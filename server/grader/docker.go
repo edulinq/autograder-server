@@ -25,10 +25,10 @@ type AssignmentConfig struct {
 
 // TODO(eriq): Break up into more files.
 type DockerImageConfig struct {
-    ParentName string `json:"parent"`
+    ParentName string `json:"parent-image"`
     Args []string `json:"args"`
-    Files string `json:"files"`
-    BuildCommands string `json:"build-commands"`
+    Files []string `json:"files"`
+    BuildCommands []string `json:"build-commands"`
 }
 
 func (this DockerImageConfig) ToDockerfile() string {
@@ -104,7 +104,8 @@ func BuildAssignmentImage(courseID string, assignment AssignmentConfig) (string,
     if (err != nil) {
         return "", fmt.Errorf("Failed to create temp build directory for '%s': '%w'.", imageName, err);
     }
-    defer os.RemoveAll(tempDir);
+    // TEST
+    // defer os.RemoveAll(tempDir);
 
     dockerfilePath := filepath.Join(tempDir, "Dockerfile");
 

@@ -21,7 +21,6 @@ RUN apt-get install -y \
     vim \
     wget
 
-RUN mkdir /work
-RUN mkdir /input
-RUN mkdir /output
-
+RUN mkdir -p /autograder/work
+RUN mkdir -p /autograder/input
+RUN mkdir -p /autograder/output

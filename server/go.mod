@@ -2,7 +2,11 @@ module github.com/eriq-augustine/autograder
 
 go 1.20
 
-require github.com/docker/docker v24.0.2+incompatible
+require (
+	github.com/alecthomas/kong v0.8.0
+	github.com/docker/docker v24.0.4+incompatible
+	github.com/rs/zerolog v1.29.1
+)
 
 require (
 	github.com/Microsoft/go-winio v0.6.1 // indirect
@@ -12,6 +16,8 @@ require (
 	github.com/docker/go-units v0.5.0 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/klauspost/compress v1.16.7 // indirect
+	github.com/mattn/go-colorable v0.1.12 // indirect
+	github.com/mattn/go-isatty v0.0.14 // indirect
 	github.com/moby/patternmatcher v0.5.0 // indirect
 	github.com/moby/sys/sequential v0.5.0 // indirect
 	github.com/moby/term v0.5.0 // indirect
