@@ -7,7 +7,7 @@ import (
     "github.com/rs/zerolog/log"
 
     "github.com/eriq-augustine/autograder/grader"
-    "github.com/eriq-augustine/autograder/util"
+    "github.com/eriq-augustine/autograder/model"
 )
 
 var args struct {
@@ -21,9 +21,7 @@ func main() {
         // TODO(eriq): Find course config file.
         courseName := "test";
 
-        // TODO(eriq): More to method.
-        var config grader.AssignmentConfig;
-        err := util.JSONFromFile(path, &config);
+        config, err := model.LoadAssignmentConfig(path);
         if (err != nil) {
             log.Fatal().Str("course", courseName).Str("path", path).Err(err).Msg("Failed to load assignment config.");
         }

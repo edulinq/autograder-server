@@ -4,42 +4,19 @@ import (
 	"context"
 	"fmt"
     "io"
-    "io/ioutil"
-	"os"
     "path/filepath"
+	"os"
     "strings"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
+	"github.com/docker/docker/api/types/mount"
 	"github.com/docker/docker/client"
     "github.com/docker/docker/pkg/archive"
 	"github.com/docker/docker/pkg/stdcopy"
+
+    "github.com/eriq-augustine/autograder/model"
 )
-
-// TODO(eriq): Break up into more files.
-type AssignmentConfig struct {
-    ID string  `json:"id"`
-    DisplayName string `json:"display-name"`
-    Image DockerImageConfig `json:"image"`
-}
-
-// TODO(eriq): Break up into more files.
-type DockerImageConfig struct {
-    ParentName string `json:"parent-image"`
-    Args []string `json:"args"`
-    Files []string `json:"files"`
-    BuildCommands []string `json:"build-commands"`
-}
-
-func (this DockerImageConfig) ToDockerfile() string {
-    lines := make([]string, 0);
-
-    lines = append(lines, fmt.Sprintf("FROM %s", this.ParentName));
-
-    // TODO(eriq): All the other stuff (copy, commands, etc).
-
-    return strings.Join(lines, "\n");
-}
 
 func getDockerClient() (context.Context, *client.Client, error) {
 	ctx := context.Background()
@@ -51,18 +28,42 @@ func getDockerClient() (context.Context, *client.Client, error) {
     return ctx, docker, nil;
 }
 
-// TEST
-func RunContainerGrader(imageName string) error {
+func RunContainerGrader(imageName string, submissionPath string) error {
 	ctx, docker, err := getDockerClient();
     if (err != nil) {
         return err;
     }
 	defer docker.Close()
 
-	resp, err := docker.ContainerCreate(ctx, &container.Config{
-		Image: imageName,
-		Tty:   false,
-	}, nil, nil, nil, "")
+    submissionPath, err = filepath.Abs(submissionPath);
+    if (err != nil) {
+        return fmt.Errorf("Could not create abs path for submission mount from '%s': '%w'.", submissionPath, err);
+    }
+
+    // TODO(eriq): Unique name.
+    name := ""
+
+	resp, err := docker.ContainerCreate(
+        ctx,
+        &container.Config{
+            Image: imageName,
+            Tty: false,
+            NetworkDisabled: true,
+        },
+        &container.HostConfig{
+            Mounts: []mount.Mount{
+                mount.Mount{
+                    Type: "bind",
+                    Source: submissionPath,
+                    Target: "/autograder/submission",
+                    ReadOnly: true,
+                },
+            },
+        },
+	    nil,
+        nil,
+        name)
+
 	if err != nil {
 		panic(err)
 	}
@@ -90,8 +91,8 @@ func RunContainerGrader(imageName string) error {
     return nil;
 }
 
-func BuildAssignmentImage(courseID string, assignment AssignmentConfig) (string, error) {
-    // TODO(eriq): Sanitization should be done earlier on IDS.
+func BuildAssignmentImage(courseID string, assignment *model.AssignmentConfig) (string, error) {
+    // TODO(eriq): Sanitization should be done earlier on IDs.
     imageName := strings.ToLower(fmt.Sprintf("autograder.%s.%s", courseID, assignment.ID));
 
 	ctx, docker, err := getDockerClient();
@@ -104,14 +105,11 @@ func BuildAssignmentImage(courseID string, assignment AssignmentConfig) (string,
     if (err != nil) {
         return "", fmt.Errorf("Failed to create temp build directory for '%s': '%w'.", imageName, err);
     }
-    // TEST
-    // defer os.RemoveAll(tempDir);
+    defer os.RemoveAll(tempDir);
 
-    dockerfilePath := filepath.Join(tempDir, "Dockerfile");
-
-    err = ioutil.WriteFile(dockerfilePath, []byte(assignment.Image.ToDockerfile()), 0644);
+    err = assignment.WriteDockerContext(tempDir);
     if (err != nil) {
-        return "", fmt.Errorf("Failed to write dockerfile (%s) for '%s': '%w'", dockerfilePath, imageName, err);
+        return "", err;
     }
 
     // TODO(eriq): Version
@@ -125,8 +123,6 @@ func BuildAssignmentImage(courseID string, assignment AssignmentConfig) (string,
     if (err != nil) {
         return "", fmt.Errorf("Failed to create tar build context for image '%s': '%w'.", imageName, err);
     }
-
-    // TODO(eriq): Create a build dir, copy files to build into image, and set it as the build context.
 
     response, err := docker.ImageBuild(ctx, tar, buildOptions);
     if (err != nil) {
