@@ -1,0 +1,5 @@
+flake8==6.0.0
+
+build
+twine
+packaging==21.3
