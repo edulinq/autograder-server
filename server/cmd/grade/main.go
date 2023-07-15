@@ -5,6 +5,7 @@ import (
     "github.com/rs/zerolog/log"
 
     "github.com/eriq-augustine/autograder/grader"
+    "github.com/eriq-augustine/autograder/model"
 )
 
 var args struct {
@@ -15,9 +16,9 @@ var args struct {
 func main() {
     kong.Parse(&args);
 
-    // TODO(eriq): Fetch info from config.
+    assignment := model.MustLoadAssignmentConfig(args.Assignment);
 
-    err := grader.RunContainerGrader("autograder.test.p0", args.Submission);
+    err := grader.RunContainerGrader(assignment.ImageName(), args.Submission);
     if (err != nil) {
         log.Fatal().Err(err).Msg("Failed to run container.");
     }

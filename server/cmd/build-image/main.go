@@ -18,17 +18,11 @@ func main() {
     kong.Parse(&args);
 
     for _, path := range args.Path {
-        // TODO(eriq): Find course config file.
-        courseName := "test";
+        assignment := model.MustLoadAssignmentConfig(path);
 
-        config, err := model.LoadAssignmentConfig(path);
+        imageName, err := grader.BuildAssignmentImage(assignment);
         if (err != nil) {
-            log.Fatal().Str("course", courseName).Str("path", path).Err(err).Msg("Failed to load assignment config.");
-        }
-
-        imageName, err := grader.BuildAssignmentImage(courseName, config);
-        if (err != nil) {
-            log.Fatal().Str("course", courseName).Str("path", path).Err(err).Msg("Failed to build image.");
+            log.Fatal().Str("assignment", assignment.FullID()).Str("path", path).Err(err).Msg("Failed to build image.");
         }
 
         fmt.Printf("Built image '%s'.", imageName);

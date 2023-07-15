@@ -6,7 +6,6 @@ import (
     "io"
     "path/filepath"
 	"os"
-    "strings"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
@@ -91,9 +90,8 @@ func RunContainerGrader(imageName string, submissionPath string) error {
     return nil;
 }
 
-func BuildAssignmentImage(courseID string, assignment *model.AssignmentConfig) (string, error) {
-    // TODO(eriq): Sanitization should be done earlier on IDs.
-    imageName := strings.ToLower(fmt.Sprintf("autograder.%s.%s", courseID, assignment.ID));
+func BuildAssignmentImage(assignment *model.AssignmentConfig) (string, error) {
+    imageName := assignment.ImageName();
 
 	ctx, docker, err := getDockerClient();
     if (err != nil) {
