@@ -1,0 +1,140 @@
+package model
+
+import (
+    "encoding/json"
+    "fmt"
+    "io"
+    "net/http"
+    "os"
+    "path/filepath"
+    "strings"
+    "time"
+
+    "github.com/eriq-augustine/autograder/util"
+)
+
+const API_REQUEST_CONTENT_KEY = "content";
+const API_REQUEST_FILES_KEY = "files";
+const MAX_FORM_MEM_SIZE_BYTES = 10 << 20  // 20 MB
+
+type APIResponse struct {
+    Success bool
+    HTTPStatus int
+    Timestamp time.Time
+    Content any
+}
+
+func NewResponse(status int, content any) *APIResponse {
+    response := APIResponse{
+        Success: (status == http.StatusOK),
+        HTTPStatus: status,
+        Timestamp: time.Now(),
+        Content: content,
+    };
+
+    return &response;
+}
+
+func (this *APIResponse) Send(response http.ResponseWriter) error {
+    payload, err := util.ToJSON(this);
+    if (err != nil) {
+        return fmt.Errorf("Could not serialize API response: '%w'.", err);
+    }
+
+    response.WriteHeader(this.HTTPStatus);
+    _, err = fmt.Fprint(response, payload);
+    if (err != nil) {
+        return fmt.Errorf("Could not write API response payload: '%w'.", err);
+    }
+
+    return nil;
+}
+
+type APIRequest interface {
+    io.Closer
+}
+
+type BaseAPIRequest struct {
+    Course string `json:course`
+    User string `json:user`
+    Pass string `json:pass`
+}
+
+// The basic deserialization of an API request from an HTTP request.
+// All requests should do this first.
+// The |apiRequest| should be a pointer that we will decode JSON into.
+func APIRequestFromHTTP(apiRequest any, request *http.Request) error {
+    err := request.ParseMultipartForm(MAX_FORM_MEM_SIZE_BYTES);
+    if (err != nil) {
+        return fmt.Errorf("Improperly formatted POST submission: '%w'.", err);
+    }
+
+    textContent := request.PostFormValue(API_REQUEST_CONTENT_KEY);
+    if (textContent == "") {
+        return fmt.Errorf("No JSON payload.");
+    }
+
+    err = json.Unmarshal([]byte(textContent), apiRequest);
+    if (err != nil) {
+        return fmt.Errorf("Improperly formatted JSON payload: '%w'.", err);
+    }
+
+    return nil;
+}
+
+// Pull files off the HTTP request and store them in a temp directory.
+// On success, the caller owns the temp directory.
+func StoreRequestFiles(request *http.Request) (string, error) {
+    _, present := request.MultipartForm.File[API_REQUEST_FILES_KEY];
+    if (!present) {
+        return "", nil;
+    }
+
+    tempDir, err := os.MkdirTemp("", "api-request-files-");
+    if (err != nil) {
+        return "", fmt.Errorf("Failed to create temp api files directory: '%w'.", err);
+    }
+
+    // Use an inner function to help control the removal of the temp dir on error.
+    innerFunc := func() error {
+        inFile, header, err := request.FormFile(API_REQUEST_FILES_KEY);
+        if (err != nil) {
+            return fmt.Errorf("Failed to access request file: '%w'.", err);
+        }
+        defer inFile.Close();
+
+        outPath := filepath.Join(tempDir, header.Filename);
+        outFile, err := os.Create(outPath);
+        if (err != nil) {
+            return fmt.Errorf("Failed to create output file: '%w'.", err);
+        }
+        defer outFile.Close();
+
+        _, err = io.Copy(outFile, inFile);
+        if (err != nil) {
+            return fmt.Errorf("Failed to copy contents of request file: '%w'.", err);
+        }
+
+        if (strings.HasSuffix(outPath, ".zip")) {
+            err = util.Unzip(outPath, tempDir);
+            if (err != nil) {
+                return fmt.Errorf("Failed to extract zip archive ('%s'): '%w'.", outPath, err);
+            }
+
+            os.Remove(outPath);
+            if (err != nil) {
+                return fmt.Errorf("Failed to remove extracted zip archive ('%s'): '%w'.", outPath, err);
+            }
+        }
+
+        return nil;
+    }
+
+    err = innerFunc();
+    if (err != nil) {
+        os.RemoveAll(tempDir);
+        return "", err;
+    }
+
+    return tempDir, nil;
+}
