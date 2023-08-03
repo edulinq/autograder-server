@@ -5,7 +5,6 @@ import (
     "github.com/rs/zerolog/log"
 
     "github.com/eriq-augustine/autograder/config"
-    "github.com/eriq-augustine/autograder/grader"
     "github.com/eriq-augustine/autograder/model"
 )
 
@@ -24,7 +23,7 @@ func main() {
 
     assignment := model.MustLoadAssignmentConfig(args.Assignment);
 
-    err = grader.RunContainerGrader(assignment.ImageName(), args.Submission);
+    err = assignment.RunGrader(args.Submission);
     if (err != nil) {
         log.Fatal().Err(err).Msg("Failed to run container.");
     }

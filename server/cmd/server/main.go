@@ -5,6 +5,7 @@ import (
     "github.com/rs/zerolog/log"
 
     "github.com/eriq-augustine/autograder/config"
+    "github.com/eriq-augustine/autograder/grader"
     "github.com/eriq-augustine/autograder/web"
 )
 
@@ -17,6 +18,11 @@ func main() {
     err := config.HandleConfigArgs(args.ConfigArgs);
     if (err != nil) {
         log.Fatal().Err(err).Msg("Could not load config options.");
+    }
+
+    _, err = grader.LoadCourses();
+    if (err != nil) {
+        log.Fatal().Err(err).Msg("Could not load courses.");
     }
 
     web.StartServer();

@@ -7,7 +7,6 @@ import (
     "github.com/rs/zerolog/log"
 
     "github.com/eriq-augustine/autograder/config"
-    "github.com/eriq-augustine/autograder/grader"
     "github.com/eriq-augustine/autograder/model"
 )
 
@@ -26,11 +25,11 @@ func main() {
     for _, path := range args.Path {
         assignment := model.MustLoadAssignmentConfig(path);
 
-        imageName, err := grader.BuildAssignmentImage(assignment);
+        err = assignment.BuildDockerImage();
         if (err != nil) {
             log.Fatal().Str("assignment", assignment.FullID()).Str("path", path).Err(err).Msg("Failed to build image.");
         }
 
-        fmt.Printf("Built image '%s'.", imageName);
+        fmt.Printf("Built image '%s'.", assignment.ImageName());
     }
 }

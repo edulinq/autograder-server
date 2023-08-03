@@ -17,7 +17,14 @@ import (
     "github.com/rs/zerolog/log"
 )
 
-//go:embed configs/default_config.json
+// Keys in the default config.
+const (
+    COURSES_ROOTDIR = "courses.rootdir"
+    LOG_LEVEL = "log.level"
+    WEB_PORT = "web.port"
+)
+
+//go:embed default_config.json
 var DEFAULT_CONFIG string;
 
 var options map[string]any = make(map[string]any);
@@ -32,7 +39,7 @@ func init() {
 }
 
 func InitLogging() {
-    var rawLogLevel = GetString("log.level");
+    var rawLogLevel = GetString(LOG_LEVEL);
     level, err := zerolog.ParseLevel(rawLogLevel);
     if (err != nil) {
         log.Fatal().Err(err).Str("level", rawLogLevel).Msg("Failed to parse the logging level.");
