@@ -20,7 +20,7 @@ func main() {
         log.Fatal().Err(err).Msg("Could not load config options.");
     }
 
-    _, err = grader.LoadCourses();
+    err = grader.LoadCourses();
     if (err != nil) {
         log.Fatal().Err(err).Msg("Could not load courses.");
     }

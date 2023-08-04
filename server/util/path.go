@@ -2,6 +2,7 @@ package util
 
 import (
     "fmt"
+    "io"
     "io/fs"
     "path/filepath"
     "os"
@@ -44,10 +45,36 @@ func IsDir(path string) bool {
             return false;
         }
 
+        log.Warn().Err(err).Str("path", path).Msg("Unexpected error when checking if a path is a dir.");
         return false;
     }
 
     return stat.IsDir();
+}
+
+func IsEmptyDir(path string) bool {
+    if (!IsDir(path)) {
+        return false;
+    }
+
+    dir, err := os.Open(path);
+    if (err != nil) {
+        log.Warn().Err(err).Str("path", path).Msg("Failed to open dir to check if it is empty.");
+        return false;
+    }
+    defer dir.Close();
+
+    _, err = dir.Readdirnames(1);
+    if (err != nil) {
+        if (err == io.EOF) {
+            return true;
+        }
+
+        log.Warn().Err(err).Str("path", path).Msg("Unexpected error when reading dir names.");
+        return false;
+    }
+
+    return false;
 }
 
 func FindFiles(filename string, dir string) ([]string, error) {

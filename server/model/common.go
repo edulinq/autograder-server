@@ -7,7 +7,7 @@ import (
 )
 
 // Return a cleaned ID, or an error if the ID cannot be cleaned.
-func validateID(id string) (string, error) {
+func ValidateID(id string) (string, error) {
     id = strings.ToLower(id);
 
     if (!regexp.MustCompile(`^[a-z0-9\._\-]+$`).MatchString(id)) {

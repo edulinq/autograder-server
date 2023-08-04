@@ -58,7 +58,7 @@ func newRoute(method string, pattern string, handler RouteHandler) route {
 }
 
 func newAPIRoute[T model.APIRequest](method string, pattern string,
-        requestFactory func(*http.Request) (T, error),
+        requestFactory func(*http.Request) (T, *model.APIResponse, error),
         apiHandler func(T) (int, any, error)) route {
     handler := func(response http.ResponseWriter, request *http.Request) error {
         return handleAPIEndpoint(response, request, requestFactory, apiHandler);
@@ -80,12 +80,16 @@ func handleRedirect(target string, response http.ResponseWriter, request *http.R
 }
 
 func handleAPIEndpoint[T model.APIRequest](response http.ResponseWriter, request *http.Request,
-        requestFactory func(*http.Request) (T, error),
+        requestFactory func(*http.Request) (T, *model.APIResponse, error),
         apiHandler func(T) (int, any, error)) error {
-    apiRequest, err := requestFactory(request);
+    apiRequest, apiResponse, err := requestFactory(request);
     if (err != nil) {
         log.Info().Err(err).Msg("Could not deserialize API request.");
-        http.Error(response, "Improperly formatted API request.", http.StatusBadRequest);
+        http.Error(response, "Could not deserialize API request.", http.StatusBadRequest);
+        return nil;
+    } else if (apiResponse != nil) {
+        // Short-cut the response.
+        sendAPIResponse(response, request, apiResponse);
         return nil;
     }
     defer apiRequest.Close();
@@ -107,15 +111,18 @@ func handleAPIEndpoint[T model.APIRequest](response http.ResponseWriter, request
         }
     }
 
-    apiResponse := model.NewResponse(status, message);
+    apiResponse = model.NewResponse(status, message);
+    sendAPIResponse(response, request, apiResponse);
 
-    err = apiResponse.Send(response);
+    return nil;
+}
+
+func sendAPIResponse(response http.ResponseWriter, request *http.Request, apiResponse *model.APIResponse) {
+    err := apiResponse.Send(response);
     if (err != nil) {
         log.Error().Err(err).Str("path", request.URL.Path).Msg("Error sending API response.");
         http.Error(response, "Server Error", http.StatusInternalServerError);
     }
-
-    return nil;
 }
 
 func serve(response http.ResponseWriter, request *http.Request) {

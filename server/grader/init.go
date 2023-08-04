@@ -12,23 +12,27 @@ import (
 
 const COURSE_CONFIG_FILENAME = "course.json"
 
+var courses map[string]*model.Course = make(map[string]*model.Course);
+
+func GetCourses() map[string]*model.Course {
+    return courses;
+}
+
 // Discover all courses (from the config) and load all the associated courses and assignments.
-func LoadCourses() (map[string]*model.Course, error) {
+func LoadCourses() error {
     baseDir := config.GetString(config.COURSES_ROOTDIR);
 
     configPaths, err := util.FindFiles(model.COURSE_CONFIG_FILENAME, baseDir);
     if (err != nil) {
-        return nil, fmt.Errorf("Failed to search for course configs in '%s': '%w'.", baseDir, err);
+        return fmt.Errorf("Failed to search for course configs in '%s': '%w'.", baseDir, err);
     }
 
     log.Info().Int("count", len(configPaths)).Msg(fmt.Sprintf("Found %d course config(s).", len(configPaths)));
 
-    courses := make(map[string]*model.Course);
-
     for _, configPath := range configPaths {
         courseConfig, err := model.LoadCourseDirectory(configPath);
         if (err != nil) {
-            return nil, fmt.Errorf("Could not load course config '%s': '%w'.", configPath, err);
+            return fmt.Errorf("Could not load course config '%s': '%w'.", configPath, err);
         }
 
         courses[courseConfig.ID] = courseConfig;
@@ -36,5 +40,28 @@ func LoadCourses() (map[string]*model.Course, error) {
         log.Info().Str("path", configPath).Str("id", courseConfig.ID).Int("assignments", len(courseConfig.Assignments)).Msg("Loading course config.");
     }
 
-    return courses, nil;
+    return nil;
+}
+
+func GetCourse(id string) *model.Course {
+    course, ok := courses[id];
+    if (!ok) {
+        return nil;
+    }
+
+    return course;
+}
+
+func GetAssignment(courseID string, assignmentID string) *model.Assignment {
+    course := GetCourse(courseID);
+    if (course == nil) {
+        return nil;
+    }
+
+    assignment, ok := course.Assignments[assignmentID];
+    if (!ok) {
+        return nil;
+    }
+
+    return assignment;
 }

@@ -52,6 +52,9 @@ func (this *APIResponse) Send(response http.ResponseWriter) error {
 
 type APIRequest interface {
     io.Closer
+
+    // Called after desieralization to clean/normalize.
+    Clean() error
 }
 
 type BaseAPIRequest struct {
@@ -60,10 +63,20 @@ type BaseAPIRequest struct {
     Pass string `json:pass`
 }
 
+func (this *BaseAPIRequest) Clean() error {
+    var err error;
+    this.Course, err = ValidateID(this.Course);
+    if (err != nil) {
+        return fmt.Errorf("Could not clean course ID ('%s'): '%w'.", this.Course, err);
+    }
+
+    return nil;
+}
+
 // The basic deserialization of an API request from an HTTP request.
 // All requests should do this first.
 // The |apiRequest| should be a pointer that we will decode JSON into.
-func APIRequestFromHTTP(apiRequest any, request *http.Request) error {
+func APIRequestFromHTTP(apiRequest APIRequest, request *http.Request) error {
     err := request.ParseMultipartForm(MAX_FORM_MEM_SIZE_BYTES);
     if (err != nil) {
         return fmt.Errorf("Improperly formatted POST submission: '%w'.", err);
@@ -77,6 +90,11 @@ func APIRequestFromHTTP(apiRequest any, request *http.Request) error {
     err = json.Unmarshal([]byte(textContent), apiRequest);
     if (err != nil) {
         return fmt.Errorf("Improperly formatted JSON payload: '%w'.", err);
+    }
+
+    err = apiRequest.Clean();
+    if (err != nil) {
+        return fmt.Errorf("Could not clean API request: '%w'.", err);
     }
 
     return nil;

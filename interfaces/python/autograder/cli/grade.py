@@ -1,5 +1,6 @@
 import argparse
 import inspect
+import json
 import os
 import sys
 
@@ -46,6 +47,16 @@ def run(args):
     assignment.grade(submission)
     print(assignment.report())
 
+    if (args.outpath is not None):
+        # TEST
+        print('---')
+        print(args.outpath)
+        print('---')
+
+        os.makedirs(os.path.dirname(os.path.abspath(args.outpath)), exist_ok = True)
+        with open(args.outpath, 'w') as file:
+            json.dump(assignment.to_dict(), file, indent = 4)
+
     return 0
 
 def _load_args():
@@ -59,6 +70,10 @@ def _load_args():
     parser.add_argument('-s', '--submission',
         action = 'store', type = str, required = True,
         help = 'The path to a submission to use for grading.')
+
+    parser.add_argument('-o', '--outpath',
+        action = 'store', type = str, required = False, default = None,
+        help = 'The path to a output the JSON result.')
 
     return parser.parse_args()
 

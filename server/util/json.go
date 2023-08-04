@@ -7,6 +7,7 @@ import (
    "os"
 )
 
+// The target must be a pointer.
 func JSONFromFile(path string, target any) error {
     file, err := os.Open(path);
     if (err != nil) {

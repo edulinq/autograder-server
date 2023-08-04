@@ -20,6 +20,7 @@ import (
 )
 
 const DOCKER_WORK_DIR = "/autograder/work"
+const DOCKER_OUTPUT_RESULT_FILENAME = "result.json"
 
 type DockerImageConfig struct {
     ParentName string `json:"parent-image"`
@@ -38,7 +39,38 @@ func getDockerClient() (context.Context, *client.Client, error) {
     return ctx, docker, nil;
 }
 
-func (this *Assignment) RunGrader(submissionPath string) error {
+// TODO(eriq): Get the grading output.
+func (this *Assignment) RunGrader(submissionPath string, outputDir string) (*GradingResult, error) {
+    if (!util.PathExists(outputDir)) {
+        os.MkdirAll(outputDir, 0755);
+    }
+
+    if (!util.IsEmptyDir(outputDir)) {
+        return nil, fmt.Errorf("Output dir for grader is not empty.");
+    }
+
+    err := this.runGraderContainer(submissionPath, outputDir);
+    if (err != nil) {
+        return nil, err;
+    }
+
+    resultPath := filepath.Join(outputDir, DOCKER_OUTPUT_RESULT_FILENAME);
+    if (!util.PathExists(resultPath)) {
+        return nil, fmt.Errorf("Cannot find output file ('%s') after grading container was run.", resultPath);
+    }
+
+    var result GradingResult;
+    err = util.JSONFromFile(resultPath, &result);
+    if (err != nil) {
+        return nil, err;
+    }
+
+    return &result, nil;
+}
+
+// TODO(eriq): More gracefull errors (no panics),
+// and try to diferentiate a Docker error, grader error, and submission fail.
+func (this *Assignment) runGraderContainer(submissionPath string, outputDir string) error {
 	ctx, docker, err := getDockerClient();
     if (err != nil) {
         return err;
@@ -46,6 +78,7 @@ func (this *Assignment) RunGrader(submissionPath string) error {
 	defer docker.Close()
 
     submissionPath = util.MustAbs(submissionPath);
+    outputDir = util.MustAbs(outputDir);
 
     // TODO(eriq): Unique name.
     name := ""
@@ -64,6 +97,12 @@ func (this *Assignment) RunGrader(submissionPath string) error {
                     Source: submissionPath,
                     Target: "/autograder/submission",
                     ReadOnly: true,
+                },
+                mount.Mount{
+                    Type: "bind",
+                    Source: outputDir,
+                    Target: "/autograder/output",
+                    ReadOnly: false,
                 },
             },
         },
@@ -88,7 +127,7 @@ func (this *Assignment) RunGrader(submissionPath string) error {
 	case <-statusCh:
 	}
 
-	out, err := docker.ContainerLogs(ctx, resp.ID, types.ContainerLogsOptions{ShowStdout: true})
+	out, err := docker.ContainerLogs(ctx, resp.ID, types.ContainerLogsOptions{ShowStdout: true, ShowStderr: true})
 	if err != nil {
 		panic(err)
 	}

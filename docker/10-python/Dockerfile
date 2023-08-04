@@ -4,5 +4,7 @@ FROM autograder.base
 COPY autograder-*.tar.gz /autograder/build/
 RUN pip3 install /autograder/build/autograder-*.tar.gz
 
+# TODO(eriq): Entrypoint?
+
 WORKDIR /autograder/work
-CMD ["python3", "-m", "autograder.cli.grade", "--assignment", "/autograder/work/assignment.py", "--submission", "/autograder/submission"]
+CMD ["python3", "-m", "autograder.cli.grade", "--assignment", "/autograder/work/assignment.py", "--submission", "/autograder/submission", "--outpath", "/autograder/output/result.json"]

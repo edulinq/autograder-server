@@ -66,7 +66,7 @@ func (this *Course) Validate() error {
     }
 
     var err error;
-    this.ID, err = validateID(this.ID);
+    this.ID, err = ValidateID(this.ID);
     if (err != nil) {
         return err;
     }

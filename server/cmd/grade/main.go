@@ -1,6 +1,8 @@
 package main
 
 import (
+    "fmt"
+
     "github.com/alecthomas/kong"
     "github.com/rs/zerolog/log"
 
@@ -12,6 +14,7 @@ var args struct {
     config.ConfigArgs
     Assignment string `help:"Path to assignment JSON files." required:"" type:"existingfile"`
     Submission string `help:"Path to submission directory." required:"" type:"existingdir"`
+    OutputDir string `help:"Path to a directory to write grading output to (must be non-existant or empty)." required:"" type:"path"`
 }
 
 func main() {
@@ -23,8 +26,10 @@ func main() {
 
     assignment := model.MustLoadAssignmentConfig(args.Assignment);
 
-    err = assignment.RunGrader(args.Submission);
+    result, err := assignment.RunGrader(args.Submission, args.OutputDir);
     if (err != nil) {
         log.Fatal().Err(err).Msg("Failed to run container.");
     }
+
+    fmt.Println(result);
 }

@@ -22,14 +22,14 @@ class Assignment(object):
         self._grading_end = None
 
     def grade(self, submission, additional_data = {}, show_exceptions = False):
-        self._grading_start = datetime.datetime.now().strftime(PRETTY_TIMESTEMP_FORMAT)
+        self._grading_start = datetime.datetime.now(datetime.timezone.utc)
         score = 0
 
         for question in self._questions:
             score += question.grade(submission, additional_data = additional_data,
                 show_exceptions = show_exceptions)
 
-        self._grading_end = datetime.datetime.now().strftime(PRETTY_TIMESTEMP_FORMAT)
+        self._grading_end = datetime.datetime.now(datetime.timezone.utc)
 
         return score
 
@@ -54,7 +54,9 @@ class Assignment(object):
 
         output = [
             "Autograder transcript for project: %s." % (self._name),
-            "Grading started at %s and ended at %s." % (self._grading_start, self._grading_end)
+            "Grading started at %s and ended at %s." % (
+                self._grading_start.strftime(PRETTY_TIMESTEMP_FORMAT),
+                self._grading_end.strftime(PRETTY_TIMESTEMP_FORMAT))
         ]
 
         total_score = 0
@@ -88,8 +90,8 @@ class Assignment(object):
 
         return {
             'name': self._name,
-            'start': self._grading_start,
-            'end': self._grading_end,
+            'start': self._grading_start.isoformat(),
+            'end': self._grading_end.isoformat(),
             'questions': [question.to_dict() for question in self._questions],
         }
 
@@ -103,7 +105,7 @@ class Assignment(object):
         questions = [Question.from_dict(question) for question in data['questions']]
         assignment = Assignment(data['name'], questions)
 
-        assignment._grading_start = data['start']
-        assignment._grading_end = data['end']
+        assignment._grading_start = datetime.datetime.fromisoformat(data['start'])
+        assignment._grading_end = datetime.datetime.fromisoformat(data['end'])
 
         return assignment

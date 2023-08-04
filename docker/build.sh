@@ -8,11 +8,6 @@ readonly THIS_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 readonly BASE_IMAGE_NAME='autograder'
 
 function main() {
-    if [[ $# -ne 0 ]]; then
-        echo "USAGE: $0"
-        exit 1
-    fi
-
     trap exit SIGINT
     set -e
 
@@ -21,7 +16,7 @@ function main() {
         local subImageName=$(basename "${buildDir}" | sed 's/^[0-9]\+-//')
 
         echo "Building '${BASE_IMAGE_NAME}.${subImageName}' ..."
-        docker build --tag "${BASE_IMAGE_NAME}.${subImageName}" --file "${dockerfile}" "${buildDir}"
+        docker build --tag "${BASE_IMAGE_NAME}.${subImageName}" --file "${dockerfile}" "${buildDir}" $@
     done
 
     exit 0
