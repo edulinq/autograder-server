@@ -64,27 +64,10 @@ func handleSubmit(submission *SubmissionRequest) (int, any, error) {
         return http.StatusBadRequest, fmt.Sprintf("Could not find assignment ('%s') for course ('%s').", submission.Assignment, submission.Course,), nil;
     }
 
-    // TEST
-    fmt.Println("---");
-    fmt.Println(submission);
-    fmt.Println(submission.Dir);
-    fmt.Println("---");
-    fmt.Println(assignment);
-    fmt.Println("---");
-
-    // TEST: Get output dir.
-    outputDir := "/tmp/testtime"
-
-    // TEST
-    result, err := assignment.RunGrader(submission.Dir, outputDir);
+    result, err := assignment.Grade(submission.Dir, submission.User);
     if (err != nil) {
         return 0, nil, err;
     }
-
-    // TEST
-    fmt.Println("---");
-    fmt.Println(result);
-    fmt.Println("---");
 
     return 0, result, nil;
 }

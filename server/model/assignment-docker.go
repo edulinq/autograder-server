@@ -39,7 +39,6 @@ func getDockerClient() (context.Context, *client.Client, error) {
     return ctx, docker, nil;
 }
 
-// TODO(eriq): Get the grading output.
 func (this *Assignment) RunGrader(submissionPath string, outputDir string) (*GradingResult, error) {
     if (!util.PathExists(outputDir)) {
         os.MkdirAll(outputDir, 0755);

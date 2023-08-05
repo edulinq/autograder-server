@@ -10,8 +10,6 @@ import (
     "github.com/eriq-augustine/autograder/util"
 )
 
-const COURSE_CONFIG_FILENAME = "course.json"
-
 var courses map[string]*model.Course = make(map[string]*model.Course);
 
 func GetCourses() map[string]*model.Course {

@@ -14,7 +14,7 @@ var args struct {
     config.ConfigArgs
     Assignment string `help:"Path to assignment JSON files." required:"" type:"existingfile"`
     Submission string `help:"Path to submission directory." required:"" type:"existingdir"`
-    OutputDir string `help:"Path to a directory to write grading output to (must be non-existant or empty)." required:"" type:"path"`
+    User string `help:"Username for the submission." required:""`
 }
 
 func main() {
@@ -26,7 +26,7 @@ func main() {
 
     assignment := model.MustLoadAssignmentConfig(args.Assignment);
 
-    result, err := assignment.RunGrader(args.Submission, args.OutputDir);
+    result, err := assignment.Grade(args.Submission, args.User);
     if (err != nil) {
         log.Fatal().Err(err).Msg("Failed to run container.");
     }

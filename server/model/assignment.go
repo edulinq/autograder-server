@@ -4,6 +4,7 @@ import (
 	"fmt"
     "path/filepath"
     "strings"
+    "sync"
 
     "github.com/rs/zerolog/log"
 
@@ -11,6 +12,10 @@ import (
 )
 
 const ASSIGNMENT_CONFIG_FILENAME = "assignment.json"
+const OUTPUT_DIRNAME = "output"
+
+// TODO(eriq): Create a maintenance task that removed old, unused locks.
+var submissionLocks sync.Map;
 
 type Assignment struct {
     ID string  `json:"id"`
@@ -94,4 +99,24 @@ func MustLoadAssignmentConfig(path string) *Assignment {
     }
 
     return config;
+}
+
+func (this *Assignment) Grade(submissionPath string, user string) (*GradingResult, error) {
+    lockKey := fmt.Sprintf("%s::%s::%s", this.Course.ID, this.ID, user);
+    // Get the existing mutex, or store (and fetch) a new one.
+    val, _ := submissionLocks.LoadOrStore(lockKey, &sync.Mutex{});
+
+    lock := val.(*sync.Mutex)
+
+    lock.Lock();
+    defer lock.Unlock();
+
+    submissionDir, err := this.Course.PrepareSubmission(user);
+    if (err != nil) {
+        return nil, err;
+    }
+
+    outputDir := filepath.Join(submissionDir, OUTPUT_DIRNAME);
+
+    return this.RunGrader(submissionPath, outputDir);
 }
