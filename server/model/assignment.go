@@ -111,6 +111,8 @@ func (this *Assignment) Grade(submissionPath string, user string) (*GradingResul
     lock.Lock();
     defer lock.Unlock();
 
+    // TODO(eriq): Copy the submission to the user's submission directory.
+
     submissionDir, err := this.Course.PrepareSubmission(user);
     if (err != nil) {
         return nil, err;

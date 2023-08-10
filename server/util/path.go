@@ -6,6 +6,7 @@ import (
     "io/fs"
     "path/filepath"
     "os"
+    "runtime"
 
     "github.com/rs/zerolog/log"
 )
@@ -101,4 +102,15 @@ func FindFiles(filename string, dir string) ([]string, error) {
     }
 
     return matches, nil;
+}
+
+// Get the directory of the source file calling this method.
+func GetThisDir() string {
+    // 0 is the current caller (this function), and 1 should be one frame back.
+    _, path, _, ok := runtime.Caller(1);
+    if (!ok) {
+        log.Fatal().Msg("Could not get the stackframe for the current runtime.");
+    }
+
+    return filepath.Dir(path);
 }

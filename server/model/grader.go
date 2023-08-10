@@ -1,6 +1,7 @@
 package model
 
 import (
+    "reflect"
     "time"
 
     "github.com/eriq-augustine/autograder/util"
@@ -22,4 +23,16 @@ type QuestionResult struct {
 
 func (this *GradingResult) String() string {
     return util.BaseString(this);
+}
+
+func (this *GradingResult) Equals(other *GradingResult) bool {
+    if (other == nil) {
+        return false;
+    }
+
+    if (this == other) {
+        return true;
+    }
+
+    return (this.Name == other.Name) && (reflect.DeepEqual(this.Questions, other.Questions));
 }

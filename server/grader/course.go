@@ -18,8 +18,10 @@ func GetCourses() map[string]*model.Course {
 
 // Discover all courses (from the config) and load all the associated courses and assignments.
 func LoadCourses() error {
-    baseDir := config.GetString(config.COURSES_ROOTDIR);
+    return LoadCoursesFromDir(config.GetString(config.COURSES_ROOTDIR));
+}
 
+func LoadCoursesFromDir(baseDir string) error {
     configPaths, err := util.FindFiles(model.COURSE_CONFIG_FILENAME, baseDir);
     if (err != nil) {
         return fmt.Errorf("Failed to search for course configs in '%s': '%w'.", baseDir, err);
@@ -42,6 +44,11 @@ func LoadCourses() error {
 }
 
 func GetCourse(id string) *model.Course {
+    id, err := model.ValidateID(id);
+    if (err != nil) {
+        return nil;
+    }
+
     course, ok := courses[id];
     if (!ok) {
         return nil;
@@ -53,6 +60,11 @@ func GetCourse(id string) *model.Course {
 func GetAssignment(courseID string, assignmentID string) *model.Assignment {
     course := GetCourse(courseID);
     if (course == nil) {
+        return nil;
+    }
+
+    assignmentID, err := model.ValidateID(assignmentID);
+    if (err != nil) {
         return nil;
     }
 
