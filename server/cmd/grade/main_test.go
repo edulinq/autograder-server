@@ -28,12 +28,12 @@ func TestSubmissions(test *testing.T) {
     if (err != nil) {
         log.Fatal().Err(err).Msg("Could not create temp dir.");
     }
+    defer os.RemoveAll(tempDir);
 
     err = grader.LoadCoursesFromDir(testsDir);
     if (err != nil) {
         log.Fatal().Err(err).Msg("Could not load courses.");
     }
-    defer os.RemoveAll(testsDir);
 
     for _, course := range grader.GetCourses() {
         course.Dir = filepath.Join(tempDir, course.ID);
@@ -56,22 +56,21 @@ func TestSubmissions(test *testing.T) {
             var testSubmission TestSubmission;
             err := util.JSONFromFile(testResultPath, &testSubmission);
             if (err != nil) {
-                test.Errorf("Failed to load test submission: '%s': '%v'.", testResultPath, err);
+                test.Fatalf("Failed to load test submission: '%s': '%v'.", testResultPath, err);
             }
 
             assignment := grader.GetAssignment(testSubmission.Course, testSubmission.Assignment);
             if (assignment == nil) {
-                test.Errorf("Could not find assignment '%s' from course '%s'.", testSubmission.Assignment, testSubmission.Course);
+                test.Fatalf("Could not find assignment '%s' from course '%s'.", testSubmission.Assignment, testSubmission.Course);
             }
 
             result, err := assignment.Grade(filepath.Dir(testResultPath), USERNAME);
             if (err != nil) {
-                test.Errorf("Failed to grade assignment: '%v'.", err);
+                test.Fatalf("Failed to grade assignment: '%v'.", err);
             }
 
             if (!result.Equals(&testSubmission.Result)) {
-                test.Logf("Actual output:\n---\n%v\n---\ndoes not match expected output:\n---\n%v\n---\n.", result, testSubmission.Result);
-                test.FailNow();
+                test.Fatalf("Actual output:\n---\n%v\n---\ndoes not match expected output:\n---\n%v\n---\n.", result, &testSubmission.Result);
             }
 
         });
