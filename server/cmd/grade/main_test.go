@@ -22,6 +22,10 @@ type TestSubmission struct {
 }
 
 func TestSubmissions(test *testing.T) {
+    if (!model.CanAccessDocker()) {
+        test.Fatal("Could not access docker.");
+    }
+
     testsDir := filepath.Join(util.GetThisDir(), "..", "..", "..", "tests");
 
     tempDir, err := os.MkdirTemp("", "submission-tests-");

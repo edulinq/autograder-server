@@ -29,6 +29,15 @@ type DockerImageConfig struct {
     BuildCommands []string `json:"build-commands"`
 }
 
+func CanAccessDocker() bool {
+    _, docker, err := getDockerClient();
+    if (docker != nil) {
+        defer docker.Close();
+    }
+
+    return (err != nil);
+}
+
 func getDockerClient() (context.Context, *client.Client, error) {
 	ctx := context.Background()
 	docker, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
