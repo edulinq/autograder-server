@@ -85,7 +85,7 @@ func prepSubmissionDir(assignment *model.Assignment, user string, options GradeO
         }
 
         if (options.LeaveTempDir) {
-            log.Info().Str("tempdir", tempSubmissionsDir).Msg("Leaving behind temp submissions dir.");
+            log.Info().Str("path", tempSubmissionsDir).Msg("Leaving behind temp submissions dir.");
         } else {
             defer os.RemoveAll(tempSubmissionsDir);
         }

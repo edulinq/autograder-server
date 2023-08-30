@@ -1,7 +1,6 @@
 package grader
 
 import (
-    "errors"
     "fmt"
     "os"
     "os/exec"
@@ -26,7 +25,7 @@ func RunNoDockerGrader(assignment *model.Assignment, submissionPath string, outp
     if (!options.LeaveTempDir) {
         defer os.RemoveAll(tempDir);
     } else {
-        log.Info().Str("tempdir", tempDir).Msg("Leaving behind temp grading dir.");
+        log.Info().Str("path", tempDir).Msg("Leaving behind temp grading dir.");
     }
 
     cmd, err := getAssignmentInvocation(assignment, inputDir, outputDir, workDir);
@@ -103,97 +102,4 @@ func getAssignmentInvocation(assignment *model.Assignment, inputDir string, outp
     }
 
     return exec.Command(cleanCommand[0], cleanCommand[1:]...), nil;
-}
-
-// Copy over assignment files.
-// 1) Do pre-copy operations.
-// 2) Copy.
-// 3) Do post-copy operations.
-func copyAssignmentFiles(sourceDir string, destDir string, opDir string,
-                         files []string, onlyContents bool,
-                         preOps [][]string, postOps [][]string) error {
-    var err error;
-
-    // Do pre ops.
-    for _, fileOperation := range preOps {
-        err = doFileOperation(fileOperation, opDir);
-        if (err != nil) {
-            return fmt.Errorf("Failed to do pre file operation '%v': '%w'.", fileOperation, err);
-        }
-    }
-
-    // Copy files.
-    for _, filename := range files {
-        sourcePath := filepath.Join(sourceDir, filename);
-        destPath := filepath.Join(destDir, filepath.Base(filename));
-
-        if (onlyContents) {
-            util.CopyDirContents(sourcePath, destPath);
-        } else {
-            util.CopyDirent(sourcePath, destPath, false);
-        }
-    }
-
-    // Do post ops.
-    for _, fileOperation := range postOps {
-        err = doFileOperation(fileOperation, opDir);
-        if (err != nil) {
-            return fmt.Errorf("Failed to do post file operation '%v': '%w'.", fileOperation, err);
-        }
-    }
-
-    return nil;
-}
-
-func doFileOperation(fileOperation []string, opDir string) error {
-    if ((fileOperation == nil) || (len(fileOperation) == 0)) {
-        return fmt.Errorf("File operation is empty.");
-    }
-
-    if (fileOperation[0] == "cp") {
-        if (len(fileOperation) != 3) {
-            return fmt.Errorf("Incorrect number of argument for 'cp' file operation. Expected 2, found %d.", len(fileOperation) - 1);
-        }
-
-        sourcePath := filepath.Join(opDir, fileOperation[1]);
-        destPath := filepath.Join(opDir, fileOperation[2]);
-
-        return util.CopyDirent(sourcePath, destPath, false);
-    } else if (fileOperation[0] == "mv") {
-        if (len(fileOperation) != 3) {
-            return fmt.Errorf("Incorrect number of argument for 'mv' file operation. Expected 2, found %d.", len(fileOperation) - 1);
-        }
-
-        sourcePath := filepath.Join(opDir, fileOperation[1]);
-        destPath := filepath.Join(opDir, fileOperation[2]);
-
-        return os.Rename(sourcePath, destPath);
-    } else {
-        return fmt.Errorf("Unknown file operation: '%s'.", fileOperation[0]);
-    }
-}
-
-// Create a temp dir for grading as well as the three standard directories in it.
-// Paths to the three direcotries (temp, in, out, work) will be returned.
-// The created directory will be in the system's temp directory.
-func prepTempGradingDir() (string, string, string, string, error) {
-    tempDir, err := os.MkdirTemp("", "autograding-nodocker-");
-    if (err != nil) {
-        return "", "", "", "", fmt.Errorf("Could not create temp dir: '%w'.", err);
-    }
-
-    // Create the standard three grading directories.
-    inputDir := filepath.Join(tempDir, GRADING_INPUT_DIRNAME);
-    outputDir := filepath.Join(tempDir, GRADING_OUTPUT_DIRNAME);
-    workDir := filepath.Join(tempDir, GRADING_WORK_DIRNAME);
-
-    err = errors.Join(err, os.Mkdir(inputDir, 0755));
-    err = errors.Join(err, os.Mkdir(outputDir, 0755));
-    err = errors.Join(err, os.Mkdir(workDir, 0755));
-
-    if (err != nil) {
-        return "", "", "", "", fmt.Errorf("Could not create standard grading directories in temp dir ('%s'): '%w'.", tempDir, err);
-    }
-
-    return tempDir, inputDir, outputDir, workDir, nil;
 }

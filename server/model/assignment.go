@@ -17,8 +17,6 @@ type Assignment struct {
     ID string `json:"id"`
     DisplayName string `json:"display-name"`
 
-    // TEST
-    // Image DockerImageConfig `json:"image"`
     Image string `json:"image,omitempty"`
     Invocation []string `json:"invocation,omitempty"`
 
@@ -97,6 +95,12 @@ func (this *Assignment) Validate() error {
         this.StaticFiles = make([]string, 0);
     }
 
+    for _, staticFile := range this.StaticFiles {
+        if (filepath.IsAbs(staticFile)) {
+            return fmt.Errorf("All static file paths must be relative (to the assignment config file), found: '%s'.", staticFile);
+        }
+    }
+
     if (this.PreStaticFileOperations == nil) {
         this.PreStaticFileOperations = make([][]string, 0);
     }
@@ -123,16 +127,6 @@ func (this *Assignment) Validate() error {
 
     if ((this.Image == "") && ((this.Invocation == nil) || (len(this.Invocation) == 0))) {
         return fmt.Errorf("Assignment image and invocation cannot both be empty.");
-    }
-
-    return nil;
-}
-
-// Ensure the assignment is ready for grading.
-func (this *Assignment) Init(useDocker bool) error {
-    if (useDocker) {
-        // TEST
-        // return this.BuildDockerImage();
     }
 
     return nil;

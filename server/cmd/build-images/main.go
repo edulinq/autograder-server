@@ -13,7 +13,7 @@ import (
 
 var args struct {
     config.ConfigArgs
-    model.DockerBuildOptions
+    grader.DockerBuildOptions
     Path []string `help:"Path to assignment JSON files." arg:"" optional:"" type:"existingfile"`
 }
 
@@ -29,16 +29,15 @@ func main() {
         log.Fatal().Err(err).Msg("Could not load config options.");
     }
 
-    // TEST
     if (len(args.Path) > 0) {
-        buildFromPaths(args.Path);
+        buildFromPaths(args.Path, &args.DockerBuildOptions);
         return;
     }
 
     buildFromCourses(&args.DockerBuildOptions);
 }
 
-func buildFromCourses(buildOptions *model.DockerBuildOptions) {
+func buildFromCourses(buildOptions *grader.DockerBuildOptions) {
     err := grader.LoadCourses();
     if (err != nil) {
         log.Fatal().Err(err).Msg("Failed to load courses.");
@@ -54,11 +53,11 @@ func buildFromCourses(buildOptions *model.DockerBuildOptions) {
     }
 }
 
-func buildFromPaths(paths []string) {
+func buildFromPaths(paths []string, buildOptions *grader.DockerBuildOptions) {
     for _, path := range paths {
         assignment := model.MustLoadAssignmentConfig(path);
 
-        err := assignment.BuildDockerImage();
+        err := grader.BuildDockerImageWithOptions(assignment, buildOptions);
         if (err != nil) {
             log.Fatal().Str("assignment", assignment.FullID()).Str("path", path).Err(err).Msg("Failed to build image.");
         }

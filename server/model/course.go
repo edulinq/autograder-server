@@ -7,7 +7,6 @@ import (
     "time"
 
     "github.com/eriq-augustine/autograder/util"
-    "github.com/eriq-augustine/autograder/config"
 )
 
 const COURSE_CONFIG_FILENAME = "course.json"
@@ -98,18 +97,6 @@ func (this *Course) Validate() error {
     this.ID, err = ValidateID(this.ID);
     if (err != nil) {
         return err;
-    }
-
-    return nil;
-}
-
-// Ensure the course is ready for grading.
-func (this *Course) Init() error {
-    for _, assignment := range this.Assignments {
-        err := assignment.Init(config.GetBool(config.DOCKER_DISABLE))
-        if (err != nil) {
-            return err;
-        }
     }
 
     return nil;
