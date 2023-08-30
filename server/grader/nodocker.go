@@ -146,8 +146,31 @@ func copyAssignmentFiles(sourceDir string, destDir string, opDir string,
 }
 
 func doFileOperation(fileOperation []string, opDir string) error {
-    // TEST
-    return fmt.Errorf("TEST: %v", fileOperation);
+    if ((fileOperation == nil) || (len(fileOperation) == 0)) {
+        return fmt.Errorf("File operation is empty.");
+    }
+
+    if (fileOperation[0] == "cp") {
+        if (len(fileOperation) != 3) {
+            return fmt.Errorf("Incorrect number of argument for 'cp' file operation. Expected 2, found %d.", len(fileOperation) - 1);
+        }
+
+        sourcePath := filepath.Join(opDir, fileOperation[1]);
+        destPath := filepath.Join(opDir, fileOperation[2]);
+
+        return util.CopyDirent(sourcePath, destPath, false);
+    } else if (fileOperation[0] == "mv") {
+        if (len(fileOperation) != 3) {
+            return fmt.Errorf("Incorrect number of argument for 'mv' file operation. Expected 2, found %d.", len(fileOperation) - 1);
+        }
+
+        sourcePath := filepath.Join(opDir, fileOperation[1]);
+        destPath := filepath.Join(opDir, fileOperation[2]);
+
+        return os.Rename(sourcePath, destPath);
+    } else {
+        return fmt.Errorf("Unknown file operation: '%s'.", fileOperation[0]);
+    }
 }
 
 // Create a temp dir for grading as well as the three standard directories in it.

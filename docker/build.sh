@@ -16,7 +16,7 @@ function main() {
         local subImageName=$(basename "${buildDir}" | sed 's/^[0-9]\+-//')
 
         echo "Building '${BASE_IMAGE_NAME}.${subImageName}' ..."
-        docker build --tag "${BASE_IMAGE_NAME}.${subImageName}" --file "${dockerfile}" "${buildDir}" $@
+        docker build --no-cache --tag "${BASE_IMAGE_NAME}.${subImageName}" --file "${dockerfile}" "${buildDir}" $@
     done
 
     exit 0

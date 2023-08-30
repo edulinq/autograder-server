@@ -16,7 +16,7 @@ func CopyDirent(source string, dest string, onlyContents bool) error {
     }
 
     if (IsDir(source)) {
-        CopyDir(source, dest, onlyContents);
+        return CopyDir(source, dest, onlyContents);
     }
 
     return CopyFile(source, dest);

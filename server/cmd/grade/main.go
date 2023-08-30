@@ -18,6 +18,7 @@ var args struct {
     Submission string `help:"Path to submission directory." required:"" type:"existingdir"`
     OutPath string `help:"Option path to output a JSON grading result." type:"path"`
     User string `help:"Username for the submission." default:"testuser"`
+    NoStore bool `help:"Do not store the grading result into the user's submission directory." default:"false"`
     Debug bool `help:"Leave some debug artifacts like the grading sirectory." default:"false"`
 }
 
@@ -32,6 +33,7 @@ func main() {
 
     options := grader.GetDefaultGradeOptions();
     options.LeaveTempDir = args.Debug;
+    options.UseFakeSubmissionsDir = args.NoStore;
 
     result, err := grader.Grade(assignment, args.Submission, args.User, options);
     if (err != nil) {

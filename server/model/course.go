@@ -132,18 +132,22 @@ func (this *Course) GetSubmissionsDir() (string, error) {
     return path, nil;
 }
 
-// Prepare a place to hold the student's submission history.
 func (this *Course) PrepareSubmission(user string) (string, error) {
     submissionsDir, err := this.GetSubmissionsDir();
     if (err != nil) {
         return "", err;
     }
 
+    return this.PrepareSubmissionWithDir(user, submissionsDir);
+}
+
+// Prepare a place to hold the student's submission history.
+func (this *Course) PrepareSubmissionWithDir(user string, submissionsDir string) (string, error) {
     submissionID := time.Now().Unix();
     var path string;
 
     for ; ; {
-        path = filepath.Join(submissionsDir, fmt.Sprintf("%d", submissionID));
+        path = filepath.Join(submissionsDir, user, fmt.Sprintf("%d", submissionID));
         if (!util.PathExists(path)) {
             break;
         }
@@ -152,7 +156,7 @@ func (this *Course) PrepareSubmission(user string) (string, error) {
         submissionID++;
     }
 
-    err = os.MkdirAll(path, 0755);
+    err := os.MkdirAll(path, 0755);
     if (err != nil) {
         return "", fmt.Errorf("Failed to make submission directory ('%s'): '%w'.", path, err);
     }
