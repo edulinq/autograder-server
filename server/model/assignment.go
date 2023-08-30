@@ -4,7 +4,6 @@ import (
 	"fmt"
     "path/filepath"
     "strings"
-    "sync"
 
     "github.com/rs/zerolog/log"
 
@@ -12,16 +11,23 @@ import (
 )
 
 const ASSIGNMENT_CONFIG_FILENAME = "assignment.json"
-const OUTPUT_DIRNAME = "output"
-
-// TODO(eriq): Create a maintenance task that removed old, unused locks.
-var submissionLocks sync.Map;
+const GRADER_OUTPUT_RESULT_FILENAME = "result.json"
 
 type Assignment struct {
-    ID string  `json:"id"`
+    ID string `json:"id"`
     DisplayName string `json:"display-name"`
-    Files []string `json:"files"`
-    Image DockerImageConfig `json:"image"`
+
+    // TEST
+    // Image DockerImageConfig `json:"image"`
+    Image string `json:"image,omitempty"`
+    Invocation []string `json:"invocation,omitempty"`
+
+    StaticFiles []string `json:"static-files,omitempty"`
+    PreStaticFileOperations [][]string `json:"pre-static-files-ops,omitempty"`
+    PostStaticFileOperations [][]string `json:"post-static-files-ops,omitempty"`
+
+    PreSubmissionFileOperations [][]string `json:"pre-submission-files-ops,omitempty"`
+    PostSubmissionFileOperations [][]string `json:"post-submission-files-ops,omitempty"`
 
     // Ignore these fields in JSON.
     SourcePath string `json:"-"`
@@ -57,6 +63,15 @@ func LoadAssignmentConfig(path string, courseConfig *Course) (*Assignment, error
     return &config, nil;
 }
 
+func MustLoadAssignmentConfig(path string) *Assignment {
+    config, err := LoadAssignmentConfig(path, nil);
+    if (err != nil) {
+        log.Fatal().Str("path", path).Err(err).Msg("Failed to load assignment config.");
+    }
+
+    return config;
+}
+
 func (this *Assignment) FullID() string {
     return fmt.Sprintf("%s-%s", this.Course.ID, this.ID);
 }
@@ -65,6 +80,8 @@ func (this *Assignment) ImageName() string {
     return strings.ToLower(fmt.Sprintf("autograder.%s.%s", this.Course.ID, this.ID));
 }
 
+// Ensure that the assignment is formatted correctly.
+// Missing optional components will be defaulted correctly.
 func (this *Assignment) Validate() error {
     if (this.DisplayName == "") {
         this.DisplayName = this.ID;
@@ -76,6 +93,26 @@ func (this *Assignment) Validate() error {
         return err;
     }
 
+    if (this.StaticFiles == nil) {
+        this.StaticFiles = make([]string, 0);
+    }
+
+    if (this.PreStaticFileOperations == nil) {
+        this.PreStaticFileOperations = make([][]string, 0);
+    }
+
+    if (this.PostStaticFileOperations == nil) {
+        this.PostStaticFileOperations = make([][]string, 0);
+    }
+
+    if (this.PreSubmissionFileOperations == nil) {
+        this.PreSubmissionFileOperations = make([][]string, 0);
+    }
+
+    if (this.PostSubmissionFileOperations == nil) {
+        this.PostSubmissionFileOperations = make([][]string, 0);
+    }
+
     if (this.SourcePath == "") {
         return fmt.Errorf("Source path must not be empty.")
     }
@@ -84,41 +121,19 @@ func (this *Assignment) Validate() error {
         return fmt.Errorf("No course found for assignment.")
     }
 
+    if ((this.Image == "") && ((this.Invocation == nil) || (len(this.Invocation) == 0))) {
+        return fmt.Errorf("Assignment image and invocation cannot both be empty.");
+    }
+
     return nil;
 }
 
 // Ensure the assignment is ready for grading.
-func (this *Assignment) Init() error {
-    return this.BuildDockerImage();
-}
-
-func MustLoadAssignmentConfig(path string) *Assignment {
-    config, err := LoadAssignmentConfig(path, nil);
-    if (err != nil) {
-        log.Fatal().Str("path", path).Err(err).Msg("Failed to load assignment config.");
+func (this *Assignment) Init(useDocker bool) error {
+    if (useDocker) {
+        // TEST
+        // return this.BuildDockerImage();
     }
 
-    return config;
-}
-
-func (this *Assignment) Grade(submissionPath string, user string) (*GradingResult, error) {
-    lockKey := fmt.Sprintf("%s::%s::%s", this.Course.ID, this.ID, user);
-    // Get the existing mutex, or store (and fetch) a new one.
-    val, _ := submissionLocks.LoadOrStore(lockKey, &sync.Mutex{});
-
-    lock := val.(*sync.Mutex)
-
-    lock.Lock();
-    defer lock.Unlock();
-
-    // TODO(eriq): Copy the submission to the user's submission directory.
-
-    submissionDir, err := this.Course.PrepareSubmission(user);
-    if (err != nil) {
-        return nil, err;
-    }
-
-    outputDir := filepath.Join(submissionDir, OUTPUT_DIRNAME);
-
-    return this.RunGrader(submissionPath, outputDir);
+    return nil;
 }

@@ -29,10 +29,27 @@ func JSONFromFile(path string, target any) error {
 }
 
 func ToJSON(data any) (string, error) {
-    bytes, err := json.Marshal(data);
+    return ToJSONIndent(data, "", "");
+}
+
+func ToJSONIndent(data any, prefix string, indent string) (string, error) {
+    bytes, err := json.MarshalIndent(data, prefix, indent);
     if (err != nil) {
         return "", fmt.Errorf("Could not marshal object ('%v'): '%w'.", data, err);
     }
 
     return string(bytes), nil;
+}
+
+func ToJSONFile(data any, path string) error {
+    return ToJSONFileIndent(data, path, "", "");
+}
+
+func ToJSONFileIndent(data any, path string, prefix string, indent string) error {
+    text, err := ToJSONIndent(data, prefix, indent);
+    if (err != nil) {
+        return err;
+    }
+
+    return WriteFile(text, path);
 }

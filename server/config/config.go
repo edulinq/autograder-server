@@ -22,6 +22,8 @@ const (
     COURSES_ROOTDIR = "courses.rootdir"
     LOG_LEVEL = "log.level"
     WEB_PORT = "web.port"
+
+    DOCKER_DISABLE = "docker.disable"
 )
 
 //go:embed default_config.json

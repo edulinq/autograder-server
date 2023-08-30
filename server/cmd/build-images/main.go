@@ -13,8 +13,11 @@ import (
 
 var args struct {
     config.ConfigArgs
+    model.DockerBuildOptions
     Path []string `help:"Path to assignment JSON files." arg:"" optional:"" type:"existingfile"`
 }
+
+// TODO(eriq): Output information about what images were built.
 
 func main() {
     kong.Parse(&args,
@@ -26,29 +29,28 @@ func main() {
         log.Fatal().Err(err).Msg("Could not load config options.");
     }
 
+    // TEST
     if (len(args.Path) > 0) {
         buildFromPaths(args.Path);
         return;
     }
 
-    buildFromCourses();
+    buildFromCourses(&args.DockerBuildOptions);
 }
 
-func buildFromCourses() {
+func buildFromCourses(buildOptions *model.DockerBuildOptions) {
     err := grader.LoadCourses();
     if (err != nil) {
         log.Fatal().Err(err).Msg("Failed to load courses.");
     }
 
-    courses := grader.GetCourses();
-
-    for _, course := range courses {
-        for _, assignment := range course.Assignments {
-            err = assignment.BuildDockerImage();
-            if (err != nil) {
-                log.Fatal().Str("assignment", assignment.FullID()).Str("course", course.ID).Err(err).Msg("Failed to build image.");
-            }
+    errs := grader.BuildDockerImages(buildOptions);
+    if (len(errs) > 0) {
+        for _, err = range errs {
+            log.Error().Err(err).Msg("Failed to build grader docker images.");
         }
+
+        log.Fatal().Int("count", len(errs)).Msg("Failed to build course images.");
     }
 }
 

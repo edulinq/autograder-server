@@ -7,6 +7,7 @@ import (
     "time"
 
     "github.com/eriq-augustine/autograder/util"
+    "github.com/eriq-augustine/autograder/config"
 )
 
 const COURSE_CONFIG_FILENAME = "course.json"
@@ -105,7 +106,7 @@ func (this *Course) Validate() error {
 // Ensure the course is ready for grading.
 func (this *Course) Init() error {
     for _, assignment := range this.Assignments {
-        err := assignment.Init()
+        err := assignment.Init(config.GetBool(config.DOCKER_DISABLE))
         if (err != nil) {
             return err;
         }
@@ -131,6 +132,7 @@ func (this *Course) GetSubmissionsDir() (string, error) {
     return path, nil;
 }
 
+// Prepare a place to hold the student's submission history.
 func (this *Course) PrepareSubmission(user string) (string, error) {
     submissionsDir, err := this.GetSubmissionsDir();
     if (err != nil) {

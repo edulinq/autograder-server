@@ -20,7 +20,6 @@ import (
 )
 
 const DOCKER_WORK_DIR = "/autograder/work"
-const DOCKER_OUTPUT_RESULT_FILENAME = "result.json"
 
 type DockerImageConfig struct {
     ParentName string `json:"parent-image"`
@@ -29,13 +28,17 @@ type DockerImageConfig struct {
     BuildCommands []string `json:"build-commands"`
 }
 
+type DockerBuildOptions struct {
+    Rebuild bool `help:"Rebuild images ignoring caches." default:"false"`
+}
+
 func CanAccessDocker() bool {
     _, docker, err := getDockerClient();
     if (docker != nil) {
         defer docker.Close();
     }
 
-    return (err != nil);
+    return (err == nil);
 }
 
 func getDockerClient() (context.Context, *client.Client, error) {
@@ -48,7 +51,15 @@ func getDockerClient() (context.Context, *client.Client, error) {
     return ctx, docker, nil;
 }
 
-func (this *Assignment) RunGrader(submissionPath string, outputDir string) (*GradingResult, error) {
+func NewDockerBuildOptions() *DockerBuildOptions {
+    return &DockerBuildOptions{
+        Rebuild: false,
+    };
+}
+
+// TEST
+func (this *Assignment) RunDockerGrader(submissionPath string, outputDir string) (*GradedAssignment, error) {
+// func RunDockerGrader(assignment *Assignment, submissionPath string, outputDir string) (*GradedAssignment, error) {
     if (!util.PathExists(outputDir)) {
         os.MkdirAll(outputDir, 0755);
     }
@@ -62,12 +73,12 @@ func (this *Assignment) RunGrader(submissionPath string, outputDir string) (*Gra
         return nil, err;
     }
 
-    resultPath := filepath.Join(outputDir, DOCKER_OUTPUT_RESULT_FILENAME);
+    resultPath := filepath.Join(outputDir, GRADER_OUTPUT_RESULT_FILENAME);
     if (!util.PathExists(resultPath)) {
         return nil, fmt.Errorf("Cannot find output file ('%s') after grading container was run.", resultPath);
     }
 
-    var result GradingResult;
+    var result GradedAssignment;
     err = util.JSONFromFile(resultPath, &result);
     if (err != nil) {
         return nil, err;
@@ -146,6 +157,10 @@ func (this *Assignment) runGraderContainer(submissionPath string, outputDir stri
 }
 
 func (this *Assignment) BuildDockerImage() error {
+    return this.BuildDockerImageWithOptions(NewDockerBuildOptions());
+}
+
+func (this *Assignment) BuildDockerImageWithOptions(options *DockerBuildOptions) error {
     imageName := this.ImageName();
 
 	ctx, docker, err := getDockerClient();
@@ -170,6 +185,10 @@ func (this *Assignment) BuildDockerImage() error {
         Tags: []string{imageName},
         Dockerfile: "Dockerfile",
     };
+
+    if (options.Rebuild) {
+        buildOptions.NoCache = true;
+    }
 
     // Create the build context by adding all the relevant files.
     tar, err := archive.TarWithOptions(tempDir, &archive.TarOptions{});
@@ -202,7 +221,7 @@ func (this *Assignment) WriteDockerContext(dir string) error {
     // The directory containing the assignment config and base for all relative paths.
     sourceDir := filepath.Dir(this.SourcePath);
 
-    for _, relpath := range this.Image.StaticFiles {
+    for _, relpath := range this.StaticFiles {
         sourcePath := filepath.Join(sourceDir, relpath);
         destPath := filepath.Join(dir, relpath);
 
@@ -233,9 +252,9 @@ func (this *Assignment) ToDockerfile() (string, error) {
     // Note that we will insert blank lines for formatting.
     lines := make([]string, 0);
 
-    lines = append(lines, fmt.Sprintf("FROM %s", this.Image.ParentName), "")
+    lines = append(lines, fmt.Sprintf("FROM %s", this.Image), "")
 
-    for _, path := range this.Image.StaticFiles {
+    for _, path := range this.StaticFiles {
         if (filepath.IsAbs(path)) {
             return "", fmt.Errorf("All paths in an assignment config (%s) must be relative (to the assignment config file), found: '%s'.", this.SourcePath, path);
         }

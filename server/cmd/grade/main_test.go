@@ -28,16 +28,21 @@ func TestSubmissions(test *testing.T) {
 
     testsDir := filepath.Join(util.GetThisDir(), "..", "..", "..", "tests");
 
+    err := grader.LoadCoursesFromDir(testsDir);
+    if (err != nil) {
+        log.Fatal().Err(err).Msg("Could not load courses.");
+    }
+
+    err = grader.BuildDockerImagesJoinErrors(model.NewDockerBuildOptions());
+    if (err != nil) {
+        log.Fatal().Err(err).Msg("Failed to build docker images.");
+    }
+
     tempDir, err := os.MkdirTemp("", "submission-tests-");
     if (err != nil) {
         log.Fatal().Err(err).Msg("Could not create temp dir.");
     }
     defer os.RemoveAll(tempDir);
-
-    err = grader.LoadCoursesFromDir(testsDir);
-    if (err != nil) {
-        log.Fatal().Err(err).Msg("Could not load courses.");
-    }
 
     for _, course := range grader.GetCourses() {
         course.Dir = filepath.Join(tempDir, course.ID);

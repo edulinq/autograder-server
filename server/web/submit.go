@@ -12,7 +12,7 @@ import (
 
 type SubmissionRequest struct {
     model.BaseAPIRequest
-    Assignment string `json:assignment`
+    Assignment string `json:"assignment"`
 
     Dir string `json:"-"`
 }
@@ -64,7 +64,7 @@ func handleSubmit(submission *SubmissionRequest) (int, any, error) {
         return http.StatusBadRequest, fmt.Sprintf("Could not find assignment ('%s') for course ('%s').", submission.Assignment, submission.Course,), nil;
     }
 
-    result, err := assignment.Grade(submission.Dir, submission.User);
+    result, err := grader.GradeDefault(assignment, submission.Dir, submission.User);
     if (err != nil) {
         return 0, nil, err;
     }

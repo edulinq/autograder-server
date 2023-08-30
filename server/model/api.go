@@ -58,9 +58,9 @@ type APIRequest interface {
 }
 
 type BaseAPIRequest struct {
-    Course string `json:course`
-    User string `json:user`
-    Pass string `json:pass`
+    Course string `json:"course"`
+    User string `json:"user"`
+    Pass string `json:"pass"`
 }
 
 func (this *BaseAPIRequest) Clean() error {
