@@ -34,23 +34,27 @@ func NewDockerBuildOptions() *DockerBuildOptions {
     };
 }
 
-func BuildDockerImagesJoinErrors(buildOptions *DockerBuildOptions) error {
-    return errors.Join(BuildDockerImages(buildOptions)...);
+func BuildDockerImagesJoinErrors(buildOptions *DockerBuildOptions) ([]string, error) {
+    imageNames, errs := BuildDockerImages(buildOptions);
+    return imageNames, errors.Join(errs...);
 }
 
-func BuildDockerImages(buildOptions *DockerBuildOptions) []error {
+func BuildDockerImages(buildOptions *DockerBuildOptions) ([]string, []error) {
     errs := make([]error, 0);
+    imageNames := make([]string, 0);
 
     for _, course := range courses {
         for _, assignment := range course.Assignments {
             err := BuildDockerImageWithOptions(assignment, buildOptions);
             if (err != nil) {
                 errs = append(errs, fmt.Errorf("Failed to build docker grader image for assignment (%s): '%w'.", assignment.FullID(), err));
+            } else {
+                imageNames = append(imageNames, assignment.ImageName());
             }
         }
     }
 
-    return errs;
+    return imageNames, errs;
 }
 
 func BuildDockerImage(assignment *model.Assignment) error {
@@ -104,10 +108,13 @@ func BuildDockerImageWithOptions(assignment *model.Assignment, options *DockerBu
     }
     defer response.Body.Close();
 
-    _, err = io.Copy(os.Stdout, response.Body);
+    buildOutput := strings.Builder{};
+    _, err = io.Copy(&buildOutput, response.Body);
     if (err != nil) {
         return fmt.Errorf("Unable to get response body from build of '%s': '%w'.", imageName, err);
     }
+
+    log.Debug().Str("image-build-output", buildOutput.String()).Msg("Image Build Output");
 
     return nil;
 }
