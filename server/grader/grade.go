@@ -17,6 +17,8 @@ const GRADING_INPUT_DIRNAME = "input"
 const GRADING_OUTPUT_DIRNAME = "output"
 const GRADING_WORK_DIRNAME = "work"
 
+const GRADER_OUTPUT_RESULT_FILENAME = "result.json"
+
 // TODO(eriq): Create a maintenance task that removes old, unused locks.
 var submissionLocks sync.Map;
 
@@ -39,19 +41,21 @@ func GradeDefault(assignment *model.Assignment, submissionPath string, user stri
 
 // Grade with custom options.
 func Grade(assignment *model.Assignment, submissionPath string, user string, options GradeOptions) (*model.GradedAssignment, error) {
-    lockKey := fmt.Sprintf("%s::%s::%s", assignment.Course.ID, assignment.ID, user);
+    gradingKey := fmt.Sprintf("%s::%s::%s", assignment.Course.ID, assignment.ID, user);
 
     // Get the existing mutex, or store (and fetch) a new one.
-    val, _ := submissionLocks.LoadOrStore(lockKey, &sync.Mutex{});
+    val, _ := submissionLocks.LoadOrStore(gradingKey, &sync.Mutex{});
     lock := val.(*sync.Mutex)
 
     lock.Lock();
     defer lock.Unlock();
 
-    submissionDir, err := prepSubmissionDir(assignment, user, options);
+    submissionDir, submissionID, err := prepSubmissionDir(assignment, user, options);
     if (err != nil) {
         return nil, fmt.Errorf("Failed to prepare submission dir for assignment '%s' and user '%s': '%w'.", assignment.FullID(), user, err);
     }
+
+    gradingID := fmt.Sprintf("%s::%d", gradingKey, submissionID);
 
     // Copy the submission to the user's submission directory.
     submissionCopyDir := filepath.Join(submissionDir, GRADING_INPUT_DIRNAME);
@@ -61,27 +65,29 @@ func Grade(assignment *model.Assignment, submissionPath string, user string, opt
     }
 
     outputDir := filepath.Join(submissionDir, GRADING_OUTPUT_DIRNAME);
+    os.MkdirAll(outputDir, 0755);
 
     if (options.NoDocker) {
-        return RunNoDockerGrader(assignment, submissionPath, outputDir, options);
+        return RunNoDockerGrader(assignment, submissionPath, outputDir, options, gradingID);
     }
 
-    return RunDockerGrader(assignment, submissionPath, outputDir, options);
+    return RunDockerGrader(assignment, submissionPath, outputDir, options, gradingID);
 }
 
-func prepSubmissionDir(assignment *model.Assignment, user string, options GradeOptions) (string, error) {
+func prepSubmissionDir(assignment *model.Assignment, user string, options GradeOptions) (string, int64, error) {
     var submissionDir string;
     var err error;
+    var id int64;
 
     if (options.UseFakeSubmissionsDir) {
-        tempSubmissionsDir, err := os.MkdirTemp("", "autograding-submissions-dir-");
+        tempSubmissionsDir, err := os.MkdirTemp("", "autograding-submissions-");
         if (err != nil) {
-            return "", fmt.Errorf("Could not create temp submissions dir: '%w'.", err);
+            return "", 0, fmt.Errorf("Could not create temp submissions dir: '%w'.", err);
         }
 
-        submissionDir, err = assignment.Course.PrepareSubmissionWithDir(user, tempSubmissionsDir);
+        submissionDir, id, err = assignment.Course.PrepareSubmissionWithDir(user, tempSubmissionsDir);
         if (err != nil) {
-            return "", fmt.Errorf("Failed to prepare fake submission dir: '%w'.", err);
+            return "", 0, fmt.Errorf("Failed to prepare fake submission dir: '%w'.", err);
         }
 
         if (options.LeaveTempDir) {
@@ -90,11 +96,11 @@ func prepSubmissionDir(assignment *model.Assignment, user string, options GradeO
             defer os.RemoveAll(tempSubmissionsDir);
         }
     } else {
-        submissionDir, err = assignment.Course.PrepareSubmission(user);
+        submissionDir, id, err = assignment.Course.PrepareSubmission(user);
         if (err != nil) {
-            return "", fmt.Errorf("Failed to prepare default submission dir: '%w'.", err);
+            return "", 0, fmt.Errorf("Failed to prepare default submission dir: '%w'.", err);
         }
     }
 
-    return submissionDir, nil;
+    return submissionDir, id, nil;
 }

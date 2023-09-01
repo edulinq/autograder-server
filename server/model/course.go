@@ -119,17 +119,17 @@ func (this *Course) GetSubmissionsDir() (string, error) {
     return path, nil;
 }
 
-func (this *Course) PrepareSubmission(user string) (string, error) {
+func (this *Course) PrepareSubmission(user string) (string, int64, error) {
     submissionsDir, err := this.GetSubmissionsDir();
     if (err != nil) {
-        return "", err;
+        return "", 0, err;
     }
 
     return this.PrepareSubmissionWithDir(user, submissionsDir);
 }
 
 // Prepare a place to hold the student's submission history.
-func (this *Course) PrepareSubmissionWithDir(user string, submissionsDir string) (string, error) {
+func (this *Course) PrepareSubmissionWithDir(user string, submissionsDir string) (string, int64, error) {
     submissionID := time.Now().Unix();
     var path string;
 
@@ -145,10 +145,10 @@ func (this *Course) PrepareSubmissionWithDir(user string, submissionsDir string)
 
     err := os.MkdirAll(path, 0755);
     if (err != nil) {
-        return "", fmt.Errorf("Failed to make submission directory ('%s'): '%w'.", path, err);
+        return "", 0, fmt.Errorf("Failed to make submission directory ('%s'): '%w'.", path, err);
     }
 
-    return path, nil;
+    return path, submissionID, nil;
 }
 
 // Check this directory and all parent directories for a course config file.

@@ -11,7 +11,6 @@ import (
 )
 
 const ASSIGNMENT_CONFIG_FILENAME = "assignment.json"
-const GRADER_OUTPUT_RESULT_FILENAME = "result.json"
 
 type Assignment struct {
     ID string `json:"id"`
@@ -24,12 +23,27 @@ type Assignment struct {
     PreStaticFileOperations [][]string `json:"pre-static-files-ops,omitempty"`
     PostStaticFileOperations [][]string `json:"post-static-files-ops,omitempty"`
 
-    PreSubmissionFileOperations [][]string `json:"pre-submission-files-ops,omitempty"`
     PostSubmissionFileOperations [][]string `json:"post-submission-files-ops,omitempty"`
 
     // Ignore these fields in JSON.
     SourcePath string `json:"-"`
     Course *Course `json:"-"`
+}
+
+// A subset of assignment that is passed to docker images for config.
+type DockerAssignmentConfig struct {
+    ID string `json:"id"`
+    DisplayName string `json:"display-name"`
+
+    PostSubmissionFileOperations [][]string `json:"post-submission-files-ops,omitempty"`
+}
+
+func (this *Assignment) GetDockerAssignmentConfig() *DockerAssignmentConfig {
+    return &DockerAssignmentConfig{
+        ID: this.ID,
+        DisplayName: this.DisplayName,
+        PostSubmissionFileOperations: this.PostSubmissionFileOperations,
+    };
 }
 
 // Load an assignment config from a given JSON path.
@@ -107,10 +121,6 @@ func (this *Assignment) Validate() error {
 
     if (this.PostStaticFileOperations == nil) {
         this.PostStaticFileOperations = make([][]string, 0);
-    }
-
-    if (this.PreSubmissionFileOperations == nil) {
-        this.PreSubmissionFileOperations = make([][]string, 0);
     }
 
     if (this.PostSubmissionFileOperations == nil) {

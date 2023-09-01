@@ -18,9 +18,12 @@ import (
     "github.com/eriq-augustine/autograder/util"
 )
 
+const DOCKER_CONFIG_FILENAME = "config.json"
+
 const DOCKER_INPUT_DIR = "/autograder/input"
 const DOCKER_OUTPUT_DIR = "/autograder/output"
 const DOCKER_WORK_DIR = "/autograder/work"
+const DOCKER_CONFIG_PATH = "/autograder/" + DOCKER_CONFIG_FILENAME
 
 type DockerBuildOptions struct {
     Rebuild bool `help:"Rebuild images ignoring caches." default:"false"`
@@ -136,6 +139,12 @@ func writeDockerContext(assignment *model.Assignment, dir string) error {
         return fmt.Errorf("Failed to copy static assignment files: '%w'.", err);
     }
 
+    dockerConfigPath := filepath.Join(dir, DOCKER_CONFIG_FILENAME);
+    err = util.ToJSONFile(assignment.GetDockerAssignmentConfig(), dockerConfigPath);
+    if (err != nil) {
+        return fmt.Errorf("Failed to create docker config file: '%w'.", err);
+    }
+
     dockerfilePath := filepath.Join(dir, "Dockerfile");
     err = writeDockerfile(assignment, workDir, dockerfilePath)
     if (err != nil) {
@@ -170,6 +179,9 @@ func toDockerfile(assignment *model.Assignment, workDir string) (string, error) 
         lines = append(lines, fmt.Sprintf("RUN mkdir -p '%s'", dir));
     }
     lines = append(lines, "");
+
+    // Copy over the config file.
+    lines = append(lines, fmt.Sprintf("COPY %s %s", DOCKER_CONFIG_FILENAME, DOCKER_CONFIG_PATH), "");
 
     // Copy over all the contents of the work directory (this is after post-static file ops).
     dirents, err := os.ReadDir(workDir);

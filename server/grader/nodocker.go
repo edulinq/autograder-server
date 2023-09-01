@@ -16,7 +16,7 @@ import (
 const PYTHON_AUTOGRADER_INVOCATION = "python3 -m autograder.cli.grade-submission --grader <grader> --inputdir <inputdir> --outputdir <outputdir> --workdir <workdir> --outpath <outpath>"
 const PYTHON_GRADER_FILENAME = "grader.py"
 
-func RunNoDockerGrader(assignment *model.Assignment, submissionPath string, outputDir string, options GradeOptions) (*model.GradedAssignment, error) {
+func RunNoDockerGrader(assignment *model.Assignment, submissionPath string, outputDir string, options GradeOptions, gradingID string) (*model.GradedAssignment, error) {
     tempDir, inputDir, _, workDir, err := prepTempGradingDir();
     if (err != nil) {
         return nil, err;
@@ -42,7 +42,7 @@ func RunNoDockerGrader(assignment *model.Assignment, submissionPath string, outp
 
     // Copy over the submission files (and do any file ops).
     err = copyAssignmentFiles(submissionPath, inputDir, tempDir,
-            []string{"."}, true, assignment.PreSubmissionFileOperations, assignment.PostSubmissionFileOperations);
+            []string{"."}, true, [][]string{}, assignment.PostSubmissionFileOperations);
     if (err != nil) {
         return nil, fmt.Errorf("Failed to copy submission ssignment files: '%w'.", err);
     }
@@ -53,7 +53,7 @@ func RunNoDockerGrader(assignment *model.Assignment, submissionPath string, outp
         return nil, fmt.Errorf("Failed to run non-docker grader for assignment '%s': '%w'.", assignment.FullID(), err);
     }
 
-    resultPath := filepath.Join(outputDir, model.GRADER_OUTPUT_RESULT_FILENAME);
+    resultPath := filepath.Join(outputDir, GRADER_OUTPUT_RESULT_FILENAME);
     if (!util.PathExists(resultPath)) {
         return nil, fmt.Errorf("Cannot find output file ('%s') after non-docker grading.", resultPath);
     }
@@ -95,7 +95,7 @@ func getAssignmentInvocation(assignment *model.Assignment, inputDir string, outp
         } else if (value == "<workdir>") {
             value = workDir;
         } else if (value == "<outpath>") {
-            value = filepath.Join(outputDir, model.GRADER_OUTPUT_RESULT_FILENAME);
+            value = filepath.Join(outputDir, GRADER_OUTPUT_RESULT_FILENAME);
         }
 
         cleanCommand = append(cleanCommand, value);
