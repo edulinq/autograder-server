@@ -3,6 +3,7 @@ package grader
 // Handle building docker images for grading.
 
 import (
+    "bufio"
     "errors"
     "fmt"
     "io"
@@ -20,10 +21,11 @@ import (
 
 const DOCKER_CONFIG_FILENAME = "config.json"
 
-const DOCKER_INPUT_DIR = "/autograder/input"
-const DOCKER_OUTPUT_DIR = "/autograder/output"
-const DOCKER_WORK_DIR = "/autograder/work"
-const DOCKER_CONFIG_PATH = "/autograder/" + DOCKER_CONFIG_FILENAME
+const DOCKER_BASE_DIR = "/autograder"
+const DOCKER_INPUT_DIR = DOCKER_BASE_DIR + "/input"
+const DOCKER_OUTPUT_DIR = DOCKER_BASE_DIR + "/output"
+const DOCKER_WORK_DIR = DOCKER_BASE_DIR + "/work"
+const DOCKER_CONFIG_PATH = DOCKER_BASE_DIR + "/" + DOCKER_CONFIG_FILENAME
 
 type DockerBuildOptions struct {
     Rebuild bool `help:"Rebuild images ignoring caches." default:"false"`
@@ -65,17 +67,9 @@ func BuildDockerImage(assignment *model.Assignment) error {
 }
 
 func BuildDockerImageWithOptions(assignment *model.Assignment, options *DockerBuildOptions) error {
-    imageName := assignment.ImageName();
-
-	ctx, docker, err := getDockerClient();
+    tempDir, err := os.MkdirTemp("", "autograder-docker-build-" + assignment.ImageName() + "-");
     if (err != nil) {
-        return err;
-    }
-	defer docker.Close()
-
-    tempDir, err := os.MkdirTemp("", "autograder-docker-build-" + imageName + "-");
-    if (err != nil) {
-        return fmt.Errorf("Failed to create temp build directory for '%s': '%w'.", imageName, err);
+        return fmt.Errorf("Failed to create temp build directory for '%s': '%w'.", assignment.ImageName(), err);
     }
 
     if (options.Debug) {
@@ -91,7 +85,7 @@ func BuildDockerImageWithOptions(assignment *model.Assignment, options *DockerBu
 
     // TODO(eriq): Version
     buildOptions := types.ImageBuildOptions{
-        Tags: []string{imageName},
+        Tags: []string{assignment.ImageName()},
         Dockerfile: "Dockerfile",
     };
 
@@ -102,22 +96,68 @@ func BuildDockerImageWithOptions(assignment *model.Assignment, options *DockerBu
     // Create the build context by adding all the relevant files.
     tar, err := archive.TarWithOptions(tempDir, &archive.TarOptions{});
     if (err != nil) {
-        return fmt.Errorf("Failed to create tar build context for image '%s': '%w'.", imageName, err);
+        return fmt.Errorf("Failed to create tar build context for image '%s': '%w'.", assignment.ImageName(), err);
     }
+
+    return buildDockerImage(buildOptions, tar);
+}
+
+func buildDockerImage(buildOptions types.ImageBuildOptions, tar io.ReadCloser) error {
+	ctx, docker, err := getDockerClient();
+    if (err != nil) {
+        return err;
+    }
+	defer docker.Close()
 
     response, err := docker.ImageBuild(ctx, tar, buildOptions);
     if (err != nil) {
-        return fmt.Errorf("Failed to build assignment image ('%s'): '%w'.", imageName, err);
+        return fmt.Errorf("Failed to run docker image build command: '%w'.", err);
     }
     defer response.Body.Close();
 
-    buildOutput := strings.Builder{};
-    _, err = io.Copy(&buildOutput, response.Body);
-    if (err != nil) {
-        return fmt.Errorf("Unable to get response body from build of '%s': '%w'.", imageName, err);
+    buildStringOutput := strings.Builder{};
+
+    responseScanner := bufio.NewScanner(response.Body);
+    for responseScanner.Scan() {
+        line := responseScanner.Text();
+
+        line = strings.TrimSpace(line);
+        if (line == "") {
+            continue;
+        }
+
+        jsonData, err := util.JSONMapFromString(line);
+        if (err != nil) {
+            return fmt.Errorf("Docker build output line is not JSON ('%s'): '%w'.", line, err);
+        }
+
+        rawText, ok := jsonData["error"];
+        if (ok) {
+            text, ok := rawText.(string);
+            if (!ok) {
+                text = "<ERROR: Docker output JSON value is not a string.>";
+            }
+
+            return fmt.Errorf("Docker image build failed with message: '%s'.", text);
+        }
+
+        rawText, ok = jsonData["stream"];
+        if (ok) {
+            text, ok := rawText.(string);
+            if (!ok) {
+                text = "<ERROR: Docker output JSON value is not a string.>";
+            }
+
+            buildStringOutput.WriteString(text);
+        }
     }
 
-    log.Debug().Str("image-build-output", buildOutput.String()).Msg("Image Build Output");
+    err = responseScanner.Err();
+    if (err != nil) {
+        return fmt.Errorf("Failed to scan docker image build responseL '%w'.", err);
+    }
+
+    log.Debug().Str("image-build-output", buildStringOutput.String()).Msg("Image Build Output");
 
     return nil;
 }
@@ -175,13 +215,22 @@ func toDockerfile(assignment *model.Assignment, workDir string) (string, error) 
     lines = append(lines, fmt.Sprintf("FROM %s", assignment.Image), "")
 
     // Ensure standard directories are created.
-    for _, dir := range []string{DOCKER_INPUT_DIR, DOCKER_OUTPUT_DIR, DOCKER_WORK_DIR} {
+    lines = append(lines, "# Core directories");
+    for _, dir := range []string{DOCKER_BASE_DIR, DOCKER_INPUT_DIR, DOCKER_OUTPUT_DIR, DOCKER_WORK_DIR} {
         lines = append(lines, fmt.Sprintf("RUN mkdir -p '%s'", dir));
     }
     lines = append(lines, "");
 
+    // Set the working directory.
+    lines = append(lines, fmt.Sprintf("WORKDIR %s", DOCKER_BASE_DIR), "")
+
     // Copy over the config file.
     lines = append(lines, fmt.Sprintf("COPY %s %s", DOCKER_CONFIG_FILENAME, DOCKER_CONFIG_PATH), "");
+
+    // Append pre-static docker commands.
+    lines = append(lines, "# Pre-Static Assignment Commands");
+    lines = append(lines, assignment.PreStaticDockerCommands...);
+    lines = append(lines, "");
 
     // Copy over all the contents of the work directory (this is after post-static file ops).
     dirents, err := os.ReadDir(workDir);
@@ -189,12 +238,19 @@ func toDockerfile(assignment *model.Assignment, workDir string) (string, error) 
         return "", fmt.Errorf("Failed to list work dir ('%s') for static files: '%w'.", workDir, err);
     }
 
+    lines = append(lines, "# Static Files");
     for _, dirent := range dirents {
         sourcePath := util.DockerfilePathQuote(filepath.Join(GRADING_WORK_DIRNAME, dirent.Name()));
         destPath := util.DockerfilePathQuote(filepath.Join(DOCKER_WORK_DIR, dirent.Name()));
 
         lines = append(lines, fmt.Sprintf("COPY %s %s", sourcePath, destPath));
     }
+    lines = append(lines, "");
+
+    // Append post-static docker commands.
+    lines = append(lines, "# Post-Static Assignment Commands");
+    lines = append(lines, assignment.PostStaticDockerCommands...);
+    lines = append(lines, "");
 
     return strings.Join(lines, "\n"), nil;
 }

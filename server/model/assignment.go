@@ -17,6 +17,9 @@ type Assignment struct {
     DisplayName string `json:"display-name"`
 
     Image string `json:"image,omitempty"`
+    PreStaticDockerCommands []string `json:"pre-static-docker-commands,omitempty"`
+    PostStaticDockerCommands []string `json:"post-static-docker-commands,omitempty"`
+
     Invocation []string `json:"invocation,omitempty"`
 
     StaticFiles []string `json:"static-files,omitempty"`
@@ -103,6 +106,14 @@ func (this *Assignment) Validate() error {
     this.ID, err = ValidateID(this.ID);
     if (err != nil) {
         return err;
+    }
+
+    if (this.PreStaticDockerCommands == nil) {
+        this.PreStaticDockerCommands = make([]string, 0);
+    }
+
+    if (this.PostStaticDockerCommands == nil) {
+        this.PostStaticDockerCommands = make([]string, 0);
     }
 
     if (this.StaticFiles == nil) {

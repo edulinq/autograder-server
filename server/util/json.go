@@ -28,6 +28,26 @@ func JSONFromFile(path string, target any) error {
     return nil;
 }
 
+func JSONFromString(data string, target any) error {
+    err := json.Unmarshal([]byte(data), target);
+    if (err != nil) {
+        return fmt.Errorf("Could not unmarshal JSON string (%s): '%w'.", data, err);
+    }
+
+    return nil;
+}
+
+func JSONMapFromString(data string) (map[string]any, error) {
+    target := make(map[string]any);
+
+    err := json.Unmarshal([]byte(data), &target);
+    if (err != nil) {
+        return nil, fmt.Errorf("Could not unmarshal JSON map from string(%s): '%w'.", data, err);
+    }
+
+    return target, nil;
+}
+
 func ToJSON(data any) (string, error) {
     return ToJSONIndent(data, "", "");
 }
