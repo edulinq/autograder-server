@@ -5,6 +5,7 @@ go 1.20
 require (
 	github.com/alecthomas/kong v0.8.0
 	github.com/docker/docker v24.0.4+incompatible
+	github.com/google/uuid v1.3.0
 	github.com/rs/zerolog v1.29.1
 )
 

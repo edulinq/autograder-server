@@ -7,6 +7,7 @@ import (
     "path/filepath"
     "os"
     "runtime"
+    "strings"
 
     "github.com/rs/zerolog/log"
 )
@@ -113,4 +114,38 @@ func GetThisDir() string {
     }
 
     return filepath.Dir(path);
+}
+
+// Check this directory and all parent directories for a file with a specific name.
+// If nothing is found, an empty string will be returned.
+func SearchParents(basepath string, name string) string {
+    basepath = MustAbs(basepath);
+
+    for ; ; {
+        targetPath := filepath.Join(basepath, name);
+
+        if (!PathExists(targetPath)) {
+            // Move up to the parent.
+            oldBasepath := basepath;
+            basepath = filepath.Dir(basepath);
+
+            if (oldBasepath == basepath) {
+                break;
+            }
+
+            continue;
+        }
+
+        return targetPath;
+    }
+
+    return "";
+}
+
+// This method is not robust (in many ways) and should be generally avoided in non-testing code.
+func PathHasParent(child string, parent string) bool {
+    child = MustAbs(child);
+    parent = MustAbs(parent);
+
+    return strings.HasPrefix(child, parent);
 }

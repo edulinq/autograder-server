@@ -153,25 +153,10 @@ func (this *Course) PrepareSubmissionWithDir(user string, submissionsDir string)
 
 // Check this directory and all parent directories for a course config file.
 func loadParentCourseConfig(basepath string) (*Course, error) {
-    basepath = util.MustAbs(basepath);
-
-    for ; ; {
-        configPath := filepath.Join(basepath, COURSE_CONFIG_FILENAME);
-
-        if (!util.PathExists(configPath)) {
-            // Move up to the parent.
-            oldBasepath := basepath;
-            basepath = filepath.Dir(basepath);
-
-            if (oldBasepath == basepath) {
-                break;
-            }
-
-            continue;
-        }
-
-        return LoadCourseConfig(configPath);
+    configPath := util.SearchParents(basepath, COURSE_CONFIG_FILENAME);
+    if (configPath == "") {
+        return nil, fmt.Errorf("Could not locate course config.");
     }
 
-    return nil, fmt.Errorf("Could not locate course config.");
+    return LoadCourseConfig(configPath);
 }

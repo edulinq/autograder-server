@@ -76,7 +76,7 @@ func runGraderContainer(assignment *model.Assignment, inputDir string, outputDir
     inputDir = util.MustAbs(inputDir);
     outputDir = util.MustAbs(outputDir);
 
-    name := cleanContainerName(gradingID);
+    name := cleanContainerName(fmt.Sprintf("%s-%s", gradingID, util.UUID()));
 
 	resp, err := docker.ContainerCreate(
         ctx,
@@ -86,6 +86,7 @@ func runGraderContainer(assignment *model.Assignment, inputDir string, outputDir
             NetworkDisabled: true,
         },
         &container.HostConfig{
+            AutoRemove: true,
             Mounts: []mount.Mount{
                 mount.Mount{
                     Type: "bind",

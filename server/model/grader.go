@@ -2,7 +2,6 @@ package model
 
 import (
     "fmt"
-    "reflect"
     "strings"
     "time"
 
@@ -25,23 +24,37 @@ type GradedQuestion struct {
     GradingEndTime time.Time `json:"grading_end_time"`
 }
 
-func (this *GradedAssignment) String() string {
+func (this GradedAssignment) String() string {
     return util.BaseString(this);
 }
 
-func (this *GradedAssignment) Equals(other *GradedAssignment) bool {
-    if (other == nil) {
+func (this GradedAssignment) Equals(other GradedAssignment, checkMessages bool) bool {
+    if (this.Name != other.Name) {
         return false;
     }
 
-    if (this == other) {
+    if ((this.Questions == nil) && (other.Questions == nil)) {
         return true;
     }
 
-    return (this.Name == other.Name) && (reflect.DeepEqual(this.Questions, other.Questions));
+    if ((this.Questions == nil) || (other.Questions == nil)) {
+        return false;
+    }
+
+    if (len(this.Questions) != len(other.Questions)) {
+        return false;
+    }
+
+    for i := 0; i < len(this.Questions); i++ {
+        if (!this.Questions[i].Equals(other.Questions[i], checkMessages)) {
+            return false;
+        }
+    }
+
+    return true;
 }
 
-func (this *GradedAssignment) Report() string {
+func (this GradedAssignment) Report() string {
     var builder strings.Builder;
 
     builder.WriteString(fmt.Sprintf("Autograder transcript for assignment: %s.\n", this.Name));
@@ -63,7 +76,7 @@ func (this *GradedAssignment) Report() string {
     return builder.String();
 }
 
-func (this *GradedQuestion) Report() string {
+func (this GradedQuestion) Report() string {
     var builder strings.Builder;
 
     builder.WriteString(fmt.Sprintf("%s: %f / %f\n", this.Name, this.Score, this.MaxPoints));
@@ -75,4 +88,16 @@ func (this *GradedQuestion) Report() string {
     }
 
     return builder.String();
+}
+
+func (this GradedQuestion) Equals(other GradedQuestion, checkMessages bool) bool {
+    if ((this.Name != other.Name) || (this.MaxPoints != other.MaxPoints) || (this.Score != other.Score)) {
+        return false;
+    }
+
+    if (checkMessages && (this.Message != other.Message)) {
+        return false;
+    }
+
+    return true;
 }
