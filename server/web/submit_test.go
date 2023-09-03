@@ -6,5 +6,4 @@ import (
 
 // TEST
 func TestSubmissionTable(test *testing.T) {
-    // TEST
 }

@@ -14,14 +14,26 @@ import (
 )
 
 const API_REQUEST_CONTENT_KEY = "content";
-const API_REQUEST_FILES_KEY = "files";
 const MAX_FORM_MEM_SIZE_BYTES = 10 << 20  // 20 MB
 
 type APIResponse struct {
-    Success bool
-    HTTPStatus int
-    Timestamp time.Time
-    Content any
+    Success bool `json:"success"`
+    HTTPStatus int `json:"status"`
+    Timestamp time.Time `json:"timestamp"`
+    Content any `json:"content"`
+}
+
+type APIRequest interface {
+    io.Closer
+
+    // Called after desieralization to clean/normalize.
+    Clean() error
+}
+
+type BaseAPIRequest struct {
+    Course string `json:"course"`
+    User string `json:"user"`
+    Pass string `json:"pass"`
 }
 
 func NewResponse(status int, content any) *APIResponse {
@@ -48,19 +60,6 @@ func (this *APIResponse) Send(response http.ResponseWriter) error {
     }
 
     return nil;
-}
-
-type APIRequest interface {
-    io.Closer
-
-    // Called after desieralization to clean/normalize.
-    Clean() error
-}
-
-type BaseAPIRequest struct {
-    Course string `json:"course"`
-    User string `json:"user"`
-    Pass string `json:"pass"`
 }
 
 func (this *BaseAPIRequest) Clean() error {
@@ -103,8 +102,7 @@ func APIRequestFromHTTP(apiRequest APIRequest, request *http.Request) error {
 // Pull files off the HTTP request and store them in a temp directory.
 // On success, the caller owns the temp directory.
 func StoreRequestFiles(request *http.Request) (string, error) {
-    _, present := request.MultipartForm.File[API_REQUEST_FILES_KEY];
-    if (!present) {
+    if (len(request.MultipartForm.File) == 0) {
         return "", nil;
     }
 
@@ -115,35 +113,10 @@ func StoreRequestFiles(request *http.Request) (string, error) {
 
     // Use an inner function to help control the removal of the temp dir on error.
     innerFunc := func() error {
-        inFile, header, err := request.FormFile(API_REQUEST_FILES_KEY);
-        if (err != nil) {
-            return fmt.Errorf("Failed to access request file: '%w'.", err);
-        }
-        defer inFile.Close();
-
-        outPath := filepath.Join(tempDir, header.Filename);
-        outFile, err := os.Create(outPath);
-        if (err != nil) {
-            return fmt.Errorf("Failed to create output file: '%w'.", err);
-        }
-        defer outFile.Close();
-
-        // TODO(eriq): Check size limits (server -> course -> assignment).
-
-        _, err = io.Copy(outFile, inFile);
-        if (err != nil) {
-            return fmt.Errorf("Failed to copy contents of request file: '%w'.", err);
-        }
-
-        if (strings.HasSuffix(outPath, ".zip")) {
-            err = util.Unzip(outPath, tempDir);
+        for filename, _ := range request.MultipartForm.File {
+            err = storeRequestFile(request, tempDir, filename);
             if (err != nil) {
-                return fmt.Errorf("Failed to extract zip archive ('%s'): '%w'.", outPath, err);
-            }
-
-            os.Remove(outPath);
-            if (err != nil) {
-                return fmt.Errorf("Failed to remove extracted zip archive ('%s'): '%w'.", outPath, err);
+                return err;
             }
         }
 
@@ -157,4 +130,41 @@ func StoreRequestFiles(request *http.Request) (string, error) {
     }
 
     return tempDir, nil;
+}
+
+func storeRequestFile(request *http.Request, outDir string, filename string) error {
+    inFile, _, err := request.FormFile(filename);
+    if (err != nil) {
+        return fmt.Errorf("Failed to access request file '%s': '%w'.", filename, err);
+    }
+    defer inFile.Close();
+
+    outPath := filepath.Join(outDir, filename);
+
+    outFile, err := os.Create(outPath);
+    if (err != nil) {
+        return fmt.Errorf("Failed to create output file '%s': '%w'.", outPath, err);
+    }
+    defer outFile.Close();
+
+    // TODO(eriq): Check size limits (server -> course -> assignment).
+
+    _, err = io.Copy(outFile, inFile);
+    if (err != nil) {
+        return fmt.Errorf("Failed to copy contents of request file '%s': '%w'.", filename, err);
+    }
+
+    if (strings.HasSuffix(outPath, ".zip")) {
+        err = util.Unzip(outPath, outDir);
+        if (err != nil) {
+            return fmt.Errorf("Failed to extract zip archive ('%s'): '%w'.", outPath, err);
+        }
+
+        os.Remove(outPath);
+        if (err != nil) {
+            return fmt.Errorf("Failed to remove extracted zip archive ('%s'): '%w'.", outPath, err);
+        }
+    }
+
+    return nil;
 }
