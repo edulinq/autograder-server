@@ -75,3 +75,17 @@ func GetAssignment(courseID string, assignmentID string) *model.Assignment {
 
     return assignment;
 }
+
+func VerifyCourseAssignment(courseID string, assignmentID string) (*model.Course, *model.Assignment, error) {
+    course := GetCourse(courseID);
+    if (course == nil) {
+        return nil, nil, fmt.Errorf("Unknown course: '%s'.", courseID);
+    }
+
+    assignment := GetAssignment(courseID, assignmentID);
+    if (assignment == nil) {
+        return nil, nil, fmt.Errorf("Unknown assignment: '%s'.", assignmentID);
+    }
+
+    return course, assignment, nil;
+}

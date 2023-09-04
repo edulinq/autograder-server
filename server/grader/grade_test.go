@@ -12,7 +12,7 @@ import (
 )
 
 const ENV_TESTS_DIR = "AUTOGRADER__TEST__TESTS_DIR";
-const BASE_TEST_USERNAME = "test_user";
+const BASE_TEST_USER = "test_user@test.com";
 
 func TestDockerSubmissions(test *testing.T) {
     if (!CanAccessDocker()) {
@@ -66,7 +66,7 @@ func runSubmissionTests(test *testing.T, parallel bool, docker bool) {
 
     for i, testSubmissionPath := range testSubmissionPaths {
         testID := strings.TrimPrefix(testSubmissionPath, testsDir);
-        username := fmt.Sprintf("%s_%03d", BASE_TEST_USERNAME, i);
+        user := fmt.Sprintf("%03d_%s", i, BASE_TEST_USER);
 
         ok := test.Run(testID, func(test *testing.T) {
             if (parallel) {
@@ -84,7 +84,7 @@ func runSubmissionTests(test *testing.T, parallel bool, docker bool) {
                 test.Fatalf("Could not find assignment for test submission '%s'.", testSubmissionPath);
             }
 
-            result, err := Grade(assignment, filepath.Dir(testSubmissionPath), username, gradeOptions);
+            result, err := Grade(assignment, filepath.Dir(testSubmissionPath), user, gradeOptions);
             if (err != nil) {
                 test.Fatalf("Failed to grade assignment: '%v'.", err);
             }

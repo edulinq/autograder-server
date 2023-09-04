@@ -10,6 +10,7 @@ import (
 )
 
 const COURSE_CONFIG_FILENAME = "course.json"
+const DEFAULT_USERS_FILENAME = "users.json"
 
 type Course struct {
     // Required fields.
@@ -159,4 +160,31 @@ func loadParentCourseConfig(basepath string) (*Course, error) {
     }
 
     return LoadCourseConfig(configPath);
+}
+
+func (this *Course) GetUsers() ([]User, error) {
+    path := filepath.Join(filepath.Dir(this.SourcePath), DEFAULT_USERS_FILENAME);
+
+    var users []User;
+    err := util.JSONFromFile(path, &users);
+    if (err != nil) {
+        return nil, fmt.Errorf("Faile to deserialize users file '%s': '%w'.", path, err);
+    }
+
+    return users, nil;
+}
+
+func (this *Course) GetUser(email string) (*User, error) {
+    users, err := this.GetUsers();
+    if (err != nil) {
+        return nil, err;
+    }
+
+    for _, user := range users {
+        if (user.Email == email) {
+            return &user, nil;
+        }
+    }
+
+    return nil, fmt.Errorf("Could not find user '%s' in course '%s'.", email, this.ID);
 }

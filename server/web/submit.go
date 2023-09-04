@@ -23,13 +23,17 @@ func (this *SubmissionRequest) String() string {
 
 func NewSubmissionRequest(request *http.Request) (*SubmissionRequest, *model.APIResponse, error) {
     var apiRequest SubmissionRequest;
-
     err := model.APIRequestFromHTTP(&apiRequest, request);
     if (err != nil) {
         return nil, nil, err;
     }
 
-    ok, err := grader.AuthAPIRequest(&apiRequest.BaseAPIRequest);
+    course, _, err := grader.VerifyCourseAssignment(apiRequest.Course, apiRequest.Assignment);
+    if (err != nil) {
+        return nil, nil, err;
+    }
+
+    ok, err := AuthAPIRequest(&apiRequest.BaseAPIRequest, course);
     if (err != nil) {
         return nil, nil, err;
     } else if (!ok) {

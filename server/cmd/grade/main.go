@@ -17,7 +17,7 @@ var args struct {
     Assignment string `help:"Path to assignment JSON files." required:"" type:"existingfile"`
     Submission string `help:"Path to submission directory." required:"" type:"existingdir"`
     OutPath string `help:"Option path to output a JSON grading result." type:"path"`
-    User string `help:"Username for the submission." default:"testuser"`
+    User string `help:"User email for the submission." default:"testuser"`
     NoStore bool `help:"Do not store the grading result into the user's submission directory." default:"false"`
     Debug bool `help:"Leave some debug artifacts like the grading sirectory." default:"false"`
 }
