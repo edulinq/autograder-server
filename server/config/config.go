@@ -4,7 +4,6 @@ package config;
 // (even if the key exists, but is of the wrong type).
 
 import (
-    _ "embed"
     "encoding/json"
     "fmt"
     "io"
@@ -17,31 +16,14 @@ import (
     "github.com/rs/zerolog/log"
 )
 
-// Keys in the default config.
-const (
-    COURSES_ROOTDIR = "courses.rootdir"
-    LOG_LEVEL = "log.level"
-    WEB_PORT = "web.port"
-
-    DOCKER_DISABLE = "docker.disable"
-)
-
-//go:embed default_config.json
-var DEFAULT_CONFIG string;
-
-var options map[string]any = make(map[string]any);
+var configValues map[string]any = make(map[string]any);
 
 func init() {
-    err := LoadString(DEFAULT_CONFIG);
-    if (err != nil) {
-        log.Fatal().Err(err).Msg("Failed to load the default config.");
-    }
-
     InitLogging();
 }
 
 func InitLogging() {
-    var rawLogLevel = GetString(LOG_LEVEL);
+    var rawLogLevel = LOG_LEVEL.GetString();
     level, err := zerolog.ParseLevel(rawLogLevel);
     if (err != nil) {
         log.Fatal().Err(err).Str("level", rawLogLevel).Msg("Failed to parse the logging level.");
@@ -99,27 +81,27 @@ func LoadReader(reader io.Reader) error {
             }
         }
 
-        options[key] = value;
+        configValues[key] = value;
     }
 
     return nil;
 }
 
 func Reset() {
-    options = make(map[string]any);
+    configValues = make(map[string]any);
 }
 
 func Has(key string) bool {
-    _, present := options[key];
+    _, present := configValues[key];
     return present;
 }
 
 func Set(key string, value any) {
-    options[key] = value;
+    configValues[key] = value;
 }
 
 func Get(key string) any {
-    value, present := options[key];
+    value, present := configValues[key];
     if (!present) {
         log.Fatal().Str("key", key).Msg("Config key does not exist.");
     }
@@ -128,7 +110,7 @@ func Get(key string) any {
 }
 
 func GetDefault(key string, defaultValue any) any {
-    value, exists := options[key];
+    value, exists := configValues[key];
     if (exists) {
         return value;
     }

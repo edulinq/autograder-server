@@ -18,7 +18,7 @@ func GetCourses() map[string]*model.Course {
 
 // Discover all courses (from the config) and load all the associated courses and assignments.
 func LoadCourses() error {
-    return LoadCoursesFromDir(config.GetString(config.COURSES_ROOTDIR));
+    return LoadCoursesFromDir(config.COURSES_ROOT.GetString());
 }
 
 func LoadCoursesFromDir(baseDir string) error {

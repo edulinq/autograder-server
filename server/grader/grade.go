@@ -30,7 +30,7 @@ type GradeOptions struct {
 
 func GetDefaultGradeOptions() GradeOptions {
     return GradeOptions{
-        NoDocker: config.GetBool(config.DOCKER_DISABLE),
+        NoDocker: config.DOCKER_DISABLE.GetBool(),
     };
 }
 
