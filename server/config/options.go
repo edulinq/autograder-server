@@ -1,8 +1,5 @@
 package config
 
-import (
-)
-
 var (
     LOG_LEVEL = newOption("log.level", "INFO", "The default logging level.");
     WEB_PORT = newOption("web.port", 8080, "The port for the web interface to serve on.");

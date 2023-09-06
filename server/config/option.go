@@ -1,7 +1,12 @@
 package config
 
 import (
+    "slices"
+    "strings"
+
     "github.com/rs/zerolog/log"
+
+    "github.com/eriq-augustine/autograder/util"
 )
 
 var seenOptions = make(map[string]*Option);
@@ -47,4 +52,18 @@ func (this *Option) GetInt() int {
 
 func (this *Option) GetBool() bool {
     return GetBoolDefault(this.Key, this.DefaultValue.(bool));
+}
+
+func OptionsToJSON() (string, error) {
+    options := make([]*Option, 0, len(seenOptions));
+
+    for _, option := range seenOptions {
+        options = append(options, option);
+    }
+
+    slices.SortFunc(options, func(a *Option, b *Option) int {
+        return strings.Compare(a.Key, b.Key);
+    });
+
+    return util.ToJSONIndent(options, "", "    ");
 }
