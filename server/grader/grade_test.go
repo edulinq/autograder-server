@@ -7,11 +7,11 @@ import (
     "strings"
     "testing"
 
+    "github.com/eriq-augustine/autograder/config"
     "github.com/eriq-augustine/autograder/model"
     "github.com/eriq-augustine/autograder/util"
 )
 
-const ENV_TESTS_DIR = "AUTOGRADER__TEST__TESTS_DIR";
 const BASE_TEST_USER = "test_user@test.com";
 
 func TestDockerSubmissions(test *testing.T) {
@@ -27,9 +27,13 @@ func TestNoDockerSubmissions(test *testing.T) {
 }
 
 func runSubmissionTests(test *testing.T, parallel bool, docker bool) {
-    testsDir := os.Getenv(ENV_TESTS_DIR);
+    testsDir := config.TESTS_DIR.GetString();
     if (testsDir == "") {
-        test.Fatalf("No tests dir set (env variable '%s').", ENV_TESTS_DIR);
+        test.Fatalf("No tests dir set ('%s').", config.TESTS_DIR.Key);
+    }
+
+    if (!filepath.IsAbs(testsDir)) {
+        testsDir = util.MustAbs(filepath.Join(util.RootDirForTesting(), testsDir));
     }
 
     err := LoadCoursesFromDir(testsDir);

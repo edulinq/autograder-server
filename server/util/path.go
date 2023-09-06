@@ -149,3 +149,10 @@ func PathHasParent(child string, parent string) bool {
 
     return strings.HasPrefix(child, parent);
 }
+
+// Get the root directory of this project.
+// This is decently fragile and can easily break in a deployment/production setting.
+// Should only be used for testing purposes.
+func RootDirForTesting() string {
+    return MustAbs(filepath.Join(MustAbs(GetThisDir()), ".."));
+}

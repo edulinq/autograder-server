@@ -14,11 +14,21 @@ import (
 
     "github.com/rs/zerolog"
     "github.com/rs/zerolog/log"
+
+    "github.com/eriq-augustine/autograder/util"
 )
+
+const ENV_PREFIX = "AUTOGRADER__";
+const ENV_DOT_REPLACEMENT = "__";
 
 var configValues map[string]any = make(map[string]any);
 
+func ToJSON() (string, error) {
+    return util.ToJSONIndent(configValues, "", "    ");
+}
+
 func init() {
+    LoadEnv();
     InitLogging();
 }
 
@@ -85,6 +95,29 @@ func LoadReader(reader io.Reader) error {
     }
 
     return nil;
+}
+
+// Load any config options from environmental variables.
+// Config keys must start with ENV_PREFIX.
+// Keys will them be trainsformed by
+// removing the leading ENV_PREFIX, replacing ENV_DOT_REPLACEMENT with '.', and lowercasing.
+func LoadEnv() {
+    for _, envValue := range(os.Environ()) {
+        if (!strings.HasPrefix(envValue, ENV_PREFIX)) {
+            continue;
+        }
+
+        parts := strings.SplitN(envValue, "=", 2);
+
+        key := parts[0];
+        value := parts[1];
+
+        key = strings.TrimPrefix(key, ENV_PREFIX);
+        key = strings.ReplaceAll(key, ENV_DOT_REPLACEMENT, ".");
+        key = strings.ToLower(key);
+
+        Set(key, value);
+    }
 }
 
 func Reset() {
