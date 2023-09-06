@@ -38,6 +38,11 @@ func InitLogging() {
     if (err != nil) {
         log.Fatal().Err(err).Str("level", rawLogLevel).Msg("Failed to parse the logging level.");
     }
+
+    if (DEBUG.GetBool() && (level > zerolog.DebugLevel)) {
+        level = zerolog.DebugLevel;
+    }
+
     zerolog.SetGlobalLevel(level);
 }
 

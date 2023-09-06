@@ -15,6 +15,7 @@ import (
     "github.com/docker/docker/pkg/archive"
     "github.com/rs/zerolog/log"
 
+    "github.com/eriq-augustine/autograder/config"
     "github.com/eriq-augustine/autograder/model"
     "github.com/eriq-augustine/autograder/util"
 )
@@ -29,13 +30,11 @@ const DOCKER_CONFIG_PATH = DOCKER_BASE_DIR + "/" + DOCKER_CONFIG_FILENAME
 
 type DockerBuildOptions struct {
     Rebuild bool `help:"Rebuild images ignoring caches." default:"false"`
-    Debug bool `help:"Leave some debug artifacts like the build sirectory." default:"false"`
 }
 
 func NewDockerBuildOptions() *DockerBuildOptions {
     return &DockerBuildOptions{
         Rebuild: false,
-        Debug: false,
     };
 }
 
@@ -72,7 +71,7 @@ func BuildDockerImageWithOptions(assignment *model.Assignment, options *DockerBu
         return fmt.Errorf("Failed to create temp build directory for '%s': '%w'.", assignment.ImageName(), err);
     }
 
-    if (options.Debug) {
+    if (config.DEBUG.GetBool()) {
         log.Info().Str("path", tempDir).Msg("Leaving behind temp building dir.");
     } else {
         defer os.RemoveAll(tempDir);

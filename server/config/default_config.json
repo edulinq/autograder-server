@@ -1,7 +1,0 @@
-{
-    "log.level": "INFO",
-    "web.port": 8080,
-    "courses.rootdir": "courses",
-
-    "docker.disable": false
-}

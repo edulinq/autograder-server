@@ -38,6 +38,10 @@ func newOption(key string, defaultValue any, description string) *Option {
     return &option;
 }
 
+func (this *Option) Set(value any) {
+    Set(this.Key, value);
+}
+
 func (this *Option) Get() any {
     return GetDefault(this.Key, this.DefaultValue);
 }

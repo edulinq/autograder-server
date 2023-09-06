@@ -4,6 +4,7 @@ package config;
 type ConfigArgs struct {
     ConfigPath []string `help:"Path to config file to load." type:"existingfile"`
     Config map[string]string `help:"Config options."`
+    Debug bool `help:"Enable general debugging. Shortcut for '-c debug=true'." default:"false"`
 }
 
 func HandleConfigArgs(args ConfigArgs) error {
@@ -16,6 +17,10 @@ func HandleConfigArgs(args ConfigArgs) error {
 
     for key, value := range args.Config {
         Set(key, value);
+    }
+
+    if (args.Debug) {
+        DEBUG.Set(true);
     }
 
     InitLogging();

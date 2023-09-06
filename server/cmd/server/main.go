@@ -9,8 +9,6 @@ import (
     "github.com/eriq-augustine/autograder/web"
 )
 
-// TEST: More options (like no-store and debug).
-
 var args struct {
     config.ConfigArgs
 }
