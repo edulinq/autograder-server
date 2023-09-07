@@ -106,8 +106,6 @@ func runGraderContainer(assignment *model.Assignment, inputDir string, outputDir
         nil,
         name)
 
-    // TEST : Cleanup this error handling and output.
-
 	if err != nil {
 		panic(err)
 	}

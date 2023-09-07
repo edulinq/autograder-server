@@ -147,8 +147,6 @@ func storeRequestFile(request *http.Request, outDir string, filename string) err
     }
     defer outFile.Close();
 
-    // TODO(eriq): Check size limits (server -> course -> assignment).
-
     _, err = io.Copy(outFile, inFile);
     if (err != nil) {
         return fmt.Errorf("Failed to copy contents of request file '%s': '%w'.", filename, err);

@@ -82,7 +82,6 @@ func BuildDockerImageWithOptions(assignment *model.Assignment, options *DockerBu
         return err;
     }
 
-    // TODO(eriq): Version
     buildOptions := types.ImageBuildOptions{
         Tags: []string{assignment.ImageName()},
         Dockerfile: "Dockerfile",

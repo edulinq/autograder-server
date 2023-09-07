@@ -20,7 +20,6 @@ const GRADING_WORK_DIRNAME = "work"
 const GRADER_OUTPUT_RESULT_FILENAME = "result.json"
 const GRADER_OUTPUT_SUMMARY_FILENAME = "summary.json"
 
-// TODO(eriq): Create a maintenance task that removes old, unused locks.
 var submissionLocks sync.Map;
 
 type GradeOptions struct {
