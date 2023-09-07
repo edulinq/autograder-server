@@ -24,7 +24,7 @@ const ENV_DOT_REPLACEMENT = "__";
 var configValues map[string]any = make(map[string]any);
 
 func ToJSON() (string, error) {
-    return util.ToJSONIndent(configValues, "", "    ");
+    return util.ToJSONIndent(configValues);
 }
 
 func init() {

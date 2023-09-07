@@ -7,6 +7,9 @@ import (
    "os"
 )
 
+const DEFAULT_PREFIX = "";
+const DEFAULT_INDENT = "    ";
+
 // The target must be a pointer.
 func JSONFromFile(path string, target any) error {
     file, err := os.Open(path);
@@ -49,10 +52,14 @@ func JSONMapFromString(data string) (map[string]any, error) {
 }
 
 func ToJSON(data any) (string, error) {
-    return ToJSONIndent(data, "", "");
+    return ToJSONIndentCustom(data, "", "");
 }
 
-func ToJSONIndent(data any, prefix string, indent string) (string, error) {
+func ToJSONIndent(data any) (string, error) {
+    return ToJSONIndentCustom(data, DEFAULT_PREFIX, DEFAULT_INDENT);
+}
+
+func ToJSONIndentCustom(data any, prefix string, indent string) (string, error) {
     bytes, err := json.MarshalIndent(data, prefix, indent);
     if (err != nil) {
         return "", fmt.Errorf("Could not marshal object ('%v'): '%w'.", data, err);
@@ -62,11 +69,15 @@ func ToJSONIndent(data any, prefix string, indent string) (string, error) {
 }
 
 func ToJSONFile(data any, path string) error {
-    return ToJSONFileIndent(data, path, "", "");
+    return ToJSONFileIndentCustom(data, path, "", "");
 }
 
-func ToJSONFileIndent(data any, path string, prefix string, indent string) error {
-    text, err := ToJSONIndent(data, prefix, indent);
+func ToJSONFileIndent(data any, path string) error {
+    return ToJSONFileIndentCustom(data, path, DEFAULT_PREFIX, DEFAULT_INDENT);
+}
+
+func ToJSONFileIndentCustom(data any, path string, prefix string, indent string) error {
+    text, err := ToJSONIndentCustom(data, prefix, indent);
     if (err != nil) {
         return err;
     }

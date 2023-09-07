@@ -13,6 +13,7 @@ import (
 )
 
 const BASE_TEST_USER = "test_user@test.com";
+const TEST_MESSAGE = "";
 
 func TestDockerSubmissions(test *testing.T) {
     if (!CanAccessDocker()) {
@@ -88,7 +89,7 @@ func runSubmissionTests(test *testing.T, parallel bool, docker bool) {
                 test.Fatalf("Could not find assignment for test submission '%s'.", testSubmissionPath);
             }
 
-            result, err := Grade(assignment, filepath.Dir(testSubmissionPath), user, gradeOptions);
+            result, _, err := Grade(assignment, filepath.Dir(testSubmissionPath), user, TEST_MESSAGE, gradeOptions);
             if (err != nil) {
                 test.Fatalf("Failed to grade assignment: '%v'.", err);
             }

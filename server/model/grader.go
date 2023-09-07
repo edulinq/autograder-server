@@ -8,6 +8,14 @@ import (
     "github.com/eriq-augustine/autograder/util"
 )
 
+type SubmissionSummary struct {
+    ID string `json:"id"`
+    Message string `json:"message"`
+    MaxPoints float64 `json:"max_points"`
+    Score float64 `json:"score"`
+    GradingStartTime time.Time `json:"grading_start_time"`
+}
+
 type GradedAssignment struct {
     Name string `json:"name"`
     Questions []GradedQuestion `json:"questions"`
@@ -74,6 +82,22 @@ func (this GradedAssignment) Report() string {
     builder.WriteString(fmt.Sprintf("Total: %f / %f", totalScore, maxScore));
 
     return builder.String();
+}
+
+func (this GradedAssignment) GetSummary(id string, message string) *SubmissionSummary {
+    summary := SubmissionSummary{
+        ID: id,
+        Message: message,
+        GradingStartTime: this.GradingStartTime,
+    };
+
+
+    for _, question := range this.Questions {
+        summary.Score += question.Score;
+        summary.MaxPoints += question.MaxPoints;
+    }
+
+    return &summary;
 }
 
 func (this GradedQuestion) Report() string {

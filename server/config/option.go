@@ -69,5 +69,5 @@ func OptionsToJSON() (string, error) {
         return strings.Compare(a.Key, b.Key);
     });
 
-    return util.ToJSONIndent(options, "", "    ");
+    return util.ToJSONIndent(options);
 }

@@ -18,6 +18,7 @@ var args struct {
     Submission string `help:"Path to submission directory." required:"" type:"existingdir"`
     OutPath string `help:"Option path to output a JSON grading result." type:"path"`
     User string `help:"User email for the submission." default:"testuser"`
+    Message string `help:"Submission message." default:""`
 }
 
 func main() {
@@ -29,13 +30,13 @@ func main() {
 
     assignment := model.MustLoadAssignmentConfig(args.Assignment);
 
-    result, err := grader.GradeDefault(assignment, args.Submission, args.User);
+    result, _, err := grader.GradeDefault(assignment, args.Submission, args.User, args.Message);
     if (err != nil) {
         log.Fatal().Err(err).Msg("Failed to run grader.");
     }
 
     if (args.OutPath != "") {
-        err = util.ToJSONFileIndent(result, args.OutPath, "", "    ");
+        err = util.ToJSONFileIndent(result, args.OutPath);
         if (err != nil) {
             log.Fatal().Err(err).Str("outpath", args.OutPath).Msg("Failed to output JSON result.");
         }

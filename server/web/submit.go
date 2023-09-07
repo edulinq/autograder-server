@@ -13,8 +13,14 @@ import (
 type SubmissionRequest struct {
     model.BaseAPIRequest
     Assignment string `json:"assignment"`
+    Message string `json:"message"`
 
     Dir string `json:"-"`
+}
+
+type SubmissionResponse struct {
+    Summary *model.SubmissionSummary `json:"summary"`
+    Assignment *model.GradedAssignment `json:"result"`
 }
 
 func (this *SubmissionRequest) String() string {
@@ -68,10 +74,15 @@ func handleSubmit(submission *SubmissionRequest) (int, any, error) {
         return http.StatusBadRequest, fmt.Sprintf("Could not find assignment ('%s') for course ('%s').", submission.Assignment, submission.Course,), nil;
     }
 
-    result, err := grader.GradeDefault(assignment, submission.Dir, submission.User);
+    result, summary, err := grader.GradeDefault(assignment, submission.Dir, submission.User, submission.Message);
     if (err != nil) {
         return 0, nil, err;
     }
 
-    return 0, result, nil;
+    response := SubmissionResponse{
+        Summary: summary,
+        Assignment: result,
+    };
+
+    return 0, response, nil;
 }
