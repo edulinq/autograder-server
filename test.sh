@@ -1,5 +1,7 @@
 #!/bin/bash
 
+readonly THIS_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
 function main() {
     if [[ $# -ne 0 ]]; then
         echo "USAGE: $0"
@@ -7,6 +9,8 @@ function main() {
     fi
 
     trap exit SIGINT
+
+    cd "${THIS_DIR}"
 
     go test -v -count=1 ./...
     if [[ ${?} -ne 0 ]] ; then

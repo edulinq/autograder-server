@@ -12,6 +12,7 @@ function main() {
     set -e
     trap exit SIGINT
 
+    cd "${THIS_DIR}"
     mkdir -p "${BIN_DIR}"
 
     for main_path in "${THIS_DIR}/cmd/"*"/main.go" ; do
