@@ -1,0 +1,8 @@
+{
+    "id": "hw0",
+    "display-name": "Homework 0",
+    "static-files": [
+        "grader.py"
+    ],
+    "image": "autograder.python"
+}

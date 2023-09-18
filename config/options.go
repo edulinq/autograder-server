@@ -11,7 +11,7 @@ var (
 
     LOG_LEVEL = newOption("log.level", "INFO", "The default logging level.");
 
-    TESTS_DIR = newOption("test.tests_dir", "../../autograder-py-tests", "The base dir containing courses and assignments for testing.");
+    TESTS_DIR = newOption("test.tests_dir", "_tests", "The base dir containing courses and assignments for testing.");
 
     WEB_PORT = newOption("web.port", 8080, "The port for the web interface to serve on.");
 )

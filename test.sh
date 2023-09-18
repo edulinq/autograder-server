@@ -6,10 +6,16 @@ function main() {
         exit 1
     fi
 
-    set -e
     trap exit SIGINT
 
     go test -v -count=1 ./...
+    if [[ ${?} -ne 0 ]] ; then
+        echo "Found test issues."
+        return 1
+    else
+        echo "No issues found."
+        return 0
+    fi
 }
 
 [[ "${BASH_SOURCE[0]}" == "${0}" ]] && main "$@"
