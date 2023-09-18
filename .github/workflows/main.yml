@@ -22,4 +22,6 @@ jobs:
         run: ./build.sh
 
       - name: Run Tests
+        env:
+          AUTOGRADER__DOCKER__DISABLE: 'true'
         run: ./test.sh

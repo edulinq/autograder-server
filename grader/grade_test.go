@@ -16,6 +16,10 @@ const BASE_TEST_USER = "test_user@test.com";
 const TEST_MESSAGE = "";
 
 func TestDockerSubmissions(test *testing.T) {
+    if (config.DOCKER_DISABLE.GetBool()) {
+        test.Skip("Docker is disabled, skipping test.");
+    }
+
     if (!CanAccessDocker()) {
         test.Fatal("Could not access docker.");
     }
