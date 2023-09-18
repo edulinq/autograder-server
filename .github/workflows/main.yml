@@ -18,6 +18,14 @@ jobs:
         with:
           go-version: '1.21.0'
 
+      - name: Cache Go Dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-golang-${{ hashFiles('**/go.sum') }}
+
       - name: Build
         run: ./build.sh
 
