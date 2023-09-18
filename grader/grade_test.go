@@ -46,9 +46,11 @@ func runSubmissionTests(test *testing.T, parallel bool, docker bool) {
         test.Fatalf("Could not load courses from '%s': '%v'.", testsDir, err);
     }
 
-    _, err = BuildDockerImagesJoinErrors(NewDockerBuildOptions());
-    if (err != nil) {
-        test.Fatalf("Failed to build docker images: '%v'.", err);
+    if (docker) {
+        _, err = BuildDockerImagesJoinErrors(NewDockerBuildOptions());
+        if (err != nil) {
+            test.Fatalf("Failed to build docker images: '%v'.", err);
+        }
     }
 
     tempDir, err := os.MkdirTemp("", "submission-tests-");
