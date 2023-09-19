@@ -10,5 +10,7 @@ bin/
 dist/
 test/
 
+/.secrets.json
+
 *.gz
 test.json

@@ -28,6 +28,7 @@ func ToJSON() (string, error) {
 }
 
 func init() {
+    LoadSecrets();
     LoadEnv();
     InitLogging();
 }
@@ -44,6 +45,15 @@ func InitLogging() {
     }
 
     zerolog.SetGlobalLevel(level);
+}
+
+func LoadSecrets() error {
+    path := SECRETS_PATH.GetString();
+    if (!util.PathExists(path)) {
+        return nil;
+    }
+
+    return LoadFile(path);
 }
 
 // See LoadReader().
