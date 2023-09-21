@@ -2,6 +2,7 @@ package model
 
 import (
     "fmt"
+    "strconv"
     "strings"
     "time"
 
@@ -79,7 +80,7 @@ func (this GradedAssignment) Report() string {
     }
 
     builder.WriteString("\n");
-    builder.WriteString(fmt.Sprintf("Total: %f / %f", totalScore, maxScore));
+    builder.WriteString(fmt.Sprintf("Total: %s / %s", strFloat(totalScore), strFloat(maxScore)));
 
     return builder.String();
 }
@@ -103,7 +104,7 @@ func (this GradedAssignment) GetSummary(id string, message string) *SubmissionSu
 func (this GradedQuestion) Report() string {
     var builder strings.Builder;
 
-    builder.WriteString(fmt.Sprintf("%s: %f / %f\n", this.Name, this.Score, this.MaxPoints));
+    builder.WriteString(fmt.Sprintf("%s: %s / %s\n", this.Name, strFloat(this.Score), strFloat(this.MaxPoints)));
 
     if (this.Message != "") {
         for _, line := range strings.Split(this.Message, "\n") {
@@ -124,4 +125,8 @@ func (this GradedQuestion) Equals(other GradedQuestion, checkMessages bool) bool
     }
 
     return true;
+}
+
+func strFloat(value float64) string {
+    return strconv.FormatFloat(value, 'f', -1, 64);
 }
