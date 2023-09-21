@@ -5,8 +5,15 @@ import (
     "fmt"
     "os"
     "path/filepath"
+    "strings"
 
     "github.com/eriq-augustine/autograder/util"
+)
+
+const (
+    FILESPEC_DELIM = "::"
+    FILESPEC_GIT = "git"
+    FILESPEC_GIT_PREFIX = FILESPEC_GIT + FILESPEC_DELIM
 )
 
 // Create a temp dir for grading as well as the three standard directories in it.
@@ -42,6 +49,53 @@ func createStandardGradingDirs(dir string) (string, string, string, error) {
     return inputDir, outputDir, workDir, nil;
 }
 
+func copyAssignmentFile(filename string, sourceDir string, destDir string, onlyContents bool) error {
+    sourcePath := filepath.Join(sourceDir, filename);
+    destPath := filepath.Join(destDir, filepath.Base(filename));
+
+    var err error;
+
+    if (onlyContents) {
+        err = util.CopyDirContents(sourcePath, destPath);
+    } else {
+        err = util.CopyDirent(sourcePath, destPath, false);
+    }
+
+    if (err != nil) {
+        return fmt.Errorf("Failed to copy assignment file '%s' to '%s': '%w'.", sourcePath, destPath, err);
+    }
+
+    return nil;
+}
+
+func handleStaticGitSpec(filespec string, destDir string) error {
+    parts := strings.Split(filespec, FILESPEC_DELIM);
+
+    if ((len(parts) < 2) || (len(parts) > 4) || (parts[0] != FILESPEC_GIT)) {
+        return fmt.Errorf("Unknown git filespec: '%s'.", filespec);
+    }
+
+    url := parts[1]
+    var dirname string;
+    var ref string;
+
+    if (len(parts) >= 3) {
+        dirname = parts[2];
+    } else {
+        urlParts := strings.Split(url, "/")
+        dirname = strings.TrimSuffix(urlParts[len(urlParts) - 1], ".git");
+    }
+
+    if (len(parts) >= 4) {
+        ref = parts[3]
+    }
+
+    destPath := filepath.Join(destDir, dirname);
+
+    _, err := util.GitEnsureRepo(url, destPath, true, ref);
+    return err;
+}
+
 // Copy over assignment files.
 // 1) Do pre-copy operations.
 // 2) Copy.
@@ -60,14 +114,15 @@ func copyAssignmentFiles(sourceDir string, destDir string, opDir string,
     }
 
     // Copy files.
-    for _, filename := range files {
-        sourcePath := filepath.Join(sourceDir, filename);
-        destPath := filepath.Join(destDir, filepath.Base(filename));
-
-        if (onlyContents) {
-            util.CopyDirContents(sourcePath, destPath);
+    for _, filespec := range files {
+        if (strings.HasPrefix(filespec, FILESPEC_GIT_PREFIX)) {
+            err = handleStaticGitSpec(filespec, destDir);
         } else {
-            util.CopyDirent(sourcePath, destPath, false);
+            err = copyAssignmentFile(filespec, sourceDir, destDir, onlyContents);
+        }
+
+        if (err != nil) {
+            return fmt.Errorf("Failed to handle filespec '%s': '%w'", filespec, err);
         }
     }
 

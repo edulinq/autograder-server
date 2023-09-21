@@ -36,6 +36,14 @@ func PathExists(path string) bool {
     return true;
 }
 
+func IsFile(path string) bool {
+    if (!PathExists(path)) {
+        return false;
+    }
+
+    return !IsDir(path);
+}
+
 func IsDir(path string) bool {
     if (!PathExists(path)) {
         return false;
