@@ -10,11 +10,11 @@ import (
 type UserRole int;
 
 const (
-    Owner UserRole = iota
-    Admin
-    Grader
-    Student
-    Other
+    Other UserRole = 10
+    Student        = 20
+    Grader         = 30
+    Admin          = 40
+    Owner          = 50
 )
 
 func (this UserRole) String() string {
