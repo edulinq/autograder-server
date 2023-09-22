@@ -34,6 +34,12 @@ func init() {
 }
 
 func InitLogging() {
+    if (LOG_PRETTY.GetBool()) {
+        log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr});
+    } else {
+        log.Logger = zerolog.New(os.Stderr).With().Timestamp().Logger();
+    }
+
     var rawLogLevel = LOG_LEVEL.GetString();
     level, err := zerolog.ParseLevel(rawLogLevel);
     if (err != nil) {
