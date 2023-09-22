@@ -13,4 +13,5 @@ test/
 /.secrets.json
 
 *.gz
-test.json
+test.*
+/users.json

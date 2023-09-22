@@ -1,5 +1,9 @@
 package model
 
+// It is expected that any cleartext password passed into functions here
+// are already a hex encoding of a sha256 hash of the original cleartext
+// see util.Sha256Hex().
+
 import (
     "crypto/subtle"
     "encoding/hex"
@@ -16,7 +20,7 @@ const (
 
     ARGON2_KEY_LEN_BYTES = 32;
     ARGON2_MEM_KB = 64 * 1024;
-    ARGON2_THREADS = 1;
+    ARGON2_THREADS = 4;
     ARGON2_TIME = 1;
 )
 
@@ -65,4 +69,23 @@ func (this *User) CheckPassword(cleartext string) bool {
 
 func generateHash(cleartext string, salt []byte) []byte {
     return argon2.IDKey([]byte(cleartext), salt, ARGON2_TIME, ARGON2_MEM_KB, ARGON2_THREADS, ARGON2_KEY_LEN_BYTES);
+}
+
+func LoadUsersFile(path string) (map[string]*User, error) {
+    users := make(map[string]*User);
+
+    if (!util.PathExists(path)) {
+        return users, nil;
+    }
+
+    err := util.JSONFromFile(path, &users);
+    if (err != nil) {
+        return nil, err;
+    }
+
+    return users, nil;
+}
+
+func SaveUsersFile(path string, users map[string]*User) error {
+    return util.ToJSONFileIndent(users, path);
 }

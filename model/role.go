@@ -10,11 +10,12 @@ import (
 type UserRole int;
 
 const (
-    Other UserRole = 10
-    Student        = 20
-    Grader         = 30
-    Admin          = 40
-    Owner          = 50
+    Unknown UserRole = 0
+    Other            = 10
+    Student          = 20
+    Grader           = 30
+    Admin            = 40
+    Owner            = 50
 )
 
 func (this UserRole) String() string {
@@ -27,6 +28,7 @@ var roleToString = map[UserRole]string{
     Grader:  "grader",
     Student: "student",
     Other:   "other",
+    Unknown: "unknown",
 }
 
 var stringToRole = map[string]UserRole{
@@ -35,6 +37,11 @@ var stringToRole = map[string]UserRole{
     "grader":  Grader,
     "student": Student,
     "other":   Other,
+    "unknown": Unknown,
+}
+
+func GetRole(text string) UserRole {
+    return stringToRole[text];
 }
 
 func (this UserRole) MarshalJSON() ([]byte, error) {
@@ -57,7 +64,7 @@ func (this *UserRole) UnmarshalJSON(data []byte) error {
     var ok bool;
     *this, ok = stringToRole[temp];
     if (!ok) {
-        *this = Other;
+        *this = Unknown;
         return fmt.Errorf("Unknown UserRole value: '%s'.", temp);
     }
 

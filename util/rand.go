@@ -2,6 +2,8 @@ package util
 
 import (
     "crypto/rand"
+    "encoding/hex"
+    "math"
 )
 
 func RandBytes(length int) ([]byte, error) {
@@ -12,4 +14,15 @@ func RandBytes(length int) ([]byte, error) {
     }
 
     return buffer, nil;
+}
+
+func RandHex(length int) (string, error) {
+    numBytes := int(math.Ceil(float64(length) / 2.0));
+    bytes, err := RandBytes(numBytes);
+    if (err != nil) {
+        return "", err;
+    }
+
+    text := hex.EncodeToString(bytes);
+    return text[:length], nil;
 }
