@@ -242,7 +242,7 @@ func (this *ChangePassword) Run(path string) error {
 
 var cli struct {
     config.ConfigArgs
-    Path string `help:"Option path to output a JSON grading result." type:"path" default:"users.json"`
+    UsersPath string `help:"Optional path to a users JSON file (or where one will be created)." type:"path" default:"users.json"`
 
     Add AddUser `cmd:"" help:"Add a user."`
     AddTSV AddTSV `cmd:"" help:"Add users from a TSV file formatted as: '<email>[\t<display name>[\t<role>[\t<password>]]]'. See add for default values."`
@@ -261,7 +261,7 @@ func main() {
         log.Fatal().Err(err).Msg("Could not load config options.");
     }
 
-    err = context.Run(cli.Path);
+    err = context.Run(cli.UsersPath);
     if (err != nil) {
         log.Fatal().Err(err).Msg("Failed to run command.");
     }
