@@ -1,6 +1,8 @@
 package config
 
 var (
+    NO_AUTH = newOption("web.noauth", false, "Disbale authentication on the API.");
+
     COURSES_ROOT = newOption("courses.rootdir", "courses", "The default places to look for courses.");
 
     DEBUG = newOption("debug", false, "Enable general debugging.");

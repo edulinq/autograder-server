@@ -5,6 +5,7 @@ import (
 
     "github.com/rs/zerolog/log"
 
+    "github.com/eriq-augustine/autograder/config"
     "github.com/eriq-augustine/autograder/model"
 )
 
@@ -18,13 +19,19 @@ func AuthAPIRequest(request *model.BaseAPIRequest, course *model.Course) (bool, 
         return false, fmt.Errorf("Cannot authenticate nil course.");
     }
 
+    if (config.NO_AUTH.GetBool()) {
+        log.Debug().Str("user", request.User).Msg("Authentication Disabled.");
+        return true, nil;
+    }
+
     user, err := course.GetUser(request.User);
     if (err != nil) {
-        log.Debug().Str("user", request.User).Err(err).Msg("Authentication failure.");
+        log.Debug().Str("user", request.User).Err(err).Msg("Authentication Failure: Unknown User.");
         return false, nil;
     }
 
-    if (user.Pass != request.Pass) {
+    if (!user.CheckPassword(request.Pass)) {
+        log.Debug().Str("user", request.User).Msg("Authentication Failure: Bad Password.");
         return false, nil;
     }
 

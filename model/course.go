@@ -162,11 +162,10 @@ func loadParentCourseConfig(basepath string) (*Course, error) {
     return LoadCourseConfig(configPath);
 }
 
-func (this *Course) GetUsers() ([]User, error) {
+func (this *Course) GetUsers() (map[string]*User, error) {
     path := filepath.Join(filepath.Dir(this.SourcePath), DEFAULT_USERS_FILENAME);
 
-    var users []User;
-    err := util.JSONFromFile(path, &users);
+    users, err := LoadUsersFile(path);
     if (err != nil) {
         return nil, fmt.Errorf("Faile to deserialize users file '%s': '%w'.", path, err);
     }
@@ -180,10 +179,9 @@ func (this *Course) GetUser(email string) (*User, error) {
         return nil, err;
     }
 
-    for _, user := range users {
-        if (user.Email == email) {
-            return &user, nil;
-        }
+    user := users[email];
+    if (user != nil) {
+        return user, nil;
     }
 
     return nil, fmt.Errorf("Could not find user '%s' in course '%s'.", email, this.ID);
