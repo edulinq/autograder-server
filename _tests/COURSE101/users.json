@@ -1,0 +1,9 @@
+{
+    "test@test.com": {
+        "email": "test@test.com",
+        "display-name": "Test",
+        "role": "student",
+        "pass": "a82ff4aa4cef27126a9714bddcca0caa1663aad0e1feb3390c2a3ab64883d7b7",
+        "salt": "9f1f7fe0d4d329ad8c6be2ce690801d3"
+    }
+}
