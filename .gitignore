@@ -9,6 +9,7 @@ __pycache__/
 bin/
 dist/
 test/
+_submissions/
 
 /.secrets.json
 

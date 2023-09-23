@@ -1,9 +1,11 @@
 package model
 
 import (
-	"fmt"
+    "fmt"
+    "os"
     "path/filepath"
     "strings"
+    "time"
 
     "github.com/rs/zerolog/log"
 
@@ -11,6 +13,7 @@ import (
 )
 
 const ASSIGNMENT_CONFIG_FILENAME = "assignment.json"
+const DEFAULT_SUBMISSIONS_DIR = "_submissions";
 
 type Assignment struct {
     ID string `json:"id"`
@@ -151,4 +154,54 @@ func (this *Assignment) Validate() error {
     }
 
     return nil;
+}
+
+func (this *Assignment) getSubmissionsDir() (string, error) {
+    assignmentDir := filepath.Dir(this.SourcePath);
+    path := filepath.Join(assignmentDir, DEFAULT_SUBMISSIONS_DIR);
+
+    if (util.PathExists(path)) {
+        if (!util.IsDir(path)) {
+            return "", fmt.Errorf("Submissions dir ('%s') already exists and is not a dir.", path);
+        }
+    } else {
+        err := os.MkdirAll(path, 0755);
+        if (err != nil) {
+            return "", fmt.Errorf("Failed to make submissions directory ('%s'): '%w'.", path, err);
+        }
+    }
+
+    return path, nil;
+}
+
+func (this *Assignment) PrepareSubmission(user string) (string, int64, error) {
+    submissionsDir, err := this.getSubmissionsDir();
+    if (err != nil) {
+        return "", 0, err;
+    }
+
+    return this.PrepareSubmissionWithDir(user, submissionsDir);
+}
+
+// Prepare a place to hold the student's submission history.
+func (this *Assignment) PrepareSubmissionWithDir(user string, submissionsDir string) (string, int64, error) {
+    submissionID := time.Now().Unix();
+    var path string;
+
+    for ; ; {
+        path = filepath.Join(submissionsDir, user, fmt.Sprintf("%d", submissionID));
+        if (!util.PathExists(path)) {
+            break;
+        }
+
+        // This ID has been used.
+        submissionID++;
+    }
+
+    err := os.MkdirAll(path, 0755);
+    if (err != nil) {
+        return "", 0, fmt.Errorf("Failed to make submission directory ('%s'): '%w'.", path, err);
+    }
+
+    return path, submissionID, nil;
 }

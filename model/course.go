@@ -1,10 +1,8 @@
 package model
 
 import (
-	"fmt"
-    "os"
+    "fmt"
     "path/filepath"
-    "time"
 
     "github.com/eriq-augustine/autograder/util"
 )
@@ -18,19 +16,13 @@ type Course struct {
     DisplayName string `json:"display-name"`
 
     // Non-required fields that have defaults.
-    // If not provided, the directory the config file is in will be used.
-    Dir string `json:"dir"`
-    // Paths are always relative to Dir.
-    SubmissionsDir string `json:"submissions-dir"`
+    // Paths are always relative to the course dir.
     UsersFile string `json:"users-file"`
 
     // Ignore these fields in JSON.
     SourcePath string `json:"-"`
     Assignments map[string]*Assignment `json:"-"`
 }
-
-const DEFAULT_SUBMISSIONS_DIR = "submissions";
-const DEFAULT_USERS_FILE = "users.json";
 
 func LoadCourseConfig(path string) (*Course, error) {
     var config Course;
@@ -41,16 +33,8 @@ func LoadCourseConfig(path string) (*Course, error) {
 
     config.SourcePath = util.MustAbs(path);
 
-    if (config.Dir == "") {
-        config.Dir = filepath.Dir(config.SourcePath);
-    }
-
-    if (config.SubmissionsDir == "") {
-        config.SubmissionsDir = DEFAULT_SUBMISSIONS_DIR;
-    }
-
     if (config.UsersFile == "") {
-        config.UsersFile = DEFAULT_USERS_FILE;
+        config.UsersFile = DEFAULT_USERS_FILENAME;
     }
 
     config.Assignments = make(map[string]*Assignment);
@@ -101,55 +85,6 @@ func (this *Course) Validate() error {
     }
 
     return nil;
-}
-
-func (this *Course) GetSubmissionsDir() (string, error) {
-    path := filepath.Join(this.Dir, this.SubmissionsDir);
-
-    if (util.PathExists(path)) {
-        if (!util.IsDir(path)) {
-            return "", fmt.Errorf("Submissions dir ('%s') already exists and is not a dir.", path);
-        }
-    } else {
-        err := os.MkdirAll(path, 0755);
-        if (err != nil) {
-            return "", fmt.Errorf("Failed to make submissions directory ('%s'): '%w'.", path, err);
-        }
-    }
-
-    return path, nil;
-}
-
-func (this *Course) PrepareSubmission(user string) (string, int64, error) {
-    submissionsDir, err := this.GetSubmissionsDir();
-    if (err != nil) {
-        return "", 0, err;
-    }
-
-    return this.PrepareSubmissionWithDir(user, submissionsDir);
-}
-
-// Prepare a place to hold the student's submission history.
-func (this *Course) PrepareSubmissionWithDir(user string, submissionsDir string) (string, int64, error) {
-    submissionID := time.Now().Unix();
-    var path string;
-
-    for ; ; {
-        path = filepath.Join(submissionsDir, user, fmt.Sprintf("%d", submissionID));
-        if (!util.PathExists(path)) {
-            break;
-        }
-
-        // This ID has been used.
-        submissionID++;
-    }
-
-    err := os.MkdirAll(path, 0755);
-    if (err != nil) {
-        return "", 0, fmt.Errorf("Failed to make submission directory ('%s'): '%w'.", path, err);
-    }
-
-    return path, submissionID, nil;
 }
 
 // Check this directory and all parent directories for a course config file.

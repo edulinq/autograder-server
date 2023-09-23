@@ -103,7 +103,7 @@ func prepSubmissionDir(assignment *model.Assignment, user string, options GradeO
             return "", 0, fmt.Errorf("Could not create temp submissions dir: '%w'.", err);
         }
 
-        submissionDir, id, err = assignment.Course.PrepareSubmissionWithDir(user, tempSubmissionsDir);
+        submissionDir, id, err = assignment.PrepareSubmissionWithDir(user, tempSubmissionsDir);
         if (err != nil) {
             return "", 0, fmt.Errorf("Failed to prepare fake submission dir: '%w'.", err);
         }
@@ -114,7 +114,7 @@ func prepSubmissionDir(assignment *model.Assignment, user string, options GradeO
             defer os.RemoveAll(tempSubmissionsDir);
         }
     } else {
-        submissionDir, id, err = assignment.Course.PrepareSubmission(user);
+        submissionDir, id, err = assignment.PrepareSubmission(user);
         if (err != nil) {
             return "", 0, fmt.Errorf("Failed to prepare default submission dir: '%w'.", err);
         }
