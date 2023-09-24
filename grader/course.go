@@ -76,6 +76,7 @@ func GetAssignment(courseID string, assignmentID string) *model.Assignment {
     return assignment;
 }
 
+// Get the course and assignment from identifiers.
 func VerifyCourseAssignment(courseID string, assignmentID string) (*model.Course, *model.Assignment, error) {
     course := GetCourse(courseID);
     if (course == nil) {

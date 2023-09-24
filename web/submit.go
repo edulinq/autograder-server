@@ -29,7 +29,7 @@ func (this *SubmissionRequest) String() string {
 
 func NewSubmissionRequest(request *http.Request) (*SubmissionRequest, *model.APIResponse, error) {
     var apiRequest SubmissionRequest;
-    err := model.APIRequestFromHTTP(&apiRequest, request);
+    err := model.APIRequestFromPOST(&apiRequest, request);
     if (err != nil) {
         return nil, nil, err;
     }

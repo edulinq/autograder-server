@@ -7,6 +7,7 @@ import (
     "path/filepath"
     "strings"
 
+    "github.com/eriq-augustine/autograder/model"
     "github.com/eriq-augustine/autograder/util"
 )
 
@@ -32,9 +33,9 @@ func prepTempGradingDir() (string, string, string, string, error) {
 
 // Create the standard three grading directories.
 func createStandardGradingDirs(dir string) (string, string, string, error) {
-    inputDir := filepath.Join(dir, GRADING_INPUT_DIRNAME);
-    outputDir := filepath.Join(dir, GRADING_OUTPUT_DIRNAME);
-    workDir := filepath.Join(dir, GRADING_WORK_DIRNAME);
+    inputDir := filepath.Join(dir, model.GRADING_INPUT_DIRNAME);
+    outputDir := filepath.Join(dir, model.GRADING_OUTPUT_DIRNAME);
+    workDir := filepath.Join(dir, model.GRADING_WORK_DIRNAME);
 
     var err error;
 

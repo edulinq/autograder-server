@@ -19,6 +19,8 @@ var routes = []route{
     newRoute("GET", `/static`, handleStatic),
     newRoute("GET", `/static/.*`, handleStatic),
 
+    newAPIRoute("POST", `/api/v01/history`, NewHistoryRequest, handleHistory),
+    newAPIRoute("POST", `/api/v01/peek`, NewPeekRequest, handlePeek),
     newAPIRoute("POST", `/api/v01/submit`, NewSubmissionRequest, handleSubmit),
 }
 
@@ -141,7 +143,7 @@ func serve(response http.ResponseWriter, request *http.Request) {
 
         match = route.regex.MatchString(request.URL.Path);
         if (!match) {
-            break;
+            continue;
         }
 
         err := route.handler(response, request);

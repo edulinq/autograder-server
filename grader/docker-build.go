@@ -238,7 +238,7 @@ func toDockerfile(assignment *model.Assignment, workDir string) (string, error) 
 
     lines = append(lines, "# Static Files");
     for _, dirent := range dirents {
-        sourcePath := util.DockerfilePathQuote(filepath.Join(GRADING_WORK_DIRNAME, dirent.Name()));
+        sourcePath := util.DockerfilePathQuote(filepath.Join(model.GRADING_WORK_DIRNAME, dirent.Name()));
         destPath := util.DockerfilePathQuote(filepath.Join(DOCKER_WORK_DIR, dirent.Name()));
 
         lines = append(lines, fmt.Sprintf("COPY %s %s", sourcePath, destPath));

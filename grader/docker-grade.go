@@ -52,7 +52,7 @@ func RunDockerGrader(assignment *model.Assignment, submissionPath string, output
         return nil, err;
     }
 
-    resultPath := filepath.Join(outputDir, GRADER_OUTPUT_RESULT_FILENAME);
+    resultPath := filepath.Join(outputDir, model.GRADER_OUTPUT_RESULT_FILENAME);
     if (!util.PathExists(resultPath)) {
         return nil, fmt.Errorf("Cannot find output file ('%s') after the grading container (%s) was run.", resultPath, assignment.ImageName());
     }

@@ -13,13 +13,6 @@ import (
     "github.com/eriq-augustine/autograder/util"
 )
 
-const GRADING_INPUT_DIRNAME = "input"
-const GRADING_OUTPUT_DIRNAME = "output"
-const GRADING_WORK_DIRNAME = "work"
-
-const GRADER_OUTPUT_RESULT_FILENAME = "result.json"
-const GRADER_OUTPUT_SUMMARY_FILENAME = "summary.json"
-
 var submissionLocks sync.Map;
 
 type GradeOptions struct {
@@ -60,13 +53,13 @@ func Grade(assignment *model.Assignment, submissionPath string, user string, mes
     gradingID := fmt.Sprintf("%s::%d", gradingKey, submissionID);
 
     // Copy the submission to the user's submission directory.
-    submissionCopyDir := filepath.Join(submissionDir, GRADING_INPUT_DIRNAME);
+    submissionCopyDir := filepath.Join(submissionDir, model.GRADING_INPUT_DIRNAME);
     err = util.CopyDirent(submissionPath, submissionCopyDir, true);
     if (err != nil) {
         return nil, nil, fmt.Errorf("Failed to copy submission for assignment '%s' and user '%s': '%w'.", assignment.FullID(), user, err);
     }
 
-    outputDir := filepath.Join(submissionDir, GRADING_OUTPUT_DIRNAME);
+    outputDir := filepath.Join(submissionDir, model.GRADING_OUTPUT_DIRNAME);
     os.MkdirAll(outputDir, 0755);
 
     var result *model.GradedAssignment;
@@ -82,7 +75,7 @@ func Grade(assignment *model.Assignment, submissionPath string, user string, mes
     }
 
     summary := result.GetSummary(gradingID, message);
-    summaryPath := filepath.Join(outputDir, GRADER_OUTPUT_SUMMARY_FILENAME);
+    summaryPath := filepath.Join(outputDir, model.GRADER_OUTPUT_SUMMARY_FILENAME);
 
     err = util.ToJSONFileIndent(summary, summaryPath);
     if (err != nil) {

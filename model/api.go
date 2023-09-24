@@ -75,10 +75,14 @@ func (this *BaseAPIRequest) Clean() error {
 // The basic deserialization of an API request from an HTTP request.
 // All requests should do this first.
 // The |apiRequest| should be a pointer that we will decode JSON into.
-func APIRequestFromHTTP(apiRequest APIRequest, request *http.Request) error {
-    err := request.ParseMultipartForm(MAX_FORM_MEM_SIZE_BYTES);
-    if (err != nil) {
-        return fmt.Errorf("Improperly formatted POST submission: '%w'.", err);
+func APIRequestFromPOST(apiRequest APIRequest, request *http.Request) error {
+    var err error;
+
+    if (strings.Contains(strings.Join(request.Header["Content-Type"], " "), "multipart/form-data")) {
+        err = request.ParseMultipartForm(MAX_FORM_MEM_SIZE_BYTES);
+        if (err != nil) {
+            return fmt.Errorf("Improperly formatted POST submission: '%w'.", err);
+        }
     }
 
     textContent := request.PostFormValue(API_REQUEST_CONTENT_KEY);

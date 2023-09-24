@@ -15,6 +15,13 @@ import (
 const ASSIGNMENT_CONFIG_FILENAME = "assignment.json"
 const DEFAULT_SUBMISSIONS_DIR = "_submissions";
 
+const GRADING_INPUT_DIRNAME = "input"
+const GRADING_OUTPUT_DIRNAME = "output"
+const GRADING_WORK_DIRNAME = "work"
+
+const GRADER_OUTPUT_RESULT_FILENAME = "result.json"
+const GRADER_OUTPUT_SUMMARY_FILENAME = "summary.json"
+
 type Assignment struct {
     ID string `json:"id"`
     DisplayName string `json:"display-name"`
@@ -204,4 +211,57 @@ func (this *Assignment) PrepareSubmissionWithDir(user string, submissionsDir str
     }
 
     return path, submissionID, nil;
+}
+
+// See getSubmissionFiles().
+// Fetches full grading result.
+func (this *Assignment) GetSubmissionResults(user string) ([]string, error) {
+    return this.getSubmissionFiles(user, GRADER_OUTPUT_RESULT_FILENAME);
+}
+
+// See getSubmissionFiles().
+// Fetches grading summary.
+func (this *Assignment) GetSubmissionSummaries(user string) ([]string, error) {
+    return this.getSubmissionFiles(user, GRADER_OUTPUT_SUMMARY_FILENAME);
+}
+
+// Get all the paths to the submission files for and assignment and user.
+// The results will be sorted in ascending order (first submission first).
+// An empty slice indicates that there are no matching submission files.
+func (this *Assignment) getSubmissionFiles(user string, filename string) ([]string, error) {
+    submissionsDir, err := this.getSubmissionsDir();
+    if (err != nil) {
+        return nil, err;
+    }
+
+    paths := make([]string, 0);
+
+    baseDir := filepath.Join(submissionsDir, user);
+    if (!util.PathExists(baseDir)) {
+        return paths, nil;
+    }
+
+    if (!util.IsDir(baseDir)) {
+        return nil, fmt.Errorf("Expected user's submission dir '%s' exists and is not a dir.", baseDir);
+    }
+
+    dirents, err := os.ReadDir(baseDir);
+    if (err != nil) {
+        return nil, fmt.Errorf("Failed to read dir '%s': '%w'.", baseDir, err);
+    }
+
+    for _, dirent := range dirents {
+        if (!dirent.IsDir()) {
+            continue;
+        }
+
+        path := filepath.Join(baseDir, dirent.Name(), GRADING_OUTPUT_DIRNAME, filename);
+        if (!util.IsFile(path)) {
+            continue;
+        }
+
+        paths = append(paths, path);
+    }
+
+    return paths, nil;
 }

@@ -53,7 +53,7 @@ func RunNoDockerGrader(assignment *model.Assignment, submissionPath string, outp
         return nil, fmt.Errorf("Failed to run non-docker grader for assignment '%s': '%w'.", assignment.FullID(), err);
     }
 
-    resultPath := filepath.Join(outputDir, GRADER_OUTPUT_RESULT_FILENAME);
+    resultPath := filepath.Join(outputDir, model.GRADER_OUTPUT_RESULT_FILENAME);
     if (!util.PathExists(resultPath)) {
         return nil, fmt.Errorf("Cannot find output file ('%s') after non-docker grading.", resultPath);
     }
@@ -95,7 +95,7 @@ func getAssignmentInvocation(assignment *model.Assignment, inputDir string, outp
         } else if (value == "<workdir>") {
             value = workDir;
         } else if (value == "<outpath>") {
-            value = filepath.Join(outputDir, GRADER_OUTPUT_RESULT_FILENAME);
+            value = filepath.Join(outputDir, model.GRADER_OUTPUT_RESULT_FILENAME);
         }
 
         cleanCommand = append(cleanCommand, value);
