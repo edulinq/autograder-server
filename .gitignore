@@ -10,6 +10,7 @@ bin/
 dist/
 test/
 _submissions/
+/_courses/
 
 /.secrets.json
 
