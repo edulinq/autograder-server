@@ -1,4 +1,11 @@
 {
+    "grader@test.com": {
+        "email": "grader@test.com",
+        "display-name": "grader",
+        "role": "grader",
+        "pass": "9c33fae839ad63474a677e871aeb4cdb63ab7089774a83fd8ad01a28b45f4271",
+        "salt": "a853844be59b339ec45733eddeee41cd"
+    },
     "test@test.com": {
         "email": "test@test.com",
         "display-name": "Test",

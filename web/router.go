@@ -19,6 +19,7 @@ var routes = []route{
     newRoute("GET", `/static`, handleStatic),
     newRoute("GET", `/static/.*`, handleStatic),
 
+    newAPIRoute("POST", `/api/v01/grades/fetch`, NewFetchGradesRequest, handleFetchGrades),
     newAPIRoute("POST", `/api/v01/history`, NewHistoryRequest, handleHistory),
     newAPIRoute("POST", `/api/v01/peek`, NewPeekRequest, handlePeek),
     newAPIRoute("POST", `/api/v01/submit`, NewSubmissionRequest, handleSubmit),

@@ -265,3 +265,37 @@ func (this *Assignment) getSubmissionFiles(user string, filename string) ([]stri
 
     return paths, nil;
 }
+
+// See getAllRecentSubmissionFiles().
+// Fetches full grading result.
+func (this *Assignment) GetAllRecentSubmissionResults(users map[string]*User) (map[string]string, error) {
+    return this.getAllRecentSubmissionFiles(users, GRADER_OUTPUT_RESULT_FILENAME);
+}
+
+// See getAllRecentSubmissionFiles().
+// Fetches grading summary.
+func (this *Assignment) GetAllRecentSubmissionSummaries(users map[string]*User) (map[string]string, error) {
+    return this.getAllRecentSubmissionFiles(users, GRADER_OUTPUT_SUMMARY_FILENAME);
+}
+
+// Get all the paths to the most recent submission file for each user for this assignment.
+// The returned map will contain an entry for every user (if not nil).
+// An empty entry in the map indicates the user has no submissions.
+func (this *Assignment) getAllRecentSubmissionFiles(users map[string]*User, filename string) (map[string]string, error) {
+    paths := make(map[string]string);
+
+    for email, _ := range users {
+        userPaths, err := this.getSubmissionFiles(email, filename);
+        if (err != nil) {
+            return nil, err;
+        }
+
+        if (len(userPaths) == 0) {
+            paths[email] = "";
+        } else {
+            paths[email] = userPaths[len(userPaths) - 1];
+        }
+    }
+
+    return paths, nil;
+}

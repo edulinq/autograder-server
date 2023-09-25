@@ -34,7 +34,7 @@ func NewPeekRequest(request *http.Request) (*PeekRequest, *model.APIResponse, er
         return nil, nil, err;
     }
 
-    ok, err := AuthAPIRequest(&apiRequest.BaseAPIRequest, course);
+    ok, _, err := AuthAPIRequest(&apiRequest.BaseAPIRequest, course);
     if (err != nil) {
         return nil, nil, err;
     } else if (!ok) {
