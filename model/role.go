@@ -44,6 +44,10 @@ func GetRole(text string) UserRole {
     return stringToRole[text];
 }
 
+func GetRoleString(role UserRole) string {
+    return roleToString[role];
+}
+
 func (this UserRole) MarshalJSON() ([]byte, error) {
     buffer := bytes.NewBufferString(`"`);
     buffer.WriteString(roleToString[this]);

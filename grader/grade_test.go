@@ -24,11 +24,11 @@ func TestDockerSubmissions(test *testing.T) {
         test.Fatal("Could not access docker.");
     }
 
-    runSubmissionTests(test, true, true);
+    runSubmissionTests(test, false, true);
 }
 
 func TestNoDockerSubmissions(test *testing.T) {
-    runSubmissionTests(test, true, false);
+    runSubmissionTests(test, false, false);
 }
 
 func runSubmissionTests(test *testing.T, parallel bool, docker bool) {

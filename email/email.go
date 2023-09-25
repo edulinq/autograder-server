@@ -8,7 +8,7 @@ import (
     "github.com/eriq-augustine/autograder/config"
 )
 
-func SendEmail(to []string, subject string, body string) error {
+func Send(to []string, subject string, body string) error {
     auth := smtp.PlainAuth("", config.EMAIL_USER.GetString(), config.EMAIL_PASS.GetString(), config.EMAIL_HOST.GetString());
     serverAddress := fmt.Sprintf("%s:%s", config.EMAIL_HOST.GetString(), config.EMAIL_PORT.GetString());
 

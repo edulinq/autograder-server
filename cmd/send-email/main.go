@@ -25,7 +25,7 @@ func main() {
         log.Fatal().Err(err).Msg("Could not load config options.");
     }
 
-    err = email.SendEmail(args.To, args.Subject, args.Body);
+    err = email.Send(args.To, args.Subject, args.Body);
     if (err != nil) {
         log.Fatal().Err(err).Msg("Could not send email.");
     }
