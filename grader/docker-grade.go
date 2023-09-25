@@ -3,15 +3,16 @@ package grader
 // Handle running docker containers for grading.
 
 import (
-	"fmt"
-	"os"
+    "fmt"
+    "os"
     "path/filepath"
     "regexp"
+    "strings"
 
-	"github.com/docker/docker/api/types"
-	"github.com/docker/docker/api/types/container"
-	"github.com/docker/docker/api/types/mount"
-	"github.com/docker/docker/pkg/stdcopy"
+    "github.com/docker/docker/api/types"
+    "github.com/docker/docker/api/types/container"
+    "github.com/docker/docker/api/types/mount"
+    "github.com/docker/docker/pkg/stdcopy"
     "github.com/rs/zerolog/log"
 
     "github.com/eriq-augustine/autograder/model"
@@ -67,18 +68,18 @@ func RunDockerGrader(assignment *model.Assignment, submissionPath string, output
 }
 
 func runGraderContainer(assignment *model.Assignment, inputDir string, outputDir string, gradingID string) error {
-	ctx, docker, err := getDockerClient();
+    ctx, docker, err := getDockerClient();
     if (err != nil) {
         return err;
     }
-	defer docker.Close()
+    defer docker.Close()
 
     inputDir = util.MustAbs(inputDir);
     outputDir = util.MustAbs(outputDir);
 
     name := cleanContainerName(fmt.Sprintf("%s-%s", gradingID, util.UUID()));
 
-	resp, err := docker.ContainerCreate(
+    containerInstance, err := docker.ContainerCreate(
         ctx,
         &container.Config{
             Image: assignment.ImageName(),
@@ -102,33 +103,40 @@ func runGraderContainer(assignment *model.Assignment, inputDir string, outputDir
                 },
             },
         },
-	    nil,
+        nil,
         nil,
         name)
 
-	if err != nil {
-		panic(err)
-	}
+    if (err != nil) {
+        return fmt.Errorf("Failed to create container '%s': '%w'.", name, err);
+    }
 
-	if err := docker.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{}); err != nil {
-		panic(err)
-	}
+    err = docker.ContainerStart(ctx, containerInstance.ID, types.ContainerStartOptions{});
+    if (err != nil) {
+        return fmt.Errorf("Failed to start container '%s' (%s): '%w'.", name, containerInstance.ID, err);
+    }
 
-	statusCh, errCh := docker.ContainerWait(ctx, resp.ID, container.WaitConditionNotRunning)
-	select {
-	case err := <-errCh:
-		if err != nil {
-			panic(err)
-		}
-	case <-statusCh:
-	}
+    statusChan, errorChan := docker.ContainerWait(ctx, containerInstance.ID, container.WaitConditionNotRunning);
+    select {
+        case err := <-errorChan:
+            if (err != nil) {
+                return fmt.Errorf("Got an error when running container '%s' (%s): '%w'.", name, containerInstance.ID, err);
+            }
+        case <-statusChan:
+            // Waiting is complete.
+    }
 
-	out, err := docker.ContainerLogs(ctx, resp.ID, types.ContainerLogsOptions{ShowStdout: true, ShowStderr: true})
-	if err != nil {
-		panic(err)
-	}
+    out, err := docker.ContainerLogs(ctx, containerInstance.ID, types.ContainerLogsOptions{ShowStdout: true, ShowStderr: true})
+    if (err != nil) {
+        log.Warn().Err(err).Str("container-name", name).Str("container-id", containerInstance.ID).Msg("Failed to get output from container (but run did not throw an error).");
+    } else {
+        outBuffer := new(strings.Builder);
+        errBuffer := new(strings.Builder);
 
-	stdcopy.StdCopy(os.Stdout, os.Stderr, out)
+        stdcopy.StdCopy(outBuffer, errBuffer, out);
+
+        log.Debug().Str("container-name", name).Str("container-id", containerInstance.ID).Str("stdout", outBuffer.String()).Str("stderr", errBuffer.String()).Msg("Container output.");
+    }
 
     return nil;
 }
