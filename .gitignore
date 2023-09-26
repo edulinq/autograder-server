@@ -16,4 +16,5 @@ _submissions/
 
 *.gz
 test.*
-/users.json
+users.json
+/out.*
