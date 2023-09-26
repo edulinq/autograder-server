@@ -5,6 +5,7 @@ import (
     "fmt"
     "os"
     "strings"
+    "time"
 
     "github.com/alecthomas/kong"
     "github.com/rs/zerolog/log"
@@ -16,6 +17,7 @@ import (
 )
 
 const DEFAULT_PASSWORD_LEN = 32;
+const EMAIL_SLEEP_TIME = int64(0.5 * float64(time.Second));
 
 type AddUser struct {
     Email string `help:"Email for the user." arg:"" required:""`
@@ -65,7 +67,7 @@ func (this *AddUser) Run(path string) error {
     }
 
     if (this.SendEmail) {
-        sendUserAddEmail(user, this.Pass, generatedPass, userExists, this.DryRun);
+        sendUserAddEmail(user, this.Pass, generatedPass, userExists, this.DryRun, false);
     }
 
     return nil;
@@ -130,8 +132,9 @@ func (this *AddTSV) Run(path string) error {
     }
 
     if (this.SendEmail) {
+        fmt.Println("Sending out registration emails.");
         for _, newUser := range newUsers {
-            sendUserAddEmail(newUser.User, newUser.CleartextPass, newUser.GeneratedPass, newUser.UserExists, this.DryRun);
+            sendUserAddEmail(newUser.User, newUser.CleartextPass, newUser.GeneratedPass, newUser.UserExists, this.DryRun, true);
         }
     }
 
@@ -430,7 +433,7 @@ func newOrMergeUser(users map[string]*model.User, email string, name string, str
     return user, userExists, nil;
 }
 
-func sendUserAddEmail(user *model.User, pass string, generatedPass bool, userExists bool, dryRun bool) {
+func sendUserAddEmail(user *model.User, pass string, generatedPass bool, userExists bool, dryRun bool, sleep bool) {
     subject, body := composeUserAddEmail(user.Email, pass, generatedPass, userExists);
 
     if (dryRun) {
@@ -442,5 +445,9 @@ func sendUserAddEmail(user *model.User, pass string, generatedPass bool, userExi
             log.Error().Err(err).Str("email", user.Email).Msg("Failed to send email.");
         }
         fmt.Printf("Registration email send to '%s'.\n", user.Email);
+
+        if (sleep) {
+            time.Sleep(time.Duration(EMAIL_SLEEP_TIME));
+        }
     }
 }
