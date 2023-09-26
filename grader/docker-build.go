@@ -111,6 +111,20 @@ func buildDockerImage(buildOptions types.ImageBuildOptions, tar io.ReadCloser) e
     if (err != nil) {
         return fmt.Errorf("Failed to run docker image build command: '%w'.", err);
     }
+
+    output := collectBuildOutput(response);
+    log.Debug().Str("image-build-output", output).Msg("Image Build Output");
+
+    return nil;
+}
+
+// Try to get the build output from a build response.
+// Note that the response may be from a failure.
+func collectBuildOutput(response types.ImageBuildResponse) string {
+    if (response.Body == nil) {
+        return "";
+    }
+
     defer response.Body.Close();
 
     buildStringOutput := strings.Builder{};
@@ -126,7 +140,8 @@ func buildDockerImage(buildOptions types.ImageBuildOptions, tar io.ReadCloser) e
 
         jsonData, err := util.JSONMapFromString(line);
         if (err != nil) {
-            return fmt.Errorf("Docker build output line is not JSON ('%s'): '%w'.", line, err);
+            buildStringOutput.WriteString("<WARNING: The following output line was not JSON.>");
+            buildStringOutput.WriteString(line);
         }
 
         rawText, ok := jsonData["error"];
@@ -136,7 +151,8 @@ func buildDockerImage(buildOptions types.ImageBuildOptions, tar io.ReadCloser) e
                 text = "<ERROR: Docker output JSON value is not a string.>";
             }
 
-            return fmt.Errorf("Docker image build failed with message: '%s'.", text);
+            log.Warn().Err(err).Str("message", text).Msg("Docker image build failed with message.");
+            buildStringOutput.WriteString(text);
         }
 
         rawText, ok = jsonData["stream"];
@@ -150,14 +166,12 @@ func buildDockerImage(buildOptions types.ImageBuildOptions, tar io.ReadCloser) e
         }
     }
 
-    err = responseScanner.Err();
+    err := responseScanner.Err();
     if (err != nil) {
-        return fmt.Errorf("Failed to scan docker image build responseL '%w'.", err);
+        log.Warn().Err(err).Msg("Failed to scan docker image build response.");
     }
 
-    log.Debug().Str("image-build-output", buildStringOutput.String()).Msg("Image Build Output");
-
-    return nil;
+    return buildStringOutput.String();
 }
 
 // Write a full docker build context (Dockerfile and static files) to the given directory.
