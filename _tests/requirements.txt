@@ -1,1 +1,1 @@
-autograder-py==0.2.1
+autograder-py==0.2.2
