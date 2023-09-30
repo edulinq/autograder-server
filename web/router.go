@@ -23,6 +23,8 @@ var routes = []route{
     newAPIRoute("POST", `/api/v01/history`, NewHistoryRequest, handleHistory),
     newAPIRoute("POST", `/api/v01/peek`, NewPeekRequest, handlePeek),
     newAPIRoute("POST", `/api/v01/submit`, NewSubmissionRequest, handleSubmit),
+
+    newAPIRoute("POST", `/api/v01/user/list`, NewUserListRequest, handleUserList),
 }
 
 // Handlers that internally handle and log errors should return nil and ensure that responses are written.

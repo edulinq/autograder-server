@@ -98,7 +98,7 @@ func loadParentCourseConfig(basepath string) (*Course, error) {
 }
 
 func (this *Course) GetUsers() (map[string]*User, error) {
-    path := filepath.Join(filepath.Dir(this.SourcePath), DEFAULT_USERS_FILENAME);
+    path := filepath.Join(filepath.Dir(this.SourcePath), this.UsersFile);
 
     users, err := LoadUsersFile(path);
     if (err != nil) {
