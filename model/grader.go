@@ -33,6 +33,10 @@ type GradedQuestion struct {
     GradingEndTime time.Time `json:"grading_end_time"`
 }
 
+func (this SubmissionSummary) String() string {
+    return util.BaseString(this);
+}
+
 func (this GradedAssignment) String() string {
     return util.BaseString(this);
 }

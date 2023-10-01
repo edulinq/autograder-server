@@ -35,7 +35,12 @@ jobs:
       - name: Build
         run: ./build.sh
 
-      - name: Run Tests
+      - name: Run Base Tests
         env:
           AUTOGRADER__DOCKER__DISABLE: 'true'
         run: ./test.sh
+
+      - name: Run Submission Tests
+        env:
+          AUTOGRADER__DOCKER__DISABLE: 'true'
+        run: ./.ci/run_remote_tests.sh

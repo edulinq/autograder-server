@@ -16,6 +16,10 @@ const BASE_TEST_USER = "test_user@test.com";
 const TEST_MESSAGE = "";
 
 func TestDockerSubmissions(test *testing.T) {
+    config.NO_AUTH.Set(true);
+    config.NO_STORE.Set(true);
+    config.COURSES_ROOT.Set(config.TESTS_DIR.GetString());
+
     if (config.DOCKER_DISABLE.GetBool()) {
         test.Skip("Docker is disabled, skipping test.");
     }

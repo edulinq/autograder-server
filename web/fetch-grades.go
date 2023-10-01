@@ -11,7 +11,7 @@ import (
     "github.com/eriq-augustine/autograder/util"
 )
 
-var MIN_ROLE model.UserRole = model.Grader;
+var MIN_ROLE_FETCH_GRADES model.UserRole = model.Grader;
 
 type FetchGradesRequest struct {
     model.BaseAPIRequest
@@ -45,7 +45,7 @@ func NewFetchGradesRequest(request *http.Request) (*FetchGradesRequest, *model.A
         return nil, model.NewResponse(http.StatusUnauthorized, "Failed to authenticate."), nil;
     }
 
-    if ((user != nil) && (user.Role < MIN_ROLE)) {
+    if ((user != nil) && (user.Role < MIN_ROLE_FETCH_GRADES)) {
         log.Debug().Str("user", user.Email).Msg("Authentication Failure: Insufficient Permissions.");
         return nil, model.NewResponse(http.StatusForbidden, "Insufficient Permissions."), nil;
     }

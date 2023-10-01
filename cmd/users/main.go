@@ -5,19 +5,14 @@ import (
     "fmt"
     "os"
     "strings"
-    "time"
 
     "github.com/alecthomas/kong"
     "github.com/rs/zerolog/log"
 
     "github.com/eriq-augustine/autograder/config"
-    "github.com/eriq-augustine/autograder/email"
     "github.com/eriq-augustine/autograder/model"
     "github.com/eriq-augustine/autograder/util"
 )
-
-const DEFAULT_PASSWORD_LEN = 32;
-const EMAIL_SLEEP_TIME = int64(0.5 * float64(time.Second));
 
 type AddUser struct {
     Email string `help:"Email for the user." arg:"" required:""`
@@ -37,7 +32,7 @@ func (this *AddUser) Run(path string) error {
 
     generatedPass := false;
     if (this.Pass == "") {
-        this.Pass, err = util.RandHex(DEFAULT_PASSWORD_LEN);
+        this.Pass, err = util.RandHex(model.DEFAULT_PASSWORD_LEN);
         if (err != nil) {
             return fmt.Errorf("Failed to generate a default password.");
         }
@@ -45,7 +40,7 @@ func (this *AddUser) Run(path string) error {
         generatedPass = true;
     }
 
-    user, userExists, err := newOrMergeUser(users, this.Email, this.Name, this.Role, this.Pass, this.Force);
+    user, userExists, err := model.NewOrMergeUser(users, this.Email, this.Name, this.Role, this.Pass, this.Force);
     if (err != nil) {
         return err;
     }
@@ -67,7 +62,7 @@ func (this *AddUser) Run(path string) error {
     }
 
     if (this.SendEmail) {
-        sendUserAddEmail(user, this.Pass, generatedPass, userExists, this.DryRun, false);
+        model.SendUserAddEmail(user, this.Pass, generatedPass, userExists, this.DryRun, false);
     }
 
     return nil;
@@ -134,7 +129,7 @@ func (this *AddTSV) Run(path string) error {
     if (this.SendEmail) {
         fmt.Println("Sending out registration emails.");
         for _, newUser := range newUsers {
-            sendUserAddEmail(newUser.User, newUser.CleartextPass, newUser.GeneratedPass, newUser.UserExists, this.DryRun, true);
+            model.SendUserAddEmail(newUser.User, newUser.CleartextPass, newUser.GeneratedPass, newUser.UserExists, this.DryRun, true);
         }
     }
 
@@ -231,7 +226,7 @@ func (this *ChangePassword) Run(path string) error {
 
     generatedPass := false;
     if (this.Pass == "") {
-        this.Pass, err = util.RandHex(DEFAULT_PASSWORD_LEN);
+        this.Pass, err = util.RandHex(model.DEFAULT_PASSWORD_LEN);
         if (err != nil) {
             return fmt.Errorf("Failed to generate a default password.");
         }
@@ -371,7 +366,7 @@ func readUsersTSV(users map[string]*model.User, path string, skipRows int, force
             pass = parts[3];
             generatedPass = false;
         } else {
-            pass, err = util.RandHex(DEFAULT_PASSWORD_LEN);
+            pass, err = util.RandHex(model.DEFAULT_PASSWORD_LEN);
             if (err != nil) {
                 return nil, fmt.Errorf("Failed to generate a default password.");
             }
@@ -383,7 +378,7 @@ func readUsersTSV(users map[string]*model.User, path string, skipRows int, force
             return nil, fmt.Errorf("User file '%s' line %d contains too many fields. Found %d, expecting at most %d.", path, lineno, len(parts), 4);
         }
 
-        user, userExists, err := newOrMergeUser(users, email, name, role, pass, force);
+        user, userExists, err := model.NewOrMergeUser(users, email, name, role, pass, force);
         if (err != nil) {
             return nil, err;
         }
@@ -399,82 +394,4 @@ func readUsersTSV(users map[string]*model.User, path string, skipRows int, force
     }
 
     return newUsers, nil;
-}
-
-func composeUserAddEmail(address string, pass string, generatedPass bool, userExists bool) (string, string) {
-    var subject string;
-    var body string;
-
-    if (userExists) {
-        subject = "Autograder -- User Password Changed";
-        body = fmt.Sprintf("Hello,\n\nThe password for '%s' has been changed.\n", address);
-    } else {
-        subject = "Autograder -- User Account Created";
-        body = fmt.Sprintf("Hello,\n\nAn account with the username/email '%s' has been created.\n", address);
-    }
-
-    if (generatedPass) {
-        body += fmt.Sprintf("The new password is '%s' (no quotes).\n", pass);
-    }
-
-    return subject, body;
-}
-
-// Return a user that is either new or a merged with the existing user (depending on force).
-// If a user exists (and force is true), then the user will be updated.
-// New users will not be added to |users|.
-func newOrMergeUser(users map[string]*model.User, email string, name string, stringRole string, pass string, force bool) (*model.User, bool, error) {
-    user := users[email];
-    userExists := (user != nil);
-
-    if (userExists && !force) {
-        return nil, false, fmt.Errorf("User '%s' already exists, cannot add.", email);
-    }
-
-    if (!userExists) {
-        user = &model.User{Email: email};
-    }
-
-    if (name != "") {
-        user.DisplayName = name;
-    } else  if (user.DisplayName == "") {
-        user.DisplayName = email;
-    }
-
-    // Note the slightly tricky conditions here.
-    // Only error if the string role is bad and there is not an existing good role.
-    role := model.GetRole(stringRole);
-    if (role != model.Unknown) {
-        user.Role = role;
-    } else if (user.Role == model.Unknown) {
-        return nil, false, fmt.Errorf("Unknown role: '%s'.", stringRole);
-    }
-
-    hashPass := util.Sha256Hex([]byte(pass));
-
-    err := user.SetPassword(hashPass);
-    if (err != nil) {
-        return nil, false, fmt.Errorf("Could not set password: '%w'.", err);
-    }
-
-    return user, userExists, nil;
-}
-
-func sendUserAddEmail(user *model.User, pass string, generatedPass bool, userExists bool, dryRun bool, sleep bool) {
-    subject, body := composeUserAddEmail(user.Email, pass, generatedPass, userExists);
-
-    if (dryRun) {
-        fmt.Printf("Doing a dry run, user '%s' will not be emailed.\n", user.Email);
-        log.Debug().Str("address", user.Email).Str("subject", subject).Str("body", body).Msg("Email not sent because of dry run.");
-    } else {
-        err := email.Send([]string{user.Email}, subject, body);
-        if (err != nil) {
-            log.Error().Err(err).Str("email", user.Email).Msg("Failed to send email.");
-        }
-        fmt.Printf("Registration email send to '%s'.\n", user.Email);
-
-        if (sleep) {
-            time.Sleep(time.Duration(EMAIL_SLEEP_TIME));
-        }
-    }
 }

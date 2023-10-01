@@ -98,7 +98,7 @@ func loadParentCourseConfig(basepath string) (*Course, error) {
 }
 
 func (this *Course) GetUsers() (map[string]*User, error) {
-    path := filepath.Join(filepath.Dir(this.SourcePath), DEFAULT_USERS_FILENAME);
+    path := filepath.Join(filepath.Dir(this.SourcePath), this.UsersFile);
 
     users, err := LoadUsersFile(path);
     if (err != nil) {
@@ -119,5 +119,10 @@ func (this *Course) GetUser(email string) (*User, error) {
         return user, nil;
     }
 
-    return nil, fmt.Errorf("Could not find user '%s' in course '%s'.", email, this.ID);
+    return nil, nil;
+}
+
+func (this *Course) SaveUsersFile(users map[string]*User) error {
+    path := filepath.Join(filepath.Dir(this.SourcePath), this.UsersFile);
+    return SaveUsersFile(path, users);
 }
