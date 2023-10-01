@@ -28,7 +28,12 @@ func AuthAPIRequest(request *model.BaseAPIRequest, course *model.Course) (bool, 
     }
 
     if (err != nil) {
-        log.Debug().Str("user", request.User).Err(err).Msg("Authentication Failure: Unknown User.");
+        log.Debug().Str("user", request.User).Err(err).Msg("Authentication Failure: Cannot get user.");
+        return false, nil, nil;
+    }
+
+    if (user == nil) {
+        log.Debug().Str("user", request.User).Msg("Authentication Failure: Unknown user.");
         return false, nil, nil;
     }
 

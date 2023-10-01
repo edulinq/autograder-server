@@ -13,6 +13,13 @@
         "pass": "9c33fae839ad63474a677e871aeb4cdb63ab7089774a83fd8ad01a28b45f4271",
         "salt": "a853844be59b339ec45733eddeee41cd"
     },
+    "owner@test.com": {
+        "email": "owner@test.com",
+        "display-name": "owner",
+        "role": "owner",
+        "pass": "a8f8cc96aba145d957bf5934bba22a43aff98684e2df44d2fc214c1cfd51ea8d",
+        "salt": "c61fe4f62b132d3908843e9c00f45c98"
+    },
     "test@test.com": {
         "email": "test@test.com",
         "display-name": "Test",
