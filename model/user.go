@@ -26,7 +26,7 @@ const (
     ARGON2_THREADS = 4;
     ARGON2_TIME = 1;
 
-    EMAIL_SLEEP_TIME = int64(0.5 * float64(time.Second));
+    EMAIL_SLEEP_TIME = int64(1.5 * float64(time.Second));
 )
 
 type User struct {
@@ -145,8 +145,9 @@ func SendUserAddEmail(user *User, pass string, generatedPass bool, userExists bo
         err := email.Send([]string{user.Email}, subject, body);
         if (err != nil) {
             log.Error().Err(err).Str("email", user.Email).Msg("Failed to send email.");
+        } else {
+            fmt.Printf("Registration email send to '%s'.\n", user.Email);
         }
-        fmt.Printf("Registration email send to '%s'.\n", user.Email);
 
         if (sleep) {
             time.Sleep(time.Duration(EMAIL_SLEEP_TIME));
