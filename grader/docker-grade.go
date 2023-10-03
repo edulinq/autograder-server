@@ -116,6 +116,19 @@ func runGraderContainer(assignment *model.Assignment, inputDir string, outputDir
         return fmt.Errorf("Failed to start container '%s' (%s): '%w'.", name, containerInstance.ID, err);
     }
 
+    // Get the output reader before the container dies.
+    out, err := docker.ContainerLogs(ctx, containerInstance.ID, types.ContainerLogsOptions{
+        ShowStdout: true,
+        ShowStderr: true,
+        Follow: true,
+    })
+
+    if (err != nil) {
+        log.Warn().Err(err).Str("container-name", name).Str("container-id", containerInstance.ID).Msg("Failed to get output from container (but run did not throw an error).");
+        out = nil;
+    }
+    defer out.Close()
+
     statusChan, errorChan := docker.ContainerWait(ctx, containerInstance.ID, container.WaitConditionNotRunning);
     select {
         case err := <-errorChan:
@@ -126,10 +139,8 @@ func runGraderContainer(assignment *model.Assignment, inputDir string, outputDir
             // Waiting is complete.
     }
 
-    out, err := docker.ContainerLogs(ctx, containerInstance.ID, types.ContainerLogsOptions{ShowStdout: true, ShowStderr: true})
-    if (err != nil) {
-        log.Warn().Err(err).Str("container-name", name).Str("container-id", containerInstance.ID).Msg("Failed to get output from container (but run did not throw an error).");
-    } else {
+    // Read the output after the container is done.
+    if (out != nil) {
         outBuffer := new(strings.Builder);
         errBuffer := new(strings.Builder);
 
