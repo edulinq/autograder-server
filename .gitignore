@@ -11,6 +11,7 @@ dist/
 test/
 _submissions/
 /_courses/
+/_backup/
 
 /.secrets.json
 

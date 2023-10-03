@@ -4,6 +4,8 @@ import (
     "fmt"
     "path/filepath"
 
+    "github.com/rs/zerolog/log"
+
     "github.com/eriq-augustine/autograder/util"
 )
 
@@ -12,12 +14,14 @@ const DEFAULT_USERS_FILENAME = "users.json"
 
 type Course struct {
     // Required fields.
-    ID string  `json:"id"`
+    ID string `json:"id"`
     DisplayName string `json:"display-name"`
 
     // Non-required fields that have defaults.
     // Paths are always relative to the course dir.
     UsersFile string `json:"users-file"`
+
+    Backup []*BackupTask `json:"backup"`
 
     // Ignore these fields in JSON.
     SourcePath string `json:"-"`
@@ -45,6 +49,15 @@ func LoadCourseConfig(path string) (*Course, error) {
     }
 
     return &config, nil;
+}
+
+func MustLoadCourseConfig(path string) *Course {
+    config, err := LoadCourseConfig(path);
+    if (err != nil) {
+        log.Fatal().Str("path", path).Err(err).Msg("Failed to load course config.");
+    }
+
+    return config;
 }
 
 // Load the course (with its JSON config) and all assignments (JSON configs) recursivley in a directory.
@@ -82,6 +95,19 @@ func (this *Course) Validate() error {
     this.ID, err = ValidateID(this.ID);
     if (err != nil) {
         return err;
+    }
+
+    // Validate backup tasks.
+    for _, backupTask := range this.Backup {
+        err = backupTask.Validate(filepath.Dir(this.SourcePath), this.ID);
+        if (err != nil) {
+            return err;
+        }
+    }
+
+    // Schedule backup tasks.
+    for _, backupTask := range this.Backup {
+        backupTask.Schedule();
     }
 
     return nil;

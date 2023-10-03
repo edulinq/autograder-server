@@ -22,6 +22,8 @@ var (
 
     SECRETS_PATH = newOption("secrets.path", ".secrets.json", "Path to an optional secrets config file.");
 
+    BACKUP_DIR = newOption("server.backup.dir", "_backup", "Path to where backups are made by default.");
+
     TESTS_DIR = newOption("test.tests_dir", "_tests", "The base dir containing courses and assignments for testing.");
 
     WEB_PORT = newOption("web.port", 8080, "The port for the web interface to serve on.");
