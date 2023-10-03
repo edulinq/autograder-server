@@ -24,6 +24,8 @@ var (
 
     BACKUP_DIR = newOption("server.backup.dir", "_backup", "Path to where backups are made by default.");
 
+    NO_TASKS = newOption("tasks.disable", false, "Disable all scheduled tasks.");
+
     TESTS_DIR = newOption("test.tests_dir", "_tests", "The base dir containing courses and assignments for testing.");
 
     WEB_PORT = newOption("web.port", 8080, "The port for the web interface to serve on.");

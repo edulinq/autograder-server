@@ -27,6 +27,8 @@ func (this *BackupTask) Validate(source string, basename string) error {
         return err;
     }
 
+    this.Disable = (this.Disable || config.NO_TASKS.GetBool());
+
     this.basename = basename;
     if (this.basename == "") {
         return fmt.Errorf("Backup basename cannot be empty.");
@@ -51,6 +53,10 @@ func (this *BackupTask) String() string {
 
 // Schedule this task to be regularly run at the scheduled time.
 func (this *BackupTask) Schedule() {
+    if (this.Disable) {
+        return;
+    }
+
     this.When.Schedule(func() {
         err := this.Run();
         if (err != nil) {
