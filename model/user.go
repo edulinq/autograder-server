@@ -35,6 +35,8 @@ type User struct {
     Role UserRole `json:"role"`
     Pass string `json:"pass"`
     Salt string `json:"salt"`
+
+    CanvasID string `json:"canvas-id,omitempty"`
 }
 
 // Sets the password and generates a new salt.

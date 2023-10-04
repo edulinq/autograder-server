@@ -21,6 +21,8 @@ type Course struct {
     // Paths are always relative to the course dir.
     UsersFile string `json:"users-file"`
 
+    CanvasInfo *CanvasInfo `json:"canvas,omitempty"`
+
     Backup []*BackupTask `json:"backup"`
 
     // Ignore these fields in JSON.
