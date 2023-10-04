@@ -13,13 +13,7 @@ const (
     HEADER_LINK = "Link";
 )
 
-type CanvasUserInfo struct {
-    ID string `json:"id"`
-    Name string `json:"name"`
-    Email string `json:"login_id"`
-}
-
-func FetchUsers(canvasInfo *model.CanvasInfo) ([]CanvasUserInfo, error) {
+func FetchUsers(canvasInfo *model.CanvasInfo) ([]model.CanvasUserInfo, error) {
     userListEndpoint := fmt.Sprintf("/api/v1/courses/%s/users", canvasInfo.CourseID);
 
     url := fmt.Sprintf("%s%s?per_page=%d", canvasInfo.BaseURL, userListEndpoint, PAGE_SIZE);
@@ -28,7 +22,7 @@ func FetchUsers(canvasInfo *model.CanvasInfo) ([]CanvasUserInfo, error) {
         "Accept": []string{"application/json+canvas-string-ids"},
     };
 
-    users := make([]CanvasUserInfo, 0);
+    users := make([]model.CanvasUserInfo, 0);
 
     for (url != "") {
         body, responseHeaders, err := util.GetWithHeaders(url, headers);
@@ -36,7 +30,7 @@ func FetchUsers(canvasInfo *model.CanvasInfo) ([]CanvasUserInfo, error) {
             return nil, fmt.Errorf("Failed to fetch users.");
         }
 
-        var pageUsers []CanvasUserInfo;
+        var pageUsers []model.CanvasUserInfo;
         err = util.JSONFromString(body, &pageUsers);
         if (err != nil) {
             return nil, fmt.Errorf("Failed to unmarshal users page: '%w'.", err);

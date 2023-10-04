@@ -5,6 +5,12 @@ import (
     "strings"
 )
 
+type CanvasUserInfo struct {
+    ID string `json:"id"`
+    Name string `json:"name"`
+    Email string `json:"login_id"`
+}
+
 type CanvasInfo struct {
     CourseID string `json:"course-id"`
     APIToken string `json:"api-token"`
