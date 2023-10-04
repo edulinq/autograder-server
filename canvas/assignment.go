@@ -36,3 +36,25 @@ func FetchAssignmentGrades(canvasInfo *model.CanvasInfo, assignmentID string) ([
 
     return grades, nil;
 }
+
+func UpdateAssignmentGrades(canvasInfo *model.CanvasInfo, assignmentID string, grades []model.CanvasGradeInfo) error {
+    apiEndpoint := fmt.Sprintf(
+        "/api/v1/courses/%s/assignments/%s/submissions/update_grades",
+        canvasInfo.CourseID, assignmentID);
+    url := canvasInfo.BaseURL + apiEndpoint;
+
+    headers := standardHeaders(canvasInfo);
+
+    formGrades := make(map[string]string);
+
+    for _, gradeInfo := range grades {
+        formGrades[fmt.Sprintf("grade_data[%s][posted_grade]", gradeInfo.UserID)] = gradeInfo.Score;
+    }
+
+    _, _, err := util.PostWithHeaders(url, formGrades, headers);
+    if (err != nil) {
+        return fmt.Errorf("Failed to upload grades: '%w'.", err);
+    }
+
+    return nil;
+}
