@@ -2,25 +2,18 @@ package canvas
 
 import (
     "fmt"
-    "strings"
 
     "github.com/eriq-augustine/autograder/model"
     "github.com/eriq-augustine/autograder/util"
 )
 
-const (
-    PAGE_SIZE = 75
-    HEADER_LINK = "Link";
-)
-
 func FetchUsers(canvasInfo *model.CanvasInfo) ([]model.CanvasUserInfo, error) {
-    userListEndpoint := fmt.Sprintf("/api/v1/courses/%s/users", canvasInfo.CourseID);
+    apiEndpoint := fmt.Sprintf(
+        "/api/v1/courses/%s/users?per_page=%d",
+        canvasInfo.CourseID, PAGE_SIZE);
+    url := canvasInfo.BaseURL + apiEndpoint;
 
-    url := fmt.Sprintf("%s%s?per_page=%d", canvasInfo.BaseURL, userListEndpoint, PAGE_SIZE);
-    headers := map[string][]string{
-        "Authorization": []string{fmt.Sprintf("Bearer %s", canvasInfo.APIToken)},
-        "Accept": []string{"application/json+canvas-string-ids"},
-    };
+    headers := standardHeaders(canvasInfo);
 
     users := make([]model.CanvasUserInfo, 0);
 
@@ -42,29 +35,4 @@ func FetchUsers(canvasInfo *model.CanvasInfo) ([]model.CanvasUserInfo, error) {
     }
 
     return users, nil;
-}
-
-// See if the response headers have a next link.
-// Returns the link or an empty string.
-func fetchNextCanvasLink(headers map[string][]string) string {
-    values, ok := headers[HEADER_LINK];
-    if (!ok) {
-        return "";
-    }
-
-    for _, value := range values {
-        links := strings.Split(value, ",");
-        for _, link := range links {
-            parts := strings.Split(link, ";");
-            if (len(parts) < 2) {
-                continue;
-            }
-
-            if (strings.TrimSpace(parts[1]) == `rel="next"`) {
-                return strings.Trim(strings.TrimSpace(parts[0]), "<>");
-            }
-        }
-    }
-
-    return "";
 }
