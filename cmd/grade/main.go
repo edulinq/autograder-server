@@ -30,8 +30,12 @@ func main() {
 
     assignment := model.MustLoadAssignmentConfig(args.Assignment);
 
-    result, _, err := grader.GradeDefault(assignment, args.Submission, args.User, args.Message);
+    result, _, output, err := grader.GradeDefault(assignment, args.Submission, args.User, args.Message);
     if (err != nil) {
+        if (output != "") {
+            fmt.Println("Grading failed, but output was recovered:");
+            fmt.Println(output);
+        }
         log.Fatal().Err(err).Msg("Failed to run grader.");
     }
 

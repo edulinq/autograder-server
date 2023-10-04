@@ -30,12 +30,12 @@ func GetDefaultGradeOptions() GradeOptions {
 }
 
 // Grade with default options pulled from config.
-func GradeDefault(assignment *model.Assignment, submissionPath string, user string, message string) (*model.GradedAssignment, *model.SubmissionSummary, error) {
+func GradeDefault(assignment *model.Assignment, submissionPath string, user string, message string) (*model.GradedAssignment, *model.SubmissionSummary, string, error) {
     return Grade(assignment, submissionPath, user, message, GetDefaultGradeOptions());
 }
 
 // Grade with custom options.
-func Grade(assignment *model.Assignment, submissionPath string, user string, message string, options GradeOptions) (*model.GradedAssignment, *model.SubmissionSummary, error) {
+func Grade(assignment *model.Assignment, submissionPath string, user string, message string, options GradeOptions) (*model.GradedAssignment, *model.SubmissionSummary, string, error) {
     gradingKey := fmt.Sprintf("%s::%s::%s", assignment.Course.ID, assignment.ID, user);
 
     // Get the existing mutex, or store (and fetch) a new one.
@@ -47,7 +47,7 @@ func Grade(assignment *model.Assignment, submissionPath string, user string, mes
 
     submissionDir, submissionID, err := prepSubmissionDir(assignment, user, options);
     if (err != nil) {
-        return nil, nil, fmt.Errorf("Failed to prepare submission dir for assignment '%s' and user '%s': '%w'.", assignment.FullID(), user, err);
+        return nil, nil, "", fmt.Errorf("Failed to prepare submission dir for assignment '%s' and user '%s': '%w'.", assignment.FullID(), user, err);
     }
 
     gradingID := fmt.Sprintf("%s::%d", gradingKey, submissionID);
@@ -56,22 +56,23 @@ func Grade(assignment *model.Assignment, submissionPath string, user string, mes
     submissionCopyDir := filepath.Join(submissionDir, model.GRADING_INPUT_DIRNAME);
     err = util.CopyDirent(submissionPath, submissionCopyDir, true);
     if (err != nil) {
-        return nil, nil, fmt.Errorf("Failed to copy submission for assignment '%s' and user '%s': '%w'.", assignment.FullID(), user, err);
+        return nil, nil, "", fmt.Errorf("Failed to copy submission for assignment '%s' and user '%s': '%w'.", assignment.FullID(), user, err);
     }
 
     outputDir := filepath.Join(submissionDir, model.GRADING_OUTPUT_DIRNAME);
     os.MkdirAll(outputDir, 0755);
 
     var result *model.GradedAssignment;
+    var output string;
 
     if (options.NoDocker) {
-        result, err = RunNoDockerGrader(assignment, submissionPath, outputDir, options, gradingID);
+        result, output, err = RunNoDockerGrader(assignment, submissionPath, outputDir, options, gradingID);
     } else {
-        result, err = RunDockerGrader(assignment, submissionPath, outputDir, options, gradingID);
+        result, output, err = RunDockerGrader(assignment, submissionPath, outputDir, options, gradingID);
     }
 
     if (err != nil) {
-        return nil, nil, err;
+        return nil, nil, output, err;
     }
 
     summary := result.GetSummary(gradingID, message);
@@ -79,10 +80,10 @@ func Grade(assignment *model.Assignment, submissionPath string, user string, mes
 
     err = util.ToJSONFileIndent(summary, summaryPath);
     if (err != nil) {
-        return nil, nil, fmt.Errorf("Failed to write submission summary for assignment '%s' and user '%s': '%w'.", assignment.FullID(), user, err);
+        return nil, nil, output, fmt.Errorf("Failed to write submission summary for assignment '%s' and user '%s': '%w'.", assignment.FullID(), user, err);
     }
 
-    return result, summary, nil;
+    return result, summary, output, nil;
 }
 
 func prepSubmissionDir(assignment *model.Assignment, user string, options GradeOptions) (string, int64, error) {

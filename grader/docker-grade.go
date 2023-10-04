@@ -24,16 +24,16 @@ import (
 //  - input -- A temp dir that will be mounted at DOCKER_INPUT_DIR (read-only).
 //  - output -- Passed in directory that will be mounted at DOCKER_OUTPUT_DIR.
 //  - work -- Should already be created inside the docker image, will only exist within the container.
-func RunDockerGrader(assignment *model.Assignment, submissionPath string, outputDir string, options GradeOptions, gradingID string) (*model.GradedAssignment, error) {
+func RunDockerGrader(assignment *model.Assignment, submissionPath string, outputDir string, options GradeOptions, gradingID string) (*model.GradedAssignment, string, error) {
     os.MkdirAll(outputDir, 0755);
     if (!util.IsEmptyDir(outputDir)) {
-        return nil, fmt.Errorf("Output dir for docker grader is not empty.");
+        return nil, "", fmt.Errorf("Output dir for docker grader is not empty.");
     }
 
     // Create a temp directory to use for input (will be mounted to the container).
     tempInputDir, err := os.MkdirTemp("", "autograding-docker-input-");
     if (err != nil) {
-        return nil, fmt.Errorf("Could not create temp input dir: '%w'.", err);
+        return nil, "", fmt.Errorf("Could not create temp input dir: '%w'.", err);
     }
 
     if (options.LeaveTempDir) {
@@ -45,32 +45,32 @@ func RunDockerGrader(assignment *model.Assignment, submissionPath string, output
     // Copy over submission files to the temp input dir.
     err = util.CopyDirent(submissionPath, tempInputDir, true);
     if (err != nil) {
-        return nil, fmt.Errorf("Failed to copy over submission/input contents: '%w'.", err);
+        return nil, "", fmt.Errorf("Failed to copy over submission/input contents: '%w'.", err);
     }
 
-    err = runGraderContainer(assignment, tempInputDir, outputDir, gradingID);
+    output, err := runGraderContainer(assignment, tempInputDir, outputDir, gradingID);
     if (err != nil) {
-        return nil, err;
+        return nil, "", err;
     }
 
     resultPath := filepath.Join(outputDir, model.GRADER_OUTPUT_RESULT_FILENAME);
     if (!util.PathExists(resultPath)) {
-        return nil, fmt.Errorf("Cannot find output file ('%s') after the grading container (%s) was run.", resultPath, assignment.ImageName());
+        return nil, output, fmt.Errorf("Cannot find output file ('%s') after the grading container (%s) was run.", resultPath, assignment.ImageName());
     }
 
     var result model.GradedAssignment;
     err = util.JSONFromFile(resultPath, &result);
     if (err != nil) {
-        return nil, err;
+        return nil, output, err;
     }
 
-    return &result, nil;
+    return &result, output, nil;
 }
 
-func runGraderContainer(assignment *model.Assignment, inputDir string, outputDir string, gradingID string) error {
+func runGraderContainer(assignment *model.Assignment, inputDir string, outputDir string, gradingID string) (string, error) {
     ctx, docker, err := getDockerClient();
     if (err != nil) {
-        return err;
+        return "", err;
     }
     defer docker.Close()
 
@@ -108,12 +108,12 @@ func runGraderContainer(assignment *model.Assignment, inputDir string, outputDir
         name)
 
     if (err != nil) {
-        return fmt.Errorf("Failed to create container '%s': '%w'.", name, err);
+        return "", fmt.Errorf("Failed to create container '%s': '%w'.", name, err);
     }
 
     err = docker.ContainerStart(ctx, containerInstance.ID, types.ContainerStartOptions{});
     if (err != nil) {
-        return fmt.Errorf("Failed to start container '%s' (%s): '%w'.", name, containerInstance.ID, err);
+        return "", fmt.Errorf("Failed to start container '%s' (%s): '%w'.", name, containerInstance.ID, err);
     }
 
     // Get the output reader before the container dies.
@@ -133,11 +133,13 @@ func runGraderContainer(assignment *model.Assignment, inputDir string, outputDir
     select {
         case err := <-errorChan:
             if (err != nil) {
-                return fmt.Errorf("Got an error when running container '%s' (%s): '%w'.", name, containerInstance.ID, err);
+                return "", fmt.Errorf("Got an error when running container '%s' (%s): '%w'.", name, containerInstance.ID, err);
             }
         case <-statusChan:
             // Waiting is complete.
     }
+
+    output := "";
 
     // Read the output after the container is done.
     if (out != nil) {
@@ -147,9 +149,11 @@ func runGraderContainer(assignment *model.Assignment, inputDir string, outputDir
         stdcopy.StdCopy(outBuffer, errBuffer, out);
 
         log.Debug().Str("container-name", name).Str("container-id", containerInstance.ID).Str("stdout", outBuffer.String()).Str("stderr", errBuffer.String()).Msg("Container output.");
+
+        output = fmt.Sprintf("\n--- stdout ---\n%s\n--- stderr ---\n%s\n---\n", outBuffer.String(), errBuffer.String());
     }
 
-    return nil;
+    return output, nil;
 }
 
 func cleanContainerName(text string) string {

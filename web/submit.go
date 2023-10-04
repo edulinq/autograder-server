@@ -5,6 +5,8 @@ import (
     "net/http"
     "os"
 
+    "github.com/rs/zerolog/log"
+
     "github.com/eriq-augustine/autograder/grader"
     "github.com/eriq-augustine/autograder/model"
     "github.com/eriq-augustine/autograder/util"
@@ -74,8 +76,13 @@ func handleSubmit(submission *SubmissionRequest) (int, any, error) {
         return http.StatusBadRequest, fmt.Sprintf("Could not find assignment ('%s') for course ('%s').", submission.Assignment, submission.Course,), nil;
     }
 
-    result, summary, err := grader.GradeDefault(assignment, submission.Dir, submission.User, submission.Message);
+    result, summary, output, err := grader.GradeDefault(assignment, submission.Dir, submission.User, submission.Message);
     if (err != nil) {
+        if (output != "") {
+            log.Debug().Err(err).Str("output", output).Msg("Submission grading failed, but output exists.");
+            return 0, model.NewSoftFailureResponse(output), nil;
+        }
+
         return 0, nil, err;
     }
 

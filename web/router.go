@@ -112,15 +112,20 @@ func handleAPIEndpoint[T model.APIRequest](response http.ResponseWriter, request
         return nil;
     }
 
-    if (status == 0) {
-        if (err != nil) {
-            status = http.StatusInternalServerError;
-        } else {
-            status = http.StatusOK;
+    apiResponse, ok := message.(*model.APIResponse)
+    if (!ok) {
+        // We don't have a response yet, build one.
+        if (status == 0) {
+            if (err != nil) {
+                status = http.StatusInternalServerError;
+            } else {
+                status = http.StatusOK;
+            }
         }
+
+        apiResponse = model.NewResponse(status, message);
     }
 
-    apiResponse = model.NewResponse(status, message);
     sendAPIResponse(response, request, apiResponse);
 
     return nil;

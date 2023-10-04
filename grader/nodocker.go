@@ -16,10 +16,10 @@ import (
 const PYTHON_AUTOGRADER_INVOCATION = "python3 -m autograder.cli.grade-submission --grader <grader> --inputdir <inputdir> --outputdir <outputdir> --workdir <workdir> --outpath <outpath>"
 const PYTHON_GRADER_FILENAME = "grader.py"
 
-func RunNoDockerGrader(assignment *model.Assignment, submissionPath string, outputDir string, options GradeOptions, gradingID string) (*model.GradedAssignment, error) {
+func RunNoDockerGrader(assignment *model.Assignment, submissionPath string, outputDir string, options GradeOptions, gradingID string) (*model.GradedAssignment, string, error) {
     tempDir, inputDir, _, workDir, err := prepTempGradingDir();
     if (err != nil) {
-        return nil, err;
+        return nil, "", err;
     }
 
     if (!options.LeaveTempDir) {
@@ -30,41 +30,43 @@ func RunNoDockerGrader(assignment *model.Assignment, submissionPath string, outp
 
     cmd, err := getAssignmentInvocation(assignment, inputDir, outputDir, workDir);
     if (err != nil) {
-        return nil, err;
+        return nil, "", err;
     }
 
     // Copy over the static files (and do any file ops).
     err = copyAssignmentFiles(filepath.Dir(assignment.SourcePath), workDir, tempDir,
             assignment.StaticFiles, false, assignment.PreStaticFileOperations, assignment.PostStaticFileOperations);
     if (err != nil) {
-        return nil, fmt.Errorf("Failed to copy static assignment files: '%w'.", err);
+        return nil, "", fmt.Errorf("Failed to copy static assignment files: '%w'.", err);
     }
 
     // Copy over the submission files (and do any file ops).
     err = copyAssignmentFiles(submissionPath, inputDir, tempDir,
             []string{"."}, true, [][]string{}, assignment.PostSubmissionFileOperations);
     if (err != nil) {
-        return nil, fmt.Errorf("Failed to copy submission ssignment files: '%w'.", err);
+        return nil, "", fmt.Errorf("Failed to copy submission ssignment files: '%w'.", err);
     }
 
-    output, err := cmd.CombinedOutput();
+    rawOutput, err := cmd.CombinedOutput();
+    output := string(rawOutput[:])
+
     if (err != nil) {
         log.Warn().Str("assignment", assignment.FullID()).Str("tempdir", tempDir).Msg(string(output[:]));
-        return nil, fmt.Errorf("Failed to run non-docker grader for assignment '%s': '%w'.", assignment.FullID(), err);
+        return nil, output, fmt.Errorf("Failed to run non-docker grader for assignment '%s': '%w'.", assignment.FullID(), err);
     }
 
     resultPath := filepath.Join(outputDir, model.GRADER_OUTPUT_RESULT_FILENAME);
     if (!util.PathExists(resultPath)) {
-        return nil, fmt.Errorf("Cannot find output file ('%s') after non-docker grading.", resultPath);
+        return nil, output, fmt.Errorf("Cannot find output file ('%s') after non-docker grading.", resultPath);
     }
 
     var result model.GradedAssignment;
     err = util.JSONFromFile(resultPath, &result);
     if (err != nil) {
-        return nil, err;
+        return nil, output, err;
     }
 
-    return &result, nil;
+    return &result, output, nil;
 }
 
 // Get a command to invoke the non-docker grader.

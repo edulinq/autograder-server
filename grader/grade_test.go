@@ -99,7 +99,7 @@ func runSubmissionTests(test *testing.T, parallel bool, docker bool) {
                 test.Fatalf("Could not find assignment for test submission '%s'.", testSubmissionPath);
             }
 
-            result, _, err := Grade(assignment, filepath.Dir(testSubmissionPath), user, TEST_MESSAGE, gradeOptions);
+            result, _, _, err := Grade(assignment, filepath.Dir(testSubmissionPath), user, TEST_MESSAGE, gradeOptions);
             if (err != nil) {
                 test.Fatalf("Failed to grade assignment: '%v'.", err);
             }

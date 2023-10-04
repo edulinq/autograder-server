@@ -47,6 +47,18 @@ func NewResponse(status int, content any) *APIResponse {
     return &response;
 }
 
+// A failure, but still return a 200.
+func NewSoftFailureResponse(content any) *APIResponse {
+    response := APIResponse{
+        Success: false,
+        HTTPStatus: http.StatusOK,
+        Timestamp: time.Now(),
+        Content: content,
+    };
+
+    return &response;
+}
+
 func (this *APIResponse) Send(response http.ResponseWriter) error {
     payload, err := util.ToJSON(this);
     if (err != nil) {
