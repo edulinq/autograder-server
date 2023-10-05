@@ -25,6 +25,14 @@ type CanvasSubmissionComment struct {
     Time string `json:"edited_at"`
 }
 
+type CanvasAssignment struct {
+    ID string `json:"id"`
+    Name string `json:"name"`
+    CourseID string `json:"course_id"`
+    DueDate string `json:"due_at"`
+    MaxPoints float64 `json:"points_possible"`
+}
+
 type CanvasInfo struct {
     CourseID string `json:"course-id"`
     APIToken string `json:"api-token"`

@@ -5,6 +5,8 @@ import (
    "fmt"
    "io"
    "os"
+
+    "github.com/rs/zerolog/log"
 )
 
 const DEFAULT_PREFIX = "";
@@ -53,6 +55,15 @@ func JSONMapFromString(data string) (map[string]any, error) {
 
 func ToJSON(data any) (string, error) {
     return ToJSONIndentCustom(data, "", "");
+}
+
+func MustToJSONIndent(data any) string {
+    text, err := ToJSONIndentCustom(data, DEFAULT_PREFIX, DEFAULT_INDENT);
+    if (err != nil) {
+        log.Fatal().Err(err).Any("data", data).Msg("Failed to convert object to JSON.");
+    }
+
+    return text;
 }
 
 func ToJSONIndent(data any) (string, error) {
