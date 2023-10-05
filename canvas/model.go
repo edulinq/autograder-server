@@ -1,4 +1,4 @@
-package model
+package canvas
 
 import (
     "fmt"
@@ -33,13 +33,13 @@ type CanvasAssignment struct {
     MaxPoints float64 `json:"points_possible"`
 }
 
-type CanvasInfo struct {
+type CanvasInstanceInfo struct {
     CourseID string `json:"course-id"`
     APIToken string `json:"api-token"`
     BaseURL string `json:"base-url"`
 }
 
-func (this *CanvasInfo) Validate() error {
+func (this *CanvasInstanceInfo) Validate() error {
     if (this.CourseID == "") {
         return fmt.Errorf("Canvas course ID (course-id) cannot be empty.");
     }

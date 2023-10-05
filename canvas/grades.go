@@ -3,11 +3,10 @@ package canvas
 import (
     "fmt"
 
-    "github.com/eriq-augustine/autograder/model"
     "github.com/eriq-augustine/autograder/util"
 )
 
-func FetchAssignmentGrades(canvasInfo *model.CanvasInfo, assignmentID string) ([]model.CanvasGradeInfo, error) {
+func FetchAssignmentGrades(canvasInfo *CanvasInstanceInfo, assignmentID string) ([]CanvasGradeInfo, error) {
     apiEndpoint := fmt.Sprintf(
         "/api/v1/courses/%s/assignments/%s/submissions?per_page=%d&include[]=submission_comments",
         canvasInfo.CourseID, assignmentID, PAGE_SIZE);
@@ -15,7 +14,7 @@ func FetchAssignmentGrades(canvasInfo *model.CanvasInfo, assignmentID string) ([
 
     headers := standardHeaders(canvasInfo);
 
-    grades := make([]model.CanvasGradeInfo, 0);
+    grades := make([]CanvasGradeInfo, 0);
 
     for (url != "") {
         body, responseHeaders, err := util.GetWithHeaders(url, headers);
@@ -23,7 +22,7 @@ func FetchAssignmentGrades(canvasInfo *model.CanvasInfo, assignmentID string) ([
             return nil, fmt.Errorf("Failed to fetch grades.");
         }
 
-        var pageGrades []model.CanvasGradeInfo;
+        var pageGrades []CanvasGradeInfo;
         err = util.JSONFromString(body, &pageGrades);
         if (err != nil) {
             return nil, fmt.Errorf("Failed to unmarshal grades page: '%w'.", err);
@@ -37,7 +36,7 @@ func FetchAssignmentGrades(canvasInfo *model.CanvasInfo, assignmentID string) ([
     return grades, nil;
 }
 
-func UpdateAssignmentGrades(canvasInfo *model.CanvasInfo, assignmentID string, grades []model.CanvasGradeInfo) error {
+func UpdateAssignmentGrades(canvasInfo *CanvasInstanceInfo, assignmentID string, grades []CanvasGradeInfo) error {
     apiEndpoint := fmt.Sprintf(
         "/api/v1/courses/%s/assignments/%s/submissions/update_grades",
         canvasInfo.CourseID, assignmentID);

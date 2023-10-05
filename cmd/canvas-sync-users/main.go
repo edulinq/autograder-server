@@ -28,7 +28,7 @@ func main() {
     }
 
     course := model.MustLoadCourseConfig(args.Path);
-    if (course.CanvasInfo == nil) {
+    if (course.CanvasInstanceInfo == nil) {
         fmt.Println("Course has no Canvas info associated with it.");
         os.Exit(2);
     }
@@ -38,7 +38,7 @@ func main() {
         log.Fatal().Err(err).Msg("Failed to fetch autograder users.");
     }
 
-    canvasUsers, err := canvas.FetchUsers(course.CanvasInfo);
+    canvasUsers, err := canvas.FetchUsers(course.CanvasInstanceInfo);
     if (err != nil) {
         log.Fatal().Err(err).Msg("Failed to fetch canvas users.");
     }

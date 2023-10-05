@@ -6,6 +6,7 @@ import (
 
     "github.com/rs/zerolog/log"
 
+    "github.com/eriq-augustine/autograder/canvas"
     "github.com/eriq-augustine/autograder/util"
 )
 
@@ -21,9 +22,9 @@ type Course struct {
     // Paths are always relative to the course dir.
     UsersFile string `json:"users-file"`
 
-    CanvasInfo *CanvasInfo `json:"canvas,omitempty"`
+    CanvasInstanceInfo *canvas.CanvasInstanceInfo `json:"canvas,omitempty"`
 
-    Backup []*BackupTask `json:"backup"`
+    Backup []*BackupTask `json:"backup,omitempty"`
 
     // Ignore these fields in JSON.
     SourcePath string `json:"-"`

@@ -55,7 +55,7 @@ func main() {
     if (args.DryRun) {
         fmt.Println("Dry Run: Skipping upload.");
     } else {
-        err = canvas.UpdateAssignmentGrades(course.CanvasInfo, assignmentCanvasID, grades);
+        err = canvas.UpdateAssignmentGrades(course.CanvasInstanceInfo, assignmentCanvasID, grades);
         if (err != nil) {
             log.Fatal().Err(err).Msg("Could not upload grades.");
         }
@@ -64,8 +64,8 @@ func main() {
     fmt.Printf("Uploaded %d grades.\n", len(grades));
 }
 
-func loadGrades(path string, users map[string]*model.User, force bool) ([]model.CanvasGradeInfo, error) { 
-    grades := make([]model.CanvasGradeInfo, 0);
+func loadGrades(path string, users map[string]*model.User, force bool) ([]canvas.CanvasGradeInfo, error) {
+    grades := make([]canvas.CanvasGradeInfo, 0);
 
     rows, err := util.ReadSeparatedFile(path, "\t", 0);
     if (err != nil) {
@@ -99,7 +99,7 @@ func loadGrades(path string, users map[string]*model.User, force bool) ([]model.
             }
         }
 
-        grades = append(grades, model.CanvasGradeInfo{
+        grades = append(grades, canvas.CanvasGradeInfo{
             UserID: canvasID,
             Score: util.MustStrToFloat(row[1]),
         });
@@ -123,7 +123,7 @@ func getAssignmentIDAndCourse(assignmentPath string, assignmentID string, course
     }
 
     course := model.MustLoadCourseConfig(coursePath);
-    if (course.CanvasInfo == nil) {
+    if (course.CanvasInstanceInfo == nil) {
         return "", nil, fmt.Errorf("Assignment's course has no Canvas info associated with it.");
     }
 

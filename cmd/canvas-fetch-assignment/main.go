@@ -35,7 +35,7 @@ func main() {
         log.Fatal().Err(err).Msg("Failed to load course/assignment information.");
     }
 
-    canvasAssignment, err := canvas.FetchAssignment(course.CanvasInfo, assignmentCanvasID);
+    canvasAssignment, err := canvas.FetchAssignment(course.CanvasInstanceInfo, assignmentCanvasID);
     if (err != nil) {
         log.Fatal().Err(err).Msg("Could not fetch assignment.");
     }
@@ -58,7 +58,7 @@ func getAssignmentIDAndCourse(assignmentPath string, assignmentID string, course
     }
 
     course := model.MustLoadCourseConfig(coursePath);
-    if (course.CanvasInfo == nil) {
+    if (course.CanvasInstanceInfo == nil) {
         return "", nil, fmt.Errorf("Assignment's course has no Canvas info associated with it.");
     }
 

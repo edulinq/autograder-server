@@ -26,7 +26,8 @@ type Assignment struct {
     ID string `json:"id"`
     DisplayName string `json:"display-name"`
 
-    CanvasID string `json:"canvas-id"`
+    CanvasID string `json:"canvas-id",omitempty`
+    LatePolicy LateGradingPolicy `json:"late-policy,omitempty"`
 
     Image string `json:"image,omitempty"`
     PreStaticDockerCommands []string `json:"pre-static-docker-commands,omitempty"`

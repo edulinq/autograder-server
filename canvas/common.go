@@ -3,8 +3,6 @@ package canvas
 import (
     "fmt"
     "strings"
-
-    "github.com/eriq-augustine/autograder/model"
 )
 
 const (
@@ -12,7 +10,7 @@ const (
     HEADER_LINK = "Link";
 )
 
-func standardHeaders(canvasInfo *model.CanvasInfo) map[string][]string {
+func standardHeaders(canvasInfo *CanvasInstanceInfo) map[string][]string {
     return map[string][]string{
         "Authorization": []string{fmt.Sprintf("Bearer %s", canvasInfo.APIToken)},
         "Accept": []string{"application/json+canvas-string-ids"},

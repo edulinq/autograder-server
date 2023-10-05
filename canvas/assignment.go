@@ -3,11 +3,10 @@ package canvas
 import (
     "fmt"
 
-    "github.com/eriq-augustine/autograder/model"
     "github.com/eriq-augustine/autograder/util"
 )
 
-func FetchAssignment(canvasInfo *model.CanvasInfo, assignmentID string) (*model.CanvasAssignment, error) {
+func FetchAssignment(canvasInfo *CanvasInstanceInfo, assignmentID string) (*CanvasAssignment, error) {
     apiEndpoint := fmt.Sprintf(
         "/api/v1/courses/%s/assignments/%s",
         canvasInfo.CourseID, assignmentID);
@@ -20,7 +19,7 @@ func FetchAssignment(canvasInfo *model.CanvasInfo, assignmentID string) (*model.
         return nil, fmt.Errorf("Failed to fetch assignment.");
     }
 
-    var assignment model.CanvasAssignment;
+    var assignment CanvasAssignment;
     err = util.JSONFromString(body, &assignment);
     if (err != nil) {
         return nil, fmt.Errorf("Failed to unmarshal assignment: '%w'.", err);

@@ -28,12 +28,12 @@ func main() {
     }
 
     course := model.MustLoadCourseConfig(args.Path);
-    if (course.CanvasInfo == nil) {
+    if (course.CanvasInstanceInfo == nil) {
         fmt.Println("Course has no Canvas info associated with it.");
         os.Exit(2);
     }
 
-    users, err := canvas.FetchUsers(course.CanvasInfo);
+    users, err := canvas.FetchUsers(course.CanvasInstanceInfo);
     if (err != nil) {
         log.Fatal().Err(err).Msg("Could not fetch users.");
     }
