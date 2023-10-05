@@ -48,7 +48,7 @@ func UpdateAssignmentGrades(canvasInfo *model.CanvasInfo, assignmentID string, g
     formGrades := make(map[string]string);
 
     for _, gradeInfo := range grades {
-        formGrades[fmt.Sprintf("grade_data[%s][posted_grade]", gradeInfo.UserID)] = gradeInfo.Score;
+        formGrades[fmt.Sprintf("grade_data[%s][posted_grade]", gradeInfo.UserID)] = util.FloatToStr(gradeInfo.Score);
     }
 
     _, _, err := util.PostWithHeaders(url, formGrades, headers);

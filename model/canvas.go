@@ -13,7 +13,7 @@ type CanvasUserInfo struct {
 
 type CanvasGradeInfo struct {
     UserID string `json:"user_id"`
-    Score string `json:"score"`
+    Score float64 `json:"score"`
     Time string `json:"submitted_at"`
     Comments []CanvasSubmissionComment `json:"submission_comments"`
 }
