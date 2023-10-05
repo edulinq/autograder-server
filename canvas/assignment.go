@@ -16,7 +16,7 @@ func FetchAssignment(canvasInfo *CanvasInstanceInfo, assignmentID string) (*Canv
 
     body, _, err := util.GetWithHeaders(url, headers);
     if (err != nil) {
-        return nil, fmt.Errorf("Failed to fetch assignment.");
+        return nil, fmt.Errorf("Failed to fetch assignment: '%w'.", err);
     }
 
     var assignment CanvasAssignment;

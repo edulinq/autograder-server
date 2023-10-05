@@ -121,6 +121,11 @@ func (this *Assignment) Validate() error {
         return err;
     }
 
+    err = this.LatePolicy.Validate();
+    if (err != nil) {
+        return fmt.Errorf("Failed to validate late policy: '%w'.", err);
+    }
+
     if (this.PreStaticDockerCommands == nil) {
         this.PreStaticDockerCommands = make([]string, 0);
     }
@@ -301,4 +306,31 @@ func (this *Assignment) getAllRecentSubmissionFiles(users map[string]*User, file
     }
 
     return paths, nil;
+}
+
+// Get all the recent submission summaries (via GetAllRecentSubmissionSummaries()),
+// and convert them to ScoringInfo structs so they can be properly scored/uploaded.
+func (this *Assignment) GetScoringInfo(users map[string]*User) (map[string]*ScoringInfo, error) {
+    paths, err := this.GetAllRecentSubmissionSummaries(users);
+    if (err != nil) {
+        return nil, fmt.Errorf("Unable to load submission summaries: '%w'.", err);
+    }
+
+    results := make(map[string]*ScoringInfo, len(paths));
+
+    for username, path := range paths {
+        if (path == "") {
+            continue;
+        }
+
+        var summary SubmissionSummary;
+        err = util.JSONFromFile(path, &summary);
+        if (err != nil) {
+            return nil, fmt.Errorf("Unable to load submission summary from path '%s': '%w'.", path, err);
+        }
+
+        results[username] = ScoringInfoFromSubmissionSummary(&summary);
+    }
+
+    return results, nil;
 }
