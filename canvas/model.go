@@ -6,6 +6,9 @@ import (
     "time"
 )
 
+const LOCK_COMMENT string = "__lock__";
+const POST_PAGE_SIZE int = 100;
+
 type CanvasUserInfo struct {
     ID string `json:"id"`
     Name string `json:"name"`

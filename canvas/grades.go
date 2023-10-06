@@ -2,9 +2,12 @@ package canvas
 
 import (
     "fmt"
+    "time"
 
     "github.com/eriq-augustine/autograder/util"
 )
+
+const CANVAS_UPLOAD_SLEEP_TIME_SEC = int64(0.5 * float64(time.Second));
 
 func FetchAssignmentGrades(canvasInfo *CanvasInstanceInfo, assignmentID string) ([]*CanvasGradeInfo, error) {
     apiEndpoint := fmt.Sprintf(
@@ -37,6 +40,28 @@ func FetchAssignmentGrades(canvasInfo *CanvasInstanceInfo, assignmentID string) 
 }
 
 func UpdateAssignmentGrades(canvasInfo *CanvasInstanceInfo, assignmentID string, grades []*CanvasGradeInfo) error {
+    for page := 0; (page * POST_PAGE_SIZE) < len(grades); page++ {
+        startIndex := page * POST_PAGE_SIZE;
+        endIndex := min(len(grades), ((page + 1) * POST_PAGE_SIZE));
+
+        if (page != 0) {
+            time.Sleep(time.Duration(CANVAS_UPLOAD_SLEEP_TIME_SEC));
+        }
+
+        err := updateAssignmentGrades(canvasInfo, assignmentID, grades[startIndex:endIndex]);
+        if (err != nil) {
+            return fmt.Errorf("Failed on page %d: '%w'.", page, err);
+        }
+    }
+
+    return nil;
+}
+
+func updateAssignmentGrades(canvasInfo *CanvasInstanceInfo, assignmentID string, grades []*CanvasGradeInfo) error {
+    if (len(grades) > POST_PAGE_SIZE) {
+        return fmt.Errorf("Too many grade upload requests at once. Found %d, max %d.", len(grades), POST_PAGE_SIZE);
+    }
+
     apiEndpoint := fmt.Sprintf(
         "/api/v1/courses/%s/assignments/%s/submissions/update_grades",
         canvasInfo.CourseID, assignmentID);
