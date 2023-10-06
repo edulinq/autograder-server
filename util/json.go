@@ -53,12 +53,21 @@ func JSONMapFromString(data string) (map[string]any, error) {
     return target, nil;
 }
 
+func MustToJSON(data any) string {
+    text, err := ToJSON(data);
+    if (err != nil) {
+        log.Fatal().Err(err).Any("data", data).Msg("Failed to convert object to JSON.");
+    }
+
+    return text;
+}
+
 func ToJSON(data any) (string, error) {
     return ToJSONIndentCustom(data, "", "");
 }
 
 func MustToJSONIndent(data any) string {
-    text, err := ToJSONIndentCustom(data, DEFAULT_PREFIX, DEFAULT_INDENT);
+    text, err := ToJSONIndent(data);
     if (err != nil) {
         log.Fatal().Err(err).Any("data", data).Msg("Failed to convert object to JSON.");
     }

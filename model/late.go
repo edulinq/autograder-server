@@ -130,7 +130,7 @@ func (this *LateGradingPolicy) applyBaselinePolicy(scores map[string]*ScoringInf
         score.NumDaysLate = lateDays(dueDate, score.SubmissionTime);
 
         if ((this.RejectAfterDays > 0) && (score.NumDaysLate > this.RejectAfterDays)) {
-            score.Rejected = true;
+            score.Reject = true;
             continue;
         }
     }

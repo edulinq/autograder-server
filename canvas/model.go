@@ -3,6 +3,7 @@ package canvas
 import (
     "fmt"
     "strings"
+    "time"
 )
 
 type CanvasUserInfo struct {
@@ -14,7 +15,7 @@ type CanvasUserInfo struct {
 type CanvasGradeInfo struct {
     UserID string `json:"user_id"`
     Score float64 `json:"score"`
-    Time string `json:"submitted_at"`
+    Time time.Time `json:"submitted_at"`
     Comments []CanvasSubmissionComment `json:"submission_comments"`
 }
 

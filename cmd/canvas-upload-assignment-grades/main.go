@@ -64,8 +64,8 @@ func main() {
     fmt.Printf("Uploaded %d grades.\n", len(grades));
 }
 
-func loadGrades(path string, users map[string]*model.User, force bool) ([]canvas.CanvasGradeInfo, error) {
-    grades := make([]canvas.CanvasGradeInfo, 0);
+func loadGrades(path string, users map[string]*model.User, force bool) ([]*canvas.CanvasGradeInfo, error) {
+    grades := make([]*canvas.CanvasGradeInfo, 0);
 
     rows, err := util.ReadSeparatedFile(path, "\t", 0);
     if (err != nil) {
@@ -99,7 +99,7 @@ func loadGrades(path string, users map[string]*model.User, force bool) ([]canvas
             }
         }
 
-        grades = append(grades, canvas.CanvasGradeInfo{
+        grades = append(grades, &canvas.CanvasGradeInfo{
             UserID: canvasID,
             Score: util.MustStrToFloat(row[1]),
         });

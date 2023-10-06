@@ -6,7 +6,7 @@ import (
     "github.com/eriq-augustine/autograder/util"
 )
 
-func FetchAssignmentGrades(canvasInfo *CanvasInstanceInfo, assignmentID string) ([]CanvasGradeInfo, error) {
+func FetchAssignmentGrades(canvasInfo *CanvasInstanceInfo, assignmentID string) ([]*CanvasGradeInfo, error) {
     apiEndpoint := fmt.Sprintf(
         "/api/v1/courses/%s/assignments/%s/submissions?per_page=%d&include[]=submission_comments",
         canvasInfo.CourseID, assignmentID, PAGE_SIZE);
@@ -14,7 +14,7 @@ func FetchAssignmentGrades(canvasInfo *CanvasInstanceInfo, assignmentID string) 
 
     headers := standardHeaders(canvasInfo);
 
-    grades := make([]CanvasGradeInfo, 0);
+    grades := make([]*CanvasGradeInfo, 0);
 
     for (url != "") {
         body, responseHeaders, err := util.GetWithHeaders(url, headers);
@@ -22,7 +22,7 @@ func FetchAssignmentGrades(canvasInfo *CanvasInstanceInfo, assignmentID string) 
             return nil, fmt.Errorf("Failed to fetch grades.");
         }
 
-        var pageGrades []CanvasGradeInfo;
+        var pageGrades []*CanvasGradeInfo;
         err = util.JSONFromString(body, &pageGrades);
         if (err != nil) {
             return nil, fmt.Errorf("Failed to unmarshal grades page: '%w'.", err);
@@ -36,7 +36,7 @@ func FetchAssignmentGrades(canvasInfo *CanvasInstanceInfo, assignmentID string) 
     return grades, nil;
 }
 
-func UpdateAssignmentGrades(canvasInfo *CanvasInstanceInfo, assignmentID string, grades []CanvasGradeInfo) error {
+func UpdateAssignmentGrades(canvasInfo *CanvasInstanceInfo, assignmentID string, grades []*CanvasGradeInfo) error {
     apiEndpoint := fmt.Sprintf(
         "/api/v1/courses/%s/assignments/%s/submissions/update_grades",
         canvasInfo.CourseID, assignmentID);
@@ -48,6 +48,14 @@ func UpdateAssignmentGrades(canvasInfo *CanvasInstanceInfo, assignmentID string,
 
     for _, gradeInfo := range grades {
         formGrades[fmt.Sprintf("grade_data[%s][posted_grade]", gradeInfo.UserID)] = util.FloatToStr(gradeInfo.Score);
+
+        if (len(gradeInfo.Comments) > 1) {
+            return fmt.Errorf("Grades to upload can have at most one comment. Student '%s' for assignment '%s' has %d.", gradeInfo.UserID, assignmentID, len(gradeInfo.Comments));
+        }
+
+        for _, comment := range gradeInfo.Comments {
+            formGrades[fmt.Sprintf("grade_data[%s][text_comment]", gradeInfo.UserID)] = comment.Text;
+        }
     }
 
     _, _, err := util.PostWithHeaders(url, formGrades, headers);
