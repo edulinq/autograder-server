@@ -88,6 +88,13 @@ func IsEmptyDir(path string) bool {
 }
 
 func FindFiles(filename string, dir string) ([]string, error) {
+    return FindDirents(filename, dir, true, false, true);
+}
+
+// When symbolic links are allowed, keep two things in mind:
+//  1) A retutned path may be outside the passed in dir.
+//  2) This method will not terminate if there are loops.
+func FindDirents(filename string, dir string, allowFiles bool, allowDirs bool, allowLinks bool) ([]string, error) {
     matches := make([]string, 0);
 
     if (!IsDir(dir)) {
@@ -97,6 +104,36 @@ func FindFiles(filename string, dir string) ([]string, error) {
     err := filepath.WalkDir(dir, func(path string, dirent fs.DirEntry, err error) error {
         if (err != nil) {
             return err;
+        }
+
+        if (dirent.Type() & fs.ModeSymlink != 0) {
+            // Dirent is a link.
+            if (!allowLinks) {
+                return nil;
+            }
+
+            path, err = filepath.EvalSymlinks(path);
+            if (err != nil) {
+                return err;
+            }
+
+            newEntries, err := FindDirents(filename, path, allowFiles, allowDirs, allowLinks);
+            if (err != nil) {
+                return err;
+            }
+
+            matches = append(matches, newEntries...);
+            return nil;
+        }
+
+        if (dirent.IsDir()) {
+            if (!allowDirs) {
+                return nil;
+            }
+        } else {
+            if (!allowFiles) {
+                return nil;
+            }
         }
 
         if (filename == dirent.Name()) {

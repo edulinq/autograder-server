@@ -1,6 +1,8 @@
 package main
 
 import (
+    "os"
+
     "github.com/alecthomas/kong"
     "github.com/rs/zerolog/log"
 
@@ -19,6 +21,13 @@ func main() {
     if (err != nil) {
         log.Fatal().Err(err).Msg("Could not load config options.");
     }
+
+    workingDir, err := os.Getwd();
+    if (err != nil) {
+        log.Fatal().Err(err).Msg("Could not get working directory.");
+    }
+
+    log.Info().Str("dir", workingDir).Msg("Running server with working directory.");
 
     err = grader.LoadCourses();
     if (err != nil) {

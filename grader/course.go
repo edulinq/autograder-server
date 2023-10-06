@@ -22,6 +22,8 @@ func LoadCourses() error {
 }
 
 func LoadCoursesFromDir(baseDir string) error {
+    log.Debug().Str("dir", baseDir).Msg("Searching for courses.");
+
     configPaths, err := util.FindFiles(model.COURSE_CONFIG_FILENAME, baseDir);
     if (err != nil) {
         return fmt.Errorf("Failed to search for course configs in '%s': '%w'.", baseDir, err);
