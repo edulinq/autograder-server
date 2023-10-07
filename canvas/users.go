@@ -17,7 +17,10 @@ func FetchUsers(canvasInfo *CanvasInstanceInfo) ([]CanvasUserInfo, error) {
     users := make([]CanvasUserInfo, 0);
 
     for (url != "") {
+        getAPILock();
         body, responseHeaders, err := util.GetWithHeaders(url, headers);
+        releaseAPILock();
+
         if (err != nil) {
             return nil, fmt.Errorf("Failed to fetch users.");
         }

@@ -33,7 +33,10 @@ func UpdateComment(canvasInfo *CanvasInstanceInfo, assignmentID string, comment 
     form := make(map[string]string, 1);
     form["comment"] = comment.Text;
 
+    getAPILock();
     _, _, err := util.PutWithHeaders(url, form, headers);
+    releaseAPILock();
+
     if (err != nil) {
         return fmt.Errorf("Failed to update comments: '%w'.", err);
     }

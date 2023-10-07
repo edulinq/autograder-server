@@ -3,12 +3,23 @@ package canvas
 import (
     "fmt"
     "strings"
+    "sync"
 )
 
 const (
     PAGE_SIZE = 75
     HEADER_LINK = "Link";
 )
+
+var apiLock sync.Mutex;
+
+func getAPILock() {
+    apiLock.Lock();
+}
+
+func releaseAPILock() {
+    apiLock.Unlock();
+}
 
 func standardHeaders(canvasInfo *CanvasInstanceInfo) map[string][]string {
     return map[string][]string{

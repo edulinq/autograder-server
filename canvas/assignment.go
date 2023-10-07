@@ -14,7 +14,10 @@ func FetchAssignment(canvasInfo *CanvasInstanceInfo, assignmentID string) (*Canv
 
     headers := standardHeaders(canvasInfo);
 
+    getAPILock();
     body, _, err := util.GetWithHeaders(url, headers);
+    releaseAPILock();
+
     if (err != nil) {
         return nil, fmt.Errorf("Failed to fetch assignment: '%w'.", err);
     }
