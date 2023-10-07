@@ -21,6 +21,7 @@ type ScoringInfo struct {
     Autograder int `json:"__autograder__v01__"`
     // If this object was serialized from a Canvas comment, keep the ID.
     CanvasCommentID string `json:"-"`
+    CanvasCommentAuthorID string `json:"-"`
 }
 
 func ScoringInfoFromSubmissionSummary(summary *SubmissionSummary) *ScoringInfo {

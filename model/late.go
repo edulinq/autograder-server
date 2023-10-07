@@ -86,8 +86,6 @@ func (this *LateGradingPolicy) Validate() error {
     return nil;
 }
 
-// TEST - Need to update assignment comment.
-
 // This assumes that all assignments are in canvas.
 func (this *LateGradingPolicy) Apply(
         assignment *Assignment,
@@ -185,11 +183,6 @@ func (this *LateGradingPolicy) applyLateDaysPolicy(
 
     lateDaysToUpdate := make(map[string]*LateDaysInfo);
 
-    // TEST
-    fmt.Println("%%%");
-    // fmt.Println(util.MustToJSONIndent(allLateDays));
-    fmt.Println("%%%");
-
     for email, scoringInfo := range scores {
         if (scoringInfo.Reject) {
             continue;
@@ -258,11 +251,6 @@ func (this *LateGradingPolicy) applyLateDaysPolicy(
 }
 
 func (this *LateGradingPolicy) updateLateDays(assignment *Assignment, lateDaysToUpdate map[string]*LateDaysInfo, dryRun bool) error {
-    // TEST
-    fmt.Println("%%%");
-    fmt.Println(util.MustToJSONIndent(lateDaysToUpdate));
-    fmt.Println("%%%");
-
     // Update late days.
     // Info that does NOT have a CanvasCommentID will get the autograder comment added in.
     grades := make([]*canvas.CanvasGradeInfo, 0, len(lateDaysToUpdate));
@@ -285,11 +273,9 @@ func (this *LateGradingPolicy) updateLateDays(assignment *Assignment, lateDaysTo
     }
 
     if (dryRun) {
-        // TEST
-        // log.Info().Str("assignment", assignment.ID).Str("grades", util.MustToJSON(grades)).Msg("Dry Run: Skipping upload of late days.");
         log.Info().Str("assignment", assignment.ID).Any("grades", grades).Msg("Dry Run: Skipping upload of late days.");
     } else {
-        err := canvas.UpdateAssignmentGrades(assignment.Course.CanvasInstanceInfo, assignment.CanvasID, grades);
+        err := canvas.UpdateAssignmentGrades(assignment.Course.CanvasInstanceInfo, this.LateDaysCanvasID, grades);
         if (err != nil) {
             return fmt.Errorf("Failed to upload late days: '%w'.", err);
         }
@@ -312,7 +298,7 @@ func (this *LateGradingPolicy) updateLateDays(assignment *Assignment, lateDaysTo
     if (dryRun) {
         log.Info().Str("assignment", assignment.ID).Any("comments", comments).Msg("Dry Run: Skipping update of late day comments.");
     } else {
-        err := canvas.UpdateComments(assignment.Course.CanvasInstanceInfo, assignment.CanvasID, comments);
+        err := canvas.UpdateComments(assignment.Course.CanvasInstanceInfo, this.LateDaysCanvasID, comments);
         if (err != nil) {
             return fmt.Errorf("Failed to update late days comments: '%w'.", err);
         }
