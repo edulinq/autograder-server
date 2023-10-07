@@ -11,14 +11,23 @@ const (
     HEADER_LINK = "Link";
 )
 
-var apiLock sync.Mutex;
+// {string: *sync.Mutex}.
+var apiLocks sync.Map;
 
-func getAPILock() {
-    apiLock.Lock();
+func getAPILock(canvasInfo *CanvasInstanceInfo) {
+    ensureAPILock(canvasInfo);
+    lock, _ := apiLocks.Load(canvasInfo.APIToken);
+    lock.(*sync.Mutex).Lock();
 }
 
-func releaseAPILock() {
-    apiLock.Unlock();
+func releaseAPILock(canvasInfo *CanvasInstanceInfo) {
+    ensureAPILock(canvasInfo);
+    lock, _ := apiLocks.Load(canvasInfo.APIToken);
+    lock.(*sync.Mutex).Unlock();
+}
+
+func ensureAPILock(canvasInfo *CanvasInstanceInfo) {
+    apiLocks.LoadOrStore(canvasInfo.APIToken, &sync.Mutex{});
 }
 
 func standardHeaders(canvasInfo *CanvasInstanceInfo) map[string][]string {

@@ -18,9 +18,9 @@ func FetchAssignmentGrades(canvasInfo *CanvasInstanceInfo, assignmentID string) 
     grades := make([]*CanvasGradeInfo, 0);
 
     for (url != "") {
-        getAPILock();
+        getAPILock(canvasInfo);
         body, responseHeaders, err := util.GetWithHeaders(url, headers);
-        releaseAPILock();
+        releaseAPILock(canvasInfo);
 
         if (err != nil) {
             return nil, fmt.Errorf("Failed to fetch grades.");
@@ -84,9 +84,9 @@ func updateAssignmentGrades(canvasInfo *CanvasInstanceInfo, assignmentID string,
         }
     }
 
-    getAPILock();
+    getAPILock(canvasInfo);
     _, _, err := util.PostWithHeaders(url, form, headers);
-    releaseAPILock();
+    releaseAPILock(canvasInfo);
 
     if (err != nil) {
         return fmt.Errorf("Failed to upload grades: '%w'.", err);
