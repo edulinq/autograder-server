@@ -24,6 +24,7 @@ var routes = []route{
     newAPIRoute("POST", `/api/v01/peek`, NewPeekRequest, handlePeek),
     newAPIRoute("POST", `/api/v01/submit`, NewSubmissionRequest, handleSubmit),
 
+    newAPIRoute("POST", `/api/v01/canvas/scores/upload`, NewCanvasScoresUploadRequest, handleCanvasScoresUpload),
     newAPIRoute("POST", `/api/v01/canvas/user/sync`, NewCanvasSyncUsersRequest, handleCanvasSyncUsers),
 
     newAPIRoute("POST", `/api/v01/user/add`, NewUserAddRequest, handleUserAdd),
