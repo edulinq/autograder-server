@@ -3,6 +3,7 @@ package main
 import (
     "fmt"
     "strings"
+    "time"
 
     "github.com/alecthomas/kong"
     "github.com/rs/zerolog/log"
@@ -53,7 +54,7 @@ func main() {
         log.Fatal().Err(err).Msg("Failed to get scoring information.");
     }
 
-    err = assignment.LatePolicy.Apply(assignment, scoringInfos, args.DryRun);
+    err = assignment.LatePolicy.Apply(assignment, users, scoringInfos, args.DryRun);
     if (err != nil) {
         log.Fatal().Err(err).Msg("Failed to apply late policy.");
     }
@@ -74,11 +75,10 @@ func main() {
 }
 
 // TEST
-const LOCK_COMMENT string = "__lock__";
-
-// TEST
 func computeFinalScores(users map[string]*model.User, scoringInfos map[string]*model.ScoringInfo, canvasGrades []*canvas.CanvasGradeInfo, dryRun bool) error {
     var err error;
+
+    // TEST Put in another function.
 
     // First, through canvas comments for locks and autograder notes.
     locks := make(map[string]bool);
@@ -87,9 +87,9 @@ func computeFinalScores(users map[string]*model.User, scoringInfos map[string]*m
     for _, canvasGradeInfo := range canvasGrades {
         for _, comment := range canvasGradeInfo.Comments {
             text := strings.ToLower(comment.Text);
-            if (strings.Contains(text, LOCK_COMMENT)) {
+            if (strings.Contains(text, canvas.LOCK_COMMENT)) {
                 locks[canvasGradeInfo.UserID] = true;
-            } else if (strings.Contains(text, model.SCORING_INFO_IDENTITY_KEY)) {
+            } else if (strings.Contains(text, model.AUTOGRADER_COMMENT_IDENTITY_KEY)) {
                 var scoringInfo model.ScoringInfo;
                 err = util.JSONFromString(comment.Text, &scoringInfo);
                 if (err != nil) {
@@ -126,6 +126,8 @@ func computeFinalScores(users map[string]*model.User, scoringInfos map[string]*m
             log.Warn().Str("user", email).Msg("User does not have a Canvas ID, skipping grade upload.");
             continue;
         }
+
+        scoringInfo.UploadTime = time.Now();
 
         // Check the existing comment last so we can decide if this comment needs to be updated.
         existingComment := existingComments[user.CanvasID];

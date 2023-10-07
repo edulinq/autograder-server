@@ -40,14 +40,29 @@ func Post(uri string, form map[string]string) (string, error) {
 
 // Returns: (body, headers (response), error)
 func PostWithHeaders(uri string, form map[string]string, headers map[string][]string) (string, map[string][]string, error) {
+    return postPutWithHeaders("POST", uri, form, headers);
+}
+
+// Returns: (body, error)
+func Put(uri string, form map[string]string) (string, error) {
+    body, _, err := PutWithHeaders(uri, form, make(map[string][]string));
+    return body, err;
+}
+
+// Returns: (body, headers (response), error)
+func PutWithHeaders(uri string, form map[string]string, headers map[string][]string) (string, map[string][]string, error) {
+    return postPutWithHeaders("PUT", uri, form, headers);
+}
+
+func postPutWithHeaders(verb string, uri string, form map[string]string, headers map[string][]string) (string, map[string][]string, error) {
     formValues := url.Values{};
     for key, value := range form {
         formValues.Set(key, value);
     }
 
-    request, err := http.NewRequest("POST", uri, strings.NewReader(formValues.Encode()));
+    request, err := http.NewRequest(verb, uri, strings.NewReader(formValues.Encode()));
     if (err != nil) {
-        return "", nil, fmt.Errorf("Failed to create POST request on URL '%s': '%w'.", uri, err);
+        return "", nil, fmt.Errorf("Failed to create %s request on URL '%s': '%w'.", verb, uri, err);
     }
 
     request.Header.Add("Content-Type", "application/x-www-form-urlencoded");
@@ -58,7 +73,7 @@ func PostWithHeaders(uri string, form map[string]string, headers map[string][]st
         }
     }
 
-    return doRequest(uri, request, "POST");
+    return doRequest(uri, request, verb);
 }
 
 // Returns: (body, headers (response), error)
@@ -78,7 +93,7 @@ func doRequest(uri string, request *http.Request, verb string) (string, map[stri
     body := string(rawBody);
 
     if (response.StatusCode != http.StatusOK) {
-        log.Error().Int("code", response.StatusCode).Str("body", body).Str("url", uri).Msg("Got a non-OK status.");
+        log.Error().Int("code", response.StatusCode).Str("body", body).Any("headers", response.Header).Str("url", uri).Msg("Got a non-OK status.");
         return "", nil, fmt.Errorf("Got a non-OK status code '%d' from %s on URL '%s': '%w'.", response.StatusCode, verb, uri, err);
     }
 

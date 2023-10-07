@@ -83,6 +83,7 @@ func loadGrades(path string, users map[string]*model.User, force bool) ([]*canva
 
             if (force) {
                 fmt.Println(message);
+                continue;
             } else {
                 return nil, fmt.Errorf(message);
             }
@@ -94,6 +95,7 @@ func loadGrades(path string, users map[string]*model.User, force bool) ([]*canva
 
             if (force) {
                 fmt.Println(message);
+                continue;
             } else {
                 return nil, fmt.Errorf(message);
             }

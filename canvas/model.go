@@ -6,8 +6,11 @@ import (
     "time"
 )
 
-const LOCK_COMMENT string = "__lock__";
-const POST_PAGE_SIZE int = 100;
+const (
+    LOCK_COMMENT string = "__lock__";
+    POST_PAGE_SIZE int = 75;
+    UPLOAD_SLEEP_TIME_SEC = int64(0.5 * float64(time.Second));
+)
 
 type CanvasUserInfo struct {
     ID string `json:"id"`

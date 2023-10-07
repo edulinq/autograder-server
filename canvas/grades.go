@@ -7,8 +7,6 @@ import (
     "github.com/eriq-augustine/autograder/util"
 )
 
-const CANVAS_UPLOAD_SLEEP_TIME_SEC = int64(0.5 * float64(time.Second));
-
 func FetchAssignmentGrades(canvasInfo *CanvasInstanceInfo, assignmentID string) ([]*CanvasGradeInfo, error) {
     apiEndpoint := fmt.Sprintf(
         "/api/v1/courses/%s/assignments/%s/submissions?per_page=%d&include[]=submission_comments",
@@ -45,7 +43,7 @@ func UpdateAssignmentGrades(canvasInfo *CanvasInstanceInfo, assignmentID string,
         endIndex := min(len(grades), ((page + 1) * POST_PAGE_SIZE));
 
         if (page != 0) {
-            time.Sleep(time.Duration(CANVAS_UPLOAD_SLEEP_TIME_SEC));
+            time.Sleep(time.Duration(UPLOAD_SLEEP_TIME_SEC));
         }
 
         err := updateAssignmentGrades(canvasInfo, assignmentID, grades[startIndex:endIndex]);
@@ -69,21 +67,21 @@ func updateAssignmentGrades(canvasInfo *CanvasInstanceInfo, assignmentID string,
 
     headers := standardHeaders(canvasInfo);
 
-    formGrades := make(map[string]string);
+    form := make(map[string]string);
 
     for _, gradeInfo := range grades {
-        formGrades[fmt.Sprintf("grade_data[%s][posted_grade]", gradeInfo.UserID)] = util.FloatToStr(gradeInfo.Score);
+        form[fmt.Sprintf("grade_data[%s][posted_grade]", gradeInfo.UserID)] = util.FloatToStr(gradeInfo.Score);
 
         if (len(gradeInfo.Comments) > 1) {
             return fmt.Errorf("Grades to upload can have at most one comment. Student '%s' for assignment '%s' has %d.", gradeInfo.UserID, assignmentID, len(gradeInfo.Comments));
         }
 
         for _, comment := range gradeInfo.Comments {
-            formGrades[fmt.Sprintf("grade_data[%s][text_comment]", gradeInfo.UserID)] = comment.Text;
+            form[fmt.Sprintf("grade_data[%s][text_comment]", gradeInfo.UserID)] = comment.Text;
         }
     }
 
-    _, _, err := util.PostWithHeaders(url, formGrades, headers);
+    _, _, err := util.PostWithHeaders(url, form, headers);
     if (err != nil) {
         return fmt.Errorf("Failed to upload grades: '%w'.", err);
     }
