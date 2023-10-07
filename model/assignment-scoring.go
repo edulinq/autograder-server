@@ -26,7 +26,7 @@ func (this *Assignment) FullScoringAndUpload(dryRun bool) error {
         return fmt.Errorf("Could not fetch Canvas grades: '%w'.", err);
     }
 
-    scoringInfos, err := this.GetScoringInfo(users);
+    scoringInfos, err := this.GetScoringInfo(users, true);
     if (err != nil) {
         return fmt.Errorf("Failed to get scoring information: '%w'.", err);
     }

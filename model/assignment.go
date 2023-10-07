@@ -310,7 +310,7 @@ func (this *Assignment) getAllRecentSubmissionFiles(users map[string]*User, file
 
 // Get all the recent submission summaries (via GetAllRecentSubmissionSummaries()),
 // and convert them to ScoringInfo structs so they can be properly scored/uploaded.
-func (this *Assignment) GetScoringInfo(users map[string]*User) (map[string]*ScoringInfo, error) {
+func (this *Assignment) GetScoringInfo(users map[string]*User, onlyStudents bool) (map[string]*ScoringInfo, error) {
     paths, err := this.GetAllRecentSubmissionSummaries(users);
     if (err != nil) {
         return nil, fmt.Errorf("Unable to load submission summaries: '%w'.", err);
@@ -320,6 +320,10 @@ func (this *Assignment) GetScoringInfo(users map[string]*User) (map[string]*Scor
 
     for username, path := range paths {
         if (path == "") {
+            continue;
+        }
+
+        if (onlyStudents && (users[username].Role != Student)) {
             continue;
         }
 
