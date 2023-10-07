@@ -20,7 +20,8 @@ var (
     LOG_LEVEL = newOption("log.level", "INFO", "The default logging level.");
     LOG_PRETTY = newOption("log.pretty", true, "Make the logging human-readable, but less efficient.");
 
-    SECRETS_PATH = newOption("secrets.path", ".secrets.json", "Path to an optional secrets config file.");
+    LOCAL_CONFIG_PATH = newOption("config.local.path", "config.json", "Path to an optional local config file.");
+    SECRETS_CONFIG_PATH = newOption("config.secrets.path", ".secrets.json", "Path to an optional secrets config file.");
 
     BACKUP_DIR = newOption("server.backup.dir", "_backup", "Path to where backups are made by default.");
 

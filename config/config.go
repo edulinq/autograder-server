@@ -28,7 +28,7 @@ func ToJSON() (string, error) {
 }
 
 func init() {
-    LoadSecrets();
+    LoadLoacalConfig();
     LoadEnv();
     InitLogging();
 }
@@ -53,13 +53,24 @@ func InitLogging() {
     zerolog.SetGlobalLevel(level);
 }
 
-func LoadSecrets() error {
-    path := SECRETS_PATH.GetString();
-    if (!util.PathExists(path)) {
-        return nil;
+func LoadLoacalConfig() error {
+    path := LOCAL_CONFIG_PATH.GetString();
+    if (util.PathExists(path)) {
+        err := LoadFile(path);
+        if (err != nil) {
+            return fmt.Errorf("Could not load local config '%s': '%w'.", path, err);
+        }
     }
 
-    return LoadFile(path);
+    path = SECRETS_CONFIG_PATH.GetString();
+    if (util.PathExists(path)) {
+        err := LoadFile(path);
+        if (err != nil) {
+            return fmt.Errorf("Could not load secrets config '%s': '%w'.", path, err);
+        }
+    }
+
+    return nil;
 }
 
 // See LoadReader().

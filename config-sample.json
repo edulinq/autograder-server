@@ -1,0 +1,7 @@
+{
+    "email.from": "sslug@ucsc.edu",
+    "email.user": "Sammy Slug",
+    "email.pass": "I Love Decomposing",
+    "email.host": "smtp.gmail.com",
+    "email.port": "587"
+}
