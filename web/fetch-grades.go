@@ -16,6 +16,7 @@ var MIN_ROLE_FETCH_GRADES model.UserRole = model.Grader;
 type FetchGradesRequest struct {
     model.BaseAPIRequest
     Assignment string `json:"assignment"`
+    Role model.UserRole `json:"role"`
 }
 
 type FetchGradesResponse struct {
@@ -88,6 +89,10 @@ func handleFetchGrades(request *FetchGradesRequest) (int, any, error) {
     };
 
     for email, path := range paths {
+        if ((request.Role != model.Unknown) && (request.Role != users[email].Role)) {
+            continue;
+        }
+
         if (path == "") {
             response.Summaries[email] = nil;
             continue;
