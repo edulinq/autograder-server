@@ -18,7 +18,7 @@ var args struct {
 
 func main() {
     kong.Parse(&args,
-        kong.Description("Upload grades after late polices have been applied for an assignment to canvas from local submissions."),
+        kong.Description("Perform a full assignment scoring (including late policy) and upload."),
     );
 
     err := config.HandleConfigArgs(args.ConfigArgs);
