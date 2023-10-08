@@ -3,6 +3,7 @@ package model
 import (
     "fmt"
     "path/filepath"
+    "slices"
 
     "github.com/rs/zerolog/log"
 
@@ -55,7 +56,7 @@ func LoadCourseConfig(path string) (*Course, error) {
 }
 
 func MustLoadCourseConfig(path string) *Course {
-    config, err := LoadCourseConfig(path);
+    config, err := LoadCourseDirectory(path);
     if (err != nil) {
         log.Fatal().Str("path", path).Err(err).Msg("Failed to load course config.");
     }
@@ -154,4 +155,15 @@ func (this *Course) GetUser(email string) (*User, error) {
 func (this *Course) SaveUsersFile(users map[string]*User) error {
     path := filepath.Join(filepath.Dir(this.SourcePath), this.UsersFile);
     return SaveUsersFile(path, users);
+}
+
+func (this *Course) GetSortedAssignments() []*Assignment {
+    assignments := make([]*Assignment, 0, len(this.Assignments));
+    for _, assignment := range this.Assignments {
+        assignments = append(assignments, assignment);
+    }
+
+    slices.SortFunc(assignments, CompareAssignments);
+
+    return assignments;
 }

@@ -10,12 +10,13 @@ import (
 
 type ScoringUploadTask struct {
     Disable bool `json:"disable"`
+    DryRun bool `json:"dry-run"`
     When ScheduledTime `json:"when"`
 
-    assignment *Assignment `json:"-"`
+    course *Course `json:"-"`
 }
 
-func (this *ScoringUploadTask) Validate(assignment *Assignment) error {
+func (this *ScoringUploadTask) Validate(course *Course) error {
     err := this.When.Validate();
     if (err != nil) {
         return err;
@@ -23,17 +24,24 @@ func (this *ScoringUploadTask) Validate(assignment *Assignment) error {
 
     this.Disable = (this.Disable || config.NO_TASKS.GetBool());
 
-    this.assignment = assignment;
+    this.course = course;
 
-    if (this.assignment.CanvasID == "") {
-        return fmt.Errorf("Score and Upload task assignment must have a Canvas ID.");
+    if (this.course.CanvasInstanceInfo == nil) {
+        return fmt.Errorf("Score and Upload task course must have Canvas instance information.");
+    }
+
+    for _, assignment := range this.course.Assignments {
+        if (assignment.CanvasID == "") {
+            log.Warn().Str("course", course.ID).Str("assignment", assignment.ID).
+                    Msg("Score and Upload assignment is missing a Canvas ID.");
+        }
     }
 
     return nil;
 }
 
 func (this *ScoringUploadTask) String() string {
-    return fmt.Sprintf("Score and Upload of assignmnet '%s' at '%s' (next time: '%s').", this.assignment.ID, this.When.String(), this.When.ComputeNext());
+    return fmt.Sprintf("Score and Upload of course '%s' at '%s' (next time: '%s').", this.course.ID, this.When.String(), this.When.ComputeNext());
 }
 
 // Schedule this task to be regularly run at the scheduled time.
@@ -45,7 +53,7 @@ func (this *ScoringUploadTask) Schedule() {
     this.When.Schedule(func() {
         err := this.Run();
         if (err != nil) {
-            log.Error().Err(err).Str("assignment", this.assignment.ID).Msg("Score and Upload task failed.");
+            log.Error().Err(err).Str("course", this.course.ID).Msg("Score and Upload task failed.");
         }
     });
 }
@@ -57,5 +65,5 @@ func (this *ScoringUploadTask) Stop() {
 
 // Run the task regardless of schedule.
 func (this *ScoringUploadTask) Run() error {
-    return this.assignment.FullScoringAndUpload(false);
+    return this.course.FullScoringAndUpload(this.DryRun);
 }

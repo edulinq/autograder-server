@@ -25,6 +25,7 @@ const GRADER_OUTPUT_SUMMARY_FILENAME = "summary.json"
 type Assignment struct {
     ID string `json:"id"`
     DisplayName string `json:"display-name"`
+    SortID string `json:"sort-id"`
 
     CanvasID string `json:"canvas-id",omitempty`
     LatePolicy LateGradingPolicy `json:"late-policy,omitempty"`
@@ -86,6 +87,12 @@ func LoadAssignmentConfig(path string, courseConfig *Course) (*Assignment, error
         return nil, fmt.Errorf("Failed to validate config (%s): '%w'.", path, err);
     }
 
+    otherAssignment := courseConfig.Assignments[config.ID];
+    if (otherAssignment != nil) {
+        return nil, fmt.Errorf(
+                "Found multiple assignments with the same ID ('%s'): ['%s', '%s'].",
+                config.ID, otherAssignment.SourcePath, config.SourcePath);
+    }
     courseConfig.Assignments[config.ID] = &config;
 
     return &config, nil;
@@ -337,4 +344,32 @@ func (this *Assignment) GetScoringInfo(users map[string]*User, onlyStudents bool
     }
 
     return results, nil;
+}
+
+func CompareAssignments(a *Assignment, b *Assignment) int {
+    if (a == b) {
+        return 0;
+    }
+
+    // Favor non-nil over nil.
+    if (a == nil) {
+        return 1;
+    } else if (b == nil) {
+        return -1;
+    }
+
+    // If both assignments have a sort key, use that for comparison.
+    if ((a.SortID != "") && (b.SortID != "")) {
+        return strings.Compare(a.SortID, b.SortID);
+    }
+
+    // Favor assignments with a sort key over those without.
+    if (a.SortID == "") {
+        return 1;
+    } else if (b.SortID == "") {
+        return -1;
+    }
+
+    // If both don't have sort keys, just use the IDs.
+    return strings.Compare(a.ID, b.ID);
 }
