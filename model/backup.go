@@ -21,7 +21,7 @@ type BackupTask struct {
     dest string `json:"-"`
 }
 
-func (this *BackupTask) Validate(source string, basename string) error {
+func (this *BackupTask) Validate(course *Course) error {
     err := this.When.Validate();
     if (err != nil) {
         return err;
@@ -29,12 +29,12 @@ func (this *BackupTask) Validate(source string, basename string) error {
 
     this.Disable = (this.Disable || config.NO_TASKS.GetBool());
 
-    this.basename = basename;
+    this.basename = course.ID;
     if (this.basename == "") {
         return fmt.Errorf("Backup basename cannot be empty.");
     }
 
-    this.source = source;
+    this.source = filepath.Dir(course.SourcePath);
     if (!util.PathExists(this.source)) {
         return fmt.Errorf("Backup source path '%s' does not exist.", this.source);
     }

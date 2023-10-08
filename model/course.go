@@ -26,10 +26,13 @@ type Course struct {
     CanvasInstanceInfo *canvas.CanvasInstanceInfo `json:"canvas,omitempty"`
 
     Backup []*BackupTask `json:"backup,omitempty"`
+    ScoringUpload []*ScoringUploadTask `json:"scoring-upload,omitempty"`
 
     // Ignore these fields in JSON.
     SourcePath string `json:"-"`
     Assignments map[string]*Assignment `json:"-"`
+
+    tasks []ScheduledCourseTask `json:"-"`
 }
 
 func LoadCourseConfig(path string) (*Course, error) {
@@ -101,17 +104,26 @@ func (this *Course) Validate() error {
         return err;
     }
 
-    // Validate backup tasks.
-    for _, backupTask := range this.Backup {
-        err = backupTask.Validate(filepath.Dir(this.SourcePath), this.ID);
+    // Register tasks.
+    for _, task := range this.Backup {
+        this.tasks = append(this.tasks, task);
+    }
+
+    for _, task := range this.ScoringUpload {
+        this.tasks = append(this.tasks, task);
+    }
+
+    // Validate tasks.
+    for _, task := range this.tasks {
+        err = task.Validate(this);
         if (err != nil) {
             return err;
         }
     }
 
-    // Schedule backup tasks.
-    for _, backupTask := range this.Backup {
-        backupTask.Schedule();
+    // Schedule tasks.
+    for _, task := range this.tasks {
+        task.Schedule();
     }
 
     return nil;
