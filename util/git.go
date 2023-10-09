@@ -73,10 +73,16 @@ func GitCheckoutRepo(repo *git.Repository, ref string) error {
         return err;
     }
 
-    err = tree.Checkout(&git.CheckoutOptions{
-        Branch: plumbing.ReferenceName(ref),
-    });
+    resolvedHash, err := repo.ResolveRevision(plumbing.Revision(ref));
+    if (err != nil) {
+        return fmt.Errorf("Failed to resolve ref '%s': '%w'.", ref, err);
+    }
 
+    options := &git.CheckoutOptions{
+        Hash: *resolvedHash,
+    };
+
+    err = tree.Checkout(options);
     if (err != nil) {
         return fmt.Errorf("Failed to checkout ref '%s': '%w'.", ref, err);
     }

@@ -26,7 +26,7 @@ func CachePut(cachePath string, key string, value any) (any, bool, error) {
 
     cache[key] = value;
 
-    err = ToJSONFile(cache, cachePath);
+    err = ToJSONFileIndent(cache, cachePath);
     if (err != nil) {
         return nil, false, fmt.Errorf("Unable to save cache '%s': '%w'.", cachePath, err);
     }

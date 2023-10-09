@@ -10,6 +10,7 @@ import (
     "github.com/eriq-augustine/autograder/canvas"
     "github.com/eriq-augustine/autograder/common"
     "github.com/eriq-augustine/autograder/config"
+    "github.com/eriq-augustine/autograder/docker"
     "github.com/eriq-augustine/autograder/task"
     "github.com/eriq-augustine/autograder/util"
 )
@@ -159,7 +160,29 @@ func (this *Course) Activate() error {
         task.Schedule();
     }
 
+    // Build images.
+    go this.BuildAssignmentImages(false, false, docker.NewBuildOptions());
+
     return nil;
+}
+
+// Returns: (successfull image names, map[imagename]error).
+func (this *Course) BuildAssignmentImages(force bool, quick bool, options *docker.BuildOptions) ([]string, map[string]error) {
+    goodImageNames := make([]string, 0, len(this.Assignments));
+    errors := make(map[string]error);
+
+    for _, assignment := range this.Assignments {
+        err := assignment.BuildImage(force, quick, options);
+        if (err != nil) {
+            log.Error().Err(err).Str("course", this.ID).Str("assignment", assignment.ID).
+                    Msg("Failed to build assignment docker image.");
+            errors[assignment.ImageName()] = err;
+        } else {
+            goodImageNames = append(goodImageNames, assignment.ImageName());
+        }
+    }
+
+    return goodImageNames, errors;
 }
 
 func (this *Course) GetCacheDir() string {

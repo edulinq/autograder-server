@@ -1,6 +1,7 @@
 package model
 
 import (
+    "errors"
     "fmt"
     "path/filepath"
     "strings"
@@ -8,15 +9,18 @@ import (
     "github.com/rs/zerolog/log"
 
     "github.com/eriq-augustine/autograder/common"
+    "github.com/eriq-augustine/autograder/config"
     "github.com/eriq-augustine/autograder/docker"
     "github.com/eriq-augustine/autograder/util"
 )
 
 const ASSIGNMENT_CONFIG_FILENAME = "assignment.json"
-const DEFAULT_SUBMISSIONS_DIR = "_submissions";
+const DEFAULT_SUBMISSIONS_DIR = "_submissions"
 
 const FILE_CACHE_FILENAME = "filecache.json"
 const CACHE_FILENAME = "cache.json"
+
+const CACHE_KEY_BUILD_SUCCESS = "image-build-success"
 
 type Assignment struct {
     ID string `json:"id"`
@@ -156,7 +160,17 @@ func (this *Assignment) Validate() error {
 }
 
 func (this *Assignment) GetCacheDir() string {
-    return filepath.Join(this.Course.GetCacheDir(), "assignment_" + this.ID);
+    dir := filepath.Join(this.Course.GetCacheDir(), "assignment_" + this.ID);
+    util.MkDir(dir);
+    return dir;
+}
+
+func (this *Assignment) GetCachePath() string {
+    return filepath.Join(this.GetCacheDir(), CACHE_FILENAME);
+}
+
+func (this *Assignment) GetFileCachePath() string {
+    return filepath.Join(this.GetCacheDir(), FILE_CACHE_FILENAME);
 }
 
 func CompareAssignments(a *Assignment, b *Assignment) int {
@@ -187,18 +201,82 @@ func CompareAssignments(a *Assignment, b *Assignment) int {
     return strings.Compare(a.ID, b.ID);
 }
 
-// Check if the assignment's static files have changes since the last time they were cached.
-// This is thread-safe.
-func (this *Assignment) HaveStaticFilesChanges(quick bool) (bool, error) {
-    cacheDir := this.GetCacheDir();
-
-    err := util.MkDir(cacheDir);
-    if (err != nil) {
-        return false, fmt.Errorf("Unable to create cache dir '%s': '%w'.", cacheDir, err);
+func (this *Assignment) BuildImage(force bool, quick bool, options *docker.BuildOptions) error {
+    if (config.DOCKER_DISABLE.GetBool()) {
+        return nil;
     }
 
-    fileCachePath := filepath.Join(cacheDir, FILE_CACHE_FILENAME);
-    cachePath := filepath.Join(cacheDir, CACHE_FILENAME);
+    if (force) {
+        quick = false;
+    }
+
+    build, err := this.needImageRebuild(quick);
+    if (err != nil) {
+        return fmt.Errorf("Could not check if image needs building for assignment '%s': '%w'.", this.ID, err);
+    }
+
+    if (!force && !build) {
+        // Nothing has changed, skip build.
+        log.Debug().Str("assignment", this.ID).Msg("No files have changed, skipping image build.");
+        return nil;
+    }
+
+    buildErr := docker.BuildImageWithOptions(this.GetImageInfo(), options);
+
+    // Always try to store the result of cache building.
+    _, _, cacheErr := util.CachePut(this.GetCachePath(), CACHE_KEY_BUILD_SUCCESS, (buildErr == nil));
+
+    return errors.Join(buildErr, cacheErr);
+}
+
+func (this *Assignment) needImageRebuild(quick bool) (bool, error) {
+    // Check if the last build failed.
+    lastBuildSuccess, exists, err := util.CacheFetch(this.GetCachePath(), CACHE_KEY_BUILD_SUCCESS);
+    if (err != nil) {
+        return false, fmt.Errorf("Failed to fetch the last build status from cahce for assignment '%s': '%w'.", this.ID, err);
+    }
+
+    lastBuildFailed := true;
+    if (exists) {
+        lastBuildFailed = !(lastBuildSuccess.(bool));
+    }
+
+    if (lastBuildFailed && quick) {
+        return true, nil;
+    }
+
+    // Check if the image info has changed.
+    imageInfoHash, err := util.MD5StringHex(util.MustToJSON(this.GetImageInfo()));
+    if (err != nil) {
+        return false, fmt.Errorf("Failed to hash image info for assignment '%s': '%w'.", this.ID, err);
+    }
+
+    oldHash, _, err := util.CachePut(this.GetCachePath(), "image-info", imageInfoHash);
+    if (err != nil) {
+        return false, fmt.Errorf("Failed to put image info hash into cahce for assignment '%s': '%w'.", this.ID, err);
+    }
+
+    imageInfoHashHasChanges := (imageInfoHash != oldHash);
+    if (imageInfoHashHasChanges && quick) {
+        return true, nil;
+    }
+
+    // Check if the static files have changes.
+    staticFilesHaveChanges, err := this.CheckFileChanges(quick);
+    if (err != nil) {
+        return false, fmt.Errorf("Could not check if static files changed for assignment '%s': '%w'.", this.ID, err);
+    }
+
+    return (lastBuildFailed || imageInfoHashHasChanges || staticFilesHaveChanges), nil;
+}
+
+// Check if the assignment's static files have changes since the last time they were cached.
+// This is thread-safe.
+func (this *Assignment) CheckFileChanges(quick bool) (bool, error) {
+    baseDir := filepath.Dir(this.SourcePath);
+
+    fileCachePath := this.GetFileCachePath();
+    cachePath := this.GetCachePath();
 
     paths := make([]string, 0, len(this.StaticFiles));
     gitChanges := false;
@@ -211,7 +289,7 @@ func (this *Assignment) HaveStaticFilesChanges(quick bool) (bool, error) {
         switch (filespec.GetType()) {
             case common.FILESPEC_TYPE_PATH:
                 // Collect paths to test all at once.
-                paths = append(paths, filespec.GetPath());
+                paths = append(paths, filepath.Join(baseDir, filespec.GetPath()));
             case common.FILESPEC_TYPE_GIT:
                 // Check git refs for changes.
                 url, _, ref, err := filespec.ParseGitParts();
@@ -237,7 +315,7 @@ func (this *Assignment) HaveStaticFilesChanges(quick bool) (bool, error) {
         }
     }
 
-    pathChanges, err := util.HaveFilesChanges(fileCachePath, paths, quick);
+    pathChanges, err := util.CheckFileChanges(fileCachePath, paths, quick);
     if (err != nil) {
         return false, err;
     }

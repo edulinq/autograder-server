@@ -123,7 +123,7 @@ func collectBuildOutput(response types.ImageBuildResponse) string {
                 text = "<ERROR: Docker output JSON value is not a string.>";
             }
 
-            log.Warn().Err(err).Str("message", text).Msg("Docker image build failed with message.");
+            log.Warn().Err(err).Str("message", text).Msg("Docker image build had an error entry.");
             buildStringOutput.WriteString(text);
         }
 

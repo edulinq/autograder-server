@@ -12,6 +12,7 @@ test/
 _submissions/
 /_courses
 /_backup
+/_autograder
 
 /config.json
 /.secrets.json

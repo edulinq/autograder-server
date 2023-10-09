@@ -20,7 +20,7 @@ type FileCache map[string]int64;
 // |quick| will be used to determine if the function should return immediately if a difference is found,
 // or complete checking (and updating) the cache.
 // This method is thread safe.
-func HaveFilesChanges(cachePath string, paths []string, quick bool) (bool, error) {
+func CheckFileChanges(cachePath string, paths []string, quick bool) (bool, error) {
     cachePath = MustAbs(cachePath);
 
     lock, _ := fileLocks.LoadOrStore(cachePath, &sync.Mutex{});
@@ -32,7 +32,7 @@ func HaveFilesChanges(cachePath string, paths []string, quick bool) (bool, error
         return false, fmt.Errorf("Unable to get file cache '%s': '%w'.", cachePath, err);
     }
 
-    result, err := haveFilesChanges(cache, paths, quick);
+    result, err := checkFileChanges(cache, paths, quick);
     if (err != nil) {
         return false, err;
     }
@@ -40,7 +40,7 @@ func HaveFilesChanges(cachePath string, paths []string, quick bool) (bool, error
     // If chnges were found, the cache must be rewritten
     // (even if this is quick and it is just the one file).
     if (result) {
-        err := ToJSONFile(cache, cachePath);
+        err := ToJSONFileIndent(cache, cachePath);
         if (err != nil) {
             return false, fmt.Errorf("Unable to save file cache '%s': '%w'.", cachePath, err);
         }
@@ -64,7 +64,7 @@ func loadFileCache(path string) (FileCache, error) {
     return cache, nil;
 }
 
-func haveFilesChanges(cache FileCache, paths []string, quick bool) (bool, error) {
+func checkFileChanges(cache FileCache, paths []string, quick bool) (bool, error) {
     changesFound := false;
 
     for _, path := range paths {
@@ -77,6 +77,7 @@ func haveFilesChanges(cache FileCache, paths []string, quick bool) (bool, error)
 
         if (!PathExists(path)) {
             changesFound = true;
+
             // The path may not be in the cache and could result in and extra write, but that's fine.
             delete(cache, path);
 
@@ -119,7 +120,7 @@ func handleDir(cache FileCache, dir string, quick bool) (bool, error) {
         paths = append(paths, filepath.Join(dir, dirent.Name()));
     }
 
-    return haveFilesChanges(cache, paths, quick);
+    return checkFileChanges(cache, paths, quick);
 }
 
 func getModTime(path string) (int64, error) {

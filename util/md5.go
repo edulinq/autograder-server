@@ -24,3 +24,14 @@ func MD5FileHex(path string) (string, error) {
 
     return hex.EncodeToString(hash.Sum(nil)), nil;
 }
+
+func MD5StringHex(content string) (string, error) {
+    hash := md5.New()
+
+    _, err := io.WriteString(hash, content);
+    if (err != nil) {
+        return "", fmt.Errorf("Failed to copy string contents for MD5 hashing: '%w'.", err);
+    }
+
+    return hex.EncodeToString(hash.Sum(nil)), nil;
+}

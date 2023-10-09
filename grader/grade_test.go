@@ -52,8 +52,12 @@ func runSubmissionTests(test *testing.T, parallel bool, useDocker bool) {
     }
 
     if (useDocker) {
-        _, err = BuildDockerImagesJoinErrors(docker.NewBuildOptions());
-        if (err != nil) {
+        _, errs := BuildDockerImages(false, docker.NewBuildOptions());
+        if (len(errs) > 0) {
+            for imageName, err := range errs {
+                test.Errorf("Failed to build image '%s': '%v'.", imageName, err);
+            }
+
             test.Fatalf("Failed to build docker images: '%v'.", err);
         }
     }

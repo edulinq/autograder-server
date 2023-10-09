@@ -1,7 +1,6 @@
 package grader
 
 import (
-    "errors"
     "fmt"
     "os"
     "path/filepath"
@@ -14,27 +13,21 @@ import (
     "github.com/eriq-augustine/autograder/util"
 )
 
-func BuildDockerImagesJoinErrors(buildOptions *docker.BuildOptions) ([]string, error) {
-    imageNames, errs := BuildDockerImages(buildOptions);
-    return imageNames, errors.Join(errs...);
-}
-
-func BuildDockerImages(buildOptions *docker.BuildOptions) ([]string, []error) {
-    errs := make([]error, 0);
-    imageNames := make([]string, 0);
+func BuildDockerImages(force bool, buildOptions *docker.BuildOptions) ([]string, map[string]error) {
+    goodImageNames := make([]string, 0);
+    errors := make(map[string]error);
 
     for _, course := range courses {
-        for _, assignment := range course.Assignments {
-            err := docker.BuildImageWithOptions(assignment.GetImageInfo(), buildOptions);
-            if (err != nil) {
-                errs = append(errs, fmt.Errorf("Failed to build docker grader image for assignment (%s): '%w'.", assignment.FullID(), err));
-            } else {
-                imageNames = append(imageNames, assignment.ImageName());
-            }
+        courseGoodImageNames, courseErrors := course.BuildAssignmentImages(force, false, buildOptions);
+
+        goodImageNames = append(goodImageNames, courseGoodImageNames...);
+
+        for key, value := range courseErrors {
+            errors[key] = value;
         }
     }
 
-    return imageNames, errs;
+    return goodImageNames, errors;
 }
 
 // Grade using a docker container.

@@ -16,6 +16,7 @@ var args struct {
     config.ConfigArgs
     docker.BuildOptions
     Path []string `help:"Path to assignment JSON files." arg:"" optional:"" type:"existingfile"`
+    Force bool `help:"Force images build commands to be sent to docker even if the image is up-to-date." default:"false"`
 }
 
 func main() {
@@ -48,10 +49,10 @@ func buildFromCourses(buildOptions *docker.BuildOptions) []string {
         log.Fatal().Err(err).Msg("Failed to load courses.");
     }
 
-    imageNames, errs := grader.BuildDockerImages(buildOptions);
+    imageNames, errs := grader.BuildDockerImages(args.Force, buildOptions);
     if (len(errs) > 0) {
-        for _, err = range errs {
-            log.Error().Err(err).Msg("Failed to build grader docker images.");
+        for imageName, err := range errs {
+            log.Error().Err(err).Str("image", imageName).Msg("Failed to build grader docker images.");
         }
 
         log.Fatal().Int("count", len(errs)).Msg("Failed to build course images.");
@@ -66,7 +67,7 @@ func buildFromPaths(paths []string, buildOptions *docker.BuildOptions) []string 
     for _, path := range paths {
         assignment := model.MustLoadAssignmentConfig(path);
 
-        err := docker.BuildImageWithOptions(assignment.GetImageInfo(), buildOptions);
+        err := assignment.BuildImage(args.Force, false, buildOptions);
         if (err != nil) {
             log.Fatal().Str("assignment", assignment.FullID()).Str("path", path).Err(err).Msg("Failed to build image.");
         }
