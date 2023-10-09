@@ -34,5 +34,10 @@ func main() {
         log.Fatal().Err(err).Msg("Could not load courses.");
     }
 
+    err = grader.ActivateCourses();
+    if (err != nil) {
+        log.Fatal().Err(err).Msg("Could not activate courses.");
+    }
+
     web.StartServer();
 }

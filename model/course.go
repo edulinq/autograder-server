@@ -94,6 +94,7 @@ func LoadCourseDirectory(courseConfigPath string) (*Course, error) {
     return courseConfig, nil;
 }
 
+// Ensure this course makes sense.
 func (this *Course) Validate() error {
     if (this.DisplayName == "") {
         this.DisplayName = this.ID;
@@ -122,6 +123,11 @@ func (this *Course) Validate() error {
         }
     }
 
+    return nil;
+}
+
+// Start any scheduled tasks or informal tasks associated with this course.
+func (this *Course) Activate() error {
     // Schedule tasks.
     for _, task := range this.tasks {
         task.Schedule();

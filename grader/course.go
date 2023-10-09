@@ -16,6 +16,17 @@ func GetCourses() map[string]*model.Course {
     return courses;
 }
 
+func ActivateCourses() error {
+    for _, course := range courses {
+        err := course.Activate();
+        if (err != nil) {
+            return fmt.Errorf("Unable to activate course '%s': '%w'.", course.ID, err);
+        }
+    }
+
+    return nil;
+}
+
 // Discover all courses (from the config) and load all the associated courses and assignments.
 func LoadCourses() error {
     return LoadCoursesFromDir(config.COURSES_ROOT.GetString());
