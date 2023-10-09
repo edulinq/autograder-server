@@ -46,6 +46,12 @@ func Grade(assignment *model.Assignment, submissionPath string, user string, mes
     lock.Lock();
     defer lock.Unlock();
 
+    // Ensure the assignment docker image is built.
+    err := assignment.BuildImageQuick();
+    if (err != nil) {
+        return nil, nil, "", fmt.Errorf("Failed to build assignment assignment '%s' docker image: '%w'.", assignment.FullID(), err);
+    }
+
     submissionDir, submissionID, err := prepSubmissionDir(assignment, user, options);
     if (err != nil) {
         return nil, nil, "", fmt.Errorf("Failed to prepare submission dir for assignment '%s' and user '%s': '%w'.", assignment.FullID(), user, err);

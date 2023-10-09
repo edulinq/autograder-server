@@ -5,6 +5,7 @@ import (
     "fmt"
     "path/filepath"
     "strings"
+    "sync"
 
     "github.com/rs/zerolog/log"
 
@@ -35,6 +36,8 @@ type Assignment struct {
     // Ignore these fields in JSON.
     SourcePath string `json:"-"`
     Course *Course `json:"-"`
+
+    dockerLock *sync.Mutex `json:"-"`
 }
 
 // Load an assignment config from a given JSON path.
@@ -105,6 +108,8 @@ func (this *Assignment) Validate() error {
     if (err != nil) {
         return err;
     }
+
+    this.dockerLock = &sync.Mutex{};
 
     err = this.LatePolicy.Validate();
     if (err != nil) {
@@ -201,10 +206,17 @@ func CompareAssignments(a *Assignment, b *Assignment) int {
     return strings.Compare(a.ID, b.ID);
 }
 
+func (this *Assignment) BuildImageQuick() error {
+    return this.BuildImage(false, true, docker.NewBuildOptions());
+}
+
 func (this *Assignment) BuildImage(force bool, quick bool, options *docker.BuildOptions) error {
     if (config.DOCKER_DISABLE.GetBool()) {
         return nil;
     }
+
+    this.dockerLock.Lock();
+    defer this.dockerLock.Unlock();
 
     if (force) {
         quick = false;
