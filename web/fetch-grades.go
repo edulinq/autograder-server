@@ -6,6 +6,7 @@ import (
 
     "github.com/rs/zerolog/log"
 
+    "github.com/eriq-augustine/autograder/common"
     "github.com/eriq-augustine/autograder/grader"
     "github.com/eriq-augustine/autograder/model"
     "github.com/eriq-augustine/autograder/util"
@@ -14,7 +15,7 @@ import (
 var MIN_ROLE_FETCH_GRADES model.UserRole = model.Grader;
 
 type FetchGradesRequest struct {
-    model.BaseAPIRequest
+    BaseAPIRequest
     Assignment string `json:"assignment"`
     Role model.UserRole `json:"role"`
 }
@@ -27,9 +28,9 @@ func (this *FetchGradesRequest) String() string {
     return util.BaseString(this);
 }
 
-func NewFetchGradesRequest(request *http.Request) (*FetchGradesRequest, *model.APIResponse, error) {
+func NewFetchGradesRequest(request *http.Request) (*FetchGradesRequest, *APIResponse, error) {
     var apiRequest FetchGradesRequest;
-    err := model.APIRequestFromPOST(&apiRequest, request);
+    err := APIRequestFromPOST(&apiRequest, request);
     if (err != nil) {
         return nil, nil, err;
     }
@@ -43,12 +44,12 @@ func NewFetchGradesRequest(request *http.Request) (*FetchGradesRequest, *model.A
     if (err != nil) {
         return nil, nil, err;
     } else if (!ok) {
-        return nil, model.NewResponse(http.StatusUnauthorized, "Failed to authenticate."), nil;
+        return nil, NewResponse(http.StatusUnauthorized, "Failed to authenticate."), nil;
     }
 
     if ((user != nil) && (user.Role < MIN_ROLE_FETCH_GRADES)) {
         log.Debug().Str("user", user.Email).Msg("Authentication Failure: Insufficient Permissions.");
-        return nil, model.NewResponse(http.StatusForbidden, "Insufficient Permissions."), nil;
+        return nil, NewResponse(http.StatusForbidden, "Insufficient Permissions."), nil;
     }
 
     return &apiRequest, nil, nil;
@@ -60,7 +61,7 @@ func (this *FetchGradesRequest) Close() error {
 
 func (this *FetchGradesRequest) Clean() error {
     var err error;
-    this.Assignment, err = model.ValidateID(this.Assignment);
+    this.Assignment, err = common.ValidateID(this.Assignment);
     if (err != nil) {
         return fmt.Errorf("Could not clean FetchGradesRequest assignment ID ('%s'): '%w'.", this.Assignment, err);
     }

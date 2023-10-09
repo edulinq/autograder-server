@@ -9,6 +9,7 @@ import (
 
     "github.com/rs/zerolog/log"
 
+    "github.com/eriq-augustine/autograder/common"
     "github.com/eriq-augustine/autograder/model"
     "github.com/eriq-augustine/autograder/util"
 )
@@ -17,7 +18,7 @@ const PYTHON_AUTOGRADER_INVOCATION = "python3 -m autograder.cli.grade-submission
 const PYTHON_GRADER_FILENAME = "grader.py"
 
 func RunNoDockerGrader(assignment *model.Assignment, submissionPath string, outputDir string, options GradeOptions, gradingID string) (*model.GradedAssignment, string, error) {
-    tempDir, inputDir, _, workDir, err := prepTempGradingDir();
+    tempDir, inputDir, _, workDir, err := common.PrepTempGradingDir();
     if (err != nil) {
         return nil, "", err;
     }
@@ -34,15 +35,15 @@ func RunNoDockerGrader(assignment *model.Assignment, submissionPath string, outp
     }
 
     // Copy over the static files (and do any file ops).
-    err = copyAssignmentFiles(filepath.Dir(assignment.SourcePath), workDir, tempDir,
+    err = common.CopyFileSpecs(filepath.Dir(assignment.SourcePath), workDir, tempDir,
             assignment.StaticFiles, false, assignment.PreStaticFileOperations, assignment.PostStaticFileOperations);
     if (err != nil) {
         return nil, "", fmt.Errorf("Failed to copy static assignment files: '%w'.", err);
     }
 
     // Copy over the submission files (and do any file ops).
-    err = copyAssignmentFiles(submissionPath, inputDir, tempDir,
-            []model.FileSpec{model.FileSpec(".")}, true, [][]string{}, assignment.PostSubmissionFileOperations);
+    err = common.CopyFileSpecs(submissionPath, inputDir, tempDir,
+            []common.FileSpec{common.FileSpec(".")}, true, [][]string{}, assignment.PostSubmissionFileOperations);
     if (err != nil) {
         return nil, "", fmt.Errorf("Failed to copy submission ssignment files: '%w'.", err);
     }
@@ -55,7 +56,7 @@ func RunNoDockerGrader(assignment *model.Assignment, submissionPath string, outp
         return nil, output, fmt.Errorf("Failed to run non-docker grader for assignment '%s': '%w'.", assignment.FullID(), err);
     }
 
-    resultPath := filepath.Join(outputDir, model.GRADER_OUTPUT_RESULT_FILENAME);
+    resultPath := filepath.Join(outputDir, common.GRADER_OUTPUT_RESULT_FILENAME);
     if (!util.PathExists(resultPath)) {
         return nil, output, fmt.Errorf("Cannot find output file ('%s') after non-docker grading.", resultPath);
     }
@@ -97,7 +98,7 @@ func getAssignmentInvocation(assignment *model.Assignment, inputDir string, outp
         } else if (value == "<workdir>") {
             value = workDir;
         } else if (value == "<outpath>") {
-            value = filepath.Join(outputDir, model.GRADER_OUTPUT_RESULT_FILENAME);
+            value = filepath.Join(outputDir, common.GRADER_OUTPUT_RESULT_FILENAME);
         }
 
         cleanCommand = append(cleanCommand, value);

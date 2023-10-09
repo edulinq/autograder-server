@@ -4,13 +4,14 @@ import (
     "fmt"
     "net/http"
 
+    "github.com/eriq-augustine/autograder/common"
     "github.com/eriq-augustine/autograder/grader"
     "github.com/eriq-augustine/autograder/model"
     "github.com/eriq-augustine/autograder/util"
 )
 
 type HistoryRequest struct {
-    model.BaseAPIRequest
+    BaseAPIRequest
     Assignment string `json:"assignment"`
 }
 
@@ -22,9 +23,9 @@ func (this *HistoryRequest) String() string {
     return util.BaseString(this);
 }
 
-func NewHistoryRequest(request *http.Request) (*HistoryRequest, *model.APIResponse, error) {
+func NewHistoryRequest(request *http.Request) (*HistoryRequest, *APIResponse, error) {
     var apiRequest HistoryRequest;
-    err := model.APIRequestFromPOST(&apiRequest, request);
+    err := APIRequestFromPOST(&apiRequest, request);
     if (err != nil) {
         return nil, nil, err;
     }
@@ -38,7 +39,7 @@ func NewHistoryRequest(request *http.Request) (*HistoryRequest, *model.APIRespon
     if (err != nil) {
         return nil, nil, err;
     } else if (!ok) {
-        return nil, model.NewResponse(http.StatusUnauthorized, "Failed to authenticate."), nil;
+        return nil, NewResponse(http.StatusUnauthorized, "Failed to authenticate."), nil;
     }
 
     return &apiRequest, nil, nil;
@@ -50,7 +51,7 @@ func (this *HistoryRequest) Close() error {
 
 func (this *HistoryRequest) Clean() error {
     var err error;
-    this.Assignment, err = model.ValidateID(this.Assignment);
+    this.Assignment, err = common.ValidateID(this.Assignment);
     if (err != nil) {
         return fmt.Errorf("Could not clean HistoryRequest assignment ID ('%s'): '%w'.", this.Assignment, err);
     }

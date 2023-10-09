@@ -1,4 +1,4 @@
-package model
+package task
 
 import (
     "fmt"
@@ -21,7 +21,7 @@ type BackupTask struct {
     dest string `json:"-"`
 }
 
-func (this *BackupTask) Validate(course *Course) error {
+func (this *BackupTask) Validate(course TaskCourseSource) error {
     err := this.When.Validate();
     if (err != nil) {
         return err;
@@ -29,12 +29,12 @@ func (this *BackupTask) Validate(course *Course) error {
 
     this.Disable = (this.Disable || config.NO_TASKS.GetBool());
 
-    this.basename = course.ID;
+    this.basename = course.GetID();
     if (this.basename == "") {
         return fmt.Errorf("Backup basename cannot be empty.");
     }
 
-    this.source = filepath.Dir(course.SourcePath);
+    this.source = course.GetSourceDir();
     if (!util.PathExists(this.source)) {
         return fmt.Errorf("Backup source path '%s' does not exist.", this.source);
     }

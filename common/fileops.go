@@ -1,55 +1,21 @@
-package grader
+package common
 
 import (
-    "errors"
     "fmt"
     "os"
     "path/filepath"
 
-    "github.com/eriq-augustine/autograder/model"
     "github.com/eriq-augustine/autograder/util"
 )
-
-// Create a temp dir for grading as well as the three standard directories in it.
-// Paths to the three direcotries (temp, in, out, work) will be returned.
-// The created directory will be in the system's temp directory.
-func prepTempGradingDir() (string, string, string, string, error) {
-    tempDir, err := os.MkdirTemp("", "autograding-nodocker-");
-    if (err != nil) {
-        return "", "", "", "", fmt.Errorf("Could not create temp dir: '%w'.", err);
-    }
-
-    inputDir, outputDir, workDir, err := createStandardGradingDirs(tempDir);
-
-    return tempDir, inputDir, outputDir, workDir, err;
-}
-
-// Create the standard three grading directories.
-func createStandardGradingDirs(dir string) (string, string, string, error) {
-    inputDir := filepath.Join(dir, model.GRADING_INPUT_DIRNAME);
-    outputDir := filepath.Join(dir, model.GRADING_OUTPUT_DIRNAME);
-    workDir := filepath.Join(dir, model.GRADING_WORK_DIRNAME);
-
-    var err error;
-
-    err = errors.Join(err, os.Mkdir(inputDir, 0755));
-    err = errors.Join(err, os.Mkdir(outputDir, 0755));
-    err = errors.Join(err, os.Mkdir(workDir, 0755));
-
-    if (err != nil) {
-        return "", "", "", fmt.Errorf("Could not create standard grading directories in temp dir ('%s'): '%w'.", dir, err);
-    }
-
-    return inputDir, outputDir, workDir, nil;
-}
 
 // Copy over assignment filespecs.
 // 1) Do pre-copy operations.
 // 2) Copy.
 // 3) Do post-copy operations.
-func copyAssignmentFiles(sourceDir string, destDir string, opDir string,
-                         filespecs []model.FileSpec, onlyContents bool,
-                         preOps [][]string, postOps [][]string) error {
+func CopyFileSpecs(
+        sourceDir string, destDir string, opDir string,
+        filespecs []FileSpec, onlyContents bool,
+        preOps [][]string, postOps [][]string) error {
     var err error;
 
     // Do pre ops.

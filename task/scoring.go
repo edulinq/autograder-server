@@ -1,4 +1,4 @@
-package model
+package task
 
 import (
     "fmt"
@@ -13,10 +13,10 @@ type ScoringUploadTask struct {
     DryRun bool `json:"dry-run"`
     When ScheduledTime `json:"when"`
 
-    course *Course `json:"-"`
+    course TaskCourseSource `json:"-"`
 }
 
-func (this *ScoringUploadTask) Validate(course *Course) error {
+func (this *ScoringUploadTask) Validate(course TaskCourseSource) error {
     err := this.When.Validate();
     if (err != nil) {
         return err;
@@ -26,14 +26,15 @@ func (this *ScoringUploadTask) Validate(course *Course) error {
 
     this.course = course;
 
-    if (this.course.CanvasInstanceInfo == nil) {
+    if (this.course.GetCanvasInstanceInfo() == nil) {
         return fmt.Errorf("Score and Upload task course must have Canvas instance information.");
     }
 
-    for _, assignment := range this.course.Assignments {
-        if (assignment.CanvasID == "") {
-            log.Warn().Str("course", course.ID).Str("assignment", assignment.ID).
-                    Msg("Score and Upload assignment is missing a Canvas ID.");
+    canvasIDs, assignmentIDs := this.course.GetCanvasIDs();
+    for i, _ := range canvasIDs {
+        if (canvasIDs[i] == "") {
+            log.Warn().Str("course", course.GetID()).Str("assignment", assignmentIDs[i]).
+                    Msg("Score and Upload course has an assignment with a missing Canvas ID.");
         }
     }
 
@@ -41,7 +42,7 @@ func (this *ScoringUploadTask) Validate(course *Course) error {
 }
 
 func (this *ScoringUploadTask) String() string {
-    return fmt.Sprintf("Score and Upload of course '%s' at '%s' (next time: '%s').", this.course.ID, this.When.String(), this.When.ComputeNext());
+    return fmt.Sprintf("Score and Upload of course '%s' at '%s' (next time: '%s').", this.course.GetID(), this.When.String(), this.When.ComputeNext());
 }
 
 // Schedule this task to be regularly run at the scheduled time.
@@ -53,7 +54,7 @@ func (this *ScoringUploadTask) Schedule() {
     this.When.Schedule(func() {
         err := this.Run();
         if (err != nil) {
-            log.Error().Err(err).Str("course", this.course.ID).Msg("Score and Upload task failed.");
+            log.Error().Err(err).Str("course", this.course.GetID()).Msg("Score and Upload task failed.");
         }
     });
 }

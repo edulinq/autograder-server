@@ -7,13 +7,14 @@ import (
 
     "github.com/rs/zerolog/log"
 
+    "github.com/eriq-augustine/autograder/common"
     "github.com/eriq-augustine/autograder/grader"
     "github.com/eriq-augustine/autograder/model"
     "github.com/eriq-augustine/autograder/util"
 )
 
 type SubmissionRequest struct {
-    model.BaseAPIRequest
+    BaseAPIRequest
     Assignment string `json:"assignment"`
     Message string `json:"message"`
 
@@ -29,9 +30,9 @@ func (this *SubmissionRequest) String() string {
     return util.BaseString(this);
 }
 
-func NewSubmissionRequest(request *http.Request) (*SubmissionRequest, *model.APIResponse, error) {
+func NewSubmissionRequest(request *http.Request) (*SubmissionRequest, *APIResponse, error) {
     var apiRequest SubmissionRequest;
-    err := model.APIRequestFromPOST(&apiRequest, request);
+    err := APIRequestFromPOST(&apiRequest, request);
     if (err != nil) {
         return nil, nil, err;
     }
@@ -45,10 +46,10 @@ func NewSubmissionRequest(request *http.Request) (*SubmissionRequest, *model.API
     if (err != nil) {
         return nil, nil, err;
     } else if (!ok) {
-        return nil, model.NewResponse(http.StatusUnauthorized, "Failed to authenticate."), nil;
+        return nil, NewResponse(http.StatusUnauthorized, "Failed to authenticate."), nil;
     }
 
-    apiRequest.Dir, err = model.StoreRequestFiles(request);
+    apiRequest.Dir, err = StoreRequestFiles(request);
     if (err != nil) {
         return nil, nil, err;
     }
@@ -62,7 +63,7 @@ func (this *SubmissionRequest) Close() error {
 
 func (this *SubmissionRequest) Clean() error {
     var err error;
-    this.Assignment, err = model.ValidateID(this.Assignment);
+    this.Assignment, err = common.ValidateID(this.Assignment);
     if (err != nil) {
         return fmt.Errorf("Could not clean SubmissionRequest assignment ID ('%s'): '%w'.", this.Assignment, err);
     }
@@ -80,7 +81,7 @@ func handleSubmit(submission *SubmissionRequest) (int, any, error) {
     if (err != nil) {
         if (output != "") {
             log.Debug().Err(err).Str("output", output).Msg("Submission grading failed, but output exists.");
-            return 0, model.NewSoftFailureResponse(output), nil;
+            return 0, NewSoftFailureResponse(output), nil;
         }
 
         return 0, nil, err;

@@ -18,11 +18,11 @@ var MIN_ROLE_CANVAS_UPLOAD_SCORES model.UserRole = model.Grader;
 // Requests
 
 type CanvasSyncUsersRequest struct {
-    model.BaseAPIRequest
+    BaseAPIRequest
 }
 
 type CanvasScoresUploadRequest struct {
-    model.BaseAPIRequest
+    BaseAPIRequest
     AssignmentCanvasID string `json:"assignment-id"`
     Scores [][]string `json:"scores"`
 }
@@ -45,9 +45,9 @@ type CanvasScoresUploadResponse struct {
 
 // Constructors
 
-func NewCanvasSyncUsersRequest(request *http.Request) (*CanvasSyncUsersRequest, *model.APIResponse, error) {
+func NewCanvasSyncUsersRequest(request *http.Request) (*CanvasSyncUsersRequest, *APIResponse, error) {
     var apiRequest CanvasSyncUsersRequest;
-    err := model.APIRequestFromPOST(&apiRequest, request);
+    err := APIRequestFromPOST(&apiRequest, request);
     if (err != nil) {
         return nil, nil, err;
     }
@@ -61,12 +61,12 @@ func NewCanvasSyncUsersRequest(request *http.Request) (*CanvasSyncUsersRequest, 
     if (err != nil) {
         return nil, nil, err;
     } else if (!ok) {
-        return nil, model.NewResponse(http.StatusUnauthorized, "Failed to authenticate."), nil;
+        return nil, NewResponse(http.StatusUnauthorized, "Failed to authenticate."), nil;
     }
 
     if ((user != nil) && (user.Role < MIN_ROLE_CANVAS_SYNC_USERS)) {
         log.Debug().Str("user", user.Email).Msg("Authentication Failure: Insufficient Permissions.");
-        return nil, model.NewResponse(http.StatusForbidden, "Insufficient Permissions."), nil;
+        return nil, NewResponse(http.StatusForbidden, "Insufficient Permissions."), nil;
     }
 
     if (course.CanvasInstanceInfo == nil) {
@@ -76,9 +76,9 @@ func NewCanvasSyncUsersRequest(request *http.Request) (*CanvasSyncUsersRequest, 
     return &apiRequest, nil, nil;
 }
 
-func NewCanvasScoresUploadRequest(request *http.Request) (*CanvasScoresUploadRequest, *model.APIResponse, error) {
+func NewCanvasScoresUploadRequest(request *http.Request) (*CanvasScoresUploadRequest, *APIResponse, error) {
     var apiRequest CanvasScoresUploadRequest;
-    err := model.APIRequestFromPOST(&apiRequest, request);
+    err := APIRequestFromPOST(&apiRequest, request);
     if (err != nil) {
         return nil, nil, err;
     }
@@ -92,12 +92,12 @@ func NewCanvasScoresUploadRequest(request *http.Request) (*CanvasScoresUploadReq
     if (err != nil) {
         return nil, nil, err;
     } else if (!ok) {
-        return nil, model.NewResponse(http.StatusUnauthorized, "Failed to authenticate."), nil;
+        return nil, NewResponse(http.StatusUnauthorized, "Failed to authenticate."), nil;
     }
 
     if ((user != nil) && (user.Role < MIN_ROLE_CANVAS_UPLOAD_SCORES)) {
         log.Debug().Str("user", user.Email).Msg("Authentication Failure: Insufficient Permissions.");
-        return nil, model.NewResponse(http.StatusForbidden, "Insufficient Permissions."), nil;
+        return nil, NewResponse(http.StatusForbidden, "Insufficient Permissions."), nil;
     }
 
     if (course.CanvasInstanceInfo == nil) {

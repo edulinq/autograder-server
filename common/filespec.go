@@ -1,4 +1,4 @@
-package model
+package common
 
 // Filespecs are string specifications for file-like objects.
 // They could be for a plain file/dir (just a path),

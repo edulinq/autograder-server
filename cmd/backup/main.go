@@ -10,6 +10,7 @@ import (
     "github.com/eriq-augustine/autograder/config"
     "github.com/eriq-augustine/autograder/grader"
     "github.com/eriq-augustine/autograder/model"
+    "github.com/eriq-augustine/autograder/task"
 )
 
 var args struct {
@@ -66,7 +67,7 @@ func backupFromMap(courses map[string]*model.Course) []string {
     errs := make([]error, 0);
 
     for _, course := range courses {
-        err := model.RunBackup(filepath.Dir(course.SourcePath), "", course.ID);
+        err := task.RunBackup(filepath.Dir(course.SourcePath), "", course.ID);
         if (err != nil) {
             errs = append(errs, fmt.Errorf("Failed to backup course '%s': '%w'.", course.ID, err));
         } else {

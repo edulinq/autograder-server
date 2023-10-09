@@ -7,18 +7,13 @@ import (
 
     "github.com/rs/zerolog/log"
 
+    "github.com/eriq-augustine/autograder/common"
+    "github.com/eriq-augustine/autograder/docker"
     "github.com/eriq-augustine/autograder/util"
 )
 
 const ASSIGNMENT_CONFIG_FILENAME = "assignment.json"
 const DEFAULT_SUBMISSIONS_DIR = "_submissions";
-
-const GRADING_INPUT_DIRNAME = "input"
-const GRADING_OUTPUT_DIRNAME = "output"
-const GRADING_WORK_DIRNAME = "work"
-
-const GRADER_OUTPUT_RESULT_FILENAME = "result.json"
-const GRADER_OUTPUT_SUMMARY_FILENAME = "summary.json"
 
 const FILE_CACHE_FILENAME = "filecache.json"
 const CACHE_FILENAME = "cache.json"
@@ -31,37 +26,11 @@ type Assignment struct {
     CanvasID string `json:"canvas-id",omitempty`
     LatePolicy LateGradingPolicy `json:"late-policy,omitempty"`
 
-    Image string `json:"image,omitempty"`
-    PreStaticDockerCommands []string `json:"pre-static-docker-commands,omitempty"`
-    PostStaticDockerCommands []string `json:"post-static-docker-commands,omitempty"`
-
-    Invocation []string `json:"invocation,omitempty"`
-
-    StaticFiles []FileSpec `json:"static-files,omitempty"`
-    PreStaticFileOperations [][]string `json:"pre-static-files-ops,omitempty"`
-    PostStaticFileOperations [][]string `json:"post-static-files-ops,omitempty"`
-
-    PostSubmissionFileOperations [][]string `json:"post-submission-files-ops,omitempty"`
+    docker.ImageInfo
 
     // Ignore these fields in JSON.
     SourcePath string `json:"-"`
     Course *Course `json:"-"`
-}
-
-// A subset of assignment that is passed to docker images for config.
-type DockerAssignmentConfig struct {
-    ID string `json:"id"`
-    DisplayName string `json:"display-name"`
-
-    PostSubmissionFileOperations [][]string `json:"post-submission-files-ops,omitempty"`
-}
-
-func (this *Assignment) GetDockerAssignmentConfig() *DockerAssignmentConfig {
-    return &DockerAssignmentConfig{
-        ID: this.ID,
-        DisplayName: this.DisplayName,
-        PostSubmissionFileOperations: this.PostSubmissionFileOperations,
-    };
 }
 
 // Load an assignment config from a given JSON path.
@@ -116,6 +85,10 @@ func (this *Assignment) ImageName() string {
     return strings.ToLower(fmt.Sprintf("autograder.%s.%s", this.Course.ID, this.ID));
 }
 
+func (this *Assignment) GetImageInfo() *docker.ImageInfo {
+    return &this.ImageInfo;
+}
+
 // Ensure that the assignment is formatted correctly.
 // Missing optional components will be defaulted correctly.
 func (this *Assignment) Validate() error {
@@ -124,7 +97,7 @@ func (this *Assignment) Validate() error {
     }
 
     var err error;
-    this.ID, err = ValidateID(this.ID);
+    this.ID, err = common.ValidateID(this.ID);
     if (err != nil) {
         return err;
     }
@@ -143,7 +116,7 @@ func (this *Assignment) Validate() error {
     }
 
     if (this.StaticFiles == nil) {
-        this.StaticFiles = make([]FileSpec, 0);
+        this.StaticFiles = make([]common.FileSpec, 0);
     }
 
     for _, staticFile := range this.StaticFiles {
@@ -175,6 +148,9 @@ func (this *Assignment) Validate() error {
     if ((this.Image == "") && ((this.Invocation == nil) || (len(this.Invocation) == 0))) {
         return fmt.Errorf("Assignment image and invocation cannot both be empty.");
     }
+
+    this.ImageInfo.Name = this.ImageName();
+    this.ImageInfo.BaseDir = filepath.Dir(this.SourcePath);
 
     return nil;
 }
@@ -233,10 +209,10 @@ func (this *Assignment) HaveStaticFilesChanges(quick bool) (bool, error) {
         }
 
         switch (filespec.GetType()) {
-            case FILESPEC_TYPE_PATH:
+            case common.FILESPEC_TYPE_PATH:
                 // Collect paths to test all at once.
                 paths = append(paths, filespec.GetPath());
-            case FILESPEC_TYPE_GIT:
+            case common.FILESPEC_TYPE_GIT:
                 // Check git refs for changes.
                 url, _, ref, err := filespec.ParseGitParts();
                 if (err != nil) {
@@ -248,7 +224,7 @@ func (this *Assignment) HaveStaticFilesChanges(quick bool) (bool, error) {
                             Msg("Git repo without ref (branch/commit) used as a static file. Please specify a ref so changes can be seen.");
                 }
 
-                oldRef, exists, err := util.CachePut(cachePath, FILESPEC_GIT_PREFIX + url, ref);
+                oldRef, exists, err := util.CachePut(cachePath, common.FILESPEC_GIT_PREFIX + url, ref);
                 if (err != nil) {
                     return false, err;
                 }

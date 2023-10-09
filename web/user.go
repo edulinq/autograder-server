@@ -19,7 +19,7 @@ var MIN_ROLE_USER_REMOVE model.UserRole = model.Admin;
 // Requests
 
 type UserAddRequest struct {
-    model.BaseAPIRequest
+    BaseAPIRequest
     Email string `json:"email"`
     NewPass string `json:"new-pass"`
     Name string `json:"name"`
@@ -29,22 +29,22 @@ type UserAddRequest struct {
 }
 
 type UserAuthRequest struct {
-    model.BaseAPIRequest
+    BaseAPIRequest
     Email string `json:"email"`
     UserPass string `json:"user-pass"`
 }
 
 type UserGetRequest struct {
-    model.BaseAPIRequest
+    BaseAPIRequest
     Email string `json:"email"`
 }
 
 type UserListRequest struct {
-    model.BaseAPIRequest
+    BaseAPIRequest
 }
 
 type UserRemoveRequest struct {
-    model.BaseAPIRequest
+    BaseAPIRequest
     Email string `json:"email"`
 }
 
@@ -82,9 +82,9 @@ type userListRow struct {
 
 // Constructors
 
-func NewUserAddRequest(request *http.Request) (*UserAddRequest, *model.APIResponse, error) {
+func NewUserAddRequest(request *http.Request) (*UserAddRequest, *APIResponse, error) {
     var apiRequest UserAddRequest;
-    err := model.APIRequestFromPOST(&apiRequest, request);
+    err := APIRequestFromPOST(&apiRequest, request);
     if (err != nil) {
         return nil, nil, err;
     }
@@ -98,24 +98,24 @@ func NewUserAddRequest(request *http.Request) (*UserAddRequest, *model.APIRespon
     if (err != nil) {
         return nil, nil, err;
     } else if (!ok) {
-        return nil, model.NewResponse(http.StatusUnauthorized, "Failed to authenticate."), nil;
+        return nil, NewResponse(http.StatusUnauthorized, "Failed to authenticate."), nil;
     }
 
     if ((user != nil) && (user.Role < MIN_ROLE_USER_ADD)) {
         log.Debug().Str("user", user.Email).Msg("Authentication Failure: Insufficient Permissions.");
-        return nil, model.NewResponse(http.StatusForbidden, "Insufficient Permissions."), nil;
+        return nil, NewResponse(http.StatusForbidden, "Insufficient Permissions."), nil;
     }
 
     if ((apiRequest.NewPass == "") && (!apiRequest.SendEmail)) {
-        return nil, model.NewResponse(http.StatusNotAcceptable, "If a password is not provided, you must send an email."), nil;
+        return nil, NewResponse(http.StatusNotAcceptable, "If a password is not provided, you must send an email."), nil;
     }
 
     return &apiRequest, nil, nil;
 }
 
-func NewUserAuthRequest(request *http.Request) (*UserAuthRequest, *model.APIResponse, error) {
+func NewUserAuthRequest(request *http.Request) (*UserAuthRequest, *APIResponse, error) {
     var apiRequest UserAuthRequest;
-    err := model.APIRequestFromPOST(&apiRequest, request);
+    err := APIRequestFromPOST(&apiRequest, request);
     if (err != nil) {
         return nil, nil, err;
     }
@@ -129,15 +129,15 @@ func NewUserAuthRequest(request *http.Request) (*UserAuthRequest, *model.APIResp
     if (err != nil) {
         return nil, nil, err;
     } else if (!ok) {
-        return nil, model.NewResponse(http.StatusUnauthorized, "Failed to authenticate."), nil;
+        return nil, NewResponse(http.StatusUnauthorized, "Failed to authenticate."), nil;
     }
 
     return &apiRequest, nil, nil;
 }
 
-func NewUserGetRequest(request *http.Request) (*UserGetRequest, *model.APIResponse, error) {
+func NewUserGetRequest(request *http.Request) (*UserGetRequest, *APIResponse, error) {
     var apiRequest UserGetRequest;
-    err := model.APIRequestFromPOST(&apiRequest, request);
+    err := APIRequestFromPOST(&apiRequest, request);
     if (err != nil) {
         return nil, nil, err;
     }
@@ -151,20 +151,20 @@ func NewUserGetRequest(request *http.Request) (*UserGetRequest, *model.APIRespon
     if (err != nil) {
         return nil, nil, err;
     } else if (!ok) {
-        return nil, model.NewResponse(http.StatusUnauthorized, "Failed to authenticate."), nil;
+        return nil, NewResponse(http.StatusUnauthorized, "Failed to authenticate."), nil;
     }
 
     if ((user != nil) && (user.Role < MIN_ROLE_USER_GET)) {
         log.Debug().Str("user", user.Email).Msg("Authentication Failure: Insufficient Permissions.");
-        return nil, model.NewResponse(http.StatusForbidden, "Insufficient Permissions."), nil;
+        return nil, NewResponse(http.StatusForbidden, "Insufficient Permissions."), nil;
     }
 
     return &apiRequest, nil, nil;
 }
 
-func NewUserListRequest(request *http.Request) (*UserListRequest, *model.APIResponse, error) {
+func NewUserListRequest(request *http.Request) (*UserListRequest, *APIResponse, error) {
     var apiRequest UserListRequest;
-    err := model.APIRequestFromPOST(&apiRequest, request);
+    err := APIRequestFromPOST(&apiRequest, request);
     if (err != nil) {
         return nil, nil, err;
     }
@@ -178,20 +178,20 @@ func NewUserListRequest(request *http.Request) (*UserListRequest, *model.APIResp
     if (err != nil) {
         return nil, nil, err;
     } else if (!ok) {
-        return nil, model.NewResponse(http.StatusUnauthorized, "Failed to authenticate."), nil;
+        return nil, NewResponse(http.StatusUnauthorized, "Failed to authenticate."), nil;
     }
 
     if ((user != nil) && (user.Role < MIN_ROLE_USER_LIST)) {
         log.Debug().Str("user", user.Email).Msg("Authentication Failure: Insufficient Permissions.");
-        return nil, model.NewResponse(http.StatusForbidden, "Insufficient Permissions."), nil;
+        return nil, NewResponse(http.StatusForbidden, "Insufficient Permissions."), nil;
     }
 
     return &apiRequest, nil, nil;
 }
 
-func NewUserRemoveRequest(request *http.Request) (*UserRemoveRequest, *model.APIResponse, error) {
+func NewUserRemoveRequest(request *http.Request) (*UserRemoveRequest, *APIResponse, error) {
     var apiRequest UserRemoveRequest;
-    err := model.APIRequestFromPOST(&apiRequest, request);
+    err := APIRequestFromPOST(&apiRequest, request);
     if (err != nil) {
         return nil, nil, err;
     }
@@ -205,12 +205,12 @@ func NewUserRemoveRequest(request *http.Request) (*UserRemoveRequest, *model.API
     if (err != nil) {
         return nil, nil, err;
     } else if (!ok) {
-        return nil, model.NewResponse(http.StatusUnauthorized, "Failed to authenticate."), nil;
+        return nil, NewResponse(http.StatusUnauthorized, "Failed to authenticate."), nil;
     }
 
     if ((user != nil) && (user.Role < MIN_ROLE_USER_LIST)) {
         log.Debug().Str("user", user.Email).Msg("Authentication Failure: Insufficient Permissions.");
-        return nil, model.NewResponse(http.StatusForbidden, "Insufficient Permissions."), nil;
+        return nil, NewResponse(http.StatusForbidden, "Insufficient Permissions."), nil;
     }
 
     return &apiRequest, nil, nil;
@@ -408,7 +408,7 @@ func handleUserRemove(request *UserRemoveRequest) (int, any, error) {
     }
 
     if (removeUser.Role > contextUser.Role) {
-        return http.StatusForbidden, model.NewResponse(http.StatusForbidden, "Insufficient Permissions."), nil;
+        return http.StatusForbidden, NewResponse(http.StatusForbidden, "Insufficient Permissions."), nil;
     }
 
     response.FoundUser = true;

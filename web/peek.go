@@ -4,13 +4,14 @@ import (
     "fmt"
     "net/http"
 
+    "github.com/eriq-augustine/autograder/common"
     "github.com/eriq-augustine/autograder/grader"
     "github.com/eriq-augustine/autograder/model"
     "github.com/eriq-augustine/autograder/util"
 )
 
 type PeekRequest struct {
-    model.BaseAPIRequest
+    BaseAPIRequest
     Assignment string `json:"assignment"`
 }
 
@@ -22,9 +23,9 @@ func (this *PeekRequest) String() string {
     return util.BaseString(this);
 }
 
-func NewPeekRequest(request *http.Request) (*PeekRequest, *model.APIResponse, error) {
+func NewPeekRequest(request *http.Request) (*PeekRequest, *APIResponse, error) {
     var apiRequest PeekRequest;
-    err := model.APIRequestFromPOST(&apiRequest, request);
+    err := APIRequestFromPOST(&apiRequest, request);
     if (err != nil) {
         return nil, nil, err;
     }
@@ -38,7 +39,7 @@ func NewPeekRequest(request *http.Request) (*PeekRequest, *model.APIResponse, er
     if (err != nil) {
         return nil, nil, err;
     } else if (!ok) {
-        return nil, model.NewResponse(http.StatusUnauthorized, "Failed to authenticate."), nil;
+        return nil, NewResponse(http.StatusUnauthorized, "Failed to authenticate."), nil;
     }
 
     return &apiRequest, nil, nil;
@@ -50,7 +51,7 @@ func (this *PeekRequest) Close() error {
 
 func (this *PeekRequest) Clean() error {
     var err error;
-    this.Assignment, err = model.ValidateID(this.Assignment);
+    this.Assignment, err = common.ValidateID(this.Assignment);
     if (err != nil) {
         return fmt.Errorf("Could not clean PeekRequest assignment ID ('%s'): '%w'.", this.Assignment, err);
     }

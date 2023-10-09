@@ -5,6 +5,7 @@ import (
 
     "github.com/rs/zerolog/log"
 
+    "github.com/eriq-augustine/autograder/common"
     "github.com/eriq-augustine/autograder/config"
     "github.com/eriq-augustine/autograder/model"
     "github.com/eriq-augustine/autograder/util"
@@ -57,7 +58,7 @@ func LoadCoursesFromDir(baseDir string) error {
 }
 
 func GetCourse(id string) *model.Course {
-    id, err := model.ValidateID(id);
+    id, err := common.ValidateID(id);
     if (err != nil) {
         return nil;
     }
@@ -76,7 +77,7 @@ func GetAssignment(courseID string, assignmentID string) *model.Assignment {
         return nil;
     }
 
-    assignmentID, err := model.ValidateID(assignmentID);
+    assignmentID, err := common.ValidateID(assignmentID);
     if (err != nil) {
         return nil;
     }

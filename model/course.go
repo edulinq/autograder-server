@@ -8,7 +8,9 @@ import (
     "github.com/rs/zerolog/log"
 
     "github.com/eriq-augustine/autograder/canvas"
+    "github.com/eriq-augustine/autograder/common"
     "github.com/eriq-augustine/autograder/config"
+    "github.com/eriq-augustine/autograder/task"
     "github.com/eriq-augustine/autograder/util"
 )
 
@@ -26,14 +28,38 @@ type Course struct {
 
     CanvasInstanceInfo *canvas.CanvasInstanceInfo `json:"canvas,omitempty"`
 
-    Backup []*BackupTask `json:"backup,omitempty"`
-    ScoringUpload []*ScoringUploadTask `json:"scoring-upload,omitempty"`
+    Backup []*task.BackupTask `json:"backup,omitempty"`
+    ScoringUpload []*task.ScoringUploadTask `json:"scoring-upload,omitempty"`
 
     // Ignore these fields in JSON.
     SourcePath string `json:"-"`
     Assignments map[string]*Assignment `json:"-"`
 
-    tasks []ScheduledCourseTask `json:"-"`
+    tasks []task.ScheduledCourseTask `json:"-"`
+}
+
+func (this *Course) GetID() string {
+    return this.ID;
+}
+
+func (this *Course) GetSourceDir() string {
+    return filepath.Dir(this.SourcePath);
+}
+
+func (this *Course) GetCanvasInstanceInfo() *canvas.CanvasInstanceInfo {
+    return this.CanvasInstanceInfo;
+}
+
+func (this *Course) GetCanvasIDs() ([]string, []string) {
+    canvasIDs := make([]string, 0, len(this.Assignments));
+    assignmentIDs := make([]string, 0, len(this.Assignments));
+
+    for _, assignment := range this.Assignments {
+        canvasIDs = append(canvasIDs, assignment.CanvasID);
+        assignmentIDs = append(assignmentIDs, assignment.CanvasID);
+    }
+
+    return canvasIDs, assignmentIDs;
 }
 
 func LoadCourseConfig(path string) (*Course, error) {
@@ -101,7 +127,7 @@ func (this *Course) Validate() error {
     }
 
     var err error;
-    this.ID, err = ValidateID(this.ID);
+    this.ID, err = common.ValidateID(this.ID);
     if (err != nil) {
         return err;
     }

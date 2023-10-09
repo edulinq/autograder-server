@@ -8,6 +8,7 @@ import (
     "testing"
 
     "github.com/eriq-augustine/autograder/config"
+    "github.com/eriq-augustine/autograder/docker"
     "github.com/eriq-augustine/autograder/model"
     "github.com/eriq-augustine/autograder/util"
 )
@@ -24,7 +25,7 @@ func TestDockerSubmissions(test *testing.T) {
         test.Skip("Docker is disabled, skipping test.");
     }
 
-    if (!CanAccessDocker()) {
+    if (!docker.CanAccessDocker()) {
         test.Fatal("Could not access docker.");
     }
 
@@ -35,7 +36,7 @@ func TestNoDockerSubmissions(test *testing.T) {
     runSubmissionTests(test, false, false);
 }
 
-func runSubmissionTests(test *testing.T, parallel bool, docker bool) {
+func runSubmissionTests(test *testing.T, parallel bool, useDocker bool) {
     testsDir := config.TESTS_DIR.GetString();
     if (testsDir == "") {
         test.Fatalf("No tests dir set ('%s').", config.TESTS_DIR.Key);
@@ -50,8 +51,8 @@ func runSubmissionTests(test *testing.T, parallel bool, docker bool) {
         test.Fatalf("Could not load courses from '%s': '%v'.", testsDir, err);
     }
 
-    if (docker) {
-        _, err = BuildDockerImagesJoinErrors(NewDockerBuildOptions());
+    if (useDocker) {
+        _, err = BuildDockerImagesJoinErrors(docker.NewBuildOptions());
         if (err != nil) {
             test.Fatalf("Failed to build docker images: '%v'.", err);
         }
@@ -74,7 +75,7 @@ func runSubmissionTests(test *testing.T, parallel bool, docker bool) {
 
     gradeOptions := GradeOptions{
         UseFakeSubmissionsDir: true,
-        NoDocker: !docker,
+        NoDocker: !useDocker,
     };
 
     failedTests := make([]string, 0);

@@ -6,6 +6,7 @@ import (
     "path/filepath"
     "time"
 
+    "github.com/eriq-augustine/autograder/common"
     "github.com/eriq-augustine/autograder/util"
 )
 
@@ -62,13 +63,13 @@ func (this *Assignment) PrepareSubmissionWithDir(user string, submissionsDir str
 // See getSubmissionFiles().
 // Fetches full grading result.
 func (this *Assignment) GetSubmissionResults(user string) ([]string, error) {
-    return this.getSubmissionFiles(user, GRADER_OUTPUT_RESULT_FILENAME);
+    return this.getSubmissionFiles(user, common.GRADER_OUTPUT_RESULT_FILENAME);
 }
 
 // See getSubmissionFiles().
 // Fetches grading summary.
 func (this *Assignment) GetSubmissionSummaries(user string) ([]string, error) {
-    return this.getSubmissionFiles(user, GRADER_OUTPUT_SUMMARY_FILENAME);
+    return this.getSubmissionFiles(user, common.GRADER_OUTPUT_SUMMARY_FILENAME);
 }
 
 // Get all the paths to the submission files for and assignment and user.
@@ -101,7 +102,7 @@ func (this *Assignment) getSubmissionFiles(user string, filename string) ([]stri
             continue;
         }
 
-        path := filepath.Join(baseDir, dirent.Name(), GRADING_OUTPUT_DIRNAME, filename);
+        path := filepath.Join(baseDir, dirent.Name(), common.GRADING_OUTPUT_DIRNAME, filename);
         if (!util.IsFile(path)) {
             continue;
         }
@@ -115,13 +116,13 @@ func (this *Assignment) getSubmissionFiles(user string, filename string) ([]stri
 // See getAllRecentSubmissionFiles().
 // Fetches full grading result.
 func (this *Assignment) GetAllRecentSubmissionResults(users map[string]*User) (map[string]string, error) {
-    return this.getAllRecentSubmissionFiles(users, GRADER_OUTPUT_RESULT_FILENAME);
+    return this.getAllRecentSubmissionFiles(users, common.GRADER_OUTPUT_RESULT_FILENAME);
 }
 
 // See getAllRecentSubmissionFiles().
 // Fetches grading summary.
 func (this *Assignment) GetAllRecentSubmissionSummaries(users map[string]*User) (map[string]string, error) {
-    return this.getAllRecentSubmissionFiles(users, GRADER_OUTPUT_SUMMARY_FILENAME);
+    return this.getAllRecentSubmissionFiles(users, common.GRADER_OUTPUT_SUMMARY_FILENAME);
 }
 
 // Get all the paths to the most recent submission file for each user for this assignment.

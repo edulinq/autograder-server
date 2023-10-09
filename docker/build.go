@@ -1,10 +1,9 @@
-package grader
+package docker
 
 // Handle building docker images for grading.
 
 import (
     "bufio"
-    "errors"
     "fmt"
     "io"
     "os"
@@ -15,60 +14,33 @@ import (
     "github.com/docker/docker/pkg/archive"
     "github.com/rs/zerolog/log"
 
+    "github.com/eriq-augustine/autograder/common"
     "github.com/eriq-augustine/autograder/config"
-    "github.com/eriq-augustine/autograder/model"
     "github.com/eriq-augustine/autograder/util"
 )
 
-const DOCKER_CONFIG_FILENAME = "config.json"
+const (
+    TEMPDIR_PREFIX = "autograder-docker-build-";
+)
 
-const DOCKER_BASE_DIR = "/autograder"
-const DOCKER_INPUT_DIR = DOCKER_BASE_DIR + "/input"
-const DOCKER_OUTPUT_DIR = DOCKER_BASE_DIR + "/output"
-const DOCKER_WORK_DIR = DOCKER_BASE_DIR + "/work"
-const DOCKER_CONFIG_PATH = DOCKER_BASE_DIR + "/" + DOCKER_CONFIG_FILENAME
-
-type DockerBuildOptions struct {
+type BuildOptions struct {
     Rebuild bool `help:"Rebuild images ignoring caches." default:"false"`
 }
 
-func NewDockerBuildOptions() *DockerBuildOptions {
-    return &DockerBuildOptions{
+func NewBuildOptions() *BuildOptions {
+    return &BuildOptions{
         Rebuild: false,
     };
 }
 
-func BuildDockerImagesJoinErrors(buildOptions *DockerBuildOptions) ([]string, error) {
-    imageNames, errs := BuildDockerImages(buildOptions);
-    return imageNames, errors.Join(errs...);
+func BuildImage(imageInfo *ImageInfo) error {
+    return BuildImageWithOptions(imageInfo, NewBuildOptions());
 }
 
-func BuildDockerImages(buildOptions *DockerBuildOptions) ([]string, []error) {
-    errs := make([]error, 0);
-    imageNames := make([]string, 0);
-
-    for _, course := range courses {
-        for _, assignment := range course.Assignments {
-            err := BuildDockerImageWithOptions(assignment, buildOptions);
-            if (err != nil) {
-                errs = append(errs, fmt.Errorf("Failed to build docker grader image for assignment (%s): '%w'.", assignment.FullID(), err));
-            } else {
-                imageNames = append(imageNames, assignment.ImageName());
-            }
-        }
-    }
-
-    return imageNames, errs;
-}
-
-func BuildDockerImage(assignment *model.Assignment) error {
-    return BuildDockerImageWithOptions(assignment, NewDockerBuildOptions());
-}
-
-func BuildDockerImageWithOptions(assignment *model.Assignment, options *DockerBuildOptions) error {
-    tempDir, err := os.MkdirTemp("", "autograder-docker-build-" + assignment.ImageName() + "-");
+func BuildImageWithOptions(imageInfo *ImageInfo, options *BuildOptions) error {
+    tempDir, err := os.MkdirTemp("", TEMPDIR_PREFIX + imageInfo.Name + "-");
     if (err != nil) {
-        return fmt.Errorf("Failed to create temp build directory for '%s': '%w'.", assignment.ImageName(), err);
+        return fmt.Errorf("Failed to create temp build directory for '%s': '%w'.", imageInfo.Name, err);
     }
 
     if (config.DEBUG.GetBool()) {
@@ -77,13 +49,13 @@ func BuildDockerImageWithOptions(assignment *model.Assignment, options *DockerBu
         defer os.RemoveAll(tempDir);
     }
 
-    err = writeDockerContext(assignment, tempDir);
+    err = writeDockerContext(imageInfo, tempDir);
     if (err != nil) {
         return err;
     }
 
     buildOptions := types.ImageBuildOptions{
-        Tags: []string{assignment.ImageName()},
+        Tags: []string{imageInfo.Name},
         Dockerfile: "Dockerfile",
     };
 
@@ -94,13 +66,13 @@ func BuildDockerImageWithOptions(assignment *model.Assignment, options *DockerBu
     // Create the build context by adding all the relevant files.
     tar, err := archive.TarWithOptions(tempDir, &archive.TarOptions{});
     if (err != nil) {
-        return fmt.Errorf("Failed to create tar build context for image '%s': '%w'.", assignment.ImageName(), err);
+        return fmt.Errorf("Failed to create tar build context for image '%s': '%w'.", imageInfo.Name, err);
     }
 
-    return buildDockerImage(buildOptions, tar);
+    return buildImage(buildOptions, tar);
 }
 
-func buildDockerImage(buildOptions types.ImageBuildOptions, tar io.ReadCloser) error {
+func buildImage(buildOptions types.ImageBuildOptions, tar io.ReadCloser) error {
 	ctx, docker, err := getDockerClient();
     if (err != nil) {
         return err;
@@ -175,30 +147,27 @@ func collectBuildOutput(response types.ImageBuildResponse) string {
 }
 
 // Write a full docker build context (Dockerfile and static files) to the given directory.
-func writeDockerContext(assignment *model.Assignment, dir string) error {
-    // The directory containing the assignment config and base for all relative paths.
-    sourceDir := filepath.Dir(assignment.SourcePath);
-
-    _, _, workDir, err := createStandardGradingDirs(dir);
+func writeDockerContext(imageInfo *ImageInfo, dir string) error {
+    _, _, workDir, err := common.CreateStandardGradingDirs(dir);
     if (err != nil) {
         return fmt.Errorf("Could not create standard grading directories: '%w'.", err);
     }
 
     // Copy over the static files (and do any file ops).
-    err = copyAssignmentFiles(sourceDir, workDir, dir,
-            assignment.StaticFiles, false, assignment.PreStaticFileOperations, assignment.PostStaticFileOperations);
+    err = common.CopyFileSpecs(imageInfo.BaseDir, workDir, dir,
+            imageInfo.StaticFiles, false, imageInfo.PreStaticFileOperations, imageInfo.PostStaticFileOperations);
     if (err != nil) {
-        return fmt.Errorf("Failed to copy static assignment files: '%w'.", err);
+        return fmt.Errorf("Failed to copy static imageInfo files: '%w'.", err);
     }
 
     dockerConfigPath := filepath.Join(dir, DOCKER_CONFIG_FILENAME);
-    err = util.ToJSONFile(assignment.GetDockerAssignmentConfig(), dockerConfigPath);
+    err = util.ToJSONFile(imageInfo.GetGradingConfig(), dockerConfigPath);
     if (err != nil) {
         return fmt.Errorf("Failed to create docker config file: '%w'.", err);
     }
 
     dockerfilePath := filepath.Join(dir, "Dockerfile");
-    err = writeDockerfile(assignment, workDir, dockerfilePath)
+    err = writeDockerfile(imageInfo, workDir, dockerfilePath)
     if (err != nil) {
         return err;
     }
@@ -206,8 +175,8 @@ func writeDockerContext(assignment *model.Assignment, dir string) error {
     return nil;
 }
 
-func writeDockerfile(assignment *model.Assignment, workDir string, path string) error {
-    contents, err := toDockerfile(assignment, workDir)
+func writeDockerfile(imageInfo *ImageInfo, workDir string, path string) error {
+    contents, err := toDockerfile(imageInfo, workDir)
     if (err != nil) {
         return fmt.Errorf("Failed get contenets for dockerfile ('%s'): '%w'.", path, err);
     }
@@ -220,11 +189,11 @@ func writeDockerfile(assignment *model.Assignment, workDir string, path string) 
     return nil;
 }
 
-func toDockerfile(assignment *model.Assignment, workDir string) (string, error) {
+func toDockerfile(imageInfo *ImageInfo, workDir string) (string, error) {
     // Note that we will insert blank lines for formatting.
     lines := make([]string, 0);
 
-    lines = append(lines, fmt.Sprintf("FROM %s", assignment.Image), "")
+    lines = append(lines, fmt.Sprintf("FROM %s", imageInfo.Image), "")
 
     // Ensure standard directories are created.
     lines = append(lines, "# Core directories");
@@ -240,8 +209,8 @@ func toDockerfile(assignment *model.Assignment, workDir string) (string, error) 
     lines = append(lines, fmt.Sprintf("COPY %s %s", DOCKER_CONFIG_FILENAME, DOCKER_CONFIG_PATH), "");
 
     // Append pre-static docker commands.
-    lines = append(lines, "# Pre-Static Assignment Commands");
-    lines = append(lines, assignment.PreStaticDockerCommands...);
+    lines = append(lines, "# Pre-Static Commands");
+    lines = append(lines, imageInfo.PreStaticDockerCommands...);
     lines = append(lines, "");
 
     // Copy over all the contents of the work directory (this is after post-static file ops).
@@ -252,7 +221,7 @@ func toDockerfile(assignment *model.Assignment, workDir string) (string, error) 
 
     lines = append(lines, "# Static Files");
     for _, dirent := range dirents {
-        sourcePath := util.DockerfilePathQuote(filepath.Join(model.GRADING_WORK_DIRNAME, dirent.Name()));
+        sourcePath := util.DockerfilePathQuote(filepath.Join(common.GRADING_WORK_DIRNAME, dirent.Name()));
         destPath := util.DockerfilePathQuote(filepath.Join(DOCKER_WORK_DIR, dirent.Name()));
 
         lines = append(lines, fmt.Sprintf("COPY %s %s", sourcePath, destPath));
@@ -260,8 +229,8 @@ func toDockerfile(assignment *model.Assignment, workDir string) (string, error) 
     lines = append(lines, "");
 
     // Append post-static docker commands.
-    lines = append(lines, "# Post-Static Assignment Commands");
-    lines = append(lines, assignment.PostStaticDockerCommands...);
+    lines = append(lines, "# Post-Static Commands");
+    lines = append(lines, imageInfo.PostStaticDockerCommands...);
     lines = append(lines, "");
 
     return strings.Join(lines, "\n"), nil;

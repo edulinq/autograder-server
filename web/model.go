@@ -1,4 +1,4 @@
-package model
+package web
 
 import (
     "encoding/json"
@@ -10,6 +10,7 @@ import (
     "strings"
     "time"
 
+    "github.com/eriq-augustine/autograder/common"
     "github.com/eriq-augustine/autograder/util"
 )
 
@@ -76,7 +77,7 @@ func (this *APIResponse) Send(response http.ResponseWriter) error {
 
 func (this *BaseAPIRequest) Clean() error {
     var err error;
-    this.Course, err = ValidateID(this.Course);
+    this.Course, err = common.ValidateID(this.Course);
     if (err != nil) {
         return fmt.Errorf("Could not clean course ID ('%s'): '%w'.", this.Course, err);
     }

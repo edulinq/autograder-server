@@ -11,7 +11,7 @@ import (
 
 // Return true only if the request is authenticated.
 // A returned user may be nil if authentication is disabled.
-func AuthAPIRequest(request *model.BaseAPIRequest, course *model.Course) (bool, *model.User, error) {
+func AuthAPIRequest(request *BaseAPIRequest, course *model.Course) (bool, *model.User, error) {
     if (request == nil) {
         return false, nil, fmt.Errorf("Cannot authenticate nil request.");
     }

@@ -8,7 +8,6 @@ import (
     "github.com/rs/zerolog/log"
 
     "github.com/eriq-augustine/autograder/config"
-    "github.com/eriq-augustine/autograder/model"
 )
 
 var routes = []route{
@@ -45,7 +44,7 @@ type RouteHandler func(response http.ResponseWriter, request *http.Request) erro
 // (it will be assumed that the handler already handled the response).
 // The any object will be json encoded and passed back in the response.
 // If the error is not nil, then it will be logged and an error status will be set (if not already specified).
-type APIHandler func(model.APIRequest) (int, any, error);
+type APIHandler func(APIRequest) (int, any, error);
 
 // Inspired by https://benhoyt.com/writings/go-routing/
 type route struct {
@@ -69,8 +68,8 @@ func newRoute(method string, pattern string, handler RouteHandler) route {
     return route{method, regexp.MustCompile("^" + pattern + "$"), handler};
 }
 
-func newAPIRoute[T model.APIRequest](method string, pattern string,
-        requestFactory func(*http.Request) (T, *model.APIResponse, error),
+func newAPIRoute[T APIRequest](method string, pattern string,
+        requestFactory func(*http.Request) (T, *APIResponse, error),
         apiHandler func(T) (int, any, error)) route {
     handler := func(response http.ResponseWriter, request *http.Request) error {
         return handleAPIEndpoint(response, request, requestFactory, apiHandler);
@@ -91,8 +90,8 @@ func handleRedirect(target string, response http.ResponseWriter, request *http.R
     return nil;
 }
 
-func handleAPIEndpoint[T model.APIRequest](response http.ResponseWriter, request *http.Request,
-        requestFactory func(*http.Request) (T, *model.APIResponse, error),
+func handleAPIEndpoint[T APIRequest](response http.ResponseWriter, request *http.Request,
+        requestFactory func(*http.Request) (T, *APIResponse, error),
         apiHandler func(T) (int, any, error)) error {
     apiRequest, apiResponse, err := requestFactory(request);
     if (err != nil) {
@@ -115,7 +114,7 @@ func handleAPIEndpoint[T model.APIRequest](response http.ResponseWriter, request
         return nil;
     }
 
-    apiResponse, ok := message.(*model.APIResponse)
+    apiResponse, ok := message.(*APIResponse)
     if (!ok) {
         // We don't have a response yet, build one.
         if (status == 0) {
@@ -126,7 +125,7 @@ func handleAPIEndpoint[T model.APIRequest](response http.ResponseWriter, request
             }
         }
 
-        apiResponse = model.NewResponse(status, message);
+        apiResponse = NewResponse(status, message);
     }
 
     sendAPIResponse(response, request, apiResponse);
@@ -134,7 +133,7 @@ func handleAPIEndpoint[T model.APIRequest](response http.ResponseWriter, request
     return nil;
 }
 
-func sendAPIResponse(response http.ResponseWriter, request *http.Request, apiResponse *model.APIResponse) {
+func sendAPIResponse(response http.ResponseWriter, request *http.Request, apiResponse *APIResponse) {
     err := apiResponse.Send(response);
     if (err != nil) {
         log.Error().Err(err).Str("path", request.URL.Path).Msg("Error sending API response.");

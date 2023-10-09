@@ -1,4 +1,4 @@
-package grader
+package docker
 
 import (
 	"context"

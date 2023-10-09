@@ -7,13 +7,14 @@ import (
     "github.com/rs/zerolog/log"
 
     "github.com/eriq-augustine/autograder/config"
+    "github.com/eriq-augustine/autograder/docker"
     "github.com/eriq-augustine/autograder/grader"
     "github.com/eriq-augustine/autograder/model"
 )
 
 var args struct {
     config.ConfigArgs
-    grader.DockerBuildOptions
+    docker.BuildOptions
     Path []string `help:"Path to assignment JSON files." arg:"" optional:"" type:"existingfile"`
 }
 
@@ -30,9 +31,9 @@ func main() {
     var imageNames []string;
 
     if (len(args.Path) > 0) {
-        imageNames = buildFromPaths(args.Path, &args.DockerBuildOptions);
+        imageNames = buildFromPaths(args.Path, &args.BuildOptions);
     } else {
-        imageNames = buildFromCourses(&args.DockerBuildOptions);
+        imageNames = buildFromCourses(&args.BuildOptions);
     }
 
     fmt.Printf("Successfully built %d images:\n", len(imageNames));
@@ -41,7 +42,7 @@ func main() {
     }
 }
 
-func buildFromCourses(buildOptions *grader.DockerBuildOptions) []string {
+func buildFromCourses(buildOptions *docker.BuildOptions) []string {
     err := grader.LoadCourses();
     if (err != nil) {
         log.Fatal().Err(err).Msg("Failed to load courses.");
@@ -59,13 +60,13 @@ func buildFromCourses(buildOptions *grader.DockerBuildOptions) []string {
     return imageNames;
 }
 
-func buildFromPaths(paths []string, buildOptions *grader.DockerBuildOptions) []string {
+func buildFromPaths(paths []string, buildOptions *docker.BuildOptions) []string {
     imageNames := make([]string, 0);
 
     for _, path := range paths {
         assignment := model.MustLoadAssignmentConfig(path);
 
-        err := grader.BuildDockerImageWithOptions(assignment, buildOptions);
+        err := docker.BuildImageWithOptions(assignment.GetImageInfo(), buildOptions);
         if (err != nil) {
             log.Fatal().Str("assignment", assignment.FullID()).Str("path", path).Err(err).Msg("Failed to build image.");
         }
