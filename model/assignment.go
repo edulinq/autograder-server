@@ -257,7 +257,7 @@ func (this *Assignment) HaveStaticFilesChanges(quick bool) (bool, error) {
                     gitChanges = true;
                 }
             default:
-                return false, fmt.Errorf("Unknown filespec type '%s': '%s'.", filespec, filespec.GetType());
+                return false, fmt.Errorf("Unknown filespec type '%s': '%v'.", filespec, filespec.GetType());
         }
     }
 

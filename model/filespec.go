@@ -63,7 +63,7 @@ func (this FileSpec) CopyTarget(baseDir string, destDir string, onlyContents boo
         case FILESPEC_TYPE_GIT:
             return this.copyGit(destDir);
         default:
-            return fmt.Errorf("Unknown filespec type ('%s'): '%s'.", this, this.GetType());
+            return fmt.Errorf("Unknown filespec type ('%s'): '%v'.", this, this.GetType());
     }
 }
 
