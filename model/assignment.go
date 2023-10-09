@@ -2,10 +2,8 @@ package model
 
 import (
     "fmt"
-    "os"
     "path/filepath"
     "strings"
-    "time"
 
     "github.com/rs/zerolog/log"
 
@@ -22,6 +20,9 @@ const GRADING_WORK_DIRNAME = "work"
 const GRADER_OUTPUT_RESULT_FILENAME = "result.json"
 const GRADER_OUTPUT_SUMMARY_FILENAME = "summary.json"
 
+const FILE_CACHE_FILENAME = "filecache.json"
+const CACHE_FILENAME = "cache.json"
+
 type Assignment struct {
     ID string `json:"id"`
     DisplayName string `json:"display-name"`
@@ -36,7 +37,7 @@ type Assignment struct {
 
     Invocation []string `json:"invocation,omitempty"`
 
-    StaticFiles []string `json:"static-files,omitempty"`
+    StaticFiles []FileSpec `json:"static-files,omitempty"`
     PreStaticFileOperations [][]string `json:"pre-static-files-ops,omitempty"`
     PostStaticFileOperations [][]string `json:"post-static-files-ops,omitempty"`
 
@@ -142,11 +143,11 @@ func (this *Assignment) Validate() error {
     }
 
     if (this.StaticFiles == nil) {
-        this.StaticFiles = make([]string, 0);
+        this.StaticFiles = make([]FileSpec, 0);
     }
 
     for _, staticFile := range this.StaticFiles {
-        if (filepath.IsAbs(staticFile)) {
+        if (staticFile.IsAbs()) {
             return fmt.Errorf("All static file paths must be relative (to the assignment config file), found: '%s'.", staticFile);
         }
     }
@@ -178,172 +179,8 @@ func (this *Assignment) Validate() error {
     return nil;
 }
 
-func (this *Assignment) getSubmissionsDir() (string, error) {
-    assignmentDir := filepath.Dir(this.SourcePath);
-    path := filepath.Join(assignmentDir, DEFAULT_SUBMISSIONS_DIR);
-
-    if (util.PathExists(path)) {
-        if (!util.IsDir(path)) {
-            return "", fmt.Errorf("Submissions dir ('%s') already exists and is not a dir.", path);
-        }
-    } else {
-        err := os.MkdirAll(path, 0755);
-        if (err != nil) {
-            return "", fmt.Errorf("Failed to make submissions directory ('%s'): '%w'.", path, err);
-        }
-    }
-
-    return path, nil;
-}
-
-func (this *Assignment) PrepareSubmission(user string) (string, int64, error) {
-    submissionsDir, err := this.getSubmissionsDir();
-    if (err != nil) {
-        return "", 0, err;
-    }
-
-    return this.PrepareSubmissionWithDir(user, submissionsDir);
-}
-
-// Prepare a place to hold the student's submission history.
-func (this *Assignment) PrepareSubmissionWithDir(user string, submissionsDir string) (string, int64, error) {
-    submissionID := time.Now().Unix();
-    var path string;
-
-    for ; ; {
-        path = filepath.Join(submissionsDir, user, fmt.Sprintf("%d", submissionID));
-        if (!util.PathExists(path)) {
-            break;
-        }
-
-        // This ID has been used.
-        submissionID++;
-    }
-
-    err := os.MkdirAll(path, 0755);
-    if (err != nil) {
-        return "", 0, fmt.Errorf("Failed to make submission directory ('%s'): '%w'.", path, err);
-    }
-
-    return path, submissionID, nil;
-}
-
-// See getSubmissionFiles().
-// Fetches full grading result.
-func (this *Assignment) GetSubmissionResults(user string) ([]string, error) {
-    return this.getSubmissionFiles(user, GRADER_OUTPUT_RESULT_FILENAME);
-}
-
-// See getSubmissionFiles().
-// Fetches grading summary.
-func (this *Assignment) GetSubmissionSummaries(user string) ([]string, error) {
-    return this.getSubmissionFiles(user, GRADER_OUTPUT_SUMMARY_FILENAME);
-}
-
-// Get all the paths to the submission files for and assignment and user.
-// The results will be sorted in ascending order (first submission first).
-// An empty slice indicates that there are no matching submission files.
-func (this *Assignment) getSubmissionFiles(user string, filename string) ([]string, error) {
-    submissionsDir, err := this.getSubmissionsDir();
-    if (err != nil) {
-        return nil, err;
-    }
-
-    paths := make([]string, 0);
-
-    baseDir := filepath.Join(submissionsDir, user);
-    if (!util.PathExists(baseDir)) {
-        return paths, nil;
-    }
-
-    if (!util.IsDir(baseDir)) {
-        return nil, fmt.Errorf("Expected user's submission dir '%s' exists and is not a dir.", baseDir);
-    }
-
-    dirents, err := os.ReadDir(baseDir);
-    if (err != nil) {
-        return nil, fmt.Errorf("Failed to read dir '%s': '%w'.", baseDir, err);
-    }
-
-    for _, dirent := range dirents {
-        if (!dirent.IsDir()) {
-            continue;
-        }
-
-        path := filepath.Join(baseDir, dirent.Name(), GRADING_OUTPUT_DIRNAME, filename);
-        if (!util.IsFile(path)) {
-            continue;
-        }
-
-        paths = append(paths, path);
-    }
-
-    return paths, nil;
-}
-
-// See getAllRecentSubmissionFiles().
-// Fetches full grading result.
-func (this *Assignment) GetAllRecentSubmissionResults(users map[string]*User) (map[string]string, error) {
-    return this.getAllRecentSubmissionFiles(users, GRADER_OUTPUT_RESULT_FILENAME);
-}
-
-// See getAllRecentSubmissionFiles().
-// Fetches grading summary.
-func (this *Assignment) GetAllRecentSubmissionSummaries(users map[string]*User) (map[string]string, error) {
-    return this.getAllRecentSubmissionFiles(users, GRADER_OUTPUT_SUMMARY_FILENAME);
-}
-
-// Get all the paths to the most recent submission file for each user for this assignment.
-// The returned map will contain an entry for every user (if not nil).
-// An empty entry in the map indicates the user has no submissions.
-func (this *Assignment) getAllRecentSubmissionFiles(users map[string]*User, filename string) (map[string]string, error) {
-    paths := make(map[string]string);
-
-    for email, _ := range users {
-        userPaths, err := this.getSubmissionFiles(email, filename);
-        if (err != nil) {
-            return nil, err;
-        }
-
-        if (len(userPaths) == 0) {
-            paths[email] = "";
-        } else {
-            paths[email] = userPaths[len(userPaths) - 1];
-        }
-    }
-
-    return paths, nil;
-}
-
-// Get all the recent submission summaries (via GetAllRecentSubmissionSummaries()),
-// and convert them to ScoringInfo structs so they can be properly scored/uploaded.
-func (this *Assignment) GetScoringInfo(users map[string]*User, onlyStudents bool) (map[string]*ScoringInfo, error) {
-    paths, err := this.GetAllRecentSubmissionSummaries(users);
-    if (err != nil) {
-        return nil, fmt.Errorf("Unable to load submission summaries: '%w'.", err);
-    }
-
-    results := make(map[string]*ScoringInfo, len(paths));
-
-    for username, path := range paths {
-        if (path == "") {
-            continue;
-        }
-
-        if (onlyStudents && (users[username].Role != Student)) {
-            continue;
-        }
-
-        var summary SubmissionSummary;
-        err = util.JSONFromFile(path, &summary);
-        if (err != nil) {
-            return nil, fmt.Errorf("Unable to load submission summary from path '%s': '%w'.", path, err);
-        }
-
-        results[username] = ScoringInfoFromSubmissionSummary(&summary);
-    }
-
-    return results, nil;
+func (this *Assignment) GetCacheDir() string {
+    return filepath.Join(this.Course.GetCacheDir(), "assignment_" + this.ID);
 }
 
 func CompareAssignments(a *Assignment, b *Assignment) int {
@@ -372,4 +209,62 @@ func CompareAssignments(a *Assignment, b *Assignment) int {
 
     // If both don't have sort keys, just use the IDs.
     return strings.Compare(a.ID, b.ID);
+}
+
+// Check if the assignment's static files have changes since the last time they were cached.
+// This is thread-safe.
+func (this *Assignment) HaveStaticFilesChanges(quick bool) (bool, error) {
+    cacheDir := this.GetCacheDir();
+
+    err := util.MkDir(cacheDir);
+    if (err != nil) {
+        return false, fmt.Errorf("Unable to create cache dir '%s': '%w'.", cacheDir, err);
+    }
+
+    fileCachePath := filepath.Join(cacheDir, FILE_CACHE_FILENAME);
+    cachePath := filepath.Join(cacheDir, CACHE_FILENAME);
+
+    paths := make([]string, 0, len(this.StaticFiles));
+    gitChanges := false;
+
+    for _, filespec := range this.StaticFiles {
+        if (quick && gitChanges) {
+            return true, nil;
+        }
+
+        switch (filespec.GetType()) {
+            case FILESPEC_TYPE_PATH:
+                // Collect paths to test all at once.
+                paths = append(paths, filespec.GetPath());
+            case FILESPEC_TYPE_GIT:
+                // Check git refs for changes.
+                url, _, ref, err := filespec.ParseGitParts();
+                if (err != nil) {
+                    return false, err;
+                }
+
+                if (ref == "") {
+                    log.Warn().Str("assignment", this.ID).Str("repo", url).
+                            Msg("Git repo without ref (branch/commit) used as a static file. Please specify a ref so changes can be seen.");
+                }
+
+                oldRef, exists, err := util.CachePut(cachePath, FILESPEC_GIT_PREFIX + url, ref);
+                if (err != nil) {
+                    return false, err;
+                }
+
+                if (!exists || (oldRef != ref)) {
+                    gitChanges = true;
+                }
+            default:
+                return false, fmt.Errorf("Unknown filespec type '%s': '%s'.", filespec, filespec.GetType());
+        }
+    }
+
+    pathChanges, err := util.HaveFilesChanges(fileCachePath, paths, quick);
+    if (err != nil) {
+        return false, err;
+    }
+
+    return (gitChanges || pathChanges), nil;
 }

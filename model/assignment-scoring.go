@@ -44,6 +44,37 @@ func (this *Assignment) FullScoringAndUpload(dryRun bool) error {
     return nil;
 }
 
+// Get all the recent submission summaries (via GetAllRecentSubmissionSummaries()),
+// and convert them to ScoringInfo structs so they can be properly scored/uploaded.
+func (this *Assignment) GetScoringInfo(users map[string]*User, onlyStudents bool) (map[string]*ScoringInfo, error) {
+    paths, err := this.GetAllRecentSubmissionSummaries(users);
+    if (err != nil) {
+        return nil, fmt.Errorf("Unable to load submission summaries: '%w'.", err);
+    }
+
+    results := make(map[string]*ScoringInfo, len(paths));
+
+    for username, path := range paths {
+        if (path == "") {
+            continue;
+        }
+
+        if (onlyStudents && (users[username].Role != Student)) {
+            continue;
+        }
+
+        var summary SubmissionSummary;
+        err = util.JSONFromFile(path, &summary);
+        if (err != nil) {
+            return nil, fmt.Errorf("Unable to load submission summary from path '%s': '%w'.", path, err);
+        }
+
+        results[username] = ScoringInfoFromSubmissionSummary(&summary);
+    }
+
+    return results, nil;
+}
+
 func computeFinalScores(
         assignment *Assignment, users map[string]*User,
         scoringInfos map[string]*ScoringInfo, canvasGrades []*canvas.CanvasGradeInfo,

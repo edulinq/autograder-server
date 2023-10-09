@@ -8,6 +8,7 @@ import (
     "github.com/rs/zerolog/log"
 
     "github.com/eriq-augustine/autograder/canvas"
+    "github.com/eriq-augustine/autograder/config"
     "github.com/eriq-augustine/autograder/util"
 )
 
@@ -127,6 +128,10 @@ func (this *Course) Validate() error {
     }
 
     return nil;
+}
+
+func (this *Course) GetCacheDir() string {
+    return filepath.Join(config.CACHE_DIR.GetString(), "course_" + this.ID);
 }
 
 // Check this directory and all parent directories for a course config file.

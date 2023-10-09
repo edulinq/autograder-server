@@ -42,7 +42,7 @@ func RunNoDockerGrader(assignment *model.Assignment, submissionPath string, outp
 
     // Copy over the submission files (and do any file ops).
     err = copyAssignmentFiles(submissionPath, inputDir, tempDir,
-            []string{"."}, true, [][]string{}, assignment.PostSubmissionFileOperations);
+            []model.FileSpec{model.FileSpec(".")}, true, [][]string{}, assignment.PostSubmissionFileOperations);
     if (err != nil) {
         return nil, "", fmt.Errorf("Failed to copy submission ssignment files: '%w'.", err);
     }
