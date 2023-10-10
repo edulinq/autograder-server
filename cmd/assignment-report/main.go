@@ -36,7 +36,7 @@ func main() {
     }
 
     if (args.HTML) {
-        html, err := report.ToHTML();
+        html, err := report.ToHTML(false);
         if (err != nil) {
             log.Fatal().Err(err).Str("assignment", assignment.ID).Msg("Failed to generate HTML scoring report.");
         }

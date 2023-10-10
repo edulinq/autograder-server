@@ -9,7 +9,10 @@ import (
 )
 
 func (this *CourseScoringReport) ToHTML() (string, error) {
-    tmpl, err := template.New("course-scoring-report").Parse(courseReportTemplate);
+    title := fmt.Sprintf("Course Scoring Report for %s", this.CourseName);
+    templateHTML := fmt.Sprintf(outterShell, title, style, courseReportTemplate);
+
+    tmpl, err := template.New("course-scoring-report").Parse(templateHTML);
     if (err != nil) {
         return "", fmt.Errorf("Could not parse course scoring report template: '%w'.", err);
     }
@@ -23,8 +26,14 @@ func (this *CourseScoringReport) ToHTML() (string, error) {
     return builder.String(), nil;
 }
 
-func (this *AssignmentScoringReport) ToHTML() (string, error) {
-    tmpl, err := template.New("assignment-scoring-report").Parse(assignmentReportTemplate);
+func (this *AssignmentScoringReport) ToHTML(inline bool) (string, error) {
+    templateHTML := assignmentReportTemplate;
+    if (!inline) {
+        title := fmt.Sprintf("Assignment Scoring Report for %s", this.AssignmentName);
+        templateHTML = fmt.Sprintf(outterShell, title, style, assignmentReportTemplate);
+    }
+
+    tmpl, err := template.New("assignment-scoring-report").Parse(templateHTML);
     if (err != nil) {
         return "", fmt.Errorf("Could not parse assignment scoring report template: '%w'.", err);
     }
@@ -38,8 +47,8 @@ func (this *AssignmentScoringReport) ToHTML() (string, error) {
     return builder.String(), nil;
 }
 
-func (this *AssignmentScoringReport) MustToHTML() template.HTML {
-    html, err := this.ToHTML();
+func (this *AssignmentScoringReport) MustToInlineHTML() template.HTML {
+    html, err := this.ToHTML(true);
     if (err != nil) {
         log.Fatal().Err(err).Str("assignment", this.AssignmentName).Msg("Failed to generate HTML assignment scoring report.");
     }
@@ -47,17 +56,34 @@ func (this *AssignmentScoringReport) MustToHTML() template.HTML {
     return template.HTML(html);
 }
 
+// Replacements: [title, head, body]
+var outterShell string = `
+    <html>
+        <head>
+            <meta charset="utf-8"/>
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+            <title>%s</title>
+
+            %s
+        </head>
+        <body>
+            %s
+        </body>
+    </html>
+`
+
 var courseReportTemplate string = `
     <div class='autograder autograder-course-scoring-report'>
         <div class='ag-header'>
-            <h2>Course: {{ .CourseName }}</h2>
+            <h1>Course: {{ .CourseName }}</h1>
         </div>
         <div class='ag-body'>
             {{ range .Assignments }}
                 {{ if eq .NumberOfSubmissions 0 }} {{ continue }} {{ end }}
 
                 <div>
-                    {{ .MustToHTML }}
+                    {{ .MustToInlineHTML }}
                 </div>
             {{ end }}
         </div>
@@ -65,22 +91,6 @@ var courseReportTemplate string = `
 `
 
 var assignmentReportTemplate string = `
-    <style>
-        .autograder-assignment-scoring-report table th,
-        .autograder-assignment-scoring-report table .text {
-            text-align: left;
-        }
-
-        .autograder-assignment-scoring-report table .numeric {
-            text-align: right;
-        }
-
-        .autograder-assignment-scoring-report table th,
-        .autograder-assignment-scoring-report table td {
-            padding: 5px;
-        }
-    </style>
-
     <div class='autograder autograder-assignment-scoring-report'>
         <div class='ag-header'>
             <h2>Assignment: {{ .AssignmentName }}</h2>
@@ -114,4 +124,27 @@ var assignmentReportTemplate string = `
             </table>
         </div>
     </div>
+`
+
+var style string = `
+    <style>
+        .autograder-assignment-scoring-report table th,
+        .autograder-assignment-scoring-report table .text {
+            text-align: left;
+        }
+
+        .autograder-assignment-scoring-report table .numeric {
+            text-align: right;
+        }
+
+        .autograder-assignment-scoring-report table th,
+        .autograder-assignment-scoring-report table td {
+            padding: 5px;
+            padding-right: 10px;
+        }
+
+        .autograder-assignment-scoring-report table td.text {
+            padding-right: 15px;
+        }
+    </style>
 `

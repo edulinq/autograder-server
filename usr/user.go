@@ -144,7 +144,7 @@ func SendUserAddEmail(user *User, pass string, generatedPass bool, userExists bo
         fmt.Printf("Doing a dry run, user '%s' will not be emailed.\n", user.Email);
         log.Debug().Str("address", user.Email).Str("subject", subject).Str("body", body).Msg("Email not sent because of dry run.");
     } else {
-        err := email.Send([]string{user.Email}, subject, body);
+        err := email.Send([]string{user.Email}, subject, body, false);
         if (err != nil) {
             log.Error().Err(err).Str("email", user.Email).Msg("Failed to send email.");
         } else {
