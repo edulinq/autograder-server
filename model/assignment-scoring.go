@@ -7,7 +7,10 @@ import (
 
     "github.com/rs/zerolog/log"
 
+    "github.com/eriq-augustine/autograder/artifact"
     "github.com/eriq-augustine/autograder/canvas"
+    "github.com/eriq-augustine/autograder/common"
+    "github.com/eriq-augustine/autograder/usr"
     "github.com/eriq-augustine/autograder/util"
 )
 
@@ -45,39 +48,39 @@ func (this *Assignment) FullScoringAndUpload(dryRun bool) error {
 }
 
 // Get all the recent submission summaries (via GetAllRecentSubmissionSummaries()),
-// and convert them to ScoringInfo structs so they can be properly scored/uploaded.
-func (this *Assignment) GetScoringInfo(users map[string]*User, onlyStudents bool) (map[string]*ScoringInfo, error) {
+// and convert them to scoring info structs so they can be properly scored/uploaded.
+func (this *Assignment) GetScoringInfo(users map[string]*usr.User, onlyStudents bool) (map[string]*artifact.ScoringInfo, error) {
     paths, err := this.GetAllRecentSubmissionSummaries(users);
     if (err != nil) {
         return nil, fmt.Errorf("Unable to load submission summaries: '%w'.", err);
     }
 
-    results := make(map[string]*ScoringInfo, len(paths));
+    results := make(map[string]*artifact.ScoringInfo, len(paths));
 
     for username, path := range paths {
         if (path == "") {
             continue;
         }
 
-        if (onlyStudents && (users[username].Role != Student)) {
+        if (onlyStudents && (users[username].Role != usr.Student)) {
             continue;
         }
 
-        var summary SubmissionSummary;
+        var summary artifact.SubmissionSummary;
         err = util.JSONFromFile(path, &summary);
         if (err != nil) {
             return nil, fmt.Errorf("Unable to load submission summary from path '%s': '%w'.", path, err);
         }
 
-        results[username] = ScoringInfoFromSubmissionSummary(&summary);
+        results[username] = summary.GetScoringInfo();
     }
 
     return results, nil;
 }
 
 func computeFinalScores(
-        assignment *Assignment, users map[string]*User,
-        scoringInfos map[string]*ScoringInfo, canvasGrades []*canvas.CanvasGradeInfo,
+        assignment *Assignment, users map[string]*usr.User,
+        scoringInfos map[string]*artifact.ScoringInfo, canvasGrades []*canvas.CanvasGradeInfo,
         dryRun bool) error {
     var err error;
 
@@ -113,17 +116,17 @@ func computeFinalScores(
     return nil;
 }
 
-func parseComments(canvasGrades []*canvas.CanvasGradeInfo) (map[string]bool, map[string]*ScoringInfo, error) {
+func parseComments(canvasGrades []*canvas.CanvasGradeInfo) (map[string]bool, map[string]*artifact.ScoringInfo, error) {
     locks := make(map[string]bool);
-    existingComments := make(map[string]*ScoringInfo);
+    existingComments := make(map[string]*artifact.ScoringInfo);
 
     for _, canvasGradeInfo := range canvasGrades {
         for _, comment := range canvasGradeInfo.Comments {
             text := strings.ToLower(comment.Text);
             if (strings.Contains(text, canvas.LOCK_COMMENT)) {
                 locks[canvasGradeInfo.UserID] = true;
-            } else if (strings.Contains(text, AUTOGRADER_COMMENT_IDENTITY_KEY)) {
-                var scoringInfo ScoringInfo;
+            } else if (strings.Contains(text, common.AUTOGRADER_COMMENT_IDENTITY_KEY)) {
+                var scoringInfo artifact.ScoringInfo;
                 err := util.JSONFromString(comment.Text, &scoringInfo);
                 if (err != nil) {
                     return nil, nil, fmt.Errorf("Could not unmarshall Canvas comment %s (%s) into a scoring info: '%w'.", comment.ID, comment.Text, err);
@@ -145,8 +148,8 @@ func parseComments(canvasGrades []*canvas.CanvasGradeInfo) (map[string]bool, map
 }
 
 func filterFinalScores(
-        users map[string]*User, scoringInfos map[string]*ScoringInfo,
-        locks map[string]bool, existingComments map[string]*ScoringInfo,
+        users map[string]*usr.User, scoringInfos map[string]*artifact.ScoringInfo,
+        locks map[string]bool, existingComments map[string]*artifact.ScoringInfo,
         ) ([]*canvas.CanvasGradeInfo, []*canvas.CanvasSubmissionComment) {
     finalGrades := make([]*canvas.CanvasGradeInfo, 0);
     commentsToUpdate := make([]*canvas.CanvasSubmissionComment, 0);

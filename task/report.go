@@ -1,4 +1,4 @@
-package model
+package task
 
 import (
     "fmt"
@@ -6,8 +6,15 @@ import (
 
     "gonum.org/v1/gonum/stat"
 
+    "github.com/eriq-augustine/autograder/artifact"
     "github.com/eriq-augustine/autograder/util"
+    "github.com/eriq-augustine/autograder/usr"
 )
+
+type ReportingSource interface {
+    GetUsers() (map[string]*usr.User, error)
+    GetAllRecentSubmissionResults(users map[string]*usr.User) (map[string]string, error)
+}
 
 type ScoringReport struct {
     NumberOfSubmissions int `json:"number-of-submissions"`
@@ -24,8 +31,8 @@ type ScoringReportQuestionStats struct {
     StdDev float64 `json:"standard-deviation"`
 }
 
-func (this *Assignment) GetScoringReport() (*ScoringReport, error) {
-    questionNames, scores, lastSubmissionTime, err := this.fetchScores();
+func GetScoringReport(source ReportingSource) (*ScoringReport, error) {
+    questionNames, scores, lastSubmissionTime, err := fetchScores(source);
     if (err != nil) {
         return nil, err;
     }
@@ -60,13 +67,13 @@ func (this *Assignment) GetScoringReport() (*ScoringReport, error) {
     return &report, nil;
 }
 
-func (this *Assignment) fetchScores() ([]string, map[string][]float64, time.Time, error) {
-    users, err := this.Course.GetUsers();
+func fetchScores(source ReportingSource) ([]string, map[string][]float64, time.Time, error) {
+    users, err := source.GetUsers();
     if (err != nil) {
         return nil, nil, time.Time{}, fmt.Errorf("Failed to get users for course: '%w'.", err);
     }
 
-    paths, err := this.GetAllRecentSubmissionResults(users);
+    paths, err := source.GetAllRecentSubmissionResults(users);
     if (err != nil) {
         return nil, nil, time.Time{}, fmt.Errorf("Failed to get submission results: '%w'.", err);
     }
@@ -76,7 +83,7 @@ func (this *Assignment) fetchScores() ([]string, map[string][]float64, time.Time
     lastSubmissionTime := time.Time{};
 
     for email, path := range paths {
-        if (users[email].Role != Student) {
+        if (users[email].Role != usr.Student) {
             continue;
         }
 
@@ -84,7 +91,7 @@ func (this *Assignment) fetchScores() ([]string, map[string][]float64, time.Time
             continue;
         }
 
-        result := GradedAssignment{};
+        result := artifact.GradedAssignment{};
         err = util.JSONFromFile(path, &result);
         if (err != nil) {
             return nil, nil, time.Time{}, fmt.Errorf("Failed to deserialize submission result '%s': '%w'.", path, err);

@@ -1,4 +1,4 @@
-package model
+package usr
 
 // It is expected that any cleartext password passed into functions here
 // are already a hex encoding of a sha256 hash of the original cleartext

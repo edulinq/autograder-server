@@ -1,10 +1,8 @@
-package model
+package artifact
 
 import (
     "time"
 )
-
-const AUTOGRADER_COMMENT_IDENTITY_KEY string = "__autograder__";
 
 type ScoringInfo struct {
     ID string `json:"id"`
@@ -22,12 +20,4 @@ type ScoringInfo struct {
     // If this object was serialized from a Canvas comment, keep the ID.
     CanvasCommentID string `json:"-"`
     CanvasCommentAuthorID string `json:"-"`
-}
-
-func ScoringInfoFromSubmissionSummary(summary *SubmissionSummary) *ScoringInfo {
-    return &ScoringInfo{
-        ID: summary.ID,
-        SubmissionTime: summary.GradingStartTime,
-        RawScore: summary.Score,
-    };
 }

@@ -9,6 +9,7 @@ import (
     "github.com/eriq-augustine/autograder/canvas"
     "github.com/eriq-augustine/autograder/config"
     "github.com/eriq-augustine/autograder/model"
+    "github.com/eriq-augustine/autograder/usr"
     "github.com/eriq-augustine/autograder/util"
 )
 
@@ -64,7 +65,7 @@ func main() {
     fmt.Printf("Uploaded %d grades.\n", len(grades));
 }
 
-func loadGrades(path string, users map[string]*model.User, force bool) ([]*canvas.CanvasGradeInfo, error) {
+func loadGrades(path string, users map[string]*usr.User, force bool) ([]*canvas.CanvasGradeInfo, error) {
     grades := make([]*canvas.CanvasGradeInfo, 0);
 
     rows, err := util.ReadSeparatedFile(path, "\t", 0);

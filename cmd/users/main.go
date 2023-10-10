@@ -10,7 +10,7 @@ import (
     "github.com/rs/zerolog/log"
 
     "github.com/eriq-augustine/autograder/config"
-    "github.com/eriq-augustine/autograder/model"
+    "github.com/eriq-augustine/autograder/usr"
     "github.com/eriq-augustine/autograder/util"
 )
 
@@ -25,14 +25,14 @@ type AddUser struct {
 }
 
 func (this *AddUser) Run(path string) error {
-    users, err := model.LoadUsersFile(path);
+    users, err := usr.LoadUsersFile(path);
     if (err != nil) {
         return fmt.Errorf("Failed to load users file '%s': '%w'.", path, err);
     }
 
     generatedPass := false;
     if (this.Pass == "") {
-        this.Pass, err = util.RandHex(model.DEFAULT_PASSWORD_LEN);
+        this.Pass, err = util.RandHex(usr.DEFAULT_PASSWORD_LEN);
         if (err != nil) {
             return fmt.Errorf("Failed to generate a default password.");
         }
@@ -40,7 +40,7 @@ func (this *AddUser) Run(path string) error {
         generatedPass = true;
     }
 
-    user, userExists, err := model.NewOrMergeUser(users, this.Email, this.Name, this.Role, this.Pass, this.Force);
+    user, userExists, err := usr.NewOrMergeUser(users, this.Email, this.Name, this.Role, this.Pass, this.Force);
     if (err != nil) {
         return err;
     }
@@ -50,7 +50,7 @@ func (this *AddUser) Run(path string) error {
     if (this.DryRun) {
         fmt.Printf("Doing a dry run, users file '%s' will not be written to.\n", path);
     } else {
-        err = model.SaveUsersFile(path, users);
+        err = usr.SaveUsersFile(path, users);
         if (err != nil) {
             return fmt.Errorf("Failed to save users file '%s': '%w'.", path, err);
         }
@@ -62,7 +62,7 @@ func (this *AddUser) Run(path string) error {
     }
 
     if (this.SendEmail) {
-        model.SendUserAddEmail(user, this.Pass, generatedPass, userExists, this.DryRun, false);
+        usr.SendUserAddEmail(user, this.Pass, generatedPass, userExists, this.DryRun, false);
     }
 
     return nil;
@@ -77,7 +77,7 @@ type AddTSV struct {
 }
 
 func (this *AddTSV) Run(path string) error {
-    users, err := model.LoadUsersFile(path);
+    users, err := usr.LoadUsersFile(path);
     if (err != nil) {
         return fmt.Errorf("Failed to load users file '%s': '%w'.", path, err);
     }
@@ -111,7 +111,7 @@ func (this *AddTSV) Run(path string) error {
     if (this.DryRun) {
         fmt.Printf("Doing a dry run, users file '%s' will not be written to.\n", path);
     } else {
-        err = model.SaveUsersFile(path, users);
+        err = usr.SaveUsersFile(path, users);
         if (err != nil) {
             return fmt.Errorf("Failed to save users file '%s': '%w'.", path, err);
         }
@@ -129,7 +129,7 @@ func (this *AddTSV) Run(path string) error {
     if (this.SendEmail) {
         fmt.Println("Sending out registration emails.");
         for _, newUser := range newUsers {
-            model.SendUserAddEmail(newUser.User, newUser.CleartextPass, newUser.GeneratedPass, newUser.UserExists, this.DryRun, true);
+            usr.SendUserAddEmail(newUser.User, newUser.CleartextPass, newUser.GeneratedPass, newUser.UserExists, this.DryRun, true);
         }
     }
 
@@ -142,7 +142,7 @@ type AuthUser struct {
 }
 
 func (this *AuthUser) Run(path string) error {
-    users, err := model.LoadUsersFile(path);
+    users, err := usr.LoadUsersFile(path);
     if (err != nil) {
         return fmt.Errorf("Failed to load users file '%s': '%w'.", path, err);
     }
@@ -168,7 +168,7 @@ type GetUser struct {
 }
 
 func (this *GetUser) Run(path string) error {
-    users, err := model.LoadUsersFile(path);
+    users, err := usr.LoadUsersFile(path);
     if (err != nil) {
         return fmt.Errorf("Failed to load users file '%s': '%w'.", path, err);
     }
@@ -188,7 +188,7 @@ type ListUsers struct {
 }
 
 func (this *ListUsers) Run(path string) error {
-    users, err := model.LoadUsersFile(path);
+    users, err := usr.LoadUsersFile(path);
     if (err != nil) {
         return fmt.Errorf("Failed to load users file '%s': '%w'.", path, err);
     }
@@ -214,7 +214,7 @@ type ChangePassword struct {
 }
 
 func (this *ChangePassword) Run(path string) error {
-    users, err := model.LoadUsersFile(path);
+    users, err := usr.LoadUsersFile(path);
     if (err != nil) {
         return fmt.Errorf("Failed to load users file '%s': '%w'.", path, err);
     }
@@ -226,7 +226,7 @@ func (this *ChangePassword) Run(path string) error {
 
     generatedPass := false;
     if (this.Pass == "") {
-        this.Pass, err = util.RandHex(model.DEFAULT_PASSWORD_LEN);
+        this.Pass, err = util.RandHex(usr.DEFAULT_PASSWORD_LEN);
         if (err != nil) {
             return fmt.Errorf("Failed to generate a default password.");
         }
@@ -241,7 +241,7 @@ func (this *ChangePassword) Run(path string) error {
         return fmt.Errorf("Could not set password: '%w'.", err);
     }
 
-    err = model.SaveUsersFile(path, users);
+    err = usr.SaveUsersFile(path, users);
     if (err != nil) {
         return fmt.Errorf("Failed to save users file '%s': '%w'.", path, err);
     }
@@ -259,7 +259,7 @@ type RmUser struct {
 }
 
 func (this *RmUser) Run(path string) error {
-    users, err := model.LoadUsersFile(path);
+    users, err := usr.LoadUsersFile(path);
     if (err != nil) {
         return fmt.Errorf("Failed to load users file '%s': '%w'.", path, err);
     }
@@ -271,7 +271,7 @@ func (this *RmUser) Run(path string) error {
 
     delete(users, this.Email);
 
-    err = model.SaveUsersFile(path, users);
+    err = usr.SaveUsersFile(path, users);
     if (err != nil) {
         return fmt.Errorf("Failed to save users file '%s': '%w'.", path, err);
     }
@@ -310,7 +310,7 @@ func main() {
 }
 
 type TSVUser struct {
-    User *model.User
+    User *usr.User
     UserExists bool;
     GeneratedPass bool;
     CleartextPass string
@@ -320,7 +320,7 @@ type TSVUser struct {
 // The users returned from this function are not official users yet.
 // Their cleaartext password (not hash) will be stored in Salt, and it is up to the caller
 // to decide what to do with them (and to set their password).
-func readUsersTSV(users map[string]*model.User, path string, skipRows int, force bool) ([]*TSVUser, error) {
+func readUsersTSV(users map[string]*usr.User, path string, skipRows int, force bool) ([]*TSVUser, error) {
     file, err := os.Open(path);
     if (err != nil) {
         return nil, fmt.Errorf("Failed to open user TSV file '%s': '%w'.", path, err);
@@ -344,7 +344,7 @@ func readUsersTSV(users map[string]*model.User, path string, skipRows int, force
 
         var email string;
         var name string = "";
-        var role string = model.GetRoleString(model.Student);
+        var role string = usr.GetRoleString(usr.Student);
         var pass string = "";
         var generatedPass bool = false;
 
@@ -366,7 +366,7 @@ func readUsersTSV(users map[string]*model.User, path string, skipRows int, force
             pass = parts[3];
             generatedPass = false;
         } else {
-            pass, err = util.RandHex(model.DEFAULT_PASSWORD_LEN);
+            pass, err = util.RandHex(usr.DEFAULT_PASSWORD_LEN);
             if (err != nil) {
                 return nil, fmt.Errorf("Failed to generate a default password.");
             }
@@ -378,7 +378,7 @@ func readUsersTSV(users map[string]*model.User, path string, skipRows int, force
             return nil, fmt.Errorf("User file '%s' line %d contains too many fields. Found %d, expecting at most %d.", path, lineno, len(parts), 4);
         }
 
-        user, userExists, err := model.NewOrMergeUser(users, email, name, role, pass, force);
+        user, userExists, err := usr.NewOrMergeUser(users, email, name, role, pass, force);
         if (err != nil) {
             return nil, err;
         }

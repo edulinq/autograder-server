@@ -7,11 +7,12 @@ import (
 
     "github.com/eriq-augustine/autograder/config"
     "github.com/eriq-augustine/autograder/model"
+    "github.com/eriq-augustine/autograder/usr"
 )
 
 // Return true only if the request is authenticated.
 // A returned user may be nil if authentication is disabled.
-func AuthAPIRequest(request *BaseAPIRequest, course *model.Course) (bool, *model.User, error) {
+func AuthAPIRequest(request *BaseAPIRequest, course *model.Course) (bool, *usr.User, error) {
     if (request == nil) {
         return false, nil, fmt.Errorf("Cannot authenticate nil request.");
     }

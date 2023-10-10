@@ -9,11 +9,11 @@ import (
 
     "github.com/eriq-augustine/autograder/canvas"
     "github.com/eriq-augustine/autograder/grader"
-    "github.com/eriq-augustine/autograder/model"
+    "github.com/eriq-augustine/autograder/usr"
 )
 
-var MIN_ROLE_CANVAS_SYNC_USERS model.UserRole = model.Admin;
-var MIN_ROLE_CANVAS_UPLOAD_SCORES model.UserRole = model.Grader;
+var MIN_ROLE_CANVAS_SYNC_USERS usr.UserRole = usr.Admin;
+var MIN_ROLE_CANVAS_UPLOAD_SCORES usr.UserRole = usr.Grader;
 
 // Requests
 

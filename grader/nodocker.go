@@ -9,6 +9,7 @@ import (
 
     "github.com/rs/zerolog/log"
 
+    "github.com/eriq-augustine/autograder/artifact"
     "github.com/eriq-augustine/autograder/common"
     "github.com/eriq-augustine/autograder/model"
     "github.com/eriq-augustine/autograder/util"
@@ -17,7 +18,7 @@ import (
 const PYTHON_AUTOGRADER_INVOCATION = "python3 -m autograder.cli.grade-submission --grader <grader> --inputdir <inputdir> --outputdir <outputdir> --workdir <workdir> --outpath <outpath>"
 const PYTHON_GRADER_FILENAME = "grader.py"
 
-func RunNoDockerGrader(assignment *model.Assignment, submissionPath string, outputDir string, options GradeOptions, gradingID string) (*model.GradedAssignment, string, error) {
+func RunNoDockerGrader(assignment *model.Assignment, submissionPath string, outputDir string, options GradeOptions, gradingID string) (*artifact.GradedAssignment, string, error) {
     tempDir, inputDir, _, workDir, err := common.PrepTempGradingDir();
     if (err != nil) {
         return nil, "", err;
@@ -61,7 +62,7 @@ func RunNoDockerGrader(assignment *model.Assignment, submissionPath string, outp
         return nil, output, fmt.Errorf("Cannot find output file ('%s') after non-docker grading.", resultPath);
     }
 
-    var result model.GradedAssignment;
+    var result artifact.GradedAssignment;
     err = util.JSONFromFile(resultPath, &result);
     if (err != nil) {
         return nil, output, err;

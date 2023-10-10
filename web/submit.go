@@ -7,9 +7,9 @@ import (
 
     "github.com/rs/zerolog/log"
 
+    "github.com/eriq-augustine/autograder/artifact"
     "github.com/eriq-augustine/autograder/common"
     "github.com/eriq-augustine/autograder/grader"
-    "github.com/eriq-augustine/autograder/model"
     "github.com/eriq-augustine/autograder/util"
 )
 
@@ -22,8 +22,8 @@ type SubmissionRequest struct {
 }
 
 type SubmissionResponse struct {
-    Summary *model.SubmissionSummary `json:"summary"`
-    Assignment *model.GradedAssignment `json:"result"`
+    Summary *artifact.SubmissionSummary `json:"summary"`
+    Assignment *artifact.GradedAssignment `json:"result"`
 }
 
 func (this *SubmissionRequest) String() string {

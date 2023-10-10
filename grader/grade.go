@@ -8,6 +8,7 @@ import (
 
     "github.com/rs/zerolog/log"
 
+    "github.com/eriq-augustine/autograder/artifact"
     "github.com/eriq-augustine/autograder/common"
     "github.com/eriq-augustine/autograder/config"
     "github.com/eriq-augustine/autograder/model"
@@ -31,12 +32,12 @@ func GetDefaultGradeOptions() GradeOptions {
 }
 
 // Grade with default options pulled from config.
-func GradeDefault(assignment *model.Assignment, submissionPath string, user string, message string) (*model.GradedAssignment, *model.SubmissionSummary, string, error) {
+func GradeDefault(assignment *model.Assignment, submissionPath string, user string, message string) (*artifact.GradedAssignment, *artifact.SubmissionSummary, string, error) {
     return Grade(assignment, submissionPath, user, message, GetDefaultGradeOptions());
 }
 
 // Grade with custom options.
-func Grade(assignment *model.Assignment, submissionPath string, user string, message string, options GradeOptions) (*model.GradedAssignment, *model.SubmissionSummary, string, error) {
+func Grade(assignment *model.Assignment, submissionPath string, user string, message string, options GradeOptions) (*artifact.GradedAssignment, *artifact.SubmissionSummary, string, error) {
     gradingKey := fmt.Sprintf("%s::%s::%s", assignment.Course.ID, assignment.ID, user);
 
     // Get the existing mutex, or store (and fetch) a new one.
@@ -69,7 +70,7 @@ func Grade(assignment *model.Assignment, submissionPath string, user string, mes
     outputDir := filepath.Join(submissionDir, common.GRADING_OUTPUT_DIRNAME);
     os.MkdirAll(outputDir, 0755);
 
-    var result *model.GradedAssignment;
+    var result *artifact.GradedAssignment;
     var output string;
 
     if (options.NoDocker) {

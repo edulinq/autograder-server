@@ -7,6 +7,7 @@ import (
     "time"
 
     "github.com/eriq-augustine/autograder/common"
+    "github.com/eriq-augustine/autograder/usr"
     "github.com/eriq-augustine/autograder/util"
 )
 
@@ -115,20 +116,20 @@ func (this *Assignment) getSubmissionFiles(user string, filename string) ([]stri
 
 // See getAllRecentSubmissionFiles().
 // Fetches full grading result.
-func (this *Assignment) GetAllRecentSubmissionResults(users map[string]*User) (map[string]string, error) {
+func (this *Assignment) GetAllRecentSubmissionResults(users map[string]*usr.User) (map[string]string, error) {
     return this.getAllRecentSubmissionFiles(users, common.GRADER_OUTPUT_RESULT_FILENAME);
 }
 
 // See getAllRecentSubmissionFiles().
 // Fetches grading summary.
-func (this *Assignment) GetAllRecentSubmissionSummaries(users map[string]*User) (map[string]string, error) {
+func (this *Assignment) GetAllRecentSubmissionSummaries(users map[string]*usr.User) (map[string]string, error) {
     return this.getAllRecentSubmissionFiles(users, common.GRADER_OUTPUT_SUMMARY_FILENAME);
 }
 
 // Get all the paths to the most recent submission file for each user for this assignment.
 // The returned map will contain an entry for every user (if not nil).
 // An empty entry in the map indicates the user has no submissions.
-func (this *Assignment) getAllRecentSubmissionFiles(users map[string]*User, filename string) (map[string]string, error) {
+func (this *Assignment) getAllRecentSubmissionFiles(users map[string]*usr.User, filename string) (map[string]string, error) {
     paths := make(map[string]string);
 
     for email, _ := range users {

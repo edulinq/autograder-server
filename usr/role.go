@@ -1,4 +1,4 @@
-package model
+package usr
 
 import (
     "bytes"

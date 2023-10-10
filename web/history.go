@@ -4,9 +4,9 @@ import (
     "fmt"
     "net/http"
 
+    "github.com/eriq-augustine/autograder/artifact"
     "github.com/eriq-augustine/autograder/common"
     "github.com/eriq-augustine/autograder/grader"
-    "github.com/eriq-augustine/autograder/model"
     "github.com/eriq-augustine/autograder/util"
 )
 
@@ -16,7 +16,7 @@ type HistoryRequest struct {
 }
 
 type HistoryResponse struct {
-    History []*model.SubmissionSummary `json:"history"`
+    History []*artifact.SubmissionSummary `json:"history"`
 }
 
 func (this *HistoryRequest) String() string {
@@ -71,11 +71,11 @@ func handleHistory(request *HistoryRequest) (int, any, error) {
     }
 
     response := HistoryResponse{
-        History: make([]*model.SubmissionSummary, 0, len(paths)),
+        History: make([]*artifact.SubmissionSummary, 0, len(paths)),
     };
 
     for _, path := range paths {
-        summary := model.SubmissionSummary{};
+        summary := artifact.SubmissionSummary{};
         err = util.JSONFromFile(path, &summary);
         if (err != nil) {
             return 0, nil, fmt.Errorf("Failed to deserialize submission summary '%s': '%w'.", path, err);

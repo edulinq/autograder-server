@@ -8,7 +8,10 @@ import (
 
     "github.com/rs/zerolog/log"
 
+    "github.com/eriq-augustine/autograder/artifact"
     "github.com/eriq-augustine/autograder/canvas"
+    "github.com/eriq-augustine/autograder/common"
+    "github.com/eriq-augustine/autograder/usr"
     "github.com/eriq-augustine/autograder/util"
 )
 
@@ -89,8 +92,8 @@ func (this *LateGradingPolicy) Validate() error {
 // This assumes that all assignments are in canvas.
 func (this *LateGradingPolicy) Apply(
         assignment *Assignment,
-        users map[string]*User,
-        scores map[string]*ScoringInfo,
+        users map[string]*usr.User,
+        scores map[string]*artifact.ScoringInfo,
         dryRun bool) error {
     // Start with each submission getting the raw score.
     for _, score := range scores {
@@ -143,7 +146,7 @@ func (this *LateGradingPolicy) Apply(
 }
 
 // Apply a common policy.
-func (this *LateGradingPolicy) applyBaselinePolicy(users map[string]*User, scores map[string]*ScoringInfo, dueDate time.Time) {
+func (this *LateGradingPolicy) applyBaselinePolicy(users map[string]*usr.User, scores map[string]*artifact.ScoringInfo, dueDate time.Time) {
     for email, score := range scores {
         score.NumDaysLate = computeLateDays(dueDate, score.SubmissionTime);
 
@@ -162,7 +165,7 @@ func (this *LateGradingPolicy) applyBaselinePolicy(users map[string]*User, score
 }
 
 // Apply a constant penalty per late day.
-func (this *LateGradingPolicy) applyConstantPolicy(scores map[string]*ScoringInfo, penalty float64) {
+func (this *LateGradingPolicy) applyConstantPolicy(scores map[string]*artifact.ScoringInfo, penalty float64) {
     for _, score := range scores {
         if (score.NumDaysLate <= 0) {
             continue;
@@ -173,8 +176,8 @@ func (this *LateGradingPolicy) applyConstantPolicy(scores map[string]*ScoringInf
 }
 
 func (this *LateGradingPolicy) applyLateDaysPolicy(
-        assignment *Assignment, users map[string]*User,
-        scores map[string]*ScoringInfo, penalty float64,
+        assignment *Assignment, users map[string]*usr.User,
+        scores map[string]*artifact.ScoringInfo, penalty float64,
         dryRun bool) error {
     allLateDays, err := this.fetchLateDays(assignment);
     if (err != nil) {
@@ -328,7 +331,7 @@ func (this *LateGradingPolicy) fetchLateDays(assignment *Assignment) (map[string
                 return nil, fmt.Errorf(
                         "Late days assignment '%s' for user '%s' has a lock comment. Resolve this lock to allow for grading.",
                         this.LateDaysCanvasID, canvasLateDayInfo.UserID);
-            } else if (strings.Contains(text, AUTOGRADER_COMMENT_IDENTITY_KEY)) {
+            } else if (strings.Contains(text, common.AUTOGRADER_COMMENT_IDENTITY_KEY)) {
                 err = util.JSONFromString(comment.Text, &info);
                 if (err != nil) {
                     return nil, fmt.Errorf(

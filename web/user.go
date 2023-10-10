@@ -7,14 +7,14 @@ import (
     "github.com/rs/zerolog/log"
 
     "github.com/eriq-augustine/autograder/grader"
-    "github.com/eriq-augustine/autograder/model"
+    "github.com/eriq-augustine/autograder/usr"
     "github.com/eriq-augustine/autograder/util"
 )
 
-var MIN_ROLE_USER_ADD model.UserRole = model.Admin;
-var MIN_ROLE_USER_GET model.UserRole = model.Grader;
-var MIN_ROLE_USER_LIST model.UserRole = model.Grader;
-var MIN_ROLE_USER_REMOVE model.UserRole = model.Admin;
+var MIN_ROLE_USER_ADD usr.UserRole = usr.Admin;
+var MIN_ROLE_USER_GET usr.UserRole = usr.Grader;
+var MIN_ROLE_USER_LIST usr.UserRole = usr.Grader;
+var MIN_ROLE_USER_REMOVE usr.UserRole = usr.Admin;
 
 // Requests
 
@@ -77,7 +77,7 @@ type UserRemoveResponse struct {
 type userListRow struct {
     Email string `json:"email"`
     Name string `json:"name"`
-    Role model.UserRole `json:"role"`
+    Role usr.UserRole `json:"role"`
 }
 
 // Constructors
@@ -273,7 +273,7 @@ func handleUserAdd(request *UserAddRequest) (int, any, error) {
 
     generatedPass := false;
     if (request.NewPass == "") {
-        request.NewPass, err = util.RandHex(model.DEFAULT_PASSWORD_LEN);
+        request.NewPass, err = util.RandHex(usr.DEFAULT_PASSWORD_LEN);
         if (err != nil) {
             return 0, nil, fmt.Errorf("Failed to generate a default password: '%w'.", err);
         }
@@ -283,7 +283,7 @@ func handleUserAdd(request *UserAddRequest) (int, any, error) {
 
     response := &UserAddResponse{};
 
-    user, userExists, err := model.NewOrMergeUser(users,
+    user, userExists, err := usr.NewOrMergeUser(users,
         request.Email, request.Name, request.Role, request.NewPass, request.Force);
     response.UserExists = userExists;
 
@@ -303,7 +303,7 @@ func handleUserAdd(request *UserAddRequest) (int, any, error) {
     }
 
     if (request.SendEmail) {
-        model.SendUserAddEmail(user, request.NewPass, generatedPass, userExists, false, false);
+        usr.SendUserAddEmail(user, request.NewPass, generatedPass, userExists, false, false);
     }
 
     return 0, &UserAddResponse{}, nil;

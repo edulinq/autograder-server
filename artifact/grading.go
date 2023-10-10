@@ -1,4 +1,4 @@
-package model
+package artifact
 
 import (
     "fmt"
@@ -7,14 +7,6 @@ import (
 
     "github.com/eriq-augustine/autograder/util"
 )
-
-type SubmissionSummary struct {
-    ID string `json:"id"`
-    Message string `json:"message"`
-    MaxPoints float64 `json:"max_points"`
-    Score float64 `json:"score"`
-    GradingStartTime time.Time `json:"grading_start_time"`
-}
 
 type GradedAssignment struct {
     Name string `json:"name"`
@@ -30,10 +22,6 @@ type GradedQuestion struct {
     Message string `json:"message"`
     GradingStartTime time.Time `json:"grading_start_time"`
     GradingEndTime time.Time `json:"grading_end_time"`
-}
-
-func (this SubmissionSummary) String() string {
-    return util.BaseString(this);
 }
 
 func (this GradedAssignment) String() string {

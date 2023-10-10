@@ -8,6 +8,7 @@ import (
 
     "github.com/eriq-augustine/autograder/config"
     "github.com/eriq-augustine/autograder/model"
+    "github.com/eriq-augustine/autograder/task"
     "github.com/eriq-augustine/autograder/util"
 )
 
@@ -28,7 +29,7 @@ func main() {
 
     assignment := model.MustLoadAssignmentConfig(args.AssignmentPath);
 
-    report, err := assignment.GetScoringReport();
+    report, err := task.GetScoringReport(assignment);
     if (err != nil) {
         log.Fatal().Err(err).Str("assignment", assignment.ID).Msg("Failed to get scoring report.");
     }

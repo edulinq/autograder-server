@@ -7,6 +7,7 @@ import (
     "strings"
     "testing"
 
+    "github.com/eriq-augustine/autograder/artifact"
     "github.com/eriq-augustine/autograder/config"
     "github.com/eriq-augustine/autograder/docker"
     "github.com/eriq-augustine/autograder/model"
@@ -93,7 +94,7 @@ func runSubmissionTests(test *testing.T, parallel bool, useDocker bool) {
                 test.Parallel();
             }
 
-            var testSubmission model.TestSubmission;
+            var testSubmission artifact.TestSubmission;
             err := util.JSONFromFile(testSubmissionPath, &testSubmission);
             if (err != nil) {
                 test.Fatalf("Failed to load test submission: '%s': '%v'.", testSubmissionPath, err);

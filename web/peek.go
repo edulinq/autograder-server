@@ -4,9 +4,9 @@ import (
     "fmt"
     "net/http"
 
+    "github.com/eriq-augustine/autograder/artifact"
     "github.com/eriq-augustine/autograder/common"
     "github.com/eriq-augustine/autograder/grader"
-    "github.com/eriq-augustine/autograder/model"
     "github.com/eriq-augustine/autograder/util"
 )
 
@@ -16,7 +16,7 @@ type PeekRequest struct {
 }
 
 type PeekResponse struct {
-    Assignment *model.GradedAssignment `json:"result"`
+    Assignment *artifact.GradedAssignment `json:"result"`
 }
 
 func (this *PeekRequest) String() string {
@@ -78,7 +78,7 @@ func handlePeek(request *PeekRequest) (int, any, error) {
 
     path := paths[len(paths) - 1]
 
-    result := model.GradedAssignment{};
+    result := artifact.GradedAssignment{};
     err = util.JSONFromFile(path, &result);
     if (err != nil) {
         return 0, nil, fmt.Errorf("Failed to deserialize result '%s': '%w'.", path, err);

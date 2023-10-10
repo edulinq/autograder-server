@@ -6,22 +6,23 @@ import (
 
     "github.com/rs/zerolog/log"
 
+    "github.com/eriq-augustine/autograder/artifact"
     "github.com/eriq-augustine/autograder/common"
     "github.com/eriq-augustine/autograder/grader"
-    "github.com/eriq-augustine/autograder/model"
+    "github.com/eriq-augustine/autograder/usr"
     "github.com/eriq-augustine/autograder/util"
 )
 
-var MIN_ROLE_FETCH_GRADES model.UserRole = model.Grader;
+var MIN_ROLE_FETCH_GRADES usr.UserRole = usr.Grader;
 
 type FetchGradesRequest struct {
     BaseAPIRequest
     Assignment string `json:"assignment"`
-    Role model.UserRole `json:"role"`
+    Role usr.UserRole `json:"role"`
 }
 
 type FetchGradesResponse struct {
-    Summaries map[string]*model.SubmissionSummary `json:"result"`
+    Summaries map[string]*artifact.SubmissionSummary `json:"result"`
 }
 
 func (this *FetchGradesRequest) String() string {
@@ -86,11 +87,11 @@ func handleFetchGrades(request *FetchGradesRequest) (int, any, error) {
     }
 
     response := FetchGradesResponse{
-        Summaries: make(map[string]*model.SubmissionSummary, len(paths)),
+        Summaries: make(map[string]*artifact.SubmissionSummary, len(paths)),
     };
 
     for email, path := range paths {
-        if ((request.Role != model.Unknown) && (request.Role != users[email].Role)) {
+        if ((request.Role != usr.Unknown) && (request.Role != users[email].Role)) {
             continue;
         }
 
@@ -99,7 +100,7 @@ func handleFetchGrades(request *FetchGradesRequest) (int, any, error) {
             continue;
         }
 
-        summary := model.SubmissionSummary{};
+        summary := artifact.SubmissionSummary{};
         err = util.JSONFromFile(path, &summary);
         if (err != nil) {
             return 0, nil, fmt.Errorf("Failed to deserialize submission summary '%s': '%w'.", path, err);
