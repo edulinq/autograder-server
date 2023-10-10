@@ -4,6 +4,8 @@ import (
     "fmt"
     "time"
     "strings"
+
+    "github.com/rs/zerolog/log"
 )
 
 const (
@@ -29,21 +31,31 @@ type ScheduledTime struct {
     DayOfWeek string `json:"day-of-week"`
     TimeOfDay string `json:"time-of-day"`
 
+    id string
     timeLayout string
     nextRun time.Time
     timer *time.Timer
 }
 
-func NewScheduledTime(dayOfWeek string, timeOfDay string) ScheduledTime {
+func newScheduledTimeForTestiong(dayOfWeek string, timeOfDay string) ScheduledTime {
     return ScheduledTime{
         DayOfWeek: dayOfWeek,
         TimeOfDay: timeOfDay,
         nextRun: time.Time{},
         timer: nil,
+        id: "testing",
     };
 }
 
+func (this *ScheduledTime) SetID(id string) {
+    this.id = id;
+}
+
 func (this *ScheduledTime) Validate() error {
+    if (this.id == "") {
+        return fmt.Errorf("ScheduleTime needs a non-empty ID.");
+    }
+
     if (this.TimeOfDay == "") {
         this.TimeOfDay = DEFAULT_TIME_OF_DAY;
     }
@@ -123,6 +135,8 @@ func (this *ScheduledTime) Schedule(task func()) {
         task()
         this.Schedule(task);
     });
+
+    log.Debug().Str("id", this.id).Any("next-time", this.nextRun).Msg("Task scheduled.");
 }
 
 func (this *ScheduledTime) Stop() {

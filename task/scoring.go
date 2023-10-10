@@ -17,6 +17,8 @@ type ScoringUploadTask struct {
 }
 
 func (this *ScoringUploadTask) Validate(course TaskCourseSource) error {
+    this.When.id = fmt.Sprintf("score-%s", course.GetID());
+
     err := this.When.Validate();
     if (err != nil) {
         return err;

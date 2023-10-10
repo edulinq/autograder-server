@@ -32,6 +32,7 @@ type Course struct {
     CanvasInstanceInfo *canvas.CanvasInstanceInfo `json:"canvas,omitempty"`
 
     Backup []*task.BackupTask `json:"backup,omitempty"`
+    Report []*task.ReportTask `json:"report,omitempty"`
     ScoringUpload []*task.ScoringUploadTask `json:"scoring-upload,omitempty"`
 
     // Ignore these fields in JSON.
@@ -141,6 +142,10 @@ func (this *Course) Validate() error {
 
     // Register tasks.
     for _, task := range this.Backup {
+        this.tasks = append(this.tasks, task);
+    }
+
+    for _, task := range this.Report {
         this.tasks = append(this.tasks, task);
     }
 

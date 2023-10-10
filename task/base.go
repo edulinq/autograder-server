@@ -2,9 +2,12 @@ package task
 
 import (
     "github.com/eriq-augustine/autograder/canvas"
+    "github.com/eriq-augustine/autograder/report"
 )
 
 type TaskCourseSource interface {
+    report.ReportingSources
+
     GetID() string
     GetSourceDir() string
     GetCanvasInstanceInfo() *canvas.CanvasInstanceInfo

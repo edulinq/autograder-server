@@ -22,6 +22,8 @@ type BackupTask struct {
 }
 
 func (this *BackupTask) Validate(course TaskCourseSource) error {
+    this.When.id = fmt.Sprintf("backup-%s", course.GetID());
+
     err := this.When.Validate();
     if (err != nil) {
         return err;
