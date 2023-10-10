@@ -15,6 +15,7 @@ import (
 var args struct {
     config.ConfigArgs
     AssignmentPath string `help:"Path to assignment JSON file." arg:"" type:"existingfile"`
+    HTML bool `help:"Output report as html." default:"false"`
 }
 
 func main() {
@@ -34,5 +35,14 @@ func main() {
         log.Fatal().Err(err).Str("assignment", assignment.ID).Msg("Failed to get scoring report.");
     }
 
-    fmt.Println(util.MustToJSONIndent(report));
+    if (args.HTML) {
+        html, err := report.ToHTML();
+        if (err != nil) {
+            log.Fatal().Err(err).Str("assignment", assignment.ID).Msg("Failed to generate HTML scoring report.");
+        }
+
+        fmt.Println(html);
+    } else {
+        fmt.Println(util.MustToJSONIndent(report));
+    }
 }

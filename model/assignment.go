@@ -85,6 +85,10 @@ func (this *Assignment) FullID() string {
     return fmt.Sprintf("%s-%s", this.Course.ID, this.ID);
 }
 
+func (this *Assignment) GetName() string {
+    return this.DisplayName;
+}
+
 func (this *Assignment) ImageName() string {
     return strings.ToLower(fmt.Sprintf("autograder.%s.%s", this.Course.ID, this.ID));
 }

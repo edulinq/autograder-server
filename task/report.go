@@ -12,23 +12,34 @@ import (
 )
 
 type ReportingSource interface {
+    GetName() string
     GetUsers() (map[string]*usr.User, error)
     GetAllRecentSubmissionResults(users map[string]*usr.User) (map[string]string, error)
 }
 
 type ScoringReport struct {
+    AssignmentName string `json:"assignment-name"`
     NumberOfSubmissions int `json:"number-of-submissions"`
     LatestSubmission time.Time `json:"latest-submission"`
     Questions []*ScoringReportQuestionStats `json:"questions"`
+
+    LatestSubmissionString string `json:"-"`
 }
 
 type ScoringReportQuestionStats struct {
     QuestionName string `json:"question-name"`
+
     Min float64 `json:"min"`
     Max float64 `json:"max"`
     Median float64 `json:"median"`
     Mean float64 `json:"mean"`
     StdDev float64 `json:"standard-deviation"`
+
+    MinString string `json:"-"`
+    MaxString string `json:"-"`
+    MedianString string `json:"-"`
+    MeanString string `json:"-"`
+    StdDevString string `json:"-"`
 }
 
 func GetScoringReport(source ReportingSource) (*ScoringReport, error) {
@@ -52,6 +63,12 @@ func GetScoringReport(source ReportingSource) (*ScoringReport, error) {
             Median: median,
             Mean: mean,
             StdDev: stdDev,
+
+            MinString: fmt.Sprintf("%0.2f", min),
+            MaxString: fmt.Sprintf("%0.2f", max),
+            MedianString: fmt.Sprintf("%0.2f", median),
+            MeanString: fmt.Sprintf("%0.2f", mean),
+            StdDevString: fmt.Sprintf("%0.2f", stdDev),
         };
 
         questions = append(questions, stats);
@@ -59,8 +76,10 @@ func GetScoringReport(source ReportingSource) (*ScoringReport, error) {
     }
 
     report := ScoringReport{
+        AssignmentName: source.GetName(),
         NumberOfSubmissions: numSubmissions,
         LatestSubmission: lastSubmissionTime,
+        LatestSubmissionString: lastSubmissionTime.Format(time.DateTime),
         Questions: questions,
     };
 
