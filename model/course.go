@@ -11,6 +11,7 @@ import (
     "github.com/eriq-augustine/autograder/common"
     "github.com/eriq-augustine/autograder/config"
     "github.com/eriq-augustine/autograder/docker"
+    "github.com/eriq-augustine/autograder/report"
     "github.com/eriq-augustine/autograder/task"
     "github.com/eriq-augustine/autograder/usr"
     "github.com/eriq-augustine/autograder/util"
@@ -42,6 +43,10 @@ type Course struct {
 
 func (this *Course) GetID() string {
     return this.ID;
+}
+
+func (this *Course) GetName() string {
+    return this.DisplayName;
 }
 
 func (this *Course) GetSourceDir() string {
@@ -239,4 +244,13 @@ func (this *Course) GetSortedAssignments() []*Assignment {
     slices.SortFunc(assignments, CompareAssignments);
 
     return assignments;
+}
+
+func (this *Course) GetReportingSources() []report.ReportingSource {
+    sources := make([]report.ReportingSource, 0, len(this.Assignments));
+    for _, assignment := range this.GetSortedAssignments() {
+        sources = append(sources, assignment);
+    }
+
+    return sources;
 }

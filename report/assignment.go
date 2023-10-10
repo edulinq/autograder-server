@@ -1,4 +1,4 @@
-package task
+package report
 
 import (
     "fmt"
@@ -17,7 +17,7 @@ type ReportingSource interface {
     GetAllRecentSubmissionResults(users map[string]*usr.User) (map[string]string, error)
 }
 
-type ScoringReport struct {
+type AssignmentScoringReport struct {
     AssignmentName string `json:"assignment-name"`
     NumberOfSubmissions int `json:"number-of-submissions"`
     LatestSubmission time.Time `json:"latest-submission"`
@@ -42,7 +42,7 @@ type ScoringReportQuestionStats struct {
     StdDevString string `json:"-"`
 }
 
-func GetScoringReport(source ReportingSource) (*ScoringReport, error) {
+func GetAssignmentScoringReport(source ReportingSource) (*AssignmentScoringReport, error) {
     questionNames, scores, lastSubmissionTime, err := fetchScores(source);
     if (err != nil) {
         return nil, err;
@@ -75,7 +75,7 @@ func GetScoringReport(source ReportingSource) (*ScoringReport, error) {
         numSubmissions = len(scores[questionName]);
     }
 
-    report := ScoringReport{
+    report := AssignmentScoringReport{
         AssignmentName: source.GetName(),
         NumberOfSubmissions: numSubmissions,
         LatestSubmission: lastSubmissionTime,
