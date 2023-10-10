@@ -189,7 +189,7 @@ func (this *Assignment) GetFileCachePath() string {
 }
 
 func CompareAssignments(a *Assignment, b *Assignment) int {
-    if (a == b) {
+    if ((a == nil) && (b == nil)) {
         return 0;
     }
 
@@ -200,10 +200,11 @@ func CompareAssignments(a *Assignment, b *Assignment) int {
         return -1;
     }
 
-    // If both assignments have a sort key, use that for comparison.
-    if ((a.SortID != "") && (b.SortID != "")) {
-        return strings.Compare(a.SortID, b.SortID);
+    // If both don't have sort keys, just use the IDs.
+    if ((a.SortID == "") && (b.SortID == "")) {
+        return strings.Compare(a.ID, b.ID);
     }
+
 
     // Favor assignments with a sort key over those without.
     if (a.SortID == "") {
@@ -212,6 +213,6 @@ func CompareAssignments(a *Assignment, b *Assignment) int {
         return -1;
     }
 
-    // If both don't have sort keys, just use the IDs.
-    return strings.Compare(a.ID, b.ID);
+    // Both assignments have a sort key, use that for comparison.
+    return strings.Compare(a.SortID, b.SortID);
 }
