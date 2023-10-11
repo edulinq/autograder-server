@@ -11,6 +11,10 @@ import (
     "github.com/eriq-augustine/autograder/usr"
 )
 
+const (
+    OVERALL_NAME = "<Overall>"
+)
+
 type ReportingSource interface {
     GetName() string
     GetUsers() (map[string]*usr.User, error)
@@ -125,16 +129,32 @@ func fetchScores(source ReportingSource) ([]string, map[string][]float64, time.T
                 questionNames = append(questionNames, question.Name);
                 scores[question.Name] = make([]float64, 0);
             }
+
+            questionNames = append(questionNames, OVERALL_NAME);
         }
+
+        total := 0.0
+        max_points := 0.0
 
         for _, question := range result.Questions {
             var score float64 = 0.0;
-            if (question.MaxPoints != 0.0) {
+            if (!util.IsZero(question.MaxPoints)) {
                 score = question.Score / question.MaxPoints;
             }
 
             scores[question.Name] = append(scores[question.Name], score);
+
+            total += question.Score;
+            max_points += question.MaxPoints;
         }
+
+        total_score := 0.0;
+        if (!util.IsZero(max_points)) {
+            total_score = total / max_points;
+        }
+
+
+        scores[OVERALL_NAME] = append(scores[OVERALL_NAME], total_score);
     }
 
     return questionNames, scores, lastSubmissionTime, nil;

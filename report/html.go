@@ -146,5 +146,9 @@ var style string = `
         .autograder-assignment-scoring-report table td.text {
             padding-right: 15px;
         }
+
+        .autograder-assignment-scoring-report table tr:last-child {
+            font-style: italic;
+        }
     </style>
 `

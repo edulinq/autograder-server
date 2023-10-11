@@ -1,11 +1,22 @@
 package util
 
 import (
+    "math"
     "slices"
     "strconv"
 
     "github.com/rs/zerolog/log"
 )
+
+const EPSILON = 1e-5
+
+func IsClose(a float64, b float64) bool {
+    return math.Abs(a - b) < EPSILON;
+}
+
+func IsZero(a float64) bool {
+    return IsClose(a, 0.0);
+}
 
 func FloatToStr(value float64) string {
     return strconv.FormatFloat(value, 'f', -1, 64);
