@@ -2,6 +2,7 @@ package util
 
 import (
     "archive/zip"
+    "bytes"
     "fmt"
     "io"
     "os"
@@ -24,11 +25,32 @@ func Zip(source string, dest string) error {
     }
     defer zipfile.Close();
 
-
     writer := zip.NewWriter(zipfile);
     defer writer.Close();
 
-    err = filepath.Walk(source, func(path string, info os.FileInfo, err error) error {
+    return ZipWithWriter(source, "", writer);
+}
+
+// Zip to a slice of bytes.
+func ZipToBytes(source string, prefix string) ([]byte, error) {
+    buffer := new(bytes.Buffer);
+
+    // Create a new zip archive.
+    writer := zip.NewWriter(buffer);
+    defer writer.Close();
+
+    err := ZipWithWriter(source, prefix, writer);
+    if (err != nil) {
+        return nil, err;
+    }
+
+    writer.Close();
+    return buffer.Bytes(), nil;
+}
+
+// |prefix| can be used to set a dir that the zip contents will be located in.
+func ZipWithWriter(source string, prefix string, writer *zip.Writer) error {
+    err := filepath.Walk(source, func(path string, info os.FileInfo, err error) error {
         if (err != nil) {
             return err;
         }
@@ -43,6 +65,10 @@ func Zip(source string, dest string) error {
         header.Name, err = filepath.Rel(filepath.Dir(source), path);
         if (err != nil) {
             return fmt.Errorf("Could not compute relative path for '%s' (wrt '%s'): '%w'.", path, source, err);
+        }
+
+        if (prefix != "") {
+            header.Name = filepath.Join(prefix, header.Name);
         }
 
         if (info.IsDir()) {
@@ -73,7 +99,7 @@ func Zip(source string, dest string) error {
     });
 
     if (err != nil) {
-        return fmt.Errorf("Could not create zip file '%s' for source '%s': '%w'.", dest, source, err);
+        return fmt.Errorf("Could not create zip file for source '%s': '%w'.", source, err);
     }
 
     return nil;

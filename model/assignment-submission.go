@@ -73,7 +73,7 @@ func (this *Assignment) GetSubmissionSummaries(user string) ([]string, error) {
     return this.getSubmissionFiles(user, common.GRADER_OUTPUT_SUMMARY_FILENAME);
 }
 
-// Get all the paths to the submission files for and assignment and user.
+// Get all the paths to the submission files for an assignment and user.
 // The results will be sorted in ascending order (first submission first).
 // An empty slice indicates that there are no matching submission files.
 func (this *Assignment) getSubmissionFiles(user string, filename string) ([]string, error) {
