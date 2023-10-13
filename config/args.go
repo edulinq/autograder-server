@@ -25,10 +25,7 @@ func HandleConfigArgs(args ConfigArgs) error {
     }
 
     if (args.Testing) {
-        DEBUG.Set(true);
-        NO_AUTH.Set(true);
-        NO_STORE.Set(true);
-        NO_TASKS.Set(true);
+        EnableTestingMode(true, false);
     }
 
     InitLogging();

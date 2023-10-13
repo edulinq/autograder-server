@@ -9,6 +9,7 @@ import (
     "io"
     "math"
     "os"
+    "path/filepath"
     "strconv"
     "strings"
 
@@ -20,6 +21,9 @@ import (
 
 const ENV_PREFIX = "AUTOGRADER__";
 const ENV_DOT_REPLACEMENT = "__";
+
+// The test courses are always stored in here.
+const TESTS_DIRNAME = "_tests";
 
 var configValues map[string]any = make(map[string]any);
 
@@ -51,6 +55,22 @@ func InitLogging() {
     }
 
     zerolog.SetGlobalLevel(level);
+}
+
+func EnableTestingMode(debug bool, setTestCourses bool) {
+    NO_AUTH.Set(true);
+    NO_STORE.Set(true);
+    NO_TASKS.Set(true);
+
+    if (debug) {
+        DEBUG.Set(true);
+        InitLogging();
+    }
+
+    if (setTestCourses) {
+        testsDir := filepath.Join(util.RootDirForTesting(), TESTS_DIRNAME);
+        COURSES_ROOT.Set(testsDir);
+    }
 }
 
 func LoadLoacalConfig() error {
