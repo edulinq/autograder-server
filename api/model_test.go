@@ -41,8 +41,8 @@ func TestInvalidBaseAssignmentAPIRequests(test *testing.T) {
             continue;
         }
 
-        err = ValidateAPIRequest(request);
-        if (err == nil) {
+        apiErr := ValidateAPIRequest(request, "");
+        if (apiErr == nil) {
             test.Errorf("Case %d: Invalid request failed to raise an error.", i);
             continue;
         }
@@ -112,9 +112,9 @@ func testBaseAPIRequests(test *testing.T, testCases []baseAPIRequestTestCase, re
             continue;
         }
 
-        err = ValidateAPIRequest(request);
-        if (err != nil) {
-            test.Errorf("Case %d: Failed to validate request: '%v'.", i, err);
+        apiErr := ValidateAPIRequest(request, "");
+        if (apiErr != nil) {
+            test.Errorf("Case %d: Failed to validate request: '%v'.", i, apiErr);
             continue;
         }
     }
@@ -163,6 +163,10 @@ var validBaseAPIRequestTestCases []baseAPIRequestTestCase = []baseAPIRequestTest
 
 var invalidBaseAPIRequestTestCases []baseAPIRequestTestCase = []baseAPIRequestTestCase{
     baseAPIRequestTestCase{Payload: "{}"},
+    baseAPIRequestTestCase{Payload: `{"assignment-id": "hw0", "user-email": "student@test.com", "user-pass": "student"}`},
+    baseAPIRequestTestCase{Payload: `{"course-id": "COURSE101", "user-email": "student@test.com", "user-pass": "student"}`},
+    baseAPIRequestTestCase{Payload: `{"course-id": "COURSE101", "assignment-id": "hw0", "user-pass": "student"}`},
+    baseAPIRequestTestCase{Payload: `{"course-id": "COURSE101", "assignment-id": "hw0", "user-email": "student@test.com"}`},
 };
 
 var invalidJSONTestCases []baseAPIRequestTestCase = []baseAPIRequestTestCase{
