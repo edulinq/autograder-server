@@ -9,7 +9,7 @@ import (
     "github.com/eriq-augustine/autograder/util"
 )
 
-// The minimum user roles required encoded as a type so it can be embeded into a request struct.
+// The minimum user roles required encoded as a type so it can be embedded into a request struct.
 type MinRoleOwner bool;
 type MinRoleAdmin bool;
 type MinRoleGrader bool;
@@ -17,8 +17,10 @@ type MinRoleStudent bool;
 type MinRoleOther bool;
 
 type APIRequest struct {
+    // These are not provided in JSON, they are filled in during validation.
     RequestID string `json:"-"`
     Endpoint string `json:"-"`
+    Timestamp string `json:"-"`
 }
 
 // Context for a request that has a course and user (pretty much the lowest level of request).
@@ -47,6 +49,7 @@ type APIRequestAssignmentContext struct {
 func (this *APIRequest) Validate(request any, endpoint string) *APIError {
     this.RequestID = util.UUID();
     this.Endpoint = endpoint;
+    this.Timestamp = util.NowTimestamp();
 
     return nil;
 }
@@ -55,7 +58,7 @@ func (this *APIRequest) Validate(request any, endpoint string) *APIError {
 // that they are valid in the context of this server,
 // Additionally, all context fields will be populated.
 // This means that this request will be authenticated here.
-// The full request (object that this is embeded in) is also sent.
+// The full request (object that this is embedded in) is also sent.
 func (this *APIRequestCourseUserContext) Validate(request any, endpoint string) *APIError {
     apiErr := this.APIRequest.Validate(request, endpoint);
     if (apiErr != nil) {

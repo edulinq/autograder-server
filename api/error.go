@@ -40,6 +40,7 @@ const (
 type APIError struct {
     RequestID string
     Endpoint string
+    Timestamp string
     HTTPStatus int
     InternalText string
     ResponseText string
@@ -55,6 +56,7 @@ func (this *APIError) Error() string {
 func (this *APIError) Log() {
     log.Error().
             Str("api-request-id", this.RequestID).Str("api-endpoint", this.Endpoint).
+            Str("timestamp", this.Timestamp).
             Int("http-status", this.HTTPStatus).
             Err(this.SourceError).
             Str("internal-text", this.InternalText).Str("response-text", this.ResponseText).
@@ -79,12 +81,24 @@ func (this *APIError) Err(err error) *APIError {
     return this;
 }
 
+func (this *APIError) ToResponse() *APIResponse {
+    return &APIResponse{
+        ID: this.RequestID,
+        Timestamp: this.Timestamp,
+        HTTPStatus: this.HTTPStatus,
+        Success: (this.HTTPStatus == HTTP_STATUS_GOOD),
+        Message: this.ResponseText,
+        Content: nil,
+    };
+}
+
 // Constructors for common cases.
 
 func NewBadRequestError(request *APIRequest, message string) *APIError {
     return &APIError{
         RequestID: request.RequestID,
         Endpoint: request.Endpoint,
+        Timestamp: request.Timestamp,
         HTTPStatus: HTTP_STATUS_BAD_REQUEST,
         InternalText: message,
         ResponseText: message,
@@ -95,6 +109,7 @@ func NewBadAuthError(request *APIRequestCourseUserContext, internalMessage strin
     err := &APIError{
         RequestID: request.RequestID,
         Endpoint: request.Endpoint,
+        Timestamp: request.Timestamp,
         HTTPStatus: HTTP_STATUS_AUTH_ERROR,
         InternalText: fmt.Sprintf("Authentication failure: '%s'.", internalMessage),
         ResponseText: "Authentication failure, check course, email, and password.",
@@ -110,6 +125,7 @@ func NewBadPermissionsError(request *APIRequestCourseUserContext, minRole usr.Us
     err := &APIError{
         RequestID: request.RequestID,
         Endpoint: request.Endpoint,
+        Timestamp: request.Timestamp,
         HTTPStatus: HTTP_PERMISSIONS_ERROR,
         InternalText: fmt.Sprintf("Insufficient Permissions: '%s'.", internalMessage),
         ResponseText: "You have insufficient permissions for the requested operation.",
@@ -128,6 +144,7 @@ func NewInternalError(request *APIRequestCourseUserContext, internalMessage stri
     err := &APIError{
         RequestID: request.RequestID,
         Endpoint: request.Endpoint,
+        Timestamp: request.Timestamp,
         HTTPStatus: HTTP_STATUS_SERVER_ERROR,
         InternalText: internalMessage,
         ResponseText: fmt.Sprintf("The server failed to process your request. Please contact an adimistrator with this ID '%s'.", request.RequestID),
@@ -144,6 +161,7 @@ func NewBareInternalError(endpoint string, internalMessage string) *APIError {
     err := &APIError{
         RequestID: "0",
         Endpoint: endpoint,
+        Timestamp: util.NowTimestamp(),
         HTTPStatus: HTTP_STATUS_SERVER_ERROR,
         InternalText: internalMessage,
         ResponseText: "The server failed to process your request. Please contact an adimistrator with this ID '0'.",
