@@ -197,7 +197,7 @@ func (this *Course) BuildAssignmentImages(force bool, quick bool, options *docke
 }
 
 func (this *Course) GetCacheDir() string {
-    return filepath.Join(config.CACHE_DIR.GetString(), "course_" + this.ID);
+    return filepath.Join(config.WORK_DIR.GetString(), common.CACHE_DIRNAME, "course_" + this.ID);
 }
 
 // Check this directory and all parent directories for a course config file.

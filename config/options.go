@@ -11,7 +11,6 @@ var (
     COURSES_ROOT = newOption("courses.rootdir", "_courses", "The default places to look for courses.");
 
     WORK_DIR = newOption("dirs.work", filepath.Join(os.TempDir(), "_autograder"), "The root dir roe autograder output and artifacts.");
-    CACHE_DIR = newOption("dirs.cache", filepath.Join(WORK_DIR.GetString(), "cache"), "A place for the autograder to store information to be cached between restarts.");
 
     DEBUG = newOption("debug", false, "Enable general debugging.");
 
