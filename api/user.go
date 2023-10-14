@@ -1,12 +1,15 @@
 package api
 
 import (
+    "fmt"
+
     "github.com/eriq-augustine/autograder/usr"
 )
 
 type UserGetRequest struct {
     APIRequestCourseUserContext
     MinRoleGrader
+    Users CourseUsers `json:"-"`
 
     Email string `json:"email"`
 }
@@ -25,6 +28,11 @@ type userListRow struct {
 func handleUserGet(request *UserGetRequest) (*UserGetResponse, *APIError) {
     // TEST
     // return nil, nil;
+
+    // TEST
+    fmt.Println("TEST - HANDLE");
+    fmt.Println(request.course);
+    fmt.Println(request.Users);
 
     return &UserGetResponse{
         FoundUser: true,

@@ -83,6 +83,95 @@ func TestGetMaxRole(test *testing.T) {
     }
 }
 
+func TestBadCourseUsersFieldNoContext(test *testing.T) {
+    // No embeded course context.
+    type badCourseUsersNoCourse struct {
+        Users CourseUsers
+    }
+
+    apiErr := fillRequestSpecialFields(&badCourseUsersNoCourse{}, "");
+    if (apiErr == nil) {
+        test.Fatalf("Struct with no course context does not return an error,");
+    }
+
+    if (apiErr.RequestID != "-541") {
+        test.Fatalf("Struct with no course context does not return an error with request id '-541', found '%s'.", apiErr.RequestID);
+    }
+}
+
+func TestBadCourseUsersFieldNotExported(test *testing.T) {
+    // Users are not exported.
+    type badCourseUsersNonExported struct {
+        APIRequestCourseUserContext
+        MinRoleStudent
+
+        users CourseUsers
+    }
+
+    request := badCourseUsersNonExported{
+        APIRequestCourseUserContext: APIRequestCourseUserContext{
+            CourseID: "COURSE101",
+            UserEmail: "student@test.com",
+            UserPass: studentPass,
+        },
+    };
+
+    apiErr := ValidateAPIRequest(&request, "");
+    if (apiErr == nil) {
+        test.Fatalf("Struct with non-exported course users does not return an error,");
+    }
+
+    expectedText := "A CourseUsers field must be exported.";
+    if (apiErr.InternalText != expectedText) {
+        test.Fatalf("Struct with non-exported course users does not return an error with the correct message. Expcted '%s', found '%s'.",
+                expectedText, apiErr.InternalText);
+    }
+}
+
+func TestBadCourseUsersFieldFailGetUsers(test *testing.T) {
+    type goodCourseUsers struct {
+        APIRequestCourseUserContext
+        MinRoleStudent
+
+        Users CourseUsers
+    }
+
+    request := goodCourseUsers{
+        APIRequestCourseUserContext: APIRequestCourseUserContext{
+            CourseID: "COURSE101",
+            UserEmail: "student@test.com",
+            UserPass: studentPass,
+        },
+    };
+
+    // First, validate the course context.
+    found, apiErr := validateRequestStruct(&request, "");
+
+    if (apiErr != nil) {
+        test.Fatalf("Course context validation returned an error when it should be clean: '%v'.", apiErr);
+    }
+
+    if (!found) {
+        test.Fatalf("Course context validation did not find course context.");
+    }
+
+    // Course context is now fine, now make GetUsers fail.
+    oldSourcePath := request.course.SourcePath;
+    defer func() { request.course.SourcePath = oldSourcePath }();
+    request.course.SourcePath = "/dev/null/course.json";
+
+    apiErr = fillRequestSpecialFields(&request, "");
+    if (apiErr == nil) {
+        test.Fatalf("Error not returned when users fetch failed.");
+    }
+
+    expectedText := "Failed to fetch embeded users.";
+    if (apiErr.InternalText != expectedText) {
+        test.Fatalf("Incorrect error message when user fetch failed. Expcted '%s', found '%s'.",
+                expectedText, apiErr.InternalText);
+    }
+}
+
 func testBaseAPIRequests(test *testing.T, testCases []baseAPIRequestTestCase, request getTestValues) {
     for i, testCase := range testCases {
         err := util.JSONFromString(testCase.Payload, &request);

@@ -21,6 +21,10 @@ type MinRoleGrader bool;
 type MinRoleStudent bool;
 type MinRoleOther bool;
 
+// A request having a field of this type indicates that the users for the course should be automatically fetched.
+// The existence of this type in a struct also indicates that the request is at least a APIRequestCourseUserContext.
+type CourseUsers map[string]*usr.User;
+
 type APIRequest struct {
     // These are not provided in JSON, they are filled in during validation.
     RequestID string `json:"-"`
@@ -132,11 +136,30 @@ func ValidateAPIRequest(request any, endpoint string) *APIError {
         return NewBareInternalError("-512", endpoint, "ValidateAPIRequest() must be called with a pointer.");
     }
 
-    reflectValue := reflectPointer.Elem();
+    // Ensure the request has an request type embedded, and validate it.
+    foundRequestStruct, apiErr := validateRequestStruct(request, endpoint);
+    if (apiErr != nil) {
+        return apiErr;
+    }
 
+    if (!foundRequestStruct) {
+        return NewBareInternalError("-511", endpoint, "Request is not any kind of known API request.");
+    }
+
+    // Check for any special field types that we know how to populate.
+    apiErr = fillRequestSpecialFields(request, endpoint);
+    if (apiErr != nil) {
+        return apiErr;
+    }
+
+    return nil;
+}
+
+func validateRequestStruct(request any, endpoint string) (bool, *APIError) {
     // Check all the fields (including embedded ones) for structures that we recognize as requests.
     foundRequestStruct := false;
 
+    reflectValue := reflect.ValueOf(request).Elem();
     for i := 0; i < reflectValue.NumField(); i++ {
         fieldValue := reflectValue.Field(i);
 
@@ -147,7 +170,7 @@ func ValidateAPIRequest(request any, endpoint string) *APIError {
 
             apiErr := courseUserRequest.Validate(request, endpoint);
             if (apiErr != nil) {
-                return apiErr;
+                return false, apiErr;
             }
 
             fieldValue.Set(reflect.ValueOf(courseUserRequest));
@@ -158,15 +181,46 @@ func ValidateAPIRequest(request any, endpoint string) *APIError {
 
             apiErr := assignmentRequest.Validate(request, endpoint);
             if (apiErr != nil) {
-                return apiErr;
+                return false, apiErr;
             }
 
             fieldValue.Set(reflect.ValueOf(assignmentRequest));
         }
     }
 
-    if (!foundRequestStruct) {
-        return NewBareInternalError("-511", endpoint, "Request is not any kind of known API request.");
+    return foundRequestStruct, nil;
+}
+
+func fillRequestSpecialFields(request any, endpoint string) *APIError {
+    reflectValue := reflect.ValueOf(request).Elem();
+    structName := reflectValue.Type().Name();
+
+    for i := 0; i < reflectValue.NumField(); i++ {
+        fieldValue := reflectValue.Field(i);
+        fieldType := reflectValue.Type().Field(i);
+
+        if (fieldValue.Type() == reflect.TypeOf((*CourseUsers)(nil)).Elem()) {
+            courseContextValue := reflectValue.FieldByName("APIRequestCourseUserContext");
+            if (!courseContextValue.IsValid() || courseContextValue.IsZero()) {
+                return NewBareInternalError("-541", endpoint, "A request with a CourseUsers field must embed APIRequestCourseUserContext").
+                        Add("request", request).
+                        Add("struct-name", structName).Add("field-name", fieldType.Name);
+            }
+            courseContext := courseContextValue.Interface().(APIRequestCourseUserContext);
+
+            if (!fieldType.IsExported()) {
+                return NewInternalError(&courseContext, "A CourseUsers field must be exported.").
+                        Add("struct-name", structName).Add("field-name", fieldType.Name);
+            }
+
+            users, err := courseContext.course.GetUsers();
+            if (err != nil) {
+                return NewInternalError(&courseContext, "Failed to fetch embeded users.").Err(err).
+                        Add("struct-name", structName).Add("field-name", fieldType.Name);
+            }
+
+            fieldValue.Set(reflect.ValueOf(users));
+        }
     }
 
     return nil;
