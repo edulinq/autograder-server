@@ -271,7 +271,9 @@ func handleUserAdd(request *UserAddRequest) (int, any, error) {
         return 0, nil, err;
     }
 
+    hashPass := request.NewPass;
     generatedPass := false;
+
     if (request.NewPass == "") {
         request.NewPass, err = util.RandHex(usr.DEFAULT_PASSWORD_LEN);
         if (err != nil) {
@@ -279,12 +281,14 @@ func handleUserAdd(request *UserAddRequest) (int, any, error) {
         }
 
         generatedPass = true;
+        hashPass = util.Sha256Hex([]byte(request.NewPass));
     }
 
     response := &UserAddResponse{};
 
     user, userExists, err := usr.NewOrMergeUser(users,
-        request.Email, request.Name, request.Role, request.NewPass, request.Force);
+        request.Email, request.Name, request.Role, hashPass,
+        request.Force, course.CanvasInstanceInfo);
     response.UserExists = userExists;
 
     if (err != nil) {

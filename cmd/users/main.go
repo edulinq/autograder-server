@@ -40,7 +40,9 @@ func (this *AddUser) Run(path string) error {
         generatedPass = true;
     }
 
-    user, userExists, err := usr.NewOrMergeUser(users, this.Email, this.Name, this.Role, this.Pass, this.Force);
+    hashPass := util.Sha256Hex([]byte(this.Pass));
+
+    user, userExists, err := usr.NewOrMergeUser(users, this.Email, this.Name, this.Role, hashPass, this.Force, nil);
     if (err != nil) {
         return err;
     }
@@ -378,7 +380,9 @@ func readUsersTSV(users map[string]*usr.User, path string, skipRows int, force b
             return nil, fmt.Errorf("User file '%s' line %d contains too many fields. Found %d, expecting at most %d.", path, lineno, len(parts), 4);
         }
 
-        user, userExists, err := usr.NewOrMergeUser(users, email, name, role, pass, force);
+        hashPass := util.Sha256Hex([]byte(pass));
+
+        user, userExists, err := usr.NewOrMergeUser(users, email, name, role, hashPass, force, nil);
         if (err != nil) {
             return nil, err;
         }
