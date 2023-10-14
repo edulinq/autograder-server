@@ -2,8 +2,11 @@ package api
 
 import (
     "fmt"
+    "path/filepath"
+    "strings"
     "testing"
 
+    "github.com/eriq-augustine/autograder/config"
     "github.com/eriq-augustine/autograder/usr"
     "github.com/eriq-augustine/autograder/util"
 )
@@ -25,7 +28,7 @@ func TestInvalidBaseAssignmentAPIRequests(test *testing.T) {
             continue;
         }
 
-        apiErr := ValidateAPIRequest(request, "");
+        apiErr := ValidateAPIRequest(nil, request, "");
         if (apiErr == nil) {
             test.Errorf("Case %d: Invalid request failed to raise an error.", i);
             continue;
@@ -89,7 +92,7 @@ func TestBadCourseUsersFieldNoContext(test *testing.T) {
         Users CourseUsers
     }
 
-    apiErr := fillRequestSpecialFields(&badCourseUsersNoCourse{}, "");
+    apiErr := fillRequestSpecialFields(nil, &badCourseUsersNoCourse{}, "");
     if (apiErr == nil) {
         test.Fatalf("Struct with no course context does not return an error,");
     }
@@ -116,7 +119,7 @@ func TestBadCourseUsersFieldNotExported(test *testing.T) {
         },
     };
 
-    apiErr := ValidateAPIRequest(&request, "");
+    apiErr := ValidateAPIRequest(nil, &request, "");
     if (apiErr == nil) {
         test.Fatalf("Struct with non-exported course users does not return an error,");
     }
@@ -160,7 +163,7 @@ func TestBadCourseUsersFieldFailGetUsers(test *testing.T) {
     defer func() { request.course.SourcePath = oldSourcePath }();
     request.course.SourcePath = "/dev/null/course.json";
 
-    apiErr = fillRequestSpecialFields(&request, "");
+    apiErr = fillRequestSpecialFields(nil, &request, "");
     if (apiErr == nil) {
         test.Fatalf("Error not returned when users fetch failed.");
     }
@@ -169,6 +172,59 @@ func TestBadCourseUsersFieldFailGetUsers(test *testing.T) {
     if (apiErr.InternalText != expectedText) {
         test.Fatalf("Incorrect error message when user fetch failed. Expcted '%s', found '%s'.",
                 expectedText, apiErr.InternalText);
+    }
+}
+
+// TEST -- need negative tests for post files.
+
+func TestGoodPostFiles(test *testing.T) {
+    endpoint := `/test/api/post-files/good`;
+
+    type requestType struct {
+        APIRequestCourseUserContext
+        MinRoleStudent
+
+        Files POSTFiles
+    }
+
+    handler := func(request *requestType) (*string, *APIError) {
+        if (len(request.Files.Filenames) != 1) {
+            response := fmt.Sprintf("Incorrect number of files. Expected 1, got '%d'.", len(request.Files.Filenames));
+            return &response, nil;
+        }
+
+        path := filepath.Join(request.Files.TempDir, request.Files.Filenames[0]);
+        text, err := util.ReadFile(path);
+        if (err != nil) {
+            response := fmt.Sprintf("Unable to get files contents from '%s': '%v'.", path, err);
+            return &response, nil;
+        }
+
+        text = strings.TrimSpace(text);
+
+        expectedText := "a";
+        if (text != expectedText) {
+            response := fmt.Sprintf("File text not as expected. Expected: '%s', actual: '%s'.", expectedText, text);
+            return &response, nil;
+        }
+
+        return nil, nil;
+    }
+
+    routes = append(routes, newAPIRoute(endpoint, handler));
+
+    paths := []string{
+        filepath.Join(config.COURSES_ROOT.GetString(), "files", "a.txt"),
+    };
+
+    response := sendTestAPIRequestFull(test, endpoint, nil, paths);
+
+    fmt.Println("###");
+    fmt.Println(response);
+    fmt.Println("###");
+
+    if (response.Content != nil) {
+        test.Fatalf("Handler gave an error: '%s'.", response.Content);
     }
 }
 
@@ -185,7 +241,7 @@ func testBaseAPIRequests(test *testing.T, testCases []baseAPIRequestTestCase, re
             continue;
         }
 
-        apiErr := ValidateAPIRequest(request, "");
+        apiErr := ValidateAPIRequest(nil, request, "");
         if (apiErr != nil) {
             test.Errorf("Case %d: Failed to validate request: '%v'.", i, apiErr);
             continue;

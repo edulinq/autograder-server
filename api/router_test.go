@@ -79,11 +79,11 @@ func TestMalformedHandlers(test *testing.T) {
 func TestBadRequestEmptyContent(test *testing.T) {
     // Define all the content that will go in the post form.
     testCases := []struct{form map[string]string; id string}{
-        {map[string]string{}, "-401"},
-        {map[string]string{API_REQUEST_CONTENT_KEY: ``}, "-401"},
-        {map[string]string{API_REQUEST_CONTENT_KEY: `Z`}, "-402"},
-        {map[string]string{API_REQUEST_CONTENT_KEY: `1`}, "-402"},
-        {map[string]string{API_REQUEST_CONTENT_KEY: `[]`}, "-402"},
+        {map[string]string{}, "-402"},
+        {map[string]string{API_REQUEST_CONTENT_KEY: ``}, "-402"},
+        {map[string]string{API_REQUEST_CONTENT_KEY: `Z`}, "-403"},
+        {map[string]string{API_REQUEST_CONTENT_KEY: `1`}, "-403"},
+        {map[string]string{API_REQUEST_CONTENT_KEY: `[]`}, "-403"},
     };
 
     endpoint := `/test/api/bad-request/empty-content`;

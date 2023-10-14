@@ -37,6 +37,10 @@ func stopTestServer() {
 // a standard test request plus whatever other fields are specified.
 // Provided fields will override base fields.
 func sendTestAPIRequest(test *testing.T, endpoint string, fields map[string]any) *APIResponse {
+    return sendTestAPIRequestFull(test, endpoint, fields, nil);
+}
+
+func sendTestAPIRequestFull(test *testing.T, endpoint string, fields map[string]any, paths []string) *APIResponse {
     url := serverURL + endpoint;
 
     content := map[string]any{
@@ -53,7 +57,15 @@ func sendTestAPIRequest(test *testing.T, endpoint string, fields map[string]any)
         API_REQUEST_CONTENT_KEY: util.MustToJSON(content),
     };
 
-    responseText, err := util.PostNoCheck(url, form);
+    var responseText string;
+    var err error;
+
+    if (len(paths) == 0) {
+        responseText, err = util.PostNoCheck(url, form);
+    } else {
+        responseText, err = util.PostFiles(url, form, paths, false);
+    }
+
     if (err != nil) {
         test.Fatalf("API POST returned an error: '%v'.", err);
     }

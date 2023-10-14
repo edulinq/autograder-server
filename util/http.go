@@ -1,10 +1,14 @@
 package util
 
 import (
+    "bytes"
     "fmt"
     "io"
+    "mime/multipart"
     "net/http"
     "net/url"
+    "os"
+    "path/filepath"
     "strings"
 
     "github.com/rs/zerolog/log"
@@ -86,6 +90,49 @@ func postPutWithHeaders(verb string, uri string, form map[string]string, headers
     }
 
     return doRequest(uri, request, verb, checkResult);
+}
+
+func PostFiles(uri string, form map[string]string, paths []string, checkResult bool) (string, error) {
+    var buffer bytes.Buffer;
+
+    // Create a new multipart writer with the buffer
+    formWriter := multipart.NewWriter(&buffer);
+
+    for key, value := range form {
+        formWriter.WriteField(key, value);
+    }
+
+    for _, path := range paths {
+        file, err := os.Open(path);
+        if (err != nil) {
+            return "", fmt.Errorf("Failed to open file '%s': '%w'.", path, err);
+        }
+        defer file.Close();
+
+        filename := filepath.Base(path);
+
+        fileWriter, err := formWriter.CreateFormFile(filename, filename);
+        if (err != nil) {
+            return "", fmt.Errorf("Failed to create form file for '%s': '%w'.", path, err);
+        }
+
+        _, err = io.Copy(fileWriter, file);
+        if (err != nil) {
+            return "", fmt.Errorf("Failed to copy file '%s' into form: '%w'.", path, err);
+        }
+    }
+
+    formWriter.Close();
+
+    request, err := http.NewRequest("POST", uri, &buffer);
+    if (err != nil) {
+        return "", fmt.Errorf("Failed to create POST request (with files) on URL '%s': '%w'.", uri, err);
+    }
+
+    request.Header.Add("Content-Type", formWriter.FormDataContentType());
+
+    body, _, err := doRequest(uri, request, "POST", checkResult);
+    return body, err;
 }
 
 // Returns: (body, headers (response), error)

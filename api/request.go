@@ -1,6 +1,11 @@
 package api
 
 import (
+    "fmt"
+    "io"
+    "net/http"
+    "os"
+    "path/filepath"
     "reflect"
 
     "github.com/eriq-augustine/autograder/grader"
@@ -24,6 +29,13 @@ type MinRoleOther bool;
 // A request having a field of this type indicates that the users for the course should be automatically fetched.
 // The existence of this type in a struct also indicates that the request is at least a APIRequestCourseUserContext.
 type CourseUsers map[string]*usr.User;
+
+// A request having a field of this type indicates that files from the POST request
+// will be qutomatically read and written to a temp directory on disk.
+type POSTFiles struct {
+    TempDir string `json:"-"`
+    Filenames []string `json:"-"`
+}
 
 type APIRequest struct {
     // These are not provided in JSON, they are filled in during validation.
@@ -130,14 +142,14 @@ func (this *APIRequestAssignmentContext) Validate(request any, endpoint string) 
 
 // Take in a pointer to an API request.
 // Ensure this request has a type of known API request embedded in it and validate that embedded request.
-func ValidateAPIRequest(request any, endpoint string) *APIError {
-    reflectPointer := reflect.ValueOf(request);
+func ValidateAPIRequest(request *http.Request, apiRequest any, endpoint string) *APIError {
+    reflectPointer := reflect.ValueOf(apiRequest);
     if (reflectPointer.Kind() != reflect.Pointer) {
         return NewBareInternalError("-512", endpoint, "ValidateAPIRequest() must be called with a pointer.");
     }
 
     // Ensure the request has an request type embedded, and validate it.
-    foundRequestStruct, apiErr := validateRequestStruct(request, endpoint);
+    foundRequestStruct, apiErr := validateRequestStruct(apiRequest, endpoint);
     if (apiErr != nil) {
         return apiErr;
     }
@@ -147,9 +159,30 @@ func ValidateAPIRequest(request any, endpoint string) *APIError {
     }
 
     // Check for any special field types that we know how to populate.
-    apiErr = fillRequestSpecialFields(request, endpoint);
+    apiErr = fillRequestSpecialFields(request, apiRequest, endpoint);
     if (apiErr != nil) {
         return apiErr;
+    }
+
+    return nil;
+}
+
+// Cleanup any resources after the response has been sent.
+// This function will return an error on failure,
+// but the error will generally be ignored (since this will typically be called in a defer).
+// So, any error will be logged here.
+func CleanupAPIrequest(apiRequest ValidAPIRequest) error {
+    reflectValue := reflect.ValueOf(apiRequest).Elem();
+
+    for i := 0; i < reflectValue.NumField(); i++ {
+        fieldValue := reflectValue.Field(i);
+
+        if (fieldValue.Type() == reflect.TypeOf((*POSTFiles)(nil)).Elem()) {
+            apiErr := cleanPostFiles(apiRequest, i);
+            if (apiErr != nil) {
+                return apiErr;
+            }
+        }
     }
 
     return nil;
@@ -191,36 +224,161 @@ func validateRequestStruct(request any, endpoint string) (bool, *APIError) {
     return foundRequestStruct, nil;
 }
 
-func fillRequestSpecialFields(request any, endpoint string) *APIError {
-    reflectValue := reflect.ValueOf(request).Elem();
-    structName := reflectValue.Type().Name();
+func fillRequestSpecialFields(request *http.Request, apiRequest any, endpoint string) *APIError {
+    reflectValue := reflect.ValueOf(apiRequest).Elem();
 
     for i := 0; i < reflectValue.NumField(); i++ {
         fieldValue := reflectValue.Field(i);
-        fieldType := reflectValue.Type().Field(i);
 
         if (fieldValue.Type() == reflect.TypeOf((*CourseUsers)(nil)).Elem()) {
-            courseContextValue := reflectValue.FieldByName("APIRequestCourseUserContext");
-            if (!courseContextValue.IsValid() || courseContextValue.IsZero()) {
-                return NewBareInternalError("-541", endpoint, "A request with a CourseUsers field must embed APIRequestCourseUserContext").
-                        Add("request", request).
-                        Add("struct-name", structName).Add("field-name", fieldType.Name);
+            apiErr := fillRequestCourseUsers(endpoint, apiRequest, i);
+            if (apiErr != nil) {
+                return apiErr;
             }
-            courseContext := courseContextValue.Interface().(APIRequestCourseUserContext);
-
-            if (!fieldType.IsExported()) {
-                return NewInternalError(&courseContext, "A CourseUsers field must be exported.").
-                        Add("struct-name", structName).Add("field-name", fieldType.Name);
+        } else if (fieldValue.Type() == reflect.TypeOf((*POSTFiles)(nil)).Elem()) {
+            apiErr := fillRequestPostFiles(request, endpoint, apiRequest, i);
+            if (apiErr != nil) {
+                return apiErr;
             }
-
-            users, err := courseContext.course.GetUsers();
-            if (err != nil) {
-                return NewInternalError(&courseContext, "Failed to fetch embeded users.").Err(err).
-                        Add("struct-name", structName).Add("field-name", fieldType.Name);
-            }
-
-            fieldValue.Set(reflect.ValueOf(users));
         }
+    }
+
+    return nil;
+}
+
+func fillRequestCourseUsers(endpoint string, apiRequest any, fieldIndex int) *APIError {
+    reflectValue := reflect.ValueOf(apiRequest).Elem();
+
+    structName := reflectValue.Type().Name();
+
+    fieldValue := reflectValue.Field(fieldIndex);
+    fieldType := reflectValue.Type().Field(fieldIndex);
+
+    courseContextValue := reflectValue.FieldByName("APIRequestCourseUserContext");
+    if (!courseContextValue.IsValid() || courseContextValue.IsZero()) {
+        return NewBareInternalError("-541", endpoint, "A request with CourseUsers must embed APIRequestCourseUserContext").
+                Add("request", apiRequest).
+                Add("struct-name", structName).Add("field-name", fieldType.Name);
+    }
+    courseContext := courseContextValue.Interface().(APIRequestCourseUserContext);
+
+    if (!fieldType.IsExported()) {
+        return NewInternalError(&courseContext, "A CourseUsers field must be exported.").
+                Add("struct-name", structName).Add("field-name", fieldType.Name);
+    }
+
+    users, err := courseContext.course.GetUsers();
+    if (err != nil) {
+        return NewInternalError(&courseContext, "Failed to fetch embeded users.").Err(err).
+                Add("struct-name", structName).Add("field-name", fieldType.Name);
+    }
+
+    fieldValue.Set(reflect.ValueOf(users));
+
+    return nil;
+}
+
+func fillRequestPostFiles(request *http.Request, endpoint string, apiRequest any, fieldIndex int) *APIError {
+    reflectValue := reflect.ValueOf(apiRequest).Elem();
+
+    structName := reflectValue.Type().Name();
+
+    fieldValue := reflectValue.Field(fieldIndex);
+    fieldType := reflectValue.Type().Field(fieldIndex);
+
+    if (!fieldType.IsExported()) {
+        return NewBareInternalError("-551", endpoint, "A POSTFiles field must be exported.").
+                Add("struct-name", structName).Add("field-name", fieldType.Name);
+    }
+
+    postFiles, err := storeRequestFiles(request);
+
+    if (err != nil) {
+        return NewBareInternalError("-552", endpoint, "Failed to store files from POST.").Err(err).
+                Add("struct-name", structName).Add("field-name", fieldType.Name);
+    }
+
+    if (postFiles == nil) {
+        return NewBareBadRequestError("-411", endpoint, "Endpoint requires files to be provided in POST body, no files found.").
+                Add("struct-name", structName).Add("field-name", fieldType.Name);
+    }
+
+    fieldValue.Set(reflect.ValueOf(*postFiles));
+
+    return nil;
+}
+
+func cleanPostFiles(apiRequest ValidAPIRequest, fieldIndex int) *APIError {
+    reflectValue := reflect.ValueOf(apiRequest).Elem();
+    fieldValue := reflectValue.Field(fieldIndex);
+    postFiles := fieldValue.Interface().(POSTFiles);
+    os.RemoveAll(postFiles.TempDir);
+
+    return nil;
+}
+
+func storeRequestFiles(request *http.Request) (*POSTFiles, error) {
+    if (request.MultipartForm == nil) {
+        return nil, nil;
+    }
+
+    if (len(request.MultipartForm.File) == 0) {
+        return nil, nil;
+    }
+
+    tempDir, err := os.MkdirTemp("", "api-request-files-");
+    if (err != nil) {
+        return nil, fmt.Errorf("Failed to create temp api files directory: '%w'.", err);
+    }
+
+    filenames := make([]string, 0, len(request.MultipartForm.File));
+
+    // Use an inner function to help control the removal of the temp dir on error.
+    innerFunc := func() error {
+        for filename, _ := range request.MultipartForm.File {
+            filenames = append(filenames, filename);
+
+            err = storeRequestFile(request, tempDir, filename);
+            if (err != nil) {
+                return err;
+            }
+        }
+
+        return nil;
+    }
+
+    err = innerFunc();
+    if (err != nil) {
+        os.RemoveAll(tempDir);
+        return nil, err;
+    }
+
+    postFiles := POSTFiles{
+        TempDir: tempDir,
+        Filenames: filenames,
+    };
+
+    return &postFiles, nil;
+}
+
+func storeRequestFile(request *http.Request, outDir string, filename string) error {
+    inFile, _, err := request.FormFile(filename);
+    if (err != nil) {
+        return fmt.Errorf("Failed to access request file '%s': '%w'.", filename, err);
+    }
+    defer inFile.Close();
+
+    outPath := filepath.Join(outDir, filename);
+
+    outFile, err := os.Create(outPath);
+    if (err != nil) {
+        return fmt.Errorf("Failed to create output file '%s': '%w'.", outPath, err);
+    }
+    defer outFile.Close();
+
+    _, err = io.Copy(outFile, inFile);
+    if (err != nil) {
+        return fmt.Errorf("Failed to copy contents of request file '%s': '%w'.", filename, err);
     }
 
     return nil;
