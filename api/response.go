@@ -18,6 +18,10 @@ type APIResponse struct {
     Content any `json:"content"`
 }
 
+func (this *APIResponse) String() string {
+    return util.BaseString(this);
+}
+
 func NewAPIResponse(request ValidAPIRequest, content any) *APIResponse {
     id, timestamp := getRequestInfo(request);
 

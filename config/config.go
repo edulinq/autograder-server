@@ -13,7 +13,6 @@ import (
     "strconv"
     "strings"
 
-    "github.com/rs/zerolog"
     "github.com/rs/zerolog/log"
 
     "github.com/eriq-augustine/autograder/util"
@@ -35,26 +34,6 @@ func init() {
     LoadLoacalConfig();
     LoadEnv();
     InitLogging();
-}
-
-func InitLogging() {
-    if (LOG_PRETTY.GetBool()) {
-        log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr});
-    } else {
-        log.Logger = zerolog.New(os.Stderr).With().Timestamp().Logger();
-    }
-
-    var rawLogLevel = LOG_LEVEL.GetString();
-    level, err := zerolog.ParseLevel(rawLogLevel);
-    if (err != nil) {
-        log.Fatal().Err(err).Str("level", rawLogLevel).Msg("Failed to parse the logging level.");
-    }
-
-    if (DEBUG.GetBool() && (level > zerolog.DebugLevel)) {
-        level = zerolog.DebugLevel;
-    }
-
-    zerolog.SetGlobalLevel(level);
 }
 
 func EnableTestingMode(debug bool, setTestCourses bool) {

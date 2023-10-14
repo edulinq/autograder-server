@@ -9,6 +9,7 @@ import (
 
     "github.com/eriq-augustine/autograder/config"
     "github.com/eriq-augustine/autograder/grader"
+    "github.com/eriq-augustine/autograder/util"
 )
 
 var server *httptest.Server;
@@ -30,6 +31,40 @@ func stopTestServer() {
         server = nil;
         serverURL = "";
     }
+}
+
+// Make a request to the test server using fields for
+// a standard test request plus whatever other fields are specified.
+// Provided fields will override base fields.
+func sendTestAPIRequest(test *testing.T, endpoint string, fields map[string]any) *APIResponse {
+    url := serverURL + endpoint;
+
+    content := map[string]any{
+        "course-id": "COURSE101",
+        "user-email": "admin@test.com",
+        "user-pass": util.Sha256HexFromStrong("admin"),
+    };
+
+    for key, value := range fields {
+        content[key] = value;
+    }
+
+    form := map[string]string{
+        API_REQUEST_CONTENT_KEY: util.MustToJSON(content),
+    };
+
+    responseText, err := util.PostNoCheck(url, form);
+    if (err != nil) {
+        test.Fatalf("API POST returned an error: '%v'.", err);
+    }
+
+    var response APIResponse;
+    err = util.JSONFromString(responseText, &response);
+    if (err != nil) {
+        test.Fatalf("Could not unmarshal JSON response '%s': '%v'.", responseText, err);
+    }
+
+    return &response;
 }
 
 // Common setup for all API tests.

@@ -5,6 +5,7 @@ import (
     "net/http"
     "reflect"
     "regexp"
+    "runtime"
 
     "github.com/rs/zerolog/log"
 
@@ -57,6 +58,37 @@ func StartServer() {
     }
 }
 
+func serve(response http.ResponseWriter, request *http.Request) {
+    log.Debug().
+        Str("method", request.Method).
+        Str("url", request.URL.Path).
+        Msg("");
+
+    var route route;
+    var match bool;
+
+    for _, route = range routes {
+        if (route.method != request.Method) {
+            continue;
+        }
+
+        match = route.regex.MatchString(request.URL.Path);
+        if (!match) {
+            continue;
+        }
+
+        err := route.handler(response, request);
+        if (err != nil) {
+            log.Error().Err(err).Str("path", request.URL.Path).Msg("Handler had an error.");
+            http.Error(response, "Server Error", http.StatusInternalServerError);
+        }
+
+        return;
+    }
+
+    http.NotFound(response, request);
+}
+
 func newRoute(method string, pattern string, handler RouteHandler) route {
     return route{method, regexp.MustCompile("^" + pattern + "$"), handler};
 }
@@ -102,7 +134,7 @@ func handleAPIEndpoint(response http.ResponseWriter, request *http.Request, apiH
     // Ensure the handler looks good.
     validAPIHandler, apiErr := validateAPIHandler(request.URL.Path, apiHandler);
     if (apiErr != nil) {
-        return apiErr;
+        return sendAPIResponse(nil, response, nil, apiErr, false);
     }
 
     // Get the actual request.
@@ -228,62 +260,61 @@ func validateAPIHandler(endpoint string, apiHandler any) (ValidAPIHandler, *APIE
                 Add("kind", reflectValue.Kind().String());
     }
 
+    funcInfo := getFuncInfo(apiHandler);
+
     if (reflectType.NumIn() != 1) {
         return nil, NewBareInternalError("-522", endpoint, "API handler does not have exactly 1 argument.").
-                Add("num-in", reflectType.NumIn());
+                Add("num-in", reflectType.NumIn()).
+                Add("function-info", funcInfo);
     }
     argumentType := reflectType.In(0);
 
     if (argumentType.Kind() != reflect.Pointer) {
         return nil, NewBareInternalError("-523", endpoint, "API handler's argument is not a pointer.").
-                Add("kind", argumentType.Kind().String());
+                Add("kind", argumentType.Kind().String()).
+                Add("function-info", funcInfo);
     }
 
     if (reflectType.NumOut() != 2) {
         return nil, NewBareInternalError("-524", endpoint, "API handler does not return exactly 2 arguments.").
-                Add("num-out", reflectType.NumOut());
+                Add("num-out", reflectType.NumOut()).
+                Add("function-info", funcInfo);
     }
 
     if (reflectType.Out(0).Kind() != reflect.Pointer) {
         return nil, NewBareInternalError("-525", endpoint, "API handler's first return value is not a pointer.").
-                Add("kind", reflectType.Out(0).Kind().String());
+                Add("kind", reflectType.Out(0).Kind().String()).
+                Add("function-info", funcInfo);
     }
 
     if (reflectType.Out(1) != reflect.TypeOf((*APIError)(nil))) {
         return nil, NewBareInternalError("-526", endpoint, "API handler's second return value is a *APIError.").
-                Add("type", reflectType.Out(1).String());
+                Add("type", reflectType.Out(1).String()).
+                Add("function-info", funcInfo);
     }
 
     return ValidAPIHandler(apiHandler), nil;
 }
 
-func serve(response http.ResponseWriter, request *http.Request) {
-    log.Debug().
-        Str("method", request.Method).
-        Str("url", request.URL.Path).
-        Msg("");
+type FuncRuntimeInfo struct {
+    Name string
+    File string
+    Line int
+}
 
-    var route route;
-    var match bool;
+func getFuncInfo(funcHandle any) *FuncRuntimeInfo {
+    info := FuncRuntimeInfo{};
 
-    for _, route = range routes {
-        if (route.method != request.Method) {
-            continue;
-        }
-
-        match = route.regex.MatchString(request.URL.Path);
-        if (!match) {
-            continue;
-        }
-
-        err := route.handler(response, request);
-        if (err != nil) {
-            log.Error().Err(err).Str("path", request.URL.Path).Msg("Handler had an error.");
-            http.Error(response, "Server Error", http.StatusInternalServerError);
-        }
-
-        return;
+    reflectValue := reflect.ValueOf(funcHandle);
+    if (reflectValue.Kind() != reflect.Func) {
+        return &info;
     }
 
-    http.NotFound(response, request);
+    runtimeFunc := runtime.FuncForPC(reflectValue.Pointer());
+    if (runtimeFunc != nil) {
+        info.Name = runtimeFunc.Name();
+        info.File, info.Line = runtimeFunc.FileLine(reflectValue.Pointer());
+    }
+
+    return &info;
 }
