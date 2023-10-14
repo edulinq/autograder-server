@@ -9,10 +9,10 @@ import (
     "io"
     "math"
     "os"
+    "path/filepath"
     "strconv"
     "strings"
 
-    "github.com/rs/zerolog"
     "github.com/rs/zerolog/log"
 
     "github.com/eriq-augustine/autograder/util"
@@ -20,6 +20,9 @@ import (
 
 const ENV_PREFIX = "AUTOGRADER__";
 const ENV_DOT_REPLACEMENT = "__";
+
+// The test courses are always stored in here.
+const TESTS_DIRNAME = "_tests";
 
 var configValues map[string]any = make(map[string]any);
 
@@ -33,24 +36,20 @@ func init() {
     InitLogging();
 }
 
-func InitLogging() {
-    if (LOG_PRETTY.GetBool()) {
-        log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr});
-    } else {
-        log.Logger = zerolog.New(os.Stderr).With().Timestamp().Logger();
+func EnableTestingMode(debug bool, setTestCourses bool) {
+    NO_AUTH.Set(true);
+    NO_STORE.Set(true);
+    NO_TASKS.Set(true);
+
+    if (debug) {
+        DEBUG.Set(true);
+        InitLogging();
     }
 
-    var rawLogLevel = LOG_LEVEL.GetString();
-    level, err := zerolog.ParseLevel(rawLogLevel);
-    if (err != nil) {
-        log.Fatal().Err(err).Str("level", rawLogLevel).Msg("Failed to parse the logging level.");
+    if (setTestCourses) {
+        testsDir := filepath.Join(util.RootDirForTesting(), TESTS_DIRNAME);
+        COURSES_ROOT.Set(testsDir);
     }
-
-    if (DEBUG.GetBool() && (level > zerolog.DebugLevel)) {
-        level = zerolog.DebugLevel;
-    }
-
-    zerolog.SetGlobalLevel(level);
 }
 
 func LoadLoacalConfig() error {

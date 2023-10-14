@@ -18,10 +18,6 @@ const BASE_TEST_USER = "test_user@test.com";
 const TEST_MESSAGE = "";
 
 func TestDockerSubmissions(test *testing.T) {
-    config.NO_AUTH.Set(true);
-    config.NO_STORE.Set(true);
-    config.COURSES_ROOT.Set(config.TESTS_DIR.GetString());
-
     if (config.DOCKER_DISABLE.GetBool()) {
         test.Skip("Docker is disabled, skipping test.");
     }
@@ -38,18 +34,14 @@ func TestNoDockerSubmissions(test *testing.T) {
 }
 
 func runSubmissionTests(test *testing.T, parallel bool, useDocker bool) {
-    testsDir := config.TESTS_DIR.GetString();
-    if (testsDir == "") {
-        test.Fatalf("No tests dir set ('%s').", config.TESTS_DIR.Key);
-    }
+    config.EnableTestingMode(false, true);
 
-    if (!filepath.IsAbs(testsDir)) {
-        testsDir = util.MustAbs(filepath.Join(util.RootDirForTesting(), testsDir));
-    }
+    // Directory where all the test courses and other materials are located.
+    baseDir := config.COURSES_ROOT.GetString();
 
-    err := LoadCoursesFromDir(testsDir);
+    err := LoadCourses()
     if (err != nil) {
-        test.Fatalf("Could not load courses from '%s': '%v'.", testsDir, err);
+        test.Fatalf("Could not load courses: '%v'.", err);
     }
 
     if (useDocker) {
@@ -69,13 +61,13 @@ func runSubmissionTests(test *testing.T, parallel bool, useDocker bool) {
     }
     defer os.RemoveAll(tempDir);
 
-    testSubmissionPaths, err := util.FindFiles("test-submission.json", testsDir);
+    testSubmissionPaths, err := util.FindFiles("test-submission.json", baseDir);
     if (err != nil) {
-        test.Fatalf("Could not find test results in '%s': '%v'.", testsDir, err);
+        test.Fatalf("Could not find test results in '%s': '%v'.", baseDir, err);
     }
 
     if (len(testSubmissionPaths) == 0) {
-        test.Fatalf("Could not find any test cases in '%s'.", testsDir);
+        test.Fatalf("Could not find any test cases in '%s'.", baseDir);
     }
 
     gradeOptions := GradeOptions{
@@ -86,7 +78,7 @@ func runSubmissionTests(test *testing.T, parallel bool, useDocker bool) {
     failedTests := make([]string, 0);
 
     for i, testSubmissionPath := range testSubmissionPaths {
-        testID := strings.TrimPrefix(testSubmissionPath, testsDir);
+        testID := strings.TrimPrefix(testSubmissionPath, baseDir);
         user := fmt.Sprintf("%03d_%s", i, BASE_TEST_USER);
 
         ok := test.Run(testID, func(test *testing.T) {

@@ -25,11 +25,12 @@ func (this *Course) SyncCanvasUsers() (int, error) {
             continue;
         }
 
-        if (user.CanvasID == canvasUser.ID) {
+        if ((user.CanvasID == canvasUser.ID) && (user.DisplayName == canvasUser.Name)) {
             continue;
         }
 
         user.CanvasID = canvasUser.ID;
+        user.DisplayName = canvasUser.Name;
         count++;
     }
 

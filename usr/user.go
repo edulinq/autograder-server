@@ -13,6 +13,7 @@ import (
     "github.com/rs/zerolog/log"
     "golang.org/x/crypto/argon2"
 
+    "github.com/eriq-augustine/autograder/canvas"
     "github.com/eriq-augustine/autograder/email"
     "github.com/eriq-augustine/autograder/util"
 )
@@ -78,6 +79,23 @@ func generateHash(cleartext string, salt []byte) []byte {
     return argon2.IDKey([]byte(cleartext), salt, ARGON2_TIME, ARGON2_MEM_KB, ARGON2_THREADS, ARGON2_KEY_LEN_BYTES);
 }
 
+func (this *User) SyncWithCanvas(canvasInfo *canvas.CanvasInstanceInfo) error {
+    userInfo, err := canvas.FetchUser(canvasInfo, this.Email)
+    if (err != nil) {
+        return err;
+    }
+
+    if (userInfo != nil) {
+        this.CanvasID = userInfo.ID;
+
+        if (userInfo.Name != "") {
+            this.DisplayName = userInfo.Name;
+        }
+    }
+
+    return nil;
+}
+
 func LoadUsersFile(path string) (map[string]*User, error) {
     users := make(map[string]*User);
 
@@ -100,7 +118,9 @@ func SaveUsersFile(path string, users map[string]*User) error {
 // Return a user that is either new or a merged with the existing user (depending on force).
 // If a user exists (and force is true), then the user will be updated.
 // New users will just be retuturned and not be added to |users|.
-func NewOrMergeUser(users map[string]*User, email string, name string, stringRole string, pass string, force bool) (*User, bool, error) {
+// If canvas into is provided, an attempt to sync the user with canvas will be made.
+func NewOrMergeUser(users map[string]*User, email string, name string, stringRole string, hashPass string,
+        force bool, canvasInfo *canvas.CanvasInstanceInfo) (*User, bool, error) {
     user := users[email];
     userExists := (user != nil);
 
@@ -127,11 +147,16 @@ func NewOrMergeUser(users map[string]*User, email string, name string, stringRol
         return nil, false, fmt.Errorf("Unknown role: '%s'.", stringRole);
     }
 
-    hashPass := util.Sha256Hex([]byte(pass));
-
     err := user.SetPassword(hashPass);
     if (err != nil) {
         return nil, false, fmt.Errorf("Could not set password: '%w'.", err);
+    }
+
+    if (canvasInfo != nil) {
+        err = user.SyncWithCanvas(canvasInfo);
+        if (err != nil) {
+            return nil, false, fmt.Errorf("Could not sync user with canvas: '%w'.", err);
+        }
     }
 
     return user, userExists, nil;

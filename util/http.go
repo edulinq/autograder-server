@@ -29,7 +29,7 @@ func GetWithHeaders(uri string, headers map[string][]string) (string, map[string
         }
     }
 
-    return doRequest(uri, request, "GET");
+    return doRequest(uri, request, "GET", true);
 }
 
 // Returns: (body, error)
@@ -38,9 +38,21 @@ func Post(uri string, form map[string]string) (string, error) {
     return body, err;
 }
 
+// Usually for testing.
+// Returns: (body, error)
+func PostNoCheck(uri string, form map[string]string) (string, error) {
+    body, _, err := PostWithHeadersNoCheck(uri, form, make(map[string][]string));
+    return body, err;
+}
+
 // Returns: (body, headers (response), error)
 func PostWithHeaders(uri string, form map[string]string, headers map[string][]string) (string, map[string][]string, error) {
-    return postPutWithHeaders("POST", uri, form, headers);
+    return postPutWithHeaders("POST", uri, form, headers, true);
+}
+
+// Returns: (body, headers (response), error)
+func PostWithHeadersNoCheck(uri string, form map[string]string, headers map[string][]string) (string, map[string][]string, error) {
+    return postPutWithHeaders("POST", uri, form, headers, false);
 }
 
 // Returns: (body, error)
@@ -51,10 +63,10 @@ func Put(uri string, form map[string]string) (string, error) {
 
 // Returns: (body, headers (response), error)
 func PutWithHeaders(uri string, form map[string]string, headers map[string][]string) (string, map[string][]string, error) {
-    return postPutWithHeaders("PUT", uri, form, headers);
+    return postPutWithHeaders("PUT", uri, form, headers, true);
 }
 
-func postPutWithHeaders(verb string, uri string, form map[string]string, headers map[string][]string) (string, map[string][]string, error) {
+func postPutWithHeaders(verb string, uri string, form map[string]string, headers map[string][]string, checkResult bool) (string, map[string][]string, error) {
     formValues := url.Values{};
     for key, value := range form {
         formValues.Set(key, value);
@@ -73,11 +85,11 @@ func postPutWithHeaders(verb string, uri string, form map[string]string, headers
         }
     }
 
-    return doRequest(uri, request, verb);
+    return doRequest(uri, request, verb, checkResult);
 }
 
 // Returns: (body, headers (response), error)
-func doRequest(uri string, request *http.Request, verb string) (string, map[string][]string, error) {
+func doRequest(uri string, request *http.Request, verb string, checkResult bool) (string, map[string][]string, error) {
     client := http.Client{}
 
     response, err := client.Do(request);
@@ -92,7 +104,7 @@ func doRequest(uri string, request *http.Request, verb string) (string, map[stri
     }
     body := string(rawBody);
 
-    if (response.StatusCode != http.StatusOK) {
+    if (checkResult && (response.StatusCode != http.StatusOK)) {
         log.Error().Int("code", response.StatusCode).Str("body", body).Any("headers", response.Header).Str("url", uri).Msg("Got a non-OK status.");
         return "", nil, fmt.Errorf("Got a non-OK status code '%d' from %s on URL '%s': '%w'.", response.StatusCode, verb, uri, err);
     }
