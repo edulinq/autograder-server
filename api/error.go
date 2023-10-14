@@ -11,8 +11,6 @@ import (
     "github.com/eriq-augustine/autograder/util"
 )
 
-// TEST - APIErrors should be logged once the response is sent.
-
 // Constants for http status codes.
 // These should be used instead of choosing codes directly, so we remain consistent.
 const (
@@ -66,6 +64,10 @@ func (this *APIError) Log() {
 
 // Add additional context to this error.
 func (this *APIError) Add(key string, value any) *APIError {
+    if (this.AdditionalDetails == nil) {
+        this.AdditionalDetails = make(map[string]any);
+    }
+
     this.AdditionalDetails[key] = value;
     return this;
 }
@@ -84,7 +86,8 @@ func (this *APIError) Err(err error) *APIError {
 func (this *APIError) ToResponse() *APIResponse {
     return &APIResponse{
         ID: this.RequestID,
-        Timestamp: this.Timestamp,
+        StartTimestamp: this.Timestamp,
+        EndTimestamp: util.NowTimestamp(),
         HTTPStatus: this.HTTPStatus,
         Success: (this.HTTPStatus == HTTP_STATUS_GOOD),
         Message: this.ResponseText,
@@ -99,6 +102,18 @@ func NewBadRequestError(request *APIRequest, message string) *APIError {
         RequestID: request.RequestID,
         Endpoint: request.Endpoint,
         Timestamp: request.Timestamp,
+        HTTPStatus: HTTP_STATUS_BAD_REQUEST,
+        InternalText: message,
+        ResponseText: message,
+    };
+}
+
+// A bad request before the request was even parsed (usually a JSON error).
+func NewBareBadRequestError(endpoint string, message string) *APIError {
+    return &APIError{
+        RequestID: "-1",
+        Endpoint: endpoint,
+        Timestamp: util.NowTimestamp(),
         HTTPStatus: HTTP_STATUS_BAD_REQUEST,
         InternalText: message,
         ResponseText: message,
@@ -157,14 +172,14 @@ func NewInternalError(request *APIRequestCourseUserContext, internalMessage stri
 }
 
 // Very rare errors can occur so early that there is not even a request id.
-func NewBareInternalError(endpoint string, internalMessage string) *APIError {
+func NewBareInternalError(id string, endpoint string, internalMessage string) *APIError {
     err := &APIError{
-        RequestID: "0",
+        RequestID: id,
         Endpoint: endpoint,
         Timestamp: util.NowTimestamp(),
         HTTPStatus: HTTP_STATUS_SERVER_ERROR,
         InternalText: internalMessage,
-        ResponseText: "The server failed to process your request. Please contact an adimistrator with this ID '0'.",
+        ResponseText: fmt.Sprintf("The server failed to process your request. Please contact an adimistrator with this ID '%s'.", id),
     };
 
     return err;

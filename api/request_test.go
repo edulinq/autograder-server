@@ -2,27 +2,11 @@ package api
 
 import (
     "fmt"
-    "os"
     "testing"
 
-    "github.com/eriq-augustine/autograder/config"
-    "github.com/eriq-augustine/autograder/grader"
     "github.com/eriq-augustine/autograder/usr"
     "github.com/eriq-augustine/autograder/util"
 )
-
-// Make sure that common setup is done.
-func TestMain(suite *testing.M) {
-    config.EnableTestingMode(false, true);
-
-    err := grader.LoadCourses();
-    if (err != nil) {
-        fmt.Printf("Failed to load test courses: '%v'.", err);
-        os.Exit(1);
-    }
-
-    os.Exit(suite.Run())
-}
 
 func TestValidBaseCourseUserAPIRequests(test *testing.T) {
     testBaseAPIRequests(test, validBaseAPIRequestTestCases, &baseCourseUserAPIRequest{});
@@ -154,18 +138,20 @@ func (this *baseAssignmentAPIRequest) GetTestValues() testValues {
     return this.testValues;
 }
 
+var studentPass string = util.Sha256HexFromStrong("student");
+
 var validBaseAPIRequestTestCases []baseAPIRequestTestCase = []baseAPIRequestTestCase{
     baseAPIRequestTestCase{
-        Payload: `{"course-id": "COURSE101", "assignment-id": "hw0", "user-email": "student@test.com", "user-pass": "student"}`,
+        Payload: fmt.Sprintf(`{"course-id": "COURSE101", "assignment-id": "hw0", "user-email": "student@test.com", "user-pass": "%s"}`, studentPass),
         testValues: testValues{A: "", B: 0},
     },
 };
 
 var invalidBaseAPIRequestTestCases []baseAPIRequestTestCase = []baseAPIRequestTestCase{
     baseAPIRequestTestCase{Payload: "{}"},
-    baseAPIRequestTestCase{Payload: `{"assignment-id": "hw0", "user-email": "student@test.com", "user-pass": "student"}`},
-    baseAPIRequestTestCase{Payload: `{"course-id": "COURSE101", "user-email": "student@test.com", "user-pass": "student"}`},
-    baseAPIRequestTestCase{Payload: `{"course-id": "COURSE101", "assignment-id": "hw0", "user-pass": "student"}`},
+    baseAPIRequestTestCase{Payload: fmt.Sprintf(`{"assignment-id": "hw0", "user-email": "student@test.com", "user-pass": "%s"}`, studentPass)},
+    baseAPIRequestTestCase{Payload: fmt.Sprintf(`{"course-id": "COURSE101", "user-email": "student@test.com", "user-pass": "%s"}`, studentPass)},
+    baseAPIRequestTestCase{Payload: fmt.Sprintf(`{"course-id": "COURSE101", "assignment-id": "hw0", "user-pass": "%s"}`, studentPass)},
     baseAPIRequestTestCase{Payload: `{"course-id": "COURSE101", "assignment-id": "hw0", "user-email": "student@test.com"}`},
 };
 

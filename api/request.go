@@ -9,6 +9,11 @@ import (
     "github.com/eriq-augustine/autograder/util"
 )
 
+const (
+    // Post form key for request content.
+    API_REQUEST_CONTENT_KEY = "content";
+)
+
 // The minimum user roles required encoded as a type so it can be embedded into a request struct.
 type MinRoleOwner bool;
 type MinRoleAdmin bool;
@@ -124,7 +129,7 @@ func (this *APIRequestAssignmentContext) Validate(request any, endpoint string) 
 func ValidateAPIRequest(request any, endpoint string) *APIError {
     reflectPointer := reflect.ValueOf(request);
     if (reflectPointer.Kind() != reflect.Pointer) {
-        return NewBareInternalError(endpoint, "ValidateAPIRequest() must be called with a pointer.");
+        return NewBareInternalError("-512", endpoint, "ValidateAPIRequest() must be called with a pointer.");
     }
 
     reflectValue := reflectPointer.Elem();
@@ -144,6 +149,8 @@ func ValidateAPIRequest(request any, endpoint string) *APIError {
             if (apiErr != nil) {
                 return apiErr;
             }
+
+            fieldValue.Set(reflect.ValueOf(courseUserRequest));
         } else if (fieldValue.Type() == reflect.TypeOf((*APIRequestAssignmentContext)(nil)).Elem()) {
             // APIRequestAssignmentContext
             assignmentRequest := fieldValue.Interface().(APIRequestAssignmentContext);
@@ -153,11 +160,13 @@ func ValidateAPIRequest(request any, endpoint string) *APIError {
             if (apiErr != nil) {
                 return apiErr;
             }
+
+            fieldValue.Set(reflect.ValueOf(assignmentRequest));
         }
     }
 
     if (!foundRequestStruct) {
-        return NewBareInternalError(endpoint, "Request is not any kind of known API request.");
+        return NewBareInternalError("-511", endpoint, "Request is not any kind of known API request.");
     }
 
     return nil;
