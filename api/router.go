@@ -208,14 +208,14 @@ func createAPIRequest(request *http.Request, apiHandler ValidAPIHandler) (ValidA
     // Get the text from the POST.
     textContent := request.PostFormValue(API_REQUEST_CONTENT_KEY);
     if (textContent == "") {
-        return nil, NewBareBadRequestError(endpoint,
+        return nil, NewBareBadRequestError("-401", endpoint,
                 fmt.Sprintf("JSON payload for POST form key '%s' is empty.", API_REQUEST_CONTENT_KEY));
     }
 
     // Unmarshal the JSON.
     err := util.JSONFromString(textContent, apiRequest);
     if (err != nil) {
-        return nil, NewBareBadRequestError(endpoint,
+        return nil, NewBareBadRequestError("-402", endpoint,
                 fmt.Sprintf("JSON payload for POST form key '%s' is not valid JSON.", API_REQUEST_CONTENT_KEY)).
                 Err(err);
     }

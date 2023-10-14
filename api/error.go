@@ -109,9 +109,9 @@ func NewBadRequestError(request *APIRequest, message string) *APIError {
 }
 
 // A bad request before the request was even parsed (usually a JSON error).
-func NewBareBadRequestError(endpoint string, message string) *APIError {
+func NewBareBadRequestError(id string, endpoint string, message string) *APIError {
     return &APIError{
-        RequestID: "-1",
+        RequestID: id,
         Endpoint: endpoint,
         Timestamp: util.NowTimestamp(),
         HTTPStatus: HTTP_STATUS_BAD_REQUEST,
