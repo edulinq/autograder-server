@@ -80,12 +80,7 @@ func ToJSONIndent(data any) (string, error) {
 }
 
 func ToJSONIndentCustom(data any, prefix string, indent string) (string, error) {
-    bytes, err := json.MarshalIndent(data, prefix, indent);
-    if (err != nil) {
-        return "", fmt.Errorf("Could not marshal object ('%v'): '%w'.", data, err);
-    }
-
-    return string(bytes), nil;
+    return unmarshal(data, prefix, indent);
 }
 
 func ToJSONFile(data any, path string) error {
@@ -103,4 +98,15 @@ func ToJSONFileIndentCustom(data any, path string, prefix string, indent string)
     }
 
     return WriteFile(text, path);
+}
+
+// The only place we call json.Marshal*.
+func unmarshal(data any, prefix string, indent string) (string, error) {
+    bytes, err := json.MarshalIndent(data, prefix, indent);
+    if (err != nil) {
+        // Explicitly use Go-Syntax (%#v) to avoid loops with overwritten String() methods.
+        return "", fmt.Errorf("Could not marshal object ('%#v'): '%w'.", data, err);
+    }
+
+    return string(bytes), nil;
 }
