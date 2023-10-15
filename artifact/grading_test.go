@@ -35,7 +35,6 @@ func TestSummaryMarshalling(test *testing.T) {
         summary := SubmissionSummary{}
         util.JSONFromString(testCase.JSON, &summary);
 
-        // TODO(eriq): Expand to also use a direct equality check.
         if (summary.String() != testCase.Summary.String()) {
             test.Errorf("Summaries %d do not match:\n--- Exepcted ---\n%s\n--- Actual ---\n%s\n---\n", i, testCase.Summary, summary);
         }

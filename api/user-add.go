@@ -1,8 +1,6 @@
 package api
 
 import (
-    "fmt"
-
     "github.com/eriq-augustine/autograder/usr"
 )
 
@@ -26,16 +24,17 @@ type userListRow struct {
 }
 
 func handleUserGet(request *UserGetRequest) (*UserGetResponse, *APIError) {
-    // TEST
-    // return nil, nil;
+    response := UserGetResponse{};
 
-    // TEST
-    fmt.Println("TEST - HANDLE");
-    fmt.Println(request.course);
-    fmt.Println(request.Users);
+    user := request.Users[request.Email];
+    if (user != nil) {
+        response.FoundUser = true;
+        response.User = &userListRow{
+            Email: user.Email,
+            Name: user.DisplayName,
+            Role: user.Role,
+        };
+    }
 
-    return &UserGetResponse{
-        FoundUser: true,
-        User: &userListRow{"X", "Y", usr.Owner},
-    }, nil;
+    return &response, nil;
 }
