@@ -283,7 +283,7 @@ func (this *baseAssignmentAPIRequest) GetTestValues() testValues {
     return this.testValues;
 }
 
-var studentPass string = util.Sha256HexFromStrong("student");
+var studentPass string = util.Sha256HexFromString("student");
 
 var validBaseAPIRequestTestCases []baseAPIRequestTestCase = []baseAPIRequestTestCase{
     baseAPIRequestTestCase{

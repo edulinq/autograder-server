@@ -10,6 +10,6 @@ func Sha256Hex(data []byte) string {
     return hex.EncodeToString(sha[:]);
 }
 
-func Sha256HexFromStrong(data string) string {
+func Sha256HexFromString(data string) string {
     return Sha256Hex([]byte(data));
 }

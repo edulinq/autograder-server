@@ -46,7 +46,7 @@ func sendTestAPIRequestFull(test *testing.T, endpoint string, fields map[string]
     content := map[string]any{
         "course-id": "COURSE101",
         "user-email": "admin@test.com",
-        "user-pass": util.Sha256HexFromStrong("admin"),
+        "user-pass": util.Sha256HexFromString("admin"),
     };
 
     for key, value := range fields {
