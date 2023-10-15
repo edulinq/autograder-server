@@ -1,0 +1,25 @@
+{
+    "result": {
+        "name": "HW0",
+        "questions": [
+            {
+                "name": "Q1",
+                "max_points": 1,
+                "score": 1,
+                "message": ""
+            },
+            {
+                "name": "Q2",
+                "max_points": 1,
+                "score": 0,
+                "message": "NotImplemented returned."
+            },
+            {
+                "name": "Style",
+                "max_points": 0,
+                "score": 0,
+                "message": "Style is clean!"
+            }
+        ]
+    }
+}
