@@ -6,9 +6,9 @@
 *.pyc
 __pycache__/
 
-bin/
-dist/
-test/
+/bin/
+/dist/
+/test/
 _submissions/
 /_courses
 /_backup
@@ -18,6 +18,6 @@ _submissions/
 /.secrets.json
 
 *.gz
-test.*
+/test.*
 users.json
 /out.*
