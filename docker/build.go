@@ -38,7 +38,7 @@ func BuildImage(imageInfo *ImageInfo) error {
 }
 
 func BuildImageWithOptions(imageInfo *ImageInfo, options *BuildOptions) error {
-    tempDir, err := os.MkdirTemp("", TEMPDIR_PREFIX + imageInfo.Name + "-");
+    tempDir, err := util.MkDirTemp(TEMPDIR_PREFIX + imageInfo.Name + "-");
     if (err != nil) {
         return fmt.Errorf("Failed to create temp build directory for '%s': '%w'.", imageInfo.Name, err);
     }

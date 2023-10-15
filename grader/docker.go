@@ -43,7 +43,7 @@ func RunDockerGrader(assignment *model.Assignment, submissionPath string, output
     }
 
     // Create a temp directory to use for input (will be mounted to the container).
-    tempInputDir, err := os.MkdirTemp("", "autograding-docker-input-");
+    tempInputDir, err := util.MkDirTemp("autograding-docker-input-");
     if (err != nil) {
         return nil, "", fmt.Errorf("Could not create temp input dir: '%w'.", err);
     }

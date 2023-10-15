@@ -100,7 +100,7 @@ func prepSubmissionDir(assignment *model.Assignment, user string, options GradeO
     var id int64;
 
     if (options.UseFakeSubmissionsDir) {
-        tempSubmissionsDir, err := os.MkdirTemp("", "autograding-submissions-");
+        tempSubmissionsDir, err := util.MkDirTemp("autograding-submissions-");
         if (err != nil) {
             return "", 0, fmt.Errorf("Could not create temp submissions dir: '%w'.", err);
         }

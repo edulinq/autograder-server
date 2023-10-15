@@ -5,13 +5,15 @@ import (
     "fmt"
     "os"
     "path/filepath"
+
+    "github.com/eriq-augustine/autograder/util"
 )
 
 // Create a temp dir for grading as well as the three standard directories in it.
 // Paths to the three direcotries (temp, in, out, work) will be returned.
 // The created directory will be in the system's temp directory.
 func PrepTempGradingDir() (string, string, string, string, error) {
-    tempDir, err := os.MkdirTemp("", "autograding-nodocker-");
+    tempDir, err := util.MkDirTemp("autograding-nodocker-");
     if (err != nil) {
         return "", "", "", "", fmt.Errorf("Could not create temp dir: '%w'.", err);
     }

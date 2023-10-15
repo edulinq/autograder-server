@@ -2,6 +2,7 @@ package api
 
 import (
     "fmt"
+    "os"
     "path/filepath"
     "strings"
     "testing"
@@ -161,7 +162,7 @@ func TestBadCourseUsersFieldFailGetUsers(test *testing.T) {
     // Course context is now fine, now make GetUsers fail.
     oldSourcePath := request.course.SourcePath;
     defer func() { request.course.SourcePath = oldSourcePath }();
-    request.course.SourcePath = "/dev/null/course.json";
+    request.course.SourcePath = filepath.Join(os.DevNull, "course.json");
 
     apiErr = fillRequestSpecialFields(nil, &request, "");
     if (apiErr == nil) {
@@ -175,8 +176,6 @@ func TestBadCourseUsersFieldFailGetUsers(test *testing.T) {
     }
 }
 
-// TEST -- need negative tests for post files.
-
 func TestGoodPostFiles(test *testing.T) {
     endpoint := `/test/api/post-files/good`;
 
@@ -186,6 +185,8 @@ func TestGoodPostFiles(test *testing.T) {
 
         Files POSTFiles
     }
+
+    var tempDir string;
 
     handler := func(request *requestType) (*string, *APIError) {
         if (len(request.Files.Filenames) != 1) {
@@ -208,6 +209,8 @@ func TestGoodPostFiles(test *testing.T) {
             return &response, nil;
         }
 
+        tempDir = request.Files.TempDir;
+
         return nil, nil;
     }
 
@@ -218,13 +221,118 @@ func TestGoodPostFiles(test *testing.T) {
     };
 
     response := sendTestAPIRequestFull(test, endpoint, nil, paths);
-
-    fmt.Println("###");
-    fmt.Println(response);
-    fmt.Println("###");
-
     if (response.Content != nil) {
         test.Fatalf("Handler gave an error: '%s'.", response.Content);
+    }
+
+    // Check that the temp dir was cleaned up.
+    if (util.PathExists(tempDir)) {
+        test.Fatalf("Temp dir was not cleaned up: '%s'.", tempDir);
+    }
+}
+
+func TestBadPostFilesFieldNotExported(test *testing.T) {
+    // Files are not exported.
+    type badRequestType struct {
+        APIRequestCourseUserContext
+        MinRoleStudent
+
+        files POSTFiles
+    }
+
+    request := badRequestType{
+        APIRequestCourseUserContext: APIRequestCourseUserContext{
+            CourseID: "COURSE101",
+            UserEmail: "student@test.com",
+            UserPass: studentPass,
+        },
+    };
+
+    apiErr := ValidateAPIRequest(nil, &request, "");
+    if (apiErr == nil) {
+        test.Fatalf("Struct with non-exported files does not return an error,");
+    }
+
+    expectedLocator := "-551";
+    if (apiErr.Locator != expectedLocator) {
+        test.Fatalf("Struct with non-exported files does not return an error with the correct locator. Expcted '%s', found '%s'.",
+                expectedLocator, apiErr.Locator);
+    }
+}
+
+func TestBadPostFilesNoFiles(test *testing.T) {
+    endpoint := `/test/api/post-files/bad/no-files`;
+
+    type requestType struct {
+        APIRequestCourseUserContext
+        MinRoleStudent
+
+        Files POSTFiles
+    }
+
+    handler := func(request *requestType) (*any, *APIError) {
+        return nil, nil;
+    }
+
+    routes = append(routes, newAPIRoute(endpoint, handler));
+
+    paths := []string{};
+
+    // Quiet the output a bit.
+    oldLevel := config.GetLoggingLevel();
+    config.SetLogLevelFatal();
+    defer config.SetLoggingLevel(oldLevel);
+
+    response := sendTestAPIRequestFull(test, endpoint, nil, paths);
+    if (response.Success) {
+        test.Fatalf("Request did not generate an error: '%v'.", response);
+    }
+
+    expectedLocator := "-411";
+    if (response.Locator != expectedLocator) {
+        test.Fatalf("Error does not have the correct locator. Expcted '%s', found '%s'.",
+                expectedLocator, response.Locator);
+    }
+}
+
+func TestBadPostFilesStoreFail(test *testing.T) {
+    endpoint := `/test/api/post-files/bad/store-fail`;
+
+    type requestType struct {
+        APIRequestCourseUserContext
+        MinRoleStudent
+
+        Files POSTFiles
+    }
+
+    handler := func(request *requestType) (*any, *APIError) {
+        return nil, nil;
+    }
+
+    routes = append(routes, newAPIRoute(endpoint, handler));
+
+    paths := []string{
+        filepath.Join(config.COURSES_ROOT.GetString(), "files", "a.txt"),
+    };
+
+    // Quiet the output a bit.
+    oldLevel := config.GetLoggingLevel();
+    config.SetLogLevelFatal();
+    defer config.SetLoggingLevel(oldLevel);
+
+    // Ensure that storing the files will fail.
+    util.SetTempDirForTesting(os.DevNull);
+    defer util.SetTempDirForTesting("");
+
+    response := sendTestAPIRequestFull(test, endpoint, nil, paths);
+    if (response.Success) {
+        test.Fatalf("Request did not generate an error: '%v'.", response);
+    }
+
+    expectedLocator := "-552";
+    if (response.Locator != expectedLocator) {
+        test.Fatalf("Error does not have the correct locator. Expcted '%s', found '%s'.",
+                expectedLocator, response.Locator);
     }
 }
 

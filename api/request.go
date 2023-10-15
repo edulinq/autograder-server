@@ -326,7 +326,7 @@ func storeRequestFiles(request *http.Request) (*POSTFiles, error) {
         return nil, nil;
     }
 
-    tempDir, err := os.MkdirTemp("", "api-request-files-");
+    tempDir, err := util.MkDirTemp("api-request-files-");
     if (err != nil) {
         return nil, fmt.Errorf("Failed to create temp api files directory: '%w'.", err);
     }

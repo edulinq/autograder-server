@@ -123,7 +123,7 @@ func StoreRequestFiles(request *http.Request) (string, error) {
         return "", nil;
     }
 
-    tempDir, err := os.MkdirTemp("", "api-request-files-");
+    tempDir, err := util.MkDirTemp("api-request-files-");
     if (err != nil) {
         return "", fmt.Errorf("Failed to create temp api files directory: '%w'.", err);
     }

@@ -55,7 +55,7 @@ func runSubmissionTests(test *testing.T, parallel bool, useDocker bool) {
         }
     }
 
-    tempDir, err := os.MkdirTemp("", "submission-tests-");
+    tempDir, err := util.MkDirTemp("submission-tests-");
     if (err != nil) {
         test.Fatalf("Could not create temp dir: '%v'.", err);
     }
