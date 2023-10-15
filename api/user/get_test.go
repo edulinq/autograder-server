@@ -8,12 +8,12 @@ import (
 )
 
 func TestUserGet(test *testing.T) {
-    testCases := []struct{ email string; expected *userListRow }{
-        {"other@test.com", &userListRow{"other@test.com", "other", usr.Other}},
-        {"student@test.com", &userListRow{"student@test.com", "student", usr.Student}},
-        {"grader@test.com", &userListRow{"grader@test.com", "grader", usr.Grader}},
-        {"admin@test.com", &userListRow{"admin@test.com", "admin", usr.Admin}},
-        {"owner@test.com", &userListRow{"owner@test.com", "owner", usr.Owner}},
+    testCases := []struct{ email string; expected *UserInfo }{
+        {"other@test.com", &UserInfo{"other@test.com", "other", usr.Other, ""}},
+        {"student@test.com", &UserInfo{"student@test.com", "student", usr.Student, ""}},
+        {"grader@test.com", &UserInfo{"grader@test.com", "grader", usr.Grader, ""}},
+        {"admin@test.com", &UserInfo{"admin@test.com", "admin", usr.Admin, ""}},
+        {"owner@test.com", &UserInfo{"owner@test.com", "owner", usr.Owner, ""}},
 
         {"ZZZ", nil},
     };
@@ -47,16 +47,9 @@ func TestUserGet(test *testing.T) {
             continue;
         }
 
-        actualUserInfo := responseContent["user"].(map[string]any);
-
-        actualUser := &userListRow{
-            Email: actualUserInfo["email"].(string),
-            Name: actualUserInfo["name"].(string),
-            Role: usr.GetRole(actualUserInfo["role"].(string)),
-        };
-
+        actualUser := UserInfoFromMap(responseContent["user"].(map[string]any));
         if (*testCase.expected != *actualUser) {
-            test.Errorf("Case %d: Unexpected user result. Expected: '%v', actual: '%v'.", i, testCase.expected, actualUser);
+            test.Errorf("Case %d: Unexpected user result. Expected: '%+v', actual: '%+v'.", i, testCase.expected, actualUser);
             continue;
         }
     }

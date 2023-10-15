@@ -2,7 +2,6 @@ package user
 
 import (
     "github.com/eriq-augustine/autograder/api/core"
-    "github.com/eriq-augustine/autograder/usr"
 )
 
 type UserGetRequest struct {
@@ -15,13 +14,7 @@ type UserGetRequest struct {
 
 type UserGetResponse struct {
     FoundUser bool `json:"found"`
-    User *userListRow `json:"user"`
-}
-
-type userListRow struct {
-    Email string `json:"email"`
-    Name string `json:"name"`
-    Role usr.UserRole `json:"role"`
+    User *UserInfo `json:"user"`
 }
 
 func HandleUserGet(request *UserGetRequest) (*UserGetResponse, *core.APIError) {
@@ -30,11 +23,7 @@ func HandleUserGet(request *UserGetRequest) (*UserGetResponse, *core.APIError) {
     user := request.Users[request.Email];
     if (user != nil) {
         response.FoundUser = true;
-        response.User = &userListRow{
-            Email: user.Email,
-            Name: user.DisplayName,
-            Role: user.Role,
-        };
+        response.User = NewUserInfo(user);
     }
 
     return &response, nil;
