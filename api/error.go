@@ -37,6 +37,7 @@ const (
 // but should generally be treated as an APIError and not a general error.
 type APIError struct {
     RequestID string
+    Locator string
     Endpoint string
     Timestamp string
     HTTPStatus int
@@ -53,7 +54,7 @@ func (this *APIError) Error() string {
 
 func (this *APIError) Log() {
     log.Error().
-            Str("api-request-id", this.RequestID).Str("api-endpoint", this.Endpoint).
+            Str("api-request-id", this.RequestID).Str("locator", this.Locator).Str("api-endpoint", this.Endpoint).
             Str("timestamp", this.Timestamp).
             Int("http-status", this.HTTPStatus).
             Err(this.SourceError).
@@ -84,8 +85,15 @@ func (this *APIError) Err(err error) *APIError {
 }
 
 func (this *APIError) ToResponse() *APIResponse {
+    // Remove the locator for HTTP_STATUS_AUTH_ERROR.
+    locator := this.Locator;
+    if (this.HTTPStatus == HTTP_STATUS_AUTH_ERROR) {
+        locator = "";
+    }
+
     return &APIResponse{
         ID: this.RequestID,
+        Locator: locator,
         StartTimestamp: this.Timestamp,
         EndTimestamp: util.NowTimestamp(),
         HTTPStatus: this.HTTPStatus,
@@ -97,9 +105,10 @@ func (this *APIError) ToResponse() *APIResponse {
 
 // Constructors for common cases.
 
-func NewBadRequestError(request *APIRequest, message string) *APIError {
+func NewBadRequestError(locator string, request *APIRequest, message string) *APIError {
     return &APIError{
         RequestID: request.RequestID,
+        Locator: locator,
         Endpoint: request.Endpoint,
         Timestamp: request.Timestamp,
         HTTPStatus: HTTP_STATUS_BAD_REQUEST,
@@ -109,9 +118,10 @@ func NewBadRequestError(request *APIRequest, message string) *APIError {
 }
 
 // A bad request before the request was even parsed (usually a JSON error).
-func NewBareBadRequestError(id string, endpoint string, message string) *APIError {
+func NewBareBadRequestError(locator string, endpoint string, message string) *APIError {
     return &APIError{
-        RequestID: id,
+        RequestID: locator,
+        Locator: locator,
         Endpoint: endpoint,
         Timestamp: util.NowTimestamp(),
         HTTPStatus: HTTP_STATUS_BAD_REQUEST,
@@ -120,9 +130,10 @@ func NewBareBadRequestError(id string, endpoint string, message string) *APIErro
     };
 }
 
-func NewBadAuthError(request *APIRequestCourseUserContext, internalMessage string) *APIError {
+func NewAuthBadRequestError(locator string, request *APIRequestCourseUserContext, internalMessage string) *APIError {
     err := &APIError{
         RequestID: request.RequestID,
+        Locator: locator,
         Endpoint: request.Endpoint,
         Timestamp: request.Timestamp,
         HTTPStatus: HTTP_STATUS_AUTH_ERROR,
@@ -136,9 +147,10 @@ func NewBadAuthError(request *APIRequestCourseUserContext, internalMessage strin
     return err;
 }
 
-func NewBadPermissionsError(request *APIRequestCourseUserContext, minRole usr.UserRole, internalMessage string) *APIError {
+func NewBadPermissionsError(locator string, request *APIRequestCourseUserContext, minRole usr.UserRole, internalMessage string) *APIError {
     err := &APIError{
         RequestID: request.RequestID,
+        Locator: locator,
         Endpoint: request.Endpoint,
         Timestamp: request.Timestamp,
         HTTPStatus: HTTP_PERMISSIONS_ERROR,
@@ -155,9 +167,10 @@ func NewBadPermissionsError(request *APIRequestCourseUserContext, minRole usr.Us
     return err;
 }
 
-func NewInternalError(request *APIRequestCourseUserContext, internalMessage string) *APIError {
+func NewInternalError(locator string, request *APIRequestCourseUserContext, internalMessage string) *APIError {
     err := &APIError{
         RequestID: request.RequestID,
+        Locator: locator,
         Endpoint: request.Endpoint,
         Timestamp: request.Timestamp,
         HTTPStatus: HTTP_STATUS_SERVER_ERROR,
@@ -172,14 +185,15 @@ func NewInternalError(request *APIRequestCourseUserContext, internalMessage stri
 }
 
 // Very rare errors can occur so early that there is not even a request id.
-func NewBareInternalError(id string, endpoint string, internalMessage string) *APIError {
+func NewBareInternalError(locator string, endpoint string, internalMessage string) *APIError {
     err := &APIError{
-        RequestID: id,
+        RequestID: locator,
+        Locator: locator,
         Endpoint: endpoint,
         Timestamp: util.NowTimestamp(),
         HTTPStatus: HTTP_STATUS_SERVER_ERROR,
         InternalText: internalMessage,
-        ResponseText: fmt.Sprintf("The server failed to process your request. Please contact an adimistrator with this ID '%s'.", id),
+        ResponseText: fmt.Sprintf("The server failed to process your request. Please contact an adimistrator with this ID '%s'.", locator),
     };
 
     return err;

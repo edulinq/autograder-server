@@ -32,8 +32,8 @@ func TestAPIPanic(test *testing.T) {
     defer config.SetLoggingLevel(oldLevel);
 
     response := sendTestAPIRequest(test, endpoint, nil);
-    if (response.ID != "-501") {
-        test.Fatalf("Response does not have panic ID of '-501', actual ID: '%s'.", response.ID);
+    if (response.Locator != "-501") {
+        test.Fatalf("Response does not have panic locator of '-501', actual locator: '%s'.", response.Locator);
     }
 }
 
@@ -41,7 +41,7 @@ func TestAPIPanic(test *testing.T) {
 // Specifically, we are focusing on testing validateAPIHandler().
 func TestMalformedHandlers(test *testing.T) {
     // Define all the handlers.
-    testCases := []struct{handler any; id string}{
+    testCases := []struct{handler any; locator string}{
         {"", "-521"},
         {nil, "-521"},
         {0, "-521"},
@@ -69,8 +69,8 @@ func TestMalformedHandlers(test *testing.T) {
         routes = append(routes, newAPIRoute(endpoint, testCase.handler));
 
         response := sendTestAPIRequest(test, endpoint, nil);
-        if (response.ID != testCase.id) {
-            test.Errorf("Case %d -- Expected response ID of '%s', found response ID of '%s'. Response: [%v]", i, testCase.id, response.ID, response);
+        if (response.Locator != testCase.locator) {
+            test.Errorf("Case %d -- Expected response locator of '%s', found response locator of '%s'. Response: [%v]", i, testCase.locator, response.Locator, response);
         }
     }
 }
@@ -78,7 +78,7 @@ func TestMalformedHandlers(test *testing.T) {
 // Test empty/non-deserializable content.
 func TestBadRequestEmptyContent(test *testing.T) {
     // Define all the content that will go in the post form.
-    testCases := []struct{form map[string]string; id string}{
+    testCases := []struct{form map[string]string; locator string}{
         {map[string]string{}, "-402"},
         {map[string]string{API_REQUEST_CONTENT_KEY: ``}, "-402"},
         {map[string]string{API_REQUEST_CONTENT_KEY: `Z`}, "-403"},
@@ -111,8 +111,8 @@ func TestBadRequestEmptyContent(test *testing.T) {
             continue;
         }
 
-        if (response.ID != testCase.id) {
-            test.Errorf("Case %d -- Expected response ID of '%s', found response ID of '%s'. Response: [%v]", i, testCase.id, response.ID, response);
+        if (response.Locator != testCase.locator) {
+            test.Errorf("Case %d -- Expected response locator of '%s', found response locator of '%s'. Response: [%v]", i, testCase.locator, response.Locator, response);
         }
     }
 }
@@ -141,7 +141,7 @@ func TestNonMarshalableResponse(test *testing.T) {
     defer config.SetLoggingLevel(oldLevel);
 
     response := sendTestAPIRequest(test, endpoint, nil);
-    if (response.ID != "-531") {
-        test.Fatalf("Response does not ID of '-531', actual ID: '%s'.", response.ID);
+    if (response.Locator != "-531") {
+        test.Fatalf("Response does not locator of '-531', actual locator: '%s'.", response.Locator);
     }
 }

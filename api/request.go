@@ -87,20 +87,20 @@ func (this *APIRequestCourseUserContext) Validate(request any, endpoint string) 
     }
 
     if (this.CourseID == "") {
-        return NewBadRequestError(&this.APIRequest, "No course ID specified.");
+        return NewBadRequestError("-421", &this.APIRequest, "No course ID specified.");
     }
 
     if (this.UserEmail == "") {
-        return NewBadRequestError(&this.APIRequest, "No user email specified.");
+        return NewBadRequestError("-422", &this.APIRequest, "No user email specified.");
     }
 
     if (this.UserPass == "") {
-        return NewBadRequestError(&this.APIRequest, "No user password specified.");
+        return NewBadRequestError("-423", &this.APIRequest, "No user password specified.");
     }
 
     this.course = grader.GetCourse(this.CourseID);
     if (this.course == nil) {
-        return NewBadRequestError(&this.APIRequest, "Could not find course.").Add("course-id", this.CourseID);
+        return NewBadRequestError("-424", &this.APIRequest, "Could not find course.").Add("course-id", this.CourseID);
     }
 
     this.user, apiErr = this.Auth();
@@ -110,11 +110,11 @@ func (this *APIRequestCourseUserContext) Validate(request any, endpoint string) 
 
     minRole, foundRole := getMaxRole(request);
     if (!foundRole) {
-        return NewInternalError(this, "No role found for request. All request structs require a minimum role.");
+        return NewInternalError("-561", this, "No role found for request. All request structs require a minimum role.");
     }
 
     if (this.user.Role < minRole) {
-        return NewBadPermissionsError(this, minRole, "");
+        return NewBadPermissionsError("-425", this, minRole, "");
     }
 
     return nil;
@@ -128,12 +128,12 @@ func (this *APIRequestAssignmentContext) Validate(request any, endpoint string) 
     }
 
     if (this.AssignmentID == "") {
-        return NewBadRequestError(&this.APIRequest, "No assignment ID specified.");
+        return NewBadRequestError("-431", &this.APIRequest, "No assignment ID specified.");
     }
 
     this.assignment = this.course.Assignments[this.AssignmentID];
     if (this.assignment == nil) {
-        return NewBadRequestError(&this.APIRequest, "Could not find assignment.").
+        return NewBadRequestError("-432", &this.APIRequest, "Could not find assignment.").
             Add("course-id", this.CourseID).Add("assignment-id", this.AssignmentID);
     }
 
@@ -145,7 +145,7 @@ func (this *APIRequestAssignmentContext) Validate(request any, endpoint string) 
 func ValidateAPIRequest(request *http.Request, apiRequest any, endpoint string) *APIError {
     reflectPointer := reflect.ValueOf(apiRequest);
     if (reflectPointer.Kind() != reflect.Pointer) {
-        return NewBareInternalError("-512", endpoint, "ValidateAPIRequest() must be called with a pointer.");
+        return NewBareInternalError("-511", endpoint, "ValidateAPIRequest() must be called with a pointer.");
     }
 
     // Ensure the request has an request type embedded, and validate it.
@@ -155,7 +155,7 @@ func ValidateAPIRequest(request *http.Request, apiRequest any, endpoint string) 
     }
 
     if (!foundRequestStruct) {
-        return NewBareInternalError("-511", endpoint, "Request is not any kind of known API request.");
+        return NewBareInternalError("-512", endpoint, "Request is not any kind of known API request.");
     }
 
     // Check for any special field types that we know how to populate.
@@ -263,13 +263,13 @@ func fillRequestCourseUsers(endpoint string, apiRequest any, fieldIndex int) *AP
     courseContext := courseContextValue.Interface().(APIRequestCourseUserContext);
 
     if (!fieldType.IsExported()) {
-        return NewInternalError(&courseContext, "A CourseUsers field must be exported.").
+        return NewInternalError("-542", &courseContext, "A CourseUsers field must be exported.").
                 Add("struct-name", structName).Add("field-name", fieldType.Name);
     }
 
     users, err := courseContext.course.GetUsers();
     if (err != nil) {
-        return NewInternalError(&courseContext, "Failed to fetch embeded users.").Err(err).
+        return NewInternalError("-543", &courseContext, "Failed to fetch embeded users.").Err(err).
                 Add("struct-name", structName).Add("field-name", fieldType.Name);
     }
 

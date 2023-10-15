@@ -8,6 +8,8 @@ import (
 
 type APIResponse struct {
     ID string `json:"id"`
+    Locator string `json:"locator"`
+
     StartTimestamp string `json:"start-timestamp"`
     EndTimestamp string `json:"end-timestamp"`
 

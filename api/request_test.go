@@ -97,8 +97,8 @@ func TestBadCourseUsersFieldNoContext(test *testing.T) {
         test.Fatalf("Struct with no course context does not return an error,");
     }
 
-    if (apiErr.RequestID != "-541") {
-        test.Fatalf("Struct with no course context does not return an error with request id '-541', found '%s'.", apiErr.RequestID);
+    if (apiErr.Locator != "-541") {
+        test.Fatalf("Struct with no course context does not return an error with locator '-541', found '%s'.", apiErr.Locator);
     }
 }
 
@@ -124,10 +124,10 @@ func TestBadCourseUsersFieldNotExported(test *testing.T) {
         test.Fatalf("Struct with non-exported course users does not return an error,");
     }
 
-    expectedText := "A CourseUsers field must be exported.";
-    if (apiErr.InternalText != expectedText) {
-        test.Fatalf("Struct with non-exported course users does not return an error with the correct message. Expcted '%s', found '%s'.",
-                expectedText, apiErr.InternalText);
+    expectedLocator := "-542";
+    if (apiErr.Locator != expectedLocator) {
+        test.Fatalf("Struct with non-exported course users does not return an error with the correct locator. Expcted '%s', found '%s'.",
+                expectedLocator, apiErr.Locator);
     }
 }
 
@@ -168,10 +168,10 @@ func TestBadCourseUsersFieldFailGetUsers(test *testing.T) {
         test.Fatalf("Error not returned when users fetch failed.");
     }
 
-    expectedText := "Failed to fetch embeded users.";
-    if (apiErr.InternalText != expectedText) {
-        test.Fatalf("Incorrect error message when user fetch failed. Expcted '%s', found '%s'.",
-                expectedText, apiErr.InternalText);
+    expectedLocator := "-543";
+    if (apiErr.Locator != expectedLocator) {
+        test.Fatalf("Incorrect error locator when user fetch failed. Expcted '%s', found '%s'.",
+                expectedLocator, apiErr.Locator);
     }
 }
 

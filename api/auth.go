@@ -13,11 +13,11 @@ import (
 func (this *APIRequestCourseUserContext) Auth() (*usr.User, *APIError) {
     user, err := this.course.GetUser(this.UserEmail);
     if (err != nil) {
-        return nil, NewBadAuthError(this, "Cannot Get User").Err(err);
+        return nil, NewAuthBadRequestError("-441", this, "Cannot Get User").Err(err);
     }
 
     if (user == nil) {
-        return nil, NewBadAuthError(this, "Unknown User");
+        return nil, NewAuthBadRequestError("-442", this, "Unknown User");
     }
 
     if (config.NO_AUTH.GetBool()) {
@@ -26,7 +26,7 @@ func (this *APIRequestCourseUserContext) Auth() (*usr.User, *APIError) {
     }
 
     if (!user.CheckPassword(this.UserPass)) {
-        return nil, NewBadAuthError(this, "Bad Password");
+        return nil, NewAuthBadRequestError("-443", this, "Bad Password");
     }
 
     return user, nil;
