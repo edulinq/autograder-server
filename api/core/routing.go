@@ -1,4 +1,7 @@
-package api
+package core
+
+// The infrastructure for routing requests,
+// mostly API requests.
 
 import (
     "fmt"
@@ -10,20 +13,8 @@ import (
 
     "github.com/rs/zerolog/log"
 
-    "github.com/eriq-augustine/autograder/config"
     "github.com/eriq-augustine/autograder/util"
 )
-
-var routes = []route{
-    newRedirect("GET", ``, `/static/index.html`),
-    newRedirect("GET", `/`, `/static/index.html`),
-    newRedirect("GET", `/index.html`, `/static/index.html`),
-
-    newRoute("GET", `/static`, handleStatic),
-    newRoute("GET", `/static/.*`, handleStatic),
-
-    newAPIRoute(`/api/v02/user/get`, handleUserGet),
-}
 
 // Handlers that internally handle and log errors should return nil and ensure that responses are written.
 type RouteHandler func(response http.ResponseWriter, request *http.Request) error;
@@ -35,14 +26,15 @@ type RouteHandler func(response http.ResponseWriter, request *http.Request) erro
 // Thus alias is not actually used (any and reflection are used), but shows what the structure is.
 type APIHandler func(*any) (*any, *APIError);
 
-// Objects that have been reflexively verifed.
-// Once validated, callers should feel safe calling reflection methods on these.
+// A handler that has been reflexively verifed.
+// Once validated, callers should feel safe calling reflection methods on this without extra checks.
 type ValidAPIHandler any;
-// This is a pointer to a request.
-type ValidAPIRequest any;
+
+// Post form key for request content.
+const API_REQUEST_CONTENT_KEY = "content";
 
 // Inspired by https://benhoyt.com/writings/go-routing/
-type route struct {
+type Route struct {
     method string
     regex *regexp.Regexp
     handler RouteHandler
@@ -50,27 +42,32 @@ type route struct {
 
 const MAX_FORM_MEM_SIZE_BYTES = 10 << 20  // 20 MB
 
-func StartServer() {
-    var port = config.WEB_PORT.GetInt();
-
-    log.Info().Msgf("Serving on %d.", port);
-
-    err := http.ListenAndServe(fmt.Sprintf(":%d", port), http.HandlerFunc(serve));
-    if (err != nil) {
-        log.Fatal().Err(err).Msg("Server stopped.");
-    }
+// Get a function to pass to http.HandlerFunc().
+func GetRouteServer(routes *[]*Route) http.HandlerFunc {
+    return func(response http.ResponseWriter, request *http.Request) {
+        ServeRoutes(routes, response, request);
+    };
 }
 
-func serve(response http.ResponseWriter, request *http.Request) {
+func ServeRoutes(routes *[]*Route, response http.ResponseWriter, request *http.Request) {
     log.Debug().
         Str("method", request.Method).
         Str("url", request.URL.Path).
         Msg("");
 
-    var route route;
+    if (routes == nil) {
+        http.NotFound(response, request);
+    }
+
+    var i int;
+    var route *Route;
     var match bool;
 
-    for _, route = range routes {
+    for i, route = range *routes {
+        if (route == nil) {
+            log.Warn().Int("index", i).Msg("Found nil route.");
+        }
+
         if (route.method != request.Method) {
             continue;
         }
@@ -92,18 +89,19 @@ func serve(response http.ResponseWriter, request *http.Request) {
     http.NotFound(response, request);
 }
 
-func newRoute(method string, pattern string, handler RouteHandler) route {
-    return route{method, regexp.MustCompile("^" + pattern + "$"), handler};
+func NewRoute(method string, pattern string, handler RouteHandler) *Route {
+    return &Route{method, regexp.MustCompile("^" + pattern + "$"), handler};
 }
 
-func newRedirect(method string, pattern string, target string) route {
+func NewRedirect(method string, pattern string, target string) *Route {
     redirectFunc := func(response http.ResponseWriter, request *http.Request) error {
         return handleRedirect(target, response, request);
     };
-    return route{method, regexp.MustCompile("^" + pattern + "$"), redirectFunc};
+
+    return &Route{method, regexp.MustCompile("^" + pattern + "$"), redirectFunc};
 }
 
-func newAPIRoute[T APIRequest](pattern string, apiHandler any) route {
+func NewAPIRoute(pattern string, apiHandler any) *Route {
     handler := func(response http.ResponseWriter, request *http.Request) (err error) {
         // Recover from any panic.
         defer func() {
@@ -125,7 +123,7 @@ func newAPIRoute[T APIRequest](pattern string, apiHandler any) route {
         return err;
     }
 
-    return route{"POST", regexp.MustCompile("^" + pattern + "$"), handler};
+    return &Route{"POST", regexp.MustCompile("^" + pattern + "$"), handler};
 }
 
 func handleRedirect(target string, response http.ResponseWriter, request *http.Request) error {
@@ -158,7 +156,8 @@ func handleAPIEndpoint(response http.ResponseWriter, request *http.Request, apiH
 // Otherwise, send the content in the response's "content" field.
 // |hardFail| controls whether we should try to wrap an error and call this method again (so we don't infinite loop),
 // most callers should set it to false.
-func sendAPIResponse(apiRequest ValidAPIRequest, response http.ResponseWriter, content any, apiErr *APIError, hardFail bool) error {
+func sendAPIResponse(apiRequest ValidAPIRequest, response http.ResponseWriter,
+        content any, apiErr *APIError, hardFail bool) error {
     var apiResponse *APIResponse = nil;
 
     if (apiErr != nil) {
@@ -308,14 +307,14 @@ func validateAPIHandler(endpoint string, apiHandler any) (ValidAPIHandler, *APIE
     return ValidAPIHandler(apiHandler), nil;
 }
 
-type FuncRuntimeInfo struct {
+type funcRuntimeInfo struct {
     Name string
     File string
     Line int
 }
 
-func getFuncInfo(funcHandle any) *FuncRuntimeInfo {
-    info := FuncRuntimeInfo{};
+func getFuncInfo(funcHandle any) *funcRuntimeInfo {
+    info := funcRuntimeInfo{};
 
     reflectValue := reflect.ValueOf(funcHandle);
     if (reflectValue.Kind() != reflect.Func) {

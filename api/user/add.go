@@ -1,13 +1,14 @@
-package api
+package user
 
 import (
+    "github.com/eriq-augustine/autograder/api/core"
     "github.com/eriq-augustine/autograder/usr"
 )
 
 type UserGetRequest struct {
-    APIRequestCourseUserContext
-    MinRoleGrader
-    Users CourseUsers `json:"-"`
+    core.APIRequestCourseUserContext
+    core.MinRoleGrader
+    Users core.CourseUsers `json:"-"`
 
     Email string `json:"email"`
 }
@@ -23,7 +24,7 @@ type userListRow struct {
     Role usr.UserRole `json:"role"`
 }
 
-func handleUserGet(request *UserGetRequest) (*UserGetResponse, *APIError) {
+func HandleUserGet(request *UserGetRequest) (*UserGetResponse, *core.APIError) {
     response := UserGetResponse{};
 
     user := request.Users[request.Email];

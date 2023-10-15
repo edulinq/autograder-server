@@ -1,4 +1,4 @@
-package api
+package core
 
 import (
     "fmt"
@@ -12,11 +12,6 @@ import (
     "github.com/eriq-augustine/autograder/model"
     "github.com/eriq-augustine/autograder/usr"
     "github.com/eriq-augustine/autograder/util"
-)
-
-const (
-    // Post form key for request content.
-    API_REQUEST_CONTENT_KEY = "content";
 )
 
 // The minimum user roles required encoded as a type so it can be embedded into a request struct.
@@ -36,6 +31,10 @@ type POSTFiles struct {
     TempDir string `json:"-"`
     Filenames []string `json:"-"`
 }
+
+// An api request that has been reflexively verifed.
+// Once validated, callers should feel safe calling reflection methods on this without extra checks.
+type ValidAPIRequest any;
 
 type APIRequest struct {
     // These are not provided in JSON, they are filled in during validation.

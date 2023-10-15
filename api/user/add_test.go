@@ -1,8 +1,9 @@
-package api
+package user
 
 import (
     "testing"
 
+    "github.com/eriq-augustine/autograder/api/core"
     "github.com/eriq-augustine/autograder/usr"
 )
 
@@ -22,7 +23,7 @@ func TestUserGet(test *testing.T) {
             "email": testCase.email,
         };
 
-        response := sendTestAPIRequest(test, "/api/v02/user/get", fields);
+        response := core.SendTestAPIRequest(test, core.NewEndpoint(`user/get`), fields);
         if (!response.Success) {
             test.Errorf("Case %d: Response is not a success: '%v'.", i, response);
             continue;

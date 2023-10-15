@@ -1,4 +1,4 @@
-package api
+package core
 
 import (
     "fmt"
@@ -214,13 +214,13 @@ func TestGoodPostFiles(test *testing.T) {
         return nil, nil;
     }
 
-    routes = append(routes, newAPIRoute(endpoint, handler));
+    routes = append(routes, NewAPIRoute(endpoint, handler));
 
     paths := []string{
         filepath.Join(config.COURSES_ROOT.GetString(), "files", "a.txt"),
     };
 
-    response := sendTestAPIRequestFull(test, endpoint, nil, paths);
+    response := SendTestAPIRequestFull(test, endpoint, nil, paths);
     if (response.Content != nil) {
         test.Fatalf("Handler gave an error: '%s'.", response.Content);
     }
@@ -274,7 +274,7 @@ func TestBadPostFilesNoFiles(test *testing.T) {
         return nil, nil;
     }
 
-    routes = append(routes, newAPIRoute(endpoint, handler));
+    routes = append(routes, NewAPIRoute(endpoint, handler));
 
     paths := []string{};
 
@@ -283,7 +283,7 @@ func TestBadPostFilesNoFiles(test *testing.T) {
     config.SetLogLevelFatal();
     defer config.SetLoggingLevel(oldLevel);
 
-    response := sendTestAPIRequestFull(test, endpoint, nil, paths);
+    response := SendTestAPIRequestFull(test, endpoint, nil, paths);
     if (response.Success) {
         test.Fatalf("Request did not generate an error: '%v'.", response);
     }
@@ -309,7 +309,7 @@ func TestBadPostFilesStoreFail(test *testing.T) {
         return nil, nil;
     }
 
-    routes = append(routes, newAPIRoute(endpoint, handler));
+    routes = append(routes, NewAPIRoute(endpoint, handler));
 
     paths := []string{
         filepath.Join(config.COURSES_ROOT.GetString(), "files", "a.txt"),
@@ -324,7 +324,7 @@ func TestBadPostFilesStoreFail(test *testing.T) {
     util.SetTempDirForTesting(os.DevNull);
     defer util.SetTempDirForTesting("");
 
-    response := sendTestAPIRequestFull(test, endpoint, nil, paths);
+    response := SendTestAPIRequestFull(test, endpoint, nil, paths);
     if (response.Success) {
         test.Fatalf("Request did not generate an error: '%v'.", response);
     }

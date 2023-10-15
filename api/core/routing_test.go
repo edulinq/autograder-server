@@ -1,4 +1,4 @@
-package api
+package core
 
 import (
     "fmt"
@@ -24,14 +24,14 @@ func TestAPIPanic(test *testing.T) {
         return nil, nil;
     }
 
-    routes = append(routes, newAPIRoute(endpoint, handler));
+    routes = append(routes, NewAPIRoute(endpoint, handler));
 
     // Quiet the output a bit.
     oldLevel := config.GetLoggingLevel();
     config.SetLogLevelFatal();
     defer config.SetLoggingLevel(oldLevel);
 
-    response := sendTestAPIRequest(test, endpoint, nil);
+    response := SendTestAPIRequest(test, endpoint, nil);
     if (response.Locator != "-501") {
         test.Fatalf("Response does not have panic locator of '-501', actual locator: '%s'.", response.Locator);
     }
@@ -66,9 +66,9 @@ func TestMalformedHandlers(test *testing.T) {
     for i, testCase := range testCases {
         // Register the handlers using its index in the endpoint..
         endpoint := fmt.Sprintf("/test/api/malformed/handler/%d", i);
-        routes = append(routes, newAPIRoute(endpoint, testCase.handler));
+        routes = append(routes, NewAPIRoute(endpoint, testCase.handler));
 
-        response := sendTestAPIRequest(test, endpoint, nil);
+        response := SendTestAPIRequest(test, endpoint, nil);
         if (response.Locator != testCase.locator) {
             test.Errorf("Case %d -- Expected response locator of '%s', found response locator of '%s'. Response: [%v]", i, testCase.locator, response.Locator, response);
         }
@@ -88,7 +88,7 @@ func TestBadRequestEmptyContent(test *testing.T) {
 
     endpoint := `/test/api/bad-request/empty-content`;
     handler := func(request *BaseTestRequest) (*any, *APIError) { return nil, nil };
-    routes = append(routes, newAPIRoute(endpoint, handler));
+    routes = append(routes, NewAPIRoute(endpoint, handler));
 
     url := serverURL + endpoint;
 
@@ -133,14 +133,14 @@ func TestNonMarshalableResponse(test *testing.T) {
         return &response, nil;
     }
 
-    routes = append(routes, newAPIRoute(endpoint, handler));
+    routes = append(routes, NewAPIRoute(endpoint, handler));
 
     // Quiet the output a bit.
     oldLevel := config.GetLoggingLevel();
     config.SetLogLevelFatal();
     defer config.SetLoggingLevel(oldLevel);
 
-    response := sendTestAPIRequest(test, endpoint, nil);
+    response := SendTestAPIRequest(test, endpoint, nil);
     if (response.Locator != "-531") {
         test.Fatalf("Response does not locator of '-531', actual locator: '%s'.", response.Locator);
     }
