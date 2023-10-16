@@ -1,4 +1,6 @@
-package user
+package core
+
+// How to represent users in API responses.
 
 import (
     "strings"

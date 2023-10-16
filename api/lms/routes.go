@@ -1,4 +1,4 @@
-package user
+package lms
 
 // All the API endpoints handled by this package.
 
@@ -7,8 +7,7 @@ import (
 )
 
 var routes []*core.Route = []*core.Route{
-    core.NewAPIRoute(core.NewEndpoint(`user/get`), HandleUserGet),
-    core.NewAPIRoute(core.NewEndpoint(`user/list`), HandleUserList),
+    core.NewAPIRoute(core.NewEndpoint(`lms/user/get`), HandleUserGet),
 };
 
 func GetRoutes() *[]*core.Route {

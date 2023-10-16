@@ -9,12 +9,12 @@ import (
 )
 
 func TestUserList(test *testing.T) {
-    expectedUsers := []UserInfo{
-        UserInfo{"other@test.com", "other", usr.Other, ""},
-        UserInfo{"student@test.com", "student", usr.Student, ""},
-        UserInfo{"grader@test.com", "grader", usr.Grader, ""},
-        UserInfo{"admin@test.com", "admin", usr.Admin, ""},
-        UserInfo{"owner@test.com", "owner", usr.Owner, ""},
+    expectedUsers := []core.UserInfo{
+        core.UserInfo{"other@test.com", "other", usr.Other, ""},
+        core.UserInfo{"student@test.com", "student", usr.Student, ""},
+        core.UserInfo{"grader@test.com", "grader", usr.Grader, ""},
+        core.UserInfo{"admin@test.com", "admin", usr.Admin, ""},
+        core.UserInfo{"owner@test.com", "owner", usr.Owner, ""},
     };
 
     response := core.SendTestAPIRequest(test, core.NewEndpoint(`user/list`), nil);
@@ -29,14 +29,14 @@ func TestUserList(test *testing.T) {
     }
 
     rawUsers := responseContent["users"].([]any);
-    actualUsers := make([]UserInfo, 0, len(rawUsers));
+    actualUsers := make([]core.UserInfo, 0, len(rawUsers));
 
     for _, rawUser := range rawUsers {
-        actualUsers = append(actualUsers, *UserInfoFromMap(rawUser.(map[string]any)));
+        actualUsers = append(actualUsers, *core.UserInfoFromMap(rawUser.(map[string]any)));
     }
 
-    slices.SortFunc(expectedUsers, CompareUserInfo);
-    slices.SortFunc(actualUsers, CompareUserInfo);
+    slices.SortFunc(expectedUsers, core.CompareUserInfo);
+    slices.SortFunc(actualUsers, core.CompareUserInfo);
 
     if (!slices.Equal(expectedUsers, actualUsers)) {
         test.Fatalf("Users not as expected. Expected: '%+v', actual: '%+v'.", expectedUsers, actualUsers);

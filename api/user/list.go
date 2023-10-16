@@ -11,14 +11,14 @@ type UserListRequest struct {
 }
 
 type UserListResponse struct {
-    Users []*UserInfo `json:"users"`
+    Users []*core.UserInfo `json:"users"`
 }
 
 func HandleUserList(request *UserListRequest) (*UserListResponse, *core.APIError) {
-    users := make([]*UserInfo, 0, len(request.Users));
+    users := make([]*core.UserInfo, 0, len(request.Users));
 
     for _, user := range request.Users {
-        users = append(users, NewUserInfo(user));
+        users = append(users, core.NewUserInfo(user));
     }
 
     return &UserListResponse{users}, nil;

@@ -9,21 +9,21 @@ type UserGetRequest struct {
     core.MinRoleGrader
     Users core.CourseUsers `json:"-"`
 
-    Email string `json:"email"`
+    TargetEmail string `json:"target-email"`
 }
 
 type UserGetResponse struct {
     FoundUser bool `json:"found"`
-    User *UserInfo `json:"user"`
+    User *core.UserInfo `json:"user"`
 }
 
 func HandleUserGet(request *UserGetRequest) (*UserGetResponse, *core.APIError) {
     response := UserGetResponse{};
 
-    user := request.Users[request.Email];
+    user := request.Users[request.TargetEmail];
     if (user != nil) {
         response.FoundUser = true;
-        response.User = NewUserInfo(user);
+        response.User = core.NewUserInfo(user);
     }
 
     return &response, nil;

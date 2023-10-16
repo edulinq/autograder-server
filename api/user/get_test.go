@@ -8,19 +8,19 @@ import (
 )
 
 func TestUserGet(test *testing.T) {
-    testCases := []struct{ email string; expected *UserInfo }{
-        {"other@test.com", &UserInfo{"other@test.com", "other", usr.Other, ""}},
-        {"student@test.com", &UserInfo{"student@test.com", "student", usr.Student, ""}},
-        {"grader@test.com", &UserInfo{"grader@test.com", "grader", usr.Grader, ""}},
-        {"admin@test.com", &UserInfo{"admin@test.com", "admin", usr.Admin, ""}},
-        {"owner@test.com", &UserInfo{"owner@test.com", "owner", usr.Owner, ""}},
+    testCases := []struct{ email string; expected *core.UserInfo }{
+        {"other@test.com", &core.UserInfo{"other@test.com", "other", usr.Other, ""}},
+        {"student@test.com", &core.UserInfo{"student@test.com", "student", usr.Student, ""}},
+        {"grader@test.com", &core.UserInfo{"grader@test.com", "grader", usr.Grader, ""}},
+        {"admin@test.com", &core.UserInfo{"admin@test.com", "admin", usr.Admin, ""}},
+        {"owner@test.com", &core.UserInfo{"owner@test.com", "owner", usr.Owner, ""}},
 
         {"ZZZ", nil},
     };
 
     for i, testCase := range testCases {
         fields := map[string]any{
-            "email": testCase.email,
+            "target-email": testCase.email,
         };
 
         response := core.SendTestAPIRequest(test, core.NewEndpoint(`user/get`), fields);
@@ -47,7 +47,7 @@ func TestUserGet(test *testing.T) {
             continue;
         }
 
-        actualUser := UserInfoFromMap(responseContent["user"].(map[string]any));
+        actualUser := core.UserInfoFromMap(responseContent["user"].(map[string]any));
         if (*testCase.expected != *actualUser) {
             test.Errorf("Case %d: Unexpected user result. Expected: '%+v', actual: '%+v'.", i, testCase.expected, actualUser);
             continue;
