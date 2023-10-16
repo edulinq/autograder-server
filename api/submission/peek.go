@@ -16,7 +16,7 @@ type PeekRequest struct {
     core.MinRoleStudent
 
     TargetEmail string `json:"target-email"`
-    SubmissionID string `json:"submission-id"`
+    TargetSubmission string `json:"target-submission"`
 }
 
 type PeekResponse struct {
@@ -52,7 +52,7 @@ func HandlePeek(request *PeekRequest) (*PeekResponse, *core.APIError) {
         path := paths[i];
         id := filepath.Base(filepath.Dir(filepath.Dir(path)));
 
-        if ((request.SubmissionID == "") || (request.SubmissionID == id)) {
+        if ((request.TargetSubmission == "") || (request.TargetSubmission == id)) {
             targetPath = path;
             break;
         }

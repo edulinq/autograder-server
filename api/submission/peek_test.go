@@ -55,7 +55,7 @@ func TestPeek(test *testing.T) {
     for i, testCase := range testCases {
         fields := map[string]any{
             "target-email": testCase.target,
-            "submission-id": testCase.id,
+            "target-submission": testCase.id,
         };
 
         response := core.SendTestAPIRequestFull(test, core.NewEndpoint(`submission/peek`), fields, nil, testCase.role);
