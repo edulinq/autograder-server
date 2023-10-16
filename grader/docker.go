@@ -36,7 +36,7 @@ func BuildDockerImages(force bool, buildOptions *docker.BuildOptions) ([]string,
 //  - input -- A temp dir that will be mounted at DOCKER_INPUT_DIR (read-only).
 //  - output -- Passed in directory that will be mounted at DOCKER_OUTPUT_DIR.
 //  - work -- Should already be created inside the docker image, will only exist within the container.
-func RunDockerGrader(assignment *model.Assignment, submissionPath string, outputDir string, options GradeOptions, gradingID string) (*artifact.GradedAssignment, string, error) {
+func RunDockerGrader(assignment *model.Assignment, submissionPath string, outputDir string, options GradeOptions, fullSubmissionID string) (*artifact.GradedAssignment, string, error) {
     os.MkdirAll(outputDir, 0755);
     if (!util.IsEmptyDir(outputDir)) {
         return nil, "", fmt.Errorf("Output dir for docker grader is not empty.");
@@ -60,7 +60,7 @@ func RunDockerGrader(assignment *model.Assignment, submissionPath string, output
         return nil, "", fmt.Errorf("Failed to copy over submission/input contents: '%w'.", err);
     }
 
-    output, err := docker.RunContainer(assignment.ImageName(), tempInputDir, outputDir, gradingID);
+    output, err := docker.RunContainer(assignment.ImageName(), tempInputDir, outputDir, fullSubmissionID);
     if (err != nil) {
         return nil, "", err;
     }

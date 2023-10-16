@@ -58,7 +58,7 @@ func Grade(assignment *model.Assignment, submissionPath string, user string, mes
         return nil, nil, "", fmt.Errorf("Failed to prepare submission dir for assignment '%s' and user '%s': '%w'.", assignment.FullID(), user, err);
     }
 
-    gradingID := fmt.Sprintf("%s::%d", gradingKey, submissionID);
+    fullSubmissionID := common.CreateFullSubmissionID(assignment.Course.ID, assignment.ID, user, submissionID);
 
     // Copy the submission to the user's submission directory.
     submissionCopyDir := filepath.Join(submissionDir, common.GRADING_INPUT_DIRNAME);
@@ -74,16 +74,16 @@ func Grade(assignment *model.Assignment, submissionPath string, user string, mes
     var output string;
 
     if (options.NoDocker) {
-        result, output, err = RunNoDockerGrader(assignment, submissionPath, outputDir, options, gradingID);
+        result, output, err = RunNoDockerGrader(assignment, submissionPath, outputDir, options, fullSubmissionID);
     } else {
-        result, output, err = RunDockerGrader(assignment, submissionPath, outputDir, options, gradingID);
+        result, output, err = RunDockerGrader(assignment, submissionPath, outputDir, options, fullSubmissionID);
     }
 
     if (err != nil) {
         return nil, nil, output, err;
     }
 
-    summary := result.GetSummary(gradingID, message);
+    summary := result.GetSummary(fullSubmissionID, message);
     summaryPath := filepath.Join(outputDir, common.GRADER_OUTPUT_SUMMARY_FILENAME);
 
     err = util.ToJSONFileIndent(summary, summaryPath);
@@ -94,20 +94,20 @@ func Grade(assignment *model.Assignment, submissionPath string, user string, mes
     return result, summary, output, nil;
 }
 
-func prepSubmissionDir(assignment *model.Assignment, user string, options GradeOptions) (string, int64, error) {
+func prepSubmissionDir(assignment *model.Assignment, user string, options GradeOptions) (string, string, error) {
     var submissionDir string;
     var err error;
-    var id int64;
+    var id string;
 
     if (options.UseFakeSubmissionsDir) {
         tempSubmissionsDir, err := util.MkDirTemp("autograding-submissions-");
         if (err != nil) {
-            return "", 0, fmt.Errorf("Could not create temp submissions dir: '%w'.", err);
+            return "", "", fmt.Errorf("Could not create temp submissions dir: '%w'.", err);
         }
 
         submissionDir, id, err = assignment.PrepareSubmissionWithDir(user, tempSubmissionsDir);
         if (err != nil) {
-            return "", 0, fmt.Errorf("Failed to prepare fake submission dir: '%w'.", err);
+            return "", "", fmt.Errorf("Failed to prepare fake submission dir: '%w'.", err);
         }
 
         if (options.LeaveTempDir) {
@@ -118,7 +118,7 @@ func prepSubmissionDir(assignment *model.Assignment, user string, options GradeO
     } else {
         submissionDir, id, err = assignment.PrepareSubmission(user);
         if (err != nil) {
-            return "", 0, fmt.Errorf("Failed to prepare default submission dir: '%w'.", err);
+            return "", "", fmt.Errorf("Failed to prepare default submission dir: '%w'.", err);
         }
     }
 

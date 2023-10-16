@@ -18,7 +18,7 @@ import (
 const PYTHON_AUTOGRADER_INVOCATION = "python3 -m autograder.cli.grade-submission --grader <grader> --inputdir <inputdir> --outputdir <outputdir> --workdir <workdir> --outpath <outpath>"
 const PYTHON_GRADER_FILENAME = "grader.py"
 
-func RunNoDockerGrader(assignment *model.Assignment, submissionPath string, outputDir string, options GradeOptions, gradingID string) (*artifact.GradedAssignment, string, error) {
+func RunNoDockerGrader(assignment *model.Assignment, submissionPath string, outputDir string, options GradeOptions, fullSubmissionID string) (*artifact.GradedAssignment, string, error) {
     tempDir, inputDir, _, workDir, err := common.PrepTempGradingDir();
     if (err != nil) {
         return nil, "", err;

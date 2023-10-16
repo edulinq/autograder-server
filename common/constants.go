@@ -10,3 +10,5 @@ const GRADER_OUTPUT_SUMMARY_FILENAME = "summary.json"
 const AUTOGRADER_COMMENT_IDENTITY_KEY = "__autograder__"
 
 const CACHE_DIRNAME = "cache"
+
+const SUBMISSION_ID_DELIM = "::"

@@ -5,9 +5,25 @@ import (
     "fmt"
     "os"
     "path/filepath"
+    "strings"
 
     "github.com/eriq-augustine/autograder/util"
 )
+
+func CreateFullSubmissionID(courseID string, assignmentID string, email string, shortSubmissionID string) string {
+    return util.JoinStrings(SUBMISSION_ID_DELIM, courseID, assignmentID, email, shortSubmissionID);
+}
+
+func SplitFullSubmissionID(fullSubmissionID string) []string {
+    return strings.Split(fullSubmissionID, SUBMISSION_ID_DELIM);
+}
+
+// Get the short submission ID from either a full or short submission ID.
+// Accepted inputs are: full id, short id, empty string.
+func GetShortSubmissionID(submissionID string) string {
+    parts := SplitFullSubmissionID(submissionID);
+    return parts[len(parts) - 1];
+}
 
 // Create a temp dir for grading as well as the three standard directories in it.
 // Paths to the three direcotries (temp, in, out, work) will be returned.

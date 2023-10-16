@@ -5,6 +5,7 @@ import (
 
     "github.com/eriq-augustine/autograder/api/core"
     "github.com/eriq-augustine/autograder/artifact"
+    "github.com/eriq-augustine/autograder/common"
     "github.com/eriq-augustine/autograder/usr"
     "github.com/eriq-augustine/autograder/util"
 )
@@ -34,6 +35,9 @@ func HandlePeek(request *PeekRequest) (*PeekResponse, *core.APIError) {
     if ((request.TargetEmail != request.User.Email) && (request.User.Role < NON_SELF_PEEK_PERMISSIONS)) {
         return nil, core.NewBadPermissionsError("-401", &request.APIRequestCourseUserContext, NON_SELF_PEEK_PERMISSIONS, "Non-Self Peek");
     }
+
+    // Ensure the submission ID is short.
+    request.TargetSubmission = common.GetShortSubmissionID(request.TargetSubmission);
 
     response := PeekResponse{};
 
