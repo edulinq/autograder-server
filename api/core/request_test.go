@@ -98,7 +98,7 @@ func TestBadCourseUsersFieldNoContext(test *testing.T) {
         test.Fatalf("Struct with no course context does not return an error,");
     }
 
-    if (apiErr.Locator != "-541") {
+    if (apiErr.Locator != "-311") {
         test.Fatalf("Struct with no course context does not return an error with locator '-541', found '%s'.", apiErr.Locator);
     }
 }
@@ -125,7 +125,7 @@ func TestBadCourseUsersFieldNotExported(test *testing.T) {
         test.Fatalf("Struct with non-exported course users does not return an error,");
     }
 
-    expectedLocator := "-542";
+    expectedLocator := "-312";
     if (apiErr.Locator != expectedLocator) {
         test.Fatalf("Struct with non-exported course users does not return an error with the correct locator. Expcted '%s', found '%s'.",
                 expectedLocator, apiErr.Locator);
@@ -160,16 +160,16 @@ func TestBadCourseUsersFieldFailGetUsers(test *testing.T) {
     }
 
     // Course context is now fine, now make GetUsers fail.
-    oldSourcePath := request.course.SourcePath;
-    defer func() { request.course.SourcePath = oldSourcePath }();
-    request.course.SourcePath = filepath.Join(os.DevNull, "course.json");
+    oldSourcePath := request.Course.SourcePath;
+    defer func() { request.Course.SourcePath = oldSourcePath }();
+    request.Course.SourcePath = filepath.Join(os.DevNull, "course.json");
 
     apiErr = fillRequestSpecialFields(nil, &request, "");
     if (apiErr == nil) {
         test.Fatalf("Error not returned when users fetch failed.");
     }
 
-    expectedLocator := "-543";
+    expectedLocator := "-313";
     if (apiErr.Locator != expectedLocator) {
         test.Fatalf("Incorrect error locator when user fetch failed. Expcted '%s', found '%s'.",
                 expectedLocator, apiErr.Locator);
@@ -220,7 +220,7 @@ func TestGoodPostFiles(test *testing.T) {
         filepath.Join(config.COURSES_ROOT.GetString(), "files", "a.txt"),
     };
 
-    response := SendTestAPIRequestFull(test, endpoint, nil, paths);
+    response := SendTestAPIRequestFull(test, endpoint, nil, paths, usr.Admin);
     if (response.Content != nil) {
         test.Fatalf("Handler gave an error: '%s'.", response.Content);
     }
@@ -253,7 +253,7 @@ func TestBadPostFilesFieldNotExported(test *testing.T) {
         test.Fatalf("Struct with non-exported files does not return an error,");
     }
 
-    expectedLocator := "-551";
+    expectedLocator := "-314";
     if (apiErr.Locator != expectedLocator) {
         test.Fatalf("Struct with non-exported files does not return an error with the correct locator. Expcted '%s', found '%s'.",
                 expectedLocator, apiErr.Locator);
@@ -283,12 +283,12 @@ func TestBadPostFilesNoFiles(test *testing.T) {
     config.SetLogLevelFatal();
     defer config.SetLoggingLevel(oldLevel);
 
-    response := SendTestAPIRequestFull(test, endpoint, nil, paths);
+    response := SendTestAPIRequestFull(test, endpoint, nil, paths, usr.Admin);
     if (response.Success) {
         test.Fatalf("Request did not generate an error: '%v'.", response);
     }
 
-    expectedLocator := "-411";
+    expectedLocator := "-316";
     if (response.Locator != expectedLocator) {
         test.Fatalf("Error does not have the correct locator. Expcted '%s', found '%s'.",
                 expectedLocator, response.Locator);
@@ -324,12 +324,12 @@ func TestBadPostFilesStoreFail(test *testing.T) {
     util.SetTempDirForTesting(os.DevNull);
     defer util.SetTempDirForTesting("");
 
-    response := SendTestAPIRequestFull(test, endpoint, nil, paths);
+    response := SendTestAPIRequestFull(test, endpoint, nil, paths, usr.Admin);
     if (response.Success) {
         test.Fatalf("Request did not generate an error: '%v'.", response);
     }
 
-    expectedLocator := "-552";
+    expectedLocator := "-315";
     if (response.Locator != expectedLocator) {
         test.Fatalf("Error does not have the correct locator. Expcted '%s', found '%s'.",
                 expectedLocator, response.Locator);

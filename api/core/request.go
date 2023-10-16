@@ -53,8 +53,8 @@ type APIRequestCourseUserContext struct {
 
     // These fields are filled out as the request is parsed,
     // before being sent to the handler.
-    course *model.Course
-    user *usr.User
+    Course *model.Course
+    User *usr.User
 }
 
 //Context for requests that need an assignment on top of a user/course.
@@ -63,7 +63,7 @@ type APIRequestAssignmentContext struct {
 
     AssignmentID string `json:"assignment-id"`
 
-    assignment *model.Assignment
+    Assignment *model.Assignment
 }
 
 func (this *APIRequest) Validate(request any, endpoint string) *APIError {
@@ -86,34 +86,34 @@ func (this *APIRequestCourseUserContext) Validate(request any, endpoint string) 
     }
 
     if (this.CourseID == "") {
-        return NewBadRequestError("-421", &this.APIRequest, "No course ID specified.");
+        return NewBadRequestError("-301", &this.APIRequest, "No course ID specified.");
     }
 
     if (this.UserEmail == "") {
-        return NewBadRequestError("-422", &this.APIRequest, "No user email specified.");
+        return NewBadRequestError("-302", &this.APIRequest, "No user email specified.");
     }
 
     if (this.UserPass == "") {
-        return NewBadRequestError("-423", &this.APIRequest, "No user password specified.");
+        return NewBadRequestError("-303", &this.APIRequest, "No user password specified.");
     }
 
-    this.course = grader.GetCourse(this.CourseID);
-    if (this.course == nil) {
-        return NewBadRequestError("-424", &this.APIRequest, "Could not find course.").Add("course-id", this.CourseID);
+    this.Course = grader.GetCourse(this.CourseID);
+    if (this.Course == nil) {
+        return NewBadRequestError("-304", &this.APIRequest, "Could not find course.").Add("course-id", this.CourseID);
     }
 
-    this.user, apiErr = this.Auth();
+    this.User, apiErr = this.Auth();
     if (apiErr != nil) {
         return apiErr;
     }
 
     minRole, foundRole := getMaxRole(request);
     if (!foundRole) {
-        return NewInternalError("-561", this, "No role found for request. All request structs require a minimum role.");
+        return NewInternalError("-305", this, "No role found for request. All request structs require a minimum role.");
     }
 
-    if (this.user.Role < minRole) {
-        return NewBadPermissionsError("-425", this, minRole, "");
+    if (this.User.Role < minRole) {
+        return NewBadPermissionsError("-306", this, minRole, "Base API Request");
     }
 
     return nil;
@@ -127,12 +127,12 @@ func (this *APIRequestAssignmentContext) Validate(request any, endpoint string) 
     }
 
     if (this.AssignmentID == "") {
-        return NewBadRequestError("-431", &this.APIRequest, "No assignment ID specified.");
+        return NewBadRequestError("-307", &this.APIRequest, "No assignment ID specified.");
     }
 
-    this.assignment = this.course.Assignments[this.AssignmentID];
-    if (this.assignment == nil) {
-        return NewBadRequestError("-432", &this.APIRequest, "Could not find assignment.").
+    this.Assignment = this.Course.Assignments[this.AssignmentID];
+    if (this.Assignment == nil) {
+        return NewBadRequestError("-308", &this.APIRequest, "Could not find assignment.").
             Add("course-id", this.CourseID).Add("assignment-id", this.AssignmentID);
     }
 
@@ -144,7 +144,7 @@ func (this *APIRequestAssignmentContext) Validate(request any, endpoint string) 
 func ValidateAPIRequest(request *http.Request, apiRequest any, endpoint string) *APIError {
     reflectPointer := reflect.ValueOf(apiRequest);
     if (reflectPointer.Kind() != reflect.Pointer) {
-        return NewBareInternalError("-511", endpoint, "ValidateAPIRequest() must be called with a pointer.");
+        return NewBareInternalError("-309", endpoint, "ValidateAPIRequest() must be called with a pointer.");
     }
 
     // Ensure the request has an request type embedded, and validate it.
@@ -154,7 +154,7 @@ func ValidateAPIRequest(request *http.Request, apiRequest any, endpoint string) 
     }
 
     if (!foundRequestStruct) {
-        return NewBareInternalError("-512", endpoint, "Request is not any kind of known API request.");
+        return NewBareInternalError("-310", endpoint, "Request is not any kind of known API request.");
     }
 
     // Check for any special field types that we know how to populate.
@@ -255,20 +255,20 @@ func fillRequestCourseUsers(endpoint string, apiRequest any, fieldIndex int) *AP
 
     courseContextValue := reflectValue.FieldByName("APIRequestCourseUserContext");
     if (!courseContextValue.IsValid() || courseContextValue.IsZero()) {
-        return NewBareInternalError("-541", endpoint, "A request with CourseUsers must embed APIRequestCourseUserContext").
+        return NewBareInternalError("-311", endpoint, "A request with CourseUsers must embed APIRequestCourseUserContext").
                 Add("request", apiRequest).
                 Add("struct-name", structName).Add("field-name", fieldType.Name);
     }
     courseContext := courseContextValue.Interface().(APIRequestCourseUserContext);
 
     if (!fieldType.IsExported()) {
-        return NewInternalError("-542", &courseContext, "A CourseUsers field must be exported.").
+        return NewInternalError("-312", &courseContext, "A CourseUsers field must be exported.").
                 Add("struct-name", structName).Add("field-name", fieldType.Name);
     }
 
-    users, err := courseContext.course.GetUsers();
+    users, err := courseContext.Course.GetUsers();
     if (err != nil) {
-        return NewInternalError("-543", &courseContext, "Failed to fetch embeded users.").Err(err).
+        return NewInternalError("-313", &courseContext, "Failed to fetch embeded users.").Err(err).
                 Add("struct-name", structName).Add("field-name", fieldType.Name);
     }
 
@@ -286,19 +286,19 @@ func fillRequestPostFiles(request *http.Request, endpoint string, apiRequest any
     fieldType := reflectValue.Type().Field(fieldIndex);
 
     if (!fieldType.IsExported()) {
-        return NewBareInternalError("-551", endpoint, "A POSTFiles field must be exported.").
+        return NewBareInternalError("-314", endpoint, "A POSTFiles field must be exported.").
                 Add("struct-name", structName).Add("field-name", fieldType.Name);
     }
 
     postFiles, err := storeRequestFiles(request);
 
     if (err != nil) {
-        return NewBareInternalError("-552", endpoint, "Failed to store files from POST.").Err(err).
+        return NewBareInternalError("-315", endpoint, "Failed to store files from POST.").Err(err).
                 Add("struct-name", structName).Add("field-name", fieldType.Name);
     }
 
     if (postFiles == nil) {
-        return NewBareBadRequestError("-411", endpoint, "Endpoint requires files to be provided in POST body, no files found.").
+        return NewBareBadRequestError("-316", endpoint, "Endpoint requires files to be provided in POST body, no files found.").
                 Add("struct-name", structName).Add("field-name", fieldType.Name);
     }
 

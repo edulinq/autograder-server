@@ -33,6 +33,13 @@ func JSONFromFile(path string, target any) error {
     return nil;
 }
 
+func MustJSONFromString(data string, target any) {
+    err := JSONFromString(data, target);
+    if (err != nil) {
+        log.Fatal().Err(err).Any("data", data).Msg("Failed to convert JSON to object.");
+    }
+}
+
 func JSONFromString(data string, target any) error {
     err := json.Unmarshal([]byte(data), target);
     if (err != nil) {

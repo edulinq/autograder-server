@@ -161,7 +161,7 @@ func NewBadPermissionsError(locator string, request *APIRequestCourseUserContext
     err.Add("course", request.CourseID);
     err.Add("email", request.UserEmail);
 
-    err.Add("actual-role", request.user.Role);
+    err.Add("actual-role", request.User.Role);
     err.Add("min-required-role", minRole);
 
     return err;

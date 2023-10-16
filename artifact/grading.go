@@ -28,6 +28,16 @@ func (this GradedAssignment) String() string {
     return util.BaseString(this);
 }
 
+func (this GradedAssignment) Score() float64 {
+    score := 0.0;
+
+    for _, question := range this.Questions {
+        score += question.Score;
+    }
+
+    return score;
+}
+
 func (this GradedAssignment) Equals(other GradedAssignment, checkMessages bool) bool {
     if (this.Name != other.Name) {
         return false;

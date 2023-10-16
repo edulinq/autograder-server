@@ -11,13 +11,13 @@ import (
 // If any error is retuturned, then the request should end and the response sent based on the error.
 // This assumes basic validation has already been done on the request.
 func (this *APIRequestCourseUserContext) Auth() (*usr.User, *APIError) {
-    user, err := this.course.GetUser(this.UserEmail);
+    user, err := this.Course.GetUser(this.UserEmail);
     if (err != nil) {
-        return nil, NewAuthBadRequestError("-441", this, "Cannot Get User").Err(err);
+        return nil, NewAuthBadRequestError("-201", this, "Cannot Get User").Err(err);
     }
 
     if (user == nil) {
-        return nil, NewAuthBadRequestError("-442", this, "Unknown User");
+        return nil, NewAuthBadRequestError("-202", this, "Unknown User");
     }
 
     if (config.NO_AUTH.GetBool()) {
@@ -26,7 +26,7 @@ func (this *APIRequestCourseUserContext) Auth() (*usr.User, *APIError) {
     }
 
     if (!user.CheckPassword(this.UserPass)) {
-        return nil, NewAuthBadRequestError("-443", this, "Bad Password");
+        return nil, NewAuthBadRequestError("-203", this, "Bad Password");
     }
 
     return user, nil;

@@ -112,7 +112,7 @@ func NewAPIRoute(pattern string, apiHandler any) *Route {
 
             log.Error().Any("value", value).Str("endpoint", request.URL.Path).
                     Msg("Recovered from a panic when handling an API endpoint.");
-            apiErr := NewBareInternalError("-501", request.URL.Path, "Recovered from a panic when handling an API endpoint.").
+            apiErr := NewBareInternalError("-101", request.URL.Path, "Recovered from a panic when handling an API endpoint.").
                     Add("value", value);
 
             err = sendAPIResponse(nil, response, nil, apiErr, false);
@@ -171,7 +171,7 @@ func sendAPIResponse(apiRequest ValidAPIRequest, response http.ResponseWriter,
 
     payload, err := util.ToJSON(apiResponse);
     if (err != nil) {
-        apiErr = NewBareInternalError("-531", "", "Could not serialize API response.").Err(err);
+        apiErr = NewBareInternalError("-102", "", "Could not serialize API response.").Err(err);
         apiResponse = apiErr.ToResponse();
 
         if (hardFail) {
@@ -210,7 +210,7 @@ func createAPIRequest(request *http.Request, apiHandler ValidAPIHandler) (ValidA
     if (strings.Contains(strings.Join(request.Header["Content-Type"], " "), "multipart/form-data")) {
         err := request.ParseMultipartForm(MAX_FORM_MEM_SIZE_BYTES);
         if (err != nil) {
-            return nil, NewBareBadRequestError("-401", endpoint,
+            return nil, NewBareBadRequestError("-103", endpoint,
                     fmt.Sprintf("POST request is improperly formatted.")).
                     Err(err);
         }
@@ -219,14 +219,14 @@ func createAPIRequest(request *http.Request, apiHandler ValidAPIHandler) (ValidA
     // Get the text from the POST.
     textContent := request.PostFormValue(API_REQUEST_CONTENT_KEY);
     if (textContent == "") {
-        return nil, NewBareBadRequestError("-402", endpoint,
+        return nil, NewBareBadRequestError("-104", endpoint,
                 fmt.Sprintf("JSON payload for POST form key '%s' is empty.", API_REQUEST_CONTENT_KEY));
     }
 
     // Unmarshal the JSON.
     err := util.JSONFromString(textContent, apiRequest);
     if (err != nil) {
-        return nil, NewBareBadRequestError("-403", endpoint,
+        return nil, NewBareBadRequestError("-105", endpoint,
                 fmt.Sprintf("JSON payload for POST form key '%s' is not valid JSON.", API_REQUEST_CONTENT_KEY)).
                 Err(err);
     }
@@ -267,39 +267,39 @@ func validateAPIHandler(endpoint string, apiHandler any) (ValidAPIHandler, *APIE
     reflectType := reflect.TypeOf(apiHandler);
 
     if (reflectValue.Kind() != reflect.Func) {
-        return nil, NewBareInternalError("-521", endpoint, "API handler is not a function.").
+        return nil, NewBareInternalError("-106", endpoint, "API handler is not a function.").
                 Add("kind", reflectValue.Kind().String());
     }
 
     funcInfo := getFuncInfo(apiHandler);
 
     if (reflectType.NumIn() != 1) {
-        return nil, NewBareInternalError("-522", endpoint, "API handler does not have exactly 1 argument.").
+        return nil, NewBareInternalError("-107", endpoint, "API handler does not have exactly 1 argument.").
                 Add("num-in", reflectType.NumIn()).
                 Add("function-info", funcInfo);
     }
     argumentType := reflectType.In(0);
 
     if (argumentType.Kind() != reflect.Pointer) {
-        return nil, NewBareInternalError("-523", endpoint, "API handler's argument is not a pointer.").
+        return nil, NewBareInternalError("-108", endpoint, "API handler's argument is not a pointer.").
                 Add("kind", argumentType.Kind().String()).
                 Add("function-info", funcInfo);
     }
 
     if (reflectType.NumOut() != 2) {
-        return nil, NewBareInternalError("-524", endpoint, "API handler does not return exactly 2 arguments.").
+        return nil, NewBareInternalError("-109", endpoint, "API handler does not return exactly 2 arguments.").
                 Add("num-out", reflectType.NumOut()).
                 Add("function-info", funcInfo);
     }
 
     if (reflectType.Out(0).Kind() != reflect.Pointer) {
-        return nil, NewBareInternalError("-525", endpoint, "API handler's first return value is not a pointer.").
+        return nil, NewBareInternalError("-110", endpoint, "API handler's first return value is not a pointer.").
                 Add("kind", reflectType.Out(0).Kind().String()).
                 Add("function-info", funcInfo);
     }
 
     if (reflectType.Out(1) != reflect.TypeOf((*APIError)(nil))) {
-        return nil, NewBareInternalError("-526", endpoint, "API handler's second return value is a *APIError.").
+        return nil, NewBareInternalError("-111", endpoint, "API handler's second return value is a *APIError.").
                 Add("type", reflectType.Out(1).String()).
                 Add("function-info", funcInfo);
     }

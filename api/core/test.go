@@ -8,6 +8,7 @@ import (
 
     "github.com/eriq-augustine/autograder/config"
     "github.com/eriq-augustine/autograder/grader"
+    "github.com/eriq-augustine/autograder/usr"
     "github.com/eriq-augustine/autograder/util"
 )
 
@@ -49,20 +50,25 @@ func APITestingMain(suite *testing.M, routes *[]*Route) {
     os.Exit(suite.Run())
 }
 
+func SendTestAPIRequest(test *testing.T, endpoint string, fields map[string]any) *APIResponse {
+    return SendTestAPIRequestFull(test, endpoint, fields, nil, usr.Admin);
+}
+
 // Make a request to the test server using fields for
 // a standard test request plus whatever other fields are specified.
 // Provided fields will override base fields.
-func SendTestAPIRequest(test *testing.T, endpoint string, fields map[string]any) *APIResponse {
-    return SendTestAPIRequestFull(test, endpoint, fields, nil);
-}
-
-func SendTestAPIRequestFull(test *testing.T, endpoint string, fields map[string]any, paths []string) *APIResponse {
+// The given role will choose the user (the test course has one user per role).
+func SendTestAPIRequestFull(test *testing.T, endpoint string, fields map[string]any, paths []string, role usr.UserRole) *APIResponse {
     url := serverURL + endpoint;
+
+    email := usr.GetRoleString(role) + "@test.com";
+    pass := util.Sha256HexFromString(usr.GetRoleString(role));
 
     content := map[string]any{
         "course-id": "COURSE101",
-        "user-email": "admin@test.com",
-        "user-pass": util.Sha256HexFromString("admin"),
+        "assignment-id": "hw0",
+        "user-email": email,
+        "user-pass": pass,
     };
 
     for key, value := range fields {
