@@ -114,7 +114,7 @@ func TestBadCourseUsersFieldNotExported(test *testing.T) {
 
     request := badCourseUsersNonExported{
         APIRequestCourseUserContext: APIRequestCourseUserContext{
-            CourseID: "COURSE101",
+            CourseID: "course101",
             UserEmail: "student@test.com",
             UserPass: studentPass,
         },
@@ -142,7 +142,7 @@ func TestBadCourseUsersFieldFailGetUsers(test *testing.T) {
 
     request := goodCourseUsers{
         APIRequestCourseUserContext: APIRequestCourseUserContext{
-            CourseID: "COURSE101",
+            CourseID: "course101",
             UserEmail: "student@test.com",
             UserPass: studentPass,
         },
@@ -242,7 +242,7 @@ func TestBadPostFilesFieldNotExported(test *testing.T) {
 
     request := badRequestType{
         APIRequestCourseUserContext: APIRequestCourseUserContext{
-            CourseID: "COURSE101",
+            CourseID: "course101",
             UserEmail: "student@test.com",
             UserPass: studentPass,
         },
@@ -395,7 +395,7 @@ var studentPass string = util.Sha256HexFromString("student");
 
 var validBaseAPIRequestTestCases []baseAPIRequestTestCase = []baseAPIRequestTestCase{
     baseAPIRequestTestCase{
-        Payload: fmt.Sprintf(`{"course-id": "COURSE101", "assignment-id": "hw0", "user-email": "student@test.com", "user-pass": "%s"}`, studentPass),
+        Payload: fmt.Sprintf(`{"course-id": "course101", "assignment-id": "hw0", "user-email": "student@test.com", "user-pass": "%s"}`, studentPass),
         testValues: testValues{A: "", B: 0},
     },
 };
@@ -403,17 +403,17 @@ var validBaseAPIRequestTestCases []baseAPIRequestTestCase = []baseAPIRequestTest
 var invalidBaseAPIRequestTestCases []baseAPIRequestTestCase = []baseAPIRequestTestCase{
     baseAPIRequestTestCase{Payload: "{}"},
     baseAPIRequestTestCase{Payload: fmt.Sprintf(`{"assignment-id": "hw0", "user-email": "student@test.com", "user-pass": "%s"}`, studentPass)},
-    baseAPIRequestTestCase{Payload: fmt.Sprintf(`{"course-id": "COURSE101", "user-email": "student@test.com", "user-pass": "%s"}`, studentPass)},
-    baseAPIRequestTestCase{Payload: fmt.Sprintf(`{"course-id": "COURSE101", "assignment-id": "hw0", "user-pass": "%s"}`, studentPass)},
-    baseAPIRequestTestCase{Payload: `{"course-id": "COURSE101", "assignment-id": "hw0", "user-email": "student@test.com"}`},
+    baseAPIRequestTestCase{Payload: fmt.Sprintf(`{"course-id": "course101", "user-email": "student@test.com", "user-pass": "%s"}`, studentPass)},
+    baseAPIRequestTestCase{Payload: fmt.Sprintf(`{"course-id": "course101", "assignment-id": "hw0", "user-pass": "%s"}`, studentPass)},
+    baseAPIRequestTestCase{Payload: `{"course-id": "course101", "assignment-id": "hw0", "user-email": "student@test.com"}`},
 };
 
 var invalidJSONTestCases []baseAPIRequestTestCase = []baseAPIRequestTestCase{
     baseAPIRequestTestCase{Payload: ""},
     baseAPIRequestTestCase{Payload: "{"},
-    baseAPIRequestTestCase{Payload: `{course-id": "COURSE101", "assignment-id": "hw0"}`},
-    baseAPIRequestTestCase{Payload: `{course-id: "COURSE101", "assignment-id": "hw0"}`},
-    baseAPIRequestTestCase{Payload: `{"course-id": COURSE101, "assignment-id": "hw0"}`},
-    baseAPIRequestTestCase{Payload: `{"course-id": "COURSE101" "assignment-id": "hw0"}`},
-    baseAPIRequestTestCase{Payload: `{"course-id": "COURSE101", "assignment-id": "hw0}`},
+    baseAPIRequestTestCase{Payload: `{course-id": "course101", "assignment-id": "hw0"}`},
+    baseAPIRequestTestCase{Payload: `{course-id: "course101", "assignment-id": "hw0"}`},
+    baseAPIRequestTestCase{Payload: `{"course-id": course101, "assignment-id": "hw0"}`},
+    baseAPIRequestTestCase{Payload: `{"course-id": "course101" "assignment-id": "hw0"}`},
+    baseAPIRequestTestCase{Payload: `{"course-id": "course101", "assignment-id": "hw0}`},
 };

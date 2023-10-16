@@ -51,7 +51,7 @@ func TestAuth(test *testing.T) {
     for i, testCase := range testCases {
         request := baseAPIRequest{
             APIRequestCourseUserContext: APIRequestCourseUserContext{
-                CourseID: "COURSE101",
+                CourseID: "course101",
                 UserEmail: testCase.email,
                 UserPass: util.Sha256HexFromString(testCase.pass),
             },

@@ -65,7 +65,7 @@ func SendTestAPIRequestFull(test *testing.T, endpoint string, fields map[string]
     pass := util.Sha256HexFromString(usr.GetRoleString(role));
 
     content := map[string]any{
-        "course-id": "COURSE101",
+        "course-id": "course101",
         "assignment-id": "hw0",
         "user-email": email,
         "user-pass": pass,

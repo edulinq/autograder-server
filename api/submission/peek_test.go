@@ -30,9 +30,9 @@ func TestPeek(test *testing.T) {
         {usr.Grader, "student@test.com", "1697406272", 2.0, false},
 
         // Grader, other, specific (full ID).
-        {usr.Grader, "student@test.com", "COURSE101::hw0::student@test.com::1697406256", 0.0, false},
-        {usr.Grader, "student@test.com", "COURSE101::hw0::student@test.com::1697406265", 1.0, false},
-        {usr.Grader, "student@test.com", "COURSE101::hw0::student@test.com::1697406272", 2.0, false},
+        {usr.Grader, "student@test.com", "course101::hw0::student@test.com::1697406256", 0.0, false},
+        {usr.Grader, "student@test.com", "course101::hw0::student@test.com::1697406265", 1.0, false},
+        {usr.Grader, "student@test.com", "course101::hw0::student@test.com::1697406272", 2.0, false},
 
         // Grader, other, missing.
         {usr.Grader, "student@test.com", "ZZZ", -1.0, false},
