@@ -20,7 +20,7 @@ var args struct {
 
 func main() {
     kong.Parse(&args,
-        kong.Description("Fetch the grades for a specific assignment from canvas."),
+        kong.Description("Compile a report on the current scores in the autograder for an assignment."),
     );
 
     err := config.HandleConfigArgs(args.ConfigArgs);

@@ -2,7 +2,6 @@ package lms
 
 import (
     "github.com/eriq-augustine/autograder/api/core"
-    "github.com/eriq-augustine/autograder/canvas"
 )
 
 // TEST - Write tests once the LMS abstraction is complete.
@@ -22,7 +21,7 @@ type UserGetResponse struct {
 }
 
 func HandleUserGet(request *UserGetRequest) (*UserGetResponse, *core.APIError) {
-    if (request.Course.CanvasInstanceInfo == nil) {
+    if (request.Course.LMSAdapter == nil) {
         return nil, core.NewBadRequestError("-501", &request.APIRequest, "Course is not linked to an LMS.").
                 Add("course", request.Course.ID);
     }
@@ -37,10 +36,10 @@ func HandleUserGet(request *UserGetRequest) (*UserGetResponse, *core.APIError) {
     response.FoundAGUser = true;
     response.User = core.NewUserInfo(user);
 
-    lmsUser, err := canvas.FetchUser(request.Course.CanvasInstanceInfo, string(request.TargetEmail));
+    lmsUser, err := request.Course.LMSAdapter.FetchUser(string(request.TargetEmail));
     if (err != nil) {
         return nil, core.NewInternalError("-502", &request.APIRequestCourseUserContext,
-                "Failed to fetch canvas user.").Err(err).Add("email", string(request.TargetEmail));
+                "Failed to fetch LMS user.").Err(err).Add("email", string(request.TargetEmail));
     }
 
     if (lmsUser == nil) {

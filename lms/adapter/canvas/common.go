@@ -4,35 +4,40 @@ import (
     "fmt"
     "strings"
     "sync"
+    "time"
 )
 
 const (
-    PAGE_SIZE = 75
-    HEADER_LINK = "Link";
+    PAGE_SIZE int = 75
+    POST_PAGE_SIZE int = 75;
+    HEADER_LINK string = "Link";
+    UPLOAD_SLEEP_TIME_SEC = int64(0.5 * float64(time.Second));
 )
 
+// Lock for each API token being used.
+// Note that it is possible to have multiple adapters with the same token.
 // {string: *sync.Mutex}.
 var apiLocks sync.Map;
 
-func getAPILock(canvasInfo *CanvasInstanceInfo) {
-    ensureAPILock(canvasInfo);
-    lock, _ := apiLocks.Load(canvasInfo.APIToken);
+func (this *CanvasAdapter) getAPILock() {
+    this.ensureAPILock();
+    lock, _ := apiLocks.Load(this.APIToken);
     lock.(*sync.Mutex).Lock();
 }
 
-func releaseAPILock(canvasInfo *CanvasInstanceInfo) {
-    ensureAPILock(canvasInfo);
-    lock, _ := apiLocks.Load(canvasInfo.APIToken);
+func (this *CanvasAdapter) releaseAPILock() {
+    this.ensureAPILock();
+    lock, _ := apiLocks.Load(this.APIToken);
     lock.(*sync.Mutex).Unlock();
 }
 
-func ensureAPILock(canvasInfo *CanvasInstanceInfo) {
-    apiLocks.LoadOrStore(canvasInfo.APIToken, &sync.Mutex{});
+func (this *CanvasAdapter) ensureAPILock() {
+    apiLocks.LoadOrStore(this.APIToken, &sync.Mutex{});
 }
 
-func standardHeaders(canvasInfo *CanvasInstanceInfo) map[string][]string {
+func (this *CanvasAdapter) standardHeaders() map[string][]string {
     return map[string][]string{
-        "Authorization": []string{fmt.Sprintf("Bearer %s", canvasInfo.APIToken)},
+        "Authorization": []string{fmt.Sprintf("Bearer %s", this.APIToken)},
         "Accept": []string{"application/json+canvas-string-ids"},
     };
 }

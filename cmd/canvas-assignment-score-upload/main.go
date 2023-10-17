@@ -27,8 +27,8 @@ func main() {
     }
 
     assignment := model.MustLoadAssignmentConfig(args.AssignmentPath);
-    if (assignment.CanvasID == "") {
-        log.Fatal().Msg("Assignment has no Canvas ID.");
+    if (assignment.LMSID == "") {
+        log.Fatal().Msg("Assignment has no LMS ID.");
     }
 
     err = assignment.FullScoringAndUpload(args.DryRun);

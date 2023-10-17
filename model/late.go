@@ -9,8 +9,8 @@ import (
     "github.com/rs/zerolog/log"
 
     "github.com/eriq-augustine/autograder/artifact"
-    "github.com/eriq-augustine/autograder/canvas"
     "github.com/eriq-augustine/autograder/common"
+    "github.com/eriq-augustine/autograder/lms"
     "github.com/eriq-augustine/autograder/usr"
     "github.com/eriq-augustine/autograder/util"
 )
@@ -37,7 +37,7 @@ type LateGradingPolicy struct {
     RejectAfterDays int `json:"reject-after-days"`
 
     MaxLateDays int `json:"max-late-days"`
-    LateDaysCanvasID string `json:"late-days-canvas-id"`
+    LateDaysLMSID string `json:"late-days-lms-id"`
 }
 
 type LateDaysInfo struct {
@@ -47,9 +47,9 @@ type LateDaysInfo struct {
 
     // A distinct key so we can recognize this as an autograder object.
     Autograder int `json:"__autograder__v01__"`
-    // If this object was serialized from a Canvas comment, keep the ID.
-    CanvasCommentID string `json:"-"`
-    CanvasCommentAuthorID string `json:"-"`
+    // If this object was serialized from an LMS comment, keep the ID.
+    LMSCommentID string `json:"-"`
+    LMSCommentAuthorID string `json:"-"`
 }
 
 func (this *LateGradingPolicy) Validate() error {
@@ -79,8 +79,8 @@ func (this *LateGradingPolicy) Validate() error {
                 return fmt.Errorf("Policy '%s': max late days must be in [1, <reject days>(%d)], found '%d'.", this.Type, this.RejectAfterDays, this.MaxLateDays);
             }
 
-            if (this.LateDaysCanvasID == "") {
-                return fmt.Errorf("Policy '%s': Canvas ID for late days assignment cannot be empty.", this.Type);
+            if (this.LateDaysLMSID == "") {
+                return fmt.Errorf("Policy '%s': LMS ID for late days assignment cannot be empty.", this.Type);
             }
         default:
             return fmt.Errorf("Unknown late policy type: '%s'.", this.Type);
@@ -89,7 +89,7 @@ func (this *LateGradingPolicy) Validate() error {
     return nil;
 }
 
-// This assumes that all assignments are in canvas.
+// This assumes that all assignments are in the LMS.
 func (this *LateGradingPolicy) Apply(
         assignment *Assignment,
         users map[string]*usr.User,
@@ -105,17 +105,16 @@ func (this *LateGradingPolicy) Apply(
         return nil;
     }
 
-    canvasAssignment, err := canvas.FetchAssignment(assignment.Course.CanvasInstanceInfo, assignment.CanvasID);
+    lmsAssignment, err := assignment.Course.LMSAdapter.FetchAssignment(assignment.LMSID);
     if (err != nil) {
         return err;
     }
 
-    dueDate, err := time.Parse(time.RFC3339, canvasAssignment.DueDate);
-    if (err != nil) {
-        return fmt.Errorf("Failed to parse canvas due date '%s': '%w'.", canvasAssignment.DueDate, err);
+    if (lmsAssignment.DueDate == nil) {
+        return fmt.Errorf("Assignment does not have a due date.");
     }
 
-    this.applyBaselinePolicy(users, scores, dueDate);
+    this.applyBaselinePolicy(users, scores, *lmsAssignment.DueDate);
 
     // Baseline policy is complete.
     if (this.Type == BaselinePolicy) {
@@ -125,7 +124,7 @@ func (this *LateGradingPolicy) Apply(
     if ((this.Type == ConstantPenalty) || (this.Type == PercentagePenalty)) {
         penalty := this.Penalty;
         if (this.Type == PercentagePenalty) {
-            penalty = canvasAssignment.MaxPoints * this.Penalty;
+            penalty = lmsAssignment.MaxPoints * this.Penalty;
         }
 
         this.applyConstantPolicy(scores, penalty);
@@ -133,7 +132,7 @@ func (this *LateGradingPolicy) Apply(
     }
 
     if (this.Type == LateDays) {
-        penalty := canvasAssignment.MaxPoints * this.Penalty;
+        penalty := lmsAssignment.MaxPoints * this.Penalty;
         err = this.applyLateDaysPolicy(assignment, users, scores, penalty, dryRun);
         if (err != nil) {
             return fmt.Errorf("Failed to apply late days policy: '%w'.", err);
@@ -191,16 +190,16 @@ func (this *LateGradingPolicy) applyLateDaysPolicy(
             continue;
         }
 
-        studentCanvasID := users[email].CanvasID;
-        if (studentCanvasID == "") {
-            log.Warn().Str("user", email).Msg("User does not have Canvas ID, cannot appply late days policy. Rejecting submission.");
+        studentLMSID := users[email].LMSID;
+        if (studentLMSID == "") {
+            log.Warn().Str("user", email).Msg("User does not have am LMS ID, cannot appply late days policy. Rejecting submission.");
             scoringInfo.Reject = true;
             continue;
         }
 
-        lateDays := allLateDays[studentCanvasID];
+        lateDays := allLateDays[studentLMSID];
         if (lateDays == nil) {
-            log.Warn().Str("user", email).Str("canvas-id", studentCanvasID).Msg(
+            log.Warn().Str("user", email).Str("lms-id", studentLMSID).Msg(
                     "Cannot find user late days, cannot appply late days policy. Rejecting submission.");
             scoringInfo.Reject = true;
             continue;
@@ -235,13 +234,13 @@ func (this *LateGradingPolicy) applyLateDaysPolicy(
         scoringInfo.Score = math.Max(0.0, scoringInfo.RawScore - (penalty * float64(remainingDaysLate)));
 
         // Check if the number of allocated late days has changed.
-        // If so, we need to update the late days in canvas.
+        // If so, we need to update the late days in the LMS.
         if (allocatedDays != lateDaysToUse) {
             lateDays.AvailableDays = lateDaysAvailable - lateDaysToUse;
             lateDays.AllocatedDays[assignment.ID] = lateDaysToUse;
             lateDays.UploadTime = time.Now();
 
-            lateDaysToUpdate[studentCanvasID] = lateDays;
+            lateDaysToUpdate[studentLMSID] = lateDays;
         }
     }
 
@@ -255,18 +254,18 @@ func (this *LateGradingPolicy) applyLateDaysPolicy(
 
 func (this *LateGradingPolicy) updateLateDays(assignment *Assignment, lateDaysToUpdate map[string]*LateDaysInfo, dryRun bool) error {
     // Update late days.
-    // Info that does NOT have a CanvasCommentID will get the autograder comment added in.
-    grades := make([]*canvas.CanvasGradeInfo, 0, len(lateDaysToUpdate));
-    for canvasUser, lateInfo := range lateDaysToUpdate {
-        uploadComments := make([]canvas.CanvasSubmissionComment, 0);
-        if (lateInfo.CanvasCommentID == "") {
-            uploadComments = append(uploadComments, canvas.CanvasSubmissionComment{
+    // Info that does NOT have a LMSCommentID will get the autograder comment added in.
+    grades := make([]*lms.SubmissionScore, 0, len(lateDaysToUpdate));
+    for lmsUserID, lateInfo := range lateDaysToUpdate {
+        uploadComments := make([]*lms.SubmissionComment, 0);
+        if (lateInfo.LMSCommentID == "") {
+            uploadComments = append(uploadComments, &lms.SubmissionComment{
                 Text: util.MustToJSON(lateInfo),
             });
         }
 
-        gradeInfo := canvas.CanvasGradeInfo{
-            UserID: canvasUser,
+        gradeInfo := lms.SubmissionScore{
+            UserID: lmsUserID,
             Score: float64(lateInfo.AvailableDays),
             Time: lateInfo.UploadTime,
             Comments: uploadComments,
@@ -278,22 +277,22 @@ func (this *LateGradingPolicy) updateLateDays(assignment *Assignment, lateDaysTo
     if (dryRun) {
         log.Info().Str("assignment", assignment.ID).Any("grades", grades).Msg("Dry Run: Skipping upload of late days.");
     } else {
-        err := canvas.UpdateAssignmentGrades(assignment.Course.CanvasInstanceInfo, this.LateDaysCanvasID, grades);
+        err := assignment.Course.LMSAdapter.UpdateAssignmentScores(this.LateDaysLMSID, grades);
         if (err != nil) {
             return fmt.Errorf("Failed to upload late days: '%w'.", err);
         }
     }
 
-    // Update late days comment for info that has a CanvasCommentID.
-    comments := make([]*canvas.CanvasSubmissionComment, 0, len(lateDaysToUpdate));
+    // Update late days comment for info that has a LMSCommentID.
+    comments := make([]*lms.SubmissionComment, 0, len(lateDaysToUpdate));
     for _, lateInfo := range lateDaysToUpdate {
-        if (lateInfo.CanvasCommentID == "") {
+        if (lateInfo.LMSCommentID == "") {
             continue;
         }
 
-        comments = append(comments, &canvas.CanvasSubmissionComment{
-            ID: lateInfo.CanvasCommentID,
-            Author: lateInfo.CanvasCommentAuthorID,
+        comments = append(comments, &lms.SubmissionComment{
+            ID: lateInfo.LMSCommentID,
+            Author: lateInfo.LMSCommentAuthorID,
             Text: util.MustToJSON(lateInfo),
         });
     }
@@ -301,7 +300,7 @@ func (this *LateGradingPolicy) updateLateDays(assignment *Assignment, lateDaysTo
     if (dryRun) {
         log.Info().Str("assignment", assignment.ID).Any("comments", comments).Msg("Dry Run: Skipping update of late day comments.");
     } else {
-        err := canvas.UpdateComments(assignment.Course.CanvasInstanceInfo, this.LateDaysCanvasID, comments);
+        err := assignment.Course.LMSAdapter.UpdateComments(this.LateDaysLMSID, comments);
         if (err != nil) {
             return fmt.Errorf("Failed to update late days comments: '%w'.", err);
         }
@@ -311,41 +310,41 @@ func (this *LateGradingPolicy) updateLateDays(assignment *Assignment, lateDaysTo
 }
 
 func (this *LateGradingPolicy) fetchLateDays(assignment *Assignment) (map[string]*LateDaysInfo, error) {
-    // Fetch available late days from canvas.
-    canvasLateDays, err := canvas.FetchAssignmentGrades(assignment.Course.CanvasInstanceInfo, this.LateDaysCanvasID);
+    // Fetch available late days from the LMS.
+    lmsLateDaysScores, err := assignment.Course.LMSAdapter.FetchAssignmentScores(this.LateDaysLMSID);
     if (err != nil) {
-        return nil, fmt.Errorf("Failed to fetch late days assignment (%s): '%w'.", this.LateDaysCanvasID, err);
+        return nil, fmt.Errorf("Failed to fetch late days assignment (%s): '%w'.", this.LateDaysLMSID, err);
     }
 
     lateDays := make(map[string]*LateDaysInfo);
 
     // Parse out the full late days information.
-    for _, canvasLateDayInfo := range canvasLateDays {
+    for _, lmsLateDaysScore := range lmsLateDaysScores {
         var info LateDaysInfo;
         foundComment := false;
 
         // First check the comments for already submitted info.
-        for _, comment := range canvasLateDayInfo.Comments {
+        for _, comment := range lmsLateDaysScore.Comments {
             text := strings.ToLower(comment.Text);
-            if (strings.Contains(text, canvas.LOCK_COMMENT)) {
+            if (strings.Contains(text, LOCK_COMMENT)) {
                 return nil, fmt.Errorf(
                         "Late days assignment '%s' for user '%s' has a lock comment. Resolve this lock to allow for grading.",
-                        this.LateDaysCanvasID, canvasLateDayInfo.UserID);
+                        this.LateDaysLMSID, lmsLateDaysScore.UserID);
             } else if (strings.Contains(text, common.AUTOGRADER_COMMENT_IDENTITY_KEY)) {
                 err = util.JSONFromString(comment.Text, &info);
                 if (err != nil) {
                     return nil, fmt.Errorf(
-                            "Could not unmarshall Canvas comment %s (%s) into a late days info: '%w'.",
+                            "Could not unmarshall LSM comment %s (%s) into a late days info: '%w'.",
                             comment.ID, comment.Text, err);
                 }
-                info.CanvasCommentID = comment.ID;
-                info.CanvasCommentAuthorID = comment.Author;
+                info.LMSCommentID = comment.ID;
+                info.LMSCommentAuthorID = comment.Author;
 
                 foundComment = true;
             }
         }
 
-        postedLateDays := int(math.Round(canvasLateDayInfo.Score));
+        postedLateDays := int(math.Round(lmsLateDaysScore.Score));
 
         if (foundComment) {
             if (info.AvailableDays != postedLateDays) {
@@ -358,7 +357,7 @@ func (this *LateGradingPolicy) fetchLateDays(assignment *Assignment) (map[string
         info.AvailableDays = postedLateDays;
         info.UploadTime = time.Now();
 
-        lateDays[canvasLateDayInfo.UserID] = &info;
+        lateDays[lmsLateDaysScore.UserID] = &info;
     }
 
     return lateDays, nil;

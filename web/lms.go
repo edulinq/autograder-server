@@ -7,46 +7,46 @@ import (
 
     "github.com/rs/zerolog/log"
 
-    "github.com/eriq-augustine/autograder/canvas"
     "github.com/eriq-augustine/autograder/grader"
+    "github.com/eriq-augustine/autograder/lms"
     "github.com/eriq-augustine/autograder/usr"
 )
 
-var MIN_ROLE_CANVAS_SYNC_USERS usr.UserRole = usr.Admin;
-var MIN_ROLE_CANVAS_UPLOAD_SCORES usr.UserRole = usr.Grader;
+var MIN_ROLE_LMS_SYNC_USERS usr.UserRole = usr.Admin;
+var MIN_ROLE_LMS_UPLOAD_SCORES usr.UserRole = usr.Grader;
 
 // Requests
 
-type CanvasSyncUsersRequest struct {
+type LMSSyncUsersRequest struct {
     BaseAPIRequest
 }
 
-type CanvasScoresUploadRequest struct {
+type LMSScoresUploadRequest struct {
     BaseAPIRequest
-    AssignmentCanvasID string `json:"assignment-id"`
+    AssignmentLMSID string `json:"assignment-id"`
     Scores [][]string `json:"scores"`
 }
 
 // Responses
 
-type CanvasSyncUsersResponse struct {
+type LMSSyncUsersResponse struct {
     Success bool `json:"success"`
     Count int `json:"count"`
 }
 
-type CanvasScoresUploadResponse struct {
+type LMSScoresUploadResponse struct {
     Success bool `json:"success"`
     Count int `json:"count"`
     ErrorCount int `json:"error-count"`
     UnrecognizedUsers []string `json:"unrecognized-users"`
-    NoCanvasIDUsers []string `json:"no-canvas-id-users"`
+    NoLMSIDUsers []string `json:"no-lms-id-users"`
     BadScores []string `json:"bad-scores"`
 }
 
 // Constructors
 
-func NewCanvasSyncUsersRequest(request *http.Request) (*CanvasSyncUsersRequest, *APIResponse, error) {
-    var apiRequest CanvasSyncUsersRequest;
+func NewLMSSyncUsersRequest(request *http.Request) (*LMSSyncUsersRequest, *APIResponse, error) {
+    var apiRequest LMSSyncUsersRequest;
     err := APIRequestFromPOST(&apiRequest, request);
     if (err != nil) {
         return nil, nil, err;
@@ -64,20 +64,20 @@ func NewCanvasSyncUsersRequest(request *http.Request) (*CanvasSyncUsersRequest, 
         return nil, NewResponse(http.StatusUnauthorized, "Failed to authenticate."), nil;
     }
 
-    if ((user != nil) && (user.Role < MIN_ROLE_CANVAS_SYNC_USERS)) {
+    if ((user != nil) && (user.Role < MIN_ROLE_LMS_SYNC_USERS)) {
         log.Debug().Str("user", user.Email).Msg("Authentication Failure: Insufficient Permissions.");
         return nil, NewResponse(http.StatusForbidden, "Insufficient Permissions."), nil;
     }
 
-    if (course.CanvasInstanceInfo == nil) {
-        return nil, nil, fmt.Errorf("Course '%s' does not have any canvas instance information.", apiRequest.Course);
+    if (course.LMSAdapter == nil) {
+        return nil, nil, fmt.Errorf("Course '%s' does not have any LMS instance information.", apiRequest.Course);
     }
 
     return &apiRequest, nil, nil;
 }
 
-func NewCanvasScoresUploadRequest(request *http.Request) (*CanvasScoresUploadRequest, *APIResponse, error) {
-    var apiRequest CanvasScoresUploadRequest;
+func NewLMSScoresUploadRequest(request *http.Request) (*LMSScoresUploadRequest, *APIResponse, error) {
+    var apiRequest LMSScoresUploadRequest;
     err := APIRequestFromPOST(&apiRequest, request);
     if (err != nil) {
         return nil, nil, err;
@@ -95,13 +95,13 @@ func NewCanvasScoresUploadRequest(request *http.Request) (*CanvasScoresUploadReq
         return nil, NewResponse(http.StatusUnauthorized, "Failed to authenticate."), nil;
     }
 
-    if ((user != nil) && (user.Role < MIN_ROLE_CANVAS_UPLOAD_SCORES)) {
+    if ((user != nil) && (user.Role < MIN_ROLE_LMS_UPLOAD_SCORES)) {
         log.Debug().Str("user", user.Email).Msg("Authentication Failure: Insufficient Permissions.");
         return nil, NewResponse(http.StatusForbidden, "Insufficient Permissions."), nil;
     }
 
-    if (course.CanvasInstanceInfo == nil) {
-        return nil, nil, fmt.Errorf("Course '%s' does not have any canvas instance information.", apiRequest.Course);
+    if (course.LMSAdapter == nil) {
+        return nil, nil, fmt.Errorf("Course '%s' does not have any LMS instance information.", apiRequest.Course);
     }
 
     return &apiRequest, nil, nil;
@@ -109,36 +109,36 @@ func NewCanvasScoresUploadRequest(request *http.Request) (*CanvasScoresUploadReq
 
 // Close and Clean
 
-func (this *CanvasSyncUsersRequest) Close() error {
+func (this *LMSSyncUsersRequest) Close() error {
     return nil;
 }
 
-func (this *CanvasSyncUsersRequest) Clean() error {
+func (this *LMSSyncUsersRequest) Clean() error {
     return nil;
 }
 
-func (this *CanvasScoresUploadRequest) Close() error {
+func (this *LMSScoresUploadRequest) Close() error {
     return nil;
 }
 
-func (this *CanvasScoresUploadRequest) Clean() error {
+func (this *LMSScoresUploadRequest) Clean() error {
     return nil;
 }
 
 // Handlers
 
-func handleCanvasSyncUsers(request *CanvasSyncUsersRequest) (int, any, error) {
+func handleLMSSyncUsers(request *LMSSyncUsersRequest) (int, any, error) {
     course := grader.GetCourse(request.Course);
     if (course == nil) {
         return 0, nil, fmt.Errorf("Failed to find course '%s'.", request.Course);
     }
 
-    count, err := course.SyncCanvasUsers();
+    count, err := course.SyncLMSUsers();
     if (err != nil) {
         return 0, nil, err;
     }
 
-    response := &CanvasSyncUsersResponse{
+    response := &LMSSyncUsersResponse{
         Success: true,
         Count: count,
     };
@@ -146,7 +146,7 @@ func handleCanvasSyncUsers(request *CanvasSyncUsersRequest) (int, any, error) {
     return 0, response, nil;
 }
 
-func handleCanvasScoresUpload(request *CanvasScoresUploadRequest) (int, any, error) {
+func handleLMSScoresUpload(request *LMSScoresUploadRequest) (int, any, error) {
     course := grader.GetCourse(request.Course);
     if (course == nil) {
         return 0, nil, fmt.Errorf("Failed to find course '%s'.", request.Course);
@@ -158,10 +158,10 @@ func handleCanvasScoresUpload(request *CanvasScoresUploadRequest) (int, any, err
     }
 
     unknownUsers := make([]string, 0);
-    noCanvasIDUsers := make([]string, 0);
+    noLMSIDUsers := make([]string, 0);
     badScores := make([]string, 0);
 
-    grades := make([]*canvas.CanvasGradeInfo, 0, len(request.Scores));
+    grades := make([]*lms.SubmissionScore, 0, len(request.Scores));
 
     for i, row := range request.Scores {
         if (len(row) != 2) {
@@ -182,28 +182,28 @@ func handleCanvasScoresUpload(request *CanvasScoresUploadRequest) (int, any, err
             continue;
         }
 
-        if (user.CanvasID == "") {
-            noCanvasIDUsers = append(noCanvasIDUsers, email);
+        if (user.LMSID == "") {
+            noLMSIDUsers = append(noLMSIDUsers, email);
             continue;
         }
 
-        grades = append(grades, &canvas.CanvasGradeInfo{
-            UserID: user.CanvasID,
+        grades = append(grades, &lms.SubmissionScore{
+            UserID: user.LMSID,
             Score: score,
         });
     }
 
-    err = canvas.UpdateAssignmentGrades(course.CanvasInstanceInfo, request.AssignmentCanvasID, grades);
+    err = course.LMSAdapter.UpdateAssignmentScores(request.AssignmentLMSID, grades);
     if (err != nil) {
         return 0, nil, fmt.Errorf("Failed to upload grades: '%w'.", err);
     }
 
-    response := &CanvasScoresUploadResponse{
+    response := &LMSScoresUploadResponse{
         Success: true,
         Count: len(grades),
-        ErrorCount: (len(unknownUsers) + len(noCanvasIDUsers) + len(badScores)),
+        ErrorCount: (len(unknownUsers) + len(noLMSIDUsers) + len(badScores)),
         UnrecognizedUsers: unknownUsers,
-        NoCanvasIDUsers: noCanvasIDUsers,
+        NoLMSIDUsers: noLMSIDUsers,
         BadScores: badScores,
     };
 

@@ -17,7 +17,7 @@ var args struct {
 
 func main() {
     kong.Parse(&args,
-        kong.Description("Sync IDs with matching canvas users (does not add/remove users)."),
+        kong.Description("Sync IDs with matching LMS users (does not add/remove users)."),
     );
 
     err := config.HandleConfigArgs(args.ConfigArgs);
@@ -26,13 +26,13 @@ func main() {
     }
 
     course := model.MustLoadCourseConfig(args.Path);
-    if (course.CanvasInstanceInfo == nil) {
-        log.Fatal().Msg("Course has no Canvas info associated with it.");
+    if (course.LMSAdapter == nil) {
+        log.Fatal().Msg("Course has no LMS info associated with it.");
     }
 
-    count, err := course.SyncCanvasUsers();
+    count, err := course.SyncLMSUsers();
     if (err != nil) {
-        log.Fatal().Err(err).Msg("Failed to sync canvas users.");
+        log.Fatal().Err(err).Msg("Failed to sync LMS users.");
     }
 
     fmt.Printf("Updated %d users.\n", count);

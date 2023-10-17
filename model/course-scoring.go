@@ -12,8 +12,8 @@ func (this *Course) FullScoringAndUpload(dryRun bool) error {
     log.Debug().Str("course", this.ID).Bool("dry-run", dryRun).Msg("Beginning full scoring for course.");
 
     for i, assignment := range assignments {
-        if (assignment.CanvasID == "") {
-            log.Warn().Str("course", this.ID).Str("assignment", assignment.ID).Msg("Assignment has no canvas id, skipping scoring.");
+        if (assignment.LMSID == "") {
+            log.Warn().Str("course", this.ID).Str("assignment", assignment.ID).Msg("Assignment has no LMS id, skipping scoring.");
             continue;
         }
 

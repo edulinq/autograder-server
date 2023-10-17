@@ -6,35 +6,43 @@ import (
 
     "github.com/rs/zerolog/log"
 
+    "github.com/eriq-augustine/autograder/lms"
     "github.com/eriq-augustine/autograder/util"
 )
 
-func FetchUsers(canvasInfo *CanvasInstanceInfo) ([]CanvasUserInfo, error) {
+func (this *CanvasAdapter) FetchUsers() ([]*lms.User, error) {
+    this.getAPILock();
+    defer this.releaseAPILock();
+
     apiEndpoint := fmt.Sprintf(
         "/api/v1/courses/%s/users?per_page=%d",
-        canvasInfo.CourseID, PAGE_SIZE);
-    url := canvasInfo.BaseURL + apiEndpoint;
+        this.CourseID, PAGE_SIZE);
+    url := this.BaseURL + apiEndpoint;
 
-    headers := standardHeaders(canvasInfo);
+    headers := this.standardHeaders();
 
-    users := make([]CanvasUserInfo, 0);
+    users := make([]*lms.User, 0);
 
     for (url != "") {
-        getAPILock(canvasInfo);
         body, responseHeaders, err := util.GetWithHeaders(url, headers);
-        releaseAPILock(canvasInfo);
 
         if (err != nil) {
             return nil, fmt.Errorf("Failed to fetch users: '%w'.", err);
         }
 
-        var pageUsers []CanvasUserInfo;
+        var pageUsers []*User;
         err = util.JSONFromString(body, &pageUsers);
         if (err != nil) {
             return nil, fmt.Errorf("Failed to unmarshal users page: '%w'.", err);
         }
 
-        users = append(users, pageUsers...);
+        for _, user := range pageUsers {
+            if (user == nil) {
+                continue;
+            }
+
+            users = append(users, user.ToLMSType());
+        }
 
         url = fetchNextCanvasLink(responseHeaders);
     }
@@ -42,23 +50,23 @@ func FetchUsers(canvasInfo *CanvasInstanceInfo) ([]CanvasUserInfo, error) {
     return users, nil;
 }
 
-func FetchUser(canvasInfo *CanvasInstanceInfo, email string) (*CanvasUserInfo, error) {
+func (this *CanvasAdapter) FetchUser(email string) (*lms.User, error) {
+    this.getAPILock();
+    defer this.releaseAPILock();
+
     apiEndpoint := fmt.Sprintf(
         "/api/v1/courses/%s/search_users?search_term=%s",
-        canvasInfo.CourseID, url.QueryEscape(email));
-    url := canvasInfo.BaseURL + apiEndpoint;
+        this.CourseID, url.QueryEscape(email));
+    url := this.BaseURL + apiEndpoint;
 
-    headers := standardHeaders(canvasInfo);
-
-    getAPILock(canvasInfo);
+    headers := this.standardHeaders();
     body, _, err := util.GetWithHeaders(url, headers);
-    releaseAPILock(canvasInfo);
 
     if (err != nil) {
         return nil, fmt.Errorf("Failed to fetch user '%s': '%w'.", email, err);
     }
 
-    var pageUsers []CanvasUserInfo;
+    var pageUsers []User;
     err = util.JSONFromString(body, &pageUsers);
     if (err != nil) {
         return nil, fmt.Errorf("Failed to unmarshal user page: '%w'.", err);
@@ -69,5 +77,5 @@ func FetchUser(canvasInfo *CanvasInstanceInfo, email string) (*CanvasUserInfo, e
         return nil, nil;
     }
 
-    return &pageUsers[0], nil;
+    return pageUsers[0].ToLMSType(), nil;
 }

@@ -6,8 +6,8 @@ import (
     "github.com/alecthomas/kong"
     "github.com/rs/zerolog/log"
 
-    "github.com/eriq-augustine/autograder/canvas"
     "github.com/eriq-augustine/autograder/config"
+    "github.com/eriq-augustine/autograder/lms"
     "github.com/eriq-augustine/autograder/model"
     "github.com/eriq-augustine/autograder/usr"
     "github.com/eriq-augustine/autograder/util"
@@ -17,7 +17,7 @@ var args struct {
     config.ConfigArgs
     Grades string `help:"Path to TSV file containing 'email<TAB>score'." arg:"" type:"existingfile"`
     AssignmentPath string `help:"Path to assignment JSON file. If specified, --course-path and --assignment-id are not required." type:"existingfile"`
-    AssignmentID string `help:"The Canvas ID for an assigmnet (with --course-path, can be used instead of --assignment-path)."`
+    AssignmentID string `help:"The LMS ID for an assigmnet (with --course-path, can be used instead of --assignment-path)."`
     CoursePath string `help:"Path to course JSON file (with --assignment-id, can be used instead of --assignment-path)."`
     Force bool `help:"Ignore when there are bad users and upload all the grades for good users." short:"f" default:"false"`
     DryRun bool `help:"Do not actually upload the grades, just state what you would do." default:"false"`
@@ -25,7 +25,7 @@ var args struct {
 
 func main() {
     kong.Parse(&args,
-        kong.Description("Upload grades for an assignment to canvas from a TSV file." +
+        kong.Description("Upload grades for an assignment to the coure's LMS from a TSV file." +
             " Either --assignment-path or (--course-path and --assignment-id) are required."),
     );
 
@@ -34,7 +34,7 @@ func main() {
         log.Fatal().Err(err).Msg("Could not load config options.");
     }
 
-    assignmentCanvasID, course, err := getAssignmentIDAndCourse(args.AssignmentPath, args.AssignmentID, args.CoursePath);
+    assignmentLMSID, course, err := getAssignmentIDAndCourse(args.AssignmentPath, args.AssignmentID, args.CoursePath);
     if (err != nil) {
         log.Fatal().Err(err).Msg("Failed to load course/assignment information.");
     }
@@ -56,7 +56,7 @@ func main() {
     if (args.DryRun) {
         fmt.Println("Dry Run: Skipping upload.");
     } else {
-        err = canvas.UpdateAssignmentGrades(course.CanvasInstanceInfo, assignmentCanvasID, grades);
+        err = course.LMSAdapter.UpdateAssignmentScores(assignmentLMSID, grades);
         if (err != nil) {
             log.Fatal().Err(err).Msg("Could not upload grades.");
         }
@@ -65,8 +65,8 @@ func main() {
     fmt.Printf("Uploaded %d grades.\n", len(grades));
 }
 
-func loadGrades(path string, users map[string]*usr.User, force bool) ([]*canvas.CanvasGradeInfo, error) {
-    grades := make([]*canvas.CanvasGradeInfo, 0);
+func loadGrades(path string, users map[string]*usr.User, force bool) ([]*lms.SubmissionScore, error) {
+    grades := make([]*lms.SubmissionScore, 0);
 
     rows, err := util.ReadSeparatedFile(path, "\t", 0);
     if (err != nil) {
@@ -90,9 +90,9 @@ func loadGrades(path string, users map[string]*usr.User, force bool) ([]*canvas.
             }
         }
 
-        canvasID := user.CanvasID;
-        if (canvasID == "") {
-            message := fmt.Sprintf("User '%s' (from row (%d)) has no Canvas ID.", row[0], i);
+        lmsID := user.LMSID;
+        if (lmsID == "") {
+            message := fmt.Sprintf("User '%s' (from row (%d)) has no LMS ID.", row[0], i);
 
             if (force) {
                 fmt.Println(message);
@@ -102,8 +102,8 @@ func loadGrades(path string, users map[string]*usr.User, force bool) ([]*canvas.
             }
         }
 
-        grades = append(grades, &canvas.CanvasGradeInfo{
-            UserID: canvasID,
+        grades = append(grades, &lms.SubmissionScore{
+            UserID: lmsID,
             Score: util.MustStrToFloat(row[1]),
         });
     }
@@ -114,11 +114,11 @@ func loadGrades(path string, users map[string]*usr.User, force bool) ([]*canvas.
 func getAssignmentIDAndCourse(assignmentPath string, assignmentID string, coursePath string) (string, *model.Course, error) {
     if (assignmentPath != "") {
         assignment := model.MustLoadAssignmentConfig(assignmentPath);
-        if (assignment.CanvasID == "") {
-            return "", nil, fmt.Errorf("Assignment has no Canvas ID.");
+        if (assignment.LMSID == "") {
+            return "", nil, fmt.Errorf("Assignment has no LMS ID.");
         }
 
-        return assignment.CanvasID, assignment.Course, nil;
+        return assignment.LMSID, assignment.Course, nil;
     }
 
     if ((assignmentID == "") || (coursePath == "")) {
@@ -126,8 +126,8 @@ func getAssignmentIDAndCourse(assignmentPath string, assignmentID string, course
     }
 
     course := model.MustLoadCourseConfig(coursePath);
-    if (course.CanvasInstanceInfo == nil) {
-        return "", nil, fmt.Errorf("Assignment's course has no Canvas info associated with it.");
+    if (course.LMSAdapter == nil) {
+        return "", nil, fmt.Errorf("Assignment's course has no LMS info associated with it.");
     }
 
     return assignmentID, course, nil;

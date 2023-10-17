@@ -25,7 +25,7 @@ type Assignment struct {
     DisplayName string `json:"display-name"`
     SortID string `json:"sort-id"`
 
-    CanvasID string `json:"canvas-id",omitempty`
+    LMSID string `json:"lms-id",omitempty`
     LatePolicy LateGradingPolicy `json:"late-policy,omitempty"`
 
     docker.ImageInfo

@@ -20,7 +20,7 @@ func NewUserInfo(user *usr.User) *UserInfo {
         Email: user.Email,
         Name: user.DisplayName,
         Role: user.Role,
-        LMSID: user.CanvasID,
+        LMSID: user.LMSID,
     };
 }
 

@@ -7,7 +7,6 @@ import (
     "github.com/alecthomas/kong"
     "github.com/rs/zerolog/log"
 
-    "github.com/eriq-augustine/autograder/canvas"
     "github.com/eriq-augustine/autograder/config"
     "github.com/eriq-augustine/autograder/model"
 )
@@ -19,7 +18,7 @@ var args struct {
 
 func main() {
     kong.Parse(&args,
-        kong.Description("Fetch users for a specific canvas course."),
+        kong.Description("Fetch users for a specific LMS course."),
     );
 
     err := config.HandleConfigArgs(args.ConfigArgs);
@@ -28,12 +27,12 @@ func main() {
     }
 
     course := model.MustLoadCourseConfig(args.Path);
-    if (course.CanvasInstanceInfo == nil) {
-        fmt.Println("Course has no Canvas info associated with it.");
+    if (course.LMSAdapter == nil) {
+        fmt.Println("Course has no LMS info associated with it.");
         os.Exit(2);
     }
 
-    users, err := canvas.FetchUsers(course.CanvasInstanceInfo);
+    users, err := course.LMSAdapter.FetchUsers();
     if (err != nil) {
         log.Fatal().Err(err).Msg("Could not fetch users.");
     }

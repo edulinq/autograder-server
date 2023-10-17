@@ -8,15 +8,17 @@ import (
     "github.com/rs/zerolog/log"
 
     "github.com/eriq-augustine/autograder/artifact"
-    "github.com/eriq-augustine/autograder/canvas"
     "github.com/eriq-augustine/autograder/common"
+    "github.com/eriq-augustine/autograder/lms"
     "github.com/eriq-augustine/autograder/usr"
     "github.com/eriq-augustine/autograder/util"
 )
 
+const LOCK_COMMENT string = "__lock__";
+
 func (this *Assignment) FullScoringAndUpload(dryRun bool) error {
-    if (this.Course.CanvasInstanceInfo == nil) {
-        return fmt.Errorf("Assignment's course has no Canvas info associated with it.");
+    if (this.Course.LMSAdapter == nil) {
+        return fmt.Errorf("Assignment's course has no LMS info associated with it.");
     }
 
     users, err := this.Course.GetUsers();
@@ -24,9 +26,9 @@ func (this *Assignment) FullScoringAndUpload(dryRun bool) error {
         return fmt.Errorf("Failed to fetch autograder users: '%w'.", err);
     }
 
-    canvasGrades, err := canvas.FetchAssignmentGrades(this.Course.CanvasInstanceInfo, this.CanvasID);
+    lmsScores, err := this.Course.LMSAdapter.FetchAssignmentScores(this.LMSID);
     if (err != nil) {
-        return fmt.Errorf("Could not fetch Canvas grades: '%w'.", err);
+        return fmt.Errorf("Could not fetch LMS grades: '%w'.", err);
     }
 
     scoringInfos, err := this.GetScoringInfo(users, true);
@@ -39,7 +41,7 @@ func (this *Assignment) FullScoringAndUpload(dryRun bool) error {
         return fmt.Errorf("Failed to apply late policy: '%w'.", err);
     }
 
-    err = computeFinalScores(this, users, scoringInfos, canvasGrades, dryRun);
+    err = computeFinalScores(this, users, scoringInfos, lmsScores, dryRun);
     if (err != nil) {
         return fmt.Errorf("Failed to apply late policy: '%w'.", err);
     }
@@ -80,24 +82,24 @@ func (this *Assignment) GetScoringInfo(users map[string]*usr.User, onlyStudents 
 
 func computeFinalScores(
         assignment *Assignment, users map[string]*usr.User,
-        scoringInfos map[string]*artifact.ScoringInfo, canvasGrades []*canvas.CanvasGradeInfo,
+        scoringInfos map[string]*artifact.ScoringInfo, lmsScores []*lms.SubmissionScore,
         dryRun bool) error {
     var err error;
 
-    // First, look through canvas comments for locks and autograder notes.
-    locks, existingComments, err := parseComments(canvasGrades);
+    // First, look through comments for locks and autograder notes.
+    locks, existingComments, err := parseComments(lmsScores);
     if (err != nil) {
         return err;
     }
 
     // Next, create the grades that will actually be uploaded and the comments that will be updated..
-    finalGrades, commentsToUpdate := filterFinalScores(users, scoringInfos, locks, existingComments);
+    finalScores, commentsToUpdate := filterFinalScores(users, scoringInfos, locks, existingComments);
 
     // Upload the grades.
     if (dryRun) {
-        log.Info().Str("assignment", assignment.ID).Any("grades", finalGrades).Msg("Dry Run: Skipping upload of final grades.");
+        log.Info().Str("assignment", assignment.ID).Any("grades", finalScores).Msg("Dry Run: Skipping upload of final grades.");
     } else {
-        err = canvas.UpdateAssignmentGrades(assignment.Course.CanvasInstanceInfo, assignment.CanvasID, finalGrades);
+        err = assignment.Course.LMSAdapter.UpdateAssignmentScores(assignment.LMSID, finalScores);
         if (err != nil) {
             return fmt.Errorf("Failed to upload final scores: '%w'.", err);
         }
@@ -107,7 +109,7 @@ func computeFinalScores(
     if (dryRun) {
         log.Info().Str("assignment", assignment.ID).Any("comments", commentsToUpdate).Msg("Dry Run: Skipping update of final comments.");
     } else {
-        err = canvas.UpdateComments(assignment.Course.CanvasInstanceInfo, assignment.CanvasID, commentsToUpdate);
+        err = assignment.Course.LMSAdapter.UpdateComments(assignment.LMSID, commentsToUpdate);
         if (err != nil) {
             return fmt.Errorf("Failed to update final comments: '%w'.", err);
         }
@@ -116,29 +118,29 @@ func computeFinalScores(
     return nil;
 }
 
-func parseComments(canvasGrades []*canvas.CanvasGradeInfo) (map[string]bool, map[string]*artifact.ScoringInfo, error) {
+func parseComments(lmsScores []*lms.SubmissionScore) (map[string]bool, map[string]*artifact.ScoringInfo, error) {
     locks := make(map[string]bool);
     existingComments := make(map[string]*artifact.ScoringInfo);
 
-    for _, canvasGradeInfo := range canvasGrades {
-        for _, comment := range canvasGradeInfo.Comments {
+    for _, lmsScore := range lmsScores {
+        for _, comment := range lmsScore.Comments {
             text := strings.ToLower(comment.Text);
-            if (strings.Contains(text, canvas.LOCK_COMMENT)) {
-                locks[canvasGradeInfo.UserID] = true;
+            if (strings.Contains(text, LOCK_COMMENT)) {
+                locks[lmsScore.UserID] = true;
             } else if (strings.Contains(text, common.AUTOGRADER_COMMENT_IDENTITY_KEY)) {
                 var scoringInfo artifact.ScoringInfo;
                 err := util.JSONFromString(comment.Text, &scoringInfo);
                 if (err != nil) {
-                    return nil, nil, fmt.Errorf("Could not unmarshall Canvas comment %s (%s) into a scoring info: '%w'.", comment.ID, comment.Text, err);
+                    return nil, nil, fmt.Errorf("Could not unmarshall LMS comment %s (%s) into a scoring info: '%w'.", comment.ID, comment.Text, err);
                 }
-                scoringInfo.CanvasCommentID = comment.ID;
-                scoringInfo.CanvasCommentAuthorID = comment.Author;
+                scoringInfo.LMSCommentID = comment.ID;
+                scoringInfo.LMSCommentAuthorID = comment.Author;
 
-                existingComments[canvasGradeInfo.UserID] = &scoringInfo;
+                existingComments[lmsScore.UserID] = &scoringInfo;
 
                 // Scoring infos can also lock grades.
                 if (scoringInfo.Lock) {
-                    locks[canvasGradeInfo.UserID] = true;
+                    locks[lmsScore.UserID] = true;
                 }
             }
         }
@@ -150,9 +152,9 @@ func parseComments(canvasGrades []*canvas.CanvasGradeInfo) (map[string]bool, map
 func filterFinalScores(
         users map[string]*usr.User, scoringInfos map[string]*artifact.ScoringInfo,
         locks map[string]bool, existingComments map[string]*artifact.ScoringInfo,
-        ) ([]*canvas.CanvasGradeInfo, []*canvas.CanvasSubmissionComment) {
-    finalGrades := make([]*canvas.CanvasGradeInfo, 0);
-    commentsToUpdate := make([]*canvas.CanvasSubmissionComment, 0);
+        ) ([]*lms.SubmissionScore, []*lms.SubmissionComment) {
+    finalScores := make([]*lms.SubmissionScore, 0);
+    commentsToUpdate := make([]*lms.SubmissionComment, 0);
 
     for email, scoringInfo := range scoringInfos {
         user := users[email];
@@ -166,21 +168,21 @@ func filterFinalScores(
             continue;
         }
 
-        // Skip users that do not have a canvas id.
-        if (user.CanvasID == "") {
-            log.Warn().Str("user", email).Msg("User does not have a Canvas ID, skipping grade upload.");
+        // Skip users that do not have an LMS id.
+        if (user.LMSID == "") {
+            log.Warn().Str("user", email).Msg("User does not have an LMS ID, skipping grade upload.");
             continue;
         }
 
         // This score is locked, skip it.
-        if (locks[user.CanvasID]) {
+        if (locks[user.LMSID]) {
             continue;
         }
 
         scoringInfo.UploadTime = time.Now();
 
         // Check the existing comment last so we can decide if this comment needs to be updated.
-        existingComment := existingComments[user.CanvasID];
+        existingComment := existingComments[user.LMSID];
         if (existingComment != nil) {
             // If this user has an existing comment, then we may skip this upload if submission IDs match.
             if (existingComment.ID == scoringInfo.ID) {
@@ -192,34 +194,34 @@ func filterFinalScores(
         // This scoring is valid and different than the last one.
 
         // Existing comments are updated, new comments are posted with the grade.
-        var uploadComments []canvas.CanvasSubmissionComment = nil;
+        var uploadComments []*lms.SubmissionComment = nil;
 
         if (existingComment != nil) {
-            scoringInfo.CanvasCommentID = existingComment.CanvasCommentID;
-            scoringInfo.CanvasCommentAuthorID = existingComment.CanvasCommentAuthorID;
+            scoringInfo.LMSCommentID = existingComment.LMSCommentID;
+            scoringInfo.LMSCommentAuthorID = existingComment.LMSCommentAuthorID;
 
-            commentsToUpdate = append(commentsToUpdate, &canvas.CanvasSubmissionComment{
-                ID: scoringInfo.CanvasCommentID,
-                Author: scoringInfo.CanvasCommentAuthorID,
+            commentsToUpdate = append(commentsToUpdate, &lms.SubmissionComment{
+                ID: scoringInfo.LMSCommentID,
+                Author: scoringInfo.LMSCommentAuthorID,
                 Text: util.MustToJSON(scoringInfo),
             });
         } else {
-            uploadComments = []canvas.CanvasSubmissionComment{
-                canvas.CanvasSubmissionComment{
+            uploadComments = []*lms.SubmissionComment{
+                &lms.SubmissionComment{
                     Text: util.MustToJSON(scoringInfo),
                 },
             };
         }
 
-        canvasGrade := canvas.CanvasGradeInfo{
-            UserID: user.CanvasID,
+        lmsScore := lms.SubmissionScore{
+            UserID: user.LMSID,
             Score: scoringInfo.Score,
             Time: scoringInfo.SubmissionTime,
             Comments: uploadComments,
         }
 
-        finalGrades = append(finalGrades, &canvasGrade);
+        finalScores = append(finalScores, &lmsScore);
     }
 
-    return finalGrades, commentsToUpdate;
+    return finalScores, commentsToUpdate;
 }

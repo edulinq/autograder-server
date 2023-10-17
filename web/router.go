@@ -25,8 +25,8 @@ var routes = []route{
     newAPIRoute("POST", `/api/v01/peek`, NewPeekRequest, handlePeek),
     newAPIRoute("POST", `/api/v01/submit`, NewSubmissionRequest, handleSubmit),
 
-    newAPIRoute("POST", `/api/v01/canvas/scores/upload`, NewCanvasScoresUploadRequest, handleCanvasScoresUpload),
-    newAPIRoute("POST", `/api/v01/canvas/user/sync`, NewCanvasSyncUsersRequest, handleCanvasSyncUsers),
+    newAPIRoute("POST", `/api/v01/lms/scores/upload`, NewLMSScoresUploadRequest, handleLMSScoresUpload),
+    newAPIRoute("POST", `/api/v01/lms/user/sync`, NewLMSSyncUsersRequest, handleLMSSyncUsers),
 
     newAPIRoute("POST", `/api/v01/user/add`, NewUserAddRequest, handleUserAdd),
     newAPIRoute("POST", `/api/v01/user/auth`, NewUserAuthRequest, handleUserAuth),

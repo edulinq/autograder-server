@@ -28,15 +28,15 @@ func (this *ScoringUploadTask) Validate(course TaskCourseSource) error {
 
     this.course = course;
 
-    if (this.course.GetCanvasInstanceInfo() == nil) {
-        return fmt.Errorf("Score and Upload task course must have Canvas instance information.");
+    if (this.course.GetLMSAdapter() == nil) {
+        return fmt.Errorf("Score and Upload task course must have an LMS adapter.");
     }
 
-    canvasIDs, assignmentIDs := this.course.GetCanvasIDs();
-    for i, _ := range canvasIDs {
-        if (canvasIDs[i] == "") {
+    lmsIDs, assignmentIDs := this.course.GetAssignmentLMSIDs();
+    for i, _ := range lmsIDs {
+        if (lmsIDs[i] == "") {
             log.Warn().Str("course", course.GetID()).Str("assignment", assignmentIDs[i]).
-                    Msg("Score and Upload course has an assignment with a missing Canvas ID.");
+                    Msg("Score and Upload course has an assignment with a missing LMS ID.");
         }
     }
 

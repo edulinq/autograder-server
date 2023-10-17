@@ -1,7 +1,7 @@
 package task
 
 import (
-    "github.com/eriq-augustine/autograder/canvas"
+    "github.com/eriq-augustine/autograder/lms/adapter"
     "github.com/eriq-augustine/autograder/report"
 )
 
@@ -10,9 +10,9 @@ type TaskCourseSource interface {
 
     GetID() string
     GetSourceDir() string
-    GetCanvasInstanceInfo() *canvas.CanvasInstanceInfo
-    // (canvas ids, assignment ids)
-    GetCanvasIDs() ([]string, []string)
+    GetLMSAdapter() *adapter.LMSAdapter
+    // (LMS ids, assignment ids)
+    GetAssignmentLMSIDs() ([]string, []string)
     FullScoringAndUpload(bool) error
 }
 

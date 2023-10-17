@@ -7,10 +7,10 @@ import (
 
     "github.com/rs/zerolog/log"
 
-    "github.com/eriq-augustine/autograder/canvas"
     "github.com/eriq-augustine/autograder/common"
     "github.com/eriq-augustine/autograder/config"
     "github.com/eriq-augustine/autograder/docker"
+    "github.com/eriq-augustine/autograder/lms/adapter"
     "github.com/eriq-augustine/autograder/report"
     "github.com/eriq-augustine/autograder/task"
     "github.com/eriq-augustine/autograder/usr"
@@ -29,7 +29,7 @@ type Course struct {
     // Paths are always relative to the course dir.
     UsersFile string `json:"users-file"`
 
-    CanvasInstanceInfo *canvas.CanvasInstanceInfo `json:"canvas,omitempty"`
+    LMSAdapter *adapter.LMSAdapter `json:"lms,omitempty"`
 
     Backup []*task.BackupTask `json:"backup,omitempty"`
     Report []*task.ReportTask `json:"report,omitempty"`
@@ -54,20 +54,20 @@ func (this *Course) GetSourceDir() string {
     return filepath.Dir(this.SourcePath);
 }
 
-func (this *Course) GetCanvasInstanceInfo() *canvas.CanvasInstanceInfo {
-    return this.CanvasInstanceInfo;
+func (this *Course) GetLMSAdapter() *adapter.LMSAdapter {
+    return this.LMSAdapter;
 }
 
-func (this *Course) GetCanvasIDs() ([]string, []string) {
-    canvasIDs := make([]string, 0, len(this.Assignments));
+func (this *Course) GetAssignmentLMSIDs() ([]string, []string) {
+    lmsIDs := make([]string, 0, len(this.Assignments));
     assignmentIDs := make([]string, 0, len(this.Assignments));
 
     for _, assignment := range this.Assignments {
-        canvasIDs = append(canvasIDs, assignment.CanvasID);
-        assignmentIDs = append(assignmentIDs, assignment.CanvasID);
+        lmsIDs = append(lmsIDs, assignment.LMSID);
+        assignmentIDs = append(assignmentIDs, assignment.LMSID);
     }
 
-    return canvasIDs, assignmentIDs;
+    return lmsIDs, assignmentIDs;
 }
 
 func LoadCourseConfig(path string) (*Course, error) {

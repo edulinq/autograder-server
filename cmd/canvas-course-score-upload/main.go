@@ -27,8 +27,8 @@ func main() {
     }
 
     course := model.MustLoadCourseConfig(args.Path);
-    if (course.CanvasInstanceInfo == nil) {
-        log.Fatal().Msg("Course has no Canvas info associated with it.");
+    if (course.LMSAdapter == nil) {
+        log.Fatal().Msg("Course has no LMS info associated with it.");
     }
 
     err = course.FullScoringAndUpload(args.DryRun);

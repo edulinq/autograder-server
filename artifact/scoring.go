@@ -17,7 +17,7 @@ type ScoringInfo struct {
 
     // A distinct key so we can recognize this as an autograder object.
     Autograder int `json:"__autograder__v01__"`
-    // If this object was serialized from a Canvas comment, keep the ID.
-    CanvasCommentID string `json:"-"`
-    CanvasCommentAuthorID string `json:"-"`
+    // If this object was serialized from an LMS comment, keep the ID.
+    LMSCommentID string `json:"-"`
+    LMSCommentAuthorID string `json:"-"`
 }
