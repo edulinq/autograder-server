@@ -32,6 +32,9 @@ type POSTFiles struct {
     Filenames []string `json:"-"`
 }
 
+// The type for a named field that must have a non-empty string value.
+type NonEmptyString string;
+
 // An api request that has been reflexively verifed.
 // Once validated, callers should feel safe calling reflection methods on this without extra checks.
 type ValidAPIRequest any;
@@ -144,7 +147,8 @@ func (this *APIRequestAssignmentContext) Validate(request any, endpoint string) 
 func ValidateAPIRequest(request *http.Request, apiRequest any, endpoint string) *APIError {
     reflectPointer := reflect.ValueOf(apiRequest);
     if (reflectPointer.Kind() != reflect.Pointer) {
-        return NewBareInternalError("-309", endpoint, "ValidateAPIRequest() must be called with a pointer.");
+        return NewBareInternalError("-309", endpoint, "ValidateAPIRequest() must be called with a pointer.").
+                Add("kind", reflectPointer.Kind().String());
     }
 
     // Ensure the request has an request type embedded, and validate it.
@@ -158,7 +162,7 @@ func ValidateAPIRequest(request *http.Request, apiRequest any, endpoint string) 
     }
 
     // Check for any special field types that we know how to populate.
-    apiErr = fillRequestSpecialFields(request, apiRequest, endpoint);
+    apiErr = checkRequestSpecialFields(request, apiRequest, endpoint);
     if (apiErr != nil) {
         return apiErr;
     }
@@ -192,10 +196,26 @@ func validateRequestStruct(request any, endpoint string) (bool, *APIError) {
     foundRequestStruct := false;
 
     reflectValue := reflect.ValueOf(request).Elem();
+    if (reflectValue.Kind() != reflect.Struct) {
+        return false, NewBareInternalError("-317", endpoint, "Request's type must be a struct.").
+                Add("kind", reflectValue.Kind().String());
+    }
+
     for i := 0; i < reflectValue.NumField(); i++ {
         fieldValue := reflectValue.Field(i);
 
-        if (fieldValue.Type() == reflect.TypeOf((*APIRequestCourseUserContext)(nil)).Elem()) {
+        if (fieldValue.Type() == reflect.TypeOf((*APIRequest)(nil)).Elem()) {
+            // APIRequest
+            apiRequest := fieldValue.Interface().(APIRequest);
+            foundRequestStruct = true;
+
+            apiErr := apiRequest.Validate(request, endpoint);
+            if (apiErr != nil) {
+                return false, apiErr;
+            }
+
+            fieldValue.Set(reflect.ValueOf(apiRequest));
+        } else if (fieldValue.Type() == reflect.TypeOf((*APIRequestCourseUserContext)(nil)).Elem()) {
             // APIRequestCourseUserContext
             courseUserRequest := fieldValue.Interface().(APIRequestCourseUserContext);
             foundRequestStruct = true;
@@ -223,19 +243,25 @@ func validateRequestStruct(request any, endpoint string) (bool, *APIError) {
     return foundRequestStruct, nil;
 }
 
-func fillRequestSpecialFields(request *http.Request, apiRequest any, endpoint string) *APIError {
+// Check for any special request fields and validate/populate them.
+func checkRequestSpecialFields(request *http.Request, apiRequest any, endpoint string) *APIError {
     reflectValue := reflect.ValueOf(apiRequest).Elem();
 
     for i := 0; i < reflectValue.NumField(); i++ {
         fieldValue := reflectValue.Field(i);
 
         if (fieldValue.Type() == reflect.TypeOf((*CourseUsers)(nil)).Elem()) {
-            apiErr := fillRequestCourseUsers(endpoint, apiRequest, i);
+            apiErr := checkRequestCourseUsers(endpoint, apiRequest, i);
             if (apiErr != nil) {
                 return apiErr;
             }
         } else if (fieldValue.Type() == reflect.TypeOf((*POSTFiles)(nil)).Elem()) {
-            apiErr := fillRequestPostFiles(request, endpoint, apiRequest, i);
+            apiErr := checkRequestPostFiles(request, endpoint, apiRequest, i);
+            if (apiErr != nil) {
+                return apiErr;
+            }
+        } else if (fieldValue.Type() == reflect.TypeOf((*NonEmptyString)(nil)).Elem()) {
+            apiErr := checkRequestNonEmptyString(request, endpoint, apiRequest, i);
             if (apiErr != nil) {
                 return apiErr;
             }
@@ -245,7 +271,7 @@ func fillRequestSpecialFields(request *http.Request, apiRequest any, endpoint st
     return nil;
 }
 
-func fillRequestCourseUsers(endpoint string, apiRequest any, fieldIndex int) *APIError {
+func checkRequestCourseUsers(endpoint string, apiRequest any, fieldIndex int) *APIError {
     reflectValue := reflect.ValueOf(apiRequest).Elem();
 
     structName := reflectValue.Type().Name();
@@ -277,7 +303,7 @@ func fillRequestCourseUsers(endpoint string, apiRequest any, fieldIndex int) *AP
     return nil;
 }
 
-func fillRequestPostFiles(request *http.Request, endpoint string, apiRequest any, fieldIndex int) *APIError {
+func checkRequestPostFiles(request *http.Request, endpoint string, apiRequest any, fieldIndex int) *APIError {
     reflectValue := reflect.ValueOf(apiRequest).Elem();
 
     structName := reflectValue.Type().Name();
@@ -303,6 +329,25 @@ func fillRequestPostFiles(request *http.Request, endpoint string, apiRequest any
     }
 
     fieldValue.Set(reflect.ValueOf(*postFiles));
+
+    return nil;
+}
+
+func checkRequestNonEmptyString(request *http.Request, endpoint string, apiRequest any, fieldIndex int) *APIError {
+    reflectValue := reflect.ValueOf(apiRequest).Elem();
+
+    structName := reflectValue.Type().Name();
+
+    fieldValue := reflectValue.Field(fieldIndex);
+    fieldType := reflectValue.Type().Field(fieldIndex);
+    jsonName := util.JSONFieldName(fieldType);
+
+    value := string(fieldValue.Interface().(NonEmptyString));
+    if (value == "") {
+        return NewBareBadRequestError("-318", endpoint,
+                fmt.Sprintf("Field '%s' requires a non-empty string, empty or null provided.", jsonName)).
+                Add("struct-name", structName).Add("field-name", fieldType.Name).Add("json-name", jsonName);
+    }
 
     return nil;
 }

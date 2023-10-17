@@ -5,6 +5,8 @@ import (
    "fmt"
    "io"
    "os"
+   "reflect"
+   "strings"
 
     "github.com/rs/zerolog/log"
 )
@@ -105,6 +107,35 @@ func ToJSONFileIndentCustom(data any, path string, prefix string, indent string)
     }
 
     return WriteFile(text, path);
+}
+
+// Take a best shot at getting what the key would be for this the field in a JSON object.
+func JSONFieldName(field reflect.StructField) string {
+    name := field.Name;
+
+    tag := field.Tag.Get("json");
+    if (tag == "") {
+        return name;
+    }
+
+    parts := strings.Split(tag, ",");
+    for _, part := range parts {
+        part = strings.TrimSpace(part);
+
+        // This field is omitted from JSON.
+        if (part == "-") {
+            return "";
+        }
+
+        // This special option is allowed.
+        if (part == "omitempty") {
+            continue;
+        }
+
+        return part;
+    }
+
+    return name;
 }
 
 // The only place we call json.Marshal*.

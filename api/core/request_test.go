@@ -93,7 +93,7 @@ func TestBadCourseUsersFieldNoContext(test *testing.T) {
         Users CourseUsers
     }
 
-    apiErr := fillRequestSpecialFields(nil, &badCourseUsersNoCourse{}, "");
+    apiErr := checkRequestSpecialFields(nil, &badCourseUsersNoCourse{}, "");
     if (apiErr == nil) {
         test.Fatalf("Struct with no course context does not return an error,");
     }
@@ -113,11 +113,7 @@ func TestBadCourseUsersFieldNotExported(test *testing.T) {
     }
 
     request := badCourseUsersNonExported{
-        APIRequestCourseUserContext: APIRequestCourseUserContext{
-            CourseID: "course101",
-            UserEmail: "student@test.com",
-            UserPass: studentPass,
-        },
+        APIRequestCourseUserContext: standardCourseContext,
     };
 
     apiErr := ValidateAPIRequest(nil, &request, "");
@@ -141,11 +137,7 @@ func TestBadCourseUsersFieldFailGetUsers(test *testing.T) {
     }
 
     request := goodCourseUsers{
-        APIRequestCourseUserContext: APIRequestCourseUserContext{
-            CourseID: "course101",
-            UserEmail: "student@test.com",
-            UserPass: studentPass,
-        },
+        APIRequestCourseUserContext: standardCourseContext,
     };
 
     // First, validate the course context.
@@ -164,7 +156,7 @@ func TestBadCourseUsersFieldFailGetUsers(test *testing.T) {
     defer func() { request.Course.SourcePath = oldSourcePath }();
     request.Course.SourcePath = filepath.Join(os.DevNull, "course.json");
 
-    apiErr = fillRequestSpecialFields(nil, &request, "");
+    apiErr = checkRequestSpecialFields(nil, &request, "");
     if (apiErr == nil) {
         test.Fatalf("Error not returned when users fetch failed.");
     }
@@ -173,6 +165,45 @@ func TestBadCourseUsersFieldFailGetUsers(test *testing.T) {
     if (apiErr.Locator != expectedLocator) {
         test.Fatalf("Incorrect error locator when user fetch failed. Expcted '%s', found '%s'.",
                 expectedLocator, apiErr.Locator);
+    }
+}
+
+func TestNonEmptyStringField(test *testing.T) {
+    testCases := []struct{ request any; errLoc string; jsonName string}{
+        {&struct{ APIRequest; Text string }{}, "", ""},
+
+        {&struct{ APIRequest; Text NonEmptyString }{Text: "ZZZ"}, "", "Text"},
+
+        {&struct{ APIRequest; Text NonEmptyString }{}, "-318", "Text"},
+        {&struct{ APIRequest; Text NonEmptyString }{Text: ""}, "-318", "Text"},
+
+        {&struct{ APIRequest; Text NonEmptyString `json:"text"`}{}, "-318", "text"},
+        {&struct{ APIRequest; Text NonEmptyString `json:"text,omitempty"`}{}, "-318", "text"},
+        {&struct{ APIRequest; Text NonEmptyString `json:"foo-bar"`}{}, "-318", "foo-bar"},
+        {&struct{ APIRequest; Text NonEmptyString `json:"foo-bar,omitempty"`}{}, "-318", "foo-bar"},
+    };
+
+    for i, testCase := range testCases {
+        apiErr := ValidateAPIRequest(nil, testCase.request, "");
+        if (apiErr != nil) {
+            if (testCase.errLoc != "") {
+                if (testCase.errLoc != apiErr.Locator) {
+                    test.Errorf("Case %d: Incorrect error returned on empty string. Expcted '%s', found '%s'.",
+                            i, testCase.errLoc, apiErr.Locator);
+                } else {
+                    if (testCase.jsonName != apiErr.AdditionalDetails["json-name"]) {
+                        test.Errorf("Case %d: Incorrect JSON name returned. Expcted '%s', found '%s'.",
+                                i, testCase.jsonName, apiErr.AdditionalDetails["json-name"]);
+                    }
+                }
+            } else {
+                test.Errorf("Case %d: Error retutned when it should not be: '%v'.", i, apiErr);
+            }
+        } else {
+            if (testCase.errLoc != "") {
+                test.Errorf("Case %d: Error not retutned when it should be.", i);
+            }
+        }
     }
 }
 
@@ -241,11 +272,7 @@ func TestBadPostFilesFieldNotExported(test *testing.T) {
     }
 
     request := badRequestType{
-        APIRequestCourseUserContext: APIRequestCourseUserContext{
-            CourseID: "course101",
-            UserEmail: "student@test.com",
-            UserPass: studentPass,
-        },
+        APIRequestCourseUserContext: standardCourseContext,
     };
 
     apiErr := ValidateAPIRequest(nil, &request, "");
@@ -416,4 +443,10 @@ var invalidJSONTestCases []baseAPIRequestTestCase = []baseAPIRequestTestCase{
     baseAPIRequestTestCase{Payload: `{"course-id": course101, "assignment-id": "hw0"}`},
     baseAPIRequestTestCase{Payload: `{"course-id": "course101" "assignment-id": "hw0"}`},
     baseAPIRequestTestCase{Payload: `{"course-id": "course101", "assignment-id": "hw0}`},
+};
+
+var standardCourseContext APIRequestCourseUserContext = APIRequestCourseUserContext{
+    CourseID: "course101",
+    UserEmail: "student@test.com",
+    UserPass: studentPass,
 };
