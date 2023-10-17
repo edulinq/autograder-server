@@ -12,7 +12,7 @@ type UserGetRequest struct {
     core.MinRoleGrader
     Users core.CourseUsers `json:"-"`
 
-    TargetEmail string `json:"target-email"`
+    TargetEmail core.NonEmptyString `json:"target-email"`
 }
 
 type UserGetResponse struct {
@@ -27,11 +27,9 @@ func HandleUserGet(request *UserGetRequest) (*UserGetResponse, *core.APIError) {
                 Add("course", request.Course.ID);
     }
 
-    // TEST - Need to ensure the email is not empty.
-
     response := UserGetResponse{};
 
-    user := request.Users[request.TargetEmail];
+    user := request.Users[string(request.TargetEmail)];
     if (user == nil) {
         return &response, nil;
     }
@@ -39,10 +37,10 @@ func HandleUserGet(request *UserGetRequest) (*UserGetResponse, *core.APIError) {
     response.FoundAGUser = true;
     response.User = core.NewUserInfo(user);
 
-    lmsUser, err := canvas.FetchUser(request.Course.CanvasInstanceInfo, request.TargetEmail);
+    lmsUser, err := canvas.FetchUser(request.Course.CanvasInstanceInfo, string(request.TargetEmail));
     if (err != nil) {
         return nil, core.NewInternalError("-502", &request.APIRequestCourseUserContext,
-                "Failed to fetch canvas user.").Err(err).Add("email", request.TargetEmail);
+                "Failed to fetch canvas user.").Err(err).Add("email", string(request.TargetEmail));
     }
 
     if (lmsUser == nil) {
