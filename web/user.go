@@ -288,7 +288,7 @@ func handleUserAdd(request *UserAddRequest) (int, any, error) {
 
     user, userExists, err := usr.NewOrMergeUser(users,
         request.Email, request.Name, request.Role, hashPass,
-        request.Force, course.LMSAdapter);
+        request.Force, course);
     response.UserExists = userExists;
 
     if (err != nil) {

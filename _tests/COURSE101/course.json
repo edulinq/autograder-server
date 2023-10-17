@@ -1,4 +1,7 @@
 {
     "id": "course101",
-    "display-name": "Course 101"
+    "display-name": "Course 101",
+    "lms": {
+        "type": "test"
+    }
 }

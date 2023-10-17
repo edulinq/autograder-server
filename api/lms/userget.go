@@ -4,8 +4,6 @@ import (
     "github.com/eriq-augustine/autograder/api/core"
 )
 
-// TEST - Write tests once the LMS abstraction is complete.
-
 type UserGetRequest struct {
     core.APIRequestCourseUserContext
     core.MinRoleGrader

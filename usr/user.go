@@ -14,7 +14,6 @@ import (
     "golang.org/x/crypto/argon2"
 
     "github.com/eriq-augustine/autograder/email"
-    "github.com/eriq-augustine/autograder/lms/adapter"
     "github.com/eriq-augustine/autograder/util"
 )
 
@@ -38,6 +37,10 @@ type User struct {
     Salt string `json:"salt"`
 
     LMSID string `json:"lms-id,omitempty"`
+}
+
+type LMSUserSyncer interface {
+    SyncUserWithLMS(user *User) error
 }
 
 // Sets the password and generates a new salt.
@@ -79,23 +82,6 @@ func generateHash(cleartext string, salt []byte) []byte {
     return argon2.IDKey([]byte(cleartext), salt, ARGON2_TIME, ARGON2_MEM_KB, ARGON2_THREADS, ARGON2_KEY_LEN_BYTES);
 }
 
-func (this *User) SyncWithLMS(lmsAdapter *adapter.LMSAdapter) error {
-    userInfo, err := lmsAdapter.FetchUser(this.Email)
-    if (err != nil) {
-        return err;
-    }
-
-    if (userInfo != nil) {
-        this.LMSID = userInfo.ID;
-
-        if (userInfo.Name != "") {
-            this.DisplayName = userInfo.Name;
-        }
-    }
-
-    return nil;
-}
-
 func LoadUsersFile(path string) (map[string]*User, error) {
     users := make(map[string]*User);
 
@@ -120,7 +106,7 @@ func SaveUsersFile(path string, users map[string]*User) error {
 // New users will just be retuturned and not be added to |users|.
 // If an LSM adapter is provided, an attempt to sync the user with the LMS will be made.
 func NewOrMergeUser(users map[string]*User, email string, name string, stringRole string, hashPass string,
-        force bool, lmsAdapter *adapter.LMSAdapter) (*User, bool, error) {
+        force bool, lmsUserSyncer LMSUserSyncer) (*User, bool, error) {
     user := users[email];
     userExists := (user != nil);
 
@@ -152,8 +138,8 @@ func NewOrMergeUser(users map[string]*User, email string, name string, stringRol
         return nil, false, fmt.Errorf("Could not set password: '%w'.", err);
     }
 
-    if (lmsAdapter != nil) {
-        err = user.SyncWithLMS(lmsAdapter);
+    if (lmsUserSyncer != nil) {
+        err = lmsUserSyncer.SyncUserWithLMS(user);
         if (err != nil) {
             return nil, false, fmt.Errorf("Could not sync user with the LMS: '%w'.", err);
         }

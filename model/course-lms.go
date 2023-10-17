@@ -2,6 +2,8 @@ package model
 
 import (
     "fmt"
+
+    "github.com/eriq-augustine/autograder/usr"
 )
 
 // Sync IDs with matching LMS users (does not add/remove users).
@@ -38,4 +40,27 @@ func (this *Course) SyncLMSUsers() (int, error) {
     }
 
     return count, nil;
+}
+
+func (this *Course) SyncUserWithLMS(user *usr.User) error {
+    if (this.LMSAdapter == nil) {
+        return nil;
+    }
+
+    userInfo, err := this.LMSAdapter.FetchUser(user.Email)
+    if (err != nil) {
+        return err;
+    }
+
+    if (userInfo == nil) {
+        return nil;
+    }
+
+    user.LMSID = userInfo.ID;
+
+    if (userInfo.Name != "") {
+        user.DisplayName = userInfo.Name;
+    }
+
+    return nil;
 }

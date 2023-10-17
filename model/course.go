@@ -140,6 +140,10 @@ func (this *Course) Validate() error {
         return err;
     }
 
+    if (this.LMSAdapter != nil) {
+        this.LMSAdapter.Validate(this);
+    }
+
     // Register tasks.
     for _, task := range this.Backup {
         this.tasks = append(this.tasks, task);
