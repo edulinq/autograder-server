@@ -25,10 +25,6 @@ type MinRoleOther bool;
 // The existence of this type in a struct also indicates that the request is at least a APIRequestCourseUserContext.
 type CourseUsers map[string]*usr.User;
 
-// A request having a field of this type indicates that the user making the request should be fetched.
-// The existence of this type in a struct also indicates that the request is at least a APIRequestCourseUserContext.
-type ContextUser *usr.User;
-
 // A request having a field of this type indicates that files from the POST request
 // will be qutomatically read and written to a temp directory on disk.
 type POSTFiles struct {
@@ -259,11 +255,6 @@ func checkRequestSpecialFields(request *http.Request, apiRequest any, endpoint s
             if (apiErr != nil) {
                 return apiErr;
             }
-        } else if (fieldValue.Type() == reflect.TypeOf((*ContextUser)(nil)).Elem()) {
-            apiErr := checkRequestContextUser(endpoint, apiRequest, i);
-            if (apiErr != nil) {
-                return apiErr;
-            }
         } else if (fieldValue.Type() == reflect.TypeOf((*POSTFiles)(nil)).Elem()) {
             apiErr := checkRequestPostFiles(request, endpoint, apiRequest, i);
             if (apiErr != nil) {
@@ -281,67 +272,35 @@ func checkRequestSpecialFields(request *http.Request, apiRequest any, endpoint s
 }
 
 func checkRequestCourseUsers(endpoint string, apiRequest any, fieldIndex int) *APIError {
-    _, users, apiErr := checkRequestUsers(endpoint, apiRequest, fieldIndex);
-    if (apiErr != nil) {
-        return apiErr;
-    }
-
-    reflect.ValueOf(apiRequest).Elem().Field(fieldIndex).Set(reflect.ValueOf(users));
-
-    return nil;
-}
-
-func checkRequestContextUser(endpoint string, apiRequest any, fieldIndex int) *APIError {
-    courseContext, users, apiErr := checkRequestUsers(endpoint, apiRequest, fieldIndex);
-    if (apiErr != nil) {
-        return apiErr;
-    }
-
-    user := users[courseContext.UserEmail];
-    if (user == nil) {
-        // Should never happen (request was authenticated).
-        return NewInternalError("-319", courseContext, "Could not find context user.").
-                Add("request", apiRequest);
-    }
-
-    reflect.ValueOf(apiRequest).Elem().Field(fieldIndex).Set(reflect.ValueOf(user));
-
-    return nil;
-}
-
-// A common function to check for user for a type-alias field.
-func checkRequestUsers(endpoint string, apiRequest any, fieldIndex int) (*APIRequestCourseUserContext, map[string]*usr.User, *APIError) {
     reflectValue := reflect.ValueOf(apiRequest).Elem();
+
+    structName := reflectValue.Type().Name();
 
     fieldValue := reflectValue.Field(fieldIndex);
     fieldType := reflectValue.Type().Field(fieldIndex);
 
-    structName := reflectValue.Type().Name();
-    fieldName := fieldValue.Type().Name()
-
     courseContextValue := reflectValue.FieldByName("APIRequestCourseUserContext");
     if (!courseContextValue.IsValid() || courseContextValue.IsZero()) {
-        return nil, nil,
-                NewBareInternalError("-311", endpoint, "A request with users alias type must embed APIRequestCourseUserContext").
-                        Add("request", apiRequest).
-                        Add("struct-name", structName).Add("field-name", fieldType.Name).Add("field-type", fieldName);
+        return NewBareInternalError("-311", endpoint, "A request with CourseUsers must embed APIRequestCourseUserContext").
+                Add("request", apiRequest).
+                Add("struct-name", structName).Add("field-name", fieldType.Name);
     }
     courseContext := courseContextValue.Interface().(APIRequestCourseUserContext);
 
     if (!fieldType.IsExported()) {
-        return nil, nil,
-                NewInternalError("-312", &courseContext, "A users alias field must be exported.").
-                        Add("struct-name", structName).Add("field-name", fieldType.Name).Add("field-type", fieldName);
+        return NewInternalError("-312", &courseContext, "A CourseUsers field must be exported.").
+                Add("struct-name", structName).Add("field-name", fieldType.Name);
     }
 
     users, err := courseContext.Course.GetUsers();
     if (err != nil) {
-        return nil, nil,
-                NewInternalError("-313", &courseContext, "Failed to fetch embeded users.").Err(err).
-                        Add("struct-name", structName).Add("field-name", fieldType.Name).Add("field-type", fieldName);
+        return NewInternalError("-313", &courseContext, "Failed to fetch embeded users.").Err(err).
+                Add("struct-name", structName).Add("field-name", fieldType.Name);
     }
 
-    return &courseContext, users, nil;
+    fieldValue.Set(reflect.ValueOf(users));
+
+    return nil;
 }
 
 func checkRequestPostFiles(request *http.Request, endpoint string, apiRequest any, fieldIndex int) *APIError {
