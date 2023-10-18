@@ -7,6 +7,7 @@ import (
 )
 
 var routes []*core.Route = []*core.Route{
+    core.NewAPIRoute(core.NewEndpoint(`submission/history`), HandleHistory),
     core.NewAPIRoute(core.NewEndpoint(`submission/peek`), HandlePeek),
     core.NewAPIRoute(core.NewEndpoint(`submission/fetch/scores`), HandleFetchScores),
 };

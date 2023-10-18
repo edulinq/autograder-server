@@ -6,6 +6,8 @@ package util
 
 import (
     "time"
+
+    "github.com/rs/zerolog/log"
 )
 
 const TIMESTAMP_FORMAT = time.RFC3339;
@@ -20,4 +22,14 @@ func ToTimestamp(instance time.Time) string {
 
 func FromTimestamp(timestamp string) (time.Time, error) {
     return time.Parse(TIMESTAMP_FORMAT, timestamp);
+}
+
+func MustFromTimestamp(timestamp string) time.Time {
+    value, err := FromTimestamp(timestamp);
+    if (err != nil) {
+        log.Fatal().Err(err).Str("timestamp", timestamp).Str("format", TIMESTAMP_FORMAT).
+                Msg("Failed to parse timestamp.");
+    }
+
+    return value;
 }
