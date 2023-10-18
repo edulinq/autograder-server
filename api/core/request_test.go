@@ -87,44 +87,63 @@ func TestGetMaxRole(test *testing.T) {
     }
 }
 
-func TestBadCourseUsersFieldNoContext(test *testing.T) {
-    // No embeded course context.
-    type badCourseUsersNoCourse struct {
-        Users CourseUsers
-    }
+// Test CourseUsers and ContextUser.
+// No embeded course context.
+func TestBadUsersFieldNoContext(test *testing.T) {
+    testCases := []struct{ request any;  }{
+        { &struct{ Users CourseUsers }{} },
+        { &struct{ User ContextUser }{} },
+    };
 
-    apiErr := checkRequestSpecialFields(nil, &badCourseUsersNoCourse{}, "");
-    if (apiErr == nil) {
-        test.Fatalf("Struct with no course context does not return an error,");
-    }
+    for i, testCase := range testCases {
+        apiErr := checkRequestSpecialFields(nil, testCase.request, "");
+        if (apiErr == nil) {
+            test.Fatalf("Case %d: Struct with no course context does not return an error: '%+v'.",
+                    i, testCase.request);
+        }
 
-    if (apiErr.Locator != "-311") {
-        test.Fatalf("Struct with no course context does not return an error with locator '-541', found '%s'.", apiErr.Locator);
+        if (apiErr.Locator != "-311") {
+            test.Fatalf("Case %d: Struct with no course context does not return an error with locator '-311', found '%s': '%+v.",
+                    i, apiErr.Locator, testCase.request);
+        }
     }
 }
 
-func TestBadCourseUsersFieldNotExported(test *testing.T) {
-    // Users are not exported.
-    type badCourseUsersNonExported struct {
-        APIRequestCourseUserContext
-        MinRoleStudent
-
-        users CourseUsers
-    }
-
-    request := badCourseUsersNonExported{
-        APIRequestCourseUserContext: standardCourseContext,
+// Test CourseUsers and ContextUser.
+// Users are not exported.
+func TestBadUsersFieldNotExported(test *testing.T) {
+    testCases := []struct{ request any;  }{
+        {
+            &struct{ APIRequestCourseUserContext; MinRoleStudent; users CourseUsers }{
+                APIRequestCourseUserContext: APIRequestCourseUserContext{
+                    CourseID: "course101",
+                    UserEmail: "student@test.com",
+                    UserPass: studentPass,
+                },
+            },
+        },
+        {
+            &struct{ APIRequestCourseUserContext; MinRoleStudent; user ContextUser }{
+                APIRequestCourseUserContext: APIRequestCourseUserContext{
+                    CourseID: "course101",
+                    UserEmail: "student@test.com",
+                    UserPass: studentPass,
+                },
+            },
+        },
     };
 
-    apiErr := ValidateAPIRequest(nil, &request, "");
-    if (apiErr == nil) {
-        test.Fatalf("Struct with non-exported course users does not return an error,");
-    }
+    for i, testCase := range testCases {
+        apiErr := ValidateAPIRequest(nil, testCase.request, "");
+        if (apiErr == nil) {
+            test.Fatalf("Case %d: Struct with non-exported field does not return an error: '%+v'.",
+                    i, testCase.request);
+        }
 
-    expectedLocator := "-312";
-    if (apiErr.Locator != expectedLocator) {
-        test.Fatalf("Struct with non-exported course users does not return an error with the correct locator. Expcted '%s', found '%s'.",
-                expectedLocator, apiErr.Locator);
+        if (apiErr.Locator != "-312") {
+            test.Fatalf("Case %d: Struct with non-exported field does not return an error with locator '-312', found '%s': '%v.",
+                    i, apiErr.Locator, apiErr);
+        }
     }
 }
 
