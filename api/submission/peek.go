@@ -16,38 +16,31 @@ type PeekRequest struct {
     core.APIRequestAssignmentContext
     core.MinRoleStudent
 
-    TargetEmail string `json:"target-email"`
+    TargetUser core.TargetUserSelfOrGrader `json:"target-email"`
     TargetSubmission string `json:"target-submission"`
 }
 
 type PeekResponse struct {
-    Found bool `json:"found"`
-    Assignment *artifact.GradedAssignment `json:"assignment"`
+    FoundUser bool `json:"found-user"`
+    FoundSubmission bool `json:"found-submission"`
+    Submission *artifact.GradedAssignment `json:"submission"`
 }
 
 func HandlePeek(request *PeekRequest) (*PeekResponse, *core.APIError) {
-    // Default the target to self.
-    if (request.TargetEmail == "") {
-        request.TargetEmail = request.User.Email;
-    }
-
-    // If the target is not self, user must be a grader or above.
-    if ((request.TargetEmail != request.User.Email) && (request.User.Role < NON_SELF_PEEK_PERMISSIONS)) {
-        return nil, core.NewBadPermissionsError("-401", &request.APIRequestCourseUserContext, NON_SELF_PEEK_PERMISSIONS, "Non-Self Peek");
-    }
-
     // Ensure the submission ID is short.
     request.TargetSubmission = common.GetShortSubmissionID(request.TargetSubmission);
 
     response := PeekResponse{};
 
-    paths, err := request.Assignment.GetSubmissionResults(request.TargetEmail);
-    if (err != nil) {
-        return nil, core.NewInternalError("-402", &request.APIRequestCourseUserContext, "Failed to get submission results.").Err(err);
+    if (!request.TargetUser.Found) {
+        return &response, nil;
     }
 
-    if (len(paths) == 0) {
-        return &response, nil;
+    response.FoundUser = true;
+
+    paths, err := request.Assignment.GetSubmissionResults(request.TargetUser.Email);
+    if (err != nil) {
+        return nil, core.NewInternalError("-402", &request.APIRequestCourseUserContext, "Failed to get submission results.").Err(err);
     }
 
     targetPath := "";
@@ -66,16 +59,16 @@ func HandlePeek(request *PeekRequest) (*PeekResponse, *core.APIError) {
         return &response, nil;
     }
 
-    assignment := artifact.GradedAssignment{};
-    err = util.JSONFromFile(targetPath, &assignment);
+    submission := artifact.GradedAssignment{};
+    err = util.JSONFromFile(targetPath, &submission);
     if (err != nil) {
         return nil, core.NewInternalError("-403", &request.APIRequestCourseUserContext,
-                "Failed to deserialize assignment.").Err(err).
+                "Failed to deserialize submission.").Err(err).
                 Add("path", targetPath);
     }
 
-    response.Found = true;
-    response.Assignment = &assignment;
+    response.FoundSubmission = true;
+    response.Submission = &submission;
 
     return &response, nil;
 }
