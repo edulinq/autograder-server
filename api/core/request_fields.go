@@ -34,15 +34,16 @@ type POSTFiles struct {
 }
 
 // A request having a field of this type indicates that the request is targeting a specific user.
+// This type serializes to/from a string.
 // If no user is specified, then the context user is the target.
 // If a user is specified, then the context user must be a grader
 // (any user can acces their own resources, but higher permissions are required to access another user's resources).
 // No error is generated if the user is not found.
 // The existence of this type in a struct also indicates that the request is at least a APIRequestCourseUserContext.
 type TargetUserSelfOrGrader struct {
-    FoundUser bool
-    TargetUserEmail string
-    TargetUser *usr.User
+    Found bool
+    Email string
+    User *usr.User
 }
 
 // The type for a named field that must have a non-empty string value.
@@ -99,21 +100,21 @@ func checkRequestTargetUser(endpoint string, apiRequest any, fieldIndex int) *AP
     }
 
     field := reflect.ValueOf(apiRequest).Elem().Field(fieldIndex).Interface().(TargetUserSelfOrGrader);
-    if (field.TargetUserEmail == "") {
-        field.TargetUserEmail = courseContext.User.Email;
+    if (field.Email == "") {
+        field.Email = courseContext.User.Email;
     }
 
     // Operations not on self require grader permissions.
-    if ((field.TargetUserEmail != courseContext.User.Email) && (courseContext.User.Role < usr.Grader)) {
+    if ((field.Email != courseContext.User.Email) && (courseContext.User.Role < usr.Grader)) {
         return NewBadPermissionsError("-319", courseContext, usr.Grader, "Non-Self Target User");
     }
 
-    user := users[field.TargetUserEmail];
+    user := users[field.Email];
     if (user == nil) {
-        field.FoundUser = false;
+        field.Found = false;
     } else {
-        field.FoundUser = true;
-        field.TargetUser = user;
+        field.Found = true;
+        field.User = user;
     }
 
     reflect.ValueOf(apiRequest).Elem().Field(fieldIndex).Set(reflect.ValueOf(field));
@@ -292,11 +293,11 @@ func (this *TargetUserSelfOrGrader) UnmarshalJSON(data []byte) error {
         text = "";
     }
 
-    this.TargetUserEmail = text;
+    this.Email = text;
 
     return nil;
 }
 
 func (this TargetUserSelfOrGrader) MarshalJSON() ([]byte, error) {
-    return json.Marshal(this.TargetUserEmail);
+    return json.Marshal(this.Email);
 }
