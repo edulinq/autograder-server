@@ -3,49 +3,35 @@ package submission
 import (
     "github.com/eriq-augustine/autograder/api/core"
     "github.com/eriq-augustine/autograder/artifact"
-    "github.com/eriq-augustine/autograder/usr"
     "github.com/eriq-augustine/autograder/util"
 )
-
-const NON_SELF_HISTORY_PERMISSIONS = usr.Grader;
 
 type HistoryRequest struct {
     core.APIRequestAssignmentContext
     core.MinRoleStudent
     Users core.CourseUsers
 
-    TargetEmail string `json:"target-email"`
+    TargetUser core.TargetUserSelfOrGrader `json:"target-email"`
 }
 
 type HistoryResponse struct {
-    Found bool `json:"found:`
+    FoundUser bool `json:"found-user"`
     History []*artifact.SubmissionSummary `json:"history"`
 }
 
 func HandleHistory(request *HistoryRequest) (*HistoryResponse, *core.APIError) {
-    // Default the target to self.
-    if (request.TargetEmail == "") {
-        request.TargetEmail = request.User.Email;
-    }
-
-    // If the target is not self, user must be a grader or above.
-    if ((request.TargetEmail != request.User.Email) && (request.User.Role < NON_SELF_HISTORY_PERMISSIONS)) {
-        return nil, core.NewBadPermissionsError("-406", &request.APIRequestCourseUserContext, NON_SELF_HISTORY_PERMISSIONS, "Non-Self History");
-    }
-
     response := HistoryResponse{
-        Found: false,
+        FoundUser: false,
         History: make([]*artifact.SubmissionSummary, 0),
     };
 
-    if (request.Users[request.TargetEmail] == nil) {
-        // User not found.
+    if (!request.TargetUser.Found) {
         return &response, nil;
     }
 
-    response.Found = true;
+    response.FoundUser = true;
 
-    paths, err := request.Assignment.GetSubmissionSummaries(request.TargetEmail);
+    paths, err := request.Assignment.GetSubmissionSummaries(request.TargetUser.Email);
     if (err != nil) {
         return nil, core.NewInternalError("-407", &request.APIRequestCourseUserContext, "Failed to get submission summaries.").Err(err);
     }

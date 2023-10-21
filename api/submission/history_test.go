@@ -39,7 +39,7 @@ func TestHistory(test *testing.T) {
         response := core.SendTestAPIRequestFull(test, core.NewEndpoint(`submission/history`), fields, nil, testCase.role);
         if (!response.Success) {
             if (testCase.permError) {
-                expectedLocator := "-406";
+                expectedLocator := "-319";
                 if (response.Locator != expectedLocator) {
                     test.Errorf("Case %d: Incorrect error returned on permissions error. Expcted '%s', found '%s'.",
                             i, expectedLocator, response.Locator);
@@ -54,8 +54,8 @@ func TestHistory(test *testing.T) {
         var responseContent HistoryResponse;
         util.MustJSONFromString(util.MustToJSON(response.Content), &responseContent);
 
-        if (testCase.found != responseContent.Found) {
-            test.Errorf("Case %d: Found value mismatch. Expected: '%v', actual: '%v'.", i, testCase.found, responseContent.Found);
+        if (testCase.found != responseContent.FoundUser) {
+            test.Errorf("Case %d: FoundUser value mismatch. Expected: '%v', actual: '%v'.", i, testCase.found, responseContent.FoundUser);
             continue;
         }
 

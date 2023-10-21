@@ -6,11 +6,8 @@ import (
     "github.com/eriq-augustine/autograder/api/core"
     "github.com/eriq-augustine/autograder/artifact"
     "github.com/eriq-augustine/autograder/common"
-    "github.com/eriq-augustine/autograder/usr"
     "github.com/eriq-augustine/autograder/util"
 )
-
-const NON_SELF_PEEK_PERMISSIONS = usr.Grader;
 
 type PeekRequest struct {
     core.APIRequestAssignmentContext
