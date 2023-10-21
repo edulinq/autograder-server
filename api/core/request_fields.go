@@ -35,6 +35,16 @@ type POSTFiles struct {
 
 // A request having a field of this type indicates that the request is targeting a specific user.
 // This type serializes to/from a string.
+// A user's email must be specified, but no error is generated if the user is not found.
+// The existence of this type in a struct also indicates that the request is at least a APIRequestCourseUserContext.
+type TargetUser struct {
+    Found bool
+    Email string
+    User *usr.User
+}
+
+// A request having a field of this type indicates that the request is targeting a specific user.
+// This type serializes to/from a string.
 // If no user is specified, then the context user is the target.
 // If a user is specified, then the context user must be a grader
 // (any user can acces their own resources, but higher permissions are required to access another user's resources).
@@ -61,8 +71,13 @@ func checkRequestSpecialFields(request *http.Request, apiRequest any, endpoint s
             if (apiErr != nil) {
                 return apiErr;
             }
-        } else if (fieldValue.Type() == reflect.TypeOf((*TargetUserSelfOrGrader)(nil)).Elem()) {
+        } else if (fieldValue.Type() == reflect.TypeOf((*TargetUser)(nil)).Elem()) {
             apiErr := checkRequestTargetUser(endpoint, apiRequest, i);
+            if (apiErr != nil) {
+                return apiErr;
+            }
+        } else if (fieldValue.Type() == reflect.TypeOf((*TargetUserSelfOrGrader)(nil)).Elem()) {
+            apiErr := checkRequestTargetUserSelfOrGrader(endpoint, apiRequest, i);
             if (apiErr != nil) {
                 return apiErr;
             }
@@ -72,7 +87,7 @@ func checkRequestSpecialFields(request *http.Request, apiRequest any, endpoint s
                 return apiErr;
             }
         } else if (fieldValue.Type() == reflect.TypeOf((*NonEmptyString)(nil)).Elem()) {
-            apiErr := checkRequestNonEmptyString(request, endpoint, apiRequest, i);
+            apiErr := checkRequestNonEmptyString(endpoint, apiRequest, i);
             if (apiErr != nil) {
                 return apiErr;
             }
@@ -94,6 +109,38 @@ func checkRequestCourseUsers(endpoint string, apiRequest any, fieldIndex int) *A
 }
 
 func checkRequestTargetUser(endpoint string, apiRequest any, fieldIndex int) *APIError {
+    courseContext, users, apiErr := baseCheckRequestUsersField(endpoint, apiRequest, fieldIndex);
+    if (apiErr != nil) {
+        return apiErr;
+    }
+
+    reflectValue := reflect.ValueOf(apiRequest).Elem();
+    field := reflectValue.Field(fieldIndex).Interface().(TargetUser);
+
+    structName := reflectValue.Type().Name();
+    fieldType := reflectValue.Type().Field(fieldIndex);
+    jsonName := util.JSONFieldName(fieldType);
+
+    if (field.Email == "") {
+        return NewBadRequestError("-320", &courseContext.APIRequest,
+                fmt.Sprintf("Field '%s' requires a non-empty string, empty or null provided.", jsonName)).
+                Add("struct-name", structName).Add("field-name", fieldType.Name).Add("json-name", jsonName);
+    }
+
+    user := users[field.Email];
+    if (user == nil) {
+        field.Found = false;
+    } else {
+        field.Found = true;
+        field.User = user;
+    }
+
+    reflect.ValueOf(apiRequest).Elem().Field(fieldIndex).Set(reflect.ValueOf(field));
+
+    return nil;
+}
+
+func checkRequestTargetUserSelfOrGrader(endpoint string, apiRequest any, fieldIndex int) *APIError {
     courseContext, users, apiErr := baseCheckRequestUsersField(endpoint, apiRequest, fieldIndex);
     if (apiErr != nil) {
         return apiErr;
@@ -152,7 +199,7 @@ func checkRequestPostFiles(request *http.Request, endpoint string, apiRequest an
     return nil;
 }
 
-func checkRequestNonEmptyString(request *http.Request, endpoint string, apiRequest any, fieldIndex int) *APIError {
+func checkRequestNonEmptyString(endpoint string, apiRequest any, fieldIndex int) *APIError {
     reflectValue := reflect.ValueOf(apiRequest).Elem();
 
     structName := reflectValue.Type().Name();
@@ -161,7 +208,7 @@ func checkRequestNonEmptyString(request *http.Request, endpoint string, apiReque
     fieldType := reflectValue.Type().Field(fieldIndex);
     jsonName := util.JSONFieldName(fieldType);
 
-    value := string(fieldValue.Interface().(NonEmptyString));
+    value := fieldValue.Interface().(NonEmptyString);
     if (value == "") {
         return NewBareBadRequestError("-318", endpoint,
                 fmt.Sprintf("Field '%s' requires a non-empty string, empty or null provided.", jsonName)).
@@ -280,6 +327,26 @@ func baseCheckRequestUsersField(endpoint string, apiRequest any, fieldIndex int)
     }
 
     return &courseContext, users, nil;
+}
+
+func (this *TargetUser) UnmarshalJSON(data []byte) error {
+    var text string;
+    err := json.Unmarshal(data, &text);
+    if (err != nil) {
+        return err;
+    }
+
+    if ((text == "null") || text == `""`) {
+        text = "";
+    }
+
+    this.Email = text;
+
+    return nil;
+}
+
+func (this TargetUser) MarshalJSON() ([]byte, error) {
+    return json.Marshal(this.Email);
 }
 
 func (this *TargetUserSelfOrGrader) UnmarshalJSON(data []byte) error {

@@ -310,6 +310,44 @@ func TestBadPostFilesStoreFail(test *testing.T) {
     }
 }
 
+func TestTargetUserJSON(test *testing.T) {
+    type testType struct {
+        target TargetUser
+    }
+
+    testCases := []struct{ in string; expected TargetUser; }{
+        {`""`, TargetUser{false, "", nil}},
+        {`"a"`, TargetUser{false, "a", nil}},
+        {`"student@test.com"`, TargetUser{false, "student@test.com", nil}},
+        {`"a\"b\"c"`, TargetUser{false, `a"b"c`, nil}},
+    };
+
+    for i, testCase := range testCases {
+        var target TargetUser;
+        err := json.Unmarshal([]byte(testCase.in), &target);
+        if (err != nil) {
+            test.Errorf("Case %d: Failed to unmarshal: '%v'.", i, err);
+            continue;
+        }
+
+        if (testCase.expected != target) {
+            test.Errorf("Case %d: Result not as expected. Expected: '%+v', Actual: '%+v'.", i, testCase.expected, target);
+            continue;
+        }
+
+        out, err := util.ToJSON(target);
+        if (err != nil) {
+            test.Errorf("Case %d: Failed to marshal: '%v'.", i, err);
+            continue;
+        }
+
+        if (testCase.in != out) {
+            test.Errorf("Case %d: Remarshal does not produce the same as input. Expected: '%+v', Actual: '%+v'.", i, testCase.in, out);
+            continue;
+        }
+    }
+}
+
 func TestTargetUserSelfOrGraderJSON(test *testing.T) {
     type testType struct {
         target TargetUserSelfOrGrader
@@ -376,7 +414,7 @@ func TestTargetUserSelfOrGrader(test *testing.T) {
         {usr.Owner,   "student@test.com", false, TargetUserSelfOrGrader{true, "student@test.com", users["student@test.com"]}},
 
         // Not found.
-        {usr.Grader, "ZZZ",   false, TargetUserSelfOrGrader{false, "ZZZ", nil}},
+        {usr.Grader, "ZZZ", false, TargetUserSelfOrGrader{false, "ZZZ", nil}},
     };
 
     for i, testCase := range testCases {
@@ -397,6 +435,70 @@ func TestTargetUserSelfOrGrader(test *testing.T) {
                 expectedLocator := "-319";
                 if (expectedLocator != apiErr.Locator) {
                     test.Errorf("Case %d: Incorrect error returned on permissions error. Expcted '%s', found '%s'.",
+                            i, expectedLocator, apiErr.Locator);
+                }
+            } else {
+                test.Errorf("Case %d: Failed to validate request: '%v'.", i, apiErr);
+            }
+
+            continue;
+        }
+
+        if (!reflect.DeepEqual(testCase.expected, request.User)) {
+            test.Errorf("Case %d: Result not as expected. Expcted '%+v', found '%+v'.",
+                    i, testCase.expected, request.User);
+        }
+    }
+}
+
+func TestTargetUser(test *testing.T) {
+    type requestType struct {
+        APIRequestCourseUserContext
+        MinRoleOther
+
+        User TargetUser
+    }
+
+    users, err := grader.GetCourse("course101").GetUsers();
+    if (err != nil) {
+        test.Fatalf("Failed to get users: '%v'.", err);
+    }
+
+    testCases := []struct{ role usr.UserRole; target string; expected TargetUser; }{
+        {usr.Student, "student@test.com", TargetUser{true, "student@test.com", users["student@test.com"]}},
+        {usr.Grader,  "grader@test.com",  TargetUser{true, "grader@test.com", users["grader@test.com"]}},
+
+        {usr.Student, "", TargetUser{}},
+        {usr.Grader,  "", TargetUser{}},
+
+        {usr.Other,   "student@test.com", TargetUser{true, "student@test.com", users["student@test.com"]}},
+        {usr.Student, "grader@test.com",  TargetUser{true, "grader@test.com", users["grader@test.com"]}},
+        {usr.Grader,  "student@test.com", TargetUser{true, "student@test.com", users["student@test.com"]}},
+        {usr.Admin,   "student@test.com", TargetUser{true, "student@test.com", users["student@test.com"]}},
+        {usr.Owner,   "student@test.com", TargetUser{true, "student@test.com", users["student@test.com"]}},
+
+        // Not found.
+        {usr.Grader, "ZZZ", TargetUser{false, "ZZZ", nil}},
+    };
+
+    for i, testCase := range testCases {
+        request := requestType{
+            APIRequestCourseUserContext: APIRequestCourseUserContext{
+                CourseID: "course101",
+                UserEmail: usr.GetRoleString(testCase.role) + "@test.com",
+                UserPass: util.Sha256HexFromString(usr.GetRoleString(testCase.role)),
+            },
+            User: TargetUser{
+                Email: testCase.target,
+            },
+        };
+
+        apiErr := ValidateAPIRequest(nil, &request, "");
+        if (apiErr != nil) {
+            if (testCase.target == "") {
+                expectedLocator := "-320";
+                if (expectedLocator != apiErr.Locator) {
+                    test.Errorf("Case %d: Incorrect error returned on empty string. Expcted '%s', found '%s'.",
                             i, expectedLocator, apiErr.Locator);
                 }
             } else {
