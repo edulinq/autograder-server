@@ -9,7 +9,7 @@ type UserGetRequest struct {
     core.MinRoleGrader
     Users core.CourseUsers `json:"-"`
 
-    TargetEmail core.NonEmptyString `json:"target-email"`
+    TargetUser core.TargetUser `json:"target-email"`
 }
 
 type UserGetResponse struct {
@@ -26,18 +26,17 @@ func HandleUserGet(request *UserGetRequest) (*UserGetResponse, *core.APIError) {
 
     response := UserGetResponse{};
 
-    user := request.Users[string(request.TargetEmail)];
-    if (user == nil) {
+    if (!request.TargetUser.Found) {
         return &response, nil;
     }
 
     response.FoundAGUser = true;
-    response.User = core.NewUserInfo(user);
+    response.User = core.NewUserInfo(request.TargetUser.User);
 
-    lmsUser, err := request.Course.LMSAdapter.FetchUser(string(request.TargetEmail));
+    lmsUser, err := request.Course.LMSAdapter.FetchUser(string(request.TargetUser.Email));
     if (err != nil) {
         return nil, core.NewInternalError("-502", &request.APIRequestCourseUserContext,
-                "Failed to fetch LMS user.").Err(err).Add("email", string(request.TargetEmail));
+                "Failed to fetch LMS user.").Err(err).Add("email", string(request.TargetUser.Email));
     }
 
     if (lmsUser == nil) {
