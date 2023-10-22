@@ -28,7 +28,7 @@ func Zip(source string, dest string) error {
     writer := zip.NewWriter(zipfile);
     defer writer.Close();
 
-    return ZipWithWriter(source, "", writer);
+    return AddDirToZipWriter(source, "", writer);
 }
 
 // Zip to a slice of bytes.
@@ -39,7 +39,7 @@ func ZipToBytes(source string, prefix string) ([]byte, error) {
     writer := zip.NewWriter(buffer);
     defer writer.Close();
 
-    err := ZipWithWriter(source, prefix, writer);
+    err := AddDirToZipWriter(source, prefix, writer);
     if (err != nil) {
         return nil, err;
     }
@@ -49,50 +49,24 @@ func ZipToBytes(source string, prefix string) ([]byte, error) {
 }
 
 // |prefix| can be used to set a dir that the zip contents will be located in.
-func ZipWithWriter(source string, prefix string, writer *zip.Writer) error {
+func AddDirToZipWriter(source string, prefix string, writer *zip.Writer) error {
     err := filepath.Walk(source, func(path string, info os.FileInfo, err error) error {
         if (err != nil) {
             return err;
         }
 
-        header, err := zip.FileInfoHeader(info);
-        if (err != nil) {
-            return fmt.Errorf("Could not create file header for '%s': '%w'.", path, err);
-        }
-
-        header.Method = zip.Deflate;
-
-        header.Name, err = filepath.Rel(filepath.Dir(source), path);
+        archivePath, err := filepath.Rel(filepath.Dir(source), path);
         if (err != nil) {
             return fmt.Errorf("Could not compute relative path for '%s' (wrt '%s'): '%w'.", path, source, err);
         }
 
         if (prefix != "") {
-            header.Name = filepath.Join(prefix, header.Name);
+            archivePath = filepath.Join(prefix, archivePath);
         }
 
-        if (info.IsDir()) {
-            header.Name += "/";
-        }
-
-        headerWriter, err := writer.CreateHeader(header);
+        err = AddFileToZipWriter(path, archivePath, writer);
         if (err != nil) {
-            return fmt.Errorf("Could not create file header writer for '%s': '%w'.", path, err);
-        }
-
-        if (info.IsDir()) {
-            return nil
-        }
-
-        file, err := os.Open(path);
-        if (err != nil) {
-            return fmt.Errorf("Could not create file handle for '%s': '%w'.", path, err);
-        }
-        defer file.Close();
-
-        _, err = io.Copy(headerWriter, file);
-        if (err != nil) {
-            return fmt.Errorf("Could not copy file into zipfile '%s': '%w'.", path, err);
+            return fmt.Errorf("Could not add file to zip archive '%s': '%w'.", path, err);
         }
 
         return nil;
@@ -100,6 +74,50 @@ func ZipWithWriter(source string, prefix string, writer *zip.Writer) error {
 
     if (err != nil) {
         return fmt.Errorf("Could not create zip file for source '%s': '%w'.", source, err);
+    }
+
+    return nil;
+}
+
+// Add an existing file to an ongoing zip writer.
+// This can be used to add several files to an archive that may not start in the same source directory.
+// |archivePath| is used to set the file's path/name within the archive.
+func AddFileToZipWriter(path string, archivePath string, writer *zip.Writer) error {
+    info, err := os.Stat(path);
+    if (err != nil) {
+        return fmt.Errorf("Could not stat source path '%s': '%w'.", path, err);
+    }
+
+    header, err := zip.FileInfoHeader(info);
+    if (err != nil) {
+        return fmt.Errorf("Could not create file header for '%s': '%w'.", path, err);
+    }
+
+    header.Method = zip.Deflate;
+    header.Name = archivePath;
+
+    if (info.IsDir() && !strings.HasSuffix(header.Name, "/")) {
+        header.Name += "/";
+    }
+
+    headerWriter, err := writer.CreateHeader(header);
+    if (err != nil) {
+        return fmt.Errorf("Could not create file header writer for '%s': '%w'.", path, err);
+    }
+
+    if (info.IsDir()) {
+        return nil
+    }
+
+    file, err := os.Open(path);
+    if (err != nil) {
+        return fmt.Errorf("Could not create file handle for '%s': '%w'.", path, err);
+    }
+    defer file.Close();
+
+    _, err = io.Copy(headerWriter, file);
+    if (err != nil) {
+        return fmt.Errorf("Could not copy file into zipfile '%s': '%w'.", path, err);
     }
 
     return nil;
@@ -145,4 +163,50 @@ func Unzip(zipPath string, outDir string) error {
     }
 
     return nil;
+}
+
+// A type to help handling ongoing zip operations where files are added individually.
+// Once closed or GetBytes() as been called, no new files can be added.
+type OngoingZipOperation struct {
+    buffer *bytes.Buffer
+    writer *zip.Writer
+}
+
+func NewOngoingZipOperation() *OngoingZipOperation {
+    buffer := new(bytes.Buffer);
+
+    return &OngoingZipOperation{
+        buffer: buffer,
+        writer: zip.NewWriter(buffer),
+    };
+}
+
+func (this *OngoingZipOperation) AddDir(path string, prefix string) error {
+    if (this.writer == nil) {
+        return fmt.Errorf("Can not add dir to closed zip operation: '%s'.", path);
+    }
+
+    return AddDirToZipWriter(path, prefix, this.writer);
+}
+
+func (this *OngoingZipOperation) AddFile(path string, archivePath string) error {
+    if (this.writer == nil) {
+        return fmt.Errorf("Can not add file to closed zip operation: '%s'.", path);
+    }
+
+    return AddFileToZipWriter(path, archivePath, this.writer);
+}
+
+func (this *OngoingZipOperation) GetBytes() []byte {
+    this.Close();
+    return this.buffer.Bytes();
+}
+
+func (this *OngoingZipOperation) Close() {
+    if (this.writer == nil) {
+        return;
+    }
+
+    this.writer.Close();
+    this.writer = nil;
 }
