@@ -37,8 +37,8 @@ func main() {
         log.Fatal().Err(err).Msg("Could not fetch users.");
     }
 
-    fmt.Println("id\temail\tname");
+    fmt.Println("id\temail\tname\trole");
     for _, user := range users {
-        fmt.Printf("%s\t%s\t%s\n", user.ID, user.Email, user.Name);
+        fmt.Printf("%s\t%s\t%s\t%s\n", user.ID, user.Email, user.Name, user.Role.String());
     }
 }

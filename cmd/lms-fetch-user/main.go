@@ -43,6 +43,6 @@ func main() {
         return;
     }
 
-    fmt.Println("id\temail\tname");
-    fmt.Printf("%s\t%s\t%s\n", user.ID, user.Email, user.Name);
+    fmt.Println("id\temail\tname\trole");
+    fmt.Printf("%s\t%s\t%s\t%s\n", user.ID, user.Email, user.Name, user.Role.String());
 }

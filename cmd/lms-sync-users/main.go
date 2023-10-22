@@ -1,8 +1,6 @@
 package main
 
 import (
-    "fmt"
-
     "github.com/alecthomas/kong"
     "github.com/rs/zerolog/log"
 
@@ -13,6 +11,8 @@ import (
 var args struct {
     config.ConfigArgs
     Path string `help:"Path to course JSON file." arg:"" type:"existingfile"`
+    DryRun bool `help:"Do not actually do the operation, just state what you would do." default:"false"`
+    SkipSendEmails bool `help:"Skip sending out emails to new users (always true if a dry run)." default:"false"`
 }
 
 func main() {
@@ -30,10 +30,11 @@ func main() {
         log.Fatal().Msg("Course has no LMS info associated with it.");
     }
 
-    count, err := course.SyncLMSUsers();
+    args.SkipSendEmails = (args.SkipSendEmails || args.DryRun);
+    result, err := course.SyncLMSUsers(args.DryRun, !args.SkipSendEmails);
     if (err != nil) {
         log.Fatal().Err(err).Msg("Failed to sync LMS users.");
     }
 
-    fmt.Printf("Updated %d users.\n", count);
+    result.PrintReport();
 }
