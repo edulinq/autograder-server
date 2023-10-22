@@ -1,6 +1,6 @@
 package usr
 
-// It is expected that any cleartext password passed into functions here
+// It is expected that any password passed into functions here
 // are already a hex encoding of a sha256 hash of the original cleartext
 // see util.Sha256Hex().
 
@@ -8,6 +8,7 @@ import (
     "crypto/subtle"
     "encoding/hex"
     "fmt"
+    "strings"
     "time"
 
     "github.com/rs/zerolog/log"
@@ -44,13 +45,14 @@ type LMSUserSyncer interface {
 }
 
 // Sets the password and generates a new salt.
-func (this *User) SetPassword(cleartext string) error {
+// The passed in passowrd should actually be a hash of the cleartext password.
+func (this *User) SetPassword(hashPass string) error {
     salt, err := util.RandBytes(SALT_LENGTH_BYTES);
     if (err != nil) {
         return fmt.Errorf("Could not generate salt: '%w'.", err);
     }
 
-    pass := generateHash(cleartext, salt);
+    pass := generateHash(hashPass, salt);
 
     this.Salt = hex.EncodeToString(salt);
     this.Pass = hex.EncodeToString(pass);
@@ -60,7 +62,7 @@ func (this *User) SetPassword(cleartext string) error {
 
 // Return true if the password matches the hash, false otherwise.
 // Any errors (which can only come from bad hex strings) will be logged and ignored (false will be returned).
-func (this *User) CheckPassword(cleartext string) bool {
+func (this *User) CheckPassword(hashPass string) bool {
     thisHash, err := hex.DecodeString(this.Pass);
     if (err != nil) {
         log.Warn().Err(err).Str("user", this.Email).Msg("Bad password hash for user.");
@@ -73,13 +75,13 @@ func (this *User) CheckPassword(cleartext string) bool {
         return false;
     }
 
-    otherHash := generateHash(cleartext, salt);
+    otherHash := generateHash(hashPass, salt);
 
     return (subtle.ConstantTimeCompare(thisHash, otherHash) == 1);
 }
 
-func generateHash(cleartext string, salt []byte) []byte {
-    return argon2.IDKey([]byte(cleartext), salt, ARGON2_TIME, ARGON2_MEM_KB, ARGON2_THREADS, ARGON2_KEY_LEN_BYTES);
+func generateHash(hashPass string, salt []byte) []byte {
+    return argon2.IDKey([]byte(hashPass), salt, ARGON2_TIME, ARGON2_MEM_KB, ARGON2_THREADS, ARGON2_KEY_LEN_BYTES);
 }
 
 func LoadUsersFile(path string) (map[string]*User, error) {
@@ -185,4 +187,14 @@ func composeUserAddEmail(address string, pass string, generatedPass bool, userEx
     }
 
     return subject, body;
+}
+
+func ToRowHeaader(delim string) string {
+    parts := []string{"email", "name", "role", "lms-id"};
+    return strings.Join(parts, delim);
+}
+
+func (this *User) ToRow(delim string) string {
+    parts := []string{this.Email, this.DisplayName, this.Role.String(), this.LMSID};
+    return strings.Join(parts, delim);
 }

@@ -141,7 +141,10 @@ func (this *Course) Validate() error {
     }
 
     if (this.LMSAdapter != nil) {
-        this.LMSAdapter.Validate(this);
+        err = this.LMSAdapter.Validate(this);
+        if (err != nil) {
+            return err;
+        }
     }
 
     // Register tasks.

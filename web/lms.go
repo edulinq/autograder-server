@@ -133,14 +133,14 @@ func handleLMSSyncUsers(request *LMSSyncUsersRequest) (int, any, error) {
         return 0, nil, fmt.Errorf("Failed to find course '%s'.", request.Course);
     }
 
-    count, err := course.SyncLMSUsers();
+    result, err := course.SyncLMSUsers(false, true);
     if (err != nil) {
         return 0, nil, err;
     }
 
     response := &LMSSyncUsersResponse{
         Success: true,
-        Count: count,
+        Count: result.Count(),
     };
 
     return 0, response, nil;
