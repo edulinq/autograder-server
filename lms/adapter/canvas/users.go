@@ -15,7 +15,7 @@ func (this *CanvasAdapter) FetchUsers() ([]*lms.User, error) {
     defer this.releaseAPILock();
 
     apiEndpoint := fmt.Sprintf(
-        "/api/v1/courses/%s/users?per_page=%d",
+        "/api/v1/courses/%s/users?include[]=enrollments&per_page=%d",
         this.CourseID, PAGE_SIZE);
     url := this.BaseURL + apiEndpoint;
 
@@ -55,7 +55,7 @@ func (this *CanvasAdapter) FetchUser(email string) (*lms.User, error) {
     defer this.releaseAPILock();
 
     apiEndpoint := fmt.Sprintf(
-        "/api/v1/courses/%s/search_users?search_term=%s",
+        "/api/v1/courses/%s/search_users?include[]=enrollments&search_term=%s",
         this.CourseID, url.QueryEscape(email));
     url := this.BaseURL + apiEndpoint;
 

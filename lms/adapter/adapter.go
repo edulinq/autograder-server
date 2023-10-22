@@ -17,9 +17,15 @@ const (
 type LMSAdapter struct {
     Type string `json:"type"`
 
+    // Connection options.
     CourseID string `json:"course-id"`
     APIToken string `json:"api-token"`
     BaseURL string `json:"base-url"`
+
+    // Behavior options.
+    SyncUserAttributes bool `json:"sync-user-attributes"`
+    SyncAddUsers bool `json:"sync-add-users"`
+    SyncRemoveUsers bool `json:"sync-remove-users"`
 
     adapter Backend `json:"-"`
 }

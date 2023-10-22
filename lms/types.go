@@ -16,6 +16,7 @@ type User struct {
     ID string
     Name string
     Email string
+    Role usr.UserRole
 }
 
 type SubmissionScore struct {

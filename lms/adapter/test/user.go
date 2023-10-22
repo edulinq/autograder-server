@@ -32,5 +32,6 @@ func UserFromAGUser(user *usr.User) *lms.User {
         ID: "lms-" + user.Email,
         Name: user.DisplayName,
         Email: user.Email,
+        Role: user.Role,
     };
 }
