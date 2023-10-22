@@ -121,8 +121,8 @@ func TestFetchSubmission(test *testing.T) {
 
 // If you need to validate a new hash,
 // then print the hash, write out the zip, and manually inspect the zip contents.
-func writeZipContents(test *testing.T, responseContent *FetchSubmissionResponse) {
-    data, err := util.Base64Decode(responseContent.Contents);
+func writeZipContents(test *testing.T, content string) {
+    data, err := util.Base64Decode(content);
     if (err != nil) {
         test.Fatalf("Failed to decode: '%v'.", err);
     }
