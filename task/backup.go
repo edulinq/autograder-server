@@ -96,7 +96,7 @@ func RunBackup(source string, dest string, basename string) error {
     }
 
     log.Debug().Str("source", source).Str("dest", dest).Str("basename", basename).Msg("Starting backup.");
-    err := util.Zip(source, targetPath);
+    err := util.Zip(source, targetPath, false);
     if (err != nil) {
         log.Debug().Str("source", source).Str("dest", dest).Str("basename", basename).Msg("Backup failed.");
         return err;

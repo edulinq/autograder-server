@@ -87,7 +87,7 @@ func handleFetchSubmissions(request *FetchSubmissionsRequest) (int, any, error) 
         return 0, nil, fmt.Errorf("Failed to get submissions: '%w'.", err);
     }
 
-    zipOperation := util.NewOngoingZipOperation();
+    zipOperation := util.NewOngoingZipOperation(false);
     defer zipOperation.Close();
 
     for email, path := range paths {

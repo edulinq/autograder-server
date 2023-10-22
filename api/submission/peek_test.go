@@ -48,10 +48,10 @@ func TestPeek(test *testing.T) {
         {usr.Student, "student@test.com", "ZZZ", -1.0, true, false, false},
 
         // Student, other, recent.
-        {usr.Student, "grader@test.com", "", -1.0, true, true, true},
+        {usr.Student, "grader@test.com", "", -1.0, false, false, true},
 
         // Student, other, missing.
-        {usr.Student, "grader@test.com", "ZZZ", -1.0, true, false, true},
+        {usr.Student, "grader@test.com", "ZZZ", -1.0, false, false, true},
     };
 
     // Quiet the output a bit.

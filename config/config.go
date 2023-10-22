@@ -37,6 +37,7 @@ func init() {
 }
 
 func EnableTestingMode(debug bool, setTestCourses bool) {
+    TESTING_MODE.Set(true);
     NO_AUTH.Set(true);
     NO_STORE.Set(true);
     NO_TASKS.Set(true);

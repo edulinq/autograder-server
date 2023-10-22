@@ -34,5 +34,7 @@ var (
 
     NO_TASKS = newOption("tasks.disable", false, "Disable all scheduled tasks.");
 
+    TESTING_MODE = newOption("testing", false, "Assume tests are being run, which may alter some operations.");
+
     WEB_PORT = newOption("web.port", 8080, "The port for the web interface to serve on.");
 )

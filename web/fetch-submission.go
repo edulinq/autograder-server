@@ -115,7 +115,7 @@ func handleFetchSubmission(request *FetchSubmissionRequest) (int, any, error) {
     response.SubmissionID = summary.ID;
 
     submissionPath := filepath.Dir(filepath.Dir(path));
-    data, err := util.ZipToBytes(submissionPath, response.SubmissionID);
+    data, err := util.ZipToBytes(submissionPath, response.SubmissionID, false);
     if (err != nil) {
         return 0, nil, fmt.Errorf("Failed to create a zip file in memory for submission '%s': '%w'.", submissionPath, err);
     }

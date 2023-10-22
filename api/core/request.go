@@ -4,6 +4,7 @@ import (
     "net/http"
     "reflect"
 
+    "github.com/eriq-augustine/autograder/config"
     "github.com/eriq-augustine/autograder/grader"
     "github.com/eriq-augustine/autograder/model"
     "github.com/eriq-augustine/autograder/usr"
@@ -19,6 +20,9 @@ type APIRequest struct {
     RequestID string `json:"-"`
     Endpoint string `json:"-"`
     Timestamp string `json:"-"`
+
+    // This request is being used as part of a test.
+    TestingMode bool `json:"-"`
 }
 
 // Context for a request that has a course and user (pretty much the lowest level of request).
@@ -48,6 +52,8 @@ func (this *APIRequest) Validate(request any, endpoint string) *APIError {
     this.RequestID = util.UUID();
     this.Endpoint = endpoint;
     this.Timestamp = util.NowTimestamp();
+
+    this.TestingMode = config.TESTING_MODE.GetBool();
 
     return nil;
 }
