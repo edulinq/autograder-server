@@ -8,31 +8,10 @@ import (
     "github.com/eriq-augustine/autograder/util"
 )
 
-type UserSyncResult struct {
-    Add []*usr.User
-    Mod []*usr.User
-    Del []*usr.User
-
-    ClearTextPasswords map[string]string
-}
-
-type UserResolveResult struct {
-    Add *usr.User
-    Mod *usr.User
-    Del *usr.User
-
-    ClearTextPassword string
-}
-
 // Sync users with the provided LMS.
-func (this *Course) SyncLMSUsers(dryRun bool, sendEmails bool) (*UserSyncResult, error) {
+func (this *Course) SyncLMSUsers(dryRun bool, sendEmails bool) (*usr.UserSyncResult, error) {
     if (this.LMSAdapter == nil) {
-        return nil, fmt.Errorf("Course '%s' has no adapter, cannot sync users.", this.ID);
-    }
-
-    localUsers, err := this.GetUsers();
-    if (err != nil) {
-        return nil, fmt.Errorf("Failed to fetch local users: '%w'.", err);
+        return nil, nil;
     }
 
     lmsUsersSlice, err := this.LMSAdapter.FetchUsers();
@@ -45,14 +24,43 @@ func (this *Course) SyncLMSUsers(dryRun bool, sendEmails bool) (*UserSyncResult,
         lmsUsers[lmsUser.Email] = lmsUser;
     }
 
-    syncResult := UserSyncResult{
-        Add: make([]*usr.User, 0),
-        Mod: make([]*usr.User, 0),
-        Del: make([]*usr.User, 0),
-        ClearTextPasswords: make(map[string]string),
+    return this.syncLMSUsers(dryRun, sendEmails, lmsUsers, nil);
+}
+
+func (this *Course) SyncLMSUser(email string, dryRun bool, sendEmails bool) (*usr.UserSyncResult, error) {
+    if (this.LMSAdapter == nil) {
+        return nil, nil;
     }
 
-    for _, email := range getAllEmails(localUsers, lmsUsers) {
+    lmsUser, err := this.LMSAdapter.FetchUser(email);
+    if (err != nil) {
+        return nil, err;
+    }
+
+    lmsUsers := map[string]*lms.User{
+        lmsUser.Email: lmsUser,
+    };
+
+    return this.syncLMSUsers(dryRun, sendEmails, lmsUsers, []string{email});
+}
+
+// Sync users.
+// If |syncEmails| is not empty, then only emails in it will be checked/resolved.
+// Otherwise, all emails from local and LMS users will be checked.
+func (this *Course) syncLMSUsers(dryRun bool, sendEmails bool, lmsUsers map[string]*lms.User, syncEmails []string) (
+        *usr.UserSyncResult, error) {
+    localUsers, err := this.GetUsers();
+    if (err != nil) {
+        return nil, fmt.Errorf("Failed to fetch local users: '%w'.", err);
+    }
+
+    if (len(syncEmails) == 0) {
+        syncEmails = getAllEmails(localUsers, lmsUsers);
+    }
+
+    syncResult := usr.NewUserSyncResult();
+
+    for _, email := range syncEmails {
         resolveResult, err := this.resolveUserSync(localUsers, lmsUsers, email);
         if (err != nil) {
             return nil, err;
@@ -64,7 +72,7 @@ func (this *Course) SyncLMSUsers(dryRun bool, sendEmails bool) (*UserSyncResult,
     }
 
     if (dryRun) {
-        return &syncResult, nil;
+        return syncResult, nil;
     }
 
     err = this.SaveUsersFile(localUsers);
@@ -73,37 +81,13 @@ func (this *Course) SyncLMSUsers(dryRun bool, sendEmails bool) (*UserSyncResult,
     }
 
     if (sendEmails) {
-        for _, localUser := range localUsers {
-            pass := syncResult.ClearTextPasswords[localUser.Email];
-            usr.SendUserAddEmail(localUser, pass, true, false, dryRun, true);
+        for _, newUser := range syncResult.Add {
+            pass := syncResult.ClearTextPasswords[newUser.Email];
+            usr.SendUserAddEmail(newUser, pass, true, false, dryRun, true);
         }
     }
 
-    return &syncResult, nil;
-}
-
-// TEST
-func (this *Course) SyncUserWithLMS(user *usr.User) error {
-    if (this.LMSAdapter == nil) {
-        return nil;
-    }
-
-    userInfo, err := this.LMSAdapter.FetchUser(user.Email)
-    if (err != nil) {
-        return err;
-    }
-
-    if (userInfo == nil) {
-        return nil;
-    }
-
-    user.LMSID = userInfo.ID;
-
-    if (userInfo.Name != "") {
-        user.DisplayName = userInfo.Name;
-    }
-
-    return nil;
+    return syncResult, nil;
 }
 
 func mergeUsers(localUser *usr.User, lmsUser *lms.User, mergeAttributes bool) bool {
@@ -135,7 +119,7 @@ func mergeUsers(localUser *usr.User, lmsUser *lms.User, mergeAttributes bool) bo
 // The passed in local user map will be modified to reflect any resolution.
 // The taken action will depend on the options set in the course's LMS adapter.
 func (this *Course) resolveUserSync(localUsers map[string]*usr.User, lmsUsers map[string]*lms.User, email string) (
-        *UserResolveResult, error) {
+        *usr.UserResolveResult, error) {
     localUser := localUsers[email];
     lmsUser := lmsUsers[email];
 
@@ -151,7 +135,7 @@ func (this *Course) resolveUserSync(localUsers map[string]*usr.User, lmsUsers ma
 
         pass, err := util.RandHex(usr.DEFAULT_PASSWORD_LEN);
         if (err != nil) {
-            return nil, fmt.Errorf("Failed to generate a default password.");
+            return nil, fmt.Errorf("Failed to generate a default password: '%w'.", err);
         }
 
         localUser = &usr.User{
@@ -162,11 +146,14 @@ func (this *Course) resolveUserSync(localUsers map[string]*usr.User, lmsUsers ma
         };
 
         hashPass := util.Sha256HexFromString(pass);
-        localUser.SetPassword(hashPass);
+        err = localUser.SetPassword(hashPass);
+        if (err != nil) {
+            return nil, fmt.Errorf("Failed to set password: '%w'.", err);
+        }
 
         localUsers[email] = localUser;
 
-        return &UserResolveResult{Add: localUser, ClearTextPassword: pass}, nil;
+        return &usr.UserResolveResult{Add: localUser, ClearTextPassword: pass}, nil;
     }
 
     // Del.
@@ -176,13 +163,13 @@ func (this *Course) resolveUserSync(localUsers map[string]*usr.User, lmsUsers ma
         }
 
         delete(localUsers, email);
-        return &UserResolveResult{Del: localUser}, nil;
+        return &usr.UserResolveResult{Del: localUser}, nil;
     }
 
     // Mod.
     userChanged := mergeUsers(localUser, lmsUser, this.LMSAdapter.SyncUserAttributes);
     if (userChanged) {
-        return &UserResolveResult{Mod: localUser}, nil;
+        return &usr.UserResolveResult{Mod: localUser}, nil;
     }
 
     return nil, nil;
@@ -206,46 +193,4 @@ func getAllEmails(localUsers map[string]*usr.User, lmsUsers map[string]*lms.User
     }
 
     return emails;
-}
-
-func (this *UserSyncResult) Count() int {
-    return len(this.Add) + len(this.Mod) + len(this.Del);
-}
-
-func (this *UserSyncResult) PrintReport() {
-    groups := []struct{operation string; users []*usr.User}{
-        {"Added", this.Add},
-        {"Modified", this.Mod},
-        {"Deleted", this.Del},
-    };
-
-    for i, group := range groups {
-        if (i != 0) {
-            fmt.Println();
-        }
-
-        fmt.Printf("%s %d users.\n", group.operation, len(group.users));
-        for _, user := range group.users {
-            fmt.Println("    " + user.ToRow(", "));
-        }
-    }
-}
-
-func (this *UserSyncResult) AddResolveResult(resolveResult *UserResolveResult) {
-    if (resolveResult == nil) {
-        return;
-    }
-
-    if (resolveResult.Add != nil) {
-        this.Add = append(this.Add, resolveResult.Add);
-        this.ClearTextPasswords[resolveResult.Add.Email] = resolveResult.ClearTextPassword;
-    }
-
-    if (resolveResult.Mod != nil) {
-        this.Mod = append(this.Mod, resolveResult.Mod);
-    }
-
-    if (resolveResult.Del != nil) {
-        this.Del = append(this.Del, resolveResult.Del);
-    }
 }

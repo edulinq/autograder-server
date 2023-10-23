@@ -40,8 +40,12 @@ type User struct {
     LMSID string `json:"lms-id,omitempty"`
 }
 
-type LMSUserSyncer interface {
-    SyncUserWithLMS(user *User) error
+func NewUser(email string, name string, role UserRole) *User {
+    return &User{
+        Email: email,
+        DisplayName: name,
+        Role: role,
+    };
 }
 
 // Sets the password and generates a new salt.
@@ -58,6 +62,22 @@ func (this *User) SetPassword(hashPass string) error {
     this.Pass = hex.EncodeToString(pass);
 
     return nil;
+}
+
+// Set a random passowrd, and return the cleartext (not hash) password.
+func (this *User) SetRandomPassword() (string, error) {
+    pass, err := util.RandHex(DEFAULT_PASSWORD_LEN)
+    if (err != nil) {
+        return "", fmt.Errorf("Failed to generate random password: '%s'.", err);
+    }
+
+    hashPass := util.Sha256HexFromString(pass);
+    err = this.SetPassword(hashPass);
+    if (err != nil) {
+        return "", err;
+    }
+
+    return pass, nil;
 }
 
 // Return true if the password matches the hash, false otherwise.
@@ -78,6 +98,36 @@ func (this *User) CheckPassword(hashPass string) bool {
     otherHash := generateHash(hashPass, salt);
 
     return (subtle.ConstantTimeCompare(thisHash, otherHash) == 1);
+}
+
+// Merge another user's information into this user (email will not be merged).
+// Empty values will not be merged.
+// Returns true if any changes were made.
+func (this *User) Merge(other *User) bool {
+    changed := false;
+
+    if ((other.DisplayName != "") && (this.DisplayName != other.DisplayName)) {
+        this.DisplayName = other.DisplayName;
+        changed = true;
+    }
+
+    if ((other.Pass != "") && (this.Pass != other.Pass)) {
+        this.Pass = other.Pass;
+        this.Salt = other.Salt;
+        changed = true;
+    }
+
+    if ((other.Role != Unknown) && (this.Role != other.Role)) {
+        this.Role = other.Role;
+        changed = true;
+    }
+
+    if ((other.LMSID != "") && (this.LMSID != other.LMSID)) {
+        this.LMSID = other.LMSID;
+        changed = true;
+    }
+
+    return changed;
 }
 
 func generateHash(hashPass string, salt []byte) []byte {
@@ -101,53 +151,6 @@ func LoadUsersFile(path string) (map[string]*User, error) {
 
 func SaveUsersFile(path string, users map[string]*User) error {
     return util.ToJSONFileIndent(users, path);
-}
-
-// Return a user that is either new or a merged with the existing user (depending on force).
-// If a user exists (and force is true), then the user will be updated.
-// New users will just be retuturned and not be added to |users|.
-// If an LSM adapter is provided, an attempt to sync the user with the LMS will be made.
-func NewOrMergeUser(users map[string]*User, email string, name string, stringRole string, hashPass string,
-        force bool, lmsUserSyncer LMSUserSyncer) (*User, bool, error) {
-    user := users[email];
-    userExists := (user != nil);
-
-    if (userExists && !force) {
-        return nil, true, fmt.Errorf("User '%s' already exists, cannot add.", email);
-    }
-
-    if (!userExists) {
-        user = &User{Email: email};
-    }
-
-    if (name != "") {
-        user.DisplayName = name;
-    } else  if (user.DisplayName == "") {
-        user.DisplayName = email;
-    }
-
-    // Note the slightly tricky conditions here.
-    // Only error if the string role is bad and there is not an existing good role.
-    role := GetRole(stringRole);
-    if (role != Unknown) {
-        user.Role = role;
-    } else if (user.Role == Unknown) {
-        return nil, false, fmt.Errorf("Unknown role: '%s'.", stringRole);
-    }
-
-    err := user.SetPassword(hashPass);
-    if (err != nil) {
-        return nil, false, fmt.Errorf("Could not set password: '%w'.", err);
-    }
-
-    if (lmsUserSyncer != nil) {
-        err = lmsUserSyncer.SyncUserWithLMS(user);
-        if (err != nil) {
-            return nil, false, fmt.Errorf("Could not sync user with the LMS: '%w'.", err);
-        }
-    }
-
-    return user, userExists, nil;
 }
 
 func SendUserAddEmail(user *User, pass string, generatedPass bool, userExists bool, dryRun bool, sleep bool) {

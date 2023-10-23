@@ -133,6 +133,10 @@ func handleLMSSyncUsers(request *LMSSyncUsersRequest) (int, any, error) {
         return 0, nil, fmt.Errorf("Failed to find course '%s'.", request.Course);
     }
 
+    if (course.LMSAdapter == nil) {
+        return 0, nil, fmt.Errorf("Course '%s' has no LMS adapter.", request.Course);
+    }
+
     result, err := course.SyncLMSUsers(false, true);
     if (err != nil) {
         return 0, nil, err;

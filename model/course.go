@@ -13,7 +13,6 @@ import (
     "github.com/eriq-augustine/autograder/lms/adapter"
     "github.com/eriq-augustine/autograder/report"
     "github.com/eriq-augustine/autograder/task"
-    "github.com/eriq-augustine/autograder/usr"
     "github.com/eriq-augustine/autograder/util"
 )
 
@@ -215,36 +214,6 @@ func loadParentCourseConfig(basepath string) (*Course, error) {
     }
 
     return LoadCourseConfig(configPath);
-}
-
-func (this *Course) GetUsers() (map[string]*usr.User, error) {
-    path := filepath.Join(filepath.Dir(this.SourcePath), this.UsersFile);
-
-    users, err := usr.LoadUsersFile(path);
-    if (err != nil) {
-        return nil, fmt.Errorf("Faile to deserialize users file '%s': '%w'.", path, err);
-    }
-
-    return users, nil;
-}
-
-func (this *Course) GetUser(email string) (*usr.User, error) {
-    users, err := this.GetUsers();
-    if (err != nil) {
-        return nil, err;
-    }
-
-    user := users[email];
-    if (user != nil) {
-        return user, nil;
-    }
-
-    return nil, nil;
-}
-
-func (this *Course) SaveUsersFile(users map[string]*usr.User) error {
-    path := filepath.Join(filepath.Dir(this.SourcePath), this.UsersFile);
-    return usr.SaveUsersFile(path, users);
 }
 
 func (this *Course) GetSortedAssignments() []*Assignment {

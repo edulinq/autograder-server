@@ -8,7 +8,6 @@ import (
 
     "github.com/eriq-augustine/autograder/grader"
     "github.com/eriq-augustine/autograder/usr"
-    "github.com/eriq-augustine/autograder/util"
 )
 
 var MIN_ROLE_USER_ADD usr.UserRole = usr.Admin;
@@ -26,6 +25,7 @@ type UserAddRequest struct {
     Role string `json:"role"`
     Force bool `json:"force"`
     SendEmail bool `json:"send-email"`
+    SyncLMS bool `json:"sync-lms"`
 }
 
 type UserAuthRequest struct {
@@ -266,51 +266,34 @@ func handleUserAdd(request *UserAddRequest) (int, any, error) {
         return 0, nil, fmt.Errorf("Failed to find course '%s'.", request.Course);
     }
 
-    users, err := course.GetUsers();
+    role := usr.GetRole(request.Role);
+    if (role == usr.Unknown) {
+        return 0, nil, fmt.Errorf("Unknown role: '%s'.", request.Role)
+    }
+
+    newUser := usr.NewUser(request.Email, request.Name, role);
+
+    // If set, the password comes in hashed.
+    newUser.Pass = request.NewPass;
+
+    result, err := course.AddUser(newUser, request.Force, false, request.SendEmail);
     if (err != nil) {
         return 0, nil, err;
     }
 
-    hashPass := request.NewPass;
-    generatedPass := false;
-
-    if (request.NewPass == "") {
-        request.NewPass, err = util.RandHex(usr.DEFAULT_PASSWORD_LEN);
+    if (request.SyncLMS) {
+        _, err = course.SyncLMSUser(request.Email, false, request.SendEmail);
         if (err != nil) {
-            return 0, nil, fmt.Errorf("Failed to generate a default password: '%w'.", err);
-        }
-
-        generatedPass = true;
-        hashPass = util.Sha256Hex([]byte(request.NewPass));
-    }
-
-    response := &UserAddResponse{};
-
-    user, userExists, err := usr.NewOrMergeUser(users,
-        request.Email, request.Name, request.Role, hashPass,
-        request.Force, course);
-    response.UserExists = userExists;
-
-    if (err != nil) {
-        if (userExists) {
-            return 0, response, nil;
-        } else {
-            return 0, nil, fmt.Errorf("Failed to create a new or merged user: '%w'.", err);
+            return 0, nil, err;
         }
     }
 
-    users[user.Email] = user;
+    response := UserAddResponse{
+        Success: true,
+        UserExists: (len(result.Add) == 0),
+    };
 
-    err = course.SaveUsersFile(users);
-    if (err != nil) {
-        return 0, nil, err;
-    }
-
-    if (request.SendEmail) {
-        usr.SendUserAddEmail(user, request.NewPass, generatedPass, userExists, false, false);
-    }
-
-    return 0, &UserAddResponse{}, nil;
+    return 0, &response, nil;
 }
 
 func handleUserAuth(request *UserAuthRequest) (int, any, error) {
