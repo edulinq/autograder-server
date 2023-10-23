@@ -22,6 +22,15 @@ func FloatToStr(value float64) string {
     return strconv.FormatFloat(value, 'f', -1, 64);
 }
 
+// If the value is NaN, return the default.
+func DefaultNaN(value float64, defaultValue float64) float64 {
+    if (math.IsNaN(value)) {
+        return defaultValue;
+    }
+
+    return value;
+}
+
 func MustStrToFloat(value string) float64 {
     result, err := StrToFloat(value);
     if (err != nil) {

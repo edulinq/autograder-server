@@ -46,6 +46,8 @@ type ScoringReportQuestionStats struct {
     StdDevString string `json:"-"`
 }
 
+const DEFAULT_VALUE float64 = -1.0;
+
 func GetAssignmentScoringReport(source ReportingSource) (*AssignmentScoringReport, error) {
     questionNames, scores, lastSubmissionTime, err := fetchScores(source);
     if (err != nil) {
@@ -62,11 +64,11 @@ func GetAssignmentScoringReport(source ReportingSource) (*AssignmentScoringRepor
 
         stats := &ScoringReportQuestionStats{
             QuestionName: questionName,
-            Min: min,
-            Max: max,
-            Median: median,
-            Mean: mean,
-            StdDev: stdDev,
+            Min: util.DefaultNaN(min, DEFAULT_VALUE),
+            Max: util.DefaultNaN(max, DEFAULT_VALUE),
+            Median: util.DefaultNaN(median, DEFAULT_VALUE),
+            Mean: util.DefaultNaN(mean, DEFAULT_VALUE),
+            StdDev: util.DefaultNaN(stdDev, DEFAULT_VALUE),
 
             MinString: fmt.Sprintf("%0.2f", min),
             MaxString: fmt.Sprintf("%0.2f", max),

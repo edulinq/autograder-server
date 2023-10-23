@@ -83,7 +83,6 @@ func RunReport(sources report.ReportingSources, to []string) error {
     if (err != nil) {
         return fmt.Errorf("Failed to send scoring report for course '%s': '%w'.", sources.GetName(), err);
     }
-    
 
     log.Debug().Str("course", sources.GetName()).Any("to", to).Msg("Report completed sucessfully.");
     return nil;
