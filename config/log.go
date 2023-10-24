@@ -4,7 +4,10 @@ package config;
 // (even if the key exists, but is of the wrong type).
 
 import (
+    "fmt"
     "os"
+    "strings"
+    "time"
 
     "github.com/rs/zerolog"
     "github.com/rs/zerolog/log"
@@ -12,7 +15,17 @@ import (
 
 func InitLogging() {
     if (LOG_PRETTY.GetBool()) {
-        log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr});
+        log.Logger = log.Output(zerolog.ConsoleWriter{
+            Out: os.Stderr,
+            NoColor: true,
+            TimeFormat: time.RFC3339,
+            FormatLevel: func(level interface{}) string {
+                return strings.ToUpper(fmt.Sprintf(":: %-6s::", level));
+            },
+            FormatMessage: func(message interface{}) string {
+                return fmt.Sprintf(" %s ::", message)
+            },
+        });
     } else {
         log.Logger = zerolog.New(os.Stderr).With().Timestamp().Logger();
     }
