@@ -126,10 +126,9 @@ func (this *ScheduledTime) computeNextTime(startTime time.Time) time.Time {
 }
 
 // Set a recurring invoation of the given task.
+// The caller is responsible for stopping any previous timers
+// (or ignoring them if they no longer need to be canceled).
 func (this *ScheduledTime) Schedule(task func()) {
-    // Cleanup any old timers.
-    this.Stop();
-
     this.nextRun = this.ComputeNext();
     this.timer = time.AfterFunc(this.nextRun.Sub(time.Now()), func() {
         task()
