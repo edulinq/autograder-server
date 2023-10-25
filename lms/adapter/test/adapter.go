@@ -12,6 +12,8 @@ type TestLMSAdapter struct {
     SourceCourse lms.SourceCourse
 
     UsersModifier FetchUsersModifier
+
+    FailUpdateAssignmentScores bool
 }
 
 // Change the users returned from FetchUsers() for testing.
@@ -43,8 +45,4 @@ func (this *TestLMSAdapter) UpdateComment(assignmentID string, comment *lms.Subm
 
 func (this *TestLMSAdapter) FetchAssignmentScores(assignmentID string) ([]*lms.SubmissionScore, error) {
     return nil, nil;
-}
-
-func (this *TestLMSAdapter) UpdateAssignmentScores(assignmentID string, scores []*lms.SubmissionScore) error {
-    return nil;
 }

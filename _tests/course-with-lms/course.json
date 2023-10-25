@@ -1,0 +1,7 @@
+{
+    "id": "course-with-lms",
+    "display-name": "Course With LMS",
+    "lms": {
+        "type": "test"
+    }
+}
