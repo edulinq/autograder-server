@@ -14,6 +14,7 @@ import (
     "github.com/rs/zerolog/log"
     "golang.org/x/crypto/argon2"
 
+    "github.com/eriq-augustine/autograder/config"
     "github.com/eriq-augustine/autograder/email"
     "github.com/eriq-augustine/autograder/util"
 )
@@ -157,17 +158,18 @@ func SendUserAddEmail(user *User, pass string, generatedPass bool, userExists bo
     subject, body := composeUserAddEmail(user.Email, pass, generatedPass, userExists);
 
     if (dryRun) {
-        fmt.Printf("Doing a dry run, user '%s' will not be emailed.\n", user.Email);
+        log.Info().Str("email", user.Email).Msg("Doing a dry run, user will not be emailed.");
         log.Debug().Str("address", user.Email).Str("subject", subject).Str("body", body).Msg("Email not sent because of dry run.");
     } else {
         err := email.Send([]string{user.Email}, subject, body, false);
         if (err != nil) {
             log.Error().Err(err).Str("email", user.Email).Msg("Failed to send email.");
         } else {
-            fmt.Printf("Registration email send to '%s'.\n", user.Email);
+            log.Info().Str("email", user.Email).Msg("Registration email sent.");
         }
 
-        if (sleep) {
+        // Skip sleeping in testing mode.
+        if (sleep && !config.TESTING_MODE.GetBool()) {
             time.Sleep(time.Duration(EMAIL_SLEEP_TIME));
         }
     }

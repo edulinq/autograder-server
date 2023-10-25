@@ -27,7 +27,7 @@ type LMSAdapter struct {
     SyncAddUsers bool `json:"sync-add-users"`
     SyncRemoveUsers bool `json:"sync-remove-users"`
 
-    adapter Backend `json:"-"`
+    Adapter Backend `json:"-"`
 }
 
 type Backend interface {
@@ -55,14 +55,14 @@ func (this *LMSAdapter) Validate(source lms.SourceCourse) error {
             return err;
         }
 
-        this.adapter = adapter;
+        this.Adapter = adapter;
     } else if (this.Type == LMS_TYPE_TEST) {
         adapter, err := test.NewAdapter(source);
         if (err != nil) {
             return err;
         }
 
-        this.adapter = adapter;
+        this.Adapter = adapter;
     } else {
         return fmt.Errorf("Unknown LMS type: '%s'.", this.Type);
     }
@@ -71,30 +71,30 @@ func (this *LMSAdapter) Validate(source lms.SourceCourse) error {
 }
 
 func (this *LMSAdapter) FetchAssignment(assignmentID string) (*lms.Assignment, error) {
-    return this.adapter.FetchAssignment(assignmentID);
+    return this.Adapter.FetchAssignment(assignmentID);
 }
 
 func (this *LMSAdapter) UpdateComments(assignmentID string, comments []*lms.SubmissionComment) error {
-    return this.adapter.UpdateComments(assignmentID, comments);
+    return this.Adapter.UpdateComments(assignmentID, comments);
 }
 
 func (this *LMSAdapter) UpdateComment(assignmentID string, comment *lms.SubmissionComment) error {
-    return this.adapter.UpdateComment(assignmentID, comment);
+    return this.Adapter.UpdateComment(assignmentID, comment);
 }
 
 func (this *LMSAdapter) FetchAssignmentScores(assignmentID string) ([]*lms.SubmissionScore, error) {
-    return this.adapter.FetchAssignmentScores(assignmentID);
+    return this.Adapter.FetchAssignmentScores(assignmentID);
 }
 
 func (this *LMSAdapter) UpdateAssignmentScores(assignmentID string, scores []*lms.SubmissionScore) error {
-    return this.adapter.UpdateAssignmentScores(assignmentID, scores);
+    return this.Adapter.UpdateAssignmentScores(assignmentID, scores);
 }
 
 func (this *LMSAdapter) FetchUsers() ([]*lms.User, error) {
-    return this.adapter.FetchUsers();
+    return this.Adapter.FetchUsers();
 }
 
 func (this *LMSAdapter) FetchUser(email string) (*lms.User, error) {
-    return this.adapter.FetchUser(email);
+    return this.Adapter.FetchUser(email);
 }
 

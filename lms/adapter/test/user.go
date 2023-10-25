@@ -10,7 +10,29 @@ import (
 )
 
 func (this *TestLMSAdapter) FetchUsers() ([]*lms.User, error) {
-    return nil, nil;
+    localUsers, err := this.SourceCourse.GetUsers();
+    if (err != nil) {
+        return nil, fmt.Errorf("Failed to get local users: '%w'.", err);
+    }
+
+    users := make([]*lms.User, 0, len(localUsers));
+    for _, localUser := range localUsers {
+        users = append(users, UserFromAGUser(localUser));
+    }
+
+    if (this.UsersModifier != nil) {
+        return this.UsersModifier(users), nil;
+    }
+
+    return users, nil;
+}
+
+func (this *TestLMSAdapter) SetUsersModifier(modifier FetchUsersModifier) {
+    this.UsersModifier = modifier;
+}
+
+func (this *TestLMSAdapter) ClearUsersModifier() {
+    this.UsersModifier = nil;
 }
 
 func (this *TestLMSAdapter) FetchUser(email string) (*lms.User, error) {

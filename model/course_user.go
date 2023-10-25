@@ -4,6 +4,7 @@ import (
     "fmt"
     "path/filepath"
 
+    "github.com/eriq-augustine/autograder/config"
     "github.com/eriq-augustine/autograder/usr"
 )
 
@@ -34,6 +35,12 @@ func (this *Course) GetUser(email string) (*usr.User, error) {
 
 func (this *Course) SaveUsersFile(users map[string]*usr.User) error {
     path := filepath.Join(filepath.Dir(this.SourcePath), this.UsersFile);
+
+    // Do not save user files in testing mode.
+    if (config.TESTING_MODE.GetBool()) {
+        return nil;
+    }
+
     return usr.SaveUsersFile(path, users);
 }
 

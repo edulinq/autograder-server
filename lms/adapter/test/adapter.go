@@ -10,7 +10,12 @@ import (
 
 type TestLMSAdapter struct {
     SourceCourse lms.SourceCourse
+
+    UsersModifier FetchUsersModifier
 }
+
+// Change the users returned from FetchUsers() for testing.
+type FetchUsersModifier func ([]*lms.User) []*lms.User;
 
 func NewAdapter(sourceCourse lms.SourceCourse) (*TestLMSAdapter, error) {
     if (sourceCourse == nil) {
