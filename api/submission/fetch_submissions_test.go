@@ -5,7 +5,6 @@ import (
     "testing"
 
     "github.com/eriq-augustine/autograder/api/core"
-    "github.com/eriq-augustine/autograder/config"
     "github.com/eriq-augustine/autograder/usr"
     "github.com/eriq-augustine/autograder/util"
 )
@@ -26,11 +25,6 @@ func TestFetchSubmissions(test *testing.T) {
         {usr.Admin, false, map[string]string{"student@test.com": "1697406272"}, hash},
         {usr.Owner, false, map[string]string{"student@test.com": "1697406272"}, hash},
     };
-
-    // Quiet the output a bit.
-    oldLevel := config.GetLoggingLevel();
-    config.SetLogLevelFatal();
-    defer config.SetLoggingLevel(oldLevel);
 
     for i, testCase := range testCases {
         response := core.SendTestAPIRequestFull(test, core.NewEndpoint(`submission/fetch/submissions`), nil, nil, testCase.role);

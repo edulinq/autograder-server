@@ -38,6 +38,9 @@ func APITestingMain(suite *testing.M, routes *[]*Route) {
     config.EnableTestingMode(false, true);
     config.NO_AUTH.Set(false);
 
+    // Quiet the logs.
+    config.SetLogLevelFatal();
+
     err := grader.LoadCourses();
     if (err != nil) {
         fmt.Printf("Failed to load test courses: '%v'.", err);

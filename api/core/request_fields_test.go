@@ -252,11 +252,6 @@ func TestBadPostFilesNoFiles(test *testing.T) {
 
     paths := []string{};
 
-    // Quiet the output a bit.
-    oldLevel := config.GetLoggingLevel();
-    config.SetLogLevelFatal();
-    defer config.SetLoggingLevel(oldLevel);
-
     response := SendTestAPIRequestFull(test, endpoint, nil, paths, usr.Admin);
     if (response.Success) {
         test.Fatalf("Request did not generate an error: '%v'.", response);
@@ -288,11 +283,6 @@ func TestBadPostFilesStoreFail(test *testing.T) {
     paths := []string{
         filepath.Join(config.COURSES_ROOT.GetString(), "files", "a.txt"),
     };
-
-    // Quiet the output a bit.
-    oldLevel := config.GetLoggingLevel();
-    config.SetLogLevelFatal();
-    defer config.SetLoggingLevel(oldLevel);
 
     // Ensure that storing the files will fail.
     util.SetTempDirForTesting(os.DevNull);

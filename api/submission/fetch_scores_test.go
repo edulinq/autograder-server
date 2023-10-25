@@ -5,7 +5,6 @@ import (
     "testing"
 
     "github.com/eriq-augustine/autograder/api/core"
-    "github.com/eriq-augustine/autograder/config"
     "github.com/eriq-augustine/autograder/usr"
     "github.com/eriq-augustine/autograder/util"
 )
@@ -37,11 +36,6 @@ func TestFetchScores(test *testing.T) {
         {usr.Other, usr.Unknown, true, nil},
         {usr.Other, usr.Grader, true, nil},
     };
-
-    // Quiet the output a bit.
-    oldLevel := config.GetLoggingLevel();
-    config.SetLogLevelFatal();
-    defer config.SetLoggingLevel(oldLevel);
 
     for i, testCase := range testCases {
         fields := map[string]any{

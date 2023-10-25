@@ -5,7 +5,6 @@ import (
     "testing"
 
     "github.com/eriq-augustine/autograder/api/core"
-    "github.com/eriq-augustine/autograder/config"
     "github.com/eriq-augustine/autograder/grader"
     lmstest "github.com/eriq-augustine/autograder/lms/adapter/test"
     "github.com/eriq-augustine/autograder/usr"
@@ -122,11 +121,6 @@ func TestUploadScores(test *testing.T) {
             },
         },
     };
-
-    // Quiet the output a bit.
-    oldLevel := config.GetLoggingLevel();
-    config.SetLogLevelFatal();
-    defer config.SetLoggingLevel(oldLevel);
 
     for i, testCase := range testCases {
         fields := map[string]any{
