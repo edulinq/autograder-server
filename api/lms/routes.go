@@ -8,6 +8,7 @@ import (
 
 var routes []*core.Route = []*core.Route{
     core.NewAPIRoute(core.NewEndpoint(`lms/user/get`), HandleUserGet),
+    core.NewAPIRoute(core.NewEndpoint(`lms/sync/users`), HandleSyncUsers),
 };
 
 func GetRoutes() *[]*core.Route {

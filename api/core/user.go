@@ -24,6 +24,14 @@ func NewUserInfo(user *usr.User) *UserInfo {
     };
 }
 
+func NewUserInfos(users []*usr.User) []*UserInfo {
+    result := make([]*UserInfo, 0, len(users));
+    for _, user := range users {
+        result = append(result, NewUserInfo(user));
+    }
+    return result;
+}
+
 // Get user info from a generic map (like what an API response would have).
 func UserInfoFromMap(data map[string]any) *UserInfo {
     return &UserInfo{
