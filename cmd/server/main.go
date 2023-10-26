@@ -8,6 +8,7 @@ import (
 
     "github.com/eriq-augustine/autograder/config"
     "github.com/eriq-augustine/autograder/grader"
+    "github.com/eriq-augustine/autograder/util"
     "github.com/eriq-augustine/autograder/web"
 )
 
@@ -21,6 +22,8 @@ func main() {
     if (err != nil) {
         log.Fatal().Err(err).Msg("Could not load config options.");
     }
+
+    log.Info().Str("version", util.GetAutograderFullVersion()).Msg("Autograder Version");
 
     workingDir, err := os.Getwd();
     if (err != nil) {

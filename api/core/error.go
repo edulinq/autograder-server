@@ -94,6 +94,7 @@ func (this *APIError) ToResponse() *APIResponse {
     return &APIResponse{
         ID: this.RequestID,
         Locator: locator,
+        ServerVersion: util.GetAutograderFullVersion(),
         StartTimestamp: this.Timestamp,
         EndTimestamp: util.NowTimestamp(),
         HTTPStatus: this.HTTPStatus,

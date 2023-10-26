@@ -9,6 +9,7 @@ import (
 type APIResponse struct {
     ID string `json:"id"`
     Locator string `json:"locator"`
+    ServerVersion string `json:"server-version"`
 
     StartTimestamp string `json:"start-timestamp"`
     EndTimestamp string `json:"end-timestamp"`
@@ -29,6 +30,7 @@ func NewAPIResponse(request ValidAPIRequest, content any) *APIResponse {
 
     return &APIResponse{
         ID: id,
+        ServerVersion: util.GetAutograderFullVersion(),
         StartTimestamp: timestamp,
         EndTimestamp: util.NowTimestamp(),
         HTTPStatus: HTTP_STATUS_GOOD,
