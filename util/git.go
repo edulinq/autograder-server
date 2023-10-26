@@ -1,7 +1,9 @@
 package util
 
 import (
+    "bytes"
     "fmt"
+    "os/exec"
 
     "github.com/go-git/go-git/v5"
     "github.com/go-git/go-git/v5/plumbing"
@@ -108,4 +110,55 @@ func GitUpdateRepo(repo *git.Repository) (bool, error) {
     }
 
     return false, err;
+}
+
+func GitGetCommitHash(path string) (string, error) {
+    repo, err := GitGetRepo(path);
+    if (err != nil) {
+        return "", fmt.Errorf("Unable to open repo (%s'): '%w'.", path, err);
+    }
+
+    head, err := repo.Head()
+    if (err != nil) {
+        return "", fmt.Errorf("Unable to get repo's head (%s'): '%w'.", path, err);
+    }
+
+    return head.Hash().String(), nil;
+}
+
+// Due to a long standing issue in go-get, this operation is slow and should generally be avoided.
+// https://github.com/go-git/go-git/issues/181
+func GitRepoIsDirty(path string) (bool, error) {
+    repo, err := GitGetRepo(path);
+    if (err != nil) {
+        return false, fmt.Errorf("Unable to open repo (%s'): '%w'.", path, err);
+    }
+
+    worktree, err := repo.Worktree();
+    if (err != nil) {
+        return false, fmt.Errorf("Unable to get repo's working tree (%s'): '%w'.", path, err);
+    }
+
+    status, err := worktree.Status();
+    if (err != nil) {
+        return false, fmt.Errorf("Unable to get repo's status (%s'): '%w'.", path, err);
+    }
+
+    return !status.IsClean(), nil;
+}
+
+// A fast, hacky version of checking for a dirty repo.
+// This function will call out to the command-line git (which it assumes is installed) to check the status.
+func GitRepoIsDirtyHack(path string) (bool, error) {
+    var stdout bytes.Buffer;
+
+    cmd := exec.Command("git", "status", "--porcelain");
+    cmd.Stdout = &stdout;
+
+    err := cmd.Run();
+    if (err != nil) {
+        return false, fmt.Errorf("Failed to run command-line git: '%w'.", err);
+    }
+
+    return (stdout.Len() > 0), nil;
 }

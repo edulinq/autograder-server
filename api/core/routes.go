@@ -1,10 +1,12 @@
 package core
 
 import (
+    "fmt"
     "strings"
 )
 
-const CURRENT_PREFIX string = "/api/v02"
+const API_VERSION int = 2;
+var CURRENT_PREFIX string = fmt.Sprintf("/api/v%02d", API_VERSION);
 
 // Get an endpoint using the current prefix.
 func NewEndpoint(suffix string) string {
