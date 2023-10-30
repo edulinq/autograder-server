@@ -4,22 +4,22 @@ import (
     "github.com/eriq-augustine/autograder/api/core"
 )
 
-type UserListRequest struct {
+type ListRequest struct {
     core.APIRequestCourseUserContext
     core.MinRoleGrader
     Users core.CourseUsers `json:"-"`
 }
 
-type UserListResponse struct {
+type ListResponse struct {
     Users []*core.UserInfo `json:"users"`
 }
 
-func HandleUserList(request *UserListRequest) (*UserListResponse, *core.APIError) {
+func HandleList(request *ListRequest) (*ListResponse, *core.APIError) {
     users := make([]*core.UserInfo, 0, len(request.Users));
 
     for _, user := range request.Users {
         users = append(users, core.NewUserInfo(user));
     }
 
-    return &UserListResponse{users}, nil;
+    return &ListResponse{users}, nil;
 }

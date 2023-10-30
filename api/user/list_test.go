@@ -8,7 +8,7 @@ import (
     "github.com/eriq-augustine/autograder/usr"
 )
 
-func TestUserList(test *testing.T) {
+func TestList(test *testing.T) {
     expectedUsers := []core.UserInfo{
         core.UserInfo{"other@test.com", "other", usr.Other, ""},
         core.UserInfo{"student@test.com", "student", usr.Student, ""},
