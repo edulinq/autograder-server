@@ -1,11 +1,11 @@
 package grader
 
 import (
-    "fmt"
-    "testing"
+	"fmt"
+	"testing"
 
-    "github.com/eriq-augustine/autograder/config"
-    "github.com/eriq-augustine/autograder/docker"
+	"github.com/eriq-augustine/autograder/config"
+	"github.com/eriq-augustine/autograder/docker"
 )
 
 const BASE_TEST_USER = "test_user@test.com";
@@ -24,6 +24,10 @@ func TestDockerSubmissions(test *testing.T) {
 }
 
 func TestNoDockerSubmissions(test *testing.T) {
+    oldDockerVal := config.DOCKER_DISABLE.GetBool();
+    config.DOCKER_DISABLE.Set(true);
+    defer config.DOCKER_DISABLE.Set(oldDockerVal);
+
     runSubmissionTests(test, false, false);
 }
 

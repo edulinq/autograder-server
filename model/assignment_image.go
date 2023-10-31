@@ -1,16 +1,16 @@
 package model
 
 import (
-    "errors"
-    "fmt"
-    "path/filepath"
+	"errors"
+	"fmt"
+	"path/filepath"
 
-    "github.com/rs/zerolog/log"
+	"github.com/rs/zerolog/log"
 
-    "github.com/eriq-augustine/autograder/common"
-    "github.com/eriq-augustine/autograder/config"
-    "github.com/eriq-augustine/autograder/docker"
-    "github.com/eriq-augustine/autograder/util"
+	"github.com/eriq-augustine/autograder/common"
+	"github.com/eriq-augustine/autograder/config"
+	"github.com/eriq-augustine/autograder/docker"
+	"github.com/eriq-augustine/autograder/util"
 )
 
 const CACHE_KEY_BUILD_SUCCESS = "image-build-success"
