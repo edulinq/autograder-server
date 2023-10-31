@@ -94,6 +94,12 @@ func (this *Course) SyncNewUsers(newUsers map[string]*usr.User, merge bool, dryR
 
         if (localUser == nil) {
             // New user.
+
+            // Default role-less users to usr.Other.
+            if (newUser.Role == usr.Unknown) {
+                newUser.Role = usr.Other;
+            }
+
             localUsers[newUser.Email] = newUser;
             syncResult.AddResolveResult(&usr.UserResolveResult{Add: newUser});
             continue;

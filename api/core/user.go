@@ -3,6 +3,7 @@ package core
 // How to represent users in API responses.
 
 import (
+    "fmt"
     "strings"
 
     "github.com/eriq-augustine/autograder/usr"
@@ -15,6 +16,11 @@ type UserInfo struct {
     LMSID string `json:"lms-id"`
 }
 
+type UserInfoWithPass struct {
+    UserInfo
+    Pass string `json:"pass"`
+}
+
 func NewUserInfo(user *usr.User) *UserInfo {
     return &UserInfo{
         Email: user.Email,
@@ -22,6 +28,22 @@ func NewUserInfo(user *usr.User) *UserInfo {
         Role: user.Role,
         LMSID: user.LMSID,
     };
+}
+
+func (this *UserInfoWithPass) ToUsr() (*usr.User, error) {
+    if (this.Email == "") {
+        return nil, fmt.Errorf("Empty emails are not allowed.")
+    }
+
+    user := usr.User{
+        Email: this.Email,
+        Pass: this.Pass,
+        DisplayName: this.Name,
+        Role: this.Role,
+        LMSID: this.LMSID,
+    };
+
+    return &user, nil;
 }
 
 func NewUserInfos(users []*usr.User) []*UserInfo {
@@ -44,4 +66,23 @@ func UserInfoFromMap(data map[string]any) *UserInfo {
 
 func CompareUserInfo(a UserInfo, b UserInfo) int {
     return strings.Compare(a.Email, b.Email);
+}
+
+// An API-friendly version of usr.UserSyncResult.
+type SyncUsersInfo struct {
+    Add []*UserInfo `json:"add-users"`
+    Mod []*UserInfo `json:"mod-users"`
+    Del []*UserInfo `json:"del-users"`
+    Skip []*UserInfo `json:"skip-users"`
+}
+
+func NewSyncUsersInfo(syncResult *usr.UserSyncResult) *SyncUsersInfo {
+    info := SyncUsersInfo{
+        Add: NewUserInfos(syncResult.Add),
+        Mod: NewUserInfos(syncResult.Mod),
+        Del: NewUserInfos(syncResult.Del),
+        Skip: NewUserInfos(syncResult.Skip),
+    };
+
+    return &info;
 }

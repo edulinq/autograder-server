@@ -82,7 +82,7 @@ func TestCourseSyncNewUsers(test *testing.T) {
         }
 
         if (len(emptyCase) != 0) {
-            test.Errorf("Case %d (%+v): Should have found 0 %s users, found (%d): '%s'.", 
+            test.Errorf("Case %d (%+v): Should have found 0 %s users, found (%d): '%s'.",
                     i, testCase, emptyName, len(emptyCase), util.MustToJSON(emptyCase));
             continue;
         }
@@ -145,7 +145,8 @@ func getSynNewUsersTestUsers() (
         "add@test.com": &usr.User{
             Email: "add@test.com",
             DisplayName: "add",
-            Role: usr.Student,
+            // Leave empty, should default to usr.Other.
+            // Role: usr.Unknown,
             LMSID: "lms-add@test.com",
         },
         "add-pass@test.com": &usr.User{
@@ -172,7 +173,7 @@ func getSynNewUsersTestUsers() (
         &usr.User{
             Email: "add@test.com",
             DisplayName: "add",
-            Role: usr.Student,
+            Role: usr.Other,
             LMSID: "lms-add@test.com",
         },
         &usr.User{

@@ -13,10 +13,7 @@ type SyncUsersRequest struct {
 }
 
 type SyncUsersResponse struct {
-    Add []*core.UserInfo `json:"add-users"`
-    Mod []*core.UserInfo `json:"mod-users"`
-    Del []*core.UserInfo `json:"del-users"`
-    Skip []*core.UserInfo `json:"skip-users"`
+    core.SyncUsersInfo
 }
 
 func HandleSyncUsers(request *SyncUsersRequest) (*SyncUsersResponse, *core.APIError) {
@@ -32,10 +29,7 @@ func HandleSyncUsers(request *SyncUsersRequest) (*SyncUsersResponse, *core.APIEr
     }
 
     response := SyncUsersResponse{
-        Add: core.NewUserInfos(result.Add),
-        Mod: core.NewUserInfos(result.Mod),
-        Del: core.NewUserInfos(result.Del),
-        Skip: core.NewUserInfos(result.Skip),
+        SyncUsersInfo: *core.NewSyncUsersInfo(result),
     };
 
     return &response, nil;

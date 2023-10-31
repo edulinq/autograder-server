@@ -34,7 +34,8 @@ func HandleRemove(request *RemoveRequest) (*RemoveResponse, *core.APIError) {
 
     err := request.Course.SaveUsersFile(request.Users);
     if (err != nil) {
-        return nil, core.NewInternalError("-602", &request.APIRequestCourseUserContext, "Failed to save users after a remove.");
+        return nil, core.NewInternalError("-602", &request.APIRequestCourseUserContext,
+                "Failed to save users after a remove.").Err(err);
     }
 
     return &response, nil;
