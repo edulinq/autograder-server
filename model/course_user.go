@@ -53,6 +53,7 @@ func (this *Course) AddUser(user *usr.User, merge bool, dryRun bool, sendEmails 
 }
 
 // Sync users with the new users.
+// The course takes ownership of the passed-in users (they may be modified).
 // If |merge| is true, then existing users will be updated with non-empty fields.
 // Otherwise existing users will be ignored.
 // Any non-ignored user WILL have their password changed.

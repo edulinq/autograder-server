@@ -14,7 +14,7 @@ import (
     "github.com/eriq-augustine/autograder/util"
 )
 
-type SyncTestCase struct {
+type SyncLMSTestCase struct {
     dryRun bool
     sendEmails bool
     syncAttributes bool
@@ -22,7 +22,7 @@ type SyncTestCase struct {
     syncDel bool
 }
 
-func TestCourseSyncUsers(test *testing.T) {
+func TestCourseSyncLMSUsers(test *testing.T) {
     course, err := LoadCourseConfig(filepath.Join(config.COURSES_ROOT.GetString(), "COURSE101", "course.json"));
     if (err != nil) {
         test.Fatalf("Failed to get test course: '%v'.", err);
@@ -38,7 +38,7 @@ func TestCourseSyncUsers(test *testing.T) {
     config.SetLogLevelFatal();
     defer config.SetLoggingLevel(oldLevel);
 
-    for i, testCase := range getSyncTestCases() {
+    for i, testCase := range getSyncLMSTestCases() {
         course.LMSAdapter.SyncUserAttributes = testCase.syncAttributes;
         course.LMSAdapter.SyncAddUsers = testCase.syncAdd;
         course.LMSAdapter.SyncRemoveUsers = testCase.syncDel;
@@ -99,7 +99,7 @@ func TestCourseSyncUsers(test *testing.T) {
                     continue;
                 }
             } else {
-                if (!messageEquals(addEmails, testMessages)) {
+                if (!email.ShallowSliceEqual(addEmails, testMessages)) {
                     test.Errorf("Case %d (%+v): Unexpected add emails. Expected: '%s', actual: '%s'.",
                             i, testCase, util.MustToJSON(addEmails), util.MustToJSON(testMessages));
                     continue;
@@ -138,13 +138,13 @@ func TestCourseSyncUsers(test *testing.T) {
 }
 
 // Get all possible test cases.
-func getSyncTestCases() []SyncTestCase {
-    return buildSyncTestCase(nil, 0, make([]bool, 5));
+func getSyncLMSTestCases() []SyncLMSTestCase {
+    return buildSyncLMSTestCase(nil, 0, make([]bool, 5));
 }
 
-func buildSyncTestCase(testCases []SyncTestCase, index int, currentCase []bool) []SyncTestCase {
+func buildSyncLMSTestCase(testCases []SyncLMSTestCase, index int, currentCase []bool) []SyncLMSTestCase {
     if (index >= len(currentCase)) {
-        return append(testCases, SyncTestCase{
+        return append(testCases, SyncLMSTestCase{
             dryRun: currentCase[0],
             sendEmails: currentCase[1],
             syncAttributes: currentCase[2],
@@ -154,21 +154,12 @@ func buildSyncTestCase(testCases []SyncTestCase, index int, currentCase []bool) 
     }
 
     currentCase[index] = true;
-    testCases = buildSyncTestCase(testCases, index + 1, currentCase);
+    testCases = buildSyncLMSTestCase(testCases, index + 1, currentCase);
 
     currentCase[index] = false;
-    testCases = buildSyncTestCase(testCases, index + 1, currentCase);
+    testCases = buildSyncLMSTestCase(testCases, index + 1, currentCase);
 
     return testCases;
-}
-
-// Correct order is assumed.
-func messageEquals(a []*email.Message, b []*email.Message) bool {
-    if (len(a) != len(b)) {
-        return false;
-    }
-
-    return slices.EqualFunc(a, b, email.ShallowEqual);
 }
 
 func usersEquals(a []*usr.User, b []*usr.User) bool {
@@ -278,7 +269,7 @@ var delUsers []*usr.User = []*usr.User{
     },
 };
 
-// The users that are marked as deletions.
+// All the users that are marked as mods.
 var modAllUsers []*usr.User = []*usr.User{
     &usr.User{
         Email: "student@test.com",
@@ -300,6 +291,7 @@ var modAllUsers []*usr.User = []*usr.User{
     },
 };
 
+// All the users that are marked as mods with no attribute syncing.
 var modUsers []*usr.User = []*usr.User{
     &usr.User{
         Email: "student@test.com",

@@ -54,3 +54,47 @@ func ShallowEqual(a *Message, b *Message) bool {
 
     return slices.Equal(aTo, bTo) && (a.Subject == b.Subject) && (a.HTML == b.HTML);
 }
+
+func Compare(a *Message, b *Message) int {
+    if (a == b) {
+        return 0;
+    }
+
+    if (a == nil) {
+        return 1;
+    } else if (b == nil) {
+        return -1;
+    }
+
+    aSortedTo := a.To;
+    bSortedTo := b.To;
+
+    slices.Sort(aSortedTo);
+    slices.Sort(bSortedTo);
+
+    value := slices.Compare(aSortedTo, bSortedTo);
+    if (value != 0) {
+        return value;
+    }
+
+    value = strings.Compare(a.Subject, b.Subject);
+    if (value != 0) {
+        return value;
+    }
+
+    return strings.Compare(a.Body, b.Body);
+}
+
+func ShallowSliceEqual(a []*Message, b []*Message) bool {
+    if (len(a) != len(b)) {
+        return false;
+    }
+
+    aSorted := a;
+    bSorted := b;
+
+    slices.SortFunc(aSorted, Compare);
+    slices.SortFunc(bSorted, Compare);
+
+    return slices.EqualFunc(aSorted, bSorted, ShallowEqual);
+}
