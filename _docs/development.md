@@ -2,7 +2,7 @@
 
 ## "Must" and "Should" Functions
 
-In Go, there is a convention of "Must" functions (e.g. `regex.MustCompile()`).
+In Go, there is a convention of "Must" functions (e.g. `regexp.MustCompile()`).
 These methods are supposed to either complete their task, or panic.
 
 In the autograder, "Must" functions should only be used in testing code,
@@ -10,8 +10,8 @@ in a program's main file (excluding the server),
 and code that is verified once run a single time (in a test).
 The last situation is where arguments that can cause the possible error are fixed
 and the code just needs to be run once to verify that it will not generate an error.
-The prime example of this is `regex.MustCompile()`, where the regex is a string literal which cannot change.
-Once the regex is verified to compile once (in a test), it should compile every time.
+The prime example of this is `regexp.MustCompile()`, where the regexp is a string literal which cannot change.
+Once the regexp is verified to compile once (in a test), it should compile every time.
 
 In addition to "Must" functions, this project also uses "Should" functions.
 A "Should" function is for situations where a function could encounter an error in very rare circumstances,

@@ -4,8 +4,6 @@ import (
     "fmt"
     "html/template"
     "strings"
-
-    "github.com/rs/zerolog/log"
 )
 
 func (this *CourseScoringReport) ToHTML() (string, error) {
@@ -47,13 +45,14 @@ func (this *AssignmentScoringReport) ToHTML(inline bool) (string, error) {
     return builder.String(), nil;
 }
 
-func (this *AssignmentScoringReport) MustToInlineHTML() template.HTML {
+func (this *AssignmentScoringReport) ToInlineHTML() (template.HTML, error) {
     html, err := this.ToHTML(true);
     if (err != nil) {
-        log.Fatal().Err(err).Str("assignment", this.AssignmentName).Msg("Failed to generate HTML assignment scoring report.");
+        return template.HTML(""), fmt.Errorf("Failed to generate HTML scoring report for assignment '%s': '%w'.",
+                this.AssignmentName, err);
     }
 
-    return template.HTML(html);
+    return template.HTML(html), nil;
 }
 
 // Replacements: [title, head, body]
@@ -83,7 +82,7 @@ var courseReportTemplate string = `
                 {{ if eq .NumberOfSubmissions 0 }} {{ continue }} {{ end }}
 
                 <div>
-                    {{ .MustToInlineHTML }}
+                    {{ .ToInlineHTML }}
                 </div>
             {{ end }}
         </div>
