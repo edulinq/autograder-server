@@ -1,19 +1,19 @@
 package model
 
 import (
-	"fmt"
-	"path/filepath"
-	"slices"
+    "fmt"
+    "path/filepath"
+    "slices"
 
-	"github.com/rs/zerolog/log"
+    "github.com/rs/zerolog/log"
 
-	"github.com/eriq-augustine/autograder/common"
-	"github.com/eriq-augustine/autograder/config"
-	"github.com/eriq-augustine/autograder/docker"
-	"github.com/eriq-augustine/autograder/lms/adapter"
-	"github.com/eriq-augustine/autograder/report"
-	"github.com/eriq-augustine/autograder/task"
-	"github.com/eriq-augustine/autograder/util"
+    "github.com/eriq-augustine/autograder/common"
+    "github.com/eriq-augustine/autograder/config"
+    "github.com/eriq-augustine/autograder/docker"
+    "github.com/eriq-augustine/autograder/lms/adapter"
+    "github.com/eriq-augustine/autograder/report"
+    "github.com/eriq-augustine/autograder/task"
+    "github.com/eriq-augustine/autograder/util"
 )
 
 const COURSE_CONFIG_FILENAME = "course.json"

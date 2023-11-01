@@ -1,11 +1,11 @@
 package grader
 
 import (
-	"fmt"
-	"testing"
+    "fmt"
+    "testing"
 
-	"github.com/eriq-augustine/autograder/config"
-	"github.com/eriq-augustine/autograder/docker"
+    "github.com/eriq-augustine/autograder/config"
+    "github.com/eriq-augustine/autograder/docker"
 )
 
 const BASE_TEST_USER = "test_user@test.com";
