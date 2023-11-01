@@ -24,6 +24,10 @@ func TestDockerSubmissions(test *testing.T) {
 }
 
 func TestNoDockerSubmissions(test *testing.T) {
+    oldDockerVal := config.DOCKER_DISABLE.GetBool();
+    config.DOCKER_DISABLE.Set(true);
+    defer config.DOCKER_DISABLE.Set(oldDockerVal);
+
     runSubmissionTests(test, false, false);
 }
 
