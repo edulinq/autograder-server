@@ -165,15 +165,6 @@ func Set(key string, value any) {
     configValues[key] = value;
 }
 
-func Get(key string) any {
-    value, present := configValues[key];
-    if (!present) {
-        log.Fatal().Str("key", key).Msg("Config key does not exist.");
-    }
-
-    return value;
-}
-
 func GetDefault(key string, defaultValue any) any {
     value, exists := configValues[key];
     if (exists) {
@@ -183,21 +174,8 @@ func GetDefault(key string, defaultValue any) any {
     return defaultValue;
 }
 
-func GetString(key string) string {
-    return asString(Get(key));
-}
-
 func GetStringDefault(key string, defaultValue string) string {
     return asString(GetDefault(key, defaultValue));
-}
-
-func GetInt(key string) int {
-    intValue, err := asInt(Get(key));
-    if (err != nil) {
-        log.Fatal().Err(err).Str("key", key).Msg("Could not get int option.");
-    }
-
-    return intValue;
 }
 
 func GetIntDefault(key string, defaultValue int) int {
@@ -210,15 +188,6 @@ func GetIntDefault(key string, defaultValue int) int {
     return intValue;
 }
 
-func GetFloat(key string) float64 {
-    floatValue, err := asFloat(Get(key));
-    if (err != nil) {
-        log.Fatal().Err(err).Str("key", key).Msg("Could not get float option.");
-    }
-
-    return floatValue;
-}
-
 func GetFloatDefault(key string, defaultValue float64) float64 {
     floatValue, err := asFloat(GetDefault(key, defaultValue));
     if (err != nil) {
@@ -227,15 +196,6 @@ func GetFloatDefault(key string, defaultValue float64) float64 {
     }
 
     return floatValue;
-}
-
-func GetBool(key string) bool {
-    boolValue, err := asBool(Get(key));
-    if (err != nil) {
-        log.Fatal().Err(err).Str("key", key).Msg("Could not get bool option.");
-    }
-
-    return boolValue;
 }
 
 func GetBoolDefault(key string, defaultValue bool) bool {

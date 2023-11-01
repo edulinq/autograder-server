@@ -22,7 +22,7 @@ type Option struct {
 }
 
 // Create a new option, will panic on failure.
-func newOption(key string, defaultValue any, description string) *Option {
+func mustNewOption(key string, defaultValue any, description string) *Option {
     _, ok := seenOptions[key];
     if (ok) {
         log.Fatal().Str("key", key).Msg("Duplicate option key.");
@@ -52,6 +52,10 @@ func (this *Option) GetString() string {
 
 func (this *Option) GetInt() int {
     return GetIntDefault(this.Key, this.DefaultValue.(int));
+}
+
+func (this *Option) GetFloat() float64 {
+    return GetFloatDefault(this.Key, this.DefaultValue.(float64));
 }
 
 func (this *Option) GetBool() bool {

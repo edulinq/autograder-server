@@ -33,7 +33,8 @@ func InitLogging() {
     var rawLogLevel = LOG_LEVEL.GetString();
     level, err := zerolog.ParseLevel(rawLogLevel);
     if (err != nil) {
-        log.Fatal().Err(err).Str("level", rawLogLevel).Msg("Failed to parse the logging level.");
+        log.Error().Err(err).Str("level", rawLogLevel).Msg("Failed to parse the logging level, setting to INFO.");
+        level = zerolog.InfoLevel;
     }
 
     if (DEBUG.GetBool() && (level > zerolog.DebugLevel)) {
