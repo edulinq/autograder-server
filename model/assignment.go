@@ -46,7 +46,7 @@ func LoadAssignmentConfig(path string, courseConfig *Course) (*Assignment, error
         return nil, fmt.Errorf("Could not load assignment config (%s): '%w'.", path, err);
     }
 
-    assignment.SourcePath = util.MustAbs(path);
+    assignment.SourcePath = util.ShouldAbs(path);
 
     if (courseConfig == nil) {
         courseConfig, err = loadParentCourseConfig(filepath.Dir(path));

@@ -76,7 +76,7 @@ func LoadCourseConfig(path string) (*Course, error) {
         return nil, fmt.Errorf("Could not load course config (%s): '%w'.", path, err);
     }
 
-    config.SourcePath = util.MustAbs(path);
+    config.SourcePath = util.ShouldAbs(path);
 
     if (config.UsersFile == "") {
         config.UsersFile = DEFAULT_USERS_FILENAME;

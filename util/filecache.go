@@ -21,7 +21,7 @@ type FileCache map[string]int64;
 // or complete checking (and updating) the cache.
 // This method is thread safe.
 func CheckFileChanges(cachePath string, paths []string, quick bool) (bool, error) {
-    cachePath = MustAbs(cachePath);
+    cachePath = ShouldAbs(cachePath);
 
     lock, _ := fileLocks.LoadOrStore(cachePath, &sync.Mutex{});
     lock.(*sync.Mutex).Lock();
@@ -73,7 +73,7 @@ func checkFileChanges(cache FileCache, paths []string, quick bool) (bool, error)
         }
 
         // Need abs paths for cache consistency.
-        path = MustAbs(path);
+        path = ShouldAbs(path);
 
         if (!PathExists(path)) {
             changesFound = true;

@@ -15,7 +15,7 @@ const (
 )
 
 func GetAutograderVersion() string {
-    versionPath := MustAbs(filepath.Join(GetThisDir(), "..", VERSION_FILENAME));
+    versionPath := ShouldAbs(filepath.Join(GetThisDir(), "..", VERSION_FILENAME));
     if (!IsFile(versionPath)) {
         log.Error().Str("path", versionPath).Msg("Version file does not exist.");
         return UNKNOWN_VERSION;
@@ -31,7 +31,7 @@ func GetAutograderVersion() string {
 }
 
 func GetAutograderFullVersion() string {
-    repoPath := MustAbs(filepath.Join(GetThisDir(), ".."));
+    repoPath := ShouldAbs(filepath.Join(GetThisDir(), ".."));
 
     version := GetAutograderVersion();
 

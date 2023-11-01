@@ -21,8 +21,8 @@ func RunContainer(imageName string, inputDir string, outputDir string, gradingID
     }
     defer docker.Close()
 
-    inputDir = util.MustAbs(inputDir);
-    outputDir = util.MustAbs(outputDir);
+    inputDir = util.ShouldAbs(inputDir);
+    outputDir = util.ShouldAbs(outputDir);
 
     name := cleanContainerName(fmt.Sprintf("%s-%s", gradingID, util.UUID()));
 

@@ -34,7 +34,7 @@ func GetTestSubmissions(baseDir string) ([]*TestSubmissionInfo, error) {
     testSubmissions := make([]*TestSubmissionInfo, 0, len(testSubmissionPaths));
 
     for _, testSubmissionPath := range testSubmissionPaths {
-        testSubmissionPath = util.MustAbs(testSubmissionPath);
+        testSubmissionPath = util.ShouldAbs(testSubmissionPath);
 
         var testSubmission artifact.TestSubmission;
         err := util.JSONFromFile(testSubmissionPath, &testSubmission);
@@ -47,7 +47,7 @@ func GetTestSubmissions(baseDir string) ([]*TestSubmissionInfo, error) {
             return nil, fmt.Errorf("Could not find assignment for test submission '%s'.", testSubmissionPath);
         }
 
-        dir := util.MustAbs(filepath.Dir(testSubmissionPath));
+        dir := util.ShouldAbs(filepath.Dir(testSubmissionPath));
 
         paths, err := util.GetAllDirents(dir);
         if (err != nil) {
@@ -72,7 +72,7 @@ func GetTestSubmissions(baseDir string) ([]*TestSubmissionInfo, error) {
 // Test submission are withing their assignment's directory,
 // just check the source dirs for existing courses and assignments.
 func fetchTestSubmissionAssignment(testSubmissionPath string) *model.Assignment {
-    testSubmissionPath = util.MustAbs(testSubmissionPath);
+    testSubmissionPath = util.ShouldAbs(testSubmissionPath);
 
     for _, course := range GetCourses() {
         if (!util.PathHasParent(testSubmissionPath, filepath.Dir(course.SourcePath))) {
