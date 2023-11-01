@@ -184,11 +184,12 @@ func GetAllDirents(basePath string) ([]string, error) {
 }
 
 // Get the directory of the source file calling this method.
-func GetThisDir() string {
+func ShouldGetThisDir() string {
     // 0 is the current caller (this function), and 1 should be one frame back.
     _, path, _, ok := runtime.Caller(1);
     if (!ok) {
-        log.Fatal().Msg("Could not get the stackframe for the current runtime.");
+        log.Error().Msg("Could not get the stackframe for the current runtime.");
+        return ".";
     }
 
     return filepath.Dir(path);
@@ -232,5 +233,5 @@ func PathHasParent(child string, parent string) bool {
 // This is decently fragile and can easily break in a deployment/production setting.
 // Should only be used for testing purposes.
 func RootDirForTesting() string {
-    return ShouldAbs(filepath.Join(ShouldAbs(GetThisDir()), ".."));
+    return ShouldAbs(filepath.Join(ShouldAbs(ShouldGetThisDir()), ".."));
 }
