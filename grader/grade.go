@@ -25,9 +25,9 @@ type GradeOptions struct {
 
 func GetDefaultGradeOptions() GradeOptions {
     return GradeOptions{
-        UseFakeSubmissionsDir: config.NO_STORE.GetBool(),
-        NoDocker: config.DOCKER_DISABLE.GetBool(),
-        LeaveTempDir: config.DEBUG.GetBool(),
+        UseFakeSubmissionsDir: config.NO_STORE.Get(),
+        NoDocker: config.DOCKER_DISABLE.Get(),
+        LeaveTempDir: config.DEBUG.Get(),
     };
 }
 

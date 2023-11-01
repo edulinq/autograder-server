@@ -12,7 +12,7 @@ const BASE_TEST_USER = "test_user@test.com";
 const TEST_MESSAGE = "";
 
 func TestDockerSubmissions(test *testing.T) {
-    if (config.DOCKER_DISABLE.GetBool()) {
+    if (config.DOCKER_DISABLE.Get()) {
         test.Skip("Docker is disabled, skipping test.");
     }
 
@@ -24,7 +24,7 @@ func TestDockerSubmissions(test *testing.T) {
 }
 
 func TestNoDockerSubmissions(test *testing.T) {
-    oldDockerVal := config.DOCKER_DISABLE.GetBool();
+    oldDockerVal := config.DOCKER_DISABLE.Get();
     config.DOCKER_DISABLE.Set(true);
     defer config.DOCKER_DISABLE.Set(oldDockerVal);
 
@@ -35,7 +35,7 @@ func runSubmissionTests(test *testing.T, parallel bool, useDocker bool) {
     config.EnableTestingMode(false, true);
 
     // Directory where all the test courses and other materials are located.
-    baseDir := config.COURSES_ROOT.GetString();
+    baseDir := config.COURSES_ROOT.Get();
 
     if (useDocker) {
         _, errs := BuildDockerImages(false, docker.NewBuildOptions());

@@ -37,7 +37,7 @@ func (this *Course) SaveUsersFile(users map[string]*usr.User) error {
     path := filepath.Join(filepath.Dir(this.SourcePath), this.UsersFile);
 
     // Do not save user files in testing mode.
-    if (config.TESTING_MODE.GetBool()) {
+    if (config.TESTING_MODE.Get()) {
         return nil;
     }
 

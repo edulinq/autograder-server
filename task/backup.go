@@ -29,7 +29,7 @@ func (this *BackupTask) Validate(course TaskCourseSource) error {
         return err;
     }
 
-    this.Disable = (this.Disable || config.NO_TASKS.GetBool());
+    this.Disable = (this.Disable || config.NO_TASKS.Get());
 
     this.basename = course.GetID();
     if (this.basename == "") {
@@ -41,7 +41,7 @@ func (this *BackupTask) Validate(course TaskCourseSource) error {
         return fmt.Errorf("Backup source path '%s' does not exist.", this.source);
     }
 
-    this.dest = config.BACKUP_DIR.GetString();
+    this.dest = config.BACKUP_DIR.Get();
     if (util.IsFile(this.dest)) {
         return fmt.Errorf("Backup directory exists and is a file: '%s'.", this.dest);
     }
@@ -81,7 +81,7 @@ func (this *BackupTask) Run() error {
 // If dest is not specified, it will be picked up from config.BACKUP_DIR.
 func RunBackup(source string, dest string, basename string) error {
     if (dest == "") {
-        dest = config.BACKUP_DIR.GetString();
+        dest = config.BACKUP_DIR.Get();
     }
 
     os.MkdirAll(dest, 0755);

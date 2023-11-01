@@ -20,7 +20,7 @@ func (this *APIRequestCourseUserContext) Auth() (*usr.User, *APIError) {
         return nil, NewAuthBadRequestError("-202", this, "Unknown User");
     }
 
-    if (config.NO_AUTH.GetBool()) {
+    if (config.NO_AUTH.Get()) {
         log.Debug().Str("email", this.UserEmail).Str("course", this.CourseID).Msg("Authentication Disabled.");
         return user, nil;
     }

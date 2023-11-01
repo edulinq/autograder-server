@@ -23,7 +23,7 @@ type SyncLMSTestCase struct {
 }
 
 func TestCourseSyncLMSUsers(test *testing.T) {
-    course, err := LoadCourseConfig(filepath.Join(config.COURSES_ROOT.GetString(), "COURSE101", "course.json"));
+    course, err := LoadCourseConfig(filepath.Join(config.COURSES_ROOT.Get(), "COURSE101", "course.json"));
     if (err != nil) {
         test.Fatalf("Failed to get test course: '%v'.", err);
     }

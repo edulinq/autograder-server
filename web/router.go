@@ -57,7 +57,7 @@ type route struct {
 }
 
 func StartServer() {
-    var port = config.WEB_PORT.GetInt();
+    var port = config.WEB_PORT.Get();
 
     log.Info().Msgf("Serving on %d.", port);
 

@@ -27,7 +27,7 @@ func (this *ReportTask) Validate(course TaskCourseSource) error {
         return err;
     }
 
-    this.Disable = (this.Disable || config.NO_TASKS.GetBool());
+    this.Disable = (this.Disable || config.NO_TASKS.Get());
     this.sources = course;
 
     if (!this.Disable && (len(this.To) == 0)) {

@@ -169,7 +169,7 @@ func SendUserAddEmail(user *User, pass string, generatedPass bool, userExists bo
         }
 
         // Skip sleeping in testing mode.
-        if (sleep && !config.TESTING_MODE.GetBool()) {
+        if (sleep && !config.TESTING_MODE.Get()) {
             time.Sleep(time.Duration(EMAIL_SLEEP_TIME));
         }
     }

@@ -24,7 +24,7 @@ func (this *ScoringUploadTask) Validate(course TaskCourseSource) error {
         return err;
     }
 
-    this.Disable = (this.Disable || config.NO_TASKS.GetBool());
+    this.Disable = (this.Disable || config.NO_TASKS.Get());
 
     this.course = course;
 

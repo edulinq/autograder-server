@@ -54,7 +54,7 @@ func EnableTestingMode(debug bool, setTestCourses bool) {
 }
 
 func LoadLoacalConfig() error {
-    path := LOCAL_CONFIG_PATH.GetString();
+    path := LOCAL_CONFIG_PATH.Get();
     if (util.PathExists(path)) {
         err := LoadFile(path);
         if (err != nil) {
@@ -62,7 +62,7 @@ func LoadLoacalConfig() error {
         }
     }
 
-    path = SECRETS_CONFIG_PATH.GetString();
+    path = SECRETS_CONFIG_PATH.Get();
     if (util.PathExists(path)) {
         err := LoadFile(path);
         if (err != nil) {

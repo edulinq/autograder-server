@@ -20,18 +20,18 @@ func Send(to []string, subject string, body string, html bool) error {
 }
 
 func SendMessage(message *Message) error {
-    auth := smtp.PlainAuth("", config.EMAIL_USER.GetString(), config.EMAIL_PASS.GetString(), config.EMAIL_HOST.GetString());
+    auth := smtp.PlainAuth("", config.EMAIL_USER.Get(), config.EMAIL_PASS.Get(), config.EMAIL_HOST.Get());
 
-    serverAddress := fmt.Sprintf("%s:%s", config.EMAIL_HOST.GetString(), config.EMAIL_PORT.GetString());
+    serverAddress := fmt.Sprintf("%s:%s", config.EMAIL_HOST.Get(), config.EMAIL_PORT.Get());
     content := message.ToContent();
 
     // In testing mode, just store the message.
-    if (config.TESTING_MODE.GetBool()) {
+    if (config.TESTING_MODE.Get()) {
         testMessages = append(testMessages, message);
         return nil;
     }
 
-    return smtp.SendMail(serverAddress, auth, config.EMAIL_FROM.GetString(), message.To, content);
+    return smtp.SendMail(serverAddress, auth, config.EMAIL_FROM.Get(), message.To, content);
 }
 
 func GetTestMessages() []*Message {

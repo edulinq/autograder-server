@@ -11,7 +11,7 @@ import (
 )
 
 func TestSubmit(test *testing.T) {
-    testSubmissions, err := grader.GetTestSubmissions(config.COURSES_ROOT.GetString());
+    testSubmissions, err := grader.GetTestSubmissions(config.COURSES_ROOT.Get());
     if (err != nil) {
         test.Fatalf("Failed to get test submissions: '%v'.", err);
     }

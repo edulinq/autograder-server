@@ -68,7 +68,7 @@ func HandleFetchSubmission(request *FetchSubmissionRequest) (*FetchSubmissionRes
     }
 
     // When testing, create deterministic zip files.
-    deterministicZip := config.TESTING_MODE.GetBool();
+    deterministicZip := config.TESTING_MODE.Get();
 
     submissionPath := filepath.Dir(filepath.Dir(targetPath));
     data, err := util.ZipToBytes(submissionPath, summary.ID, deterministicZip);

@@ -53,7 +53,7 @@ func (this *APIRequest) Validate(request any, endpoint string) *APIError {
     this.Endpoint = endpoint;
     this.Timestamp = util.NowTimestamp();
 
-    this.TestingMode = config.TESTING_MODE.GetBool();
+    this.TestingMode = config.TESTING_MODE.Get();
 
     return nil;
 }

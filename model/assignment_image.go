@@ -20,7 +20,7 @@ func (this *Assignment) BuildImageQuick() error {
 }
 
 func (this *Assignment) BuildImage(force bool, quick bool, options *docker.BuildOptions) error {
-    if (config.DOCKER_DISABLE.GetBool()) {
+    if (config.DOCKER_DISABLE.Get()) {
         return nil;
     }
 

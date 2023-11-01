@@ -23,7 +23,7 @@ func AuthAPIRequest(request *BaseAPIRequest, course *model.Course) (bool, *usr.U
 
     user, err := course.GetUser(request.User);
 
-    if (config.NO_AUTH.GetBool()) {
+    if (config.NO_AUTH.Get()) {
         log.Debug().Str("user", request.User).Msg("Authentication Disabled.");
         return true, user, nil;
     }

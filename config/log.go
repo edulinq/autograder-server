@@ -14,7 +14,7 @@ import (
 )
 
 func InitLogging() {
-    if (LOG_PRETTY.GetBool()) {
+    if (LOG_PRETTY.Get()) {
         log.Logger = log.Output(zerolog.ConsoleWriter{
             Out: os.Stderr,
             NoColor: true,
@@ -30,14 +30,14 @@ func InitLogging() {
         log.Logger = zerolog.New(os.Stderr).With().Timestamp().Logger();
     }
 
-    var rawLogLevel = LOG_LEVEL.GetString();
+    var rawLogLevel = LOG_LEVEL.Get();
     level, err := zerolog.ParseLevel(rawLogLevel);
     if (err != nil) {
         log.Error().Err(err).Str("level", rawLogLevel).Msg("Failed to parse the logging level, setting to INFO.");
         level = zerolog.InfoLevel;
     }
 
-    if (DEBUG.GetBool() && (level > zerolog.DebugLevel)) {
+    if (DEBUG.Get() && (level > zerolog.DebugLevel)) {
         level = zerolog.DebugLevel;
     }
 

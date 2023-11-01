@@ -30,7 +30,7 @@ func ActivateCourses() error {
 
 // Discover all courses (from the config) and load all the associated courses and assignments.
 func LoadCourses() error {
-    return LoadCoursesFromDir(config.COURSES_ROOT.GetString());
+    return LoadCoursesFromDir(config.COURSES_ROOT.Get());
 }
 
 func LoadCoursesFromDir(baseDir string) error {

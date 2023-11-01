@@ -13,7 +13,7 @@ import (
 )
 
 func StartServer() error {
-    var port = config.WEB_PORT.GetInt();
+    var port = config.WEB_PORT.Get();
 
     log.Info().Msgf("Serving on %d.", port);
     return http.ListenAndServe(fmt.Sprintf(":%d", port), core.GetRouteServer(GetRoutes()));

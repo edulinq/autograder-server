@@ -45,7 +45,7 @@ func TestAuth(test *testing.T) {
         {"student@test.com", "studentZ", true, ""},
     };
 
-    oldNoAuth := config.NO_AUTH.GetBool();
+    oldNoAuth := config.NO_AUTH.Get();
     defer config.NO_AUTH.Set(oldNoAuth);
 
     for i, testCase := range testCases {
