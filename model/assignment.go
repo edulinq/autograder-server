@@ -40,7 +40,7 @@ type Assignment struct {
 
 // Load an assignment config from a given JSON path.
 // If the course config is nil, search all parent directories for the course config.
-func LoadAssignmentConfig(path string, courseConfig *Course) (*Assignment, error) {
+func LoadAssignmentConfig(path string, course *Course) (*Assignment, error) {
     var assignment Assignment;
     err := util.JSONFromFile(path, &assignment);
     if (err != nil) {
@@ -49,26 +49,26 @@ func LoadAssignmentConfig(path string, courseConfig *Course) (*Assignment, error
 
     assignment.SourcePath = util.ShouldAbs(path);
 
-    if (courseConfig == nil) {
-        courseConfig, err = loadParentCourseConfig(filepath.Dir(path));
+    if (course == nil) {
+        course, err = loadParentCourseConfig(filepath.Dir(path));
         if (err != nil) {
             return nil, fmt.Errorf("Could not load course config for '%s': '%w'.", path, err);
         }
     }
-    assignment.Course = courseConfig;
+    assignment.Course = course;
 
     err = assignment.Validate();
     if (err != nil) {
         return nil, fmt.Errorf("Failed to validate assignment config (%s): '%w'.", path, err);
     }
 
-    otherAssignment := courseConfig.Assignments[assignment.GetID()];
+    otherAssignment := course.GetAssignment(assignment.GetID());
     if (otherAssignment != nil) {
         return nil, fmt.Errorf(
                 "Found multiple assignments with the same ID ('%s'): ['%s', '%s'].",
-                assignment.GetID(), otherAssignment.SourcePath, assignment.SourcePath);
+                assignment.GetID(), otherAssignment.GetSourceDir(), assignment.GetSourceDir());
     }
-    courseConfig.Assignments[assignment.GetID()] = &assignment;
+    course.Assignments[assignment.GetID()] = &assignment;
 
     return &assignment, nil;
 }

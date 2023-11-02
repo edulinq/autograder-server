@@ -18,9 +18,18 @@ type Assignment interface {
     ImageName() string;
     GetImageInfo() *docker.ImageInfo;
     GetSourceDir() string;
-    GetAllRecentSubmissionResults(map[string]*usr.User) (map[string]string, error);
     FullScoringAndUpload(dryRun bool) error;
+
+    BuildImageQuick() error;
+    BuildImage(force bool, quick bool, options *docker.BuildOptions) error;
+
+    PrepareSubmission(user string) (string, string, error);
+    PrepareSubmissionWithDir(user string, submissionsDir string) (string, string, error);
     GetScoringInfo(users map[string]*usr.User, onlyStudents bool) (map[string]*artifact.ScoringInfo, error);
+    GetSubmissionResults(user string) ([]string, error);
+    GetSubmissionSummaries(user string) ([]string, error);
+    GetAllRecentSubmissionResults(users map[string]*usr.User) (map[string]string, error);
+    GetAllRecentSubmissionSummaries(users map[string]*usr.User) (map[string]string, error);
 }
 
 func CompareAssignments(a Assignment, b Assignment) int {

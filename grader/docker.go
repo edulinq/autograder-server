@@ -10,7 +10,7 @@ import (
     "github.com/eriq-augustine/autograder/artifact"
     "github.com/eriq-augustine/autograder/common"
     "github.com/eriq-augustine/autograder/docker"
-    "github.com/eriq-augustine/autograder/model"
+    "github.com/eriq-augustine/autograder/model2"
     "github.com/eriq-augustine/autograder/util"
 )
 
@@ -36,7 +36,7 @@ func BuildDockerImages(force bool, buildOptions *docker.BuildOptions) ([]string,
 //  - input -- A temp dir that will be mounted at DOCKER_INPUT_DIR (read-only).
 //  - output -- Passed in directory that will be mounted at DOCKER_OUTPUT_DIR.
 //  - work -- Should already be created inside the docker image, will only exist within the container.
-func RunDockerGrader(assignment *model.Assignment, submissionPath string, outputDir string, options GradeOptions, fullSubmissionID string) (*artifact.GradedAssignment, string, error) {
+func RunDockerGrader(assignment model2.Assignment, submissionPath string, outputDir string, options GradeOptions, fullSubmissionID string) (*artifact.GradedAssignment, string, error) {
     os.MkdirAll(outputDir, 0755);
     if (!util.IsEmptyDir(outputDir)) {
         return nil, "", fmt.Errorf("Output dir for docker grader is not empty.");

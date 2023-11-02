@@ -33,7 +33,7 @@ func (this *Course) GetUser(email string) (*usr.User, error) {
     return nil, nil;
 }
 
-func (this *Course) SaveUsersFile(users map[string]*usr.User) error {
+func (this *Course) SaveUsers(users map[string]*usr.User) error {
     path := filepath.Join(this.GetSourceDir(), USERS_FILENAME);
 
     // Do not save user files in testing mode.
@@ -41,7 +41,7 @@ func (this *Course) SaveUsersFile(users map[string]*usr.User) error {
         return nil;
     }
 
-    return usr.SaveUsersFile(path, users);
+    return usr.SaveUsers(path, users);
 }
 
 func (this *Course) AddUser(user *usr.User, merge bool, dryRun bool, sendEmails bool) (*usr.UserSyncResult, error) {
@@ -116,7 +116,7 @@ func (this *Course) SyncNewUsers(newUsers map[string]*usr.User, merge bool, dryR
         return syncResult, nil;
     }
 
-    err = this.SaveUsersFile(localUsers);
+    err = this.SaveUsers(localUsers);
     if (err != nil) {
         return nil, fmt.Errorf("Failed to save users file: '%w'.", err);
     }

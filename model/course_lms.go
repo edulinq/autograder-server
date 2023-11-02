@@ -75,7 +75,7 @@ func (this *Course) syncLMSUsers(dryRun bool, sendEmails bool, lmsUsers map[stri
         return syncResult, nil;
     }
 
-    err = this.SaveUsersFile(localUsers);
+    err = this.SaveUsers(localUsers);
     if (err != nil) {
         return nil, fmt.Errorf("Failed to save users file: '%w'.", err);
     }

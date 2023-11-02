@@ -8,12 +8,13 @@ import (
     "github.com/eriq-augustine/autograder/common"
     "github.com/eriq-augustine/autograder/config"
     "github.com/eriq-augustine/autograder/model"
+    "github.com/eriq-augustine/autograder/model2"
     "github.com/eriq-augustine/autograder/util"
 )
 
-var courses map[string]*model.Course = make(map[string]*model.Course);
+var courses map[string]model2.Course = make(map[string]model2.Course);
 
-func GetCourses() map[string]*model.Course {
+func GetCourses() map[string]model2.Course {
     return courses;
 }
 
@@ -57,7 +58,7 @@ func LoadCoursesFromDir(baseDir string) error {
     return nil;
 }
 
-func GetCourse(id string) *model.Course {
+func GetCourse(id string) model2.Course {
     id, err := common.ValidateID(id);
     if (err != nil) {
         return nil;
@@ -71,7 +72,7 @@ func GetCourse(id string) *model.Course {
     return course;
 }
 
-func GetAssignment(courseID string, assignmentID string) *model.Assignment {
+func GetAssignment(courseID string, assignmentID string) model2.Assignment {
     course := GetCourse(courseID);
     if (course == nil) {
         return nil;
@@ -86,7 +87,7 @@ func GetAssignment(courseID string, assignmentID string) *model.Assignment {
 }
 
 // Get the course and assignment from identifiers.
-func VerifyCourseAssignment(courseID string, assignmentID string) (*model.Course, *model.Assignment, error) {
+func VerifyCourseAssignment(courseID string, assignmentID string) (model2.Course, model2.Assignment, error) {
     course := GetCourse(courseID);
     if (course == nil) {
         return nil, nil, fmt.Errorf("Unknown course: '%s'.", courseID);

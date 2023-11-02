@@ -6,7 +6,7 @@ import (
 
     "github.com/eriq-augustine/autograder/config"
     "github.com/eriq-augustine/autograder/grader"
-    "github.com/eriq-augustine/autograder/model"
+    "github.com/eriq-augustine/autograder/model2"
     "github.com/eriq-augustine/autograder/usr"
     "github.com/eriq-augustine/autograder/util"
 )
@@ -35,7 +35,7 @@ type APIRequestCourseUserContext struct {
 
     // These fields are filled out as the request is parsed,
     // before being sent to the handler.
-    Course *model.Course
+    Course model2.Course
     User *usr.User
 }
 
@@ -45,7 +45,7 @@ type APIRequestAssignmentContext struct {
 
     AssignmentID string `json:"assignment-id"`
 
-    Assignment *model.Assignment
+    Assignment model2.Assignment
 }
 
 func (this *APIRequest) Validate(request any, endpoint string) *APIError {

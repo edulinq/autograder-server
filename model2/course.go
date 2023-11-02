@@ -1,6 +1,7 @@
 package model2
 
 import (
+    "github.com/eriq-augustine/autograder/docker"
     "github.com/eriq-augustine/autograder/lms/adapter"
     "github.com/eriq-augustine/autograder/usr"
 )
@@ -10,10 +11,25 @@ type Course interface {
     GetName() string
     GetSourceDir() string
     GetLMSAdapter() *adapter.LMSAdapter
-    // (LMS ids, assignment ids)
+    GetAssignment(id string) Assignment;
+    GetAssignments() map[string]Assignment;
+    GetSortedAssignments() []Assignment
     GetAssignmentLMSIDs() ([]string, []string)
-    GetUsers() (map[string]*usr.User, error)
     FullScoringAndUpload(bool) error
 
-    GetSortedAssignments() []Assignment
+    GetUser(email string) (*usr.User, error);
+    GetUsers() (map[string]*usr.User, error)
+    // TODO(eriq): Save a single user.
+    SaveUsers(users map[string]*usr.User) error;
+    AddUser(user *usr.User, merge bool, dryRun bool, sendEmails bool) (*usr.UserSyncResult, error);
+    SyncNewUsers(newUsers map[string]*usr.User, merge bool, dryRun bool, sendEmails bool) (*usr.UserSyncResult, error);
+
+    Activate() error;
+    BuildAssignmentImages(force bool, quick bool, options *docker.BuildOptions) ([]string, map[string]error);
+    GetCacheDir() string;
+
+    SyncLMSUsers(dryRun bool, sendEmails bool) (*usr.UserSyncResult, error);
+    SyncLMSUser(email string, dryRun bool, sendEmails bool) (*usr.UserSyncResult, error);
+
+    SetSourcePathForTesting(sourcePath string) string;
 }

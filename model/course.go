@@ -32,7 +32,7 @@ type Course struct {
 
     // Ignore these fields in JSON.
     SourcePath string `json:"-"`
-    Assignments map[string]*Assignment `json:"-"`
+    Assignments map[string]model2.Assignment `json:"-"`
 
     tasks []model2.ScheduledCourseTask `json:"-"`
 }
@@ -80,7 +80,7 @@ func LoadCourseConfig(path string) (*Course, error) {
 
     config.SourcePath = util.ShouldAbs(path);
 
-    config.Assignments = make(map[string]*Assignment);
+    config.Assignments = make(map[string]model2.Assignment);
 
     err = config.Validate();
     if (err != nil) {
@@ -168,6 +168,7 @@ func (this *Course) Validate() error {
     return nil;
 }
 
+// TODO(eriq): After DBs, the concept of activation will move to tasks.
 // Start any scheduled tasks or informal tasks associated with this course.
 func (this *Course) Activate() error {
     // Schedule tasks.
@@ -214,11 +215,11 @@ func loadParentCourseConfig(basepath string) (*Course, error) {
     return LoadCourseConfig(configPath);
 }
 
-func (this *Course) GetAssignment(id string) *Assignment {
+func (this *Course) GetAssignment(id string) model2.Assignment {
     return this.Assignments[id];
 }
 
-func (this *Course) GetAssignments() map[string]*Assignment {
+func (this *Course) GetAssignments() map[string]model2.Assignment {
     return this.Assignments;
 }
 

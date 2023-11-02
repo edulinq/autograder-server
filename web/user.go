@@ -401,7 +401,7 @@ func handleUserRemove(request *UserRemoveRequest) (int, any, error) {
     response.FoundUser = true;
     delete(users, removeUser.Email);
 
-    err = course.SaveUsersFile(users);
+    err = course.SaveUsers(users);
     if (err != nil) {
         return 0, nil, err;
     }

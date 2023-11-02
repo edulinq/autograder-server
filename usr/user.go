@@ -150,7 +150,7 @@ func LoadUsersFile(path string) (map[string]*User, error) {
     return users, nil;
 }
 
-func SaveUsersFile(path string, users map[string]*User) error {
+func SaveUsers(path string, users map[string]*User) error {
     return util.ToJSONFileIndent(users, path);
 }
 
