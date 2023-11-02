@@ -17,16 +17,12 @@ import (
 )
 
 const COURSE_CONFIG_FILENAME = "course.json"
-const DEFAULT_USERS_FILENAME = "users.json"
+const USERS_FILENAME = "users.json"
 
 type Course struct {
     // Required fields.
     ID string `json:"id"`
     DisplayName string `json:"display-name"`
-
-    // Non-required fields that have defaults.
-    // Paths are always relative to the course dir.
-    UsersFile string `json:"users-file"`
 
     LMSAdapter *adapter.LMSAdapter `json:"lms,omitempty"`
 
@@ -77,10 +73,6 @@ func LoadCourseConfig(path string) (*Course, error) {
     }
 
     config.SourcePath = util.ShouldAbs(path);
-
-    if (config.UsersFile == "") {
-        config.UsersFile = DEFAULT_USERS_FILENAME;
-    }
 
     config.Assignments = make(map[string]*Assignment);
 
