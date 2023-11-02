@@ -11,7 +11,7 @@ import (
     "github.com/eriq-augustine/autograder/config"
     "github.com/eriq-augustine/autograder/docker"
     "github.com/eriq-augustine/autograder/lms/adapter"
-    "github.com/eriq-augustine/autograder/report"
+    "github.com/eriq-augustine/autograder/model2"
     "github.com/eriq-augustine/autograder/task"
     "github.com/eriq-augustine/autograder/util"
 )
@@ -34,7 +34,7 @@ type Course struct {
     SourcePath string `json:"-"`
     Assignments map[string]*Assignment `json:"-"`
 
-    tasks []task.ScheduledCourseTask `json:"-"`
+    tasks []model2.ScheduledCourseTask `json:"-"`
 }
 
 func (this *Course) GetID() string {
@@ -222,22 +222,13 @@ func (this *Course) GetAssignments() map[string]*Assignment {
     return this.Assignments;
 }
 
-func (this *Course) GetSortedAssignments() []*Assignment {
-    assignments := make([]*Assignment, 0, len(this.Assignments));
+func (this *Course) GetSortedAssignments() []model2.Assignment {
+    assignments := make([]model2.Assignment, 0, len(this.Assignments));
     for _, assignment := range this.Assignments {
         assignments = append(assignments, assignment);
     }
 
-    slices.SortFunc(assignments, CompareAssignments);
+    slices.SortFunc(assignments, model2.CompareAssignments);
 
     return assignments;
-}
-
-func (this *Course) GetReportingSources() []report.ReportingSource {
-    sources := make([]report.ReportingSource, 0, len(this.Assignments));
-    for _, assignment := range this.GetSortedAssignments() {
-        sources = append(sources, assignment);
-    }
-
-    return sources;
 }

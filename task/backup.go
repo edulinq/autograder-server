@@ -9,6 +9,7 @@ import (
     "github.com/rs/zerolog/log"
 
     "github.com/eriq-augustine/autograder/config"
+    "github.com/eriq-augustine/autograder/model2"
     "github.com/eriq-augustine/autograder/util"
 )
 
@@ -21,7 +22,7 @@ type BackupTask struct {
     dest string `json:"-"`
 }
 
-func (this *BackupTask) Validate(course TaskCourseSource) error {
+func (this *BackupTask) Validate(course model2.Course) error {
     this.When.id = fmt.Sprintf("backup-%s", course.GetID());
 
     err := this.When.Validate();

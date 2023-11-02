@@ -1,26 +1,19 @@
-package task
+package model2
 
 import (
     "github.com/eriq-augustine/autograder/lms/adapter"
-    "github.com/eriq-augustine/autograder/report"
+    "github.com/eriq-augustine/autograder/usr"
 )
 
-type TaskCourseSource interface {
-    report.ReportingSources
-
+type Course interface {
     GetID() string
+    GetName() string
     GetSourceDir() string
     GetLMSAdapter() *adapter.LMSAdapter
     // (LMS ids, assignment ids)
     GetAssignmentLMSIDs() ([]string, []string)
+    GetUsers() (map[string]*usr.User, error)
     FullScoringAndUpload(bool) error
-}
 
-type ScheduledTask interface {
-    Schedule()
-}
-
-type ScheduledCourseTask interface {
-    ScheduledTask
-    Validate(TaskCourseSource) error
+    GetSortedAssignments() []Assignment
 }

@@ -7,6 +7,7 @@ import (
     "gonum.org/v1/gonum/stat"
 
     "github.com/eriq-augustine/autograder/artifact"
+    "github.com/eriq-augustine/autograder/model2"
     "github.com/eriq-augustine/autograder/util"
     "github.com/eriq-augustine/autograder/usr"
 )
@@ -14,12 +15,6 @@ import (
 const (
     OVERALL_NAME = "<Overall>"
 )
-
-type ReportingSource interface {
-    GetName() string
-    GetUsers() (map[string]*usr.User, error)
-    GetAllRecentSubmissionResults(users map[string]*usr.User) (map[string]string, error)
-}
 
 type AssignmentScoringReport struct {
     AssignmentName string `json:"assignment-name"`
@@ -48,8 +43,8 @@ type ScoringReportQuestionStats struct {
 
 const DEFAULT_VALUE float64 = -1.0;
 
-func GetAssignmentScoringReport(source ReportingSource) (*AssignmentScoringReport, error) {
-    questionNames, scores, lastSubmissionTime, err := fetchScores(source);
+func GetAssignmentScoringReport(assignment model2.Assignment) (*AssignmentScoringReport, error) {
+    questionNames, scores, lastSubmissionTime, err := fetchScores(assignment);
     if (err != nil) {
         return nil, err;
     }
@@ -82,7 +77,7 @@ func GetAssignmentScoringReport(source ReportingSource) (*AssignmentScoringRepor
     }
 
     report := AssignmentScoringReport{
-        AssignmentName: source.GetName(),
+        AssignmentName: assignment.GetName(),
         NumberOfSubmissions: numSubmissions,
         LatestSubmission: lastSubmissionTime,
         LatestSubmissionString: lastSubmissionTime.Format(time.DateTime),
@@ -92,13 +87,13 @@ func GetAssignmentScoringReport(source ReportingSource) (*AssignmentScoringRepor
     return &report, nil;
 }
 
-func fetchScores(source ReportingSource) ([]string, map[string][]float64, time.Time, error) {
-    users, err := source.GetUsers();
+func fetchScores(assignment model2.Assignment) ([]string, map[string][]float64, time.Time, error) {
+    users, err := assignment.GetCourse().GetUsers();
     if (err != nil) {
         return nil, nil, time.Time{}, fmt.Errorf("Failed to get users for course: '%w'.", err);
     }
 
-    paths, err := source.GetAllRecentSubmissionResults(users);
+    paths, err := assignment.GetAllRecentSubmissionResults(users);
     if (err != nil) {
         return nil, nil, time.Time{}, fmt.Errorf("Failed to get submission results: '%w'.", err);
     }

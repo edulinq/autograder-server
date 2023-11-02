@@ -9,6 +9,7 @@ import (
     "github.com/eriq-augustine/autograder/config"
     "github.com/eriq-augustine/autograder/lms"
     "github.com/eriq-augustine/autograder/model"
+    "github.com/eriq-augustine/autograder/model2"
     "github.com/eriq-augustine/autograder/usr"
     "github.com/eriq-augustine/autograder/util"
 )
@@ -111,7 +112,7 @@ func loadGrades(path string, users map[string]*usr.User, force bool) ([]*lms.Sub
     return grades, nil;
 }
 
-func getAssignmentIDAndCourse(assignmentPath string, assignmentID string, coursePath string) (string, *model.Course, error) {
+func getAssignmentIDAndCourse(assignmentPath string, assignmentID string, coursePath string) (string, model2.Course, error) {
     if (assignmentPath != "") {
         assignment := model.MustLoadAssignmentConfig(assignmentPath);
         if (assignment.GetLMSID() == "") {

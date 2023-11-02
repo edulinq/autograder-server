@@ -10,6 +10,7 @@ import (
 
     "github.com/eriq-augustine/autograder/common"
     "github.com/eriq-augustine/autograder/docker"
+    "github.com/eriq-augustine/autograder/model2"
     "github.com/eriq-augustine/autograder/usr"
     "github.com/eriq-augustine/autograder/util"
 )
@@ -85,11 +86,15 @@ func (this *Assignment) GetID() string {
     return this.ID;
 }
 
+func (this *Assignment) GetSortID() string {
+    return this.SortID;
+}
+
 func (this *Assignment) FullID() string {
     return fmt.Sprintf("%s-%s", this.Course.GetID(), this.ID);
 }
 
-func (this *Assignment) GetCourse() *Course {
+func (this *Assignment) GetCourse() model2.Course {
     return this.Course;
 }
 
@@ -202,33 +207,4 @@ func (this *Assignment) GetCachePath() string {
 
 func (this *Assignment) GetFileCachePath() string {
     return filepath.Join(this.GetCacheDir(), FILE_CACHE_FILENAME);
-}
-
-func CompareAssignments(a *Assignment, b *Assignment) int {
-    if ((a == nil) && (b == nil)) {
-        return 0;
-    }
-
-    // Favor non-nil over nil.
-    if (a == nil) {
-        return 1;
-    } else if (b == nil) {
-        return -1;
-    }
-
-    // If both don't have sort keys, just use the IDs.
-    if ((a.SortID == "") && (b.SortID == "")) {
-        return strings.Compare(a.ID, b.ID);
-    }
-
-
-    // Favor assignments with a sort key over those without.
-    if (a.SortID == "") {
-        return 1;
-    } else if (b.SortID == "") {
-        return -1;
-    }
-
-    // Both assignments have a sort key, use that for comparison.
-    return strings.Compare(a.SortID, b.SortID);
 }
