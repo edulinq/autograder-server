@@ -17,7 +17,7 @@ func TestUploadScores(test *testing.T) {
         test.Fatalf("Failed to get test course.");
     }
 
-    testLMSAdapter := course.LMSAdapter.Adapter.(*lmstest.TestLMSAdapter);
+    testLMSAdapter := course.GetLMSAdapter().Adapter.(*lmstest.TestLMSAdapter);
 
     // Reset the LMS adapter.
     defer func() {

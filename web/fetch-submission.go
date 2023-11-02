@@ -80,7 +80,7 @@ func handleFetchSubmission(request *FetchSubmissionRequest) (int, any, error) {
         return http.StatusBadRequest, fmt.Sprintf("Could not find assignment ('%s') for course ('%s').", request.Assignment, request.Course,), nil;
     }
 
-    users, err := assignment.Course.GetUsers();
+    users, err := assignment.GetCourse().GetUsers();
     if (err != nil) {
         return 0, nil, fmt.Errorf("Failed to get users for course: '%w'.", err);
     }

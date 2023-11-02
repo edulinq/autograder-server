@@ -17,9 +17,9 @@ type SyncUsersResponse struct {
 }
 
 func HandleSyncUsers(request *SyncUsersRequest) (*SyncUsersResponse, *core.APIError) {
-    if (request.Course.LMSAdapter == nil) {
+    if (request.Course.GetLMSAdapter() == nil) {
         return nil, core.NewBadRequestError("-503", &request.APIRequest, "Course is not linked to an LMS.").
-                Add("course", request.Course.ID);
+                Add("course", request.Course.GetID());
     }
 
     result, err := request.Course.SyncLMSUsers(request.DryRun, request.SendEmails);

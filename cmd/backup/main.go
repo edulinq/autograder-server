@@ -56,7 +56,7 @@ func backupFromPaths(paths []string) []string {
 
     for _, path := range paths {
         course := model.MustLoadCourseConfig(path);
-        courses[course.ID] = course;
+        courses[course.GetID()] = course;
     }
 
     return backupFromMap(courses);
@@ -67,11 +67,11 @@ func backupFromMap(courses map[string]*model.Course) []string {
     errs := make([]error, 0);
 
     for _, course := range courses {
-        err := task.RunBackup(filepath.Dir(course.SourcePath), "", course.ID);
+        err := task.RunBackup(filepath.Dir(course.SourcePath), "", course.GetID());
         if (err != nil) {
-            errs = append(errs, fmt.Errorf("Failed to backup course '%s': '%w'.", course.ID, err));
+            errs = append(errs, fmt.Errorf("Failed to backup course '%s': '%w'.", course.GetID(), err));
         } else {
-            courseIDs = append(courseIDs, course.ID);
+            courseIDs = append(courseIDs, course.GetID());
         }
     }
 

@@ -27,12 +27,12 @@ func main() {
     }
 
     course := model.MustLoadCourseConfig(args.Path);
-    if (course.LMSAdapter == nil) {
+    if (course.GetLMSAdapter() == nil) {
         fmt.Println("Course has no LMS info associated with it.");
         os.Exit(2);
     }
 
-    users, err := course.LMSAdapter.FetchUsers();
+    users, err := course.GetLMSAdapter().FetchUsers();
     if (err != nil) {
         log.Fatal().Err(err).Msg("Could not fetch users.");
     }

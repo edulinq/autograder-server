@@ -56,7 +56,7 @@ func main() {
     if (args.DryRun) {
         fmt.Println("Dry Run: Skipping upload.");
     } else {
-        err = course.LMSAdapter.UpdateAssignmentScores(assignmentLMSID, grades);
+        err = course.GetLMSAdapter().UpdateAssignmentScores(assignmentLMSID, grades);
         if (err != nil) {
             log.Fatal().Err(err).Msg("Could not upload grades.");
         }
@@ -114,11 +114,11 @@ func loadGrades(path string, users map[string]*usr.User, force bool) ([]*lms.Sub
 func getAssignmentIDAndCourse(assignmentPath string, assignmentID string, coursePath string) (string, *model.Course, error) {
     if (assignmentPath != "") {
         assignment := model.MustLoadAssignmentConfig(assignmentPath);
-        if (assignment.LMSID == "") {
+        if (assignment.GetLMSID() == "") {
             return "", nil, fmt.Errorf("Assignment has no LMS ID.");
         }
 
-        return assignment.LMSID, assignment.Course, nil;
+        return assignment.GetLMSID(), assignment.GetCourse(), nil;
     }
 
     if ((assignmentID == "") || (coursePath == "")) {
@@ -126,7 +126,7 @@ func getAssignmentIDAndCourse(assignmentPath string, assignmentID string, course
     }
 
     course := model.MustLoadCourseConfig(coursePath);
-    if (course.LMSAdapter == nil) {
+    if (course.GetLMSAdapter() == nil) {
         return "", nil, fmt.Errorf("Assignment's course has no LMS info associated with it.");
     }
 

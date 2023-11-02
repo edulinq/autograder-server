@@ -35,7 +35,7 @@ func main() {
         log.Fatal().Err(err).Msg("Failed to load course/assignment information.");
     }
 
-    grades, err := course.LMSAdapter.FetchAssignmentScores(assignmentLMSID);
+    grades, err := course.GetLMSAdapter().FetchAssignmentScores(assignmentLMSID);
     if (err != nil) {
         log.Fatal().Err(err).Msg("Could not fetch grades.");
     }
@@ -55,11 +55,11 @@ func main() {
 func getAssignmentIDAndCourse(assignmentPath string, assignmentID string, coursePath string) (string, *model.Course, error) {
     if (assignmentPath != "") {
         assignment := model.MustLoadAssignmentConfig(assignmentPath);
-        if (assignment.LMSID == "") {
+        if (assignment.GetLMSID() == "") {
             return "", nil, fmt.Errorf("Assignment has no LMS ID.");
         }
 
-        return assignment.LMSID, assignment.Course, nil;
+        return assignment.GetLMSID(), assignment.GetCourse(), nil;
     }
 
     if ((assignmentID == "") || (coursePath == "")) {
@@ -67,7 +67,7 @@ func getAssignmentIDAndCourse(assignmentPath string, assignmentID string, course
     }
 
     course := model.MustLoadCourseConfig(coursePath);
-    if (course.LMSAdapter == nil) {
+    if (course.GetLMSAdapter() == nil) {
         return "", nil, fmt.Errorf("Assignment's course has no LMS info associated with it.");
     }
 

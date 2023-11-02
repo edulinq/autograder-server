@@ -38,7 +38,7 @@ func GradeDefault(assignment *model.Assignment, submissionPath string, user stri
 
 // Grade with custom options.
 func Grade(assignment *model.Assignment, submissionPath string, user string, message string, options GradeOptions) (*artifact.GradedAssignment, *artifact.SubmissionSummary, string, error) {
-    gradingKey := fmt.Sprintf("%s::%s::%s", assignment.Course.ID, assignment.ID, user);
+    gradingKey := fmt.Sprintf("%s::%s::%s", assignment.GetCourse().GetID(), assignment.GetID(), user);
 
     // Get the existing mutex, or store (and fetch) a new one.
     val, _ := submissionLocks.LoadOrStore(gradingKey, &sync.Mutex{});
@@ -58,7 +58,7 @@ func Grade(assignment *model.Assignment, submissionPath string, user string, mes
         return nil, nil, "", fmt.Errorf("Failed to prepare submission dir for assignment '%s' and user '%s': '%w'.", assignment.FullID(), user, err);
     }
 
-    fullSubmissionID := common.CreateFullSubmissionID(assignment.Course.ID, assignment.ID, user, submissionID);
+    fullSubmissionID := common.CreateFullSubmissionID(assignment.GetCourse().GetID(), assignment.GetID(), user, submissionID);
 
     // Copy the submission to the user's submission directory.
     submissionCopyDir := filepath.Join(submissionDir, common.GRADING_INPUT_DIRNAME);

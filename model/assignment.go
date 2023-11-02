@@ -61,13 +61,13 @@ func LoadAssignmentConfig(path string, courseConfig *Course) (*Assignment, error
         return nil, fmt.Errorf("Failed to validate assignment config (%s): '%w'.", path, err);
     }
 
-    otherAssignment := courseConfig.Assignments[assignment.ID];
+    otherAssignment := courseConfig.Assignments[assignment.GetID()];
     if (otherAssignment != nil) {
         return nil, fmt.Errorf(
                 "Found multiple assignments with the same ID ('%s'): ['%s', '%s'].",
-                assignment.ID, otherAssignment.SourcePath, assignment.SourcePath);
+                assignment.GetID(), otherAssignment.SourcePath, assignment.SourcePath);
     }
-    courseConfig.Assignments[assignment.ID] = &assignment;
+    courseConfig.Assignments[assignment.GetID()] = &assignment;
 
     return &assignment, nil;
 }
@@ -81,16 +81,28 @@ func MustLoadAssignmentConfig(path string) *Assignment {
     return assignment;
 }
 
+func (this *Assignment) GetID() string {
+    return this.ID;
+}
+
 func (this *Assignment) FullID() string {
-    return fmt.Sprintf("%s-%s", this.Course.ID, this.ID);
+    return fmt.Sprintf("%s-%s", this.Course.GetID(), this.ID);
+}
+
+func (this *Assignment) GetCourse() *Course {
+    return this.Course;
 }
 
 func (this *Assignment) GetName() string {
     return this.DisplayName;
 }
 
+func (this *Assignment) GetLMSID() string {
+    return this.LMSID;
+}
+
 func (this *Assignment) ImageName() string {
-    return strings.ToLower(fmt.Sprintf("autograder.%s.%s", this.Course.ID, this.ID));
+    return strings.ToLower(fmt.Sprintf("autograder.%s.%s", this.Course.GetID(), this.ID));
 }
 
 func (this *Assignment) GetImageInfo() *docker.ImageInfo {

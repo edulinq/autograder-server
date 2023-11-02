@@ -32,13 +32,13 @@ func main() {
 
     report, err := report.GetAssignmentScoringReport(assignment);
     if (err != nil) {
-        log.Fatal().Err(err).Str("assignment", assignment.ID).Msg("Failed to get scoring report.");
+        log.Fatal().Err(err).Str("assignment", assignment.GetID()).Msg("Failed to get scoring report.");
     }
 
     if (args.HTML) {
         html, err := report.ToHTML(false);
         if (err != nil) {
-            log.Fatal().Err(err).Str("assignment", assignment.ID).Msg("Failed to generate HTML scoring report.");
+            log.Fatal().Err(err).Str("assignment", assignment.GetID()).Msg("Failed to generate HTML scoring report.");
         }
 
         fmt.Println(html);

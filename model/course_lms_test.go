@@ -30,7 +30,7 @@ func TestCourseSyncLMSUsers(test *testing.T) {
 
     defer resetAdapter(course);
 
-    testLMSAdapter := course.LMSAdapter.Adapter.(*lmstest.TestLMSAdapter);
+    testLMSAdapter := course.GetLMSAdapter().Adapter.(*lmstest.TestLMSAdapter);
     testLMSAdapter.SetUsersModifier(testingUsers);
 
     // Quiet the output a bit.
@@ -39,9 +39,9 @@ func TestCourseSyncLMSUsers(test *testing.T) {
     defer config.SetLoggingLevel(oldLevel);
 
     for i, testCase := range getSyncLMSTestCases() {
-        course.LMSAdapter.SyncUserAttributes = testCase.syncAttributes;
-        course.LMSAdapter.SyncAddUsers = testCase.syncAdd;
-        course.LMSAdapter.SyncRemoveUsers = testCase.syncDel;
+        course.GetLMSAdapter().SyncUserAttributes = testCase.syncAttributes;
+        course.GetLMSAdapter().SyncAddUsers = testCase.syncAdd;
+        course.GetLMSAdapter().SyncRemoveUsers = testCase.syncDel;
 
         email.ClearTestMessages();
 
@@ -206,11 +206,11 @@ func userPtrCompare(a *usr.User, b *usr.User) int {
 
 // Reset the test LMS adapter back to it's starting settings.
 func resetAdapter(course *Course) {
-    course.LMSAdapter.SyncUserAttributes = false;
-    course.LMSAdapter.SyncAddUsers = false;
-    course.LMSAdapter.SyncRemoveUsers = false;
+    course.GetLMSAdapter().SyncUserAttributes = false;
+    course.GetLMSAdapter().SyncAddUsers = false;
+    course.GetLMSAdapter().SyncRemoveUsers = false;
 
-    testLMSAdapter := course.LMSAdapter.Adapter.(*lmstest.TestLMSAdapter);
+    testLMSAdapter := course.GetLMSAdapter().Adapter.(*lmstest.TestLMSAdapter);
     testLMSAdapter.ClearUsersModifier();
 }
 

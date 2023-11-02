@@ -33,9 +33,9 @@ type RowEntry struct {
 }
 
 func HandleUploadScores(request *UploadScoresRequest) (*UploadScoresResponse, *core.APIError) {
-    if (request.Course.LMSAdapter == nil) {
+    if (request.Course.GetLMSAdapter() == nil) {
         return nil, core.NewBadRequestError("-505", &request.APIRequest, "Course is not linked to an LMS.").
-                Add("course", request.Course.ID);
+                Add("course", request.Course.GetID());
     }
 
     response := UploadScoresResponse{};
@@ -45,7 +45,7 @@ func HandleUploadScores(request *UploadScoresRequest) (*UploadScoresResponse, *c
         return &response, nil;
     }
 
-    err := request.Course.LMSAdapter.UpdateAssignmentScores(string(request.AssignmentLMSID), scores);
+    err := request.Course.GetLMSAdapter().UpdateAssignmentScores(string(request.AssignmentLMSID), scores);
     if (err != nil) {
         return nil, core.NewInternalError("-506", &request.APIRequestCourseUserContext,
                 "Failed to upload LMS scores.").Err(err);

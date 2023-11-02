@@ -34,13 +34,13 @@ func main() {
 
     report, err := report.GetCourseScoringReport(course);
     if (err != nil) {
-        log.Fatal().Err(err).Str("course", course.ID).Msg("Failed to get scoring report.");
+        log.Fatal().Err(err).Str("course", course.GetID()).Msg("Failed to get scoring report.");
     }
 
     if (args.HTML) {
         html, err := report.ToHTML();
         if (err != nil) {
-            log.Fatal().Err(err).Str("course", course.ID).Msg("Failed to generate HTML scoring report.");
+            log.Fatal().Err(err).Str("course", course.GetID()).Msg("Failed to generate HTML scoring report.");
         }
 
         fmt.Println(html);
@@ -51,14 +51,14 @@ func main() {
     if (len(args.Email) > 0) {
         html, err := report.ToHTML();
         if (err != nil) {
-            log.Fatal().Err(err).Str("course", course.ID).Msg("Failed to generate HTML scoring report.");
+            log.Fatal().Err(err).Str("course", course.GetID()).Msg("Failed to generate HTML scoring report.");
         }
 
-        subject := fmt.Sprintf("Autograder Scoring Report for %s", course.DisplayName);
+        subject := fmt.Sprintf("Autograder Scoring Report for %s", course.GetName());
 
         err = email.Send(args.Email, subject, html, true);
         if (err != nil) {
-            log.Fatal().Err(err).Str("course", course.ID).Msg("Failed to send scoring report email.");
+            log.Fatal().Err(err).Str("course", course.GetID()).Msg("Failed to send scoring report email.");
         }
     }
 }

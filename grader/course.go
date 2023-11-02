@@ -21,7 +21,7 @@ func ActivateCourses() error {
     for _, course := range courses {
         err := course.Activate();
         if (err != nil) {
-            return fmt.Errorf("Unable to activate course '%s': '%w'.", course.ID, err);
+            return fmt.Errorf("Unable to activate course '%s': '%w'.", course.GetID(), err);
         }
     }
 
@@ -82,12 +82,7 @@ func GetAssignment(courseID string, assignmentID string) *model.Assignment {
         return nil;
     }
 
-    assignment, ok := course.Assignments[assignmentID];
-    if (!ok) {
-        return nil;
-    }
-
-    return assignment;
+    return course.GetAssignment(assignmentID);
 }
 
 // Get the course and assignment from identifiers.

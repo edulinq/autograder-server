@@ -17,7 +17,7 @@ import (
 const LOCK_COMMENT string = "__lock__";
 
 func (this *Assignment) FullScoringAndUpload(dryRun bool) error {
-    if (this.Course.LMSAdapter == nil) {
+    if (this.Course.GetLMSAdapter() == nil) {
         return fmt.Errorf("Assignment's course has no LMS info associated with it.");
     }
 
@@ -26,7 +26,7 @@ func (this *Assignment) FullScoringAndUpload(dryRun bool) error {
         return fmt.Errorf("Failed to fetch autograder users: '%w'.", err);
     }
 
-    lmsScores, err := this.Course.LMSAdapter.FetchAssignmentScores(this.LMSID);
+    lmsScores, err := this.Course.GetLMSAdapter().FetchAssignmentScores(this.LMSID);
     if (err != nil) {
         return fmt.Errorf("Could not fetch LMS grades: '%w'.", err);
     }
@@ -97,9 +97,9 @@ func computeFinalScores(
 
     // Upload the grades.
     if (dryRun) {
-        log.Info().Str("assignment", assignment.ID).Any("grades", finalScores).Msg("Dry Run: Skipping upload of final grades.");
+        log.Info().Str("assignment", assignment.GetID()).Any("grades", finalScores).Msg("Dry Run: Skipping upload of final grades.");
     } else {
-        err = assignment.Course.LMSAdapter.UpdateAssignmentScores(assignment.LMSID, finalScores);
+        err = assignment.GetCourse().GetLMSAdapter().UpdateAssignmentScores(assignment.GetLMSID(), finalScores);
         if (err != nil) {
             return fmt.Errorf("Failed to upload final scores: '%w'.", err);
         }
@@ -107,9 +107,9 @@ func computeFinalScores(
 
     // Update the comments.
     if (dryRun) {
-        log.Info().Str("assignment", assignment.ID).Any("comments", commentsToUpdate).Msg("Dry Run: Skipping update of final comments.");
+        log.Info().Str("assignment", assignment.GetID()).Any("comments", commentsToUpdate).Msg("Dry Run: Skipping update of final comments.");
     } else {
-        err = assignment.Course.LMSAdapter.UpdateComments(assignment.LMSID, commentsToUpdate);
+        err = assignment.GetCourse().GetLMSAdapter().UpdateComments(assignment.GetLMSID(), commentsToUpdate);
         if (err != nil) {
             return fmt.Errorf("Failed to update final comments: '%w'.", err);
         }

@@ -58,8 +58,8 @@ func (this *Course) GetAssignmentLMSIDs() ([]string, []string) {
     assignmentIDs := make([]string, 0, len(this.Assignments));
 
     for _, assignment := range this.Assignments {
-        lmsIDs = append(lmsIDs, assignment.LMSID);
-        assignmentIDs = append(assignmentIDs, assignment.LMSID);
+        lmsIDs = append(lmsIDs, assignment.GetLMSID());
+        assignmentIDs = append(assignmentIDs, assignment.GetLMSID());
     }
 
     return lmsIDs, assignmentIDs;
@@ -183,7 +183,7 @@ func (this *Course) BuildAssignmentImages(force bool, quick bool, options *docke
     for _, assignment := range this.Assignments {
         err := assignment.BuildImage(force, quick, options);
         if (err != nil) {
-            log.Error().Err(err).Str("course", this.ID).Str("assignment", assignment.ID).
+            log.Error().Err(err).Str("course", this.ID).Str("assignment", assignment.GetID()).
                     Msg("Failed to build assignment docker image.");
             errors[assignment.ImageName()] = err;
         } else {
@@ -206,6 +206,14 @@ func loadParentCourseConfig(basepath string) (*Course, error) {
     }
 
     return LoadCourseConfig(configPath);
+}
+
+func (this *Course) GetAssignment(id string) *Assignment {
+    return this.Assignments[id];
+}
+
+func (this *Course) GetAssignments() map[string]*Assignment {
+    return this.Assignments;
 }
 
 func (this *Course) GetSortedAssignments() []*Assignment {

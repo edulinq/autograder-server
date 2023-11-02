@@ -79,7 +79,7 @@ func fetchTestSubmissionAssignment(testSubmissionPath string) *model.Assignment 
             continue;
         }
 
-        for _, assignment := range course.Assignments {
+        for _, assignment := range course.GetAssignments() {
             if (util.PathHasParent(testSubmissionPath, filepath.Dir(assignment.SourcePath))) {
                 return assignment;
             }

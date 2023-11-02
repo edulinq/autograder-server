@@ -26,7 +26,7 @@ func main() {
     }
 
     course := model.MustLoadCourseConfig(args.Path);
-    if (course.LMSAdapter == nil) {
+    if (course.GetLMSAdapter() == nil) {
         log.Fatal().Msg("Course has no LMS info associated with it.");
     }
 

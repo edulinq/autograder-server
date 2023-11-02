@@ -19,6 +19,11 @@ const PYTHON_AUTOGRADER_INVOCATION = "python3 -m autograder.cli.grade-submission
 const PYTHON_GRADER_FILENAME = "grader.py"
 
 func RunNoDockerGrader(assignment *model.Assignment, submissionPath string, outputDir string, options GradeOptions, fullSubmissionID string) (*artifact.GradedAssignment, string, error) {
+    imageInfo := assignment.GetImageInfo();
+    if (imageInfo == nil) {
+        return nil, "", fmt.Errorf("No image information associated with assignment: '%s'.", assignment.FullID());
+    }
+
     tempDir, inputDir, _, workDir, err := common.PrepTempGradingDir();
     if (err != nil) {
         return nil, "", err;
@@ -37,14 +42,14 @@ func RunNoDockerGrader(assignment *model.Assignment, submissionPath string, outp
 
     // Copy over the static files (and do any file ops).
     err = common.CopyFileSpecs(filepath.Dir(assignment.SourcePath), workDir, tempDir,
-            assignment.StaticFiles, false, assignment.PreStaticFileOperations, assignment.PostStaticFileOperations);
+            imageInfo.StaticFiles, false, imageInfo.PreStaticFileOperations, imageInfo.PostStaticFileOperations);
     if (err != nil) {
         return nil, "", fmt.Errorf("Failed to copy static assignment files: '%w'.", err);
     }
 
     // Copy over the submission files (and do any file ops).
     err = common.CopyFileSpecs(submissionPath, inputDir, tempDir,
-            []common.FileSpec{common.FileSpec(".")}, true, [][]string{}, assignment.PostSubmissionFileOperations);
+            []common.FileSpec{common.FileSpec(".")}, true, [][]string{}, imageInfo.PostSubmissionFileOperations);
     if (err != nil) {
         return nil, "", fmt.Errorf("Failed to copy submission ssignment files: '%w'.", err);
     }
@@ -73,14 +78,19 @@ func RunNoDockerGrader(assignment *model.Assignment, submissionPath string, outp
 
 // Get a command to invoke the non-docker grader.
 func getAssignmentInvocation(assignment *model.Assignment, inputDir string, outputDir string, workDir string) (*exec.Cmd, error) {
+    imageInfo := assignment.GetImageInfo();
+    if (imageInfo == nil) {
+        return nil, fmt.Errorf("No image information associated with assignment: '%s'.", assignment.FullID());
+    }
+
     var rawCommand []string = nil;
 
-    if ((assignment.Invocation != nil) && (len(assignment.Invocation) > 0)) {
-        rawCommand = assignment.Invocation;
+    if ((imageInfo.Invocation != nil) && (len(imageInfo.Invocation) > 0)) {
+        rawCommand = imageInfo.Invocation;
     }
 
     // Special case for the python grader (we know how to invoke that).
-    if (assignment.Image == "autograder.python") {
+    if (imageInfo.Image == "autograder.python") {
         rawCommand = strings.Split(PYTHON_AUTOGRADER_INVOCATION, " ");
     }
 

@@ -105,7 +105,7 @@ func (this *LateGradingPolicy) Apply(
         return nil;
     }
 
-    lmsAssignment, err := assignment.Course.LMSAdapter.FetchAssignment(assignment.LMSID);
+    lmsAssignment, err := assignment.GetCourse().GetLMSAdapter().FetchAssignment(assignment.GetLMSID());
     if (err != nil) {
         return err;
     }
@@ -209,9 +209,9 @@ func (this *LateGradingPolicy) applyLateDaysPolicy(
         // To do this, we will reclaim any late days that have already been used in addition to free days.
         lateDaysAvailable := lateDays.AvailableDays;
 
-        allocatedDays, hasAllocatedLateDays := lateDays.AllocatedDays[assignment.ID];
+        allocatedDays, hasAllocatedLateDays := lateDays.AllocatedDays[assignment.GetID()];
         if (hasAllocatedLateDays) {
-            delete(lateDays.AllocatedDays, assignment.ID);
+            delete(lateDays.AllocatedDays, assignment.GetID());
             lateDaysAvailable += allocatedDays;
         }
 
@@ -237,7 +237,7 @@ func (this *LateGradingPolicy) applyLateDaysPolicy(
         // If so, we need to update the late days in the LMS.
         if (allocatedDays != lateDaysToUse) {
             lateDays.AvailableDays = lateDaysAvailable - lateDaysToUse;
-            lateDays.AllocatedDays[assignment.ID] = lateDaysToUse;
+            lateDays.AllocatedDays[assignment.GetID()] = lateDaysToUse;
             lateDays.UploadTime = time.Now();
 
             lateDaysToUpdate[studentLMSID] = lateDays;
@@ -275,9 +275,9 @@ func (this *LateGradingPolicy) updateLateDays(assignment *Assignment, lateDaysTo
     }
 
     if (dryRun) {
-        log.Info().Str("assignment", assignment.ID).Any("grades", grades).Msg("Dry Run: Skipping upload of late days.");
+        log.Info().Str("assignment", assignment.GetID()).Any("grades", grades).Msg("Dry Run: Skipping upload of late days.");
     } else {
-        err := assignment.Course.LMSAdapter.UpdateAssignmentScores(this.LateDaysLMSID, grades);
+        err := assignment.GetCourse().GetLMSAdapter().UpdateAssignmentScores(this.LateDaysLMSID, grades);
         if (err != nil) {
             return fmt.Errorf("Failed to upload late days: '%w'.", err);
         }
@@ -298,9 +298,9 @@ func (this *LateGradingPolicy) updateLateDays(assignment *Assignment, lateDaysTo
     }
 
     if (dryRun) {
-        log.Info().Str("assignment", assignment.ID).Any("comments", comments).Msg("Dry Run: Skipping update of late day comments.");
+        log.Info().Str("assignment", assignment.GetID()).Any("comments", comments).Msg("Dry Run: Skipping update of late day comments.");
     } else {
-        err := assignment.Course.LMSAdapter.UpdateComments(this.LateDaysLMSID, comments);
+        err := assignment.GetCourse().GetLMSAdapter().UpdateComments(this.LateDaysLMSID, comments);
         if (err != nil) {
             return fmt.Errorf("Failed to update late days comments: '%w'.", err);
         }
@@ -311,7 +311,7 @@ func (this *LateGradingPolicy) updateLateDays(assignment *Assignment, lateDaysTo
 
 func (this *LateGradingPolicy) fetchLateDays(assignment *Assignment) (map[string]*LateDaysInfo, error) {
     // Fetch available late days from the LMS.
-    lmsLateDaysScores, err := assignment.Course.LMSAdapter.FetchAssignmentScores(this.LateDaysLMSID);
+    lmsLateDaysScores, err := assignment.GetCourse().GetLMSAdapter().FetchAssignmentScores(this.LateDaysLMSID);
     if (err != nil) {
         return nil, fmt.Errorf("Failed to fetch late days assignment (%s): '%w'.", this.LateDaysLMSID, err);
     }

@@ -27,7 +27,7 @@ func main() {
     }
 
     assignment := model.MustLoadAssignmentConfig(args.AssignmentPath);
-    if (assignment.LMSID == "") {
+    if (assignment.GetLMSID() == "") {
         log.Fatal().Msg("Assignment has no LMS ID.");
     }
 

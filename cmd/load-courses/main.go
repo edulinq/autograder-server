@@ -31,7 +31,7 @@ func main() {
     for _, path := range args.Path {
         course := model.MustLoadCourseConfig(path);
         count++;
-        fmt.Printf("Loaded course '%s'.\n", course.ID);
+        fmt.Printf("Loaded course '%s'.\n", course.GetID());
     }
 
     if (count == 0) {
@@ -41,7 +41,7 @@ func main() {
         }
 
         for _, course := range grader.GetCourses() {
-            fmt.Printf("Loaded course '%s'.\n", course.ID);
+            fmt.Printf("Loaded course '%s'.\n", course.GetID());
             count++;
         }
     }

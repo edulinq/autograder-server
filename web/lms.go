@@ -69,7 +69,7 @@ func NewLMSSyncUsersRequest(request *http.Request) (*LMSSyncUsersRequest, *APIRe
         return nil, NewResponse(http.StatusForbidden, "Insufficient Permissions."), nil;
     }
 
-    if (course.LMSAdapter == nil) {
+    if (course.GetLMSAdapter() == nil) {
         return nil, nil, fmt.Errorf("Course '%s' does not have any LMS instance information.", apiRequest.Course);
     }
 
@@ -100,7 +100,7 @@ func NewLMSScoresUploadRequest(request *http.Request) (*LMSScoresUploadRequest, 
         return nil, NewResponse(http.StatusForbidden, "Insufficient Permissions."), nil;
     }
 
-    if (course.LMSAdapter == nil) {
+    if (course.GetLMSAdapter() == nil) {
         return nil, nil, fmt.Errorf("Course '%s' does not have any LMS instance information.", apiRequest.Course);
     }
 
@@ -133,7 +133,7 @@ func handleLMSSyncUsers(request *LMSSyncUsersRequest) (int, any, error) {
         return 0, nil, fmt.Errorf("Failed to find course '%s'.", request.Course);
     }
 
-    if (course.LMSAdapter == nil) {
+    if (course.GetLMSAdapter() == nil) {
         return 0, nil, fmt.Errorf("Course '%s' has no LMS adapter.", request.Course);
     }
 
@@ -197,7 +197,7 @@ func handleLMSScoresUpload(request *LMSScoresUploadRequest) (int, any, error) {
         });
     }
 
-    err = course.LMSAdapter.UpdateAssignmentScores(request.AssignmentLMSID, grades);
+    err = course.GetLMSAdapter().UpdateAssignmentScores(request.AssignmentLMSID, grades);
     if (err != nil) {
         return 0, nil, fmt.Errorf("Failed to upload grades: '%w'.", err);
     }
