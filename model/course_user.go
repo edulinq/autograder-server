@@ -9,7 +9,7 @@ import (
 )
 
 func (this *Course) GetUsers() (map[string]*usr.User, error) {
-    path := filepath.Join(filepath.Dir(this.SourcePath), USERS_FILENAME);
+    path := filepath.Join(this.GetSourceDir(), USERS_FILENAME);
 
     users, err := usr.LoadUsersFile(path);
     if (err != nil) {
@@ -34,7 +34,7 @@ func (this *Course) GetUser(email string) (*usr.User, error) {
 }
 
 func (this *Course) SaveUsersFile(users map[string]*usr.User) error {
-    path := filepath.Join(filepath.Dir(this.SourcePath), USERS_FILENAME);
+    path := filepath.Join(this.GetSourceDir(), USERS_FILENAME);
 
     // Do not save user files in testing mode.
     if (config.TESTING_MODE.Get()) {

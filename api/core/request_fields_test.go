@@ -99,9 +99,8 @@ func TestBadCourseUsersFieldFailGetUsers(test *testing.T) {
     }
 
     // Course context is now fine, now make GetUsers fail.
-    oldSourcePath := request.Course.SourcePath;
-    defer func() { request.Course.SourcePath = oldSourcePath }();
-    request.Course.SourcePath = filepath.Join(os.DevNull, "course.json");
+    oldSourcePath := request.Course.SetSourcePathForTesting(filepath.Join(os.DevNull, "course.json"));
+    defer func() { request.Course.SetSourcePathForTesting(oldSourcePath); }();
 
     apiErr = checkRequestSpecialFields(nil, &request, "");
     if (apiErr == nil) {

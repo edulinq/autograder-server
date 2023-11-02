@@ -109,6 +109,10 @@ func (this *Assignment) GetImageInfo() *docker.ImageInfo {
     return &this.ImageInfo;
 }
 
+func (this *Assignment) GetSourceDir() string {
+    return filepath.Dir(this.SourcePath);
+}
+
 // Ensure that the assignment is formatted correctly.
 // Missing optional components will be defaulted correctly.
 func (this *Assignment) Validate() error {

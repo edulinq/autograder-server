@@ -49,6 +49,12 @@ func (this *Course) GetSourceDir() string {
     return filepath.Dir(this.SourcePath);
 }
 
+func (this *Course) SetSourcePathForTesting(sourcePath string) string {
+    oldPath := this.SourcePath;
+    this.SourcePath = sourcePath;
+    return oldPath;
+}
+
 func (this *Course) GetLMSAdapter() *adapter.LMSAdapter {
     return this.LMSAdapter;
 }

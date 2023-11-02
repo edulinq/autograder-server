@@ -12,8 +12,7 @@ import (
 )
 
 func (this *Assignment) getSubmissionsDir() (string, error) {
-    assignmentDir := filepath.Dir(this.SourcePath);
-    path := filepath.Join(assignmentDir, DEFAULT_SUBMISSIONS_DIR);
+    path := filepath.Join(this.GetSourceDir(), DEFAULT_SUBMISSIONS_DIR);
 
     if (util.PathExists(path)) {
         if (!util.IsDir(path)) {

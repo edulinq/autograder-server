@@ -2,7 +2,6 @@ package main
 
 import (
     "fmt"
-    "path/filepath"
 
     "github.com/alecthomas/kong"
     "github.com/rs/zerolog/log"
@@ -67,7 +66,7 @@ func backupFromMap(courses map[string]*model.Course) []string {
     errs := make([]error, 0);
 
     for _, course := range courses {
-        err := task.RunBackup(filepath.Dir(course.SourcePath), "", course.GetID());
+        err := task.RunBackup(course.GetSourceDir(), "", course.GetID());
         if (err != nil) {
             errs = append(errs, fmt.Errorf("Failed to backup course '%s': '%w'.", course.GetID(), err));
         } else {

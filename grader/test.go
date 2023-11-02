@@ -75,12 +75,12 @@ func fetchTestSubmissionAssignment(testSubmissionPath string) *model.Assignment 
     testSubmissionPath = util.ShouldAbs(testSubmissionPath);
 
     for _, course := range GetCourses() {
-        if (!util.PathHasParent(testSubmissionPath, filepath.Dir(course.SourcePath))) {
+        if (!util.PathHasParent(testSubmissionPath, course.GetSourceDir())) {
             continue;
         }
 
         for _, assignment := range course.GetAssignments() {
-            if (util.PathHasParent(testSubmissionPath, filepath.Dir(assignment.SourcePath))) {
+            if (util.PathHasParent(testSubmissionPath, assignment.GetSourceDir())) {
                 return assignment;
             }
         }

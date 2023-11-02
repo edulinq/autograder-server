@@ -94,7 +94,7 @@ func (this *Assignment) needImageRebuild(quick bool) (bool, error) {
 // Check if the assignment's static files have changes since the last time they were cached.
 // This is thread-safe.
 func (this *Assignment) CheckFileChanges(quick bool) (bool, error) {
-    baseDir := filepath.Dir(this.SourcePath);
+    baseDir := this.GetSourceDir();
 
     fileCachePath := this.GetFileCachePath();
     cachePath := this.GetCachePath();
