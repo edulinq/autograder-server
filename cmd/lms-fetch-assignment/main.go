@@ -8,7 +8,7 @@ import (
 
     "github.com/eriq-augustine/autograder/config"
     "github.com/eriq-augustine/autograder/db"
-    "github.com/eriq-augustine/autograder/model2"
+    "github.com/eriq-augustine/autograder/model"
     "github.com/eriq-augustine/autograder/util"
 )
 
@@ -43,7 +43,7 @@ func main() {
     fmt.Println(util.MustToJSONIndent(lmsAssignment));
 }
 
-func getAssignmentIDAndCourse(assignmentPath string, assignmentID string, coursePath string) (string, model2.Course, error) {
+func getAssignmentIDAndCourse(assignmentPath string, assignmentID string, coursePath string) (string, model.Course, error) {
     if (assignmentPath != "") {
         assignment := db.MustLoadAssignmentConfig(assignmentPath);
         if (assignment.GetLMSID() == "") {

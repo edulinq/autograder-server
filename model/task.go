@@ -1,4 +1,4 @@
-package model2
+package model
 
 type ScheduledTask interface {
     Schedule()

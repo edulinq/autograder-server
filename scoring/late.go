@@ -11,7 +11,7 @@ import (
     "github.com/eriq-augustine/autograder/artifact"
     "github.com/eriq-augustine/autograder/common"
     "github.com/eriq-augustine/autograder/lms"
-    "github.com/eriq-augustine/autograder/model2"
+    "github.com/eriq-augustine/autograder/model"
     "github.com/eriq-augustine/autograder/usr"
     "github.com/eriq-augustine/autograder/util"
 )
@@ -30,7 +30,7 @@ type LateDaysInfo struct {
 
 // This assumes that all assignments are in the LMS.
 func ApplyLatePolicy(
-        assignment model2.Assignment,
+        assignment model.Assignment,
         users map[string]*usr.User,
         scores map[string]*artifact.ScoringInfo,
         dryRun bool) error {
@@ -42,7 +42,7 @@ func ApplyLatePolicy(
     }
 
     // Empty policy does nothing.
-    if (policy.Type == model2.EmptyPolicy) {
+    if (policy.Type == model.EmptyPolicy) {
         return nil;
     }
 
@@ -58,13 +58,13 @@ func ApplyLatePolicy(
     applyBaselinePolicy(policy, users, scores, *lmsAssignment.DueDate);
 
     // Baseline policy is complete.
-    if (policy.Type == model2.BaselinePolicy) {
+    if (policy.Type == model.BaselinePolicy) {
         return nil;
     }
 
-    if ((policy.Type == model2.ConstantPenalty) || (policy.Type == model2.PercentagePenalty)) {
+    if ((policy.Type == model.ConstantPenalty) || (policy.Type == model.PercentagePenalty)) {
         penalty := policy.Penalty;
-        if (policy.Type == model2.PercentagePenalty) {
+        if (policy.Type == model.PercentagePenalty) {
             penalty = lmsAssignment.MaxPoints * policy.Penalty;
         }
 
@@ -72,7 +72,7 @@ func ApplyLatePolicy(
         return nil;
     }
 
-    if (policy.Type == model2.LateDays) {
+    if (policy.Type == model.LateDays) {
         penalty := lmsAssignment.MaxPoints * policy.Penalty;
         err = applyLateDaysPolicy(policy, assignment, users, scores, penalty, dryRun);
         if (err != nil) {
@@ -86,7 +86,7 @@ func ApplyLatePolicy(
 }
 
 // Apply a common policy.
-func applyBaselinePolicy(policy model2.LateGradingPolicy, users map[string]*usr.User, scores map[string]*artifact.ScoringInfo, dueDate time.Time) {
+func applyBaselinePolicy(policy model.LateGradingPolicy, users map[string]*usr.User, scores map[string]*artifact.ScoringInfo, dueDate time.Time) {
     for email, score := range scores {
         score.NumDaysLate = computeLateDays(dueDate, score.SubmissionTime);
 
@@ -105,7 +105,7 @@ func applyBaselinePolicy(policy model2.LateGradingPolicy, users map[string]*usr.
 }
 
 // Apply a constant penalty per late day.
-func applyConstantPolicy(policy model2.LateGradingPolicy, scores map[string]*artifact.ScoringInfo, penalty float64) {
+func applyConstantPolicy(policy model.LateGradingPolicy, scores map[string]*artifact.ScoringInfo, penalty float64) {
     for _, score := range scores {
         if (score.NumDaysLate <= 0) {
             continue;
@@ -116,8 +116,8 @@ func applyConstantPolicy(policy model2.LateGradingPolicy, scores map[string]*art
 }
 
 func applyLateDaysPolicy(
-        policy model2.LateGradingPolicy,
-        assignment model2.Assignment, users map[string]*usr.User,
+        policy model.LateGradingPolicy,
+        assignment model.Assignment, users map[string]*usr.User,
         scores map[string]*artifact.ScoringInfo, penalty float64,
         dryRun bool) error {
     allLateDays, err := fetchLateDays(policy, assignment);
@@ -194,7 +194,7 @@ func applyLateDaysPolicy(
     return nil;
 }
 
-func updateLateDays(policy model2.LateGradingPolicy, assignment model2.Assignment, lateDaysToUpdate map[string]*LateDaysInfo, dryRun bool) error {
+func updateLateDays(policy model.LateGradingPolicy, assignment model.Assignment, lateDaysToUpdate map[string]*LateDaysInfo, dryRun bool) error {
     // Update late days.
     // Info that does NOT have a LMSCommentID will get the autograder comment added in.
     grades := make([]*lms.SubmissionScore, 0, len(lateDaysToUpdate));
@@ -251,7 +251,7 @@ func updateLateDays(policy model2.LateGradingPolicy, assignment model2.Assignmen
     return nil;
 }
 
-func fetchLateDays(policy model2.LateGradingPolicy, assignment model2.Assignment) (map[string]*LateDaysInfo, error) {
+func fetchLateDays(policy model.LateGradingPolicy, assignment model.Assignment) (map[string]*LateDaysInfo, error) {
     // Fetch available late days from the LMS.
     lmsLateDaysScores, err := assignment.GetCourse().GetLMSAdapter().FetchAssignmentScores(policy.LateDaysLMSID);
     if (err != nil) {

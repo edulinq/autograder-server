@@ -10,14 +10,14 @@ import (
     "github.com/eriq-augustine/autograder/artifact"
     "github.com/eriq-augustine/autograder/common"
     "github.com/eriq-augustine/autograder/lms"
-    "github.com/eriq-augustine/autograder/model2"
+    "github.com/eriq-augustine/autograder/model"
     "github.com/eriq-augustine/autograder/usr"
     "github.com/eriq-augustine/autograder/util"
 )
 
 const LOCK_COMMENT string = "__lock__";
 
-func FullAssignmentScoringAndUpload(assignment model2.Assignment, dryRun bool) error {
+func FullAssignmentScoringAndUpload(assignment model.Assignment, dryRun bool) error {
     if (assignment.GetCourse().GetLMSAdapter() == nil) {
         return fmt.Errorf("Assignment's course has no LMS info associated with it.");
     }
@@ -52,7 +52,7 @@ func FullAssignmentScoringAndUpload(assignment model2.Assignment, dryRun bool) e
 
 // Get all the recent submission summaries (via GetAllRecentSubmissionSummaries()),
 // and convert them to scoring info structs so they can be properly scored/uploaded.
-func GetScoringInfo(assignment model2.Assignment, users map[string]*usr.User, onlyStudents bool) (map[string]*artifact.ScoringInfo, error) {
+func GetScoringInfo(assignment model.Assignment, users map[string]*usr.User, onlyStudents bool) (map[string]*artifact.ScoringInfo, error) {
     paths, err := assignment.GetAllRecentSubmissionSummaries(users);
     if (err != nil) {
         return nil, fmt.Errorf("Unable to load submission summaries: '%w'.", err);
@@ -82,7 +82,7 @@ func GetScoringInfo(assignment model2.Assignment, users map[string]*usr.User, on
 }
 
 func computeFinalScores(
-        assignment model2.Assignment, users map[string]*usr.User,
+        assignment model.Assignment, users map[string]*usr.User,
         scoringInfos map[string]*artifact.ScoringInfo, lmsScores []*lms.SubmissionScore,
         dryRun bool) error {
     var err error;

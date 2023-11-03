@@ -11,7 +11,7 @@ import (
     "github.com/eriq-augustine/autograder/config"
     "github.com/eriq-augustine/autograder/docker"
     "github.com/eriq-augustine/autograder/lms/adapter"
-    "github.com/eriq-augustine/autograder/model2"
+    "github.com/eriq-augustine/autograder/model"
     "github.com/eriq-augustine/autograder/task"
     "github.com/eriq-augustine/autograder/util"
 )
@@ -31,9 +31,9 @@ type Course struct {
 
     // Ignore these fields in JSON.
     SourcePath string `json:"-"`
-    Assignments map[string]model2.Assignment `json:"-"`
+    Assignments map[string]model.Assignment `json:"-"`
 
-    tasks []model2.ScheduledCourseTask `json:"-"`
+    tasks []model.ScheduledCourseTask `json:"-"`
 }
 
 func (this *Course) GetID() string {
@@ -79,7 +79,7 @@ func LoadCourseConfig(path string) (*Course, error) {
 
     config.SourcePath = util.ShouldAbs(path);
 
-    config.Assignments = make(map[string]model2.Assignment);
+    config.Assignments = make(map[string]model.Assignment);
 
     err = config.Validate();
     if (err != nil) {
@@ -206,7 +206,7 @@ func (this *Course) GetCacheDir() string {
 
 // Check this directory and all parent directories for a course config file.
 func loadParentCourseConfig(basepath string) (*Course, error) {
-    configPath := util.SearchParents(basepath, model2.COURSE_CONFIG_FILENAME);
+    configPath := util.SearchParents(basepath, model.COURSE_CONFIG_FILENAME);
     if (configPath == "") {
         return nil, fmt.Errorf("Could not locate course config.");
     }
@@ -214,21 +214,21 @@ func loadParentCourseConfig(basepath string) (*Course, error) {
     return LoadCourseConfig(configPath);
 }
 
-func (this *Course) GetAssignment(id string) model2.Assignment {
+func (this *Course) GetAssignment(id string) model.Assignment {
     return this.Assignments[id];
 }
 
-func (this *Course) GetAssignments() map[string]model2.Assignment {
+func (this *Course) GetAssignments() map[string]model.Assignment {
     return this.Assignments;
 }
 
-func (this *Course) GetSortedAssignments() []model2.Assignment {
-    assignments := make([]model2.Assignment, 0, len(this.Assignments));
+func (this *Course) GetSortedAssignments() []model.Assignment {
+    assignments := make([]model.Assignment, 0, len(this.Assignments));
     for _, assignment := range this.Assignments {
         assignments = append(assignments, assignment);
     }
 
-    slices.SortFunc(assignments, model2.CompareAssignments);
+    slices.SortFunc(assignments, model.CompareAssignments);
 
     return assignments;
 }

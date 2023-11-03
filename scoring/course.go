@@ -5,10 +5,10 @@ import (
 
     "github.com/rs/zerolog/log"
 
-    "github.com/eriq-augustine/autograder/model2"
+    "github.com/eriq-augustine/autograder/model"
 )
 
-func FullCourseScoringAndUpload(course model2.Course, dryRun bool) error {
+func FullCourseScoringAndUpload(course model.Course, dryRun bool) error {
     assignments := course.GetSortedAssignments();
 
     log.Debug().Str("course", course.GetID()).Bool("dry-run", dryRun).Msg("Beginning full scoring for course.");

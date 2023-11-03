@@ -4,13 +4,13 @@ import (
     "fmt"
 
     "github.com/eriq-augustine/autograder/lms"
-    "github.com/eriq-augustine/autograder/model2"
+    "github.com/eriq-augustine/autograder/model"
     "github.com/eriq-augustine/autograder/usr"
     "github.com/eriq-augustine/autograder/util"
 )
 
 // Sync users with the provided LMS.
-func SyncLMSUsers(course model2.Course, dryRun bool, sendEmails bool) (*usr.UserSyncResult, error) {
+func SyncLMSUsers(course model.Course, dryRun bool, sendEmails bool) (*usr.UserSyncResult, error) {
     adapter := course.GetLMSAdapter();
     if (adapter == nil) {
         return nil, nil;
@@ -29,7 +29,7 @@ func SyncLMSUsers(course model2.Course, dryRun bool, sendEmails bool) (*usr.User
     return syncLMSUsers(course, dryRun, sendEmails, lmsUsers, nil);
 }
 
-func SyncLMSUser(course model2.Course, email string, dryRun bool, sendEmails bool) (*usr.UserSyncResult, error) {
+func SyncLMSUser(course model.Course, email string, dryRun bool, sendEmails bool) (*usr.UserSyncResult, error) {
     adapter := course.GetLMSAdapter();
     if (adapter == nil) {
         return nil, nil;
@@ -50,7 +50,7 @@ func SyncLMSUser(course model2.Course, email string, dryRun bool, sendEmails boo
 // Sync users.
 // If |syncEmails| is not empty, then only emails in it will be checked/resolved.
 // Otherwise, all emails from local and LMS users will be checked.
-func syncLMSUsers(course model2.Course, dryRun bool, sendEmails bool, lmsUsers map[string]*lms.User,
+func syncLMSUsers(course model.Course, dryRun bool, sendEmails bool, lmsUsers map[string]*lms.User,
         syncEmails []string) (*usr.UserSyncResult, error) {
     localUsers, err := course.GetUsers();
     if (err != nil) {
@@ -121,7 +121,7 @@ func mergeUsers(localUser *usr.User, lmsUser *lms.User, mergeAttributes bool) bo
 // Resolve differences between a local user and LMS user (linked using the provided email).
 // The passed in local user map will be modified to reflect any resolution.
 // The taken action will depend on the options set in the course's LMS adapter.
-func resolveUserSync(course model2.Course, localUsers map[string]*usr.User,
+func resolveUserSync(course model.Course, localUsers map[string]*usr.User,
         lmsUsers map[string]*lms.User, email string) (*usr.UserResolveResult, error) {
     adapter := course.GetLMSAdapter();
 

@@ -10,7 +10,7 @@ import (
 
     "github.com/eriq-augustine/autograder/common"
     "github.com/eriq-augustine/autograder/docker"
-    "github.com/eriq-augustine/autograder/model2"
+    "github.com/eriq-augustine/autograder/model"
     "github.com/eriq-augustine/autograder/usr"
     "github.com/eriq-augustine/autograder/util"
 )
@@ -27,7 +27,7 @@ type Assignment struct {
     SortID string `json:"sort-id"`
 
     LMSID string `json:"lms-id",omitempty`
-    LatePolicy model2.LateGradingPolicy `json:"late-policy,omitempty"`
+    LatePolicy model.LateGradingPolicy `json:"late-policy,omitempty"`
 
     docker.ImageInfo
 
@@ -94,7 +94,7 @@ func (this *Assignment) FullID() string {
     return fmt.Sprintf("%s-%s", this.Course.GetID(), this.ID);
 }
 
-func (this *Assignment) GetCourse() model2.Course {
+func (this *Assignment) GetCourse() model.Course {
     return this.Course;
 }
 
@@ -106,7 +106,7 @@ func (this *Assignment) GetLMSID() string {
     return this.LMSID;
 }
 
-func (this *Assignment) GetLatePolicy() model2.LateGradingPolicy {
+func (this *Assignment) GetLatePolicy() model.LateGradingPolicy {
     return this.LatePolicy;
 }
 

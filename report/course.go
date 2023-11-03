@@ -1,7 +1,7 @@
 package report
 
 import (
-    "github.com/eriq-augustine/autograder/model2"
+    "github.com/eriq-augustine/autograder/model"
 )
 
 type CourseScoringReport struct {
@@ -9,7 +9,7 @@ type CourseScoringReport struct {
     Assignments []*AssignmentScoringReport `json:"assignments"`
 }
 
-func GetCourseScoringReport(course model2.Course) (*CourseScoringReport, error) {
+func GetCourseScoringReport(course model.Course) (*CourseScoringReport, error) {
     assignmentReports := make([]*AssignmentScoringReport, 0);
 
     for _, assignment := range course.GetSortedAssignments() {

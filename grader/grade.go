@@ -11,7 +11,7 @@ import (
     "github.com/eriq-augustine/autograder/artifact"
     "github.com/eriq-augustine/autograder/common"
     "github.com/eriq-augustine/autograder/config"
-    "github.com/eriq-augustine/autograder/model2"
+    "github.com/eriq-augustine/autograder/model"
     "github.com/eriq-augustine/autograder/util"
 )
 
@@ -32,12 +32,12 @@ func GetDefaultGradeOptions() GradeOptions {
 }
 
 // Grade with default options pulled from config.
-func GradeDefault(assignment model2.Assignment, submissionPath string, user string, message string) (*artifact.GradedAssignment, *artifact.SubmissionSummary, string, error) {
+func GradeDefault(assignment model.Assignment, submissionPath string, user string, message string) (*artifact.GradedAssignment, *artifact.SubmissionSummary, string, error) {
     return Grade(assignment, submissionPath, user, message, GetDefaultGradeOptions());
 }
 
 // Grade with custom options.
-func Grade(assignment model2.Assignment, submissionPath string, user string, message string, options GradeOptions) (*artifact.GradedAssignment, *artifact.SubmissionSummary, string, error) {
+func Grade(assignment model.Assignment, submissionPath string, user string, message string, options GradeOptions) (*artifact.GradedAssignment, *artifact.SubmissionSummary, string, error) {
     gradingKey := fmt.Sprintf("%s::%s::%s", assignment.GetCourse().GetID(), assignment.GetID(), user);
 
     // Get the existing mutex, or store (and fetch) a new one.
@@ -94,7 +94,7 @@ func Grade(assignment model2.Assignment, submissionPath string, user string, mes
     return result, summary, output, nil;
 }
 
-func prepSubmissionDir(assignment model2.Assignment, user string, options GradeOptions) (string, string, error) {
+func prepSubmissionDir(assignment model.Assignment, user string, options GradeOptions) (string, string, error) {
     var submissionDir string;
     var err error;
     var id string;

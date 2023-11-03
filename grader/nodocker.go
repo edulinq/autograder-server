@@ -11,14 +11,14 @@ import (
 
     "github.com/eriq-augustine/autograder/artifact"
     "github.com/eriq-augustine/autograder/common"
-    "github.com/eriq-augustine/autograder/model2"
+    "github.com/eriq-augustine/autograder/model"
     "github.com/eriq-augustine/autograder/util"
 )
 
 const PYTHON_AUTOGRADER_INVOCATION = "python3 -m autograder.cli.grade-submission --grader <grader> --inputdir <inputdir> --outputdir <outputdir> --workdir <workdir> --outpath <outpath>"
 const PYTHON_GRADER_FILENAME = "grader.py"
 
-func RunNoDockerGrader(assignment model2.Assignment, submissionPath string, outputDir string, options GradeOptions, fullSubmissionID string) (*artifact.GradedAssignment, string, error) {
+func RunNoDockerGrader(assignment model.Assignment, submissionPath string, outputDir string, options GradeOptions, fullSubmissionID string) (*artifact.GradedAssignment, string, error) {
     imageInfo := assignment.GetImageInfo();
     if (imageInfo == nil) {
         return nil, "", fmt.Errorf("No image information associated with assignment: '%s'.", assignment.FullID());
@@ -77,7 +77,7 @@ func RunNoDockerGrader(assignment model2.Assignment, submissionPath string, outp
 }
 
 // Get a command to invoke the non-docker grader.
-func getAssignmentInvocation(assignment model2.Assignment, inputDir string, outputDir string, workDir string) (*exec.Cmd, error) {
+func getAssignmentInvocation(assignment model.Assignment, inputDir string, outputDir string, workDir string) (*exec.Cmd, error) {
     imageInfo := assignment.GetImageInfo();
     if (imageInfo == nil) {
         return nil, fmt.Errorf("No image information associated with assignment: '%s'.", assignment.FullID());

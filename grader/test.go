@@ -7,7 +7,7 @@ import (
     "strings"
 
     "github.com/eriq-augustine/autograder/artifact"
-    "github.com/eriq-augustine/autograder/model2"
+    "github.com/eriq-augustine/autograder/model"
     "github.com/eriq-augustine/autograder/util"
 )
 
@@ -16,7 +16,7 @@ type TestSubmissionInfo struct {
     Dir string
     Files []string
     TestSubmission *artifact.TestSubmission
-    Assignment model2.Assignment
+    Assignment model.Assignment
 
 }
 
@@ -71,7 +71,7 @@ func GetTestSubmissions(baseDir string) ([]*TestSubmissionInfo, error) {
 
 // Test submission are withing their assignment's directory,
 // just check the source dirs for existing courses and assignments.
-func fetchTestSubmissionAssignment(testSubmissionPath string) model2.Assignment {
+func fetchTestSubmissionAssignment(testSubmissionPath string) model.Assignment {
     testSubmissionPath = util.ShouldAbs(testSubmissionPath);
 
     for _, course := range GetCourses() {

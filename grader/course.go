@@ -8,13 +8,13 @@ import (
     "github.com/eriq-augustine/autograder/common"
     "github.com/eriq-augustine/autograder/config"
     "github.com/eriq-augustine/autograder/db"
-    "github.com/eriq-augustine/autograder/model2"
+    "github.com/eriq-augustine/autograder/model"
     "github.com/eriq-augustine/autograder/util"
 )
 
-var courses map[string]model2.Course = make(map[string]model2.Course);
+var courses map[string]model.Course = make(map[string]model.Course);
 
-func GetCourses() map[string]model2.Course {
+func GetCourses() map[string]model.Course {
     return courses;
 }
 
@@ -37,7 +37,7 @@ func LoadCourses() error {
 func LoadCoursesFromDir(baseDir string) error {
     log.Debug().Str("dir", baseDir).Msg("Searching for courses.");
 
-    configPaths, err := util.FindFiles(model2.COURSE_CONFIG_FILENAME, baseDir);
+    configPaths, err := util.FindFiles(model.COURSE_CONFIG_FILENAME, baseDir);
     if (err != nil) {
         return fmt.Errorf("Failed to search for course configs in '%s': '%w'.", baseDir, err);
     }
@@ -58,7 +58,7 @@ func LoadCoursesFromDir(baseDir string) error {
     return nil;
 }
 
-func GetCourse(id string) model2.Course {
+func GetCourse(id string) model.Course {
     id, err := common.ValidateID(id);
     if (err != nil) {
         return nil;
@@ -72,7 +72,7 @@ func GetCourse(id string) model2.Course {
     return course;
 }
 
-func GetAssignment(courseID string, assignmentID string) model2.Assignment {
+func GetAssignment(courseID string, assignmentID string) model.Assignment {
     course := GetCourse(courseID);
     if (course == nil) {
         return nil;
@@ -87,7 +87,7 @@ func GetAssignment(courseID string, assignmentID string) model2.Assignment {
 }
 
 // Get the course and assignment from identifiers.
-func VerifyCourseAssignment(courseID string, assignmentID string) (model2.Course, model2.Assignment, error) {
+func VerifyCourseAssignment(courseID string, assignmentID string) (model.Course, model.Assignment, error) {
     course := GetCourse(courseID);
     if (course == nil) {
         return nil, nil, fmt.Errorf("Unknown course: '%s'.", courseID);

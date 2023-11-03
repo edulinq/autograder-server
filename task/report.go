@@ -7,7 +7,7 @@ import (
 
     "github.com/eriq-augustine/autograder/config"
     "github.com/eriq-augustine/autograder/email"
-    "github.com/eriq-augustine/autograder/model2"
+    "github.com/eriq-augustine/autograder/model"
     "github.com/eriq-augustine/autograder/report"
 )
 
@@ -17,10 +17,10 @@ type ReportTask struct {
 
     To []string `json:"to"`
 
-    course model2.Course `json:"-"`
+    course model.Course `json:"-"`
 }
 
-func (this *ReportTask) Validate(course model2.Course) error {
+func (this *ReportTask) Validate(course model.Course) error {
     this.When.id = fmt.Sprintf("report-%s", course.GetID());
 
     err := this.When.Validate();
@@ -67,7 +67,7 @@ func (this *ReportTask) Run() error {
 }
 
 // Do a report without an attatched object.
-func RunReport(course model2.Course, to []string) error {
+func RunReport(course model.Course, to []string) error {
     report, err := report.GetCourseScoringReport(course);
     if (err != nil) {
         return fmt.Errorf("Failed to get scoring report for course '%s': '%w'.", course.GetName(), err);

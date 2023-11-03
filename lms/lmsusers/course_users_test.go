@@ -10,7 +10,7 @@ import (
     "github.com/eriq-augustine/autograder/email"
     "github.com/eriq-augustine/autograder/lms"
     lmstest "github.com/eriq-augustine/autograder/lms/adapter/test"
-    "github.com/eriq-augustine/autograder/model2"
+    "github.com/eriq-augustine/autograder/model"
     "github.com/eriq-augustine/autograder/usr"
     "github.com/eriq-augustine/autograder/util"
 )
@@ -164,7 +164,7 @@ func buildSyncLMSTestCase(testCases []SyncLMSTestCase, index int, currentCase []
 }
 
 // Reset the test LMS adapter back to it's starting settings.
-func resetAdapter(course model2.Course) {
+func resetAdapter(course model.Course) {
     course.GetLMSAdapter().SyncUserAttributes = false;
     course.GetLMSAdapter().SyncAddUsers = false;
     course.GetLMSAdapter().SyncRemoveUsers = false;

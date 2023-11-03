@@ -6,7 +6,7 @@ import (
     "github.com/rs/zerolog/log"
 
     "github.com/eriq-augustine/autograder/config"
-    "github.com/eriq-augustine/autograder/model2"
+    "github.com/eriq-augustine/autograder/model"
     "github.com/eriq-augustine/autograder/scoring"
 )
 
@@ -15,10 +15,10 @@ type ScoringUploadTask struct {
     DryRun bool `json:"dry-run"`
     When ScheduledTime `json:"when"`
 
-    course model2.Course `json:"-"`
+    course model.Course `json:"-"`
 }
 
-func (this *ScoringUploadTask) Validate(course model2.Course) error {
+func (this *ScoringUploadTask) Validate(course model.Course) error {
     this.When.id = fmt.Sprintf("score-%s", course.GetID());
 
     err := this.When.Validate();

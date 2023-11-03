@@ -9,7 +9,7 @@ import (
     "github.com/eriq-augustine/autograder/config"
     "github.com/eriq-augustine/autograder/db"
     "github.com/eriq-augustine/autograder/grader"
-    "github.com/eriq-augustine/autograder/model2"
+    "github.com/eriq-augustine/autograder/model"
     "github.com/eriq-augustine/autograder/task"
 )
 
@@ -52,7 +52,7 @@ func backupFromCourses() []string {
 }
 
 func backupFromPaths(paths []string) []string {
-    courses := make(map[string]model2.Course);
+    courses := make(map[string]model.Course);
 
     for _, path := range paths {
         course := db.MustLoadCourseConfig(path);
@@ -62,7 +62,7 @@ func backupFromPaths(paths []string) []string {
     return backupFromMap(courses);
 }
 
-func backupFromMap(courses map[string]model2.Course) []string {
+func backupFromMap(courses map[string]model.Course) []string {
     courseIDs := make([]string, 0);
     errs := make([]error, 0);
 

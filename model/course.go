@@ -1,4 +1,4 @@
-package model2
+package model
 
 import (
     "github.com/eriq-augustine/autograder/docker"

@@ -12,7 +12,7 @@ import (
     "github.com/eriq-augustine/autograder/config"
     "github.com/eriq-augustine/autograder/db"
     "github.com/eriq-augustine/autograder/lms/lmsusers"
-    "github.com/eriq-augustine/autograder/model2"
+    "github.com/eriq-augustine/autograder/model"
     "github.com/eriq-augustine/autograder/usr"
     "github.com/eriq-augustine/autograder/util"
 )
@@ -28,7 +28,7 @@ type AddUser struct {
     SyncLMS bool `help:"After adding users, sync the course users (all of them) with the course's LMS." default:"false"`
 }
 
-func (this *AddUser) Run(course model2.Course) error {
+func (this *AddUser) Run(course model.Course) error {
     role := usr.GetRole(this.Role);
     if (role == usr.Unknown) {
         return fmt.Errorf("Unknown role: '%s'.", this.Role)
@@ -76,7 +76,7 @@ type AddTSV struct {
     SyncLMS bool `help:"After adding users, sync the course users (all of them) with the course's LMS." default:"false"`
 }
 
-func (this *AddTSV) Run(course model2.Course) error {
+func (this *AddTSV) Run(course model.Course) error {
     newUsers, err := readUsersTSV(this.TSV, this.SkipRows);
     if (err != nil) {
         return err;
@@ -112,7 +112,7 @@ type AuthUser struct {
     Pass string `help:"Password for the user. Defaults to a random string (will be output)." short:"p"`
 }
 
-func (this *AuthUser) Run(course model2.Course) error {
+func (this *AuthUser) Run(course model.Course) error {
     user, err := course.GetUser(this.Email);
     if (err != nil) {
         return fmt.Errorf("Failed to get user: '%w'.", err);
@@ -137,7 +137,7 @@ type GetUser struct {
     Email string `help:"Email for the user." arg:"" required:""`
 }
 
-func (this *GetUser) Run(course model2.Course) error {
+func (this *GetUser) Run(course model.Course) error {
     user, err := course.GetUser(this.Email);
     if (err != nil) {
         return fmt.Errorf("Failed to get user: '%w'.", err);
@@ -156,7 +156,7 @@ type ListUsers struct {
     All bool `help:"Show more info about each user." short:"a" default:"false"`
 }
 
-func (this *ListUsers) Run(course model2.Course) error {
+func (this *ListUsers) Run(course model.Course) error {
     users, err := course.GetUsers();
     if (err != nil) {
         return fmt.Errorf("Failed to load users: '%w'.", err);
@@ -182,7 +182,7 @@ type ChangePassword struct {
     Pass string `help:"Password for the user. Defaults to a random string (will be output)." short:"p"`
 }
 
-func (this *ChangePassword) Run(course model2.Course) error {
+func (this *ChangePassword) Run(course model.Course) error {
     users, err := course.GetUsers();
     if (err != nil) {
         return fmt.Errorf("Failed to get users: '%w'.", err);
@@ -227,7 +227,7 @@ type RmUser struct {
     Email string `help:"Email for the user to be removed." arg:"" required:""`
 }
 
-func (this *RmUser) Run(course model2.Course) error {
+func (this *RmUser) Run(course model.Course) error {
     users, err := course.GetUsers();
     if (err != nil) {
         return fmt.Errorf("Failed to get users: '%w'.", err);
@@ -293,7 +293,7 @@ type TSVUser struct {
 
 // Read users from a TSV formatted as: '<email>[\t<display name>[\t<role>[\t<cleartext password>]]]'.
 // The users returned from this function are not official users yet.
-// The users returned from here can be sent straight to model2.Course.SyncUsers() without any modifications.
+// The users returned from here can be sent straight to model.Course.SyncUsers() without any modifications.
 func readUsersTSV(path string, skipRows int) (map[string]*usr.User, error) {
     file, err := os.Open(path);
     if (err != nil) {
