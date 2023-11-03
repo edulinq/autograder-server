@@ -10,8 +10,8 @@ import (
     "github.com/rs/zerolog/log"
 
     "github.com/eriq-augustine/autograder/config"
+    "github.com/eriq-augustine/autograder/db"
     "github.com/eriq-augustine/autograder/lms/lmsusers"
-    "github.com/eriq-augustine/autograder/model"
     "github.com/eriq-augustine/autograder/model2"
     "github.com/eriq-augustine/autograder/usr"
     "github.com/eriq-augustine/autograder/util"
@@ -276,7 +276,7 @@ func main() {
         log.Fatal().Msg("--course-path must be supplied.");
     }
 
-    course := model.MustLoadCourseConfig(cli.CoursePath);
+    course := db.MustLoadCourseConfig(cli.CoursePath);
 
     err = context.Run(course);
     if (err != nil) {

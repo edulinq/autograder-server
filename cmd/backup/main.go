@@ -7,8 +7,8 @@ import (
     "github.com/rs/zerolog/log"
 
     "github.com/eriq-augustine/autograder/config"
+    "github.com/eriq-augustine/autograder/db"
     "github.com/eriq-augustine/autograder/grader"
-    "github.com/eriq-augustine/autograder/model"
     "github.com/eriq-augustine/autograder/model2"
     "github.com/eriq-augustine/autograder/task"
 )
@@ -55,7 +55,7 @@ func backupFromPaths(paths []string) []string {
     courses := make(map[string]model2.Course);
 
     for _, path := range paths {
-        course := model.MustLoadCourseConfig(path);
+        course := db.MustLoadCourseConfig(path);
         courses[course.GetID()] = course;
     }
 

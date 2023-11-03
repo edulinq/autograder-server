@@ -7,8 +7,8 @@ import (
     "github.com/rs/zerolog/log"
 
     "github.com/eriq-augustine/autograder/config"
+    "github.com/eriq-augustine/autograder/db"
     "github.com/eriq-augustine/autograder/grader"
-    "github.com/eriq-augustine/autograder/model"
 )
 
 var args struct {
@@ -29,7 +29,7 @@ func main() {
     count := 0;
 
     for _, path := range args.Path {
-        course := model.MustLoadCourseConfig(path);
+        course := db.MustLoadCourseConfig(path);
         count++;
         fmt.Printf("Loaded course '%s'.\n", course.GetID());
     }

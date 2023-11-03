@@ -8,7 +8,7 @@ import (
     "github.com/rs/zerolog/log"
 
     "github.com/eriq-augustine/autograder/config"
-    "github.com/eriq-augustine/autograder/model"
+    "github.com/eriq-augustine/autograder/db"
 )
 
 var args struct {
@@ -27,7 +27,7 @@ func main() {
         log.Fatal().Err(err).Msg("Could not load config options.");
     }
 
-    course := model.MustLoadCourseConfig(args.Path);
+    course := db.MustLoadCourseConfig(args.Path);
     if (course.GetLMSAdapter() == nil) {
         fmt.Println("Course has no LMS info associated with it.");
         os.Exit(2);

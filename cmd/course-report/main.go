@@ -7,8 +7,8 @@ import (
     "github.com/rs/zerolog/log"
 
     "github.com/eriq-augustine/autograder/config"
+    "github.com/eriq-augustine/autograder/db"
     "github.com/eriq-augustine/autograder/email"
-    "github.com/eriq-augustine/autograder/model"
     "github.com/eriq-augustine/autograder/report"
     "github.com/eriq-augustine/autograder/util"
 )
@@ -30,7 +30,7 @@ func main() {
         log.Fatal().Err(err).Msg("Could not load config options.");
     }
 
-    course := model.MustLoadCourseConfig(args.CoursePath);
+    course := db.MustLoadCourseConfig(args.CoursePath);
 
     report, err := report.GetCourseScoringReport(course);
     if (err != nil) {

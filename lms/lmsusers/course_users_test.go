@@ -6,10 +6,10 @@ import (
     "testing"
 
     "github.com/eriq-augustine/autograder/config"
+    "github.com/eriq-augustine/autograder/db"
     "github.com/eriq-augustine/autograder/email"
     "github.com/eriq-augustine/autograder/lms"
     lmstest "github.com/eriq-augustine/autograder/lms/adapter/test"
-    "github.com/eriq-augustine/autograder/model"
     "github.com/eriq-augustine/autograder/model2"
     "github.com/eriq-augustine/autograder/usr"
     "github.com/eriq-augustine/autograder/util"
@@ -24,7 +24,7 @@ type SyncLMSTestCase struct {
 }
 
 func TestCourseSyncLMSUsers(test *testing.T) {
-    course, err := model.LoadCourseConfig(filepath.Join(config.COURSES_ROOT.Get(), "COURSE101", "course.json"));
+    course, err := db.LoadCourseConfig(filepath.Join(config.COURSES_ROOT.Get(), "COURSE101", "course.json"));
     if (err != nil) {
         test.Fatalf("Failed to get test course: '%v'.", err);
     }

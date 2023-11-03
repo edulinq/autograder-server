@@ -1,4 +1,4 @@
-package model
+package db
 
 import (
     "fmt"
@@ -16,7 +16,6 @@ import (
     "github.com/eriq-augustine/autograder/util"
 )
 
-const COURSE_CONFIG_FILENAME = "course.json"
 const USERS_FILENAME = "users.json"
 
 type Course struct {
@@ -207,7 +206,7 @@ func (this *Course) GetCacheDir() string {
 
 // Check this directory and all parent directories for a course config file.
 func loadParentCourseConfig(basepath string) (*Course, error) {
-    configPath := util.SearchParents(basepath, COURSE_CONFIG_FILENAME);
+    configPath := util.SearchParents(basepath, model2.COURSE_CONFIG_FILENAME);
     if (configPath == "") {
         return nil, fmt.Errorf("Could not locate course config.");
     }

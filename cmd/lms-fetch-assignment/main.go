@@ -7,7 +7,7 @@ import (
     "github.com/rs/zerolog/log"
 
     "github.com/eriq-augustine/autograder/config"
-    "github.com/eriq-augustine/autograder/model"
+    "github.com/eriq-augustine/autograder/db"
     "github.com/eriq-augustine/autograder/model2"
     "github.com/eriq-augustine/autograder/util"
 )
@@ -45,7 +45,7 @@ func main() {
 
 func getAssignmentIDAndCourse(assignmentPath string, assignmentID string, coursePath string) (string, model2.Course, error) {
     if (assignmentPath != "") {
-        assignment := model.MustLoadAssignmentConfig(assignmentPath);
+        assignment := db.MustLoadAssignmentConfig(assignmentPath);
         if (assignment.GetLMSID() == "") {
             return "", nil, fmt.Errorf("Assignment has no LMS ID.");
         }
@@ -57,7 +57,7 @@ func getAssignmentIDAndCourse(assignmentPath string, assignmentID string, course
         return "", nil, fmt.Errorf("Neither --assignment-path nor (--course-path and --assignment-id) were proveded.");
     }
 
-    course := model.MustLoadCourseConfig(coursePath);
+    course := db.MustLoadCourseConfig(coursePath);
     if (course.GetLMSAdapter() == nil) {
         return "", nil, fmt.Errorf("Assignment's course has no LMS info associated with it.");
     }

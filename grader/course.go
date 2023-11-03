@@ -7,7 +7,7 @@ import (
 
     "github.com/eriq-augustine/autograder/common"
     "github.com/eriq-augustine/autograder/config"
-    "github.com/eriq-augustine/autograder/model"
+    "github.com/eriq-augustine/autograder/db"
     "github.com/eriq-augustine/autograder/model2"
     "github.com/eriq-augustine/autograder/util"
 )
@@ -37,7 +37,7 @@ func LoadCourses() error {
 func LoadCoursesFromDir(baseDir string) error {
     log.Debug().Str("dir", baseDir).Msg("Searching for courses.");
 
-    configPaths, err := util.FindFiles(model.COURSE_CONFIG_FILENAME, baseDir);
+    configPaths, err := util.FindFiles(model2.COURSE_CONFIG_FILENAME, baseDir);
     if (err != nil) {
         return fmt.Errorf("Failed to search for course configs in '%s': '%w'.", baseDir, err);
     }
@@ -45,7 +45,7 @@ func LoadCoursesFromDir(baseDir string) error {
     log.Info().Int("count", len(configPaths)).Msg(fmt.Sprintf("Found %d course config(s).", len(configPaths)));
 
     for _, configPath := range configPaths {
-        courseConfig, err := model.LoadCourseDirectory(configPath);
+        courseConfig, err := db.LoadCourseDirectory(configPath);
         if (err != nil) {
             return fmt.Errorf("Could not load course config '%s': '%w'.", configPath, err);
         }

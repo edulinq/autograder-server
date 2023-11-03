@@ -7,9 +7,9 @@ import (
     "github.com/rs/zerolog/log"
 
     "github.com/eriq-augustine/autograder/config"
+    "github.com/eriq-augustine/autograder/db"
     "github.com/eriq-augustine/autograder/docker"
     "github.com/eriq-augustine/autograder/grader"
-    "github.com/eriq-augustine/autograder/model"
 )
 
 var args struct {
@@ -65,7 +65,7 @@ func buildFromPaths(paths []string, buildOptions *docker.BuildOptions) []string 
     imageNames := make([]string, 0);
 
     for _, path := range paths {
-        assignment := model.MustLoadAssignmentConfig(path);
+        assignment := db.MustLoadAssignmentConfig(path);
 
         err := assignment.BuildImage(args.Force, false, buildOptions);
         if (err != nil) {

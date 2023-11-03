@@ -7,7 +7,7 @@ import (
     "github.com/rs/zerolog/log"
 
     "github.com/eriq-augustine/autograder/config"
-    "github.com/eriq-augustine/autograder/model"
+    "github.com/eriq-augustine/autograder/db"
     "github.com/eriq-augustine/autograder/report"
     "github.com/eriq-augustine/autograder/util"
 )
@@ -28,7 +28,7 @@ func main() {
         log.Fatal().Err(err).Msg("Could not load config options.");
     }
 
-    assignment := model.MustLoadAssignmentConfig(args.AssignmentPath);
+    assignment := db.MustLoadAssignmentConfig(args.AssignmentPath);
 
     report, err := report.GetAssignmentScoringReport(assignment);
     if (err != nil) {
