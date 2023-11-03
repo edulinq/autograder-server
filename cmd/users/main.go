@@ -10,6 +10,7 @@ import (
     "github.com/rs/zerolog/log"
 
     "github.com/eriq-augustine/autograder/config"
+    "github.com/eriq-augustine/autograder/lms/lmsusers"
     "github.com/eriq-augustine/autograder/model"
     "github.com/eriq-augustine/autograder/model2"
     "github.com/eriq-augustine/autograder/usr"
@@ -54,7 +55,7 @@ func (this *AddUser) Run(course model2.Course) error {
     result.PrintReport();
 
     if (this.SyncLMS) {
-        result, err = course.SyncLMSUser(this.Email, this.DryRun, this.SendEmail);
+        result, err = lmsusers.SyncLMSUser(course, this.Email, this.DryRun, this.SendEmail);
         if (err != nil) {
             return err;
         }
@@ -92,7 +93,7 @@ func (this *AddTSV) Run(course model2.Course) error {
     }
 
     if (this.SyncLMS) {
-        result, err = course.SyncLMSUsers(this.DryRun, this.SendEmail);
+        result, err = lmsusers.SyncLMSUsers(course, this.DryRun, this.SendEmail);
         if (err != nil) {
             return err;
         }

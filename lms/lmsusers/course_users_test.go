@@ -1,15 +1,16 @@
-package model
+package lmsusers
 
 import (
     "path/filepath"
     "slices"
-    "strings"
     "testing"
 
     "github.com/eriq-augustine/autograder/config"
     "github.com/eriq-augustine/autograder/email"
     "github.com/eriq-augustine/autograder/lms"
     lmstest "github.com/eriq-augustine/autograder/lms/adapter/test"
+    "github.com/eriq-augustine/autograder/model"
+    "github.com/eriq-augustine/autograder/model2"
     "github.com/eriq-augustine/autograder/usr"
     "github.com/eriq-augustine/autograder/util"
 )
@@ -23,7 +24,7 @@ type SyncLMSTestCase struct {
 }
 
 func TestCourseSyncLMSUsers(test *testing.T) {
-    course, err := LoadCourseConfig(filepath.Join(config.COURSES_ROOT.Get(), "COURSE101", "course.json"));
+    course, err := model.LoadCourseConfig(filepath.Join(config.COURSES_ROOT.Get(), "COURSE101", "course.json"));
     if (err != nil) {
         test.Fatalf("Failed to get test course: '%v'.", err);
     }
@@ -45,7 +46,7 @@ func TestCourseSyncLMSUsers(test *testing.T) {
 
         email.ClearTestMessages();
 
-        result, err := course.SyncLMSUsers(testCase.dryRun, testCase.sendEmails);
+        result, err := SyncLMSUsers(course, testCase.dryRun, testCase.sendEmails);
         if (err != nil) {
             test.Errorf("Case %d (%+v): User sync failed: '%v'.", i, testCase, err);
             continue;
@@ -66,14 +67,14 @@ func TestCourseSyncLMSUsers(test *testing.T) {
             currentModUsers = modAllUsers;
         }
 
-        if (!usersEquals(currentModUsers, result.Mod)) {
+        if (!usr.UsersPointerEqual(currentModUsers, result.Mod)) {
             test.Errorf("Case %d (%+v): Unexpected mod users. Expected: '%s', actual: '%s'.",
                     i, testCase, util.MustToJSON(currentModUsers), util.MustToJSON(result.Mod));
             continue;
         }
 
         if (testCase.syncAdd) {
-            if (!usersEquals(addUsers, result.Add)) {
+            if (!usr.UsersPointerEqual(addUsers, result.Add)) {
                 test.Errorf("Case %d (%+v): Unexpected add users. Expected: '%s', actual: '%s'.",
                         i, testCase, util.MustToJSON(addUsers), util.MustToJSON(result.Add));
                 continue;
@@ -123,7 +124,7 @@ func TestCourseSyncLMSUsers(test *testing.T) {
         }
 
         if (testCase.syncDel) {
-            if (!usersEquals(delUsers, result.Del)) {
+            if (!usr.UsersPointerEqual(delUsers, result.Del)) {
                 test.Errorf("Case %d (%+v): Unexpected del users. Expected: '%s', actual: '%s'.",
                         i, testCase, util.MustToJSON(delUsers), util.MustToJSON(result.Del));
                 continue;
@@ -162,50 +163,8 @@ func buildSyncLMSTestCase(testCases []SyncLMSTestCase, index int, currentCase []
     return testCases;
 }
 
-func usersEquals(a []*usr.User, b []*usr.User) bool {
-    if (len(a) != len(b)) {
-        return false;
-    }
-
-    slices.SortFunc(a, userPtrCompare);
-    slices.SortFunc(b, userPtrCompare);
-
-    return slices.EqualFunc(a, b, userPtrEqual);
-}
-
-func userPtrEqual(a *usr.User, b *usr.User) bool {
-    if (a == b) {
-        return true;
-    }
-
-    if ((a == nil) || (b == nil)) {
-        return false;
-    }
-
-    return (a.Email == b.Email) &&
-            (a.DisplayName == b.DisplayName) &&
-            (a.Role == b.Role) &&
-            (a.LMSID == b.LMSID);
-}
-
-func userPtrCompare(a *usr.User, b *usr.User) int {
-    if (a == b) {
-        return 0;
-    }
-
-    if (a == nil) {
-        return 1;
-    }
-
-    if (b == nil) {
-        return -1;
-    }
-
-    return strings.Compare(a.Email, b.Email);
-}
-
 // Reset the test LMS adapter back to it's starting settings.
-func resetAdapter(course *Course) {
+func resetAdapter(course model2.Course) {
     course.GetLMSAdapter().SyncUserAttributes = false;
     course.GetLMSAdapter().SyncAddUsers = false;
     course.GetLMSAdapter().SyncRemoveUsers = false;

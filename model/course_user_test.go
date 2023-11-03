@@ -48,7 +48,7 @@ func TestCourseSyncNewUsers(test *testing.T) {
 
         // There will always be adds.
 
-        if (!usersEquals(addUsers, result.Add)) {
+        if (!usr.UsersPointerEqual(addUsers, result.Add)) {
             test.Errorf("Case %d (%+v): Unexpected add users. Expected: '%s', actual: '%s'.",
                     i, testCase, util.MustToJSON(addUsers), util.MustToJSON(result.Add));
             continue;
@@ -75,7 +75,7 @@ func TestCourseSyncNewUsers(test *testing.T) {
             cleartextPassUsers = fullCleartextPassUsers;
         }
 
-        if (!usersEquals(activeExpected, activeCase)) {
+        if (!usr.UsersPointerEqual(activeExpected, activeCase)) {
             test.Errorf("Case %d (%+v): Unexpected %s users. Expected: '%s', actual: '%s'.",
                     i, testCase, activeName, util.MustToJSON(activeExpected), util.MustToJSON(activeCase));
             continue;

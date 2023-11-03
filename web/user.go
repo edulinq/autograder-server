@@ -7,6 +7,7 @@ import (
     "github.com/rs/zerolog/log"
 
     "github.com/eriq-augustine/autograder/grader"
+    "github.com/eriq-augustine/autograder/lms/lmsusers"
     "github.com/eriq-augustine/autograder/usr"
 )
 
@@ -282,7 +283,7 @@ func handleUserAdd(request *UserAddRequest) (int, any, error) {
     }
 
     if (request.SyncLMS) {
-        _, err = course.SyncLMSUser(request.Email, false, request.SendEmail);
+        _, err = lmsusers.SyncLMSUser(course, request.Email, false, request.SendEmail);
         if (err != nil) {
             return 0, nil, err;
         }

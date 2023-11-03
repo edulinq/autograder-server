@@ -1,20 +1,22 @@
-package model
+package lmsusers
 
 import (
     "fmt"
 
     "github.com/eriq-augustine/autograder/lms"
+    "github.com/eriq-augustine/autograder/model2"
     "github.com/eriq-augustine/autograder/usr"
     "github.com/eriq-augustine/autograder/util"
 )
 
 // Sync users with the provided LMS.
-func (this *Course) SyncLMSUsers(dryRun bool, sendEmails bool) (*usr.UserSyncResult, error) {
-    if (this.LMSAdapter == nil) {
+func SyncLMSUsers(course model2.Course, dryRun bool, sendEmails bool) (*usr.UserSyncResult, error) {
+    adapter := course.GetLMSAdapter();
+    if (adapter == nil) {
         return nil, nil;
     }
 
-    lmsUsersSlice, err := this.LMSAdapter.FetchUsers();
+    lmsUsersSlice, err := adapter.FetchUsers();
     if (err != nil) {
         return nil, fmt.Errorf("Failed to fetch LMS users: '%w'.", err);
     }
@@ -24,15 +26,16 @@ func (this *Course) SyncLMSUsers(dryRun bool, sendEmails bool) (*usr.UserSyncRes
         lmsUsers[lmsUser.Email] = lmsUser;
     }
 
-    return this.syncLMSUsers(dryRun, sendEmails, lmsUsers, nil);
+    return syncLMSUsers(course, dryRun, sendEmails, lmsUsers, nil);
 }
 
-func (this *Course) SyncLMSUser(email string, dryRun bool, sendEmails bool) (*usr.UserSyncResult, error) {
-    if (this.LMSAdapter == nil) {
+func SyncLMSUser(course model2.Course, email string, dryRun bool, sendEmails bool) (*usr.UserSyncResult, error) {
+    adapter := course.GetLMSAdapter();
+    if (adapter == nil) {
         return nil, nil;
     }
 
-    lmsUser, err := this.LMSAdapter.FetchUser(email);
+    lmsUser, err := adapter.FetchUser(email);
     if (err != nil) {
         return nil, err;
     }
@@ -41,15 +44,15 @@ func (this *Course) SyncLMSUser(email string, dryRun bool, sendEmails bool) (*us
         lmsUser.Email: lmsUser,
     };
 
-    return this.syncLMSUsers(dryRun, sendEmails, lmsUsers, []string{email});
+    return syncLMSUsers(course, dryRun, sendEmails, lmsUsers, []string{email});
 }
 
 // Sync users.
 // If |syncEmails| is not empty, then only emails in it will be checked/resolved.
 // Otherwise, all emails from local and LMS users will be checked.
-func (this *Course) syncLMSUsers(dryRun bool, sendEmails bool, lmsUsers map[string]*lms.User, syncEmails []string) (
-        *usr.UserSyncResult, error) {
-    localUsers, err := this.GetUsers();
+func syncLMSUsers(course model2.Course, dryRun bool, sendEmails bool, lmsUsers map[string]*lms.User,
+        syncEmails []string) (*usr.UserSyncResult, error) {
+    localUsers, err := course.GetUsers();
     if (err != nil) {
         return nil, fmt.Errorf("Failed to fetch local users: '%w'.", err);
     }
@@ -61,7 +64,7 @@ func (this *Course) syncLMSUsers(dryRun bool, sendEmails bool, lmsUsers map[stri
     syncResult := usr.NewUserSyncResult();
 
     for _, email := range syncEmails {
-        resolveResult, err := this.resolveUserSync(localUsers, lmsUsers, email);
+        resolveResult, err := resolveUserSync(course, localUsers, lmsUsers, email);
         if (err != nil) {
             return nil, err;
         }
@@ -75,7 +78,7 @@ func (this *Course) syncLMSUsers(dryRun bool, sendEmails bool, lmsUsers map[stri
         return syncResult, nil;
     }
 
-    err = this.SaveUsers(localUsers);
+    err = course.SaveUsers(localUsers);
     if (err != nil) {
         return nil, fmt.Errorf("Failed to save users file: '%w'.", err);
     }
@@ -118,8 +121,10 @@ func mergeUsers(localUser *usr.User, lmsUser *lms.User, mergeAttributes bool) bo
 // Resolve differences between a local user and LMS user (linked using the provided email).
 // The passed in local user map will be modified to reflect any resolution.
 // The taken action will depend on the options set in the course's LMS adapter.
-func (this *Course) resolveUserSync(localUsers map[string]*usr.User, lmsUsers map[string]*lms.User, email string) (
-        *usr.UserResolveResult, error) {
+func resolveUserSync(course model2.Course, localUsers map[string]*usr.User,
+        lmsUsers map[string]*lms.User, email string) (*usr.UserResolveResult, error) {
+    adapter := course.GetLMSAdapter();
+
     localUser := localUsers[email];
     lmsUser := lmsUsers[email];
 
@@ -129,7 +134,7 @@ func (this *Course) resolveUserSync(localUsers map[string]*usr.User, lmsUsers ma
 
     // Add.
     if (localUser == nil) {
-        if (!this.LMSAdapter.SyncAddUsers) {
+        if (!adapter.SyncAddUsers) {
             return nil, nil;
         }
 
@@ -158,7 +163,7 @@ func (this *Course) resolveUserSync(localUsers map[string]*usr.User, lmsUsers ma
 
     // Del.
     if (lmsUser == nil) {
-        if (!this.LMSAdapter.SyncRemoveUsers) {
+        if (!adapter.SyncRemoveUsers) {
             return nil, nil;
         }
 
@@ -167,7 +172,7 @@ func (this *Course) resolveUserSync(localUsers map[string]*usr.User, lmsUsers ma
     }
 
     // Mod.
-    userChanged := mergeUsers(localUser, lmsUser, this.LMSAdapter.SyncUserAttributes);
+    userChanged := mergeUsers(localUser, lmsUser, adapter.SyncUserAttributes);
     if (userChanged) {
         return &usr.UserResolveResult{Mod: localUser}, nil;
     }

@@ -9,6 +9,7 @@ import (
 
     "github.com/eriq-augustine/autograder/grader"
     "github.com/eriq-augustine/autograder/lms"
+    "github.com/eriq-augustine/autograder/lms/lmsusers"
     "github.com/eriq-augustine/autograder/usr"
 )
 
@@ -137,7 +138,7 @@ func handleLMSSyncUsers(request *LMSSyncUsersRequest) (int, any, error) {
         return 0, nil, fmt.Errorf("Course '%s' has no LMS adapter.", request.Course);
     }
 
-    result, err := course.SyncLMSUsers(false, true);
+    result, err := lmsusers.SyncLMSUsers(course, false, true);
     if (err != nil) {
         return 0, nil, err;
     }

@@ -8,7 +8,7 @@ import (
     "github.com/eriq-augustine/autograder/util"
 )
 
-// course.SyncLMSUsers is already heavily tested, focus on API-specific functionality.
+// lmsusers.SyncLMSUsers() is already heavily tested, focus on API-specific functionality.
 func TestAPISyncUsers(test *testing.T) {
     testCases := []struct{ role usr.UserRole; dryRun bool; sendEmails bool; permError bool }{
         {usr.Other, false, false, true},

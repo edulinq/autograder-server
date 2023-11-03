@@ -8,6 +8,7 @@ import (
     "crypto/subtle"
     "encoding/hex"
     "fmt"
+    "slices"
     "strings"
     "time"
 
@@ -202,4 +203,46 @@ func ToRowHeaader(delim string) string {
 func (this *User) ToRow(delim string) string {
     parts := []string{this.Email, this.DisplayName, this.Role.String(), this.LMSID};
     return strings.Join(parts, delim);
+}
+
+func UsersPointerEqual(a []*User, b []*User) bool {
+    if (len(a) != len(b)) {
+        return false;
+    }
+
+    slices.SortFunc(a, UserPointerCompare);
+    slices.SortFunc(b, UserPointerCompare);
+
+    return slices.EqualFunc(a, b, UserPointerEqual);
+}
+
+func UserPointerEqual(a *User, b *User) bool {
+    if (a == b) {
+        return true;
+    }
+
+    if ((a == nil) || (b == nil)) {
+        return false;
+    }
+
+    return (a.Email == b.Email) &&
+            (a.DisplayName == b.DisplayName) &&
+            (a.Role == b.Role) &&
+            (a.LMSID == b.LMSID);
+}
+
+func UserPointerCompare(a *User, b *User) int {
+    if (a == b) {
+        return 0;
+    }
+
+    if (a == nil) {
+        return 1;
+    }
+
+    if (b == nil) {
+        return -1;
+    }
+
+    return strings.Compare(a.Email, b.Email);
 }

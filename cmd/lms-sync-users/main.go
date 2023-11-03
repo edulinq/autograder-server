@@ -5,6 +5,7 @@ import (
     "github.com/rs/zerolog/log"
 
     "github.com/eriq-augustine/autograder/config"
+    "github.com/eriq-augustine/autograder/lms/lmsusers"
     "github.com/eriq-augustine/autograder/model"
 )
 
@@ -31,7 +32,7 @@ func main() {
     }
 
     args.SkipSendEmails = (args.SkipSendEmails || args.DryRun);
-    result, err := course.SyncLMSUsers(args.DryRun, !args.SkipSendEmails);
+    result, err := lmsusers.SyncLMSUsers(course, args.DryRun, !args.SkipSendEmails);
     if (err != nil) {
         log.Fatal().Err(err).Msg("Failed to sync LMS users.");
     }

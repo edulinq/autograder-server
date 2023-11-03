@@ -27,8 +27,5 @@ type Course interface {
     BuildAssignmentImages(force bool, quick bool, options *docker.BuildOptions) ([]string, map[string]error);
     GetCacheDir() string;
 
-    SyncLMSUsers(dryRun bool, sendEmails bool) (*usr.UserSyncResult, error);
-    SyncLMSUser(email string, dryRun bool, sendEmails bool) (*usr.UserSyncResult, error);
-
     SetSourcePathForTesting(sourcePath string) string;
 }
