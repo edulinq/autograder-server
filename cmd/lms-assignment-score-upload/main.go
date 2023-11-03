@@ -8,6 +8,7 @@ import (
 
     "github.com/eriq-augustine/autograder/config"
     "github.com/eriq-augustine/autograder/model"
+    "github.com/eriq-augustine/autograder/scoring"
 )
 
 var args struct {
@@ -31,7 +32,7 @@ func main() {
         log.Fatal().Msg("Assignment has no LMS ID.");
     }
 
-    err = assignment.FullScoringAndUpload(args.DryRun);
+    err = scoring.FullAssignmentScoringAndUpload(assignment, args.DryRun);
     if (err != nil) {
         log.Fatal().Err(err).Msg("Failed to score and upload assignment.");
     }

@@ -1,4 +1,4 @@
-package model
+package scoring
 
 import (
     "fmt"
@@ -10,38 +10,39 @@ import (
     "github.com/eriq-augustine/autograder/artifact"
     "github.com/eriq-augustine/autograder/common"
     "github.com/eriq-augustine/autograder/lms"
+    "github.com/eriq-augustine/autograder/model2"
     "github.com/eriq-augustine/autograder/usr"
     "github.com/eriq-augustine/autograder/util"
 )
 
 const LOCK_COMMENT string = "__lock__";
 
-func (this *Assignment) FullScoringAndUpload(dryRun bool) error {
-    if (this.Course.GetLMSAdapter() == nil) {
+func FullAssignmentScoringAndUpload(assignment model2.Assignment, dryRun bool) error {
+    if (assignment.GetCourse().GetLMSAdapter() == nil) {
         return fmt.Errorf("Assignment's course has no LMS info associated with it.");
     }
 
-    users, err := this.Course.GetUsers();
+    users, err := assignment.GetCourse().GetUsers();
     if (err != nil) {
         return fmt.Errorf("Failed to fetch autograder users: '%w'.", err);
     }
 
-    lmsScores, err := this.Course.GetLMSAdapter().FetchAssignmentScores(this.LMSID);
+    lmsScores, err := assignment.GetCourse().GetLMSAdapter().FetchAssignmentScores(assignment.GetLMSID());
     if (err != nil) {
         return fmt.Errorf("Could not fetch LMS grades: '%w'.", err);
     }
 
-    scoringInfos, err := this.GetScoringInfo(users, true);
+    scoringInfos, err := GetScoringInfo(assignment, users, true);
     if (err != nil) {
         return fmt.Errorf("Failed to get scoring information: '%w'.", err);
     }
 
-    err = this.LatePolicy.Apply(this, users, scoringInfos, dryRun);
+    err = ApplyLatePolicy(assignment, users, scoringInfos, dryRun);
     if (err != nil) {
         return fmt.Errorf("Failed to apply late policy: '%w'.", err);
     }
 
-    err = computeFinalScores(this, users, scoringInfos, lmsScores, dryRun);
+    err = computeFinalScores(assignment, users, scoringInfos, lmsScores, dryRun);
     if (err != nil) {
         return fmt.Errorf("Failed to apply late policy: '%w'.", err);
     }
@@ -51,8 +52,8 @@ func (this *Assignment) FullScoringAndUpload(dryRun bool) error {
 
 // Get all the recent submission summaries (via GetAllRecentSubmissionSummaries()),
 // and convert them to scoring info structs so they can be properly scored/uploaded.
-func (this *Assignment) GetScoringInfo(users map[string]*usr.User, onlyStudents bool) (map[string]*artifact.ScoringInfo, error) {
-    paths, err := this.GetAllRecentSubmissionSummaries(users);
+func GetScoringInfo(assignment model2.Assignment, users map[string]*usr.User, onlyStudents bool) (map[string]*artifact.ScoringInfo, error) {
+    paths, err := assignment.GetAllRecentSubmissionSummaries(users);
     if (err != nil) {
         return nil, fmt.Errorf("Unable to load submission summaries: '%w'.", err);
     }
@@ -81,7 +82,7 @@ func (this *Assignment) GetScoringInfo(users map[string]*usr.User, onlyStudents 
 }
 
 func computeFinalScores(
-        assignment *Assignment, users map[string]*usr.User,
+        assignment model2.Assignment, users map[string]*usr.User,
         scoringInfos map[string]*artifact.ScoringInfo, lmsScores []*lms.SubmissionScore,
         dryRun bool) error {
     var err error;

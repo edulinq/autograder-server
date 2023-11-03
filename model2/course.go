@@ -15,7 +15,6 @@ type Course interface {
     GetAssignments() map[string]Assignment;
     GetSortedAssignments() []Assignment
     GetAssignmentLMSIDs() ([]string, []string)
-    FullScoringAndUpload(bool) error
 
     GetUser(email string) (*usr.User, error);
     GetUsers() (map[string]*usr.User, error)

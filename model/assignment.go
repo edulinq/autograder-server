@@ -27,7 +27,7 @@ type Assignment struct {
     SortID string `json:"sort-id"`
 
     LMSID string `json:"lms-id",omitempty`
-    LatePolicy LateGradingPolicy `json:"late-policy,omitempty"`
+    LatePolicy model2.LateGradingPolicy `json:"late-policy,omitempty"`
 
     docker.ImageInfo
 
@@ -104,6 +104,10 @@ func (this *Assignment) GetName() string {
 
 func (this *Assignment) GetLMSID() string {
     return this.LMSID;
+}
+
+func (this *Assignment) GetLatePolicy() model2.LateGradingPolicy {
+    return this.LatePolicy;
 }
 
 func (this *Assignment) ImageName() string {

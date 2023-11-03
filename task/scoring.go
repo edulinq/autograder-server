@@ -7,6 +7,7 @@ import (
 
     "github.com/eriq-augustine/autograder/config"
     "github.com/eriq-augustine/autograder/model2"
+    "github.com/eriq-augustine/autograder/scoring"
 )
 
 type ScoringUploadTask struct {
@@ -69,5 +70,5 @@ func (this *ScoringUploadTask) Stop() {
 
 // Run the task regardless of schedule.
 func (this *ScoringUploadTask) Run() error {
-    return this.course.FullScoringAndUpload(this.DryRun);
+    return scoring.FullCourseScoringAndUpload(this.course, this.DryRun);
 }

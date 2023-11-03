@@ -1,4 +1,4 @@
-package model
+package scoring
 
 import (
     "fmt"
@@ -11,34 +11,10 @@ import (
     "github.com/eriq-augustine/autograder/artifact"
     "github.com/eriq-augustine/autograder/common"
     "github.com/eriq-augustine/autograder/lms"
+    "github.com/eriq-augustine/autograder/model2"
     "github.com/eriq-augustine/autograder/usr"
     "github.com/eriq-augustine/autograder/util"
 )
-
-type LateGradingPolicyType string;
-
-const (
-    // Apply no late policy at all.
-    EmptyPolicy         LateGradingPolicyType = ""
-    // Check the baseline (rejection), but nothing else.
-    BaselinePolicy            LateGradingPolicyType = "baseline"
-    ConstantPenalty     LateGradingPolicyType = "constant-penalty"
-    PercentagePenalty   LateGradingPolicyType = "percentage-penalty"
-    LateDays            LateGradingPolicyType = "late-days"
-)
-
-const (
-    LATE_OPTIONS_KEY_PENALTY string = "penalty";
-)
-
-type LateGradingPolicy struct {
-    Type LateGradingPolicyType `json:"type"`
-    Penalty float64 `json:"penalty"`
-    RejectAfterDays int `json:"reject-after-days"`
-
-    MaxLateDays int `json:"max-late-days"`
-    LateDaysLMSID string `json:"late-days-lms-id"`
-}
 
 type LateDaysInfo struct {
     AvailableDays int `json:"available-days"`
@@ -52,56 +28,21 @@ type LateDaysInfo struct {
     LMSCommentAuthorID string `json:"-"`
 }
 
-func (this *LateGradingPolicy) Validate() error {
-    this.Type = LateGradingPolicyType(strings.ToLower(string(this.Type)));
-
-    if (this.RejectAfterDays < 0) {
-        return fmt.Errorf("Number of days for rejection is negative (%d), should be zero to be ignored or positive to be applied.", this.RejectAfterDays);
-    }
-
-    switch this.Type {
-        case EmptyPolicy, BaselinePolicy:
-            return nil;
-        case ConstantPenalty:
-            if (this.Penalty <= 0.0) {
-                return fmt.Errorf("Policy '%s': penalty must be larger than zero, found '%s'.", this.Type, util.FloatToStr(this.Penalty));
-            }
-        case PercentagePenalty:
-            if ((this.Penalty <= 0.0) || (this.Penalty > 1.0)) {
-                return fmt.Errorf("Policy '%s': penalty must be in (0.0, 1.0], found '%s'.", this.Type, util.FloatToStr(this.Penalty));
-            }
-        case LateDays:
-            if ((this.Penalty <= 0.0) || (this.Penalty > 1.0)) {
-                return fmt.Errorf("Policy '%s': penalty must be in (0.0, 1.0], found '%s'.", this.Type, util.FloatToStr(this.Penalty));
-            }
-
-            if ((this.MaxLateDays < 1) || (this.MaxLateDays > this.RejectAfterDays)) {
-                return fmt.Errorf("Policy '%s': max late days must be in [1, <reject days>(%d)], found '%d'.", this.Type, this.RejectAfterDays, this.MaxLateDays);
-            }
-
-            if (this.LateDaysLMSID == "") {
-                return fmt.Errorf("Policy '%s': LMS ID for late days assignment cannot be empty.", this.Type);
-            }
-        default:
-            return fmt.Errorf("Unknown late policy type: '%s'.", this.Type);
-    }
-
-    return nil;
-}
-
 // This assumes that all assignments are in the LMS.
-func (this *LateGradingPolicy) Apply(
-        assignment *Assignment,
+func ApplyLatePolicy(
+        assignment model2.Assignment,
         users map[string]*usr.User,
         scores map[string]*artifact.ScoringInfo,
         dryRun bool) error {
+    policy := assignment.GetLatePolicy();
+
     // Start with each submission getting the raw score.
     for _, score := range scores {
         score.Score = score.RawScore;
     }
 
     // Empty policy does nothing.
-    if (this.Type == EmptyPolicy) {
+    if (policy.Type == model2.EmptyPolicy) {
         return nil;
     }
 
@@ -114,26 +55,26 @@ func (this *LateGradingPolicy) Apply(
         return fmt.Errorf("Assignment does not have a due date.");
     }
 
-    this.applyBaselinePolicy(users, scores, *lmsAssignment.DueDate);
+    applyBaselinePolicy(policy, users, scores, *lmsAssignment.DueDate);
 
     // Baseline policy is complete.
-    if (this.Type == BaselinePolicy) {
+    if (policy.Type == model2.BaselinePolicy) {
         return nil;
     }
 
-    if ((this.Type == ConstantPenalty) || (this.Type == PercentagePenalty)) {
-        penalty := this.Penalty;
-        if (this.Type == PercentagePenalty) {
-            penalty = lmsAssignment.MaxPoints * this.Penalty;
+    if ((policy.Type == model2.ConstantPenalty) || (policy.Type == model2.PercentagePenalty)) {
+        penalty := policy.Penalty;
+        if (policy.Type == model2.PercentagePenalty) {
+            penalty = lmsAssignment.MaxPoints * policy.Penalty;
         }
 
-        this.applyConstantPolicy(scores, penalty);
+        applyConstantPolicy(policy, scores, penalty);
         return nil;
     }
 
-    if (this.Type == LateDays) {
-        penalty := lmsAssignment.MaxPoints * this.Penalty;
-        err = this.applyLateDaysPolicy(assignment, users, scores, penalty, dryRun);
+    if (policy.Type == model2.LateDays) {
+        penalty := lmsAssignment.MaxPoints * policy.Penalty;
+        err = applyLateDaysPolicy(policy, assignment, users, scores, penalty, dryRun);
         if (err != nil) {
             return fmt.Errorf("Failed to apply late days policy: '%w'.", err);
         }
@@ -141,11 +82,11 @@ func (this *LateGradingPolicy) Apply(
         return nil;
     }
 
-    return fmt.Errorf("Unknown late policy type: '%s'.", this.Type);
+    return fmt.Errorf("Unknown late policy type: '%s'.", policy.Type);
 }
 
 // Apply a common policy.
-func (this *LateGradingPolicy) applyBaselinePolicy(users map[string]*usr.User, scores map[string]*artifact.ScoringInfo, dueDate time.Time) {
+func applyBaselinePolicy(policy model2.LateGradingPolicy, users map[string]*usr.User, scores map[string]*artifact.ScoringInfo, dueDate time.Time) {
     for email, score := range scores {
         score.NumDaysLate = computeLateDays(dueDate, score.SubmissionTime);
 
@@ -156,7 +97,7 @@ func (this *LateGradingPolicy) applyBaselinePolicy(users map[string]*usr.User, s
             continue;
         }
 
-        if ((this.RejectAfterDays > 0) && (score.NumDaysLate > this.RejectAfterDays)) {
+        if ((policy.RejectAfterDays > 0) && (score.NumDaysLate > policy.RejectAfterDays)) {
             score.Reject = true;
             continue;
         }
@@ -164,7 +105,7 @@ func (this *LateGradingPolicy) applyBaselinePolicy(users map[string]*usr.User, s
 }
 
 // Apply a constant penalty per late day.
-func (this *LateGradingPolicy) applyConstantPolicy(scores map[string]*artifact.ScoringInfo, penalty float64) {
+func applyConstantPolicy(policy model2.LateGradingPolicy, scores map[string]*artifact.ScoringInfo, penalty float64) {
     for _, score := range scores {
         if (score.NumDaysLate <= 0) {
             continue;
@@ -174,11 +115,12 @@ func (this *LateGradingPolicy) applyConstantPolicy(scores map[string]*artifact.S
     }
 }
 
-func (this *LateGradingPolicy) applyLateDaysPolicy(
-        assignment *Assignment, users map[string]*usr.User,
+func applyLateDaysPolicy(
+        policy model2.LateGradingPolicy,
+        assignment model2.Assignment, users map[string]*usr.User,
         scores map[string]*artifact.ScoringInfo, penalty float64,
         dryRun bool) error {
-    allLateDays, err := this.fetchLateDays(assignment);
+    allLateDays, err := fetchLateDays(policy, assignment);
     if (err != nil) {
         return err;
     }
@@ -226,7 +168,7 @@ func (this *LateGradingPolicy) applyLateDaysPolicy(
         // - The number of late days the user has to use.
         // - The maximum number of late days that can be used on this assignment.
         // - The number of days late the submission actually is.
-        lateDaysToUse := min(lateDaysAvailable, this.MaxLateDays, scoringInfo.NumDaysLate);
+        lateDaysToUse := min(lateDaysAvailable, policy.MaxLateDays, scoringInfo.NumDaysLate);
         scoringInfo.LateDayUsage = lateDaysToUse;
 
         // Enforce a penalty for any remaining late days.
@@ -244,7 +186,7 @@ func (this *LateGradingPolicy) applyLateDaysPolicy(
         }
     }
 
-    err = this.updateLateDays(assignment, lateDaysToUpdate, dryRun);
+    err = updateLateDays(policy, assignment, lateDaysToUpdate, dryRun);
     if (err != nil) {
         return err;
     }
@@ -252,7 +194,7 @@ func (this *LateGradingPolicy) applyLateDaysPolicy(
     return nil;
 }
 
-func (this *LateGradingPolicy) updateLateDays(assignment *Assignment, lateDaysToUpdate map[string]*LateDaysInfo, dryRun bool) error {
+func updateLateDays(policy model2.LateGradingPolicy, assignment model2.Assignment, lateDaysToUpdate map[string]*LateDaysInfo, dryRun bool) error {
     // Update late days.
     // Info that does NOT have a LMSCommentID will get the autograder comment added in.
     grades := make([]*lms.SubmissionScore, 0, len(lateDaysToUpdate));
@@ -277,7 +219,7 @@ func (this *LateGradingPolicy) updateLateDays(assignment *Assignment, lateDaysTo
     if (dryRun) {
         log.Info().Str("assignment", assignment.GetID()).Any("grades", grades).Msg("Dry Run: Skipping upload of late days.");
     } else {
-        err := assignment.GetCourse().GetLMSAdapter().UpdateAssignmentScores(this.LateDaysLMSID, grades);
+        err := assignment.GetCourse().GetLMSAdapter().UpdateAssignmentScores(policy.LateDaysLMSID, grades);
         if (err != nil) {
             return fmt.Errorf("Failed to upload late days: '%w'.", err);
         }
@@ -300,7 +242,7 @@ func (this *LateGradingPolicy) updateLateDays(assignment *Assignment, lateDaysTo
     if (dryRun) {
         log.Info().Str("assignment", assignment.GetID()).Any("comments", comments).Msg("Dry Run: Skipping update of late day comments.");
     } else {
-        err := assignment.GetCourse().GetLMSAdapter().UpdateComments(this.LateDaysLMSID, comments);
+        err := assignment.GetCourse().GetLMSAdapter().UpdateComments(policy.LateDaysLMSID, comments);
         if (err != nil) {
             return fmt.Errorf("Failed to update late days comments: '%w'.", err);
         }
@@ -309,11 +251,11 @@ func (this *LateGradingPolicy) updateLateDays(assignment *Assignment, lateDaysTo
     return nil;
 }
 
-func (this *LateGradingPolicy) fetchLateDays(assignment *Assignment) (map[string]*LateDaysInfo, error) {
+func fetchLateDays(policy model2.LateGradingPolicy, assignment model2.Assignment) (map[string]*LateDaysInfo, error) {
     // Fetch available late days from the LMS.
-    lmsLateDaysScores, err := assignment.GetCourse().GetLMSAdapter().FetchAssignmentScores(this.LateDaysLMSID);
+    lmsLateDaysScores, err := assignment.GetCourse().GetLMSAdapter().FetchAssignmentScores(policy.LateDaysLMSID);
     if (err != nil) {
-        return nil, fmt.Errorf("Failed to fetch late days assignment (%s): '%w'.", this.LateDaysLMSID, err);
+        return nil, fmt.Errorf("Failed to fetch late days assignment (%s): '%w'.", policy.LateDaysLMSID, err);
     }
 
     lateDays := make(map[string]*LateDaysInfo);
@@ -329,7 +271,7 @@ func (this *LateGradingPolicy) fetchLateDays(assignment *Assignment) (map[string
             if (strings.Contains(text, LOCK_COMMENT)) {
                 return nil, fmt.Errorf(
                         "Late days assignment '%s' for user '%s' has a lock comment. Resolve this lock to allow for grading.",
-                        this.LateDaysLMSID, lmsLateDaysScore.UserID);
+                        policy.LateDaysLMSID, lmsLateDaysScore.UserID);
             } else if (strings.Contains(text, common.AUTOGRADER_COMMENT_IDENTITY_KEY)) {
                 err = util.JSONFromString(comment.Text, &info);
                 if (err != nil) {
