@@ -8,19 +8,18 @@ import (
 
     "github.com/eriq-augustine/autograder/config"
     "github.com/eriq-augustine/autograder/db"
-    "github.com/eriq-augustine/autograder/grader"
     "github.com/eriq-augustine/autograder/model"
     "github.com/eriq-augustine/autograder/task"
 )
 
 var args struct {
     config.ConfigArgs
-    Path []string `help:"Path to course JSON files." arg:"" optional:"" type:"existingfile"`
+    Course string `help:"ID of the course." arg:"" optional:""`
 }
 
 func main() {
     kong.Parse(&args,
-        kong.Description("Backup all known courses (if no paths are supplied), or just the courses specified."),
+        kong.Description("Backup a single course or all known courses."),
     );
 
     err := config.HandleConfigArgs(args.ConfigArgs);
@@ -28,38 +27,21 @@ func main() {
         log.Fatal().Err(err).Msg("Could not load config options.");
     }
 
-    var courseIDs []string;
+    var courses map[string]model.Course;
 
-    if (len(args.Path) > 0) {
-        courseIDs = backupFromPaths(args.Path);
+    if (args.Course != "") {
+        course := db.MustGetCourse(args.Course);
+        courses[course.GetID()] = course;
     } else {
-        courseIDs = backupFromCourses();
+        courses = db.MustGetCourses();
     }
+
+    courseIDs := backupFromMap(courses);
 
     fmt.Printf("Successfully backed-up %d courses:\n", len(courseIDs));
     for _, courseID := range courseIDs {
         fmt.Printf("    %s\n", courseID);
     }
-}
-
-func backupFromCourses() []string {
-    err := grader.LoadCourses();
-    if (err != nil) {
-        log.Fatal().Err(err).Msg("Failed to load courses.");
-    }
-
-    return backupFromMap(grader.GetCourses());
-}
-
-func backupFromPaths(paths []string) []string {
-    courses := make(map[string]model.Course);
-
-    for _, path := range paths {
-        course := db.MustLoadCourseConfig(path);
-        courses[course.GetID()] = course;
-    }
-
-    return backupFromMap(courses);
 }
 
 func backupFromMap(courses map[string]model.Course) []string {

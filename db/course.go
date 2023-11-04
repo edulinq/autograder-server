@@ -2,233 +2,111 @@ package db
 
 import (
     "fmt"
-    "path/filepath"
-    "slices"
 
     "github.com/rs/zerolog/log"
 
     "github.com/eriq-augustine/autograder/common"
     "github.com/eriq-augustine/autograder/config"
-    "github.com/eriq-augustine/autograder/docker"
-    "github.com/eriq-augustine/autograder/lms/adapter"
+    "github.com/eriq-augustine/autograder/db/types"
     "github.com/eriq-augustine/autograder/model"
-    "github.com/eriq-augustine/autograder/task"
     "github.com/eriq-augustine/autograder/util"
 )
 
-const USERS_FILENAME = "users.json"
-
-type Course struct {
-    // Required fields.
-    ID string `json:"id"`
-    DisplayName string `json:"display-name"`
-
-    LMSAdapter *adapter.LMSAdapter `json:"lms,omitempty"`
-
-    Backup []*task.BackupTask `json:"backup,omitempty"`
-    Report []*task.ReportTask `json:"report,omitempty"`
-    ScoringUpload []*task.ScoringUploadTask `json:"scoring-upload,omitempty"`
-
-    // Ignore these fields in JSON.
-    SourcePath string `json:"-"`
-    Assignments map[string]model.Assignment `json:"-"`
-
-    tasks []model.ScheduledCourseTask `json:"-"`
-}
-
-func (this *Course) GetID() string {
-    return this.ID;
-}
-
-func (this *Course) GetName() string {
-    return this.DisplayName;
-}
-
-func (this *Course) GetSourceDir() string {
-    return filepath.Dir(this.SourcePath);
-}
-
-func (this *Course) SetSourcePathForTesting(sourcePath string) string {
-    oldPath := this.SourcePath;
-    this.SourcePath = sourcePath;
-    return oldPath;
-}
-
-func (this *Course) GetLMSAdapter() *adapter.LMSAdapter {
-    return this.LMSAdapter;
-}
-
-func (this *Course) GetAssignmentLMSIDs() ([]string, []string) {
-    lmsIDs := make([]string, 0, len(this.Assignments));
-    assignmentIDs := make([]string, 0, len(this.Assignments));
-
-    for _, assignment := range this.Assignments {
-        lmsIDs = append(lmsIDs, assignment.GetLMSID());
-        assignmentIDs = append(assignmentIDs, assignment.GetLMSID());
-    }
-
-    return lmsIDs, assignmentIDs;
-}
-
-func LoadCourseConfig(path string) (*Course, error) {
-    var config Course;
-    err := util.JSONFromFile(path, &config);
+// Get a course.
+func GetCourse(rawCourseID string) (model.Course, error) {
+    courseID, err := common.ValidateID(rawCourseID);
     if (err != nil) {
-        return nil, fmt.Errorf("Could not load course config (%s): '%w'.", path, err);
+        return nil, fmt.Errorf("Failed to validate course id '%s': '%w'.", rawCourseID, err);
     }
 
-    config.SourcePath = util.ShouldAbs(path);
-
-    config.Assignments = make(map[string]model.Assignment);
-
-    err = config.Validate();
-    if (err != nil) {
-        return nil, fmt.Errorf("Could not validate course config (%s): '%w'.", path, err);
-    }
-
-    return &config, nil;
+    return backend.GetCourse(courseID);
 }
 
-func MustLoadCourseConfig(path string) *Course {
-    config, err := LoadCourseDirectory(path);
+// Get a course or panic.
+// This is a convenience function for the CLI mains that need to get a course.
+func MustGetCourse(rawCourseID string) model.Course {
+    course, err := GetCourse(rawCourseID);
     if (err != nil) {
-        log.Fatal().Str("path", path).Err(err).Msg("Failed to load course config.");
+        log.Fatal().Err(err).Str("course-id", rawCourseID).Msg("Failed to get course.");
     }
 
-    return config;
+    if (course == nil) {
+        log.Fatal().Str("course-id", rawCourseID).Msg("Could not find course.");
+    }
+
+    return course;
 }
 
-// Load the course (with its JSON config) and all assignments (JSON configs) recursivley in a directory.
-// The path should point to the course config,
-// and the directory that path lives in will be searched for assignment configs.
-func LoadCourseDirectory(courseConfigPath string) (*Course, error) {
-    courseConfig, err := LoadCourseConfig(courseConfigPath);
+// Get all the known courses.
+func GetCourses() (map[string]model.Course, error) {
+    dbCourses, err := backend.GetCourses();
     if (err != nil) {
-        return nil, fmt.Errorf("Could not load course config at '%s': '%w'.", courseConfigPath, err);
+        return nil, err;
     }
 
-    courseDir := filepath.Dir(courseConfigPath);
-
-    assignmentPaths, err := util.FindFiles(ASSIGNMENT_CONFIG_FILENAME, courseDir);
-    if (err != nil) {
-        return nil, fmt.Errorf("Failed to search for assignment configs in '%s': '%w'.", courseDir, err);
+    courses := make(map[string]model.Course, len(dbCourses));
+    for key, value := range dbCourses {
+        courses[key] = value;
     }
 
-    for _, assignmentPath := range assignmentPaths {
-        _, err := LoadAssignmentConfig(assignmentPath, courseConfig);
+    return courses, nil;
+}
+
+// Get all the known courses or panic.
+// This is a convenience function for the CLI mains.
+func MustGetCourses() map[string]model.Course {
+    courses, err := GetCourses();
+    if (err != nil) {
+        log.Fatal().Err(err).Msg("Failed to get courses.");
+    }
+
+    return courses;
+}
+
+func LoadCourse(path string) error {
+    return backend.LoadCourse(path);
+}
+
+// TEST - Do we need this anymore?
+func MustLoadCourse(path string) {
+    err := LoadCourse(path);
+    if (err != nil) {
+        log.Fatal().Err(err).Str("path", path).Msg("Failed to load course.");
+    }
+}
+
+func SaveCourse(rawCourse model.Course) error {
+    course, ok := rawCourse.(*types.Course);
+    if (!ok) {
+        return fmt.Errorf("Course '%v' is not a db course.", rawCourse);
+    }
+
+    return backend.SaveCourse(course);
+}
+
+// Search the courses root directory and load all the associated courses and assignments.
+func LoadCourses() error {
+    return LoadCoursesFromDir(config.COURSES_ROOT.Get());
+}
+
+func LoadCoursesFromDir(baseDir string) error {
+    log.Debug().Str("dir", baseDir).Msg("Searching for courses.");
+
+    configPaths, err := util.FindFiles(types.COURSE_CONFIG_FILENAME, baseDir);
+    if (err != nil) {
+        return fmt.Errorf("Failed to search for course configs in '%s': '%w'.", baseDir, err);
+    }
+
+    log.Info().Int("count", len(configPaths)).Msg(fmt.Sprintf("Found %d course config(s).", len(configPaths)));
+
+    for _, configPath := range configPaths {
+        err := LoadCourse(configPath);
         if (err != nil) {
-            return nil, fmt.Errorf("Failed to load assignment config '%s': '%w'.", assignmentPath, err);
+            return fmt.Errorf("Could not load course '%s': '%w'.", configPath, err);
         }
-    }
 
-    return courseConfig, nil;
-}
-
-// Ensure this course makes sense.
-func (this *Course) Validate() error {
-    if (this.DisplayName == "") {
-        this.DisplayName = this.ID;
-    }
-
-    var err error;
-    this.ID, err = common.ValidateID(this.ID);
-    if (err != nil) {
-        return err;
-    }
-
-    if (this.LMSAdapter != nil) {
-        err = this.LMSAdapter.Validate(this);
-        if (err != nil) {
-            return err;
-        }
-    }
-
-    // Register tasks.
-    for _, task := range this.Backup {
-        this.tasks = append(this.tasks, task);
-    }
-
-    for _, task := range this.Report {
-        this.tasks = append(this.tasks, task);
-    }
-
-    for _, task := range this.ScoringUpload {
-        this.tasks = append(this.tasks, task);
-    }
-
-    // Validate tasks.
-    for _, task := range this.tasks {
-        err = task.Validate(this);
-        if (err != nil) {
-            return err;
-        }
+        log.Debug().Str("path", configPath).Msg("Loaded course.");
     }
 
     return nil;
-}
-
-// TODO(eriq): After DBs, the concept of activation will move to tasks.
-// Start any scheduled tasks or informal tasks associated with this course.
-func (this *Course) Activate() error {
-    // Schedule tasks.
-    for _, task := range this.tasks {
-        task.Schedule();
-    }
-
-    // Build images.
-    go this.BuildAssignmentImages(false, false, docker.NewBuildOptions());
-
-    return nil;
-}
-
-// Returns: (successfull image names, map[imagename]error).
-func (this *Course) BuildAssignmentImages(force bool, quick bool, options *docker.BuildOptions) ([]string, map[string]error) {
-    goodImageNames := make([]string, 0, len(this.Assignments));
-    errors := make(map[string]error);
-
-    for _, assignment := range this.Assignments {
-        err := assignment.BuildImage(force, quick, options);
-        if (err != nil) {
-            log.Error().Err(err).Str("course", this.ID).Str("assignment", assignment.GetID()).
-                    Msg("Failed to build assignment docker image.");
-            errors[assignment.ImageName()] = err;
-        } else {
-            goodImageNames = append(goodImageNames, assignment.ImageName());
-        }
-    }
-
-    return goodImageNames, errors;
-}
-
-func (this *Course) GetCacheDir() string {
-    return filepath.Join(config.WORK_DIR.Get(), common.CACHE_DIRNAME, "course_" + this.ID);
-}
-
-// Check this directory and all parent directories for a course config file.
-func loadParentCourseConfig(basepath string) (*Course, error) {
-    configPath := util.SearchParents(basepath, model.COURSE_CONFIG_FILENAME);
-    if (configPath == "") {
-        return nil, fmt.Errorf("Could not locate course config.");
-    }
-
-    return LoadCourseConfig(configPath);
-}
-
-func (this *Course) GetAssignment(id string) model.Assignment {
-    return this.Assignments[id];
-}
-
-func (this *Course) GetAssignments() map[string]model.Assignment {
-    return this.Assignments;
-}
-
-func (this *Course) GetSortedAssignments() []model.Assignment {
-    assignments := make([]model.Assignment, 0, len(this.Assignments));
-    for _, assignment := range this.Assignments {
-        assignments = append(assignments, assignment);
-    }
-
-    slices.SortFunc(assignments, model.CompareAssignments);
-
-    return assignments;
 }

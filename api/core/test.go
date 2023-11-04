@@ -35,7 +35,7 @@ func stopTestServer() {
 
 // Common setup for all API tests.
 func APITestingMain(suite *testing.M, routes *[]*Route) {
-    config.EnableTestingMode(false, true);
+    config.EnableUnitTestingMode();
     config.NO_AUTH.Set(false);
 
     // Quiet the logs.

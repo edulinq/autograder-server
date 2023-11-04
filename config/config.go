@@ -36,21 +36,25 @@ func init() {
     InitLogging();
 }
 
-func EnableTestingMode(debug bool, setTestCourses bool) {
+// A mode intended for running unit tests.
+func EnableUnitTestingMode() {
+    TESTING_MODE.Set(true);
+    NO_STORE.Set(true);
+    NO_TASKS.Set(true);
+
+    testsDir := filepath.Join(util.RootDirForTesting(), TESTS_DIRNAME);
+    COURSES_ROOT.Set(testsDir);
+}
+
+// A mode intended for testing on the CLI.
+func EnableTestingMode() {
     TESTING_MODE.Set(true);
     NO_AUTH.Set(true);
     NO_STORE.Set(true);
     NO_TASKS.Set(true);
 
-    if (debug) {
-        DEBUG.Set(true);
-        InitLogging();
-    }
-
-    if (setTestCourses) {
-        testsDir := filepath.Join(util.RootDirForTesting(), TESTS_DIRNAME);
-        COURSES_ROOT.Set(testsDir);
-    }
+    DEBUG.Set(true);
+    InitLogging();
 }
 
 func LoadLoacalConfig() error {

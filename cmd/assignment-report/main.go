@@ -14,7 +14,8 @@ import (
 
 var args struct {
     config.ConfigArgs
-    AssignmentPath string `help:"Path to assignment JSON file." arg:"" type:"existingfile"`
+    Course string `help:"ID of the course." arg:""`
+    Assignment string `help:"ID of the assignment." arg:""`
     HTML bool `help:"Output report as html." default:"false"`
 }
 
@@ -28,7 +29,7 @@ func main() {
         log.Fatal().Err(err).Msg("Could not load config options.");
     }
 
-    assignment := db.MustLoadAssignmentConfig(args.AssignmentPath);
+    assignment := db.MustGetAssignment(args.Course, args.Assignment);
 
     report, err := report.GetAssignmentScoringReport(assignment);
     if (err != nil) {

@@ -25,7 +25,7 @@ func HandleConfigArgs(args ConfigArgs) error {
     }
 
     if (args.Testing) {
-        EnableTestingMode(true, false);
+        EnableTestingMode();
     }
 
     InitLogging();

@@ -37,4 +37,9 @@ var (
     TESTING_MODE = MustNewBoolOption("testing", false, "Assume tests are being run, which may alter some operations.");
 
     WEB_PORT = MustNewIntOption("web.port", 8080, "The port for the web interface to serve on.");
+
+    DB_TYPE = MustNewStringOption("db.type", "disk", "The type of database to use.");
+    DB_DISK_DIR = MustNewStringOption("db.disk.dir", "disk-database", "The dir (absolute or relative to WORK_DIR) for the disk database.");
+    DB_SQLITE_PATH = MustNewStringOption("db.sqlite.path", "autograder.sqlite3", "The path (absolute or relative to WORK_DIR) for the SQLite3 database.");
+    DB_PG_URI = MustNewStringOption("db.pg.uri", "", "Connection string to connect to a Postgres Databse. Empty if not using Postgres.");
 )

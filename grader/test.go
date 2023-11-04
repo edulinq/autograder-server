@@ -7,6 +7,7 @@ import (
     "strings"
 
     "github.com/eriq-augustine/autograder/artifact"
+    "github.com/eriq-augustine/autograder/db"
     "github.com/eriq-augustine/autograder/model"
     "github.com/eriq-augustine/autograder/util"
 )
@@ -21,7 +22,7 @@ type TestSubmissionInfo struct {
 }
 
 func GetTestSubmissions(baseDir string) ([]*TestSubmissionInfo, error) {
-    err := LoadCourses()
+    err := db.LoadCourses()
     if (err != nil) {
         return nil, fmt.Errorf("Could not load courses: '%w'.", err);
     }
@@ -69,7 +70,7 @@ func GetTestSubmissions(baseDir string) ([]*TestSubmissionInfo, error) {
     return testSubmissions, nil;
 }
 
-// Test submission are withing their assignment's directory,
+// Test submission are within their assignment's directory,
 // just check the source dirs for existing courses and assignments.
 func fetchTestSubmissionAssignment(testSubmissionPath string) model.Assignment {
     testSubmissionPath = util.ShouldAbs(testSubmissionPath);

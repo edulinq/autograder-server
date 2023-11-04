@@ -9,7 +9,7 @@ import (
 
 // Use the common main for all tests in this package.
 func TestMain(suite *testing.M) {
-    config.EnableTestingMode(false, true);
+    config.EnableUnitTestingMode();
 
     os.Exit(suite.Run())
 }

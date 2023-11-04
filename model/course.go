@@ -6,8 +6,6 @@ import (
     "github.com/eriq-augustine/autograder/usr"
 )
 
-const COURSE_CONFIG_FILENAME = "course.json"
-
 type Course interface {
     GetID() string
     GetName() string
