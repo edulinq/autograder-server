@@ -13,7 +13,8 @@ import (
 
 var args struct {
     config.ConfigArgs
-    AssignmentPath string `help:"Path to assignment JSON file." arg:"" type:"existingfile"`
+    Course string `help:"ID of the course." arg:""`
+    Assignment string `help:"ID of the assignment." arg:""`
     DryRun bool `help:"Do not actually upload the grades, just state what you would do." default:"false"`
 }
 
@@ -27,7 +28,10 @@ func main() {
         log.Fatal().Err(err).Msg("Could not load config options.");
     }
 
-    assignment := db.MustLoadAssignmentConfig(args.AssignmentPath);
+    db.MustOpen();
+    defer db.MustClose();
+
+    assignment := db.MustGetAssignment(args.Course, args.Assignment);
     if (assignment.GetLMSID() == "") {
         log.Fatal().Msg("Assignment has no LMS ID.");
     }

@@ -149,8 +149,14 @@ func (this *Course) GetCacheDir() string {
     return filepath.Join(config.WORK_DIR.Get(), common.CACHE_DIRNAME, "course_" + this.ID);
 }
 
-func (this *Course) GetAssignment(id string) model.Assignment {
-    return this.Assignments[id];
+func (this *Course) HasAssignment(id string) bool {
+    _, ok := this.Assignments[id];
+    return ok;
+}
+
+func (this *Course) GetAssignment(id string) (model.Assignment, bool) {
+    assignment, ok := this.Assignments[id];
+    return assignment, ok;
 }
 
 func (this *Course) GetAssignments() map[string]model.Assignment {

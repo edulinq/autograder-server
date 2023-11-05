@@ -11,7 +11,8 @@ type Course interface {
     GetName() string
     GetSourceDir() string
     GetLMSAdapter() *adapter.LMSAdapter
-    GetAssignment(id string) Assignment;
+    HasAssignment(id string) bool;
+    GetAssignment(id string) (Assignment, bool);
     GetAssignments() map[string]Assignment;
     GetSortedAssignments() []Assignment
     GetAssignmentLMSIDs() ([]string, []string)

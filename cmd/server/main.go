@@ -7,7 +7,7 @@ import (
     "github.com/rs/zerolog/log"
 
     "github.com/eriq-augustine/autograder/config"
-    "github.com/eriq-augustine/autograder/grader"
+    "github.com/eriq-augustine/autograder/db"
     "github.com/eriq-augustine/autograder/util"
     "github.com/eriq-augustine/autograder/web"
 )
@@ -30,17 +30,22 @@ func main() {
         log.Fatal().Err(err).Msg("Could not get working directory.");
     }
 
+    db.MustOpen();
+    defer db.MustClose();
+
     log.Info().Str("dir", workingDir).Msg("Running server with working directory.");
 
-    err = grader.LoadCourses();
+    _, err = db.LoadCourses();
     if (err != nil) {
         log.Fatal().Err(err).Msg("Could not load courses.");
     }
 
+    /* TEST
     err = grader.ActivateCourses();
     if (err != nil) {
         log.Fatal().Err(err).Msg("Could not activate courses.");
     }
+    */
 
     web.StartServer();
 }

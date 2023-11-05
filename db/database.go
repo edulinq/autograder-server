@@ -7,6 +7,8 @@ import (
     "fmt"
     "sync"
 
+    "github.com/rs/zerolog/log"
+
     "github.com/eriq-augustine/autograder/config"
     "github.com/eriq-augustine/autograder/db/disk"
     "github.com/eriq-augustine/autograder/db/types"
@@ -37,10 +39,10 @@ type Backend interface {
     // Returns (nil, nil) if the course does not exist.
     GetCourse(courseID string) (*types.Course, error);
 
-    // Load a course into the databse.
+    // Load a course into the databse and return the course's id.
     // This implies loading a course directory from a config and saving it in the db.
     // Override any existing settings for this course.
-    LoadCourse(path string) error;
+    LoadCourse(path string) (string, error);
 
     // Explicitly save a course.
     SaveCourse(course *types.Course) error;
@@ -86,4 +88,18 @@ func Close() error {
     backend = nil;
 
     return err;
+}
+
+func MustOpen() {
+    err := Open();
+    if (err != nil) {
+        log.Fatal().Err(err).Msg("Failed to open db.");
+    }
+}
+
+func MustClose() {
+    err := Close();
+    if (err != nil) {
+        log.Fatal().Err(err).Msg("Failed to close db.");
+    }
 }

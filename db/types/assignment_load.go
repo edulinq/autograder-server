@@ -33,8 +33,8 @@ func LoadAssignment(path string, course *Course) (*Assignment, error) {
         return nil, fmt.Errorf("Failed to validate assignment config (%s): '%w'.", path, err);
     }
 
-    otherAssignment := course.GetAssignment(assignment.GetID());
-    if (otherAssignment != nil) {
+    otherAssignment, ok := course.GetAssignment(assignment.GetID());
+    if (ok) {
         return nil, fmt.Errorf(
                 "Found multiple assignments with the same ID ('%s'): ['%s', '%s'].",
                 assignment.GetID(), otherAssignment.GetSourceDir(), assignment.GetSourceDir());

@@ -14,7 +14,8 @@ import (
 
 var args struct {
     config.ConfigArgs
-    Assignment string `help:"Path to assignment JSON files." required:"" type:"existingfile"`
+    Course string `help:"ID of the course." arg:""`
+    Assignment string `help:"ID of the assignment." arg:""`
     Submission string `help:"Path to submission directory." required:"" type:"existingdir"`
     OutPath string `help:"Option path to output a JSON grading result." type:"path"`
     User string `help:"User email for the submission." default:"testuser"`
@@ -28,7 +29,10 @@ func main() {
         log.Fatal().Err(err).Msg("Could not load config options.");
     }
 
-    assignment := db.MustLoadAssignmentConfig(args.Assignment);
+    db.MustOpen();
+    defer db.MustClose();
+
+    assignment := db.MustGetAssignment(args.Course, args.Assignment);
 
     result, _, output, err := grader.GradeDefault(assignment, args.Submission, args.User, args.Message);
     if (err != nil) {

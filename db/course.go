@@ -63,16 +63,17 @@ func MustGetCourses() map[string]model.Course {
     return courses;
 }
 
-func LoadCourse(path string) error {
+func LoadCourse(path string) (string, error) {
     return backend.LoadCourse(path);
 }
 
-// TEST - Do we need this anymore?
-func MustLoadCourse(path string) {
-    err := LoadCourse(path);
+func MustLoadCourse(path string) string {
+    courseID, err := LoadCourse(path);
     if (err != nil) {
         log.Fatal().Err(err).Str("path", path).Msg("Failed to load course.");
     }
+
+    return courseID;
 }
 
 func SaveCourse(rawCourse model.Course) error {
@@ -85,28 +86,31 @@ func SaveCourse(rawCourse model.Course) error {
 }
 
 // Search the courses root directory and load all the associated courses and assignments.
-func LoadCourses() error {
+// Return all the loaded course ids.
+func LoadCourses() ([]string, error) {
     return LoadCoursesFromDir(config.COURSES_ROOT.Get());
 }
 
-func LoadCoursesFromDir(baseDir string) error {
+func LoadCoursesFromDir(baseDir string) ([]string, error) {
     log.Debug().Str("dir", baseDir).Msg("Searching for courses.");
 
     configPaths, err := util.FindFiles(types.COURSE_CONFIG_FILENAME, baseDir);
     if (err != nil) {
-        return fmt.Errorf("Failed to search for course configs in '%s': '%w'.", baseDir, err);
+        return nil, fmt.Errorf("Failed to search for course configs in '%s': '%w'.", baseDir, err);
     }
 
     log.Info().Int("count", len(configPaths)).Msg(fmt.Sprintf("Found %d course config(s).", len(configPaths)));
 
+    courseIDs := make([]string, 0, len(configPaths));
     for _, configPath := range configPaths {
-        err := LoadCourse(configPath);
+        courseID, err := LoadCourse(configPath);
         if (err != nil) {
-            return fmt.Errorf("Could not load course '%s': '%w'.", configPath, err);
+            return nil, fmt.Errorf("Could not load course '%s': '%w'.", configPath, err);
         }
 
-        log.Debug().Str("path", configPath).Msg("Loaded course.");
+        log.Debug().Str("course-id", courseID).Str("path", configPath).Msg("Loaded course.");
+        courseIDs = append(courseIDs, courseID);
     }
 
-    return nil;
+    return courseIDs, nil;
 }

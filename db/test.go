@@ -17,5 +17,6 @@ func MustLoadTestCourse() {
 }
 
 func MustGetTestCourse() model.Course {
+    MustLoadTestCourse();
     return MustGetCourse(TEST_COURSE_ID);
 }

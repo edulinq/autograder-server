@@ -8,15 +8,13 @@ import (
 
     "github.com/eriq-augustine/autograder/config"
     "github.com/eriq-augustine/autograder/db"
-    "github.com/eriq-augustine/autograder/model"
     "github.com/eriq-augustine/autograder/util"
 )
 
 var args struct {
     config.ConfigArgs
-    AssignmentPath string `help:"Path to assignment JSON file. If specified, --course-path and --assignment-id are not required." type:"existingfile"`
-    AssignmentID string `help:"The LMS ID for an assigmnet (with --course-path, can be used instead of --assignment-path)."`
-    CoursePath string `help:"Path to course JSON file (with --assignment-id, can be used instead of --assignment-path)."`
+    Course string `help:"ID of the course." arg:""`
+    Assignment string `help:"ID of the assignment." arg:""`
 }
 
 func main() {
@@ -30,37 +28,26 @@ func main() {
         log.Fatal().Err(err).Msg("Could not load config options.");
     }
 
-    assignmentLMSID, course, err := getAssignmentIDAndCourse(args.AssignmentPath, args.AssignmentID, args.CoursePath);
-    if (err != nil) {
-        log.Fatal().Err(err).Msg("Failed to load course/assignment information.");
+    db.MustOpen();
+    defer db.MustClose();
+
+    assignment := db.MustGetAssignment(args.Course, args.Assignment);
+    course := assignment.GetCourse();
+
+    if (assignment.GetLMSID() == "") {
+        log.Fatal().Str("assignment", assignment.FullID()).Msg("Assignment has no LMS ID.");
     }
 
-    lmsAssignment, err := course.GetLMSAdapter().FetchAssignment(assignmentLMSID);
+    if (course.GetLMSAdapter() == nil) {
+        log.Fatal().
+            Str("course-id", course.GetID()).Str("assignment-id", assignment.GetID()).
+            Msg("Course has no LMS info associated with it.");
+    }
+
+    lmsAssignment, err := course.GetLMSAdapter().FetchAssignment(assignment.GetLMSID());
     if (err != nil) {
         log.Fatal().Err(err).Msg("Could not fetch assignment.");
     }
 
     fmt.Println(util.MustToJSONIndent(lmsAssignment));
-}
-
-func getAssignmentIDAndCourse(assignmentPath string, assignmentID string, coursePath string) (string, model.Course, error) {
-    if (assignmentPath != "") {
-        assignment := db.MustLoadAssignmentConfig(assignmentPath);
-        if (assignment.GetLMSID() == "") {
-            return "", nil, fmt.Errorf("Assignment has no LMS ID.");
-        }
-
-        return assignment.GetLMSID(), assignment.GetCourse(), nil;
-    }
-
-    if ((assignmentID == "") || (coursePath == "")) {
-        return "", nil, fmt.Errorf("Neither --assignment-path nor (--course-path and --assignment-id) were proveded.");
-    }
-
-    course := db.MustLoadCourseConfig(coursePath);
-    if (course.GetLMSAdapter() == nil) {
-        return "", nil, fmt.Errorf("Assignment's course has no LMS info associated with it.");
-    }
-
-    return assignmentID, course, nil;
 }

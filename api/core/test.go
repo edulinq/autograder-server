@@ -1,13 +1,12 @@
 package core
 
 import (
-    "fmt"
     "net/http/httptest"
     "os"
     "testing"
 
     "github.com/eriq-augustine/autograder/config"
-    "github.com/eriq-augustine/autograder/grader"
+    "github.com/eriq-augustine/autograder/db"
     "github.com/eriq-augustine/autograder/usr"
     "github.com/eriq-augustine/autograder/util"
 )
@@ -41,11 +40,10 @@ func APITestingMain(suite *testing.M, routes *[]*Route) {
     // Quiet the logs.
     config.SetLogLevelFatal();
 
-    err := grader.LoadCourses();
-    if (err != nil) {
-        fmt.Printf("Failed to load test courses: '%v'.", err);
-        os.Exit(1);
-    }
+    db.MustOpen();
+    defer db.MustClose();
+
+    db.MustLoadTestCourse();
 
     startTestServer(routes);
     defer stopTestServer();

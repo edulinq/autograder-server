@@ -17,7 +17,7 @@ type SyncNewUsersTestCase struct {
 }
 
 func TestCourseSyncNewUsers(test *testing.T) {
-    course, err := LoadCourse(filepath.Join(config.COURSES_ROOT.Get(), "COURSE101", "course.json"));
+    course, err := LoadCourse(filepath.Join(config.COURSES_ROOT.Get(), TEST_COURSE_ID, COURSE_CONFIG_FILENAME));
     if (err != nil) {
         test.Fatalf("Failed to get test course: '%v'.", err);
     }

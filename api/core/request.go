@@ -5,7 +5,7 @@ import (
     "reflect"
 
     "github.com/eriq-augustine/autograder/config"
-    "github.com/eriq-augustine/autograder/grader"
+    "github.com/eriq-augustine/autograder/db"
     "github.com/eriq-augustine/autograder/model"
     "github.com/eriq-augustine/autograder/usr"
     "github.com/eriq-augustine/autograder/util"
@@ -81,7 +81,12 @@ func (this *APIRequestCourseUserContext) Validate(request any, endpoint string) 
         return NewBadRequestError("-303", &this.APIRequest, "No user password specified.");
     }
 
-    this.Course = grader.GetCourse(this.CourseID);
+    var err error;
+    this.Course, err = db.GetCourse(this.CourseID);
+    if (err != nil) {
+        return NewInternalError("-318", this, "Unable to get course").Err(err);
+    }
+
     if (this.Course == nil) {
         return NewBadRequestError("-304", &this.APIRequest, "Could not find course.").Add("course-id", this.CourseID);
     }
@@ -114,8 +119,9 @@ func (this *APIRequestAssignmentContext) Validate(request any, endpoint string) 
         return NewBadRequestError("-307", &this.APIRequest, "No assignment ID specified.");
     }
 
-    this.Assignment = this.Course.GetAssignment(this.AssignmentID);
-    if (this.Assignment == nil) {
+    var ok bool;
+    this.Assignment, ok = this.Course.GetAssignment(this.AssignmentID);
+    if (!ok) {
         return NewBadRequestError("-308", &this.APIRequest, "Could not find assignment.").
             Add("course-id", this.CourseID).Add("assignment-id", this.AssignmentID);
     }

@@ -13,7 +13,7 @@ import (
 
 var args struct {
     config.ConfigArgs
-    Path string `help:"Path to course JSON file." arg:"" type:"existingfile"`
+    Course string `help:"ID of the course." arg:""`
     Email string `help:"Email of the user to fetch." arg:""`
 }
 
@@ -27,7 +27,10 @@ func main() {
         log.Fatal().Err(err).Msg("Could not load config options.");
     }
 
-    course := db.MustLoadCourseConfig(args.Path);
+    db.MustOpen();
+    defer db.MustClose();
+
+    course := db.MustGetCourse(args.Course);
     if (course.GetLMSAdapter() == nil) {
         fmt.Println("Course has no LMS info associated with it.");
         os.Exit(2);

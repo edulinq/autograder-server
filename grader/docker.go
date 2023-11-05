@@ -14,23 +14,6 @@ import (
     "github.com/eriq-augustine/autograder/util"
 )
 
-func BuildDockerImages(force bool, buildOptions *docker.BuildOptions) ([]string, map[string]error) {
-    goodImageNames := make([]string, 0);
-    errors := make(map[string]error);
-
-    for _, course := range courses {
-        courseGoodImageNames, courseErrors := course.BuildAssignmentImages(force, false, buildOptions);
-
-        goodImageNames = append(goodImageNames, courseGoodImageNames...);
-
-        for key, value := range courseErrors {
-            errors[key] = value;
-        }
-    }
-
-    return goodImageNames, errors;
-}
-
 // Grade using a docker container.
 // Directory information:
 //  - input -- A temp dir that will be mounted at DOCKER_INPUT_DIR (read-only).

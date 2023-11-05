@@ -252,7 +252,7 @@ func (this *RmUser) Run(course model.Course) error {
 
 var cli struct {
     config.ConfigArgs
-    CoursePath string `help:"Path to course JSON file." type:"existingfile"`
+    Course string `help:"ID of the course." arg:""`
 
     Add AddUser `cmd:"" help:"Add a user."`
     AddTSV AddTSV `cmd:"" help:"Add users from a TSV file formatted as: '<email>[\t<display name>[\t<role>[\t<password>]]]'. See add for default values."`
@@ -272,11 +272,10 @@ func main() {
         log.Fatal().Err(err).Msg("Could not load config options.");
     }
 
-    if (cli.CoursePath == "") {
-        log.Fatal().Msg("--course-path must be supplied.");
-    }
+    db.MustOpen();
+    defer db.MustClose();
 
-    course := db.MustLoadCourseConfig(cli.CoursePath);
+    course := db.MustGetCourse(cli.Course);
 
     err = context.Run(course);
     if (err != nil) {

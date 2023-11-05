@@ -22,7 +22,7 @@ type TestSubmissionInfo struct {
 }
 
 func GetTestSubmissions(baseDir string) ([]*TestSubmissionInfo, error) {
-    err := db.LoadCourses()
+    _, err := db.LoadCourses()
     if (err != nil) {
         return nil, fmt.Errorf("Could not load courses: '%w'.", err);
     }
@@ -75,7 +75,7 @@ func GetTestSubmissions(baseDir string) ([]*TestSubmissionInfo, error) {
 func fetchTestSubmissionAssignment(testSubmissionPath string) model.Assignment {
     testSubmissionPath = util.ShouldAbs(testSubmissionPath);
 
-    for _, course := range GetCourses() {
+    for _, course := range db.MustGetCourses() {
         if (!util.PathHasParent(testSubmissionPath, course.GetSourceDir())) {
             continue;
         }

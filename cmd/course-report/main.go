@@ -15,7 +15,7 @@ import (
 
 var args struct {
     config.ConfigArgs
-    CoursePath string `help:"Path to course JSON file." arg:"" type:"existingfile"`
+    Course string `help:"ID of the course." arg:""`
     Email []string `help:"Email addresses to send the report to (as HTML)." short:"e"`
     HTML bool `help:"Output report as html." default:"false"`
 }
@@ -30,7 +30,10 @@ func main() {
         log.Fatal().Err(err).Msg("Could not load config options.");
     }
 
-    course := db.MustLoadCourseConfig(args.CoursePath);
+    db.MustOpen();
+    defer db.MustClose();
+
+    course := db.MustGetCourse(args.Course);
 
     report, err := report.GetCourseScoringReport(course);
     if (err != nil) {

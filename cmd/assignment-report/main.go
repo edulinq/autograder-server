@@ -29,6 +29,9 @@ func main() {
         log.Fatal().Err(err).Msg("Could not load config options.");
     }
 
+    db.MustOpen();
+    defer db.MustClose();
+
     assignment := db.MustGetAssignment(args.Course, args.Assignment);
 
     report, err := report.GetAssignmentScoringReport(assignment);

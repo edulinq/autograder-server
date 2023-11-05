@@ -12,19 +12,19 @@ import (
 
 const DISK_DB_COURSES_DIR = "courses";
 
-func (this *backend) LoadCourse(path string) error {
+func (this *backend) LoadCourse(path string) (string, error) {
     this.lock.Lock();
     defer this.lock.Unlock();
 
     course, err := types.LoadCourse(path);
     if (err != nil) {
-        return err;
+        return "", err;
     }
 
     log.Info().Str("database", "disk").Str("path", path).Str("id", course.GetID()).
             Int("num-assignments", len(course.Assignments)).Msg("Loaded course.");
 
-    return this.saveCourseLock(course, false);
+    return course.GetID(), this.saveCourseLock(course, false);
 }
 
 func (this *backend) SaveCourse(course *types.Course) error {
@@ -103,5 +103,5 @@ func (this *backend) getCourseDirFromID(courseID string) string {
 }
 
 func (this *backend) getCoursePathFromID(courseID string) string {
-    return filepath.Join(this.getCourseDirFromID(courseID), DISK_DB_COURSES_DIR);
+    return filepath.Join(this.getCourseDirFromID(courseID), types.COURSE_CONFIG_FILENAME);
 }

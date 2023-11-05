@@ -27,6 +27,9 @@ func main() {
         log.Fatal().Err(err).Msg("Could not load config options.");
     }
 
+    db.MustOpen();
+    defer db.MustClose();
+
     var courses map[string]model.Course;
 
     if (args.Course != "") {

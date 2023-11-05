@@ -12,7 +12,7 @@ import (
 
 var args struct {
     config.ConfigArgs
-    Path []string `help:"Path to course JSON file." arg:"" type:"existingfile"`
+    Path string `help:"Path to course JSON file." arg:"" type:"existingdir"`
 }
 
 func main() {
@@ -28,11 +28,9 @@ func main() {
     db.MustOpen();
     defer db.MustClose();
 
-    courseIDs := make([]string, 0);
-    for _, path := range args.Path {
-        courseID := db.MustLoadCourse(path);
-        fmt.Printf("Loaded course %s ('%s').\n", courseID, path);
-        courseIDs = append(courseIDs, courseID);
+    courseIDs, err := db.LoadCoursesFromDir(args.Path);
+    if (err != nil) {
+        log.Fatal().Err(err).Str("path", args.Path).Msg("Could not load courses dir.");
     }
 
     fmt.Printf("Loaded %d courses.\n", len(courseIDs));

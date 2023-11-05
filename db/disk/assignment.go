@@ -35,5 +35,5 @@ func (this *backend) getAssignmentDir(assignment *types.Assignment) string {
 }
 
 func (this *backend) getAssignmentPath(assignment *types.Assignment) string {
-    return filepath.Join(this.getAssignmentDir(assignment), assignment.GetID());
+    return filepath.Join(this.getAssignmentDir(assignment), types.ASSIGNMENT_CONFIG_FILENAME);
 }
