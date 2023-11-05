@@ -6,8 +6,6 @@ import (
 )
 
 var (
-    NO_AUTH = MustNewBoolOption("web.noauth", false, "Disbale authentication on the API.");
-
     COURSES_ROOT = MustNewStringOption("courses.rootdir", "_courses", "The default places to look for courses.");
 
     WORK_DIR = MustNewStringOption("dirs.work", filepath.Join(os.TempDir(), "_autograder"), "The root dir roe autograder output and artifacts.");
@@ -37,6 +35,7 @@ var (
     TESTING_MODE = MustNewBoolOption("testing", false, "Assume tests are being run, which may alter some operations.");
 
     WEB_PORT = MustNewIntOption("web.port", 8080, "The port for the web interface to serve on.");
+    NO_AUTH = MustNewBoolOption("api.noauth", false, "Disbale authentication on the API.");
 
     DB_TYPE = MustNewStringOption("db.type", "disk", "The type of database to use.");
     DB_DISK_DIR = MustNewStringOption("db.disk.dir", "disk-database", "The dir (absolute or relative to WORK_DIR) for the disk database.");

@@ -6,10 +6,10 @@ import (
     "github.com/alecthomas/kong"
     "github.com/rs/zerolog/log"
 
+    "github.com/eriq-augustine/autograder/api"
     "github.com/eriq-augustine/autograder/config"
     "github.com/eriq-augustine/autograder/db"
     "github.com/eriq-augustine/autograder/util"
-    "github.com/eriq-augustine/autograder/web"
 )
 
 var args struct {
@@ -47,5 +47,5 @@ func main() {
     }
     */
 
-    web.StartServer();
+    api.StartServer();
 }
