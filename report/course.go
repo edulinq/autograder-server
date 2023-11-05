@@ -16,8 +16,9 @@ type CourseScoringReport struct {
 func GetCourseScoringReport(sources ReportingSources) (*CourseScoringReport, error) {
     assignmentReports := make([]*AssignmentScoringReport, 0);
 
-    for _, source := range sources.GetReportingSources() {
-        assignmentReport, err := GetAssignmentScoringReport(source);
+    reportingSources := sources.GetReportingSources();
+    for i := (len(reportingSources) - 1); i >= 0; i-- {
+        assignmentReport, err := GetAssignmentScoringReport(reportingSources[i]);
         if (err != nil) {
             return nil, err;
         }
