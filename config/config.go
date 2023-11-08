@@ -37,10 +37,17 @@ func init() {
 }
 
 // A mode intended for running unit tests.
-func EnableUnitTestingMode() {
+func MustEnableUnitTestingMode() {
     TESTING_MODE.Set(true);
     NO_STORE.Set(true);
     NO_TASKS.Set(true);
+
+    tempWorkDir, err := util.MkDirTemp("autograader-unit-testing-");
+    if (err != nil) {
+        log.Fatal().Err(err).Msg("Failed to make temp unit testing work dir.");
+    }
+
+    WORK_DIR.Set(tempWorkDir);
 
     testsDir := filepath.Join(util.RootDirForTesting(), TESTS_DIRNAME);
     COURSES_ROOT.Set(testsDir);

@@ -7,6 +7,10 @@ import (
     "os"
 )
 
+func RemoveDirent(path string) error {
+    return os.RemoveAll(path);
+}
+
 // Copy a file or directory into dest.
 // If source is a file, then dest can be a file or dir.
 // If source is a dir, then see CopyDir() for semantics.

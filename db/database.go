@@ -29,6 +29,7 @@ const (
 // Any ID (course, assignment, etc) passed into a backend will be sanitized.
 type Backend interface {
     Close() error;
+    Clear() error;
     EnsureTables() error;
 
     // Get all known courses.
@@ -99,6 +100,10 @@ func Close() error {
     return err;
 }
 
+func Clear() error {
+    return backend.Clear();
+}
+
 func MustOpen() {
     err := Open();
     if (err != nil) {
@@ -110,5 +115,12 @@ func MustClose() {
     err := Close();
     if (err != nil) {
         log.Fatal().Err(err).Msg("Failed to close db.");
+    }
+}
+
+func MustClear() {
+    err := Clear();
+    if (err != nil) {
+        log.Fatal().Err(err).Msg("Failed to clear db.");
     }
 }

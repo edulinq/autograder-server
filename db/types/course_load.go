@@ -4,6 +4,7 @@ import (
     "fmt"
     "path/filepath"
 
+    "github.com/eriq-augustine/autograder/usr"
     "github.com/eriq-augustine/autograder/util"
 )
 
@@ -23,13 +24,27 @@ func LoadCourse(path string) (*Course, error) {
     }
 
     for _, assignmentPath := range assignmentPaths {
-        _, err := LoadAssignment(assignmentPath, course);
+        _, err := LoadAssignment(course, assignmentPath);
         if (err != nil) {
             return nil, fmt.Errorf("Failed to load assignment config '%s': '%w'.", assignmentPath, err);
         }
     }
 
     return course, nil;
+}
+
+func LoadCourseWithUsers(path string) (*Course, map[string]*usr.User, error) {
+    course, err := LoadCourse(path);
+    if (err != nil) {
+        return nil, nil, err;
+    }
+
+    users, err := loadStaticUsers(path);
+    if (err != nil) {
+        return nil, nil, fmt.Errorf("Failed to load static users for course config '%s': '%w'.", path, err);
+    }
+
+    return course, users, nil;
 }
 
 func loadCourseConfig(path string) (*Course, error) {
@@ -48,14 +63,4 @@ func loadCourseConfig(path string) (*Course, error) {
     }
 
     return &course, nil;
-}
-
-// Check this directory and all parent directories for a course config file.
-func loadParentCourse(basepath string) (*Course, error) {
-    configPath := util.SearchParents(basepath, COURSE_CONFIG_FILENAME);
-    if (configPath == "") {
-        return nil, fmt.Errorf("Could not locate course config.");
-    }
-
-    return LoadCourse(configPath);
 }

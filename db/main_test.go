@@ -9,13 +9,13 @@ import (
 
 // Use the common main for all tests in this package.
 func TestMain(suite *testing.M) {
-    config.EnableUnitTestingMode();
+    // Run inside a func so defers will run before os.Exit().
+    code := func() int {
+        PrepForTestingMain();
+        defer CleanupTestingMain();
 
-    MustOpen();
-    MustLoadTestCourse();
+        return suite.Run();
+    }();
 
-    // Quiet the logs.
-    config.SetLogLevelFatal();
-
-    os.Exit(suite.Run())
+    os.Exit(code);
 }

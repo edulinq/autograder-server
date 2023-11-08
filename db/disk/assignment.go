@@ -22,7 +22,7 @@ func (this *backend) saveAssignmentLock(assignment *types.Assignment, acquireLoc
 
     util.MkDir(this.getAssignmentDir(assignment));
 
-    err := util.ToJSONFile(assignment, this.getAssignmentPath(assignment));
+    err := util.ToJSONFileIndent(assignment, this.getAssignmentPath(assignment));
     if (err != nil) {
         return fmt.Errorf("Failed to save assignment '%s': '%v'.", assignment.FullID(), err);
     }

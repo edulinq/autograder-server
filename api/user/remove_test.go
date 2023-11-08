@@ -4,9 +4,12 @@ import (
     "testing"
 
     "github.com/eriq-augustine/autograder/api/core"
+    "github.com/eriq-augustine/autograder/db"
     "github.com/eriq-augustine/autograder/usr"
     "github.com/eriq-augustine/autograder/util"
 )
+
+// TEST - Now that the course is reloaded, ensure that the users are removed: db.GetUser().
 
 func TestRemove(test *testing.T) {
     testCases := []struct{ role usr.UserRole; target string; basicPermError bool; advPermError bool; expected RemoveResponse }{
@@ -29,11 +32,15 @@ func TestRemove(test *testing.T) {
     };
 
     for i, testCase := range testCases {
+        // Reload the test course every time.
+        db.MustLoadTestCourse();
+
         fields := map[string]any{
             "target-email": testCase.target,
         };
 
         response := core.SendTestAPIRequestFull(test, core.NewEndpoint(`user/remove`), fields, nil, testCase.role);
+
         if (!response.Success) {
             expectedLocator := "";
             if (testCase.basicPermError) {

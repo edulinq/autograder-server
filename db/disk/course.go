@@ -16,7 +16,7 @@ func (this *backend) LoadCourse(path string) (string, error) {
     this.lock.Lock();
     defer this.lock.Unlock();
 
-    course, err := types.LoadCourse(path);
+    course, users, err := types.LoadCourseWithUsers(path);
     if (err != nil) {
         return "", err;
     }
@@ -24,7 +24,17 @@ func (this *backend) LoadCourse(path string) (string, error) {
     log.Info().Str("database", "disk").Str("path", path).Str("id", course.GetID()).
             Int("num-assignments", len(course.Assignments)).Msg("Loaded course.");
 
-    return course.GetID(), this.saveCourseLock(course, false);
+    err = this.saveCourseLock(course, false);
+    if (err != nil) {
+        return "", err;
+    }
+
+    err = this.saveUsersLock(course, users, false);
+    if (err != nil) {
+        return "", err;
+    }
+
+    return course.GetID(), nil;
 }
 
 func (this *backend) SaveCourse(course *types.Course) error {
@@ -39,7 +49,7 @@ func (this *backend) saveCourseLock(course *types.Course, acquireLock bool) erro
 
     util.MkDir(this.getCourseDir(course));
 
-    err := util.ToJSONFile(course, this.getCoursePath(course));
+    err := util.ToJSONFileIndent(course, this.getCoursePath(course));
     if (err != nil) {
         return err;
     }
@@ -55,8 +65,8 @@ func (this *backend) saveCourseLock(course *types.Course, acquireLock bool) erro
 }
 
 func (this *backend) GetCourse(courseID string) (*types.Course, error) {
-    this.lock.Lock();
-    defer this.lock.Unlock();
+    this.lock.RLock();
+    defer this.lock.RUnlock();
 
     path := this.getCoursePathFromID(courseID);
     if (!util.PathExists(path)) {
@@ -67,8 +77,8 @@ func (this *backend) GetCourse(courseID string) (*types.Course, error) {
 }
 
 func (this *backend) GetCourses() (map[string]*types.Course, error) {
-    this.lock.Lock();
-    defer this.lock.Unlock();
+    this.lock.RLock();
+    defer this.lock.RUnlock();
 
     coursesDir := filepath.Join(this.baseDir, DISK_DB_COURSES_DIR);
 

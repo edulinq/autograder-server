@@ -9,11 +9,24 @@ import (
     "github.com/eriq-augustine/autograder/util"
 )
 
-// TEST - How to approach testing mode.
-
 func (this *backend) GetUsers(course *types.Course) (map[string]*usr.User, error) {
-    var users map[string]*usr.User;
-    err := util.JSONFromFile(this.getUsersPath(course), &users);
+    return this.getUsersLock(course, true);
+}
+
+func (this *backend) getUsersLock(course *types.Course, acquireLock bool) (map[string]*usr.User, error) {
+    if (acquireLock) {
+        this.lock.RLock();
+        defer this.lock.RUnlock();
+    }
+
+    users := make(map[string]*usr.User);
+
+    path := this.getUsersPath(course);
+    if (!util.PathExists(path)) {
+        return users, nil;
+    }
+
+    err := util.JSONFromFile(path, &users);
     if (err != nil) {
         return nil, err;
     }
@@ -31,12 +44,21 @@ func (this *backend) GetUser(course *types.Course, email string) (*usr.User, err
 }
 
 func (this *backend) SaveUsers(course *types.Course, users map[string]*usr.User) error {
-    users, err := this.GetUsers(course);
+    return this.saveUsersLock(course, users, true);
+}
+
+func (this *backend) saveUsersLock(course *types.Course, newUsers map[string]*usr.User, acquireLock bool) error {
+    if (acquireLock) {
+        this.lock.Lock();
+        defer this.lock.Unlock();
+    }
+
+    users, err := this.getUsersLock(course, false);
     if (err != nil) {
         return fmt.Errorf("Failed to get users to merge before saving: '%w'.", err);
     }
 
-    for key, value := range users {
+    for key, value := range newUsers {
         users[key] = value;
     }
 
@@ -49,7 +71,10 @@ func (this *backend) SaveUsers(course *types.Course, users map[string]*usr.User)
 }
 
 func (this *backend) RemoveUser(course *types.Course, email string) error {
-    users, err := this.GetUsers(course);
+    this.lock.Lock();
+    defer this.lock.Unlock();
+
+    users, err := this.getUsersLock(course, false);
     if (err != nil) {
         return fmt.Errorf("Failed to get users when removing for '%s': '%w'.", email, err);
     }

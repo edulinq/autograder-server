@@ -1,4 +1,4 @@
-package lmsusers
+package grader
 
 import (
     "os"

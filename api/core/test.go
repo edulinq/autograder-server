@@ -34,21 +34,20 @@ func stopTestServer() {
 
 // Common setup for all API tests.
 func APITestingMain(suite *testing.M, routes *[]*Route) {
-    config.EnableUnitTestingMode();
-    config.NO_AUTH.Set(false);
+    // Run inside a func so defers will run before os.Exit().
+    code := func() int {
+        db.PrepForTestingMain();
+        defer db.CleanupTestingMain();
 
-    // Quiet the logs.
-    config.SetLogLevelFatal();
+        config.NO_AUTH.Set(false);
 
-    db.MustOpen();
-    defer db.MustClose();
+        startTestServer(routes);
+        defer stopTestServer();
 
-    db.MustLoadTestCourse();
+        return suite.Run();
+    }();
 
-    startTestServer(routes);
-    defer stopTestServer();
-
-    os.Exit(suite.Run())
+    os.Exit(code);
 }
 
 func SendTestAPIRequest(test *testing.T, endpoint string, fields map[string]any) *APIResponse {

@@ -33,8 +33,6 @@ func TestNoDockerSubmissions(test *testing.T) {
 }
 
 func runSubmissionTests(test *testing.T, parallel bool, useDocker bool) {
-    config.EnableUnitTestingMode();
-
     // Directory where all the test courses and other materials are located.
     baseDir := config.COURSES_ROOT.Get();
 

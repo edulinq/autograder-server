@@ -2,7 +2,6 @@ package types
 
 import (
     "fmt"
-    "path/filepath"
 
     "github.com/eriq-augustine/autograder/util"
 )
@@ -11,22 +10,19 @@ const ASSIGNMENT_CONFIG_FILENAME = "assignment.json"
 
 // Load an assignment config from a given JSON path.
 // If the course is nil, search all parent directories for the course config.
-func LoadAssignment(path string, course *Course) (*Assignment, error) {
+func LoadAssignment(course *Course, path string) (*Assignment, error) {
+    if (course == nil) {
+        return nil, fmt.Errorf("Cannot load an assignment without a course.");
+    }
+
     var assignment Assignment;
     err := util.JSONFromFile(path, &assignment);
     if (err != nil) {
         return nil, fmt.Errorf("Could not load assignment config (%s): '%w'.", path, err);
     }
 
-    assignment.SourcePath = util.ShouldAbs(path);
-
-    if (course == nil) {
-        course, err = loadParentCourse(filepath.Dir(path));
-        if (err != nil) {
-            return nil, fmt.Errorf("Could not load course config for '%s': '%w'.", path, err);
-        }
-    }
     assignment.Course = course;
+    assignment.SourcePath = util.ShouldAbs(path);
 
     err = assignment.Validate();
     if (err != nil) {
