@@ -4,11 +4,11 @@ import (
     "fmt"
     "time"
 
-    "github.com/eriq-augustine/autograder/lms"
+    "github.com/eriq-augustine/autograder/lms/lmstypes"
     "github.com/eriq-augustine/autograder/util"
 )
 
-func (this *CanvasAdapter) FetchAssignmentScores(assignmentID string) ([]*lms.SubmissionScore, error) {
+func (this *CanvasBackend) FetchAssignmentScores(assignmentID string) ([]*lmstypes.SubmissionScore, error) {
     this.getAPILock();
     defer this.releaseAPILock();
 
@@ -19,7 +19,7 @@ func (this *CanvasAdapter) FetchAssignmentScores(assignmentID string) ([]*lms.Su
 
     headers := this.standardHeaders();
 
-    scores := make([]*lms.SubmissionScore, 0);
+    scores := make([]*lmstypes.SubmissionScore, 0);
 
     for (url != "") {
         body, responseHeaders, err := util.GetWithHeaders(url, headers);
@@ -48,7 +48,7 @@ func (this *CanvasAdapter) FetchAssignmentScores(assignmentID string) ([]*lms.Su
     return scores, nil;
 }
 
-func (this *CanvasAdapter) UpdateAssignmentScores(assignmentID string, scores []*lms.SubmissionScore) error {
+func (this *CanvasBackend) UpdateAssignmentScores(assignmentID string, scores []*lmstypes.SubmissionScore) error {
     for page := 0; (page * POST_PAGE_SIZE) < len(scores); page++ {
         startIndex := page * POST_PAGE_SIZE;
         endIndex := min(len(scores), ((page + 1) * POST_PAGE_SIZE));
@@ -66,7 +66,7 @@ func (this *CanvasAdapter) UpdateAssignmentScores(assignmentID string, scores []
     return nil;
 }
 
-func (this *CanvasAdapter) updateAssignmentScores(assignmentID string, scores []*lms.SubmissionScore) error {
+func (this *CanvasBackend) updateAssignmentScores(assignmentID string, scores []*lmstypes.SubmissionScore) error {
     this.getAPILock();
     defer this.releaseAPILock();
 

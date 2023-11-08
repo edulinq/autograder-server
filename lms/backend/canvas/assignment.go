@@ -3,11 +3,11 @@ package canvas
 import (
     "fmt"
 
-    "github.com/eriq-augustine/autograder/lms"
+    "github.com/eriq-augustine/autograder/lms/lmstypes"
     "github.com/eriq-augustine/autograder/util"
 )
 
-func (this *CanvasAdapter) FetchAssignment(assignmentID string) (*lms.Assignment, error) {
+func (this *CanvasBackend) FetchAssignment(assignmentID string) (*lmstypes.Assignment, error) {
     this.getAPILock();
     defer this.releaseAPILock();
 

@@ -2,13 +2,13 @@ package main
 
 import (
     "fmt"
-    "os"
 
     "github.com/alecthomas/kong"
     "github.com/rs/zerolog/log"
 
     "github.com/eriq-augustine/autograder/config"
     "github.com/eriq-augustine/autograder/db"
+    "github.com/eriq-augustine/autograder/lms"
 )
 
 var args struct {
@@ -30,12 +30,8 @@ func main() {
     defer db.MustClose();
 
     course := db.MustGetCourse(args.Course);
-    if (course.GetLMSAdapter() == nil) {
-        fmt.Println("Course has no LMS info associated with it.");
-        os.Exit(2);
-    }
 
-    users, err := course.GetLMSAdapter().FetchUsers();
+    users, err := lms.FetchUsers(course);
     if (err != nil) {
         log.Fatal().Err(err).Msg("Could not fetch users.");
     }

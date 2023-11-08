@@ -2,6 +2,7 @@ package lms
 
 import (
     "github.com/eriq-augustine/autograder/api/core"
+    "github.com/eriq-augustine/autograder/lms"
 )
 
 type UserGetRequest struct {
@@ -33,7 +34,7 @@ func HandleUserGet(request *UserGetRequest) (*UserGetResponse, *core.APIError) {
     response.FoundAGUser = true;
     response.User = core.NewUserInfo(request.TargetUser.User);
 
-    lmsUser, err := request.Course.GetLMSAdapter().FetchUser(string(request.TargetUser.Email));
+    lmsUser, err := lms.FetchUser(request.Course, string(request.TargetUser.Email));
     if (err != nil) {
         return nil, core.NewInternalError("-502", &request.APIRequestCourseUserContext,
                 "Failed to fetch LMS user.").Err(err).Add("email", string(request.TargetUser.Email));

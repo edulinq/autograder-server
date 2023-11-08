@@ -4,6 +4,7 @@ import (
     "github.com/rs/zerolog/log"
 
     "github.com/eriq-augustine/autograder/config"
+    "github.com/eriq-augustine/autograder/db"
     "github.com/eriq-augustine/autograder/usr"
 )
 
@@ -11,7 +12,7 @@ import (
 // If any error is retuturned, then the request should end and the response sent based on the error.
 // This assumes basic validation has already been done on the request.
 func (this *APIRequestCourseUserContext) Auth() (*usr.User, *APIError) {
-    user, err := this.Course.GetUser(this.UserEmail);
+    user, err := db.GetUser(this.Course, this.UserEmail);
     if (err != nil) {
         return nil, NewAuthBadRequestError("-201", this, "Cannot Get User").Err(err);
     }

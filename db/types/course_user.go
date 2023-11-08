@@ -1,5 +1,6 @@
 package types
 
+/*
 import (
     "fmt"
     "path/filepath"
@@ -7,7 +8,28 @@ import (
     "github.com/eriq-augustine/autograder/config"
     "github.com/eriq-augustine/autograder/usr"
 )
+*/
 
+const USERS_FILENAME = "users.json"
+
+// TEST -- Most of these should go away.
+
+// TEST - The test for this needs to move.
+
+/*
+// TEST
+func (this *Course) LoadUsers() (map[string]*usr.User, error) {
+    path := filepath.Join(this.GetSourceDir(), USERS_FILENAME);
+
+    users, err := usr.LoadUsersFile(path);
+    if (err != nil) {
+        return nil, fmt.Errorf("Faile to deserialize users file '%s': '%w'.", path, err);
+    }
+
+    return users, nil;
+}
+
+// TEST
 func (this *Course) GetUsers() (map[string]*usr.User, error) {
     path := filepath.Join(this.GetSourceDir(), USERS_FILENAME);
 
@@ -142,3 +164,4 @@ func (this *Course) SyncNewUsers(newUsers map[string]*usr.User, merge bool, dryR
 
     return syncResult, nil;
 }
+*/

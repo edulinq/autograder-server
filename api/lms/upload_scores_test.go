@@ -5,23 +5,15 @@ import (
     "testing"
 
     "github.com/eriq-augustine/autograder/api/core"
-    "github.com/eriq-augustine/autograder/grader"
-    lmstest "github.com/eriq-augustine/autograder/lms/adapter/test"
+    lmstest "github.com/eriq-augustine/autograder/lms/backend/test"
     "github.com/eriq-augustine/autograder/usr"
     "github.com/eriq-augustine/autograder/util"
 )
 
 func TestUploadScores(test *testing.T) {
-    course := grader.GetCourse("course-with-lms");
-    if (course == nil) {
-        test.Fatalf("Failed to get test course.");
-    }
-
-    testLMSAdapter := course.GetLMSAdapter().Adapter.(*lmstest.TestLMSAdapter);
-
     // Reset the LMS adapter.
     defer func() {
-        testLMSAdapter.FailUpdateAssignmentScores = false;
+        lmstest.SetFailUpdateAssignmentScores(false);
     }();
 
     testCases := []struct{ role usr.UserRole; permError bool; failUpdate bool; scores []ScoreEntry; expected *UploadScoresResponse }{
@@ -130,7 +122,7 @@ func TestUploadScores(test *testing.T) {
             "scores": testCase.scores,
         };
 
-        testLMSAdapter.FailUpdateAssignmentScores = testCase.failUpdate;
+        lmstest.SetFailUpdateAssignmentScores(testCase.failUpdate);
 
         response := core.SendTestAPIRequestFull(test, core.NewEndpoint(`lms/upload/scores`), fields, nil, testCase.role);
         if (!response.Success) {

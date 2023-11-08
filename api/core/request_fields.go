@@ -11,6 +11,7 @@ import (
     "path/filepath"
     "reflect"
 
+    "github.com/eriq-augustine/autograder/db"
     "github.com/eriq-augustine/autograder/usr"
     "github.com/eriq-augustine/autograder/util"
 )
@@ -319,7 +320,7 @@ func baseCheckRequestUsersField(endpoint string, apiRequest any, fieldIndex int)
                 Add("struct-name", structName).Add("field-name", fieldType.Name).Add("field-type", fieldName);
     }
 
-    users, err := courseContext.Course.GetUsers();
+    users, err := db.GetUsers(courseContext.Course);
     if (err != nil) {
         return nil, nil,
             NewInternalError("-313", &courseContext, "Failed to fetch embeded users.").Err(err).

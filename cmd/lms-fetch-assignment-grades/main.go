@@ -9,6 +9,7 @@ import (
 
     "github.com/eriq-augustine/autograder/config"
     "github.com/eriq-augustine/autograder/db"
+    "github.com/eriq-augustine/autograder/lms"
     "github.com/eriq-augustine/autograder/util"
 )
 
@@ -39,13 +40,7 @@ func main() {
         log.Fatal().Str("assignment", assignment.FullID()).Msg("Assignment has no LMS ID.");
     }
 
-    if (course.GetLMSAdapter() == nil) {
-        log.Fatal().
-            Str("course-id", course.GetID()).Str("assignment-id", assignment.GetID()).
-            Msg("Course has no LMS info associated with it.");
-    }
-
-    grades, err := course.GetLMSAdapter().FetchAssignmentScores(assignment.GetLMSID());
+    grades, err := lms.FetchAssignmentScores(course, assignment.GetLMSID());
     if (err != nil) {
         log.Fatal().Err(err).Msg("Could not fetch grades.");
     }

@@ -15,27 +15,27 @@ const (
 )
 
 // Lock for each API token being used.
-// Note that it is possible to have multiple adapters with the same token.
+// Note that it is possible to have multiple backends with the same token.
 // {string: *sync.Mutex}.
 var apiLocks sync.Map;
 
-func (this *CanvasAdapter) getAPILock() {
+func (this *CanvasBackend) getAPILock() {
     this.ensureAPILock();
     lock, _ := apiLocks.Load(this.APIToken);
     lock.(*sync.Mutex).Lock();
 }
 
-func (this *CanvasAdapter) releaseAPILock() {
+func (this *CanvasBackend) releaseAPILock() {
     this.ensureAPILock();
     lock, _ := apiLocks.Load(this.APIToken);
     lock.(*sync.Mutex).Unlock();
 }
 
-func (this *CanvasAdapter) ensureAPILock() {
+func (this *CanvasBackend) ensureAPILock() {
     apiLocks.LoadOrStore(this.APIToken, &sync.Mutex{});
 }
 
-func (this *CanvasAdapter) standardHeaders() map[string][]string {
+func (this *CanvasBackend) standardHeaders() map[string][]string {
     return map[string][]string{
         "Authorization": []string{fmt.Sprintf("Bearer %s", this.APIToken)},
         "Accept": []string{"application/json+canvas-string-ids"},

@@ -6,11 +6,11 @@ import (
 
     "github.com/rs/zerolog/log"
 
-    "github.com/eriq-augustine/autograder/lms"
+    "github.com/eriq-augustine/autograder/lms/lmstypes"
     "github.com/eriq-augustine/autograder/util"
 )
 
-func (this *CanvasAdapter) FetchUsers() ([]*lms.User, error) {
+func (this *CanvasBackend) FetchUsers() ([]*lmstypes.User, error) {
     this.getAPILock();
     defer this.releaseAPILock();
 
@@ -21,7 +21,7 @@ func (this *CanvasAdapter) FetchUsers() ([]*lms.User, error) {
 
     headers := this.standardHeaders();
 
-    users := make([]*lms.User, 0);
+    users := make([]*lmstypes.User, 0);
 
     for (url != "") {
         body, responseHeaders, err := util.GetWithHeaders(url, headers);
@@ -50,7 +50,7 @@ func (this *CanvasAdapter) FetchUsers() ([]*lms.User, error) {
     return users, nil;
 }
 
-func (this *CanvasAdapter) FetchUser(email string) (*lms.User, error) {
+func (this *CanvasBackend) FetchUser(email string) (*lmstypes.User, error) {
     this.getAPILock();
     defer this.releaseAPILock();
 

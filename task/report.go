@@ -5,68 +5,24 @@ import (
 
     "github.com/rs/zerolog/log"
 
-    "github.com/eriq-augustine/autograder/config"
     "github.com/eriq-augustine/autograder/email"
     "github.com/eriq-augustine/autograder/model"
     "github.com/eriq-augustine/autograder/report"
 )
 
-type ReportTask struct {
-    Disable bool `json:"disable"`
-    When ScheduledTime `json:"when"`
-
-    To []string `json:"to"`
-
-    course model.Course `json:"-"`
-}
-
-func (this *ReportTask) Validate(course model.Course) error {
-    this.When.id = fmt.Sprintf("report-%s", course.GetID());
-
-    err := this.When.Validate();
-    if (err != nil) {
-        return err;
+func RunReportTask(course model.Course, rawTask model.ScheduledTask) error {
+    task, ok := rawTask.(*model.ReportTask);
+    if (!ok) {
+        return fmt.Errorf("Task is not a ReportTask: %t (%v).", rawTask, rawTask);
     }
 
-    this.Disable = (this.Disable || config.NO_TASKS.Get());
-    this.course = course;
-
-    if (!this.Disable && (len(this.To) == 0)) {
-        return fmt.Errorf("Report task is not disabled, but no email recipients are declared.");
+    if (task.Disable) {
+        return nil;
     }
 
-    return nil;
+    return RunReport(course, task.To);
 }
 
-func (this *ReportTask) String() string {
-    return fmt.Sprintf("Report on '%s' at '%s' (next time: '%s').", this.course.GetName(), this.When.String(), this.When.ComputeNext());
-}
-
-// Schedule this task to be regularly run at the scheduled time.
-func (this *ReportTask) Schedule() {
-    if (this.Disable) {
-        return;
-    }
-
-    this.When.Schedule(func() {
-        err := this.Run();
-        if (err != nil) {
-            log.Error().Err(err).Str("course", this.course.GetName()).Msg("Report task failed.");
-        }
-    });
-}
-
-// Stop any scheduled executions of this task.
-func (this *ReportTask) Stop() {
-    this.When.Stop();
-}
-
-// Run the task regardless of schedule.
-func (this *ReportTask) Run() error {
-    return RunReport(this.course, this.To);
-}
-
-// Do a report without an attatched object.
 func RunReport(course model.Course, to []string) error {
     report, err := report.GetCourseScoringReport(course);
     if (err != nil) {

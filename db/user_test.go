@@ -1,10 +1,8 @@
-package types
+package db
 
 import (
-    "path/filepath"
     "testing"
 
-    "github.com/eriq-augustine/autograder/config"
     "github.com/eriq-augustine/autograder/email"
     "github.com/eriq-augustine/autograder/usr"
     "github.com/eriq-augustine/autograder/util"
@@ -17,22 +15,14 @@ type SyncNewUsersTestCase struct {
 }
 
 func TestCourseSyncNewUsers(test *testing.T) {
-    course, err := LoadCourse(filepath.Join(config.COURSES_ROOT.Get(), TEST_COURSE_ID, COURSE_CONFIG_FILENAME));
-    if (err != nil) {
-        test.Fatalf("Failed to get test course: '%v'.", err);
-    }
-
-    // Quiet the output a bit.
-    oldLevel := config.GetLoggingLevel();
-    config.SetLogLevelFatal();
-    defer config.SetLoggingLevel(oldLevel);
+    course := MustGetCourse(TEST_COURSE_ID);
 
     for i, testCase := range getSyncNewUsersTestCases() {
         testUsers, addUsers, shortCleartextPassUsers, fullCleartextPassUsers, shortEmails, fullEmails, modUsers, skipUsers := getSynNewUsersTestUsers();
 
         email.ClearTestMessages();
 
-        result, err := course.SyncNewUsers(testUsers, testCase.merge, testCase.dryRun, testCase.sendEmails);
+        result, err := SyncUsers(course, testUsers, testCase.merge, testCase.dryRun, testCase.sendEmails);
         if (err != nil) {
             test.Errorf("Case %d (%+v): User sync failed: '%v'.", i, testCase, err);
             continue;

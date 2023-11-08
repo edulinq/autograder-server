@@ -1,16 +1,10 @@
-package lms
+package lmstypes
 
 import (
     "time"
 
     "github.com/eriq-augustine/autograder/usr"
 )
-
-// An interface for adapters to work closely with courses.
-type SourceCourse interface {
-    GetSourceDir() string
-    GetUsers() (map[string]*usr.User, error)
-}
 
 type User struct {
     ID string

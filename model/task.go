@@ -1,10 +1,8 @@
 package model
 
 type ScheduledTask interface {
-    Schedule()
-}
-
-type ScheduledCourseTask interface {
-    ScheduledTask
+    IsDisabled() bool
+    GetTime() ScheduledTime
+    String() string
     Validate(Course) error
 }

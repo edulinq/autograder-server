@@ -30,7 +30,6 @@ const (
 type Backend interface {
     Close() error;
     EnsureTables() error;
-    GetCourseUsers(courseID string) (map[string]*usr.User, error);
 
     // Get all known courses.
     GetCourses() (map[string]*types.Course, error);
@@ -49,6 +48,16 @@ type Backend interface {
 
     // Explicitly save an assignment.
     SaveAssignment(assignment *types.Assignment) error;
+
+    GetUsers(course *types.Course) (map[string]*usr.User, error);
+    GetUser(course *types.Course, email string) (*usr.User, error);
+
+    // Upsert the given users.
+    SaveUsers(course *types.Course, users map[string]*usr.User) error;
+
+    // Remove a user.
+    // Do nothing and return nil if the user does not exist.
+    RemoveUser(course *types.Course, email string) error;
 }
 
 func Open() error {

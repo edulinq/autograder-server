@@ -2,12 +2,12 @@ package user
 
 import (
     "github.com/eriq-augustine/autograder/api/core"
+    "github.com/eriq-augustine/autograder/db"
 )
 
 type RemoveRequest struct {
     core.APIRequestCourseUserContext
     core.MinRoleAdmin
-    Users core.CourseUsers `json:"-"`
 
     TargetUser core.TargetUser `json:"target-email"`
 }
@@ -30,12 +30,10 @@ func HandleRemove(request *RemoveRequest) (*RemoveResponse, *core.APIError) {
                 "Cannot remove a user with a higher role.").Add("target-user", request.TargetUser.User.Email);
     }
 
-    delete(request.Users, request.TargetUser.Email);
-
-    err := request.Course.SaveUsers(request.Users);
+    _, err := db.RemoveUser(request.Course, request.TargetUser.Email);
     if (err != nil) {
         return nil, core.NewInternalError("-602", &request.APIRequestCourseUserContext,
-                "Failed to save users after a remove.").Err(err);
+                "Failed to remove user.").Err(err).Add("email", request.TargetUser.Email);
     }
 
     return &response, nil;

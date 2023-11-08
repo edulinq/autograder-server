@@ -9,6 +9,7 @@ import (
     "github.com/eriq-augustine/autograder/config"
     "github.com/eriq-augustine/autograder/db"
     "github.com/eriq-augustine/autograder/lms"
+    "github.com/eriq-augustine/autograder/lms/lmstypes"
     "github.com/eriq-augustine/autograder/usr"
     "github.com/eriq-augustine/autograder/util"
 )
@@ -43,13 +44,7 @@ func main() {
         log.Fatal().Str("assignment", assignment.FullID()).Msg("Assignment has no LMS ID.");
     }
 
-    if (course.GetLMSAdapter() == nil) {
-        log.Fatal().
-            Str("course-id", course.GetID()).Str("assignment-id", assignment.GetID()).
-            Msg("Course has no LMS info associated with it.");
-    }
-
-    users, err := course.GetUsers();
+    users, err := db.GetUsers(course);
     if (err != nil) {
         log.Fatal().Err(err).Msg("Failed to fetch autograder users.");
     }
@@ -66,7 +61,7 @@ func main() {
     if (args.DryRun) {
         fmt.Println("Dry Run: Skipping upload.");
     } else {
-        err = course.GetLMSAdapter().UpdateAssignmentScores(assignment.GetLMSID(), grades);
+        err = lms.UpdateAssignmentScores(course, assignment.GetLMSID(), grades);
         if (err != nil) {
             log.Fatal().Err(err).Msg("Could not upload grades.");
         }
@@ -75,8 +70,8 @@ func main() {
     fmt.Printf("Uploaded %d grades.\n", len(grades));
 }
 
-func loadGrades(path string, users map[string]*usr.User, force bool) ([]*lms.SubmissionScore, error) {
-    grades := make([]*lms.SubmissionScore, 0);
+func loadGrades(path string, users map[string]*usr.User, force bool) ([]*lmstypes.SubmissionScore, error) {
+    grades := make([]*lmstypes.SubmissionScore, 0);
 
     rows, err := util.ReadSeparatedFile(path, "\t", 0);
     if (err != nil) {
@@ -112,7 +107,7 @@ func loadGrades(path string, users map[string]*usr.User, force bool) ([]*lms.Sub
             }
         }
 
-        grades = append(grades, &lms.SubmissionScore{
+        grades = append(grades, &lmstypes.SubmissionScore{
             UserID: lmsID,
             Score: util.MustStrToFloat(row[1]),
         });

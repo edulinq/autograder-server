@@ -3,7 +3,9 @@ package lmsusers
 import (
     "fmt"
 
+    "github.com/eriq-augustine/autograder/db"
     "github.com/eriq-augustine/autograder/lms"
+    "github.com/eriq-augustine/autograder/lms/lmstypes"
     "github.com/eriq-augustine/autograder/model"
     "github.com/eriq-augustine/autograder/usr"
     "github.com/eriq-augustine/autograder/util"
@@ -11,17 +13,12 @@ import (
 
 // Sync users with the provided LMS.
 func SyncLMSUsers(course model.Course, dryRun bool, sendEmails bool) (*usr.UserSyncResult, error) {
-    adapter := course.GetLMSAdapter();
-    if (adapter == nil) {
-        return nil, nil;
-    }
-
-    lmsUsersSlice, err := adapter.FetchUsers();
+    lmsUsersSlice, err := lms.FetchUsers(course);
     if (err != nil) {
         return nil, fmt.Errorf("Failed to fetch LMS users: '%w'.", err);
     }
 
-    lmsUsers := make(map[string]*lms.User, len(lmsUsersSlice));
+    lmsUsers := make(map[string]*lmstypes.User, len(lmsUsersSlice));
     for _, lmsUser := range lmsUsersSlice {
         lmsUsers[lmsUser.Email] = lmsUser;
     }
@@ -30,17 +27,12 @@ func SyncLMSUsers(course model.Course, dryRun bool, sendEmails bool) (*usr.UserS
 }
 
 func SyncLMSUser(course model.Course, email string, dryRun bool, sendEmails bool) (*usr.UserSyncResult, error) {
-    adapter := course.GetLMSAdapter();
-    if (adapter == nil) {
-        return nil, nil;
-    }
-
-    lmsUser, err := adapter.FetchUser(email);
+    lmsUser, err := lms.FetchUser(course, email);
     if (err != nil) {
         return nil, err;
     }
 
-    lmsUsers := map[string]*lms.User{
+    lmsUsers := map[string]*lmstypes.User{
         lmsUser.Email: lmsUser,
     };
 
@@ -50,9 +42,9 @@ func SyncLMSUser(course model.Course, email string, dryRun bool, sendEmails bool
 // Sync users.
 // If |syncEmails| is not empty, then only emails in it will be checked/resolved.
 // Otherwise, all emails from local and LMS users will be checked.
-func syncLMSUsers(course model.Course, dryRun bool, sendEmails bool, lmsUsers map[string]*lms.User,
+func syncLMSUsers(course model.Course, dryRun bool, sendEmails bool, lmsUsers map[string]*lmstypes.User,
         syncEmails []string) (*usr.UserSyncResult, error) {
-    localUsers, err := course.GetUsers();
+    localUsers, err := db.GetUsers(course);
     if (err != nil) {
         return nil, fmt.Errorf("Failed to fetch local users: '%w'.", err);
     }
@@ -78,7 +70,7 @@ func syncLMSUsers(course model.Course, dryRun bool, sendEmails bool, lmsUsers ma
         return syncResult, nil;
     }
 
-    err = course.SaveUsers(localUsers);
+    err = db.SaveUsers(course, localUsers);
     if (err != nil) {
         return nil, fmt.Errorf("Failed to save users file: '%w'.", err);
     }
@@ -93,7 +85,7 @@ func syncLMSUsers(course model.Course, dryRun bool, sendEmails bool, lmsUsers ma
     return syncResult, nil;
 }
 
-func mergeUsers(localUser *usr.User, lmsUser *lms.User, mergeAttributes bool) bool {
+func mergeUsers(localUser *usr.User, lmsUser *lmstypes.User, mergeAttributes bool) bool {
     changed := false;
 
     if (localUser.LMSID != lmsUser.ID) {
@@ -122,7 +114,7 @@ func mergeUsers(localUser *usr.User, lmsUser *lms.User, mergeAttributes bool) bo
 // The passed in local user map will be modified to reflect any resolution.
 // The taken action will depend on the options set in the course's LMS adapter.
 func resolveUserSync(course model.Course, localUsers map[string]*usr.User,
-        lmsUsers map[string]*lms.User, email string) (*usr.UserResolveResult, error) {
+        lmsUsers map[string]*lmstypes.User, email string) (*usr.UserResolveResult, error) {
     adapter := course.GetLMSAdapter();
 
     localUser := localUsers[email];
@@ -180,7 +172,7 @@ func resolveUserSync(course model.Course, localUsers map[string]*usr.User,
     return nil, nil;
 }
 
-func getAllEmails(localUsers map[string]*usr.User, lmsUsers map[string]*lms.User) []string {
+func getAllEmails(localUsers map[string]*usr.User, lmsUsers map[string]*lmstypes.User) []string {
     emails := make([]string, 0, max(len(localUsers), len(lmsUsers)));
 
     for email, _ := range localUsers {

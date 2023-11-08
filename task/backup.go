@@ -13,72 +13,20 @@ import (
     "github.com/eriq-augustine/autograder/util"
 )
 
-type BackupTask struct {
-    Disable bool `json:"disable"`
-    When ScheduledTime `json:"when"`
-
-    basename string `json:"-"`
-    source string `json:"-"`
-    dest string `json:"-"`
-}
-
-func (this *BackupTask) Validate(course model.Course) error {
-    this.When.id = fmt.Sprintf("backup-%s", course.GetID());
-
-    err := this.When.Validate();
-    if (err != nil) {
-        return err;
+func RunBackupTask(course model.Course, rawTask model.ScheduledTask) error {
+    task, ok := rawTask.(*model.BackupTask);
+    if (!ok) {
+        return fmt.Errorf("Task is not a BackupTask: %t (%v).", rawTask, rawTask);
     }
 
-    this.Disable = (this.Disable || config.NO_TASKS.Get());
-
-    this.basename = course.GetID();
-    if (this.basename == "") {
-        return fmt.Errorf("Backup basename cannot be empty.");
+    if (task.Disable) {
+        return nil;
     }
 
-    this.source = course.GetSourceDir();
-    if (!util.PathExists(this.source)) {
-        return fmt.Errorf("Backup source path '%s' does not exist.", this.source);
-    }
-
-    this.dest = config.BACKUP_DIR.Get();
-    if (util.IsFile(this.dest)) {
-        return fmt.Errorf("Backup directory exists and is a file: '%s'.", this.dest);
-    }
-
-    return nil;
+    return RunBackup(task.Source, task.Dest, task.Basename);
 }
 
-func (this *BackupTask) String() string {
-    return fmt.Sprintf("Backup '%s' to '%s' at '%s' (next time: '%s').", this.source, this.dest, this.When.String(), this.When.ComputeNext());
-}
-
-// Schedule this task to be regularly run at the scheduled time.
-func (this *BackupTask) Schedule() {
-    if (this.Disable) {
-        return;
-    }
-
-    this.When.Schedule(func() {
-        err := this.Run();
-        if (err != nil) {
-            log.Error().Err(err).Str("source", this.source).Str("dest", this.dest).Msg("Backup task failed.");
-        }
-    });
-}
-
-// Stop any scheduled executions of this task.
-func (this *BackupTask) Stop() {
-    this.When.Stop();
-}
-
-// Run the task regardless of schedule.
-func (this *BackupTask) Run() error {
-    return RunBackup(this.source, this.dest, this.basename);
-}
-
-// Do a backup without an attatched object.
+// Perform a backup.
 // If dest is not specified, it will be picked up from config.BACKUP_DIR.
 func RunBackup(source string, dest string, basename string) error {
     if (dest == "") {

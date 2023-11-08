@@ -10,7 +10,7 @@ import (
     "testing"
 
     "github.com/eriq-augustine/autograder/config"
-    "github.com/eriq-augustine/autograder/grader"
+    "github.com/eriq-augustine/autograder/db"
     "github.com/eriq-augustine/autograder/usr"
     "github.com/eriq-augustine/autograder/util"
 )
@@ -383,7 +383,7 @@ func TestTargetUserSelfOrGrader(test *testing.T) {
         User TargetUserSelfOrGrader
     }
 
-    users, err := grader.GetCourse("course101").GetUsers();
+    users, err := db.GetUsersFromID("course101");
     if (err != nil) {
         test.Fatalf("Failed to get users: '%v'.", err);
     }
@@ -448,7 +448,7 @@ func TestTargetUser(test *testing.T) {
         User TargetUser
     }
 
-    users, err := grader.GetCourse("course101").GetUsers();
+    users, err := db.GetUsersFromID("course101");
     if (err != nil) {
         test.Fatalf("Failed to get users: '%v'.", err);
     }

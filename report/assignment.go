@@ -7,6 +7,7 @@ import (
     "gonum.org/v1/gonum/stat"
 
     "github.com/eriq-augustine/autograder/artifact"
+    "github.com/eriq-augustine/autograder/db"
     "github.com/eriq-augustine/autograder/model"
     "github.com/eriq-augustine/autograder/util"
     "github.com/eriq-augustine/autograder/usr"
@@ -88,7 +89,7 @@ func GetAssignmentScoringReport(assignment model.Assignment) (*AssignmentScoring
 }
 
 func fetchScores(assignment model.Assignment) ([]string, map[string][]float64, time.Time, error) {
-    users, err := assignment.GetCourse().GetUsers();
+    users, err := db.GetUsers(assignment.GetCourse());
     if (err != nil) {
         return nil, nil, time.Time{}, fmt.Errorf("Failed to get users for course: '%w'.", err);
     }

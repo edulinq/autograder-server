@@ -136,6 +136,7 @@ func generateHash(hashPass string, salt []byte) []byte {
     return argon2.IDKey([]byte(hashPass), salt, ARGON2_TIME, ARGON2_MEM_KB, ARGON2_THREADS, ARGON2_KEY_LEN_BYTES);
 }
 
+/* TEST
 func LoadUsersFile(path string) (map[string]*User, error) {
     users := make(map[string]*User);
 
@@ -154,6 +155,7 @@ func LoadUsersFile(path string) (map[string]*User, error) {
 func SaveUsers(path string, users map[string]*User) error {
     return util.ToJSONFileIndent(users, path);
 }
+*/
 
 func SendUserAddEmail(user *User, pass string, generatedPass bool, userExists bool, dryRun bool, sleep bool) {
     subject, body := composeUserAddEmail(user.Email, pass, generatedPass, userExists);

@@ -17,8 +17,8 @@ func MustGetAssignment(rawCourseID string, rawAssignmentID string) model.Assignm
         log.Fatal().Err(err).Str("assignment-id", rawAssignmentID).Msg("Failed to validate assignment id.");
     }
 
-    assignment, ok := course.GetAssignment(assignmentID);
-    if (!ok) {
+    assignment := course.GetAssignment(assignmentID);
+    if (assignment == nil) {
         log.Fatal().Str("course-id", course.GetID()).Str("assignment-id", assignmentID).Msg("Could not find assignment.");
     }
 

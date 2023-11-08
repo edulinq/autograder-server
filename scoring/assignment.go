@@ -9,7 +9,9 @@ import (
 
     "github.com/eriq-augustine/autograder/artifact"
     "github.com/eriq-augustine/autograder/common"
+    "github.com/eriq-augustine/autograder/db"
     "github.com/eriq-augustine/autograder/lms"
+    "github.com/eriq-augustine/autograder/lms/lmstypes"
     "github.com/eriq-augustine/autograder/model"
     "github.com/eriq-augustine/autograder/usr"
     "github.com/eriq-augustine/autograder/util"
@@ -22,12 +24,12 @@ func FullAssignmentScoringAndUpload(assignment model.Assignment, dryRun bool) er
         return fmt.Errorf("Assignment's course has no LMS info associated with it.");
     }
 
-    users, err := assignment.GetCourse().GetUsers();
+    users, err := db.GetUsers(assignment.GetCourse());
     if (err != nil) {
         return fmt.Errorf("Failed to fetch autograder users: '%w'.", err);
     }
 
-    lmsScores, err := assignment.GetCourse().GetLMSAdapter().FetchAssignmentScores(assignment.GetLMSID());
+    lmsScores, err := lms.FetchAssignmentScores(assignment.GetCourse(), assignment.GetLMSID());
     if (err != nil) {
         return fmt.Errorf("Could not fetch LMS grades: '%w'.", err);
     }
@@ -83,7 +85,7 @@ func GetScoringInfo(assignment model.Assignment, users map[string]*usr.User, onl
 
 func computeFinalScores(
         assignment model.Assignment, users map[string]*usr.User,
-        scoringInfos map[string]*artifact.ScoringInfo, lmsScores []*lms.SubmissionScore,
+        scoringInfos map[string]*artifact.ScoringInfo, lmsScores []*lmstypes.SubmissionScore,
         dryRun bool) error {
     var err error;
 
@@ -100,7 +102,7 @@ func computeFinalScores(
     if (dryRun) {
         log.Info().Str("assignment", assignment.GetID()).Any("grades", finalScores).Msg("Dry Run: Skipping upload of final grades.");
     } else {
-        err = assignment.GetCourse().GetLMSAdapter().UpdateAssignmentScores(assignment.GetLMSID(), finalScores);
+        err = lms.UpdateAssignmentScores(assignment.GetCourse(), assignment.GetLMSID(), finalScores);
         if (err != nil) {
             return fmt.Errorf("Failed to upload final scores: '%w'.", err);
         }
@@ -110,7 +112,7 @@ func computeFinalScores(
     if (dryRun) {
         log.Info().Str("assignment", assignment.GetID()).Any("comments", commentsToUpdate).Msg("Dry Run: Skipping update of final comments.");
     } else {
-        err = assignment.GetCourse().GetLMSAdapter().UpdateComments(assignment.GetLMSID(), commentsToUpdate);
+        err = lms.UpdateComments(assignment.GetCourse(), assignment.GetLMSID(), commentsToUpdate);
         if (err != nil) {
             return fmt.Errorf("Failed to update final comments: '%w'.", err);
         }
@@ -119,7 +121,7 @@ func computeFinalScores(
     return nil;
 }
 
-func parseComments(lmsScores []*lms.SubmissionScore) (map[string]bool, map[string]*artifact.ScoringInfo, error) {
+func parseComments(lmsScores []*lmstypes.SubmissionScore) (map[string]bool, map[string]*artifact.ScoringInfo, error) {
     locks := make(map[string]bool);
     existingComments := make(map[string]*artifact.ScoringInfo);
 
@@ -153,9 +155,9 @@ func parseComments(lmsScores []*lms.SubmissionScore) (map[string]bool, map[strin
 func filterFinalScores(
         users map[string]*usr.User, scoringInfos map[string]*artifact.ScoringInfo,
         locks map[string]bool, existingComments map[string]*artifact.ScoringInfo,
-        ) ([]*lms.SubmissionScore, []*lms.SubmissionComment) {
-    finalScores := make([]*lms.SubmissionScore, 0);
-    commentsToUpdate := make([]*lms.SubmissionComment, 0);
+        ) ([]*lmstypes.SubmissionScore, []*lmstypes.SubmissionComment) {
+    finalScores := make([]*lmstypes.SubmissionScore, 0);
+    commentsToUpdate := make([]*lmstypes.SubmissionComment, 0);
 
     for email, scoringInfo := range scoringInfos {
         user := users[email];
@@ -195,26 +197,26 @@ func filterFinalScores(
         // This scoring is valid and different than the last one.
 
         // Existing comments are updated, new comments are posted with the grade.
-        var uploadComments []*lms.SubmissionComment = nil;
+        var uploadComments []*lmstypes.SubmissionComment = nil;
 
         if (existingComment != nil) {
             scoringInfo.LMSCommentID = existingComment.LMSCommentID;
             scoringInfo.LMSCommentAuthorID = existingComment.LMSCommentAuthorID;
 
-            commentsToUpdate = append(commentsToUpdate, &lms.SubmissionComment{
+            commentsToUpdate = append(commentsToUpdate, &lmstypes.SubmissionComment{
                 ID: scoringInfo.LMSCommentID,
                 Author: scoringInfo.LMSCommentAuthorID,
                 Text: util.MustToJSON(scoringInfo),
             });
         } else {
-            uploadComments = []*lms.SubmissionComment{
-                &lms.SubmissionComment{
+            uploadComments = []*lmstypes.SubmissionComment{
+                &lmstypes.SubmissionComment{
                     Text: util.MustToJSON(scoringInfo),
                 },
             };
         }
 
-        lmsScore := lms.SubmissionScore{
+        lmsScore := lmstypes.SubmissionScore{
             UserID: user.LMSID,
             Score: scoringInfo.Score,
             Time: scoringInfo.SubmissionTime,

@@ -119,9 +119,8 @@ func (this *APIRequestAssignmentContext) Validate(request any, endpoint string) 
         return NewBadRequestError("-307", &this.APIRequest, "No assignment ID specified.");
     }
 
-    var ok bool;
-    this.Assignment, ok = this.Course.GetAssignment(this.AssignmentID);
-    if (!ok) {
+    this.Assignment = this.Course.GetAssignment(this.AssignmentID);
+    if (this.Assignment == nil) {
         return NewBadRequestError("-308", &this.APIRequest, "Could not find assignment.").
             Add("course-id", this.CourseID).Add("assignment-id", this.AssignmentID);
     }

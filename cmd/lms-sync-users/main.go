@@ -30,9 +30,6 @@ func main() {
     defer db.MustClose();
 
     course := db.MustGetCourse(args.Course);
-    if (course.GetLMSAdapter() == nil) {
-        log.Fatal().Msg("Course has no LMS info associated with it.");
-    }
 
     args.SkipSendEmails = (args.SkipSendEmails || args.DryRun);
     result, err := lmsusers.SyncLMSUsers(course, args.DryRun, !args.SkipSendEmails);

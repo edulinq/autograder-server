@@ -31,9 +31,6 @@ func main() {
     defer db.MustClose();
 
     course := db.MustGetCourse(args.Course);
-    if (course.GetLMSAdapter() == nil) {
-        log.Fatal().Msg("Course has no LMS info associated with it.");
-    }
 
     err = scoring.FullCourseScoringAndUpload(course, args.DryRun);
     if (err != nil) {

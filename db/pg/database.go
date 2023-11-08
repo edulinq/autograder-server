@@ -7,7 +7,6 @@ import (
     "github.com/jackc/pgx/v5/pgxpool"
 
     "github.com/eriq-augustine/autograder/config"
-    "github.com/eriq-augustine/autograder/usr"
 )
 
 type backend struct {
@@ -31,16 +30,4 @@ func Open() (*backend, error) {
 func (this *backend) Close() error {
     this.pool.Close()
     return nil;
-}
-
-// TEST
-func (this *backend) EnsureTables() error {
-    // TEST
-    return nil;
-}
-
-// TEST
-func (this *backend) GetCourseUsers(courseID string) (map[string]*usr.User, error) {
-    // TEST
-    return nil, nil;
 }

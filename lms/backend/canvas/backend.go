@@ -5,13 +5,13 @@ import (
     "strings"
 )
 
-type CanvasAdapter struct {
+type CanvasBackend struct {
     CourseID string
     APIToken string
     BaseURL string
 }
 
-func NewAdapter(courseID string, apiToken string, baseURL string) (*CanvasAdapter, error) {
+func NewBackend(courseID string, apiToken string, baseURL string) (*CanvasBackend, error) {
     if (courseID == "") {
         return nil, fmt.Errorf("Canvas course ID (course-id) cannot be empty.");
     }
@@ -26,11 +26,11 @@ func NewAdapter(courseID string, apiToken string, baseURL string) (*CanvasAdapte
 
     baseURL = strings.TrimSuffix(baseURL, "/");
 
-    adapter := CanvasAdapter{
+    backend := CanvasBackend{
         CourseID: courseID,
         APIToken: apiToken,
         BaseURL: baseURL,
     };
 
-    return &adapter, nil;
+    return &backend, nil;
 }

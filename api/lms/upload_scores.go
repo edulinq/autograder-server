@@ -3,6 +3,7 @@ package lms
 import (
     "github.com/eriq-augustine/autograder/api/core"
     "github.com/eriq-augustine/autograder/lms"
+    "github.com/eriq-augustine/autograder/lms/lmstypes"
 )
 
 type UploadScoresRequest struct {
@@ -45,7 +46,7 @@ func HandleUploadScores(request *UploadScoresRequest) (*UploadScoresResponse, *c
         return &response, nil;
     }
 
-    err := request.Course.GetLMSAdapter().UpdateAssignmentScores(string(request.AssignmentLMSID), scores);
+    err := lms.UpdateAssignmentScores(request.Course, string(request.AssignmentLMSID), scores);
     if (err != nil) {
         return nil, core.NewInternalError("-506", &request.APIRequestCourseUserContext,
                 "Failed to upload LMS scores.").Err(err);
@@ -54,8 +55,8 @@ func HandleUploadScores(request *UploadScoresRequest) (*UploadScoresResponse, *c
     return &response, nil;
 }
 
-func parseScores(request *UploadScoresRequest, response *UploadScoresResponse) []*lms.SubmissionScore {
-    scores := make([]*lms.SubmissionScore, 0, len(request.Scores));
+func parseScores(request *UploadScoresRequest, response *UploadScoresResponse) []*lmstypes.SubmissionScore {
+    scores := make([]*lmstypes.SubmissionScore, 0, len(request.Scores));
 
     for i, entry := range request.Scores {
         user := request.Users[entry.Email];
@@ -69,7 +70,7 @@ func parseScores(request *UploadScoresRequest, response *UploadScoresResponse) [
             continue;
         }
 
-        scores = append(scores, &lms.SubmissionScore{
+        scores = append(scores, &lmstypes.SubmissionScore{
             UserID: user.LMSID,
             Score: entry.Score,
         });

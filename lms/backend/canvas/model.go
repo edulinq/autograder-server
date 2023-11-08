@@ -3,7 +3,7 @@ package canvas
 import (
     "time"
 
-    "github.com/eriq-augustine/autograder/lms"
+    "github.com/eriq-augustine/autograder/lms/lmstypes"
     "github.com/eriq-augustine/autograder/usr"
 )
 
@@ -88,8 +88,8 @@ func (this *User) GetRole() usr.UserRole {
     return maxRole;
 }
 
-func (this *User) ToLMSType() *lms.User {
-    return &lms.User{
+func (this *User) ToLMSType() *lmstypes.User {
+    return &lmstypes.User{
         ID: this.ID,
         Name: this.Name,
         Email: this.Email,
@@ -97,13 +97,13 @@ func (this *User) ToLMSType() *lms.User {
     };
 }
 
-func (this *SubmissionScore) ToLMSType() *lms.SubmissionScore {
-    comments := make([]*lms.SubmissionComment, 0, len(this.Comments));
+func (this *SubmissionScore) ToLMSType() *lmstypes.SubmissionScore {
+    comments := make([]*lmstypes.SubmissionComment, 0, len(this.Comments));
     for _, comment := range this.Comments {
         comments = append(comments, comment.ToLMSType());
     }
 
-    return &lms.SubmissionScore{
+    return &lmstypes.SubmissionScore{
         UserID: this.UserID,
         Score: this.Score,
         Time: this.Time,
@@ -111,8 +111,8 @@ func (this *SubmissionScore) ToLMSType() *lms.SubmissionScore {
     };
 }
 
-func (this *SubmissionComment) ToLMSType() *lms.SubmissionComment {
-    return &lms.SubmissionComment{
+func (this *SubmissionComment) ToLMSType() *lmstypes.SubmissionComment {
+    return &lmstypes.SubmissionComment{
         ID: this.ID,
         Author: this.Author,
         Text: this.Text,
@@ -120,8 +120,8 @@ func (this *SubmissionComment) ToLMSType() *lms.SubmissionComment {
     };
 }
 
-func (this *Assignment) ToLMSType() *lms.Assignment {
-    return &lms.Assignment{
+func (this *Assignment) ToLMSType() *lmstypes.Assignment {
+    return &lmstypes.Assignment{
         ID: this.ID,
         Name: this.Name,
         CourseID: this.CourseID,

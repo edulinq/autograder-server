@@ -11,6 +11,7 @@ import (
     "github.com/eriq-augustine/autograder/artifact"
     "github.com/eriq-augustine/autograder/common"
     "github.com/eriq-augustine/autograder/lms"
+    "github.com/eriq-augustine/autograder/lms/lmstypes"
     "github.com/eriq-augustine/autograder/model"
     "github.com/eriq-augustine/autograder/usr"
     "github.com/eriq-augustine/autograder/util"
@@ -46,7 +47,7 @@ func ApplyLatePolicy(
         return nil;
     }
 
-    lmsAssignment, err := assignment.GetCourse().GetLMSAdapter().FetchAssignment(assignment.GetLMSID());
+    lmsAssignment, err := lms.FetchAssignment(assignment.GetCourse(), assignment.GetLMSID());
     if (err != nil) {
         return err;
     }
@@ -197,16 +198,16 @@ func applyLateDaysPolicy(
 func updateLateDays(policy model.LateGradingPolicy, assignment model.Assignment, lateDaysToUpdate map[string]*LateDaysInfo, dryRun bool) error {
     // Update late days.
     // Info that does NOT have a LMSCommentID will get the autograder comment added in.
-    grades := make([]*lms.SubmissionScore, 0, len(lateDaysToUpdate));
+    grades := make([]*lmstypes.SubmissionScore, 0, len(lateDaysToUpdate));
     for lmsUserID, lateInfo := range lateDaysToUpdate {
-        uploadComments := make([]*lms.SubmissionComment, 0);
+        uploadComments := make([]*lmstypes.SubmissionComment, 0);
         if (lateInfo.LMSCommentID == "") {
-            uploadComments = append(uploadComments, &lms.SubmissionComment{
+            uploadComments = append(uploadComments, &lmstypes.SubmissionComment{
                 Text: util.MustToJSON(lateInfo),
             });
         }
 
-        gradeInfo := lms.SubmissionScore{
+        gradeInfo := lmstypes.SubmissionScore{
             UserID: lmsUserID,
             Score: float64(lateInfo.AvailableDays),
             Time: lateInfo.UploadTime,
@@ -219,20 +220,20 @@ func updateLateDays(policy model.LateGradingPolicy, assignment model.Assignment,
     if (dryRun) {
         log.Info().Str("assignment", assignment.GetID()).Any("grades", grades).Msg("Dry Run: Skipping upload of late days.");
     } else {
-        err := assignment.GetCourse().GetLMSAdapter().UpdateAssignmentScores(policy.LateDaysLMSID, grades);
+        err := lms.UpdateAssignmentScores(assignment.GetCourse(), policy.LateDaysLMSID, grades);
         if (err != nil) {
             return fmt.Errorf("Failed to upload late days: '%w'.", err);
         }
     }
 
     // Update late days comment for info that has a LMSCommentID.
-    comments := make([]*lms.SubmissionComment, 0, len(lateDaysToUpdate));
+    comments := make([]*lmstypes.SubmissionComment, 0, len(lateDaysToUpdate));
     for _, lateInfo := range lateDaysToUpdate {
         if (lateInfo.LMSCommentID == "") {
             continue;
         }
 
-        comments = append(comments, &lms.SubmissionComment{
+        comments = append(comments, &lmstypes.SubmissionComment{
             ID: lateInfo.LMSCommentID,
             Author: lateInfo.LMSCommentAuthorID,
             Text: util.MustToJSON(lateInfo),
@@ -242,7 +243,7 @@ func updateLateDays(policy model.LateGradingPolicy, assignment model.Assignment,
     if (dryRun) {
         log.Info().Str("assignment", assignment.GetID()).Any("comments", comments).Msg("Dry Run: Skipping update of late day comments.");
     } else {
-        err := assignment.GetCourse().GetLMSAdapter().UpdateComments(policy.LateDaysLMSID, comments);
+        err := lms.UpdateComments(assignment.GetCourse(), policy.LateDaysLMSID, comments);
         if (err != nil) {
             return fmt.Errorf("Failed to update late days comments: '%w'.", err);
         }
@@ -253,7 +254,7 @@ func updateLateDays(policy model.LateGradingPolicy, assignment model.Assignment,
 
 func fetchLateDays(policy model.LateGradingPolicy, assignment model.Assignment) (map[string]*LateDaysInfo, error) {
     // Fetch available late days from the LMS.
-    lmsLateDaysScores, err := assignment.GetCourse().GetLMSAdapter().FetchAssignmentScores(policy.LateDaysLMSID);
+    lmsLateDaysScores, err := lms.FetchAssignmentScores(assignment.GetCourse(), policy.LateDaysLMSID);
     if (err != nil) {
         return nil, fmt.Errorf("Failed to fetch late days assignment (%s): '%w'.", policy.LateDaysLMSID, err);
     }

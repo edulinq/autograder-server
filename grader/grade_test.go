@@ -5,6 +5,7 @@ import (
     "testing"
 
     "github.com/eriq-augustine/autograder/config"
+    "github.com/eriq-augustine/autograder/db"
     "github.com/eriq-augustine/autograder/docker"
 )
 
@@ -38,13 +39,13 @@ func runSubmissionTests(test *testing.T, parallel bool, useDocker bool) {
     baseDir := config.COURSES_ROOT.Get();
 
     if (useDocker) {
-        _, errs := BuildDockerImages(false, docker.NewBuildOptions());
-        if (len(errs) > 0) {
-            for imageName, err := range errs {
-                test.Errorf("Failed to build image '%s': '%v'.", imageName, err);
+        for _, course := range db.MustGetCourses() {
+            for _, assignment := range course.GetAssignments() {
+                err := assignment.BuildImage(false, false, docker.NewBuildOptions());
+                if (err != nil) {
+                    test.Fatalf("Failed to build image '%s': '%v'.", assignment.FullID(), err);
+                }
             }
-
-            test.Fatalf("Failed to build docker images.");
         }
     }
 

@@ -1,5 +1,15 @@
 # Development Notes
 
+## Memory Persistence Mentality
+
+In general, we want to avoid keeping things in memory for more than they are absolutely necessary.
+For most objects, this means that we only want them in memory for the duration of an API request.
+(Since we do not need to heavily optimize for throughput and our objects tend to be simple,
+this should not be a performance concern).
+This mentality will allow us to "live load" things like courses, assignment, and users.
+Changes to them should be reflected in the next use (usually an API call).
+This means that most actions will begin with a call to the DB so the required object can be loaded into memory.
+
 ## "Must" and "Should" Functions
 
 In Go, there is a convention of "Must" functions (e.g. `regexp.MustCompile()`).

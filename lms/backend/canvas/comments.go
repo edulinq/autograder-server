@@ -4,11 +4,11 @@ import (
     "fmt"
     "time"
 
-    "github.com/eriq-augustine/autograder/lms"
+    "github.com/eriq-augustine/autograder/lms/lmstypes"
     "github.com/eriq-augustine/autograder/util"
 )
 
-func (this *CanvasAdapter) UpdateComments(assignmentID string, comments []*lms.SubmissionComment) error {
+func (this *CanvasBackend) UpdateComments(assignmentID string, comments []*lmstypes.SubmissionComment) error {
     for i, comment := range comments {
         if (i != 0) {
             time.Sleep(time.Duration(UPLOAD_SLEEP_TIME_SEC));
@@ -23,7 +23,7 @@ func (this *CanvasAdapter) UpdateComments(assignmentID string, comments []*lms.S
     return nil;
 }
 
-func (this *CanvasAdapter) UpdateComment(assignmentID string, comment *lms.SubmissionComment) error {
+func (this *CanvasBackend) UpdateComment(assignmentID string, comment *lmstypes.SubmissionComment) error {
     this.getAPILock();
     defer this.releaseAPILock();
 

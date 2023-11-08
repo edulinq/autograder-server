@@ -1,11 +1,9 @@
-package task
+package model
 
 import (
     "fmt"
     "time"
     "strings"
-
-    "github.com/rs/zerolog/log"
 )
 
 const (
@@ -33,16 +31,12 @@ type ScheduledTime struct {
 
     id string
     timeLayout string
-    nextRun time.Time
-    timer *time.Timer
 }
 
 func newScheduledTimeForTestiong(dayOfWeek string, timeOfDay string) ScheduledTime {
     return ScheduledTime{
         DayOfWeek: dayOfWeek,
         TimeOfDay: timeOfDay,
-        nextRun: time.Time{},
-        timer: nil,
         id: "testing",
     };
 }
@@ -123,37 +117,6 @@ func (this *ScheduledTime) computeNextTime(startTime time.Time) time.Time {
     }
 
     return nextTime;
-}
-
-// Set a recurring invoation of the given task.
-// The caller is responsible for stopping any previous timers
-// (or ignoring them if they no longer need to be canceled).
-func (this *ScheduledTime) Schedule(task func()) {
-    this.nextRun = this.ComputeNext();
-    this.timer = time.AfterFunc(this.nextRun.Sub(time.Now()), func() {
-        task()
-        this.Schedule(task);
-    });
-
-    log.Debug().Str("id", this.id).Any("next-time", this.nextRun).Msg("Task scheduled.");
-}
-
-func (this *ScheduledTime) Stop() {
-    if (this.timer == nil) {
-        return;
-    }
-
-    this.nextRun = time.Time{}
-
-    if (!this.timer.Stop()) {
-        // Clear the channel.
-        <- this.timer.C;
-    }
-    this.timer = nil;
-}
-
-func (this *ScheduledTime) GetNextRunTime() time.Time {
-    return this.nextRun;
 }
 
 func (this *ScheduledTime) GetTimeOfDay() time.Time {

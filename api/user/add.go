@@ -5,6 +5,7 @@ import (
     "github.com/rs/zerolog/log"
 
     "github.com/eriq-augustine/autograder/api/core"
+    "github.com/eriq-augustine/autograder/db"
     "github.com/eriq-augustine/autograder/lms/lmsusers"
     "github.com/eriq-augustine/autograder/usr"
 )
@@ -57,7 +58,7 @@ func HandleAdd(request *AddRequest) (*AddResponse, *core.APIError) {
         newUsers[apiUser.Email] = user;
     }
 
-    result, err := request.Course.SyncNewUsers(newUsers, request.Force, request.DryRun, request.SendEmails);
+    result, err := db.SyncUsers(request.Course, newUsers, request.Force, request.DryRun, request.SendEmails);
     if (err != nil) {
         return nil, core.NewInternalError("-603", &request.APIRequestCourseUserContext,
                 "Failed to sync new users.").Err(err);

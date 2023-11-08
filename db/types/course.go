@@ -9,30 +9,28 @@ import (
     "github.com/eriq-augustine/autograder/common"
     "github.com/eriq-augustine/autograder/config"
     "github.com/eriq-augustine/autograder/docker"
-    "github.com/eriq-augustine/autograder/lms/adapter"
     "github.com/eriq-augustine/autograder/model"
-    "github.com/eriq-augustine/autograder/task"
 )
-
-const USERS_FILENAME = "users.json"
 
 type Course struct {
     // Required fields.
     ID string `json:"id"`
     DisplayName string `json:"display-name"`
 
-    LMSAdapter *adapter.LMSAdapter `json:"lms,omitempty"`
+    LMS *model.LMSAdapter `json:"lms,omitempty"`
 
-    Backup []*task.BackupTask `json:"backup,omitempty"`
-    Report []*task.ReportTask `json:"report,omitempty"`
-    ScoringUpload []*task.ScoringUploadTask `json:"scoring-upload,omitempty"`
+    Backup []*model.BackupTask `json:"backup,omitempty"`
+    Report []*model.ReportTask `json:"report,omitempty"`
+    ScoringUpload []*model.ScoringUploadTask `json:"scoring-upload,omitempty"`
 
     // Ignore these fields in JSON.
     DBID int `json:"-"`
     SourcePath string `json:"-"`
+
+    // TEST - This should go away at some point.
     Assignments map[string]*Assignment `json:"-"`
 
-    tasks []model.ScheduledCourseTask `json:"-"`
+    tasks []model.ScheduledTask `json:"-"`
 }
 
 func (this *Course) GetID() string {
@@ -53,8 +51,8 @@ func (this *Course) SetSourcePathForTesting(sourcePath string) string {
     return oldPath;
 }
 
-func (this *Course) GetLMSAdapter() *adapter.LMSAdapter {
-    return this.LMSAdapter;
+func (this *Course) GetLMSAdapter() *model.LMSAdapter {
+    return this.LMS;
 }
 
 func (this *Course) GetAssignmentLMSIDs() ([]string, []string) {
@@ -81,8 +79,8 @@ func (this *Course) Validate() error {
         return err;
     }
 
-    if (this.LMSAdapter != nil) {
-        err = this.LMSAdapter.Validate(this);
+    if (this.LMS != nil) {
+        err = this.LMS.Validate();
         if (err != nil) {
             return err;
         }
@@ -115,6 +113,7 @@ func (this *Course) Validate() error {
 // TODO(eriq): After DBs, the concept of activation will move to tasks.
 // Start any scheduled tasks or informal tasks associated with this course.
 func (this *Course) Activate() error {
+    /* TEST
     // Schedule tasks.
     for _, task := range this.tasks {
         task.Schedule();
@@ -122,6 +121,7 @@ func (this *Course) Activate() error {
 
     // Build images.
     go this.BuildAssignmentImages(false, false, docker.NewBuildOptions());
+    */
 
     return nil;
 }
@@ -154,9 +154,14 @@ func (this *Course) HasAssignment(id string) bool {
     return ok;
 }
 
-func (this *Course) GetAssignment(id string) (model.Assignment, bool) {
+// Get an assignment, or nil if the assignment does not exist.
+func (this *Course) GetAssignment(id string) model.Assignment {
     assignment, ok := this.Assignments[id];
-    return assignment, ok;
+    if (!ok) {
+        return nil;
+    }
+
+    return assignment;
 }
 
 func (this *Course) GetAssignments() map[string]model.Assignment {

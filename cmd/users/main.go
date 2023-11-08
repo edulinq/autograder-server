@@ -42,7 +42,7 @@ func (this *AddUser) Run(course model.Course) error {
         newUser.Pass = hashPass;
     }
 
-    result, err := course.AddUser(newUser, this.Force, this.DryRun, this.SendEmail);
+    result, err := db.SyncUser(course, newUser, this.Force, this.DryRun, this.SendEmail);
     if (err != nil) {
         return err;
     }
@@ -82,7 +82,7 @@ func (this *AddTSV) Run(course model.Course) error {
         return err;
     }
 
-    result, err := course.SyncNewUsers(newUsers, this.Force, this.DryRun, this.SendEmail);
+    result, err := db.SyncUsers(course, newUsers, this.Force, this.DryRun, this.SendEmail);
     if (err != nil) {
         return err;
     }
@@ -113,7 +113,7 @@ type AuthUser struct {
 }
 
 func (this *AuthUser) Run(course model.Course) error {
-    user, err := course.GetUser(this.Email);
+    user, err := db.GetUser(course, this.Email);
     if (err != nil) {
         return fmt.Errorf("Failed to get user: '%w'.", err);
     }
@@ -138,7 +138,7 @@ type GetUser struct {
 }
 
 func (this *GetUser) Run(course model.Course) error {
-    user, err := course.GetUser(this.Email);
+    user, err := db.GetUser(course, this.Email);
     if (err != nil) {
         return fmt.Errorf("Failed to get user: '%w'.", err);
     }
@@ -157,7 +157,7 @@ type ListUsers struct {
 }
 
 func (this *ListUsers) Run(course model.Course) error {
-    users, err := course.GetUsers();
+    users, err := db.GetUsers(course);
     if (err != nil) {
         return fmt.Errorf("Failed to load users: '%w'.", err);
     }
@@ -180,44 +180,29 @@ func (this *ListUsers) Run(course model.Course) error {
 type ChangePassword struct {
     Email string `help:"Email for the user." arg:"" required:""`
     Pass string `help:"Password for the user. Defaults to a random string (will be output)." short:"p"`
+    SendEmail bool `help:"Send an email to the user." default:"false"`
 }
 
 func (this *ChangePassword) Run(course model.Course) error {
-    users, err := course.GetUsers();
+    user, err := db.GetUser(course, this.Email);
     if (err != nil) {
-        return fmt.Errorf("Failed to get users: '%w'.", err);
+        return fmt.Errorf("Failed to get user: '%w'.", err);
     }
 
-    user := users[this.Email];
     if (user == nil) {
-        return fmt.Errorf("No user found with email '%s'.", this.Email);
+        return fmt.Errorf("User '%s' does not exist.", this.Email);
     }
 
-    generatedPass := false;
-    if (this.Pass == "") {
-        this.Pass, err = util.RandHex(usr.DEFAULT_PASSWORD_LEN);
-        if (err != nil) {
-            return fmt.Errorf("Failed to generate a default password.");
-        }
+    user.Pass = this.Pass;
 
-        generatedPass = true;
-    }
-
-    pass := util.Sha256Hex([]byte(this.Pass));
-
-    err = user.SetPassword(pass);
+    result, err := db.SyncUser(course, user, true, false, this.SendEmail);
     if (err != nil) {
-        return fmt.Errorf("Could not set password: '%w'.", err);
-    }
-
-    err = course.SaveUsers(users);
-    if (err != nil) {
-        return fmt.Errorf("Failed to save users file: '%w'.", err);
+        return fmt.Errorf("Failed to sync user: '%w'.", err);
     }
 
     // Wait to the very end to output the generated password.
-    if (generatedPass) {
-        fmt.Printf("Generated password: '%s'.\n", this.Pass);
+    if (len(result.ClearTextPasswords) > 0) {
+        fmt.Printf("Generated password: '%s'.\n", result.ClearTextPasswords[user.Email]);
     }
 
     return nil
@@ -228,21 +213,13 @@ type RmUser struct {
 }
 
 func (this *RmUser) Run(course model.Course) error {
-    users, err := course.GetUsers();
+    exists, err := db.RemoveUser(course, this.Email);
     if (err != nil) {
-        return fmt.Errorf("Failed to get users: '%w'.", err);
+        return fmt.Errorf("Failed to remove user '%s': '%w'.", this.Email, err);
     }
 
-    user := users[this.Email];
-    if (user == nil) {
-        return fmt.Errorf("User '%s' does not exist, cannot remove.", this.Email);
-    }
-
-    delete(users, this.Email);
-
-    err = course.SaveUsers(users);
-    if (err != nil) {
-        return fmt.Errorf("Failed to save users file: '%w'.", err);
+    if (!exists) {
+        return fmt.Errorf("User does not exist '%s'.", this.Email);
     }
 
     fmt.Printf("User '%s' removed.\n", this.Email);

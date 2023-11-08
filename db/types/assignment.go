@@ -9,7 +9,6 @@ import (
     "github.com/eriq-augustine/autograder/common"
     "github.com/eriq-augustine/autograder/docker"
     "github.com/eriq-augustine/autograder/model"
-    "github.com/eriq-augustine/autograder/usr"
     "github.com/eriq-augustine/autograder/util"
 )
 
@@ -148,15 +147,6 @@ func (this *Assignment) Validate() error {
     this.ImageInfo.BaseDir = filepath.Dir(this.SourcePath);
 
     return nil;
-}
-
-func (this *Assignment) GetUsers() (map[string]*usr.User, error) {
-    users, err := this.Course.GetUsers();
-    if (err != nil) {
-        return nil, fmt.Errorf("Failed to get users for assignment '%s': '%w'.", this.FullID(), err);
-    }
-
-    return users, nil;
 }
 
 func (this *Assignment) GetCacheDir() string {

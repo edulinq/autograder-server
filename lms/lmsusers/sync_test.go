@@ -1,15 +1,14 @@
 package lmsusers
 
 import (
-    "path/filepath"
     "slices"
     "testing"
 
     "github.com/eriq-augustine/autograder/config"
     "github.com/eriq-augustine/autograder/db"
     "github.com/eriq-augustine/autograder/email"
-    "github.com/eriq-augustine/autograder/lms"
-    lmstest "github.com/eriq-augustine/autograder/lms/adapter/test"
+    "github.com/eriq-augustine/autograder/lms/lmstypes"
+    lmstest "github.com/eriq-augustine/autograder/lms/backend/test"
     "github.com/eriq-augustine/autograder/model"
     "github.com/eriq-augustine/autograder/usr"
     "github.com/eriq-augustine/autograder/util"
@@ -28,8 +27,7 @@ func TestCourseSyncLMSUsers(test *testing.T) {
 
     defer resetAdapter(course);
 
-    testLMSAdapter := course.GetLMSAdapter().Adapter.(*lmstest.TestLMSAdapter);
-    testLMSAdapter.SetUsersModifier(testingUsers);
+    lmstest.SetUsersModifier(testingUsers);
 
     // Quiet the output a bit.
     oldLevel := config.GetLoggingLevel();
@@ -166,12 +164,11 @@ func resetAdapter(course model.Course) {
     course.GetLMSAdapter().SyncAddUsers = false;
     course.GetLMSAdapter().SyncRemoveUsers = false;
 
-    testLMSAdapter := course.GetLMSAdapter().Adapter.(*lmstest.TestLMSAdapter);
-    testLMSAdapter.ClearUsersModifier();
+    lmstest.ClearUsersModifier();
 }
 
 // Modify the users that the LMS will return for testing.
-func testingUsers(users []*lms.User) []*lms.User {
+func testingUsers(users []*lmstypes.User) []*lmstypes.User {
     // Remove other.
     removeIndex := -1;
     for i, user := range users {
@@ -194,7 +191,7 @@ func testingUsers(users []*lms.User) []*lms.User {
     users = slices.Delete(users, removeIndex, removeIndex + 1);
 
     // Make an add user.
-    addUser := &lms.User{
+    addUser := &lmstypes.User{
         ID: "lms-add@test.com",
         Name: "add",
         Email: "add@test.com",

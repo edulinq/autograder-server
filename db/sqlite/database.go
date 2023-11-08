@@ -10,7 +10,6 @@ import (
     _ "github.com/mattn/go-sqlite3"
 
     "github.com/eriq-augustine/autograder/config"
-    "github.com/eriq-augustine/autograder/usr"
     "github.com/eriq-augustine/autograder/util"
 )
 
@@ -72,13 +71,4 @@ func (this *backend) EnsureTables() error {
 	}
 
     return nil;
-}
-
-// TEST
-func (this *backend) GetCourseUsers(courseID string) (map[string]*usr.User, error) {
-    this.lock.Lock();
-    defer this.lock.Unlock();
-
-    // TEST
-    return nil, nil;
 }
