@@ -19,7 +19,16 @@ func GetCourse(rawCourseID string) (model.Course, error) {
         return nil, fmt.Errorf("Failed to validate course id '%s': '%w'.", rawCourseID, err);
     }
 
-    return backend.GetCourse(courseID);
+    course, err := backend.GetCourse(courseID);
+    if (err != nil) {
+        return nil, err;
+    }
+
+    if (course == nil) {
+        return nil, nil;
+    }
+
+    return course, nil;
 }
 
 // Get a course or panic.
@@ -89,6 +98,15 @@ func SaveCourse(rawCourse model.Course) error {
 // Return all the loaded course ids.
 func LoadCourses() ([]string, error) {
     return LoadCoursesFromDir(config.COURSES_ROOT.Get());
+}
+
+func MustLoadCourses() []string {
+    courseIDs, err := LoadCourses();
+    if (err != nil) {
+        log.Fatal().Err(err).Str("path", config.COURSES_ROOT.Get()).Msg("Failed to load courses.");
+    }
+
+    return courseIDs;
 }
 
 func LoadCoursesFromDir(baseDir string) ([]string, error) {

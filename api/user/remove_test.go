@@ -12,6 +12,9 @@ import (
 // TEST - Now that the course is reloaded, ensure that the users are removed: db.GetUser().
 
 func TestRemove(test *testing.T) {
+    // Leave the course in a good state after the test.
+    defer db.ResetForTesting();
+
     testCases := []struct{ role usr.UserRole; target string; basicPermError bool; advPermError bool; expected RemoveResponse }{
         {usr.Owner, "other@test.com",   false, false, RemoveResponse{true}},
         {usr.Owner, "student@test.com", false, false, RemoveResponse{true}},
@@ -33,7 +36,7 @@ func TestRemove(test *testing.T) {
 
     for i, testCase := range testCases {
         // Reload the test course every time.
-        db.MustLoadTestCourse();
+        db.ResetForTesting();
 
         fields := map[string]any{
             "target-email": testCase.target,

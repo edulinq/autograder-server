@@ -30,7 +30,7 @@ type SubmissionComment struct {
 type Assignment struct {
     ID string
     Name string
-    CourseID string
+    LMSCourseID string
     DueDate *time.Time
     MaxPoints float64
 }

@@ -2,6 +2,7 @@ package db
 
 // The db package acts as an interface for other packages into the database.
 // Once db.Open() is called, this layer will handle conversions to/from the databse.
+// Any Get*() functions that return an interface will return a pure nil if nothing is found.
 
 import (
     "fmt"

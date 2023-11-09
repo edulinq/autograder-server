@@ -75,45 +75,6 @@ func TestBadUsersFieldNotExported(test *testing.T) {
     }
 }
 
-func TestBadCourseUsersFieldFailGetUsers(test *testing.T) {
-    type goodCourseUsers struct {
-        APIRequestCourseUserContext
-        MinRoleStudent
-
-        Users CourseUsers
-    }
-
-    request := goodCourseUsers{
-        APIRequestCourseUserContext: standardCourseContext,
-    };
-
-    // First, validate the course context.
-    found, apiErr := validateRequestStruct(&request, "");
-
-    if (apiErr != nil) {
-        test.Fatalf("Course context validation returned an error when it should be clean: '%v'.", apiErr);
-    }
-
-    if (!found) {
-        test.Fatalf("Course context validation did not find course context.");
-    }
-
-    // Course context is now fine, now make GetUsers fail.
-    oldSourcePath := request.Course.SetSourcePathForTesting(filepath.Join(os.DevNull, "course.json"));
-    defer func() { request.Course.SetSourcePathForTesting(oldSourcePath); }();
-
-    apiErr = checkRequestSpecialFields(nil, &request, "");
-    if (apiErr == nil) {
-        test.Fatalf("Error not returned when users fetch failed.");
-    }
-
-    expectedLocator := "-313";
-    if (apiErr.Locator != expectedLocator) {
-        test.Fatalf("Incorrect error locator when user fetch failed. Expcted '%s', found '%s'.",
-                expectedLocator, apiErr.Locator);
-    }
-}
-
 func TestNonEmptyStringField(test *testing.T) {
     testCases := []struct{ request any; errLoc string; jsonName string}{
         {&struct{ APIRequest; Text string }{}, "", ""},

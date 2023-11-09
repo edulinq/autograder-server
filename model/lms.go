@@ -14,7 +14,7 @@ type LMSAdapter struct {
     Type string `json:"type"`
 
     // Connection options.
-    CourseID string `json:"course-id"`
+    LMSCourseID string `json:"course-id"`
     APIToken string `json:"api-token"`
     BaseURL string `json:"base-url"`
 

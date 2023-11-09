@@ -5,6 +5,7 @@ import (
     "testing"
 
     "github.com/eriq-augustine/autograder/api/core"
+    "github.com/eriq-augustine/autograder/db"
     "github.com/eriq-augustine/autograder/usr"
     "github.com/eriq-augustine/autograder/util"
 )
@@ -12,6 +13,8 @@ import (
 // Many of the semantics of add users are tested at the course level,
 // focus on the API here.
 func TestAdd(test *testing.T) {
+    defer db.ResetForTesting();
+
     testCases := []struct{
             role usr.UserRole; permError bool
             force bool; dryRun bool; sendEmails bool; skipLMSSync bool
@@ -40,7 +43,7 @@ func TestAdd(test *testing.T) {
                     },
                 },
                 Errors: []AddError{},
-                LMSSyncCount: 5,
+                LMSSyncCount: 6,
             },
         },
 
@@ -118,6 +121,8 @@ func TestAdd(test *testing.T) {
     };
 
     for i, testCase := range testCases {
+        db.ResetForTesting();
+
         fields := map[string]any{
             "force": testCase.force,
             "dry-run": testCase.dryRun,

@@ -36,7 +36,16 @@ func GetUser(rawCourse model.Course, email string) (*usr.User, error) {
         return nil, fmt.Errorf("Course '%v' is not a db course.", rawCourse);
     }
 
-    return backend.GetUser(course, email);
+    user, err := backend.GetUser(course, email);
+    if (err != nil) {
+        return nil, err;
+    }
+
+    if (user == nil) {
+        return nil, nil;
+    }
+
+    return user, nil;
 }
 
 // Insert the given users (overriding any conflicting users).

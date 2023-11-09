@@ -4,12 +4,10 @@ import (
     "slices"
     "testing"
 
-    "github.com/eriq-augustine/autograder/config"
     "github.com/eriq-augustine/autograder/db"
     "github.com/eriq-augustine/autograder/email"
     "github.com/eriq-augustine/autograder/lms/lmstypes"
     lmstest "github.com/eriq-augustine/autograder/lms/backend/test"
-    "github.com/eriq-augustine/autograder/model"
     "github.com/eriq-augustine/autograder/usr"
     "github.com/eriq-augustine/autograder/util"
 )
@@ -22,19 +20,22 @@ type SyncLMSTestCase struct {
     syncDel bool
 }
 
-func TestCourseSyncLMSUsers(test *testing.T) {
-    course := db.MustGetTestCourse();
+func reset() {
+    db.ResetForTesting();
+    lmstest.ClearUsersModifier();
+}
 
-    defer resetAdapter(course);
-
-    lmstest.SetUsersModifier(testingUsers);
-
-    // Quiet the output a bit.
-    oldLevel := config.GetLoggingLevel();
-    config.SetLogLevelFatal();
-    defer config.SetLoggingLevel(oldLevel);
+func TestCourseSyncLMSUisers(test *testing.T) {
+    // Leave the db in a good state after the test.
+    defer reset();
 
     for i, testCase := range getSyncLMSTestCases() {
+        // Reload the test course every time.
+        reset();
+
+        lmstest.SetUsersModifier(testingUsers);
+        course := db.MustGetTestCourse();
+
         course.GetLMSAdapter().SyncUserAttributes = testCase.syncAttributes;
         course.GetLMSAdapter().SyncAddUsers = testCase.syncAdd;
         course.GetLMSAdapter().SyncRemoveUsers = testCase.syncDel;
@@ -156,15 +157,6 @@ func buildSyncLMSTestCase(testCases []SyncLMSTestCase, index int, currentCase []
     testCases = buildSyncLMSTestCase(testCases, index + 1, currentCase);
 
     return testCases;
-}
-
-// Reset the test LMS adapter back to it's starting settings.
-func resetAdapter(course model.Course) {
-    course.GetLMSAdapter().SyncUserAttributes = false;
-    course.GetLMSAdapter().SyncAddUsers = false;
-    course.GetLMSAdapter().SyncRemoveUsers = false;
-
-    lmstest.ClearUsersModifier();
 }
 
 // Modify the users that the LMS will return for testing.

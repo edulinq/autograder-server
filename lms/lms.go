@@ -30,14 +30,14 @@ func getBackend(course model.Course) (lmsBackend, error) {
 
     switch (adapter.Type) {
         case model.LMS_TYPE_CANVAS:
-            backend, err := canvas.NewBackend(adapter.CourseID, adapter.APIToken, adapter.BaseURL);
+            backend, err := canvas.NewBackend(adapter.LMSCourseID, adapter.APIToken, adapter.BaseURL);
             if (err != nil) {
                 return nil, err;
             }
 
             return backend, nil;
         case model.LMS_TYPE_TEST:
-            backend, err := test.NewBackend(adapter.CourseID);
+            backend, err := test.NewBackend(course.GetID());
             if (err != nil) {
                 return nil, err;
             }

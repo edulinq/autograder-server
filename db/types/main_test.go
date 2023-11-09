@@ -1,5 +1,8 @@
 package types
 
+// Note that this file is largely a copy of db/test.go.
+// The content is repeated to avoid an import cycle.
+
 import (
     "os"
     "testing"
@@ -8,15 +11,19 @@ import (
     "github.com/eriq-augustine/autograder/util"
 )
 
-// Note that this is a duplicate of db/test.go, but we have to avoid an import cycle.
 const TEST_COURSE_ID = "COURSE101";
 
 // Use the common main for all tests in this package.
 func TestMain(suite *testing.M) {
-    config.MustEnableUnitTestingMode();
+    // Run inside a func so defers will run before os.Exit().
+    code := func() int {
+        config.MustEnableUnitTestingMode();
 
-    // Remove the temp working directory set in config.MustEnableUnitTestingMode().
-    defer util.RemoveDirent(config.WorkDir.Get());
+        // Remove the temp working directory set in config.MustEnableUnitTestingMode().
+        defer util.RemoveDirent(config.WORK_DIR.Get());
 
-    os.Exit(suite.Run())
+        return suite.Run();
+    }();
+
+    os.Exit(code);
 }

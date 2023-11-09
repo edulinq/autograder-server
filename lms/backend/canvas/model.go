@@ -31,7 +31,7 @@ type SubmissionComment struct {
 type Assignment struct {
     ID string `json:"id"`
     Name string `json:"name"`
-    CourseID string `json:"course_id"`
+    CanvasCourseID string `json:"course_id"`
     DueDate *time.Time `json:"due_at"`
     MaxPoints float64 `json:"points_possible"`
 }
@@ -124,7 +124,7 @@ func (this *Assignment) ToLMSType() *lmstypes.Assignment {
     return &lmstypes.Assignment{
         ID: this.ID,
         Name: this.Name,
-        CourseID: this.CourseID,
+        LMSCourseID: this.CanvasCourseID,
         DueDate: this.DueDate,
         MaxPoints: this.MaxPoints,
     };

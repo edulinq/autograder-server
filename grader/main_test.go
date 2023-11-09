@@ -4,7 +4,6 @@ import (
     "os"
     "testing"
 
-    "github.com/eriq-augustine/autograder/config"
     "github.com/eriq-augustine/autograder/db"
 )
 

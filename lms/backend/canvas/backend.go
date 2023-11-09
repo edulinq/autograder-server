@@ -11,8 +11,8 @@ type CanvasBackend struct {
     BaseURL string
 }
 
-func NewBackend(courseID string, apiToken string, baseURL string) (*CanvasBackend, error) {
-    if (courseID == "") {
+func NewBackend(canvasCourseID string, apiToken string, baseURL string) (*CanvasBackend, error) {
+    if (canvasCourseID == "") {
         return nil, fmt.Errorf("Canvas course ID (course-id) cannot be empty.");
     }
 
@@ -27,7 +27,7 @@ func NewBackend(courseID string, apiToken string, baseURL string) (*CanvasBacken
     baseURL = strings.TrimSuffix(baseURL, "/");
 
     backend := CanvasBackend{
-        CourseID: courseID,
+        CourseID: canvasCourseID,
         APIToken: apiToken,
         BaseURL: baseURL,
     };
