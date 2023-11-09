@@ -8,11 +8,34 @@ import (
     "github.com/eriq-augustine/autograder/util"
 )
 
+// TEST - Include more info in graded assignment (e.g. id)
+
+// TODO(eriq): Include output.
+type GradingResult struct {
+    Result *GradedAssignment
+    InputFilesZip []byte
+}
+
+// TEST - Rename to GradedSubmission
 type GradedAssignment struct {
+    // Information set by the autograder.
+    ID string `json:"id"`
+    ShortID string `json:"short-id"`
+    CourseID string `json:"course-id"`
+    AssignmentID string `json:"assignment-id"`
+    User string `json:"user"`
+    Message string `json:"message"`
+    MaxPoints float64 `json:"max_points"`
+    Score float64 `json:"score"`
+
+    // Information generally filled out by the grader.
     Name string `json:"name"`
     Questions []GradedQuestion `json:"questions"`
     GradingStartTime time.Time `json:"grading_start_time"`
     GradingEndTime time.Time `json:"grading_end_time"`
+
+    // Additional pass-through information that the grader can use.
+    AdditionalInfo map[string]any `json:"additional-info"`
 }
 
 type GradedQuestion struct {
@@ -26,16 +49,6 @@ type GradedQuestion struct {
 
 func (this GradedAssignment) String() string {
     return util.BaseString(this);
-}
-
-func (this GradedAssignment) Score() float64 {
-    score := 0.0;
-
-    for _, question := range this.Questions {
-        score += question.Score;
-    }
-
-    return score;
 }
 
 func (this GradedAssignment) Equals(other GradedAssignment, checkMessages bool) bool {
@@ -84,6 +97,14 @@ func (this GradedAssignment) Report() string {
     builder.WriteString(fmt.Sprintf("Total: %s / %s", util.FloatToStr(totalScore), util.FloatToStr(maxScore)));
 
     return builder.String();
+}
+
+// Fill in the MaxPoints and Score fields.
+func (this GradedAssignment) ComputePoints() {
+    for _, question := range this.Questions {
+        this.Score += question.Score;
+        this.MaxPoints += question.MaxPoints;
+    }
 }
 
 func (this GradedAssignment) GetSummary(id string, message string) *SubmissionSummary {

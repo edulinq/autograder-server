@@ -10,6 +10,7 @@ import (
 
     "github.com/rs/zerolog/log"
 
+    "github.com/eriq-augustine/autograder/artifact"
     "github.com/eriq-augustine/autograder/config"
     "github.com/eriq-augustine/autograder/db/disk"
     "github.com/eriq-augustine/autograder/db/types"
@@ -42,6 +43,8 @@ type Backend interface {
 
     // Load a course into the databse and return the course's id.
     // This implies loading a course directory from a config and saving it in the db.
+    // Will search for and load any assignments, users, and submissions
+    // located in the same directory tree.
     // Override any existing settings for this course.
     LoadCourse(path string) (string, error);
 
@@ -60,6 +63,10 @@ type Backend interface {
     // Remove a user.
     // Do nothing and return nil if the user does not exist.
     RemoveUser(course *types.Course, email string) error;
+
+    // Save the results of grading.
+    // All the submissions should be from this course.
+    SaveSubmissions(course *types.Course, results []*artifact.GradingResult) error;
 }
 
 func Open() error {

@@ -6,6 +6,8 @@ import (
     "github.com/eriq-augustine/autograder/util"
 )
 
+// TEST - We don't really need summaries written to disk, just pass them around.
+
 type TestSubmission struct {
     IgnoreMessages bool `json:"ignore_messages"`
     Result GradedAssignment `json:"result"`

@@ -4,6 +4,7 @@ import (
     "fmt"
     "path/filepath"
 
+    "github.com/eriq-augustine/autograder/artifact"
     "github.com/eriq-augustine/autograder/usr"
     "github.com/eriq-augustine/autograder/util"
 )
@@ -33,18 +34,23 @@ func LoadCourse(path string) (*Course, error) {
     return course, nil;
 }
 
-func LoadCourseWithUsers(path string) (*Course, map[string]*usr.User, error) {
+func FullLoadCourse(path string) (*Course, map[string]*usr.User, []*artifact.GradingResult, error) {
     course, err := LoadCourse(path);
     if (err != nil) {
-        return nil, nil, err;
+        return nil, nil, nil, err;
     }
 
     users, err := loadStaticUsers(path);
     if (err != nil) {
-        return nil, nil, fmt.Errorf("Failed to load static users for course config '%s': '%w'.", path, err);
+        return nil, nil, nil, fmt.Errorf("Failed to load static users for course config '%s': '%w'.", path, err);
     }
 
-    return course, users, nil;
+    submissions, err := loadStaticSubmissions(path);
+    if (err != nil) {
+        return nil, nil, nil, fmt.Errorf("Failed to load static submissions for course config '%s': '%w'.", path, err);
+    }
+
+    return course, users, submissions, nil;
 }
 
 func loadCourseConfig(path string) (*Course, error) {

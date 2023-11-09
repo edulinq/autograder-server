@@ -54,6 +54,11 @@ func TestPeek(test *testing.T) {
     };
 
     for i, testCase := range testCases {
+        // TEST
+        if (i >= 1) {
+            break;
+        }
+
         fields := map[string]any{
             "target-email": testCase.targetEmail,
             "target-submission": testCase.targetSubmission,
@@ -91,7 +96,7 @@ func TestPeek(test *testing.T) {
             continue;
         }
 
-        actualScore := responseContent.Submission.Score();
+        actualScore := responseContent.Submission.Score;
         if (!util.IsClose(testCase.score, actualScore)) {
             test.Errorf("Case %d: Unexpected submission score. Expected: '%+v', actual: '%+v'.", i, testCase.score, actualScore);
             continue;

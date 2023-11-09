@@ -7,6 +7,8 @@ import (
     "github.com/eriq-augustine/autograder/util"
 )
 
+// TEST - Rename file? user.go?
+
 const USERS_FILENAME = "users.json"
 
 // Load users from a file adjacent to the course config (if it exists).

@@ -41,6 +41,9 @@ func APITestingMain(suite *testing.M, routes *[]*Route) {
 
         config.NO_AUTH.Set(false);
 
+        // TEST
+        config.SetLogLevelInfo();
+
         startTestServer(routes);
         defer stopTestServer();
 

@@ -72,12 +72,6 @@ func (this *Assignment) GetImageInfo() *docker.ImageInfo {
 }
 
 func (this *Assignment) GetSourceDir() string {
-    // TEST
-    fmt.Println("---")
-    fmt.Println(this);
-    fmt.Println(this.SourcePath);
-    fmt.Println("---")
-
     return filepath.Dir(this.SourcePath);
 }
 

@@ -16,7 +16,7 @@ func (this *backend) LoadCourse(path string) (string, error) {
     this.lock.Lock();
     defer this.lock.Unlock();
 
-    course, users, err := types.LoadCourseWithUsers(path);
+    course, users, submissions, err := types.FullLoadCourse(path);
     if (err != nil) {
         return "", err;
     }
@@ -30,6 +30,11 @@ func (this *backend) LoadCourse(path string) (string, error) {
     }
 
     err = this.saveUsersLock(course, users, false);
+    if (err != nil) {
+        return "", err;
+    }
+
+    err = this.saveSubmissionsLock(course, submissions, false);
     if (err != nil) {
         return "", err;
     }

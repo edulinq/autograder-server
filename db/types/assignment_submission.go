@@ -11,6 +11,8 @@ import (
     "github.com/eriq-augustine/autograder/util"
 )
 
+// TEST - Everything below here needs updating.
+
 func (this *Assignment) getSubmissionsDir() (string, error) {
     path := filepath.Join(this.GetSourceDir(), DEFAULT_SUBMISSIONS_DIR);
 

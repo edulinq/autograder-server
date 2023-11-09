@@ -1,4 +1,12 @@
 {
+    "id": "course101::hw0::student@test.com::1697406272",
+    "short-id": "1697406272",
+    "course-id": "course101",
+    "assignment-id": "hw0",
+    "user": "student@test.com",
+    "message": "",
+    "max_points": 2,
+    "score": 2,
     "name": "HW0",
     "questions": [
         {

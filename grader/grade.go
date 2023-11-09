@@ -83,6 +83,16 @@ func Grade(assignment model.Assignment, submissionPath string, user string, mess
         return nil, nil, output, err;
     }
 
+    // Set all the autograder fields in the result.
+    result.ID = fullSubmissionID;
+    result.ShortID = submissionID;
+    result.CourseID = assignment.GetCourse().GetID();
+    result.AssignmentID = assignment.GetID();
+    result.User = user;
+    result.Message = message;
+    result.ComputePoints();
+
+    // TEST
     summary := result.GetSummary(fullSubmissionID, message);
     summaryPath := filepath.Join(outputDir, common.GRADER_OUTPUT_SUMMARY_FILENAME);
 
