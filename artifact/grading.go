@@ -58,8 +58,8 @@ type GradedQuestion struct {
     GradingEndTime time.Time `json:"grading_end_time"`
 }
 
-func (this GradedAssignment) ToHistoryItem() SubmissionHistoryItem {
-    return SubmissionHistoryItem{
+func (this GradedAssignment) ToHistoryItem() *SubmissionHistoryItem {
+    return &SubmissionHistoryItem{
         ID: this.ID,
         ShortID: this.ShortID,
         CourseID: this.CourseID,

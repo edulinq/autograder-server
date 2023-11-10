@@ -87,11 +87,35 @@ func (this *backend) GetSubmissionResult(assignment *types.Assignment, email str
     return &result, nil;
 }
 
-// TEST
 func (this *backend) GetSubmissionHistory(assignment *types.Assignment, email string) ([]*artifact.SubmissionHistoryItem, error) {
     history := make([]*artifact.SubmissionHistoryItem, 0);
 
-    // TEST
+    submissionsDir := this.getUserSubmissionDir(assignment.GetCourse().GetID(), assignment.GetID(), email);
+    if (!util.PathExists(submissionsDir)) {
+        return history, nil;
+    }
+
+    dirents, err := os.ReadDir(submissionsDir);
+    if (err != nil) {
+        return nil, fmt.Errorf("Unable to read user submissions dir '%s': '%w'.", submissionsDir, err);
+    }
+
+    if (len(dirents) == 0) {
+        return history, nil;
+    }
+
+    for _, dirent := range dirents {
+        resultPath := filepath.Join(submissionsDir, dirent.Name(), types.SUBMISSION_RESULT_FILENAME);
+
+        var result artifact.GradedAssignment;
+        err = util.JSONFromFile(resultPath, &result);
+        if (err != nil) {
+            return nil, fmt.Errorf("Unable to deserialize submission result '%s': '%w'.", resultPath, err);
+        }
+
+        history = append(history, result.ToHistoryItem());
+    }
+
     return history, nil;
 }
 

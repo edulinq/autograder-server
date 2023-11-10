@@ -11,10 +11,10 @@ import (
 )
 
 func TestHistory(test *testing.T) {
-    testCases := []struct{ role usr.UserRole; target string; found bool; permError bool; expected []*artifact.SubmissionSummary; }{
+    testCases := []struct{ role usr.UserRole; target string; found bool; permError bool; expected []*artifact.SubmissionHistoryItem; }{
         // Self.
         {usr.Student, "", true, false, studentHist},
-        {usr.Grader, "", true, false, []*artifact.SubmissionSummary{}},
+        {usr.Grader, "", true, false, []*artifact.SubmissionHistoryItem{}},
 
         // Other
         {usr.Grader, "student@test.com", true, false, studentHist},
@@ -22,7 +22,7 @@ func TestHistory(test *testing.T) {
 
         // Missing user.
         {usr.Student, "ZZZ@test.com", false, true, nil},
-        {usr.Grader, "ZZZ@test.com", false, false, []*artifact.SubmissionSummary{}},
+        {usr.Grader, "ZZZ@test.com", false, false, []*artifact.SubmissionHistoryItem{}},
     };
 
     for i, testCase := range testCases {
@@ -59,29 +59,42 @@ func TestHistory(test *testing.T) {
         }
 
         if (!reflect.DeepEqual(testCase.expected, responseContent.History)) {
-            test.Errorf("Case %d: History does not match. Expected: '%+v', actual: '%+v'.", i, testCase.expected, responseContent.History);
+            test.Errorf("Case %d: History does not match. Expected: '%s', actual: '%s'.", i,
+                    util.MustToJSONIndent(testCase.expected), util.MustToJSONIndent(responseContent.History));
             continue;
         }
     }
 }
 
-var studentHist []*artifact.SubmissionSummary = []*artifact.SubmissionSummary{
-    &artifact.SubmissionSummary{
+var studentHist []*artifact.SubmissionHistoryItem = []*artifact.SubmissionHistoryItem{
+    &artifact.SubmissionHistoryItem{
         ID: "course101::hw0::student@test.com::1697406256",
+        ShortID: "1697406256",
+        CourseID: "course101",
+        AssignmentID: "hw0",
+        User: "student@test.com",
         Message: "",
         MaxPoints: 2,
         Score: 0,
         GradingStartTime: util.MustFromTimestamp("2023-10-15T21:44:16.84006Z"),
     },
-    &artifact.SubmissionSummary{
+    &artifact.SubmissionHistoryItem{
         ID: "course101::hw0::student@test.com::1697406265",
+        ShortID: "1697406265",
+        CourseID: "course101",
+        AssignmentID: "hw0",
+        User: "student@test.com",
         Message: "",
         MaxPoints: 2,
         Score: 1,
         GradingStartTime: util.MustFromTimestamp("2023-10-15T21:44:26.445382Z"),
     },
-    &artifact.SubmissionSummary{
+    &artifact.SubmissionHistoryItem{
         ID: "course101::hw0::student@test.com::1697406272",
+        ShortID: "1697406272",
+        CourseID: "course101",
+        AssignmentID: "hw0",
+        User: "student@test.com",
         Message: "",
         MaxPoints: 2,
         Score: 2,
