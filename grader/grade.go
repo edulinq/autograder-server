@@ -6,11 +6,10 @@ import (
     "path/filepath"
     "sync"
 
-    "github.com/rs/zerolog/log"
-
     "github.com/eriq-augustine/autograder/artifact"
     "github.com/eriq-augustine/autograder/common"
     "github.com/eriq-augustine/autograder/config"
+    "github.com/eriq-augustine/autograder/db"
     "github.com/eriq-augustine/autograder/model"
     "github.com/eriq-augustine/autograder/util"
 )
@@ -18,14 +17,12 @@ import (
 var submissionLocks sync.Map;
 
 type GradeOptions struct {
-    UseFakeSubmissionsDir bool
     NoDocker bool
     LeaveTempDir bool
 }
 
 func GetDefaultGradeOptions() GradeOptions {
     return GradeOptions{
-        UseFakeSubmissionsDir: config.NO_STORE.Get(),
         NoDocker: config.DOCKER_DISABLE.Get(),
         LeaveTempDir: config.DEBUG.Get(),
     };
@@ -53,10 +50,16 @@ func Grade(assignment model.Assignment, submissionPath string, user string, mess
         return nil, nil, "", fmt.Errorf("Failed to build assignment assignment '%s' docker image: '%w'.", assignment.FullID(), err);
     }
 
-    submissionDir, submissionID, err := prepSubmissionDir(assignment, user, options);
+    submissionID, err := db.GetNextSubmissionID(assignment, user);
     if (err != nil) {
-        return nil, nil, "", fmt.Errorf("Failed to prepare submission dir for assignment '%s' and user '%s': '%w'.", assignment.FullID(), user, err);
+        return nil, nil, "", fmt.Errorf("Unable to get next submission id for assignment'%s', user '%s': '%w'.", assignment.FullID(), user, err);
     }
+
+    submissionDir, err := util.MkDirTemp("autograder-submission-dir-");
+    if (err != nil) {
+        return nil, nil, "", fmt.Errorf("Could not create temp submission dir: '%w'.", err);
+    }
+
 
     fullSubmissionID := common.CreateFullSubmissionID(assignment.GetCourse().GetID(), assignment.GetID(), user, submissionID);
 
@@ -92,7 +95,7 @@ func Grade(assignment model.Assignment, submissionPath string, user string, mess
     result.Message = message;
     result.ComputePoints();
 
-    // TEST
+    // TEST - Remove summary
     summary := result.GetSummary(fullSubmissionID, message);
     summaryPath := filepath.Join(outputDir, common.GRADER_OUTPUT_SUMMARY_FILENAME);
 
@@ -101,36 +104,9 @@ func Grade(assignment model.Assignment, submissionPath string, user string, mess
         return nil, nil, output, fmt.Errorf("Failed to write submission summary for assignment '%s' and user '%s': '%w'.", assignment.FullID(), user, err);
     }
 
+    // TEST - Save results in DB?
+
+    // TEST - Skip DB save if config.NO_STORE ?
+
     return result, summary, output, nil;
-}
-
-func prepSubmissionDir(assignment model.Assignment, user string, options GradeOptions) (string, string, error) {
-    var submissionDir string;
-    var err error;
-    var id string;
-
-    if (options.UseFakeSubmissionsDir) {
-        tempSubmissionsDir, err := util.MkDirTemp("autograding-submissions-");
-        if (err != nil) {
-            return "", "", fmt.Errorf("Could not create temp submissions dir: '%w'.", err);
-        }
-
-        submissionDir, id, err = assignment.PrepareSubmissionWithDir(user, tempSubmissionsDir);
-        if (err != nil) {
-            return "", "", fmt.Errorf("Failed to prepare fake submission dir: '%w'.", err);
-        }
-
-        if (options.LeaveTempDir) {
-            log.Info().Str("path", tempSubmissionsDir).Msg("Leaving behind temp submissions dir.");
-        } else {
-            defer os.RemoveAll(tempSubmissionsDir);
-        }
-    } else {
-        submissionDir, id, err = assignment.PrepareSubmission(user);
-        if (err != nil) {
-            return "", "", fmt.Errorf("Failed to prepare default submission dir: '%w'.", err);
-        }
-    }
-
-    return submissionDir, id, nil;
 }

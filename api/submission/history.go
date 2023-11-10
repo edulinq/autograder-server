@@ -3,7 +3,7 @@ package submission
 import (
     "github.com/eriq-augustine/autograder/api/core"
     "github.com/eriq-augustine/autograder/artifact"
-    "github.com/eriq-augustine/autograder/util"
+    "github.com/eriq-augustine/autograder/db"
 )
 
 type HistoryRequest struct {
@@ -16,13 +16,13 @@ type HistoryRequest struct {
 
 type HistoryResponse struct {
     FoundUser bool `json:"found-user"`
-    History []*artifact.SubmissionSummary `json:"history"`
+    History []*artifact.SubmissionHistoryItem `json:"history"`
 }
 
 func HandleHistory(request *HistoryRequest) (*HistoryResponse, *core.APIError) {
     response := HistoryResponse{
         FoundUser: false,
-        History: make([]*artifact.SubmissionSummary, 0),
+        History: make([]*artifact.SubmissionHistoryItem, 0),
     };
 
     if (!request.TargetUser.Found) {
@@ -31,21 +31,13 @@ func HandleHistory(request *HistoryRequest) (*HistoryResponse, *core.APIError) {
 
     response.FoundUser = true;
 
-    paths, err := request.Assignment.GetSubmissionSummaries(request.TargetUser.Email);
+    history, err := db.GetSubmissionHistory(request.Assignment, request.TargetUser.Email);
     if (err != nil) {
-        return nil, core.NewInternalError("-407", &request.APIRequestCourseUserContext, "Failed to get submission summaries.").Err(err);
+        return nil, core.NewInternalError("-407", &request.APIRequestCourseUserContext, "Failed to get submission history.").
+                Err(err).Add("user", request.TargetUser.Email);
     }
 
-    for _, path := range paths {
-        summary := artifact.SubmissionSummary{};
-        err = util.JSONFromFile(path, &summary);
-        if (err != nil) {
-            return nil, core.NewInternalError("-408", &request.APIRequestCourseUserContext,
-                    "Failed to deserialize submission summary.").Err(err).Add("path", path);
-        }
-
-        response.History = append(response.History, &summary);
-    }
+    response.History = history;
 
     return &response, nil;
 }

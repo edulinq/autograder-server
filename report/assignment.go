@@ -5,12 +5,10 @@ import (
     "time"
 
     "gonum.org/v1/gonum/stat"
-
-    "github.com/eriq-augustine/autograder/artifact"
     "github.com/eriq-augustine/autograder/db"
+    "github.com/eriq-augustine/autograder/usr"
     "github.com/eriq-augustine/autograder/model"
     "github.com/eriq-augustine/autograder/util"
-    "github.com/eriq-augustine/autograder/usr"
 )
 
 const (
@@ -89,33 +87,18 @@ func GetAssignmentScoringReport(assignment model.Assignment) (*AssignmentScoring
 }
 
 func fetchScores(assignment model.Assignment) ([]string, map[string][]float64, time.Time, error) {
-    users, err := db.GetUsers(assignment.GetCourse());
+    results, err := db.GetRecentSubmissions(assignment, usr.Student);
     if (err != nil) {
-        return nil, nil, time.Time{}, fmt.Errorf("Failed to get users for course: '%w'.", err);
-    }
-
-    paths, err := assignment.GetAllRecentSubmissionResults(users);
-    if (err != nil) {
-        return nil, nil, time.Time{}, fmt.Errorf("Failed to get submission results: '%w'.", err);
+        return nil, nil, time.Time{}, fmt.Errorf("Failed to get recent submission results: '%w'.", err);
     }
 
     questionNames := make([]string, 0);
     scores := make(map[string][]float64);
     lastSubmissionTime := time.Time{};
 
-    for email, path := range paths {
-        if (users[email].Role != usr.Student) {
+    for _, result := range results {
+        if (result == nil) {
             continue;
-        }
-
-        if (path == "") {
-            continue;
-        }
-
-        result := artifact.GradedAssignment{};
-        err = util.JSONFromFile(path, &result);
-        if (err != nil) {
-            return nil, nil, time.Time{}, fmt.Errorf("Failed to deserialize submission result '%s': '%w'.", path, err);
         }
 
         if (result.GradingStartTime.After(lastSubmissionTime)) {

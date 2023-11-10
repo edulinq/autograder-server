@@ -3,8 +3,8 @@ package submission
 import (
     "github.com/eriq-augustine/autograder/api/core"
     "github.com/eriq-augustine/autograder/artifact"
+    "github.com/eriq-augustine/autograder/db"
     "github.com/eriq-augustine/autograder/usr"
-    "github.com/eriq-augustine/autograder/util"
 )
 
 type FetchScoresRequest struct {
@@ -17,37 +17,14 @@ type FetchScoresRequest struct {
 }
 
 type FetchScoresResponse struct {
-    Summaries map[string]*artifact.SubmissionSummary `json:"scores"`
+    SubmissionInfos map[string]*artifact.SubmissionHistoryItem `json:"submission-infos"`
 }
 
 func HandleFetchScores(request *FetchScoresRequest) (*FetchScoresResponse, *core.APIError) {
-    paths, err := request.Assignment.GetAllRecentSubmissionSummaries(request.Users);
+    submissionInfos, err := db.GetRecentSubmissionSurvey(request.Assignment, request.FilterRole);
     if (err != nil) {
         return nil, core.NewInternalError("-404", &request.APIRequestCourseUserContext, "Failed to get submission summaries.").Err(err);
     }
 
-    summaries := make(map[string]*artifact.SubmissionSummary, len(paths));
-
-    for email, user := range request.Users {
-        if ((request.FilterRole != usr.Unknown) && (request.FilterRole != user.Role)) {
-            continue;
-        }
-
-        path := paths[email];
-        if (path == "") {
-            summaries[email] = nil;
-            continue;
-        }
-
-        summary := artifact.SubmissionSummary{};
-        err = util.JSONFromFile(path, &summary);
-        if (err != nil) {
-            return nil, core.NewInternalError("-405", &request.APIRequestCourseUserContext,
-                    "Failed to deserialize submission summary.").Err(err).Add("path", path);
-        }
-
-        summaries[email] = &summary;
-    }
-
-    return &FetchScoresResponse{summaries}, nil;
+    return &FetchScoresResponse{submissionInfos}, nil;
 }

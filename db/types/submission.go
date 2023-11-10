@@ -31,7 +31,7 @@ func loadStaticSubmissions(courseConfigPath string) ([]*artifact.GradingResult, 
     }
 
     for _, resultPath := range resultPaths {
-        baseSubmissionDir := filepath.Dir(filepath.Dir(resultPath));
+        baseSubmissionDir := filepath.Dir(resultPath);
         submissionInputDir := filepath.Join(baseSubmissionDir, common.GRADING_INPUT_DIRNAME);
 
         var submissionResult artifact.GradedAssignment;

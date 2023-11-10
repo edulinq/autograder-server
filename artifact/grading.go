@@ -8,15 +8,14 @@ import (
     "github.com/eriq-augustine/autograder/util"
 )
 
-// TEST - Include more info in graded assignment (e.g. id)
-
 // TODO(eriq): Include output.
 type GradingResult struct {
     Result *GradedAssignment
+    // TEST - Keep these as {<filename (relpath)>: <gzip>, ...} instead.
     InputFilesZip []byte
 }
 
-// TEST - Rename to GradedSubmission
+// TEST - Rename to SubmissionResult
 type GradedAssignment struct {
     // Information set by the autograder.
     ID string `json:"id"`
@@ -38,6 +37,18 @@ type GradedAssignment struct {
     AdditionalInfo map[string]any `json:"additional-info"`
 }
 
+type SubmissionHistoryItem struct {
+    ID string `json:"id"`
+    ShortID string `json:"short-id"`
+    CourseID string `json:"course-id"`
+    AssignmentID string `json:"assignment-id"`
+    User string `json:"user"`
+    Message string `json:"message"`
+    MaxPoints float64 `json:"max_points"`
+    Score float64 `json:"score"`
+    GradingStartTime time.Time `json:"grading_start_time"`
+}
+
 type GradedQuestion struct {
     Name string `json:"name"`
     MaxPoints float64 `json:"max_points"`
@@ -45,6 +56,20 @@ type GradedQuestion struct {
     Message string `json:"message"`
     GradingStartTime time.Time `json:"grading_start_time"`
     GradingEndTime time.Time `json:"grading_end_time"`
+}
+
+func (this GradedAssignment) ToHistoryItem() SubmissionHistoryItem {
+    return SubmissionHistoryItem{
+        ID: this.ID,
+        ShortID: this.ShortID,
+        CourseID: this.CourseID,
+        AssignmentID: this.AssignmentID,
+        User: this.User,
+        Message: this.Message,
+        MaxPoints: this.MaxPoints,
+        Score: this.Score,
+        GradingStartTime: this.GradingStartTime,
+    };
 }
 
 func (this GradedAssignment) String() string {
@@ -107,6 +132,7 @@ func (this GradedAssignment) ComputePoints() {
     }
 }
 
+// TEST
 func (this GradedAssignment) GetSummary(id string, message string) *SubmissionSummary {
     summary := SubmissionSummary{
         ID: id,

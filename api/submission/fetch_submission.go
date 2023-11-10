@@ -1,13 +1,16 @@
 package submission
 
 import (
+    "github.com/eriq-augustine/autograder/api/core"
+
+    /* TEST
     "path/filepath"
 
-    "github.com/eriq-augustine/autograder/api/core"
     "github.com/eriq-augustine/autograder/artifact"
     "github.com/eriq-augustine/autograder/common"
     "github.com/eriq-augustine/autograder/config"
     "github.com/eriq-augustine/autograder/util"
+    */
 )
 
 type FetchSubmissionRequest struct {
@@ -26,6 +29,11 @@ type FetchSubmissionResponse struct {
 }
 
 func HandleFetchSubmission(request *FetchSubmissionRequest) (*FetchSubmissionResponse, *core.APIError) {
+    // TEST
+    return nil, nil;
+
+    /* TEST - This needs some work. We already have the contents in the DB, we just need to strip the input/ path/dir from it.
+
     // Ensure the submission ID is short.
     request.TargetSubmission = common.GetShortSubmissionID(request.TargetSubmission);
 
@@ -83,4 +91,5 @@ func HandleFetchSubmission(request *FetchSubmissionRequest) (*FetchSubmissionRes
     response.Contents = util.Base64Encode(data);
 
     return &response, nil;
+    */
 }

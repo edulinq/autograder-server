@@ -34,7 +34,7 @@ func FullAssignmentScoringAndUpload(assignment model.Assignment, dryRun bool) er
         return fmt.Errorf("Could not fetch LMS grades: '%w'.", err);
     }
 
-    scoringInfos, err := GetScoringInfo(assignment, users, true);
+    scoringInfos, err := db.GetScoringInfos(assignment, usr.Student);
     if (err != nil) {
         return fmt.Errorf("Failed to get scoring information: '%w'.", err);
     }
@@ -50,37 +50,6 @@ func FullAssignmentScoringAndUpload(assignment model.Assignment, dryRun bool) er
     }
 
     return nil;
-}
-
-// Get all the recent submission summaries (via GetAllRecentSubmissionSummaries()),
-// and convert them to scoring info structs so they can be properly scored/uploaded.
-func GetScoringInfo(assignment model.Assignment, users map[string]*usr.User, onlyStudents bool) (map[string]*artifact.ScoringInfo, error) {
-    paths, err := assignment.GetAllRecentSubmissionSummaries(users);
-    if (err != nil) {
-        return nil, fmt.Errorf("Unable to load submission summaries: '%w'.", err);
-    }
-
-    results := make(map[string]*artifact.ScoringInfo, len(paths));
-
-    for username, path := range paths {
-        if (path == "") {
-            continue;
-        }
-
-        if (onlyStudents && (users[username].Role != usr.Student)) {
-            continue;
-        }
-
-        var summary artifact.SubmissionSummary;
-        err = util.JSONFromFile(path, &summary);
-        if (err != nil) {
-            return nil, fmt.Errorf("Unable to load submission summary from path '%s': '%w'.", path, err);
-        }
-
-        results[username] = summary.GetScoringInfo();
-    }
-
-    return results, nil;
 }
 
 func computeFinalScores(

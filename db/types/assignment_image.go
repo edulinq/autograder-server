@@ -15,6 +15,8 @@ import (
 
 const CACHE_KEY_BUILD_SUCCESS = "image-build-success"
 
+// TEST - Move to docker package.
+
 func (this *Assignment) BuildImageQuick() error {
     return this.BuildImage(false, true, docker.NewBuildOptions());
 }

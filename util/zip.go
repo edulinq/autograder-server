@@ -143,6 +143,19 @@ func Unzip(zipPath string, outDir string) error {
     }
     defer reader.Close();
 
+    return UnzipFromReader(&reader.Reader, outDir);
+}
+
+func UnzipFromBytes(data []byte, outDir string) error {
+    reader, err := zip.NewReader(bytes.NewReader(data), int64(len(data)));
+    if (err != nil) {
+        return fmt.Errorf("Could not open zip archive from bytes for reading: '%w'.", err);
+    }
+
+    return UnzipFromReader(reader, outDir);
+}
+
+func UnzipFromReader(reader *zip.Reader, outDir string) error {
     for _, zipfile := range reader.File {
         path := filepath.Join(outDir, zipfile.Name);
 
@@ -156,7 +169,7 @@ func Unzip(zipPath string, outDir string) error {
 
         inFile, err := zipfile.Open();
         if (err != nil) {
-            return fmt.Errorf("Could not open zip archive ('%s') file ('%s') for reading: '%w'.", zipPath, zipfile.Name, err);
+            return fmt.Errorf("Could not open file in zip archive ('%s') for reading: '%w'.", zipfile.Name, err);
         }
         defer inFile.Close();
 

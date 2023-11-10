@@ -67,6 +67,32 @@ type Backend interface {
     // Save the results of grading.
     // All the submissions should be from this course.
     SaveSubmissions(course *types.Course, results []*artifact.GradingResult) error;
+
+    // Get the next short submission ID.
+    GetNextSubmissionID(assignment *types.Assignment, email string) (string, error);
+
+    // Get a history of all submissions for this assignment and user.
+    GetSubmissionHistory(assignment *types.Assignment, email string) ([]*artifact.SubmissionHistoryItem, error);
+
+    // Get the results from a specific (or most recent) submission.
+    // The submission ID will either be a short submission ID, or empty (if the most recent submission is to be returned).
+    // Can return nil if the submission does not exist.
+    GetSubmissionResult(assignment *types.Assignment, email string, shortSubmissionID string) (*artifact.GradedAssignment, error);
+
+    // Get the scoring infos for an assignment for all users that match the given role.
+    // A role of usr.Unknown means all users.
+    // Users without a submission will be represented with a nil map value.
+    GetScoringInfos(assignment *types.Assignment, onlyRole usr.UserRole) (map[string]*artifact.ScoringInfo, error);
+
+    // Get recent submission result for each user of the given role.
+    // A role of usr.Unknown means all users.
+    // Users without a submission will be represented with a nil map value.
+    GetRecentSubmissions(assignment *types.Assignment, onlyRole usr.UserRole) (map[string]*artifact.GradedAssignment, error);
+
+    // Get an overview of the recent submission result for each user of the given role.
+    // A role of usr.Unknown means all users.
+    // Users without a submission will be represented with a nil map value.
+    GetRecentSubmissionSurvey(assignment *types.Assignment, onlyRole usr.UserRole) (map[string]*artifact.SubmissionHistoryItem, error);
 }
 
 func Open() error {

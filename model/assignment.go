@@ -4,7 +4,6 @@ import (
     "strings"
 
     "github.com/eriq-augustine/autograder/docker"
-    "github.com/eriq-augustine/autograder/usr"
 )
 
 type Assignment interface {
@@ -21,13 +20,6 @@ type Assignment interface {
 
     BuildImageQuick() error;
     BuildImage(force bool, quick bool, options *docker.BuildOptions) error;
-
-    PrepareSubmission(user string) (string, string, error);
-    PrepareSubmissionWithDir(user string, submissionsDir string) (string, string, error);
-    GetSubmissionResults(user string) ([]string, error);
-    GetSubmissionSummaries(user string) ([]string, error);
-    GetAllRecentSubmissionResults(users map[string]*usr.User) (map[string]string, error);
-    GetAllRecentSubmissionSummaries(users map[string]*usr.User) (map[string]string, error);
 }
 
 func CompareAssignments(a Assignment, b Assignment) int {

@@ -48,7 +48,6 @@ func runSubmissionTests(test *testing.T, parallel bool, useDocker bool) {
     }
 
     gradeOptions := GradeOptions{
-        UseFakeSubmissionsDir: true,
         NoDocker: !useDocker,
     };
 
