@@ -28,8 +28,7 @@ type Assignment struct {
     docker.ImageInfo
 
     // Ignore these fields in JSON.
-    DBID int `json:"-"`
-    SourcePath string `json:"-"`
+    SourceDir string `json:"_source-dir"`
     Course *Course `json:"-"`
 
     dockerLock *sync.Mutex `json:"-"`
@@ -72,7 +71,7 @@ func (this *Assignment) GetImageInfo() *docker.ImageInfo {
 }
 
 func (this *Assignment) GetSourceDir() string {
-    return filepath.Dir(this.SourcePath);
+    return this.SourceDir;
 }
 
 // Ensure that the assignment is formatted correctly.
@@ -125,8 +124,8 @@ func (this *Assignment) Validate() error {
         this.PostSubmissionFileOperations = make([][]string, 0);
     }
 
-    if (this.SourcePath == "") {
-        return fmt.Errorf("Source path must not be empty.")
+    if (this.SourceDir == "") {
+        return fmt.Errorf("Source dir must not be empty.")
     }
 
     if (this.Course == nil) {
@@ -138,7 +137,7 @@ func (this *Assignment) Validate() error {
     }
 
     this.ImageInfo.Name = this.ImageName();
-    this.ImageInfo.BaseDir = filepath.Dir(this.SourcePath);
+    this.ImageInfo.BaseDir = this.SourceDir;
 
     return nil;
 }

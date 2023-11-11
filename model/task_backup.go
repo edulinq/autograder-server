@@ -33,6 +33,7 @@ func (this *BackupTask) Validate(course Course) error {
         return fmt.Errorf("Backup basename cannot be empty.");
     }
 
+    // TEST - This is wrong. DB needs to output backup source.
     this.Source = course.GetSourceDir();
     if (!util.PathExists(this.Source)) {
         return fmt.Errorf("Backup source path '%s' does not exist.", this.Source);

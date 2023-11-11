@@ -24,8 +24,7 @@ type Course struct {
     ScoringUpload []*model.ScoringUploadTask `json:"scoring-upload,omitempty"`
 
     // Ignore these fields in JSON.
-    DBID int `json:"-"`
-    SourcePath string `json:"-"`
+    SourceDir string `json:"_source-dir"`
 
     // TEST - This should go away at some point.
     Assignments map[string]*Assignment `json:"-"`
@@ -42,13 +41,7 @@ func (this *Course) GetName() string {
 }
 
 func (this *Course) GetSourceDir() string {
-    return filepath.Dir(this.SourcePath);
-}
-
-func (this *Course) SetSourcePathForTesting(sourcePath string) string {
-    oldPath := this.SourcePath;
-    this.SourcePath = sourcePath;
-    return oldPath;
+    return this.SourceDir;
 }
 
 func (this *Course) GetLMSAdapter() *model.LMSAdapter {

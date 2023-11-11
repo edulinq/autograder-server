@@ -19,45 +19,46 @@ import (
 //  - input -- A temp dir that will be mounted at DOCKER_INPUT_DIR (read-only).
 //  - output -- Passed in directory that will be mounted at DOCKER_OUTPUT_DIR.
 //  - work -- Should already be created inside the docker image, will only exist within the container.
-func RunDockerGrader(assignment model.Assignment, submissionPath string, outputDir string, options GradeOptions, fullSubmissionID string) (*artifact.GradedAssignment, string, error) {
-    os.MkdirAll(outputDir, 0755);
-    if (!util.IsEmptyDir(outputDir)) {
-        return nil, "", fmt.Errorf("Output dir for docker grader is not empty.");
-    }
-
-    // Create a temp directory to use for input (will be mounted to the container).
-    tempInputDir, err := util.MkDirTemp("autograding-docker-input-");
+func runDockerGrader(assignment model.Assignment, submissionPath string, options GradeOptions, fullSubmissionID string) (
+        *artifact.GradedAssignment, map[string][]byte, string, string, error) {
+    tempDir, inputDir, outputDir, _, err := common.PrepTempGradingDir("docker");
     if (err != nil) {
-        return nil, "", fmt.Errorf("Could not create temp input dir: '%w'.", err);
+        return nil, nil, "", "", err;
     }
 
-    if (options.LeaveTempDir) {
-        log.Info().Str("path", tempInputDir).Msg("Leaving behind temp input dir.");
+    if (!options.LeaveTempDir) {
+        defer os.RemoveAll(tempDir);
     } else {
-        defer os.RemoveAll(tempInputDir);
+        log.Info().Str("path", tempDir).Msg("Leaving behind temp grading dir.");
     }
 
     // Copy over submission files to the temp input dir.
-    err = util.CopyDirent(submissionPath, tempInputDir, true);
+    err = util.CopyDirent(submissionPath, inputDir, true);
     if (err != nil) {
-        return nil, "", fmt.Errorf("Failed to copy over submission/input contents: '%w'.", err);
+        return nil, nil, "", "", fmt.Errorf("Failed to copy over submission/input contents: '%w'.", err);
     }
 
-    output, err := docker.RunContainer(assignment.ImageName(), tempInputDir, outputDir, fullSubmissionID);
+    stdout, stderr, err := docker.RunContainer(assignment.ImageName(), inputDir, outputDir, fullSubmissionID);
     if (err != nil) {
-        return nil, "", err;
+        return nil, nil, stdout, stderr, err;
     }
 
     resultPath := filepath.Join(outputDir, common.GRADER_OUTPUT_RESULT_FILENAME);
     if (!util.PathExists(resultPath)) {
-        return nil, output, fmt.Errorf("Cannot find output file ('%s') after the grading container (%s) was run.", resultPath, assignment.ImageName());
+        return nil, nil, stdout, stderr,
+                fmt.Errorf("Cannot find output file ('%s') after the grading container (%s) was run.", resultPath, assignment.ImageName());
     }
 
     var result artifact.GradedAssignment;
     err = util.JSONFromFile(resultPath, &result);
     if (err != nil) {
-        return nil, output, err;
+        return nil, nil, stdout, stderr, err;
     }
 
-    return &result, output, nil;
+    fileContents, err := util.GzipDirectoryToBytes(outputDir);
+    if (err != nil) {
+        return nil, nil, stdout, stderr, fmt.Errorf("Failed to copy grading output '%s': '%w'.", outputDir, err);
+    }
+
+    return &result, fileContents, stdout, stderr, nil;
 }

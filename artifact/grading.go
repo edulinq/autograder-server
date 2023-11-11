@@ -8,10 +8,12 @@ import (
     "github.com/eriq-augustine/autograder/util"
 )
 
-// TODO(eriq): Include output.
 type GradingResult struct {
     Result *GradedAssignment `json:"result"`
     InputFilesGZip map[string][]byte `json:"input-files-gzip"`
+    OutputFilesGZip map[string][]byte `json:"output-files-gzip"`
+    Stdout string `json:"stdout"`
+    Stderr string `json:"stderr"`
 }
 
 // TEST - Rename to SubmissionResult? Get a name the complements the above struct (GradingResult).
@@ -55,6 +57,14 @@ type GradedQuestion struct {
     Message string `json:"message"`
     GradingStartTime common.Timestamp `json:"grading_start_time"`
     GradingEndTime common.Timestamp `json:"grading_end_time"`
+}
+
+func (this *GradingResult) HasTextOutput() bool {
+    return ((this.Stdout != "") || (this.Stderr != ""));
+}
+
+func (this *GradingResult) GetCombinedOutput() string {
+    return fmt.Sprintf("--- stdout ---\n%s\n--------------\n--- stderr ---\n%s\n--------------", this.Stdout, this.Stderr);
 }
 
 func (this GradedAssignment) ToHistoryItem() *SubmissionHistoryItem {

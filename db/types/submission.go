@@ -57,21 +57,9 @@ func LoadGradingResult(resultPath string) (*artifact.GradingResult, error) {
         return nil, fmt.Errorf("Input dir for submission result does not exist '%s': '%w'.", submissionInputDir, err);
     }
 
-    fileContents := make(map[string][]byte);
-
-    paths, err := util.FindFiles("", submissionInputDir);
+    fileContents, err := util.GzipDirectoryToBytes(submissionInputDir);
     if (err != nil) {
-        return nil, fmt.Errorf("Unable to find files in submission input dir '%s': '%w'.", submissionInputDir, err);
-    }
-
-    for _, path := range paths {
-        contents, err := util.GzipFileToBytes(path);
-        if (err != nil) {
-            return nil, fmt.Errorf("Failed to gzip input file '%s': '%w'.", path, err);
-        }
-
-        relPath := util.RelPath(path, submissionInputDir);
-        fileContents[relPath] = contents;
+        return nil, fmt.Errorf("Unable to gzip files in submission input dir '%s': '%w'.", submissionInputDir, err);
     }
 
     return &artifact.GradingResult{

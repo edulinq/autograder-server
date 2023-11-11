@@ -18,27 +18,29 @@ type SubmitRequest struct {
 
 type SubmitResponse struct {
     GradingSucess bool `json:"grading-success"`
-    RawOutput string `json:"raw-output"`
-    Summary *artifact.SubmissionSummary `json:"summary"`
     SubmissionResult *artifact.GradedAssignment `json:"result"`
 }
 
 func HandleSubmit(request *SubmitRequest) (*SubmitResponse, *core.APIError) {
     response := SubmitResponse{};
 
-    result, summary, output, err := grader.GradeDefault(request.Assignment, request.Files.TempDir, request.User.Email, request.Message);
+    result, err := grader.GradeDefault(request.Assignment, request.Files.TempDir, request.User.Email, request.Message);
     if (err != nil) {
-        if (output != "") {
-            log.Debug().Err(err).Str("output", output).Msg("Submission grading failed, but output exists.");
-            response.RawOutput = output;
+        stdout := "";
+        stderr := "";
+
+        if ((result != nil) && (result.HasTextOutput())) {
+            stdout = result.Stdout;
+            stderr = result.Stderr;
         }
+
+        log.Debug().Err(err).Str("stdout", stdout).Str("stderr", stderr).Msg("Submission grading failed.");
 
         return &response, nil;
     }
 
     response.GradingSucess = true;
-    response.Summary = summary;
-    response.SubmissionResult = result;
+    response.SubmissionResult = result.Result;
 
     return &response, nil;
 }

@@ -201,6 +201,10 @@ func ShouldGetThisDir() string {
 func SearchParents(basepath string, name string) string {
     basepath = ShouldAbs(basepath);
 
+    if (IsFile(basepath)) {
+        basepath = filepath.Dir(basepath);
+    }
+
     for ; ; {
         targetPath := filepath.Join(basepath, name);
 

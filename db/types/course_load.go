@@ -12,7 +12,7 @@ import (
 const COURSE_CONFIG_FILENAME = "course.json"
 
 func LoadCourse(path string) (*Course, error) {
-    course, err := loadCourseConfig(path);
+    course, err := LoadCourseConfig(path);
     if (err != nil) {
         return nil, fmt.Errorf("Could not load course config at '%s': '%w'.", path, err);
     }
@@ -53,14 +53,17 @@ func FullLoadCourse(path string) (*Course, map[string]*usr.User, []*artifact.Gra
     return course, users, submissions, nil;
 }
 
-func loadCourseConfig(path string) (*Course, error) {
+func LoadCourseConfig(path string) (*Course, error) {
     var course Course;
     err := util.JSONFromFile(path, &course);
     if (err != nil) {
         return nil, fmt.Errorf("Could not load course config (%s): '%w'.", path, err);
     }
 
-    course.SourcePath = util.ShouldAbs(path);
+    if (course.SourceDir == "") {
+        course.SourceDir = util.ShouldAbs(filepath.Dir(path));
+    }
+
     course.Assignments = make(map[string]*Assignment);
 
     err = course.Validate();

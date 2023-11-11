@@ -47,3 +47,29 @@ func GzipBytesToFile(data []byte, path string) error {
 
     return WriteBinaryFile(clearData, path);
 }
+
+// Gzip each file in a direcotry to bytes and return the output as a map: {<relpath>: bytes, ...}.
+func GzipDirectoryToBytes(baseDir string) (map[string][]byte, error) {
+    fileContents := make(map[string][]byte);
+
+    paths, err := FindFiles("", baseDir);
+    if (err != nil) {
+        return nil, fmt.Errorf("Unable to find files in base dir '%s': '%w'.", baseDir, err);
+    }
+
+    for _, path := range paths {
+        contents, err := GzipFileToBytes(path);
+        if (err != nil) {
+            return nil, fmt.Errorf("Failed to gzip file '%s': '%w'.", path, err);
+        }
+
+        relPath := RelPath(path, baseDir);
+        if (relPath == "") {
+            relPath = filepath.Base(path);
+        }
+
+        fileContents[relPath] = contents;
+    }
+
+    return fileContents, nil;
+}

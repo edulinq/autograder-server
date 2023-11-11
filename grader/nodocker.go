@@ -1,6 +1,7 @@
 package grader
 
 import (
+    "bytes"
     "fmt"
     "os"
     "os/exec"
@@ -18,15 +19,16 @@ import (
 const PYTHON_AUTOGRADER_INVOCATION = "python3 -m autograder.cli.grade-submission --grader <grader> --inputdir <inputdir> --outputdir <outputdir> --workdir <workdir> --outpath <outpath>"
 const PYTHON_GRADER_FILENAME = "grader.py"
 
-func RunNoDockerGrader(assignment model.Assignment, submissionPath string, outputDir string, options GradeOptions, fullSubmissionID string) (*artifact.GradedAssignment, string, error) {
+func runNoDockerGrader(assignment model.Assignment, submissionPath string, options GradeOptions, fullSubmissionID string) (
+        *artifact.GradedAssignment, map[string][]byte, string, string, error) {
     imageInfo := assignment.GetImageInfo();
     if (imageInfo == nil) {
-        return nil, "", fmt.Errorf("No image information associated with assignment: '%s'.", assignment.FullID());
+        return nil, nil, "", "", fmt.Errorf("No image information associated with assignment: '%s'.", assignment.FullID());
     }
 
-    tempDir, inputDir, _, workDir, err := common.PrepTempGradingDir();
+    tempDir, inputDir, outputDir, workDir, err := common.PrepTempGradingDir("nodocker");
     if (err != nil) {
-        return nil, "", err;
+        return nil, nil, "", "", err;
     }
 
     if (!options.LeaveTempDir) {
@@ -37,43 +39,62 @@ func RunNoDockerGrader(assignment model.Assignment, submissionPath string, outpu
 
     cmd, err := getAssignmentInvocation(assignment, inputDir, outputDir, workDir);
     if (err != nil) {
-        return nil, "", err;
+        return nil, nil, "", "", err;
     }
 
     // Copy over the static files (and do any file ops).
-    err = common.CopyFileSpecs(assignment.GetSourceDir(), workDir, tempDir,
+    err = common.CopyFileSpecs(imageInfo.BaseDir, workDir, tempDir,
             imageInfo.StaticFiles, false, imageInfo.PreStaticFileOperations, imageInfo.PostStaticFileOperations);
     if (err != nil) {
-        return nil, "", fmt.Errorf("Failed to copy static assignment files: '%w'.", err);
+        return nil, nil, "", "", fmt.Errorf("Failed to copy static assignment files: '%w'.", err);
     }
 
     // Copy over the submission files (and do any file ops).
     err = common.CopyFileSpecs(submissionPath, inputDir, tempDir,
             []common.FileSpec{common.FileSpec(".")}, true, [][]string{}, imageInfo.PostSubmissionFileOperations);
     if (err != nil) {
-        return nil, "", fmt.Errorf("Failed to copy submission ssignment files: '%w'.", err);
+        return nil, nil, "", "", fmt.Errorf("Failed to copy submission ssignment files: '%w'.", err);
     }
 
-    rawOutput, err := cmd.CombinedOutput();
-    output := string(rawOutput[:])
-
+    stdout, stderr, err := runCMD(cmd);
     if (err != nil) {
-        log.Warn().Str("assignment", assignment.FullID()).Str("tempdir", tempDir).Msg(string(output[:]));
-        return nil, output, fmt.Errorf("Failed to run non-docker grader for assignment '%s': '%w'.", assignment.FullID(), err);
+        return nil, nil, stdout, stderr,
+                fmt.Errorf("Failed to run non-docker grader for assignment '%s': '%w'.", assignment.FullID(), err);
     }
 
     resultPath := filepath.Join(outputDir, common.GRADER_OUTPUT_RESULT_FILENAME);
     if (!util.PathExists(resultPath)) {
-        return nil, output, fmt.Errorf("Cannot find output file ('%s') after non-docker grading.", resultPath);
+        return nil, nil, stdout, stderr, fmt.Errorf("Cannot find output file ('%s') after non-docker grading.", resultPath);
     }
 
     var result artifact.GradedAssignment;
     err = util.JSONFromFile(resultPath, &result);
     if (err != nil) {
-        return nil, output, err;
+        return nil, nil, stdout, stderr, err;
     }
 
-    return &result, output, nil;
+    fileContents, err := util.GzipDirectoryToBytes(outputDir);
+    if (err != nil) {
+        return nil, nil, stdout, stderr, fmt.Errorf("Failed to copy grading output '%s': '%w'.", outputDir, err);
+    }
+
+    return &result, fileContents, stdout, stderr, nil;
+}
+
+func runCMD(cmd *exec.Cmd) (string, string, error) {
+    var outBuffer bytes.Buffer;
+    var errBuffer bytes.Buffer;
+
+    cmd.Stdout = &outBuffer;
+    cmd.Stderr = &errBuffer;
+
+    err := cmd.Run();
+
+    stdout := outBuffer.String();
+    stderr := errBuffer.String();
+
+
+    return stdout, stderr, err;
 }
 
 // Get a command to invoke the non-docker grader.

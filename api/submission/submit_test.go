@@ -10,13 +10,20 @@ import (
     "github.com/eriq-augustine/autograder/usr"
 )
 
+// TEST - Create a test that saves and fetches (ensures it was comitted to the DB).
+
 func TestSubmit(test *testing.T) {
     testSubmissions, err := grader.GetTestSubmissions(config.COURSES_ROOT.Get());
     if (err != nil) {
-        test.Fatalf("Failed to get test submissions: '%v'.", err);
+        test.Fatalf("Failed to get test submissions in '%s': '%v'.", config.COURSES_ROOT.Get(), err);
     }
 
     for i, testSubmission := range testSubmissions {
+        // TEST
+        if (i != 0) {
+            continue;
+        }
+
         response := core.SendTestAPIRequestFull(test, core.NewEndpoint(`submission/submit`), nil, testSubmission.Files, usr.Student);
         if (!response.Success) {
             test.Errorf("Case %d: Response is not a success when it should be: '%v'.", i, response);

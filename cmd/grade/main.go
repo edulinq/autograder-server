@@ -34,21 +34,21 @@ func main() {
 
     assignment := db.MustGetAssignment(args.Course, args.Assignment);
 
-    result, _, output, err := grader.GradeDefault(assignment, args.Submission, args.User, args.Message);
+    result, err := grader.GradeDefault(assignment, args.Submission, args.User, args.Message);
     if (err != nil) {
-        if (output != "") {
+        if (result.HasTextOutput()) {
             fmt.Println("Grading failed, but output was recovered:");
-            fmt.Println(output);
+            fmt.Println(result.GetCombinedOutput());
         }
         log.Fatal().Err(err).Msg("Failed to run grader.");
     }
 
     if (args.OutPath != "") {
-        err = util.ToJSONFileIndent(result, args.OutPath);
+        err = util.ToJSONFileIndent(result.Result, args.OutPath);
         if (err != nil) {
             log.Fatal().Err(err).Str("outpath", args.OutPath).Msg("Failed to output JSON result.");
         }
     }
 
-    fmt.Println(result.Report());
+    fmt.Println(result.Result.Report());
 }
