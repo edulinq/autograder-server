@@ -18,7 +18,7 @@ type SubmitRequest struct {
 
 type SubmitResponse struct {
     GradingSucess bool `json:"grading-success"`
-    SubmissionResult *artifact.GradedAssignment `json:"result"`
+    GradingInfo *artifact.GradingInfo `json:"result"`
 }
 
 func HandleSubmit(request *SubmitRequest) (*SubmitResponse, *core.APIError) {
@@ -40,7 +40,7 @@ func HandleSubmit(request *SubmitRequest) (*SubmitResponse, *core.APIError) {
     }
 
     response.GradingSucess = true;
-    response.SubmissionResult = result.Result;
+    response.GradingInfo = result.Info;
 
     return &response, nil;
 }

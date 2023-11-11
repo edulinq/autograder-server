@@ -39,7 +39,7 @@ func runSubmissionTests(test *testing.T, parallel bool, useDocker bool) {
     // TEST - Reset db.
     _, err := db.LoadCourses()
     if (err != nil) {
-        return nil, fmt.Errorf("Could not load courses: '%w'.", err);
+        test.Fatalf("Could not load courses: '%v'.", err);
     }
 
     if (useDocker) {
@@ -76,14 +76,14 @@ func runSubmissionTests(test *testing.T, parallel bool, useDocker bool) {
                 test.Parallel();
             }
 
-            result, _, _, err := Grade(testSubmission.Assignment, testSubmission.Dir, user, TEST_MESSAGE, gradeOptions);
+            result, err := Grade(testSubmission.Assignment, testSubmission.Dir, user, TEST_MESSAGE, gradeOptions);
             if (err != nil) {
                 test.Fatalf("Failed to grade assignment: '%v'.", err);
             }
 
-            if (!result.Equals(testSubmission.TestSubmission.Result, !testSubmission.TestSubmission.IgnoreMessages)) {
+            if (!result.Info.Equals(*testSubmission.TestSubmission.GradingInfo, !testSubmission.TestSubmission.IgnoreMessages)) {
                 test.Fatalf("Actual output:\n---\n%v\n---\ndoes not match expected output:\n---\n%v\n---\n.",
-                        result, &testSubmission.TestSubmission.Result);
+                        result.Info, testSubmission.TestSubmission.GradingInfo);
             }
 
         });

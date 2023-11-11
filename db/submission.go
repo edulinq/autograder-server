@@ -43,7 +43,7 @@ func GetSubmissionHistory(rawAssignment model.Assignment, email string) ([]*arti
     return backend.GetSubmissionHistory(assignment, email);
 }
 
-func GetSubmissionResult(rawAssignment model.Assignment, email string, submissionID string) (*artifact.GradedAssignment, error) {
+func GetSubmissionResult(rawAssignment model.Assignment, email string, submissionID string) (*artifact.GradingInfo, error) {
     assignment, ok := rawAssignment.(*types.Assignment);
     if (!ok) {
         return nil, fmt.Errorf("Assignment '%v' is not a db assignment.", rawAssignment);
@@ -62,7 +62,7 @@ func GetScoringInfos(rawAssignment model.Assignment, filterRole usr.UserRole) (m
     return backend.GetScoringInfos(assignment, filterRole);
 }
 
-func GetRecentSubmissions(rawAssignment model.Assignment, filterRole usr.UserRole) (map[string]*artifact.GradedAssignment, error) {
+func GetRecentSubmissions(rawAssignment model.Assignment, filterRole usr.UserRole) (map[string]*artifact.GradingInfo, error) {
     assignment, ok := rawAssignment.(*types.Assignment);
     if (!ok) {
         return nil, fmt.Errorf("Assignment '%v' is not a db assignment.", rawAssignment);

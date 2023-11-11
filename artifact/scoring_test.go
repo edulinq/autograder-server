@@ -2,8 +2,8 @@ package artifact
 
 import (
     "testing"
-    "time"
 
+    "github.com/eriq-augustine/autograder/common"
     "github.com/eriq-augustine/autograder/util"
 )
 
@@ -13,7 +13,7 @@ func TestScoringInfoStruct(test *testing.T) {
     testCases := []*ScoringInfo{
         nil,
         &ScoringInfo{},
-        &ScoringInfo{"foo", time.Now(), time.Now(), 1.0, 2.0, false, 1, 2, true, 3, "foo", "bar"},
+        &ScoringInfo{"foo", common.NowTimestamp(), common.NowTimestamp(), 1.0, 2.0, false, 1, 2, true, 3, "foo", "bar"},
     };
 
     for _, testCase := range testCases {

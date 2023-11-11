@@ -79,7 +79,7 @@ type Backend interface {
     // Get the results from a specific (or most recent) submission.
     // The submission ID will either be a short submission ID, or empty (if the most recent submission is to be returned).
     // Can return nil if the submission does not exist.
-    GetSubmissionResult(assignment *types.Assignment, email string, shortSubmissionID string) (*artifact.GradedAssignment, error);
+    GetSubmissionResult(assignment *types.Assignment, email string, shortSubmissionID string) (*artifact.GradingInfo, error);
 
     // Get the scoring infos for an assignment for all users that match the given role.
     // A role of usr.Unknown means all users.
@@ -89,7 +89,7 @@ type Backend interface {
     // Get recent submission result for each user of the given role.
     // A role of usr.Unknown means all users.
     // Users without a submission (but with a matching role) will be represented with a nil map value.
-    GetRecentSubmissions(assignment *types.Assignment, filterRole usr.UserRole) (map[string]*artifact.GradedAssignment, error);
+    GetRecentSubmissions(assignment *types.Assignment, filterRole usr.UserRole) (map[string]*artifact.GradingInfo, error);
 
     // Get an overview of the recent submission result for each user of the given role.
     // A role of usr.Unknown means all users.

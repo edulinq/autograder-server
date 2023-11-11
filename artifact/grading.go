@@ -9,15 +9,14 @@ import (
 )
 
 type GradingResult struct {
-    Result *GradedAssignment `json:"result"`
+    Info *GradingInfo `json:"nfo"`
     InputFilesGZip map[string][]byte `json:"input-files-gzip"`
     OutputFilesGZip map[string][]byte `json:"output-files-gzip"`
     Stdout string `json:"stdout"`
     Stderr string `json:"stderr"`
 }
 
-// TEST - Rename to SubmissionResult? Get a name the complements the above struct (GradingResult).
-type GradedAssignment struct {
+type GradingInfo struct {
     // Information set by the autograder.
     ID string `json:"id"`
     ShortID string `json:"short-id"`
@@ -38,18 +37,6 @@ type GradedAssignment struct {
     AdditionalInfo map[string]any `json:"additional-info"`
 }
 
-type SubmissionHistoryItem struct {
-    ID string `json:"id"`
-    ShortID string `json:"short-id"`
-    CourseID string `json:"course-id"`
-    AssignmentID string `json:"assignment-id"`
-    User string `json:"user"`
-    Message string `json:"message"`
-    MaxPoints float64 `json:"max_points"`
-    Score float64 `json:"score"`
-    GradingStartTime common.Timestamp `json:"grading_start_time"`
-}
-
 type GradedQuestion struct {
     Name string `json:"name"`
     MaxPoints float64 `json:"max_points"`
@@ -67,21 +54,7 @@ func (this *GradingResult) GetCombinedOutput() string {
     return fmt.Sprintf("--- stdout ---\n%s\n--------------\n--- stderr ---\n%s\n--------------", this.Stdout, this.Stderr);
 }
 
-func (this GradedAssignment) ToHistoryItem() *SubmissionHistoryItem {
-    return &SubmissionHistoryItem{
-        ID: this.ID,
-        ShortID: this.ShortID,
-        CourseID: this.CourseID,
-        AssignmentID: this.AssignmentID,
-        User: this.User,
-        Message: this.Message,
-        MaxPoints: this.MaxPoints,
-        Score: this.Score,
-        GradingStartTime: this.GradingStartTime,
-    };
-}
-
-func (this GradedAssignment) ToScoringInfo() *ScoringInfo {
+func (this GradingInfo) ToScoringInfo() *ScoringInfo {
     return &ScoringInfo{
         ID: this.ID,
         SubmissionTime: this.GradingStartTime,
@@ -89,11 +62,11 @@ func (this GradedAssignment) ToScoringInfo() *ScoringInfo {
     };
 }
 
-func (this GradedAssignment) String() string {
+func (this GradingInfo) String() string {
     return util.BaseString(this);
 }
 
-func (this GradedAssignment) Equals(other GradedAssignment, checkMessages bool) bool {
+func (this GradingInfo) Equals(other GradingInfo, checkMessages bool) bool {
     if (this.Name != other.Name) {
         return false;
     }
@@ -119,7 +92,7 @@ func (this GradedAssignment) Equals(other GradedAssignment, checkMessages bool) 
     return true;
 }
 
-func (this GradedAssignment) Report() string {
+func (this GradingInfo) Report() string {
     var builder strings.Builder;
 
     builder.WriteString(fmt.Sprintf("Autograder transcript for assignment: %s.\n", this.Name));
@@ -142,7 +115,7 @@ func (this GradedAssignment) Report() string {
 }
 
 // Fill in the MaxPoints and Score fields.
-func (this GradedAssignment) ComputePoints() {
+func (this GradingInfo) ComputePoints() {
     for _, question := range this.Questions {
         this.Score += question.Score;
         this.MaxPoints += question.MaxPoints;

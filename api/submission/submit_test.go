@@ -32,9 +32,9 @@ func TestSubmit(test *testing.T) {
             continue;
         }
 
-        if (!responseContent.SubmissionResult.Equals(testSubmission.TestSubmission.Result, !testSubmission.TestSubmission.IgnoreMessages)) {
+        if (!responseContent.GradingInfo.Equals(*testSubmission.TestSubmission.GradingInfo, !testSubmission.TestSubmission.IgnoreMessages)) {
             test.Errorf("Case %d: Actual output:\n---\n%v\n---\ndoes not match expected output:\n---\n%v\n---\n.",
-                    i, responseContent.SubmissionResult, &testSubmission.TestSubmission.Result);
+                    i, responseContent.GradingInfo, testSubmission.TestSubmission.GradingInfo);
             continue;
         }
 
@@ -45,9 +45,9 @@ func TestSubmit(test *testing.T) {
             continue;
         }
 
-        if (!responseContent.SubmissionResult.Equals(*submission, !testSubmission.TestSubmission.IgnoreMessages)) {
-            test.Errorf("Case %d: Actual output:\n---\n%v\n---\ndoes not match expected output:\n---\n%v\n---\n.",
-                    i, responseContent.SubmissionResult, submission);
+        if (!responseContent.GradingInfo.Equals(*submission, !testSubmission.TestSubmission.IgnoreMessages)) {
+            test.Errorf("Case %d: Actual output:\n---\n%v\n---\ndoes not match database value:\n---\n%v\n---\n.",
+                    i, responseContent.GradingInfo, submission);
             continue;
         }
     }

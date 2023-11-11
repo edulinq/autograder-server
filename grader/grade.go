@@ -53,15 +53,15 @@ func Grade(assignment model.Assignment, submissionPath string, user string, mess
 
     fullSubmissionID := common.CreateFullSubmissionID(assignment.GetCourse().GetID(), assignment.GetID(), user, submissionID);
 
-    var submissionResult *artifact.GradedAssignment;
+    var gradingInfo *artifact.GradingInfo;
     var outputFileContents map[string][]byte;
     var stdout string;
     var stderr string;
 
     if (options.NoDocker) {
-        submissionResult, outputFileContents, stdout, stderr, err = runNoDockerGrader(assignment, submissionPath, options, fullSubmissionID);
+        gradingInfo, outputFileContents, stdout, stderr, err = runNoDockerGrader(assignment, submissionPath, options, fullSubmissionID);
     } else {
-        submissionResult, outputFileContents, stdout, stderr, err = runDockerGrader(assignment, submissionPath, options, fullSubmissionID);
+        gradingInfo, outputFileContents, stdout, stderr, err = runDockerGrader(assignment, submissionPath, options, fullSubmissionID);
     }
 
     // Copy over stdout and stderr even if an error occured.
@@ -72,16 +72,16 @@ func Grade(assignment model.Assignment, submissionPath string, user string, mess
         return &gradingResult, err;
     }
 
-    // Set all the autograder fields in the submissionResult.
-    submissionResult.ID = fullSubmissionID;
-    submissionResult.ShortID = submissionID;
-    submissionResult.CourseID = assignment.GetCourse().GetID();
-    submissionResult.AssignmentID = assignment.GetID();
-    submissionResult.User = user;
-    submissionResult.Message = message;
-    submissionResult.ComputePoints();
+    // Set all the autograder fields in the grading info.
+    gradingInfo.ID = fullSubmissionID;
+    gradingInfo.ShortID = submissionID;
+    gradingInfo.CourseID = assignment.GetCourse().GetID();
+    gradingInfo.AssignmentID = assignment.GetID();
+    gradingInfo.User = user;
+    gradingInfo.Message = message;
+    gradingInfo.ComputePoints();
 
-    gradingResult.Result = submissionResult;
+    gradingResult.Info = gradingInfo;
     gradingResult.OutputFilesGZip = outputFileContents;
 
     if (!config.NO_STORE.Get()) {

@@ -17,7 +17,7 @@ type PeekRequest struct {
 type PeekResponse struct {
     FoundUser bool `json:"found-user"`
     FoundSubmission bool `json:"found-submission"`
-    SubmissionResult *artifact.GradedAssignment `json:"submission-result"`
+    GradingInfo *artifact.GradingInfo `json:"submission-result"`
 }
 
 func HandlePeek(request *PeekRequest) (*PeekResponse, *core.APIError) {
@@ -40,7 +40,7 @@ func HandlePeek(request *PeekRequest) (*PeekResponse, *core.APIError) {
     }
 
     response.FoundSubmission = true;
-    response.SubmissionResult = submissionResult;
+    response.GradingInfo = submissionResult;
 
     return &response, nil;
 }

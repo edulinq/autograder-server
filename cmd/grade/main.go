@@ -44,11 +44,11 @@ func main() {
     }
 
     if (args.OutPath != "") {
-        err = util.ToJSONFileIndent(result.Result, args.OutPath);
+        err = util.ToJSONFileIndent(result.Info, args.OutPath);
         if (err != nil) {
             log.Fatal().Err(err).Str("outpath", args.OutPath).Msg("Failed to output JSON result.");
         }
     }
 
-    fmt.Println(result.Result.Report());
+    fmt.Println(result.Info.Report());
 }

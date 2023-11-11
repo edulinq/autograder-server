@@ -91,7 +91,7 @@ func TestPeek(test *testing.T) {
             continue;
         }
 
-        actualScore := responseContent.SubmissionResult.Score;
+        actualScore := responseContent.GradingInfo.Score;
         if (!util.IsClose(testCase.score, actualScore)) {
             test.Errorf("Case %d: Unexpected submission score. Expected: '%+v', actual: '%+v'.", i, testCase.score, actualScore);
             continue;

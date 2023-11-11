@@ -20,7 +20,7 @@ import (
 //  - output -- Passed in directory that will be mounted at DOCKER_OUTPUT_DIR.
 //  - work -- Should already be created inside the docker image, will only exist within the container.
 func runDockerGrader(assignment model.Assignment, submissionPath string, options GradeOptions, fullSubmissionID string) (
-        *artifact.GradedAssignment, map[string][]byte, string, string, error) {
+        *artifact.GradingInfo, map[string][]byte, string, string, error) {
     tempDir, inputDir, outputDir, _, err := common.PrepTempGradingDir("docker");
     if (err != nil) {
         return nil, nil, "", "", err;
@@ -49,8 +49,8 @@ func runDockerGrader(assignment model.Assignment, submissionPath string, options
                 fmt.Errorf("Cannot find output file ('%s') after the grading container (%s) was run.", resultPath, assignment.ImageName());
     }
 
-    var result artifact.GradedAssignment;
-    err = util.JSONFromFile(resultPath, &result);
+    var gradingInfo artifact.GradingInfo;
+    err = util.JSONFromFile(resultPath, &gradingInfo);
     if (err != nil) {
         return nil, nil, stdout, stderr, err;
     }
@@ -60,5 +60,5 @@ func runDockerGrader(assignment model.Assignment, submissionPath string, options
         return nil, nil, stdout, stderr, fmt.Errorf("Failed to copy grading output '%s': '%w'.", outputDir, err);
     }
 
-    return &result, fileContents, stdout, stderr, nil;
+    return &gradingInfo, fileContents, stdout, stderr, nil;
 }

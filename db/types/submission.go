@@ -47,10 +47,10 @@ func LoadGradingResult(resultPath string) (*artifact.GradingResult, error) {
     baseSubmissionDir := filepath.Dir(resultPath);
     submissionInputDir := filepath.Join(baseSubmissionDir, common.GRADING_INPUT_DIRNAME);
 
-    var submissionResult artifact.GradedAssignment;
-    err := util.JSONFromFile(resultPath, &submissionResult);
+    var gradingInfo artifact.GradingInfo;
+    err := util.JSONFromFile(resultPath, &gradingInfo);
     if (err != nil) {
-        return nil, fmt.Errorf("Failed to load submission result '%s': '%w'.", resultPath, err);
+        return nil, fmt.Errorf("Failed to load grading info '%s': '%w'.", resultPath, err);
     }
 
     if (!util.PathExists(submissionInputDir)) {
@@ -63,7 +63,7 @@ func LoadGradingResult(resultPath string) (*artifact.GradingResult, error) {
     }
 
     return &artifact.GradingResult{
-        Result: &submissionResult,
+        Info: &gradingInfo,
         InputFilesGZip: fileContents,
     }, nil;
 }
