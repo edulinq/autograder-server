@@ -89,7 +89,14 @@ func ApplyLatePolicy(
 // Apply a common policy.
 func applyBaselinePolicy(policy model.LateGradingPolicy, users map[string]*usr.User, scores map[string]*artifact.ScoringInfo, dueDate time.Time) {
     for email, score := range scores {
-        score.NumDaysLate = computeLateDays(dueDate, score.SubmissionTime);
+        scoreTime, err := score.SubmissionTime.Time();
+        if (err != nil) {
+            log.Warn().Err(err).Str("user", email).Msg("Cannot parse score time.");
+            score.Reject = true;
+            continue;
+        }
+
+        score.NumDaysLate = computeLateDays(dueDate, scoreTime);
 
         _, ok := users[email];
         if (!ok) {

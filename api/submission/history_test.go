@@ -6,6 +6,7 @@ import (
 
     "github.com/eriq-augustine/autograder/api/core"
     "github.com/eriq-augustine/autograder/artifact"
+    "github.com/eriq-augustine/autograder/common"
     "github.com/eriq-augustine/autograder/usr"
     "github.com/eriq-augustine/autograder/util"
 )
@@ -76,7 +77,7 @@ var studentHist []*artifact.SubmissionHistoryItem = []*artifact.SubmissionHistor
         Message: "",
         MaxPoints: 2,
         Score: 0,
-        GradingStartTime: util.MustFromTimestamp("2023-10-15T21:44:16.84006Z"),
+        GradingStartTime: common.MustTimestampFromString("2023-10-15T21:44:16.840060+00:00"),
     },
     &artifact.SubmissionHistoryItem{
         ID: "course101::hw0::student@test.com::1697406265",
@@ -87,7 +88,7 @@ var studentHist []*artifact.SubmissionHistoryItem = []*artifact.SubmissionHistor
         Message: "",
         MaxPoints: 2,
         Score: 1,
-        GradingStartTime: util.MustFromTimestamp("2023-10-15T21:44:26.445382Z"),
+        GradingStartTime: common.MustTimestampFromString("2023-10-15T21:44:26.445382+00:00"),
     },
     &artifact.SubmissionHistoryItem{
         ID: "course101::hw0::student@test.com::1697406272",
@@ -98,6 +99,6 @@ var studentHist []*artifact.SubmissionHistoryItem = []*artifact.SubmissionHistor
         Message: "",
         MaxPoints: 2,
         Score: 2,
-        GradingStartTime: util.MustFromTimestamp("2023-10-15T21:44:33.157275Z"),
+        GradingStartTime: common.MustTimestampFromString("2023-10-15T21:44:33.157275+00:00"),
     },
 };

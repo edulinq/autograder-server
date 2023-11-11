@@ -31,30 +31,60 @@ func loadStaticSubmissions(courseConfigPath string) ([]*artifact.GradingResult, 
     }
 
     for _, resultPath := range resultPaths {
-        baseSubmissionDir := filepath.Dir(resultPath);
-        submissionInputDir := filepath.Join(baseSubmissionDir, common.GRADING_INPUT_DIRNAME);
-
-        var submissionResult artifact.GradedAssignment;
-        err = util.JSONFromFile(resultPath, &submissionResult);
+        gradingResult, err := LoadGradingResult(resultPath);
         if (err != nil) {
-            return nil, fmt.Errorf("Failed to load submission result '%s': '%w'.", resultPath, err);
+            return nil, err;
         }
 
-        if (!util.PathExists(submissionInputDir)) {
-            log.Warn().Str("dir", submissionInputDir).Msg("Input dir for submission result does not exist.");
-            continue;
-        }
-
-        inputBytes, err := util.ZipToBytes(submissionInputDir, "", true);
-        if (err != nil) {
-            return nil, fmt.Errorf("Could not zip submission input dir '%s': '%w'.", submissionInputDir, err);
-        }
-
-        submissions = append(submissions, &artifact.GradingResult{
-            Result: &submissionResult,
-            InputFilesZip: inputBytes,
-        });
+        submissions = append(submissions, gradingResult);
     }
 
     return submissions, nil;
+}
+
+// Load a full standard grading result froma result path.
+func LoadGradingResult(resultPath string) (*artifact.GradingResult, error) {
+    baseSubmissionDir := filepath.Dir(resultPath);
+    submissionInputDir := filepath.Join(baseSubmissionDir, common.GRADING_INPUT_DIRNAME);
+
+    var submissionResult artifact.GradedAssignment;
+    err := util.JSONFromFile(resultPath, &submissionResult);
+    if (err != nil) {
+        return nil, fmt.Errorf("Failed to load submission result '%s': '%w'.", resultPath, err);
+    }
+
+    if (!util.PathExists(submissionInputDir)) {
+        return nil, fmt.Errorf("Input dir for submission result does not exist '%s': '%w'.", submissionInputDir, err);
+    }
+
+    fileContents := make(map[string][]byte);
+
+    paths, err := util.FindFiles("", submissionInputDir);
+    if (err != nil) {
+        return nil, fmt.Errorf("Unable to find files in submission input dir '%s': '%w'.", submissionInputDir, err);
+    }
+
+    for _, path := range paths {
+        contents, err := util.GzipFileToBytes(path);
+        if (err != nil) {
+            return nil, fmt.Errorf("Failed to gzip input file '%s': '%w'.", path, err);
+        }
+
+        relPath := util.RelPath(path, submissionInputDir);
+        fileContents[relPath] = contents;
+    }
+
+    return &artifact.GradingResult{
+        Result: &submissionResult,
+        InputFilesGZip: fileContents,
+    }, nil;
+}
+
+func MustLoadGradingResult(resultPath string) *artifact.GradingResult {
+    result, err := LoadGradingResult(resultPath);
+    if (err != nil) {
+        log.Fatal().Err(err).Str("path", resultPath).Msg("Failed to load grading result.");
+    }
+
+    return result;
 }

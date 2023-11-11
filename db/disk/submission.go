@@ -7,6 +7,7 @@ import (
     "time"
 
     "github.com/eriq-augustine/autograder/artifact"
+    "github.com/eriq-augustine/autograder/common"
     "github.com/eriq-augustine/autograder/db/types"
     "github.com/eriq-augustine/autograder/usr"
     "github.com/eriq-augustine/autograder/util"
@@ -31,9 +32,19 @@ func (this *backend) saveSubmissionsLock(course *types.Course, submissions []*ar
             return fmt.Errorf("Failed to write submission result '%s': '%w'.", resultPath, err);
         }
 
-        err = util.UnzipFromBytes(submission.InputFilesZip, baseDir);
-        if (err != nil) {
-            return fmt.Errorf("Failed to input files into '%s': '%w'.", baseDir, err);
+        for relPath, data := range submission.InputFilesGZip {
+            dir := filepath.Join(baseDir, common.GRADING_INPUT_DIRNAME);
+            path := filepath.Join(dir, relPath);
+
+            err = util.MkDir(dir);
+            if (err != nil) {
+                return fmt.Errorf("Failed to make dir ('%s') for input file ('%s'): '%w'.", dir, path, err);
+            }
+
+            err = util.GzipBytesToFile(data, path);
+            if (err != nil) {
+                return err;
+            }
         }
     }
 
@@ -69,6 +80,10 @@ func (this *backend) GetSubmissionResult(assignment *types.Assignment, email str
         if (err != nil) {
             return nil, fmt.Errorf("Failed to get most recent submission id: '%w'.", err);
         }
+    }
+
+    if (shortSubmissionID == "") {
+        return nil, nil;
     }
 
     submissionDir := this.getSubmissionDirFromAssignment(assignment, email, shortSubmissionID);
@@ -119,27 +134,126 @@ func (this *backend) GetSubmissionHistory(assignment *types.Assignment, email st
     return history, nil;
 }
 
-// TEST
-func (this *backend) GetScoringInfos(assignment *types.Assignment, onlyRole usr.UserRole) (map[string]*artifact.ScoringInfo, error) {
-    scoringInfos := make(map[string]*artifact.ScoringInfo);
-
-    // TEST
-    return scoringInfos, nil;
-}
-
-// TEST
-func (this *backend) GetRecentSubmissions(assignment *types.Assignment, onlyRole usr.UserRole) (map[string]*artifact.GradedAssignment, error) {
+func (this *backend) GetRecentSubmissions(assignment *types.Assignment, filterRole usr.UserRole) (map[string]*artifact.GradedAssignment, error) {
     results := make(map[string]*artifact.GradedAssignment);
 
-    // TEST
+    users, err := this.GetUsers(assignment.Course);
+    if (err != nil) {
+        return nil, err;
+    }
+
+    for email, user := range users {
+        if ((filterRole != usr.Unknown) && (filterRole != user.Role)) {
+            continue;
+        }
+
+        shortSubmissionID, err := this.getMostRecentSubmissionID(assignment, email);
+        if (err != nil) {
+            return nil, err;
+        }
+
+        if (shortSubmissionID == "") {
+            results[email] = nil;
+            continue;
+        }
+
+        resultPath := filepath.Join(this.getSubmissionDirFromAssignment(assignment, email, shortSubmissionID), types.SUBMISSION_RESULT_FILENAME);
+
+        var result artifact.GradedAssignment;
+        err = util.JSONFromFile(resultPath, &result);
+        if (err != nil) {
+            return nil, fmt.Errorf("Unable to deserialize submission result '%s': '%w'.", resultPath, err);
+        }
+
+        results[email] = &result;
+    }
+
     return results, nil;
 }
 
-// TEST
-func (this *backend) GetRecentSubmissionSurvey(assignment *types.Assignment, onlyRole usr.UserRole) (map[string]*artifact.SubmissionHistoryItem, error) {
+func (this *backend) GetScoringInfos(assignment *types.Assignment, filterRole usr.UserRole) (map[string]*artifact.ScoringInfo, error) {
+    scoringInfos := make(map[string]*artifact.ScoringInfo);
+
+    submissionResults, err := this.GetRecentSubmissions(assignment, filterRole);
+    if (err != nil) {
+        return nil, err;
+    }
+
+    for email, submissionResult := range submissionResults {
+        if (submissionResult == nil) {
+            scoringInfos[email] = nil;
+        } else {
+            scoringInfos[email] = submissionResult.ToScoringInfo();
+        }
+    }
+
+    return scoringInfos, nil;
+}
+
+func (this *backend) GetRecentSubmissionSurvey(assignment *types.Assignment, filterRole usr.UserRole) (map[string]*artifact.SubmissionHistoryItem, error) {
     results := make(map[string]*artifact.SubmissionHistoryItem);
 
-    // TEST
+    submissionResults, err := this.GetRecentSubmissions(assignment, filterRole);
+    if (err != nil) {
+        return nil, err;
+    }
+
+    for email, submissionResult := range submissionResults {
+        if (submissionResult == nil) {
+            results[email] = nil;
+        } else {
+            results[email] = submissionResult.ToHistoryItem();
+        }
+    }
+
+    return results, nil;
+}
+
+func (this *backend) GetSubmissionContents(assignment *types.Assignment, email string, shortSubmissionID string) (*artifact.GradingResult, error) {
+    var err error;
+
+    if (shortSubmissionID == "") {
+        shortSubmissionID, err = this.getMostRecentSubmissionID(assignment, email);
+        if (err != nil) {
+            return nil, fmt.Errorf("Failed to get most recent submission id: '%w'.", err);
+        }
+    }
+
+    if (shortSubmissionID == "") {
+        return nil, nil;
+    }
+
+    submissionDir := this.getSubmissionDirFromAssignment(assignment, email, shortSubmissionID);
+    resultPath := filepath.Join(submissionDir, types.SUBMISSION_RESULT_FILENAME);
+
+    if (!util.PathExists(resultPath)) {
+        return nil, nil;
+    }
+
+    return types.LoadGradingResult(resultPath);
+}
+
+func (this *backend) GetRecentSubmissionContents(assignment *types.Assignment, filterRole usr.UserRole) (map[string]*artifact.GradingResult, error) {
+    results := make(map[string]*artifact.GradingResult);
+
+    users, err := this.GetUsers(assignment.Course);
+    if (err != nil) {
+        return nil, err;
+    }
+
+    for email, user := range users {
+        if ((filterRole != usr.Unknown) && (filterRole != user.Role)) {
+            continue;
+        }
+
+        result, err := this.GetSubmissionContents(assignment, email, "");
+        if (err != nil) {
+            return nil, err;
+        }
+
+        results[email] = result;
+    }
+
     return results, nil;
 }
 
@@ -177,68 +291,3 @@ func (this *backend) getMostRecentSubmissionID(assignment *types.Assignment, ema
 
     return dirents[len(dirents) - 1].Name(), nil;
 }
-
-/* TEST
-// Get all the paths to the submission files for an assignment and user.
-// The results will be sorted in ascending order (first submission first).
-// An empty slice indicates that there are no matching submission files.
-func (this *Assignment) getSubmissionFiles(user string, filename string) ([]string, error) {
-    submissionsDir, err := this.getSubmissionsDir();
-    if (err != nil) {
-        return nil, err;
-    }
-
-    paths := make([]string, 0);
-
-    baseDir := filepath.Join(submissionsDir, user);
-    if (!util.PathExists(baseDir)) {
-        return paths, nil;
-    }
-
-    if (!util.IsDir(baseDir)) {
-        return nil, fmt.Errorf("Expected user's submission dir '%s' exists and is not a dir.", baseDir);
-    }
-
-    dirents, err := os.ReadDir(baseDir);
-    if (err != nil) {
-        return nil, fmt.Errorf("Failed to read dir '%s': '%w'.", baseDir, err);
-    }
-
-    for _, dirent := range dirents {
-        if (!dirent.IsDir()) {
-            continue;
-        }
-
-        path := filepath.Join(baseDir, dirent.Name(), common.GRADING_OUTPUT_DIRNAME, filename);
-        if (!util.IsFile(path)) {
-            continue;
-        }
-
-        paths = append(paths, path);
-    }
-
-    return paths, nil;
-}
-
-// Get all the paths to the most recent submission file for each user for this assignment.
-// The returned map will contain an entry for every user (if not nil).
-// An empty entry in the map indicates the user has no submissions.
-func (this *Assignment) getAllRecentSubmissionFiles(users map[string]*usr.User, filename string) (map[string]string, error) {
-    paths := make(map[string]string);
-
-    for email, _ := range users {
-        userPaths, err := this.getSubmissionFiles(email, filename);
-        if (err != nil) {
-            return nil, err;
-        }
-
-        if (len(userPaths) == 0) {
-            paths[email] = "";
-        } else {
-            paths[email] = userPaths[len(userPaths) - 1];
-        }
-    }
-
-    return paths, nil;
-}
-*/

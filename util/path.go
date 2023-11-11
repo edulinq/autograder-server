@@ -97,6 +97,7 @@ func FindFiles(filename string, dir string) ([]string, error) {
 // When symbolic links are allowed, keep two things in mind:
 //  1) A retutned path may be outside the passed in dir.
 //  2) This method will not terminate if there are loops.
+// If the filename is empty, return all dirents.
 func FindDirents(filename string, dir string, allowFiles bool, allowDirs bool, allowLinks bool) ([]string, error) {
     matches := make([]string, 0);
 
@@ -139,7 +140,7 @@ func FindDirents(filename string, dir string, allowFiles bool, allowDirs bool, a
             }
         }
 
-        if (filename == dirent.Name()) {
+        if ((filename == "") || (filename == dirent.Name())) {
             matches = append(matches, path);
         }
 
@@ -227,6 +228,14 @@ func PathHasParent(child string, parent string) bool {
     parent = ShouldAbs(parent);
 
     return strings.HasPrefix(child, parent);
+}
+
+// This method is not robust (in many ways) and should be generally avoided in non-testing code.
+func RelPath(child string, parent string) string {
+    child = ShouldAbs(child);
+    parent = ShouldAbs(parent) + "/";
+
+    return strings.TrimPrefix(child, parent);
 }
 
 // Get the root directory of this project.

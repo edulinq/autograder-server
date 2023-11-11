@@ -51,29 +51,48 @@ func GetSubmissionResult(rawAssignment model.Assignment, email string, submissio
     return backend.GetSubmissionResult(assignment, email, shortSubmissionID);
 }
 
-func GetScoringInfos(rawAssignment model.Assignment, onlyRole usr.UserRole) (map[string]*artifact.ScoringInfo, error) {
+func GetScoringInfos(rawAssignment model.Assignment, filterRole usr.UserRole) (map[string]*artifact.ScoringInfo, error) {
     assignment, ok := rawAssignment.(*types.Assignment);
     if (!ok) {
         return nil, fmt.Errorf("Assignment '%v' is not a db assignment.", rawAssignment);
     }
 
-    return backend.GetScoringInfos(assignment, onlyRole);
+    return backend.GetScoringInfos(assignment, filterRole);
 }
 
-func GetRecentSubmissions(rawAssignment model.Assignment, onlyRole usr.UserRole) (map[string]*artifact.GradedAssignment, error) {
+func GetRecentSubmissions(rawAssignment model.Assignment, filterRole usr.UserRole) (map[string]*artifact.GradedAssignment, error) {
     assignment, ok := rawAssignment.(*types.Assignment);
     if (!ok) {
         return nil, fmt.Errorf("Assignment '%v' is not a db assignment.", rawAssignment);
     }
 
-    return backend.GetRecentSubmissions(assignment, onlyRole);
+    return backend.GetRecentSubmissions(assignment, filterRole);
 }
 
-func GetRecentSubmissionSurvey(rawAssignment model.Assignment, onlyRole usr.UserRole) (map[string]*artifact.SubmissionHistoryItem, error) {
+func GetRecentSubmissionSurvey(rawAssignment model.Assignment, filterRole usr.UserRole) (map[string]*artifact.SubmissionHistoryItem, error) {
     assignment, ok := rawAssignment.(*types.Assignment);
     if (!ok) {
         return nil, fmt.Errorf("Assignment '%v' is not a db assignment.", rawAssignment);
     }
 
-    return backend.GetRecentSubmissionSurvey(assignment, onlyRole);
+    return backend.GetRecentSubmissionSurvey(assignment, filterRole);
+}
+
+func GetSubmissionContents(rawAssignment model.Assignment, email string, submissionID string) (*artifact.GradingResult, error) {
+    assignment, ok := rawAssignment.(*types.Assignment);
+    if (!ok) {
+        return nil, fmt.Errorf("Assignment '%v' is not a db assignment.", rawAssignment);
+    }
+
+    shortSubmissionID := common.GetShortSubmissionID(submissionID);
+    return backend.GetSubmissionContents(assignment, email, shortSubmissionID);
+}
+
+func GetRecentSubmissionContents(rawAssignment model.Assignment, filterRole usr.UserRole) (map[string]*artifact.GradingResult, error) {
+    assignment, ok := rawAssignment.(*types.Assignment);
+    if (!ok) {
+        return nil, fmt.Errorf("Assignment '%v' is not a db assignment.", rawAssignment);
+    }
+
+    return backend.GetRecentSubmissionContents(assignment, filterRole);
 }

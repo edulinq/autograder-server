@@ -4,6 +4,8 @@ package util
 // Externally, all times should be considered a "timestamp" string.
 // Internally, all times should be a time.Time.
 
+// TEST - Remove, replace with common/time
+
 import (
     "time"
 

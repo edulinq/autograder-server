@@ -3,19 +3,18 @@ package artifact
 import (
     "fmt"
     "strings"
-    "time"
 
+    "github.com/eriq-augustine/autograder/common"
     "github.com/eriq-augustine/autograder/util"
 )
 
 // TODO(eriq): Include output.
 type GradingResult struct {
-    Result *GradedAssignment
-    // TEST - Keep these as {<filename (relpath)>: <gzip>, ...} instead.
-    InputFilesZip []byte
+    Result *GradedAssignment `json:"result"`
+    InputFilesGZip map[string][]byte `json:"input-files-gzip"`
 }
 
-// TEST - Rename to SubmissionResult
+// TEST - Rename to SubmissionResult? Get a name the complements the above struct (GradingResult).
 type GradedAssignment struct {
     // Information set by the autograder.
     ID string `json:"id"`
@@ -30,8 +29,8 @@ type GradedAssignment struct {
     // Information generally filled out by the grader.
     Name string `json:"name"`
     Questions []GradedQuestion `json:"questions"`
-    GradingStartTime time.Time `json:"grading_start_time"`
-    GradingEndTime time.Time `json:"grading_end_time"`
+    GradingStartTime common.Timestamp `json:"grading_start_time"`
+    GradingEndTime common.Timestamp `json:"grading_end_time"`
 
     // Additional pass-through information that the grader can use.
     AdditionalInfo map[string]any `json:"additional-info"`
@@ -46,7 +45,7 @@ type SubmissionHistoryItem struct {
     Message string `json:"message"`
     MaxPoints float64 `json:"max_points"`
     Score float64 `json:"score"`
-    GradingStartTime time.Time `json:"grading_start_time"`
+    GradingStartTime common.Timestamp `json:"grading_start_time"`
 }
 
 type GradedQuestion struct {
@@ -54,8 +53,8 @@ type GradedQuestion struct {
     MaxPoints float64 `json:"max_points"`
     Score float64 `json:"score"`
     Message string `json:"message"`
-    GradingStartTime time.Time `json:"grading_start_time"`
-    GradingEndTime time.Time `json:"grading_end_time"`
+    GradingStartTime common.Timestamp `json:"grading_start_time"`
+    GradingEndTime common.Timestamp `json:"grading_end_time"`
 }
 
 func (this GradedAssignment) ToHistoryItem() *SubmissionHistoryItem {
@@ -69,6 +68,14 @@ func (this GradedAssignment) ToHistoryItem() *SubmissionHistoryItem {
         MaxPoints: this.MaxPoints,
         Score: this.Score,
         GradingStartTime: this.GradingStartTime,
+    };
+}
+
+func (this GradedAssignment) ToScoringInfo() *ScoringInfo {
+    return &ScoringInfo{
+        ID: this.ID,
+        SubmissionTime: this.GradingStartTime,
+        RawScore: this.Score,
     };
 }
 

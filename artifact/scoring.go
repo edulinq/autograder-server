@@ -1,13 +1,13 @@
 package artifact
 
 import (
-    "time"
+    "github.com/eriq-augustine/autograder/common"
 )
 
 type ScoringInfo struct {
     ID string `json:"id"`
-    SubmissionTime time.Time `json:"submission-time"`
-    UploadTime time.Time `json:"upload-time"`
+    SubmissionTime common.Timestamp `json:"submission-time"`
+    UploadTime common.Timestamp `json:"upload-time"`
     RawScore float64 `json:"raw-score"`
     Score float64 `json:"score"`
     Lock bool `json:"lock"`

@@ -5,6 +5,7 @@ import (
     "time"
 
     "gonum.org/v1/gonum/stat"
+
     "github.com/eriq-augustine/autograder/db"
     "github.com/eriq-augustine/autograder/usr"
     "github.com/eriq-augustine/autograder/model"
@@ -101,8 +102,13 @@ func fetchScores(assignment model.Assignment) ([]string, map[string][]float64, t
             continue;
         }
 
-        if (result.GradingStartTime.After(lastSubmissionTime)) {
-            lastSubmissionTime = result.GradingStartTime;
+        resultTime, err := result.GradingStartTime.Time();
+        if (err != nil) {
+            return nil, nil, time.Time{}, fmt.Errorf("Failed to get submission result time: '%w'.", err);
+        }
+
+        if (resultTime.After(lastSubmissionTime)) {
+            lastSubmissionTime = resultTime;
         }
 
         if (len(questionNames) == 0) {

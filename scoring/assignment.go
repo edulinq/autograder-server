@@ -151,7 +151,7 @@ func filterFinalScores(
             continue;
         }
 
-        scoringInfo.UploadTime = time.Now();
+        scoringInfo.UploadTime = common.NowTimestamp();
 
         // Check the existing comment last so we can decide if this comment needs to be updated.
         existingComment := existingComments[user.LMSID];
@@ -185,10 +185,16 @@ func filterFinalScores(
             };
         }
 
+        scoringTime, err := scoringInfo.SubmissionTime.Time();
+        if (err != nil) {
+            log.Warn().Err(err).Str("user", email).Msg("Failed to get scoring time, using now.");
+            scoringTime = time.Now();
+        }
+
         lmsScore := lmstypes.SubmissionScore{
             UserID: user.LMSID,
             Score: scoringInfo.Score,
-            Time: scoringInfo.SubmissionTime,
+            Time: scoringTime,
             Comments: uploadComments,
         }
 

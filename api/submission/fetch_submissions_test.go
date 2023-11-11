@@ -5,25 +5,30 @@ import (
     "testing"
 
     "github.com/eriq-augustine/autograder/api/core"
+    "github.com/eriq-augustine/autograder/artifact"
+    "github.com/eriq-augustine/autograder/db/types"
     "github.com/eriq-augustine/autograder/usr"
     "github.com/eriq-augustine/autograder/util"
 )
 
-var hash string = "45adfd6ba2624ec5b7b3ae4a0f11b9077b27db36837659b7f30ad13f1406ea34";
-
 func TestFetchSubmissions(test *testing.T) {
-    // See writeZipContents() for hash information.
     testCases := []struct{
             role usr.UserRole
             permError bool
-            submissionIDs map[string]string
-            hash string
     }{
-        {usr.Other, true, nil, ""},
-        {usr.Student, true, nil, ""},
-        {usr.Grader, false, map[string]string{"student@test.com": "1697406272"}, hash},
-        {usr.Admin, false, map[string]string{"student@test.com": "1697406272"}, hash},
-        {usr.Owner, false, map[string]string{"student@test.com": "1697406272"}, hash},
+        {usr.Other, true},
+        {usr.Student, true},
+        {usr.Grader, false},
+        {usr.Admin, false},
+        {usr.Owner, false},
+    };
+
+    submissions := map[string]*artifact.GradingResult{
+        "other@test.com": nil,
+        "student@test.com": types.MustLoadGradingResult(getTestSubmissionResultPath("1697406272")),
+        "grader@test.com": nil,
+        "admin@test.com": nil,
+        "owner@test.com": nil,
     };
 
     for i, testCase := range testCases {
@@ -45,14 +50,9 @@ func TestFetchSubmissions(test *testing.T) {
         var responseContent FetchSubmissionsResponse;
         util.MustJSONFromString(util.MustToJSON(response.Content), &responseContent);
 
-        if (!reflect.DeepEqual(testCase.submissionIDs, responseContent.SubmissionIDs)) {
-            test.Errorf("Case %d: Unexpected submission IDs. Expected: '%+v', actual: '%+v'.", i, testCase.submissionIDs, responseContent.SubmissionIDs);
-            continue;
-        }
-
-        actualHash := util.Sha256HexFromString(responseContent.Contents);
-        if (testCase.hash != actualHash) {
-            test.Errorf("Case %d: Unexpected submissions hash. Expected: '%+v', actual: '%+v'.", i, testCase.hash, actualHash);
+        if (!reflect.DeepEqual(submissions, responseContent.GradingResults)) {
+            test.Errorf("Case %d: Unexpected submission IDs. Expected: '%s', actual: '%s'.", i,
+                    util.MustToJSONIndent(submissions), util.MustToJSONIndent(responseContent.GradingResults));
             continue;
         }
     }

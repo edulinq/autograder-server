@@ -81,18 +81,26 @@ type Backend interface {
 
     // Get the scoring infos for an assignment for all users that match the given role.
     // A role of usr.Unknown means all users.
-    // Users without a submission will be represented with a nil map value.
-    GetScoringInfos(assignment *types.Assignment, onlyRole usr.UserRole) (map[string]*artifact.ScoringInfo, error);
+    // Users without a submission (but with a matching role) will be represented with a nil map value.
+    GetScoringInfos(assignment *types.Assignment, filterRole usr.UserRole) (map[string]*artifact.ScoringInfo, error);
 
     // Get recent submission result for each user of the given role.
     // A role of usr.Unknown means all users.
-    // Users without a submission will be represented with a nil map value.
-    GetRecentSubmissions(assignment *types.Assignment, onlyRole usr.UserRole) (map[string]*artifact.GradedAssignment, error);
+    // Users without a submission (but with a matching role) will be represented with a nil map value.
+    GetRecentSubmissions(assignment *types.Assignment, filterRole usr.UserRole) (map[string]*artifact.GradedAssignment, error);
 
     // Get an overview of the recent submission result for each user of the given role.
     // A role of usr.Unknown means all users.
-    // Users without a submission will be represented with a nil map value.
-    GetRecentSubmissionSurvey(assignment *types.Assignment, onlyRole usr.UserRole) (map[string]*artifact.SubmissionHistoryItem, error);
+    // Users without a submission (but with a matching role) will be represented with a nil map value.
+    GetRecentSubmissionSurvey(assignment *types.Assignment, filterRole usr.UserRole) (map[string]*artifact.SubmissionHistoryItem, error);
+
+    // Get the results of a submission including files and grading output.
+    GetSubmissionContents(assignment *types.Assignment, email string, shortSubmissionID string) (*artifact.GradingResult, error);
+
+    // Get the contents of recent submission result for each user of the given role.
+    // A role of usr.Unknown means all users.
+    // Users without a submission (but with a matching role) will be represented with a nil map value.
+    GetRecentSubmissionContents(assignment *types.Assignment, filterRole usr.UserRole) (map[string]*artifact.GradingResult, error);
 }
 
 func Open() error {

@@ -1,12 +1,12 @@
 package artifact
 
 import (
-    "time"
-
+    "github.com/eriq-augustine/autograder/common"
     "github.com/eriq-augustine/autograder/util"
 )
 
 // TEST - We don't really need summaries written to disk, just pass them around.
+// We may not need them at all.
 
 type TestSubmission struct {
     IgnoreMessages bool `json:"ignore_messages"`
@@ -18,7 +18,7 @@ type SubmissionSummary struct {
     Message string `json:"message"`
     MaxPoints float64 `json:"max_points"`
     Score float64 `json:"score"`
-    GradingStartTime time.Time `json:"grading_start_time"`
+    GradingStartTime common.Timestamp `json:"grading_start_time"`
 }
 
 func (this SubmissionSummary) String() string {
