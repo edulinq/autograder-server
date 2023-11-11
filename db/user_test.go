@@ -15,9 +15,13 @@ type SyncNewUsersTestCase struct {
 }
 
 func TestCourseSyncNewUsers(test *testing.T) {
+    defer ResetForTesting();
+
     course := MustGetCourse(TEST_COURSE_ID);
 
     for i, testCase := range getSyncNewUsersTestCases() {
+        ResetForTesting();
+
         testUsers, addUsers, shortCleartextPassUsers, fullCleartextPassUsers, shortEmails, fullEmails, modUsers, skipUsers := getSynNewUsersTestUsers();
 
         email.ClearTestMessages();
