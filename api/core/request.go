@@ -4,6 +4,7 @@ import (
     "net/http"
     "reflect"
 
+    "github.com/eriq-augustine/autograder/common"
     "github.com/eriq-augustine/autograder/config"
     "github.com/eriq-augustine/autograder/db"
     "github.com/eriq-augustine/autograder/model"
@@ -19,7 +20,7 @@ type APIRequest struct {
     // These are not provided in JSON, they are filled in during validation.
     RequestID string `json:"-"`
     Endpoint string `json:"-"`
-    Timestamp string `json:"-"`
+    Timestamp common.Timestamp `json:"-"`
 
     // This request is being used as part of a test.
     TestingMode bool `json:"-"`
@@ -51,7 +52,7 @@ type APIRequestAssignmentContext struct {
 func (this *APIRequest) Validate(request any, endpoint string) *APIError {
     this.RequestID = util.UUID();
     this.Endpoint = endpoint;
-    this.Timestamp = util.NowTimestamp();
+    this.Timestamp = common.NowTimestamp();
 
     this.TestingMode = config.TESTING_MODE.Get();
 

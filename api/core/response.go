@@ -3,6 +3,7 @@ package core
 import (
     "reflect"
 
+    "github.com/eriq-augustine/autograder/common"
     "github.com/eriq-augustine/autograder/util"
 )
 
@@ -11,8 +12,8 @@ type APIResponse struct {
     Locator string `json:"locator"`
     ServerVersion string `json:"server-version"`
 
-    StartTimestamp string `json:"start-timestamp"`
-    EndTimestamp string `json:"end-timestamp"`
+    StartTimestamp common.Timestamp `json:"start-timestamp"`
+    EndTimestamp common.Timestamp `json:"end-timestamp"`
 
     HTTPStatus int `json:"status"`
     Success bool `json:"success"`
@@ -32,7 +33,7 @@ func NewAPIResponse(request ValidAPIRequest, content any) *APIResponse {
         ID: id,
         ServerVersion: util.GetAutograderFullVersion(),
         StartTimestamp: timestamp,
-        EndTimestamp: util.NowTimestamp(),
+        EndTimestamp: common.NowTimestamp(),
         HTTPStatus: HTTP_STATUS_GOOD,
         Success: true,
         Message: "",
@@ -41,9 +42,9 @@ func NewAPIResponse(request ValidAPIRequest, content any) *APIResponse {
 }
 
 // Reflexively get the request ID and timestamp from a request.
-func getRequestInfo(request ValidAPIRequest) (string, string) {
+func getRequestInfo(request ValidAPIRequest) (string, common.Timestamp) {
     id := "";
-    timestamp := "";
+    timestamp := common.NowTimestamp();
 
     if (request == nil) {
         return id, timestamp;
@@ -58,7 +59,7 @@ func getRequestInfo(request ValidAPIRequest) (string, string) {
 
     timestampValue := reflectValue.FieldByName("Timestamp");
     if (timestampValue.IsValid()) {
-        timestamp = timestampValue.Interface().(string);
+        timestamp = timestampValue.Interface().(common.Timestamp);
     }
 
     return id, timestamp;

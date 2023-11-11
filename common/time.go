@@ -1,5 +1,9 @@
 package common
 
+// Consistently handle time operations.
+// Internally, all times should be a time.Time.
+// Externally (including things internal, but serialized), all times should be considered a "timestamp" string.
+
 import (
     "fmt"
     "time"
