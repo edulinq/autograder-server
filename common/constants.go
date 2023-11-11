@@ -7,6 +7,9 @@ const GRADING_WORK_DIRNAME = "work"
 const GRADER_OUTPUT_RESULT_FILENAME = "result.json"
 const GRADER_OUTPUT_SUMMARY_FILENAME = "summary.json"
 
+const SUBMISSION_STDOUT_FILENAME = "stdout.txt"
+const SUBMISSION_STDERR_FILENAME = "stderr.txt"
+
 const AUTOGRADER_COMMENT_IDENTITY_KEY = "__autograder__"
 
 const CACHE_DIRNAME = "cache"

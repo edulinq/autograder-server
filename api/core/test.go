@@ -37,13 +37,9 @@ func APITestingMain(suite *testing.M, routes *[]*Route) {
     // Run inside a func so defers will run before os.Exit().
     code := func() int {
         db.PrepForTestingMain();
-        // TEST
-        // defer db.CleanupTestingMain();
+        defer db.CleanupTestingMain();
 
         config.NO_AUTH.Set(false);
-
-        // TEST
-        config.SetLogLevelDebug();
 
         startTestServer(routes);
         defer stopTestServer();

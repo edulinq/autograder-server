@@ -39,7 +39,6 @@ func init() {
 // A mode intended for running unit tests.
 func MustEnableUnitTestingMode() {
     TESTING_MODE.Set(true);
-    NO_STORE.Set(true);
     NO_TASKS.Set(true);
 
     tempWorkDir, err := util.MkDirTemp("autograader-unit-testing-");

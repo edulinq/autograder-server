@@ -32,19 +32,24 @@ func (this *backend) saveSubmissionsLock(course *types.Course, submissions []*ar
             return fmt.Errorf("Failed to write submission result '%s': '%w'.", resultPath, err);
         }
 
-        for relPath, data := range submission.InputFilesGZip {
-            dir := filepath.Join(baseDir, common.GRADING_INPUT_DIRNAME);
-            path := filepath.Join(dir, relPath);
+        err = util.GzipBytesToDirectory(filepath.Join(baseDir, common.GRADING_INPUT_DIRNAME), submission.InputFilesGZip);
+        if (err != nil) {
+            return fmt.Errorf("Failed to write submission input files: '%w'.", err);
+        }
 
-            err = util.MkDir(dir);
-            if (err != nil) {
-                return fmt.Errorf("Failed to make dir ('%s') for input file ('%s'): '%w'.", dir, path, err);
-            }
+        err = util.GzipBytesToDirectory(filepath.Join(baseDir, common.GRADING_OUTPUT_DIRNAME), submission.OutputFilesGZip);
+        if (err != nil) {
+            return fmt.Errorf("Failed to write submission input files: '%w'.", err);
+        }
 
-            err = util.GzipBytesToFile(data, path);
-            if (err != nil) {
-                return err;
-            }
+        err = util.WriteFile(submission.Stdout, filepath.Join(baseDir, common.SUBMISSION_STDOUT_FILENAME));
+        if (err != nil) {
+            return fmt.Errorf("Failed to write submission stdout file: '%w'.", err);
+        }
+
+        err = util.WriteFile(submission.Stderr, filepath.Join(baseDir, common.SUBMISSION_STDERR_FILENAME));
+        if (err != nil) {
+            return fmt.Errorf("Failed to write submission stderr file: '%w'.", err);
         }
     }
 

@@ -35,9 +35,6 @@ func GradeDefault(assignment model.Assignment, submissionPath string, user strin
 func Grade(assignment model.Assignment, submissionPath string, user string, message string, options GradeOptions) (*artifact.GradingResult, error) {
     var gradingResult artifact.GradingResult;
 
-    // TEST
-    fmt.Println("TEST2A");
-
     gradingKey := fmt.Sprintf("%s::%s::%s", assignment.GetCourse().GetID(), assignment.GetID(), user);
 
     // Get the existing mutex, or store (and fetch) a new one.
@@ -47,23 +44,14 @@ func Grade(assignment model.Assignment, submissionPath string, user string, mess
     lock.Lock();
     defer lock.Unlock()
 
-    // TEST
-    fmt.Println("TEST2B");
-
     submissionID, inputFileContents, err := prepForGrading(assignment, submissionPath, user);
     if (err != nil) {
         return nil, fmt.Errorf("Failed to prep for grading: '%w'.", err);
     }
 
-    // TEST
-    fmt.Println("TEST2C");
-
     gradingResult.InputFilesGZip = inputFileContents;
 
     fullSubmissionID := common.CreateFullSubmissionID(assignment.GetCourse().GetID(), assignment.GetID(), user, submissionID);
-
-    // TEST - Graders shoud use their own temp work/in/out dirs.
-    // TEST - Have the grader copy all output files into the DB.
 
     var submissionResult *artifact.GradedAssignment;
     var outputFileContents map[string][]byte;
@@ -76,15 +64,9 @@ func Grade(assignment model.Assignment, submissionPath string, user string, mess
         submissionResult, outputFileContents, stdout, stderr, err = runDockerGrader(assignment, submissionPath, options, fullSubmissionID);
     }
 
-    // TEST
-    fmt.Println("TEST2D");
-
     // Copy over stdout and stderr even if an error occured.
     gradingResult.Stdout = stdout;
     gradingResult.Stderr = stderr;
-
-    // TEST
-    fmt.Println("TEST2E");
 
     if (err != nil) {
         return &gradingResult, err;
@@ -102,11 +84,12 @@ func Grade(assignment model.Assignment, submissionPath string, user string, mess
     gradingResult.Result = submissionResult;
     gradingResult.OutputFilesGZip = outputFileContents;
 
-    // TEST - Save results in DB?
-    // TEST - Skip DB save if config.NO_STORE ?
-
-    // TEST
-    fmt.Println("TEST2Z");
+    if (!config.NO_STORE.Get()) {
+        err = db.SaveSubmission(assignment, &gradingResult);
+        if (err != nil) {
+            return &gradingResult, fmt.Errorf("Failed to save grading result: '%w'.", err);
+        }
+    }
 
     return &gradingResult, nil;
 }

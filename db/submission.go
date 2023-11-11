@@ -10,6 +10,8 @@ import (
     "github.com/eriq-augustine/autograder/usr"
 )
 
+// TEST - Make a test that make checks a saved submission against the original.
+
 func SaveSubmissions(rawCourse model.Course, submissions []*artifact.GradingResult) error {
     course, ok := rawCourse.(*types.Course);
     if (!ok) {
@@ -19,8 +21,8 @@ func SaveSubmissions(rawCourse model.Course, submissions []*artifact.GradingResu
     return backend.SaveSubmissions(course, submissions);
 }
 
-func SaveSubmission(rawCourse model.Course, submission *artifact.GradingResult) error {
-    return SaveSubmissions(rawCourse, []*artifact.GradingResult{submission});
+func SaveSubmission(rawAssignment model.Assignment, submission *artifact.GradingResult) error {
+    return SaveSubmissions(rawAssignment.GetCourse(), []*artifact.GradingResult{submission});
 }
 
 func GetNextSubmissionID(rawAssignment model.Assignment, email string) (string, error) {

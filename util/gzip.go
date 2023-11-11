@@ -49,6 +49,7 @@ func GzipBytesToFile(data []byte, path string) error {
 }
 
 // Gzip each file in a direcotry to bytes and return the output as a map: {<relpath>: bytes, ...}.
+// Complements GzipBytesToDirectory().
 func GzipDirectoryToBytes(baseDir string) (map[string][]byte, error) {
     fileContents := make(map[string][]byte);
 
@@ -72,4 +73,24 @@ func GzipDirectoryToBytes(baseDir string) (map[string][]byte, error) {
     }
 
     return fileContents, nil;
+}
+
+// Writes all the gzipped files into the provided dir.
+// Complements GzipDirectoryToBytes().
+func GzipBytesToDirectory(baseDir string, fileContents map[string][]byte) error {
+    for relPath, data := range fileContents {
+        path := filepath.Join(baseDir, relPath);
+
+        err := MkDir(filepath.Dir(path));
+        if (err != nil) {
+            return err;
+        }
+
+        err = GzipBytesToFile(data, path);
+        if (err != nil) {
+            return err;
+        }
+    }
+
+    return nil;
 }

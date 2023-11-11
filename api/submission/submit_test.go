@@ -5,12 +5,11 @@ import (
 
     "github.com/eriq-augustine/autograder/api/core"
     "github.com/eriq-augustine/autograder/config"
+    "github.com/eriq-augustine/autograder/db"
     "github.com/eriq-augustine/autograder/grader"
     "github.com/eriq-augustine/autograder/util"
     "github.com/eriq-augustine/autograder/usr"
 )
-
-// TEST - Create a test that saves and fetches (ensures it was comitted to the DB).
 
 func TestSubmit(test *testing.T) {
     testSubmissions, err := grader.GetTestSubmissions(config.COURSES_ROOT.Get());
@@ -19,11 +18,6 @@ func TestSubmit(test *testing.T) {
     }
 
     for i, testSubmission := range testSubmissions {
-        // TEST
-        if (i != 0) {
-            continue;
-        }
-
         response := core.SendTestAPIRequestFull(test, core.NewEndpoint(`submission/submit`), nil, testSubmission.Files, usr.Student);
         if (!response.Success) {
             test.Errorf("Case %d: Response is not a success when it should be: '%v'.", i, response);
@@ -39,8 +33,21 @@ func TestSubmit(test *testing.T) {
         }
 
         if (!responseContent.SubmissionResult.Equals(testSubmission.TestSubmission.Result, !testSubmission.TestSubmission.IgnoreMessages)) {
-            test.Errorf("Actual output:\n---\n%v\n---\ndoes not match expected output:\n---\n%v\n---\n.",
-                    responseContent.SubmissionResult, &testSubmission.TestSubmission.Result);
+            test.Errorf("Case %d: Actual output:\n---\n%v\n---\ndoes not match expected output:\n---\n%v\n---\n.",
+                    i, responseContent.SubmissionResult, &testSubmission.TestSubmission.Result);
+            continue;
+        }
+
+        // Fetch the most recent submission from the DB and ensure it matches.
+        submission, err := db.GetSubmissionResult(testSubmission.Assignment, "student@test.com", "");
+        if (err != nil) {
+            test.Errorf("Case %d: Failed to get submission: '%v'.", i, err);
+            continue;
+        }
+
+        if (!responseContent.SubmissionResult.Equals(*submission, !testSubmission.TestSubmission.IgnoreMessages)) {
+            test.Errorf("Case %d: Actual output:\n---\n%v\n---\ndoes not match expected output:\n---\n%v\n---\n.",
+                    i, responseContent.SubmissionResult, submission);
             continue;
         }
     }

@@ -10,14 +10,19 @@ import (
 func ReadFile(path string) (string, error) {
     data, err := os.ReadFile(path);
     if (err != nil) {
-        return "", err;
+        return "", fmt.Errorf("Failed to read file '%s': '%w'.", path, err);
     }
 
     return string(data[:]), nil;
 }
 
 func WriteBinaryFile(data []byte, path string) error {
-    return os.WriteFile(path, data, 0644);
+    err := os.WriteFile(path, data, 0644);
+    if (err != nil) {
+        return fmt.Errorf("Failed to write file '%s': '%w'.", path, err);
+    }
+
+    return nil;
 }
 
 func WriteFile(text string, path string) error {
