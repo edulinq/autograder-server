@@ -61,10 +61,10 @@ func TestFetchScores(test *testing.T) {
         util.MustJSONFromString(util.MustToJSON(response.Content), &responseContent);
 
         actualIDs := make(map[string]string, len(testCase.ids));
-        for email, summary := range responseContent.SubmissionInfos {
+        for email, info := range responseContent.SubmissionInfos {
             id := "";
-            if (summary != nil) {
-                id = summary.ID;
+            if (info != nil) {
+                id = info.ID;
             }
 
             actualIDs[email] = id;

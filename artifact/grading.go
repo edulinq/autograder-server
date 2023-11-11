@@ -149,23 +149,6 @@ func (this GradedAssignment) ComputePoints() {
     }
 }
 
-// TEST
-func (this GradedAssignment) GetSummary(id string, message string) *SubmissionSummary {
-    summary := SubmissionSummary{
-        ID: id,
-        Message: message,
-        GradingStartTime: this.GradingStartTime,
-    };
-
-
-    for _, question := range this.Questions {
-        summary.Score += question.Score;
-        summary.MaxPoints += question.MaxPoints;
-    }
-
-    return &summary;
-}
-
 func (this GradedQuestion) Report() string {
     var builder strings.Builder;
 

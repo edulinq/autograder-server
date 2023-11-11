@@ -30,17 +30,6 @@ func TestDates(test *testing.T) {
     }
 }
 
-func TestSummaryMarshalling(test *testing.T) {
-    for i, testCase := range testSummaries {
-        summary := SubmissionSummary{}
-        util.JSONFromString(testCase.JSON, &summary);
-
-        if (summary.String() != testCase.Summary.String()) {
-            test.Errorf("Summaries %d do not match:\n--- Exepcted ---\n%s\n--- Actual ---\n%s\n---\n", i, testCase.Summary, summary);
-        }
-    }
-}
-
 type dateTestCase struct {
     Input string
     Expected time.Time
@@ -62,30 +51,4 @@ func getSimpleTime(value string) time.Time {
     }
 
     return result;
-}
-
-type summaryTestCase struct {
-    Summary SubmissionSummary
-    JSON string
-}
-
-var testSummaries []summaryTestCase = []summaryTestCase{
-    summaryTestCase{
-        Summary: SubmissionSummary{
-            ID: "1",
-            Message: "Test 1!",
-            MaxPoints: 1,
-            Score: 1,
-            GradingStartTime: getSimpleTime("2023-09-28 04:00:20"),
-        },
-        JSON: `
-            {
-                "id": "1",
-                "message": "Test 1!",
-                "max_points": 1,
-                "score": 1,
-                "grading_start_time": "2023-09-28T04:00:20+00:00"
-            }
-        `,
-    },
 }
