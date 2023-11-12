@@ -9,8 +9,6 @@ import (
     "github.com/eriq-augustine/autograder/util"
 )
 
-// TEST - Now that the course is reloaded, ensure that the users are removed: db.GetUser().
-
 func TestRemove(test *testing.T) {
     // Leave the course in a good state after the test.
     defer db.ResetForTesting();
@@ -69,6 +67,24 @@ func TestRemove(test *testing.T) {
 
         if (testCase.expected != responseContent) {
             test.Errorf("Case %d: Unexpected result. Expected: '%+v', actual: '%+v'.", i, testCase.expected, responseContent);
+            continue;
+        }
+
+        if (!testCase.expected.FoundUser) {
+            continue;
+        }
+
+        // Ensure that the user is removed.
+
+        course := db.MustGetCourse("course101");
+        user, err := db.GetUser(course, testCase.target);
+        if (err != nil) {
+            test.Errorf("Case %d: Failed to get removed user: '%v'.", i, err);
+            continue;
+        }
+
+        if (user != nil) {
+            test.Errorf("Case %d: User not removed from DB: '%+v'.", i, user);
             continue;
         }
     }

@@ -57,6 +57,9 @@ type Backend interface {
     SaveAssignment(assignment *types.Assignment) error;
 
     GetUsers(course *types.Course) (map[string]*usr.User, error);
+
+    // Get a specific user.
+    // Returns nil if no matching user exists.
     GetUser(course *types.Course, email string) (*usr.User, error);
 
     // Upsert the given users.
