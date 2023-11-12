@@ -14,7 +14,7 @@ type SyncNewUsersTestCase struct {
     sendEmails bool
 }
 
-func TestCourseSyncNewUsers(test *testing.T) {
+func (this *DBTests) DBTestCourseSyncNewUsers(test *testing.T) {
     defer ResetForTesting();
 
     course := MustGetCourse(TEST_COURSE_ID);

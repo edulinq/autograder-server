@@ -26,8 +26,6 @@ const (
     DB_TYPE_POSTGRES = "postgres"
 )
 
-// TEST -- Make a testing infrasutrcuture that automatically works on all backends.
-
 // Actual databse implementations.
 // Backends will always deal with concrete types from db/types and not interfaces from model.
 // Any ID (course, assignment, etc) passed into a backend will be sanitized.
@@ -148,6 +146,10 @@ func Close() error {
 }
 
 func Clear() error {
+    if (backend == nil) {
+        return nil;
+    }
+
     return backend.Clear();
 }
 
