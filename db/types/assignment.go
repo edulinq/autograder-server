@@ -31,7 +31,7 @@ type Assignment struct {
     SourceDir string `json:"_source-dir"`
     Course *Course `json:"-"`
 
-    dockerLock *sync.Mutex `json:"-"`
+    imageLock *sync.Mutex `json:"-"`
 }
 
 func (this *Assignment) GetID() string {
@@ -87,7 +87,7 @@ func (this *Assignment) Validate() error {
         return err;
     }
 
-    this.dockerLock = &sync.Mutex{};
+    this.imageLock = &sync.Mutex{};
 
     err = this.LatePolicy.Validate();
     if (err != nil) {
@@ -154,4 +154,8 @@ func (this *Assignment) GetCachePath() string {
 
 func (this *Assignment) GetFileCachePath() string {
     return filepath.Join(this.GetCacheDir(), FILE_CACHE_FILENAME);
+}
+
+func (this *Assignment) GetImageLock() *sync.Mutex {
+    return this.imageLock;
 }

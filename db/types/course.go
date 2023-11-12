@@ -125,7 +125,7 @@ func (this *Course) BuildAssignmentImages(force bool, quick bool, options *docke
     errors := make(map[string]error);
 
     for _, assignment := range this.Assignments {
-        err := assignment.BuildImage(force, quick, options);
+        err := docker.BuildImageFromSource(assignment, force, quick, options);
         if (err != nil) {
             log.Error().Err(err).Str("course", this.ID).Str("assignment", assignment.GetID()).
                     Msg("Failed to build assignment docker image.");

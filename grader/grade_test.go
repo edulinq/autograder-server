@@ -45,7 +45,7 @@ func runSubmissionTests(test *testing.T, parallel bool, useDocker bool) {
     if (useDocker) {
         for _, course := range db.MustGetCourses() {
             for _, assignment := range course.GetAssignments() {
-                err := assignment.BuildImage(false, false, docker.NewBuildOptions());
+                err := docker.BuildImageFromSource(assignment, false, false, docker.NewBuildOptions());
                 if (err != nil) {
                     test.Fatalf("Failed to build image '%s': '%v'.", assignment.FullID(), err);
                 }

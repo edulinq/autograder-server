@@ -2,6 +2,7 @@ package model
 
 import (
     "strings"
+    "sync"
 
     "github.com/eriq-augustine/autograder/docker"
 )
@@ -14,12 +15,14 @@ type Assignment interface {
     GetName() string;
     GetLMSID() string;
     GetLatePolicy() LateGradingPolicy;
-    ImageName() string;
-    GetImageInfo() *docker.ImageInfo;
     GetSourceDir() string;
 
-    BuildImageQuick() error;
-    BuildImage(force bool, quick bool, options *docker.BuildOptions) error;
+    GetCachePath() string;
+    GetFileCachePath() string;
+
+    ImageName() string;
+    GetImageInfo() *docker.ImageInfo;
+    GetImageLock() *sync.Mutex;
 }
 
 func CompareAssignments(a Assignment, b Assignment) int {

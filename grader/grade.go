@@ -8,6 +8,7 @@ import (
     "github.com/eriq-augustine/autograder/common"
     "github.com/eriq-augustine/autograder/config"
     "github.com/eriq-augustine/autograder/db"
+    "github.com/eriq-augustine/autograder/docker"
     "github.com/eriq-augustine/autograder/model"
     "github.com/eriq-augustine/autograder/util"
 )
@@ -96,7 +97,7 @@ func Grade(assignment model.Assignment, submissionPath string, user string, mess
 
 func prepForGrading(assignment model.Assignment, submissionPath string, user string) (string, map[string][]byte, error) {
     // Ensure the assignment docker image is built.
-    err := assignment.BuildImageQuick();
+    err := docker.BuildImageFromSourceQuick(assignment);
     if (err != nil) {
         return "", nil, fmt.Errorf("Failed to build assignment assignment '%s' docker image: '%w'.", assignment.FullID(), err);
     }

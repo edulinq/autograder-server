@@ -57,7 +57,7 @@ func buildImages(assignments []model.Assignment) []string {
     imageNames := make([]string, 0);
 
     for _, assignment := range assignments {
-        err := assignment.BuildImage(args.Force, false, &args.BuildOptions);
+        err := docker.BuildImageFromSource(assignment, args.Force, false, &args.BuildOptions);
         if (err != nil) {
             log.Fatal().Str("assignment", assignment.FullID()).Err(err).Msg("Failed to build image.");
         }
