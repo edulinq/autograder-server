@@ -36,12 +36,6 @@ func runSubmissionTests(test *testing.T, parallel bool, useDocker bool) {
     // Directory where all the test courses and other materials are located.
     baseDir := config.COURSES_ROOT.Get();
 
-    // TEST - Reset db.
-    _, err := db.LoadCourses()
-    if (err != nil) {
-        test.Fatalf("Could not load courses: '%v'.", err);
-    }
-
     if (useDocker) {
         for _, course := range db.MustGetCourses() {
             for _, assignment := range course.GetAssignments() {

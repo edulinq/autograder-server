@@ -23,12 +23,9 @@ type Course struct {
     Report []*model.ReportTask `json:"report,omitempty"`
     ScoringUpload []*model.ScoringUploadTask `json:"scoring-upload,omitempty"`
 
-    // Ignore these fields in JSON.
+    // Internal fields the autograder will set.
     SourceDir string `json:"_source-dir"`
-
-    // TEST - This should go away at some point.
     Assignments map[string]*Assignment `json:"-"`
-
     tasks []model.ScheduledTask `json:"-"`
 }
 
