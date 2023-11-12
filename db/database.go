@@ -51,6 +51,11 @@ type Backend interface {
     // Explicitly save a course.
     SaveCourse(course *types.Course) error;
 
+    // Dump a database course to the standard directory layout
+    // in the specified directory.
+    // The target directory should not exist, or be empty.
+    DumpCourse(course *types.Course, targetDir string) error;
+
     // Explicitly save an assignment.
     SaveAssignment(assignment *types.Assignment) error;
 

@@ -69,6 +69,19 @@ func (this *backend) saveCourseLock(course *types.Course, acquireLock bool) erro
     return nil;
 }
 
+func (this *backend) DumpCourse(course *types.Course, targetDir string) error {
+    this.lock.RLock();
+    defer this.lock.RUnlock();
+
+    // Just directly copy the course's dir in the DB.
+    err := util.CopyDirContents(this.getCourseDir(course), targetDir);
+    if (err != nil) {
+        return fmt.Errorf("Failed to copy disk db '%s' into '%s': '%w'.", this.baseDir, targetDir, err);
+    }
+
+    return nil;
+}
+
 func (this *backend) GetCourse(courseID string) (*types.Course, error) {
     this.lock.RLock();
     defer this.lock.RUnlock();

@@ -14,6 +14,10 @@ import (
 
 // Get a course.
 func GetCourse(rawCourseID string) (model.Course, error) {
+    if (backend == nil) {
+        return nil, fmt.Errorf("Database has not been opened.");
+    }
+
     courseID, err := common.ValidateID(rawCourseID);
     if (err != nil) {
         return nil, fmt.Errorf("Failed to validate course id '%s': '%w'.", rawCourseID, err);
@@ -48,6 +52,10 @@ func MustGetCourse(rawCourseID string) model.Course {
 
 // Get all the known courses.
 func GetCourses() (map[string]model.Course, error) {
+    if (backend == nil) {
+        return nil, fmt.Errorf("Database has not been opened.");
+    }
+
     dbCourses, err := backend.GetCourses();
     if (err != nil) {
         return nil, err;
@@ -73,6 +81,10 @@ func MustGetCourses() map[string]model.Course {
 }
 
 func LoadCourse(path string) (string, error) {
+    if (backend == nil) {
+        return "", fmt.Errorf("Database has not been opened.");
+    }
+
     return backend.LoadCourse(path);
 }
 
@@ -86,6 +98,10 @@ func MustLoadCourse(path string) string {
 }
 
 func SaveCourse(rawCourse model.Course) error {
+    if (backend == nil) {
+        return fmt.Errorf("Database has not been opened.");
+    }
+
     course, ok := rawCourse.(*types.Course);
     if (!ok) {
         return fmt.Errorf("Course '%v' is not a db course.", rawCourse);
@@ -94,9 +110,37 @@ func SaveCourse(rawCourse model.Course) error {
     return backend.SaveCourse(course);
 }
 
+func DumpCourse(rawCourse model.Course, targetDir string) error {
+    if (backend == nil) {
+        return fmt.Errorf("Database has not been opened.");
+    }
+
+    course, ok := rawCourse.(*types.Course);
+    if (!ok) {
+        return fmt.Errorf("Course '%v' is not a db course.", rawCourse);
+    }
+
+    if (!util.PathExists(targetDir)) {
+        err := util.MkDir(targetDir);
+        if (err != nil) {
+            return err;
+        }
+    }
+
+    if (!util.IsEmptyDir(targetDir)) {
+        return fmt.Errorf("Dump target dir '%s' is not empty.", targetDir);
+    }
+
+    return backend.DumpCourse(course, targetDir);
+}
+
 // Search the courses root directory and load all the associated courses and assignments.
 // Return all the loaded course ids.
 func LoadCourses() ([]string, error) {
+    if (backend == nil) {
+        return nil, fmt.Errorf("Database has not been opened.");
+    }
+
     return LoadCoursesFromDir(config.COURSES_ROOT.Get());
 }
 
@@ -110,6 +154,10 @@ func MustLoadCourses() []string {
 }
 
 func LoadCoursesFromDir(baseDir string) ([]string, error) {
+    if (backend == nil) {
+        return nil, fmt.Errorf("Database has not been opened.");
+    }
+
     log.Debug().Str("dir", baseDir).Msg("Searching for courses.");
 
     configPaths, err := util.FindFiles(types.COURSE_CONFIG_FILENAME, baseDir);

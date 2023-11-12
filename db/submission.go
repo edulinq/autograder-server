@@ -10,9 +10,11 @@ import (
     "github.com/eriq-augustine/autograder/usr"
 )
 
-// TEST - Make a test that make checks a saved submission against the original.
-
 func SaveSubmissions(rawCourse model.Course, submissions []*artifact.GradingResult) error {
+    if (backend == nil) {
+        return fmt.Errorf("Database has not been opened.");
+    }
+
     course, ok := rawCourse.(*types.Course);
     if (!ok) {
         return fmt.Errorf("Course '%v' is not a db course.", rawCourse);
@@ -22,10 +24,18 @@ func SaveSubmissions(rawCourse model.Course, submissions []*artifact.GradingResu
 }
 
 func SaveSubmission(rawAssignment model.Assignment, submission *artifact.GradingResult) error {
+    if (backend == nil) {
+        return fmt.Errorf("Database has not been opened.");
+    }
+
     return SaveSubmissions(rawAssignment.GetCourse(), []*artifact.GradingResult{submission});
 }
 
 func GetNextSubmissionID(rawAssignment model.Assignment, email string) (string, error) {
+    if (backend == nil) {
+        return "", fmt.Errorf("Database has not been opened.");
+    }
+
     assignment, ok := rawAssignment.(*types.Assignment);
     if (!ok) {
         return "", fmt.Errorf("Assignment '%v' is not a db assignment.", rawAssignment);
@@ -35,6 +45,10 @@ func GetNextSubmissionID(rawAssignment model.Assignment, email string) (string, 
 }
 
 func GetSubmissionHistory(rawAssignment model.Assignment, email string) ([]*artifact.SubmissionHistoryItem, error) {
+    if (backend == nil) {
+        return nil, fmt.Errorf("Database has not been opened.");
+    }
+
     assignment, ok := rawAssignment.(*types.Assignment);
     if (!ok) {
         return nil, fmt.Errorf("Assignment '%v' is not a db assignment.", rawAssignment);
@@ -44,6 +58,10 @@ func GetSubmissionHistory(rawAssignment model.Assignment, email string) ([]*arti
 }
 
 func GetSubmissionResult(rawAssignment model.Assignment, email string, submissionID string) (*artifact.GradingInfo, error) {
+    if (backend == nil) {
+        return nil, fmt.Errorf("Database has not been opened.");
+    }
+
     assignment, ok := rawAssignment.(*types.Assignment);
     if (!ok) {
         return nil, fmt.Errorf("Assignment '%v' is not a db assignment.", rawAssignment);
@@ -54,6 +72,10 @@ func GetSubmissionResult(rawAssignment model.Assignment, email string, submissio
 }
 
 func GetScoringInfos(rawAssignment model.Assignment, filterRole usr.UserRole) (map[string]*artifact.ScoringInfo, error) {
+    if (backend == nil) {
+        return nil, fmt.Errorf("Database has not been opened.");
+    }
+
     assignment, ok := rawAssignment.(*types.Assignment);
     if (!ok) {
         return nil, fmt.Errorf("Assignment '%v' is not a db assignment.", rawAssignment);
@@ -63,6 +85,10 @@ func GetScoringInfos(rawAssignment model.Assignment, filterRole usr.UserRole) (m
 }
 
 func GetRecentSubmissions(rawAssignment model.Assignment, filterRole usr.UserRole) (map[string]*artifact.GradingInfo, error) {
+    if (backend == nil) {
+        return nil, fmt.Errorf("Database has not been opened.");
+    }
+
     assignment, ok := rawAssignment.(*types.Assignment);
     if (!ok) {
         return nil, fmt.Errorf("Assignment '%v' is not a db assignment.", rawAssignment);
@@ -72,6 +98,10 @@ func GetRecentSubmissions(rawAssignment model.Assignment, filterRole usr.UserRol
 }
 
 func GetRecentSubmissionSurvey(rawAssignment model.Assignment, filterRole usr.UserRole) (map[string]*artifact.SubmissionHistoryItem, error) {
+    if (backend == nil) {
+        return nil, fmt.Errorf("Database has not been opened.");
+    }
+
     assignment, ok := rawAssignment.(*types.Assignment);
     if (!ok) {
         return nil, fmt.Errorf("Assignment '%v' is not a db assignment.", rawAssignment);
@@ -81,6 +111,10 @@ func GetRecentSubmissionSurvey(rawAssignment model.Assignment, filterRole usr.Us
 }
 
 func GetSubmissionContents(rawAssignment model.Assignment, email string, submissionID string) (*artifact.GradingResult, error) {
+    if (backend == nil) {
+        return nil, fmt.Errorf("Database has not been opened.");
+    }
+
     assignment, ok := rawAssignment.(*types.Assignment);
     if (!ok) {
         return nil, fmt.Errorf("Assignment '%v' is not a db assignment.", rawAssignment);
@@ -91,6 +125,10 @@ func GetSubmissionContents(rawAssignment model.Assignment, email string, submiss
 }
 
 func GetRecentSubmissionContents(rawAssignment model.Assignment, filterRole usr.UserRole) (map[string]*artifact.GradingResult, error) {
+    if (backend == nil) {
+        return nil, fmt.Errorf("Database has not been opened.");
+    }
+
     assignment, ok := rawAssignment.(*types.Assignment);
     if (!ok) {
         return nil, fmt.Errorf("Assignment '%v' is not a db assignment.", rawAssignment);

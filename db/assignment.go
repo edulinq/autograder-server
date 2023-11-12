@@ -23,6 +23,10 @@ func MustGetAssignment(rawCourseID string, rawAssignmentID string) model.Assignm
 }
 
 func GetAssignment(rawCourseID string, rawAssignmentID string) (model.Assignment, error) {
+    if (backend == nil) {
+        return nil, fmt.Errorf("Database has not been opened.");
+    }
+
     course, err := GetCourse(rawCourseID);
     if (err != nil) {
         return nil, err;

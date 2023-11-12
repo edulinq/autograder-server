@@ -60,6 +60,12 @@ func runTask(courseID string, target model.ScheduledTask, runFunc RunFunc) {
         return;
     }
 
+    err = target.Validate(course);
+    if (err != nil) {
+        log.Error().Err(err).Str("course-id", courseID).Str("task", target.String()).Msg("Task failed validation.");
+        return;
+    }
+
     err = runFunc(course, target);
     if (err != nil) {
         log.Error().Err(err).Str("course-id", courseID).Str("task", target.String()).Msg("Task run failed.");
@@ -69,7 +75,6 @@ func runTask(courseID string, target model.ScheduledTask, runFunc RunFunc) {
     log.Debug().Str("course-id", courseID).Str("task", target.String()).Msg("Task finished.");
 }
 
-// TODO(eriq): Needs sync.
 func StopCourse(courseID string) {
     for _, timer := range courseTimers[courseID] {
         if (!timer.Stop()) {

@@ -12,8 +12,6 @@ type BackupTask struct {
     When ScheduledTime `json:"when"`
 
     CourseID string `json:"-"`
-    Basename string `json:"-"`
-    Source string `json:"-"`
     Dest string `json:"-"`
 }
 
@@ -27,17 +25,6 @@ func (this *BackupTask) Validate(course Course) error {
     }
 
     this.Disable = (this.Disable || config.NO_TASKS.Get());
-
-    this.Basename = course.GetID();
-    if (this.Basename == "") {
-        return fmt.Errorf("Backup basename cannot be empty.");
-    }
-
-    // TEST - This is wrong. DB needs to output backup source.
-    this.Source = course.GetSourceDir();
-    if (!util.PathExists(this.Source)) {
-        return fmt.Errorf("Backup source path '%s' does not exist.", this.Source);
-    }
 
     this.Dest = config.BACKUP_DIR.Get();
     if (util.IsFile(this.Dest)) {
@@ -56,6 +43,6 @@ func (this *BackupTask) GetTime() *ScheduledTime {
 }
 
 func (this *BackupTask) String() string {
-    return fmt.Sprintf("Backup of course '%s': '%s' to '%s' at '%s'.",
-            this.CourseID, this.Source, this.Dest, this.When.String());
+    return fmt.Sprintf("Backup of course '%s' to '%s' at '%s'.",
+            this.CourseID, this.Dest, this.When.String());
 }
