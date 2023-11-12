@@ -11,6 +11,7 @@ require (
 	github.com/mattn/go-sqlite3 v1.14.17
 	github.com/rs/zerolog v1.29.1
 	golang.org/x/crypto v0.13.0
+	golang.org/x/exp v0.0.0-20230321023759-10a507213a29
 	gonum.org/v1/gonum v0.14.0
 )
 

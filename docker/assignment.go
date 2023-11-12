@@ -14,7 +14,7 @@ import (
 )
 
 type ImageSource interface {
-    GetID() string;
+    FullID() string;
     GetSourceDir() string;
     GetCachePath() string;
     GetFileCachePath() string;
@@ -42,12 +42,12 @@ func BuildImageFromSource(imageSource ImageSource, force bool, quick bool, optio
 
     build, err := NeedImageRebuild(imageSource, quick);
     if (err != nil) {
-        return fmt.Errorf("Could not check if image needs building for image source '%s': '%w'.", imageSource.GetID(), err);
+        return fmt.Errorf("Could not check if image needs building for image source '%s': '%w'.", imageSource.FullID(), err);
     }
 
     if (!force && !build) {
         // Nothing has changed, skip build.
-        log.Debug().Str("imageSource", imageSource.GetID()).Msg("No files have changed, skipping image build.");
+        log.Debug().Str("imageSource", imageSource.FullID()).Msg("No files have changed, skipping image build.");
         return nil;
     }
 
@@ -63,7 +63,7 @@ func NeedImageRebuild(imageSource ImageSource, quick bool) (bool, error) {
     // Check if the last build failed.
     lastBuildSuccess, exists, err := util.CacheFetch(imageSource.GetCachePath(), CACHE_KEY_BUILD_SUCCESS);
     if (err != nil) {
-        return false, fmt.Errorf("Failed to fetch the last build status from cahce for image source '%s': '%w'.", imageSource.GetID(), err);
+        return false, fmt.Errorf("Failed to fetch the last build status from cahce for image source '%s': '%w'.", imageSource.FullID(), err);
     }
 
     lastBuildFailed := true;
@@ -78,12 +78,12 @@ func NeedImageRebuild(imageSource ImageSource, quick bool) (bool, error) {
     // Check if the image info has changed.
     imageInfoHash, err := util.MD5StringHex(util.MustToJSON(imageSource.GetImageInfo()));
     if (err != nil) {
-        return false, fmt.Errorf("Failed to hash image info for image source '%s': '%w'.", imageSource.GetID(), err);
+        return false, fmt.Errorf("Failed to hash image info for image source '%s': '%w'.", imageSource.FullID(), err);
     }
 
     oldHash, _, err := util.CachePut(imageSource.GetCachePath(), "image-info", imageInfoHash);
     if (err != nil) {
-        return false, fmt.Errorf("Failed to put image info hash into cahce for image source '%s': '%w'.", imageSource.GetID(), err);
+        return false, fmt.Errorf("Failed to put image info hash into cahce for image source '%s': '%w'.", imageSource.FullID(), err);
     }
 
     imageInfoHashHasChanges := (imageInfoHash != oldHash);
@@ -94,7 +94,7 @@ func NeedImageRebuild(imageSource ImageSource, quick bool) (bool, error) {
     // Check if the static files have changes.
     staticFilesHaveChanges, err := CheckFileChanges(imageSource, quick);
     if (err != nil) {
-        return false, fmt.Errorf("Could not check if static files changed for image source '%s': '%w'.", imageSource.GetID(), err);
+        return false, fmt.Errorf("Could not check if static files changed for image source '%s': '%w'.", imageSource.FullID(), err);
     }
 
     return (lastBuildFailed || imageInfoHashHasChanges || staticFilesHaveChanges), nil;
@@ -130,7 +130,7 @@ func CheckFileChanges(imageSource ImageSource, quick bool) (bool, error) {
                 }
 
                 if (ref == "") {
-                    log.Warn().Str("imageSource", imageSource.GetID()).Str("repo", url).
+                    log.Warn().Str("imageSource", imageSource.FullID()).Str("repo", url).
                             Msg("Git repo without ref (branch/commit) used as a static file. Please specify a ref so changes can be seen.");
                 }
 

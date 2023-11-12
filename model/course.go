@@ -12,10 +12,11 @@ type Course interface {
     HasAssignment(id string) bool;
     GetAssignment(id string) Assignment;
     GetAssignments() map[string]Assignment;
-    GetSortedAssignments() []Assignment
-    GetAssignmentLMSIDs() ([]string, []string)
+    GetSortedAssignments() []Assignment;
+    GetAssignmentLMSIDs() ([]string, []string);
 
-    Activate() error;
+    GetTasks() []ScheduledTask;
+
     BuildAssignmentImages(force bool, quick bool, options *docker.BuildOptions) ([]string, map[string]error);
     GetCacheDir() string;
 }

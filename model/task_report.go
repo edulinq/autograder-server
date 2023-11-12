@@ -36,11 +36,11 @@ func (this *ReportTask) IsDisabled() bool {
     return this.Disable;
 }
 
-func (this *ReportTask) GetTime() ScheduledTime {
-    return this.When;
+func (this *ReportTask) GetTime() *ScheduledTime {
+    return &this.When;
 }
 
 func (this *ReportTask) String() string {
-    return fmt.Sprintf("Report on course '%s': '%s' (next time: '%s').",
-            this.CourseID, this.When.String(), this.When.ComputeNext());
+    return fmt.Sprintf("Report on course '%s': '%s'.",
+            this.CourseID, this.When.String());
 }

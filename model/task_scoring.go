@@ -46,11 +46,11 @@ func (this *ScoringUploadTask) IsDisabled() bool {
     return this.Disable;
 }
 
-func (this *ScoringUploadTask) GetTime() ScheduledTime {
-    return this.When;
+func (this *ScoringUploadTask) GetTime() *ScheduledTime {
+    return &this.When;
 }
 
 func (this *ScoringUploadTask) String() string {
-    return fmt.Sprintf("Score and Upload of course '%s': '%s' (next time: '%s').",
-            this.CourseID, this.When.String(), this.When.ComputeNext());
+    return fmt.Sprintf("Score and Upload of course '%s': '%s'.",
+            this.CourseID, this.When.String());
 }

@@ -2,7 +2,7 @@ package model
 
 type ScheduledTask interface {
     IsDisabled() bool
-    GetTime() ScheduledTime
+    GetTime() *ScheduledTime
     String() string
     Validate(Course) error
 }

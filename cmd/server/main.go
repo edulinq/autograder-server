@@ -9,6 +9,8 @@ import (
     "github.com/eriq-augustine/autograder/api"
     "github.com/eriq-augustine/autograder/config"
     "github.com/eriq-augustine/autograder/db"
+    "github.com/eriq-augustine/autograder/docker"
+    "github.com/eriq-augustine/autograder/task"
     "github.com/eriq-augustine/autograder/util"
 )
 
@@ -40,12 +42,25 @@ func main() {
         log.Fatal().Err(err).Msg("Could not load courses.");
     }
 
-    /* TEST
-    err = grader.ActivateCourses();
-    if (err != nil) {
-        log.Fatal().Err(err).Msg("Could not activate courses.");
+    // Startup courses,
+
+    for _, course := range db.MustGetCourses() {
+        // Schedule tasks.
+        for _, courseTask := range course.GetTasks() {
+            err = task.Schedule(course, courseTask);
+            if (err != nil) {
+                log.Fatal().Err(err).Str("course-id", course.GetID()).Str("task", courseTask.String()).Msg("Failed to schedule task.");
+            }
+        }
+
+        // Build images (in the background).
+        go func() {
+            _, errs := course.BuildAssignmentImages(false, false, docker.NewBuildOptions());
+            for imageName, err := range errs {
+                log.Error().Err(err).Str("course-id", course.GetID()).Str("image", imageName).Msg("Failed to build image.");
+            }
+        }();
     }
-    */
 
     api.StartServer();
 }

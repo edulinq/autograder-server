@@ -126,7 +126,6 @@ func LoadCoursesFromDir(baseDir string) ([]string, error) {
             return nil, fmt.Errorf("Could not load course '%s': '%w'.", configPath, err);
         }
 
-        log.Debug().Str("course-id", courseID).Str("path", configPath).Msg("Loaded course.");
         courseIDs = append(courseIDs, courseID);
     }
 

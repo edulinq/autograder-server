@@ -60,6 +60,10 @@ func (this *Course) GetAssignmentLMSIDs() ([]string, []string) {
     return lmsIDs, assignmentIDs;
 }
 
+func (this *Course) GetTasks() []model.ScheduledTask {
+    return this.tasks;
+}
+
 // Ensure this course makes sense.
 func (this *Course) Validate() error {
     if (this.DisplayName == "") {
@@ -99,22 +103,6 @@ func (this *Course) Validate() error {
             return err;
         }
     }
-
-    return nil;
-}
-
-// TODO(eriq): After DBs, the concept of activation will move to tasks.
-// Start any scheduled tasks or informal tasks associated with this course.
-func (this *Course) Activate() error {
-    /* TEST
-    // Schedule tasks.
-    for _, task := range this.tasks {
-        task.Schedule();
-    }
-
-    // Build images.
-    go this.BuildAssignmentImages(false, false, docker.NewBuildOptions());
-    */
 
     return nil;
 }

@@ -51,11 +51,11 @@ func (this *BackupTask) IsDisabled() bool {
     return this.Disable;
 }
 
-func (this *BackupTask) GetTime() ScheduledTime {
-    return this.When;
+func (this *BackupTask) GetTime() *ScheduledTime {
+    return &this.When;
 }
 
 func (this *BackupTask) String() string {
-    return fmt.Sprintf("Backup of course '%s': '%s' to '%s' at '%s' (next time: '%s').",
-            this.CourseID, this.Source, this.Dest, this.When.String(), this.When.ComputeNext());
+    return fmt.Sprintf("Backup of course '%s': '%s' to '%s' at '%s'.",
+            this.CourseID, this.Source, this.Dest, this.When.String());
 }
