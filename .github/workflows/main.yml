@@ -43,4 +43,6 @@ jobs:
       - name: Run Submission Tests
         env:
           AUTOGRADER__DOCKER__DISABLE: 'true'
-        run: ./.ci/run_remote_tests.sh
+        run: |
+            echo "TEST - Run Remote tests once Python interface is updated for v2."
+            echo ./.ci/run_remote_tests.sh
