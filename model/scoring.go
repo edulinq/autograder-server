@@ -1,4 +1,4 @@
-package artifact
+package model
 
 import (
     "github.com/eriq-augustine/autograder/common"

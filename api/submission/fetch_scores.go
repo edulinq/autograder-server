@@ -2,7 +2,6 @@ package submission
 
 import (
     "github.com/eriq-augustine/autograder/api/core"
-    "github.com/eriq-augustine/autograder/artifact"
     "github.com/eriq-augustine/autograder/db"
     "github.com/eriq-augustine/autograder/model"
 )
@@ -17,7 +16,7 @@ type FetchScoresRequest struct {
 }
 
 type FetchScoresResponse struct {
-    SubmissionInfos map[string]*artifact.SubmissionHistoryItem `json:"submission-infos"`
+    SubmissionInfos map[string]*model.SubmissionHistoryItem `json:"submission-infos"`
 }
 
 func HandleFetchScores(request *FetchScoresRequest) (*FetchScoresResponse, *core.APIError) {

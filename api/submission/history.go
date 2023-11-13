@@ -2,8 +2,8 @@ package submission
 
 import (
     "github.com/eriq-augustine/autograder/api/core"
-    "github.com/eriq-augustine/autograder/artifact"
     "github.com/eriq-augustine/autograder/db"
+    "github.com/eriq-augustine/autograder/model"
 )
 
 type HistoryRequest struct {
@@ -16,13 +16,13 @@ type HistoryRequest struct {
 
 type HistoryResponse struct {
     FoundUser bool `json:"found-user"`
-    History []*artifact.SubmissionHistoryItem `json:"history"`
+    History []*model.SubmissionHistoryItem `json:"history"`
 }
 
 func HandleHistory(request *HistoryRequest) (*HistoryResponse, *core.APIError) {
     response := HistoryResponse{
         FoundUser: false,
-        History: make([]*artifact.SubmissionHistoryItem, 0),
+        History: make([]*model.SubmissionHistoryItem, 0),
     };
 
     if (!request.TargetUser.Found) {

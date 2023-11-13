@@ -5,7 +5,6 @@ import (
     "testing"
 
     "github.com/eriq-augustine/autograder/api/core"
-    "github.com/eriq-augustine/autograder/artifact"
     "github.com/eriq-augustine/autograder/model"
     "github.com/eriq-augustine/autograder/util"
 )
@@ -22,7 +21,7 @@ func TestFetchSubmissions(test *testing.T) {
         {model.RoleOwner, false},
     };
 
-    submissions := map[string]*artifact.GradingResult{
+    submissions := map[string]*model.GradingResult{
         "other@test.com": nil,
         "student@test.com": model.MustLoadGradingResult(getTestSubmissionResultPath("1697406272")),
         "grader@test.com": nil,

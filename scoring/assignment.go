@@ -7,7 +7,6 @@ import (
 
     "github.com/rs/zerolog/log"
 
-    "github.com/eriq-augustine/autograder/artifact"
     "github.com/eriq-augustine/autograder/common"
     "github.com/eriq-augustine/autograder/db"
     "github.com/eriq-augustine/autograder/lms"
@@ -53,7 +52,7 @@ func FullAssignmentScoringAndUpload(assignment *model.Assignment, dryRun bool) e
 
 func computeFinalScores(
         assignment *model.Assignment, users map[string]*model.User,
-        scoringInfos map[string]*artifact.ScoringInfo, lmsScores []*lmstypes.SubmissionScore,
+        scoringInfos map[string]*model.ScoringInfo, lmsScores []*lmstypes.SubmissionScore,
         dryRun bool) error {
     var err error;
 
@@ -89,9 +88,9 @@ func computeFinalScores(
     return nil;
 }
 
-func parseComments(lmsScores []*lmstypes.SubmissionScore) (map[string]bool, map[string]*artifact.ScoringInfo, error) {
+func parseComments(lmsScores []*lmstypes.SubmissionScore) (map[string]bool, map[string]*model.ScoringInfo, error) {
     locks := make(map[string]bool);
-    existingComments := make(map[string]*artifact.ScoringInfo);
+    existingComments := make(map[string]*model.ScoringInfo);
 
     for _, lmsScore := range lmsScores {
         for _, comment := range lmsScore.Comments {
@@ -99,7 +98,7 @@ func parseComments(lmsScores []*lmstypes.SubmissionScore) (map[string]bool, map[
             if (strings.Contains(text, LOCK_COMMENT)) {
                 locks[lmsScore.UserID] = true;
             } else if (strings.Contains(text, common.AUTOGRADER_COMMENT_IDENTITY_KEY)) {
-                var scoringInfo artifact.ScoringInfo;
+                var scoringInfo model.ScoringInfo;
                 err := util.JSONFromString(comment.Text, &scoringInfo);
                 if (err != nil) {
                     return nil, nil, fmt.Errorf("Could not unmarshall LMS comment %s (%s) into a scoring info: '%w'.", comment.ID, comment.Text, err);
@@ -121,8 +120,8 @@ func parseComments(lmsScores []*lmstypes.SubmissionScore) (map[string]bool, map[
 }
 
 func filterFinalScores(
-        users map[string]*model.User, scoringInfos map[string]*artifact.ScoringInfo,
-        locks map[string]bool, existingComments map[string]*artifact.ScoringInfo,
+        users map[string]*model.User, scoringInfos map[string]*model.ScoringInfo,
+        locks map[string]bool, existingComments map[string]*model.ScoringInfo,
         ) ([]*lmstypes.SubmissionScore, []*lmstypes.SubmissionComment) {
     finalScores := make([]*lmstypes.SubmissionScore, 0);
     commentsToUpdate := make([]*lmstypes.SubmissionComment, 0);

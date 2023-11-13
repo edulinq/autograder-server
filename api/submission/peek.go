@@ -2,8 +2,8 @@ package submission
 
 import (
     "github.com/eriq-augustine/autograder/api/core"
-    "github.com/eriq-augustine/autograder/artifact"
     "github.com/eriq-augustine/autograder/db"
+    "github.com/eriq-augustine/autograder/model"
 )
 
 type PeekRequest struct {
@@ -17,7 +17,7 @@ type PeekRequest struct {
 type PeekResponse struct {
     FoundUser bool `json:"found-user"`
     FoundSubmission bool `json:"found-submission"`
-    GradingInfo *artifact.GradingInfo `json:"submission-result"`
+    GradingInfo *model.GradingInfo `json:"submission-result"`
 }
 
 func HandlePeek(request *PeekRequest) (*PeekResponse, *core.APIError) {

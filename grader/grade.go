@@ -4,7 +4,6 @@ import (
     "fmt"
     "sync"
 
-    "github.com/eriq-augustine/autograder/artifact"
     "github.com/eriq-augustine/autograder/common"
     "github.com/eriq-augustine/autograder/config"
     "github.com/eriq-augustine/autograder/db"
@@ -28,13 +27,13 @@ func GetDefaultGradeOptions() GradeOptions {
 }
 
 // Grade with default options pulled from config.
-func GradeDefault(assignment *model.Assignment, submissionPath string, user string, message string) (*artifact.GradingResult, error) {
+func GradeDefault(assignment *model.Assignment, submissionPath string, user string, message string) (*model.GradingResult, error) {
     return Grade(assignment, submissionPath, user, message, GetDefaultGradeOptions());
 }
 
 // Grade with custom options.
-func Grade(assignment *model.Assignment, submissionPath string, user string, message string, options GradeOptions) (*artifact.GradingResult, error) {
-    var gradingResult artifact.GradingResult;
+func Grade(assignment *model.Assignment, submissionPath string, user string, message string, options GradeOptions) (*model.GradingResult, error) {
+    var gradingResult model.GradingResult;
 
     gradingKey := fmt.Sprintf("%s::%s::%s", assignment.GetCourse().GetID(), assignment.GetID(), user);
 
@@ -54,7 +53,7 @@ func Grade(assignment *model.Assignment, submissionPath string, user string, mes
 
     fullSubmissionID := common.CreateFullSubmissionID(assignment.GetCourse().GetID(), assignment.GetID(), user, submissionID);
 
-    var gradingInfo *artifact.GradingInfo;
+    var gradingInfo *model.GradingInfo;
     var outputFileContents map[string][]byte;
     var stdout string;
     var stderr string;

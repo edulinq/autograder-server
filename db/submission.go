@@ -3,12 +3,11 @@ package db
 import (
     "fmt"
 
-    "github.com/eriq-augustine/autograder/artifact"
     "github.com/eriq-augustine/autograder/common"
     "github.com/eriq-augustine/autograder/model"
 )
 
-func SaveSubmissions(course *model.Course, submissions []*artifact.GradingResult) error {
+func SaveSubmissions(course *model.Course, submissions []*model.GradingResult) error {
     if (backend == nil) {
         return fmt.Errorf("Database has not been opened.");
     }
@@ -16,12 +15,12 @@ func SaveSubmissions(course *model.Course, submissions []*artifact.GradingResult
     return backend.SaveSubmissions(course, submissions);
 }
 
-func SaveSubmission(assignment *model.Assignment, submission *artifact.GradingResult) error {
+func SaveSubmission(assignment *model.Assignment, submission *model.GradingResult) error {
     if (backend == nil) {
         return fmt.Errorf("Database has not been opened.");
     }
 
-    return SaveSubmissions(assignment.GetCourse(), []*artifact.GradingResult{submission});
+    return SaveSubmissions(assignment.GetCourse(), []*model.GradingResult{submission});
 }
 
 func GetNextSubmissionID(assignment *model.Assignment, email string) (string, error) {
@@ -32,7 +31,7 @@ func GetNextSubmissionID(assignment *model.Assignment, email string) (string, er
     return backend.GetNextSubmissionID(assignment, email);
 }
 
-func GetSubmissionHistory(assignment *model.Assignment, email string) ([]*artifact.SubmissionHistoryItem, error) {
+func GetSubmissionHistory(assignment *model.Assignment, email string) ([]*model.SubmissionHistoryItem, error) {
     if (backend == nil) {
         return nil, fmt.Errorf("Database has not been opened.");
     }
@@ -40,7 +39,7 @@ func GetSubmissionHistory(assignment *model.Assignment, email string) ([]*artifa
     return backend.GetSubmissionHistory(assignment, email);
 }
 
-func GetSubmissionResult(assignment *model.Assignment, email string, submissionID string) (*artifact.GradingInfo, error) {
+func GetSubmissionResult(assignment *model.Assignment, email string, submissionID string) (*model.GradingInfo, error) {
     if (backend == nil) {
         return nil, fmt.Errorf("Database has not been opened.");
     }
@@ -49,7 +48,7 @@ func GetSubmissionResult(assignment *model.Assignment, email string, submissionI
     return backend.GetSubmissionResult(assignment, email, shortSubmissionID);
 }
 
-func GetScoringInfos(assignment *model.Assignment, filterRole model.UserRole) (map[string]*artifact.ScoringInfo, error) {
+func GetScoringInfos(assignment *model.Assignment, filterRole model.UserRole) (map[string]*model.ScoringInfo, error) {
     if (backend == nil) {
         return nil, fmt.Errorf("Database has not been opened.");
     }
@@ -57,7 +56,7 @@ func GetScoringInfos(assignment *model.Assignment, filterRole model.UserRole) (m
     return backend.GetScoringInfos(assignment, filterRole);
 }
 
-func GetRecentSubmissions(assignment *model.Assignment, filterRole model.UserRole) (map[string]*artifact.GradingInfo, error) {
+func GetRecentSubmissions(assignment *model.Assignment, filterRole model.UserRole) (map[string]*model.GradingInfo, error) {
     if (backend == nil) {
         return nil, fmt.Errorf("Database has not been opened.");
     }
@@ -65,7 +64,7 @@ func GetRecentSubmissions(assignment *model.Assignment, filterRole model.UserRol
     return backend.GetRecentSubmissions(assignment, filterRole);
 }
 
-func GetRecentSubmissionSurvey(assignment *model.Assignment, filterRole model.UserRole) (map[string]*artifact.SubmissionHistoryItem, error) {
+func GetRecentSubmissionSurvey(assignment *model.Assignment, filterRole model.UserRole) (map[string]*model.SubmissionHistoryItem, error) {
     if (backend == nil) {
         return nil, fmt.Errorf("Database has not been opened.");
     }
@@ -73,7 +72,7 @@ func GetRecentSubmissionSurvey(assignment *model.Assignment, filterRole model.Us
     return backend.GetRecentSubmissionSurvey(assignment, filterRole);
 }
 
-func GetSubmissionContents(assignment *model.Assignment, email string, submissionID string) (*artifact.GradingResult, error) {
+func GetSubmissionContents(assignment *model.Assignment, email string, submissionID string) (*model.GradingResult, error) {
     if (backend == nil) {
         return nil, fmt.Errorf("Database has not been opened.");
     }
@@ -82,7 +81,7 @@ func GetSubmissionContents(assignment *model.Assignment, email string, submissio
     return backend.GetSubmissionContents(assignment, email, shortSubmissionID);
 }
 
-func GetRecentSubmissionContents(assignment *model.Assignment, filterRole model.UserRole) (map[string]*artifact.GradingResult, error) {
+func GetRecentSubmissionContents(assignment *model.Assignment, filterRole model.UserRole) (map[string]*model.GradingResult, error) {
     if (backend == nil) {
         return nil, fmt.Errorf("Database has not been opened.");
     }

@@ -6,7 +6,6 @@ import (
     "slices"
     "strings"
 
-    "github.com/eriq-augustine/autograder/artifact"
     "github.com/eriq-augustine/autograder/db"
     "github.com/eriq-augustine/autograder/model"
     "github.com/eriq-augustine/autograder/util"
@@ -16,7 +15,7 @@ type TestSubmissionInfo struct {
     ID string
     Dir string
     Files []string
-    TestSubmission *artifact.TestSubmission
+    TestSubmission *model.TestSubmission
     Assignment *model.Assignment
 }
 
@@ -31,7 +30,7 @@ func GetTestSubmissions(baseDir string) ([]*TestSubmissionInfo, error) {
     for _, testSubmissionPath := range testSubmissionPaths {
         testSubmissionPath = util.ShouldAbs(testSubmissionPath);
 
-        var testSubmission artifact.TestSubmission;
+        var testSubmission model.TestSubmission;
         err := util.JSONFromFile(testSubmissionPath, &testSubmission);
         if (err != nil) {
             return nil, fmt.Errorf("Failed to load test submission: '%s': '%w'.", testSubmissionPath, err);

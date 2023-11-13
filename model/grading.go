@@ -1,4 +1,4 @@
-package artifact
+package model
 
 import (
     "fmt"

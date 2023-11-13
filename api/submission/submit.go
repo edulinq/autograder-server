@@ -4,8 +4,8 @@ import (
     "github.com/rs/zerolog/log"
 
     "github.com/eriq-augustine/autograder/api/core"
-    "github.com/eriq-augustine/autograder/artifact"
     "github.com/eriq-augustine/autograder/grader"
+    "github.com/eriq-augustine/autograder/model"
 )
 
 type SubmitRequest struct {
@@ -18,7 +18,7 @@ type SubmitRequest struct {
 
 type SubmitResponse struct {
     GradingSucess bool `json:"grading-success"`
-    GradingInfo *artifact.GradingInfo `json:"result"`
+    GradingInfo *model.GradingInfo `json:"result"`
 }
 
 func HandleSubmit(request *SubmitRequest) (*SubmitResponse, *core.APIError) {

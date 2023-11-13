@@ -7,7 +7,6 @@ import (
 
     "github.com/rs/zerolog/log"
 
-    "github.com/eriq-augustine/autograder/artifact"
     "github.com/eriq-augustine/autograder/common"
     "github.com/eriq-augustine/autograder/docker"
     "github.com/eriq-augustine/autograder/model"
@@ -20,7 +19,7 @@ import (
 //  - output -- Passed in directory that will be mounted at DOCKER_OUTPUT_DIR.
 //  - work -- Should already be created inside the docker image, will only exist within the container.
 func runDockerGrader(assignment *model.Assignment, submissionPath string, options GradeOptions, fullSubmissionID string) (
-        *artifact.GradingInfo, map[string][]byte, string, string, error) {
+        *model.GradingInfo, map[string][]byte, string, string, error) {
     tempDir, inputDir, outputDir, _, err := common.PrepTempGradingDir("docker");
     if (err != nil) {
         return nil, nil, "", "", err;
@@ -49,7 +48,7 @@ func runDockerGrader(assignment *model.Assignment, submissionPath string, option
                 fmt.Errorf("Cannot find output file ('%s') after the grading container (%s) was run.", resultPath, assignment.ImageName());
     }
 
-    var gradingInfo artifact.GradingInfo;
+    var gradingInfo model.GradingInfo;
     err = util.JSONFromFile(resultPath, &gradingInfo);
     if (err != nil) {
         return nil, nil, stdout, stderr, err;

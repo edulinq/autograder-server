@@ -6,7 +6,6 @@ import (
     "testing"
 
     "github.com/eriq-augustine/autograder/api/core"
-    "github.com/eriq-augustine/autograder/artifact"
     "github.com/eriq-augustine/autograder/config"
     "github.com/eriq-augustine/autograder/model"
     "github.com/eriq-augustine/autograder/util"
@@ -14,7 +13,7 @@ import (
 
 func TestFetchSubmission(test *testing.T) {
     // Note that computation of these paths is deferred until test time.
-    studentGradingResults := map[string]*artifact.GradingResult{
+    studentGradingResults := map[string]*model.GradingResult{
         "1697406256": model.MustLoadGradingResult(getTestSubmissionResultPath("1697406256")),
         "1697406265": model.MustLoadGradingResult(getTestSubmissionResultPath("1697406265")),
         "1697406272": model.MustLoadGradingResult(getTestSubmissionResultPath("1697406272")),
@@ -27,7 +26,7 @@ func TestFetchSubmission(test *testing.T) {
             foundUser bool
             foundSubmission bool
             permError bool
-            result *artifact.GradingResult
+            result *model.GradingResult
     }{
         // Grader, self, recent.
         {model.RoleGrader, "",                "", true, false, false, nil},

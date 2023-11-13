@@ -8,7 +8,6 @@ import (
 
     "github.com/rs/zerolog/log"
 
-    "github.com/eriq-augustine/autograder/artifact"
     "github.com/eriq-augustine/autograder/common"
     "github.com/eriq-augustine/autograder/lms"
     "github.com/eriq-augustine/autograder/lms/lmstypes"
@@ -32,7 +31,7 @@ type LateDaysInfo struct {
 func ApplyLatePolicy(
         assignment *model.Assignment,
         users map[string]*model.User,
-        scores map[string]*artifact.ScoringInfo,
+        scores map[string]*model.ScoringInfo,
         dryRun bool) error {
     policy := assignment.GetLatePolicy();
 
@@ -86,7 +85,7 @@ func ApplyLatePolicy(
 }
 
 // Apply a common policy.
-func applyBaselinePolicy(policy model.LateGradingPolicy, users map[string]*model.User, scores map[string]*artifact.ScoringInfo, dueDate time.Time) {
+func applyBaselinePolicy(policy model.LateGradingPolicy, users map[string]*model.User, scores map[string]*model.ScoringInfo, dueDate time.Time) {
     for email, score := range scores {
         scoreTime, err := score.SubmissionTime.Time();
         if (err != nil) {
@@ -112,7 +111,7 @@ func applyBaselinePolicy(policy model.LateGradingPolicy, users map[string]*model
 }
 
 // Apply a constant penalty per late day.
-func applyConstantPolicy(policy model.LateGradingPolicy, scores map[string]*artifact.ScoringInfo, penalty float64) {
+func applyConstantPolicy(policy model.LateGradingPolicy, scores map[string]*model.ScoringInfo, penalty float64) {
     for _, score := range scores {
         if (score.NumDaysLate <= 0) {
             continue;
@@ -125,7 +124,7 @@ func applyConstantPolicy(policy model.LateGradingPolicy, scores map[string]*arti
 func applyLateDaysPolicy(
         policy model.LateGradingPolicy,
         assignment *model.Assignment, users map[string]*model.User,
-        scores map[string]*artifact.ScoringInfo, penalty float64,
+        scores map[string]*model.ScoringInfo, penalty float64,
         dryRun bool) error {
     allLateDays, err := fetchLateDays(policy, assignment);
     if (err != nil) {

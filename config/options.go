@@ -8,7 +8,7 @@ import (
 var (
     COURSES_ROOT = MustNewStringOption("courses.rootdir", "_courses", "The default places to look for courses.");
 
-    WORK_DIR = MustNewStringOption("dirs.work", filepath.Join(os.TempDir(), "_autograder"), "The root dir roe autograder output and artifacts.");
+    WORK_DIR = MustNewStringOption("dirs.work", filepath.Join(os.TempDir(), "_autograder"), "The root dir for autograder output and artifacts.");
 
     DEBUG = MustNewBoolOption("debug", false, "Enable general debugging.");
 

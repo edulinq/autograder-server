@@ -6,13 +6,12 @@ import (
     "path/filepath"
     "time"
 
-    "github.com/eriq-augustine/autograder/artifact"
     "github.com/eriq-augustine/autograder/common"
     "github.com/eriq-augustine/autograder/model"
     "github.com/eriq-augustine/autograder/util"
 )
 
-func (this *backend) saveSubmissionsLock(course *model.Course, submissions []*artifact.GradingResult, acquireLock bool) error {
+func (this *backend) saveSubmissionsLock(course *model.Course, submissions []*model.GradingResult, acquireLock bool) error {
     if (acquireLock) {
         this.lock.Lock();
         defer this.lock.Unlock();
@@ -55,7 +54,7 @@ func (this *backend) saveSubmissionsLock(course *model.Course, submissions []*ar
     return nil;
 }
 
-func (this *backend) SaveSubmissions(course *model.Course, submissions []*artifact.GradingResult) error {
+func (this *backend) SaveSubmissions(course *model.Course, submissions []*model.GradingResult) error {
     return this.saveSubmissionsLock(course, submissions, true);
 }
 
@@ -76,7 +75,7 @@ func (this *backend) GetNextSubmissionID(assignment *model.Assignment, email str
     return fmt.Sprintf("%d", submissionID), nil;
 }
 
-func (this *backend) GetSubmissionResult(assignment *model.Assignment, email string, shortSubmissionID string) (*artifact.GradingInfo, error) {
+func (this *backend) GetSubmissionResult(assignment *model.Assignment, email string, shortSubmissionID string) (*model.GradingInfo, error) {
     var err error;
 
     if (shortSubmissionID == "") {
@@ -97,7 +96,7 @@ func (this *backend) GetSubmissionResult(assignment *model.Assignment, email str
         return nil, nil;
     }
 
-    var gradingInfo artifact.GradingInfo;
+    var gradingInfo model.GradingInfo;
     err = util.JSONFromFile(resultPath, &gradingInfo);
     if (err != nil) {
         return nil, fmt.Errorf("Unable to deserialize grading info '%s': '%w'.", resultPath, err);
@@ -106,8 +105,8 @@ func (this *backend) GetSubmissionResult(assignment *model.Assignment, email str
     return &gradingInfo, nil;
 }
 
-func (this *backend) GetSubmissionHistory(assignment *model.Assignment, email string) ([]*artifact.SubmissionHistoryItem, error) {
-    history := make([]*artifact.SubmissionHistoryItem, 0);
+func (this *backend) GetSubmissionHistory(assignment *model.Assignment, email string) ([]*model.SubmissionHistoryItem, error) {
+    history := make([]*model.SubmissionHistoryItem, 0);
 
     submissionsDir := this.getUserSubmissionDir(assignment.GetCourse().GetID(), assignment.GetID(), email);
     if (!util.PathExists(submissionsDir)) {
@@ -126,7 +125,7 @@ func (this *backend) GetSubmissionHistory(assignment *model.Assignment, email st
     for _, dirent := range dirents {
         resultPath := filepath.Join(submissionsDir, dirent.Name(), model.SUBMISSION_RESULT_FILENAME);
 
-        var gradingInfo artifact.GradingInfo;
+        var gradingInfo model.GradingInfo;
         err = util.JSONFromFile(resultPath, &gradingInfo);
         if (err != nil) {
             return nil, fmt.Errorf("Unable to deserialize grading info '%s': '%w'.", resultPath, err);
@@ -138,8 +137,8 @@ func (this *backend) GetSubmissionHistory(assignment *model.Assignment, email st
     return history, nil;
 }
 
-func (this *backend) GetRecentSubmissions(assignment *model.Assignment, filterRole model.UserRole) (map[string]*artifact.GradingInfo, error) {
-    gradingInfos := make(map[string]*artifact.GradingInfo);
+func (this *backend) GetRecentSubmissions(assignment *model.Assignment, filterRole model.UserRole) (map[string]*model.GradingInfo, error) {
+    gradingInfos := make(map[string]*model.GradingInfo);
 
     users, err := this.GetUsers(assignment.Course);
     if (err != nil) {
@@ -163,7 +162,7 @@ func (this *backend) GetRecentSubmissions(assignment *model.Assignment, filterRo
 
         resultPath := filepath.Join(this.getSubmissionDirFromAssignment(assignment, email, shortSubmissionID), model.SUBMISSION_RESULT_FILENAME);
 
-        var gradingInfo artifact.GradingInfo;
+        var gradingInfo model.GradingInfo;
         err = util.JSONFromFile(resultPath, &gradingInfo);
         if (err != nil) {
             return nil, fmt.Errorf("Unable to deserialize grading info '%s': '%w'.", resultPath, err);
@@ -175,8 +174,8 @@ func (this *backend) GetRecentSubmissions(assignment *model.Assignment, filterRo
     return gradingInfos, nil;
 }
 
-func (this *backend) GetScoringInfos(assignment *model.Assignment, filterRole model.UserRole) (map[string]*artifact.ScoringInfo, error) {
-    scoringInfos := make(map[string]*artifact.ScoringInfo);
+func (this *backend) GetScoringInfos(assignment *model.Assignment, filterRole model.UserRole) (map[string]*model.ScoringInfo, error) {
+    scoringInfos := make(map[string]*model.ScoringInfo);
 
     submissionResults, err := this.GetRecentSubmissions(assignment, filterRole);
     if (err != nil) {
@@ -194,8 +193,8 @@ func (this *backend) GetScoringInfos(assignment *model.Assignment, filterRole mo
     return scoringInfos, nil;
 }
 
-func (this *backend) GetRecentSubmissionSurvey(assignment *model.Assignment, filterRole model.UserRole) (map[string]*artifact.SubmissionHistoryItem, error) {
-    results := make(map[string]*artifact.SubmissionHistoryItem);
+func (this *backend) GetRecentSubmissionSurvey(assignment *model.Assignment, filterRole model.UserRole) (map[string]*model.SubmissionHistoryItem, error) {
+    results := make(map[string]*model.SubmissionHistoryItem);
 
     submissionResults, err := this.GetRecentSubmissions(assignment, filterRole);
     if (err != nil) {
@@ -213,7 +212,7 @@ func (this *backend) GetRecentSubmissionSurvey(assignment *model.Assignment, fil
     return results, nil;
 }
 
-func (this *backend) GetSubmissionContents(assignment *model.Assignment, email string, shortSubmissionID string) (*artifact.GradingResult, error) {
+func (this *backend) GetSubmissionContents(assignment *model.Assignment, email string, shortSubmissionID string) (*model.GradingResult, error) {
     var err error;
 
     if (shortSubmissionID == "") {
@@ -237,8 +236,8 @@ func (this *backend) GetSubmissionContents(assignment *model.Assignment, email s
     return model.LoadGradingResult(resultPath);
 }
 
-func (this *backend) GetRecentSubmissionContents(assignment *model.Assignment, filterRole model.UserRole) (map[string]*artifact.GradingResult, error) {
-    results := make(map[string]*artifact.GradingResult);
+func (this *backend) GetRecentSubmissionContents(assignment *model.Assignment, filterRole model.UserRole) (map[string]*model.GradingResult, error) {
+    results := make(map[string]*model.GradingResult);
 
     users, err := this.GetUsers(assignment.Course);
     if (err != nil) {
@@ -269,7 +268,7 @@ func (this *backend) getSubmissionDirFromAssignment(assignment *model.Assignment
     return this.getSubmissionDir(assignment.GetCourse().GetID(), assignment.GetID(), user, shortSubmissionID);
 }
 
-func (this *backend) getSubmissionDirFromResult(gradingInfo *artifact.GradingInfo) string {
+func (this *backend) getSubmissionDirFromResult(gradingInfo *model.GradingInfo) string {
     return this.getSubmissionDir(gradingInfo.CourseID, gradingInfo.AssignmentID, gradingInfo.User, gradingInfo.ShortID);
 }
 

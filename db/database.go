@@ -10,7 +10,6 @@ import (
 
     "github.com/rs/zerolog/log"
 
-    "github.com/eriq-augustine/autograder/artifact"
     "github.com/eriq-augustine/autograder/config"
     "github.com/eriq-augustine/autograder/db/disk"
     "github.com/eriq-augustine/autograder/model"
@@ -72,41 +71,41 @@ type Backend interface {
 
     // Save the results of grading.
     // All the submissions should be from this course.
-    SaveSubmissions(course *model.Course, results []*artifact.GradingResult) error;
+    SaveSubmissions(course *model.Course, results []*model.GradingResult) error;
 
     // Get the next short submission ID.
     GetNextSubmissionID(assignment *model.Assignment, email string) (string, error);
 
     // Get a history of all submissions for this assignment and user.
-    GetSubmissionHistory(assignment *model.Assignment, email string) ([]*artifact.SubmissionHistoryItem, error);
+    GetSubmissionHistory(assignment *model.Assignment, email string) ([]*model.SubmissionHistoryItem, error);
 
     // Get the results from a specific (or most recent) submission.
     // The submission ID will either be a short submission ID, or empty (if the most recent submission is to be returned).
     // Can return nil if the submission does not exist.
-    GetSubmissionResult(assignment *model.Assignment, email string, shortSubmissionID string) (*artifact.GradingInfo, error);
+    GetSubmissionResult(assignment *model.Assignment, email string, shortSubmissionID string) (*model.GradingInfo, error);
 
     // Get the scoring infos for an assignment for all users that match the given role.
     // A role of model.RoleUnknown means all users.
     // Users without a submission (but with a matching role) will be represented with a nil map value.
-    GetScoringInfos(assignment *model.Assignment, filterRole model.UserRole) (map[string]*artifact.ScoringInfo, error);
+    GetScoringInfos(assignment *model.Assignment, filterRole model.UserRole) (map[string]*model.ScoringInfo, error);
 
     // Get recent submission result for each user of the given role.
     // A role of model.RoleUnknown means all users.
     // Users without a submission (but with a matching role) will be represented with a nil map value.
-    GetRecentSubmissions(assignment *model.Assignment, filterRole model.UserRole) (map[string]*artifact.GradingInfo, error);
+    GetRecentSubmissions(assignment *model.Assignment, filterRole model.UserRole) (map[string]*model.GradingInfo, error);
 
     // Get an overview of the recent submission result for each user of the given role.
     // A role of model.RoleUnknown means all users.
     // Users without a submission (but with a matching role) will be represented with a nil map value.
-    GetRecentSubmissionSurvey(assignment *model.Assignment, filterRole model.UserRole) (map[string]*artifact.SubmissionHistoryItem, error);
+    GetRecentSubmissionSurvey(assignment *model.Assignment, filterRole model.UserRole) (map[string]*model.SubmissionHistoryItem, error);
 
     // Get the results of a submission including files and grading output.
-    GetSubmissionContents(assignment *model.Assignment, email string, shortSubmissionID string) (*artifact.GradingResult, error);
+    GetSubmissionContents(assignment *model.Assignment, email string, shortSubmissionID string) (*model.GradingResult, error);
 
     // Get the contents of recent submission result for each user of the given role.
     // A role of model.RoleUnknown means all users.
     // Users without a submission (but with a matching role) will be represented with a nil map value.
-    GetRecentSubmissionContents(assignment *model.Assignment, filterRole model.UserRole) (map[string]*artifact.GradingResult, error);
+    GetRecentSubmissionContents(assignment *model.Assignment, filterRole model.UserRole) (map[string]*model.GradingResult, error);
 }
 
 func Open() error {

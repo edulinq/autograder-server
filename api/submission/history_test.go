@@ -5,17 +5,16 @@ import (
     "testing"
 
     "github.com/eriq-augustine/autograder/api/core"
-    "github.com/eriq-augustine/autograder/artifact"
     "github.com/eriq-augustine/autograder/common"
     "github.com/eriq-augustine/autograder/model"
     "github.com/eriq-augustine/autograder/util"
 )
 
 func TestHistory(test *testing.T) {
-    testCases := []struct{ role model.UserRole; target string; found bool; permError bool; expected []*artifact.SubmissionHistoryItem; }{
+    testCases := []struct{ role model.UserRole; target string; found bool; permError bool; expected []*model.SubmissionHistoryItem; }{
         // Self.
         {model.RoleStudent, "", true, false, studentHist},
-        {model.RoleGrader, "", true, false, []*artifact.SubmissionHistoryItem{}},
+        {model.RoleGrader, "", true, false, []*model.SubmissionHistoryItem{}},
 
         // Other
         {model.RoleGrader, "student@test.com", true, false, studentHist},
@@ -23,7 +22,7 @@ func TestHistory(test *testing.T) {
 
         // Missing user.
         {model.RoleStudent, "ZZZ@test.com", false, true, nil},
-        {model.RoleGrader, "ZZZ@test.com", false, false, []*artifact.SubmissionHistoryItem{}},
+        {model.RoleGrader, "ZZZ@test.com", false, false, []*model.SubmissionHistoryItem{}},
     };
 
     for i, testCase := range testCases {
@@ -67,8 +66,8 @@ func TestHistory(test *testing.T) {
     }
 }
 
-var studentHist []*artifact.SubmissionHistoryItem = []*artifact.SubmissionHistoryItem{
-    &artifact.SubmissionHistoryItem{
+var studentHist []*model.SubmissionHistoryItem = []*model.SubmissionHistoryItem{
+    &model.SubmissionHistoryItem{
         ID: "course101::hw0::student@test.com::1697406256",
         ShortID: "1697406256",
         CourseID: "course101",
@@ -79,7 +78,7 @@ var studentHist []*artifact.SubmissionHistoryItem = []*artifact.SubmissionHistor
         Score: 0,
         GradingStartTime: common.MustTimestampFromString("2023-10-15T21:44:16.840060+00:00"),
     },
-    &artifact.SubmissionHistoryItem{
+    &model.SubmissionHistoryItem{
         ID: "course101::hw0::student@test.com::1697406265",
         ShortID: "1697406265",
         CourseID: "course101",
@@ -90,7 +89,7 @@ var studentHist []*artifact.SubmissionHistoryItem = []*artifact.SubmissionHistor
         Score: 1,
         GradingStartTime: common.MustTimestampFromString("2023-10-15T21:44:26.445382+00:00"),
     },
-    &artifact.SubmissionHistoryItem{
+    &model.SubmissionHistoryItem{
         ID: "course101::hw0::student@test.com::1697406272",
         ShortID: "1697406272",
         CourseID: "course101",

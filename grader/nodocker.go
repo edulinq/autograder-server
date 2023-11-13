@@ -10,7 +10,6 @@ import (
 
     "github.com/rs/zerolog/log"
 
-    "github.com/eriq-augustine/autograder/artifact"
     "github.com/eriq-augustine/autograder/common"
     "github.com/eriq-augustine/autograder/model"
     "github.com/eriq-augustine/autograder/util"
@@ -20,7 +19,7 @@ const PYTHON_AUTOGRADER_INVOCATION = "python3 -m autograder.cli.grade-submission
 const PYTHON_GRADER_FILENAME = "grader.py"
 
 func runNoDockerGrader(assignment *model.Assignment, submissionPath string, options GradeOptions, fullSubmissionID string) (
-        *artifact.GradingInfo, map[string][]byte, string, string, error) {
+        *model.GradingInfo, map[string][]byte, string, string, error) {
     imageInfo := assignment.GetImageInfo();
     if (imageInfo == nil) {
         return nil, nil, "", "", fmt.Errorf("No image information associated with assignment: '%s'.", assignment.FullID());
@@ -67,7 +66,7 @@ func runNoDockerGrader(assignment *model.Assignment, submissionPath string, opti
         return nil, nil, stdout, stderr, fmt.Errorf("Cannot find output file ('%s') after non-docker grading.", resultPath);
     }
 
-    var gradingInfo artifact.GradingInfo;
+    var gradingInfo model.GradingInfo;
     err = util.JSONFromFile(resultPath, &gradingInfo);
     if (err != nil) {
         return nil, nil, stdout, stderr, err;
