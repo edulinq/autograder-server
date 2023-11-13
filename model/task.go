@@ -4,5 +4,5 @@ type ScheduledTask interface {
     IsDisabled() bool
     GetTime() *ScheduledTime
     String() string
-    Validate(Course) error
+    Validate(*Course) error
 }

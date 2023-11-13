@@ -16,9 +16,9 @@ import (
 // {courseID: [taskTimer, ...], ...}
 var courseTimers map[string][]*time.Timer = make(map[string][]*time.Timer);
 
-type RunFunc func(model.Course, model.ScheduledTask) error;
+type RunFunc func(*model.Course, model.ScheduledTask) error;
 
-func Schedule(course model.Course, target model.ScheduledTask) error {
+func Schedule(course *model.Course, target model.ScheduledTask) error {
     if (target.IsDisabled() || config.NO_TASKS.Get()) {
         return nil;
     }

@@ -16,7 +16,7 @@ type ScoringUploadTask struct {
     CourseID string `json:"-"`
 }
 
-func (this *ScoringUploadTask) Validate(course Course) error {
+func (this *ScoringUploadTask) Validate(course *Course) error {
     this.When.id = fmt.Sprintf("score-%s", course.GetID());
     this.CourseID = course.GetID();
 

@@ -28,12 +28,12 @@ func GetDefaultGradeOptions() GradeOptions {
 }
 
 // Grade with default options pulled from config.
-func GradeDefault(assignment model.Assignment, submissionPath string, user string, message string) (*artifact.GradingResult, error) {
+func GradeDefault(assignment *model.Assignment, submissionPath string, user string, message string) (*artifact.GradingResult, error) {
     return Grade(assignment, submissionPath, user, message, GetDefaultGradeOptions());
 }
 
 // Grade with custom options.
-func Grade(assignment model.Assignment, submissionPath string, user string, message string, options GradeOptions) (*artifact.GradingResult, error) {
+func Grade(assignment *model.Assignment, submissionPath string, user string, message string, options GradeOptions) (*artifact.GradingResult, error) {
     var gradingResult artifact.GradingResult;
 
     gradingKey := fmt.Sprintf("%s::%s::%s", assignment.GetCourse().GetID(), assignment.GetID(), user);
@@ -95,7 +95,7 @@ func Grade(assignment model.Assignment, submissionPath string, user string, mess
     return &gradingResult, nil;
 }
 
-func prepForGrading(assignment model.Assignment, submissionPath string, user string) (string, map[string][]byte, error) {
+func prepForGrading(assignment *model.Assignment, submissionPath string, user string) (string, map[string][]byte, error) {
     // Ensure the assignment docker image is built.
     err := docker.BuildImageFromSourceQuick(assignment);
     if (err != nil) {

@@ -43,7 +43,7 @@ type ScoringReportQuestionStats struct {
 
 const DEFAULT_VALUE float64 = -1.0;
 
-func GetAssignmentScoringReport(assignment model.Assignment) (*AssignmentScoringReport, error) {
+func GetAssignmentScoringReport(assignment *model.Assignment) (*AssignmentScoringReport, error) {
     questionNames, scores, lastSubmissionTime, err := fetchScores(assignment);
     if (err != nil) {
         return nil, err;
@@ -87,7 +87,7 @@ func GetAssignmentScoringReport(assignment model.Assignment) (*AssignmentScoring
     return &report, nil;
 }
 
-func fetchScores(assignment model.Assignment) ([]string, map[string][]float64, time.Time, error) {
+func fetchScores(assignment *model.Assignment) ([]string, map[string][]float64, time.Time, error) {
     results, err := db.GetRecentSubmissions(assignment, usr.Student);
     if (err != nil) {
         return nil, nil, time.Time{}, fmt.Errorf("Failed to get recent submission results: '%w'.", err);

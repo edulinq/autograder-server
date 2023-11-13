@@ -31,7 +31,7 @@ type LateDaysInfo struct {
 
 // This assumes that all assignments are in the LMS.
 func ApplyLatePolicy(
-        assignment model.Assignment,
+        assignment *model.Assignment,
         users map[string]*usr.User,
         scores map[string]*artifact.ScoringInfo,
         dryRun bool) error {
@@ -125,7 +125,7 @@ func applyConstantPolicy(policy model.LateGradingPolicy, scores map[string]*arti
 
 func applyLateDaysPolicy(
         policy model.LateGradingPolicy,
-        assignment model.Assignment, users map[string]*usr.User,
+        assignment *model.Assignment, users map[string]*usr.User,
         scores map[string]*artifact.ScoringInfo, penalty float64,
         dryRun bool) error {
     allLateDays, err := fetchLateDays(policy, assignment);
@@ -202,7 +202,7 @@ func applyLateDaysPolicy(
     return nil;
 }
 
-func updateLateDays(policy model.LateGradingPolicy, assignment model.Assignment, lateDaysToUpdate map[string]*LateDaysInfo, dryRun bool) error {
+func updateLateDays(policy model.LateGradingPolicy, assignment *model.Assignment, lateDaysToUpdate map[string]*LateDaysInfo, dryRun bool) error {
     // Update late days.
     // Info that does NOT have a LMSCommentID will get the autograder comment added in.
     grades := make([]*lmstypes.SubmissionScore, 0, len(lateDaysToUpdate));
@@ -259,7 +259,7 @@ func updateLateDays(policy model.LateGradingPolicy, assignment model.Assignment,
     return nil;
 }
 
-func fetchLateDays(policy model.LateGradingPolicy, assignment model.Assignment) (map[string]*LateDaysInfo, error) {
+func fetchLateDays(policy model.LateGradingPolicy, assignment *model.Assignment) (map[string]*LateDaysInfo, error) {
     // Fetch available late days from the LMS.
     lmsLateDaysScores, err := lms.FetchAssignmentScores(assignment.GetCourse(), policy.LateDaysLMSID);
     if (err != nil) {

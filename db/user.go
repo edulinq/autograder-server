@@ -3,19 +3,13 @@ package db
 import (
     "fmt"
 
-    "github.com/eriq-augustine/autograder/db/types"
     "github.com/eriq-augustine/autograder/model"
     "github.com/eriq-augustine/autograder/usr"
 )
 
-func GetUsers(rawCourse model.Course) (map[string]*usr.User, error) {
+func GetUsers(course *model.Course) (map[string]*usr.User, error) {
     if (backend == nil) {
         return nil, fmt.Errorf("Database has not been opened.");
-    }
-
-    course, ok := rawCourse.(*types.Course);
-    if (!ok) {
-        return nil, fmt.Errorf("Course '%v' is not a db course.", rawCourse);
     }
 
     return backend.GetUsers(course);
@@ -38,14 +32,9 @@ func GetUsersFromID(courseID string) (map[string]*usr.User, error) {
     return GetUsers(course);
 }
 
-func GetUser(rawCourse model.Course, email string) (*usr.User, error) {
+func GetUser(course *model.Course, email string) (*usr.User, error) {
     if (backend == nil) {
         return nil, fmt.Errorf("Database has not been opened.");
-    }
-
-    course, ok := rawCourse.(*types.Course);
-    if (!ok) {
-        return nil, fmt.Errorf("Course '%v' is not a db course.", rawCourse);
     }
 
     user, err := backend.GetUser(course, email);
@@ -62,14 +51,9 @@ func GetUser(rawCourse model.Course, email string) (*usr.User, error) {
 
 // Insert the given users (overriding any conflicting users).
 // For user merging (instead of overriding), user db.SyncUsers().
-func SaveUsers(rawCourse model.Course, users map[string]*usr.User) error {
+func SaveUsers(course *model.Course, users map[string]*usr.User) error {
     if (backend == nil) {
         return fmt.Errorf("Database has not been opened.");
-    }
-
-    course, ok := rawCourse.(*types.Course);
-    if (!ok) {
-        return fmt.Errorf("Course '%v' is not a db course.", rawCourse);
     }
 
     return backend.SaveUsers(course, users);
@@ -79,14 +63,9 @@ func SaveUsers(rawCourse model.Course, users map[string]*usr.User) error {
 // Returns a boolean indicating if the user exists.
 // If true, then the user exists and was removed.
 // If false (and the error is nil), then the user did not exist.
-func RemoveUser(rawCourse model.Course, email string) (bool, error) {
+func RemoveUser(course *model.Course, email string) (bool, error) {
     if (backend == nil) {
         return false, fmt.Errorf("Database has not been opened.");
-    }
-
-    course, ok := rawCourse.(*types.Course);
-    if (!ok) {
-        return false, fmt.Errorf("Course '%v' is not a db course.", rawCourse);
     }
 
     user, err := GetUser(course, email);
@@ -103,7 +82,7 @@ func RemoveUser(rawCourse model.Course, email string) (bool, error) {
 
 // Sync a single user to the database.
 // See db.SyncUsers().
-func SyncUser(rawCourse model.Course, user *usr.User,
+func SyncUser(course *model.Course, user *usr.User,
         merge bool, dryRun bool, sendEmails bool) (*usr.UserSyncResult, error) {
     if (backend == nil) {
         return nil, fmt.Errorf("Database has not been opened.");
@@ -113,7 +92,7 @@ func SyncUser(rawCourse model.Course, user *usr.User,
         user.Email: user,
     };
 
-    return SyncUsers(rawCourse, newUsers, merge, dryRun, sendEmails);
+    return SyncUsers(course, newUsers, merge, dryRun, sendEmails);
 }
 
 
@@ -124,15 +103,10 @@ func SyncUser(rawCourse model.Course, user *usr.User,
 // Any non-ignored user WILL have their password changed.
 // Passwords should either be left empty (and they will be randomly generated),
 // or set to the hash of the desired password.
-func SyncUsers(rawCourse model.Course, newUsers map[string]*usr.User,
+func SyncUsers(course *model.Course, newUsers map[string]*usr.User,
         merge bool, dryRun bool, sendEmails bool) (*usr.UserSyncResult, error) {
     if (backend == nil) {
         return nil, fmt.Errorf("Database has not been opened.");
-    }
-
-    course, ok := rawCourse.(*types.Course);
-    if (!ok) {
-        return nil, fmt.Errorf("Course '%v' is not a db course.", rawCourse);
     }
 
     localUsers, err := GetUsers(course);

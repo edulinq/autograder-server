@@ -19,7 +19,7 @@ import (
 const PYTHON_AUTOGRADER_INVOCATION = "python3 -m autograder.cli.grade-submission --grader <grader> --inputdir <inputdir> --outputdir <outputdir> --workdir <workdir> --outpath <outpath>"
 const PYTHON_GRADER_FILENAME = "grader.py"
 
-func runNoDockerGrader(assignment model.Assignment, submissionPath string, options GradeOptions, fullSubmissionID string) (
+func runNoDockerGrader(assignment *model.Assignment, submissionPath string, options GradeOptions, fullSubmissionID string) (
         *artifact.GradingInfo, map[string][]byte, string, string, error) {
     imageInfo := assignment.GetImageInfo();
     if (imageInfo == nil) {
@@ -98,7 +98,7 @@ func runCMD(cmd *exec.Cmd) (string, string, error) {
 }
 
 // Get a command to invoke the non-docker grader.
-func getAssignmentInvocation(assignment model.Assignment, inputDir string, outputDir string, workDir string) (*exec.Cmd, error) {
+func getAssignmentInvocation(assignment *model.Assignment, inputDir string, outputDir string, workDir string) (*exec.Cmd, error) {
     imageInfo := assignment.GetImageInfo();
     if (imageInfo == nil) {
         return nil, fmt.Errorf("No image information associated with assignment: '%s'.", assignment.FullID());

@@ -4,17 +4,17 @@ import (
     "fmt"
     "path/filepath"
 
-    "github.com/eriq-augustine/autograder/db/types"
+    "github.com/eriq-augustine/autograder/model"
     "github.com/eriq-augustine/autograder/util"
 )
 
 const DISK_DB_ASSIGNMENTS_DIR = "assignments";
 
-func (this *backend) SaveAssignment(assignment *types.Assignment) error {
+func (this *backend) SaveAssignment(assignment *model.Assignment) error {
     return this.saveAssignmentLock(assignment, true)
 }
 
-func (this *backend) saveAssignmentLock(assignment *types.Assignment, acquireLock bool) error {
+func (this *backend) saveAssignmentLock(assignment *model.Assignment, acquireLock bool) error {
     if (acquireLock) {
         this.lock.Lock();
         defer this.lock.Unlock();
@@ -30,10 +30,10 @@ func (this *backend) saveAssignmentLock(assignment *types.Assignment, acquireLoc
     return nil;
 }
 
-func (this *backend) getAssignmentDir(assignment *types.Assignment) string {
+func (this *backend) getAssignmentDir(assignment *model.Assignment) string {
     return filepath.Join(this.getCourseDir(assignment.Course), DISK_DB_ASSIGNMENTS_DIR, assignment.GetID());
 }
 
-func (this *backend) getAssignmentPath(assignment *types.Assignment) string {
-    return filepath.Join(this.getAssignmentDir(assignment), types.ASSIGNMENT_CONFIG_FILENAME);
+func (this *backend) getAssignmentPath(assignment *model.Assignment) string {
+    return filepath.Join(this.getAssignmentDir(assignment), model.ASSIGNMENT_CONFIG_FILENAME);
 }

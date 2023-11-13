@@ -9,7 +9,7 @@ type CourseScoringReport struct {
     Assignments []*AssignmentScoringReport `json:"assignments"`
 }
 
-func GetCourseScoringReport(course model.Course) (*CourseScoringReport, error) {
+func GetCourseScoringReport(course *model.Course) (*CourseScoringReport, error) {
     assignmentReports := make([]*AssignmentScoringReport, 0);
 
     for _, assignment := range course.GetSortedAssignments() {

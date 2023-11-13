@@ -6,7 +6,7 @@ import (
 
     "github.com/eriq-augustine/autograder/api/core"
     "github.com/eriq-augustine/autograder/artifact"
-    "github.com/eriq-augustine/autograder/db/types"
+    "github.com/eriq-augustine/autograder/model"
     "github.com/eriq-augustine/autograder/usr"
     "github.com/eriq-augustine/autograder/util"
 )
@@ -25,7 +25,7 @@ func TestFetchSubmissions(test *testing.T) {
 
     submissions := map[string]*artifact.GradingResult{
         "other@test.com": nil,
-        "student@test.com": types.MustLoadGradingResult(getTestSubmissionResultPath("1697406272")),
+        "student@test.com": model.MustLoadGradingResult(getTestSubmissionResultPath("1697406272")),
         "grader@test.com": nil,
         "admin@test.com": nil,
         "owner@test.com": nil,

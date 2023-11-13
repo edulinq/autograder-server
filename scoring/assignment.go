@@ -19,7 +19,7 @@ import (
 
 const LOCK_COMMENT string = "__lock__";
 
-func FullAssignmentScoringAndUpload(assignment model.Assignment, dryRun bool) error {
+func FullAssignmentScoringAndUpload(assignment *model.Assignment, dryRun bool) error {
     if (assignment.GetCourse().GetLMSAdapter() == nil) {
         return fmt.Errorf("Assignment's course has no LMS info associated with it.");
     }
@@ -53,7 +53,7 @@ func FullAssignmentScoringAndUpload(assignment model.Assignment, dryRun bool) er
 }
 
 func computeFinalScores(
-        assignment model.Assignment, users map[string]*usr.User,
+        assignment *model.Assignment, users map[string]*usr.User,
         scoringInfos map[string]*artifact.ScoringInfo, lmsScores []*lmstypes.SubmissionScore,
         dryRun bool) error {
     var err error;

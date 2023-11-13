@@ -36,7 +36,7 @@ type APIRequestCourseUserContext struct {
 
     // These fields are filled out as the request is parsed,
     // before being sent to the handler.
-    Course model.Course
+    Course *model.Course
     User *usr.User
 }
 
@@ -46,7 +46,7 @@ type APIRequestAssignmentContext struct {
 
     AssignmentID string `json:"assignment-id"`
 
-    Assignment model.Assignment
+    Assignment *model.Assignment
 }
 
 func (this *APIRequest) Validate(request any, endpoint string) *APIError {

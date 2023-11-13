@@ -8,7 +8,7 @@ import (
 
 const TEST_COURSE_ID = "COURSE101";
 
-func MustGetTestCourse() model.Course {
+func MustGetTestCourse() *model.Course {
     return MustGetCourse(TEST_COURSE_ID);
 }
 

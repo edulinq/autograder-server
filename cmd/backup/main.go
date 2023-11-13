@@ -30,7 +30,7 @@ func main() {
     db.MustOpen();
     defer db.MustClose();
 
-    var courses map[string]model.Course;
+    var courses map[string]*model.Course;
 
     if (args.Course != "") {
         course := db.MustGetCourse(args.Course);
@@ -47,7 +47,7 @@ func main() {
     }
 }
 
-func backupFromMap(courses map[string]model.Course) []string {
+func backupFromMap(courses map[string]*model.Course) []string {
     courseIDs := make([]string, 0);
     errs := make([]error, 0);
 

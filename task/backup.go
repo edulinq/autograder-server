@@ -11,7 +11,7 @@ import (
     "github.com/eriq-augustine/autograder/util"
 )
 
-func RunBackupTask(course model.Course, rawTask model.ScheduledTask) error {
+func RunBackupTask(course *model.Course, rawTask model.ScheduledTask) error {
     task, ok := rawTask.(*model.BackupTask);
     if (!ok) {
         return fmt.Errorf("Task is not a BackupTask: %t (%v).", rawTask, rawTask);
@@ -26,7 +26,7 @@ func RunBackupTask(course model.Course, rawTask model.ScheduledTask) error {
 
 // Perform a backup.
 // If dest is not specified, it will be picked up from config.BACKUP_DIR.
-func RunBackup(course model.Course, dest string) error {
+func RunBackup(course *model.Course, dest string) error {
     if (dest == "") {
         dest = config.BACKUP_DIR.Get();
     }

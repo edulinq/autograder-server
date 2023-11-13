@@ -12,7 +12,7 @@ import (
 )
 
 // Sync users with the provided LMS.
-func SyncLMSUsers(course model.Course, dryRun bool, sendEmails bool) (*usr.UserSyncResult, error) {
+func SyncLMSUsers(course *model.Course, dryRun bool, sendEmails bool) (*usr.UserSyncResult, error) {
     lmsUsersSlice, err := lms.FetchUsers(course);
     if (err != nil) {
         return nil, fmt.Errorf("Failed to fetch LMS users: '%w'.", err);
@@ -26,7 +26,7 @@ func SyncLMSUsers(course model.Course, dryRun bool, sendEmails bool) (*usr.UserS
     return syncLMSUsers(course, dryRun, sendEmails, lmsUsers, nil);
 }
 
-func SyncLMSUser(course model.Course, email string, dryRun bool, sendEmails bool) (*usr.UserSyncResult, error) {
+func SyncLMSUser(course *model.Course, email string, dryRun bool, sendEmails bool) (*usr.UserSyncResult, error) {
     lmsUser, err := lms.FetchUser(course, email);
     if (err != nil) {
         return nil, err;
@@ -42,7 +42,7 @@ func SyncLMSUser(course model.Course, email string, dryRun bool, sendEmails bool
 // Sync users.
 // If |syncEmails| is not empty, then only emails in it will be checked/resolved.
 // Otherwise, all emails from local and LMS users will be checked.
-func syncLMSUsers(course model.Course, dryRun bool, sendEmails bool, lmsUsers map[string]*lmstypes.User,
+func syncLMSUsers(course *model.Course, dryRun bool, sendEmails bool, lmsUsers map[string]*lmstypes.User,
         syncEmails []string) (*usr.UserSyncResult, error) {
     localUsers, err := db.GetUsers(course);
     if (err != nil) {
@@ -113,7 +113,7 @@ func mergeUsers(localUser *usr.User, lmsUser *lmstypes.User, mergeAttributes boo
 // Resolve differences between a local user and LMS user (linked using the provided email).
 // The passed in local user map will be modified to reflect any resolution.
 // The taken action will depend on the options set in the course's LMS adapter.
-func resolveUserSync(course model.Course, localUsers map[string]*usr.User,
+func resolveUserSync(course *model.Course, localUsers map[string]*usr.User,
         lmsUsers map[string]*lmstypes.User, email string) (*usr.UserResolveResult, error) {
     adapter := course.GetLMSAdapter();
 

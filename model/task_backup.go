@@ -15,7 +15,7 @@ type BackupTask struct {
     Dest string `json:"-"`
 }
 
-func (this *BackupTask) Validate(course Course) error {
+func (this *BackupTask) Validate(course *Course) error {
     this.When.id = fmt.Sprintf("backup-%s", course.GetID());
     this.CourseID = course.GetID();
 

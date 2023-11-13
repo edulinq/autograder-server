@@ -7,13 +7,12 @@ import (
 
     "github.com/eriq-augustine/autograder/common"
     "github.com/eriq-augustine/autograder/config"
-    "github.com/eriq-augustine/autograder/db/types"
     "github.com/eriq-augustine/autograder/model"
     "github.com/eriq-augustine/autograder/util"
 )
 
 // Get a course.
-func GetCourse(rawCourseID string) (model.Course, error) {
+func GetCourse(rawCourseID string) (*model.Course, error) {
     if (backend == nil) {
         return nil, fmt.Errorf("Database has not been opened.");
     }
@@ -37,7 +36,7 @@ func GetCourse(rawCourseID string) (model.Course, error) {
 
 // Get a course or panic.
 // This is a convenience function for the CLI mains that need to get a course.
-func MustGetCourse(rawCourseID string) model.Course {
+func MustGetCourse(rawCourseID string) *model.Course {
     course, err := GetCourse(rawCourseID);
     if (err != nil) {
         log.Fatal().Err(err).Str("course-id", rawCourseID).Msg("Failed to get course.");
@@ -51,7 +50,7 @@ func MustGetCourse(rawCourseID string) model.Course {
 }
 
 // Get all the known courses.
-func GetCourses() (map[string]model.Course, error) {
+func GetCourses() (map[string]*model.Course, error) {
     if (backend == nil) {
         return nil, fmt.Errorf("Database has not been opened.");
     }
@@ -61,7 +60,7 @@ func GetCourses() (map[string]model.Course, error) {
         return nil, err;
     }
 
-    courses := make(map[string]model.Course, len(dbCourses));
+    courses := make(map[string]*model.Course, len(dbCourses));
     for key, value := range dbCourses {
         courses[key] = value;
     }
@@ -71,7 +70,7 @@ func GetCourses() (map[string]model.Course, error) {
 
 // Get all the known courses or panic.
 // This is a convenience function for the CLI mains.
-func MustGetCourses() map[string]model.Course {
+func MustGetCourses() map[string]*model.Course {
     courses, err := GetCourses();
     if (err != nil) {
         log.Fatal().Err(err).Msg("Failed to get courses.");
@@ -97,27 +96,17 @@ func MustLoadCourse(path string) string {
     return courseID;
 }
 
-func SaveCourse(rawCourse model.Course) error {
+func SaveCourse(course *model.Course) error {
     if (backend == nil) {
         return fmt.Errorf("Database has not been opened.");
-    }
-
-    course, ok := rawCourse.(*types.Course);
-    if (!ok) {
-        return fmt.Errorf("Course '%v' is not a db course.", rawCourse);
     }
 
     return backend.SaveCourse(course);
 }
 
-func DumpCourse(rawCourse model.Course, targetDir string) error {
+func DumpCourse(course *model.Course, targetDir string) error {
     if (backend == nil) {
         return fmt.Errorf("Database has not been opened.");
-    }
-
-    course, ok := rawCourse.(*types.Course);
-    if (!ok) {
-        return fmt.Errorf("Course '%v' is not a db course.", rawCourse);
     }
 
     if (!util.PathExists(targetDir)) {
@@ -160,7 +149,7 @@ func LoadCoursesFromDir(baseDir string) ([]string, error) {
 
     log.Debug().Str("dir", baseDir).Msg("Searching for courses.");
 
-    configPaths, err := util.FindFiles(types.COURSE_CONFIG_FILENAME, baseDir);
+    configPaths, err := util.FindFiles(model.COURSE_CONFIG_FILENAME, baseDir);
     if (err != nil) {
         return nil, fmt.Errorf("Failed to search for course configs in '%s': '%w'.", baseDir, err);
     }

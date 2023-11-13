@@ -8,7 +8,6 @@ import (
 
     "github.com/eriq-augustine/autograder/artifact"
     "github.com/eriq-augustine/autograder/db"
-    "github.com/eriq-augustine/autograder/db/types"
     "github.com/eriq-augustine/autograder/model"
     "github.com/eriq-augustine/autograder/util"
 )
@@ -18,7 +17,7 @@ type TestSubmissionInfo struct {
     Dir string
     Files []string
     TestSubmission *artifact.TestSubmission
-    Assignment model.Assignment
+    Assignment *model.Assignment
 }
 
 func GetTestSubmissions(baseDir string) ([]*TestSubmissionInfo, error) {
@@ -67,25 +66,25 @@ func GetTestSubmissions(baseDir string) ([]*TestSubmissionInfo, error) {
 
 // Test submission are within their assignment's directory,
 // just check the source dirs for existing courses and assignments.
-func fetchTestSubmissionAssignment(testSubmissionPath string) (model.Assignment, error) {
+func fetchTestSubmissionAssignment(testSubmissionPath string) (*model.Assignment, error) {
     testSubmissionPath = util.ShouldAbs(testSubmissionPath);
 
-    assignmentPath := util.SearchParents(testSubmissionPath, types.ASSIGNMENT_CONFIG_FILENAME);
+    assignmentPath := util.SearchParents(testSubmissionPath, model.ASSIGNMENT_CONFIG_FILENAME);
     if (assignmentPath == "") {
         return nil, fmt.Errorf("Could not find assignment file for test submission.");
     }
 
-    coursePath := util.SearchParents(testSubmissionPath, types.COURSE_CONFIG_FILENAME);
+    coursePath := util.SearchParents(testSubmissionPath, model.COURSE_CONFIG_FILENAME);
     if (coursePath == "") {
         return nil, fmt.Errorf("Could not find course file for test submission.");
     }
 
-    course, err := types.LoadCourseConfig(coursePath);
+    course, err := model.LoadCourseConfig(coursePath);
     if (err != nil) {
         return nil, fmt.Errorf("Failed to load course '%s': '%w'.", coursePath, err);
     }
 
-    assignment, err := types.LoadCourseConfig(assignmentPath);
+    assignment, err := model.LoadCourseConfig(assignmentPath);
     if (err != nil) {
         return nil, fmt.Errorf("Failed to load assignment '%s': '%w'.", assignmentPath, err);
     }

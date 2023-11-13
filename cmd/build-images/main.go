@@ -33,7 +33,7 @@ func main() {
     db.MustOpen();
     defer db.MustClose();
 
-    var assignments []model.Assignment;
+    var assignments []*model.Assignment;
 
     if (args.Assignment != "") {
         assignments = append(assignments, db.MustGetAssignment(args.Course, args.Assignment));
@@ -53,7 +53,7 @@ func main() {
     }
 }
 
-func buildImages(assignments []model.Assignment) []string {
+func buildImages(assignments []*model.Assignment) []string {
     imageNames := make([]string, 0);
 
     for _, assignment := range assignments {

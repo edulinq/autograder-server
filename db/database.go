@@ -13,7 +13,7 @@ import (
     "github.com/eriq-augustine/autograder/artifact"
     "github.com/eriq-augustine/autograder/config"
     "github.com/eriq-augustine/autograder/db/disk"
-    "github.com/eriq-augustine/autograder/db/types"
+    "github.com/eriq-augustine/autograder/model"
     "github.com/eriq-augustine/autograder/usr"
 )
 
@@ -27,7 +27,6 @@ const (
 )
 
 // Actual databse implementations.
-// Backends will always deal with concrete types from db/types and not interfaces from model.
 // Any ID (course, assignment, etc) passed into a backend will be sanitized.
 type Backend interface {
     Close() error;
@@ -35,11 +34,11 @@ type Backend interface {
     EnsureTables() error;
 
     // Get all known courses.
-    GetCourses() (map[string]*types.Course, error);
+    GetCourses() (map[string]*model.Course, error);
 
     // Get a specific course.
     // Returns (nil, nil) if the course does not exist.
-    GetCourse(courseID string) (*types.Course, error);
+    GetCourse(courseID string) (*model.Course, error);
 
     // Load a course into the databse and return the course's id.
     // This implies loading a course directory from a config and saving it in the db.
@@ -49,66 +48,66 @@ type Backend interface {
     LoadCourse(path string) (string, error);
 
     // Explicitly save a course.
-    SaveCourse(course *types.Course) error;
+    SaveCourse(course *model.Course) error;
 
     // Dump a database course to the standard directory layout
     // in the specified directory.
     // The target directory should not exist, or be empty.
-    DumpCourse(course *types.Course, targetDir string) error;
+    DumpCourse(course *model.Course, targetDir string) error;
 
     // Explicitly save an assignment.
-    SaveAssignment(assignment *types.Assignment) error;
+    SaveAssignment(assignment *model.Assignment) error;
 
-    GetUsers(course *types.Course) (map[string]*usr.User, error);
+    GetUsers(course *model.Course) (map[string]*usr.User, error);
 
     // Get a specific user.
     // Returns nil if no matching user exists.
-    GetUser(course *types.Course, email string) (*usr.User, error);
+    GetUser(course *model.Course, email string) (*usr.User, error);
 
     // Upsert the given users.
-    SaveUsers(course *types.Course, users map[string]*usr.User) error;
+    SaveUsers(course *model.Course, users map[string]*usr.User) error;
 
     // Remove a user.
     // Do nothing and return nil if the user does not exist.
-    RemoveUser(course *types.Course, email string) error;
+    RemoveUser(course *model.Course, email string) error;
 
     // Save the results of grading.
     // All the submissions should be from this course.
-    SaveSubmissions(course *types.Course, results []*artifact.GradingResult) error;
+    SaveSubmissions(course *model.Course, results []*artifact.GradingResult) error;
 
     // Get the next short submission ID.
-    GetNextSubmissionID(assignment *types.Assignment, email string) (string, error);
+    GetNextSubmissionID(assignment *model.Assignment, email string) (string, error);
 
     // Get a history of all submissions for this assignment and user.
-    GetSubmissionHistory(assignment *types.Assignment, email string) ([]*artifact.SubmissionHistoryItem, error);
+    GetSubmissionHistory(assignment *model.Assignment, email string) ([]*artifact.SubmissionHistoryItem, error);
 
     // Get the results from a specific (or most recent) submission.
     // The submission ID will either be a short submission ID, or empty (if the most recent submission is to be returned).
     // Can return nil if the submission does not exist.
-    GetSubmissionResult(assignment *types.Assignment, email string, shortSubmissionID string) (*artifact.GradingInfo, error);
+    GetSubmissionResult(assignment *model.Assignment, email string, shortSubmissionID string) (*artifact.GradingInfo, error);
 
     // Get the scoring infos for an assignment for all users that match the given role.
     // A role of usr.Unknown means all users.
     // Users without a submission (but with a matching role) will be represented with a nil map value.
-    GetScoringInfos(assignment *types.Assignment, filterRole usr.UserRole) (map[string]*artifact.ScoringInfo, error);
+    GetScoringInfos(assignment *model.Assignment, filterRole usr.UserRole) (map[string]*artifact.ScoringInfo, error);
 
     // Get recent submission result for each user of the given role.
     // A role of usr.Unknown means all users.
     // Users without a submission (but with a matching role) will be represented with a nil map value.
-    GetRecentSubmissions(assignment *types.Assignment, filterRole usr.UserRole) (map[string]*artifact.GradingInfo, error);
+    GetRecentSubmissions(assignment *model.Assignment, filterRole usr.UserRole) (map[string]*artifact.GradingInfo, error);
 
     // Get an overview of the recent submission result for each user of the given role.
     // A role of usr.Unknown means all users.
     // Users without a submission (but with a matching role) will be represented with a nil map value.
-    GetRecentSubmissionSurvey(assignment *types.Assignment, filterRole usr.UserRole) (map[string]*artifact.SubmissionHistoryItem, error);
+    GetRecentSubmissionSurvey(assignment *model.Assignment, filterRole usr.UserRole) (map[string]*artifact.SubmissionHistoryItem, error);
 
     // Get the results of a submission including files and grading output.
-    GetSubmissionContents(assignment *types.Assignment, email string, shortSubmissionID string) (*artifact.GradingResult, error);
+    GetSubmissionContents(assignment *model.Assignment, email string, shortSubmissionID string) (*artifact.GradingResult, error);
 
     // Get the contents of recent submission result for each user of the given role.
     // A role of usr.Unknown means all users.
     // Users without a submission (but with a matching role) will be represented with a nil map value.
-    GetRecentSubmissionContents(assignment *types.Assignment, filterRole usr.UserRole) (map[string]*artifact.GradingResult, error);
+    GetRecentSubmissionContents(assignment *model.Assignment, filterRole usr.UserRole) (map[string]*artifact.GradingResult, error);
 }
 
 func Open() error {

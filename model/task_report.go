@@ -14,7 +14,7 @@ type ReportTask struct {
     CourseID string `json:"-"`
 }
 
-func (this *ReportTask) Validate(course Course) error {
+func (this *ReportTask) Validate(course *Course) error {
     this.When.id = fmt.Sprintf("report-%s", course.GetID());
     this.CourseID = course.GetID();
 

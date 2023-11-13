@@ -19,7 +19,7 @@ import (
 //  - input -- A temp dir that will be mounted at DOCKER_INPUT_DIR (read-only).
 //  - output -- Passed in directory that will be mounted at DOCKER_OUTPUT_DIR.
 //  - work -- Should already be created inside the docker image, will only exist within the container.
-func runDockerGrader(assignment model.Assignment, submissionPath string, options GradeOptions, fullSubmissionID string) (
+func runDockerGrader(assignment *model.Assignment, submissionPath string, options GradeOptions, fullSubmissionID string) (
         *artifact.GradingInfo, map[string][]byte, string, string, error) {
     tempDir, inputDir, outputDir, _, err := common.PrepTempGradingDir("docker");
     if (err != nil) {

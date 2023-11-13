@@ -22,7 +22,7 @@ type lmsBackend interface {
     FetchUser(email string) (*lmstypes.User, error)
 }
 
-func getBackend(course model.Course) (lmsBackend, error) {
+func getBackend(course *model.Course) (lmsBackend, error) {
     adapter := course.GetLMSAdapter();
     if (adapter == nil) {
         return nil, fmt.Errorf("Course '%s' has no LMS information.", course.GetID());
@@ -48,7 +48,7 @@ func getBackend(course model.Course) (lmsBackend, error) {
     }
 }
 
-func FetchAssignment(course model.Course, assignmentID string) (*lmstypes.Assignment, error) {
+func FetchAssignment(course *model.Course, assignmentID string) (*lmstypes.Assignment, error) {
     backend, err := getBackend(course);
     if (err != nil) {
         return nil, err;
@@ -57,7 +57,7 @@ func FetchAssignment(course model.Course, assignmentID string) (*lmstypes.Assign
     return backend.FetchAssignment(assignmentID);
 }
 
-func UpdateComments(course model.Course, assignmentID string, comments []*lmstypes.SubmissionComment) error {
+func UpdateComments(course *model.Course, assignmentID string, comments []*lmstypes.SubmissionComment) error {
     backend, err := getBackend(course);
     if (err != nil) {
         return err;
@@ -66,7 +66,7 @@ func UpdateComments(course model.Course, assignmentID string, comments []*lmstyp
     return backend.UpdateComments(assignmentID, comments);
 }
 
-func UpdateComment(course model.Course, assignmentID string, comment *lmstypes.SubmissionComment) error {
+func UpdateComment(course *model.Course, assignmentID string, comment *lmstypes.SubmissionComment) error {
     backend, err := getBackend(course);
     if (err != nil) {
         return err;
@@ -75,7 +75,7 @@ func UpdateComment(course model.Course, assignmentID string, comment *lmstypes.S
     return backend.UpdateComment(assignmentID, comment);
 }
 
-func FetchAssignmentScores(course model.Course, assignmentID string) ([]*lmstypes.SubmissionScore, error) {
+func FetchAssignmentScores(course *model.Course, assignmentID string) ([]*lmstypes.SubmissionScore, error) {
     backend, err := getBackend(course);
     if (err != nil) {
         return nil, err;
@@ -84,7 +84,7 @@ func FetchAssignmentScores(course model.Course, assignmentID string) ([]*lmstype
     return backend.FetchAssignmentScores(assignmentID);
 }
 
-func UpdateAssignmentScores(course model.Course, assignmentID string, scores []*lmstypes.SubmissionScore) error {
+func UpdateAssignmentScores(course *model.Course, assignmentID string, scores []*lmstypes.SubmissionScore) error {
     backend, err := getBackend(course);
     if (err != nil) {
         return err;
@@ -93,7 +93,7 @@ func UpdateAssignmentScores(course model.Course, assignmentID string, scores []*
     return backend.UpdateAssignmentScores(assignmentID, scores);
 }
 
-func FetchUsers(course model.Course, ) ([]*lmstypes.User, error) {
+func FetchUsers(course *model.Course, ) ([]*lmstypes.User, error) {
     backend, err := getBackend(course);
     if (err != nil) {
         return nil, err;
@@ -102,7 +102,7 @@ func FetchUsers(course model.Course, ) ([]*lmstypes.User, error) {
     return backend.FetchUsers();
 }
 
-func FetchUser(course model.Course, email string) (*lmstypes.User, error) {
+func FetchUser(course *model.Course, email string) (*lmstypes.User, error) {
     backend, err := getBackend(course);
     if (err != nil) {
         return nil, err;

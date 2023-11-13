@@ -6,7 +6,7 @@ import (
 
     "github.com/rs/zerolog/log"
 
-    "github.com/eriq-augustine/autograder/db/types"
+    "github.com/eriq-augustine/autograder/model"
     "github.com/eriq-augustine/autograder/util"
 )
 
@@ -16,7 +16,7 @@ func (this *backend) LoadCourse(path string) (string, error) {
     this.lock.Lock();
     defer this.lock.Unlock();
 
-    course, users, submissions, err := types.FullLoadCourse(path);
+    course, users, submissions, err := model.FullLoadCourse(path);
     if (err != nil) {
         return "", err;
     }
@@ -42,11 +42,11 @@ func (this *backend) LoadCourse(path string) (string, error) {
     return course.GetID(), nil;
 }
 
-func (this *backend) SaveCourse(course *types.Course) error {
+func (this *backend) SaveCourse(course *model.Course) error {
     return this.saveCourseLock(course, true);
 }
 
-func (this *backend) saveCourseLock(course *types.Course, acquireLock bool) error {
+func (this *backend) saveCourseLock(course *model.Course, acquireLock bool) error {
     if (acquireLock) {
         this.lock.Lock();
         defer this.lock.Unlock();
@@ -69,7 +69,7 @@ func (this *backend) saveCourseLock(course *types.Course, acquireLock bool) erro
     return nil;
 }
 
-func (this *backend) DumpCourse(course *types.Course, targetDir string) error {
+func (this *backend) DumpCourse(course *model.Course, targetDir string) error {
     this.lock.RLock();
     defer this.lock.RUnlock();
 
@@ -82,7 +82,7 @@ func (this *backend) DumpCourse(course *types.Course, targetDir string) error {
     return nil;
 }
 
-func (this *backend) GetCourse(courseID string) (*types.Course, error) {
+func (this *backend) GetCourse(courseID string) (*model.Course, error) {
     this.lock.RLock();
     defer this.lock.RUnlock();
 
@@ -91,23 +91,23 @@ func (this *backend) GetCourse(courseID string) (*types.Course, error) {
         return nil, nil;
     }
 
-    return types.LoadCourse(path);
+    return model.LoadCourse(path);
 }
 
-func (this *backend) GetCourses() (map[string]*types.Course, error) {
+func (this *backend) GetCourses() (map[string]*model.Course, error) {
     this.lock.RLock();
     defer this.lock.RUnlock();
 
     coursesDir := filepath.Join(this.baseDir, DISK_DB_COURSES_DIR);
 
-    configPaths, err := util.FindFiles(types.COURSE_CONFIG_FILENAME, coursesDir);
+    configPaths, err := util.FindFiles(model.COURSE_CONFIG_FILENAME, coursesDir);
     if (err != nil) {
         return nil, fmt.Errorf("Failed to search for courses in '%s': '%w'.", coursesDir, err);
     }
 
-    courses := make(map[string]*types.Course, len(configPaths));
+    courses := make(map[string]*model.Course, len(configPaths));
     for _, configPath := range configPaths {
-        course, err := types.LoadCourse(configPath);
+        course, err := model.LoadCourse(configPath);
         if (err != nil) {
             return nil, fmt.Errorf("Failed to load course '%s': '%w'.", configPath, err);
         }
@@ -118,11 +118,11 @@ func (this *backend) GetCourses() (map[string]*types.Course, error) {
     return courses, nil;
 }
 
-func (this *backend) getCourseDir(course *types.Course) string {
+func (this *backend) getCourseDir(course *model.Course) string {
     return this.getCourseDirFromID(course.GetID());
 }
 
-func (this *backend) getCoursePath(course *types.Course) string {
+func (this *backend) getCoursePath(course *model.Course) string {
     return this.getCoursePathFromID(course.GetID());
 }
 
@@ -131,5 +131,5 @@ func (this *backend) getCourseDirFromID(courseID string) string {
 }
 
 func (this *backend) getCoursePathFromID(courseID string) string {
-    return filepath.Join(this.getCourseDirFromID(courseID), types.COURSE_CONFIG_FILENAME);
+    return filepath.Join(this.getCourseDirFromID(courseID), model.COURSE_CONFIG_FILENAME);
 }

@@ -10,7 +10,7 @@ import (
     "github.com/eriq-augustine/autograder/report"
 )
 
-func RunReportTask(course model.Course, rawTask model.ScheduledTask) error {
+func RunReportTask(course *model.Course, rawTask model.ScheduledTask) error {
     task, ok := rawTask.(*model.ReportTask);
     if (!ok) {
         return fmt.Errorf("Task is not a ReportTask: %t (%v).", rawTask, rawTask);
@@ -23,7 +23,7 @@ func RunReportTask(course model.Course, rawTask model.ScheduledTask) error {
     return RunReport(course, task.To);
 }
 
-func RunReport(course model.Course, to []string) error {
+func RunReport(course *model.Course, to []string) error {
     report, err := report.GetCourseScoringReport(course);
     if (err != nil) {
         return fmt.Errorf("Failed to get scoring report for course '%s': '%w'.", course.GetName(), err);
