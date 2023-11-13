@@ -3,10 +3,12 @@
 ## Hierarchy
 
  1. util
- 2. config
- 3. artifact, common, config, usr
- 4. docker, task, lms
- 5. model
- 6. grader
- 7. web
- 8. cmd/main
+ 2. common, config
+ 3. docker, email
+ 4. model
+ 5. db
+ 6. grader, lms, report
+ 7. scoring
+ 8. task
+ 9. api
+ 10. cmd
