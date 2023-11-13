@@ -7,12 +7,11 @@ import (
     "github.com/eriq-augustine/autograder/lms"
     "github.com/eriq-augustine/autograder/lms/lmstypes"
     "github.com/eriq-augustine/autograder/model"
-    "github.com/eriq-augustine/autograder/usr"
     "github.com/eriq-augustine/autograder/util"
 )
 
 // Sync users with the provided LMS.
-func SyncLMSUsers(course *model.Course, dryRun bool, sendEmails bool) (*usr.UserSyncResult, error) {
+func SyncLMSUsers(course *model.Course, dryRun bool, sendEmails bool) (*model.UserSyncResult, error) {
     lmsUsersSlice, err := lms.FetchUsers(course);
     if (err != nil) {
         return nil, fmt.Errorf("Failed to fetch LMS users: '%w'.", err);
@@ -26,7 +25,7 @@ func SyncLMSUsers(course *model.Course, dryRun bool, sendEmails bool) (*usr.User
     return syncLMSUsers(course, dryRun, sendEmails, lmsUsers, nil);
 }
 
-func SyncLMSUser(course *model.Course, email string, dryRun bool, sendEmails bool) (*usr.UserSyncResult, error) {
+func SyncLMSUser(course *model.Course, email string, dryRun bool, sendEmails bool) (*model.UserSyncResult, error) {
     lmsUser, err := lms.FetchUser(course, email);
     if (err != nil) {
         return nil, err;
@@ -43,7 +42,7 @@ func SyncLMSUser(course *model.Course, email string, dryRun bool, sendEmails boo
 // If |syncEmails| is not empty, then only emails in it will be checked/resolved.
 // Otherwise, all emails from local and LMS users will be checked.
 func syncLMSUsers(course *model.Course, dryRun bool, sendEmails bool, lmsUsers map[string]*lmstypes.User,
-        syncEmails []string) (*usr.UserSyncResult, error) {
+        syncEmails []string) (*model.UserSyncResult, error) {
     localUsers, err := db.GetUsers(course);
     if (err != nil) {
         return nil, fmt.Errorf("Failed to fetch local users: '%w'.", err);
@@ -53,7 +52,7 @@ func syncLMSUsers(course *model.Course, dryRun bool, sendEmails bool, lmsUsers m
         syncEmails = getAllEmails(localUsers, lmsUsers);
     }
 
-    syncResult := usr.NewUserSyncResult();
+    syncResult := model.NewUserSyncResult();
 
     for _, email := range syncEmails {
         resolveResult, err := resolveUserSync(course, localUsers, lmsUsers, email);
@@ -78,14 +77,14 @@ func syncLMSUsers(course *model.Course, dryRun bool, sendEmails bool, lmsUsers m
     if (sendEmails) {
         for _, newUser := range syncResult.Add {
             pass := syncResult.ClearTextPasswords[newUser.Email];
-            usr.SendUserAddEmail(newUser, pass, true, false, dryRun, true);
+            model.SendUserAddEmail(newUser, pass, true, false, dryRun, true);
         }
     }
 
     return syncResult, nil;
 }
 
-func mergeUsers(localUser *usr.User, lmsUser *lmstypes.User, mergeAttributes bool) bool {
+func mergeUsers(localUser *model.User, lmsUser *lmstypes.User, mergeAttributes bool) bool {
     changed := false;
 
     if (localUser.LMSID != lmsUser.ID) {
@@ -113,8 +112,8 @@ func mergeUsers(localUser *usr.User, lmsUser *lmstypes.User, mergeAttributes boo
 // Resolve differences between a local user and LMS user (linked using the provided email).
 // The passed in local user map will be modified to reflect any resolution.
 // The taken action will depend on the options set in the course's LMS adapter.
-func resolveUserSync(course *model.Course, localUsers map[string]*usr.User,
-        lmsUsers map[string]*lmstypes.User, email string) (*usr.UserResolveResult, error) {
+func resolveUserSync(course *model.Course, localUsers map[string]*model.User,
+        lmsUsers map[string]*lmstypes.User, email string) (*model.UserResolveResult, error) {
     adapter := course.GetLMSAdapter();
 
     localUser := localUsers[email];
@@ -130,12 +129,12 @@ func resolveUserSync(course *model.Course, localUsers map[string]*usr.User,
             return nil, nil;
         }
 
-        pass, err := util.RandHex(usr.DEFAULT_PASSWORD_LEN);
+        pass, err := util.RandHex(model.DEFAULT_PASSWORD_LEN);
         if (err != nil) {
             return nil, fmt.Errorf("Failed to generate a default password: '%w'.", err);
         }
 
-        localUser = &usr.User{
+        localUser = &model.User{
             Email: email,
             DisplayName: lmsUser.Name,
             Role: lmsUser.Role,
@@ -150,7 +149,7 @@ func resolveUserSync(course *model.Course, localUsers map[string]*usr.User,
 
         localUsers[email] = localUser;
 
-        return &usr.UserResolveResult{Add: localUser, ClearTextPassword: pass}, nil;
+        return &model.UserResolveResult{Add: localUser, ClearTextPassword: pass}, nil;
     }
 
     // Del.
@@ -160,19 +159,19 @@ func resolveUserSync(course *model.Course, localUsers map[string]*usr.User,
         }
 
         delete(localUsers, email);
-        return &usr.UserResolveResult{Del: localUser}, nil;
+        return &model.UserResolveResult{Del: localUser}, nil;
     }
 
     // Mod.
     userChanged := mergeUsers(localUser, lmsUser, adapter.SyncUserAttributes);
     if (userChanged) {
-        return &usr.UserResolveResult{Mod: localUser}, nil;
+        return &model.UserResolveResult{Mod: localUser}, nil;
     }
 
     return nil, nil;
 }
 
-func getAllEmails(localUsers map[string]*usr.User, lmsUsers map[string]*lmstypes.User) []string {
+func getAllEmails(localUsers map[string]*model.User, lmsUsers map[string]*lmstypes.User) []string {
     emails := make([]string, 0, max(len(localUsers), len(lmsUsers)));
 
     for email, _ := range localUsers {

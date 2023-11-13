@@ -1,4 +1,4 @@
-package usr
+package model
 
 import (
     "bytes"
@@ -10,12 +10,12 @@ import (
 type UserRole int;
 
 const (
-    Unknown UserRole = 0
-    Other            = 10
-    Student          = 20
-    Grader           = 30
-    Admin            = 40
-    Owner            = 50
+    RoleUnknown UserRole = 0
+    RoleOther            = 10
+    RoleStudent          = 20
+    RoleGrader           = 30
+    RoleAdmin            = 40
+    RoleOwner            = 50
 )
 
 func (this UserRole) String() string {
@@ -23,21 +23,21 @@ func (this UserRole) String() string {
 }
 
 var roleToString = map[UserRole]string{
-    Owner:   "owner",
-    Admin:   "admin",
-    Grader:  "grader",
-    Student: "student",
-    Other:   "other",
-    Unknown: "unknown",
+    RoleOwner:   "owner",
+    RoleAdmin:   "admin",
+    RoleGrader:  "grader",
+    RoleStudent: "student",
+    RoleOther:   "other",
+    RoleUnknown: "unknown",
 }
 
 var stringToRole = map[string]UserRole{
-    "owner":   Owner,
-    "admin":   Admin,
-    "grader":  Grader,
-    "student": Student,
-    "other":   Other,
-    "unknown": Unknown,
+    "owner":   RoleOwner,
+    "admin":   RoleAdmin,
+    "grader":  RoleGrader,
+    "student": RoleStudent,
+    "other":   RoleOther,
+    "unknown": RoleUnknown,
 }
 
 func GetRole(text string) UserRole {
@@ -68,8 +68,8 @@ func (this *UserRole) UnmarshalJSON(data []byte) error {
     var ok bool;
     *this, ok = stringToRole[temp];
     if (!ok) {
-        *this = Unknown;
-        return fmt.Errorf("Unknown UserRole value: '%s'.", temp);
+        *this = RoleUnknown;
+        return fmt.Errorf("RoleUnknown UserRole value: '%s'.", temp);
     }
 
     return nil;

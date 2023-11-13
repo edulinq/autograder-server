@@ -12,7 +12,7 @@ import (
     "reflect"
 
     "github.com/eriq-augustine/autograder/db"
-    "github.com/eriq-augustine/autograder/usr"
+    "github.com/eriq-augustine/autograder/model"
     "github.com/eriq-augustine/autograder/util"
 )
 
@@ -25,7 +25,7 @@ type MinRoleOther bool;
 
 // A request having a field of this type indicates that the users for the course should be automatically fetched.
 // The existence of this type in a struct also indicates that the request is at least a APIRequestCourseUserContext.
-type CourseUsers map[string]*usr.User;
+type CourseUsers map[string]*model.User;
 
 // A request having a field of this type indicates that files from the POST request
 // will be qutomatically read and written to a temp directory on disk.
@@ -41,7 +41,7 @@ type POSTFiles struct {
 type TargetUser struct {
     Found bool
     Email string
-    User *usr.User
+    User *model.User
 }
 
 // A request having a field of this type indicates that the request is targeting a specific user.
@@ -54,7 +54,7 @@ type TargetUser struct {
 type TargetUserSelfOrGrader struct {
     Found bool
     Email string
-    User *usr.User
+    User *model.User
 }
 
 // The type for a named field that must have a non-empty string value.
@@ -153,8 +153,8 @@ func checkRequestTargetUserSelfOrGrader(endpoint string, apiRequest any, fieldIn
     }
 
     // Operations not on self require grader permissions.
-    if ((field.Email != courseContext.User.Email) && (courseContext.User.Role < usr.Grader)) {
-        return NewBadPermissionsError("-319", courseContext, usr.Grader, "Non-Self Target User");
+    if ((field.Email != courseContext.User.Email) && (courseContext.User.Role < model.RoleGrader)) {
+        return NewBadPermissionsError("-319", courseContext, model.RoleGrader, "Non-Self Target User");
     }
 
     user := users[field.Email];
@@ -296,7 +296,7 @@ func storeRequestFile(request *http.Request, outDir string, filename string) err
 }
 
 // Baseline checks for fields that require access to the course's users.
-func baseCheckRequestUsersField(endpoint string, apiRequest any, fieldIndex int) (*APIRequestCourseUserContext, map[string]*usr.User, *APIError) {
+func baseCheckRequestUsersField(endpoint string, apiRequest any, fieldIndex int) (*APIRequestCourseUserContext, map[string]*model.User, *APIError) {
     reflectValue := reflect.ValueOf(apiRequest).Elem();
 
     fieldValue := reflectValue.Field(fieldIndex);

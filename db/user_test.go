@@ -4,7 +4,7 @@ import (
     "testing"
 
     "github.com/eriq-augustine/autograder/email"
-    "github.com/eriq-augustine/autograder/usr"
+    "github.com/eriq-augustine/autograder/model"
     "github.com/eriq-augustine/autograder/util"
 )
 
@@ -42,7 +42,7 @@ func (this *DBTests) DBTestCourseSyncNewUsers(test *testing.T) {
 
         // There will always be adds.
 
-        if (!usr.UsersPointerEqual(addUsers, result.Add)) {
+        if (!model.UsersPointerEqual(addUsers, result.Add)) {
             test.Errorf("Case %d (%+v): Unexpected add users. Expected: '%s', actual: '%s'.",
                     i, testCase, util.MustToJSON(addUsers), util.MustToJSON(result.Add));
             continue;
@@ -69,7 +69,7 @@ func (this *DBTests) DBTestCourseSyncNewUsers(test *testing.T) {
             cleartextPassUsers = fullCleartextPassUsers;
         }
 
-        if (!usr.UsersPointerEqual(activeExpected, activeCase)) {
+        if (!model.UsersPointerEqual(activeExpected, activeCase)) {
             test.Errorf("Case %d (%+v): Unexpected %s users. Expected: '%s', actual: '%s'.",
                     i, testCase, activeName, util.MustToJSON(activeExpected), util.MustToJSON(activeCase));
             continue;
@@ -134,46 +134,46 @@ func buildSyncNewUsersTestCase(testCases []SyncNewUsersTestCase, index int, curr
 }
 
 func getSynNewUsersTestUsers() (
-        map[string]*usr.User, []*usr.User, []string, []string, []*email.Message, []*email.Message, []*usr.User, []*usr.User) {
-    var testUsers map[string]*usr.User = map[string]*usr.User{
-        "add@test.com": &usr.User{
+        map[string]*model.User, []*model.User, []string, []string, []*email.Message, []*email.Message, []*model.User, []*model.User) {
+    var testUsers map[string]*model.User = map[string]*model.User{
+        "add@test.com": &model.User{
             Email: "add@test.com",
             DisplayName: "add",
-            // Leave empty, should default to usr.Other.
-            // Role: usr.Unknown,
+            // Leave empty, should default to model.RoleOther.
+            // Role: model.RoleUnknown,
             LMSID: "lms-add@test.com",
         },
-        "add-pass@test.com": &usr.User{
+        "add-pass@test.com": &model.User{
             Email: "add-pass@test.com",
             Pass: util.Sha256HexFromString("add-pass"),
             DisplayName: "add pass",
-            Role: usr.Student,
+            Role: model.RoleStudent,
             LMSID: "lms-add-pass@test.com",
         },
-        "other@test.com": &usr.User{
+        "other@test.com": &model.User{
             Email: "other@test.com",
             DisplayName: "modified",
-            Role: usr.Student,
+            Role: model.RoleStudent,
             LMSID: "lms-mod@test.com",
         },
-        "student@test.com": &usr.User{
+        "student@test.com": &model.User{
             Email: "student@test.com",
             Pass: util.Sha256HexFromString("mod-pass"),
         },
     };
 
     // The users that are marked as additions.
-    var addUsers []*usr.User = []*usr.User{
-        &usr.User{
+    var addUsers []*model.User = []*model.User{
+        &model.User{
             Email: "add@test.com",
             DisplayName: "add",
-            Role: usr.Other,
+            Role: model.RoleOther,
             LMSID: "lms-add@test.com",
         },
-        &usr.User{
+        &model.User{
             Email: "add-pass@test.com",
             DisplayName: "add pass",
-            Role: usr.Student,
+            Role: model.RoleStudent,
             LMSID: "lms-add-pass@test.com",
         },
     };
@@ -219,33 +219,33 @@ func getSynNewUsersTestUsers() (
 
     // The users that are marked as mods.
     // These will not appear in every case.
-    var modUsers []*usr.User = []*usr.User{
-        &usr.User{
+    var modUsers []*model.User = []*model.User{
+        &model.User{
             Email: "other@test.com",
             DisplayName: "modified",
-            Role: usr.Student,
+            Role: model.RoleStudent,
             LMSID: "lms-mod@test.com",
         },
-        &usr.User{
+        &model.User{
             Email: "student@test.com",
             DisplayName: "student",
-            Role: usr.Student,
+            Role: model.RoleStudent,
             LMSID: "",
         },
     };
 
     // The users that are marked as skips.
     // These will not appear in every case.
-    var skipUsers []*usr.User = []*usr.User{
-        &usr.User{
+    var skipUsers []*model.User = []*model.User{
+        &model.User{
             Email: "other@test.com",
             DisplayName: "other",
-            Role: usr.Other,
+            Role: model.RoleOther,
         },
-        &usr.User{
+        &model.User{
             Email: "student@test.com",
             DisplayName: "student",
-            Role: usr.Student,
+            Role: model.RoleStudent,
         },
     };
 

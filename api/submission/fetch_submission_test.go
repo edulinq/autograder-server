@@ -9,7 +9,6 @@ import (
     "github.com/eriq-augustine/autograder/artifact"
     "github.com/eriq-augustine/autograder/config"
     "github.com/eriq-augustine/autograder/model"
-    "github.com/eriq-augustine/autograder/usr"
     "github.com/eriq-augustine/autograder/util"
 )
 
@@ -22,7 +21,7 @@ func TestFetchSubmission(test *testing.T) {
     };
 
     testCases := []struct{
-            role usr.UserRole
+            role model.UserRole
             targetEmail string
             targetSubmission string
             foundUser bool
@@ -31,45 +30,45 @@ func TestFetchSubmission(test *testing.T) {
             result *artifact.GradingResult
     }{
         // Grader, self, recent.
-        {usr.Grader, "",                "", true, false, false, nil},
-        {usr.Grader, "grader@test.com", "", true, false, false, nil},
+        {model.RoleGrader, "",                "", true, false, false, nil},
+        {model.RoleGrader, "grader@test.com", "", true, false, false, nil},
 
         // Grader, self, missing.
-        {usr.Grader, "",                "ZZZ", true, false, false, nil},
-        {usr.Grader, "grader@test.com", "ZZZ", true, false, false, nil},
+        {model.RoleGrader, "",                "ZZZ", true, false, false, nil},
+        {model.RoleGrader, "grader@test.com", "ZZZ", true, false, false, nil},
 
         // Grader, other, recent.
-        {usr.Grader, "student@test.com", "", true, true, false, studentGradingResults["1697406272"]},
+        {model.RoleGrader, "student@test.com", "", true, true, false, studentGradingResults["1697406272"]},
 
         // Grader, other, specific.
-        {usr.Grader, "student@test.com", "1697406256", true, true, false, studentGradingResults["1697406256"]},
-        {usr.Grader, "student@test.com", "1697406265", true, true, false, studentGradingResults["1697406265"]},
-        {usr.Grader, "student@test.com", "1697406272", true, true, false, studentGradingResults["1697406272"]},
+        {model.RoleGrader, "student@test.com", "1697406256", true, true, false, studentGradingResults["1697406256"]},
+        {model.RoleGrader, "student@test.com", "1697406265", true, true, false, studentGradingResults["1697406265"]},
+        {model.RoleGrader, "student@test.com", "1697406272", true, true, false, studentGradingResults["1697406272"]},
 
         // Grader, other, specific (full ID).
-        {usr.Grader, "student@test.com", "course101::hw0::student@test.com::1697406256", true, true, false, studentGradingResults["1697406256"]},
-        {usr.Grader, "student@test.com", "course101::hw0::student@test.com::1697406265", true, true, false, studentGradingResults["1697406265"]},
-        {usr.Grader, "student@test.com", "course101::hw0::student@test.com::1697406272", true, true, false, studentGradingResults["1697406272"]},
+        {model.RoleGrader, "student@test.com", "course101::hw0::student@test.com::1697406256", true, true, false, studentGradingResults["1697406256"]},
+        {model.RoleGrader, "student@test.com", "course101::hw0::student@test.com::1697406265", true, true, false, studentGradingResults["1697406265"]},
+        {model.RoleGrader, "student@test.com", "course101::hw0::student@test.com::1697406272", true, true, false, studentGradingResults["1697406272"]},
 
         // Grader, other, missing.
-        {usr.Grader, "student@test.com", "ZZZ", true, false, false, nil},
+        {model.RoleGrader, "student@test.com", "ZZZ", true, false, false, nil},
 
         // Grader, missing, recent.
-        {usr.Grader, "ZZZ@test.com", "", false, false, false, nil},
+        {model.RoleGrader, "ZZZ@test.com", "", false, false, false, nil},
 
         // Student, self, recent.
-        {usr.Student, "",                 "", true, true, false, studentGradingResults["1697406272"]},
-        {usr.Student, "student@test.com", "", true, true, false, studentGradingResults["1697406272"]},
+        {model.RoleStudent, "",                 "", true, true, false, studentGradingResults["1697406272"]},
+        {model.RoleStudent, "student@test.com", "", true, true, false, studentGradingResults["1697406272"]},
 
         // Student, self, missing.
-        {usr.Student, "",                 "ZZZ", true, false, false, nil},
-        {usr.Student, "student@test.com", "ZZZ", true, false, false, nil},
+        {model.RoleStudent, "",                 "ZZZ", true, false, false, nil},
+        {model.RoleStudent, "student@test.com", "ZZZ", true, false, false, nil},
 
         // Student, other, recent.
-        {usr.Student, "grader@test.com", "", false, false, true, nil},
+        {model.RoleStudent, "grader@test.com", "", false, false, true, nil},
 
         // Student, other, missing.
-        {usr.Student, "grader@test.com", "ZZZ", true, false, true, nil},
+        {model.RoleStudent, "grader@test.com", "ZZZ", true, false, true, nil},
     };
 
     for i, testCase := range testCases {

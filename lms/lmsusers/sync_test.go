@@ -8,7 +8,7 @@ import (
     "github.com/eriq-augustine/autograder/email"
     "github.com/eriq-augustine/autograder/lms/lmstypes"
     lmstest "github.com/eriq-augustine/autograder/lms/backend/test"
-    "github.com/eriq-augustine/autograder/usr"
+    "github.com/eriq-augustine/autograder/model"
     "github.com/eriq-augustine/autograder/util"
 )
 
@@ -63,14 +63,14 @@ func TestCourseSyncLMSUisers(test *testing.T) {
             currentModUsers = modAllUsers;
         }
 
-        if (!usr.UsersPointerEqual(currentModUsers, result.Mod)) {
+        if (!model.UsersPointerEqual(currentModUsers, result.Mod)) {
             test.Errorf("Case %d (%+v): Unexpected mod users. Expected: '%s', actual: '%s'.",
                     i, testCase, util.MustToJSON(currentModUsers), util.MustToJSON(result.Mod));
             continue;
         }
 
         if (testCase.syncAdd) {
-            if (!usr.UsersPointerEqual(addUsers, result.Add)) {
+            if (!model.UsersPointerEqual(addUsers, result.Add)) {
                 test.Errorf("Case %d (%+v): Unexpected add users. Expected: '%s', actual: '%s'.",
                         i, testCase, util.MustToJSON(addUsers), util.MustToJSON(result.Add));
                 continue;
@@ -120,7 +120,7 @@ func TestCourseSyncLMSUisers(test *testing.T) {
         }
 
         if (testCase.syncDel) {
-            if (!usr.UsersPointerEqual(delUsers, result.Del)) {
+            if (!model.UsersPointerEqual(delUsers, result.Del)) {
                 test.Errorf("Case %d (%+v): Unexpected del users. Expected: '%s', actual: '%s'.",
                         i, testCase, util.MustToJSON(delUsers), util.MustToJSON(result.Del));
                 continue;
@@ -173,7 +173,7 @@ func testingUsers(users []*lmstypes.User) []*lmstypes.User {
             user.Name = "Changed Name";
         } else if (user.Email == "admin@test.com") {
             // admin will have their role changed.
-            user.Role = usr.Owner;
+            user.Role = model.RoleOwner;
         } else if (user.Email == "owner@test.com") {
             // owner will not have anything changed (so we must manually remove their LMS ID).
             user.ID = "";
@@ -187,7 +187,7 @@ func testingUsers(users []*lmstypes.User) []*lmstypes.User {
         ID: "lms-add@test.com",
         Name: "add",
         Email: "add@test.com",
-        Role: usr.Student,
+        Role: model.RoleStudent,
     };
     users = append(users, addUser);
 
@@ -195,65 +195,65 @@ func testingUsers(users []*lmstypes.User) []*lmstypes.User {
 }
 
 // The users that are marked as additions.
-var addUsers []*usr.User = []*usr.User{
-    &usr.User{
+var addUsers []*model.User = []*model.User{
+    &model.User{
         Email: "add@test.com",
         DisplayName: "add",
-        Role: usr.Student,
+        Role: model.RoleStudent,
         LMSID: "lms-add@test.com",
     },
 };
 
 // The users that are marked as deletions.
-var delUsers []*usr.User = []*usr.User{
-    &usr.User{
+var delUsers []*model.User = []*model.User{
+    &model.User{
         Email: "other@test.com",
         DisplayName: "other",
-        Role: usr.Other,
+        Role: model.RoleOther,
         LMSID: "",
     },
 };
 
 // All the users that are marked as mods.
-var modAllUsers []*usr.User = []*usr.User{
-    &usr.User{
+var modAllUsers []*model.User = []*model.User{
+    &model.User{
         Email: "student@test.com",
         DisplayName: "student",
-        Role: usr.Student,
+        Role: model.RoleStudent,
         LMSID: "lms-student@test.com",
     },
-    &usr.User{
+    &model.User{
         Email: "grader@test.com",
         DisplayName: "Changed Name",
-        Role: usr.Grader,
+        Role: model.RoleGrader,
         LMSID: "lms-grader@test.com",
     },
-    &usr.User{
+    &model.User{
         Email: "admin@test.com",
         DisplayName: "admin",
-        Role: usr.Owner,
+        Role: model.RoleOwner,
         LMSID: "lms-admin@test.com",
     },
 };
 
 // All the users that are marked as mods with no attribute syncing.
-var modUsers []*usr.User = []*usr.User{
-    &usr.User{
+var modUsers []*model.User = []*model.User{
+    &model.User{
         Email: "student@test.com",
         DisplayName: "student",
-        Role: usr.Student,
+        Role: model.RoleStudent,
         LMSID: "lms-student@test.com",
     },
-    &usr.User{
+    &model.User{
         Email: "grader@test.com",
         DisplayName: "grader",
-        Role: usr.Grader,
+        Role: model.RoleGrader,
         LMSID: "lms-grader@test.com",
     },
-    &usr.User{
+    &model.User{
         Email: "admin@test.com",
         DisplayName: "admin",
-        Role: usr.Admin,
+        Role: model.RoleAdmin,
         LMSID: "lms-admin@test.com",
     },
 };

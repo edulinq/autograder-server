@@ -7,20 +7,19 @@ import (
     "github.com/eriq-augustine/autograder/api/core"
     "github.com/eriq-augustine/autograder/artifact"
     "github.com/eriq-augustine/autograder/model"
-    "github.com/eriq-augustine/autograder/usr"
     "github.com/eriq-augustine/autograder/util"
 )
 
 func TestFetchSubmissions(test *testing.T) {
     testCases := []struct{
-            role usr.UserRole
+            role model.UserRole
             permError bool
     }{
-        {usr.Other, true},
-        {usr.Student, true},
-        {usr.Grader, false},
-        {usr.Admin, false},
-        {usr.Owner, false},
+        {model.RoleOther, true},
+        {model.RoleStudent, true},
+        {model.RoleGrader, false},
+        {model.RoleAdmin, false},
+        {model.RoleOwner, false},
     };
 
     submissions := map[string]*artifact.GradingResult{

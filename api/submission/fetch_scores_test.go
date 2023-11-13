@@ -5,36 +5,36 @@ import (
     "testing"
 
     "github.com/eriq-augustine/autograder/api/core"
-    "github.com/eriq-augustine/autograder/usr"
+    "github.com/eriq-augustine/autograder/model"
     "github.com/eriq-augustine/autograder/util"
 )
 
 func TestFetchScores(test *testing.T) {
-    testCases := []struct{ role usr.UserRole; filterRole usr.UserRole; permError bool; ids map[string]string; }{
-        {usr.Grader, usr.Unknown, false, map[string]string{
+    testCases := []struct{ role model.UserRole; filterRole model.UserRole; permError bool; ids map[string]string; }{
+        {model.RoleGrader, model.RoleUnknown, false, map[string]string{
             "other@test.com": "",
             "student@test.com": "course101::hw0::student@test.com::1697406272",
             "grader@test.com": "",
             "admin@test.com": "",
             "owner@test.com": "",
         }},
-        {usr.Admin, usr.Unknown, false, map[string]string{
+        {model.RoleAdmin, model.RoleUnknown, false, map[string]string{
             "other@test.com": "",
             "student@test.com": "course101::hw0::student@test.com::1697406272",
             "grader@test.com": "",
             "admin@test.com": "",
             "owner@test.com": "",
         }},
-        {usr.Grader, usr.Student, false, map[string]string{
+        {model.RoleGrader, model.RoleStudent, false, map[string]string{
             "student@test.com": "course101::hw0::student@test.com::1697406272",
         }},
-        {usr.Grader, usr.Grader, false, map[string]string{
+        {model.RoleGrader, model.RoleGrader, false, map[string]string{
             "grader@test.com": "",
         }},
-        {usr.Student, usr.Unknown, true, nil},
-        {usr.Student, usr.Student, true, nil},
-        {usr.Other, usr.Unknown, true, nil},
-        {usr.Other, usr.Grader, true, nil},
+        {model.RoleStudent, model.RoleUnknown, true, nil},
+        {model.RoleStudent, model.RoleStudent, true, nil},
+        {model.RoleOther, model.RoleUnknown, true, nil},
+        {model.RoleOther, model.RoleGrader, true, nil},
     };
 
     for i, testCase := range testCases {

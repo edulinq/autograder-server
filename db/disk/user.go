@@ -5,21 +5,20 @@ import (
     "path/filepath"
 
     "github.com/eriq-augustine/autograder/model"
-    "github.com/eriq-augustine/autograder/usr"
     "github.com/eriq-augustine/autograder/util"
 )
 
-func (this *backend) GetUsers(course *model.Course) (map[string]*usr.User, error) {
+func (this *backend) GetUsers(course *model.Course) (map[string]*model.User, error) {
     return this.getUsersLock(course, true);
 }
 
-func (this *backend) getUsersLock(course *model.Course, acquireLock bool) (map[string]*usr.User, error) {
+func (this *backend) getUsersLock(course *model.Course, acquireLock bool) (map[string]*model.User, error) {
     if (acquireLock) {
         this.lock.RLock();
         defer this.lock.RUnlock();
     }
 
-    users := make(map[string]*usr.User);
+    users := make(map[string]*model.User);
 
     path := this.getUsersPath(course);
     if (!util.PathExists(path)) {
@@ -34,7 +33,7 @@ func (this *backend) getUsersLock(course *model.Course, acquireLock bool) (map[s
     return users, nil;
 }
 
-func (this *backend) GetUser(course *model.Course, email string) (*usr.User, error) {
+func (this *backend) GetUser(course *model.Course, email string) (*model.User, error) {
     users, err := this.GetUsers(course);
     if (err != nil) {
         return nil, fmt.Errorf("Failed to get users when searching for '%s': '%w'.", email, err);
@@ -43,11 +42,11 @@ func (this *backend) GetUser(course *model.Course, email string) (*usr.User, err
     return users[email], nil;
 }
 
-func (this *backend) SaveUsers(course *model.Course, users map[string]*usr.User) error {
+func (this *backend) SaveUsers(course *model.Course, users map[string]*model.User) error {
     return this.saveUsersLock(course, users, true);
 }
 
-func (this *backend) saveUsersLock(course *model.Course, newUsers map[string]*usr.User, acquireLock bool) error {
+func (this *backend) saveUsersLock(course *model.Course, newUsers map[string]*model.User, acquireLock bool) error {
     if (acquireLock) {
         this.lock.Lock();
         defer this.lock.Unlock();

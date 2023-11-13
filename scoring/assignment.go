@@ -13,7 +13,6 @@ import (
     "github.com/eriq-augustine/autograder/lms"
     "github.com/eriq-augustine/autograder/lms/lmstypes"
     "github.com/eriq-augustine/autograder/model"
-    "github.com/eriq-augustine/autograder/usr"
     "github.com/eriq-augustine/autograder/util"
 )
 
@@ -34,7 +33,7 @@ func FullAssignmentScoringAndUpload(assignment *model.Assignment, dryRun bool) e
         return fmt.Errorf("Could not fetch LMS grades: '%w'.", err);
     }
 
-    scoringInfos, err := db.GetScoringInfos(assignment, usr.Student);
+    scoringInfos, err := db.GetScoringInfos(assignment, model.RoleStudent);
     if (err != nil) {
         return fmt.Errorf("Failed to get scoring information: '%w'.", err);
     }
@@ -53,7 +52,7 @@ func FullAssignmentScoringAndUpload(assignment *model.Assignment, dryRun bool) e
 }
 
 func computeFinalScores(
-        assignment *model.Assignment, users map[string]*usr.User,
+        assignment *model.Assignment, users map[string]*model.User,
         scoringInfos map[string]*artifact.ScoringInfo, lmsScores []*lmstypes.SubmissionScore,
         dryRun bool) error {
     var err error;
@@ -122,7 +121,7 @@ func parseComments(lmsScores []*lmstypes.SubmissionScore) (map[string]bool, map[
 }
 
 func filterFinalScores(
-        users map[string]*usr.User, scoringInfos map[string]*artifact.ScoringInfo,
+        users map[string]*model.User, scoringInfos map[string]*artifact.ScoringInfo,
         locks map[string]bool, existingComments map[string]*artifact.ScoringInfo,
         ) ([]*lmstypes.SubmissionScore, []*lmstypes.SubmissionComment) {
     finalScores := make([]*lmstypes.SubmissionScore, 0);

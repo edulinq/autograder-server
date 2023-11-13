@@ -4,7 +4,7 @@ import (
     "github.com/eriq-augustine/autograder/api/core"
     "github.com/eriq-augustine/autograder/artifact"
     "github.com/eriq-augustine/autograder/db"
-    "github.com/eriq-augustine/autograder/usr"
+    "github.com/eriq-augustine/autograder/model"
 )
 
 type FetchScoresRequest struct {
@@ -13,7 +13,7 @@ type FetchScoresRequest struct {
     Users core.CourseUsers `json:"-"`
 
     // Filter results to only users with this role.
-    FilterRole usr.UserRole `json:"filter-role"`
+    FilterRole model.UserRole `json:"filter-role"`
 }
 
 type FetchScoresResponse struct {

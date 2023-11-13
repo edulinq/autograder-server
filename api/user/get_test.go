@@ -5,23 +5,23 @@ import (
     "testing"
 
     "github.com/eriq-augustine/autograder/api/core"
-    "github.com/eriq-augustine/autograder/usr"
+    "github.com/eriq-augustine/autograder/model"
     "github.com/eriq-augustine/autograder/util"
 )
 
 func TestUserGet(test *testing.T) {
-    testCases := []struct{ role usr.UserRole; target string; permError bool; expected *core.UserInfo }{
-        {usr.Grader, "other@test.com", false, &core.UserInfo{"other@test.com", "other", usr.Other, ""}},
-        {usr.Grader, "student@test.com", false, &core.UserInfo{"student@test.com", "student", usr.Student, ""}},
-        {usr.Grader, "grader@test.com", false, &core.UserInfo{"grader@test.com", "grader", usr.Grader, ""}},
-        {usr.Grader, "admin@test.com", false, &core.UserInfo{"admin@test.com", "admin", usr.Admin, ""}},
-        {usr.Grader, "owner@test.com", false, &core.UserInfo{"owner@test.com", "owner", usr.Owner, ""}},
+    testCases := []struct{ role model.UserRole; target string; permError bool; expected *core.UserInfo }{
+        {model.RoleGrader, "other@test.com", false, &core.UserInfo{"other@test.com", "other", model.RoleOther, ""}},
+        {model.RoleGrader, "student@test.com", false, &core.UserInfo{"student@test.com", "student", model.RoleStudent, ""}},
+        {model.RoleGrader, "grader@test.com", false, &core.UserInfo{"grader@test.com", "grader", model.RoleGrader, ""}},
+        {model.RoleGrader, "admin@test.com", false, &core.UserInfo{"admin@test.com", "admin", model.RoleAdmin, ""}},
+        {model.RoleGrader, "owner@test.com", false, &core.UserInfo{"owner@test.com", "owner", model.RoleOwner, ""}},
 
-        {usr.Student, "student@test.com", true, nil},
+        {model.RoleStudent, "student@test.com", true, nil},
 
-        {usr.Grader, "", false, nil},
+        {model.RoleGrader, "", false, nil},
 
-        {usr.Grader, "ZZZ", false, nil},
+        {model.RoleGrader, "ZZZ", false, nil},
     };
 
     for i, testCase := range testCases {

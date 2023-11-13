@@ -4,53 +4,53 @@ import (
     "testing"
 
     "github.com/eriq-augustine/autograder/api/core"
-    "github.com/eriq-augustine/autograder/usr"
+    "github.com/eriq-augustine/autograder/model"
     "github.com/eriq-augustine/autograder/util"
 )
 
 func TestPeek(test *testing.T) {
     // There are two options, which makes for four general test cases.
-    testCases := []struct{ role usr.UserRole; targetEmail string; targetSubmission string; score float64; foundUser bool; foundSubmission bool; permError bool }{
+    testCases := []struct{ role model.UserRole; targetEmail string; targetSubmission string; score float64; foundUser bool; foundSubmission bool; permError bool }{
         // Grader, self, recent.
-        {usr.Grader, "",                "", -1.0, true, false, false},
-        {usr.Grader, "grader@test.com", "", -1.0, true, false, false},
+        {model.RoleGrader, "",                "", -1.0, true, false, false},
+        {model.RoleGrader, "grader@test.com", "", -1.0, true, false, false},
 
         // Grader, self, missing.
-        {usr.Grader, "",                "ZZZ", -1.0, true, false, false},
-        {usr.Grader, "grader@test.com", "ZZZ", -1.0, true, false, false},
+        {model.RoleGrader, "",                "ZZZ", -1.0, true, false, false},
+        {model.RoleGrader, "grader@test.com", "ZZZ", -1.0, true, false, false},
 
         // Grader, other, recent.
-        {usr.Grader, "student@test.com", "", 2.0, true, true, false},
+        {model.RoleGrader, "student@test.com", "", 2.0, true, true, false},
 
         // Grader, other, specific.
-        {usr.Grader, "student@test.com", "1697406256", 0.0, true, true, false},
-        {usr.Grader, "student@test.com", "1697406265", 1.0, true, true, false},
-        {usr.Grader, "student@test.com", "1697406272", 2.0, true, true, false},
+        {model.RoleGrader, "student@test.com", "1697406256", 0.0, true, true, false},
+        {model.RoleGrader, "student@test.com", "1697406265", 1.0, true, true, false},
+        {model.RoleGrader, "student@test.com", "1697406272", 2.0, true, true, false},
 
         // Grader, other, specific (full ID).
-        {usr.Grader, "student@test.com", "course101::hw0::student@test.com::1697406256", 0.0, true, true, false},
-        {usr.Grader, "student@test.com", "course101::hw0::student@test.com::1697406265", 1.0, true, true, false},
-        {usr.Grader, "student@test.com", "course101::hw0::student@test.com::1697406272", 2.0, true, true, false},
+        {model.RoleGrader, "student@test.com", "course101::hw0::student@test.com::1697406256", 0.0, true, true, false},
+        {model.RoleGrader, "student@test.com", "course101::hw0::student@test.com::1697406265", 1.0, true, true, false},
+        {model.RoleGrader, "student@test.com", "course101::hw0::student@test.com::1697406272", 2.0, true, true, false},
 
         // Grader, other, missing.
-        {usr.Grader, "student@test.com", "ZZZ", -1.0, true, false, false},
+        {model.RoleGrader, "student@test.com", "ZZZ", -1.0, true, false, false},
 
         // Grader, missing, recent.
-        {usr.Grader, "ZZZ@test.com", "", -1.0, false, false, false},
+        {model.RoleGrader, "ZZZ@test.com", "", -1.0, false, false, false},
 
         // Student, self, recent.
-        {usr.Student, "",                 "", 2.0, true, true, false},
-        {usr.Student, "student@test.com", "", 2.0, true, true, false},
+        {model.RoleStudent, "",                 "", 2.0, true, true, false},
+        {model.RoleStudent, "student@test.com", "", 2.0, true, true, false},
 
         // Student, self, missing.
-        {usr.Student, "",                 "ZZZ", -1.0, true, false, false},
-        {usr.Student, "student@test.com", "ZZZ", -1.0, true, false, false},
+        {model.RoleStudent, "",                 "ZZZ", -1.0, true, false, false},
+        {model.RoleStudent, "student@test.com", "ZZZ", -1.0, true, false, false},
 
         // Student, other, recent.
-        {usr.Student, "grader@test.com", "", -1.0, false, false, true},
+        {model.RoleStudent, "grader@test.com", "", -1.0, false, false, true},
 
         // Student, other, missing.
-        {usr.Student, "grader@test.com", "ZZZ", -1.0, false, false, true},
+        {model.RoleStudent, "grader@test.com", "ZZZ", -1.0, false, false, true},
     };
 
     for i, testCase := range testCases {

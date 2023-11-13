@@ -5,7 +5,7 @@ import (
 
     "github.com/eriq-augustine/autograder/db"
     "github.com/eriq-augustine/autograder/lms/lmstypes"
-    "github.com/eriq-augustine/autograder/usr"
+    "github.com/eriq-augustine/autograder/model"
 )
 
 func (this *TestLMSBackend) FetchUsers() ([]*lmstypes.User, error) {
@@ -40,7 +40,7 @@ func (this *TestLMSBackend) FetchUser(email string) (*lmstypes.User, error) {
     return UserFromAGUser(user), nil;
 }
 
-func UserFromAGUser(user *usr.User) *lmstypes.User {
+func UserFromAGUser(user *model.User) *lmstypes.User {
     return &lmstypes.User{
         ID: "lms-" + user.Email,
         Name: user.DisplayName,

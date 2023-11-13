@@ -4,23 +4,23 @@ import (
     "testing"
 
     "github.com/eriq-augustine/autograder/api/core"
-    "github.com/eriq-augustine/autograder/usr"
+    "github.com/eriq-augustine/autograder/model"
     "github.com/eriq-augustine/autograder/util"
 )
 
 // lmsusers.SyncLMSUsers() is already heavily tested, focus on API-specific functionality.
 func TestAPISyncUsers(test *testing.T) {
-    testCases := []struct{ role usr.UserRole; dryRun bool; sendEmails bool; permError bool }{
-        {usr.Other, false, false, true},
-        {usr.Student, false, false, true},
-        {usr.Grader, false, false, true},
-        {usr.Admin, false, false, false},
-        {usr.Owner, false, false, false},
+    testCases := []struct{ role model.UserRole; dryRun bool; sendEmails bool; permError bool }{
+        {model.RoleOther, false, false, true},
+        {model.RoleStudent, false, false, true},
+        {model.RoleGrader, false, false, true},
+        {model.RoleAdmin, false, false, false},
+        {model.RoleOwner, false, false, false},
 
-        {usr.Admin, false, false, false},
-        {usr.Admin, false, true, false},
-        {usr.Admin, true, false, false},
-        {usr.Admin, true, true, false},
+        {model.RoleAdmin, false, false, false},
+        {model.RoleAdmin, false, true, false},
+        {model.RoleAdmin, true, false, false},
+        {model.RoleAdmin, true, true, false},
     };
 
     for i, testCase := range testCases {

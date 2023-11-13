@@ -10,7 +10,7 @@ import (
     "github.com/eriq-augustine/autograder/db"
     "github.com/eriq-augustine/autograder/lms"
     "github.com/eriq-augustine/autograder/lms/lmstypes"
-    "github.com/eriq-augustine/autograder/usr"
+    "github.com/eriq-augustine/autograder/model"
     "github.com/eriq-augustine/autograder/util"
 )
 
@@ -70,7 +70,7 @@ func main() {
     fmt.Printf("Uploaded %d grades.\n", len(grades));
 }
 
-func loadGrades(path string, users map[string]*usr.User, force bool) ([]*lmstypes.SubmissionScore, error) {
+func loadGrades(path string, users map[string]*model.User, force bool) ([]*lmstypes.SubmissionScore, error) {
     grades := make([]*lmstypes.SubmissionScore, 0);
 
     rows, err := util.ReadSeparatedFile(path, "\t", 0);

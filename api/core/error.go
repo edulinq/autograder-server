@@ -8,7 +8,7 @@ import (
     "github.com/rs/zerolog/log"
 
     "github.com/eriq-augustine/autograder/common"
-    "github.com/eriq-augustine/autograder/usr"
+    "github.com/eriq-augustine/autograder/model"
     "github.com/eriq-augustine/autograder/util"
 )
 
@@ -149,7 +149,7 @@ func NewAuthBadRequestError(locator string, request *APIRequestCourseUserContext
     return err;
 }
 
-func NewBadPermissionsError(locator string, request *APIRequestCourseUserContext, minRole usr.UserRole, internalMessage string) *APIError {
+func NewBadPermissionsError(locator string, request *APIRequestCourseUserContext, minRole model.UserRole, internalMessage string) *APIError {
     err := &APIError{
         RequestID: request.RequestID,
         Locator: locator,

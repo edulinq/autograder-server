@@ -6,7 +6,7 @@ import (
 
     "github.com/eriq-augustine/autograder/api/core"
     "github.com/eriq-augustine/autograder/db"
-    "github.com/eriq-augustine/autograder/usr"
+    "github.com/eriq-augustine/autograder/model"
     "github.com/eriq-augustine/autograder/util"
 )
 
@@ -16,7 +16,7 @@ func TestAdd(test *testing.T) {
     defer db.ResetForTesting();
 
     testCases := []struct{
-            role usr.UserRole; permError bool
+            role model.UserRole; permError bool
             force bool; dryRun bool; sendEmails bool; skipLMSSync bool
             newUsers []*core.UserInfoWithPass
             expected AddResponse
@@ -25,21 +25,21 @@ func TestAdd(test *testing.T) {
 
         // Basic
         {
-            usr.Admin, false,
+            model.RoleAdmin, false,
             false, false, false, false,
             []*core.UserInfoWithPass{
-                &core.UserInfoWithPass{core.UserInfo{"add@test.com", "add", usr.Admin, ""}, ""},
-                &core.UserInfoWithPass{core.UserInfo{"student@test.com", "new name", usr.Student, ""}, ""},
+                &core.UserInfoWithPass{core.UserInfo{"add@test.com", "add", model.RoleAdmin, ""}, ""},
+                &core.UserInfoWithPass{core.UserInfo{"student@test.com", "new name", model.RoleStudent, ""}, ""},
             },
             AddResponse{
                 SyncUsersInfo: core.SyncUsersInfo{
                     Add: []*core.UserInfo{
-                        &core.UserInfo{"add@test.com", "add", usr.Admin, ""},
+                        &core.UserInfo{"add@test.com", "add", model.RoleAdmin, ""},
                     },
                     Mod: []*core.UserInfo{},
                     Del: []*core.UserInfo{},
                     Skip: []*core.UserInfo{
-                        &core.UserInfo{"student@test.com", "student", usr.Student, ""},
+                        &core.UserInfo{"student@test.com", "student", model.RoleStudent, ""},
                     },
                 },
                 Errors: []AddError{},
@@ -49,11 +49,11 @@ func TestAdd(test *testing.T) {
 
         // User Errors
         {
-            usr.Admin, false,
+            model.RoleAdmin, false,
             false, false, false, false,
             []*core.UserInfoWithPass{
-                &core.UserInfoWithPass{core.UserInfo{"", "", usr.Student, ""}, ""},
-                &core.UserInfoWithPass{core.UserInfo{"owner@test.com", "new name", usr.Owner, ""}, ""},
+                &core.UserInfoWithPass{core.UserInfo{"", "", model.RoleStudent, ""}, ""},
+                &core.UserInfoWithPass{core.UserInfo{"owner@test.com", "new name", model.RoleOwner, ""}, ""},
             },
             AddResponse{
                 SyncUsersInfo: core.SyncUsersInfo{
@@ -72,7 +72,7 @@ func TestAdd(test *testing.T) {
 
         // Perm Error
         {
-            usr.Grader, true,
+            model.RoleGrader, true,
             false, false, false, false,
             []*core.UserInfoWithPass{},
             AddResponse{},
@@ -80,21 +80,21 @@ func TestAdd(test *testing.T) {
 
         // No LMS
         {
-            usr.Admin, false,
+            model.RoleAdmin, false,
             false, false, false, true,
             []*core.UserInfoWithPass{
-                &core.UserInfoWithPass{core.UserInfo{"add@test.com", "add", usr.Admin, ""}, ""},
-                &core.UserInfoWithPass{core.UserInfo{"student@test.com", "new name", usr.Student, ""}, ""},
+                &core.UserInfoWithPass{core.UserInfo{"add@test.com", "add", model.RoleAdmin, ""}, ""},
+                &core.UserInfoWithPass{core.UserInfo{"student@test.com", "new name", model.RoleStudent, ""}, ""},
             },
             AddResponse{
                 SyncUsersInfo: core.SyncUsersInfo{
                     Add: []*core.UserInfo{
-                        &core.UserInfo{"add@test.com", "add", usr.Admin, ""},
+                        &core.UserInfo{"add@test.com", "add", model.RoleAdmin, ""},
                     },
                     Mod: []*core.UserInfo{},
                     Del: []*core.UserInfo{},
                     Skip: []*core.UserInfo{
-                        &core.UserInfo{"student@test.com", "student", usr.Student, ""},
+                        &core.UserInfo{"student@test.com", "student", model.RoleStudent, ""},
                     },
                 },
                 Errors: []AddError{},
@@ -104,7 +104,7 @@ func TestAdd(test *testing.T) {
 
         // Empty
         {
-            usr.Admin, false,
+            model.RoleAdmin, false,
             false, false, false, false,
             []*core.UserInfoWithPass{},
             AddResponse{

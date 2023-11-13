@@ -13,7 +13,6 @@ import (
     "github.com/eriq-augustine/autograder/db"
     "github.com/eriq-augustine/autograder/lms/lmsusers"
     "github.com/eriq-augustine/autograder/model"
-    "github.com/eriq-augustine/autograder/usr"
     "github.com/eriq-augustine/autograder/util"
 )
 
@@ -29,12 +28,12 @@ type AddUser struct {
 }
 
 func (this *AddUser) Run(course *model.Course) error {
-    role := usr.GetRole(this.Role);
-    if (role == usr.Unknown) {
+    role := model.GetRole(this.Role);
+    if (role == model.RoleUnknown) {
         return fmt.Errorf("Unknown role: '%s'.", this.Role)
     }
 
-    newUser := usr.NewUser(this.Email, this.Name, role);
+    newUser := model.NewUser(this.Email, this.Name, role);
 
     // If set, the password comes in cleartext.
     if (this.Pass != "") {
@@ -261,7 +260,7 @@ func main() {
 }
 
 type TSVUser struct {
-    User *usr.User
+    User *model.User
     UserExists bool;
     GeneratedPass bool;
     CleartextPass string
@@ -270,14 +269,14 @@ type TSVUser struct {
 // Read users from a TSV formatted as: '<email>[\t<display name>[\t<role>[\t<cleartext password>]]]'.
 // The users returned from this function are not official users yet.
 // The users returned from here can be sent straight to db.SyncUsers() without any modifications.
-func readUsersTSV(path string, skipRows int) (map[string]*usr.User, error) {
+func readUsersTSV(path string, skipRows int) (map[string]*model.User, error) {
     file, err := os.Open(path);
     if (err != nil) {
         return nil, fmt.Errorf("Failed to open user TSV file '%s': '%w'.", path, err);
     }
     defer file.Close();
 
-    newUsers := make(map[string]*usr.User);
+    newUsers := make(map[string]*model.User);
 
     scanner := bufio.NewScanner(file);
     scanner.Split(bufio.ScanLines);
@@ -294,7 +293,7 @@ func readUsersTSV(path string, skipRows int) (map[string]*usr.User, error) {
 
         var email string;
         var name string = "";
-        var role usr.UserRole = usr.Student;
+        var role model.UserRole = model.RoleStudent;
 
         if (len(parts) >= 1) {
             email = parts[0];
@@ -307,13 +306,13 @@ func readUsersTSV(path string, skipRows int) (map[string]*usr.User, error) {
         }
 
         if (len(parts) >= 3) {
-            role = usr.GetRole(parts[2]);
-            if (role == usr.Unknown) {
+            role = model.GetRole(parts[2]);
+            if (role == model.RoleUnknown) {
                 return nil, fmt.Errorf("User file '%s' line %d has unknwon role '%s'.", path, lineno, parts[2]);
             }
         }
 
-        newUser := usr.NewUser(email, name, role);
+        newUser := model.NewUser(email, name, role);
 
         if (len(parts) >= 4) {
             hashPass := util.Sha256HexFromString(parts[3]);

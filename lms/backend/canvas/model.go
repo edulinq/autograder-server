@@ -4,7 +4,7 @@ import (
     "time"
 
     "github.com/eriq-augustine/autograder/lms/lmstypes"
-    "github.com/eriq-augustine/autograder/usr"
+    "github.com/eriq-augustine/autograder/model"
 )
 
 type User struct {
@@ -46,38 +46,38 @@ type Enrollment struct {
 // Canvas enrollment to autograder role.
 // Canvas has default enrollment "types" and then "roles" which may be the same
 // as the type or custom.
-var enrollmentToRoleMapping map[string]usr.UserRole = map[string]usr.UserRole{
-    "ObserverEnrollment": usr.Other,
-    "DesignerEnrollment": usr.Other,
-    "StudentEnrollment": usr.Student,
-    "TaEnrollment": usr.Grader,
-    "TeacherEnrollment": usr.Owner,
+var enrollmentToRoleMapping map[string]model.UserRole = map[string]model.UserRole{
+    "ObserverEnrollment": model.RoleOther,
+    "DesignerEnrollment": model.RoleOther,
+    "StudentEnrollment": model.RoleStudent,
+    "TaEnrollment": model.RoleGrader,
+    "TeacherEnrollment": model.RoleOwner,
 
     // Custom role.
-    "TA - Site Manager": usr.Admin,
+    "TA - Site Manager": model.RoleAdmin,
 };
 
-var roleToEnrollmentMapping map[usr.UserRole]string = map[usr.UserRole]string{
-    usr.Other: "ObserverEnrollment",
-    usr.Student: "StudentEnrollment",
-    usr.Grader: "TaEnrollment",
-    usr.Admin: "TA - Site Manager",
-    usr.Owner: "TeacherEnrollment",
+var roleToEnrollmentMapping map[model.UserRole]string = map[model.UserRole]string{
+    model.RoleOther: "ObserverEnrollment",
+    model.RoleStudent: "StudentEnrollment",
+    model.RoleGrader: "TaEnrollment",
+    model.RoleAdmin: "TA - Site Manager",
+    model.RoleOwner: "TeacherEnrollment",
 };
 
-func (this *Enrollment) GetRole() usr.UserRole {
+func (this *Enrollment) GetRole() model.UserRole {
     typeRole := enrollmentToRoleMapping[this.Type];
     roleRole := enrollmentToRoleMapping[this.Role];
 
     return max(typeRole, roleRole);
 }
 
-func (this *User) GetRole() usr.UserRole {
+func (this *User) GetRole() model.UserRole {
     if (this.Enrollments == nil) {
-        return usr.Other;
+        return model.RoleOther;
     }
 
-    var maxRole usr.UserRole;
+    var maxRole model.UserRole;
     for _, enrollment := range this.Enrollments {
         role := enrollment.GetRole();
         if (role > maxRole) {

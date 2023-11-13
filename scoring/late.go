@@ -13,7 +13,6 @@ import (
     "github.com/eriq-augustine/autograder/lms"
     "github.com/eriq-augustine/autograder/lms/lmstypes"
     "github.com/eriq-augustine/autograder/model"
-    "github.com/eriq-augustine/autograder/usr"
     "github.com/eriq-augustine/autograder/util"
 )
 
@@ -32,7 +31,7 @@ type LateDaysInfo struct {
 // This assumes that all assignments are in the LMS.
 func ApplyLatePolicy(
         assignment *model.Assignment,
-        users map[string]*usr.User,
+        users map[string]*model.User,
         scores map[string]*artifact.ScoringInfo,
         dryRun bool) error {
     policy := assignment.GetLatePolicy();
@@ -87,7 +86,7 @@ func ApplyLatePolicy(
 }
 
 // Apply a common policy.
-func applyBaselinePolicy(policy model.LateGradingPolicy, users map[string]*usr.User, scores map[string]*artifact.ScoringInfo, dueDate time.Time) {
+func applyBaselinePolicy(policy model.LateGradingPolicy, users map[string]*model.User, scores map[string]*artifact.ScoringInfo, dueDate time.Time) {
     for email, score := range scores {
         scoreTime, err := score.SubmissionTime.Time();
         if (err != nil) {
@@ -125,7 +124,7 @@ func applyConstantPolicy(policy model.LateGradingPolicy, scores map[string]*arti
 
 func applyLateDaysPolicy(
         policy model.LateGradingPolicy,
-        assignment *model.Assignment, users map[string]*usr.User,
+        assignment *model.Assignment, users map[string]*model.User,
         scores map[string]*artifact.ScoringInfo, penalty float64,
         dryRun bool) error {
     allLateDays, err := fetchLateDays(policy, assignment);

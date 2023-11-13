@@ -6,13 +6,13 @@ import (
     "fmt"
     "strings"
 
-    "github.com/eriq-augustine/autograder/usr"
+    "github.com/eriq-augustine/autograder/model"
 )
 
 type UserInfo struct {
     Email string `json:"email"`
     Name string `json:"name"`
-    Role usr.UserRole `json:"role"`
+    Role model.UserRole `json:"role"`
     LMSID string `json:"lms-id"`
 }
 
@@ -21,7 +21,7 @@ type UserInfoWithPass struct {
     Pass string `json:"pass"`
 }
 
-func NewUserInfo(user *usr.User) *UserInfo {
+func NewUserInfo(user *model.User) *UserInfo {
     return &UserInfo{
         Email: user.Email,
         Name: user.DisplayName,
@@ -30,12 +30,12 @@ func NewUserInfo(user *usr.User) *UserInfo {
     };
 }
 
-func (this *UserInfoWithPass) ToUsr() (*usr.User, error) {
+func (this *UserInfoWithPass) ToUsr() (*model.User, error) {
     if (this.Email == "") {
         return nil, fmt.Errorf("Empty emails are not allowed.")
     }
 
-    user := usr.User{
+    user := model.User{
         Email: this.Email,
         Pass: this.Pass,
         DisplayName: this.Name,
@@ -46,7 +46,7 @@ func (this *UserInfoWithPass) ToUsr() (*usr.User, error) {
     return &user, nil;
 }
 
-func NewUserInfos(users []*usr.User) []*UserInfo {
+func NewUserInfos(users []*model.User) []*UserInfo {
     result := make([]*UserInfo, 0, len(users));
     for _, user := range users {
         result = append(result, NewUserInfo(user));
@@ -59,7 +59,7 @@ func UserInfoFromMap(data map[string]any) *UserInfo {
     return &UserInfo{
         Email: data["email"].(string),
         Name: data["name"].(string),
-        Role: usr.GetRole(data["role"].(string)),
+        Role: model.GetRole(data["role"].(string)),
         LMSID: data["lms-id"].(string),
     };
 }
@@ -68,7 +68,7 @@ func CompareUserInfo(a UserInfo, b UserInfo) int {
     return strings.Compare(a.Email, b.Email);
 }
 
-// An API-friendly version of usr.UserSyncResult.
+// An API-friendly version of model.UserSyncResult.
 type SyncUsersInfo struct {
     Add []*UserInfo `json:"add-users"`
     Mod []*UserInfo `json:"mod-users"`
@@ -76,7 +76,7 @@ type SyncUsersInfo struct {
     Skip []*UserInfo `json:"skip-users"`
 }
 
-func NewSyncUsersInfo(syncResult *usr.UserSyncResult) *SyncUsersInfo {
+func NewSyncUsersInfo(syncResult *model.UserSyncResult) *SyncUsersInfo {
     info := SyncUsersInfo{
         Add: NewUserInfos(syncResult.Add),
         Mod: NewUserInfos(syncResult.Mod),

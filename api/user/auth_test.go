@@ -4,31 +4,31 @@ import (
     "testing"
 
     "github.com/eriq-augustine/autograder/api/core"
-    "github.com/eriq-augustine/autograder/usr"
+    "github.com/eriq-augustine/autograder/model"
     "github.com/eriq-augustine/autograder/util"
 )
 
 func TestAuth(test *testing.T) {
-    testCases := []struct{ role usr.UserRole; email string; pass string; expected AuthResponse }{
-        {usr.Grader, "other@test.com",   "other",   AuthResponse{true, true}},
-        {usr.Grader, "student@test.com", "student", AuthResponse{true, true}},
-        {usr.Grader, "grader@test.com",  "grader",  AuthResponse{true, true}},
-        {usr.Grader, "admin@test.com",   "admin",   AuthResponse{true, true}},
-        {usr.Grader, "owner@test.com",   "owner",   AuthResponse{true, true}},
+    testCases := []struct{ role model.UserRole; email string; pass string; expected AuthResponse }{
+        {model.RoleGrader, "other@test.com",   "other",   AuthResponse{true, true}},
+        {model.RoleGrader, "student@test.com", "student", AuthResponse{true, true}},
+        {model.RoleGrader, "grader@test.com",  "grader",  AuthResponse{true, true}},
+        {model.RoleGrader, "admin@test.com",   "admin",   AuthResponse{true, true}},
+        {model.RoleGrader, "owner@test.com",   "owner",   AuthResponse{true, true}},
 
-        {usr.Grader, "other@test.com",   "ZZZ", AuthResponse{true, false}},
-        {usr.Grader, "student@test.com", "ZZZ", AuthResponse{true, false}},
-        {usr.Grader, "grader@test.com",  "ZZZ", AuthResponse{true, false}},
-        {usr.Grader, "admin@test.com",   "ZZZ", AuthResponse{true, false}},
-        {usr.Grader, "owner@test.com",   "ZZZ", AuthResponse{true, false}},
+        {model.RoleGrader, "other@test.com",   "ZZZ", AuthResponse{true, false}},
+        {model.RoleGrader, "student@test.com", "ZZZ", AuthResponse{true, false}},
+        {model.RoleGrader, "grader@test.com",  "ZZZ", AuthResponse{true, false}},
+        {model.RoleGrader, "admin@test.com",   "ZZZ", AuthResponse{true, false}},
+        {model.RoleGrader, "owner@test.com",   "ZZZ", AuthResponse{true, false}},
 
-        {usr.Other,   "student@test.com", "student", AuthResponse{true, true}},
-        {usr.Student, "student@test.com", "student", AuthResponse{true, true}},
-        {usr.Grader,  "student@test.com", "student", AuthResponse{true, true}},
-        {usr.Admin,   "student@test.com", "student", AuthResponse{true, true}},
-        {usr.Owner,   "student@test.com", "student", AuthResponse{true, true}},
+        {model.RoleOther,   "student@test.com", "student", AuthResponse{true, true}},
+        {model.RoleStudent, "student@test.com", "student", AuthResponse{true, true}},
+        {model.RoleGrader,  "student@test.com", "student", AuthResponse{true, true}},
+        {model.RoleAdmin,   "student@test.com", "student", AuthResponse{true, true}},
+        {model.RoleOwner,   "student@test.com", "student", AuthResponse{true, true}},
 
-        {usr.Grader, "ZZZ", "ZZZ", AuthResponse{false, false}},
+        {model.RoleGrader, "ZZZ", "ZZZ", AuthResponse{false, false}},
     };
 
     for i, testCase := range testCases {

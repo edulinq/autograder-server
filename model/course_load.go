@@ -5,7 +5,6 @@ import (
     "path/filepath"
 
     "github.com/eriq-augustine/autograder/artifact"
-    "github.com/eriq-augustine/autograder/usr"
     "github.com/eriq-augustine/autograder/util"
 )
 
@@ -34,7 +33,7 @@ func LoadCourse(path string) (*Course, error) {
     return course, nil;
 }
 
-func FullLoadCourse(path string) (*Course, map[string]*usr.User, []*artifact.GradingResult, error) {
+func FullLoadCourse(path string) (*Course, map[string]*User, []*artifact.GradingResult, error) {
     course, err := LoadCourse(path);
     if (err != nil) {
         return nil, nil, nil, err;

@@ -11,7 +11,7 @@ import (
 
     "github.com/eriq-augustine/autograder/config"
     "github.com/eriq-augustine/autograder/db"
-    "github.com/eriq-augustine/autograder/usr"
+    "github.com/eriq-augustine/autograder/model"
     "github.com/eriq-augustine/autograder/util"
 )
 
@@ -158,7 +158,7 @@ func TestGoodPostFiles(test *testing.T) {
         filepath.Join(config.COURSES_ROOT.Get(), "files", "a.txt"),
     };
 
-    response := SendTestAPIRequestFull(test, endpoint, nil, paths, usr.Admin);
+    response := SendTestAPIRequestFull(test, endpoint, nil, paths, model.RoleAdmin);
     if (response.Content != nil) {
         test.Fatalf("Handler gave an error: '%s'.", response.Content);
     }
@@ -212,7 +212,7 @@ func TestBadPostFilesNoFiles(test *testing.T) {
 
     paths := []string{};
 
-    response := SendTestAPIRequestFull(test, endpoint, nil, paths, usr.Admin);
+    response := SendTestAPIRequestFull(test, endpoint, nil, paths, model.RoleAdmin);
     if (response.Success) {
         test.Fatalf("Request did not generate an error: '%v'.", response);
     }
@@ -248,7 +248,7 @@ func TestBadPostFilesStoreFail(test *testing.T) {
     util.SetTempDirForTesting(os.DevNull);
     defer util.SetTempDirForTesting("");
 
-    response := SendTestAPIRequestFull(test, endpoint, nil, paths, usr.Admin);
+    response := SendTestAPIRequestFull(test, endpoint, nil, paths, model.RoleAdmin);
     if (response.Success) {
         test.Fatalf("Request did not generate an error: '%v'.", response);
     }
@@ -349,30 +349,30 @@ func TestTargetUserSelfOrGrader(test *testing.T) {
         test.Fatalf("Failed to get users: '%v'.", err);
     }
 
-    testCases := []struct{ role usr.UserRole; target string; permError bool; expected TargetUserSelfOrGrader; }{
+    testCases := []struct{ role model.UserRole; target string; permError bool; expected TargetUserSelfOrGrader; }{
         // Self.
-        {usr.Student, "",                 false, TargetUserSelfOrGrader{true, "student@test.com", users["student@test.com"]}},
-        {usr.Student, "student@test.com", false, TargetUserSelfOrGrader{true, "student@test.com", users["student@test.com"]}},
-        {usr.Grader,  "",                 false, TargetUserSelfOrGrader{true, "grader@test.com", users["grader@test.com"]}},
-        {usr.Grader,  "grader@test.com",  false, TargetUserSelfOrGrader{true, "grader@test.com", users["grader@test.com"]}},
+        {model.RoleStudent, "",                 false, TargetUserSelfOrGrader{true, "student@test.com", users["student@test.com"]}},
+        {model.RoleStudent, "student@test.com", false, TargetUserSelfOrGrader{true, "student@test.com", users["student@test.com"]}},
+        {model.RoleGrader,  "",                 false, TargetUserSelfOrGrader{true, "grader@test.com", users["grader@test.com"]}},
+        {model.RoleGrader,  "grader@test.com",  false, TargetUserSelfOrGrader{true, "grader@test.com", users["grader@test.com"]}},
 
         // Other.
-        {usr.Other,   "student@test.com", true,  TargetUserSelfOrGrader{true, "student@test.com", users["student@test.com"]}},
-        {usr.Student, "grader@test.com",  true,  TargetUserSelfOrGrader{true, "grader@test.com", users["grader@test.com"]}},
-        {usr.Grader,  "student@test.com", false, TargetUserSelfOrGrader{true, "student@test.com", users["student@test.com"]}},
-        {usr.Admin,   "student@test.com", false, TargetUserSelfOrGrader{true, "student@test.com", users["student@test.com"]}},
-        {usr.Owner,   "student@test.com", false, TargetUserSelfOrGrader{true, "student@test.com", users["student@test.com"]}},
+        {model.RoleOther,   "student@test.com", true,  TargetUserSelfOrGrader{true, "student@test.com", users["student@test.com"]}},
+        {model.RoleStudent, "grader@test.com",  true,  TargetUserSelfOrGrader{true, "grader@test.com", users["grader@test.com"]}},
+        {model.RoleGrader,  "student@test.com", false, TargetUserSelfOrGrader{true, "student@test.com", users["student@test.com"]}},
+        {model.RoleAdmin,   "student@test.com", false, TargetUserSelfOrGrader{true, "student@test.com", users["student@test.com"]}},
+        {model.RoleOwner,   "student@test.com", false, TargetUserSelfOrGrader{true, "student@test.com", users["student@test.com"]}},
 
         // Not found.
-        {usr.Grader, "ZZZ", false, TargetUserSelfOrGrader{false, "ZZZ", nil}},
+        {model.RoleGrader, "ZZZ", false, TargetUserSelfOrGrader{false, "ZZZ", nil}},
     };
 
     for i, testCase := range testCases {
         request := requestType{
             APIRequestCourseUserContext: APIRequestCourseUserContext{
                 CourseID: "course101",
-                UserEmail: usr.GetRoleString(testCase.role) + "@test.com",
-                UserPass: util.Sha256HexFromString(usr.GetRoleString(testCase.role)),
+                UserEmail: model.GetRoleString(testCase.role) + "@test.com",
+                UserPass: util.Sha256HexFromString(model.GetRoleString(testCase.role)),
             },
             User: TargetUserSelfOrGrader{
                 Email: testCase.target,
@@ -414,29 +414,29 @@ func TestTargetUser(test *testing.T) {
         test.Fatalf("Failed to get users: '%v'.", err);
     }
 
-    testCases := []struct{ role usr.UserRole; target string; expected TargetUser; }{
-        {usr.Student, "student@test.com", TargetUser{true, "student@test.com", users["student@test.com"]}},
-        {usr.Grader,  "grader@test.com",  TargetUser{true, "grader@test.com", users["grader@test.com"]}},
+    testCases := []struct{ role model.UserRole; target string; expected TargetUser; }{
+        {model.RoleStudent, "student@test.com", TargetUser{true, "student@test.com", users["student@test.com"]}},
+        {model.RoleGrader,  "grader@test.com",  TargetUser{true, "grader@test.com", users["grader@test.com"]}},
 
-        {usr.Student, "", TargetUser{}},
-        {usr.Grader,  "", TargetUser{}},
+        {model.RoleStudent, "", TargetUser{}},
+        {model.RoleGrader,  "", TargetUser{}},
 
-        {usr.Other,   "student@test.com", TargetUser{true, "student@test.com", users["student@test.com"]}},
-        {usr.Student, "grader@test.com",  TargetUser{true, "grader@test.com", users["grader@test.com"]}},
-        {usr.Grader,  "student@test.com", TargetUser{true, "student@test.com", users["student@test.com"]}},
-        {usr.Admin,   "student@test.com", TargetUser{true, "student@test.com", users["student@test.com"]}},
-        {usr.Owner,   "student@test.com", TargetUser{true, "student@test.com", users["student@test.com"]}},
+        {model.RoleOther,   "student@test.com", TargetUser{true, "student@test.com", users["student@test.com"]}},
+        {model.RoleStudent, "grader@test.com",  TargetUser{true, "grader@test.com", users["grader@test.com"]}},
+        {model.RoleGrader,  "student@test.com", TargetUser{true, "student@test.com", users["student@test.com"]}},
+        {model.RoleAdmin,   "student@test.com", TargetUser{true, "student@test.com", users["student@test.com"]}},
+        {model.RoleOwner,   "student@test.com", TargetUser{true, "student@test.com", users["student@test.com"]}},
 
         // Not found.
-        {usr.Grader, "ZZZ", TargetUser{false, "ZZZ", nil}},
+        {model.RoleGrader, "ZZZ", TargetUser{false, "ZZZ", nil}},
     };
 
     for i, testCase := range testCases {
         request := requestType{
             APIRequestCourseUserContext: APIRequestCourseUserContext{
                 CourseID: "course101",
-                UserEmail: usr.GetRoleString(testCase.role) + "@test.com",
-                UserPass: util.Sha256HexFromString(usr.GetRoleString(testCase.role)),
+                UserEmail: model.GetRoleString(testCase.role) + "@test.com",
+                UserPass: util.Sha256HexFromString(model.GetRoleString(testCase.role)),
             },
             User: TargetUser{
                 Email: testCase.target,

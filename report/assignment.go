@@ -7,7 +7,6 @@ import (
     "gonum.org/v1/gonum/stat"
 
     "github.com/eriq-augustine/autograder/db"
-    "github.com/eriq-augustine/autograder/usr"
     "github.com/eriq-augustine/autograder/model"
     "github.com/eriq-augustine/autograder/util"
 )
@@ -88,7 +87,7 @@ func GetAssignmentScoringReport(assignment *model.Assignment) (*AssignmentScorin
 }
 
 func fetchScores(assignment *model.Assignment) ([]string, map[string][]float64, time.Time, error) {
-    results, err := db.GetRecentSubmissions(assignment, usr.Student);
+    results, err := db.GetRecentSubmissions(assignment, model.RoleStudent);
     if (err != nil) {
         return nil, nil, time.Time{}, fmt.Errorf("Failed to get recent submission results: '%w'.", err);
     }

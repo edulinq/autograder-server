@@ -9,7 +9,6 @@ import (
     "github.com/eriq-augustine/autograder/artifact"
     "github.com/eriq-augustine/autograder/common"
     "github.com/eriq-augustine/autograder/model"
-    "github.com/eriq-augustine/autograder/usr"
     "github.com/eriq-augustine/autograder/util"
 )
 
@@ -139,7 +138,7 @@ func (this *backend) GetSubmissionHistory(assignment *model.Assignment, email st
     return history, nil;
 }
 
-func (this *backend) GetRecentSubmissions(assignment *model.Assignment, filterRole usr.UserRole) (map[string]*artifact.GradingInfo, error) {
+func (this *backend) GetRecentSubmissions(assignment *model.Assignment, filterRole model.UserRole) (map[string]*artifact.GradingInfo, error) {
     gradingInfos := make(map[string]*artifact.GradingInfo);
 
     users, err := this.GetUsers(assignment.Course);
@@ -148,7 +147,7 @@ func (this *backend) GetRecentSubmissions(assignment *model.Assignment, filterRo
     }
 
     for email, user := range users {
-        if ((filterRole != usr.Unknown) && (filterRole != user.Role)) {
+        if ((filterRole != model.RoleUnknown) && (filterRole != user.Role)) {
             continue;
         }
 
@@ -176,7 +175,7 @@ func (this *backend) GetRecentSubmissions(assignment *model.Assignment, filterRo
     return gradingInfos, nil;
 }
 
-func (this *backend) GetScoringInfos(assignment *model.Assignment, filterRole usr.UserRole) (map[string]*artifact.ScoringInfo, error) {
+func (this *backend) GetScoringInfos(assignment *model.Assignment, filterRole model.UserRole) (map[string]*artifact.ScoringInfo, error) {
     scoringInfos := make(map[string]*artifact.ScoringInfo);
 
     submissionResults, err := this.GetRecentSubmissions(assignment, filterRole);
@@ -195,7 +194,7 @@ func (this *backend) GetScoringInfos(assignment *model.Assignment, filterRole us
     return scoringInfos, nil;
 }
 
-func (this *backend) GetRecentSubmissionSurvey(assignment *model.Assignment, filterRole usr.UserRole) (map[string]*artifact.SubmissionHistoryItem, error) {
+func (this *backend) GetRecentSubmissionSurvey(assignment *model.Assignment, filterRole model.UserRole) (map[string]*artifact.SubmissionHistoryItem, error) {
     results := make(map[string]*artifact.SubmissionHistoryItem);
 
     submissionResults, err := this.GetRecentSubmissions(assignment, filterRole);
@@ -238,7 +237,7 @@ func (this *backend) GetSubmissionContents(assignment *model.Assignment, email s
     return model.LoadGradingResult(resultPath);
 }
 
-func (this *backend) GetRecentSubmissionContents(assignment *model.Assignment, filterRole usr.UserRole) (map[string]*artifact.GradingResult, error) {
+func (this *backend) GetRecentSubmissionContents(assignment *model.Assignment, filterRole model.UserRole) (map[string]*artifact.GradingResult, error) {
     results := make(map[string]*artifact.GradingResult);
 
     users, err := this.GetUsers(assignment.Course);
@@ -247,7 +246,7 @@ func (this *backend) GetRecentSubmissionContents(assignment *model.Assignment, f
     }
 
     for email, user := range users {
-        if ((filterRole != usr.Unknown) && (filterRole != user.Role)) {
+        if ((filterRole != model.RoleUnknown) && (filterRole != user.Role)) {
             continue;
         }
 

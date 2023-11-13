@@ -6,7 +6,7 @@ import (
 
     "github.com/eriq-augustine/autograder/api/core"
     lmstest "github.com/eriq-augustine/autograder/lms/backend/test"
-    "github.com/eriq-augustine/autograder/usr"
+    "github.com/eriq-augustine/autograder/model"
     "github.com/eriq-augustine/autograder/util"
 )
 
@@ -16,10 +16,10 @@ func TestUploadScores(test *testing.T) {
         lmstest.SetFailUpdateAssignmentScores(false);
     }();
 
-    testCases := []struct{ role usr.UserRole; permError bool; failUpdate bool; scores []ScoreEntry; expected *UploadScoresResponse }{
+    testCases := []struct{ role model.UserRole; permError bool; failUpdate bool; scores []ScoreEntry; expected *UploadScoresResponse }{
         // Normal.
         {
-            usr.Grader, false, false,
+            model.RoleGrader, false, false,
             []ScoreEntry{
                 ScoreEntry{"student@test.com", 10},
             },
@@ -31,7 +31,7 @@ func TestUploadScores(test *testing.T) {
             },
         },
         {
-            usr.Grader, false, false,
+            model.RoleGrader, false, false,
             []ScoreEntry{
                 ScoreEntry{"student@test.com", 10},
                 ScoreEntry{"grader@test.com", 0},
@@ -47,12 +47,12 @@ func TestUploadScores(test *testing.T) {
         },
 
         // Permissions.
-        {usr.Other, true, false, nil, nil},
-        {usr.Student, true, false, nil, nil},
+        {model.RoleOther, true, false, nil, nil},
+        {model.RoleStudent, true, false, nil, nil},
 
         // Upload fails.
         {
-            usr.Grader, false, true,
+            model.RoleGrader, false, true,
             []ScoreEntry{
                 ScoreEntry{"student@test.com", 10},
             },
@@ -61,7 +61,7 @@ func TestUploadScores(test *testing.T) {
 
         // Bad scores.
         {
-            usr.Grader, false, false,
+            model.RoleGrader, false, false,
             []ScoreEntry{
                 ScoreEntry{"zzz@test.com", 10},
                 ScoreEntry{"no-lms-id@test.com", 20},
@@ -83,7 +83,7 @@ func TestUploadScores(test *testing.T) {
 
         // Upload will pass, but never gets called.
         {
-            usr.Grader, false, false,
+            model.RoleGrader, false, false,
             []ScoreEntry{
                 ScoreEntry{"zzz@test.com", 10},
             },
@@ -99,7 +99,7 @@ func TestUploadScores(test *testing.T) {
 
         // Upload will fail, but never gets called.
         {
-            usr.Grader, false, true,
+            model.RoleGrader, false, true,
             []ScoreEntry{
                 ScoreEntry{"zzz@test.com", 10},
             },

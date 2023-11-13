@@ -8,7 +8,7 @@ import (
     "github.com/eriq-augustine/autograder/db"
     "github.com/eriq-augustine/autograder/grader"
     "github.com/eriq-augustine/autograder/util"
-    "github.com/eriq-augustine/autograder/usr"
+    "github.com/eriq-augustine/autograder/model"
 )
 
 func TestSubmit(test *testing.T) {
@@ -18,7 +18,7 @@ func TestSubmit(test *testing.T) {
     }
 
     for i, testSubmission := range testSubmissions {
-        response := core.SendTestAPIRequestFull(test, core.NewEndpoint(`submission/submit`), nil, testSubmission.Files, usr.Student);
+        response := core.SendTestAPIRequestFull(test, core.NewEndpoint(`submission/submit`), nil, testSubmission.Files, model.RoleStudent);
         if (!response.Success) {
             test.Errorf("Case %d: Response is not a success when it should be: '%v'.", i, response);
             continue;

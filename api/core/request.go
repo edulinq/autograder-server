@@ -8,7 +8,6 @@ import (
     "github.com/eriq-augustine/autograder/config"
     "github.com/eriq-augustine/autograder/db"
     "github.com/eriq-augustine/autograder/model"
-    "github.com/eriq-augustine/autograder/usr"
     "github.com/eriq-augustine/autograder/util"
 )
 
@@ -37,7 +36,7 @@ type APIRequestCourseUserContext struct {
     // These fields are filled out as the request is parsed,
     // before being sent to the handler.
     Course *model.Course
-    User *usr.User
+    User *model.User
 }
 
 //Context for requests that need an assignment on top of a user/course.
@@ -234,7 +233,7 @@ func validateRequestStruct(request any, endpoint string) (bool, *APIError) {
 // go through all the fields and look for fields typed as the encoded MinRole* fields.
 // Return the maximum amongst the found roles.
 // Return: (role, found role).
-func getMaxRole(request any) (usr.UserRole, bool) {
+func getMaxRole(request any) (model.UserRole, bool) {
     reflectValue := reflect.ValueOf(request);
 
     // Dereference any pointer.
@@ -243,35 +242,35 @@ func getMaxRole(request any) (usr.UserRole, bool) {
     }
 
     foundRole := false;
-    role := usr.Unknown;
+    role := model.RoleUnknown;
 
     for i := 0; i < reflectValue.NumField(); i++ {
         fieldValue := reflectValue.Field(i);
 
         if (fieldValue.Type() == reflect.TypeOf((*MinRoleOwner)(nil)).Elem()) {
             foundRole = true;
-            if (role < usr.Owner) {
-                role = usr.Owner;
+            if (role < model.RoleOwner) {
+                role = model.RoleOwner;
             }
         } else if (fieldValue.Type() == reflect.TypeOf((*MinRoleAdmin)(nil)).Elem()) {
             foundRole = true;
-            if (role < usr.Admin) {
-                role = usr.Admin;
+            if (role < model.RoleAdmin) {
+                role = model.RoleAdmin;
             }
         } else if (fieldValue.Type() == reflect.TypeOf((*MinRoleGrader)(nil)).Elem()) {
             foundRole = true;
-            if (role < usr.Grader) {
-                role = usr.Grader;
+            if (role < model.RoleGrader) {
+                role = model.RoleGrader;
             }
         } else if (fieldValue.Type() == reflect.TypeOf((*MinRoleStudent)(nil)).Elem()) {
             foundRole = true;
-            if (role < usr.Student) {
-                role = usr.Student;
+            if (role < model.RoleStudent) {
+                role = model.RoleStudent;
             }
         } else if (fieldValue.Type() == reflect.TypeOf((*MinRoleOther)(nil)).Elem()) {
             foundRole = true;
-            if (role < usr.Other) {
-                role = usr.Other;
+            if (role < model.RoleOther) {
+                role = model.RoleOther;
             }
         }
     }

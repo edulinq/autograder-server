@@ -1,4 +1,4 @@
-package usr
+package model
 
 import (
     "fmt"

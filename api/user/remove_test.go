@@ -5,7 +5,7 @@ import (
 
     "github.com/eriq-augustine/autograder/api/core"
     "github.com/eriq-augustine/autograder/db"
-    "github.com/eriq-augustine/autograder/usr"
+    "github.com/eriq-augustine/autograder/model"
     "github.com/eriq-augustine/autograder/util"
 )
 
@@ -13,23 +13,23 @@ func TestRemove(test *testing.T) {
     // Leave the course in a good state after the test.
     defer db.ResetForTesting();
 
-    testCases := []struct{ role usr.UserRole; target string; basicPermError bool; advPermError bool; expected RemoveResponse }{
-        {usr.Owner, "other@test.com",   false, false, RemoveResponse{true}},
-        {usr.Owner, "student@test.com", false, false, RemoveResponse{true}},
-        {usr.Owner, "grader@test.com",  false, false, RemoveResponse{true}},
-        {usr.Owner, "admin@test.com",   false, false, RemoveResponse{true}},
-        {usr.Owner, "owner@test.com",   false, false, RemoveResponse{true}},
+    testCases := []struct{ role model.UserRole; target string; basicPermError bool; advPermError bool; expected RemoveResponse }{
+        {model.RoleOwner, "other@test.com",   false, false, RemoveResponse{true}},
+        {model.RoleOwner, "student@test.com", false, false, RemoveResponse{true}},
+        {model.RoleOwner, "grader@test.com",  false, false, RemoveResponse{true}},
+        {model.RoleOwner, "admin@test.com",   false, false, RemoveResponse{true}},
+        {model.RoleOwner, "owner@test.com",   false, false, RemoveResponse{true}},
 
-        {usr.Other,   "other@test.com", true,  false, RemoveResponse{true}},
-        {usr.Student, "other@test.com", true,  false, RemoveResponse{true}},
-        {usr.Grader,  "other@test.com", true,  false, RemoveResponse{true}},
-        {usr.Admin,   "other@test.com", false, false, RemoveResponse{true}},
-        {usr.Owner,   "other@test.com", false, false, RemoveResponse{true}},
+        {model.RoleOther,   "other@test.com", true,  false, RemoveResponse{true}},
+        {model.RoleStudent, "other@test.com", true,  false, RemoveResponse{true}},
+        {model.RoleGrader,  "other@test.com", true,  false, RemoveResponse{true}},
+        {model.RoleAdmin,   "other@test.com", false, false, RemoveResponse{true}},
+        {model.RoleOwner,   "other@test.com", false, false, RemoveResponse{true}},
 
-        {usr.Owner, "ZZZ", false, false, RemoveResponse{false}},
+        {model.RoleOwner, "ZZZ", false, false, RemoveResponse{false}},
 
-        {usr.Admin, "owner@test.com", false, true,  RemoveResponse{true}},
-        {usr.Owner, "owner@test.com", false, false, RemoveResponse{true}},
+        {model.RoleAdmin, "owner@test.com", false, true,  RemoveResponse{true}},
+        {model.RoleOwner, "owner@test.com", false, false, RemoveResponse{true}},
     };
 
     for i, testCase := range testCases {

@@ -4,10 +4,9 @@ import (
     "fmt"
 
     "github.com/eriq-augustine/autograder/model"
-    "github.com/eriq-augustine/autograder/usr"
 )
 
-func GetUsers(course *model.Course) (map[string]*usr.User, error) {
+func GetUsers(course *model.Course) (map[string]*model.User, error) {
     if (backend == nil) {
         return nil, fmt.Errorf("Database has not been opened.");
     }
@@ -15,7 +14,7 @@ func GetUsers(course *model.Course) (map[string]*usr.User, error) {
     return backend.GetUsers(course);
 }
 
-func GetUsersFromID(courseID string) (map[string]*usr.User, error) {
+func GetUsersFromID(courseID string) (map[string]*model.User, error) {
     if (backend == nil) {
         return nil, fmt.Errorf("Database has not been opened.");
     }
@@ -32,7 +31,7 @@ func GetUsersFromID(courseID string) (map[string]*usr.User, error) {
     return GetUsers(course);
 }
 
-func GetUser(course *model.Course, email string) (*usr.User, error) {
+func GetUser(course *model.Course, email string) (*model.User, error) {
     if (backend == nil) {
         return nil, fmt.Errorf("Database has not been opened.");
     }
@@ -51,7 +50,7 @@ func GetUser(course *model.Course, email string) (*usr.User, error) {
 
 // Insert the given users (overriding any conflicting users).
 // For user merging (instead of overriding), user db.SyncUsers().
-func SaveUsers(course *model.Course, users map[string]*usr.User) error {
+func SaveUsers(course *model.Course, users map[string]*model.User) error {
     if (backend == nil) {
         return fmt.Errorf("Database has not been opened.");
     }
@@ -82,13 +81,13 @@ func RemoveUser(course *model.Course, email string) (bool, error) {
 
 // Sync a single user to the database.
 // See db.SyncUsers().
-func SyncUser(course *model.Course, user *usr.User,
-        merge bool, dryRun bool, sendEmails bool) (*usr.UserSyncResult, error) {
+func SyncUser(course *model.Course, user *model.User,
+        merge bool, dryRun bool, sendEmails bool) (*model.UserSyncResult, error) {
     if (backend == nil) {
         return nil, fmt.Errorf("Database has not been opened.");
     }
 
-    newUsers := map[string]*usr.User{
+    newUsers := map[string]*model.User{
         user.Email: user,
     };
 
@@ -103,8 +102,8 @@ func SyncUser(course *model.Course, user *usr.User,
 // Any non-ignored user WILL have their password changed.
 // Passwords should either be left empty (and they will be randomly generated),
 // or set to the hash of the desired password.
-func SyncUsers(course *model.Course, newUsers map[string]*usr.User,
-        merge bool, dryRun bool, sendEmails bool) (*usr.UserSyncResult, error) {
+func SyncUsers(course *model.Course, newUsers map[string]*model.User,
+        merge bool, dryRun bool, sendEmails bool) (*model.UserSyncResult, error) {
     if (backend == nil) {
         return nil, fmt.Errorf("Database has not been opened.");
     }
@@ -115,17 +114,17 @@ func SyncUsers(course *model.Course, newUsers map[string]*usr.User,
     }
 
     // Summary of results.
-    syncResult := usr.NewUserSyncResult();
+    syncResult := model.NewUserSyncResult();
 
     // Users that require saving in the DB.
-    syncUsers := make(map[string]*usr.User);
+    syncUsers := make(map[string]*model.User);
 
     for _, newUser := range newUsers {
         localUser := localUsers[newUser.Email];
 
         if ((localUser != nil) && !merge) {
             // Skip.
-            syncResult.AddResolveResult(&usr.UserResolveResult{Skip: localUser});
+            syncResult.AddResolveResult(&model.UserResolveResult{Skip: localUser});
             continue;
         }
 
@@ -148,12 +147,12 @@ func SyncUsers(course *model.Course, newUsers map[string]*usr.User,
         if (localUser == nil) {
             // New user.
 
-            // Default role-less users to usr.Other.
-            if (newUser.Role == usr.Unknown) {
-                newUser.Role = usr.Other;
+            // Default role-less users to model.RoleOther.
+            if (newUser.Role == model.RoleUnknown) {
+                newUser.Role = model.RoleOther;
             }
 
-            syncResult.AddResolveResult(&usr.UserResolveResult{Add: newUser});
+            syncResult.AddResolveResult(&model.UserResolveResult{Add: newUser});
             syncUsers[newUser.Email] = newUser;
 
             continue;
@@ -162,7 +161,7 @@ func SyncUsers(course *model.Course, newUsers map[string]*usr.User,
         // Merge.
         changed := localUser.Merge(newUser);
         if (changed) {
-            syncResult.AddResolveResult(&usr.UserResolveResult{Mod: localUser});
+            syncResult.AddResolveResult(&model.UserResolveResult{Mod: localUser});
             syncUsers[newUser.Email] = newUser;
         }
     }
@@ -181,7 +180,7 @@ func SyncUsers(course *model.Course, newUsers map[string]*usr.User,
 
         for _, newUser := range syncResult.Add {
             clearTextPass := syncResult.ClearTextPasswords[newUser.Email];
-            usr.SendUserAddEmail(newUser, clearTextPass, (clearTextPass != ""), false, dryRun, sleep);
+            model.SendUserAddEmail(newUser, clearTextPass, (clearTextPass != ""), false, dryRun, sleep);
         }
 
         for _, newUser := range syncResult.Mod {
@@ -191,7 +190,7 @@ func SyncUsers(course *model.Course, newUsers map[string]*usr.User,
                 continue;
             }
 
-            usr.SendUserAddEmail(newUser, clearTextPass, true, true, dryRun, sleep);
+            model.SendUserAddEmail(newUser, clearTextPass, true, true, dryRun, sleep);
         }
     }
 

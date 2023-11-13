@@ -3,14 +3,14 @@ package lmstypes
 import (
     "time"
 
-    "github.com/eriq-augustine/autograder/usr"
+    "github.com/eriq-augustine/autograder/model"
 )
 
 type User struct {
     ID string
     Name string
     Email string
-    Role usr.UserRole
+    Role model.UserRole
 }
 
 type SubmissionScore struct {

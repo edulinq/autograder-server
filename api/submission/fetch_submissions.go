@@ -4,14 +4,14 @@ import (
     "github.com/eriq-augustine/autograder/api/core"
     "github.com/eriq-augustine/autograder/artifact"
     "github.com/eriq-augustine/autograder/db"
-    "github.com/eriq-augustine/autograder/usr"
+    "github.com/eriq-augustine/autograder/model"
 )
 
 type FetchSubmissionsRequest struct {
     core.APIRequestAssignmentContext
     core.MinRoleGrader
 
-    FilterRole usr.UserRole `json:"filter-role"`
+    FilterRole model.UserRole `json:"filter-role"`
 }
 
 type FetchSubmissionsResponse struct {

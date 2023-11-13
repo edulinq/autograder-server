@@ -4,7 +4,7 @@ import (
     "fmt"
     "testing"
 
-    "github.com/eriq-augustine/autograder/usr"
+    "github.com/eriq-augustine/autograder/model"
     "github.com/eriq-augustine/autograder/util"
 )
 
@@ -53,31 +53,31 @@ func TestInvalidJSON(test *testing.T) {
 }
 
 func TestGetMaxRole(test *testing.T) {
-    testCases := []struct{value any; role usr.UserRole}{
-        {struct{}{}, usr.Unknown},
-        {struct{int}{}, usr.Unknown},
+    testCases := []struct{value any; role model.UserRole}{
+        {struct{}{}, model.RoleUnknown},
+        {struct{int}{}, model.RoleUnknown},
 
-        {struct{MinRoleOwner}{}, usr.Owner},
-        {struct{MinRoleAdmin}{}, usr.Admin},
-        {struct{MinRoleGrader}{}, usr.Grader},
-        {struct{MinRoleStudent}{}, usr.Student},
-        {struct{MinRoleOther}{}, usr.Other},
+        {struct{MinRoleOwner}{}, model.RoleOwner},
+        {struct{MinRoleAdmin}{}, model.RoleAdmin},
+        {struct{MinRoleGrader}{}, model.RoleGrader},
+        {struct{MinRoleStudent}{}, model.RoleStudent},
+        {struct{MinRoleOther}{}, model.RoleOther},
 
-        {struct{MinRoleOwner; MinRoleOther}{}, usr.Owner},
-        {struct{MinRoleAdmin; MinRoleOther}{}, usr.Admin},
-        {struct{MinRoleGrader; MinRoleOther}{}, usr.Grader},
-        {struct{MinRoleStudent; MinRoleOther}{}, usr.Student},
+        {struct{MinRoleOwner; MinRoleOther}{}, model.RoleOwner},
+        {struct{MinRoleAdmin; MinRoleOther}{}, model.RoleAdmin},
+        {struct{MinRoleGrader; MinRoleOther}{}, model.RoleGrader},
+        {struct{MinRoleStudent; MinRoleOther}{}, model.RoleStudent},
 
-        {struct{MinRoleOther; MinRoleOwner}{}, usr.Owner},
-        {struct{MinRoleOther; MinRoleAdmin}{}, usr.Admin},
-        {struct{MinRoleOther; MinRoleGrader}{}, usr.Grader},
-        {struct{MinRoleOther; MinRoleStudent}{}, usr.Student},
+        {struct{MinRoleOther; MinRoleOwner}{}, model.RoleOwner},
+        {struct{MinRoleOther; MinRoleAdmin}{}, model.RoleAdmin},
+        {struct{MinRoleOther; MinRoleGrader}{}, model.RoleGrader},
+        {struct{MinRoleOther; MinRoleStudent}{}, model.RoleStudent},
     };
 
     for i, testCase := range testCases {
         role, hasRole := getMaxRole(testCase.value);
 
-        if (testCase.role == usr.Unknown) {
+        if (testCase.role == model.RoleUnknown) {
             if (hasRole) {
                 test.Errorf("Case %d: Found a role ('%s') when none was specified.", i, role);
             }

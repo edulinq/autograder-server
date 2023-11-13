@@ -7,23 +7,23 @@ import (
     "github.com/eriq-augustine/autograder/api/core"
     "github.com/eriq-augustine/autograder/artifact"
     "github.com/eriq-augustine/autograder/common"
-    "github.com/eriq-augustine/autograder/usr"
+    "github.com/eriq-augustine/autograder/model"
     "github.com/eriq-augustine/autograder/util"
 )
 
 func TestHistory(test *testing.T) {
-    testCases := []struct{ role usr.UserRole; target string; found bool; permError bool; expected []*artifact.SubmissionHistoryItem; }{
+    testCases := []struct{ role model.UserRole; target string; found bool; permError bool; expected []*artifact.SubmissionHistoryItem; }{
         // Self.
-        {usr.Student, "", true, false, studentHist},
-        {usr.Grader, "", true, false, []*artifact.SubmissionHistoryItem{}},
+        {model.RoleStudent, "", true, false, studentHist},
+        {model.RoleGrader, "", true, false, []*artifact.SubmissionHistoryItem{}},
 
         // Other
-        {usr.Grader, "student@test.com", true, false, studentHist},
-        {usr.Student, "grader@test.com", true, true, nil},
+        {model.RoleGrader, "student@test.com", true, false, studentHist},
+        {model.RoleStudent, "grader@test.com", true, true, nil},
 
         // Missing user.
-        {usr.Student, "ZZZ@test.com", false, true, nil},
-        {usr.Grader, "ZZZ@test.com", false, false, []*artifact.SubmissionHistoryItem{}},
+        {model.RoleStudent, "ZZZ@test.com", false, true, nil},
+        {model.RoleGrader, "ZZZ@test.com", false, false, []*artifact.SubmissionHistoryItem{}},
     };
 
     for i, testCase := range testCases {

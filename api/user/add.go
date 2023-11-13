@@ -7,7 +7,7 @@ import (
     "github.com/eriq-augustine/autograder/api/core"
     "github.com/eriq-augustine/autograder/db"
     "github.com/eriq-augustine/autograder/lms/lmsusers"
-    "github.com/eriq-augustine/autograder/usr"
+    "github.com/eriq-augustine/autograder/model"
 )
 
 type AddRequest struct {
@@ -39,7 +39,7 @@ func HandleAdd(request *AddRequest) (*AddResponse, *core.APIError) {
         Errors: []AddError{},
     };
 
-    newUsers := make(map[string]*usr.User, len(request.NewUsers));
+    newUsers := make(map[string]*model.User, len(request.NewUsers));
 
     for i, apiUser := range request.NewUsers {
         user, err := apiUser.ToUsr();
