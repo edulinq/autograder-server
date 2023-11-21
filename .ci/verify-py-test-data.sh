@@ -1,6 +1,7 @@
 #!/bin/bash
 
 # Verify the Python interface's test data against the server.
+# The python interface should have already been installed via '.ci/install-py-interface.sh'.
 
 readonly THIS_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 readonly BASE_DIR="${THIS_DIR}/.."
@@ -8,9 +9,7 @@ readonly BASE_DIR="${THIS_DIR}/.."
 readonly PORT='12345'
 readonly TESTS_DIR="${BASE_DIR}/_tests"
 
-readonly TEMP_DIR='/tmp/__autograder__/verify_test_data'
-
-readonly REPO_URL='https://github.com/eriq-augustine/autograder-py.git'
+readonly TEMP_DIR='/tmp/__autograder__/autograder-py'
 
 readonly SERVER_URL="http://127.0.0.1:${PORT}"
 
@@ -23,35 +22,6 @@ function verify_test_data() {
     return $?
 }
 
-function fetch_repo() {
-    echo "Fetching Python interface repo."
-
-    if [[ -d "${TEMP_DIR}" ]] ; then
-        echo "Found existing repo '${TEMP_DIR}', skipping clone/checkout."
-        return 0
-    fi
-
-    mkdir -p "${TEMP_DIR}"
-
-    git clone "${REPO_URL}" "${TEMP_DIR}"
-    if [[ $? -ne 0 ]] ; then
-        echo "ERROR: Failed to clone repo."
-        return 1
-    fi
-
-    local branch=$(git branch --show-current)
-
-    cd "${TEMP_DIR}"
-
-    git checkout "${branch}"
-    if [[ $? -ne 0 ]] ; then
-        echo "ERROR: Failed to checkout target branch ('${branch}')."
-        return 2
-    fi
-
-    return 0
-}
-
 function run() {
     cd "${BASE_DIR}"
     echo "Building project."
@@ -60,12 +30,6 @@ function run() {
     if [[ $? -ne 0 ]] ; then
         echo "ERROR: Failed to build server."
         return 100
-    fi
-
-    fetch_repo
-    if [[ $? -ne 0 ]] ; then
-        echo "ERROR: Failed to fetch the Python interface repo."
-        return 110
     fi
 
     cd "${BASE_DIR}"

@@ -29,8 +29,10 @@ jobs:
           path: ${{ env.pythonLocation }}
           key: ${{ runner.os }}-${{ env.pythonLocation }}-${{ hashFiles('_tests/requirements.txt') }}
 
-      - name: Install Python Dependencies
-        run: pip3 install -U -r _tests/requirements.txt
+      - name: Install Python Interface
+        run: |
+            echo "TEST - Change the branch once the main branch is updated."
+            ./.ci/install-py-interface.sh 'winter-24'
 
       - name: Build
         run: ./build.sh
@@ -50,5 +52,4 @@ jobs:
       - name: Verify Python Interface Test Data
         env:
           AUTOGRADER__DOCKER__DISABLE: 'true'
-        run: |
-            ./.ci/verify-py-test-data.sh
+        run: ./.ci/verify-py-test-data.sh
