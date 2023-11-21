@@ -46,3 +46,9 @@ jobs:
         run: |
             echo "TEST - Run Remote tests once Python interface is updated for v2."
             echo ./.ci/run_remote_tests.sh
+
+      - name: Verify Python Interface Test Data
+        env:
+          AUTOGRADER__DOCKER__DISABLE: 'true'
+        run: |
+            ./.ci/verify-py-test-data.sh

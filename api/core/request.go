@@ -1,6 +1,7 @@
 package core
 
 import (
+    "fmt"
     "net/http"
     "reflect"
 
@@ -88,7 +89,8 @@ func (this *APIRequestCourseUserContext) Validate(request any, endpoint string) 
     }
 
     if (this.Course == nil) {
-        return NewBadRequestError("-304", &this.APIRequest, "Could not find course.").Add("course-id", this.CourseID);
+        return NewBadRequestError("-304", &this.APIRequest, fmt.Sprintf("Could not find course: '%s'.", this.CourseID)).
+                Add("course-id", this.CourseID);
     }
 
     this.User, apiErr = this.Auth();
@@ -121,7 +123,7 @@ func (this *APIRequestAssignmentContext) Validate(request any, endpoint string) 
 
     this.Assignment = this.Course.GetAssignment(this.AssignmentID);
     if (this.Assignment == nil) {
-        return NewBadRequestError("-308", &this.APIRequest, "Could not find assignment.").
+        return NewBadRequestError("-308", &this.APIRequest, fmt.Sprintf("Could not find assignment: '%s'.", this.AssignmentID)).
             Add("course-id", this.CourseID).Add("assignment-id", this.AssignmentID);
     }
 
