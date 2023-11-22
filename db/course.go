@@ -2,6 +2,7 @@ package db
 
 import (
     "fmt"
+    "path/filepath"
 
     "github.com/rs/zerolog/log"
 
@@ -77,6 +78,15 @@ func MustGetCourses() map[string]*model.Course {
     }
 
     return courses;
+}
+
+func ReloadCourse(course *model.Course) (string, error) {
+    if (backend == nil) {
+        return "", fmt.Errorf("Database has not been opened.");
+    }
+
+    path := filepath.Join(course.GetSourceDir(), model.COURSE_CONFIG_FILENAME);
+    return backend.LoadCourse(path);
 }
 
 func LoadCourse(path string) (string, error) {
