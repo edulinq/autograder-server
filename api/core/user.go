@@ -4,6 +4,7 @@ package core
 
 import (
     "fmt"
+    "slices"
     "strings"
 
     "github.com/eriq-augustine/autograder/model"
@@ -51,7 +52,26 @@ func NewUserInfos(users []*model.User) []*UserInfo {
     for _, user := range users {
         result = append(result, NewUserInfo(user));
     }
+
+    slices.SortFunc(result, CompareUserInfoPointer);
+
     return result;
+}
+
+func CompareUserInfoPointer(a *UserInfo, b *UserInfo) int {
+    if (a == b) {
+        return 0;
+    }
+
+    if (a == nil) {
+        return 1;
+    }
+
+    if (b == nil) {
+        return -1;
+    }
+
+    return strings.Compare(a.Email, b.Email);
 }
 
 // Get user info from a generic map (like what an API response would have).
