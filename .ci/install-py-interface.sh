@@ -29,6 +29,12 @@ function fetch_repo() {
         return 2
     fi
 
+    git pull
+    if [[ $? -ne 0 ]] ; then
+        echo "ERROR: Failed to pull."
+        return 3
+    fi
+
     return 0
 }
 
