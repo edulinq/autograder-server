@@ -18,7 +18,7 @@ type AddRequest struct {
 
     Force bool `json:"force"`
     DryRun bool `json:"dry-run"`
-    SendEmails bool `json:"send-emails"`
+    SkipEmails bool `json:"skip-emails"`
     SkipLMSSync bool `json:"skip-lms-sync"`
 }
 
@@ -58,14 +58,14 @@ func HandleAdd(request *AddRequest) (*AddResponse, *core.APIError) {
         newUsers[apiUser.Email] = user;
     }
 
-    result, err := db.SyncUsers(request.Course, newUsers, request.Force, request.DryRun, request.SendEmails);
+    result, err := db.SyncUsers(request.Course, newUsers, request.Force, request.DryRun, !request.SkipEmails);
     if (err != nil) {
         return nil, core.NewInternalError("-603", &request.APIRequestCourseUserContext,
                 "Failed to sync new users.").Err(err);
     }
 
     if (!request.SkipLMSSync) {
-        lmsResult, err := lmsusers.SyncLMSUsers(request.Course, request.DryRun, request.SendEmails);
+        lmsResult, err := lmsusers.SyncLMSUsers(request.Course, request.DryRun, !request.SkipEmails);
         if (err != nil) {
             log.Error().Err(err).Str("api-request", request.RequestID).Msg("Failed to sync LMS users.");
         } else {

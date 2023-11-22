@@ -13,12 +13,12 @@ var args struct {
     config.ConfigArgs
     Course string `help:"ID of the course." arg:""`
     DryRun bool `help:"Do not actually do the operation, just state what you would do." default:"false"`
-    SkipSendEmails bool `help:"Skip sending out emails to new users (always true if a dry run)." default:"false"`
+    SkipEmails bool `help:"Skip sending out emails to new users (always true if a dry run)." default:"false"`
 }
 
 func main() {
     kong.Parse(&args,
-        kong.Description("Sync IDs with matching LMS users (does not add/remove users)."),
+        kong.Description("Sync local users with matching LMS users."),
     );
 
     err := config.HandleConfigArgs(args.ConfigArgs);
@@ -31,8 +31,7 @@ func main() {
 
     course := db.MustGetCourse(args.Course);
 
-    args.SkipSendEmails = (args.SkipSendEmails || args.DryRun);
-    result, err := lmsusers.SyncLMSUsers(course, args.DryRun, !args.SkipSendEmails);
+    result, err := lmsusers.SyncLMSUsers(course, args.DryRun, !args.SkipEmails);
     if (err != nil) {
         log.Fatal().Err(err).Msg("Failed to sync LMS users.");
     }

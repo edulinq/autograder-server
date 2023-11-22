@@ -10,23 +10,23 @@ import (
 
 // lmsusers.SyncLMSUsers() is already heavily tested, focus on API-specific functionality.
 func TestAPISyncUsers(test *testing.T) {
-    testCases := []struct{ role model.UserRole; dryRun bool; sendEmails bool; permError bool }{
-        {model.RoleOther, false, false, true},
-        {model.RoleStudent, false, false, true},
-        {model.RoleGrader, false, false, true},
-        {model.RoleAdmin, false, false, false},
-        {model.RoleOwner, false, false, false},
-
-        {model.RoleAdmin, false, false, false},
+    testCases := []struct{ role model.UserRole; dryRun bool; skipEmails bool; permError bool }{
+        {model.RoleOther, false, true, true},
+        {model.RoleStudent, false, true, true},
+        {model.RoleGrader, false, true, true},
         {model.RoleAdmin, false, true, false},
-        {model.RoleAdmin, true, false, false},
+        {model.RoleOwner, false, true, false},
+
+        {model.RoleAdmin, false, true, false},
+        {model.RoleAdmin, false, false, false},
         {model.RoleAdmin, true, true, false},
+        {model.RoleAdmin, true, false, false},
     };
 
     for i, testCase := range testCases {
         fields := map[string]any{
             "dry-run": testCase.dryRun,
-            "send-emails": testCase.sendEmails,
+            "skip-emails": testCase.skipEmails,
         };
 
         response := core.SendTestAPIRequestFull(test, core.NewEndpoint(`lms/sync/users`), fields, nil, testCase.role);

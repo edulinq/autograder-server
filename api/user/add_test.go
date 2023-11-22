@@ -17,7 +17,7 @@ func TestAdd(test *testing.T) {
 
     testCases := []struct{
             role model.UserRole; permError bool
-            force bool; dryRun bool; sendEmails bool; skipLMSSync bool
+            force bool; dryRun bool; skipEmails bool; skipLMSSync bool
             newUsers []*core.UserInfoWithPass
             expected AddResponse
     }{
@@ -26,7 +26,7 @@ func TestAdd(test *testing.T) {
         // Basic
         {
             model.RoleAdmin, false,
-            false, false, false, false,
+            false, false, true, false,
             []*core.UserInfoWithPass{
                 &core.UserInfoWithPass{core.UserInfo{"add@test.com", "add", model.RoleAdmin, ""}, ""},
                 &core.UserInfoWithPass{core.UserInfo{"student@test.com", "new name", model.RoleStudent, ""}, ""},
@@ -50,7 +50,7 @@ func TestAdd(test *testing.T) {
         // User Errors
         {
             model.RoleAdmin, false,
-            false, false, false, false,
+            false, false, true, false,
             []*core.UserInfoWithPass{
                 &core.UserInfoWithPass{core.UserInfo{"", "", model.RoleStudent, ""}, ""},
                 &core.UserInfoWithPass{core.UserInfo{"owner@test.com", "new name", model.RoleOwner, ""}, ""},
@@ -73,7 +73,7 @@ func TestAdd(test *testing.T) {
         // Perm Error
         {
             model.RoleGrader, true,
-            false, false, false, false,
+            false, false, true, false,
             []*core.UserInfoWithPass{},
             AddResponse{},
         },
@@ -81,7 +81,7 @@ func TestAdd(test *testing.T) {
         // No LMS
         {
             model.RoleAdmin, false,
-            false, false, false, true,
+            false, false, true, true,
             []*core.UserInfoWithPass{
                 &core.UserInfoWithPass{core.UserInfo{"add@test.com", "add", model.RoleAdmin, ""}, ""},
                 &core.UserInfoWithPass{core.UserInfo{"student@test.com", "new name", model.RoleStudent, ""}, ""},
@@ -105,7 +105,7 @@ func TestAdd(test *testing.T) {
         // Empty
         {
             model.RoleAdmin, false,
-            false, false, false, false,
+            false, false, true, false,
             []*core.UserInfoWithPass{},
             AddResponse{
                 SyncUsersInfo: core.SyncUsersInfo{
@@ -126,7 +126,7 @@ func TestAdd(test *testing.T) {
         fields := map[string]any{
             "force": testCase.force,
             "dry-run": testCase.dryRun,
-            "send-emails": testCase.sendEmails,
+            "skip-emails": testCase.skipEmails,
             "skip-lms-sync": testCase.skipLMSSync,
             "new-users": testCase.newUsers,
         };
