@@ -12,6 +12,14 @@ import (
     "github.com/eriq-augustine/autograder/util"
 )
 
+func ClearCourse(course *model.Course) error {
+    if (backend == nil) {
+        return fmt.Errorf("Database has not been opened.");
+    }
+
+    return backend.ClearCourse(course);
+}
+
 // Get a course.
 func GetCourse(rawCourseID string) (*model.Course, error) {
     if (backend == nil) {

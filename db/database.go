@@ -24,12 +24,15 @@ const (
     DB_TYPE_POSTGRES = "postgres"
 )
 
-// Actual databse implementations.
+// Actual database implementations.
 // Any ID (course, assignment, etc) passed into a backend will be sanitized.
 type Backend interface {
     Close() error;
     Clear() error;
     EnsureTables() error;
+
+    // Clear all information about a course.
+    ClearCourse(course *model.Course) error;
 
     // Get all known courses.
     GetCourses() (map[string]*model.Course, error);

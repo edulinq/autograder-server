@@ -12,6 +12,18 @@ import (
 
 const DISK_DB_COURSES_DIR = "courses";
 
+func (this *backend) ClearCourse(course *model.Course) error {
+    this.lock.Lock();
+    defer this.lock.Unlock();
+
+    err := util.RemoveDirent(this.getCourseDir(course));
+    if (err != nil) {
+        return fmt.Errorf("Failed to remove course dir for '%s': '%w'.", course.GetID(), err);
+    }
+
+    return nil;
+}
+
 func (this *backend) LoadCourse(path string) (string, error) {
     this.lock.Lock();
     defer this.lock.Unlock();
