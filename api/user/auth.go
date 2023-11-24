@@ -7,7 +7,6 @@ import (
 type AuthRequest struct {
     core.APIRequestCourseUserContext
     core.MinRoleOther
-    Users core.CourseUsers `json:"-"`
 
     TargetUser core.TargetUser `json:"target-email"`
     TargetPass core.NonEmptyString `json:"target-pass"`

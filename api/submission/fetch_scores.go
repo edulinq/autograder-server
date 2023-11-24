@@ -9,7 +9,6 @@ import (
 type FetchScoresRequest struct {
     core.APIRequestAssignmentContext
     core.MinRoleGrader
-    Users core.CourseUsers `json:"-"`
 
     // Filter results to only users with this role.
     FilterRole model.UserRole `json:"filter-role"`

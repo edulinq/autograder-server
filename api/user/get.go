@@ -7,7 +7,6 @@ import (
 type UserGetRequest struct {
     core.APIRequestCourseUserContext
     core.MinRoleGrader
-    Users core.CourseUsers `json:"-"`
 
     TargetUser core.TargetUser `json:"target-email"`
 }
