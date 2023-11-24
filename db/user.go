@@ -3,6 +3,8 @@ package db
 import (
     "fmt"
 
+    "github.com/rs/zerolog/log"
+
     "github.com/eriq-augustine/autograder/model"
 )
 
@@ -12,6 +14,15 @@ func GetUsers(course *model.Course) (map[string]*model.User, error) {
     }
 
     return backend.GetUsers(course);
+}
+
+func MustGetUsers(course *model.Course) map[string]*model.User {
+    users, err := GetUsers(course);
+    if (err != nil) {
+        log.Fatal().Err(err).Str("course-id", course.GetID()).Msg("Failed to get users.");
+    }
+
+    return users;
 }
 
 func GetUsersFromID(courseID string) (map[string]*model.User, error) {
@@ -162,7 +173,9 @@ func SyncUsers(course *model.Course, newUsers map[string]*model.User,
         changed := localUser.Merge(newUser);
         if (changed) {
             syncResult.AddResolveResult(&model.UserResolveResult{Mod: localUser});
-            syncUsers[newUser.Email] = newUser;
+            syncUsers[newUser.Email] = localUser;
+        } else {
+            syncResult.AddResolveResult(&model.UserResolveResult{Unchanged: localUser});
         }
     }
 

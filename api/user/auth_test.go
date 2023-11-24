@@ -8,7 +8,7 @@ import (
     "github.com/eriq-augustine/autograder/util"
 )
 
-func TestAuth(test *testing.T) {
+func TestUserAuth(test *testing.T) {
     testCases := []struct{ role model.UserRole; email string; pass string; expected AuthResponse }{
         {model.RoleGrader, "other@test.com",   "other",   AuthResponse{true, true}},
         {model.RoleGrader, "student@test.com", "student", AuthResponse{true, true}},

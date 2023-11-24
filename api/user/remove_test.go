@@ -9,7 +9,7 @@ import (
     "github.com/eriq-augustine/autograder/util"
 )
 
-func TestRemove(test *testing.T) {
+func TestUserRemove(test *testing.T) {
     // Leave the course in a good state after the test.
     defer db.ResetForTesting();
 

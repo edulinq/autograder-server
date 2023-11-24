@@ -12,7 +12,7 @@ import (
 
 // Many of the semantics of add users are tested at the course level,
 // focus on the API here.
-func TestAdd(test *testing.T) {
+func TestUserAdd(test *testing.T) {
     defer db.ResetForTesting();
 
     testCases := []struct{
@@ -28,19 +28,20 @@ func TestAdd(test *testing.T) {
             model.RoleAdmin, false,
             false, false, true, false,
             []*core.UserInfoWithPass{
-                &core.UserInfoWithPass{core.UserInfo{"add@test.com", "add", model.RoleAdmin, ""}, ""},
+                &core.UserInfoWithPass{core.UserInfo{"add@test.com", "add", model.RoleAdmin, "add@test.com"}, ""},
                 &core.UserInfoWithPass{core.UserInfo{"student@test.com", "new name", model.RoleStudent, ""}, ""},
             },
             AddResponse{
                 SyncUsersInfo: core.SyncUsersInfo{
                     Add: []*core.UserInfo{
-                        &core.UserInfo{"add@test.com", "add", model.RoleAdmin, ""},
+                        &core.UserInfo{"add@test.com", "add", model.RoleAdmin, "lms-add@test.com"},
                     },
                     Mod: []*core.UserInfo{},
                     Del: []*core.UserInfo{},
                     Skip: []*core.UserInfo{
-                        &core.UserInfo{"student@test.com", "student", model.RoleStudent, ""},
+                        &core.UserInfo{"student@test.com", "student", model.RoleStudent, "lms-student@test.com"},
                     },
+                    Unchanged: []*core.UserInfo{},
                 },
                 Errors: []AddError{},
                 LMSSyncCount: 6,
@@ -54,6 +55,7 @@ func TestAdd(test *testing.T) {
             []*core.UserInfoWithPass{
                 &core.UserInfoWithPass{core.UserInfo{"", "", model.RoleStudent, ""}, ""},
                 &core.UserInfoWithPass{core.UserInfo{"owner@test.com", "new name", model.RoleOwner, ""}, ""},
+                &core.UserInfoWithPass{core.UserInfo{"owner@test.com", "", model.RoleAdmin, ""}, ""},
             },
             AddResponse{
                 SyncUsersInfo: core.SyncUsersInfo{
@@ -61,10 +63,12 @@ func TestAdd(test *testing.T) {
                     Mod: []*core.UserInfo{},
                     Del: []*core.UserInfo{},
                     Skip: []*core.UserInfo{},
+                    Unchanged: []*core.UserInfo{},
                 },
                 Errors: []AddError{
                     AddError{0, "", "Empty emails are not allowed."},
                     AddError{1, "owner@test.com", "Cannot create a user with a higher role (owner) than your role (admin)."},
+                    AddError{2, "owner@test.com", "Cannot modify a user with a higher role (owner) than your role (admin)."},
                 },
                 LMSSyncCount: 5,
             },
@@ -96,6 +100,7 @@ func TestAdd(test *testing.T) {
                     Skip: []*core.UserInfo{
                         &core.UserInfo{"student@test.com", "student", model.RoleStudent, ""},
                     },
+                    Unchanged: []*core.UserInfo{},
                 },
                 Errors: []AddError{},
                 LMSSyncCount: 0,
@@ -113,6 +118,7 @@ func TestAdd(test *testing.T) {
                     Mod: []*core.UserInfo{},
                     Del: []*core.UserInfo{},
                     Skip: []*core.UserInfo{},
+                    Unchanged: []*core.UserInfo{},
                 },
                 Errors: []AddError{},
                 LMSSyncCount: 5,

@@ -12,6 +12,9 @@ type UserSyncResult struct {
     // Users that exist and will not be overwritten.
     Skip []*User
 
+    // Users that could have been modified, but would not be changed.
+    Unchanged []*User
+
     ClearTextPasswords map[string]string
 }
 
@@ -20,6 +23,7 @@ type UserResolveResult struct {
     Mod *User
     Del *User
     Skip *User
+    Unchanged *User
 
     ClearTextPassword string
 }
@@ -30,6 +34,7 @@ func NewUserSyncResult() *UserSyncResult {
         Mod: make([]*User, 0),
         Del: make([]*User, 0),
         Skip: make([]*User, 0),
+        Unchanged: make([]*User, 0),
         ClearTextPasswords: make(map[string]string),
     }
 }
@@ -44,6 +49,7 @@ func (this *UserSyncResult) PrintReport() {
         {"Modified", this.Mod},
         {"Deleted", this.Del},
         {"Skipped", this.Skip},
+        {"Unchanged", this.Unchanged},
     };
 
     for i, group := range groups {
@@ -87,5 +93,28 @@ func (this *UserSyncResult) AddResolveResult(resolveResult *UserResolveResult) {
 
     if (resolveResult.Skip != nil) {
         this.Skip = append(this.Skip, resolveResult.Skip);
+    }
+
+    if (resolveResult.Unchanged != nil) {
+        this.Unchanged = append(this.Unchanged, resolveResult.Unchanged);
+    }
+}
+
+func (this *UserSyncResult) UpdateUsers(newUsers map[string]*User) {
+    updateUsersList(this.Add, newUsers);
+    updateUsersList(this.Mod, newUsers);
+    updateUsersList(this.Del, newUsers);
+    updateUsersList(this.Skip, newUsers);
+    updateUsersList(this.Unchanged, newUsers);
+}
+
+func updateUsersList(oldUsers []*User, newUsers map[string]*User) {
+    for i, oldUser := range oldUsers {
+        newUser, ok := newUsers[oldUser.Email];
+        if (!ok) {
+            continue;
+        }
+
+        oldUsers[i] = newUser;
     }
 }

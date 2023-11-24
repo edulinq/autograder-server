@@ -155,7 +155,7 @@ func resolveUserSync(course *model.Course, localUsers map[string]*model.User,
     // Del.
     if (lmsUser == nil) {
         if (!adapter.SyncRemoveUsers) {
-            return nil, nil;
+            return &model.UserResolveResult{Unchanged: localUser}, nil;
         }
 
         delete(localUsers, email);
@@ -168,7 +168,7 @@ func resolveUserSync(course *model.Course, localUsers map[string]*model.User,
         return &model.UserResolveResult{Mod: localUser}, nil;
     }
 
-    return nil, nil;
+    return &model.UserResolveResult{Unchanged: localUser}, nil;
 }
 
 func getAllEmails(localUsers map[string]*model.User, lmsUsers map[string]*lmstypes.User) []string {

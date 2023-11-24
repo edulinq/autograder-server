@@ -39,7 +39,7 @@ type User struct {
     Pass string `json:"pass"`
     Salt string `json:"salt"`
 
-    LMSID string `json:"lms-id,omitempty"`
+    LMSID string `json:"lms-id"`
 }
 
 func NewUser(email string, name string, role UserRole) *User {

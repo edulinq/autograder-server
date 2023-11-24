@@ -13,6 +13,7 @@ import (
 type AddRequest struct {
     core.APIRequestCourseUserContext
     core.MinRoleAdmin
+    Users core.CourseUsers `json:"-"`
 
     NewUsers []*core.UserInfoWithPass `json:"new-users"`
 
@@ -55,6 +56,14 @@ func HandleAdd(request *AddRequest) (*AddResponse, *core.APIError) {
             continue;
         }
 
+        localUser, ok := request.Users[user.Email];
+        if (ok && (localUser.Role > request.User.Role)) {
+            message := fmt.Sprintf("Cannot modify a user with a higher role (%s) than your role (%s).",
+                    localUser.Role.String(), request.User.Role.String());
+            response.Errors = append(response.Errors, AddError{i, apiUser.Email, message});
+            continue;
+        }
+
         newUsers[apiUser.Email] = user;
     }
 
@@ -71,6 +80,16 @@ func HandleAdd(request *AddRequest) (*AddResponse, *core.APIError) {
         } else {
             response.LMSSyncCount = lmsResult.Count();
         }
+
+        // Users may have been updated in the LMS sync.
+
+        users, err := db.GetUsers(request.Course);
+        if (err != nil) {
+            return nil, core.NewInternalError("-604", &request.APIRequestCourseUserContext,
+                    "Failed to fetch users").Err(err);
+        }
+
+        result.UpdateUsers(users);
     }
 
     response.SyncUsersInfo = *core.NewSyncUsersInfo(result);

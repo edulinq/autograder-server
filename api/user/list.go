@@ -1,6 +1,8 @@
 package user
 
 import (
+    "slices"
+
     "github.com/eriq-augustine/autograder/api/core"
 )
 
@@ -20,6 +22,8 @@ func HandleList(request *ListRequest) (*ListResponse, *core.APIError) {
     for _, user := range request.Users {
         users = append(users, core.NewUserInfo(user));
     }
+
+    slices.SortFunc(users, core.CompareUserInfoPointer);
 
     return &ListResponse{users}, nil;
 }

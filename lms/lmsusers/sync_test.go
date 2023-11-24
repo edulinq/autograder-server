@@ -40,6 +40,8 @@ func TestCourseSyncLMSUisers(test *testing.T) {
         course.GetLMSAdapter().SyncAddUsers = testCase.syncAdd;
         course.GetLMSAdapter().SyncRemoveUsers = testCase.syncDel;
 
+        localUsers := db.MustGetUsers(course);
+
         email.ClearTestMessages();
 
         result, err := SyncLMSUsers(course, testCase.dryRun, testCase.sendEmails);
@@ -47,6 +49,10 @@ func TestCourseSyncLMSUisers(test *testing.T) {
             test.Errorf("Case %d (%+v): User sync failed: '%v'.", i, testCase, err);
             continue;
         }
+
+        var unchangedUsers []*model.User = []*model.User{
+            localUsers["owner@test.com"],
+        };
 
         testMessages := email.GetTestMessages();
 
@@ -61,6 +67,7 @@ func TestCourseSyncLMSUisers(test *testing.T) {
         currentModUsers := modUsers;
         if (testCase.syncAttributes) {
             currentModUsers = modAllUsers;
+        } else {
         }
 
         if (!model.UsersPointerEqual(currentModUsers, result.Mod)) {
@@ -126,10 +133,18 @@ func TestCourseSyncLMSUisers(test *testing.T) {
                 continue;
             }
         } else {
+            unchangedUsers = append(unchangedUsers, localUsers["other@test.com"]);
+
             if (len(result.Del) != 0) {
                 test.Errorf("Case %d (%+v): User deletions were disabled, but %d deleted users were found.", i, testCase, len(result.Del));
                 continue;
             }
+        }
+
+        if (!model.UsersPointerEqual(unchangedUsers, result.Unchanged)) {
+            test.Errorf("Case %d (%+v): Unexpected unchanged users. Expected: '%s', actual: '%s'.",
+                    i, testCase, util.MustToJSON(unchangedUsers), util.MustToJSON(result.Unchanged));
+            continue;
         }
     }
 }

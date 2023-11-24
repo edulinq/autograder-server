@@ -94,6 +94,7 @@ type SyncUsersInfo struct {
     Mod []*UserInfo `json:"mod-users"`
     Del []*UserInfo `json:"del-users"`
     Skip []*UserInfo `json:"skip-users"`
+    Unchanged []*UserInfo `json:"unchanged-users"`
 }
 
 func NewSyncUsersInfo(syncResult *model.UserSyncResult) *SyncUsersInfo {
@@ -102,6 +103,7 @@ func NewSyncUsersInfo(syncResult *model.UserSyncResult) *SyncUsersInfo {
         Mod: NewUserInfos(syncResult.Mod),
         Del: NewUserInfos(syncResult.Del),
         Skip: NewUserInfos(syncResult.Skip),
+        Unchanged: NewUserInfos(syncResult.Unchanged),
     };
 
     return &info;

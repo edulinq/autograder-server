@@ -8,7 +8,7 @@ import (
     "github.com/eriq-augustine/autograder/model"
 )
 
-func TestList(test *testing.T) {
+func TestUserList(test *testing.T) {
     expectedUsers := []core.UserInfo{
         core.UserInfo{"other@test.com", "other", model.RoleOther, ""},
         core.UserInfo{"student@test.com", "student", model.RoleStudent, ""},

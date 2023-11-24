@@ -139,8 +139,6 @@ func getSynNewUsersTestUsers() (
         "add@test.com": &model.User{
             Email: "add@test.com",
             DisplayName: "add",
-            // Leave empty, should default to model.RoleOther.
-            // Role: model.RoleUnknown,
             LMSID: "lms-add@test.com",
         },
         "add-pass@test.com": &model.User{
@@ -159,6 +157,12 @@ func getSynNewUsersTestUsers() (
         "student@test.com": &model.User{
             Email: "student@test.com",
             Pass: util.Sha256HexFromString("mod-pass"),
+        },
+        // No change, should be marked as mod (because of password).
+        "grader@test.com": &model.User{
+            Email: "grader@test.com",
+            // No role change.
+            Role: model.RoleUnknown,
         },
     };
 
@@ -182,7 +186,7 @@ func getSynNewUsersTestUsers() (
     var shortCleartextPassUsers []string = []string{"add@test.com"};
 
     // The users that will have cleartext passwords when users are merged.
-    var fullCleartextPassUsers []string = []string{"add@test.com", "other@test.com"};
+    var fullCleartextPassUsers []string = []string{"add@test.com", "other@test.com", "grader@test.com"};
 
     // The emails when users are skipped.
     var shortEmails []*email.Message = []*email.Message{
@@ -215,6 +219,11 @@ func getSynNewUsersTestUsers() (
             Subject: "Autograder -- User Password Changed",
             HTML: false,
         },
+        &email.Message{
+            To: []string{"grader@test.com"},
+            Subject: "Autograder -- User Password Changed",
+            HTML: false,
+        },
     };
 
     // The users that are marked as mods.
@@ -232,6 +241,12 @@ func getSynNewUsersTestUsers() (
             Role: model.RoleStudent,
             LMSID: "",
         },
+        &model.User{
+            Email: "grader@test.com",
+            DisplayName: "grader",
+            Role: model.RoleGrader,
+            LMSID: "",
+        },
     };
 
     // The users that are marked as skips.
@@ -246,6 +261,11 @@ func getSynNewUsersTestUsers() (
             Email: "student@test.com",
             DisplayName: "student",
             Role: model.RoleStudent,
+        },
+        &model.User{
+            Email: "grader@test.com",
+            DisplayName: "grader",
+            Role: model.RoleGrader,
         },
     };
 
