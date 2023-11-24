@@ -37,10 +37,8 @@ function run() {
     # Start the server.
     ./bin/server \
         -c web.port="${PORT}" \
-        -c web.noauth=true \
         -c courses.rootdir="${TESTS_DIR}" \
-        -c grader.nostore=true \
-        -c log.level=DEBUG &
+        --testing &
     local server_pid="$!"
     sleep 1
 
