@@ -1,6 +1,7 @@
 package lmsusers
 
 import (
+    "errors"
     "fmt"
 
     "github.com/eriq-augustine/autograder/db"
@@ -75,9 +76,15 @@ func syncLMSUsers(course *model.Course, dryRun bool, sendEmails bool, lmsUsers m
     }
 
     if (sendEmails) {
+        err = nil;
+
         for _, newUser := range syncResult.Add {
             pass := syncResult.ClearTextPasswords[newUser.Email];
-            model.SendUserAddEmail(newUser, pass, true, false, dryRun, true);
+            err = errors.Join(err, model.SendUserAddEmail(newUser, pass, true, false, dryRun, true));
+        }
+
+        if (err != nil) {
+            return nil, fmt.Errorf("Failed to send user email: '%w'.", err);
         }
     }
 

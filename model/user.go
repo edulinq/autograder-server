@@ -136,25 +136,29 @@ func generateHash(hashPass string, salt []byte) []byte {
     return argon2.IDKey([]byte(hashPass), salt, ARGON2_TIME, ARGON2_MEM_KB, ARGON2_THREADS, ARGON2_KEY_LEN_BYTES);
 }
 
-func SendUserAddEmail(user *User, pass string, generatedPass bool, userExists bool, dryRun bool, sleep bool) {
+func SendUserAddEmail(user *User, pass string, generatedPass bool, userExists bool, dryRun bool, sleep bool) error {
     subject, body := composeUserAddEmail(user.Email, pass, generatedPass, userExists);
 
     if (dryRun) {
         log.Info().Str("email", user.Email).Msg("Doing a dry run, user will not be emailed.");
         log.Debug().Str("address", user.Email).Str("subject", subject).Str("body", body).Msg("Email not sent because of dry run.");
-    } else {
-        err := email.Send([]string{user.Email}, subject, body, false);
-        if (err != nil) {
-            log.Error().Err(err).Str("email", user.Email).Msg("Failed to send email.");
-        } else {
-            log.Info().Str("email", user.Email).Msg("Registration email sent.");
-        }
-
-        // Skip sleeping in testing mode.
-        if (sleep && !config.TESTING_MODE.Get()) {
-            time.Sleep(time.Duration(EMAIL_SLEEP_TIME));
-        }
+        return nil;
     }
+
+    err := email.Send([]string{user.Email}, subject, body, false);
+    if (err != nil) {
+        log.Error().Err(err).Str("email", user.Email).Msg("Failed to send email.");
+        return err;
+    }
+
+    log.Info().Str("email", user.Email).Msg("Registration email sent.");
+
+    // Skip sleeping in testing mode.
+    if (sleep && !config.TESTING_MODE.Get()) {
+        time.Sleep(time.Duration(EMAIL_SLEEP_TIME));
+    }
+
+    return nil;
 }
 
 func composeUserAddEmail(address string, pass string, generatedPass bool, userExists bool) (string, string) {

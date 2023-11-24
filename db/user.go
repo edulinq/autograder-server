@@ -1,6 +1,7 @@
 package db
 
 import (
+    "errors"
     "fmt"
 
     "github.com/rs/zerolog/log"
@@ -67,6 +68,12 @@ func SaveUsers(course *model.Course, users map[string]*model.User) error {
     }
 
     return backend.SaveUsers(course, users);
+}
+
+// Convenience function for SaveUsers() with a single user.
+func SaveUser(course *model.Course, user *model.User) error {
+    users := map[string]*model.User{user.Email: user};
+    return SaveUsers(course, users);
 }
 
 // Remove a user.
@@ -191,9 +198,11 @@ func SyncUsers(course *model.Course, newUsers map[string]*model.User,
     if (sendEmails) {
         sleep := (len(newUsers) > 1);
 
+        err = nil;
+
         for _, newUser := range syncResult.Add {
             clearTextPass := syncResult.ClearTextPasswords[newUser.Email];
-            model.SendUserAddEmail(newUser, clearTextPass, (clearTextPass != ""), false, dryRun, sleep);
+            err = errors.Join(err, model.SendUserAddEmail(newUser, clearTextPass, (clearTextPass != ""), false, dryRun, sleep));
         }
 
         for _, newUser := range syncResult.Mod {
@@ -203,7 +212,11 @@ func SyncUsers(course *model.Course, newUsers map[string]*model.User,
                 continue;
             }
 
-            model.SendUserAddEmail(newUser, clearTextPass, true, true, dryRun, sleep);
+            err = errors.Join(err, model.SendUserAddEmail(newUser, clearTextPass, true, true, dryRun, sleep));
+        }
+
+        if (err != nil) {
+            return nil, fmt.Errorf("Failed to send user email: '%w'.", err);
         }
     }
 
