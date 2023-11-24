@@ -52,9 +52,12 @@ type TargetUser struct {
 // No error is generated if the user is not found.
 // The existence of this type in a struct also indicates that the request is at least a APIRequestCourseUserContext.
 type TargetUserSelfOrGrader struct {
-    Found bool
-    Email string
-    User *model.User
+    TargetUser
+}
+
+// Same as TargetUserSelfOrGrader, but for an admin context user.
+type TargetUserSelfOrAdmin struct {
+    TargetUser
 }
 
 // The type for a named field that must have a non-empty string value.
@@ -79,6 +82,11 @@ func checkRequestSpecialFields(request *http.Request, apiRequest any, endpoint s
             }
         } else if (fieldValue.Type() == reflect.TypeOf((*TargetUserSelfOrGrader)(nil)).Elem()) {
             apiErr := checkRequestTargetUserSelfOrGrader(endpoint, apiRequest, i);
+            if (apiErr != nil) {
+                return apiErr;
+            }
+        } else if (fieldValue.Type() == reflect.TypeOf((*TargetUserSelfOrAdmin)(nil)).Elem()) {
+            apiErr := checkRequestTargetUserSelfOrAdmin(endpoint, apiRequest, i);
             if (apiErr != nil) {
                 return apiErr;
             }
@@ -142,19 +150,30 @@ func checkRequestTargetUser(endpoint string, apiRequest any, fieldIndex int) *AP
 }
 
 func checkRequestTargetUserSelfOrGrader(endpoint string, apiRequest any, fieldIndex int) *APIError {
+    return checkRequestTargetUserSelfOrRole(endpoint, apiRequest, fieldIndex, model.RoleGrader);
+}
+
+func checkRequestTargetUserSelfOrAdmin(endpoint string, apiRequest any, fieldIndex int) *APIError {
+    return checkRequestTargetUserSelfOrRole(endpoint, apiRequest, fieldIndex, model.RoleAdmin);
+}
+
+func checkRequestTargetUserSelfOrRole(endpoint string, apiRequest any, fieldIndex int, minRole model.UserRole) *APIError {
     courseContext, users, apiErr := baseCheckRequestUsersField(endpoint, apiRequest, fieldIndex);
     if (apiErr != nil) {
         return apiErr;
     }
 
-    field := reflect.ValueOf(apiRequest).Elem().Field(fieldIndex).Interface().(TargetUserSelfOrGrader);
+    structValue := reflect.ValueOf(apiRequest).Elem().Field(fieldIndex);
+    reflectField := structValue.FieldByName("TargetUser");
+
+    field := reflectField.Interface().(TargetUser);
     if (field.Email == "") {
         field.Email = courseContext.User.Email;
     }
 
-    // Operations not on self require grader permissions.
-    if ((field.Email != courseContext.User.Email) && (courseContext.User.Role < model.RoleGrader)) {
-        return NewBadPermissionsError("-319", courseContext, model.RoleGrader, "Non-Self Target User");
+    // Operations not on self require higher permissions.
+    if ((field.Email != courseContext.User.Email) && (courseContext.User.Role < minRole)) {
+        return NewBadPermissionsError("-319", courseContext, minRole, "Non-Self Target User");
     }
 
     user := users[field.Email];
@@ -165,7 +184,7 @@ func checkRequestTargetUserSelfOrGrader(endpoint string, apiRequest any, fieldIn
         field.User = user;
     }
 
-    reflect.ValueOf(apiRequest).Elem().Field(fieldIndex).Set(reflect.ValueOf(field));
+    reflectField.Set(reflect.ValueOf(field));
 
     return nil;
 }
@@ -351,21 +370,17 @@ func (this TargetUser) MarshalJSON() ([]byte, error) {
 }
 
 func (this *TargetUserSelfOrGrader) UnmarshalJSON(data []byte) error {
-    var text string;
-    err := json.Unmarshal(data, &text);
-    if (err != nil) {
-        return err;
-    }
-
-    if ((text == "null") || text == `""`) {
-        text = "";
-    }
-
-    this.Email = text;
-
-    return nil;
+    return this.TargetUser.UnmarshalJSON(data);
 }
 
 func (this TargetUserSelfOrGrader) MarshalJSON() ([]byte, error) {
-    return json.Marshal(this.Email);
+    return this.TargetUser.MarshalJSON();
+}
+
+func (this *TargetUserSelfOrAdmin) UnmarshalJSON(data []byte) error {
+    return this.TargetUser.UnmarshalJSON(data);
+}
+
+func (this TargetUserSelfOrAdmin) MarshalJSON() ([]byte, error) {
+    return this.TargetUser.MarshalJSON();
 }
