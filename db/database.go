@@ -90,16 +90,19 @@ type Backend interface {
     // Get the scoring infos for an assignment for all users that match the given role.
     // A role of model.RoleUnknown means all users.
     // Users without a submission (but with a matching role) will be represented with a nil map value.
+    // A nil map should only be returned on error.
     GetScoringInfos(assignment *model.Assignment, filterRole model.UserRole) (map[string]*model.ScoringInfo, error);
 
     // Get recent submission result for each user of the given role.
     // A role of model.RoleUnknown means all users.
     // Users without a submission (but with a matching role) will be represented with a nil map value.
+    // A nil map should only be returned on error.
     GetRecentSubmissions(assignment *model.Assignment, filterRole model.UserRole) (map[string]*model.GradingInfo, error);
 
     // Get an overview of the recent submission result for each user of the given role.
     // A role of model.RoleUnknown means all users.
     // Users without a submission (but with a matching role) will be represented with a nil map value.
+    // A nil map should only be returned on error.
     GetRecentSubmissionSurvey(assignment *model.Assignment, filterRole model.UserRole) (map[string]*model.SubmissionHistoryItem, error);
 
     // Get the results of a submission including files and grading output.
@@ -108,6 +111,7 @@ type Backend interface {
     // Get the contents of recent submission result for each user of the given role.
     // A role of model.RoleUnknown means all users.
     // Users without a submission (but with a matching role) will be represented with a nil map value.
+    // A nil map should only be returned on error.
     GetRecentSubmissionContents(assignment *model.Assignment, filterRole model.UserRole) (map[string]*model.GradingResult, error);
 }
 

@@ -9,7 +9,7 @@ import (
 )
 
 type GradingResult struct {
-    Info *GradingInfo `json:"nfo"`
+    Info *GradingInfo `json:"info"`
     InputFilesGZip map[string][]byte `json:"input-files-gzip"`
     OutputFilesGZip map[string][]byte `json:"output-files-gzip"`
     Stdout string `json:"stdout"`

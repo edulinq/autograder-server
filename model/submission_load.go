@@ -45,6 +45,7 @@ func loadStaticSubmissions(courseConfigPath string) ([]*GradingResult, error) {
 func LoadGradingResult(resultPath string) (*GradingResult, error) {
     baseSubmissionDir := filepath.Dir(resultPath);
     submissionInputDir := filepath.Join(baseSubmissionDir, common.GRADING_INPUT_DIRNAME);
+    submissionOutputDir := filepath.Join(baseSubmissionDir, common.GRADING_OUTPUT_DIRNAME);
 
     var gradingInfo GradingInfo;
     err := util.JSONFromFile(resultPath, &gradingInfo);
@@ -56,14 +57,24 @@ func LoadGradingResult(resultPath string) (*GradingResult, error) {
         return nil, fmt.Errorf("Input dir for submission result does not exist '%s': '%w'.", submissionInputDir, err);
     }
 
-    fileContents, err := util.GzipDirectoryToBytes(submissionInputDir);
+    if (!util.PathExists(submissionOutputDir)) {
+        return nil, fmt.Errorf("Output dir for submission result does not exist '%s': '%w'.", submissionOutputDir, err);
+    }
+
+    inputFileContents, err := util.GzipDirectoryToBytes(submissionInputDir);
     if (err != nil) {
         return nil, fmt.Errorf("Unable to gzip files in submission input dir '%s': '%w'.", submissionInputDir, err);
     }
 
+    outputFileContents, err := util.GzipDirectoryToBytes(submissionOutputDir);
+    if (err != nil) {
+        return nil, fmt.Errorf("Unable to gzip files in submission output dir '%s': '%w'.", submissionOutputDir, err);
+    }
+
     return &GradingResult{
         Info: &gradingInfo,
-        InputFilesGZip: fileContents,
+        InputFilesGZip: inputFileContents,
+        OutputFilesGZip: outputFileContents,
     }, nil;
 }
 
