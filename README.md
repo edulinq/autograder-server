@@ -1,3 +1,197 @@
-# Autograder
+# Autograder Server
+
+[![Main](https://github.com/eriq-augustine/autograder-server/actions/workflows/main.yml/badge.svg)](https://github.com/eriq-augustine/autograder-server/actions/workflows/main.yml)
 
 A server for automatically (and in real-time) grading programming assignments.
+
+The autograding effort is broken into three main parts:
+ 1. The autograding server that can accept student submissions, run the assignment graders, and provide feedback to students.
+    This repository implements that server.
+ 2. The interfaces through which users can interact with the autograding server.
+    Since the autograding server interacts via a REST API, the requirements for an interface are very low.
+    Currently, the [autograder-py Python package](https://github.com/eriq-augustine/autograder-py) is the only official interface package.
+ 3. Course and assignment configurations, including graders to score student submissions.
+    These materials should generally be kept private (since they include grading information),
+    but we have made a [sample course](https://github.com/eriq-augustine/cse-cracks-course) available.
+
+## Installation
+
+This project uses Go 1.21.
+Development and deployment are intended for a Linux environment,
+but all Go code is written in a platform independent fashion.
+
+By default, assignments are graded using Docker.
+Therefore when grading functionality is used,
+Docker should be installed on the machine and accessible to the current user without additional permissions.
+Users without Docker can run the server without Docker (see below).
+
+The project adheres to standard Go standards,
+so the `go` tool can be used to build, test, manage, etc.
+Additionally, the `build.sh` script is provided which will build all executables in this project.
+
+```
+./build.sh
+```
+
+All executable mains are kept in the `cmd` directory.
+Each includes a usage and responds to the `--help` flag.
+
+## Running Executables
+
+Once built, all executables are available in the `bin` directory and can be run directly.
+For development, these executables can also be run via `go run`, which will rebuild them if necessary before running:
+```
+go run cmd/version/main.go
+```
+
+## Configuration
+
+This project uses configuration options to set the behavior of its executables.
+All executables use the same configuration infrastructure
+and can therefore be configured the same way and with the same options.
+
+To see all the available options,
+either look in the [config/options.go](config/options.go) file,
+use the `cmd/list-options` executable.
+```
+./bin/list-options
+```
+
+Options can be set on the command line using the `-c`/`--config` flag.
+For example:
+```
+./bin/logs-example --config log.level=debug
+```
+
+### Loading Options
+
+When an autograder executable is run,
+it will automatically look for config files in two locations,
+both specified by config options:
+ - `config.local.path` which defaults to "config.json"
+ - `config.secrets.path` which defaults to ".secrets.json"
+
+Use these files to set persistent options.
+
+### Key Configuration Options
+
+Here are several key configurations you should be aware of:
+
+ - `courses.rootdir` -- The location that will be searched for courses.
+ - `dirs.work` -- The "working" directory for the autograder.
+    Caches, databases, and other files will be stored here.
+    This defaults to the system's temp directory,
+    so production environments will want to change this to a persistent location.
+ - `server.backup.dir` -- The location that course backups will be saved to.
+ - `log.level` -- The logging level. Should be one of ["trace", "debug", "info", "warn", "error", "fatal"].
+
+## Preparing for Grading
+
+Before the server is ready to grade student submissions,
+you may have to take some steps depending on your server and assignments.
+
+### Docker Grading
+
+If using the standard Docker-based grading,
+then you should take two steps before starting the server for grading.
+
+First, ensure that any required Docker images are accessible for building.
+The required images depend on what courses you are hosting,
+but the default images live in the [autograder-docker](https://github.com/eriq-augustine/autograder-docker) repository.
+
+Second, you will want to pre-build your grader images.
+This step is not required as the autograder will ensure that grader images are up-to-date before running a grader,
+but this will ensure that the first student to submit is not stuck with a long wait.
+Building images can be done using the `cmd/build-images` executable,
+which will build images for all known assignments.
+
+```
+./bin/build-images
+```
+
+### Non-Docker Grading
+
+When Docker is not available,
+users can choose to run the server without Docker.
+Non-Docker grading will only work when the default Python grader is used.
+Also note that running the grader without Docker is a potential security risk
+and should be avoided in production.
+
+To disable docker, set the `docker.disable` config option to `true`.
+
+The [Python autograder interface](https://github.com/eriq-augustine/autograder-py) must be installed for the non-Docker grader to work:
+```
+pip install autograder-py
+```
+
+## Running the Server
+
+The main server is available via the `cmd/server` executable.
+The `web.port` config option can be used to set the port the server listens on:
+```
+./bin/server -c web.port=80
+```
+
+If you want to run on a privileged port as a non-root user,
+we recommend using [setcap](https://man.archlinux.org/man/setcap.8).
+The `setcap.sh` script will do this for you:
+```
+./setcap.sh
+```
+
+## Running Tests
+
+This repository comes with several types of tests.
+All these tests are run in the CI,
+and can also be run using the `./.ci/run_all.sh` script:
+```
+./.ci/run_all.sh
+```
+
+Users may also choose to run them individually.
+
+### Installing the Python Interface
+
+Some tests require the Python interface to be installed.
+For general users, installing via pip is sufficient:
+```
+pip install autograder-py
+```
+
+For developers who need the latest version, a script in the `./ci` directory can be used to install from source:
+```
+./.ci/install-py-interface.sh
+```
+
+### Base Tests
+
+The base tests are created with Go's `testing` standard library package,
+and can therefore be run using `go test`.
+The `test.sh` script runs `go test` for each package:
+```
+./test.sh
+```
+
+### Remote Tests
+
+Remote tests are tests that start an instance of the autograder server,
+sends the server test submissions via the Python interface,
+and ensures that the response matches the expected output.
+
+To find test submissions, the `_tests` directory will be searched for `assignment.json` files.
+Then, an adjacent `test-submissions` directory is looked for.
+
+```
+./.ci/run_remote_tests.sh
+```
+
+### Verifying Python Test Data
+
+As part of the tests for the Python interface,
+the test suite will mock an autograder server using pre-scripted responses.
+To ensure that these responses are correct, this repository can run an official autograder server and
+validate that the pre-scripted responses matches the real responses.
+
+```
+./.ci/verify-py-test-data.sh
+```
