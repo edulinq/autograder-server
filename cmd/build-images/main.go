@@ -15,8 +15,8 @@ import (
 var args struct {
     config.ConfigArgs
     docker.BuildOptions
-    Course string `help:"ID of the course." arg:""`
-    Assignment string `help:"ID of the assignment." arg:""`
+    Course string `help:"ID of the course." arg:"" optional:""`
+    Assignment string `help:"ID of the assignment." arg:"" optional:""`
     Force bool `help:"Force images build commands to be sent to docker even if the image is up-to-date." default:"false"`
 }
 
