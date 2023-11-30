@@ -5,7 +5,6 @@ import (
     "math"
     "testing"
 
-    "github.com/eriq-augustine/autograder/config"
     "github.com/eriq-augustine/autograder/util"
 )
 
@@ -25,11 +24,6 @@ func TestAPIPanic(test *testing.T) {
     }
 
     routes = append(routes, NewAPIRoute(endpoint, handler));
-
-    // Quiet the output a bit.
-    oldLevel := config.GetLoggingLevel();
-    config.SetLogLevelFatal();
-    defer config.SetLoggingLevel(oldLevel);
 
     response := SendTestAPIRequest(test, endpoint, nil);
     if (response.Locator != "-101") {
@@ -57,11 +51,6 @@ func TestMalformedHandlers(test *testing.T) {
         {func(request *BaseTestRequest) (*any, any) { return nil, nil }, "-111"},
         {func(request *BaseTestRequest) (*any, int) { return nil, 0}, "-111"},
     };
-
-    // Quiet the output a bit.
-    oldLevel := config.GetLoggingLevel();
-    config.SetLogLevelFatal();
-    defer config.SetLoggingLevel(oldLevel);
 
     for i, testCase := range testCases {
         // Register the handlers using its index in the endpoint..
@@ -91,11 +80,6 @@ func TestBadRequestEmptyContent(test *testing.T) {
     routes = append(routes, NewAPIRoute(endpoint, handler));
 
     url := serverURL + endpoint;
-
-    // Quiet the output a bit.
-    oldLevel := config.GetLoggingLevel();
-    config.SetLogLevelFatal();
-    defer config.SetLoggingLevel(oldLevel);
 
     for i, testCase := range testCases {
         responseText, err := util.PostNoCheck(url, testCase.form);
@@ -134,11 +118,6 @@ func TestNonMarshalableResponse(test *testing.T) {
     }
 
     routes = append(routes, NewAPIRoute(endpoint, handler));
-
-    // Quiet the output a bit.
-    oldLevel := config.GetLoggingLevel();
-    config.SetLogLevelFatal();
-    defer config.SetLoggingLevel(oldLevel);
 
     response := SendTestAPIRequest(test, endpoint, nil);
     if (response.Locator != "-102") {

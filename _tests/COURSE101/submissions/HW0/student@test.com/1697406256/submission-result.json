@@ -1,0 +1,39 @@
+{
+    "id": "course101::hw0::student@test.com::1697406256",
+    "short-id": "1697406256",
+    "course-id": "course101",
+    "assignment-id": "hw0",
+    "user": "student@test.com",
+    "message": "",
+    "max_points": 2,
+    "score": 0,
+    "name": "HW0",
+    "questions": [
+        {
+            "name": "Q1",
+            "max_points": 1,
+            "score": 0,
+            "message": "NotImplemented returned.",
+            "grading_start_time": "2023-10-15T21:44:16Z",
+            "grading_end_time": "2023-10-15T21:44:16Z"
+        },
+        {
+            "name": "Q2",
+            "max_points": 1,
+            "score": 0,
+            "message": "NotImplemented returned.",
+            "grading_start_time": "2023-10-15T21:44:16Z",
+            "grading_end_time": "2023-10-15T21:44:16Z"
+        },
+        {
+            "name": "Style",
+            "max_points": 0,
+            "score": 0,
+            "message": "Style is clean!",
+            "grading_start_time": "2023-10-15T21:44:16Z",
+            "grading_end_time": "2023-10-15T21:44:16Z"
+        }
+    ],
+    "grading_start_time": "2023-10-15T21:44:16Z",
+    "grading_end_time": "2023-10-15T21:44:16Z"
+}

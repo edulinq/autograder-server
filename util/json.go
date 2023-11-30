@@ -140,7 +140,15 @@ func JSONFieldName(field reflect.StructField) string {
 
 // The only place we call json.Marshal*.
 func unmarshal(data any, prefix string, indent string) (string, error) {
-    bytes, err := json.MarshalIndent(data, prefix, indent);
+    var bytes []byte;
+    var err error;
+
+    if ((prefix == "") && (indent == "")) {
+        bytes, err = json.Marshal(data);
+    } else {
+        bytes, err = json.MarshalIndent(data, prefix, indent);
+    }
+
     if (err != nil) {
         // Explicitly use Go-Syntax (%#v) to avoid loops with overwritten String() methods.
         return "", fmt.Errorf("Could not marshal object ('%#v'): '%w'.", data, err);

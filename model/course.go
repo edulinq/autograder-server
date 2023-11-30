@@ -1,45 +1,31 @@
 package model
 
 import (
-    "fmt"
     "path/filepath"
     "slices"
 
     "github.com/rs/zerolog/log"
 
-    "github.com/eriq-augustine/autograder/canvas"
     "github.com/eriq-augustine/autograder/common"
     "github.com/eriq-augustine/autograder/config"
     "github.com/eriq-augustine/autograder/docker"
-    "github.com/eriq-augustine/autograder/report"
-    "github.com/eriq-augustine/autograder/task"
-    "github.com/eriq-augustine/autograder/usr"
-    "github.com/eriq-augustine/autograder/util"
 )
-
-const COURSE_CONFIG_FILENAME = "course.json"
-const DEFAULT_USERS_FILENAME = "users.json"
 
 type Course struct {
     // Required fields.
     ID string `json:"id"`
     DisplayName string `json:"display-name"`
 
-    // Non-required fields that have defaults.
-    // Paths are always relative to the course dir.
-    UsersFile string `json:"users-file"`
+    LMS *LMSAdapter `json:"lms,omitempty"`
 
-    CanvasInstanceInfo *canvas.CanvasInstanceInfo `json:"canvas,omitempty"`
+    Backup []*BackupTask `json:"backup,omitempty"`
+    Report []*ReportTask `json:"report,omitempty"`
+    ScoringUpload []*ScoringUploadTask `json:"scoring-upload,omitempty"`
 
-    Backup []*task.BackupTask `json:"backup,omitempty"`
-    Report []*task.ReportTask `json:"report,omitempty"`
-    ScoringUpload []*task.ScoringUploadTask `json:"scoring-upload,omitempty"`
-
-    // Ignore these fields in JSON.
-    SourcePath string `json:"-"`
+    // Internal fields the autograder will set.
+    SourceDir string `json:"_source-dir"`
     Assignments map[string]*Assignment `json:"-"`
-
-    tasks []task.ScheduledCourseTask `json:"-"`
+    tasks []ScheduledTask `json:"-"`
 }
 
 func (this *Course) GetID() string {
@@ -51,81 +37,27 @@ func (this *Course) GetName() string {
 }
 
 func (this *Course) GetSourceDir() string {
-    return filepath.Dir(this.SourcePath);
+    return this.SourceDir;
 }
 
-func (this *Course) GetCanvasInstanceInfo() *canvas.CanvasInstanceInfo {
-    return this.CanvasInstanceInfo;
+func (this *Course) GetLMSAdapter() *LMSAdapter {
+    return this.LMS;
 }
 
-func (this *Course) GetCanvasIDs() ([]string, []string) {
-    canvasIDs := make([]string, 0, len(this.Assignments));
+func (this *Course) GetAssignmentLMSIDs() ([]string, []string) {
+    lmsIDs := make([]string, 0, len(this.Assignments));
     assignmentIDs := make([]string, 0, len(this.Assignments));
 
     for _, assignment := range this.Assignments {
-        canvasIDs = append(canvasIDs, assignment.CanvasID);
-        assignmentIDs = append(assignmentIDs, assignment.CanvasID);
+        lmsIDs = append(lmsIDs, assignment.GetLMSID());
+        assignmentIDs = append(assignmentIDs, assignment.GetLMSID());
     }
 
-    return canvasIDs, assignmentIDs;
+    return lmsIDs, assignmentIDs;
 }
 
-func LoadCourseConfig(path string) (*Course, error) {
-    var config Course;
-    err := util.JSONFromFile(path, &config);
-    if (err != nil) {
-        return nil, fmt.Errorf("Could not load course config (%s): '%w'.", path, err);
-    }
-
-    config.SourcePath = util.MustAbs(path);
-
-    if (config.UsersFile == "") {
-        config.UsersFile = DEFAULT_USERS_FILENAME;
-    }
-
-    config.Assignments = make(map[string]*Assignment);
-
-    err = config.Validate();
-    if (err != nil) {
-        return nil, fmt.Errorf("Could not validate course config (%s): '%w'.", path, err);
-    }
-
-    return &config, nil;
-}
-
-func MustLoadCourseConfig(path string) *Course {
-    config, err := LoadCourseDirectory(path);
-    if (err != nil) {
-        log.Fatal().Str("path", path).Err(err).Msg("Failed to load course config.");
-    }
-
-    return config;
-}
-
-// Load the course (with its JSON config) and all assignments (JSON configs) recursivley in a directory.
-// The path should point to the course config,
-// and the directory that path lives in will be searched for assignment configs.
-func LoadCourseDirectory(courseConfigPath string) (*Course, error) {
-    courseConfig, err := LoadCourseConfig(courseConfigPath);
-    if (err != nil) {
-        return nil, fmt.Errorf("Could not load course config at '%s': '%w'.", courseConfigPath, err);
-    }
-
-    courseDir := filepath.Dir(courseConfigPath);
-
-    assignmentPaths, err := util.FindFiles(ASSIGNMENT_CONFIG_FILENAME, courseDir);
-    if (err != nil) {
-        return nil, fmt.Errorf("Failed to search for assignment configs in '%s': '%w'.", courseDir, err);
-    }
-
-    for _, assignmentPath := range assignmentPaths {
-        _, err := LoadAssignmentConfig(assignmentPath, courseConfig);
-        if (err != nil) {
-            return nil, fmt.Errorf("Failed to load assignment config '%s': '%w'.", assignmentPath, err);
-        }
-    }
-
-    return courseConfig, nil;
+func (this *Course) GetTasks() []ScheduledTask {
+    return this.tasks;
 }
 
 // Ensure this course makes sense.
@@ -138,6 +70,13 @@ func (this *Course) Validate() error {
     this.ID, err = common.ValidateID(this.ID);
     if (err != nil) {
         return err;
+    }
+
+    if (this.LMS != nil) {
+        err = this.LMS.Validate();
+        if (err != nil) {
+            return err;
+        }
     }
 
     // Register tasks.
@@ -164,28 +103,15 @@ func (this *Course) Validate() error {
     return nil;
 }
 
-// Start any scheduled tasks or informal tasks associated with this course.
-func (this *Course) Activate() error {
-    // Schedule tasks.
-    for _, task := range this.tasks {
-        task.Schedule();
-    }
-
-    // Build images.
-    go this.BuildAssignmentImages(false, false, docker.NewBuildOptions());
-
-    return nil;
-}
-
 // Returns: (successfull image names, map[imagename]error).
 func (this *Course) BuildAssignmentImages(force bool, quick bool, options *docker.BuildOptions) ([]string, map[string]error) {
     goodImageNames := make([]string, 0, len(this.Assignments));
     errors := make(map[string]error);
 
     for _, assignment := range this.Assignments {
-        err := assignment.BuildImage(force, quick, options);
+        err := docker.BuildImageFromSource(assignment, force, quick, options);
         if (err != nil) {
-            log.Error().Err(err).Str("course", this.ID).Str("assignment", assignment.ID).
+            log.Error().Err(err).Str("course", this.ID).Str("assignment", assignment.GetID()).
                     Msg("Failed to build assignment docker image.");
             errors[assignment.ImageName()] = err;
         } else {
@@ -197,47 +123,31 @@ func (this *Course) BuildAssignmentImages(force bool, quick bool, options *docke
 }
 
 func (this *Course) GetCacheDir() string {
-    return filepath.Join(config.WORK_DIR.GetString(), common.CACHE_DIRNAME, "course_" + this.ID);
+    return filepath.Join(config.WORK_DIR.Get(), common.CACHE_DIRNAME, "course_" + this.ID);
 }
 
-// Check this directory and all parent directories for a course config file.
-func loadParentCourseConfig(basepath string) (*Course, error) {
-    configPath := util.SearchParents(basepath, COURSE_CONFIG_FILENAME);
-    if (configPath == "") {
-        return nil, fmt.Errorf("Could not locate course config.");
-    }
-
-    return LoadCourseConfig(configPath);
+func (this *Course) HasAssignment(id string) bool {
+    _, ok := this.Assignments[id];
+    return ok;
 }
 
-func (this *Course) GetUsers() (map[string]*usr.User, error) {
-    path := filepath.Join(filepath.Dir(this.SourcePath), this.UsersFile);
-
-    users, err := usr.LoadUsersFile(path);
-    if (err != nil) {
-        return nil, fmt.Errorf("Faile to deserialize users file '%s': '%w'.", path, err);
+// Get an assignment, or nil if the assignment does not exist.
+func (this *Course) GetAssignment(id string) *Assignment {
+    assignment, ok := this.Assignments[id];
+    if (!ok) {
+        return nil;
     }
 
-    return users, nil;
+    return assignment;
 }
 
-func (this *Course) GetUser(email string) (*usr.User, error) {
-    users, err := this.GetUsers();
-    if (err != nil) {
-        return nil, err;
+func (this *Course) GetAssignments() map[string]*Assignment {
+    assignments := make(map[string]*Assignment, len(this.Assignments));
+    for key, value := range this.Assignments {
+        assignments[key] = value;
     }
 
-    user := users[email];
-    if (user != nil) {
-        return user, nil;
-    }
-
-    return nil, nil;
-}
-
-func (this *Course) SaveUsersFile(users map[string]*usr.User) error {
-    path := filepath.Join(filepath.Dir(this.SourcePath), this.UsersFile);
-    return usr.SaveUsersFile(path, users);
+    return assignments;
 }
 
 func (this *Course) GetSortedAssignments() []*Assignment {
@@ -249,13 +159,4 @@ func (this *Course) GetSortedAssignments() []*Assignment {
     slices.SortFunc(assignments, CompareAssignments);
 
     return assignments;
-}
-
-func (this *Course) GetReportingSources() []report.ReportingSource {
-    sources := make([]report.ReportingSource, 0, len(this.Assignments));
-    for _, assignment := range this.GetSortedAssignments() {
-        sources = append(sources, assignment);
-    }
-
-    return sources;
 }

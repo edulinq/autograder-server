@@ -11,7 +11,7 @@ var cacheLocks sync.Map;
 // Put a new value in the cache and return any previous value.
 // Return: (old value, old value exists, error).
 func CachePut(cachePath string, key string, value any) (any, bool, error) {
-    cachePath = MustAbs(cachePath);
+    cachePath = ShouldAbs(cachePath);
 
     lock, _ := fileLocks.LoadOrStore(cachePath, &sync.Mutex{});
     lock.(*sync.Mutex).Lock();
@@ -37,7 +37,7 @@ func CachePut(cachePath string, key string, value any) (any, bool, error) {
 // Get a value from the cache.
 // Return: (value, value exists, error).
 func CacheFetch(cachePath string, key string) (any, bool, error) {
-    cachePath = MustAbs(cachePath);
+    cachePath = ShouldAbs(cachePath);
 
     lock, _ := fileLocks.LoadOrStore(cachePath, &sync.Mutex{});
     lock.(*sync.Mutex).Lock();

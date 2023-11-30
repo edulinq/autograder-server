@@ -2,15 +2,12 @@ package grader
 
 import (
     "fmt"
-    "os"
-    "path/filepath"
     "sync"
 
-    "github.com/rs/zerolog/log"
-
-    "github.com/eriq-augustine/autograder/artifact"
     "github.com/eriq-augustine/autograder/common"
     "github.com/eriq-augustine/autograder/config"
+    "github.com/eriq-augustine/autograder/db"
+    "github.com/eriq-augustine/autograder/docker"
     "github.com/eriq-augustine/autograder/model"
     "github.com/eriq-augustine/autograder/util"
 )
@@ -18,109 +15,101 @@ import (
 var submissionLocks sync.Map;
 
 type GradeOptions struct {
-    UseFakeSubmissionsDir bool
     NoDocker bool
     LeaveTempDir bool
 }
 
 func GetDefaultGradeOptions() GradeOptions {
     return GradeOptions{
-        UseFakeSubmissionsDir: config.NO_STORE.GetBool(),
-        NoDocker: config.DOCKER_DISABLE.GetBool(),
-        LeaveTempDir: config.DEBUG.GetBool(),
+        NoDocker: config.DOCKER_DISABLE.Get(),
+        LeaveTempDir: config.DEBUG.Get(),
     };
 }
 
 // Grade with default options pulled from config.
-func GradeDefault(assignment *model.Assignment, submissionPath string, user string, message string) (*artifact.GradedAssignment, *artifact.SubmissionSummary, string, error) {
+func GradeDefault(assignment *model.Assignment, submissionPath string, user string, message string) (*model.GradingResult, error) {
     return Grade(assignment, submissionPath, user, message, GetDefaultGradeOptions());
 }
 
 // Grade with custom options.
-func Grade(assignment *model.Assignment, submissionPath string, user string, message string, options GradeOptions) (*artifact.GradedAssignment, *artifact.SubmissionSummary, string, error) {
-    gradingKey := fmt.Sprintf("%s::%s::%s", assignment.Course.ID, assignment.ID, user);
+func Grade(assignment *model.Assignment, submissionPath string, user string, message string, options GradeOptions) (*model.GradingResult, error) {
+    var gradingResult model.GradingResult;
+
+    gradingKey := fmt.Sprintf("%s::%s::%s", assignment.GetCourse().GetID(), assignment.GetID(), user);
 
     // Get the existing mutex, or store (and fetch) a new one.
     val, _ := submissionLocks.LoadOrStore(gradingKey, &sync.Mutex{});
     lock := val.(*sync.Mutex)
 
     lock.Lock();
-    defer lock.Unlock();
+    defer lock.Unlock()
 
-    // Ensure the assignment docker image is built.
-    err := assignment.BuildImageQuick();
+    submissionID, inputFileContents, err := prepForGrading(assignment, submissionPath, user);
     if (err != nil) {
-        return nil, nil, "", fmt.Errorf("Failed to build assignment assignment '%s' docker image: '%w'.", assignment.FullID(), err);
+        return nil, fmt.Errorf("Failed to prep for grading: '%w'.", err);
     }
 
-    submissionDir, submissionID, err := prepSubmissionDir(assignment, user, options);
-    if (err != nil) {
-        return nil, nil, "", fmt.Errorf("Failed to prepare submission dir for assignment '%s' and user '%s': '%w'.", assignment.FullID(), user, err);
-    }
+    gradingResult.InputFilesGZip = inputFileContents;
 
-    fullSubmissionID := common.CreateFullSubmissionID(assignment.Course.ID, assignment.ID, user, submissionID);
+    fullSubmissionID := common.CreateFullSubmissionID(assignment.GetCourse().GetID(), assignment.GetID(), user, submissionID);
 
-    // Copy the submission to the user's submission directory.
-    submissionCopyDir := filepath.Join(submissionDir, common.GRADING_INPUT_DIRNAME);
-    err = util.CopyDirent(submissionPath, submissionCopyDir, true);
-    if (err != nil) {
-        return nil, nil, "", fmt.Errorf("Failed to copy submission for assignment '%s' and user '%s': '%w'.", assignment.FullID(), user, err);
-    }
-
-    outputDir := filepath.Join(submissionDir, common.GRADING_OUTPUT_DIRNAME);
-    os.MkdirAll(outputDir, 0755);
-
-    var result *artifact.GradedAssignment;
-    var output string;
+    var gradingInfo *model.GradingInfo;
+    var outputFileContents map[string][]byte;
+    var stdout string;
+    var stderr string;
 
     if (options.NoDocker) {
-        result, output, err = RunNoDockerGrader(assignment, submissionPath, outputDir, options, fullSubmissionID);
+        gradingInfo, outputFileContents, stdout, stderr, err = runNoDockerGrader(assignment, submissionPath, options, fullSubmissionID);
     } else {
-        result, output, err = RunDockerGrader(assignment, submissionPath, outputDir, options, fullSubmissionID);
+        gradingInfo, outputFileContents, stdout, stderr, err = runDockerGrader(assignment, submissionPath, options, fullSubmissionID);
     }
+
+    // Copy over stdout and stderr even if an error occured.
+    gradingResult.Stdout = stdout;
+    gradingResult.Stderr = stderr;
 
     if (err != nil) {
-        return nil, nil, output, err;
+        return &gradingResult, err;
     }
 
-    summary := result.GetSummary(fullSubmissionID, message);
-    summaryPath := filepath.Join(outputDir, common.GRADER_OUTPUT_SUMMARY_FILENAME);
+    // Set all the autograder fields in the grading info.
+    gradingInfo.ID = fullSubmissionID;
+    gradingInfo.ShortID = submissionID;
+    gradingInfo.CourseID = assignment.GetCourse().GetID();
+    gradingInfo.AssignmentID = assignment.GetID();
+    gradingInfo.User = user;
+    gradingInfo.Message = message;
+    gradingInfo.ComputePoints();
 
-    err = util.ToJSONFileIndent(summary, summaryPath);
-    if (err != nil) {
-        return nil, nil, output, fmt.Errorf("Failed to write submission summary for assignment '%s' and user '%s': '%w'.", assignment.FullID(), user, err);
+    gradingResult.Info = gradingInfo;
+    gradingResult.OutputFilesGZip = outputFileContents;
+
+    if (!config.NO_STORE.Get()) {
+        err = db.SaveSubmission(assignment, &gradingResult);
+        if (err != nil) {
+            return &gradingResult, fmt.Errorf("Failed to save grading result: '%w'.", err);
+        }
     }
 
-    return result, summary, output, nil;
+    return &gradingResult, nil;
 }
 
-func prepSubmissionDir(assignment *model.Assignment, user string, options GradeOptions) (string, string, error) {
-    var submissionDir string;
-    var err error;
-    var id string;
-
-    if (options.UseFakeSubmissionsDir) {
-        tempSubmissionsDir, err := util.MkDirTemp("autograding-submissions-");
-        if (err != nil) {
-            return "", "", fmt.Errorf("Could not create temp submissions dir: '%w'.", err);
-        }
-
-        submissionDir, id, err = assignment.PrepareSubmissionWithDir(user, tempSubmissionsDir);
-        if (err != nil) {
-            return "", "", fmt.Errorf("Failed to prepare fake submission dir: '%w'.", err);
-        }
-
-        if (options.LeaveTempDir) {
-            log.Info().Str("path", tempSubmissionsDir).Msg("Leaving behind temp submissions dir.");
-        } else {
-            defer os.RemoveAll(tempSubmissionsDir);
-        }
-    } else {
-        submissionDir, id, err = assignment.PrepareSubmission(user);
-        if (err != nil) {
-            return "", "", fmt.Errorf("Failed to prepare default submission dir: '%w'.", err);
-        }
+func prepForGrading(assignment *model.Assignment, submissionPath string, user string) (string, map[string][]byte, error) {
+    // Ensure the assignment docker image is built.
+    err := docker.BuildImageFromSourceQuick(assignment);
+    if (err != nil) {
+        return "", nil, fmt.Errorf("Failed to build assignment assignment '%s' docker image: '%w'.", assignment.FullID(), err);
     }
 
-    return submissionDir, id, nil;
+    submissionID, err := db.GetNextSubmissionID(assignment, user);
+    if (err != nil) {
+        return "", nil, fmt.Errorf("Unable to get next submission id for assignment '%s', user '%s': '%w'.", assignment.FullID(), user, err);
+    }
+
+    fileContents, err := util.GzipDirectoryToBytes(submissionPath);
+    if (err != nil) {
+        return "", nil, fmt.Errorf("Failed to copy submission input '%s': '%w'.", submissionPath, err);
+    }
+
+    return submissionID, fileContents, nil;
 }

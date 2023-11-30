@@ -1,6 +1,7 @@
 package grader
 
 import (
+    "bytes"
     "fmt"
     "os"
     "os/exec"
@@ -9,19 +10,24 @@ import (
 
     "github.com/rs/zerolog/log"
 
-    "github.com/eriq-augustine/autograder/artifact"
     "github.com/eriq-augustine/autograder/common"
     "github.com/eriq-augustine/autograder/model"
     "github.com/eriq-augustine/autograder/util"
 )
 
-const PYTHON_AUTOGRADER_INVOCATION = "python3 -m autograder.cli.grade-submission --grader <grader> --inputdir <inputdir> --outputdir <outputdir> --workdir <workdir> --outpath <outpath>"
+const PYTHON_AUTOGRADER_INVOCATION = "python3 -m autograder.cli.grading.grade-dir --grader <grader> --dir <basedir> --outpath <outpath>"
 const PYTHON_GRADER_FILENAME = "grader.py"
 
-func RunNoDockerGrader(assignment *model.Assignment, submissionPath string, outputDir string, options GradeOptions, fullSubmissionID string) (*artifact.GradedAssignment, string, error) {
-    tempDir, inputDir, _, workDir, err := common.PrepTempGradingDir();
+func runNoDockerGrader(assignment *model.Assignment, submissionPath string, options GradeOptions, fullSubmissionID string) (
+        *model.GradingInfo, map[string][]byte, string, string, error) {
+    imageInfo := assignment.GetImageInfo();
+    if (imageInfo == nil) {
+        return nil, nil, "", "", fmt.Errorf("No image information associated with assignment: '%s'.", assignment.FullID());
+    }
+
+    tempDir, inputDir, outputDir, workDir, err := common.PrepTempGradingDir("nodocker");
     if (err != nil) {
-        return nil, "", err;
+        return nil, nil, "", "", err;
     }
 
     if (!options.LeaveTempDir) {
@@ -30,57 +36,81 @@ func RunNoDockerGrader(assignment *model.Assignment, submissionPath string, outp
         log.Info().Str("path", tempDir).Msg("Leaving behind temp grading dir.");
     }
 
-    cmd, err := getAssignmentInvocation(assignment, inputDir, outputDir, workDir);
+    cmd, err := getAssignmentInvocation(assignment, tempDir, inputDir, outputDir, workDir);
     if (err != nil) {
-        return nil, "", err;
+        return nil, nil, "", "", err;
     }
 
     // Copy over the static files (and do any file ops).
-    err = common.CopyFileSpecs(filepath.Dir(assignment.SourcePath), workDir, tempDir,
-            assignment.StaticFiles, false, assignment.PreStaticFileOperations, assignment.PostStaticFileOperations);
+    err = common.CopyFileSpecs(imageInfo.BaseDir, workDir, tempDir,
+            imageInfo.StaticFiles, false, imageInfo.PreStaticFileOperations, imageInfo.PostStaticFileOperations);
     if (err != nil) {
-        return nil, "", fmt.Errorf("Failed to copy static assignment files: '%w'.", err);
+        return nil, nil, "", "", fmt.Errorf("Failed to copy static assignment files: '%w'.", err);
     }
 
     // Copy over the submission files (and do any file ops).
     err = common.CopyFileSpecs(submissionPath, inputDir, tempDir,
-            []common.FileSpec{common.FileSpec(".")}, true, [][]string{}, assignment.PostSubmissionFileOperations);
+            []common.FileSpec{common.FileSpec(".")}, true, [][]string{}, imageInfo.PostSubmissionFileOperations);
     if (err != nil) {
-        return nil, "", fmt.Errorf("Failed to copy submission ssignment files: '%w'.", err);
+        return nil, nil, "", "", fmt.Errorf("Failed to copy submission ssignment files: '%w'.", err);
     }
 
-    rawOutput, err := cmd.CombinedOutput();
-    output := string(rawOutput[:])
-
+    stdout, stderr, err := runCMD(cmd);
     if (err != nil) {
-        log.Warn().Str("assignment", assignment.FullID()).Str("tempdir", tempDir).Msg(string(output[:]));
-        return nil, output, fmt.Errorf("Failed to run non-docker grader for assignment '%s': '%w'.", assignment.FullID(), err);
+        return nil, nil, stdout, stderr,
+                fmt.Errorf("Failed to run non-docker grader for assignment '%s': '%w'.", assignment.FullID(), err);
     }
 
     resultPath := filepath.Join(outputDir, common.GRADER_OUTPUT_RESULT_FILENAME);
     if (!util.PathExists(resultPath)) {
-        return nil, output, fmt.Errorf("Cannot find output file ('%s') after non-docker grading.", resultPath);
+        return nil, nil, stdout, stderr, fmt.Errorf("Cannot find output file ('%s') after non-docker grading.", resultPath);
     }
 
-    var result artifact.GradedAssignment;
-    err = util.JSONFromFile(resultPath, &result);
+    var gradingInfo model.GradingInfo;
+    err = util.JSONFromFile(resultPath, &gradingInfo);
     if (err != nil) {
-        return nil, output, err;
+        return nil, nil, stdout, stderr, err;
     }
 
-    return &result, output, nil;
+    fileContents, err := util.GzipDirectoryToBytes(outputDir);
+    if (err != nil) {
+        return nil, nil, stdout, stderr, fmt.Errorf("Failed to copy grading output '%s': '%w'.", outputDir, err);
+    }
+
+    return &gradingInfo, fileContents, stdout, stderr, nil;
+}
+
+func runCMD(cmd *exec.Cmd) (string, string, error) {
+    var outBuffer bytes.Buffer;
+    var errBuffer bytes.Buffer;
+
+    cmd.Stdout = &outBuffer;
+    cmd.Stderr = &errBuffer;
+
+    err := cmd.Run();
+
+    stdout := outBuffer.String();
+    stderr := errBuffer.String();
+
+    return stdout, stderr, err;
 }
 
 // Get a command to invoke the non-docker grader.
-func getAssignmentInvocation(assignment *model.Assignment, inputDir string, outputDir string, workDir string) (*exec.Cmd, error) {
+func getAssignmentInvocation(assignment *model.Assignment,
+        baseDir string, inputDir string, outputDir string, workDir string) (*exec.Cmd, error) {
+    imageInfo := assignment.GetImageInfo();
+    if (imageInfo == nil) {
+        return nil, fmt.Errorf("No image information associated with assignment: '%s'.", assignment.FullID());
+    }
+
     var rawCommand []string = nil;
 
-    if ((assignment.Invocation != nil) && (len(assignment.Invocation) > 0)) {
-        rawCommand = assignment.Invocation;
+    if ((imageInfo.Invocation != nil) && (len(imageInfo.Invocation) > 0)) {
+        rawCommand = imageInfo.Invocation;
     }
 
     // Special case for the python grader (we know how to invoke that).
-    if (assignment.Image == "autograder.python") {
+    if (imageInfo.Image == "autograder.python") {
         rawCommand = strings.Split(PYTHON_AUTOGRADER_INVOCATION, " ");
     }
 
@@ -92,6 +122,8 @@ func getAssignmentInvocation(assignment *model.Assignment, inputDir string, outp
     for _, value := range rawCommand {
         if (value == "<grader>") {
             value = filepath.Join(workDir, PYTHON_GRADER_FILENAME);
+        } else if (value == "<basedir>") {
+            value = baseDir;
         } else if (value == "<inputdir>") {
             value = inputDir;
         } else if (value == "<outputdir>") {

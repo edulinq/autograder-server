@@ -43,7 +43,7 @@ func BuildImageWithOptions(imageInfo *ImageInfo, options *BuildOptions) error {
         return fmt.Errorf("Failed to create temp build directory for '%s': '%w'.", imageInfo.Name, err);
     }
 
-    if (config.DEBUG.GetBool()) {
+    if (config.DEBUG.Get()) {
         log.Info().Str("path", tempDir).Msg("Leaving behind temp building dir.");
     } else {
         defer os.RemoveAll(tempDir);

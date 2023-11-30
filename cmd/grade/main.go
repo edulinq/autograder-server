@@ -7,14 +7,15 @@ import (
     "github.com/rs/zerolog/log"
 
     "github.com/eriq-augustine/autograder/config"
+    "github.com/eriq-augustine/autograder/db"
     "github.com/eriq-augustine/autograder/grader"
-    "github.com/eriq-augustine/autograder/model"
     "github.com/eriq-augustine/autograder/util"
 )
 
 var args struct {
     config.ConfigArgs
-    Assignment string `help:"Path to assignment JSON files." required:"" type:"existingfile"`
+    Course string `help:"ID of the course." arg:""`
+    Assignment string `help:"ID of the assignment." arg:""`
     Submission string `help:"Path to submission directory." required:"" type:"existingdir"`
     OutPath string `help:"Option path to output a JSON grading result." type:"path"`
     User string `help:"User email for the submission." default:"testuser"`
@@ -28,23 +29,26 @@ func main() {
         log.Fatal().Err(err).Msg("Could not load config options.");
     }
 
-    assignment := model.MustLoadAssignmentConfig(args.Assignment);
+    db.MustOpen();
+    defer db.MustClose();
 
-    result, _, output, err := grader.GradeDefault(assignment, args.Submission, args.User, args.Message);
+    assignment := db.MustGetAssignment(args.Course, args.Assignment);
+
+    result, err := grader.GradeDefault(assignment, args.Submission, args.User, args.Message);
     if (err != nil) {
-        if (output != "") {
+        if (result.HasTextOutput()) {
             fmt.Println("Grading failed, but output was recovered:");
-            fmt.Println(output);
+            fmt.Println(result.GetCombinedOutput());
         }
         log.Fatal().Err(err).Msg("Failed to run grader.");
     }
 
     if (args.OutPath != "") {
-        err = util.ToJSONFileIndent(result, args.OutPath);
+        err = util.ToJSONFileIndent(result.Info, args.OutPath);
         if (err != nil) {
             log.Fatal().Err(err).Str("outpath", args.OutPath).Msg("Failed to output JSON result.");
         }
     }
 
-    fmt.Println(result.Report());
+    fmt.Println(result.Info.Report());
 }

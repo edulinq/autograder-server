@@ -15,7 +15,7 @@ var args struct {
 
 func main() {
     kong.Parse(&args,
-        kong.Description("Show all the known config options."),
+        kong.Description("Show all the current config values."),
     );
 
     err := config.HandleConfigArgs(args.ConfigArgs);

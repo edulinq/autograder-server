@@ -1,55 +1,66 @@
 package user
 
 import (
+    "reflect"
     "testing"
 
     "github.com/eriq-augustine/autograder/api/core"
-    "github.com/eriq-augustine/autograder/usr"
+    "github.com/eriq-augustine/autograder/model"
+    "github.com/eriq-augustine/autograder/util"
 )
 
 func TestUserGet(test *testing.T) {
-    testCases := []struct{ email string; expected *core.UserInfo }{
-        {"other@test.com", &core.UserInfo{"other@test.com", "other", usr.Other, ""}},
-        {"student@test.com", &core.UserInfo{"student@test.com", "student", usr.Student, ""}},
-        {"grader@test.com", &core.UserInfo{"grader@test.com", "grader", usr.Grader, ""}},
-        {"admin@test.com", &core.UserInfo{"admin@test.com", "admin", usr.Admin, ""}},
-        {"owner@test.com", &core.UserInfo{"owner@test.com", "owner", usr.Owner, ""}},
+    testCases := []struct{ role model.UserRole; target string; permError bool; expected *core.UserInfo }{
+        {model.RoleGrader, "other@test.com", false, &core.UserInfo{"other@test.com", "other", model.RoleOther, ""}},
+        {model.RoleGrader, "student@test.com", false, &core.UserInfo{"student@test.com", "student", model.RoleStudent, ""}},
+        {model.RoleGrader, "grader@test.com", false, &core.UserInfo{"grader@test.com", "grader", model.RoleGrader, ""}},
+        {model.RoleGrader, "admin@test.com", false, &core.UserInfo{"admin@test.com", "admin", model.RoleAdmin, ""}},
+        {model.RoleGrader, "owner@test.com", false, &core.UserInfo{"owner@test.com", "owner", model.RoleOwner, ""}},
 
-        {"ZZZ", nil},
+        {model.RoleStudent, "student@test.com", true, nil},
+
+        {model.RoleGrader, "", false, nil},
+
+        {model.RoleGrader, "ZZZ", false, nil},
     };
 
     for i, testCase := range testCases {
         fields := map[string]any{
-            "target-email": testCase.email,
+            "target-email": testCase.target,
         };
 
-        response := core.SendTestAPIRequest(test, core.NewEndpoint(`user/get`), fields);
+        response := core.SendTestAPIRequestFull(test, core.NewEndpoint(`user/get`), fields, nil, testCase.role);
         if (!response.Success) {
-            test.Errorf("Case %d: Response is not a success: '%v'.", i, response);
-            continue;
-        }
+            expectedLocator := "";
+            if (testCase.permError) {
+                expectedLocator = "-306";
+            } else if (testCase.target == "") {
+                expectedLocator = "-320";
+            }
 
-        responseContent := response.Content.(map[string]any);
-
-        expectedFound := (testCase.expected != nil);
-        actualFound := responseContent["found"].(bool);
-        if (expectedFound != actualFound) {
-            test.Errorf("Case %d: Found user does not match. Expected: '%v', actual: '%v'.", i, expectedFound, actualFound);
-            continue;
-        }
-
-        if (responseContent["user"] == nil) {
-            if (testCase.expected != nil) {
-                test.Errorf("Case %d: Got a nil user when one was expected.", i);
-                continue;
+            if (expectedLocator == "") {
+                test.Errorf("Case %d: Response is not a success when it should be: '%v'.", i, response);
+            } else {
+                if (response.Locator != expectedLocator) {
+                    test.Errorf("Case %d: Incorrect error returned. Expcted '%s', found '%s'.",
+                            i, expectedLocator, response.Locator);
+                }
             }
 
             continue;
         }
 
-        actualUser := core.UserInfoFromMap(responseContent["user"].(map[string]any));
-        if (*testCase.expected != *actualUser) {
-            test.Errorf("Case %d: Unexpected user result. Expected: '%+v', actual: '%+v'.", i, testCase.expected, actualUser);
+        var responseContent UserGetResponse;
+        util.MustJSONFromString(util.MustToJSON(response.Content), &responseContent);
+
+        expectedFound := (testCase.expected != nil);
+        if (expectedFound != responseContent.FoundUser) {
+            test.Errorf("Case %d: Found user does not match. Expected: '%v', actual: '%v'.", i, expectedFound, responseContent.FoundUser);
+            continue;
+        }
+
+        if (!reflect.DeepEqual(testCase.expected, responseContent.User)) {
+            test.Errorf("Case %d: Unexpected user result. Expected: '%+v', actual: '%+v'.", i, testCase.expected, responseContent.User);
             continue;
         }
     }

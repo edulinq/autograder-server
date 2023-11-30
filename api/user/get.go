@@ -7,24 +7,24 @@ import (
 type UserGetRequest struct {
     core.APIRequestCourseUserContext
     core.MinRoleGrader
-    Users core.CourseUsers `json:"-"`
 
-    TargetEmail core.NonEmptyString `json:"target-email"`
+    TargetUser core.TargetUser `json:"target-email"`
 }
 
 type UserGetResponse struct {
-    FoundUser bool `json:"found"`
+    FoundUser bool `json:"found-user"`
     User *core.UserInfo `json:"user"`
 }
 
 func HandleUserGet(request *UserGetRequest) (*UserGetResponse, *core.APIError) {
     response := UserGetResponse{};
 
-    user := request.Users[string(request.TargetEmail)];
-    if (user != nil) {
-        response.FoundUser = true;
-        response.User = core.NewUserInfo(user);
+    if (!request.TargetUser.Found) {
+        return &response, nil;
     }
+
+    response.FoundUser = true;
+    response.User = core.NewUserInfo(request.TargetUser.User);
 
     return &response, nil;
 }

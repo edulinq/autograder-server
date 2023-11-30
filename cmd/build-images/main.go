@@ -7,21 +7,22 @@ import (
     "github.com/rs/zerolog/log"
 
     "github.com/eriq-augustine/autograder/config"
+    "github.com/eriq-augustine/autograder/db"
     "github.com/eriq-augustine/autograder/docker"
-    "github.com/eriq-augustine/autograder/grader"
     "github.com/eriq-augustine/autograder/model"
 )
 
 var args struct {
     config.ConfigArgs
     docker.BuildOptions
-    Path []string `help:"Path to assignment JSON files." arg:"" optional:"" type:"existingfile"`
+    Course string `help:"ID of the course." arg:"" optional:""`
+    Assignment string `help:"ID of the assignment." arg:"" optional:""`
     Force bool `help:"Force images build commands to be sent to docker even if the image is up-to-date." default:"false"`
 }
 
 func main() {
     kong.Parse(&args,
-        kong.Description("Build all images from all known assignments (if no paths are supplied), or the images specified by the given assignments."),
+        kong.Description("Build images from all known assignments, or from the specified assignment."),
     );
 
     err := config.HandleConfigArgs(args.ConfigArgs);
@@ -29,13 +30,22 @@ func main() {
         log.Fatal().Err(err).Msg("Could not load config options.");
     }
 
-    var imageNames []string;
+    db.MustOpen();
+    defer db.MustClose();
 
-    if (len(args.Path) > 0) {
-        imageNames = buildFromPaths(args.Path, &args.BuildOptions);
+    var assignments []*model.Assignment;
+
+    if (args.Assignment != "") {
+        assignments = append(assignments, db.MustGetAssignment(args.Course, args.Assignment));
     } else {
-        imageNames = buildFromCourses(&args.BuildOptions);
+        for _, course := range db.MustGetCourses() {
+            for _, assignment := range course.GetAssignments() {
+                assignments = append(assignments, assignment);
+            }
+        }
     }
+
+    imageNames := buildImages(assignments);
 
     fmt.Printf("Successfully built %d images:\n", len(imageNames));
     for _, imageName := range imageNames {
@@ -43,33 +53,13 @@ func main() {
     }
 }
 
-func buildFromCourses(buildOptions *docker.BuildOptions) []string {
-    err := grader.LoadCourses();
-    if (err != nil) {
-        log.Fatal().Err(err).Msg("Failed to load courses.");
-    }
-
-    imageNames, errs := grader.BuildDockerImages(args.Force, buildOptions);
-    if (len(errs) > 0) {
-        for imageName, err := range errs {
-            log.Error().Err(err).Str("image", imageName).Msg("Failed to build grader docker images.");
-        }
-
-        log.Fatal().Int("count", len(errs)).Msg("Failed to build course images.");
-    }
-
-    return imageNames;
-}
-
-func buildFromPaths(paths []string, buildOptions *docker.BuildOptions) []string {
+func buildImages(assignments []*model.Assignment) []string {
     imageNames := make([]string, 0);
 
-    for _, path := range paths {
-        assignment := model.MustLoadAssignmentConfig(path);
-
-        err := assignment.BuildImage(args.Force, false, buildOptions);
+    for _, assignment := range assignments {
+        err := docker.BuildImageFromSource(assignment, args.Force, false, &args.BuildOptions);
         if (err != nil) {
-            log.Fatal().Str("assignment", assignment.FullID()).Str("path", path).Err(err).Msg("Failed to build image.");
+            log.Fatal().Str("assignment", assignment.FullID()).Err(err).Msg("Failed to build image.");
         }
 
         imageNames = append(imageNames, assignment.ImageName());

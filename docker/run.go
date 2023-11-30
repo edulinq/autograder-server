@@ -14,15 +14,15 @@ import (
     "github.com/eriq-augustine/autograder/util"
 )
 
-func RunContainer(imageName string, inputDir string, outputDir string, gradingID string) (string, error) {
+func RunContainer(imageName string, inputDir string, outputDir string, gradingID string) (string, string, error) {
     ctx, docker, err := getDockerClient();
     if (err != nil) {
-        return "", err;
+        return "", "", err;
     }
     defer docker.Close()
 
-    inputDir = util.MustAbs(inputDir);
-    outputDir = util.MustAbs(outputDir);
+    inputDir = util.ShouldAbs(inputDir);
+    outputDir = util.ShouldAbs(outputDir);
 
     name := cleanContainerName(fmt.Sprintf("%s-%s", gradingID, util.UUID()));
 
@@ -55,12 +55,12 @@ func RunContainer(imageName string, inputDir string, outputDir string, gradingID
         name)
 
     if (err != nil) {
-        return "", fmt.Errorf("Failed to create container '%s': '%w'.", name, err);
+        return "", "", fmt.Errorf("Failed to create container '%s': '%w'.", name, err);
     }
 
     err = docker.ContainerStart(ctx, containerInstance.ID, types.ContainerStartOptions{});
     if (err != nil) {
-        return "", fmt.Errorf("Failed to start container '%s' (%s): '%w'.", name, containerInstance.ID, err);
+        return "", "", fmt.Errorf("Failed to start container '%s' (%s): '%w'.", name, containerInstance.ID, err);
     }
 
     // Get the output reader before the container dies.
@@ -80,13 +80,14 @@ func RunContainer(imageName string, inputDir string, outputDir string, gradingID
     select {
         case err := <-errorChan:
             if (err != nil) {
-                return "", fmt.Errorf("Got an error when running container '%s' (%s): '%w'.", name, containerInstance.ID, err);
+                return "", "", fmt.Errorf("Got an error when running container '%s' (%s): '%w'.", name, containerInstance.ID, err);
             }
         case <-statusChan:
             // Waiting is complete.
     }
 
-    output := "";
+    stdout := "";
+    stderr := "";
 
     // Read the output after the container is done.
     if (out != nil) {
@@ -95,12 +96,13 @@ func RunContainer(imageName string, inputDir string, outputDir string, gradingID
 
         stdcopy.StdCopy(outBuffer, errBuffer, out);
 
-        log.Debug().Str("container-name", name).Str("container-id", containerInstance.ID).Str("stdout", outBuffer.String()).Str("stderr", errBuffer.String()).Msg("Container output.");
+        stdout = outBuffer.String();
+        stderr = errBuffer.String();
 
-        output = fmt.Sprintf("\n--- stdout ---\n%s\n--- stderr ---\n%s\n---\n", outBuffer.String(), errBuffer.String());
+        log.Debug().Str("container-name", name).Str("container-id", containerInstance.ID).Str("stdout", stdout).Str("stderr", stderr).Msg("Container output.");
     }
 
-    return output, nil;
+    return stdout, stderr, nil;
 }
 
 func cleanContainerName(text string) string {

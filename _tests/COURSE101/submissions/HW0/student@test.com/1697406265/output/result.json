@@ -1,0 +1,31 @@
+{
+    "name": "HW0",
+    "questions": [
+        {
+            "name": "Q1",
+            "max_points": 1,
+            "score": 1,
+            "message": "",
+            "grading_start_time": "2023-11-11T22:13:41.995528+00:00",
+            "grading_end_time": "2023-11-11T22:13:41.995562+00:00"
+        },
+        {
+            "name": "Q2",
+            "max_points": 1,
+            "score": 0,
+            "message": "NotImplemented returned.",
+            "grading_start_time": "2023-11-11T22:13:41.998572+00:00",
+            "grading_end_time": "2023-11-11T22:13:41.998616+00:00"
+        },
+        {
+            "name": "Style",
+            "max_points": 0,
+            "score": 0,
+            "message": "Style is clean!",
+            "grading_start_time": "2023-11-11T22:13:42.001562+00:00",
+            "grading_end_time": "2023-11-11T22:13:42.030210+00:00"
+        }
+    ],
+    "grading_start_time": "2023-11-11T22:13:41.993294+00:00",
+    "grading_end_time": "2023-11-11T22:13:42.031903+00:00"
+}

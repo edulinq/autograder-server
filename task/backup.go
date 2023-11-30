@@ -2,106 +2,73 @@ package task
 
 import (
     "fmt"
-    "os"
     "path/filepath"
     "time"
 
-    "github.com/rs/zerolog/log"
-
     "github.com/eriq-augustine/autograder/config"
+    "github.com/eriq-augustine/autograder/db"
+    "github.com/eriq-augustine/autograder/model"
     "github.com/eriq-augustine/autograder/util"
 )
 
-type BackupTask struct {
-    Disable bool `json:"disable"`
-    When ScheduledTime `json:"when"`
+func RunBackupTask(course *model.Course, rawTask model.ScheduledTask) error {
+    task, ok := rawTask.(*model.BackupTask);
+    if (!ok) {
+        return fmt.Errorf("Task is not a BackupTask: %t (%v).", rawTask, rawTask);
+    }
 
-    basename string `json:"-"`
-    source string `json:"-"`
-    dest string `json:"-"`
+    if (task.Disable) {
+        return nil;
+    }
+
+    return RunBackup(course, task.Dest);
 }
 
-func (this *BackupTask) Validate(course TaskCourseSource) error {
-    this.When.id = fmt.Sprintf("backup-%s", course.GetID());
+// Perform a backup.
+// If dest is not specified, it will be picked up from config.BACKUP_DIR.
+func RunBackup(course *model.Course, dest string) error {
+    if (dest == "") {
+        dest = config.BACKUP_DIR.Get();
+    }
 
-    err := this.When.Validate();
+    err := util.MkDir(dest);
     if (err != nil) {
-        return err;
+        return fmt.Errorf("Could not create dest dir '%s': '%w'.", dest, err);
     }
 
-    this.Disable = (this.Disable || config.NO_TASKS.GetBool());
+    baseTempDir, err := util.MkDirTemp("autograder-backup-course-");
+    if (err != nil) {
+        return fmt.Errorf("Could not create temp backup dir: '%w'.", err);
+    }
+    defer util.RemoveDirent(baseTempDir);
 
-    this.basename = course.GetID();
-    if (this.basename == "") {
-        return fmt.Errorf("Backup basename cannot be empty.");
+    baseFilename, targetPath := getBackupPath(dest, course.GetID());
+
+    tempDir := filepath.Join(baseTempDir, baseFilename);
+    err = db.DumpCourse(course, tempDir);
+    if (err != nil) {
+        return fmt.Errorf("Failed to dump course: '%w'.", err);
     }
 
-    this.source = course.GetSourceDir();
-    if (!util.PathExists(this.source)) {
-        return fmt.Errorf("Backup source path '%s' does not exist.", this.source);
-    }
-
-    this.dest = config.BACKUP_DIR.GetString();
-    if (util.IsFile(this.dest)) {
-        return fmt.Errorf("Backup directory exists and is a file: '%s'.", this.dest);
+    err = util.Zip(tempDir, targetPath, true);
+    if (err != nil) {
+        return fmt.Errorf("Failed to zip dumpped course dir '%s' into '%s': '%w'.", tempDir, targetPath, err);
     }
 
     return nil;
 }
 
-func (this *BackupTask) String() string {
-    return fmt.Sprintf("Backup '%s' to '%s' at '%s' (next time: '%s').", this.source, this.dest, this.When.String(), this.When.ComputeNext());
-}
-
-// Schedule this task to be regularly run at the scheduled time.
-func (this *BackupTask) Schedule() {
-    if (this.Disable) {
-        return;
-    }
-
-    this.When.Schedule(func() {
-        err := this.Run();
-        if (err != nil) {
-            log.Error().Err(err).Str("source", this.source).Str("dest", this.dest).Msg("Backup task failed.");
-        }
-    });
-}
-
-// Stop any scheduled executions of this task.
-func (this *BackupTask) Stop() {
-    this.When.Stop();
-}
-
-// Run the task regardless of schedule.
-func (this *BackupTask) Run() error {
-    return RunBackup(this.source, this.dest, this.basename);
-}
-
-// Do a backup without an attatched object.
-// If dest is not specified, it will be picked up from config.BACKUP_DIR.
-func RunBackup(source string, dest string, basename string) error {
-    if (dest == "") {
-        dest = config.BACKUP_DIR.GetString();
-    }
-
-    os.MkdirAll(dest, 0755);
-
+func getBackupPath(dest string, basename string) (string, string) {
     backupID := time.Now().Unix();
     offsetCount := 0;
-    targetPath := filepath.Join(dest, fmt.Sprintf("%s-%d.zip", basename, backupID));
+    baseFilename := fmt.Sprintf("%s-%d", basename, backupID);
+    targetPath := filepath.Join(dest, baseFilename + ".zip");
 
     for ((targetPath == "") || (util.PathExists(targetPath))) {
         offsetCount++;
-        targetPath = filepath.Join(dest, fmt.Sprintf("%s-%d-%d.zip", basename, backupID, offsetCount));
+        baseFilename = fmt.Sprintf("%s-%d-%d.zip", basename, backupID, offsetCount);
+        targetPath = filepath.Join(dest, baseFilename + ".zip");
     }
 
-    log.Debug().Str("source", source).Str("dest", dest).Str("basename", basename).Msg("Starting backup.");
-    err := util.Zip(source, targetPath);
-    if (err != nil) {
-        log.Debug().Str("source", source).Str("dest", dest).Str("basename", basename).Msg("Backup failed.");
-        return err;
-    }
-
-    log.Debug().Str("source", source).Str("dest", dest).Str("basename", basename).Msg("Backup completed sucessfully.");
-    return nil;
+    return baseFilename, targetPath;
 }

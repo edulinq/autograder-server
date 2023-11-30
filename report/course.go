@@ -1,24 +1,19 @@
 package report
 
 import (
+    "github.com/eriq-augustine/autograder/model"
 )
-
-type ReportingSources interface {
-    GetName() string
-    GetReportingSources() []ReportingSource
-}
 
 type CourseScoringReport struct {
     CourseName string `json:"course-name"`
     Assignments []*AssignmentScoringReport `json:"assignments"`
 }
 
-func GetCourseScoringReport(sources ReportingSources) (*CourseScoringReport, error) {
+func GetCourseScoringReport(course *model.Course) (*CourseScoringReport, error) {
     assignmentReports := make([]*AssignmentScoringReport, 0);
 
-    reportingSources := sources.GetReportingSources();
-    for i := (len(reportingSources) - 1); i >= 0; i-- {
-        assignmentReport, err := GetAssignmentScoringReport(reportingSources[i]);
+    for _, assignment := range course.GetSortedAssignments() {
+        assignmentReport, err := GetAssignmentScoringReport(assignment);
         if (err != nil) {
             return nil, err;
         }
@@ -27,7 +22,7 @@ func GetCourseScoringReport(sources ReportingSources) (*CourseScoringReport, err
     }
 
     report := CourseScoringReport {
-        CourseName: sources.GetName(),
+        CourseName: course.GetName(),
         Assignments: assignmentReports,
     };
 

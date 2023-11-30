@@ -7,7 +7,8 @@ import (
 
     "github.com/rs/zerolog/log"
 
-    "github.com/eriq-augustine/autograder/usr"
+    "github.com/eriq-augustine/autograder/common"
+    "github.com/eriq-augustine/autograder/model"
     "github.com/eriq-augustine/autograder/util"
 )
 
@@ -39,7 +40,7 @@ type APIError struct {
     RequestID string
     Locator string
     Endpoint string
-    Timestamp string
+    Timestamp common.Timestamp
     HTTPStatus int
     InternalText string
     ResponseText string
@@ -55,7 +56,7 @@ func (this *APIError) Error() string {
 func (this *APIError) Log() {
     log.Error().
             Str("api-request-id", this.RequestID).Str("locator", this.Locator).Str("api-endpoint", this.Endpoint).
-            Str("timestamp", this.Timestamp).
+            Str("timestamp", this.Timestamp.String()).
             Int("http-status", this.HTTPStatus).
             Err(this.SourceError).
             Str("internal-text", this.InternalText).Str("response-text", this.ResponseText).
@@ -94,8 +95,9 @@ func (this *APIError) ToResponse() *APIResponse {
     return &APIResponse{
         ID: this.RequestID,
         Locator: locator,
+        ServerVersion: util.GetAutograderFullVersion(),
         StartTimestamp: this.Timestamp,
-        EndTimestamp: util.NowTimestamp(),
+        EndTimestamp: common.NowTimestamp(),
         HTTPStatus: this.HTTPStatus,
         Success: (this.HTTPStatus == HTTP_STATUS_GOOD),
         Message: this.ResponseText,
@@ -123,7 +125,7 @@ func NewBareBadRequestError(locator string, endpoint string, message string) *AP
         RequestID: locator,
         Locator: locator,
         Endpoint: endpoint,
-        Timestamp: util.NowTimestamp(),
+        Timestamp: common.NowTimestamp(),
         HTTPStatus: HTTP_STATUS_BAD_REQUEST,
         InternalText: message,
         ResponseText: message,
@@ -147,7 +149,7 @@ func NewAuthBadRequestError(locator string, request *APIRequestCourseUserContext
     return err;
 }
 
-func NewBadPermissionsError(locator string, request *APIRequestCourseUserContext, minRole usr.UserRole, internalMessage string) *APIError {
+func NewBadPermissionsError(locator string, request *APIRequestCourseUserContext, minRole model.UserRole, internalMessage string) *APIError {
     err := &APIError{
         RequestID: request.RequestID,
         Locator: locator,
@@ -190,7 +192,7 @@ func NewBareInternalError(locator string, endpoint string, internalMessage strin
         RequestID: locator,
         Locator: locator,
         Endpoint: endpoint,
-        Timestamp: util.NowTimestamp(),
+        Timestamp: common.NowTimestamp(),
         HTTPStatus: HTTP_STATUS_SERVER_ERROR,
         InternalText: internalMessage,
         ResponseText: fmt.Sprintf("The server failed to process your request. Please contact an adimistrator with this ID '%s'.", locator),

@@ -2,38 +2,15 @@ package core
 
 import (
     "fmt"
-    "io"
     "net/http"
-    "os"
-    "path/filepath"
     "reflect"
 
-    "github.com/eriq-augustine/autograder/grader"
+    "github.com/eriq-augustine/autograder/common"
+    "github.com/eriq-augustine/autograder/config"
+    "github.com/eriq-augustine/autograder/db"
     "github.com/eriq-augustine/autograder/model"
-    "github.com/eriq-augustine/autograder/usr"
     "github.com/eriq-augustine/autograder/util"
 )
-
-// The minimum user roles required encoded as a type so it can be embedded into a request struct.
-type MinRoleOwner bool;
-type MinRoleAdmin bool;
-type MinRoleGrader bool;
-type MinRoleStudent bool;
-type MinRoleOther bool;
-
-// A request having a field of this type indicates that the users for the course should be automatically fetched.
-// The existence of this type in a struct also indicates that the request is at least a APIRequestCourseUserContext.
-type CourseUsers map[string]*usr.User;
-
-// A request having a field of this type indicates that files from the POST request
-// will be qutomatically read and written to a temp directory on disk.
-type POSTFiles struct {
-    TempDir string `json:"-"`
-    Filenames []string `json:"-"`
-}
-
-// The type for a named field that must have a non-empty string value.
-type NonEmptyString string;
 
 // An api request that has been reflexively verifed.
 // Once validated, callers should feel safe calling reflection methods on this without extra checks.
@@ -43,7 +20,10 @@ type APIRequest struct {
     // These are not provided in JSON, they are filled in during validation.
     RequestID string `json:"-"`
     Endpoint string `json:"-"`
-    Timestamp string `json:"-"`
+    Timestamp common.Timestamp `json:"-"`
+
+    // This request is being used as part of a test.
+    TestingMode bool `json:"-"`
 }
 
 // Context for a request that has a course and user (pretty much the lowest level of request).
@@ -57,7 +37,7 @@ type APIRequestCourseUserContext struct {
     // These fields are filled out as the request is parsed,
     // before being sent to the handler.
     Course *model.Course
-    User *usr.User
+    User *model.User
 }
 
 //Context for requests that need an assignment on top of a user/course.
@@ -72,7 +52,9 @@ type APIRequestAssignmentContext struct {
 func (this *APIRequest) Validate(request any, endpoint string) *APIError {
     this.RequestID = util.UUID();
     this.Endpoint = endpoint;
-    this.Timestamp = util.NowTimestamp();
+    this.Timestamp = common.NowTimestamp();
+
+    this.TestingMode = config.TESTING_MODE.Get();
 
     return nil;
 }
@@ -100,9 +82,15 @@ func (this *APIRequestCourseUserContext) Validate(request any, endpoint string) 
         return NewBadRequestError("-303", &this.APIRequest, "No user password specified.");
     }
 
-    this.Course = grader.GetCourse(this.CourseID);
+    var err error;
+    this.Course, err = db.GetCourse(this.CourseID);
+    if (err != nil) {
+        return NewInternalError("-318", this, "Unable to get course").Err(err);
+    }
+
     if (this.Course == nil) {
-        return NewBadRequestError("-304", &this.APIRequest, "Could not find course.").Add("course-id", this.CourseID);
+        return NewBadRequestError("-304", &this.APIRequest, fmt.Sprintf("Could not find course: '%s'.", this.CourseID)).
+                Add("course-id", this.CourseID);
     }
 
     this.User, apiErr = this.Auth();
@@ -133,9 +121,9 @@ func (this *APIRequestAssignmentContext) Validate(request any, endpoint string) 
         return NewBadRequestError("-307", &this.APIRequest, "No assignment ID specified.");
     }
 
-    this.Assignment = this.Course.Assignments[this.AssignmentID];
+    this.Assignment = this.Course.GetAssignment(this.AssignmentID);
     if (this.Assignment == nil) {
-        return NewBadRequestError("-308", &this.APIRequest, "Could not find assignment.").
+        return NewBadRequestError("-308", &this.APIRequest, fmt.Sprintf("Could not find assignment: '%s'.", this.AssignmentID)).
             Add("course-id", this.CourseID).Add("assignment-id", this.AssignmentID);
     }
 
@@ -243,196 +231,11 @@ func validateRequestStruct(request any, endpoint string) (bool, *APIError) {
     return foundRequestStruct, nil;
 }
 
-// Check for any special request fields and validate/populate them.
-func checkRequestSpecialFields(request *http.Request, apiRequest any, endpoint string) *APIError {
-    reflectValue := reflect.ValueOf(apiRequest).Elem();
-
-    for i := 0; i < reflectValue.NumField(); i++ {
-        fieldValue := reflectValue.Field(i);
-
-        if (fieldValue.Type() == reflect.TypeOf((*CourseUsers)(nil)).Elem()) {
-            apiErr := checkRequestCourseUsers(endpoint, apiRequest, i);
-            if (apiErr != nil) {
-                return apiErr;
-            }
-        } else if (fieldValue.Type() == reflect.TypeOf((*POSTFiles)(nil)).Elem()) {
-            apiErr := checkRequestPostFiles(request, endpoint, apiRequest, i);
-            if (apiErr != nil) {
-                return apiErr;
-            }
-        } else if (fieldValue.Type() == reflect.TypeOf((*NonEmptyString)(nil)).Elem()) {
-            apiErr := checkRequestNonEmptyString(request, endpoint, apiRequest, i);
-            if (apiErr != nil) {
-                return apiErr;
-            }
-        }
-    }
-
-    return nil;
-}
-
-func checkRequestCourseUsers(endpoint string, apiRequest any, fieldIndex int) *APIError {
-    reflectValue := reflect.ValueOf(apiRequest).Elem();
-
-    structName := reflectValue.Type().Name();
-
-    fieldValue := reflectValue.Field(fieldIndex);
-    fieldType := reflectValue.Type().Field(fieldIndex);
-
-    courseContextValue := reflectValue.FieldByName("APIRequestCourseUserContext");
-    if (!courseContextValue.IsValid() || courseContextValue.IsZero()) {
-        return NewBareInternalError("-311", endpoint, "A request with CourseUsers must embed APIRequestCourseUserContext").
-                Add("request", apiRequest).
-                Add("struct-name", structName).Add("field-name", fieldType.Name);
-    }
-    courseContext := courseContextValue.Interface().(APIRequestCourseUserContext);
-
-    if (!fieldType.IsExported()) {
-        return NewInternalError("-312", &courseContext, "A CourseUsers field must be exported.").
-                Add("struct-name", structName).Add("field-name", fieldType.Name);
-    }
-
-    users, err := courseContext.Course.GetUsers();
-    if (err != nil) {
-        return NewInternalError("-313", &courseContext, "Failed to fetch embeded users.").Err(err).
-                Add("struct-name", structName).Add("field-name", fieldType.Name);
-    }
-
-    fieldValue.Set(reflect.ValueOf(users));
-
-    return nil;
-}
-
-func checkRequestPostFiles(request *http.Request, endpoint string, apiRequest any, fieldIndex int) *APIError {
-    reflectValue := reflect.ValueOf(apiRequest).Elem();
-
-    structName := reflectValue.Type().Name();
-
-    fieldValue := reflectValue.Field(fieldIndex);
-    fieldType := reflectValue.Type().Field(fieldIndex);
-
-    if (!fieldType.IsExported()) {
-        return NewBareInternalError("-314", endpoint, "A POSTFiles field must be exported.").
-                Add("struct-name", structName).Add("field-name", fieldType.Name);
-    }
-
-    postFiles, err := storeRequestFiles(request);
-
-    if (err != nil) {
-        return NewBareInternalError("-315", endpoint, "Failed to store files from POST.").Err(err).
-                Add("struct-name", structName).Add("field-name", fieldType.Name);
-    }
-
-    if (postFiles == nil) {
-        return NewBareBadRequestError("-316", endpoint, "Endpoint requires files to be provided in POST body, no files found.").
-                Add("struct-name", structName).Add("field-name", fieldType.Name);
-    }
-
-    fieldValue.Set(reflect.ValueOf(*postFiles));
-
-    return nil;
-}
-
-func checkRequestNonEmptyString(request *http.Request, endpoint string, apiRequest any, fieldIndex int) *APIError {
-    reflectValue := reflect.ValueOf(apiRequest).Elem();
-
-    structName := reflectValue.Type().Name();
-
-    fieldValue := reflectValue.Field(fieldIndex);
-    fieldType := reflectValue.Type().Field(fieldIndex);
-    jsonName := util.JSONFieldName(fieldType);
-
-    value := string(fieldValue.Interface().(NonEmptyString));
-    if (value == "") {
-        return NewBareBadRequestError("-318", endpoint,
-                fmt.Sprintf("Field '%s' requires a non-empty string, empty or null provided.", jsonName)).
-                Add("struct-name", structName).Add("field-name", fieldType.Name).Add("json-name", jsonName);
-    }
-
-    return nil;
-}
-
-func cleanPostFiles(apiRequest ValidAPIRequest, fieldIndex int) *APIError {
-    reflectValue := reflect.ValueOf(apiRequest).Elem();
-    fieldValue := reflectValue.Field(fieldIndex);
-    postFiles := fieldValue.Interface().(POSTFiles);
-    os.RemoveAll(postFiles.TempDir);
-
-    return nil;
-}
-
-func storeRequestFiles(request *http.Request) (*POSTFiles, error) {
-    if (request.MultipartForm == nil) {
-        return nil, nil;
-    }
-
-    if (len(request.MultipartForm.File) == 0) {
-        return nil, nil;
-    }
-
-    tempDir, err := util.MkDirTemp("api-request-files-");
-    if (err != nil) {
-        return nil, fmt.Errorf("Failed to create temp api files directory: '%w'.", err);
-    }
-
-    filenames := make([]string, 0, len(request.MultipartForm.File));
-
-    // Use an inner function to help control the removal of the temp dir on error.
-    innerFunc := func() error {
-        for filename, _ := range request.MultipartForm.File {
-            filenames = append(filenames, filename);
-
-            err = storeRequestFile(request, tempDir, filename);
-            if (err != nil) {
-                return err;
-            }
-        }
-
-        return nil;
-    }
-
-    err = innerFunc();
-    if (err != nil) {
-        os.RemoveAll(tempDir);
-        return nil, err;
-    }
-
-    postFiles := POSTFiles{
-        TempDir: tempDir,
-        Filenames: filenames,
-    };
-
-    return &postFiles, nil;
-}
-
-func storeRequestFile(request *http.Request, outDir string, filename string) error {
-    inFile, _, err := request.FormFile(filename);
-    if (err != nil) {
-        return fmt.Errorf("Failed to access request file '%s': '%w'.", filename, err);
-    }
-    defer inFile.Close();
-
-    outPath := filepath.Join(outDir, filename);
-
-    outFile, err := os.Create(outPath);
-    if (err != nil) {
-        return fmt.Errorf("Failed to create output file '%s': '%w'.", outPath, err);
-    }
-    defer outFile.Close();
-
-    _, err = io.Copy(outFile, inFile);
-    if (err != nil) {
-        return fmt.Errorf("Failed to copy contents of request file '%s': '%w'.", filename, err);
-    }
-
-    return nil;
-}
-
 // Take a request (or any object),
 // go through all the fields and look for fields typed as the encoded MinRole* fields.
 // Return the maximum amongst the found roles.
 // Return: (role, found role).
-func getMaxRole(request any) (usr.UserRole, bool) {
+func getMaxRole(request any) (model.UserRole, bool) {
     reflectValue := reflect.ValueOf(request);
 
     // Dereference any pointer.
@@ -441,35 +244,35 @@ func getMaxRole(request any) (usr.UserRole, bool) {
     }
 
     foundRole := false;
-    role := usr.Unknown;
+    role := model.RoleUnknown;
 
     for i := 0; i < reflectValue.NumField(); i++ {
         fieldValue := reflectValue.Field(i);
 
         if (fieldValue.Type() == reflect.TypeOf((*MinRoleOwner)(nil)).Elem()) {
             foundRole = true;
-            if (role < usr.Owner) {
-                role = usr.Owner;
+            if (role < model.RoleOwner) {
+                role = model.RoleOwner;
             }
         } else if (fieldValue.Type() == reflect.TypeOf((*MinRoleAdmin)(nil)).Elem()) {
             foundRole = true;
-            if (role < usr.Admin) {
-                role = usr.Admin;
+            if (role < model.RoleAdmin) {
+                role = model.RoleAdmin;
             }
         } else if (fieldValue.Type() == reflect.TypeOf((*MinRoleGrader)(nil)).Elem()) {
             foundRole = true;
-            if (role < usr.Grader) {
-                role = usr.Grader;
+            if (role < model.RoleGrader) {
+                role = model.RoleGrader;
             }
         } else if (fieldValue.Type() == reflect.TypeOf((*MinRoleStudent)(nil)).Elem()) {
             foundRole = true;
-            if (role < usr.Student) {
-                role = usr.Student;
+            if (role < model.RoleStudent) {
+                role = model.RoleStudent;
             }
         } else if (fieldValue.Type() == reflect.TypeOf((*MinRoleOther)(nil)).Elem()) {
             foundRole = true;
-            if (role < usr.Other) {
-                role = usr.Other;
+            if (role < model.RoleOther) {
+                role = model.RoleOther;
             }
         }
     }

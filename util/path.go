@@ -12,13 +12,16 @@ import (
     "github.com/rs/zerolog/log"
 )
 
+// Get an absolute path of a path.
+// On error, log the error and return the original path.
 // filepath.Abs() errors out when the path is not abs and the cwd cannot be fetched
 // (like if our cwd has been deleted from under us).
 // We will just treat this as a fatal error.
-func MustAbs(path string) string {
+func ShouldAbs(path string) string {
     absPath, err := filepath.Abs(path);
     if (err != nil) {
-        log.Fatal().Str("path", path).Err(err).Msg("Failed to compute an absolute path.");
+        log.Error().Str("path", path).Err(err).Msg("Failed to compute an absolute path.");
+        return path;
     }
 
     return absPath;
@@ -94,6 +97,7 @@ func FindFiles(filename string, dir string) ([]string, error) {
 // When symbolic links are allowed, keep two things in mind:
 //  1) A retutned path may be outside the passed in dir.
 //  2) This method will not terminate if there are loops.
+// If the filename is empty, return all dirents.
 func FindDirents(filename string, dir string, allowFiles bool, allowDirs bool, allowLinks bool) ([]string, error) {
     matches := make([]string, 0);
 
@@ -136,7 +140,7 @@ func FindDirents(filename string, dir string, allowFiles bool, allowDirs bool, a
             }
         }
 
-        if (filename == dirent.Name()) {
+        if ((filename == "") || (filename == dirent.Name())) {
             matches = append(matches, path);
         }
 
@@ -150,12 +154,43 @@ func FindDirents(filename string, dir string, allowFiles bool, allowDirs bool, a
     return matches, nil;
 }
 
+// Get all the dirents starting with some path (not including that path).
+// If the base path is a file, and empty slice will be returned.
+func GetAllDirents(basePath string) ([]string, error) {
+    basePath = ShouldAbs(basePath);
+    paths := make([]string, 0);
+
+    if (IsFile(basePath)) {
+        return paths, nil;
+    }
+
+    err := filepath.WalkDir(basePath, func(path string, dirent fs.DirEntry, err error) error {
+        if (err != nil) {
+            return err;
+        }
+
+        if (basePath == path) {
+            return nil;
+        }
+
+        paths = append(paths, path);
+        return nil;
+    });
+
+    if (err != nil) {
+        return nil, err;
+    }
+
+    return paths, nil;
+}
+
 // Get the directory of the source file calling this method.
-func GetThisDir() string {
+func ShouldGetThisDir() string {
     // 0 is the current caller (this function), and 1 should be one frame back.
     _, path, _, ok := runtime.Caller(1);
     if (!ok) {
-        log.Fatal().Msg("Could not get the stackframe for the current runtime.");
+        log.Error().Msg("Could not get the stackframe for the current runtime.");
+        return ".";
     }
 
     return filepath.Dir(path);
@@ -164,7 +199,11 @@ func GetThisDir() string {
 // Check this directory and all parent directories for a file with a specific name.
 // If nothing is found, an empty string will be returned.
 func SearchParents(basepath string, name string) string {
-    basepath = MustAbs(basepath);
+    basepath = ShouldAbs(basepath);
+
+    if (IsFile(basepath)) {
+        basepath = filepath.Dir(basepath);
+    }
 
     for ; ; {
         targetPath := filepath.Join(basepath, name);
@@ -189,15 +228,23 @@ func SearchParents(basepath string, name string) string {
 
 // This method is not robust (in many ways) and should be generally avoided in non-testing code.
 func PathHasParent(child string, parent string) bool {
-    child = MustAbs(child);
-    parent = MustAbs(parent);
+    child = ShouldAbs(child);
+    parent = ShouldAbs(parent);
 
     return strings.HasPrefix(child, parent);
+}
+
+// This method is not robust (in many ways) and should be generally avoided in non-testing code.
+func RelPath(child string, parent string) string {
+    child = ShouldAbs(child);
+    parent = ShouldAbs(parent) + "/";
+
+    return strings.TrimPrefix(child, parent);
 }
 
 // Get the root directory of this project.
 // This is decently fragile and can easily break in a deployment/production setting.
 // Should only be used for testing purposes.
 func RootDirForTesting() string {
-    return MustAbs(filepath.Join(MustAbs(GetThisDir()), ".."));
+    return ShouldAbs(filepath.Join(ShouldAbs(ShouldGetThisDir()), ".."));
 }

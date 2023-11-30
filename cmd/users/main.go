@@ -10,7 +10,9 @@ import (
     "github.com/rs/zerolog/log"
 
     "github.com/eriq-augustine/autograder/config"
-    "github.com/eriq-augustine/autograder/usr"
+    "github.com/eriq-augustine/autograder/db"
+    "github.com/eriq-augustine/autograder/lms/lmsusers"
+    "github.com/eriq-augustine/autograder/model"
     "github.com/eriq-augustine/autograder/util"
 )
 
@@ -22,49 +24,43 @@ type AddUser struct {
     Force bool `help:"Overwrite any existing user." short:"f" default:"false"`
     SendEmail bool `help:"Send an email to the user about adding them. Errors sending emails will be noted, but will not halt operations." default:"false"`
     DryRun bool `help:"Do not actually write out the user's file or send emails, just state what you would do." default:"false"`
+    SyncLMS bool `help:"After adding users, sync the course users (all of them) with the course's LMS." default:"false"`
 }
 
-func (this *AddUser) Run(path string) error {
-    users, err := usr.LoadUsersFile(path);
-    if (err != nil) {
-        return fmt.Errorf("Failed to load users file '%s': '%w'.", path, err);
+func (this *AddUser) Run(course *model.Course) error {
+    role := model.GetRole(this.Role);
+    if (role == model.RoleUnknown) {
+        return fmt.Errorf("Unknown role: '%s'.", this.Role)
     }
 
-    generatedPass := false;
-    if (this.Pass == "") {
-        this.Pass, err = util.RandHex(usr.DEFAULT_PASSWORD_LEN);
-        if (err != nil) {
-            return fmt.Errorf("Failed to generate a default password.");
-        }
+    newUser := model.NewUser(this.Email, this.Name, role);
 
-        generatedPass = true;
+    // If set, the password comes in cleartext.
+    if (this.Pass != "") {
+        hashPass := util.Sha256HexFromString(this.Pass);
+        newUser.Pass = hashPass;
     }
 
-    hashPass := util.Sha256Hex([]byte(this.Pass));
-
-    user, userExists, err := usr.NewOrMergeUser(users, this.Email, this.Name, this.Role, hashPass, this.Force, nil);
+    result, err := db.SyncUser(course, newUser, this.Force, this.DryRun, this.SendEmail);
     if (err != nil) {
         return err;
     }
 
-    users[user.Email] = user;
-
     if (this.DryRun) {
-        fmt.Printf("Doing a dry run, users file '%s' will not be written to.\n", path);
-    } else {
-        err = usr.SaveUsersFile(path, users);
+        fmt.Println("Doing a dry run, users file will not be written to.");
+    }
+
+    fmt.Println("Add Report:");
+    result.PrintReport();
+
+    if (this.SyncLMS) {
+        result, err = lmsusers.SyncLMSUser(course, this.Email, this.DryRun, this.SendEmail);
         if (err != nil) {
-            return fmt.Errorf("Failed to save users file '%s': '%w'.", path, err);
+            return err;
         }
-    }
 
-    // Wait until the users file has been written to output the generated password.
-    if (generatedPass) {
-        fmt.Printf("Generated password for '%s': '%s'.\n", this.Email, this.Pass);
-    }
-
-    if (this.SendEmail) {
-        usr.SendUserAddEmail(user, this.Pass, generatedPass, userExists, this.DryRun, false);
+        fmt.Println("\nLMS sync report:");
+        result.PrintReport();
     }
 
     return nil;
@@ -76,62 +72,34 @@ type AddTSV struct {
     Force bool `help:"Overwrite any existing users." short:"f" default:"false"`
     SendEmail bool `help:"Send an email to the user about adding them. Errors sending emails will be noted, but will not halt operations." default:"false"`
     DryRun bool `help:"Do not actually write out the user's file, just state what you would do." default:"false"`
+    SyncLMS bool `help:"After adding users, sync the course users (all of them) with the course's LMS." default:"false"`
 }
 
-func (this *AddTSV) Run(path string) error {
-    users, err := usr.LoadUsersFile(path);
-    if (err != nil) {
-        return fmt.Errorf("Failed to load users file '%s': '%w'.", path, err);
-    }
-
-    newUsers, err := readUsersTSV(users, this.TSV, this.SkipRows, this.Force);
+func (this *AddTSV) Run(course *model.Course) error {
+    newUsers, err := readUsersTSV(this.TSV, this.SkipRows);
     if (err != nil) {
         return err;
     }
 
-    if (!this.Force) {
-        // Make a pass and ensure that no new users are dups.
-        dupCount := 0;
-        for _, newUser := range newUsers {
-            user := users[newUser.User.Email];
-            if (user != nil) {
-                fmt.Printf("Found a duplicate user: '%s'.\n", user.Email);
-                dupCount++;
-            }
-        }
-
-        if (dupCount > 0) {
-            return fmt.Errorf("Found %d dupliate users.", dupCount);
-        }
-    }
-
-    // Set all the new users.
-    for _, newUser := range newUsers {
-        users[newUser.User.Email] = newUser.User;
+    result, err := db.SyncUsers(course, newUsers, this.Force, this.DryRun, this.SendEmail);
+    if (err != nil) {
+        return err;
     }
 
     if (this.DryRun) {
-        fmt.Printf("Doing a dry run, users file '%s' will not be written to.\n", path);
-    } else {
-        err = usr.SaveUsersFile(path, users);
+        fmt.Println("Doing a dry run, users file will not be written to.");
+        result.PrintReport();
+    }
+
+    if (this.SyncLMS) {
+        result, err = lmsusers.SyncLMSUsers(course, this.DryRun, this.SendEmail);
         if (err != nil) {
-            return fmt.Errorf("Failed to save users file '%s': '%w'.", path, err);
-        }
-    }
-
-    // Wait until the users file has been written to output the generated passwords.
-    for _, newUser := range newUsers {
-        if (!newUser.GeneratedPass) {
-            continue;
+            return err;
         }
 
-        fmt.Printf("Generated password for '%s': '%s'.\n", newUser.User.Email, newUser.CleartextPass);
-    }
-
-    if (this.SendEmail) {
-        fmt.Println("Sending out registration emails.");
-        for _, newUser := range newUsers {
-            usr.SendUserAddEmail(newUser.User, newUser.CleartextPass, newUser.GeneratedPass, newUser.UserExists, this.DryRun, true);
+        if (this.DryRun) {
+            fmt.Println("LMS sync report:");
+            result.PrintReport();
         }
     }
 
@@ -143,13 +111,12 @@ type AuthUser struct {
     Pass string `help:"Password for the user. Defaults to a random string (will be output)." short:"p"`
 }
 
-func (this *AuthUser) Run(path string) error {
-    users, err := usr.LoadUsersFile(path);
+func (this *AuthUser) Run(course *model.Course) error {
+    user, err := db.GetUser(course, this.Email);
     if (err != nil) {
-        return fmt.Errorf("Failed to load users file '%s': '%w'.", path, err);
+        return fmt.Errorf("Failed to get user: '%w'.", err);
     }
 
-    user := users[this.Email];
     if (user == nil) {
         return fmt.Errorf("User '%s' does not exist, cannot auth.", this.Email);
     }
@@ -169,13 +136,12 @@ type GetUser struct {
     Email string `help:"Email for the user." arg:"" required:""`
 }
 
-func (this *GetUser) Run(path string) error {
-    users, err := usr.LoadUsersFile(path);
+func (this *GetUser) Run(course *model.Course) error {
+    user, err := db.GetUser(course, this.Email);
     if (err != nil) {
-        return fmt.Errorf("Failed to load users file '%s': '%w'.", path, err);
+        return fmt.Errorf("Failed to get user: '%w'.", err);
     }
 
-    user := users[this.Email];
     if (user == nil) {
         fmt.Printf("No user found with email '%s'.\n", this.Email);
     } else {
@@ -189,10 +155,10 @@ type ListUsers struct {
     All bool `help:"Show more info about each user." short:"a" default:"false"`
 }
 
-func (this *ListUsers) Run(path string) error {
-    users, err := usr.LoadUsersFile(path);
+func (this *ListUsers) Run(course *model.Course) error {
+    users, err := db.GetUsers(course);
     if (err != nil) {
-        return fmt.Errorf("Failed to load users file '%s': '%w'.", path, err);
+        return fmt.Errorf("Failed to load users: '%w'.", err);
     }
 
     if (this.All) {
@@ -213,44 +179,29 @@ func (this *ListUsers) Run(path string) error {
 type ChangePassword struct {
     Email string `help:"Email for the user." arg:"" required:""`
     Pass string `help:"Password for the user. Defaults to a random string (will be output)." short:"p"`
+    SendEmail bool `help:"Send an email to the user." default:"false"`
 }
 
-func (this *ChangePassword) Run(path string) error {
-    users, err := usr.LoadUsersFile(path);
+func (this *ChangePassword) Run(course *model.Course) error {
+    user, err := db.GetUser(course, this.Email);
     if (err != nil) {
-        return fmt.Errorf("Failed to load users file '%s': '%w'.", path, err);
+        return fmt.Errorf("Failed to get user: '%w'.", err);
     }
 
-    user := users[this.Email];
     if (user == nil) {
-        return fmt.Errorf("No user found with email '%s'.\n", this.Email);
+        return fmt.Errorf("User '%s' does not exist.", this.Email);
     }
 
-    generatedPass := false;
-    if (this.Pass == "") {
-        this.Pass, err = util.RandHex(usr.DEFAULT_PASSWORD_LEN);
-        if (err != nil) {
-            return fmt.Errorf("Failed to generate a default password.");
-        }
+    user.Pass = this.Pass;
 
-        generatedPass = true;
-    }
-
-    pass := util.Sha256Hex([]byte(this.Pass));
-
-    err = user.SetPassword(pass);
+    result, err := db.SyncUser(course, user, true, false, this.SendEmail);
     if (err != nil) {
-        return fmt.Errorf("Could not set password: '%w'.", err);
-    }
-
-    err = usr.SaveUsersFile(path, users);
-    if (err != nil) {
-        return fmt.Errorf("Failed to save users file '%s': '%w'.", path, err);
+        return fmt.Errorf("Failed to sync user: '%w'.", err);
     }
 
     // Wait to the very end to output the generated password.
-    if (generatedPass) {
-        fmt.Printf("Generated password: '%s'.\n", this.Pass);
+    if (len(result.ClearTextPasswords) > 0) {
+        fmt.Printf("Generated password: '%s'.\n", result.ClearTextPasswords[user.Email]);
     }
 
     return nil
@@ -260,22 +211,14 @@ type RmUser struct {
     Email string `help:"Email for the user to be removed." arg:"" required:""`
 }
 
-func (this *RmUser) Run(path string) error {
-    users, err := usr.LoadUsersFile(path);
+func (this *RmUser) Run(course *model.Course) error {
+    exists, err := db.RemoveUser(course, this.Email);
     if (err != nil) {
-        return fmt.Errorf("Failed to load users file '%s': '%w'.", path, err);
+        return fmt.Errorf("Failed to remove user '%s': '%w'.", this.Email, err);
     }
 
-    user := users[this.Email];
-    if (user == nil) {
-        return fmt.Errorf("User '%s' does not exist, cannot remove.", this.Email);
-    }
-
-    delete(users, this.Email);
-
-    err = usr.SaveUsersFile(path, users);
-    if (err != nil) {
-        return fmt.Errorf("Failed to save users file '%s': '%w'.", path, err);
+    if (!exists) {
+        return fmt.Errorf("User does not exist '%s'.", this.Email);
     }
 
     fmt.Printf("User '%s' removed.\n", this.Email);
@@ -285,7 +228,7 @@ func (this *RmUser) Run(path string) error {
 
 var cli struct {
     config.ConfigArgs
-    UsersPath string `help:"Optional path to a users JSON file (or where one will be created)." type:"path" default:"users.json"`
+    Course string `help:"ID of the course." arg:""`
 
     Add AddUser `cmd:"" help:"Add a user."`
     AddTSV AddTSV `cmd:"" help:"Add users from a TSV file formatted as: '<email>[\t<display name>[\t<role>[\t<password>]]]'. See add for default values."`
@@ -305,31 +248,35 @@ func main() {
         log.Fatal().Err(err).Msg("Could not load config options.");
     }
 
-    err = context.Run(cli.UsersPath);
+    db.MustOpen();
+    defer db.MustClose();
+
+    course := db.MustGetCourse(cli.Course);
+
+    err = context.Run(course);
     if (err != nil) {
         log.Fatal().Err(err).Msg("Failed to run command.");
     }
 }
 
 type TSVUser struct {
-    User *usr.User
+    User *model.User
     UserExists bool;
     GeneratedPass bool;
     CleartextPass string
 }
 
-// Read users from a TSV formatted as: '<email>[\t<display name>[\t<role>[\t<password>]]]'.
+// Read users from a TSV formatted as: '<email>[\t<display name>[\t<role>[\t<cleartext password>]]]'.
 // The users returned from this function are not official users yet.
-// Their cleaartext password (not hash) will be stored in Salt, and it is up to the caller
-// to decide what to do with them (and to set their password).
-func readUsersTSV(users map[string]*usr.User, path string, skipRows int, force bool) ([]*TSVUser, error) {
+// The users returned from here can be sent straight to db.SyncUsers() without any modifications.
+func readUsersTSV(path string, skipRows int) (map[string]*model.User, error) {
     file, err := os.Open(path);
     if (err != nil) {
         return nil, fmt.Errorf("Failed to open user TSV file '%s': '%w'.", path, err);
     }
     defer file.Close();
 
-    newUsers := make([]*TSVUser, 0);
+    newUsers := make(map[string]*model.User);
 
     scanner := bufio.NewScanner(file);
     scanner.Split(bufio.ScanLines);
@@ -346,9 +293,7 @@ func readUsersTSV(users map[string]*usr.User, path string, skipRows int, force b
 
         var email string;
         var name string = "";
-        var role string = usr.GetRoleString(usr.Student);
-        var pass string = "";
-        var generatedPass bool = false;
+        var role model.UserRole = model.RoleStudent;
 
         if (len(parts) >= 1) {
             email = parts[0];
@@ -361,40 +306,24 @@ func readUsersTSV(users map[string]*usr.User, path string, skipRows int, force b
         }
 
         if (len(parts) >= 3) {
-            role = parts[2];
+            role = model.GetRole(parts[2]);
+            if (role == model.RoleUnknown) {
+                return nil, fmt.Errorf("User file '%s' line %d has unknwon role '%s'.", path, lineno, parts[2]);
+            }
         }
 
-        if (len(parts) >= 4) {
-            pass = parts[3];
-            generatedPass = false;
-        } else {
-            pass, err = util.RandHex(usr.DEFAULT_PASSWORD_LEN);
-            if (err != nil) {
-                return nil, fmt.Errorf("Failed to generate a default password.");
-            }
+        newUser := model.NewUser(email, name, role);
 
-            generatedPass = true;
+        if (len(parts) >= 4) {
+            hashPass := util.Sha256HexFromString(parts[3]);
+            newUser.Pass = hashPass;
         }
 
         if (len(parts) >= 5) {
             return nil, fmt.Errorf("User file '%s' line %d contains too many fields. Found %d, expecting at most %d.", path, lineno, len(parts), 4);
         }
 
-        hashPass := util.Sha256Hex([]byte(pass));
-
-        user, userExists, err := usr.NewOrMergeUser(users, email, name, role, hashPass, force, nil);
-        if (err != nil) {
-            return nil, err;
-        }
-
-        newUser := &TSVUser{
-            User: user,
-            UserExists: userExists,
-            GeneratedPass: generatedPass,
-            CleartextPass: pass,
-        };
-
-        newUsers = append(newUsers, newUser);
+        newUsers[email] = newUser;
     }
 
     return newUsers, nil;

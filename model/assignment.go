@@ -6,15 +6,11 @@ import (
     "strings"
     "sync"
 
-    "github.com/rs/zerolog/log"
-
     "github.com/eriq-augustine/autograder/common"
     "github.com/eriq-augustine/autograder/docker"
-    "github.com/eriq-augustine/autograder/usr"
     "github.com/eriq-augustine/autograder/util"
 )
 
-const ASSIGNMENT_CONFIG_FILENAME = "assignment.json"
 const DEFAULT_SUBMISSIONS_DIR = "_submissions"
 
 const FILE_CACHE_FILENAME = "filecache.json"
@@ -25,76 +21,56 @@ type Assignment struct {
     DisplayName string `json:"display-name"`
     SortID string `json:"sort-id"`
 
-    CanvasID string `json:"canvas-id",omitempty`
+    LMSID string `json:"lms-id",omitempty`
     LatePolicy LateGradingPolicy `json:"late-policy,omitempty"`
 
     docker.ImageInfo
 
     // Ignore these fields in JSON.
-    SourcePath string `json:"-"`
+    SourceDir string `json:"_source-dir"`
     Course *Course `json:"-"`
 
-    dockerLock *sync.Mutex `json:"-"`
+    imageLock *sync.Mutex `json:"-"`
 }
 
-// Load an assignment config from a given JSON path.
-// If the course config is nil, search all parent directories for the course config.
-func LoadAssignmentConfig(path string, courseConfig *Course) (*Assignment, error) {
-    var assignment Assignment;
-    err := util.JSONFromFile(path, &assignment);
-    if (err != nil) {
-        return nil, fmt.Errorf("Could not load assignment config (%s): '%w'.", path, err);
-    }
-
-    assignment.SourcePath = util.MustAbs(path);
-
-    if (courseConfig == nil) {
-        courseConfig, err = loadParentCourseConfig(filepath.Dir(path));
-        if (err != nil) {
-            return nil, fmt.Errorf("Could not load course config for '%s': '%w'.", path, err);
-        }
-    }
-    assignment.Course = courseConfig;
-
-    err = assignment.Validate();
-    if (err != nil) {
-        return nil, fmt.Errorf("Failed to validate assignment config (%s): '%w'.", path, err);
-    }
-
-    otherAssignment := courseConfig.Assignments[assignment.ID];
-    if (otherAssignment != nil) {
-        return nil, fmt.Errorf(
-                "Found multiple assignments with the same ID ('%s'): ['%s', '%s'].",
-                assignment.ID, otherAssignment.SourcePath, assignment.SourcePath);
-    }
-    courseConfig.Assignments[assignment.ID] = &assignment;
-
-    return &assignment, nil;
+func (this *Assignment) GetID() string {
+    return this.ID;
 }
 
-func MustLoadAssignmentConfig(path string) *Assignment {
-    assignment, err := LoadAssignmentConfig(path, nil);
-    if (err != nil) {
-        log.Fatal().Str("path", path).Err(err).Msg("Failed to load assignment config.");
-    }
-
-    return assignment;
+func (this *Assignment) GetSortID() string {
+    return this.SortID;
 }
 
 func (this *Assignment) FullID() string {
-    return fmt.Sprintf("%s-%s", this.Course.ID, this.ID);
+    return fmt.Sprintf("%s-%s", this.Course.GetID(), this.ID);
+}
+
+func (this *Assignment) GetCourse() *Course {
+    return this.Course;
 }
 
 func (this *Assignment) GetName() string {
     return this.DisplayName;
 }
 
+func (this *Assignment) GetLMSID() string {
+    return this.LMSID;
+}
+
+func (this *Assignment) GetLatePolicy() LateGradingPolicy {
+    return this.LatePolicy;
+}
+
 func (this *Assignment) ImageName() string {
-    return strings.ToLower(fmt.Sprintf("autograder.%s.%s", this.Course.ID, this.ID));
+    return strings.ToLower(fmt.Sprintf("autograder.%s.%s", this.Course.GetID(), this.ID));
 }
 
 func (this *Assignment) GetImageInfo() *docker.ImageInfo {
     return &this.ImageInfo;
+}
+
+func (this *Assignment) GetSourceDir() string {
+    return this.SourceDir;
 }
 
 // Ensure that the assignment is formatted correctly.
@@ -110,7 +86,7 @@ func (this *Assignment) Validate() error {
         return err;
     }
 
-    this.dockerLock = &sync.Mutex{};
+    this.imageLock = &sync.Mutex{};
 
     err = this.LatePolicy.Validate();
     if (err != nil) {
@@ -147,8 +123,8 @@ func (this *Assignment) Validate() error {
         this.PostSubmissionFileOperations = make([][]string, 0);
     }
 
-    if (this.SourcePath == "") {
-        return fmt.Errorf("Source path must not be empty.")
+    if (this.SourceDir == "") {
+        return fmt.Errorf("Source dir must not be empty.")
     }
 
     if (this.Course == nil) {
@@ -160,18 +136,9 @@ func (this *Assignment) Validate() error {
     }
 
     this.ImageInfo.Name = this.ImageName();
-    this.ImageInfo.BaseDir = filepath.Dir(this.SourcePath);
+    this.ImageInfo.BaseDir = this.SourceDir;
 
     return nil;
-}
-
-func (this *Assignment) GetUsers() (map[string]*usr.User, error) {
-    users, err := this.Course.GetUsers();
-    if (err != nil) {
-        return nil, fmt.Errorf("Failed to get users for assignment '%s': '%w'.", this.FullID(), err);
-    }
-
-    return users, nil;
 }
 
 func (this *Assignment) GetCacheDir() string {
@@ -188,6 +155,10 @@ func (this *Assignment) GetFileCachePath() string {
     return filepath.Join(this.GetCacheDir(), FILE_CACHE_FILENAME);
 }
 
+func (this *Assignment) GetImageLock() *sync.Mutex {
+    return this.imageLock;
+}
+
 func CompareAssignments(a *Assignment, b *Assignment) int {
     if ((a == nil) && (b == nil)) {
         return 0;
@@ -200,19 +171,22 @@ func CompareAssignments(a *Assignment, b *Assignment) int {
         return -1;
     }
 
+    aSortID := a.GetSortID();
+    bSortID := b.GetSortID();
+
     // If both don't have sort keys, just use the IDs.
-    if ((a.SortID == "") && (b.SortID == "")) {
-        return strings.Compare(a.ID, b.ID);
+    if ((aSortID == "") && (bSortID == "")) {
+        return strings.Compare(a.GetID(), b.GetID());
     }
 
 
     // Favor assignments with a sort key over those without.
-    if (a.SortID == "") {
+    if (aSortID == "") {
         return 1;
-    } else if (b.SortID == "") {
+    } else if (bSortID == "") {
         return -1;
     }
 
     // Both assignments have a sort key, use that for comparison.
-    return strings.Compare(a.SortID, b.SortID);
+    return strings.Compare(aSortID, bSortID);
 }

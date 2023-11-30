@@ -53,7 +53,7 @@ func ServeRoutes(routes *[]*Route, response http.ResponseWriter, request *http.R
     log.Debug().
         Str("method", request.Method).
         Str("url", request.URL.Path).
-        Msg("");
+        Msg("Incoming Request");
 
     if (routes == nil) {
         http.NotFound(response, request);

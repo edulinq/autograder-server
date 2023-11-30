@@ -28,8 +28,8 @@ func GetShortSubmissionID(submissionID string) string {
 // Create a temp dir for grading as well as the three standard directories in it.
 // Paths to the three direcotries (temp, in, out, work) will be returned.
 // The created directory will be in the system's temp directory.
-func PrepTempGradingDir() (string, string, string, string, error) {
-    tempDir, err := util.MkDirTemp("autograding-nodocker-");
+func PrepTempGradingDir(name string) (string, string, string, string, error) {
+    tempDir, err := util.MkDirTemp(fmt.Sprintf("autograding-%s-", name));
     if (err != nil) {
         return "", "", "", "", fmt.Errorf("Could not create temp dir: '%w'.", err);
     }

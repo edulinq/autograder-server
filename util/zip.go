@@ -1,5 +1,8 @@
 package util
 
+// Utilities for creating and extracting zip archives.
+// Zip archives can be created as deterministic, which will remove any time (modtime) and extra attributes.
+
 import (
     "archive/zip"
     "bytes"
@@ -8,9 +11,10 @@ import (
     "os"
     "path/filepath"
     "strings"
+    "time"
 )
 
-func Zip(source string, dest string) error {
+func Zip(source string, dest string, deterministic bool) error {
     if (!strings.HasSuffix(dest, ".zip")) {
         dest = dest + ".zip";
     }
@@ -28,18 +32,18 @@ func Zip(source string, dest string) error {
     writer := zip.NewWriter(zipfile);
     defer writer.Close();
 
-    return AddDirToZipWriter(source, "", writer);
+    return AddDirToZipWriter(source, "", writer, deterministic);
 }
 
 // Zip to a slice of bytes.
-func ZipToBytes(source string, prefix string) ([]byte, error) {
+func ZipToBytes(source string, prefix string, deterministic bool) ([]byte, error) {
     buffer := new(bytes.Buffer);
 
     // Create a new zip archive.
     writer := zip.NewWriter(buffer);
     defer writer.Close();
 
-    err := AddDirToZipWriter(source, prefix, writer);
+    err := AddDirToZipWriter(source, prefix, writer, deterministic);
     if (err != nil) {
         return nil, err;
     }
@@ -49,7 +53,7 @@ func ZipToBytes(source string, prefix string) ([]byte, error) {
 }
 
 // |prefix| can be used to set a dir that the zip contents will be located in.
-func AddDirToZipWriter(source string, prefix string, writer *zip.Writer) error {
+func AddDirToZipWriter(source string, prefix string, writer *zip.Writer, deterministic bool) error {
     err := filepath.Walk(source, func(path string, info os.FileInfo, err error) error {
         if (err != nil) {
             return err;
@@ -64,7 +68,7 @@ func AddDirToZipWriter(source string, prefix string, writer *zip.Writer) error {
             archivePath = filepath.Join(prefix, archivePath);
         }
 
-        err = AddFileToZipWriter(path, archivePath, writer);
+        err = AddFileToZipWriter(path, archivePath, writer, deterministic);
         if (err != nil) {
             return fmt.Errorf("Could not add file to zip archive '%s': '%w'.", path, err);
         }
@@ -82,7 +86,7 @@ func AddDirToZipWriter(source string, prefix string, writer *zip.Writer) error {
 // Add an existing file to an ongoing zip writer.
 // This can be used to add several files to an archive that may not start in the same source directory.
 // |archivePath| is used to set the file's path/name within the archive.
-func AddFileToZipWriter(path string, archivePath string, writer *zip.Writer) error {
+func AddFileToZipWriter(path string, archivePath string, writer *zip.Writer, deterministic bool) error {
     info, err := os.Stat(path);
     if (err != nil) {
         return fmt.Errorf("Could not stat source path '%s': '%w'.", path, err);
@@ -95,6 +99,15 @@ func AddFileToZipWriter(path string, archivePath string, writer *zip.Writer) err
 
     header.Method = zip.Deflate;
     header.Name = archivePath;
+
+    // Remove data and any additional information.
+    if (deterministic) {
+        header.Modified = time.Time{};
+        header.Extra = nil;
+        header.ExternalAttrs = 0;
+        header.ModifiedTime = 0;
+        header.ModifiedDate = 0;
+    }
 
     if (info.IsDir() && !strings.HasSuffix(header.Name, "/")) {
         header.Name += "/";
@@ -130,6 +143,19 @@ func Unzip(zipPath string, outDir string) error {
     }
     defer reader.Close();
 
+    return UnzipFromReader(&reader.Reader, outDir);
+}
+
+func UnzipFromBytes(data []byte, outDir string) error {
+    reader, err := zip.NewReader(bytes.NewReader(data), int64(len(data)));
+    if (err != nil) {
+        return fmt.Errorf("Could not open zip archive from bytes for reading: '%w'.", err);
+    }
+
+    return UnzipFromReader(reader, outDir);
+}
+
+func UnzipFromReader(reader *zip.Reader, outDir string) error {
     for _, zipfile := range reader.File {
         path := filepath.Join(outDir, zipfile.Name);
 
@@ -143,7 +169,7 @@ func Unzip(zipPath string, outDir string) error {
 
         inFile, err := zipfile.Open();
         if (err != nil) {
-            return fmt.Errorf("Could not open zip archive ('%s') file ('%s') for reading: '%w'.", zipPath, zipfile.Name, err);
+            return fmt.Errorf("Could not open file in zip archive ('%s') for reading: '%w'.", zipfile.Name, err);
         }
         defer inFile.Close();
 
@@ -170,14 +196,16 @@ func Unzip(zipPath string, outDir string) error {
 type OngoingZipOperation struct {
     buffer *bytes.Buffer
     writer *zip.Writer
+    deterministic bool
 }
 
-func NewOngoingZipOperation() *OngoingZipOperation {
+func NewOngoingZipOperation(deterministic bool) *OngoingZipOperation {
     buffer := new(bytes.Buffer);
 
     return &OngoingZipOperation{
         buffer: buffer,
         writer: zip.NewWriter(buffer),
+        deterministic: deterministic,
     };
 }
 
@@ -186,7 +214,7 @@ func (this *OngoingZipOperation) AddDir(path string, prefix string) error {
         return fmt.Errorf("Can not add dir to closed zip operation: '%s'.", path);
     }
 
-    return AddDirToZipWriter(path, prefix, this.writer);
+    return AddDirToZipWriter(path, prefix, this.writer, this.deterministic);
 }
 
 func (this *OngoingZipOperation) AddFile(path string, archivePath string) error {
@@ -194,7 +222,7 @@ func (this *OngoingZipOperation) AddFile(path string, archivePath string) error 
         return fmt.Errorf("Can not add file to closed zip operation: '%s'.", path);
     }
 
-    return AddFileToZipWriter(path, archivePath, this.writer);
+    return AddFileToZipWriter(path, archivePath, this.writer, this.deterministic);
 }
 
 func (this *OngoingZipOperation) GetBytes() []byte {

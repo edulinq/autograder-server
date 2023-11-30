@@ -3,7 +3,10 @@ package api
 // All routes handled by the server.
 
 import (
+    "github.com/eriq-augustine/autograder/api/admin"
     "github.com/eriq-augustine/autograder/api/core"
+    "github.com/eriq-augustine/autograder/api/lms"
+    "github.com/eriq-augustine/autograder/api/submission"
     "github.com/eriq-augustine/autograder/api/user"
 )
 
@@ -20,7 +23,10 @@ func GetRoutes() *[]*core.Route {
     routes := make([]*core.Route, 0);
 
     routes = append(routes, baseRoutes...);
+    routes = append(routes, *(lms.GetRoutes())...);
     routes = append(routes, *(user.GetRoutes())...);
+    routes = append(routes, *(submission.GetRoutes())...);
+    routes = append(routes, *(admin.GetRoutes())...);
 
     return &routes;
 }

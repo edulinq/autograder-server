@@ -5,16 +5,16 @@ import (
     "testing"
 
     "github.com/eriq-augustine/autograder/api/core"
-    "github.com/eriq-augustine/autograder/usr"
+    "github.com/eriq-augustine/autograder/model"
 )
 
 func TestUserList(test *testing.T) {
     expectedUsers := []core.UserInfo{
-        core.UserInfo{"other@test.com", "other", usr.Other, ""},
-        core.UserInfo{"student@test.com", "student", usr.Student, ""},
-        core.UserInfo{"grader@test.com", "grader", usr.Grader, ""},
-        core.UserInfo{"admin@test.com", "admin", usr.Admin, ""},
-        core.UserInfo{"owner@test.com", "owner", usr.Owner, ""},
+        core.UserInfo{"other@test.com", "other", model.RoleOther, ""},
+        core.UserInfo{"student@test.com", "student", model.RoleStudent, ""},
+        core.UserInfo{"grader@test.com", "grader", model.RoleGrader, ""},
+        core.UserInfo{"admin@test.com", "admin", model.RoleAdmin, ""},
+        core.UserInfo{"owner@test.com", "owner", model.RoleOwner, ""},
     };
 
     response := core.SendTestAPIRequest(test, core.NewEndpoint(`user/list`), nil);

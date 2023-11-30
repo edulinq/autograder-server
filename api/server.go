@@ -12,13 +12,9 @@ import (
     "github.com/eriq-augustine/autograder/config"
 )
 
-func StartServer() {
-    var port = config.WEB_PORT.GetInt();
+func StartServer() error {
+    var port = config.WEB_PORT.Get();
 
     log.Info().Msgf("Serving on %d.", port);
-
-    err := http.ListenAndServe(fmt.Sprintf(":%d", port), core.GetRouteServer(GetRoutes()));
-    if (err != nil) {
-        log.Fatal().Err(err).Msg("Server stopped.");
-    }
+    return http.ListenAndServe(fmt.Sprintf(":%d", port), core.GetRouteServer(GetRoutes()));
 }
