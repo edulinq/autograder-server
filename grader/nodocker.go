@@ -15,7 +15,7 @@ import (
     "github.com/eriq-augustine/autograder/util"
 )
 
-const PYTHON_AUTOGRADER_INVOCATION = "python3 -m autograder.cli.grade-submission --grader <grader> --inputdir <inputdir> --outputdir <outputdir> --workdir <workdir> --outpath <outpath>"
+const PYTHON_AUTOGRADER_INVOCATION = "python3 -m autograder.cli.grading.grade-dir --grader <grader> --dir <basedir> --outpath <outpath>"
 const PYTHON_GRADER_FILENAME = "grader.py"
 
 func runNoDockerGrader(assignment *model.Assignment, submissionPath string, options GradeOptions, fullSubmissionID string) (
@@ -36,7 +36,7 @@ func runNoDockerGrader(assignment *model.Assignment, submissionPath string, opti
         log.Info().Str("path", tempDir).Msg("Leaving behind temp grading dir.");
     }
 
-    cmd, err := getAssignmentInvocation(assignment, inputDir, outputDir, workDir);
+    cmd, err := getAssignmentInvocation(assignment, tempDir, inputDir, outputDir, workDir);
     if (err != nil) {
         return nil, nil, "", "", err;
     }
@@ -92,12 +92,12 @@ func runCMD(cmd *exec.Cmd) (string, string, error) {
     stdout := outBuffer.String();
     stderr := errBuffer.String();
 
-
     return stdout, stderr, err;
 }
 
 // Get a command to invoke the non-docker grader.
-func getAssignmentInvocation(assignment *model.Assignment, inputDir string, outputDir string, workDir string) (*exec.Cmd, error) {
+func getAssignmentInvocation(assignment *model.Assignment,
+        baseDir string, inputDir string, outputDir string, workDir string) (*exec.Cmd, error) {
     imageInfo := assignment.GetImageInfo();
     if (imageInfo == nil) {
         return nil, fmt.Errorf("No image information associated with assignment: '%s'.", assignment.FullID());
@@ -122,6 +122,8 @@ func getAssignmentInvocation(assignment *model.Assignment, inputDir string, outp
     for _, value := range rawCommand {
         if (value == "<grader>") {
             value = filepath.Join(workDir, PYTHON_GRADER_FILENAME);
+        } else if (value == "<basedir>") {
+            value = baseDir;
         } else if (value == "<inputdir>") {
             value = inputDir;
         } else if (value == "<outputdir>") {

@@ -15,8 +15,8 @@ readonly TEST_SUBMISSIONS_DIRNAME='test-submissions'
 readonly DEFAULT_SERVER="http://127.0.0.1:${PORT}"
 
 # These do not actually matter, the server is run in noauth mode.
-readonly TEST_USER='user@test.com'
-readonly TEST_PASS='password123'
+readonly TEST_USER='admin@test.com'
+readonly TEST_PASS='admin'
 
 function run_submissions() {
     local error_count=0
@@ -52,13 +52,13 @@ function run_submissions() {
 
         echo "Testing assignment '${assignment_config_path}' on submissions '${submission_dir}'."
 
-        python3 -m autograder.cli.test-remote-submissions \
+        python3 -m autograder.cli.testing.test-remote-submissions \
             --server "${DEFAULT_SERVER}" \
             --user "${TEST_USER}" \
             --pass "${TEST_PASS}" \
             --course "${course_id}" \
             --assignment "${assignment_id}" \
-            --submissions "${submission_dir}"
+            "${submission_dir}"
 
         ((error_count += $?))
 
