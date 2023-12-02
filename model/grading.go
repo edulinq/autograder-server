@@ -115,7 +115,7 @@ func (this GradingInfo) Report() string {
 }
 
 // Fill in the MaxPoints and Score fields.
-func (this GradingInfo) ComputePoints() {
+func (this *GradingInfo) ComputePoints() {
     for _, question := range this.Questions {
         this.Score += question.Score;
         this.MaxPoints += question.MaxPoints;

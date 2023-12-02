@@ -62,5 +62,10 @@ func main() {
         }();
     }
 
-    api.StartServer();
+    err = api.StartServer();
+    if (err != nil) {
+        log.Fatal().Err(err).Msg("Server was stopped.");
+    }
+
+    log.Info().Msg("Server closed.");
 }
