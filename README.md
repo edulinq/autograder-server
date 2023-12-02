@@ -14,6 +14,12 @@ The autograding effort is broken into three main parts:
     These materials should generally be kept private (since they include grading information),
     but we have made a [sample course](https://github.com/eriq-augustine/cse-cracks-course) available.
 
+## Quick Links
+
+ - [Autograder Server](https://github.com/eriq-augustine/autograder-server)
+ - [Autograder Python Interface](https://github.com/eriq-augustine/autograder-py)
+ - [Autograder Sample Course](https://github.com/eriq-augustine/cse-cracks-course)
+
 ## Installation
 
 This project uses Go 1.21.
