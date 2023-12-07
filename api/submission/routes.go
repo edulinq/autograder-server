@@ -3,7 +3,7 @@ package submission
 // All the API endpoints handled by this package.
 
 import (
-    "github.com/eriq-augustine/autograder/api/core"
+	"github.com/eriq-augustine/autograder/api/core"
 )
 
 var routes []*core.Route = []*core.Route{
@@ -13,6 +13,7 @@ var routes []*core.Route = []*core.Route{
     core.NewAPIRoute(core.NewEndpoint(`submission/fetch/submission`), HandleFetchSubmission),
     core.NewAPIRoute(core.NewEndpoint(`submission/fetch/submissions`), HandleFetchSubmissions),
     core.NewAPIRoute(core.NewEndpoint(`submission/submit`), HandleSubmit),
+	core.NewAPIRoute(core.NewEndpoint(`submission/remove/submission`), HandleRemoveSubmission),
 };
 
 func GetRoutes() *[]*core.Route {

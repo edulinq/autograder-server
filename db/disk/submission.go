@@ -1,14 +1,14 @@
 package disk
 
 import (
-    "fmt"
-    "os"
-    "path/filepath"
-    "time"
+	"fmt"
+	"os"
+	"path/filepath"
+	"time"
 
-    "github.com/eriq-augustine/autograder/common"
-    "github.com/eriq-augustine/autograder/model"
-    "github.com/eriq-augustine/autograder/util"
+	"github.com/eriq-augustine/autograder/common"
+	"github.com/eriq-augustine/autograder/model"
+	"github.com/eriq-augustine/autograder/util"
 )
 
 func (this *backend) saveSubmissionsLock(course *model.Course, submissions []*model.GradingResult, acquireLock bool) error {
@@ -91,6 +91,9 @@ func (this *backend) GetSubmissionResult(assignment *model.Assignment, email str
 
     submissionDir := this.getSubmissionDirFromAssignment(assignment, email, shortSubmissionID);
     resultPath := filepath.Join(submissionDir, model.SUBMISSION_RESULT_FILENAME);
+
+	// fmt.Println("submissionDir: ", submissionDir)
+	// fmt.Println("New Thing: ", model.SUBMISSION_RESULT_FILENAME)
 
     if (!util.PathExists(resultPath)) {
         return nil, nil;
@@ -214,7 +217,6 @@ func (this *backend) GetRecentSubmissionSurvey(assignment *model.Assignment, fil
 
 func (this *backend) GetSubmissionContents(assignment *model.Assignment, email string, shortSubmissionID string) (*model.GradingResult, error) {
     var err error;
-
     if (shortSubmissionID == "") {
         shortSubmissionID, err = this.getMostRecentSubmissionID(assignment, email);
         if (err != nil) {
@@ -293,4 +295,18 @@ func (this *backend) getMostRecentSubmissionID(assignment *model.Assignment, ema
     }
 
     return dirents[len(dirents) - 1].Name(), nil;
+}
+
+func (this *backend) RemoveSubmission(assignment *model.Assignment, email string, shortSubmissionID string) error {
+    submissionDir := this.getSubmissionDirFromAssignment(assignment, email, shortSubmissionID);
+	if (!util.PathExists(submissionDir)) {
+        return fmt.Errorf("No submission found");
+    }
+
+	err := os.RemoveAll(submissionDir)
+	if err != nil {
+		return fmt.Errorf("Error removing submission")
+	}
+
+	return nil;
 }
