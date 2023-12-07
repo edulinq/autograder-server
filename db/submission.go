@@ -1,10 +1,10 @@
 package db
 
 import (
-	"fmt"
+    "fmt"
 
-	"github.com/eriq-augustine/autograder/common"
-	"github.com/eriq-augustine/autograder/model"
+    "github.com/eriq-augustine/autograder/common"
+    "github.com/eriq-augustine/autograder/model"
 )
 
 func SaveSubmissions(course *model.Course, submissions []*model.GradingResult) error {
@@ -73,7 +73,7 @@ func GetRecentSubmissionSurvey(assignment *model.Assignment, filterRole model.Us
 }
 
 func GetSubmissionContents(assignment *model.Assignment, email string, submissionID string) (*model.GradingResult, error) {
-	if (backend == nil) {
+    if (backend == nil) {
         return nil, fmt.Errorf("Database has not been opened.");
     }
 
@@ -90,9 +90,9 @@ func GetRecentSubmissionContents(assignment *model.Assignment, filterRole model.
 }
 
 func RemoveSubmission(assignment *model.Assignment, email string, submissionID string) error {
-	if (backend == nil) {
+    if (backend == nil) {
         return fmt.Errorf("Database has not been opened.");
     }
-	
-	return backend.RemoveSubmission(assignment, email, submissionID);
+    
+    return backend.RemoveSubmission(assignment, email, submissionID);
 }
