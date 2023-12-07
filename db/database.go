@@ -5,14 +5,14 @@ package db
 // Any Get*() functions that return an interface will return a pure nil if nothing is found.
 
 import (
-	"fmt"
-	"sync"
+    "fmt"
+    "sync"
 
-	"github.com/rs/zerolog/log"
+    "github.com/rs/zerolog/log"
 
-	"github.com/eriq-augustine/autograder/config"
-	"github.com/eriq-augustine/autograder/db/disk"
-	"github.com/eriq-augustine/autograder/model"
+    "github.com/eriq-augustine/autograder/config"
+    "github.com/eriq-augustine/autograder/db/disk"
+    "github.com/eriq-augustine/autograder/model"
 )
 
 var backend Backend;
@@ -71,10 +71,10 @@ type Backend interface {
     // Remove a user.
     // Do nothing and return nil if the user does not exist.
     RemoveUser(course *model.Course, email string) error;
-	
-	// Remove a submission.
-	// Do nothing and return nil if the submission does not exist.
-	RemoveSubmission(assignment *model.Assignment, email string, submissionID string) error
+    
+    // Remove a submission.
+    // Do nothing and return nil if the submission does not exist.
+    RemoveSubmission(assignment *model.Assignment, email string, submissionID string) error
 
     // Save the results of grading.
     // All the submissions should be from this course.
@@ -137,9 +137,9 @@ func Open() error {
             err = fmt.Errorf("Unknown database type: '%s'.", dbType);
     }
 
-	if (err != nil) {
+    if (err != nil) {
         return fmt.Errorf("Failed to open database: %w.", err);
-	}
+    }
 
     return backend.EnsureTables();
 }

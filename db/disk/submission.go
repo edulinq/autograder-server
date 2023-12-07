@@ -92,8 +92,8 @@ func (this *backend) GetSubmissionResult(assignment *model.Assignment, email str
     submissionDir := this.getSubmissionDirFromAssignment(assignment, email, shortSubmissionID);
     resultPath := filepath.Join(submissionDir, model.SUBMISSION_RESULT_FILENAME);
 
-	// fmt.Println("submissionDir: ", submissionDir)
-	// fmt.Println("New Thing: ", model.SUBMISSION_RESULT_FILENAME)
+    // fmt.Println("submissionDir: ", submissionDir)
+    // fmt.Println("New Thing: ", model.SUBMISSION_RESULT_FILENAME)
 
     if (!util.PathExists(resultPath)) {
         return nil, nil;
@@ -299,14 +299,14 @@ func (this *backend) getMostRecentSubmissionID(assignment *model.Assignment, ema
 
 func (this *backend) RemoveSubmission(assignment *model.Assignment, email string, shortSubmissionID string) error {
     submissionDir := this.getSubmissionDirFromAssignment(assignment, email, shortSubmissionID);
-	if (!util.PathExists(submissionDir)) {
+    if (!util.PathExists(submissionDir)) {
         return fmt.Errorf("No submission found");
     }
 
-	err := os.RemoveAll(submissionDir)
-	if err != nil {
-		return fmt.Errorf("Error removing submission")
-	}
+    err := os.RemoveAll(submissionDir)
+    if err != nil {
+        return fmt.Errorf("Error removing submission")
+    }
 
-	return nil;
+    return nil;
 }
