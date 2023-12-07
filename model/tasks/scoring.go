@@ -1,4 +1,4 @@
-package model
+package tasks
 
 import (
     "fmt"
@@ -16,8 +16,7 @@ type ScoringUploadTask struct {
     CourseID string `json:"-"`
 }
 
-func (this *ScoringUploadTask) Validate(course *Course) error {
-    this.When.id = fmt.Sprintf("score-%s", course.GetID());
+func (this *ScoringUploadTask) Validate(course TaskCourse) error {
     this.CourseID = course.GetID();
 
     err := this.When.Validate();
@@ -27,7 +26,7 @@ func (this *ScoringUploadTask) Validate(course *Course) error {
 
     this.Disable = (this.Disable || config.NO_TASKS.Get());
 
-    if (course.GetLMSAdapter() == nil) {
+    if (course.HasLMSAdapter()) {
         return fmt.Errorf("Score and Upload task course must have an LMS adapter.");
     }
 

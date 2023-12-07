@@ -1,4 +1,4 @@
-package model
+package tasks
 
 // Note that this file is largely a copy of db/test.go.
 // The content is repeated to avoid an import cycle.
@@ -19,6 +19,9 @@ func TestMain(suite *testing.M) {
 
         // Remove the temp working directory set in config.MustEnableUnitTestingMode().
         defer util.RemoveDirent(config.WORK_DIR.Get());
+
+        // Quiet the logs.
+        config.SetLogLevelFatal();
 
         return suite.Run();
     }();

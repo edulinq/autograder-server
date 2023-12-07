@@ -4,11 +4,12 @@ import (
     "fmt"
 
     "github.com/eriq-augustine/autograder/model"
+    "github.com/eriq-augustine/autograder/model/tasks"
     "github.com/eriq-augustine/autograder/scoring"
 )
 
-func RunScoringUploadTask(course *model.Course, rawTask model.ScheduledTask) error {
-    task, ok := rawTask.(*model.ScoringUploadTask);
+func RunScoringUploadTask(course *model.Course, rawTask tasks.ScheduledTask) error {
+    task, ok := rawTask.(*tasks.ScoringUploadTask);
     if (!ok) {
         return fmt.Errorf("Task is not a ScoringUploadTask: %t (%v).", rawTask, rawTask);
     }

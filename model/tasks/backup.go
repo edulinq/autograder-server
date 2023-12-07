@@ -1,4 +1,4 @@
-package model
+package tasks
 
 import (
     "fmt"
@@ -15,8 +15,7 @@ type BackupTask struct {
     Dest string `json:"-"`
 }
 
-func (this *BackupTask) Validate(course *Course) error {
-    this.When.id = fmt.Sprintf("backup-%s", course.GetID());
+func (this *BackupTask) Validate(course TaskCourse) error {
     this.CourseID = course.GetID();
 
     err := this.When.Validate();

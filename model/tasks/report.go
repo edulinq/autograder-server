@@ -1,4 +1,4 @@
-package model
+package tasks
 
 import (
     "fmt"
@@ -14,8 +14,7 @@ type ReportTask struct {
     CourseID string `json:"-"`
 }
 
-func (this *ReportTask) Validate(course *Course) error {
-    this.When.id = fmt.Sprintf("report-%s", course.GetID());
+func (this *ReportTask) Validate(course TaskCourse) error {
     this.CourseID = course.GetID();
 
     err := this.When.Validate();

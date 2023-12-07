@@ -9,6 +9,7 @@ import (
     "github.com/eriq-augustine/autograder/common"
     "github.com/eriq-augustine/autograder/config"
     "github.com/eriq-augustine/autograder/docker"
+    "github.com/eriq-augustine/autograder/model/tasks"
 )
 
 type Course struct {
@@ -18,14 +19,14 @@ type Course struct {
 
     LMS *LMSAdapter `json:"lms,omitempty"`
 
-    Backup []*BackupTask `json:"backup,omitempty"`
-    Report []*ReportTask `json:"report,omitempty"`
-    ScoringUpload []*ScoringUploadTask `json:"scoring-upload,omitempty"`
+    Backup []*tasks.BackupTask `json:"backup,omitempty"`
+    Report []*tasks.ReportTask `json:"report,omitempty"`
+    ScoringUpload []*tasks.ScoringUploadTask `json:"scoring-upload,omitempty"`
 
     // Internal fields the autograder will set.
     SourceDir string `json:"_source-dir"`
     Assignments map[string]*Assignment `json:"-"`
-    tasks []ScheduledTask `json:"-"`
+    scheduledTasks []tasks.ScheduledTask `json:"-"`
 }
 
 func (this *Course) GetID() string {
@@ -44,6 +45,10 @@ func (this *Course) GetLMSAdapter() *LMSAdapter {
     return this.LMS;
 }
 
+func (this *Course) HasLMSAdapter() bool {
+    return (this.LMS != nil);
+}
+
 func (this *Course) GetAssignmentLMSIDs() ([]string, []string) {
     lmsIDs := make([]string, 0, len(this.Assignments));
     assignmentIDs := make([]string, 0, len(this.Assignments));
@@ -56,8 +61,8 @@ func (this *Course) GetAssignmentLMSIDs() ([]string, []string) {
     return lmsIDs, assignmentIDs;
 }
 
-func (this *Course) GetTasks() []ScheduledTask {
-    return this.tasks;
+func (this *Course) GetTasks() []tasks.ScheduledTask {
+    return this.scheduledTasks;
 }
 
 // Ensure this course makes sense.
@@ -81,19 +86,19 @@ func (this *Course) Validate() error {
 
     // Register tasks.
     for _, task := range this.Backup {
-        this.tasks = append(this.tasks, task);
+        this.scheduledTasks = append(this.scheduledTasks, task);
     }
 
     for _, task := range this.Report {
-        this.tasks = append(this.tasks, task);
+        this.scheduledTasks = append(this.scheduledTasks, task);
     }
 
     for _, task := range this.ScoringUpload {
-        this.tasks = append(this.tasks, task);
+        this.scheduledTasks = append(this.scheduledTasks, task);
     }
 
     // Validate tasks.
-    for _, task := range this.tasks {
+    for _, task := range this.scheduledTasks {
         err = task.Validate(this);
         if (err != nil) {
             return err;

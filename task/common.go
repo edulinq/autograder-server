@@ -11,25 +11,26 @@ import (
     "github.com/eriq-augustine/autograder/config"
     "github.com/eriq-augustine/autograder/db"
     "github.com/eriq-augustine/autograder/model"
+    "github.com/eriq-augustine/autograder/model/tasks"
 )
 
 // {courseID: [taskTimer, ...], ...}
 var courseTimers map[string][]*time.Timer = make(map[string][]*time.Timer);
 
-type RunFunc func(*model.Course, model.ScheduledTask) error;
+type RunFunc func(*model.Course, tasks.ScheduledTask) error;
 
-func Schedule(course *model.Course, target model.ScheduledTask) error {
+func Schedule(course *model.Course, target tasks.ScheduledTask) error {
     if (target.IsDisabled() || config.NO_TASKS.Get()) {
         return nil;
     }
 
     var runFunc RunFunc;
     switch target.(type) {
-        case *model.BackupTask:
+        case *tasks.BackupTask:
             runFunc = RunBackupTask;
-        case *model.ReportTask:
+        case *tasks.ReportTask:
             runFunc = RunReportTask;
-        case *model.ScoringUploadTask:
+        case *tasks.ScoringUploadTask:
             runFunc = RunScoringUploadTask;
         default:
             return fmt.Errorf("Unknown task type: %t (%v).", target, target);
@@ -46,7 +47,7 @@ func Schedule(course *model.Course, target model.ScheduledTask) error {
     return nil;
 }
 
-func runTask(courseID string, target model.ScheduledTask, runFunc RunFunc) {
+func runTask(courseID string, target tasks.ScheduledTask, runFunc RunFunc) {
     log.Debug().Str("task", target.String()).Msg("Task started.");
 
     course, err := db.GetCourse(courseID);
