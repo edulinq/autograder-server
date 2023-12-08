@@ -8,22 +8,18 @@ import (
 )
 
 type BackupTask struct {
-    Disable bool `json:"disable"`
-    When ScheduledTime `json:"when"`
+    *BaseTask
 
-    CourseID string `json:"-"`
     Dest string `json:"-"`
 }
 
 func (this *BackupTask) Validate(course TaskCourse) error {
-    this.CourseID = course.GetID();
+    this.BaseTask.Name = "backup";
 
-    err := this.When.Validate();
+    err := this.BaseTask.Validate(course);
     if (err != nil) {
         return err;
     }
-
-    this.Disable = (this.Disable || config.NO_TASKS.Get());
 
     this.Dest = config.BACKUP_DIR.Get();
     if (util.IsFile(this.Dest)) {
@@ -31,17 +27,4 @@ func (this *BackupTask) Validate(course TaskCourse) error {
     }
 
     return nil;
-}
-
-func (this *BackupTask) IsDisabled() bool {
-    return this.Disable;
-}
-
-func (this *BackupTask) GetTime() *ScheduledTime {
-    return &this.When;
-}
-
-func (this *BackupTask) String() string {
-    return fmt.Sprintf("Backup of course '%s' to '%s' at '%s'.",
-            this.CourseID, this.Dest, this.When.String());
 }

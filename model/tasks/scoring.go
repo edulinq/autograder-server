@@ -4,27 +4,21 @@ import (
     "fmt"
 
     "github.com/rs/zerolog/log"
-
-    "github.com/eriq-augustine/autograder/config"
 )
 
 type ScoringUploadTask struct {
-    Disable bool `json:"disable"`
-    DryRun bool `json:"dry-run"`
-    When ScheduledTime `json:"when"`
+    *BaseTask
 
-    CourseID string `json:"-"`
+    DryRun bool `json:"dry-run"`
 }
 
 func (this *ScoringUploadTask) Validate(course TaskCourse) error {
-    this.CourseID = course.GetID();
+    this.BaseTask.Name = "scoring";
 
-    err := this.When.Validate();
+    err := this.BaseTask.Validate(course);
     if (err != nil) {
         return err;
     }
-
-    this.Disable = (this.Disable || config.NO_TASKS.Get());
 
     if (course.HasLMSAdapter()) {
         return fmt.Errorf("Score and Upload task course must have an LMS adapter.");
@@ -39,17 +33,4 @@ func (this *ScoringUploadTask) Validate(course TaskCourse) error {
     }
 
     return nil;
-}
-
-func (this *ScoringUploadTask) IsDisabled() bool {
-    return this.Disable;
-}
-
-func (this *ScoringUploadTask) GetTime() *ScheduledTime {
-    return &this.When;
-}
-
-func (this *ScoringUploadTask) String() string {
-    return fmt.Sprintf("Score and Upload of course '%s': '%s'.",
-            this.CourseID, this.When.String());
 }
