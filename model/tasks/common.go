@@ -17,6 +17,7 @@ type TaskCourse interface {
 }
 
 type ScheduledTask interface {
+    GetID() string
     GetCourseID() string
     IsDisabled() bool
     GetTimes() []*ScheduledTime
@@ -28,8 +29,13 @@ type BaseTask struct {
     Disable bool `json:"disable"`
     When []*ScheduledTime `json:"when"`
 
+    ID string `json:"-"`
     Name string `json:"-"`
     CourseID string `json:"-"`
+}
+
+func (this *BaseTask) GetID() string {
+    return this.ID;
 }
 
 func (this *BaseTask) GetCourseID() string {
@@ -67,6 +73,7 @@ func (this *BaseTask) Validate(course TaskCourse) error {
     }
 
     this.CourseID = course.GetID();
+    this.ID = course.GetID() + "::" + this.Name;
 
     for i, when := range this.When {
         if (when == nil) {

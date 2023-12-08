@@ -11,38 +11,37 @@ import (
 const (
     TIME_LAYOUT_MINS = "15:04";
     TIME_LAYOUT_SECS = "15:04:05";
-
-    SECS_PER_MIN = 60;
-    SECS_PER_HOUR = SECS_PER_MIN * 60;
-    SECS_PER_DAY = SECS_PER_HOUR * 24;
 )
 
 // This struct should always have Validate() called after construction.
 // All other methods will assume Validate() returns no error.
 type ScheduledTime struct {
-    Every durationSpec `json:"every"`
-    Daily timeOfDaySpec `json:"daily"`
+    Every DurationSpec `json:"every"`
+    Daily TimeOfDaySpec `json:"daily"`
 }
 
 type timeSpec interface {
     Validate() error
-    TotalSecs() int
+    TotalNanosecs() int64
     IsEmpty() bool
     // Get the next time to run (starting at the passed in time).
     ComputeNextTime(startTime time.Time) time.Time
     String() string
 }
 
-type timeOfDaySpec string;
+type TimeOfDaySpec string;
 
-type durationSpec struct {
-    Days int `json:"days"`
-    Hours int `json:"hours"`
-    Minutes int `json:"minutes"`
-    Seconds int `json:"seconds"`
+type DurationSpec struct {
+    Days int64 `json:"days"`
+    Hours int64 `json:"hours"`
+    Minutes int64 `json:"minutes"`
+    Seconds int64 `json:"seconds"`
+
+    // Microseconds in not exposed in JSON and in meant for testing.
+    Microseconds int64 `json:"-"`
 }
 
-func (this *durationSpec) Validate() error {
+func (this *DurationSpec) Validate() error {
     if (this.Days < 0) {
         return fmt.Errorf("Duration cannot have negative days, found '%d'.", this.Days);
     }
@@ -59,31 +58,36 @@ func (this *durationSpec) Validate() error {
         return fmt.Errorf("Duration cannot have negative seconds, found '%d'.", this.Seconds);
     }
 
+    if (this.Microseconds < 0) {
+        return fmt.Errorf("Duration cannot have negative microseconds, found '%d'.", this.Microseconds);
+    }
+
     return nil;
 }
 
-func (this *durationSpec) TotalSecs() int {
-    return this.Seconds +
-        this.Minutes * 60 +
-        this.Hours * 60 * 60 +
-        this.Days * 24 * 60 * 60;
+func (this *DurationSpec) TotalNanosecs() int64 {
+    return this.Microseconds * int64(time.Microsecond) +
+        this.Seconds * int64(time.Second) +
+        this.Minutes * int64(time.Minute) +
+        this.Hours * int64(time.Hour) +
+        this.Days * int64(time.Hour) * 24;
 }
 
-func (this *durationSpec) IsEmpty() bool {
-    return (this.TotalSecs() == 0);
+func (this *DurationSpec) IsEmpty() bool {
+    return (this.TotalNanosecs() == 0);
 }
 
-func (this *durationSpec) ComputeNextTime(startTime time.Time) time.Time {
-    duration := time.Duration(int64(this.TotalSecs()) * int64(time.Second));
+func (this *DurationSpec) ComputeNextTime(startTime time.Time) time.Time {
+    duration := time.Duration(this.TotalNanosecs());
     return startTime.Add(duration);
 }
 
-func (this *durationSpec) String() string {
+func (this *DurationSpec) String() string {
     return fmt.Sprintf("Every %d days, %d hours, %d minutes, %d seconds; (%d total seconds)",
-        this.Days, this.Hours, this.Minutes, this.Seconds, this.TotalSecs());
+        this.Days, this.Hours, this.Minutes, this.Seconds, (this.TotalNanosecs() / int64(time.Second)));
 }
 
-func (this timeOfDaySpec) Validate() error {
+func (this TimeOfDaySpec) Validate() error {
     var contents string = string(this);
     if (contents == "") {
         return nil;
@@ -93,15 +97,15 @@ func (this timeOfDaySpec) Validate() error {
     return err;
 }
 
-func (this timeOfDaySpec) TotalSecs() int {
-    return 24 * 60 * 60;
+func (this TimeOfDaySpec) TotalNanosecs() int64 {
+    return int64(time.Hour) * 24;
 }
 
-func (this timeOfDaySpec) IsEmpty() bool {
+func (this TimeOfDaySpec) IsEmpty() bool {
     return (string(this) == "");
 }
 
-func (this timeOfDaySpec) ComputeNextTime(startTime time.Time) time.Time {
+func (this TimeOfDaySpec) ComputeNextTime(startTime time.Time) time.Time {
     var thisTime time.Time;
 
     instance, err := this.getTime();
@@ -126,7 +130,7 @@ func (this timeOfDaySpec) ComputeNextTime(startTime time.Time) time.Time {
     return nextTime;
 }
 
-func (this timeOfDaySpec) String() string {
+func (this TimeOfDaySpec) String() string {
     timeOfDay := "00:00:00";
 
     instance, err := this.getTime();
@@ -139,9 +143,9 @@ func (this timeOfDaySpec) String() string {
     return fmt.Sprintf("Daily at %s.", timeOfDay);
 }
 
-// This timeOfDaySpec should have already been validated,
+// This TimeOfDaySpec should have already been validated,
 // so the time should parse.
-func (this timeOfDaySpec) getTime() (time.Time, error) {
+func (this TimeOfDaySpec) getTime() (time.Time, error) {
     var contents string = string(this);
     if (contents == "") {
         return time.Time{}, fmt.Errorf("Time of day spec is empty, cannot parse.");
@@ -188,12 +192,12 @@ func (this *ScheduledTime) Validate() error {
     return nil;
 }
 
-func (this *ScheduledTime) TotalSecs() int {
+func (this *ScheduledTime) TotalNanosecs() int64 {
     if (this.Daily.IsEmpty()) {
-        return this.Every.TotalSecs();
+        return this.Every.TotalNanosecs();
     }
 
-    return this.Daily.TotalSecs();
+    return this.Daily.TotalNanosecs();
 }
 
 func (this *ScheduledTime) IsEmpty() bool {
