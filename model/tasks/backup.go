@@ -11,6 +11,7 @@ type BackupTask struct {
     *BaseTask
 
     Dest string `json:"-"`
+    BackupID string `json:"-"`
 }
 
 func (this *BackupTask) Validate(course TaskCourse) error {

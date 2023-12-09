@@ -8,6 +8,7 @@ import (
     "bytes"
     "fmt"
     "io"
+    "io/fs"
     "os"
     "path/filepath"
     "strings"
@@ -92,6 +93,15 @@ func AddFileToZipWriter(path string, archivePath string, writer *zip.Writer, det
         return fmt.Errorf("Could not stat source path '%s': '%w'.", path, err);
     }
 
+    mode := info.Mode();
+
+    // Set the permissions.
+    if (info.IsDir()) {
+        mode = fs.ModeDir | 0755;
+    } else {
+        mode = 0644;
+    }
+
     header, err := zip.FileInfoHeader(info);
     if (err != nil) {
         return fmt.Errorf("Could not create file header for '%s': '%w'.", path, err);
@@ -108,6 +118,9 @@ func AddFileToZipWriter(path string, archivePath string, writer *zip.Writer, det
         header.ModifiedTime = 0;
         header.ModifiedDate = 0;
     }
+
+    // Set mode after we may clear the other attributes.
+    header.SetMode(mode);
 
     if (info.IsDir() && !strings.HasSuffix(header.Name, "/")) {
         header.Name += "/";
