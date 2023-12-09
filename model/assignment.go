@@ -70,7 +70,7 @@ func (this *Assignment) GetImageInfo() *docker.ImageInfo {
 }
 
 func (this *Assignment) GetSourceDir() string {
-    return this.SourceDir;
+    return filepath.Join(this.Course.GetSourceDir(), this.SourceDir);
 }
 
 // Ensure that the assignment is formatted correctly.
@@ -136,7 +136,7 @@ func (this *Assignment) Validate() error {
     }
 
     this.ImageInfo.Name = this.ImageName();
-    this.ImageInfo.BaseDir = this.SourceDir;
+    this.ImageInfo.BaseDir = this.GetSourceDir();
 
     return nil;
 }

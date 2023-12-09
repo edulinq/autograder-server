@@ -12,7 +12,7 @@ import (
 func TestBackupBase(test *testing.T) {
     db.ResetForTesting();
 
-    expectedMD5 := "e5169a963b347c148b7ec6bf8657a305";
+    expectedMD5 := "fed9ff9d424f1877638366faf0fdd588";
 
     course := db.MustGetTestCourse();
 

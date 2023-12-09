@@ -24,7 +24,11 @@ func LoadAssignment(course *Course, path string) (*Assignment, error) {
     assignment.Course = course;
 
     if (assignment.SourceDir == "") {
-        assignment.SourceDir = util.ShouldAbs(filepath.Dir(path));
+        // Force the source dir to be relative to the course dir.
+        assignment.SourceDir, err = filepath.Rel(course.GetSourceDir(), util.ShouldAbs(filepath.Dir(path)));
+        if (err != nil) {
+            return nil, fmt.Errorf("Could not compute source dir for assignment (%s): '%w'.", path, err);
+        }
     }
 
     err = assignment.Validate();
