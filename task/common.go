@@ -33,7 +33,7 @@ var timers map[string]map[string]*timerInfo = make(map[string]map[string]*timerI
 
 // Stopped tasks should not be rescheduled automatically.
 // Manually scheduling a stopped task (via Schedule()) will remove it from this map.
-// The key (id) is the same as timerInfo.ID.
+// The key (timerID) is the same as timerInfo.ID.
 var stoppedTasks map[string]bool = make(map[string]bool);
 
 type RunFunc func(*model.Course, tasks.ScheduledTask) error;
@@ -59,13 +59,13 @@ func Schedule(course *model.Course, target tasks.ScheduledTask) error {
 
     for i, when := range target.GetTimes() {
         // ID unique to every (task, timer).
-        id := fmt.Sprintf("%s::%03d", target.GetID(), i);
+        timerID := fmt.Sprintf("%s::%03d", target.GetID(), i);
 
         timersLock.Lock();
-        delete(stoppedTasks, id);
+        delete(stoppedTasks, timerID);
         timersLock.Unlock();
 
-        err := scheduleTask(course.GetID(), target, id, runFunc, when);
+        err := scheduleTask(course.GetID(), target, timerID, runFunc, when);
         if (err != nil) {
             return fmt.Errorf("Failed to schedule task (%s): '%w'.", target.String(), err);
         }
@@ -74,13 +74,13 @@ func Schedule(course *model.Course, target tasks.ScheduledTask) error {
     return nil;
 }
 
-func scheduleTask(courseID string, target tasks.ScheduledTask, id string, runFunc RunFunc, when *tasks.ScheduledTime) error {
+func scheduleTask(courseID string, target tasks.ScheduledTask, timerID string, runFunc RunFunc, when *tasks.ScheduledTime) error {
     timersLock.Lock();
     defer timersLock.Unlock();
 
     // Ensure this task has not been stopped,
     // and therefore should not be scheduled.
-    stopped, exists := stoppedTasks[id];
+    stopped, exists := stoppedTasks[timerID];
     if (exists && stopped) {
         return nil;
     }
@@ -98,10 +98,10 @@ func scheduleTask(courseID string, target tasks.ScheduledTask, id string, runFun
         taskLock.Lock();
         taskLock.Unlock();
 
-        runTask(courseID, target, id, runFunc);
+        runTask(courseID, target, timerID, runFunc);
 
         // Schedule the next run.
-        err := scheduleTask(courseID, target, id, runFunc, when);
+        err := scheduleTask(courseID, target, timerID, runFunc, when);
         if (err != nil) {
             log.Error().Err(err).Str("task", target.String()).Str("when", when.String()).Msg("Failed to reschedule task.");
         }
@@ -112,8 +112,8 @@ func scheduleTask(courseID string, target tasks.ScheduledTask, id string, runFun
         timers[courseID] = make(map[string]*timerInfo);
     }
 
-    timers[courseID][id] = &timerInfo{
-        ID: id,
+    timers[courseID][timerID] = &timerInfo{
+        ID: timerID,
         CourseID: courseID,
         Timer: timer,
         Lock: taskLock,
@@ -163,8 +163,8 @@ func StopAll() {
     }
 }
 
-func runTask(courseID string, target tasks.ScheduledTask, id string, runFunc RunFunc) {
-    info := getTimerInfo(courseID, id);
+func runTask(courseID string, target tasks.ScheduledTask, timerID string, runFunc RunFunc) {
+    info := getTimerInfo(courseID, timerID);
     if (info == nil) {
         return;
     }
@@ -202,10 +202,16 @@ func runTask(courseID string, target tasks.ScheduledTask, id string, runFunc Run
     }
 
     log.Debug().Str("course-id", courseID).Str("task", target.String()).Msg("Task finished.");
+
+    err = db.LogTaskCompletion(courseID, target.GetID());
+    if (err != nil) {
+        log.Error().Err(err).Str("course-id", courseID).Str("task", target.String()).Msg("Failed to log task completion.");
+        return;
+    }
 }
 
 // Should a task run?
-func getTimerInfo(courseID string, id string) *timerInfo {
+func getTimerInfo(courseID string, timerID string) *timerInfo {
     timersLock.Lock();
     defer timersLock.Unlock();
 
@@ -215,7 +221,7 @@ func getTimerInfo(courseID string, id string) *timerInfo {
         return nil;
     }
 
-    info, ok := timers[id];
+    info, ok := timers[timerID];
     if (!ok) {
         // This timer cannot be found, it must have been stopped.
         return nil;

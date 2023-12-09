@@ -7,6 +7,7 @@ package db
 import (
     "fmt"
     "sync"
+    "time"
 
     "github.com/rs/zerolog/log"
 
@@ -113,6 +114,14 @@ type Backend interface {
     // Users without a submission (but with a matching role) will be represented with a nil map value.
     // A nil map should only be returned on error.
     GetRecentSubmissionContents(assignment *model.Assignment, filterRole model.UserRole) (map[string]*model.GradingResult, error);
+
+    // Record that a task has been completed.
+    // The DB is only required to keep the most recently completed task with the given course/ID.
+    LogTaskCompletion(courseID string, taskID string) error;
+
+    // Get the last time a task with the given course/ID was completed.
+    // Will return a zero time (time.Time{}).
+    GetLastTaskCompletion(courseID string, taskID string) (time.Time, error);
 }
 
 func Open() error {
