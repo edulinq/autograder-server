@@ -10,6 +10,7 @@ import (
     "github.com/eriq-augustine/autograder/config"
     "github.com/eriq-augustine/autograder/docker"
     "github.com/eriq-augustine/autograder/model/tasks"
+    "github.com/eriq-augustine/autograder/util"
 )
 
 type Course struct {
@@ -38,7 +39,11 @@ func (this *Course) GetName() string {
 }
 
 func (this *Course) GetSourceDir() string {
-    return this.SourceDir;
+    if (filepath.IsAbs(this.SourceDir)) {
+        return this.SourceDir;
+    }
+
+    return util.ShouldAbs(filepath.Join(common.ShouldGetCWD(), this.SourceDir));
 }
 
 func (this *Course) GetLMSAdapter() *LMSAdapter {

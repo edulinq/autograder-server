@@ -1,6 +1,7 @@
 {
     "id": "course101",
     "display-name": "Course 101",
+    "_source-dir": "_tests/COURSE101",
     "lms": {
         "type": "test"
     }
