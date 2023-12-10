@@ -4,11 +4,47 @@ import (
     "testing"
     "time"
 
+    "github.com/eriq-augustine/autograder/config"
     "github.com/eriq-augustine/autograder/db"
     "github.com/eriq-augustine/autograder/model/tasks"
 )
 
 func TestTaskBase(test *testing.T) {
+    db.ResetForTesting();
+    defer db.ResetForTesting();
+
+    // Set the task rest time to negative.
+    oldRestTime := config.TASK_MIN_REST_SECS.Get();
+    config.TASK_MIN_REST_SECS.Set(-1);
+    defer config.TASK_MIN_REST_SECS.Set(oldRestTime);
+
+    count := runTestTask(test);
+
+    if (count <= 1) {
+        test.Fatalf("Not enough test tasks were run (%d run). (It's possible for this to be flaky on a very busy machine).", count)
+    }
+}
+
+// Test that tasks will not run too often.
+func TestTaskSkipRecent(test *testing.T) {
+    db.ResetForTesting();
+    defer db.ResetForTesting();
+
+    // Set the task rest time to something large.
+    oldRestTime := config.TASK_MIN_REST_SECS.Get();
+    config.TASK_MIN_REST_SECS.Set(10 * 60);
+    defer config.TASK_MIN_REST_SECS.Set(oldRestTime);
+
+    count := runTestTask(test);
+
+    if (count != 1) {
+        test.Fatalf("Incorrect number of runs. Expected exactly 1, got %d.", count);
+    }
+}
+
+// Run a basic test task.
+// Return the number of times the task was run.
+func runTestTask(test *testing.T) int {
     defer StopAll();
 
     counter := make(chan int, 100);
@@ -59,7 +95,5 @@ func TestTaskBase(test *testing.T) {
         count++;
     }
 
-    if (count == 0) {
-        test.Fatalf("No test tasks were run. (It's possible for this to be flaky on a very busy machine).")
-    }
+    return count;
 }

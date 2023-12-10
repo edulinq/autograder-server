@@ -31,6 +31,9 @@ var (
     BACKUP_DIR = MustNewStringOption("server.backup.dir", "_backup", "Path to where backups are made by default.");
 
     NO_TASKS = MustNewBoolOption("tasks.disable", false, "Disable all scheduled tasks.");
+    TASK_MIN_REST_SECS = MustNewIntOption("tasks.minrest", 5 * 60,
+            "The minimum time (in seconds) betwen invocations of the same task." +
+            " A task instance that tries to run too quickly will be skipped.");
 
     TESTING_MODE = MustNewBoolOption("testing", false, "Assume tests are being run, which may alter some operations.");
 

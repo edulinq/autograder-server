@@ -6,6 +6,7 @@ package tasks
 import (
     "fmt"
     "strings"
+    "sync"
 
     "github.com/eriq-augustine/autograder/config"
 )
@@ -23,6 +24,7 @@ type ScheduledTask interface {
     GetTimes() []*ScheduledTime
     String() string
     Validate(TaskCourse) error
+    GetLock() *sync.Mutex
 }
 
 type BaseTask struct {
@@ -32,6 +34,8 @@ type BaseTask struct {
     ID string `json:"-"`
     Name string `json:"-"`
     CourseID string `json:"-"`
+    // A lock to ensure only one instance of the task is runnning at a time.
+    Lock *sync.Mutex `json:"-"`
 }
 
 func (this *BaseTask) GetID() string {
@@ -68,6 +72,8 @@ func (this *BaseTask) String() string {
 }
 
 func (this *BaseTask) Validate(course TaskCourse) error {
+    this.Lock = &sync.Mutex{};
+
     if (this.Name == "") {
         return fmt.Errorf("No name provided to the task.");
     }
@@ -89,4 +95,8 @@ func (this *BaseTask) Validate(course TaskCourse) error {
     this.Disable = (this.Disable || config.NO_TASKS.Get());
 
     return nil;
+}
+
+func (this *BaseTask) GetLock() *sync.Mutex {
+    return this.Lock;
 }

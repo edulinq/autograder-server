@@ -67,7 +67,7 @@ func Schedule(course *model.Course, target tasks.ScheduledTask) error {
 
         err := scheduleTask(course.GetID(), target, timerID, runFunc, when);
         if (err != nil) {
-            return fmt.Errorf("Failed to schedule task (%s): '%w'.", target.String(), err);
+            return fmt.Errorf("Failed to schedule task (%s): '%w'.", target.GetID(), err);
         }
     }
 
@@ -103,7 +103,7 @@ func scheduleTask(courseID string, target tasks.ScheduledTask, timerID string, r
         // Schedule the next run.
         err := scheduleTask(courseID, target, timerID, runFunc, when);
         if (err != nil) {
-            log.Error().Err(err).Str("task", target.String()).Str("when", when.String()).Msg("Failed to reschedule task.");
+            log.Error().Err(err).Str("task", target.GetID()).Str("when", when.String()).Msg("Failed to reschedule task.");
         }
     });
 
@@ -120,7 +120,7 @@ func scheduleTask(courseID string, target tasks.ScheduledTask, timerID string, r
         Stopped: false,
     };
 
-    log.Debug().Str("task", target.String()).Str("when", when.String()).Any("next-time", nextRunTime).Msg("Task scheduled.");
+    log.Debug().Str("task", target.GetID()).Str("when", when.String()).Any("next-time", nextRunTime).Msg("Task scheduled.");
 
     return nil;
 }
@@ -164,6 +164,12 @@ func StopAll() {
 }
 
 func runTask(courseID string, target tasks.ScheduledTask, timerID string, runFunc RunFunc) {
+    target.GetLock().Lock();
+    defer target.GetLock().Unlock();
+
+    taskID := target.GetID();
+    now := time.Now();
+
     info := getTimerInfo(courseID, timerID);
     if (info == nil) {
         return;
@@ -176,36 +182,50 @@ func runTask(courseID string, target tasks.ScheduledTask, timerID string, runFun
     info.Lock.Lock();
     defer info.Lock.Unlock();
 
-    log.Debug().Str("task", target.String()).Msg("Task started.");
+    lastRunTime, err := db.GetLastTaskCompletion(courseID, taskID);
+    if (err != nil) {
+        log.Error().Err(err).Str("course-id", courseID).Str("task", taskID).Msg("Failed to get last time task was run.");
+        // Keep trying to run the task.
+    }
+
+    // Skip this task if it was run too recently.
+    lastRunDuration := now.Sub(lastRunTime);
+    if (lastRunDuration < (time.Duration(config.TASK_MIN_REST_SECS.Get()) * time.Second)) {
+        log.Debug().Str("course-id", courseID).Str("task", taskID).Any("last-run", lastRunTime).
+                Msg("Skipping task run, last run was too recent.");
+        return;
+    }
+
+    log.Debug().Str("task", taskID).Msg("Task started.");
 
     course, err := db.GetCourse(courseID);
     if (err != nil) {
-        log.Error().Err(err).Str("course-id", courseID).Str("task", target.String()).Msg("Failed to get course for task.");
+        log.Error().Err(err).Str("course-id", courseID).Str("task", taskID).Msg("Failed to get course for task.");
         return;
     }
 
     if (course == nil) {
-        log.Error().Str("course-id", courseID).Str("task", target.String()).Msg("Could not find course for task.");
+        log.Error().Str("course-id", courseID).Str("task", taskID).Msg("Could not find course for task.");
         return;
     }
 
     err = target.Validate(course);
     if (err != nil) {
-        log.Error().Err(err).Str("course-id", courseID).Str("task", target.String()).Msg("Task failed validation.");
+        log.Error().Err(err).Str("course-id", courseID).Str("task", taskID).Msg("Task failed validation.");
         return;
     }
 
     err = runFunc(course, target);
     if (err != nil) {
-        log.Error().Err(err).Str("course-id", courseID).Str("task", target.String()).Msg("Task run failed.");
+        log.Error().Err(err).Str("course-id", courseID).Str("task", taskID).Msg("Task run failed.");
         return;
     }
 
-    log.Debug().Str("course-id", courseID).Str("task", target.String()).Msg("Task finished.");
+    log.Debug().Str("course-id", courseID).Str("task", taskID).Msg("Task finished.");
 
-    err = db.LogTaskCompletion(courseID, target.GetID());
+    err = db.LogTaskCompletion(courseID, taskID);
     if (err != nil) {
-        log.Error().Err(err).Str("course-id", courseID).Str("task", target.String()).Msg("Failed to log task completion.");
+        log.Error().Err(err).Str("course-id", courseID).Str("task", taskID).Msg("Failed to log task completion.");
         return;
     }
 }
