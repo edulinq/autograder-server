@@ -117,7 +117,7 @@ type Backend interface {
 
     // Record that a task has been completed.
     // The DB is only required to keep the most recently completed task with the given course/ID.
-    LogTaskCompletion(courseID string, taskID string) error;
+    LogTaskCompletion(courseID string, taskID string, instance time.Time) error;
 
     // Get the last time a task with the given course/ID was completed.
     // Will return a zero time (time.Time{}).

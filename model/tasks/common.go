@@ -7,6 +7,7 @@ import (
     "fmt"
     "strings"
     "sync"
+    "time"
 
     "github.com/eriq-augustine/autograder/config"
 )
@@ -22,6 +23,9 @@ type ScheduledTask interface {
     GetCourseID() string
     IsDisabled() bool
     GetTimes() []*ScheduledTime
+    // Get the minimum time between task runs.
+    // The boolean return will be false if there are no times (infinite durtion).
+    GetMinDuration() (time.Duration, bool)
     String() string
     Validate(TaskCourse) error
     GetLock() *sync.Mutex
@@ -52,6 +56,22 @@ func (this *BaseTask) IsDisabled() bool {
 
 func (this *BaseTask) GetTimes() []*ScheduledTime {
     return this.When;
+}
+
+func (this *BaseTask) GetMinDuration() (time.Duration, bool) {
+    if (len(this.When) == 0) {
+        return time.Duration(0), false;
+    }
+
+    var minDuration int64 = -1;
+    for _, when := range this.When {
+        duration := when.TotalNanosecs();
+        if ((minDuration < 0) || (duration < minDuration)) {
+            minDuration = duration;
+        }
+    }
+
+    return time.Duration(minDuration), true;
 }
 
 func (this *BaseTask) String() string {

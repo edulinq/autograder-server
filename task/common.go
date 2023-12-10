@@ -57,6 +57,23 @@ func Schedule(course *model.Course, target tasks.ScheduledTask) error {
             return fmt.Errorf("Unknown task type: %t (%v).", target, target);
     }
 
+    // Does this task need to be run right now
+    // to cachup for lost time (e.g. the server being down).
+    catchup, err := checkForCatchup(course.GetID(), target);
+    if (err != nil) {
+        return err;
+    }
+
+    if (catchup) {
+        // Special ID for catchup tasks.
+        timerID := fmt.Sprintf("%s::catchup", target.GetID());
+
+        err := scheduleTask(course.GetID(), target, timerID, runFunc, nil);
+        if (err != nil) {
+            return fmt.Errorf("Failed to schedule catchup task (%s): '%w'.", target.GetID(), err);
+        }
+    }
+
     for i, when := range target.GetTimes() {
         // ID unique to every (task, timer).
         timerID := fmt.Sprintf("%s::%03d", target.GetID(), i);
@@ -74,6 +91,32 @@ func Schedule(course *model.Course, target tasks.ScheduledTask) error {
     return nil;
 }
 
+// Check to see if it has been too long since this task has been run.
+// Do this by getting the minimum duration for all the task's timers,
+// and seeing if it has been at least that long since the task has been run.
+// Return true of a catchup task needs to be run.
+func checkForCatchup(courseID string, target tasks.ScheduledTask) (bool, error) {
+    minDuration, exists := target.GetMinDuration();
+    if (!exists) {
+        return false, nil;
+    }
+
+    lastRunTime, err := db.GetLastTaskCompletion(courseID, target.GetID());
+    if (err != nil) {
+        return false, fmt.Errorf("Failed to get last time task was run: '%w'.", err);
+    }
+
+    // Don't catchup if the task has never been run.
+    if (lastRunTime.IsZero()) {
+        return false, nil;
+    }
+
+    currentDuration := time.Now().Sub(lastRunTime);
+    return (currentDuration > minDuration), nil;
+}
+
+// Schedule a task.
+// |when| will be nil on a catchup task.
 func scheduleTask(courseID string, target tasks.ScheduledTask, timerID string, runFunc RunFunc, when *tasks.ScheduledTime) error {
     timersLock.Lock();
     defer timersLock.Unlock();
@@ -91,14 +134,24 @@ func scheduleTask(courseID string, target tasks.ScheduledTask, timerID string, r
     taskLock.Lock();
     defer taskLock.Unlock();
 
-    nextRunTime := when.ComputeNextTimeFromNow();
-    timer := time.AfterFunc(nextRunTime.Sub(time.Now()), func() {
+    nextRunDuration := 5 * time.Microsecond;
+    if (when != nil) {
+        nextRunTime := when.ComputeNextTimeFromNow();
+        nextRunDuration = nextRunTime.Sub(time.Now());
+    }
+
+    timer := time.AfterFunc(nextRunDuration, func() {
         // Ensure that this task does not start too quickly.
         // We will acquire this lock for the duration of the task run later.
         taskLock.Lock();
         taskLock.Unlock();
 
         runTask(courseID, target, timerID, runFunc);
+
+        // Do not reschedule catchup tasks.
+        if (when == nil) {
+            return;
+        }
 
         // Schedule the next run.
         err := scheduleTask(courseID, target, timerID, runFunc, when);
@@ -120,7 +173,12 @@ func scheduleTask(courseID string, target tasks.ScheduledTask, timerID string, r
         Stopped: false,
     };
 
-    log.Debug().Str("task", target.GetID()).Str("when", when.String()).Any("next-time", nextRunTime).Msg("Task scheduled.");
+    if (when == nil) {
+        log.Debug().Str("task", target.GetID()).Msg("Catchup task scheduled.");
+    } else {
+        nextRunTime := time.Now().Add(nextRunDuration);
+        log.Debug().Str("task", target.GetID()).Str("when", when.String()).Any("next-time", nextRunTime).Msg("Task scheduled.");
+    }
 
     return nil;
 }
@@ -209,12 +267,6 @@ func runTask(courseID string, target tasks.ScheduledTask, timerID string, runFun
         return;
     }
 
-    err = target.Validate(course);
-    if (err != nil) {
-        log.Error().Err(err).Str("course-id", courseID).Str("task", taskID).Msg("Task failed validation.");
-        return;
-    }
-
     err = runFunc(course, target);
     if (err != nil) {
         log.Error().Err(err).Str("course-id", courseID).Str("task", taskID).Msg("Task run failed.");
@@ -223,7 +275,7 @@ func runTask(courseID string, target tasks.ScheduledTask, timerID string, runFun
 
     log.Debug().Str("course-id", courseID).Str("task", taskID).Msg("Task finished.");
 
-    err = db.LogTaskCompletion(courseID, taskID);
+    err = db.LogTaskCompletion(courseID, taskID, now);
     if (err != nil) {
         log.Error().Err(err).Str("course-id", courseID).Str("task", taskID).Msg("Failed to log task completion.");
         return;

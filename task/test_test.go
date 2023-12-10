@@ -18,7 +18,7 @@ func TestTaskBase(test *testing.T) {
     config.TASK_MIN_REST_SECS.Set(-1);
     defer config.TASK_MIN_REST_SECS.Set(oldRestTime);
 
-    count := runTestTask(test);
+    count := runTestTask(test, 5);
 
     if (count <= 1) {
         test.Fatalf("Not enough test tasks were run (%d run). (It's possible for this to be flaky on a very busy machine).", count)
@@ -35,16 +35,67 @@ func TestTaskSkipRecent(test *testing.T) {
     config.TASK_MIN_REST_SECS.Set(10 * 60);
     defer config.TASK_MIN_REST_SECS.Set(oldRestTime);
 
-    count := runTestTask(test);
+    count := runTestTask(test, 5);
 
     if (count != 1) {
         test.Fatalf("Incorrect number of runs. Expected exactly 1, got %d.", count);
     }
 }
 
+// Ensure that a catchup task will run.
+func TestTaskCatchup(test *testing.T) {
+    db.ResetForTesting();
+    defer db.ResetForTesting();
+
+    // Set the task rest time to negative.
+    oldRestTime := config.TASK_MIN_REST_SECS.Get();
+    config.TASK_MIN_REST_SECS.Set(-1);
+    defer config.TASK_MIN_REST_SECS.Set(oldRestTime);
+
+    // Set the last run for this task to be far in the past
+    // (but not a zero time).
+    err := db.LogTaskCompletion("course101", "course101::test", time.Time{}.Add(time.Second));
+    if (err != nil) {
+        test.Fatalf("Failed to log task completion: '%v'.", err);
+    }
+
+    // Set the duration high enough so it will never run.
+    count := runTestTask(test, 100000000);
+
+    // Exactly one instance of the task (the catchup) should have run.
+    if (count != 1) {
+        test.Fatalf("Incorrect number of runs. Expected exactly 1, got %d.", count);
+    }
+}
+
+// Ensure that a catchup task will not run.
+func TestTaskNoCatchup(test *testing.T) {
+    db.ResetForTesting();
+    defer db.ResetForTesting();
+
+    // Set the task rest time to negative.
+    oldRestTime := config.TASK_MIN_REST_SECS.Get();
+    config.TASK_MIN_REST_SECS.Set(-1);
+    defer config.TASK_MIN_REST_SECS.Set(oldRestTime);
+
+    // Set the last run for this task to be right now.
+    err := db.LogTaskCompletion("course101", "course101::test", time.Now());
+    if (err != nil) {
+        test.Fatalf("Failed to log task completion: '%v'.", err);
+    }
+
+    // Set the duration high enough so it will never run.
+    count := runTestTask(test, 100000000);
+
+    // No tasks should run.
+    if (count != 0) {
+        test.Fatalf("Incorrect number of runs. Expected exactly 0, got %d.", count);
+    }
+}
+
 // Run a basic test task.
 // Return the number of times the task was run.
-func runTestTask(test *testing.T) int {
+func runTestTask(test *testing.T, everyUSecs int64) int {
     defer StopAll();
 
     counter := make(chan int, 100);
@@ -63,7 +114,7 @@ func runTestTask(test *testing.T) int {
             When: []*tasks.ScheduledTime{
                 &tasks.ScheduledTime{
                     Every: tasks.DurationSpec{
-                        Microseconds: 5,
+                        Microseconds: everyUSecs,
                     },
                 },
             },
@@ -71,6 +122,8 @@ func runTestTask(test *testing.T) int {
         Func: fun,
         Payload: counter,
     };
+
+    task.Validate(course);
 
     err := task.Validate(course);
     if (err != nil) {

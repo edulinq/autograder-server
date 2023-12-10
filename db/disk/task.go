@@ -10,7 +10,7 @@ import (
 
 const DISK_DB_TASKS_FILENAME = "tasks.json";
 
-func (this *backend) LogTaskCompletion(courseID string, taskID string) error {
+func (this *backend) LogTaskCompletion(courseID string, taskID string, instance time.Time) error {
     this.lock.Lock();
     defer this.lock.Unlock();
 
@@ -19,7 +19,7 @@ func (this *backend) LogTaskCompletion(courseID string, taskID string) error {
         return err;
     }
 
-    log[taskID] = time.Now();
+    log[taskID] = instance;
 
     err = this.writeTaskLog(courseID, log);
     if (err != nil) {
