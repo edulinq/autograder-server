@@ -10,7 +10,7 @@ import (
 const ASSIGNMENT_CONFIG_FILENAME = "assignment.json"
 
 // Load an assignment config from a given JSON path.
-func LoadAssignment(course *Course, path string) (*Assignment, error) {
+func ReadAssignmentConfig(course *Course, path string) (*Assignment, error) {
     if (course == nil) {
         return nil, fmt.Errorf("Cannot load an assignment without a course.");
     }

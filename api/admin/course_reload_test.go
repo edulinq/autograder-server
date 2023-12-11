@@ -35,7 +35,7 @@ func TestCourseReload(test *testing.T) {
         test.Fatalf("Unexpected post-remove user count. Expected 4, found %d.", count);
     }
 
-    removeRequest(test);
+    reloadRequest(test);
 
     count = countUsers(test, course);
     if (count != 5) {
@@ -43,7 +43,7 @@ func TestCourseReload(test *testing.T) {
     }
 }
 
-func removeRequest(test *testing.T) {
+func reloadRequest(test *testing.T) {
     response := core.SendTestAPIRequestFull(test, core.NewEndpoint(`admin/course/reload`), nil, nil, model.RoleAdmin);
     if (!response.Success) {
         test.Errorf("Response is not a success when it should be: '%v'.", response);

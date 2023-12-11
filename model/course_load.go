@@ -23,7 +23,7 @@ func LoadCourseFromPath(path string) (*Course, error) {
     }
 
     for _, assignmentPath := range assignmentPaths {
-        _, err := LoadAssignment(course, assignmentPath);
+        _, err := ReadAssignmentConfig(course, assignmentPath);
         if (err != nil) {
             return nil, fmt.Errorf("Failed to load assignment config '%s': '%w'.", assignmentPath, err);
         }

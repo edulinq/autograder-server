@@ -83,8 +83,7 @@ func fetchTestSubmissionAssignment(testSubmissionPath string) (*model.Assignment
         return nil, fmt.Errorf("Failed to load course '%s': '%w'.", coursePath, err);
     }
 
-    // TEST - How is this correct? An assignment loading like a course?
-    assignment, err := model.ReadCourseConfig(assignmentPath);
+    assignment, err := model.ReadAssignmentConfig(course, assignmentPath);
     if (err != nil) {
         return nil, fmt.Errorf("Failed to load assignment '%s': '%w'.", assignmentPath, err);
     }
