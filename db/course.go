@@ -97,7 +97,14 @@ func loadCourse(path string) (*model.Course, error) {
         return nil, fmt.Errorf("Database has not been opened.");
     }
 
-    return backend.LoadCourse(path);
+    course, err := backend.LoadCourse(path);
+
+    if (err == nil) {
+        log.Info().Str("path", path).Str("id", course.GetID()).
+                Int("num-assignments", len(course.Assignments)).Msg("Loaded course.");
+    }
+
+    return course, err;
 }
 
 func SaveCourse(course *model.Course) error {
@@ -173,32 +180,37 @@ func AddCoursesFromDir(baseDir string) ([]string, error) {
     return courseIDs, nil;
 }
 
-// Add a course to the db from the course's source.
+// Add a course to the db from a path.
 func AddCourse(path string) (*model.Course, error) {
     if (backend == nil) {
         return nil, fmt.Errorf("Database has not been opened.");
     }
 
-    partialCourse, err := model.ReadCourseConfig(path);
+    course, err := loadCourse(path);
     if (err != nil) {
         return nil, fmt.Errorf("Failed to load course config '%s': '%w'.", path, err);
     }
 
     // If the source is empty, set it to this directory where it is being added from.
-    if (partialCourse.Source.IsEmpty()) {
-        partialCourse.Source = common.FileSpec(util.ShouldAbs(filepath.Dir(path)));
+    if (course.Source.IsEmpty()) {
+        course.Source = common.FileSpec(util.ShouldAbs(filepath.Dir(path)));
+
+        err = SaveCourse(course);
+        if (err != nil) {
+            return nil, fmt.Errorf("Failed to save course: '%w'.", err);
+        }
+
+        return course, nil;
     }
 
-    course, err := UpdateCourseFromSource(partialCourse);
+    // Try to update the course from source.
+
+    newCourse, _, err := UpdateCourseFromSource(course);
     if (err != nil) {
         return nil, err;
     }
 
-    if (course == nil) {
-        return nil, fmt.Errorf("Course has no source.");
-    }
-
-    return course, nil;
+    return newCourse, nil;
 }
 
 func MustAddCourse(path string) *model.Course {
@@ -213,15 +225,17 @@ func MustAddCourse(path string) *model.Course {
 // Get a fresh copy of the course from the source and load it into the DB
 // (thereby updating the course).
 // After the update, build new images.
-func UpdateCourseFromSource(course *model.Course) (*model.Course, error) {
+// The new course (or old course if no update happens) will be returned.
+// The boolean return indicates if an update attempt was made.
+func UpdateCourseFromSource(course *model.Course) (*model.Course, bool, error) {
     if (backend == nil) {
-        return nil, fmt.Errorf("Database has not been opened.");
+        return nil, false, fmt.Errorf("Database has not been opened.");
     }
 
     source := course.GetSource();
 
     if (source.IsEmpty() || source.IsNil()) {
-        return nil, nil;
+        return course, false, nil;
     }
 
     baseDir := course.GetBaseSourceDir();
@@ -229,38 +243,38 @@ func UpdateCourseFromSource(course *model.Course) (*model.Course, error) {
     if (util.PathExists(baseDir)) {
         err := util.RemoveDirent(baseDir);
         if (err != nil) {
-            return nil, fmt.Errorf("Failed to remove existing course base source output '%s': '%w'.", baseDir, err);
+            return nil, false, fmt.Errorf("Failed to remove existing course base source output '%s': '%w'.", baseDir, err);
         }
     }
 
     err := util.MkDir(baseDir);
     if (err != nil) {
-        return nil, fmt.Errorf("Failed to make course base source dir '%s': '%w'.", baseDir, err);
+        return nil, false, fmt.Errorf("Failed to make course base source dir '%s': '%w'.", baseDir, err);
     }
 
     err = source.CopyTarget(common.ShouldGetCWD(), baseDir, true);
     if (err != nil) {
-        return nil, fmt.Errorf("Failed to copy course source ('%s') into course base source dir ('%s'): '%w'.", source, baseDir, err);
+        return nil, false, fmt.Errorf("Failed to copy course source ('%s') into course base source dir ('%s'): '%w'.", source, baseDir, err);
     }
 
     configPaths, err := util.FindFiles(model.COURSE_CONFIG_FILENAME, baseDir);
     if (err != nil) {
-        return nil, fmt.Errorf("Failed to search for course configs in '%s': '%w'.", baseDir, err);
+        return nil, false, fmt.Errorf("Failed to search for course configs in '%s': '%w'.", baseDir, err);
     }
 
     if (len(configPaths) == 0) {
-        return nil, fmt.Errorf("Did not find any course configs in course source ('%s'), should be exactly one.", source);
+        return nil, false, fmt.Errorf("Did not find any course configs in course source ('%s'), should be exactly one.", source);
     }
 
     if (len(configPaths) > 1) {
-        return nil, fmt.Errorf("Found too many course configs (%d) in course source ('%s'), should be exactly one.", len(configPaths), source);
+        return nil, false, fmt.Errorf("Found too many course configs (%d) in course source ('%s'), should be exactly one.", len(configPaths), source);
     }
 
     configPath := util.ShouldAbs(configPaths[0]);
 
     newCourse, err := loadCourse(configPath);
     if (err != nil) {
-        return nil, fmt.Errorf("Failed to load updated course: '%w'.", err);
+        return nil, false, fmt.Errorf("Failed to load updated course: '%w'.", err);
     }
 
     // Ensure that the source is passed along.
@@ -270,7 +284,7 @@ func UpdateCourseFromSource(course *model.Course) (*model.Course, error) {
 
         err = SaveCourse(newCourse);
         if (err != nil) {
-            return nil, fmt.Errorf("Failed to save new course: '%w'.", err);
+            return nil, false, fmt.Errorf("Failed to save new course: '%w'.", err);
         }
     }
 
@@ -281,8 +295,8 @@ func UpdateCourseFromSource(course *model.Course) (*model.Course, error) {
             err = errors.Join(err, newErr);
         }
 
-        return nil, fmt.Errorf("Failed to build assignment images: '%w'.", err);
+        return nil, false, fmt.Errorf("Failed to build assignment images: '%w'.", err);
     }
 
-    return newCourse, nil;
+    return newCourse, true, nil;
 }

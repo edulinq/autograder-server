@@ -7,7 +7,7 @@ import (
 )
 
 var routes []*core.Route = []*core.Route{
-    core.NewAPIRoute(core.NewEndpoint(`admin/course/reload`), HandleCourseReload),
+    core.NewAPIRoute(core.NewEndpoint(`admin/update/course`), HandleUpdateCourse),
 };
 
 func GetRoutes() *[]*core.Route {

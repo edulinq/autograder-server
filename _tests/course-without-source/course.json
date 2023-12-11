@@ -1,0 +1,8 @@
+{
+    "id": "course-without-source",
+    "display-name": "Course Without Source",
+    "source": "nil::",
+    "lms": {
+        "type": "test"
+    }
+}

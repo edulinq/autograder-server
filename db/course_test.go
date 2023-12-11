@@ -33,12 +33,12 @@ func (this *DBTests) DBTestCourseUpdateCourseFromSourceBase(test *testing.T) {
         test.Fatalf("Unexpected post-remove user count. Expected 4, found %d.", count);
     }
 
-    newCourse, err := UpdateCourseFromSource(course);
+    newCourse, updated, err := UpdateCourseFromSource(course);
     if (err != nil) {
         test.Fatalf("Failed to update course: '%v'.", err);
     }
 
-    if (newCourse == nil) {
+    if (!updated) {
         test.Fatalf("Course did not update.");
     }
 
@@ -82,12 +82,12 @@ func (this *DBTests) DBTestCourseUpdateCourseFromSourceSkip(test *testing.T) {
         test.Fatalf("Failed to save course: '%v'.", err);
     }
 
-    newCourse, err := UpdateCourseFromSource(course);
+    _, updated, err := UpdateCourseFromSource(course);
     if (err != nil) {
         test.Fatalf("Failed to update course: '%v'.", err);
     }
 
-    if (newCourse != nil) {
+    if (updated) {
         test.Fatalf("Course was (incorrectly) updated.");
     }
 

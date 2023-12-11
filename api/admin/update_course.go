@@ -5,17 +5,18 @@ import (
     "github.com/eriq-augustine/autograder/db"
 )
 
-type CourseReloadRequest struct {
+type UpdateCourseRequest struct {
     core.APIRequestCourseUserContext
     core.MinRoleAdmin
 
     Clear bool `json:"clear"`
 }
 
-type CourseReloadResponse struct {
+type UpdateCourseResponse struct {
+    CourseUpdated bool `json:"course-updated"`
 }
 
-func HandleCourseReload(request *CourseReloadRequest) (*CourseReloadResponse, *core.APIError) {
+func HandleUpdateCourse(request *UpdateCourseRequest) (*UpdateCourseResponse, *core.APIError) {
     if (request.Clear) {
         err := db.ClearCourse(request.Course);
         if (err != nil) {
@@ -24,11 +25,11 @@ func HandleCourseReload(request *CourseReloadRequest) (*CourseReloadResponse, *c
         }
     }
 
-    _, err := db.UpdateCourseFromSource(request.Course);
+    _, updated, err := db.UpdateCourseFromSource(request.Course);
     if (err != nil) {
         return nil, core.NewInternalError("-702", &request.APIRequestCourseUserContext,
                 "Failed to reload course.").Err(err);
     }
 
-    return &CourseReloadResponse{}, nil;
+    return &UpdateCourseResponse{updated}, nil;
 }

@@ -10,6 +10,7 @@ import (
     "github.com/eriq-augustine/autograder/config"
     "github.com/eriq-augustine/autograder/db"
     "github.com/eriq-augustine/autograder/docker"
+    "github.com/eriq-augustine/autograder/model"
     "github.com/eriq-augustine/autograder/task"
     "github.com/eriq-augustine/autograder/util"
 )
@@ -54,12 +55,12 @@ func main() {
         }
 
         // Build images (in the background).
-        go func() {
+        go func(course *model.Course) {
             _, errs := course.BuildAssignmentImages(false, false, docker.NewBuildOptions());
             for imageName, err := range errs {
                 log.Error().Err(err).Str("course-id", course.GetID()).Str("image", imageName).Msg("Failed to build image.");
             }
-        }();
+        }(course);
     }
 
     err = api.StartServer();

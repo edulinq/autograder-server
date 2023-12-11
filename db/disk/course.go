@@ -33,7 +33,7 @@ func (this *backend) LoadCourse(path string) (*model.Course, error) {
         return nil, err;
     }
 
-    log.Info().Str("database", "disk").Str("path", path).Str("id", course.GetID()).
+    log.Debug().Str("database", "disk").Str("path", path).Str("id", course.GetID()).
             Int("num-assignments", len(course.Assignments)).Msg("Loaded course.");
 
     err = this.saveCourseLock(course, false);

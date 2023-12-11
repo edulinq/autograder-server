@@ -8,7 +8,7 @@ import (
     "github.com/eriq-augustine/autograder/model"
 )
 
-func TestCourseReload(test *testing.T) {
+func TestUpdateCourse(test *testing.T) {
     // Remove a user and ensure the user is back after a reload.
 
     // Leave the course in a good state after the test.
@@ -44,7 +44,7 @@ func TestCourseReload(test *testing.T) {
 }
 
 func reloadRequest(test *testing.T) {
-    response := core.SendTestAPIRequestFull(test, core.NewEndpoint(`admin/course/reload`), nil, nil, model.RoleAdmin);
+    response := core.SendTestAPIRequestFull(test, core.NewEndpoint(`admin/update/course`), nil, nil, model.RoleAdmin);
     if (!response.Success) {
         test.Errorf("Response is not a success when it should be: '%v'.", response);
     }
