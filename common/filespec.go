@@ -40,6 +40,14 @@ func (this FileSpec) GetType() FileSpecType {
     }
 }
 
+func GetEmptyFileSpec() FileSpec {
+    return FileSpec("");
+}
+
+func GetNilFileSpec() FileSpec {
+    return FileSpec(FILESPEC_NIL_PREFIX);
+}
+
 func (this FileSpec) IsEmpty() bool {
     return (string(this) == "");
 }
