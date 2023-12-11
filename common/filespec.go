@@ -19,20 +19,29 @@ type FileSpecType int;
 const (
     FILESPEC_TYPE_PATH FileSpecType = iota
     FILESPEC_TYPE_GIT
+    FILESPEC_TYPE_NIL
 )
 
 const (
     FILESPEC_DELIM = "::"
     FILESPEC_GIT = "git"
     FILESPEC_GIT_PREFIX = FILESPEC_GIT + FILESPEC_DELIM
+    FILESPEC_NIL = "nil"
+    FILESPEC_NIL_PREFIX = FILESPEC_NIL + FILESPEC_DELIM
 )
 
 func (this FileSpec) GetType() FileSpecType {
     if (strings.HasPrefix(string(this), FILESPEC_GIT_PREFIX)) {
         return FILESPEC_TYPE_GIT;
+    } else if (strings.HasPrefix(string(this), FILESPEC_NIL_PREFIX)) {
+        return FILESPEC_TYPE_NIL;
+    } else {
+        return FILESPEC_TYPE_PATH;
     }
+}
 
-    return FILESPEC_TYPE_PATH;
+func (this FileSpec) IsEmpty() bool {
+    return (string(this) == "");
 }
 
 func (this FileSpec) IsPath() bool {
@@ -41,6 +50,10 @@ func (this FileSpec) IsPath() bool {
 
 func (this FileSpec) IsGit() bool {
     return this.GetType() == FILESPEC_TYPE_GIT;
+}
+
+func (this FileSpec) IsNil() bool {
+    return this.GetType() == FILESPEC_TYPE_NIL;
 }
 
 func (this FileSpec) IsAbs() bool {
@@ -62,14 +75,23 @@ func (this FileSpec) CopyTarget(baseDir string, destDir string, onlyContents boo
             return this.copyPath(baseDir, destDir, onlyContents);
         case FILESPEC_TYPE_GIT:
             return this.copyGit(destDir);
+        case FILESPEC_TYPE_NIL:
+            // noop.
+            return nil;
         default:
             return fmt.Errorf("Unknown filespec type ('%s'): '%v'.", this, this.GetType());
     }
 }
 
 func (this FileSpec) copyPath(baseDir string, destDir string, onlyContents bool) error {
-    sourcePath := filepath.Join(baseDir, string(this));
-    destPath := filepath.Join(destDir, filepath.Base(string(this)));
+    rawPath := string(this);
+
+    sourcePath := rawPath;
+    if (!filepath.IsAbs(sourcePath) && (baseDir != "")) {
+        sourcePath = filepath.Join(baseDir, rawPath);
+    }
+
+    destPath := filepath.Join(destDir, filepath.Base(rawPath));
 
     var err error;
 

@@ -37,7 +37,7 @@ func main() {
 
     log.Info().Str("dir", workingDir).Msg("Running server with working directory.");
 
-    _, err = db.LoadCourses();
+    _, err = db.AddCourses();
     if (err != nil) {
         log.Fatal().Err(err).Msg("Could not load courses.");
     }

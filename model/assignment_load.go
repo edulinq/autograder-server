@@ -23,11 +23,11 @@ func LoadAssignment(course *Course, path string) (*Assignment, error) {
 
     assignment.Course = course;
 
-    if (assignment.SourceDir == "") {
-        // Force the source dir to be relative to the course dir.
-        assignment.SourceDir, err = filepath.Rel(course.GetSourceDir(), util.ShouldAbs(filepath.Dir(path)));
+    if (assignment.RelSourceDir == "") {
+        // Force the source dir to be relative to the course's base source dir.
+        assignment.RelSourceDir, err = filepath.Rel(course.GetBaseSourceDir(), util.ShouldAbs(filepath.Dir(path)));
         if (err != nil) {
-            return nil, fmt.Errorf("Could not compute source dir for assignment (%s): '%w'.", path, err);
+            return nil, fmt.Errorf("Could not compute relative source dir for assignment (%s): '%w'.", path, err);
         }
     }
 

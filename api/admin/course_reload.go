@@ -24,7 +24,7 @@ func HandleCourseReload(request *CourseReloadRequest) (*CourseReloadResponse, *c
         }
     }
 
-    _, err := db.ReloadCourse(request.Course);
+    _, err := db.UpdateCourseFromSource(request.Course);
     if (err != nil) {
         return nil, core.NewInternalError("-702", &request.APIRequestCourseUserContext,
                 "Failed to reload course.").Err(err);

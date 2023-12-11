@@ -10,13 +10,16 @@ import (
     "github.com/eriq-augustine/autograder/config"
     "github.com/eriq-augustine/autograder/docker"
     "github.com/eriq-augustine/autograder/model/tasks"
-    "github.com/eriq-augustine/autograder/util"
 )
+
+const SOURCES_DIRNAME = "sources";
 
 type Course struct {
     // Required fields.
     ID string `json:"id"`
     DisplayName string `json:"display-name"`
+
+    Source common.FileSpec `json:"source"`
 
     LMS *LMSAdapter `json:"lms,omitempty"`
 
@@ -25,7 +28,6 @@ type Course struct {
     ScoringUpload []*tasks.ScoringUploadTask `json:"scoring-upload,omitempty"`
 
     // Internal fields the autograder will set.
-    SourceDir string `json:"_source-dir"`
     Assignments map[string]*Assignment `json:"-"`
     scheduledTasks []tasks.ScheduledTask `json:"-"`
 }
@@ -38,12 +40,8 @@ func (this *Course) GetName() string {
     return this.DisplayName;
 }
 
-func (this *Course) GetSourceDir() string {
-    if (filepath.IsAbs(this.SourceDir)) {
-        return this.SourceDir;
-    }
-
-    return util.ShouldAbs(filepath.Join(common.ShouldGetCWD(), this.SourceDir));
+func (this *Course) GetSource() common.FileSpec {
+    return this.Source;
 }
 
 func (this *Course) GetLMSAdapter() *LMSAdapter {
@@ -169,4 +167,12 @@ func (this *Course) GetSortedAssignments() []*Assignment {
     slices.SortFunc(assignments, CompareAssignments);
 
     return assignments;
+}
+
+func GetSourcesDir() string {
+    return filepath.Join(config.WORK_DIR.Get(), SOURCES_DIRNAME);
+}
+
+func (this *Course) GetBaseSourceDir() string {
+    return filepath.Join(GetSourcesDir(), this.GetID());
 }

@@ -3,6 +3,8 @@ package db
 // The db package acts as an interface for other packages into the database.
 // Once db.Open() is called, this layer will handle conversions to/from the databse.
 // Any Get*() functions that return an interface will return a pure nil if nothing is found.
+// When working with courses, Load*() functions are for courses that are already added to the system,
+// use Add*() functions for new courses.
 
 import (
     "fmt"
@@ -42,12 +44,12 @@ type Backend interface {
     // Returns (nil, nil) if the course does not exist.
     GetCourse(courseID string) (*model.Course, error);
 
-    // Load a course into the databse and return the course's id.
+    // Load a course into the databse and return the course.
     // This implies loading a course directory from a config and saving it in the db.
     // Will search for and load any assignments, users, and submissions
     // located in the same directory tree.
     // Override any existing settings for this course.
-    LoadCourse(path string) (string, error);
+    LoadCourse(path string) (*model.Course, error);
 
     // Explicitly save a course.
     SaveCourse(course *model.Course) error;

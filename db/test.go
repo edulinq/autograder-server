@@ -29,7 +29,7 @@ func PrepForTestingMain() {
 // A reset function than can be called between tests.
 func ResetForTesting() {
     MustClear();
-    MustLoadCourses();
+    MustAddCourses();
 }
 
 func CleanupTestingMain() {

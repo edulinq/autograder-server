@@ -17,7 +17,7 @@ var args struct {
 
 func main() {
     kong.Parse(&args,
-        kong.Description("Load all specified courses."),
+        kong.Description("Add all specified courses to the system."),
     );
 
     err := config.HandleConfigArgs(args.ConfigArgs);
@@ -28,12 +28,12 @@ func main() {
     db.MustOpen();
     defer db.MustClose();
 
-    courseIDs, err := db.LoadCoursesFromDir(args.Path);
+    courseIDs, err := db.AddCoursesFromDir(args.Path);
     if (err != nil) {
-        log.Fatal().Err(err).Str("path", args.Path).Msg("Could not load courses dir.");
+        log.Fatal().Err(err).Str("path", args.Path).Msg("Could not add courses dir.");
     }
 
-    fmt.Printf("Loaded %d courses.\n", len(courseIDs));
+    fmt.Printf("Added %d courses.\n", len(courseIDs));
     for _, courseID := range courseIDs {
         fmt.Printf("    %s\n", courseID);
     }

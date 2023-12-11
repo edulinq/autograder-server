@@ -24,13 +24,13 @@ func (this *backend) ClearCourse(course *model.Course) error {
     return nil;
 }
 
-func (this *backend) LoadCourse(path string) (string, error) {
+func (this *backend) LoadCourse(path string) (*model.Course, error) {
     this.lock.Lock();
     defer this.lock.Unlock();
 
-    course, users, submissions, err := model.FullLoadCourse(path);
+    course, users, submissions, err := model.FullLoadCourseFromPath(path);
     if (err != nil) {
-        return "", err;
+        return nil, err;
     }
 
     log.Info().Str("database", "disk").Str("path", path).Str("id", course.GetID()).
@@ -38,20 +38,20 @@ func (this *backend) LoadCourse(path string) (string, error) {
 
     err = this.saveCourseLock(course, false);
     if (err != nil) {
-        return "", err;
+        return nil, err;
     }
 
     err = this.saveUsersLock(course, users, false);
     if (err != nil) {
-        return "", err;
+        return nil, err;
     }
 
     err = this.saveSubmissionsLock(course, submissions, false);
     if (err != nil) {
-        return "", err;
+        return nil, err;
     }
 
-    return course.GetID(), nil;
+    return course, nil;
 }
 
 func (this *backend) SaveCourse(course *model.Course) error {
@@ -103,7 +103,7 @@ func (this *backend) GetCourse(courseID string) (*model.Course, error) {
         return nil, nil;
     }
 
-    return model.LoadCourse(path);
+    return model.LoadCourseFromPath(path);
 }
 
 func (this *backend) GetCourses() (map[string]*model.Course, error) {
@@ -119,7 +119,7 @@ func (this *backend) GetCourses() (map[string]*model.Course, error) {
 
     courses := make(map[string]*model.Course, len(configPaths));
     for _, configPath := range configPaths {
-        course, err := model.LoadCourse(configPath);
+        course, err := model.LoadCourseFromPath(configPath);
         if (err != nil) {
             return nil, fmt.Errorf("Failed to load course '%s': '%w'.", configPath, err);
         }

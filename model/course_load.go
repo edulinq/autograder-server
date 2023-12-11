@@ -9,8 +9,8 @@ import (
 
 const COURSE_CONFIG_FILENAME = "course.json"
 
-func LoadCourse(path string) (*Course, error) {
-    course, err := LoadCourseConfig(path);
+func LoadCourseFromPath(path string) (*Course, error) {
+    course, err := ReadCourseConfig(path);
     if (err != nil) {
         return nil, fmt.Errorf("Could not load course config at '%s': '%w'.", path, err);
     }
@@ -32,8 +32,8 @@ func LoadCourse(path string) (*Course, error) {
     return course, nil;
 }
 
-func FullLoadCourse(path string) (*Course, map[string]*User, []*GradingResult, error) {
-    course, err := LoadCourse(path);
+func FullLoadCourseFromPath(path string) (*Course, map[string]*User, []*GradingResult, error) {
+    course, err := LoadCourseFromPath(path);
     if (err != nil) {
         return nil, nil, nil, err;
     }
@@ -51,15 +51,13 @@ func FullLoadCourse(path string) (*Course, map[string]*User, []*GradingResult, e
     return course, users, submissions, nil;
 }
 
-func LoadCourseConfig(path string) (*Course, error) {
+// Load just the course config (and validate).
+// Do not load any assignments or other resources.
+func ReadCourseConfig(path string) (*Course, error) {
     var course Course;
     err := util.JSONFromFile(path, &course);
     if (err != nil) {
         return nil, fmt.Errorf("Could not load course config (%s): '%w'.", path, err);
-    }
-
-    if (course.SourceDir == "") {
-        course.SourceDir = util.ShouldAbs(filepath.Dir(path));
     }
 
     course.Assignments = make(map[string]*Assignment);

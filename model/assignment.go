@@ -27,7 +27,7 @@ type Assignment struct {
     docker.ImageInfo
 
     // Ignore these fields in JSON.
-    SourceDir string `json:"_source-dir"`
+    RelSourceDir string `json:"_rel_source-dir"`
     Course *Course `json:"-"`
 
     imageLock *sync.Mutex `json:"-"`
@@ -70,7 +70,7 @@ func (this *Assignment) GetImageInfo() *docker.ImageInfo {
 }
 
 func (this *Assignment) GetSourceDir() string {
-    return filepath.Join(this.Course.GetSourceDir(), this.SourceDir);
+    return filepath.Join(this.Course.GetBaseSourceDir(), this.RelSourceDir);
 }
 
 // Ensure that the assignment is formatted correctly.
@@ -123,8 +123,8 @@ func (this *Assignment) Validate() error {
         this.PostSubmissionFileOperations = make([][]string, 0);
     }
 
-    if (this.SourceDir == "") {
-        return fmt.Errorf("Source dir must not be empty.")
+    if (this.RelSourceDir == "") {
+        return fmt.Errorf("Relative source dir must not be empty.")
     }
 
     if (this.Course == nil) {
