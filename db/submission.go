@@ -78,7 +78,6 @@ func GetSubmissionContents(assignment *model.Assignment, email string, submissio
     }
 
     shortSubmissionID := common.GetShortSubmissionID(submissionID);
-
     return backend.GetSubmissionContents(assignment, email, shortSubmissionID);
 }
 
@@ -94,7 +93,7 @@ func RemoveSubmission(assignment *model.Assignment, email string, submissionID s
     if (backend == nil) {
         return false, fmt.Errorf("Database has not been opened.");
     }
+
     shortSubmissionID := common.GetShortSubmissionID(submissionID);
-    
     return backend.RemoveSubmission(assignment, email, shortSubmissionID);
 }
