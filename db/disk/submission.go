@@ -295,16 +295,29 @@ func (this *backend) getMostRecentSubmissionID(assignment *model.Assignment, ema
     return dirents[len(dirents) - 1].Name(), nil;
 }
 
-func (this *backend) RemoveSubmission(assignment *model.Assignment, email string, shortSubmissionID string) error {
+func (this *backend) RemoveSubmission(assignment *model.Assignment, email string, shortSubmissionID string) (bool, error) {
+    var err error;
+
+    if (shortSubmissionID == "") {
+        shortSubmissionID, err = this.getMostRecentSubmissionID(assignment, email);
+        if (err != nil){
+            return false, fmt.Errorf("Failed to get most recent submission id: `%w`.", err);
+        }
+    }
+
+    if (shortSubmissionID == ""){
+        return false, nil;
+    }
+
     submissionDir := this.getSubmissionDirFromAssignment(assignment, email, shortSubmissionID);
+
     if (!util.PathExists(submissionDir)) {
-        return fmt.Errorf("No submission found");
+        return false, fmt.Errorf("Submission does not exist");
+    }
+    err = util.RemoveDirent(submissionDir)
+    if (err != nil) {
+        return false, err;
     }
 
-    err := os.RemoveAll(submissionDir)
-    if err != nil {
-        return fmt.Errorf("Error removing submission")
-    }
-
-    return nil;
+    return true, nil;
 }

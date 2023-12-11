@@ -20,17 +20,21 @@ type RemoveSubmissionResponse struct {
 
 func HandleRemoveSubmission(request *RemoveSubmissionRequest) (*RemoveSubmissionResponse, *core.APIError){
     response := RemoveSubmissionResponse{};
+
     if (!request.TargetUser.Found) {
         return &response, nil;
     }
 
     response.FoundUser = true;
-    err := db.RemoveSubmission(request.Assignment, request.TargetUser.Email, request.TargetSubmission)
-    if (err != nil){
+
+    doesExist, err := db.RemoveSubmission(request.Assignment, request.TargetUser.Email, request.TargetSubmission);
+    if ( (err != nil) || (doesExist == false)){
         response.FoundSubmission = false;
-    } else {
-        response.FoundSubmission = true;
+        return nil, core.NewInternalError("-418", &request.APIRequestCourseUserContext, "Failed to remove the submission.").
+                Err(err).Add("user", request.TargetUser.Email).Add("submission", request.TargetSubmission);
     }
+
+    response.FoundSubmission = true;
     
     return &response, nil;
 }
