@@ -9,8 +9,8 @@ import (
 )
 
 func TestRemoveSubmission(test *testing.T) {
-	// Leave the course in a good state after the test.
-	defer db.ResetForTesting();
+    // Leave the course in a good state after the test.
+    defer db.ResetForTesting();
 
     testCases := []struct{ role model.UserRole; targetEmail string; targetSubmission string; foundUser bool; foundSubmission bool; permError bool}{
         // Grader, self, recent.
@@ -42,8 +42,8 @@ func TestRemoveSubmission(test *testing.T) {
     };
 
     for i, testCase := range testCases {
-		// Reload the test course every time.
-		db.ResetForTesting();
+        // Reload the test course every time.
+        db.ResetForTesting();
 
         fields := map[string]any{
             "target-email": testCase.targetEmail,
@@ -52,7 +52,7 @@ func TestRemoveSubmission(test *testing.T) {
 
         response := core.SendTestAPIRequestFull(test, core.NewEndpoint(`submission/remove/submission`), fields, nil, testCase.role);
         
-		if (!response.Success) {
+        if (!response.Success) {
             if (testCase.permError) {
                 expectedLocator := "-320";
                 if (response.Locator != expectedLocator) {
@@ -62,7 +62,7 @@ func TestRemoveSubmission(test *testing.T) {
             } else {
                 test.Errorf("Case %d: Response is not a success when it should be: '%v'.", i, response);
             }
-			
+            
             continue;
         }
 

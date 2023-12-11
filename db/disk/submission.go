@@ -312,7 +312,7 @@ func (this *backend) RemoveSubmission(assignment *model.Assignment, email string
     submissionDir := this.getSubmissionDirFromAssignment(assignment, email, shortSubmissionID);
 
     if (!util.PathExists(submissionDir)) {
-        return false, fmt.Errorf("Submission does not exist");
+        return false, fmt.Errorf("Submission does not exist.");
     }
     err = util.RemoveDirent(submissionDir)
     if (err != nil) {

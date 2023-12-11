@@ -79,7 +79,6 @@ func GetSubmissionContents(assignment *model.Assignment, email string, submissio
 
     shortSubmissionID := common.GetShortSubmissionID(submissionID);
 
-
     return backend.GetSubmissionContents(assignment, email, shortSubmissionID);
 }
 
