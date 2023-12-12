@@ -34,7 +34,7 @@ func (this *backend) LoadCourse(path string) (*model.Course, error) {
     }
 
     log.Debug().Str("database", "disk").Str("path", path).Str("id", course.GetID()).
-            Int("num-assignments", len(course.Assignments)).Msg("Loaded course.");
+            Int("num-assignments", len(course.Assignments)).Msg("Loaded disk course.");
 
     err = this.saveCourseLock(course, false);
     if (err != nil) {

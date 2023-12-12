@@ -43,23 +43,10 @@ func main() {
         log.Fatal().Err(err).Msg("Could not load courses.");
     }
 
-    // Startup courses,
-
+    // Startup courses (int the background).
     for _, course := range db.MustGetCourses() {
-        // Schedule tasks.
-        for _, courseTask := range course.GetTasks() {
-            err = task.Schedule(course, courseTask);
-            if (err != nil) {
-                log.Fatal().Err(err).Str("course-id", course.GetID()).Str("task", courseTask.String()).Msg("Failed to schedule task.");
-            }
-        }
-
-        // Build images (in the background).
         go func(course *model.Course) {
-            _, errs := course.BuildAssignmentImages(false, false, docker.NewBuildOptions());
-            for imageName, err := range errs {
-                log.Error().Err(err).Str("course-id", course.GetID()).Str("image", imageName).Msg("Failed to build image.");
-            }
+            initCourse(course);
         }(course);
     }
 
@@ -69,4 +56,30 @@ func main() {
     }
 
     log.Info().Msg("Server closed.");
+}
+
+func initCourse(course *model.Course) {
+    // Update the course.
+    newCourse, _, err := db.UpdateCourseFromSource(course);
+    if (err != nil) {
+        // On failure, still try and work with the old course.
+        log.Error().Err(err).Str("course-id", course.GetID()).Msg("Failed to update course.");
+    } else {
+        // On success, use the new course.
+        course = newCourse;
+    }
+
+    // Build images.
+    _, errs := course.BuildAssignmentImages(false, false, docker.NewBuildOptions());
+    for imageName, err := range errs {
+        log.Error().Err(err).Str("course-id", course.GetID()).Str("image", imageName).Msg("Failed to build image.");
+    }
+
+    // Schedule tasks.
+    for _, courseTask := range course.GetTasks() {
+        err = task.Schedule(course, courseTask);
+        if (err != nil) {
+            log.Error().Err(err).Str("course-id", course.GetID()).Str("task", courseTask.String()).Msg("Failed to schedule task.");
+        }
+    }
 }

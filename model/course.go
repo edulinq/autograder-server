@@ -111,7 +111,7 @@ func (this *Course) Validate() error {
     return nil;
 }
 
-// Returns: (successfull image names, map[imagename]error).
+// Returns: (successful image names, map[imagename]error).
 func (this *Course) BuildAssignmentImages(force bool, quick bool, options *docker.BuildOptions) ([]string, map[string]error) {
     goodImageNames := make([]string, 0, len(this.Assignments));
     errors := make(map[string]error);

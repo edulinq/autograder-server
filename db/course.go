@@ -1,7 +1,6 @@
 package db
 
 import (
-    "errors"
     "fmt"
     "path/filepath"
 
@@ -9,7 +8,6 @@ import (
 
     "github.com/eriq-augustine/autograder/common"
     "github.com/eriq-augustine/autograder/config"
-    "github.com/eriq-augustine/autograder/docker"
     "github.com/eriq-augustine/autograder/model"
     "github.com/eriq-augustine/autograder/util"
 )
@@ -224,9 +222,10 @@ func MustAddCourse(path string) *model.Course {
 
 // Get a fresh copy of the course from the source and load it into the DB
 // (thereby updating the course).
-// After the update, build new images.
 // The new course (or old course if no update happens) will be returned.
 // The boolean return indicates if an update attempt was made.
+// Callers to this should consider if tasks should be stopped before,
+// and if tasks should be started and images rebuilt after.
 func UpdateCourseFromSource(course *model.Course) (*model.Course, bool, error) {
     if (backend == nil) {
         return nil, false, fmt.Errorf("Database has not been opened.");
@@ -286,16 +285,6 @@ func UpdateCourseFromSource(course *model.Course) (*model.Course, bool, error) {
         if (err != nil) {
             return nil, false, fmt.Errorf("Failed to save new course: '%w'.", err);
         }
-    }
-
-    _, errs := newCourse.BuildAssignmentImages(false, false, docker.NewBuildOptions());
-    if (len(errs) != 0) {
-        err = nil;
-        for _, newErr := range errs {
-            err = errors.Join(err, newErr);
-        }
-
-        return nil, false, fmt.Errorf("Failed to build assignment images: '%w'.", err);
     }
 
     return newCourse, true, nil;
