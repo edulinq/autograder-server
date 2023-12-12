@@ -4,6 +4,7 @@ import (
     "bufio"
     "fmt"
     "os"
+    "slices"
     "strings"
 
     "github.com/alecthomas/kong"
@@ -165,7 +166,15 @@ func (this *ListUsers) Run(course *model.Course) error {
         fmt.Printf("%s\t%s\t%s\n", "Email", "Display Name", "Role");
     }
 
-    for _, user := range users {
+    emailList := make([]string, 0, len(users));
+    for email, _ := range users {
+        emailList = append(emailList, email);
+    }
+    slices.Sort(emailList);
+
+    for _, email := range emailList {
+        user := users[email];
+
         if (this.All) {
             fmt.Printf("%s\t%s\t%s\n", user.Email, user.DisplayName, user.Role);
         } else {
@@ -228,7 +237,7 @@ func (this *RmUser) Run(course *model.Course) error {
 
 var cli struct {
     config.ConfigArgs
-    Course string `help:"ID of the course." arg:""`
+    Course string `help:"ID of the course."`
 
     Add AddUser `cmd:"" help:"Add a user."`
     AddTSV AddTSV `cmd:"" help:"Add users from a TSV file formatted as: '<email>[\t<display name>[\t<role>[\t<password>]]]'. See add for default values."`
