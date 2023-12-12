@@ -20,6 +20,7 @@ readonly TEST_PASS='admin'
 
 function run_submissions() {
     local error_count=0
+    local run_count=0
 
     for assignment_config_path in $(find "${TESTS_DIR}" -type f -name "${ASSIGNMENT_CONFIG_FILENAME}") ; do
         local course_config_path="$(dirname "${assignment_config_path}")/../${COURSE_CONFIG_FILENAME}"
@@ -31,8 +32,7 @@ function run_submissions() {
 
         local submission_dir="$(dirname "${assignment_config_path}")/${TEST_SUBMISSIONS_DIRNAME}"
         if [[ ! -d "${submission_dir}" ]] ; then
-            echo "ERROR: Assignment ('${assignment_config_path}') does not have any submissions."
-            ((error_count += 1))
+            echo "Assignment ('${assignment_config_path}') does not have any submissions."
             continue
         fi
 
@@ -61,14 +61,14 @@ function run_submissions() {
             "${submission_dir}"
 
         ((error_count += $?))
+        ((run_count += 1))
 
         echo "---------------"
     done
 
-    if [[ ${error_count} -gt 0 ]] ; then
-        echo "Found ${error_count} issues."
-    else
-        echo "No issues found."
+    if [[ ${run_count} -eq 0 ]] ; then
+        echo "ERROR: Cound not find any test submissions."
+        ((error_count += 1))
     fi
 
     return ${error_count}
