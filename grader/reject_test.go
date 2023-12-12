@@ -10,7 +10,7 @@ import (
     "github.com/eriq-augustine/autograder/model"
 )
 
-var SUBMISSION_RELPATH string = filepath.Join("test-submissions", "solution", "submission.py");
+var SUBMISSION_RELPATH string = filepath.Join("test-submissions", "solution");
 
 func TestRejectSubmissionMaxAttempts(test *testing.T) {
     db.ResetForTesting();
