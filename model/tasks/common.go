@@ -9,6 +9,7 @@ import (
     "sync"
     "time"
 
+    "github.com/eriq-augustine/autograder/common"
     "github.com/eriq-augustine/autograder/config"
 )
 
@@ -22,7 +23,7 @@ type ScheduledTask interface {
     GetID() string
     GetCourseID() string
     IsDisabled() bool
-    GetTimes() []*ScheduledTime
+    GetTimes() []*common.ScheduledTime
     // Get the minimum time between task runs.
     // The boolean return will be false if there are no times (infinite durtion).
     GetMinDuration() (time.Duration, bool)
@@ -33,7 +34,7 @@ type ScheduledTask interface {
 
 type BaseTask struct {
     Disable bool `json:"disable"`
-    When []*ScheduledTime `json:"when"`
+    When []*common.ScheduledTime `json:"when"`
 
     ID string `json:"-"`
     Name string `json:"-"`
@@ -54,7 +55,7 @@ func (this *BaseTask) IsDisabled() bool {
     return this.Disable;
 }
 
-func (this *BaseTask) GetTimes() []*ScheduledTime {
+func (this *BaseTask) GetTimes() []*common.ScheduledTime {
     return this.When;
 }
 

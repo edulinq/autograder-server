@@ -1,0 +1,37 @@
+{
+    "admin@test.com": {
+        "email": "admin@test.com",
+        "display-name": "admin",
+        "role": "admin",
+        "pass": "9e9b6743a3fff9f56eb183f13cd34d810db94c5deb13e6a494d30ccc267eb00c",
+        "salt": "c72f85ab94f66b49b4e93cb0d0776fc7"
+    },
+    "grader@test.com": {
+        "email": "grader@test.com",
+        "display-name": "grader",
+        "role": "grader",
+        "pass": "9c33fae839ad63474a677e871aeb4cdb63ab7089774a83fd8ad01a28b45f4271",
+        "salt": "a853844be59b339ec45733eddeee41cd"
+    },
+    "other@test.com": {
+        "email": "other@test.com",
+        "display-name": "other",
+        "role": "other",
+        "pass": "d21868008248115a72109ccddb008043e12e0d37a0001a325c1afc6a66899c2a",
+        "salt": "72f9b3fdeec2724d3e47edb617295f95"
+    },
+    "owner@test.com": {
+        "email": "owner@test.com",
+        "display-name": "owner",
+        "role": "owner",
+        "pass": "a8f8cc96aba145d957bf5934bba22a43aff98684e2df44d2fc214c1cfd51ea8d",
+        "salt": "c61fe4f62b132d3908843e9c00f45c98"
+    },
+    "student@test.com": {
+        "email": "student@test.com",
+        "display-name": "student",
+        "role": "student",
+        "pass": "9b2e4fb77dc9282894a257bf54c5469b276152ea677612c44e04762970045b10",
+        "salt": "ea3a6c7d493148e01a8faff25956dc28"
+    }
+}

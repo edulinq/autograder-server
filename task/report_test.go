@@ -5,6 +5,7 @@ import (
     "strings"
     "testing"
 
+    "github.com/eriq-augustine/autograder/common"
     "github.com/eriq-augustine/autograder/db"
     "github.com/eriq-augustine/autograder/email"
     "github.com/eriq-augustine/autograder/model/tasks"
@@ -20,7 +21,7 @@ func TestReportBase(test *testing.T) {
     task := &tasks.ReportTask{
         BaseTask: &tasks.BaseTask{
             Disable: false,
-            When: []*tasks.ScheduledTime{},
+            When: []*common.ScheduledTime{},
         },
         To: to,
     };

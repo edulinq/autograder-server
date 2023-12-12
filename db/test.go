@@ -7,9 +7,14 @@ import (
 )
 
 const TEST_COURSE_ID = "COURSE101";
+const TEST_ASSIGNMENT_ID = "hw0";
 
 func MustGetTestCourse() *model.Course {
     return MustGetCourse(TEST_COURSE_ID);
+}
+
+func MustGetTestAssignment() *model.Assignment {
+    return MustGetAssignment(TEST_COURSE_ID, TEST_ASSIGNMENT_ID);
 }
 
 // Perform the standard actions that prep for a package's testing main.

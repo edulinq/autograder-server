@@ -34,13 +34,17 @@ func main() {
 
     assignment := db.MustGetAssignment(args.Course, args.Assignment);
 
-    result, err := grader.GradeDefault(assignment, args.Submission, args.User, args.Message);
+    result, reject, err := grader.GradeDefault(assignment, args.Submission, args.User, args.Message);
     if (err != nil) {
         if (result.HasTextOutput()) {
             fmt.Println("Grading failed, but output was recovered:");
             fmt.Println(result.GetCombinedOutput());
         }
         log.Fatal().Err(err).Msg("Failed to run grader.");
+    }
+
+    if (reject != nil) {
+        log.Fatal().Str("reject-reason", reject.String()).Msg("Submission was rejected.");
     }
 
     if (args.OutPath != "") {

@@ -9,6 +9,7 @@ import (
     "github.com/rs/zerolog/log"
     "golang.org/x/exp/maps"
 
+    "github.com/eriq-augustine/autograder/common"
     "github.com/eriq-augustine/autograder/config"
     "github.com/eriq-augustine/autograder/db"
     "github.com/eriq-augustine/autograder/model"
@@ -117,7 +118,7 @@ func checkForCatchup(courseID string, target tasks.ScheduledTask) (bool, error) 
 
 // Schedule a task.
 // |when| will be nil on a catchup task.
-func scheduleTask(courseID string, target tasks.ScheduledTask, timerID string, runFunc RunFunc, when *tasks.ScheduledTime) error {
+func scheduleTask(courseID string, target tasks.ScheduledTask, timerID string, runFunc RunFunc, when *common.ScheduledTime) error {
     timersLock.Lock();
     defer timersLock.Unlock();
 

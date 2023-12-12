@@ -1,6 +1,7 @@
 package model
 
 import (
+    "fmt"
     "path/filepath"
     "slices"
 
@@ -22,6 +23,12 @@ type Course struct {
     Source common.FileSpec `json:"source"`
 
     LMS *LMSAdapter `json:"lms,omitempty"`
+
+    // A common late policy that assignments can inherit.
+    LatePolicy *LateGradingPolicy `json:"late-policy,omitempty"`
+
+    // A common submission limit that assignments can inherit.
+    SubmissionLimit *SubmissionLimitInfo `json:"submission-limit,omitempty"`
 
     Backup []*tasks.BackupTask `json:"backup,omitempty"`
     Report []*tasks.ReportTask `json:"report,omitempty"`
@@ -84,6 +91,20 @@ func (this *Course) Validate() error {
         err = this.LMS.Validate();
         if (err != nil) {
             return err;
+        }
+    }
+
+    if (this.LatePolicy != nil) {
+        err = this.LatePolicy.Validate();
+        if (err != nil) {
+            return fmt.Errorf("Failed to validate late policy: '%w'.", err);
+        }
+    }
+
+    if (this.SubmissionLimit != nil) {
+        err = this.SubmissionLimit.Validate();
+        if (err != nil) {
+            return fmt.Errorf("Failed to validate submission limit: '%w'.", err);
         }
     }
 

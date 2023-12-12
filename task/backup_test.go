@@ -4,6 +4,7 @@ import (
     "path/filepath"
     "testing"
 
+    "github.com/eriq-augustine/autograder/common"
     "github.com/eriq-augustine/autograder/db"
     "github.com/eriq-augustine/autograder/model/tasks"
     "github.com/eriq-augustine/autograder/util"
@@ -25,7 +26,7 @@ func TestBackupBase(test *testing.T) {
     task := &tasks.BackupTask{
         BaseTask: &tasks.BaseTask{
             Disable: false,
-            When: []*tasks.ScheduledTime{},
+            When: []*common.ScheduledTime{},
         },
         Dest: tempDir,
         BackupID: "test",
