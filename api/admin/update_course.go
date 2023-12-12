@@ -2,6 +2,7 @@ package admin
 
 import (
     "github.com/eriq-augustine/autograder/api/core"
+    "github.com/eriq-augustine/autograder/common"
     "github.com/eriq-augustine/autograder/db"
 )
 
@@ -9,6 +10,7 @@ type UpdateCourseRequest struct {
     core.APIRequestCourseUserContext
     core.MinRoleAdmin
 
+    Source string `json:"source"`
     Clear bool `json:"clear"`
 }
 
@@ -25,10 +27,19 @@ func HandleUpdateCourse(request *UpdateCourseRequest) (*UpdateCourseResponse, *c
         }
     }
 
+    if (request.Source != "") {
+        request.Course.Source = common.FileSpec(request.Source);
+        err := db.SaveCourse(request.Course);
+        if (err != nil) {
+            return nil, core.NewInternalError("-702", &request.APIRequestCourseUserContext,
+                    "Failed to save course.").Err(err);
+        }
+    }
+
     _, updated, err := db.UpdateCourseFromSource(request.Course);
     if (err != nil) {
-        return nil, core.NewInternalError("-702", &request.APIRequestCourseUserContext,
-                "Failed to reload course.").Err(err);
+        return nil, core.NewInternalError("-703", &request.APIRequestCourseUserContext,
+                "Failed to update course.").Err(err);
     }
 
     return &UpdateCourseResponse{updated}, nil;
