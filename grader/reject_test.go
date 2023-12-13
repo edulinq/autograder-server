@@ -62,10 +62,15 @@ func TestRejectSubmissionMaxWindowAttempts(test *testing.T) {
     };
 
     // Make a submission that should pass.
-    submitForRejection(test, assignment, nil);
+    result, _, _ := submitForRejection(test, assignment, nil);
+
+    expectedTime, err := result.Info.GradingStartTime.Time();
+    if (err != nil) {
+        test.Fatalf("Failed to parse expected time: '%v'.", err);
+    }
 
     // Make a submission that should be rejected.
-    submitForRejection(test, assignment, &RejectWindowMax{Max: 1, WindowDuration: duration});
+    submitForRejection(test, assignment, &RejectWindowMax{1, duration, expectedTime});
 }
 
 func submitForRejection(test *testing.T, assignment *model.Assignment, expectedRejection RejectReason) (

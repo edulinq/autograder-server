@@ -25,10 +25,13 @@ func (this *RejectMaxAttempts) String() string {
 type RejectWindowMax struct {
     Max int
     WindowDuration common.DurationSpec
+    EarliestSubmission time.Time
 }
 
 func (this *RejectWindowMax) String() string {
-    return fmt.Sprintf("Reached the number of max attempts (%d) within window (%s).", this.Max, this.WindowDuration.ShortString());
+    nextTime := this.EarliestSubmission.Add(time.Duration(this.WindowDuration.TotalNanosecs()));
+    return fmt.Sprintf("Reached the number of max attempts (%d) within submission window (%s). Next allowed submission time: %s.",
+            this.Max, this.WindowDuration.ShortString(), nextTime.Format(time.DateTime));
 }
 
 func checkForRejection(assignment *model.Assignment, submissionPath string, user string, message string) (RejectReason, error) {
@@ -75,6 +78,7 @@ func checkSubmissionLimitWindow(window *model.SubmittionLimitWindow,
     }
 
     windowStart := now.Add(time.Duration(-window.Duration.TotalNanosecs()));
+    earliestTime := time.Time{};
 
     windowCount := 0;
     for _, item := range history {
@@ -85,11 +89,15 @@ func checkSubmissionLimitWindow(window *model.SubmittionLimitWindow,
 
         if (itemTime.After(windowStart)) {
             windowCount++;
+
+            if (earliestTime.IsZero() || earliestTime.After(itemTime)) {
+                earliestTime = itemTime;
+            }
         }
     }
 
     if (windowCount >= window.AllowedAttempts) {
-        return &RejectWindowMax{window.AllowedAttempts, window.Duration}, nil;
+        return &RejectWindowMax{window.AllowedAttempts, window.Duration, earliestTime}, nil;
     }
 
     return nil, nil;
