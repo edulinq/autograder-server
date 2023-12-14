@@ -28,7 +28,7 @@ func main() {
     db.MustOpen();
     defer db.MustClose();
 
-    courseIDs, err := db.AddCoursesFromDir(args.Path);
+    courseIDs, err := db.AddCoursesFromDir(args.Path, nil);
     if (err != nil) {
         log.Fatal().Err(err).Str("path", args.Path).Msg("Could not add courses dir.");
     }

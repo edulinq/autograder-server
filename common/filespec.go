@@ -102,6 +102,7 @@ func (this *FileSpec) UnmarshalJSON(data []byte) error {
 }
 
 // Parse a filespec from a string, but allow for strings to not be quoted.
+// Returned FileSpec will be validated.
 func ParseFileSpec(contents string) (*FileSpec, error) {
     contents = strings.TrimSpace(contents);
     if (!strings.HasPrefix(contents, `"`) && !strings.HasPrefix(contents, "{")) {
@@ -110,6 +111,11 @@ func ParseFileSpec(contents string) (*FileSpec, error) {
 
     var spec FileSpec;
     err := util.JSONFromString(contents, &spec);
+    if (err != nil) {
+        return nil, err;
+    }
+
+    err = spec.Validate();
     if (err != nil) {
         return nil, err;
     }
@@ -228,6 +234,16 @@ func (this *FileSpec) copyPath(baseDir string, destDir string, onlyContents bool
 
 func (this *FileSpec) copyGit(destDir string) error {
     destPath := filepath.Join(destDir, this.Dest);
-    _, err := util.GitEnsureRepo(this.Path, destPath, true, this.Reference, this.Username, this.Token);
+
+    if (util.PathExists(destPath)) {
+        return fmt.Errorf("Destination for git FileSpec ('%s') already exists.", destPath);
+    }
+
+    err := util.MkDir(destDir);
+    if (err != nil) {
+        return fmt.Errorf("Failed to make dir for git FileSpec ('%s'): '%w'.", destDir, err);
+    }
+
+    _, err = util.GitEnsureRepo(this.Path, destPath, true, this.Reference, this.Username, this.Token);
     return err;
 }

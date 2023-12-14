@@ -139,7 +139,7 @@ func AddCourses() ([]string, error) {
         return nil, fmt.Errorf("Database has not been opened.");
     }
 
-    return AddCoursesFromDir(config.COURSES_ROOT.Get());
+    return AddCoursesFromDir(config.COURSES_ROOT.Get(), nil);
 }
 
 func MustAddCourses() []string {
@@ -151,7 +151,7 @@ func MustAddCourses() []string {
     return courseIDs;
 }
 
-func AddCoursesFromDir(baseDir string) ([]string, error) {
+func AddCoursesFromDir(baseDir string, source *common.FileSpec) ([]string, error) {
     if (backend == nil) {
         return nil, fmt.Errorf("Database has not been opened.");
     }
@@ -167,7 +167,7 @@ func AddCoursesFromDir(baseDir string) ([]string, error) {
 
     courseIDs := make([]string, 0, len(configPaths));
     for _, configPath := range configPaths {
-        course, err := AddCourse(configPath);
+        course, err := AddCourse(configPath, source);
         if (err != nil) {
             return nil, fmt.Errorf("Could not load course '%s': '%w'.", configPath, err);
         }
@@ -179,7 +179,7 @@ func AddCoursesFromDir(baseDir string) ([]string, error) {
 }
 
 // Add a course to the db from a path.
-func AddCourse(path string) (*model.Course, error) {
+func AddCourse(path string, source *common.FileSpec) (*model.Course, error) {
     if (backend == nil) {
         return nil, fmt.Errorf("Database has not been opened.");
     }
@@ -189,7 +189,16 @@ func AddCourse(path string) (*model.Course, error) {
         return nil, fmt.Errorf("Failed to load course config '%s': '%w'.", path, err);
     }
 
-    // If the source is empty, set it to this directory where it is being added from.
+    update := true;
+    saveCourse := false;
+
+    // Use the override source if not nil.
+    if (source != nil) {
+        course.Source = source;
+        saveCourse = true;
+    }
+
+    // If the course's source is empty, set it to this directory where it is being added from.
     if ((course.Source == nil) || course.Source.IsEmpty()) {
         course.Source = common.GetPathFileSpec(util.ShouldAbs(filepath.Dir(path)));
         err = course.Source.Validate();
@@ -197,11 +206,18 @@ func AddCourse(path string) (*model.Course, error) {
             return nil, fmt.Errorf("Failed to create source FileSpec: '%w'.", err);
         }
 
+        saveCourse = true;
+        update = false;
+    }
+
+    if (saveCourse) {
         err = SaveCourse(course);
         if (err != nil) {
             return nil, fmt.Errorf("Failed to save course: '%w'.", err);
         }
+    }
 
+    if (!update) {
         return course, nil;
     }
 
@@ -216,7 +232,7 @@ func AddCourse(path string) (*model.Course, error) {
 }
 
 func MustAddCourse(path string) *model.Course {
-    course, err := AddCourse(path);
+    course, err := AddCourse(path, nil);
     if (err != nil) {
         log.Fatal().Err(err).Str("path", path).Msg("Failed to add course.");
     }
@@ -255,7 +271,7 @@ func UpdateCourseFromSource(course *model.Course) (*model.Course, bool, error) {
         return nil, false, fmt.Errorf("Failed to make course base source dir '%s': '%w'.", baseDir, err);
     }
 
-    err = source.CopyTarget(common.ShouldGetCWD(), baseDir, true);
+    err = source.CopyTarget(common.ShouldGetCWD(), baseDir, false);
     if (err != nil) {
         return nil, false, fmt.Errorf("Failed to copy course source ('%s') into course base source dir ('%s'): '%w'.", source, baseDir, err);
     }
