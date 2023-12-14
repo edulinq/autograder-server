@@ -14,14 +14,14 @@ type LMSAdapter struct {
     Type string `json:"type"`
 
     // Connection options.
-    LMSCourseID string `json:"course-id"`
-    APIToken string `json:"api-token"`
-    BaseURL string `json:"base-url"`
+    LMSCourseID string `json:"course-id,omitempty"`
+    APIToken string `json:"api-token,omitempty"`
+    BaseURL string `json:"base-url,omitempty"`
 
     // Behavior options.
-    SyncUserAttributes bool `json:"sync-user-attributes"`
-    SyncAddUsers bool `json:"sync-add-users"`
-    SyncRemoveUsers bool `json:"sync-remove-users"`
+    SyncUserAttributes bool `json:"sync-user-attributes,omitempty"`
+    SyncAddUsers bool `json:"sync-add-users,omitempty"`
+    SyncRemoveUsers bool `json:"sync-remove-users,omitempty"`
 }
 
 func (this *LMSAdapter) Validate() error {

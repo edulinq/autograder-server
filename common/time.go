@@ -29,8 +29,8 @@ const (
 // This struct should always have Validate() called after construction.
 // All other methods will assume Validate() returns no error.
 type ScheduledTime struct {
-    Every DurationSpec `json:"every"`
-    Daily TimeOfDaySpec `json:"daily"`
+    Every DurationSpec `json:"every,omitempty"`
+    Daily TimeOfDaySpec `json:"daily,omitempty"`
 }
 
 type timeSpec interface {
@@ -45,10 +45,10 @@ type timeSpec interface {
 type TimeOfDaySpec string;
 
 type DurationSpec struct {
-    Days int64 `json:"days"`
-    Hours int64 `json:"hours"`
-    Minutes int64 `json:"minutes"`
-    Seconds int64 `json:"seconds"`
+    Days int64 `json:"days,omitempty"`
+    Hours int64 `json:"hours,omitempty"`
+    Minutes int64 `json:"minutes,omitempty"`
+    Seconds int64 `json:"seconds,omitempty"`
 
     // Microseconds in not exposed in JSON and in meant for testing.
     Microseconds int64 `json:"-"`

@@ -19,9 +19,9 @@ const CACHE_FILENAME = "cache.json"
 type Assignment struct {
     ID string `json:"id"`
     DisplayName string `json:"display-name"`
-    SortID string `json:"sort-id"`
+    SortID string `json:"sort-id,omitempty"`
 
-    LMSID string `json:"lms-id",omitempty`
+    LMSID string `json:"lms-id,omitempty"`
     LatePolicy *LateGradingPolicy `json:"late-policy,omitempty"`
 
     SubmissionLimit *SubmissionLimitInfo `json:"submission-limit,omitempty"`
