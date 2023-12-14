@@ -139,13 +139,13 @@ func AddCourses() ([]string, error) {
         return nil, fmt.Errorf("Database has not been opened.");
     }
 
-    return AddCoursesFromDir(config.COURSES_ROOT.Get(), nil);
+    return AddCoursesFromDir(config.GetCourseImportDir(), nil);
 }
 
 func MustAddCourses() []string {
     courseIDs, err := AddCourses();
     if (err != nil) {
-        log.Fatal().Err(err).Str("path", config.COURSES_ROOT.Get()).Msg("Failed to load courses.");
+        log.Fatal().Err(err).Str("path", config.GetCourseImportDir()).Msg("Failed to load courses.");
     }
 
     return courseIDs;

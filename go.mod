@@ -3,6 +3,7 @@ module github.com/eriq-augustine/autograder
 go 1.21
 
 require (
+	github.com/adrg/xdg v0.4.0
 	github.com/alecthomas/kong v0.8.0
 	github.com/docker/docker v24.0.4+incompatible
 	github.com/go-git/go-git/v5 v5.9.0

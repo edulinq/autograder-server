@@ -34,7 +34,7 @@ func TestNoDockerSubmissions(test *testing.T) {
 
 func runSubmissionTests(test *testing.T, parallel bool, useDocker bool) {
     // Directory where all the test courses and other materials are located.
-    baseDir := config.COURSES_ROOT.Get();
+    baseDir := config.GetCourseImportDir();
 
     if (useDocker) {
         for _, course := range db.MustGetCourses() {

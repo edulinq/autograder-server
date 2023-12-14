@@ -152,7 +152,7 @@ func (this *Course) BuildAssignmentImages(force bool, quick bool, options *docke
 }
 
 func (this *Course) GetCacheDir() string {
-    return filepath.Join(config.WORK_DIR.Get(), common.CACHE_DIRNAME, "course_" + this.ID);
+    return filepath.Join(config.GetCacheDir(), "course_" + this.ID);
 }
 
 func (this *Course) HasAssignment(id string) bool {
@@ -190,10 +190,6 @@ func (this *Course) GetSortedAssignments() []*Assignment {
     return assignments;
 }
 
-func GetSourcesDir() string {
-    return filepath.Join(config.WORK_DIR.Get(), SOURCES_DIRNAME);
-}
-
 func (this *Course) GetBaseSourceDir() string {
-    return filepath.Join(GetSourcesDir(), this.GetID());
+    return filepath.Join(config.GetSourcesDir(), this.GetID());
 }

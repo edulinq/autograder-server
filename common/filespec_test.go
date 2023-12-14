@@ -4,6 +4,7 @@ import (
     "path/filepath"
     "testing"
 
+    "github.com/eriq-augustine/autograder/config"
     "github.com/eriq-augustine/autograder/util"
 )
 
@@ -86,7 +87,7 @@ func TestFileSpecCopy(test *testing.T) {
 
         destDir := filepath.Join(tempDir, "dest");
 
-        err = testCase.Spec.CopyTarget(ShouldGetCWD(), destDir, testCase.OnlyContents);
+        err = testCase.Spec.CopyTarget(config.GetCourseImportDir(), destDir, testCase.OnlyContents);
         if (err != nil) {
             test.Errorf("Case %d: Failed to copy target (%+v): '%v'.", i, testCase.Spec, err);
             continue;

@@ -165,7 +165,7 @@ func TestGoodPostFiles(test *testing.T) {
     routes = append(routes, NewAPIRoute(endpoint, handler));
 
     paths := []string{
-        filepath.Join(config.COURSES_ROOT.Get(), "files", "a.txt"),
+        filepath.Join(config.GetCourseImportDir(), "_tests", "files", "a.txt"),
     };
 
     response := SendTestAPIRequestFull(test, endpoint, nil, paths, model.RoleAdmin);
@@ -251,7 +251,7 @@ func TestBadPostFilesStoreFail(test *testing.T) {
     routes = append(routes, NewAPIRoute(endpoint, handler));
 
     paths := []string{
-        filepath.Join(config.COURSES_ROOT.Get(), "files", "a.txt"),
+        filepath.Join(config.GetCourseImportDir(), "_tests", "files", "a.txt"),
     };
 
     // Ensure that storing the files will fail.

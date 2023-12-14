@@ -15,9 +15,9 @@ import (
 var SUBMISSION_RELPATH string = filepath.Join("test-submissions", "solution", "submission.py");
 
 func TestSubmit(test *testing.T) {
-    testSubmissions, err := grader.GetTestSubmissions(config.COURSES_ROOT.Get());
+    testSubmissions, err := grader.GetTestSubmissions(config.GetCourseImportDir());
     if (err != nil) {
-        test.Fatalf("Failed to get test submissions in '%s': '%v'.", config.COURSES_ROOT.Get(), err);
+        test.Fatalf("Failed to get test submissions in '%s': '%v'.", config.GetCourseImportDir(), err);
     }
 
     for i, testSubmission := range testSubmissions {

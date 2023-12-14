@@ -26,10 +26,14 @@ func RunBackupTask(course *model.Course, rawTask tasks.ScheduledTask) error {
 }
 
 // Perform a backup.
-// If dest is not specified, it will be picked up from config.BACKUP_DIR.
+// For backup location check (in order): dest, config.TASK_BACKUP_DIR, config.GetBackupDir().
 func RunBackup(course *model.Course, dest string, backupID string) error {
     if (dest == "") {
-        dest = config.BACKUP_DIR.Get();
+        dest = config.TASK_BACKUP_DIR.Get();
+    }
+
+    if (dest == "") {
+        dest = config.GetBackupDir();
     }
 
     err := util.MkDir(dest);

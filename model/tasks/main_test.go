@@ -7,6 +7,8 @@ import (
     "os"
     "testing"
 
+    "github.com/rs/zerolog/log"
+
     "github.com/eriq-augustine/autograder/config"
     "github.com/eriq-augustine/autograder/util"
 )
@@ -17,8 +19,7 @@ func TestMain(suite *testing.M) {
     code := func() int {
         config.MustEnableUnitTestingMode();
 
-        // Remove the temp working directory set in config.MustEnableUnitTestingMode().
-        defer util.RemoveDirent(config.WORK_DIR.Get());
+        defer CleanupTestingMain();
 
         // Quiet the logs.
         config.SetLogLevelFatal();
@@ -27,4 +28,12 @@ func TestMain(suite *testing.M) {
     }();
 
     os.Exit(code);
+}
+
+func CleanupTestingMain() {
+    // Remove any temp directories.
+    err := util.RemoveRecordedTempDirs();
+    if (err != nil) {
+        log.Error().Err(err).Msg("Error when removing temp dirs.");
+    }
 }

@@ -22,7 +22,7 @@ func (this *BackupTask) Validate(course TaskCourse) error {
         return err;
     }
 
-    this.Dest = config.BACKUP_DIR.Get();
+    this.Dest = config.GetBackupDir();
     if (util.IsFile(this.Dest)) {
         return fmt.Errorf("Backup directory exists and is a file: '%s'.", this.Dest);
     }

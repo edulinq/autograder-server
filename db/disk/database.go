@@ -15,22 +15,15 @@ import (
     "github.com/eriq-augustine/autograder/util"
 )
 
+const DB_DIRNAME = "disk-database";
+
 type backend struct {
     baseDir string
     lock sync.RWMutex;
 }
 
 func Open() (*backend, error) {
-    baseDir := config.DB_DISK_DIR.Get();
-    if (baseDir == "") {
-        return nil, fmt.Errorf("Disk database dir cannot be empty.");
-    }
-
-    if (!filepath.IsAbs(baseDir)) {
-        baseDir = filepath.Join(config.WORK_DIR.Get(), baseDir);
-    }
-
-    baseDir = util.ShouldAbs(baseDir);
+    baseDir := util.ShouldAbs(filepath.Join(config.GetDatabaseDir(), DB_DIRNAME));
 
     err := util.MkDir(baseDir);
     if (err != nil) {

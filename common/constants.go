@@ -11,6 +11,4 @@ const SUBMISSION_STDERR_FILENAME = "stderr.txt"
 
 const AUTOGRADER_COMMENT_IDENTITY_KEY = "__autograder__"
 
-const CACHE_DIRNAME = "cache"
-
 const SUBMISSION_ID_DELIM = "::"

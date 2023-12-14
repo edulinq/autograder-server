@@ -1,6 +1,8 @@
 package db
 
 import (
+    "github.com/rs/zerolog/log"
+
     "github.com/eriq-augustine/autograder/config"
     "github.com/eriq-augustine/autograder/model"
     "github.com/eriq-augustine/autograder/util"
@@ -40,6 +42,9 @@ func ResetForTesting() {
 func CleanupTestingMain() {
     MustClose();
 
-    // Remove the temp working directory set in config.MustEnableUnitTestingMode().
-    util.RemoveDirent(config.WORK_DIR.Get());
+    // Remove any temp directories.
+    err := util.RemoveRecordedTempDirs();
+    if (err != nil) {
+        log.Error().Err(err).Msg("Error when removing temp dirs.");
+    }
 }

@@ -50,6 +50,9 @@ func main() {
         }(course);
     }
 
+    // Cleanup any temp dirs.
+    defer util.RemoveRecordedTempDirs();
+
     err = api.StartServer();
     if (err != nil) {
         log.Fatal().Err(err).Msg("Server was stopped.");

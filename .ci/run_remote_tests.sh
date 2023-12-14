@@ -86,10 +86,8 @@ function run_sever_submissions() {
     # Start the server.
     ./bin/server \
         -c web.port="${PORT}" \
-        -c web.noauth=true \
-        -c courses.rootdir="${TESTS_DIR}" \
-        -c grader.nostore=true \
-        -c log.level=DEBUG &
+        -c log.level=DEBUG \
+        --unit-testing &
     local server_pid="$!"
     sleep 1
 
