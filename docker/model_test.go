@@ -16,7 +16,7 @@ func TestImageInfoStruct(test *testing.T) {
         &ImageInfo{
             "foo",
             nil, []string{},
-            []string{"a"}, []common.FileSpec{},
+            []string{"a"}, []*common.FileSpec{},
             nil, [][]string{},
             [][]string{[]string{"a"}, []string{"b", "c"}},
             "foo", "bar",

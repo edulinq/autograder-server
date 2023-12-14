@@ -14,7 +14,7 @@ import (
 // 3) Do post-copy operations.
 func CopyFileSpecs(
         sourceDir string, destDir string, opDir string,
-        filespecs []FileSpec, onlyContents bool,
+        filespecs []*FileSpec, onlyContents bool,
         preOps [][]string, postOps [][]string) error {
     var err error;
 

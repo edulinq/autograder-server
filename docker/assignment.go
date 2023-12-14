@@ -118,32 +118,31 @@ func CheckFileChanges(imageSource ImageSource, quick bool) (bool, error) {
             return true, nil;
         }
 
-        switch (filespec.GetType()) {
+        switch (filespec.Type) {
+            case common.FILESPEC_TYPE_EMPTY, common.FILESPEC_TYPE_NIL:
+                // no-op.
+                continue;
             case common.FILESPEC_TYPE_PATH:
                 // Collect paths to test all at once.
                 paths = append(paths, filepath.Join(baseDir, filespec.GetPath()));
             case common.FILESPEC_TYPE_GIT:
                 // Check git refs for changes.
-                url, _, ref, err := filespec.ParseGitParts();
-                if (err != nil) {
-                    return false, err;
-                }
 
-                if (ref == "") {
-                    log.Warn().Str("imageSource", imageSource.FullID()).Str("repo", url).
+                if (filespec.Reference == "") {
+                    log.Warn().Str("imageSource", imageSource.FullID()).Str("repo", filespec.GetPath()).
                             Msg("Git repo without ref (branch/commit) used as a static file. Please specify a ref so changes can be seen.");
                 }
 
-                oldRef, exists, err := util.CachePut(cachePath, common.FILESPEC_GIT_PREFIX + url, ref);
+                oldRef, exists, err := util.CachePut(cachePath, filespec.GetPath(), filespec.Reference);
                 if (err != nil) {
                     return false, err;
                 }
 
-                if (!exists || (oldRef != ref)) {
+                if (!exists || (oldRef != filespec.Reference)) {
                     gitChanges = true;
                 }
             default:
-                return false, fmt.Errorf("Unknown filespec type '%s': '%v'.", filespec, filespec.GetType());
+                return false, fmt.Errorf("Unknown filespec type '%s': '%v'.", filespec, filespec.Type);
         }
     }
 

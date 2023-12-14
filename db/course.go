@@ -190,8 +190,12 @@ func AddCourse(path string) (*model.Course, error) {
     }
 
     // If the source is empty, set it to this directory where it is being added from.
-    if (course.Source.IsEmpty()) {
-        course.Source = common.FileSpec(util.ShouldAbs(filepath.Dir(path)));
+    if ((course.Source == nil) || course.Source.IsEmpty()) {
+        course.Source = common.GetPathFileSpec(util.ShouldAbs(filepath.Dir(path)));
+        err = course.Source.Validate();
+        if (err != nil) {
+            return nil, fmt.Errorf("Failed to create source FileSpec: '%w'.", err);
+        }
 
         err = SaveCourse(course);
         if (err != nil) {
@@ -233,7 +237,7 @@ func UpdateCourseFromSource(course *model.Course) (*model.Course, bool, error) {
 
     source := course.GetSource();
 
-    if (source.IsEmpty() || source.IsNil()) {
+    if ((source == nil) || source.IsEmpty() || source.IsNil()) {
         return course, false, nil;
     }
 
@@ -278,7 +282,7 @@ func UpdateCourseFromSource(course *model.Course) (*model.Course, bool, error) {
 
     // Ensure that the source is passed along.
     // This can happen when a course is loaded from a directory (without a source).
-    if (newCourse.Source.IsEmpty()) {
+    if ((newCourse.Source == nil) || newCourse.Source.IsEmpty()) {
         newCourse.Source = source;
 
         err = SaveCourse(newCourse);

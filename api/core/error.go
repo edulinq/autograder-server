@@ -119,6 +119,23 @@ func NewBadRequestError(locator string, request *APIRequest, message string) *AP
     };
 }
 
+func NewBadCourseRequestError(locator string, request *APIRequestCourseUserContext, message string) *APIError {
+    err := &APIError{
+        RequestID: request.RequestID,
+        Locator: locator,
+        Endpoint: request.Endpoint,
+        Timestamp: request.Timestamp,
+        HTTPStatus: HTTP_STATUS_BAD_REQUEST,
+        InternalText: message,
+        ResponseText: message,
+    };
+
+    err.Add("course", request.CourseID);
+    err.Add("email", request.UserEmail);
+
+    return err;
+}
+
 // A bad request before the request was even parsed (usually a JSON error).
 func NewBareBadRequestError(locator string, endpoint string, message string) *APIError {
     return &APIError{

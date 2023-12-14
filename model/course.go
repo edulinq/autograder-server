@@ -20,7 +20,7 @@ type Course struct {
     ID string `json:"id"`
     DisplayName string `json:"display-name"`
 
-    Source common.FileSpec `json:"source"`
+    Source *common.FileSpec `json:"source"`
 
     LMS *LMSAdapter `json:"lms,omitempty"`
 
@@ -47,7 +47,7 @@ func (this *Course) GetName() string {
     return this.DisplayName;
 }
 
-func (this *Course) GetSource() common.FileSpec {
+func (this *Course) GetSource() *common.FileSpec {
     return this.Source;
 }
 

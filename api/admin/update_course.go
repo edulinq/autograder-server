@@ -28,17 +28,24 @@ func HandleUpdateCourse(request *UpdateCourseRequest) (*UpdateCourseResponse, *c
     }
 
     if (request.Source != "") {
-        request.Course.Source = common.FileSpec(request.Source);
-        err := db.SaveCourse(request.Course);
+        spec, err := common.ParseFileSpec(request.Source);
         if (err != nil) {
-            return nil, core.NewInternalError("-702", &request.APIRequestCourseUserContext,
+            return nil, core.NewBadCourseRequestError("-702", &request.APIRequestCourseUserContext,
+                    "Source FileSpec is not formatted properly.").Err(err);
+        }
+
+        request.Course.Source = spec;
+
+        err = db.SaveCourse(request.Course);
+        if (err != nil) {
+            return nil, core.NewInternalError("-703", &request.APIRequestCourseUserContext,
                     "Failed to save course.").Err(err);
         }
     }
 
     _, updated, err := db.UpdateCourseFromSource(request.Course);
     if (err != nil) {
-        return nil, core.NewInternalError("-703", &request.APIRequestCourseUserContext,
+        return nil, core.NewInternalError("-704", &request.APIRequestCourseUserContext,
                 "Failed to update course.").Err(err);
     }
 

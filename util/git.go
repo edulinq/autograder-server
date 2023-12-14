@@ -7,9 +7,10 @@ import (
 
     "github.com/go-git/go-git/v5"
     "github.com/go-git/go-git/v5/plumbing"
+    "github.com/go-git/go-git/v5/plumbing/transport/http"
 )
 
-func GitEnsureRepo(url string, path string, update bool, ref string) (*git.Repository, error) {
+func GitEnsureRepo(url string, path string, update bool, ref string, user string, pass string) (*git.Repository, error) {
     if (IsFile(path)) {
         return nil, fmt.Errorf("Cannot ensure git repo, path exists and is a file: '%s'.", path);
     }
@@ -18,7 +19,7 @@ func GitEnsureRepo(url string, path string, update bool, ref string) (*git.Repos
     var repo *git.Repository;
 
     if (!IsDir(path)) {
-        repo, err = GitClone(url, path);
+        repo, err = GitClone(url, path, user, pass);
         if (err != nil) {
             return nil, err;
         }
@@ -32,7 +33,7 @@ func GitEnsureRepo(url string, path string, update bool, ref string) (*git.Repos
     }
 
     if (update) {
-        _, err = GitUpdateRepo(repo);
+        _, err = GitUpdateRepo(repo, user, pass);
         if (err != nil) {
             return nil, err;
         }
@@ -57,11 +58,17 @@ func GitGetRepo(path string) (*git.Repository, error) {
     return repo, nil;
 }
 
-func GitClone(url string, path string) (*git.Repository, error) {
-    repo, err := git.PlainClone(path, false, &git.CloneOptions{
-        URL: url,
-    });
+func GitClone(url string, path string, user string, pass string) (*git.Repository, error) {
+    options := &git.CloneOptions{URL: url};
 
+    if ((user != "") || (pass != "")) {
+        options.Auth = &http.BasicAuth{
+            Username: user,
+            Password: pass,
+        };
+    }
+
+    repo, err := git.PlainClone(path, false, options);
     if (err != nil) {
         return nil, fmt.Errorf("Failed to clone git repo '%s' into '%s': '%w'.", url, path, err);
     }
@@ -93,14 +100,22 @@ func GitCheckoutRepo(repo *git.Repository, ref string) error {
 }
 
 // Return true if an update happened.
-func GitUpdateRepo(repo *git.Repository) (bool, error) {
+func GitUpdateRepo(repo *git.Repository, user string, pass string) (bool, error) {
     tree, err := repo.Worktree();
     if (err != nil) {
         return false, err;
     }
 
-    err = tree.Pull(&git.PullOptions{});
+    options := &git.PullOptions{};
 
+    if ((user != "") || (pass != "")) {
+        options.Auth = &http.BasicAuth{
+            Username: user,
+            Password: pass,
+        };
+    }
+
+    err = tree.Pull(options);
     if (err == nil) {
         return true, nil;
     }

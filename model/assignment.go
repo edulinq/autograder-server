@@ -133,7 +133,7 @@ func (this *Assignment) Validate() error {
     }
 
     if (this.StaticFiles == nil) {
-        this.StaticFiles = make([]common.FileSpec, 0);
+        this.StaticFiles = make([]*common.FileSpec, 0);
     }
 
     for _, staticFile := range this.StaticFiles {

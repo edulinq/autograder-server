@@ -41,7 +41,13 @@ func main() {
     }
 
     if (args.Source != "") {
-        course.Source = common.FileSpec(args.Source);
+        spec, err := common.ParseFileSpec(args.Source);
+        if (err != nil) {
+            log.Fatal().Err(err).Msg("Failed to parse FileSpec.");
+        }
+
+        course.Source = spec;
+
         err = db.SaveCourse(course);
         if (err != nil) {
             log.Fatal().Err(err).Msg("Failed to save course.");
