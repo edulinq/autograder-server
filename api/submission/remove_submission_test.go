@@ -2,7 +2,7 @@ package submission
 
 import (
     "testing"
-    // "fmt"
+
     "github.com/eriq-augustine/autograder/api/core"
     "github.com/eriq-augustine/autograder/db"
     "github.com/eriq-augustine/autograder/model"
