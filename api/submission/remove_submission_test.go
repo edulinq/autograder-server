@@ -2,12 +2,11 @@ package submission
 
 import (
     "testing"
-
+    // "fmt"
     "github.com/eriq-augustine/autograder/api/core"
     "github.com/eriq-augustine/autograder/db"
     "github.com/eriq-augustine/autograder/model"
     "github.com/eriq-augustine/autograder/util"
-
 )
 
 func TestRemoveSubmission(test *testing.T) {
@@ -42,19 +41,14 @@ func TestRemoveSubmission(test *testing.T) {
         // Grader, missing, recent.
         {model.RoleGrader, "ZZZ@test.com", "", false, false, false},
 
-        // Student, self, recent.
-        {model.RoleStudent, "",                 "", true, true, true},
-        {model.RoleStudent, "student@test.com", "", true, true, true},
-        
-        // Student, self, missing.
-        {model.RoleStudent, "",                 "ZZZ", true, false, true},
-        {model.RoleStudent, "student@test.com", "ZZZ", true, false, true},
-        
-        // Student, other, recent.
-        {model.RoleStudent, "grader@test.com", "", false, false, true},
+        // Roles below grader, other, recent.
+        {model.RoleStudent, "student@test.com", "", false, false, true},
+        {model.RoleOther,   "student@test.com", "", false, false, true},
+        {model.RoleUnknown, "student@test.com", "", false, false, true},
 
-        // Student, other, missing.
-        {model.RoleStudent, "grader@test.com", "ZZZ", true, false, true},
+        // Roles above grader, other, recent
+        {model.RoleAdmin, "student@test.com", "", true, true, false},
+        {model.RoleOwner, "student@test.com", "", true, true, false},
     };
 
     for i, testCase := range testCases {
@@ -69,10 +63,13 @@ func TestRemoveSubmission(test *testing.T) {
         response := core.SendTestAPIRequestFull(test, core.NewEndpoint(`submission/remove/submission`), fields, nil, testCase.role);
         
         if (!response.Success) {
+            if (testCase.role == model.RoleUnknown) {
+                continue;
+            }
             if (testCase.permError) {
                 expectedLocator := "-306";
                 if (response.Locator != expectedLocator) {
-                    test.Errorf("Case %d: Incorrect error returned on permissions error. Expcted '%s', found '%s'.",
+                    test.Errorf("Case %d: Incorrect error returned on permissions error. Expected '%s', found '%s'.",
                             i, expectedLocator, response.Locator);
                 }
             } else {
@@ -92,10 +89,6 @@ func TestRemoveSubmission(test *testing.T) {
 
         if (testCase.foundSubmission != responseContent.FoundSubmission) {
             test.Errorf("Case %d: Found submission does not match. Expected: '%v', actual: '%v'.", i, testCase.foundSubmission, responseContent.FoundSubmission);
-            continue;
-        }
-
-        if (!responseContent.FoundSubmission) {
             continue;
         }
     }

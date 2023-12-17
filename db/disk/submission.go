@@ -317,7 +317,8 @@ func (this *backend) RemoveSubmission(assignment *model.Assignment, email string
 
     err = util.RemoveDirent(submissionDir);
     if (err != nil) {
-        return false, err;
+		wrappedErr := fmt.Errorf("Failed to remove submission '%s': '%w'", shortSubmissionID, err)
+        return false, wrappedErr;
     }
 
     return true, nil;
