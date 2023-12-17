@@ -10,7 +10,7 @@ import (
 const ASSIGNMENT_CONFIG_FILENAME = "assignment.json"
 
 // Load an assignment config from a given JSON path.
-func LoadAssignment(course *Course, path string) (*Assignment, error) {
+func ReadAssignmentConfig(course *Course, path string) (*Assignment, error) {
     if (course == nil) {
         return nil, fmt.Errorf("Cannot load an assignment without a course.");
     }
@@ -23,8 +23,12 @@ func LoadAssignment(course *Course, path string) (*Assignment, error) {
 
     assignment.Course = course;
 
-    if (assignment.SourceDir == "") {
-        assignment.SourceDir = util.ShouldAbs(filepath.Dir(path));
+    if (assignment.RelSourceDir == "") {
+        // Force the source dir to be relative to the course's base source dir.
+        assignment.RelSourceDir, err = filepath.Rel(course.GetBaseSourceDir(), util.ShouldAbs(filepath.Dir(path)));
+        if (err != nil) {
+            return nil, fmt.Errorf("Could not compute relative source dir for assignment (%s): '%w'.", path, err);
+        }
     }
 
     err = assignment.Validate();

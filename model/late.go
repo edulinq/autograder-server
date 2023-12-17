@@ -21,11 +21,11 @@ const (
 
 type LateGradingPolicy struct {
     Type LateGradingPolicyType `json:"type"`
-    Penalty float64 `json:"penalty"`
-    RejectAfterDays int `json:"reject-after-days"`
+    Penalty float64 `json:"penalty,omitempty"`
+    RejectAfterDays int `json:"reject-after-days,omitempty"`
 
-    MaxLateDays int `json:"max-late-days"`
-    LateDaysLMSID string `json:"late-days-lms-id"`
+    MaxLateDays int `json:"max-late-days,omitempty"`
+    LateDaysLMSID string `json:"late-days-lms-id,omitempty"`
 }
 
 func (this *LateGradingPolicy) Validate() error {

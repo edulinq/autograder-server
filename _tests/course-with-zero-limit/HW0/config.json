@@ -1,0 +1,7 @@
+{
+    "user": "student@test.com",
+    "pass": "student",
+    "server": "http://127.0.0.1:8080",
+    "course": "course101-with-zero-limit",
+    "assignment": "hw0"
+}

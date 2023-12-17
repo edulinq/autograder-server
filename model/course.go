@@ -1,6 +1,7 @@
 package model
 
 import (
+    "fmt"
     "path/filepath"
     "slices"
 
@@ -9,23 +10,33 @@ import (
     "github.com/eriq-augustine/autograder/common"
     "github.com/eriq-augustine/autograder/config"
     "github.com/eriq-augustine/autograder/docker"
+    "github.com/eriq-augustine/autograder/model/tasks"
 )
+
+const SOURCES_DIRNAME = "sources";
 
 type Course struct {
     // Required fields.
     ID string `json:"id"`
     DisplayName string `json:"display-name"`
 
+    Source *common.FileSpec `json:"source"`
+
     LMS *LMSAdapter `json:"lms,omitempty"`
 
-    Backup []*BackupTask `json:"backup,omitempty"`
-    Report []*ReportTask `json:"report,omitempty"`
-    ScoringUpload []*ScoringUploadTask `json:"scoring-upload,omitempty"`
+    // A common late policy that assignments can inherit.
+    LatePolicy *LateGradingPolicy `json:"late-policy,omitempty"`
+
+    // A common submission limit that assignments can inherit.
+    SubmissionLimit *SubmissionLimitInfo `json:"submission-limit,omitempty"`
+
+    Backup []*tasks.BackupTask `json:"backup,omitempty"`
+    Report []*tasks.ReportTask `json:"report,omitempty"`
+    ScoringUpload []*tasks.ScoringUploadTask `json:"scoring-upload,omitempty"`
 
     // Internal fields the autograder will set.
-    SourceDir string `json:"_source-dir"`
     Assignments map[string]*Assignment `json:"-"`
-    tasks []ScheduledTask `json:"-"`
+    scheduledTasks []tasks.ScheduledTask `json:"-"`
 }
 
 func (this *Course) GetID() string {
@@ -36,12 +47,16 @@ func (this *Course) GetName() string {
     return this.DisplayName;
 }
 
-func (this *Course) GetSourceDir() string {
-    return this.SourceDir;
+func (this *Course) GetSource() *common.FileSpec {
+    return this.Source;
 }
 
 func (this *Course) GetLMSAdapter() *LMSAdapter {
     return this.LMS;
+}
+
+func (this *Course) HasLMSAdapter() bool {
+    return (this.LMS != nil);
 }
 
 func (this *Course) GetAssignmentLMSIDs() ([]string, []string) {
@@ -56,8 +71,8 @@ func (this *Course) GetAssignmentLMSIDs() ([]string, []string) {
     return lmsIDs, assignmentIDs;
 }
 
-func (this *Course) GetTasks() []ScheduledTask {
-    return this.tasks;
+func (this *Course) GetTasks() []tasks.ScheduledTask {
+    return this.scheduledTasks;
 }
 
 // Ensure this course makes sense.
@@ -79,21 +94,35 @@ func (this *Course) Validate() error {
         }
     }
 
+    if (this.LatePolicy != nil) {
+        err = this.LatePolicy.Validate();
+        if (err != nil) {
+            return fmt.Errorf("Failed to validate late policy: '%w'.", err);
+        }
+    }
+
+    if (this.SubmissionLimit != nil) {
+        err = this.SubmissionLimit.Validate();
+        if (err != nil) {
+            return fmt.Errorf("Failed to validate submission limit: '%w'.", err);
+        }
+    }
+
     // Register tasks.
     for _, task := range this.Backup {
-        this.tasks = append(this.tasks, task);
+        this.scheduledTasks = append(this.scheduledTasks, task);
     }
 
     for _, task := range this.Report {
-        this.tasks = append(this.tasks, task);
+        this.scheduledTasks = append(this.scheduledTasks, task);
     }
 
     for _, task := range this.ScoringUpload {
-        this.tasks = append(this.tasks, task);
+        this.scheduledTasks = append(this.scheduledTasks, task);
     }
 
     // Validate tasks.
-    for _, task := range this.tasks {
+    for _, task := range this.scheduledTasks {
         err = task.Validate(this);
         if (err != nil) {
             return err;
@@ -103,7 +132,7 @@ func (this *Course) Validate() error {
     return nil;
 }
 
-// Returns: (successfull image names, map[imagename]error).
+// Returns: (successful image names, map[imagename]error).
 func (this *Course) BuildAssignmentImages(force bool, quick bool, options *docker.BuildOptions) ([]string, map[string]error) {
     goodImageNames := make([]string, 0, len(this.Assignments));
     errors := make(map[string]error);
@@ -123,7 +152,7 @@ func (this *Course) BuildAssignmentImages(force bool, quick bool, options *docke
 }
 
 func (this *Course) GetCacheDir() string {
-    return filepath.Join(config.WORK_DIR.Get(), common.CACHE_DIRNAME, "course_" + this.ID);
+    return filepath.Join(config.GetCacheDir(), "course_" + this.ID);
 }
 
 func (this *Course) HasAssignment(id string) bool {
@@ -159,4 +188,8 @@ func (this *Course) GetSortedAssignments() []*Assignment {
     slices.SortFunc(assignments, CompareAssignments);
 
     return assignments;
+}
+
+func (this *Course) GetBaseSourceDir() string {
+    return filepath.Join(config.GetSourcesDir(), this.GetID());
 }

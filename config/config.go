@@ -24,6 +24,9 @@ const ENV_DOT_REPLACEMENT = "__";
 // The test courses are always stored in here.
 const TESTS_DIRNAME = "_tests";
 
+const CONFIG_FILENAME = "config.json"
+const SECRETS_FILENAME = "secrets.json"
+
 var configValues map[string]any = make(map[string]any);
 
 func ToJSON() (string, error) {
@@ -38,18 +41,34 @@ func init() {
 
 // A mode intended for running unit tests.
 func MustEnableUnitTestingMode() {
+    err := EnableUnitTestingMode();
+    if (err != nil) {
+        log.Fatal().Err(err).Msg("Failed to enable unit testing mode.");
+    }
+}
+
+func EnableUnitTestingMode() error {
     TESTING_MODE.Set(true);
     NO_TASKS.Set(true);
 
     tempWorkDir, err := util.MkDirTemp("autograader-unit-testing-");
     if (err != nil) {
-        log.Fatal().Err(err).Msg("Failed to make temp unit testing work dir.");
+        return fmt.Errorf("Failed to make temp unit testing work dir: '%w'.", err);
     }
 
-    WORK_DIR.Set(tempWorkDir);
+    // Change the base dir to a temp dir.
+    BASE_DIR.Set(tempWorkDir);
 
+    // Copy over test courses.
     testsDir := filepath.Join(util.RootDirForTesting(), TESTS_DIRNAME);
-    COURSES_ROOT.Set(testsDir);
+    outTestsDir := filepath.Join(GetCourseImportDir(), TESTS_DIRNAME);
+
+    err = util.CopyDir(testsDir, outTestsDir, false);
+    if (err != nil) {
+        return fmt.Errorf("Failed to copy test data into working dir: '%w'.", err);
+    }
+
+    return nil;
 }
 
 // A mode intended for testing on the CLI.
@@ -64,19 +83,19 @@ func EnableTestingMode() {
 }
 
 func LoadLoacalConfig() error {
-    path := LOCAL_CONFIG_PATH.Get();
+    path := filepath.Join(GetConfigDir(), CONFIG_FILENAME);
     if (util.PathExists(path)) {
         err := LoadFile(path);
         if (err != nil) {
-            return fmt.Errorf("Could not load local config '%s': '%w'.", path, err);
+            return fmt.Errorf("Could not load config '%s': '%w'.", path, err);
         }
     }
 
-    path = SECRETS_CONFIG_PATH.Get();
+    path = filepath.Join(GetConfigDir(), SECRETS_FILENAME);
     if (util.PathExists(path)) {
         err := LoadFile(path);
         if (err != nil) {
-            return fmt.Errorf("Could not load secrets config '%s': '%w'.", path, err);
+            return fmt.Errorf("Could not load secrets '%s': '%w'.", path, err);
         }
     }
 

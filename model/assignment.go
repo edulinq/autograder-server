@@ -19,15 +19,17 @@ const CACHE_FILENAME = "cache.json"
 type Assignment struct {
     ID string `json:"id"`
     DisplayName string `json:"display-name"`
-    SortID string `json:"sort-id"`
+    SortID string `json:"sort-id,omitempty"`
 
-    LMSID string `json:"lms-id",omitempty`
-    LatePolicy LateGradingPolicy `json:"late-policy,omitempty"`
+    LMSID string `json:"lms-id,omitempty"`
+    LatePolicy *LateGradingPolicy `json:"late-policy,omitempty"`
+
+    SubmissionLimit *SubmissionLimitInfo `json:"submission-limit,omitempty"`
 
     docker.ImageInfo
 
     // Ignore these fields in JSON.
-    SourceDir string `json:"_source-dir"`
+    RelSourceDir string `json:"_rel_source-dir"`
     Course *Course `json:"-"`
 
     imageLock *sync.Mutex `json:"-"`
@@ -58,7 +60,11 @@ func (this *Assignment) GetLMSID() string {
 }
 
 func (this *Assignment) GetLatePolicy() LateGradingPolicy {
-    return this.LatePolicy;
+    return *this.LatePolicy;
+}
+
+func (this *Assignment) GetSubmissionLimit() *SubmissionLimitInfo {
+    return this.SubmissionLimit;
 }
 
 func (this *Assignment) ImageName() string {
@@ -70,12 +76,16 @@ func (this *Assignment) GetImageInfo() *docker.ImageInfo {
 }
 
 func (this *Assignment) GetSourceDir() string {
-    return this.SourceDir;
+    return filepath.Join(this.Course.GetBaseSourceDir(), this.RelSourceDir);
 }
 
 // Ensure that the assignment is formatted correctly.
 // Missing optional components will be defaulted correctly.
 func (this *Assignment) Validate() error {
+    if (this.Course == nil) {
+        return fmt.Errorf("No course found for assignment.")
+    }
+
     if (this.DisplayName == "") {
         this.DisplayName = this.ID;
     }
@@ -87,6 +97,27 @@ func (this *Assignment) Validate() error {
     }
 
     this.imageLock = &sync.Mutex{};
+
+    // Inherit submission limit from course or leave nil.
+    if ((this.SubmissionLimit == nil) && (this.Course.SubmissionLimit != nil)) {
+        this.SubmissionLimit = this.Course.SubmissionLimit;
+    }
+
+    if (this.SubmissionLimit != nil) {
+        err = this.SubmissionLimit.Validate();
+        if (err != nil) {
+            return fmt.Errorf("Failed to validate submission limit: '%w'.", err);
+        }
+    }
+
+    // Inherit late policy from course or default to empty.
+    if (this.LatePolicy == nil) {
+        if (this.Course.LatePolicy != nil) {
+            this.LatePolicy = this.Course.LatePolicy;
+        } else {
+            this.LatePolicy = &LateGradingPolicy{};
+        }
+    }
 
     err = this.LatePolicy.Validate();
     if (err != nil) {
@@ -102,7 +133,7 @@ func (this *Assignment) Validate() error {
     }
 
     if (this.StaticFiles == nil) {
-        this.StaticFiles = make([]common.FileSpec, 0);
+        this.StaticFiles = make([]*common.FileSpec, 0);
     }
 
     for _, staticFile := range this.StaticFiles {
@@ -123,12 +154,8 @@ func (this *Assignment) Validate() error {
         this.PostSubmissionFileOperations = make([][]string, 0);
     }
 
-    if (this.SourceDir == "") {
-        return fmt.Errorf("Source dir must not be empty.")
-    }
-
-    if (this.Course == nil) {
-        return fmt.Errorf("No course found for assignment.")
+    if (this.RelSourceDir == "") {
+        return fmt.Errorf("Relative source dir must not be empty.")
     }
 
     if ((this.Image == "") && ((this.Invocation == nil) || (len(this.Invocation) == 0))) {
@@ -136,7 +163,7 @@ func (this *Assignment) Validate() error {
     }
 
     this.ImageInfo.Name = this.ImageName();
-    this.ImageInfo.BaseDir = this.SourceDir;
+    this.ImageInfo.BaseDir = this.GetSourceDir();
 
     return nil;
 }

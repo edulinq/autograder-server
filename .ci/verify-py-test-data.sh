@@ -37,8 +37,8 @@ function run() {
     # Start the server.
     ./bin/server \
         -c web.port="${PORT}" \
-        -c courses.rootdir="${TESTS_DIR}" \
-        --testing &
+        -c log.level=DEBUG \
+        --unit-testing &
     local server_pid="$!"
     sleep 1
 

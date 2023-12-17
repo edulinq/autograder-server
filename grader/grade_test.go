@@ -34,7 +34,7 @@ func TestNoDockerSubmissions(test *testing.T) {
 
 func runSubmissionTests(test *testing.T, parallel bool, useDocker bool) {
     // Directory where all the test courses and other materials are located.
-    baseDir := config.COURSES_ROOT.Get();
+    baseDir := config.GetCourseImportDir();
 
     if (useDocker) {
         for _, course := range db.MustGetCourses() {
@@ -70,9 +70,13 @@ func runSubmissionTests(test *testing.T, parallel bool, useDocker bool) {
                 test.Parallel();
             }
 
-            result, err := Grade(testSubmission.Assignment, testSubmission.Dir, user, TEST_MESSAGE, gradeOptions);
+            result, reject, err := Grade(testSubmission.Assignment, testSubmission.Dir, user, TEST_MESSAGE, gradeOptions);
             if (err != nil) {
                 test.Fatalf("Failed to grade assignment: '%v'.", err);
+            }
+
+            if (reject != nil) {
+                test.Fatalf("Submission was rejected: '%s'.", reject.String());
             }
 
             if (!result.Info.Equals(*testSubmission.TestSubmission.GradingInfo, !testSubmission.TestSubmission.IgnoreMessages)) {

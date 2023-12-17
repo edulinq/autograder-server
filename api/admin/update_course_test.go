@@ -8,7 +8,7 @@ import (
     "github.com/eriq-augustine/autograder/model"
 )
 
-func TestCourseReload(test *testing.T) {
+func TestUpdateCourse(test *testing.T) {
     // Remove a user and ensure the user is back after a reload.
 
     // Leave the course in a good state after the test.
@@ -35,7 +35,7 @@ func TestCourseReload(test *testing.T) {
         test.Fatalf("Unexpected post-remove user count. Expected 4, found %d.", count);
     }
 
-    removeRequest(test);
+    reloadRequest(test);
 
     count = countUsers(test, course);
     if (count != 5) {
@@ -43,8 +43,8 @@ func TestCourseReload(test *testing.T) {
     }
 }
 
-func removeRequest(test *testing.T) {
-    response := core.SendTestAPIRequestFull(test, core.NewEndpoint(`admin/course/reload`), nil, nil, model.RoleAdmin);
+func reloadRequest(test *testing.T) {
+    response := core.SendTestAPIRequestFull(test, core.NewEndpoint(`admin/update/course`), nil, nil, model.RoleAdmin);
     if (!response.Success) {
         test.Errorf("Response is not a success when it should be: '%v'.", response);
     }

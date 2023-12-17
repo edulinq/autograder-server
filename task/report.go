@@ -7,11 +7,12 @@ import (
 
     "github.com/eriq-augustine/autograder/email"
     "github.com/eriq-augustine/autograder/model"
+    "github.com/eriq-augustine/autograder/model/tasks"
     "github.com/eriq-augustine/autograder/report"
 )
 
-func RunReportTask(course *model.Course, rawTask model.ScheduledTask) error {
-    task, ok := rawTask.(*model.ReportTask);
+func RunReportTask(course *model.Course, rawTask tasks.ScheduledTask) error {
+    task, ok := rawTask.(*tasks.ReportTask);
     if (!ok) {
         return fmt.Errorf("Task is not a ReportTask: %t (%v).", rawTask, rawTask);
     }

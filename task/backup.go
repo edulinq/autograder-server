@@ -8,11 +8,12 @@ import (
     "github.com/eriq-augustine/autograder/config"
     "github.com/eriq-augustine/autograder/db"
     "github.com/eriq-augustine/autograder/model"
+    "github.com/eriq-augustine/autograder/model/tasks"
     "github.com/eriq-augustine/autograder/util"
 )
 
-func RunBackupTask(course *model.Course, rawTask model.ScheduledTask) error {
-    task, ok := rawTask.(*model.BackupTask);
+func RunBackupTask(course *model.Course, rawTask tasks.ScheduledTask) error {
+    task, ok := rawTask.(*tasks.BackupTask);
     if (!ok) {
         return fmt.Errorf("Task is not a BackupTask: %t (%v).", rawTask, rawTask);
     }
@@ -21,14 +22,18 @@ func RunBackupTask(course *model.Course, rawTask model.ScheduledTask) error {
         return nil;
     }
 
-    return RunBackup(course, task.Dest);
+    return RunBackup(course, task.Dest, task.BackupID);
 }
 
 // Perform a backup.
-// If dest is not specified, it will be picked up from config.BACKUP_DIR.
-func RunBackup(course *model.Course, dest string) error {
+// For backup location check (in order): dest, config.TASK_BACKUP_DIR, config.GetBackupDir().
+func RunBackup(course *model.Course, dest string, backupID string) error {
     if (dest == "") {
-        dest = config.BACKUP_DIR.Get();
+        dest = config.TASK_BACKUP_DIR.Get();
+    }
+
+    if (dest == "") {
+        dest = config.GetBackupDir();
     }
 
     err := util.MkDir(dest);
@@ -42,7 +47,7 @@ func RunBackup(course *model.Course, dest string) error {
     }
     defer util.RemoveDirent(baseTempDir);
 
-    baseFilename, targetPath := getBackupPath(dest, course.GetID());
+    baseFilename, targetPath := getBackupPath(dest, course.GetID(), backupID);
 
     tempDir := filepath.Join(baseTempDir, baseFilename);
     err = db.DumpCourse(course, tempDir);
@@ -58,15 +63,18 @@ func RunBackup(course *model.Course, dest string) error {
     return nil;
 }
 
-func getBackupPath(dest string, basename string) (string, string) {
-    backupID := time.Now().Unix();
+func getBackupPath(dest string, basename string, backupID string) (string, string) {
+    if (backupID == "") {
+        backupID = fmt.Sprintf("%d", time.Now().Unix());
+    }
+
     offsetCount := 0;
-    baseFilename := fmt.Sprintf("%s-%d", basename, backupID);
+    baseFilename := fmt.Sprintf("%s-%s", basename, backupID);
     targetPath := filepath.Join(dest, baseFilename + ".zip");
 
     for ((targetPath == "") || (util.PathExists(targetPath))) {
         offsetCount++;
-        baseFilename = fmt.Sprintf("%s-%d-%d.zip", basename, backupID, offsetCount);
+        baseFilename = fmt.Sprintf("%s-%s-%d.zip", basename, backupID, offsetCount);
         targetPath = filepath.Join(dest, baseFilename + ".zip");
     }
 

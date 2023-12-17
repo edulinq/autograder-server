@@ -3,10 +3,13 @@ package db
 // The db package acts as an interface for other packages into the database.
 // Once db.Open() is called, this layer will handle conversions to/from the databse.
 // Any Get*() functions that return an interface will return a pure nil if nothing is found.
+// When working with courses, Load*() functions are for courses that are already added to the system,
+// use Add*() functions for new courses.
 
 import (
     "fmt"
     "sync"
+    "time"
 
     "github.com/rs/zerolog/log"
 
@@ -41,12 +44,12 @@ type Backend interface {
     // Returns (nil, nil) if the course does not exist.
     GetCourse(courseID string) (*model.Course, error);
 
-    // Load a course into the databse and return the course's id.
+    // Load a course into the databse and return the course.
     // This implies loading a course directory from a config and saving it in the db.
     // Will search for and load any assignments, users, and submissions
     // located in the same directory tree.
     // Override any existing settings for this course.
-    LoadCourse(path string) (string, error);
+    LoadCourse(path string) (*model.Course, error);
 
     // Explicitly save a course.
     SaveCourse(course *model.Course) error;
@@ -117,6 +120,14 @@ type Backend interface {
     // Users without a submission (but with a matching role) will be represented with a nil map value.
     // A nil map should only be returned on error.
     GetRecentSubmissionContents(assignment *model.Assignment, filterRole model.UserRole) (map[string]*model.GradingResult, error);
+
+    // Record that a task has been completed.
+    // The DB is only required to keep the most recently completed task with the given course/ID.
+    LogTaskCompletion(courseID string, taskID string, instance time.Time) error;
+
+    // Get the last time a task with the given course/ID was completed.
+    // Will return a zero time (time.Time{}).
+    GetLastTaskCompletion(courseID string, taskID string) (time.Time, error);
 }
 
 func Open() error {

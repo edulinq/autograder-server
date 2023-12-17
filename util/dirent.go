@@ -57,12 +57,11 @@ func CopyFile(source string, dest string) error {
 }
 
 // Copy a directory (or just it's contents) into dest.
-// dest must not exist.
 // When onlyContents = False:
 //    - dest must not exist.
 //    - `cp -r source dest`
 // When onlyContents = True:
-//    - dest must exist and be a dir.
+//    - dest maxy exist (and must be a dir).
 //    - `cp source/* dest/`
 func CopyDir(source string, dest string, onlyContents bool) error {
     if (onlyContents) {
@@ -97,6 +96,17 @@ func CopyDirWhole(source string, dest string) error {
 func CopyDirContents(source string, dest string) error {
     if (!IsDir(source)) {
         return fmt.Errorf("Source of directory copy ('%s') does not exist or is not a dir.", source)
+    }
+
+    if (!PathExists(dest)) {
+        err := MkDir(dest);
+        if (err != nil) {
+            return fmt.Errorf("Failed to create dest dir '%s': '%w'.", dest, err);
+        }
+    }
+
+    if (!IsDir(dest)) {
+        return fmt.Errorf("Dest of directory copy ('%s') does not exist or is not a dir.", dest)
     }
 
     dirents, err := os.ReadDir(source);

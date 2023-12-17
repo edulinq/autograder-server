@@ -13,3 +13,13 @@ func Sha256Hex(data []byte) string {
 func Sha256HexFromString(data string) string {
     return Sha256Hex([]byte(data));
 }
+
+// Convert an object to JSON, then hash the JSON.
+func Sha256HashFromJSONObject(object any) (string, error) {
+    json, err := ToJSON(object);
+    if (err != nil) {
+        return "", err;
+    }
+
+    return Sha256HexFromString(json), nil;
+}

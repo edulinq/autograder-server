@@ -17,6 +17,9 @@ type SubmitRequest struct {
 }
 
 type SubmitResponse struct {
+    Rejected bool `json:"rejected"`
+    RejectReason string `json:"reject-reason"`
+
     GradingSucess bool `json:"grading-success"`
     GradingInfo *model.GradingInfo `json:"result"`
 }
@@ -24,7 +27,7 @@ type SubmitResponse struct {
 func HandleSubmit(request *SubmitRequest) (*SubmitResponse, *core.APIError) {
     response := SubmitResponse{};
 
-    result, err := grader.GradeDefault(request.Assignment, request.Files.TempDir, request.User.Email, request.Message);
+    result, reject, err := grader.GradeDefault(request.Assignment, request.Files.TempDir, request.User.Email, request.Message);
     if (err != nil) {
         stdout := "";
         stderr := "";
@@ -36,6 +39,12 @@ func HandleSubmit(request *SubmitRequest) (*SubmitResponse, *core.APIError) {
 
         log.Debug().Err(err).Str("stdout", stdout).Str("stderr", stderr).Msg("Submission grading failed.");
 
+        return &response, nil;
+    }
+
+    if (reject != nil) {
+        response.Rejected = true;
+        response.RejectReason = reject.String();
         return &response, nil;
     }
 

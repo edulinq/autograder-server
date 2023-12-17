@@ -88,30 +88,21 @@ func MustGetCourses() map[string]*model.Course {
     return courses;
 }
 
-func ReloadCourse(course *model.Course) (string, error) {
+// Load a course into the database from an existing path.
+// This is meant for existing courses, for new courses use AddCourse().
+func loadCourse(path string) (*model.Course, error) {
     if (backend == nil) {
-        return "", fmt.Errorf("Database has not been opened.");
+        return nil, fmt.Errorf("Database has not been opened.");
     }
 
-    path := filepath.Join(course.GetSourceDir(), model.COURSE_CONFIG_FILENAME);
-    return backend.LoadCourse(path);
-}
+    course, err := backend.LoadCourse(path);
 
-func LoadCourse(path string) (string, error) {
-    if (backend == nil) {
-        return "", fmt.Errorf("Database has not been opened.");
+    if (err == nil) {
+        log.Info().Str("path", path).Str("id", course.GetID()).
+                Int("num-assignments", len(course.Assignments)).Msg("Loaded course.");
     }
 
-    return backend.LoadCourse(path);
-}
-
-func MustLoadCourse(path string) string {
-    courseID, err := LoadCourse(path);
-    if (err != nil) {
-        log.Fatal().Err(err).Str("path", path).Msg("Failed to load course.");
-    }
-
-    return courseID;
+    return course, err;
 }
 
 func SaveCourse(course *model.Course) error {
@@ -141,26 +132,26 @@ func DumpCourse(course *model.Course, targetDir string) error {
     return backend.DumpCourse(course, targetDir);
 }
 
-// Search the courses root directory and load all the associated courses and assignments.
+// Search the courses root directory and add all the associated courses and assignments.
 // Return all the loaded course ids.
-func LoadCourses() ([]string, error) {
+func AddCourses() ([]string, error) {
     if (backend == nil) {
         return nil, fmt.Errorf("Database has not been opened.");
     }
 
-    return LoadCoursesFromDir(config.COURSES_ROOT.Get());
+    return AddCoursesFromDir(config.GetCourseImportDir(), nil);
 }
 
-func MustLoadCourses() []string {
-    courseIDs, err := LoadCourses();
+func MustAddCourses() []string {
+    courseIDs, err := AddCourses();
     if (err != nil) {
-        log.Fatal().Err(err).Str("path", config.COURSES_ROOT.Get()).Msg("Failed to load courses.");
+        log.Fatal().Err(err).Str("path", config.GetCourseImportDir()).Msg("Failed to load courses.");
     }
 
     return courseIDs;
 }
 
-func LoadCoursesFromDir(baseDir string) ([]string, error) {
+func AddCoursesFromDir(baseDir string, source *common.FileSpec) ([]string, error) {
     if (backend == nil) {
         return nil, fmt.Errorf("Database has not been opened.");
     }
@@ -176,13 +167,145 @@ func LoadCoursesFromDir(baseDir string) ([]string, error) {
 
     courseIDs := make([]string, 0, len(configPaths));
     for _, configPath := range configPaths {
-        courseID, err := LoadCourse(configPath);
+        course, err := AddCourse(configPath, source);
         if (err != nil) {
             return nil, fmt.Errorf("Could not load course '%s': '%w'.", configPath, err);
         }
 
-        courseIDs = append(courseIDs, courseID);
+        courseIDs = append(courseIDs, course.GetID());
     }
 
     return courseIDs, nil;
+}
+
+// Add a course to the db from a path.
+func AddCourse(path string, source *common.FileSpec) (*model.Course, error) {
+    if (backend == nil) {
+        return nil, fmt.Errorf("Database has not been opened.");
+    }
+
+    course, err := loadCourse(path);
+    if (err != nil) {
+        return nil, fmt.Errorf("Failed to load course config '%s': '%w'.", path, err);
+    }
+
+    update := true;
+    saveCourse := false;
+
+    // Use the override source if not nil.
+    if (source != nil) {
+        course.Source = source;
+        saveCourse = true;
+    }
+
+    // If the course's source is empty, set it to this directory where it is being added from.
+    if ((course.Source == nil) || course.Source.IsEmpty()) {
+        course.Source = common.GetPathFileSpec(util.ShouldAbs(filepath.Dir(path)));
+        err = course.Source.Validate();
+        if (err != nil) {
+            return nil, fmt.Errorf("Failed to create source FileSpec: '%w'.", err);
+        }
+
+        saveCourse = true;
+        update = false;
+    }
+
+    if (saveCourse) {
+        err = SaveCourse(course);
+        if (err != nil) {
+            return nil, fmt.Errorf("Failed to save course: '%w'.", err);
+        }
+    }
+
+    if (!update) {
+        return course, nil;
+    }
+
+    // Try to update the course from source.
+
+    newCourse, _, err := UpdateCourseFromSource(course);
+    if (err != nil) {
+        return nil, err;
+    }
+
+    return newCourse, nil;
+}
+
+func MustAddCourse(path string) *model.Course {
+    course, err := AddCourse(path, nil);
+    if (err != nil) {
+        log.Fatal().Err(err).Str("path", path).Msg("Failed to add course.");
+    }
+
+    return course;
+}
+
+// Get a fresh copy of the course from the source and load it into the DB
+// (thereby updating the course).
+// The new course (or old course if no update happens) will be returned.
+// The boolean return indicates if an update attempt was made.
+// Callers to this should consider if tasks should be stopped before,
+// and if tasks should be started and images rebuilt after.
+func UpdateCourseFromSource(course *model.Course) (*model.Course, bool, error) {
+    if (backend == nil) {
+        return nil, false, fmt.Errorf("Database has not been opened.");
+    }
+
+    source := course.GetSource();
+
+    if ((source == nil) || source.IsEmpty() || source.IsNil()) {
+        return course, false, nil;
+    }
+
+    baseDir := course.GetBaseSourceDir();
+
+    if (util.PathExists(baseDir)) {
+        err := util.RemoveDirent(baseDir);
+        if (err != nil) {
+            return nil, false, fmt.Errorf("Failed to remove existing course base source output '%s': '%w'.", baseDir, err);
+        }
+    }
+
+    err := util.MkDir(baseDir);
+    if (err != nil) {
+        return nil, false, fmt.Errorf("Failed to make course base source dir '%s': '%w'.", baseDir, err);
+    }
+
+    err = source.CopyTarget(common.ShouldGetCWD(), baseDir, false);
+    if (err != nil) {
+        return nil, false, fmt.Errorf("Failed to copy course source ('%s') into course base source dir ('%s'): '%w'.", source, baseDir, err);
+    }
+
+    configPaths, err := util.FindFiles(model.COURSE_CONFIG_FILENAME, baseDir);
+    if (err != nil) {
+        return nil, false, fmt.Errorf("Failed to search for course configs in '%s': '%w'.", baseDir, err);
+    }
+
+    if (len(configPaths) == 0) {
+        return nil, false, fmt.Errorf("Did not find any course configs in course source ('%s'), should be exactly one.", source);
+    }
+
+    if (len(configPaths) > 1) {
+        return nil, false, fmt.Errorf("Found too many course configs (%d) in course source ('%s'), should be exactly one.", len(configPaths), source);
+    }
+
+    configPath := util.ShouldAbs(configPaths[0]);
+
+    newCourse, err := loadCourse(configPath);
+    if (err != nil) {
+        return nil, false, fmt.Errorf("Failed to load updated course: '%w'.", err);
+    }
+
+    // Ensure that the source is passed along.
+    // This can happen when a course is loaded from a directory (without a source).
+    if ((newCourse.Source == nil) || newCourse.Source.IsEmpty()) {
+        newCourse.Source = source;
+
+        err = SaveCourse(newCourse);
+        if (err != nil) {
+            return nil, false, fmt.Errorf("Failed to save new course: '%w'.", err);
+        }
+    }
+
+    return newCourse, true, nil;
 }

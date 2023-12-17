@@ -3,30 +3,38 @@
 readonly THIS_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 function main() {
-    if [[ $# -gt 1 ]]; then
-        echo "USAGE: $0 [test regex]"
+    if [[ $# -ne 0 ]]; then
+        echo "USAGE: $0"
         exit 1
     fi
 
     trap exit SIGINT
 
-    local testRegex=$1
-
     cd "${THIS_DIR}"
 
-    local options=""
-    if [[ ! -z "${testRegex}" ]] ; then
-        options="-run ${testRegex}"
+    local error_count=0
+
+    # Run non-task test first.
+    go test -v -count=1 -skip TestTask ./...
+    if [[ ${?} -ne 0 ]] ; then
+        ((error_count += 1))
     fi
 
-    go test -v -count=1 ${options} ./...
+    # Now run task tests.
+    # The task tests are sensitive to CPU load and scheduling,
+    # so should be run alone.
+    go test -v -count=1 ./task -run TestTask
     if [[ ${?} -ne 0 ]] ; then
+        ((error_count += 1))
+    fi
+
+    if [[ ${error_count} -gt 0 ]] ; then
         echo "Found test issues."
-        return 1
     else
         echo "No issues found."
-        return 0
     fi
+
+    return ${error_count}
 }
 
 [[ "${BASH_SOURCE[0]}" == "${0}" ]] && main "$@"

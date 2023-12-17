@@ -11,7 +11,7 @@ type ImageInfo struct {
 
     Invocation []string `json:"invocation,omitempty"`
 
-    StaticFiles []common.FileSpec `json:"static-files,omitempty"`
+    StaticFiles []*common.FileSpec `json:"static-files,omitempty"`
 
     PreStaticFileOperations [][]string `json:"pre-static-files-ops,omitempty"`
     PostStaticFileOperations [][]string `json:"post-static-files-ops,omitempty"`

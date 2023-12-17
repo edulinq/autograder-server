@@ -27,13 +27,22 @@ func GetDefaultGradeOptions() GradeOptions {
 }
 
 // Grade with default options pulled from config.
-func GradeDefault(assignment *model.Assignment, submissionPath string, user string, message string) (*model.GradingResult, error) {
+func GradeDefault(assignment *model.Assignment, submissionPath string, user string, message string) (
+        *model.GradingResult, RejectReason, error) {
     return Grade(assignment, submissionPath, user, message, GetDefaultGradeOptions());
 }
 
 // Grade with custom options.
-func Grade(assignment *model.Assignment, submissionPath string, user string, message string, options GradeOptions) (*model.GradingResult, error) {
-    var gradingResult model.GradingResult;
+func Grade(assignment *model.Assignment, submissionPath string, user string, message string, options GradeOptions) (
+        *model.GradingResult, RejectReason, error) {
+    reject, err := checkForRejection(assignment, submissionPath, user, message);
+    if (err != nil) {
+        return nil, nil, fmt.Errorf("Failed to check for rejection: '%w'.", err);
+    }
+
+    if (reject != nil) {
+        return nil, reject, nil;
+    }
 
     gradingKey := fmt.Sprintf("%s::%s::%s", assignment.GetCourse().GetID(), assignment.GetID(), user);
 
@@ -46,9 +55,10 @@ func Grade(assignment *model.Assignment, submissionPath string, user string, mes
 
     submissionID, inputFileContents, err := prepForGrading(assignment, submissionPath, user);
     if (err != nil) {
-        return nil, fmt.Errorf("Failed to prep for grading: '%w'.", err);
+        return nil, nil, fmt.Errorf("Failed to prep for grading: '%w'.", err);
     }
 
+    var gradingResult model.GradingResult;
     gradingResult.InputFilesGZip = inputFileContents;
 
     fullSubmissionID := common.CreateFullSubmissionID(assignment.GetCourse().GetID(), assignment.GetID(), user, submissionID);
@@ -69,7 +79,7 @@ func Grade(assignment *model.Assignment, submissionPath string, user string, mes
     gradingResult.Stderr = stderr;
 
     if (err != nil) {
-        return &gradingResult, err;
+        return &gradingResult, nil, err;
     }
 
     // Set all the autograder fields in the grading info.
@@ -87,11 +97,11 @@ func Grade(assignment *model.Assignment, submissionPath string, user string, mes
     if (!config.NO_STORE.Get()) {
         err = db.SaveSubmission(assignment, &gradingResult);
         if (err != nil) {
-            return &gradingResult, fmt.Errorf("Failed to save grading result: '%w'.", err);
+            return &gradingResult, nil, fmt.Errorf("Failed to save grading result: '%w'.", err);
         }
     }
 
-    return &gradingResult, nil;
+    return &gradingResult, nil, nil;
 }
 
 func prepForGrading(assignment *model.Assignment, submissionPath string, user string) (string, map[string][]byte, error) {

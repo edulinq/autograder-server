@@ -1,0 +1,63 @@
+package config
+
+import (
+    "fmt"
+    "path/filepath"
+
+    "github.com/adrg/xdg"
+)
+
+const (
+    WORK_DIR_BASENAME = "autograder"
+
+    BACKUP_DIRNAME = "backup"
+    CACHE_DIRNAME = "cache"
+    CONFIG_DIRNAME = "config"
+    COURSE_IMPORT_DIRNAME = "course_import"
+    DATABASE_DIRNAME = "database"
+    LOGS_DIRNAME = "logs"
+    SOURCES_DIRNAME = "sources"
+)
+
+func GetDefaultBaseDir() string {
+    return xdg.DataHome;
+}
+
+func GetWorkDir() string {
+    dirname := WORK_DIR_BASENAME;
+
+    serverName := NAME.Get();
+    if (serverName != "") {
+        dirname = fmt.Sprintf("%s-%s", dirname, serverName);
+    }
+
+    return filepath.Join(BASE_DIR.Get(), serverName);
+}
+
+func GetBackupDir() string {
+    return filepath.Join(GetWorkDir(), BACKUP_DIRNAME);
+}
+
+func GetCacheDir() string {
+    return filepath.Join(GetWorkDir(), CACHE_DIRNAME);
+}
+
+func GetConfigDir() string {
+    return filepath.Join(GetWorkDir(), CONFIG_DIRNAME);
+}
+
+func GetCourseImportDir() string {
+    return filepath.Join(GetWorkDir(), COURSE_IMPORT_DIRNAME);
+}
+
+func GetDatabaseDir() string {
+    return filepath.Join(GetWorkDir(), DATABASE_DIRNAME);
+}
+
+func GetLogsDir() string {
+    return filepath.Join(GetWorkDir(), LOGS_DIRNAME);
+}
+
+func GetSourcesDir() string {
+    return filepath.Join(GetWorkDir(), SOURCES_DIRNAME);
+}
