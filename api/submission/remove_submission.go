@@ -28,13 +28,17 @@ func HandleRemoveSubmission(request *RemoveSubmissionRequest) (*RemoveSubmission
     response.FoundUser = true;
 
     doesExist, err := db.RemoveSubmission(request.Assignment, request.TargetUser.Email, request.TargetSubmission);
-    if ( (err != nil) || (doesExist == false)){
+    
+    if (doesExist) {
+        response.FoundSubmission = true;
+    } else { 
         response.FoundSubmission = false;
+    }
+
+    if (err != nil) {
         return nil, core.NewInternalError("-418", &request.APIRequestCourseUserContext, "Failed to remove the submission.").
                 Err(err).Add("user", request.TargetUser.Email).Add("submission", request.TargetSubmission);
     }
 
-    response.FoundSubmission = true;
-    
     return &response, nil;
 }

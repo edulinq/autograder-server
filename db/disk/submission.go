@@ -214,7 +214,7 @@ func (this *backend) GetRecentSubmissionSurvey(assignment *model.Assignment, fil
 
 func (this *backend) GetSubmissionContents(assignment *model.Assignment, email string, shortSubmissionID string) (*model.GradingResult, error) {
     var err error;
-    
+
     if (shortSubmissionID == "") {
         shortSubmissionID, err = this.getMostRecentSubmissionID(assignment, email);
         if (err != nil) {
@@ -300,21 +300,22 @@ func (this *backend) RemoveSubmission(assignment *model.Assignment, email string
 
     if (shortSubmissionID == "") {
         shortSubmissionID, err = this.getMostRecentSubmissionID(assignment, email);
-        if (err != nil){
+        if (err != nil) {
             return false, fmt.Errorf("Failed to get most recent submission id: `%w`.", err);
         }
     }
 
-    if (shortSubmissionID == ""){
+    if (shortSubmissionID == "") {
         return false, nil;
     }
 
     submissionDir := this.getSubmissionDirFromAssignment(assignment, email, shortSubmissionID);
 
     if (!util.PathExists(submissionDir)) {
-        return false, fmt.Errorf("Submission does not exist.");
+        return false, nil;
     }
-    err = util.RemoveDirent(submissionDir)
+
+    err = util.RemoveDirent(submissionDir);
     if (err != nil) {
         return false, err;
     }

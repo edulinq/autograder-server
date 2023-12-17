@@ -73,7 +73,7 @@ type Backend interface {
     RemoveUser(course *model.Course, email string) error;
     
     // Remove a submission.
-    // Return a bool indicating whether the submission exists or not and an error if there is one
+    // Return a bool indicating whether the submission exists or not and an error if there is one.
     RemoveSubmission(assignment *model.Assignment, email string, submissionID string) (bool, error);
 
     // Save the results of grading.
