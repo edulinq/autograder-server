@@ -13,7 +13,10 @@ import (
 
 type Timestamp string;
 
-const TIMESTAMP_FORMAT = time.RFC3339;
+const (
+    TIMESTAMP_FORMAT = time.RFC3339;
+    PRETTY_FORMAT = time.DateTime;
+)
 
 func NowTimestamp() Timestamp {
     return TimestampFromTime(time.Now());
@@ -44,6 +47,11 @@ func MustTimestampFromString(text string) Timestamp {
 
 func (this Timestamp) String() string {
     return string(this);
+}
+
+func (this Timestamp) ShouldPrettyString() string {
+    instance, _ := this.Time();
+    return instance.Format(PRETTY_FORMAT);
 }
 
 func (this Timestamp) Time() (time.Time, error) {

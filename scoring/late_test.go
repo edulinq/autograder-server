@@ -3,7 +3,6 @@ package scoring
 import (
     "strings"
     "testing"
-    "time"
 
     "github.com/eriq-augustine/autograder/common"
     "github.com/eriq-augustine/autograder/util"
@@ -15,7 +14,7 @@ func TestLateDaysInfoStruct(test *testing.T) {
     testCases := []*LateDaysInfo{
         nil,
         &LateDaysInfo{},
-        &LateDaysInfo{1, time.Now(), map[string]int{"A": 1, "B": 2}, LATE_DAYS_STRUCT_VERSION, "foo", "bar"},
+        &LateDaysInfo{1, common.NowTimestamp(), map[string]int{"A": 1, "B": 2}, LATE_DAYS_STRUCT_VERSION, "foo", "bar"},
     };
 
     for _, testCase := range testCases {

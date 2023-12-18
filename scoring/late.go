@@ -19,7 +19,7 @@ const LATE_DAYS_STRUCT_VERSION = "1.0.0"
 
 type LateDaysInfo struct {
     AvailableDays int `json:"available-days"`
-    UploadTime time.Time `json:"upload-time"`
+    UploadTime common.Timestamp `json:"upload-time"`
     AllocatedDays map[string]int `json:"allocated-days"`
 
     // A distinct key so we can recognize this as an autograder object.
@@ -189,7 +189,7 @@ func applyLateDaysPolicy(
         if (allocatedDays != lateDaysToUse) {
             lateDays.AvailableDays = lateDaysAvailable - lateDaysToUse;
             lateDays.AllocatedDays[assignment.GetID()] = lateDaysToUse;
-            lateDays.UploadTime = time.Now();
+            lateDays.UploadTime = common.NowTimestamp();
 
             lateDaysToUpdate[studentLMSID] = lateDays;
         }
@@ -215,10 +215,15 @@ func updateLateDays(policy model.LateGradingPolicy, assignment *model.Assignment
             });
         }
 
+        instance, err := lateInfo.UploadTime.Time();
+        if (err != nil) {
+            return fmt.Errorf("Failed to convert upload time: '%w'.", err);
+        }
+
         gradeInfo := lmstypes.SubmissionScore{
             UserID: lmsUserID,
             Score: float64(lateInfo.AvailableDays),
-            Time: lateInfo.UploadTime,
+            Time: instance,
             Comments: uploadComments,
         }
 
@@ -312,7 +317,7 @@ func fetchLateDays(policy model.LateGradingPolicy, assignment *model.Assignment)
         }
 
         info.AvailableDays = postedLateDays;
-        info.UploadTime = time.Now();
+        info.UploadTime = common.NowTimestamp();
         info.AutograderStructVersion = LATE_DAYS_STRUCT_VERSION;
 
         lateDays[lmsLateDaysScore.UserID] = &info;
