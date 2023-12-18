@@ -48,7 +48,6 @@ func (this *DBTests) DBTestRemoveSubmission(test *testing.T) {
         assignment := MustGetTestAssignment();
 
         isRemoved, err := RemoveSubmission(assignment, testCase.targetEmail, testCase.targetSubmission);
-
         if (err != nil) {
             test.Errorf("Case %d: Submission removal failed: '%v'.", i, err);
             continue;

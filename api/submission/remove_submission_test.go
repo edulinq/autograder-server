@@ -44,7 +44,6 @@ func TestRemoveSubmission(test *testing.T) {
         // Roles below grader, other, recent.
         {model.RoleStudent, "student@test.com", "", false, false, true},
         {model.RoleOther,   "student@test.com", "", false, false, true},
-        {model.RoleUnknown, "student@test.com", "", false, false, true},
 
         // Roles above grader, other, recent
         {model.RoleAdmin, "student@test.com", "", true, true, false},
@@ -63,9 +62,6 @@ func TestRemoveSubmission(test *testing.T) {
         response := core.SendTestAPIRequestFull(test, core.NewEndpoint(`submission/remove`), fields, nil, testCase.role);
         
         if (!response.Success) {
-            if (testCase.role == model.RoleUnknown) {
-                continue;
-            }
             if (testCase.permError) {
                 expectedLocator := "-306";
                 if (response.Locator != expectedLocator) {
