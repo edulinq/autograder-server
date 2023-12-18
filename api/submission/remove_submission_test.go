@@ -60,7 +60,7 @@ func TestRemoveSubmission(test *testing.T) {
             "target-submission": testCase.targetSubmission,
         };
 
-        response := core.SendTestAPIRequestFull(test, core.NewEndpoint(`submission/remove/submission`), fields, nil, testCase.role);
+        response := core.SendTestAPIRequestFull(test, core.NewEndpoint(`submission/remove`), fields, nil, testCase.role);
         
         if (!response.Success) {
             if (testCase.role == model.RoleUnknown) {
