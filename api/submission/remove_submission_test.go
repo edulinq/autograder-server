@@ -13,7 +13,7 @@ func TestRemoveSubmission(test *testing.T) {
     // Leave the course in a good state after the test.
     defer db.ResetForTesting();
 
-    testCases := []struct{ role model.UserRole; targetEmail string; targetSubmission string; foundUser bool; foundSubmission bool; permError bool}{
+    testCases := []struct{ role model.UserRole; targetEmail string; targetSubmission string; foundUser bool; foundSubmission bool; permError bool} {
         // Grader, self, recent.
         {model.RoleGrader, "",                "", true, false, false},
         {model.RoleGrader, "grader@test.com", "", true, false, false},
