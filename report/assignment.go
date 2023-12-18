@@ -6,6 +6,7 @@ import (
 
     "gonum.org/v1/gonum/stat"
 
+    "github.com/eriq-augustine/autograder/common"
     "github.com/eriq-augustine/autograder/db"
     "github.com/eriq-augustine/autograder/model"
     "github.com/eriq-augustine/autograder/util"
@@ -18,10 +19,8 @@ const (
 type AssignmentScoringReport struct {
     AssignmentName string `json:"assignment-name"`
     NumberOfSubmissions int `json:"number-of-submissions"`
-    LatestSubmission time.Time `json:"latest-submission"`
+    LatestSubmission common.Timestamp `json:"latest-submission"`
     Questions []*ScoringReportQuestionStats `json:"questions"`
-
-    LatestSubmissionString string `json:"-"`
 }
 
 type ScoringReportQuestionStats struct {
@@ -78,8 +77,7 @@ func GetAssignmentScoringReport(assignment *model.Assignment) (*AssignmentScorin
     report := AssignmentScoringReport{
         AssignmentName: assignment.GetName(),
         NumberOfSubmissions: numSubmissions,
-        LatestSubmission: lastSubmissionTime,
-        LatestSubmissionString: lastSubmissionTime.Format(time.DateTime),
+        LatestSubmission: common.TimestampFromTime(lastSubmissionTime),
         Questions: questions,
     };
 

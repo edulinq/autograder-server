@@ -1,6 +1,6 @@
 {
     "id": "hw0",
-    "display-name": "Homework 0",
+    "name": "Homework 0",
     "static-files": [
         "grader.py"
     ],

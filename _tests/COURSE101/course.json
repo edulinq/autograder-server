@@ -1,6 +1,6 @@
 {
     "id": "course101",
-    "display-name": "Course 101",
+    "name": "Course 101",
     "source": "_tests/COURSE101",
     "lms": {
         "type": "test"

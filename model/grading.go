@@ -59,6 +59,7 @@ func (this GradingInfo) ToScoringInfo() *ScoringInfo {
         ID: this.ID,
         SubmissionTime: this.GradingStartTime,
         RawScore: this.Score,
+        AutograderStructVersion: SCORING_INFO_STRUCT_VERSION,
     };
 }
 

@@ -103,8 +103,8 @@ func mergeUsers(localUser *model.User, lmsUser *lmstypes.User, mergeAttributes b
         return changed;
     }
 
-    if (localUser.DisplayName != lmsUser.Name) {
-        localUser.DisplayName = lmsUser.Name;
+    if (localUser.Name != lmsUser.Name) {
+        localUser.Name = lmsUser.Name;
         changed = true;
     }
 
@@ -143,7 +143,7 @@ func resolveUserSync(course *model.Course, localUsers map[string]*model.User,
 
         localUser = &model.User{
             Email: email,
-            DisplayName: lmsUser.Name,
+            Name: lmsUser.Name,
             Role: lmsUser.Role,
             LMSID: lmsUser.ID,
         };

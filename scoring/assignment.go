@@ -103,6 +103,12 @@ func parseComments(lmsScores []*lmstypes.SubmissionScore) (map[string]bool, map[
                 if (err != nil) {
                     return nil, nil, fmt.Errorf("Could not unmarshall LMS comment %s (%s) into a scoring info: '%w'.", comment.ID, comment.Text, err);
                 }
+
+                if (model.SCORING_INFO_STRUCT_VERSION != scoringInfo.AutograderStructVersion) {
+                    return nil, nil, fmt.Errorf("Mismatch in late days info version found in LMS comment. Current version: '%s', comment version: '%s'.",
+                            model.SCORING_INFO_STRUCT_VERSION, scoringInfo.AutograderStructVersion);
+                }
+
                 scoringInfo.LMSCommentID = comment.ID;
                 scoringInfo.LMSCommentAuthorID = comment.Author;
 

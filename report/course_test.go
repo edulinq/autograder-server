@@ -3,8 +3,8 @@ package report
 import (
     "reflect"
     "testing"
-    "time"
 
+    "github.com/eriq-augustine/autograder/common"
     "github.com/eriq-augustine/autograder/db"
     "github.com/eriq-augustine/autograder/util"
 )
@@ -47,23 +47,13 @@ func TestCourseReportHTML(test *testing.T) {
     }
 }
 
-func mustTimeParse(data string) time.Time {
-    instance, err := time.Parse(time.RFC3339, data);
-    if (err != nil) {
-        panic(err.Error());
-    }
-
-    return instance;
-}
-
 var expected *CourseScoringReport = &CourseScoringReport{
     CourseName: "Course 101",
     Assignments: []*AssignmentScoringReport{
         &AssignmentScoringReport{
             AssignmentName: "Homework 0",
             NumberOfSubmissions: 1,
-            LatestSubmission: mustTimeParse("2023-10-15T21:44:33Z"),
-            LatestSubmissionString: mustTimeParse("2023-10-15T21:44:33Z").Format(time.DateTime),
+            LatestSubmission: common.MustTimestampFromString("2023-10-15T21:44:33Z"),
             Questions: []*ScoringReportQuestionStats{
                 &ScoringReportQuestionStats{
                     QuestionName: "Q1",

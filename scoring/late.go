@@ -15,13 +15,16 @@ import (
     "github.com/eriq-augustine/autograder/util"
 )
 
+const LATE_DAYS_STRUCT_VERSION = "1.0.0"
+
 type LateDaysInfo struct {
     AvailableDays int `json:"available-days"`
-    UploadTime time.Time `json:"upload-time"`
+    UploadTime common.Timestamp `json:"upload-time"`
     AllocatedDays map[string]int `json:"allocated-days"`
 
     // A distinct key so we can recognize this as an autograder object.
-    Autograder int `json:"__autograder__v01__"`
+    AutograderStructVersion string `json:"__autograder__version__"`
+
     // If this object was serialized from an LMS comment, keep the ID.
     LMSCommentID string `json:"-"`
     LMSCommentAuthorID string `json:"-"`
@@ -186,7 +189,7 @@ func applyLateDaysPolicy(
         if (allocatedDays != lateDaysToUse) {
             lateDays.AvailableDays = lateDaysAvailable - lateDaysToUse;
             lateDays.AllocatedDays[assignment.GetID()] = lateDaysToUse;
-            lateDays.UploadTime = time.Now();
+            lateDays.UploadTime = common.NowTimestamp();
 
             lateDaysToUpdate[studentLMSID] = lateDays;
         }
@@ -212,10 +215,15 @@ func updateLateDays(policy model.LateGradingPolicy, assignment *model.Assignment
             });
         }
 
+        instance, err := lateInfo.UploadTime.Time();
+        if (err != nil) {
+            return fmt.Errorf("Failed to convert upload time: '%w'.", err);
+        }
+
         gradeInfo := lmstypes.SubmissionScore{
             UserID: lmsUserID,
             Score: float64(lateInfo.AvailableDays),
-            Time: lateInfo.UploadTime,
+            Time: instance,
             Comments: uploadComments,
         }
 
@@ -288,6 +296,11 @@ func fetchLateDays(policy model.LateGradingPolicy, assignment *model.Assignment)
                 info.LMSCommentID = comment.ID;
                 info.LMSCommentAuthorID = comment.Author;
 
+                if (LATE_DAYS_STRUCT_VERSION != info.AutograderStructVersion) {
+                    return nil, fmt.Errorf("Mismatch in late days info version found in LMS comment. Current version: '%s', comment version: '%s'.",
+                            LATE_DAYS_STRUCT_VERSION, info.AutograderStructVersion);
+                }
+
                 foundComment = true;
             }
         }
@@ -296,14 +309,16 @@ func fetchLateDays(policy model.LateGradingPolicy, assignment *model.Assignment)
 
         if (foundComment) {
             if (info.AvailableDays != postedLateDays) {
-                log.Warn().Int("posted-days", postedLateDays).Int("comment-days", info.AvailableDays).Msg("Mismatch in the posted late days and the number found in the autograder comment.");
+                log.Warn().Int("posted-days", postedLateDays).Int("comment-days", info.AvailableDays).
+                        Msg("Mismatch in the posted late days and the number found in the autograder comment.");
             }
         } else {
             info.AllocatedDays = make(map[string]int);
         }
 
         info.AvailableDays = postedLateDays;
-        info.UploadTime = time.Now();
+        info.UploadTime = common.NowTimestamp();
+        info.AutograderStructVersion = LATE_DAYS_STRUCT_VERSION;
 
         lateDays[lmsLateDaysScore.UserID] = &info;
     }
