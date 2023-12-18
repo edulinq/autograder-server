@@ -25,7 +25,7 @@ type UserInfoWithPass struct {
 func NewUserInfo(user *model.User) *UserInfo {
     return &UserInfo{
         Email: user.Email,
-        Name: user.DisplayName,
+        Name: user.Name,
         Role: user.Role,
         LMSID: user.LMSID,
     };
@@ -39,7 +39,7 @@ func (this *UserInfoWithPass) ToUsr() (*model.User, error) {
     user := model.User{
         Email: this.Email,
         Pass: this.Pass,
-        DisplayName: this.Name,
+        Name: this.Name,
         Role: this.Role,
         LMSID: this.LMSID,
     };

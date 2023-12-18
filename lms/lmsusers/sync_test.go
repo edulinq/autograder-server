@@ -213,7 +213,7 @@ func testingUsers(users []*lmstypes.User) []*lmstypes.User {
 var addUsers []*model.User = []*model.User{
     &model.User{
         Email: "add@test.com",
-        DisplayName: "add",
+        Name: "add",
         Role: model.RoleStudent,
         LMSID: "lms-add@test.com",
     },
@@ -223,7 +223,7 @@ var addUsers []*model.User = []*model.User{
 var delUsers []*model.User = []*model.User{
     &model.User{
         Email: "other@test.com",
-        DisplayName: "other",
+        Name: "other",
         Role: model.RoleOther,
         LMSID: "",
     },
@@ -233,19 +233,19 @@ var delUsers []*model.User = []*model.User{
 var modAllUsers []*model.User = []*model.User{
     &model.User{
         Email: "student@test.com",
-        DisplayName: "student",
+        Name: "student",
         Role: model.RoleStudent,
         LMSID: "lms-student@test.com",
     },
     &model.User{
         Email: "grader@test.com",
-        DisplayName: "Changed Name",
+        Name: "Changed Name",
         Role: model.RoleGrader,
         LMSID: "lms-grader@test.com",
     },
     &model.User{
         Email: "admin@test.com",
-        DisplayName: "admin",
+        Name: "admin",
         Role: model.RoleOwner,
         LMSID: "lms-admin@test.com",
     },
@@ -255,19 +255,19 @@ var modAllUsers []*model.User = []*model.User{
 var modUsers []*model.User = []*model.User{
     &model.User{
         Email: "student@test.com",
-        DisplayName: "student",
+        Name: "student",
         Role: model.RoleStudent,
         LMSID: "lms-student@test.com",
     },
     &model.User{
         Email: "grader@test.com",
-        DisplayName: "grader",
+        Name: "grader",
         Role: model.RoleGrader,
         LMSID: "lms-grader@test.com",
     },
     &model.User{
         Email: "admin@test.com",
-        DisplayName: "admin",
+        Name: "admin",
         Role: model.RoleAdmin,
         LMSID: "lms-admin@test.com",
     },

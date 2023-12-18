@@ -1,6 +1,6 @@
 {
     "id": "course101-with-zero-limit",
-    "display-name": "Course 101 - With Zero Limit",
+    "name": "Course 101 - With Zero Limit",
     "submission-limit": {
         "max-attempts": 0
     }

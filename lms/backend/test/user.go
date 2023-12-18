@@ -43,7 +43,7 @@ func (this *TestLMSBackend) FetchUser(email string) (*lmstypes.User, error) {
 func UserFromAGUser(user *model.User) *lmstypes.User {
     return &lmstypes.User{
         ID: "lms-" + user.Email,
-        Name: user.DisplayName,
+        Name: user.Name,
         Email: user.Email,
         Role: user.Role,
     };

@@ -19,7 +19,7 @@ import (
 
 type AddUser struct {
     Email string `help:"Email for the user." arg:"" required:""`
-    Name string `help:"Display name for the user. Defaults to the user's email." short:"n"`
+    Name string `help:"Name for the user. Defaults to the user's email." short:"n"`
     Role string `help:"Role for the user. Defaults to student." short:"r" default:"student"`
     Pass string `help:"Password for the user. Defaults to a random string (will be output)." short:"p"`
     Force bool `help:"Overwrite any existing user." short:"f" default:"false"`
@@ -146,7 +146,7 @@ func (this *GetUser) Run(course *model.Course) error {
     if (user == nil) {
         fmt.Printf("No user found with email '%s'.\n", this.Email);
     } else {
-        fmt.Printf("Email: '%s', Name: '%s', Role: '%s'.\n", user.Email, user.DisplayName, user.Role);
+        fmt.Printf("Email: '%s', Name: '%s', Role: '%s'.\n", user.Email, user.Name, user.Role);
     }
 
     return nil
@@ -163,7 +163,7 @@ func (this *ListUsers) Run(course *model.Course) error {
     }
 
     if (this.All) {
-        fmt.Printf("%s\t%s\t%s\n", "Email", "Display Name", "Role");
+        fmt.Printf("%s\t%s\t%s\n", "Email", "Name", "Role");
     }
 
     emailList := make([]string, 0, len(users));
@@ -176,7 +176,7 @@ func (this *ListUsers) Run(course *model.Course) error {
         user := users[email];
 
         if (this.All) {
-            fmt.Printf("%s\t%s\t%s\n", user.Email, user.DisplayName, user.Role);
+            fmt.Printf("%s\t%s\t%s\n", user.Email, user.Name, user.Role);
         } else {
             fmt.Println(user.Email);
         }
@@ -240,7 +240,7 @@ var cli struct {
     Course string `help:"ID of the course."`
 
     Add AddUser `cmd:"" help:"Add a user."`
-    AddTSV AddTSV `cmd:"" help:"Add users from a TSV file formatted as: '<email>[\t<display name>[\t<role>[\t<password>]]]'. See add for default values."`
+    AddTSV AddTSV `cmd:"" help:"Add users from a TSV file formatted as: '<email>[\t<name>[\t<role>[\t<password>]]]'. See add for default values."`
     Auth AuthUser `cmd:"" help:"Authenticate as a user."`
     Get GetUser `cmd:"" help:"Get a user."`
     Ls ListUsers `cmd:"" help:"List users."`
@@ -275,7 +275,7 @@ type TSVUser struct {
     CleartextPass string
 }
 
-// Read users from a TSV formatted as: '<email>[\t<display name>[\t<role>[\t<cleartext password>]]]'.
+// Read users from a TSV formatted as: '<email>[\t<name>[\t<role>[\t<cleartext password>]]]'.
 // The users returned from this function are not official users yet.
 // The users returned from here can be sent straight to db.SyncUsers() without any modifications.
 func readUsersTSV(path string, skipRows int) (map[string]*model.User, error) {

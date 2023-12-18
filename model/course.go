@@ -18,7 +18,7 @@ const SOURCES_DIRNAME = "sources";
 type Course struct {
     // Required fields.
     ID string `json:"id"`
-    DisplayName string `json:"display-name"`
+    Name string `json:"name"`
 
     Source *common.FileSpec `json:"source"`
 
@@ -44,7 +44,7 @@ func (this *Course) GetID() string {
 }
 
 func (this *Course) GetName() string {
-    return this.DisplayName;
+    return this.Name;
 }
 
 func (this *Course) GetSource() *common.FileSpec {
@@ -77,8 +77,8 @@ func (this *Course) GetTasks() []tasks.ScheduledTask {
 
 // Ensure this course makes sense.
 func (this *Course) Validate() error {
-    if (this.DisplayName == "") {
-        this.DisplayName = this.ID;
+    if (this.Name == "") {
+        this.Name = this.ID;
     }
 
     var err error;

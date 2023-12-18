@@ -34,7 +34,7 @@ const (
 
 type User struct {
     Email string `json:"email"`
-    DisplayName string `json:"display-name"`
+    Name string `json:"name"`
     Role UserRole `json:"role"`
     Pass string `json:"pass"`
     Salt string `json:"salt"`
@@ -45,7 +45,7 @@ type User struct {
 func NewUser(email string, name string, role UserRole) *User {
     return &User{
         Email: email,
-        DisplayName: name,
+        Name: name,
         Role: role,
     };
 }
@@ -108,8 +108,8 @@ func (this *User) CheckPassword(hashPass string) bool {
 func (this *User) Merge(other *User) bool {
     changed := false;
 
-    if ((other.DisplayName != "") && (this.DisplayName != other.DisplayName)) {
-        this.DisplayName = other.DisplayName;
+    if ((other.Name != "") && (this.Name != other.Name)) {
+        this.Name = other.Name;
         changed = true;
     }
 
@@ -186,7 +186,7 @@ func ToRowHeaader(delim string) string {
 }
 
 func (this *User) ToRow(delim string) string {
-    parts := []string{this.Email, this.DisplayName, this.Role.String(), this.LMSID};
+    parts := []string{this.Email, this.Name, this.Role.String(), this.LMSID};
     return strings.Join(parts, delim);
 }
 
@@ -211,7 +211,7 @@ func UserPointerEqual(a *User, b *User) bool {
     }
 
     return (a.Email == b.Email) &&
-            (a.DisplayName == b.DisplayName) &&
+            (a.Name == b.Name) &&
             (a.Role == b.Role) &&
             (a.LMSID == b.LMSID);
 }

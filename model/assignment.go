@@ -18,7 +18,7 @@ const CACHE_FILENAME = "cache.json"
 
 type Assignment struct {
     ID string `json:"id"`
-    DisplayName string `json:"display-name"`
+    Name string `json:"name"`
     SortID string `json:"sort-id,omitempty"`
 
     LMSID string `json:"lms-id,omitempty"`
@@ -52,7 +52,7 @@ func (this *Assignment) GetCourse() *Course {
 }
 
 func (this *Assignment) GetName() string {
-    return this.DisplayName;
+    return this.Name;
 }
 
 func (this *Assignment) GetLMSID() string {
@@ -86,8 +86,8 @@ func (this *Assignment) Validate() error {
         return fmt.Errorf("No course found for assignment.")
     }
 
-    if (this.DisplayName == "") {
-        this.DisplayName = this.ID;
+    if (this.Name == "") {
+        this.Name = this.ID;
     }
 
     var err error;

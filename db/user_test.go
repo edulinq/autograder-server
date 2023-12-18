@@ -138,19 +138,19 @@ func getSynNewUsersTestUsers() (
     var testUsers map[string]*model.User = map[string]*model.User{
         "add@test.com": &model.User{
             Email: "add@test.com",
-            DisplayName: "add",
+            Name: "add",
             LMSID: "lms-add@test.com",
         },
         "add-pass@test.com": &model.User{
             Email: "add-pass@test.com",
             Pass: util.Sha256HexFromString("add-pass"),
-            DisplayName: "add pass",
+            Name: "add pass",
             Role: model.RoleStudent,
             LMSID: "lms-add-pass@test.com",
         },
         "other@test.com": &model.User{
             Email: "other@test.com",
-            DisplayName: "modified",
+            Name: "modified",
             Role: model.RoleStudent,
             LMSID: "lms-mod@test.com",
         },
@@ -170,13 +170,13 @@ func getSynNewUsersTestUsers() (
     var addUsers []*model.User = []*model.User{
         &model.User{
             Email: "add@test.com",
-            DisplayName: "add",
+            Name: "add",
             Role: model.RoleOther,
             LMSID: "lms-add@test.com",
         },
         &model.User{
             Email: "add-pass@test.com",
-            DisplayName: "add pass",
+            Name: "add pass",
             Role: model.RoleStudent,
             LMSID: "lms-add-pass@test.com",
         },
@@ -231,19 +231,19 @@ func getSynNewUsersTestUsers() (
     var modUsers []*model.User = []*model.User{
         &model.User{
             Email: "other@test.com",
-            DisplayName: "modified",
+            Name: "modified",
             Role: model.RoleStudent,
             LMSID: "lms-mod@test.com",
         },
         &model.User{
             Email: "student@test.com",
-            DisplayName: "student",
+            Name: "student",
             Role: model.RoleStudent,
             LMSID: "",
         },
         &model.User{
             Email: "grader@test.com",
-            DisplayName: "grader",
+            Name: "grader",
             Role: model.RoleGrader,
             LMSID: "",
         },
@@ -254,17 +254,17 @@ func getSynNewUsersTestUsers() (
     var skipUsers []*model.User = []*model.User{
         &model.User{
             Email: "other@test.com",
-            DisplayName: "other",
+            Name: "other",
             Role: model.RoleOther,
         },
         &model.User{
             Email: "student@test.com",
-            DisplayName: "student",
+            Name: "student",
             Role: model.RoleStudent,
         },
         &model.User{
             Email: "grader@test.com",
-            DisplayName: "grader",
+            Name: "grader",
             Role: model.RoleGrader,
         },
     };
