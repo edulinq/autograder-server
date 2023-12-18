@@ -4,6 +4,8 @@ import (
     "github.com/eriq-augustine/autograder/common"
 )
 
+const SCORING_INFO_STRUCT_VERSION = "1.0.0"
+
 type ScoringInfo struct {
     ID string `json:"id"`
     SubmissionTime common.Timestamp `json:"submission-time"`
@@ -16,7 +18,8 @@ type ScoringInfo struct {
     Reject bool `json:"reject"`
 
     // A distinct key so we can recognize this as an autograder object.
-    Autograder int `json:"__autograder__v01__"`
+    AutograderStructVersion string `json:"__autograder__version__"`
+
     // If this object was serialized from an LMS comment, keep the ID.
     LMSCommentID string `json:"-"`
     LMSCommentAuthorID string `json:"-"`

@@ -15,13 +15,16 @@ import (
     "github.com/eriq-augustine/autograder/util"
 )
 
+const LATE_DAYS_STRUCT_VERSION = "1.0.0"
+
 type LateDaysInfo struct {
     AvailableDays int `json:"available-days"`
     UploadTime time.Time `json:"upload-time"`
     AllocatedDays map[string]int `json:"allocated-days"`
 
     // A distinct key so we can recognize this as an autograder object.
-    Autograder int `json:"__autograder__v01__"`
+    AutograderStructVersion string `json:"__autograder__version__"`
+
     // If this object was serialized from an LMS comment, keep the ID.
     LMSCommentID string `json:"-"`
     LMSCommentAuthorID string `json:"-"`
@@ -288,6 +291,11 @@ func fetchLateDays(policy model.LateGradingPolicy, assignment *model.Assignment)
                 info.LMSCommentID = comment.ID;
                 info.LMSCommentAuthorID = comment.Author;
 
+                if (LATE_DAYS_STRUCT_VERSION != info.AutograderStructVersion) {
+                    return nil, fmt.Errorf("Mismatch in late days info version found in LMS comment. Current version: '%s', comment version: '%s'.",
+                            LATE_DAYS_STRUCT_VERSION, info.AutograderStructVersion);
+                }
+
                 foundComment = true;
             }
         }
@@ -296,7 +304,8 @@ func fetchLateDays(policy model.LateGradingPolicy, assignment *model.Assignment)
 
         if (foundComment) {
             if (info.AvailableDays != postedLateDays) {
-                log.Warn().Int("posted-days", postedLateDays).Int("comment-days", info.AvailableDays).Msg("Mismatch in the posted late days and the number found in the autograder comment.");
+                log.Warn().Int("posted-days", postedLateDays).Int("comment-days", info.AvailableDays).
+                        Msg("Mismatch in the posted late days and the number found in the autograder comment.");
             }
         } else {
             info.AllocatedDays = make(map[string]int);
@@ -304,6 +313,7 @@ func fetchLateDays(policy model.LateGradingPolicy, assignment *model.Assignment)
 
         info.AvailableDays = postedLateDays;
         info.UploadTime = time.Now();
+        info.AutograderStructVersion = LATE_DAYS_STRUCT_VERSION;
 
         lateDays[lmsLateDaysScore.UserID] = &info;
     }
