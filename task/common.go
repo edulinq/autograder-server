@@ -48,6 +48,8 @@ func Schedule(course *model.Course, target tasks.ScheduledTask) error {
     switch target.(type) {
         case *tasks.BackupTask:
             runFunc = RunBackupTask;
+        case *tasks.CourseUpdateTask:
+            runFunc = RunCourseUpdateTask;
         case *tasks.ReportTask:
             runFunc = RunReportTask;
         case *tasks.ScoringUploadTask:
