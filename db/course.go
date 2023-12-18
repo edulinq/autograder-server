@@ -163,7 +163,7 @@ func AddCoursesFromDir(baseDir string, source *common.FileSpec) ([]string, error
         return nil, fmt.Errorf("Failed to search for course configs in '%s': '%w'.", baseDir, err);
     }
 
-    log.Info().Int("count", len(configPaths)).Msg(fmt.Sprintf("Found %d course config(s).", len(configPaths)));
+    log.Info().Int("count", len(configPaths)).Msg(fmt.Sprintf("Found %d course config(s) to import.", len(configPaths)));
 
     courseIDs := make([]string, 0, len(configPaths));
     for _, configPath := range configPaths {
