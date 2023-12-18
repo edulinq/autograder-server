@@ -2,7 +2,7 @@ package config
 
 var (
     // Base
-    NAME = MustNewStringOption("instance.name", "", "A name to identify this autograder instance. Should only contain alphanumerics and underscores.");
+    NAME = MustNewStringOption("instance.name", "autograder", "A name to identify this autograder instance. Should only contain alphanumerics and underscores.");
 
     // Directories
     BASE_DIR = MustNewStringOption("dirs.base", GetDefaultBaseDir(), "The base dir for autograder to store data.");
