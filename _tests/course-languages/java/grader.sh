@@ -15,19 +15,6 @@ function main() {
 
     cd "${THIS_DIR}"
 
-    # TEST
-    echo "###"
-    ls
-    echo "---"
-    ls /autograder
-    echo "---"
-    ls /autograder/input
-    echo "---"
-    ls /autograder/work
-    echo "---"
-    ls /autograder/scripts
-    echo "###"
-
     # Allow the grader to run locally by changing the output location
     # if not in the docker image.
     local outputPath="${DEFAULT_OUTPUT_PATH}"

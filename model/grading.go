@@ -29,7 +29,7 @@ type GradingInfo struct {
 
     // Information generally filled out by the grader.
     Name string `json:"name"`
-    Questions []GradedQuestion `json:"questions"`
+    Questions []*GradedQuestion `json:"questions"`
     GradingStartTime common.Timestamp `json:"grading_start_time"`
     GradingEndTime common.Timestamp `json:"grading_end_time"`
 
@@ -115,11 +115,19 @@ func (this GradingInfo) Report() string {
     return builder.String();
 }
 
-// Fill in the MaxPoints and Score fields.
+// Fill in the MaxPoints, Score, and (if empty) time fields.
 func (this *GradingInfo) ComputePoints() {
     for _, question := range this.Questions {
         this.Score += question.Score;
         this.MaxPoints += question.MaxPoints;
+
+        if (question.GradingStartTime.IsZero()) {
+            question.GradingStartTime = this.GradingStartTime;
+        }
+
+        if (question.GradingEndTime.IsZero()) {
+            question.GradingEndTime = this.GradingEndTime;
+        }
     }
 }
 
@@ -137,7 +145,15 @@ func (this GradedQuestion) Report() string {
     return builder.String();
 }
 
-func (this GradedQuestion) Equals(other GradedQuestion, checkMessages bool) bool {
+func (this *GradedQuestion) Equals(other *GradedQuestion, checkMessages bool) bool {
+    if (this == other) {
+        return true;
+    }
+
+    if ((this == nil) || (other == nil)) {
+        return false;
+    }
+
     if ((this.Name != other.Name) || (this.MaxPoints != other.MaxPoints) || (this.Score != other.Score)) {
         return false;
     }

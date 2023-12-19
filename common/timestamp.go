@@ -45,6 +45,10 @@ func MustTimestampFromString(text string) Timestamp {
     return instance;
 }
 
+func (this Timestamp) IsZero() bool {
+    return (string(this) == "");
+}
+
 func (this Timestamp) String() string {
     return string(this);
 }

@@ -96,13 +96,19 @@ func loadCourse(path string) (*model.Course, error) {
     }
 
     course, err := backend.LoadCourse(path);
-
-    if (err == nil) {
-        log.Info().Str("path", path).Str("id", course.GetID()).
-                Int("num-assignments", len(course.Assignments)).Msg("Loaded course.");
+    if (err != nil) {
+        return nil, fmt.Errorf("Failed to load course from path '%s': '%w'.", path, err);
     }
 
-    return course, err;
+    err = course.Validate();
+    if (err != nil) {
+        return nil, fmt.Errorf("Failed to validate course from path '%s': '%w'.", path, err);
+    }
+
+    log.Info().Str("path", path).Str("id", course.GetID()).
+            Int("num-assignments", len(course.Assignments)).Msg("Loaded course.");
+
+    return course, nil;
 }
 
 func SaveCourse(course *model.Course) error {
