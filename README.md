@@ -69,25 +69,37 @@ For example:
 ./bin/logs-example --config log.level=debug
 ```
 
+### Directories
+
+The primary directory the autograder will use for storing information is referred to as the "work directory",
+and is set to `<base dir>/<instance name>`.
+Most other paths are configured to be relative to the work directory.
+
+The base directory is set through the `dirs.base` option,
+and defaults to `$XDG_DATA_HOME`.
+
+The instance name is a way to configuration a unique name for your autograder instance.
+It can be set with the `instance.name` option,
+and defaults to `autograder`.
+
 ### Loading Options
 
 When an autograder executable is run,
-it will automatically look for config files in two locations,
-both specified by config options:
- - `config.local.path` which defaults to "config.json"
- - `config.secrets.path` which defaults to ".secrets.json"
+it will automatically look for config files in two locations:
+ - `<work dir>/config/config.json`
+ - `<work dir>/config/secrets.json`
 
 Use these files to set persistent options.
+
+To load other config (JSON) files, use the `--config-path` flag.
 
 ### Key Configuration Options
 
 Here are several key configurations you should be aware of:
 
- - `courses.rootdir` -- The location that will be searched for courses.
- - `dirs.work` -- The "working" directory for the autograder.
+ - `instance.name` -- A name for this autograder instance.
+ - `dirs.base` -- The "base" data directory for the autograder.
     Caches, databases, and other files will be stored here.
-    This defaults to the system's temp directory,
-    so production environments will want to change this to a persistent location.
  - `server.backup.dir` -- The location that course backups will be saved to.
  - `log.level` -- The logging level. Should be one of ["trace", "debug", "info", "warn", "error", "fatal"].
 
