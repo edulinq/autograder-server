@@ -263,12 +263,15 @@ func (this *FileSpec) copyGit(destDir string) error {
     destPath := filepath.Join(destDir, this.Dest);
 
     if (util.PathExists(destPath)) {
-        return fmt.Errorf("Destination for git FileSpec ('%s') already exists.", destPath);
+        err := util.RemoveDirent(destPath);
+        if (err != nil) {
+            return fmt.Errorf("Failed to remove existing destination for git FileSpec ('%s'): '%w'.", destPath, err);
+        }
     }
 
-    err := util.MkDir(destDir);
+    err := util.MkDir(filepath.Dir(destPath));
     if (err != nil) {
-        return fmt.Errorf("Failed to make dir for git FileSpec ('%s'): '%w'.", destDir, err);
+        return fmt.Errorf("Failed to make dir for git FileSpec ('%s'): '%w'.", destPath, err);
     }
 
     _, err = util.GitEnsureRepo(this.Path, destPath, true, this.Reference, this.Username, this.Token);
@@ -279,12 +282,15 @@ func (this *FileSpec) downloadURL(destDir string) error {
     destPath := filepath.Join(destDir, this.Dest);
 
     if (util.PathExists(destPath)) {
-        return fmt.Errorf("Destination for URL FileSpec ('%s') already exists.", destPath);
+        err := util.RemoveDirent(destPath);
+        if (err != nil) {
+            return fmt.Errorf("Failed to remove existing destination for URL FileSpec ('%s'): '%w'.", destPath, err);
+        }
     }
 
-    err := util.MkDir(destDir);
+    err := util.MkDir(filepath.Dir(destDir));
     if (err != nil) {
-        return fmt.Errorf("Failed to make dir for URL FileSpec ('%s'): '%w'.", destDir, err);
+        return fmt.Errorf("Failed to make dir for URL FileSpec ('%s'): '%w'.", destPath, err);
     }
 
     content, err := util.RawGet(this.Path);

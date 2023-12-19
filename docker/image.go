@@ -119,7 +119,7 @@ func CheckFileChanges(imageSource ImageSource, quick bool) (bool, error) {
         }
 
         switch (filespec.Type) {
-            case common.FILESPEC_TYPE_EMPTY, common.FILESPEC_TYPE_NIL:
+            case common.FILESPEC_TYPE_EMPTY, common.FILESPEC_TYPE_NIL, common.FILESPEC_TYPE_URL:
                 // no-op.
                 continue;
             case common.FILESPEC_TYPE_PATH:

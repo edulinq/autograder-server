@@ -78,6 +78,11 @@ func (this *ImageInfo) Validate() error {
     }
 
     for _, staticFile := range this.StaticFiles {
+        err := staticFile.Validate();
+        if (err != nil) {
+            return fmt.Errorf("Failed to validate static file spec: '%w'.", err);
+        }
+
         if (staticFile.IsAbs()) {
             return fmt.Errorf("All static file paths must be relative (to the assignment config file), found: '%s'.", staticFile);
         }
