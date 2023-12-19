@@ -137,5 +137,8 @@ func getAssignmentInvocation(assignment *model.Assignment,
         cleanCommand = append(cleanCommand, value);
     }
 
-    return exec.Command(cleanCommand[0], cleanCommand[1:]...), nil;
+    cmd := exec.Command(cleanCommand[0], cleanCommand[1:]...);
+    cmd.Dir = workDir;
+
+    return cmd, nil;
 }

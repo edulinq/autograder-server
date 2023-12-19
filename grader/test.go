@@ -60,6 +60,10 @@ func GetTestSubmissions(baseDir string) ([]*TestSubmissionInfo, error) {
         });
     }
 
+    if (len(testSubmissions) == 0) {
+        return nil, fmt.Errorf("Could not find any test submissions in '%s'.", baseDir);
+    }
+
     return testSubmissions, nil;
 }
 

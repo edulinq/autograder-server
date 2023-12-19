@@ -166,7 +166,7 @@ func writeDockerContext(imageInfo *ImageInfo, dir string) error {
         return fmt.Errorf("Failed to create docker config file: '%w'.", err);
     }
 
-    dockerPostSubmittionOpsPath := filepath.Join(dir, DOCKER_POST_SUBMISSION_OS_FILENAME);
+    dockerPostSubmittionOpsPath := filepath.Join(dir, DOCKER_POST_SUBMISSION_OPS_FILENAME);
     err = writePostSubmissionOpsScript(imageInfo, dockerPostSubmittionOpsPath);
     if (err != nil) {
         return fmt.Errorf("Failed to write post-submission operations script: '%w'.", err);
@@ -190,7 +190,7 @@ func writePostSubmissionOpsScript(imageInfo *ImageInfo, path string) error {
     lines = append(lines, fmt.Sprintf("# Post-Submission operations for '%s'.\n", imageInfo.Name));
 
     for _, op := range imageInfo.PostSubmissionFileOperations {
-        lines = append(lines, op.ToUnix(imageInfo.BaseDir));
+        lines = append(lines, op.ToUnix("."));
     }
 
     err := util.WriteFile(strings.Join(lines, "\n"), path);
@@ -231,8 +231,9 @@ func toDockerfile(imageInfo *ImageInfo, workDir string) (string, error) {
     // Set the working directory.
     lines = append(lines, fmt.Sprintf("WORKDIR %s", DOCKER_BASE_DIR), "")
 
-    // Copy over the config file.
+    // Copy over the config and post-os script files.
     lines = append(lines, fmt.Sprintf("COPY %s %s", DOCKER_CONFIG_FILENAME, DOCKER_CONFIG_PATH), "");
+    lines = append(lines, fmt.Sprintf("COPY %s %s", DOCKER_POST_SUBMISSION_OPS_FILENAME, DOCKER_POST_SUBMISSION_OPS_PATH), "");
 
     // Append pre-static docker commands.
     lines = append(lines, "# Pre-Static Commands");
@@ -258,6 +259,18 @@ func toDockerfile(imageInfo *ImageInfo, workDir string) (string, error) {
     lines = append(lines, "# Post-Static Commands");
     lines = append(lines, imageInfo.PostStaticDockerCommands...);
     lines = append(lines, "");
+
+    // Add an invoation (CMD) if it exists.
+    if (len(imageInfo.Invocation) > 0) {
+        parts := make([]string, 0, len(imageInfo.Invocation));
+        for _, part := range imageInfo.Invocation {
+            parts = append(parts, DockerfilePathQuote(part));
+        }
+
+        lines = append(lines, "# Invocation");
+        lines = append(lines, fmt.Sprintf("CMD [%s]", strings.Join(parts, ", ")));
+        lines = append(lines, "");
+    }
 
     return strings.Join(lines, "\n"), nil;
 }
