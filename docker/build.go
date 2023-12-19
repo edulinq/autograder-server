@@ -166,8 +166,34 @@ func writeDockerContext(imageInfo *ImageInfo, dir string) error {
         return fmt.Errorf("Failed to create docker config file: '%w'.", err);
     }
 
+    dockerPostSubmittionOpsPath := filepath.Join(dir, DOCKER_POST_SUBMISSION_OS_FILENAME);
+    err = writePostSubmissionOpsScript(imageInfo, dockerPostSubmittionOpsPath);
+    if (err != nil) {
+        return fmt.Errorf("Failed to write post-submission operations script: '%w'.", err);
+    }
+
     dockerfilePath := filepath.Join(dir, "Dockerfile");
     err = writeDockerfile(imageInfo, workDir, dockerfilePath)
+    if (err != nil) {
+        return err;
+    }
+
+    return nil;
+}
+
+// Write out the post-submission ops as a shell script.
+func writePostSubmissionOpsScript(imageInfo *ImageInfo, path string) error {
+    var lines []string;
+
+    lines = append(lines, "#!/bin/bash\n");
+
+    lines = append(lines, fmt.Sprintf("# Post-Submission operations for '%s'.\n", imageInfo.Name));
+
+    for _, op := range imageInfo.PostSubmissionFileOperations {
+        lines = append(lines, op.ToUnix(imageInfo.BaseDir));
+    }
+
+    err := util.WriteFile(strings.Join(lines, "\n"), path);
     if (err != nil) {
         return err;
     }

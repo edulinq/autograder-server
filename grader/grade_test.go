@@ -72,6 +72,16 @@ func runSubmissionTests(test *testing.T, parallel bool, useDocker bool) {
 
             result, reject, err := Grade(testSubmission.Assignment, testSubmission.Dir, user, TEST_MESSAGE, gradeOptions);
             if (err != nil) {
+                if (result != nil) {
+                    fmt.Println("--- stdout ---");
+                    fmt.Println(result.Stdout);
+                    fmt.Println("--------------");
+
+                    fmt.Println("--- stderr ---");
+                    fmt.Println(result.Stderr);
+                    fmt.Println("--------------");
+                }
+
                 test.Fatalf("Failed to grade assignment: '%v'.", err);
             }
 

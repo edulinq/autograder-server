@@ -5,11 +5,11 @@ go 1.21
 require (
 	github.com/adrg/xdg v0.4.0
 	github.com/alecthomas/kong v0.8.0
+	github.com/alessio/shellescape v1.4.2
 	github.com/docker/docker v24.0.4+incompatible
 	github.com/go-git/go-git/v5 v5.9.0
 	github.com/google/uuid v1.3.0
 	github.com/jackc/pgx/v5 v5.4.3
-	github.com/mattn/go-sqlite3 v1.14.17
 	github.com/rs/zerolog v1.29.1
 	golang.org/x/crypto v0.13.0
 	golang.org/x/exp v0.0.0-20230321023759-10a507213a29

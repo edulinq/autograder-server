@@ -6,6 +6,7 @@ import (
 )
 
 const DOCKER_CONFIG_FILENAME = "config.json"
+const DOCKER_POST_SUBMISSION_OS_FILENAME = "post-submission-ops.sh"
 
 const DOCKER_BASE_DIR = "/autograder"
 const DOCKER_INPUT_DIR = DOCKER_BASE_DIR + "/input"
