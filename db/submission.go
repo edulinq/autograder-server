@@ -88,3 +88,12 @@ func GetRecentSubmissionContents(assignment *model.Assignment, filterRole model.
 
     return backend.GetRecentSubmissionContents(assignment, filterRole);
 }
+
+func RemoveSubmission(assignment *model.Assignment, email string, submissionID string) (bool, error) {
+    if (backend == nil) {
+        return false, fmt.Errorf("Database has not been opened.");
+    }
+
+    shortSubmissionID := common.GetShortSubmissionID(submissionID);
+    return backend.RemoveSubmission(assignment, email, shortSubmissionID);
+}

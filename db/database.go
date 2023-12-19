@@ -74,6 +74,10 @@ type Backend interface {
     // Remove a user.
     // Do nothing and return nil if the user does not exist.
     RemoveUser(course *model.Course, email string) error;
+    
+    // Remove a submission.
+    // Return a bool indicating whether the submission exists or not and an error if there is one.
+    RemoveSubmission(assignment *model.Assignment, email string, submissionID string) (bool, error);
 
     // Save the results of grading.
     // All the submissions should be from this course.
@@ -144,9 +148,9 @@ func Open() error {
             err = fmt.Errorf("Unknown database type: '%s'.", dbType);
     }
 
-	if (err != nil) {
+    if (err != nil) {
         return fmt.Errorf("Failed to open database: %w.", err);
-	}
+    }
 
     return backend.EnsureTables();
 }
