@@ -110,7 +110,7 @@ func getAssignmentInvocation(assignment *model.Assignment,
     }
 
     // Special case for the python grader (we know how to invoke that).
-    if (imageInfo.Image == "autograder.python") {
+    if ((rawCommand == nil) && (imageInfo.Image == "autograder.python")) {
         rawCommand = strings.Split(PYTHON_AUTOGRADER_INVOCATION, " ");
     }
 
