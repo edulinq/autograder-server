@@ -36,14 +36,14 @@ function run_submissions() {
             continue
         fi
 
-        local assignment_id=$(grep '"id"' "${assignment_config_path}" | sed 's/^\s*"id"\s*:\s*"\(\w\+\)\s*",\s*$/\1/')
+        local assignment_id=$(grep '"id"' "${assignment_config_path}" | sed 's/^\s*"id"\s*:\s*"\([^"]\+\)\s*",\s*$/\1/')
         if [[ -z "${assignment_id}" ]] ; then
             echo "ERROR: Could not find assignment ID for '${assignment_config_path}'."
             ((error_count += 1))
             continue
         fi
 
-        local course_id=$(grep '"id"' "${course_config_path}" | sed 's/^\s*"id"\s*:\s*"\(\w\+\)\s*",\s*$/\1/')
+        local course_id=$(grep '"id"' "${course_config_path}" | sed 's/^\s*"id"\s*:\s*"\([^"]\+\)\s*",\s*$/\1/')
         if [[ -z "${course_id}" ]] ; then
             echo "ERROR: Could not find course ID for '${course_config_path}'."
             ((error_count += 1))

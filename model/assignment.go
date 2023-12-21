@@ -124,46 +124,17 @@ func (this *Assignment) Validate() error {
         return fmt.Errorf("Failed to validate late policy: '%w'.", err);
     }
 
-    if (this.PreStaticDockerCommands == nil) {
-        this.PreStaticDockerCommands = make([]string, 0);
-    }
-
-    if (this.PostStaticDockerCommands == nil) {
-        this.PostStaticDockerCommands = make([]string, 0);
-    }
-
-    if (this.StaticFiles == nil) {
-        this.StaticFiles = make([]*common.FileSpec, 0);
-    }
-
-    for _, staticFile := range this.StaticFiles {
-        if (staticFile.IsAbs()) {
-            return fmt.Errorf("All static file paths must be relative (to the assignment config file), found: '%s'.", staticFile);
-        }
-    }
-
-    if (this.PreStaticFileOperations == nil) {
-        this.PreStaticFileOperations = make([][]string, 0);
-    }
-
-    if (this.PostStaticFileOperations == nil) {
-        this.PostStaticFileOperations = make([][]string, 0);
-    }
-
-    if (this.PostSubmissionFileOperations == nil) {
-        this.PostSubmissionFileOperations = make([][]string, 0);
-    }
-
     if (this.RelSourceDir == "") {
         return fmt.Errorf("Relative source dir must not be empty.")
     }
 
-    if ((this.Image == "") && ((this.Invocation == nil) || (len(this.Invocation) == 0))) {
-        return fmt.Errorf("Assignment image and invocation cannot both be empty.");
-    }
-
     this.ImageInfo.Name = this.ImageName();
     this.ImageInfo.BaseDir = this.GetSourceDir();
+
+    err = this.ImageInfo.Validate();
+    if (err != nil) {
+        return fmt.Errorf("Failed to validate docker information: '%w'.", err);
+    }
 
     return nil;
 }

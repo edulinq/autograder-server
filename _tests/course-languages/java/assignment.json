@@ -1,0 +1,17 @@
+{
+    "id": "java",
+    "display-name": "A Simple Java Assignment",
+    "static-files": [
+        "grader.sh",
+        "Grader.java"
+    ],
+    "image": "autograder.base",
+    "invocation": ["bash", "./grader.sh"],
+    "post-static-docker-commands": [
+        "RUN apt-get update",
+        "RUN apt-get install -y openjdk-11-jdk"
+    ],
+    "post-submission-files-ops": [
+        ["cp", "input/Assignment.java", "work/Assignment.java"]
+    ]
+}

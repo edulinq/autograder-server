@@ -21,7 +21,7 @@ func TestCourseUpdateTaskBase(test *testing.T) {
         },
     };
 
-    err := RunCourseUpdateTask(course, task);
+    _, err := RunCourseUpdateTask(course, task);
     if (err != nil) {
         test.Fatalf("Failed to run course update task: '%v'.", err);
     }

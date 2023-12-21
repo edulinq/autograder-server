@@ -5,7 +5,10 @@ import (
     "fmt"
     "os/exec"
 
+    "github.com/rs/zerolog/log"
+
     "github.com/go-git/go-git/v5"
+    "github.com/go-git/go-git/v5/config"
     "github.com/go-git/go-git/v5/plumbing"
     "github.com/go-git/go-git/v5/plumbing/transport/http"
 )
@@ -59,7 +62,12 @@ func GitGetRepo(path string) (*git.Repository, error) {
 }
 
 func GitClone(url string, path string, user string, pass string) (*git.Repository, error) {
-    options := &git.CloneOptions{URL: url};
+    log.Trace().Str("url", url).Str("path", path).Str("user", user).Msg("Cloning git repo.");
+
+    options := &git.CloneOptions{
+        URL: url,
+        RecurseSubmodules: 3,
+    };
 
     if ((user != "") || (pass != "")) {
         options.Auth = &http.BasicAuth{
@@ -73,23 +81,83 @@ func GitClone(url string, path string, user string, pass string) (*git.Repositor
         return nil, fmt.Errorf("Failed to clone git repo '%s' into '%s': '%w'.", url, path, err);
     }
 
+    err = setupTrackingBranches(repo);
+    if (err != nil) {
+        return nil, fmt.Errorf("Failed to setup tracking branches on repo '%s': '%w'.", url, err);
+    }
+
     return repo, nil;
 }
 
+// Go through all remotes and setup any tracked branches.
+func setupTrackingBranches(repo *git.Repository) error {
+    remotes, err := repo.Remotes();
+    if (err != nil) {
+        return fmt.Errorf("Failed to get remotes: '%w'.", err);
+    }
+
+    for _, remote := range remotes {
+        refs, err := remote.List(&git.ListOptions{});
+        if (err != nil) {
+            return fmt.Errorf("Failed to get objects for remote '%s': '%w'.", remote, err);
+        }
+
+        for _, ref := range refs {
+            // Skip symbolic references.
+            if (ref.Type() != plumbing.HashReference) {
+                continue;
+            }
+
+            // Skip already tracking branches.
+            if (ref.Target() != "") {
+                continue;
+            }
+
+            // Skip branches that already exist.
+            existingBranch, _ := repo.Branch(ref.Name().Short());
+            if (existingBranch != nil) {
+                continue;
+            }
+
+            branch := config.Branch{
+                Name: ref.Name().Short(),
+                Remote: remote.Config().Name,
+                Merge: ref.Name(),
+            }
+
+            err = repo.CreateBranch(&branch);
+            if (err != nil) {
+                return fmt.Errorf("Failed to create local tracking branch of '%s' for remote '%s': '%w'.",
+                        ref.Name(), remote, err);
+            }
+
+            remoteReferenceName := plumbing.NewRemoteReferenceName("origin", ref.Name().Short());
+            newReference := plumbing.NewSymbolicReference(ref.Name() , remoteReferenceName)
+            err = repo.Storer.SetReference(newReference)
+            if (err != nil) {
+                return fmt.Errorf("Failed to create tracking link of '%s' for remote '%s': '%w'.",
+                        ref.Name(), remote, err);
+            }
+        }
+    }
+
+    return nil;
+}
+
 func GitCheckoutRepo(repo *git.Repository, ref string) error {
+    log.Trace().Str("ref", ref).Msg("Checking out git repo.");
+
     tree, err := repo.Worktree();
     if (err != nil) {
         return err;
     }
 
-    resolvedHash, err := repo.ResolveRevision(plumbing.Revision(ref));
+    options, err := getCheckOptions(repo, ref);
     if (err != nil) {
-        return fmt.Errorf("Failed to resolve ref '%s': '%w'.", ref, err);
+        return err;
     }
 
-    options := &git.CheckoutOptions{
-        Hash: *resolvedHash,
-    };
+    options.Force = true;
 
     err = tree.Checkout(options);
     if (err != nil) {
@@ -99,8 +167,43 @@ func GitCheckoutRepo(repo *git.Repository, ref string) error {
     return nil;
 }
 
+// Resolve a refernce into checkout options.
+func getCheckOptions(repo *git.Repository, ref string) (*git.CheckoutOptions, error) {
+    options := &git.CheckoutOptions{}
+
+    branch, err := repo.Branch(ref);
+    if (err == nil) {
+        options.Branch = plumbing.NewBranchReferenceName(branch.Name);
+        return options, nil;
+    }
+
+    if (err != git.ErrBranchNotFound) {
+        return nil, fmt.Errorf("Failed to check if ref is a branch: '%w'.", err);
+    }
+
+    tag, err := repo.Tag(ref);
+    if (err == nil) {
+        options.Hash = tag.Hash();
+        return options, nil;
+    }
+
+    if (err != git.ErrTagNotFound) {
+        return nil, fmt.Errorf("Failed to check if ref is a tag: '%w'.", err);
+    }
+
+    resolvedHash, err := repo.ResolveRevision(plumbing.Revision(ref));
+    if (err != nil) {
+        return nil, fmt.Errorf("Failed to resolve ref '%s': '%w'.", ref, err);
+    }
+
+    options.Hash = *resolvedHash;
+    return options, nil;
+}
+
 // Return true if an update happened.
 func GitUpdateRepo(repo *git.Repository, user string, pass string) (bool, error) {
+    log.Trace().Msg("Pulling git repo.");
+
     tree, err := repo.Worktree();
     if (err != nil) {
         return false, err;

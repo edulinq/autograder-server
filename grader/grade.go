@@ -68,11 +68,15 @@ func Grade(assignment *model.Assignment, submissionPath string, user string, mes
     var stdout string;
     var stderr string;
 
+    startTimestamp := common.NowTimestamp();
+
     if (options.NoDocker) {
         gradingInfo, outputFileContents, stdout, stderr, err = runNoDockerGrader(assignment, submissionPath, options, fullSubmissionID);
     } else {
         gradingInfo, outputFileContents, stdout, stderr, err = runDockerGrader(assignment, submissionPath, options, fullSubmissionID);
     }
+
+    endTimestamp := common.NowTimestamp();
 
     // Copy over stdout and stderr even if an error occured.
     gradingResult.Stdout = stdout;
@@ -89,6 +93,15 @@ func Grade(assignment *model.Assignment, submissionPath string, user string, mes
     gradingInfo.AssignmentID = assignment.GetID();
     gradingInfo.User = user;
     gradingInfo.Message = message;
+
+    if (gradingInfo.GradingStartTime.IsZero()) {
+        gradingInfo.GradingStartTime = startTimestamp;
+    }
+
+    if (gradingInfo.GradingEndTime.IsZero()) {
+        gradingInfo.GradingEndTime = endTimestamp;
+    }
+
     gradingInfo.ComputePoints();
 
     gradingResult.Info = gradingInfo;

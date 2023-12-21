@@ -7,6 +7,8 @@ package common
 import (
     "encoding/json"
     "fmt"
+    "net/url"
+    "path"
     "path/filepath"
     "strings"
 
@@ -20,6 +22,7 @@ const (
     FILESPEC_TYPE_NIL = "nil"
     FILESPEC_TYPE_PATH = "path"
     FILESPEC_TYPE_GIT = "git"
+    FILESPEC_TYPE_URL = "url"
 )
 
 type FileSpec struct {
@@ -33,6 +36,7 @@ type FileSpec struct {
 
 func (this *FileSpec) Validate() error {
     this.Type = FileSpecType(strings.ToLower(strings.TrimSpace(string(this.Type))));
+    var err error;
 
     switch (this.Type) {
         case FILESPEC_TYPE_EMPTY, FILESPEC_TYPE_NIL:
@@ -49,8 +53,21 @@ func (this *FileSpec) Validate() error {
             }
 
             if (this.Dest == "") {
-                urlParts := strings.Split(this.Path, "/")
-                this.Dest = strings.TrimSuffix(urlParts[len(urlParts) - 1], ".git");
+                this.Dest, err = getURLBaseName(this.Path, true);
+                if (err != nil) {
+                    return fmt.Errorf("Failed to parse git URL: '%w'.", err);
+                }
+            }
+        case FILESPEC_TYPE_URL:
+            if (this.Path == "") {
+                return fmt.Errorf("A url FileSpec cannot have an empty path.");
+            }
+
+            if (this.Dest == "") {
+                this.Dest, err = getURLBaseName(this.Path, false);
+                if (err != nil) {
+                    return fmt.Errorf("Failed to parse git URL: '%w'.", err);
+                }
             }
         default:
             return fmt.Errorf("Unknown FileSpec type: '%s'.", this.Type);
@@ -131,8 +148,8 @@ func GetNilFileSpec() *FileSpec {
     return &FileSpec{Type: FILESPEC_TYPE_NIL};
 }
 
-func GetPathFileSpec(path string) *FileSpec {
-    return &FileSpec{Type: FILESPEC_TYPE_PATH, Path: path};
+func GetPathFileSpec(content string) *FileSpec {
+    return &FileSpec{Type: FILESPEC_TYPE_PATH, Path: content};
 }
 
 func (this *FileSpec) IsEmpty() bool {
@@ -157,6 +174,14 @@ func (this *FileSpec) IsGit() bool {
     }
 
     return this.Type == FILESPEC_TYPE_GIT;
+}
+
+func (this *FileSpec) IsURL() bool {
+    if (this == nil) {
+        return false;
+    }
+
+    return this.Type == FILESPEC_TYPE_URL;
 }
 
 func (this *FileSpec) IsNil() bool {
@@ -191,6 +216,8 @@ func (this *FileSpec) CopyTarget(baseDir string, destDir string, onlyContents bo
             return this.copyPath(baseDir, destDir, onlyContents);
         case FILESPEC_TYPE_GIT:
             return this.copyGit(destDir);
+        case FILESPEC_TYPE_URL:
+            return this.downloadURL(destDir);
         default:
             return fmt.Errorf("Unknown filespec type: '%s'.", this.Type);
     }
@@ -236,14 +263,66 @@ func (this *FileSpec) copyGit(destDir string) error {
     destPath := filepath.Join(destDir, this.Dest);
 
     if (util.PathExists(destPath)) {
-        return fmt.Errorf("Destination for git FileSpec ('%s') already exists.", destPath);
+        err := util.RemoveDirent(destPath);
+        if (err != nil) {
+            return fmt.Errorf("Failed to remove existing destination for git FileSpec ('%s'): '%w'.", destPath, err);
+        }
     }
 
-    err := util.MkDir(destDir);
+    err := util.MkDir(filepath.Dir(destPath));
     if (err != nil) {
-        return fmt.Errorf("Failed to make dir for git FileSpec ('%s'): '%w'.", destDir, err);
+        return fmt.Errorf("Failed to make dir for git FileSpec ('%s'): '%w'.", destPath, err);
     }
 
     _, err = util.GitEnsureRepo(this.Path, destPath, true, this.Reference, this.Username, this.Token);
     return err;
+}
+
+func (this *FileSpec) downloadURL(destDir string) error {
+    destPath := filepath.Join(destDir, this.Dest);
+
+    if (util.PathExists(destPath)) {
+        err := util.RemoveDirent(destPath);
+        if (err != nil) {
+            return fmt.Errorf("Failed to remove existing destination for URL FileSpec ('%s'): '%w'.", destPath, err);
+        }
+    }
+
+    err := util.MkDir(filepath.Dir(destDir));
+    if (err != nil) {
+        return fmt.Errorf("Failed to make dir for URL FileSpec ('%s'): '%w'.", destPath, err);
+    }
+
+    content, err := util.RawGet(this.Path);
+    if (err != nil) {
+        return err;
+    }
+
+    err = util.WriteBinaryFile(content, destPath);
+    if (err != nil) {
+        return fmt.Errorf("Failed to write output '%s': '%w'.", destPath, err);
+    }
+
+    return nil;
+}
+
+func getURLBaseName(uri string, removeExt bool) (string, error) {
+    parsedURL, err := url.Parse(uri);
+    if (err != nil) {
+        return "", fmt.Errorf("Failed to parse raw URL '%s': '%w'.", uri, err);
+    }
+
+    baseName := path.Base(parsedURL.Path);
+    if (baseName == "") {
+        return "", fmt.Errorf("Could not find base name for URL: '%s'.", uri);
+    }
+
+    if (removeExt) {
+        baseName = strings.TrimSuffix(baseName, path.Ext(baseName));
+        if (baseName == "") {
+            return "", fmt.Errorf("Could not find base name for URL after removing extension: '%s'.", uri);
+        }
+    }
+
+    return baseName, nil;
 }

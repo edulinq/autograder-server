@@ -14,12 +14,19 @@ func TestImageInfoStruct(test *testing.T) {
         nil,
         &ImageInfo{},
         &ImageInfo{
-            "foo",
-            nil, []string{},
-            []string{"a"}, []*common.FileSpec{},
-            nil, [][]string{},
-            [][]string{[]string{"a"}, []string{"b", "c"}},
-            "foo", "bar",
+            Image: "foo",
+            PreStaticDockerCommands: nil,
+            PostStaticDockerCommands: []string{},
+            Invocation: []string{"a"},
+            StaticFiles: []*common.FileSpec{},
+            PreStaticFileOperations: nil,
+            PostStaticFileOperations: []common.FileOperation{},
+            PostSubmissionFileOperations: []common.FileOperation{
+                common.FileOperation([]string{"a"}),
+                common.FileOperation([]string{"b", "c"}),
+            },
+            Name: "foo",
+            BaseDir: "bar",
         },
     };
 

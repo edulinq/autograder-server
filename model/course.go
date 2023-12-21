@@ -31,6 +31,7 @@ type Course struct {
     SubmissionLimit *SubmissionLimitInfo `json:"submission-limit,omitempty"`
 
     Backup []*tasks.BackupTask `json:"backup,omitempty"`
+    CourseUpdate []*tasks.CourseUpdateTask `json:"course-update,omitempty"`
     Report []*tasks.ReportTask `json:"report,omitempty"`
     ScoringUpload []*tasks.ScoringUploadTask `json:"scoring-upload,omitempty"`
 
@@ -109,7 +110,13 @@ func (this *Course) Validate() error {
     }
 
     // Register tasks.
+    this.scheduledTasks = make([]tasks.ScheduledTask, 0);
+
     for _, task := range this.Backup {
+        this.scheduledTasks = append(this.scheduledTasks, task);
+    }
+
+    for _, task := range this.CourseUpdate {
         this.scheduledTasks = append(this.scheduledTasks, task);
     }
 

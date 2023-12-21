@@ -26,7 +26,7 @@ func TestReportBase(test *testing.T) {
         To: to,
     };
 
-    err := RunReportTask(course, task);
+    _, err := RunReportTask(course, task);
     if (err != nil) {
         test.Fatalf("Failed to run report task: '%v'.", err);
     }

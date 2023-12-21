@@ -50,7 +50,7 @@ func runNoDockerGrader(assignment *model.Assignment, submissionPath string, opti
 
     // Copy over the submission files (and do any file ops).
     err = common.CopyFileSpecs(submissionPath, inputDir, tempDir,
-            []*common.FileSpec{common.GetPathFileSpec(".")}, true, [][]string{}, imageInfo.PostSubmissionFileOperations);
+            []*common.FileSpec{common.GetPathFileSpec(".")}, true, []common.FileOperation{}, imageInfo.PostSubmissionFileOperations);
     if (err != nil) {
         return nil, nil, "", "", fmt.Errorf("Failed to copy submission ssignment files: '%w'.", err);
     }
@@ -110,7 +110,7 @@ func getAssignmentInvocation(assignment *model.Assignment,
     }
 
     // Special case for the python grader (we know how to invoke that).
-    if (imageInfo.Image == "autograder.python") {
+    if ((rawCommand == nil) && (imageInfo.Image == "autograder.python")) {
         rawCommand = strings.Split(PYTHON_AUTOGRADER_INVOCATION, " ");
     }
 
@@ -137,5 +137,8 @@ func getAssignmentInvocation(assignment *model.Assignment,
         cleanCommand = append(cleanCommand, value);
     }
 
-    return exec.Command(cleanCommand[0], cleanCommand[1:]...), nil;
+    cmd := exec.Command(cleanCommand[0], cleanCommand[1:]...);
+    cmd.Dir = workDir;
+
+    return cmd, nil;
 }

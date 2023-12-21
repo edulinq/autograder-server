@@ -1,5 +1,7 @@
 package util
 
+// Unless marked as "raw", all functions here assume that the respone body it textual.
+
 import (
     "bytes"
     "fmt"
@@ -13,6 +15,22 @@ import (
 
     "github.com/rs/zerolog/log"
 )
+
+// Get a binary response.
+func RawGet(uri string) ([]byte, error) {
+    response, err := http.Get(uri);
+    if (err != nil) {
+        return nil, fmt.Errorf("Failed to perform GET on '%s': '%w'.", uri, err);
+    }
+    defer response.Body.Close();
+
+    body, err := io.ReadAll(response.Body);
+    if (err != nil) {
+        return nil, fmt.Errorf("Failed to read body from GET from '%s': '%w'.", uri, err);
+    }
+
+    return body, nil;
+}
 
 // Returns: (body, error)
 func Get(uri string) (string, error) {

@@ -7,15 +7,15 @@ import (
     "github.com/eriq-augustine/autograder/model/tasks"
 )
 
-func RunTestTask(course *model.Course, rawTask tasks.ScheduledTask) error {
+func RunTestTask(course *model.Course, rawTask tasks.ScheduledTask) (bool, error) {
     task, ok := rawTask.(*tasks.TestTask);
     if (!ok) {
-        return fmt.Errorf("Task is not a TestTask: %t (%v).", rawTask, rawTask);
+        return false, fmt.Errorf("Task is not a TestTask: %t (%v).", rawTask, rawTask);
     }
 
     if (task.Disable) {
-        return nil;
+        return true, nil;
     }
 
-    return task.Func(task.Payload);
+    return true, task.Func(task.Payload);
 }

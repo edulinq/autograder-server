@@ -21,7 +21,12 @@ func TestSubmit(test *testing.T) {
     }
 
     for i, testSubmission := range testSubmissions {
-        response := core.SendTestAPIRequestFull(test, core.NewEndpoint(`submission/submit`), nil, testSubmission.Files, model.RoleStudent);
+        fields := map[string]any{
+            "course-id": testSubmission.Assignment.GetCourse().GetID(),
+            "assignment-id": testSubmission.Assignment.GetID(),
+        }
+
+        response := core.SendTestAPIRequestFull(test, core.NewEndpoint(`submission/submit`), fields, testSubmission.Files, model.RoleStudent);
         if (!response.Success) {
             test.Errorf("Case %d: Response is not a success when it should be: '%v'.", i, response);
             continue;

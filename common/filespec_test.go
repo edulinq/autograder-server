@@ -227,6 +227,20 @@ var testCasesParseValidation []*testCaseParseValidation = []*testCaseParseValida
         `{"type":"git","path":"http://github.com/foo/bar.git","dest":"baz","reference":"main","username":"user","token":"pass"}`,
     },
 
+    // URL.
+    &testCaseParseValidation{
+        `{"type": "url", "path": "http://www.test.com/abc.zip"}`,
+        true, true,
+        FileSpec{Type: FILESPEC_TYPE_URL, Path: "http://www.test.com/abc.zip", Dest: "abc.zip"},
+        `{"type":"url","path":"http://www.test.com/abc.zip","dest":"abc.zip"}`,
+    },
+    &testCaseParseValidation{
+        `{"type": "url", "path": "http://www.test.com/abc.zip", "dest": "xyz.txt"}`,
+        true, true,
+        FileSpec{Type: FILESPEC_TYPE_URL, Path: "http://www.test.com/abc.zip", Dest: "xyz.txt"},
+        `{"type":"url","path":"http://www.test.com/abc.zip","dest":"xyz.txt"}`,
+    },
+
     // Validate failures.
 
     &testCaseParseValidation{

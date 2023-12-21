@@ -29,7 +29,7 @@ func GetShortSubmissionID(submissionID string) string {
 // Paths to the three direcotries (temp, in, out, work) will be returned.
 // The created directory will be in the system's temp directory.
 func PrepTempGradingDir(name string) (string, string, string, string, error) {
-    tempDir, err := util.MkDirTemp(fmt.Sprintf("autograding-%s-", name));
+    tempDir, err := util.MkDirTemp(fmt.Sprintf("autograder-%s-", name));
     if (err != nil) {
         return "", "", "", "", fmt.Errorf("Could not create temp dir: '%w'.", err);
     }
