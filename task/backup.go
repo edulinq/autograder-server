@@ -12,17 +12,17 @@ import (
     "github.com/eriq-augustine/autograder/util"
 )
 
-func RunBackupTask(course *model.Course, rawTask tasks.ScheduledTask) error {
+func RunBackupTask(course *model.Course, rawTask tasks.ScheduledTask) (bool, error) {
     task, ok := rawTask.(*tasks.BackupTask);
     if (!ok) {
-        return fmt.Errorf("Task is not a BackupTask: %t (%v).", rawTask, rawTask);
+        return false, fmt.Errorf("Task is not a BackupTask: %t (%v).", rawTask, rawTask);
     }
 
     if (task.Disable) {
-        return nil;
+        return true, nil;
     }
 
-    return RunBackup(course, task.Dest, task.BackupID);
+    return true, RunBackup(course, task.Dest, task.BackupID);
 }
 
 // Perform a backup.

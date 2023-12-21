@@ -1,6 +1,7 @@
 package main
 
 import (
+    "fmt"
     "os"
 
     "github.com/alecthomas/kong"
@@ -9,9 +10,8 @@ import (
     "github.com/eriq-augustine/autograder/api"
     "github.com/eriq-augustine/autograder/config"
     "github.com/eriq-augustine/autograder/db"
-    "github.com/eriq-augustine/autograder/docker"
     "github.com/eriq-augustine/autograder/model"
-    "github.com/eriq-augustine/autograder/task"
+    "github.com/eriq-augustine/autograder/procedures"
     "github.com/eriq-augustine/autograder/util"
 )
 
@@ -43,10 +43,14 @@ func main() {
         log.Fatal().Err(err).Msg("Could not load courses.");
     }
 
-    // Startup courses (int the background).
-    for _, course := range db.MustGetCourses() {
+    courses := db.MustGetCourses();
+    log.Info().Int("count", len(courses)).Msg(fmt.Sprintf("Loaded %d course(s).", len(courses)));
+
+    // Startup courses (in the background).
+    for _, course := range courses {
+        log.Info().Str("course", course.GetID()).Msg("Loaded course.");
         go func(course *model.Course) {
-            initCourse(course);
+            procedures.UpdateCourse(course);
         }(course);
     }
 
@@ -59,30 +63,4 @@ func main() {
     }
 
     log.Info().Msg("Server closed.");
-}
-
-func initCourse(course *model.Course) {
-    // Update the course.
-    newCourse, _, err := db.UpdateCourseFromSource(course);
-    if (err != nil) {
-        // On failure, still try and work with the old course.
-        log.Error().Err(err).Str("course-id", course.GetID()).Msg("Failed to update course.");
-    } else {
-        // On success, use the new course.
-        course = newCourse;
-    }
-
-    // Build images.
-    _, errs := course.BuildAssignmentImages(false, false, docker.NewBuildOptions());
-    for imageName, err := range errs {
-        log.Error().Err(err).Str("course-id", course.GetID()).Str("image", imageName).Msg("Failed to build image.");
-    }
-
-    // Schedule tasks.
-    for _, courseTask := range course.GetTasks() {
-        err = task.Schedule(course, courseTask);
-        if (err != nil) {
-            log.Error().Err(err).Str("course-id", course.GetID()).Str("task", courseTask.String()).Msg("Failed to schedule task.");
-        }
-    }
 }

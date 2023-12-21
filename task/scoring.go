@@ -8,15 +8,15 @@ import (
     "github.com/eriq-augustine/autograder/scoring"
 )
 
-func RunScoringUploadTask(course *model.Course, rawTask tasks.ScheduledTask) error {
+func RunScoringUploadTask(course *model.Course, rawTask tasks.ScheduledTask) (bool, error) {
     task, ok := rawTask.(*tasks.ScoringUploadTask);
     if (!ok) {
-        return fmt.Errorf("Task is not a ScoringUploadTask: %t (%v).", rawTask, rawTask);
+        return false, fmt.Errorf("Task is not a ScoringUploadTask: %t (%v).", rawTask, rawTask);
     }
 
     if (task.Disable) {
-        return nil;
+        return true, nil;
     }
 
-    return scoring.FullCourseScoringAndUpload(course, task.DryRun);
+    return true, scoring.FullCourseScoringAndUpload(course, task.DryRun);
 }

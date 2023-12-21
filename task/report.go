@@ -11,17 +11,17 @@ import (
     "github.com/eriq-augustine/autograder/report"
 )
 
-func RunReportTask(course *model.Course, rawTask tasks.ScheduledTask) error {
+func RunReportTask(course *model.Course, rawTask tasks.ScheduledTask) (bool, error) {
     task, ok := rawTask.(*tasks.ReportTask);
     if (!ok) {
-        return fmt.Errorf("Task is not a ReportTask: %t (%v).", rawTask, rawTask);
+        return false, fmt.Errorf("Task is not a ReportTask: %t (%v).", rawTask, rawTask);
     }
 
     if (task.Disable) {
-        return nil;
+        return true, nil;
     }
 
-    return RunReport(course, task.To);
+    return true, RunReport(course, task.To);
 }
 
 func RunReport(course *model.Course, to []string) error {

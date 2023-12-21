@@ -4,6 +4,7 @@ import (
     "github.com/eriq-augustine/autograder/api/core"
     "github.com/eriq-augustine/autograder/common"
     "github.com/eriq-augustine/autograder/db"
+    "github.com/eriq-augustine/autograder/procedures"
 )
 
 type UpdateCourseRequest struct {
@@ -43,7 +44,7 @@ func HandleUpdateCourse(request *UpdateCourseRequest) (*UpdateCourseResponse, *c
         }
     }
 
-    _, updated, err := db.UpdateCourseFromSource(request.Course);
+    updated, err := procedures.UpdateCourse(request.Course);
     if (err != nil) {
         return nil, core.NewInternalError("-704", &request.APIRequestCourseUserContext,
                 "Failed to update course.").Err(err);

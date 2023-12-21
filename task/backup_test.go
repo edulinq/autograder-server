@@ -56,7 +56,7 @@ func doBackup(test *testing.T, dest string, expectedPath string) {
         BackupID: "test",
     };
 
-    err := RunBackupTask(course, task);
+    _, err := RunBackupTask(course, task);
     if (err != nil) {
         test.Fatalf("Failed to run backup task: '%v'.", err);
     }

@@ -21,7 +21,7 @@ func TestScoringUploadBase(test *testing.T) {
         DryRun: true,
     };
 
-    err := RunScoringUploadTask(course, task);
+    _, err := RunScoringUploadTask(course, task);
     if (err != nil) {
         test.Fatalf("Failed to run scoring upload task: '%v'.", err);
     }

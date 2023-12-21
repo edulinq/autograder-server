@@ -20,6 +20,7 @@ var timersLock sync.Mutex;
 
 type timerInfo struct {
     ID string
+    TaskID string
     CourseID string
     Timer *time.Timer
     Lock *sync.Mutex
@@ -37,7 +38,8 @@ var timers map[string]map[string]*timerInfo = make(map[string]map[string]*timerI
 // The key (timerID) is the same as timerInfo.ID.
 var stoppedTasks map[string]bool = make(map[string]bool);
 
-type RunFunc func(*model.Course, tasks.ScheduledTask) error;
+// The boolean return indicates if a task should be scheduled again.
+type RunFunc func(*model.Course, tasks.ScheduledTask) (bool, error);
 
 func Schedule(course *model.Course, target tasks.ScheduledTask) error {
     if (target.IsDisabled() || config.NO_TASKS.Get()) {
@@ -149,7 +151,11 @@ func scheduleTask(courseID string, target tasks.ScheduledTask, timerID string, r
         taskLock.Lock();
         taskLock.Unlock();
 
-        runTask(courseID, target, timerID, runFunc);
+        reschedule := runTask(courseID, target, timerID, runFunc);
+
+        if (!reschedule) {
+            return;
+        }
 
         // Do not reschedule catchup tasks.
         if (when == nil) {
@@ -170,6 +176,7 @@ func scheduleTask(courseID string, target tasks.ScheduledTask, timerID string, r
 
     timers[courseID][timerID] = &timerInfo{
         ID: timerID,
+        TaskID: target.GetID(),
         CourseID: courseID,
         Timer: timer,
         Lock: taskLock,
@@ -180,22 +187,31 @@ func scheduleTask(courseID string, target tasks.ScheduledTask, timerID string, r
         log.Debug().Str("task", target.GetID()).Msg("Catchup task scheduled.");
     } else {
         nextRunTime := time.Now().Add(nextRunDuration);
-        log.Debug().Str("task", target.GetID()).Str("when", when.String()).Any("next-time", nextRunTime).Msg("Task scheduled.");
+        log.Debug().Str("task", target.GetID()).Str("timer-id", timerID).Str("when", when.String()).Any("next-time", nextRunTime).Msg("Task scheduled.");
     }
 
     return nil;
 }
 
-func stopCourseWithoutLocks(courseID string) {
+func stopCoursesInternal(courseID string, acquireTimersLock bool, acquireTimerSpecificLock bool) {
+    if (acquireTimersLock) {
+        timersLock.Lock();
+        defer timersLock.Unlock();
+    }
+
     for _, timerInfo := range timers[courseID] {
         // Acquiring the lock ensure that we are not interrupting an active task.
         // If we get the lock before a scheduled task, then that task will never run.
-        timerInfo.Lock.Lock();
-        defer timerInfo.Lock.Unlock();
+        if (acquireTimerSpecificLock) {
+            timerInfo.Lock.Lock();
+            defer timerInfo.Lock.Unlock();
+        }
 
         timerInfo.Stopped = true;
         stoppedTasks[timerInfo.ID] = true;
         timerInfo.Timer.Stop();
+
+        log.Debug().Str("task", timerInfo.TaskID).Str("timer-id", timerInfo.ID).Msg("Task stopped.");
     }
 
     delete(timers, courseID);
@@ -205,10 +221,7 @@ func stopCourseWithoutLocks(courseID string) {
 // This will block until all tasks have been stopped.
 // Will wait for any already running tasks to finish.
 func StopCourse(courseID string) {
-    timersLock.Lock();
-    defer timersLock.Unlock();
-
-    stopCourseWithoutLocks(courseID);
+    stopCoursesInternal(courseID, true, true);
 }
 
 // Stop all the tasks.
@@ -220,11 +233,12 @@ func StopAll() {
 
     keys := maps.Keys(timers);
     for _, key := range keys {
-        stopCourseWithoutLocks(key);
+        stopCoursesInternal(key, false, true);
     }
 }
 
-func runTask(courseID string, target tasks.ScheduledTask, timerID string, runFunc RunFunc) {
+// The boolean indicates if the task should be scheduled again.
+func runTask(courseID string, target tasks.ScheduledTask, timerID string, runFunc RunFunc) bool {
     target.GetLock().Lock();
     defer target.GetLock().Unlock();
 
@@ -233,11 +247,11 @@ func runTask(courseID string, target tasks.ScheduledTask, timerID string, runFun
 
     info := getTimerInfo(courseID, timerID);
     if (info == nil) {
-        return;
+        return true;
     }
 
     if (info.Stopped) {
-        return;
+        return true;
     }
 
     info.Lock.Lock();
@@ -254,26 +268,26 @@ func runTask(courseID string, target tasks.ScheduledTask, timerID string, runFun
     if (lastRunDuration < (time.Duration(config.TASK_MIN_REST_SECS.Get()) * time.Second)) {
         log.Debug().Str("course-id", courseID).Str("task", taskID).Any("last-run", lastRunTime).
                 Msg("Skipping task run, last run was too recent.");
-        return;
+        return true;
     }
 
-    log.Debug().Str("task", taskID).Msg("Task started.");
+    log.Debug().Str("task", taskID).Str("timer", timerID).Msg("Task started.");
 
     course, err := db.GetCourse(courseID);
     if (err != nil) {
         log.Error().Err(err).Str("course-id", courseID).Str("task", taskID).Msg("Failed to get course for task.");
-        return;
+        return true;
     }
 
     if (course == nil) {
         log.Error().Str("course-id", courseID).Str("task", taskID).Msg("Could not find course for task.");
-        return;
+        return true;
     }
 
-    err = runFunc(course, target);
+    reschedule, err := runFunc(course, target);
     if (err != nil) {
         log.Error().Err(err).Str("course-id", courseID).Str("task", taskID).Msg("Task run failed.");
-        return;
+        return true;
     }
 
     log.Debug().Str("course-id", courseID).Str("task", taskID).Msg("Task finished.");
@@ -281,8 +295,10 @@ func runTask(courseID string, target tasks.ScheduledTask, timerID string, runFun
     err = db.LogTaskCompletion(courseID, taskID, now);
     if (err != nil) {
         log.Error().Err(err).Str("course-id", courseID).Str("task", taskID).Msg("Failed to log task completion.");
-        return;
+        return reschedule;
     }
+
+    return reschedule;
 }
 
 // Should a task run?

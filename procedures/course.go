@@ -1,40 +1,22 @@
-package task
+// Common high-level procedures that can be called on by the server or the api.
+package procedures
 
 import (
     "errors"
-    "fmt"
 
     "github.com/rs/zerolog/log"
 
     "github.com/eriq-augustine/autograder/db"
     "github.com/eriq-augustine/autograder/docker"
     "github.com/eriq-augustine/autograder/model"
-    "github.com/eriq-augustine/autograder/model/tasks"
+    "github.com/eriq-augustine/autograder/task"
 )
 
-func RunCourseUpdateTask(course *model.Course, rawTask tasks.ScheduledTask) (bool, error) {
-    task, ok := rawTask.(*tasks.CourseUpdateTask);
-    if (!ok) {
-        return false, fmt.Errorf("Task is not a CourseUpdateTask: %t (%v).", rawTask, rawTask);
-    }
-
-    if (task.Disable) {
-        return true, nil;
-    }
-
-    _, err := updateCourse(course);
-
-    // Do not reschedule, all course tasks were already scheduled.
-    return false, err;
-}
-
-// See procetures.UpdateCourse().
-func updateCourse(course *model.Course) (bool, error) {
+func UpdateCourse(course *model.Course) (bool, error) {
     var errs error;
 
     // Stop any existing tasks.
-    // Note that we are one of the tasks being told to stop.
-    stopCoursesInternal(course.GetID(), true, false);
+    task.StopCourse(course.GetID());
 
     // Update the course.
     newCourse, updated, err := db.UpdateCourseFromSource(course);
@@ -56,7 +38,7 @@ func updateCourse(course *model.Course) (bool, error) {
 
     // Schedule tasks.
     for _, courseTask := range course.GetTasks() {
-        err = Schedule(course, courseTask);
+        err = task.Schedule(course, courseTask);
         if (err != nil) {
             log.Error().Err(err).Str("course-id", course.GetID()).Str("task", courseTask.String()).Msg("Failed to schedule task.");
             errs = errors.Join(errs, err);
