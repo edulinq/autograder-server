@@ -110,6 +110,8 @@ func (this *Course) Validate() error {
     }
 
     // Register tasks.
+    this.scheduledTasks = make([]tasks.ScheduledTask, 0);
+
     for _, task := range this.Backup {
         this.scheduledTasks = append(this.scheduledTasks, task);
     }
