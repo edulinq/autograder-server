@@ -4,5 +4,5 @@
     "static-files": [
         "grader.py"
     ],
-    "image": "autograder.python"
+    "image": "eriqaugustine/autograder.python"
 }

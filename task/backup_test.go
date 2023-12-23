@@ -11,7 +11,7 @@ import (
     "github.com/eriq-augustine/autograder/util"
 )
 
-const EXPECTED_MD5 = "fe81323768a15b03cdad218d35aff976";
+const EXPECTED_MD5 = "1b441fc47a0efe46b3437973c10097c1";
 
 func TestBackupTempDir(test *testing.T) {
     tempDir, err := util.MkDirTemp("autograder-test-task-backup-");
