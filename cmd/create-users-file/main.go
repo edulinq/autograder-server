@@ -16,15 +16,15 @@ var args struct {
     config.ConfigArgs
     Path string `help:"Path to the new users JSON file." arg:"" type:"path"`
 
-    Email string `help:"Email for the user." arg:"" required:""`
-    Name string `help:"Name for the user." short:"n"`
-    Role string `help:"Role for the user. Defaults to student." short:"r" default:"student"`
-    Pass string `help:"Password for the user. Defaults to a random string (will be output)." short:"p"`
+    Email string `help:"Email for the new user." arg:"" required:""`
+    Name string `help:"Name for the new user." short:"n"`
+    Role string `help:"Role for the new user. Defaults to student." short:"r" default:"student"`
+    Pass string `help:"Password for the new user. Defaults to a random string (will be output)." short:"p"`
 }
 
 func main() {
     kong.Parse(&args,
-        kong.Description("Create a users file, which can be used to see users in a course." +
+        kong.Description("Create a users file, which can be used to seed users in a course." +
             " A full user must be specified, which will be added to the file." +
             " If an existing users file is specified, then the user will be added to the file."),
     );
