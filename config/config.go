@@ -1,8 +1,5 @@
 package config;
 
-// For the defaulted getters, the defualt will be returned on ANY error
-// (even if the key exists, but is of the wrong type).
-
 import (
     "encoding/json"
     "fmt"
@@ -31,12 +28,6 @@ var configValues map[string]any = make(map[string]any);
 
 func ToJSON() (string, error) {
     return util.ToJSONIndent(configValues);
-}
-
-func init() {
-    LoadLoacalConfig();
-    LoadEnv();
-    InitLogging();
 }
 
 // A mode intended for running unit tests.
@@ -82,8 +73,8 @@ func EnableTestingMode() {
     InitLogging();
 }
 
-func LoadLoacalConfig() error {
-    path := filepath.Join(GetConfigDir(), CONFIG_FILENAME);
+func LoadConfigFromDir(dir string) error {
+    path := filepath.Join(dir, CONFIG_FILENAME);
     if (util.PathExists(path)) {
         err := LoadFile(path);
         if (err != nil) {
@@ -91,7 +82,7 @@ func LoadLoacalConfig() error {
         }
     }
 
-    path = filepath.Join(GetConfigDir(), SECRETS_FILENAME);
+    path = filepath.Join(dir, SECRETS_FILENAME);
     if (util.PathExists(path)) {
         err := LoadFile(path);
         if (err != nil) {
@@ -112,7 +103,7 @@ func LoadFile(path string) error {
 
     err = LoadReader(file);
     if (err != nil) {
-        return fmt.Errorf("Unable to decode config file (%s): %w.", path, err);
+        return fmt.Errorf("Unable to get config from file (%s): %w.", path, err);
     }
 
     return nil;
@@ -122,7 +113,7 @@ func LoadFile(path string) error {
 func LoadString(text string) error {
     err := LoadReader(strings.NewReader(text));
     if (err != nil) {
-        return fmt.Errorf("Unable to decode config from string: %w.", err);
+        return fmt.Errorf("Unable to get config from string: %w.", err);
     }
 
     return nil;
@@ -143,6 +134,10 @@ func LoadReader(reader io.Reader) error {
     }
 
     for key, value := range fileOptions {
+        if (key == BASE_DIR.Key) {
+            return fmt.Errorf("Cannot set key '%s' in config files, use the command-line.", key);
+        }
+
         // encoding/json uses float64 as its default numeric type.
         // Check if it is actually an integer.
         floatValue, ok := value.(float64);
