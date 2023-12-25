@@ -31,10 +31,10 @@ type ConfigArgs struct {
 }
 
 func HandleConfigArgs(args ConfigArgs) error {
-    return HandleConfigArgsFull(args, "");
+    return HandleConfigArgsFull(args, "", false);
 }
 
-func HandleConfigArgsFull(args ConfigArgs, cwd string) error {
+func HandleConfigArgsFull(args ConfigArgs, cwd string, skipEnv bool) error {
     defer InitLogging();
 
     if (cwd == "") {
@@ -48,7 +48,9 @@ func HandleConfigArgsFull(args ConfigArgs, cwd string) error {
     }
 
     // Step 1: Load options from environmental variables.
-    LoadEnv();
+    if (!skipEnv) {
+        LoadEnv();
+    }
 
     // Step 2: Load options from WORK_DIR.
     dir := GetConfigDir();

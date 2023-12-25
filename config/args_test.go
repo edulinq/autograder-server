@@ -122,7 +122,7 @@ func TestConfigArgs(test *testing.T) {
         Reset();
         BASE_DIR.Set(testCase.baseDir);
 
-        err := HandleConfigArgsFull(testCase.args, testCase.cwd);
+        err := HandleConfigArgsFull(testCase.args, testCase.cwd, true);
 
         if ((err == nil) && (testCase.hasError)) {
             test.Errorf("Case %d: Found no error when there should be one.", i);
