@@ -25,7 +25,7 @@ func reset() {
     lmstest.ClearUsersModifier();
 }
 
-func TestCourseSyncLMSUisers(test *testing.T) {
+func TestCourseSyncLMSUsers(test *testing.T) {
     // Leave the db in a good state after the test.
     defer reset();
 
