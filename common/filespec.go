@@ -293,7 +293,7 @@ func (this *FileSpec) downloadURL(destDir string) error {
         return fmt.Errorf("Failed to make dir for URL FileSpec ('%s'): '%w'.", destPath, err);
     }
 
-    content, err := util.RawGet(this.Path);
+    content, err := RawGet(this.Path);
     if (err != nil) {
         return err;
     }

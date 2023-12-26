@@ -4,6 +4,7 @@ import (
     "fmt"
     "time"
 
+    "github.com/eriq-augustine/autograder/common"
     "github.com/eriq-augustine/autograder/lms/lmstypes"
     "github.com/eriq-augustine/autograder/util"
 )
@@ -22,7 +23,7 @@ func (this *CanvasBackend) FetchAssignmentScores(assignmentID string) ([]*lmstyp
     scores := make([]*lmstypes.SubmissionScore, 0);
 
     for (url != "") {
-        body, responseHeaders, err := util.GetWithHeaders(url, headers);
+        body, responseHeaders, err := common.GetWithHeaders(url, headers);
 
         if (err != nil) {
             return nil, fmt.Errorf("Failed to fetch scores.");
@@ -95,7 +96,7 @@ func (this *CanvasBackend) updateAssignmentScores(assignmentID string, scores []
         }
     }
 
-    _, _, err := util.PostWithHeaders(url, form, headers);
+    _, _, err := common.PostWithHeaders(url, form, headers);
     if (err != nil) {
         return fmt.Errorf("Failed to upload scores: '%w'.", err);
     }

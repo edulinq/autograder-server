@@ -6,6 +6,7 @@ import (
 
     "github.com/rs/zerolog/log"
 
+    "github.com/eriq-augustine/autograder/common"
     "github.com/eriq-augustine/autograder/lms/lmstypes"
     "github.com/eriq-augustine/autograder/util"
 )
@@ -24,7 +25,7 @@ func (this *CanvasBackend) FetchUsers() ([]*lmstypes.User, error) {
     users := make([]*lmstypes.User, 0);
 
     for (url != "") {
-        body, responseHeaders, err := util.GetWithHeaders(url, headers);
+        body, responseHeaders, err := common.GetWithHeaders(url, headers);
 
         if (err != nil) {
             return nil, fmt.Errorf("Failed to fetch users: '%w'.", err);
@@ -60,7 +61,7 @@ func (this *CanvasBackend) FetchUser(email string) (*lmstypes.User, error) {
     url := this.BaseURL + apiEndpoint;
 
     headers := this.standardHeaders();
-    body, _, err := util.GetWithHeaders(url, headers);
+    body, _, err := common.GetWithHeaders(url, headers);
 
     if (err != nil) {
         return nil, fmt.Errorf("Failed to fetch user '%s': '%w'.", email, err);

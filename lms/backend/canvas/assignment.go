@@ -3,6 +3,7 @@ package canvas
 import (
     "fmt"
 
+    "github.com/eriq-augustine/autograder/common"
     "github.com/eriq-augustine/autograder/lms/lmstypes"
     "github.com/eriq-augustine/autograder/util"
 )
@@ -17,7 +18,7 @@ func (this *CanvasBackend) FetchAssignment(assignmentID string) (*lmstypes.Assig
     url := this.BaseURL + apiEndpoint;
 
     headers := this.standardHeaders();
-    body, _, err := util.GetWithHeaders(url, headers);
+    body, _, err := common.GetWithHeaders(url, headers);
 
     if (err != nil) {
         return nil, fmt.Errorf("Failed to fetch assignment: '%w'.", err);

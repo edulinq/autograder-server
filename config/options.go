@@ -13,9 +13,10 @@ var (
 
     // Debug / Testing
     DEBUG = MustNewBoolOption("debug", false, "Enable general debugging.");
-    NO_STORE = MustNewBoolOption("grader.nostore", false, "Do not store grading outout (submissions).");
+    NO_STORE = MustNewBoolOption("grader.nostore", false, "Do not store grading output (submissions).");
     TESTING_MODE = MustNewBoolOption("testing", false, "Assume tests are being run, which may alter some operations.");
-    NO_AUTH = MustNewBoolOption("api.noauth", false, "Disbale authentication on the API.");
+    NO_AUTH = MustNewBoolOption("api.noauth", false, "Disable authentication on the API.");
+    STORE_HTTP = MustNewStringOption("http.store", "", "Store HTTP requests made by the server to the specified directory.");
 
     // Logging
     LOG_LEVEL = MustNewStringOption("log.level", "INFO", "The default logging level.");
@@ -34,7 +35,7 @@ var (
     // Tasks
     NO_TASKS = MustNewBoolOption("tasks.disable", false, "Disable all scheduled tasks.");
     TASK_MIN_REST_SECS = MustNewIntOption("tasks.minrest", 5 * 60,
-            "The minimum time (in seconds) betwen invocations of the same task." +
+            "The minimum time (in seconds) between invocations of the same task." +
             " A task instance that tries to run too quickly will be skipped.");
     TASK_BACKUP_DIR = MustNewStringOption("tasks.backup.dir", "", "Path to where backups are made. Defaults to inside BASE_DIR.");
 
