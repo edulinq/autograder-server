@@ -20,7 +20,7 @@ func (this *ScoringUploadTask) Validate(course TaskCourse) error {
         return err;
     }
 
-    if (course.HasLMSAdapter()) {
+    if (!course.HasLMSAdapter()) {
         return fmt.Errorf("Score and Upload task course must have an LMS adapter.");
     }
 
