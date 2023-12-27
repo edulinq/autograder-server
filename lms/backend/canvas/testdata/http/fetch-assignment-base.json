@@ -1,0 +1,22 @@
+{
+    "URL": "https://canvas.test.com/api/v1/courses/12345/assignments/98765",
+    "Method": "GET",
+    "RequestHeaders": {
+        "Accept": [
+            "application/json+canvas-string-ids"
+        ],
+        "Authorization": [
+            "Bearer ABC123"
+        ]
+    },
+    "ResponseCode": 200,
+    "ResponseHeaders": {
+        "Content-Type": [
+            "application/json; charset=utf-8"
+        ],
+        "Status": [
+            "200 OK"
+        ]
+    },
+    "ResponseBody": "{\"id\":\"98765\",\"description\":\"desc\",\"due_at\":\"2023-10-06T06:59:59Z\",\"unlock_at\":null,\"lock_at\":null,\"points_possible\":100.0,\"grading_type\":\"points\",\"assignment_group_id\":\"124050\",\"grading_standard_id\":null,\"created_at\":\"2023-09-16T05:04:23Z\",\"updated_at\":\"2023-10-11T17:56:12Z\",\"peer_reviews\":false,\"automatic_peer_reviews\":false,\"position\":2,\"grade_group_students_individually\":false,\"anonymous_peer_reviews\":false,\"group_category_id\":null,\"post_to_sis\":false,\"moderated_grading\":false,\"omit_from_final_grade\":false,\"intra_group_peer_reviews\":false,\"anonymous_instructor_annotations\":false,\"anonymous_grading\":false,\"graders_anonymous_to_graders\":false,\"grader_count\":0,\"grader_comments_visible_to_graders\":true,\"final_grader_id\":null,\"grader_names_visible_to_final_grader\":true,\"allowed_attempts\":-1,\"annotatable_attachment_id\":null,\"hide_in_gradebook\":false,\"secure_params\":\"ZZZ\",\"lti_context_id\":\"YYY\",\"course_id\":\"12345\",\"name\":\"Assignment 0\",\"submission_types\":[\"none\"],\"has_submitted_submissions\":false,\"due_date_required\":false,\"max_name_length\":255,\"in_closed_grading_period\":false,\"graded_submissions_exist\":true,\"is_quiz_assignment\":false,\"can_duplicate\":true,\"original_course_id\":null,\"original_assignment_id\":null,\"original_lti_resource_link_id\":null,\"original_assignment_name\":null,\"original_quiz_id\":null,\"workflow_state\":\"published\",\"important_dates\":false,\"muted\":false,\"html_url\":\"https://canvas.test.com/courses/12345/assignments/98765\",\"has_overrides\":false,\"needs_grading_count\":0,\"sis_assignment_id\":null,\"integration_id\":null,\"integration_data\":{},\"published\":true,\"unpublishable\":true,\"only_visible_to_overrides\":false,\"locked_for_user\":false,\"submissions_download_url\":\"https://canvas.test.com/courses/12345/assignments/98765/submissions?zip=1\",\"post_manually\":true,\"anonymize_students\":false,\"require_lockdown_browser\":false,\"restrict_quantitative_data\":false}"
+}
