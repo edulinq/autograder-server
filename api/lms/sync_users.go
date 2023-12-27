@@ -2,7 +2,7 @@ package lms
 
 import (
     "github.com/eriq-augustine/autograder/api/core"
-    "github.com/eriq-augustine/autograder/lms/lmsusers"
+    "github.com/eriq-augustine/autograder/procedures"
 )
 
 type SyncUsersRequest struct {
@@ -23,7 +23,7 @@ func HandleSyncUsers(request *SyncUsersRequest) (*SyncUsersResponse, *core.APIEr
                 Add("course", request.Course.GetID());
     }
 
-    result, err := lmsusers.SyncLMSUsers(request.Course, request.DryRun, !request.SkipEmails);
+    result, err := procedures.SyncAllLMSUsers(request.Course, request.DryRun, !request.SkipEmails);
     if (err != nil) {
         return nil, core.NewInternalError("-504", &request.APIRequestCourseUserContext,
                 "Failed to sync LMS users.").Err(err);

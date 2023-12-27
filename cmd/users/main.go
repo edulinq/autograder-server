@@ -12,8 +12,8 @@ import (
 
     "github.com/eriq-augustine/autograder/config"
     "github.com/eriq-augustine/autograder/db"
-    "github.com/eriq-augustine/autograder/lms/lmsusers"
     "github.com/eriq-augustine/autograder/model"
+    "github.com/eriq-augustine/autograder/procedures"
     "github.com/eriq-augustine/autograder/util"
 )
 
@@ -55,7 +55,7 @@ func (this *AddUser) Run(course *model.Course) error {
     result.PrintReport();
 
     if (this.SyncLMS) {
-        result, err = lmsusers.SyncLMSUser(course, this.Email, this.DryRun, this.SendEmail);
+        result, err = procedures.SyncLMSUserEmail(course, this.Email, this.DryRun, this.SendEmail);
         if (err != nil) {
             return err;
         }
@@ -93,7 +93,12 @@ func (this *AddTSV) Run(course *model.Course) error {
     }
 
     if (this.SyncLMS) {
-        result, err = lmsusers.SyncLMSUsers(course, this.DryRun, this.SendEmail);
+        emails := make([]string, 0, len(newUsers));
+        for _, newUser := range newUsers {
+            emails = append(emails, newUser.Email);
+        }
+
+        result, err = procedures.SyncLMSUserEmails(course, emails, this.DryRun, this.SendEmail);
         if (err != nil) {
             return err;
         }

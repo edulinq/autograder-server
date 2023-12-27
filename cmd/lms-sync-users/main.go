@@ -6,7 +6,7 @@ import (
 
     "github.com/eriq-augustine/autograder/config"
     "github.com/eriq-augustine/autograder/db"
-    "github.com/eriq-augustine/autograder/lms/lmsusers"
+    "github.com/eriq-augustine/autograder/procedures"
 )
 
 var args struct {
@@ -31,7 +31,7 @@ func main() {
 
     course := db.MustGetCourse(args.Course);
 
-    result, err := lmsusers.SyncLMSUsers(course, args.DryRun, !args.SkipEmails);
+    result, err := procedures.SyncAllLMSUsers(course, args.DryRun, !args.SkipEmails);
     if (err != nil) {
         log.Fatal().Err(err).Msg("Failed to sync LMS users.");
     }

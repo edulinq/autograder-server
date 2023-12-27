@@ -1,4 +1,4 @@
-package lmsusers
+package procedures
 
 import (
     "slices"
@@ -44,7 +44,7 @@ func TestCourseSyncLMSUsers(test *testing.T) {
 
         email.ClearTestMessages();
 
-        result, err := SyncLMSUsers(course, testCase.dryRun, testCase.sendEmails);
+        result, err := SyncAllLMSUsers(course, testCase.dryRun, testCase.sendEmails);
         if (err != nil) {
             test.Errorf("Case %d (%+v): User sync failed: '%v'.", i, testCase, err);
             continue;

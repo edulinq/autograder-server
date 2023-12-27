@@ -1,4 +1,4 @@
-package lmsusers
+package procedures
 
 import (
     "errors"
@@ -12,7 +12,7 @@ import (
 )
 
 // Sync users with the provided LMS.
-func SyncLMSUsers(course *model.Course, dryRun bool, sendEmails bool) (*model.UserSyncResult, error) {
+func SyncAllLMSUsers(course *model.Course, dryRun bool, sendEmails bool) (*model.UserSyncResult, error) {
     lmsUsersSlice, err := lms.FetchUsers(course);
     if (err != nil) {
         return nil, fmt.Errorf("Failed to fetch LMS users: '%w'.", err);
@@ -26,17 +26,23 @@ func SyncLMSUsers(course *model.Course, dryRun bool, sendEmails bool) (*model.Us
     return syncLMSUsers(course, dryRun, sendEmails, lmsUsers, nil);
 }
 
-func SyncLMSUser(course *model.Course, email string, dryRun bool, sendEmails bool) (*model.UserSyncResult, error) {
-    lmsUser, err := lms.FetchUser(course, email);
-    if (err != nil) {
-        return nil, err;
+func SyncLMSUserEmail(course *model.Course, email string, dryRun bool, sendEmails bool) (*model.UserSyncResult, error) {
+    return SyncLMSUserEmails(course, []string{email}, dryRun, sendEmails);
+}
+
+func SyncLMSUserEmails(course *model.Course, emails []string, dryRun bool, sendEmails bool) (*model.UserSyncResult, error) {
+    lmsUsers := make(map[string]*lmstypes.User);
+
+    for _, email := range emails {
+        lmsUser, err := lms.FetchUser(course, email);
+        if (err != nil) {
+            return nil, err;
+        }
+
+        lmsUsers[lmsUser.Email] = lmsUser;
     }
 
-    lmsUsers := map[string]*lmstypes.User{
-        lmsUser.Email: lmsUser,
-    };
-
-    return syncLMSUsers(course, dryRun, sendEmails, lmsUsers, []string{email});
+    return syncLMSUsers(course, dryRun, sendEmails, lmsUsers, emails);
 }
 
 // Sync users.

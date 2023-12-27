@@ -44,7 +44,7 @@ func TestUserAdd(test *testing.T) {
                     Unchanged: []*core.UserInfo{},
                 },
                 Errors: []AddError{},
-                LMSSyncCount: 6,
+                LMSSyncCount: 2,
             },
         },
 
@@ -70,7 +70,7 @@ func TestUserAdd(test *testing.T) {
                     AddError{1, "owner@test.com", "Cannot create a user with a higher role (owner) than your role (admin)."},
                     AddError{2, "owner@test.com", "Cannot modify a user with a higher role (owner) than your role (admin)."},
                 },
-                LMSSyncCount: 5,
+                LMSSyncCount: 0,
             },
         },
 
@@ -121,7 +121,7 @@ func TestUserAdd(test *testing.T) {
                     Unchanged: []*core.UserInfo{},
                 },
                 Errors: []AddError{},
-                LMSSyncCount: 5,
+                LMSSyncCount: 0,
             },
         },
     };
