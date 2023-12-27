@@ -16,7 +16,6 @@ import (
     "github.com/eriq-augustine/autograder/util"
 )
 
-// TEST: Anonymoize
 const (
     TEST_COURSE_ID = "12345"
     TEST_TOKEN = "ABC123"
@@ -88,7 +87,7 @@ func (this *testCanvasHandler) ServeHTTP(response http.ResponseWriter, request *
         return;
     }
 
-    for key, value := range savedRequest.RequestHeaders {
+    for key, value := range savedRequest.ResponseHeaders {
         response.Header()[key] = value;
     }
 

@@ -2,7 +2,7 @@ package canvas
 
 import (
     "fmt"
-    "net/url"
+    neturl "net/url"
 
     "github.com/rs/zerolog/log"
 
@@ -12,6 +12,10 @@ import (
 )
 
 func (this *CanvasBackend) FetchUsers() ([]*lmstypes.User, error) {
+    return this.fetchUsers(false);
+}
+
+func (this *CanvasBackend) fetchUsers(rewriteLinks bool) ([]*lmstypes.User, error) {
     this.getAPILock();
     defer this.releaseAPILock();
 
@@ -25,6 +29,15 @@ func (this *CanvasBackend) FetchUsers() ([]*lmstypes.User, error) {
     users := make([]*lmstypes.User, 0);
 
     for (url != "") {
+        if (rewriteLinks) {
+            parsed, err := neturl.Parse(url);
+            if (err != nil) {
+                return nil, fmt.Errorf("Failed to parse URL '%s': '%w'.", url, err);
+            }
+
+            url = fmt.Sprintf("%s%s?%s", this.BaseURL, parsed.Path, parsed.RawQuery);
+        }
+
         body, responseHeaders, err := common.GetWithHeaders(url, headers);
 
         if (err != nil) {
@@ -57,7 +70,7 @@ func (this *CanvasBackend) FetchUser(email string) (*lmstypes.User, error) {
 
     apiEndpoint := fmt.Sprintf(
         "/api/v1/courses/%s/search_users?include[]=enrollments&search_term=%s",
-        this.CourseID, url.QueryEscape(email));
+        this.CourseID, neturl.QueryEscape(email));
     url := this.BaseURL + apiEndpoint;
 
     headers := this.standardHeaders();
