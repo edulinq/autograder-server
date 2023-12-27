@@ -57,3 +57,7 @@ func (this *TestLMSBackend) UpdateComment(assignmentID string, comment *lmstypes
 func (this *TestLMSBackend) FetchAssignmentScores(assignmentID string) ([]*lmstypes.SubmissionScore, error) {
     return nil, nil;
 }
+
+func (this *TestLMSBackend) FetchAssignmentScore(assignmentID string, userID string) (*lmstypes.SubmissionScore, error) {
+    return nil, nil;
+}

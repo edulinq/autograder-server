@@ -29,13 +29,13 @@ func (this *CanvasBackend) fetchUsers(rewriteLinks bool) ([]*lmstypes.User, erro
     users := make([]*lmstypes.User, 0);
 
     for (url != "") {
-        if (rewriteLinks) {
-            parsed, err := neturl.Parse(url);
-            if (err != nil) {
-                return nil, fmt.Errorf("Failed to parse URL '%s': '%w'.", url, err);
-            }
+        var err error;
 
-            url = fmt.Sprintf("%s%s?%s", this.BaseURL, parsed.Path, parsed.RawQuery);
+        if (rewriteLinks) {
+            url, err = this.rewriteLink(url);
+            if (err != nil) {
+                return nil, err;
+            }
         }
 
         body, responseHeaders, err := common.GetWithHeaders(url, headers);
@@ -75,7 +75,6 @@ func (this *CanvasBackend) FetchUser(email string) (*lmstypes.User, error) {
 
     headers := this.standardHeaders();
     body, _, err := common.GetWithHeaders(url, headers);
-
     if (err != nil) {
         return nil, fmt.Errorf("Failed to fetch user '%s': '%w'.", email, err);
     }

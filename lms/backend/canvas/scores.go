@@ -9,7 +9,35 @@ import (
     "github.com/eriq-augustine/autograder/util"
 )
 
+func (this *CanvasBackend) FetchAssignmentScore(assignmentID string, userID string) (*lmstypes.SubmissionScore, error) {
+    this.getAPILock();
+    defer this.releaseAPILock();
+
+    apiEndpoint := fmt.Sprintf(
+        "/api/v1/courses/%s/assignments/%s/submissions/%s?include[]=submission_comments",
+        this.CourseID, assignmentID, userID);
+    url := this.BaseURL + apiEndpoint;
+
+    headers := this.standardHeaders();
+    body, _, err := common.GetWithHeaders(url, headers);
+    if (err != nil) {
+        return nil, fmt.Errorf("Failed to fetch score.");
+    }
+
+    var rawScore SubmissionScore;
+    err = util.JSONFromString(body, &rawScore);
+    if (err != nil) {
+        return nil, fmt.Errorf("Failed to unmarshal raw scores: '%w'.", err);
+    }
+
+    return rawScore.ToLMSType(), nil;
+}
+
 func (this *CanvasBackend) FetchAssignmentScores(assignmentID string) ([]*lmstypes.SubmissionScore, error) {
+    return this.fetchAssignmentScores(assignmentID, false);
+}
+
+func (this *CanvasBackend) fetchAssignmentScores(assignmentID string, rewriteLinks bool) ([]*lmstypes.SubmissionScore, error) {
     this.getAPILock();
     defer this.releaseAPILock();
 
@@ -23,6 +51,15 @@ func (this *CanvasBackend) FetchAssignmentScores(assignmentID string) ([]*lmstyp
     scores := make([]*lmstypes.SubmissionScore, 0);
 
     for (url != "") {
+        var err error;
+
+        if (rewriteLinks) {
+            url, err = this.rewriteLink(url);
+            if (err != nil) {
+                return nil, err;
+            }
+        }
+
         body, responseHeaders, err := common.GetWithHeaders(url, headers);
 
         if (err != nil) {

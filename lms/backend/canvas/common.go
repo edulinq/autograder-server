@@ -2,6 +2,7 @@ package canvas
 
 import (
     "fmt"
+    neturl "net/url"
     "strings"
     "sync"
     "time"
@@ -65,4 +66,15 @@ func fetchNextCanvasLink(headers map[string][]string) string {
     }
 
     return "";
+}
+
+// Rewrite a URL that appears in a LINK header for testing.
+func (this *CanvasBackend) rewriteLink(url string) (string, error) {
+    parsed, err := neturl.Parse(url);
+    if (err != nil) {
+        return "", fmt.Errorf("Failed to parse URL '%s': '%w'.", url, err);
+    }
+
+    url = fmt.Sprintf("%s%s?%s", this.BaseURL, parsed.Path, parsed.RawQuery);
+    return url, nil;
 }
