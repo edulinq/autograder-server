@@ -39,7 +39,6 @@ func (this *CanvasBackend) fetchUsers(rewriteLinks bool) ([]*lmstypes.User, erro
         }
 
         body, responseHeaders, err := common.GetWithHeaders(url, headers);
-
         if (err != nil) {
             return nil, fmt.Errorf("Failed to fetch users: '%w'.", err);
         }

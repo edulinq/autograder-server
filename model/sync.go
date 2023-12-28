@@ -4,6 +4,10 @@ import (
     "fmt"
 )
 
+type LMSSyncResult struct {
+    UserSync *UserSyncResult `json:"user-sync"`
+}
+
 type UserSyncResult struct {
     Add []*User
     Mod []*User

@@ -25,8 +25,7 @@ var args struct {
 
 func main() {
     kong.Parse(&args,
-        kong.Description("Upload grades for an assignment to the coure's LMS from a TSV file." +
-            " Either --assignment-path or (--course-path and --assignment-id) are required."),
+        kong.Description("Upload grades for an assignment to the coure's LMS from a TSV file."),
     );
 
     err := config.HandleConfigArgs(args.ConfigArgs);

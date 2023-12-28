@@ -42,6 +42,10 @@ func ClearUsersModifier() {
     usersModifier = nil;
 }
 
+func (this *TestLMSBackend) FetchAssignments() ([]*lmstypes.Assignment, error) {
+    return nil, nil;
+}
+
 func (this *TestLMSBackend) FetchAssignment(assignmentID string) (*lmstypes.Assignment, error) {
     return nil, nil;
 }

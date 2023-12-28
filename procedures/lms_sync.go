@@ -138,7 +138,7 @@ func resolveUserSync(course *model.Course, localUsers map[string]*model.User,
 
     // Add.
     if (localUser == nil) {
-        if (!adapter.SyncAddUsers) {
+        if (!adapter.SyncUserAdds) {
             return nil, nil;
         }
 
@@ -167,7 +167,7 @@ func resolveUserSync(course *model.Course, localUsers map[string]*model.User,
 
     // Del.
     if (lmsUser == nil) {
-        if (!adapter.SyncRemoveUsers) {
+        if (!adapter.SyncUserRemoves) {
             return &model.UserResolveResult{Unchanged: localUser}, nil;
         }
 

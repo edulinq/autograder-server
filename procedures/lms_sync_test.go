@@ -37,8 +37,8 @@ func TestCourseSyncLMSUsers(test *testing.T) {
         course := db.MustGetTestCourse();
 
         course.GetLMSAdapter().SyncUserAttributes = testCase.syncAttributes;
-        course.GetLMSAdapter().SyncAddUsers = testCase.syncAdd;
-        course.GetLMSAdapter().SyncRemoveUsers = testCase.syncDel;
+        course.GetLMSAdapter().SyncUserAdds = testCase.syncAdd;
+        course.GetLMSAdapter().SyncUserRemoves = testCase.syncDel;
 
         localUsers := db.MustGetUsers(course);
 

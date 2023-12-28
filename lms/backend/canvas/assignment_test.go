@@ -2,23 +2,20 @@ package canvas
 
 import (
     "testing"
-    "time"
 
     "github.com/eriq-augustine/autograder/lms/lmstypes"
     "github.com/eriq-augustine/autograder/util"
 )
 
-const TEST_ASSIGNMENT_ID = "98765";
+var expectedAssignment lmstypes.Assignment = lmstypes.Assignment{
+    ID: TEST_ASSIGNMENT_ID,
+    Name: "Assignment 0",
+    LMSCourseID: "12345",
+    DueDate: mustParseTime("2023-10-06T06:59:59Z"),
+    MaxPoints: 100.0,
+};
 
 func TestFetchAssignmentBase(test *testing.T) {
-    expected := lmstypes.Assignment{
-        ID: TEST_ASSIGNMENT_ID,
-        Name: "Assignment 0",
-        LMSCourseID: "12345",
-        DueDate: mustParseTime(test, "2023-10-06T06:59:59Z"),
-        MaxPoints: 100.0,
-    };
-
     assignment, err := testBackend.FetchAssignment(TEST_ASSIGNMENT_ID);
     if (err != nil) {
         test.Fatalf("Failed tp fetch assignment: '%v'.", err);
@@ -26,7 +23,7 @@ func TestFetchAssignmentBase(test *testing.T) {
 
     // Can't compare directly because of time.Time.
     // Use JSON instead.
-    expectedJSON := util.MustToJSONIndent(expected);
+    expectedJSON := util.MustToJSONIndent(expectedAssignment);
     actualJSON := util.MustToJSONIndent(assignment);
 
     if (expectedJSON != actualJSON) {
@@ -35,11 +32,19 @@ func TestFetchAssignmentBase(test *testing.T) {
     }
 }
 
-func mustParseTime(test *testing.T, text string) *time.Time {
-    instance, err := time.Parse(time.RFC3339, text);
+func TestFetchAssignmentsBase(test *testing.T) {
+    assignments, err := testBackend.FetchAssignments();
     if (err != nil) {
-        test.Fatalf("Failed to parse time '%s': '%v'.", text, err);
+        test.Fatalf("Failed tp fetch assignments: '%v'.", err);
     }
 
-    return &instance;
+    // Can't compare directly because of time.Time.
+    // Use JSON instead.
+    expectedJSON := util.MustToJSONIndent([]*lmstypes.Assignment{&expectedAssignment});
+    actualJSON := util.MustToJSONIndent(assignments);
+
+    if (expectedJSON != actualJSON) {
+        test.Fatalf("Assignment not as expected. Expected: '%s', Actual: '%s'.",
+                expectedJSON, actualJSON);
+    }
 }

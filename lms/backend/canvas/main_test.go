@@ -10,6 +10,7 @@ import (
     "os"
     "strings"
     "testing"
+    "time"
 
     "github.com/eriq-augustine/autograder/common"
     "github.com/eriq-augustine/autograder/db"
@@ -18,6 +19,7 @@ import (
 
 const (
     TEST_COURSE_ID = "12345"
+    TEST_ASSIGNMENT_ID = "98765"
     TEST_TOKEN = "ABC123"
 )
 
@@ -150,4 +152,13 @@ func stopTestServer() {
         server = nil;
         serverURL = "";
     }
+}
+
+func mustParseTime(text string) *time.Time {
+    instance, err := time.Parse(time.RFC3339, text);
+    if (err != nil) {
+        panic(fmt.Sprintf("Failed to parse time '%s': '%v'.", text, err));
+    }
+
+    return &instance;
 }

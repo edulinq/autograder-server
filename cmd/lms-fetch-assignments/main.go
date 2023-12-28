@@ -15,12 +15,11 @@ import (
 var args struct {
     config.ConfigArgs
     Course string `help:"ID of the course." arg:""`
-    Assignment string `help:"ID of the assignment." arg:""`
 }
 
 func main() {
     kong.Parse(&args,
-        kong.Description("Fetch information about a specific assignment from an LMS."),
+        kong.Description("Fetch information about all assignments from an LMS."),
     );
 
     err := config.HandleConfigArgs(args.ConfigArgs);
@@ -31,17 +30,12 @@ func main() {
     db.MustOpen();
     defer db.MustClose();
 
-    assignment := db.MustGetAssignment(args.Course, args.Assignment);
-    course := assignment.GetCourse();
+    course := db.MustGetCourse(args.Course);
 
-    if (assignment.GetLMSID() == "") {
-        log.Fatal().Str("assignment", assignment.FullID()).Msg("Assignment has no LMS ID.");
-    }
-
-    lmsAssignment, err := lms.FetchAssignment(course, assignment.GetLMSID());
+    lmsAssignments, err := lms.FetchAssignments(course);
     if (err != nil) {
-        log.Fatal().Err(err).Msg("Could not fetch assignment.");
+        log.Fatal().Err(err).Msg("Failed to fetch assignments.");
     }
 
-    fmt.Println(util.MustToJSONIndent(lmsAssignment));
+    fmt.Println(util.MustToJSONIndent(lmsAssignments));
 }
