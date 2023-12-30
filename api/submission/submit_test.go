@@ -45,7 +45,7 @@ func TestSubmit(test *testing.T) {
             continue;
         }
 
-        if (responseContent.RejectReason != "") {
+        if (responseContent.Message != "") {
             test.Errorf("Case %d: Response has a reject reason when it should not: '%v'.", i, responseContent);
             continue;
         }
@@ -100,13 +100,13 @@ func TestRejectSubmissionMaxAttempts(test *testing.T) {
         test.Fatalf("Response is not rejected when it should be: '%v'.", responseContent);
     }
 
-    if (responseContent.RejectReason == "") {
+    if (responseContent.Message == "") {
         test.Fatalf("Response does not have a reject reason when it should: '%v'.", responseContent);
     }
 
     expected := (&grader.RejectMaxAttempts{0}).String();
-    if (expected != responseContent.RejectReason) {
+    if (expected != responseContent.Message) {
         test.Fatalf("Did not get the expected rejection reason. Expected: '%s', Actual: '%s'.",
-            expected, responseContent.RejectReason);
+            expected, responseContent.Message);
     }
 }
