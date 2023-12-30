@@ -45,9 +45,9 @@ func TestUserRemove(test *testing.T) {
         if (!response.Success) {
             expectedLocator := "";
             if (testCase.basicPermError) {
-                expectedLocator = "-306";
+                expectedLocator = "-020";
             } else if (testCase.advPermError) {
-                expectedLocator = "-601";
+                expectedLocator = "-801";
             }
 
             if (expectedLocator == "") {

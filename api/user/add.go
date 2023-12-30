@@ -71,7 +71,7 @@ func HandleAdd(request *AddRequest) (*AddResponse, *core.APIError) {
 
     result, err := db.SyncUsers(request.Course, newUsers, request.Force, request.DryRun, !request.SkipEmails);
     if (err != nil) {
-        return nil, core.NewInternalError("-603", &request.APIRequestCourseUserContext,
+        return nil, core.NewInternalError("-803", &request.APIRequestCourseUserContext,
                 "Failed to sync new users.").Err(err);
     }
 
@@ -87,7 +87,7 @@ func HandleAdd(request *AddRequest) (*AddResponse, *core.APIError) {
 
         users, err := db.GetUsers(request.Course);
         if (err != nil) {
-            return nil, core.NewInternalError("-604", &request.APIRequestCourseUserContext,
+            return nil, core.NewInternalError("-804", &request.APIRequestCourseUserContext,
                     "Failed to fetch users").Err(err);
         }
 

@@ -27,7 +27,7 @@ func TestAPIPanic(test *testing.T) {
     routes = append(routes, NewAPIRoute(endpoint, handler));
 
     response := SendTestAPIRequest(test, endpoint, nil);
-    if (response.Locator != "-101") {
+    if (response.Locator != "-001") {
         test.Fatalf("Response does not have panic locator of '-501', actual locator: '%s'.", response.Locator);
     }
 }
@@ -37,20 +37,20 @@ func TestAPIPanic(test *testing.T) {
 func TestMalformedHandlers(test *testing.T) {
     // Define all the handlers.
     testCases := []struct{handler any; locator string}{
-        {"", "-106"},
-        {nil, "-106"},
-        {0, "-106"},
-        {func() (*any, *APIError) { return nil, nil }, "-107"},
-        {func(request *BaseTestRequest, testarg int) (*any, *APIError) { return nil, nil }, "-107"},
-        {func(request BaseTestRequest) (*any, *APIError) { return nil, nil }, "-108"},
-        {func(request int) (*any, *APIError) { return nil, nil }, "-108"},
-        {func(request *BaseTestRequest) (*any) { return nil }, "-109"},
-        {func(request *BaseTestRequest) (int, *any, *APIError) { return 0, nil, nil }, "-109"},
-        {func(request *BaseTestRequest) (any, *APIError) { return nil, nil }, "-110"},
-        {func(request *BaseTestRequest) (int, *APIError) { return 0, nil }, "-110"},
-        {func(request *BaseTestRequest) (*any, APIError) { return nil, APIError{} }, "-111"},
-        {func(request *BaseTestRequest) (*any, any) { return nil, nil }, "-111"},
-        {func(request *BaseTestRequest) (*any, int) { return nil, 0}, "-111"},
+        {"", "-006"},
+        {nil, "-006"},
+        {0, "-006"},
+        {func() (*any, *APIError) { return nil, nil }, "-007"},
+        {func(request *BaseTestRequest, testarg int) (*any, *APIError) { return nil, nil }, "-007"},
+        {func(request BaseTestRequest) (*any, *APIError) { return nil, nil }, "-008"},
+        {func(request int) (*any, *APIError) { return nil, nil }, "-008"},
+        {func(request *BaseTestRequest) (*any) { return nil }, "-009"},
+        {func(request *BaseTestRequest) (int, *any, *APIError) { return 0, nil, nil }, "-009"},
+        {func(request *BaseTestRequest) (any, *APIError) { return nil, nil }, "-010"},
+        {func(request *BaseTestRequest) (int, *APIError) { return 0, nil }, "-010"},
+        {func(request *BaseTestRequest) (*any, APIError) { return nil, APIError{} }, "-011"},
+        {func(request *BaseTestRequest) (*any, any) { return nil, nil }, "-011"},
+        {func(request *BaseTestRequest) (*any, int) { return nil, 0}, "-011"},
     };
 
     for i, testCase := range testCases {
@@ -69,11 +69,11 @@ func TestMalformedHandlers(test *testing.T) {
 func TestBadRequestEmptyContent(test *testing.T) {
     // Define all the content that will go in the post form.
     testCases := []struct{form map[string]string; locator string}{
-        {map[string]string{}, "-104"},
-        {map[string]string{API_REQUEST_CONTENT_KEY: ``}, "-104"},
-        {map[string]string{API_REQUEST_CONTENT_KEY: `Z`}, "-105"},
-        {map[string]string{API_REQUEST_CONTENT_KEY: `1`}, "-105"},
-        {map[string]string{API_REQUEST_CONTENT_KEY: `[]`}, "-105"},
+        {map[string]string{}, "-004"},
+        {map[string]string{API_REQUEST_CONTENT_KEY: ``}, "-004"},
+        {map[string]string{API_REQUEST_CONTENT_KEY: `Z`}, "-005"},
+        {map[string]string{API_REQUEST_CONTENT_KEY: `1`}, "-005"},
+        {map[string]string{API_REQUEST_CONTENT_KEY: `[]`}, "-005"},
     };
 
     endpoint := `/test/api/bad-request/empty-content`;
@@ -121,7 +121,7 @@ func TestNonMarshalableResponse(test *testing.T) {
     routes = append(routes, NewAPIRoute(endpoint, handler));
 
     response := SendTestAPIRequest(test, endpoint, nil);
-    if (response.Locator != "-102") {
+    if (response.Locator != "-002") {
         test.Fatalf("Response does not locator of '-531', actual locator: '%s'.", response.Locator);
     }
 }

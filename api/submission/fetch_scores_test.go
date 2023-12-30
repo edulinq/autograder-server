@@ -45,7 +45,7 @@ func TestFetchScores(test *testing.T) {
         response := core.SendTestAPIRequestFull(test, core.NewEndpoint(`submission/fetch/scores`), fields, nil, testCase.role);
         if (!response.Success) {
             if (testCase.permError) {
-                expectedLocator := "-306";
+                expectedLocator := "-020";
                 if (response.Locator != expectedLocator) {
                     test.Errorf("Case %d: Incorrect error returned on permissions error. Expcted '%s', found '%s'.",
                             i, expectedLocator, response.Locator);

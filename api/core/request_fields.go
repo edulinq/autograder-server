@@ -131,7 +131,7 @@ func checkRequestTargetUser(endpoint string, apiRequest any, fieldIndex int) *AP
     jsonName := util.JSONFieldName(fieldType);
 
     if (field.Email == "") {
-        return NewBadRequestError("-320", &courseContext.APIRequest,
+        return NewBadRequestError("-034", &courseContext.APIRequest,
                 fmt.Sprintf("Field '%s' requires a non-empty string, empty or null provided.", jsonName)).
                 Add("struct-name", structName).Add("field-name", fieldType.Name).Add("json-name", jsonName);
     }
@@ -173,7 +173,7 @@ func checkRequestTargetUserSelfOrRole(endpoint string, apiRequest any, fieldInde
 
     // Operations not on self require higher permissions.
     if ((field.Email != courseContext.User.Email) && (courseContext.User.Role < minRole)) {
-        return NewBadPermissionsError("-319", courseContext, minRole, "Non-Self Target User");
+        return NewBadPermissionsError("-033", courseContext, minRole, "Non-Self Target User");
     }
 
     user := users[field.Email];
@@ -198,19 +198,19 @@ func checkRequestPostFiles(request *http.Request, endpoint string, apiRequest an
     fieldType := reflectValue.Type().Field(fieldIndex);
 
     if (!fieldType.IsExported()) {
-        return NewBareInternalError("-314", endpoint, "A POSTFiles field must be exported.").
+        return NewBareInternalError("-028", endpoint, "A POSTFiles field must be exported.").
                 Add("struct-name", structName).Add("field-name", fieldType.Name);
     }
 
     postFiles, err := storeRequestFiles(request);
 
     if (err != nil) {
-        return NewBareInternalError("-315", endpoint, "Failed to store files from POST.").Err(err).
+        return NewBareInternalError("-029", endpoint, "Failed to store files from POST.").Err(err).
                 Add("struct-name", structName).Add("field-name", fieldType.Name);
     }
 
     if (postFiles == nil) {
-        return NewBareBadRequestError("-316", endpoint, "Endpoint requires files to be provided in POST body, no files found.").
+        return NewBareBadRequestError("-030", endpoint, "Endpoint requires files to be provided in POST body, no files found.").
                 Add("struct-name", structName).Add("field-name", fieldType.Name);
     }
 
@@ -230,7 +230,7 @@ func checkRequestNonEmptyString(endpoint string, apiRequest any, fieldIndex int)
 
     value := fieldValue.Interface().(NonEmptyString);
     if (value == "") {
-        return NewBareBadRequestError("-318", endpoint,
+        return NewBareBadRequestError("-032", endpoint,
                 fmt.Sprintf("Field '%s' requires a non-empty string, empty or null provided.", jsonName)).
                 Add("struct-name", structName).Add("field-name", fieldType.Name).Add("json-name", jsonName);
     }
@@ -327,7 +327,7 @@ func baseCheckRequestUsersField(endpoint string, apiRequest any, fieldIndex int)
     courseContextValue := reflectValue.FieldByName("APIRequestCourseUserContext");
     if (!courseContextValue.IsValid() || courseContextValue.IsZero()) {
         return nil, nil,
-            NewBareInternalError("-311", endpoint, "A request with type requiring users must embed APIRequestCourseUserContext").
+            NewBareInternalError("-025", endpoint, "A request with type requiring users must embed APIRequestCourseUserContext").
                 Add("request", apiRequest).
                 Add("struct-name", structName).Add("field-name", fieldType.Name).Add("field-type", fieldName);
     }
@@ -335,14 +335,14 @@ func baseCheckRequestUsersField(endpoint string, apiRequest any, fieldIndex int)
 
     if (!fieldType.IsExported()) {
         return nil, nil,
-            NewInternalError("-312", &courseContext, "Field must be exported.").
+            NewInternalError("-026", &courseContext, "Field must be exported.").
                 Add("struct-name", structName).Add("field-name", fieldType.Name).Add("field-type", fieldName);
     }
 
     users, err := db.GetUsers(courseContext.Course);
     if (err != nil) {
         return nil, nil,
-            NewInternalError("-313", &courseContext, "Failed to fetch embeded users.").Err(err).
+            NewInternalError("-027", &courseContext, "Failed to fetch embeded users.").Err(err).
                 Add("struct-name", structName).Add("field-name", fieldType.Name).Add("field-type", fieldName);
     }
 
