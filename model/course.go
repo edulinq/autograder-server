@@ -139,6 +139,31 @@ func (this *Course) Validate() error {
     return nil;
 }
 
+func (this *Course) AddAssignment(assignment *Assignment) error {
+    for _, otherAssignment := range this.Assignments {
+        if (assignment.GetID() == otherAssignment.GetID()) {
+            return fmt.Errorf(
+                    "Found multiple assignments with the same ID ('%s'): ['%s', '%s'].",
+                    assignment.GetID(), otherAssignment.GetSourceDir(), assignment.GetSourceDir());
+        }
+
+        if ((assignment.GetName() != "") && (assignment.GetName() == otherAssignment.GetName())) {
+            return fmt.Errorf(
+                    "Found multiple assignments with the same name ('%s'): ['%s', '%s'].",
+                    assignment.GetName(), otherAssignment.GetID(), assignment.GetID());
+        }
+
+        if ((assignment.GetLMSID() != "") && (assignment.GetLMSID() == otherAssignment.GetLMSID())) {
+            return fmt.Errorf(
+                    "Found multiple assignments with the same LMS ID ('%s'): ['%s', '%s'].",
+                    assignment.GetLMSID(), otherAssignment.GetID(), assignment.GetID());
+        }
+    }
+
+    this.Assignments[assignment.GetID()] = assignment;
+    return nil;
+}
+
 // Returns: (successful image names, map[imagename]error).
 func (this *Course) BuildAssignmentImages(force bool, quick bool, options *docker.BuildOptions) ([]string, map[string]error) {
     goodImageNames := make([]string, 0, len(this.Assignments));

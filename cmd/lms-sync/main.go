@@ -1,12 +1,15 @@
 package main
 
 import (
+    "fmt"
+
     "github.com/alecthomas/kong"
     "github.com/rs/zerolog/log"
 
     "github.com/eriq-augustine/autograder/config"
     "github.com/eriq-augustine/autograder/db"
     "github.com/eriq-augustine/autograder/procedures"
+    "github.com/eriq-augustine/autograder/util"
 )
 
 var args struct {
@@ -18,7 +21,7 @@ var args struct {
 
 func main() {
     kong.Parse(&args,
-        kong.Description("Sync local users with matching LMS users."),
+        kong.Description("Sync course information from a course's LMS."),
     );
 
     err := config.HandleConfigArgs(args.ConfigArgs);
@@ -31,10 +34,10 @@ func main() {
 
     course := db.MustGetCourse(args.Course);
 
-    result, err := procedures.SyncAllLMSUsers(course, args.DryRun, !args.SkipEmails);
+    result, err := procedures.SyncLMS(course, args.DryRun, !args.SkipEmails);
     if (err != nil) {
-        log.Fatal().Err(err).Msg("Failed to sync LMS users.");
+        log.Fatal().Err(err).Msg("Failed to sync LMS.");
     }
 
-    result.PrintReport();
+    fmt.Println(util.MustToJSONIndent(result));
 }

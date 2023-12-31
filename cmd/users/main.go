@@ -52,7 +52,7 @@ func (this *AddUser) Run(course *model.Course) error {
     }
 
     fmt.Println("Add Report:");
-    result.PrintReport();
+    fmt.Println(util.MustToJSONIndent(result));
 
     if (this.SyncLMS) {
         result, err = procedures.SyncLMSUserEmail(course, this.Email, this.DryRun, this.SendEmail);
@@ -61,7 +61,7 @@ func (this *AddUser) Run(course *model.Course) error {
         }
 
         fmt.Println("\nLMS sync report:");
-        result.PrintReport();
+        fmt.Println(util.MustToJSONIndent(result));
     }
 
     return nil;
@@ -89,7 +89,7 @@ func (this *AddTSV) Run(course *model.Course) error {
 
     if (this.DryRun) {
         fmt.Println("Doing a dry run, users file will not be written to.");
-        result.PrintReport();
+        fmt.Println(util.MustToJSONIndent(result));
     }
 
     if (this.SyncLMS) {
@@ -105,7 +105,7 @@ func (this *AddTSV) Run(course *model.Course) error {
 
         if (this.DryRun) {
             fmt.Println("LMS sync report:");
-            result.PrintReport();
+            fmt.Println(util.MustToJSONIndent(result));
         }
     }
 

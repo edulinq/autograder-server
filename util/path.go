@@ -90,6 +90,24 @@ func IsEmptyDir(path string) bool {
     return false;
 }
 
+func IsSymLink(path string) bool {
+    if (!PathExists(path)) {
+        return false;
+    }
+
+    stat, err := os.Stat(path);
+    if (err != nil) {
+        if os.IsNotExist(err) {
+            return false;
+        }
+
+        log.Warn().Err(err).Str("path", path).Msg("Unexpected error when checking if a path is a symbolic link.");
+        return false;
+    }
+
+    return (stat.Mode() & fs.ModeSymlink) != 0;
+}
+
 func FindFiles(filename string, dir string) ([]string, error) {
     return FindDirents(filename, dir, true, false, true);
 }

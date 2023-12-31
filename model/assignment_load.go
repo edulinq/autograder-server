@@ -36,13 +36,10 @@ func ReadAssignmentConfig(course *Course, path string) (*Assignment, error) {
         return nil, fmt.Errorf("Failed to validate assignment config (%s): '%w'.", path, err);
     }
 
-    otherAssignment := course.GetAssignment(assignment.GetID());
-    if (otherAssignment != nil) {
-        return nil, fmt.Errorf(
-                "Found multiple assignments with the same ID ('%s'): ['%s', '%s'].",
-                assignment.GetID(), otherAssignment.GetSourceDir(), assignment.GetSourceDir());
+    err = course.AddAssignment(&assignment);
+    if (err != nil) {
+        return nil, fmt.Errorf("Failed to add assignment to course (%s): '%w'.", path, err);
     }
-    course.Assignments[assignment.GetID()] = &assignment;
 
     return &assignment, nil;
 }
