@@ -10,12 +10,14 @@ import (
 )
 
 type lmsBackend interface {
+    FetchAssignments() ([]*lmstypes.Assignment, error)
     FetchAssignment(assignmentID string) (*lmstypes.Assignment, error)
 
     UpdateComments(assignmentID string, comments []*lmstypes.SubmissionComment) error
     UpdateComment(assignmentID string, comment *lmstypes.SubmissionComment) error
 
     FetchAssignmentScores(assignmentID string) ([]*lmstypes.SubmissionScore, error)
+    FetchAssignmentScore(assignmentID string, userID string) (*lmstypes.SubmissionScore, error)
     UpdateAssignmentScores(assignmentID string, scores []*lmstypes.SubmissionScore) error
 
     FetchUsers() ([]*lmstypes.User, error)
@@ -57,6 +59,15 @@ func FetchAssignment(course *model.Course, assignmentID string) (*lmstypes.Assig
     return backend.FetchAssignment(assignmentID);
 }
 
+func FetchAssignments(course *model.Course) ([]*lmstypes.Assignment, error) {
+    backend, err := getBackend(course);
+    if (err != nil) {
+        return nil, err;
+    }
+
+    return backend.FetchAssignments();
+}
+
 func UpdateComments(course *model.Course, assignmentID string, comments []*lmstypes.SubmissionComment) error {
     backend, err := getBackend(course);
     if (err != nil) {
@@ -82,6 +93,15 @@ func FetchAssignmentScores(course *model.Course, assignmentID string) ([]*lmstyp
     }
 
     return backend.FetchAssignmentScores(assignmentID);
+}
+
+func FetchAssignmentScore(course *model.Course, assignmentID string, userID string) (*lmstypes.SubmissionScore, error) {
+    backend, err := getBackend(course);
+    if (err != nil) {
+        return nil, err;
+    }
+
+    return backend.FetchAssignmentScore(assignmentID, userID);
 }
 
 func UpdateAssignmentScores(course *model.Course, assignmentID string, scores []*lmstypes.SubmissionScore) error {

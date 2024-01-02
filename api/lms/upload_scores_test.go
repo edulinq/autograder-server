@@ -128,9 +128,9 @@ func TestUploadScores(test *testing.T) {
         if (!response.Success) {
             expectedLocator := "";
             if (testCase.permError) {
-                expectedLocator = "-306";
+                expectedLocator = "-020";
             } else if (testCase.failUpdate) {
-                expectedLocator = "-506";
+                expectedLocator = "-406";
             }
 
             if (expectedLocator == "") {

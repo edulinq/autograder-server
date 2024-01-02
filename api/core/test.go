@@ -5,6 +5,7 @@ import (
     "os"
     "testing"
 
+    "github.com/eriq-augustine/autograder/common"
     "github.com/eriq-augustine/autograder/config"
     "github.com/eriq-augustine/autograder/db"
     "github.com/eriq-augustine/autograder/model"
@@ -83,9 +84,9 @@ func SendTestAPIRequestFull(test *testing.T, endpoint string, fields map[string]
     var err error;
 
     if (len(paths) == 0) {
-        responseText, err = util.PostNoCheck(url, form);
+        responseText, err = common.PostNoCheck(url, form);
     } else {
-        responseText, err = util.PostFiles(url, form, paths, false);
+        responseText, err = common.PostFiles(url, form, paths, false);
     }
 
     if (err != nil) {

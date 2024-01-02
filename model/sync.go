@@ -1,8 +1,30 @@
 package model
 
-import (
-    "fmt"
-)
+type LMSSyncResult struct {
+    UserSync *UserSyncResult `json:"user-sync"`
+    AssignmentSync *AssignmentSyncResult `json:"assignment-sync"`
+}
+
+type AssignmentSyncResult struct {
+    SyncedAssignments []AssignmentInfo `json:"synced-assignments"`
+    AmbiguousMatches []AssignmentInfo `json:"ambiguous-matches"`
+    NonMatchedAssignments []AssignmentInfo `json:"non-matched-assignments"`
+    UnchangedAssignments []AssignmentInfo `json:"unchanged-assignments"`
+}
+
+type AssignmentInfo struct {
+    ID string `json:"id"`
+    Name string `json:"name"`
+}
+
+func NewAssignmentSyncResult() *AssignmentSyncResult {
+    return &AssignmentSyncResult{
+        SyncedAssignments: make([]AssignmentInfo, 0),
+        AmbiguousMatches: make([]AssignmentInfo, 0),
+        NonMatchedAssignments: make([]AssignmentInfo, 0),
+        UnchangedAssignments: make([]AssignmentInfo, 0),
+    };
+}
 
 type UserSyncResult struct {
     Add []*User
@@ -41,33 +63,6 @@ func NewUserSyncResult() *UserSyncResult {
 
 func (this *UserSyncResult) Count() int {
     return len(this.Add) + len(this.Mod) + len(this.Del);
-}
-
-func (this *UserSyncResult) PrintReport() {
-    groups := []struct{operation string; users []*User}{
-        {"Added", this.Add},
-        {"Modified", this.Mod},
-        {"Deleted", this.Del},
-        {"Skipped", this.Skip},
-        {"Unchanged", this.Unchanged},
-    };
-
-    for i, group := range groups {
-        if (i != 0) {
-            fmt.Println();
-        }
-
-        fmt.Printf("%s %d users.\n", group.operation, len(group.users));
-        for _, user := range group.users {
-            fmt.Println("    " + user.ToRow(", "));
-        }
-    }
-
-    fmt.Println();
-    fmt.Printf("Generated %d passwords.\n", len(this.ClearTextPasswords));
-    for email, pass := range this.ClearTextPasswords {
-        fmt.Printf("    %s, %s\n", email, pass);
-    }
 }
 
 func (this *UserSyncResult) AddResolveResult(resolveResult *UserResolveResult) {

@@ -8,8 +8,7 @@ import (
     "github.com/eriq-augustine/autograder/util"
 )
 
-// lmsusers.SyncLMSUsers() is already heavily tested, focus on API-specific functionality.
-func TestAPISyncUsers(test *testing.T) {
+func TestLMSSync(test *testing.T) {
     testCases := []struct{ role model.UserRole; dryRun bool; skipEmails bool; permError bool }{
         {model.RoleOther, false, true, true},
         {model.RoleStudent, false, true, true},
@@ -29,10 +28,10 @@ func TestAPISyncUsers(test *testing.T) {
             "skip-emails": testCase.skipEmails,
         };
 
-        response := core.SendTestAPIRequestFull(test, core.NewEndpoint(`lms/sync/users`), fields, nil, testCase.role);
+        response := core.SendTestAPIRequestFull(test, core.NewEndpoint(`lms/sync`), fields, nil, testCase.role);
         if (!response.Success) {
             if (testCase.permError) {
-                expectedLocator := "-306";
+                expectedLocator := "-020";
                 if (response.Locator != expectedLocator) {
                     test.Errorf("Case %d: Incorrect error returned on permissions error. Expcted '%s', found '%s'.",
                             i, expectedLocator, response.Locator);
@@ -45,7 +44,7 @@ func TestAPISyncUsers(test *testing.T) {
         }
 
         // Ensure the response can unmarshal.
-        var responseContent SyncUsersResponse;
+        var responseContent SyncResponse;
         util.MustJSONFromString(util.MustToJSON(response.Content), &responseContent);
     }
 }

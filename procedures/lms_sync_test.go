@@ -1,4 +1,4 @@
-package lmsusers
+package procedures
 
 import (
     "slices"
@@ -25,7 +25,7 @@ func reset() {
     lmstest.ClearUsersModifier();
 }
 
-func TestCourseSyncLMSUisers(test *testing.T) {
+func TestCourseSyncLMSUsers(test *testing.T) {
     // Leave the db in a good state after the test.
     defer reset();
 
@@ -37,14 +37,14 @@ func TestCourseSyncLMSUisers(test *testing.T) {
         course := db.MustGetTestCourse();
 
         course.GetLMSAdapter().SyncUserAttributes = testCase.syncAttributes;
-        course.GetLMSAdapter().SyncAddUsers = testCase.syncAdd;
-        course.GetLMSAdapter().SyncRemoveUsers = testCase.syncDel;
+        course.GetLMSAdapter().SyncUserAdds = testCase.syncAdd;
+        course.GetLMSAdapter().SyncUserRemoves = testCase.syncDel;
 
         localUsers := db.MustGetUsers(course);
 
         email.ClearTestMessages();
 
-        result, err := SyncLMSUsers(course, testCase.dryRun, testCase.sendEmails);
+        result, err := SyncAllLMSUsers(course, testCase.dryRun, testCase.sendEmails);
         if (err != nil) {
             test.Errorf("Case %d (%+v): User sync failed: '%v'.", i, testCase, err);
             continue;

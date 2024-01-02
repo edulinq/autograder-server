@@ -1,0 +1,22 @@
+{
+    "URL": "https://canvas.test.com/api/v1/courses/12345/assignments/98765/submissions/00040?include[]=submission_comments",
+    "Method": "GET",
+    "RequestHeaders": {
+        "Accept": [
+            "application/json+canvas-string-ids"
+        ],
+        "Authorization": [
+            "Bearer ABC123"
+        ]
+    },
+    "ResponseCode": 200,
+    "ResponseHeaders": {
+        "Content-Type": [
+            "application/json; charset=utf-8"
+        ],
+        "Status": [
+            "200 OK"
+        ]
+    },
+    "ResponseBody": "{\"id\":\"12345678\",\"body\":null,\"url\":null,\"grade\":\"100\",\"score\":100.0,\"submitted_at\":null,\"assignment_id\":\"98765\",\"user_id\":\"00040\",\"submission_type\":null,\"workflow_state\":\"graded\",\"grade_matches_current_submission\":true,\"graded_at\":\"2023-10-07T18:05:35Z\",\"grader_id\":\"7827\",\"attempt\":null,\"cached_due_date\":\"2023-10-06T06:59:59Z\",\"excused\":false,\"late_policy_status\":null,\"points_deducted\":null,\"grading_period_id\":null,\"extra_attempts\":null,\"posted_at\":\"2023-12-16T20:42:37Z\",\"redo_request\":false,\"custom_grade_status_id\":null,\"sticker\":null,\"late\":false,\"missing\":false,\"seconds_late\":7127012,\"entered_grade\":\"100\",\"entered_score\":100.0,\"preview_url\":\"https://canvas.test.com/courses/12345/assignments/98765/submissions/00040?preview=1\\u0026version=1\",\"submission_comments\":[{\"id\":\"0987654\",\"comment\":\"{\\n\\\"id\\\": \\\"course101::hw0::student@test.com::1696364768\\\",\\n\\\"submission-time\\\": \\\"2023-10-03T20:26:08.951546Z\\\",\\n\\\"upload-time\\\": \\\"2023-10-07T13:04:54.412979316-05:00\\\",\\n\\\"raw-score\\\": 100,\\n\\\"score\\\": 100,\\n\\\"lock\\\": false,\\n\\\"late-date-usage\\\": 0,\\n\\\"num-days-late\\\": 0,\\n\\\"reject\\\": false,\\n\\\"__autograder__v01__\\\": 0\\n}\",\"author_id\":\"7827\",\"author_name\":\"Eriq Augustine\",\"created_at\":\"2023-10-07T18:05:35Z\",\"edited_at\":null,\"attempt\":null,\"avatar_path\":\"/images/users/7827-b1af3557c8\",\"author\":{\"id\":\"7827\",\"anonymous_id\":\"61f\",\"display_name\":\"Eriq Augustine\",\"avatar_image_url\":\"https://canvas.test.com/images/messages/avatar-50.png\",\"html_url\":\"https://canvas.test.com/courses/12345/users/7827\",\"pronouns\":null}}]}"
+}

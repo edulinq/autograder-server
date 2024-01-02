@@ -29,7 +29,7 @@ func HandleRemoveSubmission(request *RemoveSubmissionRequest) (*RemoveSubmission
 
     doesExist, err := db.RemoveSubmission(request.Assignment, request.TargetUser.Email, request.TargetSubmission);
     if (err != nil) {
-        return nil, core.NewInternalError("-418", &request.APIRequestCourseUserContext, "Failed to remove the submission.").
+        return nil, core.NewInternalError("-606", &request.APIRequestCourseUserContext, "Failed to remove the submission.").
                 Err(err).Add("user", request.TargetUser.Email).Add("submission", request.TargetSubmission);
     }
 

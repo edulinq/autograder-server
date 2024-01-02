@@ -20,14 +20,14 @@ func TestAuth(test *testing.T) {
         {"student@test.com", "student",  false, ""},
         {"other@test.com",   "other",    false, ""},
 
-        {"Z",                 "student",  false, "-202"},
-        {"Zstudent@test.com", "student",  false, "-202"},
-        {"student@test.comZ", "student",  false, "-202"},
-        {"student",           "student",  false, "-202"},
+        {"Z",                 "student",  false, "-013"},
+        {"Zstudent@test.com", "student",  false, "-013"},
+        {"student@test.comZ", "student",  false, "-013"},
+        {"student",           "student",  false, "-013"},
 
-        {"student@test.com", "",         false, "-203"},
-        {"student@test.com", "Zstudent", false, "-203"},
-        {"student@test.com", "studentZ", false, "-203"},
+        {"student@test.com", "",         false, "-014"},
+        {"student@test.com", "Zstudent", false, "-014"},
+        {"student@test.com", "studentZ", false, "-014"},
 
         {"owner@test.com",   "owner",    true, ""},
         {"admin@test.com",   "admin",    true, ""},
@@ -35,10 +35,10 @@ func TestAuth(test *testing.T) {
         {"student@test.com", "student",  true, ""},
         {"other@test.com",   "other",    true, ""},
 
-        {"Z",                 "student",  true, "-202"},
-        {"Zstudent@test.com", "student",  true, "-202"},
-        {"student@test.comZ", "student",  true, "-202"},
-        {"student",           "student",  true, "-202"},
+        {"Z",                 "student",  true, "-013"},
+        {"Zstudent@test.com", "student",  true, "-013"},
+        {"student@test.comZ", "student",  true, "-013"},
+        {"student",           "student",  true, "-013"},
 
         {"student@test.com", "",         true, ""},
         {"student@test.com", "Zstudent", true, ""},

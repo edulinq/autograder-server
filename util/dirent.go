@@ -19,6 +19,10 @@ func CopyDirent(source string, dest string, onlyContents bool) error {
         return fmt.Errorf("Source dirent for copy does not exist: '%s'", source);
     }
 
+    if (IsSymLink(source)) {
+        return CopyLink(source, dest);
+    }
+
     if (IsDir(source)) {
         return CopyDir(source, dest, onlyContents);
     }
@@ -26,9 +30,33 @@ func CopyDirent(source string, dest string, onlyContents bool) error {
     return CopyFile(source, dest);
 }
 
+func CopyLink(source string, dest string) error {
+    if (!PathExists(source)) {
+        return fmt.Errorf("Source link for copy does not exist: '%s'", source);
+    }
+
+    if (IsDir(dest)) {
+        dest = filepath.Join(dest, filepath.Base(source));
+    }
+
+    MkDir(filepath.Dir(dest));
+
+    target, err := os.Readlink(source);
+    if (err != nil) {
+        return fmt.Errorf("Failed to read link being copied (%s): %w.", source, err);
+    }
+
+    err = os.Symlink(target, dest);
+    if (err != nil) {
+        return fmt.Errorf("Failed to write link (target: '%s', source: '%s', dest: '%s'): %w.", target, source, dest, err);
+    }
+
+    return nil;
+}
+
 // Copy a file from source to dest creating any necessary parents along the way..
 // If dest is a file, it will be truncated.
-// If fest is a dir, then the file will be created inside dest.
+// If dest is a dir, then the file will be created inside dest.
 func CopyFile(source string, dest string) error {
     if (!PathExists(source)) {
         return fmt.Errorf("Source file for copy does not exist: '%s'", source);
@@ -53,7 +81,11 @@ func CopyFile(source string, dest string) error {
     defer destIO.Close()
 
     _, err = io.Copy(destIO, sourceIO);
-    return err;
+    if (err != nil) {
+        return fmt.Errorf("Failed to copy file contents from '%s' to '%s': %w.", source, dest, err);
+    }
+
+    return nil;
 }
 
 // Copy a directory (or just it's contents) into dest.
@@ -118,16 +150,9 @@ func CopyDirContents(source string, dest string) error {
         sourcePath := filepath.Join(source, dirent.Name());
         destPath := filepath.Join(dest, dirent.Name());
 
-        if (dirent.IsDir()) {
-            err = CopyDirWhole(sourcePath, destPath);
-            if (err != nil) {
-                return err;
-            }
-        } else {
-            err = CopyFile(sourcePath, destPath);
-            if (err != nil) {
-                return err;
-            }
+        err = CopyDirent(sourcePath, destPath, false);
+        if (err != nil) {
+            return err;
         }
     }
 

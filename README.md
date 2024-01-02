@@ -53,7 +53,7 @@ go run cmd/version/main.go
 ## Configuration
 
 This project uses configuration options to set the behavior of its executables.
-All executables use the same configuration infrastructure
+All executables that use autograder resources use the same configuration infrastructure
 and can therefore be configured the same way and with the same options.
 
 To see all the available options,
@@ -63,7 +63,7 @@ use the `cmd/list-options` executable.
 ./bin/list-options
 ```
 
-Options can be set on the command line using the `-c`/`--config` flag.
+Options can be set on the command-line using the `-c`/`--config` flag.
 For example:
 ```
 ./bin/logs-example --config log.level=debug
@@ -84,14 +84,16 @@ and defaults to `autograder`.
 
 ### Loading Options
 
-When an autograder executable is run,
-it will automatically look for config files in two locations:
- - `<work dir>/config/config.json`
- - `<work dir>/config/secrets.json`
+Configurations will be loaded in the following order (later options override earlier ones):
+ 0. The command-line options are checked for `BASE_DIR`.
+ 1. Load options from environmental variables.
+ 2. Options are loaded from `WORK_DIR/config` (config.json then secrets.json).
+ 3. Options are loaded from the current working directory (config.json then secrets.json).
+ 4. Options are loaded from any files specified with `--config-path` (ordered by appearance).
+ 5. Options are loaded from the command-line (`--config` / `-c`).
 
-Use these files to set persistent options.
-
-To load other config (JSON) files, use the `--config-path` flag.
+The base directory (`dirs.base`) can ONLY be set via the command-line or environmental variables.
+This prevents cycles from the base directory changing and loading new options.
 
 ### Key Configuration Options
 

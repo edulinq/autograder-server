@@ -20,7 +20,7 @@ type FetchSubmissionsResponse struct {
 func HandleFetchSubmissions(request *FetchSubmissionsRequest) (*FetchSubmissionsResponse, *core.APIError) {
     results, err := db.GetRecentSubmissionContents(request.Assignment, request.FilterRole);
     if (err != nil) {
-        return nil, core.NewInternalError("-412", &request.APIRequestCourseUserContext, "Failed to get submissions.").
+        return nil, core.NewInternalError("-605", &request.APIRequestCourseUserContext, "Failed to get submissions.").
                 Err(err);
     }
 

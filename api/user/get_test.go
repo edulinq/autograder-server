@@ -33,9 +33,9 @@ func TestUserGet(test *testing.T) {
         if (!response.Success) {
             expectedLocator := "";
             if (testCase.permError) {
-                expectedLocator = "-306";
+                expectedLocator = "-020";
             } else if (testCase.target == "") {
-                expectedLocator = "-320";
+                expectedLocator = "-034";
             }
 
             if (expectedLocator == "") {

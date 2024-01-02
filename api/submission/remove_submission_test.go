@@ -63,7 +63,7 @@ func TestRemoveSubmission(test *testing.T) {
         
         if (!response.Success) {
             if (testCase.permError) {
-                expectedLocator := "-306";
+                expectedLocator := "-020";
                 if (response.Locator != expectedLocator) {
                     test.Errorf("Case %d: Incorrect error returned on permissions error. Expected '%s', found '%s'.",
                             i, expectedLocator, response.Locator);

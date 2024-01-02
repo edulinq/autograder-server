@@ -62,7 +62,7 @@ func TestPeek(test *testing.T) {
         response := core.SendTestAPIRequestFull(test, core.NewEndpoint(`submission/peek`), fields, nil, testCase.role);
         if (!response.Success) {
             if (testCase.permError) {
-                expectedLocator := "-319";
+                expectedLocator := "-033";
                 if (response.Locator != expectedLocator) {
                     test.Errorf("Case %d: Incorrect error returned on permissions error. Expcted '%s', found '%s'.",
                             i, expectedLocator, response.Locator);

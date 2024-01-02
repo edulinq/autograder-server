@@ -31,7 +31,7 @@ func HandlePeek(request *PeekRequest) (*PeekResponse, *core.APIError) {
 
     submissionResult, err := db.GetSubmissionResult(request.Assignment, request.TargetUser.Email, request.TargetSubmission);
     if (err != nil) {
-        return nil, core.NewInternalError("-402", &request.APIRequestCourseUserContext, "Failed to get submission result.").
+        return nil, core.NewInternalError("-601", &request.APIRequestCourseUserContext, "Failed to get submission result.").
                 Err(err).Add("user", request.TargetUser.Email).Add("submission", request.TargetSubmission);
     }
 

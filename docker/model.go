@@ -7,7 +7,7 @@ import (
 )
 
 const (
-    DEFAULT_IMAGE = "autograder.base"
+    DEFAULT_IMAGE = "eriqaugustine/autograder.base"
 )
 
 type ImageInfo struct {

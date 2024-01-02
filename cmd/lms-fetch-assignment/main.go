@@ -20,8 +20,7 @@ var args struct {
 
 func main() {
     kong.Parse(&args,
-        kong.Description("Fetch the grades for a specific assignment from an LMS." +
-            " Either --assignment-path or (--course-path and --assignment-id) are required."),
+        kong.Description("Fetch information about a specific assignment from an LMS."),
     );
 
     err := config.HandleConfigArgs(args.ConfigArgs);

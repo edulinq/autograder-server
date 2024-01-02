@@ -18,7 +18,7 @@ type SubmitRequest struct {
 
 type SubmitResponse struct {
     Rejected bool `json:"rejected"`
-    RejectReason string `json:"reject-reason"`
+    Message string `json:"message"`
 
     GradingSucess bool `json:"grading-success"`
     GradingInfo *model.GradingInfo `json:"result"`
@@ -44,7 +44,7 @@ func HandleSubmit(request *SubmitRequest) (*SubmitResponse, *core.APIError) {
 
     if (reject != nil) {
         response.Rejected = true;
-        response.RejectReason = reject.String();
+        response.Message = reject.String();
         return &response, nil;
     }
 

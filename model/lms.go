@@ -19,9 +19,12 @@ type LMSAdapter struct {
     BaseURL string `json:"base-url,omitempty"`
 
     // Behavior options.
+
     SyncUserAttributes bool `json:"sync-user-attributes,omitempty"`
-    SyncAddUsers bool `json:"sync-add-users,omitempty"`
-    SyncRemoveUsers bool `json:"sync-remove-users,omitempty"`
+    SyncUserAdds bool `json:"sync-user-adds,omitempty"`
+    SyncUserRemoves bool `json:"sync-user-removes,omitempty"`
+
+    SyncAssignments bool `json:"sync-assignments,omitempty"`
 }
 
 func (this *LMSAdapter) Validate() error {

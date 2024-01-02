@@ -45,6 +45,19 @@ func MustTimestampFromString(text string) Timestamp {
     return instance;
 }
 
+func (this Timestamp) Validate() error {
+    if (this.IsZero()) {
+        return nil;
+    }
+
+    _, err := this.Time();
+    if (err != nil) {
+        return err;
+    }
+
+    return nil;
+}
+
 func (this Timestamp) IsZero() bool {
     return (string(this) == "");
 }

@@ -1,4 +1,4 @@
-package util
+package common
 
 // Unless marked as "raw", all functions here assume that the respone body it textual.
 
@@ -14,7 +14,21 @@ import (
     "strings"
 
     "github.com/rs/zerolog/log"
+
+    "github.com/eriq-augustine/autograder/config"
+    "github.com/eriq-augustine/autograder/util"
 )
+
+// A representation of an HTTP request.
+type SavedHTTPRequest struct {
+    URL string
+    Method string
+    RequestHeaders map[string][]string
+
+    ResponseCode int
+    ResponseHeaders map[string][]string
+    ResponseBody string
+}
 
 // Get a binary response.
 func RawGet(uri string) ([]byte, error) {
@@ -169,10 +183,49 @@ func doRequest(uri string, request *http.Request, verb string, checkResult bool)
     }
     body := string(rawBody);
 
+    if (config.STORE_HTTP.Get() != "") {
+        request := SavedHTTPRequest{
+            URL: uri,
+            Method: request.Method,
+            RequestHeaders: request.Header,
+            ResponseCode: response.StatusCode,
+            ResponseHeaders: response.Header,
+            ResponseBody: body,
+        };
+
+        err = writeRequest(&request);
+        if (err != nil) {
+            return "", nil, fmt.Errorf("Failed to save HTTP request '%s': '%w'.", uri, err);
+        }
+    }
+
     if (checkResult && (response.StatusCode != http.StatusOK)) {
         log.Error().Int("code", response.StatusCode).Str("body", body).Any("headers", response.Header).Str("url", uri).Msg("Got a non-OK status.");
         return "", nil, fmt.Errorf("Got a non-OK status code '%d' from %s on URL '%s': '%w'.", response.StatusCode, verb, uri, err);
     }
 
     return body, response.Header, nil;
+}
+
+func writeRequest(request *SavedHTTPRequest) error {
+    baseDir := config.STORE_HTTP.Get();
+    if (baseDir == "") {
+        return fmt.Errorf("No base dir provided.");
+    }
+
+    err := util.MkDir(baseDir);
+    if (err != nil) {
+        return fmt.Errorf("Failed to create dir to store HTTP requests '%s': '%w'.", baseDir, err);
+    }
+
+    filename := fmt.Sprintf("%s.json", util.UUID());
+    path := filepath.Join(baseDir, filename);
+
+    err = util.ToJSONFileIndent(request, path);
+    if (err != nil) {
+        return fmt.Errorf("Failed to write JSON file '%s': '%w'.", path, err);
+    }
+
+    log.Debug().Str("uri", request.URL).Str("path", path).Msg("Saved HTTP request.");
+    return nil;
 }

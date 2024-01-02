@@ -31,7 +31,7 @@ func HandleFetchSubmission(request *FetchSubmissionRequest) (*FetchSubmissionRes
 
     gradingResult, err := db.GetSubmissionContents(request.Assignment, request.TargetUser.Email, request.TargetSubmission);
     if (err != nil) {
-        return nil, core.NewInternalError("-409", &request.APIRequestCourseUserContext, "Failed to get submission contents.").
+        return nil, core.NewInternalError("-604", &request.APIRequestCourseUserContext, "Failed to get submission contents.").
                 Err(err).Add("email", request.TargetUser.Email).Add("submission", request.TargetSubmission);
     }
 

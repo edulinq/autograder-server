@@ -70,9 +70,9 @@ func TestChangePassword(test *testing.T) {
         if (!response.Success) {
             expectedLocator := "";
             if (testCase.permError) {
-                expectedLocator = "-319";
+                expectedLocator = "-033";
             } else if (testCase.advPermError) {
-                expectedLocator = "-605";
+                expectedLocator = "-805";
             }
 
             if (expectedLocator == "") {

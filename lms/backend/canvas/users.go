@@ -2,15 +2,20 @@ package canvas
 
 import (
     "fmt"
-    "net/url"
+    neturl "net/url"
 
     "github.com/rs/zerolog/log"
 
+    "github.com/eriq-augustine/autograder/common"
     "github.com/eriq-augustine/autograder/lms/lmstypes"
     "github.com/eriq-augustine/autograder/util"
 )
 
 func (this *CanvasBackend) FetchUsers() ([]*lmstypes.User, error) {
+    return this.fetchUsers(false);
+}
+
+func (this *CanvasBackend) fetchUsers(rewriteLinks bool) ([]*lmstypes.User, error) {
     this.getAPILock();
     defer this.releaseAPILock();
 
@@ -24,8 +29,16 @@ func (this *CanvasBackend) FetchUsers() ([]*lmstypes.User, error) {
     users := make([]*lmstypes.User, 0);
 
     for (url != "") {
-        body, responseHeaders, err := util.GetWithHeaders(url, headers);
+        var err error;
 
+        if (rewriteLinks) {
+            url, err = this.rewriteLink(url);
+            if (err != nil) {
+                return nil, err;
+            }
+        }
+
+        body, responseHeaders, err := common.GetWithHeaders(url, headers);
         if (err != nil) {
             return nil, fmt.Errorf("Failed to fetch users: '%w'.", err);
         }
@@ -56,12 +69,11 @@ func (this *CanvasBackend) FetchUser(email string) (*lmstypes.User, error) {
 
     apiEndpoint := fmt.Sprintf(
         "/api/v1/courses/%s/search_users?include[]=enrollments&search_term=%s",
-        this.CourseID, url.QueryEscape(email));
+        this.CourseID, neturl.QueryEscape(email));
     url := this.BaseURL + apiEndpoint;
 
     headers := this.standardHeaders();
-    body, _, err := util.GetWithHeaders(url, headers);
-
+    body, _, err := common.GetWithHeaders(url, headers);
     if (err != nil) {
         return nil, fmt.Errorf("Failed to fetch user '%s': '%w'.", email, err);
     }

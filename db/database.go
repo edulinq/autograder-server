@@ -44,14 +44,14 @@ type Backend interface {
     // Returns (nil, nil) if the course does not exist.
     GetCourse(courseID string) (*model.Course, error);
 
-    // Load a course into the databse and return the course.
+    // Load a course into the database and return the course.
     // This implies loading a course directory from a config and saving it in the db.
     // Will search for and load any assignments, users, and submissions
     // located in the same directory tree.
     // Override any existing settings for this course.
     LoadCourse(path string) (*model.Course, error);
 
-    // Explicitly save a course.
+    // Explicitly save a course (which includes all course assignments).
     SaveCourse(course *model.Course) error;
 
     // Dump a database course to the standard directory layout
@@ -74,7 +74,7 @@ type Backend interface {
     // Remove a user.
     // Do nothing and return nil if the user does not exist.
     RemoveUser(course *model.Course, email string) error;
-    
+
     // Remove a submission.
     // Return a bool indicating whether the submission exists or not and an error if there is one.
     RemoveSubmission(assignment *model.Assignment, email string, submissionID string) (bool, error);

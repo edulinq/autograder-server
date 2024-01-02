@@ -1,24 +1,25 @@
 package main
 
 import (
+    "fmt"
+
     "github.com/alecthomas/kong"
     "github.com/rs/zerolog/log"
 
     "github.com/eriq-augustine/autograder/config"
     "github.com/eriq-augustine/autograder/db"
-    "github.com/eriq-augustine/autograder/lms/lmsusers"
+    "github.com/eriq-augustine/autograder/lms"
+    "github.com/eriq-augustine/autograder/util"
 )
 
 var args struct {
     config.ConfigArgs
     Course string `help:"ID of the course." arg:""`
-    DryRun bool `help:"Do not actually do the operation, just state what you would do." default:"false"`
-    SkipEmails bool `help:"Skip sending out emails to new users (always true if a dry run)." default:"false"`
 }
 
 func main() {
     kong.Parse(&args,
-        kong.Description("Sync local users with matching LMS users."),
+        kong.Description("Fetch information about all assignments from an LMS."),
     );
 
     err := config.HandleConfigArgs(args.ConfigArgs);
@@ -31,10 +32,10 @@ func main() {
 
     course := db.MustGetCourse(args.Course);
 
-    result, err := lmsusers.SyncLMSUsers(course, args.DryRun, !args.SkipEmails);
+    lmsAssignments, err := lms.FetchAssignments(course);
     if (err != nil) {
-        log.Fatal().Err(err).Msg("Failed to sync LMS users.");
+        log.Fatal().Err(err).Msg("Failed to fetch assignments.");
     }
 
-    result.PrintReport();
+    fmt.Println(util.MustToJSONIndent(lmsAssignments));
 }

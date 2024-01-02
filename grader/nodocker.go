@@ -17,6 +17,7 @@ import (
 
 const PYTHON_AUTOGRADER_INVOCATION = "python3 -m autograder.cli.grading.grade-dir --grader <grader> --dir <basedir> --outpath <outpath>"
 const PYTHON_GRADER_FILENAME = "grader.py"
+const PYTHON_DOCKER_IMAGE_BASENAME = "autograder.python";
 
 func runNoDockerGrader(assignment *model.Assignment, submissionPath string, options GradeOptions, fullSubmissionID string) (
         *model.GradingInfo, map[string][]byte, string, string, error) {
@@ -110,7 +111,7 @@ func getAssignmentInvocation(assignment *model.Assignment,
     }
 
     // Special case for the python grader (we know how to invoke that).
-    if ((rawCommand == nil) && (imageInfo.Image == "autograder.python")) {
+    if ((rawCommand == nil) && (strings.Contains(imageInfo.Image, PYTHON_DOCKER_IMAGE_BASENAME))) {
         rawCommand = strings.Split(PYTHON_AUTOGRADER_INVOCATION, " ");
     }
 

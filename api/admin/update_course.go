@@ -23,7 +23,7 @@ func HandleUpdateCourse(request *UpdateCourseRequest) (*UpdateCourseResponse, *c
     if (request.Clear) {
         err := db.ClearCourse(request.Course);
         if (err != nil) {
-            return nil, core.NewInternalError("-701", &request.APIRequestCourseUserContext,
+            return nil, core.NewInternalError("-201", &request.APIRequestCourseUserContext,
                     "Failed to clear course.").Err(err);
         }
     }
@@ -31,7 +31,7 @@ func HandleUpdateCourse(request *UpdateCourseRequest) (*UpdateCourseResponse, *c
     if (request.Source != "") {
         spec, err := common.ParseFileSpec(request.Source);
         if (err != nil) {
-            return nil, core.NewBadCourseRequestError("-702", &request.APIRequestCourseUserContext,
+            return nil, core.NewBadCourseRequestError("-202", &request.APIRequestCourseUserContext,
                     "Source FileSpec is not formatted properly.").Err(err);
         }
 
@@ -39,14 +39,14 @@ func HandleUpdateCourse(request *UpdateCourseRequest) (*UpdateCourseResponse, *c
 
         err = db.SaveCourse(request.Course);
         if (err != nil) {
-            return nil, core.NewInternalError("-703", &request.APIRequestCourseUserContext,
+            return nil, core.NewInternalError("-203", &request.APIRequestCourseUserContext,
                     "Failed to save course.").Err(err);
         }
     }
 
     updated, err := procedures.UpdateCourse(request.Course);
     if (err != nil) {
-        return nil, core.NewInternalError("-704", &request.APIRequestCourseUserContext,
+        return nil, core.NewInternalError("-204", &request.APIRequestCourseUserContext,
                 "Failed to update course.").Err(err);
     }
 

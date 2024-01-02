@@ -71,25 +71,25 @@ func (this *APIRequestCourseUserContext) Validate(request any, endpoint string) 
     }
 
     if (this.CourseID == "") {
-        return NewBadRequestError("-301", &this.APIRequest, "No course ID specified.");
+        return NewBadRequestError("-015", &this.APIRequest, "No course ID specified.");
     }
 
     if (this.UserEmail == "") {
-        return NewBadRequestError("-302", &this.APIRequest, "No user email specified.");
+        return NewBadRequestError("-016", &this.APIRequest, "No user email specified.");
     }
 
     if (this.UserPass == "") {
-        return NewBadRequestError("-303", &this.APIRequest, "No user password specified.");
+        return NewBadRequestError("-017", &this.APIRequest, "No user password specified.");
     }
 
     var err error;
     this.Course, err = db.GetCourse(this.CourseID);
     if (err != nil) {
-        return NewInternalError("-318", this, "Unable to get course").Err(err);
+        return NewInternalError("-032", this, "Unable to get course").Err(err);
     }
 
     if (this.Course == nil) {
-        return NewBadRequestError("-304", &this.APIRequest, fmt.Sprintf("Could not find course: '%s'.", this.CourseID)).
+        return NewBadRequestError("-018", &this.APIRequest, fmt.Sprintf("Could not find course: '%s'.", this.CourseID)).
                 Add("course-id", this.CourseID);
     }
 
@@ -100,11 +100,11 @@ func (this *APIRequestCourseUserContext) Validate(request any, endpoint string) 
 
     minRole, foundRole := getMaxRole(request);
     if (!foundRole) {
-        return NewInternalError("-305", this, "No role found for request. All request structs require a minimum role.");
+        return NewInternalError("-019", this, "No role found for request. All request structs require a minimum role.");
     }
 
     if (this.User.Role < minRole) {
-        return NewBadPermissionsError("-306", this, minRole, "Base API Request");
+        return NewBadPermissionsError("-020", this, minRole, "Base API Request");
     }
 
     return nil;
@@ -118,12 +118,12 @@ func (this *APIRequestAssignmentContext) Validate(request any, endpoint string) 
     }
 
     if (this.AssignmentID == "") {
-        return NewBadRequestError("-307", &this.APIRequest, "No assignment ID specified.");
+        return NewBadRequestError("-021", &this.APIRequest, "No assignment ID specified.");
     }
 
     this.Assignment = this.Course.GetAssignment(this.AssignmentID);
     if (this.Assignment == nil) {
-        return NewBadRequestError("-308", &this.APIRequest, fmt.Sprintf("Could not find assignment: '%s'.", this.AssignmentID)).
+        return NewBadRequestError("-022", &this.APIRequest, fmt.Sprintf("Could not find assignment: '%s'.", this.AssignmentID)).
             Add("course-id", this.CourseID).Add("assignment-id", this.AssignmentID);
     }
 
@@ -135,7 +135,7 @@ func (this *APIRequestAssignmentContext) Validate(request any, endpoint string) 
 func ValidateAPIRequest(request *http.Request, apiRequest any, endpoint string) *APIError {
     reflectPointer := reflect.ValueOf(apiRequest);
     if (reflectPointer.Kind() != reflect.Pointer) {
-        return NewBareInternalError("-309", endpoint, "ValidateAPIRequest() must be called with a pointer.").
+        return NewBareInternalError("-023", endpoint, "ValidateAPIRequest() must be called with a pointer.").
                 Add("kind", reflectPointer.Kind().String());
     }
 
@@ -146,7 +146,7 @@ func ValidateAPIRequest(request *http.Request, apiRequest any, endpoint string) 
     }
 
     if (!foundRequestStruct) {
-        return NewBareInternalError("-310", endpoint, "Request is not any kind of known API request.");
+        return NewBareInternalError("-024", endpoint, "Request is not any kind of known API request.");
     }
 
     // Check for any special field types that we know how to populate.
@@ -185,7 +185,7 @@ func validateRequestStruct(request any, endpoint string) (bool, *APIError) {
 
     reflectValue := reflect.ValueOf(request).Elem();
     if (reflectValue.Kind() != reflect.Struct) {
-        return false, NewBareInternalError("-317", endpoint, "Request's type must be a struct.").
+        return false, NewBareInternalError("-031", endpoint, "Request's type must be a struct.").
                 Add("kind", reflectValue.Kind().String());
     }
 

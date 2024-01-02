@@ -31,8 +31,8 @@ func TestBadUsersFieldNoContext(test *testing.T) {
                     i, testCase.request);
         }
 
-        if (apiErr.Locator != "-311") {
-            test.Fatalf("Case %d: Struct with no course context does not return an error with locator '-311', found '%s': '%+v.",
+        if (apiErr.Locator != "-025") {
+            test.Fatalf("Case %d: Struct with no course context does not return an error with locator '-025', found '%s': '%+v.",
                     i, apiErr.Locator, testCase.request);
         }
     }
@@ -78,8 +78,8 @@ func TestBadUsersFieldNotExported(test *testing.T) {
                     i, testCase.request);
         }
 
-        if (apiErr.Locator != "-312") {
-            test.Fatalf("Case %d: Struct with non-exported field does not return an error with locator '-312', found '%s': '%v.",
+        if (apiErr.Locator != "-026") {
+            test.Fatalf("Case %d: Struct with non-exported field does not return an error with locator '-026', found '%s': '%v.",
                     i, apiErr.Locator, apiErr);
         }
     }
@@ -91,13 +91,13 @@ func TestNonEmptyStringField(test *testing.T) {
 
         {&struct{ APIRequest; Text NonEmptyString }{Text: "ZZZ"}, "", "Text"},
 
-        {&struct{ APIRequest; Text NonEmptyString }{}, "-318", "Text"},
-        {&struct{ APIRequest; Text NonEmptyString }{Text: ""}, "-318", "Text"},
+        {&struct{ APIRequest; Text NonEmptyString }{}, "-032", "Text"},
+        {&struct{ APIRequest; Text NonEmptyString }{Text: ""}, "-032", "Text"},
 
-        {&struct{ APIRequest; Text NonEmptyString `json:"text"`}{}, "-318", "text"},
-        {&struct{ APIRequest; Text NonEmptyString `json:"text,omitempty"`}{}, "-318", "text"},
-        {&struct{ APIRequest; Text NonEmptyString `json:"foo-bar"`}{}, "-318", "foo-bar"},
-        {&struct{ APIRequest; Text NonEmptyString `json:"foo-bar,omitempty"`}{}, "-318", "foo-bar"},
+        {&struct{ APIRequest; Text NonEmptyString `json:"text"`}{}, "-032", "text"},
+        {&struct{ APIRequest; Text NonEmptyString `json:"text,omitempty"`}{}, "-032", "text"},
+        {&struct{ APIRequest; Text NonEmptyString `json:"foo-bar"`}{}, "-032", "foo-bar"},
+        {&struct{ APIRequest; Text NonEmptyString `json:"foo-bar,omitempty"`}{}, "-032", "foo-bar"},
     };
 
     for i, testCase := range testCases {
@@ -197,7 +197,7 @@ func TestBadPostFilesFieldNotExported(test *testing.T) {
         test.Fatalf("Struct with non-exported files does not return an error,");
     }
 
-    expectedLocator := "-314";
+    expectedLocator := "-028";
     if (apiErr.Locator != expectedLocator) {
         test.Fatalf("Struct with non-exported files does not return an error with the correct locator. Expcted '%s', found '%s'.",
                 expectedLocator, apiErr.Locator);
@@ -227,7 +227,7 @@ func TestBadPostFilesNoFiles(test *testing.T) {
         test.Fatalf("Request did not generate an error: '%v'.", response);
     }
 
-    expectedLocator := "-316";
+    expectedLocator := "-030";
     if (response.Locator != expectedLocator) {
         test.Fatalf("Error does not have the correct locator. Expcted '%s', found '%s'.",
                 expectedLocator, response.Locator);
@@ -263,7 +263,7 @@ func TestBadPostFilesStoreFail(test *testing.T) {
         test.Fatalf("Request did not generate an error: '%v'.", response);
     }
 
-    expectedLocator := "-315";
+    expectedLocator := "-029";
     if (response.Locator != expectedLocator) {
         test.Fatalf("Error does not have the correct locator. Expcted '%s', found '%s'.",
                 expectedLocator, response.Locator);
@@ -453,7 +453,7 @@ func testTargetUser[T comparable, V userGetter](test *testing.T,
         apiErr := ValidateAPIRequest(nil, request, "");
         if (apiErr != nil) {
             if (testCase.permError) {
-                expectedLocator := "-319";
+                expectedLocator := "-033";
                 if (expectedLocator != apiErr.Locator) {
                     test.Errorf("Case %d: Incorrect error returned on permissions error. Expcted '%s', found '%s'.",
                             i, expectedLocator, apiErr.Locator);
@@ -517,7 +517,7 @@ func TestTargetUser(test *testing.T) {
         apiErr := ValidateAPIRequest(nil, &request, "");
         if (apiErr != nil) {
             if (testCase.target == "") {
-                expectedLocator := "-320";
+                expectedLocator := "-034";
                 if (expectedLocator != apiErr.Locator) {
                     test.Errorf("Case %d: Incorrect error returned on empty string. Expcted '%s', found '%s'.",
                             i, expectedLocator, apiErr.Locator);

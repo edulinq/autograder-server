@@ -21,6 +21,9 @@ type Assignment struct {
     Name string `json:"name"`
     SortID string `json:"sort-id,omitempty"`
 
+    DueDate common.Timestamp `json:"due-date,omitempty"`
+    MaxPoints float64 `json:"max-points,omitempty"`
+
     LMSID string `json:"lms-id,omitempty"`
     LatePolicy *LateGradingPolicy `json:"late-policy,omitempty"`
 
@@ -86,14 +89,19 @@ func (this *Assignment) Validate() error {
         return fmt.Errorf("No course found for assignment.")
     }
 
-    if (this.Name == "") {
-        this.Name = this.ID;
-    }
-
     var err error;
     this.ID, err = common.ValidateID(this.ID);
     if (err != nil) {
         return err;
+    }
+
+    err = this.DueDate.Validate();
+    if (err != nil) {
+        return fmt.Errorf("Due date is not a valid timestamp: '%w'.", err);
+    }
+
+    if (this.MaxPoints < 0.0) {
+        return fmt.Errorf("Max points cannot be negative: %f.", this.MaxPoints);
     }
 
     this.imageLock = &sync.Mutex{};

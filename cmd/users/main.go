@@ -12,8 +12,8 @@ import (
 
     "github.com/eriq-augustine/autograder/config"
     "github.com/eriq-augustine/autograder/db"
-    "github.com/eriq-augustine/autograder/lms/lmsusers"
     "github.com/eriq-augustine/autograder/model"
+    "github.com/eriq-augustine/autograder/procedures"
     "github.com/eriq-augustine/autograder/util"
 )
 
@@ -52,16 +52,16 @@ func (this *AddUser) Run(course *model.Course) error {
     }
 
     fmt.Println("Add Report:");
-    result.PrintReport();
+    fmt.Println(util.MustToJSONIndent(result));
 
     if (this.SyncLMS) {
-        result, err = lmsusers.SyncLMSUser(course, this.Email, this.DryRun, this.SendEmail);
+        result, err = procedures.SyncLMSUserEmail(course, this.Email, this.DryRun, this.SendEmail);
         if (err != nil) {
             return err;
         }
 
         fmt.Println("\nLMS sync report:");
-        result.PrintReport();
+        fmt.Println(util.MustToJSONIndent(result));
     }
 
     return nil;
@@ -89,18 +89,23 @@ func (this *AddTSV) Run(course *model.Course) error {
 
     if (this.DryRun) {
         fmt.Println("Doing a dry run, users file will not be written to.");
-        result.PrintReport();
+        fmt.Println(util.MustToJSONIndent(result));
     }
 
     if (this.SyncLMS) {
-        result, err = lmsusers.SyncLMSUsers(course, this.DryRun, this.SendEmail);
+        emails := make([]string, 0, len(newUsers));
+        for _, newUser := range newUsers {
+            emails = append(emails, newUser.Email);
+        }
+
+        result, err = procedures.SyncLMSUserEmails(course, emails, this.DryRun, this.SendEmail);
         if (err != nil) {
             return err;
         }
 
         if (this.DryRun) {
             fmt.Println("LMS sync report:");
-            result.PrintReport();
+            fmt.Println(util.MustToJSONIndent(result));
         }
     }
 

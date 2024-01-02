@@ -1,4 +1,4 @@
-package lmsusers
+package procedures
 
 import (
     "os"
