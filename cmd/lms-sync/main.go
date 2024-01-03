@@ -39,5 +39,10 @@ func main() {
         log.Fatal().Err(err).Msg("Failed to sync LMS.");
     }
 
+    if (result == nil) {
+        fmt.Println("LMS sync not available for this course.");
+        return;
+    }
+
     fmt.Println(util.MustToJSONIndent(result));
 }

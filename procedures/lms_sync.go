@@ -12,7 +12,13 @@ import (
     "github.com/eriq-augustine/autograder/util"
 )
 
+// Sync all available aspects of the course with their LMS.
+// Will return nil (with no error) if the course has no LMS.
 func SyncLMS(course *model.Course, dryRun bool, sendEmails bool) (*model.LMSSyncResult, error) {
+    if (!course.HasLMSAdapter()) {
+        return nil, nil;
+    }
+
     userSync, err := SyncAllLMSUsers(course, dryRun, sendEmails);
     if (err != nil) {
         return nil, err;
