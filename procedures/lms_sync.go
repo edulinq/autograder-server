@@ -46,7 +46,9 @@ func SyncAllLMSUsers(course *model.Course, dryRun bool, sendEmails bool) (*model
 
     lmsUsers := make(map[string]*lmstypes.User, len(lmsUsersSlice));
     for _, lmsUser := range lmsUsersSlice {
-        lmsUsers[lmsUser.Email] = lmsUser;
+        if (lmsUser.Email != "") {
+            lmsUsers[lmsUser.Email] = lmsUser;
+        }
     }
 
     return syncLMSUsers(course, dryRun, sendEmails, lmsUsers, nil);
@@ -218,6 +220,10 @@ func getAllEmails(localUsers map[string]*model.User, lmsUsers map[string]*lmstyp
     }
 
     for email, _ := range lmsUsers {
+        if (email == "") {
+            continue;
+        }
+
         _, ok := localUsers[email];
         if (ok) {
             // Already added.
