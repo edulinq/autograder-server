@@ -9,6 +9,7 @@ import (
     "github.com/eriq-augustine/autograder/common"
     "github.com/eriq-augustine/autograder/config"
     "github.com/eriq-augustine/autograder/db"
+    "github.com/eriq-augustine/autograder/procedures"
 )
 
 var args struct {
@@ -54,7 +55,7 @@ func main() {
         }
     }
 
-    _, updated, err := db.UpdateCourseFromSource(course);
+    updated, err := procedures.UpdateCourse(course, false);
     if (err != nil) {
         log.Fatal().Err(err).Msg("Failed to update course.");
     }

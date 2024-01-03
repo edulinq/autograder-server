@@ -12,7 +12,7 @@ import (
     "github.com/eriq-augustine/autograder/task"
 )
 
-func UpdateCourse(course *model.Course) (bool, error) {
+func UpdateCourse(course *model.Course, startTasks bool) (bool, error) {
     var errs error;
 
     // Stop any existing tasks.
@@ -29,6 +29,13 @@ func UpdateCourse(course *model.Course) (bool, error) {
         course = newCourse;
     }
 
+    // Sync the course.
+    _, err = SyncLMS(course, false, true);
+    if (err != nil) {
+        log.Error().Err(err).Str("course-id", course.GetID()).Msg("Failed to sync course with LMS.");
+        errs = errors.Join(errs, err);
+    }
+
     // Build images.
     _, buildErrs := course.BuildAssignmentImages(false, false, docker.NewBuildOptions());
     for imageName, err := range buildErrs {
@@ -37,11 +44,13 @@ func UpdateCourse(course *model.Course) (bool, error) {
     }
 
     // Schedule tasks.
-    for _, courseTask := range course.GetTasks() {
-        err = task.Schedule(course, courseTask);
-        if (err != nil) {
-            log.Error().Err(err).Str("course-id", course.GetID()).Str("task", courseTask.String()).Msg("Failed to schedule task.");
-            errs = errors.Join(errs, err);
+    if (startTasks) {
+        for _, courseTask := range course.GetTasks() {
+            err = task.Schedule(course, courseTask);
+            if (err != nil) {
+                log.Error().Err(err).Str("course-id", course.GetID()).Str("task", courseTask.String()).Msg("Failed to schedule task.");
+                errs = errors.Join(errs, err);
+            }
         }
     }
 

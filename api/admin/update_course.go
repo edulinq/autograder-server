@@ -44,7 +44,7 @@ func HandleUpdateCourse(request *UpdateCourseRequest) (*UpdateCourseResponse, *c
         }
     }
 
-    updated, err := procedures.UpdateCourse(request.Course);
+    updated, err := procedures.UpdateCourse(request.Course, true);
     if (err != nil) {
         return nil, core.NewInternalError("-204", &request.APIRequestCourseUserContext,
                 "Failed to update course.").Err(err);
