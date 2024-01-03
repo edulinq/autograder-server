@@ -10,6 +10,7 @@ import (
     "github.com/go-git/go-git/v5"
     "github.com/go-git/go-git/v5/config"
     "github.com/go-git/go-git/v5/plumbing"
+    "github.com/go-git/go-git/v5/plumbing/transport"
     "github.com/go-git/go-git/v5/plumbing/transport/http"
 )
 
@@ -21,8 +22,16 @@ func GitEnsureRepo(url string, path string, update bool, ref string, user string
     var err error;
     var repo *git.Repository;
 
+    var auth transport.AuthMethod = nil;
+    if ((user != "") || (pass != "")) {
+        auth = &http.BasicAuth{
+            Username: user,
+            Password: pass,
+        };
+    }
+
     if (!IsDir(path)) {
-        repo, err = GitClone(url, path, user, pass);
+        repo, err = GitClone(url, path, auth);
         if (err != nil) {
             return nil, err;
         }
@@ -36,7 +45,7 @@ func GitEnsureRepo(url string, path string, update bool, ref string, user string
     }
 
     if (update) {
-        _, err = GitUpdateRepo(repo, user, pass);
+        _, err = GitUpdateRepo(repo, auth);
         if (err != nil) {
             return nil, err;
         }
@@ -61,27 +70,21 @@ func GitGetRepo(path string) (*git.Repository, error) {
     return repo, nil;
 }
 
-func GitClone(url string, path string, user string, pass string) (*git.Repository, error) {
-    log.Trace().Str("url", url).Str("path", path).Str("user", user).Msg("Cloning git repo.");
+func GitClone(url string, path string, auth transport.AuthMethod) (*git.Repository, error) {
+    log.Trace().Str("url", url).Str("path", path).Msg("Cloning git repo.");
 
     options := &git.CloneOptions{
         URL: url,
         RecurseSubmodules: 3,
+        Auth: auth,
     };
-
-    if ((user != "") || (pass != "")) {
-        options.Auth = &http.BasicAuth{
-            Username: user,
-            Password: pass,
-        };
-    }
 
     repo, err := git.PlainClone(path, false, options);
     if (err != nil) {
         return nil, fmt.Errorf("Failed to clone git repo '%s' into '%s': '%w'.", url, path, err);
     }
 
-    err = setupTrackingBranches(repo);
+    err = setupTrackingBranches(repo, auth);
     if (err != nil) {
         return nil, fmt.Errorf("Failed to setup tracking branches on repo '%s': '%w'.", url, err);
     }
@@ -90,14 +93,18 @@ func GitClone(url string, path string, user string, pass string) (*git.Repositor
 }
 
 // Go through all remotes and setup any tracked branches.
-func setupTrackingBranches(repo *git.Repository) error {
+func setupTrackingBranches(repo *git.Repository, auth transport.AuthMethod) error {
     remotes, err := repo.Remotes();
     if (err != nil) {
         return fmt.Errorf("Failed to get remotes: '%w'.", err);
     }
 
+    options := &git.ListOptions{
+        Auth: auth,
+    };
+
     for _, remote := range remotes {
-        refs, err := remote.List(&git.ListOptions{});
+        refs, err := remote.List(options);
         if (err != nil) {
             return fmt.Errorf("Failed to get objects for remote '%s': '%w'.", remote, err);
         }
@@ -110,6 +117,11 @@ func setupTrackingBranches(repo *git.Repository) error {
 
             // Skip already tracking branches.
             if (ref.Target() != "") {
+                continue;
+            }
+
+            // Only do things that look like branches.
+            if (!ref.Name().IsBranch()) {
                 continue;
             }
 
@@ -201,7 +213,7 @@ func getCheckOptions(repo *git.Repository, ref string) (*git.CheckoutOptions, er
 }
 
 // Return true if an update happened.
-func GitUpdateRepo(repo *git.Repository, user string, pass string) (bool, error) {
+func GitUpdateRepo(repo *git.Repository, auth transport.AuthMethod) (bool, error) {
     log.Trace().Msg("Pulling git repo.");
 
     tree, err := repo.Worktree();
@@ -209,14 +221,9 @@ func GitUpdateRepo(repo *git.Repository, user string, pass string) (bool, error)
         return false, err;
     }
 
-    options := &git.PullOptions{};
-
-    if ((user != "") || (pass != "")) {
-        options.Auth = &http.BasicAuth{
-            Username: user,
-            Password: pass,
-        };
-    }
+    options := &git.PullOptions{
+        Auth: auth,
+    };
 
     err = tree.Pull(options);
     if (err == nil) {
