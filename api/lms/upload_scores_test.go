@@ -26,8 +26,8 @@ func TestUploadScores(test *testing.T) {
             &UploadScoresResponse{
                 Count: 1,
                 ErrorCount: 0,
-                UnrecognizedUsers: nil,
-                NoLMSIDUsers: nil,
+                UnrecognizedUsers: []RowEntry{},
+                NoLMSIDUsers: []RowEntry{},
             },
         },
         {
@@ -41,8 +41,8 @@ func TestUploadScores(test *testing.T) {
             &UploadScoresResponse{
                 Count: 4,
                 ErrorCount: 0,
-                UnrecognizedUsers: nil,
-                NoLMSIDUsers: nil,
+                UnrecognizedUsers: []RowEntry{},
+                NoLMSIDUsers: []RowEntry{},
             },
         },
 
@@ -93,7 +93,7 @@ func TestUploadScores(test *testing.T) {
                 UnrecognizedUsers: []RowEntry{
                     RowEntry{0, "zzz@test.com"},
                 },
-                NoLMSIDUsers: nil,
+                NoLMSIDUsers: []RowEntry{},
             },
         },
 
@@ -109,7 +109,7 @@ func TestUploadScores(test *testing.T) {
                 UnrecognizedUsers: []RowEntry{
                     RowEntry{0, "zzz@test.com"},
                 },
-                NoLMSIDUsers: nil,
+                NoLMSIDUsers: []RowEntry{},
             },
         },
     };

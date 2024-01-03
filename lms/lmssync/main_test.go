@@ -1,4 +1,4 @@
-package procedures
+package lmssync
 
 import (
     "os"

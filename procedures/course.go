@@ -8,10 +8,13 @@ import (
 
     "github.com/eriq-augustine/autograder/db"
     "github.com/eriq-augustine/autograder/docker"
+    "github.com/eriq-augustine/autograder/lms/lmssync"
     "github.com/eriq-augustine/autograder/model"
     "github.com/eriq-augustine/autograder/task"
 )
 
+// Update a live course.
+// Keep in sync with task.updateCourse().
 func UpdateCourse(course *model.Course, startTasks bool) (bool, error) {
     var errs error;
 
@@ -30,7 +33,7 @@ func UpdateCourse(course *model.Course, startTasks bool) (bool, error) {
     }
 
     // Sync the course.
-    _, err = SyncLMS(course, false, true);
+    _, err = lmssync.SyncLMS(course, false, true);
     if (err != nil) {
         log.Error().Err(err).Str("course-id", course.GetID()).Msg("Failed to sync course with LMS.");
         errs = errors.Join(errs, err);

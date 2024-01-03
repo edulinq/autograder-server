@@ -6,8 +6,8 @@ import (
 
     "github.com/eriq-augustine/autograder/api/core"
     "github.com/eriq-augustine/autograder/db"
+    "github.com/eriq-augustine/autograder/lms/lmssync"
     "github.com/eriq-augustine/autograder/model"
-    "github.com/eriq-augustine/autograder/procedures"
 )
 
 type AddRequest struct {
@@ -76,7 +76,7 @@ func HandleAdd(request *AddRequest) (*AddResponse, *core.APIError) {
     }
 
     if (!request.SkipLMSSync) {
-        lmsResult, err := procedures.SyncLMSUserEmails(request.Course, emails, request.DryRun, !request.SkipEmails);
+        lmsResult, err := lmssync.SyncLMSUserEmails(request.Course, emails, request.DryRun, !request.SkipEmails);
         if (err != nil) {
             log.Error().Err(err).Str("api-request", request.RequestID).Msg("Failed to sync LMS users.");
         } else {

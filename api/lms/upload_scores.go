@@ -39,7 +39,11 @@ func HandleUploadScores(request *UploadScoresRequest) (*UploadScoresResponse, *c
                 Add("course", request.Course.GetID());
     }
 
-    response := UploadScoresResponse{};
+    response := UploadScoresResponse{
+        UnrecognizedUsers: []RowEntry{},
+        NoLMSIDUsers: []RowEntry{},
+    };
+
     scores := parseScores(request, &response);
 
     if (response.Count == 0) {

@@ -2,8 +2,8 @@ package lms
 
 import (
     "github.com/eriq-augustine/autograder/api/core"
+    "github.com/eriq-augustine/autograder/lms/lmssync"
     "github.com/eriq-augustine/autograder/model"
-    "github.com/eriq-augustine/autograder/procedures"
 )
 
 type SyncRequest struct {
@@ -28,7 +28,7 @@ func HandleSync(request *SyncRequest) (*SyncResponse, *core.APIError) {
 
     var response SyncResponse;
 
-    result, err := procedures.SyncLMS(request.Course, request.DryRun, !request.SkipEmails);
+    result, err := lmssync.SyncLMS(request.Course, request.DryRun, !request.SkipEmails);
     if (err != nil) {
         return nil, core.NewInternalError("-404", &request.APIRequestCourseUserContext,
                 "Failed to sync LMS information.").Err(err);
