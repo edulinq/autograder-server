@@ -136,8 +136,8 @@ func generateHash(hashPass string, salt []byte) []byte {
     return argon2.IDKey([]byte(hashPass), salt, ARGON2_TIME, ARGON2_MEM_KB, ARGON2_THREADS, ARGON2_KEY_LEN_BYTES);
 }
 
-func SendUserAddEmail(user *User, pass string, generatedPass bool, userExists bool, dryRun bool, sleep bool) error {
-    subject, body := composeUserAddEmail(user.Email, pass, generatedPass, userExists);
+func SendUserAddEmail(course *Course, user *User, pass string, generatedPass bool, userExists bool, dryRun bool, sleep bool) error {
+    subject, body := composeUserAddEmail(course, user.Email, pass, generatedPass, userExists);
 
     if (dryRun) {
         log.Info().Str("email", user.Email).Msg("Doing a dry run, user will not be emailed.");
@@ -161,20 +161,25 @@ func SendUserAddEmail(user *User, pass string, generatedPass bool, userExists bo
     return nil;
 }
 
-func composeUserAddEmail(address string, pass string, generatedPass bool, userExists bool) (string, string) {
+func composeUserAddEmail(course *Course, address string, pass string, generatedPass bool, userExists bool) (string, string) {
     var subject string;
     var body string;
 
     if (userExists) {
-        subject = "Autograder -- User Password Changed";
-        body = fmt.Sprintf("Hello,\n\nThe password for '%s' has been changed.\n", address);
+        subject = fmt.Sprintf("Autograder %s -- User Password Changed", course.GetID());;
+        body =
+            "Hello,\n" +
+            fmt.Sprintf("\nThe password for '%s' has been changed for the course '%s'.\n", address, course.GetDisplayName());
     } else {
-        subject = "Autograder -- User Account Created";
-        body = fmt.Sprintf("Hello,\n\nAn account with the username/email '%s' has been created.\n", address);
+        subject = fmt.Sprintf("Autograder %s -- User Account Created", course.GetID());
+        body =
+            "Hello,\n" +
+            fmt.Sprintf("\nAn autograder account with the username/email '%s' has been created for the course '%s'.\n", address, course.GetDisplayName()) +
+            "Usage instructions will provided in class.\n";
     }
 
     if (generatedPass) {
-        body += fmt.Sprintf("The new password is '%s' (no quotes).\n", pass);
+        body += fmt.Sprintf("Your new password is '%s' (no quotes).\n", pass);
     }
 
     return subject, body;

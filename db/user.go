@@ -202,7 +202,7 @@ func SyncUsers(course *model.Course, newUsers map[string]*model.User,
 
         for _, newUser := range syncResult.Add {
             clearTextPass := syncResult.ClearTextPasswords[newUser.Email];
-            err = errors.Join(err, model.SendUserAddEmail(newUser, clearTextPass, (clearTextPass != ""), false, dryRun, sleep));
+            err = errors.Join(err, model.SendUserAddEmail(course, newUser, clearTextPass, (clearTextPass != ""), false, dryRun, sleep));
         }
 
         for _, newUser := range syncResult.Mod {
@@ -212,7 +212,7 @@ func SyncUsers(course *model.Course, newUsers map[string]*model.User,
                 continue;
             }
 
-            err = errors.Join(err, model.SendUserAddEmail(newUser, clearTextPass, true, true, dryRun, sleep));
+            err = errors.Join(err, model.SendUserAddEmail(course, newUser, clearTextPass, true, true, dryRun, sleep));
         }
 
         if (err != nil) {
