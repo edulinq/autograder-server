@@ -43,6 +43,8 @@ func HandleSubmit(request *SubmitRequest) (*SubmitResponse, *core.APIError) {
     }
 
     if (reject != nil) {
+        log.Debug().Str("reason", reject.String()).Any("request", request).Msg("Submission rejected.");
+
         response.Rejected = true;
         response.Message = reject.String();
         return &response, nil;
