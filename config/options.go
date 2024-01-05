@@ -45,4 +45,6 @@ var (
     // Database
     DB_TYPE = MustNewStringOption("db.type", "disk", "The type of database to use.");
     DB_PG_URI = MustNewStringOption("db.pg.uri", "", "Connection string to connect to a Postgres Databse. Empty if not using Postgres.");
+
+	STALELOCK_DURATION = 3;
 )
