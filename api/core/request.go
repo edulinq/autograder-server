@@ -121,6 +121,14 @@ func (this *APIRequestAssignmentContext) Validate(request any, endpoint string) 
         return NewBadRequestError("-021", &this.APIRequest, "No assignment ID specified.");
     }
 
+    id, err := common.ValidateID(this.AssignmentID);
+    if (err != nil) {
+        return NewBadRequestError("-035", &this.APIRequest, fmt.Sprintf("Provided assignment ID is invalid: '%s'.", this.AssignmentID)).
+            Add("course-id", this.CourseID).Add("assignment-id", this.AssignmentID).Err(err);
+    }
+
+    this.AssignmentID = id;
+
     this.Assignment = this.Course.GetAssignment(this.AssignmentID);
     if (this.Assignment == nil) {
         return NewBadRequestError("-022", &this.APIRequest, fmt.Sprintf("Could not find assignment: '%s'.", this.AssignmentID)).

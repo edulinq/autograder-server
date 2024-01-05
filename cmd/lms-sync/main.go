@@ -8,7 +8,7 @@ import (
 
     "github.com/eriq-augustine/autograder/config"
     "github.com/eriq-augustine/autograder/db"
-    "github.com/eriq-augustine/autograder/procedures"
+    "github.com/eriq-augustine/autograder/lms/lmssync"
     "github.com/eriq-augustine/autograder/util"
 )
 
@@ -34,9 +34,14 @@ func main() {
 
     course := db.MustGetCourse(args.Course);
 
-    result, err := procedures.SyncLMS(course, args.DryRun, !args.SkipEmails);
+    result, err := lmssync.SyncLMS(course, args.DryRun, !args.SkipEmails);
     if (err != nil) {
         log.Fatal().Err(err).Msg("Failed to sync LMS.");
+    }
+
+    if (result == nil) {
+        fmt.Println("LMS sync not available for this course.");
+        return;
     }
 
     fmt.Println(util.MustToJSONIndent(result));

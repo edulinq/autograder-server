@@ -6,6 +6,7 @@ import (
     "testing"
 
     "github.com/eriq-augustine/autograder/common"
+    "github.com/eriq-augustine/autograder/config"
     "github.com/eriq-augustine/autograder/db"
     "github.com/eriq-augustine/autograder/model"
 )
@@ -75,6 +76,10 @@ func TestRejectSubmissionMaxWindowAttempts(test *testing.T) {
 
 func submitForRejection(test *testing.T, assignment *model.Assignment, expectedRejection RejectReason) (
         *model.GradingResult, RejectReason, error) {
+    // Disable testing mode to check for rejection.
+    config.TESTING_MODE.Set(false);
+    defer config.TESTING_MODE.Set(true);
+
     submissionPath := filepath.Join(assignment.GetSourceDir(), SUBMISSION_RELPATH);
 
     err := assignment.SubmissionLimit.Validate();

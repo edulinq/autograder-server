@@ -8,6 +8,7 @@ import (
 
     "github.com/eriq-augustine/autograder/db"
     "github.com/eriq-augustine/autograder/docker"
+    "github.com/eriq-augustine/autograder/lms/lmssync"
     "github.com/eriq-augustine/autograder/model"
     "github.com/eriq-augustine/autograder/model/tasks"
 )
@@ -45,6 +46,13 @@ func updateCourse(course *model.Course) (bool, error) {
     } else {
         // On success, use the new course.
         course = newCourse;
+    }
+
+    // Sync the course.
+    _, err = lmssync.SyncLMS(course, false, true);
+    if (err != nil) {
+        log.Error().Err(err).Str("course-id", course.GetID()).Msg("Failed to sync course with LMS.");
+        errs = errors.Join(errs, err);
     }
 
     // Build images.

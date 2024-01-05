@@ -1,4 +1,4 @@
-package procedures
+package lmssync
 
 import (
     "errors"
@@ -12,7 +12,13 @@ import (
     "github.com/eriq-augustine/autograder/util"
 )
 
+// Sync all available aspects of the course with their LMS.
+// Will return nil (with no error) if the course has no LMS.
 func SyncLMS(course *model.Course, dryRun bool, sendEmails bool) (*model.LMSSyncResult, error) {
+    if (!course.HasLMSAdapter()) {
+        return nil, nil;
+    }
+
     userSync, err := SyncAllLMSUsers(course, dryRun, sendEmails);
     if (err != nil) {
         return nil, err;
@@ -40,7 +46,9 @@ func SyncAllLMSUsers(course *model.Course, dryRun bool, sendEmails bool) (*model
 
     lmsUsers := make(map[string]*lmstypes.User, len(lmsUsersSlice));
     for _, lmsUser := range lmsUsersSlice {
-        lmsUsers[lmsUser.Email] = lmsUser;
+        if (lmsUser.Email != "") {
+            lmsUsers[lmsUser.Email] = lmsUser;
+        }
     }
 
     return syncLMSUsers(course, dryRun, sendEmails, lmsUsers, nil);
@@ -106,7 +114,7 @@ func syncLMSUsers(course *model.Course, dryRun bool, sendEmails bool, lmsUsers m
 
         for _, newUser := range syncResult.Add {
             pass := syncResult.ClearTextPasswords[newUser.Email];
-            err = errors.Join(err, model.SendUserAddEmail(newUser, pass, true, false, dryRun, true));
+            err = errors.Join(err, model.SendUserAddEmail(course, newUser, pass, true, false, dryRun, true));
         }
 
         if (err != nil) {
@@ -212,6 +220,10 @@ func getAllEmails(localUsers map[string]*model.User, lmsUsers map[string]*lmstyp
     }
 
     for email, _ := range lmsUsers {
+        if (email == "") {
+            continue;
+        }
+
         _, ok := localUsers[email];
         if (ok) {
             // Already added.

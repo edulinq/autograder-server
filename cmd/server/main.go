@@ -50,7 +50,7 @@ func main() {
     for _, course := range courses {
         log.Info().Str("course", course.GetID()).Msg("Loaded course.");
         go func(course *model.Course) {
-            procedures.UpdateCourse(course);
+            procedures.UpdateCourse(course, true);
         }(course);
     }
 

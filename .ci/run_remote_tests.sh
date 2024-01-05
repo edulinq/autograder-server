@@ -6,7 +6,7 @@ readonly THIS_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 readonly BASE_DIR="${THIS_DIR}/.."
 
 readonly PORT='12345'
-readonly TESTS_DIR="${BASE_DIR}/_tests"
+readonly DEFAULT_TESTS_DIR="${BASE_DIR}/_tests"
 
 readonly COURSE_CONFIG_FILENAME='course.json'
 readonly ASSIGNMENT_CONFIG_FILENAME='assignment.json'
@@ -19,10 +19,12 @@ readonly TEST_USER='admin@test.com'
 readonly TEST_PASS='admin'
 
 function run_submissions() {
+    local tests_dir=$1
+
     local error_count=0
     local run_count=0
 
-    for assignment_config_path in $(find "${TESTS_DIR}" -type f -name "${ASSIGNMENT_CONFIG_FILENAME}") ; do
+    for assignment_config_path in $(find "${tests_dir}" -type f -name "${ASSIGNMENT_CONFIG_FILENAME}") ; do
         local course_config_path="$(dirname "${assignment_config_path}")/../${COURSE_CONFIG_FILENAME}"
         if [[ ! -f "${course_config_path}" ]] ; then
             echo "ERROR: Cannot find course config for assignment ('${assignment_config_path}')."
@@ -75,6 +77,8 @@ function run_submissions() {
 }
 
 function run_sever_submissions() {
+    local tests_dir=$1
+
     cd "${BASE_DIR}"
 
     ./build.sh
@@ -83,17 +87,22 @@ function run_sever_submissions() {
         return 100
     fi
 
+    local testing_arg="--testing"
+    if [[ "${tests_dir}" == "${DEFAULT_TESTS_DIR}" ]] ; then
+        testing_arg="--unit-testing"
+    fi
+
     # Start the server.
     ./bin/server \
         -c web.port="${PORT}" \
         -c log.level=DEBUG \
-        --unit-testing &
+        "${testing_arg}" &
     local server_pid="$!"
     sleep 1
 
     local error_count=0
 
-    run_submissions
+    run_submissions "${tests_dir}"
     ((error_count += $?))
 
     # Stop the server.
@@ -109,14 +118,19 @@ function run_sever_submissions() {
 }
 
 function main() {
-    if [[ $# -ne 0 ]]; then
+    if [[ $# -gt 1 ]] ; then
         echo "USAGE: $0"
         exit 1
     fi
 
     trap exit SIGINT
 
-    run_sever_submissions
+    local tests_dir="${DEFAULT_TESTS_DIR}"
+    if [[ $# -eq 1 ]] ; then
+        tests_dir="${1}"
+    fi
+
+    run_sever_submissions "${tests_dir}"
     ((error_count += $?))
 
     if [[ ${error_count} -gt 0 ]] ; then

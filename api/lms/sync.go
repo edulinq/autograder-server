@@ -2,8 +2,8 @@ package lms
 
 import (
     "github.com/eriq-augustine/autograder/api/core"
+    "github.com/eriq-augustine/autograder/lms/lmssync"
     "github.com/eriq-augustine/autograder/model"
-    "github.com/eriq-augustine/autograder/procedures"
 )
 
 type SyncRequest struct {
@@ -15,6 +15,7 @@ type SyncRequest struct {
 }
 
 type SyncResponse struct {
+    SyncAvailable bool `json:"sync-available"`
     Users *core.SyncUsersInfo `json:"users"`
     Assignments *model.AssignmentSyncResult `json:"assignments"`
 }
@@ -25,16 +26,21 @@ func HandleSync(request *SyncRequest) (*SyncResponse, *core.APIError) {
                 Add("course", request.Course.GetID());
     }
 
-    result, err := procedures.SyncLMS(request.Course, request.DryRun, !request.SkipEmails);
+    var response SyncResponse;
+
+    result, err := lmssync.SyncLMS(request.Course, request.DryRun, !request.SkipEmails);
     if (err != nil) {
         return nil, core.NewInternalError("-404", &request.APIRequestCourseUserContext,
                 "Failed to sync LMS information.").Err(err);
     }
 
-    response := SyncResponse{
-        Users: core.NewSyncUsersInfo(result.UserSync),
-        Assignments: result.AssignmentSync,
-    };
+    if (result == nil) {
+        return &response, nil;
+    }
+
+    response.SyncAvailable = true;
+    response.Users = core.NewSyncUsersInfo(result.UserSync);
+    response.Assignments = result.AssignmentSync;
 
     return &response, nil;
 }

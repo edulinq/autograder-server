@@ -5,6 +5,7 @@ import (
     "time"
 
     "github.com/eriq-augustine/autograder/common"
+    "github.com/eriq-augustine/autograder/config"
     "github.com/eriq-augustine/autograder/db"
     "github.com/eriq-augustine/autograder/model"
 )
@@ -39,6 +40,11 @@ func checkForRejection(assignment *model.Assignment, submissionPath string, user
 }
 
 func checkSubmissionLimit(assignment *model.Assignment, user string) (RejectReason, error) {
+    // Do not check for submission limits in testing mode.
+    if (config.TESTING_MODE.Get()) {
+        return nil, nil;
+    }
+
     limit := assignment.GetSubmissionLimit();
     if (limit == nil) {
         return nil, nil;
