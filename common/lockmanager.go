@@ -2,73 +2,54 @@ package common
 
 import (
 	"fmt"
-	"log"
 	"sync"
 	"time"
 
 	"github.com/eriq-augustine/autograder/config"
+	"github.com/rs/zerolog/log"
 )
 
-type lockInfo struct {
-	key string;
+type lockData struct {
 	timestamp time.Time;
+	mutex sync.Mutex;
 }
 
-type lockManager struct {
-	lmMutex sync.Mutex;
-	lockMutex sync.Map;
-	lockInstances map[string]*lockInfo;
+var (
+	lockMap sync.Map;
 	staleDuration time.Duration;
+)
+
+func init() {
+	staleDuration = time.Duration(config.STALELOCK_DURATION) * time.Second;
+	go removeStaleLocks();
 }
 
-func NewLockManager() *lockManager {
-	lm := &lockManager{
-		lockInstances: make(map[string]*lockInfo),
-		staleDuration: time.Duration(config.STALELOCK_DURATION) * time.Second,
-	}
-	go lm.removeStaleLocks();
-	return lm;
+func Lock(key string) {
+	val, _ := lockMap.LoadOrStore(key, &lockData{});
+	val.(*lockData).mutex.Lock();	
+	val.(*lockData).timestamp = time.Now();
 }
 
-func (lm *lockManager) Lock(key string) {
-	val, _ := lm.lockMutex.LoadOrStore(key, &sync.Mutex{});
-	val.(*sync.Mutex).Lock(); // Lock the mutex for the associated key.
-	
-	// Only one go routine can write to the lockInstance map at a time.
-	lm.lmMutex.Lock(); 
-	lm.lockInstances[key] = &lockInfo{key: key, timestamp: time.Now()};
-	lm.lmMutex.Unlock();
-}
-
-func (lm *lockManager) Unlock(key string) error {
-	val, ok := lm.lockMutex.Load(key);
-	if !ok {
-		log.Printf("Error. Key not found: %v", key);
+func Unlock(key string) error {
+	_, exists := lockMap.LoadAndDelete(key);
+	if !exists {
+		log.Error().Str("key", key).Msg("Key does not exist");
 		return fmt.Errorf("Error. Key not found: %v", key);
 	}
-
-	defer val.(*sync.Mutex).Unlock(); // Unlock the mutex for the associated key.
-
-	// Only one go routine can delete a key from the lockInstance map at a time.
-	lm.lmMutex.Lock();
-	delete(lm.lockInstances, key);
-	lm.lmMutex.Unlock();
 
 	return nil;
 }
 
-func (lm *lockManager) removeStaleLocks() {
-	ticker := time.NewTicker(lm.staleDuration);
-	
+func removeStaleLocks() {
+	ticker := time.NewTicker(staleDuration);
+
 	for range ticker.C {
-		lm.lmMutex.Lock();
-		for key, timestamp := range lm.lockInstances {
-			if time.Since(timestamp.timestamp) > lm.staleDuration {
-				val, _ := lm.lockMutex.Load(key);
-				val.(*sync.Mutex).Unlock();
-				delete(lm.lockInstances, key);
-			}
-		}
-		lm.lmMutex.Unlock();
-	}
+        lockMap.Range(func(key, val interface{}) bool {
+            lock := val.(*lockData);
+            if time.Since(lock.timestamp) > staleDuration {
+				lock.mutex.Unlock();                
+            }
+            return true;
+        })
+    }
 }

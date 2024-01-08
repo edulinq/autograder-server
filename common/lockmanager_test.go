@@ -8,35 +8,40 @@ import (
 
 
 func TestLockAcquisition(t *testing.T) {
-	lm := NewLockManager();
+	
 	key := "testkey"
 	key2 := "testkey2"
-	lm.Lock(key)
-	lm.Lock(key2)
+	// fmt.Println("main")
+	Lock(key);
+	
+	Lock(key2);
 	fmt.Println("Main Thread!")
 
 	go func() {
 		fmt.Println("Go routine started")
-		lm.Lock(key);
-		defer lm.Unlock(key)
+		Lock(key);
+		defer Unlock(key)
 
 		fmt.Println("Go routine done")
 		
 	}()
 
+	time.Sleep(1 * time.Second)
+
 	go func() {
 		fmt.Println("2nd go routine started")
-		lm.Lock(key2);
-		defer lm.Unlock(key2);
+		Lock(key2);
+		defer Unlock(key2);
 		
 		fmt.Println("2nd go routine done")
 	}()
 
 	fmt.Println("Main Thread Almost Done!")
-	lm.Unlock(key)
-	lm.Unlock(key2)
+	Unlock(key)
+	fmt.Println("got here")
+	Unlock(key2)
 
-	time.Sleep(5 * time.Second);
-	lm.Lock(key);
+	time.Sleep(2 * time.Second);
+	Lock(key);
 	fmt.Println("Main Thread Done")
 }
