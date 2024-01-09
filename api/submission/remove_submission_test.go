@@ -60,7 +60,7 @@ func TestRemoveSubmission(test *testing.T) {
         };
 
         response := core.SendTestAPIRequestFull(test, core.NewEndpoint(`submission/remove`), fields, nil, testCase.role);
-        
+
         if (!response.Success) {
             if (testCase.permError) {
                 expectedLocator := "-020";
@@ -71,13 +71,13 @@ func TestRemoveSubmission(test *testing.T) {
             } else {
                 test.Errorf("Case %d: Response is not a success when it should be: '%v'.", i, response);
             }
-            
+
             continue;
         }
-        
+
         var responseContent PeekResponse;
         util.MustJSONFromString(util.MustToJSON(response.Content), &responseContent);
-        
+
         if (testCase.foundUser != responseContent.FoundUser) {
             test.Errorf("Case %d: Found user does not match. Expected: '%v', actual: '%v'.", i, testCase.foundUser, responseContent.FoundUser);
             continue;
