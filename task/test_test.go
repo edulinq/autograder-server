@@ -94,11 +94,25 @@ func TestTaskNoCatchup(test *testing.T) {
     }
 }
 
+// Test that panics are recovered.
+func TestPanic(test *testing.T) {
+    counter := make(chan int, 100);
+    fun := func(payload any) error {
+        counter := payload.(chan int);
+        counter <- 1;
+        panic("Test Panic");
+        return nil;
+    }
+
+    count := runTestTaskWithFun(test, 1, counter, fun);
+    if (count <= 1) {
+        test.Fatalf("Not enough test tasks were run (%d run).", count)
+    }
+}
+
 // Run a basic test task.
 // Return the number of times the task was run.
 func runTestTask(test *testing.T, everyUSecs int64) int {
-    defer StopAll();
-
     counter := make(chan int, 100);
 
     fun := func(payload any) error {
@@ -106,6 +120,12 @@ func runTestTask(test *testing.T, everyUSecs int64) int {
         counter <- 1;
         return nil;
     }
+
+    return runTestTaskWithFun(test, everyUSecs, counter, fun);
+}
+
+func runTestTaskWithFun(test *testing.T, everyUSecs int64, counter chan int, fun func(any) error) int {
+    defer StopAll();
 
     course := db.MustGetTestCourse();
 
@@ -123,8 +143,6 @@ func runTestTask(test *testing.T, everyUSecs int64) int {
         Func: fun,
         Payload: counter,
     };
-
-    task.Validate(course);
 
     err := task.Validate(course);
     if (err != nil) {
