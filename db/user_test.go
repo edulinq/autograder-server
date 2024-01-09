@@ -192,12 +192,12 @@ func getSynNewUsersTestUsers() (
     var shortEmails []*email.Message = []*email.Message{
         &email.Message{
             To: []string{"add@test.com"},
-            Subject: "Autograder -- User Account Created",
+            Subject: "Autograder course101 -- User Account Created",
             HTML: false,
         },
         &email.Message{
             To: []string{"add-pass@test.com"},
-            Subject: "Autograder -- User Account Created",
+            Subject: "Autograder course101 -- User Account Created",
             HTML: false,
         },
     };
@@ -206,22 +206,22 @@ func getSynNewUsersTestUsers() (
     var fullEmails []*email.Message = []*email.Message{
         &email.Message{
             To: []string{"add@test.com"},
-            Subject: "Autograder -- User Account Created",
+            Subject: "Autograder course101 -- User Account Created",
             HTML: false,
         },
         &email.Message{
             To: []string{"add-pass@test.com"},
-            Subject: "Autograder -- User Account Created",
+            Subject: "Autograder course101 -- User Account Created",
             HTML: false,
         },
         &email.Message{
             To: []string{"other@test.com"},
-            Subject: "Autograder -- User Password Changed",
+            Subject: "Autograder course101 -- User Password Changed",
             HTML: false,
         },
         &email.Message{
             To: []string{"grader@test.com"},
-            Subject: "Autograder -- User Password Changed",
+            Subject: "Autograder course101 -- User Password Changed",
             HTML: false,
         },
     };

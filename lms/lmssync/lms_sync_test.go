@@ -276,7 +276,7 @@ var modUsers []*model.User = []*model.User{
 var addEmails []*email.Message = []*email.Message{
     &email.Message{
         To: []string{"add@test.com"},
-        Subject: "Autograder -- User Account Created",
+        Subject: "Autograder course101 -- User Account Created",
         HTML: false,
     },
 };

@@ -48,6 +48,14 @@ func (this *Course) GetName() string {
     return this.Name;
 }
 
+func (this *Course) GetDisplayName() string {
+    if (this.Name != "") {
+        return this.Name;
+    }
+
+    return this.ID;
+}
+
 func (this *Course) GetSource() *common.FileSpec {
     return this.Source;
 }

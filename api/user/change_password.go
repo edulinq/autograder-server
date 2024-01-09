@@ -53,7 +53,7 @@ func HandleChangePassword(request *ChangePasswordRequest) (*ChangePasswordRespon
     }
 
     if (pass != "") {
-        err = model.SendUserAddEmail(request.TargetUser.User, pass, true, true, false, false);
+        err = model.SendUserAddEmail(request.Course, request.TargetUser.User, pass, true, true, false, false);
         if (err != nil) {
             return nil, core.NewInternalError("-808", &request.APIRequestCourseUserContext,
                     "Failed to send user email.").Err(err).Add("email", request.TargetUser.Email);

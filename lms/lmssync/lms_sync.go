@@ -114,7 +114,7 @@ func syncLMSUsers(course *model.Course, dryRun bool, sendEmails bool, lmsUsers m
 
         for _, newUser := range syncResult.Add {
             pass := syncResult.ClearTextPasswords[newUser.Email];
-            err = errors.Join(err, model.SendUserAddEmail(newUser, pass, true, false, dryRun, true));
+            err = errors.Join(err, model.SendUserAddEmail(course, newUser, pass, true, false, dryRun, true));
         }
 
         if (err != nil) {
