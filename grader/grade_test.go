@@ -9,7 +9,7 @@ import (
     "github.com/eriq-augustine/autograder/docker"
 )
 
-const BASE_TEST_USER = "test_user@test.com";
+const BASE_TEST_USER = "student@test.com";
 const TEST_MESSAGE = "";
 
 func TestDockerSubmissions(test *testing.T) {
@@ -33,6 +33,9 @@ func TestNoDockerSubmissions(test *testing.T) {
 }
 
 func runSubmissionTests(test *testing.T, parallel bool, useDocker bool) {
+    db.ResetForTesting();
+    defer db.ResetForTesting();
+
     // Directory where all the test courses and other materials are located.
     baseDir := config.GetCourseImportDir();
 

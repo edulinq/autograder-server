@@ -39,9 +39,23 @@ func checkForRejection(assignment *model.Assignment, submissionPath string, user
     return checkSubmissionLimit(assignment, user);
 }
 
-func checkSubmissionLimit(assignment *model.Assignment, user string) (RejectReason, error) {
+func checkSubmissionLimit(assignment *model.Assignment, email string) (RejectReason, error) {
     // Do not check for submission limits in testing mode.
     if (config.TESTING_MODE.Get()) {
+        return nil, nil;
+    }
+
+    user, err := db.GetUser(assignment.GetCourse(), email);
+    if (err != nil) {
+        return nil, err;
+    }
+
+    if (user == nil) {
+        return nil, fmt.Errorf("Unable to find user: '%s'.", email);
+    }
+
+    // User that are >= grader are not subject to submission restrictions.
+    if (user.Role >= model.RoleGrader) {
         return nil, nil;
     }
 
@@ -52,7 +66,7 @@ func checkSubmissionLimit(assignment *model.Assignment, user string) (RejectReas
 
     now := time.Now();
 
-    history, err := db.GetSubmissionHistory(assignment, user);
+    history, err := db.GetSubmissionHistory(assignment, email);
     if (err != nil) {
         return nil, err;
     }
