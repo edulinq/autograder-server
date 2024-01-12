@@ -26,14 +26,13 @@ func RunBackupTask(course *model.Course, rawTask tasks.ScheduledTask) (bool, err
 }
 
 // Perform a backup.
-// For backup location check (in order): dest, config.TASK_BACKUP_DIR, config.GetBackupDir().
 func RunBackup(course *model.Course, dest string, backupID string) error {
     if (dest == "") {
-        dest = config.TASK_BACKUP_DIR.Get();
+        dest = config.GetTaskBackupDir();
     }
 
-    if (dest == "") {
-        dest = config.GetBackupDir();
+    if (util.IsFile(dest)) {
+        return fmt.Errorf("Backup directory exists and is a file: '%s'.", dest);
     }
 
     err := util.MkDir(dest);
