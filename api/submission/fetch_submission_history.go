@@ -11,7 +11,6 @@ type FetchSubmissionHistoryRequest struct {
     core.MinRoleGrader
 
     TargetUser       core.TargetUser `json:"target-email"`
-    TargetSubmission string          `json:"target-submission"`
 }
 
 type FetchSubmissionHistoryResponse struct {
