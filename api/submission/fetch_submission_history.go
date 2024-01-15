@@ -10,17 +10,19 @@ type FetchSubmissionHistoryRequest struct {
     core.APIRequestAssignmentContext
     core.MinRoleGrader
 
-    TargetUser       core.TargetUser `json:"target-email"`
+    TargetUser       core.TargetUserSelfOrGrader `json:"target-email"`
 }
 
 type FetchSubmissionHistoryResponse struct {
-    FoundUser      bool                   `json:"found-user"`
+    FoundUser        bool `json:"found-user"`
+    FoundSubmissions bool `json:"found-submissions"`
     GradingResults []*model.GradingResult `json:"grading-results"`
 }
 
 func HandleFetchSubmissionHistory(request *FetchSubmissionHistoryRequest) (*FetchSubmissionHistoryResponse, *core.APIError) {
     response := FetchSubmissionHistoryResponse{
         FoundUser:      false,
+        FoundSubmissions: false,
         GradingResults: make([]*model.GradingResult, 0),
     }
 
@@ -39,6 +41,8 @@ func HandleFetchSubmissionHistory(request *FetchSubmissionHistoryRequest) (*Fetc
     if gradingResults == nil {
         return &response, nil
     }
+
+    response.FoundSubmissions = true
     response.GradingResults = gradingResults
 
     return &response, nil
