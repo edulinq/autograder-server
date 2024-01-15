@@ -327,6 +327,8 @@ func (this *backend) RemoveSubmission(assignment *model.Assignment, email string
 func (this *backend) GetSubmissionResultHistory(assignment *model.Assignment, email string) ([]*model.GradingResult, error) {
     submissions := make([]*model.GradingResult, 0)
 
+    // TODO(CAMDEN) Need to get SubmissionDir for each assignment in a course, unless the assignment is specified.
+    //              Right now this would only work if an assignment IS specified.
     submissionsDir := this.getUserSubmissionDir(assignment.GetCourse().GetID(), assignment.GetID(), email)
     if !util.PathExists(submissionsDir) {
         return submissions, nil
@@ -342,15 +344,14 @@ func (this *backend) GetSubmissionResultHistory(assignment *model.Assignment, em
     }
 
     for _, dirent := range dirents {
-        resultPath := filepath.Join(submissionsDir, dirent.Name(), model.SUBMISSION_RESULT_FILENAME)
+        var submission *model.GradingResult
 
-        var gradingInfo model.GradingInfo
-        err = util.JSONFromFile(resultPath, &gradingInfo)
+        submission, err = this.GetSubmissionContents(assignment, email, dirent.Name())
         if err != nil {
-            return nil, fmt.Errorf("Unable to deserialize grading info '%s': '%w'.", resultPath, err)
+            return nil, fmt.Errorf("Unable to get submission contents for %s: .", email)
         }
 
-        submissions = append(submissions)
+        submissions = append(submissions, submission)
     }
 
     return submissions, nil
