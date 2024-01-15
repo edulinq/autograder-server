@@ -1,5 +1,6 @@
 *.swp
 .DS_Store
+.idea
 
 *.egg-info
 .ipynb_checkpoints

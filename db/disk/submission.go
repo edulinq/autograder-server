@@ -323,3 +323,35 @@ func (this *backend) RemoveSubmission(assignment *model.Assignment, email string
 
     return true, nil;
 }
+
+func (this *backend) GetSubmissionResultHistory(assignment *model.Assignment, email string) ([]*model.GradingResult, error) {
+    submissions := make([]*model.GradingResult, 0)
+
+    submissionsDir := this.getUserSubmissionDir(assignment.GetCourse().GetID(), assignment.GetID(), email)
+    if !util.PathExists(submissionsDir) {
+        return submissions, nil
+    }
+
+    dirents, err := os.ReadDir(submissionsDir)
+    if err != nil {
+        return nil, fmt.Errorf("Unable to read user submissions dir '%s': '%w'.", submissionsDir, err)
+    }
+
+    if len(dirents) == 0 {
+        return submissions, nil
+    }
+
+    for _, dirent := range dirents {
+        resultPath := filepath.Join(submissionsDir, dirent.Name(), model.SUBMISSION_RESULT_FILENAME)
+
+        var gradingInfo model.GradingInfo
+        err = util.JSONFromFile(resultPath, &gradingInfo)
+        if err != nil {
+            return nil, fmt.Errorf("Unable to deserialize grading info '%s': '%w'.", resultPath, err)
+        }
+
+        submissions = append(submissions)
+    }
+
+    return submissions, nil
+}
