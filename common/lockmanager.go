@@ -66,7 +66,6 @@ func removeStaleLocks() {
 
     for range ticker.C {
         staleDuration := time.Duration(time.Duration(config.STALELOCK_DURATION.Get()) * time.Second);
-        fmt.Println("stale: ", staleDuration)
 
         lockMap.Range(func(key, val any) bool {
             lock := val.(*lockData);
