@@ -5,78 +5,77 @@ import (
 	"sync"
 	"time"
 
-	"github.com/eriq-augustine/autograder/config"
 	"github.com/rs/zerolog/log"
+
+	"github.com/eriq-augustine/autograder/config"
 )
 
 type lockData struct {
-	timestamp time.Time;
-	mutex sync.Mutex;
-	isLocked bool;
+    timestamp time.Time;
+    mutex sync.Mutex;
+    isLocked bool;
 }
 
 var (
-	lockManagerMutex sync.Mutex;
-	lockMap sync.Map;
-	staleDuration time.Duration;
+    lockManagerMutex sync.Mutex;
+    lockMap sync.Map;
+    staleDuration time.Duration;
 )
 
 func init() {
-	go removeStaleLocks();
+    go removeStaleLocks();
 }
 
 func Lock(key string) {
-	val, _ := lockMap.LoadOrStore(key, &lockData{});
-	val.(*lockData).mutex.Lock();	
+    lockManagerMutex.Lock();
+    defer lockManagerMutex.Unlock();
 
-	lockManagerMutex.Lock();
-	defer lockManagerMutex.Unlock()
+    val, _ := lockMap.LoadOrStore(key, &lockData{});
+    val.(*lockData).mutex.Lock();	
 
-	val.(*lockData).timestamp = time.Now();
-	val.(*lockData).isLocked = true;
 
+    val.(*lockData).timestamp = time.Now();
+    val.(*lockData).isLocked = true;
 }
 
 func Unlock(key string) error {
-	
-	val, exists := lockMap.Load(key);
-	lock := val.(*lockData);
-	if !exists {
-		log.Error().Str("key", key).Msg("Key does not exist");
-		return fmt.Errorf("Key not found: %v", key);
-	}
+    lockManagerMutex.Lock();
+    defer lockManagerMutex.Unlock();
 
-	lockManagerMutex.Lock();
-	defer lockManagerMutex.Unlock();
+    val, exists := lockMap.Load(key);
+    lock := val.(*lockData);
+    if !exists {
+        log.Error().Str("key", key).Msg("Key does not exist");
+        return fmt.Errorf("Key not found: %v", key);
+    }
 
-	if lock.isLocked {
-		lock.isLocked = false;
-		defer lock.mutex.Unlock();
-		lock.timestamp = time.Now();	
-	} else {
-		log.Error().Str("key", key).Msg("Tried to unlock a lock that is unlocked");
-		return fmt.Errorf("Key: %v Tried to unlock a lock that is unlocked", key);
-	}
+    if !lock.isLocked {
+        log.Error().Str("key", key).Msg("Tried to unlock a lock that is unlocked");
+        return fmt.Errorf("Key: %v Tried to unlock a lock that is unlocked", key);
+    }
 
-	return nil;
+    lock.isLocked = false;
+    lock.timestamp = time.Now();	
+    lock.mutex.Unlock();
+    return nil;
+
 }
 
 func removeStaleLocks() {
-	ticker := time.NewTicker(time.Duration(config.STALELOCK_DURATION) * time.Second);
-	defer ticker.Stop();
+    ticker := time.NewTicker(time.Duration(5) * time.Second);
 
-	for range ticker.C {
-		staleDuration := time.Duration(config.STALELOCK_DURATION) * time.Second;
+    for range ticker.C {
+        staleDuration := time.Duration(time.Duration(config.STALELOCK_DURATION.Get()) * time.Second);
+        fmt.Println("stale: ", staleDuration)
 
         lockMap.Range(func(key, val any) bool {
             lock := val.(*lockData);
-            if (time.Since(lock.timestamp) > staleDuration) && (lock.mutex.TryLock()) {
-				lock.mutex.Unlock();
-				lockManagerMutex.Lock();
-				if (time.Since(lock.timestamp) > staleDuration) && (lock.mutex.TryLock()) {
-					lockMap.Delete(key);
-				}
-				lockManagerMutex.Unlock();
+            if (time.Since(lock.timestamp) > staleDuration) && (!lock.isLocked) {
+                lockManagerMutex.Lock();
+                defer lockManagerMutex.Unlock();
+                if (time.Since(lock.timestamp) > staleDuration) && (lock.mutex.TryLock()) {
+                    lockMap.Delete(key);
+                }
             }
             return true;
         })
