@@ -36,12 +36,9 @@ func TestLogTextBase(test *testing.T) {
 
     for i, expectedLine := range expectedLines {
         line := strings.TrimSpace(lines[i]);
-        if (len(line) < 26) {
-            test.Errorf("Case %d: Line is too short: %d.", i, len(line));
-        }
 
         // Remove the timestamp.
-        line = line[26:]
+        _, line, _ = strings.Cut(line, " ");
 
         if (expectedLine != line) {
             test.Errorf("Case %d: Line does not match. Expected: '%s', Actual: '%s'.", i, expectedLine, line);
