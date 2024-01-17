@@ -1,13 +1,14 @@
 package submission
 
 import (
+    "path/filepath"
+    "reflect"
+    "testing"
+
     "github.com/eriq-augustine/autograder/api/core"
     "github.com/eriq-augustine/autograder/config"
     "github.com/eriq-augustine/autograder/model"
     "github.com/eriq-augustine/autograder/util"
-    "path/filepath"
-    "reflect"
-    "testing"
 )
 
 func TestFetchSubmissionHistory(test *testing.T) {
