@@ -34,7 +34,7 @@ func HandleFetchSubmissionHistory(request *FetchSubmissionHistoryRequest) (*Fetc
 
     gradingResults, err := db.GetSubmissionResultHistory(request.Assignment, request.TargetUser.Email);
     if err != nil {
-        return nil, core.NewInternalError("-604", &request.APIRequestCourseUserContext, "Failed to get submissions.").
+        return nil, core.NewInternalError("-607", &request.APIRequestCourseUserContext, "Failed to get submissions.").
             Err(err).Add("email", request.TargetUser.Email);
     }
 
