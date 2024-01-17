@@ -87,9 +87,24 @@ func SetStorageBackend(newBackend storageBackend) {
 
 func LogDirect(record *LogRecord) {
     logText(record);
+    logBackend(record);
+}
 
-    // TEST
-    return;
+func logBackend(record *LogRecord) {
+    if ((backend == nil) || (record == nil)) {
+        return;
+    }
+
+    if (record.Level < backendLevel) {
+        return;
+    }
+
+    go func(record *LogRecord) {
+        backendLock.Lock();
+        defer backendLock.Unlock();
+
+        backend.LogDirect(record);
+    }(record);
 }
 
 func logText(record *LogRecord) {
