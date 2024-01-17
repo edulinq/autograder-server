@@ -325,34 +325,32 @@ func (this *backend) RemoveSubmission(assignment *model.Assignment, email string
 }
 
 func (this *backend) GetSubmissionResultHistory(assignment *model.Assignment, email string) ([]*model.GradingResult, error) {
-    submissions := make([]*model.GradingResult, 0)
+    submissions := make([]*model.GradingResult, 0);
 
-    // TODO(CAMDEN) Need to get SubmissionDir for each assignment in a course, unless the assignment is specified.
-    //              Right now this would only work if an assignment IS specified.
-    submissionsDir := this.getUserSubmissionDir(assignment.GetCourse().GetID(), assignment.GetID(), email)
+    submissionsDir := this.getUserSubmissionDir(assignment.GetCourse().GetID(), assignment.GetID(), email);
     if !util.PathExists(submissionsDir) {
-        return submissions, nil
+        return nil, nil;
     }
 
-    dirents, err := os.ReadDir(submissionsDir)
+    dirents, err := os.ReadDir(submissionsDir);
     if err != nil {
-        return nil, fmt.Errorf("Unable to read user submissions dir '%s': '%w'.", submissionsDir, err)
+        return nil, fmt.Errorf("Unable to read user submissions dir '%s': '%w'.", submissionsDir, err);
     }
 
     if len(dirents) == 0 {
-        return submissions, nil
+        return nil, nil;
     }
 
     for _, dirent := range dirents {
-        var submission *model.GradingResult
+        var submission *model.GradingResult;
 
-        submission, err = this.GetSubmissionContents(assignment, email, dirent.Name())
+        submission, err = this.GetSubmissionContents(assignment, email, dirent.Name());
         if err != nil {
-            return nil, fmt.Errorf("Unable to get submission contents for %s: .", email)
+            return nil, fmt.Errorf("Unable to get submission contents for %s: .", email);
         }
 
-        submissions = append(submissions, submission)
+        submissions = append(submissions, submission);
     }
 
-    return submissions, nil
+    return submissions, nil;
 }

@@ -95,7 +95,7 @@ type Backend interface {
     GetSubmissionResult(assignment *model.Assignment, email string, shortSubmissionID string) (*model.GradingInfo, error);
 
     // Get the result history for a specific user.
-    // The assignment will either be specified, or empty (if all submissions are to be returned).
+    // An assignment must be specified.
     GetSubmissionResultHistory(assignment *model.Assignment, email string) ([]*model.GradingResult, error);
 
     // Get the scoring infos for an assignment for all users that match the given role.
