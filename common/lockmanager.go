@@ -58,7 +58,6 @@ func Unlock(key string) error {
     lock.timestamp = time.Now();	
     lock.mutex.Unlock();
     return nil;
-
 }
 
 func removeStaleLocks() {

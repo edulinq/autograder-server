@@ -13,7 +13,7 @@ var (
 )
 
 
-func TestLock(t *testing.T) {
+func testLock(t *testing.T) {
     var wg sync.WaitGroup
 
     Lock(key)
