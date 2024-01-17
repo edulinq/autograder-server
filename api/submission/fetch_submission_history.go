@@ -10,7 +10,7 @@ type FetchSubmissionHistoryRequest struct {
     core.APIRequestAssignmentContext
     core.MinRoleGrader
 
-    TargetUser       core.TargetUserSelfOrGrader `json:"target-email"`
+    TargetUser core.TargetUserSelfOrGrader `json:"target-email"`
 }
 
 type FetchSubmissionHistoryResponse struct {
