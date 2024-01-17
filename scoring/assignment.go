@@ -32,7 +32,7 @@ func FullAssignmentScoringAndUpload(assignment *model.Assignment, dryRun bool) e
         return fmt.Errorf("Could not fetch LMS grades: '%w'.", err);
     }
 
-    scoringInfos, err := db.GetScoringInfos(assignment, model.RoleStudent);
+    scoringInfos, err := db.GetExistingScoringInfos(assignment, model.RoleStudent);
     if (err != nil) {
         return fmt.Errorf("Failed to get scoring information: '%w'.", err);
     }

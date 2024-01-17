@@ -48,6 +48,23 @@ func GetSubmissionResult(assignment *model.Assignment, email string, submissionI
     return backend.GetSubmissionResult(assignment, email, shortSubmissionID);
 }
 
+// Get only non-nil scoring infos.
+func GetExistingScoringInfos(assignment *model.Assignment, filterRole model.UserRole) (map[string]*model.ScoringInfo, error) {
+    rawInfo, err := GetScoringInfos(assignment, filterRole);
+    if (err != nil) {
+        return nil, err;
+    }
+
+    info := make(map[string]*model.ScoringInfo, len(rawInfo));
+    for key, value := range rawInfo {
+        if (value != nil) {
+            info[key] = value;
+        }
+    }
+
+    return info, nil;
+}
+
 func GetScoringInfos(assignment *model.Assignment, filterRole model.UserRole) (map[string]*model.ScoringInfo, error) {
     if (backend == nil) {
         return nil, fmt.Errorf("Database has not been opened.");

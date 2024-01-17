@@ -284,7 +284,7 @@ func runTask(courseID string, target tasks.ScheduledTask, timerID string, runFun
         return true;
     }
 
-    reschedule, err := runFunc(course, target);
+    reschedule, err := invokeRunFunc(course, target, runFunc);
     if (err != nil) {
         log.Error().Err(err).Str("course-id", courseID).Str("task", taskID).Msg("Task run failed.");
         return true;
@@ -299,6 +299,21 @@ func runTask(courseID string, target tasks.ScheduledTask, timerID string, runFun
     }
 
     return reschedule;
+}
+
+// Actually run the run func (and recover if necessary).
+func invokeRunFunc(course *model.Course, target tasks.ScheduledTask, runFunc RunFunc) (reschedule bool, err error) {
+    defer func() {
+        value := recover();
+        if (value == nil) {
+            return;
+        }
+
+        err = fmt.Errorf("Task paniced: '%v'.", value);
+    }();
+
+    reschedule, err = runFunc(course, target);
+    return;
 }
 
 // Should a task run?

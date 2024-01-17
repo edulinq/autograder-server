@@ -3,6 +3,7 @@ package lmssync
 import (
     "errors"
     "fmt"
+    "strings"
 
     "github.com/eriq-augustine/autograder/common"
     "github.com/eriq-augustine/autograder/db"
@@ -268,7 +269,7 @@ func syncAssignments(course *model.Course, dryRun bool) (*model.AssignmentSyncRe
                 }
             } else {
                 // Name match.
-                if ((localName != "") && (localName == lmsAssignment.Name)) {
+                if ((localName != "") && strings.EqualFold(localName, lmsAssignment.Name)) {
                     matchIndex = i;
                 }
             }

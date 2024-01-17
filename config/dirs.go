@@ -38,6 +38,17 @@ func GetBackupDir() string {
     return filepath.Join(GetWorkDir(), BACKUP_DIRNAME);
 }
 
+// Get the backup directory for a task, which will check TASK_BACKUP_DIR first,
+// and then return GetBackupDir() if the option is empty.
+func GetTaskBackupDir() string {
+    dir := TASK_BACKUP_DIR.Get();
+    if (dir != "") {
+        return dir;
+    }
+
+    return GetBackupDir();
+}
+
 func GetCacheDir() string {
     return filepath.Join(GetWorkDir(), CACHE_DIRNAME);
 }

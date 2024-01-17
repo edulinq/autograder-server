@@ -24,7 +24,7 @@ func TestRejectSubmissionMaxAttempts(test *testing.T) {
     assignment.SubmissionLimit = &model.SubmissionLimitInfo{Max: &maxValue};
 
     // Make a submission that should be rejected.
-    submitForRejection(test, assignment, &RejectMaxAttempts{0});
+    submitForRejection(test, assignment, "other@test.com", &RejectMaxAttempts{0});
 }
 
 func TestRejectSubmissionMaxAttemptsInfinite(test *testing.T) {
@@ -37,17 +37,25 @@ func TestRejectSubmissionMaxAttemptsInfinite(test *testing.T) {
     assignment.SubmissionLimit = &model.SubmissionLimitInfo{};
 
     // All submissions should pass.
-    submitForRejection(test, assignment, nil);
+    submitForRejection(test, assignment, "other@test.com", nil);
 
     // Set the max submissions to nagative (infinite).
     maxValue := -1
     assignment.SubmissionLimit = &model.SubmissionLimitInfo{Max: &maxValue};
 
     // All submissions should pass.
-    submitForRejection(test, assignment, nil);
+    submitForRejection(test, assignment, "other@test.com", nil);
 }
 
 func TestRejectSubmissionMaxWindowAttempts(test *testing.T) {
+    testMaxWindowAttemps(test, "other@test.com", true);
+}
+
+func TestRejectSubmissionMaxWindowAttemptsAdmin(test *testing.T) {
+    testMaxWindowAttemps(test, "grader@test.com", false);
+}
+
+func testMaxWindowAttemps(test *testing.T, user string, expectReject bool) {
     db.ResetForTesting();
     defer db.ResetForTesting();
 
@@ -63,7 +71,7 @@ func TestRejectSubmissionMaxWindowAttempts(test *testing.T) {
     };
 
     // Make a submission that should pass.
-    result, _, _ := submitForRejection(test, assignment, nil);
+    result, _, _ := submitForRejection(test, assignment, user, nil);
 
     expectedTime, err := result.Info.GradingStartTime.Time();
     if (err != nil) {
@@ -71,10 +79,15 @@ func TestRejectSubmissionMaxWindowAttempts(test *testing.T) {
     }
 
     // Make a submission that should be rejected.
-    submitForRejection(test, assignment, &RejectWindowMax{1, duration, expectedTime});
+    var reason RejectReason;
+    if (expectReject) {
+        reason = &RejectWindowMax{1, duration, expectedTime};
+    }
+
+    submitForRejection(test, assignment, user, reason);
 }
 
-func submitForRejection(test *testing.T, assignment *model.Assignment, expectedRejection RejectReason) (
+func submitForRejection(test *testing.T, assignment *model.Assignment, user string, expectedRejection RejectReason) (
         *model.GradingResult, RejectReason, error) {
     // Disable testing mode to check for rejection.
     config.TESTING_MODE.Set(false);
@@ -87,7 +100,7 @@ func submitForRejection(test *testing.T, assignment *model.Assignment, expectedR
         test.Fatalf("Failed to validate submission limit: '%v'.", err);
     }
 
-    result, reject, err := GradeDefault(assignment, submissionPath, BASE_TEST_USER, TEST_MESSAGE);
+    result, reject, err := GradeDefault(assignment, submissionPath, user, TEST_MESSAGE);
     if (err != nil) {
         test.Fatalf("Failed to grade assignment: '%v'.", err);
     }
