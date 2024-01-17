@@ -342,9 +342,7 @@ func (this *backend) GetSubmissionResultHistory(assignment *model.Assignment, em
     }
 
     for _, dirent := range dirents {
-        var submission *model.GradingResult;
-
-        submission, err = this.GetSubmissionContents(assignment, email, dirent.Name());
+        submission, err := this.GetSubmissionContents(assignment, email, dirent.Name());
         if err != nil {
             return nil, fmt.Errorf("Unable to get submission contents for %s: .", email);
         }
