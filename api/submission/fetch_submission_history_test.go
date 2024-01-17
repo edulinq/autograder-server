@@ -27,8 +27,8 @@ func TestFetchSubmissionHistory(test *testing.T) {
         result []*model.GradingResult
     }{
         // Grader, self.
-        {model.RoleGrader, "",                true, false, false, nil},
-        {model.RoleGrader, "grader@test.com", true, false, false, nil},
+        {model.RoleGrader, "",                 true, false, false, nil},
+        {model.RoleGrader, "grader@test.com",  true, false, false, nil},
 
         // Grader, other.
         {model.RoleGrader, "student@test.com", true, true, false, studentGradingResults},
@@ -40,22 +40,43 @@ func TestFetchSubmissionHistory(test *testing.T) {
         {model.RoleStudent, "",                true, true, true, studentGradingResults},
 
         // Student, self, missing.
-        {model.RoleStudent, "",                 true, false, true, nil},
-        {model.RoleStudent, "student@test.com", true, false, true, nil},
+        {model.RoleStudent, "",                true, false, true, nil},
+        {model.RoleStudent, "student@test.com",true, false, true, nil},
 
         // Student, other, recent.
         {model.RoleStudent, "grader@test.com", false, false, true, nil},
 
         // Student, other, missing.
         {model.RoleStudent, "grader@test.com", true, false, true, nil},
+
+        // Owner, self.
+        {model.RoleOwner,   "",                true, false, false, nil},
+        {model.RoleOwner,   "owner@test.com",  true, false, false, nil},
+
+        // Owner, other.
+        {model.RoleOwner,   "student@test.com",true, true, false, studentGradingResults},
+
+        // Owner, missing.
+        {model.RoleOwner,   "ZZZ@test.com",    false, false, false, nil},
+
+        // Admin, self.
+        {model.RoleAdmin,   "",                true, false, false, nil},
+        {model.RoleAdmin,   "owner@test.com",  true, false, false, nil},
+
+        // Admin, other.
+        {model.RoleAdmin,   "student@test.com",true, true, false, studentGradingResults},
+
+        // Admin, missing.
+        {model.RoleAdmin,   "ZZZ@test.com",    false, false, false, nil},
+
     };
 
     for i, testCase := range testCases {
-        fields := map[string]any{
+        field := map[string]any{
             "target-email": testCase.targetEmail,
         };
 
-        response := core.SendTestAPIRequestFull(test, core.NewEndpoint(`submission/fetch/history`), fields, nil, testCase.role);
+        response := core.SendTestAPIRequestFull(test, core.NewEndpoint(`submission/fetch/history`), field, nil, testCase.role);
         if (!response.Success) {
             if (testCase.permError) {
                 expectedLocator := "-020";

@@ -21,29 +21,29 @@ type FetchSubmissionHistoryResponse struct {
 
 func HandleFetchSubmissionHistory(request *FetchSubmissionHistoryRequest) (*FetchSubmissionHistoryResponse, *core.APIError) {
     response := FetchSubmissionHistoryResponse{
-        FoundUser:      false,
+        FoundUser:        false,
         FoundSubmissions: false,
-        GradingResults: make([]*model.GradingResult, 0),
+        GradingResults:   make([]*model.GradingResult, 0),
     }
 
     if !request.TargetUser.Found {
-        return &response, nil
+        return &response, nil;
     }
 
-    response.FoundUser = true
+    response.FoundUser = true;
 
-    gradingResults, err := db.GetSubmissionResultHistory(request.Assignment, request.TargetUser.Email)
+    gradingResults, err := db.GetSubmissionResultHistory(request.Assignment, request.TargetUser.Email);
     if err != nil {
         return nil, core.NewInternalError("-604", &request.APIRequestCourseUserContext, "Failed to get submissions.").
-            Err(err).Add("email", request.TargetUser.Email)
+            Err(err).Add("email", request.TargetUser.Email);
     }
 
     if gradingResults == nil {
-        return &response, nil
+        return &response, nil;
     }
 
-    response.FoundSubmissions = true
-    response.GradingResults = gradingResults
+    response.FoundSubmissions = true;
+    response.GradingResults = gradingResults;
 
-    return &response, nil
+    return &response, nil;
 }
