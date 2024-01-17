@@ -48,6 +48,184 @@ func TestLogTextBase(test *testing.T) {
     }
 }
 
+type backendLogger struct {
+    records []*LogRecord
+}
+
+func (this *backendLogger) LogDirect(record *LogRecord) {
+    this.records = append(this.records, record);
+}
+
+// Test both passing records to the backend, and the content of the records (used for both loggers).
+func TestBackendLogging(test *testing.T) {
+    SetLevels(LevelOff, LevelTrace);
+    defer SetLevelInfo();
+
+    var backend backendLogger;
+    SetStorageBackend(&backend);
+    defer SetStorageBackend(nil);
+
+    backgroundBackendLoggingForTesting = false;
+    defer func() {
+        backgroundBackendLoggingForTesting = true;
+    }();
+
+    // Empty.
+    Info("");
+
+    // Levels.
+    Trace("trace");
+    Debug("debug");
+    Info("info");
+    Warn("warn");
+    Error("error");
+
+    // Context.
+    Info("msg", fakeCourse{"C"});
+    Info("msg", Attr{KEY_COURSE, "C"});
+    Info("msg", fakeAssignment{"A"});
+    Info("msg", Attr{KEY_ASSIGNMENT, "A"});
+    Info("msg", fakeUser{"U"});
+    Info("msg", Attr{KEY_USER, "U"});
+    Info("msg", fakeCourse{"C"}, fakeAssignment{"A"}, fakeUser{"U"});
+
+    // Error
+    Info("msg", fmt.Errorf("err"));
+
+    // Attributes.
+    Info("msg", Attr{"ABC", 123});
+
+    expectedRecords := []*LogRecord{
+        // Empty.
+        &LogRecord{
+            LevelInfo,
+            "",
+            "", nil,
+            "", "", "",
+            map[string]any{},
+        },
+
+        // Levels.
+        &LogRecord{
+            LevelTrace,
+            "trace",
+            "", nil,
+            "", "", "",
+            map[string]any{},
+        },
+        &LogRecord{
+            LevelDebug,
+            "debug",
+            "", nil,
+            "", "", "",
+            map[string]any{},
+        },
+        &LogRecord{
+            LevelInfo,
+            "info",
+            "", nil,
+            "", "", "",
+            map[string]any{},
+        },
+        &LogRecord{
+            LevelWarn,
+            "warn",
+            "", nil,
+            "", "", "",
+            map[string]any{},
+        },
+        &LogRecord{
+            LevelError,
+            "error",
+            "", nil,
+            "", "", "",
+            map[string]any{},
+        },
+
+        // Context.
+        &LogRecord{
+            LevelInfo,
+            "msg",
+            "", nil,
+            "C", "", "",
+            map[string]any{},
+        },
+        &LogRecord{
+            LevelInfo,
+            "msg",
+            "", nil,
+            "C", "", "",
+            map[string]any{},
+        },
+        &LogRecord{
+            LevelInfo,
+            "msg",
+            "", nil,
+            "", "A", "",
+            map[string]any{},
+        },
+        &LogRecord{
+            LevelInfo,
+            "msg",
+            "", nil,
+            "", "A", "",
+            map[string]any{},
+        },
+        &LogRecord{
+            LevelInfo,
+            "msg",
+            "", nil,
+            "", "", "U",
+            map[string]any{},
+        },
+        &LogRecord{
+            LevelInfo,
+            "msg",
+            "", nil,
+            "", "", "U",
+            map[string]any{},
+        },
+        &LogRecord{
+            LevelInfo,
+            "msg",
+            "", nil,
+            "C", "A", "U",
+            map[string]any{},
+        },
+
+        // Error.
+        &LogRecord{
+            LevelInfo,
+            "msg",
+            "", fmt.Errorf("err"),
+            "", "", "",
+            map[string]any{},
+        },
+
+        // Attributes.
+        &LogRecord{
+            LevelInfo,
+            "msg",
+            "", nil,
+            "", "", "",
+            map[string]any{"ABC": 123},
+        },
+    };
+
+    if (len(backend.records) != len(expectedRecords)) {
+        test.Fatalf("Number of records does not match. Expected: %d, Actual: %d.", len(expectedRecords), len(backend.records));
+    }
+
+    for i, expectedRecord := range expectedRecords {
+        // Remove the timestamp.
+        backend.records[i].Timestamp = "";
+
+        if (!reflect.DeepEqual(expectedRecord, backend.records[i])) {
+            test.Errorf("Case %d: Record does not match. Expected: '%+v', Actual: '%+v'.", i, expectedRecord, backend.records[i]);
+        }
+    }
+}
+
 type parseResults struct {
     course string
     assignment string

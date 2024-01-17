@@ -1,3 +1,6 @@
+// A simple logging infrastructure that allows us to log directly to stderr (textWriter)
+// and a backend (presumably a database).
+
 package log
 
 import (
@@ -38,8 +41,6 @@ type Loggable interface {
     LogValue() *Attr;
 }
 
-// TODO: Maybe make sync containers for both stderr and backend.
-
 type LogRecord struct {
     // Core Attributes
     Level LogLevel `json:"level"`
@@ -68,6 +69,9 @@ var backend storageBackend = nil;
 
 var textLock sync.Mutex;
 var backendLock sync.Mutex;
+
+// Option for testing to log serially.
+var backgroundBackendLoggingForTesting bool = true;
 
 // Set the two logging levels.
 // The textLevel controls the level of the logger outputting to the text writer.
@@ -99,12 +103,18 @@ func logBackend(record *LogRecord) {
         return;
     }
 
-    go func(record *LogRecord) {
+    backendLog := func(record *LogRecord) {
         backendLock.Lock();
         defer backendLock.Unlock();
 
         backend.LogDirect(record);
-    }(record);
+    }
+
+    if (backgroundBackendLoggingForTesting) {
+        go backendLog(record);
+    } else {
+        backendLog(record);
+    }
 }
 
 func logText(record *LogRecord) {
