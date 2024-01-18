@@ -30,6 +30,8 @@ const (
     KEY_COURSE = "course"
     KEY_ASSIGNMENT = "assignment"
     KEY_USER = "user"
+
+    PRETTY_TIME_FORMAT = time.RFC3339
 )
 
 type Attr struct {
@@ -41,11 +43,11 @@ type Loggable interface {
     LogValue() *Attr;
 }
 
-type LogRecord struct {
+type Record struct {
     // Core Attributes
     Level LogLevel `json:"level"`
     Message string `json:"message"`
-    Timestamp string `json:"timestamp"`
+    UnixMicro int64 `json:"unix-time"`
     Error error `json:"error,omitempty"`
 
     // Context Attributes
@@ -57,21 +59,21 @@ type LogRecord struct {
     Attributes map[string]any `json:"attributes,omitempty"`
 }
 
-type storageBackend interface {
-    LogDirect(record *LogRecord);
+type StorageBackend interface {
+    LogDirect(record *Record) error;
 }
 
 var textLevel LogLevel = LevelInfo;
 var backendLevel LogLevel = LevelInfo;
 
 var textWriter io.StringWriter = os.Stderr;
-var backend storageBackend = nil;
+var backend StorageBackend = nil;
 
 var textLock sync.Mutex;
 var backendLock sync.Mutex;
 
-// Option for testing to log serially.
-var backgroundBackendLoggingForTesting bool = true;
+// Option to log serially, generally only for testing.
+var backgroundBackendLogging bool = true;
 
 // Set the two logging levels.
 // The textLevel controls the level of the logger outputting to the text writer.
@@ -85,16 +87,28 @@ func SetTextWriter(newTextWriter io.StringWriter) {
     textWriter = newTextWriter;
 }
 
-func SetStorageBackend(newBackend storageBackend) {
+func SetStorageBackend(newBackend StorageBackend) {
     backend = newBackend;
 }
 
-func LogDirect(record *LogRecord) {
+// Set whether to log to the backend in the backgroun and return the old value.
+// Generally should only be used for testing and fatal logs.
+func SetBackgroundLogging(value bool) bool {
+    backendLock.Lock();
+    defer backendLock.Unlock();
+
+    oldValue := backgroundBackendLogging;
+    backgroundBackendLogging = value;
+
+    return oldValue;
+}
+
+func LogDirectRecord(record *Record) {
     logText(record);
     logBackend(record);
 }
 
-func logBackend(record *LogRecord) {
+func logBackend(record *Record) {
     if ((backend == nil) || (record == nil)) {
         return;
     }
@@ -103,21 +117,30 @@ func logBackend(record *LogRecord) {
         return;
     }
 
-    backendLog := func(record *LogRecord) {
+    backendLog := func(record *Record) {
         backendLock.Lock();
         defer backendLock.Unlock();
 
-        backend.LogDirect(record);
+        err := backend.LogDirect(record);
+        if (err != nil) {
+            errRecord := &Record{
+                Level: LevelError,
+                Message: "Failed to log to storage backend.",
+                UnixMicro: time.Now().UnixMicro(),
+                Error: err,
+            };
+            logText(errRecord);
+        }
     }
 
-    if (backgroundBackendLoggingForTesting) {
+    if (backgroundBackendLogging) {
         go backendLog(record);
     } else {
         backendLog(record);
     }
 }
 
-func logText(record *LogRecord) {
+func logText(record *Record) {
     if ((textWriter == nil) || (record == nil)) {
         return;
     }
@@ -128,7 +151,8 @@ func logText(record *LogRecord) {
 
     builder := strings.Builder{};
 
-    builder.WriteString(fmt.Sprintf("%s [%5s] %s", record.Timestamp, record.Level.String(), record.Message));
+    timestamp := time.UnixMicro(record.UnixMicro).Format(PRETTY_TIME_FORMAT);
+    builder.WriteString(fmt.Sprintf("%s [%5s] %s", timestamp, record.Level.String(), record.Message));
 
     if (record.Course != "") {
         record.Attributes[KEY_COURSE] = record.Course;
@@ -175,10 +199,10 @@ func logText(record *LogRecord) {
 }
 
 func Log(level LogLevel, message string, course string, assignment string, user string, logError error, attributes map[string]any) {
-    record := &LogRecord{
+    record := &Record{
         Level: level,
         Message: message,
-        Timestamp: time.Now().Format(time.RFC3339),
+        UnixMicro: time.Now().UnixMicro(),
         Error: logError,
 
         Course: course,
@@ -188,7 +212,7 @@ func Log(level LogLevel, message string, course string, assignment string, user 
         Attributes: attributes,
     };
 
-    LogDirect(record);
+    LogDirectRecord(record);
 }
 
 // Parse logging information from standard arguments.
@@ -326,6 +350,8 @@ func Fatal(message string, args ...any) {
 }
 
 func FatalWithCode(code int, message string, args ...any) {
+    SetBackgroundLogging(false);
+
     logToLevel(LevelFatal, message, args...);
     os.Exit(code);
 }

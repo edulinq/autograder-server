@@ -19,7 +19,8 @@ const DB_DIRNAME = "disk-database";
 
 type backend struct {
     baseDir string
-    lock sync.RWMutex;
+    lock sync.RWMutex
+    logLock sync.RWMutex
 }
 
 func Open() (*backend, error) {
@@ -44,6 +45,9 @@ func (this *backend) EnsureTables() error {
 }
 
 func (this *backend) Clear() error {
+    this.lock.Lock();
+    defer this.lock.Unlock();
+
     err := util.RemoveDirent(this.baseDir);
     if (err != nil) {
         return err;

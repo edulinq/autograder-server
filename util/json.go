@@ -43,9 +43,20 @@ func MustJSONFromString(data string, target any) {
 }
 
 func JSONFromString(data string, target any) error {
-    err := json.Unmarshal([]byte(data), target);
+    return JSONFromBytes([]byte(data), target);
+}
+
+func MustJSONFromBytes(data []byte, target any) {
+    err := JSONFromBytes(data, target);
     if (err != nil) {
-        return fmt.Errorf("Could not unmarshal JSON string (%s): '%w'.", data, err);
+        log.Fatal().Err(err).Any("data", data).Msg("Failed to convert JSON to object.");
+    }
+}
+
+func JSONFromBytes(data []byte, target any) error {
+    err := json.Unmarshal(data, target);
+    if (err != nil) {
+        return fmt.Errorf("Could not unmarshal JSON bytes/string (%s): '%w'.", string(data), err);
     }
 
     return nil;

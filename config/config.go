@@ -42,7 +42,7 @@ func EnableUnitTestingMode() error {
     TESTING_MODE.Set(true);
     NO_TASKS.Set(true);
 
-    tempWorkDir, err := util.MkDirTemp("autograader-unit-testing-");
+    tempWorkDir, err := util.MkDirTemp("autograder-unit-testing-");
     if (err != nil) {
         return fmt.Errorf("Failed to make temp unit testing work dir: '%w'.", err);
     }
