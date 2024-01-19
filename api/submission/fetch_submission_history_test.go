@@ -1,12 +1,10 @@
 package submission
 
 import (
-    "path/filepath"
     "reflect"
     "testing"
 
     "github.com/eriq-augustine/autograder/api/core"
-    "github.com/eriq-augustine/autograder/config"
     "github.com/eriq-augustine/autograder/model"
     "github.com/eriq-augustine/autograder/util"
 )
@@ -14,61 +12,60 @@ import (
 func TestFetchSubmissionHistory(test *testing.T) {
     // Note that computation of these paths is deferred until test time.
     studentGradingResults := []*model.GradingResult{
-        model.MustLoadGradingResult(getTestSubmissionsResultPath("1697406256")),
-        model.MustLoadGradingResult(getTestSubmissionsResultPath("1697406265")),
-        model.MustLoadGradingResult(getTestSubmissionsResultPath("1697406272")),
+        model.MustLoadGradingResult(getTestSubmissionResultPath("1697406256")),
+        model.MustLoadGradingResult(getTestSubmissionResultPath("1697406265")),
+        model.MustLoadGradingResult(getTestSubmissionResultPath("1697406272")),
     };
 
     testCases := []struct{
         role model.UserRole
         targetEmail string
         foundUser bool
-        foundSubmissions bool
         permError bool
         result []*model.GradingResult
     }{
         // Grader, self.
-        {model.RoleGrader, "",                 true, false, false, nil},
-        {model.RoleGrader, "grader@test.com",  true, false, false, nil},
+        {model.RoleGrader, "",                 true, false, []*model.GradingResult{}},
+        {model.RoleGrader, "grader@test.com",  true, false, []*model.GradingResult{}},
 
         // Grader, other.
-        {model.RoleGrader, "student@test.com", true, true, false, studentGradingResults},
+        {model.RoleGrader, "student@test.com", true, false, studentGradingResults},
 
         // Grader, missing.
-        {model.RoleGrader, "ZZZ@test.com",     false, false, false, nil},
+        {model.RoleGrader, "ZZZ@test.com",     false, false, []*model.GradingResult{}},
 
         // Student, self.
-        {model.RoleStudent, "",                true, true, true, studentGradingResults},
+        {model.RoleStudent, "",                true, true, studentGradingResults},
 
         // Student, self, missing.
-        {model.RoleStudent, "",                true, false, true, nil},
-        {model.RoleStudent, "student@test.com",true, false, true, nil},
+        {model.RoleStudent, "",                true, true, []*model.GradingResult{}},
+        {model.RoleStudent, "student@test.com",true, true, []*model.GradingResult{}},
 
         // Student, other, recent.
-        {model.RoleStudent, "grader@test.com", false, false, true, nil},
+        {model.RoleStudent, "grader@test.com", false, true, []*model.GradingResult{}},
 
         // Student, other, missing.
-        {model.RoleStudent, "grader@test.com", true, false, true, nil},
+        {model.RoleStudent, "grader@test.com", true, true, []*model.GradingResult{}},
 
         // Owner, self.
-        {model.RoleOwner,   "",                true, false, false, nil},
-        {model.RoleOwner,   "owner@test.com",  true, false, false, nil},
+        {model.RoleOwner,   "",                true, false, []*model.GradingResult{}},
+        {model.RoleOwner,   "owner@test.com",  true, false, []*model.GradingResult{}},
 
         // Owner, other.
-        {model.RoleOwner,   "student@test.com",true, true, false, studentGradingResults},
+        {model.RoleOwner,   "student@test.com",true, false, studentGradingResults},
 
         // Owner, missing.
-        {model.RoleOwner,   "ZZZ@test.com",    false, false, false, nil},
+        {model.RoleOwner,   "ZZZ@test.com",    false, false, []*model.GradingResult{}},
 
         // Admin, self.
-        {model.RoleAdmin,   "",                true, false, false, nil},
-        {model.RoleAdmin,   "owner@test.com",  true, false, false, nil},
+        {model.RoleAdmin,   "",                true, false, []*model.GradingResult{}},
+        {model.RoleAdmin,   "owner@test.com",  true, false, []*model.GradingResult{}},
 
         // Admin, other.
-        {model.RoleAdmin,   "student@test.com",true, true, false, studentGradingResults},
+        {model.RoleAdmin,   "student@test.com",true, false, studentGradingResults},
 
         // Admin, missing.
-        {model.RoleAdmin,   "ZZZ@test.com",    false, false, false, nil},
+        {model.RoleAdmin,   "ZZZ@test.com",    false, false, []*model.GradingResult{}},
 
     };
 
@@ -100,24 +97,10 @@ func TestFetchSubmissionHistory(test *testing.T) {
             continue;
         }
 
-        if (testCase.foundSubmissions != responseContent.FoundSubmissions) {
-            test.Errorf("Case %d: Found submissions does not match. Expected: '%v', actual: '%v'.", i, testCase.foundSubmissions, responseContent.FoundSubmissions);
-            test.Errorf("Expected: %v, actual: %v", testCase.result, responseContent.GradingResults)
-            continue;
-        }
-
-        if (!responseContent.FoundSubmissions) {
-            continue;
-        }
-
         if (!reflect.DeepEqual(testCase.result, responseContent.GradingResults)) {
             test.Errorf("Case %d: Unexpected submission result. Expected: '%s', actual: '%s'.", i,
                 util.MustToJSONIndent(testCase.result), util.MustToJSONIndent(responseContent.GradingResults));
             continue;
         }
     }
-}
-
-func getTestSubmissionsResultPath(shortID string) string {
-    return filepath.Join(config.GetCourseImportDir(), "_tests", "COURSE101", "submissions", "HW0", "student@test.com", shortID, "submission-result.json");
 }

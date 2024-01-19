@@ -15,14 +15,12 @@ type FetchSubmissionHistoryRequest struct {
 
 type FetchSubmissionHistoryResponse struct {
     FoundUser        bool `json:"found-user"`
-    FoundSubmissions bool `json:"found-submissions"`
     GradingResults []*model.GradingResult `json:"grading-results"`
 }
 
 func HandleFetchSubmissionHistory(request *FetchSubmissionHistoryRequest) (*FetchSubmissionHistoryResponse, *core.APIError) {
     response := FetchSubmissionHistoryResponse{
         FoundUser:        false,
-        FoundSubmissions: false,
         GradingResults:   make([]*model.GradingResult, 0),
     }
 
@@ -38,11 +36,6 @@ func HandleFetchSubmissionHistory(request *FetchSubmissionHistoryRequest) (*Fetc
             Err(err).Add("email", request.TargetUser.Email);
     }
 
-    if gradingResults == nil {
-        return &response, nil;
-    }
-
-    response.FoundSubmissions = true;
     response.GradingResults = gradingResults;
 
     return &response, nil;

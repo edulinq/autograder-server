@@ -329,7 +329,7 @@ func (this *backend) GetSubmissionResultHistory(assignment *model.Assignment, em
 
     submissionsDir := this.getUserSubmissionDir(assignment.GetCourse().GetID(), assignment.GetID(), email);
     if !util.PathExists(submissionsDir) {
-        return nil, nil;
+        return submissions, nil;
     }
 
     dirents, err := os.ReadDir(submissionsDir);
@@ -338,7 +338,7 @@ func (this *backend) GetSubmissionResultHistory(assignment *model.Assignment, em
     }
 
     if len(dirents) == 0 {
-        return nil, nil;
+        return submissions, nil;
     }
 
     for _, dirent := range dirents {
