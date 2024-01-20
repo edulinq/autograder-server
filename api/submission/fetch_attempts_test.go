@@ -73,20 +73,3 @@ func TestFetchAttempts(test *testing.T) {
         }
     }
 }
-
-// TODO: DB test
-// ResetForTesting()
-// Testcase: submission exists
-// Testcase: submission DNE
-// Testcase: dir for submissions exist but is empty
-    // Make a submission by hijacking a submission from student@test.com from the grading result
-    // Edit user in grading info to be grader@test.com
-    // SaveSubmissions with new grading result
-    // Then remove submission
-    // Then test
-// Then cleanup using defer ResetForTesting()
-
-// TODO: Cleanup
-// Remove unnecessary tests from this file
-
-// TODO: Refactor naming

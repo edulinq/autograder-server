@@ -59,3 +59,54 @@ func (this *DBTests) DBTestRemoveSubmission(test *testing.T) {
         }
     }
 }
+
+func (this *DBTests) DBTestFetchAttempts(test *testing.T) {
+    ResetForTesting();
+    defer ResetForTesting();
+
+    assignment := MustGetTestAssignment()
+
+    // User has submissions
+    studentAttempts, err := GetAttempts(assignment, "student@test.com");
+    if err != nil {
+        test.Errorf("Failed to get student attempts when should be a success: %v", err);
+    }
+    if len(studentAttempts) == 0 {
+        test.Errorf("Got an empty result when shouldn't be.")
+    }
+
+    // User does not have submissions
+    graderAttempts, err := GetAttempts(assignment, "grader@test.com");
+    if err != nil {
+        test.Errorf("Failed to get grader attempts when should be a success (with empty result): %v", err);
+    }
+    if len(graderAttempts) != 0 {
+        test.Errorf("Got a non-empty result when should be empty.")
+    }
+
+    // User makes a submission, then that submission is removed.
+    // This case tests GetAttempts() when the submission directory exists but is empty.
+    graderSubmission := studentAttempts[0];
+    graderSubmission.Info.User = "grader@test.com";
+
+    err = SaveSubmission(assignment, graderSubmission)
+    if err != nil {
+        test.Errorf("Failed to save grader submission %v: ", err);
+    }
+
+    isRemoved, err := RemoveSubmission(assignment, "grader@test.com", "");
+    if err != nil {
+        test.Errorf("Failed to remove grader submission: %v", err);
+    }
+    if !isRemoved {
+        test.Errorf("Returned false from RemoveSubmission() when should be true.");
+    }
+
+    graderAttempts, err = GetAttempts(assignment, "grader@test.com")
+    if err != nil {
+        test.Errorf("Failed to get grader attempts when should be a success (with empty result): %v", err);
+    }
+    if len(graderAttempts) != 0 {
+        test.Errorf("Got a non-empty result when should be.")
+    }
+}
