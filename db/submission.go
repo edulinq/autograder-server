@@ -115,10 +115,10 @@ func RemoveSubmission(assignment *model.Assignment, email string, submissionID s
     return backend.RemoveSubmission(assignment, email, shortSubmissionID);
 }
 
-func GetSubmissionResultHistory(assignment *model.Assignment, email string) ([]*model.GradingResult, error) {
+func GetAttempts(assignment *model.Assignment, email string) ([]*model.GradingResult, error) {
     if backend == nil {
         return nil, fmt.Errorf("Database has not been opened.")
     }
 
-    return backend.GetSubmissionResultHistory(assignment, email)
+    return backend.GetAttempts(assignment, email)
 }

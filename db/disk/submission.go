@@ -324,7 +324,7 @@ func (this *backend) RemoveSubmission(assignment *model.Assignment, email string
     return true, nil;
 }
 
-func (this *backend) GetSubmissionResultHistory(assignment *model.Assignment, email string) ([]*model.GradingResult, error) {
+func (this *backend) GetAttempts(assignment *model.Assignment, email string) ([]*model.GradingResult, error) {
     submissions := make([]*model.GradingResult, 0);
 
     submissionsDir := this.getUserSubmissionDir(assignment.GetCourse().GetID(), assignment.GetID(), email);

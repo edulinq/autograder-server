@@ -9,7 +9,7 @@ import (
     "github.com/eriq-augustine/autograder/util"
 )
 
-func TestFetchSubmissionHistory(test *testing.T) {
+func TestFetchAttempts(test *testing.T) {
     // Note that computation of these paths is deferred until test time.
     studentGradingResults := []*model.GradingResult{
         model.MustLoadGradingResult(getTestSubmissionResultPath("1697406256")),
@@ -36,37 +36,6 @@ func TestFetchSubmissionHistory(test *testing.T) {
 
         // Student, self.
         {model.RoleStudent, "",                true, true, studentGradingResults},
-
-        // Student, self, missing.
-        {model.RoleStudent, "",                true, true, []*model.GradingResult{}},
-        {model.RoleStudent, "student@test.com",true, true, []*model.GradingResult{}},
-
-        // Student, other, recent.
-        {model.RoleStudent, "grader@test.com", false, true, []*model.GradingResult{}},
-
-        // Student, other, missing.
-        {model.RoleStudent, "grader@test.com", true, true, []*model.GradingResult{}},
-
-        // Owner, self.
-        {model.RoleOwner,   "",                true, false, []*model.GradingResult{}},
-        {model.RoleOwner,   "owner@test.com",  true, false, []*model.GradingResult{}},
-
-        // Owner, other.
-        {model.RoleOwner,   "student@test.com",true, false, studentGradingResults},
-
-        // Owner, missing.
-        {model.RoleOwner,   "ZZZ@test.com",    false, false, []*model.GradingResult{}},
-
-        // Admin, self.
-        {model.RoleAdmin,   "",                true, false, []*model.GradingResult{}},
-        {model.RoleAdmin,   "owner@test.com",  true, false, []*model.GradingResult{}},
-
-        // Admin, other.
-        {model.RoleAdmin,   "student@test.com",true, false, studentGradingResults},
-
-        // Admin, missing.
-        {model.RoleAdmin,   "ZZZ@test.com",    false, false, []*model.GradingResult{}},
-
     };
 
     for i, testCase := range testCases {
@@ -74,7 +43,7 @@ func TestFetchSubmissionHistory(test *testing.T) {
             "target-email": testCase.targetEmail,
         };
 
-        response := core.SendTestAPIRequestFull(test, core.NewEndpoint(`submission/fetch/history`), field, nil, testCase.role);
+        response := core.SendTestAPIRequestFull(test, core.NewEndpoint(`submission/fetch/attempts`), field, nil, testCase.role);
         if (!response.Success) {
             if (testCase.permError) {
                 expectedLocator := "-020";
@@ -89,7 +58,7 @@ func TestFetchSubmissionHistory(test *testing.T) {
             continue;
         }
 
-        var responseContent FetchSubmissionHistoryResponse;
+        var responseContent FetchAttemptsResponse;
         util.MustJSONFromString(util.MustToJSON(response.Content), &responseContent);
 
         if (testCase.foundUser != responseContent.FoundUser) {
@@ -104,3 +73,20 @@ func TestFetchSubmissionHistory(test *testing.T) {
         }
     }
 }
+
+// TODO: DB test
+// ResetForTesting()
+// Testcase: submission exists
+// Testcase: submission DNE
+// Testcase: dir for submissions exist but is empty
+    // Make a submission by hijacking a submission from student@test.com from the grading result
+    // Edit user in grading info to be grader@test.com
+    // SaveSubmissions with new grading result
+    // Then remove submission
+    // Then test
+// Then cleanup using defer ResetForTesting()
+
+// TODO: Cleanup
+// Remove unnecessary tests from this file
+
+// TODO: Refactor naming

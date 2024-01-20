@@ -6,20 +6,20 @@ import (
     "github.com/eriq-augustine/autograder/model"
 )
 
-type FetchSubmissionHistoryRequest struct {
+type FetchAttemptsRequest struct {
     core.APIRequestAssignmentContext
     core.MinRoleGrader
 
     TargetUser core.TargetUserSelfOrGrader `json:"target-email"`
 }
 
-type FetchSubmissionHistoryResponse struct {
+type FetchAttemptsResponse struct {
     FoundUser        bool `json:"found-user"`
     GradingResults []*model.GradingResult `json:"grading-results"`
 }
 
-func HandleFetchSubmissionHistory(request *FetchSubmissionHistoryRequest) (*FetchSubmissionHistoryResponse, *core.APIError) {
-    response := FetchSubmissionHistoryResponse{
+func HandleFetchAttempts(request *FetchAttemptsRequest) (*FetchAttemptsResponse, *core.APIError) {
+    response := FetchAttemptsResponse{
         FoundUser:        false,
         GradingResults:   make([]*model.GradingResult, 0),
     }
@@ -30,7 +30,7 @@ func HandleFetchSubmissionHistory(request *FetchSubmissionHistoryRequest) (*Fetc
 
     response.FoundUser = true;
 
-    gradingResults, err := db.GetSubmissionResultHistory(request.Assignment, request.TargetUser.Email);
+    gradingResults, err := db.GetAttempts(request.Assignment, request.TargetUser.Email);
     if err != nil {
         return nil, core.NewInternalError("-607", &request.APIRequestCourseUserContext, "Failed to get submissions.").
             Err(err).Add("email", request.TargetUser.Email);

@@ -94,8 +94,8 @@ type Backend interface {
     // Can return nil if the submission does not exist.
     GetSubmissionResult(assignment *model.Assignment, email string, shortSubmissionID string) (*model.GradingInfo, error);
 
-    // Get the result history for a specific user.
-    GetSubmissionResultHistory(assignment *model.Assignment, email string) ([]*model.GradingResult, error);
+    // Get all attempts for a specific user.
+    GetAttempts(assignment *model.Assignment, email string) ([]*model.GradingResult, error);
 
     // Get the scoring infos for an assignment for all users that match the given role.
     // A role of model.RoleUnknown means all users.
