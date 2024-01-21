@@ -1,9 +1,10 @@
 package db
 
 import (
-    "github.com/eriq-augustine/autograder/util"
     "reflect"
     "testing"
+
+    "github.com/eriq-augustine/autograder/util"
 )
 
 func (this *DBTests) DBTestRemoveSubmission(test *testing.T) {
