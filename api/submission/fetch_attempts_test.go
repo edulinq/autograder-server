@@ -35,7 +35,7 @@ func TestFetchAttempts(test *testing.T) {
         {model.RoleGrader, "ZZZ@test.com",     false, false, []*model.GradingResult{}},
 
         // Student, self.
-        {model.RoleStudent, "",                true, true, studentGradingResults},
+        {model.RoleStudent, "",                true, true, nil},
     };
 
     for i, testCase := range testCases {

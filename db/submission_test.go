@@ -1,6 +1,8 @@
 package db
 
 import (
+    "github.com/eriq-augustine/autograder/util"
+    "reflect"
     "testing"
 )
 
@@ -64,49 +66,67 @@ func (this *DBTests) DBTestFetchAttempts(test *testing.T) {
     ResetForTesting();
     defer ResetForTesting();
 
-    assignment := MustGetTestAssignment()
+    assignment := MustGetTestAssignment();
 
-    // User has submissions
-    studentAttempts, err := GetAttempts(assignment, "student@test.com");
+    // Fetch attempts from another user who has submissions.
+    studentAttempts, err := GetSubmissionAttempts(assignment, "student@test.com");
     if err != nil {
-        test.Errorf("Failed to get student attempts when should be a success: %v", err);
+        test.Fatalf("Failed to get student attempts when should be a success: %v", err);
     }
+
     if len(studentAttempts) == 0 {
-        test.Errorf("Got an empty result when shouldn't be.")
+        test.Fatalf("Got an empty result when shouldn't be.");
     }
 
-    // User does not have submissions
-    graderAttempts, err := GetAttempts(assignment, "grader@test.com");
+    // Fetch attempts from self (grader). User does not have submissions.
+    graderAttempts, err := GetSubmissionAttempts(assignment, "grader@test.com");
     if err != nil {
-        test.Errorf("Failed to get grader attempts when should be a success (with empty result): %v", err);
+        test.Fatalf("Failed to get grader attempts when should be a success (with empty result): %v", err);
     }
+
     if len(graderAttempts) != 0 {
-        test.Errorf("Got a non-empty result when should be empty.")
+        test.Fatalf("Got a non-empty result when should be empty.");
     }
 
     // User makes a submission, then that submission is removed.
-    // This case tests GetAttempts() when the submission directory exists but is empty.
+    // This case tests GetSubmissionAttempts() when the submission directory exists but is empty.
     graderSubmission := studentAttempts[0];
     graderSubmission.Info.User = "grader@test.com";
 
-    err = SaveSubmission(assignment, graderSubmission)
+    err = SaveSubmission(assignment, graderSubmission);
     if err != nil {
-        test.Errorf("Failed to save grader submission %v: ", err);
+        test.Fatalf("Failed to save grader submission %v: ", err);
+    }
+
+    graderAttempts, err = GetSubmissionAttempts(assignment, "grader@test.com");
+    if err != nil {
+        test.Fatalf("Failed to get grader attempts when there should be one %v: ", err);
+    }
+
+    if len(graderAttempts) != 1 {
+        test.Fatalf("Fetch returned unexpected number of attempts. Expected: %d, actual: %d", 1, len(graderAttempts));
+    }
+
+    if (!reflect.DeepEqual(graderAttempts[0], graderSubmission)) {
+        test.Errorf("Unexpected attempt returned. Expected: '%s', actual: '%s'.",
+            util.MustToJSONIndent(graderAttempts[0]), util.MustToJSONIndent(graderSubmission));
     }
 
     isRemoved, err := RemoveSubmission(assignment, "grader@test.com", "");
     if err != nil {
-        test.Errorf("Failed to remove grader submission: %v", err);
-    }
-    if !isRemoved {
-        test.Errorf("Returned false from RemoveSubmission() when should be true.");
+        test.Fatalf("Failed to remove grader submission: %v", err);
     }
 
-    graderAttempts, err = GetAttempts(assignment, "grader@test.com")
-    if err != nil {
-        test.Errorf("Failed to get grader attempts when should be a success (with empty result): %v", err);
+    if !isRemoved {
+        test.Fatalf("Returned false from RemoveSubmission() when should be true.");
     }
+
+    graderAttempts, err = GetSubmissionAttempts(assignment, "grader@test.com");
+    if err != nil {
+        test.Fatalf("Failed to get grader attempts when should be a success (with empty result): %v", err);
+    }
+
     if len(graderAttempts) != 0 {
-        test.Errorf("Got a non-empty result when should be.")
+        test.Fatalf("Got a non-empty result when should be.");
     }
 }

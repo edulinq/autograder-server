@@ -324,7 +324,7 @@ func (this *backend) RemoveSubmission(assignment *model.Assignment, email string
     return true, nil;
 }
 
-func (this *backend) GetAttempts(assignment *model.Assignment, email string) ([]*model.GradingResult, error) {
+func (this *backend) GetSubmissionAttempts(assignment *model.Assignment, email string) ([]*model.GradingResult, error) {
     submissions := make([]*model.GradingResult, 0);
 
     submissionsDir := this.getUserSubmissionDir(assignment.GetCourse().GetID(), assignment.GetID(), email);
@@ -335,10 +335,6 @@ func (this *backend) GetAttempts(assignment *model.Assignment, email string) ([]
     dirents, err := os.ReadDir(submissionsDir);
     if err != nil {
         return nil, fmt.Errorf("Unable to read user submissions dir '%s': '%w'.", submissionsDir, err);
-    }
-
-    if len(dirents) == 0 {
-        return submissions, nil;
     }
 
     for _, dirent := range dirents {

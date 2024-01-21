@@ -14,14 +14,14 @@ type FetchAttemptsRequest struct {
 }
 
 type FetchAttemptsResponse struct {
-    FoundUser        bool `json:"found-user"`
+    FoundUser bool `json:"found-user"`
     GradingResults []*model.GradingResult `json:"grading-results"`
 }
 
 func HandleFetchAttempts(request *FetchAttemptsRequest) (*FetchAttemptsResponse, *core.APIError) {
     response := FetchAttemptsResponse{
-        FoundUser:        false,
-        GradingResults:   make([]*model.GradingResult, 0),
+        FoundUser: false,
+        GradingResults: make([]*model.GradingResult, 0),
     }
 
     if !request.TargetUser.Found {
@@ -30,9 +30,9 @@ func HandleFetchAttempts(request *FetchAttemptsRequest) (*FetchAttemptsResponse,
 
     response.FoundUser = true;
 
-    gradingResults, err := db.GetAttempts(request.Assignment, request.TargetUser.Email);
+    gradingResults, err := db.GetSubmissionAttempts(request.Assignment, request.TargetUser.Email);
     if err != nil {
-        return nil, core.NewInternalError("-607", &request.APIRequestCourseUserContext, "Failed to get submissions.").
+        return nil, core.NewInternalError("-607", &request.APIRequestCourseUserContext, "Failed to get submission attempts.").
             Err(err).Add("email", request.TargetUser.Email);
     }
 

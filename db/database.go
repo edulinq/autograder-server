@@ -95,7 +95,7 @@ type Backend interface {
     GetSubmissionResult(assignment *model.Assignment, email string, shortSubmissionID string) (*model.GradingInfo, error);
 
     // Get all attempts for a specific user.
-    GetAttempts(assignment *model.Assignment, email string) ([]*model.GradingResult, error);
+    GetSubmissionAttempts(assignment *model.Assignment, email string) ([]*model.GradingResult, error);
 
     // Get the scoring infos for an assignment for all users that match the given role.
     // A role of model.RoleUnknown means all users.
