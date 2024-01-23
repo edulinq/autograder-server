@@ -160,8 +160,8 @@ func filterFinalScores(
         // Check the existing comment last so we can decide if this comment needs to be updated.
         existingComment := existingComments[user.LMSID];
         if (existingComment != nil) {
-            // If this user has an existing comment, then we may skip this upload if submission IDs match.
-            if (existingComment.ID == scoringInfo.ID) {
+            // If this user has an existing comment, then we may skip this upload if everything matches.
+            if (existingComment.Equal(scoringInfo)) {
                 log.Trace().Str("user", email).Str("submittion-id", existingComment.ID).Msg("User's submission/grade is up-to-date.");
                 continue;
             }
