@@ -63,49 +63,53 @@ func (this *DBTests) DBTestRemoveSubmission(test *testing.T) {
     }
 }
 
+// Tests GetSubmissionAttempts as follows:
+// A) Fetch all attempts from a user who has submissions and check that the result is not empty.
+// B) Fetch attempts from a user who has no submissions and check that the result is empty.
+// C) Make a submission to a user with no entries, then fetch that attempt and makes sure the result has one entry.
+// D) Remove that submission and then fetch again and maker sure the result is empty.
 func (this *DBTests) DBTestFetchAttempts(test *testing.T) {
     ResetForTesting();
     defer ResetForTesting();
 
     assignment := MustGetTestAssignment();
 
-    // Fetch attempts from another user who has submissions.
+    // Case A
     studentAttempts, err := GetSubmissionAttempts(assignment, "student@test.com");
     if err != nil {
-        test.Fatalf("Failed to get student attempts when should be a success: %v", err);
+        test.Fatalf("Failed to get student attempts when should be a success: '%v'.", err);
     }
 
     if len(studentAttempts) == 0 {
         test.Fatalf("Got an empty result when shouldn't be.");
     }
 
-    // Fetch attempts from self (grader). User does not have submissions.
+    // Case B
     graderAttempts, err := GetSubmissionAttempts(assignment, "grader@test.com");
     if err != nil {
-        test.Fatalf("Failed to get grader attempts when should be a success (with empty result): %v", err);
+        test.Fatalf("Failed to get grader attempts when should be a success (with empty result): '%v'.", err);
     }
 
     if len(graderAttempts) != 0 {
-        test.Fatalf("Got a non-empty result when should be empty.");
+        test.Fatalf("Unexpected result length. Expected: '%d', Actual: '%d'.", 0, len(graderAttempts));
     }
 
-    // User makes a submission, then that submission is removed.
-    // This case tests GetSubmissionAttempts() when the submission directory exists but is empty.
+    // Case C
     graderSubmission := studentAttempts[0];
     graderSubmission.Info.User = "grader@test.com";
 
     err = SaveSubmission(assignment, graderSubmission);
     if err != nil {
-        test.Fatalf("Failed to save grader submission %v: ", err);
+        test.Fatalf("Failed to save grader submission: '%v'.", err);
     }
 
     graderAttempts, err = GetSubmissionAttempts(assignment, "grader@test.com");
     if err != nil {
-        test.Fatalf("Failed to get grader attempts when there should be one %v: ", err);
+        test.Fatalf("Failed to get grader attempts when there should be one: '%v'.", err);
     }
 
     if len(graderAttempts) != 1 {
-        test.Fatalf("Fetch returned unexpected number of attempts. Expected: %d, actual: %d", 1, len(graderAttempts));
+        test.Fatalf("Fetch returned unexpected number of attempts. Expected: '%d', Actual: '%d'.", 1, len(graderAttempts));
     }
 
     if (!reflect.DeepEqual(graderAttempts[0], graderSubmission)) {
@@ -113,9 +117,10 @@ func (this *DBTests) DBTestFetchAttempts(test *testing.T) {
             util.MustToJSONIndent(graderAttempts[0]), util.MustToJSONIndent(graderSubmission));
     }
 
+    // Case D
     isRemoved, err := RemoveSubmission(assignment, "grader@test.com", "");
     if err != nil {
-        test.Fatalf("Failed to remove grader submission: %v", err);
+        test.Fatalf("Failed to remove grader submission: '%v'.", err);
     }
 
     if !isRemoved {
@@ -124,10 +129,10 @@ func (this *DBTests) DBTestFetchAttempts(test *testing.T) {
 
     graderAttempts, err = GetSubmissionAttempts(assignment, "grader@test.com");
     if err != nil {
-        test.Fatalf("Failed to get grader attempts when should be a success (with empty result): %v", err);
+        test.Fatalf("Failed to get grader attempts when should be a success (with empty result): '%v'.", err);
     }
 
     if len(graderAttempts) != 0 {
-        test.Fatalf("Got a non-empty result when should be.");
+        test.Fatalf("Unexpected result length. Expected: '%d', Actual: '%d'", 0, len(graderAttempts));
     }
 }
