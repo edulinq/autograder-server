@@ -18,7 +18,7 @@ import (
     "fmt"
     "os"
 
-    "github.com/rs/zerolog/log"
+    "github.com/eriq-augustine/autograder/log"
 )
 
 // A Kong-style struct for adding on all the config-related options to a CLI.
@@ -35,7 +35,7 @@ func HandleConfigArgs(args ConfigArgs) error {
 }
 
 func HandleConfigArgsFull(args ConfigArgs, cwd string, skipEnv bool) error {
-    defer InitLogging();
+    defer InitLoggingFromConfig();
 
     if (cwd == "") {
         cwd = shouldGetCWD();
@@ -106,7 +106,7 @@ func HandleConfigArgsFull(args ConfigArgs, cwd string, skipEnv bool) error {
 func shouldGetCWD() string {
     cwd, err := os.Getwd();
     if (err != nil) {
-        log.Error().Err(err).Msg("Failed to get working directory.");
+        log.Error("Failed to get working directory.", err);
         return ".";
     }
 

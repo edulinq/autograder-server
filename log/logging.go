@@ -5,7 +5,6 @@ package log
 
 import (
     "encoding/json"
-    "errors"
     "fmt"
     "io"
     "os"
@@ -14,34 +13,9 @@ import (
     "time"
 )
 
-type LogLevel int32;
-
 const (
-    LevelTrace LogLevel = -20
-    LevelDebug LogLevel = -10
-    LevelInfo LogLevel = 0
-    LevelWarn LogLevel = 10
-    LevelError LogLevel = 20
-    LevelFatal LogLevel = 30
-    LevelOff LogLevel = 100
-)
-
-const (
-    KEY_COURSE = "course"
-    KEY_ASSIGNMENT = "assignment"
-    KEY_USER = "user"
-
     PRETTY_TIME_FORMAT = time.RFC3339
 )
-
-type Attr struct {
-    Name string
-    Value any
-}
-
-type Loggable interface {
-    LogValue() *Attr;
-}
 
 type Record struct {
     // Core Attributes
@@ -63,9 +37,6 @@ type StorageBackend interface {
     LogDirect(record *Record) error;
 }
 
-var textLevel LogLevel = LevelInfo;
-var backendLevel LogLevel = LevelInfo;
-
 var textWriter io.StringWriter = os.Stderr;
 var backend StorageBackend = nil;
 
@@ -74,14 +45,6 @@ var backendLock sync.Mutex;
 
 // Option to log serially, generally only for testing.
 var backgroundBackendLogging bool = true;
-
-// Set the two logging levels.
-// The textLevel controls the level of the logger outputting to the text writer.
-// The backendLevel controls the level of the logger outputting to the backend.
-func SetLevels(newTextLevel LogLevel, newBackendLevel LogLevel) {
-    textLevel = newTextLevel;
-    backendLevel = newBackendLevel;
-}
 
 func SetTextWriter(newTextWriter io.StringWriter) {
     textWriter = newTextWriter;
@@ -215,88 +178,6 @@ func Log(level LogLevel, message string, course string, assignment string, user 
     LogDirectRecord(record);
 }
 
-// Parse logging information from standard arguments.
-// Arguments must be either:
-// nil, error, Loggable, Attr, or *Attr.
-// If there is an error parsing the attributes,
-// the best effort attributes will be returned and an error will be retutned.
-func parseArgs(args ...any) (string, string, string, error, map[string]any, error) {
-    var course string;
-    var assignment string;
-    var user string;
-    var logError error;
-    var attributes map[string]any = make(map[string]any);
-    var err error;
-
-    for i, arg := range args {
-        if (arg == nil) {
-            continue;
-        }
-
-        var attr *Attr = nil;
-
-        switch argValue := arg.(type) {
-            case error:
-                logError = argValue;
-            case Loggable:
-                attr = argValue.LogValue();
-            case Attr:
-                attr = &argValue;
-            case *Attr:
-                attr = argValue;
-            default:
-                err = errors.Join(err, fmt.Errorf("Logging argument %d is an unknown type '%T': '%v'.", i, argValue, argValue));
-        }
-
-        if (attr == nil) {
-            continue;
-        }
-
-        switch attr.Name {
-            case KEY_COURSE:
-                value, ok := attr.Value.(string);
-                if (!ok) {
-                    err = errors.Join(fmt.Errorf("Logging argument %d has a course key, but non-string value '%T': '%v'.", i, attr.Value, attr.Value));
-                    value = fmt.Sprintf("%v", attr.Value);
-                }
-
-                if (course != "") {
-                    err = errors.Join(fmt.Errorf("Logging argument %d is a duplicate course key. Old value: '%s', New value: '%s'.", i, course, value));
-                }
-
-                course = value;
-            case KEY_ASSIGNMENT:
-                value, ok := attr.Value.(string);
-                if (!ok) {
-                    err = errors.Join(fmt.Errorf("Logging argument %d has a assignment key, but non-string value '%T': '%v'.", i, attr.Value, attr.Value));
-                    value = fmt.Sprintf("%v", attr.Value);
-                }
-
-                if (assignment != "") {
-                    err = errors.Join(fmt.Errorf("Logging argument %d is a duplicate assignment key. Old value: '%s', New value: '%s'.", i, assignment, value));
-                }
-
-                assignment = value;
-            case KEY_USER:
-                value, ok := attr.Value.(string);
-                if (!ok) {
-                    err = errors.Join(fmt.Errorf("Logging argument %d has a user key, but non-string value '%T': '%v'.", i, attr.Value, attr.Value));
-                    value = fmt.Sprintf("%v", attr.Value);
-                }
-
-                if (user != "") {
-                    err = errors.Join(fmt.Errorf("Logging argument %d is a duplicate user key. Old value: '%s', New value: '%s'.", i, user, value));
-                }
-
-                user = value;
-            default:
-                attributes[attr.Name] = attr.Value
-        }
-    }
-
-    return course, assignment, user, logError, attributes, err;
-}
-
 func logToLevel(level LogLevel, message string, args ...any) {
     course, assignment, user, logError, attributes, err := parseArgs(args...);
     if (err != nil) {
@@ -304,82 +185,4 @@ func logToLevel(level LogLevel, message string, args ...any) {
     }
 
     Log(level, message, course, assignment, user, logError, attributes);
-}
-
-func (this LogLevel) String() string {
-    switch this {
-        case LevelTrace:
-            return "TRACE";
-        case LevelDebug:
-            return "DEBUG";
-        case LevelInfo:
-            return "INFO";
-        case LevelWarn:
-            return "WARN";
-        case LevelError:
-            return "ERROR";
-        case LevelFatal:
-            return "FATAL";
-        default:
-            return fmt.Sprintf("%d", int32(this));
-    }
-}
-
-func Trace(message string, args ...any) {
-    logToLevel(LevelTrace, message, args...);
-}
-
-func Debug(message string, args ...any) {
-    logToLevel(LevelDebug, message, args...);
-}
-
-func Info(message string, args ...any) {
-    logToLevel(LevelInfo, message, args...);
-}
-
-func Warn(message string, args ...any) {
-    logToLevel(LevelWarn, message, args...);
-}
-
-func Error(message string, args ...any) {
-    logToLevel(LevelError, message, args...);
-}
-
-func Fatal(message string, args ...any) {
-    FatalWithCode(1, message, args...);
-}
-
-func FatalWithCode(code int, message string, args ...any) {
-    SetBackgroundLogging(false);
-
-    logToLevel(LevelFatal, message, args...);
-    os.Exit(code);
-}
-
-func SetLevel(level LogLevel) {
-    SetLevels(level, level);
-}
-
-func SetLevelTrace() {
-    SetLevel(LevelTrace);
-}
-
-func SetLevelDebug() {
-    SetLevel(LevelDebug);
-}
-
-func SetLevelInfo() {
-    SetLevel(LevelInfo);
-}
-
-func SetLevelWarn() {
-    SetLevel(LevelWarn);
-}
-
-func SetLevelError() {
-    SetLevel(LevelError);
-}
-
-func SetLevelFatal() {
-    SetLevel(LevelFatal);
 }

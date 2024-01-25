@@ -6,6 +6,7 @@ import (
     "testing"
 
     "github.com/eriq-augustine/autograder/config"
+    "github.com/eriq-augustine/autograder/log"
 )
 
 // Backends to put through the standard tests.
@@ -33,7 +34,7 @@ func TestDatabases(test *testing.T) {
     config.MustEnableUnitTestingMode();
 
     // Quiet the logs.
-    config.SetLogLevelFatal();
+    log.SetLevelFatal();
 
     for _, dbType := range testBackends {
         config.DB_TYPE.Set(dbType);

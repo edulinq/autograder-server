@@ -4,9 +4,9 @@ import (
     "fmt"
 
     "github.com/alecthomas/kong"
-    "github.com/rs/zerolog/log"
 
     "github.com/eriq-augustine/autograder/config"
+    "github.com/eriq-augustine/autograder/log"
 )
 
 var args struct {
@@ -20,21 +20,21 @@ func main() {
 
     err := config.HandleConfigArgs(args.ConfigArgs);
     if (err != nil) {
-        log.Fatal().Err(err).Msg("Could not load config options.");
+        log.Fatal("Could not load config options.", err);
     }
 
     fmt.Println("Basic Levels")
-    log.Trace().Msg("This message is trace.");
-    log.Debug().Msg("This message is debug.");
-    log.Info().Msg("This message is info.");
-    log.Warn().Msg("This message is warn.");
-    log.Error().Msg("This message is error.");
-    // log.Fatal().Msg("This message is fatal.");
+    log.Trace("This message is trace.");
+    log.Debug("This message is debug.");
+    log.Info("This message is info.");
+    log.Warn("This message is warn.");
+    log.Error("This message is error.");
+    // log.Fatal("This message is fatal.");
 
     fmt.Println("Attatched Values");
-    log.Info().Int("value", 1).Msg("Attatched Int.");
-    log.Info().Float64("value", 2.3).Msg("Attatched Float64.");
-    log.Info().Str("value", "Foo Bar").Msg("Attatched Str.");
-    log.Info().Bool("value", true).Msg("Attatched Bool.");
-    log.Info().Err(fmt.Errorf("This is an error!")).Msg("Attatched Err.");
+    log.Info("Attatched Int.", log.NewAttr("value", 1));
+    log.Info("Attatched Float64.", log.NewAttr("value", 2.3));
+    log.Info("Attatched Str.", log.NewAttr("value", "Foo Bar"));
+    log.Info("Attatched Bool.", log.NewAttr("value", true));
+    log.Info("Attatched Err.", fmt.Errorf("This is an error!"));
 }

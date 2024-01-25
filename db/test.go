@@ -1,9 +1,8 @@
 package db
 
 import (
-    "github.com/rs/zerolog/log"
-
     "github.com/eriq-augustine/autograder/config"
+    "github.com/eriq-augustine/autograder/log"
     "github.com/eriq-augustine/autograder/model"
     "github.com/eriq-augustine/autograder/util"
 )
@@ -26,7 +25,7 @@ func PrepForTestingMain() {
     config.MustEnableUnitTestingMode();
 
     // Quiet the logs.
-    config.SetLogLevelFatal();
+    log.SetLevelFatal();
 
     MustOpen();
 
@@ -45,6 +44,6 @@ func CleanupTestingMain() {
     // Remove any temp directories.
     err := util.RemoveRecordedTempDirs();
     if (err != nil) {
-        log.Error().Err(err).Msg("Error when removing temp dirs.");
+        log.Error("Error when removing temp dirs.", err);
     }
 }
