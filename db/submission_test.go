@@ -44,7 +44,7 @@ func (this *DBTests) DBTestRemoveSubmission(test *testing.T) {
     for i, testCase := range testCases {
         // Reload the test course every time.
         ResetForTesting();
-        
+
         assignment := MustGetTestAssignment();
 
         isRemoved, err := RemoveSubmission(assignment, testCase.targetEmail, testCase.targetSubmission);
