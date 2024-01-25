@@ -133,6 +133,6 @@ func (this *DBTests) DBTestFetchAttempts(test *testing.T) {
     }
 
     if len(graderAttempts) != 0 {
-        test.Fatalf("Unexpected result length. Expected: '%d', Actual: '%d'", 0, len(graderAttempts));
+        test.Fatalf("Unexpected result length. Expected: '%d', Actual: '%d'.", 0, len(graderAttempts));
     }
 }
