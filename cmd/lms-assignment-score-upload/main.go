@@ -4,10 +4,10 @@ import (
     "fmt"
 
     "github.com/alecthomas/kong"
-    "github.com/rs/zerolog/log"
 
     "github.com/eriq-augustine/autograder/config"
     "github.com/eriq-augustine/autograder/db"
+    "github.com/eriq-augustine/autograder/log"
     "github.com/eriq-augustine/autograder/scoring"
 )
 
@@ -25,7 +25,7 @@ func main() {
 
     err := config.HandleConfigArgs(args.ConfigArgs);
     if (err != nil) {
-        log.Fatal().Err(err).Msg("Could not load config options.");
+        log.Fatal("Could not load config options.", err);
     }
 
     db.MustOpen();
@@ -33,12 +33,12 @@ func main() {
 
     assignment := db.MustGetAssignment(args.Course, args.Assignment);
     if (assignment.GetLMSID() == "") {
-        log.Fatal().Msg("Assignment has no LMS ID.");
+        log.Fatal("Assignment has no LMS ID.");
     }
 
     err = scoring.FullAssignmentScoringAndUpload(assignment, args.DryRun);
     if (err != nil) {
-        log.Fatal().Err(err).Msg("Failed to score and upload assignment.");
+        log.Fatal("Failed to score and upload assignment.", err);
     }
 
 

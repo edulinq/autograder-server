@@ -4,10 +4,10 @@ import (
     "fmt"
 
     "github.com/alecthomas/kong"
-    "github.com/rs/zerolog/log"
 
     "github.com/eriq-augustine/autograder/config"
     "github.com/eriq-augustine/autograder/db"
+    "github.com/eriq-augustine/autograder/log"
     "github.com/eriq-augustine/autograder/docker"
     "github.com/eriq-augustine/autograder/model"
 )
@@ -27,7 +27,7 @@ func main() {
 
     err := config.HandleConfigArgs(args.ConfigArgs);
     if (err != nil) {
-        log.Fatal().Err(err).Msg("Could not load config options.");
+        log.Fatal("Could not load config options.", err);
     }
 
     db.MustOpen();
@@ -59,7 +59,7 @@ func buildImages(assignments []*model.Assignment) []string {
     for _, assignment := range assignments {
         err := docker.BuildImageFromSource(assignment, args.Force, false, &args.BuildOptions);
         if (err != nil) {
-            log.Fatal().Str("assignment", assignment.FullID()).Err(err).Msg("Failed to build image.");
+            log.Fatal("Failed to build image.", log.NewAttr("assignment", assignment.FullID()), err);
         }
 
         imageNames = append(imageNames, assignment.ImageName());

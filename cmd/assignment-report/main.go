@@ -4,10 +4,10 @@ import (
     "fmt"
 
     "github.com/alecthomas/kong"
-    "github.com/rs/zerolog/log"
 
     "github.com/eriq-augustine/autograder/config"
     "github.com/eriq-augustine/autograder/db"
+    "github.com/eriq-augustine/autograder/log"
     "github.com/eriq-augustine/autograder/report"
     "github.com/eriq-augustine/autograder/util"
 )
@@ -26,7 +26,7 @@ func main() {
 
     err := config.HandleConfigArgs(args.ConfigArgs);
     if (err != nil) {
-        log.Fatal().Err(err).Msg("Could not load config options.");
+        log.Fatal("Could not load config options.", err);
     }
 
     db.MustOpen();
@@ -36,13 +36,13 @@ func main() {
 
     report, err := report.GetAssignmentScoringReport(assignment);
     if (err != nil) {
-        log.Fatal().Err(err).Str("assignment", assignment.GetID()).Msg("Failed to get scoring report.");
+        log.Fatal("Failed to get scoring report.", log.NewAttr("assignment", assignment.GetID()), err);
     }
 
     if (args.HTML) {
         html, err := report.ToHTML(false);
         if (err != nil) {
-            log.Fatal().Err(err).Str("assignment", assignment.GetID()).Msg("Failed to generate HTML scoring report.");
+            log.Fatal("Failed to generate HTML scoring report.", log.NewAttr("assignment", assignment.GetID()), err);
         }
 
         fmt.Println(html);

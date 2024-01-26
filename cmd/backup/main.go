@@ -4,10 +4,10 @@ import (
     "fmt"
 
     "github.com/alecthomas/kong"
-    "github.com/rs/zerolog/log"
 
     "github.com/eriq-augustine/autograder/config"
     "github.com/eriq-augustine/autograder/db"
+    "github.com/eriq-augustine/autograder/log"
     "github.com/eriq-augustine/autograder/model"
     "github.com/eriq-augustine/autograder/task"
 )
@@ -24,7 +24,7 @@ func main() {
 
     err := config.HandleConfigArgs(args.ConfigArgs);
     if (err != nil) {
-        log.Fatal().Err(err).Msg("Could not load config options.");
+        log.Fatal("Could not load config options.", err);
     }
 
     db.MustOpen();
@@ -62,10 +62,10 @@ func backupFromMap(courses map[string]*model.Course) []string {
 
     if (len(errs) > 0) {
         for _, err := range errs {
-            log.Error().Err(err).Msg("Failed to backup course.");
+            log.Error("Failed to backup course.", err);
         }
 
-        log.Fatal().Int("count", len(errs)).Msg("Failed to backup courses.");
+        log.Fatal("Failed to backup courses.", log.NewAttr("count", len(errs)));
     }
 
     return courseIDs;

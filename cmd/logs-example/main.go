@@ -6,6 +6,7 @@ import (
     "github.com/alecthomas/kong"
 
     "github.com/eriq-augustine/autograder/config"
+    "github.com/eriq-augustine/autograder/db"
     "github.com/eriq-augustine/autograder/log"
 )
 
@@ -22,6 +23,9 @@ func main() {
     if (err != nil) {
         log.Fatal("Could not load config options.", err);
     }
+
+    db.MustOpen();
+    defer db.MustClose();
 
     fmt.Println("Basic Levels")
     log.Trace("This message is trace.");

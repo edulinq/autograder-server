@@ -4,12 +4,12 @@ import (
     "fmt"
 
     "github.com/alecthomas/kong"
-    "github.com/rs/zerolog/log"
 
     "github.com/eriq-augustine/autograder/config"
     "github.com/eriq-augustine/autograder/db"
     "github.com/eriq-augustine/autograder/lms"
     "github.com/eriq-augustine/autograder/lms/lmstypes"
+    "github.com/eriq-augustine/autograder/log"
     "github.com/eriq-augustine/autograder/model"
     "github.com/eriq-augustine/autograder/util"
 )
@@ -30,7 +30,7 @@ func main() {
 
     err := config.HandleConfigArgs(args.ConfigArgs);
     if (err != nil) {
-        log.Fatal().Err(err).Msg("Could not load config options.");
+        log.Fatal("Could not load config options.", err);
     }
 
     db.MustOpen();
@@ -40,17 +40,17 @@ func main() {
     course := assignment.GetCourse();
 
     if (assignment.GetLMSID() == "") {
-        log.Fatal().Str("assignment", assignment.FullID()).Msg("Assignment has no LMS ID.");
+        log.Fatal("Assignment has no LMS ID.", log.NewAttr("assignment", assignment.FullID()));
     }
 
     users, err := db.GetUsers(course);
     if (err != nil) {
-        log.Fatal().Err(err).Msg("Failed to fetch autograder users.");
+        log.Fatal("Failed to fetch autograder users.", err);
     }
 
     grades, err := loadGrades(args.Grades, users, args.Force);
     if (err != nil) {
-        log.Fatal().Err(err).Msg("Could not fetch grades.");
+        log.Fatal("Could not fetch grades.", err);
     }
 
     if (len(grades) == 0) {
@@ -62,7 +62,7 @@ func main() {
     } else {
         err = lms.UpdateAssignmentScores(course, assignment.GetLMSID(), grades);
         if (err != nil) {
-            log.Fatal().Err(err).Msg("Could not upload grades.");
+            log.Fatal("Could not upload grades.", err);
         }
     }
 

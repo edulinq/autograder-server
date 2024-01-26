@@ -4,10 +4,10 @@ import (
     "fmt"
 
     "github.com/alecthomas/kong"
-    "github.com/rs/zerolog/log"
 
     "github.com/eriq-augustine/autograder/config"
     "github.com/eriq-augustine/autograder/db"
+    "github.com/eriq-augustine/autograder/log"
     "github.com/eriq-augustine/autograder/grader"
     "github.com/eriq-augustine/autograder/util"
 )
@@ -26,7 +26,7 @@ func main() {
     kong.Parse(&args);
     err := config.HandleConfigArgs(args.ConfigArgs);
     if (err != nil) {
-        log.Fatal().Err(err).Msg("Could not load config options.");
+        log.Fatal("Could not load config options.", err);
     }
 
     db.MustOpen();
@@ -40,17 +40,17 @@ func main() {
             fmt.Println("Grading failed, but output was recovered:");
             fmt.Println(result.GetCombinedOutput());
         }
-        log.Fatal().Err(err).Msg("Failed to run grader.");
+        log.Fatal("Failed to run grader.", err);
     }
 
     if (reject != nil) {
-        log.Fatal().Str("reject-reason", reject.String()).Msg("Submission was rejected.");
+        log.Fatal("Submission was rejected.", log.NewAttr("reject-reason", reject.String()));
     }
 
     if (args.OutPath != "") {
         err = util.ToJSONFileIndent(result.Info, args.OutPath);
         if (err != nil) {
-            log.Fatal().Err(err).Str("outpath", args.OutPath).Msg("Failed to output JSON result.");
+            log.Fatal("Failed to output JSON result.", log.NewAttr("outpath", args.OutPath), err);
         }
     }
 

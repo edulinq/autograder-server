@@ -4,11 +4,11 @@ import (
     "fmt"
 
     "github.com/alecthomas/kong"
-    "github.com/rs/zerolog/log"
 
     "github.com/eriq-augustine/autograder/config"
     "github.com/eriq-augustine/autograder/db"
     "github.com/eriq-augustine/autograder/lms/lmssync"
+    "github.com/eriq-augustine/autograder/log"
     "github.com/eriq-augustine/autograder/util"
 )
 
@@ -26,7 +26,7 @@ func main() {
 
     err := config.HandleConfigArgs(args.ConfigArgs);
     if (err != nil) {
-        log.Fatal().Err(err).Msg("Could not load config options.");
+        log.Fatal("Could not load config options.", err);
     }
 
     db.MustOpen();
@@ -36,7 +36,7 @@ func main() {
 
     result, err := lmssync.SyncLMS(course, args.DryRun, !args.SkipEmails);
     if (err != nil) {
-        log.Fatal().Err(err).Msg("Failed to sync LMS.");
+        log.Fatal("Failed to sync LMS.", err);
     }
 
     if (result == nil) {
