@@ -8,9 +8,8 @@ import (
     "path/filepath"
     "strings"
 
-    "github.com/rs/zerolog/log"
-
     "github.com/eriq-augustine/autograder/common"
+    "github.com/eriq-augustine/autograder/log"
     "github.com/eriq-augustine/autograder/model"
     "github.com/eriq-augustine/autograder/util"
 )
@@ -34,7 +33,7 @@ func runNoDockerGrader(assignment *model.Assignment, submissionPath string, opti
     if (!options.LeaveTempDir) {
         defer os.RemoveAll(tempDir);
     } else {
-        log.Info().Str("path", tempDir).Msg("Leaving behind temp grading dir.");
+        log.Info("Leaving behind temp grading dir.", log.NewAttr("path", tempDir));
     }
 
     cmd, err := getAssignmentInvocation(assignment, tempDir, inputDir, outputDir, workDir);

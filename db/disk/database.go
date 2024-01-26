@@ -9,9 +9,8 @@ import (
     "path/filepath"
     "sync"
 
-    "github.com/rs/zerolog/log"
-
     "github.com/eriq-augustine/autograder/config"
+    "github.com/eriq-augustine/autograder/log"
     "github.com/eriq-augustine/autograder/util"
 )
 
@@ -31,7 +30,7 @@ func Open() (*backend, error) {
         return nil, fmt.Errorf("Failed to make db dir '%s': '%w'.", baseDir, err);
     }
 
-    log.Debug().Str("base-dir", baseDir).Msg("Opened disk database.");
+    log.Debug("Opened disk database.", log.NewAttr("base-dir", baseDir));
 
     return &backend{baseDir: baseDir}, nil;
 }

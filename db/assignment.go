@@ -3,9 +3,8 @@ package db
 import (
     "fmt"
 
-    "github.com/rs/zerolog/log"
-
     "github.com/eriq-augustine/autograder/common"
+    "github.com/eriq-augustine/autograder/log"
     "github.com/eriq-augustine/autograder/model"
 )
 
@@ -14,9 +13,8 @@ import (
 func MustGetAssignment(rawCourseID string, rawAssignmentID string) *model.Assignment {
     assignment, err := GetAssignment(rawCourseID, rawAssignmentID);
     if (err != nil) {
-        log.Fatal().Err(err).
-                Str("raw-course-id", rawCourseID).Str("raw-assignment-id", rawAssignmentID).
-                Msg("Failed to get assignment.");
+        log.Fatal("Failed to get assignment.",
+                err, log.NewAttr("raw-course-id", rawCourseID), log.NewAttr("raw-assignment-id", rawAssignmentID));
     }
 
     return assignment;

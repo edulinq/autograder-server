@@ -4,8 +4,7 @@ import (
     "errors"
     "fmt"
 
-    "github.com/rs/zerolog/log"
-
+    "github.com/eriq-augustine/autograder/log"
     "github.com/eriq-augustine/autograder/model"
 )
 
@@ -20,7 +19,7 @@ func GetUsers(course *model.Course) (map[string]*model.User, error) {
 func MustGetUsers(course *model.Course) map[string]*model.User {
     users, err := GetUsers(course);
     if (err != nil) {
-        log.Fatal().Err(err).Str("course-id", course.GetID()).Msg("Failed to get users.");
+        log.Fatal("Failed to get users.", err, log.NewAttr("course-id", course.GetID()));
     }
 
     return users;

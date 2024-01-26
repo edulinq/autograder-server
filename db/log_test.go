@@ -10,14 +10,17 @@ import (
 )
 
 func (this *DBTests) DBTestGetLogsLevel(test *testing.T) {
-    Clear();
-    defer Clear();
-
     oldValue := log.SetBackgroundLogging(false);
     defer log.SetBackgroundLogging(oldValue);
 
     log.SetLevels(log.LevelOff, log.LevelTrace);
-    defer log.SetLevelInfo();
+    defer log.SetLevelFatal();
+
+    // Wait for old logs to get written.
+    time.Sleep(10 * time.Millisecond)
+
+    Clear();
+    defer Clear();
 
     // The logs, records, and levels are all ordered so we can loop over each level.
 
@@ -84,7 +87,9 @@ func (this *DBTests) DBTestGetLogsLevel(test *testing.T) {
         expectedRecords := allRecords[i:len(allRecords)];
 
         if (len(expectedRecords) != len(records)) {
-            test.Errorf("Level '%s': Got the incorrect number of records. Expected: %d, Actual: %d.", level.String(), len(expectedRecords), len(records));
+            test.Errorf("Level '%s': Got the incorrect number of records. Expected: %d, Actual: %d (%s vs %s).", level.String(),
+                    len(expectedRecords), len(records),
+                    util.MustToJSONIndent(expectedRecords), util.MustToJSONIndent(records));
             continue;
         }
 
@@ -104,7 +109,7 @@ func (this *DBTests) DBTestGetLogsTime(test *testing.T) {
     defer log.SetBackgroundLogging(oldValue);
 
     log.SetLevels(log.LevelOff, log.LevelTrace);
-    defer log.SetLevelInfo();
+    defer log.SetLevelFatal();
 
     beginning := time.Now();
     time.Sleep(2 * time.Millisecond)
@@ -176,7 +181,7 @@ func (this *DBTests) DBTestGetLogsContext(test *testing.T) {
     defer log.SetBackgroundLogging(oldValue);
 
     log.SetLevels(log.LevelOff, log.LevelTrace);
-    defer log.SetLevelInfo();
+    defer log.SetLevelFatal();
 
     log.Info("msg", log.Attr{log.KEY_COURSE, "C"});
     log.Info("msg", log.Attr{log.KEY_ASSIGNMENT, "A"});

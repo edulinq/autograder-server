@@ -5,10 +5,9 @@ import (
     "os"
     "path/filepath"
 
-    "github.com/rs/zerolog/log"
-
     "github.com/eriq-augustine/autograder/common"
     "github.com/eriq-augustine/autograder/docker"
+    "github.com/eriq-augustine/autograder/log"
     "github.com/eriq-augustine/autograder/model"
     "github.com/eriq-augustine/autograder/util"
 )
@@ -28,7 +27,7 @@ func runDockerGrader(assignment *model.Assignment, submissionPath string, option
     if (!options.LeaveTempDir) {
         defer os.RemoveAll(tempDir);
     } else {
-        log.Info().Str("path", tempDir).Msg("Leaving behind temp grading dir.");
+        log.Info("Leaving behind temp grading dir.", log.NewAttr("path", tempDir));
     }
 
     // Copy over submission files to the temp input dir.
