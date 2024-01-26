@@ -3,9 +3,8 @@ package common
 import (
     "os"
 
-    "github.com/rs/zerolog/log"
-
     "github.com/eriq-augustine/autograder/config"
+    "github.com/eriq-augustine/autograder/log"
     "github.com/eriq-augustine/autograder/util"
 )
 
@@ -16,7 +15,7 @@ func ShouldGetCWD() string {
 
     cwd, err := os.Getwd();
     if (err != nil) {
-        log.Error().Err(err).Msg("Failed to get working directory.");
+        log.Error("Failed to get working directory.", err);
         return ".";
     }
 

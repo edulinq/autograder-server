@@ -9,7 +9,7 @@ import (
     "runtime"
     "strings"
 
-    "github.com/rs/zerolog/log"
+    "github.com/eriq-augustine/autograder/log"
 )
 
 // Get an absolute path of a path.
@@ -20,7 +20,7 @@ import (
 func ShouldAbs(path string) string {
     absPath, err := filepath.Abs(path);
     if (err != nil) {
-        log.Error().Str("path", path).Err(err).Msg("Failed to compute an absolute path.");
+        log.Error("Failed to compute an absolute path.", err, log.NewAttr("path", path));
         return path;
     }
 
@@ -58,7 +58,7 @@ func IsDir(path string) bool {
             return false;
         }
 
-        log.Warn().Err(err).Str("path", path).Msg("Unexpected error when checking if a path is a dir.");
+        log.Warn("Unexpected error when checking if a path is a dir.", err, log.NewAttr("path", path));
         return false;
     }
 
@@ -72,7 +72,7 @@ func IsEmptyDir(path string) bool {
 
     dir, err := os.Open(path);
     if (err != nil) {
-        log.Warn().Err(err).Str("path", path).Msg("Failed to open dir to check if it is empty.");
+        log.Warn("Failed to open dir to check if it is empty.", err, log.NewAttr("path", path));
         return false;
     }
     defer dir.Close();
@@ -83,7 +83,7 @@ func IsEmptyDir(path string) bool {
             return true;
         }
 
-        log.Warn().Err(err).Str("path", path).Msg("Unexpected error when reading dir names.");
+        log.Warn("Unexpected error when reading dir names.", err, log.NewAttr("path", path));
         return false;
     }
 
@@ -101,7 +101,7 @@ func IsSymLink(path string) bool {
             return false;
         }
 
-        log.Warn().Err(err).Str("path", path).Msg("Unexpected error when checking if a path is a symbolic link.");
+        log.Warn("Unexpected error when checking if a path is a symbolic link.", err, log.NewAttr("path", path));
         return false;
     }
 
@@ -207,7 +207,7 @@ func ShouldGetThisDir() string {
     // 0 is the current caller (this function), and 1 should be one frame back.
     _, path, _, ok := runtime.Caller(1);
     if (!ok) {
-        log.Error().Msg("Could not get the stackframe for the current runtime.");
+        log.Error("Could not get the stackframe for the current runtime.");
         return ".";
     }
 

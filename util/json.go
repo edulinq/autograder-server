@@ -8,7 +8,7 @@ import (
    "reflect"
    "strings"
 
-    "github.com/rs/zerolog/log"
+    "github.com/eriq-augustine/autograder/log"
 )
 
 const DEFAULT_PREFIX = "";
@@ -38,7 +38,7 @@ func JSONFromFile(path string, target any) error {
 func MustJSONFromString(data string, target any) {
     err := JSONFromString(data, target);
     if (err != nil) {
-        log.Fatal().Err(err).Any("data", data).Msg("Failed to convert JSON to object.");
+        log.Fatal("Failed to convert JSON to object.", log.NewAttr("data", data), err);
     }
 }
 
@@ -49,7 +49,7 @@ func JSONFromString(data string, target any) error {
 func MustJSONFromBytes(data []byte, target any) {
     err := JSONFromBytes(data, target);
     if (err != nil) {
-        log.Fatal().Err(err).Any("data", data).Msg("Failed to convert JSON to object.");
+        log.Fatal("Failed to convert JSON to object.", log.NewAttr("data", data), err);
     }
 }
 
@@ -76,7 +76,7 @@ func JSONMapFromString(data string) (map[string]any, error) {
 func MustToJSON(data any) string {
     text, err := ToJSON(data);
     if (err != nil) {
-        log.Fatal().Err(err).Any("data", data).Msg("Failed to convert object to JSON.");
+        log.Fatal("Failed to convert object to JSON.", log.NewAttr("data", data), err);
     }
 
     return text;
@@ -89,7 +89,7 @@ func ToJSON(data any) (string, error) {
 func MustToJSONIndent(data any) string {
     text, err := ToJSONIndent(data);
     if (err != nil) {
-        log.Fatal().Err(err).Any("data", data).Msg("Failed to convert object to JSON.");
+        log.Fatal("Failed to convert object to JSON.", log.NewAttr("data", data), err);
     }
 
     return text;

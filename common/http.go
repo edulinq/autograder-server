@@ -13,9 +13,8 @@ import (
     "path/filepath"
     "strings"
 
-    "github.com/rs/zerolog/log"
-
     "github.com/eriq-augustine/autograder/config"
+    "github.com/eriq-augustine/autograder/log"
     "github.com/eriq-augustine/autograder/util"
 )
 
@@ -200,7 +199,9 @@ func doRequest(uri string, request *http.Request, verb string, checkResult bool)
     }
 
     if (checkResult && (response.StatusCode != http.StatusOK)) {
-        log.Error().Int("code", response.StatusCode).Str("body", body).Any("headers", response.Header).Str("url", uri).Msg("Got a non-OK status.");
+        log.Error("Got a non-OK status.",
+                log.NewAttr("code", response.StatusCode), log.NewAttr("body", body),
+                log.NewAttr("headers", response.Header), log.NewAttr("url", uri));
         return "", nil, fmt.Errorf("Got a non-OK status code '%d' from %s on URL '%s': '%w'.", response.StatusCode, verb, uri, err);
     }
 
@@ -226,6 +227,6 @@ func writeRequest(request *SavedHTTPRequest) error {
         return fmt.Errorf("Failed to write JSON file '%s': '%w'.", path, err);
     }
 
-    log.Debug().Str("uri", request.URL).Str("path", path).Msg("Saved HTTP request.");
+    log.Debug("Saved HTTP request.", log.NewAttr("uri", request.URL), log.NewAttr("path", path));
     return nil;
 }

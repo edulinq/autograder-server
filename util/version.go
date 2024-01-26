@@ -4,7 +4,7 @@ import (
     "path/filepath"
     "strings"
 
-    "github.com/rs/zerolog/log"
+    "github.com/eriq-augustine/autograder/log"
 )
 
 const (
@@ -17,13 +17,13 @@ const (
 func GetAutograderVersion() string {
     versionPath := ShouldAbs(filepath.Join(ShouldGetThisDir(), "..", VERSION_FILENAME));
     if (!IsFile(versionPath)) {
-        log.Error().Str("path", versionPath).Msg("Version file does not exist.");
+        log.Error("Version file does not exist.", log.NewAttr("path", versionPath));
         return UNKNOWN_VERSION;
     }
 
     version, err := ReadFile(versionPath);
     if (err != nil) {
-        log.Error().Err(err).Str("path", versionPath).Msg("Failed to read the version file.");
+        log.Error("Failed to read the version file.", err, log.NewAttr("path", versionPath));
         return UNKNOWN_VERSION;
     }
 
@@ -37,7 +37,7 @@ func GetAutograderFullVersion() string {
 
     hash, err := GitGetCommitHash(repoPath);
     if (err != nil) {
-        log.Error().Err(err).Str("path", repoPath).Msg("Failed to get commit hash.");
+        log.Error("Failed to get commit hash.", err, log.NewAttr("path", repoPath));
         hash = UNKNOWN_VERSION;
     }
 
