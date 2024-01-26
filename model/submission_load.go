@@ -4,9 +4,8 @@ import (
     "fmt"
     "path/filepath"
 
-    "github.com/rs/zerolog/log"
-
     "github.com/eriq-augustine/autograder/common"
+    "github.com/eriq-augustine/autograder/log"
     "github.com/eriq-augustine/autograder/util"
 )
 
@@ -81,7 +80,7 @@ func LoadGradingResult(resultPath string) (*GradingResult, error) {
 func MustLoadGradingResult(resultPath string) *GradingResult {
     result, err := LoadGradingResult(resultPath);
     if (err != nil) {
-        log.Fatal().Err(err).Str("path", resultPath).Msg("Failed to load grading result.");
+        log.Fatal("Failed to load grading result.", err, log.NewAttr("path", resultPath));
     }
 
     return result;

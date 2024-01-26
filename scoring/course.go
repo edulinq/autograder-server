@@ -3,24 +3,30 @@ package scoring
 import (
     "fmt"
 
-    "github.com/rs/zerolog/log"
-
+    "github.com/eriq-augustine/autograder/log"
     "github.com/eriq-augustine/autograder/model"
 )
 
 func FullCourseScoringAndUpload(course *model.Course, dryRun bool) error {
     assignments := course.GetSortedAssignments();
 
-    log.Debug().Str("course", course.GetID()).Bool("dry-run", dryRun).Msg("Beginning full scoring for course.");
+    log.Debug("Beginning full scoring for course.",
+            log.NewAttr("course", course.GetID()),
+            log.NewAttr("dry-run", dryRun));
 
     for i, assignment := range assignments {
         if (assignment.GetLMSID() == "") {
-            log.Warn().Str("course", course.GetID()).Str("assignment", assignment.GetID()).Msg("Assignment has no LMS id, skipping scoring.");
+            log.Warn("Assignment has no LMS id, skipping scoring.",
+                    log.NewAttr("course", course.GetID()),
+                    log.NewAttr("assignment", assignment.GetID()));
             continue;
         }
 
-        log.Debug().Str("course", course.GetID()).Str("assignment", assignment.GetID()).Int("index", i).Bool("dry-run", dryRun).
-                Msg("Scoring course assignment.");
+        log.Debug("Scoring course assignment.",
+                log.NewAttr("course", course.GetID()),
+                log.NewAttr("assignment", assignment.GetID()),
+                log.NewAttr("index", i),
+                log.NewAttr("dry-run", dryRun));
 
         err := FullAssignmentScoringAndUpload(assignment, dryRun);
         if (err != nil) {
@@ -28,7 +34,8 @@ func FullCourseScoringAndUpload(course *model.Course, dryRun bool) error {
         }
     }
 
-    log.Debug().Str("course", course.GetID()).Bool("dry-run", dryRun).Msg("Finished full scoring for course.");
+    log.Debug("Finished full scoring for course.",
+            log.NewAttr("course", course.GetID()), log.NewAttr("dry-run", dryRun));
 
     return nil;
 }
