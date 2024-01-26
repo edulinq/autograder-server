@@ -9,8 +9,8 @@ import (
     "github.com/docker/docker/api/types/container"
     "github.com/docker/docker/api/types/mount"
     "github.com/docker/docker/pkg/stdcopy"
-    "github.com/rs/zerolog/log"
 
+    "github.com/eriq-augustine/autograder/log"
     "github.com/eriq-augustine/autograder/util"
 )
 
@@ -71,7 +71,9 @@ func RunContainer(imageName string, inputDir string, outputDir string, gradingID
     })
 
     if (err != nil) {
-        log.Warn().Err(err).Str("container-name", name).Str("container-id", containerInstance.ID).Msg("Failed to get output from container (but run did not throw an error).");
+        log.Warn("Failed to get output from container (but run did not throw an error).",
+                err, log.NewAttr("container-name", name),
+                log.NewAttr("container-id", containerInstance.ID));
         out = nil;
     }
     defer out.Close()
@@ -99,7 +101,11 @@ func RunContainer(imageName string, inputDir string, outputDir string, gradingID
         stdout = outBuffer.String();
         stderr = errBuffer.String();
 
-        log.Debug().Str("container-name", name).Str("container-id", containerInstance.ID).Str("stdout", stdout).Str("stderr", stderr).Msg("Container output.");
+        log.Debug("Container output.",
+                log.NewAttr("container-name", name),
+                log.NewAttr("container-id", containerInstance.ID),
+                log.NewAttr("stdout", stdout),
+                log.NewAttr("stderr", stderr));
     }
 
     return stdout, stderr, nil;

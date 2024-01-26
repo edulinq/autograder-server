@@ -6,10 +6,9 @@ import (
     "path/filepath"
     "sync"
 
-    "github.com/rs/zerolog/log"
-
     "github.com/eriq-augustine/autograder/common"
     "github.com/eriq-augustine/autograder/config"
+    "github.com/eriq-augustine/autograder/log"
     "github.com/eriq-augustine/autograder/util"
 )
 
@@ -47,7 +46,7 @@ func BuildImageFromSource(imageSource ImageSource, force bool, quick bool, optio
 
     if (!force && !build) {
         // Nothing has changed, skip build.
-        log.Debug().Str("imageSource", imageSource.FullID()).Msg("No files have changed, skipping image build.");
+        log.Debug("No files have changed, skipping image build.", log.NewAttr("imageSource", imageSource.FullID()));
         return nil;
     }
 
@@ -129,8 +128,8 @@ func CheckFileChanges(imageSource ImageSource, quick bool) (bool, error) {
                 // Check git refs for changes.
 
                 if (filespec.Reference == "") {
-                    log.Warn().Str("imageSource", imageSource.FullID()).Str("repo", filespec.GetPath()).
-                            Msg("Git repo without ref (branch/commit) used as a static file. Please specify a ref so changes can be seen.");
+                    log.Warn("Git repo without ref (branch/commit) used as a static file. Please specify a ref so changes can be seen.",
+                            log.NewAttr("imageSource", imageSource.FullID()), log.NewAttr("repo", filespec.GetPath()));
                 }
 
                 oldRef, exists, err := util.CachePut(cachePath, filespec.GetPath(), filespec.Reference);

@@ -11,8 +11,7 @@ import (
     "runtime"
     "strings"
 
-    "github.com/rs/zerolog/log"
-
+    "github.com/eriq-augustine/autograder/log"
     "github.com/eriq-augustine/autograder/util"
 )
 
@@ -50,10 +49,7 @@ func GetRouteServer(routes *[]*Route) http.HandlerFunc {
 }
 
 func ServeRoutes(routes *[]*Route, response http.ResponseWriter, request *http.Request) {
-    log.Debug().
-        Str("method", request.Method).
-        Str("url", request.URL.Path).
-        Msg("Incoming Request");
+    log.Debug("Incoming Request", log.NewAttr("method", request.Method), log.NewAttr("url", request.URL.Path));
 
     if (routes == nil) {
         http.NotFound(response, request);
@@ -65,7 +61,7 @@ func ServeRoutes(routes *[]*Route, response http.ResponseWriter, request *http.R
 
     for i, route = range *routes {
         if (route == nil) {
-            log.Warn().Int("index", i).Msg("Found nil route.");
+            log.Warn("Found nil route.", log.NewAttr("index", i));
         }
 
         if (route.method != request.Method) {
@@ -79,7 +75,7 @@ func ServeRoutes(routes *[]*Route, response http.ResponseWriter, request *http.R
 
         err := route.handler(response, request);
         if (err != nil) {
-            log.Error().Err(err).Str("path", request.URL.Path).Msg("Handler had an error.");
+            log.Error("Handler had an error.", err, log.NewAttr("path", request.URL.Path));
             http.Error(response, "Server Error", http.StatusInternalServerError);
         }
 
@@ -110,8 +106,8 @@ func NewAPIRoute(pattern string, apiHandler any) *Route {
                 return;
             }
 
-            log.Error().Any("value", value).Str("endpoint", request.URL.Path).
-                    Msg("Recovered from a panic when handling an API endpoint.");
+            log.Error("Recovered from a panic when handling an API endpoint.",
+                    log.NewAttr("value", value), log.NewAttr("endpoint", request.URL.Path));
             apiErr := NewBareInternalError("-001", request.URL.Path, "Recovered from a panic when handling an API endpoint.").
                     Add("value", value);
 
@@ -175,8 +171,8 @@ func sendAPIResponse(apiRequest ValidAPIRequest, response http.ResponseWriter,
         apiResponse = apiErr.ToResponse();
 
         if (hardFail) {
-            log.Error().Err(err).Any("request", apiRequest).Any("response", apiResponse).Any("api-error", apiErr).
-                    Msg("Failed to encode API result as JSON, hard failing.");
+            log.Error("Failed to encode API result as JSON, hard failing.",
+                    err, log.NewAttr("request", apiRequest), log.NewAttr("response", apiResponse), log.NewAttr("api-error", apiErr));
 
             payload, _ = util.ToJSON(apiResponse);
         } else {
@@ -189,7 +185,7 @@ func sendAPIResponse(apiRequest ValidAPIRequest, response http.ResponseWriter,
     _, err = fmt.Fprint(response, payload);
     if (err != nil) {
         http.Error(response, "Server Failed to Send Response - Contact Admins", http.StatusInternalServerError);
-        log.Error().Err(err).Str("payload", payload).Msg("Failed to write final payload to http writer.");
+        log.Error("Failed to write final payload to http writer.", err, log.NewAttr("payload", payload));
         return fmt.Errorf("Could not write API response payload: '%w'.", err);
     }
 

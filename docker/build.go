@@ -12,10 +12,10 @@ import (
 
 	"github.com/docker/docker/api/types"
     "github.com/docker/docker/pkg/archive"
-    "github.com/rs/zerolog/log"
 
     "github.com/eriq-augustine/autograder/common"
     "github.com/eriq-augustine/autograder/config"
+    "github.com/eriq-augustine/autograder/log"
     "github.com/eriq-augustine/autograder/util"
 )
 
@@ -44,7 +44,7 @@ func BuildImageWithOptions(imageInfo *ImageInfo, options *BuildOptions) error {
     }
 
     if (config.DEBUG.Get()) {
-        log.Info().Str("path", tempDir).Msg("Leaving behind temp building dir.");
+        log.Info("Leaving behind temp building dir.", log.NewAttr("path", tempDir));
     } else {
         defer os.RemoveAll(tempDir);
     }
@@ -85,7 +85,7 @@ func buildImage(buildOptions types.ImageBuildOptions, tar io.ReadCloser) error {
     }
 
     output := collectBuildOutput(response);
-    log.Debug().Str("image-build-output", output).Msg("Image Build Output");
+    log.Debug("Image Build Output", log.NewAttr("image-build-output", output));
 
     return nil;
 }
@@ -123,7 +123,7 @@ func collectBuildOutput(response types.ImageBuildResponse) string {
                 text = "<ERROR: Docker output JSON value is not a string.>";
             }
 
-            log.Warn().Err(err).Str("message", text).Msg("Docker image build had an error entry.");
+            log.Warn("Docker image build had an error entry.", err, log.NewAttr("message", text));
             buildStringOutput.WriteString(text);
         }
 
@@ -140,7 +140,7 @@ func collectBuildOutput(response types.ImageBuildResponse) string {
 
     err := responseScanner.Err();
     if (err != nil) {
-        log.Warn().Err(err).Msg("Failed to scan docker image build response.");
+        log.Warn("Failed to scan docker image build response.", err);
     }
 
     return buildStringOutput.String();

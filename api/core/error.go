@@ -5,9 +5,8 @@ import (
     "fmt"
     "net/http"
 
-    "github.com/rs/zerolog/log"
-
     "github.com/eriq-augustine/autograder/common"
+    "github.com/eriq-augustine/autograder/log"
     "github.com/eriq-augustine/autograder/model"
     "github.com/eriq-augustine/autograder/util"
 )
@@ -54,14 +53,16 @@ func (this *APIError) Error() string {
 }
 
 func (this *APIError) Log() {
-    log.Error().
-            Str("api-request-id", this.RequestID).Str("locator", this.Locator).Str("api-endpoint", this.Endpoint).
-            Str("timestamp", this.Timestamp.String()).
-            Int("http-status", this.HTTPStatus).
-            Err(this.SourceError).
-            Str("internal-text", this.InternalText).Str("response-text", this.ResponseText).
-            Any("additional-details", this.AdditionalDetails).
-            Msg("API Error");
+    log.Error("API Error",
+            this.SourceError,
+            log.NewAttr("api-request-id", this.RequestID),
+            log.NewAttr("locator", this.Locator),
+            log.NewAttr("api-endpoint", this.Endpoint),
+            log.NewAttr("timestamp", this.Timestamp.String()),
+            log.NewAttr("http-status", this.HTTPStatus),
+            log.NewAttr("internal-text", this.InternalText),
+            log.NewAttr("response-text", this.ResponseText),
+            log.NewAttr("additional-details", this.AdditionalDetails));
 }
 
 // Add additional context to this error.

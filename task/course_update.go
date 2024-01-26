@@ -4,11 +4,10 @@ import (
     "errors"
     "fmt"
 
-    "github.com/rs/zerolog/log"
-
     "github.com/eriq-augustine/autograder/db"
     "github.com/eriq-augustine/autograder/docker"
     "github.com/eriq-augustine/autograder/lms/lmssync"
+    "github.com/eriq-augustine/autograder/log"
     "github.com/eriq-augustine/autograder/model"
     "github.com/eriq-augustine/autograder/model/tasks"
 )
@@ -41,7 +40,7 @@ func updateCourse(course *model.Course) (bool, error) {
     newCourse, updated, err := db.UpdateCourseFromSource(course);
     if (err != nil) {
         // On failure, still try and work with the old course.
-        log.Error().Err(err).Str("course-id", course.GetID()).Msg("Failed to update course.");
+        log.Error("Failed to update course.", err, log.NewAttr("course-id", course.GetID()));
         errs = errors.Join(errs, err);
     } else {
         // On success, use the new course.
@@ -51,14 +50,14 @@ func updateCourse(course *model.Course) (bool, error) {
     // Sync the course.
     _, err = lmssync.SyncLMS(course, false, true);
     if (err != nil) {
-        log.Error().Err(err).Str("course-id", course.GetID()).Msg("Failed to sync course with LMS.");
+        log.Error("Failed to sync course with LMS.", err, log.NewAttr("course-id", course.GetID()));
         errs = errors.Join(errs, err);
     }
 
     // Build images.
     _, buildErrs := course.BuildAssignmentImages(false, false, docker.NewBuildOptions());
     for imageName, err := range buildErrs {
-        log.Error().Err(err).Str("course-id", course.GetID()).Str("image", imageName).Msg("Failed to build image.");
+        log.Error("Failed to build image.", err, log.NewAttr("course-id", course.GetID()), log.NewAttr("image", imageName));
         errs = errors.Join(errs, err);
     }
 
@@ -66,7 +65,7 @@ func updateCourse(course *model.Course) (bool, error) {
     for _, courseTask := range course.GetTasks() {
         err = Schedule(course, courseTask);
         if (err != nil) {
-            log.Error().Err(err).Str("course-id", course.GetID()).Str("task", courseTask.String()).Msg("Failed to schedule task.");
+            log.Error("Failed to schedule task.", err, log.NewAttr("course-id", course.GetID()), log.NewAttr("task", courseTask.String()));
             errs = errors.Join(errs, err);
         }
     }

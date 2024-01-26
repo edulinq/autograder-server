@@ -1,10 +1,9 @@
 package core
 
 import (
-    "github.com/rs/zerolog/log"
-
     "github.com/eriq-augustine/autograder/config"
     "github.com/eriq-augustine/autograder/db"
+    "github.com/eriq-augustine/autograder/log"
     "github.com/eriq-augustine/autograder/model"
 )
 
@@ -22,7 +21,8 @@ func (this *APIRequestCourseUserContext) Auth() (*model.User, *APIError) {
     }
 
     if (config.NO_AUTH.Get()) {
-        log.Debug().Str("email", this.UserEmail).Str("course", this.CourseID).Msg("Authentication Disabled.");
+        log.Debug("Authentication Disabled.",
+                log.NewAttr("email", this.UserEmail), log.NewAttr("course", this.CourseID));
         return user, nil;
     }
 
