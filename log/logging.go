@@ -112,53 +112,10 @@ func logText(record *Record) {
         return;
     }
 
-    builder := strings.Builder{};
-
-    timestamp := time.UnixMicro(record.UnixMicro).Format(PRETTY_TIME_FORMAT);
-    builder.WriteString(fmt.Sprintf("%s [%5s] %s", timestamp, record.Level.String(), record.Message));
-
-    if (record.Course != "") {
-        record.Attributes[KEY_COURSE] = record.Course;
-    }
-
-    if (record.Assignment != "") {
-        record.Attributes[KEY_ASSIGNMENT] = record.Assignment;
-    }
-
-    if (record.User != "") {
-        record.Attributes[KEY_USER] = record.User;
-    }
-
-    if (len(record.Attributes) > 0) {
-        value := "";
-
-        bytes, err := json.Marshal(record.Attributes);
-        if (err != nil) {
-            value = fmt.Sprintf("%+v", record.Attributes);
-            Error("JSON encoding error on logging attributes: '%+v'.", err);
-        } else {
-            value = string(bytes);
-        }
-
-        builder.WriteString(" | ");
-        builder.WriteString(value);
-
-        delete(record.Attributes, KEY_COURSE);
-        delete(record.Attributes, KEY_ASSIGNMENT);
-        delete(record.Attributes, KEY_USER);
-    }
-
-    if (record.Error != nil) {
-        builder.WriteString(" | ");
-        builder.WriteString(record.Error.Error());
-    }
-
-    builder.WriteString("\n");
-
     textLock.Lock();
     defer textLock.Unlock();
 
-    textWriter.WriteString(builder.String());
+    textWriter.WriteString(record.String() + "\n");
 }
 
 func Log(level LogLevel, message string, course string, assignment string, user string, logError error, attributes map[string]any) {
@@ -185,4 +142,50 @@ func logToLevel(level LogLevel, message string, args ...any) {
     }
 
     Log(level, message, course, assignment, user, logError, attributes);
+}
+
+func (this *Record) String() string {
+    builder := strings.Builder{};
+
+    timestamp := time.UnixMicro(this.UnixMicro).Format(PRETTY_TIME_FORMAT);
+    builder.WriteString(fmt.Sprintf("%s [%5s] %s", timestamp, this.Level.String(), this.Message));
+
+    attributes := make(map[string]any, len(this.Attributes) + 3);
+    for key, value := range this.Attributes {
+        attributes[key] = value;
+    }
+
+    if (this.Course != "") {
+        attributes[KEY_COURSE] = this.Course;
+    }
+
+    if (this.Assignment != "") {
+        attributes[KEY_ASSIGNMENT] = this.Assignment;
+    }
+
+    if (this.User != "") {
+        attributes[KEY_USER] = this.User;
+    }
+
+    if (len(attributes) > 0) {
+        value := "";
+
+        bytes, err := json.Marshal(attributes);
+        if (err != nil) {
+            value = fmt.Sprintf("%+v", attributes);
+            Error("JSON encoding error on logging attributes: '%+v'.", err);
+        } else {
+            value = string(bytes);
+        }
+
+        builder.WriteString(" | ");
+        builder.WriteString(value);
+    }
+
+    if (this.Error != nil) {
+        builder.WriteString(" | ");
+        builder.WriteString(this.Error.Error());
+    }
+
+    return builder.String();
 }

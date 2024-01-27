@@ -93,7 +93,7 @@ func (this *backend) GetLogRecords(level log.LogLevel, after time.Time, courseID
 
     return records, nil;
 }
-        
+
 func keepRecord(record *log.Record, level log.LogLevel, after time.Time, courseID string, assignmentID string, userID string) (bool, error) {
     if (record.Level < level) {
         return false, nil;
