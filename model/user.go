@@ -50,6 +50,10 @@ func NewUser(email string, name string, role UserRole) *User {
     };
 }
 
+func (this *User) LogValue() *log.Attr {
+    return log.NewAttr(log.KEY_USER, this.Email);
+}
+
 // Sets the password and generates a new salt.
 // The passed in passowrd should actually be a hash of the cleartext password.
 func (this *User) SetPassword(hashPass string) error {

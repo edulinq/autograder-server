@@ -43,6 +43,10 @@ func (this *Course) GetID() string {
     return this.ID;
 }
 
+func (this *Course) LogValue() *log.Attr {
+    return log.NewAttr(log.KEY_COURSE, this.ID);
+}
+
 func (this *Course) GetName() string {
     return this.Name;
 }

@@ -8,6 +8,7 @@ import (
     "github.com/eriq-augustine/autograder/config"
     "github.com/eriq-augustine/autograder/db"
     "github.com/eriq-augustine/autograder/log"
+    "github.com/eriq-augustine/autograder/model"
 )
 
 var args struct {
@@ -41,4 +42,11 @@ func main() {
     log.Info("Attatched Str.", log.NewAttr("value", "Foo Bar"));
     log.Info("Attatched Bool.", log.NewAttr("value", true));
     log.Info("Attatched Err.", fmt.Errorf("This is an error!"));
+
+    // Special values do not need to be wrapped.
+    fmt.Println("Logging with Special Values");
+    log.Info("Error.", fmt.Errorf("Some error!"));
+    log.Info("Course.", &model.Course{ID: "test-course"});
+    log.Info("Assignment.", &model.Assignment{ID: "test-assignment"});
+    log.Info("User.", &model.User{Email: "user@test.com"});
 }
