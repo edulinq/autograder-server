@@ -47,6 +47,9 @@ func (this *backend) Clear() error {
     this.lock.Lock();
     defer this.lock.Unlock();
 
+    this.logLock.Lock();
+    defer this.logLock.Unlock();
+
     err := util.RemoveDirent(this.baseDir);
     if (err != nil) {
         return err;

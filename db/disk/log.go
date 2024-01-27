@@ -15,9 +15,6 @@ import (
 const LOG_FILENAME = "log.jsonl"
 
 func (this *backend) LogDirect(record *log.Record) error {
-    this.lock.Lock();
-    defer this.lock.Unlock();
-
     this.logLock.Lock();
     defer this.logLock.Unlock();
 
