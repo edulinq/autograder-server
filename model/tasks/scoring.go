@@ -28,7 +28,7 @@ func (this *ScoringUploadTask) Validate(course TaskCourse) error {
     for i, _ := range lmsIDs {
         if (lmsIDs[i] == "") {
             log.Warn("Score and Upload course has an assignment with a missing LMS ID.",
-                    log.NewAttr("course", course.GetID()), log.NewAttr("assignment", assignmentIDs[i]));
+                    log.NewCourseAttr(course.GetID()), log.NewAssignmentAttr(assignmentIDs[i]));
         }
     }
 

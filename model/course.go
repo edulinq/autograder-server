@@ -43,8 +43,8 @@ func (this *Course) GetID() string {
     return this.ID;
 }
 
-func (this *Course) LogValue() *log.Attr {
-    return log.NewAttr(log.KEY_COURSE, this.ID);
+func (this *Course) LogValue() []*log.Attr {
+    return []*log.Attr{log.NewCourseAttr(this.ID)};
 }
 
 func (this *Course) GetName() string {
@@ -183,8 +183,7 @@ func (this *Course) BuildAssignmentImages(force bool, quick bool, options *docke
     for _, assignment := range this.Assignments {
         err := docker.BuildImageFromSource(assignment, force, quick, options);
         if (err != nil) {
-            log.Error("Failed to build assignment docker image.",
-                    err, log.NewAttr("course", this.ID), log.NewAttr("assignment", assignment.GetID()));
+            log.Error("Failed to build assignment docker image.", err, this, assignment);
             errors[assignment.ImageName()] = err;
         } else {
             goodImageNames = append(goodImageNames, assignment.ImageName());

@@ -78,7 +78,7 @@ func HandleAdd(request *AddRequest) (*AddResponse, *core.APIError) {
     if (!request.SkipLMSSync) {
         lmsResult, err := lmssync.SyncLMSUserEmails(request.Course, emails, request.DryRun, !request.SkipEmails);
         if (err != nil) {
-            log.Error("Failed to sync LMS users.", err, log.NewAttr("api-request", request.RequestID));
+            log.Error("Failed to sync LMS users.", err, request.Course, log.NewAttr("api-request", request.RequestID));
         } else {
             response.LMSSyncCount = lmsResult.Count();
         }

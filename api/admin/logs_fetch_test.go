@@ -2,6 +2,7 @@ package admin
 
 import (
     "reflect"
+    "slices"
     "testing"
     "time"
 
@@ -26,6 +27,12 @@ func TestFetchLogs(test *testing.T) {
 
     db.ResetForTesting();
     defer db.ResetForTesting();
+
+    // Ignore logs with these messages.
+    ignoreMessages := []string{
+        "Loaded course.",
+        "API Error",
+    };
 
     course := db.MustGetTestCourse();
 
@@ -149,9 +156,17 @@ func TestFetchLogs(test *testing.T) {
             record.UnixMicro = 0;
         }
 
-        if (!reflect.DeepEqual(testCase.expectedRecords, responseContent.Records)) {
+        // Filter out records not related to this test.
+        actualRecords := make([]*log.Record, 0, len(responseContent.Records));
+        for _, record := range responseContent.Records {
+            if (!slices.Contains(ignoreMessages, record.Message)) {
+                actualRecords = append(actualRecords, record);
+            }
+        }
+
+        if (!reflect.DeepEqual(testCase.expectedRecords, actualRecords)) {
             test.Errorf("Case %d: Log records not as expected. Expected: '%s', Actual: '%s'.",
-                    i, util.MustToJSONIndent(testCase.expectedRecords), util.MustToJSONIndent(responseContent.Records));
+                    i, util.MustToJSONIndent(testCase.expectedRecords), util.MustToJSONIndent(actualRecords));
             continue;
         }
     }

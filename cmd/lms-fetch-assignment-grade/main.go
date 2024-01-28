@@ -37,25 +37,25 @@ func main() {
     course := assignment.GetCourse();
 
     if (assignment.GetLMSID() == "") {
-        log.Fatal("Assignment has no LMS ID.", log.NewAttr("assignment", assignment.FullID()));
+        log.Fatal("Assignment has no LMS ID.", assignment);
     }
 
     user, err := db.GetUser(course, args.Email);
     if (err != nil) {
-        log.Fatal("Failed to fetch user.", err, log.NewAttr("course", course.GetID()), log.NewAttr("user", args.Email));
+        log.Fatal("Failed to fetch user.", err, assignment, log.NewUserAttr(args.Email));
     }
 
     if (user == nil) {
-        log.Fatal("Could not find user.", err, log.NewAttr("course", course.GetID()), log.NewAttr("user", args.Email));
+        log.Fatal("Could not find user.", err, assignment, log.NewUserAttr(args.Email));
     }
 
     if (user.LMSID == "") {
-        log.Fatal("User does not have an LMS ID.", err, log.NewAttr("course", course.GetID()), log.NewAttr("user", args.Email));
+        log.Fatal("User does not have an LMS ID.", err, assignment, user);
     }
 
     score, err := lms.FetchAssignmentScore(course, assignment.GetLMSID(), user.LMSID);
     if (err != nil) {
-        log.Fatal("User does not have an LMS ID.", err, log.NewAttr("course", course.GetID()), log.NewAttr("assignment", assignment.GetID()), log.NewAttr("user", args.Email));
+        log.Fatal("User does not have an LMS ID.", err, assignment, user);
     }
 
     textComments := make([]string, 0, len(score.Comments));

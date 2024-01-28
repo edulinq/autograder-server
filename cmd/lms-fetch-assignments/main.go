@@ -34,7 +34,7 @@ func main() {
 
     lmsAssignments, err := lms.FetchAssignments(course);
     if (err != nil) {
-        log.Fatal("Failed to fetch assignments.", err);
+        log.Fatal("Failed to fetch assignments.", err, course);
     }
 
     fmt.Println(util.MustToJSONIndent(lmsAssignments));

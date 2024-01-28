@@ -19,7 +19,7 @@ func GetUsers(course *model.Course) (map[string]*model.User, error) {
 func MustGetUsers(course *model.Course) map[string]*model.User {
     users, err := GetUsers(course);
     if (err != nil) {
-        log.Fatal("Failed to get users.", err, log.NewAttr("course-id", course.GetID()));
+        log.Fatal("Failed to get users.", err, course);
     }
 
     return users;

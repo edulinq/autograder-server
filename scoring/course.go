@@ -10,21 +10,15 @@ import (
 func FullCourseScoringAndUpload(course *model.Course, dryRun bool) error {
     assignments := course.GetSortedAssignments();
 
-    log.Debug("Beginning full scoring for course.",
-            log.NewAttr("course", course.GetID()),
-            log.NewAttr("dry-run", dryRun));
+    log.Debug("Beginning full scoring for course.", course, log.NewAttr("dry-run", dryRun));
 
     for i, assignment := range assignments {
         if (assignment.GetLMSID() == "") {
-            log.Warn("Assignment has no LMS id, skipping scoring.",
-                    log.NewAttr("course", course.GetID()),
-                    log.NewAttr("assignment", assignment.GetID()));
+            log.Warn("Assignment has no LMS id, skipping scoring.", course, assignment);
             continue;
         }
 
-        log.Debug("Scoring course assignment.",
-                log.NewAttr("course", course.GetID()),
-                log.NewAttr("assignment", assignment.GetID()),
+        log.Debug("Scoring course assignment.", course, assignment,
                 log.NewAttr("index", i),
                 log.NewAttr("dry-run", dryRun));
 
@@ -34,8 +28,7 @@ func FullCourseScoringAndUpload(course *model.Course, dryRun bool) error {
         }
     }
 
-    log.Debug("Finished full scoring for course.",
-            log.NewAttr("course", course.GetID()), log.NewAttr("dry-run", dryRun));
+    log.Debug("Finished full scoring for course.", course, log.NewAttr("dry-run", dryRun));
 
     return nil;
 }

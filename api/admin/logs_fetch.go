@@ -69,7 +69,7 @@ func HandleFetchLogs(request *FetchLogsRequest) (*FetchLogsResponse, *core.APIEr
         fullUser, err := db.GetUser(request.Course, request.TargetUser);
         if (err != nil) {
             return nil, core.NewInternalError("-205", &request.APIRequestCourseUserContext, "Failed to get target user.").
-                    Add("email", request.TargetUser).Err(err);
+                    Add("target-user", request.TargetUser).Err(err);
         }
 
         if (fullUser == nil) {

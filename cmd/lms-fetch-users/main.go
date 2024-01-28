@@ -33,7 +33,7 @@ func main() {
 
     users, err := lms.FetchUsers(course);
     if (err != nil) {
-        log.Fatal("Could not fetch users.", err);
+        log.Fatal("Could not fetch users.", err, course);
     }
 
     fmt.Println("id\temail\tname\trole");

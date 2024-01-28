@@ -43,8 +43,11 @@ func (this *Assignment) GetID() string {
     return this.ID;
 }
 
-func (this *Assignment) LogValue() *log.Attr {
-    return log.NewAttr(log.KEY_ASSIGNMENT, this.ID);
+func (this *Assignment) LogValue() []*log.Attr {
+    return []*log.Attr{
+        log.NewCourseAttr(this.Course.ID),
+        log.NewAssignmentAttr(this.ID),
+    };
 }
 
 func (this *Assignment) GetSortID() string {

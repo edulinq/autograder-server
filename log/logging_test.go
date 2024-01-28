@@ -81,11 +81,11 @@ func TestBackendLogging(test *testing.T) {
 
     // Context.
     Info("msg", fakeCourse{"C"});
-    Info("msg", Attr{KEY_COURSE, "C"});
+    Info("msg", NewCourseAttr("C"));
     Info("msg", fakeAssignment{"A"});
-    Info("msg", Attr{KEY_ASSIGNMENT, "A"});
+    Info("msg", NewAssignmentAttr("A"));
     Info("msg", fakeUser{"U"});
-    Info("msg", Attr{KEY_USER, "U"});
+    Info("msg", NewUserAttr("U"));
     Info("msg", fakeCourse{"C"}, fakeAssignment{"A"}, fakeUser{"U"});
 
     // Error
@@ -296,7 +296,7 @@ func TestParseArgs(test *testing.T) {
         {
             parseResults{"C", "A", "U", nil, map[string]any{}},
             nil,
-            []any{Attr{KEY_COURSE, "C"}, Attr{KEY_ASSIGNMENT, "A"}, Attr{KEY_USER, "U"}},
+            []any{NewCourseAttr("C"), NewAssignmentAttr("A"), NewUserAttr("U")},
         },
 
         // Multiple attributes.
@@ -313,6 +313,23 @@ func TestParseArgs(test *testing.T) {
             []any{fakeAssignment{"A"}, fakeUser{"U"}, fakeCourse{"C"}, fmt.Errorf("err"), Attr{"ABC", 123}},
         },
 
+        // Pure dups generate no errors.
+        {
+            parseResults{"C1", "", "", nil, map[string]any{}},
+            nil,
+            []any{fakeCourse{"C1"}, fakeCourse{"C1"}},
+        },
+        {
+            parseResults{"", "A1", "", nil, map[string]any{}},
+            nil,
+            []any{fakeAssignment{"A1"}, fakeAssignment{"A1"}},
+        },
+        {
+            parseResults{"", "", "U1", nil, map[string]any{}},
+            nil,
+            []any{fakeUser{"U1"}, fakeUser{"U1"}},
+        },
+
         // Dup key errors.
         {
             parseResults{"", "", "", nil, map[string]any{}},
@@ -321,8 +338,8 @@ func TestParseArgs(test *testing.T) {
         },
         {
             parseResults{"", "", "", nil, map[string]any{}},
-            fmt.Errorf("Logging argument 1 is a duplicate course key. Old value: 'C1', New value: 'C2'."),
-            []any{fakeCourse{"C1"}, Attr{KEY_COURSE, "C2"}},
+            fmt.Errorf("Logging argument 0 is a duplicate course key. Old value: 'C2', New value: 'C1'."),
+            []any{fakeCourse{"C1"}, NewCourseAttr("C2")},
         },
         {
             parseResults{"", "", "", nil, map[string]any{}},
@@ -331,8 +348,8 @@ func TestParseArgs(test *testing.T) {
         },
         {
             parseResults{"", "", "", nil, map[string]any{}},
-            fmt.Errorf("Logging argument 1 is a duplicate assignment key. Old value: 'A1', New value: 'A2'."),
-            []any{fakeAssignment{"A1"}, Attr{KEY_ASSIGNMENT, "A2"}},
+            fmt.Errorf("Logging argument 0 is a duplicate assignment key. Old value: 'A2', New value: 'A1'."),
+            []any{fakeAssignment{"A1"}, NewAssignmentAttr("A2")},
         },
         {
             parseResults{"", "", "", nil, map[string]any{}},
@@ -341,8 +358,8 @@ func TestParseArgs(test *testing.T) {
         },
         {
             parseResults{"", "", "", nil, map[string]any{}},
-            fmt.Errorf("Logging argument 1 is a duplicate user key. Old value: 'U1', New value: 'U2'."),
-            []any{fakeUser{"U1"}, Attr{KEY_USER, "U2"}},
+            fmt.Errorf("Logging argument 0 is a duplicate user key. Old value: 'U2', New value: 'U1'."),
+            []any{fakeUser{"U1"}, NewUserAttr("U2")},
         },
 
         // Bad special key values.
@@ -360,6 +377,21 @@ func TestParseArgs(test *testing.T) {
             parseResults{"", "", "", nil, map[string]any{}},
             fmt.Errorf("Logging argument 0 has a user key, but non-string value '[]string': '[U]'."),
             []any{Attr{KEY_USER, []string{"U"}}},
+        },
+        {
+            parseResults{"", "", "", nil, map[string]any{}},
+            fmt.Errorf("Logging argument 0 is an empty course."),
+            []any{NewCourseAttr("")},
+        },
+        {
+            parseResults{"", "", "", nil, map[string]any{}},
+            fmt.Errorf("Logging argument 0 is an empty assignment."),
+            []any{NewAssignmentAttr("")},
+        },
+        {
+            parseResults{"", "", "", nil, map[string]any{}},
+            fmt.Errorf("Logging argument 0 is an empty user."),
+            []any{NewUserAttr("")},
         },
     }
 
@@ -385,22 +417,22 @@ type fakeCourse struct {
     name string
 }
 
-func (this fakeCourse) LogValue() *Attr {
-    return &Attr{KEY_COURSE, this.name};
+func (this fakeCourse) LogValue() []*Attr {
+    return []*Attr{NewCourseAttr(this.name)};
 }
 
 type fakeAssignment struct {
     name string
 }
 
-func (this fakeAssignment) LogValue() *Attr {
-    return &Attr{KEY_ASSIGNMENT, this.name};
+func (this fakeAssignment) LogValue() []*Attr {
+    return []*Attr{NewAssignmentAttr(this.name)};
 }
 
 type fakeUser struct {
     name string
 }
 
-func (this fakeUser) LogValue() *Attr {
-    return &Attr{KEY_USER, this.name};
+func (this fakeUser) LogValue() []*Attr {
+    return []*Attr{NewUserAttr(this.name)};
 }

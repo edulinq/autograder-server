@@ -21,8 +21,7 @@ func (this *APIRequestCourseUserContext) Auth() (*model.User, *APIError) {
     }
 
     if (config.NO_AUTH.Get()) {
-        log.Debug("Authentication Disabled.",
-                log.NewAttr("email", this.UserEmail), log.NewAttr("course", this.CourseID));
+        log.Debug("Authentication Disabled.", this.Course, log.NewUserAttr(this.UserEmail));
         return user, nil;
     }
 

@@ -47,7 +47,7 @@ func main() {
 
     // Startup courses (in the background).
     for _, course := range courses {
-        log.Info("Loaded course.", log.NewAttr("course", course.GetID()));
+        log.Info("Loaded course.", course);
         go func(course *model.Course) {
             procedures.UpdateCourse(course, true);
         }(course);

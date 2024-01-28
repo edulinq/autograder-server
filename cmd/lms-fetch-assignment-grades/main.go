@@ -36,12 +36,12 @@ func main() {
     course := assignment.GetCourse();
 
     if (assignment.GetLMSID() == "") {
-        log.Fatal("Assignment has no LMS ID.", log.NewAttr("assignment", assignment.FullID()));
+        log.Fatal("Assignment has no LMS ID.", assignment);
     }
 
     grades, err := lms.FetchAssignmentScores(course, assignment.GetLMSID());
     if (err != nil) {
-        log.Fatal("Could not fetch grades.", err);
+        log.Fatal("Could not fetch grades.", err, assignment);
     }
 
     fmt.Println("lms_user_id\tscore\ttime\tcomments");

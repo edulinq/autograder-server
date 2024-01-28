@@ -165,7 +165,8 @@ func scheduleTask(courseID string, target tasks.ScheduledTask, timerID string, r
         // Schedule the next run.
         err := scheduleTask(courseID, target, timerID, runFunc, when);
         if (err != nil) {
-            log.Error("Failed to reschedule task.", err, log.NewAttr("task", target.GetID()), log.NewAttr("when", when.String()));
+            log.Error("Failed to reschedule task.", err,
+                    log.NewCourseAttr(courseID), log.NewAttr("task", target.GetID()), log.NewAttr("when", when.String()));
         }
     });
 
@@ -184,10 +185,11 @@ func scheduleTask(courseID string, target tasks.ScheduledTask, timerID string, r
     };
 
     if (when == nil) {
-        log.Debug("Catchup task scheduled.", log.NewAttr("task", target.GetID()));
+        log.Debug("Catchup task scheduled.", log.NewCourseAttr(courseID), log.NewAttr("task", target.GetID()));
     } else {
         nextRunTime := time.Now().Add(nextRunDuration);
-        log.Debug("Task scheduled.", log.NewAttr("task", target.GetID()), log.NewAttr("timer-id", timerID), log.NewAttr("when", when.String()), log.NewAttr("next-time", nextRunTime));
+        log.Debug("Task scheduled.", log.NewCourseAttr(courseID), log.NewAttr("task", target.GetID()),
+                log.NewAttr("timer-id", timerID), log.NewAttr("when", when.String()), log.NewAttr("next-time", nextRunTime));
     }
 
     return nil;
@@ -211,7 +213,7 @@ func stopCoursesInternal(courseID string, acquireTimersLock bool, acquireTimerSp
         stoppedTasks[timerInfo.ID] = true;
         timerInfo.Timer.Stop();
 
-        log.Debug("Task stopped.", log.NewAttr("task", timerInfo.TaskID), log.NewAttr("timer-id", timerInfo.ID));
+        log.Debug("Task stopped.", log.NewCourseAttr(courseID), log.NewAttr("task", timerInfo.TaskID), log.NewAttr("timer-id", timerInfo.ID));
     }
 
     delete(timers, courseID);
@@ -259,7 +261,7 @@ func runTask(courseID string, target tasks.ScheduledTask, timerID string, runFun
 
     lastRunTime, err := db.GetLastTaskCompletion(courseID, taskID);
     if (err != nil) {
-        log.Error("Failed to get last time task was run.", err, log.NewAttr("course-id", courseID), log.NewAttr("task", taskID));
+        log.Error("Failed to get last time task was run.", err, log.NewCourseAttr(courseID), log.NewAttr("task", taskID));
         // Keep trying to run the task.
     }
 
@@ -267,34 +269,34 @@ func runTask(courseID string, target tasks.ScheduledTask, timerID string, runFun
     lastRunDuration := now.Sub(lastRunTime);
     if (lastRunDuration < (time.Duration(config.TASK_MIN_REST_SECS.Get()) * time.Second)) {
         log.Debug("Skipping task run, last run was too recent.",
-                log.NewAttr("course-id", courseID), log.NewAttr("task", taskID), log.NewAttr("last-run", lastRunTime));
+                log.NewCourseAttr(courseID), log.NewAttr("task", taskID), log.NewAttr("last-run", lastRunTime));
         return true;
     }
 
-    log.Debug("Task started.", log.NewAttr("task", taskID), log.NewAttr("timer", timerID));
+    log.Debug("Task started.", log.NewCourseAttr(courseID), log.NewAttr("task", taskID), log.NewAttr("timer", timerID));
 
     course, err := db.GetCourse(courseID);
     if (err != nil) {
-        log.Error("Failed to get course for task.", err, log.NewAttr("course-id", courseID), log.NewAttr("task", taskID));
+        log.Error("Failed to get course for task.", err, log.NewCourseAttr(courseID), log.NewAttr("task", taskID));
         return true;
     }
 
     if (course == nil) {
-        log.Error("Could not find course for task.", log.NewAttr("course-id", courseID), log.NewAttr("task", taskID));
+        log.Error("Could not find course for task.", log.NewCourseAttr(courseID), log.NewAttr("task", taskID));
         return true;
     }
 
     reschedule, err := invokeRunFunc(course, target, runFunc);
     if (err != nil) {
-        log.Error("Task run failed.", err, log.NewAttr("course-id", courseID), log.NewAttr("task", taskID));
+        log.Error("Task run failed.", err, course, log.NewAttr("task", taskID));
         return true;
     }
 
-    log.Debug("Task finished.", log.NewAttr("course-id", courseID), log.NewAttr("task", taskID));
+    log.Debug("Task finished.", course, log.NewAttr("task", taskID));
 
     err = db.LogTaskCompletion(courseID, taskID, now);
     if (err != nil) {
-        log.Error("Failed to log task completion.", err, log.NewAttr("course-id", courseID), log.NewAttr("task", taskID));
+        log.Error("Failed to log task completion.", err, course, log.NewAttr("task", taskID));
         return reschedule;
     }
 

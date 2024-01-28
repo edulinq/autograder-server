@@ -34,7 +34,7 @@ func main() {
 
     user, err := lms.FetchUser(course, args.Email);
     if (err != nil) {
-        log.Fatal("Could not fetch user.", err);
+        log.Fatal("Could not fetch user.", err, course);
     }
 
     if (user == nil) {

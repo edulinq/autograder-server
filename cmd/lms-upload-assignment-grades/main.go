@@ -40,17 +40,17 @@ func main() {
     course := assignment.GetCourse();
 
     if (assignment.GetLMSID() == "") {
-        log.Fatal("Assignment has no LMS ID.", log.NewAttr("assignment", assignment.FullID()));
+        log.Fatal("Assignment has no LMS ID.", assignment);
     }
 
     users, err := db.GetUsers(course);
     if (err != nil) {
-        log.Fatal("Failed to fetch autograder users.", err);
+        log.Fatal("Failed to fetch autograder users.", err, assignment);
     }
 
     grades, err := loadGrades(args.Grades, users, args.Force);
     if (err != nil) {
-        log.Fatal("Could not fetch grades.", err);
+        log.Fatal("Could not fetch grades.", err, assignment);
     }
 
     if (len(grades) == 0) {
@@ -62,7 +62,7 @@ func main() {
     } else {
         err = lms.UpdateAssignmentScores(course, assignment.GetLMSID(), grades);
         if (err != nil) {
-            log.Fatal("Could not upload grades.", err);
+            log.Fatal("Could not upload grades.", err, assignment);
         }
     }
 

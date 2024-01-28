@@ -269,7 +269,7 @@ func main() {
 
     err = context.Run(course);
     if (err != nil) {
-        log.Fatal("Failed to run command.", err);
+        log.Fatal("Failed to run command.", err, course);
     }
 }
 

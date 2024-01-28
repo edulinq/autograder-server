@@ -47,11 +47,11 @@ func GetCourse(rawCourseID string) (*model.Course, error) {
 func MustGetCourse(rawCourseID string) *model.Course {
     course, err := GetCourse(rawCourseID);
     if (err != nil) {
-        log.Fatal("Failed to get course.", err, log.NewAttr("course-id", rawCourseID));
+        log.Fatal("Failed to get course.", err, log.NewCourseAttr(rawCourseID));
     }
 
     if (course == nil) {
-        log.Fatal("Could not find course.", log.NewAttr("course-id", rawCourseID));
+        log.Fatal("Could not find course.", log.NewCourseAttr(rawCourseID));
     }
 
     return course;
@@ -104,9 +104,7 @@ func loadCourse(path string) (*model.Course, error) {
         return nil, fmt.Errorf("Failed to validate course from path '%s': '%w'.", path, err);
     }
 
-    log.Info("Loaded course.",
-            log.NewAttr("path", path), log.NewAttr("id", course.GetID()),
-            log.NewAttr("num-assignments", len(course.Assignments)));
+    log.Info("Loaded course.", course, log.NewAttr("path", path), log.NewAttr("num-assignments", len(course.Assignments)));
 
     return course, nil;
 }

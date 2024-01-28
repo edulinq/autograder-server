@@ -37,27 +37,27 @@ func main() {
     if (args.Clear) {
         err := db.ClearCourse(course);
         if (err != nil) {
-            log.Fatal("Failed to clear course.", err);
+            log.Fatal("Failed to clear course.", err, course);
         }
     }
 
     if (args.Source != "") {
         spec, err := common.ParseFileSpec(args.Source);
         if (err != nil) {
-            log.Fatal("Failed to parse FileSpec.", err);
+            log.Fatal("Failed to parse FileSpec.", err, course);
         }
 
         course.Source = spec;
 
         err = db.SaveCourse(course);
         if (err != nil) {
-            log.Fatal("Failed to save course.", err);
+            log.Fatal("Failed to save course.", err, course);
         }
     }
 
     updated, err := procedures.UpdateCourse(course, false);
     if (err != nil) {
-        log.Fatal("Failed to update course.", err);
+        log.Fatal("Failed to update course.", err, course);
     }
 
     if (updated) {

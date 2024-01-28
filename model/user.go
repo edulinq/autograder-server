@@ -50,8 +50,8 @@ func NewUser(email string, name string, role UserRole) *User {
     };
 }
 
-func (this *User) LogValue() *log.Attr {
-    return log.NewAttr(log.KEY_USER, this.Email);
+func (this *User) LogValue() []*log.Attr {
+    return []*log.Attr{log.NewUserAttr(this.Email)};
 }
 
 // Sets the password and generates a new salt.
@@ -91,13 +91,13 @@ func (this *User) SetRandomPassword() (string, error) {
 func (this *User) CheckPassword(hashPass string) bool {
     thisHash, err := hex.DecodeString(this.Pass);
     if (err != nil) {
-        log.Warn("Bad password hash for user.", log.NewAttr("user", this.Email), err);
+        log.Warn("Bad password hash for user.", err, this);
         return false;
     }
 
     salt, err := hex.DecodeString(this.Salt);
     if (err != nil) {
-        log.Warn("Bad salt for user.", log.NewAttr("user", this.Email), err);
+        log.Warn("Bad salt for user.", err, this);
         return false;
     }
 
@@ -144,19 +144,19 @@ func SendUserAddEmail(course *Course, user *User, pass string, generatedPass boo
     subject, body := composeUserAddEmail(course, user.Email, pass, generatedPass, userExists);
 
     if (dryRun) {
-        log.Info("Doing a dry run, user will not be emailed.", log.NewAttr("email", user.Email));
-        log.Debug("Email not sent because of dry run.",
+        log.Info("Doing a dry run, user will not be emailed.", course, log.NewUserAttr(user.Email));
+        log.Debug("Email not sent because of dry run.", course,
                 log.NewAttr("address", user.Email), log.NewAttr("subject", subject), log.NewAttr("body", body));
         return nil;
     }
 
     err := email.Send([]string{user.Email}, subject, body, false);
     if (err != nil) {
-        log.Error("Failed to send email.", log.NewAttr("email", user.Email), err);
+        log.Error("Failed to send email.", err, course, log.NewUserAttr(user.Email));
         return err;
     }
 
-    log.Info("Registration email sent.", log.NewAttr("email", user.Email));
+    log.Info("Registration email sent.", course, log.NewUserAttr(user.Email));
 
     // Skip sleeping in testing mode.
     if (sleep && !config.TESTING_MODE.Get()) {

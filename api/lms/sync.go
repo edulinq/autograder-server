@@ -23,7 +23,7 @@ type SyncResponse struct {
 func HandleSync(request *SyncRequest) (*SyncResponse, *core.APIError) {
     if (request.Course.GetLMSAdapter() == nil) {
         return nil, core.NewBadRequestError("-403", &request.APIRequest, "Course is not linked to an LMS.").
-                Add("course", request.Course.GetID());
+                Course(request.Course.GetID());
     }
 
     var response SyncResponse;

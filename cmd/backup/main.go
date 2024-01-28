@@ -49,23 +49,20 @@ func main() {
 
 func backupFromMap(courses map[string]*model.Course) []string {
     courseIDs := make([]string, 0);
-    errs := make([]error, 0);
+    errorCount := 0;
 
     for _, course := range courses {
         err := task.RunBackup(course, "", "");
         if (err != nil) {
-            errs = append(errs, fmt.Errorf("Failed to backup course '%s': '%w'.", course.GetID(), err));
+            log.Error("Failed to backup course.", err, course);
+            errorCount++;
         } else {
             courseIDs = append(courseIDs, course.GetID());
         }
     }
 
-    if (len(errs) > 0) {
-        for _, err := range errs {
-            log.Error("Failed to backup course.", err);
-        }
-
-        log.Fatal("Failed to backup courses.", log.NewAttr("count", len(errs)));
+    if (errorCount > 0) {
+        log.Fatal("Failed to backup courses.", log.NewAttr("error-count", errorCount));
     }
 
     return courseIDs;

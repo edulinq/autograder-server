@@ -34,7 +34,7 @@ func main() {
 
     err = scoring.FullCourseScoringAndUpload(course, args.DryRun);
     if (err != nil) {
-        log.Fatal("Failed to score and upload assignment.", err);
+        log.Fatal("Failed to score and upload assignment.", err, course);
     }
 
     fmt.Println("Course grades uploaded.");

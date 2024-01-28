@@ -40,7 +40,7 @@ func updateCourse(course *model.Course) (bool, error) {
     newCourse, updated, err := db.UpdateCourseFromSource(course);
     if (err != nil) {
         // On failure, still try and work with the old course.
-        log.Error("Failed to update course.", err, log.NewAttr("course-id", course.GetID()));
+        log.Error("Failed to update course.", err, course);
         errs = errors.Join(errs, err);
     } else {
         // On success, use the new course.
@@ -50,14 +50,14 @@ func updateCourse(course *model.Course) (bool, error) {
     // Sync the course.
     _, err = lmssync.SyncLMS(course, false, true);
     if (err != nil) {
-        log.Error("Failed to sync course with LMS.", err, log.NewAttr("course-id", course.GetID()));
+        log.Error("Failed to sync course with LMS.", err, course);
         errs = errors.Join(errs, err);
     }
 
     // Build images.
     _, buildErrs := course.BuildAssignmentImages(false, false, docker.NewBuildOptions());
     for imageName, err := range buildErrs {
-        log.Error("Failed to build image.", err, log.NewAttr("course-id", course.GetID()), log.NewAttr("image", imageName));
+        log.Error("Failed to build image.", err, course, log.NewAttr("image", imageName));
         errs = errors.Join(errs, err);
     }
 
@@ -65,7 +65,7 @@ func updateCourse(course *model.Course) (bool, error) {
     for _, courseTask := range course.GetTasks() {
         err = Schedule(course, courseTask);
         if (err != nil) {
-            log.Error("Failed to schedule task.", err, log.NewAttr("course-id", course.GetID()), log.NewAttr("task", courseTask.String()));
+            log.Error("Failed to schedule task.", err, course, log.NewAttr("task", courseTask.String()));
             errs = errors.Join(errs, err);
         }
     }

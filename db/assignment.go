@@ -14,7 +14,7 @@ func MustGetAssignment(rawCourseID string, rawAssignmentID string) *model.Assign
     assignment, err := GetAssignment(rawCourseID, rawAssignmentID);
     if (err != nil) {
         log.Fatal("Failed to get assignment.",
-                err, log.NewAttr("raw-course-id", rawCourseID), log.NewAttr("raw-assignment-id", rawAssignmentID));
+                err, log.NewCourseAttr(rawCourseID), log.NewAssignmentAttr(rawAssignmentID));
     }
 
     return assignment;

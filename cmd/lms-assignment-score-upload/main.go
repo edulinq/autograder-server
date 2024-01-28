@@ -33,12 +33,12 @@ func main() {
 
     assignment := db.MustGetAssignment(args.Course, args.Assignment);
     if (assignment.GetLMSID() == "") {
-        log.Fatal("Assignment has no LMS ID.");
+        log.Fatal("Assignment has no LMS ID.", assignment);
     }
 
     err = scoring.FullAssignmentScoringAndUpload(assignment, args.DryRun);
     if (err != nil) {
-        log.Fatal("Failed to score and upload assignment.", err);
+        log.Fatal("Failed to score and upload assignment.", err, assignment);
     }
 
 

@@ -36,13 +36,13 @@ func HandleSubmit(request *SubmitRequest) (*SubmitResponse, *core.APIError) {
             stderr = result.Stderr;
         }
 
-        log.Debug("Submission grading failed.", err, log.NewAttr("stdout", stdout), log.NewAttr("stderr", stderr));
+        log.Debug("Submission grading failed.", err, request.Assignment, log.NewAttr("stdout", stdout), log.NewAttr("stderr", stderr));
 
         return &response, nil;
     }
 
     if (reject != nil) {
-        log.Debug("Submission rejected.", log.NewAttr("reason", reject.String()), log.NewAttr("request", request));
+        log.Debug("Submission rejected.", request.Assignment, log.NewAttr("reason", reject.String()), log.NewAttr("request", request));
 
         response.Rejected = true;
         response.Message = reject.String();

@@ -36,7 +36,7 @@ func main() {
 
     result, err := lmssync.SyncLMS(course, args.DryRun, !args.SkipEmails);
     if (err != nil) {
-        log.Fatal("Failed to sync LMS.", err);
+        log.Fatal("Failed to sync LMS.", err, course);
     }
 
     if (result == nil) {

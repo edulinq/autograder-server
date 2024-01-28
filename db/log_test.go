@@ -183,9 +183,9 @@ func (this *DBTests) DBTestGetLogsContext(test *testing.T) {
     log.SetLevels(log.LevelOff, log.LevelTrace);
     defer log.SetLevelFatal();
 
-    log.Info("msg", log.Attr{log.KEY_COURSE, "C"});
-    log.Info("msg", log.Attr{log.KEY_ASSIGNMENT, "A"});
-    log.Info("msg", log.Attr{log.KEY_USER, "U"});
+    log.Info("msg", log.NewCourseAttr("C"));
+    log.Info("msg", log.NewAssignmentAttr("A"));
+    log.Info("msg", log.NewUserAttr("U"));
 
     testCases := []struct{courseID string; assignmentID string; userID string; expectedRecords []*log.Record}{
         {"C", "", "", []*log.Record{&log.Record{log.LevelInfo, "msg", 0, nil, "C", "", "", nil}}},

@@ -45,6 +45,10 @@ type APIError struct {
     ResponseText string
     SourceError error
 
+    CourseID string
+    AssignmentID string
+    UserEmail string
+
     AdditionalDetails map[string]any
 }
 
@@ -53,7 +57,9 @@ func (this *APIError) Error() string {
 }
 
 func (this *APIError) Log() {
-    log.Error("API Error",
+    args := make([]any, 0, 16);
+
+    args = append(args,
             this.SourceError,
             log.NewAttr("api-request-id", this.RequestID),
             log.NewAttr("locator", this.Locator),
@@ -61,8 +67,25 @@ func (this *APIError) Log() {
             log.NewAttr("timestamp", this.Timestamp.String()),
             log.NewAttr("http-status", this.HTTPStatus),
             log.NewAttr("internal-text", this.InternalText),
-            log.NewAttr("response-text", this.ResponseText),
-            log.NewAttr("additional-details", this.AdditionalDetails));
+            log.NewAttr("response-text", this.ResponseText));
+
+    for key, value := range this.AdditionalDetails {
+        args = append(args, log.NewAttr(key, value));
+    }
+
+    if (this.CourseID != "") {
+        args = append(args, log.NewCourseAttr(this.CourseID));
+    }
+
+    if (this.AssignmentID != "") {
+        args = append(args, log.NewAssignmentAttr(this.AssignmentID));
+    }
+
+    if (this.UserEmail != "") {
+        args = append(args, log.NewUserAttr(this.UserEmail));
+    }
+
+    log.Error("API Error", args...);
 }
 
 // Add additional context to this error.
@@ -72,6 +95,24 @@ func (this *APIError) Add(key string, value any) *APIError {
     }
 
     this.AdditionalDetails[key] = value;
+    return this;
+}
+
+// Attatch a course ID.
+func (this *APIError) Course(id string) *APIError {
+    this.CourseID = id;
+    return this;
+}
+
+// Attatch an assignment ID.
+func (this *APIError) Assignment(id string) *APIError {
+    this.AssignmentID = id;
+    return this;
+}
+
+// Attatch a user email.
+func (this *APIError) User(email string) *APIError {
+    this.UserEmail = email;
     return this;
 }
 
@@ -129,10 +170,9 @@ func NewBadCourseRequestError(locator string, request *APIRequestCourseUserConte
         HTTPStatus: HTTP_STATUS_BAD_REQUEST,
         InternalText: message,
         ResponseText: message,
+        CourseID: request.CourseID,
+        UserEmail: request.UserEmail,
     };
-
-    err.Add("course", request.CourseID);
-    err.Add("email", request.UserEmail);
 
     return err;
 }
@@ -159,10 +199,9 @@ func NewAuthBadRequestError(locator string, request *APIRequestCourseUserContext
         HTTPStatus: HTTP_STATUS_AUTH_ERROR,
         InternalText: fmt.Sprintf("Authentication failure: '%s'.", internalMessage),
         ResponseText: "Authentication failure, check course, email, and password.",
+        CourseID: request.CourseID,
+        UserEmail: request.UserEmail,
     };
-
-    err.Add("course", request.CourseID);
-    err.Add("email", request.UserEmail);
 
     return err;
 }
@@ -176,10 +215,9 @@ func NewBadPermissionsError(locator string, request *APIRequestCourseUserContext
         HTTPStatus: HTTP_PERMISSIONS_ERROR,
         InternalText: fmt.Sprintf("Insufficient Permissions: '%s'.", internalMessage),
         ResponseText: "You have insufficient permissions for the requested operation.",
+        CourseID: request.CourseID,
+        UserEmail: request.UserEmail,
     };
-
-    err.Add("course", request.CourseID);
-    err.Add("email", request.UserEmail);
 
     err.Add("actual-role", request.User.Role);
     err.Add("min-required-role", minRole);
@@ -196,10 +234,9 @@ func NewInternalError(locator string, request *APIRequestCourseUserContext, inte
         HTTPStatus: HTTP_STATUS_SERVER_ERROR,
         InternalText: internalMessage,
         ResponseText: fmt.Sprintf("The server failed to process your request. Please contact an adimistrator with this ID '%s'.", request.RequestID),
+        CourseID: request.CourseID,
+        UserEmail: request.UserEmail,
     };
-
-    err.Add("course", request.CourseID);
-    err.Add("email", request.UserEmail);
 
     return err;
 }

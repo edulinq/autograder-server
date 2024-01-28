@@ -35,12 +35,12 @@ func main() {
     course := assignment.GetCourse();
 
     if (assignment.GetLMSID() == "") {
-        log.Fatal("Assignment has no LMS ID.", log.NewAttr("assignment", assignment.FullID()));
+        log.Fatal("Assignment has no LMS ID.", assignment);
     }
 
     lmsAssignment, err := lms.FetchAssignment(course, assignment.GetLMSID());
     if (err != nil) {
-        log.Fatal("Could not fetch assignment.", err);
+        log.Fatal("Could not fetch assignment.", err, assignment);
     }
 
     fmt.Println(util.MustToJSONIndent(lmsAssignment));

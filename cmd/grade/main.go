@@ -40,17 +40,17 @@ func main() {
             fmt.Println("Grading failed, but output was recovered:");
             fmt.Println(result.GetCombinedOutput());
         }
-        log.Fatal("Failed to run grader.", err);
+        log.Fatal("Failed to run grader.", assignment, err);
     }
 
     if (reject != nil) {
-        log.Fatal("Submission was rejected.", log.NewAttr("reject-reason", reject.String()));
+        log.Fatal("Submission was rejected.", assignment, log.NewAttr("reject-reason", reject.String()));
     }
 
     if (args.OutPath != "") {
         err = util.ToJSONFileIndent(result.Info, args.OutPath);
         if (err != nil) {
-            log.Fatal("Failed to output JSON result.", log.NewAttr("outpath", args.OutPath), err);
+            log.Fatal("Failed to output JSON result.", assignment, log.NewAttr("outpath", args.OutPath), err);
         }
     }
 

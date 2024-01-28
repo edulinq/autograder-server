@@ -41,7 +41,6 @@ func RunReport(course *model.Course, to []string) error {
         return fmt.Errorf("Failed to send scoring report for course '%s': '%w'.", course.GetName(), err);
     }
 
-    log.Debug("Report completed sucessfully.",
-            log.NewAttr("course", course.GetName()), log.NewAttr("to", to));
+    log.Debug("Report completed sucessfully.", course, log.NewAttr("to", to));
     return nil;
 }
