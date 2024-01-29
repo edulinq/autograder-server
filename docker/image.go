@@ -13,6 +13,8 @@ import (
 )
 
 type ImageSource interface {
+    log.Loggable
+
     FullID() string;
     GetSourceDir() string;
     GetCachePath() string;
@@ -46,11 +48,11 @@ func BuildImageFromSource(imageSource ImageSource, force bool, quick bool, optio
 
     if (!force && !build) {
         // Nothing has changed, skip build.
-        log.Debug("No files have changed, skipping image build.", log.NewAttr("imageSource", imageSource.FullID()));
+        log.Debug("No files have changed, skipping image build.", imageSource);
         return nil;
     }
 
-    buildErr := BuildImageWithOptions(imageSource.GetImageInfo(), options);
+    buildErr := BuildImageWithOptions(imageSource, options);
 
     // Always try to store the result of cache building.
     _, _, cacheErr := util.CachePut(imageSource.GetCachePath(), CACHE_KEY_BUILD_SUCCESS, (buildErr == nil));
@@ -129,7 +131,7 @@ func CheckFileChanges(imageSource ImageSource, quick bool) (bool, error) {
 
                 if (filespec.Reference == "") {
                     log.Warn("Git repo without ref (branch/commit) used as a static file. Please specify a ref so changes can be seen.",
-                            log.NewAttr("imageSource", imageSource.FullID()), log.NewAttr("repo", filespec.GetPath()));
+                            imageSource, log.NewAttr("repo", filespec.GetPath()));
                 }
 
                 oldRef, exists, err := util.CachePut(cachePath, filespec.GetPath(), filespec.Reference);

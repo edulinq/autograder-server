@@ -14,7 +14,7 @@ import (
     "github.com/eriq-augustine/autograder/util"
 )
 
-func RunContainer(imageName string, inputDir string, outputDir string, gradingID string) (string, string, error) {
+func RunContainer(logId log.Loggable, imageName string, inputDir string, outputDir string, gradingID string) (string, string, error) {
     ctx, docker, err := getDockerClient();
     if (err != nil) {
         return "", "", err;
@@ -72,8 +72,8 @@ func RunContainer(imageName string, inputDir string, outputDir string, gradingID
 
     if (err != nil) {
         log.Warn("Failed to get output from container (but run did not throw an error).",
-                err, log.NewAttr("container-name", name),
-                log.NewAttr("container-id", containerInstance.ID));
+                err, logId,
+                log.NewAttr("container-name", name), log.NewAttr("container-id", containerInstance.ID));
         out = nil;
     }
     defer out.Close()
@@ -102,6 +102,7 @@ func RunContainer(imageName string, inputDir string, outputDir string, gradingID
         stderr = errBuffer.String();
 
         log.Debug("Container output.",
+                logId,
                 log.NewAttr("container-name", name),
                 log.NewAttr("container-id", containerInstance.ID),
                 log.NewAttr("stdout", stdout),
