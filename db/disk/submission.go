@@ -323,3 +323,28 @@ func (this *backend) RemoveSubmission(assignment *model.Assignment, email string
 
     return true, nil;
 }
+
+func (this *backend) GetSubmissionAttempts(assignment *model.Assignment, email string) ([]*model.GradingResult, error) {
+    submissions := make([]*model.GradingResult, 0);
+
+    submissionsDir := this.getUserSubmissionDir(assignment.GetCourse().GetID(), assignment.GetID(), email);
+    if !util.PathExists(submissionsDir) {
+        return submissions, nil;
+    }
+
+    dirents, err := os.ReadDir(submissionsDir);
+    if err != nil {
+        return nil, fmt.Errorf("Unable to read user submissions dir '%s': '%w'.", submissionsDir, err);
+    }
+
+    for _, dirent := range dirents {
+        submission, err := this.GetSubmissionContents(assignment, email, dirent.Name());
+        if err != nil {
+            return nil, fmt.Errorf("Unable to get submission contents for %s: .", email);
+        }
+
+        submissions = append(submissions, submission);
+    }
+
+    return submissions, nil;
+}
