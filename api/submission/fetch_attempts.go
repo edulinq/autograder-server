@@ -33,7 +33,7 @@ func HandleFetchAttempts(request *FetchAttemptsRequest) (*FetchAttemptsResponse,
     gradingResults, err := db.GetSubmissionAttempts(request.Assignment, request.TargetUser.Email);
     if err != nil {
         return nil, core.NewInternalError("-607", &request.APIRequestCourseUserContext, "Failed to get submission attempts.").
-            Err(err).Add("email", request.TargetUser.Email);
+            Err(err).Assignment(request.Assignment.GetID()).Add("target-user", request.TargetUser.Email);
     }
 
     response.GradingResults = gradingResults;
