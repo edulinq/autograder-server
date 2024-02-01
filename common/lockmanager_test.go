@@ -8,61 +8,86 @@ import (
 )
 
 var (
-    key = "testkey"
-    key2 = "testkey2"
+	removeKey = "remove"
+	key = "testkey1"
+	key2 = "testkey2"
+	doesNotExistKey = "dne"
 )
 
-
-func testLock(t *testing.T) {
+func TestLock(test *testing.T) {
     var wg sync.WaitGroup
 
-    Lock(key)
-    Unlock(key)
-    time.Sleep(4 * time.Second) // test remove stale lock
+	// Testing Lock
+	Lock(key)
 
-    Lock(key)
-    Lock(key2)
-    fmt.Println("Main Thread!")
+	// Testing Unlock
+	err := Unlock(key);
+	if (err != nil) {
+		test.Errorf("Failed to unlock a key");
+	}
 
+	// Testing remove stale locks
+    Lock(removeKey)
+    Unlock(removeKey)
+	wg.Add(1)
+	go func() {
+		defer wg.Done();
+		time.Sleep(2 * time.Second)
+		if !RemoveStaleLocksOnce() {
+			test.Errorf("Failed to remove stale locks");
+		} 
+	}()
+
+	// Testing concurrent Locking/Unlocking
+    Lock(key);
+    Lock(key2);
+	wg.Add(2);
     go func() {
-        wg.Add(1)
         defer wg.Done()
-        fmt.Println("Go routine started")
         Lock(key);
-        time.Sleep(time.Second)
         defer Unlock(key)
-        go func() {
-            wg.Add(1)
-            defer wg.Done()
-            fmt.Println("Another go routine started")
-            Lock(key2)
-            defer Unlock(key2)
-            fmt.Println("Another go routine done")
-        }()
-        fmt.Println("Go routine done")
-        
     }()
-
-    time.Sleep(5000 * time.Millisecond);
-
     go func() {
-        wg.Add(1)
         defer wg.Done()
-        fmt.Println("2nd go routine started")
         Lock(key2);
         defer Unlock(key2);
-        
-        fmt.Println("2nd go routine done")
-    }()
+    }();
+    Unlock(key);
+    Unlock(key2);
 
+    wg.Wait();
 
+	// Testing Unlocking an unlocked lock
+	err = Unlock(key);
+	if err == nil {
+		test.Errorf("Lockmanager unlocked an unlocked key");
+	}
+	
+	// Testing Unlocking a key that doesn't exist
+	err = Unlock(doesNotExistKey);
+	if err == nil {
+		test.Errorf("Lockmanager unlocked a key that doesn't exist");
+	}
 
-    fmt.Println("Main Thread Almost Done!")
-    Unlock(key)
-    fmt.Println("got here")
-    Unlock(key2)
-    
-    wg.Wait()
+	//Stress Test
 
-    fmt.Println("Main Thread Done")
+	fmt.Println("starting")
+	keys := []string{"key1", "key2", "key3"}
+
+	wg.Add(10)
+	for i := 0; i < 10; i++ {
+		go func() {
+			defer wg.Done()
+			key := keys[i%len(keys)]
+			fmt.Println("key: ", key)
+			Lock(key)
+			time.Sleep(10 * time.Millisecond)
+			Unlock(key)
+			fmt.Println("here")
+			
+		}()
+	}
+
+	wg.Wait() 
+	
 }

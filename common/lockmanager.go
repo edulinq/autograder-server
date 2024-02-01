@@ -12,7 +12,7 @@ import (
 
 type lockData struct {
     timestamp time.Time;
-    mutex sync.Mutex;
+    mutex sync.RWMutex;
     isLocked bool;
 }
 
@@ -33,7 +33,6 @@ func Lock(key string) {
     val, _ := lockMap.LoadOrStore(key, &lockData{});
     val.(*lockData).mutex.Lock();	
 
-
     val.(*lockData).timestamp = time.Now();
     val.(*lockData).isLocked = true;
 }
@@ -43,12 +42,12 @@ func Unlock(key string) error {
     defer lockManagerMutex.Unlock();
 
     val, exists := lockMap.Load(key);
-    lock := val.(*lockData);
     if !exists {
         log.Error().Str("key", key).Msg("Key does not exist");
         return fmt.Errorf("Key not found: %v", key);
     }
-
+	
+	lock := val.(*lockData);
     if !lock.isLocked {
         log.Error().Str("key", key).Msg("Tried to unlock a lock that is unlocked");
         return fmt.Errorf("Key: %v Tried to unlock a lock that is unlocked", key);
@@ -60,22 +59,30 @@ func Unlock(key string) error {
     return nil;
 }
 
+
 func removeStaleLocks() {
     ticker := time.NewTicker(time.Duration(5) * time.Second);
 
     for range ticker.C {
-        staleDuration := time.Duration(time.Duration(config.STALELOCK_DURATION.Get()) * time.Second);
-
-        lockMap.Range(func(key, val any) bool {
-            lock := val.(*lockData);
-            if (time.Since(lock.timestamp) > staleDuration) && (!lock.isLocked) {
-                lockManagerMutex.Lock();
-                defer lockManagerMutex.Unlock();
-                if (time.Since(lock.timestamp) > staleDuration) && (lock.mutex.TryLock()) {
-                    lockMap.Delete(key);
-                }
-            }
-            return true;
-        })
+		RemoveStaleLocksOnce();
     }
+}
+
+func RemoveStaleLocksOnce() bool {
+	staleDuration := time.Duration(time.Duration(config.STALELOCK_DURATION.Get()) * time.Second);
+	removed := false;
+	
+	lockMap.Range(func(key, val any) bool {
+		lock := val.(*lockData);
+		if (time.Since(lock.timestamp) > staleDuration) && (!lock.isLocked) {
+			lockManagerMutex.Lock();
+			defer lockManagerMutex.Unlock();
+			if (time.Since(lock.timestamp) > staleDuration) && (lock.mutex.TryLock()) {
+				lockMap.Delete(key);
+				removed = true;
+			}
+		}
+		return true;
+	})
+	return removed;
 }
