@@ -41,6 +41,7 @@ var (
 
     // Server
     WEB_PORT = MustNewIntOption("web.port", 8080, "The port for the web interface to serve on.");
+    WEB_MAX_FILE_SIZE = MustNewIntOption("web.maxsize", 4 << 20, "The maximum allowed file size submitted via POST request.");
 
     // Database
     DB_TYPE = MustNewStringOption("db.type", "disk", "The type of database to use.");
