@@ -45,8 +45,8 @@ func Unlock(key string) error {
         log.Error("Key does not exist: ", key);
         return fmt.Errorf("Key not found: %v", key);
     }
-	
-	lock := val.(*lockData);
+    
+    lock := val.(*lockData);
     if !lock.isLocked {
         log.Error("Tried to unlock a lock that is unlocked with key: ", key);
         return fmt.Errorf("Key: %v Tried to unlock a lock that is unlocked", key);
@@ -63,25 +63,25 @@ func removeStaleLocks() {
     ticker := time.NewTicker(time.Duration(5) * time.Second);
 
     for range ticker.C {
-		RemoveStaleLocksOnce();
+        RemoveStaleLocksOnce();
     }
 }
 
 func RemoveStaleLocksOnce() bool {
-	staleDuration := time.Duration(time.Duration(config.STALELOCK_DURATION.Get()) * time.Second);
-	removed := false;
-	
-	lockMap.Range(func(key, val any) bool {
-		lock := val.(*lockData);
-		if (time.Since(lock.timestamp) > staleDuration) && (!lock.isLocked) {
-			lockManagerMutex.Lock();
-			defer lockManagerMutex.Unlock();
-			if (time.Since(lock.timestamp) > staleDuration) && (lock.mutex.TryLock()) {
-				lockMap.Delete(key);
-				removed = true;
-			}
-		}
-		return true;
-	})
-	return removed;
+    staleDuration := time.Duration(time.Duration(config.STALELOCK_DURATION.Get()) * time.Second);
+    removed := false;
+    
+    lockMap.Range(func(key, val any) bool {
+        lock := val.(*lockData);
+        if (time.Since(lock.timestamp) > staleDuration) && (!lock.isLocked) {
+            lockManagerMutex.Lock();
+            defer lockManagerMutex.Unlock();
+            if (time.Since(lock.timestamp) > staleDuration) && (lock.mutex.TryLock()) {
+                lockMap.Delete(key);
+                removed = true;
+            }
+        }
+        return true;
+    })
+    return removed;
 }
