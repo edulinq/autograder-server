@@ -5,9 +5,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/rs/zerolog/log"
-
 	"github.com/eriq-augustine/autograder/config"
+	"github.com/eriq-augustine/autograder/log"
 )
 
 type lockData struct {
@@ -43,13 +42,13 @@ func Unlock(key string) error {
 
     val, exists := lockMap.Load(key);
     if !exists {
-        log.Error().Str("key", key).Msg("Key does not exist");
+        log.Error("Key does not exist: ", key);
         return fmt.Errorf("Key not found: %v", key);
     }
 	
 	lock := val.(*lockData);
     if !lock.isLocked {
-        log.Error().Str("key", key).Msg("Tried to unlock a lock that is unlocked");
+        log.Error("Tried to unlock a lock that is unlocked with key: ", key);
         return fmt.Errorf("Key: %v Tried to unlock a lock that is unlocked", key);
     }
 
