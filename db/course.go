@@ -4,10 +4,9 @@ import (
     "fmt"
     "path/filepath"
 
-    "github.com/rs/zerolog/log"
-
     "github.com/eriq-augustine/autograder/common"
     "github.com/eriq-augustine/autograder/config"
+    "github.com/eriq-augustine/autograder/log"
     "github.com/eriq-augustine/autograder/model"
     "github.com/eriq-augustine/autograder/util"
 )
@@ -48,11 +47,11 @@ func GetCourse(rawCourseID string) (*model.Course, error) {
 func MustGetCourse(rawCourseID string) *model.Course {
     course, err := GetCourse(rawCourseID);
     if (err != nil) {
-        log.Fatal().Err(err).Str("course-id", rawCourseID).Msg("Failed to get course.");
+        log.Fatal("Failed to get course.", err, log.NewCourseAttr(rawCourseID));
     }
 
     if (course == nil) {
-        log.Fatal().Str("course-id", rawCourseID).Msg("Could not find course.");
+        log.Fatal("Could not find course.", log.NewCourseAttr(rawCourseID));
     }
 
     return course;
@@ -82,7 +81,7 @@ func GetCourses() (map[string]*model.Course, error) {
 func MustGetCourses() map[string]*model.Course {
     courses, err := GetCourses();
     if (err != nil) {
-        log.Fatal().Err(err).Msg("Failed to get courses.");
+        log.Fatal("Failed to get courses.", err);
     }
 
     return courses;
@@ -105,8 +104,7 @@ func loadCourse(path string) (*model.Course, error) {
         return nil, fmt.Errorf("Failed to validate course from path '%s': '%w'.", path, err);
     }
 
-    log.Info().Str("path", path).Str("id", course.GetID()).
-            Int("num-assignments", len(course.Assignments)).Msg("Loaded course.");
+    log.Info("Loaded course.", course, log.NewAttr("path", path), log.NewAttr("num-assignments", len(course.Assignments)));
 
     return course, nil;
 }
@@ -151,7 +149,7 @@ func AddCourses() ([]string, error) {
 func MustAddCourses() []string {
     courseIDs, err := AddCourses();
     if (err != nil) {
-        log.Fatal().Err(err).Str("path", config.GetCourseImportDir()).Msg("Failed to load courses.");
+        log.Fatal("Failed to load courses.", err, log.NewAttr("path", config.GetCourseImportDir()));
     }
 
     return courseIDs;
@@ -162,14 +160,14 @@ func AddCoursesFromDir(baseDir string, source *common.FileSpec) ([]string, error
         return nil, fmt.Errorf("Database has not been opened.");
     }
 
-    log.Debug().Str("dir", baseDir).Msg("Searching for courses.");
+    log.Debug("Searching for courses.", log.NewAttr("dir", baseDir));
 
     configPaths, err := util.FindFiles(model.COURSE_CONFIG_FILENAME, baseDir);
     if (err != nil) {
         return nil, fmt.Errorf("Failed to search for course configs in '%s': '%w'.", baseDir, err);
     }
 
-    log.Info().Int("count", len(configPaths)).Msg(fmt.Sprintf("Found %d course config(s) to import.", len(configPaths)));
+    log.Debug("Number of importable course configs found.", log.NewAttr("count", len(configPaths)));
 
     courseIDs := make([]string, 0, len(configPaths));
     for _, configPath := range configPaths {
@@ -240,7 +238,7 @@ func AddCourse(path string, source *common.FileSpec) (*model.Course, error) {
 func MustAddCourse(path string) *model.Course {
     course, err := AddCourse(path, nil);
     if (err != nil) {
-        log.Fatal().Err(err).Str("path", path).Msg("Failed to add course.");
+        log.Fatal("Failed to add course.", err, log.NewAttr("path", path));
     }
 
     return course;

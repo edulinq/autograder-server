@@ -33,7 +33,8 @@ func HandleHistory(request *HistoryRequest) (*HistoryResponse, *core.APIError) {
     history, err := db.GetSubmissionHistory(request.Assignment, request.TargetUser.Email);
     if (err != nil) {
         return nil, core.NewInternalError("-603", &request.APIRequestCourseUserContext, "Failed to get submission history.").
-                Err(err).Add("user", request.TargetUser.Email);
+                Err(err).Assignment(request.Assignment.GetID()).
+                Add("target-user", request.TargetUser.Email);
     }
 
     response.History = history;

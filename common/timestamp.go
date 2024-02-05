@@ -8,7 +8,7 @@ import (
     "fmt"
     "time"
 
-    "github.com/rs/zerolog/log"
+    "github.com/eriq-augustine/autograder/log"
 )
 
 type Timestamp string;
@@ -38,8 +38,7 @@ func TimestampFromString(text string) (Timestamp, error) {
 func MustTimestampFromString(text string) Timestamp {
     instance, err := TimestampFromString(text);
     if (err != nil) {
-        log.Fatal().Err(err).Str("text", text).Str("format", TIMESTAMP_FORMAT).
-                Msg("Failed to parse timestamp text.");
+        log.Fatal("Failed to parse timestamp text.", err, log.NewAttr("text", text), log.NewAttr("format", TIMESTAMP_FORMAT));
     }
 
     return instance;
@@ -83,8 +82,7 @@ func (this Timestamp) Time() (time.Time, error) {
 func (this Timestamp) MustTime() time.Time {
     instance, err := this.Time();
     if (err != nil) {
-        log.Fatal().Err(err).Str("text", string(this)).Str("format", TIMESTAMP_FORMAT).
-                Msg("Failed to parse timestamp.");
+        log.Fatal("Failed to parse timestamp.", err, log.NewAttr("text", string(this)), log.NewAttr("format", TIMESTAMP_FORMAT));
     }
 
     return instance;

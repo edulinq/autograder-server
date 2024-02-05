@@ -4,11 +4,11 @@ import (
     "fmt"
 
     "github.com/alecthomas/kong"
-    "github.com/rs/zerolog/log"
 
     "github.com/eriq-augustine/autograder/common"
     "github.com/eriq-augustine/autograder/config"
     "github.com/eriq-augustine/autograder/db"
+    "github.com/eriq-augustine/autograder/log"
     "github.com/eriq-augustine/autograder/procedures"
 )
 
@@ -26,7 +26,7 @@ func main() {
 
     err := config.HandleConfigArgs(args.ConfigArgs);
     if (err != nil) {
-        log.Fatal().Err(err).Msg("Could not load config options.");
+        log.Fatal("Could not load config options.", err);
     }
 
     db.MustOpen();
@@ -37,27 +37,27 @@ func main() {
     if (args.Clear) {
         err := db.ClearCourse(course);
         if (err != nil) {
-            log.Fatal().Err(err).Msg("Failed to clear course.");
+            log.Fatal("Failed to clear course.", err, course);
         }
     }
 
     if (args.Source != "") {
         spec, err := common.ParseFileSpec(args.Source);
         if (err != nil) {
-            log.Fatal().Err(err).Msg("Failed to parse FileSpec.");
+            log.Fatal("Failed to parse FileSpec.", err, course);
         }
 
         course.Source = spec;
 
         err = db.SaveCourse(course);
         if (err != nil) {
-            log.Fatal().Err(err).Msg("Failed to save course.");
+            log.Fatal("Failed to save course.", err, course);
         }
     }
 
     updated, err := procedures.UpdateCourse(course, false);
     if (err != nil) {
-        log.Fatal().Err(err).Msg("Failed to update course.");
+        log.Fatal("Failed to update course.", err, course);
     }
 
     if (updated) {

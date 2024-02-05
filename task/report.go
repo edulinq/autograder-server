@@ -3,9 +3,8 @@ package task
 import (
     "fmt"
 
-    "github.com/rs/zerolog/log"
-
     "github.com/eriq-augustine/autograder/email"
+    "github.com/eriq-augustine/autograder/log"
     "github.com/eriq-augustine/autograder/model"
     "github.com/eriq-augustine/autograder/model/tasks"
     "github.com/eriq-augustine/autograder/report"
@@ -42,6 +41,6 @@ func RunReport(course *model.Course, to []string) error {
         return fmt.Errorf("Failed to send scoring report for course '%s': '%w'.", course.GetName(), err);
     }
 
-    log.Debug().Str("course", course.GetName()).Any("to", to).Msg("Report completed sucessfully.");
+    log.Debug("Report completed sucessfully.", course, log.NewAttr("to", to));
     return nil;
 }

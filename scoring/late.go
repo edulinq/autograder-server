@@ -6,11 +6,10 @@ import (
     "strings"
     "time"
 
-    "github.com/rs/zerolog/log"
-
     "github.com/eriq-augustine/autograder/common"
     "github.com/eriq-augustine/autograder/lms"
     "github.com/eriq-augustine/autograder/lms/lmstypes"
+    "github.com/eriq-augustine/autograder/log"
     "github.com/eriq-augustine/autograder/model"
     "github.com/eriq-augustine/autograder/util"
 )
@@ -57,7 +56,7 @@ func ApplyLatePolicy(
         return fmt.Errorf("Assignment does not have a due date.");
     }
 
-    applyBaselinePolicy(policy, users, scores, *lmsAssignment.DueDate);
+    applyBaselinePolicy(assignment, policy, users, scores, *lmsAssignment.DueDate);
 
     // Baseline policy is complete.
     if (policy.Type == model.BaselinePolicy) {
@@ -88,11 +87,11 @@ func ApplyLatePolicy(
 }
 
 // Apply a common policy.
-func applyBaselinePolicy(policy model.LateGradingPolicy, users map[string]*model.User, scores map[string]*model.ScoringInfo, dueDate time.Time) {
+func applyBaselinePolicy(assignment *model.Assignment, policy model.LateGradingPolicy, users map[string]*model.User, scores map[string]*model.ScoringInfo, dueDate time.Time) {
     for email, score := range scores {
         scoreTime, err := score.SubmissionTime.Time();
         if (err != nil) {
-            log.Warn().Err(err).Str("user", email).Msg("Cannot parse score time.");
+            log.Warn("Cannot parse score time.", err, assignment, log.NewUserAttr(email));
             score.Reject = true;
             continue;
         }
@@ -101,7 +100,7 @@ func applyBaselinePolicy(policy model.LateGradingPolicy, users map[string]*model
 
         _, ok := users[email];
         if (!ok) {
-            log.Warn().Str("user", email).Msg("Cannot find user, rejecting submission and skipping application of late polict.");
+            log.Warn("Cannot find user, rejecting submission and skipping application of late polict.", assignment, log.NewUserAttr(email));
             score.Reject = true;
             continue;
         }
@@ -143,15 +142,16 @@ func applyLateDaysPolicy(
 
         studentLMSID := users[email].LMSID;
         if (studentLMSID == "") {
-            log.Warn().Str("user", email).Msg("User does not have am LMS ID, cannot appply late days policy. Rejecting submission.");
+            log.Warn("User does not have am LMS ID, cannot appply late days policy. Rejecting submission.",
+                    assignment, users[email]);
             scoringInfo.Reject = true;
             continue;
         }
 
         lateDays := allLateDays[studentLMSID];
         if (lateDays == nil) {
-            log.Warn().Str("user", email).Str("lms-id", studentLMSID).Msg(
-                    "Cannot find user late days, cannot appply late days policy. Rejecting submission.");
+            log.Warn("Cannot find user late days, cannot appply late days policy. Rejecting submission.",
+                    assignment, users[email], log.NewAttr("lms-id", studentLMSID));
             scoringInfo.Reject = true;
             continue;
         }
@@ -231,7 +231,7 @@ func updateLateDays(policy model.LateGradingPolicy, assignment *model.Assignment
     }
 
     if (dryRun) {
-        log.Info().Str("assignment", assignment.GetID()).Any("grades", grades).Msg("Dry Run: Skipping upload of late days.");
+        log.Info("Dry Run: Skipping upload of late days.", assignment, log.NewAttr("grades", grades));
     } else {
         err := lms.UpdateAssignmentScores(assignment.GetCourse(), policy.LateDaysLMSID, grades);
         if (err != nil) {
@@ -254,7 +254,7 @@ func updateLateDays(policy model.LateGradingPolicy, assignment *model.Assignment
     }
 
     if (dryRun) {
-        log.Info().Str("assignment", assignment.GetID()).Any("comments", comments).Msg("Dry Run: Skipping update of late day comments.");
+        log.Info("Dry Run: Skipping update of late day comments.", assignment, log.NewAttr("comments", comments));
     } else {
         err := lms.UpdateComments(assignment.GetCourse(), policy.LateDaysLMSID, comments);
         if (err != nil) {
@@ -309,8 +309,8 @@ func fetchLateDays(policy model.LateGradingPolicy, assignment *model.Assignment)
 
         if (foundComment) {
             if (info.AvailableDays != postedLateDays) {
-                log.Warn().Int("posted-days", postedLateDays).Int("comment-days", info.AvailableDays).
-                        Msg("Mismatch in the posted late days and the number found in the autograder comment.");
+                log.Warn("Mismatch in the posted late days and the number found in the autograder comment.",
+                        assignment, log.NewAttr("posted-days", postedLateDays), log.NewAttr("comment-days", info.AvailableDays));
             }
         } else {
             info.AllocatedDays = make(map[string]int);

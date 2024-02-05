@@ -8,6 +8,7 @@ import (
 
     "github.com/eriq-augustine/autograder/common"
     "github.com/eriq-augustine/autograder/docker"
+    "github.com/eriq-augustine/autograder/log"
     "github.com/eriq-augustine/autograder/util"
 )
 
@@ -40,6 +41,13 @@ type Assignment struct {
 
 func (this *Assignment) GetID() string {
     return this.ID;
+}
+
+func (this *Assignment) LogValue() []*log.Attr {
+    return []*log.Attr{
+        log.NewCourseAttr(this.Course.ID),
+        log.NewAssignmentAttr(this.ID),
+    };
 }
 
 func (this *Assignment) GetSortID() string {

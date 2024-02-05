@@ -21,7 +21,7 @@ type UserGetResponse struct {
 func HandleUserGet(request *UserGetRequest) (*UserGetResponse, *core.APIError) {
     if (request.Course.GetLMSAdapter() == nil) {
         return nil, core.NewBadRequestError("-401", &request.APIRequest, "Course is not linked to an LMS.").
-                Add("course", request.Course.GetID());
+                Course(request.Course.GetID());
     }
 
     response := UserGetResponse{};
@@ -36,7 +36,7 @@ func HandleUserGet(request *UserGetRequest) (*UserGetResponse, *core.APIError) {
     lmsUser, err := lms.FetchUser(request.Course, string(request.TargetUser.Email));
     if (err != nil) {
         return nil, core.NewInternalError("-402", &request.APIRequestCourseUserContext,
-                "Failed to fetch LMS user.").Err(err).Add("email", string(request.TargetUser.Email));
+                "Failed to fetch LMS user.").Err(err).Add("target-user", string(request.TargetUser.Email));
     }
 
     if (lmsUser == nil) {

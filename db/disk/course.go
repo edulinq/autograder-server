@@ -4,8 +4,7 @@ import (
     "fmt"
     "path/filepath"
 
-    "github.com/rs/zerolog/log"
-
+    "github.com/eriq-augustine/autograder/log"
     "github.com/eriq-augustine/autograder/model"
     "github.com/eriq-augustine/autograder/util"
 )
@@ -33,8 +32,9 @@ func (this *backend) LoadCourse(path string) (*model.Course, error) {
         return nil, err;
     }
 
-    log.Debug().Str("database", "disk").Str("path", path).Str("id", course.GetID()).
-            Int("num-assignments", len(course.Assignments)).Msg("Loaded disk course.");
+    log.Debug("Loaded disk course.",
+            log.NewAttr("database", "disk"), log.NewAttr("path", path),
+            log.NewAttr("id", course.GetID()), log.NewAttr("num-assignments", len(course.Assignments)));
 
     err = this.saveCourseLock(course, false);
     if (err != nil) {

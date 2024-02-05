@@ -5,12 +5,11 @@ import (
     "strings"
     "time"
 
-    "github.com/rs/zerolog/log"
-
     "github.com/eriq-augustine/autograder/common"
     "github.com/eriq-augustine/autograder/db"
     "github.com/eriq-augustine/autograder/lms"
     "github.com/eriq-augustine/autograder/lms/lmstypes"
+    "github.com/eriq-augustine/autograder/log"
     "github.com/eriq-augustine/autograder/model"
     "github.com/eriq-augustine/autograder/util"
 )
@@ -63,11 +62,11 @@ func computeFinalScores(
     }
 
     // Next, create the grades that will actually be uploaded and the comments that will be updated..
-    finalScores, commentsToUpdate := filterFinalScores(users, scoringInfos, locks, existingComments);
+    finalScores, commentsToUpdate := filterFinalScores(assignment, users, scoringInfos, locks, existingComments);
 
     // Upload the grades.
     if (dryRun) {
-        log.Info().Str("assignment", assignment.GetID()).Any("grades", finalScores).Msg("Dry Run: Skipping upload of final grades.");
+        log.Info("Dry Run: Skipping upload of final grades.", assignment, log.NewAttr("grades", finalScores));
     } else {
         err = lms.UpdateAssignmentScores(assignment.GetCourse(), assignment.GetLMSID(), finalScores);
         if (err != nil) {
@@ -77,7 +76,7 @@ func computeFinalScores(
 
     // Update the comments.
     if (dryRun) {
-        log.Info().Str("assignment", assignment.GetID()).Any("comments", commentsToUpdate).Msg("Dry Run: Skipping update of final comments.");
+        log.Info("Dry Run: Skipping update of final comments.", assignment, log.NewAttr("comments", commentsToUpdate));
     } else {
         err = lms.UpdateComments(assignment.GetCourse(), assignment.GetLMSID(), commentsToUpdate);
         if (err != nil) {
@@ -126,6 +125,7 @@ func parseComments(lmsScores []*lmstypes.SubmissionScore) (map[string]bool, map[
 }
 
 func filterFinalScores(
+        assignment *model.Assignment,
         users map[string]*model.User, scoringInfos map[string]*model.ScoringInfo,
         locks map[string]bool, existingComments map[string]*model.ScoringInfo,
         ) ([]*lmstypes.SubmissionScore, []*lmstypes.SubmissionComment) {
@@ -135,7 +135,7 @@ func filterFinalScores(
     for email, scoringInfo := range scoringInfos {
         user := users[email];
         if (user == nil) {
-            log.Warn().Str("user", email).Msg("User does not exist, skipping grade upload.");
+            log.Warn("User does not exist, skipping grade upload.", assignment, log.NewUserAttr(email));
             continue;
         }
 
@@ -146,7 +146,7 @@ func filterFinalScores(
 
         // Skip users that do not have an LMS id.
         if (user.LMSID == "") {
-            log.Warn().Str("user", email).Msg("User does not have an LMS ID, skipping grade upload.");
+            log.Warn("User does not have an LMS ID, skipping grade upload.", assignment, log.NewUserAttr(email));
             continue;
         }
 
@@ -160,9 +160,10 @@ func filterFinalScores(
         // Check the existing comment last so we can decide if this comment needs to be updated.
         existingComment := existingComments[user.LMSID];
         if (existingComment != nil) {
-            // If this user has an existing comment, then we may skip this upload if submission IDs match.
-            if (existingComment.ID == scoringInfo.ID) {
-                log.Trace().Str("user", email).Str("submittion-id", existingComment.ID).Msg("User's submission/grade is up-to-date.");
+            // If this user has an existing comment, then we may skip this upload if everything matches.
+            if (existingComment.Equal(scoringInfo)) {
+                log.Trace("User's submission/grade is up-to-date.",
+                        assignment, log.NewUserAttr(email), log.NewAttr("submittion-id", existingComment.ID));
                 continue;
             }
         }
@@ -191,7 +192,7 @@ func filterFinalScores(
 
         scoringTime, err := scoringInfo.SubmissionTime.Time();
         if (err != nil) {
-            log.Warn().Err(err).Str("user", email).Msg("Failed to get scoring time, using now.");
+            log.Warn("Failed to get scoring time, using now.", err, assignment, log.NewUserAttr(email));
             scoringTime = time.Now();
         }
 

@@ -5,9 +5,9 @@ import (
     "path/filepath"
 
     "github.com/alecthomas/kong"
-    "github.com/rs/zerolog/log"
 
     "github.com/eriq-augustine/autograder/config"
+    "github.com/eriq-augustine/autograder/log"
     "github.com/eriq-augustine/autograder/model"
     "github.com/eriq-augustine/autograder/util"
 )
@@ -31,12 +31,12 @@ func main() {
 
     err := config.HandleConfigArgs(args.ConfigArgs);
     if (err != nil) {
-        log.Fatal().Err(err).Msg("Could not load config options.");
+        log.Fatal("Could not load config options.", err);
     }
 
     role := model.GetRole(args.Role);
     if (role == model.RoleUnknown) {
-        log.Fatal().Str("role", args.Role).Msg("Unknown role.");
+        log.Fatal("Unknown role.", log.NewAttr("role", args.Role));
     }
 
     users := getUsers(args.Path);
@@ -47,7 +47,7 @@ func main() {
 
     err = util.ToJSONFileIndent(users, args.Path);
     if (err != nil) {
-        log.Fatal().Err(err).Str("path", args.Path).Msg("Failed to write users file.");
+        log.Fatal("Failed to write users file.", log.NewAttr("path", args.Path), err);
     }
 
     fmt.Printf("Successfully wrote user's file: '%s'.\n", args.Path);
@@ -63,7 +63,7 @@ func getUsers(path string) map[string]*model.User {
     if (!util.PathExists(path)) {
         err = util.MkDir(filepath.Dir(path));
         if (err != nil) {
-            log.Fatal().Err(err).Str("path", path).Msg("Failed to create dir.");
+            log.Fatal("Failed to create dir.", log.NewAttr("path", path), err);
         }
 
         return make(map[string]*model.User, 0);
@@ -72,7 +72,7 @@ func getUsers(path string) map[string]*model.User {
     var users map[string]*model.User;
     err = util.JSONFromFile(path, &users);
     if (err != nil) {
-        log.Fatal().Err(err).Str("path", path).Msg("Failed to read existing users file.");
+        log.Fatal("Failed to read existing users file.", log.NewAttr("path", path), err);
     }
 
     return users;
@@ -89,12 +89,12 @@ func makeNewUser(email string, name string, pass string, role model.UserRole) (*
         hashPass := util.Sha256HexFromString(pass);
         err = newUser.SetPassword(hashPass);
         if (err != nil) {
-            log.Fatal().Err(err).Msg("Failed to set password.");
+            log.Fatal("Failed to set password.", err);
         }
     } else {
         generatedPass, err = newUser.SetRandomPassword();
         if (err != nil) {
-            log.Fatal().Err(err).Msg("Failed to set random password.");
+            log.Fatal("Failed to set random password.", err);
         }
     }
 

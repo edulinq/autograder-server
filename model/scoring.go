@@ -24,3 +24,19 @@ type ScoringInfo struct {
     LMSCommentID string `json:"-"`
     LMSCommentAuthorID string `json:"-"`
 }
+
+func (this *ScoringInfo) Equal(other *ScoringInfo) bool {
+    if ((this == nil) || (other == nil)) {
+        return false;
+    }
+
+    return (this.ID == other.ID &&
+            this.SubmissionTime == other.SubmissionTime &&
+            this.RawScore == other.RawScore &&
+            this.Score == other.Score &&
+            this.Lock == other.Lock &&
+            this.LateDayUsage == other.LateDayUsage &&
+            this.NumDaysLate == other.NumDaysLate &&
+            this.Reject == other.Reject &&
+            this.AutograderStructVersion == other.AutograderStructVersion);
+}

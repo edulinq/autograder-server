@@ -1,10 +1,9 @@
 package submission
 
 import (
-    "github.com/rs/zerolog/log"
-
     "github.com/eriq-augustine/autograder/api/core"
     "github.com/eriq-augustine/autograder/grader"
+    "github.com/eriq-augustine/autograder/log"
     "github.com/eriq-augustine/autograder/model"
 )
 
@@ -37,13 +36,13 @@ func HandleSubmit(request *SubmitRequest) (*SubmitResponse, *core.APIError) {
             stderr = result.Stderr;
         }
 
-        log.Debug().Err(err).Str("stdout", stdout).Str("stderr", stderr).Msg("Submission grading failed.");
+        log.Debug("Submission grading failed.", err, request.Assignment, log.NewAttr("stdout", stdout), log.NewAttr("stderr", stderr));
 
         return &response, nil;
     }
 
     if (reject != nil) {
-        log.Debug().Str("reason", reject.String()).Any("request", request).Msg("Submission rejected.");
+        log.Debug("Submission rejected.", request.Assignment, log.NewAttr("reason", reject.String()), log.NewAttr("request", request));
 
         response.Rejected = true;
         response.Message = reject.String();

@@ -5,7 +5,7 @@ import (
     "slices"
     "strconv"
 
-    "github.com/rs/zerolog/log"
+    "github.com/eriq-augustine/autograder/log"
 )
 
 const EPSILON = 1e-5
@@ -34,7 +34,7 @@ func DefaultNaN(value float64, defaultValue float64) float64 {
 func MustStrToFloat(value string) float64 {
     result, err := StrToFloat(value);
     if (err != nil) {
-        log.Fatal().Err(err).Str("value", value).Msg("Failed to convert string to float.");
+        log.Fatal("Failed to convert string to float.", err, log.NewAttr("value", value));
     }
 
     return result;

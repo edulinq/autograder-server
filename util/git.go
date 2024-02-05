@@ -5,13 +5,13 @@ import (
     "fmt"
     "os/exec"
 
-    "github.com/rs/zerolog/log"
-
     "github.com/go-git/go-git/v5"
     "github.com/go-git/go-git/v5/config"
     "github.com/go-git/go-git/v5/plumbing"
     "github.com/go-git/go-git/v5/plumbing/transport"
     "github.com/go-git/go-git/v5/plumbing/transport/http"
+
+    "github.com/eriq-augustine/autograder/log"
 )
 
 func GitEnsureRepo(url string, path string, update bool, ref string, user string, pass string) (*git.Repository, error) {
@@ -71,7 +71,7 @@ func GitGetRepo(path string) (*git.Repository, error) {
 }
 
 func GitClone(url string, path string, auth transport.AuthMethod) (*git.Repository, error) {
-    log.Trace().Str("url", url).Str("path", path).Msg("Cloning git repo.");
+    log.Trace("Cloning git repo.", log.NewAttr("url", url), log.NewAttr("path", path));
 
     options := &git.CloneOptions{
         URL: url,
@@ -157,7 +157,7 @@ func setupTrackingBranches(repo *git.Repository, auth transport.AuthMethod) erro
 }
 
 func GitCheckoutRepo(repo *git.Repository, ref string) error {
-    log.Trace().Str("ref", ref).Msg("Checking out git repo.");
+    log.Trace("Checking out git repo.", log.NewAttr("ref", ref));
 
     tree, err := repo.Worktree();
     if (err != nil) {
@@ -214,7 +214,7 @@ func getCheckOptions(repo *git.Repository, ref string) (*git.CheckoutOptions, er
 
 // Return true if an update happened.
 func GitUpdateRepo(repo *git.Repository, auth transport.AuthMethod) (bool, error) {
-    log.Trace().Msg("Pulling git repo.");
+    log.Trace("Pulling git repo.");
 
     tree, err := repo.Worktree();
     if (err != nil) {

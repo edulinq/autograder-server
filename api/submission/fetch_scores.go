@@ -21,7 +21,8 @@ type FetchScoresResponse struct {
 func HandleFetchScores(request *FetchScoresRequest) (*FetchScoresResponse, *core.APIError) {
     submissionInfos, err := db.GetRecentSubmissionSurvey(request.Assignment, request.FilterRole);
     if (err != nil) {
-        return nil, core.NewInternalError("-602", &request.APIRequestCourseUserContext, "Failed to get submission summaries.").Err(err);
+        return nil, core.NewInternalError("-602", &request.APIRequestCourseUserContext, "Failed to get submission summaries.").
+                Err(err).Assignment(request.Assignment.GetID());
     }
 
     return &FetchScoresResponse{submissionInfos}, nil;

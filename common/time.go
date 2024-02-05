@@ -6,7 +6,7 @@ import (
     "time"
     "strings"
 
-    "github.com/rs/zerolog/log"
+    "github.com/eriq-augustine/autograder/log"
 )
 
 const (
@@ -169,7 +169,7 @@ func (this TimeOfDaySpec) ComputeNextTime(startTime time.Time) time.Time {
 
     instance, err := this.getTime();
     if (err != nil) {
-        log.Error().Err(err).Str("contents", string(this)).Msg("Failed to parse time of day spec.");
+        log.Error("Failed to parse time of day spec.", err, log.NewAttr("contents", string(this)));
         thisTime, _ = time.Parse(TIME_LAYOUT_MINS, "00:00");
     } else {
         thisTime = instance;
@@ -194,7 +194,7 @@ func (this TimeOfDaySpec) String() string {
 
     instance, err := this.getTime();
     if (err != nil) {
-        log.Error().Err(err).Str("contents", string(this)).Msg("Failed to parse time of day spec.");
+        log.Error("Failed to parse time of day spec.", err, log.NewAttr("contents", string(this)));
     } else {
         timeOfDay = instance.Format(time.TimeOnly);
     }

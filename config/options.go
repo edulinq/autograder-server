@@ -19,8 +19,8 @@ var (
     STORE_HTTP = MustNewStringOption("http.store", "", "Store HTTP requests made by the server to the specified directory.");
 
     // Logging
-    LOG_LEVEL = MustNewStringOption("log.level", "INFO", "The default logging level.");
-    LOG_PRETTY = MustNewBoolOption("log.pretty", true, "Make the logging human-readable, but less efficient.");
+    LOG_TEXT_LEVEL = MustNewStringOption("log.text.level", "INFO", "The default logging level for the text (stderr) logger.");
+    LOG_BACKEND_LEVEL = MustNewStringOption("log.backend.level", "INFO", "The default logging level for the backend (database) logger.");
 
     // Email
     EMAIL_FROM = MustNewStringOption("email.from", "", "From address for emails sent from the autograder.");

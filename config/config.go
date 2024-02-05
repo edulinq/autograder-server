@@ -10,8 +10,7 @@ import (
     "strconv"
     "strings"
 
-    "github.com/rs/zerolog/log"
-
+    "github.com/eriq-augustine/autograder/log"
     "github.com/eriq-augustine/autograder/util"
 )
 
@@ -34,7 +33,7 @@ func ToJSON() (string, error) {
 func MustEnableUnitTestingMode() {
     err := EnableUnitTestingMode();
     if (err != nil) {
-        log.Fatal().Err(err).Msg("Failed to enable unit testing mode.");
+        log.Fatal("Failed to enable unit testing mode.", err);
     }
 }
 
@@ -42,7 +41,7 @@ func EnableUnitTestingMode() error {
     TESTING_MODE.Set(true);
     NO_TASKS.Set(true);
 
-    tempWorkDir, err := util.MkDirTemp("autograader-unit-testing-");
+    tempWorkDir, err := util.MkDirTemp("autograder-unit-testing-");
     if (err != nil) {
         return fmt.Errorf("Failed to make temp unit testing work dir: '%w'.", err);
     }
@@ -70,7 +69,7 @@ func EnableTestingMode() {
     NO_TASKS.Set(true);
 
     DEBUG.Set(true);
-    InitLogging();
+    InitLoggingFromConfig();
 }
 
 func LoadConfigFromDir(dir string) error {
@@ -205,7 +204,7 @@ func GetStringDefault(key string, defaultValue string) string {
 func GetIntDefault(key string, defaultValue int) int {
     intValue, err := asInt(GetDefault(key, defaultValue));
     if (err != nil) {
-        log.Warn().Err(err).Str("key", key).Int("default", defaultValue).Msg("Could not get int option, returning default.");
+        log.Warn("Could not get int option, returning default.", err, log.NewAttr("key", key), log.NewAttr("default", defaultValue));
         return defaultValue;
     }
 
@@ -215,7 +214,7 @@ func GetIntDefault(key string, defaultValue int) int {
 func GetFloatDefault(key string, defaultValue float64) float64 {
     floatValue, err := asFloat(GetDefault(key, defaultValue));
     if (err != nil) {
-        log.Warn().Err(err).Str("key", key).Float64("default", defaultValue).Msg("Could not get float option, returning default.");
+        log.Warn("Could not get float option, returning default.", err, log.NewAttr("key", key), log.NewAttr("default", defaultValue));
         return defaultValue;
     }
 
@@ -225,7 +224,7 @@ func GetFloatDefault(key string, defaultValue float64) float64 {
 func GetBoolDefault(key string, defaultValue bool) bool {
     boolValue, err := asBool(GetDefault(key, defaultValue));
     if (err != nil) {
-        log.Warn().Err(err).Str("key", key).Bool("default", defaultValue).Msg("Could not get bool option, returning default.");
+        log.Warn("Could not get bool option, returning default.", err, log.NewAttr("key", key), log.NewAttr("default", defaultValue));
         return defaultValue;
     }
 

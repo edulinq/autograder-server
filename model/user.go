@@ -12,11 +12,11 @@ import (
     "strings"
     "time"
 
-    "github.com/rs/zerolog/log"
     "golang.org/x/crypto/argon2"
 
     "github.com/eriq-augustine/autograder/config"
     "github.com/eriq-augustine/autograder/email"
+    "github.com/eriq-augustine/autograder/log"
     "github.com/eriq-augustine/autograder/util"
 )
 
@@ -48,6 +48,10 @@ func NewUser(email string, name string, role UserRole) *User {
         Name: name,
         Role: role,
     };
+}
+
+func (this *User) LogValue() []*log.Attr {
+    return []*log.Attr{log.NewUserAttr(this.Email)};
 }
 
 // Sets the password and generates a new salt.
@@ -87,13 +91,13 @@ func (this *User) SetRandomPassword() (string, error) {
 func (this *User) CheckPassword(hashPass string) bool {
     thisHash, err := hex.DecodeString(this.Pass);
     if (err != nil) {
-        log.Warn().Err(err).Str("user", this.Email).Msg("Bad password hash for user.");
+        log.Warn("Bad password hash for user.", err, this);
         return false;
     }
 
     salt, err := hex.DecodeString(this.Salt);
     if (err != nil) {
-        log.Warn().Err(err).Str("user", this.Email).Msg("Bad salt for user.");
+        log.Warn("Bad salt for user.", err, this);
         return false;
     }
 
@@ -140,18 +144,19 @@ func SendUserAddEmail(course *Course, user *User, pass string, generatedPass boo
     subject, body := composeUserAddEmail(course, user.Email, pass, generatedPass, userExists);
 
     if (dryRun) {
-        log.Info().Str("email", user.Email).Msg("Doing a dry run, user will not be emailed.");
-        log.Debug().Str("address", user.Email).Str("subject", subject).Str("body", body).Msg("Email not sent because of dry run.");
+        log.Info("Doing a dry run, user will not be emailed.", course, log.NewUserAttr(user.Email));
+        log.Debug("Email not sent because of dry run.", course,
+                log.NewAttr("address", user.Email), log.NewAttr("subject", subject), log.NewAttr("body", body));
         return nil;
     }
 
     err := email.Send([]string{user.Email}, subject, body, false);
     if (err != nil) {
-        log.Error().Err(err).Str("email", user.Email).Msg("Failed to send email.");
+        log.Error("Failed to send email.", err, course, log.NewUserAttr(user.Email));
         return err;
     }
 
-    log.Info().Str("email", user.Email).Msg("Registration email sent.");
+    log.Info("Registration email sent.", course, log.NewUserAttr(user.Email));
 
     // Skip sleeping in testing mode.
     if (sleep && !config.TESTING_MODE.Get()) {

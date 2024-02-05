@@ -3,7 +3,7 @@ package tasks
 import (
     "fmt"
 
-    "github.com/rs/zerolog/log"
+    "github.com/eriq-augustine/autograder/log"
 )
 
 type ScoringUploadTask struct {
@@ -27,8 +27,8 @@ func (this *ScoringUploadTask) Validate(course TaskCourse) error {
     lmsIDs, assignmentIDs := course.GetAssignmentLMSIDs();
     for i, _ := range lmsIDs {
         if (lmsIDs[i] == "") {
-            log.Warn().Str("course", course.GetID()).Str("assignment", assignmentIDs[i]).
-                    Msg("Score and Upload course has an assignment with a missing LMS ID.");
+            log.Warn("Score and Upload course has an assignment with a missing LMS ID.",
+                    log.NewCourseAttr(course.GetID()), log.NewAssignmentAttr(assignmentIDs[i]));
         }
     }
 

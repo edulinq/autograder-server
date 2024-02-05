@@ -4,10 +4,10 @@ import (
     "fmt"
 
     "github.com/alecthomas/kong"
-    "github.com/rs/zerolog/log"
 
     "github.com/eriq-augustine/autograder/config"
     "github.com/eriq-augustine/autograder/db"
+    "github.com/eriq-augustine/autograder/log"
     "github.com/eriq-augustine/autograder/email"
     "github.com/eriq-augustine/autograder/report"
     "github.com/eriq-augustine/autograder/util"
@@ -27,7 +27,7 @@ func main() {
 
     err := config.HandleConfigArgs(args.ConfigArgs);
     if (err != nil) {
-        log.Fatal().Err(err).Msg("Could not load config options.");
+        log.Fatal("Could not load config options.", err);
     }
 
     db.MustOpen();
@@ -37,13 +37,13 @@ func main() {
 
     report, err := report.GetCourseScoringReport(course);
     if (err != nil) {
-        log.Fatal().Err(err).Str("course", course.GetID()).Msg("Failed to get scoring report.");
+        log.Fatal("Failed to get scoring report.", course, err);
     }
 
     if (args.HTML) {
         html, err := report.ToHTML();
         if (err != nil) {
-            log.Fatal().Err(err).Str("course", course.GetID()).Msg("Failed to generate HTML scoring report.");
+            log.Fatal("Failed to generate HTML scoring report.", course, err);
         }
 
         fmt.Println(html);
@@ -54,14 +54,14 @@ func main() {
     if (len(args.Email) > 0) {
         html, err := report.ToHTML();
         if (err != nil) {
-            log.Fatal().Err(err).Str("course", course.GetID()).Msg("Failed to generate HTML scoring report.");
+            log.Fatal("Failed to generate HTML scoring report.", course, err);
         }
 
         subject := fmt.Sprintf("Autograder Scoring Report for %s", course.GetName());
 
         err = email.Send(args.Email, subject, html, true);
         if (err != nil) {
-            log.Fatal().Err(err).Str("course", course.GetID()).Msg("Failed to send scoring report email.");
+            log.Fatal("Failed to send scoring report email.", course, err);
         }
     }
 }

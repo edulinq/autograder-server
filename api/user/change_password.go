@@ -43,20 +43,20 @@ func HandleChangePassword(request *ChangePasswordRequest) (*ChangePasswordRespon
 
     if (err != nil) {
         return nil, core.NewInternalError("-806", &request.APIRequestCourseUserContext,
-                "Failed to set password.").Err(err).Add("email", request.TargetUser.Email);
+                "Failed to set password.").Err(err).Add("target-user", request.TargetUser.Email);
     }
 
     err = db.SaveUser(request.Course, request.TargetUser.User);
     if (err != nil) {
         return nil, core.NewInternalError("-807", &request.APIRequestCourseUserContext,
-                "Failed to save user.").Err(err).Add("email", request.TargetUser.Email);
+                "Failed to save user.").Err(err).Add("target-user", request.TargetUser.Email);
     }
 
     if (pass != "") {
         err = model.SendUserAddEmail(request.Course, request.TargetUser.User, pass, true, true, false, false);
         if (err != nil) {
             return nil, core.NewInternalError("-808", &request.APIRequestCourseUserContext,
-                    "Failed to send user email.").Err(err).Add("email", request.TargetUser.Email);
+                    "Failed to send user email.").Err(err).Add("target-user", request.TargetUser.Email);
         }
     }
 

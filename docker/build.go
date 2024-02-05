@@ -12,10 +12,10 @@ import (
 
 	"github.com/docker/docker/api/types"
     "github.com/docker/docker/pkg/archive"
-    "github.com/rs/zerolog/log"
 
     "github.com/eriq-augustine/autograder/common"
     "github.com/eriq-augustine/autograder/config"
+    "github.com/eriq-augustine/autograder/log"
     "github.com/eriq-augustine/autograder/util"
 )
 
@@ -33,18 +33,20 @@ func NewBuildOptions() *BuildOptions {
     };
 }
 
-func BuildImage(imageInfo *ImageInfo) error {
-    return BuildImageWithOptions(imageInfo, NewBuildOptions());
+func BuildImage(imageSource ImageSource) error {
+    return BuildImageWithOptions(imageSource, NewBuildOptions());
 }
 
-func BuildImageWithOptions(imageInfo *ImageInfo, options *BuildOptions) error {
+func BuildImageWithOptions(imageSource ImageSource, options *BuildOptions) error {
+    imageInfo := imageSource.GetImageInfo();
+
     tempDir, err := util.MkDirTemp(TEMPDIR_PREFIX + imageInfo.Name + "-");
     if (err != nil) {
         return fmt.Errorf("Failed to create temp build directory for '%s': '%w'.", imageInfo.Name, err);
     }
 
     if (config.DEBUG.Get()) {
-        log.Info().Str("path", tempDir).Msg("Leaving behind temp building dir.");
+        log.Info("Leaving behind temp building dir.", imageSource, log.NewAttr("path", tempDir));
     } else {
         defer os.RemoveAll(tempDir);
     }
@@ -69,10 +71,10 @@ func BuildImageWithOptions(imageInfo *ImageInfo, options *BuildOptions) error {
         return fmt.Errorf("Failed to create tar build context for image '%s': '%w'.", imageInfo.Name, err);
     }
 
-    return buildImage(buildOptions, tar);
+    return buildImage(imageSource, buildOptions, tar);
 }
 
-func buildImage(buildOptions types.ImageBuildOptions, tar io.ReadCloser) error {
+func buildImage(imageSource ImageSource, buildOptions types.ImageBuildOptions, tar io.ReadCloser) error {
 	ctx, docker, err := getDockerClient();
     if (err != nil) {
         return err;
@@ -84,15 +86,15 @@ func buildImage(buildOptions types.ImageBuildOptions, tar io.ReadCloser) error {
         return fmt.Errorf("Failed to run docker image build command: '%w'.", err);
     }
 
-    output := collectBuildOutput(response);
-    log.Debug().Str("image-build-output", output).Msg("Image Build Output");
+    output := collectBuildOutput(imageSource, response);
+    log.Debug("Image Build Output", imageSource, log.NewAttr("image-build-output", output));
 
     return nil;
 }
 
 // Try to get the build output from a build response.
 // Note that the response may be from a failure.
-func collectBuildOutput(response types.ImageBuildResponse) string {
+func collectBuildOutput(imageSource ImageSource, response types.ImageBuildResponse) string {
     if (response.Body == nil) {
         return "";
     }
@@ -123,7 +125,7 @@ func collectBuildOutput(response types.ImageBuildResponse) string {
                 text = "<ERROR: Docker output JSON value is not a string.>";
             }
 
-            log.Warn().Err(err).Str("message", text).Msg("Docker image build had an error entry.");
+            log.Warn("Docker image build had an error entry.", err, imageSource, log.NewAttr("message", text));
             buildStringOutput.WriteString(text);
         }
 
@@ -140,7 +142,7 @@ func collectBuildOutput(response types.ImageBuildResponse) string {
 
     err := responseScanner.Err();
     if (err != nil) {
-        log.Warn().Err(err).Msg("Failed to scan docker image build response.");
+        log.Warn("Failed to scan docker image build response.", err, imageSource);
     }
 
     return buildStringOutput.String();

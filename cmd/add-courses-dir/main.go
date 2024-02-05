@@ -4,10 +4,10 @@ import (
     "fmt"
 
     "github.com/alecthomas/kong"
-    "github.com/rs/zerolog/log"
 
     "github.com/eriq-augustine/autograder/config"
     "github.com/eriq-augustine/autograder/db"
+    "github.com/eriq-augustine/autograder/log"
 )
 
 var args struct {
@@ -22,7 +22,7 @@ func main() {
 
     err := config.HandleConfigArgs(args.ConfigArgs);
     if (err != nil) {
-        log.Fatal().Err(err).Msg("Could not load config options.");
+        log.Fatal("Could not load config options.", err);
     }
 
     db.MustOpen();
@@ -30,7 +30,7 @@ func main() {
 
     courseIDs, err := db.AddCoursesFromDir(args.Path, nil);
     if (err != nil) {
-        log.Fatal().Err(err).Str("path", args.Path).Msg("Could not add courses dir.");
+        log.Fatal("Could not add courses dir.", log.NewAttr("path", args.Path), err);
     }
 
     fmt.Printf("Added %d courses.\n", len(courseIDs));

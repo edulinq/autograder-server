@@ -5,11 +5,11 @@ import (
     "strings"
 
     "github.com/alecthomas/kong"
-    "github.com/rs/zerolog/log"
 
     "github.com/eriq-augustine/autograder/config"
     "github.com/eriq-augustine/autograder/db"
     "github.com/eriq-augustine/autograder/lms"
+    "github.com/eriq-augustine/autograder/log"
     "github.com/eriq-augustine/autograder/util"
 )
 
@@ -26,7 +26,7 @@ func main() {
 
     err := config.HandleConfigArgs(args.ConfigArgs);
     if (err != nil) {
-        log.Fatal().Err(err).Msg("Could not load config options.");
+        log.Fatal("Could not load config options.", err);
     }
 
     db.MustOpen();
@@ -36,12 +36,12 @@ func main() {
     course := assignment.GetCourse();
 
     if (assignment.GetLMSID() == "") {
-        log.Fatal().Str("assignment", assignment.FullID()).Msg("Assignment has no LMS ID.");
+        log.Fatal("Assignment has no LMS ID.", assignment);
     }
 
     grades, err := lms.FetchAssignmentScores(course, assignment.GetLMSID());
     if (err != nil) {
-        log.Fatal().Err(err).Msg("Could not fetch grades.");
+        log.Fatal("Could not fetch grades.", err, assignment);
     }
 
     fmt.Println("lms_user_id\tscore\ttime\tcomments");

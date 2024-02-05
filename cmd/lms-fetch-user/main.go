@@ -4,11 +4,11 @@ import (
     "fmt"
 
     "github.com/alecthomas/kong"
-    "github.com/rs/zerolog/log"
 
     "github.com/eriq-augustine/autograder/config"
     "github.com/eriq-augustine/autograder/db"
     "github.com/eriq-augustine/autograder/lms"
+    "github.com/eriq-augustine/autograder/log"
 )
 
 var args struct {
@@ -24,7 +24,7 @@ func main() {
 
     err := config.HandleConfigArgs(args.ConfigArgs);
     if (err != nil) {
-        log.Fatal().Err(err).Msg("Could not load config options.");
+        log.Fatal("Could not load config options.", err);
     }
 
     db.MustOpen();
@@ -34,7 +34,7 @@ func main() {
 
     user, err := lms.FetchUser(course, args.Email);
     if (err != nil) {
-        log.Fatal().Err(err).Msg("Could not fetch user.");
+        log.Fatal("Could not fetch user.", err, course);
     }
 
     if (user == nil) {

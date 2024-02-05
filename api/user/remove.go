@@ -33,7 +33,7 @@ func HandleRemove(request *RemoveRequest) (*RemoveResponse, *core.APIError) {
     _, err := db.RemoveUser(request.Course, request.TargetUser.Email);
     if (err != nil) {
         return nil, core.NewInternalError("-802", &request.APIRequestCourseUserContext,
-                "Failed to remove user.").Err(err).Add("email", request.TargetUser.Email);
+                "Failed to remove user.").Err(err).Add("target-user", request.TargetUser.Email);
     }
 
     return &response, nil;

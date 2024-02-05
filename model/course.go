@@ -5,11 +5,10 @@ import (
     "path/filepath"
     "slices"
 
-    "github.com/rs/zerolog/log"
-
     "github.com/eriq-augustine/autograder/common"
     "github.com/eriq-augustine/autograder/config"
     "github.com/eriq-augustine/autograder/docker"
+    "github.com/eriq-augustine/autograder/log"
     "github.com/eriq-augustine/autograder/model/tasks"
 )
 
@@ -42,6 +41,10 @@ type Course struct {
 
 func (this *Course) GetID() string {
     return this.ID;
+}
+
+func (this *Course) LogValue() []*log.Attr {
+    return []*log.Attr{log.NewCourseAttr(this.ID)};
 }
 
 func (this *Course) GetName() string {
@@ -180,8 +183,7 @@ func (this *Course) BuildAssignmentImages(force bool, quick bool, options *docke
     for _, assignment := range this.Assignments {
         err := docker.BuildImageFromSource(assignment, force, quick, options);
         if (err != nil) {
-            log.Error().Err(err).Str("course", this.ID).Str("assignment", assignment.GetID()).
-                    Msg("Failed to build assignment docker image.");
+            log.Error("Failed to build assignment docker image.", err, this, assignment);
             errors[assignment.ImageName()] = err;
         } else {
             goodImageNames = append(goodImageNames, assignment.ImageName());

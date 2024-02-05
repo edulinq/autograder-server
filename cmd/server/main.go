@@ -1,15 +1,14 @@
 package main
 
 import (
-    "fmt"
     "os"
 
     "github.com/alecthomas/kong"
-    "github.com/rs/zerolog/log"
 
     "github.com/eriq-augustine/autograder/api"
     "github.com/eriq-augustine/autograder/config"
     "github.com/eriq-augustine/autograder/db"
+    "github.com/eriq-augustine/autograder/log"
     "github.com/eriq-augustine/autograder/model"
     "github.com/eriq-augustine/autograder/procedures"
     "github.com/eriq-augustine/autograder/util"
@@ -23,32 +22,32 @@ func main() {
     kong.Parse(&args);
     err := config.HandleConfigArgs(args.ConfigArgs);
     if (err != nil) {
-        log.Fatal().Err(err).Msg("Could not load config options.");
+        log.Fatal("Could not load config options.", err);
     }
 
-    log.Info().Str("version", util.GetAutograderFullVersion()).Msg("Autograder Version");
+    log.Info("Autograder Version", log.NewAttr("version", util.GetAutograderFullVersion()));
 
     workingDir, err := os.Getwd();
     if (err != nil) {
-        log.Fatal().Err(err).Msg("Could not get working directory.");
+        log.Fatal("Could not get working directory.", err);
     }
 
     db.MustOpen();
     defer db.MustClose();
 
-    log.Info().Str("dir", workingDir).Msg("Running server with working directory.");
+    log.Info("Running server with working directory.", log.NewAttr("dir", workingDir));
 
     _, err = db.AddCourses();
     if (err != nil) {
-        log.Fatal().Err(err).Msg("Could not load courses.");
+        log.Fatal("Could not load courses.", err);
     }
 
     courses := db.MustGetCourses();
-    log.Info().Int("count", len(courses)).Msg(fmt.Sprintf("Loaded %d course(s).", len(courses)));
+    log.Info("Loaded course(s).", log.NewAttr("count", len(courses)));
 
     // Startup courses (in the background).
     for _, course := range courses {
-        log.Info().Str("course", course.GetID()).Msg("Loaded course.");
+        log.Info("Loaded course.", course);
         go func(course *model.Course) {
             procedures.UpdateCourse(course, true);
         }(course);
@@ -59,8 +58,8 @@ func main() {
 
     err = api.StartServer();
     if (err != nil) {
-        log.Fatal().Err(err).Msg("Server was stopped.");
+        log.Fatal("Server was stopped.", err);
     }
 
-    log.Info().Msg("Server closed.");
+    log.Info("Server closed.");
 }

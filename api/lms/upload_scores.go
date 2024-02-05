@@ -36,7 +36,7 @@ type RowEntry struct {
 func HandleUploadScores(request *UploadScoresRequest) (*UploadScoresResponse, *core.APIError) {
     if (request.Course.GetLMSAdapter() == nil) {
         return nil, core.NewBadRequestError("-405", &request.APIRequest, "Course is not linked to an LMS.").
-                Add("course", request.Course.GetID());
+                Course(request.Course.GetID());
     }
 
     response := UploadScoresResponse{

@@ -8,8 +8,7 @@ import (
     "slices"
     "strings"
 
-    "github.com/rs/zerolog/log"
-
+    "github.com/eriq-augustine/autograder/log"
     "github.com/eriq-augustine/autograder/util"
 )
 
@@ -30,7 +29,7 @@ type BoolOption struct {*baseOption}
 func mustNewOption(key string, defaultValue any, description string) *baseOption {
     _, ok := seenOptions[key];
     if (ok) {
-        log.Fatal().Str("key", key).Msg("Duplicate option key.");
+        log.Fatal("Duplicate option key.", log.NewAttr("key", key));
     }
 
     option := baseOption{

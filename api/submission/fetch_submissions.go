@@ -21,7 +21,7 @@ func HandleFetchSubmissions(request *FetchSubmissionsRequest) (*FetchSubmissions
     results, err := db.GetRecentSubmissionContents(request.Assignment, request.FilterRole);
     if (err != nil) {
         return nil, core.NewInternalError("-605", &request.APIRequestCourseUserContext, "Failed to get submissions.").
-                Err(err);
+                Err(err).Assignment(request.Assignment.GetID());
     }
 
     return &FetchSubmissionsResponse{results}, nil;

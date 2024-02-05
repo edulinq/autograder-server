@@ -5,11 +5,11 @@ import (
     "strings"
 
     "github.com/alecthomas/kong"
-    "github.com/rs/zerolog/log"
 
     "github.com/eriq-augustine/autograder/config"
     "github.com/eriq-augustine/autograder/db"
     "github.com/eriq-augustine/autograder/lms"
+    "github.com/eriq-augustine/autograder/log"
     "github.com/eriq-augustine/autograder/util"
 )
 
@@ -27,7 +27,7 @@ func main() {
 
     err := config.HandleConfigArgs(args.ConfigArgs);
     if (err != nil) {
-        log.Fatal().Err(err).Msg("Could not load config options.");
+        log.Fatal("Could not load config options.", err);
     }
 
     db.MustOpen();
@@ -37,25 +37,25 @@ func main() {
     course := assignment.GetCourse();
 
     if (assignment.GetLMSID() == "") {
-        log.Fatal().Str("assignment", assignment.FullID()).Msg("Assignment has no LMS ID.");
+        log.Fatal("Assignment has no LMS ID.", assignment);
     }
 
     user, err := db.GetUser(course, args.Email);
     if (err != nil) {
-        log.Fatal().Err(err).Str("course", course.GetID()).Str("user", args.Email).Msg("Failed to fetch user.");
+        log.Fatal("Failed to fetch user.", err, assignment, log.NewUserAttr(args.Email));
     }
 
     if (user == nil) {
-        log.Fatal().Err(err).Str("course", course.GetID()).Str("user", args.Email).Msg("Could not find user.");
+        log.Fatal("Could not find user.", err, assignment, log.NewUserAttr(args.Email));
     }
 
     if (user.LMSID == "") {
-        log.Fatal().Err(err).Str("course", course.GetID()).Str("user", args.Email).Msg("User does not have an LMS ID.");
+        log.Fatal("User does not have an LMS ID.", err, assignment, user);
     }
 
     score, err := lms.FetchAssignmentScore(course, assignment.GetLMSID(), user.LMSID);
     if (err != nil) {
-        log.Fatal().Err(err).Str("course", course.GetID()).Str("assignment", assignment.GetID()).Str("user", args.Email).Msg("User does not have an LMS ID.");
+        log.Fatal("User does not have an LMS ID.", err, assignment, user);
     }
 
     textComments := make([]string, 0, len(score.Comments));

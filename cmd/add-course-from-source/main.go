@@ -4,11 +4,11 @@ import (
     "fmt"
 
     "github.com/alecthomas/kong"
-    "github.com/rs/zerolog/log"
 
     "github.com/eriq-augustine/autograder/common"
     "github.com/eriq-augustine/autograder/config"
     "github.com/eriq-augustine/autograder/db"
+    "github.com/eriq-augustine/autograder/log"
     "github.com/eriq-augustine/autograder/util"
 )
 
@@ -24,7 +24,7 @@ func main() {
 
     err := config.HandleConfigArgs(args.ConfigArgs);
     if (err != nil) {
-        log.Fatal().Err(err).Msg("Could not load config options.");
+        log.Fatal("Could not load config options.", err);
     }
 
     db.MustOpen();
@@ -32,23 +32,23 @@ func main() {
 
     spec, err := common.ParseFileSpec(args.Source);
     if (err != nil) {
-        log.Fatal().Err(err).Msg("Failed to parse FileSpec.");
+        log.Fatal("Failed to parse FileSpec.", err);
     }
 
     tempDir, err := util.MkDirTemp("autograder-add-course-source-");
     if (err != nil) {
-        log.Fatal().Err(err).Msg("Failed to make temp source dir.");
+        log.Fatal("Failed to make temp source dir.", err);
     }
     defer util.RemoveDirent(tempDir);
 
     err = spec.CopyTarget(common.ShouldGetCWD(), tempDir, false);
     if (err != nil) {
-        log.Fatal().Err(err).Msg("Failed to copy source.");
+        log.Fatal("Failed to copy source.", err);
     }
 
     courseIDs, err := db.AddCoursesFromDir(tempDir, spec);
     if (err != nil) {
-        log.Fatal().Err(err).Msg("Failed to add course dir.");
+        log.Fatal("Failed to add course dir.", err);
     }
 
     fmt.Printf("Added %d courses.\n", len(courseIDs));

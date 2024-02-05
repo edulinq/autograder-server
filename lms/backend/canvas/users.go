@@ -4,10 +4,9 @@ import (
     "fmt"
     neturl "net/url"
 
-    "github.com/rs/zerolog/log"
-
     "github.com/eriq-augustine/autograder/common"
     "github.com/eriq-augustine/autograder/lms/lmstypes"
+    "github.com/eriq-augustine/autograder/log"
     "github.com/eriq-augustine/autograder/util"
 )
 
@@ -85,7 +84,8 @@ func (this *CanvasBackend) FetchUser(email string) (*lmstypes.User, error) {
     }
 
     if (len(pageUsers) != 1) {
-        log.Warn().Str("email", email).Int("num-results", len(pageUsers)).Msg("Did not find exactly one matching user in canvas.");
+        log.Warn("Did not find exactly one matching user in canvas.",
+                log.NewAttr("email", email), log.NewAttr("num-results", len(pageUsers)));
         return nil, nil;
     }
 

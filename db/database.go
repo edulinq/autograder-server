@@ -11,10 +11,9 @@ import (
     "sync"
     "time"
 
-    "github.com/rs/zerolog/log"
-
     "github.com/eriq-augustine/autograder/config"
     "github.com/eriq-augustine/autograder/db/disk"
+    "github.com/eriq-augustine/autograder/log"
     "github.com/eriq-augustine/autograder/model"
 )
 
@@ -94,6 +93,9 @@ type Backend interface {
     // Can return nil if the submission does not exist.
     GetSubmissionResult(assignment *model.Assignment, email string, shortSubmissionID string) (*model.GradingInfo, error);
 
+    // Get all attempts for a specific user.
+    GetSubmissionAttempts(assignment *model.Assignment, email string) ([]*model.GradingResult, error);
+
     // Get the scoring infos for an assignment for all users that match the given role.
     // A role of model.RoleUnknown means all users.
     // Users without a submission (but with a matching role) will be represented with a nil map value.
@@ -128,6 +130,13 @@ type Backend interface {
     // Get the last time a task with the given course/ID was completed.
     // Will return a zero time (time.Time{}).
     GetLastTaskCompletion(courseID string, taskID string) (time.Time, error);
+
+    // DB backends will also be used as logging storage backends.
+    log.StorageBackend
+
+    // Get any logs that that match the specific requirements.
+    // Each parameter (except for the log level) can be passed with a zero value, in which case it will not be used for filtering.
+    GetLogRecords(level log.LogLevel, after time.Time, courseID string, assignmentID string, userID string) ([]*log.Record, error);
 }
 
 func Open() error {
@@ -151,6 +160,8 @@ func Open() error {
     if (err != nil) {
         return fmt.Errorf("Failed to open database: %w.", err);
     }
+
+    log.SetStorageBackend(backend);
 
     return backend.EnsureTables();
 }
@@ -180,20 +191,20 @@ func Clear() error {
 func MustOpen() {
     err := Open();
     if (err != nil) {
-        log.Fatal().Err(err).Msg("Failed to open db.");
+        log.Fatal("Failed to open db.", err);
     }
 }
 
 func MustClose() {
     err := Close();
     if (err != nil) {
-        log.Fatal().Err(err).Msg("Failed to close db.");
+        log.Fatal("Failed to close db.", err);
     }
 }
 
 func MustClear() {
     err := Clear();
     if (err != nil) {
-        log.Fatal().Err(err).Msg("Failed to clear db.");
+        log.Fatal("Failed to clear db.", err);
     }
 }
