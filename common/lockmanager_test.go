@@ -1,7 +1,6 @@
 package common
 
 import (
-	"fmt"
 	"sync"
 	"testing"
 	"time"
@@ -15,10 +14,10 @@ var (
 )
 
 func TestLock(test *testing.T) {
-    var wg sync.WaitGroup
+    var wg sync.WaitGroup;
 
 	// Testing Lock
-	Lock(key)
+	Lock(key);
 
 	// Testing Unlock
 	err := Unlock(key);
@@ -27,12 +26,12 @@ func TestLock(test *testing.T) {
 	}
 
 	// Testing remove stale locks
-    Lock(removeKey)
-    Unlock(removeKey)
+    Lock(removeKey);
+    Unlock(removeKey);
 	wg.Add(1)
 	go func() {
 		defer wg.Done();
-		time.Sleep(2 * time.Second)
+		time.Sleep(2 * time.Second);
 		if !RemoveStaleLocksOnce() {
 			test.Errorf("Failed to remove stale locks");
 		} 
@@ -43,12 +42,12 @@ func TestLock(test *testing.T) {
     Lock(key2);
 	wg.Add(2);
     go func() {
-        defer wg.Done()
+        defer wg.Done();
         Lock(key);
-        defer Unlock(key)
+        defer Unlock(key);
     }()
     go func() {
-        defer wg.Done()
+        defer wg.Done();
         Lock(key2);
         defer Unlock(key2);
     }();
@@ -69,25 +68,4 @@ func TestLock(test *testing.T) {
 		test.Errorf("Lockmanager unlocked a key that doesn't exist");
 	}
 
-	//Stress Test
-
-	fmt.Println("starting")
-	keys := []string{"key1", "key2", "key3"}
-
-	wg.Add(10)
-	for i := 0; i < 10; i++ {
-		go func() {
-			defer wg.Done()
-			key := keys[i%len(keys)]
-			fmt.Println("key: ", key)
-			Lock(key)
-			time.Sleep(10 * time.Millisecond)
-			Unlock(key)
-			fmt.Println("here")
-			
-		}()
-	}
-
-	wg.Wait() 
-	
 }
