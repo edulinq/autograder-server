@@ -36,7 +36,7 @@ func HandleSubmit(request *SubmitRequest) (*SubmitResponse, *core.APIError) {
             stderr = result.Stderr;
         }
 
-        log.Debug("Submission grading failed.", err, request.Assignment, log.NewAttr("stdout", stdout), log.NewAttr("stderr", stderr));
+        log.Info("Submission grading failed.", err, request.Assignment, log.NewAttr("stdout", stdout), log.NewAttr("stderr", stderr));
 
         return &response, nil;
     }
