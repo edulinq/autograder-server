@@ -4,11 +4,7 @@
     "static-files": [
         "grader.sh",
         "grader.cpp",
-        "assignment.h",
-        {
-            "type": "url",
-            "path": "https://github.com/nlohmann/json/releases/download/v3.11.3/json.hpp"
-        }
+        "assignment.h"
     ],
     "image": "eriqaugustine/autograder.base",
     "invocation": ["bash", "./grader.sh"],
