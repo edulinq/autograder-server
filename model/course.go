@@ -77,7 +77,7 @@ func (this *Course) GetAssignmentLMSIDs() ([]string, []string) {
 
     for _, assignment := range this.Assignments {
         lmsIDs = append(lmsIDs, assignment.GetLMSID());
-        assignmentIDs = append(assignmentIDs, assignment.GetLMSID());
+        assignmentIDs = append(assignmentIDs, assignment.GetID());
     }
 
     return lmsIDs, assignmentIDs;
