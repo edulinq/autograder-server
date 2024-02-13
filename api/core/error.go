@@ -33,6 +33,18 @@ const (
     HTTP_PERMISSIONS_ERROR = http.StatusForbidden;
 )
 
+// A special error for when a submitted file exceeds the defined maximum allowable size.
+type fileSizeExceededError struct {
+    Message  string
+    Filename string
+    FileSize int64
+}
+
+// Implementation of the error interface for the fileSizeExceeded error.
+func (this *fileSizeExceededError) Error() string {
+    return this.Message;
+}
+
 // This is technically an error,
 // but should generally be treated as an APIError and not a general error.
 type APIError struct {

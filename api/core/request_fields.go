@@ -4,7 +4,6 @@ package core
 
 import (
     "encoding/json"
-    "errors"
     "fmt"
     "io"
     "net/http"
@@ -64,18 +63,6 @@ type TargetUserSelfOrAdmin struct {
 
 // The type for a named field that must have a non-empty string value.
 type NonEmptyString string;
-
-// A special error for when a submitted file exceeds the defined maximum allowable size.
-type FileSizeExceededError struct {
-    Msg string
-    Filename string
-    Filesize int
-}
-
-// Implementation of the error interface for the FileSizeExceeded error.
-func (e *FileSizeExceededError) Error() string {
-    return e.Msg;
-}
 
 // Check for any special request fields and validate/populate them.
 func checkRequestSpecialFields(request *http.Request, apiRequest any, endpoint string) *APIError {
@@ -219,15 +206,13 @@ func checkRequestPostFiles(request *http.Request, endpoint string, apiRequest an
     postFiles, err := storeRequestFiles(request);
 
     if (err != nil) {
-        var sizeExceededErr *FileSizeExceededError;
-        switch {
-        case errors.As(err, &sizeExceededErr):
-            msg := fmt.Sprintf("File '%s' is %d bytes. The maximum allowable size is %d bytes.", sizeExceededErr.Filename, sizeExceededErr.Filesize, config.WEB_MAX_FILE_SIZE.Get());
-            return NewBareBadRequestError("-036", endpoint, msg).Err(sizeExceededErr).
-                Add("struct-name", structName).Add("field-name", fieldType.Name);
-        default:
-            return NewBareInternalError("-029", endpoint, "Failed to store files from POST.").Err(err).
-                Add("struct-name", structName).Add("field-name", fieldType.Name);
+        switch err.(type) {
+            case *fileSizeExceededError:
+                return NewBareBadRequestError("-036", endpoint, err.Error()).Err(err).
+                    Add("struct-name", structName).Add("field-name", fieldType.Name);
+            default:
+                return NewBareInternalError("-029", endpoint, "Failed to store files from POST.").Err(err).
+                    Add("struct-name", structName).Add("field-name", fieldType.Name);
         }
     }
 
@@ -314,17 +299,18 @@ func storeRequestFiles(request *http.Request) (*POSTFiles, error) {
 }
 
 func storeRequestFile(request *http.Request, outDir string, filename string) error {
-    inFile, header, err := request.FormFile(filename);
+    inFile, fileHeader, err := request.FormFile(filename);
     if (err != nil) {
         return fmt.Errorf("Failed to access request file '%s': '%w'.", filename, err);
     }
     defer inFile.Close();
 
-    if (int(header.Size) > config.WEB_MAX_FILE_SIZE.Get()) {
-        return &FileSizeExceededError{
-            Msg: fmt.Sprintf("Failed to store file. File exceeds maximum allowable size."),
+    maxFileSize := config.WEB_MAX_FILE_SIZE.Get()
+    if (fileHeader.Size > int64(maxFileSize)) {
+        return &fileSizeExceededError{
+            Message:  fmt.Sprintf("File '%s' is %d bytes. The maximum allowable size is %d bytes.", filename, fileHeader.Size, maxFileSize),
             Filename: filename,
-            Filesize: int(header.Size),
+            FileSize: fileHeader.Size,
         };
     }
 
