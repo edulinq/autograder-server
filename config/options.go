@@ -1,5 +1,7 @@
 package config
 
+const MAX_FILE_SIZE_KB = 2048 // 2048 KiB (2 MiB)
+
 var (
     // Base
     NAME = MustNewStringOption("instance.name", "autograder",
@@ -41,7 +43,7 @@ var (
 
     // Server
     WEB_PORT = MustNewIntOption("web.port", 8080, "The port for the web interface to serve on.");
-    WEB_MAX_FILE_SIZE = MustNewFloatOption("web.maxsize", 2 << 20, "The maximum allowed file size submitted via POST request.");
+    WEB_MAX_FILE_SIZE = MustNewIntOption("web.maxsize", MAX_FILE_SIZE_KB, "The maximum allowed file size submitted via POST request.");
 
     // Database
     DB_TYPE = MustNewStringOption("db.type", "disk", "The type of database to use.");

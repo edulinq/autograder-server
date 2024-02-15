@@ -273,8 +273,8 @@ func TestBadPostFilesStoreFail(test *testing.T) {
 func TestBadPostFilesFileSizeExceeded(test *testing.T) {
     resetMaxFileSize := config.WEB_MAX_FILE_SIZE.Get()
 
-    // Set size to 1 byte for testing, then reset when done testing. (a.txt is 2 bytes)
-    config.WEB_MAX_FILE_SIZE.Set(1.0);
+    // Set size to 1 KB for testing, then reset when done testing.
+    config.WEB_MAX_FILE_SIZE.Set(1);
     defer config.WEB_MAX_FILE_SIZE.Set(resetMaxFileSize)
 
     endpoint := `/test/api/post-files/bad/size-exceeded`;
@@ -292,8 +292,10 @@ func TestBadPostFilesFileSizeExceeded(test *testing.T) {
 
     routes = append(routes, NewAPIRoute(endpoint, handler));
 
+    // Two paths provided: a.txt is under the size limit, 1092bytes.txt is over the size limit.
     paths := []string{
         filepath.Join(config.GetCourseImportDir(), "_tests", "files", "a.txt"),
+        filepath.Join(config.GetCourseImportDir(), "_tests", "files", "1092bytes.txt"),
     };
 
     response := SendTestAPIRequestFull(test, endpoint, nil, paths, model.RoleAdmin);
