@@ -3,7 +3,7 @@ package test
 import (
     "fmt"
 
-    "github.com/eriq-augustine/autograder/lms/lmstypes"
+    "github.com/edulinq/autograder/lms/lmstypes"
 )
 
 func (this *TestLMSBackend) UpdateAssignmentScores(assignmentID string, scores []*lmstypes.SubmissionScore) error {

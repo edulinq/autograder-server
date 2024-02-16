@@ -5,7 +5,7 @@ import (
     "reflect"
     "testing"
 
-    "github.com/eriq-augustine/autograder/util"
+    "github.com/edulinq/autograder/util"
 )
 
 func TestConfigArgs(test *testing.T) {

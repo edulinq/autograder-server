@@ -5,11 +5,11 @@ import (
     "path/filepath"
     "time"
 
-    "github.com/eriq-augustine/autograder/config"
-    "github.com/eriq-augustine/autograder/db"
-    "github.com/eriq-augustine/autograder/model"
-    "github.com/eriq-augustine/autograder/model/tasks"
-    "github.com/eriq-augustine/autograder/util"
+    "github.com/edulinq/autograder/config"
+    "github.com/edulinq/autograder/db"
+    "github.com/edulinq/autograder/model"
+    "github.com/edulinq/autograder/model/tasks"
+    "github.com/edulinq/autograder/util"
 )
 
 func RunBackupTask(course *model.Course, rawTask tasks.ScheduledTask) (bool, error) {

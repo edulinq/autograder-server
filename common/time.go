@@ -6,7 +6,7 @@ import (
     "time"
     "strings"
 
-    "github.com/eriq-augustine/autograder/log"
+    "github.com/edulinq/autograder/log"
 )
 
 const (

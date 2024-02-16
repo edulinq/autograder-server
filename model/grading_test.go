@@ -5,7 +5,7 @@ import (
     "testing"
     "time"
 
-    "github.com/eriq-augustine/autograder/util"
+    "github.com/edulinq/autograder/util"
 )
 
 // Test some dates to make sure that are marshed from JSON correctly.

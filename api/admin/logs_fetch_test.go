@@ -6,11 +6,11 @@ import (
     "testing"
     "time"
 
-    "github.com/eriq-augustine/autograder/api/core"
-    "github.com/eriq-augustine/autograder/db"
-    "github.com/eriq-augustine/autograder/log"
-    "github.com/eriq-augustine/autograder/model"
-    "github.com/eriq-augustine/autograder/util"
+    "github.com/edulinq/autograder/api/core"
+    "github.com/edulinq/autograder/db"
+    "github.com/edulinq/autograder/log"
+    "github.com/edulinq/autograder/model"
+    "github.com/edulinq/autograder/util"
 )
 
 func TestFetchLogs(test *testing.T) {

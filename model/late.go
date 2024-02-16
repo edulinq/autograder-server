@@ -4,7 +4,7 @@ import (
     "fmt"
     "strings"
 
-    "github.com/eriq-augustine/autograder/util"
+    "github.com/edulinq/autograder/util"
 )
 
 type LateGradingPolicyType string;

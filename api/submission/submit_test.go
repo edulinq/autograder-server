@@ -4,12 +4,12 @@ import (
     "path/filepath"
     "testing"
 
-    "github.com/eriq-augustine/autograder/api/core"
-    "github.com/eriq-augustine/autograder/config"
-    "github.com/eriq-augustine/autograder/db"
-    "github.com/eriq-augustine/autograder/grader"
-    "github.com/eriq-augustine/autograder/util"
-    "github.com/eriq-augustine/autograder/model"
+    "github.com/edulinq/autograder/api/core"
+    "github.com/edulinq/autograder/config"
+    "github.com/edulinq/autograder/db"
+    "github.com/edulinq/autograder/grader"
+    "github.com/edulinq/autograder/util"
+    "github.com/edulinq/autograder/model"
 )
 
 var SUBMISSION_RELPATH string = filepath.Join("test-submissions", "solution", "submission.py");

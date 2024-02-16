@@ -1,7 +1,7 @@
 package config;
 
 import (
-    "github.com/eriq-augustine/autograder/log"
+    "github.com/edulinq/autograder/log"
 )
 
 func InitLoggingFromConfig() {

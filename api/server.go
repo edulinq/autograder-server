@@ -4,9 +4,9 @@ import (
     "fmt"
     "net/http"
 
-    "github.com/eriq-augustine/autograder/api/core"
-    "github.com/eriq-augustine/autograder/config"
-    "github.com/eriq-augustine/autograder/log"
+    "github.com/edulinq/autograder/api/core"
+    "github.com/edulinq/autograder/config"
+    "github.com/edulinq/autograder/log"
 )
 
 // Run the standard API server.

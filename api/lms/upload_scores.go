@@ -1,9 +1,9 @@
 package lms
 
 import (
-    "github.com/eriq-augustine/autograder/api/core"
-    "github.com/eriq-augustine/autograder/lms"
-    "github.com/eriq-augustine/autograder/lms/lmstypes"
+    "github.com/edulinq/autograder/api/core"
+    "github.com/edulinq/autograder/lms"
+    "github.com/edulinq/autograder/lms/lmstypes"
 )
 
 type UploadScoresRequest struct {

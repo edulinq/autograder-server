@@ -4,8 +4,8 @@ import (
     "fmt"
     "path/filepath"
 
-    "github.com/eriq-augustine/autograder/model"
-    "github.com/eriq-augustine/autograder/util"
+    "github.com/edulinq/autograder/model"
+    "github.com/edulinq/autograder/util"
 )
 
 func (this *backend) GetUsers(course *model.Course) (map[string]*model.User, error) {

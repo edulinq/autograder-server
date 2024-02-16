@@ -4,7 +4,7 @@ import (
     "fmt"
     "path/filepath"
 
-    "github.com/eriq-augustine/autograder/util"
+    "github.com/edulinq/autograder/util"
 )
 
 const COURSE_CONFIG_FILENAME = "course.json"

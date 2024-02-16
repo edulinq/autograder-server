@@ -4,10 +4,10 @@ import (
     "reflect"
     "testing"
 
-    "github.com/eriq-augustine/autograder/api/core"
-    "github.com/eriq-augustine/autograder/db"
-    "github.com/eriq-augustine/autograder/model"
-    "github.com/eriq-augustine/autograder/util"
+    "github.com/edulinq/autograder/api/core"
+    "github.com/edulinq/autograder/db"
+    "github.com/edulinq/autograder/model"
+    "github.com/edulinq/autograder/util"
 )
 
 // Many of the semantics of add users are tested at the course level,

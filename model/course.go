@@ -5,11 +5,11 @@ import (
     "path/filepath"
     "slices"
 
-    "github.com/eriq-augustine/autograder/common"
-    "github.com/eriq-augustine/autograder/config"
-    "github.com/eriq-augustine/autograder/docker"
-    "github.com/eriq-augustine/autograder/log"
-    "github.com/eriq-augustine/autograder/model/tasks"
+    "github.com/edulinq/autograder/common"
+    "github.com/edulinq/autograder/config"
+    "github.com/edulinq/autograder/docker"
+    "github.com/edulinq/autograder/log"
+    "github.com/edulinq/autograder/model/tasks"
 )
 
 const SOURCES_DIRNAME = "sources";

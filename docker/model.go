@@ -3,11 +3,11 @@ package docker
 import (
     "fmt"
 
-    "github.com/eriq-augustine/autograder/common"
+    "github.com/edulinq/autograder/common"
 )
 
 const (
-    DEFAULT_IMAGE = "eriqaugustine/autograder.base"
+    DEFAULT_IMAGE = "edulinq/autograder.base"
 )
 
 type ImageInfo struct {

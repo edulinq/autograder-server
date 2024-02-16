@@ -1,6 +1,6 @@
 # Autograder Server
 
-[![Main](https://github.com/eriq-augustine/autograder-server/actions/workflows/main.yml/badge.svg)](https://github.com/eriq-augustine/autograder-server/actions/workflows/main.yml)
+[![Main](https://github.com/edulinq/autograder-server/actions/workflows/main.yml/badge.svg)](https://github.com/edulinq/autograder-server/actions/workflows/main.yml)
 
 A server for automatically (and in real-time) grading programming assignments.
 
@@ -9,16 +9,16 @@ The autograding effort is broken into three main parts:
     This repository implements that server.
  2. The interfaces through which users can interact with the autograding server.
     Since the autograding server interacts via a REST API, the requirements for an interface are very low.
-    Currently, the [autograder-py Python package](https://github.com/eriq-augustine/autograder-py) is the only official interface package.
+    Currently, the [autograder-py Python package](https://github.com/edulinq/autograder-py) is the only official interface package.
  3. Course and assignment configurations, including graders to score student submissions.
     These materials should generally be kept private (since they include grading information),
-    but we have made a [sample course](https://github.com/eriq-augustine/cse-cracks-course) available.
+    but we have made a [sample course](https://github.com/edulinq/cse-cracks-course) available.
 
 ## Quick Links
 
- - [Autograder Server](https://github.com/eriq-augustine/autograder-server)
- - [Autograder Python Interface](https://github.com/eriq-augustine/autograder-py)
- - [Autograder Sample Course](https://github.com/eriq-augustine/cse-cracks-course)
+ - [Autograder Server](https://github.com/edulinq/autograder-server)
+ - [Autograder Python Interface](https://github.com/edulinq/autograder-py)
+ - [Autograder Sample Course](https://github.com/edulinq/cse-cracks-course)
 
 ## Installation
 
@@ -117,7 +117,7 @@ then you should take two steps before starting the server for grading.
 
 First, ensure that any required Docker images are accessible for building.
 The required images depend on what courses you are hosting,
-but the default images live in the [autograder-docker](https://github.com/eriq-augustine/autograder-docker) repository.
+but the default images live in the [autograder-docker](https://github.com/edulinq/autograder-docker) repository.
 
 Second, you will want to pre-build your grader images.
 This step is not required as the autograder will ensure that grader images are up-to-date before running a grader,
@@ -139,7 +139,7 @@ and should be avoided in production.
 
 To disable docker, set the `docker.disable` config option to `true`.
 
-The [Python autograder interface](https://github.com/eriq-augustine/autograder-py) must be installed for the non-Docker grader to work:
+The [Python autograder interface](https://github.com/edulinq/autograder-py) must be installed for the non-Docker grader to work:
 ```
 pip install autograder-py
 ```

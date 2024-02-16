@@ -5,7 +5,7 @@ import (
     "slices"
     "strconv"
 
-    "github.com/eriq-augustine/autograder/log"
+    "github.com/edulinq/autograder/log"
 )
 
 const EPSILON = 1e-5

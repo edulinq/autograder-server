@@ -6,7 +6,7 @@
         "grader.cpp",
         "assignment.h"
     ],
-    "image": "eriqaugustine/autograder.base",
+    "image": "edulinq/autograder.base",
     "invocation": ["bash", "./grader.sh"],
     "post-submission-files-ops": [
         ["cp", "input/assignment.cpp", "work/assignment.cpp"]

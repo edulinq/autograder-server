@@ -5,10 +5,10 @@ import (
     "strings"
     "testing"
 
-    "github.com/eriq-augustine/autograder/common"
-    "github.com/eriq-augustine/autograder/db"
-    "github.com/eriq-augustine/autograder/email"
-    "github.com/eriq-augustine/autograder/model/tasks"
+    "github.com/edulinq/autograder/common"
+    "github.com/edulinq/autograder/db"
+    "github.com/edulinq/autograder/email"
+    "github.com/edulinq/autograder/model/tasks"
 )
 
 func TestReportBase(test *testing.T) {

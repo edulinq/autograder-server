@@ -1,7 +1,7 @@
 package user
 
 import (
-    "github.com/eriq-augustine/autograder/api/core"
+    "github.com/edulinq/autograder/api/core"
 )
 
 type AuthRequest struct {

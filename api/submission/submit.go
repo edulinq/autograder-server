@@ -1,10 +1,10 @@
 package submission
 
 import (
-    "github.com/eriq-augustine/autograder/api/core"
-    "github.com/eriq-augustine/autograder/grader"
-    "github.com/eriq-augustine/autograder/log"
-    "github.com/eriq-augustine/autograder/model"
+    "github.com/edulinq/autograder/api/core"
+    "github.com/edulinq/autograder/grader"
+    "github.com/edulinq/autograder/log"
+    "github.com/edulinq/autograder/model"
 )
 
 type SubmitRequest struct {

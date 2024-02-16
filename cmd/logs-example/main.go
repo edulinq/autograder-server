@@ -5,10 +5,10 @@ import (
 
     "github.com/alecthomas/kong"
 
-    "github.com/eriq-augustine/autograder/config"
-    "github.com/eriq-augustine/autograder/db"
-    "github.com/eriq-augustine/autograder/log"
-    "github.com/eriq-augustine/autograder/model"
+    "github.com/edulinq/autograder/config"
+    "github.com/edulinq/autograder/db"
+    "github.com/edulinq/autograder/log"
+    "github.com/edulinq/autograder/model"
 )
 
 var args struct {

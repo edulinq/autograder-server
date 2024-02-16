@@ -4,7 +4,7 @@ import (
     "path/filepath"
     "strings"
 
-    "github.com/eriq-augustine/autograder/log"
+    "github.com/edulinq/autograder/log"
 )
 
 const (

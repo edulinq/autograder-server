@@ -4,8 +4,8 @@ import (
     "testing"
     "time"
 
-    "github.com/eriq-augustine/autograder/lms/lmstypes"
-    "github.com/eriq-augustine/autograder/util"
+    "github.com/edulinq/autograder/lms/lmstypes"
+    "github.com/edulinq/autograder/util"
 )
 
 var testScore lmstypes.SubmissionScore = lmstypes.SubmissionScore{
