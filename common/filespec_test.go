@@ -122,12 +122,12 @@ var testCasesCopy []*testCaseCopy = []*testCaseCopy{
     &testCaseCopy{
         FileSpec{Type: "path", Path: "_tests/files"},
         false,
-        "6481ba58a09ec62ff50325df54cf8966",
+        "3ec09caa093ac5b9211001adf722a418",
     },
     &testCaseCopy{
         FileSpec{Type: "path", Path: "_tests/files"},
         true,
-        "1d81dcf2c1a5b659901389d694c57248",
+        "e7571feb3aee557546b047c009017a3b",
     },
     &testCaseCopy{
         FileSpec{Type: "path", Path: "_tests/files/a.txt", Dest: "test.txt"},
@@ -137,12 +137,12 @@ var testCasesCopy []*testCaseCopy = []*testCaseCopy{
     &testCaseCopy{
         FileSpec{Type: "path", Path: "_tests/files", Dest: "test"},
         false,
-        "f2b2da8886520af505cd152f80cdce23",
+        "1bb71f6af1335959240f755d148ce437",
     },
     &testCaseCopy{
         FileSpec{Type: "path", Path: "_tests/files", Dest: "test"},
         true,
-        "f2b2da8886520af505cd152f80cdce23",
+        "1bb71f6af1335959240f755d148ce437",
     },
 };
 
