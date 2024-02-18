@@ -13,9 +13,9 @@ import (
     "path/filepath"
     "strings"
 
-    "github.com/eriq-augustine/autograder/config"
-    "github.com/eriq-augustine/autograder/log"
-    "github.com/eriq-augustine/autograder/util"
+    "github.com/edulinq/autograder/config"
+    "github.com/edulinq/autograder/log"
+    "github.com/edulinq/autograder/util"
 )
 
 // A representation of an HTTP request.

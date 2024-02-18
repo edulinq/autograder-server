@@ -3,9 +3,9 @@ package common
 import (
     "os"
 
-    "github.com/eriq-augustine/autograder/config"
-    "github.com/eriq-augustine/autograder/log"
-    "github.com/eriq-augustine/autograder/util"
+    "github.com/edulinq/autograder/config"
+    "github.com/edulinq/autograder/log"
+    "github.com/edulinq/autograder/util"
 )
 
 func ShouldGetCWD() string {

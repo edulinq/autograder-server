@@ -3,7 +3,7 @@ package model
 import (
     "fmt"
 
-    "github.com/eriq-augustine/autograder/common"
+    "github.com/edulinq/autograder/common"
 )
 
 type SubmissionLimitInfo struct {

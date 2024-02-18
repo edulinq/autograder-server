@@ -4,7 +4,7 @@ import (
     "os"
     "testing"
 
-    "github.com/eriq-augustine/autograder/db"
+    "github.com/edulinq/autograder/db"
 )
 
 // Use the common main for all tests in this package.

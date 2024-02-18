@@ -5,10 +5,10 @@ import (
     "fmt"
     "net/http"
 
-    "github.com/eriq-augustine/autograder/common"
-    "github.com/eriq-augustine/autograder/log"
-    "github.com/eriq-augustine/autograder/model"
-    "github.com/eriq-augustine/autograder/util"
+    "github.com/edulinq/autograder/common"
+    "github.com/edulinq/autograder/log"
+    "github.com/edulinq/autograder/model"
+    "github.com/edulinq/autograder/util"
 )
 
 // Constants for http status codes.

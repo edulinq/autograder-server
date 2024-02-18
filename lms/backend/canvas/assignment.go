@@ -3,9 +3,9 @@ package canvas
 import (
     "fmt"
 
-    "github.com/eriq-augustine/autograder/common"
-    "github.com/eriq-augustine/autograder/lms/lmstypes"
-    "github.com/eriq-augustine/autograder/util"
+    "github.com/edulinq/autograder/common"
+    "github.com/edulinq/autograder/lms/lmstypes"
+    "github.com/edulinq/autograder/util"
 )
 
 func (this *CanvasBackend) FetchAssignment(assignmentID string) (*lmstypes.Assignment, error) {

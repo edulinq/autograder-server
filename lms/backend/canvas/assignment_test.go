@@ -3,8 +3,8 @@ package canvas
 import (
     "testing"
 
-    "github.com/eriq-augustine/autograder/lms/lmstypes"
-    "github.com/eriq-augustine/autograder/util"
+    "github.com/edulinq/autograder/lms/lmstypes"
+    "github.com/edulinq/autograder/util"
 )
 
 var expectedAssignment lmstypes.Assignment = lmstypes.Assignment{

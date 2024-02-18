@@ -5,11 +5,11 @@ import (
     "net/http"
     "reflect"
 
-    "github.com/eriq-augustine/autograder/common"
-    "github.com/eriq-augustine/autograder/config"
-    "github.com/eriq-augustine/autograder/db"
-    "github.com/eriq-augustine/autograder/model"
-    "github.com/eriq-augustine/autograder/util"
+    "github.com/edulinq/autograder/common"
+    "github.com/edulinq/autograder/config"
+    "github.com/edulinq/autograder/db"
+    "github.com/edulinq/autograder/model"
+    "github.com/edulinq/autograder/util"
 )
 
 // An api request that has been reflexively verifed.

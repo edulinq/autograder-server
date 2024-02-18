@@ -3,7 +3,7 @@ package admin
 // All the API endpoints handled by this package.
 
 import (
-    "github.com/eriq-augustine/autograder/api/core"
+    "github.com/edulinq/autograder/api/core"
 )
 
 var routes []*core.Route = []*core.Route{

@@ -6,7 +6,7 @@ import (
 
     "github.com/jackc/pgx/v5/pgxpool"
 
-    "github.com/eriq-augustine/autograder/config"
+    "github.com/edulinq/autograder/config"
 )
 
 type backend struct {

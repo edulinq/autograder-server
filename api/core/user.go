@@ -7,7 +7,7 @@ import (
     "slices"
     "strings"
 
-    "github.com/eriq-augustine/autograder/model"
+    "github.com/edulinq/autograder/model"
 )
 
 type UserInfo struct {

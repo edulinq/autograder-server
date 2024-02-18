@@ -1,13 +1,12 @@
+#include <cstdio>
 #include <iostream>
 #include <string>
 #include <vector>
 
-#include "json.hpp"
-
 #include "assignment.h"
 
-const std::string ASSIGNMENT_NAME = "cpp-simple";
-const int INDENT = 4;
+const char* ASSIGNMENT_NAME = "cpp-simple";
+const int BUFFER_LENGTH = 1024;
 
 struct AddTestCase {
     int a;
@@ -27,18 +26,13 @@ class QuestionScore {
             : name(a_name), max_points(a_max_points)
         {}
 
-        nlohmann::json toJSON();
+        char* toJSON();
 };
 
-nlohmann::json QuestionScore::toJSON() {
-    nlohmann::json value = {
-        {"name", name},
-        {"max_points", max_points},
-        {"score", score},
-        {"message", message},
-    };
-
-    return value;
+char* QuestionScore::toJSON() {
+    char* output = new char[BUFFER_LENGTH];
+    snprintf(output, BUFFER_LENGTH, R"({"name": "%s", "max_points": %d, "score": %d, "message": "%s"})", &(name[0]), max_points, score, &(message[0]));
+    return output;
 }
 
 void testAddTestCases(std::vector<AddTestCase> &testCases, QuestionScore &score) {
@@ -49,7 +43,7 @@ void testAddTestCases(std::vector<AddTestCase> &testCases, QuestionScore &score)
 
         int result = add(testCase.a, testCase.b);
         if (result != testCase.expected) {
-            score.message.append("Missed test case '" + testCase.feedback + "'.\n");
+            score.message.append("Missed test case '" + testCase.feedback + "'. ");
             score.score -= 2;
         }
     }
@@ -77,16 +71,12 @@ QuestionScore testAdd() {
 }
 
 int main() {
-    nlohmann::json questions = {
-        testAdd().toJSON(),
-    };
+    char* question = testAdd().toJSON();
 
-    nlohmann::json output = {
-        {"name", ASSIGNMENT_NAME},
-        {"questions", questions},
-    };
+    char* output = new char[BUFFER_LENGTH];
+    snprintf(output, BUFFER_LENGTH, R"({"name": "%s", "questions": [%s]})", ASSIGNMENT_NAME, question);
 
-    std::cout << output.dump(INDENT) << std::endl;
+    std::cout << output << std::endl;
 
     return 0;
 }

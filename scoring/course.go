@@ -3,8 +3,8 @@ package scoring
 import (
     "fmt"
 
-    "github.com/eriq-augustine/autograder/log"
-    "github.com/eriq-augustine/autograder/model"
+    "github.com/edulinq/autograder/log"
+    "github.com/edulinq/autograder/model"
 )
 
 func FullCourseScoringAndUpload(course *model.Course, dryRun bool) error {

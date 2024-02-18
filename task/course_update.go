@@ -4,12 +4,12 @@ import (
     "errors"
     "fmt"
 
-    "github.com/eriq-augustine/autograder/db"
-    "github.com/eriq-augustine/autograder/docker"
-    "github.com/eriq-augustine/autograder/lms/lmssync"
-    "github.com/eriq-augustine/autograder/log"
-    "github.com/eriq-augustine/autograder/model"
-    "github.com/eriq-augustine/autograder/model/tasks"
+    "github.com/edulinq/autograder/db"
+    "github.com/edulinq/autograder/docker"
+    "github.com/edulinq/autograder/lms/lmssync"
+    "github.com/edulinq/autograder/log"
+    "github.com/edulinq/autograder/model"
+    "github.com/edulinq/autograder/model/tasks"
 )
 
 func RunCourseUpdateTask(course *model.Course, rawTask tasks.ScheduledTask) (bool, error) {

@@ -4,10 +4,10 @@ import (
     "reflect"
     "testing"
 
-    "github.com/eriq-augustine/autograder/api/core"
-    lmstest "github.com/eriq-augustine/autograder/lms/backend/test"
-    "github.com/eriq-augustine/autograder/model"
-    "github.com/eriq-augustine/autograder/util"
+    "github.com/edulinq/autograder/api/core"
+    lmstest "github.com/edulinq/autograder/lms/backend/test"
+    "github.com/edulinq/autograder/model"
+    "github.com/edulinq/autograder/util"
 )
 
 func TestUploadScores(test *testing.T) {

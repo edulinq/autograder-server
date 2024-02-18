@@ -5,13 +5,13 @@ import (
 
     "github.com/alecthomas/kong"
 
-    "github.com/eriq-augustine/autograder/api"
-    "github.com/eriq-augustine/autograder/config"
-    "github.com/eriq-augustine/autograder/db"
-    "github.com/eriq-augustine/autograder/log"
-    "github.com/eriq-augustine/autograder/model"
-    "github.com/eriq-augustine/autograder/procedures"
-    "github.com/eriq-augustine/autograder/util"
+    "github.com/edulinq/autograder/api"
+    "github.com/edulinq/autograder/config"
+    "github.com/edulinq/autograder/db"
+    "github.com/edulinq/autograder/log"
+    "github.com/edulinq/autograder/model"
+    "github.com/edulinq/autograder/procedures"
+    "github.com/edulinq/autograder/util"
 )
 
 var args struct {

@@ -3,7 +3,7 @@
 # Install a matching version of the Python interface.
 
 readonly TEMP_DIR='/tmp/__autograder__/autograder-py'
-readonly REPO_URL='https://github.com/eriq-augustine/autograder-py.git'
+readonly REPO_URL='https://github.com/edulinq/autograder-py.git'
 
 function fetch_repo() {
     local branch=$1

@@ -4,8 +4,8 @@ import (
     "errors"
     "fmt"
 
-    "github.com/eriq-augustine/autograder/log"
-    "github.com/eriq-augustine/autograder/model"
+    "github.com/edulinq/autograder/log"
+    "github.com/edulinq/autograder/model"
 )
 
 func GetUsers(course *model.Course) (map[string]*model.User, error) {

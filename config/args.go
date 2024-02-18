@@ -18,7 +18,7 @@ import (
     "fmt"
     "os"
 
-    "github.com/eriq-augustine/autograder/log"
+    "github.com/edulinq/autograder/log"
 )
 
 // A Kong-style struct for adding on all the config-related options to a CLI.

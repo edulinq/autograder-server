@@ -4,7 +4,7 @@ import (
     "path/filepath"
     "testing"
 
-    "github.com/eriq-augustine/autograder/util"
+    "github.com/edulinq/autograder/util"
 )
 
 func TestFileOpsToUnix(test *testing.T) {

@@ -3,8 +3,8 @@ package task
 import (
     "fmt"
 
-    "github.com/eriq-augustine/autograder/model"
-    "github.com/eriq-augustine/autograder/model/tasks"
+    "github.com/edulinq/autograder/model"
+    "github.com/edulinq/autograder/model/tasks"
 )
 
 func RunTestTask(course *model.Course, rawTask tasks.ScheduledTask) (bool, error) {

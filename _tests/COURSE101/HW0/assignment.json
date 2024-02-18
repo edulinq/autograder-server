@@ -4,5 +4,5 @@
     "static-files": [
         "grader.py"
     ],
-    "image": "eriqaugustine/autograder.python"
+    "image": "edulinq/autograder.python"
 }

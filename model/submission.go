@@ -1,7 +1,7 @@
 package model
 
 import (
-    "github.com/eriq-augustine/autograder/common"
+    "github.com/edulinq/autograder/common"
 )
 
 type TestSubmission struct {

@@ -3,7 +3,7 @@ package lmstypes
 import (
     "time"
 
-    "github.com/eriq-augustine/autograder/model"
+    "github.com/edulinq/autograder/model"
 )
 
 type User struct {

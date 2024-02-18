@@ -3,7 +3,7 @@ package user
 import (
     "testing"
 
-    "github.com/eriq-augustine/autograder/api/core"
+    "github.com/edulinq/autograder/api/core"
 )
 
 // Use the common main for all tests in this package.

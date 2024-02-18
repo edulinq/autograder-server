@@ -10,8 +10,8 @@ import (
     "github.com/docker/docker/api/types/mount"
     "github.com/docker/docker/pkg/stdcopy"
 
-    "github.com/eriq-augustine/autograder/log"
-    "github.com/eriq-augustine/autograder/util"
+    "github.com/edulinq/autograder/log"
+    "github.com/edulinq/autograder/util"
 )
 
 func RunContainer(logId log.Loggable, imageName string, inputDir string, outputDir string, gradingID string) (string, string, error) {
