@@ -1,6 +1,6 @@
 package config
 
-const MAX_FILE_SIZE_KB = 2048 // 2048 KiB (2 MiB)
+const MAX_FILE_SIZE_KB = 2 * 1024 // 2048 KiB (2 MiB)
 
 var (
     // Base
