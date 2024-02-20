@@ -11,7 +11,7 @@ import (
     "github.com/go-git/go-git/v5/plumbing/transport"
     "github.com/go-git/go-git/v5/plumbing/transport/http"
 
-    "github.com/eriq-augustine/autograder/log"
+    "github.com/edulinq/autograder/log"
 )
 
 func GitEnsureRepo(url string, path string, update bool, ref string, user string, pass string) (*git.Repository, error) {

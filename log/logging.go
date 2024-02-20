@@ -22,7 +22,7 @@ type Record struct {
     Level LogLevel `json:"level"`
     Message string `json:"message"`
     UnixMicro int64 `json:"unix-time"`
-    Error error `json:"error,omitempty"`
+    Error string `json:"error,omitempty"`
 
     // Context Attributes
     Course string `json:"course,omitempty"`
@@ -90,7 +90,7 @@ func logBackend(record *Record) {
                 Level: LevelError,
                 Message: "Failed to log to storage backend.",
                 UnixMicro: time.Now().UnixMicro(),
-                Error: err,
+                Error: err.Error(),
             };
             logText(errRecord);
         }
@@ -119,11 +119,16 @@ func logText(record *Record) {
 }
 
 func Log(level LogLevel, message string, course string, assignment string, user string, logError error, attributes map[string]any) {
+    errorMessage := "";
+    if (logError != nil) {
+        errorMessage = logError.Error();
+    }
+
     record := &Record{
         Level: level,
         Message: message,
         UnixMicro: time.Now().UnixMicro(),
-        Error: logError,
+        Error: errorMessage,
 
         Course: course,
         Assignment: assignment,
@@ -182,9 +187,9 @@ func (this *Record) String() string {
         builder.WriteString(value);
     }
 
-    if (this.Error != nil) {
+    if (this.Error != "") {
         builder.WriteString(" | ");
-        builder.WriteString(this.Error.Error());
+        builder.WriteString(this.Error);
     }
 
     return builder.String();

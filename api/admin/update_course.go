@@ -1,10 +1,10 @@
 package admin
 
 import (
-    "github.com/eriq-augustine/autograder/api/core"
-    "github.com/eriq-augustine/autograder/common"
-    "github.com/eriq-augustine/autograder/db"
-    "github.com/eriq-augustine/autograder/procedures"
+    "github.com/edulinq/autograder/api/core"
+    "github.com/edulinq/autograder/common"
+    "github.com/edulinq/autograder/db"
+    "github.com/edulinq/autograder/procedures"
 )
 
 type UpdateCourseRequest struct {

@@ -7,7 +7,7 @@ import (
     "path/filepath"
     "strings"
 
-    "github.com/eriq-augustine/autograder/util"
+    "github.com/edulinq/autograder/util"
 )
 
 func CreateFullSubmissionID(courseID string, assignmentID string, email string, shortSubmissionID string) string {

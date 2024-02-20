@@ -1,8 +1,8 @@
 package lms
 
 import (
-    "github.com/eriq-augustine/autograder/api/core"
-    "github.com/eriq-augustine/autograder/lms"
+    "github.com/edulinq/autograder/api/core"
+    "github.com/edulinq/autograder/lms"
 )
 
 type UserGetRequest struct {

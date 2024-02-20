@@ -8,8 +8,8 @@ import (
     "slices"
     "strings"
 
-    "github.com/eriq-augustine/autograder/log"
-    "github.com/eriq-augustine/autograder/util"
+    "github.com/edulinq/autograder/log"
+    "github.com/edulinq/autograder/util"
 )
 
 var seenOptions = make(map[string]*baseOption);

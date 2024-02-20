@@ -3,11 +3,11 @@ package api
 // All routes handled by the server.
 
 import (
-    "github.com/eriq-augustine/autograder/api/admin"
-    "github.com/eriq-augustine/autograder/api/core"
-    "github.com/eriq-augustine/autograder/api/lms"
-    "github.com/eriq-augustine/autograder/api/submission"
-    "github.com/eriq-augustine/autograder/api/user"
+    "github.com/edulinq/autograder/api/admin"
+    "github.com/edulinq/autograder/api/core"
+    "github.com/edulinq/autograder/api/lms"
+    "github.com/edulinq/autograder/api/submission"
+    "github.com/edulinq/autograder/api/user"
 )
 
 var baseRoutes = []*core.Route{

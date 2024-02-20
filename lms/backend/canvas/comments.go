@@ -4,8 +4,8 @@ import (
     "fmt"
     "time"
 
-    "github.com/eriq-augustine/autograder/common"
-    "github.com/eriq-augustine/autograder/lms/lmstypes"
+    "github.com/edulinq/autograder/common"
+    "github.com/edulinq/autograder/lms/lmstypes"
 )
 
 func (this *CanvasBackend) UpdateComments(assignmentID string, comments []*lmstypes.SubmissionComment) error {

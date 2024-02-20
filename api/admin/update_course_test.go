@@ -3,9 +3,9 @@ package admin
 import (
     "testing"
 
-    "github.com/eriq-augustine/autograder/api/core"
-    "github.com/eriq-augustine/autograder/db"
-    "github.com/eriq-augustine/autograder/model"
+    "github.com/edulinq/autograder/api/core"
+    "github.com/edulinq/autograder/db"
+    "github.com/edulinq/autograder/model"
 )
 
 func TestUpdateCourse(test *testing.T) {

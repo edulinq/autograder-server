@@ -1,9 +1,9 @@
 package lms
 
 import (
-    "github.com/eriq-augustine/autograder/api/core"
-    "github.com/eriq-augustine/autograder/lms/lmssync"
-    "github.com/eriq-augustine/autograder/model"
+    "github.com/edulinq/autograder/api/core"
+    "github.com/edulinq/autograder/lms/lmssync"
+    "github.com/edulinq/autograder/model"
 )
 
 type SyncRequest struct {

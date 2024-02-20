@@ -3,8 +3,8 @@ package core
 import (
     "reflect"
 
-    "github.com/eriq-augustine/autograder/common"
-    "github.com/eriq-augustine/autograder/util"
+    "github.com/edulinq/autograder/common"
+    "github.com/edulinq/autograder/util"
 )
 
 type APIResponse struct {

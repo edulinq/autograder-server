@@ -12,7 +12,7 @@ import (
     "path/filepath"
     "strings"
 
-    "github.com/eriq-augustine/autograder/util"
+    "github.com/edulinq/autograder/util"
 )
 
 type FileSpecType string;

@@ -4,8 +4,8 @@ import (
     "slices"
     "testing"
 
-    "github.com/eriq-augustine/autograder/api/core"
-    "github.com/eriq-augustine/autograder/model"
+    "github.com/edulinq/autograder/api/core"
+    "github.com/edulinq/autograder/model"
 )
 
 func TestUserList(test *testing.T) {

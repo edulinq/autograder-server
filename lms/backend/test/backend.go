@@ -4,7 +4,7 @@ package test
 import (
     "fmt"
 
-    "github.com/eriq-augustine/autograder/lms/lmstypes"
+    "github.com/edulinq/autograder/lms/lmstypes"
 )
 
 // Settings to help in testing.

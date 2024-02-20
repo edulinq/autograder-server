@@ -3,7 +3,7 @@ package user
 import (
     "slices"
 
-    "github.com/eriq-augustine/autograder/api/core"
+    "github.com/edulinq/autograder/api/core"
 )
 
 type ListRequest struct {

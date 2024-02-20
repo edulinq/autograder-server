@@ -4,9 +4,9 @@ import (
     "reflect"
     "testing"
 
-    "github.com/eriq-augustine/autograder/common"
-    "github.com/eriq-augustine/autograder/db"
-    "github.com/eriq-augustine/autograder/util"
+    "github.com/edulinq/autograder/common"
+    "github.com/edulinq/autograder/db"
+    "github.com/edulinq/autograder/util"
 )
 
 func TestCourseReportBase(test *testing.T) {

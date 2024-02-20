@@ -9,7 +9,7 @@ import (
     "runtime"
     "strings"
 
-    "github.com/eriq-augustine/autograder/log"
+    "github.com/edulinq/autograder/log"
 )
 
 // Get an absolute path of a path.

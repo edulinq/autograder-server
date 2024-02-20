@@ -8,7 +8,7 @@ import (
     "fmt"
     "time"
 
-    "github.com/eriq-augustine/autograder/log"
+    "github.com/edulinq/autograder/log"
 )
 
 type Timestamp string;
