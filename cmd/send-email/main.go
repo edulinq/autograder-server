@@ -3,10 +3,10 @@ package main
 import (
     "github.com/alecthomas/kong"
 
-    "github.com/eriq-augustine/config"
-    "github.com/eriq-augustine/autograder/email"
-    "github.com/eriq-augustine/autograder/log"
-    "github.com/eriq-augustine/autograder/db"
+    "github.com/edulinq/autograder/config"
+    "github.com/edulinq/autograder/email"
+    "github.com/edulinq/autograder/log"
+    "github.com/edulinq/autograder/db"
 )
 
 var args struct {
@@ -27,7 +27,7 @@ func main() {
         log.Fatal("Could not load config options.", err);
     }
 
-		args.To = db.ResolveUsers(args.Course, args.To);
+		args.To, err = db.ResolveUsers(args.Course, args.To);
 		if (err != nil) {
 			log.Fatal("Could not resolve users.", err);
 		}
