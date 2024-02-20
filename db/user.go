@@ -3,9 +3,10 @@ package db
 import (
     "errors"
     "fmt"
+		"strings"
 
-    "github.com/eriq-augustine/autograder/log"
-    "github.com/eriq-augustine/autograder/model"
+    "github.com/edulinq/autograder/log"
+    "github.com/edulinq/autograder/model"
 )
 
 func GetUsers(course *model.Course) (map[string]*model.User, error) {
@@ -27,7 +28,7 @@ func MustGetUsers(course *model.Course) map[string]*model.User {
 
 func GetUsersFromID(courseID string) (map[string]*model.User, error) {
     if (backend == nil) {
-        return nil, fmt.Errorf("Database has not been opened.");
+       return nil, fmt.Errorf("Database has not been opened.");
     }
 
     course, err := GetCourse(courseID);
@@ -40,6 +41,62 @@ func GetUsersFromID(courseID string) (map[string]*model.User, error) {
     }
 
     return GetUsers(course);
+}
+
+// Insert method that takes a course id, email [] string and resolves based on *, roles, emails to all emails
+func ResolveUsers(courseID string, email []string) ([]string, error) {
+	if (backend == nil) {
+		return nil, fmt.Errorf("Database has not been opened.");
+	}
+	emailSet := map[string]struct{}{};
+	roleSet := map[string]struct{}{};
+	allRoles := false;
+	foundRoles := false;
+	for _, e := range email {
+		if strings.Contains(e, '@') {
+			emailSet[e] = struct{}{};
+		} else if (rolesAllowed) {
+			if (e == "*") {
+				allRoles = true;
+			} else {
+				roleSet[model.GetRole(e)] = struct{}{};
+				foundRoles = true;
+			}
+		} else {
+			return nil, fmt.Errorf("Passed role without valid course.");
+		}
+	}
+	if (allRoles || foundRoles) {
+		users, err := GetUsersFromID(courseID)
+		if (err != nil) {
+			return nil, err;
+		}
+		if (allRoles) {
+			// Get all users and emails.
+			for id, u := range users {
+				emailSet[u.Email]= struct{}{};
+			}
+		} else {
+			roleNums := map[UserRole]struct{}{};
+			for r, _ := range roleSet {
+				roleNums[model.GetRole(r)] = struct{}{};
+			}
+			for id, u := range users {
+				val, ok := roleNums[u.Role]; // in the role set
+				if ok {
+					emailSet[u.Email] = struct{}{};
+				}
+			}
+		}
+	}
+	numEmails := len(emailSet);
+	var emails [numEmails]string;
+	counter := 0;
+	for e := range emailSet {
+		emails[counter] = e;
+		counter += 1;
+	}
+	return emails;
 }
 
 func GetUser(course *model.Course, email string) (*model.User, error) {

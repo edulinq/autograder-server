@@ -3,9 +3,10 @@ package main
 import (
     "github.com/alecthomas/kong"
 
-    "github.com/eriq-augustine/autograder/config"
-    "github.com/eriq-augustine/autograder/email"
-    "github.com/eriq-augustine/autograder/log"
+    "github.com/edulinq/autograder/config"
+    "github.com/edulinq/autograder/email"
+    "github.com/edulinq/autograder/log"
+    "github.com/edulinq/autograder/db"
 )
 
 var args struct {
@@ -13,6 +14,7 @@ var args struct {
     To []string `help:"Email recipents." required:""`
     Subject string `help:"Email subject." required:""`
     Body string `help:"Email body." required:""`
+		Course string `help:"Course name." short:"c"`
 }
 
 func main() {
@@ -25,6 +27,10 @@ func main() {
         log.Fatal("Could not load config options.", err);
     }
 
+		args.To = db.ResolveUsers(args.Course, args.To);
+		if (err != nil) {
+			log.Fatal("Could not resolve users.", err);
+		}
     err = email.Send(args.To, args.Subject, args.Body, false);
     if (err != nil) {
         log.Fatal("Could not send email.", err);
