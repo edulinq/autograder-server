@@ -4,7 +4,7 @@ import (
     "fmt"
     "net/smtp"
 
-    "github.com/edulinq/autograder/config"
+    "github.com/eriq-augustine/autograder/config"
 )
 
 // Messages that are stored (instead of sent) in testing mode.
