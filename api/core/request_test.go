@@ -4,8 +4,8 @@ import (
     "fmt"
     "testing"
 
-    "github.com/eriq-augustine/autograder/model"
-    "github.com/eriq-augustine/autograder/util"
+    "github.com/edulinq/autograder/model"
+    "github.com/edulinq/autograder/util"
 )
 
 var studentPass string = util.Sha256HexFromString("student");

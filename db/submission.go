@@ -3,8 +3,8 @@ package db
 import (
     "fmt"
 
-    "github.com/eriq-augustine/autograder/common"
-    "github.com/eriq-augustine/autograder/model"
+    "github.com/edulinq/autograder/common"
+    "github.com/edulinq/autograder/model"
 )
 
 func SaveSubmissions(course *model.Course, submissions []*model.GradingResult) error {

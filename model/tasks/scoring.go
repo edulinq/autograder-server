@@ -3,7 +3,7 @@ package tasks
 import (
     "fmt"
 
-    "github.com/eriq-augustine/autograder/log"
+    "github.com/edulinq/autograder/log"
 )
 
 type ScoringUploadTask struct {

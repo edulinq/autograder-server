@@ -3,9 +3,9 @@ package main
 import (
     "github.com/alecthomas/kong"
 
-    "github.com/eriq-augustine/autograder/config"
-    "github.com/eriq-augustine/autograder/email"
-    "github.com/eriq-augustine/autograder/log"
+    "github.com/edulinq/autograder/config"
+    "github.com/edulinq/autograder/email"
+    "github.com/edulinq/autograder/log"
 )
 
 var args struct {

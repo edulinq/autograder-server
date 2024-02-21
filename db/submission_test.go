@@ -4,7 +4,7 @@ import (
     "reflect"
     "testing"
 
-    "github.com/eriq-augustine/autograder/util"
+    "github.com/edulinq/autograder/util"
 )
 
 func (this *DBTests) DBTestRemoveSubmission(test *testing.T) {

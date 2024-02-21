@@ -4,9 +4,9 @@ import (
     "fmt"
     "testing"
 
-    "github.com/eriq-augustine/autograder/config"
-    "github.com/eriq-augustine/autograder/db"
-    "github.com/eriq-augustine/autograder/docker"
+    "github.com/edulinq/autograder/config"
+    "github.com/edulinq/autograder/db"
+    "github.com/edulinq/autograder/docker"
 )
 
 const BASE_TEST_USER = "student@test.com";

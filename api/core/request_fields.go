@@ -11,9 +11,9 @@ import (
     "path/filepath"
     "reflect"
 
-    "github.com/eriq-augustine/autograder/db"
-    "github.com/eriq-augustine/autograder/model"
-    "github.com/eriq-augustine/autograder/util"
+    "github.com/edulinq/autograder/db"
+    "github.com/edulinq/autograder/model"
+    "github.com/edulinq/autograder/util"
 )
 
 // The minimum user roles required encoded as a type so it can be embedded into a request struct.

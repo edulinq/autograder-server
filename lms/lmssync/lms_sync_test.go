@@ -4,12 +4,12 @@ import (
     "slices"
     "testing"
 
-    "github.com/eriq-augustine/autograder/db"
-    "github.com/eriq-augustine/autograder/email"
-    "github.com/eriq-augustine/autograder/lms/lmstypes"
-    lmstest "github.com/eriq-augustine/autograder/lms/backend/test"
-    "github.com/eriq-augustine/autograder/model"
-    "github.com/eriq-augustine/autograder/util"
+    "github.com/edulinq/autograder/db"
+    "github.com/edulinq/autograder/email"
+    "github.com/edulinq/autograder/lms/lmstypes"
+    lmstest "github.com/edulinq/autograder/lms/backend/test"
+    "github.com/edulinq/autograder/model"
+    "github.com/edulinq/autograder/util"
 )
 
 type SyncLMSTestCase struct {

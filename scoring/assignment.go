@@ -5,13 +5,13 @@ import (
     "strings"
     "time"
 
-    "github.com/eriq-augustine/autograder/common"
-    "github.com/eriq-augustine/autograder/db"
-    "github.com/eriq-augustine/autograder/lms"
-    "github.com/eriq-augustine/autograder/lms/lmstypes"
-    "github.com/eriq-augustine/autograder/log"
-    "github.com/eriq-augustine/autograder/model"
-    "github.com/eriq-augustine/autograder/util"
+    "github.com/edulinq/autograder/common"
+    "github.com/edulinq/autograder/db"
+    "github.com/edulinq/autograder/lms"
+    "github.com/edulinq/autograder/lms/lmstypes"
+    "github.com/edulinq/autograder/log"
+    "github.com/edulinq/autograder/model"
+    "github.com/edulinq/autograder/util"
 )
 
 const LOCK_COMMENT string = "__lock__";

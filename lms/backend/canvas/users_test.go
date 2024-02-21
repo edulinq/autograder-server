@@ -4,9 +4,9 @@ import (
     "reflect"
     "testing"
 
-    "github.com/eriq-augustine/autograder/lms/lmstypes"
-    "github.com/eriq-augustine/autograder/model"
-    "github.com/eriq-augustine/autograder/util"
+    "github.com/edulinq/autograder/lms/lmstypes"
+    "github.com/edulinq/autograder/model"
+    "github.com/edulinq/autograder/util"
 )
 
 func TestCanvasUserGetBase(test *testing.T) {

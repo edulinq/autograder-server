@@ -3,9 +3,9 @@ package db
 import (
     "testing"
 
-    "github.com/eriq-augustine/autograder/email"
-    "github.com/eriq-augustine/autograder/model"
-    "github.com/eriq-augustine/autograder/util"
+    "github.com/edulinq/autograder/email"
+    "github.com/edulinq/autograder/model"
+    "github.com/edulinq/autograder/util"
 )
 
 type SyncNewUsersTestCase struct {

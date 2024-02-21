@@ -8,8 +8,8 @@ import (
     "path/filepath"
     "time"
 
-    "github.com/eriq-augustine/autograder/log"
-    "github.com/eriq-augustine/autograder/util"
+    "github.com/edulinq/autograder/log"
+    "github.com/edulinq/autograder/util"
 )
 
 const LOG_FILENAME = "log.jsonl"

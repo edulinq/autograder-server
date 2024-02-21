@@ -3,7 +3,7 @@ package model
 import (
     "path/filepath"
 
-    "github.com/eriq-augustine/autograder/util"
+    "github.com/edulinq/autograder/util"
 )
 
 const USERS_FILENAME = "users.json"

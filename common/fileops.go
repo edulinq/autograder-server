@@ -10,7 +10,7 @@ import (
 
     "github.com/alessio/shellescape"
 
-    "github.com/eriq-augustine/autograder/util"
+    "github.com/edulinq/autograder/util"
 )
 
 type FileOperation []string;

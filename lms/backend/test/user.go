@@ -3,9 +3,9 @@ package test
 import (
     "fmt"
 
-    "github.com/eriq-augustine/autograder/db"
-    "github.com/eriq-augustine/autograder/lms/lmstypes"
-    "github.com/eriq-augustine/autograder/model"
+    "github.com/edulinq/autograder/db"
+    "github.com/edulinq/autograder/lms/lmstypes"
+    "github.com/edulinq/autograder/model"
 )
 
 func (this *TestLMSBackend) FetchUsers() ([]*lmstypes.User, error) {

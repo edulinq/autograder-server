@@ -1,10 +1,10 @@
 package submission
 
 import (
-    "github.com/eriq-augustine/autograder/api/core"
-    "github.com/eriq-augustine/autograder/grader"
-    "github.com/eriq-augustine/autograder/log"
-    "github.com/eriq-augustine/autograder/model"
+    "github.com/edulinq/autograder/api/core"
+    "github.com/edulinq/autograder/grader"
+    "github.com/edulinq/autograder/log"
+    "github.com/edulinq/autograder/model"
 )
 
 type SubmitRequest struct {
@@ -36,7 +36,7 @@ func HandleSubmit(request *SubmitRequest) (*SubmitResponse, *core.APIError) {
             stderr = result.Stderr;
         }
 
-        log.Debug("Submission grading failed.", err, request.Assignment, log.NewAttr("stdout", stdout), log.NewAttr("stderr", stderr));
+        log.Info("Submission grading failed.", err, request.Assignment, log.NewAttr("stdout", stdout), log.NewAttr("stderr", stderr));
 
         return &response, nil;
     }

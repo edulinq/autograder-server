@@ -1,7 +1,7 @@
 package report
 
 import (
-    "github.com/eriq-augustine/autograder/model"
+    "github.com/edulinq/autograder/model"
 )
 
 type CourseScoringReport struct {

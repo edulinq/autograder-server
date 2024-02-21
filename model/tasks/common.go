@@ -9,8 +9,8 @@ import (
     "sync"
     "time"
 
-    "github.com/eriq-augustine/autograder/common"
-    "github.com/eriq-augustine/autograder/config"
+    "github.com/edulinq/autograder/common"
+    "github.com/edulinq/autograder/config"
 )
 
 type TaskCourse interface {

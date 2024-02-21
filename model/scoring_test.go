@@ -4,8 +4,8 @@ import (
     "strings"
     "testing"
 
-    "github.com/eriq-augustine/autograder/common"
-    "github.com/eriq-augustine/autograder/util"
+    "github.com/edulinq/autograder/common"
+    "github.com/edulinq/autograder/util"
 )
 
 // Ensure that the scoring info struct can be serialized

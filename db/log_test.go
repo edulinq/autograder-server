@@ -5,8 +5,8 @@ import (
     "testing"
     "time"
 
-    "github.com/eriq-augustine/autograder/log"
-    "github.com/eriq-augustine/autograder/util"
+    "github.com/edulinq/autograder/log"
+    "github.com/edulinq/autograder/util"
 )
 
 func (this *DBTests) DBTestGetLogsLevel(test *testing.T) {
@@ -34,35 +34,35 @@ func (this *DBTests) DBTestGetLogsLevel(test *testing.T) {
         &log.Record{
             log.LevelTrace,
             "trace",
-            0, nil,
+            0, "",
             "", "", "",
             nil,
         },
         &log.Record{
             log.LevelDebug,
             "debug",
-            0, nil,
+            0, "",
             "", "", "",
             nil,
         },
         &log.Record{
             log.LevelInfo,
             "info",
-            0, nil,
+            0, "",
             "", "", "",
             nil,
         },
         &log.Record{
             log.LevelWarn,
             "warn",
-            0, nil,
+            0, "",
             "", "", "",
             nil,
         },
         &log.Record{
             log.LevelError,
             "error",
-            0, nil,
+            0, "",
             "", "", "",
             nil,
         },
@@ -129,14 +129,14 @@ func (this *DBTests) DBTestGetLogsTime(test *testing.T) {
         &log.Record{
             log.LevelInfo,
             "A",
-            0, nil,
+            0, "",
             "", "", "",
             nil,
         },
         &log.Record{
             log.LevelInfo,
             "B",
-            0, nil,
+            0, "",
             "", "", "",
             nil,
         },
@@ -188,9 +188,9 @@ func (this *DBTests) DBTestGetLogsContext(test *testing.T) {
     log.Info("msg", log.NewUserAttr("U"));
 
     testCases := []struct{courseID string; assignmentID string; userID string; expectedRecords []*log.Record}{
-        {"C", "", "", []*log.Record{&log.Record{log.LevelInfo, "msg", 0, nil, "C", "", "", nil}}},
-        {"", "A", "", []*log.Record{&log.Record{log.LevelInfo, "msg", 0, nil, "", "A", "", nil}}},
-        {"", "", "U", []*log.Record{&log.Record{log.LevelInfo, "msg", 0, nil, "", "", "U", nil}}},
+        {"C", "", "", []*log.Record{&log.Record{log.LevelInfo, "msg", 0, "", "C", "", "", nil}}},
+        {"", "A", "", []*log.Record{&log.Record{log.LevelInfo, "msg", 0, "", "", "A", "", nil}}},
+        {"", "", "U", []*log.Record{&log.Record{log.LevelInfo, "msg", 0, "", "", "", "U", nil}}},
     };
 
     for i, testCase := range testCases {

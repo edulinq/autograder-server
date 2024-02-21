@@ -1,7 +1,7 @@
 package model
 
 import (
-    "github.com/eriq-augustine/autograder/common"
+    "github.com/edulinq/autograder/common"
 )
 
 const SCORING_INFO_STRUCT_VERSION = "1.0.0"

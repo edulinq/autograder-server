@@ -5,8 +5,8 @@ import (
     "math"
     "testing"
 
-    "github.com/eriq-augustine/autograder/common"
-    "github.com/eriq-augustine/autograder/util"
+    "github.com/edulinq/autograder/common"
+    "github.com/edulinq/autograder/util"
 )
 
 // The most simple authenticating request.

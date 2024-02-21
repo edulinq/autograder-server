@@ -1,4 +1,4 @@
-module github.com/eriq-augustine/autograder
+module github.com/edulinq/autograder
 
 go 1.21
 

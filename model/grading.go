@@ -4,8 +4,8 @@ import (
     "fmt"
     "strings"
 
-    "github.com/eriq-augustine/autograder/common"
-    "github.com/eriq-augustine/autograder/util"
+    "github.com/edulinq/autograder/common"
+    "github.com/edulinq/autograder/util"
 )
 
 type GradingResult struct {

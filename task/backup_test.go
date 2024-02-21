@@ -4,14 +4,14 @@ import (
     "path/filepath"
     "testing"
 
-    "github.com/eriq-augustine/autograder/common"
-    "github.com/eriq-augustine/autograder/config"
-    "github.com/eriq-augustine/autograder/db"
-    "github.com/eriq-augustine/autograder/model/tasks"
-    "github.com/eriq-augustine/autograder/util"
+    "github.com/edulinq/autograder/common"
+    "github.com/edulinq/autograder/config"
+    "github.com/edulinq/autograder/db"
+    "github.com/edulinq/autograder/model/tasks"
+    "github.com/edulinq/autograder/util"
 )
 
-const EXPECTED_MD5 = "1b441fc47a0efe46b3437973c10097c1";
+const EXPECTED_MD5 = "432c809de1c6db2ba4a29f2420ec759b";
 
 func TestBackupTempDir(test *testing.T) {
     tempDir, err := util.MkDirTemp("autograder-test-task-backup-");
