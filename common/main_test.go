@@ -4,12 +4,12 @@ package common
 // The content is repeated to avoid an import cycle.
 
 import (
-    "os"
-    "testing"
+	"os"
+	"testing"
 
-    "github.com/eriq-augustine/autograder/config"
-    "github.com/eriq-augustine/autograder/log"
-    "github.com/eriq-augustine/autograder/util"
+	"github.com/eriq-augustine/autograder/config"
+	"github.com/eriq-augustine/autograder/log"
+	"github.com/eriq-augustine/autograder/util"
 )
 
 // Use the common main for all tests in this package.
@@ -17,7 +17,8 @@ func TestMain(suite *testing.M) {
     // Run inside a func so defers will run before os.Exit().
     code := func() int {
         config.MustEnableUnitTestingMode();
-
+		log.SetLevelFatal();
+		
         defer CleanupTestingMain();
 
         return suite.Run();

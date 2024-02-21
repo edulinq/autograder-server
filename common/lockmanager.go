@@ -15,10 +15,11 @@ type lockData struct {
     isLocked bool;
 }
 
+const TICKER_DURATION_HOUR = 1.0;
+
 var (
     lockManagerMutex sync.Mutex;
     lockMap sync.Map;
-    staleDuration time.Duration;
 )
 
 func init() {
@@ -42,14 +43,14 @@ func Unlock(key string) error {
 
     val, exists := lockMap.Load(key);
     if !exists {
-        log.Error("Key does not exist: ", key);
-        return fmt.Errorf("Key not found: %v", key);
+        log.Error("Key does not exist.", log.NewAttr("key", key));
+        return fmt.Errorf("Key not found: '%s'.", key);
     }
     
     lock := val.(*lockData);
     if !lock.isLocked {
-        log.Error("Tried to unlock a lock that is unlocked with key: ", key);
-        return fmt.Errorf("Key: %v Tried to unlock a lock that is unlocked", key);
+        log.Error("Tried to unlock a lock that is unlocked with key.", log.NewAttr("key", key));
+        return fmt.Errorf("Key '%s' tried to unlock a lock that is unlocked.", key);
     }
 
     lock.isLocked = false;
@@ -60,28 +61,26 @@ func Unlock(key string) error {
 
 
 func removeStaleLocks() {
-    ticker := time.NewTicker(time.Duration(5) * time.Second);
+    ticker := time.NewTicker(TICKER_DURATION_HOUR * time.Hour);
 
     for range ticker.C {
         RemoveStaleLocksOnce();
     }
 }
 
-func RemoveStaleLocksOnce() bool {
+func RemoveStaleLocksOnce() {
     staleDuration := time.Duration(time.Duration(config.STALELOCK_DURATION.Get()) * time.Second);
-    removed := false;
     
     lockMap.Range(func(key, val any) bool {
         lock := val.(*lockData);
+
         if (time.Since(lock.timestamp) > staleDuration) && (!lock.isLocked) {
             lockManagerMutex.Lock();
             defer lockManagerMutex.Unlock();
             if (time.Since(lock.timestamp) > staleDuration) && (lock.mutex.TryLock()) {
                 lockMap.Delete(key);
-                removed = true;
             }
         }
         return true;
     })
-    return removed;
 }
