@@ -309,8 +309,6 @@ func storeRequestFile(request *http.Request, outDir string, filename string) err
     if (fileHeader.Size > int64(maxFileSizeBytes)) {
         return &fileSizeExceededError{
             Message:  fmt.Sprintf("File '%s' is %d bytes. The maximum allowable size is %d bytes.", filename, fileHeader.Size, maxFileSizeBytes),
-            Filename: filename,
-            FileSize: fileHeader.Size,
         };
     }
 

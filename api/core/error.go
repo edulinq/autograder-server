@@ -36,8 +36,6 @@ const (
 // A special error for when a submitted file exceeds the defined maximum allowable size.
 type fileSizeExceededError struct {
     Message  string
-    Filename string
-    FileSize int64
 }
 
 // Implementation of the error interface for the fileSizeExceeded error.
