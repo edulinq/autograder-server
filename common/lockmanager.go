@@ -5,8 +5,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/eriq-augustine/autograder/config"
-	"github.com/eriq-augustine/autograder/log"
+	"github.com/edulinq/autograder/config"
+	"github.com/edulinq/autograder/log"
 )
 
 type lockData struct {

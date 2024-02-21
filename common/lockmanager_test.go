@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/eriq-augustine/autograder/config"
+	"github.com/edulinq/autograder/config"
 )
 
 var (
