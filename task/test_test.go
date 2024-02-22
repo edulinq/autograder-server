@@ -156,7 +156,7 @@ func runTestTaskWithFun(test *testing.T, everyUSecs int64, counter chan int, fun
     }
 
     // Wait.
-    time.Sleep(1500 * time.Microsecond);
+    time.Sleep(1750 * time.Microsecond);
 
     // Stop the task.
     StopCourse(course.GetID());
