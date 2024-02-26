@@ -48,6 +48,16 @@ func GetRoleString(role UserRole) string {
     return roleToString[role];
 }
 
+func GetAllRoles() map[UserRole]string {
+    // var allRoles = map[UserRole]bool
+    // for role, _ := range roleToString {
+    //     allRoles[role] = true
+    // }
+
+    // return allRoles
+    return roleToString
+}
+
 func (this UserRole) MarshalJSON() ([]byte, error) {
     buffer := bytes.NewBufferString(`"`);
     buffer.WriteString(roleToString[this]);

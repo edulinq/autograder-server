@@ -14,7 +14,8 @@ var args struct {
     To []string `help:"Email recipents." required:""`
     Subject string `help:"Email subject." required:""`
     Body string `help:"Email body." required:""`
-		Course string `help:"Course name." short:"c"`
+    //TODO: fix this to be an optional argument
+    Course string `help:"Course ID." short:"c" default:""`
 }
 
 func main() {
@@ -27,10 +28,10 @@ func main() {
         log.Fatal("Could not load config options.", err);
     }
 
-		args.To, err = db.ResolveUsers(args.Course, args.To);
-		if (err != nil) {
-			log.Fatal("Could not resolve users.", err);
-		}
+    args.To, err = db.ResolveUsers(args.Course, args.To);
+    if (err != nil) {
+        log.Fatal("Could not resolve users.", err);
+    }
     err = email.Send(args.To, args.Subject, args.Body, false);
     if (err != nil) {
         log.Fatal("Could not send email.", err);
