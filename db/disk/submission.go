@@ -6,9 +6,9 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/eriq-augustine/autograder/common"
-	"github.com/eriq-augustine/autograder/model"
-	"github.com/eriq-augustine/autograder/util"
+	"github.com/edulinq/autograder/common"
+	"github.com/edulinq/autograder/model"
+	"github.com/edulinq/autograder/util"
 )
 
 func (this *backend) saveSubmissionsLock(course *model.Course, submissions []*model.GradingResult, acquireLock bool) error {

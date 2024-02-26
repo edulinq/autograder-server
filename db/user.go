@@ -44,52 +44,44 @@ func GetUsersFromID(courseID string) (map[string]*model.User, error) {
 }
 
 // Insert method that takes a course id, email [] string and resolves based on *, roles, emails to all emails
-func ResolveUsers(courseID string, email []string) ([]string, error) {
-	if backend == nil {
-		return nil, fmt.Errorf("Database has not been opened.")
-	}
-	emailSet := map[string]struct{}{}
-	roleSet := map[model.UserRole]struct{}{}
-	allRoles := false
-	foundRoles := false
-	for _, e := range email {
-		if strings.Contains(e, "@") {
-			emailSet[e] = struct{}{}
-		} else {
-			if e == "*" {
-				allRoles = true
-			} else {
-				roleSet[model.GetRole(e)] = struct{}{}
-				foundRoles = true
-			}
-		}
-	}
-	if allRoles || foundRoles {
-		users, err := GetUsersFromID(courseID)
-		if err != nil {
-			return nil, err
-		}
-		if allRoles {
-			// Get all users and emails.
-			for _, u := range users {
-				emailSet[u.Email] = struct{}{}
-			}
-		} else {
-			for _, u := range users {
-				_, ok := roleSet[u.Role] // in the role set
-				if ok {
-					emailSet[u.Email] = struct{}{}
-				}
-			}
-		}
-	}
-	emails := make([]string, len(emailSet));
-	counter := 0
-	for e := range emailSet {
-		emails[counter] = e
-		counter += 1
-	}
-	return emails, nil
+func ResolveUsers(course *model.Course, emails []string) ([]string, error) {
+    if backend == nil {
+        return nil, fmt.Errorf("Database has not been opened.")
+    }
+    emailSet := map[string]any{}
+    roleSet := map[model.UserRole]any{}
+    // check for emails, roles, and * (all)
+    for _, email := range emails {
+        if strings.Contains(email, "@") {
+            emailSet[email] = nil
+        } else {
+            if email == "*" {
+                allRoles := model.GetAllRoles()
+                for role := range allRoles {
+                    roleSet[role] = nil
+                }
+            } else {
+                roleSet[model.GetRole(email)] = nil
+            }
+        }
+    }
+    if len(roleSet) > 0 {
+        users, err := GetUsers(course)
+        if err != nil {
+            return nil, err
+        }
+        for _, user := range users {
+            _, ok := roleSet[user.Role] // in the role set
+            if ok {
+                emailSet[user.Email] = nil
+            }
+        }
+    }
+    emailSlice := make([]string, 0, len(emailSet));
+    for email := range emailSet {
+        emailSlice = append(emailSlice, email)
+    }
+    return emails, nil
 }
 
 func GetUser(course *model.Course, email string) (*model.User, error) {

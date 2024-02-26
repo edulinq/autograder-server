@@ -3,8 +3,8 @@ package db
 import (
 	"testing"
 
-	"github.com/eriq-augustine/autograder/common"
-	"github.com/eriq-augustine/autograder/model"
+	"github.com/edulinq/autograder/common"
+	"github.com/edulinq/autograder/model"
 )
 
 // Update a course from a path source.

@@ -5,8 +5,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/eriq-augustine/autograder/log"
-	"github.com/eriq-augustine/autograder/util"
+	"github.com/edulinq/autograder/log"
+	"github.com/edulinq/autograder/util"
 )
 
 func (this *DBTests) DBTestGetLogsLevel(test *testing.T) {

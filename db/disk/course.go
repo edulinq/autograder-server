@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"path/filepath"
 
-	"github.com/eriq-augustine/autograder/log"
-	"github.com/eriq-augustine/autograder/model"
-	"github.com/eriq-augustine/autograder/util"
+	"github.com/edulinq/autograder/log"
+	"github.com/edulinq/autograder/model"
+	"github.com/edulinq/autograder/util"
 )
 
 const DISK_DB_COURSES_DIR = "courses"

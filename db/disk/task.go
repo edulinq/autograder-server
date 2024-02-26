@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/eriq-augustine/autograder/util"
+	"github.com/edulinq/autograder/util"
 )
 
 const DISK_DB_TASKS_FILENAME = "tasks.json"

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/eriq-augustine/autograder/log"
+	"github.com/edulinq/autograder/log"
 )
 
 func GetLogRecords(level log.LogLevel, after time.Time, courseID string, assignmentID string, userID string) ([]*log.Record, error) {

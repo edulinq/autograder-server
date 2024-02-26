@@ -3,9 +3,9 @@ package db
 import (
 	"testing"
 
-	"github.com/eriq-augustine/autograder/email"
-	"github.com/eriq-augustine/autograder/model"
-	"github.com/eriq-augustine/autograder/util"
+	"github.com/edulinq/autograder/email"
+	"github.com/edulinq/autograder/model"
+	"github.com/edulinq/autograder/util"
 )
 
 type SyncNewUsersTestCase struct {
@@ -13,6 +13,34 @@ type SyncNewUsersTestCase struct {
 	dryRun     bool
 	sendEmails bool
 }
+
+/* type ResolveUsersTestCase struct {
+    input []string
+    expected []string
+}
+
+func (this *DBTests) DBTestResolveUsers(test *testing T) {
+    // All of these test cases should produce errors beccause they need courses.
+    defer ResetForTesting()
+
+    course := MustGetCourse(TEST_COURSE_ID)
+
+    for i, testCase := range getResolveUsersTestCases() {
+        ResetForTesting()
+
+        result, err := ResolveUsers(course, testInput)
+        if err != nil {
+            test.Errorf("Case %d (%+v): Resolve users failed: '%v'.", i, testCase, err)
+            continue
+        }
+
+        if len(result) != len(input[i]) {
+            test.Errorf("Case %d (%+v): Resolve users failed: '%v'.", i, testCase, err)
+            continue
+        }
+    }
+
+} */
 
 func (this *DBTests) DBTestCourseSyncNewUsers(test *testing.T) {
 	defer ResetForTesting()

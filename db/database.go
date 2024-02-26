@@ -11,10 +11,10 @@ import (
 	"sync"
 	"time"
 
-	"github.com/eriq-augustine/autograder/config"
-	"github.com/eriq-augustine/autograder/db/disk"
-	"github.com/eriq-augustine/autograder/log"
-	"github.com/eriq-augustine/autograder/model"
+	"github.com/edulinq/autograder/config"
+	"github.com/edulinq/autograder/db/disk"
+	"github.com/edulinq/autograder/log"
+	"github.com/edulinq/autograder/model"
 )
 
 var backend Backend

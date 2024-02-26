@@ -5,8 +5,8 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/eriq-augustine/autograder/config"
-	"github.com/eriq-augustine/autograder/log"
+	"github.com/edulinq/autograder/config"
+	"github.com/edulinq/autograder/log"
 )
 
 // Backends to put through the standard tests.

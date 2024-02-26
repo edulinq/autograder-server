@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"path/filepath"
 
-	"github.com/eriq-augustine/autograder/common"
-	"github.com/eriq-augustine/autograder/config"
-	"github.com/eriq-augustine/autograder/log"
-	"github.com/eriq-augustine/autograder/model"
-	"github.com/eriq-augustine/autograder/util"
+	"github.com/edulinq/autograder/common"
+	"github.com/edulinq/autograder/config"
+	"github.com/edulinq/autograder/log"
+	"github.com/edulinq/autograder/model"
+	"github.com/edulinq/autograder/util"
 )
 
 func ClearCourse(course *model.Course) error {
