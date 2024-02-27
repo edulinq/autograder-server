@@ -30,6 +30,9 @@ func main() {
 
     args.To, err = db.ResolveUsers(args.Course, args.To);
     if (err != nil) {
+        log.Fatal("Failed to resolve users: '%w'.", course.GetName(), err);
+    }
+    if (err != nil) {
         log.Fatal("Could not resolve users.", err);
     }
     err = email.Send(args.To, args.Subject, args.Body, false);
