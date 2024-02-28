@@ -20,10 +20,6 @@ func RunReportTask(course *model.Course, rawTask tasks.ScheduledTask) (bool, err
     if (task.Disable) {
         return true, nil;
     }
-    task.To = db.ResolveUsers(course.GetID(), task.To);
-    if (err != nil) {
-        return fmt.Errorf("Failed to resolve users for course '%s': '%w'.", course.GetName(), err);
-    }
     return true, RunReport(course, task.To);
 }
 
@@ -40,7 +36,7 @@ func RunReport(course *model.Course, to []string) error {
 
     subject := fmt.Sprintf("Autograder Scoring Report for %s", course.GetName());
 
-    emailTo, err := db.ResolveUsers(course.GetID(), to);
+    emailTo, err := db.ResolveUsers(course, to);
     if (err != nil) {
         return fmt.Errorf("Failed to resolve users for course '%s': '%w'.", course.GetName(), err);
     }
