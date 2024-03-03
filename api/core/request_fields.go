@@ -305,7 +305,7 @@ func storeRequestFile(request *http.Request, outDir string, filename string) err
     }
     defer inFile.Close();
 
-    maxFileSizeBytes := config.WEB_MAX_FILE_SIZE.Get() * 1024
+    maxFileSizeBytes := config.WEB_MAX_FILE_SIZE_KB.Get() * 1024
     if (fileHeader.Size > int64(maxFileSizeBytes)) {
         return &fileSizeExceededError{
             Filename: filename,

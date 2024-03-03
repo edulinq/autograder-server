@@ -271,11 +271,11 @@ func TestBadPostFilesStoreFail(test *testing.T) {
 }
 
 func TestBadPostFilesFileSizeExceeded(test *testing.T) {
-    resetMaxFileSize := config.WEB_MAX_FILE_SIZE.Get()
+    resetMaxFileSize := config.WEB_MAX_FILE_SIZE_KB.Get()
 
     // Set size to 1 KB for testing, then reset when done testing.
-    config.WEB_MAX_FILE_SIZE.Set(1);
-    defer config.WEB_MAX_FILE_SIZE.Set(resetMaxFileSize)
+    config.WEB_MAX_FILE_SIZE_KB.Set(1);
+    defer config.WEB_MAX_FILE_SIZE_KB.Set(resetMaxFileSize)
 
     endpoint := `/test/api/post-files/bad/size-exceeded`;
 
