@@ -308,7 +308,9 @@ func storeRequestFile(request *http.Request, outDir string, filename string) err
     maxFileSizeBytes := config.WEB_MAX_FILE_SIZE.Get() * 1024
     if (fileHeader.Size > int64(maxFileSizeBytes)) {
         return &fileSizeExceededError{
-            Message:  fmt.Sprintf("File '%s' is %d bytes. The maximum allowable size is %d bytes.", filename, fileHeader.Size, maxFileSizeBytes),
+            Filename: filename,
+            FileSize: fileHeader.Size,
+            MaxFileSizeBytes: maxFileSizeBytes,
         };
     }
 

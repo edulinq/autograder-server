@@ -35,12 +35,13 @@ const (
 
 // A special error for when a submitted file exceeds the defined maximum allowable size.
 type fileSizeExceededError struct {
-    Message  string
+    Filename string
+    FileSize int64
+    MaxFileSizeBytes int
 }
 
-// Implementation of the error interface for the fileSizeExceeded error.
 func (this *fileSizeExceededError) Error() string {
-    return this.Message;
+    return fmt.Sprintf("File '%s' is %d bytes. The maximum allowable size is %d bytes.", this.Filename, this.FileSize, this.MaxFileSizeBytes);
 }
 
 // This is technically an error,
