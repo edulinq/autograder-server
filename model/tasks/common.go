@@ -16,6 +16,7 @@ import (
 type TaskCourse interface {
     GetID() string
     GetAssignmentLMSIDs() ([]string, []string)
+    HasAssignment(id string) bool
     HasLMSAdapter() bool
 }
 
