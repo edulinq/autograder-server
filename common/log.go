@@ -12,6 +12,7 @@ import (
 type RawLogQuery struct {
     LevelString string `json:"level"`
     AfterString string `json:"after"`
+    PastString string `json:"past"`
     AssignmentID string `json:"assignment-id"`
     TargetUser string `json:"target-email"`
 }
@@ -70,7 +71,7 @@ func (this RawLogQuery) Parse(course courseInferface) (*ParsedLogQuery, []error)
         errs = append(errs, err);
     }
 
-    parsed.After, err = ParseLogQueryAfter(this.AfterString);
+    parsed.After, err = ParseLogQueryTiming(time.Now(), this.AfterString, this.PastString);
     if (err != nil) {
         errs = append(errs, err);
     }
@@ -118,10 +119,40 @@ func ParseLogQueryLevel(levelString string) (log.LogLevel, error) {
 
     level, err := log.ParseLevel(levelString);
     if (err != nil) {
-        return log.LevelInfo, fmt.Errorf("Could not parse 'level' componet of log query ('%s'): '%v'.", levelString, err);
+        return log.LevelInfo, fmt.Errorf("Could not parse 'level' component of log query ('%s'): '%v'.", levelString, err);
     }
 
     return level, nil;
+}
+
+// Parse both the after and past, and then resolve that the actual after time should be.
+// If both after and past are given, the latter of the resulting times will be returned.
+func ParseLogQueryTiming(now time.Time, afterString string, pastString string) (time.Time, error) {
+    after, err := ParseLogQueryAfter(afterString);
+    if (err != nil) {
+        return time.Time{}, err;
+    }
+
+    past, err := ParseLogQueryPast(pastString);
+    if (err != nil) {
+        return time.Time{}, err;
+    }
+    pastTime := now.Add(-past);
+
+    if (past == 0) {
+        return after, nil;
+    }
+
+    if (after.IsZero()) {
+        return pastTime, nil;
+    }
+
+    // Return the latter of the two times.
+    if (after.Before(pastTime)) {
+        return pastTime, nil;
+    }
+
+    return after, nil;
 }
 
 func ParseLogQueryAfter(afterString string) (time.Time, error) {
@@ -131,15 +162,32 @@ func ParseLogQueryAfter(afterString string) (time.Time, error) {
 
     timestamp, err := TimestampFromString(afterString);
     if (err != nil) {
-        return time.Time{}, fmt.Errorf("Could not parse 'after' componet of log query ('%s'): '%v'.", afterString, err);
+        return time.Time{}, fmt.Errorf("Could not parse 'after' component of log query ('%s'): '%v'.", afterString, err);
     }
 
     after, err := timestamp.Time();
     if (err != nil) {
-        return time.Time{}, fmt.Errorf("Could not extract time from 'after' componet of log query ('%s'): '%v'.", afterString, err);
+        return time.Time{}, fmt.Errorf("Could not extract time from 'after' component of log query ('%s'): '%v'.", afterString, err);
     }
 
     return after, nil;
+}
+
+func ParseLogQueryPast(pastString string) (time.Duration, error) {
+    if (pastString == "") {
+        return 0, nil;
+    }
+
+    past, err := time.ParseDuration(pastString);
+    if (err != nil) {
+        return 0, fmt.Errorf("Could not parse 'past' component of log query ('%s'): '%v'.", pastString, err);
+    }
+
+    if (past < 0) {
+        return 0, fmt.Errorf("Negative duration given for 'past' component of log query ('%s').", pastString);
+    }
+
+    return past, nil;
 }
 
 func ParseLogQueryAssignmentID(assignmentString string, course courseInferface) (string, error) {
@@ -149,11 +197,11 @@ func ParseLogQueryAssignmentID(assignmentString string, course courseInferface) 
 
     assignmentID, err := ValidateID(assignmentString);
     if (err != nil) {
-        return "", fmt.Errorf("Could not parse 'assignment' componet of log query ('%s'): '%v'.", assignmentString, err);
+        return "", fmt.Errorf("Could not parse 'assignment' component of log query ('%s'): '%v'.", assignmentString, err);
     }
 
     if (!course.HasAssignment(assignmentID)) {
-        return "", fmt.Errorf("Unknown assignment given for 'assignment' componet of log query ('%s').", assignmentString);
+        return "", fmt.Errorf("Unknown assignment given for 'assignment' component of log query ('%s').", assignmentString);
     }
 
     return assignmentID, nil;
