@@ -52,6 +52,8 @@ func Schedule(course *model.Course, target tasks.ScheduledTask) error {
             runFunc = RunBackupTask;
         case *tasks.CourseUpdateTask:
             runFunc = RunCourseUpdateTask;
+        case *tasks.EmailLogsTask:
+            runFunc = RunEmailLogsTask;
         case *tasks.ReportTask:
             runFunc = RunReportTask;
         case *tasks.ScoringUploadTask:
