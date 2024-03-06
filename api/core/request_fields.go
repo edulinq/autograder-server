@@ -208,15 +208,14 @@ func checkRequestPostFiles(request *http.Request, endpoint string, apiRequest an
 
     if (err != nil) {
         var fileSizeExceededError *fileSizeExceededError
-        switch {
-            case errors.As(err, &fileSizeExceededError):
-                return NewBareBadRequestError("-036", endpoint, err.Error()).Err(err).
-                    Add("struct-name", structName).Add("field-name", fieldType.Name).
-                    Add("filename", fileSizeExceededError.Filename).Add("file-size", fileSizeExceededError.FileSizeKB).
-                    Add("max-file-size-kb", fileSizeExceededError.MaxFileSizeKB)
-            default:
-                return NewBareInternalError("-029", endpoint, "Failed to store files from POST.").Err(err).
-                    Add("struct-name", structName).Add("field-name", fieldType.Name)
+        if errors.As(err, &fileSizeExceededError) {
+            return NewBareBadRequestError("-036", endpoint, err.Error()).Err(err).
+                Add("struct-name", structName).Add("field-name", fieldType.Name).
+                Add("filename", fileSizeExceededError.Filename).Add("file-size", fileSizeExceededError.FileSizeKB).
+                Add("max-file-size-kb", fileSizeExceededError.MaxFileSizeKB)
+        } else {
+            return NewBareInternalError("-029", endpoint, "Failed to store files from POST.").Err(err).
+                Add("struct-name", structName).Add("field-name", fieldType.Name)
         }
     }
 
