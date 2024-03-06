@@ -412,5 +412,5 @@ type fileSizeExceededError struct {
 }
 
 func (this *fileSizeExceededError) Error() string {
-    return fmt.Sprintf("File '%s' is over %d KB. The maximum allowable size is %d KB.", this.Filename, this.FileSizeKB, this.MaxFileSizeKB);
+    return fmt.Sprintf("File '%s' is %d KB. The maximum allowable size is %d KB.", this.Filename, this.FileSizeKB, this.MaxFileSizeKB);
 }
