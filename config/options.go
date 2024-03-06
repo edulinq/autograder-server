@@ -1,7 +1,5 @@
 package config
 
-const MAX_FILE_SIZE_KB = 2 * 1024 // 2048 KiB (2 MiB)
-
 var (
     // Base
     NAME = MustNewStringOption("instance.name", "autograder",

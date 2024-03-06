@@ -4,6 +4,7 @@ package core
 
 import (
     "encoding/json"
+    "errors"
     "fmt"
     "io"
     "net/http"
@@ -206,13 +207,16 @@ func checkRequestPostFiles(request *http.Request, endpoint string, apiRequest an
     postFiles, err := storeRequestFiles(request);
 
     if (err != nil) {
-        switch err.(type) {
-            case *fileSizeExceededError:
+        var fileSizeExceededError *fileSizeExceededError
+        switch {
+            case errors.As(err, &fileSizeExceededError):
                 return NewBareBadRequestError("-036", endpoint, err.Error()).Err(err).
-                    Add("struct-name", structName).Add("field-name", fieldType.Name);
+                    Add("struct-name", structName).Add("field-name", fieldType.Name).
+                    Add("filename", fileSizeExceededError.Filename).Add("file-size", fileSizeExceededError.FileSizeKB).
+                    Add("max-file-size-kb", fileSizeExceededError.MaxFileSizeKB)
             default:
                 return NewBareInternalError("-029", endpoint, "Failed to store files from POST.").Err(err).
-                    Add("struct-name", structName).Add("field-name", fieldType.Name);
+                    Add("struct-name", structName).Add("field-name", fieldType.Name)
         }
     }
 
@@ -305,12 +309,12 @@ func storeRequestFile(request *http.Request, outDir string, filename string) err
     }
     defer inFile.Close();
 
-    maxFileSizeBytes := config.WEB_MAX_FILE_SIZE_KB.Get() * 1024
-    if (fileHeader.Size > int64(maxFileSizeBytes)) {
+    maxFileSizeKB := int64(config.WEB_MAX_FILE_SIZE_KB.Get())
+    if (fileHeader.Size > maxFileSizeKB * 1024) {
         return &fileSizeExceededError{
             Filename: filename,
-            FileSize: fileHeader.Size,
-            MaxFileSizeBytes: maxFileSizeBytes,
+            FileSizeKB: fileHeader.Size / 1024,
+            MaxFileSizeKB: maxFileSizeKB,
         };
     }
 
@@ -404,10 +408,10 @@ func (this TargetUserSelfOrAdmin) MarshalJSON() ([]byte, error) {
 // A special error for when a submitted file exceeds the defined maximum allowable size.
 type fileSizeExceededError struct {
     Filename string
-    FileSize int64
-    MaxFileSizeBytes int
+    FileSizeKB int64
+    MaxFileSizeKB int64
 }
 
 func (this *fileSizeExceededError) Error() string {
-    return fmt.Sprintf("File '%s' is %d bytes. The maximum allowable size is %d bytes.", this.Filename, this.FileSize, this.MaxFileSizeBytes);
+    return fmt.Sprintf("File '%s' is over %d KB. The maximum allowable size is %d KB.", this.Filename, this.FileSizeKB, this.MaxFileSizeKB);
 }

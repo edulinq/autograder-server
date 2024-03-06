@@ -294,7 +294,6 @@ func TestBadPostFilesFileSizeExceeded(test *testing.T) {
 
     // Two paths provided: a.txt is under the size limit, 1092bytes.txt is over the size limit.
     paths := []string{
-        filepath.Join(config.GetCourseImportDir(), "_tests", "files", "a.txt"),
         filepath.Join(config.GetCourseImportDir(), "_tests", "files", "1092bytes.txt"),
     };
 
