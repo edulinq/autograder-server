@@ -25,6 +25,37 @@ func reset() {
     lmstest.ClearUsersModifier();
 }
 
+func TestCourseSyncLMSUserEmails(test *testing.T) {
+    reset();
+    defer reset();
+
+    course := db.MustGetTestCourse();
+
+    emails := []string{"student@test.com"};
+    result, err := SyncLMSUserEmails(course, emails, false, false);
+    if (err != nil) {
+        test.Fatalf("Got an error when syncing known user: '%v'.", err);
+    }
+
+    if (result.Count() != 1) {
+        test.Fatalf("Unexpected sync count. Expected 1, Actual: %d.", result.Count());
+    }
+
+    if (len(result.Mod) != 1) {
+        test.Fatalf("Unexpected mod count. Expected 1, Actual: %d.", len(result.Mod));
+    }
+
+    emails = []string{"ZZZ@test.com"};
+    result, err = SyncLMSUserEmails(course, emails, false, false);
+    if (err != nil) {
+        test.Fatalf("Got an error when syncing unknown user: '%v'.", err);
+    }
+
+    if (result.Count() != 0) {
+        test.Fatalf("Unexpected sync count. Expected 0, Actual: %d.", result.Count());
+    }
+}
+
 func TestCourseSyncLMSUsers(test *testing.T) {
     // Leave the db in a good state after the test.
     defer reset();
