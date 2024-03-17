@@ -44,48 +44,6 @@ func GetUsersFromID(courseID string) (map[string]*model.User, error) {
     return GetUsers(course);
 }
 
-// Insert method that takes a course id, email [] string and resolves based on *, roles, emails to all emails
-func ResolveUsers(course *model.Course, emails []string) ([]string, error) {
-    if (backend == nil) {
-        return nil, fmt.Errorf("Database has not been opened.");
-    }
-    emailSet := map[string]any{};
-    roleSet := map[model.UserRole]any{};
-    // check for emails, roles, and * (all)
-    for _, email := range emails {
-        if (strings.Contains(email, "@") || (email == "")) {
-            emailSet[email] = nil;
-        } else {
-            if (email == "*") {
-                allRoles := model.GetAllRoles();
-                for role := range allRoles {
-                    roleSet[role] = nil;
-                }
-            } else {
-                roleSet[model.GetRole(strings.ToLower(email))] = nil;
-            }
-        }
-    }
-    if (len(roleSet) > 0) {
-        users, err := GetUsers(course);
-        if (err != nil) {
-            return nil, err;
-        }
-        for _, user := range users {
-            _, ok := roleSet[user.Role] // in the role set
-            if (ok) {
-                emailSet[user.Email] = nil;
-            }
-        }
-    }
-    emailSlice := make([]string, 0, len(emailSet));
-    for email := range emailSet {
-        emailSlice = append(emailSlice, email);
-    }
-    slices.Sort(emailSlice);
-    return emailSlice, nil;
-}
-
 func GetUser(course *model.Course, email string) (*model.User, error) {
     if (backend == nil) {
         return nil, fmt.Errorf("Database has not been opened.");
@@ -143,14 +101,14 @@ func RemoveUser(course *model.Course, email string) (bool, error) {
 // Sync a single user to the database.
 // See db.SyncUsers().
 func SyncUser(course *model.Course, user *model.User,
-    merge bool, dryRun bool, sendEmails bool) (*model.UserSyncResult, error) {
+        merge bool, dryRun bool, sendEmails bool) (*model.UserSyncResult, error) {
     if (backend == nil) {
         return nil, fmt.Errorf("Database has not been opened.");
     }
 
     newUsers := map[string]*model.User{
         user.Email: user,
-    }
+    };
 
     return SyncUsers(course, newUsers, merge, dryRun, sendEmails);
 }
@@ -163,7 +121,7 @@ func SyncUser(course *model.Course, user *model.User,
 // Passwords should either be left empty (and they will be randomly generated),
 // or set to the hash of the desired password.
 func SyncUsers(course *model.Course, newUsers map[string]*model.User,
-    merge bool, dryRun bool, sendEmails bool) (*model.UserSyncResult, error) {
+        merge bool, dryRun bool, sendEmails bool) (*model.UserSyncResult, error) {
     if (backend == nil) {
         return nil, fmt.Errorf("Database has not been opened.");
     }
@@ -263,4 +221,46 @@ func SyncUsers(course *model.Course, newUsers map[string]*model.User,
     }
 
     return syncResult, nil;
+}
+
+// Insert method that takes a course, email [] string and resolves based on *, roles, emails to all emails
+func ResolveUsers(course *model.Course, emails []string) ([]string, error) {
+    if (backend == nil) {
+        return nil, fmt.Errorf("Database has not been opened.");
+    }
+    emailSet := map[string]any{};
+    roleSet := map[model.UserRole]any{};
+    // check for emails, roles, and * (all)
+    for _, email := range emails {
+        if (strings.Contains(email, "@") || (email == "")) {
+            emailSet[email] = nil;
+        } else {
+            if (email == "*") {
+                allRoles := model.GetAllRoles();
+                for role := range allRoles {
+                    roleSet[role] = nil;
+                }
+            } else {
+                roleSet[model.GetRole(strings.ToLower(email))] = nil;
+            }
+        }
+    }
+    if (len(roleSet) > 0) {
+        users, err := GetUsers(course);
+        if (err != nil) {
+            return nil, err;
+        }
+        for _, user := range users {
+            _, ok := roleSet[user.Role] // in the role set
+            if (ok) {
+                emailSet[user.Email] = nil;
+            }
+        }
+    }
+    emailSlice := make([]string, 0, len(emailSet));
+    for email := range emailSet {
+        emailSlice = append(emailSlice, email);
+    }
+    slices.Sort(emailSlice);
+    return emailSlice, nil;
 }
