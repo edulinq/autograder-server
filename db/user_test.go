@@ -2,6 +2,7 @@ package db
 
 import (
     "testing"
+    "reflect"
 
     "github.com/edulinq/autograder/email"
     "github.com/edulinq/autograder/model"
@@ -12,6 +13,83 @@ type SyncNewUsersTestCase struct {
     merge bool
     dryRun bool
     sendEmails bool
+}
+
+type ResolveUsersTestCase struct {
+    input []string
+    expectedOutput []string
+    course *model.Course
+    actualOutput []string
+    err error
+}
+
+func (this *DBTests) DBTestResolveUsers(test *testing.T) {
+    defer ResetForTesting();
+
+    for i, testCase := range getResolveUsersTestCases() {
+        ResetForTesting();
+        if (i == 4) {
+            course := MustGetCourse(TEST_COURSE_ID);
+            SaveUser(course, model.NewUser("secondStudent@test.com", "Billy Bob", model.RoleStudent));
+            RemoveUser(course, "owner@test.com");
+        }
+        testCase.actualOutput, testCase.err = ResolveUsers(testCase.course, testCase.input);
+        if (testCase.err != nil) {
+            test.Errorf("Case %d (%+v): Resolve User failed: '%v'.", i, testCase, testCase.err);
+            continue;
+        }
+        if (!reflect.DeepEqual(testCase.expectedOutput, testCase.actualOutput)) {
+            test.Errorf("Case %d (%+v): Incorrect Output. Expected: '%v', actual '%v'.", i,
+                testCase, testCase.expectedOutput, testCase.actualOutput);
+            continue;
+        }
+    }
+}
+
+
+func getResolveUsersTestCases() ([]ResolveUsersTestCase) {
+    course := MustGetCourse(TEST_COURSE_ID);
+    testCases := []ResolveUsersTestCase{
+        ResolveUsersTestCase{
+            input: make([]string, 0, 1),
+            course: nil,
+        },
+        ResolveUsersTestCase{
+            input: make([]string, 0, 3),
+            course: nil,
+        },
+        ResolveUsersTestCase{
+            input: make([]string, 0, 1),
+            course: course,
+        },
+        ResolveUsersTestCase{
+            input: make([]string, 0, 1),
+            course: course,
+        },
+        ResolveUsersTestCase{
+            input: make([]string, 0, 5),
+            course: course,
+        },
+        ResolveUsersTestCase{
+            input: make([]string, 0, 2),
+            course: course,
+        },
+    }
+    testCases[0].input = append(testCases[0].input, "");
+    testCases[0].expectedOutput = append(testCases[0].expectedOutput, "");
+    testCases[1].input = append(testCases[1].input, "b@test.com", "a@test.com", "c@test.com");
+    testCases[1].expectedOutput = append(testCases[1].expectedOutput, "a@test.com", "b@test.com", "c@test.com");
+    testCases[2].input = append(testCases[2].input, "admin");
+    testCases[2].expectedOutput = append(testCases[2].expectedOutput, "admin@test.com");
+    testCases[3].input = append(testCases[3].input, "*");
+    testCases[3].expectedOutput = append(testCases[3].expectedOutput, "admin@test.com", "grader@test.com",
+        "other@test.com", "owner@test.com", "student@test.com");
+    testCases[4].input = append(testCases[4].input, "other", "*", "grader@test.com", "zoinks@test.com", "zoinks@test.com");
+    testCases[4].expectedOutput = append(testCases[4].expectedOutput, "admin@test.com", "grader@test.com",
+        "other@test.com", "secondStudent@test.com", "student@test.com", "zoinks@test.com");
+    testCases[5].input = append(testCases[5].input, "OTHER", "garbage");
+    testCases[5].expectedOutput = append(testCases[5].expectedOutput, "other@test.com");
+    return testCases;
 }
 
 func (this *DBTests) DBTestCourseSyncNewUsers(test *testing.T) {

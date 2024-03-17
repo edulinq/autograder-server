@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+    "slices"
 
 	"github.com/edulinq/autograder/log"
 	"github.com/edulinq/autograder/model"
@@ -52,7 +53,7 @@ func ResolveUsers(course *model.Course, emails []string) ([]string, error) {
     roleSet := map[model.UserRole]any{}
     // check for emails, roles, and * (all)
     for _, email := range emails {
-        if strings.Contains(email, "@") {
+        if (strings.Contains(email, "@") || (email == "")) {
             emailSet[email] = nil
         } else {
             if email == "*" {
@@ -61,7 +62,7 @@ func ResolveUsers(course *model.Course, emails []string) ([]string, error) {
                     roleSet[role] = nil
                 }
             } else {
-                roleSet[model.GetRole(email)] = nil
+                roleSet[model.GetRole(strings.ToLower(email))] = nil
             }
         }
     }
@@ -81,7 +82,8 @@ func ResolveUsers(course *model.Course, emails []string) ([]string, error) {
     for email := range emailSet {
         emailSlice = append(emailSlice, email)
     }
-    return emails, nil
+    slices.Sort(emailSlice);
+    return emailSlice, nil
 }
 
 func GetUser(course *model.Course, email string) (*model.User, error) {
