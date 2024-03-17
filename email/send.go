@@ -12,7 +12,7 @@ var testMessages []*Message = nil;
 
 func Send(to []string, subject string, body string, html bool) error {
     return SendMessage(&Message{
-				// Parse to[] and load them into a new string array
+        // Parse to[] and load them into a new string array
         To: to,
         Subject: subject,
         Body: body,
