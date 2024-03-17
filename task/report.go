@@ -20,6 +20,7 @@ func RunReportTask(course *model.Course, rawTask tasks.ScheduledTask) (bool, err
     if (task.Disable) {
         return true, nil;
     }
+
     return true, RunReport(course, task.To);
 }
 
