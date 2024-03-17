@@ -49,12 +49,6 @@ func GetRoleString(role UserRole) string {
 }
 
 func GetAllRoles() map[UserRole]string {
-    // var allRoles = map[UserRole]bool
-    // for role, _ := range roleToString {
-    //     allRoles[role] = true
-    // }
-
-    // return allRoles
     return roleToString
 }
 
