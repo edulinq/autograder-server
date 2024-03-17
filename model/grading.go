@@ -32,6 +32,8 @@ type GradingInfo struct {
     Questions []*GradedQuestion `json:"questions"`
     GradingStartTime common.Timestamp `json:"grading_start_time"`
     GradingEndTime common.Timestamp `json:"grading_end_time"`
+    Prologue string `json:"prologue,omitempty"`
+    Epilogue string `json:"epilogue,omitempty"`
 
     // Additional pass-through information that the grader can use.
     AdditionalInfo map[string]any `json:"additional-info"`

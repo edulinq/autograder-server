@@ -101,10 +101,10 @@ func TestFetchLogs(test *testing.T) {
         {model.RoleAdmin, false, "", timeAfterLogs, "", "", nil, []*log.Record{}},
 
         // Parse Errors.
-        {model.RoleAdmin, false, "ZZZ", "", "", "", []string{"Could not parse 'level': 'Unknown log level 'ZZZ'.'."}, nil},
-        {model.RoleAdmin, false, "", "ZZZ", "", "", []string{"Could not parse 'after': 'ZZZ'."}, nil},
-        {model.RoleAdmin, false, "", "", "!ZZZ", "", []string{"Improperly formatted 'assignment-id': 'IDs must only have letters, digits, and single sequences of periods, underscores, and hyphens, found '!zzz'.'."}, nil},
-        {model.RoleAdmin, false, "", "", "ZZZ", "", []string{"Unknown assignment: 'zzz'."}, nil},
+        {model.RoleAdmin, false, "ZZZ", "", "", "", []string{"Could not parse 'level' component of log query ('ZZZ'): 'Unknown log level 'ZZZ'.'."}, nil},
+        {model.RoleAdmin, false, "", "ZZZ", "", "", []string{`Could not parse 'after' component of log query ('ZZZ'): 'Failed to parse timestamp string 'ZZZ': 'parsing time "ZZZ" as "2006-01-02T15:04:05Z07:00": cannot parse "ZZZ" as "2006"'.'.`}, nil},
+        {model.RoleAdmin, false, "", "", "!ZZZ", "", []string{"Could not parse 'assignment' component of log query ('!ZZZ'): 'IDs must only have letters, digits, and single sequences of periods, underscores, and hyphens, found '!zzz'.'."}, nil},
+        {model.RoleAdmin, false, "", "", "ZZZ", "", []string{"Unknown assignment given for 'assignment' component of log query ('ZZZ')."}, nil},
         {model.RoleAdmin, false, "", "", "", "ZZZ", []string{"Could not find user: 'ZZZ'."}, nil},
     };
 

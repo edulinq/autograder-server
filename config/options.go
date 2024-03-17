@@ -41,6 +41,7 @@ var (
 
     // Server
     WEB_PORT = MustNewIntOption("web.port", 8080, "The port for the web interface to serve on.");
+    WEB_MAX_FILE_SIZE_KB = MustNewIntOption("web.maxsizekb", 2 * 1024, "The maximum allowed file size (in KB) submitted via POST request. The default is 2048 KB (2 MB).");
 
     // Database
     DB_TYPE = MustNewStringOption("db.type", "disk", "The type of database to use.");

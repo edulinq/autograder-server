@@ -270,6 +270,45 @@ func TestBadPostFilesStoreFail(test *testing.T) {
     }
 }
 
+func TestBadPostFilesFileSizeExceeded(test *testing.T) {
+    resetMaxFileSize := config.WEB_MAX_FILE_SIZE_KB.Get()
+
+    // Set size to 1 KB for testing, then reset when done testing.
+    config.WEB_MAX_FILE_SIZE_KB.Set(1);
+    defer config.WEB_MAX_FILE_SIZE_KB.Set(resetMaxFileSize)
+
+    endpoint := `/test/api/post-files/bad/size-exceeded`;
+
+    type requestType struct {
+        APIRequestCourseUserContext
+        MinRoleStudent
+
+        Files POSTFiles
+    }
+
+    handler := func(request *requestType) (*any, *APIError) {
+        return nil, nil;
+    }
+
+    routes = append(routes, NewAPIRoute(endpoint, handler));
+
+    // Two paths provided: a.txt is under the size limit, 1092bytes.txt is over the size limit.
+    paths := []string{
+        filepath.Join(config.GetCourseImportDir(), "_tests", "files", "1092bytes.txt"),
+    };
+
+    response := SendTestAPIRequestFull(test, endpoint, nil, paths, model.RoleAdmin);
+    if (response.Success) {
+        test.Fatalf("Request did not generate an error: '%v'.", response);
+    }
+
+    expectedLocator := "-036";
+    if (response.Locator != expectedLocator) {
+        test.Fatalf("Error does not have the correct locator. Expected '%s', found '%s'.",
+            expectedLocator, response.Locator);
+    }
+}
+
 func TestTargetUserJSON(test *testing.T) {
     createTargetType := func(targetUser TargetUser) TargetUser {
         return targetUser;
