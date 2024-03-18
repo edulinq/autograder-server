@@ -3,8 +3,8 @@ package db
 import (
     "errors"
     "fmt"
-    "strings"
     "slices"
+    "strings"
 
     "github.com/edulinq/autograder/log"
     "github.com/edulinq/autograder/model"
@@ -223,44 +223,71 @@ func SyncUsers(course *model.Course, newUsers map[string]*model.User,
     return syncResult, nil;
 }
 
-// Insert method that takes a course, email [] string and resolves based on *, roles, emails to all emails
+// Convert roles to the associated user emails for a given course.
+// Returns a slice of lowercase emails without duplicates.
+// Will error if given non-emails without a valid course.
+// Will warn if given roles that do not exist within a course.
 func ResolveUsers(course *model.Course, emails []string) ([]string, error) {
     if (backend == nil) {
         return nil, fmt.Errorf("Database has not been opened.");
     }
+
     emailSet := map[string]any{};
-    roleSet := map[model.UserRole]any{};
+    roleSet := map[string]any{};
+
     // check for emails, roles, and * (all)
     for _, email := range emails {
-        if (strings.Contains(email, "@") || (email == "")) {
+        if (email == "") {
+            continue;
+        }
+
+        if (strings.Contains(email, "@")) {
             emailSet[strings.ToLower(email)] = nil;
         } else {
             if (email == "*") {
-                allRoles := model.GetAllRoles();
+                allRoles := model.GetAllRoleStrings();
                 for role := range allRoles {
                     roleSet[role] = nil;
                 }
             } else {
-                roleSet[model.GetRole(strings.ToLower(email))] = nil;
+                roleSet[strings.ToLower(email)] = nil;
             }
         }
     }
+
     if (len(roleSet) > 0) {
         users, err := GetUsers(course);
+
         if (err != nil) {
             return nil, err;
         }
+
+        allowedRoles := make([]string, 0, len(model.GetAllRoleStrings()));
+        for role := range model.GetAllRoleStrings() {
+            allowedRoles = append(allowedRoles, role);
+        }
+
+        for roleString := range roleSet {
+            if (!slices.Contains(allowedRoles, roleString)) {
+                fmt.Errorf("Resolve Users was given an invalid role: '%s' for the course: '%+v'.", roleString, course);
+            }
+        }
+
         for _, user := range users {
-            _, ok := roleSet[user.Role] // in the role set
+            _, ok := roleSet[model.GetRoleString(user.Role)] // in the role set
             if (ok) {
                 emailSet[strings.ToLower(user.Email)] = nil;
             }
         }
     }
+
     emailSlice := make([]string, 0, len(emailSet));
+
     for email := range emailSet {
         emailSlice = append(emailSlice, email);
     }
+
     slices.Sort(emailSlice);
+
     return emailSlice, nil;
 }

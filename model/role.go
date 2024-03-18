@@ -49,7 +49,11 @@ func GetRoleString(role UserRole) string {
 }
 
 func GetAllRoles() map[UserRole]string {
-    return roleToString
+    return roleToString;
+}
+
+func GetAllRoleStrings() map[string]UserRole {
+    return stringToRole;
 }
 
 func (this UserRole) MarshalJSON() ([]byte, error) {

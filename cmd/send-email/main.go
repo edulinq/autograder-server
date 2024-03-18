@@ -4,9 +4,9 @@ import (
     "github.com/alecthomas/kong"
 
     "github.com/edulinq/autograder/config"
+    "github.com/edulinq/autograder/db"
     "github.com/edulinq/autograder/email"
     "github.com/edulinq/autograder/log"
-    "github.com/edulinq/autograder/db"
 )
 
 var args struct {
@@ -14,7 +14,6 @@ var args struct {
     To []string `help:"Email recipents." required:""`
     Subject string `help:"Email subject." required:""`
     Body string `help:"Email body." required:""`
-    //TODO: fix this to be an optional argument
     Course string `help:"Course ID." default:""`
 }
 
@@ -28,17 +27,16 @@ func main() {
         log.Fatal("Could not load config options.", err);
     }
 
-    // If database cannot get course and using role based addressing
-    // Then, resolve users will return an error
-    // So, we do not error check on the get course method
     course, err := db.GetCourse(args.Course);
+    if (err != nil) {
+        log.Fatal("Failed to get course: '%s', '%w'.", args.Course, err);
+    }
+
     emailTo, err := db.ResolveUsers(course, args.To);
     if (err != nil) {
-        log.Fatal("Failed to resolve users:'%s', '%w'.", course.GetName(), err);
+        log.Fatal("Failed to resolve users: '%s', '%w'.", course.GetName(), err);
     }
-    if (err != nil) {
-        log.Fatal("Could not resolve users.", err);
-    }
+
     err = email.Send(emailTo, args.Subject, args.Body, false);
     if (err != nil) {
         log.Fatal("Could not send email.", err);

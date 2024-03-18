@@ -4,11 +4,11 @@ import (
     "fmt"
 
     "github.com/edulinq/autograder/email"
+    "github.com/edulinq/autograder/db"
     "github.com/edulinq/autograder/log"
     "github.com/edulinq/autograder/model"
     "github.com/edulinq/autograder/model/tasks"
     "github.com/edulinq/autograder/report"
-    "github.com/edulinq/autograder/db"
 )
 
 func RunReportTask(course *model.Course, rawTask tasks.ScheduledTask) (bool, error) {
@@ -41,6 +41,7 @@ func RunReport(course *model.Course, to []string) error {
     if (err != nil) {
         return fmt.Errorf("Failed to resolve users for course '%s': '%w'.", course.GetName(), err);
     }
+
     err = email.Send(emailTo, subject, html, true);
     if (err != nil) {
         return fmt.Errorf("Failed to send scoring report for course '%s': '%w'.", course.GetName(), err);
