@@ -233,7 +233,7 @@ func ResolveUsers(course *model.Course, emails []string) ([]string, error) {
     // check for emails, roles, and * (all)
     for _, email := range emails {
         if (strings.Contains(email, "@") || (email == "")) {
-            emailSet[email] = nil;
+            emailSet[strings.ToLower(email)] = nil;
         } else {
             if (email == "*") {
                 allRoles := model.GetAllRoles();
@@ -253,7 +253,7 @@ func ResolveUsers(course *model.Course, emails []string) ([]string, error) {
         for _, user := range users {
             _, ok := roleSet[user.Role] // in the role set
             if (ok) {
-                emailSet[user.Email] = nil;
+                emailSet[strings.ToLower(user.Email)] = nil;
             }
         }
     }

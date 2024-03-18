@@ -30,7 +30,7 @@ func (this *DBTests) DBTestResolveUsers(test *testing.T) {
         ResetForTesting();
         if (i == 4) {
             course := MustGetCourse(TEST_COURSE_ID);
-            SaveUser(course, model.NewUser("secondStudent@test.com", "Billy Bob", model.RoleStudent));
+            SaveUser(course, model.NewUser("second_student@test.com", "Billy Bob", model.RoleStudent));
             RemoveUser(course, "owner@test.com");
         }
         testCase.actualOutput, testCase.err = ResolveUsers(testCase.course, testCase.input);
@@ -84,9 +84,9 @@ func getResolveUsersTestCases() ([]ResolveUsersTestCase) {
     testCases[3].input = append(testCases[3].input, "*");
     testCases[3].expectedOutput = append(testCases[3].expectedOutput, "admin@test.com", "grader@test.com",
         "other@test.com", "owner@test.com", "student@test.com");
-    testCases[4].input = append(testCases[4].input, "other", "*", "grader@test.com", "zoinks@test.com", "zoinks@test.com");
+    testCases[4].input = append(testCases[4].input, "other", "*", "grader@test.com", "zoinks@test.com", "ZoinKS@teSt.Com");
     testCases[4].expectedOutput = append(testCases[4].expectedOutput, "admin@test.com", "grader@test.com",
-        "other@test.com", "secondStudent@test.com", "student@test.com", "zoinks@test.com");
+        "other@test.com", "second_student@test.com", "student@test.com", "zoinks@test.com");
     testCases[5].input = append(testCases[5].input, "OTHER", "garbage");
     testCases[5].expectedOutput = append(testCases[5].expectedOutput, "other@test.com");
     return testCases;
