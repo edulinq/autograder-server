@@ -22,8 +22,11 @@ func (this *DBTests) DBTestResolveUsers(test *testing.T) {
         {[]string{""}, make([]string, 0, 1), nil, nil, make([]string, 0, 1)},
         {[]string{"b@test.com", "a@test.com", "c@test.com"}, []string{"a@test.com", "b@test.com", "c@test.com"}, nil, nil, make([]string, 0, 1)},
         {[]string{"admin"}, []string{"admin@test.com"}, MustGetCourse(TEST_COURSE_ID), nil, make([]string, 0, 1)},
-        {[]string{"*"}, []string{"admin@test.com", "grader@test.com", "other@test.com", "owner@test.com", "student@test.com"}, MustGetCourse(TEST_COURSE_ID), nil, make([]string, 0, 1)},
-        {[]string{"other", "*", "grader@test.com", "zoinks@test.com", "ZoinKS@teSt.Com"}, []string{"admin@test.com", "grader@test.com", "other@test.com", "second_student@test.com", "student@test.com", "zoinks@test.com"}, MustGetCourse(TEST_COURSE_ID), []*model.User{model.NewUser("second_student@test.com", "", model.GetRole("student"))}, []string{"owner@test.com"}},
+        {[]string{"*"}, []string{"admin@test.com", "grader@test.com", "other@test.com", "owner@test.com", "student@test.com"},
+            MustGetCourse(TEST_COURSE_ID), nil, make([]string, 0, 1)},
+        {[]string{"other", "*", "grader@test.com", "zoinks@test.com", "ZoinKS@teSt.Com"}, []string{"admin@test.com", "grader@test.com",
+            "other@test.com", "second_student@test.com", "student@test.com", "zoinks@test.com"}, MustGetCourse(TEST_COURSE_ID),
+            []*model.User{model.NewUser("second_student@test.com", "", model.GetRole("student"))}, []string{"owner@test.com"}},
         {[]string{"OTHER", "garbage"}, []string{"other@test.com"}, MustGetCourse(TEST_COURSE_ID), nil, make([]string, 0, 1)},
     };
 
