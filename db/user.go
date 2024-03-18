@@ -269,7 +269,7 @@ func ResolveUsers(course *model.Course, emails []string) ([]string, error) {
 
         for roleString := range roleSet {
             if (!slices.Contains(allowedRoles, roleString)) {
-                fmt.Errorf("Resolve Users was given an invalid role: '%s' for the course: '%+v'.", roleString, course);
+                log.Warn("Resolve Users was given an invalid role.", log.NewCourseAttr(course.GetID()), log.NewAttr("Role", roleString));
             }
         }
 
