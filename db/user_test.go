@@ -1,8 +1,8 @@
 package db
 
 import (
-    "testing"
     "reflect"
+    "testing"
 
     "github.com/edulinq/autograder/email"
     "github.com/edulinq/autograder/model"
