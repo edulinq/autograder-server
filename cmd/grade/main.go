@@ -36,7 +36,7 @@ func main() {
 
     result, reject, err := grader.GradeDefault(assignment, args.Submission, args.User, args.Message);
     if (err != nil) {
-        if (result.HasTextOutput()) {
+        if ((result != nil) && result.HasTextOutput()) {
             fmt.Println("Grading failed, but output was recovered:");
             fmt.Println(result.GetCombinedOutput());
         }
