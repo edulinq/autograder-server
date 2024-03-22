@@ -5,23 +5,23 @@ import (
 )
 
 func Trace(message string, args ...any) {
-    logToLevel(LevelTrace, message, args...);
+    LogToLevel(LevelTrace, message, args...);
 }
 
 func Debug(message string, args ...any) {
-    logToLevel(LevelDebug, message, args...);
+    LogToLevel(LevelDebug, message, args...);
 }
 
 func Info(message string, args ...any) {
-    logToLevel(LevelInfo, message, args...);
+    LogToLevel(LevelInfo, message, args...);
 }
 
 func Warn(message string, args ...any) {
-    logToLevel(LevelWarn, message, args...);
+    LogToLevel(LevelWarn, message, args...);
 }
 
 func Error(message string, args ...any) {
-    logToLevel(LevelError, message, args...);
+    LogToLevel(LevelError, message, args...);
 }
 
 func Fatal(message string, args ...any) {
@@ -31,7 +31,7 @@ func Fatal(message string, args ...any) {
 func FatalWithCode(code int, message string, args ...any) {
     SetBackgroundLogging(false);
 
-    logToLevel(LevelFatal, message, args...);
+    LogToLevel(LevelFatal, message, args...);
     os.Exit(code);
 }
 

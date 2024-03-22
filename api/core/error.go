@@ -40,6 +40,7 @@ type APIError struct {
     Locator string
     Endpoint string
     Timestamp common.Timestamp
+    LogLevel log.LogLevel
     HTTPStatus int
     InternalText string
     ResponseText string
@@ -85,7 +86,7 @@ func (this *APIError) Log() {
         args = append(args, log.NewUserAttr(this.UserEmail));
     }
 
-    log.Error("API Error", args...);
+    log.LogToLevel(this.LogLevel, "API Error", args...);
 }
 
 // Add additional context to this error.
@@ -155,6 +156,7 @@ func NewBadRequestError(locator string, request *APIRequest, message string) *AP
         Locator: locator,
         Endpoint: request.Endpoint,
         Timestamp: request.Timestamp,
+        LogLevel: log.LevelInfo,
         HTTPStatus: HTTP_STATUS_BAD_REQUEST,
         InternalText: message,
         ResponseText: message,
@@ -167,6 +169,7 @@ func NewBadCourseRequestError(locator string, request *APIRequestCourseUserConte
         Locator: locator,
         Endpoint: request.Endpoint,
         Timestamp: request.Timestamp,
+        LogLevel: log.LevelInfo,
         HTTPStatus: HTTP_STATUS_BAD_REQUEST,
         InternalText: message,
         ResponseText: message,
@@ -184,6 +187,7 @@ func NewBareBadRequestError(locator string, endpoint string, message string) *AP
         Locator: locator,
         Endpoint: endpoint,
         Timestamp: common.NowTimestamp(),
+        LogLevel: log.LevelInfo,
         HTTPStatus: HTTP_STATUS_BAD_REQUEST,
         InternalText: message,
         ResponseText: message,
@@ -196,6 +200,7 @@ func NewAuthBadRequestError(locator string, request *APIRequestCourseUserContext
         Locator: locator,
         Endpoint: request.Endpoint,
         Timestamp: request.Timestamp,
+        LogLevel: log.LevelInfo,
         HTTPStatus: HTTP_STATUS_AUTH_ERROR,
         InternalText: fmt.Sprintf("Authentication failure: '%s'.", internalMessage),
         ResponseText: "Authentication failure, check course, email, and password.",
@@ -212,6 +217,7 @@ func NewBadPermissionsError(locator string, request *APIRequestCourseUserContext
         Locator: locator,
         Endpoint: request.Endpoint,
         Timestamp: request.Timestamp,
+        LogLevel: log.LevelInfo,
         HTTPStatus: HTTP_PERMISSIONS_ERROR,
         InternalText: fmt.Sprintf("Insufficient Permissions: '%s'.", internalMessage),
         ResponseText: "You have insufficient permissions for the requested operation.",
@@ -231,6 +237,7 @@ func NewInternalError(locator string, request *APIRequestCourseUserContext, inte
         Locator: locator,
         Endpoint: request.Endpoint,
         Timestamp: request.Timestamp,
+        LogLevel: log.LevelError,
         HTTPStatus: HTTP_STATUS_SERVER_ERROR,
         InternalText: internalMessage,
         ResponseText: fmt.Sprintf("The server failed to process your request. Please contact an adimistrator with this ID '%s'.", request.RequestID),
@@ -248,6 +255,7 @@ func NewBareInternalError(locator string, endpoint string, internalMessage strin
         Locator: locator,
         Endpoint: endpoint,
         Timestamp: common.NowTimestamp(),
+        LogLevel: log.LevelError,
         HTTPStatus: HTTP_STATUS_SERVER_ERROR,
         InternalText: internalMessage,
         ResponseText: fmt.Sprintf("The server failed to process your request. Please contact an adimistrator with this ID '%s'.", locator),

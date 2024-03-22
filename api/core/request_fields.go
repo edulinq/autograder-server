@@ -4,6 +4,7 @@ package core
 
 import (
     "encoding/json"
+    "errors"
     "fmt"
     "io"
     "net/http"
@@ -11,6 +12,7 @@ import (
     "path/filepath"
     "reflect"
 
+    "github.com/edulinq/autograder/config"
     "github.com/edulinq/autograder/db"
     "github.com/edulinq/autograder/model"
     "github.com/edulinq/autograder/util"
@@ -205,8 +207,16 @@ func checkRequestPostFiles(request *http.Request, endpoint string, apiRequest an
     postFiles, err := storeRequestFiles(request);
 
     if (err != nil) {
-        return NewBareInternalError("-029", endpoint, "Failed to store files from POST.").Err(err).
-                Add("struct-name", structName).Add("field-name", fieldType.Name);
+        var fileSizeExceededError *fileSizeExceededError
+        if errors.As(err, &fileSizeExceededError) {
+            return NewBareBadRequestError("-036", endpoint, err.Error()).Err(err).
+                Add("struct-name", structName).Add("field-name", fieldType.Name).
+                Add("filename", fileSizeExceededError.Filename).Add("file-size", fileSizeExceededError.FileSizeKB).
+                Add("max-file-size-kb", fileSizeExceededError.MaxFileSizeKB)
+        } else {
+            return NewBareInternalError("-029", endpoint, "Failed to store files from POST.").Err(err).
+                Add("struct-name", structName).Add("field-name", fieldType.Name)
+        }
     }
 
     if (postFiles == nil) {
@@ -292,11 +302,20 @@ func storeRequestFiles(request *http.Request) (*POSTFiles, error) {
 }
 
 func storeRequestFile(request *http.Request, outDir string, filename string) error {
-    inFile, _, err := request.FormFile(filename);
+    inFile, fileHeader, err := request.FormFile(filename);
     if (err != nil) {
         return fmt.Errorf("Failed to access request file '%s': '%w'.", filename, err);
     }
     defer inFile.Close();
+
+    maxFileSizeKB := int64(config.WEB_MAX_FILE_SIZE_KB.Get())
+    if (fileHeader.Size > maxFileSizeKB * 1024) {
+        return &fileSizeExceededError{
+            Filename: filename,
+            FileSizeKB: fileHeader.Size / 1024,
+            MaxFileSizeKB: maxFileSizeKB,
+        };
+    }
 
     outPath := filepath.Join(outDir, filename);
 
@@ -383,4 +402,15 @@ func (this *TargetUserSelfOrAdmin) UnmarshalJSON(data []byte) error {
 
 func (this TargetUserSelfOrAdmin) MarshalJSON() ([]byte, error) {
     return this.TargetUser.MarshalJSON();
+}
+
+// A special error for when a submitted file exceeds the defined maximum allowable size.
+type fileSizeExceededError struct {
+    Filename string
+    FileSizeKB int64
+    MaxFileSizeKB int64
+}
+
+func (this *fileSizeExceededError) Error() string {
+    return fmt.Sprintf("File '%s' is %d KB. The maximum allowable size is %d KB.", this.Filename, this.FileSizeKB, this.MaxFileSizeKB);
 }

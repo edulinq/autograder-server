@@ -140,7 +140,7 @@ func Log(level LogLevel, message string, course string, assignment string, user 
     LogDirectRecord(record);
 }
 
-func logToLevel(level LogLevel, message string, args ...any) {
+func LogToLevel(level LogLevel, message string, args ...any) {
     course, assignment, user, logError, attributes, err := parseArgs(args...);
     if (err != nil) {
         Error("Failed to parse logging arguments.", err);

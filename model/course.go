@@ -33,6 +33,7 @@ type Course struct {
     CourseUpdate []*tasks.CourseUpdateTask `json:"course-update,omitempty"`
     Report []*tasks.ReportTask `json:"report,omitempty"`
     ScoringUpload []*tasks.ScoringUploadTask `json:"scoring-upload,omitempty"`
+    EmailLogs []*tasks.EmailLogsTask `json:"email-logs,omitempty"`
 
     // Internal fields the autograder will set.
     Assignments map[string]*Assignment `json:"-"`
@@ -136,6 +137,10 @@ func (this *Course) Validate() error {
     }
 
     for _, task := range this.ScoringUpload {
+        this.scheduledTasks = append(this.scheduledTasks, task);
+    }
+
+    for _, task := range this.EmailLogs {
         this.scheduledTasks = append(this.scheduledTasks, task);
     }
 

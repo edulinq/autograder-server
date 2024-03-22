@@ -20,10 +20,14 @@ var args struct {
     OutPath string `help:"Option path to output a JSON grading result." type:"path"`
     User string `help:"User email for the submission." default:"testuser"`
     Message string `help:"Submission message." default:""`
+    CheckRejection bool `help:"Check if this submission should be rejected (bypassed by default)." default:"false"`
 }
 
 func main() {
-    kong.Parse(&args);
+    kong.Parse(&args,
+        kong.Description("Perform a grading."),
+    );
+
     err := config.HandleConfigArgs(args.ConfigArgs);
     if (err != nil) {
         log.Fatal("Could not load config options.", err);
@@ -34,9 +38,9 @@ func main() {
 
     assignment := db.MustGetAssignment(args.Course, args.Assignment);
 
-    result, reject, err := grader.GradeDefault(assignment, args.Submission, args.User, args.Message);
+    result, reject, err := grader.Grade(assignment, args.Submission, args.User, args.Message, args.CheckRejection, grader.GetDefaultGradeOptions());
     if (err != nil) {
-        if (result.HasTextOutput()) {
+        if ((result != nil) && result.HasTextOutput()) {
             fmt.Println("Grading failed, but output was recovered:");
             fmt.Println(result.GetCombinedOutput());
         }

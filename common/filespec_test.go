@@ -115,34 +115,34 @@ func TestFileSpecCopy(test *testing.T) {
 
 var testCasesCopy []*testCaseCopy = []*testCaseCopy{
     &testCaseCopy{
-        FileSpec{Type: "path", Path: "_tests/files/a.txt"},
+        FileSpec{Type: "path", Path: "_tests/files/filespec_test/spec.txt"},
         false,
-        "1d81dcf2c1a5b659901389d694c57248",
+        "4b6070442f731cb7a83b18e0145c6be1",
     },
     &testCaseCopy{
-        FileSpec{Type: "path", Path: "_tests/files"},
+        FileSpec{Type: "path", Path: "_tests/files/filespec_test"},
         false,
-        "6481ba58a09ec62ff50325df54cf8966",
+        "7bf405075ec83eec2c44ac44ce3385c2",
     },
     &testCaseCopy{
-        FileSpec{Type: "path", Path: "_tests/files"},
+        FileSpec{Type: "path", Path: "_tests/files/filespec_test"},
         true,
-        "1d81dcf2c1a5b659901389d694c57248",
+        "4b6070442f731cb7a83b18e0145c6be1",
     },
     &testCaseCopy{
-        FileSpec{Type: "path", Path: "_tests/files/a.txt", Dest: "test.txt"},
+        FileSpec{Type: "path", Path: "_tests/files/filespec_test/spec.txt", Dest: "test.txt"},
         false,
         "6911edb915da8cd1fdf1e4b1483d604e",
     },
     &testCaseCopy{
-        FileSpec{Type: "path", Path: "_tests/files", Dest: "test"},
+        FileSpec{Type: "path", Path: "_tests/files/filespec_test", Dest: "test"},
         false,
-        "f2b2da8886520af505cd152f80cdce23",
+        "720b5768bf364f35c316976e549f1bcd",
     },
     &testCaseCopy{
-        FileSpec{Type: "path", Path: "_tests/files", Dest: "test"},
+        FileSpec{Type: "path", Path: "_tests/files/filespec_test", Dest: "test"},
         true,
-        "f2b2da8886520af505cd152f80cdce23",
+        "720b5768bf364f35c316976e549f1bcd",
     },
 };
 

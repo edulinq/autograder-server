@@ -68,7 +68,9 @@ func SyncLMSUserEmails(course *model.Course, emails []string, dryRun bool, sendE
             return nil, err;
         }
 
-        lmsUsers[lmsUser.Email] = lmsUser;
+        if (lmsUser != nil) {
+            lmsUsers[lmsUser.Email] = lmsUser;
+        }
     }
 
     return syncLMSUsers(course, dryRun, sendEmails, lmsUsers, emails);
