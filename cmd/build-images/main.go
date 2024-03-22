@@ -35,11 +35,27 @@ func main() {
 
     var assignments []*model.Assignment;
 
-    if (args.Assignment != "") {
-        assignments = append(assignments, db.MustGetAssignment(args.Course, args.Assignment));
+    if (args.Course != "") {
+        course := db.MustGetCourse(args.Course);
+
+        if (args.Assignment != "") {
+            assignment := course.GetAssignment(args.Assignment);
+            if (assignment == nil) {
+                log.Fatal(fmt.Sprintf("Unknown assignment: '%s'.", args.Assignment));
+            }
+
+            fmt.Printf("Building assignment image '%s' from %s.\n", assignment.GetID(), course.GetID());
+            assignments = append(assignments, assignment);
+        } else {
+            fmt.Printf("Building all assignment images from %s.\n", course.GetID());
+            for _, assignment := range course.GetSortedAssignments() {
+                assignments = append(assignments, assignment);
+            }
+        }
     } else {
+        fmt.Println("Building all assignment images from all courses.");
         for _, course := range db.MustGetCourses() {
-            for _, assignment := range course.GetAssignments() {
+            for _, assignment := range course.GetSortedAssignments() {
                 assignments = append(assignments, assignment);
             }
         }
