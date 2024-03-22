@@ -25,6 +25,7 @@ import (
 type ConfigArgs struct {
     ConfigPath []string `help:"Path to config file to load." type:"existingfile"`
     Config map[string]string `help:"Config options." short:"c"`
+    LogLevel string `help:"Set the text (command line) logging level. Shortcut for '-c log.text.level'."`
     Debug bool `help:"Enable general debugging. Shortcut for '-c debug=true'." default:"false"`
     Testing bool `help:"Enable all options for general testing. Shortcut for '-c debug=true -c api.noauth=true -c grader.nostore=true -c tasks.disable=true'. Not compatible with --unit-testing." default:"false"`
     UnitTesting bool `help:"Enable all options for unit testing and load test data/courses. Not compatible with --testing." default:"false"`
@@ -80,6 +81,10 @@ func HandleConfigArgsFull(args ConfigArgs, cwd string, skipEnv bool) error {
     }
 
     // Set special options.
+
+    if (args.LogLevel != "") {
+        LOG_TEXT_LEVEL.Set(args.LogLevel);
+    }
 
     if (args.Debug) {
         DEBUG.Set(true);
