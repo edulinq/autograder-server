@@ -29,19 +29,21 @@ func GetDefaultGradeOptions() GradeOptions {
 // Grade with default options pulled from config.
 func GradeDefault(assignment *model.Assignment, submissionPath string, user string, message string) (
         *model.GradingResult, RejectReason, error) {
-    return Grade(assignment, submissionPath, user, message, GetDefaultGradeOptions());
+    return Grade(assignment, submissionPath, user, message, true, GetDefaultGradeOptions());
 }
 
 // Grade with custom options.
-func Grade(assignment *model.Assignment, submissionPath string, user string, message string, options GradeOptions) (
+func Grade(assignment *model.Assignment, submissionPath string, user string, message string, checkRejection bool, options GradeOptions) (
         *model.GradingResult, RejectReason, error) {
-    reject, err := checkForRejection(assignment, submissionPath, user, message);
-    if (err != nil) {
-        return nil, nil, fmt.Errorf("Failed to check for rejection: '%w'.", err);
-    }
+    if (checkRejection) {
+        reject, err := checkForRejection(assignment, submissionPath, user, message);
+        if (err != nil) {
+            return nil, nil, fmt.Errorf("Failed to check for rejection: '%w'.", err);
+        }
 
-    if (reject != nil) {
-        return nil, reject, nil;
+        if (reject != nil) {
+            return nil, reject, nil;
+        }
     }
 
     gradingKey := fmt.Sprintf("%s::%s::%s", assignment.GetCourse().GetID(), assignment.GetID(), user);
