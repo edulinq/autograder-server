@@ -223,19 +223,16 @@ func SyncUsers(course *model.Course, newUsers map[string]*model.User,
     return syncResult, nil;
 }
 
-// Convert roles to the associated user emails for a given course.
-// Returns a slice of lowercase emails without duplicates.
-// Will error if given non-emails without a valid course.
-// Will warn if given roles that do not exist within a course.
+// ResolveUsers is a helper function to map a User.Role to all User.Email's for that course.
+// The function takes an optional course and a list of strings, containing emails, roles, and * as input.
+// The function returns an alphanumerically sorted slice of lowercase emails without duplicates.
+// The function returns an error if a course cannot be opened and the input contains roles or a *.
+// The function will issue a warning if it's given a valid course and an invalid role.
 func ResolveUsers(course *model.Course, emails []string) ([]string, error) {
-    if (backend == nil) {
-        return nil, fmt.Errorf("Database has not been opened.");
-    }
-
     emailSet := map[string]any{};
     roleSet := map[string]any{};
 
-    // check for emails, roles, and * (all)
+    // Iterate over every given string, checking for emails, roles, and *, which denotes all roles.
     for _, email := range emails {
         if (email == "") {
             continue;
@@ -256,6 +253,10 @@ func ResolveUsers(course *model.Course, emails []string) ([]string, error) {
     }
 
     if (len(roleSet) > 0) {
+        if (backend == nil) {
+            return nil, fmt.Errorf("Database has not been opened.");
+        }
+
         users, err := GetUsers(course);
 
         if (err != nil) {
@@ -274,7 +275,8 @@ func ResolveUsers(course *model.Course, emails []string) ([]string, error) {
         }
 
         for _, user := range users {
-            _, ok := roleSet[model.GetRoleString(user.Role)] // in the role set
+            // Add a User.email if their User.Role is in the role set.
+            _, ok := roleSet[model.GetRoleString(user.Role)];
             if (ok) {
                 emailSet[strings.ToLower(user.Email)] = nil;
             }
