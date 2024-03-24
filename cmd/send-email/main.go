@@ -7,7 +7,6 @@ import (
     "github.com/edulinq/autograder/db"
     "github.com/edulinq/autograder/email"
     "github.com/edulinq/autograder/log"
-    "github.com/edulinq/autograder/model"
 )
 
 var args struct {
@@ -28,22 +27,16 @@ func main() {
         log.Fatal("Could not load config options.", err);
     }
 
-    var course *model.Course;
     if (args.Course != "") {
-        course, err = db.GetCourse(args.Course);
+        course := db.MustGetCourse(args.Course);
+
+        args.To, err = db.ResolveUsers(course, args.To);
         if (err != nil) {
-            log.Fatal("Failed to get course: '%s', '%w'.", args.Course, err);
+            log.Fatal("Failed to resolve users: '%w'.", err);
         }
-    } else {
-        course = nil;
     }
 
-    emailTo, err := db.ResolveUsers(course, args.To);
-    if (err != nil) {
-        log.Fatal("Failed to resolve users: '%w'.", err);
-    }
-
-    err = email.Send(emailTo, args.Subject, args.Body, false);
+    err = email.Send(args.To, args.Subject, args.Body, false);
     if (err != nil) {
         log.Fatal("Could not send email.", err);
     }

@@ -275,7 +275,7 @@ func ResolveUsers(course *model.Course, emails []string) ([]string, error) {
         }
 
         for _, user := range users {
-            // Add a User.email if their User.Role is in the role set.
+            // Add a User.Email if their User.Role is in the role set.
             _, ok := roleSet[model.GetRoleString(user.Role)];
             if (ok) {
                 emailSet[strings.ToLower(user.Email)] = nil;
