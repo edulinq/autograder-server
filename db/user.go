@@ -3,6 +3,8 @@ package db
 import (
     "errors"
     "fmt"
+    "slices"
+    "strings"
 
     "github.com/edulinq/autograder/log"
     "github.com/edulinq/autograder/model"
@@ -110,7 +112,6 @@ func SyncUser(course *model.Course, user *model.User,
 
     return SyncUsers(course, newUsers, merge, dryRun, sendEmails);
 }
-
 
 // Sync (merge) new users with existing users.
 // The db takes ownership of the passed-in users (they may be modified).
@@ -220,4 +221,75 @@ func SyncUsers(course *model.Course, newUsers map[string]*model.User,
     }
 
     return syncResult, nil;
+}
+
+// ResolveUsers is a helper function to map a User.Role to all User.Email's for that course.
+// The function takes an optional course and a list of strings, containing emails, roles, and * as input.
+// The function returns an alphanumerically sorted slice of lowercase emails without duplicates.
+// The function returns an error if a course cannot be opened and the input contains roles or a *.
+// The function will issue a warning if it's given a valid course and an invalid role.
+func ResolveUsers(course *model.Course, emails []string) ([]string, error) {
+    emailSet := map[string]any{};
+    roleSet := map[string]any{};
+
+    // Iterate over every given string, checking for emails, roles, and *, which denotes all roles.
+    for _, email := range emails {
+        if (email == "") {
+            continue;
+        }
+
+        if (strings.Contains(email, "@")) {
+            emailSet[strings.ToLower(email)] = nil;
+        } else {
+            if (email == "*") {
+                allRoles := model.GetAllRoleStrings();
+                for role := range allRoles {
+                    roleSet[role] = nil;
+                }
+            } else {
+                roleSet[strings.ToLower(email)] = nil;
+            }
+        }
+    }
+
+    if (len(roleSet) > 0) {
+        if (backend == nil) {
+            return nil, fmt.Errorf("Database has not been opened.");
+        }
+
+        users, err := GetUsers(course);
+
+        if (err != nil) {
+            return nil, err;
+        }
+
+        allowedRoles := make([]string, 0, len(model.GetAllRoleStrings()));
+        for role := range model.GetAllRoleStrings() {
+            allowedRoles = append(allowedRoles, role);
+        }
+
+        for roleString := range roleSet {
+            if (!slices.Contains(allowedRoles, roleString)) {
+                log.Warn("Resolve Users was given an invalid role.", log.NewCourseAttr(course.GetID()), log.NewAttr("Role", roleString));
+            }
+        }
+
+        for _, user := range users {
+            // Add a User.Email if their User.Role is in the role set.
+            _, ok := roleSet[model.GetRoleString(user.Role)];
+            if (ok) {
+                emailSet[strings.ToLower(user.Email)] = nil;
+            }
+        }
+    }
+
+    emailSlice := make([]string, 0, len(emailSet));
+
+    for email := range emailSet {
+        emailSlice = append(emailSlice, email);
+    }
+
+    slices.Sort(emailSlice);
+
+    return emailSlice, nil;
 }

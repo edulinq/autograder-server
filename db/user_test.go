@@ -1,6 +1,7 @@
 package db
 
 import (
+    "reflect"
     "testing"
 
     "github.com/edulinq/autograder/email"
@@ -12,6 +13,88 @@ type SyncNewUsersTestCase struct {
     merge bool
     dryRun bool
     sendEmails bool
+}
+
+func (this *DBTests) DBTestResolveUsers(test *testing.T) {
+    defer ResetForTesting();
+
+    testCases := []struct {input []string; expectedOutput []string; addUsers []*model.User; removeUsers []string} {
+        // This is a simple test case for the empty string input.
+        {
+            []string{""},
+            []string{},
+            nil,
+            []string{},
+        },
+
+        // This is a test to ensure the output is sorted.
+        {
+            []string{"b@test.com", "a@test.com", "c@test.com"},
+            []string{"a@test.com", "b@test.com", "c@test.com"},
+            nil,
+            []string{},
+        },
+
+        // This is a basic test to ensure that a role gets mapped to the correct email.
+        {
+            []string{"admin"},
+            []string{"admin@test.com"},
+            nil,
+            []string{},
+        },
+
+        // This is a test for our all roles character, the *. 
+        {
+            []string{"*"},
+            []string{"admin@test.com", "grader@test.com", "other@test.com", "owner@test.com", "student@test.com"},
+            nil,
+            []string{},
+        },
+
+        // This is a more complex test that adds multiple Users for the student role.
+        // This test case removes the only user from the "other" role, so we check that a role without any users still functions properly.
+        // This test case is given duplicate emails of different capitalizations and duplicate roles.
+        // It tests to ensures we do not produce duplicates on this input.
+        {
+            []string{"other", "*", "grader@test.com", "zoinks@test.com", "ZoinKS@teSt.Com"},
+            []string{"admin@test.com", "grader@test.com", "other@test.com", "second_student@test.com", "student@test.com", "zoinks@test.com"},
+            []*model.User{model.NewUser("second_student@test.com", "", model.GetRole("student"))},
+            []string{"owner@test.com"},
+        },
+
+        // This test case tests if miscapitalized roles still function and that we warn on invalid roles.
+        {
+            []string{"OTHER", "garbage"},
+            []string{"other@test.com"},
+            nil,
+            []string{},
+        },
+    };
+
+    for i, testCase := range testCases {
+        ResetForTesting();
+        course := MustGetCourse(TEST_COURSE_ID);
+
+        for _, newUser := range testCase.addUsers {
+            SaveUser(course, newUser);
+        }
+
+        for _, oldUser := range testCase.removeUsers {
+            RemoveUser(course, oldUser);
+        }
+
+        actualOutput, err := ResolveUsers(course, testCase.input);
+        if (err != nil) {
+            test.Errorf("Case %d (%+v): Resolve User failed: '%v'.", i, testCase, err);
+            continue;
+        }
+
+        if (!reflect.DeepEqual(testCase.expectedOutput, actualOutput)) {
+            test.Errorf("Case %d (%+v): Incorrect Output. Expected: '%v', Actual: '%v'.", i,
+                testCase, testCase.expectedOutput, actualOutput);
+            continue;
+        }
+    }
 }
 
 func (this *DBTests) DBTestCourseSyncNewUsers(test *testing.T) {

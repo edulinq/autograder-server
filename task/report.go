@@ -4,6 +4,7 @@ import (
     "fmt"
 
     "github.com/edulinq/autograder/email"
+    "github.com/edulinq/autograder/db"
     "github.com/edulinq/autograder/log"
     "github.com/edulinq/autograder/model"
     "github.com/edulinq/autograder/model/tasks"
@@ -36,7 +37,12 @@ func RunReport(course *model.Course, to []string) error {
 
     subject := fmt.Sprintf("Autograder Scoring Report for %s", course.GetName());
 
-    err = email.Send(to, subject, html, true);
+    emailTo, err := db.ResolveUsers(course, to);
+    if (err != nil) {
+        return fmt.Errorf("Failed to resolve users for course '%s': '%w'.", course.GetName(), err);
+    }
+
+    err = email.Send(emailTo, subject, html, true);
     if (err != nil) {
         return fmt.Errorf("Failed to send scoring report for course '%s': '%w'.", course.GetName(), err);
     }
