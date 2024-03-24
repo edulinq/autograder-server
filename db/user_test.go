@@ -53,7 +53,8 @@ func (this *DBTests) DBTestResolveUsers(test *testing.T) {
 
         // This is a more complex test that adds multiple Users for the student role.
         // This test case removes the only user from the "other" role, so we check that a role without any users still functions properly.
-        // This test case ensures we do not produce duplicates on duplicate roles given and duplicate emails with different capitalizations.
+        // This test case is given duplicate emails of different capitalizations and duplicate roles.
+        // It tests to ensures we do not produce duplicates on this input.
         {
             []string{"other", "*", "grader@test.com", "zoinks@test.com", "ZoinKS@teSt.Com"},
             []string{"admin@test.com", "grader@test.com", "other@test.com", "second_student@test.com", "student@test.com", "zoinks@test.com"},
