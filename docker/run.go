@@ -71,6 +71,15 @@ func RunContainer(logId log.Loggable, imageName string, inputDir string, outputD
         Follow: true,
     })
 
+    if (err != nil) {
+        log.Warn("Failed to get output from container (but run did not throw an error).",
+            err, logId,
+            log.NewAttr("container-name", name), log.NewAttr("container-id", containerInstance.ID));
+        // FIXME: Would this cause a panic on defer out.Close()?
+        out = nil;
+    }
+    defer out.Close()
+
     stdout := "";
     stderr := "";
 
@@ -96,14 +105,6 @@ func RunContainer(logId log.Loggable, imageName string, inputDir string, outputD
             log.NewAttr("stdout", stdout),
             log.NewAttr("stderr", stderr));
     }
-
-    if (err != nil) {
-        log.Warn("Failed to get output from container (but run did not throw an error).",
-                err, logId,
-                log.NewAttr("container-name", name), log.NewAttr("container-id", containerInstance.ID));
-        out = nil;
-    }
-    defer out.Close()
 
     statusChan, errorChan := docker.ContainerWait(ctx, containerInstance.ID, container.WaitConditionNotRunning);
     select {
