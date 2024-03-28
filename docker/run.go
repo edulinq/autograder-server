@@ -84,14 +84,16 @@ func RunContainer(logId log.Loggable, imageName string, inputDir string, outputD
     stderr := "";
 
     // Read the output after the container is done.
+    // FIXME(CAMDEN): Not sure about the ordering of ContainerWait and ContainerLogs.
     if (out != nil) {
-        outBuffer := NewFixedBuffer(5000);
-        errBuffer := NewFixedBuffer(5000);
+        outBuffer := NewFixedBuffer(500000);
+        errBuffer := NewFixedBuffer(500000);
 
         _, err = stdcopy.StdCopy(outBuffer, errBuffer, out);
 
         stdout = outBuffer.String();
         stderr = errBuffer.String();
+        fmt.Printf("%v\n%d", stdout, len(stdout))
 
         if err != nil {
             docker.ContainerKill(ctx, containerInstance.ID, "KILL")
