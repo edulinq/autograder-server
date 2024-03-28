@@ -1,6 +1,7 @@
 package docker
 
 import (
+    "errors"
     "fmt"
     "regexp"
     "strings"
@@ -70,6 +71,32 @@ func RunContainer(logId log.Loggable, imageName string, inputDir string, outputD
         Follow: true,
     })
 
+    stdout := "";
+    stderr := "";
+
+    // Read the output after the container is done.
+    if (out != nil) {
+        outBuffer := NewFixedBuffer(5000);
+        errBuffer := NewFixedBuffer(5000);
+
+        _, err = stdcopy.StdCopy(outBuffer, errBuffer, out);
+
+        stdout = outBuffer.String();
+        stderr = errBuffer.String();
+
+        if err != nil {
+            docker.ContainerKill(ctx, containerInstance.ID, "KILL")
+            return stdout, stderr, err
+        }
+
+        log.Debug("Container output.",
+            logId,
+            log.NewAttr("container-name", name),
+            log.NewAttr("container-id", containerInstance.ID),
+            log.NewAttr("stdout", stdout),
+            log.NewAttr("stderr", stderr));
+    }
+
     if (err != nil) {
         log.Warn("Failed to get output from container (but run did not throw an error).",
                 err, logId,
@@ -88,27 +115,6 @@ func RunContainer(logId log.Loggable, imageName string, inputDir string, outputD
             // Waiting is complete.
     }
 
-    stdout := "";
-    stderr := "";
-
-    // Read the output after the container is done.
-    if (out != nil) {
-        outBuffer := new(strings.Builder);
-        errBuffer := new(strings.Builder);
-
-        stdcopy.StdCopy(outBuffer, errBuffer, out);
-
-        stdout = outBuffer.String();
-        stderr = errBuffer.String();
-
-        log.Debug("Container output.",
-                logId,
-                log.NewAttr("container-name", name),
-                log.NewAttr("container-id", containerInstance.ID),
-                log.NewAttr("stdout", stdout),
-                log.NewAttr("stderr", stderr));
-    }
-
     return stdout, stderr, nil;
 }
 
@@ -123,3 +129,29 @@ func cleanContainerName(text string) string {
 
     return text;
 }
+
+type FixedBuffer struct {
+    buf *strings.Builder
+    limit int
+}
+
+func NewFixedBuffer(limit int) *FixedBuffer {
+    buf := new(strings.Builder)
+    return &FixedBuffer{
+        buf: buf,
+        limit: limit,
+    }
+}
+
+func (this *FixedBuffer) Write(p []byte) (int, error) {
+    if this.limit > 0 && this.buf.Len() + len(p) > this.limit {
+        return 0, BufferOverflowError
+    }
+    return this.buf.Write(p)
+}
+
+func (this *FixedBuffer) String() string {
+    return this.buf.String()
+}
+
+var BufferOverflowError = errors.New("Output exceeds limit. Do you have an infinite loop?")
