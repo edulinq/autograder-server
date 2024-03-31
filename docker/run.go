@@ -86,14 +86,13 @@ func RunContainer(logId log.Loggable, imageName string, inputDir string, outputD
     // Read the output after the container is done.
     // FIXME(CAMDEN): Not sure about the ordering of ContainerWait and ContainerLogs.
     if (out != nil) {
-        outBuffer := NewFixedBuffer(500000);
-        errBuffer := NewFixedBuffer(500000);
+        outBuffer := newFixedBuffer(5000);
+        errBuffer := newFixedBuffer(5000);
 
         _, err = stdcopy.StdCopy(outBuffer, errBuffer, out);
 
         stdout = outBuffer.String();
         stderr = errBuffer.String();
-        fmt.Printf("%v\n%d", stdout, len(stdout))
 
         if err != nil {
             docker.ContainerKill(ctx, containerInstance.ID, "KILL")
@@ -133,28 +132,28 @@ func cleanContainerName(text string) string {
     return text;
 }
 
-type FixedBuffer struct {
+type fixedBuffer struct {
     buf *strings.Builder
     limit int
 }
 
-func NewFixedBuffer(limit int) *FixedBuffer {
+func newFixedBuffer(limit int) *fixedBuffer {
     buf := new(strings.Builder)
-    return &FixedBuffer{
+    return &fixedBuffer{
         buf: buf,
         limit: limit,
     }
 }
 
-func (this *FixedBuffer) Write(p []byte) (int, error) {
+func (this *fixedBuffer) Write(p []byte) (int, error) {
     if this.limit > 0 && this.buf.Len() + len(p) > this.limit {
-        return 0, BufferOverflowError
+        return 0, bufferOverflowError
     }
     return this.buf.Write(p)
 }
 
-func (this *FixedBuffer) String() string {
+func (this *fixedBuffer) String() string {
     return this.buf.String()
 }
 
-var BufferOverflowError = errors.New("Output exceeds limit. Do you have an infinite loop?")
+var bufferOverflowError = errors.New("Output exceeds limit. Do you have an infinite loop?")
