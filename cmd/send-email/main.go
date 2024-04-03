@@ -11,7 +11,7 @@ import (
 
 var args struct {
     config.ConfigArgs
-    Course string `help:"Optional Course ID. The course is only required when emailing by role or the *, which denotes all roles." arg:"" optional:""`
+    Course string `help:"Optional Course ID. Only required when roles or * (all course users) are in the recipients." arg:"" optional:""`
     To []string `help:"Email recipents." required:""`
     Subject string `help:"Email subject." required:""`
     Body string `help:"Email body." required:""`
@@ -28,11 +28,14 @@ func main() {
     }
 
     if (args.Course != "") {
+        db.MustOpen();
+        defer db.MustClose();
+
         course := db.MustGetCourse(args.Course);
 
         args.To, err = db.ResolveUsers(course, args.To);
         if (err != nil) {
-            log.Fatal("Failed to resolve users: '%w'.", err);
+            log.Fatal("Failed to resolve users.", err, course);
         }
     }
 

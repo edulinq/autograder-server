@@ -223,23 +223,27 @@ func SyncUsers(course *model.Course, newUsers map[string]*model.User,
     return syncResult, nil;
 }
 
-// ResolveUsers is a helper function to map a User.Role to all User.Email's for that course.
-// The function takes an optional course and a list of strings, containing emails, roles, and * as input.
-// The function returns an alphanumerically sorted slice of lowercase emails without duplicates.
-// The function returns an error if a course cannot be opened and the input contains roles or a *.
-// The function will issue a warning if it's given a valid course and an invalid role.
+// ResolveUsers is a helper function to maps string representations of roles and * (all roles) to the emails for users with those roles.
+// The function takes an optional course and a list of strings, containing emails, roles, and * as input and returns an alphanumerically sorted slice of lowercase emails without duplicates.
+// A fatal error occurs if a course cannot be opened and the input contains roles or a *.
+// A warning will be logged for every invalid role.
 func ResolveUsers(course *model.Course, emails []string) ([]string, error) {
+    if (backend == nil) {
+        return nil, fmt.Errorf("Database has not been opened.");
+    }
+
     emailSet := map[string]any{};
     roleSet := map[string]any{};
 
-    // Iterate over every given string, checking for emails, roles, and *, which denotes all roles.
+    // Iterate over every given string, checking for emails, roles, and *, which denotes all users.
     for _, email := range emails {
+        email = strings.ToLower(strings.TrimSpace(email));
         if (email == "") {
             continue;
         }
 
         if (strings.Contains(email, "@")) {
-            emailSet[strings.ToLower(email)] = nil;
+            emailSet[email] = nil;
         } else {
             if (email == "*") {
                 allRoles := model.GetAllRoleStrings();
@@ -247,35 +251,29 @@ func ResolveUsers(course *model.Course, emails []string) ([]string, error) {
                     roleSet[role] = nil;
                 }
             } else {
-                roleSet[strings.ToLower(email)] = nil;
+                roleSet[email] = nil;
             }
         }
     }
 
     if (len(roleSet) > 0) {
-        if (backend == nil) {
-            return nil, fmt.Errorf("Database has not been opened.");
-        }
-
         users, err := GetUsers(course);
-
         if (err != nil) {
             return nil, err;
         }
 
-        allowedRoles := make([]string, 0, len(model.GetAllRoleStrings()));
-        for role := range model.GetAllRoleStrings() {
-            allowedRoles = append(allowedRoles, role);
-        }
-
         for roleString := range roleSet {
-            if (!slices.Contains(allowedRoles, roleString)) {
-                log.Warn("Resolve Users was given an invalid role.", log.NewCourseAttr(course.GetID()), log.NewAttr("Role", roleString));
+            if (roleString == "unknown") {
+                continue;
+            }
+
+            if (model.GetRole(roleString) == model.RoleUnknown) {
+                log.Warn("Invalid role given to ResolveUsers.", course, log.NewAttr("role", roleString))
             }
         }
 
         for _, user := range users {
-            // Add a User.Email if their User.Role is in the role set.
+            // Add a user if their role is set.
             _, ok := roleSet[model.GetRoleString(user.Role)];
             if (ok) {
                 emailSet[strings.ToLower(user.Email)] = nil;
@@ -284,7 +282,6 @@ func ResolveUsers(course *model.Course, emails []string) ([]string, error) {
     }
 
     emailSlice := make([]string, 0, len(emailSet));
-
     for email := range emailSet {
         emailSlice = append(emailSlice, email);
     }

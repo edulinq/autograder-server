@@ -27,24 +27,24 @@ func RunReportTask(course *model.Course, rawTask tasks.ScheduledTask) (bool, err
 func RunReport(course *model.Course, to []string) error {
     report, err := report.GetCourseScoringReport(course);
     if (err != nil) {
-        return fmt.Errorf("Failed to get scoring report for course '%s': '%w'.", course.GetName(), err);
+        return fmt.Errorf("Failed to get scoring report for course '%s': '%w'.", course.GetID(), err);
     }
 
     html, err := report.ToHTML();
     if (err != nil) {
-        return fmt.Errorf("Failed to generate HTML for scoring report for course '%s': '%w'.", course.GetName(), err);
+        return fmt.Errorf("Failed to generate HTML for scoring report for course '%s': '%w'.", course.GetID(), err);
     }
 
     subject := fmt.Sprintf("Autograder Scoring Report for %s", course.GetName());
 
-    emailTo, err := db.ResolveUsers(course, to);
+    to, err = db.ResolveUsers(course, to);
     if (err != nil) {
-        return fmt.Errorf("Failed to resolve users for course '%s': '%w'.", course.GetName(), err);
+        return fmt.Errorf("Failed to resolve users for course '%s': '%w'.", course.GetID(), err);
     }
 
-    err = email.Send(emailTo, subject, html, true);
+    err = email.Send(to, subject, html, true);
     if (err != nil) {
-        return fmt.Errorf("Failed to send scoring report for course '%s': '%w'.", course.GetName(), err);
+        return fmt.Errorf("Failed to send scoring report for course '%s': '%w'.", course.GetID(), err);
     }
 
     log.Debug("Report completed sucessfully.", course, log.NewAttr("to", to));

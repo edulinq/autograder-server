@@ -3,8 +3,10 @@ package db
 import (
     "reflect"
     "testing"
+    "time"
 
     "github.com/edulinq/autograder/email"
+    "github.com/edulinq/autograder/log"
     "github.com/edulinq/autograder/model"
     "github.com/edulinq/autograder/util"
 )
@@ -18,13 +20,26 @@ type SyncNewUsersTestCase struct {
 func (this *DBTests) DBTestResolveUsers(test *testing.T) {
     defer ResetForTesting();
 
-    testCases := []struct {input []string; expectedOutput []string; addUsers []*model.User; removeUsers []string} {
+    oldValue := log.SetBackgroundLogging(false);
+    defer log.SetBackgroundLogging(oldValue);
+
+    log.SetLevels(log.LevelOff, log.LevelWarn);
+    defer log.SetLevelFatal();
+
+    // Wait for old logs to get written.
+    time.Sleep(10 * time.Millisecond);
+
+    Clear();
+    defer Clear();
+
+    testCases := []struct {input []string; expectedOutput []string; addUsers []*model.User; removeUsers []string; numWarnings int} {
         // This is a simple test case for the empty string input.
         {
             []string{""},
             []string{},
             nil,
             []string{},
+            0,
         },
 
         // This is a test to ensure the output is sorted.
@@ -33,6 +48,16 @@ func (this *DBTests) DBTestResolveUsers(test *testing.T) {
             []string{"a@test.com", "b@test.com", "c@test.com"},
             nil,
             []string{},
+            0,
+        },
+
+        // This is a test to ensure miscapitalized emails only get returned once.
+        {
+            []string{"a@test.com", "A@tesT.CoM", "A@TEST.COM"},
+            []string{"a@test.com"},
+            nil,
+            []string{},
+            0,
         },
 
         // This is a basic test to ensure that a role gets mapped to the correct email.
@@ -41,6 +66,7 @@ func (this *DBTests) DBTestResolveUsers(test *testing.T) {
             []string{"admin@test.com"},
             nil,
             []string{},
+            0,
         },
 
         // This is a test for our all roles character, the *. 
@@ -49,31 +75,70 @@ func (this *DBTests) DBTestResolveUsers(test *testing.T) {
             []string{"admin@test.com", "grader@test.com", "other@test.com", "owner@test.com", "student@test.com"},
             nil,
             []string{},
+            0,
         },
 
-        // This is a more complex test that adds multiple Users for the student role.
-        // This test case removes the only user from the "other" role, so we check that a role without any users still functions properly.
-        // This test case is given duplicate emails of different capitalizations and duplicate roles.
+
+        // This test case is given redundant roles and emails.
         // It tests to ensures we do not produce duplicates on this input.
         {
-            []string{"other", "*", "grader@test.com", "zoinks@test.com", "ZoinKS@teSt.Com"},
-            []string{"admin@test.com", "grader@test.com", "other@test.com", "second_student@test.com", "student@test.com", "zoinks@test.com"},
-            []*model.User{model.NewUser("second_student@test.com", "", model.GetRole("student"))},
-            []string{"owner@test.com"},
+            []string{"other", "*", "grader@test.com"},
+            []string{"admin@test.com", "grader@test.com", "other@test.com", "owner@test.com", "student@test.com"},
+            nil,
+            []string{},
+            0,
         },
 
-        // This test case tests if miscapitalized roles still function and that we warn on invalid roles.
+        // This test case tests if miscapitalized roles still function.
         {
-            []string{"OTHER", "garbage"},
+            []string{"OTHER"},
             []string{"other@test.com"},
             nil,
             []string{},
+            0,
+        },
+
+        // This test case tests if warnings are issued on invalid roles.
+        {
+            []string{"trash", "garbage", "waste", "recycle!"},
+            []string{},
+            nil,
+            []string{},
+            4,
+        },
+
+        // This test adds new Users to the course and ensures we retrieve all emails for the given role.
+        {
+            []string{"student"},
+            []string{"a_student@test.com", "b_student@test.com", "student@test.com"},
+            []*model.User{model.NewUser("a_student@test.com", "", model.GetRole("student")), model.NewUser("b_student@test.com", "", model.GetRole("student"))},
+            []string{},
+            0,
+        },
+
+        // This is a test case to see if we properly trim whitespace.
+        {
+            []string{"\t\n student    ", "\n \t testing@test.com", "\t\n     \t    \n"},
+            []string{"student@test.com", "testing@test.com"},
+            nil,
+            []string{},
+            0,
+        },
+
+        // This test case removes the only user from the "owner" role, so we check that a role without any users still functions properly.
+        {
+            []string{"owner", "student"},
+            []string{"student@test.com"},
+            nil,
+            []string{"owner@test.com"},
+            0,
         },
     };
 
     for i, testCase := range testCases {
         ResetForTesting();
         course := MustGetCourse(TEST_COURSE_ID);
+        // startTime := time.Time{};
 
         for _, newUser := range testCase.addUsers {
             SaveUser(course, newUser);
@@ -92,6 +157,17 @@ func (this *DBTests) DBTestResolveUsers(test *testing.T) {
         if (!reflect.DeepEqual(testCase.expectedOutput, actualOutput)) {
             test.Errorf("Case %d (%+v): Incorrect Output. Expected: '%v', Actual: '%v'.", i,
                 testCase, testCase.expectedOutput, actualOutput);
+            continue;
+        }
+
+        logs, err := GetLogRecords(log.LevelWarn, time.Time{}, "", "", "")
+        if (err != nil) {
+            test.Errorf("Case %d (%+v): Error getting log records.", i, testCase);
+            continue;
+        }
+        if (testCase.numWarnings != len(logs)) {
+            test.Errorf("Case %d (%+v): Incorrect number of warnings issued. Expected: %d, Actual: %d.", i,
+                testCase, testCase.numWarnings, len(logs));
             continue;
         }
     }
