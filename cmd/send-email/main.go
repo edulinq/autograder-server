@@ -22,15 +22,15 @@ func main() {
         kong.Description("Send an email."),
     );
 
+    db.MustOpen();
+    defer db.MustClose();
+
     err := config.HandleConfigArgs(args.ConfigArgs);
     if (err != nil) {
         log.Fatal("Could not load config options.", err);
     }
 
     if (args.Course != "") {
-        db.MustOpen();
-        defer db.MustClose();
-
         course := db.MustGetCourse(args.Course);
 
         args.To, err = db.ResolveUsers(course, args.To);

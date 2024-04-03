@@ -223,10 +223,8 @@ func SyncUsers(course *model.Course, newUsers map[string]*model.User,
     return syncResult, nil;
 }
 
-// ResolveUsers is a helper function to maps string representations of roles and * (all roles) to the emails for users with those roles.
-// The function takes an optional course and a list of strings, containing emails, roles, and * as input and returns an alphanumerically sorted slice of lowercase emails without duplicates.
-// A fatal error occurs if a course cannot be opened and the input contains roles or a *.
-// A warning will be logged for every invalid role.
+// ResolveUsers maps string representations of roles and * (all roles) to the emails for users with those roles.
+// The function takes a course and a list of strings, containing emails, roles, and * as input and returns a sorted slice of lowercase emails without duplicates.
 func ResolveUsers(course *model.Course, emails []string) ([]string, error) {
     if (backend == nil) {
         return nil, fmt.Errorf("Database has not been opened.");
@@ -235,7 +233,7 @@ func ResolveUsers(course *model.Course, emails []string) ([]string, error) {
     emailSet := map[string]any{};
     roleSet := map[string]any{};
 
-    // Iterate over every given string, checking for emails, roles, and *, which denotes all users.
+    // Iterate over all strings, checking for emails, roles, and * (which denotes all users).
     for _, email := range emails {
         email = strings.ToLower(strings.TrimSpace(email));
         if (email == "") {
@@ -251,6 +249,11 @@ func ResolveUsers(course *model.Course, emails []string) ([]string, error) {
                     roleSet[role] = nil;
                 }
             } else {
+                if (model.GetRole(email) == model.RoleUnknown) {
+                    log.Warn("Invalid role given to ResolveUsers.", course, log.NewAttr("role", email))
+                    continue;
+                }
+
                 roleSet[email] = nil;
             }
         }
@@ -260,16 +263,6 @@ func ResolveUsers(course *model.Course, emails []string) ([]string, error) {
         users, err := GetUsers(course);
         if (err != nil) {
             return nil, err;
-        }
-
-        for roleString := range roleSet {
-            if (roleString == "unknown") {
-                continue;
-            }
-
-            if (model.GetRole(roleString) == model.RoleUnknown) {
-                log.Warn("Invalid role given to ResolveUsers.", course, log.NewAttr("role", roleString))
-            }
         }
 
         for _, user := range users {

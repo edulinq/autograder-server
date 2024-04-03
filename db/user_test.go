@@ -33,6 +33,15 @@ func (this *DBTests) DBTestResolveUsers(test *testing.T) {
     defer Clear();
 
     testCases := []struct {input []string; expectedOutput []string; addUsers []*model.User; removeUsers []string; numWarnings int} {
+        // This test case tests the empty slice input.
+        {
+            []string{},
+            []string{},
+            nil,
+            []string{},
+            0,
+        },
+
         // This is a simple test case for the empty string input.
         {
             []string{""},
@@ -133,19 +142,27 @@ func (this *DBTests) DBTestResolveUsers(test *testing.T) {
             []string{"owner@test.com"},
             0,
         },
+
+        // This test supplies a single role that resolves to nothing.
+        {
+            []string{"owner"},
+            []string{},
+            nil,
+            []string{"owner@test.com"},
+            0,
+        },
     };
 
     for i, testCase := range testCases {
         ResetForTesting();
         course := MustGetCourse(TEST_COURSE_ID);
-        // startTime := time.Time{};
 
         for _, newUser := range testCase.addUsers {
             SaveUser(course, newUser);
         }
 
-        for _, oldUser := range testCase.removeUsers {
-            RemoveUser(course, oldUser);
+        for _, removeUser := range testCase.removeUsers {
+            RemoveUser(course, removeUser);
         }
 
         actualOutput, err := ResolveUsers(course, testCase.input);
@@ -165,6 +182,7 @@ func (this *DBTests) DBTestResolveUsers(test *testing.T) {
             test.Errorf("Case %d (%+v): Error getting log records.", i, testCase);
             continue;
         }
+
         if (testCase.numWarnings != len(logs)) {
             test.Errorf("Case %d (%+v): Incorrect number of warnings issued. Expected: %d, Actual: %d.", i,
                 testCase, testCase.numWarnings, len(logs));
