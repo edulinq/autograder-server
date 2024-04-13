@@ -11,6 +11,7 @@ import (
 
 const BASE_TEST_USER = "student@test.com";
 const TEST_MESSAGE = "";
+const OUTPUT_LIMIT_DIR = "exceeds_out_limit"
 
 func TestDockerSubmissions(test *testing.T) {
     if (config.DOCKER_DISABLE.Get()) {
@@ -22,6 +23,7 @@ func TestDockerSubmissions(test *testing.T) {
     }
 
     runSubmissionTests(test, false, true);
+    runErrorSubmissions(test);
 }
 
 func TestNoDockerSubmissions(test *testing.T) {
@@ -107,4 +109,8 @@ func runSubmissionTests(test *testing.T, parallel bool, useDocker bool) {
     if (len(failedTests) > 0) {
         test.Fatalf("Failed to run submission test(s): '%s'.", failedTests);
     }
+}
+
+func runErrorSubmissions(test *testing.T) {
+
 }

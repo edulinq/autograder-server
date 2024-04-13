@@ -1,6 +1,5 @@
 def function1():
-    while True:
-        print("INFINITE")
+    print("A"*1025)
 
     return NotImplemented
 

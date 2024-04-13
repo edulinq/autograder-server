@@ -11,6 +11,7 @@ import (
     "github.com/docker/docker/api/types/mount"
     "github.com/docker/docker/pkg/stdcopy"
 
+    "github.com/edulinq/autograder/config"
     "github.com/edulinq/autograder/log"
     "github.com/edulinq/autograder/util"
 )
@@ -75,7 +76,6 @@ func RunContainer(logId log.Loggable, imageName string, inputDir string, outputD
         log.Warn("Failed to get output from container (but run did not throw an error).",
             err, logId,
             log.NewAttr("container-name", name), log.NewAttr("container-id", containerInstance.ID));
-        // FIXME: Would this cause a panic on defer out.Close()?
         out = nil;
     }
     defer out.Close()
@@ -83,21 +83,14 @@ func RunContainer(logId log.Loggable, imageName string, inputDir string, outputD
     stdout := "";
     stderr := "";
 
-    // Read the output after the container is done.
-    // FIXME(CAMDEN): Not sure about the ordering of ContainerWait and ContainerLogs.
     if (out != nil) {
-        outBuffer := newFixedBuffer(5000);
-        errBuffer := newFixedBuffer(5000);
+        outBuffer := newFixedBuffer(config.GRADER_OUTPUT_LIMIT_KB.Get() * 1024);
+        errBuffer := newFixedBuffer(config.GRADER_OUTPUT_LIMIT_KB.Get() * 1024);
 
         _, err = stdcopy.StdCopy(outBuffer, errBuffer, out);
 
         stdout = outBuffer.String();
         stderr = errBuffer.String();
-
-        if err != nil {
-            docker.ContainerKill(ctx, containerInstance.ID, "KILL")
-            return stdout, stderr, err
-        }
 
         log.Debug("Container output.",
             logId,
@@ -105,6 +98,10 @@ func RunContainer(logId log.Loggable, imageName string, inputDir string, outputD
             log.NewAttr("container-id", containerInstance.ID),
             log.NewAttr("stdout", stdout),
             log.NewAttr("stderr", stderr));
+
+        if err != nil {
+            return stdout, stderr, docker.ContainerKill(ctx, containerInstance.ID, "KILL");
+        }
     }
 
     statusChan, errorChan := docker.ContainerWait(ctx, containerInstance.ID, container.WaitConditionNotRunning);
