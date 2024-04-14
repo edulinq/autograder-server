@@ -36,6 +36,9 @@ func HandleSubmit(request *SubmitRequest) (*SubmitResponse, *core.APIError) {
             stderr = result.Stderr;
         }
 
+        // FIXME(CAMDEN): Probably want to differentiate errors that a student should see and ones they shouldn't.
+        response.Message = err.Error()
+
         log.Info("Submission grading failed.", err, request.Assignment, log.NewAttr("stdout", stdout), log.NewAttr("stderr", stderr), request.User);
 
         return &response, nil;
