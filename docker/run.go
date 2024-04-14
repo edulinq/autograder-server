@@ -100,7 +100,8 @@ func RunContainer(logId log.Loggable, imageName string, inputDir string, outputD
             log.NewAttr("stderr", stderr));
 
         if err != nil {
-            return stdout, stderr, docker.ContainerKill(ctx, containerInstance.ID, "KILL");
+            docker.ContainerKill(ctx, containerInstance.ID, "KILL");
+            return stdout, stderr, err;
         }
     }
 

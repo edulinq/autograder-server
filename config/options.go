@@ -33,7 +33,7 @@ var (
     DOCKER_DISABLE = MustNewBoolOption("docker.disable", false, "Disable the use of docker (usually for testing).");
 
     // Grader
-    GRADER_OUTPUT_LIMIT_KB = MustNewIntOption("grader.output.limit.kb", 500 * 1024, "How much output to allow from stdout and stderr (in KB) before stopping the grader.")
+    GRADER_OUTPUT_LIMIT_KB = MustNewIntOption("grader.output.limit.kb", 500, "How much output to allow from stdout and stderr (in KB) before stopping the grader.")
 
     // Tasks
     NO_TASKS = MustNewBoolOption("tasks.disable", false, "Disable all scheduled tasks.");

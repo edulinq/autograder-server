@@ -4,6 +4,7 @@ import (
     "fmt"
     "testing"
 
+    "github.com/edulinq/autograder/common"
     "github.com/edulinq/autograder/config"
     "github.com/edulinq/autograder/db"
     "github.com/edulinq/autograder/docker"
@@ -11,7 +12,6 @@ import (
 
 const BASE_TEST_USER = "student@test.com";
 const TEST_MESSAGE = "";
-const OUTPUT_LIMIT_DIR = "exceeds_out_limit"
 
 func TestDockerSubmissions(test *testing.T) {
     if (config.DOCKER_DISABLE.Get()) {
@@ -23,7 +23,6 @@ func TestDockerSubmissions(test *testing.T) {
     }
 
     runSubmissionTests(test, false, true);
-    runErrorSubmissions(test);
 }
 
 func TestNoDockerSubmissions(test *testing.T) {
@@ -56,7 +55,7 @@ func runSubmissionTests(test *testing.T, parallel bool, useDocker bool) {
         NoDocker: !useDocker,
     };
 
-    testSubmissions, err := GetTestSubmissions(baseDir);
+    testSubmissions, err := GetTestSubmissions(baseDir, common.TEST_SUBMISSIONS);
     if (err != nil) {
         test.Fatalf("Error getting test submissions in '%s': '%v'.", baseDir, err);
     }
@@ -111,6 +110,76 @@ func runSubmissionTests(test *testing.T, parallel bool, useDocker bool) {
     }
 }
 
-func runErrorSubmissions(test *testing.T) {
+func TestErrorSubmissions(test *testing.T) {
+    resetVal := config.GRADER_OUTPUT_LIMIT_KB.Get()
+    config.GRADER_OUTPUT_LIMIT_KB.Set(1)
+    defer config.GRADER_OUTPUT_LIMIT_KB.Set(resetVal)
 
+    db.ResetForTesting()
+    defer db.ResetForTesting()
+
+    baseDir := config.GetCourseImportDir()
+
+    assignment := db.MustGetTestAssignment()
+    err := docker.BuildImageFromSource(assignment, false, false, docker.NewBuildOptions());
+    if (err != nil) {
+        test.Fatalf("Failed to build image '%s': '%v'.", assignment.FullID(), err);
+    }
+
+    for _, course := range db.MustGetCourses() {
+        for _, assignment := range course.GetAssignments() {
+            err := docker.BuildImageFromSource(assignment, false, false, docker.NewBuildOptions());
+            if (err != nil) {
+                test.Fatalf("Failed to build image '%s': '%v'.", assignment.FullID(), err);
+            }
+        }
+    }
+
+    testSubmissions, err := GetTestSubmissions(baseDir, common.TEST_ERROR_SUBMISSIONS);
+    if (err != nil) {
+        test.Fatalf("Error getting test submissions in '%s': '%v'.", baseDir, err);
+    }
+
+    if (len(testSubmissions) == 0) {
+        test.Fatalf("Could not find any test submissions in '%s'.", baseDir);
+    }
+
+    gradeOptions := GradeOptions{
+        NoDocker: false,
+    }
+
+    failedTests := make([]string, 0);
+
+    for i, testSubmission := range testSubmissions {
+        user := fmt.Sprintf("%03d_%s", i, BASE_TEST_USER);
+
+        ok := test.Run(testSubmission.ID, func(test *testing.T) {
+            result, reject, err := Grade(testSubmission.Assignment, testSubmission.Dir, user, TEST_MESSAGE, false, gradeOptions);
+            if (err == nil) {
+                test.Fatal("Grading succeeded when it shouldn't have.");
+            }
+
+            if (reject != nil) {
+                test.Fatalf("Submission was rejected: '%s'.", reject.String());
+            }
+
+            if (result.Info != nil) {
+                test.Fatal("Result Info is not nil when it should be.")
+            }
+
+            if (testSubmission.TestSubmission.Error != err.Error()) {
+                test.Fatalf("Actual error:\n---\n%v\n---\ndoes not match expected err:\n---\n%v\n---\n.",
+                    testSubmission.TestSubmission.Error, err.Error())
+            }
+
+        });
+
+        if (!ok) {
+            failedTests = append(failedTests, testSubmission.ID);
+        }
+    }
+
+    if (len(failedTests) > 0) {
+        test.Fatalf("Failed to run submission test(s): '%s'.", failedTests);
+    }
 }
