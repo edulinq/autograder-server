@@ -2,6 +2,7 @@ package submission
 
 import (
     "errors"
+
     "github.com/edulinq/autograder/api/core"
     "github.com/edulinq/autograder/common"
     "github.com/edulinq/autograder/grader"
@@ -14,7 +15,6 @@ type SubmitRequest struct {
     core.MinRoleStudent
     Files core.POSTFiles
 
-    TargetUser core.TargetUserSelfOrGrader `json:"target-email"`
     Message string `json:"message"`
 }
 

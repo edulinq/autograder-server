@@ -74,8 +74,8 @@ func RunContainer(logId log.Loggable, imageName string, inputDir string, outputD
 
     if (err != nil) {
         log.Warn("Failed to get output from container (but run did not throw an error).",
-            err, logId,
-            log.NewAttr("container-name", name), log.NewAttr("container-id", containerInstance.ID));
+                err, logId,
+                log.NewAttr("container-name", name), log.NewAttr("container-id", containerInstance.ID));
         out = nil;
     }
     defer out.Close()
@@ -93,11 +93,11 @@ func RunContainer(logId log.Loggable, imageName string, inputDir string, outputD
         stderr = errBuffer.String();
 
         log.Debug("Container output.",
-            logId,
-            log.NewAttr("container-name", name),
-            log.NewAttr("container-id", containerInstance.ID),
-            log.NewAttr("stdout", stdout),
-            log.NewAttr("stderr", stderr));
+                logId,
+                log.NewAttr("container-name", name),
+                log.NewAttr("container-id", containerInstance.ID),
+                log.NewAttr("stdout", stdout),
+                log.NewAttr("stderr", stderr));
 
         if err != nil {
             docker.ContainerKill(ctx, containerInstance.ID, "KILL");

@@ -137,7 +137,7 @@ func TestErrorSubmission(test *testing.T) {
 
         response := core.SendTestAPIRequestFull(test, core.NewEndpoint(`submission/submit`), fields, testSubmission.Files, model.RoleStudent);
         if (!response.Success) {
-            test.Errorf("Case %d: Response is a success when it should not be: '%v'.", i, response);
+            test.Errorf("Case %d: Response is not a success when it should be: '%v'.", i, response);
             continue;
         }
 
