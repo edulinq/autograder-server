@@ -1,7 +1,9 @@
 package submission
 
 import (
+    "errors"
     "github.com/edulinq/autograder/api/core"
+    "github.com/edulinq/autograder/common"
     "github.com/edulinq/autograder/grader"
     "github.com/edulinq/autograder/log"
     "github.com/edulinq/autograder/model"
@@ -12,6 +14,7 @@ type SubmitRequest struct {
     core.MinRoleStudent
     Files core.POSTFiles
 
+    TargetUser core.TargetUserSelfOrGrader `json:"target-email"`
     Message string `json:"message"`
 }
 
@@ -36,12 +39,14 @@ func HandleSubmit(request *SubmitRequest) (*SubmitResponse, *core.APIError) {
             stderr = result.Stderr;
         }
 
-        // FIXME(CAMDEN): Probably want to differentiate errors that a student should see and ones they shouldn't.
-        response.Message = err.Error()
-
         log.Info("Submission grading failed.", err, request.Assignment, log.NewAttr("stdout", stdout), log.NewAttr("stderr", stderr), request.User);
 
-        return &response, nil;
+        var secureErr = new(common.SecureError);
+        if (errors.As(err, &secureErr)) {
+            response.Message = err.Error();
+        }
+
+        return &response, nil
     }
 
     if (reject != nil) {

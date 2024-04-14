@@ -117,12 +117,12 @@ func TestRejectSubmissionMaxAttempts(test *testing.T) {
 }
 
 func TestErrorSubmission(test *testing.T) {
-    resetVal := config.GRADER_OUTPUT_LIMIT_KB.Get()
-    config.GRADER_OUTPUT_LIMIT_KB.Set(1)
-    defer config.GRADER_OUTPUT_LIMIT_KB.Set(resetVal)
+    resetVal := config.GRADER_OUTPUT_LIMIT_KB.Get();
+    config.GRADER_OUTPUT_LIMIT_KB.Set(1);
+    defer config.GRADER_OUTPUT_LIMIT_KB.Set(resetVal);
 
-    db.ResetForTesting()
-    defer db.ResetForTesting()
+    db.ResetForTesting();
+    defer db.ResetForTesting();
 
     testSubmissions, err := grader.GetTestSubmissions(config.GetCourseImportDir(), common.TEST_ERROR_SUBMISSIONS);
     if (err != nil) {
@@ -137,7 +137,7 @@ func TestErrorSubmission(test *testing.T) {
 
         response := core.SendTestAPIRequestFull(test, core.NewEndpoint(`submission/submit`), fields, testSubmission.Files, model.RoleStudent);
         if (!response.Success) {
-            test.Errorf("Case %d: Response is not a success when it should be: '%v'.", i, response);
+            test.Errorf("Case %d: Response is a success when it should not be: '%v'.", i, response);
             continue;
         }
 
@@ -152,6 +152,5 @@ func TestErrorSubmission(test *testing.T) {
             test.Fatalf("Response does not have the correct error.\nActual error:\n---\n%v\n---\ndoes not match expected err:\n---\n%v\n---\n.",
                 responseContent.Message, testSubmission.TestSubmission.Error);
         }
-
     }
 }
