@@ -2,7 +2,6 @@ package docker
 
 import (
     "fmt"
-    "github.com/edulinq/autograder/common"
     "regexp"
     "strings"
 
@@ -11,6 +10,7 @@ import (
     "github.com/docker/docker/api/types/mount"
     "github.com/docker/docker/pkg/stdcopy"
 
+    "github.com/edulinq/autograder/common"
     "github.com/edulinq/autograder/config"
     "github.com/edulinq/autograder/log"
     "github.com/edulinq/autograder/util"
