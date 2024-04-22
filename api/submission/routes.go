@@ -15,6 +15,7 @@ var routes []*core.Route = []*core.Route{
     core.NewAPIRoute(core.NewEndpoint(`submission/fetch/submissions`), HandleFetchSubmissions),
     core.NewAPIRoute(core.NewEndpoint(`submission/submit`), HandleSubmit),
     core.NewAPIRoute(core.NewEndpoint(`submission/remove`), HandleRemoveSubmission),
+    core.NewAPIRoute(core.NewEndpoint(`submission/fetch/course-report`), HandleFetchCourseReport),
 };
 
 func GetRoutes() *[]*core.Route {
