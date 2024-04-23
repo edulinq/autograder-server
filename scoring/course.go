@@ -24,7 +24,7 @@ func FullCourseScoringAndUpload(course *model.Course, dryRun bool) error {
 
         err := FullAssignmentScoringAndUpload(assignment, dryRun);
         if (err != nil) {
-            return fmt.Errorf("Failed to grade assignment '%s' for course '%s': '%w'.", course.GetID(), assignment.GetID(), err);
+            return fmt.Errorf("Failed to grade assignment '%s' for course '%s': '%w'.", assignment.GetID(), course.GetID(), err);
         }
     }
 
