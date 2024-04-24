@@ -1,14 +1,14 @@
 package submission
 
 import (
-    // "reflect"
-    "testing"
-    "reflect"
+	"reflect"
+	"testing"
+
 	"github.com/edulinq/autograder/api/core"
+	"github.com/edulinq/autograder/common"
 	"github.com/edulinq/autograder/model"
 	"github.com/edulinq/autograder/report"
-    "github.com/edulinq/autograder/util"
-    "github.com/edulinq/autograder/common"
+	"github.com/edulinq/autograder/util"
 )
 
 
@@ -19,14 +19,12 @@ func TestCourseReport(test *testing.T) {
     testCases := []struct{
         role model.UserRole
         permError bool
-        result *report.CourseScoringReport
+        result *FetchCourseReportResponse
     }{
-        // perfect test case
-        {model.RoleAdmin,false,Expected},
-        // Student access 
-        {model.RoleStudent,true,&report.CourseScoringReport{}},
-        // Nonexisting course
-        
+        // Admin 
+        {model.RoleAdmin,false,expected},
+        // Student 
+        {model.RoleStudent,true,&FetchCourseReportResponse{}},
 
     };
     for i, testCase := range testCases {
@@ -44,12 +42,12 @@ func TestCourseReport(test *testing.T) {
 
             continue;
         }
-        var responseContent FetchCourseReportResponse
+        var responseContent *FetchCourseReportResponse
         util.MustJSONFromString(util.MustToJSON(response.Content), &responseContent);
 
-        if (!reflect.DeepEqual(testCase.result, responseContent.CourseReport)) {
+        if (!reflect.DeepEqual(testCase.result, responseContent)) {
             test.Errorf("Case %d: Unexpected submission result. Expected: '%s', actual: '%s'.", i,
-                util.MustToJSONIndent(testCase.result), util.MustToJSONIndent(responseContent.CourseReport));
+                util.MustToJSONIndent(testCase.result), util.MustToJSONIndent(responseContent));
             continue;
         }
     }
@@ -58,44 +56,72 @@ func TestCourseReport(test *testing.T) {
 }
 
 
-var Expected *report.CourseScoringReport = &report.CourseScoringReport{CourseName: "Course 101",
-    Assignments: []*report.AssignmentScoringReport{
-        &report.AssignmentScoringReport{
-            AssignmentName: "Homework 0",
-            NumberOfSubmissions: 1,
-            LatestSubmission: common.MustTimestampFromString("2023-10-15T21:44:33Z"),
-            Questions: []*report.ScoringReportQuestionStats{
-                &report.ScoringReportQuestionStats{
-                    QuestionName: "Q1",
-                    Min: 1,
-                    Max: 1,
-                    Median: 1,
-                    Mean: 1,
-                    StdDev: -1,
-                },
-                &report.ScoringReportQuestionStats{
-                    QuestionName: "Q2",
-                    Min: 1,
-                    Max: 1,
-                    Median: 1,
-                    Mean: 1,
-                    StdDev: -1,
-                },
-                &report.ScoringReportQuestionStats{
-                    QuestionName: "Style",
-                    Min: 0,
-                    Max: 0,
-                    Median: 0,
-                    Mean: 0,
-                    StdDev: -1,
-                },
-                &report.ScoringReportQuestionStats{
-                    QuestionName: "<Overall>",
-                    Min: 1,
-                    Max: 1,
-                    Median: 1,
-                    Mean: 1,
-                    StdDev: -1,
+var expected = &FetchCourseReportResponse{
+    CourseReport: &report.CourseScoringReport{
+        CourseName: "Course 101",
+        Assignments: []*report.AssignmentScoringReport{
+            &report.AssignmentScoringReport{
+                AssignmentName: "Homework 0",
+                NumberOfSubmissions: 1,
+                LatestSubmission: common.MustTimestampFromString("2023-10-15T21:44:33Z"),
+                Questions: []*report.ScoringReportQuestionStats{
+                    &report.ScoringReportQuestionStats{
+                        QuestionName: "Q1",
+                        Min: 1,
+                        Max: 1,
+                        Median: 1,
+                        Mean: 1,
+                        StdDev: -1,
+
+                        // MinString: "1.00",
+                        // MaxString: "1.00",
+                        // MedianString: "1.00",
+                        // MeanString: "1.00",
+                        // StdDevString: "NaN",
+
+                    },
+                    &report.ScoringReportQuestionStats{
+                        QuestionName: "Q2",
+                        Min: 1,
+                        Max: 1,
+                        Median: 1,
+                        Mean: 1,
+                        StdDev: -1,
+
+                        // MinString: "1.00",
+                        // MaxString: "1.00",
+                        // MedianString: "1.00",
+                        // MeanString: "1.00",
+                        // StdDevString: "NaN",
+                    },
+                    &report.ScoringReportQuestionStats{
+                        QuestionName: "Style",
+                        Min: 0,
+                        Max: 0,
+                        Median: 0,
+                        Mean: 0,
+                        StdDev: -1,
+
+                        // MinString: "0.00",
+                        // MaxString: "0.00",
+                        // MedianString: "0.00",
+                        // MeanString: "0.00",
+                        // StdDevString: "NaN",
+                    },
+                    &report.ScoringReportQuestionStats{
+                        QuestionName: "<Overall>",
+                        Min: 1,
+                        Max: 1,
+                        Median: 1,
+                        Mean: 1,
+                        StdDev: -1,
+
+                        // MinString: "1.00",
+                        // MaxString: "1.00",
+                        // MedianString: "1.00",
+                        // MeanString: "1.00",
+                        // StdDevString: "NaN",
+                    },
                 },
             },
         },

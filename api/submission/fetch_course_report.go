@@ -1,9 +1,11 @@
 package submission
 
 import (
-    "github.com/edulinq/autograder/api/core"
-    //"github.com/edulinq/autograder/model"
-    "github.com/edulinq/autograder/report"
+	// "fmt"
+
+	"github.com/edulinq/autograder/api/core"
+	//"github.com/edulinq/autograder/model"
+	"github.com/edulinq/autograder/report"
 )
 
 // permission erros
@@ -24,6 +26,7 @@ func HandleFetchCourseReport(request *FetchCourseReportRequest) (*FetchCourseRep
 	response := FetchCourseReportResponse{};
 
 	gettingCourseReport, err := report.GetCourseScoringReport(request.Course);
+
 
 	if err != nil {
         return nil, core.NewInternalError("-608", &request.APIRequestCourseUserContext, "Failed to get course report.").
