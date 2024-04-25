@@ -4,31 +4,36 @@ import (
 	"reflect"
 	"testing"
 
+    "github.com/edulinq/autograder/common"
 	"github.com/edulinq/autograder/api/core"
-	"github.com/edulinq/autograder/common"
 	"github.com/edulinq/autograder/model"
 	"github.com/edulinq/autograder/report"
 	"github.com/edulinq/autograder/util"
 )
 
-
-
-
-
 func TestCourseReport(test *testing.T) {
     testCases := []struct{
         role model.UserRole
+        courseId string 
+        coursError bool
         permError bool
         result *FetchCourseReportResponse
     }{
-        // Admin 
-        {model.RoleAdmin,false,expected},
-        // Student 
-        {model.RoleStudent,true,&FetchCourseReportResponse{}},
+        // Admin Valid Course
+        {model.RoleAdmin,"course101",false,false,expected},
 
+        // Admin Invalid course
+        {model.RoleAdmin,"course102",true,false,expected},
+
+        // Student 
+        {model.RoleStudent,"course101",false,true,&FetchCourseReportResponse{}},
     };
+
     for i, testCase := range testCases {
-        response := core.SendTestAPIRequestFull(test, core.NewEndpoint(`submission/fetch/course-report`), nil, nil, testCase.role );
+        fields := map[string]any{
+            "course-id": testCase.courseId,
+        }
+        response := core.SendTestAPIRequestFull(test, core.NewEndpoint(`submission/fetch/course-report`),fields, nil, testCase.role );
         if (!response.Success) {
             if (testCase.permError) {
                 expectedLocator := "-020";
@@ -36,25 +41,26 @@ func TestCourseReport(test *testing.T) {
                     test.Errorf("Case %d: Incorrect error returned on permissions error. Expcted '%s', found '%s'.",
                         i, expectedLocator, response.Locator);
                 }
+            } else if(testCase.coursError) {
+                expectedLocator := "-018";
+                if (response.Locator != expectedLocator) {
+                    test.Errorf("Case %d: Incorrect error returned on permissions error. Expcted '%s', found '%s'.",
+                        i, expectedLocator, response.Locator);
+                }
             } else {
                 test.Errorf("Case %d: Response is not a success when it should be: '%v'.", i, response);
             }
-
             continue;
         }
         var responseContent *FetchCourseReportResponse
         util.MustJSONFromString(util.MustToJSON(response.Content), &responseContent);
-
         if (!reflect.DeepEqual(testCase.result, responseContent)) {
             test.Errorf("Case %d: Unexpected submission result. Expected: '%s', actual: '%s'.", i,
                 util.MustToJSONIndent(testCase.result), util.MustToJSONIndent(responseContent));
             continue;
         }
     }
-
-
 }
-
 
 var expected = &FetchCourseReportResponse{
     CourseReport: &report.CourseScoringReport{
@@ -72,13 +78,6 @@ var expected = &FetchCourseReportResponse{
                         Median: 1,
                         Mean: 1,
                         StdDev: -1,
-
-                        // MinString: "1.00",
-                        // MaxString: "1.00",
-                        // MedianString: "1.00",
-                        // MeanString: "1.00",
-                        // StdDevString: "NaN",
-
                     },
                     &report.ScoringReportQuestionStats{
                         QuestionName: "Q2",
@@ -87,12 +86,6 @@ var expected = &FetchCourseReportResponse{
                         Median: 1,
                         Mean: 1,
                         StdDev: -1,
-
-                        // MinString: "1.00",
-                        // MaxString: "1.00",
-                        // MedianString: "1.00",
-                        // MeanString: "1.00",
-                        // StdDevString: "NaN",
                     },
                     &report.ScoringReportQuestionStats{
                         QuestionName: "Style",
@@ -101,12 +94,6 @@ var expected = &FetchCourseReportResponse{
                         Median: 0,
                         Mean: 0,
                         StdDev: -1,
-
-                        // MinString: "0.00",
-                        // MaxString: "0.00",
-                        // MedianString: "0.00",
-                        // MeanString: "0.00",
-                        // StdDevString: "NaN",
                     },
                     &report.ScoringReportQuestionStats{
                         QuestionName: "<Overall>",
@@ -115,12 +102,6 @@ var expected = &FetchCourseReportResponse{
                         Median: 1,
                         Mean: 1,
                         StdDev: -1,
-
-                        // MinString: "1.00",
-                        // MaxString: "1.00",
-                        // MedianString: "1.00",
-                        // MeanString: "1.00",
-                        // StdDevString: "NaN",
                     },
                 },
             },
