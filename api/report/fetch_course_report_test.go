@@ -6,6 +6,7 @@ import (
 
     "github.com/edulinq/autograder/api/core"
     "github.com/edulinq/autograder/model"
+    "github.com/edulinq/autograder/report"
     "github.com/edulinq/autograder/util"
 )
 
@@ -16,10 +17,10 @@ func TestCourseReport(test *testing.T) {
         expectedReport *FetchCourseReportResponse
     }{
         // Admin, Valid Permission
-        {model.RoleAdmin, false, &FetchCourseReportResponse{TestCourseReportExpected}},
+        {model.RoleAdmin, false, &FetchCourseReportResponse{report.TestCourseReportExpected}},
 
         // Grader, Valid Permission
-        {model.RoleGrader, false, &FetchCourseReportResponse{TestCourseReportExpected}},
+        {model.RoleGrader, false, &FetchCourseReportResponse{report.TestCourseReportExpected}},
 
         // Student, Invalid Permission
         {model.RoleStudent, true, nil},

@@ -16,9 +16,9 @@ func TestCourseReportBase(test *testing.T) {
         test.Fatalf("Failed to get course report: '%v'.", err);
     }
 
-    if (!reflect.DeepEqual(TestCourseReport, report)) {
+    if (!reflect.DeepEqual(TestCourseReportExpected, report)) {
         test.Fatalf("Report not as expected.\n--- Expected ---\n%s\n--- Actual ---\n%s\n",
-                util.MustToJSONIndent(TestCourseReport), util.MustToJSONIndent(report));
+                util.MustToJSONIndent(TestCourseReportExpected), util.MustToJSONIndent(report));
     }
 }
 
