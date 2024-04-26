@@ -14,7 +14,7 @@ func TestCourseReport(test *testing.T) {
     testCases := []struct{
         role model.UserRole
         permError bool
-        result *FetchCourseReportResponse
+        expectedReport *FetchCourseReportResponse
     }{
         // Admin, Valid Permission
         {model.RoleAdmin, false, &FetchCourseReportResponse{CourseReport: report.TestCourseReport}},
@@ -38,18 +38,19 @@ func TestCourseReport(test *testing.T) {
             } else {
                 test.Errorf("Case %d: Response is not a success when it should be: '%v'.", i, response);
             }
+
             continue;
         }
 
         var responseContent *FetchCourseReportResponse;
         util.MustJSONFromString(util.MustToJSON(response.Content), &responseContent);
 
-        var expected_marshaled *FetchCourseReportResponse;
-        util.MustJSONFromString(util.MustToJSON(testCase.result), &expected_marshaled);
+        var expectedResponse *FetchCourseReportResponse;
+        util.MustJSONFromString(util.MustToJSON(testCase.expectedReport), &expectedResponse);
 
-        if (!reflect.DeepEqual(expected_marshaled, responseContent)) {
+        if (!reflect.DeepEqual(expectedResponse, responseContent)) {
             test.Errorf("Case %d: Unexpected submission result. Expected: '%s', actual: '%s'.", i,
-                util.MustToJSONIndent(expected_marshaled), util.MustToJSONIndent(responseContent));
+                util.MustToJSONIndent(expectedResponse), util.MustToJSONIndent(responseContent));
             continue;
         }
     }

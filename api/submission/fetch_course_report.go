@@ -15,12 +15,11 @@ type FetchCourseReportResponse struct {
 }
 
 func HandleFetchCourseReport(request *FetchCourseReportRequest) (*FetchCourseReportResponse, *core.APIError) {
-    gettingCourseReport, err := report.GetCourseScoringReport(request.Course);
-
+    courseReport, err := report.GetCourseScoringReport(request.Course);
     if err != nil {
         return nil, core.NewInternalError("-608", &request.APIRequestCourseUserContext, "Failed to get course report.").
             Err(err).Course(request.CourseID);
     }
 
-    return &FetchCourseReportResponse{CourseReport: gettingCourseReport}, nil
+    return &FetchCourseReportResponse{courseReport}, nil
 }
