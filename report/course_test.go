@@ -35,7 +35,7 @@ func TestCourseReportHTML(test *testing.T) {
         test.Fatalf("Failed to generate HTML for report: '%v'.", err);
     }
 
-    expectedHTML, err := TestCourseReport.ToHTML();
+    expectedHTML, err := TestCourseReportExpected.ToHTML();
     if (err != nil) {
         test.Fatalf("Failed to generate HTML for expected report: '%v'.", err);
     }

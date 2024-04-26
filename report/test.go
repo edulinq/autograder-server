@@ -4,7 +4,7 @@ import(
     "github.com/edulinq/autograder/common"
 )
 
-var TestCourseReport *CourseScoringReport = &CourseScoringReport{
+var TestCourseReportExpected *CourseScoringReport = &CourseScoringReport{
     CourseName: "Course 101",
     Assignments: []*AssignmentScoringReport{
         &AssignmentScoringReport{

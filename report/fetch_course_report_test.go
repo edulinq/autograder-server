@@ -1,4 +1,4 @@
-package submission
+package report
 
 import (
     "reflect"
@@ -6,7 +6,6 @@ import (
 
     "github.com/edulinq/autograder/api/core"
     "github.com/edulinq/autograder/model"
-    "github.com/edulinq/autograder/report"
     "github.com/edulinq/autograder/util"
 )
 
@@ -17,17 +16,17 @@ func TestCourseReport(test *testing.T) {
         expectedReport *FetchCourseReportResponse
     }{
         // Admin, Valid Permission
-        {model.RoleAdmin, false, &FetchCourseReportResponse{CourseReport: report.TestCourseReport}},
+        {model.RoleAdmin, false, &FetchCourseReportResponse{TestCourseReportExpected}},
 
         // Grader, Valid Permission
-        {model.RoleGrader, false, &FetchCourseReportResponse{CourseReport: report.TestCourseReport}},
+        {model.RoleGrader, false, &FetchCourseReportResponse{TestCourseReportExpected}},
 
         // Student, Invalid Permission
         {model.RoleStudent, true, nil},
     };
 
     for i, testCase := range testCases {
-        response := core.SendTestAPIRequestFull(test, core.NewEndpoint(`submission/fetch/course-report`), nil, nil, testCase.role);
+        response := core.SendTestAPIRequestFull(test, core.NewEndpoint(`report/submissions/fetch`), nil, nil, testCase.role);
         if (!response.Success) {
             if (testCase.permError) {
                 expectedLocator := "-020";
