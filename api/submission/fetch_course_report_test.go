@@ -45,6 +45,7 @@ func TestCourseReport(test *testing.T) {
         var responseContent *FetchCourseReportResponse;
         util.MustJSONFromString(util.MustToJSON(response.Content), &responseContent);
 
+        // Serialize and deserialize the expectedResponse to get rid of the formating info attached to it.
         var expectedResponse *FetchCourseReportResponse;
         util.MustJSONFromString(util.MustToJSON(testCase.expectedReport), &expectedResponse);
 
