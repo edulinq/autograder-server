@@ -16,13 +16,13 @@ func TestCourseReport(test *testing.T) {
         permError bool
         result *FetchCourseReportResponse
     }{
-        // Admin
+        // Admin, Valid Permission
         {model.RoleAdmin, false, &FetchCourseReportResponse{CourseReport: report.TestCourseReport}},
 
-        // Grader
+        // Grader, Valid Permission
         {model.RoleGrader, false, &FetchCourseReportResponse{CourseReport: report.TestCourseReport}},
 
-        // Student 
+        // Student, Invalid Permission
         {model.RoleStudent, true, nil},
     };
 
