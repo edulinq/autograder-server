@@ -1,0 +1,58 @@
+package report
+
+import (
+    "reflect"
+    "testing"
+
+    "github.com/edulinq/autograder/api/core"
+    "github.com/edulinq/autograder/model"
+    "github.com/edulinq/autograder/report"
+    "github.com/edulinq/autograder/util"
+)
+
+func TestCourseReport(test *testing.T) {
+    testCases := []struct{
+        role model.UserRole
+        permError bool
+        expectedReport *FetchCourseReportResponse
+    }{
+        // Admin, Valid Permission
+        {model.RoleAdmin, false, &FetchCourseReportResponse{report.TestCourseReportExpected}},
+
+        // Grader, Valid Permission
+        {model.RoleGrader, false, &FetchCourseReportResponse{report.TestCourseReportExpected}},
+
+        // Student, Invalid Permission
+        {model.RoleStudent, true, nil},
+    };
+
+    for i, testCase := range testCases {
+        response := core.SendTestAPIRequestFull(test, core.NewEndpoint(`report/submissions/fetch`), nil, nil, testCase.role);
+        if (!response.Success) {
+            if (testCase.permError) {
+                expectedLocator := "-020";
+                if (response.Locator != expectedLocator) {
+                    test.Errorf("Case %d: Incorrect error returned on permissions error. Expcted '%s', found '%s'.",
+                        i, expectedLocator, response.Locator);
+                }
+            } else {
+                test.Errorf("Case %d: Response is not a success when it should be: '%v'.", i, response);
+            }
+
+            continue;
+        }
+
+        var responseContent *FetchCourseReportResponse;
+        util.MustJSONFromString(util.MustToJSON(response.Content), &responseContent);
+
+        // Serialize and deserialize the expectedResponse to get rid of the formating info attached to it.
+        var expectedResponse *FetchCourseReportResponse;
+        util.MustJSONFromString(util.MustToJSON(testCase.expectedReport), &expectedResponse);
+
+        if (!reflect.DeepEqual(expectedResponse, responseContent)) {
+            test.Errorf("Case %d: Unexpected submission result. Expected: '%s', actual: '%s'.", i,
+                util.MustToJSONIndent(expectedResponse), util.MustToJSONIndent(responseContent));
+            continue;
+        }
+    }
+}
