@@ -1,14 +1,15 @@
 package grader
 
 import (
-    "path/filepath"
-    "reflect"
-    "testing"
+	"path/filepath"
+	"reflect"
+	"testing"
+	"time"
 
-    "github.com/edulinq/autograder/common"
-    "github.com/edulinq/autograder/config"
-    "github.com/edulinq/autograder/db"
-    "github.com/edulinq/autograder/model"
+	"github.com/edulinq/autograder/common"
+	"github.com/edulinq/autograder/config"
+	"github.com/edulinq/autograder/db"
+	"github.com/edulinq/autograder/model"
 )
 
 var SUBMISSION_RELPATH string = filepath.Join("test-submissions", "solution");
@@ -24,7 +25,7 @@ func TestRejectSubmissionMaxAttempts(test *testing.T) {
     assignment.SubmissionLimit = &model.SubmissionLimitInfo{Max: &maxValue};
 
     // Make a submission that should be rejected.
-    submitForRejection(test, assignment, "other@test.com", &RejectMaxAttempts{0});
+    submitForRejection(test, assignment, "other@test.com", false, &RejectMaxAttempts{0});
 }
 
 func TestRejectSubmissionMaxAttemptsInfinite(test *testing.T) {
@@ -37,14 +38,14 @@ func TestRejectSubmissionMaxAttemptsInfinite(test *testing.T) {
     assignment.SubmissionLimit = &model.SubmissionLimitInfo{};
 
     // All submissions should pass.
-    submitForRejection(test, assignment, "other@test.com", nil);
+    submitForRejection(test, assignment, "other@test.com", false, nil);
 
     // Set the max submissions to nagative (infinite).
     maxValue := -1
     assignment.SubmissionLimit = &model.SubmissionLimitInfo{Max: &maxValue};
 
     // All submissions should pass.
-    submitForRejection(test, assignment, "other@test.com", nil);
+    submitForRejection(test, assignment, "other@test.com", false, nil);
 }
 
 func TestRejectSubmissionMaxWindowAttempts(test *testing.T) {
@@ -71,7 +72,7 @@ func testMaxWindowAttemps(test *testing.T, user string, expectReject bool) {
     };
 
     // Make a submission that should pass.
-    result, _, _ := submitForRejection(test, assignment, user, nil);
+    result, _, _ := submitForRejection(test, assignment, user, false, nil);
 
     expectedTime, err := result.Info.GradingStartTime.Time();
     if (err != nil) {
@@ -84,10 +85,65 @@ func testMaxWindowAttemps(test *testing.T, user string, expectReject bool) {
         reason = &RejectWindowMax{1, duration, expectedTime};
     }
 
-    submitForRejection(test, assignment, user, reason);
+    submitForRejection(test, assignment, user, false, reason);
 }
 
-func submitForRejection(test *testing.T, assignment *model.Assignment, user string, expectedRejection RejectReason) (
+
+func TestRejectSubmissionLateAcknowledgmentOverdueEmptyPolicy(test *testing.T) {
+    // if late policy is not set, can submit overdue assignment without late acknowledgment
+
+    db.ResetForTesting();
+    defer db.ResetForTesting();
+
+    assignment := db.MustGetTestAssignment();
+    assignment.SubmissionLimit = &model.SubmissionLimitInfo{};
+    assignment.LatePolicy = &model.LateGradingPolicy{Type: model.EmptyPolicy}
+
+    assignment.DueDate = common.TimestampFromTime(time.Now().AddDate(-1, 0, 0)) // was due a year ago
+    submitForRejection(test, assignment, "other@test.com", false, nil)
+}
+
+func TestRejectSubmissionLateAcknowledgmentOverdue(test *testing.T) {
+    // late submission is rejected without acknowledgment
+
+    db.ResetForTesting();
+    defer db.ResetForTesting();
+
+    assignment := db.MustGetTestAssignment();
+    assignment.SubmissionLimit = &model.SubmissionLimitInfo{};
+    assignment.LatePolicy = &model.LateGradingPolicy{Type: model.LateDays}
+
+    assignment.DueDate = common.TimestampFromTime(time.Now().AddDate(-1, 0, 0))
+    submitForRejection(test, assignment, "other@test.com", false, &RejectMissingLateAcknowledgment{})
+}
+
+func TestRejectSubmissionLateAcknowledgmentOverdueWithAck(test *testing.T) {
+    // late submission is accepted with acknowledgment
+
+    db.ResetForTesting();
+    defer db.ResetForTesting();
+
+    assignment := db.MustGetTestAssignment();
+    assignment.SubmissionLimit = &model.SubmissionLimitInfo{};
+    assignment.LatePolicy = &model.LateGradingPolicy{Type: model.LateDays}
+
+    assignment.DueDate = common.TimestampFromTime(time.Now().AddDate(-1, 0, 0))
+    submitForRejection(test, assignment, "other@test.com", true, nil)
+}
+
+func TestRejectSubmissionLateAcknowledgmentNotOverdue(test *testing.T) {
+    db.ResetForTesting();
+    defer db.ResetForTesting();
+
+    assignment := db.MustGetTestAssignment();
+    assignment.SubmissionLimit = &model.SubmissionLimitInfo{};
+    assignment.LatePolicy = &model.LateGradingPolicy{Type: model.LateDays}
+
+    assignment.DueDate = common.TimestampFromTime(time.Now().AddDate(+1, 0, 0))
+    submitForRejection(test, assignment, "other@test.com", false, nil) // assignment is not overdue so can submit without acknowledgment
+}
+
+func submitForRejection(test *testing.T, assignment *model.Assignment, user string, lateAcknowledgment bool, expectedRejection RejectReason) (
         *model.GradingResult, RejectReason, error) {
     // Disable testing mode to check for rejection.
     config.TESTING_MODE.Set(false);
@@ -95,12 +151,14 @@ func submitForRejection(test *testing.T, assignment *model.Assignment, user stri
 
     submissionPath := filepath.Join(assignment.GetSourceDir(), SUBMISSION_RELPATH);
 
-    err := assignment.SubmissionLimit.Validate();
-    if (err != nil) {
-        test.Fatalf("Failed to validate submission limit: '%v'.", err);
+    if assignment.SubmissionLimit != nil {
+        err := assignment.SubmissionLimit.Validate();
+        if (err != nil) {
+            test.Fatalf("Failed to validate submission limit: '%v'.", err);
+        }
     }
 
-    result, reject, err := GradeDefault(assignment, submissionPath, user, TEST_MESSAGE, true);
+    result, reject, err := GradeDefault(assignment, submissionPath, user, TEST_MESSAGE, lateAcknowledgment);
     if (err != nil) {
         test.Fatalf("Failed to grade assignment: '%v'.", err);
     }
