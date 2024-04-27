@@ -73,7 +73,7 @@ func runSubmissionTests(test *testing.T, parallel bool, useDocker bool) {
                 test.Parallel();
             }
 
-            result, reject, err := Grade(testSubmission.Assignment, testSubmission.Dir, user, TEST_MESSAGE, false, gradeOptions);
+            result, reject, err := Grade(testSubmission.Assignment, testSubmission.Dir, user, TEST_MESSAGE, false, true, gradeOptions);
             if (err != nil) {
                 if (result != nil) {
                     fmt.Println("--- stdout ---");

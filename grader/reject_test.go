@@ -100,7 +100,7 @@ func submitForRejection(test *testing.T, assignment *model.Assignment, user stri
         test.Fatalf("Failed to validate submission limit: '%v'.", err);
     }
 
-    result, reject, err := GradeDefault(assignment, submissionPath, user, TEST_MESSAGE);
+    result, reject, err := GradeDefault(assignment, submissionPath, user, TEST_MESSAGE, true);
     if (err != nil) {
         test.Fatalf("Failed to grade assignment: '%v'.", err);
     }
