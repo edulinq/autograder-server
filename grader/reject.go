@@ -144,7 +144,7 @@ func checkLateAcknowledgment(assignment *model.Assignment, lateAcknowledgment bo
 
     policy := assignment.GetLatePolicy()
     
-    if policy.Type == model.EmptyPolicy {
+    if policy.Type == model.EmptyPolicy || policy.Type == model.BaselinePolicy {
         return nil, nil
     }
 
