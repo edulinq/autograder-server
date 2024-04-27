@@ -29,14 +29,14 @@ func GetDefaultGradeOptions() GradeOptions {
 // Grade with default options pulled from config.
 func GradeDefault(assignment *model.Assignment, submissionPath string, user string, message string) (
         *model.GradingResult, RejectReason, error) {
-    return Grade(assignment, submissionPath, user, message, true, GetDefaultGradeOptions());
+    return Grade(assignment, submissionPath, user, message, true, false, GetDefaultGradeOptions());
 }
 
 // Grade with custom options.
-func Grade(assignment *model.Assignment, submissionPath string, user string, message string, checkRejection bool, options GradeOptions) (
+func Grade(assignment *model.Assignment, submissionPath string, user string, message string, checkRejection bool, lateAcknowledgment bool, options GradeOptions) (
         *model.GradingResult, RejectReason, error) {
     if (checkRejection) {
-        reject, err := checkForRejection(assignment, submissionPath, user, message);
+        reject, err := checkForRejection(assignment, submissionPath, user, message, lateAcknowledgment);
         if (err != nil) {
             return nil, nil, fmt.Errorf("Failed to check for rejection: '%w'.", err);
         }

@@ -5,7 +5,6 @@ import (
     "github.com/edulinq/autograder/grader"
     "github.com/edulinq/autograder/log"
     "github.com/edulinq/autograder/model"
-    "github.com/edulinq/autograder/scoring"
 )
 
 type SubmitRequest struct {
@@ -29,12 +28,6 @@ type SubmitResponse struct {
 func HandleSubmit(request *SubmitRequest) (*SubmitResponse, *core.APIError) {
     response := SubmitResponse{};
 
-    requireAcknowledgment := scoring.RequireLateAcknowledgment(request.Assignment);
-    if requireAcknowledgment && request.LateAcknowledgment != nil && !*request.LateAcknowledgment {
-        response.RequireLateAcknowledgment = true;
-        return &response, nil;
-    }
-
     result, reject, err := grader.GradeDefault(request.Assignment, request.Files.TempDir, request.User.Email, request.Message);
     if (err != nil) {
         stdout := "";
@@ -55,6 +48,10 @@ func HandleSubmit(request *SubmitRequest) (*SubmitResponse, *core.APIError) {
 
         response.Rejected = true;
         response.Message = reject.String();
+
+        if _, ok := reject.(*grader.RejectMissingLateAcknowledgment); ok {
+            response.RequireLateAcknowledgment = true;
+        }
         return &response, nil;
     }
 

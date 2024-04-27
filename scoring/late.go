@@ -333,23 +333,3 @@ func computeLateDays(dueDate time.Time, submissionTime time.Time) int {
 
     return int(math.Ceil(submissionTime.Sub(dueDate).Hours() / 24.0));
 }
-
-// Checks if late acknowledgment is necessary to accept a submission
-func RequireLateAcknowledgment(assignment *model.Assignment) bool {
-    policy := assignment.GetLatePolicy()
-
-    // Empty policy does not require an acknowledgment
-    if (policy.Type == model.EmptyPolicy) {
-        return false
-    }
-
-    dueDate := assignment.DueDate
-
-    // This assignment does not have a due date
-    if dueDate.IsZero() {
-        return false
-    }
-
-    // If the current timestamp is not smaller than the due date, the late policy will be applied
-    return common.NowTimestamp() >= dueDate
-}
