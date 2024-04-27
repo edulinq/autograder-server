@@ -10,7 +10,7 @@ import (
 type SubmitRequest struct {
     core.APIRequestAssignmentContext
     core.MinRoleStudent
-    LateAcknowledgment *bool `json:"late-acknowledgment"`
+    LateAcknowledgment bool `json:"late-acknowledgment"`
     Files core.POSTFiles
 
     Message string `json:"message"`
@@ -28,7 +28,7 @@ type SubmitResponse struct {
 func HandleSubmit(request *SubmitRequest) (*SubmitResponse, *core.APIError) {
     response := SubmitResponse{};
 
-    result, reject, err := grader.GradeDefault(request.Assignment, request.Files.TempDir, request.User.Email, request.Message);
+    result, reject, err := grader.GradeDefault(request.Assignment, request.Files.TempDir, request.User.Email, request.Message, request.LateAcknowledgment);
     if (err != nil) {
         stdout := "";
         stderr := "";

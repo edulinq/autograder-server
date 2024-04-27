@@ -27,9 +27,9 @@ func GetDefaultGradeOptions() GradeOptions {
 }
 
 // Grade with default options pulled from config.
-func GradeDefault(assignment *model.Assignment, submissionPath string, user string, message string) (
+func GradeDefault(assignment *model.Assignment, submissionPath string, user string, message string, lateAcknowledgment bool) (
         *model.GradingResult, RejectReason, error) {
-    return Grade(assignment, submissionPath, user, message, true, false, GetDefaultGradeOptions());
+    return Grade(assignment, submissionPath, user, message, true, lateAcknowledgment, GetDefaultGradeOptions());
 }
 
 // Grade with custom options.
