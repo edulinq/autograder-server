@@ -27,7 +27,7 @@ func TestCourseReport(test *testing.T) {
     };
 
     for i, testCase := range testCases {
-        response := core.SendTestAPIRequestFull(test, core.NewEndpoint(`report/submissions/fetch`), nil, nil,testCase.role);
+        response := core.SendTestAPIRequestFull(test, core.NewEndpoint(`report/submissions/fetch`), nil, nil, testCase.role);
         if (!response.Success) {
             if (testCase.permError) {
                 expectedLocator := "-020";
