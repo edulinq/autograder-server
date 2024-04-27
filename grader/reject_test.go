@@ -143,6 +143,17 @@ func TestRejectSubmissionLateAcknowledgmentNotOverdue(test *testing.T) {
     submitForRejection(test, assignment, "other@test.com", false, nil) // assignment is not overdue so can submit without acknowledgment
 }
 
+func TestRejectSubmissionLateAcknowledgmentNoDueDate(test *testing.T) {
+    db.ResetForTesting();
+    defer db.ResetForTesting();
+
+    assignment := db.MustGetTestAssignment();
+    assignment.SubmissionLimit = &model.SubmissionLimitInfo{};
+    assignment.LatePolicy = &model.LateGradingPolicy{Type: model.LateDays}
+
+    submitForRejection(test, assignment, "other@test.com", false, nil) // assignment does not have a due date
+}
+
 func submitForRejection(test *testing.T, assignment *model.Assignment, user string, lateAcknowledgment bool, expectedRejection RejectReason) (
         *model.GradingResult, RejectReason, error) {
     // Disable testing mode to check for rejection.
