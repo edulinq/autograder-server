@@ -154,7 +154,13 @@ func checkLateAcknowledgment(assignment *model.Assignment, lateAcknowledgment bo
         return nil, nil
     }
 
-    if common.NowTimestamp() >= dueDate {
+    dueDateTime, err := dueDate.Time()
+
+    if err != nil {
+        return nil, err
+    }
+
+    if time.Now().After(dueDateTime) {
         return &RejectMissingLateAcknowledgment{}, nil
     }
 
