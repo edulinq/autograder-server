@@ -10,10 +10,10 @@ import (
 type SubmitRequest struct {
     core.APIRequestAssignmentContext
     core.MinRoleStudent
-    LateAcknowledgment bool `json:"late-acknowledgment"`
     Files core.POSTFiles
-
+    
     Message string `json:"message"`
+    LateAcknowledgment bool `json:"late-acknowledgment"`
 }
 
 type SubmitResponse struct {
