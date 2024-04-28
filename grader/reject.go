@@ -137,7 +137,7 @@ func checkSubmissionLimitWindow(window *model.SubmittionLimitWindow,
 }
 
 func checkLateAcknowledgment(assignment *model.Assignment, lateAcknowledgment bool) RejectReason {
-    // if the user acknowledges that they are submitting late, do not reject the submission
+    // If the user acknowledges that they are submitting late, do not reject the submission.
     if lateAcknowledgment {
         return nil
     }
