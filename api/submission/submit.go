@@ -52,6 +52,7 @@ func HandleSubmit(request *SubmitRequest) (*SubmitResponse, *core.APIError) {
         if _, ok := reject.(*grader.RejectMissingLateAcknowledgment); ok {
             response.RequireLateAcknowledgment = true;
         }
+        
         return &response, nil;
     }
 
