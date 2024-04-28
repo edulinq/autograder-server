@@ -45,9 +45,9 @@ func (this *RejectMissingLateAcknowledgment) String() string {
 }
 
 func checkForRejection(assignment *model.Assignment, submissionPath string, user string, message string, lateAcknowledgment bool) (RejectReason, error) {
-    reject, err := checkLateAcknowledgment(assignment, lateAcknowledgment)
-    if reject != nil || err != nil {
-        return reject, err
+    reject := checkLateAcknowledgment(assignment, lateAcknowledgment)
+    if reject != nil {
+        return reject, nil
     }
     return checkSubmissionLimit(assignment, user);
 }
@@ -136,27 +136,27 @@ func checkSubmissionLimitWindow(window *model.SubmittionLimitWindow,
     return nil, nil;
 }
 
-func checkLateAcknowledgment(assignment *model.Assignment, lateAcknowledgment bool) (RejectReason, error) {
+func checkLateAcknowledgment(assignment *model.Assignment, lateAcknowledgment bool) RejectReason {
     // if the user acknowledges that they are submitting late, do not reject the submission
     if lateAcknowledgment {
-        return nil, nil
+        return nil
     }
 
     policy := assignment.GetLatePolicy()
     
     if policy.Type == model.EmptyPolicy || policy.Type == model.BaselinePolicy {
-        return nil, nil
+        return nil
     }
 
     dueDate := assignment.DueDate
 
     if dueDate.IsZero() {
-        return nil, nil
+        return nil
     }
 
     if common.NowTimestamp() >= dueDate {
-        return &RejectMissingLateAcknowledgment{}, nil
+        return &RejectMissingLateAcknowledgment{}
     }
 
-    return nil, nil
+    return nil
 }
