@@ -1,15 +1,15 @@
 package grader
 
 import (
-	"path/filepath"
-	"reflect"
-	"testing"
-	"time"
+    "path/filepath"
+    "reflect"
+    "testing"
+    "time"
 
-	"github.com/edulinq/autograder/common"
-	"github.com/edulinq/autograder/config"
-	"github.com/edulinq/autograder/db"
-	"github.com/edulinq/autograder/model"
+    "github.com/edulinq/autograder/common"
+    "github.com/edulinq/autograder/config"
+    "github.com/edulinq/autograder/db"
+    "github.com/edulinq/autograder/model"
 )
 
 var SUBMISSION_RELPATH string = filepath.Join("test-submissions", "solution");
