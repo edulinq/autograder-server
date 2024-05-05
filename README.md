@@ -147,6 +147,10 @@ pip install autograder-py
 ## Running the Server
 
 The main server is available via the `cmd/server` executable.
+```
+./bin/server
+```
+
 The `web.port` config option can be used to set the port the server listens on:
 ```
 ./bin/server -c web.port=80
@@ -158,6 +162,20 @@ The `setcap.sh` script will do this for you:
 ```
 ./setcap.sh
 ```
+
+### Running the Server for Testing
+
+You may want to run the server for testing/debugging,
+e.g., if you are developing an interface to the server.
+We recommend two additional changes to how you would normally run the server:
+```
+go run cmd/server/main.go --unit-testing
+```
+
+First, we ran the server using `go run`,
+This will ensure that the server executable is up-to-date before running it.
+Second we used the `--unit-testing` flag,
+which will set some testing options, create a clean new database, and load the test courses (inside the `_tests directory).
 
 ## Running Tests
 
