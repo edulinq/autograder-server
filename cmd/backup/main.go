@@ -33,6 +33,7 @@ func main() {
     var courses map[string]*model.Course;
 
     if (args.Course != "") {
+        courses = make(map[string]*model.Course);
         course := db.MustGetCourse(args.Course);
         courses[course.GetID()] = course;
     } else {
