@@ -7,7 +7,7 @@ import (
 )
 
 var routes []*core.Route = []*core.Route{
-    core.NewAPIRoute(core.NewEndpoint(`report/submissions/fetch`), HandleFetchCourseReport),
+    core.NewAPIRoute(core.NewEndpoint(`report/fetchcourse`), HandleFetchCourseReport),
 
 };
 
