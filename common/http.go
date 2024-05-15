@@ -202,7 +202,7 @@ func doRequest(uri string, request *http.Request, verb string, checkResult bool)
         log.Error("Got a non-OK status.",
                 log.NewAttr("code", response.StatusCode), log.NewAttr("body", body),
                 log.NewAttr("headers", response.Header), log.NewAttr("url", uri));
-        return "", nil, fmt.Errorf("Got a non-OK status code '%d' from %s on URL '%s': '%w'.", response.StatusCode, verb, uri, err);
+        return "", nil, fmt.Errorf("Got a non-OK status code '%d' from %s on URL '%s'.", response.StatusCode, verb, uri);
     }
 
     return body, response.Header, nil;
