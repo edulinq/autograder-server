@@ -4,12 +4,12 @@ package common
 // The content is repeated to avoid an import cycle.
 
 import (
-	"os"
-	"testing"
+    "os"
+    "testing"
 
-	"github.com/edulinq/autograder/config"
-	"github.com/edulinq/autograder/log"
-	"github.com/edulinq/autograder/util"
+    "github.com/edulinq/autograder/config"
+    "github.com/edulinq/autograder/log"
+    "github.com/edulinq/autograder/util"
 )
 
 // Use the common main for all tests in this package.
