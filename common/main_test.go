@@ -17,8 +17,8 @@ func TestMain(suite *testing.M) {
     // Run inside a func so defers will run before os.Exit().
     code := func() int {
         config.MustEnableUnitTestingMode();
-		log.SetLevelFatal();
-		
+        log.SetLevelFatal();
+        
         defer CleanupTestingMain();
 
         return suite.Run();
