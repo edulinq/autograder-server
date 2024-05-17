@@ -37,7 +37,7 @@ jobs:
         run: ./.ci/install_py_interface.sh 'main'
 
       - name: Build
-        run: ./build.sh
+        run: ./scripts/build.sh
 
       - name: Run Base Tests
         env:
