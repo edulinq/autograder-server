@@ -30,7 +30,7 @@ var (
     EMAIL_USER = MustNewStringOption("email.user", "", "SMTP username for emails sent from the autograder.");
 
     // Docker
-    DOCKER_DISABLE = MustNewBoolOption("docker.disable", true, "Disable the use of docker (usually for testing).");
+    DOCKER_DISABLE = MustNewBoolOption("docker.disable", false, "Disable the use of docker (usually for testing).");
 
     // Tasks
     NO_TASKS = MustNewBoolOption("tasks.disable", false, "Disable all scheduled tasks.");
@@ -47,5 +47,5 @@ var (
     DB_TYPE = MustNewStringOption("db.type", "disk", "The type of database to use.");
     DB_PG_URI = MustNewStringOption("db.pg.uri", "", "Connection string to connect to a Postgres Databse. Empty if not using Postgres.");
 
-	STALELOCK_DURATION = MustNewIntOption("stale.duration", 2, "Amount of time a lock can be unused before getting removed");
+    STALELOCK_DURATION = MustNewIntOption("stale.duration", 2, "Amount of time a lock can be unused before getting removed");
 )
