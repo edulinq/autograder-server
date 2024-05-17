@@ -14,15 +14,14 @@ var (
     doesNotExistKey = "dne"
     staleDuration = time.Duration(config.STALELOCK_DURATION.Get()) * time.Second;
 	wg sync.WaitGroup;
-
 )
 
-func TestLock(test *testing.T) {
+func TestLockManager(test *testing.T) {
 	testLockingKey()
-
+	
 	testUnlockingKey(test)
 
-	testConcurrentLockingUnlocking(test)
+	testConcurrentLockingUnlocking()
 
     testUnlockingAnUnlockedLock(test)
     
@@ -42,7 +41,7 @@ func testUnlockingKey(test *testing.T) {
     }
 }
 
-func testConcurrentLockingUnlocking(test *testing.T) {
+func testConcurrentLockingUnlocking() {
     Lock(key);
     Lock(key2);
     wg.Add(2);
@@ -74,14 +73,10 @@ func testUnlockingMissingKey(test *testing.T) {
     if err == nil {
         test.Errorf("Lockmanager unlocked a key that doesn't exist");
     }
-
-
 }
 
 func testLockConcurrencyWithStaleCheck(test *testing.T) {
-
     testWithCondition := func(shouldPreventRemoval bool) bool {
-		
         Lock(key) 
         Unlock(key) 
 
@@ -107,15 +102,13 @@ func testLockConcurrencyWithStaleCheck(test *testing.T) {
     }
 
     // Test if a lock gets past the first "if" in RemoveStaleLocksOnce
-	// but not the second because it had been aquired 
+	// but not the second because it had been aquired. 
     if !testWithCondition(true) {
         test.Errorf("Lock was unexpectedly removed even though it was accessed concurrently")
     }
 
-
-    // Test if a lock gets past both "if's" and gets removed from the map
+    // Test if a lock gets past both "if's" and gets removed from the map.
     if testWithCondition(false) {
         test.Errorf("Stale lock was not removed")
     }
-
 }
