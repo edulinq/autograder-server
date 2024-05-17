@@ -34,7 +34,7 @@ jobs:
           key: ${{ runner.os }}-${{ env.pythonLocation }}-${{ hashFiles('testdata/requirements.txt') }}
 
       - name: Install Python Interface
-        run: ./.ci/install-py-interface.sh 'main'
+        run: ./.ci/install_py_interface.sh 'main'
 
       - name: Build
         run: ./build.sh
