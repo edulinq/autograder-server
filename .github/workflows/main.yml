@@ -39,6 +39,9 @@ jobs:
       - name: Build
         run: ./scripts/build.sh
 
+      - name: Check Formatting
+        run: ./scripts/check_formatting.sh
+
       - name: Run Base Tests
         env:
           AUTOGRADER__DOCKER__DISABLE: 'true'

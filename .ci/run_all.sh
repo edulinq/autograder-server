@@ -16,12 +16,14 @@ function main() {
 
     cd "${ROOT_DIR}"
 
+    echo "Building"
     ./scripts/build.sh
     if [[ $? -ne 0 ]] ; then
         echo "Failed to build the autograder."
         exit 1
     fi
 
+    echo "\nInstalling Python Dependencies"
     ./.ci/install_py_interface.sh
     if [[ $? -ne 0 ]] ; then
         echo "Failed to install the Python interface."
@@ -30,12 +32,19 @@ function main() {
 
     local error_count=0
 
+    echo "\nChecking Formatting"
+    ./scripts/check_formatting.sh
+    ((error_count += $?))
+
+    echo "\nRunning Tests"
     ./scripts/run_tests.sh
     ((error_count += $?))
 
+    echo "\nRunning Remote Tests"
     ./.ci/run_remote_tests.sh
     ((error_count += $?))
 
+    echo "\nVerifying Python Test Data"
     ./.ci/verify_py_test_data.sh
     ((error_count += $?))
 

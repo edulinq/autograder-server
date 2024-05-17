@@ -1,0 +1,39 @@
+#!/bin/sh
+
+# Based on:
+# https://github.com/golang/go/blob/release-branch.go1.1/misc/git/pre-commit
+# Copyright 2012 The Go Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style
+# license that can be found in the LICENSE file.
+
+# git gofmt pre-commit hook
+#
+# To use, store as .git/hooks/pre-commit inside your repository and make sure
+# it has execute permissions.
+#
+# This script does not handle file names that contain spaces.
+
+function main() {
+    if [[ $# -ne 0 ]]; then
+        echo "USAGE: $0"
+        exit 1
+    fi
+
+    trap exit SIGINT
+
+    local commitGoPaths=$(git diff --cached --name-only --diff-filter=ACM | grep '.go$')
+    if [[ -z "$commitGoPaths" ]] ; then
+        return 0
+    fi
+
+    local unformattedPaths=$(gofmt -l $commitGoPaths)
+    if [[ -z "$unformattedPaths" ]] ; then
+        return 0
+    fi
+
+    echo "Found files that are not properly formatted (below), run ./scripts/format_code.sh ."
+    echo "${unformattedPaths}"
+    return 1
+}
+
+[[ "${BASH_SOURCE[0]}" == "${0}" ]] && main "$@"
