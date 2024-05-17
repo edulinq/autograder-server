@@ -25,7 +25,7 @@ function main() {
     # Now run task tests.
     # The task tests are sensitive to CPU load and scheduling,
     # so should be run alone.
-    echo "\nRunning task tests."
+    echo -e "\nRunning task tests."
     go test -v -count=1 ./internal/task -run TestTask
     if [[ ${?} -ne 0 ]] ; then
         ((error_count += 1))
