@@ -1,70 +1,70 @@
 package main
 
 import (
-    "fmt"
+	"fmt"
 
-    "github.com/alecthomas/kong"
+	"github.com/alecthomas/kong"
 
-    "github.com/edulinq/autograder/internal/config"
-    "github.com/edulinq/autograder/internal/db"
-    "github.com/edulinq/autograder/internal/log"
-    "github.com/edulinq/autograder/internal/model"
-    "github.com/edulinq/autograder/internal/task"
+	"github.com/edulinq/autograder/internal/config"
+	"github.com/edulinq/autograder/internal/db"
+	"github.com/edulinq/autograder/internal/log"
+	"github.com/edulinq/autograder/internal/model"
+	"github.com/edulinq/autograder/internal/task"
 )
 
 var args struct {
-    config.ConfigArgs
-    Course string `help:"ID of the course." arg:"" optional:""`
+	config.ConfigArgs
+	Course string `help:"ID of the course." arg:"" optional:""`
 }
 
 func main() {
-    kong.Parse(&args,
-        kong.Description("Backup a single course or all known courses."),
-    );
+	kong.Parse(&args,
+		kong.Description("Backup a single course or all known courses."),
+	)
 
-    err := config.HandleConfigArgs(args.ConfigArgs);
-    if (err != nil) {
-        log.Fatal("Could not load config options.", err);
-    }
+	err := config.HandleConfigArgs(args.ConfigArgs)
+	if err != nil {
+		log.Fatal("Could not load config options.", err)
+	}
 
-    db.MustOpen();
-    defer db.MustClose();
+	db.MustOpen()
+	defer db.MustClose()
 
-    var courses map[string]*model.Course;
+	var courses map[string]*model.Course
 
-    if (args.Course != "") {
-        courses = make(map[string]*model.Course);
-        course := db.MustGetCourse(args.Course);
-        courses[course.GetID()] = course;
-    } else {
-        courses = db.MustGetCourses();
-    }
+	if args.Course != "" {
+		courses = make(map[string]*model.Course)
+		course := db.MustGetCourse(args.Course)
+		courses[course.GetID()] = course
+	} else {
+		courses = db.MustGetCourses()
+	}
 
-    courseIDs := backupFromMap(courses);
+	courseIDs := backupFromMap(courses)
 
-    fmt.Printf("Successfully backed-up %d courses:\n", len(courseIDs));
-    for _, courseID := range courseIDs {
-        fmt.Printf("    %s\n", courseID);
-    }
+	fmt.Printf("Successfully backed-up %d courses:\n", len(courseIDs))
+	for _, courseID := range courseIDs {
+		fmt.Printf("    %s\n", courseID)
+	}
 }
 
 func backupFromMap(courses map[string]*model.Course) []string {
-    courseIDs := make([]string, 0);
-    errorCount := 0;
+	courseIDs := make([]string, 0)
+	errorCount := 0
 
-    for _, course := range courses {
-        err := task.RunBackup(course, "", "");
-        if (err != nil) {
-            log.Error("Failed to backup course.", err, course);
-            errorCount++;
-        } else {
-            courseIDs = append(courseIDs, course.GetID());
-        }
-    }
+	for _, course := range courses {
+		err := task.RunBackup(course, "", "")
+		if err != nil {
+			log.Error("Failed to backup course.", err, course)
+			errorCount++
+		} else {
+			courseIDs = append(courseIDs, course.GetID())
+		}
+	}
 
-    if (errorCount > 0) {
-        log.Fatal("Failed to backup courses.", log.NewAttr("error-count", errorCount));
-    }
+	if errorCount > 0 {
+		log.Fatal("Failed to backup courses.", log.NewAttr("error-count", errorCount))
+	}
 
-    return courseIDs;
+	return courseIDs
 }

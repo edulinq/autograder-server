@@ -1,52 +1,52 @@
 package main
 
 import (
-    "fmt"
+	"fmt"
 
-    "github.com/alecthomas/kong"
+	"github.com/alecthomas/kong"
 
-    "github.com/edulinq/autograder/internal/config"
-    "github.com/edulinq/autograder/internal/db"
-    "github.com/edulinq/autograder/internal/log"
-    "github.com/edulinq/autograder/internal/report"
-    "github.com/edulinq/autograder/internal/util"
+	"github.com/edulinq/autograder/internal/config"
+	"github.com/edulinq/autograder/internal/db"
+	"github.com/edulinq/autograder/internal/log"
+	"github.com/edulinq/autograder/internal/report"
+	"github.com/edulinq/autograder/internal/util"
 )
 
 var args struct {
-    config.ConfigArgs
-    Course string `help:"ID of the course." arg:""`
-    Assignment string `help:"ID of the assignment." arg:""`
-    HTML bool `help:"Output report as html." default:"false"`
+	config.ConfigArgs
+	Course     string `help:"ID of the course." arg:""`
+	Assignment string `help:"ID of the assignment." arg:""`
+	HTML       bool   `help:"Output report as html." default:"false"`
 }
 
 func main() {
-    kong.Parse(&args,
-        kong.Description("Compile a report on the current scores in the autograder for an assignment."),
-    );
+	kong.Parse(&args,
+		kong.Description("Compile a report on the current scores in the autograder for an assignment."),
+	)
 
-    err := config.HandleConfigArgs(args.ConfigArgs);
-    if (err != nil) {
-        log.Fatal("Could not load config options.", err);
-    }
+	err := config.HandleConfigArgs(args.ConfigArgs)
+	if err != nil {
+		log.Fatal("Could not load config options.", err)
+	}
 
-    db.MustOpen();
-    defer db.MustClose();
+	db.MustOpen()
+	defer db.MustClose()
 
-    assignment := db.MustGetAssignment(args.Course, args.Assignment);
+	assignment := db.MustGetAssignment(args.Course, args.Assignment)
 
-    report, err := report.GetAssignmentScoringReport(assignment);
-    if (err != nil) {
-        log.Fatal("Failed to get scoring report.", assignment, err);
-    }
+	report, err := report.GetAssignmentScoringReport(assignment)
+	if err != nil {
+		log.Fatal("Failed to get scoring report.", assignment, err)
+	}
 
-    if (args.HTML) {
-        html, err := report.ToHTML(false);
-        if (err != nil) {
-            log.Fatal("Failed to generate HTML scoring report.", assignment, err);
-        }
+	if args.HTML {
+		html, err := report.ToHTML(false)
+		if err != nil {
+			log.Fatal("Failed to generate HTML scoring report.", assignment, err)
+		}
 
-        fmt.Println(html);
-    } else {
-        fmt.Println(util.MustToJSONIndent(report));
-    }
+		fmt.Println(html)
+	} else {
+		fmt.Println(util.MustToJSONIndent(report))
+	}
 }

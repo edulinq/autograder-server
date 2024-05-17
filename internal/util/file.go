@@ -1,55 +1,55 @@
 package util
 
 import (
-    "bufio"
-    "fmt"
-    "os"
-    "strings"
+	"bufio"
+	"fmt"
+	"os"
+	"strings"
 )
 
 func ReadFile(path string) (string, error) {
-    data, err := os.ReadFile(path);
-    if (err != nil) {
-        return "", fmt.Errorf("Failed to read file '%s': '%w'.", path, err);
-    }
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return "", fmt.Errorf("Failed to read file '%s': '%w'.", path, err)
+	}
 
-    return string(data[:]), nil;
+	return string(data[:]), nil
 }
 
 func WriteBinaryFile(data []byte, path string) error {
-    err := os.WriteFile(path, data, 0644);
-    if (err != nil) {
-        return fmt.Errorf("Failed to write file '%s': '%w'.", path, err);
-    }
+	err := os.WriteFile(path, data, 0644)
+	if err != nil {
+		return fmt.Errorf("Failed to write file '%s': '%w'.", path, err)
+	}
 
-    return nil;
+	return nil
 }
 
 func WriteFile(text string, path string) error {
-    return WriteBinaryFile([]byte(text), path);
+	return WriteBinaryFile([]byte(text), path)
 }
 
 // Read a separated file into a slice of slices.
 func ReadSeparatedFile(path string, delim string, skipRows int) ([][]string, error) {
-    file, err := os.Open(path);
-    if (err != nil) {
-        return nil, fmt.Errorf("Failed to open file '%s': '%w'.", path, err);
-    }
-    defer file.Close();
+	file, err := os.Open(path)
+	if err != nil {
+		return nil, fmt.Errorf("Failed to open file '%s': '%w'.", path, err)
+	}
+	defer file.Close()
 
-    rows := make([][]string, 0);
+	rows := make([][]string, 0)
 
-    scanner := bufio.NewScanner(file);
-    scanner.Split(bufio.ScanLines);
+	scanner := bufio.NewScanner(file)
+	scanner.Split(bufio.ScanLines)
 
-    for scanner.Scan() {
-        if (skipRows > 0) {
-            skipRows--;
-            continue;
-        }
+	for scanner.Scan() {
+		if skipRows > 0 {
+			skipRows--
+			continue
+		}
 
-        rows = append(rows, strings.Split(scanner.Text(), delim));
-    }
+		rows = append(rows, strings.Split(scanner.Text(), delim))
+	}
 
-    return rows, nil;
+	return rows, nil
 }

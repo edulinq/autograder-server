@@ -1,12 +1,12 @@
 package lms
 
 import (
-    "testing"
+	"testing"
 
-    "github.com/edulinq/autograder/internal/api/core"
+	"github.com/edulinq/autograder/internal/api/core"
 )
 
 // Use the common main for all tests in this package.
 func TestMain(suite *testing.M) {
-    core.APITestingMain(suite, GetRoutes());
+	core.APITestingMain(suite, GetRoutes())
 }

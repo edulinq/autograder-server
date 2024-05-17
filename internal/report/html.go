@@ -1,58 +1,58 @@
 package report
 
 import (
-    "fmt"
-    "html/template"
-    "strings"
+	"fmt"
+	"html/template"
+	"strings"
 )
 
 func (this *CourseScoringReport) ToHTML() (string, error) {
-    title := fmt.Sprintf("Course Scoring Report for %s", this.CourseName);
-    templateHTML := fmt.Sprintf(outterShell, title, style, courseReportTemplate);
+	title := fmt.Sprintf("Course Scoring Report for %s", this.CourseName)
+	templateHTML := fmt.Sprintf(outterShell, title, style, courseReportTemplate)
 
-    tmpl, err := template.New("course-scoring-report").Parse(templateHTML);
-    if (err != nil) {
-        return "", fmt.Errorf("Could not parse course scoring report template: '%w'.", err);
-    }
+	tmpl, err := template.New("course-scoring-report").Parse(templateHTML)
+	if err != nil {
+		return "", fmt.Errorf("Could not parse course scoring report template: '%w'.", err)
+	}
 
-    var builder strings.Builder;
-    err = tmpl.Execute(&builder, this);
-    if (err != nil) {
-        return "", fmt.Errorf("Failed to execute course scoring report template: '%w'.", err);
-    }
+	var builder strings.Builder
+	err = tmpl.Execute(&builder, this)
+	if err != nil {
+		return "", fmt.Errorf("Failed to execute course scoring report template: '%w'.", err)
+	}
 
-    return builder.String(), nil;
+	return builder.String(), nil
 }
 
 func (this *AssignmentScoringReport) ToHTML(inline bool) (string, error) {
-    templateHTML := assignmentReportTemplate;
-    if (!inline) {
-        title := fmt.Sprintf("Assignment Scoring Report for %s", this.AssignmentName);
-        templateHTML = fmt.Sprintf(outterShell, title, style, assignmentReportTemplate);
-    }
+	templateHTML := assignmentReportTemplate
+	if !inline {
+		title := fmt.Sprintf("Assignment Scoring Report for %s", this.AssignmentName)
+		templateHTML = fmt.Sprintf(outterShell, title, style, assignmentReportTemplate)
+	}
 
-    tmpl, err := template.New("assignment-scoring-report").Parse(templateHTML);
-    if (err != nil) {
-        return "", fmt.Errorf("Could not parse assignment scoring report template: '%w'.", err);
-    }
+	tmpl, err := template.New("assignment-scoring-report").Parse(templateHTML)
+	if err != nil {
+		return "", fmt.Errorf("Could not parse assignment scoring report template: '%w'.", err)
+	}
 
-    var builder strings.Builder;
-    err = tmpl.Execute(&builder, this);
-    if (err != nil) {
-        return "", fmt.Errorf("Failed to execute assignment scoring report template: '%w'.", err);
-    }
+	var builder strings.Builder
+	err = tmpl.Execute(&builder, this)
+	if err != nil {
+		return "", fmt.Errorf("Failed to execute assignment scoring report template: '%w'.", err)
+	}
 
-    return builder.String(), nil;
+	return builder.String(), nil
 }
 
 func (this *AssignmentScoringReport) ToInlineHTML() (template.HTML, error) {
-    html, err := this.ToHTML(true);
-    if (err != nil) {
-        return template.HTML(""), fmt.Errorf("Failed to generate HTML scoring report for assignment '%s': '%w'.",
-                this.AssignmentName, err);
-    }
+	html, err := this.ToHTML(true)
+	if err != nil {
+		return template.HTML(""), fmt.Errorf("Failed to generate HTML scoring report for assignment '%s': '%w'.",
+			this.AssignmentName, err)
+	}
 
-    return template.HTML(html), nil;
+	return template.HTML(html), nil
 }
 
 // Replacements: [title, head, body]

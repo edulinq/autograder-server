@@ -1,36 +1,36 @@
 package tasks
 
 import (
-    "fmt"
+	"fmt"
 
-    "github.com/edulinq/autograder/internal/log"
+	"github.com/edulinq/autograder/internal/log"
 )
 
 type ScoringUploadTask struct {
-    *BaseTask
+	*BaseTask
 
-    DryRun bool `json:"dry-run"`
+	DryRun bool `json:"dry-run"`
 }
 
 func (this *ScoringUploadTask) Validate(course TaskCourse) error {
-    this.BaseTask.Name = "scoring";
+	this.BaseTask.Name = "scoring"
 
-    err := this.BaseTask.Validate(course);
-    if (err != nil) {
-        return err;
-    }
+	err := this.BaseTask.Validate(course)
+	if err != nil {
+		return err
+	}
 
-    if (!course.HasLMSAdapter()) {
-        return fmt.Errorf("Score and Upload task course must have an LMS adapter.");
-    }
+	if !course.HasLMSAdapter() {
+		return fmt.Errorf("Score and Upload task course must have an LMS adapter.")
+	}
 
-    lmsIDs, assignmentIDs := course.GetAssignmentLMSIDs();
-    for i, _ := range lmsIDs {
-        if (lmsIDs[i] == "") {
-            log.Warn("Score and Upload course has an assignment with a missing LMS ID.",
-                    log.NewCourseAttr(course.GetID()), log.NewAssignmentAttr(assignmentIDs[i]));
-        }
-    }
+	lmsIDs, assignmentIDs := course.GetAssignmentLMSIDs()
+	for i, _ := range lmsIDs {
+		if lmsIDs[i] == "" {
+			log.Warn("Score and Upload course has an assignment with a missing LMS ID.",
+				log.NewCourseAttr(course.GetID()), log.NewAssignmentAttr(assignmentIDs[i]))
+		}
+	}
 
-    return nil;
+	return nil
 }

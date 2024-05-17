@@ -1,56 +1,56 @@
 package submission
 
 import (
-    "github.com/edulinq/autograder/internal/api/core"
-    "github.com/edulinq/autograder/internal/grader"
-    "github.com/edulinq/autograder/internal/log"
-    "github.com/edulinq/autograder/internal/model"
+	"github.com/edulinq/autograder/internal/api/core"
+	"github.com/edulinq/autograder/internal/grader"
+	"github.com/edulinq/autograder/internal/log"
+	"github.com/edulinq/autograder/internal/model"
 )
 
 type SubmitRequest struct {
-    core.APIRequestAssignmentContext
-    core.MinRoleStudent
-    Files core.POSTFiles
+	core.APIRequestAssignmentContext
+	core.MinRoleStudent
+	Files core.POSTFiles
 
-    Message string `json:"message"`
+	Message string `json:"message"`
 }
 
 type SubmitResponse struct {
-    Rejected bool `json:"rejected"`
-    Message string `json:"message"`
+	Rejected bool   `json:"rejected"`
+	Message  string `json:"message"`
 
-    GradingSucess bool `json:"grading-success"`
-    GradingInfo *model.GradingInfo `json:"result"`
+	GradingSucess bool               `json:"grading-success"`
+	GradingInfo   *model.GradingInfo `json:"result"`
 }
 
 func HandleSubmit(request *SubmitRequest) (*SubmitResponse, *core.APIError) {
-    response := SubmitResponse{};
+	response := SubmitResponse{}
 
-    result, reject, err := grader.GradeDefault(request.Assignment, request.Files.TempDir, request.User.Email, request.Message);
-    if (err != nil) {
-        stdout := "";
-        stderr := "";
+	result, reject, err := grader.GradeDefault(request.Assignment, request.Files.TempDir, request.User.Email, request.Message)
+	if err != nil {
+		stdout := ""
+		stderr := ""
 
-        if ((result != nil) && (result.HasTextOutput())) {
-            stdout = result.Stdout;
-            stderr = result.Stderr;
-        }
+		if (result != nil) && (result.HasTextOutput()) {
+			stdout = result.Stdout
+			stderr = result.Stderr
+		}
 
-        log.Info("Submission grading failed.", err, request.Assignment, log.NewAttr("stdout", stdout), log.NewAttr("stderr", stderr), request.User);
+		log.Info("Submission grading failed.", err, request.Assignment, log.NewAttr("stdout", stdout), log.NewAttr("stderr", stderr), request.User)
 
-        return &response, nil;
-    }
+		return &response, nil
+	}
 
-    if (reject != nil) {
-        log.Debug("Submission rejected.", request.Assignment, log.NewAttr("reason", reject.String()), log.NewAttr("request", request), request.User);
+	if reject != nil {
+		log.Debug("Submission rejected.", request.Assignment, log.NewAttr("reason", reject.String()), log.NewAttr("request", request), request.User)
 
-        response.Rejected = true;
-        response.Message = reject.String();
-        return &response, nil;
-    }
+		response.Rejected = true
+		response.Message = reject.String()
+		return &response, nil
+	}
 
-    response.GradingSucess = true;
-    response.GradingInfo = result.Info;
+	response.GradingSucess = true
+	response.GradingInfo = result.Info
 
-    return &response, nil;
+	return &response, nil
 }

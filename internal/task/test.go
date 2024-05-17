@@ -1,21 +1,21 @@
 package task
 
 import (
-    "fmt"
+	"fmt"
 
-    "github.com/edulinq/autograder/internal/model"
-    "github.com/edulinq/autograder/internal/model/tasks"
+	"github.com/edulinq/autograder/internal/model"
+	"github.com/edulinq/autograder/internal/model/tasks"
 )
 
 func RunTestTask(course *model.Course, rawTask tasks.ScheduledTask) (bool, error) {
-    task, ok := rawTask.(*tasks.TestTask);
-    if (!ok) {
-        return false, fmt.Errorf("Task is not a TestTask: %t (%v).", rawTask, rawTask);
-    }
+	task, ok := rawTask.(*tasks.TestTask)
+	if !ok {
+		return false, fmt.Errorf("Task is not a TestTask: %t (%v).", rawTask, rawTask)
+	}
 
-    if (task.Disable) {
-        return true, nil;
-    }
+	if task.Disable {
+		return true, nil
+	}
 
-    return true, task.Func(task.Payload);
+	return true, task.Func(task.Payload)
 }

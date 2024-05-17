@@ -1,36 +1,36 @@
 package lmstypes
 
 import (
-    "time"
+	"time"
 
-    "github.com/edulinq/autograder/internal/model"
+	"github.com/edulinq/autograder/internal/model"
 )
 
 type User struct {
-    ID string
-    Name string
-    Email string
-    Role model.UserRole
+	ID    string
+	Name  string
+	Email string
+	Role  model.UserRole
 }
 
 type SubmissionScore struct {
-    UserID string
-    Score float64
-    Time time.Time
-    Comments []*SubmissionComment
+	UserID   string
+	Score    float64
+	Time     time.Time
+	Comments []*SubmissionComment
 }
 
 type SubmissionComment struct {
-    ID string
-    Author string
-    Text string
-    Time string
+	ID     string
+	Author string
+	Text   string
+	Time   string
 }
 
 type Assignment struct {
-    ID string
-    Name string
-    LMSCourseID string
-    DueDate *time.Time
-    MaxPoints float64
+	ID          string
+	Name        string
+	LMSCourseID string
+	DueDate     *time.Time
+	MaxPoints   float64
 }

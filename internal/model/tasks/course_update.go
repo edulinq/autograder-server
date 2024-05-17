@@ -1,16 +1,16 @@
 package tasks
 
 type CourseUpdateTask struct {
-    *BaseTask
+	*BaseTask
 }
 
 func (this *CourseUpdateTask) Validate(course TaskCourse) error {
-    this.BaseTask.Name = "course-update";
+	this.BaseTask.Name = "course-update"
 
-    err := this.BaseTask.Validate(course);
-    if (err != nil) {
-        return err;
-    }
+	err := this.BaseTask.Validate(course)
+	if err != nil {
+		return err
+	}
 
-    return nil;
+	return nil
 }

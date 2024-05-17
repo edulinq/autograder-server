@@ -1,65 +1,65 @@
 package main
 
 import (
-    "os"
+	"os"
 
-    "github.com/alecthomas/kong"
+	"github.com/alecthomas/kong"
 
-    "github.com/edulinq/autograder/internal/api"
-    "github.com/edulinq/autograder/internal/config"
-    "github.com/edulinq/autograder/internal/db"
-    "github.com/edulinq/autograder/internal/log"
-    "github.com/edulinq/autograder/internal/model"
-    "github.com/edulinq/autograder/internal/procedures"
-    "github.com/edulinq/autograder/internal/util"
+	"github.com/edulinq/autograder/internal/api"
+	"github.com/edulinq/autograder/internal/config"
+	"github.com/edulinq/autograder/internal/db"
+	"github.com/edulinq/autograder/internal/log"
+	"github.com/edulinq/autograder/internal/model"
+	"github.com/edulinq/autograder/internal/procedures"
+	"github.com/edulinq/autograder/internal/util"
 )
 
 var args struct {
-    config.ConfigArgs
+	config.ConfigArgs
 }
 
 func main() {
-    kong.Parse(&args);
-    err := config.HandleConfigArgs(args.ConfigArgs);
-    if (err != nil) {
-        log.Fatal("Could not load config options.", err);
-    }
+	kong.Parse(&args)
+	err := config.HandleConfigArgs(args.ConfigArgs)
+	if err != nil {
+		log.Fatal("Could not load config options.", err)
+	}
 
-    log.Info("Autograder Version", log.NewAttr("version", util.GetAutograderFullVersion()));
+	log.Info("Autograder Version", log.NewAttr("version", util.GetAutograderFullVersion()))
 
-    workingDir, err := os.Getwd();
-    if (err != nil) {
-        log.Fatal("Could not get working directory.", err);
-    }
+	workingDir, err := os.Getwd()
+	if err != nil {
+		log.Fatal("Could not get working directory.", err)
+	}
 
-    db.MustOpen();
-    defer db.MustClose();
+	db.MustOpen()
+	defer db.MustClose()
 
-    log.Info("Running server with working directory.", log.NewAttr("dir", workingDir));
+	log.Info("Running server with working directory.", log.NewAttr("dir", workingDir))
 
-    _, err = db.AddCourses();
-    if (err != nil) {
-        log.Fatal("Could not load courses.", err);
-    }
+	_, err = db.AddCourses()
+	if err != nil {
+		log.Fatal("Could not load courses.", err)
+	}
 
-    courses := db.MustGetCourses();
-    log.Info("Loaded course(s).", log.NewAttr("count", len(courses)));
+	courses := db.MustGetCourses()
+	log.Info("Loaded course(s).", log.NewAttr("count", len(courses)))
 
-    // Startup courses (in the background).
-    for _, course := range courses {
-        log.Info("Loaded course.", course);
-        go func(course *model.Course) {
-            procedures.UpdateCourse(course, true);
-        }(course);
-    }
+	// Startup courses (in the background).
+	for _, course := range courses {
+		log.Info("Loaded course.", course)
+		go func(course *model.Course) {
+			procedures.UpdateCourse(course, true)
+		}(course)
+	}
 
-    // Cleanup any temp dirs.
-    defer util.RemoveRecordedTempDirs();
+	// Cleanup any temp dirs.
+	defer util.RemoveRecordedTempDirs()
 
-    err = api.StartServer();
-    if (err != nil) {
-        log.Fatal("Server was stopped.", err);
-    }
+	err = api.StartServer()
+	if err != nil {
+		log.Fatal("Server was stopped.", err)
+	}
 
-    log.Info("Server closed.");
+	log.Info("Server closed.")
 }

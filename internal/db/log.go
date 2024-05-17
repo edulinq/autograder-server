@@ -1,16 +1,16 @@
 package db
 
 import (
-    "fmt"
-    "time"
+	"fmt"
+	"time"
 
-    "github.com/edulinq/autograder/internal/log"
+	"github.com/edulinq/autograder/internal/log"
 )
 
 func GetLogRecords(level log.LogLevel, after time.Time, courseID string, assignmentID string, userID string) ([]*log.Record, error) {
-    if (backend == nil) {
-        return nil, fmt.Errorf("Database has not been opened.");
-    }
+	if backend == nil {
+		return nil, fmt.Errorf("Database has not been opened.")
+	}
 
-    return backend.GetLogRecords(level, after, courseID, assignmentID, userID);
+	return backend.GetLogRecords(level, after, courseID, assignmentID, userID)
 }

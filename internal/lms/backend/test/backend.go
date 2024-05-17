@@ -2,66 +2,66 @@
 package test
 
 import (
-    "fmt"
+	"fmt"
 
-    "github.com/edulinq/autograder/internal/lms/lmstypes"
+	"github.com/edulinq/autograder/internal/lms/lmstypes"
 )
 
 // Settings to help in testing.
-var failUpdateAssignmentScores bool = false;
-var usersModifier FetchUsersModifier = nil;
+var failUpdateAssignmentScores bool = false
+var usersModifier FetchUsersModifier = nil
 
 type TestLMSBackend struct {
-    CourseID string
+	CourseID string
 }
 
 // Change the users returned from FetchUsers() for testing.
-type FetchUsersModifier func ([]*lmstypes.User) []*lmstypes.User;
+type FetchUsersModifier func([]*lmstypes.User) []*lmstypes.User
 
 func NewBackend(courseID string) (*TestLMSBackend, error) {
-    if (courseID == "") {
-        return nil, fmt.Errorf("Test LMS backend must have a non-empty course id.");
-    }
+	if courseID == "" {
+		return nil, fmt.Errorf("Test LMS backend must have a non-empty course id.")
+	}
 
-    backend := TestLMSBackend{
-        CourseID: courseID,
-    };
+	backend := TestLMSBackend{
+		CourseID: courseID,
+	}
 
-    return &backend, nil;
+	return &backend, nil
 }
 
 func SetFailUpdateAssignmentScores(value bool) {
-    failUpdateAssignmentScores = value;
+	failUpdateAssignmentScores = value
 }
 
 func SetUsersModifier(modifier FetchUsersModifier) {
-    usersModifier = modifier;
+	usersModifier = modifier
 }
 
 func ClearUsersModifier() {
-    usersModifier = nil;
+	usersModifier = nil
 }
 
 func (this *TestLMSBackend) FetchAssignments() ([]*lmstypes.Assignment, error) {
-    return nil, nil;
+	return nil, nil
 }
 
 func (this *TestLMSBackend) FetchAssignment(assignmentID string) (*lmstypes.Assignment, error) {
-    return nil, nil;
+	return nil, nil
 }
 
 func (this *TestLMSBackend) UpdateComments(assignmentID string, comments []*lmstypes.SubmissionComment) error {
-    return nil;
+	return nil
 }
 
 func (this *TestLMSBackend) UpdateComment(assignmentID string, comment *lmstypes.SubmissionComment) error {
-    return nil;
+	return nil
 }
 
 func (this *TestLMSBackend) FetchAssignmentScores(assignmentID string) ([]*lmstypes.SubmissionScore, error) {
-    return nil, nil;
+	return nil, nil
 }
 
 func (this *TestLMSBackend) FetchAssignmentScore(assignmentID string, userID string) (*lmstypes.SubmissionScore, error) {
-    return nil, nil;
+	return nil, nil
 }

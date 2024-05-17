@@ -1,133 +1,132 @@
 package lms
 
 import (
-    "fmt"
+	"fmt"
 
-    "github.com/edulinq/autograder/internal/lms/backend/canvas"
-    "github.com/edulinq/autograder/internal/lms/backend/test"
-    "github.com/edulinq/autograder/internal/lms/lmstypes"
-    "github.com/edulinq/autograder/internal/model"
+	"github.com/edulinq/autograder/internal/lms/backend/canvas"
+	"github.com/edulinq/autograder/internal/lms/backend/test"
+	"github.com/edulinq/autograder/internal/lms/lmstypes"
+	"github.com/edulinq/autograder/internal/model"
 )
 
 type lmsBackend interface {
-    FetchAssignments() ([]*lmstypes.Assignment, error)
-    FetchAssignment(assignmentID string) (*lmstypes.Assignment, error)
+	FetchAssignments() ([]*lmstypes.Assignment, error)
+	FetchAssignment(assignmentID string) (*lmstypes.Assignment, error)
 
-    UpdateComments(assignmentID string, comments []*lmstypes.SubmissionComment) error
-    UpdateComment(assignmentID string, comment *lmstypes.SubmissionComment) error
+	UpdateComments(assignmentID string, comments []*lmstypes.SubmissionComment) error
+	UpdateComment(assignmentID string, comment *lmstypes.SubmissionComment) error
 
-    FetchAssignmentScores(assignmentID string) ([]*lmstypes.SubmissionScore, error)
-    FetchAssignmentScore(assignmentID string, userID string) (*lmstypes.SubmissionScore, error)
-    UpdateAssignmentScores(assignmentID string, scores []*lmstypes.SubmissionScore) error
+	FetchAssignmentScores(assignmentID string) ([]*lmstypes.SubmissionScore, error)
+	FetchAssignmentScore(assignmentID string, userID string) (*lmstypes.SubmissionScore, error)
+	UpdateAssignmentScores(assignmentID string, scores []*lmstypes.SubmissionScore) error
 
-    FetchUsers() ([]*lmstypes.User, error)
-    FetchUser(email string) (*lmstypes.User, error)
+	FetchUsers() ([]*lmstypes.User, error)
+	FetchUser(email string) (*lmstypes.User, error)
 }
 
 func getBackend(course *model.Course) (lmsBackend, error) {
-    adapter := course.GetLMSAdapter();
-    if (adapter == nil) {
-        return nil, fmt.Errorf("Course '%s' has no LMS information.", course.GetID());
-    }
+	adapter := course.GetLMSAdapter()
+	if adapter == nil {
+		return nil, fmt.Errorf("Course '%s' has no LMS information.", course.GetID())
+	}
 
-    switch (adapter.Type) {
-        case model.LMS_TYPE_CANVAS:
-            backend, err := canvas.NewBackend(adapter.LMSCourseID, adapter.APIToken, adapter.BaseURL);
-            if (err != nil) {
-                return nil, err;
-            }
+	switch adapter.Type {
+	case model.LMS_TYPE_CANVAS:
+		backend, err := canvas.NewBackend(adapter.LMSCourseID, adapter.APIToken, adapter.BaseURL)
+		if err != nil {
+			return nil, err
+		}
 
-            return backend, nil;
-        case model.LMS_TYPE_TEST:
-            backend, err := test.NewBackend(course.GetID());
-            if (err != nil) {
-                return nil, err;
-            }
+		return backend, nil
+	case model.LMS_TYPE_TEST:
+		backend, err := test.NewBackend(course.GetID())
+		if err != nil {
+			return nil, err
+		}
 
-            return backend, nil;
-        default:
-            return nil, fmt.Errorf("Unknown LMS type: '%s'.", adapter.Type);
-    }
+		return backend, nil
+	default:
+		return nil, fmt.Errorf("Unknown LMS type: '%s'.", adapter.Type)
+	}
 }
 
 func FetchAssignment(course *model.Course, assignmentID string) (*lmstypes.Assignment, error) {
-    backend, err := getBackend(course);
-    if (err != nil) {
-        return nil, err;
-    }
+	backend, err := getBackend(course)
+	if err != nil {
+		return nil, err
+	}
 
-    return backend.FetchAssignment(assignmentID);
+	return backend.FetchAssignment(assignmentID)
 }
 
 func FetchAssignments(course *model.Course) ([]*lmstypes.Assignment, error) {
-    backend, err := getBackend(course);
-    if (err != nil) {
-        return nil, err;
-    }
+	backend, err := getBackend(course)
+	if err != nil {
+		return nil, err
+	}
 
-    return backend.FetchAssignments();
+	return backend.FetchAssignments()
 }
 
 func UpdateComments(course *model.Course, assignmentID string, comments []*lmstypes.SubmissionComment) error {
-    backend, err := getBackend(course);
-    if (err != nil) {
-        return err;
-    }
+	backend, err := getBackend(course)
+	if err != nil {
+		return err
+	}
 
-    return backend.UpdateComments(assignmentID, comments);
+	return backend.UpdateComments(assignmentID, comments)
 }
 
 func UpdateComment(course *model.Course, assignmentID string, comment *lmstypes.SubmissionComment) error {
-    backend, err := getBackend(course);
-    if (err != nil) {
-        return err;
-    }
+	backend, err := getBackend(course)
+	if err != nil {
+		return err
+	}
 
-    return backend.UpdateComment(assignmentID, comment);
+	return backend.UpdateComment(assignmentID, comment)
 }
 
 func FetchAssignmentScores(course *model.Course, assignmentID string) ([]*lmstypes.SubmissionScore, error) {
-    backend, err := getBackend(course);
-    if (err != nil) {
-        return nil, err;
-    }
+	backend, err := getBackend(course)
+	if err != nil {
+		return nil, err
+	}
 
-    return backend.FetchAssignmentScores(assignmentID);
+	return backend.FetchAssignmentScores(assignmentID)
 }
 
 func FetchAssignmentScore(course *model.Course, assignmentID string, userID string) (*lmstypes.SubmissionScore, error) {
-    backend, err := getBackend(course);
-    if (err != nil) {
-        return nil, err;
-    }
+	backend, err := getBackend(course)
+	if err != nil {
+		return nil, err
+	}
 
-    return backend.FetchAssignmentScore(assignmentID, userID);
+	return backend.FetchAssignmentScore(assignmentID, userID)
 }
 
 func UpdateAssignmentScores(course *model.Course, assignmentID string, scores []*lmstypes.SubmissionScore) error {
-    backend, err := getBackend(course);
-    if (err != nil) {
-        return err;
-    }
+	backend, err := getBackend(course)
+	if err != nil {
+		return err
+	}
 
-    return backend.UpdateAssignmentScores(assignmentID, scores);
+	return backend.UpdateAssignmentScores(assignmentID, scores)
 }
 
-func FetchUsers(course *model.Course, ) ([]*lmstypes.User, error) {
-    backend, err := getBackend(course);
-    if (err != nil) {
-        return nil, err;
-    }
+func FetchUsers(course *model.Course) ([]*lmstypes.User, error) {
+	backend, err := getBackend(course)
+	if err != nil {
+		return nil, err
+	}
 
-    return backend.FetchUsers();
+	return backend.FetchUsers()
 }
 
 func FetchUser(course *model.Course, email string) (*lmstypes.User, error) {
-    backend, err := getBackend(course);
-    if (err != nil) {
-        return nil, err;
-    }
+	backend, err := getBackend(course)
+	if err != nil {
+		return nil, err
+	}
 
-    return backend.FetchUser(email);
+	return backend.FetchUser(email)
 }
-

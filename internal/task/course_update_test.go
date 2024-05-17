@@ -1,28 +1,28 @@
 package task
 
 import (
-    "testing"
+	"testing"
 
-    "github.com/edulinq/autograder/internal/common"
-    "github.com/edulinq/autograder/internal/db"
-    "github.com/edulinq/autograder/internal/model/tasks"
+	"github.com/edulinq/autograder/internal/common"
+	"github.com/edulinq/autograder/internal/db"
+	"github.com/edulinq/autograder/internal/model/tasks"
 )
 
 func TestCourseUpdateTaskBase(test *testing.T) {
-    db.ResetForTesting();
-    defer db.ResetForTesting();
+	db.ResetForTesting()
+	defer db.ResetForTesting()
 
-    course := db.MustGetTestCourse();
+	course := db.MustGetTestCourse()
 
-    task := &tasks.CourseUpdateTask{
-        BaseTask: &tasks.BaseTask{
-            Disable: false,
-            When: []*common.ScheduledTime{},
-        },
-    };
+	task := &tasks.CourseUpdateTask{
+		BaseTask: &tasks.BaseTask{
+			Disable: false,
+			When:    []*common.ScheduledTime{},
+		},
+	}
 
-    _, err := RunCourseUpdateTask(course, task);
-    if (err != nil) {
-        test.Fatalf("Failed to run course update task: '%v'.", err);
-    }
+	_, err := RunCourseUpdateTask(course, task)
+	if err != nil {
+		test.Fatalf("Failed to run course update task: '%v'.", err)
+	}
 }

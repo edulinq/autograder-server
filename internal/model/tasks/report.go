@@ -1,26 +1,26 @@
 package tasks
 
 import (
-    "fmt"
+	"fmt"
 )
 
 type ReportTask struct {
-    *BaseTask
+	*BaseTask
 
-    To []string `json:"to"`
+	To []string `json:"to"`
 }
 
 func (this *ReportTask) Validate(course TaskCourse) error {
-    this.BaseTask.Name = "report";
+	this.BaseTask.Name = "report"
 
-    err := this.BaseTask.Validate(course);
-    if (err != nil) {
-        return err;
-    }
+	err := this.BaseTask.Validate(course)
+	if err != nil {
+		return err
+	}
 
-    if (!this.Disable && (len(this.To) == 0)) {
-        return fmt.Errorf("Report task is not disabled, but no email recipients are declared.");
-    }
+	if !this.Disable && (len(this.To) == 0) {
+		return fmt.Errorf("Report task is not disabled, but no email recipients are declared.")
+	}
 
-    return nil;
+	return nil
 }

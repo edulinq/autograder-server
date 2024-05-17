@@ -1,64 +1,64 @@
 package log
 
 import (
-    "os"
+	"os"
 )
 
 func Trace(message string, args ...any) {
-    LogToLevel(LevelTrace, message, args...);
+	LogToLevel(LevelTrace, message, args...)
 }
 
 func Debug(message string, args ...any) {
-    LogToLevel(LevelDebug, message, args...);
+	LogToLevel(LevelDebug, message, args...)
 }
 
 func Info(message string, args ...any) {
-    LogToLevel(LevelInfo, message, args...);
+	LogToLevel(LevelInfo, message, args...)
 }
 
 func Warn(message string, args ...any) {
-    LogToLevel(LevelWarn, message, args...);
+	LogToLevel(LevelWarn, message, args...)
 }
 
 func Error(message string, args ...any) {
-    LogToLevel(LevelError, message, args...);
+	LogToLevel(LevelError, message, args...)
 }
 
 func Fatal(message string, args ...any) {
-    FatalWithCode(1, message, args...);
+	FatalWithCode(1, message, args...)
 }
 
 func FatalWithCode(code int, message string, args ...any) {
-    SetBackgroundLogging(false);
+	SetBackgroundLogging(false)
 
-    LogToLevel(LevelFatal, message, args...);
-    os.Exit(code);
+	LogToLevel(LevelFatal, message, args...)
+	os.Exit(code)
 }
 
 func SetLevel(level LogLevel) {
-    SetLevels(level, level);
+	SetLevels(level, level)
 }
 
 func SetLevelTrace() {
-    SetLevel(LevelTrace);
+	SetLevel(LevelTrace)
 }
 
 func SetLevelDebug() {
-    SetLevel(LevelDebug);
+	SetLevel(LevelDebug)
 }
 
 func SetLevelInfo() {
-    SetLevel(LevelInfo);
+	SetLevel(LevelInfo)
 }
 
 func SetLevelWarn() {
-    SetLevel(LevelWarn);
+	SetLevel(LevelWarn)
 }
 
 func SetLevelError() {
-    SetLevel(LevelError);
+	SetLevel(LevelError)
 }
 
 func SetLevelFatal() {
-    SetLevel(LevelFatal);
+	SetLevel(LevelFatal)
 }

@@ -1,57 +1,57 @@
 package util
 
 import (
-    "errors"
-    "os"
-    "sync"
+	"errors"
+	"os"
+	"sync"
 )
 
-const DEFAULT_MKDIR_PERMS os.FileMode = 0755;
+const DEFAULT_MKDIR_PERMS os.FileMode = 0755
 
-var tempDir string = "";
-var tempDirMutex sync.Mutex;
-var createdTempDirs []string;
+var tempDir string = ""
+var tempDirMutex sync.Mutex
+var createdTempDirs []string
 
 func SetTempDirForTesting(newTempDir string) {
-    tempDir = newTempDir;
+	tempDir = newTempDir
 }
 
 func MkDirTemp(prefix string) (string, error) {
-    tempDirMutex.Lock();
-    defer tempDirMutex.Unlock();
+	tempDirMutex.Lock()
+	defer tempDirMutex.Unlock()
 
-    dir, err := os.MkdirTemp(tempDir, prefix);
-    if (err != nil) {
-        return "", err;
-    }
+	dir, err := os.MkdirTemp(tempDir, prefix)
+	if err != nil {
+		return "", err
+	}
 
-    createdTempDirs = append(createdTempDirs, dir);
-    return dir, nil;
+	createdTempDirs = append(createdTempDirs, dir)
+	return dir, nil
 }
 
 func MkDir(path string) error {
-    return MkDirPerms(path, DEFAULT_MKDIR_PERMS);
+	return MkDirPerms(path, DEFAULT_MKDIR_PERMS)
 }
 
 func MkDirPerms(path string, perms os.FileMode) error {
-    return os.MkdirAll(path, perms);
+	return os.MkdirAll(path, perms)
 }
 
 func ClearRecordedTempDirs() {
-    createdTempDirs = nil;
+	createdTempDirs = nil
 }
 
 // Remove all the temp dirs created via MkDirTemp().
 func RemoveRecordedTempDirs() error {
-    tempDirMutex.Lock();
-    defer tempDirMutex.Unlock();
+	tempDirMutex.Lock()
+	defer tempDirMutex.Unlock()
 
-    var errs error = nil;
-    for _, dir := range createdTempDirs {
-        errs = errors.Join(errs, RemoveDirent(dir));
-    }
+	var errs error = nil
+	for _, dir := range createdTempDirs {
+		errs = errors.Join(errs, RemoveDirent(dir))
+	}
 
-    ClearRecordedTempDirs();
+	ClearRecordedTempDirs()
 
-    return errs;
+	return errs
 }

@@ -1,37 +1,37 @@
 package model
 
 import (
-    "fmt"
-    "strings"
+	"fmt"
+	"strings"
 )
 
 const (
-    LMS_TYPE_CANVAS = "canvas"
-    LMS_TYPE_TEST = "test"
+	LMS_TYPE_CANVAS = "canvas"
+	LMS_TYPE_TEST   = "test"
 )
 
 type LMSAdapter struct {
-    Type string `json:"type"`
+	Type string `json:"type"`
 
-    // Connection options.
-    LMSCourseID string `json:"course-id,omitempty"`
-    APIToken string `json:"api-token,omitempty"`
-    BaseURL string `json:"base-url,omitempty"`
+	// Connection options.
+	LMSCourseID string `json:"course-id,omitempty"`
+	APIToken    string `json:"api-token,omitempty"`
+	BaseURL     string `json:"base-url,omitempty"`
 
-    // Behavior options.
+	// Behavior options.
 
-    SyncUserAttributes bool `json:"sync-user-attributes,omitempty"`
-    SyncUserAdds bool `json:"sync-user-adds,omitempty"`
-    SyncUserRemoves bool `json:"sync-user-removes,omitempty"`
+	SyncUserAttributes bool `json:"sync-user-attributes,omitempty"`
+	SyncUserAdds       bool `json:"sync-user-adds,omitempty"`
+	SyncUserRemoves    bool `json:"sync-user-removes,omitempty"`
 
-    SyncAssignments bool `json:"sync-assignments,omitempty"`
+	SyncAssignments bool `json:"sync-assignments,omitempty"`
 }
 
 func (this *LMSAdapter) Validate() error {
-    if (this.Type == "") {
-        return fmt.Errorf("LMS type cannot be empty.");
-    }
-    this.Type = strings.ToLower(this.Type);
+	if this.Type == "" {
+		return fmt.Errorf("LMS type cannot be empty.")
+	}
+	this.Type = strings.ToLower(this.Type)
 
-    return nil;
+	return nil
 }
