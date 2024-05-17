@@ -1,8 +1,0 @@
-{
-    "id": "course101",
-    "name": "Course 101",
-    "source": "_tests/COURSE101",
-    "lms": {
-        "type": "test"
-    }
-}

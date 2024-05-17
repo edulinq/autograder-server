@@ -31,7 +31,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ${{ env.pythonLocation }}
-          key: ${{ runner.os }}-${{ env.pythonLocation }}-${{ hashFiles('_tests/requirements.txt') }}
+          key: ${{ runner.os }}-${{ env.pythonLocation }}-${{ hashFiles('testdata/requirements.txt') }}
 
       - name: Install Python Interface
         run: ./.ci/install-py-interface.sh 'main'
@@ -42,7 +42,7 @@ jobs:
       - name: Run Base Tests
         env:
           AUTOGRADER__DOCKER__DISABLE: 'true'
-        run: ./test.sh
+        run: ./scripts/run_tests.sh
 
       - name: Run Submission Tests
         env:
@@ -52,4 +52,4 @@ jobs:
       - name: Verify Python Interface Test Data
         env:
           AUTOGRADER__DOCKER__DISABLE: 'true'
-        run: ./.ci/verify-py-test-data.sh
+        run: ./.ci/verify_py_test_data.sh

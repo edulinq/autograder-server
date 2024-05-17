@@ -6,10 +6,10 @@ import (
 
     "github.com/alecthomas/kong"
 
-    "github.com/edulinq/autograder/config"
-    "github.com/edulinq/autograder/log"
-    "github.com/edulinq/autograder/model"
-    "github.com/edulinq/autograder/util"
+    "github.com/edulinq/autograder/internal/config"
+    "github.com/edulinq/autograder/internal/log"
+    "github.com/edulinq/autograder/internal/model"
+    "github.com/edulinq/autograder/internal/util"
 )
 
 var args struct {

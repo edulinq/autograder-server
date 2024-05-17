@@ -1,0 +1,8 @@
+{
+    "id": "course101",
+    "name": "Course 101",
+    "source": "testdata/COURSE101",
+    "lms": {
+        "type": "test"
+    }
+}

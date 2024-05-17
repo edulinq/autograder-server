@@ -5,8 +5,8 @@ import (
 
     "github.com/alecthomas/kong"
 
-    "github.com/edulinq/autograder/config"
-    "github.com/edulinq/autograder/log"
+    "github.com/edulinq/autograder/internal/config"
+    "github.com/edulinq/autograder/internal/log"
 )
 
 var args struct {

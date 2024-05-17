@@ -16,13 +16,13 @@ function main() {
 
     cd "${ROOT_DIR}"
 
-    ./build.sh
+    ./scripts/build.sh
     if [[ $? -ne 0 ]] ; then
         echo "Failed to build the autograder."
         exit 1
     fi
 
-    ./.ci/install-py-interface.sh
+    ./.ci/install_py_interface.sh
     if [[ $? -ne 0 ]] ; then
         echo "Failed to install the Python interface."
         exit 1
@@ -30,13 +30,13 @@ function main() {
 
     local error_count=0
 
-    ./test.sh
+    ./scripts/run_tests.sh
     ((error_count += $?))
 
     ./.ci/run_remote_tests.sh
     ((error_count += $?))
 
-    ./.ci/verify-py-test-data.sh
+    ./.ci/verify_py_test_data.sh
     ((error_count += $?))
 
     echo "================="

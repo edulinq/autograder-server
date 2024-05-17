@@ -5,11 +5,11 @@ import (
 
     "github.com/alecthomas/kong"
 
-    "github.com/edulinq/autograder/common"
-    "github.com/edulinq/autograder/config"
-    "github.com/edulinq/autograder/db"
-    "github.com/edulinq/autograder/log"
-    "github.com/edulinq/autograder/procedures"
+    "github.com/edulinq/autograder/internal/common"
+    "github.com/edulinq/autograder/internal/config"
+    "github.com/edulinq/autograder/internal/db"
+    "github.com/edulinq/autograder/internal/log"
+    "github.com/edulinq/autograder/internal/procedures"
 )
 
 var args struct {

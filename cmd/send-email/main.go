@@ -3,10 +3,10 @@ package main
 import (
     "github.com/alecthomas/kong"
 
-    "github.com/edulinq/autograder/config"
-    "github.com/edulinq/autograder/db"
-    "github.com/edulinq/autograder/email"
-    "github.com/edulinq/autograder/log"
+    "github.com/edulinq/autograder/internal/config"
+    "github.com/edulinq/autograder/internal/db"
+    "github.com/edulinq/autograder/internal/email"
+    "github.com/edulinq/autograder/internal/log"
 )
 
 var args struct {
