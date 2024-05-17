@@ -20,11 +20,11 @@ const TICKER_DURATION_HOUR = 1.0;
 var (
     lockManagerMutex sync.Mutex;
     lockMap sync.Map;
-	ticker *time.Ticker;
+    ticker *time.Ticker;
 )
 
 func init() {
-	ticker = time.NewTicker(TICKER_DURATION_HOUR * time.Hour)
+    ticker = time.NewTicker(TICKER_DURATION_HOUR * time.Hour)
     go removeStaleLocks();
 }
 
@@ -33,7 +33,7 @@ func Lock(key string) {
     defer lockManagerMutex.Unlock();
 
     val, _ := lockMap.LoadOrStore(key, &lockData{});
-	lock := val.(*lockData)
+    lock := val.(*lockData)
 
     lock.mutex.Lock();	
 
