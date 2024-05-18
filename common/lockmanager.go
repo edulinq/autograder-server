@@ -45,13 +45,13 @@ func Unlock(key string) error {
     defer lockManagerMutex.Unlock();
 
     val, exists := lockMap.Load(key);
-    if !exists {
+    if (!exists) {
         log.Error("Key does not exist.", log.NewAttr("key", key));
         return fmt.Errorf("Lock key not found: '%s'.", key);
     }
     
     lock := val.(*lockData);
-    if !lock.isLocked {
+    if (!lock.isLocked) {
         log.Error("Tried to unlock a lock that is unlocked with key.", log.NewAttr("key", key));
         return fmt.Errorf("Tried to unlock a lock that is already unlocked with key '%s'.", key);
     }
@@ -75,13 +75,13 @@ func RemoveStaleLocksOnce() {
     lockMap.Range(func(key, val any) bool {
         lock := val.(*lockData);
 
-        if time.Since(lock.timestamp) < staleDuration || lock.isLocked {
+        if (time.Since(lock.timestamp) < staleDuration || lock.isLocked) {
             return true;
         }
 
         lockManagerMutex.Lock();
         defer lockManagerMutex.Unlock();
-        if time.Since(lock.timestamp) > staleDuration && lock.mutex.TryLock() {
+        if (time.Since(lock.timestamp) > staleDuration && lock.mutex.TryLock()) {
             lockMap.Delete(key);
         }
 

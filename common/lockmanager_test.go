@@ -20,7 +20,7 @@ func TestLockBase(t *testing.T) {
     Lock(key1);
 
     err := Unlock(key1);
-    if err != nil {
+    if (err != nil) {
         t.Errorf("Failed to unlock a key.");
     }
 }
@@ -29,19 +29,19 @@ func TestUnlockingAnUnlockedLock(t *testing.T) {
     Lock(key1);
 
     err := Unlock(key1);
-    if err != nil {
+    if (err != nil) {
         t.Errorf("Failed to unlock a key.");
     }
 
     err = Unlock(key1);
-    if err == nil {
+    if (err == nil) {
         t.Errorf("Unlocking a lock that is already unlocked did not return an error.");
     }
 }
 
 func TestUnlockingKeyThatIsntLocked(t *testing.T) {
     err := Unlock(doesNotExistKey);
-    if err == nil {
+    if (err == nil) {
         t.Errorf("Lock manager unlocked a key that wasn't locked.");
     }
 }
@@ -81,11 +81,11 @@ func TestConcurrentLockingUnlocking(t *testing.T) {
     
     // Unlock key1 & key2 for the first time.
     err := Unlock(key1);
-    if err != nil {
+    if (err != nil) {
         t.Errorf("Failed to unlock a key.");
     }
     err = Unlock(key2);
-    if err != nil {
+    if (err != nil) {
         t.Errorf("Failed to unlock a key.");
     }
 
@@ -107,7 +107,7 @@ func TestLockConcurrencyWithStaleCheck(t *testing.T) {
             RemoveStaleLocksOnce();
         }()
 
-        if shouldPreventRemoval {
+        if (shouldPreventRemoval) {
             Lock(key1);
             Unlock(key1);
         }
@@ -119,12 +119,12 @@ func TestLockConcurrencyWithStaleCheck(t *testing.T) {
     }
 
     // Test if a lock gets past the first "if" in RemoveStaleLocksOnce but not the second because it had been acquired.
-    if !testWithCondition(true) {
+    if (!testWithCondition(true)) {
         t.Errorf("Lock was unexpectedly removed even though it was accessed concurrently.");
     }
 
     // Test if a lock gets past both "if's" and gets removed from the map.
-    if testWithCondition(false) {
+    if (testWithCondition(false)) {
         t.Errorf("Stale lock was not removed.");
     }
 }
