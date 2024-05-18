@@ -26,12 +26,13 @@ function main() {
         return 0
     fi
 
-    local unformattedPaths=$(gofmt -l $commitGoPaths)
+    local unformattedPaths=$(gofmt -l $commitGoPaths 2>&1)
     if [[ -z "$unformattedPaths" ]] ; then
         return 0
     fi
 
-    echo "Found files that are not properly formatted (below), run ./scripts/format_code.sh ."
+    echo -e "\nCommit aborted.\n"
+    echo "Found files that are not properly formatted or have errors (see below), run ./scripts/format_code.sh to format code."
     echo "${unformattedPaths}"
     return 1
 }
