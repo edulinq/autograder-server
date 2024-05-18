@@ -1,114 +1,130 @@
 package common
 
 import (
-	"sync"
-	"testing"
-	"time"
+    "sync"
+    "testing"
+    "time"
 
-	"github.com/edulinq/autograder/config"
+    "github.com/edulinq/autograder/config"
 )
 
 var (
-    key = "testkey1"
-    key2 = "testkey2"
-    doesNotExistKey = "dne"
-    staleDuration = time.Duration(config.STALELOCK_DURATION.Get()) * time.Second;
-    wg sync.WaitGroup;
+    key1 = "testkey1";
+    key2 = "testkey2";
+    doesNotExistKey = "dne";
+    staleDuration = time.Duration(config.STALELOCK_DURATION_SECS.Get()) * time.Second;
+    lockWaitGroup sync.WaitGroup;
 )
 
-func TestLockManager(test *testing.T) {
-    testLockingKey()
-    
-    testUnlockingKey(test)
+func TestLockBase(t *testing.T) {
+    Lock(key1);
 
-    testConcurrentLockingUnlocking()
-
-    testUnlockingAnUnlockedLock(test)
-    
-    testUnlockingMissingKey(test)
-
-    testLockConcurrencyWithStaleCheck(test)
-}
-
-func testLockingKey() {
-    Lock(key)
-}
-
-func testUnlockingKey(test *testing.T) {
-    err := Unlock(key);
-    if (err != nil) {
-        test.Errorf("Failed to unlock a key");
+    err := Unlock(key1);
+    if err != nil {
+        t.Errorf("Failed to unlock a key.");
     }
 }
 
-func testConcurrentLockingUnlocking() {
-    Lock(key);
-    Lock(key2);
-    wg.Add(2);
-    go func() {
-        defer wg.Done();
-        Lock(key);
-        defer Unlock(key);
-    }()
-    go func() {
-        defer wg.Done();
-        Lock(key2);
-        defer Unlock(key2);
-    }();
-    Unlock(key);
-    Unlock(key2);
+func TestUnlockingAnUnlockedLock(t *testing.T) {
+    Lock(key1);
 
-    wg.Wait();
-}
+    err := Unlock(key1);
+    if err != nil {
+        t.Errorf("Failed to unlock a key.");
+    }
 
-func testUnlockingAnUnlockedLock(test *testing.T) {
-    err := Unlock(key);
-    if (err == nil) {
-        test.Errorf("Failed to unlock a key");
+    err = Unlock(key1);
+    if err == nil {
+        t.Errorf("Unlocking a lock that is already unlocked did not return an error.");
     }
 }
 
-func testUnlockingMissingKey(test *testing.T) {
+func TestUnlockingKeyThatIsntLocked(t *testing.T) {
     err := Unlock(doesNotExistKey);
     if err == nil {
-        test.Errorf("Lockmanager unlocked a key that doesn't exist");
+        t.Errorf("Lock manager unlocked a key that wasn't locked.");
     }
 }
 
-func testLockConcurrencyWithStaleCheck(test *testing.T) {
-    testWithCondition := func(shouldPreventRemoval bool) bool {
-        Lock(key) 
-        Unlock(key) 
+func TestConcurrentLockingUnlocking(t *testing.T) {
+    // Lock key1 and key2 for the first time.
+    Lock(key1);
+    Lock(key2);
 
-        val, _ := lockMap.Load(key)
-        val.(*lockData).timestamp = time.Now().Add(-1 * (staleDuration + (1 * time.Second)))
+    lockWaitGroup.Add(2);
 
-        wg.Add(1)
-        go func() {
-            defer wg.Done()
-            time.Sleep(100 * time.Millisecond)
-            RemoveStaleLocksOnce()
+    // This goroutine should wait to lock/unlock key1 a second time until it gets
+    // unlocked for the first time.
+    go func() {
+        defer lockWaitGroup.Done();
+        Lock(key1);
+        defer func() {
+            err := Unlock(key1);
+            if (err != nil) {
+                t.Errorf("Failed to unlock a key.");
+            }
         }()
+    }()
 
-        if (shouldPreventRemoval) {
-            Lock(key)
-            Unlock(key)
-        }
-
-        wg.Wait()
-
-        _, exists := lockMap.Load(key)
-        return exists
+    // This goroutine should wait to lock/unlock key2 a second time until it gets
+    // unlocked for the first time.
+    go func() {
+        defer lockWaitGroup.Done();
+        Lock(key2);
+        defer func() {
+            err := Unlock(key2);
+            if (err != nil) {
+                t.Errorf("Failed to unlock a key.");
+            }
+        }()
+    }()
+    
+    // Unlock key1 & key2 for the first time.
+    err := Unlock(key1);
+    if err != nil {
+        t.Errorf("Failed to unlock a key.");
+    }
+    err = Unlock(key2);
+    if err != nil {
+        t.Errorf("Failed to unlock a key.");
     }
 
-    // Test if a lock gets past the first "if" in RemoveStaleLocksOnce
-    // but not the second because it had been aquired. 
+    lockWaitGroup.Wait();
+}
+
+func TestLockConcurrencyWithStaleCheck(t *testing.T) {
+    testWithCondition := func(shouldPreventRemoval bool) bool {
+        Lock(key1);
+        Unlock(key1);
+
+        val, _ := lockMap.Load(key1);
+        val.(*lockData).timestamp = time.Now().Add(-1 * (staleDuration + (1 * time.Second)));
+
+        lockWaitGroup.Add(1);
+        go func() {
+            defer lockWaitGroup.Done();
+            time.Sleep(100 * time.Millisecond);
+            RemoveStaleLocksOnce();
+        }()
+
+        if shouldPreventRemoval {
+            Lock(key1);
+            Unlock(key1);
+        }
+
+        lockWaitGroup.Wait();
+
+        _, exists := lockMap.Load(key1);
+        return exists;
+    }
+
+    // Test if a lock gets past the first "if" in RemoveStaleLocksOnce but not the second because it had been acquired.
     if !testWithCondition(true) {
-        test.Errorf("Lock was unexpectedly removed even though it was accessed concurrently")
+        t.Errorf("Lock was unexpectedly removed even though it was accessed concurrently.");
     }
 
     // Test if a lock gets past both "if's" and gets removed from the map.
     if testWithCondition(false) {
-        test.Errorf("Stale lock was not removed")
+        t.Errorf("Stale lock was not removed.");
     }
 }
