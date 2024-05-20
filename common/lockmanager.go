@@ -30,12 +30,13 @@ func init() {
 
 func Lock(key string) {
     lockManagerMutex.Lock();
-    defer lockManagerMutex.Unlock();
 
     val, _ := lockMap.LoadOrStore(key, &lockData{});
-    lock := val.(*lockData)
+    lock := val.(*lockData);
+    lockManagerMutex.Unlock();
 
     lock.mutex.Lock();	
+
     lock.timestamp = time.Now();
     lock.isLocked = true;
 }
@@ -52,7 +53,7 @@ func Unlock(key string) error {
     
     lock := val.(*lockData);
     if (!lock.isLocked) {
-        log.Error("Tried to unlock a lock that is unlocked with key.", log.NewAttr("key", key));
+        log.Error("Tried to unlock a lock that is already unlocked with key.", log.NewAttr("key", key));
         return fmt.Errorf("Tried to unlock a lock that is already unlocked with key '%s'.", key);
     }
 
@@ -74,13 +75,16 @@ func RemoveStaleLocksOnce() {
 
     lockMap.Range(func(key, val any) bool {
         lock := val.(*lockData);
-
+        
+        // First check: If the conditions aren't met to remove a stale lock, return early.
         if (time.Since(lock.timestamp) < staleDuration || lock.isLocked) {
             return true;
         }
 
+        // Lock the lock manager in case another thread is trying to lock/unlock.
         lockManagerMutex.Lock();
         defer lockManagerMutex.Unlock();
+        // Second check: If conditions are met to determine a stale lock, delete it.
         if (time.Since(lock.timestamp) > staleDuration && lock.mutex.TryLock()) {
             lockMap.Delete(key);
         }
