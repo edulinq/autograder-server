@@ -274,8 +274,8 @@ func TestStaleLockWithLockedKey(test *testing.T) {
 }
 
 func TestStaleLockPassesFirstCheckButNotSecond(test *testing.T) {
-    Clear()
-    defer Clear()
+    Clear();
+    defer Clear();
 
     key1 := "testkey1";
     staleDuration := time.Duration(config.STALELOCK_DURATION_SECS.Get()) * time.Second;
