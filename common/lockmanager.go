@@ -33,6 +33,7 @@ func Lock(key string) {
 
     val, _ := lockMap.LoadOrStore(key, &lockData{});
     lock := val.(*lockData);
+    // Unlock the lockManagerMutex before aquiring the lock to avoid a deadlock.
     lockManagerMutex.Unlock();
 
     lock.mutex.Lock();	
@@ -75,8 +76,8 @@ func RemoveStaleLocksOnce() {
 
     lockMap.Range(func(key, val any) bool {
         lock := val.(*lockData);
-        
-        // First check: If the conditions aren't met to remove a stale lock, return early.
+
+        // First check: If the lock isn't stale or is locked, return early.
         if (time.Since(lock.timestamp) < staleDuration || lock.isLocked) {
             return true;
         }
@@ -84,7 +85,8 @@ func RemoveStaleLocksOnce() {
         // Lock the lock manager in case another thread is trying to lock/unlock.
         lockManagerMutex.Lock();
         defer lockManagerMutex.Unlock();
-        // Second check: If conditions are met to determine a stale lock, delete it.
+
+        // Second check: If the lock is stale and and is able to be locked, delete it.
         if (time.Since(lock.timestamp) > staleDuration && lock.mutex.TryLock()) {
             lockMap.Delete(key);
         }

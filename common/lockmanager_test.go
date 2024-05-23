@@ -8,7 +8,17 @@ import (
     "github.com/edulinq/autograder/config"
 )
 
+func Clear() {
+    lockManagerMutex = sync.Mutex{};
+
+    lockMap = sync.Map{};
+}
+
+// Lock(1) -> Unlock(1).
 func TestLockBase(test *testing.T) {
+    Clear();
+    defer Clear();
+
     key1 := "testkey1";
 
     Lock(key1);
@@ -19,7 +29,11 @@ func TestLockBase(test *testing.T) {
     }
 }
 
+// Lock(1) -> Unlock(1) -> Unlock(1).
 func TestUnlockingAnUnlockedLock(test *testing.T) {
+    Clear();
+    defer Clear();
+
     key1 := "testkey1";
 
     Lock(key1);
@@ -35,7 +49,11 @@ func TestUnlockingAnUnlockedLock(test *testing.T) {
     }
 }
 
+// Unlock(1).
 func TestUnlockingKeyThatDoesntExist(test *testing.T) {
+    Clear();
+    defer Clear();
+
     doesNotExistKey := "dne";
 
     err := Unlock(doesNotExistKey);
@@ -44,195 +62,162 @@ func TestUnlockingKeyThatDoesntExist(test *testing.T) {
     }
 }
 
-func TestLockUnlockDifferentKeysOneThread(test *testing.T) {
+// Lock(1) -> %Lock(2) -> Unlock(1) -> %Unlock(2).
+// % denotes a thread.
+func TestThread1UnlockFirst(test *testing.T) {
+    Clear();
+    defer Clear();
+
     key1 := "testkey1";
     key2 := "testkey2";
-    var verifyWaitGroup sync.WaitGroup;
-    var threadWaitGroup sync.WaitGroup;
+    var key1UnlockBlock sync.WaitGroup;
+    var key2LockedBlock sync.WaitGroup;
+    var threadFinishBlock sync.WaitGroup;
 
-    // Lock key1 for the first time.
     Lock(key1);
 
-    threadWaitGroup.Add(1);
-    verifyWaitGroup.Add(1);
+    threadFinishBlock.Add(1);
+    key2LockedBlock.Add(1);
+    key1UnlockBlock.Add(1);
 
-    // This thread should lock key2 for the first time while key1 is already locked.
     go func() {
-        defer threadWaitGroup.Done();
+        defer threadFinishBlock.Done();
+
+        // Lock key2 while key1 is already locked.
         Lock(key2);
-        verifyWaitGroup.Done();
+
+        key2LockedBlock.Done();
+
+        // Wait for the main thread to unlock key1.
+        key1UnlockBlock.Wait();
+
         err := Unlock(key2);
         if (err != nil) {
-            test.Fatalf("Failed to unlock.");
+            test.Fatalf("Failed to unlock inside the thread.");
         }
     }()
 
-    // Make sure the thread locked key2 before the main thread unlocks key1.
-    verifyWaitGroup.Wait();
+    // Wait for the thread to lock key2 before unlocking key1.
+    key2LockedBlock.Wait();
 
-    // Unlock key1.
     err := Unlock(key1);
     if (err != nil) {
         test.Fatalf("Failed to unlock.");
     }
 
+    key1UnlockBlock.Done();
+
     // Wait for the thread to finish unlocking key2.
-    threadWaitGroup.Wait();
+    threadFinishBlock.Wait();
 }
 
-func TestLockUnlockDifferentKeysTwoThreads(test *testing.T) {
+// Lock(1) -> %Lock(2) -> %Unlock(2) -> Unlock(1).
+// % denotes a thread.
+func TestThread2UnlockFirst(test *testing.T) {
+    Clear();
+    defer Clear();
+
     key1 := "testkey1";
     key2 := "testkey2";
-    var threadsWaitGroup sync.WaitGroup;
-    var funcWaitGroup sync.WaitGroup
+    var key2LockUnlockBlock sync.WaitGroup;
 
-    threadsWaitGroup.Add(2);
-    funcWaitGroup.Add(2);
+    Lock(key1);
 
-    // First thread locks and unlocks key1.
+    key2LockUnlockBlock.Add(1);
+
     go func() {
-        defer funcWaitGroup.Done();
-        Lock(key1);
-        threadsWaitGroup.Done();
-        err := Unlock(key1);
-        if (err != nil) {
-            test.Fatalf("Failed to unlock.")
-        }
-    }()
+        defer key2LockUnlockBlock.Done();
 
-    // Second thread locks and unlocks key2.
-    go func() {
-        defer funcWaitGroup.Done();
+        // Lock key2 while key1 is already locked.
         Lock(key2);
-        threadsWaitGroup.Done();
+
         err := Unlock(key2);
         if (err != nil) {
-            test.Fatalf("Failed to Unlock")
+            test.Fatalf("Failed to unlock inside the thread.");
         }
     }()
-    
-    // Wait until both threads have finished locking their keys so they 
-    // can unlock at the same time.
-    threadsWaitGroup.Wait();
-    
-    // Wait until both threads finish their execution.
-    funcWaitGroup.Wait();
+
+    // Wait for the thread to lock and unlock key2 before unlocking key1.
+    key2LockUnlockBlock.Wait();
+
+    err := Unlock(key1);
+    if (err != nil) {
+        test.Fatalf("Failed to unlock.");
+    }
 }
 
+// Lock(1) -> %Lock(1) -> Unlock(1) -> %Unlock(1).
+// % denotes a thread.
 func TestLockingTwiceWithSameKeyConcurrently(test *testing.T) {
+    Clear();
+    defer Clear();
+
     key1 := "testkey1";
-    var firstThreadWaitGroup sync.WaitGroup;
-    var secondThreadWaitGroup sync.WaitGroup;
-    var bothThreadsWaitGroup sync.WaitGroup;
+    var threadLockBlock sync.WaitGroup;
+    var threadFinishBlock sync.WaitGroup;
 
-    firstThreadWaitGroup.Add(1);
-    secondThreadWaitGroup.Add(1);
-    bothThreadsWaitGroup.Add(1);
+    threadLockBlock.Add(1);
+    threadFinishBlock.Add(1);
 
-    // First thread aquires the lock a first time.
+    // Lock for the first time.
+    Lock(key1);
+
+    // This thread tries to lock key1 a second time but is blocked
+    // until key1 gets unlocked for the first time.
     go func() {
-        defer firstThreadWaitGroup.Done();
+        defer threadFinishBlock.Done();
+
+        threadLockBlock.Done();
+
         Lock(key1);
-    }()
-
-    // Wait for the first thread to lock key1. 
-    firstThreadWaitGroup.Wait();
-
-
-    // Second thread aquires the lock a second time.
-    go func() {
-        defer bothThreadsWaitGroup.Done();
-        secondThreadWaitGroup.Done();
-        Lock(key1);
+        err := Unlock(key1);
+        if (err != nil) {
+            test.Fatalf("Failed to unlock for the second time.");
+        }
     }()
 
     // Wait for the second thread to try to lock key1
     // while the lock is being used by the first thread.
-    secondThreadWaitGroup.Wait();
+    threadLockBlock.Wait();
     
-    // Small sleep to ensure the second thread gets to locking key1.
+    // Small sleep to ensure the thread tries to lock key1.
     time.Sleep(10 * time.Millisecond);
 
-    // Unlock the first threads lock.
+    // Unlock for the first time.
     err := Unlock(key1);
     if (err != nil) {
-        test.Fatalf("Failed to unlock.");
+        test.Fatalf("Failed to unlock for the first time.");
     }
     
-    // Wait for the second thread to aquire the lock.
-    bothThreadsWaitGroup.Wait();
-
-    // Unlock the second threads lock.
-    err = Unlock(key1);
-    if (err != nil) {
-        test.Fatalf("Failed to unlock.");
-    }
+    // Wait for the thread to lock and unlock key1.
+    threadFinishBlock.Wait();
 }
 
-func TestLockUnlockSameKeyConcurrently(test *testing.T) {
+func TestStaleLockWithNonStaleLock(test *testing.T) {
+    Clear();
+    defer Clear();
+
     key1 := "testkey1";
-    var threadWaitGroup sync.WaitGroup;
-    var verifyWaitGroup sync.WaitGroup;
-
-    // Lock key1 for the first time.
-    Lock(key1);
-
-    threadWaitGroup.Add(1);
-    verifyWaitGroup.Add(1);
-
-    // This thread should wait to lock/unlock key1 a second time until it gets
-    // unlocked for the first time.
-    go func() {
-        defer threadWaitGroup.Done();
-        verifyWaitGroup.Done();
-        Lock(key1);
-        defer func() {
-            err := Unlock(key1);
-            if (err != nil) {
-                test.Fatalf("Failed to unlock.");
-            }
-        }()
-    }()
-
-    // Make sure the thread is trying to Lock with the same key
-    // before the main thread unlocks it.
-    verifyWaitGroup.Wait();
-
-    // Small sleep to ensure the thread gets to locking key1.
-    time.Sleep(10 * time.Millisecond);
-
-    // Unlock key1 for the first time.
-    err := Unlock(key1);
-    if (err != nil) {
-        test.Fatalf("Failed to unlock.");
-    }
-
-    // Wait for the thread to finish locking and unlocking key1.
-    threadWaitGroup.Wait();
-}
-
-func TestStaleLockRetention(test *testing.T) {
-    key1 := "testkey1";
-    staleDuration := time.Duration(config.STALELOCK_DURATION_SECS.Get()) * time.Second;
-    var threadWaitGroup sync.WaitGroup;
-    var timestampWaitGroup sync.WaitGroup;
+    staleDuration := time.Duration(config.STALELOCK_DURATION_SECS.Get()) * time.Minute;
+    var threadExecutionBlock sync.WaitGroup;
+    var timestampBlock sync.WaitGroup;
 
     Lock(key1);
     Unlock(key1);
 
-    // Load the lock data.
     val, _ := lockMap.Load(key1); 
-    // Set the timestamp for a lock to be considered stale.
-    val.(*lockData).timestamp = time.Now().Add(-1 * (staleDuration + (1 * time.Second)));
+    // Set the timestamp for the lock to be considered stale.
+    val.(*lockData).timestamp = time.Now().Add(-1 * (staleDuration + (1 * time.Minute)));
 
-    threadWaitGroup.Add(1);
-    timestampWaitGroup.Add(1);
+    threadExecutionBlock.Add(1);
+    timestampBlock.Add(1);
 
-    // Start a goroutine to check if the lock is stale.
     go func() {
-        defer threadWaitGroup.Done();
+        defer threadExecutionBlock.Done();
+
         // Wait for the lock's timestamp to be reset.
-        timestampWaitGroup.Wait();
+        timestampBlock.Wait();
+
         RemoveStaleLocksOnce();
     }()
 
@@ -241,78 +226,130 @@ func TestStaleLockRetention(test *testing.T) {
     Unlock(key1);
     
     // Let the goroutine continue its execution after resetting the timestamp.
-    timestampWaitGroup.Done();
+    timestampBlock.Done();
 
     // Wait for the go routine to finish its execution.
-    threadWaitGroup.Wait();
+    threadExecutionBlock.Wait();
     
     // Check if the lock still exists in the lock map.
     _, exists := lockMap.Load(key1);
-    // Test if the lock gets past the first check in RemoveStaleLocksOnce but not the second because it had been acquired.
+    // Test if the non stale lock got removed.
     if (!exists) {
         test.Fatalf("Failed to retain lock even though it was accessed concurrently.");
     }
 } 
 
-func TestStaleLockRemoval(test *testing.T) {
+func TestStaleLockWithLockedKey(test *testing.T) {
+    Clear();
+    defer Clear();
+
     key1 := "testkey1";
     staleDuration := time.Duration(config.STALELOCK_DURATION_SECS.Get()) * time.Second;
-    var threadWaitGroup sync.WaitGroup;
-
-    Lock(key1);
-    Unlock(key1);
-
-    // Load the lock data.
-    val, _ := lockMap.Load(key1); 
-    // Set the timestamp for a lock to be considered stale.
-    val.(*lockData).timestamp = time.Now().Add(-1 * (staleDuration + (1 * time.Second)));
-
-    threadWaitGroup.Add(1);
-
-    // Start a goroutine to check if the lock is stale.
-    go func() {
-        defer threadWaitGroup.Done();
-        RemoveStaleLocksOnce();
-    }()
-    
-    // Wait for the goroutine to finish checking for staleness.
-    threadWaitGroup.Wait();
-    
-    // Check if the lock still exists in the lock map.
-    _, exists := lockMap.Load(key1);
-    // Test if the lock gets past the first and second check in RemoveStaleLocksOnce and gets deleted.
-    if (exists) {
-        test.Fatalf("Failed to remove stale lock.");
-    }
-}
-
-func TestStaleLockRemovalWithLockedKey(test *testing.T) {
-    key1 := "testkey1";
-    staleDuration := time.Duration(config.STALELOCK_DURATION_SECS.Get()) * time.Second;
-    var lockWaitGroup sync.WaitGroup;
+    var staleCheckBlock sync.WaitGroup;
 
     Lock(key1);
 
-    // Load the lock data.
     val, _ := lockMap.Load(key1); 
     // Set the timestamp for a lock to be considered stale.
     val.(*lockData).timestamp = time.Now().Add(-1 * (staleDuration + (1 * time.Second)));
     
-    lockWaitGroup.Add(1);
+    staleCheckBlock.Add(1);
 
     // Start a goroutine to check if the lock is stale.
     go func() {
-        defer lockWaitGroup.Done();
+        defer staleCheckBlock.Done();
+
         RemoveStaleLocksOnce();
     }()
     
     // Wait for the goroutine to finish its execution.
-    lockWaitGroup.Wait();
+    staleCheckBlock.Wait();
 
     // Check if the lock still exists in the lock map and return it.
     _, exists := lockMap.Load(key1);
     // Test if the Locked lock got removed.
     if (!exists) {
         test.Fatalf("Failed to retain lock even though it was locked.");
+    }
+}
+
+func TestStaleLockPassesFirstCheckButNotSecond(test *testing.T) {
+    Clear()
+    defer Clear()
+
+    key1 := "testkey1";
+    staleDuration := time.Duration(config.STALELOCK_DURATION_SECS.Get()) * time.Second;
+    var finishThreadBlock sync.WaitGroup;
+
+    Lock(key1);
+    Unlock(key1);
+
+    val, _ := lockMap.Load(key1);
+    lockData := val.(*lockData);
+    // Set the timestamp for a lock to be considered stale.
+    lockData.timestamp = time.Now().Add(-1 * (staleDuration + (1 * time.Minute)));
+
+    finishThreadBlock.Add(1);
+
+    // Lock the lockManagerMutex to to give the main thread time to reset the lock's timestamp.
+    lockManagerMutex.Lock();
+
+    // This thread will pass the first guard but wait until the lock's timestamp gets reset
+    // to pass the second guard.
+    go func() {
+        defer finishThreadBlock.Done();
+
+        RemoveStaleLocksOnce();
+    }()
+
+    // Small sleep to give the thread time to pass the first check in RemoveStaleLocksOnce().
+    time.Sleep(10 * time.Millisecond);
+
+    // Reset the lockdata's timestamp to simulate a lock aquiring a lock between checks in RemoveStaleLocksOnce().
+    lockData.timestamp = time.Now();
+    
+    // Let the thread continue to the second check in RemoveStaleLocksOnce().
+    lockManagerMutex.Unlock();
+
+    // Wait until the thread finishes.
+    finishThreadBlock.Wait();
+
+    _, exists := lockMap.Load(key1);
+    // Test if the lock gets past the first check but not the second in RemoveStaleLocksOnce().
+    if (!exists) {
+        test.Fatalf("Failed to retain lock even though it was accessed concurrently.");
+    }
+}
+
+func TestStaleLockDeletion(test *testing.T) {
+    Clear();
+    defer Clear();
+
+    key1 := "testkey1";
+    staleDuration := time.Duration(config.STALELOCK_DURATION_SECS.Get()) * time.Second;
+    var staleCheckBlock sync.WaitGroup;
+
+    Lock(key1);
+    Unlock(key1);
+
+    val, _ := lockMap.Load(key1); 
+    // Set the timestamp for a lock to be considered stale.
+    val.(*lockData).timestamp = time.Now().Add(-1 * (staleDuration + (1 * time.Second)));
+
+    staleCheckBlock.Add(1);
+
+    go func() {
+        defer staleCheckBlock.Done();
+
+        RemoveStaleLocksOnce();
+    }()
+    
+    // Wait for the goroutine to finish checking for staleness.
+    staleCheckBlock.Wait();
+    
+    _, exists := lockMap.Load(key1);
+    // Test if the stale lock got deleted.
+    if (exists) {
+        test.Fatalf("Failed to remove stale lock.");
     }
 }
