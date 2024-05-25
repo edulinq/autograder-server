@@ -191,7 +191,7 @@ func TestMainThreadUnlockFirst(test *testing.T) {
 
     // Check if the child thread unlocked key1 before the main thread did.
     if (len(unlockInChildThreadFirst) > 0) {
-        test.Fatalf("Failed to ensure the main thread unlocked key1 before the child thread unlocked it.")
+        test.Fatalf("Failed to ensure the main thread unlocked key1 before the child thread unlocked it.");
     }
 
     // Unlock for the first time.
