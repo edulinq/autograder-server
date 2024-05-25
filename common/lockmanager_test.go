@@ -1,23 +1,27 @@
 package common
 
+// Function level comments: 
+// % denotes a thread off the main thread.
+// ! denotes an error from doing an operation.
+// Ex. Lock(1) -> %!Unlock(2) - The main thread locks key1 then a thread generates an error unlocking key2.
+
 import (
     "sync"
     "testing"
     "time"
-
+    
     "github.com/edulinq/autograder/config"
 )
 
-func Clear() {
+func clear() {
     lockManagerMutex = sync.Mutex{};
-
     lockMap = sync.Map{};
 }
 
 // Lock(1) -> Unlock(1).
 func TestLockBase(test *testing.T) {
-    Clear();
-    defer Clear();
+    clear();
+    defer clear();
 
     key1 := "testkey1";
 
@@ -29,10 +33,10 @@ func TestLockBase(test *testing.T) {
     }
 }
 
-// Lock(1) -> Unlock(1) -> Unlock(1).
+// Lock(1) -> Unlock(1) -> !Unlock(1).
 func TestUnlockingAnUnlockedLock(test *testing.T) {
-    Clear();
-    defer Clear();
+    clear();
+    defer clear();
 
     key1 := "testkey1";
 
@@ -51,8 +55,8 @@ func TestUnlockingAnUnlockedLock(test *testing.T) {
 
 // Unlock(1).
 func TestUnlockingKeyThatDoesntExist(test *testing.T) {
-    Clear();
-    defer Clear();
+    clear();
+    defer clear();
 
     doesNotExistKey := "dne";
 
@@ -63,10 +67,9 @@ func TestUnlockingKeyThatDoesntExist(test *testing.T) {
 }
 
 // Lock(1) -> %Lock(2) -> Unlock(1) -> %Unlock(2).
-// % denotes a thread.
-func TestThread1UnlockFirst(test *testing.T) {
-    Clear();
-    defer Clear();
+func TestMainThreadUnlocksFirst(test *testing.T) {
+    clear();
+    defer clear();
 
     key1 := "testkey1";
     key2 := "testkey2";
@@ -93,16 +96,16 @@ func TestThread1UnlockFirst(test *testing.T) {
 
         err := Unlock(key2);
         if (err != nil) {
-            test.Fatalf("Failed to unlock inside the thread.");
+            test.Fatalf("Failed to unlock key2 in the child thread.");
         }
-    }()
+    }();
 
     // Wait for the thread to lock key2 before unlocking key1.
     key2LockedBlock.Wait();
 
     err := Unlock(key1);
     if (err != nil) {
-        test.Fatalf("Failed to unlock.");
+        test.Fatalf("Failed to unlock key1 in the main thread.");
     }
 
     key1UnlockBlock.Done();
@@ -112,10 +115,9 @@ func TestThread1UnlockFirst(test *testing.T) {
 }
 
 // Lock(1) -> %Lock(2) -> %Unlock(2) -> Unlock(1).
-// % denotes a thread.
-func TestThread2UnlockFirst(test *testing.T) {
-    Clear();
-    defer Clear();
+func TestChildThreadUnlocksFirst(test *testing.T) {
+    clear();
+    defer clear();
 
     key1 := "testkey1";
     key2 := "testkey2";
@@ -133,24 +135,23 @@ func TestThread2UnlockFirst(test *testing.T) {
 
         err := Unlock(key2);
         if (err != nil) {
-            test.Fatalf("Failed to unlock inside the thread.");
+            test.Fatalf("Failed to unlock key2 in the child thread.");
         }
-    }()
+    }();
 
     // Wait for the thread to lock and unlock key2 before unlocking key1.
     key2LockUnlockBlock.Wait();
 
     err := Unlock(key1);
     if (err != nil) {
-        test.Fatalf("Failed to unlock.");
+        test.Fatalf("Failed to unlock key1 in the main thread.");
     }
 }
 
 // Lock(1) -> %Lock(1) -> Unlock(1) -> %Unlock(1).
-// % denotes a thread.
-func TestLockingTwiceWithSameKeyConcurrently(test *testing.T) {
-    Clear();
-    defer Clear();
+func TestMainThreadUnlockFirst(test *testing.T) {
+    clear();
+    defer clear();
 
     key1 := "testkey1";
     var threadLockBlock sync.WaitGroup;
@@ -158,6 +159,7 @@ func TestLockingTwiceWithSameKeyConcurrently(test *testing.T) {
 
     threadLockBlock.Add(1);
     threadFinishBlock.Add(1);
+    unlockInChildThreadFirst := make(chan struct{}, 1);
 
     // Lock for the first time.
     Lock(key1);
@@ -170,11 +172,15 @@ func TestLockingTwiceWithSameKeyConcurrently(test *testing.T) {
         threadLockBlock.Done();
 
         Lock(key1);
+
+        // Signal the child thread locked key1.
+        unlockInChildThreadFirst <- struct{}{};
+
         err := Unlock(key1);
         if (err != nil) {
-            test.Fatalf("Failed to unlock for the second time.");
+            test.Fatalf("Failed to unlock for the second time in the child thread.");
         }
-    }()
+    }();
 
     // Wait for the second thread to try to lock key1
     // while the lock is being used by the first thread.
@@ -183,75 +189,66 @@ func TestLockingTwiceWithSameKeyConcurrently(test *testing.T) {
     // Small sleep to ensure the thread tries to lock key1.
     time.Sleep(10 * time.Millisecond);
 
+    // Check if the child thread unlocked key1 before the main thread did.
+    if (len(unlockInChildThreadFirst) > 0) {
+        test.Fatalf("Failed to ensure the main thread unlocked key1 before the child thread unlocked it.")
+    }
+
     // Unlock for the first time.
     err := Unlock(key1);
     if (err != nil) {
-        test.Fatalf("Failed to unlock for the first time.");
+        test.Fatalf("Failed to unlock for the first time in the main thread.");
     }
     
     // Wait for the thread to lock and unlock key1.
     threadFinishBlock.Wait();
 }
 
-func TestStaleLockWithNonStaleLock(test *testing.T) {
-    Clear();
-    defer Clear();
+// Lock(1) -> Unlock(1) -> %StaleCheck.
+func TestStaleRetentionWithNonStaleLock(test *testing.T) {
+    clear();
+    defer clear();
 
     key1 := "testkey1";
-    staleDuration := time.Duration(config.STALELOCK_DURATION_SECS.Get()) * time.Minute;
     var threadExecutionBlock sync.WaitGroup;
-    var timestampBlock sync.WaitGroup;
 
+    // Add key1 to the lockmap and have it unlocked.
     Lock(key1);
     Unlock(key1);
 
-    val, _ := lockMap.Load(key1); 
-    // Set the timestamp for the lock to be considered stale.
-    val.(*lockData).timestamp = time.Now().Add(-1 * (staleDuration + (1 * time.Minute)));
-
     threadExecutionBlock.Add(1);
-    timestampBlock.Add(1);
 
     go func() {
         defer threadExecutionBlock.Done();
 
-        // Wait for the lock's timestamp to be reset.
-        timestampBlock.Wait();
-
         RemoveStaleLocksOnce();
-    }()
+    }();
 
-    // Reset the locks timestamp.
-    Lock(key1);
-    Unlock(key1);
-    
-    // Let the goroutine continue its execution after resetting the timestamp.
-    timestampBlock.Done();
-
-    // Wait for the go routine to finish its execution.
+    // Wait for the thread to finish checking for staleness.
     threadExecutionBlock.Wait();
     
-    // Check if the lock still exists in the lock map.
+    // Check if the stale lock got removed.
     _, exists := lockMap.Load(key1);
-    // Test if the non stale lock got removed.
     if (!exists) {
         test.Fatalf("Failed to retain lock even though it was accessed concurrently.");
     }
 } 
 
-func TestStaleLockWithLockedKey(test *testing.T) {
-    Clear();
-    defer Clear();
+// Lock(1) -> %Stale Check.
+func TestStaleLockRetentionWithLockedKey(test *testing.T) {
+    clear();
+    defer clear();
 
     key1 := "testkey1";
     staleDuration := time.Duration(config.STALELOCK_DURATION_SECS.Get()) * time.Second;
     var staleCheckBlock sync.WaitGroup;
 
+    // Add key1 to the lockmap and have it locked.
     Lock(key1);
 
+    // Load the lockmap and set the timestamp for the lock to be considered stale.
     val, _ := lockMap.Load(key1); 
-    // Set the timestamp for a lock to be considered stale.
-    val.(*lockData).timestamp = time.Now().Add(-1 * (staleDuration + (1 * time.Second)));
+    val.(*lockData).timestamp = time.Now().Add(-2 * (staleDuration));
     
     staleCheckBlock.Add(1);
 
@@ -260,95 +257,105 @@ func TestStaleLockWithLockedKey(test *testing.T) {
         defer staleCheckBlock.Done();
 
         RemoveStaleLocksOnce();
-    }()
+    }();
     
-    // Wait for the goroutine to finish its execution.
+    // Wait for the thread to finish checking for staleness.
     staleCheckBlock.Wait();
 
-    // Check if the lock still exists in the lock map and return it.
+    // Check if the locked stale lock got removed. 
     _, exists := lockMap.Load(key1);
-    // Test if the Locked lock got removed.
     if (!exists) {
         test.Fatalf("Failed to retain lock even though it was locked.");
     }
 }
 
-func TestStaleLockPassesFirstCheckButNotSecond(test *testing.T) {
-    Clear();
-    defer Clear();
+// Lock(1) -> Unlock(1) -> Make Stale -> %Stale Check first check -> Update timestamp -> %Stale Check second check. 
+func TestLockRetentionWithMidCheckActivity(test *testing.T) {
+    clear();
+    defer clear();
 
     key1 := "testkey1";
     staleDuration := time.Duration(config.STALELOCK_DURATION_SECS.Get()) * time.Second;
     var finishThreadBlock sync.WaitGroup;
+    var threadStartBlock sync.WaitGroup;
 
+    // Add key1 to the lockmap and have it unlocked.
     Lock(key1);
     Unlock(key1);
 
+    // Load the lockmap and set the timestamp for the lock to be considered stale.
     val, _ := lockMap.Load(key1);
     lockData := val.(*lockData);
-    // Set the timestamp for a lock to be considered stale.
-    lockData.timestamp = time.Now().Add(-1 * (staleDuration + (1 * time.Minute)));
+    lockData.timestamp = time.Now().Add(-2 * (staleDuration));
 
     finishThreadBlock.Add(1);
+    threadStartBlock.Add(1);
 
     // Lock the lockManagerMutex to to give the main thread time to reset the lock's timestamp.
     lockManagerMutex.Lock();
 
-    // This thread will pass the first guard but wait until the lock's timestamp gets reset
-    // to pass the second guard.
+    // This thread will pass the first check but wait until the lock's timestamp gets reset
+    // to pass the second check.
     go func() {
         defer finishThreadBlock.Done();
 
-        RemoveStaleLocksOnce();
-    }()
+        threadStartBlock.Done();
 
-    // Small sleep to give the thread time to pass the first check in RemoveStaleLocksOnce().
+        RemoveStaleLocksOnce();
+    }();
+
+    // Wait for the thread to start.
+    threadStartBlock.Wait();
+
+    // Small sleep to give the thread time to pass the first stale check in RemoveStaleLocksOnce().
     time.Sleep(10 * time.Millisecond);
 
     // Reset the lockdata's timestamp to simulate a lock aquiring a lock between checks in RemoveStaleLocksOnce().
     lockData.timestamp = time.Now();
     
-    // Let the thread continue to the second check in RemoveStaleLocksOnce().
+    // Let the thread continue to the second stale check in RemoveStaleLocksOnce().
     lockManagerMutex.Unlock();
 
-    // Wait until the thread finishes.
+    // Wait for the thread to finish checking for staleness.
     finishThreadBlock.Wait();
 
+    // Check if the stale lock changed to un-stale mid check got removed.
     _, exists := lockMap.Load(key1);
-    // Test if the lock gets past the first check but not the second in RemoveStaleLocksOnce().
     if (!exists) {
         test.Fatalf("Failed to retain lock even though it was accessed concurrently.");
     }
 }
 
+// Lock(1) -> Unlock(1) -> Make Stale -> %Stale Check
 func TestStaleLockDeletion(test *testing.T) {
-    Clear();
-    defer Clear();
+    clear();
+    defer clear();
 
     key1 := "testkey1";
     staleDuration := time.Duration(config.STALELOCK_DURATION_SECS.Get()) * time.Second;
-    var staleCheckBlock sync.WaitGroup;
+    var finishThreadBlock sync.WaitGroup;
 
+    // Add key1 to the lockmap and have it unlocked.
     Lock(key1);
     Unlock(key1);
 
+    // Load the lockmap and set the timestamp for the lock to be considered stale.
     val, _ := lockMap.Load(key1); 
-    // Set the timestamp for a lock to be considered stale.
-    val.(*lockData).timestamp = time.Now().Add(-1 * (staleDuration + (1 * time.Second)));
+    val.(*lockData).timestamp = time.Now().Add(-2 * (staleDuration));
 
-    staleCheckBlock.Add(1);
+    finishThreadBlock.Add(1);
 
     go func() {
-        defer staleCheckBlock.Done();
+        defer finishThreadBlock.Done();
 
         RemoveStaleLocksOnce();
-    }()
+    }();
     
-    // Wait for the goroutine to finish checking for staleness.
-    staleCheckBlock.Wait();
+    // Wait for the thread to finish checking for staleness.
+    finishThreadBlock.Wait();
     
+    // Check if the stale lock got deleted.
     _, exists := lockMap.Load(key1);
-    // Test if the stale lock got deleted.
     if (exists) {
         test.Fatalf("Failed to remove stale lock.");
     }

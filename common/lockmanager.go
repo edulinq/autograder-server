@@ -37,7 +37,6 @@ func Lock(key string) {
     lockManagerMutex.Unlock();
 
     lock.mutex.Lock();	
-
     lock.timestamp = time.Now();
     lock.isLocked = true;
 }
