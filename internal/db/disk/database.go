@@ -17,9 +17,10 @@ import (
 const DB_DIRNAME = "disk-database"
 
 type backend struct {
-	baseDir string
-	lock    sync.RWMutex
-	logLock sync.RWMutex
+	baseDir  string
+	lock     sync.RWMutex
+	logLock  sync.RWMutex
+	userLock sync.RWMutex
 }
 
 func Open() (*backend, error) {
@@ -49,6 +50,9 @@ func (this *backend) Clear() error {
 
 	this.logLock.Lock()
 	defer this.logLock.Unlock()
+
+	this.userLock.Lock()
+	defer this.userLock.Unlock()
 
 	err := util.RemoveDirent(this.baseDir)
 	if err != nil {

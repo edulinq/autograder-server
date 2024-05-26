@@ -1,6 +1,7 @@
 package disk
 
 import (
+	"errors"
 	"fmt"
 	"path/filepath"
 
@@ -8,19 +9,115 @@ import (
 	"github.com/edulinq/autograder/internal/util"
 )
 
-func (this *backend) GetUsers(course *model.Course) (map[string]*model.User, error) {
-	return this.getUsersLock(course, true)
+func (this *backend) GetServerUsers() (map[string]*model.ServerUser, error) {
+	return this.getServerUsersLock(true)
 }
 
-func (this *backend) getUsersLock(course *model.Course, acquireLock bool) (map[string]*model.User, error) {
-	if acquireLock {
-		this.lock.RLock()
-		defer this.lock.RUnlock()
+func (this *backend) GetCourseUsers(course *model.Course) (map[string]*model.CourseUser, error) {
+	users, err := this.getServerUsersLock(true)
+	if err != nil {
+		return nil, err
 	}
 
-	users := make(map[string]*model.User)
+	courseUsers := make(map[string]*model.CourseUser)
+	for email, user := range users {
+		courseUser, err := user.GetCourseUser(course)
+		if err != nil {
+			return nil, fmt.Errorf("Invalid user '%s': '%w'.", email, err)
+		}
 
-	path := this.getUsersPath(course)
+		if courseUser != nil {
+			courseUsers[courseUser.Email] = courseUser
+		}
+	}
+
+	return courseUsers, nil
+}
+
+func (this *backend) GetServerUser(email string, includeTokens bool) (*model.ServerUser, error) {
+	users, err := this.getServerUsersLock(true)
+	if err != nil {
+		return nil, err
+	}
+
+	user, exists := users[email]
+	if !exists {
+		return nil, nil
+	}
+
+	if !includeTokens {
+		user.Tokens = nil
+	}
+
+	return user, nil
+}
+
+func (this *backend) UpsertUsers(users map[string]*model.ServerUser) error {
+	return this.upsertUsersLock(users, true)
+}
+
+func (this *backend) DeleteUser(email string) error {
+	this.userLock.Lock()
+	defer this.userLock.Unlock()
+
+	users, err := this.getServerUsersLock(false)
+	if err != nil {
+		return fmt.Errorf("Failed to get users when deleting user '%s': '%w'.", email, err)
+	}
+
+	_, ok := users[email]
+	if !ok {
+		return nil
+	}
+
+	delete(users, email)
+
+	err = util.ToJSONFileIndent(users, this.getServerUsersPath())
+	if err != nil {
+		return fmt.Errorf("Unable to save user's file: '%w'.", err)
+	}
+
+	return nil
+}
+
+func (this *backend) RemoveUserFromCourse(course *model.Course, email string) error {
+	this.userLock.Lock()
+	defer this.userLock.Unlock()
+
+	users, err := this.getServerUsersLock(false)
+	if err != nil {
+		return fmt.Errorf("Failed to get users when deleting user '%s': '%w'.", email, err)
+	}
+
+	user, ok := users[email]
+	if !ok {
+		return nil
+	}
+
+	_, enrolled := user.Roles[course.ID]
+	if !enrolled {
+		return nil
+	}
+
+	delete(user.Roles, course.ID)
+
+	err = util.ToJSONFileIndent(users, this.getServerUsersPath())
+	if err != nil {
+		return fmt.Errorf("Unable to save user's file: '%w'.", err)
+	}
+
+	return nil
+}
+
+func (this *backend) getServerUsersLock(acquireLock bool) (map[string]*model.ServerUser, error) {
+	if acquireLock {
+		this.userLock.RLock()
+		defer this.userLock.RUnlock()
+	}
+
+	users := make(map[string]*model.ServerUser)
+
+	path := this.getServerUsersPath()
 	if !util.PathExists(path) {
 		return users, nil
 	}
@@ -33,35 +130,27 @@ func (this *backend) getUsersLock(course *model.Course, acquireLock bool) (map[s
 	return users, nil
 }
 
-func (this *backend) GetUser(course *model.Course, email string) (*model.User, error) {
-	users, err := this.GetUsers(course)
-	if err != nil {
-		return nil, fmt.Errorf("Failed to get users when searching for '%s': '%w'.", email, err)
-	}
-
-	return users[email], nil
-}
-
-func (this *backend) SaveUsers(course *model.Course, users map[string]*model.User) error {
-	return this.saveUsersLock(course, users, true)
-}
-
-func (this *backend) saveUsersLock(course *model.Course, newUsers map[string]*model.User, acquireLock bool) error {
+func (this *backend) upsertUsersLock(upsertUsers map[string]*model.ServerUser, acquireLock bool) error {
 	if acquireLock {
-		this.lock.Lock()
-		defer this.lock.Unlock()
+		this.userLock.Lock()
+		defer this.userLock.Unlock()
 	}
 
-	users, err := this.getUsersLock(course, false)
+	users, err := this.getServerUsersLock(false)
 	if err != nil {
 		return fmt.Errorf("Failed to get users to merge before saving: '%w'.", err)
 	}
 
-	for key, value := range newUsers {
-		users[key] = value
+	for email, upsertUser := range upsertUsers {
+		oldUser, exists := users[email]
+		if exists {
+			oldUser.Upsert(upsertUser)
+		} else {
+			users[email] = upsertUser
+		}
 	}
 
-	err = util.ToJSONFileIndent(users, this.getUsersPath(course))
+	err = util.ToJSONFileIndent(users, this.getServerUsersPath())
 	if err != nil {
 		return fmt.Errorf("Unable to save user's file: '%w'.", err)
 	}
@@ -69,30 +158,26 @@ func (this *backend) saveUsersLock(course *model.Course, newUsers map[string]*mo
 	return nil
 }
 
-func (this *backend) RemoveUser(course *model.Course, email string) error {
-	this.lock.Lock()
-	defer this.lock.Unlock()
-
-	users, err := this.getUsersLock(course, false)
-	if err != nil {
-		return fmt.Errorf("Failed to get users when removing for '%s': '%w'.", email, err)
-	}
-
-	_, ok := users[email]
-	if !ok {
-		return nil
-	}
-
-	delete(users, email)
-
-	err = util.ToJSONFileIndent(users, this.getUsersPath(course))
-	if err != nil {
-		return fmt.Errorf("Unable to save user's file: '%w'.", err)
-	}
-
-	return nil
+func (this *backend) getServerUsersPath() string {
+	return filepath.Join(this.baseDir, model.USERS_FILENAME)
 }
 
-func (this *backend) getUsersPath(course *model.Course) string {
-	return filepath.Join(this.getCourseDir(course), model.USERS_FILENAME)
+func convertCourseUsers(courseUsers map[string]*model.CourseUser, course *model.Course) (map[string]*model.ServerUser, error) {
+	serverUsers := make(map[string]*model.ServerUser, len(courseUsers))
+
+	var userErrors error = nil
+	for email, courseUser := range courseUsers {
+		serverUser, err := courseUser.GetServerUser(course)
+		if err != nil {
+			userErrors = errors.Join(userErrors, fmt.Errorf("Error with user '%s': '%w'.", email, err))
+		} else {
+			serverUsers[email] = serverUser
+		}
+	}
+
+	if userErrors != nil {
+		return nil, userErrors
+	}
+
+	return serverUsers, nil
 }

@@ -26,6 +26,10 @@ type APIRequest struct {
 	TestingMode bool `json:"-"`
 }
 
+// TEST - Will need a new context here: APIRequestUserContext.
+//        This will handle the authentication (but not role checking).
+//        Get a ServerUser, then APIRequestCourseUserContext will check role and set a CourseUser.
+
 // Context for a request that has a course and user (pretty much the lowest level of request).
 type APIRequestCourseUserContext struct {
 	APIRequest

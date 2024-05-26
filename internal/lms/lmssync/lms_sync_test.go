@@ -71,7 +71,11 @@ func TestCourseSyncLMSUsers(test *testing.T) {
 		course.GetLMSAdapter().SyncUserAdds = testCase.syncAdd
 		course.GetLMSAdapter().SyncUserRemoves = testCase.syncDel
 
-		localUsers := db.MustGetUsers(course)
+		courseUsers, err := db.GetCourseUsers(course)
+		if err != nil {
+			test.Errorf("Case %d (%+v): Failed to get course users: '%v'.", i, testCase, err)
+			continue
+		}
 
 		email.ClearTestMessages()
 
@@ -82,7 +86,7 @@ func TestCourseSyncLMSUsers(test *testing.T) {
 		}
 
 		var unchangedUsers []*model.User = []*model.User{
-			localUsers["owner@test.com"],
+			courseUsers["owner@test.com"],
 		}
 
 		testMessages := email.GetTestMessages()
@@ -164,7 +168,7 @@ func TestCourseSyncLMSUsers(test *testing.T) {
 				continue
 			}
 		} else {
-			unchangedUsers = append(unchangedUsers, localUsers["other@test.com"])
+			unchangedUsers = append(unchangedUsers, courseUsers["other@test.com"])
 
 			if len(result.Del) != 0 {
 				test.Errorf("Case %d (%+v): User deletions were disabled, but %d deleted users were found.", i, testCase, len(result.Del))

@@ -81,19 +81,19 @@ func SyncLMSUserEmails(course *model.Course, emails []string, dryRun bool, sendE
 // Otherwise, all emails from local and LMS users will be checked.
 func syncLMSUsers(course *model.Course, dryRun bool, sendEmails bool, lmsUsers map[string]*lmstypes.User,
 	syncEmails []string) (*model.UserSyncResult, error) {
-	localUsers, err := db.GetUsers(course)
+	courseUsers, err := db.GetCourseUsers(course)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to fetch local users: '%w'.", err)
 	}
 
 	if len(syncEmails) == 0 {
-		syncEmails = getAllEmails(localUsers, lmsUsers)
+		syncEmails = getAllEmails(courseUsers, lmsUsers)
 	}
 
 	syncResult := model.NewUserSyncResult()
 
 	for _, email := range syncEmails {
-		resolveResult, err := resolveUserSync(course, localUsers, lmsUsers, email)
+		resolveResult, err := resolveUserSync(course, courseUsers, lmsUsers, email)
 		if err != nil {
 			return nil, err
 		}
@@ -107,7 +107,7 @@ func syncLMSUsers(course *model.Course, dryRun bool, sendEmails bool, lmsUsers m
 		return syncResult, nil
 	}
 
-	err = db.SaveUsers(course, localUsers)
+	err = db.UpsertCourseUsers(course, courseUsers)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to save users file: '%w'.", err)
 	}
@@ -128,11 +128,13 @@ func syncLMSUsers(course *model.Course, dryRun bool, sendEmails bool, lmsUsers m
 	return syncResult, nil
 }
 
-func mergeUsers(localUser *model.User, lmsUser *lmstypes.User, mergeAttributes bool) bool {
+func mergeUsers(courseUser *model.CourseUser, lmsUser *lmstypes.User, mergeAttributes bool) bool {
 	changed := false
 
-	if localUser.LMSID != lmsUser.ID {
-		localUser.LMSID = lmsUser.ID
+	// TEST - We should ensure that LMS users without and ID are thrown out early.
+
+	if (courseUser.LMSID == nil) || (*courseUser.LMSID != lmsUser.ID) {
+		courseUser.LMSID = &lmsUser.ID
 		changed = true
 	}
 
@@ -140,13 +142,14 @@ func mergeUsers(localUser *model.User, lmsUser *lmstypes.User, mergeAttributes b
 		return changed
 	}
 
-	if localUser.Name != lmsUser.Name {
-		localUser.Name = lmsUser.Name
+	name := courseUser.GetName(false)
+	if name != lmsUser.Name {
+		courseUser.Name = &lmsUser.Name
 		changed = true
 	}
 
-	if localUser.Role != lmsUser.Role {
-		localUser.Role = lmsUser.Role
+	if courseUser.Role != lmsUser.Role {
+		courseUser.Role = lmsUser.Role
 		changed = true
 	}
 
@@ -156,19 +159,19 @@ func mergeUsers(localUser *model.User, lmsUser *lmstypes.User, mergeAttributes b
 // Resolve differences between a local user and LMS user (linked using the provided email).
 // The passed in local user map will be modified to reflect any resolution.
 // The taken action will depend on the options set in the course's LMS adapter.
-func resolveUserSync(course *model.Course, localUsers map[string]*model.User,
+func resolveUserSync(course *model.Course, courseUsers map[string]*model.CourseUser,
 	lmsUsers map[string]*lmstypes.User, email string) (*model.UserResolveResult, error) {
 	adapter := course.GetLMSAdapter()
 
-	localUser := localUsers[email]
+	courseUser := courseUsers[email]
 	lmsUser := lmsUsers[email]
 
-	if (localUser == nil) && lmsUser == nil {
+	if (courseUser == nil) && (lmsUser == nil) {
 		return nil, nil
 	}
 
 	// Add.
-	if localUser == nil {
+	if courseUser == nil {
 		if !adapter.SyncUserAdds {
 			return nil, nil
 		}
@@ -178,47 +181,52 @@ func resolveUserSync(course *model.Course, localUsers map[string]*model.User,
 			return nil, fmt.Errorf("Failed to generate a default password: '%w'.", err)
 		}
 
-		localUser = &model.User{
-			Email: email,
-			Name:  lmsUser.Name,
-			Role:  lmsUser.Role,
-			LMSID: lmsUser.ID,
+		var name *string = nil
+		if lmsUser.Name != "" {
+			name = &lmsUser.Name
 		}
 
+		courseUser, err = model.NewCourseUser(email, name, lmsUser.Role, lmsUser.ID)
+		if err != nil {
+			return nil, fmt.Errorf("Failed to create a course user: '%w'.", err)
+		}
+
+		// TEST - HERE
+
 		hashPass := util.Sha256HexFromString(pass)
-		err = localUser.SetPassword(hashPass)
+		err = courseUser.SetPassword(hashPass)
 		if err != nil {
 			return nil, fmt.Errorf("Failed to set password: '%w'.", err)
 		}
 
-		localUsers[email] = localUser
+		courseUsers[email] = courseUser
 
-		return &model.UserResolveResult{Add: localUser, ClearTextPassword: pass}, nil
+		return &model.UserResolveResult{Add: courseUser, ClearTextPassword: pass}, nil
 	}
 
 	// Del.
 	if lmsUser == nil {
 		if !adapter.SyncUserRemoves {
-			return &model.UserResolveResult{Unchanged: localUser}, nil
+			return &model.UserResolveResult{Unchanged: courseUser}, nil
 		}
 
-		delete(localUsers, email)
-		return &model.UserResolveResult{Del: localUser}, nil
+		delete(courseUsers, email)
+		return &model.UserResolveResult{Del: courseUser}, nil
 	}
 
 	// Mod.
-	userChanged := mergeUsers(localUser, lmsUser, adapter.SyncUserAttributes)
+	userChanged := mergeUsers(courseUser, lmsUser, adapter.SyncUserAttributes)
 	if userChanged {
-		return &model.UserResolveResult{Mod: localUser}, nil
+		return &model.UserResolveResult{Mod: courseUser}, nil
 	}
 
-	return &model.UserResolveResult{Unchanged: localUser}, nil
+	return &model.UserResolveResult{Unchanged: courseUser}, nil
 }
 
-func getAllEmails(localUsers map[string]*model.User, lmsUsers map[string]*lmstypes.User) []string {
-	emails := make([]string, 0, max(len(localUsers), len(lmsUsers)))
+func getAllEmails(courseUsers map[string]*model.User, lmsUsers map[string]*lmstypes.User) []string {
+	emails := make([]string, 0, max(len(courseUsers), len(lmsUsers)))
 
-	for email, _ := range localUsers {
+	for email, _ := range courseUsers {
 		emails = append(emails, email)
 	}
 
@@ -227,7 +235,7 @@ func getAllEmails(localUsers map[string]*model.User, lmsUsers map[string]*lmstyp
 			continue
 		}
 
-		_, ok := localUsers[email]
+		_, ok := courseUsers[email]
 		if ok {
 			// Already added.
 			continue

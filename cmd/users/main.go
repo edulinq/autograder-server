@@ -143,7 +143,7 @@ type GetUser struct {
 }
 
 func (this *GetUser) Run(course *model.Course) error {
-	user, err := db.GetUser(course, this.Email)
+	user, err := db.GetCourseUser(course, this.Email)
 	if err != nil {
 		return fmt.Errorf("Failed to get user: '%w'.", err)
 	}
@@ -162,7 +162,7 @@ type ListUsers struct {
 }
 
 func (this *ListUsers) Run(course *model.Course) error {
-	users, err := db.GetUsers(course)
+	users, err := db.GetCourseUsers(course)
 	if err != nil {
 		return fmt.Errorf("Failed to load users: '%w'.", err)
 	}
@@ -197,7 +197,7 @@ type ChangePassword struct {
 }
 
 func (this *ChangePassword) Run(course *model.Course) error {
-	user, err := db.GetUser(course, this.Email)
+	user, err := db.GetCourseUser(course, this.Email)
 	if err != nil {
 		return fmt.Errorf("Failed to get user: '%w'.", err)
 	}

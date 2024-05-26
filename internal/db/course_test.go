@@ -19,13 +19,17 @@ func (this *DBTests) DBTestCourseUpdateCourseFromSourceBase(test *testing.T) {
 		test.Fatalf("Unexpected pre-remove user count. Expected 5, found %d.", count)
 	}
 
-	removed, err := RemoveUser(course, "student@test.com")
+	exists, enrolled, err := RemoveUserFromCourse(course, "student@test.com")
 	if err != nil {
 		test.Fatalf("Error when removing the user: '%v'.", err)
 	}
 
-	if !removed {
-		test.Fatalf("User was not removed.")
+	if !exists {
+		test.Fatalf("User does not exist.")
+	}
+
+	if !enrolled {
+		test.Fatalf("User was not enrolled in course.")
 	}
 
 	count = countUsers(test, course)
@@ -61,13 +65,17 @@ func (this *DBTests) DBTestCourseUpdateCourseFromSourceSkip(test *testing.T) {
 		test.Fatalf("Unexpected pre-remove user count. Expected 5, found %d.", count)
 	}
 
-	removed, err := RemoveUser(course, "student@test.com")
+	exists, enrolled, err := RemoveUserFromCourse(course, "student@test.com")
 	if err != nil {
 		test.Fatalf("Error when removing the user: '%v'.", err)
 	}
 
-	if !removed {
-		test.Fatalf("User was not removed.")
+	if !exists {
+		test.Fatalf("User does not exist.")
+	}
+
+	if !enrolled {
+		test.Fatalf("User was not enrolled in course.")
 	}
 
 	count = countUsers(test, course)
@@ -99,7 +107,7 @@ func (this *DBTests) DBTestCourseUpdateCourseFromSourceSkip(test *testing.T) {
 }
 
 func countUsers(test *testing.T, course *model.Course) int {
-	users, err := GetUsers(course)
+	users, err := GetCourseUsers(course)
 	if err != nil {
 		test.Fatalf("Failed to get users: '%v'.", err)
 	}

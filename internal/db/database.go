@@ -28,10 +28,15 @@ const (
 
 // Actual database implementations.
 // Any ID (course, assignment, etc) passed into a backend will be sanitized.
+// Note that the database package provides more functionality than what is provided directly by a Backend.
 type Backend interface {
+	// Administrative operations.
+
 	Close() error
 	Clear() error
 	EnsureTables() error
+
+	// Course operations.
 
 	// Clear all information about a course.
 	ClearCourse(course *model.Course) error
@@ -58,21 +63,39 @@ type Backend interface {
 	// The target directory should not exist, or be empty.
 	DumpCourse(course *model.Course, targetDir string) error
 
+	// Assignment operations.
+
 	// Explicitly save an assignment.
 	SaveAssignment(assignment *model.Assignment) error
 
-	GetUsers(course *model.Course) (map[string]*model.User, error)
+	// User operations.
+	// User maps always map the user's ID to an actual user pointer.
 
-	// Get a specific user.
+	// Get all the users on the server.
+	GetServerUsers() (map[string]*model.ServerUser, error)
+
+	// Get all the users in a course.
+	GetCourseUsers(course *model.Course) (map[string]*model.CourseUser, error)
+
+	// Get a specific server user.
 	// Returns nil if no matching user exists.
-	GetUser(course *model.Course, email string) (*model.User, error)
+	// If |includeTokens| is false, then the token map should be nil.
+	GetServerUser(email string, includeTokens bool) (*model.ServerUser, error)
 
 	// Upsert the given users.
-	SaveUsers(course *model.Course, users map[string]*model.User) error
+	// Only fields to be updated should be non-nil (excluding email, which will always exist).
+	// Any group membership (roles) will be added to. A missing role does not imply deletion.
+	UpsertUsers(users map[string]*model.ServerUser) error
 
-	// Remove a user.
+	// Remove a user from the server.
 	// Do nothing and return nil if the user does not exist.
-	RemoveUser(course *model.Course, email string) error
+	DeleteUser(email string) error
+
+	// Remove a user from a course (but leave the user on the server).
+	// Do nothing and return nil if the user does not exist in that course.
+	RemoveUserFromCourse(course *model.Course, email string) error
+
+	// Submission operations.
 
 	// Remove a submission.
 	// Return a bool indicating whether the submission exists or not and an error if there is one.
@@ -123,6 +146,8 @@ type Backend interface {
 	// A nil map should only be returned on error.
 	GetRecentSubmissionContents(assignment *model.Assignment, filterRole model.UserRole) (map[string]*model.GradingResult, error)
 
+	// Task operations.
+
 	// Record that a task has been completed.
 	// The DB is only required to keep the most recently completed task with the given course/ID.
 	LogTaskCompletion(courseID string, taskID string, instance time.Time) error
@@ -130,6 +155,8 @@ type Backend interface {
 	// Get the last time a task with the given course/ID was completed.
 	// Will return a zero time (time.Time{}).
 	GetLastTaskCompletion(courseID string, taskID string) (time.Time, error)
+
+	// Logging operations.
 
 	// DB backends will also be used as logging storage backends.
 	log.StorageBackend

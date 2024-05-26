@@ -9,14 +9,19 @@ import (
 )
 
 func (this *TestLMSBackend) FetchUsers() ([]*lmstypes.User, error) {
-	localUsers, err := db.GetUsersFromID(this.CourseID)
+	course, err := db.GetCourse(this.CourseID)
+	if err != nil {
+		return nil, fmt.Errorf("Failed to get course for local users: '%w'.", err)
+	}
+
+	courseUsers, err := db.GetCourseUsers(course)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to get local users: '%w'.", err)
 	}
 
-	users := make([]*lmstypes.User, 0, len(localUsers))
-	for _, localUser := range localUsers {
-		users = append(users, UserFromAGUser(localUser))
+	users := make([]*lmstypes.User, 0, len(courseUsers))
+	for _, courseUser := range courseUsers {
+		users = append(users, UserFromCourseUser(courseUser))
 	}
 
 	if usersModifier != nil {
@@ -27,7 +32,12 @@ func (this *TestLMSBackend) FetchUsers() ([]*lmstypes.User, error) {
 }
 
 func (this *TestLMSBackend) FetchUser(email string) (*lmstypes.User, error) {
-	users, err := db.GetUsersFromID(this.CourseID)
+	course, err := db.GetCourse(this.CourseID)
+	if err != nil {
+		return nil, fmt.Errorf("Failed to get course for local users: '%w'.", err)
+	}
+
+	users, err := db.GetCourseUsers(course)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to get users: '%w'.", err)
 	}
@@ -37,13 +47,13 @@ func (this *TestLMSBackend) FetchUser(email string) (*lmstypes.User, error) {
 		return nil, nil
 	}
 
-	return UserFromAGUser(user), nil
+	return UserFromCourseUser(user), nil
 }
 
-func UserFromAGUser(user *model.User) *lmstypes.User {
+func UserFromCourseUser(user *model.CourseUser) *lmstypes.User {
 	return &lmstypes.User{
 		ID:    "lms-" + user.Email,
-		Name:  user.Name,
+		Name:  user.GetName(false),
 		Email: user.Email,
 		Role:  user.Role,
 	}

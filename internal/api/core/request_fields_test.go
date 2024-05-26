@@ -494,7 +494,9 @@ func testTargetUser[T comparable, V userGetter](test *testing.T,
 	createTargetType func(TargetUser) T,
 	createRequest func(model.UserRole, string) V,
 	isNonSelfPermError func(model.UserRole) bool) {
-	users, err := db.GetUsersFromID("course101")
+	course := db.MustGetTestCourse()
+
+	users, err := db.GetCourseUsers(course)
 	if err != nil {
 		test.Fatalf("Failed to get users: '%v'.", err)
 	}
@@ -567,7 +569,9 @@ func TestTargetUser(test *testing.T) {
 		User TargetUser
 	}
 
-	users, err := db.GetUsersFromID("course101")
+	course := db.MustGetTestCourse()
+
+	users, err := db.GetCourseUsers(course)
 	if err != nil {
 		test.Fatalf("Failed to get users: '%v'.", err)
 	}

@@ -27,7 +27,7 @@ func (this *backend) LoadCourse(path string) (*model.Course, error) {
 	this.lock.Lock()
 	defer this.lock.Unlock()
 
-	course, users, submissions, err := model.FullLoadCourseFromPath(path)
+	course, courseUsers, submissions, err := model.FullLoadCourseFromPath(path)
 	if err != nil {
 		return nil, err
 	}
@@ -41,7 +41,12 @@ func (this *backend) LoadCourse(path string) (*model.Course, error) {
 		return nil, err
 	}
 
-	err = this.saveUsersLock(course, users, false)
+	serverUsers, err := convertCourseUsers(courseUsers, course)
+	if err != nil {
+		return nil, fmt.Errorf("Found invalid users in course ('%s'): '%w'.", path, err)
+	}
+
+	err = this.UpsertUsers(serverUsers)
 	if err != nil {
 		return nil, err
 	}

@@ -32,13 +32,13 @@ func LoadCourseFromPath(path string) (*Course, error) {
 	return course, nil
 }
 
-func FullLoadCourseFromPath(path string) (*Course, map[string]*User, []*GradingResult, error) {
+func FullLoadCourseFromPath(path string) (*Course, map[string]*CourseUser, []*GradingResult, error) {
 	course, err := LoadCourseFromPath(path)
 	if err != nil {
 		return nil, nil, nil, err
 	}
 
-	users, err := loadStaticUsers(path)
+	users, err := loadStaticCourseUsers(path)
 	if err != nil {
 		return nil, nil, nil, fmt.Errorf("Failed to load static users for course config '%s': '%w'.", path, err)
 	}

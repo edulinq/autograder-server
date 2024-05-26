@@ -140,7 +140,7 @@ func (this *backend) GetSubmissionHistory(assignment *model.Assignment, email st
 func (this *backend) GetRecentSubmissions(assignment *model.Assignment, filterRole model.UserRole) (map[string]*model.GradingInfo, error) {
 	gradingInfos := make(map[string]*model.GradingInfo)
 
-	users, err := this.GetUsers(assignment.Course)
+	users, err := this.GetCourseUsers(assignment.Course)
 	if err != nil {
 		return nil, err
 	}
@@ -239,7 +239,7 @@ func (this *backend) GetSubmissionContents(assignment *model.Assignment, email s
 func (this *backend) GetRecentSubmissionContents(assignment *model.Assignment, filterRole model.UserRole) (map[string]*model.GradingResult, error) {
 	results := make(map[string]*model.GradingResult)
 
-	users, err := this.GetUsers(assignment.Course)
+	users, err := this.GetCourseUsers(assignment.Course)
 	if err != nil {
 		return nil, err
 	}
