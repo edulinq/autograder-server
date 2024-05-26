@@ -1,0 +1,116 @@
+{
+    "admin@test.com": {
+        "email": "admin@test.com",
+        "name": "admin",
+        "salt": "c72f85ab94f66b49b4e93cb0d0776fc7",
+        "tokens": [
+            "9e9b6743a3fff9f56eb183f13cd34d810db94c5deb13e6a494d30ccc267eb00c"
+        ],
+        "roles": {
+            "course-languages": "admin",
+            "course-with-lms": "admin",
+            "course-without-source": "admin",
+            "course101": "admin",
+            "course101-with-zero-limit": "admin"
+        },
+        "lms-ids": {
+            "course-languages": "lms-admin@test.com",
+            "course-with-lms": "lms-admin@test.com",
+            "course-without-source": "lms-admin@test.com"
+        }
+    },
+    "grader@test.com": {
+        "email": "grader@test.com",
+        "name": "grader",
+        "salt": "a853844be59b339ec45733eddeee41cd",
+        "tokens": [
+            "9c33fae839ad63474a677e871aeb4cdb63ab7089774a83fd8ad01a28b45f4271"
+        ],
+        "roles": {
+            "course-languages": "grader",
+            "course-with-lms": "grader",
+            "course-without-source": "grader",
+            "course101": "grader",
+            "course101-with-zero-limit": "grader"
+        },
+        "lms-ids": {
+            "course-languages": "lms-grader@test.com",
+            "course-with-lms": "lms-grader@test.com",
+            "course-without-source": "lms-grader@test.com"
+        }
+    },
+    "no-lms-id@test.com": {
+        "email": "no-lms-id@test.com",
+        "name": "no-lms-id",
+        "salt": "2d3ecb56a6d429e580db9a8c9f117717",
+        "tokens": [
+            "4ddbd2eef282a729bcf7cfdacd107efe7c636e437842bc161ff5fa6ab19af4a7"
+        ],
+        "roles": {
+            "course-languages": "student",
+            "course-with-lms": "student",
+            "course-without-source": "student"
+        },
+        "lms-ids": {}
+    },
+    "other@test.com": {
+        "email": "other@test.com",
+        "name": "other",
+        "salt": "72f9b3fdeec2724d3e47edb617295f95",
+        "tokens": [
+            "d21868008248115a72109ccddb008043e12e0d37a0001a325c1afc6a66899c2a"
+        ],
+        "roles": {
+            "course-languages": "other",
+            "course-with-lms": "other",
+            "course-without-source": "other",
+            "course101": "other",
+            "course101-with-zero-limit": "other"
+        },
+        "lms-ids": {
+            "course-languages": "lms-other@test.com",
+            "course-with-lms": "lms-other@test.com",
+            "course-without-source": "lms-other@test.com"
+        }
+    },
+    "owner@test.com": {
+        "email": "owner@test.com",
+        "name": "owner",
+        "salt": "c61fe4f62b132d3908843e9c00f45c98",
+        "tokens": [
+            "a8f8cc96aba145d957bf5934bba22a43aff98684e2df44d2fc214c1cfd51ea8d"
+        ],
+        "roles": {
+            "course-languages": "owner",
+            "course-with-lms": "owner",
+            "course-without-source": "owner",
+            "course101": "owner",
+            "course101-with-zero-limit": "owner"
+        },
+        "lms-ids": {
+            "course-languages": "lms-owner@test.com",
+            "course-with-lms": "lms-owner@test.com",
+            "course-without-source": "lms-owner@test.com"
+        }
+    },
+    "student@test.com": {
+        "email": "student@test.com",
+        "name": "student",
+        "salt": "ea3a6c7d493148e01a8faff25956dc28",
+        "tokens": [
+            "9b2e4fb77dc9282894a257bf54c5469b276152ea677612c44e04762970045b10"
+        ],
+        "roles": {
+            "course-languages": "student",
+            "course-with-lms": "student",
+            "course-without-source": "student",
+            "course101": "student",
+            "course101-with-zero-limit": "student"
+        },
+        "lms-ids": {
+            "course-languages": "lms-student@test.com",
+            "course-with-lms": "lms-student@test.com",
+            "course-without-source": "lms-student@test.com"
+        }
+    }
+}

@@ -9,7 +9,7 @@ import (
 
 func TestFullLoadCourseBase(test *testing.T) {
 	courseID := "course101"
-	testPath := filepath.Join(config.GetCourseImportDir(), "testdata", "COURSE101", COURSE_CONFIG_FILENAME)
+	testPath := filepath.Join(config.GetCourseImportDir(), "testdata", courseID, COURSE_CONFIG_FILENAME)
 
 	course, users, submissions, err := FullLoadCourseFromPath(testPath)
 	if err != nil {

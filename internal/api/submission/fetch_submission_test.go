@@ -116,5 +116,5 @@ func TestFetchSubmission(test *testing.T) {
 }
 
 func getTestSubmissionResultPath(shortID string) string {
-	return filepath.Join(util.RootDirForTesting(), "testdata", "COURSE101", "submissions", "HW0", "student@test.com", shortID, "submission-result.json")
+	return filepath.Join(util.RootDirForTesting(), "testdata", "course101", "submissions", "HW0", "student@test.com", shortID, "submission-result.json")
 }
