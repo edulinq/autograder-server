@@ -29,40 +29,102 @@ func init() {
 }
 
 func Lock(key string) {
-    lockManagerMutex.Lock();
-
-    val, _ := lockMap.LoadOrStore(key, &lockData{});
-    lock := val.(*lockData);
-    // Unlock the lockManagerMutex before aquiring the lock to avoid a deadlock.
-    lockManagerMutex.Unlock();
-
-    lock.mutex.Lock();	
-    lock.timestamp = time.Now();
-    lock.isLocked = true;
+    lock(key, false)
 }
 
 func Unlock(key string) error {
-    lockManagerMutex.Lock();
-    defer lockManagerMutex.Unlock();
+    return unlock(key, false)
+}
 
-    val, exists := lockMap.Load(key);
+func ReadLock(key string) {
+    lock(key, true)
+}
+
+func ReadUnlock(key string) error {
+    return unlock(key, true)
+}
+
+func lock(key string, read bool) {
+    lockManagerMutex.Lock()
+
+    val, _ := lockMap.LoadOrStore(key, &lockData{})
+    lock := val.(*lockData)
+    // Unlock the lockManagerMutex before acquiring the lock to avoid a deadlock.
+    lockManagerMutex.Unlock()
+
+    if (read) {
+        lock.mutex.RLock()
+    } else {
+        lock.mutex.Lock()
+        lock.isLocked = true
+    }
+
+    lock.timestamp = time.Now()
+}
+
+func unlock(key string, read bool) error {
+    lockManagerMutex.Lock()
+    defer lockManagerMutex.Unlock()
+
+    val, exists := lockMap.Load(key)
     if (!exists) {
         log.Error("Key does not exist.", log.NewAttr("key", key));
         return fmt.Errorf("Lock key not found: '%s'.", key);
     }
-    
-    lock := val.(*lockData);
-    if (!lock.isLocked) {
-        log.Error("Tried to unlock a lock that is already unlocked with key.", log.NewAttr("key", key));
-        return fmt.Errorf("Tried to unlock a lock that is already unlocked with key '%s'.", key);
+
+    lock := val.(*lockData)
+    if (!read && !lock.isLocked) {
+        log.Error("Tried to unlock a lock that is already unlocked: %s\n", key)
+        return fmt.Errorf("Tried to unlock a lock that is already unlocked with key '%s'", key)
     }
 
-    lock.isLocked = false;
-    lock.timestamp = time.Now();
-    lock.mutex.Unlock();
+    if (read) {
+        lock.mutex.RUnlock()
+    } else {
+        lock.isLocked = false
+        lock.mutex.Unlock()
+    }
 
-    return nil;
+    lock.timestamp = time.Now()
+    return nil
 }
+
+
+// func Lock(key string) {
+//     lockManagerMutex.Lock();
+
+//     val, _ := lockMap.LoadOrStore(key, &lockData{});
+//     lock := val.(*lockData);
+//     // Unlock the lockManagerMutex before aquiring the lock to avoid a deadlock.
+//     lockManagerMutex.Unlock();
+
+//     lock.mutex.Lock();	
+//     lock.timestamp = time.Now();
+//     lock.isLocked = true;
+// }
+
+// func Unlock(key string) error {
+//     lockManagerMutex.Lock();
+//     defer lockManagerMutex.Unlock();
+
+//     val, exists := lockMap.Load(key);
+//     if (!exists) {
+//         log.Error("Key does not exist.", log.NewAttr("key", key));
+//         return fmt.Errorf("Lock key not found: '%s'.", key);
+//     }
+    
+//     lock := val.(*lockData);
+//     if (!lock.isLocked) {
+//         log.Error("Tried to unlock a lock that is already unlocked with key.", log.NewAttr("key", key));
+//         return fmt.Errorf("Tried to unlock a lock that is already unlocked with key '%s'.", key);
+//     }
+
+//     lock.isLocked = false;
+//     lock.timestamp = time.Now();
+//     lock.mutex.Unlock();
+
+//     return nil;
+// }
 
 func removeStaleLocks() {
     for range ticker.C {

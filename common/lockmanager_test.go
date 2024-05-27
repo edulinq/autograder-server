@@ -1,9 +1,10 @@
 package common
 
-// Function level comments: 
-// % denotes a thread off the main thread.
-// ! denotes an error from doing an operation.
-// Ex. Lock(1) -> %!Unlock(2) - The main thread locks key1 then a thread generates an error unlocking key2.
+// Tests in this file will deal with locking, unlocking, and checking for stale locks (sometimes on multiple threads).
+// Since this can quickly get confusing, we will have comments for each test using the following syntax:
+// "%" denotes a thread off the main thread.
+// "!" denotes that the associated operation will produce an error.
+// Ex. Lock(key1) -> %!Unlock(key2) - The main thread locks key1 then a thread generates an error unlocking key2.
 
 import (
     "sync"
@@ -13,12 +14,7 @@ import (
     "github.com/edulinq/autograder/config"
 )
 
-func clear() {
-    lockManagerMutex = sync.Mutex{};
-    lockMap = sync.Map{};
-}
-
-// Lock(1) -> Unlock(1).
+// Lock(key1) -> Unlock(key1).
 func TestLockBase(test *testing.T) {
     clear();
     defer clear();
@@ -29,11 +25,11 @@ func TestLockBase(test *testing.T) {
 
     err := Unlock(key1);
     if (err != nil) {
-        test.Fatalf("Failed to unlock.");
+        test.Fatalf("Failed to unlock the lock.");
     }
 }
 
-// Lock(1) -> Unlock(1) -> !Unlock(1).
+// Lock(key1) -> Unlock(key1) -> !Unlock(key1).
 func TestUnlockingAnUnlockedLock(test *testing.T) {
     clear();
     defer clear();
@@ -44,7 +40,7 @@ func TestUnlockingAnUnlockedLock(test *testing.T) {
 
     err := Unlock(key1);
     if (err != nil) {
-        test.Fatalf("Failed to unlock.");
+        test.Fatalf("Failed to unlock the lock.");
     }
 
     err = Unlock(key1);
@@ -53,7 +49,7 @@ func TestUnlockingAnUnlockedLock(test *testing.T) {
     }
 }
 
-// Unlock(1).
+// Unlock(key1).
 func TestUnlockingKeyThatDoesntExist(test *testing.T) {
     clear();
     defer clear();
@@ -66,8 +62,69 @@ func TestUnlockingKeyThatDoesntExist(test *testing.T) {
     }
 }
 
-// Lock(1) -> %Lock(2) -> Unlock(1) -> %Unlock(2).
-func TestMainThreadUnlocksFirst(test *testing.T) {
+// Lock(key1) -> %Lock(key1) -> Unlock(key1) -> %Unlock(key1).
+func TestMainThreadUnlocksFirstWithOneLock(test *testing.T) {
+    clear();
+    defer clear();
+
+    key1 := "testkey1";
+    var threadLockBlock sync.WaitGroup;
+    var threadFinishBlock sync.WaitGroup;
+    unlockInChildThreadFirst := make(chan bool, 1);
+
+    // Lock for the first time.
+    Lock(key1);
+
+    threadLockBlock.Add(1);
+    threadFinishBlock.Add(1);
+
+    // This thread tries to lock key1 a second time but is blocked
+    // until key1 gets unlocked for the first time.
+    go func() {
+        defer threadFinishBlock.Done();
+
+        threadLockBlock.Done();
+
+        Lock(key1);
+
+        // Signal the child thread locked key1.
+        unlockInChildThreadFirst <- true;
+
+        err := Unlock(key1);
+        if (err != nil) {
+            test.Fatalf("Failed to unlock the lock for the second time in the child thread.");
+        }
+    }();
+
+    // Wait for the second thread to try to lock key1
+    // while the lock is being used by the first thread.
+    threadLockBlock.Wait();
+    
+    // Small sleep to ensure the thread tries to lock key1.
+    time.Sleep(10 * time.Millisecond);
+
+    // Check if the child thread unlocked key1 before the main thread did.
+    if (len(unlockInChildThreadFirst) > 0) {
+        test.Fatalf("Failed to ensure the main thread unlocked key1 before the child thread unlocked it.");
+    }
+
+    // Unlock for the first time.
+    err := Unlock(key1);
+    if (err != nil) {
+        test.Fatalf("Failed to unlock the lock for the first time in the main thread.");
+    }
+    
+    // Wait for the thread to lock and unlock key1.
+    threadFinishBlock.Wait();
+
+    // Check if the child thread was able to lock key1 after the main thread unlocked key1.
+    if (len(unlockInChildThreadFirst) == 0) {
+        test.Fatalf("Failed to Lock in the child thread.")
+    }
+}
+
+// Lock(key1) -> %Lock(key2) -> Unlock(key1) -> %Unlock(key2).
+func TestMainThreadUnlocksFirstWithTwoLocks(test *testing.T) {
     clear();
     defer clear();
 
@@ -96,7 +153,7 @@ func TestMainThreadUnlocksFirst(test *testing.T) {
 
         err := Unlock(key2);
         if (err != nil) {
-            test.Fatalf("Failed to unlock key2 in the child thread.");
+            test.Fatalf("Failed to unlock key2's lock in the child thread.");
         }
     }();
 
@@ -105,7 +162,7 @@ func TestMainThreadUnlocksFirst(test *testing.T) {
 
     err := Unlock(key1);
     if (err != nil) {
-        test.Fatalf("Failed to unlock key1 in the main thread.");
+        test.Fatalf("Failed to unlock key1's lock in the main thread.");
     }
 
     key1UnlockBlock.Done();
@@ -114,8 +171,8 @@ func TestMainThreadUnlocksFirst(test *testing.T) {
     threadFinishBlock.Wait();
 }
 
-// Lock(1) -> %Lock(2) -> %Unlock(2) -> Unlock(1).
-func TestChildThreadUnlocksFirst(test *testing.T) {
+// Lock(key1) -> %Lock(key2) -> %Unlock(key2) -> Unlock(key1).
+func TestChildThreadUnlocksFirstWithTwoLocks(test *testing.T) {
     clear();
     defer clear();
 
@@ -135,7 +192,7 @@ func TestChildThreadUnlocksFirst(test *testing.T) {
 
         err := Unlock(key2);
         if (err != nil) {
-            test.Fatalf("Failed to unlock key2 in the child thread.");
+            test.Fatalf("Failed to unlock key2's lock in the child thread.");
         }
     }();
 
@@ -144,67 +201,11 @@ func TestChildThreadUnlocksFirst(test *testing.T) {
 
     err := Unlock(key1);
     if (err != nil) {
-        test.Fatalf("Failed to unlock key1 in the main thread.");
+        test.Fatalf("Failed to unlock key1's lock in the main thread.");
     }
 }
 
-// Lock(1) -> %Lock(1) -> Unlock(1) -> %Unlock(1).
-func TestMainThreadUnlockFirst(test *testing.T) {
-    clear();
-    defer clear();
-
-    key1 := "testkey1";
-    var threadLockBlock sync.WaitGroup;
-    var threadFinishBlock sync.WaitGroup;
-
-    threadLockBlock.Add(1);
-    threadFinishBlock.Add(1);
-    unlockInChildThreadFirst := make(chan struct{}, 1);
-
-    // Lock for the first time.
-    Lock(key1);
-
-    // This thread tries to lock key1 a second time but is blocked
-    // until key1 gets unlocked for the first time.
-    go func() {
-        defer threadFinishBlock.Done();
-
-        threadLockBlock.Done();
-
-        Lock(key1);
-
-        // Signal the child thread locked key1.
-        unlockInChildThreadFirst <- struct{}{};
-
-        err := Unlock(key1);
-        if (err != nil) {
-            test.Fatalf("Failed to unlock for the second time in the child thread.");
-        }
-    }();
-
-    // Wait for the second thread to try to lock key1
-    // while the lock is being used by the first thread.
-    threadLockBlock.Wait();
-    
-    // Small sleep to ensure the thread tries to lock key1.
-    time.Sleep(10 * time.Millisecond);
-
-    // Check if the child thread unlocked key1 before the main thread did.
-    if (len(unlockInChildThreadFirst) > 0) {
-        test.Fatalf("Failed to ensure the main thread unlocked key1 before the child thread unlocked it.");
-    }
-
-    // Unlock for the first time.
-    err := Unlock(key1);
-    if (err != nil) {
-        test.Fatalf("Failed to unlock for the first time in the main thread.");
-    }
-    
-    // Wait for the thread to lock and unlock key1.
-    threadFinishBlock.Wait();
-}
-
-// Lock(1) -> Unlock(1) -> %StaleCheck.
+// Lock(key1) -> Unlock(key1) -> %StaleCheck.
 func TestStaleRetentionWithNonStaleLock(test *testing.T) {
     clear();
     defer clear();
@@ -227,14 +228,14 @@ func TestStaleRetentionWithNonStaleLock(test *testing.T) {
     // Wait for the thread to finish checking for staleness.
     threadExecutionBlock.Wait();
     
-    // Check if the stale lock got removed.
+    // Check if the non-stale lock got removed.
     _, exists := lockMap.Load(key1);
     if (!exists) {
         test.Fatalf("Failed to retain lock even though it was accessed concurrently.");
     }
 } 
 
-// Lock(1) -> %Stale Check.
+// Lock(key1) -> MakeTimestampStale(key1) -> %StaleCheck.
 func TestStaleLockRetentionWithLockedKey(test *testing.T) {
     clear();
     defer clear();
@@ -267,9 +268,14 @@ func TestStaleLockRetentionWithLockedKey(test *testing.T) {
     if (!exists) {
         test.Fatalf("Failed to retain lock even though it was locked.");
     }
+
+    err := Unlock(key1);
+    if (err != nil) {
+        test.Fatalf("Failed to unlock key1's lock after checking for staleness.")
+    }
 }
 
-// Lock(1) -> Unlock(1) -> Make Stale -> %Stale Check first check -> Update timestamp -> %Stale Check second check. 
+// Lock(key1) -> Unlock(key1) -> MakeTimestampStale(key1) -> %StaleCheck(First Part) -> MakeTimestampNotStale(key1) -> %StaleCheck(Last Part). 
 func TestLockRetentionWithMidCheckActivity(test *testing.T) {
     clear();
     defer clear();
@@ -288,14 +294,14 @@ func TestLockRetentionWithMidCheckActivity(test *testing.T) {
     lockData := val.(*lockData);
     lockData.timestamp = time.Now().Add(-2 * (staleDuration));
 
-    finishThreadBlock.Add(1);
-    threadStartBlock.Add(1);
-
     // Lock the lockManagerMutex to to give the main thread time to reset the lock's timestamp.
     lockManagerMutex.Lock();
 
-    // This thread will pass the first check but wait until the lock's timestamp gets reset
-    // to pass the second check.
+    finishThreadBlock.Add(1);
+    threadStartBlock.Add(1);
+
+    // This thread will pass the first part but wait until the lock's timestamp gets reset
+    // to pass the second part of RemoveStaleLocksOnce().
     go func() {
         defer finishThreadBlock.Done();
 
@@ -307,26 +313,26 @@ func TestLockRetentionWithMidCheckActivity(test *testing.T) {
     // Wait for the thread to start.
     threadStartBlock.Wait();
 
-    // Small sleep to give the thread time to pass the first stale check in RemoveStaleLocksOnce().
+    // Small sleep to give the thread time to pass the first part in RemoveStaleLocksOnce().
     time.Sleep(10 * time.Millisecond);
 
     // Reset the lockdata's timestamp to simulate a lock aquiring a lock between checks in RemoveStaleLocksOnce().
     lockData.timestamp = time.Now();
     
-    // Let the thread continue to the second stale check in RemoveStaleLocksOnce().
+    // Let the thread continue to the second part in RemoveStaleLocksOnce().
     lockManagerMutex.Unlock();
 
     // Wait for the thread to finish checking for staleness.
     finishThreadBlock.Wait();
 
-    // Check if the stale lock changed to un-stale mid check got removed.
+    // Check if the stale lock changed to not stale mid check got removed.
     _, exists := lockMap.Load(key1);
     if (!exists) {
         test.Fatalf("Failed to retain lock even though it was accessed concurrently.");
     }
 }
 
-// Lock(1) -> Unlock(1) -> Make Stale -> %Stale Check
+// Lock(key1) -> Unlock(key1) -> Make Stale -> %StaleCheck
 func TestStaleLockDeletion(test *testing.T) {
     clear();
     defer clear();
@@ -359,4 +365,181 @@ func TestStaleLockDeletion(test *testing.T) {
     if (exists) {
         test.Fatalf("Failed to remove stale lock.");
     }
+}
+
+// ReadLock(key1) -> ReadUnlock(key1).
+func TestReadLockBase(test *testing.T) {
+    clear();
+    defer clear();
+
+    key1 := "testkey1";
+
+    ReadLock(key1);
+    
+    err := ReadUnlock(key1);
+    if (err != nil) {
+        test.Fatalf("Failed to unlock the read lock.");
+    }
+}
+
+// ReadLock(key1) -> %ReadLock(key1) -> %ReadUnlock(key1) -> ReadUnlock(key1).
+func TestSimultaneousReadLocks(test *testing.T) {
+    clear();
+    defer clear();
+
+    key1 := "testkey1";
+    var finishThreadBlock sync.WaitGroup;
+    var readLockChildThreadBlock sync.WaitGroup;
+    readLockInChildThread := make(chan bool, 1);
+
+    ReadLock(key1);
+
+    finishThreadBlock.Add(1);
+    readLockChildThreadBlock.Add(1);
+
+    go func() {
+        defer finishThreadBlock.Done();
+
+        ReadLock(key1);
+
+        // Signal that key1 read locked.
+        readLockInChildThread <- true;
+        readLockChildThreadBlock.Done();
+
+        err := ReadUnlock(key1);
+        if (err != nil) {
+            test.Fatalf("Failed to unlock the read lock for key2 in the child thread.");
+        }
+    }();
+
+    readLockChildThreadBlock.Wait();
+
+    // Check if the child thread was able to read lock key1 a second time.
+    if (len(readLockInChildThread) == 0) {
+        test.Fatalf("Failed to ensure the read lock doesn't block after another read lock.");
+    }
+
+    // Wait for the child thread to finish read locking and read unlocking.
+    finishThreadBlock.Wait();
+
+    err := ReadUnlock(key1);
+    if (err != nil) {
+        test.Fatalf("Failed to unlock the read lock for key1 in the main thread.");
+    }
+}
+
+// ReadLock(key1) -> %Lock(key1) -> ReadUnlock(key1) -> %Unlock(key1)
+func TestWriteLockBlock(test *testing.T) {
+    clear();
+    defer clear();
+
+    key1 := "testkey1";
+    var finishThreadBlock sync.WaitGroup;
+    var writeLockBlock sync.WaitGroup;
+    lockInThread := make(chan bool, 1);
+
+    ReadLock(key1);
+
+    finishThreadBlock.Add(1);
+    writeLockBlock.Add(1);
+
+    go func() {
+        defer finishThreadBlock.Done();
+
+        writeLockBlock.Done();
+
+        Lock(key1);
+
+        // Signal key1 got locked.
+        lockInThread <- true;
+
+        err := Unlock(key1);
+        if (err != nil) {
+            test.Fatalf("Failed to unlock the write lock for key1 in the child thread.");
+        }
+    }();
+
+    // Wait until the thread is about to lock key1.
+    writeLockBlock.Wait();
+
+    // Small sleep to ensure the thread tries to lock key1.
+    time.Sleep(10 * time.Millisecond);
+
+    // Check if the thread locked key1 while it was already read locked.
+    if (len(lockInThread) > 0) {
+        test.Fatalf("Failed to block the write lock from locking after read locking key1.");
+    }
+
+    err := ReadUnlock(key1);
+    if (err != nil) {
+        test.Fatalf("Failed to unlock the read lock for key1 in the main thread.");
+    }
+
+    // Wait for the thread to finish locking and unlocking key1.
+    finishThreadBlock.Wait();
+
+    // Check if the thread locked key1.
+    if (len(lockInThread) == 0) {
+        test.Fatalf("Failed to lock key1 in the child thread.");
+    }
+}
+
+// Lock(1) -> %ReadLock(1) -> Unlock(1) -> %ReadUnlock(1).
+func TestReadLockBlock(test *testing.T) {
+    clear();
+    defer clear();
+
+    key1 := "testkey1";
+    readLockInChildThread := make(chan bool, 1);
+    var finishThreadBlock sync.WaitGroup;
+    var readLockChildThreadBlock sync.WaitGroup;
+
+    Lock(key1);
+
+    finishThreadBlock.Add(1);
+    readLockChildThreadBlock.Add(1);
+
+    go func() {
+        defer finishThreadBlock.Done();
+
+        readLockChildThreadBlock.Done();
+
+        ReadLock(key1);
+
+        readLockInChildThread <- true;
+
+        err := ReadUnlock(key1);
+        if (err != nil) {
+            test.Fatalf("Failed to unlock the read lock in the child thread.");
+        }
+    }();
+
+    // Wait until the thread is about to read lock key1.
+    readLockChildThreadBlock.Wait();
+    
+    // Small sleep to ensure the child thread tries to read lock key1.
+    time.Sleep(10 * time.Millisecond);
+
+    // Check if the thread read locked key1 while it was already locked.
+    if (len(readLockInChildThread) > 0) {
+        test.Fatalf("Failed to block the read lock from read-locking key1 after locking key1.");
+    }
+
+    err := Unlock(key1);
+    if (err != nil) {
+        test.Fatalf("Failed to unlock the lock in the main thread.");
+    }
+
+    // Wait for the thread to finish read locking and read unlocking.
+    finishThreadBlock.Wait();
+
+    // Check if the thread read locked key1.
+    if (len(readLockInChildThread) == 0) {
+        test.Fatalf("Failed to read lock key1 in the child thread");
+    }
+}
+
+func clear() {
+    lockManagerMutex = sync.Mutex{};
+    lockMap = sync.Map{};
 }
