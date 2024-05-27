@@ -271,7 +271,7 @@ func TestStaleLockRetentionWithLockedKey(test *testing.T) {
 
     err := Unlock(key1);
     if (err != nil) {
-        test.Fatalf("Failed to unlock key1 after checking for staleness.")
+        test.Fatalf("Failed to unlock key1 after checking for staleness.");
     }
 }
 
@@ -332,7 +332,7 @@ func TestLockRetentionWithMidCheckActivity(test *testing.T) {
     }
 }
 
-// Lock(key1) -> Unlock(key1) -> Make Stale -> %StaleCheck
+// Lock(key1) -> Unlock(key1) -> Make Stale -> %StaleCheck.
 func TestStaleLockDeletion(test *testing.T) {
     clear();
     defer clear();
