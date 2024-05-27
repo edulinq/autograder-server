@@ -64,12 +64,24 @@ func (this *DBTests) DBTestUserGetCourseUsersEmpty(test *testing.T) {
 	defer ResetForTesting()
 	ResetForTesting()
 
+	course := MustGetCourse("course-languages")
+
+	users, err := GetCourseUsers(course)
+	if err != nil {
+		test.Fatalf("Could not get initial course users: '%v'.", err)
+	}
+
+	if len(users) == 0 {
+		test.Fatalf("Could not find any users when there should be some.")
+	}
+
+	// Clear the db (users) and re-add the courses without server-level users..
 	MustClear()
 	MustAddCourses()
 
-	course := MustGetTestCourse()
+	course = MustGetCourse("course-languages")
 
-	users, err := GetCourseUsers(course)
+	users, err = GetCourseUsers(course)
 	if err != nil {
 		test.Fatalf("Could not get course users: '%v'.", err)
 	}
