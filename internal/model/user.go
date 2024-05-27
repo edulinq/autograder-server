@@ -242,13 +242,17 @@ func (this *ServerUser) GetCourseUser(course *Course) (*CourseUser, error) {
 		return nil, nil
 	}
 
-	lmsID := this.LMSIDs[course.ID]
+	var lmsID *string = nil
+	lmsIDText, exists := this.LMSIDs[course.ID]
+	if exists {
+		lmsID = &lmsIDText
+	}
 
 	courseUser := &CourseUser{
 		Email: this.Email,
 		Name:  this.Name,
 		Role:  role,
-		LMSID: &lmsID,
+		LMSID: lmsID,
 	}
 
 	return courseUser, courseUser.Validate()
@@ -293,6 +297,10 @@ func (this *ServerUser) Upsert(other *ServerUser) {
 		for _, token := range other.Tokens {
 			this.Tokens = append(this.Tokens, token)
 		}
+
+		// Sort and removes duplicates.
+		slices.Sort(this.Tokens)
+		this.Tokens = slices.Compact(this.Tokens)
 	}
 
 	if other.Roles != nil {

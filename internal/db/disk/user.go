@@ -142,6 +142,10 @@ func (this *backend) upsertUsersLock(upsertUsers map[string]*model.ServerUser, a
 	}
 
 	for email, upsertUser := range upsertUsers {
+		if upsertUser == nil {
+			continue
+		}
+
 		oldUser, exists := users[email]
 		if exists {
 			oldUser.Upsert(upsertUser)
