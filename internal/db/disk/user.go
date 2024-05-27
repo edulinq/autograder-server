@@ -148,7 +148,10 @@ func (this *backend) upsertUsersLock(upsertUsers map[string]*model.ServerUser, a
 
 		oldUser, exists := users[email]
 		if exists {
-			oldUser.Upsert(upsertUser)
+			err = oldUser.Merge(upsertUser)
+			if err != nil {
+				return fmt.Errorf("User '%s' could not be merged with existing user: '%w'.", email, err)
+			}
 		} else {
 			users[email] = upsertUser
 		}

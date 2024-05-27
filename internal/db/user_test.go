@@ -27,7 +27,7 @@ func (this *DBTests) DBTestUserGetServerUsersBase(test *testing.T) {
 	}
 
 	if !reflect.DeepEqual(expected, users) {
-		test.Fatalf("Server users do not match. Expected: '%s', actual: '%s'.",
+		test.Fatalf("Server users do not match. Expected: '%s', Actual: '%s'.",
 			util.MustToJSONIndent(expected), util.MustToJSONIndent(users))
 	}
 }
@@ -108,7 +108,7 @@ func (this *DBTests) DBTestUserGetServerUserBase(test *testing.T) {
 	}
 
 	if !reflect.DeepEqual(expected, user) {
-		test.Fatalf("Server user does not match. Expected: '%s', actual: '%s'.",
+		test.Fatalf("Server user does not match. Expected: '%s', Actual: '%s'.",
 			util.MustToJSONIndent(expected), util.MustToJSONIndent(user))
 	}
 }
@@ -131,7 +131,7 @@ func (this *DBTests) DBTestUserGetServerUserNoTokens(test *testing.T) {
 	}
 
 	if !reflect.DeepEqual(expected, user) {
-		test.Fatalf("Server user does not match. Expected: '%s', actual: '%s'.",
+		test.Fatalf("Server user does not match. Expected: '%s', Actual: '%s'.",
 			util.MustToJSONIndent(expected), util.MustToJSONIndent(user))
 	}
 }
@@ -174,7 +174,7 @@ func (this *DBTests) DBTestUserGetCourseUserBase(test *testing.T) {
 	}
 
 	if !reflect.DeepEqual(expected, user) {
-		test.Fatalf("Course user does not match. Expected: '%s', actual: '%s'.",
+		test.Fatalf("Course user does not match. Expected: '%s', Actual: '%s'.",
 			util.MustToJSONIndent(expected), util.MustToJSONIndent(user))
 	}
 }
@@ -245,7 +245,7 @@ func (this *DBTests) DBTestUserUpsertUserInsert(test *testing.T) {
 	}
 
 	if !reflect.DeepEqual(expected, newUser) {
-		test.Fatalf("Server user does not match. Expected: '%s', actual: '%s'.",
+		test.Fatalf("Server user does not match. Expected: '%s', Actual: '%s'.",
 			util.MustToJSONIndent(expected), util.MustToJSONIndent(newUser))
 	}
 }
@@ -287,7 +287,7 @@ func (this *DBTests) DBTestUserUpsertUserUpdate(test *testing.T) {
 	}
 
 	if !reflect.DeepEqual(expected, newUser) {
-		test.Fatalf("Server user does not match. Expected: '%s', actual: '%s'.",
+		test.Fatalf("Server user does not match. Expected: '%s', Actual: '%s'.",
 			util.MustToJSONIndent(expected), util.MustToJSONIndent(newUser))
 	}
 }
@@ -323,7 +323,7 @@ func (this *DBTests) DBTestUserUpsertUserEmptyUpdate(test *testing.T) {
 	}
 
 	if !reflect.DeepEqual(expected, newUser) {
-		test.Fatalf("Server user does not match. Expected: '%s', actual: '%s'.",
+		test.Fatalf("Server user does not match. Expected: '%s', Actual: '%s'.",
 			util.MustToJSONIndent(expected), util.MustToJSONIndent(newUser))
 	}
 }
@@ -357,7 +357,7 @@ func (this *DBTests) DBTestUserUpsertCourseUserInsert(test *testing.T) {
 	}
 
 	if !reflect.DeepEqual(expected, newUser) {
-		test.Fatalf("Course user does not match. Expected: '%s', actual: '%s'.",
+		test.Fatalf("Course user does not match. Expected: '%s', Actual: '%s'.",
 			util.MustToJSONIndent(expected), util.MustToJSONIndent(newUser))
 	}
 }
@@ -468,7 +468,7 @@ func testCourseUsers(test *testing.T, course *model.Course, expected map[string]
 	}
 
 	if !reflect.DeepEqual(expected, users) {
-		test.Fatalf("Course users do not match. Expected: '%s', actual: '%s'.",
+		test.Fatalf("Course users do not match. Expected: '%s', Actual: '%s'.",
 			util.MustToJSONIndent(expected), util.MustToJSONIndent(users))
 	}
 }
