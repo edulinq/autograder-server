@@ -10,7 +10,7 @@ import (
 	"github.com/edulinq/autograder/internal/log"
 )
 
-// TEST -- Full tests on validate and upsert.
+// TEST -- Full tests on validate and merge.
 
 // ServerUsers represent general users that exist on a server.
 // They may or may not be enrolled in courses.

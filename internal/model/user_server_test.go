@@ -8,7 +8,7 @@ import (
 	"github.com/edulinq/autograder/internal/util"
 )
 
-func TestServerUserValidate(test *testing.T) {
+func TestUserServerUserValidate(test *testing.T) {
 	testCases := []struct {
 		Email    string
 		Name     *string
@@ -20,275 +20,275 @@ func TestServerUserValidate(test *testing.T) {
 	}{
 		// Base
 		{
-			baseTestUser.Email,
-			baseTestUser.Name,
-			baseTestUser.Salt,
-			baseTestUser.Tokens,
-			baseTestUser.Roles,
-			baseTestUser.LMSIDs,
-			baseTestUser,
+			baseTestServerUser.Email,
+			baseTestServerUser.Name,
+			baseTestServerUser.Salt,
+			baseTestServerUser.Tokens,
+			baseTestServerUser.Roles,
+			baseTestServerUser.LMSIDs,
+			baseTestServerUser,
 		},
 
 		// Email
 		{
-			" " + baseTestUser.Email + " ",
-			baseTestUser.Name,
-			baseTestUser.Salt,
-			baseTestUser.Tokens,
-			baseTestUser.Roles,
-			baseTestUser.LMSIDs,
-			baseTestUser,
+			" " + baseTestServerUser.Email + " ",
+			baseTestServerUser.Name,
+			baseTestServerUser.Salt,
+			baseTestServerUser.Tokens,
+			baseTestServerUser.Roles,
+			baseTestServerUser.LMSIDs,
+			baseTestServerUser,
 		},
 		{
 			"",
-			baseTestUser.Name,
-			baseTestUser.Salt,
-			baseTestUser.Tokens,
-			baseTestUser.Roles,
-			baseTestUser.LMSIDs,
+			baseTestServerUser.Name,
+			baseTestServerUser.Salt,
+			baseTestServerUser.Tokens,
+			baseTestServerUser.Roles,
+			baseTestServerUser.LMSIDs,
 			nil,
 		},
 
 		// Name
 		{
-			baseTestUser.Email,
-			stringPointer(" " + *baseTestUser.Name + " "),
-			baseTestUser.Salt,
-			baseTestUser.Tokens,
-			baseTestUser.Roles,
-			baseTestUser.LMSIDs,
-			baseTestUser,
+			baseTestServerUser.Email,
+			util.StringPointer(" " + *baseTestServerUser.Name + " "),
+			baseTestServerUser.Salt,
+			baseTestServerUser.Tokens,
+			baseTestServerUser.Roles,
+			baseTestServerUser.LMSIDs,
+			baseTestServerUser,
 		},
 		{
-			baseTestUser.Email,
+			baseTestServerUser.Email,
 			nil,
-			baseTestUser.Salt,
-			baseTestUser.Tokens,
-			baseTestUser.Roles,
-			baseTestUser.LMSIDs,
-			setName(baseTestUser, nil),
+			baseTestServerUser.Salt,
+			baseTestServerUser.Tokens,
+			baseTestServerUser.Roles,
+			baseTestServerUser.LMSIDs,
+			setServerUserName(baseTestServerUser, nil),
 		},
 		{
-			baseTestUser.Email,
-			stringPointer(""),
-			baseTestUser.Salt,
-			baseTestUser.Tokens,
-			baseTestUser.Roles,
-			baseTestUser.LMSIDs,
-			setName(baseTestUser, stringPointer("")),
+			baseTestServerUser.Email,
+			util.StringPointer(""),
+			baseTestServerUser.Salt,
+			baseTestServerUser.Tokens,
+			baseTestServerUser.Roles,
+			baseTestServerUser.LMSIDs,
+			setServerUserName(baseTestServerUser, util.StringPointer("")),
 		},
 
 		// Salt
 		{
-			baseTestUser.Email,
-			baseTestUser.Name,
-			stringPointer(" " + *baseTestUser.Salt + " "),
-			baseTestUser.Tokens,
-			baseTestUser.Roles,
-			baseTestUser.LMSIDs,
-			baseTestUser,
+			baseTestServerUser.Email,
+			baseTestServerUser.Name,
+			util.StringPointer(" " + *baseTestServerUser.Salt + " "),
+			baseTestServerUser.Tokens,
+			baseTestServerUser.Roles,
+			baseTestServerUser.LMSIDs,
+			baseTestServerUser,
 		},
 		{
-			baseTestUser.Email,
-			baseTestUser.Name,
-			stringPointer(strings.ToUpper(*baseTestUser.Salt)),
-			baseTestUser.Tokens,
-			baseTestUser.Roles,
-			baseTestUser.LMSIDs,
-			baseTestUser,
+			baseTestServerUser.Email,
+			baseTestServerUser.Name,
+			util.StringPointer(strings.ToUpper(*baseTestServerUser.Salt)),
+			baseTestServerUser.Tokens,
+			baseTestServerUser.Roles,
+			baseTestServerUser.LMSIDs,
+			baseTestServerUser,
 		},
 		{
-			baseTestUser.Email,
-			baseTestUser.Name,
+			baseTestServerUser.Email,
+			baseTestServerUser.Name,
 			nil,
-			baseTestUser.Tokens,
-			baseTestUser.Roles,
-			baseTestUser.LMSIDs,
-			setSalt(baseTestUser, nil),
+			baseTestServerUser.Tokens,
+			baseTestServerUser.Roles,
+			baseTestServerUser.LMSIDs,
+			setServerUserSalt(baseTestServerUser, nil),
 		},
 		{
-			baseTestUser.Email,
-			baseTestUser.Name,
-			stringPointer(""),
-			baseTestUser.Tokens,
-			baseTestUser.Roles,
-			baseTestUser.LMSIDs,
-			setSalt(baseTestUser, stringPointer("")),
+			baseTestServerUser.Email,
+			baseTestServerUser.Name,
+			util.StringPointer(""),
+			baseTestServerUser.Tokens,
+			baseTestServerUser.Roles,
+			baseTestServerUser.LMSIDs,
+			setServerUserSalt(baseTestServerUser, util.StringPointer("")),
 		},
 		{
-			baseTestUser.Email,
-			baseTestUser.Name,
-			stringPointer("nothex"),
-			baseTestUser.Tokens,
-			baseTestUser.Roles,
-			baseTestUser.LMSIDs,
+			baseTestServerUser.Email,
+			baseTestServerUser.Name,
+			util.StringPointer("nothex"),
+			baseTestServerUser.Tokens,
+			baseTestServerUser.Roles,
+			baseTestServerUser.LMSIDs,
 			nil,
 		},
 
 		// Tokens
 		{
-			baseTestUser.Email,
-			baseTestUser.Name,
-			baseTestUser.Salt,
-			[]string{" " + baseTestUser.Tokens[0] + " "},
-			baseTestUser.Roles,
-			baseTestUser.LMSIDs,
-			baseTestUser,
+			baseTestServerUser.Email,
+			baseTestServerUser.Name,
+			baseTestServerUser.Salt,
+			[]string{" " + baseTestServerUser.Tokens[0] + " "},
+			baseTestServerUser.Roles,
+			baseTestServerUser.LMSIDs,
+			baseTestServerUser,
 		},
 		{
-			baseTestUser.Email,
-			baseTestUser.Name,
-			baseTestUser.Salt,
-			[]string{strings.ToUpper(baseTestUser.Tokens[0])},
-			baseTestUser.Roles,
-			baseTestUser.LMSIDs,
-			baseTestUser,
+			baseTestServerUser.Email,
+			baseTestServerUser.Name,
+			baseTestServerUser.Salt,
+			[]string{strings.ToUpper(baseTestServerUser.Tokens[0])},
+			baseTestServerUser.Roles,
+			baseTestServerUser.LMSIDs,
+			baseTestServerUser,
 		},
 		{
-			baseTestUser.Email,
-			baseTestUser.Name,
-			baseTestUser.Salt,
-			[]string{baseTestUser.Tokens[0], baseTestUser.Tokens[0]},
-			baseTestUser.Roles,
-			baseTestUser.LMSIDs,
-			baseTestUser,
+			baseTestServerUser.Email,
+			baseTestServerUser.Name,
+			baseTestServerUser.Salt,
+			[]string{baseTestServerUser.Tokens[0], baseTestServerUser.Tokens[0]},
+			baseTestServerUser.Roles,
+			baseTestServerUser.LMSIDs,
+			baseTestServerUser,
 		},
 		{
-			baseTestUser.Email,
-			baseTestUser.Name,
-			baseTestUser.Salt,
+			baseTestServerUser.Email,
+			baseTestServerUser.Name,
+			baseTestServerUser.Salt,
 			[]string{"ffff", "0000"},
-			baseTestUser.Roles,
-			baseTestUser.LMSIDs,
-			setTokens(baseTestUser, []string{"0000", "ffff"}),
+			baseTestServerUser.Roles,
+			baseTestServerUser.LMSIDs,
+			setServerUserTokens(baseTestServerUser, []string{"0000", "ffff"}),
 		},
 		{
-			baseTestUser.Email,
-			baseTestUser.Name,
-			baseTestUser.Salt,
+			baseTestServerUser.Email,
+			baseTestServerUser.Name,
+			baseTestServerUser.Salt,
 			nil,
-			baseTestUser.Roles,
-			baseTestUser.LMSIDs,
-			setTokens(baseTestUser, []string{}),
+			baseTestServerUser.Roles,
+			baseTestServerUser.LMSIDs,
+			setServerUserTokens(baseTestServerUser, []string{}),
 		},
 		{
-			baseTestUser.Email,
-			baseTestUser.Name,
-			baseTestUser.Salt,
+			baseTestServerUser.Email,
+			baseTestServerUser.Name,
+			baseTestServerUser.Salt,
 			[]string{""},
-			baseTestUser.Roles,
-			baseTestUser.LMSIDs,
+			baseTestServerUser.Roles,
+			baseTestServerUser.LMSIDs,
 			nil,
 		},
 		{
-			baseTestUser.Email,
-			baseTestUser.Name,
-			baseTestUser.Salt,
+			baseTestServerUser.Email,
+			baseTestServerUser.Name,
+			baseTestServerUser.Salt,
 			[]string{"ZZ"},
-			baseTestUser.Roles,
-			baseTestUser.LMSIDs,
+			baseTestServerUser.Roles,
+			baseTestServerUser.LMSIDs,
 			nil,
 		},
 
 		// Roles
 		{
-			baseTestUser.Email,
-			baseTestUser.Name,
-			baseTestUser.Salt,
-			baseTestUser.Tokens,
+			baseTestServerUser.Email,
+			baseTestServerUser.Name,
+			baseTestServerUser.Salt,
+			baseTestServerUser.Tokens,
 			nil,
-			baseTestUser.LMSIDs,
-			setRoles(baseTestUser, make(map[string]UserRole, 0)),
+			baseTestServerUser.LMSIDs,
+			setServerUserRoles(baseTestServerUser, make(map[string]UserRole, 0)),
 		},
 		{
-			baseTestUser.Email,
-			baseTestUser.Name,
-			baseTestUser.Salt,
-			baseTestUser.Tokens,
+			baseTestServerUser.Email,
+			baseTestServerUser.Name,
+			baseTestServerUser.Salt,
+			baseTestServerUser.Tokens,
 			map[string]UserRole{" foo ": RoleStudent},
-			baseTestUser.LMSIDs,
-			baseTestUser,
+			baseTestServerUser.LMSIDs,
+			baseTestServerUser,
 		},
 		{
-			baseTestUser.Email,
-			baseTestUser.Name,
-			baseTestUser.Salt,
-			baseTestUser.Tokens,
+			baseTestServerUser.Email,
+			baseTestServerUser.Name,
+			baseTestServerUser.Salt,
+			baseTestServerUser.Tokens,
 			map[string]UserRole{"FOO": RoleStudent},
-			baseTestUser.LMSIDs,
-			baseTestUser,
+			baseTestServerUser.LMSIDs,
+			baseTestServerUser,
 		},
 		{
-			baseTestUser.Email,
-			baseTestUser.Name,
-			baseTestUser.Salt,
-			baseTestUser.Tokens,
+			baseTestServerUser.Email,
+			baseTestServerUser.Name,
+			baseTestServerUser.Salt,
+			baseTestServerUser.Tokens,
 			map[string]UserRole{"": RoleStudent},
-			baseTestUser.LMSIDs,
+			baseTestServerUser.LMSIDs,
 			nil,
 		},
 		{
-			baseTestUser.Email,
-			baseTestUser.Name,
-			baseTestUser.Salt,
-			baseTestUser.Tokens,
+			baseTestServerUser.Email,
+			baseTestServerUser.Name,
+			baseTestServerUser.Salt,
+			baseTestServerUser.Tokens,
 			map[string]UserRole{"foo": RoleUnknown},
-			baseTestUser.LMSIDs,
+			baseTestServerUser.LMSIDs,
 			nil,
 		},
 
 		// LMS IDs
 		{
-			baseTestUser.Email,
-			baseTestUser.Name,
-			baseTestUser.Salt,
-			baseTestUser.Tokens,
-			baseTestUser.Roles,
+			baseTestServerUser.Email,
+			baseTestServerUser.Name,
+			baseTestServerUser.Salt,
+			baseTestServerUser.Tokens,
+			baseTestServerUser.Roles,
 			nil,
-			setLMSIDs(baseTestUser, make(map[string]string, 0)),
+			setServerUserLMSIDs(baseTestServerUser, make(map[string]string, 0)),
 		},
 		{
-			baseTestUser.Email,
-			baseTestUser.Name,
-			baseTestUser.Salt,
-			baseTestUser.Tokens,
-			baseTestUser.Roles,
+			baseTestServerUser.Email,
+			baseTestServerUser.Name,
+			baseTestServerUser.Salt,
+			baseTestServerUser.Tokens,
+			baseTestServerUser.Roles,
 			map[string]string{" foo ": "alice"},
-			baseTestUser,
+			baseTestServerUser,
 		},
 		{
-			baseTestUser.Email,
-			baseTestUser.Name,
-			baseTestUser.Salt,
-			baseTestUser.Tokens,
-			baseTestUser.Roles,
+			baseTestServerUser.Email,
+			baseTestServerUser.Name,
+			baseTestServerUser.Salt,
+			baseTestServerUser.Tokens,
+			baseTestServerUser.Roles,
 			map[string]string{"foo": " alice "},
-			baseTestUser,
+			baseTestServerUser,
 		},
 		{
-			baseTestUser.Email,
-			baseTestUser.Name,
-			baseTestUser.Salt,
-			baseTestUser.Tokens,
-			baseTestUser.Roles,
+			baseTestServerUser.Email,
+			baseTestServerUser.Name,
+			baseTestServerUser.Salt,
+			baseTestServerUser.Tokens,
+			baseTestServerUser.Roles,
 			map[string]string{"FOO": "alice"},
-			baseTestUser,
+			baseTestServerUser,
 		},
 		{
-			baseTestUser.Email,
-			baseTestUser.Name,
-			baseTestUser.Salt,
-			baseTestUser.Tokens,
-			baseTestUser.Roles,
+			baseTestServerUser.Email,
+			baseTestServerUser.Name,
+			baseTestServerUser.Salt,
+			baseTestServerUser.Tokens,
+			baseTestServerUser.Roles,
 			map[string]string{"": "alice"},
 			nil,
 		},
 		{
-			baseTestUser.Email,
-			baseTestUser.Name,
-			baseTestUser.Salt,
-			baseTestUser.Tokens,
-			baseTestUser.Roles,
+			baseTestServerUser.Email,
+			baseTestServerUser.Name,
+			baseTestServerUser.Salt,
+			baseTestServerUser.Tokens,
+			baseTestServerUser.Roles,
 			map[string]string{"foo": ""},
 			nil,
 		},
@@ -328,44 +328,80 @@ func TestServerUserValidate(test *testing.T) {
 	}
 }
 
-func stringPointer(text string) *string {
-	return &text
+func TestUserServerUserName(test *testing.T) {
+	testCases := []struct {
+		BaseName     *string
+		ResultName   string
+		FallbackName string
+	}{
+		{util.StringPointer("foo"), "foo", "foo"},
+		{util.StringPointer(""), "", "alice@test.com"},
+		{nil, "", "alice@test.com"},
+	}
+
+	for i, testCase := range testCases {
+		user := setServerUserName(baseTestServerUser, testCase.BaseName)
+		err := user.Validate()
+		if err != nil {
+			test.Errorf("Case %d: Failed to validate user: '%v'.", i, err)
+			continue
+		}
+
+		resultName := user.GetName(false)
+		fallbackName := user.GetName(true)
+		displayName := user.GetDisplayName()
+
+		if testCase.ResultName != resultName {
+			test.Errorf("Case %d: Result name not as expected. Expected: '%s', Actual: '%s'.", i, testCase.ResultName, resultName)
+			continue
+		}
+
+		if testCase.FallbackName != fallbackName {
+			test.Errorf("Case %d: Fallback name not as expected. Expected: '%s', Actual: '%s'.", i, testCase.FallbackName, fallbackName)
+			continue
+		}
+
+		if testCase.FallbackName != displayName {
+			test.Errorf("Case %d: Display name not as expected. Expected: '%s', Actual: '%s'.", i, testCase.FallbackName, displayName)
+			continue
+		}
+	}
 }
 
-func setName(user *ServerUser, name *string) *ServerUser {
+func setServerUserName(user *ServerUser, name *string) *ServerUser {
 	newUser := *user
 	newUser.Name = name
 	return &newUser
 }
 
-func setSalt(user *ServerUser, salt *string) *ServerUser {
+func setServerUserSalt(user *ServerUser, salt *string) *ServerUser {
 	newUser := *user
 	newUser.Salt = salt
 	return &newUser
 }
 
-func setTokens(user *ServerUser, tokens []string) *ServerUser {
+func setServerUserTokens(user *ServerUser, tokens []string) *ServerUser {
 	newUser := *user
 	newUser.Tokens = tokens
 	return &newUser
 }
 
-func setRoles(user *ServerUser, roles map[string]UserRole) *ServerUser {
+func setServerUserRoles(user *ServerUser, roles map[string]UserRole) *ServerUser {
 	newUser := *user
 	newUser.Roles = roles
 	return &newUser
 }
 
-func setLMSIDs(user *ServerUser, lmsIDs map[string]string) *ServerUser {
+func setServerUserLMSIDs(user *ServerUser, lmsIDs map[string]string) *ServerUser {
 	newUser := *user
 	newUser.LMSIDs = lmsIDs
 	return &newUser
 }
 
-var baseTestUser *ServerUser = &ServerUser{
+var baseTestServerUser *ServerUser = &ServerUser{
 	Email:  "alice@test.com",
-	Name:   stringPointer("Alice"),
-	Salt:   stringPointer("abc123"),
+	Name:   util.StringPointer("Alice"),
+	Salt:   util.StringPointer("abc123"),
 	Tokens: []string{"abc123"},
 	Roles:  map[string]UserRole{"foo": RoleStudent},
 	LMSIDs: map[string]string{"foo": "alice"},

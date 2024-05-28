@@ -18,3 +18,9 @@ func BaseString(obj any) string {
 func JoinStrings(delim string, parts ...string) string {
 	return strings.Join(parts, delim)
 }
+
+// A utility function for creating a string pointer for a string literal.
+// Should mostly be used for testing.
+func StringPointer(text string) *string {
+	return &text
+}

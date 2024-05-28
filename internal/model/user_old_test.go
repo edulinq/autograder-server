@@ -14,7 +14,7 @@ var testPasswords []string = []string{
 	"123",
 }
 
-func TestUserPasswordTable(test *testing.T) {
+func TestAuthPasswordTable(test *testing.T) {
 	for i, a := range testPasswords {
 		user := &User{}
 		user.SetPassword(a)
