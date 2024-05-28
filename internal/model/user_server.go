@@ -3,6 +3,7 @@ package model
 import (
 	"encoding/hex"
 	"fmt"
+	"maps"
 	"slices"
 	"strings"
 
@@ -177,11 +178,11 @@ func (this *ServerUser) GetCourseUser(courseID string) (*CourseUser, error) {
 // After all merging, this user will be validated.
 func (this *ServerUser) Merge(other *ServerUser) error {
 	if other == nil {
-		return nil
+		return fmt.Errorf("Cannot merge with nil user.")
 	}
 
 	if this.Email != other.Email {
-		return nil
+		return fmt.Errorf("Cannot merge users with different emails ('%s' and '%s').", this.Email, other.Email)
 	}
 
 	if other.Name != nil {
@@ -199,24 +200,28 @@ func (this *ServerUser) Merge(other *ServerUser) error {
 	}
 
 	if other.Roles != nil {
-		if this.Roles == nil {
-			this.Roles = make(map[string]UserRole, len(other.Roles))
-		}
-
 		for key, value := range other.Roles {
 			this.Roles[key] = value
 		}
 	}
 
 	if other.LMSIDs != nil {
-		if this.LMSIDs == nil {
-			this.LMSIDs = make(map[string]string, len(other.LMSIDs))
-		}
-
 		for key, value := range other.LMSIDs {
 			this.LMSIDs[key] = value
 		}
 	}
 
 	return this.Validate()
+}
+
+// Deep copy this user (which should already be validated).
+func (this *ServerUser) Clone() *ServerUser {
+	return &ServerUser{
+		Email:  this.Email,
+		Name:   this.Name,
+		Salt:   this.Salt,
+		Tokens: slices.Clone(this.Tokens),
+		Roles:  maps.Clone(this.Roles),
+		LMSIDs: maps.Clone(this.LMSIDs),
+	}
 }

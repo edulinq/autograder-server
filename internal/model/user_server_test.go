@@ -426,6 +426,167 @@ func TestUserServerUserGetCourseUser(test *testing.T) {
 	}
 }
 
+func TestUserServerUserMerge(test *testing.T) {
+	testCases := []struct {
+		Source   *ServerUser
+		Other    *ServerUser
+		Expected *ServerUser
+	}{
+		// No Change
+		{
+			baseTestServerUser,
+			baseTestServerUser,
+			baseTestServerUser,
+		},
+
+		// Noop
+		{
+			baseTestServerUser,
+			nil,
+			nil,
+		},
+		{
+			baseTestServerUser,
+			setServerUserEmail(baseTestServerUser, "zzz"),
+			nil,
+		},
+
+		// Validation Error
+		{
+			baseTestServerUser,
+			setServerUserSalt(baseTestServerUser, util.StringPointer("ZZZ")),
+			nil,
+		},
+
+		// Name
+		{
+			baseTestServerUser,
+			setServerUserName(baseTestServerUser, util.StringPointer("foo")),
+			setServerUserName(baseTestServerUser, util.StringPointer("foo")),
+		},
+		{
+			baseTestServerUser,
+			setServerUserName(baseTestServerUser, nil),
+			baseTestServerUser,
+		},
+
+		// Salt
+		{
+			baseTestServerUser,
+			setServerUserSalt(baseTestServerUser, util.StringPointer("1234")),
+			setServerUserSalt(baseTestServerUser, util.StringPointer("1234")),
+		},
+		{
+			baseTestServerUser,
+			setServerUserSalt(baseTestServerUser, nil),
+			baseTestServerUser,
+		},
+
+		// Tokens
+		{
+			// No tokens will be added.
+			baseTestServerUser,
+			setServerUserTokens(baseTestServerUser, []string{}),
+			baseTestServerUser,
+		},
+		{
+			// No tokens will be added.
+			baseTestServerUser,
+			setServerUserTokens(baseTestServerUser, nil),
+			baseTestServerUser,
+		},
+		{
+			// The token will be added.
+			baseTestServerUser,
+			setServerUserTokens(baseTestServerUser, []string{"1234"}),
+			setServerUserTokens(baseTestServerUser, []string{"1234", "abc123"}),
+		},
+		{
+			// Token is duplicate, will be skipped.
+			baseTestServerUser,
+			setServerUserTokens(baseTestServerUser, []string{"abc123"}),
+			baseTestServerUser,
+		},
+
+		// Roles
+		{
+			// No roles will be added.
+			baseTestServerUser,
+			setServerUserRoles(baseTestServerUser, map[string]UserRole{}),
+			baseTestServerUser,
+		},
+		{
+			// No roles will be added.
+			baseTestServerUser,
+			setServerUserRoles(baseTestServerUser, nil),
+			baseTestServerUser,
+		},
+		{
+			// Role will be added.
+			baseTestServerUser,
+			setServerUserRoles(baseTestServerUser, map[string]UserRole{"foo": RoleStudent}),
+			setServerUserRoles(baseTestServerUser, map[string]UserRole{"course101": RoleStudent, "foo": RoleStudent}),
+		},
+		{
+			// Existing role will be overwritten.
+			baseTestServerUser,
+			setServerUserRoles(baseTestServerUser, map[string]UserRole{"course101": RoleGrader}),
+			setServerUserRoles(baseTestServerUser, map[string]UserRole{"course101": RoleGrader}),
+		},
+
+		// LMSIDs
+		{
+			// No lms ids will be added.
+			baseTestServerUser,
+			setServerUserLMSIDs(baseTestServerUser, map[string]string{}),
+			baseTestServerUser,
+		},
+		{
+			// No lms ids will be added.
+			baseTestServerUser,
+			setServerUserLMSIDs(baseTestServerUser, nil),
+			baseTestServerUser,
+		},
+		{
+			// LMSID will be added.
+			baseTestServerUser,
+			setServerUserLMSIDs(baseTestServerUser, map[string]string{"foo": "bar"}),
+			setServerUserLMSIDs(baseTestServerUser, map[string]string{"course101": "alice", "foo": "bar"}),
+		},
+		{
+			// Existing lms ids will be overwritten.
+			baseTestServerUser,
+			setServerUserLMSIDs(baseTestServerUser, map[string]string{"course101": "bar"}),
+			setServerUserLMSIDs(baseTestServerUser, map[string]string{"course101": "bar"}),
+		},
+	}
+
+	for i, testCase := range testCases {
+		source := testCase.Source.Clone()
+
+		err := source.Merge(testCase.Other)
+		if err != nil {
+			if testCase.Expected != nil {
+				test.Errorf("Case %d: Failed to merge user: '%v'.", i, err)
+			}
+
+			continue
+		}
+
+		if !reflect.DeepEqual(testCase.Expected, source) {
+			test.Errorf("Merged user not as expected. Expected: '%s', Actual: '%s'.",
+				util.MustToJSONIndent(testCase.Expected), util.MustToJSONIndent(source))
+			continue
+		}
+	}
+}
+
+func setServerUserEmail(user *ServerUser, email string) *ServerUser {
+	newUser := *user
+	newUser.Email = email
+	return &newUser
+}
+
 func setServerUserName(user *ServerUser, name *string) *ServerUser {
 	newUser := *user
 	newUser.Name = name

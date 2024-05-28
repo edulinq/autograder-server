@@ -159,7 +159,7 @@ func (this *DBTests) DBTestUserGetCourseUserBase(test *testing.T) {
 	course := MustGetTestCourse()
 	email := "student@test.com"
 
-	expected, err := mustLoadTestServerUsers()[email].GetCourseUser(course)
+	expected, err := mustLoadTestServerUsers()[email].GetCourseUser(course.ID)
 	if err != nil {
 		test.Fatalf("Could not get expected course user ('%s'): '%v'.", email, err)
 	}
