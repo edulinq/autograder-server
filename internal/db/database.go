@@ -19,6 +19,7 @@ import (
 
 var backend Backend
 var dbLock sync.Mutex
+var loadTestData bool
 
 const (
 	DB_TYPE_DISK     = "disk"
@@ -190,7 +191,25 @@ func Open() error {
 
 	log.SetStorageBackend(backend)
 
-	return backend.EnsureTables()
+	err = backend.EnsureTables()
+	if err != nil {
+		return err
+	}
+
+	// We are probably running unit tests, load the test data.
+	if config.LOAD_TEST_DATA.Get() {
+		_, err = AddCourses()
+		if err != nil {
+			return fmt.Errorf("Failed to load test courses.")
+		}
+
+		err = AddTestUsers()
+		if err != nil {
+			return fmt.Errorf("Failed to load test users.")
+		}
+	}
+
+	return nil
 }
 
 func Close() error {

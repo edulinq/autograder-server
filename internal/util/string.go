@@ -24,3 +24,11 @@ func JoinStrings(delim string, parts ...string) string {
 func StringPointer(text string) *string {
 	return &text
 }
+
+func PointerToString(target *string) string {
+	if target == nil {
+		return ""
+	}
+
+	return *target
+}

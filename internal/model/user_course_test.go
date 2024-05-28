@@ -218,6 +218,111 @@ func TestUserCourseUserGetServerUser(test *testing.T) {
 	}
 }
 
+func TestUserCourseUserMustToRow(test *testing.T) {
+	testCases := []struct {
+		User     *CourseUser
+		Expected []string
+	}{
+		// Base
+		{
+			baseTestCourseUser,
+			[]string{
+				"alice@test.com",
+				"Alice",
+				"student",
+				"alice",
+			},
+		},
+
+		// Email
+		{
+			setCourseUserEmail(baseTestCourseUser, "foo"),
+			[]string{
+				"foo",
+				"Alice",
+				"student",
+				"alice",
+			},
+		},
+		{
+			setCourseUserEmail(baseTestCourseUser, ""),
+			[]string{
+				"",
+				"Alice",
+				"student",
+				"alice",
+			},
+		},
+
+		// Name
+		{
+			setCourseUserName(baseTestCourseUser, util.StringPointer("foo")),
+			[]string{
+				"alice@test.com",
+				"foo",
+				"student",
+				"alice",
+			},
+		},
+		{
+			setCourseUserName(baseTestCourseUser, nil),
+			[]string{
+				"alice@test.com",
+				"",
+				"student",
+				"alice",
+			},
+		},
+
+		// Role
+		{
+			setCourseUserRole(baseTestCourseUser, RoleGrader),
+			[]string{
+				"alice@test.com",
+				"Alice",
+				"grader",
+				"alice",
+			},
+		},
+
+		// LMS ID
+		{
+			setCourseUserLMSID(baseTestCourseUser, util.StringPointer("foo")),
+			[]string{
+				"alice@test.com",
+				"Alice",
+				"student",
+				"foo",
+			},
+		},
+		{
+			setCourseUserLMSID(baseTestCourseUser, nil),
+			[]string{
+				"alice@test.com",
+				"Alice",
+				"student",
+				"",
+			},
+		},
+	}
+
+	for i, testCase := range testCases {
+		actual := testCase.User.MustToRow()
+
+		if !reflect.DeepEqual(testCase.Expected, actual) {
+			test.Errorf("Case %d: Row not as expected. Expected: '%s', Actual: '%s'.",
+				i, util.MustToJSONIndent(testCase.Expected), util.MustToJSONIndent(actual))
+			continue
+		}
+	}
+}
+
+func setCourseUserEmail(user *CourseUser, email string) *CourseUser {
+	newUser := *user
+	newUser.Email = email
+	return &newUser
+}
+
 func setCourseUserName(user *CourseUser, name *string) *CourseUser {
 	newUser := *user
 	newUser.Name = name

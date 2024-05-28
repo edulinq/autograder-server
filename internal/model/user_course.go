@@ -5,9 +5,10 @@ import (
 	"strings"
 
 	"github.com/edulinq/autograder/internal/log"
+	"github.com/edulinq/autograder/internal/util"
 )
 
-// TEST -- Full tests on validate and upsert.
+var COURSE_USER_ROW_COLUMNS []string = []string{"email", "name", "role", "lms-id"}
 
 // CourseUsers represent users enrolled in a course (in any role including owner).
 // They only contain a users information that is relevant to the course.
@@ -87,4 +88,13 @@ func (this *CourseUser) GetServerUser(courseID string) (*ServerUser, error) {
 	}
 
 	return serverUser, serverUser.Validate()
+}
+
+func (this *CourseUser) MustToRow() []string {
+	return []string{
+		this.Email,
+		util.PointerToString(this.Name),
+		this.Role.String(),
+		util.PointerToString(this.LMSID),
+	}
 }

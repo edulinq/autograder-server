@@ -1,6 +1,7 @@
 package db
 
 import (
+	"fmt"
 	"path/filepath"
 
 	"github.com/edulinq/autograder/internal/config"
@@ -51,16 +52,25 @@ func CleanupTestingMain() {
 	}
 }
 
-func MustAddTestUsers() {
+func AddTestUsers() error {
 	path := filepath.Join(config.GetCourseImportDir(), "testdata", model.USERS_FILENAME)
 
 	users, err := model.LoadServerUsersFile(path)
 	if err != nil {
-		log.Fatal("Could not open test users file.", err, log.NewAttr("path", path))
+		return fmt.Errorf("Could not open test users file '%s': '%w'.", path, err)
 	}
 
 	err = UpsertUsers(users)
 	if err != nil {
-		log.Fatal("Failed to upsert test users.", err)
+		return fmt.Errorf("Failed to upsert test users: '%w'.", err)
+	}
+
+	return nil
+}
+
+func MustAddTestUsers() {
+	err := AddTestUsers()
+	if err != nil {
+		log.Fatal("Failed to load test users.", err)
 	}
 }

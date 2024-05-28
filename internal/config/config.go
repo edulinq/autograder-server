@@ -40,6 +40,7 @@ func MustEnableUnitTestingMode() {
 func EnableUnitTestingMode() error {
 	TESTING_MODE.Set(true)
 	NO_TASKS.Set(true)
+	LOAD_TEST_DATA.Set(true)
 
 	tempWorkDir, err := util.MkDirTemp("autograder-unit-testing-")
 	if err != nil {

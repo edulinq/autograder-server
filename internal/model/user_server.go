@@ -9,9 +9,10 @@ import (
 
 	"github.com/edulinq/autograder/internal/common"
 	"github.com/edulinq/autograder/internal/log"
+	"github.com/edulinq/autograder/internal/util"
 )
 
-// TEST -- Full tests on validate and merge.
+var SERVER_USER_ROW_COLUMNS []string = []string{"email", "name", "salt", "tokens", "roles", "lms-ids"}
 
 // ServerUsers represent general users that exist on a server.
 // They may or may not be enrolled in courses.
@@ -223,5 +224,16 @@ func (this *ServerUser) Clone() *ServerUser {
 		Tokens: slices.Clone(this.Tokens),
 		Roles:  maps.Clone(this.Roles),
 		LMSIDs: maps.Clone(this.LMSIDs),
+	}
+}
+
+func (this *ServerUser) MustToRow() []string {
+	return []string{
+		this.Email,
+		util.PointerToString(this.Name),
+		util.PointerToString(this.Salt),
+		util.MustToJSON(this.Tokens),
+		util.MustToJSON(this.Roles),
+		util.MustToJSON(this.LMSIDs),
 	}
 }

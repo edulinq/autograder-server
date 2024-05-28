@@ -321,8 +321,8 @@ func TestUserServerUserValidate(test *testing.T) {
 		}
 
 		if !reflect.DeepEqual(testCase.Expected, user) {
-			test.Errorf("User not as expected. Expected: '%s', Actual: '%s'.",
-				util.MustToJSONIndent(testCase.Expected), util.MustToJSONIndent(user))
+			test.Errorf("Case %d: User not as expected. Expected: '%s', Actual: '%s'.",
+				i, util.MustToJSONIndent(testCase.Expected), util.MustToJSONIndent(user))
 			continue
 		}
 	}
@@ -419,8 +419,8 @@ func TestUserServerUserGetCourseUser(test *testing.T) {
 		}
 
 		if !reflect.DeepEqual(testCase.CourseUser, courseUser) {
-			test.Errorf("Course user not as expected. Expected: '%s', Actual: '%s'.",
-				util.MustToJSONIndent(testCase.CourseUser), util.MustToJSONIndent(courseUser))
+			test.Errorf("Case %d: Course user not as expected. Expected: '%s', Actual: '%s'.",
+				i, util.MustToJSONIndent(testCase.CourseUser), util.MustToJSONIndent(courseUser))
 			continue
 		}
 	}
@@ -574,8 +574,182 @@ func TestUserServerUserMerge(test *testing.T) {
 		}
 
 		if !reflect.DeepEqual(testCase.Expected, source) {
-			test.Errorf("Merged user not as expected. Expected: '%s', Actual: '%s'.",
-				util.MustToJSONIndent(testCase.Expected), util.MustToJSONIndent(source))
+			test.Errorf("Case %d: Merged user not as expected. Expected: '%s', Actual: '%s'.",
+				i, util.MustToJSONIndent(testCase.Expected), util.MustToJSONIndent(source))
+			continue
+		}
+	}
+}
+
+func TestUserServerUserMustToRow(test *testing.T) {
+	testCases := []struct {
+		User     *ServerUser
+		Expected []string
+	}{
+		// Base
+		{
+			baseTestServerUser,
+			[]string{
+				"alice@test.com",
+				"Alice",
+				"abc123",
+				`["abc123"]`,
+				`{"course101":"student"}`,
+				`{"course101":"alice"}`,
+			},
+		},
+
+		// Email
+		{
+			setServerUserEmail(baseTestServerUser, "foo"),
+			[]string{
+				"foo",
+				"Alice",
+				"abc123",
+				`["abc123"]`,
+				`{"course101":"student"}`,
+				`{"course101":"alice"}`,
+			},
+		},
+		{
+			setServerUserEmail(baseTestServerUser, ""),
+			[]string{
+				"",
+				"Alice",
+				"abc123",
+				`["abc123"]`,
+				`{"course101":"student"}`,
+				`{"course101":"alice"}`,
+			},
+		},
+
+		// Name
+		{
+			setServerUserName(baseTestServerUser, util.StringPointer("foo")),
+			[]string{
+				"alice@test.com",
+				"foo",
+				"abc123",
+				`["abc123"]`,
+				`{"course101":"student"}`,
+				`{"course101":"alice"}`,
+			},
+		},
+		{
+			setServerUserName(baseTestServerUser, nil),
+			[]string{
+				"alice@test.com",
+				"",
+				"abc123",
+				`["abc123"]`,
+				`{"course101":"student"}`,
+				`{"course101":"alice"}`,
+			},
+		},
+
+		// Salt
+		{
+			setServerUserSalt(baseTestServerUser, util.StringPointer("aaaa")),
+			[]string{
+				"alice@test.com",
+				"Alice",
+				"aaaa",
+				`["abc123"]`,
+				`{"course101":"student"}`,
+				`{"course101":"alice"}`,
+			},
+		},
+		{
+			setServerUserSalt(baseTestServerUser, nil),
+			[]string{
+				"alice@test.com",
+				"Alice",
+				"",
+				`["abc123"]`,
+				`{"course101":"student"}`,
+				`{"course101":"alice"}`,
+			},
+		},
+
+		// Tokens
+		{
+			setServerUserTokens(baseTestServerUser, []string{"aaaa"}),
+			[]string{
+				"alice@test.com",
+				"Alice",
+				"abc123",
+				`["aaaa"]`,
+				`{"course101":"student"}`,
+				`{"course101":"alice"}`,
+			},
+		},
+		{
+			setServerUserTokens(baseTestServerUser, []string{}),
+			[]string{
+				"alice@test.com",
+				"Alice",
+				"abc123",
+				`[]`,
+				`{"course101":"student"}`,
+				`{"course101":"alice"}`,
+			},
+		},
+
+		// Roles
+		{
+			setServerUserRoles(baseTestServerUser, map[string]UserRole{"foo": RoleGrader}),
+			[]string{
+				"alice@test.com",
+				"Alice",
+				"abc123",
+				`["abc123"]`,
+				`{"foo":"grader"}`,
+				`{"course101":"alice"}`,
+			},
+		},
+		{
+			setServerUserRoles(baseTestServerUser, map[string]UserRole{}),
+			[]string{
+				"alice@test.com",
+				"Alice",
+				"abc123",
+				`["abc123"]`,
+				`{}`,
+				`{"course101":"alice"}`,
+			},
+		},
+
+		// LMS IDs
+		{
+			setServerUserLMSIDs(baseTestServerUser, map[string]string{"foo": "bar"}),
+			[]string{
+				"alice@test.com",
+				"Alice",
+				"abc123",
+				`["abc123"]`,
+				`{"course101":"student"}`,
+				`{"foo":"bar"}`,
+			},
+		},
+		{
+			setServerUserLMSIDs(baseTestServerUser, map[string]string{}),
+			[]string{
+				"alice@test.com",
+				"Alice",
+				"abc123",
+				`["abc123"]`,
+				`{"course101":"student"}`,
+				`{}`,
+			},
+		},
+	}
+
+	for i, testCase := range testCases {
+		actual := testCase.User.MustToRow()
+
+		if !reflect.DeepEqual(testCase.Expected, actual) {
+			test.Errorf("Case %d: Row not as expected. Expected: '%s', Actual: '%s'.",
+				i, util.MustToJSONIndent(testCase.Expected), util.MustToJSONIndent(actual))
 			continue
 		}
 	}
