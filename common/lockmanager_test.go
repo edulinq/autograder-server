@@ -119,7 +119,7 @@ func TestMainThreadUnlocksFirstWithOneLock(test *testing.T) {
 
     // Check if the thread was able to lock key1 after the main thread unlocked key1.
     if (len(unlockInChildThreadFirst) == 0) {
-        test.Fatalf("Failed to Lock in the child thread.")
+        test.Fatalf("Failed to Lock in the child thread.");
     }
 }
 
