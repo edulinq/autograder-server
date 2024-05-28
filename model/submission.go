@@ -7,6 +7,7 @@ import (
 type TestSubmission struct {
     IgnoreMessages bool `json:"ignore_messages"`
     GradingInfo *GradingInfo `json:"result"`
+    Error string `json:"error"`
 }
 
 type SubmissionHistoryItem struct {

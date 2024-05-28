@@ -19,8 +19,8 @@ type TestSubmissionInfo struct {
     Assignment *model.Assignment
 }
 
-func GetTestSubmissions(baseDir string) ([]*TestSubmissionInfo, error) {
-    testSubmissionPaths, err := util.FindFiles("test-submission.json", baseDir);
+func GetTestSubmissions(baseDir string, filename string) ([]*TestSubmissionInfo, error) {
+    testSubmissionPaths, err := util.FindFiles(filename, baseDir);
     if (err != nil) {
         return nil, fmt.Errorf("Could not find test results in '%s': '%w'.", baseDir, err);
     }

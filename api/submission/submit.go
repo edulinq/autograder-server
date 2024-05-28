@@ -1,7 +1,10 @@
 package submission
 
 import (
+    "errors"
+
     "github.com/edulinq/autograder/api/core"
+    "github.com/edulinq/autograder/common"
     "github.com/edulinq/autograder/grader"
     "github.com/edulinq/autograder/log"
     "github.com/edulinq/autograder/model"
@@ -38,7 +41,12 @@ func HandleSubmit(request *SubmitRequest) (*SubmitResponse, *core.APIError) {
 
         log.Info("Submission grading failed.", err, request.Assignment, log.NewAttr("stdout", stdout), log.NewAttr("stderr", stderr), request.User);
 
-        return &response, nil;
+        var secureErr = new(common.SecureError);
+        if (errors.As(err, &secureErr)) {
+            response.Message = err.Error();
+        }
+
+        return &response, nil
     }
 
     if (reject != nil) {

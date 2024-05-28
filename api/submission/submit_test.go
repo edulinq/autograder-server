@@ -5,17 +5,18 @@ import (
     "testing"
 
     "github.com/edulinq/autograder/api/core"
+    "github.com/edulinq/autograder/common"
     "github.com/edulinq/autograder/config"
     "github.com/edulinq/autograder/db"
     "github.com/edulinq/autograder/grader"
-    "github.com/edulinq/autograder/util"
     "github.com/edulinq/autograder/model"
+    "github.com/edulinq/autograder/util"
 )
 
 var SUBMISSION_RELPATH string = filepath.Join("test-submissions", "solution", "submission.py");
 
 func TestSubmit(test *testing.T) {
-    testSubmissions, err := grader.GetTestSubmissions(config.GetCourseImportDir());
+    testSubmissions, err := grader.GetTestSubmissions(config.GetCourseImportDir(), common.TEST_SUBMISSIONS);
     if (err != nil) {
         test.Fatalf("Failed to get test submissions in '%s': '%v'.", config.GetCourseImportDir(), err);
     }
@@ -112,5 +113,44 @@ func TestRejectSubmissionMaxAttempts(test *testing.T) {
     if (expected != responseContent.Message) {
         test.Fatalf("Did not get the expected rejection reason. Expected: '%s', Actual: '%s'.",
             expected, responseContent.Message);
+    }
+}
+
+func TestErrorSubmission(test *testing.T) {
+    resetVal := config.GRADER_OUTPUT_LIMIT_KB.Get();
+    config.GRADER_OUTPUT_LIMIT_KB.Set(1);
+    defer config.GRADER_OUTPUT_LIMIT_KB.Set(resetVal);
+
+    db.ResetForTesting();
+    defer db.ResetForTesting();
+
+    testSubmissions, err := grader.GetTestSubmissions(config.GetCourseImportDir(), common.TEST_ERROR_SUBMISSIONS);
+    if (err != nil) {
+        test.Fatalf("Failed to get test submissions in '%s': '%v'.", config.GetCourseImportDir(), err);
+    }
+
+    for i, testSubmission := range testSubmissions {
+        fields := map[string]any{
+            "course-id":     testSubmission.Assignment.GetCourse().GetID(),
+            "assignment-id": testSubmission.Assignment.GetID(),
+        }
+
+        response := core.SendTestAPIRequestFull(test, core.NewEndpoint(`submission/submit`), fields, testSubmission.Files, model.RoleStudent);
+        if (!response.Success) {
+            test.Errorf("Case %d: Response is not a success when it should be: '%v'.", i, response);
+            continue;
+        }
+
+        var responseContent SubmitResponse;
+        util.MustJSONFromString(util.MustToJSON(response.Content), &responseContent);
+
+        if (responseContent.GradingSucess) {
+            test.Fatalf("Response is a grading success when it should not be: '%v'.", responseContent);
+        }
+
+        if (responseContent.Message != testSubmission.TestSubmission.Error) {
+            test.Fatalf("Response does not have the correct error.\nActual error:\n---\n%v\n---\ndoes not match expected err:\n---\n%v\n---\n.",
+                responseContent.Message, testSubmission.TestSubmission.Error);
+        }
     }
 }

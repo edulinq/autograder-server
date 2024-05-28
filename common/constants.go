@@ -12,3 +12,6 @@ const SUBMISSION_STDERR_FILENAME = "stderr.txt"
 const AUTOGRADER_COMMENT_IDENTITY_KEY = "__autograder__"
 
 const SUBMISSION_ID_DELIM = "::"
+
+const TEST_SUBMISSIONS = "test-submission.json"
+const TEST_ERROR_SUBMISSIONS = "test-error-submission.json"
