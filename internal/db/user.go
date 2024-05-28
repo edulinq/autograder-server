@@ -59,7 +59,7 @@ func GetCourseUser(course *model.Course, email string) (*model.CourseUser, error
 		return nil, nil
 	}
 
-	return serverUser.GetCourseUser(course)
+	return serverUser.GetCourseUser(course.ID)
 }
 
 // Convenience function for UpsertUsers() with a single user.
@@ -74,7 +74,7 @@ func UpsertCourseUsers(course *model.Course, users map[string]*model.CourseUser)
 
 	var userErrors error = nil
 	for email, user := range users {
-		serverUser, err := user.GetServerUser(course)
+		serverUser, err := user.GetServerUser(course.ID)
 		if err != nil {
 			userErrors = errors.Join(userErrors, fmt.Errorf("Invalid user '%s': '%w'.", email, err))
 		} else {

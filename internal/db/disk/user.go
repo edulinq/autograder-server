@@ -21,7 +21,7 @@ func (this *backend) GetCourseUsers(course *model.Course) (map[string]*model.Cou
 
 	courseUsers := make(map[string]*model.CourseUser)
 	for email, user := range users {
-		courseUser, err := user.GetCourseUser(course)
+		courseUser, err := user.GetCourseUser(course.ID)
 		if err != nil {
 			return nil, fmt.Errorf("Invalid user '%s': '%w'.", email, err)
 		}
@@ -174,7 +174,7 @@ func convertCourseUsers(courseUsers map[string]*model.CourseUser, course *model.
 
 	var userErrors error = nil
 	for email, courseUser := range courseUsers {
-		serverUser, err := courseUser.GetServerUser(course)
+		serverUser, err := courseUser.GetServerUser(course.ID)
 		if err != nil {
 			userErrors = errors.Join(userErrors, fmt.Errorf("Error with user '%s': '%w'.", email, err))
 		} else {

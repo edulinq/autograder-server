@@ -487,7 +487,7 @@ func mustLoadTestServerUsers() map[string]*model.ServerUser {
 func convertToCourseUsers(test *testing.T, course *model.Course, serverUsers map[string]*model.ServerUser) map[string]*model.CourseUser {
 	courseUsers := make(map[string]*model.CourseUser, len(serverUsers))
 	for email, serverUser := range serverUsers {
-		courseUser, err := serverUser.GetCourseUser(course)
+		courseUser, err := serverUser.GetCourseUser(course.ID)
 		if err != nil {
 			test.Fatalf("Could not convert server user to course user: '%v'.", err)
 		}

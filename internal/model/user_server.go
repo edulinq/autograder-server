@@ -148,14 +148,14 @@ func (this *ServerUser) GetDisplayName() string {
 
 // Convert this server user into a course user for the specific course.
 // Will return (nil, nil) if the user is not enrolled in the given course.
-func (this *ServerUser) GetCourseUser(course *Course) (*CourseUser, error) {
-	role, exists := this.Roles[course.ID]
+func (this *ServerUser) GetCourseUser(courseID string) (*CourseUser, error) {
+	role, exists := this.Roles[courseID]
 	if !exists {
 		return nil, nil
 	}
 
 	var lmsID *string = nil
-	lmsIDText, exists := this.LMSIDs[course.ID]
+	lmsIDText, exists := this.LMSIDs[courseID]
 	if exists {
 		lmsID = &lmsIDText
 	}

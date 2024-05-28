@@ -134,7 +134,7 @@ func TestUserCourseUserName(test *testing.T) {
 		ResultName   string
 		FallbackName string
 	}{
-		{util.StringPointer("foo"), "foo", "foo"},
+		{util.StringPointer("alice"), "alice", "alice"},
 		{util.StringPointer(""), "", "alice@test.com"},
 		{nil, "", "alice@test.com"},
 	}
@@ -163,6 +163,56 @@ func TestUserCourseUserName(test *testing.T) {
 
 		if testCase.FallbackName != displayName {
 			test.Errorf("Case %d: Display name not as expected. Expected: '%s', Actual: '%s'.", i, testCase.FallbackName, displayName)
+			continue
+		}
+	}
+}
+
+func TestUserCourseUserGetServerUser(test *testing.T) {
+	testCases := []struct {
+		CourseUser *CourseUser
+		ServerUser *ServerUser
+		CourseID   string
+		HasError   bool
+	}{
+		// Base
+		{
+			baseTestCourseUser,
+			minimalTestServerUser,
+			"course101",
+			false,
+		},
+
+		// No LMS ID
+		{
+			setCourseUserLMSID(baseTestCourseUser, nil),
+			setServerUserLMSIDs(minimalTestServerUser, make(map[string]string, 0)),
+			"course101",
+			false,
+		},
+
+		// Validation Error
+		{
+			setCourseUserRole(baseTestCourseUser, RoleUnknown),
+			nil,
+			"course101",
+			true,
+		},
+	}
+
+	for i, testCase := range testCases {
+		serverUser, err := testCase.CourseUser.GetServerUser(testCase.CourseID)
+		if err != nil {
+			if !testCase.HasError {
+				test.Errorf("Case %d: Failed to get server user: '%v'.", i, err)
+			}
+
+			continue
+		}
+
+		if !reflect.DeepEqual(testCase.ServerUser, serverUser) {
+			test.Errorf("Server user not as expected. Expected: '%s', Actual: '%s'.",
+				util.MustToJSONIndent(testCase.ServerUser), util.MustToJSONIndent(serverUser))
 			continue
 		}
 	}

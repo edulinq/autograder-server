@@ -75,15 +75,15 @@ func (this *CourseUser) GetDisplayName() string {
 	return this.GetName(true)
 }
 
-func (this *CourseUser) GetServerUser(course *Course) (*ServerUser, error) {
+func (this *CourseUser) GetServerUser(courseID string) (*ServerUser, error) {
 	serverUser := &ServerUser{
 		Email: this.Email,
 		Name:  this.Name,
-		Roles: map[string]UserRole{course.ID: this.Role},
+		Roles: map[string]UserRole{courseID: this.Role},
 	}
 
 	if this.LMSID != nil {
-		serverUser.LMSIDs = map[string]string{course.ID: *this.LMSID}
+		serverUser.LMSIDs = map[string]string{courseID: *this.LMSID}
 	}
 
 	return serverUser, serverUser.Validate()

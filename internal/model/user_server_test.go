@@ -205,7 +205,7 @@ func TestUserServerUserValidate(test *testing.T) {
 			baseTestServerUser.Name,
 			baseTestServerUser.Salt,
 			baseTestServerUser.Tokens,
-			map[string]UserRole{" foo ": RoleStudent},
+			map[string]UserRole{" course101 ": RoleStudent},
 			baseTestServerUser.LMSIDs,
 			baseTestServerUser,
 		},
@@ -214,7 +214,7 @@ func TestUserServerUserValidate(test *testing.T) {
 			baseTestServerUser.Name,
 			baseTestServerUser.Salt,
 			baseTestServerUser.Tokens,
-			map[string]UserRole{"FOO": RoleStudent},
+			map[string]UserRole{"COURSE101": RoleStudent},
 			baseTestServerUser.LMSIDs,
 			baseTestServerUser,
 		},
@@ -232,7 +232,7 @@ func TestUserServerUserValidate(test *testing.T) {
 			baseTestServerUser.Name,
 			baseTestServerUser.Salt,
 			baseTestServerUser.Tokens,
-			map[string]UserRole{"foo": RoleUnknown},
+			map[string]UserRole{"course101": RoleUnknown},
 			baseTestServerUser.LMSIDs,
 			nil,
 		},
@@ -253,7 +253,7 @@ func TestUserServerUserValidate(test *testing.T) {
 			baseTestServerUser.Salt,
 			baseTestServerUser.Tokens,
 			baseTestServerUser.Roles,
-			map[string]string{" foo ": "alice"},
+			map[string]string{" course101 ": "alice"},
 			baseTestServerUser,
 		},
 		{
@@ -262,7 +262,7 @@ func TestUserServerUserValidate(test *testing.T) {
 			baseTestServerUser.Salt,
 			baseTestServerUser.Tokens,
 			baseTestServerUser.Roles,
-			map[string]string{"foo": " alice "},
+			map[string]string{"course101": " alice "},
 			baseTestServerUser,
 		},
 		{
@@ -271,7 +271,7 @@ func TestUserServerUserValidate(test *testing.T) {
 			baseTestServerUser.Salt,
 			baseTestServerUser.Tokens,
 			baseTestServerUser.Roles,
-			map[string]string{"FOO": "alice"},
+			map[string]string{"COURSE101": "alice"},
 			baseTestServerUser,
 		},
 		{
@@ -289,7 +289,7 @@ func TestUserServerUserValidate(test *testing.T) {
 			baseTestServerUser.Salt,
 			baseTestServerUser.Tokens,
 			baseTestServerUser.Roles,
-			map[string]string{"foo": ""},
+			map[string]string{"course101": ""},
 			nil,
 		},
 	}
@@ -334,7 +334,7 @@ func TestUserServerUserName(test *testing.T) {
 		ResultName   string
 		FallbackName string
 	}{
-		{util.StringPointer("foo"), "foo", "foo"},
+		{util.StringPointer("alice"), "alice", "alice"},
 		{util.StringPointer(""), "", "alice@test.com"},
 		{nil, "", "alice@test.com"},
 	}
@@ -363,6 +363,64 @@ func TestUserServerUserName(test *testing.T) {
 
 		if testCase.FallbackName != displayName {
 			test.Errorf("Case %d: Display name not as expected. Expected: '%s', Actual: '%s'.", i, testCase.FallbackName, displayName)
+			continue
+		}
+	}
+}
+
+func TestUserServerUserGetCourseUser(test *testing.T) {
+	testCases := []struct {
+		ServerUser *ServerUser
+		CourseUser *CourseUser
+		CourseID   string
+		HasError   bool
+	}{
+		// Base
+		{
+			baseTestServerUser,
+			baseTestCourseUser,
+			"course101",
+			false,
+		},
+
+		// Not Enrolled
+		{
+			baseTestServerUser,
+			nil,
+			"ZZZ",
+			false,
+		},
+
+		// No LMS ID
+		{
+			setServerUserLMSIDs(baseTestServerUser, make(map[string]string, 0)),
+			setCourseUserLMSID(baseTestCourseUser, nil),
+			"course101",
+			false,
+		},
+
+		// Validation Error
+		{
+			setServerUserRoles(baseTestServerUser, map[string]UserRole{"course101": RoleUnknown}),
+			nil,
+			"course101",
+			true,
+		},
+	}
+
+	for i, testCase := range testCases {
+		courseUser, err := testCase.ServerUser.GetCourseUser(testCase.CourseID)
+		if err != nil {
+			if !testCase.HasError {
+				test.Errorf("Case %d: Failed to get course user: '%v'.", i, err)
+			}
+
+			continue
+		}
+
+		if !reflect.DeepEqual(testCase.CourseUser, courseUser) {
+			test.Errorf("Course user not as expected. Expected: '%s', Actual: '%s'.",
+				util.MustToJSONIndent(testCase.CourseUser), util.MustToJSONIndent(courseUser))
 			continue
 		}
 	}
@@ -403,6 +461,8 @@ var baseTestServerUser *ServerUser = &ServerUser{
 	Name:   util.StringPointer("Alice"),
 	Salt:   util.StringPointer("abc123"),
 	Tokens: []string{"abc123"},
-	Roles:  map[string]UserRole{"foo": RoleStudent},
-	LMSIDs: map[string]string{"foo": "alice"},
+	Roles:  map[string]UserRole{"course101": RoleStudent},
+	LMSIDs: map[string]string{"course101": "alice"},
 }
+
+var minimalTestServerUser *ServerUser = setServerUserTokens(setServerUserSalt(baseTestServerUser, nil), make([]string, 0))
