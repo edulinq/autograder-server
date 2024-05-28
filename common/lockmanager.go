@@ -12,7 +12,7 @@ import (
 type lockData struct {
     timestamp time.Time;
     mutex sync.RWMutex;
-    isLocked int;
+    lockCount int;
 }
 
 const TICKER_DURATION_HOUR = 1.0;
@@ -57,8 +57,9 @@ func lock(key string, read bool) {
         lock.mutex.RLock();
     } else {
         lock.mutex.Lock();
-        lock.isLocked += 1;
     }
+
+    lock.lockCount++;
 
     lock.timestamp = time.Now();
 }
@@ -74,7 +75,7 @@ func unlock(key string, read bool) error {
     }
 
     lock := val.(*lockData);
-    if (!read && lock.isLocked == 0) {
+    if (!read && lock.lockCount == 0) {
         log.Error("Tried to unlock a lock that is already unlocked: %s\n", key);
         return fmt.Errorf("Tried to unlock a lock that is already unlocked with key '%s'", key);
     }
@@ -82,11 +83,13 @@ func unlock(key string, read bool) error {
     if (read) {
         lock.mutex.RUnlock();
     } else {
-        lock.isLocked -= 1;
         lock.mutex.Unlock();
     }
 
+    lock.lockCount--;
+
     lock.timestamp = time.Now();
+
     return nil;
 }
 
@@ -103,7 +106,7 @@ func RemoveStaleLocksOnce() {
         lock := val.(*lockData);
 
         // First check: If the lock isn't stale or is locked, return early.
-        if (time.Since(lock.timestamp) < staleDuration || lock.isLocked == 1) {
+        if (time.Since(lock.timestamp) < staleDuration || lock.lockCount > 0) {
             return true;
         }
 

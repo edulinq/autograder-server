@@ -3,7 +3,7 @@ package common
 // Tests in this file will deal with locking, unlocking, and checking for stale locks (sometimes on multiple threads).
 // Since this can quickly get confusing, we will have comments for each test using the following syntax:
 // "%" denotes a thread off the main thread.
-// "!" denotes that the associated operation will produce an error.
+// "!" denotes that the associated operation should produce an error.
 // Ex. Lock(key1) -> %!Unlock(key2) - The main thread locks key1 then a thread generates an error unlocking key2.
 
 import (
@@ -49,7 +49,7 @@ func TestUnlockingAnUnlockedLock(test *testing.T) {
     }
 }
 
-// Unlock(key1).
+// !Unlock(key1).
 func TestUnlockingKeyThatDoesntExist(test *testing.T) {
     clear();
     defer clear();
@@ -332,7 +332,7 @@ func TestLockRetentionWithMidCheckActivity(test *testing.T) {
     }
 }
 
-// Lock(key1) -> Unlock(key1) -> Make Stale -> %StaleCheck.
+// Lock(key1) -> Unlock(key1) -> MakeTimestampStale(key1) -> %StaleCheck.
 func TestStaleLockDeletion(test *testing.T) {
     clear();
     defer clear();
@@ -535,7 +535,7 @@ func TestReadLockBlock(test *testing.T) {
 
     // Check if the thread read locked key1.
     if (len(readLockInChildThread) == 0) {
-        test.Fatalf("Failed to read lock key1 in the child thread");
+        test.Fatalf("Failed to read lock key1 in the child thread.");
     }
 }
 
