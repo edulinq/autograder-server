@@ -4,7 +4,6 @@ import (
 	"encoding/hex"
 	"fmt"
 	"maps"
-	"slices"
 	"strings"
 
 	"github.com/edulinq/autograder/internal/common"
@@ -30,9 +29,9 @@ type ServerUser struct {
 	Salt *string `json:"salt"`
 
 	// May be nil/empty if not retrieved from the database,
-	// will always be non-nil after validation.
-	// Tokens shuold be hex strings.
-	Tokens []string `json:"tokens"`
+	// will always be non-nil after validation, but may be empty.
+	// Technically there could be duplicates here, but we will allow them.
+	Tokens []*Token `json:"tokens"`
 
 	// May be nil/empty if not retrieved from the database,
 	// will always be non-nil after validation.
@@ -71,26 +70,15 @@ func (this *ServerUser) Validate() error {
 	}
 
 	if this.Tokens == nil {
-		this.Tokens = make([]string, 0)
+		this.Tokens = make([]*Token, 0)
 	}
 
 	for i, token := range this.Tokens {
-		token = strings.ToLower(strings.TrimSpace(token))
-		if token == "" {
-			return fmt.Errorf("User '%s' has a token (index %d) that is empty.", this.Email, i)
-		}
-
-		_, err := hex.DecodeString(token)
+		err := token.Validate()
 		if err != nil {
-			return fmt.Errorf("User '%s' has a token (index %d) that is not proper hex: '%w'.", this.Email, i, err)
+			return fmt.Errorf("User '%s' has a token (index %d) that is invalid: '%w'.", this.Email, i, err)
 		}
-
-		this.Tokens[i] = token
 	}
-
-	// Sort and removes duplicates.
-	slices.Sort(this.Tokens)
-	this.Tokens = slices.Compact(this.Tokens)
 
 	if this.Roles == nil {
 		this.Roles = make(map[string]CourseUserRole, 0)
@@ -231,24 +219,34 @@ func (this *ServerUser) Merge(other *ServerUser) error {
 
 // Deep copy this user (which should already be validated).
 func (this *ServerUser) Clone() *ServerUser {
+	tokens := make([]*Token, 0, len(this.Tokens))
+	for _, token := range this.Tokens {
+		tokens = append(tokens, token.Clone())
+	}
+
 	return &ServerUser{
 		Email:  this.Email,
 		Name:   this.Name,
 		Role:   this.Role,
 		Salt:   this.Salt,
-		Tokens: slices.Clone(this.Tokens),
+		Tokens: tokens,
 		Roles:  maps.Clone(this.Roles),
 		LMSIDs: maps.Clone(this.LMSIDs),
 	}
 }
 
 func (this *ServerUser) MustToRow() []string {
+	tokens := make([]string, 0, len(this.Tokens))
+	for _, token := range this.Tokens {
+		tokens = append(tokens, fmt.Sprintf("%s (%s)", token.Name, string(token.Source)))
+	}
+
 	return []string{
 		this.Email,
 		util.PointerToString(this.Name),
 		this.Role.String(),
 		util.PointerToString(this.Salt),
-		util.MustToJSON(this.Tokens),
+		util.MustToJSON(tokens),
 		util.MustToJSON(this.Roles),
 		util.MustToJSON(this.LMSIDs),
 	}

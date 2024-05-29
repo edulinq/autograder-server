@@ -14,7 +14,7 @@ func TestUserServerUserValidate(test *testing.T) {
 		Name     *string
 		Role     ServerUserRole
 		Salt     *string
-		Tokens   []string
+		Tokens   []*Token
 		Roles    map[string]CourseUserRole
 		LMSIDs   map[string]string
 		Expected *ServerUser
@@ -165,67 +165,20 @@ func TestUserServerUserValidate(test *testing.T) {
 			baseTestServerUser.Name,
 			baseTestServerUser.Role,
 			baseTestServerUser.Salt,
-			[]string{" " + baseTestServerUser.Tokens[0] + " "},
-			baseTestServerUser.Roles,
-			baseTestServerUser.LMSIDs,
-			baseTestServerUser,
-		},
-		{
-			baseTestServerUser.Email,
-			baseTestServerUser.Name,
-			baseTestServerUser.Role,
-			baseTestServerUser.Salt,
-			[]string{strings.ToUpper(baseTestServerUser.Tokens[0])},
-			baseTestServerUser.Roles,
-			baseTestServerUser.LMSIDs,
-			baseTestServerUser,
-		},
-		{
-			baseTestServerUser.Email,
-			baseTestServerUser.Name,
-			baseTestServerUser.Role,
-			baseTestServerUser.Salt,
-			[]string{baseTestServerUser.Tokens[0], baseTestServerUser.Tokens[0]},
-			baseTestServerUser.Roles,
-			baseTestServerUser.LMSIDs,
-			baseTestServerUser,
-		},
-		{
-			baseTestServerUser.Email,
-			baseTestServerUser.Name,
-			baseTestServerUser.Role,
-			baseTestServerUser.Salt,
-			[]string{"ffff", "0000"},
-			baseTestServerUser.Roles,
-			baseTestServerUser.LMSIDs,
-			setServerUserTokens(baseTestServerUser, []string{"0000", "ffff"}),
-		},
-		{
-			baseTestServerUser.Email,
-			baseTestServerUser.Name,
-			baseTestServerUser.Role,
-			baseTestServerUser.Salt,
 			nil,
 			baseTestServerUser.Roles,
 			baseTestServerUser.LMSIDs,
-			setServerUserTokens(baseTestServerUser, []string{}),
+			setServerUserTokens(baseTestServerUser, []*Token{}),
 		},
 		{
 			baseTestServerUser.Email,
 			baseTestServerUser.Name,
 			baseTestServerUser.Role,
 			baseTestServerUser.Salt,
-			[]string{""},
-			baseTestServerUser.Roles,
-			baseTestServerUser.LMSIDs,
-			nil,
-		},
-		{
-			baseTestServerUser.Email,
-			baseTestServerUser.Name,
-			baseTestServerUser.Role,
-			baseTestServerUser.Salt,
-			[]string{"ZZ"},
+			[]*Token{&Token{
+				HexDigest: "ZZZ",
+				Source:    TokenSourceServer,
+			}},
 			baseTestServerUser.Roles,
 			baseTestServerUser.LMSIDs,
 			nil,
@@ -477,15 +430,18 @@ func TestUserServerUserGetCourseUser(test *testing.T) {
 }
 
 func TestUserServerUserMerge(test *testing.T) {
+	baseToken := baseTestServerUser.Tokens[0]
+	newToken := MustNewToken("aa", "abc123", TokenSourceServer, "test token 2")
+
 	testCases := []struct {
 		Source   *ServerUser
 		Other    *ServerUser
 		Expected *ServerUser
 	}{
-		// No Change
+		// No Change.
 		{
 			baseTestServerUser,
-			baseTestServerUser,
+			minimalTestServerUser,
 			baseTestServerUser,
 		},
 
@@ -497,60 +453,60 @@ func TestUserServerUserMerge(test *testing.T) {
 		},
 		{
 			baseTestServerUser,
-			setServerUserEmail(baseTestServerUser, "zzz"),
+			setServerUserEmail(minimalTestServerUser, "zzz"),
 			nil,
 		},
 
 		// Validation Error
 		{
 			baseTestServerUser,
-			setServerUserSalt(baseTestServerUser, util.StringPointer("ZZZ")),
+			setServerUserSalt(minimalTestServerUser, util.StringPointer("ZZZ")),
 			nil,
 		},
 
 		// Name
 		{
 			baseTestServerUser,
-			setServerUserName(baseTestServerUser, util.StringPointer("foo")),
+			setServerUserName(minimalTestServerUser, util.StringPointer("foo")),
 			setServerUserName(baseTestServerUser, util.StringPointer("foo")),
 		},
 		{
 			baseTestServerUser,
-			setServerUserName(baseTestServerUser, nil),
+			setServerUserName(minimalTestServerUser, nil),
 			baseTestServerUser,
 		},
 		{
 			baseTestServerUser,
-			setServerUserName(baseTestServerUser, util.StringPointer("")),
+			setServerUserName(minimalTestServerUser, util.StringPointer("")),
 			nil,
 		},
 
 		// Role
 		{
 			baseTestServerUser,
-			setServerUserRole(baseTestServerUser, ServerRoleUnknown),
+			setServerUserRole(minimalTestServerUser, ServerRoleUnknown),
 			baseTestServerUser,
 		},
 		{
 			baseTestServerUser,
-			setServerUserRole(baseTestServerUser, ServerRoleOwner),
+			setServerUserRole(minimalTestServerUser, ServerRoleOwner),
 			setServerUserRole(baseTestServerUser, ServerRoleOwner),
 		},
 		{
 			baseTestServerUser,
-			setServerUserRole(baseTestServerUser, ServerRoleRoot),
+			setServerUserRole(minimalTestServerUser, ServerRoleRoot),
 			nil,
 		},
 
 		// Salt
 		{
 			baseTestServerUser,
-			setServerUserSalt(baseTestServerUser, util.StringPointer("1234")),
+			setServerUserSalt(minimalTestServerUser, util.StringPointer("1234")),
 			setServerUserSalt(baseTestServerUser, util.StringPointer("1234")),
 		},
 		{
 			baseTestServerUser,
-			setServerUserSalt(baseTestServerUser, nil),
+			setServerUserSalt(minimalTestServerUser, nil),
 			baseTestServerUser,
 		},
 
@@ -558,51 +514,45 @@ func TestUserServerUserMerge(test *testing.T) {
 		{
 			// No tokens will be added.
 			baseTestServerUser,
-			setServerUserTokens(baseTestServerUser, []string{}),
+			setServerUserTokens(minimalTestServerUser, []*Token{}),
 			baseTestServerUser,
 		},
 		{
 			// No tokens will be added.
 			baseTestServerUser,
-			setServerUserTokens(baseTestServerUser, nil),
+			setServerUserTokens(minimalTestServerUser, nil),
 			baseTestServerUser,
 		},
 		{
 			// The token will be added.
 			baseTestServerUser,
-			setServerUserTokens(baseTestServerUser, []string{"1234"}),
-			setServerUserTokens(baseTestServerUser, []string{"1234", "abc123"}),
-		},
-		{
-			// Token is duplicate, will be skipped.
-			baseTestServerUser,
-			setServerUserTokens(baseTestServerUser, []string{"abc123"}),
-			baseTestServerUser,
+			setServerUserTokens(minimalTestServerUser, []*Token{newToken}),
+			setServerUserTokens(baseTestServerUser, []*Token{baseToken, newToken}),
 		},
 
 		// Course Roles
 		{
 			// No roles will be added.
 			baseTestServerUser,
-			setServerCourseUserRoles(baseTestServerUser, map[string]CourseUserRole{}),
+			setServerCourseUserRoles(minimalTestServerUser, map[string]CourseUserRole{}),
 			baseTestServerUser,
 		},
 		{
 			// No roles will be added.
 			baseTestServerUser,
-			setServerCourseUserRoles(baseTestServerUser, nil),
+			setServerCourseUserRoles(minimalTestServerUser, nil),
 			baseTestServerUser,
 		},
 		{
 			// Role will be added.
 			baseTestServerUser,
-			setServerCourseUserRoles(baseTestServerUser, map[string]CourseUserRole{"foo": RoleStudent}),
+			setServerCourseUserRoles(minimalTestServerUser, map[string]CourseUserRole{"foo": RoleStudent}),
 			setServerCourseUserRoles(baseTestServerUser, map[string]CourseUserRole{"course101": RoleStudent, "foo": RoleStudent}),
 		},
 		{
 			// Existing role will be overwritten.
 			baseTestServerUser,
-			setServerCourseUserRoles(baseTestServerUser, map[string]CourseUserRole{"course101": RoleGrader}),
+			setServerCourseUserRoles(minimalTestServerUser, map[string]CourseUserRole{"course101": RoleGrader}),
 			setServerCourseUserRoles(baseTestServerUser, map[string]CourseUserRole{"course101": RoleGrader}),
 		},
 
@@ -610,25 +560,25 @@ func TestUserServerUserMerge(test *testing.T) {
 		{
 			// No lms ids will be added.
 			baseTestServerUser,
-			setServerUserLMSIDs(baseTestServerUser, map[string]string{}),
+			setServerUserLMSIDs(minimalTestServerUser, map[string]string{}),
 			baseTestServerUser,
 		},
 		{
 			// No lms ids will be added.
 			baseTestServerUser,
-			setServerUserLMSIDs(baseTestServerUser, nil),
+			setServerUserLMSIDs(minimalTestServerUser, nil),
 			baseTestServerUser,
 		},
 		{
 			// LMSID will be added.
 			baseTestServerUser,
-			setServerUserLMSIDs(baseTestServerUser, map[string]string{"foo": "bar"}),
+			setServerUserLMSIDs(minimalTestServerUser, map[string]string{"foo": "bar"}),
 			setServerUserLMSIDs(baseTestServerUser, map[string]string{"course101": "alice", "foo": "bar"}),
 		},
 		{
 			// Existing lms ids will be overwritten.
 			baseTestServerUser,
-			setServerUserLMSIDs(baseTestServerUser, map[string]string{"course101": "bar"}),
+			setServerUserLMSIDs(minimalTestServerUser, map[string]string{"course101": "bar"}),
 			setServerUserLMSIDs(baseTestServerUser, map[string]string{"course101": "bar"}),
 		},
 	}
@@ -666,7 +616,7 @@ func TestUserServerUserMustToRow(test *testing.T) {
 				"Alice",
 				"user",
 				"abc123",
-				`["abc123"]`,
+				`["test token (server)"]`,
 				`{"course101":"student"}`,
 				`{"course101":"alice"}`,
 			},
@@ -680,7 +630,7 @@ func TestUserServerUserMustToRow(test *testing.T) {
 				"Alice",
 				"user",
 				"abc123",
-				`["abc123"]`,
+				`["test token (server)"]`,
 				`{"course101":"student"}`,
 				`{"course101":"alice"}`,
 			},
@@ -692,7 +642,7 @@ func TestUserServerUserMustToRow(test *testing.T) {
 				"Alice",
 				"user",
 				"abc123",
-				`["abc123"]`,
+				`["test token (server)"]`,
 				`{"course101":"student"}`,
 				`{"course101":"alice"}`,
 			},
@@ -706,7 +656,7 @@ func TestUserServerUserMustToRow(test *testing.T) {
 				"foo",
 				"user",
 				"abc123",
-				`["abc123"]`,
+				`["test token (server)"]`,
 				`{"course101":"student"}`,
 				`{"course101":"alice"}`,
 			},
@@ -718,7 +668,7 @@ func TestUserServerUserMustToRow(test *testing.T) {
 				"",
 				"user",
 				"abc123",
-				`["abc123"]`,
+				`["test token (server)"]`,
 				`{"course101":"student"}`,
 				`{"course101":"alice"}`,
 			},
@@ -732,7 +682,7 @@ func TestUserServerUserMustToRow(test *testing.T) {
 				"Alice",
 				"owner",
 				"abc123",
-				`["abc123"]`,
+				`["test token (server)"]`,
 				`{"course101":"student"}`,
 				`{"course101":"alice"}`,
 			},
@@ -746,7 +696,7 @@ func TestUserServerUserMustToRow(test *testing.T) {
 				"Alice",
 				"user",
 				"aaaa",
-				`["abc123"]`,
+				`["test token (server)"]`,
 				`{"course101":"student"}`,
 				`{"course101":"alice"}`,
 			},
@@ -758,7 +708,7 @@ func TestUserServerUserMustToRow(test *testing.T) {
 				"Alice",
 				"user",
 				"",
-				`["abc123"]`,
+				`["test token (server)"]`,
 				`{"course101":"student"}`,
 				`{"course101":"alice"}`,
 			},
@@ -766,19 +716,19 @@ func TestUserServerUserMustToRow(test *testing.T) {
 
 		// Tokens
 		{
-			setServerUserTokens(baseTestServerUser, []string{"aaaa"}),
+			setServerUserTokens(baseTestServerUser, []*Token{MustNewToken("aa", "abc123", TokenSourcePassword, "test token 2")}),
 			[]string{
 				"alice@test.com",
 				"Alice",
 				"user",
 				"abc123",
-				`["aaaa"]`,
+				`["test token 2 (password)"]`,
 				`{"course101":"student"}`,
 				`{"course101":"alice"}`,
 			},
 		},
 		{
-			setServerUserTokens(baseTestServerUser, []string{}),
+			setServerUserTokens(baseTestServerUser, []*Token{}),
 			[]string{
 				"alice@test.com",
 				"Alice",
@@ -798,7 +748,7 @@ func TestUserServerUserMustToRow(test *testing.T) {
 				"Alice",
 				"user",
 				"abc123",
-				`["abc123"]`,
+				`["test token (server)"]`,
 				`{"foo":"grader"}`,
 				`{"course101":"alice"}`,
 			},
@@ -810,7 +760,7 @@ func TestUserServerUserMustToRow(test *testing.T) {
 				"Alice",
 				"user",
 				"abc123",
-				`["abc123"]`,
+				`["test token (server)"]`,
 				`{}`,
 				`{"course101":"alice"}`,
 			},
@@ -824,7 +774,7 @@ func TestUserServerUserMustToRow(test *testing.T) {
 				"Alice",
 				"user",
 				"abc123",
-				`["abc123"]`,
+				`["test token (server)"]`,
 				`{"course101":"student"}`,
 				`{"foo":"bar"}`,
 			},
@@ -836,7 +786,7 @@ func TestUserServerUserMustToRow(test *testing.T) {
 				"Alice",
 				"user",
 				"abc123",
-				`["abc123"]`,
+				`["test token (server)"]`,
 				`{"course101":"student"}`,
 				`{}`,
 			},
@@ -878,7 +828,7 @@ func setServerUserSalt(user *ServerUser, salt *string) *ServerUser {
 	return &newUser
 }
 
-func setServerUserTokens(user *ServerUser, tokens []string) *ServerUser {
+func setServerUserTokens(user *ServerUser, tokens []*Token) *ServerUser {
 	newUser := *user
 	newUser.Tokens = tokens
 	return &newUser
@@ -901,9 +851,9 @@ var baseTestServerUser *ServerUser = &ServerUser{
 	Name:   util.StringPointer("Alice"),
 	Role:   ServerRoleUser,
 	Salt:   util.StringPointer("abc123"),
-	Tokens: []string{"abc123"},
+	Tokens: []*Token{MustNewToken("321cba", "abc123", TokenSourceServer, "test token")},
 	Roles:  map[string]CourseUserRole{"course101": RoleStudent},
 	LMSIDs: map[string]string{"course101": "alice"},
 }
 
-var minimalTestServerUser *ServerUser = setServerUserRole(setServerUserTokens(setServerUserSalt(baseTestServerUser, nil), make([]string, 0)), ServerRoleUnknown)
+var minimalTestServerUser *ServerUser = setServerUserRole(setServerUserTokens(setServerUserSalt(baseTestServerUser, nil), make([]*Token, 0)), ServerRoleUnknown)

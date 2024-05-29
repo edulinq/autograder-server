@@ -23,12 +23,6 @@ import (
 // TEST
 const (
 	DEFAULT_PASSWORD_LEN = 32
-	SALT_LENGTH_BYTES    = 32
-
-	ARGON2_KEY_LEN_BYTES = 32
-	ARGON2_MEM_KB        = 64 * 1024
-	ARGON2_THREADS       = 4
-	ARGON2_TIME          = 1
 
 	EMAIL_SLEEP_TIME = int64(1.5 * float64(time.Second))
 )

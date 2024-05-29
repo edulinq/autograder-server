@@ -272,6 +272,9 @@ func (this *DBTests) DBTestUserUpsertUserUpdate(test *testing.T) {
 	newActualName := "Test Name"
 	user.Name = &newActualName
 
+	// Remove any additive components.
+	user.Tokens = make([]*model.Token, 0)
+
 	err = UpsertUser(user)
 	if err != nil {
 		test.Fatalf("Could not upsert user '%s': '%v'.", email, err)
@@ -307,6 +310,9 @@ func (this *DBTests) DBTestUserUpsertUserEmptyUpdate(test *testing.T) {
 	if user == nil {
 		test.Fatalf("Got nil server user ('%s').", email)
 	}
+
+	// Remove any additive components.
+	user.Tokens = make([]*model.Token, 0)
 
 	err = UpsertUser(user)
 	if err != nil {
