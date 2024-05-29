@@ -16,7 +16,7 @@ func TestChangePassword(test *testing.T) {
 	defer db.ResetForTesting()
 
 	testCases := []struct {
-		role         model.UserRole
+		role         model.CourseUserRole
 		permError    bool
 		advPermError bool
 		target       string

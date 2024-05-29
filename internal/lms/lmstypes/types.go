@@ -10,7 +10,7 @@ type User struct {
 	ID    string
 	Name  string
 	Email string
-	Role  model.UserRole
+	Role  model.CourseUserRole
 }
 
 type SubmissionScore struct {

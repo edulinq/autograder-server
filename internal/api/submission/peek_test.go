@@ -11,7 +11,7 @@ import (
 func TestPeek(test *testing.T) {
 	// There are two options, which makes for four general test cases.
 	testCases := []struct {
-		role             model.UserRole
+		role             model.CourseUserRole
 		targetEmail      string
 		targetSubmission string
 		score            float64

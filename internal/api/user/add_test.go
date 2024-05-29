@@ -16,7 +16,7 @@ func TestUserAdd(test *testing.T) {
 	defer db.ResetForTesting()
 
 	testCases := []struct {
-		role        model.UserRole
+		role        model.CourseUserRole
 		permError   bool
 		force       bool
 		dryRun      bool

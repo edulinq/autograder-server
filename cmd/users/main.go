@@ -29,7 +29,7 @@ type AddUser struct {
 }
 
 func (this *AddUser) Run(course *model.Course) error {
-	role := model.GetRole(this.Role)
+	role := model.GetCourseUserRole(this.Role)
 	if role == model.RoleUnknown {
 		return fmt.Errorf("Unknown role: '%s'.", this.Role)
 	}
@@ -307,7 +307,7 @@ func readUsersTSV(path string, skipRows int) (map[string]*model.User, error) {
 
 		var email string
 		var name string = ""
-		var role model.UserRole = model.RoleStudent
+		var role model.CourseUserRole = model.RoleStudent
 
 		if len(parts) >= 1 {
 			email = parts[0]
@@ -320,7 +320,7 @@ func readUsersTSV(path string, skipRows int) (map[string]*model.User, error) {
 		}
 
 		if len(parts) >= 3 {
-			role = model.GetRole(parts[2])
+			role = model.GetCourseUserRole(parts[2])
 			if role == model.RoleUnknown {
 				return nil, fmt.Errorf("User file '%s' line %d has unknwon role '%s'.", path, lineno, parts[2])
 			}

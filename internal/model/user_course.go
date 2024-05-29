@@ -14,13 +14,13 @@ var COURSE_USER_ROW_COLUMNS []string = []string{"email", "name", "role", "lms-id
 // They only contain a users information that is relevant to the course.
 // Pointer fields indicate optional fields.
 type CourseUser struct {
-	Email string   `json:"email"`
-	Name  *string  `json:"name"`
-	Role  UserRole `json:"role"`
-	LMSID *string  `json:"lms-id"`
+	Email string         `json:"email"`
+	Name  *string        `json:"name"`
+	Role  CourseUserRole `json:"role"`
+	LMSID *string        `json:"lms-id"`
 }
 
-func NewCourseUser(email string, name *string, role UserRole, lmsID *string) (*CourseUser, error) {
+func NewCourseUser(email string, name *string, role CourseUserRole, lmsID *string) (*CourseUser, error) {
 	courseUser := &CourseUser{
 		Email: email,
 		Name:  name,
@@ -80,7 +80,7 @@ func (this *CourseUser) GetServerUser(courseID string) (*ServerUser, error) {
 	serverUser := &ServerUser{
 		Email: this.Email,
 		Name:  this.Name,
-		Roles: map[string]UserRole{courseID: this.Role},
+		Roles: map[string]CourseUserRole{courseID: this.Role},
 	}
 
 	if this.LMSID != nil {

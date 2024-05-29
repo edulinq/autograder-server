@@ -11,10 +11,10 @@ import (
 )
 
 type UserInfo struct {
-	Email string         `json:"email"`
-	Name  string         `json:"name"`
-	Role  model.UserRole `json:"role"`
-	LMSID string         `json:"lms-id"`
+	Email string               `json:"email"`
+	Name  string               `json:"name"`
+	Role  model.CourseUserRole `json:"role"`
+	LMSID string               `json:"lms-id"`
 }
 
 type UserInfoWithPass struct {
@@ -79,7 +79,7 @@ func UserInfoFromMap(data map[string]any) *UserInfo {
 	return &UserInfo{
 		Email: data["email"].(string),
 		Name:  data["name"].(string),
-		Role:  model.GetRole(data["role"].(string)),
+		Role:  model.GetCourseUserRole(data["role"].(string)),
 		LMSID: data["lms-id"].(string),
 	}
 }

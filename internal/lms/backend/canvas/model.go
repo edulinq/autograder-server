@@ -46,7 +46,7 @@ type Enrollment struct {
 // Canvas enrollment to autograder role.
 // Canvas has default enrollment "types" and then "roles" which may be the same
 // as the type or custom.
-var enrollmentToRoleMapping map[string]model.UserRole = map[string]model.UserRole{
+var enrollmentToRoleMapping map[string]model.CourseUserRole = map[string]model.CourseUserRole{
 	"ObserverEnrollment": model.RoleOther,
 	"DesignerEnrollment": model.RoleOther,
 	"StudentEnrollment":  model.RoleStudent,
@@ -57,7 +57,7 @@ var enrollmentToRoleMapping map[string]model.UserRole = map[string]model.UserRol
 	"TA - Site Manager": model.RoleAdmin,
 }
 
-var roleToEnrollmentMapping map[model.UserRole]string = map[model.UserRole]string{
+var roleToEnrollmentMapping map[model.CourseUserRole]string = map[model.CourseUserRole]string{
 	model.RoleOther:   "ObserverEnrollment",
 	model.RoleStudent: "StudentEnrollment",
 	model.RoleGrader:  "TaEnrollment",
@@ -65,19 +65,19 @@ var roleToEnrollmentMapping map[model.UserRole]string = map[model.UserRole]strin
 	model.RoleOwner:   "TeacherEnrollment",
 }
 
-func (this *Enrollment) GetRole() model.UserRole {
+func (this *Enrollment) GetRole() model.CourseUserRole {
 	typeRole := enrollmentToRoleMapping[this.Type]
 	roleRole := enrollmentToRoleMapping[this.Role]
 
 	return max(typeRole, roleRole)
 }
 
-func (this *User) GetRole() model.UserRole {
+func (this *User) GetRole() model.CourseUserRole {
 	if this.Enrollments == nil {
 		return model.RoleOther
 	}
 
-	var maxRole model.UserRole
+	var maxRole model.CourseUserRole
 	for _, enrollment := range this.Enrollments {
 		role := enrollment.GetRole()
 		if role > maxRole {

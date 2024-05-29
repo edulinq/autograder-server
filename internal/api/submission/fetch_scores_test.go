@@ -11,8 +11,8 @@ import (
 
 func TestFetchScores(test *testing.T) {
 	testCases := []struct {
-		role       model.UserRole
-		filterRole model.UserRole
+		role       model.CourseUserRole
+		filterRole model.CourseUserRole
 		permError  bool
 		ids        map[string]string
 	}{

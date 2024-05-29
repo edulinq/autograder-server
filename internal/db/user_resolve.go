@@ -30,12 +30,12 @@ func ResolveCourseUsers(course *model.Course, emails []string) ([]string, error)
 			emailSet[email] = nil
 		} else {
 			if email == "*" {
-				allRoles := model.GetAllRoleStrings()
+				allRoles := model.GetAllCourseUserRolesStrings()
 				for role := range allRoles {
 					roleSet[role] = nil
 				}
 			} else {
-				if model.GetRole(email) == model.RoleUnknown {
+				if model.GetCourseUserRole(email) == model.RoleUnknown {
 					log.Warn("Invalid role, cannot resolve users.", course, log.NewAttr("role", email))
 					continue
 				}
@@ -53,7 +53,7 @@ func ResolveCourseUsers(course *model.Course, emails []string) ([]string, error)
 
 		for _, user := range users {
 			// Add a user if their role is set.
-			_, ok := roleSet[model.GetRoleString(user.Role)]
+			_, ok := roleSet[user.Role.String()]
 			if ok {
 				emailSet[strings.ToLower(user.Email)] = nil
 			}

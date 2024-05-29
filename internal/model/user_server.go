@@ -12,7 +12,7 @@ import (
 	"github.com/edulinq/autograder/internal/util"
 )
 
-var SERVER_USER_ROW_COLUMNS []string = []string{"email", "name", "salt", "tokens", "roles", "lms-ids"}
+var SERVER_USER_ROW_COLUMNS []string = []string{"email", "name", "server-role", "salt", "tokens", "course-roles", "lms-ids"}
 
 // ServerUsers represent general users that exist on a server.
 // They may or may not be enrolled in courses.
@@ -22,8 +22,10 @@ var SERVER_USER_ROW_COLUMNS []string = []string{"email", "name", "salt", "tokens
 // Note that optional fields are not optional in all context,
 // e.g., a salt may not be required when updating a user but it is when authenticating.
 type ServerUser struct {
-	Email string  `json:"email"`
-	Name  *string `json:"name"`
+	Email string         `json:"email"`
+	Name  *string        `json:"name"`
+	Role  ServerUserRole `json:"server-role"`
+
 	// Salts shuold be hex strings.
 	Salt *string `json:"salt"`
 
@@ -35,8 +37,8 @@ type ServerUser struct {
 	// May be nil/empty if not retrieved from the database,
 	// will always be non-nil after validation.
 	// Keyed by the course id.
-	Roles  map[string]UserRole `json:"roles"`
-	LMSIDs map[string]string   `json:"lms-ids"`
+	Roles  map[string]CourseUserRole `json:"course-roles"`
+	LMSIDs map[string]string         `json:"lms-ids"`
 }
 
 func (this *ServerUser) Validate() error {
@@ -48,6 +50,14 @@ func (this *ServerUser) Validate() error {
 	if this.Name != nil {
 		name := strings.TrimSpace(*this.Name)
 		this.Name = &name
+
+		if name == "" {
+			return fmt.Errorf("User '%s' has an empty (but not nil) name.", this.Email)
+		}
+	}
+
+	if this.Role == ServerRoleRoot {
+		return fmt.Errorf("User '%s' has a root server role. Normal users are not allowed to have this role.", this.Email)
 	}
 
 	if this.Salt != nil {
@@ -83,10 +93,10 @@ func (this *ServerUser) Validate() error {
 	this.Tokens = slices.Compact(this.Tokens)
 
 	if this.Roles == nil {
-		this.Roles = make(map[string]UserRole, 0)
+		this.Roles = make(map[string]CourseUserRole, 0)
 	}
 
-	newRoles := make(map[string]UserRole, len(this.Roles))
+	newRoles := make(map[string]CourseUserRole, len(this.Roles))
 	for courseID, role := range this.Roles {
 		newCourseID, err := common.ValidateID(strings.TrimSpace(courseID))
 		if err != nil {
@@ -190,6 +200,10 @@ func (this *ServerUser) Merge(other *ServerUser) error {
 		this.Name = other.Name
 	}
 
+	if other.Role != ServerRoleUnknown {
+		this.Role = other.Role
+	}
+
 	if other.Salt != nil {
 		this.Salt = other.Salt
 	}
@@ -220,6 +234,7 @@ func (this *ServerUser) Clone() *ServerUser {
 	return &ServerUser{
 		Email:  this.Email,
 		Name:   this.Name,
+		Role:   this.Role,
 		Salt:   this.Salt,
 		Tokens: slices.Clone(this.Tokens),
 		Roles:  maps.Clone(this.Roles),
@@ -231,6 +246,7 @@ func (this *ServerUser) MustToRow() []string {
 	return []string{
 		this.Email,
 		util.PointerToString(this.Name),
+		this.Role.String(),
 		util.PointerToString(this.Salt),
 		util.MustToJSON(this.Tokens),
 		util.MustToJSON(this.Roles),

@@ -10,7 +10,7 @@ import (
 
 func TestLMSSync(test *testing.T) {
 	testCases := []struct {
-		role       model.UserRole
+		role       model.CourseUserRole
 		dryRun     bool
 		skipEmails bool
 		permError  bool

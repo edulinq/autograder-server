@@ -12,7 +12,7 @@ import (
 
 func TestHistory(test *testing.T) {
 	testCases := []struct {
-		role      model.UserRole
+		role      model.CourseUserRole
 		target    string
 		found     bool
 		permError bool

@@ -14,7 +14,7 @@ func TestUserRemove(test *testing.T) {
 	defer db.ResetForTesting()
 
 	testCases := []struct {
-		role           model.UserRole
+		role           model.CourseUserRole
 		target         string
 		basicPermError bool
 		advPermError   bool

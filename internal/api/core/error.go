@@ -211,7 +211,7 @@ func NewAuthBadRequestError(locator string, request *APIRequestCourseUserContext
 	return err
 }
 
-func NewBadPermissionsError(locator string, request *APIRequestCourseUserContext, minRole model.UserRole, internalMessage string) *APIError {
+func NewBadPermissionsError(locator string, request *APIRequestCourseUserContext, minRole model.CourseUserRole, internalMessage string) *APIError {
 	err := &APIError{
 		RequestID:    request.RequestID,
 		Locator:      locator,

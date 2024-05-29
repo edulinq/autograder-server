@@ -59,11 +59,11 @@ func SendTestAPIRequest(test *testing.T, endpoint string, fields map[string]any)
 // a standard test request plus whatever other fields are specified.
 // Provided fields will override base fields.
 // The given role will choose the user (the test course has one user per role).
-func SendTestAPIRequestFull(test *testing.T, endpoint string, fields map[string]any, paths []string, role model.UserRole) *APIResponse {
+func SendTestAPIRequestFull(test *testing.T, endpoint string, fields map[string]any, paths []string, role model.CourseUserRole) *APIResponse {
 	url := serverURL + endpoint
 
-	email := model.GetRoleString(role) + "@test.com"
-	pass := util.Sha256HexFromString(model.GetRoleString(role))
+	email := role.String() + "@test.com"
+	pass := util.Sha256HexFromString(role.String())
 
 	content := map[string]any{
 		"course-id":     "course101",

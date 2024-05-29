@@ -10,7 +10,7 @@ import (
 
 func TestUserAuth(test *testing.T) {
 	testCases := []struct {
-		role     model.UserRole
+		role     model.CourseUserRole
 		email    string
 		pass     string
 		expected AuthResponse

@@ -10,7 +10,7 @@ type FetchSubmissionsRequest struct {
 	core.APIRequestAssignmentContext
 	core.MinRoleGrader
 
-	FilterRole model.UserRole `json:"filter-role"`
+	FilterRole model.CourseUserRole `json:"filter-role"`
 }
 
 type FetchSubmissionsResponse struct {

@@ -19,7 +19,7 @@ func TestFetchSubmission(test *testing.T) {
 	}
 
 	testCases := []struct {
-		role             model.UserRole
+		role             model.CourseUserRole
 		targetEmail      string
 		targetSubmission string
 		foundUser        bool

@@ -18,7 +18,7 @@ func TestFetchAttempts(test *testing.T) {
 	}
 
 	testCases := []struct {
-		role        model.UserRole
+		role        model.CourseUserRole
 		targetEmail string
 		foundUser   bool
 		permError   bool

@@ -11,7 +11,7 @@ import (
 
 func TestFetchSubmissions(test *testing.T) {
 	testCases := []struct {
-		role      model.UserRole
+		role      model.CourseUserRole
 		permError bool
 	}{
 		{model.RoleOther, true},

@@ -34,7 +34,7 @@ func main() {
 		log.Fatal("Could not load config options.", err)
 	}
 
-	role := model.GetRole(args.Role)
+	role := model.GetCourseUserRole(args.Role)
 	if role == model.RoleUnknown {
 		log.Fatal("Unknown role.", log.NewAttr("role", args.Role))
 	}
@@ -78,7 +78,7 @@ func getUsers(path string) map[string]*model.User {
 	return users
 }
 
-func makeNewUser(email string, name string, pass string, role model.UserRole) (*model.User, string) {
+func makeNewUser(email string, name string, pass string, role model.CourseUserRole) (*model.User, string) {
 	newUser := model.NewUser(email, name, role)
 
 	var err error

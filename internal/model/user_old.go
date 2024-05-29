@@ -34,16 +34,16 @@ const (
 )
 
 type User struct {
-	Email string   `json:"email"`
-	Name  string   `json:"name"`
-	Role  UserRole `json:"role"`
-	Pass  string   `json:"pass"`
-	Salt  string   `json:"salt"`
+	Email string         `json:"email"`
+	Name  string         `json:"name"`
+	Role  CourseUserRole `json:"role"`
+	Pass  string         `json:"pass"`
+	Salt  string         `json:"salt"`
 
 	LMSID string `json:"lms-id"`
 }
 
-func NewUser(email string, name string, role UserRole) *User {
+func NewUser(email string, name string, role CourseUserRole) *User {
 	return &User{
 		Email: email,
 		Name:  name,

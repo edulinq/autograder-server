@@ -83,7 +83,7 @@ func TestFetchLogs(test *testing.T) {
 	timeAfterLogs := time.Now().Add(10 * time.Second).Format(time.RFC3339)
 
 	testCases := []struct {
-		role            model.UserRole
+		role            model.CourseUserRole
 		permError       bool
 		level           string
 		after           string

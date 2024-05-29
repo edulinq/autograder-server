@@ -159,7 +159,7 @@ func checkRequestTargetUserSelfOrAdmin(endpoint string, apiRequest any, fieldInd
 	return checkRequestTargetUserSelfOrRole(endpoint, apiRequest, fieldIndex, model.RoleAdmin)
 }
 
-func checkRequestTargetUserSelfOrRole(endpoint string, apiRequest any, fieldIndex int, minRole model.UserRole) *APIError {
+func checkRequestTargetUserSelfOrRole(endpoint string, apiRequest any, fieldIndex int, minRole model.CourseUserRole) *APIError {
 	courseContext, users, apiErr := baseCheckRequestUsersField(endpoint, apiRequest, fieldIndex)
 	if apiErr != nil {
 		return apiErr

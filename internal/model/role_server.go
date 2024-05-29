@@ -1,0 +1,91 @@
+package model
+
+import (
+	"bytes"
+	"encoding/json"
+	"fmt"
+	"strings"
+)
+
+// Sevrer user roles represent a user's role within an autograder server instance.
+type ServerUserRole int
+
+// ServerRoleUnknown is the zero value and no user should have this role (it is a validation error).
+// ServerRoleOther is for miscellaneous users that cannot be enrolled in a course.
+// ServerRoleUser is for standard users (these users can even be owners of courses).
+// ServerRoleCourseCreator is for users that can create courses, and administrate their OWN courses.
+// ServerRoleAdmin is for users that can administrate ALL courses.
+// ServerRoleOwner is for the top-level authorities (that are real users) on the server.
+// ServerRoleRoot is not for an actual user (will be a validation error), but the authority given when running CMDs directly.
+const (
+	ServerRoleUnknown       ServerUserRole = 0
+	ServerRoleOther                        = 10
+	ServerRoleUser                         = 20
+	ServerRoleCourseCreator                = 30
+	ServerRoleAdmin                        = 40
+	ServerRoleOwner                        = 50
+	ServerRoleRoot                         = 60
+)
+
+var serverRoleToString = map[ServerUserRole]string{
+	ServerRoleUnknown:       "unknown",
+	ServerRoleOther:         "other",
+	ServerRoleUser:          "user",
+	ServerRoleCourseCreator: "creator",
+	ServerRoleAdmin:         "admin",
+	ServerRoleOwner:         "owner",
+	ServerRoleRoot:          "root",
+}
+
+var stringToServerUserRole = map[string]ServerUserRole{
+	"unknown": ServerRoleUnknown,
+	"other":   ServerRoleOther,
+	"user":    ServerRoleUser,
+	"creator": ServerRoleCourseCreator,
+	"admin":   ServerRoleAdmin,
+	"owner":   ServerRoleOwner,
+	"root":    ServerRoleRoot,
+}
+
+func GetServerUserRole(text string) ServerUserRole {
+	return stringToServerUserRole[text]
+}
+
+func GetAllSevrerUserRoles() map[ServerUserRole]string {
+	return serverRoleToString
+}
+
+func GetAllServerUserRoleSStrings() map[string]ServerUserRole {
+	return stringToServerUserRole
+}
+
+func (this ServerUserRole) String() string {
+	return serverRoleToString[this]
+}
+
+func (this ServerUserRole) MarshalJSON() ([]byte, error) {
+	buffer := bytes.NewBufferString(`"`)
+	buffer.WriteString(serverRoleToString[this])
+	buffer.WriteString(`"`)
+	return buffer.Bytes(), nil
+}
+
+func (this *ServerUserRole) UnmarshalJSON(data []byte) error {
+	var temp string
+
+	err := json.Unmarshal(data, &temp)
+	if err != nil {
+		return err
+	}
+
+	temp = strings.ToLower(temp)
+
+	var ok bool
+	*this, ok = stringToServerUserRole[temp]
+	if !ok {
+		*this = ServerRoleUnknown
+		return fmt.Errorf("ServerRoleUnknown ServerUserRole value: '%s'.", temp)
+	}
+
+	return nil
+}

@@ -11,7 +11,7 @@ import (
 
 func TestUserGet(test *testing.T) {
 	testCases := []struct {
-		role      model.UserRole
+		role      model.CourseUserRole
 		target    string
 		permError bool
 		expected  *core.UserInfo

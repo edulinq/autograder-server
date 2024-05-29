@@ -247,7 +247,7 @@ func validateRequestStruct(request any, endpoint string) (bool, *APIError) {
 // go through all the fields and look for fields typed as the encoded MinRole* fields.
 // Return the maximum amongst the found roles.
 // Return: (role, found role).
-func getMaxRole(request any) (model.UserRole, bool) {
+func getMaxRole(request any) (model.CourseUserRole, bool) {
 	reflectValue := reflect.ValueOf(request)
 
 	// Dereference any pointer.

@@ -14,7 +14,7 @@ func TestRemoveSubmission(test *testing.T) {
 	defer db.ResetForTesting()
 
 	testCases := []struct {
-		role             model.UserRole
+		role             model.CourseUserRole
 		targetEmail      string
 		targetSubmission string
 		foundUser        bool

@@ -11,7 +11,7 @@ func TestUserCourseUserValidate(test *testing.T) {
 	testCases := []struct {
 		Email    string
 		Name     *string
-		Role     UserRole
+		Role     CourseUserRole
 		LMSID    *string
 		Expected *CourseUser
 	}{
@@ -193,7 +193,7 @@ func TestUserCourseUserGetServerUser(test *testing.T) {
 
 		// Validation Error
 		{
-			setCourseUserRole(baseTestCourseUser, RoleUnknown),
+			setCourseCourseUserRole(baseTestCourseUser, RoleUnknown),
 			nil,
 			"course101",
 			true,
@@ -276,7 +276,7 @@ func TestUserCourseUserMustToRow(test *testing.T) {
 
 		// Role
 		{
-			setCourseUserRole(baseTestCourseUser, RoleGrader),
+			setCourseCourseUserRole(baseTestCourseUser, RoleGrader),
 			[]string{
 				"alice@test.com",
 				"Alice",
@@ -329,7 +329,7 @@ func setCourseUserName(user *CourseUser, name *string) *CourseUser {
 	return &newUser
 }
 
-func setCourseUserRole(user *CourseUser, role UserRole) *CourseUser {
+func setCourseCourseUserRole(user *CourseUser, role CourseUserRole) *CourseUser {
 	newUser := *user
 	newUser.Role = role
 	return &newUser

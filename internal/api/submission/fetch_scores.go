@@ -11,7 +11,7 @@ type FetchScoresRequest struct {
 	core.MinRoleGrader
 
 	// Filter results to only users with this role.
-	FilterRole model.UserRole `json:"filter-role"`
+	FilterRole model.CourseUserRole `json:"filter-role"`
 }
 
 type FetchScoresResponse struct {

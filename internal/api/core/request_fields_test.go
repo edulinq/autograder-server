@@ -415,12 +415,12 @@ func TestTargetUserSelfOrGrader(test *testing.T) {
 		return TargetUserSelfOrGrader{targetUser}
 	}
 
-	createRequest := func(role model.UserRole, target string) *testTargetUserSelfOrGraderRequestType {
+	createRequest := func(role model.CourseUserRole, target string) *testTargetUserSelfOrGraderRequestType {
 		return &testTargetUserSelfOrGraderRequestType{
 			APIRequestCourseUserContext: APIRequestCourseUserContext{
 				CourseID:  "course101",
-				UserEmail: model.GetRoleString(role) + "@test.com",
-				UserPass:  util.Sha256HexFromString(model.GetRoleString(role)),
+				UserEmail: role.String() + "@test.com",
+				UserPass:  util.Sha256HexFromString(role.String()),
 			},
 			User: TargetUserSelfOrGrader{
 				TargetUser{
@@ -430,7 +430,7 @@ func TestTargetUserSelfOrGrader(test *testing.T) {
 		}
 	}
 
-	isNonSelfPermError := func(role model.UserRole) bool {
+	isNonSelfPermError := func(role model.CourseUserRole) bool {
 		return role < model.RoleGrader
 	}
 
@@ -453,12 +453,12 @@ func TestTargetUserSelfOrAdmin(test *testing.T) {
 		return TargetUserSelfOrAdmin{targetUser}
 	}
 
-	createRequest := func(role model.UserRole, target string) *testTargetUserSelfOrAdminRequestType {
+	createRequest := func(role model.CourseUserRole, target string) *testTargetUserSelfOrAdminRequestType {
 		return &testTargetUserSelfOrAdminRequestType{
 			APIRequestCourseUserContext: APIRequestCourseUserContext{
 				CourseID:  "course101",
-				UserEmail: model.GetRoleString(role) + "@test.com",
-				UserPass:  util.Sha256HexFromString(model.GetRoleString(role)),
+				UserEmail: role.String() + "@test.com",
+				UserPass:  util.Sha256HexFromString(role.String()),
 			},
 			User: TargetUserSelfOrAdmin{
 				TargetUser{
@@ -468,7 +468,7 @@ func TestTargetUserSelfOrAdmin(test *testing.T) {
 		}
 	}
 
-	isNonSelfPermError := func(role model.UserRole) bool {
+	isNonSelfPermError := func(role model.CourseUserRole) bool {
 		return role < model.RoleAdmin
 	}
 
@@ -492,8 +492,8 @@ type userGetter interface {
 
 func testTargetUser[T comparable, V userGetter](test *testing.T,
 	createTargetType func(TargetUser) T,
-	createRequest func(model.UserRole, string) V,
-	isNonSelfPermError func(model.UserRole) bool) {
+	createRequest func(model.CourseUserRole, string) V,
+	isNonSelfPermError func(model.CourseUserRole) bool) {
 	course := db.MustGetTestCourse()
 
 	users, err := db.GetCourseUsers(course)
@@ -502,7 +502,7 @@ func testTargetUser[T comparable, V userGetter](test *testing.T,
 	}
 
 	testCases := []struct {
-		role      model.UserRole
+		role      model.CourseUserRole
 		target    string
 		permError bool
 		expected  T
@@ -577,7 +577,7 @@ func TestTargetUser(test *testing.T) {
 	}
 
 	testCases := []struct {
-		role     model.UserRole
+		role     model.CourseUserRole
 		target   string
 		expected TargetUser
 	}{
@@ -601,8 +601,8 @@ func TestTargetUser(test *testing.T) {
 		request := requestType{
 			APIRequestCourseUserContext: APIRequestCourseUserContext{
 				CourseID:  "course101",
-				UserEmail: model.GetRoleString(testCase.role) + "@test.com",
-				UserPass:  util.Sha256HexFromString(model.GetRoleString(testCase.role)),
+				UserEmail: testCase.role.String() + "@test.com",
+				UserPass:  util.Sha256HexFromString(testCase.role.String()),
 			},
 			User: TargetUser{
 				Email: testCase.target,

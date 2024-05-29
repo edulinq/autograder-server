@@ -55,7 +55,7 @@ func TestInvalidJSON(test *testing.T) {
 func TestGetMaxRole(test *testing.T) {
 	testCases := []struct {
 		value any
-		role  model.UserRole
+		role  model.CourseUserRole
 	}{
 		{struct{}{}, model.RoleUnknown},
 		{struct{ int }{}, model.RoleUnknown},
