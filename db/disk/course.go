@@ -4,6 +4,7 @@ import (
     "fmt"
     "path/filepath"
 
+    "github.com/edulinq/autograder/common"
     "github.com/edulinq/autograder/log"
     "github.com/edulinq/autograder/model"
     "github.com/edulinq/autograder/util"
@@ -12,8 +13,8 @@ import (
 const DISK_DB_COURSES_DIR = "courses";
 
 func (this *backend) ClearCourse(course *model.Course) error {
-    this.lock.Lock();
-    defer this.lock.Unlock();
+    common.Lock(course.GetID());
+    defer common.Unlock(course.GetID());
 
     err := util.RemoveDirent(this.getCourseDir(course));
     if (err != nil) {
@@ -24,8 +25,13 @@ func (this *backend) ClearCourse(course *model.Course) error {
 }
 
 func (this *backend) LoadCourse(path string) (*model.Course, error) {
-    this.lock.Lock();
-    defer this.lock.Unlock();
+    course, err := model.LoadCourseFromPath(path);
+    if (err != nil) {
+        return nil, err;
+    }
+
+    common.Lock(course.GetID());
+    defer common.Unlock(course.GetID());
 
     course, users, submissions, err := model.FullLoadCourseFromPath(path);
     if (err != nil) {
@@ -60,8 +66,8 @@ func (this *backend) SaveCourse(course *model.Course) error {
 
 func (this *backend) saveCourseLock(course *model.Course, acquireLock bool) error {
     if (acquireLock) {
-        this.lock.Lock();
-        defer this.lock.Unlock();
+        common.Lock(course.GetID());
+        defer common.Unlock(course.GetID());
     }
 
     util.MkDir(this.getCourseDir(course));
@@ -82,8 +88,8 @@ func (this *backend) saveCourseLock(course *model.Course, acquireLock bool) erro
 }
 
 func (this *backend) DumpCourse(course *model.Course, targetDir string) error {
-    this.lock.RLock();
-    defer this.lock.RUnlock();
+    common.ReadLock(course.GetID());
+    defer common.ReadUnlock(course.GetID());
 
     // Just directly copy the course's dir in the DB.
     err := util.CopyDirContents(this.getCourseDir(course), targetDir);
@@ -95,8 +101,8 @@ func (this *backend) DumpCourse(course *model.Course, targetDir string) error {
 }
 
 func (this *backend) GetCourse(courseID string) (*model.Course, error) {
-    this.lock.RLock();
-    defer this.lock.RUnlock();
+    common.ReadLock(courseID);
+    defer common.ReadUnlock(courseID);
 
     path := this.getCoursePathFromID(courseID);
     if (!util.PathExists(path)) {
@@ -107,8 +113,8 @@ func (this *backend) GetCourse(courseID string) (*model.Course, error) {
 }
 
 func (this *backend) GetCourses() (map[string]*model.Course, error) {
-    this.lock.RLock();
-    defer this.lock.RUnlock();
+    common.ReadLock("all-courses");
+    defer common.ReadUnlock("all-courses");
 
     coursesDir := filepath.Join(this.baseDir, DISK_DB_COURSES_DIR);
 

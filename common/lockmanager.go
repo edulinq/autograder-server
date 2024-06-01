@@ -60,7 +60,6 @@ func lock(key string, read bool) {
     }
 
     lock.lockCount++;
-
     lock.timestamp = time.Now();
 }
 
@@ -87,7 +86,6 @@ func unlock(key string, read bool) error {
     }
 
     lock.lockCount--;
-
     lock.timestamp = time.Now();
 
     return nil;
