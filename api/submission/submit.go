@@ -11,12 +11,14 @@ type SubmitRequest struct {
     core.APIRequestAssignmentContext
     core.MinRoleStudent
     Files core.POSTFiles
-
+    
     Message string `json:"message"`
+    LateAcknowledgment bool `json:"late-acknowledgment"`
 }
 
 type SubmitResponse struct {
     Rejected bool `json:"rejected"`
+    RequireLateAcknowledgment bool `json:"require-late-acknowledgment"`
     Message string `json:"message"`
 
     GradingSucess bool `json:"grading-success"`
@@ -26,7 +28,7 @@ type SubmitResponse struct {
 func HandleSubmit(request *SubmitRequest) (*SubmitResponse, *core.APIError) {
     response := SubmitResponse{};
 
-    result, reject, err := grader.GradeDefault(request.Assignment, request.Files.TempDir, request.User.Email, request.Message);
+    result, reject, err := grader.GradeDefault(request.Assignment, request.Files.TempDir, request.User.Email, request.Message, request.LateAcknowledgment);
     if (err != nil) {
         stdout := "";
         stderr := "";
@@ -46,6 +48,11 @@ func HandleSubmit(request *SubmitRequest) (*SubmitResponse, *core.APIError) {
 
         response.Rejected = true;
         response.Message = reject.String();
+
+        if _, ok := reject.(*grader.RejectMissingLateAcknowledgment); ok {
+            response.RequireLateAcknowledgment = true;
+        }
+        
         return &response, nil;
     }
 

@@ -38,7 +38,17 @@ func (this *RejectWindowMax) String() string {
             nextTime.Format(time.RFC1123), delta.String());
 }
 
-func checkForRejection(assignment *model.Assignment, submissionPath string, user string, message string) (RejectReason, error) {
+type RejectMissingLateAcknowledgment struct {}
+
+func (this *RejectMissingLateAcknowledgment) String() string {
+    return "This assignment is past the due date and the late policy will be applied."
+}
+
+func checkForRejection(assignment *model.Assignment, submissionPath string, user string, message string, lateAcknowledgment bool) (RejectReason, error) {
+    reject, err := checkLateAcknowledgment(assignment, lateAcknowledgment)
+    if reject != nil || err != nil {
+        return reject, err
+    }
     return checkSubmissionLimit(assignment, user);
 }
 
@@ -124,4 +134,35 @@ func checkSubmissionLimitWindow(window *model.SubmittionLimitWindow,
     }
 
     return nil, nil;
+}
+
+func checkLateAcknowledgment(assignment *model.Assignment, lateAcknowledgment bool) (RejectReason, error) {
+    // If the user acknowledges that they are submitting late, do not reject the submission.
+    if lateAcknowledgment {
+        return nil, nil
+    }
+
+    policy := assignment.GetLatePolicy()
+    
+    if policy.Type == model.EmptyPolicy || policy.Type == model.BaselinePolicy {
+        return nil, nil
+    }
+
+    dueDate := assignment.DueDate
+
+    if dueDate.IsZero() {
+        return nil, nil
+    }
+
+    dueDateTime, err := dueDate.Time()
+
+    if err != nil {
+        return nil, err
+    }
+
+    if time.Now().After(dueDateTime) {
+        return &RejectMissingLateAcknowledgment{}, nil
+    }
+
+    return nil, nil
 }
