@@ -157,39 +157,6 @@ func (this *GetUser) Run(course *model.Course) error {
 	return nil
 }
 
-type ListUsers struct {
-	All bool `help:"Show more info about each user." short:"a" default:"false"`
-}
-
-func (this *ListUsers) Run(course *model.Course) error {
-	users, err := db.GetCourseUsers(course)
-	if err != nil {
-		return fmt.Errorf("Failed to load users: '%w'.", err)
-	}
-
-	if this.All {
-		fmt.Printf("%s\t%s\t%s\n", "Email", "Name", "Role")
-	}
-
-	emailList := make([]string, 0, len(users))
-	for email, _ := range users {
-		emailList = append(emailList, email)
-	}
-	slices.Sort(emailList)
-
-	for _, email := range emailList {
-		user := users[email]
-
-		if this.All {
-			fmt.Printf("%s\t%s\t%s\n", user.Email, user.Name, user.Role)
-		} else {
-			fmt.Println(user.Email)
-		}
-	}
-
-	return nil
-}
-
 type ChangePassword struct {
 	Email     string `help:"Email for the user." arg:"" required:""`
 	Pass      string `help:"Password for the user. Defaults to a random string (will be output)." short:"p"`
@@ -244,12 +211,11 @@ var cli struct {
 	config.ConfigArgs
 	Course string `help:"ID of the course."`
 
-	Add    AddUser   `cmd:"" help:"Add a user."`
-	AddTSV AddTSV    `cmd:"" help:"Add users from a TSV file formatted as: '<email>[\t<name>[\t<role>[\t<password>]]]'. See add for default values."`
-	Auth   AuthUser  `cmd:"" help:"Authenticate as a user."`
-	Get    GetUser   `cmd:"" help:"Get a user."`
-	Ls     ListUsers `cmd:"" help:"List users."`
-	Rm     RmUser    `cmd:"" help:"Remove a user."`
+	Add    AddUser  `cmd:"" help:"Add a user."`
+	AddTSV AddTSV   `cmd:"" help:"Add users from a TSV file formatted as: '<email>[\t<name>[\t<role>[\t<password>]]]'. See add for default values."`
+	Auth   AuthUser `cmd:"" help:"Authenticate as a user."`
+	Get    GetUser  `cmd:"" help:"Get a user."`
+	Rm     RmUser   `cmd:"" help:"Remove a user."`
 }
 
 func main() {

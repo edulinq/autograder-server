@@ -11,7 +11,6 @@ import (
 type ServerUserRole int
 
 // ServerRoleUnknown is the zero value and no user should have this role (it is a validation error).
-// ServerRoleOther is for miscellaneous users that cannot be enrolled in a course.
 // ServerRoleUser is for standard users (these users can even be owners of courses).
 // ServerRoleCourseCreator is for users that can create courses, and administrate their OWN courses.
 // ServerRoleAdmin is for users that can administrate ALL courses.
@@ -19,17 +18,15 @@ type ServerUserRole int
 // ServerRoleRoot is not for an actual user (will be a validation error), but the authority given when running CMDs directly.
 const (
 	ServerRoleUnknown       ServerUserRole = 0
-	ServerRoleOther                        = 10
-	ServerRoleUser                         = 20
-	ServerRoleCourseCreator                = 30
-	ServerRoleAdmin                        = 40
-	ServerRoleOwner                        = 50
-	ServerRoleRoot                         = 60
+	ServerRoleUser                         = 10
+	ServerRoleCourseCreator                = 20
+	ServerRoleAdmin                        = 30
+	ServerRoleOwner                        = 40
+	ServerRoleRoot                         = 50
 )
 
 var serverRoleToString = map[ServerUserRole]string{
 	ServerRoleUnknown:       "unknown",
-	ServerRoleOther:         "other",
 	ServerRoleUser:          "user",
 	ServerRoleCourseCreator: "creator",
 	ServerRoleAdmin:         "admin",
@@ -39,7 +36,6 @@ var serverRoleToString = map[ServerUserRole]string{
 
 var stringToServerUserRole = map[string]ServerUserRole{
 	"unknown": ServerRoleUnknown,
-	"other":   ServerRoleOther,
 	"user":    ServerRoleUser,
 	"creator": ServerRoleCourseCreator,
 	"admin":   ServerRoleAdmin,
@@ -49,6 +45,10 @@ var stringToServerUserRole = map[string]ServerUserRole{
 
 func GetServerUserRole(text string) ServerUserRole {
 	return stringToServerUserRole[text]
+}
+
+func GetServerUserRoleString(role ServerUserRole) string {
+	return serverRoleToString[role]
 }
 
 func GetAllSevrerUserRoles() map[ServerUserRole]string {

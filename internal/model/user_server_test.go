@@ -8,6 +8,8 @@ import (
 	"github.com/edulinq/autograder/internal/util"
 )
 
+var baseTestToken *Token = MustNewToken("321cba", "abc123", TokenSourceServer, "test token")
+
 func TestUserServerUserValidate(test *testing.T) {
 	testCases := []struct {
 		Email    string
@@ -182,6 +184,26 @@ func TestUserServerUserValidate(test *testing.T) {
 			baseTestServerUser.Roles,
 			baseTestServerUser.LMSIDs,
 			nil,
+		},
+		{
+			baseTestServerUser.Email,
+			baseTestServerUser.Name,
+			baseTestServerUser.Role,
+			baseTestServerUser.Salt,
+			[]*Token{nil},
+			baseTestServerUser.Roles,
+			baseTestServerUser.LMSIDs,
+			nil,
+		},
+		{
+			baseTestServerUser.Email,
+			baseTestServerUser.Name,
+			baseTestServerUser.Role,
+			baseTestServerUser.Salt,
+			[]*Token{baseTestToken, baseTestToken},
+			baseTestServerUser.Roles,
+			baseTestServerUser.LMSIDs,
+			baseTestServerUser,
 		},
 
 		// Course Roles
@@ -371,7 +393,7 @@ func TestUserServerUserName(test *testing.T) {
 	}
 }
 
-func TestUserServerUserGetCourseUser(test *testing.T) {
+func TestUserServerUserToCourseUser(test *testing.T) {
 	testCases := []struct {
 		ServerUser *ServerUser
 		CourseUser *CourseUser
@@ -412,7 +434,7 @@ func TestUserServerUserGetCourseUser(test *testing.T) {
 	}
 
 	for i, testCase := range testCases {
-		courseUser, err := testCase.ServerUser.GetCourseUser(testCase.CourseID)
+		courseUser, err := testCase.ServerUser.ToCourseUser(testCase.CourseID)
 		if err != nil {
 			if !testCase.HasError {
 				test.Errorf("Case %d: Failed to get course user: '%v'.", i, err)
@@ -436,12 +458,14 @@ func TestUserServerUserMerge(test *testing.T) {
 	testCases := []struct {
 		Source   *ServerUser
 		Other    *ServerUser
+		Changed  bool
 		Expected *ServerUser
 	}{
 		// No Change.
 		{
 			baseTestServerUser,
 			minimalTestServerUser,
+			false,
 			baseTestServerUser,
 		},
 
@@ -449,11 +473,13 @@ func TestUserServerUserMerge(test *testing.T) {
 		{
 			baseTestServerUser,
 			nil,
+			false,
 			nil,
 		},
 		{
 			baseTestServerUser,
 			setServerUserEmail(minimalTestServerUser, "zzz"),
+			false,
 			nil,
 		},
 
@@ -461,6 +487,7 @@ func TestUserServerUserMerge(test *testing.T) {
 		{
 			baseTestServerUser,
 			setServerUserSalt(minimalTestServerUser, util.StringPointer("ZZZ")),
+			false,
 			nil,
 		},
 
@@ -468,16 +495,25 @@ func TestUserServerUserMerge(test *testing.T) {
 		{
 			baseTestServerUser,
 			setServerUserName(minimalTestServerUser, util.StringPointer("foo")),
+			true,
 			setServerUserName(baseTestServerUser, util.StringPointer("foo")),
 		},
 		{
 			baseTestServerUser,
 			setServerUserName(minimalTestServerUser, nil),
+			false,
 			baseTestServerUser,
+		},
+		{
+			setServerUserName(baseTestServerUser, nil),
+			setServerUserName(minimalTestServerUser, util.StringPointer("foo")),
+			true,
+			setServerUserName(baseTestServerUser, util.StringPointer("foo")),
 		},
 		{
 			baseTestServerUser,
 			setServerUserName(minimalTestServerUser, util.StringPointer("")),
+			true,
 			nil,
 		},
 
@@ -485,16 +521,19 @@ func TestUserServerUserMerge(test *testing.T) {
 		{
 			baseTestServerUser,
 			setServerUserRole(minimalTestServerUser, ServerRoleUnknown),
+			false,
 			baseTestServerUser,
 		},
 		{
 			baseTestServerUser,
 			setServerUserRole(minimalTestServerUser, ServerRoleOwner),
+			true,
 			setServerUserRole(baseTestServerUser, ServerRoleOwner),
 		},
 		{
 			baseTestServerUser,
 			setServerUserRole(minimalTestServerUser, ServerRoleRoot),
+			false,
 			nil,
 		},
 
@@ -502,12 +541,20 @@ func TestUserServerUserMerge(test *testing.T) {
 		{
 			baseTestServerUser,
 			setServerUserSalt(minimalTestServerUser, util.StringPointer("1234")),
+			true,
 			setServerUserSalt(baseTestServerUser, util.StringPointer("1234")),
 		},
 		{
 			baseTestServerUser,
 			setServerUserSalt(minimalTestServerUser, nil),
+			false,
 			baseTestServerUser,
+		},
+		{
+			setServerUserSalt(baseTestServerUser, nil),
+			setServerUserSalt(minimalTestServerUser, util.StringPointer("1234")),
+			true,
+			setServerUserSalt(baseTestServerUser, util.StringPointer("1234")),
 		},
 
 		// Tokens
@@ -515,18 +562,21 @@ func TestUserServerUserMerge(test *testing.T) {
 			// No tokens will be added.
 			baseTestServerUser,
 			setServerUserTokens(minimalTestServerUser, []*Token{}),
+			false,
 			baseTestServerUser,
 		},
 		{
 			// No tokens will be added.
 			baseTestServerUser,
 			setServerUserTokens(minimalTestServerUser, nil),
+			false,
 			baseTestServerUser,
 		},
 		{
 			// The token will be added.
 			baseTestServerUser,
 			setServerUserTokens(minimalTestServerUser, []*Token{newToken}),
+			true,
 			setServerUserTokens(baseTestServerUser, []*Token{baseToken, newToken}),
 		},
 
@@ -535,24 +585,28 @@ func TestUserServerUserMerge(test *testing.T) {
 			// No roles will be added.
 			baseTestServerUser,
 			setServerCourseUserRoles(minimalTestServerUser, map[string]CourseUserRole{}),
+			false,
 			baseTestServerUser,
 		},
 		{
 			// No roles will be added.
 			baseTestServerUser,
 			setServerCourseUserRoles(minimalTestServerUser, nil),
+			false,
 			baseTestServerUser,
 		},
 		{
 			// Role will be added.
 			baseTestServerUser,
 			setServerCourseUserRoles(minimalTestServerUser, map[string]CourseUserRole{"foo": RoleStudent}),
+			true,
 			setServerCourseUserRoles(baseTestServerUser, map[string]CourseUserRole{"course101": RoleStudent, "foo": RoleStudent}),
 		},
 		{
 			// Existing role will be overwritten.
 			baseTestServerUser,
 			setServerCourseUserRoles(minimalTestServerUser, map[string]CourseUserRole{"course101": RoleGrader}),
+			true,
 			setServerCourseUserRoles(baseTestServerUser, map[string]CourseUserRole{"course101": RoleGrader}),
 		},
 
@@ -561,24 +615,28 @@ func TestUserServerUserMerge(test *testing.T) {
 			// No lms ids will be added.
 			baseTestServerUser,
 			setServerUserLMSIDs(minimalTestServerUser, map[string]string{}),
+			false,
 			baseTestServerUser,
 		},
 		{
 			// No lms ids will be added.
 			baseTestServerUser,
 			setServerUserLMSIDs(minimalTestServerUser, nil),
+			false,
 			baseTestServerUser,
 		},
 		{
 			// LMSID will be added.
 			baseTestServerUser,
 			setServerUserLMSIDs(minimalTestServerUser, map[string]string{"foo": "bar"}),
+			true,
 			setServerUserLMSIDs(baseTestServerUser, map[string]string{"course101": "alice", "foo": "bar"}),
 		},
 		{
 			// Existing lms ids will be overwritten.
 			baseTestServerUser,
 			setServerUserLMSIDs(minimalTestServerUser, map[string]string{"course101": "bar"}),
+			true,
 			setServerUserLMSIDs(baseTestServerUser, map[string]string{"course101": "bar"}),
 		},
 	}
@@ -586,12 +644,18 @@ func TestUserServerUserMerge(test *testing.T) {
 	for i, testCase := range testCases {
 		source := testCase.Source.Clone()
 
-		err := source.Merge(testCase.Other)
+		changed, err := source.Merge(testCase.Other)
 		if err != nil {
 			if testCase.Expected != nil {
 				test.Errorf("Case %d: Failed to merge user: '%v'.", i, err)
 			}
 
+			continue
+		}
+
+		if testCase.Changed != changed {
+			test.Errorf("Case %d: Changed indicator not as expected. Expected: '%v', Actual: '%v'.",
+				i, testCase.Changed, changed)
 			continue
 		}
 
@@ -851,7 +915,7 @@ var baseTestServerUser *ServerUser = &ServerUser{
 	Name:   util.StringPointer("Alice"),
 	Role:   ServerRoleUser,
 	Salt:   util.StringPointer("abc123"),
-	Tokens: []*Token{MustNewToken("321cba", "abc123", TokenSourceServer, "test token")},
+	Tokens: []*Token{baseTestToken},
 	Roles:  map[string]CourseUserRole{"course101": RoleStudent},
 	LMSIDs: map[string]string{"course101": "alice"},
 }

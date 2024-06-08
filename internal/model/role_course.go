@@ -47,6 +47,10 @@ func GetCourseUserRole(text string) CourseUserRole {
 	return stringToCourseUserRole[text]
 }
 
+func GetCourseUserRoleString(role CourseUserRole) string {
+	return courseRoleToString[role]
+}
+
 func GetAllCourseUserRoles() map[CourseUserRole]string {
 	return courseRoleToString
 }

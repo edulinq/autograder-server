@@ -168,7 +168,7 @@ func TestUserCourseUserName(test *testing.T) {
 	}
 }
 
-func TestUserCourseUserGetServerUser(test *testing.T) {
+func TestUserCourseUserToServerUser(test *testing.T) {
 	testCases := []struct {
 		CourseUser *CourseUser
 		ServerUser *ServerUser
@@ -201,7 +201,7 @@ func TestUserCourseUserGetServerUser(test *testing.T) {
 	}
 
 	for i, testCase := range testCases {
-		serverUser, err := testCase.CourseUser.GetServerUser(testCase.CourseID)
+		serverUser, err := testCase.CourseUser.ToServerUser(testCase.CourseID)
 		if err != nil {
 			if !testCase.HasError {
 				test.Errorf("Case %d: Failed to get server user: '%v'.", i, err)

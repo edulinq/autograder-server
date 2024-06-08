@@ -12,6 +12,8 @@ import (
 	"github.com/edulinq/autograder/internal/util"
 )
 
+// TEST
+
 type SyncLMSTestCase struct {
 	dryRun         bool
 	sendEmails     bool

@@ -4,6 +4,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"maps"
+	"slices"
 	"strings"
 
 	"github.com/edulinq/autograder/internal/common"
@@ -55,6 +56,7 @@ func (this *ServerUser) Validate() error {
 		}
 	}
 
+	// TEST
 	if this.Role == ServerRoleRoot {
 		return fmt.Errorf("User '%s' has a root server role. Normal users are not allowed to have this role.", this.Email)
 	}
@@ -79,6 +81,9 @@ func (this *ServerUser) Validate() error {
 			return fmt.Errorf("User '%s' has a token (index %d) that is invalid: '%w'.", this.Email, i, err)
 		}
 	}
+
+	slices.SortFunc(this.Tokens, TokenPointerCompare)
+	this.Tokens = slices.CompactFunc(this.Tokens, TokenPointerEqual)
 
 	if this.Roles == nil {
 		this.Roles = make(map[string]CourseUserRole, 0)
@@ -148,7 +153,7 @@ func (this *ServerUser) GetDisplayName() string {
 
 // Convert this server user into a course user for the specific course.
 // Will return (nil, nil) if the user is not enrolled in the given course.
-func (this *ServerUser) GetCourseUser(courseID string) (*CourseUser, error) {
+func (this *ServerUser) ToCourseUser(courseID string) (*CourseUser, error) {
 	role, exists := this.Roles[courseID]
 	if !exists {
 		return nil, nil
@@ -175,25 +180,34 @@ func (this *ServerUser) GetCourseUser(courseID string) (*CourseUser, error) {
 // Any given tokens will be added.
 // Any Roles or LMSIDs will be upserted.
 // After all merging, this user will be validated.
-func (this *ServerUser) Merge(other *ServerUser) error {
+// The returned boolean indicates if the context user was changed at all.
+func (this *ServerUser) Merge(other *ServerUser) (bool, error) {
 	if other == nil {
-		return fmt.Errorf("Cannot merge with nil user.")
+		return false, fmt.Errorf("Cannot merge with nil user.")
 	}
 
 	if this.Email != other.Email {
-		return fmt.Errorf("Cannot merge users with different emails ('%s' and '%s').", this.Email, other.Email)
+		return false, fmt.Errorf("Cannot merge users with different emails ('%s' and '%s').", this.Email, other.Email)
 	}
 
-	if other.Name != nil {
-		this.Name = other.Name
+	changed := false
+	numTokens := len(this.Tokens)
+
+	if (other.Name != nil) && ((this.Name == nil) || (*this.Name != *other.Name)) {
+		changed = true
+		newName := *other.Name
+		this.Name = &newName
 	}
 
-	if other.Role != ServerRoleUnknown {
+	if (other.Role != ServerRoleUnknown) && (this.Role != other.Role) {
+		changed = true
 		this.Role = other.Role
 	}
 
-	if other.Salt != nil {
-		this.Salt = other.Salt
+	if (other.Salt != nil) && ((this.Salt == nil) || (*this.Salt != *other.Salt)) {
+		changed = true
+		newSalt := *other.Salt
+		this.Salt = &newSalt
 	}
 
 	if other.Tokens != nil {
@@ -203,18 +217,33 @@ func (this *ServerUser) Merge(other *ServerUser) error {
 	}
 
 	if other.Roles != nil {
-		for key, value := range other.Roles {
-			this.Roles[key] = value
+		for key, newRole := range other.Roles {
+			if this.Roles[key] != newRole {
+				changed = true
+				this.Roles[key] = newRole
+			}
 		}
 	}
 
 	if other.LMSIDs != nil {
-		for key, value := range other.LMSIDs {
-			this.LMSIDs[key] = value
+		for key, lmsID := range other.LMSIDs {
+			if this.LMSIDs[key] != lmsID {
+				changed = true
+				this.LMSIDs[key] = lmsID
+			}
 		}
 	}
 
-	return this.Validate()
+	err := this.Validate()
+	if err != nil {
+		return false, err
+	}
+
+	// Tokens will be sorted and compacted during validation.
+	// Confirm the number of tokens (since they are addative in merges).
+	changed = changed || (numTokens != len(this.Tokens))
+
+	return changed, nil
 }
 
 // Deep copy this user (which should already be validated).
@@ -250,4 +279,12 @@ func (this *ServerUser) MustToRow() []string {
 		util.MustToJSON(this.Roles),
 		util.MustToJSON(this.LMSIDs),
 	}
+}
+
+func (this *ServerUser) GetCourses() []string {
+	courses := make([]string, 0, len(this.Roles))
+	for course, _ := range this.Roles {
+		courses = append(courses, course)
+	}
+	return courses
 }

@@ -27,6 +27,11 @@ type LMSAdapter struct {
 	SyncAssignments bool `json:"sync-assignments,omitempty"`
 }
 
+type LMSSyncResult struct {
+	UserSync       []*UserOpResult       `json:"user-sync"`
+	AssignmentSync *AssignmentSyncResult `json:"assignment-sync"`
+}
+
 func (this *LMSAdapter) Validate() error {
 	if this.Type == "" {
 		return fmt.Errorf("LMS type cannot be empty.")
@@ -34,4 +39,9 @@ func (this *LMSAdapter) Validate() error {
 	this.Type = strings.ToLower(this.Type)
 
 	return nil
+}
+
+// Returns true if any aspect of users is synced.
+func (this *LMSAdapter) SyncUsers() bool {
+	return this.SyncUserAttributes || this.SyncUserAdds || this.SyncUserRemoves
 }

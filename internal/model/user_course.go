@@ -76,7 +76,7 @@ func (this *CourseUser) GetDisplayName() string {
 	return this.GetName(true)
 }
 
-func (this *CourseUser) GetServerUser(courseID string) (*ServerUser, error) {
+func (this *CourseUser) ToServerUser(courseID string) (*ServerUser, error) {
 	serverUser := &ServerUser{
 		Email: this.Email,
 		Name:  this.Name,

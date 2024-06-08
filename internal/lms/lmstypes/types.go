@@ -34,3 +34,15 @@ type Assignment struct {
 	DueDate     *time.Time
 	MaxPoints   float64
 }
+
+func (this *User) ToRawUserData(courseID string) *model.RawUserData {
+	data := &model.RawUserData{
+		Email:       this.Email,
+		Name:        this.Name,
+		Course:      courseID,
+		CourseRole:  this.Role,
+		CourseLMSID: this.ID,
+	}
+
+	return data
+}

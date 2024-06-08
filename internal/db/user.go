@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/edulinq/autograder/internal/log"
 	"github.com/edulinq/autograder/internal/model"
 )
 
@@ -34,6 +35,15 @@ func GetServerUser(email string, includeTokens bool) (*model.ServerUser, error) 
 	return backend.GetServerUser(email, includeTokens)
 }
 
+func MustGetServerUser(email string, includeTokens bool) *model.ServerUser {
+	user, err := GetServerUser(email, includeTokens)
+	if err != nil {
+		log.Fatal("Faled to get server user.", err, log.NewUserAttr(email))
+	}
+
+	return user
+}
+
 // See Backend.
 func UpsertUsers(users map[string]*model.ServerUser) error {
 	if backend == nil {
@@ -59,7 +69,7 @@ func GetCourseUser(course *model.Course, email string) (*model.CourseUser, error
 		return nil, nil
 	}
 
-	return serverUser.GetCourseUser(course.ID)
+	return serverUser.ToCourseUser(course.ID)
 }
 
 // Convenience function for UpsertUsers() with a single user.
@@ -74,7 +84,7 @@ func UpsertCourseUsers(course *model.Course, users map[string]*model.CourseUser)
 
 	var userErrors error = nil
 	for email, user := range users {
-		serverUser, err := user.GetServerUser(course.ID)
+		serverUser, err := user.ToServerUser(course.ID)
 		if err != nil {
 			userErrors = errors.Join(userErrors, fmt.Errorf("Invalid user '%s': '%w'.", email, err))
 		} else {

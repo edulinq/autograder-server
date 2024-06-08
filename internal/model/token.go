@@ -17,6 +17,8 @@ import (
 // E.g., tokens could be created by the request of the user, or by the server when adding a user.
 type TokenSource string
 
+const DEFAULT_SALT string = "c75385ab94f66b3454e93cb0d0546fc1"
+
 const (
 	TokenSourceUnknown  TokenSource = ""
 	TokenSourceServer               = "server"
@@ -84,19 +86,32 @@ func MustNewToken(input string, salt string, source TokenSource, name string) *T
 
 // Generate a random input string, sha256 that random string, use the output to create a token, and return the random cleartext and token.
 func NewRandomToken(salt string, source TokenSource, name string) (string, *Token, error) {
-	clearText, err := util.RandHex(DEFAULT_TOKEN_LEN)
+	cleartext, err := util.RandHex(DEFAULT_TOKEN_LEN)
 	if err != nil {
 		return "", nil, fmt.Errorf("Failed to generate random token ('%s'): '%w'.", name, err)
 	}
 
-	input := util.Sha256HexFromString(clearText)
+	input := util.Sha256HexFromString(cleartext)
 
 	token, err := NewToken(input, salt, source, name)
 	if err != nil {
 		return "", nil, err
 	}
 
-	return clearText, token, nil
+	return cleartext, token, nil
+}
+
+// Get a new random salt.
+// Salts must be hex encoded strings.
+// If a salt could not be generated, an error will be logged and a default salt will be returned.
+func ShouldNewRandomSalt() string {
+	salt, err := NewRandomSalt()
+	if err != nil {
+		log.Error("Failed to generate salt.", err)
+		return DEFAULT_SALT
+	}
+
+	return salt
 }
 
 // Get a new random salt.
@@ -104,7 +119,7 @@ func NewRandomToken(salt string, source TokenSource, name string) (string, *Toke
 func NewRandomSalt() (string, error) {
 	saltBytes, err := util.RandBytes(SALT_LENGTH_BYTES)
 	if err != nil {
-		return "", fmt.Errorf("Could not generate salt: '%w'.", err)
+		return "", fmt.Errorf("Failed to generate salt: '%w'.", err)
 	}
 
 	return hex.EncodeToString(saltBytes), nil

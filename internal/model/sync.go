@@ -1,10 +1,5 @@
 package model
 
-type LMSSyncResult struct {
-	UserSync       *UserSyncResult       `json:"user-sync"`
-	AssignmentSync *AssignmentSyncResult `json:"assignment-sync"`
-}
-
 type AssignmentSyncResult struct {
 	SyncedAssignments     []AssignmentInfo `json:"synced-assignments"`
 	AmbiguousMatches      []AssignmentInfo `json:"ambiguous-matches"`
