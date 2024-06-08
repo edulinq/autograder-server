@@ -18,6 +18,7 @@ import (
 type TokenSource string
 
 const DEFAULT_SALT string = "c75385ab94f66b3454e93cb0d0546fc1"
+const TOKEN_PASSWORD_NAME = "password"
 
 const (
 	TokenSourceUnknown  TokenSource = ""
@@ -86,7 +87,7 @@ func MustNewToken(input string, salt string, source TokenSource, name string) *T
 
 // Generate a random input string, sha256 that random string, use the output to create a token, and return the random cleartext and token.
 func NewRandomToken(salt string, source TokenSource, name string) (string, *Token, error) {
-	cleartext, err := util.RandHex(DEFAULT_TOKEN_LEN)
+	cleartext, err := RandomCleartext()
 	if err != nil {
 		return "", nil, fmt.Errorf("Failed to generate random token ('%s'): '%w'.", name, err)
 	}
@@ -99,6 +100,10 @@ func NewRandomToken(salt string, source TokenSource, name string) (string, *Toke
 	}
 
 	return cleartext, token, nil
+}
+
+func RandomCleartext() (string, error) {
+	return util.RandHex(DEFAULT_TOKEN_LEN)
 }
 
 // Get a new random salt.

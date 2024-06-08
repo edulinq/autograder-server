@@ -15,6 +15,8 @@ type RawUserData struct {
 	CourseLMSID string
 }
 
+// Get a server user representation of this data.
+// Passwords will NOT be converted into tokens (as the source salt is unknown).
 func (this *RawUserData) ToServerUser() (*ServerUser, error) {
 	user := &ServerUser{
 		Email: this.Email,

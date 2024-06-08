@@ -9,19 +9,17 @@ import (
 	"github.com/edulinq/autograder/internal/util"
 )
 
-// TEST - More expected users
+var PLACEHOLDER_PASS string = "<placeholder_pass>"
+var PLACEHOLDER_SALT *string = util.StringPointer("abcd")
 
-const (
-	PASS_PLACEHOLDER = "<placeholder_pass>"
-)
-
-// TEST - Add tokens
+// TEST - Send emails
 
 func TestUpsertUser(test *testing.T) {
 	db.ResetForTesting()
 	defer db.ResetForTesting()
 
 	testCases := []struct {
+		// Do not set DryRun, this will be set automatically.
 		options      UpsertUsersOptions
 		expected     *model.UserOpResult
 		expectedUser *model.ServerUser
@@ -46,7 +44,7 @@ func TestUpsertUser(test *testing.T) {
 			expectedUser: &model.ServerUser{
 				Email:  "new@test.com",
 				Name:   util.StringPointer("new"),
-				Salt:   util.StringPointer("abcd"),
+				Salt:   PLACEHOLDER_SALT,
 				Role:   model.ServerRoleUser,
 				Tokens: []*model.Token{nil},
 			},
@@ -76,7 +74,7 @@ func TestUpsertUser(test *testing.T) {
 			expectedUser: &model.ServerUser{
 				Email:  "new@test.com",
 				Name:   util.StringPointer("new"),
-				Salt:   util.StringPointer("abcd"),
+				Salt:   PLACEHOLDER_SALT,
 				Role:   model.ServerRoleUser,
 				Tokens: []*model.Token{nil},
 				Roles:  map[string]model.CourseUserRole{"new-course": model.RoleStudent},
@@ -102,7 +100,7 @@ func TestUpsertUser(test *testing.T) {
 			expectedUser: &model.ServerUser{
 				Email:  "student@test.com",
 				Name:   util.StringPointer("new"),
-				Salt:   util.StringPointer("abcd"),
+				Salt:   PLACEHOLDER_SALT,
 				Role:   model.ServerRoleUser,
 				Tokens: []*model.Token{nil},
 				Roles: map[string]model.CourseUserRole{
@@ -141,7 +139,7 @@ func TestUpsertUser(test *testing.T) {
 			expectedUser: &model.ServerUser{
 				Email:  "student@test.com",
 				Name:   util.StringPointer("student"),
-				Salt:   util.StringPointer("abcd"),
+				Salt:   PLACEHOLDER_SALT,
 				Role:   model.ServerRoleUser,
 				Tokens: []*model.Token{nil},
 				Roles: map[string]model.CourseUserRole{
@@ -161,6 +159,77 @@ func TestUpsertUser(test *testing.T) {
 			},
 		},
 
+		// Set a new password.
+		{
+			options: UpsertUsersOptions{
+				RawUsers: []*model.RawUserData{
+					&model.RawUserData{
+						Email: "student@test.com",
+						Pass:  "1234",
+					},
+				},
+				ContextServerRole: model.ServerRoleAdmin,
+			},
+			expected: &model.UserOpResult{
+				Email:    "student@test.com",
+				Modified: true,
+			},
+			expectedUser: &model.ServerUser{
+				Email:  "student@test.com",
+				Name:   util.StringPointer("student"),
+				Salt:   PLACEHOLDER_SALT,
+				Role:   model.ServerRoleUser,
+				Tokens: []*model.Token{nil, nil},
+				Roles: map[string]model.CourseUserRole{
+					"course-languages":          model.RoleStudent,
+					"course-with-lms":           model.RoleStudent,
+					"course-without-source":     model.RoleStudent,
+					"course101":                 model.RoleStudent,
+					"course101-with-zero-limit": model.RoleStudent,
+				},
+				LMSIDs: map[string]string{
+					"course-languages":      "lms-student@test.com",
+					"course-with-lms":       "lms-student@test.com",
+					"course-without-source": "lms-student@test.com",
+				},
+			},
+		},
+
+		// Set a duplicate password.
+		{
+			options: UpsertUsersOptions{
+				RawUsers: []*model.RawUserData{
+					&model.RawUserData{
+						Email: "student@test.com",
+						Pass:  util.Sha256HexFromString("student"),
+					},
+				},
+				ContextServerRole: model.ServerRoleAdmin,
+			},
+			expected: &model.UserOpResult{
+				Email: "student@test.com",
+			},
+			expectedUser: &model.ServerUser{
+				Email:  "student@test.com",
+				Name:   util.StringPointer("student"),
+				Salt:   PLACEHOLDER_SALT,
+				Role:   model.ServerRoleUser,
+				Tokens: []*model.Token{nil},
+				Roles: map[string]model.CourseUserRole{
+					"course-languages":          model.RoleStudent,
+					"course-with-lms":           model.RoleStudent,
+					"course-without-source":     model.RoleStudent,
+					"course101":                 model.RoleStudent,
+					"course101-with-zero-limit": model.RoleStudent,
+				},
+				LMSIDs: map[string]string{
+					"course-languages":      "lms-student@test.com",
+					"course-with-lms":       "lms-student@test.com",
+					"course-without-source": "lms-student@test.com",
+				},
+			},
+		},
+
 		// New user without password.
 		{
 			options: UpsertUsersOptions{
@@ -175,11 +244,11 @@ func TestUpsertUser(test *testing.T) {
 			expected: &model.UserOpResult{
 				Email:             "new@test.com",
 				Added:             true,
-				CleartextPassword: PASS_PLACEHOLDER,
+				CleartextPassword: PLACEHOLDER_PASS,
 			},
 			expectedUser: &model.ServerUser{
 				Email:  "new@test.com",
-				Salt:   util.StringPointer("abcd"),
+				Salt:   PLACEHOLDER_SALT,
 				Role:   model.ServerRoleUser,
 				Tokens: []*model.Token{nil},
 			},
@@ -200,11 +269,11 @@ func TestUpsertUser(test *testing.T) {
 			expected: &model.UserOpResult{
 				Email:             "new@test.com",
 				Added:             true,
-				CleartextPassword: PASS_PLACEHOLDER,
+				CleartextPassword: PLACEHOLDER_PASS,
 			},
 			expectedUser: &model.ServerUser{
 				Email:  "new@test.com",
-				Salt:   util.StringPointer("abcd"),
+				Salt:   PLACEHOLDER_SALT,
 				Role:   model.ServerRoleUser,
 				Tokens: []*model.Token{nil},
 			},
@@ -263,6 +332,65 @@ func TestUpsertUser(test *testing.T) {
 			expectedUser: nil,
 		},
 
+		// Add a user with only an insufficient server role.
+		{
+			options: UpsertUsersOptions{
+				RawUsers: []*model.RawUserData{
+					&model.RawUserData{
+						Email: "new@test.com",
+					},
+				},
+				ContextServerRole: model.ServerRoleUser,
+			},
+			expected: &model.UserOpResult{
+				Email:            "new@test.com",
+				ValidationErrors: []string{"User has an insufficient server role of 'user' and no course role to create users."},
+			},
+			expectedUser: nil,
+		},
+
+		// Add a user without proper server or course roles.
+		{
+			options: UpsertUsersOptions{
+				RawUsers: []*model.RawUserData{
+					&model.RawUserData{
+						Email:      "new@test.com",
+						Role:       model.GetServerUserRoleString(model.ServerRoleUser),
+						Course:     "new-course",
+						CourseRole: model.GetCourseUserRoleString(model.RoleStudent),
+					},
+				},
+				ContextServerRole: model.ServerRoleUser,
+				ContextCourseRole: model.RoleStudent,
+			},
+			expected: &model.UserOpResult{
+				Email:            "new@test.com",
+				ValidationErrors: []string{"User has a course role of 'student', which is not high enough to create users."},
+			},
+			expectedUser: nil,
+		},
+
+		// Add a user that has a higher course role.
+		{
+			options: UpsertUsersOptions{
+				RawUsers: []*model.RawUserData{
+					&model.RawUserData{
+						Email:      "new@test.com",
+						Role:       model.GetServerUserRoleString(model.ServerRoleUser),
+						Course:     "new-course",
+						CourseRole: model.GetCourseUserRoleString(model.RoleOwner),
+					},
+				},
+				ContextServerRole: model.ServerRoleUser,
+				ContextCourseRole: model.RoleAdmin,
+			},
+			expected: &model.UserOpResult{
+				Email:            "new@test.com",
+				ValidationErrors: []string{"User has a course role of 'admin', which is not high enough to create a user with course role 'owner'."},
+			},
+			expectedUser: nil,
+		},
+
 		// Validation Errors
 		// Most validation errors are already tested by ServerUser (Validation() and Merge()).
 
@@ -286,73 +414,126 @@ func TestUpsertUser(test *testing.T) {
 	}
 
 	for i, testCase := range testCases {
-		db.ResetForTesting()
-
-		result := UpsertUser(testCase.options)
-
-		// Fill in the cleartext password if requested (which would be randomly generated).
-		if testCase.expected.CleartextPassword == PASS_PLACEHOLDER {
-			testCase.expected.CleartextPassword = result.CleartextPassword
-		}
-
-		if !reflect.DeepEqual(testCase.expected, result) {
-			test.Errorf("Case %d: Result is not as expected. Expected: '%s', Actual: '%s'.", i,
-				util.MustToJSONIndent(testCase.expected), util.MustToJSONIndent(result))
+		// Make sure to test dry runs first, since the expected objects will not be modified.
+		success := testUpsertDryRun(test, i, testCase.options, testCase.expected)
+		if !success {
 			continue
 		}
 
-		// If there is an expected user, then check it.
-		if testCase.expectedUser == nil {
+		success = testUpsert(test, i, testCase.options, testCase.expected, testCase.expectedUser)
+		if !success {
 			continue
 		}
-
-		expectedUser := testCase.expectedUser
-		actualUser := db.MustGetServerUser(expectedUser.Email, true)
-
-		if actualUser == nil {
-			test.Errorf("Case %d: Could not find expected user '%s' in database.", i, expectedUser.Email)
-			continue
-		}
-
-		// Do not check salt and tokens exactly, just ensure that the counts match.
-
-		expectedHasSalt := (expectedUser.Salt != nil)
-		actualHasSalt := (actualUser.Salt != nil)
-
-		if expectedHasSalt != actualHasSalt {
-			test.Errorf("Case %d: Salt not as expected. Expected: '%v', Actual: '%v'.", i, expectedHasSalt, actualHasSalt)
-			continue
-		}
-
-		expectedTokenCount := len(expectedUser.Tokens)
-		actualTokenCount := len(actualUser.Tokens)
-
-		if expectedTokenCount != actualTokenCount {
-			test.Errorf("Case %d: Token count not as expected. Expected: '%d', Actual: '%d'.", i, expectedTokenCount, actualTokenCount)
-			continue
-		}
-
-		// After counts have been checked, set the salt and tokens so that the equality check can go through.
-		expectedUser.Salt = nil
-		actualUser.Salt = nil
-		expectedUser.Tokens = nil
-		actualUser.Tokens = nil
-
-		// Adjust for the expected user not being validated.
-
-		if expectedUser.Roles == nil {
-			expectedUser.Roles = make(map[string]model.CourseUserRole, 0)
-		}
-
-		if expectedUser.LMSIDs == nil {
-			expectedUser.LMSIDs = make(map[string]string, 0)
-		}
-
-		if !reflect.DeepEqual(expectedUser, actualUser) {
-			test.Errorf("Case %d: User is not as expected. Expected: '%s', Actual: '%s'.", i,
-				util.MustToJSONIndent(expectedUser), util.MustToJSONIndent(actualUser))
-			continue
-		}
-
 	}
+}
+
+func testUpsertDryRun(test *testing.T, caseIndex int, options UpsertUsersOptions, expected *model.UserOpResult) bool {
+	db.ResetForTesting()
+
+	options.DryRun = true
+
+	beforeUser := db.MustGetServerUser(expected.Email, true)
+
+	result := UpsertUser(options)
+	if result == nil {
+		test.Errorf("Case (dry run) %d: Got a nil result (which should never happen).", caseIndex)
+		return false
+	}
+
+	// Fill in the cleartext password if requested (which would be randomly generated).
+	if expected.CleartextPassword != "" {
+		expected.CleartextPassword = result.CleartextPassword
+	}
+
+	if !reflect.DeepEqual(expected, result) {
+		test.Errorf("Case (dry run) %d: Result is not as expected. Expected: '%s', Actual: '%s'.", caseIndex,
+			util.MustToJSONIndent(expected), util.MustToJSONIndent(result))
+		return false
+	}
+
+	afterUser := db.MustGetServerUser(expected.Email, true)
+	if !reflect.DeepEqual(beforeUser, afterUser) {
+		test.Errorf("Case %d: User was changed during a dry run. Before: '%s', After: '%s'.", caseIndex,
+			util.MustToJSONIndent(beforeUser), util.MustToJSONIndent(afterUser))
+		return false
+	}
+
+	return true
+}
+
+func testUpsert(test *testing.T, caseIndex int, options UpsertUsersOptions, expected *model.UserOpResult, expectedUser *model.ServerUser) bool {
+	db.ResetForTesting()
+
+	options.DryRun = false
+
+	result := UpsertUser(options)
+	if result == nil {
+		test.Errorf("Case %d: Got a nil result (which should never happen).", caseIndex)
+		return false
+	}
+
+	// Fill in the cleartext password if requested (which would be randomly generated).
+	if expected.CleartextPassword != "" {
+		expected.CleartextPassword = result.CleartextPassword
+	}
+
+	if !reflect.DeepEqual(expected, result) {
+		test.Errorf("Case %d: Result is not as expected. Expected: '%s', Actual: '%s'.", caseIndex,
+			util.MustToJSONIndent(expected), util.MustToJSONIndent(result))
+		return false
+	}
+
+	// If there is an expected user, then check it.
+	if expectedUser == nil {
+		return true
+	}
+
+	actualUser := db.MustGetServerUser(expectedUser.Email, true)
+
+	if actualUser == nil {
+		test.Errorf("Case %d: Could not find expected user '%s' in database.", caseIndex, expectedUser.Email)
+		return false
+	}
+
+	// Do not check salt and tokens exactly, just ensure that the counts match.
+
+	expectedHasSalt := (expectedUser.Salt != nil)
+	actualHasSalt := (actualUser.Salt != nil)
+
+	if expectedHasSalt != actualHasSalt {
+		test.Errorf("Case %d: Salt not as expected. Expected: '%v', Actual: '%v'.", caseIndex, expectedHasSalt, actualHasSalt)
+		return false
+	}
+
+	expectedTokenCount := len(expectedUser.Tokens)
+	actualTokenCount := len(actualUser.Tokens)
+
+	if expectedTokenCount != actualTokenCount {
+		test.Errorf("Case %d: Token count not as expected. Expected: '%d', Actual: '%d'.", caseIndex, expectedTokenCount, actualTokenCount)
+		return false
+	}
+
+	// After counts have been checked, set the salt and tokens so that the equality check can go through.
+	expectedUser.Salt = nil
+	actualUser.Salt = nil
+	expectedUser.Tokens = nil
+	actualUser.Tokens = nil
+
+	// Adjust for the expected user not being validated.
+
+	if expectedUser.Roles == nil {
+		expectedUser.Roles = make(map[string]model.CourseUserRole, 0)
+	}
+
+	if expectedUser.LMSIDs == nil {
+		expectedUser.LMSIDs = make(map[string]string, 0)
+	}
+
+	if !reflect.DeepEqual(expectedUser, actualUser) {
+		test.Errorf("Case %d: User is not as expected. Expected: '%s', Actual: '%s'.", caseIndex,
+			util.MustToJSONIndent(expectedUser), util.MustToJSONIndent(actualUser))
+		return false
+	}
+
+	return true
 }

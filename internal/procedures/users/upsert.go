@@ -85,7 +85,7 @@ func upsertUser(options UpsertUsersOptions, index int) *model.UserOpResult {
 	} else {
 		// This is an update.
 		if !options.SkipUpdates {
-			result = updateUser(newUser, oldUser, options)
+			result = updateUser(newUser, oldUser, options, rawData)
 		}
 	}
 
@@ -113,19 +113,16 @@ func insertUser(user *model.ServerUser, options UpsertUsersOptions, rawData *mod
 	user.Salt = util.StringPointer(model.ShouldNewRandomSalt())
 
 	var err error = nil
-	var token *model.Token = nil
 
 	if rawData.Pass != "" {
-		token, err = model.NewToken(rawData.Pass, *user.Salt, model.TokenSourcePassword, "")
+		_, err = user.SetPassword(rawData.Pass)
 	} else {
-		result.CleartextPassword, token, err = model.NewRandomToken(*user.Salt, model.TokenSourcePassword, "")
+		result.CleartextPassword, err = user.SetRandomPassword()
 	}
 
 	if err != nil {
-		return model.NewSystemErrorUserOpResult(user.Email, fmt.Errorf("Failed to create authentication token: '%w'.", err))
+		return model.NewSystemErrorUserOpResult(user.Email, fmt.Errorf("Failed to set new password: '%w'.", err))
 	}
-
-	user.Tokens = append(user.Tokens, token)
 
 	for courseID, _ := range user.Roles {
 		result.Enrolled = append(result.Enrolled, courseID)
@@ -141,7 +138,7 @@ func insertUser(user *model.ServerUser, options UpsertUsersOptions, rawData *mod
 	return result
 }
 
-func updateUser(newUser *model.ServerUser, user *model.ServerUser, options UpsertUsersOptions) *model.UserOpResult {
+func updateUser(newUser *model.ServerUser, user *model.ServerUser, options UpsertUsersOptions, rawData *model.RawUserData) *model.UserOpResult {
 	var enrolledCourses []string = nil
 	for course, _ := range newUser.Roles {
 		_, exists := user.Roles[course]
@@ -153,6 +150,15 @@ func updateUser(newUser *model.ServerUser, user *model.ServerUser, options Upser
 	changed, err := user.Merge(newUser)
 	if err != nil {
 		return model.NewValidationErrorUserOpResult(newUser.Email, err)
+	}
+
+	if rawData.Pass != "" {
+		passChanged, err := user.SetPassword(rawData.Pass)
+		if err != nil {
+			return model.NewSystemErrorUserOpResult(newUser.Email, err)
+		}
+
+		changed = (changed || passChanged)
 	}
 
 	if !options.DryRun {
@@ -188,6 +194,12 @@ func checkUpsertPermissions(user *model.ServerUser, courseID string, contextServ
 	// If the user has high enough server credentials, then there is no need to check any course role.
 	if contextServerRole >= model.ServerRoleAdmin {
 		return nil
+	}
+
+	// The user has no course role and insufficient server role.
+	if contextCourseRole == model.RoleUnknown {
+		return model.NewValidationErrorUserOpResult(user.Email,
+			fmt.Errorf("User has an insufficient server role of '%s' and no course role to create users.", contextServerRole.String()))
 	}
 
 	// At this point, the context user's server-level credentials are not high enough to create any user.

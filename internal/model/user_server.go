@@ -31,7 +31,8 @@ type ServerUser struct {
 
 	// May be nil/empty if not retrieved from the database,
 	// will always be non-nil after validation, but may be empty.
-	// Technically there could be duplicates here, but we will allow them.
+	// There should be no duplicates and at most one token with the TokenSourcePassword source,
+	// i.e., users can have many tokens, but only one derived from a password.
 	Tokens []*Token `json:"tokens"`
 
 	// May be nil/empty if not retrieved from the database,
@@ -244,6 +245,59 @@ func (this *ServerUser) Merge(other *ServerUser) (bool, error) {
 	changed = changed || (numTokens != len(this.Tokens))
 
 	return changed, nil
+}
+
+// Set the password for a user.
+// Note that this will replace the current password token (if it exists).
+// Return true if the new password was set.
+// The only way for (false, nil) is on a duplicate password.
+func (this *ServerUser) SetPassword(password string) (bool, error) {
+	if this.Salt == nil {
+		return false, fmt.Errorf("User '%s' does not have a salt, and therefore cannot have a password.", this.Email)
+	}
+
+	newToken, err := NewToken(password, *this.Salt, TokenSourcePassword, TOKEN_PASSWORD_NAME)
+	if err != nil {
+		return false, fmt.Errorf("Failed to create token for user '%s' password.", this.Email)
+	}
+
+	oldIndex := -1
+	for i, token := range this.Tokens {
+		if token.Source == TokenSourcePassword {
+			// Check for duplicates.
+			if TokenPointerEqual(token, newToken) {
+				return false, nil
+			}
+
+			oldIndex = i
+			break
+		}
+	}
+
+	if oldIndex == -1 {
+		this.Tokens = append(this.Tokens, newToken)
+	} else {
+		this.Tokens[oldIndex] = newToken
+	}
+
+	slices.SortFunc(this.Tokens, TokenPointerCompare)
+	this.Tokens = slices.CompactFunc(this.Tokens, TokenPointerEqual)
+
+	return true, nil
+}
+
+func (this *ServerUser) SetRandomPassword() (string, error) {
+	cleartext, err := RandomCleartext()
+	if err != nil {
+		return "", fmt.Errorf("User '%s' failed to generate random text for password: '%w'.", this.Email, err)
+	}
+
+	_, err = this.SetPassword(cleartext)
+	if err != nil {
+		return "", fmt.Errorf("User '%s' failed to set random passowrd: '%w'.", this.Email, err)
+	}
+
+	return cleartext, nil
 }
 
 // Deep copy this user (which should already be validated).
