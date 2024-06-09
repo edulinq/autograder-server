@@ -7,6 +7,10 @@ import (
 // Get the email message that corresponds with this user operation
 // (or nil if there is no message to send).
 func (this *UserOpResult) GetEmail() *email.Message {
+	if this.Email == "" {
+		return nil
+	}
+
 	if this.Added {
 		return this.getAddEmail()
 	}
@@ -24,15 +28,30 @@ func (this *UserOpResult) GetEmail() *email.Message {
 
 func (this *UserOpResult) getAddEmail() *email.Message {
 	// TEST
-	return nil
+	return &email.Message{
+		To:      []string{this.Email},
+		Subject: "TEST",
+		Body:    "TEST",
+		HTML:    false,
+	}
 }
 
 func (this *UserOpResult) getEnrolledEmail() *email.Message {
 	// TEST
-	return nil
+	return &email.Message{
+		To:      []string{this.Email},
+		Subject: "TEST",
+		Body:    "TEST",
+		HTML:    false,
+	}
 }
 
 func (this *UserOpResult) getNewPasswordEmail() *email.Message {
 	// TEST
-	return nil
+	return &email.Message{
+		To:      []string{this.Email},
+		Subject: "TEST",
+		Body:    "TEST",
+		HTML:    false,
+	}
 }

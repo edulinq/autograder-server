@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/edulinq/autograder/internal/db"
+	"github.com/edulinq/autograder/internal/email"
 	"github.com/edulinq/autograder/internal/model"
 	"github.com/edulinq/autograder/internal/util"
 )
@@ -12,14 +13,15 @@ import (
 var PLACEHOLDER_PASS string = "<placeholder_pass>"
 var PLACEHOLDER_SALT *string = util.StringPointer("abcd")
 
-// TEST - Send emails
-
 func TestUpsertUser(test *testing.T) {
 	db.ResetForTesting()
 	defer db.ResetForTesting()
 
+	email.ClearTestMessages()
+	defer email.ClearTestMessages()
+
 	testCases := []struct {
-		// Do not set DryRun, this will be set automatically.
+		// Do not set DryRun or SendEmails, these will be set automatically.
 		options      UpsertUsersOptions
 		expected     *model.UserOpResult
 		expectedUser *model.ServerUser
@@ -38,8 +40,9 @@ func TestUpsertUser(test *testing.T) {
 				ContextServerRole: model.ServerRoleAdmin,
 			},
 			expected: &model.UserOpResult{
-				Email: "new@test.com",
-				Added: true,
+				Email:   "new@test.com",
+				Added:   true,
+				Emailed: true,
 			},
 			expectedUser: &model.ServerUser{
 				Email:  "new@test.com",
@@ -69,6 +72,7 @@ func TestUpsertUser(test *testing.T) {
 			expected: &model.UserOpResult{
 				Email:    "new@test.com",
 				Added:    true,
+				Emailed:  true,
 				Enrolled: []string{"new-course"},
 			},
 			expectedUser: &model.ServerUser{
@@ -134,6 +138,7 @@ func TestUpsertUser(test *testing.T) {
 			expected: &model.UserOpResult{
 				Email:    "student@test.com",
 				Modified: true,
+				Emailed:  true,
 				Enrolled: []string{"new-course"},
 			},
 			expectedUser: &model.ServerUser{
@@ -244,6 +249,7 @@ func TestUpsertUser(test *testing.T) {
 			expected: &model.UserOpResult{
 				Email:             "new@test.com",
 				Added:             true,
+				Emailed:           true,
 				CleartextPassword: PLACEHOLDER_PASS,
 			},
 			expectedUser: &model.ServerUser{
@@ -269,6 +275,7 @@ func TestUpsertUser(test *testing.T) {
 			expected: &model.UserOpResult{
 				Email:             "new@test.com",
 				Added:             true,
+				Emailed:           true,
 				CleartextPassword: PLACEHOLDER_PASS,
 			},
 			expectedUser: &model.ServerUser{
@@ -414,29 +421,64 @@ func TestUpsertUser(test *testing.T) {
 	}
 
 	for i, testCase := range testCases {
-		// Make sure to test dry runs first, since the expected objects will not be modified.
-		success := testUpsertDryRun(test, i, testCase.options, testCase.expected)
+		// Dry run without emails.
+		success := testUpsertDryRun(test, i, false, testCase.options, testCase.expected.MustClone())
 		if !success {
 			continue
 		}
 
-		success = testUpsert(test, i, testCase.options, testCase.expected, testCase.expectedUser)
+		// Dry run with emails.
+		success = testUpsertDryRun(test, i, true, testCase.options, testCase.expected.MustClone())
+		if !success {
+			continue
+		}
+
+		// Wet run without emails.
+		success = testUpsert(test, i, false, testCase.options, testCase.expected.MustClone(), cloneTestServerUser(testCase.expectedUser))
+		if !success {
+			continue
+		}
+
+		// Wet run with emails.
+		success = testUpsert(test, i, true, testCase.options, testCase.expected.MustClone(), cloneTestServerUser(testCase.expectedUser))
 		if !success {
 			continue
 		}
 	}
 }
 
-func testUpsertDryRun(test *testing.T, caseIndex int, options UpsertUsersOptions, expected *model.UserOpResult) bool {
+func cloneTestServerUser(user *model.ServerUser) *model.ServerUser {
+	if user == nil {
+		return nil
+	}
+
+	// Specially copy the tokens (since we will be passing nils instead of real tokens).
+	newTokens := append([]*model.Token(nil), user.Tokens...)
+	oldTokens := user.Tokens
+
+	user.Tokens = nil
+	clone := user.Clone()
+
+	user.Tokens = oldTokens
+	clone.Tokens = newTokens
+
+	return clone
+}
+
+func testUpsertDryRun(test *testing.T, caseIndex int, sendEmails bool, options UpsertUsersOptions, expected *model.UserOpResult) bool {
 	db.ResetForTesting()
+	email.ClearTestMessages()
 
 	options.DryRun = true
+	options.SendEmails = sendEmails
+
+	expected.Emailed = expected.Emailed && sendEmails
 
 	beforeUser := db.MustGetServerUser(expected.Email, true)
 
 	result := UpsertUser(options)
 	if result == nil {
-		test.Errorf("Case (dry run) %d: Got a nil result (which should never happen).", caseIndex)
+		test.Errorf("Case (dry run, email: %v) %d: Got a nil result (which should never happen).", sendEmails, caseIndex)
 		return false
 	}
 
@@ -446,29 +488,40 @@ func testUpsertDryRun(test *testing.T, caseIndex int, options UpsertUsersOptions
 	}
 
 	if !reflect.DeepEqual(expected, result) {
-		test.Errorf("Case (dry run) %d: Result is not as expected. Expected: '%s', Actual: '%s'.", caseIndex,
+		test.Errorf("Case (dry run, email: %v) %d: Result is not as expected. Expected: '%s', Actual: '%s'.", sendEmails, caseIndex,
 			util.MustToJSONIndent(expected), util.MustToJSONIndent(result))
 		return false
 	}
 
 	afterUser := db.MustGetServerUser(expected.Email, true)
 	if !reflect.DeepEqual(beforeUser, afterUser) {
-		test.Errorf("Case %d: User was changed during a dry run. Before: '%s', After: '%s'.", caseIndex,
+		test.Errorf("Case (dry run, email: %v) %d: User was changed during a dry run. Before: '%s', After: '%s'.", sendEmails, caseIndex,
 			util.MustToJSONIndent(beforeUser), util.MustToJSONIndent(afterUser))
+		return false
+	}
+
+	// Ensure that no emails are ever sent.
+	emailCount := len(email.GetTestMessages())
+	if emailCount > 0 {
+		test.Errorf("Case (dry run, email: %v) %d: %d emails were sent, when none should be sent on a dry run.", sendEmails, caseIndex, emailCount)
 		return false
 	}
 
 	return true
 }
 
-func testUpsert(test *testing.T, caseIndex int, options UpsertUsersOptions, expected *model.UserOpResult, expectedUser *model.ServerUser) bool {
+func testUpsert(test *testing.T, caseIndex int, sendEmails bool, options UpsertUsersOptions, expected *model.UserOpResult, expectedUser *model.ServerUser) bool {
 	db.ResetForTesting()
+	email.ClearTestMessages()
 
 	options.DryRun = false
+	options.SendEmails = sendEmails
+
+	expected.Emailed = expected.Emailed && sendEmails
 
 	result := UpsertUser(options)
 	if result == nil {
-		test.Errorf("Case %d: Got a nil result (which should never happen).", caseIndex)
+		test.Errorf("Case (wet run, email: %v) %d: Got a nil result (which should never happen).", sendEmails, caseIndex)
 		return false
 	}
 
@@ -478,7 +531,7 @@ func testUpsert(test *testing.T, caseIndex int, options UpsertUsersOptions, expe
 	}
 
 	if !reflect.DeepEqual(expected, result) {
-		test.Errorf("Case %d: Result is not as expected. Expected: '%s', Actual: '%s'.", caseIndex,
+		test.Errorf("Case (wet run, email: %v) %d: Result is not as expected. Expected: '%s', Actual: '%s'.", sendEmails, caseIndex,
 			util.MustToJSONIndent(expected), util.MustToJSONIndent(result))
 		return false
 	}
@@ -491,7 +544,7 @@ func testUpsert(test *testing.T, caseIndex int, options UpsertUsersOptions, expe
 	actualUser := db.MustGetServerUser(expectedUser.Email, true)
 
 	if actualUser == nil {
-		test.Errorf("Case %d: Could not find expected user '%s' in database.", caseIndex, expectedUser.Email)
+		test.Errorf("Case (wet run, email: %v) %d: Could not find expected user '%s' in database.", sendEmails, caseIndex, expectedUser.Email)
 		return false
 	}
 
@@ -501,7 +554,7 @@ func testUpsert(test *testing.T, caseIndex int, options UpsertUsersOptions, expe
 	actualHasSalt := (actualUser.Salt != nil)
 
 	if expectedHasSalt != actualHasSalt {
-		test.Errorf("Case %d: Salt not as expected. Expected: '%v', Actual: '%v'.", caseIndex, expectedHasSalt, actualHasSalt)
+		test.Errorf("Case (wet run, email: %v) %d: Salt not as expected. Expected: '%v', Actual: '%v'.", sendEmails, caseIndex, expectedHasSalt, actualHasSalt)
 		return false
 	}
 
@@ -509,7 +562,7 @@ func testUpsert(test *testing.T, caseIndex int, options UpsertUsersOptions, expe
 	actualTokenCount := len(actualUser.Tokens)
 
 	if expectedTokenCount != actualTokenCount {
-		test.Errorf("Case %d: Token count not as expected. Expected: '%d', Actual: '%d'.", caseIndex, expectedTokenCount, actualTokenCount)
+		test.Errorf("Case (wet run, email: %v) %d: Token count not as expected. Expected: '%d', Actual: '%d'.", sendEmails, caseIndex, expectedTokenCount, actualTokenCount)
 		return false
 	}
 
@@ -530,8 +583,15 @@ func testUpsert(test *testing.T, caseIndex int, options UpsertUsersOptions, expe
 	}
 
 	if !reflect.DeepEqual(expectedUser, actualUser) {
-		test.Errorf("Case %d: User is not as expected. Expected: '%s', Actual: '%s'.", caseIndex,
+		test.Errorf("Case (wet run, email: %v) %d: User is not as expected. Expected: '%s', Actual: '%s'.", sendEmails, caseIndex,
 			util.MustToJSONIndent(expectedUser), util.MustToJSONIndent(actualUser))
+		return false
+	}
+
+	// Check that an email was sent.
+	emailCount := len(email.GetTestMessages())
+	if expected.Emailed && (emailCount != 1) {
+		test.Errorf("Case (wet run, email: %v) %d: Expected exactly 1 email to be sent, found %d emails sent.", sendEmails, caseIndex, emailCount)
 		return false
 	}
 

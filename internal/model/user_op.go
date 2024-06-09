@@ -1,5 +1,9 @@
 package model
 
+import (
+	"github.com/edulinq/autograder/internal/util"
+)
+
 // A general representation of the result of operations that modify a user in any way (add, remove, enroll, drop, etc).
 // All user-facing functions (essentially non-db functions) should return an instance or collection of these objects.
 type UserOpResult struct {
@@ -65,4 +69,10 @@ func NewSystemErrorUserOpResult(email string, err error) *UserOpResult {
 
 func (this *UserOpResult) HasErrors() bool {
 	return (len(this.ValidationErrors) > 0) || (len(this.SystemErrors) > 0)
+}
+
+func (this *UserOpResult) MustClone() *UserOpResult {
+	var clone UserOpResult
+	util.MustJSONFromString(util.MustToJSON(this), &clone)
+	return &clone
 }
