@@ -33,10 +33,6 @@ func (this *RawUserData) ToServerUser() (*ServerUser, error) {
 		user.Name = util.StringPointer(this.Name)
 	}
 
-	if user.Role == ServerRoleUnknown {
-		user.Role = ServerRoleUser
-	}
-
 	if this.Course != "" {
 		user.Roles[this.Course] = GetCourseUserRole(this.CourseRole)
 
@@ -46,4 +42,14 @@ func (this *RawUserData) ToServerUser() (*ServerUser, error) {
 	}
 
 	return user, user.Validate()
+}
+
+// Does this data have server-level user information?
+func (this *RawUserData) HasServerInfo() bool {
+	return (this.Name != "") || (this.Role != "")
+}
+
+// Does this data have course-level user information?
+func (this *RawUserData) HasCourseInfo() bool {
+	return (this.Course != "") || (this.CourseRole != "") || (this.CourseLMSID != "")
 }

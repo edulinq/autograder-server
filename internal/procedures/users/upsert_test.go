@@ -164,6 +164,233 @@ func TestUpsertUser(test *testing.T) {
 			},
 		},
 
+		// Update course information.
+		{
+			options: UpsertUsersOptions{
+				RawUsers: []*model.RawUserData{
+					&model.RawUserData{
+						Email:      "student@test.com",
+						Course:     "course101",
+						CourseRole: model.GetCourseUserRoleString(model.RoleGrader),
+					},
+				},
+				ContextServerRole: model.ServerRoleAdmin,
+			},
+			expected: &model.UserOpResult{
+				Email:    "student@test.com",
+				Modified: true,
+			},
+			expectedUser: &model.ServerUser{
+				Email:  "student@test.com",
+				Name:   util.StringPointer("student"),
+				Salt:   PLACEHOLDER_SALT,
+				Role:   model.ServerRoleUser,
+				Tokens: []*model.Token{nil},
+				Roles: map[string]model.CourseUserRole{
+					"course-languages":          model.RoleStudent,
+					"course-with-lms":           model.RoleStudent,
+					"course-without-source":     model.RoleStudent,
+					"course101":                 model.RoleGrader,
+					"course101-with-zero-limit": model.RoleStudent,
+				},
+				LMSIDs: map[string]string{
+					"course-languages":      "lms-student@test.com",
+					"course-with-lms":       "lms-student@test.com",
+					"course-without-source": "lms-student@test.com",
+				},
+			},
+		},
+
+		// Update course information using course (not server) permissions.
+		{
+			options: UpsertUsersOptions{
+				RawUsers: []*model.RawUserData{
+					&model.RawUserData{
+						Email:      "student@test.com",
+						Course:     "course101",
+						CourseRole: model.GetCourseUserRoleString(model.RoleGrader),
+					},
+				},
+				ContextServerRole: model.ServerRoleUser,
+				ContextCourseRole: model.RoleAdmin,
+			},
+			expected: &model.UserOpResult{
+				Email:    "student@test.com",
+				Modified: true,
+			},
+			expectedUser: &model.ServerUser{
+				Email:  "student@test.com",
+				Name:   util.StringPointer("student"),
+				Salt:   PLACEHOLDER_SALT,
+				Role:   model.ServerRoleUser,
+				Tokens: []*model.Token{nil},
+				Roles: map[string]model.CourseUserRole{
+					"course-languages":          model.RoleStudent,
+					"course-with-lms":           model.RoleStudent,
+					"course-without-source":     model.RoleStudent,
+					"course101":                 model.RoleGrader,
+					"course101-with-zero-limit": model.RoleStudent,
+				},
+				LMSIDs: map[string]string{
+					"course-languages":      "lms-student@test.com",
+					"course-with-lms":       "lms-student@test.com",
+					"course-without-source": "lms-student@test.com",
+				},
+			},
+		},
+
+		// Update self with non-admin permissions.
+		{
+			options: UpsertUsersOptions{
+				RawUsers: []*model.RawUserData{
+					&model.RawUserData{
+						Email: "student@test.com",
+						Name:  "new",
+					},
+				},
+				ContextEmail:      "student@test.com",
+				ContextServerRole: model.ServerRoleUser,
+				ContextCourseRole: model.RoleStudent,
+			},
+			expected: &model.UserOpResult{
+				Email:    "student@test.com",
+				Modified: true,
+			},
+			expectedUser: &model.ServerUser{
+				Email:  "student@test.com",
+				Name:   util.StringPointer("new"),
+				Salt:   PLACEHOLDER_SALT,
+				Role:   model.ServerRoleUser,
+				Tokens: []*model.Token{nil},
+				Roles: map[string]model.CourseUserRole{
+					"course-languages":          model.RoleStudent,
+					"course-with-lms":           model.RoleStudent,
+					"course-without-source":     model.RoleStudent,
+					"course101":                 model.RoleStudent,
+					"course101-with-zero-limit": model.RoleStudent,
+				},
+				LMSIDs: map[string]string{
+					"course-languages":      "lms-student@test.com",
+					"course-with-lms":       "lms-student@test.com",
+					"course-without-source": "lms-student@test.com",
+				},
+			},
+		},
+
+		// Update self with non-admin permissions and no course.
+		{
+			options: UpsertUsersOptions{
+				RawUsers: []*model.RawUserData{
+					&model.RawUserData{
+						Email: "student@test.com",
+						Name:  "new",
+					},
+				},
+				ContextEmail:      "student@test.com",
+				ContextServerRole: model.ServerRoleUser,
+			},
+			expected: &model.UserOpResult{
+				Email:    "student@test.com",
+				Modified: true,
+			},
+			expectedUser: &model.ServerUser{
+				Email:  "student@test.com",
+				Name:   util.StringPointer("new"),
+				Salt:   PLACEHOLDER_SALT,
+				Role:   model.ServerRoleUser,
+				Tokens: []*model.Token{nil},
+				Roles: map[string]model.CourseUserRole{
+					"course-languages":          model.RoleStudent,
+					"course-with-lms":           model.RoleStudent,
+					"course-without-source":     model.RoleStudent,
+					"course101":                 model.RoleStudent,
+					"course101-with-zero-limit": model.RoleStudent,
+				},
+				LMSIDs: map[string]string{
+					"course-languages":      "lms-student@test.com",
+					"course-with-lms":       "lms-student@test.com",
+					"course-without-source": "lms-student@test.com",
+				},
+			},
+		},
+
+		// Self demote (server).
+		{
+			options: UpsertUsersOptions{
+				RawUsers: []*model.RawUserData{
+					&model.RawUserData{
+						Email: "admin@test.com",
+						Role:  model.GetServerUserRoleString(model.ServerRoleUser),
+					},
+				},
+				ContextEmail:      "admin@test.com",
+				ContextServerRole: model.ServerRoleAdmin,
+			},
+			expected: &model.UserOpResult{
+				Email:    "admin@test.com",
+				Modified: true,
+			},
+			expectedUser: &model.ServerUser{
+				Email:  "admin@test.com",
+				Name:   util.StringPointer("admin"),
+				Salt:   PLACEHOLDER_SALT,
+				Role:   model.ServerRoleUser,
+				Tokens: []*model.Token{nil},
+				Roles: map[string]model.CourseUserRole{
+					"course-languages":          model.RoleAdmin,
+					"course-with-lms":           model.RoleAdmin,
+					"course-without-source":     model.RoleAdmin,
+					"course101":                 model.RoleAdmin,
+					"course101-with-zero-limit": model.RoleAdmin,
+				},
+				LMSIDs: map[string]string{
+					"course-languages":      "lms-admin@test.com",
+					"course-with-lms":       "lms-admin@test.com",
+					"course-without-source": "lms-admin@test.com",
+				},
+			},
+		},
+
+		// Self demote (course).
+		// TODO: This test does not fully test the functionality. We need a server non-admin and a course admin.
+		{
+			options: UpsertUsersOptions{
+				RawUsers: []*model.RawUserData{
+					&model.RawUserData{
+						Email:      "admin@test.com",
+						Course:     "course101",
+						CourseRole: model.GetCourseUserRoleString(model.RoleStudent),
+					},
+				},
+				ContextEmail:      "admin@test.com",
+				ContextServerRole: model.ServerRoleAdmin,
+				ContextCourseRole: model.RoleAdmin,
+			},
+			expected: &model.UserOpResult{
+				Email:    "admin@test.com",
+				Modified: true,
+			},
+			expectedUser: &model.ServerUser{
+				Email:  "admin@test.com",
+				Name:   util.StringPointer("admin"),
+				Salt:   PLACEHOLDER_SALT,
+				Role:   model.ServerRoleAdmin,
+				Tokens: []*model.Token{nil},
+				Roles: map[string]model.CourseUserRole{
+					"course-languages":          model.RoleAdmin,
+					"course-with-lms":           model.RoleAdmin,
+					"course-without-source":     model.RoleAdmin,
+					"course101":                 model.RoleStudent,
+					"course101-with-zero-limit": model.RoleAdmin,
+				},
+				LMSIDs: map[string]string{
+					"course-languages":      "lms-admin@test.com",
+					"course-with-lms":       "lms-admin@test.com",
+					"course-without-source": "lms-admin@test.com",
+				},
+			},
+		},
+
 		// Set a new password.
 		{
 			options: UpsertUsersOptions{
@@ -286,6 +513,43 @@ func TestUpsertUser(test *testing.T) {
 			},
 		},
 
+		// Update course information on a user with higher server role.
+		{
+			options: UpsertUsersOptions{
+				RawUsers: []*model.RawUserData{
+					&model.RawUserData{
+						Email:      "owner@test.com",
+						Course:     "course101",
+						CourseRole: model.GetCourseUserRoleString(model.RoleAdmin),
+					},
+				},
+				ContextServerRole: model.ServerRoleAdmin,
+			},
+			expected: &model.UserOpResult{
+				Email:    "owner@test.com",
+				Modified: true,
+			},
+			expectedUser: &model.ServerUser{
+				Email:  "owner@test.com",
+				Name:   util.StringPointer("owner"),
+				Salt:   PLACEHOLDER_SALT,
+				Role:   model.ServerRoleOwner,
+				Tokens: []*model.Token{nil},
+				Roles: map[string]model.CourseUserRole{
+					"course-languages":          model.RoleOwner,
+					"course-with-lms":           model.RoleOwner,
+					"course-without-source":     model.RoleOwner,
+					"course101":                 model.RoleAdmin,
+					"course101-with-zero-limit": model.RoleOwner,
+				},
+				LMSIDs: map[string]string{
+					"course-languages":      "lms-owner@test.com",
+					"course-with-lms":       "lms-owner@test.com",
+					"course-without-source": "lms-owner@test.com",
+				},
+			},
+		},
+
 		// Permission Errors
 
 		// Add a user wihout a any roles.
@@ -334,7 +598,7 @@ func TestUpsertUser(test *testing.T) {
 			},
 			expected: &model.UserOpResult{
 				Email:            "new@test.com",
-				ValidationErrors: []string{"User has a server role of 'admin', which is not high enough to create a user with server role 'owner'."},
+				ValidationErrors: []string{"User has a server role of 'admin', which is not high enough to upsert a user with server role of 'owner'."},
 			},
 			expectedUser: nil,
 		},
@@ -351,7 +615,7 @@ func TestUpsertUser(test *testing.T) {
 			},
 			expected: &model.UserOpResult{
 				Email:            "new@test.com",
-				ValidationErrors: []string{"User has an insufficient server role of 'user' and no course role to create users."},
+				ValidationErrors: []string{"User has an insufficient server role of 'user' and no course role to insert users."},
 			},
 			expectedUser: nil,
 		},
@@ -372,7 +636,7 @@ func TestUpsertUser(test *testing.T) {
 			},
 			expected: &model.UserOpResult{
 				Email:            "new@test.com",
-				ValidationErrors: []string{"User has a course role of 'student', which is not high enough to create users."},
+				ValidationErrors: []string{"User has a course role of 'student', which is not high enough to insert users."},
 			},
 			expectedUser: nil,
 		},
@@ -393,7 +657,166 @@ func TestUpsertUser(test *testing.T) {
 			},
 			expected: &model.UserOpResult{
 				Email:            "new@test.com",
-				ValidationErrors: []string{"User has a course role of 'admin', which is not high enough to create a user with course role 'owner'."},
+				ValidationErrors: []string{"User has a course role of 'admin', which is not high enough to insert a user with course role of 'owner'."},
+			},
+			expectedUser: nil,
+		},
+
+		// Update server information on a user that has a higher server role.
+		{
+			options: UpsertUsersOptions{
+				RawUsers: []*model.RawUserData{
+					&model.RawUserData{
+						Email: "owner@test.com",
+						Name:  "new",
+					},
+				},
+				ContextServerRole: model.ServerRoleAdmin,
+			},
+			expected: &model.UserOpResult{
+				Email:            "owner@test.com",
+				ValidationErrors: []string{"User has a server role of 'admin', which is not high enough to update a user with server role of 'owner'."},
+			},
+			expectedUser: nil,
+		},
+
+		// Update course information on a user that has a higher course role.
+		{
+			options: UpsertUsersOptions{
+				RawUsers: []*model.RawUserData{
+					&model.RawUserData{
+						Email:      "owner@test.com",
+						Course:     "course101",
+						CourseRole: model.GetCourseUserRoleString(model.RoleGrader),
+					},
+				},
+				ContextServerRole: model.ServerRoleUser,
+				ContextCourseRole: model.RoleAdmin,
+			},
+			expected: &model.UserOpResult{
+				Email:            "owner@test.com",
+				ValidationErrors: []string{"User has a course role of 'admin', which is not high enough to update a user with course role of 'owner'."},
+			},
+			expectedUser: nil,
+		},
+
+		// Update non-self with non-admin permissions (server).
+		{
+			options: UpsertUsersOptions{
+				RawUsers: []*model.RawUserData{
+					&model.RawUserData{
+						Email: "student@test.com",
+						Name:  "new",
+					},
+				},
+				ContextEmail:      "ZZZ@test.com",
+				ContextServerRole: model.ServerRoleUser,
+				ContextCourseRole: model.RoleStudent,
+			},
+			expected: &model.UserOpResult{
+				Email:            "student@test.com",
+				ValidationErrors: []string{"User has a server role of 'user', which is not high enough to update server-level information for another user."},
+			},
+			expectedUser: nil,
+		},
+
+		// Update non-self with non-admin permissions (course).
+		{
+			options: UpsertUsersOptions{
+				RawUsers: []*model.RawUserData{
+					&model.RawUserData{
+						Email:       "student@test.com",
+						Course:      "course101",
+						CourseRole:  model.GetCourseUserRoleString(model.RoleStudent),
+						CourseLMSID: "new",
+					},
+				},
+				ContextEmail:      "ZZZ@test.com",
+				ContextServerRole: model.ServerRoleUser,
+				ContextCourseRole: model.RoleStudent,
+			},
+			expected: &model.UserOpResult{
+				Email:            "student@test.com",
+				ValidationErrors: []string{"User has a course role of 'student', which is not high enough to update course-level information for another user."},
+			},
+			expectedUser: nil,
+		},
+
+		// Cannot self promote (server).
+		{
+			options: UpsertUsersOptions{
+				RawUsers: []*model.RawUserData{
+					&model.RawUserData{
+						Email: "admin@test.com",
+						Role:  model.GetServerUserRoleString(model.ServerRoleOwner),
+					},
+				},
+				ContextEmail:      "admin@test.com",
+				ContextServerRole: model.ServerRoleAdmin,
+			},
+			expected: &model.UserOpResult{
+				Email:            "admin@test.com",
+				ValidationErrors: []string{"User has a server role of 'admin', which is not high enough to upsert a user with server role of 'owner'."},
+			},
+			expectedUser: nil,
+		},
+
+		// Cannot self promote (course).
+		{
+			options: UpsertUsersOptions{
+				RawUsers: []*model.RawUserData{
+					&model.RawUserData{
+						Email:      "grader@test.com",
+						Course:     "course101",
+						CourseRole: model.GetCourseUserRoleString(model.RoleAdmin),
+					},
+				},
+				ContextEmail:      "grader@test.com",
+				ContextServerRole: model.ServerRoleCourseCreator,
+				ContextCourseRole: model.RoleGrader,
+			},
+			expected: &model.UserOpResult{
+				Email:            "grader@test.com",
+				ValidationErrors: []string{"User has a course role of 'grader', which is not high enough to modify course roles."},
+			},
+			expectedUser: nil,
+		},
+
+		// Non-admins cannot self demote (server).
+		{
+			options: UpsertUsersOptions{
+				RawUsers: []*model.RawUserData{
+					&model.RawUserData{
+						Email: "grader@test.com",
+						Role:  model.GetServerUserRoleString(model.ServerRoleUser),
+					},
+				},
+				ContextServerRole: model.ServerRoleCourseCreator,
+			},
+			expected: &model.UserOpResult{
+				Email:            "grader@test.com",
+				ValidationErrors: []string{"User has a server role of 'creator', which is not high enough to modify server roles."},
+			},
+			expectedUser: nil,
+		},
+
+		// Non-admins cannot self demote (course).
+		{
+			options: UpsertUsersOptions{
+				RawUsers: []*model.RawUserData{
+					&model.RawUserData{
+						Email:      "grader@test.com",
+						Course:     "course101",
+						CourseRole: model.GetCourseUserRoleString(model.RoleStudent),
+					},
+				},
+				ContextEmail:      "grader@test.com",
+				ContextServerRole: model.ServerRoleCourseCreator,
+				ContextCourseRole: model.RoleGrader,
+			},
+			expected: &model.UserOpResult{
+				Email:            "grader@test.com",
+				ValidationErrors: []string{"User has a course role of 'grader', which is not high enough to modify course roles."},
 			},
 			expectedUser: nil,
 		},

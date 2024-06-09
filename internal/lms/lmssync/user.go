@@ -24,7 +24,7 @@ func SyncAllLMSUsers(course *model.Course, dryRun bool, sendEmails bool) ([]*mod
 		}
 	}
 
-	return syncLMSUsers(course, dryRun, sendEmails, lmsUsers)
+	return syncLMSUsers(course, dryRun, sendEmails, false, lmsUsers)
 }
 
 func SyncLMSUserEmail(course *model.Course, email string, dryRun bool, sendEmails bool) ([]*model.UserOpResult, error) {
@@ -45,10 +45,13 @@ func SyncLMSUserEmails(course *model.Course, emails []string, dryRun bool, sendE
 		}
 	}
 
-	return syncLMSUsers(course, dryRun, sendEmails, lmsUsers)
+	return syncLMSUsers(course, dryRun, sendEmails, true, lmsUsers)
 }
 
-func syncLMSUsers(course *model.Course, dryRun bool, sendEmails bool, lmsUsers map[string]*lmstypes.User) ([]*model.UserOpResult, error) {
+// Sync LMS users.
+// Note that |skipMissing| makes it so that only users in |lmsUsers| will be considered.
+// This means that deletes will never be processed (since they are always in the LMS).
+func syncLMSUsers(course *model.Course, dryRun bool, sendEmails bool, skipMissing bool, lmsUsers map[string]*lmstypes.User) ([]*model.UserOpResult, error) {
 	adapter := course.GetLMSAdapter()
 	if (adapter == nil) || (!adapter.SyncUsers()) {
 		return make([]*model.UserOpResult, 0), nil
@@ -76,6 +79,9 @@ func syncLMSUsers(course *model.Course, dryRun bool, sendEmails bool, lmsUsers m
 	results := users.UpsertUsers(upsertOptions)
 
 	// Remove any remaining users from the course.
+	if skipMissing {
+		return results, nil
+	}
 
 	removeEmails := make([]string, 0)
 	for email, _ := range courseUsers {
@@ -88,11 +94,18 @@ func syncLMSUsers(course *model.Course, dryRun bool, sendEmails bool, lmsUsers m
 	for _, email := range removeEmails {
 		if adapter.SyncUserRemoves {
 			_, _, err := db.RemoveUserFromCourse(course, email)
-			results = append(results, &model.UserOpResult{
-				Email:        email,
-				Dropped:      []string{course.GetID()},
-				SystemErrors: []error{err},
-			})
+			if err != nil {
+				results = append(results, &model.UserOpResult{
+					Email:        email,
+					SystemErrors: []string{err.Error()},
+				})
+			} else {
+				results = append(results, &model.UserOpResult{
+					Email:    email,
+					Modified: true,
+					Dropped:  []string{course.GetID()},
+				})
+			}
 		} else {
 			results = append(results, &model.UserOpResult{
 				Email:   email,

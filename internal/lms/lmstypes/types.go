@@ -40,7 +40,7 @@ func (this *User) ToRawUserData(courseID string) *model.RawUserData {
 		Email:       this.Email,
 		Name:        this.Name,
 		Course:      courseID,
-		CourseRole:  this.Role,
+		CourseRole:  this.Role.String(),
 		CourseLMSID: this.ID,
 	}
 

@@ -53,6 +53,25 @@ type UserOpResult struct {
 	CleartextPassword string `json:"cleartext-password,omitempty"`
 }
 
+// A struct containg counts summarizing results.
+// Each value will get +1 for a result that has a matching non-empty value.
+// This means that enrollment/errors will only get +1 regardless of the number of members over 0.
+// Mainly useful for testing.
+type UserOpResultsCounts struct {
+	Total             int
+	Added             int
+	Modified          int
+	Removed           int
+	Skipped           int
+	NotExists         int
+	Emailed           int
+	Enrolled          int
+	Dropped           int
+	ValidationErrors  int
+	SystemErrors      int
+	CleartextPassword int
+}
+
 func NewValidationErrorUserOpResult(email string, err error) *UserOpResult {
 	return &UserOpResult{
 		Email:            email,
@@ -75,4 +94,34 @@ func (this *UserOpResult) MustClone() *UserOpResult {
 	var clone UserOpResult
 	util.MustJSONFromString(util.MustToJSON(this), &clone)
 	return &clone
+}
+
+func GetUserOpResultsCounts(results []*UserOpResult) *UserOpResultsCounts {
+	counts := UserOpResultsCounts{}
+
+	for _, result := range results {
+		counts.Total++
+
+		counts.Added += boolToInt(result.Added)
+		counts.Modified += boolToInt(result.Modified)
+		counts.Removed += boolToInt(result.Removed)
+		counts.Skipped += boolToInt(result.Skipped)
+		counts.NotExists += boolToInt(result.NotExists)
+		counts.Emailed += boolToInt(result.Emailed)
+		counts.Enrolled += boolToInt(len(result.Enrolled) > 0)
+		counts.Dropped += boolToInt(len(result.Dropped) > 0)
+		counts.ValidationErrors += boolToInt(len(result.ValidationErrors) > 0)
+		counts.SystemErrors += boolToInt(len(result.SystemErrors) > 0)
+		counts.CleartextPassword += boolToInt(result.CleartextPassword != "")
+	}
+
+	return &counts
+}
+
+func boolToInt(value bool) int {
+	if value {
+		return 1
+	}
+
+	return 0
 }

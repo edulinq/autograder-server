@@ -181,6 +181,7 @@ func (this *ServerUser) ToCourseUser(courseID string) (*CourseUser, error) {
 // Any given tokens will be added.
 // Any Roles or LMSIDs will be upserted.
 // After all merging, this user will be validated.
+// Nothing can be removed in a merge.
 // The returned boolean indicates if the context user was changed at all.
 func (this *ServerUser) Merge(other *ServerUser) (bool, error) {
 	if other == nil {
