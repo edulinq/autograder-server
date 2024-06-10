@@ -127,7 +127,12 @@ func (this *backend) getServerUsersLock(acquireLock bool) (map[string]*model.Ser
 		return nil, err
 	}
 
-	return users, nil
+	var errs error = nil
+	for _, user := range users {
+		errs = errors.Join(errs, user.Validate())
+	}
+
+	return users, errs
 }
 
 func (this *backend) upsertUsersLock(upsertUsers map[string]*model.ServerUser, acquireLock bool) error {

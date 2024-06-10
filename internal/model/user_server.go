@@ -2,6 +2,7 @@ package model
 
 import (
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"maps"
 	"slices"
@@ -295,10 +296,34 @@ func (this *ServerUser) SetRandomPassword() (string, error) {
 
 	_, err = this.SetPassword(cleartext)
 	if err != nil {
-		return "", fmt.Errorf("User '%s' failed to set random passowrd: '%w'.", this.Email, err)
+		return "", fmt.Errorf("User '%s' failed to set random password: '%w'.", this.Email, err)
 	}
 
 	return cleartext, nil
+}
+
+// Attempt to authenticate this user with the provided text.
+// True will be returned if any of the tokens match.
+func (this *ServerUser) Auth(input string) (bool, error) {
+	var match bool = false
+	var errs error = nil
+
+	if this.Salt == nil {
+		return false, fmt.Errorf("User '%s' has no salt. Cannot auth.", this.Email)
+	}
+
+	// Make sure that all tokens are checked so we are vulnerable to timing attacks.
+	for _, token := range this.Tokens {
+		tokenMatch, err := token.Check(input, *this.Salt)
+		errs = errors.Join(errs, err)
+		match = match || tokenMatch
+	}
+
+	if errs != nil {
+		return false, errs
+	}
+
+	return match, nil
 }
 
 // Deep copy this user (which should already be validated).

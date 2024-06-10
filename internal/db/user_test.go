@@ -230,7 +230,12 @@ func (this *DBTests) DBTestUserUpsertUserInsert(test *testing.T) {
 		Name:  &name,
 	}
 
-	err := UpsertUser(expected)
+	err := expected.Validate()
+	if err != nil {
+		test.Fatalf("Failed to validated upsert user: '%v'.", err)
+	}
+
+	err = UpsertUser(expected)
 	if err != nil {
 		test.Fatalf("Could not upsert user '%s': '%v'.", email, err)
 	}

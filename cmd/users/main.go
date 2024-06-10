@@ -17,56 +17,6 @@ import (
 	"github.com/edulinq/autograder/internal/util"
 )
 
-type AddUser struct {
-	Email     string `help:"Email for the user." arg:"" required:""`
-	Name      string `help:"Name for the user. Defaults to the user's email." short:"n"`
-	Role      string `help:"Role for the user. Defaults to student." short:"r" default:"student"`
-	Pass      string `help:"Password for the user. Defaults to a random string (will be output)." short:"p"`
-	Force     bool   `help:"Overwrite any existing user." short:"f" default:"false"`
-	SendEmail bool   `help:"Send an email to the user about adding them. Errors sending emails will be noted, but will not halt operations." default:"false"`
-	DryRun    bool   `help:"Do not actually write out the user's file or send emails, just state what you would do." default:"false"`
-	SyncLMS   bool   `help:"After adding users, sync the course users (all of them) with the course's LMS." default:"false"`
-}
-
-func (this *AddUser) Run(course *model.Course) error {
-	role := model.GetCourseUserRole(this.Role)
-	if role == model.RoleUnknown {
-		return fmt.Errorf("Unknown role: '%s'.", this.Role)
-	}
-
-	newUser := model.NewUser(this.Email, this.Name, role)
-
-	// If set, the password comes in cleartext.
-	if this.Pass != "" {
-		hashPass := util.Sha256HexFromString(this.Pass)
-		newUser.Pass = hashPass
-	}
-
-	result, err := db.SyncUser(course, newUser, this.Force, this.DryRun, this.SendEmail)
-	if err != nil {
-		return err
-	}
-
-	if this.DryRun {
-		fmt.Println("Doing a dry run, users file will not be written to.")
-	}
-
-	fmt.Println("Add Report:")
-	fmt.Println(util.MustToJSONIndent(result))
-
-	if this.SyncLMS {
-		result, err = lmssync.SyncLMSUserEmail(course, this.Email, this.DryRun, this.SendEmail)
-		if err != nil {
-			return err
-		}
-
-		fmt.Println("\nLMS sync report:")
-		fmt.Println(util.MustToJSONIndent(result))
-	}
-
-	return nil
-}
-
 type AddTSV struct {
 	TSV       string `help:"Path to the TSV file containing the new users." arg:"" required:""`
 	SkipRows  int    `help:"Number of initial rows to skip." default:"0"`
@@ -211,11 +161,9 @@ var cli struct {
 	config.ConfigArgs
 	Course string `help:"ID of the course."`
 
-	Add    AddUser  `cmd:"" help:"Add a user."`
-	AddTSV AddTSV   `cmd:"" help:"Add users from a TSV file formatted as: '<email>[\t<name>[\t<role>[\t<password>]]]'. See add for default values."`
-	Auth   AuthUser `cmd:"" help:"Authenticate as a user."`
-	Get    GetUser  `cmd:"" help:"Get a user."`
-	Rm     RmUser   `cmd:"" help:"Remove a user."`
+	AddTSV AddTSV  `cmd:"" help:"Add users from a TSV file formatted as: '<email>[\t<name>[\t<role>[\t<password>]]]'. See add for default values."`
+	Get    GetUser `cmd:"" help:"Get a user."`
+	Rm     RmUser  `cmd:"" help:"Remove a user."`
 }
 
 func main() {

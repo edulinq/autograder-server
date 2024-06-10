@@ -86,6 +86,7 @@ func MustNewToken(input string, salt string, source TokenSource, name string) *T
 }
 
 // Generate a random input string, sha256 that random string, use the output to create a token, and return the random cleartext and token.
+// Remember that the text before sha256 will be returned.
 func NewRandomToken(salt string, source TokenSource, name string) (string, *Token, error) {
 	cleartext, err := RandomCleartext()
 	if err != nil {
@@ -100,6 +101,15 @@ func NewRandomToken(salt string, source TokenSource, name string) (string, *Toke
 	}
 
 	return cleartext, token, nil
+}
+
+func MustNewRandomToken(salt string, source TokenSource, name string) (string, *Token) {
+	cleartext, token, err := NewRandomToken(salt, source, name)
+	if err != nil {
+		log.Fatal("Failed to create new random token.", err)
+	}
+
+	return cleartext, token
 }
 
 func RandomCleartext() (string, error) {

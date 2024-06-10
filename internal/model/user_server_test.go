@@ -8,7 +8,9 @@ import (
 	"github.com/edulinq/autograder/internal/util"
 )
 
-var baseTestToken *Token = MustNewToken("321cba", "abc123", TokenSourceServer, "test token")
+const BASE_SALT string = "abc123"
+
+var baseTestToken *Token = MustNewToken("321cba", BASE_SALT, TokenSourceServer, "test token")
 
 func TestUserServerUserValidate(test *testing.T) {
 	testCases := []struct {
@@ -868,6 +870,41 @@ func TestUserServerUserMustToRow(test *testing.T) {
 	}
 }
 
+func TestUserServerUserAuth(test *testing.T) {
+	// Make a user with two new tokens.
+	cleartext1, token1 := MustNewRandomToken(BASE_SALT, TokenSourceServer, "test token")
+	cleartext2, token2 := MustNewRandomToken(BASE_SALT, TokenSourceServer, "test token")
+
+	user := setServerUserTokens(baseTestServerUser, []*Token{token1, token2})
+
+	testCases := []struct {
+		pass    string
+		success bool
+	}{
+		// Check first token.
+		{cleartext1, true},
+
+		// Check second token.
+		{cleartext2, true},
+
+		// Check bad input.
+		{cleartext1 + cleartext2, false},
+	}
+
+	for i, testCase := range testCases {
+		success, err := user.Auth(util.Sha256HexFromString(testCase.pass))
+		if err != nil {
+			test.Errorf("Case %d: Faled to auth: '%v'.", i, err)
+			continue
+		}
+
+		if testCase.success != success {
+			test.Errorf("Case %d: Result not as expected. Expected: %v, Actual: %v.", i, testCase.success, success)
+			continue
+		}
+	}
+}
+
 func setServerUserEmail(user *ServerUser, email string) *ServerUser {
 	newUser := *user
 	newUser.Email = email
@@ -914,7 +951,7 @@ var baseTestServerUser *ServerUser = &ServerUser{
 	Email:  "alice@test.com",
 	Name:   util.StringPointer("Alice"),
 	Role:   ServerRoleUser,
-	Salt:   util.StringPointer("abc123"),
+	Salt:   util.StringPointer(BASE_SALT),
 	Tokens: []*Token{baseTestToken},
 	Roles:  map[string]CourseUserRole{"course101": RoleStudent},
 	LMSIDs: map[string]string{"course101": "alice"},
