@@ -5,14 +5,15 @@ import (
 )
 
 // Raw/dirty data for a user.
+// This struct can be directly embedded for Kong arguments.
 type RawUserData struct {
-	Email       string
-	Name        string
-	Role        string
-	Pass        string
-	Course      string
-	CourseRole  string
-	CourseLMSID string
+	Email       string `help:"Email for the user." arg:"" required:""`
+	Name        string `help:"Name for the user."`
+	Role        string `help:"Server role for the user. Defaults to 'user'." default:"user"`
+	Pass        string `help:"Password for the user. Defaults to a random string (will be output)."`
+	Course      string `help:"Optional ID of course to enroll user in."`
+	CourseRole  string `help:"Role for the new user in the specified course. Defaults to 'student'." default:"student"`
+	CourseLMSID string `help:"LMS ID for the new user in the specified course."`
 }
 
 // Get a server user representation of this data.
