@@ -1,7 +1,6 @@
 package lmssync
 
 import (
-	// TEST
 	"fmt"
 	"slices"
 	"testing"
@@ -11,7 +10,6 @@ import (
 	lmstest "github.com/edulinq/autograder/internal/lms/backend/test"
 	"github.com/edulinq/autograder/internal/lms/lmstypes"
 	"github.com/edulinq/autograder/internal/model"
-	"github.com/edulinq/autograder/internal/util"
 )
 
 type SyncLMSTestCase struct {
@@ -77,8 +75,14 @@ func TestCourseSyncLMSUsers(test *testing.T) {
 		enrolled int
 		dropped  int
 	}{
-		// TEST
 		{true, true, true, 1, 4, 0, 1, 1},
+		{true, true, false, 1, 3, 1, 1, 0},
+		{true, false, true, 0, 4, 1, 0, 1},
+		{true, false, false, 0, 3, 2, 0, 0},
+		{false, true, true, 1, 1, 4, 1, 1},
+		{false, true, false, 1, 0, 5, 1, 0},
+		{false, false, true, 0, 1, 5, 0, 1},
+		{false, false, false, 0, 0, 5, 0, 0},
 	}
 
 	for i, testCase := range testCases {
@@ -93,14 +97,6 @@ func TestCourseSyncLMSUsers(test *testing.T) {
 		course.GetLMSAdapter().SyncUserAdds = testCase.syncAdd
 		course.GetLMSAdapter().SyncUserRemoves = testCase.syncDel
 
-		/* TEST
-		courseUsers, err := db.GetCourseUsers(course)
-		if err != nil {
-			test.Errorf("Case %d (%+v): Failed to get course users: '%v'.", i, testCase, err)
-			continue
-		}
-		*/
-
 		result, err := SyncAllLMSUsers(course, false, true)
 		if err != nil {
 			test.Errorf("Case %d (%s): User sync failed: '%v'.", i, label, err)
@@ -109,18 +105,14 @@ func TestCourseSyncLMSUsers(test *testing.T) {
 
 		counts := model.GetUserOpResultsCounts(result)
 
-		// TEST
-		fmt.Println("###")
-		fmt.Println(i)
-		fmt.Println(label)
-		fmt.Println(util.MustToJSONIndent(result))
-		fmt.Println("---")
-		fmt.Println(util.MustToJSONIndent(counts))
-		fmt.Println("###")
-
 		// Basic counts that are the same for all tests.
 
 		expected := 6
+		if !course.GetLMSAdapter().SyncUsers() {
+			// When stopping early, deletes are not considered.
+			expected = 5
+		}
+
 		if expected != counts.Total {
 			test.Errorf("Case %d (%s): Unexpected total number of results. Expected: %d, Actual: %d.", i, label, expected, counts.Total)
 			continue
@@ -230,265 +222,3 @@ func testingUsers(users []*lmstypes.User) []*lmstypes.User {
 
 	return users
 }
-
-/* TEST
-func TestCourseSyncLMSUsers(test *testing.T) {
-	// Leave the db in a good state after the test.
-	defer reset()
-
-	for i, testCase := range getSyncLMSTestCases() {
-		// Reload the test course every time.
-		reset()
-
-		lmstest.SetUsersModifier(testingUsers)
-		course := db.MustGetTestCourse()
-
-		course.GetLMSAdapter().SyncUserAttributes = testCase.syncAttributes
-		course.GetLMSAdapter().SyncUserAdds = testCase.syncAdd
-		course.GetLMSAdapter().SyncUserRemoves = testCase.syncDel
-
-		courseUsers, err := db.GetCourseUsers(course)
-		if err != nil {
-			test.Errorf("Case %d (%+v): Failed to get course users: '%v'.", i, testCase, err)
-			continue
-		}
-
-		email.ClearTestMessages()
-
-		result, err := SyncAllLMSUsers(course, testCase.dryRun, testCase.sendEmails)
-		if err != nil {
-			test.Errorf("Case %d (%+v): User sync failed: '%v'.", i, testCase, err)
-			continue
-		}
-
-		var unchangedUsers []*model.User = []*model.User{
-			courseUsers["owner@test.com"],
-		}
-
-		testMessages := email.GetTestMessages()
-
-		// LMS syncs cannot skip users.
-		if len(result.Skip) != 0 {
-			test.Errorf("Case %d (%+v): Skipped users is not empty.", i, testCase)
-			continue
-		}
-
-		// There will always be mod users, since LMS IDs are always synced.
-		// But when the option is on, additional attriutes will be synced.
-		currentModUsers := modUsers
-		if testCase.syncAttributes {
-			currentModUsers = modAllUsers
-		} else {
-		}
-
-		if !model.UsersPointerEqual(currentModUsers, result.Mod) {
-			test.Errorf("Case %d (%+v): Unexpected mod users. Expected: '%s', actual: '%s'.",
-				i, testCase, util.MustToJSON(currentModUsers), util.MustToJSON(result.Mod))
-			continue
-		}
-
-		if testCase.syncAdd {
-			if !model.UsersPointerEqual(addUsers, result.Add) {
-				test.Errorf("Case %d (%+v): Unexpected add users. Expected: '%s', actual: '%s'.",
-					i, testCase, util.MustToJSON(addUsers), util.MustToJSON(result.Add))
-				continue
-			}
-
-			if len(result.Add) != len(result.ClearTextPasswords) {
-				test.Errorf("Case %d (%+v): Number of cleartext passwords (%d) does not match number of add users (%d).",
-					i, testCase, len(result.ClearTextPasswords), len(result.Add))
-				continue
-			}
-
-			for _, user := range addUsers {
-				_, ok := result.ClearTextPasswords[user.Email]
-				if !ok {
-					test.Errorf("Case %d (%+v): Add user '%s' does not have a cleartext password.", i, testCase, user.Email)
-					continue
-				}
-			}
-
-			if testCase.dryRun || !testCase.sendEmails {
-				if len(testMessages) != 0 {
-					test.Errorf("Case %d (%+v): User additions were enabled on a no-email/dry run, but %d new emails were found.", i, testCase, len(testMessages))
-					continue
-				}
-			} else {
-				if !email.ShallowSliceEqual(addEmails, testMessages) {
-					test.Errorf("Case %d (%+v): Unexpected add emails. Expected: '%s', actual: '%s'.",
-						i, testCase, util.MustToJSON(addEmails), util.MustToJSON(testMessages))
-					continue
-				}
-			}
-		} else {
-			if len(result.Add) != 0 {
-				test.Errorf("Case %d (%+v): User additions were disabled, but %d new users were found.", i, testCase, len(result.Add))
-				continue
-			}
-
-			if len(result.ClearTextPasswords) != 0 {
-				test.Errorf("Case %d (%+v): User additions were disabled, but %d new cleartext passwords were found.", i, testCase, len(result.ClearTextPasswords))
-				continue
-			}
-
-			if len(testMessages) != 0 {
-				test.Errorf("Case %d (%+v): User additions were disabled, but %d new emails were found.", i, testCase, len(testMessages))
-				continue
-			}
-		}
-
-		if testCase.syncDel {
-			if !model.UsersPointerEqual(delUsers, result.Del) {
-				test.Errorf("Case %d (%+v): Unexpected del users. Expected: '%s', actual: '%s'.",
-					i, testCase, util.MustToJSON(delUsers), util.MustToJSON(result.Del))
-				continue
-			}
-		} else {
-			unchangedUsers = append(unchangedUsers, courseUsers["other@test.com"])
-
-			if len(result.Del) != 0 {
-				test.Errorf("Case %d (%+v): User deletions were disabled, but %d deleted users were found.", i, testCase, len(result.Del))
-				continue
-			}
-		}
-
-		if !model.UsersPointerEqual(unchangedUsers, result.Unchanged) {
-			test.Errorf("Case %d (%+v): Unexpected unchanged users. Expected: '%s', actual: '%s'.",
-				i, testCase, util.MustToJSON(unchangedUsers), util.MustToJSON(result.Unchanged))
-			continue
-		}
-	}
-}
-
-// Get all possible test cases.
-func getSyncLMSTestCases() []SyncLMSTestCase {
-	return buildSyncLMSTestCase(nil, 0, make([]bool, 5))
-}
-
-func buildSyncLMSTestCase(testCases []SyncLMSTestCase, index int, currentCase []bool) []SyncLMSTestCase {
-	if index >= len(currentCase) {
-		return append(testCases, SyncLMSTestCase{
-			dryRun:         currentCase[0],
-			sendEmails:     currentCase[1],
-			syncAttributes: currentCase[2],
-			syncAdd:        currentCase[3],
-			syncDel:        currentCase[4],
-		})
-	}
-
-	currentCase[index] = true
-	testCases = buildSyncLMSTestCase(testCases, index+1, currentCase)
-
-	currentCase[index] = false
-	testCases = buildSyncLMSTestCase(testCases, index+1, currentCase)
-
-	return testCases
-}
-
-// Modify the users that the LMS will return for testing.
-func testingUsers(users []*lmstypes.User) []*lmstypes.User {
-	// Remove other.
-	removeIndex := -1
-	for i, user := range users {
-		if user.Email == "other@test.com" {
-			removeIndex = i
-		} else if user.Email == "student@test.com" {
-			// student will only have their LMS ID added, no other changes.
-		} else if user.Email == "grader@test.com" {
-			// grader will have their name changed.
-			user.Name = "Changed Name"
-		} else if user.Email == "admin@test.com" {
-			// admin will have their role changed.
-			user.Role = model.RoleOwner
-		} else if user.Email == "owner@test.com" {
-			// owner will not have anything changed (so we must manually remove their LMS ID).
-			user.ID = ""
-		}
-	}
-
-	users = slices.Delete(users, removeIndex, removeIndex+1)
-
-	// Make an add user.
-	addUser := &lmstypes.User{
-		ID:    "lms-add@test.com",
-		Name:  "add",
-		Email: "add@test.com",
-		Role:  model.RoleStudent,
-	}
-	users = append(users, addUser)
-
-	return users
-}
-
-// The users that are marked as additions.
-var addUsers []*model.User = []*model.User{
-	&model.User{
-		Email: "add@test.com",
-		Name:  "add",
-		Role:  model.RoleStudent,
-		LMSID: "lms-add@test.com",
-	},
-}
-
-// The users that are marked as deletions.
-var delUsers []*model.User = []*model.User{
-	&model.User{
-		Email: "other@test.com",
-		Name:  "other",
-		Role:  model.RoleOther,
-		LMSID: "",
-	},
-}
-
-// All the users that are marked as mods.
-var modAllUsers []*model.User = []*model.User{
-	&model.User{
-		Email: "student@test.com",
-		Name:  "student",
-		Role:  model.RoleStudent,
-		LMSID: "lms-student@test.com",
-	},
-	&model.User{
-		Email: "grader@test.com",
-		Name:  "Changed Name",
-		Role:  model.RoleGrader,
-		LMSID: "lms-grader@test.com",
-	},
-	&model.User{
-		Email: "admin@test.com",
-		Name:  "admin",
-		Role:  model.RoleOwner,
-		LMSID: "lms-admin@test.com",
-	},
-}
-
-// All the users that are marked as mods with no attribute syncing.
-var modUsers []*model.User = []*model.User{
-	&model.User{
-		Email: "student@test.com",
-		Name:  "student",
-		Role:  model.RoleStudent,
-		LMSID: "lms-student@test.com",
-	},
-	&model.User{
-		Email: "grader@test.com",
-		Name:  "grader",
-		Role:  model.RoleGrader,
-		LMSID: "lms-grader@test.com",
-	},
-	&model.User{
-		Email: "admin@test.com",
-		Name:  "admin",
-		Role:  model.RoleAdmin,
-		LMSID: "lms-admin@test.com",
-	},
-}
-
-var addEmails []*email.Message = []*email.Message{
-	&email.Message{
-		To:      []string{"add@test.com"},
-		Subject: "Autograder course101 -- User Account Created",
-		HTML:    false,
-	},
-}
-*/

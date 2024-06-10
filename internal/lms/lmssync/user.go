@@ -53,8 +53,16 @@ func SyncLMSUserEmails(course *model.Course, emails []string, dryRun bool, sendE
 // This means that deletes will never be processed (since they are always in the LMS).
 func syncLMSUsers(course *model.Course, dryRun bool, sendEmails bool, skipMissing bool, lmsUsers map[string]*lmstypes.User) ([]*model.UserOpResult, error) {
 	adapter := course.GetLMSAdapter()
-	if (adapter == nil) || (!adapter.SyncUsers()) {
+	if adapter == nil {
 		return make([]*model.UserOpResult, 0), nil
+	}
+
+	if !adapter.SyncUsers() {
+		results := make([]*model.UserOpResult, 0, len(lmsUsers))
+		for email, _ := range lmsUsers {
+			results = append(results, &model.UserOpResult{Email: email, Skipped: true})
+		}
+		return results, nil
 	}
 
 	courseUsers, err := db.GetCourseUsers(course)
