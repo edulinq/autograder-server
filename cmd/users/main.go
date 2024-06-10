@@ -62,51 +62,6 @@ func (this *AddTSV) Run(course *model.Course) error {
 	return nil
 }
 
-type AuthUser struct {
-	Email string `help:"Email for the user." arg:"" required:""`
-	Pass  string `help:"Password for the user. Defaults to a random string (will be output)." short:"p"`
-}
-
-func (this *AuthUser) Run(course *model.Course) error {
-	user, err := db.GetUser(course, this.Email)
-	if err != nil {
-		return fmt.Errorf("Failed to get user: '%w'.", err)
-	}
-
-	if user == nil {
-		return fmt.Errorf("User '%s' does not exist, cannot auth.", this.Email)
-	}
-
-	passHash := util.Sha256Hex([]byte(this.Pass))
-
-	if user.CheckPassword(passHash) {
-		fmt.Println("Authentication Successful")
-	} else {
-		fmt.Println("Authentication Failed, Bad Password")
-	}
-
-	return nil
-}
-
-type GetUser struct {
-	Email string `help:"Email for the user." arg:"" required:""`
-}
-
-func (this *GetUser) Run(course *model.Course) error {
-	user, err := db.GetCourseUser(course, this.Email)
-	if err != nil {
-		return fmt.Errorf("Failed to get user: '%w'.", err)
-	}
-
-	if user == nil {
-		fmt.Printf("No user found with email '%s'.\n", this.Email)
-	} else {
-		fmt.Printf("Email: '%s', Name: '%s', Role: '%s'.\n", user.Email, user.Name, user.Role)
-	}
-
-	return nil
-}
-
 type ChangePassword struct {
 	Email     string `help:"Email for the user." arg:"" required:""`
 	Pass      string `help:"Password for the user. Defaults to a random string (will be output)." short:"p"`
@@ -161,9 +116,8 @@ var cli struct {
 	config.ConfigArgs
 	Course string `help:"ID of the course."`
 
-	AddTSV AddTSV  `cmd:"" help:"Add users from a TSV file formatted as: '<email>[\t<name>[\t<role>[\t<password>]]]'. See add for default values."`
-	Get    GetUser `cmd:"" help:"Get a user."`
-	Rm     RmUser  `cmd:"" help:"Remove a user."`
+	AddTSV AddTSV `cmd:"" help:"Add users from a TSV file formatted as: '<email>[\t<name>[\t<role>[\t<password>]]]'. See add for default values."`
+	Rm     RmUser `cmd:"" help:"Remove a user."`
 }
 
 func main() {
