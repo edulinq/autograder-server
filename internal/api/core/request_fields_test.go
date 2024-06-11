@@ -49,9 +49,11 @@ func TestBadUsersFieldNotExported(test *testing.T) {
 				users CourseUsers
 			}{
 				APIRequestCourseUserContext: APIRequestCourseUserContext{
-					CourseID:  "course101",
-					UserEmail: "student@test.com",
-					UserPass:  studentPass,
+					APIRequestUserContext: APIRequestUserContext{
+						UserEmail: "student@test.com",
+						UserPass:  studentPass,
+					},
+					CourseID: "course101",
 				},
 			},
 		},
@@ -62,9 +64,11 @@ func TestBadUsersFieldNotExported(test *testing.T) {
 				targetUser TargetUserSelfOrGrader
 			}{
 				APIRequestCourseUserContext: APIRequestCourseUserContext{
-					CourseID:  "course101",
-					UserEmail: "student@test.com",
-					UserPass:  studentPass,
+					APIRequestUserContext: APIRequestUserContext{
+						UserEmail: "student@test.com",
+						UserPass:  studentPass,
+					},
+					CourseID: "course101",
 				},
 			},
 		},
@@ -75,9 +79,11 @@ func TestBadUsersFieldNotExported(test *testing.T) {
 				targetUser TargetUserSelfOrAdmin
 			}{
 				APIRequestCourseUserContext: APIRequestCourseUserContext{
-					CourseID:  "course101",
-					UserEmail: "student@test.com",
-					UserPass:  studentPass,
+					APIRequestUserContext: APIRequestUserContext{
+						UserEmail: "student@test.com",
+						UserPass:  studentPass,
+					},
+					CourseID: "course101",
 				},
 			},
 		},
@@ -116,28 +122,28 @@ func TestNonEmptyStringField(test *testing.T) {
 		{&struct {
 			APIRequest
 			Text NonEmptyString
-		}{}, "-032", "Text"},
+		}{}, "-038", "Text"},
 		{&struct {
 			APIRequest
 			Text NonEmptyString
-		}{Text: ""}, "-032", "Text"},
+		}{Text: ""}, "-038", "Text"},
 
 		{&struct {
 			APIRequest
 			Text NonEmptyString `json:"text"`
-		}{}, "-032", "text"},
+		}{}, "-038", "text"},
 		{&struct {
 			APIRequest
 			Text NonEmptyString `json:"text,omitempty"`
-		}{}, "-032", "text"},
+		}{}, "-038", "text"},
 		{&struct {
 			APIRequest
 			Text NonEmptyString `json:"foo-bar"`
-		}{}, "-032", "foo-bar"},
+		}{}, "-038", "foo-bar"},
 		{&struct {
 			APIRequest
 			Text NonEmptyString `json:"foo-bar,omitempty"`
-		}{}, "-032", "foo-bar"},
+		}{}, "-038", "foo-bar"},
 	}
 
 	for i, testCase := range testCases {
@@ -418,9 +424,11 @@ func TestTargetUserSelfOrGrader(test *testing.T) {
 	createRequest := func(role model.CourseUserRole, target string) *testTargetUserSelfOrGraderRequestType {
 		return &testTargetUserSelfOrGraderRequestType{
 			APIRequestCourseUserContext: APIRequestCourseUserContext{
-				CourseID:  "course101",
-				UserEmail: role.String() + "@test.com",
-				UserPass:  util.Sha256HexFromString(role.String()),
+				APIRequestUserContext: APIRequestUserContext{
+					UserEmail: role.String() + "@test.com",
+					UserPass:  util.Sha256HexFromString(role.String()),
+				},
+				CourseID: "course101",
 			},
 			User: TargetUserSelfOrGrader{
 				TargetUser{
@@ -456,9 +464,11 @@ func TestTargetUserSelfOrAdmin(test *testing.T) {
 	createRequest := func(role model.CourseUserRole, target string) *testTargetUserSelfOrAdminRequestType {
 		return &testTargetUserSelfOrAdminRequestType{
 			APIRequestCourseUserContext: APIRequestCourseUserContext{
-				CourseID:  "course101",
-				UserEmail: role.String() + "@test.com",
-				UserPass:  util.Sha256HexFromString(role.String()),
+				APIRequestUserContext: APIRequestUserContext{
+					UserEmail: role.String() + "@test.com",
+					UserPass:  util.Sha256HexFromString(role.String()),
+				},
+				CourseID: "course101",
 			},
 			User: TargetUserSelfOrAdmin{
 				TargetUser{
@@ -600,9 +610,11 @@ func TestTargetUser(test *testing.T) {
 	for i, testCase := range testCases {
 		request := requestType{
 			APIRequestCourseUserContext: APIRequestCourseUserContext{
-				CourseID:  "course101",
-				UserEmail: testCase.role.String() + "@test.com",
-				UserPass:  util.Sha256HexFromString(testCase.role.String()),
+				APIRequestUserContext: APIRequestUserContext{
+					UserEmail: testCase.role.String() + "@test.com",
+					UserPass:  util.Sha256HexFromString(testCase.role.String()),
+				},
+				CourseID: "course101",
 			},
 			User: TargetUser{
 				Email: testCase.target,

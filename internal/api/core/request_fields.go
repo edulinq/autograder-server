@@ -27,7 +27,7 @@ type MinRoleOther bool
 
 // A request having a field of this type indicates that the users for the course should be automatically fetched.
 // The existence of this type in a struct also indicates that the request is at least a APIRequestCourseUserContext.
-type CourseUsers map[string]*model.User
+type CourseUsers map[string]*model.CourseUser
 
 // A request having a field of this type indicates that files from the POST request
 // will be qutomatically read and written to a temp directory on disk.
@@ -43,7 +43,7 @@ type POSTFiles struct {
 type TargetUser struct {
 	Found bool
 	Email string
-	User  *model.User
+	User  *model.CourseUser
 }
 
 // A request having a field of this type indicates that the request is targeting a specific user.
@@ -240,7 +240,7 @@ func checkRequestNonEmptyString(endpoint string, apiRequest any, fieldIndex int)
 
 	value := fieldValue.Interface().(NonEmptyString)
 	if value == "" {
-		return NewBareBadRequestError("-032", endpoint,
+		return NewBareBadRequestError("-038", endpoint,
 			fmt.Sprintf("Field '%s' requires a non-empty string, empty or null provided.", jsonName)).
 			Add("struct-name", structName).Add("field-name", fieldType.Name).Add("json-name", jsonName)
 	}
@@ -334,7 +334,7 @@ func storeRequestFile(request *http.Request, outDir string, filename string) err
 }
 
 // Baseline checks for fields that require access to the course's users.
-func baseCheckRequestUsersField(endpoint string, apiRequest any, fieldIndex int) (*APIRequestCourseUserContext, map[string]*model.User, *APIError) {
+func baseCheckRequestUsersField(endpoint string, apiRequest any, fieldIndex int) (*APIRequestCourseUserContext, map[string]*model.CourseUser, *APIError) {
 	reflectValue := reflect.ValueOf(apiRequest).Elem()
 
 	fieldValue := reflectValue.Field(fieldIndex)
@@ -358,7 +358,7 @@ func baseCheckRequestUsersField(endpoint string, apiRequest any, fieldIndex int)
 				Add("struct-name", structName).Add("field-name", fieldType.Name).Add("field-type", fieldName)
 	}
 
-	users, err := db.GetUsers(courseContext.Course)
+	users, err := db.GetCourseUsers(courseContext.Course)
 	if err != nil {
 		return nil, nil,
 			NewInternalError("-027", &courseContext, "Failed to fetch embeded users.").Err(err).

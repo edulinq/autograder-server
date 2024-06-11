@@ -194,7 +194,7 @@ func NewBareBadRequestError(locator string, endpoint string, message string) *AP
 	}
 }
 
-func NewAuthBadRequestError(locator string, request *APIRequestCourseUserContext, internalMessage string) *APIError {
+func NewAuthBadRequestError(locator string, request *APIRequestUserContext, internalMessage string) *APIError {
 	err := &APIError{
 		RequestID:    request.RequestID,
 		Locator:      locator,
@@ -204,7 +204,6 @@ func NewAuthBadRequestError(locator string, request *APIRequestCourseUserContext
 		HTTPStatus:   HTTP_STATUS_AUTH_ERROR,
 		InternalText: fmt.Sprintf("Authentication failure: '%s'.", internalMessage),
 		ResponseText: "Authentication failure, check course, email, and password.",
-		CourseID:     request.CourseID,
 		UserEmail:    request.UserEmail,
 	}
 
@@ -242,6 +241,22 @@ func NewInternalError(locator string, request *APIRequestCourseUserContext, inte
 		InternalText: internalMessage,
 		ResponseText: fmt.Sprintf("The server failed to process your request. Please contact an adimistrator with this ID '%s'.", request.RequestID),
 		CourseID:     request.CourseID,
+		UserEmail:    request.UserEmail,
+	}
+
+	return err
+}
+
+func NewUsertContextInternalError(locator string, request *APIRequestUserContext, internalMessage string) *APIError {
+	err := &APIError{
+		RequestID:    request.RequestID,
+		Locator:      locator,
+		Endpoint:     request.Endpoint,
+		Timestamp:    request.Timestamp,
+		LogLevel:     log.LevelError,
+		HTTPStatus:   HTTP_STATUS_SERVER_ERROR,
+		InternalText: internalMessage,
+		ResponseText: fmt.Sprintf("The server failed to process your request. Please contact an adimistrator with this ID '%s'.", request.RequestID),
 		UserEmail:    request.UserEmail,
 	}
 

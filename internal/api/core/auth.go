@@ -10,8 +10,8 @@ import (
 // Return a user only in the case that the authentication is successful.
 // If any error is retuturned, then the request should end and the response sent based on the error.
 // This assumes basic validation has already been done on the request.
-func (this *APIRequestCourseUserContext) Auth() (*model.User, *APIError) {
-	user, err := db.GetUser(this.Course, this.UserEmail)
+func (this *APIRequestUserContext) Auth() (*model.ServerUser, *APIError) {
+	user, err := db.GetServerUser(this.UserEmail, true)
 	if err != nil {
 		return nil, NewAuthBadRequestError("-012", this, "Cannot Get User").Err(err)
 	}
@@ -21,11 +21,16 @@ func (this *APIRequestCourseUserContext) Auth() (*model.User, *APIError) {
 	}
 
 	if config.NO_AUTH.Get() {
-		log.Debug("Authentication Disabled.", this.Course, log.NewUserAttr(this.UserEmail))
+		log.Debug("Authentication Disabled.", log.NewUserAttr(this.UserEmail))
 		return user, nil
 	}
 
-	if !user.CheckPassword(this.UserPass) {
+	auth, err := user.Auth(this.UserPass)
+	if err != nil {
+		return nil, NewBareInternalError("-037", this.Endpoint, "User auth failed.").Err(err)
+	}
+
+	if !auth {
 		return nil, NewAuthBadRequestError("-014", this, "Bad Password")
 	}
 

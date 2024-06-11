@@ -10,10 +10,16 @@ import (
 
 var studentPass string = util.Sha256HexFromString("student")
 
-var standardCourseContext APIRequestCourseUserContext = APIRequestCourseUserContext{
-	CourseID:  "course101",
+// TEST - Tests for APIRequestUserContext
+
+var standardUserContext APIRequestUserContext = APIRequestUserContext{
 	UserEmail: "student@test.com",
 	UserPass:  studentPass,
+}
+
+var standardCourseContext APIRequestCourseUserContext = APIRequestCourseUserContext{
+	APIRequestUserContext: standardUserContext,
+	CourseID:              "course101",
 }
 
 func TestValidBaseCourseUserAPIRequests(test *testing.T) {

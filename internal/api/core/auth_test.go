@@ -9,7 +9,7 @@ import (
 
 func TestAuth(test *testing.T) {
 	type baseAPIRequest struct {
-		APIRequestCourseUserContext
+		APIRequestUserContext
 		MinRoleOther
 	}
 
@@ -55,8 +55,7 @@ func TestAuth(test *testing.T) {
 
 	for i, testCase := range testCases {
 		request := baseAPIRequest{
-			APIRequestCourseUserContext: APIRequestCourseUserContext{
-				CourseID:  "course101",
+			APIRequestUserContext: APIRequestUserContext{
 				UserEmail: testCase.email,
 				UserPass:  util.Sha256HexFromString(testCase.pass),
 			},

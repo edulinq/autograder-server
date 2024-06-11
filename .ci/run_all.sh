@@ -36,6 +36,10 @@ function main() {
     ./scripts/check_formatting.sh
     ((error_count += $?))
 
+    echo -e "\nChecking Duplicate API Locators"
+    ./scripts/check_duplicate_api_locators.sh
+    ((error_count += $?))
+
     echo -e "\nRunning Tests"
     ./scripts/run_tests.sh
     ((error_count += $?))

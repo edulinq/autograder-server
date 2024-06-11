@@ -3,7 +3,6 @@ package core
 // How to represent users in API responses.
 
 import (
-	"fmt"
 	"slices"
 	"strings"
 
@@ -17,37 +16,16 @@ type UserInfo struct {
 	LMSID string               `json:"lms-id"`
 }
 
-type UserInfoWithPass struct {
-	UserInfo
-	Pass string `json:"pass"`
-}
-
-func NewUserInfo(user *model.User) *UserInfo {
+func NewUserInfo(user *model.CourseUser) *UserInfo {
 	return &UserInfo{
 		Email: user.Email,
-		Name:  user.Name,
+		Name:  user.GetDisplayName(),
 		Role:  user.Role,
-		LMSID: user.LMSID,
+		LMSID: user.GetLMSID(),
 	}
 }
 
-func (this *UserInfoWithPass) ToUsr() (*model.User, error) {
-	if this.Email == "" {
-		return nil, fmt.Errorf("Empty emails are not allowed.")
-	}
-
-	user := model.User{
-		Email: this.Email,
-		Pass:  this.Pass,
-		Name:  this.Name,
-		Role:  this.Role,
-		LMSID: this.LMSID,
-	}
-
-	return &user, nil
-}
-
-func NewUserInfos(users []*model.User) []*UserInfo {
+func NewUserInfos(users []*model.CourseUser) []*UserInfo {
 	result := make([]*UserInfo, 0, len(users))
 	for _, user := range users {
 		result = append(result, NewUserInfo(user))

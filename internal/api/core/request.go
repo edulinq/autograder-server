@@ -26,22 +26,24 @@ type APIRequest struct {
 	TestingMode bool `json:"-"`
 }
 
-// TEST - Will need a new context here: APIRequestUserContext.
-//        This will handle the authentication (but not role checking).
-//        Get a ServerUser, then APIRequestCourseUserContext will check role and set a CourseUser.
-
-// Context for a request that has a course and user (pretty much the lowest level of request).
-type APIRequestCourseUserContext struct {
+// Context for a request that has a user (pretty much the lowest level of request).
+type APIRequestUserContext struct {
 	APIRequest
 
-	CourseID  string `json:"course-id"`
 	UserEmail string `json:"user-email"`
 	UserPass  string `json:"user-pass"`
 
-	// These fields are filled out as the request is parsed,
-	// before being sent to the handler.
-	Course *model.Course
-	User   *model.User
+	ServerUser *model.ServerUser `json:"-"`
+}
+
+// Context for a request that has a course and user from that course.
+type APIRequestCourseUserContext struct {
+	APIRequestUserContext
+
+	CourseID string `json:"course-id"`
+
+	Course *model.Course     `json:"-"`
+	User   *model.CourseUser `json:"-"`
 }
 
 // Context for requests that need an assignment on top of a user/course.
@@ -64,18 +66,14 @@ func (this *APIRequest) Validate(request any, endpoint string) *APIError {
 }
 
 // Validate that all the fields are populated correctly and
-// that they are valid in the context of this server,
+// that they are valid in the context of this server.
 // Additionally, all context fields will be populated.
 // This means that this request will be authenticated here.
 // The full request (object that this is embedded in) is also sent.
-func (this *APIRequestCourseUserContext) Validate(request any, endpoint string) *APIError {
+func (this *APIRequestUserContext) Validate(request any, endpoint string) *APIError {
 	apiErr := this.APIRequest.Validate(request, endpoint)
 	if apiErr != nil {
 		return apiErr
-	}
-
-	if this.CourseID == "" {
-		return NewBadRequestError("-015", &this.APIRequest, "No course ID specified.")
 	}
 
 	if this.UserEmail == "" {
@@ -84,6 +82,26 @@ func (this *APIRequestCourseUserContext) Validate(request any, endpoint string) 
 
 	if this.UserPass == "" {
 		return NewBadRequestError("-017", &this.APIRequest, "No user password specified.")
+	}
+
+	this.ServerUser, apiErr = this.Auth()
+	if apiErr != nil {
+		return apiErr
+	}
+
+	return nil
+}
+
+// See APIRequestUserContext.Validate().
+// The server user will be converted into a course user to be stored within this request.
+func (this *APIRequestCourseUserContext) Validate(request any, endpoint string) *APIError {
+	apiErr := this.APIRequestUserContext.Validate(request, endpoint)
+	if apiErr != nil {
+		return apiErr
+	}
+
+	if this.CourseID == "" {
+		return NewBadRequestError("-015", &this.APIRequest, "No course ID specified.")
 	}
 
 	var err error
@@ -97,14 +115,18 @@ func (this *APIRequestCourseUserContext) Validate(request any, endpoint string) 
 			Course(this.CourseID)
 	}
 
-	this.User, apiErr = this.Auth()
-	if apiErr != nil {
-		return apiErr
+	this.User, err = this.ServerUser.ToCourseUser(this.Course.ID)
+	if err != nil {
+		return NewInternalError("-039", this, "Unable to convert server user to course user.").Err(err)
+	}
+
+	if this.User == nil {
+		return NewBadRequestError("-040", &this.APIRequest, fmt.Sprintf("User '%s' is not enolled in course '%s'.", this.UserEmail, this.CourseID))
 	}
 
 	minRole, foundRole := getMaxRole(request)
 	if !foundRole {
-		return NewInternalError("-019", this, "No role found for request. All request structs require a minimum role.")
+		return NewInternalError("-019", this, "No role found for request. All course-based request structs require a minimum role.")
 	}
 
 	if this.User.Role < minRole {
@@ -114,7 +136,7 @@ func (this *APIRequestCourseUserContext) Validate(request any, endpoint string) 
 	return nil
 }
 
-// See APIRequestCourseUserContext.Validate().
+// See APIRequestUserContext.Validate().
 func (this *APIRequestAssignmentContext) Validate(request any, endpoint string) *APIError {
 	apiErr := this.APIRequestCourseUserContext.Validate(request, endpoint)
 	if apiErr != nil {
@@ -215,6 +237,17 @@ func validateRequestStruct(request any, endpoint string) (bool, *APIError) {
 			}
 
 			fieldValue.Set(reflect.ValueOf(apiRequest))
+		} else if fieldValue.Type() == reflect.TypeOf((*APIRequestUserContext)(nil)).Elem() {
+			// APIRequestUserContext
+			userRequest := fieldValue.Interface().(APIRequestUserContext)
+			foundRequestStruct = true
+
+			apiErr := userRequest.Validate(request, endpoint)
+			if apiErr != nil {
+				return false, apiErr
+			}
+
+			fieldValue.Set(reflect.ValueOf(userRequest))
 		} else if fieldValue.Type() == reflect.TypeOf((*APIRequestCourseUserContext)(nil)).Elem() {
 			// APIRequestCourseUserContext
 			courseUserRequest := fieldValue.Interface().(APIRequestCourseUserContext)
