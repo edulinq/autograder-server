@@ -44,10 +44,15 @@ func (this *Assignment) GetID() string {
 }
 
 func (this *Assignment) LogValue() []*log.Attr {
-	return []*log.Attr{
-		log.NewCourseAttr(this.Course.ID),
-		log.NewAssignmentAttr(this.ID),
+	attrs := make([]*log.Attr, 0, 2)
+
+	attrs = append(attrs, log.NewAssignmentAttr(this.ID))
+
+	if this.Course != nil {
+		attrs = append(attrs, log.NewCourseAttr(this.Course.ID))
 	}
+
+	return attrs
 }
 
 func (this *Assignment) GetSortID() string {

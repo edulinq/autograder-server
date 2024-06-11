@@ -21,7 +21,7 @@ func FullAssignmentScoringAndUpload(assignment *model.Assignment, dryRun bool) e
 		return fmt.Errorf("Assignment's course has no LMS info associated with it.")
 	}
 
-	users, err := db.GetUsers(assignment.GetCourse())
+	users, err := db.GetCourseUsers(assignment.GetCourse())
 	if err != nil {
 		return fmt.Errorf("Failed to fetch autograder users: '%w'.", err)
 	}
@@ -50,7 +50,7 @@ func FullAssignmentScoringAndUpload(assignment *model.Assignment, dryRun bool) e
 }
 
 func computeFinalScores(
-	assignment *model.Assignment, users map[string]*model.User,
+	assignment *model.Assignment, users map[string]*model.CourseUser,
 	scoringInfos map[string]*model.ScoringInfo, lmsScores []*lmstypes.SubmissionScore,
 	dryRun bool) error {
 	var err error
@@ -126,7 +126,7 @@ func parseComments(lmsScores []*lmstypes.SubmissionScore) (map[string]bool, map[
 
 func filterFinalScores(
 	assignment *model.Assignment,
-	users map[string]*model.User, scoringInfos map[string]*model.ScoringInfo,
+	users map[string]*model.CourseUser, scoringInfos map[string]*model.ScoringInfo,
 	locks map[string]bool, existingComments map[string]*model.ScoringInfo,
 ) ([]*lmstypes.SubmissionScore, []*lmstypes.SubmissionComment) {
 	finalScores := make([]*lmstypes.SubmissionScore, 0)
@@ -145,20 +145,21 @@ func filterFinalScores(
 		}
 
 		// Skip users that do not have an LMS id.
-		if user.LMSID == "" {
+		lmsID := user.GetLMSID()
+		if lmsID == "" {
 			log.Warn("User does not have an LMS ID, skipping grade upload.", assignment, log.NewUserAttr(email))
 			continue
 		}
 
 		// This score is locked, skip it.
-		if locks[user.LMSID] {
+		if locks[lmsID] {
 			continue
 		}
 
 		scoringInfo.UploadTime = common.NowTimestamp()
 
 		// Check the existing comment last so we can decide if this comment needs to be updated.
-		existingComment := existingComments[user.LMSID]
+		existingComment := existingComments[lmsID]
 		if existingComment != nil {
 			// If this user has an existing comment, then we may skip this upload if everything matches.
 			if existingComment.Equal(scoringInfo) {
@@ -197,7 +198,7 @@ func filterFinalScores(
 		}
 
 		lmsScore := lmstypes.SubmissionScore{
-			UserID:   user.LMSID,
+			UserID:   lmsID,
 			Score:    scoringInfo.Score,
 			Time:     scoringTime,
 			Comments: uploadComments,

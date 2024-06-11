@@ -76,6 +76,15 @@ func (this *CourseUser) GetDisplayName() string {
 	return this.GetName(true)
 }
 
+// Get a string (not pointer) representation of this user's LMS ID.
+func (this *CourseUser) GetLMSID() string {
+	if this.LMSID == nil {
+		return ""
+	}
+
+	return *this.LMSID
+}
+
 func (this *CourseUser) ToServerUser(courseID string) (*ServerUser, error) {
 	serverUser := &ServerUser{
 		Email: this.Email,

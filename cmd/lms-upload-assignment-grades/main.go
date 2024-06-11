@@ -43,7 +43,7 @@ func main() {
 		log.Fatal("Assignment has no LMS ID.", assignment)
 	}
 
-	users, err := db.GetUsers(course)
+	users, err := db.GetCourseUsers(course)
 	if err != nil {
 		log.Fatal("Failed to fetch autograder users.", err, assignment)
 	}
@@ -69,7 +69,7 @@ func main() {
 	fmt.Printf("Uploaded %d grades.\n", len(grades))
 }
 
-func loadGrades(path string, users map[string]*model.User, force bool) ([]*lmstypes.SubmissionScore, error) {
+func loadGrades(path string, users map[string]*model.CourseUser, force bool) ([]*lmstypes.SubmissionScore, error) {
 	grades := make([]*lmstypes.SubmissionScore, 0)
 
 	rows, err := util.ReadSeparatedFile(path, "\t", 0)
@@ -94,7 +94,7 @@ func loadGrades(path string, users map[string]*model.User, force bool) ([]*lmsty
 			}
 		}
 
-		lmsID := user.LMSID
+		lmsID := user.GetLMSID()
 		if lmsID == "" {
 			message := fmt.Sprintf("User '%s' (from row (%d)) has no LMS ID.", row[0], i)
 

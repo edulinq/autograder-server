@@ -87,24 +87,3 @@ func UserInfoFromMap(data map[string]any) *UserInfo {
 func CompareUserInfo(a UserInfo, b UserInfo) int {
 	return strings.Compare(a.Email, b.Email)
 }
-
-// An API-friendly version of model.UserSyncResult.
-type SyncUsersInfo struct {
-	Add       []*UserInfo `json:"add-users"`
-	Mod       []*UserInfo `json:"mod-users"`
-	Del       []*UserInfo `json:"del-users"`
-	Skip      []*UserInfo `json:"skip-users"`
-	Unchanged []*UserInfo `json:"unchanged-users"`
-}
-
-func NewSyncUsersInfo(syncResult *model.UserSyncResult) *SyncUsersInfo {
-	info := SyncUsersInfo{
-		Add:       NewUserInfos(syncResult.Add),
-		Mod:       NewUserInfos(syncResult.Mod),
-		Del:       NewUserInfos(syncResult.Del),
-		Skip:      NewUserInfos(syncResult.Skip),
-		Unchanged: NewUserInfos(syncResult.Unchanged),
-	}
-
-	return &info
-}

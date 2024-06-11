@@ -32,7 +32,7 @@ type LateDaysInfo struct {
 // This assumes that all assignments are in the LMS.
 func ApplyLatePolicy(
 	assignment *model.Assignment,
-	users map[string]*model.User,
+	users map[string]*model.CourseUser,
 	scores map[string]*model.ScoringInfo,
 	dryRun bool) error {
 	policy := assignment.GetLatePolicy()
@@ -87,7 +87,7 @@ func ApplyLatePolicy(
 }
 
 // Apply a common policy.
-func applyBaselinePolicy(assignment *model.Assignment, policy model.LateGradingPolicy, users map[string]*model.User, scores map[string]*model.ScoringInfo, dueDate time.Time) {
+func applyBaselinePolicy(assignment *model.Assignment, policy model.LateGradingPolicy, users map[string]*model.CourseUser, scores map[string]*model.ScoringInfo, dueDate time.Time) {
 	for email, score := range scores {
 		scoreTime, err := score.SubmissionTime.Time()
 		if err != nil {
@@ -125,7 +125,7 @@ func applyConstantPolicy(policy model.LateGradingPolicy, scores map[string]*mode
 
 func applyLateDaysPolicy(
 	policy model.LateGradingPolicy,
-	assignment *model.Assignment, users map[string]*model.User,
+	assignment *model.Assignment, users map[string]*model.CourseUser,
 	scores map[string]*model.ScoringInfo, penalty float64,
 	dryRun bool) error {
 	allLateDays, err := fetchLateDays(policy, assignment)
@@ -140,7 +140,7 @@ func applyLateDaysPolicy(
 			continue
 		}
 
-		studentLMSID := users[email].LMSID
+		studentLMSID := users[email].GetLMSID()
 		if studentLMSID == "" {
 			log.Warn("User does not have am LMS ID, cannot appply late days policy. Rejecting submission.",
 				assignment, users[email])
