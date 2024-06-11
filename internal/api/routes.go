@@ -7,7 +7,6 @@ import (
 	"github.com/edulinq/autograder/internal/api/core"
 	"github.com/edulinq/autograder/internal/api/lms"
 	"github.com/edulinq/autograder/internal/api/submission"
-	"github.com/edulinq/autograder/internal/api/user"
 )
 
 var baseRoutes = []*core.Route{
@@ -24,7 +23,6 @@ func GetRoutes() *[]*core.Route {
 
 	routes = append(routes, baseRoutes...)
 	routes = append(routes, *(lms.GetRoutes())...)
-	routes = append(routes, *(user.GetRoutes())...)
 	routes = append(routes, *(submission.GetRoutes())...)
 	routes = append(routes, *(admin.GetRoutes())...)
 

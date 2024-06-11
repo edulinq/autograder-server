@@ -5,7 +5,7 @@ import (
 	"strings"
 )
 
-const API_VERSION int = 2
+const API_VERSION int = 3
 
 var CURRENT_PREFIX string = fmt.Sprintf("/api/v%02d", API_VERSION)
 
