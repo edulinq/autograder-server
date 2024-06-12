@@ -25,13 +25,13 @@ func (this *backend) ClearCourse(course *model.Course) error {
 }
 
 func (this *backend) LoadCourse(path string) (*model.Course, error) {
-    course, err := model.LoadCourseFromPath(path);
+    absolutePath, err := filepath.Abs(path);
     if (err != nil) {
         return nil, err;
     }
 
-    common.Lock(course.GetID());
-    defer common.Unlock(course.GetID());
+    common.Lock(absolutePath);
+    defer common.Unlock(absolutePath);
 
     course, users, submissions, err := model.FullLoadCourseFromPath(path);
     if (err != nil) {
@@ -113,9 +113,6 @@ func (this *backend) GetCourse(courseID string) (*model.Course, error) {
 }
 
 func (this *backend) GetCourses() (map[string]*model.Course, error) {
-    common.ReadLock("all-courses");
-    defer common.ReadUnlock("all-courses");
-
     coursesDir := filepath.Join(this.baseDir, DISK_DB_COURSES_DIR);
 
     configPaths, err := util.FindFiles(model.COURSE_CONFIG_FILENAME, coursesDir);
@@ -129,6 +126,11 @@ func (this *backend) GetCourses() (map[string]*model.Course, error) {
         if (err != nil) {
             return nil, fmt.Errorf("Failed to load course '%s': '%w'.", configPath, err);
         }
+
+        func() {
+            common.ReadLock(course.GetID());
+            defer common.ReadUnlock(course.GetID());
+        }();
 
         courses[course.GetID()] = course;
     }
