@@ -289,35 +289,35 @@ func getMaxRole(request any) (model.CourseUserRole, bool) {
 	}
 
 	foundRole := false
-	role := model.RoleUnknown
+	role := model.CourseRoleUnknown
 
 	for i := 0; i < reflectValue.NumField(); i++ {
 		fieldValue := reflectValue.Field(i)
 
 		if fieldValue.Type() == reflect.TypeOf((*MinRoleOwner)(nil)).Elem() {
 			foundRole = true
-			if role < model.RoleOwner {
-				role = model.RoleOwner
+			if role < model.CourseRoleOwner {
+				role = model.CourseRoleOwner
 			}
 		} else if fieldValue.Type() == reflect.TypeOf((*MinRoleAdmin)(nil)).Elem() {
 			foundRole = true
-			if role < model.RoleAdmin {
-				role = model.RoleAdmin
+			if role < model.CourseRoleAdmin {
+				role = model.CourseRoleAdmin
 			}
 		} else if fieldValue.Type() == reflect.TypeOf((*MinRoleGrader)(nil)).Elem() {
 			foundRole = true
-			if role < model.RoleGrader {
-				role = model.RoleGrader
+			if role < model.CourseRoleGrader {
+				role = model.CourseRoleGrader
 			}
 		} else if fieldValue.Type() == reflect.TypeOf((*MinRoleStudent)(nil)).Elem() {
 			foundRole = true
-			if role < model.RoleStudent {
-				role = model.RoleStudent
+			if role < model.CourseRoleStudent {
+				role = model.CourseRoleStudent
 			}
 		} else if fieldValue.Type() == reflect.TypeOf((*MinRoleOther)(nil)).Elem() {
 			foundRole = true
-			if role < model.RoleOther {
-				role = model.RoleOther
+			if role < model.CourseRoleOther {
+				role = model.CourseRoleOther
 			}
 		}
 	}

@@ -350,7 +350,7 @@ func (this *DBTests) DBTestUserUpsertCourseUserInsert(test *testing.T) {
 	expected := &model.CourseUser{
 		Email: email,
 		Name:  &name,
-		Role:  model.RoleStudent,
+		Role:  model.CourseRoleStudent,
 	}
 
 	err := UpsertCourseUser(course, expected)

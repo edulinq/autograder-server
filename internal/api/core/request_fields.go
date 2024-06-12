@@ -152,11 +152,11 @@ func checkRequestTargetUser(endpoint string, apiRequest any, fieldIndex int) *AP
 }
 
 func checkRequestTargetUserSelfOrGrader(endpoint string, apiRequest any, fieldIndex int) *APIError {
-	return checkRequestTargetUserSelfOrRole(endpoint, apiRequest, fieldIndex, model.RoleGrader)
+	return checkRequestTargetUserSelfOrRole(endpoint, apiRequest, fieldIndex, model.CourseRoleGrader)
 }
 
 func checkRequestTargetUserSelfOrAdmin(endpoint string, apiRequest any, fieldIndex int) *APIError {
-	return checkRequestTargetUserSelfOrRole(endpoint, apiRequest, fieldIndex, model.RoleAdmin)
+	return checkRequestTargetUserSelfOrRole(endpoint, apiRequest, fieldIndex, model.CourseRoleAdmin)
 }
 
 func checkRequestTargetUserSelfOrRole(endpoint string, apiRequest any, fieldIndex int, minRole model.CourseUserRole) *APIError {

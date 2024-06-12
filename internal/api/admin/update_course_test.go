@@ -44,7 +44,7 @@ func TestUpdateCourse(test *testing.T) {
 }
 
 func reloadRequest(test *testing.T) {
-	response := core.SendTestAPIRequestFull(test, core.NewEndpoint(`admin/update/course`), nil, nil, model.RoleAdmin)
+	response := core.SendTestAPIRequestFull(test, core.NewEndpoint(`admin/update/course`), nil, nil, model.CourseRoleAdmin)
 	if !response.Success {
 		test.Errorf("Response is not a success when it should be: '%v'.", response)
 	}

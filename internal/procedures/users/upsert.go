@@ -54,7 +54,7 @@ func UpsertUser(options UpsertUsersOptions) *model.UserOpResult {
 // System errors are errors that should not happen regardless of the data.
 // Essentially, system errors are out fault and validation errors are the user's fault.
 func upsertUser(options UpsertUsersOptions, index int) *model.UserOpResult {
-	if (options.ContextServerRole == model.ServerRoleUnknown) && (options.ContextCourseRole == model.RoleUnknown) {
+	if (options.ContextServerRole == model.ServerRoleUnknown) && (options.ContextCourseRole == model.CourseRoleUnknown) {
 		return model.NewSystemErrorUserOpResult("", fmt.Errorf("No authority/roles were provided when adding a user."))
 	}
 
@@ -219,7 +219,7 @@ func checkInsertPermissions(user *model.ServerUser, rawData *model.RawUserData, 
 	}
 
 	// The user has no course role and insufficient server role.
-	if options.ContextCourseRole == model.RoleUnknown {
+	if options.ContextCourseRole == model.CourseRoleUnknown {
 		return model.NewValidationErrorUserOpResult(user.Email,
 			fmt.Errorf("User has an insufficient server role of '%s' and no course role to insert users.", options.ContextServerRole.String()))
 	}
@@ -235,7 +235,7 @@ func checkInsertPermissions(user *model.ServerUser, rawData *model.RawUserData, 
 	}
 
 	// The user's course-level credentials need to be high enough to insert.
-	if options.ContextCourseRole < model.RoleAdmin {
+	if options.ContextCourseRole < model.CourseRoleAdmin {
 		return model.NewValidationErrorUserOpResult(user.Email,
 			fmt.Errorf("User has a course role of '%s', which is not high enough to insert users.", options.ContextCourseRole.String()))
 	}
@@ -304,8 +304,8 @@ func checkCourseUpdatePermissions(newUser *model.ServerUser, oldUser *model.Serv
 	newCourseRole := newUser.Roles[rawData.Course]
 
 	// Course roles can only be modified by course admins.
-	hasCourseRoleChange := ((newCourseRole != model.RoleUnknown) && (oldCourseRole != newCourseRole))
-	if hasCourseRoleChange && (options.ContextCourseRole < model.RoleAdmin) {
+	hasCourseRoleChange := ((newCourseRole != model.CourseRoleUnknown) && (oldCourseRole != newCourseRole))
+	if hasCourseRoleChange && (options.ContextCourseRole < model.CourseRoleAdmin) {
 		return model.NewValidationErrorUserOpResult(newUser.Email,
 			fmt.Errorf("User has a course role of '%s', which is not high enough to modify course roles.", options.ContextCourseRole.String()))
 	}
@@ -317,7 +317,7 @@ func checkCourseUpdatePermissions(newUser *model.ServerUser, oldUser *model.Serv
 	}
 
 	// Cannot modify course data unless you are an admin or self.
-	if (oldUser.Email != options.ContextEmail) && (options.ContextCourseRole < model.RoleAdmin) {
+	if (oldUser.Email != options.ContextEmail) && (options.ContextCourseRole < model.CourseRoleAdmin) {
 		return model.NewValidationErrorUserOpResult(newUser.Email,
 			fmt.Errorf("User has a course role of '%s', which is not high enough to update course-level information for another user.", options.ContextCourseRole.String()))
 	}

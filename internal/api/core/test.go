@@ -52,7 +52,7 @@ func APITestingMain(suite *testing.M, routes *[]*Route) {
 }
 
 func SendTestAPIRequest(test *testing.T, endpoint string, fields map[string]any) *APIResponse {
-	return SendTestAPIRequestFull(test, endpoint, fields, nil, model.RoleAdmin)
+	return SendTestAPIRequestFull(test, endpoint, fields, nil, model.CourseRoleAdmin)
 }
 
 // Make a request to the test server using fields for

@@ -146,7 +146,7 @@ func (this *backend) GetRecentSubmissions(assignment *model.Assignment, filterRo
 	}
 
 	for email, user := range users {
-		if (filterRole != model.RoleUnknown) && (filterRole != user.Role) {
+		if (filterRole != model.CourseRoleUnknown) && (filterRole != user.Role) {
 			continue
 		}
 
@@ -245,7 +245,7 @@ func (this *backend) GetRecentSubmissionContents(assignment *model.Assignment, f
 	}
 
 	for email, user := range users {
-		if (filterRole != model.RoleUnknown) && (filterRole != user.Role) {
+		if (filterRole != model.CourseRoleUnknown) && (filterRole != user.Role) {
 			continue
 		}
 

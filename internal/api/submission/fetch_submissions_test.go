@@ -14,11 +14,11 @@ func TestFetchSubmissions(test *testing.T) {
 		role      model.CourseUserRole
 		permError bool
 	}{
-		{model.RoleOther, true},
-		{model.RoleStudent, true},
-		{model.RoleGrader, false},
-		{model.RoleAdmin, false},
-		{model.RoleOwner, false},
+		{model.CourseRoleOther, true},
+		{model.CourseRoleStudent, true},
+		{model.CourseRoleGrader, false},
+		{model.CourseRoleAdmin, false},
+		{model.CourseRoleOwner, false},
 	}
 
 	submissions := map[string]*model.GradingResult{

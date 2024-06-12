@@ -43,7 +43,7 @@ func TestCourseScoringEmptyStudent(test *testing.T) {
 		test.Fatalf("Failed to get user: '%v'.", err)
 	}
 
-	user.Role = model.RoleStudent
+	user.Role = model.CourseRoleStudent
 	err = db.UpsertCourseUser(course, user)
 	if err != nil {
 		test.Fatalf("Failed to save user: '%v'.", err)

@@ -225,7 +225,7 @@ func TestUserServerUserValidate(test *testing.T) {
 			baseTestServerUser.Role,
 			baseTestServerUser.Salt,
 			baseTestServerUser.Tokens,
-			map[string]CourseUserRole{" course101 ": RoleStudent},
+			map[string]CourseUserRole{" course101 ": CourseRoleStudent},
 			baseTestServerUser.LMSIDs,
 			baseTestServerUser,
 		},
@@ -235,7 +235,7 @@ func TestUserServerUserValidate(test *testing.T) {
 			baseTestServerUser.Role,
 			baseTestServerUser.Salt,
 			baseTestServerUser.Tokens,
-			map[string]CourseUserRole{"COURSE101": RoleStudent},
+			map[string]CourseUserRole{"COURSE101": CourseRoleStudent},
 			baseTestServerUser.LMSIDs,
 			baseTestServerUser,
 		},
@@ -245,7 +245,7 @@ func TestUserServerUserValidate(test *testing.T) {
 			baseTestServerUser.Role,
 			baseTestServerUser.Salt,
 			baseTestServerUser.Tokens,
-			map[string]CourseUserRole{"": RoleStudent},
+			map[string]CourseUserRole{"": CourseRoleStudent},
 			baseTestServerUser.LMSIDs,
 			nil,
 		},
@@ -255,7 +255,7 @@ func TestUserServerUserValidate(test *testing.T) {
 			baseTestServerUser.Role,
 			baseTestServerUser.Salt,
 			baseTestServerUser.Tokens,
-			map[string]CourseUserRole{"course101": RoleUnknown},
+			map[string]CourseUserRole{"course101": CourseRoleUnknown},
 			baseTestServerUser.LMSIDs,
 			nil,
 		},
@@ -428,7 +428,7 @@ func TestUserServerUserToCourseUser(test *testing.T) {
 
 		// Validation Error
 		{
-			setServerCourseUserRoles(baseTestServerUser, map[string]CourseUserRole{"course101": RoleUnknown}),
+			setServerCourseUserRoles(baseTestServerUser, map[string]CourseUserRole{"course101": CourseRoleUnknown}),
 			nil,
 			"course101",
 			true,
@@ -600,16 +600,16 @@ func TestUserServerUserMerge(test *testing.T) {
 		{
 			// Role will be added.
 			baseTestServerUser,
-			setServerCourseUserRoles(minimalTestServerUser, map[string]CourseUserRole{"foo": RoleStudent}),
+			setServerCourseUserRoles(minimalTestServerUser, map[string]CourseUserRole{"foo": CourseRoleStudent}),
 			true,
-			setServerCourseUserRoles(baseTestServerUser, map[string]CourseUserRole{"course101": RoleStudent, "foo": RoleStudent}),
+			setServerCourseUserRoles(baseTestServerUser, map[string]CourseUserRole{"course101": CourseRoleStudent, "foo": CourseRoleStudent}),
 		},
 		{
 			// Existing role will be overwritten.
 			baseTestServerUser,
-			setServerCourseUserRoles(minimalTestServerUser, map[string]CourseUserRole{"course101": RoleGrader}),
+			setServerCourseUserRoles(minimalTestServerUser, map[string]CourseUserRole{"course101": CourseRoleGrader}),
 			true,
-			setServerCourseUserRoles(baseTestServerUser, map[string]CourseUserRole{"course101": RoleGrader}),
+			setServerCourseUserRoles(baseTestServerUser, map[string]CourseUserRole{"course101": CourseRoleGrader}),
 		},
 
 		// LMSIDs
@@ -808,7 +808,7 @@ func TestUserServerUserMustToRow(test *testing.T) {
 
 		// Course Roles
 		{
-			setServerCourseUserRoles(baseTestServerUser, map[string]CourseUserRole{"foo": RoleGrader}),
+			setServerCourseUserRoles(baseTestServerUser, map[string]CourseUserRole{"foo": CourseRoleGrader}),
 			[]string{
 				"alice@test.com",
 				"Alice",
@@ -953,7 +953,7 @@ var baseTestServerUser *ServerUser = &ServerUser{
 	Role:   ServerRoleUser,
 	Salt:   util.StringPointer(BASE_SALT),
 	Tokens: []*Token{baseTestToken},
-	Roles:  map[string]CourseUserRole{"course101": RoleStudent},
+	Roles:  map[string]CourseUserRole{"course101": CourseRoleStudent},
 	LMSIDs: map[string]string{"course101": "alice"},
 }
 

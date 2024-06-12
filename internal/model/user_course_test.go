@@ -67,7 +67,7 @@ func TestUserCourseUserValidate(test *testing.T) {
 		{
 			baseTestCourseUser.Email,
 			baseTestCourseUser.Name,
-			RoleUnknown,
+			CourseRoleUnknown,
 			baseTestCourseUser.LMSID,
 			nil,
 		},
@@ -193,7 +193,7 @@ func TestUserCourseUserToServerUser(test *testing.T) {
 
 		// Validation Error
 		{
-			setCourseCourseUserRole(baseTestCourseUser, RoleUnknown),
+			setCourseCourseUserRole(baseTestCourseUser, CourseRoleUnknown),
 			nil,
 			"course101",
 			true,
@@ -276,7 +276,7 @@ func TestUserCourseUserMustToRow(test *testing.T) {
 
 		// Role
 		{
-			setCourseCourseUserRole(baseTestCourseUser, RoleGrader),
+			setCourseCourseUserRole(baseTestCourseUser, CourseRoleGrader),
 			[]string{
 				"alice@test.com",
 				"Alice",
@@ -344,6 +344,6 @@ func setCourseUserLMSID(user *CourseUser, lmsID *string) *CourseUser {
 var baseTestCourseUser *CourseUser = &CourseUser{
 	Email: "alice@test.com",
 	Name:  util.StringPointer("Alice"),
-	Role:  RoleStudent,
+	Role:  CourseRoleStudent,
 	LMSID: util.StringPointer("alice"),
 }

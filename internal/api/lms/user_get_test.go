@@ -16,17 +16,17 @@ func TestUserGet(test *testing.T) {
 		permError bool
 		expected  *core.UserInfo
 	}{
-		{model.RoleGrader, "other@test.com", false, &core.UserInfo{"other@test.com", "other", model.RoleOther, "lms-other@test.com"}},
-		{model.RoleGrader, "student@test.com", false, &core.UserInfo{"student@test.com", "student", model.RoleStudent, "lms-student@test.com"}},
-		{model.RoleGrader, "grader@test.com", false, &core.UserInfo{"grader@test.com", "grader", model.RoleGrader, "lms-grader@test.com"}},
-		{model.RoleGrader, "admin@test.com", false, &core.UserInfo{"admin@test.com", "admin", model.RoleAdmin, "lms-admin@test.com"}},
-		{model.RoleGrader, "owner@test.com", false, &core.UserInfo{"owner@test.com", "owner", model.RoleOwner, "lms-owner@test.com"}},
+		{model.CourseRoleGrader, "other@test.com", false, &core.UserInfo{"other@test.com", "other", model.CourseRoleOther, "lms-other@test.com"}},
+		{model.CourseRoleGrader, "student@test.com", false, &core.UserInfo{"student@test.com", "student", model.CourseRoleStudent, "lms-student@test.com"}},
+		{model.CourseRoleGrader, "grader@test.com", false, &core.UserInfo{"grader@test.com", "grader", model.CourseRoleGrader, "lms-grader@test.com"}},
+		{model.CourseRoleGrader, "admin@test.com", false, &core.UserInfo{"admin@test.com", "admin", model.CourseRoleAdmin, "lms-admin@test.com"}},
+		{model.CourseRoleGrader, "owner@test.com", false, &core.UserInfo{"owner@test.com", "owner", model.CourseRoleOwner, "lms-owner@test.com"}},
 
-		{model.RoleStudent, "student@test.com", true, nil},
+		{model.CourseRoleStudent, "student@test.com", true, nil},
 
-		{model.RoleGrader, "", false, nil},
+		{model.CourseRoleGrader, "", false, nil},
 
-		{model.RoleGrader, "ZZZ", false, nil},
+		{model.CourseRoleGrader, "ZZZ", false, nil},
 	}
 
 	for i, testCase := range testCases {

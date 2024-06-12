@@ -118,7 +118,7 @@ func (this *User) Merge(other *User) bool {
 		changed = true
 	}
 
-	if (other.Role != RoleUnknown) && (this.Role != other.Role) {
+	if (other.Role != CourseRoleUnknown) && (this.Role != other.Role) {
 		this.Role = other.Role
 		changed = true
 	}

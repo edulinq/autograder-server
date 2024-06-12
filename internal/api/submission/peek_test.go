@@ -20,45 +20,45 @@ func TestPeek(test *testing.T) {
 		permError        bool
 	}{
 		// Grader, self, recent.
-		{model.RoleGrader, "", "", -1.0, true, false, false},
-		{model.RoleGrader, "grader@test.com", "", -1.0, true, false, false},
+		{model.CourseRoleGrader, "", "", -1.0, true, false, false},
+		{model.CourseRoleGrader, "grader@test.com", "", -1.0, true, false, false},
 
 		// Grader, self, missing.
-		{model.RoleGrader, "", "ZZZ", -1.0, true, false, false},
-		{model.RoleGrader, "grader@test.com", "ZZZ", -1.0, true, false, false},
+		{model.CourseRoleGrader, "", "ZZZ", -1.0, true, false, false},
+		{model.CourseRoleGrader, "grader@test.com", "ZZZ", -1.0, true, false, false},
 
 		// Grader, other, recent.
-		{model.RoleGrader, "student@test.com", "", 2.0, true, true, false},
+		{model.CourseRoleGrader, "student@test.com", "", 2.0, true, true, false},
 
 		// Grader, other, specific.
-		{model.RoleGrader, "student@test.com", "1697406256", 0.0, true, true, false},
-		{model.RoleGrader, "student@test.com", "1697406265", 1.0, true, true, false},
-		{model.RoleGrader, "student@test.com", "1697406272", 2.0, true, true, false},
+		{model.CourseRoleGrader, "student@test.com", "1697406256", 0.0, true, true, false},
+		{model.CourseRoleGrader, "student@test.com", "1697406265", 1.0, true, true, false},
+		{model.CourseRoleGrader, "student@test.com", "1697406272", 2.0, true, true, false},
 
 		// Grader, other, specific (full ID).
-		{model.RoleGrader, "student@test.com", "course101::hw0::student@test.com::1697406256", 0.0, true, true, false},
-		{model.RoleGrader, "student@test.com", "course101::hw0::student@test.com::1697406265", 1.0, true, true, false},
-		{model.RoleGrader, "student@test.com", "course101::hw0::student@test.com::1697406272", 2.0, true, true, false},
+		{model.CourseRoleGrader, "student@test.com", "course101::hw0::student@test.com::1697406256", 0.0, true, true, false},
+		{model.CourseRoleGrader, "student@test.com", "course101::hw0::student@test.com::1697406265", 1.0, true, true, false},
+		{model.CourseRoleGrader, "student@test.com", "course101::hw0::student@test.com::1697406272", 2.0, true, true, false},
 
 		// Grader, other, missing.
-		{model.RoleGrader, "student@test.com", "ZZZ", -1.0, true, false, false},
+		{model.CourseRoleGrader, "student@test.com", "ZZZ", -1.0, true, false, false},
 
 		// Grader, missing, recent.
-		{model.RoleGrader, "ZZZ@test.com", "", -1.0, false, false, false},
+		{model.CourseRoleGrader, "ZZZ@test.com", "", -1.0, false, false, false},
 
 		// Student, self, recent.
-		{model.RoleStudent, "", "", 2.0, true, true, false},
-		{model.RoleStudent, "student@test.com", "", 2.0, true, true, false},
+		{model.CourseRoleStudent, "", "", 2.0, true, true, false},
+		{model.CourseRoleStudent, "student@test.com", "", 2.0, true, true, false},
 
 		// Student, self, missing.
-		{model.RoleStudent, "", "ZZZ", -1.0, true, false, false},
-		{model.RoleStudent, "student@test.com", "ZZZ", -1.0, true, false, false},
+		{model.CourseRoleStudent, "", "ZZZ", -1.0, true, false, false},
+		{model.CourseRoleStudent, "student@test.com", "ZZZ", -1.0, true, false, false},
 
 		// Student, other, recent.
-		{model.RoleStudent, "grader@test.com", "", -1.0, false, false, true},
+		{model.CourseRoleStudent, "grader@test.com", "", -1.0, false, false, true},
 
 		// Student, other, missing.
-		{model.RoleStudent, "grader@test.com", "ZZZ", -1.0, false, false, true},
+		{model.CourseRoleStudent, "grader@test.com", "ZZZ", -1.0, false, false, true},
 	}
 
 	for i, testCase := range testCases {

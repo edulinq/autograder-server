@@ -42,7 +42,7 @@ func (this *CourseUser) Validate() error {
 		this.Name = &name
 	}
 
-	if this.Role == RoleUnknown {
+	if this.Role == CourseRoleUnknown {
 		return fmt.Errorf("User '%s' has an unknown role. All users must have a definite role.", this.Email)
 	}
 

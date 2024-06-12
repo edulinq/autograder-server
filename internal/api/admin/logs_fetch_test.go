@@ -92,20 +92,20 @@ func TestFetchLogs(test *testing.T) {
 		expectedErrors  []string
 		expectedRecords []*log.Record
 	}{
-		{model.RoleGrader, true, "", "", "", "", nil, nil},
+		{model.CourseRoleGrader, true, "", "", "", "", nil, nil},
 
-		{model.RoleAdmin, false, "", "", "", "", nil, allRecords[2:]},
-		{model.RoleAdmin, false, "trace", "", "", "", nil, allRecords},
+		{model.CourseRoleAdmin, false, "", "", "", "", nil, allRecords[2:]},
+		{model.CourseRoleAdmin, false, "trace", "", "", "", nil, allRecords},
 
-		{model.RoleAdmin, false, "", timeBeforeLogs, "", "", nil, allRecords[2:]},
-		{model.RoleAdmin, false, "", timeAfterLogs, "", "", nil, []*log.Record{}},
+		{model.CourseRoleAdmin, false, "", timeBeforeLogs, "", "", nil, allRecords[2:]},
+		{model.CourseRoleAdmin, false, "", timeAfterLogs, "", "", nil, []*log.Record{}},
 
 		// Parse Errors.
-		{model.RoleAdmin, false, "ZZZ", "", "", "", []string{"Could not parse 'level' component of log query ('ZZZ'): 'Unknown log level 'ZZZ'.'."}, nil},
-		{model.RoleAdmin, false, "", "ZZZ", "", "", []string{`Could not parse 'after' component of log query ('ZZZ'): 'Failed to parse timestamp string 'ZZZ': 'parsing time "ZZZ" as "2006-01-02T15:04:05Z07:00": cannot parse "ZZZ" as "2006"'.'.`}, nil},
-		{model.RoleAdmin, false, "", "", "!ZZZ", "", []string{"Could not parse 'assignment' component of log query ('!ZZZ'): 'IDs must only have letters, digits, and single sequences of periods, underscores, and hyphens, found '!zzz'.'."}, nil},
-		{model.RoleAdmin, false, "", "", "ZZZ", "", []string{"Unknown assignment given for 'assignment' component of log query ('ZZZ')."}, nil},
-		{model.RoleAdmin, false, "", "", "", "ZZZ", []string{"Could not find user: 'ZZZ'."}, nil},
+		{model.CourseRoleAdmin, false, "ZZZ", "", "", "", []string{"Could not parse 'level' component of log query ('ZZZ'): 'Unknown log level 'ZZZ'.'."}, nil},
+		{model.CourseRoleAdmin, false, "", "ZZZ", "", "", []string{`Could not parse 'after' component of log query ('ZZZ'): 'Failed to parse timestamp string 'ZZZ': 'parsing time "ZZZ" as "2006-01-02T15:04:05Z07:00": cannot parse "ZZZ" as "2006"'.'.`}, nil},
+		{model.CourseRoleAdmin, false, "", "", "!ZZZ", "", []string{"Could not parse 'assignment' component of log query ('!ZZZ'): 'IDs must only have letters, digits, and single sequences of periods, underscores, and hyphens, found '!zzz'.'."}, nil},
+		{model.CourseRoleAdmin, false, "", "", "ZZZ", "", []string{"Unknown assignment given for 'assignment' component of log query ('ZZZ')."}, nil},
+		{model.CourseRoleAdmin, false, "", "", "", "ZZZ", []string{"Could not find user: 'ZZZ'."}, nil},
 	}
 
 	for i, testCase := range testCases {

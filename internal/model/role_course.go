@@ -10,37 +10,37 @@ import (
 // Course user roles represent a user's role within a single course.
 type CourseUserRole int
 
-// RoleUnknown is the zero value and no user should have this role (it is a validation error).
-// RoleOther is for miscellaneous users that should not be able to submit.
-// RoleStudent is for standard users/students.
-// RoleGrader is for users that need access to grades/submissions, but cannot administrate a course.
-// RoleAdmin is for users that need to administrate a course.
-// RoleOwner is for the top-level authorities of a course.
+// CourseRoleUnknown is the zero value and no user should have this role (it is a validation error).
+// CourseRoleOther is for miscellaneous users that should not be able to submit.
+// CourseRoleStudent is for standard users/students.
+// CourseRoleGrader is for users that need access to grades/submissions, but cannot administrate a course.
+// CourseRoleAdmin is for users that need to administrate a course.
+// CourseRoleOwner is for the top-level authorities of a course.
 const (
-	RoleUnknown CourseUserRole = 0
-	RoleOther                  = 10
-	RoleStudent                = 20
-	RoleGrader                 = 30
-	RoleAdmin                  = 40
-	RoleOwner                  = 50
+	CourseRoleUnknown CourseUserRole = 0
+	CourseRoleOther                  = 10
+	CourseRoleStudent                = 20
+	CourseRoleGrader                 = 30
+	CourseRoleAdmin                  = 40
+	CourseRoleOwner                  = 50
 )
 
 var courseRoleToString = map[CourseUserRole]string{
-	RoleUnknown: "unknown",
-	RoleOther:   "other",
-	RoleStudent: "student",
-	RoleGrader:  "grader",
-	RoleAdmin:   "admin",
-	RoleOwner:   "owner",
+	CourseRoleUnknown: "unknown",
+	CourseRoleOther:   "other",
+	CourseRoleStudent: "student",
+	CourseRoleGrader:  "grader",
+	CourseRoleAdmin:   "admin",
+	CourseRoleOwner:   "owner",
 }
 
 var stringToCourseUserRole = map[string]CourseUserRole{
-	"unknown": RoleUnknown,
-	"other":   RoleOther,
-	"student": RoleStudent,
-	"grader":  RoleGrader,
-	"admin":   RoleAdmin,
-	"owner":   RoleOwner,
+	"unknown": CourseRoleUnknown,
+	"other":   CourseRoleOther,
+	"student": CourseRoleStudent,
+	"grader":  CourseRoleGrader,
+	"admin":   CourseRoleAdmin,
+	"owner":   CourseRoleOwner,
 }
 
 func GetCourseUserRole(text string) CourseUserRole {
@@ -83,8 +83,8 @@ func (this *CourseUserRole) UnmarshalJSON(data []byte) error {
 	var ok bool
 	*this, ok = stringToCourseUserRole[temp]
 	if !ok {
-		*this = RoleUnknown
-		return fmt.Errorf("RoleUnknown CourseUserRole value: '%s'.", temp)
+		*this = CourseRoleUnknown
+		return fmt.Errorf("CourseRoleUnknown CourseUserRole value: '%s'.", temp)
 	}
 
 	return nil

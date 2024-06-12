@@ -25,7 +25,7 @@ func TestUploadScores(test *testing.T) {
 	}{
 		// Normal.
 		{
-			model.RoleGrader, false, false,
+			model.CourseRoleGrader, false, false,
 			[]ScoreEntry{
 				ScoreEntry{"student@test.com", 10},
 			},
@@ -37,7 +37,7 @@ func TestUploadScores(test *testing.T) {
 			},
 		},
 		{
-			model.RoleGrader, false, false,
+			model.CourseRoleGrader, false, false,
 			[]ScoreEntry{
 				ScoreEntry{"student@test.com", 10},
 				ScoreEntry{"grader@test.com", 0},
@@ -53,12 +53,12 @@ func TestUploadScores(test *testing.T) {
 		},
 
 		// Permissions.
-		{model.RoleOther, true, false, nil, nil},
-		{model.RoleStudent, true, false, nil, nil},
+		{model.CourseRoleOther, true, false, nil, nil},
+		{model.CourseRoleStudent, true, false, nil, nil},
 
 		// Upload fails.
 		{
-			model.RoleGrader, false, true,
+			model.CourseRoleGrader, false, true,
 			[]ScoreEntry{
 				ScoreEntry{"student@test.com", 10},
 			},
@@ -67,7 +67,7 @@ func TestUploadScores(test *testing.T) {
 
 		// Bad scores.
 		{
-			model.RoleGrader, false, false,
+			model.CourseRoleGrader, false, false,
 			[]ScoreEntry{
 				ScoreEntry{"zzz@test.com", 10},
 				ScoreEntry{"no-lms-id@test.com", 20},
@@ -89,7 +89,7 @@ func TestUploadScores(test *testing.T) {
 
 		// Upload will pass, but never gets called.
 		{
-			model.RoleGrader, false, false,
+			model.CourseRoleGrader, false, false,
 			[]ScoreEntry{
 				ScoreEntry{"zzz@test.com", 10},
 			},
@@ -105,7 +105,7 @@ func TestUploadScores(test *testing.T) {
 
 		// Upload will fail, but never gets called.
 		{
-			model.RoleGrader, false, true,
+			model.CourseRoleGrader, false, true,
 			[]ScoreEntry{
 				ScoreEntry{"zzz@test.com", 10},
 			},

@@ -118,8 +118,8 @@ func (this *DBTests) DBTestResolveCourseUsers(test *testing.T) {
 			[]string{"student"},
 			[]string{"a_student@test.com", "b_student@test.com", "student@test.com"},
 			[]*model.CourseUser{
-				&model.CourseUser{"a_student@test.com", nil, model.RoleStudent, nil},
-				&model.CourseUser{"b_student@test.com", nil, model.RoleStudent, nil},
+				&model.CourseUser{"a_student@test.com", nil, model.CourseRoleStudent, nil},
+				&model.CourseUser{"b_student@test.com", nil, model.CourseRoleStudent, nil},
 			},
 			[]string{},
 			0,

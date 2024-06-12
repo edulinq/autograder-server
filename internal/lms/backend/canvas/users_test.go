@@ -20,7 +20,7 @@ func TestCanvasUserGetBase(test *testing.T) {
 				ID:    "00010",
 				Name:  "owner",
 				Email: "owner@test.com",
-				Role:  model.RoleOwner,
+				Role:  model.CourseRoleOwner,
 			},
 		},
 		{
@@ -29,7 +29,7 @@ func TestCanvasUserGetBase(test *testing.T) {
 				ID:    "00020",
 				Name:  "admin",
 				Email: "admin@test.com",
-				Role:  model.RoleAdmin,
+				Role:  model.CourseRoleAdmin,
 			},
 		},
 		{
@@ -38,7 +38,7 @@ func TestCanvasUserGetBase(test *testing.T) {
 				ID:    "00040",
 				Name:  "student",
 				Email: "student@test.com",
-				Role:  model.RoleStudent,
+				Role:  model.CourseRoleStudent,
 			},
 		},
 	}
@@ -63,19 +63,19 @@ func TestCanvasUsersGetBase(test *testing.T) {
 			ID:    "00040",
 			Name:  "student",
 			Email: "student@test.com",
-			Role:  model.RoleStudent,
+			Role:  model.CourseRoleStudent,
 		},
 		&lmstypes.User{
 			ID:    "00020",
 			Name:  "admin",
 			Email: "admin@test.com",
-			Role:  model.RoleAdmin,
+			Role:  model.CourseRoleAdmin,
 		},
 		&lmstypes.User{
 			ID:    "00010",
 			Name:  "owner",
 			Email: "owner@test.com",
-			Role:  model.RoleOwner,
+			Role:  model.CourseRoleOwner,
 		},
 	}
 

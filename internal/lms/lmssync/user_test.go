@@ -202,7 +202,7 @@ func testingUsers(users []*lmstypes.User) []*lmstypes.User {
 			user.Name = "Changed Name"
 		} else if user.Email == "admin@test.com" {
 			// admin will have their role changed.
-			user.Role = model.RoleOwner
+			user.Role = model.CourseRoleOwner
 		} else if user.Email == "owner@test.com" {
 			// owner will not have anything changed (so we must manually remove their email).
 			user.ID = ""
@@ -216,7 +216,7 @@ func testingUsers(users []*lmstypes.User) []*lmstypes.User {
 		ID:    "lms-add@test.com",
 		Name:  "add",
 		Email: "add@test.com",
-		Role:  model.RoleStudent,
+		Role:  model.CourseRoleStudent,
 	}
 	users = append(users, addUser)
 

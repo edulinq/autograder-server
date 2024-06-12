@@ -28,45 +28,45 @@ func TestFetchSubmission(test *testing.T) {
 		result           *model.GradingResult
 	}{
 		// Grader, self, recent.
-		{model.RoleGrader, "", "", true, false, false, nil},
-		{model.RoleGrader, "grader@test.com", "", true, false, false, nil},
+		{model.CourseRoleGrader, "", "", true, false, false, nil},
+		{model.CourseRoleGrader, "grader@test.com", "", true, false, false, nil},
 
 		// Grader, self, missing.
-		{model.RoleGrader, "", "ZZZ", true, false, false, nil},
-		{model.RoleGrader, "grader@test.com", "ZZZ", true, false, false, nil},
+		{model.CourseRoleGrader, "", "ZZZ", true, false, false, nil},
+		{model.CourseRoleGrader, "grader@test.com", "ZZZ", true, false, false, nil},
 
 		// Grader, other, recent.
-		{model.RoleGrader, "student@test.com", "", true, true, false, studentGradingResults["1697406272"]},
+		{model.CourseRoleGrader, "student@test.com", "", true, true, false, studentGradingResults["1697406272"]},
 
 		// Grader, other, specific.
-		{model.RoleGrader, "student@test.com", "1697406256", true, true, false, studentGradingResults["1697406256"]},
-		{model.RoleGrader, "student@test.com", "1697406265", true, true, false, studentGradingResults["1697406265"]},
-		{model.RoleGrader, "student@test.com", "1697406272", true, true, false, studentGradingResults["1697406272"]},
+		{model.CourseRoleGrader, "student@test.com", "1697406256", true, true, false, studentGradingResults["1697406256"]},
+		{model.CourseRoleGrader, "student@test.com", "1697406265", true, true, false, studentGradingResults["1697406265"]},
+		{model.CourseRoleGrader, "student@test.com", "1697406272", true, true, false, studentGradingResults["1697406272"]},
 
 		// Grader, other, specific (full ID).
-		{model.RoleGrader, "student@test.com", "course101::hw0::student@test.com::1697406256", true, true, false, studentGradingResults["1697406256"]},
-		{model.RoleGrader, "student@test.com", "course101::hw0::student@test.com::1697406265", true, true, false, studentGradingResults["1697406265"]},
-		{model.RoleGrader, "student@test.com", "course101::hw0::student@test.com::1697406272", true, true, false, studentGradingResults["1697406272"]},
+		{model.CourseRoleGrader, "student@test.com", "course101::hw0::student@test.com::1697406256", true, true, false, studentGradingResults["1697406256"]},
+		{model.CourseRoleGrader, "student@test.com", "course101::hw0::student@test.com::1697406265", true, true, false, studentGradingResults["1697406265"]},
+		{model.CourseRoleGrader, "student@test.com", "course101::hw0::student@test.com::1697406272", true, true, false, studentGradingResults["1697406272"]},
 
 		// Grader, other, missing.
-		{model.RoleGrader, "student@test.com", "ZZZ", true, false, false, nil},
+		{model.CourseRoleGrader, "student@test.com", "ZZZ", true, false, false, nil},
 
 		// Grader, missing, recent.
-		{model.RoleGrader, "ZZZ@test.com", "", false, false, false, nil},
+		{model.CourseRoleGrader, "ZZZ@test.com", "", false, false, false, nil},
 
 		// Student, self, recent.
-		{model.RoleStudent, "", "", true, true, false, studentGradingResults["1697406272"]},
-		{model.RoleStudent, "student@test.com", "", true, true, false, studentGradingResults["1697406272"]},
+		{model.CourseRoleStudent, "", "", true, true, false, studentGradingResults["1697406272"]},
+		{model.CourseRoleStudent, "student@test.com", "", true, true, false, studentGradingResults["1697406272"]},
 
 		// Student, self, missing.
-		{model.RoleStudent, "", "ZZZ", true, false, false, nil},
-		{model.RoleStudent, "student@test.com", "ZZZ", true, false, false, nil},
+		{model.CourseRoleStudent, "", "ZZZ", true, false, false, nil},
+		{model.CourseRoleStudent, "student@test.com", "ZZZ", true, false, false, nil},
 
 		// Student, other, recent.
-		{model.RoleStudent, "grader@test.com", "", false, false, true, nil},
+		{model.CourseRoleStudent, "grader@test.com", "", false, false, true, nil},
 
 		// Student, other, missing.
-		{model.RoleStudent, "grader@test.com", "ZZZ", true, false, true, nil},
+		{model.CourseRoleStudent, "grader@test.com", "ZZZ", true, false, true, nil},
 	}
 
 	for i, testCase := range testCases {

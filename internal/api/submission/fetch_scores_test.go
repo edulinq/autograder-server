@@ -16,30 +16,30 @@ func TestFetchScores(test *testing.T) {
 		permError  bool
 		ids        map[string]string
 	}{
-		{model.RoleGrader, model.RoleUnknown, false, map[string]string{
+		{model.CourseRoleGrader, model.CourseRoleUnknown, false, map[string]string{
 			"other@test.com":   "",
 			"student@test.com": "course101::hw0::student@test.com::1697406272",
 			"grader@test.com":  "",
 			"admin@test.com":   "",
 			"owner@test.com":   "",
 		}},
-		{model.RoleAdmin, model.RoleUnknown, false, map[string]string{
+		{model.CourseRoleAdmin, model.CourseRoleUnknown, false, map[string]string{
 			"other@test.com":   "",
 			"student@test.com": "course101::hw0::student@test.com::1697406272",
 			"grader@test.com":  "",
 			"admin@test.com":   "",
 			"owner@test.com":   "",
 		}},
-		{model.RoleGrader, model.RoleStudent, false, map[string]string{
+		{model.CourseRoleGrader, model.CourseRoleStudent, false, map[string]string{
 			"student@test.com": "course101::hw0::student@test.com::1697406272",
 		}},
-		{model.RoleGrader, model.RoleGrader, false, map[string]string{
+		{model.CourseRoleGrader, model.CourseRoleGrader, false, map[string]string{
 			"grader@test.com": "",
 		}},
-		{model.RoleStudent, model.RoleUnknown, true, nil},
-		{model.RoleStudent, model.RoleStudent, true, nil},
-		{model.RoleOther, model.RoleUnknown, true, nil},
-		{model.RoleOther, model.RoleGrader, true, nil},
+		{model.CourseRoleStudent, model.CourseRoleUnknown, true, nil},
+		{model.CourseRoleStudent, model.CourseRoleStudent, true, nil},
+		{model.CourseRoleOther, model.CourseRoleUnknown, true, nil},
+		{model.CourseRoleOther, model.CourseRoleGrader, true, nil},
 	}
 
 	for i, testCase := range testCases {

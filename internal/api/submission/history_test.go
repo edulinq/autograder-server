@@ -19,16 +19,16 @@ func TestHistory(test *testing.T) {
 		expected  []*model.SubmissionHistoryItem
 	}{
 		// Self.
-		{model.RoleStudent, "", true, false, studentHist},
-		{model.RoleGrader, "", true, false, []*model.SubmissionHistoryItem{}},
+		{model.CourseRoleStudent, "", true, false, studentHist},
+		{model.CourseRoleGrader, "", true, false, []*model.SubmissionHistoryItem{}},
 
 		// Other
-		{model.RoleGrader, "student@test.com", true, false, studentHist},
-		{model.RoleStudent, "grader@test.com", true, true, nil},
+		{model.CourseRoleGrader, "student@test.com", true, false, studentHist},
+		{model.CourseRoleStudent, "grader@test.com", true, true, nil},
 
 		// Missing user.
-		{model.RoleStudent, "ZZZ@test.com", false, true, nil},
-		{model.RoleGrader, "ZZZ@test.com", false, false, []*model.SubmissionHistoryItem{}},
+		{model.CourseRoleStudent, "ZZZ@test.com", false, true, nil},
+		{model.CourseRoleGrader, "ZZZ@test.com", false, false, []*model.SubmissionHistoryItem{}},
 	}
 
 	for i, testCase := range testCases {

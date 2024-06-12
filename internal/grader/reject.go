@@ -58,7 +58,7 @@ func checkSubmissionLimit(assignment *model.Assignment, email string) (RejectRea
 	}
 
 	// User that are >= grader are not subject to submission restrictions.
-	if user.Role >= model.RoleGrader {
+	if user.Role >= model.CourseRoleGrader {
 		return nil, nil
 	}
 

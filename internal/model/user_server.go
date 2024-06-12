@@ -98,7 +98,7 @@ func (this *ServerUser) Validate() error {
 			return fmt.Errorf("User '%s' has a role with invalid course id '%s': '%w'.", this.Email, courseID, err)
 		}
 
-		if role == RoleUnknown {
+		if role == CourseRoleUnknown {
 			return fmt.Errorf("User '%s' has an unknown role for course '%s'. All users must have a definite role.", this.Email, newCourseID)
 		}
 

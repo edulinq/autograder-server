@@ -47,22 +47,22 @@ type Enrollment struct {
 // Canvas has default enrollment "types" and then "roles" which may be the same
 // as the type or custom.
 var enrollmentToRoleMapping map[string]model.CourseUserRole = map[string]model.CourseUserRole{
-	"ObserverEnrollment": model.RoleOther,
-	"DesignerEnrollment": model.RoleOther,
-	"StudentEnrollment":  model.RoleStudent,
-	"TaEnrollment":       model.RoleGrader,
-	"TeacherEnrollment":  model.RoleOwner,
+	"ObserverEnrollment": model.CourseRoleOther,
+	"DesignerEnrollment": model.CourseRoleOther,
+	"StudentEnrollment":  model.CourseRoleStudent,
+	"TaEnrollment":       model.CourseRoleGrader,
+	"TeacherEnrollment":  model.CourseRoleOwner,
 
 	// Custom role.
-	"TA - Site Manager": model.RoleAdmin,
+	"TA - Site Manager": model.CourseRoleAdmin,
 }
 
 var roleToEnrollmentMapping map[model.CourseUserRole]string = map[model.CourseUserRole]string{
-	model.RoleOther:   "ObserverEnrollment",
-	model.RoleStudent: "StudentEnrollment",
-	model.RoleGrader:  "TaEnrollment",
-	model.RoleAdmin:   "TA - Site Manager",
-	model.RoleOwner:   "TeacherEnrollment",
+	model.CourseRoleOther:   "ObserverEnrollment",
+	model.CourseRoleStudent: "StudentEnrollment",
+	model.CourseRoleGrader:  "TaEnrollment",
+	model.CourseRoleAdmin:   "TA - Site Manager",
+	model.CourseRoleOwner:   "TeacherEnrollment",
 }
 
 func (this *Enrollment) GetRole() model.CourseUserRole {
@@ -74,7 +74,7 @@ func (this *Enrollment) GetRole() model.CourseUserRole {
 
 func (this *User) GetRole() model.CourseUserRole {
 	if this.Enrollments == nil {
-		return model.RoleOther
+		return model.CourseRoleOther
 	}
 
 	var maxRole model.CourseUserRole

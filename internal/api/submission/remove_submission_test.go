@@ -22,39 +22,39 @@ func TestRemoveSubmission(test *testing.T) {
 		permError        bool
 	}{
 		// Grader, self, recent.
-		{model.RoleGrader, "", "", true, false, false},
-		{model.RoleGrader, "grader@test.com", "", true, false, false},
+		{model.CourseRoleGrader, "", "", true, false, false},
+		{model.CourseRoleGrader, "grader@test.com", "", true, false, false},
 
 		// Grader, self, missing.
-		{model.RoleGrader, "", "ZZZ", true, false, false},
-		{model.RoleGrader, "grader@test.com", "ZZZ", true, false, false},
+		{model.CourseRoleGrader, "", "ZZZ", true, false, false},
+		{model.CourseRoleGrader, "grader@test.com", "ZZZ", true, false, false},
 
 		// Grader, other, recent.
-		{model.RoleGrader, "student@test.com", "", true, true, false},
+		{model.CourseRoleGrader, "student@test.com", "", true, true, false},
 
 		// Grader, other, specific.
-		{model.RoleGrader, "student@test.com", "1697406256", true, true, false},
-		{model.RoleGrader, "student@test.com", "1697406265", true, true, false},
-		{model.RoleGrader, "student@test.com", "1697406272", true, true, false},
+		{model.CourseRoleGrader, "student@test.com", "1697406256", true, true, false},
+		{model.CourseRoleGrader, "student@test.com", "1697406265", true, true, false},
+		{model.CourseRoleGrader, "student@test.com", "1697406272", true, true, false},
 
 		// Grader, other, specific (full ID).
-		{model.RoleGrader, "student@test.com", "course101::hw0::student@test.com::1697406256", true, true, false},
-		{model.RoleGrader, "student@test.com", "course101::hw0::student@test.com::1697406265", true, true, false},
-		{model.RoleGrader, "student@test.com", "course101::hw0::student@test.com::1697406272", true, true, false},
+		{model.CourseRoleGrader, "student@test.com", "course101::hw0::student@test.com::1697406256", true, true, false},
+		{model.CourseRoleGrader, "student@test.com", "course101::hw0::student@test.com::1697406265", true, true, false},
+		{model.CourseRoleGrader, "student@test.com", "course101::hw0::student@test.com::1697406272", true, true, false},
 
 		// Grader, other, missing.
-		{model.RoleGrader, "student@test.com", "ZZZ", true, false, false},
+		{model.CourseRoleGrader, "student@test.com", "ZZZ", true, false, false},
 
 		// Grader, missing, recent.
-		{model.RoleGrader, "ZZZ@test.com", "", false, false, false},
+		{model.CourseRoleGrader, "ZZZ@test.com", "", false, false, false},
 
 		// Roles below grader, other, recent.
-		{model.RoleStudent, "student@test.com", "", false, false, true},
-		{model.RoleOther, "student@test.com", "", false, false, true},
+		{model.CourseRoleStudent, "student@test.com", "", false, false, true},
+		{model.CourseRoleOther, "student@test.com", "", false, false, true},
 
 		// Roles above grader, other, recent
-		{model.RoleAdmin, "student@test.com", "", true, true, false},
-		{model.RoleOwner, "student@test.com", "", true, true, false},
+		{model.CourseRoleAdmin, "student@test.com", "", true, true, false},
+		{model.CourseRoleOwner, "student@test.com", "", true, true, false},
 	}
 
 	for i, testCase := range testCases {

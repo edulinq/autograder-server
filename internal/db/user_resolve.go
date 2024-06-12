@@ -35,7 +35,7 @@ func ResolveCourseUsers(course *model.Course, emails []string) ([]string, error)
 					roleSet[role] = nil
 				}
 			} else {
-				if model.GetCourseUserRole(email) == model.RoleUnknown {
+				if model.GetCourseUserRole(email) == model.CourseRoleUnknown {
 					log.Warn("Invalid role, cannot resolve users.", course, log.NewAttr("role", email))
 					continue
 				}

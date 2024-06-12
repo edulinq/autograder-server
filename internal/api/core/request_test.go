@@ -10,8 +10,6 @@ import (
 
 var studentPass string = util.Sha256HexFromString("student")
 
-// TEST - Tests for APIRequestUserContext
-
 var standardUserContext APIRequestUserContext = APIRequestUserContext{
 	UserEmail: "student@test.com",
 	UserPass:  studentPass,
@@ -63,54 +61,54 @@ func TestGetMaxRole(test *testing.T) {
 		value any
 		role  model.CourseUserRole
 	}{
-		{struct{}{}, model.RoleUnknown},
-		{struct{ int }{}, model.RoleUnknown},
+		{struct{}{}, model.CourseRoleUnknown},
+		{struct{ int }{}, model.CourseRoleUnknown},
 
-		{struct{ MinRoleOwner }{}, model.RoleOwner},
-		{struct{ MinRoleAdmin }{}, model.RoleAdmin},
-		{struct{ MinRoleGrader }{}, model.RoleGrader},
-		{struct{ MinRoleStudent }{}, model.RoleStudent},
-		{struct{ MinRoleOther }{}, model.RoleOther},
+		{struct{ MinRoleOwner }{}, model.CourseRoleOwner},
+		{struct{ MinRoleAdmin }{}, model.CourseRoleAdmin},
+		{struct{ MinRoleGrader }{}, model.CourseRoleGrader},
+		{struct{ MinRoleStudent }{}, model.CourseRoleStudent},
+		{struct{ MinRoleOther }{}, model.CourseRoleOther},
 
 		{struct {
 			MinRoleOwner
 			MinRoleOther
-		}{}, model.RoleOwner},
+		}{}, model.CourseRoleOwner},
 		{struct {
 			MinRoleAdmin
 			MinRoleOther
-		}{}, model.RoleAdmin},
+		}{}, model.CourseRoleAdmin},
 		{struct {
 			MinRoleGrader
 			MinRoleOther
-		}{}, model.RoleGrader},
+		}{}, model.CourseRoleGrader},
 		{struct {
 			MinRoleStudent
 			MinRoleOther
-		}{}, model.RoleStudent},
+		}{}, model.CourseRoleStudent},
 
 		{struct {
 			MinRoleOther
 			MinRoleOwner
-		}{}, model.RoleOwner},
+		}{}, model.CourseRoleOwner},
 		{struct {
 			MinRoleOther
 			MinRoleAdmin
-		}{}, model.RoleAdmin},
+		}{}, model.CourseRoleAdmin},
 		{struct {
 			MinRoleOther
 			MinRoleGrader
-		}{}, model.RoleGrader},
+		}{}, model.CourseRoleGrader},
 		{struct {
 			MinRoleOther
 			MinRoleStudent
-		}{}, model.RoleStudent},
+		}{}, model.CourseRoleStudent},
 	}
 
 	for i, testCase := range testCases {
 		role, hasRole := getMaxRole(testCase.value)
 
-		if testCase.role == model.RoleUnknown {
+		if testCase.role == model.CourseRoleUnknown {
 			if hasRole {
 				test.Errorf("Case %d: Found a role ('%s') when none was specified.", i, role)
 			}

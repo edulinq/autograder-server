@@ -85,7 +85,7 @@ func GetAssignmentScoringReport(assignment *model.Assignment) (*AssignmentScorin
 }
 
 func fetchScores(assignment *model.Assignment) ([]string, map[string][]float64, time.Time, error) {
-	results, err := db.GetRecentSubmissions(assignment, model.RoleStudent)
+	results, err := db.GetRecentSubmissions(assignment, model.CourseRoleStudent)
 	if err != nil {
 		return nil, nil, time.Time{}, fmt.Errorf("Failed to get recent submission results: '%w'.", err)
 	}

@@ -214,7 +214,7 @@ func TestGoodPostFiles(test *testing.T) {
 		filepath.Join(util.RootDirForTesting(), "testdata", "files", "a.txt"),
 	}
 
-	response := SendTestAPIRequestFull(test, endpoint, nil, paths, model.RoleAdmin)
+	response := SendTestAPIRequestFull(test, endpoint, nil, paths, model.CourseRoleAdmin)
 	if response.Content != nil {
 		test.Fatalf("Handler gave an error: '%s'.", response.Content)
 	}
@@ -268,7 +268,7 @@ func TestBadPostFilesNoFiles(test *testing.T) {
 
 	paths := []string{}
 
-	response := SendTestAPIRequestFull(test, endpoint, nil, paths, model.RoleAdmin)
+	response := SendTestAPIRequestFull(test, endpoint, nil, paths, model.CourseRoleAdmin)
 	if response.Success {
 		test.Fatalf("Request did not generate an error: '%v'.", response)
 	}
@@ -304,7 +304,7 @@ func TestBadPostFilesStoreFail(test *testing.T) {
 	util.SetTempDirForTesting(os.DevNull)
 	defer util.SetTempDirForTesting("")
 
-	response := SendTestAPIRequestFull(test, endpoint, nil, paths, model.RoleAdmin)
+	response := SendTestAPIRequestFull(test, endpoint, nil, paths, model.CourseRoleAdmin)
 	if response.Success {
 		test.Fatalf("Request did not generate an error: '%v'.", response)
 	}
@@ -343,7 +343,7 @@ func TestBadPostFilesFileSizeExceeded(test *testing.T) {
 		filepath.Join(util.RootDirForTesting(), "testdata", "files", "1092bytes.txt"),
 	}
 
-	response := SendTestAPIRequestFull(test, endpoint, nil, paths, model.RoleAdmin)
+	response := SendTestAPIRequestFull(test, endpoint, nil, paths, model.CourseRoleAdmin)
 	if response.Success {
 		test.Fatalf("Request did not generate an error: '%v'.", response)
 	}
@@ -439,7 +439,7 @@ func TestTargetUserSelfOrGrader(test *testing.T) {
 	}
 
 	isNonSelfPermError := func(role model.CourseUserRole) bool {
-		return role < model.RoleGrader
+		return role < model.CourseRoleGrader
 	}
 
 	testTargetUser(test, createTargetType, createRequest, isNonSelfPermError)
@@ -479,7 +479,7 @@ func TestTargetUserSelfOrAdmin(test *testing.T) {
 	}
 
 	isNonSelfPermError := func(role model.CourseUserRole) bool {
-		return role < model.RoleAdmin
+		return role < model.CourseRoleAdmin
 	}
 
 	testTargetUser(test, createTargetType, createRequest, isNonSelfPermError)
@@ -518,31 +518,31 @@ func testTargetUser[T comparable, V userGetter](test *testing.T,
 		expected  T
 	}{
 		// Self.
-		{model.RoleStudent, "", false,
+		{model.CourseRoleStudent, "", false,
 			createTargetType(TargetUser{true, "student@test.com", users["student@test.com"]})},
-		{model.RoleStudent, "student@test.com", false,
+		{model.CourseRoleStudent, "student@test.com", false,
 			createTargetType(TargetUser{true, "student@test.com", users["student@test.com"]})},
-		{model.RoleGrader, "", false,
+		{model.CourseRoleGrader, "", false,
 			createTargetType(TargetUser{true, "grader@test.com", users["grader@test.com"]})},
-		{model.RoleGrader, "grader@test.com", false,
+		{model.CourseRoleGrader, "grader@test.com", false,
 			createTargetType(TargetUser{true, "grader@test.com", users["grader@test.com"]})},
 
 		// Other.
-		{model.RoleOther, "student@test.com", isNonSelfPermError(model.RoleOther),
+		{model.CourseRoleOther, "student@test.com", isNonSelfPermError(model.CourseRoleOther),
 			createTargetType(TargetUser{true, "student@test.com", users["student@test.com"]})},
-		{model.RoleStudent, "grader@test.com", isNonSelfPermError(model.RoleStudent),
+		{model.CourseRoleStudent, "grader@test.com", isNonSelfPermError(model.CourseRoleStudent),
 			createTargetType(TargetUser{true, "grader@test.com", users["grader@test.com"]})},
-		{model.RoleGrader, "student@test.com", isNonSelfPermError(model.RoleGrader),
+		{model.CourseRoleGrader, "student@test.com", isNonSelfPermError(model.CourseRoleGrader),
 			createTargetType(TargetUser{true, "student@test.com", users["student@test.com"]})},
-		{model.RoleAdmin, "student@test.com", isNonSelfPermError(model.RoleAdmin),
+		{model.CourseRoleAdmin, "student@test.com", isNonSelfPermError(model.CourseRoleAdmin),
 			createTargetType(TargetUser{true, "student@test.com", users["student@test.com"]})},
-		{model.RoleOwner, "student@test.com", isNonSelfPermError(model.RoleOwner),
+		{model.CourseRoleOwner, "student@test.com", isNonSelfPermError(model.CourseRoleOwner),
 			createTargetType(TargetUser{true, "student@test.com", users["student@test.com"]})},
 
 		// Not found.
-		{model.RoleGrader, "ZZZ", isNonSelfPermError(model.RoleGrader),
+		{model.CourseRoleGrader, "ZZZ", isNonSelfPermError(model.CourseRoleGrader),
 			createTargetType(TargetUser{false, "ZZZ", nil})},
-		{model.RoleAdmin, "ZZZ", isNonSelfPermError(model.RoleAdmin),
+		{model.CourseRoleAdmin, "ZZZ", isNonSelfPermError(model.CourseRoleAdmin),
 			createTargetType(TargetUser{false, "ZZZ", nil})},
 	}
 
@@ -591,20 +591,20 @@ func TestTargetUser(test *testing.T) {
 		target   string
 		expected TargetUser
 	}{
-		{model.RoleStudent, "student@test.com", TargetUser{true, "student@test.com", users["student@test.com"]}},
-		{model.RoleGrader, "grader@test.com", TargetUser{true, "grader@test.com", users["grader@test.com"]}},
+		{model.CourseRoleStudent, "student@test.com", TargetUser{true, "student@test.com", users["student@test.com"]}},
+		{model.CourseRoleGrader, "grader@test.com", TargetUser{true, "grader@test.com", users["grader@test.com"]}},
 
-		{model.RoleStudent, "", TargetUser{}},
-		{model.RoleGrader, "", TargetUser{}},
+		{model.CourseRoleStudent, "", TargetUser{}},
+		{model.CourseRoleGrader, "", TargetUser{}},
 
-		{model.RoleOther, "student@test.com", TargetUser{true, "student@test.com", users["student@test.com"]}},
-		{model.RoleStudent, "grader@test.com", TargetUser{true, "grader@test.com", users["grader@test.com"]}},
-		{model.RoleGrader, "student@test.com", TargetUser{true, "student@test.com", users["student@test.com"]}},
-		{model.RoleAdmin, "student@test.com", TargetUser{true, "student@test.com", users["student@test.com"]}},
-		{model.RoleOwner, "student@test.com", TargetUser{true, "student@test.com", users["student@test.com"]}},
+		{model.CourseRoleOther, "student@test.com", TargetUser{true, "student@test.com", users["student@test.com"]}},
+		{model.CourseRoleStudent, "grader@test.com", TargetUser{true, "grader@test.com", users["grader@test.com"]}},
+		{model.CourseRoleGrader, "student@test.com", TargetUser{true, "student@test.com", users["student@test.com"]}},
+		{model.CourseRoleAdmin, "student@test.com", TargetUser{true, "student@test.com", users["student@test.com"]}},
+		{model.CourseRoleOwner, "student@test.com", TargetUser{true, "student@test.com", users["student@test.com"]}},
 
 		// Not found.
-		{model.RoleGrader, "ZZZ", TargetUser{false, "ZZZ", nil}},
+		{model.CourseRoleGrader, "ZZZ", TargetUser{false, "ZZZ", nil}},
 	}
 
 	for i, testCase := range testCases {

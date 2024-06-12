@@ -25,17 +25,17 @@ func TestFetchAttempts(test *testing.T) {
 		result      []*model.GradingResult
 	}{
 		// Grader, self.
-		{model.RoleGrader, "", true, false, []*model.GradingResult{}},
-		{model.RoleGrader, "grader@test.com", true, false, []*model.GradingResult{}},
+		{model.CourseRoleGrader, "", true, false, []*model.GradingResult{}},
+		{model.CourseRoleGrader, "grader@test.com", true, false, []*model.GradingResult{}},
 
 		// Grader, other.
-		{model.RoleGrader, "student@test.com", true, false, studentGradingResults},
+		{model.CourseRoleGrader, "student@test.com", true, false, studentGradingResults},
 
 		// Grader, missing.
-		{model.RoleGrader, "ZZZ@test.com", false, false, []*model.GradingResult{}},
+		{model.CourseRoleGrader, "ZZZ@test.com", false, false, []*model.GradingResult{}},
 
 		// Student, self.
-		{model.RoleStudent, "", true, true, nil},
+		{model.CourseRoleStudent, "", true, true, nil},
 	}
 
 	for i, testCase := range testCases {
