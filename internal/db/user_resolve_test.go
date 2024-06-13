@@ -60,7 +60,7 @@ func (this *DBTests) DBTestResolveCourseUsers(test *testing.T) {
 
 		// This is a test to ensure miscapitalized emails only get returned once.
 		{
-			[]string{"a@test.com", "A@tesT.CoM", "A@TEST.COM"},
+			[]string{"a@test.com", "A@tesT.CoM", "A@TESt.COM"},
 			[]string{"a@test.com"},
 			nil,
 			[]string{},

@@ -1,7 +1,11 @@
 package model
 
 import (
+	"fmt"
+
+	"github.com/edulinq/autograder/internal/config"
 	"github.com/edulinq/autograder/internal/email"
+	"github.com/edulinq/autograder/internal/util"
 )
 
 // Get the email message that corresponds with this user operation
@@ -27,31 +31,55 @@ func (this *UserOpResult) GetEmail() *email.Message {
 }
 
 func (this *UserOpResult) getAddEmail() *email.Message {
-	// TEST
+	body := fmt.Sprintf(baseAddBody, this.Email)
+
+	if this.CleartextPassword != "" {
+		body += fmt.Sprintf("\nYour new password token is '%s' (no quotes).\n", this.CleartextPassword)
+	}
+
 	return &email.Message{
 		To:      []string{this.Email},
-		Subject: "TEST",
-		Body:    "TEST",
+		Subject: fmt.Sprintf("Autograder %s -- User Account Created", config.NAME.Get()),
+		Body:    body,
 		HTML:    false,
 	}
 }
 
 func (this *UserOpResult) getEnrolledEmail() *email.Message {
-	// TEST
+	body := fmt.Sprintf(baseEnrollBody, this.Email, util.JoinStrings(", ", this.Enrolled...))
+
 	return &email.Message{
 		To:      []string{this.Email},
-		Subject: "TEST",
-		Body:    "TEST",
+		Subject: fmt.Sprintf("Autograder %s -- Enrolled in Course", config.NAME.Get()),
+		Body:    body,
 		HTML:    false,
 	}
 }
 
 func (this *UserOpResult) getNewPasswordEmail() *email.Message {
-	// TEST
+	body := fmt.Sprintf(baseNewPassBody, this.Email, this.CleartextPassword)
+
 	return &email.Message{
 		To:      []string{this.Email},
-		Subject: "TEST",
-		Body:    "TEST",
+		Subject: fmt.Sprintf("Autograder %s -- New Password Token", config.NAME.Get()),
+		Body:    body,
 		HTML:    false,
 	}
 }
+
+var baseAddBody string = `Hello,
+
+An autograder account with the username/email '%s' has been created.
+Usage instructions will provided in class.
+`
+
+var baseEnrollBody string = `Hello,
+
+Your autograder account '%s' has been enrolled in the course(s) '%s'.
+Usage instructions will provided in class.
+`
+
+var baseNewPassBody string = `Hello,
+
+Your autograder account '%s' has been generated a new password token: '%s' (no quotes).
+`
