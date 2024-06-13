@@ -94,12 +94,12 @@ func (this *backend) RemoveUserFromCourse(course *model.Course, email string) er
 		return nil
 	}
 
-	_, enrolled := user.Roles[course.ID]
+	_, enrolled := user.CourseInfo[course.ID]
 	if !enrolled {
 		return nil
 	}
 
-	delete(user.Roles, course.ID)
+	delete(user.CourseInfo, course.ID)
 
 	err = util.ToJSONFileIndent(users, this.getServerUsersPath())
 	if err != nil {

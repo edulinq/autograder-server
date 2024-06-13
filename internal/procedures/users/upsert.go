@@ -134,7 +134,7 @@ func insertUser(user *model.ServerUser, options UpsertUsersOptions, rawData *mod
 		return model.NewSystemErrorUserOpResult(user.Email, fmt.Errorf("Failed to set new password: '%w'.", err))
 	}
 
-	for courseID, _ := range user.Roles {
+	for courseID, _ := range user.CourseInfo {
 		result.Enrolled = append(result.Enrolled, courseID)
 	}
 
@@ -155,8 +155,8 @@ func updateUser(newUser *model.ServerUser, user *model.ServerUser, options Upser
 	}
 
 	var enrolledCourses []string = nil
-	for course, _ := range newUser.Roles {
-		_, exists := user.Roles[course]
+	for course, _ := range newUser.CourseInfo {
+		_, exists := user.CourseInfo[course]
 		if !exists {
 			enrolledCourses = append(enrolledCourses, course)
 		}
@@ -226,7 +226,7 @@ func checkInsertPermissions(user *model.ServerUser, rawData *model.RawUserData, 
 
 	// At this point, the context user's server-level credentials are not high enough to insert any user.
 	// Course-level credentials will need to be checked.
-	courseRole := user.Roles[rawData.Course]
+	courseRole := user.GetCourseRole(rawData.Course)
 
 	// Check the relative course credentials.
 	if options.ContextCourseRole < courseRole {
@@ -300,8 +300,8 @@ func checkCourseUpdatePermissions(newUser *model.ServerUser, oldUser *model.Serv
 		return nil
 	}
 
-	oldCourseRole := oldUser.Roles[rawData.Course]
-	newCourseRole := newUser.Roles[rawData.Course]
+	oldCourseRole := oldUser.GetCourseRole(rawData.Course)
+	newCourseRole := newUser.GetCourseRole(rawData.Course)
 
 	// Course roles can only be modified by course admins.
 	hasCourseRoleChange := ((newCourseRole != model.CourseRoleUnknown) && (oldCourseRole != newCourseRole))

@@ -87,13 +87,9 @@ func (this *CourseUser) GetLMSID() string {
 
 func (this *CourseUser) ToServerUser(courseID string) (*ServerUser, error) {
 	serverUser := &ServerUser{
-		Email: this.Email,
-		Name:  this.Name,
-		Roles: map[string]CourseUserRole{courseID: this.Role},
-	}
-
-	if this.LMSID != nil {
-		serverUser.LMSIDs = map[string]string{courseID: *this.LMSID}
+		Email:      this.Email,
+		Name:       this.Name,
+		CourseInfo: map[string]*UserCourseInfo{courseID: &UserCourseInfo{Role: this.Role, LMSID: this.LMSID}},
 	}
 
 	return serverUser, serverUser.Validate()

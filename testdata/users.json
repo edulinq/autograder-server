@@ -13,17 +13,27 @@
                 "AccessTime": "2000-01-01T12:00:00Z"
             }
         ],
-        "course-roles": {
-            "course-languages": "admin",
-            "course-with-lms": "admin",
-            "course-without-source": "admin",
-            "course101": "admin",
-            "course101-with-zero-limit": "admin"
-        },
-        "lms-ids": {
-            "course-languages": "lms-admin@test.com",
-            "course-with-lms": "lms-admin@test.com",
-            "course-without-source": "lms-admin@test.com"
+        "course-info": {
+            "course-languages": {
+                "role": "admin",
+                "lms-id": "lms-admin@test.com"
+            },
+            "course-with-lms": {
+                "role": "admin",
+                "lms-id": "lms-admin@test.com"
+            },
+            "course-without-source": {
+                "role": "admin",
+                "lms-id": "lms-admin@test.com"
+            },
+            "course101": {
+                "role": "admin",
+                "lms-id": ""
+            },
+            "course101-with-zero-limit": {
+                "role": "admin",
+                "lms-id": ""
+            }
         }
     },
     "grader@test.com": {
@@ -40,17 +50,27 @@
                 "AccessTime": "2000-01-01T12:00:00Z"
             }
         ],
-        "course-roles": {
-            "course-languages": "grader",
-            "course-with-lms": "grader",
-            "course-without-source": "grader",
-            "course101": "grader",
-            "course101-with-zero-limit": "grader"
-        },
-        "lms-ids": {
-            "course-languages": "lms-grader@test.com",
-            "course-with-lms": "lms-grader@test.com",
-            "course-without-source": "lms-grader@test.com"
+        "course-info": {
+            "course-languages": {
+                "role": "grader",
+                "lms-id": "lms-grader@test.com"
+            },
+            "course-with-lms": {
+                "role": "grader",
+                "lms-id": "lms-grader@test.com"
+            },
+            "course-without-source": {
+                "role": "grader",
+                "lms-id": "lms-grader@test.com"
+            },
+            "course101": {
+                "role": "grader",
+                "lms-id": ""
+            },
+            "course101-with-zero-limit": {
+                "role": "grader",
+                "lms-id": ""
+            }
         }
     },
     "no-lms-id@test.com": {
@@ -67,12 +87,17 @@
                 "AccessTime": "2000-01-01T12:00:00Z"
             }
         ],
-        "course-roles": {
-            "course-languages": "student",
-            "course-with-lms": "student",
-            "course-without-source": "student"
-        },
-        "lms-ids": {}
+        "course-info": {
+            "course-languages": {
+                "role": "admin"
+            },
+            "course-with-lms": {
+                "role": "admin"
+            },
+            "course-without-source": {
+                "role": "admin"
+            }
+        }
     },
     "other@test.com": {
         "email": "other@test.com",
@@ -88,17 +113,27 @@
                 "AccessTime": "2000-01-01T12:00:00Z"
             }
         ],
-        "course-roles": {
-            "course-languages": "other",
-            "course-with-lms": "other",
-            "course-without-source": "other",
-            "course101": "other",
-            "course101-with-zero-limit": "other"
-        },
-        "lms-ids": {
-            "course-languages": "lms-other@test.com",
-            "course-with-lms": "lms-other@test.com",
-            "course-without-source": "lms-other@test.com"
+        "course-info": {
+            "course-languages": {
+                "role": "other",
+                "lms-id": "lms-other@test.com"
+            },
+            "course-with-lms": {
+                "role": "other",
+                "lms-id": "lms-other@test.com"
+            },
+            "course-without-source": {
+                "role": "other",
+                "lms-id": "lms-other@test.com"
+            },
+            "course101": {
+                "role": "other",
+                "lms-id": ""
+            },
+            "course101-with-zero-limit": {
+                "role": "other",
+                "lms-id": ""
+            }
         }
     },
     "owner@test.com": {
@@ -115,17 +150,27 @@
                 "AccessTime": "2000-01-01T12:00:00Z"
             }
         ],
-        "course-roles": {
-            "course-languages": "owner",
-            "course-with-lms": "owner",
-            "course-without-source": "owner",
-            "course101": "owner",
-            "course101-with-zero-limit": "owner"
-        },
-        "lms-ids": {
-            "course-languages": "lms-owner@test.com",
-            "course-with-lms": "lms-owner@test.com",
-            "course-without-source": "lms-owner@test.com"
+        "course-info": {
+            "course-languages": {
+                "role": "owner",
+                "lms-id": "lms-owner@test.com"
+            },
+            "course-with-lms": {
+                "role": "owner",
+                "lms-id": "lms-owner@test.com"
+            },
+            "course-without-source": {
+                "role": "owner",
+                "lms-id": "lms-owner@test.com"
+            },
+            "course101": {
+                "role": "owner",
+                "lms-id": ""
+            },
+            "course101-with-zero-limit": {
+                "role": "owner",
+                "lms-id": ""
+            }
         }
     },
     "student@test.com": {
@@ -142,17 +187,27 @@
                 "AccessTime": "2000-01-01T12:00:00Z"
             }
         ],
-        "course-roles": {
-            "course-languages": "student",
-            "course-with-lms": "student",
-            "course-without-source": "student",
-            "course101": "student",
-            "course101-with-zero-limit": "student"
-        },
-        "lms-ids": {
-            "course-languages": "lms-student@test.com",
-            "course-with-lms": "lms-student@test.com",
-            "course-without-source": "lms-student@test.com"
+        "course-info": {
+            "course-languages": {
+                "role": "student",
+                "lms-id": "lms-student@test.com"
+            },
+            "course-with-lms": {
+                "role": "student",
+                "lms-id": "lms-student@test.com"
+            },
+            "course-without-source": {
+                "role": "student",
+                "lms-id": "lms-student@test.com"
+            },
+            "course101": {
+                "role": "student",
+                "lms-id": ""
+            },
+            "course101-with-zero-limit": {
+                "role": "student",
+                "lms-id": ""
+            }
         }
     }
 }

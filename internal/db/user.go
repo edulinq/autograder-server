@@ -142,7 +142,7 @@ func RemoveUserFromCourse(course *model.Course, email string) (bool, bool, error
 		return false, false, nil
 	}
 
-	_, exists := user.Roles[course.ID]
+	_, exists := user.CourseInfo[course.ID]
 	if !exists {
 		return true, false, nil
 	}

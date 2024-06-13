@@ -81,8 +81,12 @@ func TestUpsertUser(test *testing.T) {
 				Salt:   PLACEHOLDER_SALT,
 				Role:   model.ServerRoleUser,
 				Tokens: []*model.Token{nil},
-				Roles:  map[string]model.CourseUserRole{"new-course": model.CourseRoleStudent},
-				LMSIDs: map[string]string{"new-course": "new-lms"},
+				CourseInfo: map[string]*model.UserCourseInfo{
+					"new-course": &model.UserCourseInfo{
+						Role:  model.CourseRoleStudent,
+						LMSID: util.StringPointer("new-lms"),
+					},
+				},
 			},
 		},
 
@@ -107,17 +111,25 @@ func TestUpsertUser(test *testing.T) {
 				Salt:   PLACEHOLDER_SALT,
 				Role:   model.ServerRoleUser,
 				Tokens: []*model.Token{nil},
-				Roles: map[string]model.CourseUserRole{
-					"course-languages":          model.CourseRoleStudent,
-					"course-with-lms":           model.CourseRoleStudent,
-					"course-without-source":     model.CourseRoleStudent,
-					"course101":                 model.CourseRoleStudent,
-					"course101-with-zero-limit": model.CourseRoleStudent,
-				},
-				LMSIDs: map[string]string{
-					"course-languages":      "lms-student@test.com",
-					"course-with-lms":       "lms-student@test.com",
-					"course-without-source": "lms-student@test.com",
+				CourseInfo: map[string]*model.UserCourseInfo{
+					"course-languages": &model.UserCourseInfo{
+						Role:  model.CourseRoleStudent,
+						LMSID: util.StringPointer("lms-student@test.com"),
+					},
+					"course-with-lms": &model.UserCourseInfo{
+						Role:  model.CourseRoleStudent,
+						LMSID: util.StringPointer("lms-student@test.com"),
+					},
+					"course-without-source": &model.UserCourseInfo{
+						Role:  model.CourseRoleStudent,
+						LMSID: util.StringPointer("lms-student@test.com"),
+					},
+					"course101": &model.UserCourseInfo{
+						Role: model.CourseRoleStudent,
+					},
+					"course101-with-zero-limit": &model.UserCourseInfo{
+						Role: model.CourseRoleStudent,
+					},
 				},
 			},
 		},
@@ -147,19 +159,29 @@ func TestUpsertUser(test *testing.T) {
 				Salt:   PLACEHOLDER_SALT,
 				Role:   model.ServerRoleUser,
 				Tokens: []*model.Token{nil},
-				Roles: map[string]model.CourseUserRole{
-					"course-languages":          model.CourseRoleStudent,
-					"course-with-lms":           model.CourseRoleStudent,
-					"course-without-source":     model.CourseRoleStudent,
-					"course101":                 model.CourseRoleStudent,
-					"course101-with-zero-limit": model.CourseRoleStudent,
-					"new-course":                model.CourseRoleStudent,
-				},
-				LMSIDs: map[string]string{
-					"course-languages":      "lms-student@test.com",
-					"course-with-lms":       "lms-student@test.com",
-					"course-without-source": "lms-student@test.com",
-					"new-course":            "new-lms",
+				CourseInfo: map[string]*model.UserCourseInfo{
+					"course-languages": &model.UserCourseInfo{
+						Role:  model.CourseRoleStudent,
+						LMSID: util.StringPointer("lms-student@test.com"),
+					},
+					"course-with-lms": &model.UserCourseInfo{
+						Role:  model.CourseRoleStudent,
+						LMSID: util.StringPointer("lms-student@test.com"),
+					},
+					"course-without-source": &model.UserCourseInfo{
+						Role:  model.CourseRoleStudent,
+						LMSID: util.StringPointer("lms-student@test.com"),
+					},
+					"course101": &model.UserCourseInfo{
+						Role: model.CourseRoleStudent,
+					},
+					"course101-with-zero-limit": &model.UserCourseInfo{
+						Role: model.CourseRoleStudent,
+					},
+					"new-course": &model.UserCourseInfo{
+						Role:  model.CourseRoleStudent,
+						LMSID: util.StringPointer("new-lms"),
+					},
 				},
 			},
 		},
@@ -186,17 +208,25 @@ func TestUpsertUser(test *testing.T) {
 				Salt:   PLACEHOLDER_SALT,
 				Role:   model.ServerRoleUser,
 				Tokens: []*model.Token{nil},
-				Roles: map[string]model.CourseUserRole{
-					"course-languages":          model.CourseRoleStudent,
-					"course-with-lms":           model.CourseRoleStudent,
-					"course-without-source":     model.CourseRoleStudent,
-					"course101":                 model.CourseRoleGrader,
-					"course101-with-zero-limit": model.CourseRoleStudent,
-				},
-				LMSIDs: map[string]string{
-					"course-languages":      "lms-student@test.com",
-					"course-with-lms":       "lms-student@test.com",
-					"course-without-source": "lms-student@test.com",
+				CourseInfo: map[string]*model.UserCourseInfo{
+					"course-languages": &model.UserCourseInfo{
+						Role:  model.CourseRoleStudent,
+						LMSID: util.StringPointer("lms-student@test.com"),
+					},
+					"course-with-lms": &model.UserCourseInfo{
+						Role:  model.CourseRoleStudent,
+						LMSID: util.StringPointer("lms-student@test.com"),
+					},
+					"course-without-source": &model.UserCourseInfo{
+						Role:  model.CourseRoleStudent,
+						LMSID: util.StringPointer("lms-student@test.com"),
+					},
+					"course101": &model.UserCourseInfo{
+						Role: model.CourseRoleGrader,
+					},
+					"course101-with-zero-limit": &model.UserCourseInfo{
+						Role: model.CourseRoleStudent,
+					},
 				},
 			},
 		},
@@ -224,17 +254,25 @@ func TestUpsertUser(test *testing.T) {
 				Salt:   PLACEHOLDER_SALT,
 				Role:   model.ServerRoleUser,
 				Tokens: []*model.Token{nil},
-				Roles: map[string]model.CourseUserRole{
-					"course-languages":          model.CourseRoleStudent,
-					"course-with-lms":           model.CourseRoleStudent,
-					"course-without-source":     model.CourseRoleStudent,
-					"course101":                 model.CourseRoleGrader,
-					"course101-with-zero-limit": model.CourseRoleStudent,
-				},
-				LMSIDs: map[string]string{
-					"course-languages":      "lms-student@test.com",
-					"course-with-lms":       "lms-student@test.com",
-					"course-without-source": "lms-student@test.com",
+				CourseInfo: map[string]*model.UserCourseInfo{
+					"course-languages": &model.UserCourseInfo{
+						Role:  model.CourseRoleStudent,
+						LMSID: util.StringPointer("lms-student@test.com"),
+					},
+					"course-with-lms": &model.UserCourseInfo{
+						Role:  model.CourseRoleStudent,
+						LMSID: util.StringPointer("lms-student@test.com"),
+					},
+					"course-without-source": &model.UserCourseInfo{
+						Role:  model.CourseRoleStudent,
+						LMSID: util.StringPointer("lms-student@test.com"),
+					},
+					"course101": &model.UserCourseInfo{
+						Role: model.CourseRoleGrader,
+					},
+					"course101-with-zero-limit": &model.UserCourseInfo{
+						Role: model.CourseRoleStudent,
+					},
 				},
 			},
 		},
@@ -262,17 +300,25 @@ func TestUpsertUser(test *testing.T) {
 				Salt:   PLACEHOLDER_SALT,
 				Role:   model.ServerRoleUser,
 				Tokens: []*model.Token{nil},
-				Roles: map[string]model.CourseUserRole{
-					"course-languages":          model.CourseRoleStudent,
-					"course-with-lms":           model.CourseRoleStudent,
-					"course-without-source":     model.CourseRoleStudent,
-					"course101":                 model.CourseRoleStudent,
-					"course101-with-zero-limit": model.CourseRoleStudent,
-				},
-				LMSIDs: map[string]string{
-					"course-languages":      "lms-student@test.com",
-					"course-with-lms":       "lms-student@test.com",
-					"course-without-source": "lms-student@test.com",
+				CourseInfo: map[string]*model.UserCourseInfo{
+					"course-languages": &model.UserCourseInfo{
+						Role:  model.CourseRoleStudent,
+						LMSID: util.StringPointer("lms-student@test.com"),
+					},
+					"course-with-lms": &model.UserCourseInfo{
+						Role:  model.CourseRoleStudent,
+						LMSID: util.StringPointer("lms-student@test.com"),
+					},
+					"course-without-source": &model.UserCourseInfo{
+						Role:  model.CourseRoleStudent,
+						LMSID: util.StringPointer("lms-student@test.com"),
+					},
+					"course101": &model.UserCourseInfo{
+						Role: model.CourseRoleStudent,
+					},
+					"course101-with-zero-limit": &model.UserCourseInfo{
+						Role: model.CourseRoleStudent,
+					},
 				},
 			},
 		},
@@ -299,17 +345,25 @@ func TestUpsertUser(test *testing.T) {
 				Salt:   PLACEHOLDER_SALT,
 				Role:   model.ServerRoleUser,
 				Tokens: []*model.Token{nil},
-				Roles: map[string]model.CourseUserRole{
-					"course-languages":          model.CourseRoleStudent,
-					"course-with-lms":           model.CourseRoleStudent,
-					"course-without-source":     model.CourseRoleStudent,
-					"course101":                 model.CourseRoleStudent,
-					"course101-with-zero-limit": model.CourseRoleStudent,
-				},
-				LMSIDs: map[string]string{
-					"course-languages":      "lms-student@test.com",
-					"course-with-lms":       "lms-student@test.com",
-					"course-without-source": "lms-student@test.com",
+				CourseInfo: map[string]*model.UserCourseInfo{
+					"course-languages": &model.UserCourseInfo{
+						Role:  model.CourseRoleStudent,
+						LMSID: util.StringPointer("lms-student@test.com"),
+					},
+					"course-with-lms": &model.UserCourseInfo{
+						Role:  model.CourseRoleStudent,
+						LMSID: util.StringPointer("lms-student@test.com"),
+					},
+					"course-without-source": &model.UserCourseInfo{
+						Role:  model.CourseRoleStudent,
+						LMSID: util.StringPointer("lms-student@test.com"),
+					},
+					"course101": &model.UserCourseInfo{
+						Role: model.CourseRoleStudent,
+					},
+					"course101-with-zero-limit": &model.UserCourseInfo{
+						Role: model.CourseRoleStudent,
+					},
 				},
 			},
 		},
@@ -336,17 +390,25 @@ func TestUpsertUser(test *testing.T) {
 				Salt:   PLACEHOLDER_SALT,
 				Role:   model.ServerRoleUser,
 				Tokens: []*model.Token{nil},
-				Roles: map[string]model.CourseUserRole{
-					"course-languages":          model.CourseRoleAdmin,
-					"course-with-lms":           model.CourseRoleAdmin,
-					"course-without-source":     model.CourseRoleAdmin,
-					"course101":                 model.CourseRoleAdmin,
-					"course101-with-zero-limit": model.CourseRoleAdmin,
-				},
-				LMSIDs: map[string]string{
-					"course-languages":      "lms-admin@test.com",
-					"course-with-lms":       "lms-admin@test.com",
-					"course-without-source": "lms-admin@test.com",
+				CourseInfo: map[string]*model.UserCourseInfo{
+					"course-languages": &model.UserCourseInfo{
+						Role:  model.CourseRoleAdmin,
+						LMSID: util.StringPointer("lms-admin@test.com"),
+					},
+					"course-with-lms": &model.UserCourseInfo{
+						Role:  model.CourseRoleAdmin,
+						LMSID: util.StringPointer("lms-admin@test.com"),
+					},
+					"course-without-source": &model.UserCourseInfo{
+						Role:  model.CourseRoleAdmin,
+						LMSID: util.StringPointer("lms-admin@test.com"),
+					},
+					"course101": &model.UserCourseInfo{
+						Role: model.CourseRoleAdmin,
+					},
+					"course101-with-zero-limit": &model.UserCourseInfo{
+						Role: model.CourseRoleAdmin,
+					},
 				},
 			},
 		},
@@ -376,17 +438,25 @@ func TestUpsertUser(test *testing.T) {
 				Salt:   PLACEHOLDER_SALT,
 				Role:   model.ServerRoleAdmin,
 				Tokens: []*model.Token{nil},
-				Roles: map[string]model.CourseUserRole{
-					"course-languages":          model.CourseRoleAdmin,
-					"course-with-lms":           model.CourseRoleAdmin,
-					"course-without-source":     model.CourseRoleAdmin,
-					"course101":                 model.CourseRoleStudent,
-					"course101-with-zero-limit": model.CourseRoleAdmin,
-				},
-				LMSIDs: map[string]string{
-					"course-languages":      "lms-admin@test.com",
-					"course-with-lms":       "lms-admin@test.com",
-					"course-without-source": "lms-admin@test.com",
+				CourseInfo: map[string]*model.UserCourseInfo{
+					"course-languages": &model.UserCourseInfo{
+						Role:  model.CourseRoleAdmin,
+						LMSID: util.StringPointer("lms-admin@test.com"),
+					},
+					"course-with-lms": &model.UserCourseInfo{
+						Role:  model.CourseRoleAdmin,
+						LMSID: util.StringPointer("lms-admin@test.com"),
+					},
+					"course-without-source": &model.UserCourseInfo{
+						Role:  model.CourseRoleAdmin,
+						LMSID: util.StringPointer("lms-admin@test.com"),
+					},
+					"course101": &model.UserCourseInfo{
+						Role: model.CourseRoleStudent,
+					},
+					"course101-with-zero-limit": &model.UserCourseInfo{
+						Role: model.CourseRoleAdmin,
+					},
 				},
 			},
 		},
@@ -412,17 +482,25 @@ func TestUpsertUser(test *testing.T) {
 				Salt:   PLACEHOLDER_SALT,
 				Role:   model.ServerRoleUser,
 				Tokens: []*model.Token{nil, nil},
-				Roles: map[string]model.CourseUserRole{
-					"course-languages":          model.CourseRoleStudent,
-					"course-with-lms":           model.CourseRoleStudent,
-					"course-without-source":     model.CourseRoleStudent,
-					"course101":                 model.CourseRoleStudent,
-					"course101-with-zero-limit": model.CourseRoleStudent,
-				},
-				LMSIDs: map[string]string{
-					"course-languages":      "lms-student@test.com",
-					"course-with-lms":       "lms-student@test.com",
-					"course-without-source": "lms-student@test.com",
+				CourseInfo: map[string]*model.UserCourseInfo{
+					"course-languages": &model.UserCourseInfo{
+						Role:  model.CourseRoleStudent,
+						LMSID: util.StringPointer("lms-student@test.com"),
+					},
+					"course-with-lms": &model.UserCourseInfo{
+						Role:  model.CourseRoleStudent,
+						LMSID: util.StringPointer("lms-student@test.com"),
+					},
+					"course-without-source": &model.UserCourseInfo{
+						Role:  model.CourseRoleStudent,
+						LMSID: util.StringPointer("lms-student@test.com"),
+					},
+					"course101": &model.UserCourseInfo{
+						Role: model.CourseRoleStudent,
+					},
+					"course101-with-zero-limit": &model.UserCourseInfo{
+						Role: model.CourseRoleStudent,
+					},
 				},
 			},
 		},
@@ -447,17 +525,25 @@ func TestUpsertUser(test *testing.T) {
 				Salt:   PLACEHOLDER_SALT,
 				Role:   model.ServerRoleUser,
 				Tokens: []*model.Token{nil},
-				Roles: map[string]model.CourseUserRole{
-					"course-languages":          model.CourseRoleStudent,
-					"course-with-lms":           model.CourseRoleStudent,
-					"course-without-source":     model.CourseRoleStudent,
-					"course101":                 model.CourseRoleStudent,
-					"course101-with-zero-limit": model.CourseRoleStudent,
-				},
-				LMSIDs: map[string]string{
-					"course-languages":      "lms-student@test.com",
-					"course-with-lms":       "lms-student@test.com",
-					"course-without-source": "lms-student@test.com",
+				CourseInfo: map[string]*model.UserCourseInfo{
+					"course-languages": &model.UserCourseInfo{
+						Role:  model.CourseRoleStudent,
+						LMSID: util.StringPointer("lms-student@test.com"),
+					},
+					"course-with-lms": &model.UserCourseInfo{
+						Role:  model.CourseRoleStudent,
+						LMSID: util.StringPointer("lms-student@test.com"),
+					},
+					"course-without-source": &model.UserCourseInfo{
+						Role:  model.CourseRoleStudent,
+						LMSID: util.StringPointer("lms-student@test.com"),
+					},
+					"course101": &model.UserCourseInfo{
+						Role: model.CourseRoleStudent,
+					},
+					"course101-with-zero-limit": &model.UserCourseInfo{
+						Role: model.CourseRoleStudent,
+					},
 				},
 			},
 		},
@@ -535,17 +621,25 @@ func TestUpsertUser(test *testing.T) {
 				Salt:   PLACEHOLDER_SALT,
 				Role:   model.ServerRoleOwner,
 				Tokens: []*model.Token{nil},
-				Roles: map[string]model.CourseUserRole{
-					"course-languages":          model.CourseRoleOwner,
-					"course-with-lms":           model.CourseRoleOwner,
-					"course-without-source":     model.CourseRoleOwner,
-					"course101":                 model.CourseRoleAdmin,
-					"course101-with-zero-limit": model.CourseRoleOwner,
-				},
-				LMSIDs: map[string]string{
-					"course-languages":      "lms-owner@test.com",
-					"course-with-lms":       "lms-owner@test.com",
-					"course-without-source": "lms-owner@test.com",
+				CourseInfo: map[string]*model.UserCourseInfo{
+					"course-languages": &model.UserCourseInfo{
+						Role:  model.CourseRoleOwner,
+						LMSID: util.StringPointer("lms-owner@test.com"),
+					},
+					"course-with-lms": &model.UserCourseInfo{
+						Role:  model.CourseRoleOwner,
+						LMSID: util.StringPointer("lms-owner@test.com"),
+					},
+					"course-without-source": &model.UserCourseInfo{
+						Role:  model.CourseRoleOwner,
+						LMSID: util.StringPointer("lms-owner@test.com"),
+					},
+					"course101": &model.UserCourseInfo{
+						Role: model.CourseRoleAdmin,
+					},
+					"course101-with-zero-limit": &model.UserCourseInfo{
+						Role: model.CourseRoleOwner,
+					},
 				},
 			},
 		},
@@ -837,7 +931,7 @@ func TestUpsertUser(test *testing.T) {
 			},
 			expected: &model.UserOpResult{
 				Email:            "student@test.com",
-				ValidationErrors: []string{"User 'student@test.com' has an unknown role for course 'new-course'. All users must have a definite role."},
+				ValidationErrors: []string{"User 'student@test.com' has an invalid course info 'new-course': 'Unknown course role.'."},
 			},
 			expectedUser: nil,
 		},
@@ -997,12 +1091,8 @@ func testUpsert(test *testing.T, caseIndex int, sendEmails bool, options UpsertU
 
 	// Adjust for the expected user not being validated.
 
-	if expectedUser.Roles == nil {
-		expectedUser.Roles = make(map[string]model.CourseUserRole, 0)
-	}
-
-	if expectedUser.LMSIDs == nil {
-		expectedUser.LMSIDs = make(map[string]string, 0)
+	if expectedUser.CourseInfo == nil {
+		expectedUser.CourseInfo = make(map[string]*model.UserCourseInfo, 0)
 	}
 
 	if !reflect.DeepEqual(expectedUser, actualUser) {

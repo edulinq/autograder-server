@@ -25,9 +25,8 @@ func (this *RawUserData) ToServerUser() (*ServerUser, error) {
 		Role:  GetServerUserRole(this.Role),
 		Salt:  nil,
 
-		Tokens: make([]*Token, 0),
-		Roles:  make(map[string]CourseUserRole, 0),
-		LMSIDs: make(map[string]string, 0),
+		Tokens:     make([]*Token, 0),
+		CourseInfo: make(map[string]*UserCourseInfo, 0),
 	}
 
 	if this.Name != "" {
@@ -35,10 +34,12 @@ func (this *RawUserData) ToServerUser() (*ServerUser, error) {
 	}
 
 	if this.Course != "" {
-		user.Roles[this.Course] = GetCourseUserRole(this.CourseRole)
+		user.CourseInfo[this.Course] = &UserCourseInfo{
+			Role: GetCourseUserRole(this.CourseRole),
+		}
 
 		if this.CourseLMSID != "" {
-			user.LMSIDs[this.Course] = this.CourseLMSID
+			user.CourseInfo[this.Course].LMSID = &this.CourseLMSID
 		}
 	}
 

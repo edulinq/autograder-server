@@ -169,6 +169,17 @@ func TestUserCourseUserName(test *testing.T) {
 }
 
 func TestUserCourseUserToServerUser(test *testing.T) {
+	minConversionCourseUser := &ServerUser{
+		Email:  "alice@test.com",
+		Name:   util.StringPointer("Alice"),
+		Role:   ServerRoleUnknown,
+		Salt:   nil,
+		Tokens: []*Token{},
+		CourseInfo: map[string]*UserCourseInfo{
+			"course101": &UserCourseInfo{Role: CourseRoleStudent, LMSID: util.StringPointer("alice")},
+		},
+	}
+
 	testCases := []struct {
 		CourseUser *CourseUser
 		ServerUser *ServerUser
@@ -178,7 +189,7 @@ func TestUserCourseUserToServerUser(test *testing.T) {
 		// Base
 		{
 			baseTestCourseUser,
-			minimalTestServerUser,
+			minConversionCourseUser,
 			"course101",
 			false,
 		},
@@ -186,7 +197,9 @@ func TestUserCourseUserToServerUser(test *testing.T) {
 		// No LMS ID
 		{
 			setCourseUserLMSID(baseTestCourseUser, nil),
-			setServerUserLMSIDs(minimalTestServerUser, make(map[string]string, 0)),
+			setServerUserCourseInfo(minConversionCourseUser, map[string]*UserCourseInfo{
+				"course101": &UserCourseInfo{Role: CourseRoleStudent, LMSID: nil},
+			}),
 			"course101",
 			false,
 		},
@@ -211,8 +224,8 @@ func TestUserCourseUserToServerUser(test *testing.T) {
 		}
 
 		if !reflect.DeepEqual(testCase.ServerUser, serverUser) {
-			test.Errorf("Server user not as expected. Expected: '%s', Actual: '%s'.",
-				util.MustToJSONIndent(testCase.ServerUser), util.MustToJSONIndent(serverUser))
+			test.Errorf("Case %d: Server user not as expected. Expected: '%s', Actual: '%s'.",
+				i, util.MustToJSONIndent(testCase.ServerUser), util.MustToJSONIndent(serverUser))
 			continue
 		}
 	}

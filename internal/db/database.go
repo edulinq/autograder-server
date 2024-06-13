@@ -200,12 +200,12 @@ func Open() error {
 	if config.LOAD_TEST_DATA.Get() {
 		_, err = AddCourses()
 		if err != nil {
-			return fmt.Errorf("Failed to load test courses.")
+			return fmt.Errorf("Failed to load test courses: '%w'.", err)
 		}
 
 		err = AddTestUsers()
 		if err != nil {
-			return fmt.Errorf("Failed to load test users.")
+			return fmt.Errorf("Failed to load test users: '%w'.", err)
 		}
 	}
 

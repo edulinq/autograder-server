@@ -4,7 +4,6 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-	"maps"
 	"slices"
 	"strings"
 
@@ -13,7 +12,7 @@ import (
 	"github.com/edulinq/autograder/internal/util"
 )
 
-var SERVER_USER_ROW_COLUMNS []string = []string{"email", "name", "server-role", "salt", "tokens", "course-roles", "lms-ids"}
+var SERVER_USER_ROW_COLUMNS []string = []string{"email", "name", "server-role", "salt", "tokens", "course-info"}
 
 // ServerUsers represent general users that exist on a server.
 // They may or may not be enrolled in courses.
@@ -39,8 +38,12 @@ type ServerUser struct {
 	// May be nil/empty if not retrieved from the database,
 	// will always be non-nil after validation.
 	// Keyed by the course id.
-	Roles  map[string]CourseUserRole `json:"course-roles"`
-	LMSIDs map[string]string         `json:"lms-ids"`
+	CourseInfo map[string]*UserCourseInfo `json:"course-info"`
+}
+
+type UserCourseInfo struct {
+	Role  CourseUserRole `json:"role"`
+	LMSID *string        `json:"lms-id"`
 }
 
 func (this *ServerUser) Validate() error {
@@ -58,7 +61,6 @@ func (this *ServerUser) Validate() error {
 		}
 	}
 
-	// TEST
 	if this.Role == ServerRoleRoot {
 		return fmt.Errorf("User '%s' has a root server role. Normal users are not allowed to have this role.", this.Email)
 	}
@@ -87,46 +89,30 @@ func (this *ServerUser) Validate() error {
 	slices.SortFunc(this.Tokens, TokenPointerCompare)
 	this.Tokens = slices.CompactFunc(this.Tokens, TokenPointerEqual)
 
-	if this.Roles == nil {
-		this.Roles = make(map[string]CourseUserRole, 0)
+	if this.CourseInfo == nil {
+		this.CourseInfo = make(map[string]*UserCourseInfo, 0)
 	}
 
-	newRoles := make(map[string]CourseUserRole, len(this.Roles))
-	for courseID, role := range this.Roles {
+	newCourseInfo := make(map[string]*UserCourseInfo, len(this.CourseInfo))
+	for courseID, info := range this.CourseInfo {
 		newCourseID, err := common.ValidateID(strings.TrimSpace(courseID))
 		if err != nil {
-			return fmt.Errorf("User '%s' has a role with invalid course id '%s': '%w'.", this.Email, courseID, err)
+			return fmt.Errorf("User '%s' has a course info with invalid course id '%s': '%w'.", this.Email, courseID, err)
 		}
 
-		if role == CourseRoleUnknown {
-			return fmt.Errorf("User '%s' has an unknown role for course '%s'. All users must have a definite role.", this.Email, newCourseID)
+		if info == nil {
+			return fmt.Errorf("User '%s' has a nil course info '%s'.", this.Email, courseID)
 		}
 
-		newRoles[newCourseID] = role
-	}
-
-	this.Roles = newRoles
-
-	if this.LMSIDs == nil {
-		this.LMSIDs = make(map[string]string, 0)
-	}
-
-	newLMSIDs := make(map[string]string, len(this.LMSIDs))
-	for courseID, lmsID := range this.LMSIDs {
-		newCourseID, err := common.ValidateID(strings.TrimSpace(courseID))
+		err = info.Validate()
 		if err != nil {
-			return fmt.Errorf("User '%s' has an LMS id with invalid course id '%s': '%w'.", this.Email, courseID, err)
+			return fmt.Errorf("User '%s' has an invalid course info '%s': '%w'.", this.Email, courseID, err)
 		}
 
-		lmsID = strings.TrimSpace(lmsID)
-		if lmsID == "" {
-			return fmt.Errorf("User '%s' has an empty LMS id for course '%s'.", this.Email, newCourseID)
-		}
-
-		newLMSIDs[newCourseID] = lmsID
+		newCourseInfo[newCourseID] = info
 	}
 
-	this.LMSIDs = newLMSIDs
+	this.CourseInfo = newCourseInfo
 
 	return nil
 }
@@ -153,25 +139,28 @@ func (this *ServerUser) GetDisplayName() string {
 	return this.GetName(true)
 }
 
+func (this *ServerUser) GetCourseRole(courseID string) CourseUserRole {
+	info, exists := this.CourseInfo[courseID]
+	if !exists {
+		return CourseRoleUnknown
+	}
+
+	return info.Role
+}
+
 // Convert this server user into a course user for the specific course.
 // Will return (nil, nil) if the user is not enrolled in the given course.
 func (this *ServerUser) ToCourseUser(courseID string) (*CourseUser, error) {
-	role, exists := this.Roles[courseID]
+	info, exists := this.CourseInfo[courseID]
 	if !exists {
 		return nil, nil
-	}
-
-	var lmsID *string = nil
-	lmsIDText, exists := this.LMSIDs[courseID]
-	if exists {
-		lmsID = &lmsIDText
 	}
 
 	courseUser := &CourseUser{
 		Email: this.Email,
 		Name:  this.Name,
-		Role:  role,
-		LMSID: lmsID,
+		Role:  info.Role,
+		LMSID: info.LMSID,
 	}
 
 	return courseUser, courseUser.Validate()
@@ -180,7 +169,7 @@ func (this *ServerUser) ToCourseUser(courseID string) (*CourseUser, error) {
 // Add information from the given user to this user.
 // Everything but email can be added (the email of the two users must already match).
 // Any given tokens will be added.
-// Any Roles or LMSIDs will be upserted.
+// Any course information will be upserted.
 // After all merging, this user will be validated.
 // Nothing can be removed in a merge.
 // The returned boolean indicates if the context user was changed at all.
@@ -219,21 +208,16 @@ func (this *ServerUser) Merge(other *ServerUser) (bool, error) {
 		}
 	}
 
-	if other.Roles != nil {
-		for key, newRole := range other.Roles {
-			if this.Roles[key] != newRole {
+	if other.CourseInfo != nil {
+		for courseID, otherInfo := range other.CourseInfo {
+			info, exists := this.CourseInfo[courseID]
+			if !exists {
+				info = &UserCourseInfo{}
 				changed = true
-				this.Roles[key] = newRole
 			}
-		}
-	}
 
-	if other.LMSIDs != nil {
-		for key, lmsID := range other.LMSIDs {
-			if this.LMSIDs[key] != lmsID {
-				changed = true
-				this.LMSIDs[key] = lmsID
-			}
+			changed = info.Merge(otherInfo) || changed
+			this.CourseInfo[courseID] = info
 		}
 	}
 
@@ -333,14 +317,18 @@ func (this *ServerUser) Clone() *ServerUser {
 		tokens = append(tokens, token.Clone())
 	}
 
+	courseInfo := make(map[string]*UserCourseInfo, len(this.CourseInfo))
+	for courseID, info := range this.CourseInfo {
+		courseInfo[courseID] = info.Clone()
+	}
+
 	return &ServerUser{
-		Email:  this.Email,
-		Name:   this.Name,
-		Role:   this.Role,
-		Salt:   this.Salt,
-		Tokens: tokens,
-		Roles:  maps.Clone(this.Roles),
-		LMSIDs: maps.Clone(this.LMSIDs),
+		Email:      this.Email,
+		Name:       this.Name,
+		Role:       this.Role,
+		Salt:       this.Salt,
+		Tokens:     tokens,
+		CourseInfo: courseInfo,
 	}
 }
 
@@ -356,15 +344,69 @@ func (this *ServerUser) MustToRow() []string {
 		this.Role.String(),
 		util.PointerToString(this.Salt),
 		util.MustToJSON(tokens),
-		util.MustToJSON(this.Roles),
-		util.MustToJSON(this.LMSIDs),
+		util.MustToJSON(this.CourseInfo),
 	}
 }
 
 func (this *ServerUser) GetCourses() []string {
-	courses := make([]string, 0, len(this.Roles))
-	for course, _ := range this.Roles {
+	courses := make([]string, 0, len(this.CourseInfo))
+	for course, _ := range this.CourseInfo {
 		courses = append(courses, course)
 	}
 	return courses
+}
+
+func (this *UserCourseInfo) GetLMSID() string {
+	if this.LMSID == nil {
+		return ""
+	}
+
+	return *this.LMSID
+}
+
+func (this *UserCourseInfo) Validate() error {
+	if this.Role == CourseRoleUnknown {
+		return fmt.Errorf("Unknown course role.")
+	}
+
+	if this.LMSID != nil {
+		lmsID := strings.TrimSpace(*this.LMSID)
+		if lmsID == "" {
+			this.LMSID = nil
+		} else {
+			this.LMSID = &lmsID
+		}
+	}
+
+	return nil
+}
+
+func (this *UserCourseInfo) Merge(other *UserCourseInfo) bool {
+	if (this == nil) || (other == nil) {
+		return false
+	}
+
+	changed := false
+
+	if (other.Role != CourseRoleUnknown) && (this.Role != other.Role) {
+		this.Role = other.Role
+		changed = true
+	}
+
+	lmsID := util.PointerToString(this.LMSID)
+	otherLMSID := util.PointerToString(other.LMSID)
+
+	if (other.LMSID != nil) && (lmsID != otherLMSID) {
+		this.LMSID = other.LMSID
+		changed = true
+	}
+
+	return changed
+}
+
+func (this *UserCourseInfo) Clone() *UserCourseInfo {
+	return &UserCourseInfo{
+		Role:  this.Role,
+		LMSID: this.LMSID,
+	}
 }
