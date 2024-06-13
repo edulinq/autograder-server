@@ -10,7 +10,7 @@ import (
 	"github.com/edulinq/autograder/internal/db"
 	"github.com/edulinq/autograder/internal/log"
 	"github.com/edulinq/autograder/internal/model"
-	"github.com/edulinq/autograder/internal/procedures"
+	pcourses "github.com/edulinq/autograder/internal/procedures/courses"
 	"github.com/edulinq/autograder/internal/util"
 )
 
@@ -49,7 +49,7 @@ func main() {
 	for _, course := range courses {
 		log.Info("Loaded course.", course)
 		go func(course *model.Course) {
-			procedures.UpdateCourse(course, true)
+			pcourses.UpdateCourse(course, true)
 		}(course)
 	}
 

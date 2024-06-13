@@ -32,7 +32,7 @@ func HandleFetchLogs(request *FetchLogsRequest) (*FetchLogsResponse, *core.APIEr
 	}
 
 	if parsedQuery.UserID != "" {
-		fullUser, err := db.GetUser(request.Course, parsedQuery.UserID)
+		fullUser, err := db.GetCourseUser(request.Course, parsedQuery.UserID)
 		if err != nil {
 			return nil, core.NewInternalError("-205", &request.APIRequestCourseUserContext, "Failed to get target user.").
 				Add("target-user", parsedQuery.UserID).Err(err)

@@ -4,7 +4,7 @@ import (
 	"github.com/edulinq/autograder/internal/api/core"
 	"github.com/edulinq/autograder/internal/common"
 	"github.com/edulinq/autograder/internal/db"
-	"github.com/edulinq/autograder/internal/procedures"
+	"github.com/edulinq/autograder/internal/procedures/courses"
 )
 
 type UpdateCourseRequest struct {
@@ -44,7 +44,7 @@ func HandleUpdateCourse(request *UpdateCourseRequest) (*UpdateCourseResponse, *c
 		}
 	}
 
-	updated, err := procedures.UpdateCourse(request.Course, true)
+	updated, err := courses.UpdateCourse(request.Course, true)
 	if err != nil {
 		return nil, core.NewInternalError("-204", &request.APIRequestCourseUserContext,
 			"Failed to update course.").Err(err)

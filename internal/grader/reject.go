@@ -48,7 +48,7 @@ func checkSubmissionLimit(assignment *model.Assignment, email string) (RejectRea
 		return nil, nil
 	}
 
-	user, err := db.GetUser(assignment.GetCourse(), email)
+	user, err := db.GetCourseUser(assignment.GetCourse(), email)
 	if err != nil {
 		return nil, err
 	}

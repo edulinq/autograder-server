@@ -9,7 +9,7 @@ import (
 	"github.com/edulinq/autograder/internal/config"
 	"github.com/edulinq/autograder/internal/db"
 	"github.com/edulinq/autograder/internal/log"
-	"github.com/edulinq/autograder/internal/procedures"
+	"github.com/edulinq/autograder/internal/procedures/courses"
 )
 
 var args struct {
@@ -55,7 +55,7 @@ func main() {
 		}
 	}
 
-	updated, err := procedures.UpdateCourse(course, false)
+	updated, err := courses.UpdateCourse(course, false)
 	if err != nil {
 		log.Fatal("Failed to update course.", err, course)
 	}

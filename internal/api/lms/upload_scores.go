@@ -69,13 +69,13 @@ func parseScores(request *UploadScoresRequest, response *UploadScoresResponse) [
 			continue
 		}
 
-		if user.LMSID == "" {
+		if user.GetLMSID() == "" {
 			response.NoLMSIDUsers = append(response.NoLMSIDUsers, RowEntry{i, entry.Email})
 			continue
 		}
 
 		scores = append(scores, &lmstypes.SubmissionScore{
-			UserID: user.LMSID,
+			UserID: user.GetLMSID(),
 			Score:  entry.Score,
 		})
 	}

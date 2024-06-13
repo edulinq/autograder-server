@@ -40,7 +40,7 @@ func main() {
 		log.Fatal("Assignment has no LMS ID.", assignment)
 	}
 
-	user, err := db.GetUser(course, args.Email)
+	user, err := db.GetCourseUser(course, args.Email)
 	if err != nil {
 		log.Fatal("Failed to fetch user.", err, assignment, log.NewUserAttr(args.Email))
 	}
@@ -49,11 +49,11 @@ func main() {
 		log.Fatal("Could not find user.", err, assignment, log.NewUserAttr(args.Email))
 	}
 
-	if user.LMSID == "" {
+	if user.GetLMSID() == "" {
 		log.Fatal("User does not have an LMS ID.", err, assignment, user)
 	}
 
-	score, err := lms.FetchAssignmentScore(course, assignment.GetLMSID(), user.LMSID)
+	score, err := lms.FetchAssignmentScore(course, assignment.GetLMSID(), user.GetLMSID())
 	if err != nil {
 		log.Fatal("User does not have an LMS ID.", err, assignment, user)
 	}

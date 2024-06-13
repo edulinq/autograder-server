@@ -11,7 +11,7 @@ import (
 	"github.com/edulinq/autograder/internal/util"
 )
 
-const EXPECTED_MD5 = "404a7d09452e75c3430f144b532bde1c"
+const EXPECTED_MD5 = "386114d35cc5b7bc7e95b89ca0bd4c9c"
 
 func TestBackupTempDir(test *testing.T) {
 	tempDir, err := util.MkDirTemp("autograder-test-task-backup-")

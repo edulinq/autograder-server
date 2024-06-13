@@ -37,7 +37,7 @@ func RunReport(course *model.Course, to []string) error {
 
 	subject := fmt.Sprintf("Autograder Scoring Report for %s", course.GetName())
 
-	to, err = db.ResolveUsers(course, to)
+	to, err = db.ResolveCourseUsers(course, to)
 	if err != nil {
 		return fmt.Errorf("Failed to resolve users for course '%s': '%w'.", course.GetID(), err)
 	}

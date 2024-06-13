@@ -357,6 +357,10 @@ func (this *ServerUser) GetCourses() []string {
 }
 
 func (this *UserCourseInfo) GetLMSID() string {
+	if this == nil {
+		return ""
+	}
+
 	if this.LMSID == nil {
 		return ""
 	}

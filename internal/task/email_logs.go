@@ -32,7 +32,7 @@ func RunEmailLogs(rawQuery common.RawLogQuery, course *model.Course, to []string
 	}
 
 	if parsedQuery.UserID != "" {
-		fullUser, err := db.GetUser(course, parsedQuery.UserID)
+		fullUser, err := db.GetCourseUser(course, parsedQuery.UserID)
 		if err != nil {
 			return err
 		}
