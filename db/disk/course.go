@@ -13,10 +13,13 @@ import (
 const DISK_DB_COURSES_DIR = "courses";
 
 func (this *backend) ClearCourse(course *model.Course) error {
-    common.Lock(course.GetID());
-    defer common.Unlock(course.GetID());
+    courseDir := this.getCourseDir(course);
+    courseDir = util.ShouldAbs(courseDir);
 
-    err := util.RemoveDirent(this.getCourseDir(course));
+    common.Lock(courseDir);
+    defer common.Unlock(courseDir);
+
+    err := util.RemoveDirent(courseDir);
     if (err != nil) {
         return fmt.Errorf("Failed to remove course dir for '%s': '%w'.", course.GetID(), err);
     }
@@ -25,21 +28,18 @@ func (this *backend) ClearCourse(course *model.Course) error {
 }
 
 func (this *backend) LoadCourse(path string) (*model.Course, error) {
-    absolutePath, err := filepath.Abs(path);
-    if (err != nil) {
-        return nil, err;
-    }
+    courseDir := util.ShouldAbs(path);
 
-    common.Lock(absolutePath);
-    defer common.Unlock(absolutePath);
+    common.Lock(courseDir);
+    defer common.Unlock(courseDir);
 
-    course, users, submissions, err := model.FullLoadCourseFromPath(path);
+    course, users, submissions, err := model.FullLoadCourseFromPath(courseDir);
     if (err != nil) {
         return nil, err;
     }
 
     log.Debug("Loaded disk course.",
-            log.NewAttr("database", "disk"), log.NewAttr("path", path),
+            log.NewAttr("database", "disk"), log.NewAttr("path", courseDir),
             log.NewAttr("id", course.GetID()), log.NewAttr("num-assignments", len(course.Assignments)));
 
     err = this.saveCourseLock(course, false);
@@ -65,12 +65,15 @@ func (this *backend) SaveCourse(course *model.Course) error {
 }
 
 func (this *backend) saveCourseLock(course *model.Course, acquireLock bool) error {
+    courseDir := this.getCourseDir(course);
+    courseDir = util.ShouldAbs(courseDir);
+
     if (acquireLock) {
-        common.Lock(course.GetID());
-        defer common.Unlock(course.GetID());
+        common.Lock(courseDir);
+        defer common.Unlock(courseDir);
     }
 
-    util.MkDir(this.getCourseDir(course));
+    util.MkDir(courseDir);
 
     err := util.ToJSONFileIndent(course, this.getCoursePath(course));
     if (err != nil) {
@@ -88,11 +91,14 @@ func (this *backend) saveCourseLock(course *model.Course, acquireLock bool) erro
 }
 
 func (this *backend) DumpCourse(course *model.Course, targetDir string) error {
-    common.ReadLock(course.GetID());
-    defer common.ReadUnlock(course.GetID());
+    courseDir := this.getCourseDir(course);
+    courseDir = util.ShouldAbs(courseDir);
+
+    common.ReadLock(courseDir);
+    defer common.ReadUnlock(courseDir);
 
     // Just directly copy the course's dir in the DB.
-    err := util.CopyDirContents(this.getCourseDir(course), targetDir);
+    err := util.CopyDirContents(courseDir, targetDir);
     if (err != nil) {
         return fmt.Errorf("Failed to copy disk db '%s' into '%s': '%w'.", this.baseDir, targetDir, err);
     }
@@ -101,8 +107,11 @@ func (this *backend) DumpCourse(course *model.Course, targetDir string) error {
 }
 
 func (this *backend) GetCourse(courseID string) (*model.Course, error) {
-    common.ReadLock(courseID);
-    defer common.ReadUnlock(courseID);
+    courseDir := this.getCourseDirFromID(courseID);
+    courseDir = util.ShouldAbs(courseDir);
+
+    common.ReadLock(courseDir);
+    defer common.ReadUnlock(courseDir);
 
     path := this.getCoursePathFromID(courseID);
     if (!util.PathExists(path)) {
@@ -122,17 +131,25 @@ func (this *backend) GetCourses() (map[string]*model.Course, error) {
 
     courses := make(map[string]*model.Course, len(configPaths));
     for _, configPath := range configPaths {
-        course, err := model.LoadCourseFromPath(configPath);
-        if (err != nil) {
-            return nil, fmt.Errorf("Failed to load course '%s': '%w'.", configPath, err);
-        }
+        err := func() error {
+            configPath = util.ShouldAbs(configPath);
 
-        func() {
-            common.ReadLock(course.GetID());
-            defer common.ReadUnlock(course.GetID());
+            common.ReadLock(configPath);
+            defer common.ReadUnlock(configPath);
+
+            course, err := model.LoadCourseFromPath(configPath);
+            if (err != nil) {
+                return fmt.Errorf("Failed to load course '%s': '%w'", configPath, err);
+            }
+            
+            courses[course.GetID()] = course;
+            
+            return nil;
         }();
 
-        courses[course.GetID()] = course;
+        if (err != nil) {
+            return nil, err;
+        }
     }
 
     return courses, nil;
