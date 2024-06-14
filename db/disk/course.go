@@ -1,13 +1,13 @@
 package disk
 
 import (
-	"fmt"
-	"path/filepath"
+    "fmt"
+    "path/filepath"
 
-	"github.com/edulinq/autograder/common"
-	"github.com/edulinq/autograder/log"
-	"github.com/edulinq/autograder/model"
-	"github.com/edulinq/autograder/util"
+    "github.com/edulinq/autograder/common"
+    "github.com/edulinq/autograder/log"
+    "github.com/edulinq/autograder/model"
+    "github.com/edulinq/autograder/util"
 )
 
 const DISK_DB_COURSES_DIR = "courses";
