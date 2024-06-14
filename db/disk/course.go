@@ -4,6 +4,7 @@ import (
     "fmt"
     "path/filepath"
 
+    "github.com/edulinq/autograder/common"
     "github.com/edulinq/autograder/log"
     "github.com/edulinq/autograder/model"
     "github.com/edulinq/autograder/util"
@@ -12,8 +13,10 @@ import (
 const DISK_DB_COURSES_DIR = "courses";
 
 func (this *backend) ClearCourse(course *model.Course) error {
-    this.lock.Lock();
-    defer this.lock.Unlock();
+    path := this.getCoursePath(course);
+
+    common.Lock(path);
+    defer common.Unlock(path);
 
     err := util.RemoveDirent(this.getCourseDir(course));
     if (err != nil) {
@@ -24,8 +27,10 @@ func (this *backend) ClearCourse(course *model.Course) error {
 }
 
 func (this *backend) LoadCourse(path string) (*model.Course, error) {
-    this.lock.Lock();
-    defer this.lock.Unlock();
+    path = util.ShouldAbs(path);
+
+    common.Lock(path);
+    defer common.Unlock(path);
 
     course, users, submissions, err := model.FullLoadCourseFromPath(path);
     if (err != nil) {
@@ -59,14 +64,16 @@ func (this *backend) SaveCourse(course *model.Course) error {
 }
 
 func (this *backend) saveCourseLock(course *model.Course, acquireLock bool) error {
+    path := this.getCoursePath(course);
+
     if (acquireLock) {
-        this.lock.Lock();
-        defer this.lock.Unlock();
+        common.Lock(path);
+        defer common.Unlock(path);
     }
 
     util.MkDir(this.getCourseDir(course));
 
-    err := util.ToJSONFileIndent(course, this.getCoursePath(course));
+    err := util.ToJSONFileIndent(course, path);
     if (err != nil) {
         return err;
     }
@@ -82,8 +89,10 @@ func (this *backend) saveCourseLock(course *model.Course, acquireLock bool) erro
 }
 
 func (this *backend) DumpCourse(course *model.Course, targetDir string) error {
-    this.lock.RLock();
-    defer this.lock.RUnlock();
+    path := this.getCoursePath(course);
+
+    common.ReadLock(path);
+    defer common.ReadUnlock(path);
 
     // Just directly copy the course's dir in the DB.
     err := util.CopyDirContents(this.getCourseDir(course), targetDir);
@@ -95,10 +104,11 @@ func (this *backend) DumpCourse(course *model.Course, targetDir string) error {
 }
 
 func (this *backend) GetCourse(courseID string) (*model.Course, error) {
-    this.lock.RLock();
-    defer this.lock.RUnlock();
-
     path := this.getCoursePathFromID(courseID);
+
+    common.ReadLock(path);
+    defer common.ReadUnlock(path);
+
     if (!util.PathExists(path)) {
         return nil, nil;
     }
@@ -107,9 +117,6 @@ func (this *backend) GetCourse(courseID string) (*model.Course, error) {
 }
 
 func (this *backend) GetCourses() (map[string]*model.Course, error) {
-    this.lock.RLock();
-    defer this.lock.RUnlock();
-
     coursesDir := filepath.Join(this.baseDir, DISK_DB_COURSES_DIR);
 
     configPaths, err := util.FindFiles(model.COURSE_CONFIG_FILENAME, coursesDir);
@@ -119,12 +126,25 @@ func (this *backend) GetCourses() (map[string]*model.Course, error) {
 
     courses := make(map[string]*model.Course, len(configPaths));
     for _, configPath := range configPaths {
-        course, err := model.LoadCourseFromPath(configPath);
-        if (err != nil) {
-            return nil, fmt.Errorf("Failed to load course '%s': '%w'.", configPath, err);
-        }
+        err := func() error {
+            configPath = util.ShouldAbs(configPath);
 
-        courses[course.GetID()] = course;
+            common.ReadLock(configPath);
+            defer common.ReadUnlock(configPath);
+
+            course, err := model.LoadCourseFromPath(configPath);
+            if (err != nil) {
+                return fmt.Errorf("Failed to load course '%s': '%w'", configPath, err);
+            }
+            
+            courses[course.GetID()] = course;
+            
+            return nil;
+        }();
+
+        if (err != nil) {
+            return nil, err;
+        }
     }
 
     return courses, nil;
@@ -139,7 +159,8 @@ func (this *backend) getCoursePath(course *model.Course) string {
 }
 
 func (this *backend) getCourseDirFromID(courseID string) string {
-    return filepath.Join(this.baseDir, DISK_DB_COURSES_DIR, courseID);
+    path := filepath.Join(this.baseDir, DISK_DB_COURSES_DIR, courseID);
+    return util.ShouldAbs(path);
 }
 
 func (this *backend) getCoursePathFromID(courseID string) string {
