@@ -11,7 +11,7 @@ import (
 
 type FetchLogsRequest struct {
 	core.APIRequestCourseUserContext
-	core.MinRoleAdmin
+	core.MinCourseRoleAdmin
 
 	common.RawLogQuery
 }

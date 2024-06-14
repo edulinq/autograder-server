@@ -8,7 +8,7 @@ import (
 
 type HistoryRequest struct {
 	core.APIRequestAssignmentContext
-	core.MinRoleStudent
+	core.MinCourseRoleStudent
 
 	TargetUser core.TargetUserSelfOrGrader `json:"target-email"`
 }

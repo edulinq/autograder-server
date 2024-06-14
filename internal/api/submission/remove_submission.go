@@ -7,7 +7,7 @@ import (
 
 type RemoveSubmissionRequest struct {
 	core.APIRequestAssignmentContext
-	core.MinRoleGrader
+	core.MinCourseRoleGrader
 
 	TargetUser       core.TargetUserSelfOrGrader `json:"target-email"`
 	TargetSubmission string                      `json:"target-submission"`

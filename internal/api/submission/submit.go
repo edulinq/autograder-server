@@ -9,7 +9,7 @@ import (
 
 type SubmitRequest struct {
 	core.APIRequestAssignmentContext
-	core.MinRoleStudent
+	core.MinCourseRoleStudent
 	Files core.POSTFiles
 
 	Message string `json:"message"`

@@ -10,7 +10,7 @@ import (
 func TestAuth(test *testing.T) {
 	type baseAPIRequest struct {
 		APIRequestUserContext
-		MinRoleOther
+		MinCourseRoleOther
 	}
 
 	testCases := []struct {

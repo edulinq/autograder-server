@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/edulinq/autograder/internal/model"
 	"github.com/edulinq/autograder/internal/util"
 )
 
@@ -56,72 +55,6 @@ func TestInvalidJSON(test *testing.T) {
 	}
 }
 
-func TestGetMaxRole(test *testing.T) {
-	testCases := []struct {
-		value any
-		role  model.CourseUserRole
-	}{
-		{struct{}{}, model.CourseRoleUnknown},
-		{struct{ int }{}, model.CourseRoleUnknown},
-
-		{struct{ MinRoleOwner }{}, model.CourseRoleOwner},
-		{struct{ MinRoleAdmin }{}, model.CourseRoleAdmin},
-		{struct{ MinRoleGrader }{}, model.CourseRoleGrader},
-		{struct{ MinRoleStudent }{}, model.CourseRoleStudent},
-		{struct{ MinRoleOther }{}, model.CourseRoleOther},
-
-		{struct {
-			MinRoleOwner
-			MinRoleOther
-		}{}, model.CourseRoleOwner},
-		{struct {
-			MinRoleAdmin
-			MinRoleOther
-		}{}, model.CourseRoleAdmin},
-		{struct {
-			MinRoleGrader
-			MinRoleOther
-		}{}, model.CourseRoleGrader},
-		{struct {
-			MinRoleStudent
-			MinRoleOther
-		}{}, model.CourseRoleStudent},
-
-		{struct {
-			MinRoleOther
-			MinRoleOwner
-		}{}, model.CourseRoleOwner},
-		{struct {
-			MinRoleOther
-			MinRoleAdmin
-		}{}, model.CourseRoleAdmin},
-		{struct {
-			MinRoleOther
-			MinRoleGrader
-		}{}, model.CourseRoleGrader},
-		{struct {
-			MinRoleOther
-			MinRoleStudent
-		}{}, model.CourseRoleStudent},
-	}
-
-	for i, testCase := range testCases {
-		role, hasRole := getMaxRole(testCase.value)
-
-		if testCase.role == model.CourseRoleUnknown {
-			if hasRole {
-				test.Errorf("Case %d: Found a role ('%s') when none was specified.", i, role)
-			}
-
-			continue
-		}
-
-		if role != testCase.role {
-			test.Errorf("Case %d: Role mismatch. Expected: '%s', Actual: '%s'.", i, testCase.role, role)
-		}
-	}
-}
-
 func testBaseAPIRequests(test *testing.T, testCases []baseAPIRequestTestCase, request getTestValues) {
 	for i, testCase := range testCases {
 		err := util.JSONFromString(testCase.Payload, &request)
@@ -159,7 +92,7 @@ type baseAPIRequestTestCase struct {
 
 type baseCourseUserAPIRequest struct {
 	APIRequestCourseUserContext
-	MinRoleStudent
+	MinCourseRoleStudent
 	testValues
 }
 
@@ -169,7 +102,7 @@ func (this *baseCourseUserAPIRequest) GetTestValues() testValues {
 
 type baseAssignmentAPIRequest struct {
 	APIRequestAssignmentContext
-	MinRoleStudent
+	MinCourseRoleStudent
 	testValues
 }
 

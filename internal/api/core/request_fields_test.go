@@ -45,7 +45,7 @@ func TestBadUsersFieldNotExported(test *testing.T) {
 		{
 			&struct {
 				APIRequestCourseUserContext
-				MinRoleStudent
+				MinCourseRoleStudent
 				users CourseUsers
 			}{
 				APIRequestCourseUserContext: APIRequestCourseUserContext{
@@ -60,7 +60,7 @@ func TestBadUsersFieldNotExported(test *testing.T) {
 		{
 			&struct {
 				APIRequestCourseUserContext
-				MinRoleStudent
+				MinCourseRoleStudent
 				targetUser TargetUserSelfOrGrader
 			}{
 				APIRequestCourseUserContext: APIRequestCourseUserContext{
@@ -75,7 +75,7 @@ func TestBadUsersFieldNotExported(test *testing.T) {
 		{
 			&struct {
 				APIRequestCourseUserContext
-				MinRoleStudent
+				MinCourseRoleStudent
 				targetUser TargetUserSelfOrAdmin
 			}{
 				APIRequestCourseUserContext: APIRequestCourseUserContext{
@@ -175,7 +175,7 @@ func TestGoodPostFiles(test *testing.T) {
 
 	type requestType struct {
 		APIRequestCourseUserContext
-		MinRoleStudent
+		MinCourseRoleStudent
 
 		Files POSTFiles
 	}
@@ -229,7 +229,7 @@ func TestBadPostFilesFieldNotExported(test *testing.T) {
 	// Files are not exported.
 	type badRequestType struct {
 		APIRequestCourseUserContext
-		MinRoleStudent
+		MinCourseRoleStudent
 
 		files POSTFiles
 	}
@@ -255,7 +255,7 @@ func TestBadPostFilesNoFiles(test *testing.T) {
 
 	type requestType struct {
 		APIRequestCourseUserContext
-		MinRoleStudent
+		MinCourseRoleStudent
 
 		Files POSTFiles
 	}
@@ -285,7 +285,7 @@ func TestBadPostFilesStoreFail(test *testing.T) {
 
 	type requestType struct {
 		APIRequestCourseUserContext
-		MinRoleStudent
+		MinCourseRoleStudent
 
 		Files POSTFiles
 	}
@@ -327,7 +327,7 @@ func TestBadPostFilesFileSizeExceeded(test *testing.T) {
 
 	type requestType struct {
 		APIRequestCourseUserContext
-		MinRoleStudent
+		MinCourseRoleStudent
 
 		Files POSTFiles
 	}
@@ -447,7 +447,7 @@ func TestTargetUserSelfOrGrader(test *testing.T) {
 
 type testTargetUserSelfOrGraderRequestType struct {
 	APIRequestCourseUserContext
-	MinRoleOther
+	MinCourseRoleOther
 
 	User TargetUserSelfOrGrader
 }
@@ -487,7 +487,7 @@ func TestTargetUserSelfOrAdmin(test *testing.T) {
 
 type testTargetUserSelfOrAdminRequestType struct {
 	APIRequestCourseUserContext
-	MinRoleOther
+	MinCourseRoleOther
 
 	User TargetUserSelfOrAdmin
 }
@@ -574,7 +574,7 @@ func testTargetUser[T comparable, V userGetter](test *testing.T,
 func TestTargetUser(test *testing.T) {
 	type requestType struct {
 		APIRequestCourseUserContext
-		MinRoleOther
+		MinCourseRoleOther
 
 		User TargetUser
 	}

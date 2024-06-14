@@ -8,7 +8,7 @@ import (
 
 type FetchSubmissionsRequest struct {
 	core.APIRequestAssignmentContext
-	core.MinRoleGrader
+	core.MinCourseRoleGrader
 
 	FilterRole model.CourseUserRole `json:"filter-role"`
 }

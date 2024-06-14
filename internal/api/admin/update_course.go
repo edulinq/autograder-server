@@ -9,7 +9,7 @@ import (
 
 type UpdateCourseRequest struct {
 	core.APIRequestCourseUserContext
-	core.MinRoleAdmin
+	core.MinCourseRoleAdmin
 
 	Source string `json:"source"`
 	Clear  bool   `json:"clear"`

@@ -8,7 +8,7 @@ import (
 
 type FetchAttemptsRequest struct {
 	core.APIRequestAssignmentContext
-	core.MinRoleGrader
+	core.MinCourseRoleGrader
 
 	TargetUser core.TargetUserSelfOrGrader `json:"target-email"`
 }

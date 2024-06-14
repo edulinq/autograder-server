@@ -18,13 +18,6 @@ import (
 	"github.com/edulinq/autograder/internal/util"
 )
 
-// The minimum user roles required encoded as a type so it can be embedded into a request struct.
-type MinRoleOwner bool
-type MinRoleAdmin bool
-type MinRoleGrader bool
-type MinRoleStudent bool
-type MinRoleOther bool
-
 // A request having a field of this type indicates that the users for the course should be automatically fetched.
 // The existence of this type in a struct also indicates that the request is at least a APIRequestCourseUserContext.
 type CourseUsers map[string]*model.CourseUser
@@ -175,7 +168,7 @@ func checkRequestTargetUserSelfOrRole(endpoint string, apiRequest any, fieldInde
 
 	// Operations not on self require higher permissions.
 	if (field.Email != courseContext.User.Email) && (courseContext.User.Role < minRole) {
-		return NewBadPermissionsError("-033", courseContext, minRole, "Non-Self Target User")
+		return NewBadCoursePermissionsError("-033", courseContext, minRole, "Non-Self Target User")
 	}
 
 	user := users[field.Email]

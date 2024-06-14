@@ -8,7 +8,7 @@ import (
 
 type UploadScoresRequest struct {
 	core.APIRequestCourseUserContext
-	core.MinRoleGrader
+	core.MinCourseRoleGrader
 	Users core.CourseUsers `json:"-"`
 
 	AssignmentLMSID core.NonEmptyString `json:"assignment-lms-id"`

@@ -12,7 +12,7 @@ import (
 // The most simple authenticating request.
 type BaseTestRequest struct {
 	APIRequestCourseUserContext
-	MinRoleStudent
+	MinCourseRoleStudent
 }
 
 // Force a panic from an API handler.

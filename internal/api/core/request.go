@@ -89,6 +89,15 @@ func (this *APIRequestUserContext) Validate(request any, endpoint string) *APIEr
 		return apiErr
 	}
 
+	minRole, foundRole := getMaxServerRole(request)
+	if !foundRole {
+		minRole = model.ServerRoleUser
+	}
+
+	if this.ServerUser.Role < minRole {
+		return NewBadServerPermissionsError("-041", this, minRole, "Base API Request")
+	}
+
 	return nil
 }
 
@@ -124,13 +133,13 @@ func (this *APIRequestCourseUserContext) Validate(request any, endpoint string) 
 		return NewBadRequestError("-040", &this.APIRequest, fmt.Sprintf("User '%s' is not enolled in course '%s'.", this.UserEmail, this.CourseID))
 	}
 
-	minRole, foundRole := getMaxRole(request)
+	minRole, foundRole := getMaxCourseRole(request)
 	if !foundRole {
 		return NewInternalError("-019", this, "No role found for request. All course-based request structs require a minimum role.")
 	}
 
 	if this.User.Role < minRole {
-		return NewBadPermissionsError("-020", this, minRole, "Base API Request")
+		return NewBadCoursePermissionsError("-020", this, minRole, "Base API Request")
 	}
 
 	return nil
@@ -274,53 +283,4 @@ func validateRequestStruct(request any, endpoint string) (bool, *APIError) {
 	}
 
 	return foundRequestStruct, nil
-}
-
-// Take a request (or any object),
-// go through all the fields and look for fields typed as the encoded MinRole* fields.
-// Return the maximum amongst the found roles.
-// Return: (role, found role).
-func getMaxRole(request any) (model.CourseUserRole, bool) {
-	reflectValue := reflect.ValueOf(request)
-
-	// Dereference any pointer.
-	if reflectValue.Kind() == reflect.Pointer {
-		reflectValue = reflectValue.Elem()
-	}
-
-	foundRole := false
-	role := model.CourseRoleUnknown
-
-	for i := 0; i < reflectValue.NumField(); i++ {
-		fieldValue := reflectValue.Field(i)
-
-		if fieldValue.Type() == reflect.TypeOf((*MinRoleOwner)(nil)).Elem() {
-			foundRole = true
-			if role < model.CourseRoleOwner {
-				role = model.CourseRoleOwner
-			}
-		} else if fieldValue.Type() == reflect.TypeOf((*MinRoleAdmin)(nil)).Elem() {
-			foundRole = true
-			if role < model.CourseRoleAdmin {
-				role = model.CourseRoleAdmin
-			}
-		} else if fieldValue.Type() == reflect.TypeOf((*MinRoleGrader)(nil)).Elem() {
-			foundRole = true
-			if role < model.CourseRoleGrader {
-				role = model.CourseRoleGrader
-			}
-		} else if fieldValue.Type() == reflect.TypeOf((*MinRoleStudent)(nil)).Elem() {
-			foundRole = true
-			if role < model.CourseRoleStudent {
-				role = model.CourseRoleStudent
-			}
-		} else if fieldValue.Type() == reflect.TypeOf((*MinRoleOther)(nil)).Elem() {
-			foundRole = true
-			if role < model.CourseRoleOther {
-				role = model.CourseRoleOther
-			}
-		}
-	}
-
-	return role, foundRole
 }

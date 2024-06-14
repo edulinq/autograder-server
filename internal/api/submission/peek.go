@@ -8,7 +8,7 @@ import (
 
 type PeekRequest struct {
 	core.APIRequestAssignmentContext
-	core.MinRoleStudent
+	core.MinCourseRoleStudent
 
 	TargetUser       core.TargetUserSelfOrGrader `json:"target-email"`
 	TargetSubmission string                      `json:"target-submission"`

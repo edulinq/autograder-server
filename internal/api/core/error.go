@@ -210,7 +210,26 @@ func NewAuthBadRequestError(locator string, request *APIRequestUserContext, inte
 	return err
 }
 
-func NewBadPermissionsError(locator string, request *APIRequestCourseUserContext, minRole model.CourseUserRole, internalMessage string) *APIError {
+func NewBadServerPermissionsError(locator string, request *APIRequestUserContext, minRole model.ServerUserRole, internalMessage string) *APIError {
+	err := &APIError{
+		RequestID:    request.RequestID,
+		Locator:      locator,
+		Endpoint:     request.Endpoint,
+		Timestamp:    request.Timestamp,
+		LogLevel:     log.LevelInfo,
+		HTTPStatus:   HTTP_PERMISSIONS_ERROR,
+		InternalText: fmt.Sprintf("Insufficient Permissions: '%s'.", internalMessage),
+		ResponseText: "You have insufficient permissions for the requested operation.",
+		UserEmail:    request.UserEmail,
+	}
+
+	err.Add("actual-server-role", request.ServerUser.Role)
+	err.Add("min-required-server-role", minRole)
+
+	return err
+}
+
+func NewBadCoursePermissionsError(locator string, request *APIRequestCourseUserContext, minRole model.CourseUserRole, internalMessage string) *APIError {
 	err := &APIError{
 		RequestID:    request.RequestID,
 		Locator:      locator,
@@ -224,8 +243,8 @@ func NewBadPermissionsError(locator string, request *APIRequestCourseUserContext
 		UserEmail:    request.UserEmail,
 	}
 
-	err.Add("actual-role", request.User.Role)
-	err.Add("min-required-role", minRole)
+	err.Add("actual-course-role", request.User.Role)
+	err.Add("min-required-course-role", minRole)
 
 	return err
 }
