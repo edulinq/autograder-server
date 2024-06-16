@@ -3,11 +3,12 @@ package api
 // All routes handled by the server.
 
 import (
-    "github.com/edulinq/autograder/api/admin"
-    "github.com/edulinq/autograder/api/core"
-    "github.com/edulinq/autograder/api/lms"
-    "github.com/edulinq/autograder/api/submission"
-    "github.com/edulinq/autograder/api/user"
+	"github.com/edulinq/autograder/api/admin"
+	"github.com/edulinq/autograder/api/core"
+	"github.com/edulinq/autograder/api/lms"
+	"github.com/edulinq/autograder/api/report"
+	"github.com/edulinq/autograder/api/submission"
+	"github.com/edulinq/autograder/api/user"
 )
 
 var baseRoutes = []*core.Route{
@@ -23,10 +24,11 @@ func GetRoutes() *[]*core.Route {
     routes := make([]*core.Route, 0);
 
     routes = append(routes, baseRoutes...);
-    routes = append(routes, *(lms.GetRoutes())...);
-    routes = append(routes, *(user.GetRoutes())...);
-    routes = append(routes, *(submission.GetRoutes())...);
     routes = append(routes, *(admin.GetRoutes())...);
+    routes = append(routes, *(lms.GetRoutes())...);
+    routes = append(routes, *(report.GetRoutes())...);
+    routes = append(routes, *(submission.GetRoutes())...);
+    routes = append(routes, *(user.GetRoutes())...);
 
     return &routes;
 }
