@@ -6,6 +6,7 @@
         "salt": "c72f85ab94f66b49b4e93cb0d0776fc7",
         "tokens": [
             {
+                "id": "6bc78a24-e987-4cf0-a575-da5dab94b42d",
                 "hex-digest": "9e9b6743a3fff9f56eb183f13cd34d810db94c5deb13e6a494d30ccc267eb00c",
                 "source": "password",
                 "name": "password",
@@ -43,6 +44,7 @@
         "salt": "a853844be59b339ec45733eddeee41cd",
         "tokens": [
             {
+                "id": "a041f679-0567-495b-8dde-6c2329e094a0",
                 "hex-digest": "9c33fae839ad63474a677e871aeb4cdb63ab7089774a83fd8ad01a28b45f4271",
                 "source": "password",
                 "name": "password",
@@ -80,6 +82,7 @@
         "salt": "2d3ecb56a6d429e580db9a8c9f117717",
         "tokens": [
             {
+                "id": "3876aed7-0c60-4a17-bdf6-f350dbc8e2be",
                 "hex-digest": "4ddbd2eef282a729bcf7cfdacd107efe7c636e437842bc161ff5fa6ab19af4a7",
                 "source": "password",
                 "name": "password",
@@ -106,6 +109,7 @@
         "salt": "72f9b3fdeec2724d3e47edb617295f95",
         "tokens": [
             {
+                "id": "a632c6c9-6575-4c84-a8db-faac7a5c02ef",
                 "hex-digest": "d21868008248115a72109ccddb008043e12e0d37a0001a325c1afc6a66899c2a",
                 "source": "password",
                 "name": "password",
@@ -143,6 +147,7 @@
         "salt": "c61fe4f62b132d3908843e9c00f45c98",
         "tokens": [
             {
+                "id": "20e79fe3-4afa-4dd7-a6ed-416a32b7310a",
                 "hex-digest": "a8f8cc96aba145d957bf5934bba22a43aff98684e2df44d2fc214c1cfd51ea8d",
                 "source": "password",
                 "name": "password",
@@ -180,6 +185,7 @@
         "salt": "ea3a6c7d493148e01a8faff25956dc28",
         "tokens": [
             {
+                "id": "5c26811e-c30a-4f8e-8fcb-1ebe5719e5d9",
                 "hex-digest": "9b2e4fb77dc9282894a257bf54c5469b276152ea677612c44e04762970045b10",
                 "source": "password",
                 "name": "password",
