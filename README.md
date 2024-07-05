@@ -26,6 +26,9 @@ This project uses Go 1.21.
 Development and deployment are intended for a Linux environment,
 but all Go code is written in a platform independent fashion.
 
+All code that is not intended to be exported (used in packages outside of the autograder) is in the `internal` package/directory.
+Since this is a server and not a library, that is the majority of the code.
+
 By default, assignments are graded using Docker.
 Therefore when grading functionality is used,
 Docker should be installed on the machine and accessible to the current user without additional permissions.
@@ -33,10 +36,10 @@ Users without Docker can run the server without Docker (see below).
 
 The project adheres to standard Go standards,
 so the `go` tool can be used to build, test, manage, etc.
-Additionally, the `build.sh` script is provided which will build all executables in this project.
+Additionally, the `scripts/build.sh` script is provided which will build all executables in this project into the `bin` directory.
 
 ```
-./build.sh
+./scripts/build.sh
 ```
 
 All executable mains are kept in the `cmd` directory.
@@ -57,7 +60,7 @@ All executables that use autograder resources use the same configuration infrast
 and can therefore be configured the same way and with the same options.
 
 To see all the available options,
-either look in the [config/options.go](config/options.go) file,
+either look in the [config/options.go](internal/config/options.go) file,
 use the `cmd/list-options` executable.
 ```
 ./bin/list-options
@@ -158,9 +161,9 @@ The `web.port` config option can be used to set the port the server listens on:
 
 If you want to run on a privileged port as a non-root user,
 we recommend using [setcap](https://man.archlinux.org/man/setcap.8).
-The `setcap.sh` script will do this for you:
+The `scripts/setcap.sh` script will do this for you:
 ```
-./setcap.sh
+./scripts/setcap.sh
 ```
 
 ### Running the Server for Testing
@@ -175,7 +178,7 @@ go run cmd/server/main.go --unit-testing
 First, we ran the server using `go run`,
 This will ensure that the server executable is up-to-date before running it.
 Second we used the `--unit-testing` flag,
-which will set some testing options, create a clean new database, and load the test courses (inside the `_tests directory).
+which will set some testing options, create a clean new database, and load the test courses (inside the `testdata directory).
 
 ## Running Tests
 
@@ -198,16 +201,16 @@ pip install autograder-py
 
 For developers who need the latest version, a script in the `./ci` directory can be used to install from source:
 ```
-./.ci/install-py-interface.sh
+./.ci/install_py_interface.sh
 ```
 
 ### Base Tests
 
 The base tests are created with Go's `testing` standard library package,
 and can therefore be run using `go test`.
-The `test.sh` script runs `go test` for each package:
+The `scripts/run_tests.sh` script runs `go test` for each package:
 ```
-./test.sh
+./scripts/run_tests.sh
 ```
 
 ### Remote Tests
@@ -216,7 +219,7 @@ Remote tests are tests that start an instance of the autograder server,
 sends the server test submissions via the Python interface,
 and ensures that the response matches the expected output.
 
-To find test submissions, the `_tests` directory will be searched for `assignment.json` files.
+To find test submissions, the `testdata` directory will be searched for `assignment.json` files.
 Then, an adjacent `test-submissions` directory is looked for.
 
 ```
@@ -231,5 +234,5 @@ To ensure that these responses are correct, this repository can run an official 
 validate that the pre-scripted responses matches the real responses.
 
 ```
-./.ci/verify-py-test-data.sh
+./.ci/verify_py_test_data.sh
 ```

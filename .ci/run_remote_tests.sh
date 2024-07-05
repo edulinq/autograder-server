@@ -6,7 +6,7 @@ readonly THIS_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 readonly BASE_DIR="${THIS_DIR}/.."
 
 readonly PORT='12345'
-readonly DEFAULT_TESTS_DIR="${BASE_DIR}/_tests"
+readonly DEFAULT_TESTS_DIR="${BASE_DIR}/testdata"
 
 readonly COURSE_CONFIG_FILENAME='course.json'
 readonly ASSIGNMENT_CONFIG_FILENAME='assignment.json'
@@ -81,7 +81,7 @@ function run_sever_submissions() {
 
     cd "${BASE_DIR}"
 
-    ./build.sh
+    ./scripts/build.sh
     if [[ $? -ne 0 ]] ; then
         echo "ERROR: Failed to build server."
         return 100

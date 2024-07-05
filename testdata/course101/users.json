@@ -1,0 +1,27 @@
+{
+    "admin@test.com": {
+        "email": "admin@test.com",
+        "name": "admin",
+        "role": "admin"
+    },
+    "grader@test.com": {
+        "email": "grader@test.com",
+        "name": "grader",
+        "role": "grader"
+    },
+    "other@test.com": {
+        "email": "other@test.com",
+        "name": "other",
+        "role": "other"
+    },
+    "owner@test.com": {
+        "email": "owner@test.com",
+        "name": "owner",
+        "role": "owner"
+    },
+    "student@test.com": {
+        "email": "student@test.com",
+        "name": "student",
+        "role": "student"
+    }
+}

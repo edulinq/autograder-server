@@ -1,47 +1,47 @@
 package main
 
 import (
-    "fmt"
+	"fmt"
 
-    "github.com/alecthomas/kong"
+	"github.com/alecthomas/kong"
 
-    "github.com/edulinq/autograder/config"
-    "github.com/edulinq/autograder/db"
-    "github.com/edulinq/autograder/lms"
-    "github.com/edulinq/autograder/log"
-    "github.com/edulinq/autograder/util"
+	"github.com/edulinq/autograder/internal/config"
+	"github.com/edulinq/autograder/internal/db"
+	"github.com/edulinq/autograder/internal/lms"
+	"github.com/edulinq/autograder/internal/log"
+	"github.com/edulinq/autograder/internal/util"
 )
 
 var args struct {
-    config.ConfigArgs
-    Course string `help:"ID of the course." arg:""`
-    Assignment string `help:"ID of the assignment." arg:""`
+	config.ConfigArgs
+	Course     string `help:"ID of the course." arg:""`
+	Assignment string `help:"ID of the assignment." arg:""`
 }
 
 func main() {
-    kong.Parse(&args,
-        kong.Description("Fetch information about a specific assignment from an LMS."),
-    );
+	kong.Parse(&args,
+		kong.Description("Fetch information about a specific assignment from an LMS."),
+	)
 
-    err := config.HandleConfigArgs(args.ConfigArgs);
-    if (err != nil) {
-        log.Fatal("Could not load config options.", err);
-    }
+	err := config.HandleConfigArgs(args.ConfigArgs)
+	if err != nil {
+		log.Fatal("Could not load config options.", err)
+	}
 
-    db.MustOpen();
-    defer db.MustClose();
+	db.MustOpen()
+	defer db.MustClose()
 
-    assignment := db.MustGetAssignment(args.Course, args.Assignment);
-    course := assignment.GetCourse();
+	assignment := db.MustGetAssignment(args.Course, args.Assignment)
+	course := assignment.GetCourse()
 
-    if (assignment.GetLMSID() == "") {
-        log.Fatal("Assignment has no LMS ID.", assignment);
-    }
+	if assignment.GetLMSID() == "" {
+		log.Fatal("Assignment has no LMS ID.", assignment)
+	}
 
-    lmsAssignment, err := lms.FetchAssignment(course, assignment.GetLMSID());
-    if (err != nil) {
-        log.Fatal("Could not fetch assignment.", err, assignment);
-    }
+	lmsAssignment, err := lms.FetchAssignment(course, assignment.GetLMSID())
+	if err != nil {
+		log.Fatal("Could not fetch assignment.", err, assignment)
+	}
 
-    fmt.Println(util.MustToJSONIndent(lmsAssignment));
+	fmt.Println(util.MustToJSONIndent(lmsAssignment))
 }

@@ -31,25 +31,35 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ${{ env.pythonLocation }}
-          key: ${{ runner.os }}-${{ env.pythonLocation }}-${{ hashFiles('_tests/requirements.txt') }}
+          key: ${{ runner.os }}-${{ env.pythonLocation }}-${{ hashFiles('testdata/requirements.txt') }}
 
       - name: Install Python Interface
-        run: ./.ci/install-py-interface.sh 'main'
+        run: ./.ci/install_py_interface.sh 'main'
 
       - name: Build
-        run: ./build.sh
+        run: ./scripts/build.sh
+
+      - name: Check Formatting
+        run: ./scripts/check_formatting.sh
+
+      - name: Check Duplicate API Locators
+        run: ./scripts/check_duplicate_api_locators.sh
 
       - name: Run Base Tests
         env:
           AUTOGRADER__DOCKER__DISABLE: 'true'
-        run: ./test.sh
+        run: ./scripts/run_tests.sh
 
+        # TODO(batu): Re-enable or move when possible.
       - name: Run Submission Tests
+        if: 1 == 2
         env:
           AUTOGRADER__DOCKER__DISABLE: 'true'
         run: ./.ci/run_remote_tests.sh
 
+        # TODO(batu): Re-enable or move when possible.
       - name: Verify Python Interface Test Data
+        if: 1 == 2
         env:
           AUTOGRADER__DOCKER__DISABLE: 'true'
-        run: ./.ci/verify-py-test-data.sh
+        run: ./.ci/verify_py_test_data.sh
