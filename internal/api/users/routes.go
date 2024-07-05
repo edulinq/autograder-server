@@ -8,6 +8,7 @@ import (
 
 var routes []*core.Route = []*core.Route{
 	core.NewAPIRoute(core.NewEndpoint(`users/tokens/create`), HandleTokensCreate),
+	core.NewAPIRoute(core.NewEndpoint(`users/auth`), HandleAuth),
 }
 
 func GetRoutes() *[]*core.Route {

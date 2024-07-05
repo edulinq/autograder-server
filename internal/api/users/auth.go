@@ -6,7 +6,7 @@ import (
 
 type AuthRequest struct {
     core.APIRequestCourseUserContext
-    core.MinCourseRoleOther
+    core.MinServerRoleUser
 
     TargetPass core.NonEmptyString `json:"target-pass"`
 }
@@ -33,7 +33,7 @@ func HandleAuth(request *AuthRequest) (*AuthResponse, *core.APIError) {
         return nil, NewAuthBadRequestError("-013", this, "Uknown User");
     }
 
-    response.AuthSuccess = user.CheckPassword(string(request.TargetPass));
+    response.AuthSuccess = user.CheckPassword(string(this.UserPass));
 
     return &response, nil;
 }
