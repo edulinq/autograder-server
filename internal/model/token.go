@@ -31,6 +31,7 @@ const (
 // Tokens refer to any hex string that is used for authentication.
 // They can come from different sources but all act the same.
 type Token struct {
+	ID           string           `json:"id"`
 	HexDigest    string           `json:"hex-digest"`
 	Source       TokenSource      `json:"source"`
 	Name         string           `json:"name"`
@@ -66,6 +67,7 @@ func NewToken(input string, salt string, source TokenSource, name string) (*Toke
 	now := common.NowTimestamp()
 
 	token := &Token{
+		ID:           util.UUID(),
 		HexDigest:    digest,
 		Source:       source,
 		Name:         name,
@@ -191,6 +193,7 @@ func (this *Token) Validate() error {
 
 func (this *Token) Clone() *Token {
 	return &Token{
+		ID:           this.ID,
 		HexDigest:    this.HexDigest,
 		Source:       this.Source,
 		Name:         this.Name,
@@ -203,6 +206,8 @@ func TokenPointerEqual(a *Token, b *Token) bool {
 	return TokenPointerCompare(a, b) == 0
 }
 
+// Note that the token's ID is not used in comparison checks,
+// i.e., tokens with different IDs can still be considered equal.
 func TokenPointerCompare(a *Token, b *Token) int {
 	if (a == nil) && (b == nil) {
 		return 0

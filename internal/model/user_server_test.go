@@ -850,6 +850,32 @@ func TestUserServerUserAuth(test *testing.T) {
 	}
 }
 
+func TestUserServerCreateRandomToken(test *testing.T) {
+	user := baseTestServerUser.Clone()
+
+	initialTokenCount := len(user.Tokens)
+
+	_, cleartext, err := user.CreateRandomToken("", TokenSourceServer)
+	if err != nil {
+		test.Fatalf("Failed to create random token: '%v'.", err)
+	}
+
+	newTokenCount := len(user.Tokens)
+
+	if newTokenCount != (initialTokenCount + 1) {
+		test.Fatalf("Incorrect token count. Expected: %d, Found: %d.", (initialTokenCount + 1), newTokenCount)
+	}
+
+	auth, err := user.Auth(util.Sha256HexFromString(cleartext))
+	if err != nil {
+		test.Fatalf("Failed to perform authentication: '%v'.", err)
+	}
+
+	if !auth {
+		test.Fatalf("Failed to auth.")
+	}
+}
+
 func setServerUserEmail(user *ServerUser, email string) *ServerUser {
 	newUser := *user
 	newUser.Email = email

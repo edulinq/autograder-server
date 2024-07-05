@@ -86,8 +86,7 @@ func (this *ServerUser) Validate() error {
 		}
 	}
 
-	slices.SortFunc(this.Tokens, TokenPointerCompare)
-	this.Tokens = slices.CompactFunc(this.Tokens, TokenPointerEqual)
+	this.compactTokens()
 
 	if this.CourseInfo == nil {
 		this.CourseInfo = make(map[string]*UserCourseInfo, 0)
@@ -266,10 +265,15 @@ func (this *ServerUser) SetPassword(password string) (bool, error) {
 		this.Tokens[oldIndex] = newToken
 	}
 
-	slices.SortFunc(this.Tokens, TokenPointerCompare)
-	this.Tokens = slices.CompactFunc(this.Tokens, TokenPointerEqual)
+	this.compactTokens()
 
 	return true, nil
+}
+
+// Sort tokens and remove any duplicates.
+func (this *ServerUser) compactTokens() {
+	slices.SortFunc(this.Tokens, TokenPointerCompare)
+	this.Tokens = slices.CompactFunc(this.Tokens, TokenPointerEqual)
 }
 
 func (this *ServerUser) SetRandomPassword() (string, error) {
@@ -284,6 +288,22 @@ func (this *ServerUser) SetRandomPassword() (string, error) {
 	}
 
 	return cleartext, nil
+}
+
+func (this *ServerUser) CreateRandomToken(name string, source TokenSource) (*Token, string, error) {
+	if this.Salt == nil {
+		return nil, "", fmt.Errorf("User '%s' does not have a salt, and therefore cannot have a token.", this.Email)
+	}
+
+	cleartext, token, err := NewRandomToken(*this.Salt, source, name)
+	if err != nil {
+		return nil, "", fmt.Errorf("User '%s' failed to generate a random token: '%w'.", this.Email, err)
+	}
+
+	this.Tokens = append(this.Tokens, token)
+	this.compactTokens()
+
+	return token, cleartext, nil
 }
 
 // Attempt to authenticate this user with the provided text.
