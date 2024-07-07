@@ -11,6 +11,7 @@ import (
 	"runtime"
 	"strings"
 
+	"github.com/edulinq/autograder/internal/config"
 	"github.com/edulinq/autograder/internal/log"
 	"github.com/edulinq/autograder/internal/util"
 )
@@ -178,6 +179,11 @@ func sendAPIResponse(apiRequest ValidAPIRequest, response http.ResponseWriter,
 		} else {
 			return sendAPIResponse(apiRequest, response, nil, apiErr, true)
 		}
+	}
+
+	// When in testing mode, allow cross-origin requests.
+	if config.TESTING_MODE.Get() {
+		response.Header().Set("Access-Control-Allow-Origin", "*")
 	}
 
 	response.WriteHeader(apiResponse.HTTPStatus)

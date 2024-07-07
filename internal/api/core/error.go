@@ -203,7 +203,7 @@ func NewAuthBadRequestError(locator string, request *APIRequestUserContext, inte
 		LogLevel:     log.LevelInfo,
 		HTTPStatus:   HTTP_STATUS_AUTH_ERROR,
 		InternalText: fmt.Sprintf("Authentication failure: '%s'.", internalMessage),
-		ResponseText: "Authentication failure, check course, email, and password.",
+		ResponseText: "Authentication failure, check email and password.",
 		UserEmail:    request.UserEmail,
 	}
 

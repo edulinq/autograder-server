@@ -23,7 +23,7 @@ type MinCourseRoleStudent bool
 type MinCourseRoleOther bool
 
 // Take a request (or any object),
-// go through all the fields and look for fields typed as the encoded MinCourseRole* fields.
+// go through all the fields and look for fields typed as the encoded MinServerRole* fields.
 // Return the maximum amongst the found roles.
 // Return: (course role, found role).
 func getMaxServerRole(request any) (model.ServerUserRole, bool) {
