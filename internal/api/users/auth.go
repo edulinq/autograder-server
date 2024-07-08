@@ -33,7 +33,9 @@ func HandleAuth(request *AuthRequest) (*AuthResponse, *core.APIError) {
 		return &response, nil
 	}
 
+	// TODO: Remove!
 	fmt.Printf("User email: '%s', User pass: '%s'.\n", request.TargetUser, request.TargetPass)
+
 	response.FoundUser = true
 	response.AuthSuccess, err = user.Auth(string(request.TargetPass))
 	if err != nil {

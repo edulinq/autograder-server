@@ -22,6 +22,9 @@ func TestUsersAuth(test *testing.T) {
 
 		// Ensure we fail on bad passwords.
 		{model.ServerRoleUser, "student@test.com", "ZZZ", AuthResponse{true, false}},
+
+		// Check we cannot find invalid users.
+		{model.ServerRoleUser, "ZZZ", "Z", AuthResponse{false, false}},
 	}
 
 	for i, testCase := range testCases {
