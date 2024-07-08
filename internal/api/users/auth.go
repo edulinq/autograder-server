@@ -12,8 +12,8 @@ type AuthRequest struct {
 	core.APIRequest
 	core.MinServerRoleUser
 
-	TargetUser core.NonEmptyString `json:"target-email"`
-	TargetPass core.NonEmptyString `json:"target-pass"`
+	TargetUser string `json:"target-email"`
+	TargetPass string `json:"target-pass"`
 }
 
 type AuthResponse struct {
@@ -24,7 +24,7 @@ type AuthResponse struct {
 func HandleAuth(request *AuthRequest) (*AuthResponse, *core.APIError) {
 	response := AuthResponse{}
 
-	user, err := db.GetServerUser(string(request.TargetUser), false)
+	user, err := db.GetServerUser(request.TargetUser, false)
 	if err != nil {
 		return nil, core.NewBadRequestError("-830", &request.APIRequest, "Error getting user").Err(err)
 	}
@@ -33,7 +33,7 @@ func HandleAuth(request *AuthRequest) (*AuthResponse, *core.APIError) {
 		return &response, nil
 	}
 
-	fmt.Printf("User email: '%s', User pass: '%s'.\n", string(request.TargetUser), string(request.TargetPass))
+	fmt.Printf("User email: '%s', User pass: '%s'.\n", request.TargetUser, request.TargetPass)
 	response.FoundUser = true
 	response.AuthSuccess, err = user.Auth(string(request.TargetPass))
 	if err != nil {
