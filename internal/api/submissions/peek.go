@@ -10,8 +10,8 @@ type PeekRequest struct {
 	core.APIRequestAssignmentContext
 	core.MinCourseRoleStudent
 
-	TargetUser       core.TargetUserSelfOrGrader `json:"target-email"`
-	TargetSubmission string                      `json:"target-submission"`
+	TargetUser       core.TargetCourseUserSelfOrGrader `json:"target-email"`
+	TargetSubmission string                            `json:"target-submission"`
 }
 
 type PeekResponse struct {

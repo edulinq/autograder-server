@@ -33,7 +33,7 @@ type POSTFiles struct {
 // This type serializes to/from a string.
 // A user's email must be specified, but no error is generated if the user is not found.
 // The existence of this type in a struct also indicates that the request is at least a APIRequestCourseUserContext.
-type TargetUser struct {
+type TargetCourseUser struct {
 	Found bool
 	Email string
 	User  *model.CourseUser
@@ -46,13 +46,13 @@ type TargetUser struct {
 // (any user can acces their own resources, but higher permissions are required to access another user's resources).
 // No error is generated if the user is not found.
 // The existence of this type in a struct also indicates that the request is at least a APIRequestCourseUserContext.
-type TargetUserSelfOrGrader struct {
-	TargetUser
+type TargetCourseUserSelfOrGrader struct {
+	TargetCourseUser
 }
 
-// Same as TargetUserSelfOrGrader, but for an admin context user.
-type TargetUserSelfOrAdmin struct {
-	TargetUser
+// Same as TargetCourseUserSelfOrGrader, but for an admin context user.
+type TargetCourseUserSelfOrAdmin struct {
+	TargetCourseUser
 }
 
 // The type for a named field that must have a non-empty string value.
@@ -70,18 +70,18 @@ func checkRequestSpecialFields(request *http.Request, apiRequest any, endpoint s
 			if apiErr != nil {
 				return apiErr
 			}
-		} else if fieldValue.Type() == reflect.TypeOf((*TargetUser)(nil)).Elem() {
-			apiErr := checkRequestTargetUser(endpoint, apiRequest, i)
+		} else if fieldValue.Type() == reflect.TypeOf((*TargetCourseUser)(nil)).Elem() {
+			apiErr := checkRequestTargetCourseUser(endpoint, apiRequest, i)
 			if apiErr != nil {
 				return apiErr
 			}
-		} else if fieldValue.Type() == reflect.TypeOf((*TargetUserSelfOrGrader)(nil)).Elem() {
-			apiErr := checkRequestTargetUserSelfOrGrader(endpoint, apiRequest, i)
+		} else if fieldValue.Type() == reflect.TypeOf((*TargetCourseUserSelfOrGrader)(nil)).Elem() {
+			apiErr := checkRequestTargetCourseUserSelfOrGrader(endpoint, apiRequest, i)
 			if apiErr != nil {
 				return apiErr
 			}
-		} else if fieldValue.Type() == reflect.TypeOf((*TargetUserSelfOrAdmin)(nil)).Elem() {
-			apiErr := checkRequestTargetUserSelfOrAdmin(endpoint, apiRequest, i)
+		} else if fieldValue.Type() == reflect.TypeOf((*TargetCourseUserSelfOrAdmin)(nil)).Elem() {
+			apiErr := checkRequestTargetCourseUserSelfOrAdmin(endpoint, apiRequest, i)
 			if apiErr != nil {
 				return apiErr
 			}
@@ -112,14 +112,14 @@ func checkRequestCourseUsers(endpoint string, apiRequest any, fieldIndex int) *A
 	return nil
 }
 
-func checkRequestTargetUser(endpoint string, apiRequest any, fieldIndex int) *APIError {
+func checkRequestTargetCourseUser(endpoint string, apiRequest any, fieldIndex int) *APIError {
 	courseContext, users, apiErr := baseCheckRequestUsersField(endpoint, apiRequest, fieldIndex)
 	if apiErr != nil {
 		return apiErr
 	}
 
 	reflectValue := reflect.ValueOf(apiRequest).Elem()
-	field := reflectValue.Field(fieldIndex).Interface().(TargetUser)
+	field := reflectValue.Field(fieldIndex).Interface().(TargetCourseUser)
 
 	structName := reflectValue.Type().Name()
 	fieldType := reflectValue.Type().Field(fieldIndex)
@@ -144,24 +144,24 @@ func checkRequestTargetUser(endpoint string, apiRequest any, fieldIndex int) *AP
 	return nil
 }
 
-func checkRequestTargetUserSelfOrGrader(endpoint string, apiRequest any, fieldIndex int) *APIError {
-	return checkRequestTargetUserSelfOrRole(endpoint, apiRequest, fieldIndex, model.CourseRoleGrader)
+func checkRequestTargetCourseUserSelfOrGrader(endpoint string, apiRequest any, fieldIndex int) *APIError {
+	return checkRequestTargetCourseUserSelfOrRole(endpoint, apiRequest, fieldIndex, model.CourseRoleGrader)
 }
 
-func checkRequestTargetUserSelfOrAdmin(endpoint string, apiRequest any, fieldIndex int) *APIError {
-	return checkRequestTargetUserSelfOrRole(endpoint, apiRequest, fieldIndex, model.CourseRoleAdmin)
+func checkRequestTargetCourseUserSelfOrAdmin(endpoint string, apiRequest any, fieldIndex int) *APIError {
+	return checkRequestTargetCourseUserSelfOrRole(endpoint, apiRequest, fieldIndex, model.CourseRoleAdmin)
 }
 
-func checkRequestTargetUserSelfOrRole(endpoint string, apiRequest any, fieldIndex int, minRole model.CourseUserRole) *APIError {
+func checkRequestTargetCourseUserSelfOrRole(endpoint string, apiRequest any, fieldIndex int, minRole model.CourseUserRole) *APIError {
 	courseContext, users, apiErr := baseCheckRequestUsersField(endpoint, apiRequest, fieldIndex)
 	if apiErr != nil {
 		return apiErr
 	}
 
 	structValue := reflect.ValueOf(apiRequest).Elem().Field(fieldIndex)
-	reflectField := structValue.FieldByName("TargetUser")
+	reflectField := structValue.FieldByName("TargetCourseUser")
 
-	field := reflectField.Interface().(TargetUser)
+	field := reflectField.Interface().(TargetCourseUser)
 	if field.Email == "" {
 		field.Email = courseContext.User.Email
 	}
@@ -361,7 +361,7 @@ func baseCheckRequestUsersField(endpoint string, apiRequest any, fieldIndex int)
 	return &courseContext, users, nil
 }
 
-func (this *TargetUser) UnmarshalJSON(data []byte) error {
+func (this *TargetCourseUser) UnmarshalJSON(data []byte) error {
 	var text string
 	err := json.Unmarshal(data, &text)
 	if err != nil {
@@ -377,24 +377,24 @@ func (this *TargetUser) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-func (this TargetUser) MarshalJSON() ([]byte, error) {
+func (this TargetCourseUser) MarshalJSON() ([]byte, error) {
 	return json.Marshal(this.Email)
 }
 
-func (this *TargetUserSelfOrGrader) UnmarshalJSON(data []byte) error {
-	return this.TargetUser.UnmarshalJSON(data)
+func (this *TargetCourseUserSelfOrGrader) UnmarshalJSON(data []byte) error {
+	return this.TargetCourseUser.UnmarshalJSON(data)
 }
 
-func (this TargetUserSelfOrGrader) MarshalJSON() ([]byte, error) {
-	return this.TargetUser.MarshalJSON()
+func (this TargetCourseUserSelfOrGrader) MarshalJSON() ([]byte, error) {
+	return this.TargetCourseUser.MarshalJSON()
 }
 
-func (this *TargetUserSelfOrAdmin) UnmarshalJSON(data []byte) error {
-	return this.TargetUser.UnmarshalJSON(data)
+func (this *TargetCourseUserSelfOrAdmin) UnmarshalJSON(data []byte) error {
+	return this.TargetCourseUser.UnmarshalJSON(data)
 }
 
-func (this TargetUserSelfOrAdmin) MarshalJSON() ([]byte, error) {
-	return this.TargetUser.MarshalJSON()
+func (this TargetCourseUserSelfOrAdmin) MarshalJSON() ([]byte, error) {
+	return this.TargetCourseUser.MarshalJSON()
 }
 
 // A special error for when a submitted file exceeds the defined maximum allowable size.

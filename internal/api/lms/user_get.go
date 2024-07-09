@@ -9,7 +9,7 @@ type UserGetRequest struct {
 	core.APIRequestCourseUserContext
 	core.MinCourseRoleGrader
 
-	TargetUser core.TargetUser `json:"target-email"`
+	TargetUser core.TargetCourseUser `json:"target-email"`
 }
 
 type UserGetResponse struct {

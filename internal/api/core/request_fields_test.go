@@ -15,13 +15,13 @@ import (
 	"github.com/edulinq/autograder/internal/util"
 )
 
-// Test CourseUsers, TargetUserSelfOrGrader, and TargetUserSelfOrAdmin.
+// Test CourseUsers, TargetCourseUserSelfOrGrader, and TargetCourseUserSelfOrAdmin.
 // No embeded course context.
 func TestBadUsersFieldNoContext(test *testing.T) {
 	testCases := []struct{ request any }{
 		{&struct{ Users CourseUsers }{}},
-		{&struct{ User TargetUserSelfOrGrader }{}},
-		{&struct{ User TargetUserSelfOrAdmin }{}},
+		{&struct{ User TargetCourseUserSelfOrGrader }{}},
+		{&struct{ User TargetCourseUserSelfOrAdmin }{}},
 	}
 
 	for i, testCase := range testCases {
@@ -38,7 +38,7 @@ func TestBadUsersFieldNoContext(test *testing.T) {
 	}
 }
 
-// Test CourseUsers, TargetUserSelfOrGrader, and TargetUserSelfOrAdmin.
+// Test CourseUsers, TargetCourseUserSelfOrGrader, and TargetCourseUserSelfOrAdmin.
 // Users are not exported.
 func TestBadUsersFieldNotExported(test *testing.T) {
 	testCases := []struct{ request any }{
@@ -61,7 +61,7 @@ func TestBadUsersFieldNotExported(test *testing.T) {
 			&struct {
 				APIRequestCourseUserContext
 				MinCourseRoleStudent
-				targetUser TargetUserSelfOrGrader
+				targetCourseUser TargetCourseUserSelfOrGrader
 			}{
 				APIRequestCourseUserContext: APIRequestCourseUserContext{
 					APIRequestUserContext: APIRequestUserContext{
@@ -76,7 +76,7 @@ func TestBadUsersFieldNotExported(test *testing.T) {
 			&struct {
 				APIRequestCourseUserContext
 				MinCourseRoleStudent
-				targetUser TargetUserSelfOrAdmin
+				targetCourseUser TargetCourseUserSelfOrAdmin
 			}{
 				APIRequestCourseUserContext: APIRequestCourseUserContext{
 					APIRequestUserContext: APIRequestUserContext{
@@ -355,39 +355,39 @@ func TestBadPostFilesFileSizeExceeded(test *testing.T) {
 	}
 }
 
-func TestTargetUserJSON(test *testing.T) {
-	createTargetType := func(targetUser TargetUser) TargetUser {
-		return targetUser
+func TestTargetCourseUserJSON(test *testing.T) {
+	createTargetType := func(targetCourseUser TargetCourseUser) TargetCourseUser {
+		return targetCourseUser
 	}
 
-	testTargetUserJSON(test, createTargetType)
+	testTargetCourseUserJSON(test, createTargetType)
 }
 
-func TestTargetUserSelfOrGraderJSON(test *testing.T) {
-	createTargetType := func(targetUser TargetUser) TargetUserSelfOrGrader {
-		return TargetUserSelfOrGrader{targetUser}
+func TestTargetCourseUserSelfOrGraderJSON(test *testing.T) {
+	createTargetType := func(targetCourseUser TargetCourseUser) TargetCourseUserSelfOrGrader {
+		return TargetCourseUserSelfOrGrader{targetCourseUser}
 	}
 
-	testTargetUserJSON(test, createTargetType)
+	testTargetCourseUserJSON(test, createTargetType)
 }
 
-func TestTargetUserSelfOrAdminJSON(test *testing.T) {
-	createTargetType := func(targetUser TargetUser) TargetUserSelfOrAdmin {
-		return TargetUserSelfOrAdmin{targetUser}
+func TestTargetCourseUserSelfOrAdminJSON(test *testing.T) {
+	createTargetType := func(targetCourseUser TargetCourseUser) TargetCourseUserSelfOrAdmin {
+		return TargetCourseUserSelfOrAdmin{targetCourseUser}
 	}
 
-	testTargetUserJSON(test, createTargetType)
+	testTargetCourseUserJSON(test, createTargetType)
 }
 
-func testTargetUserJSON[T comparable](test *testing.T, createTargetType func(TargetUser) T) {
+func testTargetCourseUserJSON[T comparable](test *testing.T, createTargetType func(TargetCourseUser) T) {
 	testCases := []struct {
 		in       string
 		expected T
 	}{
-		{`""`, createTargetType(TargetUser{false, "", nil})},
-		{`"a"`, createTargetType(TargetUser{false, "a", nil})},
-		{`"student@test.com"`, createTargetType(TargetUser{false, "student@test.com", nil})},
-		{`"a\"b\"c"`, createTargetType(TargetUser{false, `a"b"c`, nil})},
+		{`""`, createTargetType(TargetCourseUser{false, "", nil})},
+		{`"a"`, createTargetType(TargetCourseUser{false, "a", nil})},
+		{`"student@test.com"`, createTargetType(TargetCourseUser{false, "student@test.com", nil})},
+		{`"a\"b\"c"`, createTargetType(TargetCourseUser{false, `a"b"c`, nil})},
 	}
 
 	for i, testCase := range testCases {
@@ -416,13 +416,13 @@ func testTargetUserJSON[T comparable](test *testing.T, createTargetType func(Tar
 	}
 }
 
-func TestTargetUserSelfOrGrader(test *testing.T) {
-	createTargetType := func(targetUser TargetUser) TargetUserSelfOrGrader {
-		return TargetUserSelfOrGrader{targetUser}
+func TestTargetCourseUserSelfOrGrader(test *testing.T) {
+	createTargetType := func(targetCourseUser TargetCourseUser) TargetCourseUserSelfOrGrader {
+		return TargetCourseUserSelfOrGrader{targetCourseUser}
 	}
 
-	createRequest := func(role model.CourseUserRole, target string) *testTargetUserSelfOrGraderRequestType {
-		return &testTargetUserSelfOrGraderRequestType{
+	createRequest := func(role model.CourseUserRole, target string) *testTargetCourseUserSelfOrGraderRequestType {
+		return &testTargetCourseUserSelfOrGraderRequestType{
 			APIRequestCourseUserContext: APIRequestCourseUserContext{
 				APIRequestUserContext: APIRequestUserContext{
 					UserEmail: role.String() + "@test.com",
@@ -430,8 +430,8 @@ func TestTargetUserSelfOrGrader(test *testing.T) {
 				},
 				CourseID: "course101",
 			},
-			User: TargetUserSelfOrGrader{
-				TargetUser{
+			User: TargetCourseUserSelfOrGrader{
+				TargetCourseUser{
 					Email: target,
 				},
 			},
@@ -442,27 +442,27 @@ func TestTargetUserSelfOrGrader(test *testing.T) {
 		return role < model.CourseRoleGrader
 	}
 
-	testTargetUser(test, createTargetType, createRequest, isNonSelfPermError)
+	testTargetCourseUser(test, createTargetType, createRequest, isNonSelfPermError)
 }
 
-type testTargetUserSelfOrGraderRequestType struct {
+type testTargetCourseUserSelfOrGraderRequestType struct {
 	APIRequestCourseUserContext
 	MinCourseRoleOther
 
-	User TargetUserSelfOrGrader
+	User TargetCourseUserSelfOrGrader
 }
 
-func (this *testTargetUserSelfOrGraderRequestType) GetUser() any {
+func (this *testTargetCourseUserSelfOrGraderRequestType) GetUser() any {
 	return this.User
 }
 
-func TestTargetUserSelfOrAdmin(test *testing.T) {
-	createTargetType := func(targetUser TargetUser) TargetUserSelfOrAdmin {
-		return TargetUserSelfOrAdmin{targetUser}
+func TestTargetCourseUserSelfOrAdmin(test *testing.T) {
+	createTargetType := func(targetCourseUser TargetCourseUser) TargetCourseUserSelfOrAdmin {
+		return TargetCourseUserSelfOrAdmin{targetCourseUser}
 	}
 
-	createRequest := func(role model.CourseUserRole, target string) *testTargetUserSelfOrAdminRequestType {
-		return &testTargetUserSelfOrAdminRequestType{
+	createRequest := func(role model.CourseUserRole, target string) *testTargetCourseUserSelfOrAdminRequestType {
+		return &testTargetCourseUserSelfOrAdminRequestType{
 			APIRequestCourseUserContext: APIRequestCourseUserContext{
 				APIRequestUserContext: APIRequestUserContext{
 					UserEmail: role.String() + "@test.com",
@@ -470,8 +470,8 @@ func TestTargetUserSelfOrAdmin(test *testing.T) {
 				},
 				CourseID: "course101",
 			},
-			User: TargetUserSelfOrAdmin{
-				TargetUser{
+			User: TargetCourseUserSelfOrAdmin{
+				TargetCourseUser{
 					Email: target,
 				},
 			},
@@ -482,17 +482,17 @@ func TestTargetUserSelfOrAdmin(test *testing.T) {
 		return role < model.CourseRoleAdmin
 	}
 
-	testTargetUser(test, createTargetType, createRequest, isNonSelfPermError)
+	testTargetCourseUser(test, createTargetType, createRequest, isNonSelfPermError)
 }
 
-type testTargetUserSelfOrAdminRequestType struct {
+type testTargetCourseUserSelfOrAdminRequestType struct {
 	APIRequestCourseUserContext
 	MinCourseRoleOther
 
-	User TargetUserSelfOrAdmin
+	User TargetCourseUserSelfOrAdmin
 }
 
-func (this *testTargetUserSelfOrAdminRequestType) GetUser() any {
+func (this *testTargetCourseUserSelfOrAdminRequestType) GetUser() any {
 	return this.User
 }
 
@@ -500,8 +500,8 @@ type userGetter interface {
 	GetUser() any
 }
 
-func testTargetUser[T comparable, V userGetter](test *testing.T,
-	createTargetType func(TargetUser) T,
+func testTargetCourseUser[T comparable, V userGetter](test *testing.T,
+	createTargetType func(TargetCourseUser) T,
 	createRequest func(model.CourseUserRole, string) V,
 	isNonSelfPermError func(model.CourseUserRole) bool) {
 	course := db.MustGetTestCourse()
@@ -519,31 +519,31 @@ func testTargetUser[T comparable, V userGetter](test *testing.T,
 	}{
 		// Self.
 		{model.CourseRoleStudent, "", false,
-			createTargetType(TargetUser{true, "student@test.com", users["student@test.com"]})},
+			createTargetType(TargetCourseUser{true, "student@test.com", users["student@test.com"]})},
 		{model.CourseRoleStudent, "student@test.com", false,
-			createTargetType(TargetUser{true, "student@test.com", users["student@test.com"]})},
+			createTargetType(TargetCourseUser{true, "student@test.com", users["student@test.com"]})},
 		{model.CourseRoleGrader, "", false,
-			createTargetType(TargetUser{true, "grader@test.com", users["grader@test.com"]})},
+			createTargetType(TargetCourseUser{true, "grader@test.com", users["grader@test.com"]})},
 		{model.CourseRoleGrader, "grader@test.com", false,
-			createTargetType(TargetUser{true, "grader@test.com", users["grader@test.com"]})},
+			createTargetType(TargetCourseUser{true, "grader@test.com", users["grader@test.com"]})},
 
 		// Other.
 		{model.CourseRoleOther, "student@test.com", isNonSelfPermError(model.CourseRoleOther),
-			createTargetType(TargetUser{true, "student@test.com", users["student@test.com"]})},
+			createTargetType(TargetCourseUser{true, "student@test.com", users["student@test.com"]})},
 		{model.CourseRoleStudent, "grader@test.com", isNonSelfPermError(model.CourseRoleStudent),
-			createTargetType(TargetUser{true, "grader@test.com", users["grader@test.com"]})},
+			createTargetType(TargetCourseUser{true, "grader@test.com", users["grader@test.com"]})},
 		{model.CourseRoleGrader, "student@test.com", isNonSelfPermError(model.CourseRoleGrader),
-			createTargetType(TargetUser{true, "student@test.com", users["student@test.com"]})},
+			createTargetType(TargetCourseUser{true, "student@test.com", users["student@test.com"]})},
 		{model.CourseRoleAdmin, "student@test.com", isNonSelfPermError(model.CourseRoleAdmin),
-			createTargetType(TargetUser{true, "student@test.com", users["student@test.com"]})},
+			createTargetType(TargetCourseUser{true, "student@test.com", users["student@test.com"]})},
 		{model.CourseRoleOwner, "student@test.com", isNonSelfPermError(model.CourseRoleOwner),
-			createTargetType(TargetUser{true, "student@test.com", users["student@test.com"]})},
+			createTargetType(TargetCourseUser{true, "student@test.com", users["student@test.com"]})},
 
 		// Not found.
 		{model.CourseRoleGrader, "ZZZ", isNonSelfPermError(model.CourseRoleGrader),
-			createTargetType(TargetUser{false, "ZZZ", nil})},
+			createTargetType(TargetCourseUser{false, "ZZZ", nil})},
 		{model.CourseRoleAdmin, "ZZZ", isNonSelfPermError(model.CourseRoleAdmin),
-			createTargetType(TargetUser{false, "ZZZ", nil})},
+			createTargetType(TargetCourseUser{false, "ZZZ", nil})},
 	}
 
 	for i, testCase := range testCases {
@@ -571,12 +571,12 @@ func testTargetUser[T comparable, V userGetter](test *testing.T,
 	}
 }
 
-func TestTargetUser(test *testing.T) {
+func TestTargetCourseUser(test *testing.T) {
 	type requestType struct {
 		APIRequestCourseUserContext
 		MinCourseRoleOther
 
-		User TargetUser
+		User TargetCourseUser
 	}
 
 	course := db.MustGetTestCourse()
@@ -589,22 +589,22 @@ func TestTargetUser(test *testing.T) {
 	testCases := []struct {
 		role     model.CourseUserRole
 		target   string
-		expected TargetUser
+		expected TargetCourseUser
 	}{
-		{model.CourseRoleStudent, "student@test.com", TargetUser{true, "student@test.com", users["student@test.com"]}},
-		{model.CourseRoleGrader, "grader@test.com", TargetUser{true, "grader@test.com", users["grader@test.com"]}},
+		{model.CourseRoleStudent, "student@test.com", TargetCourseUser{true, "student@test.com", users["student@test.com"]}},
+		{model.CourseRoleGrader, "grader@test.com", TargetCourseUser{true, "grader@test.com", users["grader@test.com"]}},
 
-		{model.CourseRoleStudent, "", TargetUser{}},
-		{model.CourseRoleGrader, "", TargetUser{}},
+		{model.CourseRoleStudent, "", TargetCourseUser{}},
+		{model.CourseRoleGrader, "", TargetCourseUser{}},
 
-		{model.CourseRoleOther, "student@test.com", TargetUser{true, "student@test.com", users["student@test.com"]}},
-		{model.CourseRoleStudent, "grader@test.com", TargetUser{true, "grader@test.com", users["grader@test.com"]}},
-		{model.CourseRoleGrader, "student@test.com", TargetUser{true, "student@test.com", users["student@test.com"]}},
-		{model.CourseRoleAdmin, "student@test.com", TargetUser{true, "student@test.com", users["student@test.com"]}},
-		{model.CourseRoleOwner, "student@test.com", TargetUser{true, "student@test.com", users["student@test.com"]}},
+		{model.CourseRoleOther, "student@test.com", TargetCourseUser{true, "student@test.com", users["student@test.com"]}},
+		{model.CourseRoleStudent, "grader@test.com", TargetCourseUser{true, "grader@test.com", users["grader@test.com"]}},
+		{model.CourseRoleGrader, "student@test.com", TargetCourseUser{true, "student@test.com", users["student@test.com"]}},
+		{model.CourseRoleAdmin, "student@test.com", TargetCourseUser{true, "student@test.com", users["student@test.com"]}},
+		{model.CourseRoleOwner, "student@test.com", TargetCourseUser{true, "student@test.com", users["student@test.com"]}},
 
 		// Not found.
-		{model.CourseRoleGrader, "ZZZ", TargetUser{false, "ZZZ", nil}},
+		{model.CourseRoleGrader, "ZZZ", TargetCourseUser{false, "ZZZ", nil}},
 	}
 
 	for i, testCase := range testCases {
@@ -616,7 +616,7 @@ func TestTargetUser(test *testing.T) {
 				},
 				CourseID: "course101",
 			},
-			User: TargetUser{
+			User: TargetCourseUser{
 				Email: testCase.target,
 			},
 		}

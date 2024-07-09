@@ -10,7 +10,7 @@ type HistoryRequest struct {
 	core.APIRequestAssignmentContext
 	core.MinCourseRoleStudent
 
-	TargetUser core.TargetUserSelfOrGrader `json:"target-email"`
+	TargetUser core.TargetCourseUserSelfOrGrader `json:"target-email"`
 }
 
 type HistoryResponse struct {
