@@ -15,13 +15,18 @@ import (
 	"github.com/edulinq/autograder/internal/util"
 )
 
-// Test CourseUsers, TargetCourseUserSelfOrGrader, and TargetCourseUserSelfOrAdmin.
+// Test CourseUsers, TargetServerUser, TargetCourseUser, TargetCourseUserSelfOrGrader, and TargetCourseUserSelfOrAdmin.
 // No embeded course context.
 func TestBadUsersFieldNoContext(test *testing.T) {
-	testCases := []struct{ request any }{
-		{&struct{ Users CourseUsers }{}},
-		{&struct{ User TargetCourseUserSelfOrGrader }{}},
-		{&struct{ User TargetCourseUserSelfOrAdmin }{}},
+	testCases := []struct {
+		locator string
+		request any
+	}{
+		{"-025", &struct{ Users CourseUsers }{}},
+		{"-042", &struct{ User TargetServerUser }{}},
+		{"-025", &struct{ User TargetCourseUser }{}},
+		{"-025", &struct{ User TargetCourseUserSelfOrGrader }{}},
+		{"-025", &struct{ User TargetCourseUserSelfOrAdmin }{}},
 	}
 
 	for i, testCase := range testCases {
@@ -31,19 +36,22 @@ func TestBadUsersFieldNoContext(test *testing.T) {
 				i, testCase.request)
 		}
 
-		if apiErr.Locator != "-025" {
-			test.Fatalf("Case %d: Struct with no course context does not return an error with locator '-025', found '%s': '%+v.",
-				i, apiErr.Locator, testCase.request)
+		if testCase.locator != apiErr.Locator {
+			test.Fatalf("Case %d: Struct with no course context does not return an error with locator '%s', found '%s': '%+v.",
+				i, testCase.locator, apiErr.Locator, testCase.request)
 		}
 	}
 }
 
-// Test CourseUsers, TargetCourseUserSelfOrGrader, and TargetCourseUserSelfOrAdmin.
+// Test CourseUsers, TargetServerUser, TargetCourseUser, TargetCourseUserSelfOrGrader, and TargetCourseUserSelfOrAdmin.
 // Users are not exported.
 func TestBadUsersFieldNotExported(test *testing.T) {
-	testCases := []struct{ request any }{
+	testCases := []struct {
+		locator string
+		request any
+	}{
 		{
-			&struct {
+			"-026", &struct {
 				APIRequestCourseUserContext
 				MinCourseRoleStudent
 				users CourseUsers
@@ -58,7 +66,33 @@ func TestBadUsersFieldNotExported(test *testing.T) {
 			},
 		},
 		{
-			&struct {
+			"-043", &struct {
+				APIRequestUserContext
+				targetServerUser TargetServerUser
+			}{
+				APIRequestUserContext: APIRequestUserContext{
+					UserEmail: "student@test.com",
+					UserPass:  studentPass,
+				},
+			},
+		},
+		{
+			"-026", &struct {
+				APIRequestCourseUserContext
+				MinCourseRoleStudent
+				targetCourseUser TargetCourseUser
+			}{
+				APIRequestCourseUserContext: APIRequestCourseUserContext{
+					APIRequestUserContext: APIRequestUserContext{
+						UserEmail: "student@test.com",
+						UserPass:  studentPass,
+					},
+					CourseID: "course101",
+				},
+			},
+		},
+		{
+			"-026", &struct {
 				APIRequestCourseUserContext
 				MinCourseRoleStudent
 				targetCourseUser TargetCourseUserSelfOrGrader
@@ -73,7 +107,7 @@ func TestBadUsersFieldNotExported(test *testing.T) {
 			},
 		},
 		{
-			&struct {
+			"-026", &struct {
 				APIRequestCourseUserContext
 				MinCourseRoleStudent
 				targetCourseUser TargetCourseUserSelfOrAdmin
@@ -96,9 +130,9 @@ func TestBadUsersFieldNotExported(test *testing.T) {
 				i, testCase.request)
 		}
 
-		if apiErr.Locator != "-026" {
-			test.Fatalf("Case %d: Struct with non-exported field does not return an error with locator '-026', found '%s': '%v.",
-				i, apiErr.Locator, apiErr)
+		if testCase.locator != apiErr.Locator {
+			test.Fatalf("Case %d: Struct with non-exported field does not return an error with locator '%s', found '%s': '%v.",
+				i, testCase.locator, apiErr.Locator, apiErr)
 		}
 	}
 }
@@ -639,6 +673,72 @@ func TestTargetCourseUser(test *testing.T) {
 		if !reflect.DeepEqual(testCase.expected, request.User) {
 			test.Errorf("Case %d: Result not as expected. Expcted '%+v', found '%+v'.",
 				i, testCase.expected, request.User)
+		}
+	}
+}
+
+func TestTargetServerUser(test *testing.T) {
+	type requestType struct {
+		APIRequestUserContext
+
+		User TargetServerUser
+	}
+
+	user := db.MustGetServerUser("student@test.com", true)
+
+	testCases := []struct {
+		target string
+		found  bool
+	}{
+		{"", false},
+		{"student@test.com", true},
+		{"ZZZ", false},
+	}
+
+	for i, testCase := range testCases {
+		request := requestType{
+			APIRequestUserContext: APIRequestUserContext{
+				UserEmail: "admin@test.com",
+				UserPass:  util.Sha256HexFromString("admin"),
+			},
+			User: TargetServerUser{
+				Email: testCase.target,
+			},
+		}
+
+		apiErr := ValidateAPIRequest(nil, &request, "")
+		if apiErr != nil {
+			if testCase.target == "" {
+				expectedLocator := "-044"
+				if expectedLocator != apiErr.Locator {
+					test.Errorf("Case %d: Incorrect error returned on empty string. Expcted '%s', found '%s'.",
+						i, expectedLocator, apiErr.Locator)
+				}
+			} else {
+				test.Errorf("Case %d: Failed to validate request: '%v'.", i, apiErr)
+			}
+
+			continue
+		}
+
+		if testCase.found != request.User.Found {
+			test.Errorf("Case %d: Found result not as expected. Expcted '%v', found '%v'.",
+				i, testCase.found, request.User.Found)
+			continue
+		}
+
+		if testCase.found {
+			if !reflect.DeepEqual(user, request.User.User) {
+				test.Errorf("Case %d: Result not as expected. Expcted '%s', found '%s'.",
+					i, util.MustToJSONIndent(user), util.MustToJSONIndent(request.User.User))
+				continue
+			}
+		} else {
+			if request.User.User != nil {
+				test.Errorf("Case %d: Did not get a nil user on !found. Got: '%s'.",
+					i, util.MustToJSONIndent(request.User))
+				continue
+			}
 		}
 	}
 }

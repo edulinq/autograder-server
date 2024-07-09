@@ -29,7 +29,17 @@ type POSTFiles struct {
 	Filenames []string `json:"-"`
 }
 
-// A request having a field of this type indicates that the request is targeting a specific user.
+// A request having a field of this type indicates that the request is targeting a specific server user.
+// This type serializes to/from a string.
+// A user's email must be specified, but no error is generated if the user is not found.
+// The existence of this type in a struct also indicates that the request is at least a APIRequestUserContext.
+type TargetServerUser struct {
+	Found bool
+	Email string
+	User  *model.ServerUser
+}
+
+// A request having a field of this type indicates that the request is targeting a specific course user.
 // This type serializes to/from a string.
 // A user's email must be specified, but no error is generated if the user is not found.
 // The existence of this type in a struct also indicates that the request is at least a APIRequestCourseUserContext.
@@ -39,10 +49,10 @@ type TargetCourseUser struct {
 	User  *model.CourseUser
 }
 
-// A request having a field of this type indicates that the request is targeting a specific user.
+// A request having a field of this type indicates that the request is targeting a specific course user.
 // This type serializes to/from a string.
 // If no user is specified, then the context user is the target.
-// If a user is specified, then the context user must be a grader
+// If a user is specified, then the context user must be a grader for the course
 // (any user can acces their own resources, but higher permissions are required to access another user's resources).
 // No error is generated if the user is not found.
 // The existence of this type in a struct also indicates that the request is at least a APIRequestCourseUserContext.
@@ -50,7 +60,7 @@ type TargetCourseUserSelfOrGrader struct {
 	TargetCourseUser
 }
 
-// Same as TargetCourseUserSelfOrGrader, but for an admin context user.
+// Same as TargetCourseUserSelfOrGrader, but for a course admin context user.
 type TargetCourseUserSelfOrAdmin struct {
 	TargetCourseUser
 }
@@ -67,6 +77,11 @@ func checkRequestSpecialFields(request *http.Request, apiRequest any, endpoint s
 
 		if fieldValue.Type() == reflect.TypeOf((*CourseUsers)(nil)).Elem() {
 			apiErr := checkRequestCourseUsers(endpoint, apiRequest, i)
+			if apiErr != nil {
+				return apiErr
+			}
+		} else if fieldValue.Type() == reflect.TypeOf((*TargetServerUser)(nil)).Elem() {
+			apiErr := checkRequestTargetServerUser(endpoint, apiRequest, i)
 			if apiErr != nil {
 				return apiErr
 			}
@@ -108,6 +123,60 @@ func checkRequestCourseUsers(endpoint string, apiRequest any, fieldIndex int) *A
 	}
 
 	reflect.ValueOf(apiRequest).Elem().Field(fieldIndex).Set(reflect.ValueOf(users))
+
+	return nil
+}
+
+func checkRequestTargetServerUser(endpoint string, apiRequest any, fieldIndex int) *APIError {
+	reflectValue := reflect.ValueOf(apiRequest).Elem()
+
+	fieldValue := reflectValue.Field(fieldIndex)
+	fieldType := reflectValue.Type().Field(fieldIndex)
+
+	structName := reflectValue.Type().Name()
+	fieldName := fieldValue.Type().Name()
+	jsonName := util.JSONFieldName(fieldType)
+
+	// Check the request.
+
+	userContextValue := reflectValue.FieldByName("APIRequestUserContext")
+	if !userContextValue.IsValid() || userContextValue.IsZero() {
+		return NewBareInternalError("-042", endpoint, "A request with type requiring a server user must embed APIRequestUserContext").
+			Add("request", apiRequest).
+			Add("struct-name", structName).Add("field-name", fieldType.Name).Add("field-type", fieldName)
+	}
+	userContext := userContextValue.Interface().(APIRequestUserContext)
+
+	if !fieldType.IsExported() {
+		return NewUsertContextInternalError("-043", &userContext, "Field must be exported.").
+			Add("struct-name", structName).Add("field-name", fieldType.Name).Add("field-type", fieldName)
+	}
+
+	// Wait until after the export check to get this information.
+	field := fieldValue.Interface().(TargetServerUser)
+
+	// Check the field.
+
+	if field.Email == "" {
+		return NewBadRequestError("-044", &userContext.APIRequest,
+			fmt.Sprintf("Field '%s' requires a non-empty string, empty or null provided.", jsonName)).
+			Add("struct-name", structName).Add("field-name", fieldType.Name).Add("json-name", jsonName)
+	}
+
+	user, err := db.GetServerUser(field.Email, true)
+	if err != nil {
+		return NewUsertContextInternalError("-045", &userContext, "Failed to fetch user from DB.").
+			Add("email", field.Email).Err(err)
+	}
+
+	if user == nil {
+		field.Found = false
+	} else {
+		field.Found = true
+		field.User = user
+	}
+
+	reflect.ValueOf(apiRequest).Elem().Field(fieldIndex).Set(reflect.ValueOf(field))
 
 	return nil
 }
@@ -339,7 +408,7 @@ func baseCheckRequestUsersField(endpoint string, apiRequest any, fieldIndex int)
 	courseContextValue := reflectValue.FieldByName("APIRequestCourseUserContext")
 	if !courseContextValue.IsValid() || courseContextValue.IsZero() {
 		return nil, nil,
-			NewBareInternalError("-025", endpoint, "A request with type requiring users must embed APIRequestCourseUserContext").
+			NewBareInternalError("-025", endpoint, "A request with type requiring course users must embed APIRequestCourseUserContext").
 				Add("request", apiRequest).
 				Add("struct-name", structName).Add("field-name", fieldType.Name).Add("field-type", fieldName)
 	}
@@ -359,6 +428,26 @@ func baseCheckRequestUsersField(endpoint string, apiRequest any, fieldIndex int)
 	}
 
 	return &courseContext, users, nil
+}
+
+func (this *TargetServerUser) UnmarshalJSON(data []byte) error {
+	var text string
+	err := json.Unmarshal(data, &text)
+	if err != nil {
+		return err
+	}
+
+	if (text == "null") || text == `""` {
+		text = ""
+	}
+
+	this.Email = text
+
+	return nil
+}
+
+func (this TargetServerUser) MarshalJSON() ([]byte, error) {
+	return json.Marshal(this.Email)
 }
 
 func (this *TargetCourseUser) UnmarshalJSON(data []byte) error {
