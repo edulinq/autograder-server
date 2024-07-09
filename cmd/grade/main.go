@@ -21,6 +21,7 @@ var args struct {
     User string `help:"User email for the submission." default:"testuser"`
     Message string `help:"Submission message." default:""`
     CheckRejection bool `help:"Check if this submission should be rejected (bypassed by default)." default:"false"`
+    LateAcknowledgment bool `help:"Acknowledge that the late penalty will be applied by making a submission." default:"false"`
 }
 
 func main() {
@@ -38,7 +39,7 @@ func main() {
 
     assignment := db.MustGetAssignment(args.Course, args.Assignment);
 
-    result, reject, err := grader.Grade(assignment, args.Submission, args.User, args.Message, args.CheckRejection, grader.GetDefaultGradeOptions());
+    result, reject, err := grader.Grade(assignment, args.Submission, args.User, args.Message, args.CheckRejection, args.LateAcknowledgment, grader.GetDefaultGradeOptions());
     if (err != nil) {
         if ((result != nil) && result.HasTextOutput()) {
             fmt.Println("Grading failed, but output was recovered:");
