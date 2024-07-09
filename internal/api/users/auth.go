@@ -1,16 +1,12 @@
 package users
 
 import (
-	"fmt"
-
 	"github.com/edulinq/autograder/internal/api/core"
 	"github.com/edulinq/autograder/internal/db"
-	// "github.com/edulinq/autograder/internal/util"
 )
 
 type AuthRequest struct {
 	core.APIRequest
-	core.MinServerRoleUser
 
 	TargetUser string `json:"target-email"`
 	TargetPass string `json:"target-pass"`
@@ -24,22 +20,19 @@ type AuthResponse struct {
 func HandleAuth(request *AuthRequest) (*AuthResponse, *core.APIError) {
 	response := AuthResponse{}
 
-	user, err := db.GetServerUser(request.TargetUser, false)
+	user, err := db.GetServerUser(request.TargetUser, true)
 	if err != nil {
-		return nil, core.NewBadRequestError("-830", &request.APIRequest, "Error getting user").Err(err)
+		return nil, core.NewBadRequestError("-012", &request.APIRequest, "Cannot Get User").Err(err)
 	}
 
 	if user == nil {
 		return &response, nil
 	}
 
-	// TODO: Remove!
-	fmt.Printf("User email: '%s', User pass: '%s'.\n", request.TargetUser, request.TargetPass)
-
 	response.FoundUser = true
-	response.AuthSuccess, err = user.Auth(string(request.TargetPass))
+	response.AuthSuccess, err = user.Auth(request.TargetPass)
 	if err != nil {
-		return nil, core.NewBadRequestError("-831", &request.APIRequest, "Error during Auth").Err(err)
+		return nil, core.NewBadRequestError("-037", &request.APIRequest, "User auth failed.").Err(err)
 	}
 
 	return &response, nil
