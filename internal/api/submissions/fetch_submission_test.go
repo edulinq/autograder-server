@@ -1,4 +1,4 @@
-package submission
+package submissions
 
 import (
 	"path/filepath"
@@ -75,7 +75,7 @@ func TestFetchSubmission(test *testing.T) {
 			"target-submission": testCase.targetSubmission,
 		}
 
-		response := core.SendTestAPIRequestFull(test, core.NewEndpoint(`submission/fetch/submission`), fields, nil, testCase.role)
+		response := core.SendTestAPIRequestFull(test, core.NewEndpoint(`submissions/fetch/submission`), fields, nil, testCase.role)
 		if !response.Success {
 			if testCase.permError {
 				expectedLocator := "-033"

@@ -1,4 +1,4 @@
-package submission
+package submissions
 
 import (
 	"testing"

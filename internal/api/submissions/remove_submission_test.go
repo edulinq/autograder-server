@@ -1,4 +1,4 @@
-package submission
+package submissions
 
 import (
 	"testing"
@@ -66,7 +66,7 @@ func TestRemoveSubmission(test *testing.T) {
 			"target-submission": testCase.targetSubmission,
 		}
 
-		response := core.SendTestAPIRequestFull(test, core.NewEndpoint(`submission/remove`), fields, nil, testCase.role)
+		response := core.SendTestAPIRequestFull(test, core.NewEndpoint(`submissions/remove`), fields, nil, testCase.role)
 
 		if !response.Success {
 			if testCase.permError {

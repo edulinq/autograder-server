@@ -1,4 +1,4 @@
-package submission
+package submissions
 
 import (
 	"reflect"
@@ -30,7 +30,7 @@ func TestFetchSubmissions(test *testing.T) {
 	}
 
 	for i, testCase := range testCases {
-		response := core.SendTestAPIRequestFull(test, core.NewEndpoint(`submission/fetch/submissions`), nil, nil, testCase.role)
+		response := core.SendTestAPIRequestFull(test, core.NewEndpoint(`submissions/fetch/submissions`), nil, nil, testCase.role)
 		if !response.Success {
 			if testCase.permError {
 				expectedLocator := "-020"

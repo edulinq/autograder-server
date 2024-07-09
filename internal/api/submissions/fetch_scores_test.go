@@ -1,4 +1,4 @@
-package submission
+package submissions
 
 import (
 	"maps"
@@ -47,7 +47,7 @@ func TestFetchScores(test *testing.T) {
 			"filter-role": testCase.filterRole,
 		}
 
-		response := core.SendTestAPIRequestFull(test, core.NewEndpoint(`submission/fetch/scores`), fields, nil, testCase.role)
+		response := core.SendTestAPIRequestFull(test, core.NewEndpoint(`submissions/fetch/scores`), fields, nil, testCase.role)
 		if !response.Success {
 			if testCase.permError {
 				expectedLocator := "-020"

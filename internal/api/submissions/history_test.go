@@ -1,4 +1,4 @@
-package submission
+package submissions
 
 import (
 	"reflect"
@@ -36,7 +36,7 @@ func TestHistory(test *testing.T) {
 			"target-email": testCase.target,
 		}
 
-		response := core.SendTestAPIRequestFull(test, core.NewEndpoint(`submission/history`), fields, nil, testCase.role)
+		response := core.SendTestAPIRequestFull(test, core.NewEndpoint(`submissions/history`), fields, nil, testCase.role)
 		if !response.Success {
 			if testCase.permError {
 				expectedLocator := "-033"

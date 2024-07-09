@@ -1,4 +1,4 @@
-package submission
+package submissions
 
 import (
 	"testing"
@@ -67,7 +67,7 @@ func TestPeek(test *testing.T) {
 			"target-submission": testCase.targetSubmission,
 		}
 
-		response := core.SendTestAPIRequestFull(test, core.NewEndpoint(`submission/peek`), fields, nil, testCase.role)
+		response := core.SendTestAPIRequestFull(test, core.NewEndpoint(`submissions/peek`), fields, nil, testCase.role)
 		if !response.Success {
 			if testCase.permError {
 				expectedLocator := "-033"
