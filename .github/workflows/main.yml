@@ -50,16 +50,12 @@ jobs:
           AUTOGRADER__DOCKER__DISABLE: 'true'
         run: ./scripts/run_tests.sh
 
-        # TODO(batu): Re-enable or move when possible.
       - name: Run Submission Tests
-        if: 1 == 2
         env:
           AUTOGRADER__DOCKER__DISABLE: 'true'
         run: ./.ci/run_remote_tests.sh
 
-        # TODO(batu): Re-enable or move when possible.
       - name: Verify Python Interface Test Data
-        if: 1 == 2
         env:
           AUTOGRADER__DOCKER__DISABLE: 'true'
         run: ./.ci/verify_py_test_data.sh
