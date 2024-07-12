@@ -53,6 +53,15 @@ func UpsertUsers(users map[string]*model.ServerUser) error {
 	return backend.UpsertUsers(users)
 }
 
+// See Backend.
+func DeleteUserToken(email string, tokenID string) (bool, error) {
+	if backend == nil {
+		return false, fmt.Errorf("Database has not been opened.")
+	}
+
+	return backend.DeleteUserToken(email, tokenID)
+}
+
 // Get a specific course user.
 // Returns nil if the user does not exist or is not enrolled in the course.
 func GetCourseUser(course *model.Course, email string) (*model.CourseUser, error) {

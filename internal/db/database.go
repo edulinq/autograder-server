@@ -96,6 +96,10 @@ type Backend interface {
 	// Do nothing and return nil if the user does not exist in that course.
 	RemoveUserFromCourse(course *model.Course, email string) error
 
+	// Delete a token owned by a user.
+	// Return true if the user and token exists and the token was removed, false otherwise.
+	DeleteUserToken(email string, tokenID string) (bool, error)
+
 	// Submission operations.
 
 	// Remove a submission.

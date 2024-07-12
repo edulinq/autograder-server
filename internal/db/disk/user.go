@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"path/filepath"
+	"slices"
 
 	"github.com/edulinq/autograder/internal/model"
 	"github.com/edulinq/autograder/internal/util"
@@ -107,6 +108,37 @@ func (this *backend) RemoveUserFromCourse(course *model.Course, email string) er
 	}
 
 	return nil
+}
+
+func (this *backend) DeleteUserToken(email string, tokenID string) (bool, error) {
+	this.userLock.Lock()
+	defer this.userLock.Unlock()
+
+	users, err := this.getServerUsersLock(false)
+	if err != nil {
+		return false, fmt.Errorf("Failed to get users when deleting user token '%s': '%w'.", email, err)
+	}
+
+	user, ok := users[email]
+	if !ok {
+		return false, nil
+	}
+
+	removed := false
+	for i, token := range user.Tokens {
+		if tokenID == token.ID {
+			user.Tokens = slices.Delete(user.Tokens, i, i+1)
+			removed = true
+			break
+		}
+	}
+
+	err = util.ToJSONFileIndent(users, this.getServerUsersPath())
+	if err != nil {
+		return false, fmt.Errorf("Unable to save user's file: '%w'.", err)
+	}
+
+	return removed, nil
 }
 
 func (this *backend) getServerUsersLock(acquireLock bool) (map[string]*model.ServerUser, error) {
