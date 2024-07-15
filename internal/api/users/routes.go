@@ -7,6 +7,7 @@ import (
 )
 
 var routes []*core.Route = []*core.Route{
+	core.NewAPIRoute(core.NewEndpoint(`users/get`), HandleGet),
 	core.NewAPIRoute(core.NewEndpoint(`users/tokens/create`), HandleTokensCreate),
 	core.NewAPIRoute(core.NewEndpoint(`users/tokens/delete`), HandleTokensDelete),
 }
