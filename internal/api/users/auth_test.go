@@ -11,25 +11,24 @@ func TestUsersAuth(test *testing.T) {
 	testCases := []struct {
 		email    string
 		pass     string
-		success  bool
-		expected AuthResponse
+		expected bool
 	}{
 		// Test cases for correct authorization.
-		{"other@test.com", "other", true, AuthResponse{true}},
-		{"student@test.com", "student", true, AuthResponse{true}},
-		{"grader@test.com", "grader", true, AuthResponse{true}},
-		{"admin@test.com", "admin", true, AuthResponse{true}},
-		{"owner@test.com", "owner", true, AuthResponse{true}},
+		{"other@test.com", "other", true},
+		{"student@test.com", "student", true},
+		{"grader@test.com", "grader", true},
+		{"admin@test.com", "admin", true},
+		{"owner@test.com", "owner", true},
 
 		// Ensure we fail on bad passwords.
-		{"other@test.com", "ZZZ", false, AuthResponse{false}},
-		{"student@test.com", "ZZZ", false, AuthResponse{false}},
-		{"grader@test.com", "ZZZ", false, AuthResponse{false}},
-		{"admin@test.com", "ZZZ", false, AuthResponse{false}},
-		{"owner@test.com", "ZZZ", false, AuthResponse{false}},
+		{"other@test.com", "ZZZ", false},
+		{"student@test.com", "ZZZ", false},
+		{"grader@test.com", "ZZZ", false},
+		{"admin@test.com", "ZZZ", false},
+		{"owner@test.com", "ZZZ", false},
 
 		// Check we cannot find invalid users.
-		{"ZZZ", "Z", false, AuthResponse{false}},
+		{"ZZZ", "Z", false},
 	}
 
 	for i, testCase := range testCases {
@@ -39,16 +38,16 @@ func TestUsersAuth(test *testing.T) {
 		}
 
 		response := core.SendTestAPIRequest(test, core.NewEndpoint("users/auth"), fields)
-		if testCase.success != response.Success {
-			test.Errorf("Case %d: Unexpected result. Expected: '%t', actual: '%t'.", i, testCase.success, response.Success)
+		if testCase.expected != response.Success {
+			test.Errorf("Case %d: Unexpected result. Expected: '%t', actual: '%t'.", i, testCase.expected, response.Success)
 			continue
 		}
 
 		var responseContent AuthResponse
 		util.MustJSONFromString(util.MustToJSON(response.Content), &responseContent)
 
-		if testCase.expected != responseContent {
-			test.Errorf("Case %d: Unexpected result. Expected: '%+v', actual: '%+v'.", i, testCase.expected, responseContent)
+		if testCase.expected != responseContent.Success {
+			test.Errorf("Case %d: Unexpected result. Expected: '%t', actual: '%t'.", i, testCase.expected, responseContent.Success)
 			continue
 		}
 	}

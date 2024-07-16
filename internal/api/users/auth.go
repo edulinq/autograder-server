@@ -13,8 +13,7 @@ type AuthResponse struct {
 }
 
 func HandleAuth(request *AuthRequest) (*AuthResponse, *core.APIError) {
-	response := AuthResponse{}
-	response.Success = true
+	response := AuthResponse{true}
 
 	return &response, nil
 }
