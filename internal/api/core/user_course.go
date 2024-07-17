@@ -1,7 +1,5 @@
 package core
 
-// How to represent users in API responses.
-
 import (
 	"slices"
 	"strings"
@@ -9,15 +7,16 @@ import (
 	"github.com/edulinq/autograder/internal/model"
 )
 
-type UserInfo struct {
+// An API-safe representation of a course user.
+type CourseUserInfo struct {
 	Email string               `json:"email"`
 	Name  string               `json:"name"`
 	Role  model.CourseUserRole `json:"role"`
 	LMSID string               `json:"lms-id"`
 }
 
-func NewUserInfo(user *model.CourseUser) *UserInfo {
-	return &UserInfo{
+func NewCourseUserInfo(user *model.CourseUser) *CourseUserInfo {
+	return &CourseUserInfo{
 		Email: user.Email,
 		Name:  user.GetDisplayName(),
 		Role:  user.Role,
@@ -25,18 +24,18 @@ func NewUserInfo(user *model.CourseUser) *UserInfo {
 	}
 }
 
-func NewUserInfos(users []*model.CourseUser) []*UserInfo {
-	result := make([]*UserInfo, 0, len(users))
+func NewCourseUserInfos(users []*model.CourseUser) []*CourseUserInfo {
+	result := make([]*CourseUserInfo, 0, len(users))
 	for _, user := range users {
-		result = append(result, NewUserInfo(user))
+		result = append(result, NewCourseUserInfo(user))
 	}
 
-	slices.SortFunc(result, CompareUserInfoPointer)
+	slices.SortFunc(result, CompareCourseUserInfoPointer)
 
 	return result
 }
 
-func CompareUserInfoPointer(a *UserInfo, b *UserInfo) int {
+func CompareCourseUserInfoPointer(a *CourseUserInfo, b *CourseUserInfo) int {
 	if a == b {
 		return 0
 	}
@@ -53,8 +52,8 @@ func CompareUserInfoPointer(a *UserInfo, b *UserInfo) int {
 }
 
 // Get user info from a generic map (like what an API response would have).
-func UserInfoFromMap(data map[string]any) *UserInfo {
-	return &UserInfo{
+func CourseUserInfoFromMap(data map[string]any) *CourseUserInfo {
+	return &CourseUserInfo{
 		Email: data["email"].(string),
 		Name:  data["name"].(string),
 		Role:  model.GetCourseUserRole(data["role"].(string)),
@@ -62,6 +61,6 @@ func UserInfoFromMap(data map[string]any) *UserInfo {
 	}
 }
 
-func CompareUserInfo(a UserInfo, b UserInfo) int {
+func CompareCourseUserInfo(a CourseUserInfo, b CourseUserInfo) int {
 	return strings.Compare(a.Email, b.Email)
 }

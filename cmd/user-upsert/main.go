@@ -36,6 +36,11 @@ func main() {
 	db.MustOpen()
 	defer db.MustClose()
 
+	// If a password was set on the command-line, then hash it before upserting.
+	if args.RawUserData.Pass != "" {
+		args.RawUserData.Pass = util.Sha256HexFromString(args.RawUserData.Pass)
+	}
+
 	options := users.UpsertUsersOptions{
 		RawUsers:          []*model.RawUserData{&args.RawUserData},
 		SendEmails:        args.SendEmail,

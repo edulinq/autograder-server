@@ -17,6 +17,15 @@ func GetServerUsers() (map[string]*model.ServerUser, error) {
 	return backend.GetServerUsers()
 }
 
+func MustGetServerUsers() map[string]*model.ServerUser {
+	users, err := GetServerUsers()
+	if err != nil {
+		log.Fatal("Faled to get server users.", err)
+	}
+
+	return users
+}
+
 // See Backend.
 func GetCourseUsers(course *model.Course) (map[string]*model.CourseUser, error) {
 	if backend == nil {
@@ -51,6 +60,15 @@ func UpsertUsers(users map[string]*model.ServerUser) error {
 	}
 
 	return backend.UpsertUsers(users)
+}
+
+// See Backend.
+func DeleteUserToken(email string, tokenID string) (bool, error) {
+	if backend == nil {
+		return false, fmt.Errorf("Database has not been opened.")
+	}
+
+	return backend.DeleteUserToken(email, tokenID)
 }
 
 // Get a specific course user.

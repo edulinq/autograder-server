@@ -468,6 +468,48 @@ func (this *DBTests) DBTestUserRemoveUserFromCourseBase(test *testing.T) {
 	}
 }
 
+func (this *DBTests) DBTestUserDeleteTokenBase(test *testing.T) {
+	defer ResetForTesting()
+	ResetForTesting()
+
+	tokenID := MustGetServerUser("admin@test.com", true).Tokens[0].ID
+
+	// Note that we do not reset between cases.
+	testCases := []struct {
+		email   string
+		id      string
+		removed bool
+	}{
+		{"admin@test.com", "ZZZ", false},
+		{"admin@test.com", tokenID, true},
+		{"admin@test.com", tokenID, false},
+		{"admin@test.com", "ZZZ", false},
+	}
+
+	for i, testCase := range testCases {
+		initialCount := len(MustGetServerUser("admin@test.com", true).Tokens)
+		expectedCount := initialCount
+
+		removed, err := DeleteUserToken(testCase.email, testCase.id)
+		if err != nil {
+			test.Fatalf("Case %d: Got an error when removing a token: '%v'.", i, err)
+		}
+
+		if testCase.removed != removed {
+			test.Fatalf("Case %d: Unexpected removed respose. Expected: %v, Actual: %v.", i, testCase.removed, removed)
+		}
+
+		if removed {
+			expectedCount--
+		}
+
+		newCount := len(MustGetServerUser("admin@test.com", true).Tokens)
+		if expectedCount != newCount {
+			test.Fatalf("Case %d: Unexpected token count. Expected: %v, Actual: %v.", i, expectedCount, newCount)
+		}
+	}
+}
+
 func testCourseUsers(test *testing.T, course *model.Course, expected map[string]*model.CourseUser) {
 	users, err := GetCourseUsers(course)
 	if err != nil {
