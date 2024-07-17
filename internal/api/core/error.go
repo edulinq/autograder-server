@@ -266,6 +266,21 @@ func NewInternalError(locator string, request *APIRequestCourseUserContext, inte
 	return err
 }
 
+func NewBaseInternalError(locator string, request *APIRequest, internalMessage string) *APIError {
+	err := &APIError{
+		RequestID:    request.RequestID,
+		Locator:      locator,
+		Endpoint:     request.Endpoint,
+		Timestamp:    request.Timestamp,
+		LogLevel:     log.LevelError,
+		HTTPStatus:   HTTP_STATUS_SERVER_ERROR,
+		InternalText: internalMessage,
+		ResponseText: fmt.Sprintf("The server failed to process your request. Please contact an adimistrator with this ID '%s'.", request.RequestID),
+	}
+
+	return err
+}
+
 func NewUsertContextInternalError(locator string, request *APIRequestUserContext, internalMessage string) *APIError {
 	err := &APIError{
 		RequestID:    request.RequestID,
