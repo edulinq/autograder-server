@@ -17,8 +17,8 @@ type ServerUserInfo struct {
 }
 
 type EnrollmentInfo struct {
-	CourseID   string               `json:"course-id"`
-	CourseName string               `json:"course-name"`
+	CourseID   string               `json:"id"`
+	CourseName string               `json:"name"`
 	Role       model.CourseUserRole `json:"role"`
 }
 
