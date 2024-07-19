@@ -2,6 +2,8 @@ package core
 
 import (
 	"fmt"
+	"slices"
+	"strings"
 
 	"github.com/edulinq/autograder/internal/db"
 	"github.com/edulinq/autograder/internal/log"
@@ -53,4 +55,36 @@ func MustNewServerUserInfo(user *model.ServerUser) *ServerUserInfo {
 	}
 
 	return info
+}
+
+func NewServerUserInfos(users []*model.ServerUser) ([]*ServerUserInfo, error) {
+	result := make([]*ServerUserInfo, 0, len(users))
+	for _, user := range users {
+		info, err := NewServerUserInfo(user)
+		if err != nil {
+			return nil, fmt.Errorf("Failed to get server user info for user (%s).", user.Email)
+		}
+
+		result = append(result, info)
+	}
+
+	slices.SortFunc(result, CompareServerUserInfoPointer)
+
+	return result, nil
+}
+
+func CompareServerUserInfoPointer(a *ServerUserInfo, b *ServerUserInfo) int {
+	if a == b {
+		return 0
+	}
+
+	if a == nil {
+		return 1
+	}
+
+	if b == nil {
+		return -1
+	}
+
+	return strings.Compare(a.Email, b.Email)
 }
