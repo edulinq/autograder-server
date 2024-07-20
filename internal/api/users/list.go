@@ -7,7 +7,7 @@ import (
 )
 
 type ListRequest struct {
-	core.APIRequest
+	core.APIRequestUserContext
 	core.MinServerRoleAdmin
 }
 

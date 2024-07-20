@@ -21,6 +21,7 @@ func TestList(test *testing.T) {
 		{users["server-user@test.com"], true, nil},
 
 		// Good permissions.
+		// TODO: Add expected output.
 		{users["server-admin@test.com"], false, nil},
 	}
 
@@ -33,7 +34,7 @@ func TestList(test *testing.T) {
 		response := core.SendTestAPIRequest(test, core.NewEndpoint(`users/list`), fields)
 		if !response.Success {
 			if testCase.permError {
-				expectedLocator := "-012"
+				expectedLocator := "-041"
 				if response.Locator != expectedLocator {
 					test.Errorf("Case %d: Incorrect error returned. Expected '%s', found '%s'.", i, expectedLocator, response.Locator)
 				}
@@ -48,5 +49,21 @@ func TestList(test *testing.T) {
 			test.Errorf("Case %d: Did not get an expected permissions error.", i)
 			continue
 		}
+
+		var responseContent GetResponse
+		util.MustJSONFromString(util.MustToJSON(response.Content), &responseContent)
+
+		expectedFound := (testCase.expected != nil)
+		if (expectedFound != responseContent.Found) {
+			test.Errorf("Case %d: Server user info does not match. Expected: '%v', actual: '%v'.", i, expectedFound, responseContent.Found)
+			continue
+		}
+
+		test.Errorf("Case %d: Found the following user info: '%s'.", i, util.MustToJSON(responseContent))
+		if testCase.expected == nil {
+			continue
+		}
+
+		// TODO: Add check for actual content!
 	}
 }
