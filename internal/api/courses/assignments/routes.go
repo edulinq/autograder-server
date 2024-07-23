@@ -7,6 +7,7 @@ import (
 )
 
 var routes []*core.Route = []*core.Route{
+	core.NewAPIRoute(core.NewEndpoint(`courses/assignments/get`), HandleGet),
 	core.NewAPIRoute(core.NewEndpoint(`courses/assignments/list`), HandleList),
 }
 
