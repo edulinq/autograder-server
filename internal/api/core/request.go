@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"reflect"
+	"sync"
 
 	"github.com/edulinq/autograder/internal/common"
 	"github.com/edulinq/autograder/internal/config"
@@ -15,6 +16,9 @@ import (
 // An api request that has been reflexively verifed.
 // Once validated, callers should feel safe calling reflection methods on this without extra checks.
 type ValidAPIRequest any
+
+var RandomNumberMap sync.Map
+
 
 type APIRequest struct {
 	// These are not provided in JSON, they are filled in during validation.
@@ -34,6 +38,8 @@ type APIRequestUserContext struct {
 	UserPass  string `json:"user-pass"`
 
 	ServerUser *model.ServerUser `json:"-"`
+
+	FakeRootUser bool `json:"-"`
 }
 
 // Context for a request that has a course and user from that course.
@@ -56,6 +62,7 @@ type APIRequestAssignmentContext struct {
 }
 
 func (this *APIRequest) Validate(request any, endpoint string) *APIError {
+	fmt.Println("requestty: ", util.MustToJSON(request))
 	this.RequestID = util.UUID()
 	this.Endpoint = endpoint
 	this.Timestamp = common.NowTimestamp()
@@ -76,11 +83,11 @@ func (this *APIRequestUserContext) Validate(request any, endpoint string) *APIEr
 		return apiErr
 	}
 
-	if this.UserEmail == "" {
+	if this.UserEmail == "" && !this.FakeRootUser {
 		return NewBadRequestError("-016", &this.APIRequest, "No user email specified.")
 	}
 
-	if this.UserPass == "" {
+	if this.UserPass == "" && !this.FakeRootUser{
 		return NewBadRequestError("-017", &this.APIRequest, "No user password specified.")
 	}
 
@@ -93,6 +100,8 @@ func (this *APIRequestUserContext) Validate(request any, endpoint string) *APIEr
 	if !foundRole {
 		minRole = model.ServerRoleUser
 	}
+	fmt.Println("minRole: ", minRole)
+	fmt.Println("foundRole: ", foundRole)
 
 	if this.ServerUser.Role < minRole {
 		return NewBadServerPermissionsError("-041", this, minRole, "Base API Request")
@@ -176,6 +185,39 @@ func (this *APIRequestAssignmentContext) Validate(request any, endpoint string) 
 // Take in a pointer to an API request.
 // Ensure this request has a type of known API request embedded in it and validate that embedded request.
 func ValidateAPIRequest(request *http.Request, apiRequest any, endpoint string) *APIError {
+    number := request.FormValue("number")
+	numberInMap, exists := RandomNumberMap.Load(number)
+	if !exists {
+		fmt.Println("Failed to load random number from map")
+	}
+
+	if (numberInMap == number) {
+		reflectPointer := reflect.ValueOf(apiRequest)
+		fmt.Println("reflect Pointer: ", reflectPointer.String())
+
+        if reflectPointer.Kind() == reflect.Pointer {
+            reflectValue := reflectPointer.Elem()
+			fmt.Println("Reflect Value: ", reflectValue.String())
+            if reflectValue.Kind() == reflect.Struct {
+                // Iterate through the fields of the struct to find APIRequestAssignmentContext
+                for i := 0; i < reflectValue.NumField(); i++ {
+                    field := reflectValue.Field(i)
+					fmt.Println("Field: ", field.String())
+					fmt.Println("reflect of context: ", reflect.TypeOf(APIRequestAssignmentContext{}))
+					fmt.Println("Field type: ", field.Type().String())
+					fmt.Println("Field addr: ", field.Addr().Interface())
+                    if field.Type() == reflect.TypeOf(APIRequestAssignmentContext{}) {
+                        assignmentContext := field.Addr().Interface().(*APIRequestAssignmentContext)
+						fmt.Println("Assignment Context: ", util.MustToJSON(assignmentContext))
+                        assignmentContext.FakeRootUser = true
+                        break
+                    }
+                }
+            }
+        }
+
+	}
+
 	reflectPointer := reflect.ValueOf(apiRequest)
 	if reflectPointer.Kind() != reflect.Pointer {
 		return NewBareInternalError("-023", endpoint, "ValidateAPIRequest() must be called with a pointer.").

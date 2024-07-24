@@ -41,6 +41,11 @@ type ServerUser struct {
 	CourseInfo map[string]*UserCourseInfo `json:"course-info"`
 }
 
+var FakeRootUser = ServerUser{
+    Email: "root",
+    Role:  ServerRoleRoot,
+}
+
 type UserCourseInfo struct {
 	Role  CourseUserRole `json:"role"`
 	LMSID *string        `json:"lms-id"`

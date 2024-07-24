@@ -11,6 +11,19 @@ import (
 // If any error is retuturned, then the request should end and the response sent based on the error.
 // This assumes basic validation has already been done on the request.
 func (this *APIRequestUserContext) Auth() (*model.ServerUser, *APIError) {
+	if this.FakeRootUser {
+		return this.authFakeRootUser()
+	}
+	return this.authRealUser()
+	
+}
+
+func (this *APIRequestUserContext) authFakeRootUser() (*model.ServerUser, *APIError) {
+	
+	return &model.FakeRootUser, nil
+}
+
+func (this *APIRequestUserContext) authRealUser() (*model.ServerUser, *APIError) {
 	user, err := db.GetServerUser(this.UserEmail, true)
 	if err != nil {
 		return nil, NewAuthBadRequestError("-012", this, "Cannot Get User").Err(err)
