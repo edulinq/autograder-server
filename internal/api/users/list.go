@@ -20,7 +20,7 @@ func HandleList(request *ListRequest) (*ListResponse, *core.APIError) {
 
 	users_map, err := db.GetServerUsers()
 	if err != nil {
-		return nil, core.NewBaseInternalError("-805", &request.APIRequest, "Failed to get server users from database.").Err(err)
+		return nil, core.NewUsertContextInternalError("-805", &request.APIRequestUserContext, "Failed to get server users from database.").Err(err)
 	}
 
 	users := make([]*model.ServerUser, 0, len(users_map))
@@ -30,7 +30,7 @@ func HandleList(request *ListRequest) (*ListResponse, *core.APIError) {
 
 	info, err := core.NewServerUserInfos(users)
 	if err != nil {
-		return nil, core.NewBaseInternalError("-806", &request.APIRequest, "Failed to get server user infos.").Err(err)
+		return nil, core.NewUsertContextInternalError("-806", &request.APIRequestUserContext, "Failed to get server user infos.").Err(err)
 	}
 
 	response.Users = info

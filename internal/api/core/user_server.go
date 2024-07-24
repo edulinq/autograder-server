@@ -88,3 +88,35 @@ func CompareServerUserInfoPointer(a *ServerUserInfo, b *ServerUserInfo) int {
 
 	return strings.Compare(a.Email, b.Email)
 }
+
+// Get server user info from a generic map (like what an API response would have).
+func ServerUserInfoFromMap(data map[string]any) *ServerUserInfo {
+	courses := data["courses"].(map[string]any)
+
+	return &ServerUserInfo{
+		Email:   data["email"].(string),
+		Name:    data["name"].(string),
+		Role:    model.GetServerUserRole(data["role"].(string)),
+		Courses: *EnrollmentInfoFromMap(courses),
+	}
+}
+
+// Get enrollment info from a generic map (like what an API response would have).
+func EnrollmentInfoFromMap(data map[string]any) *map[string]EnrollmentInfo {
+	enrollmentInfos := make(map[string]EnrollmentInfo)
+
+	for name, course := range data {
+		courseMap := course.(map[string]any)
+		enrollmentInfos[name] = EnrollmentInfo{
+			CourseID:   courseMap["id"].(string),
+			CourseName: courseMap["name"].(string),
+			Role:       model.GetCourseUserRole(courseMap["role"].(string)),
+		}
+	}
+
+	return &enrollmentInfos
+}
+
+func CompareServerUserInfo(a ServerUserInfo, b ServerUserInfo) int {
+	return strings.Compare(a.Email, b.Email)
+}

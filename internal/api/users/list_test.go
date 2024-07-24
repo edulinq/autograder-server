@@ -1,69 +1,135 @@
 package users
 
 import (
+	"reflect"
+	"slices"
 	"testing"
 
 	"github.com/edulinq/autograder/internal/api/core"
-	"github.com/edulinq/autograder/internal/db"
 	"github.com/edulinq/autograder/internal/model"
-	"github.com/edulinq/autograder/internal/util"
 )
 
 func TestList(test *testing.T) {
-	users := db.MustGetServerUsers()
-
-	testCases := []struct {
-		contextUser *model.ServerUser
-		permError   bool
-		expected    []*core.ServerUserInfo
-	}{
-		// Bad permissions.
-		{users["server-user@test.com"], true, nil},
-
-		// Good permissions.
-		// TODO: Add expected output.
-		{users["server-admin@test.com"], false, nil},
+	expectedUsers := []core.ServerUserInfo{
+		{
+			Email: "admin@test.com",
+			Name:  "admin",
+			Role:  model.GetServerUserRole("admin"),
+			Courses: map[string]core.EnrollmentInfo{
+				"course-languages":          {CourseID: "course-languages", CourseName: "Course Using Different Languages.", Role: model.GetCourseUserRole("admin")},
+				"course-with-lms":           {CourseID: "course-with-lms", CourseName: "Course With LMS", Role: model.GetCourseUserRole("admin")},
+				"course-without-source":     {CourseID: "course-without-source", CourseName: "Course Without Source", Role: model.GetCourseUserRole("admin")},
+				"course101":                 {CourseID: "course101", CourseName: "Course 101", Role: model.GetCourseUserRole("admin")},
+				"course101-with-zero-limit": {CourseID: "course101-with-zero-limit", CourseName: "Course 101 - With Zero Limit", Role: model.GetCourseUserRole("admin")},
+			},
+		},
+		{
+			Email: "grader@test.com",
+			Name:  "grader",
+			Role:  model.GetServerUserRole("creator"),
+			Courses: map[string]core.EnrollmentInfo{
+				"course-languages":          {CourseID: "course-languages", CourseName: "Course Using Different Languages.", Role: model.GetCourseUserRole("grader")},
+				"course-with-lms":           {CourseID: "course-with-lms", CourseName: "Course With LMS", Role: model.GetCourseUserRole("grader")},
+				"course-without-source":     {CourseID: "course-without-source", CourseName: "Course Without Source", Role: model.GetCourseUserRole("grader")},
+				"course101":                 {CourseID: "course101", CourseName: "Course 101", Role: model.GetCourseUserRole("grader")},
+				"course101-with-zero-limit": {CourseID: "course101-with-zero-limit", CourseName: "Course 101 - With Zero Limit", Role: model.GetCourseUserRole("grader")},
+			},
+		},
+		{
+			Email: "no-lms-id@test.com",
+			Name:  "no-lms-id",
+			Role:  model.GetServerUserRole("user"),
+			Courses: map[string]core.EnrollmentInfo{
+				"course-languages":      {CourseID: "course-languages", CourseName: "Course Using Different Languages.", Role: model.GetCourseUserRole("admin")},
+				"course-with-lms":       {CourseID: "course-with-lms", CourseName: "Course With LMS", Role: model.GetCourseUserRole("admin")},
+				"course-without-source": {CourseID: "course-without-source", CourseName: "Course Without Source", Role: model.GetCourseUserRole("admin")},
+			},
+		},
+		{
+			Email: "other@test.com",
+			Name:  "other",
+			Role:  model.GetServerUserRole("user"),
+			Courses: map[string]core.EnrollmentInfo{
+				"course-languages":          {CourseID: "course-languages", CourseName: "Course Using Different Languages.", Role: model.GetCourseUserRole("other")},
+				"course-with-lms":           {CourseID: "course-with-lms", CourseName: "Course With LMS", Role: model.GetCourseUserRole("other")},
+				"course-without-source":     {CourseID: "course-without-source", CourseName: "Course Without Source", Role: model.GetCourseUserRole("other")},
+				"course101":                 {CourseID: "course101", CourseName: "Course 101", Role: model.GetCourseUserRole("other")},
+				"course101-with-zero-limit": {CourseID: "course101-with-zero-limit", CourseName: "Course 101 - With Zero Limit", Role: model.GetCourseUserRole("other")},
+			},
+		},
+		{
+			Email: "owner@test.com",
+			Name:  "owner",
+			Role:  model.GetServerUserRole("owner"),
+			Courses: map[string]core.EnrollmentInfo{
+				"course-languages":          {CourseID: "course-languages", CourseName: "Course Using Different Languages.", Role: model.GetCourseUserRole("owner")},
+				"course-with-lms":           {CourseID: "course-with-lms", CourseName: "Course With LMS", Role: model.GetCourseUserRole("owner")},
+				"course-without-source":     {CourseID: "course-without-source", CourseName: "Course Without Source", Role: model.GetCourseUserRole("owner")},
+				"course101":                 {CourseID: "course101", CourseName: "Course 101", Role: model.GetCourseUserRole("owner")},
+				"course101-with-zero-limit": {CourseID: "course101-with-zero-limit", CourseName: "Course 101 - With Zero Limit", Role: model.GetCourseUserRole("owner")},
+			},
+		},
+		{
+			Email: "student@test.com",
+			Name:  "student",
+			Role:  model.GetServerUserRole("user"),
+			Courses: map[string]core.EnrollmentInfo{
+				"course-languages":          {CourseID: "course-languages", CourseName: "Course Using Different Languages.", Role: model.GetCourseUserRole("student")},
+				"course-with-lms":           {CourseID: "course-with-lms", CourseName: "Course With LMS", Role: model.GetCourseUserRole("student")},
+				"course-without-source":     {CourseID: "course-without-source", CourseName: "Course Without Source", Role: model.GetCourseUserRole("student")},
+				"course101":                 {CourseID: "course101", CourseName: "Course 101", Role: model.GetCourseUserRole("student")},
+				"course101-with-zero-limit": {CourseID: "course101-with-zero-limit", CourseName: "Course 101 - With Zero Limit", Role: model.GetCourseUserRole("student")},
+			},
+		},
+		{
+			Email:   "server-admin@test.com",
+			Name:    "server-admin",
+			Role:    model.GetServerUserRole("admin"),
+			Courses: map[string]core.EnrollmentInfo{},
+		},
+		{
+			Email:   "server-creator@test.com",
+			Name:    "server-creator",
+			Role:    model.GetServerUserRole("creator"),
+			Courses: map[string]core.EnrollmentInfo{},
+		},
+		{
+			Email:   "server-owner@test.com",
+			Name:    "server-owner",
+			Role:    model.GetServerUserRole("owner"),
+			Courses: map[string]core.EnrollmentInfo{},
+		},
+		{
+			Email:   "server-user@test.com",
+			Name:    "server-user",
+			Role:    model.GetServerUserRole("user"),
+			Courses: map[string]core.EnrollmentInfo{},
+		},
 	}
 
-	for i, testCase := range testCases {
-		fields := map[string]any{
-			"user-email": testCase.contextUser.Email,
-			"user-pass":  util.Sha256HexFromString(*testCase.contextUser.Name),
-		}
+	response := core.SendTestAPIRequest(test, core.NewEndpoint(`users/list`), nil)
 
-		response := core.SendTestAPIRequest(test, core.NewEndpoint(`users/list`), fields)
-		if !response.Success {
-			if testCase.permError {
-				expectedLocator := "-041"
-				if response.Locator != expectedLocator {
-					test.Errorf("Case %d: Incorrect error returned. Expected '%s', found '%s'.", i, expectedLocator, response.Locator)
-				}
-			} else {
-				test.Errorf("Case %d: Response is not a success when it should be: '%v'.", i, response)
-			}
+	if !response.Success {
+		test.Fatalf("Response is not a success: '%v'.", response)
+	}
 
-			continue
-		}
+	responseContent := response.Content.(map[string]any)
 
-		if testCase.permError {
-			test.Errorf("Case %d: Did not get an expected permissions error.", i)
-			continue
-		}
+	if responseContent["users"] == nil {
+		test.Fatalf("Got a nil user list.")
+	}
 
-		var responseContent GetResponse
-		util.MustJSONFromString(util.MustToJSON(response.Content), &responseContent)
+	rawUsers := responseContent["users"].([]any)
+	actualUsers := make([]core.ServerUserInfo, 0, len(rawUsers))
 
-		expectedFound := (testCase.expected != nil)
-		if (expectedFound != responseContent.Found) {
-			test.Errorf("Case %d: Server user info does not match. Expected: '%v', actual: '%v'.", i, expectedFound, responseContent.Found)
-			continue
-		}
+	for _, rawUser := range rawUsers {
+		actualUsers = append(actualUsers, *core.ServerUserInfoFromMap(rawUser.(map[string]any)))
+	}
 
-		test.Errorf("Case %d: Found the following user info: '%s'.", i, util.MustToJSON(responseContent))
-		if testCase.expected == nil {
-			continue
-		}
+	slices.SortFunc(expectedUsers, core.CompareServerUserInfo)
+	slices.SortFunc(actualUsers, core.CompareServerUserInfo)
 
-		// TODO: Add check for actual content!
+	if !reflect.DeepEqual(expectedUsers, actualUsers) {
+		test.Fatalf("Users not as expected. Expected: '%+v', actual: '%+v'.", expectedUsers, actualUsers)
 	}
 }
