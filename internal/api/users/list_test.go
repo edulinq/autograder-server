@@ -20,23 +20,21 @@ func TestList(test *testing.T) {
 
 	testCases := []struct {
 		email     string
-		pass      string
 		permError bool
-		users     []*model.ServerUser
 	}{
 		// Invalid permissions.
-		{"server-user@test.com", "server-user", true, nil},
-		{"server-creator@test.com", "server-creator", true, nil},
+		{"server-user@test.com", true},
+		{"server-creator@test.com", true},
 
 		// Valid permissions.
-		{"server-admin@test.com", "server-admin", false, users},
-		{"admin@test.com", "admin", false, users},
+		{"server-admin@test.com", false},
+		{"server-owner@test.com", false},
 	}
 
 	for i, testCase := range testCases {
 		fields := map[string]any{
 			"user-email": testCase.email,
-			"user-pass":  util.Sha256HexFromString(testCase.pass),
+			"user-pass":  util.Sha256HexFromString(*usersMap[testCase.email].Name),
 		}
 
 		response := core.SendTestAPIRequest(test, core.NewEndpoint(`users/list`), fields)
@@ -62,7 +60,7 @@ func TestList(test *testing.T) {
 		var responseContent ListResponse
 		util.MustJSONFromString(util.MustToJSON(response.Content), &responseContent)
 
-		expectedInfos := core.MustNewServerUserInfos(testCase.users)
+		expectedInfos := core.MustNewServerUserInfos(users)
 		if !reflect.DeepEqual(expectedInfos, responseContent.Users) {
 			test.Errorf("Case %d: Unexpected users information. Expected: '%s', actual: '%s'.",
 				i, util.MustToJSONIndent(expectedInfos), util.MustToJSONIndent(responseContent.Users))
