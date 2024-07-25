@@ -58,19 +58,28 @@ func MustNewServerUserInfo(user *model.ServerUser) *ServerUserInfo {
 }
 
 func NewServerUserInfos(users []*model.ServerUser) ([]*ServerUserInfo, error) {
-	result := make([]*ServerUserInfo, 0, len(users))
+	infos := make([]*ServerUserInfo, 0, len(users))
 	for _, user := range users {
 		info, err := NewServerUserInfo(user)
 		if err != nil {
 			return nil, fmt.Errorf("Failed to get server user info for user (%s).", user.Email)
 		}
 
-		result = append(result, info)
+		infos = append(infos, info)
 	}
 
-	slices.SortFunc(result, CompareServerUserInfoPointer)
+	slices.SortFunc(infos, CompareServerUserInfoPointer)
 
-	return result, nil
+	return infos, nil
+}
+
+func MustNewServerUserInfos(users []*model.ServerUser) []*ServerUserInfo {
+	infos, err := NewServerUserInfos(users)
+	if err != nil {
+		log.Fatal("Failed to convert server users to API infos.", err, users)
+	}
+
+	return infos
 }
 
 func CompareServerUserInfoPointer(a *ServerUserInfo, b *ServerUserInfo) int {
@@ -87,34 +96,6 @@ func CompareServerUserInfoPointer(a *ServerUserInfo, b *ServerUserInfo) int {
 	}
 
 	return strings.Compare(a.Email, b.Email)
-}
-
-// Get server user info from a generic map (like what an API response would have).
-func ServerUserInfoFromMap(data map[string]any) *ServerUserInfo {
-	courses := data["courses"].(map[string]any)
-
-	return &ServerUserInfo{
-		Email:   data["email"].(string),
-		Name:    data["name"].(string),
-		Role:    model.GetServerUserRole(data["role"].(string)),
-		Courses: *EnrollmentInfoFromMap(courses),
-	}
-}
-
-// Get enrollment info from a generic map (like what an API response would have).
-func EnrollmentInfoFromMap(data map[string]any) *map[string]EnrollmentInfo {
-	enrollmentInfos := make(map[string]EnrollmentInfo)
-
-	for name, course := range data {
-		courseMap := course.(map[string]any)
-		enrollmentInfos[name] = EnrollmentInfo{
-			CourseID:   courseMap["id"].(string),
-			CourseName: courseMap["name"].(string),
-			Role:       model.GetCourseUserRole(courseMap["role"].(string)),
-		}
-	}
-
-	return &enrollmentInfos
 }
 
 func CompareServerUserInfo(a ServerUserInfo, b ServerUserInfo) int {

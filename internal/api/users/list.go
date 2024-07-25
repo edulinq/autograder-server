@@ -16,24 +16,24 @@ type ListResponse struct {
 }
 
 func HandleList(request *ListRequest) (*ListResponse, *core.APIError) {
-	response := ListResponse{}
-
-	users_map, err := db.GetServerUsers()
+	usersMap, err := db.GetServerUsers()
 	if err != nil {
-		return nil, core.NewUsertContextInternalError("-805", &request.APIRequestUserContext, "Failed to get server users from database.").Err(err)
+		return nil, core.NewUsertContextInternalError("-805", &request.APIRequestUserContext,
+			"Failed to get server users from database.").Err(err)
 	}
 
-	users := make([]*model.ServerUser, 0, len(users_map))
-	for _, user := range users_map {
+	users := make([]*model.ServerUser, 0, len(usersMap))
+	for _, user := range usersMap {
 		users = append(users, user)
 	}
 
-	info, err := core.NewServerUserInfos(users)
+	infos, err := core.NewServerUserInfos(users)
 	if err != nil {
-		return nil, core.NewUsertContextInternalError("-806", &request.APIRequestUserContext, "Failed to get server user infos.").Err(err)
+		return nil, core.NewUsertContextInternalError("-806", &request.APIRequestUserContext,
+			"Failed to get server user infos.").Err(err)
 	}
 
-	response.Users = info
+	response := ListResponse{infos}
 
 	return &response, nil
 }

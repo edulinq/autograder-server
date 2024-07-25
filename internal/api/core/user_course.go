@@ -51,16 +51,6 @@ func CompareCourseUserInfoPointer(a *CourseUserInfo, b *CourseUserInfo) int {
 	return strings.Compare(a.Email, b.Email)
 }
 
-// Get user info from a generic map (like what an API response would have).
-func CourseUserInfoFromMap(data map[string]any) *CourseUserInfo {
-	return &CourseUserInfo{
-		Email: data["email"].(string),
-		Name:  data["name"].(string),
-		Role:  model.GetCourseUserRole(data["role"].(string)),
-		LMSID: data["lms-id"].(string),
-	}
-}
-
 func CompareCourseUserInfo(a CourseUserInfo, b CourseUserInfo) int {
 	return strings.Compare(a.Email, b.Email)
 }
