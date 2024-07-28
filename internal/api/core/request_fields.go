@@ -49,12 +49,19 @@ type TargetCourseUser struct {
 	User  *model.CourseUser
 }
 
-// A request having a field of this type indicates that the request is targeting a specific course user.
+// A request having a field of this type indicates that the request is targeting a specific user.
 // This type serializes to/from a string.
 // If no user is specified, then the context user is the target.
-// If a user is specified, then the context user must be a grader for the course
-// (any user can acces their own resources, but higher permissions are required to access another user's resources).
+// If a user is specified, then the context user must be a server admin
+// (any user can access their own resources, but higher permissions are required to access another user's resources).
 // No error is generated if the user is not found.
+// The existence of this type in a struct also indicates that the request is at least a APIRequestUserContext.
+type TargetServerUserSelfOrAdmin struct {
+	TargetServerUser
+}
+
+// Same as TargetServerUserSelfOrAdmin, but in the context of a course user and a grader context user.
+// Therefore, the context user only has to be a grader in the context course (or the target user themself).
 // The existence of this type in a struct also indicates that the request is at least a APIRequestCourseUserContext.
 type TargetCourseUserSelfOrGrader struct {
 	TargetCourseUser
@@ -87,6 +94,11 @@ func checkRequestSpecialFields(request *http.Request, apiRequest any, endpoint s
 			}
 		} else if fieldValue.Type() == reflect.TypeOf((*TargetCourseUser)(nil)).Elem() {
 			apiErr := checkRequestTargetCourseUser(endpoint, apiRequest, i)
+			if apiErr != nil {
+				return apiErr
+			}
+		} else if fieldValue.Type() == reflect.TypeOf((*TargetServerUserSelfOrAdmin)(nil)).Elem() {
+			apiErr := checkRequestTargetServerUserSelfOrAdmin(endpoint, apiRequest, i)
 			if apiErr != nil {
 				return apiErr
 			}
@@ -127,7 +139,8 @@ func checkRequestCourseUsers(endpoint string, apiRequest any, fieldIndex int) *A
 	return nil
 }
 
-func checkRequestTargetServerUser(endpoint string, apiRequest any, fieldIndex int) *APIError {
+// The base checks for any TargetServerUser* field.
+func baseCheckRequestTargetServerUser(endpoint string, apiRequest any, fieldIndex int) (*APIRequestUserContext, *APIError) {
 	reflectValue := reflect.ValueOf(apiRequest).Elem()
 
 	fieldValue := reflectValue.Field(fieldIndex)
@@ -135,27 +148,38 @@ func checkRequestTargetServerUser(endpoint string, apiRequest any, fieldIndex in
 
 	structName := reflectValue.Type().Name()
 	fieldName := fieldValue.Type().Name()
-	jsonName := util.JSONFieldName(fieldType)
 
 	// Check the request.
 
 	userContextValue := reflectValue.FieldByName("APIRequestUserContext")
 	if !userContextValue.IsValid() || userContextValue.IsZero() {
-		return NewBareInternalError("-042", endpoint, "A request with type requiring a server user must embed APIRequestUserContext").
+		return nil, NewBareInternalError("-042", endpoint, "A request with type requiring a server user must embed APIRequestUserContext").
 			Add("request", apiRequest).
 			Add("struct-name", structName).Add("field-name", fieldType.Name).Add("field-type", fieldName)
 	}
 	userContext := userContextValue.Interface().(APIRequestUserContext)
 
 	if !fieldType.IsExported() {
-		return NewUsertContextInternalError("-043", &userContext, "Field must be exported.").
+		return nil, NewUsertContextInternalError("-043", &userContext, "Field must be exported.").
 			Add("struct-name", structName).Add("field-name", fieldType.Name).Add("field-type", fieldName)
 	}
 
-	// Wait until after the export check to get this information.
-	field := fieldValue.Interface().(TargetServerUser)
+	return &userContext, nil
+}
 
-	// Check the field.
+// Check a TargetServerUser field.
+func checkRequestTargetServerUser(endpoint string, apiRequest any, fieldIndex int) *APIError {
+	userContext, apiErr := baseCheckRequestTargetServerUser(endpoint, apiRequest, fieldIndex)
+	if apiErr != nil {
+		return apiErr
+	}
+
+	reflectValue := reflect.ValueOf(apiRequest).Elem()
+	field := reflectValue.Field(fieldIndex).Interface().(TargetServerUser)
+
+	structName := reflectValue.Type().Name()
+	fieldType := reflectValue.Type().Field(fieldIndex)
+	jsonName := util.JSONFieldName(fieldType)
 
 	if field.Email == "" {
 		return NewBadRequestError("-044", &userContext.APIRequest,
@@ -165,7 +189,7 @@ func checkRequestTargetServerUser(endpoint string, apiRequest any, fieldIndex in
 
 	user, err := db.GetServerUser(field.Email, true)
 	if err != nil {
-		return NewUsertContextInternalError("-045", &userContext, "Failed to fetch user from DB.").
+		return NewUsertContextInternalError("-045", userContext, "Failed to fetch user from DB.").
 			Add("email", field.Email).Err(err)
 	}
 
@@ -177,6 +201,47 @@ func checkRequestTargetServerUser(endpoint string, apiRequest any, fieldIndex in
 	}
 
 	reflect.ValueOf(apiRequest).Elem().Field(fieldIndex).Set(reflect.ValueOf(field))
+
+	return nil
+}
+
+func checkRequestTargetServerUserSelfOrAdmin(endpoint string, apiRequest any, fieldIndex int) *APIError {
+	return checkRequestTargetServerUserSelfOrRole(endpoint, apiRequest, fieldIndex, model.ServerRoleAdmin)
+}
+
+func checkRequestTargetServerUserSelfOrRole(endpoint string, apiRequest any, fieldIndex int, minRole model.ServerUserRole) *APIError {
+	userContext, apiErr := baseCheckRequestTargetServerUser(endpoint, apiRequest, fieldIndex)
+	if apiErr != nil {
+		return apiErr
+	}
+
+	structValue := reflect.ValueOf(apiRequest).Elem().Field(fieldIndex)
+	reflectField := structValue.FieldByName("TargetServerUser")
+
+	field := reflectField.Interface().(TargetServerUser)
+	if field.Email == "" {
+		field.Email = userContext.ServerUser.Email
+	}
+
+	// Operations not on self require higher permissions.
+	if (field.Email != userContext.ServerUser.Email) && (userContext.ServerUser.Role < minRole) {
+		return NewBadServerPermissionsError("-046", userContext, minRole, "Non-Self Target User")
+	}
+
+	user, err := db.GetServerUser(field.Email, true)
+	if err != nil {
+		return NewUsertContextInternalError("-047", userContext, "Failed to fetch user from DB.").
+			Add("email", field.Email).Err(err)
+	}
+
+	if user == nil {
+		field.Found = false
+	} else {
+		field.Found = true
+		field.User = user
+	}
+
+	reflectField.Set(reflect.ValueOf(field))
 
 	return nil
 }
@@ -448,6 +513,14 @@ func (this *TargetServerUser) UnmarshalJSON(data []byte) error {
 
 func (this TargetServerUser) MarshalJSON() ([]byte, error) {
 	return json.Marshal(this.Email)
+}
+
+func (this *TargetServerUserSelfOrAdmin) UnmarshalJSON(data []byte) error {
+	return this.TargetServerUser.UnmarshalJSON(data)
+}
+
+func (this TargetServerUserSelfOrAdmin) MarshalJSON() ([]byte, error) {
+	return this.TargetServerUser.MarshalJSON()
 }
 
 func (this *TargetCourseUser) UnmarshalJSON(data []byte) error {

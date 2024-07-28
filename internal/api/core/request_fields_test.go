@@ -15,7 +15,10 @@ import (
 	"github.com/edulinq/autograder/internal/util"
 )
 
-// Test CourseUsers, TargetServerUser, TargetCourseUser, TargetCourseUserSelfOrGrader, and TargetCourseUserSelfOrAdmin.
+// Test:
+// CourseUsers,
+// TargetServerUser, TargetServerUserSelfOrAdmin,
+// TargetCourseUser, TargetCourseUserSelfOrGrader, and TargetCourseUserSelfOrAdmin.
 // No embeded course context.
 func TestBadUsersFieldNoContext(test *testing.T) {
 	testCases := []struct {
@@ -24,6 +27,7 @@ func TestBadUsersFieldNoContext(test *testing.T) {
 	}{
 		{"-025", &struct{ Users CourseUsers }{}},
 		{"-042", &struct{ User TargetServerUser }{}},
+		{"-042", &struct{ User TargetServerUserSelfOrAdmin }{}},
 		{"-025", &struct{ User TargetCourseUser }{}},
 		{"-025", &struct{ User TargetCourseUserSelfOrGrader }{}},
 		{"-025", &struct{ User TargetCourseUserSelfOrAdmin }{}},
@@ -43,7 +47,10 @@ func TestBadUsersFieldNoContext(test *testing.T) {
 	}
 }
 
-// Test CourseUsers, TargetServerUser, TargetCourseUser, TargetCourseUserSelfOrGrader, and TargetCourseUserSelfOrAdmin.
+// Test:
+// CourseUsers,
+// TargetServerUser, TargetServerUserSelfOrAdmin,
+// TargetCourseUser, TargetCourseUserSelfOrGrader, and TargetCourseUserSelfOrAdmin.
 // Users are not exported.
 func TestBadUsersFieldNotExported(test *testing.T) {
 	testCases := []struct {
@@ -69,6 +76,17 @@ func TestBadUsersFieldNotExported(test *testing.T) {
 			"-043", &struct {
 				APIRequestUserContext
 				targetServerUser TargetServerUser
+			}{
+				APIRequestUserContext: APIRequestUserContext{
+					UserEmail: "student@test.com",
+					UserPass:  studentPass,
+				},
+			},
+		},
+		{
+			"-043", &struct {
+				APIRequestUserContext
+				targetServerUser TargetServerUserSelfOrAdmin
 			}{
 				APIRequestUserContext: APIRequestUserContext{
 					UserEmail: "student@test.com",
@@ -450,6 +468,59 @@ func testTargetCourseUserJSON[T comparable](test *testing.T, createTargetType fu
 	}
 }
 
+func TestTargetServerUserJSON(test *testing.T) {
+	createTargetType := func(targetServerUser TargetServerUser) TargetServerUser {
+		return targetServerUser
+	}
+
+	testTargetServerUserJSON(test, createTargetType)
+}
+
+func TestTargetServerUserSelfOrAdminJSON(test *testing.T) {
+	createTargetType := func(targetServerUser TargetServerUser) TargetServerUserSelfOrAdmin {
+		return TargetServerUserSelfOrAdmin{targetServerUser}
+	}
+
+	testTargetServerUserJSON(test, createTargetType)
+}
+
+func testTargetServerUserJSON[T comparable](test *testing.T, createTargetType func(TargetServerUser) T) {
+	testCases := []struct {
+		in       string
+		expected T
+	}{
+		{`""`, createTargetType(TargetServerUser{false, "", nil})},
+		{`"a"`, createTargetType(TargetServerUser{false, "a", nil})},
+		{`"student@test.com"`, createTargetType(TargetServerUser{false, "student@test.com", nil})},
+		{`"a\"b\"c"`, createTargetType(TargetServerUser{false, `a"b"c`, nil})},
+	}
+
+	for i, testCase := range testCases {
+		var target T
+		err := json.Unmarshal([]byte(testCase.in), &target)
+		if err != nil {
+			test.Errorf("Case %d: Failed to unmarshal: '%v'.", i, err)
+			continue
+		}
+
+		if testCase.expected != target {
+			test.Errorf("Case %d: Result not as expected. Expected: '%+v', Actual: '%+v'.", i, testCase.expected, target)
+			continue
+		}
+
+		out, err := util.ToJSON(target)
+		if err != nil {
+			test.Errorf("Case %d: Failed to marshal: '%v'.", i, err)
+			continue
+		}
+
+		if testCase.in != out {
+			test.Errorf("Case %d: Remarshal does not produce the same as input. Expected: '%+v', Actual: '%+v'.", i, testCase.in, out)
+			continue
+		}
+	}
+}
+
 func TestTargetCourseUserSelfOrGrader(test *testing.T) {
 	createTargetType := func(targetCourseUser TargetCourseUser) TargetCourseUserSelfOrGrader {
 		return TargetCourseUserSelfOrGrader{targetCourseUser}
@@ -598,6 +669,11 @@ func testTargetCourseUser[T comparable, V userGetter](test *testing.T,
 			continue
 		}
 
+		if testCase.permError {
+			test.Errorf("Case %d: Did not get an expected permissions error.", i)
+			continue
+		}
+
 		if !reflect.DeepEqual(testCase.expected, request.GetUser()) {
 			test.Errorf("Case %d: Result not as expected. Expcted '%+v', found '%+v'.",
 				i, testCase.expected, request.GetUser())
@@ -739,6 +815,102 @@ func TestTargetServerUser(test *testing.T) {
 					i, util.MustToJSONIndent(request.User))
 				continue
 			}
+		}
+	}
+}
+
+func TestTargetServerUserSelfOrAdmin(test *testing.T) {
+	users := db.MustGetServerUsers()
+
+	type requestType struct {
+		APIRequestUserContext
+		MinServerRoleUser
+
+		User TargetServerUserSelfOrAdmin
+	}
+
+	testCases := []struct {
+		contextUser *model.ServerUser
+		target      string
+		permError   bool
+		expected    *model.ServerUser
+	}{
+		// Self, empty.
+		{users["server-user@test.com"], "", false, users["server-user@test.com"]},
+		{users["server-creator@test.com"], "", false, users["server-creator@test.com"]},
+		{users["server-admin@test.com"], "", false, users["server-admin@test.com"]},
+		{users["server-owner@test.com"], "", false, users["server-owner@test.com"]},
+
+		// Self, email.
+		{users["server-user@test.com"], "server-user@test.com", false, users["server-user@test.com"]},
+		{users["server-creator@test.com"], "server-creator@test.com", false, users["server-creator@test.com"]},
+		{users["server-admin@test.com"], "server-admin@test.com", false, users["server-admin@test.com"]},
+		{users["server-owner@test.com"], "server-owner@test.com", false, users["server-owner@test.com"]},
+
+		// Other, bad permissions.
+		{users["server-creator@test.com"], "server-user@test.com", true, nil},
+		{users["server-creator@test.com"], "server-admin@test.com", true, nil},
+		{users["server-creator@test.com"], "server-owner@test.com", true, nil},
+
+		// Other, good permissions.
+		{users["server-admin@test.com"], "server-user@test.com", false, users["server-user@test.com"]},
+		{users["server-admin@test.com"], "server-creator@test.com", false, users["server-creator@test.com"]},
+		{users["server-admin@test.com"], "server-owner@test.com", false, users["server-owner@test.com"]},
+
+		// Not found.
+		{users["server-creator@test.com"], "ZZZ", true, nil},
+		{users["server-admin@test.com"], "ZZZ", false, nil},
+	}
+
+	for i, testCase := range testCases {
+		request := &requestType{
+			APIRequestUserContext: APIRequestUserContext{
+				UserEmail: testCase.contextUser.Email,
+				UserPass:  util.Sha256HexFromString(*testCase.contextUser.Name),
+			},
+			User: TargetServerUserSelfOrAdmin{
+				TargetServerUser{
+					Email: testCase.target,
+				},
+			},
+		}
+
+		apiErr := ValidateAPIRequest(nil, request, "")
+		if apiErr != nil {
+			if testCase.permError {
+				expectedLocator := "-046"
+				if expectedLocator != apiErr.Locator {
+					test.Errorf("Case %d: Incorrect error returned on permissions error. Expcted '%s', found '%s'.",
+						i, expectedLocator, apiErr.Locator)
+				}
+			} else {
+				test.Errorf("Case %d: Failed to validate request: '%v'.", i, apiErr)
+			}
+
+			continue
+		}
+
+		if testCase.permError {
+			test.Errorf("Case %d: Did not get an expected permissions error.", i)
+			continue
+		}
+
+		// Not found case.
+		if testCase.expected == nil {
+			if request.User.Found {
+				test.Errorf("Case %d: User found when it was not expected.", i)
+			}
+
+			continue
+		}
+
+		if !request.User.Found {
+			test.Errorf("Case %d: User not found when it was expected.", i)
+		}
+
+		if !reflect.DeepEqual(testCase.expected, request.User.User) {
+			test.Errorf("Case %d: Result not as expected. Expcted '%+v', found '%+v'.",
+				i, testCase.expected, request.User.User)
 		}
 	}
 }
