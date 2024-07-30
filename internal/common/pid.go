@@ -4,11 +4,12 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+
+	"github.com/edulinq/autograder/internal/config"
 )
 
-const (
-	pidFilePath = "/tmp/autograder.pid"
-)
+
+var pidFilePath = config.PID_PATH.Get()
 
 func CreatePIDFile() error {
 	_, err := os.Stat(pidFilePath);

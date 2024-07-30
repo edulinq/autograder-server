@@ -17,8 +17,7 @@ import (
 // Once validated, callers should feel safe calling reflection methods on this without extra checks.
 type ValidAPIRequest any
 
-var RandomNumberMap sync.Map
-
+var NonceMap sync.Map
 
 type APIRequest struct {
 	// These are not provided in JSON, they are filled in during validation.
@@ -36,10 +35,9 @@ type APIRequestUserContext struct {
 
 	UserEmail string `json:"user-email"`
 	UserPass  string `json:"user-pass"`
+	RootUserNonce string `json:"root-user-nonce"`
 
 	ServerUser *model.ServerUser `json:"-"`
-
-	FakeRootUser bool `json:"-"`
 }
 
 // Context for a request that has a course and user from that course.
@@ -62,7 +60,6 @@ type APIRequestAssignmentContext struct {
 }
 
 func (this *APIRequest) Validate(request any, endpoint string) *APIError {
-	fmt.Println("requestty: ", util.MustToJSON(request))
 	this.RequestID = util.UUID()
 	this.Endpoint = endpoint
 	this.Timestamp = common.NowTimestamp()
@@ -79,29 +76,39 @@ func (this *APIRequest) Validate(request any, endpoint string) *APIError {
 // The full request (object that this is embedded in) is also sent.
 func (this *APIRequestUserContext) Validate(request any, endpoint string) *APIError {
 	apiErr := this.APIRequest.Validate(request, endpoint)
+
 	if apiErr != nil {
 		return apiErr
 	}
+	
+	// Check for a valid nonce and skip auth if it's correct.
+	_, rootUserExists := NonceMap.LoadAndDelete(this.RootUserNonce)
 
-	if this.UserEmail == "" && !this.FakeRootUser {
-		return NewBadRequestError("-016", &this.APIRequest, "No user email specified.")
-	}
-
-	if this.UserPass == "" && !this.FakeRootUser{
-		return NewBadRequestError("-017", &this.APIRequest, "No user password specified.")
-	}
-
-	this.ServerUser, apiErr = this.Auth()
-	if apiErr != nil {
-		return apiErr
+	if this.RootUserNonce != "" {
+		if rootUserExists {
+			this.ServerUser = &model.FakeRootUser
+		} else {
+			return NewBadRequestError("-2000", &this.APIRequest, "Incorrect nonce.")
+		}
+	} else {
+		if this.UserEmail == "" {
+			return NewBadRequestError("-016", &this.APIRequest, "No user email specified.")
+		}
+	
+		if this.UserPass == "" {
+			return NewBadRequestError("-017", &this.APIRequest, "No user password specified.")
+		}
+	
+		this.ServerUser, apiErr = this.Auth()
+		if apiErr != nil {
+			return apiErr
+		}
 	}
 
 	minRole, foundRole := getMaxServerRole(request)
 	if !foundRole {
 		minRole = model.ServerRoleUser
 	}
-	fmt.Println("minRole: ", minRole)
-	fmt.Println("foundRole: ", foundRole)
 
 	if this.ServerUser.Role < minRole {
 		return NewBadServerPermissionsError("-041", this, minRole, "Base API Request")
@@ -114,6 +121,7 @@ func (this *APIRequestUserContext) Validate(request any, endpoint string) *APIEr
 // The server user will be converted into a course user to be stored within this request.
 func (this *APIRequestCourseUserContext) Validate(request any, endpoint string) *APIError {
 	apiErr := this.APIRequestUserContext.Validate(request, endpoint)
+
 	if apiErr != nil {
 		return apiErr
 	}
@@ -133,20 +141,24 @@ func (this *APIRequestCourseUserContext) Validate(request any, endpoint string) 
 			Course(this.CourseID)
 	}
 
-	this.User, err = this.ServerUser.ToCourseUser(this.Course.ID)
-	if err != nil {
-		return NewInternalError("-039", this, "Unable to convert server user to course user.").Err(err)
-	}
-
-	if this.User == nil {
-		return NewBadRequestError("-040", &this.APIRequest, fmt.Sprintf("User '%s' is not enolled in course '%s'.", this.UserEmail, this.CourseID))
+	if this.RootUserNonce != "" {
+		this.User = &model.FakeRootCourseUser
+	} else {
+		this.User, err = this.ServerUser.ToCourseUser(this.Course.ID)
+		if err != nil {
+			return NewInternalError("-039", this, "Unable to convert server user to course user.").Err(err)
+		}
+	
+		if this.User == nil {
+			return NewBadRequestError("-040", &this.APIRequest, fmt.Sprintf("User '%s' is not enolled in course '%s'.", this.UserEmail, this.CourseID))
+		}
 	}
 
 	minRole, foundRole := getMaxCourseRole(request)
 	if !foundRole {
 		return NewInternalError("-019", this, "No role found for request. All course-based request structs require a minimum role.")
 	}
-
+	
 	if this.User.Role < minRole {
 		return NewBadCoursePermissionsError("-020", this, minRole, "Base API Request")
 	}
@@ -185,39 +197,6 @@ func (this *APIRequestAssignmentContext) Validate(request any, endpoint string) 
 // Take in a pointer to an API request.
 // Ensure this request has a type of known API request embedded in it and validate that embedded request.
 func ValidateAPIRequest(request *http.Request, apiRequest any, endpoint string) *APIError {
-    number := request.FormValue("number")
-	numberInMap, exists := RandomNumberMap.Load(number)
-	if !exists {
-		fmt.Println("Failed to load random number from map")
-	}
-
-	if (numberInMap == number) {
-		reflectPointer := reflect.ValueOf(apiRequest)
-		fmt.Println("reflect Pointer: ", reflectPointer.String())
-
-        if reflectPointer.Kind() == reflect.Pointer {
-            reflectValue := reflectPointer.Elem()
-			fmt.Println("Reflect Value: ", reflectValue.String())
-            if reflectValue.Kind() == reflect.Struct {
-                // Iterate through the fields of the struct to find APIRequestAssignmentContext
-                for i := 0; i < reflectValue.NumField(); i++ {
-                    field := reflectValue.Field(i)
-					fmt.Println("Field: ", field.String())
-					fmt.Println("reflect of context: ", reflect.TypeOf(APIRequestAssignmentContext{}))
-					fmt.Println("Field type: ", field.Type().String())
-					fmt.Println("Field addr: ", field.Addr().Interface())
-                    if field.Type() == reflect.TypeOf(APIRequestAssignmentContext{}) {
-                        assignmentContext := field.Addr().Interface().(*APIRequestAssignmentContext)
-						fmt.Println("Assignment Context: ", util.MustToJSON(assignmentContext))
-                        assignmentContext.FakeRootUser = true
-                        break
-                    }
-                }
-            }
-        }
-
-	}
-
 	reflectPointer := reflect.ValueOf(apiRequest)
 	if reflectPointer.Kind() != reflect.Pointer {
 		return NewBareInternalError("-023", endpoint, "ValidateAPIRequest() must be called with a pointer.").
@@ -267,8 +246,8 @@ func CleanupAPIrequest(apiRequest ValidAPIRequest) error {
 func validateRequestStruct(request any, endpoint string) (bool, *APIError) {
 	// Check all the fields (including embedded ones) for structures that we recognize as requests.
 	foundRequestStruct := false
-
 	reflectValue := reflect.ValueOf(request).Elem()
+
 	if reflectValue.Kind() != reflect.Struct {
 		return false, NewBareInternalError("-031", endpoint, "Request's type must be a struct.").
 			Add("kind", reflectValue.Kind().String())
@@ -303,7 +282,6 @@ func validateRequestStruct(request any, endpoint string) (bool, *APIError) {
 			// APIRequestCourseUserContext
 			courseUserRequest := fieldValue.Interface().(APIRequestCourseUserContext)
 			foundRequestStruct = true
-
 			apiErr := courseUserRequest.Validate(request, endpoint)
 			if apiErr != nil {
 				return false, apiErr

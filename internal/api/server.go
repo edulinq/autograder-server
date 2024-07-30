@@ -1,19 +1,15 @@
 package api
 
 import (
-	"crypto/rand"
+	"bytes"
 	"encoding/binary"
 	"encoding/json"
 	"fmt"
-	"math/big"
 	"net"
 	"net/http"
 	"os"
 	"os/signal"
-	"reflect"
-	"strconv"
 	"syscall"
-	"time"
 
 	// "time"
 
@@ -27,7 +23,12 @@ import (
 	// "github.com/edulinq/autograder/internal/util"
 )
 var API_REQUEST_CONTENT_KEY = "content"
-var ROOT_USER_NUMBER_KEY = "number"
+var AUTHENTICATION_NONCE = "nonce"
+var port = config.WEB_PORT.Get()
+var socketPath = config.UNIX_SOCKET_PATH.Get();
+var pidPath = config.PID_PATH.Get();
+
+
 
 // Run the standard API and Unix server.
 func StartServer() error {
@@ -54,6 +55,8 @@ func StartServer() error {
 func waitForShutdownSignal() <-chan os.Signal {
     serverShutdownChannel := make(chan os.Signal, 1)
     signal.Notify(serverShutdownChannel, os.Interrupt, syscall.SIGTERM)
+	os.Remove(socketPath)
+	// os.Remove(pidPath)
 
     return serverShutdownChannel
 }
@@ -66,31 +69,22 @@ func StartUnixServer() {
 }
 
 func startAPIServer() error {
-	var port = config.WEB_PORT.Get()
 
 	log.Info("API Server Started", log.NewAttr("port", port))
 	return http.ListenAndServe(fmt.Sprintf(":%d", port), core.GetRouteServer(GetRoutes()));
 }
 
 func startUnixServer() error {
-	var socketPath = config.UNIX_SOCKET.Get();
-
 	unixListener, err := net.Listen("unix", socketPath)
 	if err != nil {
 		log.Fatal("Error creating Unix socket. ", err)
 	}
 
-	log.Info("Unix Server Started", log.NewAttr("unix_socket", socketPath))
-	// go func() {
-	// 	<-waitForShutdownSignal()
-	// 	unixListener.Close()
-	// 	os.Remove(socketPath)
-	// }()
+	defer unixListener.Close()
 
-	// defer unixListener.Close()
+	log.Info("Unix Server Started", log.NewAttr("unix_socket", socketPath))
 	defer os.Remove(socketPath)
 	
-
 	for {
 		connection, err := unixListener.Accept()
 		if (err != nil) {
@@ -100,20 +94,11 @@ func startUnixServer() error {
 	}
 }
 
-func handleConnection(conn net.Conn) {
-	go func() {
-		http.ListenAndServe("127.0.0.1:8080", core.GetRouteServer(GetRoutes()))
-	}()
-	time.Sleep(1 * time.Second)
-
-	defer func() {
-		fmt.Println("Closing connection")
-	}() 
-	
+func handleConnection(conn net.Conn) {	
 	sizeBuffer := make([]byte, 8)
 	_, err := conn.Read(sizeBuffer)
 	if err != nil {
-		log.Fatal("Failed to read size of the payload. ", err)
+		log.Fatal("Failed to read size of the payload.", err)
 	}
 
 	size := binary.BigEndian.Uint64(sizeBuffer)
@@ -125,93 +110,63 @@ func handleConnection(conn net.Conn) {
 		return
 	}
 
+	randomNumber, err := util.RandHex(64)
+	if err != nil {
+		log.Error("Failed to generate random number.", err)
+	}
 
-	var request any
-	if err := json.Unmarshal(jsonBuffer, &request); err != nil {
-		fmt.Println("Error unmarshalling JSON:", err)
+
+	var payload map[string]interface{}
+	err = json.Unmarshal(jsonBuffer, &payload)
+	if err != nil {
+		log.Error("Failed to unmarshal the JSON buffer.", err)
 		return
 	}
 
-	randomNumber, err := rand.Int(rand.Reader, big.NewInt(10000000))
+	endpoint, ok := payload["endpoint"].(string)
+	if !ok {
+		log.Error("Endpoint not found or invalid in the request")
+	}
+
+
+	content, ok := payload["request"].(map[string]interface{})
+	if !ok {
+		log.Error("Request content not found or invalid in the request")
+	}
+
+	content["root-user-nonce"] = randomNumber
+
+	form := make(map[string]string)
+	formContent, err := json.Marshal(content)
 	if err != nil {
-		log.Fatal("Failed to generate random number.", err)
+		log.Error("Failed to marshal form content to JSON.", err)
+		return
 	}
+	form[API_REQUEST_CONTENT_KEY] = string(formContent)
 
-	randomNumberString := strconv.Itoa(int(randomNumber.Int64()))
+	core.NonceMap.Store(randomNumber, true)
+	defer core.NonceMap.Delete(randomNumber)
 
-	core.RandomNumberMap.Store(randomNumberString, randomNumberString)
-
-	// defer core.RandomNumberMap.Delete(randomNumber)
-
-	fmt.Println("type: ", reflect.TypeOf(strconv.Itoa(int(randomNumber.Int64()))))
-	form := map[string]string{
-		API_REQUEST_CONTENT_KEY: util.MustToJSON(request),
-		ROOT_USER_NUMBER_KEY: randomNumberString,
-	}
-
-	// fmt.Println("form: ", util.MustToJSONIndent(form))
-
-	url := "http://127.0.0.1:8080" + core.NewEndpoint(`submissions/peek`)
+	url := "http://127.0.0.1" + fmt.Sprintf(":%d", port) + endpoint
 
 	response, err := common.PostNoCheck(url, form)
 	if (err != nil) {
-		fmt.Println("Error: ", err)
+		log.Error("Failed to POST an API request.", err)
 	}
-	fmt.Println("response: ", response)
 
-	// Echo the data back to the connection.
-	_, err = conn.Write([]byte("Request received"))
+	jsonBytes := []byte(response)
+	responseBuffer := new(bytes.Buffer)
+	size = uint64(len(jsonBytes))
+
+	err = binary.Write(responseBuffer, binary.BigEndian, size)
+	if err != nil {
+		log.Error("Failed to write response size to buffer.", err)
+	}
+
+	responseBuffer.Write(jsonBytes)
+
+	_, err = conn.Write(responseBuffer.Bytes())
 	if err != nil {
 		log.Fatal("Failed to echo back data.", err)
 	}
 }
-
-// func handleGenerate(conn net.Conn) {
-// 	randomNumber, err := rand.Int(rand.Reader, big.NewInt(10000000))
-// 	if err != nil {
-// 		log.Fatal("Failed to generate random number.", err)
-// 	}
-
-// 	numberBytes := randomNumber.Bytes()
-// 	length := uint64(len(numberBytes))
-
-// 	buffer := new(bytes.Buffer)
-
-
-// 	// Send the length of the number
-// 	err = binary.Write(buffer, binary.BigEndian, length)
-// 	if err != nil {
-// 		log.Fatal("Failed to write length to connection.", err)
-// 	}
-
-// 	buffer.Write(numberBytes)
-
-// 	// Send the number itself
-// 	_, err = conn.Write(buffer.Bytes())
-// 	if err != nil {
-// 		log.Fatal("Failed to write number to connection.", err)
-// 	}
-// }
-
-// func handleValidate(conn net.Conn, request map[string]string) {
-// 	value := request["value"]
-// 	fmt.Println("value in validate: ", value)
-
-
-// 	// value, err := strconv.Atoi(request["value"])
-// 	// if err != nil {
-// 	// 	log.Error("Invalid value:", err)
-// 	// 	return
-// 	// }
-
-// 	// expectedValue, exists := RandomNumberMap[key]
-// 	// response := map[string]string{"result": "failure"}
-// 	// if exists && expectedValue.Cmp(big.NewInt(int64(value))) == 0 {
-// 	// 	response["result"] = "success"
-// 	// }
-
-// 	// encoder := json.NewEncoder(conn)
-// 	// if err := encoder.Encode(response); err != nil {
-// 	// 	log.Error("Encode error:", err)
-// 	// }
-// }

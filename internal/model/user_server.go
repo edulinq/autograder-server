@@ -42,8 +42,9 @@ type ServerUser struct {
 }
 
 var FakeRootUser = ServerUser{
-    Email: "root",
-    Role:  ServerRoleRoot,
+	Email: "rootUser",
+	Role:  ServerRoleRoot,
+
 }
 
 type UserCourseInfo struct {
@@ -96,7 +97,7 @@ func (this *ServerUser) Validate() error {
 	if this.CourseInfo == nil {
 		this.CourseInfo = make(map[string]*UserCourseInfo, 0)
 	}
-
+	
 	newCourseInfo := make(map[string]*UserCourseInfo, len(this.CourseInfo))
 	for courseID, info := range this.CourseInfo {
 		newCourseID, err := common.ValidateID(strings.TrimSpace(courseID))
@@ -165,7 +166,7 @@ func (this *ServerUser) ToCourseUser(courseID string) (*CourseUser, error) {
 		Name:  this.Name,
 		Role:  info.Role,
 		LMSID: info.LMSID,
-	}
+	}	
 
 	return courseUser, courseUser.Validate()
 }
