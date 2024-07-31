@@ -81,7 +81,7 @@ func (this *APIRequestUserContext) Validate(request any, endpoint string) *APIEr
 		return apiErr
 	}
 	
-	// Check for a valid nonce and skip auth if it's correct.
+	// Check for a valid nonce and skip auth if it's valid.
 	_, rootUserExists := NonceMap.LoadAndDelete(this.RootUserNonce)
 
 	if this.RootUserNonce != "" {

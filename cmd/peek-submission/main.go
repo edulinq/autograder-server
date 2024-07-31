@@ -11,13 +11,9 @@ import (
 
 	"github.com/edulinq/autograder/internal/api/core"
 	"github.com/edulinq/autograder/internal/api/submissions"
-	"github.com/edulinq/autograder/internal/util"
-
-	// "github.com/edulinq/autograder/internal/api/core"
-	// "github.com/edulinq/autograder/internal/api/submissions"
 	"github.com/edulinq/autograder/internal/config"
 	"github.com/edulinq/autograder/internal/log"
-	// "github.com/edulinq/autograder/internal/util"
+	"github.com/edulinq/autograder/internal/util"
 )
 
 var args struct {
@@ -27,7 +23,6 @@ var args struct {
 
 	CourseID         string `help:"ID of the course." arg:""`
 	AssignmentID     string `help:"ID of the assignment." arg:""`
-
 }
 
 func main() {
@@ -37,14 +32,14 @@ func main() {
 
 	err := config.HandleConfigArgs(args.ConfigArgs)
 	if err != nil {
-		log.Fatal("Could not load config options.", err)
+		log.Fatal("Failed to load config options.", err)
 	}
 
 	socketPath := config.UNIX_SOCKET_PATH.Get();
 
 	conn, err := net.Dial("unix", socketPath)
 	if (err != nil) {
-		log.Fatal("Failed to dial the unix socket. ", err)
+		log.Fatal("Failed to dial the unix socket.", err)
 		os.Exit(1)
 	}
 	defer conn.Close()
@@ -62,7 +57,6 @@ func main() {
 		AssignmentID: args.AssignmentID,
 	}
 
-
 	request := map[string]interface{}{
 		"endpoint":                 core.NewEndpoint(`submissions/peek`),
 		"request":                  submissions.PeekRequest{
@@ -71,41 +65,37 @@ func main() {
 			TargetSubmission: args.TargetSubmission,
 		},
 	}
-	// request := submissions.PeekRequest{
-	// 	APIRequestAssignmentContext: assignmentContext,
-	// 	TargetUser:       targetUser,
-	// 	TargetSubmission: args.TargetSubmission,
-	// }
 
 	jsonRequest := util.MustToJSONIndent(request)
 	jsonBytes := []byte(jsonRequest)
-	buffer := new(bytes.Buffer)
+	requestBuffer := new(bytes.Buffer)
 	size := uint64(len(jsonBytes))
 
-	err = binary.Write(buffer, binary.BigEndian, size)
+	err = binary.Write(requestBuffer, binary.BigEndian, size)
 	if err != nil {
-		log.Fatal("Failed to write message size to buffer.", err)
+		log.Fatal("Failed to write message size to the request buffer.", err)
 	}
 
-	buffer.Write(jsonBytes)
+	requestBuffer.Write(jsonBytes)
 
-	_, err = conn.Write(buffer.Bytes())
+	_, err = conn.Write(requestBuffer.Bytes())
 	if (err != nil) {
-		log.Fatal("Failed to send request to the server.", err)
+		log.Fatal("Failed to write the request buffer to the unix server.", err)
 	}
 
 	sizeBuffer := make([]byte, 8)
 	_, err = conn.Read(sizeBuffer)
 	if err != nil {
-		log.Error("Failed to read the size of the payload.", err)
+		log.Error("Failed to read the size of the response buffer.", err)
 	}
 
 	size = binary.BigEndian.Uint64(sizeBuffer)
 
 	responseBuffer := make([]byte, size)
-	response, err := conn.Read(responseBuffer)
+	_, err = conn.Read(responseBuffer)
 	if (err != nil) {
-		log.Fatal("Failed to read response.", err)
+		log.Fatal("Failed to read the response.", err)
 	}
-	fmt.Println("response client: ", string(responseBuffer[:response]))
+
+	fmt.Println(string(responseBuffer))
 }
