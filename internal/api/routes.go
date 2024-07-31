@@ -7,8 +7,8 @@ import (
 	"github.com/edulinq/autograder/internal/api/core"
 	"github.com/edulinq/autograder/internal/api/courses/assignments"
 	"github.com/edulinq/autograder/internal/api/lms"
+	"github.com/edulinq/autograder/internal/api/server/users"
 	"github.com/edulinq/autograder/internal/api/submissions"
-	"github.com/edulinq/autograder/internal/api/users"
 )
 
 var baseRoutes = []*core.Route{

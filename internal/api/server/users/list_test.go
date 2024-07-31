@@ -37,7 +37,7 @@ func TestList(test *testing.T) {
 			"user-pass":  util.Sha256HexFromString(*usersMap[testCase.email].Name),
 		}
 
-		response := core.SendTestAPIRequest(test, core.NewEndpoint(`users/list`), fields)
+		response := core.SendTestAPIRequest(test, core.NewEndpoint(`server/users/list`), fields)
 		if !response.Success {
 			if testCase.permError {
 				expectedLocator := "-041"
