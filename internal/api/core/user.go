@@ -10,57 +10,19 @@ import (
 	"github.com/edulinq/autograder/internal/model"
 )
 
-type UserInfoType int
+type UserInfoType string
 
 const (
-	BaseUserInfoType UserInfoType = iota
-	ServerUserInfoType
-	CourseUserInfoType
+	ServerUserInfoType = "ServerType"
+	CourseUserInfoType = "CourseType"
 )
-
-// UserInfoInterface defines the methods that all user types must implement.
-type UserInfoInterface interface {
-	GetType() UserInfoType
-}
 
 // An API-safe representation of any user.
 // UserInfo is the superclass that holds reference to any UserInfoInterface and basic user info.
 type UserInfo struct {
-	Email string            `json:"email"`
-	Name  string            `json:"name"`
-	Info  UserInfoInterface `json:"-"`
-}
-
-func NewUserInfo(email string, name string, info *UserInfoInterface) *UserInfo {
-	return &UserInfo{
-		Email: email,
-		Name:  name,
-		Info:  *info,
-	}
-}
-
-func (userInfo *UserInfo) PrintType() {
-	fmt.Printf("\nUserInfo type: '%d'.\n", userInfo.Info.GetType())
-}
-
-func CompareUserInfoPointer(a *UserInfo, b *UserInfo) int {
-	if a == b {
-		return 0
-	}
-
-	if a == nil {
-		return 1
-	}
-
-	if b == nil {
-		return -1
-	}
-
-	return strings.Compare(a.Email, b.Email)
-}
-
-func CompareUserInfo(a UserInfo, b UserInfo) int {
-	return strings.Compare(a.Email, b.Email)
+	Type  UserInfoType `json:"type"`
+	Email string       `json:"email"`
+	Name  string       `json:"name"`
 }
 
 // An API-safe representation of a server user.
@@ -83,16 +45,13 @@ func (serverUserInfo ServerUserInfo) GetType() UserInfoType {
 func NewServerUserInfo(user *model.ServerUser) (*ServerUserInfo, error) {
 	info := &ServerUserInfo{
 		UserInfo: UserInfo{
+			Type:  ServerUserInfoType,
 			Email: user.Email,
 			Name:  user.GetDisplayName(),
-			Info:  nil,
 		},
 		Role:    user.Role,
 		Courses: make(map[string]EnrollmentInfo, len(user.CourseInfo)),
 	}
-
-	// Set the Info field to the ServerUserInfo instance itself.
-	info.Info = info
 
 	for courseID, courseInfo := range user.CourseInfo {
 		course, err := db.GetCourse(courseID)
@@ -157,11 +116,11 @@ func CompareServerUserInfoPointer(a *ServerUserInfo, b *ServerUserInfo) int {
 		return -1
 	}
 
-	return CompareUserInfoPointer(&a.UserInfo, &b.UserInfo)
+	return strings.Compare(a.Email, b.Email)
 }
 
-func CompareServerUserInfo(a ServerUserInfo, b ServerUserInfo) int {
-	return CompareUserInfo(a.UserInfo, b.UserInfo)
+func CompareServerUserInfo(a ServerUserInfo, b *ServerUserInfo) int {
+	return strings.Compare(a.Email, b.Email)
 }
 
 // An API-safe representation of a course user.
@@ -174,16 +133,13 @@ type CourseUserInfo struct {
 func NewCourseUserInfo(user *model.CourseUser) *CourseUserInfo {
 	info := &CourseUserInfo{
 		UserInfo: UserInfo{
+			Type:  CourseUserInfoType,
 			Email: user.Email,
 			Name:  user.GetDisplayName(),
-			Info:  nil,
 		},
 		Role:  user.Role,
 		LMSID: user.GetLMSID(),
 	}
-
-	// Set the Info field to the CourseUserInfo instance itself.
-	info.Info = info
 
 	return info
 }
@@ -216,9 +172,9 @@ func CompareCourseUserInfoPointer(a *CourseUserInfo, b *CourseUserInfo) int {
 		return -1
 	}
 
-	return CompareUserInfoPointer(&a.UserInfo, &b.UserInfo)
+	return strings.Compare(a.Email, b.Email)
 }
 
 func CompareCourseUserInfo(a CourseUserInfo, b CourseUserInfo) int {
-	return CompareUserInfo(a.UserInfo, b.UserInfo)
+	return strings.Compare(a.Email, b.Email)
 }
