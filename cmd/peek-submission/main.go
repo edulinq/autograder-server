@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"encoding/binary"
+	"encoding/json"
 	"fmt"
 	"net"
 	"os"
@@ -97,5 +98,17 @@ func main() {
 		log.Fatal("Failed to read the response.", err)
 	}
 
-	fmt.Println(string(responseBuffer))
+	var response core.APIResponse
+	err = json.Unmarshal(responseBuffer, &response)
+	if err != nil {
+		log.Error("Failed to unmarshal the API response.", err)
+		return
+	}
+
+	fmt.Println("response: ", response)
+
+	var responseContent submissions.PeekResponse
+	util.MustJSONFromString(util.MustToJSON(response.Content), &responseContent)
+
+	fmt.Println(util.MustToJSONIndent(responseContent))
 }

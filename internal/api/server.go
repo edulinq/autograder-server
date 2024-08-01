@@ -15,7 +15,6 @@ import (
 	"github.com/edulinq/autograder/internal/common"
 	"github.com/edulinq/autograder/internal/config"
 	"github.com/edulinq/autograder/internal/log"
-	"github.com/edulinq/autograder/internal/model"
 	"github.com/edulinq/autograder/internal/util"
 )
 var API_REQUEST_CONTENT_KEY = "content"
@@ -66,8 +65,9 @@ func StartUnixServer() {
 }
 
 func startAPIServer() error {
-	log.Info("API Server Started", log.NewAttr("port", port))
 	defer os.Remove(pidPath)
+
+	log.Info("API Server Started", log.NewAttr("port", port))
 	return http.ListenAndServe(fmt.Sprintf(":%d", port), core.GetRouteServer(GetRoutes()));
 }
 
@@ -148,32 +148,8 @@ func handleConnection(conn net.Conn) {
 		log.Error("Failed to POST an API request.", err)
 	}
 
-	// Convert the json response text into a map.
-	var response map[string]interface{}
-	err = json.Unmarshal([]byte(responseText), &response)
-	if err != nil {
-		log.Error("Failed to unmarshal the API response.", err)
-	}
-
-	content = response["content"].(map[string]interface{})
-	submissionResult := content["submission-result"].(map[string]interface{})
-
-	// Convert the submission result to JSON bytes to be used store the grading info.
-	submissionResultJSON, err := json.Marshal(submissionResult)
-	if err != nil {
-		log.Error("Failed to marshal the submission result json.", err)
-	}
-
-	// Convert the JSON submission result into a GradingInfo struct.
-	var gradingInfo model.GradingInfo
-	err = json.Unmarshal(submissionResultJSON, &gradingInfo)
-	if err != nil {
-		log.Error("Failed to unmarshal the submission result json.", err)
-	}
-
-	responseText = gradingInfo.Report()
-	jsonBytes := []byte(responseText)
-	size = uint64(len(jsonBytes))
+	jsonResponseBytes := []byte(responseText)
+	size = uint64(len(jsonResponseBytes))
 	responseBuffer := new(bytes.Buffer)
 
 	err = binary.Write(responseBuffer, binary.BigEndian, size)
@@ -181,7 +157,7 @@ func handleConnection(conn net.Conn) {
 		log.Error("Failed to write response size to response buffer.", err)
 	}
 
-	responseBuffer.Write(jsonBytes)
+	responseBuffer.Write(jsonResponseBytes)
 
 	_, err = conn.Write(responseBuffer.Bytes())
 	if err != nil {
