@@ -24,7 +24,7 @@ func TestNewUserInfos(test *testing.T) {
 		serverExpected []*ServerUserInfo
 		courseExpected []*CourseUserInfo
 	}{
-		// Server User Comparisons.
+		// Compare ServerUserInfos.
 		{
 			false,
 			[]*ServerUserInfo{
@@ -137,7 +137,7 @@ func TestNewUserInfos(test *testing.T) {
 			nil,
 		},
 
-		// Course User Comparisons.
+		// Compare CourseUserInfos.
 		{
 			true,
 			nil,
