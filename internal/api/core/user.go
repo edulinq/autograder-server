@@ -18,7 +18,6 @@ const (
 )
 
 // An API-safe representation of any user.
-// UserInfo is the superclass that holds reference to any UserInfoInterface and basic user info.
 type UserInfo struct {
 	Type  UserInfoType `json:"type"`
 	Email string       `json:"email"`
@@ -130,6 +129,10 @@ type CourseUserInfo struct {
 	LMSID string               `json:"lms-id"`
 }
 
+func (courseUserInfo CourseUserInfo) GetType() UserInfoType {
+	return CourseUserInfoType
+}
+
 func NewCourseUserInfo(user *model.CourseUser) *CourseUserInfo {
 	info := &CourseUserInfo{
 		UserInfo: UserInfo{
@@ -142,10 +145,6 @@ func NewCourseUserInfo(user *model.CourseUser) *CourseUserInfo {
 	}
 
 	return info
-}
-
-func (courseUserInfo CourseUserInfo) GetType() UserInfoType {
-	return CourseUserInfoType
 }
 
 func NewCourseUserInfos(users []*model.CourseUser) []*CourseUserInfo {
