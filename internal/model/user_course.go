@@ -1,11 +1,11 @@
 package model
 
 import (
-    "fmt"
-    "strings"
+	"fmt"
+	"strings"
 
-    "github.com/edulinq/autograder/internal/log"
-    "github.com/edulinq/autograder/internal/util"
+	"github.com/edulinq/autograder/internal/log"
+	"github.com/edulinq/autograder/internal/util"
 )
 
 var COURSE_USER_ROW_COLUMNS []string = []string{"email", "name", "role", "lms-id"}
@@ -14,97 +14,97 @@ var COURSE_USER_ROW_COLUMNS []string = []string{"email", "name", "role", "lms-id
 // They only contain a users information that is relevant to the course.
 // Pointer fields indicate optional fields.
 type CourseUser struct {
-    Email string         `json:"email"`
-    Name  *string        `json:"name"`
-    Role  CourseUserRole `json:"role"`
-    LMSID *string        `json:"lms-id"`
+	Email string         `json:"email"`
+	Name  *string        `json:"name"`
+	Role  CourseUserRole `json:"role"`
+	LMSID *string        `json:"lms-id"`
 }
 
 var FakeRootCourseUser = CourseUser{
-    Email: "rootUser",
-    Role:  CourseRoleOwner,
+	Email: "rootUser",
+	Role:  CourseRoleOwner,
 }
 
 func NewCourseUser(email string, name *string, role CourseUserRole, lmsID *string) (*CourseUser, error) {
-    courseUser := &CourseUser{
-        Email: email,
-        Name:  name,
-        Role:  role,
-        LMSID: lmsID,
-    }
+	courseUser := &CourseUser{
+		Email: email,
+		Name:  name,
+		Role:  role,
+		LMSID: lmsID,
+	}
 
-    return courseUser, courseUser.Validate()
+	return courseUser, courseUser.Validate()
 }
 
 func (this *CourseUser) Validate() error {
-    this.Email = strings.TrimSpace(this.Email)
-    if this.Email == "" {
-        return fmt.Errorf("User email is empty.")
-    }
+	this.Email = strings.TrimSpace(this.Email)
+	if this.Email == "" {
+		return fmt.Errorf("User email is empty.")
+	}
 
-    if this.Name != nil {
-        name := strings.TrimSpace(*this.Name)
-        this.Name = &name
-    }
+	if this.Name != nil {
+		name := strings.TrimSpace(*this.Name)
+		this.Name = &name
+	}
 
-    if this.Role == CourseRoleUnknown {
-        return fmt.Errorf("User '%s' has an unknown role. All users must have a definite role.", this.Email)
-    }
+	if this.Role == CourseRoleUnknown {
+		return fmt.Errorf("User '%s' has an unknown role. All users must have a definite role.", this.Email)
+	}
 
-    if this.LMSID != nil {
-        lmsID := strings.TrimSpace(*this.LMSID)
-        this.LMSID = &lmsID
-    }
+	if this.LMSID != nil {
+		lmsID := strings.TrimSpace(*this.LMSID)
+		this.LMSID = &lmsID
+	}
 
-    return nil
+	return nil
 }
 
 func (this *CourseUser) LogValue() []*log.Attr {
-    return []*log.Attr{log.NewUserAttr(this.Email)}
+	return []*log.Attr{log.NewUserAttr(this.Email)}
 }
 
 func (this *CourseUser) GetName(fallback bool) string {
-    name := ""
+	name := ""
 
-    if this.Name != nil {
-        name = *this.Name
-    }
+	if this.Name != nil {
+		name = *this.Name
+	}
 
-    if fallback && (name == "") {
-        name = this.Email
-    }
+	if fallback && (name == "") {
+		name = this.Email
+	}
 
-    return name
+	return name
 }
 
 func (this *CourseUser) GetDisplayName() string {
-    return this.GetName(true)
+	return this.GetName(true)
 }
 
 // Get a string (not pointer) representation of this user's LMS ID.
 func (this *CourseUser) GetLMSID() string {
-    if this.LMSID == nil {
-        return ""
-    }
+	if this.LMSID == nil {
+		return ""
+	}
 
-    return *this.LMSID
+	return *this.LMSID
 }
 
 func (this *CourseUser) ToServerUser(courseID string) (*ServerUser, error) {
-    serverUser := &ServerUser{
-        Email:      this.Email,
-        Name:       this.Name,
-        CourseInfo: map[string]*UserCourseInfo{courseID: &UserCourseInfo{Role: this.Role, LMSID: this.LMSID}},
-    }
+	serverUser := &ServerUser{
+		Email:      this.Email,
+		Name:       this.Name,
+		CourseInfo: map[string]*UserCourseInfo{courseID: &UserCourseInfo{Role: this.Role, LMSID: this.LMSID}},
+	}
 
-    return serverUser, serverUser.Validate()
+	return serverUser, serverUser.Validate()
 }
 
 func (this *CourseUser) MustToRow() []string {
-    return []string{
-        this.Email,
-        util.PointerToString(this.Name),
-        this.Role.String(),
-        util.PointerToString(this.LMSID),
-    }
+	return []string{
+		this.Email,
+		util.PointerToString(this.Name),
+		this.Role.String(),
+		util.PointerToString(this.LMSID),
+	}
 }
