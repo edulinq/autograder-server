@@ -17,7 +17,7 @@ const (
 	CourseUserInfoType = "CourseType"
 )
 
-// An API-safe representation of any user.
+// These fields must be embedded into any API-safe representation of a user.
 type UserInfo struct {
 	Type  UserInfoType `json:"type"`
 	Email string       `json:"email"`
@@ -35,10 +35,6 @@ type EnrollmentInfo struct {
 	CourseID   string               `json:"id"`
 	CourseName string               `json:"name"`
 	Role       model.CourseUserRole `json:"role"`
-}
-
-func (serverUserInfo ServerUserInfo) GetType() UserInfoType {
-	return ServerUserInfoType
 }
 
 func NewServerUserInfo(user *model.ServerUser) (*ServerUserInfo, error) {
@@ -127,10 +123,6 @@ type CourseUserInfo struct {
 	UserInfo
 	Role  model.CourseUserRole `json:"role"`
 	LMSID string               `json:"lms-id"`
-}
-
-func (courseUserInfo CourseUserInfo) GetType() UserInfoType {
-	return CourseUserInfoType
 }
 
 func NewCourseUserInfo(user *model.CourseUser) *CourseUserInfo {
