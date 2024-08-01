@@ -87,7 +87,7 @@ func (this *APIRequestUserContext) Validate(request any, endpoint string) *APIEr
 		if rootUserExists {
 			this.ServerUser = &model.FakeRootUser
 		} else {
-			return NewBadRequestError("-040", &this.APIRequest, "Incorrect nonce.")
+			return NewBadRequestError("-048", &this.APIRequest, "Incorrect nonce.")
 		}
 	} else {
 		if this.UserEmail == "" {
@@ -120,7 +120,6 @@ func (this *APIRequestUserContext) Validate(request any, endpoint string) *APIEr
 // The server user will be converted into a course user to be stored within this request.
 func (this *APIRequestCourseUserContext) Validate(request any, endpoint string) *APIError {
 	apiErr := this.APIRequestUserContext.Validate(request, endpoint)
-
 	if apiErr != nil {
 		return apiErr
 	}
