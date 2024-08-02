@@ -52,13 +52,17 @@ func waitForShutdownSignal() <-chan os.Signal {
 
 	signal.Notify(serverShutdownChannel, os.Interrupt, syscall.SIGTERM)
 
-	defer os.Remove(socketPath)
-	defer os.Remove(pidPath)
-
 	return serverShutdownChannel
 }
 
 func StartUnixServer() {
+	defer func() {
+		err := os.Remove(socketPath)
+		if err != nil {
+			log.Error("Failed to remove the unix socket file path.", err)
+		}
+	}()
+
 	err := startUnixServer()
 	if err != nil {
 		log.Fatal("Failed to start the Unix server.", err)
@@ -66,7 +70,12 @@ func StartUnixServer() {
 }
 
 func startAPIServer() error {
-	defer os.Remove(pidPath)
+	defer func() {
+		err := os.Remove(pidPath)
+		if err != nil {
+			log.Error("Failed to remove the PID file path.", err)
+		}
+	}()
 
 	log.Info("API Server Started", log.NewAttr("port", port))
 	return http.ListenAndServe(fmt.Sprintf(":%d", port), core.GetRouteServer(GetRoutes()))
@@ -79,7 +88,6 @@ func startUnixServer() error {
 	}
 
 	defer unixListener.Close()
-	defer os.Remove(socketPath)
 
 	log.Info("Unix Server Started", log.NewAttr("unix_socket", socketPath))
 

@@ -2,8 +2,6 @@ package main
 
 import (
 	"os"
-	"os/signal"
-	"syscall"
 
 	"github.com/alecthomas/kong"
 
@@ -32,24 +30,6 @@ func main() {
 	if err != nil {
 		log.Fatal("Could not create PID file.", err)
 	}
-
-	defer func() {
-		err := common.RemovePIDFile()
-		if err != nil {
-			log.Fatal("Could not remove PID file.", err)
-		}
-	}()
-
-	sigs := make(chan os.Signal, 1)
-	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
-	go func() {
-		<-sigs
-		err := common.RemovePIDFile()
-		if err != nil {
-			log.Error("Could not remove PID file.", err)
-		}
-		os.Exit(1)
-	}()
 
 	log.Info("Autograder Version", log.NewAttr("version", util.GetAutograderFullVersion()))
 

@@ -25,12 +25,3 @@ func CreatePIDFile() error {
 
 	return nil
 }
-
-func RemovePIDFile() error {
-	err := os.Remove(pidFilePath)
-	if err != nil {
-		log.Error("Failed to remove the PID file.", err)
-	}
-
-	return nil
-}
