@@ -18,7 +18,7 @@ function main() {
 
     cd "${ROOT_DIR}"
 
-    local duplicateLocators=$(grep -R 'Error("-' "${API_DIR}" | sed 's/^.*"\(-[0-9]\{3,\}\)".*$/\1/' | sort | uniq -c | grep -ZvP '^\s+1\s+' | sed 's/^\s*\([0-9]\+\)\s\+\(-[0-9]\{3,\}\)$/\2/')
+    local duplicateLocators=$(grep -R 'Error("-' "${API_DIR}" | sed 's/^.*"\(-[0-9]\{3,\}\)".*$/\1/' | sort | uniq -c | grep -EZv '^[[:space:]]*1[[:space:]]+' | sed 's/^\s*\([0-9]\+\)\s\+\(-[0-9]\{3,\}\)$/\2/')
 
     if [[ -z ${duplicateLocators} ]] ; then
         echo "No duplicate locators found."
