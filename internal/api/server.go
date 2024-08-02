@@ -25,80 +25,76 @@ var socketPath = config.UNIX_SOCKET_PATH.Get()
 var pidPath = config.PID_PATH.Get()
 
 // Run the standard API and Unix server.
+func cleanup() {
+    if err := os.Remove(socketPath); err != nil && !os.IsNotExist(err) {
+        log.Error("Failed to remove the unix socket file path.", err)
+    }
+    if err := os.Remove(pidPath); err != nil && !os.IsNotExist(err) {
+        log.Error("Failed to remove the PID file path.", err)
+    }
+}
+
 func StartServer() error {
-	serverErrorChannel := make(chan error, 2)
+    // Set up signal handling
+    sigChan := make(chan os.Signal, 1)
+    signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM)
 
-	go func() {
-		serverErrorChannel <- startAPIServer()
-	}()
+    // Ensure cleanup happens
+    defer cleanup()
 
-	go func() {
-		serverErrorChannel <- startUnixServer()
-	}()
+    // Start a goroutine to handle signals
+    go func() {
+        <-sigChan
+        fmt.Println("Received termination signal. Cleaning up...")
+        cleanup()
+        os.Exit(0)
+    }()
 
-	for {
-		select {
-		case err := <-serverErrorChannel:
-			return fmt.Errorf("server error: %v", err)
-		case <-waitForShutdownSignal():
-			fmt.Println("Shutting down the unix and api server")
-			return nil
-		}
-	}
-}
+    // Your existing server start code here
+    serverErrorChannel := make(chan error, 2)
 
-func waitForShutdownSignal() <-chan os.Signal {
-	serverShutdownChannel := make(chan os.Signal, 1)
+    go func() {
+        serverErrorChannel <- startAPIServer()
+    }()
 
-	signal.Notify(serverShutdownChannel, os.Interrupt, syscall.SIGTERM)
+    go func() {
+        serverErrorChannel <- startUnixServer()
+    }()
 
-	return serverShutdownChannel
-}
-
-func StartUnixServer() {
-	defer func() {
-		err := os.Remove(socketPath)
-		if err != nil {
-			log.Error("Failed to remove the unix socket file path.", err)
-		}
-	}()
-
-	err := startUnixServer()
-	if err != nil {
-		log.Fatal("Failed to start the Unix server.", err)
-	}
+    // Main loop
+    for {
+        select {
+        case err := <-serverErrorChannel:
+            return fmt.Errorf("server error: %v", err)
+        }
+    }
 }
 
 func startAPIServer() error {
-	defer func() {
-		err := os.Remove(pidPath)
-		if err != nil {
-			log.Error("Failed to remove the PID file path.", err)
-		}
-	}()
-
-	log.Info("API Server Started", log.NewAttr("port", port))
-	return http.ListenAndServe(fmt.Sprintf(":%d", port), core.GetRouteServer(GetRoutes()))
+    // Remove defer from here, as it's now in StartServer
+    log.Info("API Server Started", log.NewAttr("port", port))
+    return http.ListenAndServe(fmt.Sprintf(":%d", port), core.GetRouteServer(GetRoutes()))
 }
 
 func startUnixServer() error {
-	unixListener, err := net.Listen("unix", socketPath)
-	if err != nil {
-		log.Fatal("Failed to listen on a Unix socket.", err)
-	}
+    // Remove defer from here, as it's now in StartServer
+    unixListener, err := net.Listen("unix", socketPath)
+    if err != nil {
+        log.Fatal("Failed to listen on a Unix socket.", err)
+    }
 
-	defer unixListener.Close()
+    defer unixListener.Close()
 
-	log.Info("Unix Server Started", log.NewAttr("unix_socket", socketPath))
+    log.Info("Unix Server Started", log.NewAttr("unix_socket", socketPath))
 
-	for {
-		connection, err := unixListener.Accept()
-		if err != nil {
-			log.Fatal("Failed to accept a unix connection.", err)
-		}
+    for {
+        connection, err := unixListener.Accept()
+        if err != nil {
+            log.Fatal("Failed to accept a unix connection.", err)
+        }
 
-		go handleConnection(connection)
-	}
+        go handleConnection(connection)
+    }
 }
 
 func handleConnection(conn net.Conn) {
