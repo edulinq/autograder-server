@@ -10,7 +10,6 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
-	"time"
 
 	"github.com/edulinq/autograder/internal/api/core"
 	"github.com/edulinq/autograder/internal/common"
@@ -32,8 +31,6 @@ func StartServer() error {
 	go func() {
 		serverErrorChannel <- startAPIServer()
 	}()
-
-	time.Sleep(10 * time.Millisecond)
 
 	go func() {
 		serverErrorChannel <- startUnixServer()
