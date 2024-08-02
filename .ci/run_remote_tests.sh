@@ -98,7 +98,7 @@ function run_sever_submissions() {
         -c log.level=DEBUG \
         "${testing_arg}" &
     local server_pid="$!"
-    sleep 5
+    sleep 1
 
     local error_count=0
 
