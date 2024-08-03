@@ -23,7 +23,7 @@ function main() {
 
         local largestLocator=$(grep -R '("-' "${path}" | sed 's/^.*"\(-[0-9]\{3\}\)".*$/\1/' | sort | uniq | tail -n 1)
         # Remove input zero padding (so bash does not think the numebr is octal.
-        local cleanLargestLocator=$(echo "${largestLocator}" | sed 's/^-0*/-/g')
+        local cleanLargestLocator=$(echo "${largestLocator}" | sed -E 's/^-0+/-/g')
         local nextLocator=$(printf "%04d" "$((cleanLargestLocator - 1))")
 
         echo -e "Package: $(printf "%-12s" "${dir}"),\tMax Locator: $(printf "%-4s" "${largestLocator}"),\tNext Locator: ${nextLocator}"
