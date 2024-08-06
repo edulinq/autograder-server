@@ -44,20 +44,17 @@ function grade() {
     test_add -1 2 1 "one negative" || { score=$((score-2)); message+="Missed test case 'one negative'. "; }
     test_add -1 -2 -3 "all negative" || { score=$((score-2)); message+="Missed test case 'all negative'. "; }
 
-    local json_output=$(cat <<EOF
-{
+local json_output='{
     "name": "bash",
     "questions": [
         {
             "name": "Task 1: add()",
             "max_points": 10,
-            "score": $score,
-            "message": "$message"
+            "score": '"$score"',
+            "message": "'"$message"'"
         }
     ]
-}
-EOF
-)
+}'
 
     echo "$json_output"
 }
