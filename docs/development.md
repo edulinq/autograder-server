@@ -41,10 +41,9 @@ but care should be taken not to overuse them when a fallback value is not suffic
 The `-P` flag, which stands for "Perl-compatible regular expressions", does not work consistenly across different operating systems.
 More specifically, while it may work as intended on Linux, it behaves differently on Mac. This can lead to unexpected results when run on MacOS. To avoid inconsistency across operating systems, avoid using the `-P` flag. Sometimes, using the `-E` flag may produce the same output that `-P` was going for. 
 
-When using regular expressions in shell commands, such as `sed`, there are differences between how Linux and MacOS handle them due to
-differences between basic regular expressions and extended regular expressions.
+When using regular expressions in shell commands, such as `sed`, there are differences between how Linux and MacOS handle them due to differences between basic regular  expressions and extended regular expressions.
 
-* **BRE (Basic Regular Expressions)**: Requires escaping certain metacharacters such as `+` to be able to interpret them as special characters.
+* **BRE (Basic Regular Expressions)**: Requires escaping certain metacharacters such as `+` to be able to interpret them as special characters. 
 * **ERE (Extended Regular Expressions)**: Does not require escaping these metacharacters since they are treated as special characters by default.
 
-On some Linux systems, `sed` may already have extended capabilities that allow some regular expressions to work with extended regular expressions without needing the `-E` flag. However, to ensure consistency across all operating systems, the `-E` flag is explicitly required whenever using extended regular expressions. 
+However, something like `\+` that should be interpreted as one or more in a BRE does not work consistenly on Mac. To ensure consistency across all operating systems, the `-E` flag should be used when using special characters, which would make `+` work as one or more.
