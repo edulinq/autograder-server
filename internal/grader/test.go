@@ -6,6 +6,7 @@ import (
 	"slices"
 	"strings"
 
+	"github.com/edulinq/autograder/internal/config"
 	"github.com/edulinq/autograder/internal/db"
 	"github.com/edulinq/autograder/internal/model"
 	"github.com/edulinq/autograder/internal/util"
@@ -41,6 +42,10 @@ func GetTestSubmissions(baseDir string) ([]*TestSubmissionInfo, error) {
 			return nil, fmt.Errorf("Could not find assignment for test submission '%s': '%w'.", testSubmissionPath, err)
 		}
 
+		if assignment.ID != "bash" && config.DOCKER_DISABLE.Get() {
+			continue
+		}
+
 		dir := util.ShouldAbs(filepath.Dir(testSubmissionPath))
 
 		paths, err := util.GetAllDirents(dir)
@@ -58,6 +63,7 @@ func GetTestSubmissions(baseDir string) ([]*TestSubmissionInfo, error) {
 			TestSubmission: &testSubmission,
 			Assignment:     assignment,
 		})
+
 	}
 
 	if len(testSubmissions) == 0 {
