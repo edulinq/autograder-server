@@ -35,3 +35,16 @@ Since this is very unlikely and most times an abs path is not strictly necessary
 "Should" functions can be used anywhere,
 but care should be taken not to overuse them when a fallback value is not sufficient.
 "Must" variants should be favored in testing code, since they will more obviously fail tests.
+
+## Do/Don't for cross-platform shell scripting
+
+The `-P` flag, which stands for "Perl-compatible regular expressions", does not work consistenly across different operating systems.
+More specifically, while it may work as intended on Linux, it behaves differently on Mac. This can lead to unexpected results when run on MacOS. To avoid inconsistency across operating systems, avoid using the `-P` flag. Sometimes, using the `-E` flag may produce the same output that `-P` was going for. 
+
+When using regular expressions in shell commands, such as `sed`, there are differences between how Linux and MacOS handle them due to
+differences between basic regular expressions and extended regular expressions.
+
+* **BRE (Basic Regular Expressions)**: Requires escaping certain metacharacters such as `+` to be able to interpret them as special characters.
+* **ERE (Extended Regular Expressions)**: Does not require escaping these metacharacters since they are treated as special characters by default.
+
+On some Linux systems, `sed` may already have extended capabilities that allow some regular expressions to work with extended regular expressions without needing the `-E` flag. However, to ensure consistency across all operating systems, the `-E` flag is required explicitly whenever using extended regular expressions. 
