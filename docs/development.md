@@ -42,7 +42,7 @@ We are writing bash scripts with the intention of running them in a POSIX enviro
 
 ### Grep
 
-The `-P` flag, which enables perl-compatible regular expressions, does not work consistently across operating systems. More specifically, while it may work as intended on Linux, it behaves differently on Mac. This can lead to unexpected results when run on MacOS. To avoid inconsistency across operating systems, avoid using the `-P` flag. Sometimes, using the `-E` flag, which enables "extended regular expressions," may produce the same output that `-P` was going for. 
+The `-P` flag, which enables perl-compatible regular expressions, does not work consistently across operating systems. More specifically, while it may work as intended on Linux, it behaves differently on Mac. This can lead to unexpected results when run on MacOS. To avoid inconsistency across operating systems, avoid using the `-P` flag. Sometimes, using the `-E` flag, which enables extended regular expressions, may produce the same output that `-P` was going for. 
 
 ### Sed and Regular Expression
 
