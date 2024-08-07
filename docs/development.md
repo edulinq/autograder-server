@@ -36,10 +36,16 @@ Since this is very unlikely and most times an abs path is not strictly necessary
 but care should be taken not to overuse them when a fallback value is not sufficient.
 "Must" variants should be favored in testing code, since they will more obviously fail tests.
 
-## Do/Don't for cross-platform shell scripting
+## Cross-Platform Scripting
+
+We are writing bash scripts with the intention of being run in a POSIX enviornment, however, there are still differences between operating systems that can affect a scripts behavior, particularly between Linux and MacOS. This section highlights key considerations to be made to ensure your scripts run consistently across platforms.
+
+### Grep
 
 The `-P` flag, which stands for "Perl-compatible regular expressions", does not work consistenly across different operating systems.
 More specifically, while it may work as intended on Linux, it behaves differently on Mac. This can lead to unexpected results when run on MacOS. To avoid inconsistency across operating systems, avoid using the `-P` flag. Sometimes, using the `-E` flag may produce the same output that `-P` was going for. 
+
+### Sed and Regular Expression
 
 When using regular expressions in shell commands, such as `sed`, there are differences between how Linux and MacOS handle them due to differences between basic regular  expressions and extended regular expressions.
 
