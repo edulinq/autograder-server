@@ -38,18 +38,18 @@ but care should be taken not to overuse them when a fallback value is not suffic
 
 ## Cross-Platform Scripting
 
-We are writing bash scripts with the intention of being run in a POSIX enviornment, however, there are still differences between operating systems that can affect a scripts behavior, particularly between Linux and MacOS. This section highlights key considerations to be made to ensure your scripts run consistently across platforms.
+We are writing bash scripts with the intention of running them in a POSIX environment. However, differences between operating systems, particularly between Linux and MacOS, can still affect a script's behavior. This section highlights key considerations to ensure your scripts run consistently across platforms.
 
 ### Grep
 
-The `-P` flag, which stands for "Perl-compatible regular expressions", does not work consistenly across different operating systems.
+The `-P` flag, which stands for "Perl-compatible regular expressions," does not work consistently across operating systems.
 More specifically, while it may work as intended on Linux, it behaves differently on Mac. This can lead to unexpected results when run on MacOS. To avoid inconsistency across operating systems, avoid using the `-P` flag. Sometimes, using the `-E` flag may produce the same output that `-P` was going for. 
 
 ### Sed and Regular Expression
 
-When using regular expressions in shell commands, such as `sed`, there are differences between how Linux and MacOS handle them due to differences between basic regular  expressions and extended regular expressions.
+When using regular expressions in shell commands with tools like `sed`, there are differences between how Linux and MacOS handle them due to differences between basic regular expressions and extended regular expressions.
 
 * **BRE (Basic Regular Expressions)**: Requires escaping certain metacharacters such as `+` to be able to interpret them as special characters. 
 * **ERE (Extended Regular Expressions)**: Does not require escaping these metacharacters since they are treated as special characters by default.
 
-However, something like `\+` that should be interpreted as one or more in a BRE does not work consistenly on Mac. To ensure consistency across all operating systems, the `-E` flag should be used when using special characters, which would make `+` work as one or more.
+However, something like `\+` that should be interpreted as "one or more" in a BRE does not work consistently on Mac. To ensure consistency across all operating systems, the `-E` flag should be used when using special characters, which would make `+` work as "one or more."
