@@ -6,7 +6,6 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/edulinq/autograder/internal/config"
 	"github.com/edulinq/autograder/internal/db"
 	"github.com/edulinq/autograder/internal/model"
 	"github.com/edulinq/autograder/internal/util"
@@ -20,7 +19,7 @@ type TestSubmissionInfo struct {
 	Assignment     *model.Assignment
 }
 
-func GetTestSubmissions(baseDir string) ([]*TestSubmissionInfo, error) {
+func GetTestSubmissions(baseDir string, useDocker bool) ([]*TestSubmissionInfo, error) {
 	testSubmissionPaths, err := util.FindFiles("test-submission.json", baseDir)
 	if err != nil {
 		return nil, fmt.Errorf("Could not find test results in '%s': '%w'.", baseDir, err)
@@ -42,7 +41,8 @@ func GetTestSubmissions(baseDir string) ([]*TestSubmissionInfo, error) {
 			return nil, fmt.Errorf("Could not find assignment for test submission '%s': '%w'.", testSubmissionPath, err)
 		}
 
-		if assignment.ID != "bash" && config.DOCKER_DISABLE.Get() {
+		// Skip non-bash test assignments when not using Docker.
+		if !useDocker && assignment.ID != "bash" {
 			continue
 		}
 

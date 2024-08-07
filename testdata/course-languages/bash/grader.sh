@@ -1,7 +1,5 @@
 #!/bin/bash
 
-# Compile the project and run the grader.
-
 readonly THIS_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 readonly DEFAULT_OUTPUT_PATH="${THIS_DIR}/../output/result.json"
 
@@ -23,7 +21,7 @@ function main() {
     fi
     
     # Run grader.
-    grade > "${outputPath}"
+    grade "${outputPath}"
     if [[ $? -ne 0 ]] ; then
         echo "ERROR: Failed to run grader."
         return 3
@@ -33,6 +31,7 @@ function main() {
 }
 
 function grade() {
+    # Source the student's assignment file.
     source "${THIS_DIR}/assignment.sh"
     
     local score=10
@@ -56,7 +55,7 @@ function grade() {
         ]
     }'
 
-    echo "$json_output"
+    echo "$json_output" > "${outputPath}"
 }
 
 function test_add() {
