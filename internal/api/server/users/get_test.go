@@ -42,7 +42,7 @@ func TestGet(test *testing.T) {
 			"target-email": testCase.target,
 		}
 
-		response := core.SendTestAPIRequest(test, core.NewEndpoint(`users/get`), fields)
+		response := core.SendTestAPIRequest(test, core.NewEndpoint(`server/users/get`), fields)
 		if !response.Success {
 			if testCase.permError {
 				expectedLocator := "-046"

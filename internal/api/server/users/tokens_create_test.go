@@ -8,7 +8,7 @@ import (
 	"github.com/edulinq/autograder/internal/util"
 )
 
-func TestTokensDelete(test *testing.T) {
+func TestTokensCreate(test *testing.T) {
 	db.ResetForTesting()
 	defer db.ResetForTesting()
 
@@ -18,15 +18,8 @@ func TestTokensDelete(test *testing.T) {
 	}
 
 	initialTokenCount := len(user.Tokens)
-	if initialTokenCount == 0 {
-		test.Fatalf("Test user has no tokens.")
-	}
 
-	args := map[string]any{
-		"token-id": user.Tokens[0].ID,
-	}
-
-	response := core.SendTestAPIRequest(test, core.NewEndpoint("users/tokens/delete"), args)
+	response := core.SendTestAPIRequest(test, core.NewEndpoint("server/users/tokens/create"), nil)
 	if !response.Success {
 		test.Fatalf("Response not successful: '%s'.", util.MustToJSONIndent(response))
 	}
@@ -38,7 +31,7 @@ func TestTokensDelete(test *testing.T) {
 
 	newTokenCount := len(user.Tokens)
 
-	if newTokenCount != (initialTokenCount - 1) {
-		test.Fatalf("Incorrect token count. Expected: %d, Found: %d.", (initialTokenCount - 1), newTokenCount)
+	if newTokenCount != (initialTokenCount + 1) {
+		test.Fatalf("Incorrect token count. Expected: %d, Found: %d.", (initialTokenCount + 1), newTokenCount)
 	}
 }

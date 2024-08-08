@@ -16,11 +16,31 @@ func TestUserGet(test *testing.T) {
 		permError bool
 		expected  *core.CourseUserInfo
 	}{
-		{model.CourseRoleGrader, "other@test.com", false, &core.CourseUserInfo{"other@test.com", "other", model.CourseRoleOther, "lms-other@test.com"}},
-		{model.CourseRoleGrader, "student@test.com", false, &core.CourseUserInfo{"student@test.com", "student", model.CourseRoleStudent, "lms-student@test.com"}},
-		{model.CourseRoleGrader, "grader@test.com", false, &core.CourseUserInfo{"grader@test.com", "grader", model.CourseRoleGrader, "lms-grader@test.com"}},
-		{model.CourseRoleGrader, "admin@test.com", false, &core.CourseUserInfo{"admin@test.com", "admin", model.CourseRoleAdmin, "lms-admin@test.com"}},
-		{model.CourseRoleGrader, "owner@test.com", false, &core.CourseUserInfo{"owner@test.com", "owner", model.CourseRoleOwner, "lms-owner@test.com"}},
+		{model.CourseRoleGrader, "other@test.com", false, &core.CourseUserInfo{
+			core.UserInfo{core.CourseUserInfoType, "other@test.com", "other"},
+			model.CourseRoleOther,
+			"lms-other@test.com"},
+		},
+		{model.CourseRoleGrader, "student@test.com", false, &core.CourseUserInfo{
+			core.UserInfo{core.CourseUserInfoType, "student@test.com", "student"},
+			model.CourseRoleStudent,
+			"lms-student@test.com"},
+		},
+		{model.CourseRoleGrader, "grader@test.com", false, &core.CourseUserInfo{
+			core.UserInfo{core.CourseUserInfoType, "grader@test.com", "grader"},
+			model.CourseRoleGrader,
+			"lms-grader@test.com"},
+		},
+		{model.CourseRoleGrader, "admin@test.com", false, &core.CourseUserInfo{
+			core.UserInfo{core.CourseUserInfoType, "admin@test.com", "admin"},
+			model.CourseRoleAdmin,
+			"lms-admin@test.com"},
+		},
+		{model.CourseRoleGrader, "owner@test.com", false, &core.CourseUserInfo{
+			core.UserInfo{core.CourseUserInfoType, "owner@test.com", "owner"},
+			model.CourseRoleOwner,
+			"lms-owner@test.com"},
+		},
 
 		{model.CourseRoleStudent, "student@test.com", true, nil},
 
