@@ -38,17 +38,36 @@ but care should be taken not to overuse them when a fallback value is not suffic
 
 ## Cross-Platform Scripting
 
-We are writing bash scripts with the intention of running them in a POSIX environment. However, differences between operating systems, particularly between Linux and MacOS, can still affect a script's behavior. This section highlights key considerations to ensure your scripts run consistently across platforms.
+We are writing bash scripts with the intention of running them in a POSIX environment.
+However, differences between operating systems, particularly between Linux and MacOS,
+can still affect a script's behavior. 
+This section highlights key considerations to ensure your scripts run consistently across platforms.
 
-### Grep
+### Regular Expressions
+Differences between how Linux and MacOS handle regular expressions can cause inconsistent outcomes when writing scripts.
+Be aware of the following:
 
-The `-P` flag, which enables perl-compatible regular expressions, does not work consistently across operating systems. More specifically, while it may work as intended on Linux, it behaves differently on Mac. This can lead to unexpected results when run on MacOS. To avoid inconsistency across operating systems, avoid using the `-P` flag. Sometimes, using the `-E` flag, which enables extended regular expressions, may produce the same output that `-P` was going for. 
+- **BRE (Basic Regular Expressions)**
+  - **Usage**: Default in many tools.
+  - **Consideration**: Limited feature set.
+  - **[More Info](https://en.wikibooks.org/wiki/Regular_Expressions/Basic_Regular_Expressions)**
 
-### Sed and Regular Expression
+- **ERE (Extended Regular Expressions)**
+  - **Usage**: Enabled with `-E` flag in tools like `grep` and `sed`.
+  - **Consideration**: More expressive than BRE.
+  - **[More Info](https://en.wikibooks.org/wiki/Regular_Expressions/POSIX-Extended_Regular_Expressions)**
 
-When using regular expressions in shell commands with tools like `sed`, there are differences between how Linux and MacOS handle them due to differences between basic regular expressions and extended regular expressions.
+- **PCRE (Perl-Compatible Regular Expressions)**
+  - **Usage**: Enabled with `-P` flag in `grep`.
+  - **Consideration**: Inconsistent behavior between Linux and MacOS. Avoid for cross-platform scripts.
+  - **[More Info](https://en.wikibooks.org/wiki/Regular_Expressions/Perl-Compatible_Regular_Expressions)**
 
-* **BRE (Basic Regular Expressions)**: Requires escaping certain metacharacters such as `+` to be able to interpret them as special characters. 
-* **ERE (Extended Regular Expressions)**: Does not require escaping these metacharacters since they are treated as special characters by default.
+### Tool-Specific Guidelines
 
-However, something like `\+` that should be interpreted as "one or more" in a BRE does not work consistently on Mac. To ensure consistency across all operating systems, the `-E` flag should be used when using special characters, which would make `+` work as "one or more."
+#### `grep`
+- **Avoid**: `-P` flag (PCRE) for cross-platform scripts.
+- **Alternative**: Use `-E` flag (ERE) to achieve similar functionality with more consistent behavior.
+
+#### `sed`
+- **Use**: `-E` flag to enable ERE.
+- **Avoid**: BRE syntax that may not behave consistently across platforms (e.g., `\+` in BRE).
