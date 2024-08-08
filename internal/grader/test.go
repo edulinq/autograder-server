@@ -19,7 +19,7 @@ type TestSubmissionInfo struct {
 	Assignment     *model.Assignment
 }
 
-func GetTestSubmissions(baseDir string) ([]*TestSubmissionInfo, error) {
+func GetTestSubmissions(baseDir string, useDocker bool) ([]*TestSubmissionInfo, error) {
 	testSubmissionPaths, err := util.FindFiles("test-submission.json", baseDir)
 	if err != nil {
 		return nil, fmt.Errorf("Could not find test results in '%s': '%w'.", baseDir, err)
@@ -39,6 +39,11 @@ func GetTestSubmissions(baseDir string) ([]*TestSubmissionInfo, error) {
 		assignment, err := fetchTestSubmissionAssignment(testSubmissionPath)
 		if err != nil {
 			return nil, fmt.Errorf("Could not find assignment for test submission '%s': '%w'.", testSubmissionPath, err)
+		}
+
+		// Skip non-bash test assignments when not using Docker.
+		if !useDocker && assignment.ID != "bash" {
+			continue
 		}
 
 		dir := util.ShouldAbs(filepath.Dir(testSubmissionPath))
