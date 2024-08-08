@@ -43,6 +43,7 @@ func main() {
 		log.Fatal("Failed to dial the unix socket.", err)
 		os.Exit(1)
 	}
+
 	defer conn.Close()
 
 	targetUser := core.TargetCourseUserSelfOrGrader{
@@ -104,8 +105,6 @@ func main() {
 		log.Error("Failed to unmarshal the API response.", err)
 		return
 	}
-
-	fmt.Println("response: ", response)
 
 	var responseContent submissions.PeekResponse
 	util.MustJSONFromString(util.MustToJSON(response.Content), &responseContent)

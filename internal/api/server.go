@@ -7,9 +7,7 @@ import (
 	"fmt"
 	"net"
 	"net/http"
-	"os"
-	"os/signal"
-	"syscall"
+	"sync"
 
 	"github.com/edulinq/autograder/internal/api/core"
 	"github.com/edulinq/autograder/internal/common"
@@ -23,62 +21,42 @@ var AUTHENTICATION_NONCE = "nonce"
 var socketPath = config.UNIX_SOCKET_PATH.Get()
 var pidPath = config.PID_PATH.Get()
 
-// Run the standard API and Unix server.
-func cleanup() {
-	if err := os.Remove(socketPath); err != nil && !os.IsNotExist(err) {
-		log.Error("Failed to remove the unix socket file path.", err)
-	}
-	if err := os.Remove(pidPath); err != nil && !os.IsNotExist(err) {
-		log.Error("Failed to remove the PID file path.", err)
-	}
-}
-
 func StartServer() error {
-	// Set up signal handling
-	sigChan := make(chan os.Signal, 1)
-	signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM)
+	var serverShutdown sync.WaitGroup
 
-	// Ensure cleanup happens
-	defer cleanup()
-
-	// Start a goroutine to handle signals
-	go func() {
-		<-sigChan
-		fmt.Println("Received termination signal. Cleaning up...")
-		cleanup()
-		os.Exit(0)
-	}()
-
-	// Your existing server start code here
-	serverErrorChannel := make(chan error, 2)
+	serverShutdown.Add(1)
 
 	go func() {
-		serverErrorChannel <- startAPIServer()
-	}()
+		defer serverShutdown.Done()
 
-	go func() {
-		serverErrorChannel <- startUnixServer()
-	}()
-
-	// Main loop
-	for {
-		select {
-		case err := <-serverErrorChannel:
-			return fmt.Errorf("server error: %v", err)
+		err := startAPIServer()
+		if err != nil {
+			log.Error("Failed to start the api server.", err)
 		}
-	}
+	}()
+
+	go func() {
+		defer serverShutdown.Done()
+
+		err := startUnixServer()
+		if err != nil {
+			log.Error("Failed to start the unix server.", err)
+		}
+	}()
+
+	serverShutdown.Wait()
+
+	return nil
 }
 
 func startAPIServer() error {
 	var port = config.WEB_PORT.Get()
 
-	// Remove defer from here, as it's now in StartServer
 	log.Info("API Server Started", log.NewAttr("port", port))
 	return http.ListenAndServe(fmt.Sprintf(":%d", port), core.GetRouteServer(GetRoutes()))
 }
 
 func startUnixServer() error {
-	// Remove defer from here, as it's now in StartServer
 	unixListener, err := net.Listen("unix", socketPath)
 	if err != nil {
 		log.Fatal("Failed to listen on a Unix socket.", err)
@@ -141,7 +119,6 @@ func handleConnection(conn net.Conn) {
 
 	content["root-user-nonce"] = randomNumber
 
-	// Convert the modified content with the nonce back to JSON bytes.
 	formContent, err := json.Marshal(content)
 	if err != nil {
 		log.Error("Failed to marshal the request's content.", err)
