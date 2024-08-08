@@ -17,6 +17,15 @@ func GetServerUsers() (map[string]*model.ServerUser, error) {
 	return backend.GetServerUsers()
 }
 
+func MustGetServerUsers() map[string]*model.ServerUser {
+	users, err := GetServerUsers()
+	if err != nil {
+		log.Fatal("Faled to get server users.", err)
+	}
+
+	return users
+}
+
 // See Backend.
 func GetCourseUsers(course *model.Course) (map[string]*model.CourseUser, error) {
 	if backend == nil {

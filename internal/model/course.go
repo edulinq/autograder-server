@@ -163,7 +163,7 @@ func (this *Course) AddAssignment(assignment *Assignment) error {
 				assignment.GetID(), otherAssignment.GetSourceDir(), assignment.GetSourceDir())
 		}
 
-		if (assignment.GetName() != "") && (assignment.GetName() == otherAssignment.GetName()) {
+		if assignment.GetName() == otherAssignment.GetName() {
 			return fmt.Errorf(
 				"Found multiple assignments with the same name ('%s'): ['%s', '%s'].",
 				assignment.GetName(), otherAssignment.GetID(), assignment.GetID())
