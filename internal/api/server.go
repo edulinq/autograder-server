@@ -7,7 +7,9 @@ import (
 	"fmt"
 	"net"
 	"net/http"
-	"sync"
+	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/edulinq/autograder/internal/api/core"
 	"github.com/edulinq/autograder/internal/common"
@@ -21,32 +23,45 @@ var AUTHENTICATION_NONCE = "nonce"
 var socketPath = config.UNIX_SOCKET_PATH.Get()
 var pidPath = config.PID_PATH.Get()
 
+// Run the standard API and Unix server.
+func cleanup() {
+	if err := os.Remove(socketPath); err != nil && !os.IsNotExist(err) {
+		log.Error("Failed to remove the unix socket file path.", err)
+	}
+	if err := os.Remove(pidPath); err != nil && !os.IsNotExist(err) {
+		log.Error("Failed to remove the PID file path.", err)
+	}
+}
+
 func StartServer() error {
-	var serverShutdown sync.WaitGroup
+	sigChan := make(chan os.Signal, 1)
+	signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM)
 
-	serverShutdown.Add(1)
+	defer cleanup()
 
 	go func() {
-		defer serverShutdown.Done()
+		<-sigChan
+		fmt.Println("Received termination signal. Cleaning up...")
+		cleanup()
+		os.Exit(0)
+	}()
 
-		err := startAPIServer()
-		if err != nil {
-			log.Error("Failed to start the api server.", err)
-		}
+	serverErrorChannel := make(chan error, 2)
+
+	go func() {
+		serverErrorChannel <- startAPIServer()
 	}()
 
 	go func() {
-		defer serverShutdown.Done()
-
-		err := startUnixServer()
-		if err != nil {
-			log.Error("Failed to start the unix server.", err)
-		}
+		serverErrorChannel <- startUnixServer()
 	}()
 
-	serverShutdown.Wait()
-
-	return nil
+	for {
+		select {
+		case err := <-serverErrorChannel:
+			return fmt.Errorf("server error: %v", err)
+		}
+	}
 }
 
 func startAPIServer() error {
@@ -57,14 +72,14 @@ func startAPIServer() error {
 }
 
 func startUnixServer() error {
-	log.Info("Unix Server Started", log.NewAttr("unix_socket", socketPath))
-
 	unixListener, err := net.Listen("unix", socketPath)
 	if err != nil {
 		log.Fatal("Failed to listen on a Unix socket.", err)
 	}
 
 	defer unixListener.Close()
+
+	log.Info("Unix Server Started", log.NewAttr("unix_socket", socketPath))
 
 	for {
 		connection, err := unixListener.Accept()
@@ -100,7 +115,6 @@ func handleConnection(conn net.Conn) {
 	core.NonceMap.Store(randomNumber, true)
 	defer core.NonceMap.Delete(randomNumber)
 
-	// Unmarshal the received JSON buffer into a map.
 	var payload map[string]interface{}
 	err = json.Unmarshal(jsonBuffer, &payload)
 	if err != nil {
@@ -119,6 +133,7 @@ func handleConnection(conn net.Conn) {
 
 	content["root-user-nonce"] = randomNumber
 
+	// Convert the modified content with the nonce back to JSON bytes.
 	formContent, err := json.Marshal(content)
 	if err != nil {
 		log.Error("Failed to marshal the request's content.", err)
