@@ -63,7 +63,6 @@ func GetTestSubmissions(baseDir string, useDocker bool) ([]*TestSubmissionInfo, 
 			TestSubmission: &testSubmission,
 			Assignment:     assignment,
 		})
-
 	}
 
 	if len(testSubmissions) == 0 {
