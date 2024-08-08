@@ -57,14 +57,14 @@ func startAPIServer() error {
 }
 
 func startUnixServer() error {
+	log.Info("Unix Server Started", log.NewAttr("unix_socket", socketPath))
+
 	unixListener, err := net.Listen("unix", socketPath)
 	if err != nil {
 		log.Fatal("Failed to listen on a Unix socket.", err)
 	}
 
 	defer unixListener.Close()
-
-	log.Info("Unix Server Started", log.NewAttr("unix_socket", socketPath))
 
 	for {
 		connection, err := unixListener.Accept()
