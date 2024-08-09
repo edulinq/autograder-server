@@ -39,35 +39,35 @@ but care should be taken not to overuse them when a fallback value is not suffic
 ## Cross-Platform Scripting
 
 We are writing bash scripts with the intention of running them in a POSIX environment.
-However, differences between operating systems, particularly between Linux and MacOS,
+However, differences between operating systems, particularly between Linux and BSD,
 can still affect a script's behavior. 
 This section highlights key considerations to ensure your scripts run consistently across platforms.
 
 ### Regular Expressions
-Differences between how Linux and MacOS handle regular expressions can cause inconsistent outcomes when writing scripts.
-Be aware of the following:
+
+Differences between how Linux and BSD handle different standards of regular expressions can cause inconsistent outcomes when writing scripts.
+Here are three common regex standards you may encounter, along with key considerations for each:
 
 - **BRE (Basic Regular Expressions)**
   - **Usage**: Default in many tools.
-  - **Consideration**: Limited feature set.
+  - **Consideration**: While BREs cover most common use cases, they lack more advanced features could simplify and lower the chance of compatibility issues with complex regular expressions.
   - **[More Info](https://en.wikibooks.org/wiki/Regular_Expressions/Basic_Regular_Expressions)**
 
 - **ERE (Extended Regular Expressions)**
-  - **Usage**: Enabled with `-E` flag in tools like `grep` and `sed`.
-  - **Consideration**: More expressive than BRE.
+  - **Usage**: Often enabled with the `-E` flag (like in `grep` and `sed`).
+  - **Consideration**: EREs make it easier to write and understand complex regular expressions.
   - **[More Info](https://en.wikibooks.org/wiki/Regular_Expressions/POSIX-Extended_Regular_Expressions)**
 
 - **PCRE (Perl-Compatible Regular Expressions)**
-  - **Usage**: Enabled with `-P` flag in `grep`.
-  - **Consideration**: Inconsistent behavior between Linux and MacOS. Avoid for cross-platform scripts.
+  - **Usage**: Enabled with the `-P` flag in `grep`.
+  - **Consideration**: PCREs have inconsistent behavior between Linux and BSD. Avoid using for cross-platform scripts.
   - **[More Info](https://en.wikibooks.org/wiki/Regular_Expressions/Perl-Compatible_Regular_Expressions)**
 
 ### Tool-Specific Guidelines
 
 #### `grep`
-- **Avoid**: `-P` flag (PCRE) for cross-platform scripts.
-- **Alternative**: Use `-E` flag (ERE) to achieve similar functionality with more consistent behavior.
+- **Avoid**: The `-P` flag (PCRE) for cross-platform scripts.
+- **Alternative**: Use the `-E` flag (ERE) to achieve similar functionality with more consistent behavior.
 
 #### `sed`
-- **Use**: `-E` flag to enable ERE.
-- **Avoid**: BRE syntax that may not behave consistently across platforms (e.g., `\+` in BRE).
+- **Use**: The `-E` flag to enable ERE.
