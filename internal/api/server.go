@@ -22,14 +22,26 @@ var AUTHENTICATION_NONCE = "nonce"
 var socketPath = config.UNIX_SOCKET_PATH.Get()
 var pidPath = config.PID_PATH.Get()
 
+func cleanup() {
+	err := os.Remove(pidPath)
+	if err != nil {
+		log.Error("Failed to remove pid path.", err)
+	}
+
+	err = os.Remove(socketPath)
+	if err != nil {
+		log.Error("Failed to remove unix socket path.", err)
+	}
+}
+
 func StartServer() error {
+	defer cleanup()
 	var serverShutdown sync.WaitGroup
 
 	serverShutdown.Add(1)
 
 	go func() {
 		defer serverShutdown.Done()
-		defer os.Remove(pidPath)
 
 		err := startAPIServer()
 		if err != nil {
@@ -39,7 +51,6 @@ func StartServer() error {
 
 	go func() {
 		defer serverShutdown.Done()
-		defer os.Remove(socketPath)
 
 		err := startUnixServer()
 		if err != nil {
