@@ -96,6 +96,7 @@ func handleConnection(conn net.Conn) {
 	var port = config.WEB_PORT.Get()
 
 	sizeBuffer := make([]byte, 8)
+
 	_, err := conn.Read(sizeBuffer)
 	if err != nil {
 		log.Fatal("Failed to read size of the request buffer.", err)
@@ -116,7 +117,6 @@ func handleConnection(conn net.Conn) {
 	core.NonceMap.Store(randomNumber, true)
 	defer core.NonceMap.Delete(randomNumber)
 
-	// Unmarshal the received JSON buffer into a map.
 	var payload map[string]interface{}
 	err = json.Unmarshal(jsonBuffer, &payload)
 	if err != nil {
