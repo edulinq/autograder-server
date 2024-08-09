@@ -8,8 +8,7 @@ import (
 	"net"
 	"net/http"
 	"os"
-	"os/signal"
-	"syscall"
+	"sync"
 
 	"github.com/edulinq/autograder/internal/api/core"
 	"github.com/edulinq/autograder/internal/common"
@@ -23,45 +22,34 @@ var AUTHENTICATION_NONCE = "nonce"
 var socketPath = config.UNIX_SOCKET_PATH.Get()
 var pidPath = config.PID_PATH.Get()
 
-// Run the standard API and Unix server.
-func cleanup() {
-	if err := os.Remove(socketPath); err != nil && !os.IsNotExist(err) {
-		log.Error("Failed to remove the unix socket file path.", err)
-	}
-	if err := os.Remove(pidPath); err != nil && !os.IsNotExist(err) {
-		log.Error("Failed to remove the PID file path.", err)
-	}
-}
-
 func StartServer() error {
-	sigChan := make(chan os.Signal, 1)
-	signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM)
+	var serverShutdown sync.WaitGroup
 
-	defer cleanup()
-
-	go func() {
-		<-sigChan
-		fmt.Println("Received termination signal. Cleaning up...")
-		cleanup()
-		os.Exit(0)
-	}()
-
-	serverErrorChannel := make(chan error, 2)
+	serverShutdown.Add(1)
 
 	go func() {
-		serverErrorChannel <- startAPIServer()
-	}()
+		defer serverShutdown.Done()
+		defer os.Remove(pidPath)
 
-	go func() {
-		serverErrorChannel <- startUnixServer()
-	}()
-
-	for {
-		select {
-		case err := <-serverErrorChannel:
-			return fmt.Errorf("server error: %v", err)
+		err := startAPIServer()
+		if err != nil {
+			log.Error("Failed to start the api server.", err)
 		}
-	}
+	}()
+
+	go func() {
+		defer serverShutdown.Done()
+		defer os.Remove(socketPath)
+
+		err := startUnixServer()
+		if err != nil {
+			log.Error("Failed to start the unix server.", err)
+		}
+	}()
+
+	serverShutdown.Wait()
+
+	return nil
 }
 
 func startAPIServer() error {
@@ -115,6 +103,7 @@ func handleConnection(conn net.Conn) {
 	core.NonceMap.Store(randomNumber, true)
 	defer core.NonceMap.Delete(randomNumber)
 
+	// Unmarshal the received JSON buffer into a map.
 	var payload map[string]interface{}
 	err = json.Unmarshal(jsonBuffer, &payload)
 	if err != nil {
@@ -133,7 +122,6 @@ func handleConnection(conn net.Conn) {
 
 	content["root-user-nonce"] = randomNumber
 
-	// Convert the modified content with the nonce back to JSON bytes.
 	formContent, err := json.Marshal(content)
 	if err != nil {
 		log.Error("Failed to marshal the request's content.", err)
