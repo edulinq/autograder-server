@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"reflect"
+	"sync"
 
 	"github.com/edulinq/autograder/internal/common"
 	"github.com/edulinq/autograder/internal/config"
@@ -15,6 +16,8 @@ import (
 // An api request that has been reflexively verifed.
 // Once validated, callers should feel safe calling reflection methods on this without extra checks.
 type ValidAPIRequest any
+
+var NonceMap sync.Map
 
 type APIRequest struct {
 	// These are not provided in JSON, they are filled in during validation.
@@ -30,8 +33,9 @@ type APIRequest struct {
 type APIRequestUserContext struct {
 	APIRequest
 
-	UserEmail string `json:"user-email"`
-	UserPass  string `json:"user-pass"`
+	UserEmail     string `json:"user-email"`
+	UserPass      string `json:"user-pass"`
+	RootUserNonce string `json:"root-user-nonce"`
 
 	ServerUser *model.ServerUser `json:"-"`
 }
@@ -76,17 +80,28 @@ func (this *APIRequestUserContext) Validate(request any, endpoint string) *APIEr
 		return apiErr
 	}
 
-	if this.UserEmail == "" {
-		return NewBadRequestError("-016", &this.APIRequest, "No user email specified.")
-	}
+	// Check for a valid nonce and skip auth if it's valid.
+	_, rootUserExists := NonceMap.LoadAndDelete(this.RootUserNonce)
 
-	if this.UserPass == "" {
-		return NewBadRequestError("-017", &this.APIRequest, "No user password specified.")
-	}
+	if this.RootUserNonce != "" {
+		if rootUserExists {
+			this.ServerUser = &model.FakeRootUser
+		} else {
+			return NewBadRequestError("-048", &this.APIRequest, "Incorrect nonce.")
+		}
+	} else {
+		if this.UserEmail == "" {
+			return NewBadRequestError("-016", &this.APIRequest, "No user email specified.")
+		}
 
-	this.ServerUser, apiErr = this.Auth()
-	if apiErr != nil {
-		return apiErr
+		if this.UserPass == "" {
+			return NewBadRequestError("-017", &this.APIRequest, "No user password specified.")
+		}
+
+		this.ServerUser, apiErr = this.Auth()
+		if apiErr != nil {
+			return apiErr
+		}
 	}
 
 	minRole, foundRole := getMaxServerRole(request)
@@ -124,13 +139,17 @@ func (this *APIRequestCourseUserContext) Validate(request any, endpoint string) 
 			Course(this.CourseID)
 	}
 
-	this.User, err = this.ServerUser.ToCourseUser(this.Course.ID)
-	if err != nil {
-		return NewInternalError("-039", this, "Unable to convert server user to course user.").Err(err)
-	}
+	if this.RootUserNonce != "" {
+		this.User = &model.FakeRootCourseUser
+	} else {
+		this.User, err = this.ServerUser.ToCourseUser(this.Course.ID)
+		if err != nil {
+			return NewInternalError("-039", this, "Unable to convert server user to course user.").Err(err)
+		}
 
-	if this.User == nil {
-		return NewBadRequestError("-040", &this.APIRequest, fmt.Sprintf("User '%s' is not enolled in course '%s'.", this.UserEmail, this.CourseID))
+		if this.User == nil {
+			return NewBadRequestError("-040", &this.APIRequest, fmt.Sprintf("User '%s' is not enolled in course '%s'.", this.UserEmail, this.CourseID))
+		}
 	}
 
 	minRole, foundRole := getMaxCourseRole(request)
@@ -261,7 +280,6 @@ func validateRequestStruct(request any, endpoint string) (bool, *APIError) {
 			// APIRequestCourseUserContext
 			courseUserRequest := fieldValue.Interface().(APIRequestCourseUserContext)
 			foundRequestStruct = true
-
 			apiErr := courseUserRequest.Validate(request, endpoint)
 			if apiErr != nil {
 				return false, apiErr

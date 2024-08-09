@@ -6,6 +6,7 @@ import (
 	"github.com/alecthomas/kong"
 
 	"github.com/edulinq/autograder/internal/api"
+	"github.com/edulinq/autograder/internal/common"
 	"github.com/edulinq/autograder/internal/config"
 	"github.com/edulinq/autograder/internal/db"
 	"github.com/edulinq/autograder/internal/log"
@@ -23,6 +24,11 @@ func main() {
 	err := config.HandleConfigArgs(args.ConfigArgs)
 	if err != nil {
 		log.Fatal("Could not load config options.", err)
+	}
+
+	err = common.CreatePIDFile()
+	if err != nil {
+		log.Fatal("Could not create PID file.", err)
 	}
 
 	log.Info("Autograder Version", log.NewAttr("version", util.GetAutograderFullVersion()))
