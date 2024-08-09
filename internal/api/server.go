@@ -35,7 +35,9 @@ func cleanup() {
 }
 
 func StartServer() error {
+	cleanup()
 	defer cleanup()
+	
 	var serverShutdown sync.WaitGroup
 
 	serverShutdown.Add(1)
