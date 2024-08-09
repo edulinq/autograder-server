@@ -50,18 +50,18 @@ Here are three common regex standards you may encounter, along with key consider
 
 - **BRE (Basic Regular Expressions)**
   - **Usage**: Default in many tools.
-  - **Consideration**: While BREs cover most common use cases, they lack more advanced features could simplify and lower the chance of compatibility issues with complex regular expressions.
-  - **[More Info](https://en.wikibooks.org/wiki/Regular_Expressions/Basic_Regular_Expressions)**
+  - **Consideration**: While BREs cover most common use cases, their default behavior can vary between tools and operating systems.
+  - **[More Info](https://en.wikipedia.org/wiki/Regular_expression#IEEE_POSIX_Standard)**
 
 - **ERE (Extended Regular Expressions)**
   - **Usage**: Often enabled with the `-E` flag (like in `grep` and `sed`).
   - **Consideration**: EREs make it easier to write and understand complex regular expressions.
-  - **[More Info](https://en.wikibooks.org/wiki/Regular_Expressions/POSIX-Extended_Regular_Expressions)**
+  - **[More Info](https://en.wikipedia.org/wiki/Regular_expression#IEEE_POSIX_Standard)**
 
 - **PCRE (Perl-Compatible Regular Expressions)**
   - **Usage**: Enabled with the `-P` flag in `grep`.
   - **Consideration**: PCREs have inconsistent behavior between Linux and BSD. Avoid using for cross-platform scripts.
-  - **[More Info](https://en.wikibooks.org/wiki/Regular_Expressions/Perl-Compatible_Regular_Expressions)**
+  - **[More Info](https://en.wikipedia.org/wiki/Perl_Compatible_Regular_Expressions)**
 
 ### Tool-Specific Guidelines
 
@@ -71,3 +71,4 @@ Here are three common regex standards you may encounter, along with key consider
 
 #### `sed`
 - **Use**: The `-E` flag to enable ERE.
+- **Reason**: BRE behavior is inconsistent across different operating systems.
