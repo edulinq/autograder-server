@@ -1,6 +1,7 @@
 package task
 
 import (
+	"sync"
 	"testing"
 	"time"
 
@@ -97,14 +98,14 @@ func TestTaskNoCatchup(test *testing.T) {
 // Test that panics are recovered.
 func TestPanic(test *testing.T) {
 	counter := make(chan int, 100)
-	fun := func(payload any) error {
+	function := func(payload any) error {
 		counter := payload.(chan int)
 		counter <- 1
 		panic("Test Panic")
 		return nil
 	}
 
-	count := runTestTaskWithFun(test, 1, counter, fun)
+	count := runTestTaskWithFun(test, 1, counter, function)
 	if count <= 1 {
 		test.Fatalf("Not enough test tasks were run (%d run).", count)
 	}
@@ -115,19 +116,38 @@ func TestPanic(test *testing.T) {
 func runTestTask(test *testing.T, everyUSecs int64) int {
 	counter := make(chan int, 100)
 
-	fun := func(payload any) error {
+	function := func(payload any) error {
 		counter := payload.(chan int)
 		counter <- 1
 		return nil
 	}
 
-	return runTestTaskWithFun(test, everyUSecs, counter, fun)
+	return runTestTaskWithFun(test, everyUSecs, counter, function)
 }
 
-func runTestTaskWithFun(test *testing.T, everyUSecs int64, counter chan int, fun func(any) error) int {
+func runTestTaskWithFun(test *testing.T, everyUSecs int64, counter chan int, baseFunction func(any) error) int {
 	defer StopAll()
 
 	course := db.MustGetTestCourse()
+
+	// Wrap the function so that it signals a wait group when it is run.
+	// We don't know how many times the task will be called (if at all),
+	// so we will need a few sync primitives.
+	// Wrap signaling the wait group in a once so that we don't decrement it too many times.
+	// After the task is schedule, schedule another (short) timer to call the once in case the task never fires.
+
+	var functionStartWait sync.WaitGroup
+	functionStartWait.Add(1)
+
+	var signalWaitGroup sync.Once
+	signalWaitGroupFunction := func() {
+		functionStartWait.Done()
+	}
+
+	function := func(value any) error {
+		signalWaitGroup.Do(signalWaitGroupFunction)
+		return baseFunction(value)
+	}
 
 	task := &tasks.TestTask{
 		BaseTask: &tasks.BaseTask{
@@ -140,7 +160,7 @@ func runTestTaskWithFun(test *testing.T, everyUSecs int64, counter chan int, fun
 				},
 			},
 		},
-		Func:    fun,
+		Func:    function,
 		Payload: counter,
 	}
 
@@ -155,8 +175,19 @@ func runTestTaskWithFun(test *testing.T, everyUSecs int64, counter chan int, fun
 		test.Fatalf("Failed to schedule task: '%v'.", err)
 	}
 
-	// Wait.
-	time.Sleep(1750 * time.Microsecond)
+	// Schedule a timer to trigger the wait group in case the task is never fired.
+	zeroTimer := time.AfterFunc(250*time.Microsecond, func() {
+		signalWaitGroup.Do(signalWaitGroupFunction)
+	})
+
+	// Wait for the task to start.
+	functionStartWait.Wait()
+
+	// Stop the timer if the task has fired (or if the timer fired).
+	zeroTimer.Stop()
+
+	// Wait for the task to fuinish.
+	time.Sleep(1000 * time.Microsecond)
 
 	// Stop the task.
 	StopCourse(course.GetID())
