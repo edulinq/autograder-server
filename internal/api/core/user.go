@@ -37,6 +37,13 @@ type EnrollmentInfo struct {
 	Role       model.CourseUserRole `json:"role"`
 }
 
+// An API-safe representation of a course user.
+type CourseUserInfo struct {
+	UserInfo
+	Role  model.CourseUserRole `json:"role"`
+	LMSID string               `json:"lms-id"`
+}
+
 func NewServerUserInfo(user *model.ServerUser) (*ServerUserInfo, error) {
 	info := &ServerUserInfo{
 		UserInfo: UserInfo{
@@ -51,7 +58,7 @@ func NewServerUserInfo(user *model.ServerUser) (*ServerUserInfo, error) {
 	for courseID, courseInfo := range user.CourseInfo {
 		course, err := db.GetCourse(courseID)
 		if err != nil {
-			return nil, fmt.Errorf("Failed to get course (%s) for user (%s).", courseID, user.Email)
+			return nil, fmt.Errorf("Failed to get course '%s' for user '%s'.", courseID, user.Email)
 		}
 
 		info.Courses[course.GetID()] = EnrollmentInfo{
@@ -75,10 +82,11 @@ func MustNewServerUserInfo(user *model.ServerUser) *ServerUserInfo {
 
 func NewServerUserInfos(users []*model.ServerUser) ([]*ServerUserInfo, error) {
 	infos := make([]*ServerUserInfo, 0, len(users))
+
 	for _, user := range users {
 		info, err := NewServerUserInfo(user)
 		if err != nil {
-			return nil, fmt.Errorf("Failed to get server user info for user (%s).", user.Email)
+			return nil, fmt.Errorf("Failed to get server user info for user '%s'.", user.Email)
 		}
 
 		infos = append(infos, info)
@@ -118,13 +126,6 @@ func CompareServerUserInfo(a ServerUserInfo, b *ServerUserInfo) int {
 	return strings.Compare(a.Email, b.Email)
 }
 
-// An API-safe representation of a course user.
-type CourseUserInfo struct {
-	UserInfo
-	Role  model.CourseUserRole `json:"role"`
-	LMSID string               `json:"lms-id"`
-}
-
 func NewCourseUserInfo(user *model.CourseUser) *CourseUserInfo {
 	info := &CourseUserInfo{
 		UserInfo: UserInfo{
@@ -141,6 +142,7 @@ func NewCourseUserInfo(user *model.CourseUser) *CourseUserInfo {
 
 func NewCourseUserInfos(users []*model.CourseUser) []*CourseUserInfo {
 	result := make([]*CourseUserInfo, 0, len(users))
+
 	for _, user := range users {
 		result = append(result, NewCourseUserInfo(user))
 	}

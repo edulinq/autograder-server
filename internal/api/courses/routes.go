@@ -1,6 +1,6 @@
 package courses
 
-// All routes handled by this package.
+// All the API endpoints handled by this package.
 
 import (
 	"github.com/edulinq/autograder/internal/api/core"

@@ -38,7 +38,7 @@ func TestNewUserInfos(test *testing.T) {
 					Courses: map[string]EnrollmentInfo{
 						"course-languages": {
 							CourseID:   "course-languages",
-							CourseName: "Course Using Different Languages.",
+							CourseName: "Course Using Different Languages",
 							Role:       model.GetCourseUserRole("admin"),
 						},
 						"course-with-lms": {
@@ -73,7 +73,7 @@ func TestNewUserInfos(test *testing.T) {
 					Courses: map[string]EnrollmentInfo{
 						"course-languages": {
 							CourseID:   "course-languages",
-							CourseName: "Course Using Different Languages.",
+							CourseName: "Course Using Different Languages",
 							Role:       model.GetCourseUserRole("grader"),
 						},
 						"course-with-lms": {
@@ -108,7 +108,7 @@ func TestNewUserInfos(test *testing.T) {
 					Courses: map[string]EnrollmentInfo{
 						"course-languages": {
 							CourseID:   "course-languages",
-							CourseName: "Course Using Different Languages.",
+							CourseName: "Course Using Different Languages",
 							Role:       model.GetCourseUserRole("student"),
 						},
 						"course-with-lms": {

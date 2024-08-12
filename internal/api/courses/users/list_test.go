@@ -31,6 +31,7 @@ func TestList(test *testing.T) {
 		{"student@test.com", true},
 
 		// Valid permissions.
+		{"grader@test.com", false},
 		{"admin@test.com", false},
 		{"owner@test.com", false},
 	}
