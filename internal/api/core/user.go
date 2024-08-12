@@ -82,7 +82,6 @@ func MustNewServerUserInfo(user *model.ServerUser) *ServerUserInfo {
 
 func NewServerUserInfos(users []*model.ServerUser) ([]*ServerUserInfo, error) {
 	infos := make([]*ServerUserInfo, 0, len(users))
-
 	for _, user := range users {
 		info, err := NewServerUserInfo(user)
 		if err != nil {
@@ -142,7 +141,6 @@ func NewCourseUserInfo(user *model.CourseUser) *CourseUserInfo {
 
 func NewCourseUserInfos(users []*model.CourseUser) []*CourseUserInfo {
 	result := make([]*CourseUserInfo, 0, len(users))
-
 	for _, user := range users {
 		result = append(result, NewCourseUserInfo(user))
 	}
