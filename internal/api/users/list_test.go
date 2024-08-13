@@ -11,13 +11,9 @@ import (
 )
 
 func TestList(test *testing.T) {
-	course := db.MustGetCourse(db.TEST_COURSE_ID)
-	usersMap, err := db.GetCourseUsers(course)
-	if err != nil {
-		test.Fatalf("Unable to get course users.")
-	}
+	usersMap := db.MustGetServerUsers()
 
-	users := make([]*model.CourseUser, 0, len(usersMap))
+	users := make([]*model.ServerUser, 0, len(usersMap))
 	for _, user := range usersMap {
 		users = append(users, user)
 	}
@@ -27,13 +23,12 @@ func TestList(test *testing.T) {
 		permError bool
 	}{
 		// Invalid permissions.
-		{"other@test.com", true},
-		{"student@test.com", true},
+		{"server-user@test.com", true},
+		{"server-creator@test.com", true},
 
 		// Valid permissions.
-		{"grader@test.com", false},
-		{"admin@test.com", false},
-		{"owner@test.com", false},
+		{"server-admin@test.com", false},
+		{"server-owner@test.com", false},
 	}
 
 	for i, testCase := range testCases {
@@ -42,10 +37,10 @@ func TestList(test *testing.T) {
 			"user-pass":  util.Sha256HexFromString(*usersMap[testCase.email].Name),
 		}
 
-		response := core.SendTestAPIRequest(test, core.NewEndpoint(`courses/users/list`), fields)
+		response := core.SendTestAPIRequest(test, core.NewEndpoint(`users/list`), fields)
 		if !response.Success {
 			if testCase.permError {
-				expectedLocator := "-020"
+				expectedLocator := "-041"
 				if response.Locator != expectedLocator {
 					test.Errorf("Case %d: Incorrect error returned. Expected '%s', found '%s'.",
 						i, expectedLocator, response.Locator)
@@ -65,7 +60,7 @@ func TestList(test *testing.T) {
 		var responseContent ListResponse
 		util.MustJSONFromString(util.MustToJSON(response.Content), &responseContent)
 
-		expectedInfos := core.NewCourseUserInfos(users)
+		expectedInfos := core.MustNewServerUserInfos(users)
 		if !reflect.DeepEqual(expectedInfos, responseContent.Users) {
 			test.Errorf("Case %d: Unexpected users information. Expected: '%s', actual: '%s'.",
 				i, util.MustToJSONIndent(expectedInfos), util.MustToJSONIndent(responseContent.Users))
