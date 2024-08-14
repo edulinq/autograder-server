@@ -20,11 +20,6 @@ type CourseUser struct {
 	LMSID *string        `json:"lms-id"`
 }
 
-var FakeRootCourseUser = CourseUser{
-	Email: "rootUser",
-	Role:  CourseRoleOwner,
-}
-
 func NewCourseUser(email string, name *string, role CourseUserRole, lmsID *string) (*CourseUser, error) {
 	courseUser := &CourseUser{
 		Email: email,

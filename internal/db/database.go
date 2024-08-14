@@ -200,6 +200,8 @@ func Open() error {
 		return err
 	}
 
+	UpsertUser(&model.FakeRootUser)
+
 	// We are probably running unit tests, load the test data.
 	if config.LOAD_TEST_DATA.Get() {
 		_, err = AddCourses()
@@ -212,6 +214,7 @@ func Open() error {
 			return fmt.Errorf("Failed to load test users: '%w'.", err)
 		}
 	}
+
 
 	return nil
 }

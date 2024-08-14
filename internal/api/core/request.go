@@ -17,7 +17,7 @@ import (
 // Once validated, callers should feel safe calling reflection methods on this without extra checks.
 type ValidAPIRequest any
 
-var NonceMap sync.Map
+var RootUserNonces sync.Map
 
 type APIRequest struct {
 	// These are not provided in JSON, they are filled in during validation.
@@ -80,15 +80,15 @@ func (this *APIRequestUserContext) Validate(request any, endpoint string) *APIEr
 		return apiErr
 	}
 
-	// Check for a valid nonce and skip auth if it's valid.
-	_, rootUserExists := NonceMap.LoadAndDelete(this.RootUserNonce)
+	// Check for a valid nonce and skip auth if it exists.
+	_, rootUserExists := RootUserNonces.LoadAndDelete(this.RootUserNonce)
 
 	if this.RootUserNonce != "" {
-		if rootUserExists {
-			this.ServerUser = &model.FakeRootUser
-		} else {
-			return NewBadRequestError("-048", &this.APIRequest, "Incorrect nonce.")
-		}
+		if !rootUserExists {
+			return NewBadRequestError("-048", &this.APIRequest, "Incorrect root user nonce.")
+		} 
+		
+		this.ServerUser = &model.FakeRootUser
 	} else {
 		if this.UserEmail == "" {
 			return NewBadRequestError("-016", &this.APIRequest, "No user email specified.")
@@ -139,17 +139,13 @@ func (this *APIRequestCourseUserContext) Validate(request any, endpoint string) 
 			Course(this.CourseID)
 	}
 
-	if this.RootUserNonce != "" {
-		this.User = &model.FakeRootCourseUser
-	} else {
-		this.User, err = this.ServerUser.ToCourseUser(this.Course.ID)
-		if err != nil {
-			return NewInternalError("-039", this, "Unable to convert server user to course user.").Err(err)
-		}
+	this.User, err = this.ServerUser.ToCourseUser(this.Course.ID)
+	if err != nil {
+		return NewInternalError("-039", this, "Unable to convert server user to course user.").Err(err)
+	}
 
-		if this.User == nil {
-			return NewBadRequestError("-040", &this.APIRequest, fmt.Sprintf("User '%s' is not enolled in course '%s'.", this.UserEmail, this.CourseID))
-		}
+	if this.User == nil {
+		return NewBadRequestError("-040", &this.APIRequest, fmt.Sprintf("User '%s' is not enolled in course '%s'.", this.UserEmail, this.CourseID))
 	}
 
 	minRole, foundRole := getMaxCourseRole(request)

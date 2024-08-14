@@ -42,7 +42,7 @@ type ServerUser struct {
 }
 
 var FakeRootUser = ServerUser{
-	Email: "rootUser",
+	Email: "root",
 	Role:  ServerRoleRoot,
 }
 
@@ -66,7 +66,7 @@ func (this *ServerUser) Validate() error {
 		}
 	}
 
-	if this.Role == ServerRoleRoot {
+	if this.Role == ServerRoleRoot && this.Email != FakeRootUser.Email {
 		return fmt.Errorf("User '%s' has a root server role. Normal users are not allowed to have this role.", this.Email)
 	}
 
@@ -155,6 +155,16 @@ func (this *ServerUser) GetCourseRole(courseID string) CourseUserRole {
 // Convert this server user into a course user for the specific course.
 // Will return (nil, nil) if the user is not enrolled in the given course.
 func (this *ServerUser) ToCourseUser(courseID string) (*CourseUser, error) {
+	if this.Email == "root" {
+		courseUser := &CourseUser{
+			Email: this.Email,
+			Name:  this.Name,
+			Role:  CourseRoleOwner,
+		}
+
+		return courseUser, nil
+	}
+	
 	info, exists := this.CourseInfo[courseID]
 	if !exists {
 		return nil, nil

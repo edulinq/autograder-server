@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net"
-	"os"
 
 	"github.com/alecthomas/kong"
 
@@ -20,15 +19,16 @@ import (
 var args struct {
 	config.ConfigArgs
 	TargetEmail      string `help:"Email of the user to fetch." arg:""`
-	TargetSubmission string `help:"ID of the submission." arg:""`
+	CourseID         string `help:"ID of the course." arg:""`
+	AssignmentID     string `help:"ID of the assignment." arg:""`
 
-	CourseID     string `help:"ID of the course." arg:""`
-	AssignmentID string `help:"ID of the assignment." arg:""`
+	TargetSubmission string `help:"ID of the submission." arg:"" optional:""`
+	Verbose          bool   `help:"Print the entire response." short:"v"`
 }
 
 func main() {
 	kong.Parse(&args,
-		kong.Description("Fetch the submission for a specific assignment and user."),
+		kong.Description("Fetch a submission for a specific assignment and user."),
 	)
 
 	err := config.HandleConfigArgs(args.ConfigArgs)
@@ -41,34 +41,31 @@ func main() {
 	conn, err := net.Dial("unix", socketPath)
 	if err != nil {
 		log.Fatal("Failed to dial the unix socket.", err)
-		os.Exit(1)
 	}
 
 	defer conn.Close()
 
-	targetUser := core.TargetCourseUserSelfOrGrader{
-		TargetCourseUser: core.TargetCourseUser{
-			Email: args.TargetEmail,
+	request := submissions.PeekRequest{
+		APIRequestAssignmentContext: core.APIRequestAssignmentContext{
+			APIRequestCourseUserContext: core.APIRequestCourseUserContext{
+				CourseID: args.CourseID,
+			},
+			AssignmentID: args.AssignmentID,
 		},
-	}
-
-	assignmentContext := core.APIRequestAssignmentContext{
-		APIRequestCourseUserContext: core.APIRequestCourseUserContext{
-			CourseID: args.CourseID,
+		TargetUser: core.TargetCourseUserSelfOrGrader{
+			TargetCourseUser: core.TargetCourseUser{
+				Email: args.TargetEmail,
+			},
 		},
-		AssignmentID: args.AssignmentID,
-	}
+		TargetSubmission: args.TargetSubmission,
+	}	
 
-	request := map[string]interface{}{
+	requestMap := map[string]interface{}{
 		"endpoint": core.NewEndpoint(`submissions/peek`),
-		"request": submissions.PeekRequest{
-			APIRequestAssignmentContext: assignmentContext,
-			TargetUser:                  targetUser,
-			TargetSubmission:            args.TargetSubmission,
-		},
+		"request": request,
 	}
 
-	jsonRequest := util.MustToJSONIndent(request)
+	jsonRequest := util.MustToJSONIndent(requestMap)
 	jsonBytes := []byte(jsonRequest)
 	requestBuffer := new(bytes.Buffer)
 	size := uint64(len(jsonBytes))
@@ -103,11 +100,14 @@ func main() {
 	err = json.Unmarshal(responseBuffer, &response)
 	if err != nil {
 		log.Error("Failed to unmarshal the API response.", err)
-		return
 	}
 
-	var responseContent submissions.PeekResponse
-	util.MustJSONFromString(util.MustToJSON(response.Content), &responseContent)
+	if args.Verbose {
+		fmt.Println(util.MustToJSONIndent(response))
+	} else {
+		var responseContent submissions.PeekResponse
+		util.MustJSONFromString(util.MustToJSON(response.Content), &responseContent)
 
-	fmt.Println(util.MustToJSONIndent(responseContent))
+		fmt.Println(util.MustToJSONIndent(responseContent))
+	}
 }
