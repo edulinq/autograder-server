@@ -24,7 +24,7 @@ function verify_test_data() {
 
 function run() {
     cd "${BASE_DIR}"
-    rm -f /tmp/autograder.pid /tmp/autograder.sock
+    rm -f /autograder/tmp/autograder.pid /autograder/tmp/autograder.sock
     echo "Building project."
 
     ./scripts/build.sh
