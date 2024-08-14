@@ -168,19 +168,23 @@ func (this *ServerUser) ToCourseUser(courseID string) (*CourseUser, error) {
 // Convert this server user into a course super user for the specific course.
 // The LMSID field will be nil if the user is not enrolled in the given course.
 func (this *ServerUser) ToCourseSuperUser(courseID string) (*CourseUser, error) {
-	courseUser := &CourseUser{
-		Email: this.Email,
-		Name:  this.Name,
-		Role:  CourseRoleOwner,
-		LMSID: nil,
+	courseUser, err := this.ToCourseUser(courseID)
+	if err != nil {
+		return courseUser, err
 	}
 
-	info, exists := this.CourseInfo[courseID]
-	if exists {
-		courseUser.LMSID = info.LMSID
+	if courseUser == nil {
+		courseUser = &CourseUser{
+			Email: this.Email,
+			Name:  this.Name,
+			Role:  CourseRoleSuper,
+			LMSID: nil,
+		}
 	}
 
-	return courseUser, courseUser.Validate()
+	courseUser.Role = CourseRoleSuper
+
+	return courseUser, nil
 }
 
 // Add information from the given user to this user.
