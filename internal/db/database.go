@@ -215,7 +215,6 @@ func Open() error {
 		}
 	}
 
-
 	return nil
 }
 

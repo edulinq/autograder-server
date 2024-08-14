@@ -86,8 +86,8 @@ func (this *APIRequestUserContext) Validate(request any, endpoint string) *APIEr
 	if this.RootUserNonce != "" {
 		if !rootUserExists {
 			return NewBadRequestError("-048", &this.APIRequest, "Incorrect root user nonce.")
-		} 
-		
+		}
+
 		this.ServerUser = &model.FakeRootUser
 	} else {
 		if this.UserEmail == "" {

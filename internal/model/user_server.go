@@ -164,7 +164,7 @@ func (this *ServerUser) ToCourseUser(courseID string) (*CourseUser, error) {
 
 		return courseUser, nil
 	}
-	
+
 	info, exists := this.CourseInfo[courseID]
 	if !exists {
 		return nil, nil

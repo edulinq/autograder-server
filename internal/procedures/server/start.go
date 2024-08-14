@@ -20,11 +20,11 @@ func Start() error {
 
 	var pidFilePath = config.PID_PATH.Get()
 
-    err := common.CreatePIDFile()
+	err := common.CreatePIDFile()
 	defer os.Remove(pidFilePath)
-    if err != nil {
-        log.Fatal("Could not create PID file", err)
-    }
+	if err != nil {
+		log.Fatal("Could not create PID file", err)
+	}
 
 	// Remove the unix socket file when the program terminates abruptly.
 	c := make(chan os.Signal, 1)
@@ -35,40 +35,40 @@ func Start() error {
 		os.Exit(1)
 	}()
 
-    workingDir, err := os.Getwd()
-    if err != nil {
-        log.Fatal("Could not get working directory", err)
-    }
+	workingDir, err := os.Getwd()
+	if err != nil {
+		log.Fatal("Could not get working directory", err)
+	}
 
-    db.MustOpen()
-    defer db.MustClose()
+	db.MustOpen()
+	defer db.MustClose()
 
-    log.Info("Running server with working directory.", log.NewAttr("dir", workingDir))
+	log.Info("Running server with working directory.", log.NewAttr("dir", workingDir))
 
-    _, err = db.AddCourses()
-    if err != nil {
-        log.Fatal("Could not load courses", err)
-    }
+	_, err = db.AddCourses()
+	if err != nil {
+		log.Fatal("Could not load courses", err)
+	}
 
-    courses := db.MustGetCourses()
-    log.Info("Loaded course(s).", log.NewAttr("count", len(courses)))
+	courses := db.MustGetCourses()
+	log.Info("Loaded course(s).", log.NewAttr("count", len(courses)))
 
-    // Startup courses (in the background).
-    for _, course := range courses {
-        log.Info("Loaded course.", course)
-        go func(course *model.Course) {
-            pcourses.UpdateCourse(course, true)
-        }(course)
-    }
+	// Startup courses (in the background).
+	for _, course := range courses {
+		log.Info("Loaded course.", course)
+		go func(course *model.Course) {
+			pcourses.UpdateCourse(course, true)
+		}(course)
+	}
 
-    // Cleanup any temp dirs.
-    defer util.RemoveRecordedTempDirs()
+	// Cleanup any temp dirs.
+	defer util.RemoveRecordedTempDirs()
 
-    err = api.StartServer()
-    if err != nil {
-        log.Fatal("Server was stopped", err)
-    }
+	err = api.StartServer()
+	if err != nil {
+		log.Fatal("Server was stopped", err)
+	}
 
-    log.Info("Server closed.")
-    return nil
+	log.Info("Server closed.")
+	return nil
 }

@@ -9,7 +9,6 @@ import (
 	"github.com/edulinq/autograder/internal/util"
 )
 
-
 func CreatePIDFile() error {
 	var pidFilePath = config.PID_PATH.Get()
 
@@ -25,8 +24,6 @@ func CreatePIDFile() error {
 	if err != nil {
 		log.Error("Failed to write to the PID file.", err)
 	}
-
-
 
 	return nil
 }

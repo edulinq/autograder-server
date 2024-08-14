@@ -21,7 +21,7 @@ func ReadFromUnixSocket(conn net.Conn, bufferBytes int) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-    return jsonBuffer, nil
+	return jsonBuffer, nil
 }
 
 func WriteToUnixSocket(conn net.Conn, data []byte) error {

@@ -93,19 +93,19 @@ func GetCourseUser(course *model.Course, email string) (*model.CourseUser, error
 // Convenience function for UpsertUsers() with a single user.
 func UpsertUser(user *model.ServerUser) error {
 	if user.Email == model.FakeRootUser.Email {
-        // Create a temporary user with Admin role for validation
-        tempUser := user.Clone()
-        tempUser.Role = model.ServerRoleAdmin
+		// Create a temporary user with Admin role for validation
+		tempUser := user.Clone()
+		tempUser.Role = model.ServerRoleAdmin
 
-        err := tempUser.Validate()
-        if err != nil {
-            return fmt.Errorf("root user validation failed: %w", err)
-        }
+		err := tempUser.Validate()
+		if err != nil {
+			return fmt.Errorf("root user validation failed: %w", err)
+		}
 
-        // Use the original user (with Root role) for upserting
-        users := map[string]*model.ServerUser{user.Email: user}
-        return UpsertUsers(users)
-    }
+		// Use the original user (with Root role) for upserting
+		users := map[string]*model.ServerUser{user.Email: user}
+		return UpsertUsers(users)
+	}
 
 	users := map[string]*model.ServerUser{user.Email: user}
 	return UpsertUsers(users)

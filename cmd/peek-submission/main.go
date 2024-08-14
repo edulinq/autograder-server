@@ -18,9 +18,9 @@ import (
 
 var args struct {
 	config.ConfigArgs
-	TargetEmail      string `help:"Email of the user to fetch." arg:""`
-	CourseID         string `help:"ID of the course." arg:""`
-	AssignmentID     string `help:"ID of the assignment." arg:""`
+	TargetEmail  string `help:"Email of the user to fetch." arg:""`
+	CourseID     string `help:"ID of the course." arg:""`
+	AssignmentID string `help:"ID of the assignment." arg:""`
 
 	TargetSubmission string `help:"ID of the submission." arg:"" optional:""`
 	Verbose          bool   `help:"Print the entire response." short:"v"`
@@ -58,11 +58,11 @@ func main() {
 			},
 		},
 		TargetSubmission: args.TargetSubmission,
-	}	
+	}
 
 	requestMap := map[string]interface{}{
 		"endpoint": core.NewEndpoint(`submissions/peek`),
-		"request": request,
+		"request":  request,
 	}
 
 	jsonRequest := util.MustToJSONIndent(requestMap)

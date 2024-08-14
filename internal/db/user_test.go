@@ -555,22 +555,22 @@ func convertToCourseUsers(test *testing.T, course *model.Course, serverUsers map
 }
 
 func (this *DBTests) DBTestRootUserValidation(test *testing.T) {
-    defer ResetForTesting()
-    ResetForTesting()
+	defer ResetForTesting()
+	ResetForTesting()
 
 	UpsertUser(&model.FakeRootUser)
 
-    rootUser, err := GetServerUser(model.FakeRootUser.Email, true)
-    if err != nil {
-        test.Fatalf("Failed to get root user: '%v'", err)
-    }
+	rootUser, err := GetServerUser(model.FakeRootUser.Email, true)
+	if err != nil {
+		test.Fatalf("Failed to get root user: '%v'", err)
+	}
 
-    if rootUser == nil {
-        test.Fatal("Root user not found")
-    }
+	if rootUser == nil {
+		test.Fatal("Root user not found")
+	}
 
-    err = rootUser.Validate()
-    if err != nil {
-        test.Fatalf("Root user validation failed: '%v'", err)
-    }
+	err = rootUser.Validate()
+	if err != nil {
+		test.Fatalf("Root user validation failed: '%v'", err)
+	}
 }
