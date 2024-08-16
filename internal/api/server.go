@@ -14,14 +14,17 @@ var API_REQUEST_CONTENT_KEY = "content"
 
 func StartServer() error {
 	var serverShutdown sync.WaitGroup
-	serverShutdown.Add(1)
+	serverError := make(chan error, 2)
+    serverGracefulShutdown := make(chan bool)
 
+	serverShutdown.Add(1)
 	go func() {
 		defer serverShutdown.Done()
 
 		err := startExclusiveAPIServer()
 		if err != nil {
 			log.Error("Failed to start the api server.", err)
+			serverError <- err
 		}
 	}()
 
@@ -31,12 +34,21 @@ func StartServer() error {
 		err := startExclusiveUnixServer()
 		if err != nil {
 			log.Error("Failed to start the unix server.", err)
+			serverError <- err
 		}
 	}()
 
-	serverShutdown.Wait()
+	go func() {
+		serverShutdown.Wait()
+		close(serverGracefulShutdown)
+	}()
 
-	return nil
+	select {
+		case err := <-serverError:
+			return err
+		case <- serverGracefulShutdown:
+			return nil
+	}
 }
 
 func startExclusiveAPIServer() error {
