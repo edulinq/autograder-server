@@ -35,3 +35,40 @@ Since this is very unlikely and most times an abs path is not strictly necessary
 "Should" functions can be used anywhere,
 but care should be taken not to overuse them when a fallback value is not sufficient.
 "Must" variants should be favored in testing code, since they will more obviously fail tests.
+
+## Cross-Platform Scripting
+
+We are writing bash scripts with the intention of running them in a POSIX environment.
+However, differences between operating systems, particularly between Linux and BSD,
+can still affect a script's behavior. 
+This section highlights key considerations to ensure your scripts run consistently across platforms.
+
+### Regular Expressions
+
+Differences between how Linux and BSD handle different standards of regular expressions can cause inconsistent outcomes when writing scripts.
+Here are three common regex standards you may encounter, along with key considerations for each:
+
+- **BRE (Basic Regular Expressions)**
+  - **Usage**: Default in many tools.
+  - **Consideration**: While BREs cover most common use cases, their default behavior can vary between tools and operating systems.
+  - **[More Info](https://en.wikipedia.org/wiki/Regular_expression#IEEE_POSIX_Standard)**
+
+- **ERE (Extended Regular Expressions)**
+  - **Usage**: Often enabled with the `-E` flag (like in `grep` and `sed`).
+  - **Consideration**: EREs make it easier to write and understand complex regular expressions.
+  - **[More Info](https://en.wikipedia.org/wiki/Regular_expression#IEEE_POSIX_Standard)**
+
+- **PCRE (Perl-Compatible Regular Expressions)**
+  - **Usage**: Enabled with the `-P` flag in `grep`.
+  - **Consideration**: PCREs have inconsistent behavior between Linux and BSD. Avoid using for cross-platform scripts.
+  - **[More Info](https://en.wikipedia.org/wiki/Perl_Compatible_Regular_Expressions)**
+
+### Tool-Specific Guidelines
+
+#### `grep`
+- **Avoid**: The `-P` flag (PCRE) for cross-platform scripts.
+- **Alternative**: Use the `-E` flag (ERE) to achieve similar functionality with more consistent behavior.
+
+#### `sed`
+- **Use**: The `-E` flag to enable ERE.
+- **Reason**: BRE behavior is inconsistent across different operating systems.
