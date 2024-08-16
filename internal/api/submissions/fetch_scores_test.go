@@ -22,6 +22,7 @@ func TestFetchScores(test *testing.T) {
 			"grader@test.com":  "",
 			"admin@test.com":   "",
 			"owner@test.com":   "",
+			"root":             "",
 		}},
 		{model.CourseRoleAdmin, model.CourseRoleUnknown, false, map[string]string{
 			"other@test.com":   "",
@@ -29,12 +30,15 @@ func TestFetchScores(test *testing.T) {
 			"grader@test.com":  "",
 			"admin@test.com":   "",
 			"owner@test.com":   "",
+			"root":             "",
 		}},
 		{model.CourseRoleGrader, model.CourseRoleStudent, false, map[string]string{
 			"student@test.com": "course101::hw0::student@test.com::1697406272",
+			"root":             "",
 		}},
 		{model.CourseRoleGrader, model.CourseRoleGrader, false, map[string]string{
 			"grader@test.com": "",
+			"root":            "",
 		}},
 		{model.CourseRoleStudent, model.CourseRoleUnknown, true, nil},
 		{model.CourseRoleStudent, model.CourseRoleStudent, true, nil},
