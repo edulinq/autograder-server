@@ -3,6 +3,7 @@ package server
 import (
 	"os"
 	"os/signal"
+	"strconv"
 	"syscall"
 
 	"github.com/edulinq/autograder/internal/api"
@@ -20,11 +21,30 @@ func Start() error {
 
 	var pidFilePath = config.PID_PATH.Get()
 
+	if _, err := os.Stat(pidFilePath); err == nil {
+		data, err := os.ReadFile(pidFilePath)
+		if err == nil {
+			pid, err := strconv.Atoi(string(data))
+			if err == nil {
+				process, err := os.FindProcess(pid)
+				if err == nil {
+					err = process.Signal(syscall.Signal(0))
+					if err == nil {
+						log.Fatal("Server is already running with PID:", pid)
+					} else {
+						os.Remove(pidFilePath)
+					}
+				}
+			}
+		}
+	}
+
 	err := common.CreatePIDFile()
-	defer os.Remove(pidFilePath)
 	if err != nil {
 		log.Fatal("Could not create PID file", err)
 	}
+
+	defer os.Remove(pidFilePath)
 
 	// Remove the unix socket file when the program terminates abruptly.
 	c := make(chan os.Signal, 1)
