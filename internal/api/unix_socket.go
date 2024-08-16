@@ -53,7 +53,7 @@ func startExclusiveUnixServer() error {
 	}
 }
 
-func handleUnixSocketConnection(conn net.Conn) error{
+func handleUnixSocketConnection(conn net.Conn) error {
 	var port = config.WEB_PORT.Get()
 	var bufferBytes = config.BUFFER_SIZE.Get()
 	var bitSize = config.BIT_SIZE.Get()

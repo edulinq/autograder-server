@@ -15,7 +15,7 @@ var API_REQUEST_CONTENT_KEY = "content"
 func StartServer() error {
 	var serverShutdown sync.WaitGroup
 	serverError := make(chan error, 2)
-    serverGracefulShutdown := make(chan bool)
+	serverGracefulShutdown := make(chan bool)
 
 	serverShutdown.Add(1)
 	go func() {
@@ -44,10 +44,10 @@ func StartServer() error {
 	}()
 
 	select {
-		case err := <-serverError:
-			return err
-		case <- serverGracefulShutdown:
-			return nil
+	case err := <-serverError:
+		return err
+	case <-serverGracefulShutdown:
+		return nil
 	}
 }
 
