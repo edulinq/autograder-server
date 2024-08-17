@@ -34,11 +34,9 @@ func TestFetchScores(test *testing.T) {
 		}},
 		{model.CourseRoleGrader, model.CourseRoleStudent, false, map[string]string{
 			"student@test.com": "course101::hw0::student@test.com::1697406272",
-			"root":             "",
 		}},
 		{model.CourseRoleGrader, model.CourseRoleGrader, false, map[string]string{
 			"grader@test.com": "",
-			"root":            "",
 		}},
 		{model.CourseRoleStudent, model.CourseRoleUnknown, true, nil},
 		{model.CourseRoleStudent, model.CourseRoleStudent, true, nil},
