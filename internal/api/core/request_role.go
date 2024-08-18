@@ -16,6 +16,7 @@ type MinServerRoleUser bool
 
 // The minimum course roles required encoded as a type so it can be embedded into a request struct.
 // Using any of these implies your request is at least an APIRequestCourseUserContext.
+type MinCourseRoleSuper bool
 type MinCourseRoleOwner bool
 type MinCourseRoleAdmin bool
 type MinCourseRoleGrader bool
@@ -89,7 +90,12 @@ func getMaxCourseRole(request any) (model.CourseUserRole, bool) {
 	for i := 0; i < reflectValue.NumField(); i++ {
 		fieldValue := reflectValue.Field(i)
 
-		if fieldValue.Type() == reflect.TypeOf((*MinCourseRoleOwner)(nil)).Elem() {
+		if fieldValue.Type() == reflect.TypeOf((*MinCourseRoleSuper)(nil)).Elem() {
+			foundRole = true
+			if role < model.CourseRoleSuper {
+				role = model.CourseRoleSuper
+			}
+		} else if fieldValue.Type() == reflect.TypeOf((*MinCourseRoleOwner)(nil)).Elem() {
 			foundRole = true
 			if role < model.CourseRoleOwner {
 				role = model.CourseRoleOwner
