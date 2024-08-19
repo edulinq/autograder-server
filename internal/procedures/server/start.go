@@ -46,7 +46,6 @@ func Start() error {
 
 	defer os.Remove(pidFilePath)
 
-	// Remove the unix socket file when the program terminates abruptly.
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
 	go func() {

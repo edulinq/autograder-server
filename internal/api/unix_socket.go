@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/edulinq/autograder/internal/api/core"
 	"github.com/edulinq/autograder/internal/common"
@@ -15,26 +17,21 @@ import (
 
 func startExclusiveUnixServer() error {
 	var socketPath = config.UNIX_SOCKET_PATH.Get()
-	os.Remove(socketPath)
-	fmt.Println("socketPath: ", socketPath)
+
 	unixSocket, err := net.Listen("unix", socketPath)
 	if err != nil {
 		log.Fatal("Failed to listen on a Unix socket.", err)
 	}
 
 	defer os.Remove(socketPath)
-	// sigc := make(chan os.Signal, 1)
-	// signal.Notify(sigc, os.Interrupt, syscall.SIGTERM, syscall.SIGQUIT, syscall.SIGHUP)
-	// go func(c chan os.Signal) {
-	// 	// Wait for a SIGINT or SIGKILL:
-	// 	sig := <-c
-	// 	fmt.Println("Caught signal %s: shutting down.", sig)
-	// 	// Stop listening (and unlink the socket if unix type):
-	// 	unixSocket.Close()
-	// 	os.Remove(socketPath)
-	// 	// And we're done:
-	// 	os.Exit(0)
-	// }(sigc)
+	defer unixSocket.Close()
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
+	go func() {
+		<-c
+		os.Remove(socketPath)
+		unixSocket.Close()
+	}()
 
 	log.Info("Unix Server Started", log.NewAttr("unix_socket", socketPath))
 

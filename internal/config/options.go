@@ -43,8 +43,8 @@ var (
 	// Server
 	WEB_PORT             = MustNewIntOption("web.port", 8080, "The port for the web interface to serve on.")
 	WEB_MAX_FILE_SIZE_KB = MustNewIntOption("web.maxsizekb", 2*1024, "The maximum allowed file size (in KB) submitted via POST request. The default is 2048 KB (2 MB).")
-	UNIX_SOCKET_PATH     = MustNewStringOption("unix.socket", GetUnixSocketPath(), "The socket for CMD requests to serve on.")
-	PID_PATH             = MustNewStringOption("pid.path", GetPidPath(), "The pid file to ensure only one instance of a server runs at a time.")
+	UNIX_SOCKET_PATH     = MustNewStringOption("unix.socket", "/tmp/autograder.sock", "The socket for CMD requests to serve on.")
+	PID_PATH             = MustNewStringOption("pid.path", "/tmp/autograder.pid", "The pid file to ensure only one instance of a server runs at a time.")
 	BUFFER_SIZE          = MustNewIntOption("buffer.size", 8, "The length of the byte slice for the unix socket to read the size of the request.")
 	BIT_SIZE             = MustNewIntOption("bit.size", 64, "The number of bits to generate a random hexidecimal string.")
 
