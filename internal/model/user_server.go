@@ -160,18 +160,28 @@ func (this *ServerUser) GetCourseRole(courseID string) CourseUserRole {
 }
 
 // Convert this server user into a course user for the specific course.
-// Will return (nil, nil) if the user is not enrolled in the given course.
-func (this *ServerUser) ToCourseUser(courseID string) (*CourseUser, error) {
-	info, exists := this.CourseInfo[courseID]
-	if !exists {
+// Set escalateServerAdmin to true if high level server users should be escalated to a course owner.
+// Will return (nil, nil) if the user is not escalated and not enrolled in the given course.
+func (this *ServerUser) ToCourseUser(courseID string, escalateServerAdmin bool) (*CourseUser, error) {
+	escalate := escalateServerAdmin && (this.Role >= ServerRoleAdmin)
+
+	info, enrolled := this.CourseInfo[courseID]
+	if !enrolled && !escalate {
 		return nil, nil
 	}
 
 	courseUser := &CourseUser{
 		Email: this.Email,
 		Name:  this.Name,
-		Role:  info.Role,
-		LMSID: info.LMSID,
+	}
+
+	if enrolled {
+		courseUser.Role = info.Role
+		courseUser.LMSID = info.LMSID
+	}
+
+	if escalate {
+		courseUser.Role = CourseRoleOwner
 	}
 
 	return courseUser, courseUser.Validate()
