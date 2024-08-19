@@ -168,16 +168,6 @@ func (this *ServerUser) GetCourseRole(courseID string) CourseUserRole {
 // Set escalateServerAdmin to true if high level server users should be escalated to a course owner.
 // Will return (nil, nil) if the user is not escalated and not enrolled in the given course.
 func (this *ServerUser) ToCourseUser(courseID string, escalateServerAdmin bool) (*CourseUser, error) {
-	if this.Email == "root" {
-		courseUser := &CourseUser{
-			Email: this.Email,
-			Name:  this.Name,
-			Role:  CourseRoleOwner,
-		}
-
-		return courseUser, nil
-	}
-
 	escalate := escalateServerAdmin && (this.Role >= ServerRoleAdmin)
 
 	info, enrolled := this.CourseInfo[courseID]

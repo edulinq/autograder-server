@@ -200,7 +200,11 @@ func Open() error {
 		return err
 	}
 
-	UpsertUser(&model.FakeRootUser)
+	// TODO error handle
+	err = UpsertUser(&model.FakeRootUser)
+	if err != nil {
+		return err
+	}
 
 	// We are probably running unit tests, load the test data.
 	if config.LOAD_TEST_DATA.Get() {
