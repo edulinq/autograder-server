@@ -16,7 +16,6 @@ type CourseUserRole int
 // CourseRoleGrader is for users that need access to grades/submissions, but cannot administrate a course.
 // CourseRoleAdmin is for users that need to administrate a course.
 // CourseRoleOwner is for the top-level authorities of a course.
-// CourseRoleSuper is not for an actual user (will be a validation error), but the authority given when a server admin or above runs course APIs.
 const (
 	CourseRoleUnknown CourseUserRole = 0
 	CourseRoleOther                  = 10

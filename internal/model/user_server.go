@@ -160,7 +160,7 @@ func (this *ServerUser) GetCourseRole(courseID string) CourseUserRole {
 }
 
 // Convert this server user into a course user for the specific course.
-// Set courseOnly to false if high level server users should be converted.
+// Set courseOnly to false if high level server users should be converted to a course user.
 // Will return (nil, nil) if the user is not enrolled in the given course.
 func (this *ServerUser) ToCourseUser(courseID string, courseOnly bool) (*CourseUser, error) {
 	info, exists := this.CourseInfo[courseID]
