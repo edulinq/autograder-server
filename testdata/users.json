@@ -4,16 +4,15 @@
         "name": "admin",
         "server-role": "admin",
         "salt": "c72f85ab94f66b49b4e93cb0d0776fc7",
-        "tokens": [
-            {
-                "id": "6bc78a24-e987-4cf0-a575-da5dab94b42d",
-                "hex-digest": "9e9b6743a3fff9f56eb183f13cd34d810db94c5deb13e6a494d30ccc267eb00c",
-                "source": "password",
-                "name": "password",
-                "CreationTime": "2000-01-01T12:00:00Z",
-                "AccessTime": "2000-01-01T12:00:00Z"
-            }
-        ],
+        "password": {
+            "id": "6bc78a24-e987-4cf0-a575-da5dab94b42d",
+            "hex-digest": "9e9b6743a3fff9f56eb183f13cd34d810db94c5deb13e6a494d30ccc267eb00c",
+            "source": "password",
+            "name": "password",
+            "CreationTime": "2000-01-01T12:00:00Z",
+            "AccessTime": "2000-01-01T12:00:00Z"
+        },
+        "tokens": [],
         "course-info": {
             "course-languages": {
                 "role": "admin",
@@ -42,16 +41,15 @@
         "name": "grader",
         "server-role": "creator",
         "salt": "a853844be59b339ec45733eddeee41cd",
-        "tokens": [
-            {
-                "id": "a041f679-0567-495b-8dde-6c2329e094a0",
-                "hex-digest": "9c33fae839ad63474a677e871aeb4cdb63ab7089774a83fd8ad01a28b45f4271",
-                "source": "password",
-                "name": "password",
-                "CreationTime": "2000-01-01T12:00:00Z",
-                "AccessTime": "2000-01-01T12:00:00Z"
-            }
-        ],
+        "password": {
+            "id": "a041f679-0567-495b-8dde-6c2329e094a0",
+            "hex-digest": "9c33fae839ad63474a677e871aeb4cdb63ab7089774a83fd8ad01a28b45f4271",
+            "source": "password",
+            "name": "password",
+            "CreationTime": "2000-01-01T12:00:00Z",
+            "AccessTime": "2000-01-01T12:00:00Z"
+        },
+        "tokens": [],
         "course-info": {
             "course-languages": {
                 "role": "grader",
@@ -80,16 +78,15 @@
         "name": "no-lms-id",
         "server-role": "user",
         "salt": "2d3ecb56a6d429e580db9a8c9f117717",
-        "tokens": [
-            {
-                "id": "3876aed7-0c60-4a17-bdf6-f350dbc8e2be",
-                "hex-digest": "4ddbd2eef282a729bcf7cfdacd107efe7c636e437842bc161ff5fa6ab19af4a7",
-                "source": "password",
-                "name": "password",
-                "CreationTime": "2000-01-01T12:00:00Z",
-                "AccessTime": "2000-01-01T12:00:00Z"
-            }
-        ],
+        "password": {
+            "id": "3876aed7-0c60-4a17-bdf6-f350dbc8e2be",
+            "hex-digest": "4ddbd2eef282a729bcf7cfdacd107efe7c636e437842bc161ff5fa6ab19af4a7",
+            "source": "password",
+            "name": "password",
+            "CreationTime": "2000-01-01T12:00:00Z",
+            "AccessTime": "2000-01-01T12:00:00Z"
+        },
+        "tokens": [],
         "course-info": {
             "course-languages": {
                 "role": "admin"
@@ -107,16 +104,15 @@
         "name": "other",
         "server-role": "user",
         "salt": "72f9b3fdeec2724d3e47edb617295f95",
-        "tokens": [
-            {
-                "id": "a632c6c9-6575-4c84-a8db-faac7a5c02ef",
-                "hex-digest": "d21868008248115a72109ccddb008043e12e0d37a0001a325c1afc6a66899c2a",
-                "source": "password",
-                "name": "password",
-                "CreationTime": "2000-01-01T12:00:00Z",
-                "AccessTime": "2000-01-01T12:00:00Z"
-            }
-        ],
+        "password": {
+            "id": "a632c6c9-6575-4c84-a8db-faac7a5c02ef",
+            "hex-digest": "d21868008248115a72109ccddb008043e12e0d37a0001a325c1afc6a66899c2a",
+            "source": "password",
+            "name": "password",
+            "CreationTime": "2000-01-01T12:00:00Z",
+            "AccessTime": "2000-01-01T12:00:00Z"
+        },
+        "tokens": [],
         "course-info": {
             "course-languages": {
                 "role": "other",
@@ -145,16 +141,15 @@
         "name": "owner",
         "server-role": "owner",
         "salt": "c61fe4f62b132d3908843e9c00f45c98",
-        "tokens": [
-            {
-                "id": "20e79fe3-4afa-4dd7-a6ed-416a32b7310a",
-                "hex-digest": "a8f8cc96aba145d957bf5934bba22a43aff98684e2df44d2fc214c1cfd51ea8d",
-                "source": "password",
-                "name": "password",
-                "CreationTime": "2000-01-01T12:00:00Z",
-                "AccessTime": "2000-01-01T12:00:00Z"
-            }
-        ],
+        "password": {
+            "id": "20e79fe3-4afa-4dd7-a6ed-416a32b7310a",
+            "hex-digest": "a8f8cc96aba145d957bf5934bba22a43aff98684e2df44d2fc214c1cfd51ea8d",
+            "source": "password",
+            "name": "password",
+            "CreationTime": "2000-01-01T12:00:00Z",
+            "AccessTime": "2000-01-01T12:00:00Z"
+        },
+        "tokens": [],
         "course-info": {
             "course-languages": {
                 "role": "owner",
@@ -183,16 +178,15 @@
         "name": "student",
         "server-role": "user",
         "salt": "ea3a6c7d493148e01a8faff25956dc28",
-        "tokens": [
-            {
-                "id": "5c26811e-c30a-4f8e-8fcb-1ebe5719e5d9",
-                "hex-digest": "9b2e4fb77dc9282894a257bf54c5469b276152ea677612c44e04762970045b10",
-                "source": "password",
-                "name": "password",
-                "CreationTime": "2000-01-01T12:00:00Z",
-                "AccessTime": "2000-01-01T12:00:00Z"
-            }
-        ],
+        "password": {
+            "id": "5c26811e-c30a-4f8e-8fcb-1ebe5719e5d9",
+            "hex-digest": "9b2e4fb77dc9282894a257bf54c5469b276152ea677612c44e04762970045b10",
+            "source": "password",
+            "name": "password",
+            "CreationTime": "2000-01-01T12:00:00Z",
+            "AccessTime": "2000-01-01T12:00:00Z"
+        },
+        "tokens": [],
         "course-info": {
             "course-languages": {
                 "role": "student",
@@ -221,16 +215,15 @@
         "name": "server-admin",
         "server-role": "admin",
         "salt": "8c6d9026147e4a7c7168b690b1d23347cffe85e4723772ee7899a84f71d76356",
-        "tokens": [
-            {
-                "id": "191cad61-cf41-4cc5-8684-7e10e6d052ca",
-                "hex-digest": "fc4b34a5fc240db90cc3f1d81993a392c858afbce5e650dff2754eb54dbbabec",
-                "source": "password",
-                "name": "password",
-                "creation-time": "2024-07-15T09:49:13-04:00",
-                "access-time": "2024-07-15T09:49:13-04:00"
-            }
-        ],
+        "password": {
+            "id": "191cad61-cf41-4cc5-8684-7e10e6d052ca",
+            "hex-digest": "fc4b34a5fc240db90cc3f1d81993a392c858afbce5e650dff2754eb54dbbabec",
+            "source": "password",
+            "name": "password",
+            "creation-time": "2024-07-15T09:49:13-04:00",
+            "access-time": "2024-07-15T09:49:13-04:00"
+        },
+        "tokens": [],
         "course-info": {}
     },
     "server-creator@test.com": {
@@ -238,16 +231,15 @@
         "name": "server-creator",
         "server-role": "creator",
         "salt": "dba7e9d474fdaa86096d09f1166700994a526b775eb2ce1295c351723e9323f6",
-        "tokens": [
-            {
-                "id": "61199a8d-24bd-42fe-b045-d463f8a81f0a",
-                "hex-digest": "f4e77e82622376eb2433e9f1b4bc0e8ae1fe4e85124c64f12d3353ca2dfe4454",
-                "source": "password",
-                "name": "password",
-                "creation-time": "2024-07-15T09:49:41-04:00",
-                "access-time": "2024-07-15T09:49:41-04:00"
-            }
-        ],
+        "password": {
+            "id": "61199a8d-24bd-42fe-b045-d463f8a81f0a",
+            "hex-digest": "f4e77e82622376eb2433e9f1b4bc0e8ae1fe4e85124c64f12d3353ca2dfe4454",
+            "source": "password",
+            "name": "password",
+            "creation-time": "2024-07-15T09:49:41-04:00",
+            "access-time": "2024-07-15T09:49:41-04:00"
+        },
+        "tokens": [],
         "course-info": {}
     },
     "server-owner@test.com": {
@@ -255,16 +247,15 @@
         "name": "server-owner",
         "server-role": "owner",
         "salt": "079fc4ea12af4ba0ebfa131b3dd3de664b2cae1ac2b7c49ce4ec66d56b2acfa3",
-        "tokens": [
-            {
-                "id": "c16da2bc-38a1-4e40-8afc-b6c7788e977c",
-                "hex-digest": "802047ad02de27abbe567bfe4c038a3764e979b4c10a44a7a08bf3fcb2f74c9e",
-                "source": "password",
-                "name": "password",
-                "creation-time": "2024-07-15T09:48:57-04:00",
-                "access-time": "2024-07-15T09:48:57-04:00"
-            }
-        ],
+        "password": {
+            "id": "c16da2bc-38a1-4e40-8afc-b6c7788e977c",
+            "hex-digest": "802047ad02de27abbe567bfe4c038a3764e979b4c10a44a7a08bf3fcb2f74c9e",
+            "source": "password",
+            "name": "password",
+            "creation-time": "2024-07-15T09:48:57-04:00",
+            "access-time": "2024-07-15T09:48:57-04:00"
+        },
+        "tokens": [],
         "course-info": {}
     },
     "server-user@test.com": {
@@ -272,16 +263,15 @@
         "name": "server-user",
         "server-role": "user",
         "salt": "c66b1d9533c87838e0c364bd014150691990ed007d59632cabce77206e8351a3",
-        "tokens": [
-            {
-                "id": "5baab146-a6f1-445c-b79f-a135b7fe1f06",
-                "hex-digest": "8c95dbc49b86b732b53683cc0a535a512127c2f3a09c577a68a7ea632544c4b9",
-                "source": "password",
-                "name": "password",
-                "creation-time": "2024-07-15T09:49:56-04:00",
-                "access-time": "2024-07-15T09:49:56-04:00"
-            }
-        ],
+        "password": {
+            "id": "5baab146-a6f1-445c-b79f-a135b7fe1f06",
+            "hex-digest": "8c95dbc49b86b732b53683cc0a535a512127c2f3a09c577a68a7ea632544c4b9",
+            "source": "password",
+            "name": "password",
+            "creation-time": "2024-07-15T09:49:56-04:00",
+            "access-time": "2024-07-15T09:49:56-04:00"
+        },
+        "tokens": [],
         "course-info": {}
     }
 }

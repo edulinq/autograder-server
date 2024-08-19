@@ -36,11 +36,28 @@ Since this is very unlikely and most times an abs path is not strictly necessary
 but care should be taken not to overuse them when a fallback value is not sufficient.
 "Must" variants should be favored in testing code, since they will more obviously fail tests.
 
+## Internal Notes
+
+### Passwords/Tokens
+
+Cleartext is never stored in anything other than memory (and event then it will be temporary).
+When we are working with a "password", it should always be a [SHA-256](https://en.wikipedia.org/wiki/SHA-2) hash of the cleartext.
+Any variables/arguments actually using cleartext should make that apparent with the variable name (i.e. the name should have "cleartext" in it).
+
+## API Notes
+
+### Passwords/Tokens
+
+No password or token should be sent to the server as cleartext.
+They should always be hashed using the [SHA-256](https://en.wikipedia.org/wiki/SHA-2) cryptographic hash function.
+On request, cleartext passwords and tokens may be set from the server to the user (or via email),
+but never in the other direction.
+
 ## Cross-Platform Scripting
 
 We are writing bash scripts with the intention of running them in a POSIX environment.
 However, differences between operating systems, particularly between Linux and BSD,
-can still affect a script's behavior. 
+can still affect a script's behavior.
 This section highlights key considerations to ensure your scripts run consistently across platforms.
 
 ### Regular Expressions
