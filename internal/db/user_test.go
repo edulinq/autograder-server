@@ -472,7 +472,29 @@ func (this *DBTests) DBTestUserDeleteTokenBase(test *testing.T) {
 	defer ResetForTesting()
 	ResetForTesting()
 
-	tokenID := MustGetServerUser("admin@test.com", true).Tokens[0].ID
+	email := "admin@test.com"
+
+	// Add a token.
+	user := MustGetServerUser(email, true)
+
+	_, _, err := user.CreateRandomToken("test", model.TokenSourceServer)
+	if err != nil {
+		test.Fatalf("Failed to create token: '%v'.", err)
+	}
+
+	err = UpsertUser(user)
+	if err != nil {
+		test.Fatalf("Could not upsert user: '%v'.", err)
+	}
+
+	// Re-fetch and ensure the token exists.
+	user = MustGetServerUser(email, true)
+
+	if len(user.Tokens) != 1 {
+		test.Fatalf("Incorrect number of tokens. Expected: 1, Actual: %d.", len(user.Tokens))
+	}
+
+	tokenID := user.Tokens[0].ID
 
 	// Note that we do not reset between cases.
 	testCases := []struct {
@@ -480,14 +502,14 @@ func (this *DBTests) DBTestUserDeleteTokenBase(test *testing.T) {
 		id      string
 		removed bool
 	}{
-		{"admin@test.com", "ZZZ", false},
-		{"admin@test.com", tokenID, true},
-		{"admin@test.com", tokenID, false},
-		{"admin@test.com", "ZZZ", false},
+		{email, "ZZZ", false},
+		{email, tokenID, true},
+		{email, tokenID, false},
+		{email, "ZZZ", false},
 	}
 
 	for i, testCase := range testCases {
-		initialCount := len(MustGetServerUser("admin@test.com", true).Tokens)
+		initialCount := len(MustGetServerUser(email, true).Tokens)
 		expectedCount := initialCount
 
 		removed, err := DeleteUserToken(testCase.email, testCase.id)
@@ -503,7 +525,7 @@ func (this *DBTests) DBTestUserDeleteTokenBase(test *testing.T) {
 			expectedCount--
 		}
 
-		newCount := len(MustGetServerUser("admin@test.com", true).Tokens)
+		newCount := len(MustGetServerUser(email, true).Tokens)
 		if expectedCount != newCount {
 			test.Fatalf("Case %d: Unexpected token count. Expected: %v, Actual: %v.", i, expectedCount, newCount)
 		}

@@ -11,6 +11,7 @@ import (
 const BASE_SALT string = "abc123"
 
 var baseTestToken *Token = MustNewToken("321cba", BASE_SALT, TokenSourceServer, "test token")
+var baseTestPasswordToken *Token = MustNewToken("alice", BASE_SALT, TokenSourcePassword, "password")
 
 func TestUserServerUserValidate(test *testing.T) {
 	testCases := []struct {
@@ -18,6 +19,7 @@ func TestUserServerUserValidate(test *testing.T) {
 		Name       *string
 		Role       ServerUserRole
 		Salt       *string
+		Password   *Token
 		Tokens     []*Token
 		CourseInfo map[string]*UserCourseInfo
 		Expected   *ServerUser
@@ -28,6 +30,7 @@ func TestUserServerUserValidate(test *testing.T) {
 			baseTestServerUser.Name,
 			baseTestServerUser.Role,
 			baseTestServerUser.Salt,
+			baseTestServerUser.Password,
 			baseTestServerUser.Tokens,
 			baseTestServerUser.CourseInfo,
 			baseTestServerUser,
@@ -39,6 +42,7 @@ func TestUserServerUserValidate(test *testing.T) {
 			baseTestServerUser.Name,
 			baseTestServerUser.Role,
 			baseTestServerUser.Salt,
+			baseTestServerUser.Password,
 			baseTestServerUser.Tokens,
 			baseTestServerUser.CourseInfo,
 			baseTestServerUser,
@@ -48,6 +52,7 @@ func TestUserServerUserValidate(test *testing.T) {
 			baseTestServerUser.Name,
 			baseTestServerUser.Role,
 			baseTestServerUser.Salt,
+			baseTestServerUser.Password,
 			baseTestServerUser.Tokens,
 			baseTestServerUser.CourseInfo,
 			nil,
@@ -59,6 +64,7 @@ func TestUserServerUserValidate(test *testing.T) {
 			util.StringPointer(" " + *baseTestServerUser.Name + " "),
 			baseTestServerUser.Role,
 			baseTestServerUser.Salt,
+			baseTestServerUser.Password,
 			baseTestServerUser.Tokens,
 			baseTestServerUser.CourseInfo,
 			baseTestServerUser,
@@ -68,6 +74,7 @@ func TestUserServerUserValidate(test *testing.T) {
 			nil,
 			baseTestServerUser.Role,
 			baseTestServerUser.Salt,
+			baseTestServerUser.Password,
 			baseTestServerUser.Tokens,
 			baseTestServerUser.CourseInfo,
 			setServerUserName(baseTestServerUser, nil),
@@ -77,6 +84,7 @@ func TestUserServerUserValidate(test *testing.T) {
 			util.StringPointer(""),
 			baseTestServerUser.Role,
 			baseTestServerUser.Salt,
+			baseTestServerUser.Password,
 			baseTestServerUser.Tokens,
 			baseTestServerUser.CourseInfo,
 			nil,
@@ -88,6 +96,7 @@ func TestUserServerUserValidate(test *testing.T) {
 			baseTestServerUser.Name,
 			ServerRoleUnknown,
 			baseTestServerUser.Salt,
+			baseTestServerUser.Password,
 			baseTestServerUser.Tokens,
 			baseTestServerUser.CourseInfo,
 			setServerUserRole(baseTestServerUser, ServerRoleUnknown),
@@ -97,6 +106,7 @@ func TestUserServerUserValidate(test *testing.T) {
 			baseTestServerUser.Name,
 			ServerRoleRoot,
 			baseTestServerUser.Salt,
+			baseTestServerUser.Password,
 			baseTestServerUser.Tokens,
 			baseTestServerUser.CourseInfo,
 			nil,
@@ -108,6 +118,7 @@ func TestUserServerUserValidate(test *testing.T) {
 			baseTestServerUser.Name,
 			baseTestServerUser.Role,
 			util.StringPointer(" " + *baseTestServerUser.Salt + " "),
+			baseTestServerUser.Password,
 			baseTestServerUser.Tokens,
 			baseTestServerUser.CourseInfo,
 			baseTestServerUser,
@@ -117,6 +128,7 @@ func TestUserServerUserValidate(test *testing.T) {
 			baseTestServerUser.Name,
 			baseTestServerUser.Role,
 			util.StringPointer(strings.ToUpper(*baseTestServerUser.Salt)),
+			baseTestServerUser.Password,
 			baseTestServerUser.Tokens,
 			baseTestServerUser.CourseInfo,
 			baseTestServerUser,
@@ -126,6 +138,7 @@ func TestUserServerUserValidate(test *testing.T) {
 			baseTestServerUser.Name,
 			baseTestServerUser.Role,
 			nil,
+			baseTestServerUser.Password,
 			baseTestServerUser.Tokens,
 			baseTestServerUser.CourseInfo,
 			setServerUserSalt(baseTestServerUser, nil),
@@ -135,6 +148,7 @@ func TestUserServerUserValidate(test *testing.T) {
 			baseTestServerUser.Name,
 			baseTestServerUser.Role,
 			util.StringPointer(""),
+			baseTestServerUser.Password,
 			baseTestServerUser.Tokens,
 			baseTestServerUser.CourseInfo,
 			setServerUserSalt(baseTestServerUser, util.StringPointer("")),
@@ -144,26 +158,57 @@ func TestUserServerUserValidate(test *testing.T) {
 			baseTestServerUser.Name,
 			baseTestServerUser.Role,
 			util.StringPointer("nothex"),
+			baseTestServerUser.Password,
+			baseTestServerUser.Tokens,
+			baseTestServerUser.CourseInfo,
+			nil,
+		},
+
+		// Password
+
+		{
+			baseTestServerUser.Email,
+			baseTestServerUser.Name,
+			baseTestServerUser.Role,
+			baseTestServerUser.Salt,
+			nil,
+			baseTestServerUser.Tokens,
+			baseTestServerUser.CourseInfo,
+			setServerUserPassword(baseTestServerUser, nil),
+		},
+
+		// Non-password token used as password.
+		{
+			baseTestServerUser.Email,
+			baseTestServerUser.Name,
+			baseTestServerUser.Role,
+			baseTestServerUser.Salt,
+			baseTestToken,
 			baseTestServerUser.Tokens,
 			baseTestServerUser.CourseInfo,
 			nil,
 		},
 
 		// Tokens
+
 		{
 			baseTestServerUser.Email,
 			baseTestServerUser.Name,
 			baseTestServerUser.Role,
 			baseTestServerUser.Salt,
+			baseTestServerUser.Password,
 			nil,
 			baseTestServerUser.CourseInfo,
 			setServerUserTokens(baseTestServerUser, []*Token{}),
 		},
+
+		// Bad hash (not hex).
 		{
 			baseTestServerUser.Email,
 			baseTestServerUser.Name,
 			baseTestServerUser.Role,
 			baseTestServerUser.Salt,
+			baseTestServerUser.Password,
 			[]*Token{&Token{
 				HexDigest: "ZZZ",
 				Source:    TokenSourceServer,
@@ -171,20 +216,37 @@ func TestUserServerUserValidate(test *testing.T) {
 			baseTestServerUser.CourseInfo,
 			nil,
 		},
+
+		// Nil token.
 		{
 			baseTestServerUser.Email,
 			baseTestServerUser.Name,
 			baseTestServerUser.Role,
 			baseTestServerUser.Salt,
+			baseTestServerUser.Password,
 			[]*Token{nil},
 			baseTestServerUser.CourseInfo,
 			nil,
 		},
+
+		// Token is password.
 		{
 			baseTestServerUser.Email,
 			baseTestServerUser.Name,
 			baseTestServerUser.Role,
 			baseTestServerUser.Salt,
+			baseTestServerUser.Password,
+			[]*Token{baseTestPasswordToken},
+			baseTestServerUser.CourseInfo,
+			nil,
+		},
+
+		{
+			baseTestServerUser.Email,
+			baseTestServerUser.Name,
+			baseTestServerUser.Role,
+			baseTestServerUser.Salt,
+			baseTestServerUser.Password,
 			[]*Token{baseTestToken, baseTestToken},
 			baseTestServerUser.CourseInfo,
 			baseTestServerUser,
@@ -196,6 +258,7 @@ func TestUserServerUserValidate(test *testing.T) {
 			baseTestServerUser.Name,
 			baseTestServerUser.Role,
 			baseTestServerUser.Salt,
+			baseTestServerUser.Password,
 			baseTestServerUser.Tokens,
 			nil,
 			setServerUserCourseInfo(baseTestServerUser, make(map[string]*UserCourseInfo, 0)),
@@ -205,6 +268,7 @@ func TestUserServerUserValidate(test *testing.T) {
 			baseTestServerUser.Name,
 			baseTestServerUser.Role,
 			baseTestServerUser.Salt,
+			baseTestServerUser.Password,
 			baseTestServerUser.Tokens,
 			map[string]*UserCourseInfo{" course101 ": baseUserCourseInfo},
 			baseTestServerUser,
@@ -214,6 +278,7 @@ func TestUserServerUserValidate(test *testing.T) {
 			baseTestServerUser.Name,
 			baseTestServerUser.Role,
 			baseTestServerUser.Salt,
+			baseTestServerUser.Password,
 			baseTestServerUser.Tokens,
 			map[string]*UserCourseInfo{"COURSE101": baseUserCourseInfo},
 			baseTestServerUser,
@@ -223,6 +288,7 @@ func TestUserServerUserValidate(test *testing.T) {
 			baseTestServerUser.Name,
 			baseTestServerUser.Role,
 			baseTestServerUser.Salt,
+			baseTestServerUser.Password,
 			baseTestServerUser.Tokens,
 			map[string]*UserCourseInfo{"": baseUserCourseInfo},
 			nil,
@@ -232,6 +298,7 @@ func TestUserServerUserValidate(test *testing.T) {
 			baseTestServerUser.Name,
 			baseTestServerUser.Role,
 			baseTestServerUser.Salt,
+			baseTestServerUser.Password,
 			baseTestServerUser.Tokens,
 			map[string]*UserCourseInfo{
 				"course101": &UserCourseInfo{Role: CourseRoleStudent, LMSID: nil},
@@ -245,6 +312,7 @@ func TestUserServerUserValidate(test *testing.T) {
 			baseTestServerUser.Name,
 			baseTestServerUser.Role,
 			baseTestServerUser.Salt,
+			baseTestServerUser.Password,
 			baseTestServerUser.Tokens,
 			map[string]*UserCourseInfo{
 				"course101": &UserCourseInfo{Role: CourseRoleStudent, LMSID: util.StringPointer(" alice ")},
@@ -256,6 +324,7 @@ func TestUserServerUserValidate(test *testing.T) {
 			baseTestServerUser.Name,
 			baseTestServerUser.Role,
 			baseTestServerUser.Salt,
+			baseTestServerUser.Password,
 			baseTestServerUser.Tokens,
 			map[string]*UserCourseInfo{
 				"course101": &UserCourseInfo{Role: CourseRoleUnknown, LMSID: nil},
@@ -267,6 +336,7 @@ func TestUserServerUserValidate(test *testing.T) {
 			baseTestServerUser.Name,
 			baseTestServerUser.Role,
 			baseTestServerUser.Salt,
+			baseTestServerUser.Password,
 			baseTestServerUser.Tokens,
 			map[string]*UserCourseInfo{
 				"course101": &UserCourseInfo{Role: CourseRoleStudent, LMSID: util.StringPointer("")},
@@ -280,6 +350,7 @@ func TestUserServerUserValidate(test *testing.T) {
 			baseTestServerUser.Name,
 			baseTestServerUser.Role,
 			baseTestServerUser.Salt,
+			baseTestServerUser.Password,
 			baseTestServerUser.Tokens,
 			map[string]*UserCourseInfo{
 				"course101": &UserCourseInfo{Role: CourseRoleStudent, LMSID: util.StringPointer(" ")},
@@ -296,6 +367,7 @@ func TestUserServerUserValidate(test *testing.T) {
 			Name:       testCase.Name,
 			Role:       testCase.Role,
 			Salt:       testCase.Salt,
+			Password:   testCase.Password,
 			Tokens:     testCase.Tokens,
 			CourseInfo: testCase.CourseInfo,
 		}
@@ -422,6 +494,7 @@ func TestUserServerUserToCourseUser(test *testing.T) {
 func TestUserServerUserMerge(test *testing.T) {
 	baseToken := baseTestServerUser.Tokens[0]
 	newToken := MustNewToken("aa", "abc123", TokenSourceServer, "test token 2")
+	newPasswordToken := MustNewToken("alice123", BASE_SALT, TokenSourcePassword, "password")
 
 	testCases := []struct {
 		Source   *ServerUser
@@ -523,6 +596,20 @@ func TestUserServerUserMerge(test *testing.T) {
 			setServerUserSalt(minimalTestServerUser, util.StringPointer("1234")),
 			true,
 			setServerUserSalt(baseTestServerUser, util.StringPointer("1234")),
+		},
+
+		// Password
+		{
+			baseTestServerUser,
+			setServerUserPassword(minimalTestServerUser, nil),
+			false,
+			baseTestServerUser,
+		},
+		{
+			baseTestServerUser,
+			setServerUserPassword(minimalTestServerUser, newPasswordToken),
+			true,
+			setServerUserPassword(baseTestServerUser, newPasswordToken),
 		},
 
 		// Tokens
@@ -637,6 +724,8 @@ func TestUserServerUserMerge(test *testing.T) {
 }
 
 func TestUserServerUserMustToRow(test *testing.T) {
+	newPasswordToken := MustNewToken("alice123", BASE_SALT, TokenSourcePassword, "password")
+
 	testCases := []struct {
 		User     *ServerUser
 		Expected []string
@@ -649,6 +738,7 @@ func TestUserServerUserMustToRow(test *testing.T) {
 				"Alice",
 				"user",
 				"abc123",
+				"<exists>",
 				`["test token (server)"]`,
 				`{"course101":{"role":"student","lms-id":"alice"}}`,
 			},
@@ -662,6 +752,7 @@ func TestUserServerUserMustToRow(test *testing.T) {
 				"Alice",
 				"user",
 				"abc123",
+				"<exists>",
 				`["test token (server)"]`,
 				`{"course101":{"role":"student","lms-id":"alice"}}`,
 			},
@@ -673,6 +764,7 @@ func TestUserServerUserMustToRow(test *testing.T) {
 				"Alice",
 				"user",
 				"abc123",
+				"<exists>",
 				`["test token (server)"]`,
 				`{"course101":{"role":"student","lms-id":"alice"}}`,
 			},
@@ -686,6 +778,7 @@ func TestUserServerUserMustToRow(test *testing.T) {
 				"foo",
 				"user",
 				"abc123",
+				"<exists>",
 				`["test token (server)"]`,
 				`{"course101":{"role":"student","lms-id":"alice"}}`,
 			},
@@ -697,6 +790,7 @@ func TestUserServerUserMustToRow(test *testing.T) {
 				"",
 				"user",
 				"abc123",
+				"<exists>",
 				`["test token (server)"]`,
 				`{"course101":{"role":"student","lms-id":"alice"}}`,
 			},
@@ -710,6 +804,7 @@ func TestUserServerUserMustToRow(test *testing.T) {
 				"Alice",
 				"owner",
 				"abc123",
+				"<exists>",
 				`["test token (server)"]`,
 				`{"course101":{"role":"student","lms-id":"alice"}}`,
 			},
@@ -723,6 +818,7 @@ func TestUserServerUserMustToRow(test *testing.T) {
 				"Alice",
 				"user",
 				"aaaa",
+				"<exists>",
 				`["test token (server)"]`,
 				`{"course101":{"role":"student","lms-id":"alice"}}`,
 			},
@@ -734,6 +830,33 @@ func TestUserServerUserMustToRow(test *testing.T) {
 				"Alice",
 				"user",
 				"",
+				"<exists>",
+				`["test token (server)"]`,
+				`{"course101":{"role":"student","lms-id":"alice"}}`,
+			},
+		},
+
+		// Password
+		{
+			setServerUserPassword(baseTestServerUser, nil),
+			[]string{
+				"alice@test.com",
+				"Alice",
+				"user",
+				"abc123",
+				"<nil>",
+				`["test token (server)"]`,
+				`{"course101":{"role":"student","lms-id":"alice"}}`,
+			},
+		},
+		{
+			setServerUserPassword(baseTestServerUser, newPasswordToken),
+			[]string{
+				"alice@test.com",
+				"Alice",
+				"user",
+				"abc123",
+				"<exists>",
 				`["test token (server)"]`,
 				`{"course101":{"role":"student","lms-id":"alice"}}`,
 			},
@@ -747,6 +870,7 @@ func TestUserServerUserMustToRow(test *testing.T) {
 				"Alice",
 				"user",
 				"abc123",
+				"<exists>",
 				`["test token 2 (password)"]`,
 				`{"course101":{"role":"student","lms-id":"alice"}}`,
 			},
@@ -758,6 +882,7 @@ func TestUserServerUserMustToRow(test *testing.T) {
 				"Alice",
 				"user",
 				"abc123",
+				"<exists>",
 				`[]`,
 				`{"course101":{"role":"student","lms-id":"alice"}}`,
 			},
@@ -773,6 +898,7 @@ func TestUserServerUserMustToRow(test *testing.T) {
 				"Alice",
 				"user",
 				"abc123",
+				"<exists>",
 				`["test token (server)"]`,
 				`{"foo":{"role":"grader","lms-id":"bar"}}`,
 			},
@@ -787,6 +913,7 @@ func TestUserServerUserMustToRow(test *testing.T) {
 				"Alice",
 				"user",
 				"abc123",
+				"<exists>",
 				`["test token (server)"]`,
 				`{"course101":{"role":"student","lms-id":"alice"},"foo":{"role":"grader","lms-id":"bar"}}`,
 			},
@@ -798,6 +925,7 @@ func TestUserServerUserMustToRow(test *testing.T) {
 				"Alice",
 				"user",
 				"abc123",
+				"<exists>",
 				`["test token (server)"]`,
 				`{}`,
 			},
@@ -816,16 +944,24 @@ func TestUserServerUserMustToRow(test *testing.T) {
 }
 
 func TestUserServerUserAuth(test *testing.T) {
-	// Make a user with two new tokens.
+	// Make a user with a pass and two tokens.
 	cleartext1, token1 := MustNewRandomToken(BASE_SALT, TokenSourceServer, "test token")
 	cleartext2, token2 := MustNewRandomToken(BASE_SALT, TokenSourceServer, "test token")
 
 	user := setServerUserTokens(baseTestServerUser, []*Token{token1, token2})
 
+	passCleartext, err := user.SetRandomPassword()
+	if err != nil {
+		test.Fatalf("Failed to set test password: '%v'.", err)
+	}
+
 	testCases := []struct {
 		pass    string
 		success bool
 	}{
+		// Check password.
+		{passCleartext, true},
+
 		// Check first token.
 		{cleartext1, true},
 
@@ -834,6 +970,10 @@ func TestUserServerUserAuth(test *testing.T) {
 
 		// Check bad input.
 		{cleartext1 + cleartext2, false},
+		{passCleartext + " ", false},
+		{" " + passCleartext, false},
+		{cleartext1 + " ", false},
+		{" " + cleartext1, false},
 	}
 
 	for i, testCase := range testCases {
@@ -847,6 +987,50 @@ func TestUserServerUserAuth(test *testing.T) {
 			test.Errorf("Case %d: Result not as expected. Expected: %v, Actual: %v.", i, testCase.success, success)
 			continue
 		}
+	}
+}
+
+func TestUserServerSetPassword(test *testing.T) {
+	user := baseTestServerUser.Clone()
+	cleartext := "test"
+	input := util.Sha256HexFromString(cleartext)
+
+	changed, err := user.SetPassword(input)
+	if err != nil {
+		test.Fatalf("Failed to set password: '%v'.", err)
+	}
+
+	if !changed {
+		test.Fatalf("Password was not changed.")
+	}
+
+	success, err := user.Auth(input)
+	if err != nil {
+		test.Fatalf("Faled to auth: '%v'.", err)
+	}
+
+	if !success {
+		test.Fatalf("Password was not accepted.")
+	}
+}
+
+func TestUserServerSetRandomPassword(test *testing.T) {
+	user := baseTestServerUser.Clone()
+
+	cleartext, err := user.SetRandomPassword()
+	if err != nil {
+		test.Fatalf("Failed to set random password: '%v'.", err)
+	}
+
+	input := util.Sha256HexFromString(cleartext)
+
+	success, err := user.Auth(input)
+	if err != nil {
+		test.Fatalf("Faled to auth: '%v'.", err)
+	}
+
+	if !success {
+		test.Fatalf("Password was not accepted.")
 	}
 }
 
@@ -900,6 +1084,12 @@ func setServerUserSalt(user *ServerUser, salt *string) *ServerUser {
 	return &newUser
 }
 
+func setServerUserPassword(user *ServerUser, password *Token) *ServerUser {
+	newUser := *user
+	newUser.Password = password
+	return &newUser
+}
+
 func setServerUserTokens(user *ServerUser, tokens []*Token) *ServerUser {
 	newUser := *user
 	newUser.Tokens = tokens
@@ -922,6 +1112,7 @@ var baseTestServerUser *ServerUser = &ServerUser{
 	Name:       util.StringPointer("Alice"),
 	Role:       ServerRoleUser,
 	Salt:       util.StringPointer(BASE_SALT),
+	Password:   baseTestPasswordToken,
 	Tokens:     []*Token{baseTestToken},
 	CourseInfo: map[string]*UserCourseInfo{"course101": baseUserCourseInfo},
 }
@@ -931,6 +1122,7 @@ var minimalTestServerUser *ServerUser = &ServerUser{
 	Name:       nil,
 	Role:       ServerRoleUnknown,
 	Salt:       nil,
+	Password:   nil,
 	Tokens:     []*Token{},
 	CourseInfo: map[string]*UserCourseInfo{},
 }
