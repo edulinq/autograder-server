@@ -10,6 +10,9 @@ import (
 const (
 	WORK_DIR_BASENAME = "autograder"
 
+	PID_NAME          = "autograder.pid"
+	UNIX_SOCKET_NAME  = "autograder.sock"
+
 	BACKUP_DIRNAME        = "backup"
 	CACHE_DIRNAME         = "cache"
 	CONFIG_DIRNAME        = "config"
@@ -71,4 +74,12 @@ func GetLogsDir() string {
 
 func GetSourcesDir() string {
 	return filepath.Join(GetWorkDir(), SOURCES_DIRNAME)
+}
+
+func GetUnixSocketPath() string {
+	return filepath.Join(GetWorkDir(), PID_NAME)
+}
+
+func GetPidPath() string {
+	return filepath.Join(GetWorkDir(), UNIX_SOCKET_NAME)
 }

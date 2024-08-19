@@ -11,7 +11,6 @@ import (
 
 func CreatePIDFile() error {
 	var pidFilePath = config.PID_PATH.Get()
-
 	exists := util.IsFile(pidFilePath)
 	if exists {
 		log.Fatal("Another instance of the autograder server is already running")
