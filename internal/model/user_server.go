@@ -160,10 +160,22 @@ func (this *ServerUser) GetCourseRole(courseID string) CourseUserRole {
 }
 
 // Convert this server user into a course user for the specific course.
+// Set courseOnly to false if high level server users should be converted.
 // Will return (nil, nil) if the user is not enrolled in the given course.
-func (this *ServerUser) ToCourseUser(courseID string) (*CourseUser, error) {
+func (this *ServerUser) ToCourseUser(courseID string, courseOnly bool) (*CourseUser, error) {
 	info, exists := this.CourseInfo[courseID]
 	if !exists {
+		if !courseOnly && this.Role >= ServerRoleAdmin {
+			courseUser := &CourseUser{
+				Email: this.Email,
+				Name:  this.Name,
+				Role:  CourseRoleOwner,
+				LMSID: nil,
+			}
+
+			return courseUser, courseUser.Validate()
+		}
+
 		return nil, nil
 	}
 
@@ -174,29 +186,11 @@ func (this *ServerUser) ToCourseUser(courseID string) (*CourseUser, error) {
 		LMSID: info.LMSID,
 	}
 
+	if this.Role >= ServerRoleAdmin {
+		courseUser.Role = CourseRoleOwner
+	}
+
 	return courseUser, courseUser.Validate()
-}
-
-// Convert this server user into a course super user for the specific course.
-// The LMSID field will be nil if the user is not enrolled in the given course.
-func (this *ServerUser) ToCourseSuperUser(courseID string) (*CourseUser, error) {
-	courseUser, err := this.ToCourseUser(courseID)
-	if err != nil {
-		return courseUser, err
-	}
-
-	if courseUser == nil {
-		courseUser = &CourseUser{
-			Email: this.Email,
-			Name:  this.Name,
-			Role:  CourseRoleSuper,
-			LMSID: nil,
-		}
-	}
-
-	courseUser.Role = CourseRoleSuper
-
-	return courseUser, nil
 }
 
 // Add information from the given user to this user.

@@ -382,42 +382,42 @@ func TestUpsertUser(test *testing.T) {
 			options: UpsertUsersOptions{
 				RawUsers: []*model.RawUserData{
 					&model.RawUserData{
-						Email: "admin@test.com",
+						Email: "owner@test.com",
 						Role:  model.GetServerUserRoleString(model.ServerRoleUser),
 					},
 				},
-				ContextEmail:      "admin@test.com",
-				ContextServerRole: model.ServerRoleAdmin,
+				ContextEmail:      "owner@test.com",
+				ContextServerRole: model.ServerRoleOwner,
 			},
 			expected: &model.UserOpResult{
-				Email:    "admin@test.com",
+				Email:    "owner@test.com",
 				Modified: true,
 			},
 			expectedUser: &model.ServerUser{
-				Email:    "admin@test.com",
-				Name:     util.StringPointer("admin"),
+				Email:    "owner@test.com",
+				Name:     util.StringPointer("owner"),
 				Salt:     PLACEHOLDER_SALT,
 				Password: PLACEHOLDER_PASSWORD_TOKEN,
 				Role:     model.ServerRoleUser,
 				Tokens:   []*model.Token{},
 				CourseInfo: map[string]*model.UserCourseInfo{
 					"course-languages": &model.UserCourseInfo{
-						Role:  model.CourseRoleAdmin,
-						LMSID: util.StringPointer("lms-admin@test.com"),
+						Role:  model.CourseRoleOwner,
+						LMSID: util.StringPointer("lms-owner@test.com"),
 					},
 					"course-with-lms": &model.UserCourseInfo{
-						Role:  model.CourseRoleAdmin,
-						LMSID: util.StringPointer("lms-admin@test.com"),
+						Role:  model.CourseRoleOwner,
+						LMSID: util.StringPointer("lms-owner@test.com"),
 					},
 					"course-without-source": &model.UserCourseInfo{
-						Role:  model.CourseRoleAdmin,
-						LMSID: util.StringPointer("lms-admin@test.com"),
+						Role:  model.CourseRoleOwner,
+						LMSID: util.StringPointer("lms-owner@test.com"),
 					},
 					"course101": &model.UserCourseInfo{
-						Role: model.CourseRoleAdmin,
+						Role: model.CourseRoleOwner,
 					},
 					"course101-with-zero-limit": &model.UserCourseInfo{
-						Role: model.CourseRoleAdmin,
+						Role: model.CourseRoleOwner,
 					},
 				},
 			},
@@ -429,44 +429,44 @@ func TestUpsertUser(test *testing.T) {
 			options: UpsertUsersOptions{
 				RawUsers: []*model.RawUserData{
 					&model.RawUserData{
-						Email:      "admin@test.com",
+						Email:      "owner@test.com",
 						Course:     "course101",
 						CourseRole: model.GetCourseUserRoleString(model.CourseRoleStudent),
 					},
 				},
-				ContextEmail:      "admin@test.com",
-				ContextServerRole: model.ServerRoleAdmin,
-				ContextCourseRole: model.CourseRoleAdmin,
+				ContextEmail:      "owner@test.com",
+				ContextServerRole: model.ServerRoleOwner,
+				ContextCourseRole: model.CourseRoleOwner,
 			},
 			expected: &model.UserOpResult{
-				Email:    "admin@test.com",
+				Email:    "owner@test.com",
 				Modified: true,
 			},
 			expectedUser: &model.ServerUser{
-				Email:    "admin@test.com",
-				Name:     util.StringPointer("admin"),
+				Email:    "owner@test.com",
+				Name:     util.StringPointer("owner"),
 				Salt:     PLACEHOLDER_SALT,
 				Password: PLACEHOLDER_PASSWORD_TOKEN,
-				Role:     model.ServerRoleAdmin,
+				Role:     model.ServerRoleOwner,
 				Tokens:   []*model.Token{},
 				CourseInfo: map[string]*model.UserCourseInfo{
 					"course-languages": &model.UserCourseInfo{
-						Role:  model.CourseRoleAdmin,
-						LMSID: util.StringPointer("lms-admin@test.com"),
+						Role:  model.CourseRoleOwner,
+						LMSID: util.StringPointer("lms-owner@test.com"),
 					},
 					"course-with-lms": &model.UserCourseInfo{
-						Role:  model.CourseRoleAdmin,
-						LMSID: util.StringPointer("lms-admin@test.com"),
+						Role:  model.CourseRoleOwner,
+						LMSID: util.StringPointer("lms-owner@test.com"),
 					},
 					"course-without-source": &model.UserCourseInfo{
-						Role:  model.CourseRoleAdmin,
-						LMSID: util.StringPointer("lms-admin@test.com"),
+						Role:  model.CourseRoleOwner,
+						LMSID: util.StringPointer("lms-owner@test.com"),
 					},
 					"course101": &model.UserCourseInfo{
 						Role: model.CourseRoleStudent,
 					},
 					"course101-with-zero-limit": &model.UserCourseInfo{
-						Role: model.CourseRoleAdmin,
+						Role: model.CourseRoleOwner,
 					},
 				},
 			},
@@ -905,7 +905,7 @@ func TestUpsertUser(test *testing.T) {
 			},
 			expected: &model.UserOpResult{
 				Email:            "grader@test.com",
-				ValidationErrors: []string{"User has a server role of 'creator', which is not high enough to modify server roles."},
+				ValidationErrors: []string{"User has a server role of 'creator', which is not high enough to update server-level information for another user."},
 			},
 			expectedUser: nil,
 		},

@@ -24,7 +24,6 @@ const (
 	CourseRoleGrader                 = 30
 	CourseRoleAdmin                  = 40
 	CourseRoleOwner                  = 50
-	CourseRoleSuper                  = 60
 )
 
 var courseRoleToString = map[CourseUserRole]string{
@@ -34,7 +33,6 @@ var courseRoleToString = map[CourseUserRole]string{
 	CourseRoleGrader:  "grader",
 	CourseRoleAdmin:   "admin",
 	CourseRoleOwner:   "owner",
-	CourseRoleSuper:   "super",
 }
 
 var stringToCourseUserRole = map[string]CourseUserRole{
@@ -44,7 +42,6 @@ var stringToCourseUserRole = map[string]CourseUserRole{
 	"grader":  CourseRoleGrader,
 	"admin":   CourseRoleAdmin,
 	"owner":   CourseRoleOwner,
-	"super":   CourseRoleSuper,
 }
 
 func GetCourseUserRole(text string) CourseUserRole {

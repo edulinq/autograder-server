@@ -22,7 +22,7 @@ func (this *backend) GetCourseUsers(course *model.Course) (map[string]*model.Cou
 
 	courseUsers := make(map[string]*model.CourseUser)
 	for email, user := range users {
-		courseUser, err := user.ToCourseUser(course.ID)
+		courseUser, err := user.ToCourseUser(course.ID, true)
 		if err != nil {
 			return nil, fmt.Errorf("Invalid user '%s': '%w'.", email, err)
 		}

@@ -44,6 +44,17 @@ Cleartext is never stored in anything other than memory (and event then it will 
 When we are working with a "password", it should always be a [SHA-256](https://en.wikipedia.org/wiki/SHA-2) hash of the cleartext.
 Any variables/arguments actually using cleartext should make that apparent with the variable name (i.e. the name should have "cleartext" in it).
 
+### Test Users
+
+All test users that are server-role@test.com are used to test the corresponding ServerRoles.
+These users are not enrolled in any test courses by default.
+
+The role@test.com users denote the corresponding CourseRole.
+To test courses actions, these users are enrolled in various test courses.
+All of these users are given ServerRoleUser to simplify test cases.
+The exception to this rule is owner@test.com, who is also a ServerRoleOwner.
+This allows testing of server admin commands for users that are also enrolled in the course.
+
 ## API Notes
 
 ### Passwords/Tokens

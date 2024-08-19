@@ -2,7 +2,7 @@
     "admin@test.com": {
         "email": "admin@test.com",
         "name": "admin",
-        "server-role": "admin",
+        "server-role": "user",
         "salt": "c72f85ab94f66b49b4e93cb0d0776fc7",
         "password": {
             "id": "6bc78a24-e987-4cf0-a575-da5dab94b42d",
@@ -39,7 +39,7 @@
     "grader@test.com": {
         "email": "grader@test.com",
         "name": "grader",
-        "server-role": "creator",
+        "server-role": "user",
         "salt": "a853844be59b339ec45733eddeee41cd",
         "password": {
             "id": "a041f679-0567-495b-8dde-6c2329e094a0",

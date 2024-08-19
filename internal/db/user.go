@@ -87,7 +87,7 @@ func GetCourseUser(course *model.Course, email string) (*model.CourseUser, error
 		return nil, nil
 	}
 
-	return serverUser.ToCourseUser(course.ID)
+	return serverUser.ToCourseUser(course.ID, true)
 }
 
 // Convenience function for UpsertUsers() with a single user.
