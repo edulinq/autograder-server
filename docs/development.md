@@ -46,13 +46,13 @@ Any variables/arguments actually using cleartext should make that apparent with 
 
 ### Test Users
 
-All test users that are server-role@test.com are used to test the corresponding ServerRoles.
+All test users that are prefixed with "server-" (i.e. "server-owner@test.com") are used to test the corresponding server roles.
 These users are not enrolled in any test courses by default.
 
-The role@test.com users denote the corresponding CourseRole.
+Test users without a prefix (i.e. "admin@test.com") denote users with the corresponding course role.
 To test courses actions, these users are enrolled in various test courses.
-All of these users are given ServerRoleUser to simplify test cases.
-The exception to this rule is owner@test.com, who is also a ServerRoleOwner.
+All of these users are given the standard server role, which is server user.
+The exception to this rule is owner@test.com, who is also a server owner.
 This allows testing of server admin commands for users that are also enrolled in the course.
 
 ## API Notes
@@ -63,6 +63,15 @@ No password or token should be sent to the server as cleartext.
 They should always be hashed using the [SHA-256](https://en.wikipedia.org/wiki/SHA-2) cryptographic hash function.
 On request, cleartext passwords and tokens may be set from the server to the user (or via email),
 but never in the other direction.
+
+### Role Escalation
+
+API requests that are at least course user context must be called on a user that is enrolled in the course.
+However, users with at least server role admin are allowed to call any API.
+
+To achieve this, we convert these high level server users to course owners during the validation of the request.
+A server admin (or above) that is not enrolled in the course will have a nil LMSID.
+If they are enrolled in the course, their role will be set to course owner, regardless of their existing course role.
 
 ## Cross-Platform Scripting
 

@@ -474,7 +474,7 @@ func TestUserServerUserToCourseUser(test *testing.T) {
 	}
 
 	for i, testCase := range testCases {
-		courseUser, err := testCase.ServerUser.ToCourseUser(testCase.CourseID, true)
+		courseUser, err := testCase.ServerUser.ToCourseUser(testCase.CourseID, false)
 		if err != nil {
 			if !testCase.HasError {
 				test.Errorf("Case %d: Failed to get course user: '%v'.", i, err)

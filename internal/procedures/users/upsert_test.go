@@ -382,44 +382,24 @@ func TestUpsertUser(test *testing.T) {
 			options: UpsertUsersOptions{
 				RawUsers: []*model.RawUserData{
 					&model.RawUserData{
-						Email: "owner@test.com",
+						Email: "server-admin@test.com",
 						Role:  model.GetServerUserRoleString(model.ServerRoleUser),
 					},
 				},
-				ContextEmail:      "owner@test.com",
-				ContextServerRole: model.ServerRoleOwner,
+				ContextEmail:      "server-admin@test.com",
+				ContextServerRole: model.ServerRoleAdmin,
 			},
 			expected: &model.UserOpResult{
-				Email:    "owner@test.com",
+				Email:    "server-admin@test.com",
 				Modified: true,
 			},
 			expectedUser: &model.ServerUser{
-				Email:    "owner@test.com",
-				Name:     util.StringPointer("owner"),
+				Email:    "server-admin@test.com",
+				Name:     util.StringPointer("server-admin"),
 				Salt:     PLACEHOLDER_SALT,
 				Password: PLACEHOLDER_PASSWORD_TOKEN,
 				Role:     model.ServerRoleUser,
 				Tokens:   []*model.Token{},
-				CourseInfo: map[string]*model.UserCourseInfo{
-					"course-languages": &model.UserCourseInfo{
-						Role:  model.CourseRoleOwner,
-						LMSID: util.StringPointer("lms-owner@test.com"),
-					},
-					"course-with-lms": &model.UserCourseInfo{
-						Role:  model.CourseRoleOwner,
-						LMSID: util.StringPointer("lms-owner@test.com"),
-					},
-					"course-without-source": &model.UserCourseInfo{
-						Role:  model.CourseRoleOwner,
-						LMSID: util.StringPointer("lms-owner@test.com"),
-					},
-					"course101": &model.UserCourseInfo{
-						Role: model.CourseRoleOwner,
-					},
-					"course101-with-zero-limit": &model.UserCourseInfo{
-						Role: model.CourseRoleOwner,
-					},
-				},
 			},
 		},
 
@@ -429,44 +409,44 @@ func TestUpsertUser(test *testing.T) {
 			options: UpsertUsersOptions{
 				RawUsers: []*model.RawUserData{
 					&model.RawUserData{
-						Email:      "owner@test.com",
+						Email:      "admin@test.com",
 						Course:     "course101",
 						CourseRole: model.GetCourseUserRoleString(model.CourseRoleStudent),
 					},
 				},
-				ContextEmail:      "owner@test.com",
-				ContextServerRole: model.ServerRoleOwner,
-				ContextCourseRole: model.CourseRoleOwner,
+				ContextEmail:      "admin@test.com",
+				ContextServerRole: model.ServerRoleUser,
+				ContextCourseRole: model.CourseRoleAdmin,
 			},
 			expected: &model.UserOpResult{
-				Email:    "owner@test.com",
+				Email:    "admin@test.com",
 				Modified: true,
 			},
 			expectedUser: &model.ServerUser{
-				Email:    "owner@test.com",
-				Name:     util.StringPointer("owner"),
+				Email:    "admin@test.com",
+				Name:     util.StringPointer("admin"),
 				Salt:     PLACEHOLDER_SALT,
 				Password: PLACEHOLDER_PASSWORD_TOKEN,
-				Role:     model.ServerRoleOwner,
+				Role:     model.ServerRoleUser,
 				Tokens:   []*model.Token{},
 				CourseInfo: map[string]*model.UserCourseInfo{
 					"course-languages": &model.UserCourseInfo{
-						Role:  model.CourseRoleOwner,
-						LMSID: util.StringPointer("lms-owner@test.com"),
+						Role:  model.CourseRoleAdmin,
+						LMSID: util.StringPointer("lms-admin@test.com"),
 					},
 					"course-with-lms": &model.UserCourseInfo{
-						Role:  model.CourseRoleOwner,
-						LMSID: util.StringPointer("lms-owner@test.com"),
+						Role:  model.CourseRoleAdmin,
+						LMSID: util.StringPointer("lms-admin@test.com"),
 					},
 					"course-without-source": &model.UserCourseInfo{
-						Role:  model.CourseRoleOwner,
-						LMSID: util.StringPointer("lms-owner@test.com"),
+						Role:  model.CourseRoleAdmin,
+						LMSID: util.StringPointer("lms-admin@test.com"),
 					},
 					"course101": &model.UserCourseInfo{
 						Role: model.CourseRoleStudent,
 					},
 					"course101-with-zero-limit": &model.UserCourseInfo{
-						Role: model.CourseRoleOwner,
+						Role: model.CourseRoleAdmin,
 					},
 				},
 			},

@@ -124,7 +124,7 @@ func (this *APIRequestCourseUserContext) Validate(request any, endpoint string) 
 			Course(this.CourseID)
 	}
 
-	this.User, err = this.ServerUser.ToCourseUser(this.Course.ID, false)
+	this.User, err = this.ServerUser.ToCourseUser(this.Course.ID, true)
 	if err != nil {
 		return NewInternalError("-039", this, "Unable to convert server user to course user.").Err(err)
 	}

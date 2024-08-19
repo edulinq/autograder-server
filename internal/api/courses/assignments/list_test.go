@@ -21,11 +21,12 @@ func TestList(test *testing.T) {
 		{"server-user@test.com", true, "course-without-source"},
 		{"server-creator@test.com", true, "course-without-source"},
 
-		// Valid permissions, Empty
+		// Valid permissions
+		// Empty
 		{"server-admin@test.com", false, "course-without-source"},
-		// Valid permissions, One Assignment
+		// One Assignment
 		{"server-owner@test.com", false, "course101-with-zero-limit"},
-		// Valid permissions, Multiple Assignments
+		// Multiple Assignments
 		{"admin@test.com", false, "course-languages"},
 	}
 
