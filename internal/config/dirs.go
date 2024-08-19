@@ -10,8 +10,8 @@ import (
 const (
 	WORK_DIR_BASENAME = "autograder"
 
-	PID_NAME          = "autograder.pid"
-	UNIX_SOCKET_NAME  = "autograder.sock"
+	PID_NAME         = "autograder.pid"
+	UNIX_SOCKET_NAME = "autograder.sock"
 
 	BACKUP_DIRNAME        = "backup"
 	CACHE_DIRNAME         = "cache"
