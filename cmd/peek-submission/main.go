@@ -10,7 +10,7 @@ import (
 	"github.com/alecthomas/kong"
 
 	"github.com/edulinq/autograder/internal/api/core"
-	"github.com/edulinq/autograder/internal/api/submissions"
+	"github.com/edulinq/autograder/internal/api/courses/assignments/submissions"
 	"github.com/edulinq/autograder/internal/config"
 	"github.com/edulinq/autograder/internal/log"
 	"github.com/edulinq/autograder/internal/util"
@@ -44,7 +44,7 @@ func main() {
 
 	defer conn.Close()
 
-	request := submissions.PeekRequest{
+	request := submissions.FetchUserPeekRequest{
 		APIRequestAssignmentContext: core.APIRequestAssignmentContext{
 			APIRequestCourseUserContext: core.APIRequestCourseUserContext{
 				CourseID: args.CourseID,
@@ -60,7 +60,7 @@ func main() {
 	}
 
 	requestMap := map[string]interface{}{
-		"endpoint": core.NewEndpoint(`submissions/peek`),
+		"endpoint": core.NewEndpoint(`courses/assignments/submissions/fetch/user/peek`),
 		"request":  request,
 	}
 
@@ -105,7 +105,7 @@ func main() {
 	if args.Verbose {
 		fmt.Println(util.MustToJSONIndent(response))
 	} else {
-		var responseContent submissions.PeekResponse
+		var responseContent submissions.FetchUserPeekResponse
 		util.MustJSONFromString(util.MustToJSON(response.Content), &responseContent)
 
 		fmt.Println(util.MustToJSONIndent(responseContent))
