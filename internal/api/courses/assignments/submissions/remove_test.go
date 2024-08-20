@@ -13,7 +13,7 @@ func TestRemove(test *testing.T) {
 	defer db.ResetForTesting()
 
 	testCases := []struct {
-        email            string
+		email            string
 		targetEmail      string
 		targetSubmission string
 		foundUser        bool

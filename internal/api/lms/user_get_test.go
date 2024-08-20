@@ -11,7 +11,7 @@ import (
 
 func TestUserGet(test *testing.T) {
 	testCases := []struct {
-        email     string
+		email     string
 		target    string
 		permError bool
 		expected  *core.CourseUserInfo

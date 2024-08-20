@@ -62,12 +62,12 @@ func SendTestAPIRequest(test *testing.T, endpoint string, fields map[string]any)
 func SendTestAPIRequestFull(test *testing.T, endpoint string, fields map[string]any, paths []string, email string) *APIResponse {
 	url := serverURL + endpoint
 
-    user := db.MustGetServerUser(email, true)
+	user := db.MustGetServerUser(email, true)
 
-    pass := ""
-    if user != nil {
-	    pass = util.Sha256HexFromString(*user.Name)
-    }
+	pass := ""
+	if user != nil {
+		pass = util.Sha256HexFromString(*user.Name)
+	}
 
 	content := map[string]any{
 		"course-id":     "course101",

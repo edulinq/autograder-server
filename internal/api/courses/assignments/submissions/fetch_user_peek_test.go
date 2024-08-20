@@ -10,7 +10,7 @@ import (
 func TestFetchUserPeek(test *testing.T) {
 	// There are two options, which makes for four general test cases.
 	testCases := []struct {
-        email            string
+		email            string
 		targetEmail      string
 		targetSubmission string
 		score            float64

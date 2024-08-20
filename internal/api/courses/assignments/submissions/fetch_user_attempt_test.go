@@ -44,7 +44,7 @@ func TestFetchUserAttempt(test *testing.T) {
 
 		// Grader, other, specific (full ID).
 		{"course-grader@test.edulinq.org", "course-student@test.edulinq.org", "course101::hw0::student@test.edulinq.org::1697406256", true, true, false, studentGradingResults["1697406256"]},
-        {"course-grader@test.edulinq.org", "course-student@test.edulinq.org", "course101::hw0::student@test.edulinq.org::1697406265", true, true, false, studentGradingResults["1697406265"]},
+		{"course-grader@test.edulinq.org", "course-student@test.edulinq.org", "course101::hw0::student@test.edulinq.org::1697406265", true, true, false, studentGradingResults["1697406265"]},
 		{"course-grader@test.edulinq.org", "course-student@test.edulinq.org", "course101::hw0::student@test.edulinq.org::1697406272", true, true, false, studentGradingResults["1697406272"]},
 
 		// Grader, other, missing.

@@ -16,7 +16,7 @@ func TestUploadScores(test *testing.T) {
 	}()
 
 	testCases := []struct {
-        email      string
+		email      string
 		permError  bool
 		failUpdate bool
 		scores     []ScoreEntry

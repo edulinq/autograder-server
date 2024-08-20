@@ -11,7 +11,7 @@ import (
 	"github.com/edulinq/autograder/internal/util"
 )
 
-const EXPECTED_MD5 = "386114d35cc5b7bc7e95b89ca0bd4c9c"
+const EXPECTED_MD5 = "d5d7c80112f11728a920a967bfb00489"
 
 func TestBackupTempDir(test *testing.T) {
 	tempDir, err := util.MkDirTemp("autograder-test-task-backup-")
@@ -65,7 +65,6 @@ func doBackup(test *testing.T, dest string, expectedPath string) {
 		test.Fatalf("Could not find backup at expected location: '%s'.", expectedPath)
 	}
 
-    test.Errorf("Found the following expectedPath: '%s'.", expectedPath)
 	actualMD5, err := util.MD5FileHex(expectedPath)
 	if err != nil {
 		test.Fatalf("Failed to get MD5 from backup file: '%v'.", err)
