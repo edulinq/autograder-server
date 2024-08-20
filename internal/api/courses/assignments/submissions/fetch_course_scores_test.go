@@ -9,7 +9,7 @@ import (
 	"github.com/edulinq/autograder/internal/util"
 )
 
-func TestFetchScores(test *testing.T) {
+func TestFetchCourseScores(test *testing.T) {
 	testCases := []struct {
 		role       model.CourseUserRole
 		filterRole model.CourseUserRole
@@ -47,7 +47,7 @@ func TestFetchScores(test *testing.T) {
 			"filter-role": testCase.filterRole,
 		}
 
-		response := core.SendTestAPIRequestFull(test, core.NewEndpoint(`submissions/fetch/scores`), fields, nil, testCase.role)
+		response := core.SendTestAPIRequestFull(test, core.NewEndpoint(`courses/assignments/submissions/fetch/course/scores`), fields, nil, testCase.role)
 		if !response.Success {
 			if testCase.permError {
 				expectedLocator := "-020"
@@ -62,7 +62,7 @@ func TestFetchScores(test *testing.T) {
 			continue
 		}
 
-		var responseContent FetchScoresResponse
+		var responseContent FetchCourseScoresResponse
 		util.MustJSONFromString(util.MustToJSON(response.Content), &responseContent)
 
 		actualIDs := make(map[string]string, len(testCase.ids))

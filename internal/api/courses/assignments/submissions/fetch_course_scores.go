@@ -6,7 +6,7 @@ import (
 	"github.com/edulinq/autograder/internal/model"
 )
 
-type FetchScoresRequest struct {
+type FetchCourseScoresRequest struct {
 	core.APIRequestAssignmentContext
 	core.MinCourseRoleGrader
 
@@ -14,16 +14,16 @@ type FetchScoresRequest struct {
 	FilterRole model.CourseUserRole `json:"filter-role"`
 }
 
-type FetchScoresResponse struct {
+type FetchCourseScoresResponse struct {
 	SubmissionInfos map[string]*model.SubmissionHistoryItem `json:"submission-infos"`
 }
 
-func HandleFetchScores(request *FetchScoresRequest) (*FetchScoresResponse, *core.APIError) {
+func HandleFetchCourseScores(request *FetchCourseScoresRequest) (*FetchCourseScoresResponse, *core.APIError) {
 	submissionInfos, err := db.GetRecentSubmissionSurvey(request.Assignment, request.FilterRole)
 	if err != nil {
 		return nil, core.NewInternalError("-602", &request.APIRequestCourseUserContext, "Failed to get submission summaries.").
 			Err(err).Assignment(request.Assignment.GetID())
 	}
 
-	return &FetchScoresResponse{submissionInfos}, nil
+	return &FetchCourseScoresResponse{submissionInfos}, nil
 }

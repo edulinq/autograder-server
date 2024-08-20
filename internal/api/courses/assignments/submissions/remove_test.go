@@ -9,7 +9,7 @@ import (
 	"github.com/edulinq/autograder/internal/util"
 )
 
-func TestRemoveSubmission(test *testing.T) {
+func TestRemove(test *testing.T) {
 	// Leave the course in a good state after the test.
 	defer db.ResetForTesting()
 
@@ -66,7 +66,7 @@ func TestRemoveSubmission(test *testing.T) {
 			"target-submission": testCase.targetSubmission,
 		}
 
-		response := core.SendTestAPIRequestFull(test, core.NewEndpoint(`submissions/remove`), fields, nil, testCase.role)
+		response := core.SendTestAPIRequestFull(test, core.NewEndpoint(`courses/assignments/submissions/remove`), fields, nil, testCase.role)
 
 		if !response.Success {
 			if testCase.permError {
@@ -82,7 +82,7 @@ func TestRemoveSubmission(test *testing.T) {
 			continue
 		}
 
-		var responseContent PeekResponse
+		var responseContent FetchUserPeekResponse
 		util.MustJSONFromString(util.MustToJSON(response.Content), &responseContent)
 
 		if testCase.foundUser != responseContent.FoundUser {
