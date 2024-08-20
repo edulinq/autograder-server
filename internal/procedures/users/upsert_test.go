@@ -10,8 +10,9 @@ import (
 	"github.com/edulinq/autograder/internal/util"
 )
 
-var PLACEHOLDER_PASS string = "<placeholder_pass>"
+var PLACEHOLDER_PASSWORD_CLEARTEXT string = "<placeholder_pass>"
 var PLACEHOLDER_SALT *string = util.StringPointer("abcd")
+var PLACEHOLDER_PASSWORD_TOKEN *model.Token = model.MustNewToken(PLACEHOLDER_PASSWORD_CLEARTEXT, *PLACEHOLDER_SALT, model.TokenSourcePassword, "password")
 
 func TestUpsertUser(test *testing.T) {
 	db.ResetForTesting()
@@ -45,11 +46,12 @@ func TestUpsertUser(test *testing.T) {
 				Emailed: true,
 			},
 			expectedUser: &model.ServerUser{
-				Email:  "new@test.com",
-				Name:   util.StringPointer("new"),
-				Salt:   PLACEHOLDER_SALT,
-				Role:   model.ServerRoleUser,
-				Tokens: []*model.Token{nil},
+				Email:    "new@test.com",
+				Name:     util.StringPointer("new"),
+				Salt:     PLACEHOLDER_SALT,
+				Password: PLACEHOLDER_PASSWORD_TOKEN,
+				Role:     model.ServerRoleUser,
+				Tokens:   []*model.Token{},
 			},
 		},
 
@@ -76,11 +78,12 @@ func TestUpsertUser(test *testing.T) {
 				Enrolled: []string{"new-course"},
 			},
 			expectedUser: &model.ServerUser{
-				Email:  "new@test.com",
-				Name:   util.StringPointer("new"),
-				Salt:   PLACEHOLDER_SALT,
-				Role:   model.ServerRoleUser,
-				Tokens: []*model.Token{nil},
+				Email:    "new@test.com",
+				Name:     util.StringPointer("new"),
+				Salt:     PLACEHOLDER_SALT,
+				Password: PLACEHOLDER_PASSWORD_TOKEN,
+				Role:     model.ServerRoleUser,
+				Tokens:   []*model.Token{},
 				CourseInfo: map[string]*model.UserCourseInfo{
 					"new-course": &model.UserCourseInfo{
 						Role:  model.CourseRoleStudent,
@@ -106,11 +109,12 @@ func TestUpsertUser(test *testing.T) {
 				Modified: true,
 			},
 			expectedUser: &model.ServerUser{
-				Email:  "student@test.com",
-				Name:   util.StringPointer("new"),
-				Salt:   PLACEHOLDER_SALT,
-				Role:   model.ServerRoleUser,
-				Tokens: []*model.Token{nil},
+				Email:    "student@test.com",
+				Name:     util.StringPointer("new"),
+				Salt:     PLACEHOLDER_SALT,
+				Password: PLACEHOLDER_PASSWORD_TOKEN,
+				Role:     model.ServerRoleUser,
+				Tokens:   []*model.Token{},
 				CourseInfo: map[string]*model.UserCourseInfo{
 					"course-languages": &model.UserCourseInfo{
 						Role:  model.CourseRoleStudent,
@@ -154,11 +158,12 @@ func TestUpsertUser(test *testing.T) {
 				Enrolled: []string{"new-course"},
 			},
 			expectedUser: &model.ServerUser{
-				Email:  "student@test.com",
-				Name:   util.StringPointer("student"),
-				Salt:   PLACEHOLDER_SALT,
-				Role:   model.ServerRoleUser,
-				Tokens: []*model.Token{nil},
+				Email:    "student@test.com",
+				Name:     util.StringPointer("student"),
+				Salt:     PLACEHOLDER_SALT,
+				Password: PLACEHOLDER_PASSWORD_TOKEN,
+				Role:     model.ServerRoleUser,
+				Tokens:   []*model.Token{},
 				CourseInfo: map[string]*model.UserCourseInfo{
 					"course-languages": &model.UserCourseInfo{
 						Role:  model.CourseRoleStudent,
@@ -203,11 +208,12 @@ func TestUpsertUser(test *testing.T) {
 				Modified: true,
 			},
 			expectedUser: &model.ServerUser{
-				Email:  "student@test.com",
-				Name:   util.StringPointer("student"),
-				Salt:   PLACEHOLDER_SALT,
-				Role:   model.ServerRoleUser,
-				Tokens: []*model.Token{nil},
+				Email:    "student@test.com",
+				Name:     util.StringPointer("student"),
+				Salt:     PLACEHOLDER_SALT,
+				Password: PLACEHOLDER_PASSWORD_TOKEN,
+				Role:     model.ServerRoleUser,
+				Tokens:   []*model.Token{},
 				CourseInfo: map[string]*model.UserCourseInfo{
 					"course-languages": &model.UserCourseInfo{
 						Role:  model.CourseRoleStudent,
@@ -249,11 +255,12 @@ func TestUpsertUser(test *testing.T) {
 				Modified: true,
 			},
 			expectedUser: &model.ServerUser{
-				Email:  "student@test.com",
-				Name:   util.StringPointer("student"),
-				Salt:   PLACEHOLDER_SALT,
-				Role:   model.ServerRoleUser,
-				Tokens: []*model.Token{nil},
+				Email:    "student@test.com",
+				Name:     util.StringPointer("student"),
+				Salt:     PLACEHOLDER_SALT,
+				Password: PLACEHOLDER_PASSWORD_TOKEN,
+				Role:     model.ServerRoleUser,
+				Tokens:   []*model.Token{},
 				CourseInfo: map[string]*model.UserCourseInfo{
 					"course-languages": &model.UserCourseInfo{
 						Role:  model.CourseRoleStudent,
@@ -295,11 +302,12 @@ func TestUpsertUser(test *testing.T) {
 				Modified: true,
 			},
 			expectedUser: &model.ServerUser{
-				Email:  "student@test.com",
-				Name:   util.StringPointer("new"),
-				Salt:   PLACEHOLDER_SALT,
-				Role:   model.ServerRoleUser,
-				Tokens: []*model.Token{nil},
+				Email:    "student@test.com",
+				Name:     util.StringPointer("new"),
+				Salt:     PLACEHOLDER_SALT,
+				Password: PLACEHOLDER_PASSWORD_TOKEN,
+				Role:     model.ServerRoleUser,
+				Tokens:   []*model.Token{},
 				CourseInfo: map[string]*model.UserCourseInfo{
 					"course-languages": &model.UserCourseInfo{
 						Role:  model.CourseRoleStudent,
@@ -340,11 +348,12 @@ func TestUpsertUser(test *testing.T) {
 				Modified: true,
 			},
 			expectedUser: &model.ServerUser{
-				Email:  "student@test.com",
-				Name:   util.StringPointer("new"),
-				Salt:   PLACEHOLDER_SALT,
-				Role:   model.ServerRoleUser,
-				Tokens: []*model.Token{nil},
+				Email:    "student@test.com",
+				Name:     util.StringPointer("new"),
+				Salt:     PLACEHOLDER_SALT,
+				Password: PLACEHOLDER_PASSWORD_TOKEN,
+				Role:     model.ServerRoleUser,
+				Tokens:   []*model.Token{},
 				CourseInfo: map[string]*model.UserCourseInfo{
 					"course-languages": &model.UserCourseInfo{
 						Role:  model.CourseRoleStudent,
@@ -373,43 +382,24 @@ func TestUpsertUser(test *testing.T) {
 			options: UpsertUsersOptions{
 				RawUsers: []*model.RawUserData{
 					&model.RawUserData{
-						Email: "admin@test.com",
+						Email: "server-admin@test.com",
 						Role:  model.GetServerUserRoleString(model.ServerRoleUser),
 					},
 				},
-				ContextEmail:      "admin@test.com",
+				ContextEmail:      "server-admin@test.com",
 				ContextServerRole: model.ServerRoleAdmin,
 			},
 			expected: &model.UserOpResult{
-				Email:    "admin@test.com",
+				Email:    "server-admin@test.com",
 				Modified: true,
 			},
 			expectedUser: &model.ServerUser{
-				Email:  "admin@test.com",
-				Name:   util.StringPointer("admin"),
-				Salt:   PLACEHOLDER_SALT,
-				Role:   model.ServerRoleUser,
-				Tokens: []*model.Token{nil},
-				CourseInfo: map[string]*model.UserCourseInfo{
-					"course-languages": &model.UserCourseInfo{
-						Role:  model.CourseRoleAdmin,
-						LMSID: util.StringPointer("lms-admin@test.com"),
-					},
-					"course-with-lms": &model.UserCourseInfo{
-						Role:  model.CourseRoleAdmin,
-						LMSID: util.StringPointer("lms-admin@test.com"),
-					},
-					"course-without-source": &model.UserCourseInfo{
-						Role:  model.CourseRoleAdmin,
-						LMSID: util.StringPointer("lms-admin@test.com"),
-					},
-					"course101": &model.UserCourseInfo{
-						Role: model.CourseRoleAdmin,
-					},
-					"course101-with-zero-limit": &model.UserCourseInfo{
-						Role: model.CourseRoleAdmin,
-					},
-				},
+				Email:    "server-admin@test.com",
+				Name:     util.StringPointer("server-admin"),
+				Salt:     PLACEHOLDER_SALT,
+				Password: PLACEHOLDER_PASSWORD_TOKEN,
+				Role:     model.ServerRoleUser,
+				Tokens:   []*model.Token{},
 			},
 		},
 
@@ -425,7 +415,7 @@ func TestUpsertUser(test *testing.T) {
 					},
 				},
 				ContextEmail:      "admin@test.com",
-				ContextServerRole: model.ServerRoleAdmin,
+				ContextServerRole: model.ServerRoleUser,
 				ContextCourseRole: model.CourseRoleAdmin,
 			},
 			expected: &model.UserOpResult{
@@ -433,11 +423,12 @@ func TestUpsertUser(test *testing.T) {
 				Modified: true,
 			},
 			expectedUser: &model.ServerUser{
-				Email:  "admin@test.com",
-				Name:   util.StringPointer("admin"),
-				Salt:   PLACEHOLDER_SALT,
-				Role:   model.ServerRoleAdmin,
-				Tokens: []*model.Token{nil},
+				Email:    "admin@test.com",
+				Name:     util.StringPointer("admin"),
+				Salt:     PLACEHOLDER_SALT,
+				Password: PLACEHOLDER_PASSWORD_TOKEN,
+				Role:     model.ServerRoleUser,
+				Tokens:   []*model.Token{},
 				CourseInfo: map[string]*model.UserCourseInfo{
 					"course-languages": &model.UserCourseInfo{
 						Role:  model.CourseRoleAdmin,
@@ -477,11 +468,12 @@ func TestUpsertUser(test *testing.T) {
 				Modified: true,
 			},
 			expectedUser: &model.ServerUser{
-				Email:  "student@test.com",
-				Name:   util.StringPointer("student"),
-				Salt:   PLACEHOLDER_SALT,
-				Role:   model.ServerRoleUser,
-				Tokens: []*model.Token{nil, nil},
+				Email:    "student@test.com",
+				Name:     util.StringPointer("student"),
+				Salt:     PLACEHOLDER_SALT,
+				Password: PLACEHOLDER_PASSWORD_TOKEN,
+				Role:     model.ServerRoleUser,
+				Tokens:   []*model.Token{},
 				CourseInfo: map[string]*model.UserCourseInfo{
 					"course-languages": &model.UserCourseInfo{
 						Role:  model.CourseRoleStudent,
@@ -520,11 +512,12 @@ func TestUpsertUser(test *testing.T) {
 				Email: "student@test.com",
 			},
 			expectedUser: &model.ServerUser{
-				Email:  "student@test.com",
-				Name:   util.StringPointer("student"),
-				Salt:   PLACEHOLDER_SALT,
-				Role:   model.ServerRoleUser,
-				Tokens: []*model.Token{nil},
+				Email:    "student@test.com",
+				Name:     util.StringPointer("student"),
+				Salt:     PLACEHOLDER_SALT,
+				Password: PLACEHOLDER_PASSWORD_TOKEN,
+				Role:     model.ServerRoleUser,
+				Tokens:   []*model.Token{},
 				CourseInfo: map[string]*model.UserCourseInfo{
 					"course-languages": &model.UserCourseInfo{
 						Role:  model.CourseRoleStudent,
@@ -563,13 +556,14 @@ func TestUpsertUser(test *testing.T) {
 				Email:             "new@test.com",
 				Added:             true,
 				Emailed:           true,
-				CleartextPassword: PLACEHOLDER_PASS,
+				CleartextPassword: PLACEHOLDER_PASSWORD_CLEARTEXT,
 			},
 			expectedUser: &model.ServerUser{
-				Email:  "new@test.com",
-				Salt:   PLACEHOLDER_SALT,
-				Role:   model.ServerRoleUser,
-				Tokens: []*model.Token{nil},
+				Email:    "new@test.com",
+				Salt:     PLACEHOLDER_SALT,
+				Password: PLACEHOLDER_PASSWORD_TOKEN,
+				Role:     model.ServerRoleUser,
+				Tokens:   []*model.Token{},
 			},
 		},
 
@@ -589,13 +583,14 @@ func TestUpsertUser(test *testing.T) {
 				Email:             "new@test.com",
 				Added:             true,
 				Emailed:           true,
-				CleartextPassword: PLACEHOLDER_PASS,
+				CleartextPassword: PLACEHOLDER_PASSWORD_CLEARTEXT,
 			},
 			expectedUser: &model.ServerUser{
-				Email:  "new@test.com",
-				Salt:   PLACEHOLDER_SALT,
-				Role:   model.ServerRoleUser,
-				Tokens: []*model.Token{nil},
+				Email:    "new@test.com",
+				Salt:     PLACEHOLDER_SALT,
+				Password: PLACEHOLDER_PASSWORD_TOKEN,
+				Role:     model.ServerRoleUser,
+				Tokens:   []*model.Token{},
 			},
 		},
 
@@ -616,11 +611,12 @@ func TestUpsertUser(test *testing.T) {
 				Modified: true,
 			},
 			expectedUser: &model.ServerUser{
-				Email:  "owner@test.com",
-				Name:   util.StringPointer("owner"),
-				Salt:   PLACEHOLDER_SALT,
-				Role:   model.ServerRoleOwner,
-				Tokens: []*model.Token{nil},
+				Email:    "owner@test.com",
+				Name:     util.StringPointer("owner"),
+				Salt:     PLACEHOLDER_SALT,
+				Password: PLACEHOLDER_PASSWORD_TOKEN,
+				Role:     model.ServerRoleOwner,
+				Tokens:   []*model.Token{},
 				CourseInfo: map[string]*model.UserCourseInfo{
 					"course-languages": &model.UserCourseInfo{
 						Role:  model.CourseRoleOwner,
@@ -889,7 +885,7 @@ func TestUpsertUser(test *testing.T) {
 			},
 			expected: &model.UserOpResult{
 				Email:            "grader@test.com",
-				ValidationErrors: []string{"User has a server role of 'creator', which is not high enough to modify server roles."},
+				ValidationErrors: []string{"User has a server role of 'creator', which is not high enough to update server-level information for another user."},
 			},
 			expectedUser: nil,
 		},
@@ -1065,13 +1061,19 @@ func testUpsert(test *testing.T, caseIndex int, sendEmails bool, options UpsertU
 		return false
 	}
 
-	// Do not check salt and tokens exactly, just ensure that the counts match.
+	// Do not check salt, password, and tokens exactly, just ensure that the counts match.
 
 	expectedHasSalt := (expectedUser.Salt != nil)
 	actualHasSalt := (actualUser.Salt != nil)
-
 	if expectedHasSalt != actualHasSalt {
 		test.Errorf("Case (wet run, email: %v) %d: Salt not as expected. Expected: '%v', Actual: '%v'.", sendEmails, caseIndex, expectedHasSalt, actualHasSalt)
+		return false
+	}
+
+	expectedHasPassword := (expectedUser.Password != nil)
+	actualHasPassword := (actualUser.Password != nil)
+	if expectedHasPassword != actualHasPassword {
+		test.Errorf("Case (wet run, email: %v) %d: Password not as expected. Expected: '%v', Actual: '%v'.", sendEmails, caseIndex, expectedHasPassword, actualHasPassword)
 		return false
 	}
 
@@ -1083,9 +1085,11 @@ func testUpsert(test *testing.T, caseIndex int, sendEmails bool, options UpsertU
 		return false
 	}
 
-	// After counts have been checked, set the salt and tokens so that the equality check can go through.
+	// After counts have been checked, set the salt, password, and tokens so that the equality check can go through.
 	expectedUser.Salt = nil
 	actualUser.Salt = nil
+	expectedUser.Password = nil
+	actualUser.Password = nil
 	expectedUser.Tokens = nil
 	actualUser.Tokens = nil
 
