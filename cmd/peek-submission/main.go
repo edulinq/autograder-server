@@ -21,7 +21,6 @@ var args struct {
 	TargetEmail  string `help:"Email of the user to fetch." arg:""`
 	CourseID     string `help:"ID of the course." arg:""`
 	AssignmentID string `help:"ID of the assignment." arg:""`
-
 	TargetSubmission string `help:"ID of the submission." arg:"" optional:""`
 	Verbose          bool   `help:"Print the entire response." short:"v"`
 }
@@ -82,15 +81,16 @@ func main() {
 		log.Fatal("Failed to write the request buffer to the unix server.", err)
 	}
 
-	sizeBuffer := make([]byte, 8)
+	sizeBuffer := make([]byte, config.BUFFER_SIZE.Get())
+
 	_, err = conn.Read(sizeBuffer)
 	if err != nil {
 		log.Fatal("Failed to read the size of the response buffer.", err)
 	}
 
 	size = binary.BigEndian.Uint64(sizeBuffer)
-
 	responseBuffer := make([]byte, size)
+
 	_, err = conn.Read(responseBuffer)
 	if err != nil {
 		log.Fatal("Failed to read the response.", err)

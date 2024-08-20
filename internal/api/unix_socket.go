@@ -67,6 +67,7 @@ func handleUnixSocketConnection(conn net.Conn) error {
 	if err != nil {
 		return fmt.Errorf("Failed to generate the nonce.")
 	}
+
 	core.RootUserNonce.Store(randomNumber, true)
 	defer core.RootUserNonce.Delete(randomNumber)
 
