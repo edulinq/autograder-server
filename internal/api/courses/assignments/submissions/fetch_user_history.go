@@ -6,20 +6,20 @@ import (
 	"github.com/edulinq/autograder/internal/model"
 )
 
-type HistoryRequest struct {
+type FetchUserHistoryRequest struct {
 	core.APIRequestAssignmentContext
 	core.MinCourseRoleStudent
 
 	TargetUser core.TargetCourseUserSelfOrGrader `json:"target-email"`
 }
 
-type HistoryResponse struct {
+type FetchUserHistoryResponse struct {
 	FoundUser bool                           `json:"found-user"`
 	History   []*model.SubmissionHistoryItem `json:"history"`
 }
 
-func HandleHistory(request *HistoryRequest) (*HistoryResponse, *core.APIError) {
-	response := HistoryResponse{
+func HandleFetchUserHistory(request *FetchUserHistoryRequest) (*FetchUserHistoryResponse, *core.APIError) {
+	response := FetchUserHistoryResponse{
 		FoundUser: false,
 		History:   make([]*model.SubmissionHistoryItem, 0),
 	}

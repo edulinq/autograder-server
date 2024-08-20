@@ -12,7 +12,7 @@ import (
 	"github.com/edulinq/autograder/internal/util"
 )
 
-var SERVER_USER_ROW_COLUMNS []string = []string{"email", "name", "server-role", "salt", "tokens", "course-info"}
+var SERVER_USER_ROW_COLUMNS []string = []string{"email", "name", "server-role", "salt", "password", "tokens", "course-info"}
 
 // ServerUsers represent general users that exist on a server.
 // They may or may not be enrolled in courses.
@@ -29,10 +29,12 @@ type ServerUser struct {
 	// Salts shuold be hex strings.
 	Salt *string `json:"salt"`
 
+	// May be nil if the user does not have a password.
+	Password *Token `json:"password"`
+
 	// May be nil/empty if not retrieved from the database,
 	// will always be non-nil after validation, but may be empty.
-	// There should be no duplicates and at most one token with the TokenSourcePassword source,
-	// i.e., users can have many tokens, but only one derived from a password.
+	// There should be no duplicates.
 	Tokens []*Token `json:"tokens"`
 
 	// May be nil/empty if not retrieved from the database,
@@ -75,6 +77,12 @@ func (this *ServerUser) Validate() error {
 		}
 	}
 
+	if this.Password != nil {
+		if this.Password.Source != TokenSourcePassword {
+			return fmt.Errorf("User '%s' has a password with a non-password source '%s'.", this.Email, this.Password.Source)
+		}
+	}
+
 	if this.Tokens == nil {
 		this.Tokens = make([]*Token, 0)
 	}
@@ -83,6 +91,10 @@ func (this *ServerUser) Validate() error {
 		err := token.Validate()
 		if err != nil {
 			return fmt.Errorf("User '%s' has a token (index %d) that is invalid: '%w'.", this.Email, i, err)
+		}
+
+		if token.Source == TokenSourcePassword {
+			return fmt.Errorf("User '%s' has a token (index %d) that is marked as a password.", this.Email, i)
 		}
 	}
 
@@ -148,18 +160,28 @@ func (this *ServerUser) GetCourseRole(courseID string) CourseUserRole {
 }
 
 // Convert this server user into a course user for the specific course.
-// Will return (nil, nil) if the user is not enrolled in the given course.
-func (this *ServerUser) ToCourseUser(courseID string) (*CourseUser, error) {
-	info, exists := this.CourseInfo[courseID]
-	if !exists {
+// Set escalateServerAdmin to true if high level server users should be escalated to a course owner.
+// Will return (nil, nil) if the user is not escalated and not enrolled in the given course.
+func (this *ServerUser) ToCourseUser(courseID string, escalateServerAdmin bool) (*CourseUser, error) {
+	escalate := escalateServerAdmin && (this.Role >= ServerRoleAdmin)
+
+	info, enrolled := this.CourseInfo[courseID]
+	if !enrolled && !escalate {
 		return nil, nil
 	}
 
 	courseUser := &CourseUser{
 		Email: this.Email,
 		Name:  this.Name,
-		Role:  info.Role,
-		LMSID: info.LMSID,
+	}
+
+	if enrolled {
+		courseUser.Role = info.Role
+		courseUser.LMSID = info.LMSID
+	}
+
+	if escalate {
+		courseUser.Role = CourseRoleOwner
 	}
 
 	return courseUser, courseUser.Validate()
@@ -223,9 +245,14 @@ func (this *ServerUser) Merge(other *ServerUser) (bool, error) {
 		this.Salt = &newSalt
 	}
 
+	if (other.Password != nil) && ((this.Password == nil) || !TokenPointerEqual(this.Password, other.Password)) {
+		changed = true
+		this.Password = other.Password.Clone()
+	}
+
 	if other.Tokens != nil {
 		for _, token := range other.Tokens {
-			this.Tokens = append(this.Tokens, token)
+			this.Tokens = append(this.Tokens, token.Clone())
 		}
 	}
 
@@ -268,26 +295,12 @@ func (this *ServerUser) SetPassword(password string) (bool, error) {
 		return false, fmt.Errorf("Failed to create token for user '%s' password.", this.Email)
 	}
 
-	oldIndex := -1
-	for i, token := range this.Tokens {
-		if token.Source == TokenSourcePassword {
-			// Check for duplicates.
-			if TokenPointerEqual(token, newToken) {
-				return false, nil
-			}
-
-			oldIndex = i
-			break
-		}
+	// Check for duplicate password.
+	if TokenPointerEqual(this.Password, newToken) {
+		return false, nil
 	}
 
-	if oldIndex == -1 {
-		this.Tokens = append(this.Tokens, newToken)
-	} else {
-		this.Tokens[oldIndex] = newToken
-	}
-
-	this.compactTokens()
+	this.Password = newToken
 
 	return true, nil
 }
@@ -304,7 +317,7 @@ func (this *ServerUser) SetRandomPassword() (string, error) {
 		return "", fmt.Errorf("User '%s' failed to generate random text for password: '%w'.", this.Email, err)
 	}
 
-	_, err = this.SetPassword(cleartext)
+	_, err = this.SetPassword(util.Sha256HexFromString(cleartext))
 	if err != nil {
 		return "", fmt.Errorf("User '%s' failed to set random password: '%w'.", this.Email, err)
 	}
@@ -338,7 +351,14 @@ func (this *ServerUser) Auth(input string) (bool, error) {
 		return false, fmt.Errorf("User '%s' has no salt. Cannot auth.", this.Email)
 	}
 
-	// Make sure that all tokens are checked so we are vulnerable to timing attacks.
+	// Make sure that the password and all tokens are checked so we are not vulnerable to timing attacks.
+
+	if this.Password != nil {
+		tokenMatch, err := this.Password.Check(input, *this.Salt)
+		errs = errors.Join(errs, err)
+		match = match || tokenMatch
+	}
+
 	for _, token := range this.Tokens {
 		tokenMatch, err := token.Check(input, *this.Salt)
 		errs = errors.Join(errs, err)
@@ -354,6 +374,11 @@ func (this *ServerUser) Auth(input string) (bool, error) {
 
 // Deep copy this user (which should already be validated).
 func (this *ServerUser) Clone() *ServerUser {
+	var password *Token = nil
+	if this.Password != nil {
+		password = this.Password.Clone()
+	}
+
 	tokens := make([]*Token, 0, len(this.Tokens))
 	for _, token := range this.Tokens {
 		tokens = append(tokens, token.Clone())
@@ -369,6 +394,7 @@ func (this *ServerUser) Clone() *ServerUser {
 		Name:       this.Name,
 		Role:       this.Role,
 		Salt:       this.Salt,
+		Password:   password,
 		Tokens:     tokens,
 		CourseInfo: courseInfo,
 	}
@@ -380,11 +406,17 @@ func (this *ServerUser) MustToRow() []string {
 		tokens = append(tokens, fmt.Sprintf("%s (%s)", token.Name, string(token.Source)))
 	}
 
+	password := "<nil>"
+	if this.Password != nil {
+		password = "<exists>"
+	}
+
 	return []string{
 		this.Email,
 		util.PointerToString(this.Name),
 		this.Role.String(),
 		util.PointerToString(this.Salt),
+		password,
 		util.MustToJSON(tokens),
 		util.MustToJSON(this.CourseInfo),
 	}

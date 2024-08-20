@@ -124,20 +124,13 @@ func (this *APIRequestCourseUserContext) Validate(request any, endpoint string) 
 			Course(this.CourseID)
 	}
 
-	if this.ServerUser.Role < model.ServerRoleAdmin {
-		this.User, err = this.ServerUser.ToCourseUser(this.Course.ID)
-		if err != nil {
-			return NewInternalError("-039", this, "Unable to convert server user to course user.").Err(err)
-		}
+	this.User, err = this.ServerUser.ToCourseUser(this.Course.ID, true)
+	if err != nil {
+		return NewInternalError("-039", this, "Unable to convert server user to course user.").Err(err)
+	}
 
-		if this.User == nil {
-			return NewBadRequestError("-040", &this.APIRequest, fmt.Sprintf("User '%s' is not enolled in course '%s'.", this.UserEmail, this.CourseID))
-		}
-	} else {
-		this.User, err = this.ServerUser.ToCourseSuperUser(this.Course.ID)
-		if err != nil {
-			return NewInternalError("-048", this, "Unable to convert server user to course super user.").Err(err)
-		}
+    if this.User == nil {
+		return NewBadRequestError("-040", &this.APIRequest, fmt.Sprintf("User '%s' is not enolled in course '%s'.", this.UserEmail, this.CourseID))
 	}
 
 	minRole, foundRole := getMaxCourseRole(request)

@@ -8,7 +8,7 @@ import (
 	"github.com/edulinq/autograder/internal/util"
 )
 
-func TestPeek(test *testing.T) {
+func TestFetchUserPeek(test *testing.T) {
 	// There are two options, which makes for four general test cases.
 	testCases := []struct {
 		role             model.CourseUserRole
@@ -67,7 +67,7 @@ func TestPeek(test *testing.T) {
 			"target-submission": testCase.targetSubmission,
 		}
 
-		response := core.SendTestAPIRequestFull(test, core.NewEndpoint(`submissions/peek`), fields, nil, testCase.role)
+		response := core.SendTestAPIRequestFull(test, core.NewEndpoint(`courses/assignments/submissions/fetch/user/peek`), fields, nil, testCase.role)
 		if !response.Success {
 			if testCase.permError {
 				expectedLocator := "-033"
@@ -82,7 +82,7 @@ func TestPeek(test *testing.T) {
 			continue
 		}
 
-		var responseContent PeekResponse
+		var responseContent FetchUserPeekResponse
 		util.MustJSONFromString(util.MustToJSON(response.Content), &responseContent)
 
 		if testCase.foundUser != responseContent.FoundUser {
