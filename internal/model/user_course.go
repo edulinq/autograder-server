@@ -42,10 +42,6 @@ func (this *CourseUser) Validate() error {
 		this.Name = &name
 	}
 
-	if this.Role == CourseRoleSuper {
-		return fmt.Errorf("User '%s' has a super role. Normal users are not allowed to have this role.", this.Email)
-	}
-
 	if this.Role == CourseRoleUnknown {
 		return fmt.Errorf("User '%s' has an unknown role. All users must have a definite role.", this.Email)
 	}

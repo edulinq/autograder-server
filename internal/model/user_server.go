@@ -187,28 +187,6 @@ func (this *ServerUser) ToCourseUser(courseID string, escalateServerAdmin bool) 
 	return courseUser, courseUser.Validate()
 }
 
-// Convert this server user into a course super user for the specific course.
-// The LMSID field will be nil if the user is not enrolled in the given course.
-func (this *ServerUser) ToCourseSuperUser(courseID string) (*CourseUser, error) {
-	courseUser, err := this.ToCourseUser(courseID)
-	if err != nil {
-		return courseUser, err
-	}
-
-	if courseUser == nil {
-		courseUser = &CourseUser{
-			Email: this.Email,
-			Name:  this.Name,
-			Role:  CourseRoleSuper,
-			LMSID: nil,
-		}
-	}
-
-	courseUser.Role = CourseRoleSuper
-
-	return courseUser, nil
-}
-
 // Add information from the given user to this user.
 // Everything but email can be added (the email of the two users must already match).
 // Any given tokens will be added.

@@ -16,7 +16,6 @@ type CourseUserRole int
 // CourseRoleGrader is for users that need access to grades/submissions, but cannot administrate a course.
 // CourseRoleAdmin is for users that need to administrate a course.
 // CourseRoleOwner is for the top-level authorities of a course.
-// CourseRoleSuper is not for an actual user (will be a validation error), but the authority given when a server admin or above runs course APIs.
 const (
 	CourseRoleUnknown CourseUserRole = 0
 	CourseRoleOther                  = 10
@@ -24,7 +23,6 @@ const (
 	CourseRoleGrader                 = 30
 	CourseRoleAdmin                  = 40
 	CourseRoleOwner                  = 50
-	CourseRoleSuper                  = 60
 )
 
 var courseRoleToString = map[CourseUserRole]string{
@@ -34,7 +32,6 @@ var courseRoleToString = map[CourseUserRole]string{
 	CourseRoleGrader:  "grader",
 	CourseRoleAdmin:   "admin",
 	CourseRoleOwner:   "owner",
-	CourseRoleSuper:   "super",
 }
 
 var stringToCourseUserRole = map[string]CourseUserRole{
@@ -44,7 +41,6 @@ var stringToCourseUserRole = map[string]CourseUserRole{
 	"grader":  CourseRoleGrader,
 	"admin":   CourseRoleAdmin,
 	"owner":   CourseRoleOwner,
-	"super":   CourseRoleSuper,
 }
 
 func GetCourseUserRole(text string) CourseUserRole {

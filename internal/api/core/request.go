@@ -129,7 +129,7 @@ func (this *APIRequestCourseUserContext) Validate(request any, endpoint string) 
 		return NewInternalError("-039", this, "Unable to convert server user to course user.").Err(err)
 	}
 
-    if this.User == nil {
+	if this.User == nil {
 		return NewBadRequestError("-040", &this.APIRequest, fmt.Sprintf("User '%s' is not enolled in course '%s'.", this.UserEmail, this.CourseID))
 	}
 
