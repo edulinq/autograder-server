@@ -14,10 +14,10 @@ func TestPassChange(test *testing.T) {
 
 	testCases := []struct {
 		newPass  string
-		expected PassChangeResponse
+		expected PasswordChangeResponse
 	}{
-		{"spooky", PassChangeResponse{true, false}},
-		{"admin", PassChangeResponse{true, true}},
+		{"spooky", PasswordChangeResponse{true, false}},
+		{"admin", PasswordChangeResponse{true, true}},
 	}
 
 	for i, testCase := range testCases {
@@ -29,13 +29,13 @@ func TestPassChange(test *testing.T) {
 			"new-pass":   util.Sha256HexFromString(testCase.newPass),
 		}
 
-		response := core.SendTestAPIRequest(test, core.NewEndpoint(`users/pass/change`), fields)
+		response := core.SendTestAPIRequest(test, core.NewEndpoint(`users/password/change`), fields)
 		if !response.Success {
 			test.Errorf("Case %d: Response is not a success when it should be: '%v'.", i, response)
 			continue
 		}
 
-		var responseContent PassChangeResponse
+		var responseContent PasswordChangeResponse
 		util.MustJSONFromString(util.MustToJSON(response.Content), &responseContent)
 
 		if !reflect.DeepEqual(testCase.expected, responseContent) {

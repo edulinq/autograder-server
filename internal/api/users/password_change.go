@@ -5,18 +5,18 @@ import (
 	"github.com/edulinq/autograder/internal/db"
 )
 
-type PassChangeRequest struct {
+type PasswordChangeRequest struct {
 	core.APIRequestUserContext
 
 	NewPass string `json:"new-pass"`
 }
 
-type PassChangeResponse struct {
+type PasswordChangeResponse struct {
 	Success   bool `json:"success"`
 	Duplicate bool `json:"duplicate"`
 }
 
-func HandlePassChange(request *PassChangeRequest) (*PassChangeResponse, *core.APIError) {
+func HandlePasswordChange(request *PasswordChangeRequest) (*PasswordChangeResponse, *core.APIError) {
 	success, err := request.ServerUser.SetPassword(request.NewPass)
 	if err != nil {
 		return nil, core.NewUsertContextInternalError("-805", &request.APIRequestUserContext,
@@ -29,7 +29,7 @@ func HandlePassChange(request *PassChangeRequest) (*PassChangeResponse, *core.AP
 			"Failed to save user.").Err(err)
 	}
 
-	response := &PassChangeResponse{
+	response := &PasswordChangeResponse{
 		Success:   true,
 		Duplicate: !success,
 	}
