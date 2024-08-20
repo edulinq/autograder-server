@@ -17,6 +17,7 @@ import (
 
 func startExclusiveUnixServer() error {
 	var socketPath = config.UNIX_SOCKET_PATH.Get()
+	os.Remove(socketPath)
 
 	unixSocket, err := net.Listen("unix", socketPath)
 	if err != nil {
