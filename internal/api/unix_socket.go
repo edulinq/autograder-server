@@ -17,7 +17,6 @@ import (
 
 func startExclusiveUnixServer() error {
 	var socketPath = config.UNIX_SOCKET_PATH.Get()
-	os.Remove(socketPath)
 
 	unixSocket, err := net.Listen("unix", socketPath)
 	if err != nil {
@@ -26,6 +25,7 @@ func startExclusiveUnixServer() error {
 
 	defer os.Remove(socketPath)
 	defer unixSocket.Close()
+
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
 	go func() {
