@@ -34,7 +34,7 @@ func TestNewUserInfos(test *testing.T) {
 						Email: "admin@test.com",
 						Name:  "admin",
 					},
-					Role: model.GetServerUserRole("admin"),
+					Role: model.GetServerUserRole("user"),
 					Courses: map[string]EnrollmentInfo{
 						"course-languages": {
 							CourseID:   "course-languages",
@@ -69,7 +69,7 @@ func TestNewUserInfos(test *testing.T) {
 						Email: "grader@test.com",
 						Name:  "grader",
 					},
-					Role: model.GetServerUserRole("creator"),
+					Role: model.GetServerUserRole("user"),
 					Courses: map[string]EnrollmentInfo{
 						"course-languages": {
 							CourseID:   "course-languages",
@@ -182,7 +182,8 @@ func TestNewUserInfos(test *testing.T) {
 
 			for _, serverUserInfo := range serverUserInfos {
 				if serverUserInfo.Type != ServerUserInfoType {
-					test.Errorf("Test %d: Unexpected user info type. Expected: '%s', actual: '%s'.", i, ServerUserInfoType, serverUserInfo.Type)
+					test.Errorf("Test %d: Unexpected server user info type. Expected: '%s', actual: '%s'.",
+						i, ServerUserInfoType, serverUserInfo.Type)
 					continue
 				}
 			}
@@ -197,7 +198,7 @@ func TestNewUserInfos(test *testing.T) {
 		} else {
 			courseUsers := make([]*model.CourseUser, 0, len(serverUsers))
 			for _, user := range serverUsers {
-				courseUser, err := user.ToCourseUser(db.TEST_COURSE_ID)
+				courseUser, err := user.ToCourseUser(db.TEST_COURSE_ID, true)
 				if err != nil {
 					test.Errorf("Test %d: Failed to convert a server user into a course user.", i)
 					continue
@@ -213,7 +214,8 @@ func TestNewUserInfos(test *testing.T) {
 
 			for _, courseUserInfo := range courseUserInfos {
 				if courseUserInfo.Type != CourseUserInfoType {
-					test.Errorf("Test %d: Unexpected user info type. Expected: '%s', actual: '%s'.", i, CourseUserInfoType, courseUserInfo.Type)
+					test.Errorf("Test %d: Unexpected course user info type. Expected: '%s', actual: '%s'.",
+						i, CourseUserInfoType, courseUserInfo.Type)
 					continue
 				}
 			}

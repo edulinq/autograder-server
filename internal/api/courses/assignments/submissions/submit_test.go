@@ -15,7 +15,7 @@ import (
 var SUBMISSION_RELPATH string = filepath.Join("test-submissions", "solution", "submission.py")
 
 func TestSubmit(test *testing.T) {
-	testSubmissions, err := grader.GetTestSubmissions(config.GetCourseImportDir())
+	testSubmissions, err := grader.GetTestSubmissions(config.GetCourseImportDir(), !config.DOCKER_DISABLE.Get())
 	if err != nil {
 		test.Fatalf("Failed to get test submissions in '%s': '%v'.", config.GetCourseImportDir(), err)
 	}
@@ -26,7 +26,7 @@ func TestSubmit(test *testing.T) {
 			"assignment-id": testSubmission.Assignment.GetID(),
 		}
 
-		response := core.SendTestAPIRequestFull(test, core.NewEndpoint(`submissions/submit`), fields, testSubmission.Files, model.CourseRoleStudent)
+		response := core.SendTestAPIRequestFull(test, core.NewEndpoint(`courses/assignments/submissions/submit`), fields, testSubmission.Files, model.CourseRoleStudent)
 		if !response.Success {
 			test.Errorf("Case %d: Response is not a success when it should be: '%v'.", i, response)
 			continue
@@ -88,7 +88,7 @@ func TestRejectSubmissionMaxAttempts(test *testing.T) {
 		"assignment-id": "hw0",
 	}
 
-	response := core.SendTestAPIRequestFull(test, core.NewEndpoint(`submissions/submit`), fields, paths, model.CourseRoleStudent)
+	response := core.SendTestAPIRequestFull(test, core.NewEndpoint(`courses/assignments/submissions/submit`), fields, paths, model.CourseRoleStudent)
 	if !response.Success {
 		test.Fatalf("Response is not a success when it should be: '%v'.", response)
 	}

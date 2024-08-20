@@ -54,7 +54,7 @@ func runSubmissionTests(test *testing.T, parallel bool, useDocker bool) {
 		NoDocker: !useDocker,
 	}
 
-	testSubmissions, err := GetTestSubmissions(baseDir)
+	testSubmissions, err := GetTestSubmissions(baseDir, useDocker)
 	if err != nil {
 		test.Fatalf("Error getting test submissions in '%s': '%v'.", baseDir, err)
 	}

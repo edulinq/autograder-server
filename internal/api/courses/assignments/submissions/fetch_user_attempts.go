@@ -6,20 +6,20 @@ import (
 	"github.com/edulinq/autograder/internal/model"
 )
 
-type FetchAttemptsRequest struct {
+type FetchUserAttemptsRequest struct {
 	core.APIRequestAssignmentContext
 	core.MinCourseRoleGrader
 
 	TargetUser core.TargetCourseUserSelfOrGrader `json:"target-email"`
 }
 
-type FetchAttemptsResponse struct {
+type FetchUserAttemptsResponse struct {
 	FoundUser      bool                   `json:"found-user"`
 	GradingResults []*model.GradingResult `json:"grading-results"`
 }
 
-func HandleFetchAttempts(request *FetchAttemptsRequest) (*FetchAttemptsResponse, *core.APIError) {
-	response := FetchAttemptsResponse{
+func HandleFetchUserAttempts(request *FetchUserAttemptsRequest) (*FetchUserAttemptsResponse, *core.APIError) {
+	response := FetchUserAttemptsResponse{
 		FoundUser:      false,
 		GradingResults: make([]*model.GradingResult, 0),
 	}
