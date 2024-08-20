@@ -7,16 +7,16 @@ import (
 	"github.com/edulinq/autograder/internal/model"
 )
 
-type PassResetRequest struct {
+type PasswordResetRequest struct {
 	core.APIRequest
 
 	UserEmail core.NonEmptyString `json:"user-email"`
 }
 
-type PassResetResponse struct{}
+type PasswordResetResponse struct{}
 
-func HandlePassReset(request *PassResetRequest) (*PassResetResponse, *core.APIError) {
-	response := &PassResetResponse{}
+func HandlePasswordReset(request *PasswordResetRequest) (*PasswordResetResponse, *core.APIError) {
+	response := &PasswordResetResponse{}
 
 	user, err := db.GetServerUser(string(request.UserEmail), false)
 	if err != nil {

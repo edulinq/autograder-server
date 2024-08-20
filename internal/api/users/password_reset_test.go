@@ -16,7 +16,7 @@ func TestPassReset(test *testing.T) {
 	db.ResetForTesting()
 	defer db.ResetForTesting()
 
-	response := core.SendTestAPIRequest(test, core.NewEndpoint(`users/pass/reset`), nil)
+	response := core.SendTestAPIRequest(test, core.NewEndpoint(`users/password/reset`), nil)
 	if !response.Success {
 		test.Fatalf("Response is not a success when it should be: '%v'.", response)
 	}
