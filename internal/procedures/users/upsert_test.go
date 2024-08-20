@@ -503,7 +503,7 @@ func TestUpsertUser(test *testing.T) {
 				RawUsers: []*model.RawUserData{
 					&model.RawUserData{
 						Email: "course-student@test.edulinq.org",
-						Pass:  util.Sha256HexFromString("student"),
+						Pass:  util.Sha256HexFromString("course-student"),
 					},
 				},
 				ContextServerRole: model.ServerRoleAdmin,
