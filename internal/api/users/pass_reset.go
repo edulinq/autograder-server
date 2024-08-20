@@ -13,14 +13,10 @@ type PassResetRequest struct {
 	UserEmail string `json:"user-email"`
 }
 
-type PassResetResponse struct {
-	Found   bool `json:"found"`
-	Changed bool `json:"changed"`
-	Emailed bool `json:"emailed"`
-}
+type PassResetResponse struct{}
 
 func HandlePassReset(request *PassResetRequest) (*PassResetResponse, *core.APIError) {
-	response := &PassResetResponse{false, false, false}
+	response := &PassResetResponse{}
 
 	user, err := db.GetServerUser(request.UserEmail, false)
 	if err != nil {
@@ -31,8 +27,6 @@ func HandlePassReset(request *PassResetRequest) (*PassResetResponse, *core.APIEr
 		return response, nil
 	}
 
-	response.Found = true
-
 	cleartext, err := user.SetRandomPassword()
 	if err != nil {
 		return nil, core.NewBaseInternalError("-808", &request.APIRequest, "Failed to set random password.").Err(err)
@@ -42,8 +36,6 @@ func HandlePassReset(request *PassResetRequest) (*PassResetResponse, *core.APIEr
 	if err != nil {
 		return nil, core.NewBaseInternalError("-809", &request.APIRequest, "Failed to save user.").Err(err)
 	}
-
-	response.Changed = true
 
 	userOp := &model.UserOpResult{
 		Email:             request.UserEmail,
@@ -60,8 +52,6 @@ func HandlePassReset(request *PassResetRequest) (*PassResetResponse, *core.APIEr
 	if err != nil {
 		return nil, core.NewBaseInternalError("-810", &request.APIRequest, "Failed to email user.").Err(err)
 	}
-
-	response.Emailed = true
 
 	return response, nil
 }

@@ -9,6 +9,7 @@ import (
 var routes []*core.Route = []*core.Route{
 	core.NewAPIRoute(core.NewEndpoint(`users/auth`), HandleAuth),
 	core.NewAPIRoute(core.NewEndpoint(`users/get`), HandleGet),
+	core.NewAPIRoute(core.NewEndpoint(`users/pass/reset`), HandlePassReset),
 	core.NewAPIRoute(core.NewEndpoint(`users/tokens/create`), HandleTokensCreate),
 	core.NewAPIRoute(core.NewEndpoint(`users/tokens/delete`), HandleTokensDelete),
 }
