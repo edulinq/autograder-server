@@ -43,11 +43,12 @@ func startExclusiveUnixServer() error {
 		}
 
 		go func() {
+			defer connection.Close()
+
 			err := handleUnixSocketConnection(connection)
 			if err != nil {
 				log.Error("Error handling Unix socket connection.", err)
 			}
-			connection.Close()
 		}()
 	}
 }
@@ -66,8 +67,8 @@ func handleUnixSocketConnection(conn net.Conn) error {
 	if err != nil {
 		return fmt.Errorf("Failed to generate the nonce.")
 	}
-	core.RootUserNonces.Store(randomNumber, true)
-	defer core.RootUserNonces.Delete(randomNumber)
+	core.RootUserNonce.Store(randomNumber, true)
+	defer core.RootUserNonce.Delete(randomNumber)
 
 	var payload map[string]any
 	err = json.Unmarshal(jsonBuffer, &payload)

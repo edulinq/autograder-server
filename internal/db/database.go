@@ -200,7 +200,6 @@ func Open() error {
 		return err
 	}
 
-	// TODO error handle
 	err = UpsertUser(&model.FakeRootUser)
 	if err != nil {
 		return err

@@ -5,14 +5,15 @@ import (
 	"path/filepath"
 
 	"github.com/adrg/xdg"
+	"github.com/edulinq/autograder/internal/log"
 	"github.com/edulinq/autograder/internal/util"
 )
 
 const (
 	WORK_DIR_BASENAME = "autograder"
 
-	PID_NAME         = "autograder.pid"
-	UNIX_SOCKET_NAME = "autograder.sock"
+	PID_FILENAME         = "autograder.pid"
+	UNIX_SOCKET_FILENAME = "autograder.sock"
 
 	BACKUP_DIRNAME        = "backup"
 	CACHE_DIRNAME         = "cache"
@@ -77,24 +78,24 @@ func GetSourcesDir() string {
 	return filepath.Join(GetWorkDir(), SOURCES_DIRNAME)
 }
 
-func GetUnixSocketPath() string {
+func GetUnixSocketDir() string {
 	unixSocketDir := filepath.Join(GetWorkDir(), "tmp")
 
 	err := util.MkDir(unixSocketDir)
 	if err != nil {
-		fmt.Printf("Error creating directory %s: %v\n", unixSocketDir, err)
+		log.Error("Error creating Unix Socket directory.", err)
 	}
 
-	return filepath.Join(unixSocketDir, UNIX_SOCKET_NAME)
+	return filepath.Join(unixSocketDir, UNIX_SOCKET_FILENAME)
 }
 
-func GetPidPath() string {
+func GetPidDir() string {
 	pidDir := filepath.Join(GetWorkDir(), "tmp")
 
 	err := util.MkDir(pidDir)
 	if err != nil {
-		fmt.Printf("Error creating directory %s: %v\n", pidDir, err)
+		log.Error("Error creating PID directory.", err)
 	}
 
-	return filepath.Join(pidDir, PID_NAME)
+	return filepath.Join(pidDir, PID_FILENAME)
 }

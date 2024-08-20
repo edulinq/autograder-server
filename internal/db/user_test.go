@@ -414,7 +414,6 @@ func (this *DBTests) DBTestUserDeleteUserMissing(test *testing.T) {
 	}
 
 	user, err := GetServerUser(email, true)
-
 	if err != nil {
 		test.Fatalf("Could not get (new) server user ('%s'): '%v'.", email, err)
 	}
@@ -584,15 +583,15 @@ func (this *DBTests) DBTestRootUserValidation(test *testing.T) {
 
 	rootUser, err := GetServerUser(model.FakeRootUser.Email, true)
 	if err != nil {
-		test.Fatalf("Failed to get root user: '%v'", err)
+		test.Fatalf("Failed to get root user: '%v'.", err)
 	}
 
 	if rootUser == nil {
-		test.Fatal("Root user not found")
+		test.Fatal("Root user not found.")
 	}
 
 	err = rootUser.Validate()
 	if err != nil {
-		test.Fatalf("Root user validation failed: '%v'", err)
+		test.Fatalf("Root user validation failed: '%v'.", err)
 	}
 }

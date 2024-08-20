@@ -1,6 +1,7 @@
 package server
 
 import (
+	"fmt"
 	"os"
 	"os/signal"
 	"strconv"
@@ -30,7 +31,7 @@ func Start() error {
 				if err == nil {
 					err = process.Signal(syscall.Signal(0))
 					if err == nil {
-						log.Fatal("Server is already running with PID:", pid)
+						return fmt.Errorf("Another instance of the autograder server is already running.")
 					} else {
 						os.Remove(pidFilePath)
 					}
@@ -41,7 +42,7 @@ func Start() error {
 
 	err := common.CreatePIDFile()
 	if err != nil {
-		log.Fatal("Could not create PID file", err)
+		return fmt.Errorf("Could not create PID file.")
 	}
 
 	defer os.Remove(pidFilePath)
@@ -56,7 +57,7 @@ func Start() error {
 
 	workingDir, err := os.Getwd()
 	if err != nil {
-		log.Fatal("Could not get working directory", err)
+		return fmt.Errorf("Could not get working directory.")
 	}
 
 	db.MustOpen()
@@ -85,7 +86,7 @@ func Start() error {
 
 	err = api.StartServer()
 	if err != nil {
-		log.Fatal("Server was stopped", err)
+		return fmt.Errorf("Failed to start server.")
 	}
 
 	log.Info("Server closed.")

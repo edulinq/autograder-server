@@ -15,12 +15,13 @@ func ReadFromUnixSocket(conn net.Conn, bufferBytes int) ([]byte, error) {
 	}
 
 	size := binary.BigEndian.Uint64(sizeBuffer)
-
 	jsonBuffer := make([]byte, size)
+
 	_, err = conn.Read(jsonBuffer)
 	if err != nil {
 		return nil, err
 	}
+
 	return jsonBuffer, nil
 }
 

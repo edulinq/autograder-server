@@ -17,7 +17,7 @@ import (
 // Once validated, callers should feel safe calling reflection methods on this without extra checks.
 type ValidAPIRequest any
 
-var RootUserNonces sync.Map
+var RootUserNonce sync.Map
 
 type APIRequest struct {
 	// These are not provided in JSON, they are filled in during validation.
@@ -81,7 +81,7 @@ func (this *APIRequestUserContext) Validate(request any, endpoint string) *APIEr
 	}
 
 	// Check for a valid nonce and skip auth if it exists.
-	_, rootUserExists := RootUserNonces.LoadAndDelete(this.RootUserNonce)
+	_, rootUserExists := RootUserNonce.LoadAndDelete(this.RootUserNonce)
 
 	if this.RootUserNonce != "" {
 		if !rootUserExists {
@@ -276,6 +276,7 @@ func validateRequestStruct(request any, endpoint string) (bool, *APIError) {
 			// APIRequestCourseUserContext
 			courseUserRequest := fieldValue.Interface().(APIRequestCourseUserContext)
 			foundRequestStruct = true
+
 			apiErr := courseUserRequest.Validate(request, endpoint)
 			if apiErr != nil {
 				return false, apiErr

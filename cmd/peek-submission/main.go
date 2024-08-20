@@ -85,7 +85,7 @@ func main() {
 	sizeBuffer := make([]byte, 8)
 	_, err = conn.Read(sizeBuffer)
 	if err != nil {
-		log.Error("Failed to read the size of the response buffer.", err)
+		log.Fatal("Failed to read the size of the response buffer.", err)
 	}
 
 	size = binary.BigEndian.Uint64(sizeBuffer)
@@ -99,7 +99,7 @@ func main() {
 	var response core.APIResponse
 	err = json.Unmarshal(responseBuffer, &response)
 	if err != nil {
-		log.Error("Failed to unmarshal the API response.", err)
+		log.Fatal("Failed to unmarshal the API response.", err)
 	}
 
 	if args.Verbose {
