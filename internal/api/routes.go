@@ -26,7 +26,6 @@ func GetRoutes() *[]*core.Route {
 	routes = append(routes, *(admin.GetRoutes())...)
 	routes = append(routes, *(courses.GetRoutes())...)
 	routes = append(routes, *(lms.GetRoutes())...)
-	routes = append(routes, *(submissions.GetRoutes())...)
 	routes = append(routes, *(users.GetRoutes())...)
 
 	return &routes
