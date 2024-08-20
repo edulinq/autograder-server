@@ -14,18 +14,18 @@ func TestUsersAuth(test *testing.T) {
 		expected bool
 	}{
 		// Test cases for correct authorization.
-		{"other@test.com", "other", true},
-		{"student@test.com", "student", true},
-		{"grader@test.com", "grader", true},
-		{"admin@test.com", "admin", true},
-		{"owner@test.com", "owner", true},
+		{"course-other@test.edulinq.org", "other", true},
+		{"course-student@test.edulinq.org", "student", true},
+		{"course-grader@test.edulinq.org", "grader", true},
+		{"course-admin@test.edulinq.org", "admin", true},
+		{"course-owner@test.edulinq.org", "owner", true},
 
 		// Ensure we fail on bad passwords.
-		{"other@test.com", "ZZZ", false},
-		{"student@test.com", "ZZZ", false},
-		{"grader@test.com", "ZZZ", false},
-		{"admin@test.com", "ZZZ", false},
-		{"owner@test.com", "ZZZ", false},
+		{"course-other@test.edulinq.org", "ZZZ", false},
+		{"course-student@test.edulinq.org", "ZZZ", false},
+		{"course-grader@test.edulinq.org", "ZZZ", false},
+		{"course-admin@test.edulinq.org", "ZZZ", false},
+		{"course-owner@test.edulinq.org", "ZZZ", false},
 
 		// Check we cannot find invalid users.
 		{"ZZZ", "Z", false},

@@ -403,8 +403,8 @@ func TestUserServerUserName(test *testing.T) {
 		FallbackName string
 	}{
 		{util.StringPointer("alice"), "alice", "alice"},
-		{util.StringPointer(""), "", "alice@test.com"},
-		{nil, "", "alice@test.com"},
+		{util.StringPointer(""), "", "alice@test.edulinq.org"},
+		{nil, "", "alice@test.edulinq.org"},
 	}
 
 	for i, testCase := range testCases {
@@ -734,7 +734,7 @@ func TestUserServerUserMustToRow(test *testing.T) {
 		{
 			baseTestServerUser,
 			[]string{
-				"alice@test.com",
+				"alice@test.edulinq.org",
 				"Alice",
 				"user",
 				"abc123",
@@ -774,7 +774,7 @@ func TestUserServerUserMustToRow(test *testing.T) {
 		{
 			setServerUserName(baseTestServerUser, util.StringPointer("foo")),
 			[]string{
-				"alice@test.com",
+				"alice@test.edulinq.org",
 				"foo",
 				"user",
 				"abc123",
@@ -786,7 +786,7 @@ func TestUserServerUserMustToRow(test *testing.T) {
 		{
 			setServerUserName(baseTestServerUser, nil),
 			[]string{
-				"alice@test.com",
+				"alice@test.edulinq.org",
 				"",
 				"user",
 				"abc123",
@@ -800,7 +800,7 @@ func TestUserServerUserMustToRow(test *testing.T) {
 		{
 			setServerUserRole(baseTestServerUser, ServerRoleOwner),
 			[]string{
-				"alice@test.com",
+				"alice@test.edulinq.org",
 				"Alice",
 				"owner",
 				"abc123",
@@ -814,7 +814,7 @@ func TestUserServerUserMustToRow(test *testing.T) {
 		{
 			setServerUserSalt(baseTestServerUser, util.StringPointer("aaaa")),
 			[]string{
-				"alice@test.com",
+				"alice@test.edulinq.org",
 				"Alice",
 				"user",
 				"aaaa",
@@ -826,7 +826,7 @@ func TestUserServerUserMustToRow(test *testing.T) {
 		{
 			setServerUserSalt(baseTestServerUser, nil),
 			[]string{
-				"alice@test.com",
+				"alice@test.edulinq.org",
 				"Alice",
 				"user",
 				"",
@@ -840,7 +840,7 @@ func TestUserServerUserMustToRow(test *testing.T) {
 		{
 			setServerUserPassword(baseTestServerUser, nil),
 			[]string{
-				"alice@test.com",
+				"alice@test.edulinq.org",
 				"Alice",
 				"user",
 				"abc123",
@@ -852,7 +852,7 @@ func TestUserServerUserMustToRow(test *testing.T) {
 		{
 			setServerUserPassword(baseTestServerUser, newPasswordToken),
 			[]string{
-				"alice@test.com",
+				"alice@test.edulinq.org",
 				"Alice",
 				"user",
 				"abc123",
@@ -866,7 +866,7 @@ func TestUserServerUserMustToRow(test *testing.T) {
 		{
 			setServerUserTokens(baseTestServerUser, []*Token{MustNewToken("aa", "abc123", TokenSourcePassword, "test token 2")}),
 			[]string{
-				"alice@test.com",
+				"alice@test.edulinq.org",
 				"Alice",
 				"user",
 				"abc123",
@@ -878,7 +878,7 @@ func TestUserServerUserMustToRow(test *testing.T) {
 		{
 			setServerUserTokens(baseTestServerUser, []*Token{}),
 			[]string{
-				"alice@test.com",
+				"alice@test.edulinq.org",
 				"Alice",
 				"user",
 				"abc123",
@@ -894,7 +894,7 @@ func TestUserServerUserMustToRow(test *testing.T) {
 				"foo": &UserCourseInfo{Role: CourseRoleGrader, LMSID: util.StringPointer("bar")},
 			}),
 			[]string{
-				"alice@test.com",
+				"alice@test.edulinq.org",
 				"Alice",
 				"user",
 				"abc123",
@@ -909,7 +909,7 @@ func TestUserServerUserMustToRow(test *testing.T) {
 				"foo":       &UserCourseInfo{Role: CourseRoleGrader, LMSID: util.StringPointer("bar")},
 			}),
 			[]string{
-				"alice@test.com",
+				"alice@test.edulinq.org",
 				"Alice",
 				"user",
 				"abc123",
@@ -921,7 +921,7 @@ func TestUserServerUserMustToRow(test *testing.T) {
 		{
 			setServerUserCourseInfo(baseTestServerUser, map[string]*UserCourseInfo{}),
 			[]string{
-				"alice@test.com",
+				"alice@test.edulinq.org",
 				"Alice",
 				"user",
 				"abc123",
@@ -1108,7 +1108,7 @@ var baseUserCourseInfo *UserCourseInfo = &UserCourseInfo{
 }
 
 var baseTestServerUser *ServerUser = &ServerUser{
-	Email:      "alice@test.com",
+	Email:      "alice@test.edulinq.org",
 	Name:       util.StringPointer("Alice"),
 	Role:       ServerRoleUser,
 	Salt:       util.StringPointer(BASE_SALT),
@@ -1118,7 +1118,7 @@ var baseTestServerUser *ServerUser = &ServerUser{
 }
 
 var minimalTestServerUser *ServerUser = &ServerUser{
-	Email:      "alice@test.com",
+	Email:      "alice@test.edulinq.org",
 	Name:       nil,
 	Role:       ServerRoleUnknown,
 	Salt:       nil,

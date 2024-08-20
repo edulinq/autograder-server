@@ -11,35 +11,35 @@ import (
 
 func TestFetchCourseScores(test *testing.T) {
 	testCases := []struct {
-		role       model.CourseUserRole
+		email      string
 		filterRole model.CourseUserRole
 		permError  bool
 		ids        map[string]string
 	}{
-		{model.CourseRoleGrader, model.CourseRoleUnknown, false, map[string]string{
-			"other@test.com":   "",
-			"student@test.com": "course101::hw0::student@test.com::1697406272",
-			"grader@test.com":  "",
-			"admin@test.com":   "",
-			"owner@test.com":   "",
+		{"course-grader@test.edulinq.org", model.CourseRoleUnknown, false, map[string]string{
+			"course-other@test.edulinq.org":   "",
+			"course-student@test.edulinq.org": "course101::hw0::student@test.edulinq.org::1697406272",
+			"course-grader@test.edulinq.org":  "",
+			"course-admin@test.edulinq.org":   "",
+			"course-owner@test.edulinq.org":   "",
 		}},
-		{model.CourseRoleAdmin, model.CourseRoleUnknown, false, map[string]string{
-			"other@test.com":   "",
-			"student@test.com": "course101::hw0::student@test.com::1697406272",
-			"grader@test.com":  "",
-			"admin@test.com":   "",
-			"owner@test.com":   "",
+		{"course-admin@test.edulinq.org", model.CourseRoleUnknown, false, map[string]string{
+			"course-other@test.edulinq.org":   "",
+			"course-student@test.edulinq.org": "course101::hw0::student@test.edulinq.org::1697406272",
+			"course-grader@test.edulinq.org":  "",
+			"course-admin@test.edulinq.org":   "",
+			"course-owner@test.edulinq.org":   "",
 		}},
-		{model.CourseRoleGrader, model.CourseRoleStudent, false, map[string]string{
-			"student@test.com": "course101::hw0::student@test.com::1697406272",
+		{"course-grader@test.edulinq.org", model.CourseRoleStudent, false, map[string]string{
+			"course-student@test.edulinq.org": "course101::hw0::student@test.edulinq.org::1697406272",
 		}},
-		{model.CourseRoleGrader, model.CourseRoleGrader, false, map[string]string{
-			"grader@test.com": "",
+		{"course-grader@test.edulinq.org", model.CourseRoleGrader, false, map[string]string{
+			"course-grader@test.edulinq.org": "",
 		}},
-		{model.CourseRoleStudent, model.CourseRoleUnknown, true, nil},
-		{model.CourseRoleStudent, model.CourseRoleStudent, true, nil},
-		{model.CourseRoleOther, model.CourseRoleUnknown, true, nil},
-		{model.CourseRoleOther, model.CourseRoleGrader, true, nil},
+		{"course-student@test.edulinq.org", model.CourseRoleUnknown, true, nil},
+		{"course-student@test.edulinq.org", model.CourseRoleStudent, true, nil},
+		{"course-other@test.edulinq.org", model.CourseRoleUnknown, true, nil},
+		{"course-other@test.edulinq.org", model.CourseRoleGrader, true, nil},
 	}
 
 	for i, testCase := range testCases {
@@ -47,7 +47,7 @@ func TestFetchCourseScores(test *testing.T) {
 			"filter-role": testCase.filterRole,
 		}
 
-		response := core.SendTestAPIRequestFull(test, core.NewEndpoint(`courses/assignments/submissions/fetch/course/scores`), fields, nil, testCase.role)
+		response := core.SendTestAPIRequestFull(test, core.NewEndpoint(`courses/assignments/submissions/fetch/course/scores`), fields, nil, testCase.email)
 		if !response.Success {
 			if testCase.permError {
 				expectedLocator := "-020"

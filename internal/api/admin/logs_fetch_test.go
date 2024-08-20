@@ -9,7 +9,6 @@ import (
 	"github.com/edulinq/autograder/internal/api/core"
 	"github.com/edulinq/autograder/internal/db"
 	"github.com/edulinq/autograder/internal/log"
-	"github.com/edulinq/autograder/internal/model"
 	"github.com/edulinq/autograder/internal/util"
 )
 
@@ -83,7 +82,7 @@ func TestFetchLogs(test *testing.T) {
 	timeAfterLogs := time.Now().Add(10 * time.Second).Format(time.RFC3339)
 
 	testCases := []struct {
-		role            model.CourseUserRole
+		email           string
 		permError       bool
 		level           string
 		after           string
@@ -92,20 +91,20 @@ func TestFetchLogs(test *testing.T) {
 		expectedErrors  []string
 		expectedRecords []*log.Record
 	}{
-		{model.CourseRoleGrader, true, "", "", "", "", nil, nil},
+		{"course-grader@test.edulinq.org", true, "", "", "", "", nil, nil},
 
-		{model.CourseRoleAdmin, false, "", "", "", "", nil, allRecords[2:]},
-		{model.CourseRoleAdmin, false, "trace", "", "", "", nil, allRecords},
+		{"course-admin@test.edulinq.org", false, "", "", "", "", nil, allRecords[2:]},
+		{"course-admin@test.edulinq.org", false, "trace", "", "", "", nil, allRecords},
 
-		{model.CourseRoleAdmin, false, "", timeBeforeLogs, "", "", nil, allRecords[2:]},
-		{model.CourseRoleAdmin, false, "", timeAfterLogs, "", "", nil, []*log.Record{}},
+		{"course-admin@test.edulinq.org", false, "", timeBeforeLogs, "", "", nil, allRecords[2:]},
+		{"course-admin@test.edulinq.org", false, "", timeAfterLogs, "", "", nil, []*log.Record{}},
 
 		// Parse Errors.
-		{model.CourseRoleAdmin, false, "ZZZ", "", "", "", []string{"Could not parse 'level' component of log query ('ZZZ'): 'Unknown log level 'ZZZ'.'."}, nil},
-		{model.CourseRoleAdmin, false, "", "ZZZ", "", "", []string{`Could not parse 'after' component of log query ('ZZZ'): 'Failed to parse timestamp string 'ZZZ': 'parsing time "ZZZ" as "2006-01-02T15:04:05Z07:00": cannot parse "ZZZ" as "2006"'.'.`}, nil},
-		{model.CourseRoleAdmin, false, "", "", "!ZZZ", "", []string{"Could not parse 'assignment' component of log query ('!ZZZ'): 'IDs must only have letters, digits, and single sequences of periods, underscores, and hyphens, found '!zzz'.'."}, nil},
-		{model.CourseRoleAdmin, false, "", "", "ZZZ", "", []string{"Unknown assignment given for 'assignment' component of log query ('ZZZ')."}, nil},
-		{model.CourseRoleAdmin, false, "", "", "", "ZZZ", []string{"Could not find user: 'ZZZ'."}, nil},
+		{"course-admin@test.edulinq.org", false, "ZZZ", "", "", "", []string{"Could not parse 'level' component of log query ('ZZZ'): 'Unknown log level 'ZZZ'.'."}, nil},
+		{"course-admin@test.edulinq.org", false, "", "ZZZ", "", "", []string{`Could not parse 'after' component of log query ('ZZZ'): 'Failed to parse timestamp string 'ZZZ': 'parsing time "ZZZ" as "2006-01-02T15:04:05Z07:00": cannot parse "ZZZ" as "2006"'.'.`}, nil},
+		{"course-admin@test.edulinq.org", false, "", "", "!ZZZ", "", []string{"Could not parse 'assignment' component of log query ('!ZZZ'): 'IDs must only have letters, digits, and single sequences of periods, underscores, and hyphens, found '!zzz'.'."}, nil},
+		{"course-admin@test.edulinq.org", false, "", "", "ZZZ", "", []string{"Unknown assignment given for 'assignment' component of log query ('ZZZ')."}, nil},
+		{"course-admin@test.edulinq.org", false, "", "", "", "ZZZ", []string{"Could not find user: 'ZZZ'."}, nil},
 	}
 
 	for i, testCase := range testCases {
@@ -116,7 +115,7 @@ func TestFetchLogs(test *testing.T) {
 			"target-email":  testCase.user,
 		}
 
-		response := core.SendTestAPIRequestFull(test, core.NewEndpoint(`admin/logs/fetch`), fields, nil, testCase.role)
+		response := core.SendTestAPIRequestFull(test, core.NewEndpoint(`admin/logs/fetch`), fields, nil, testCase.email)
 		if !response.Success {
 			if testCase.permError {
 				expectedLocator := "-020"

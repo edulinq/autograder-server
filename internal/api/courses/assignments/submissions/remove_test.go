@@ -5,7 +5,6 @@ import (
 
 	"github.com/edulinq/autograder/internal/api/core"
 	"github.com/edulinq/autograder/internal/db"
-	"github.com/edulinq/autograder/internal/model"
 	"github.com/edulinq/autograder/internal/util"
 )
 
@@ -14,7 +13,7 @@ func TestRemove(test *testing.T) {
 	defer db.ResetForTesting()
 
 	testCases := []struct {
-		role             model.CourseUserRole
+        email            string
 		targetEmail      string
 		targetSubmission string
 		foundUser        bool
@@ -22,39 +21,39 @@ func TestRemove(test *testing.T) {
 		permError        bool
 	}{
 		// Grader, self, recent.
-		{model.CourseRoleGrader, "", "", true, false, false},
-		{model.CourseRoleGrader, "grader@test.com", "", true, false, false},
+		{"course-grader@test.edulinq.org", "", "", true, false, false},
+		{"course-grader@test.edulinq.org", "course-grader@test.edulinq.org", "", true, false, false},
 
 		// Grader, self, missing.
-		{model.CourseRoleGrader, "", "ZZZ", true, false, false},
-		{model.CourseRoleGrader, "grader@test.com", "ZZZ", true, false, false},
+		{"course-grader@test.edulinq.org", "", "ZZZ", true, false, false},
+		{"course-grader@test.edulinq.org", "course-grader@test.edulinq.org", "ZZZ", true, false, false},
 
 		// Grader, other, recent.
-		{model.CourseRoleGrader, "student@test.com", "", true, true, false},
+		{"course-grader@test.edulinq.org", "course-student@test.edulinq.org", "", true, true, false},
 
 		// Grader, other, specific.
-		{model.CourseRoleGrader, "student@test.com", "1697406256", true, true, false},
-		{model.CourseRoleGrader, "student@test.com", "1697406265", true, true, false},
-		{model.CourseRoleGrader, "student@test.com", "1697406272", true, true, false},
+		{"course-grader@test.edulinq.org", "course-student@test.edulinq.org", "1697406256", true, true, false},
+		{"course-grader@test.edulinq.org", "course-student@test.edulinq.org", "1697406265", true, true, false},
+		{"course-grader@test.edulinq.org", "course-student@test.edulinq.org", "1697406272", true, true, false},
 
 		// Grader, other, specific (full ID).
-		{model.CourseRoleGrader, "student@test.com", "course101::hw0::student@test.com::1697406256", true, true, false},
-		{model.CourseRoleGrader, "student@test.com", "course101::hw0::student@test.com::1697406265", true, true, false},
-		{model.CourseRoleGrader, "student@test.com", "course101::hw0::student@test.com::1697406272", true, true, false},
+		{"course-grader@test.edulinq.org", "course-student@test.edulinq.org", "course101::hw0::student@test.edulinq.org::1697406256", true, true, false},
+		{"course-grader@test.edulinq.org", "course-student@test.edulinq.org", "course101::hw0::student@test.edulinq.org::1697406265", true, true, false},
+		{"course-grader@test.edulinq.org", "course-student@test.edulinq.org", "course101::hw0::student@test.edulinq.org::1697406272", true, true, false},
 
 		// Grader, other, missing.
-		{model.CourseRoleGrader, "student@test.com", "ZZZ", true, false, false},
+		{"course-grader@test.edulinq.org", "course-student@test.edulinq.org", "ZZZ", true, false, false},
 
 		// Grader, missing, recent.
-		{model.CourseRoleGrader, "ZZZ@test.com", "", false, false, false},
+		{"course-grader@test.edulinq.org", "ZZZ@test.edulinq.org", "", false, false, false},
 
 		// Roles below grader, other, recent.
-		{model.CourseRoleStudent, "student@test.com", "", false, false, true},
-		{model.CourseRoleOther, "student@test.com", "", false, false, true},
+		{"course-student@test.edulinq.org", "course-student@test.edulinq.org", "", false, false, true},
+		{"course-other@test.edulinq.org", "course-student@test.edulinq.org", "", false, false, true},
 
 		// Roles above grader, other, recent
-		{model.CourseRoleAdmin, "student@test.com", "", true, true, false},
-		{model.CourseRoleOwner, "student@test.com", "", true, true, false},
+		{"course-admin@test.edulinq.org", "course-student@test.edulinq.org", "", true, true, false},
+		{"course-owner@test.edulinq.org", "course-student@test.edulinq.org", "", true, true, false},
 	}
 
 	for i, testCase := range testCases {
@@ -66,7 +65,7 @@ func TestRemove(test *testing.T) {
 			"target-submission": testCase.targetSubmission,
 		}
 
-		response := core.SendTestAPIRequestFull(test, core.NewEndpoint(`courses/assignments/submissions/remove`), fields, nil, testCase.role)
+		response := core.SendTestAPIRequestFull(test, core.NewEndpoint(`courses/assignments/submissions/remove`), fields, nil, testCase.email)
 
 		if !response.Success {
 			if testCase.permError {

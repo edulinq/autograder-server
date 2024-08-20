@@ -11,22 +11,22 @@ import (
 
 func TestUserGet(test *testing.T) {
 	testCases := []struct {
-		role      model.CourseUserRole
+        email     string
 		target    string
 		permError bool
 		expected  *core.CourseUserInfo
 	}{
-		{model.CourseRoleGrader, "other@test.com", false, &core.CourseUserInfo{"other@test.com", "other", model.CourseRoleOther, "lms-other@test.com"}},
-		{model.CourseRoleGrader, "student@test.com", false, &core.CourseUserInfo{"student@test.com", "student", model.CourseRoleStudent, "lms-student@test.com"}},
-		{model.CourseRoleGrader, "grader@test.com", false, &core.CourseUserInfo{"grader@test.com", "grader", model.CourseRoleGrader, "lms-grader@test.com"}},
-		{model.CourseRoleGrader, "admin@test.com", false, &core.CourseUserInfo{"admin@test.com", "admin", model.CourseRoleAdmin, "lms-admin@test.com"}},
-		{model.CourseRoleGrader, "owner@test.com", false, &core.CourseUserInfo{"owner@test.com", "owner", model.CourseRoleOwner, "lms-owner@test.com"}},
+		{"course-grader@test.edulinq.org", "course-other@test.edulinq.org", false, &core.CourseUserInfo{"course-other@test.edulinq.org", "other", model.CourseRoleOther, "lms-other@test.edulinq.org"}},
+		{"course-grader@test.edulinq.org", "course-student@test.edulinq.org", false, &core.CourseUserInfo{"course-student@test.edulinq.org", "student", model.CourseRoleStudent, "lms-student@test.edulinq.org"}},
+		{"course-grader@test.edulinq.org", "course-grader@test.edulinq.org", false, &core.CourseUserInfo{"course-grader@test.edulinq.org", "grader", model.CourseRoleGrader, "lms-grader@test.edulinq.org"}},
+		{"course-grader@test.edulinq.org", "course-admin@test.edulinq.org", false, &core.CourseUserInfo{"course-admin@test.edulinq.org", "admin", model.CourseRoleAdmin, "lms-admin@test.edulinq.org"}},
+		{"course-grader@test.edulinq.org", "course-owner@test.edulinq.org", false, &core.CourseUserInfo{"course-owner@test.edulinq.org", "owner", model.CourseRoleOwner, "lms-owner@test.edulinq.org"}},
 
-		{model.CourseRoleStudent, "student@test.com", true, nil},
+		{"course-student@test.edulinq.org", "course-student@test.edulinq.org", true, nil},
 
-		{model.CourseRoleGrader, "", false, nil},
+		{"course-grader@test.edulinq.org", "", false, nil},
 
-		{model.CourseRoleGrader, "ZZZ", false, nil},
+		{"course-grader@test.edulinq.org", "ZZZ", false, nil},
 	}
 
 	for i, testCase := range testCases {
@@ -34,7 +34,7 @@ func TestUserGet(test *testing.T) {
 			"target-email": testCase.target,
 		}
 
-		response := core.SendTestAPIRequestFull(test, core.NewEndpoint(`lms/user/get`), fields, nil, testCase.role)
+		response := core.SendTestAPIRequestFull(test, core.NewEndpoint(`lms/user/get`), fields, nil, testCase.email)
 		if !response.Success {
 			expectedLocator := ""
 			if testCase.permError {

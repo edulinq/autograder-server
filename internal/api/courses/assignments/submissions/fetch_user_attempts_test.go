@@ -18,24 +18,24 @@ func TestFetchUserAttempts(test *testing.T) {
 	}
 
 	testCases := []struct {
-		role        model.CourseUserRole
+		email       string
 		targetEmail string
 		foundUser   bool
 		permError   bool
 		result      []*model.GradingResult
 	}{
 		// Grader, self.
-		{model.CourseRoleGrader, "", true, false, []*model.GradingResult{}},
-		{model.CourseRoleGrader, "grader@test.com", true, false, []*model.GradingResult{}},
+		{"course-grader@test.edulinq.org", "", true, false, []*model.GradingResult{}},
+		{"course-grader@test.edulinq.org", "course-grader@test.edulinq.org", true, false, []*model.GradingResult{}},
 
 		// Grader, other.
-		{model.CourseRoleGrader, "student@test.com", true, false, studentGradingResults},
+		{"course-grader@test.edulinq.org", "course-student@test.edulinq.org", true, false, studentGradingResults},
 
 		// Grader, missing.
-		{model.CourseRoleGrader, "ZZZ@test.com", false, false, []*model.GradingResult{}},
+		{"course-grader@test.edulinq.org", "ZZZ@test.edulinq.org", false, false, []*model.GradingResult{}},
 
 		// Student, self.
-		{model.CourseRoleStudent, "", true, true, nil},
+		{"course-student@test.edulinq.org", "", true, true, nil},
 	}
 
 	for i, testCase := range testCases {
@@ -43,7 +43,7 @@ func TestFetchUserAttempts(test *testing.T) {
 			"target-email": testCase.targetEmail,
 		}
 
-		response := core.SendTestAPIRequestFull(test, core.NewEndpoint(`courses/assignments/submissions/fetch/user/attempts`), field, nil, testCase.role)
+		response := core.SendTestAPIRequestFull(test, core.NewEndpoint(`courses/assignments/submissions/fetch/user/attempts`), field, nil, testCase.email)
 		if !response.Success {
 			if testCase.permError {
 				expectedLocator := "-020"

@@ -46,13 +46,13 @@ Any variables/arguments actually using cleartext should make that apparent with 
 
 ### Test Users
 
-All test users that are prefixed with "server-" (i.e. "server-owner@test.com") are used to test the corresponding server roles.
+All test users that are prefixed with "server-" (i.e. "server-owner@test.edulinq.org") are used to test the corresponding server roles.
 These users are not enrolled in any test courses by default.
 
-Test users without a prefix (i.e. "admin@test.com") denote users with the corresponding course role.
+Test users without a prefix (i.e. "course-admin@test.edulinq.org") denote users with the corresponding course role.
 To test courses actions, these users are enrolled in various test courses.
 All of these users are given the standard server role, which is server user.
-The exception to this rule is owner@test.com, who is also a server owner.
+The exception to this rule is owner@test.edulinq.org, who is also a server owner.
 This allows testing of server admin commands for users that are also enrolled in the course.
 
 ## API Notes

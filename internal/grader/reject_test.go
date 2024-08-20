@@ -24,7 +24,7 @@ func TestRejectSubmissionMaxAttempts(test *testing.T) {
 	assignment.SubmissionLimit = &model.SubmissionLimitInfo{Max: &maxValue}
 
 	// Make a submission that should be rejected.
-	submitForRejection(test, assignment, "other@test.com", &RejectMaxAttempts{0})
+	submitForRejection(test, assignment, "course-other@test.edulinq.org", &RejectMaxAttempts{0})
 }
 
 func TestRejectSubmissionMaxAttemptsInfinite(test *testing.T) {
@@ -37,22 +37,22 @@ func TestRejectSubmissionMaxAttemptsInfinite(test *testing.T) {
 	assignment.SubmissionLimit = &model.SubmissionLimitInfo{}
 
 	// All submissions should pass.
-	submitForRejection(test, assignment, "other@test.com", nil)
+	submitForRejection(test, assignment, "course-other@test.edulinq.org", nil)
 
 	// Set the max submissions to nagative (infinite).
 	maxValue := -1
 	assignment.SubmissionLimit = &model.SubmissionLimitInfo{Max: &maxValue}
 
 	// All submissions should pass.
-	submitForRejection(test, assignment, "other@test.com", nil)
+	submitForRejection(test, assignment, "course-other@test.edulinq.org", nil)
 }
 
 func TestRejectSubmissionMaxWindowAttempts(test *testing.T) {
-	testMaxWindowAttemps(test, "other@test.com", true)
+	testMaxWindowAttemps(test, "course-other@test.edulinq.org", true)
 }
 
 func TestRejectSubmissionMaxWindowAttemptsAdmin(test *testing.T) {
-	testMaxWindowAttemps(test, "grader@test.com", false)
+	testMaxWindowAttemps(test, "course-grader@test.edulinq.org", false)
 }
 
 func testMaxWindowAttemps(test *testing.T, user string, expectReject bool) {

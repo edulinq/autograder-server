@@ -48,6 +48,6 @@ func main() {
 	log.Info("Error.", fmt.Errorf("Some error!"))
 	log.Info("Course.", &model.Course{ID: "test-course"})
 	log.Info("Assignment.", &model.Assignment{ID: "test-assignment"})
-	log.Info("Server User.", &model.ServerUser{Email: "server-user@test.com"})
-	log.Info("Course User.", &model.CourseUser{Email: "course-user@test.com"})
+	log.Info("Server User.", &model.ServerUser{Email: "server-user@test.edulinq.org"})
+	log.Info("Course User.", &model.CourseUser{Email: "course-user@test.edulinq.org"})
 }

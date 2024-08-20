@@ -8,7 +8,6 @@ import (
 	"github.com/edulinq/autograder/internal/config"
 	"github.com/edulinq/autograder/internal/db"
 	"github.com/edulinq/autograder/internal/grader"
-	"github.com/edulinq/autograder/internal/model"
 	"github.com/edulinq/autograder/internal/util"
 )
 
@@ -26,7 +25,7 @@ func TestSubmit(test *testing.T) {
 			"assignment-id": testSubmission.Assignment.GetID(),
 		}
 
-		response := core.SendTestAPIRequestFull(test, core.NewEndpoint(`courses/assignments/submissions/submit`), fields, testSubmission.Files, model.CourseRoleStudent)
+		response := core.SendTestAPIRequestFull(test, core.NewEndpoint(`courses/assignments/submissions/submit`), fields, testSubmission.Files, "course-student@test.edulinq.org")
 		if !response.Success {
 			test.Errorf("Case %d: Response is not a success when it should be: '%v'.", i, response)
 			continue
@@ -57,7 +56,7 @@ func TestSubmit(test *testing.T) {
 		}
 
 		// Fetch the most recent submission from the DB and ensure it matches.
-		submission, err := db.GetSubmissionResult(testSubmission.Assignment, "student@test.com", "")
+		submission, err := db.GetSubmissionResult(testSubmission.Assignment, "course-student@test.edulinq.org", "")
 		if err != nil {
 			test.Errorf("Case %d: Failed to get submission: '%v'.", i, err)
 			continue
@@ -88,7 +87,7 @@ func TestRejectSubmissionMaxAttempts(test *testing.T) {
 		"assignment-id": "hw0",
 	}
 
-	response := core.SendTestAPIRequestFull(test, core.NewEndpoint(`courses/assignments/submissions/submit`), fields, paths, model.CourseRoleStudent)
+	response := core.SendTestAPIRequestFull(test, core.NewEndpoint(`courses/assignments/submissions/submit`), fields, paths, "course-student@test.edulinq.org")
 	if !response.Success {
 		test.Fatalf("Response is not a success when it should be: '%v'.", response)
 	}

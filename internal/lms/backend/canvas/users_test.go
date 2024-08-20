@@ -15,29 +15,29 @@ func TestCanvasUserGetBase(test *testing.T) {
 		expected *lmstypes.User
 	}{
 		{
-			"owner@test.com",
+			"course-owner@test.edulinq.org",
 			&lmstypes.User{
 				ID:    "00010",
 				Name:  "owner",
-				Email: "owner@test.com",
+				Email: "course-owner@test.edulinq.org",
 				Role:  model.CourseRoleOwner,
 			},
 		},
 		{
-			"admin@test.com",
+			"course-admin@test.edulinq.org",
 			&lmstypes.User{
 				ID:    "00020",
 				Name:  "admin",
-				Email: "admin@test.com",
+				Email: "course-admin@test.edulinq.org",
 				Role:  model.CourseRoleAdmin,
 			},
 		},
 		{
-			"student@test.com",
+			"course-student@test.edulinq.org",
 			&lmstypes.User{
 				ID:    "00040",
 				Name:  "student",
-				Email: "student@test.com",
+				Email: "course-student@test.edulinq.org",
 				Role:  model.CourseRoleStudent,
 			},
 		},
@@ -62,19 +62,19 @@ func TestCanvasUsersGetBase(test *testing.T) {
 		&lmstypes.User{
 			ID:    "00040",
 			Name:  "student",
-			Email: "student@test.com",
+			Email: "course-student@test.edulinq.org",
 			Role:  model.CourseRoleStudent,
 		},
 		&lmstypes.User{
 			ID:    "00020",
 			Name:  "admin",
-			Email: "admin@test.com",
+			Email: "course-admin@test.edulinq.org",
 			Role:  model.CourseRoleAdmin,
 		},
 		&lmstypes.User{
 			ID:    "00010",
 			Name:  "owner",
-			Email: "owner@test.com",
+			Email: "course-owner@test.edulinq.org",
 			Role:  model.CourseRoleOwner,
 		},
 	}

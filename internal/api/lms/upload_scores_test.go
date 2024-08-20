@@ -6,7 +6,6 @@ import (
 
 	"github.com/edulinq/autograder/internal/api/core"
 	lmstest "github.com/edulinq/autograder/internal/lms/backend/test"
-	"github.com/edulinq/autograder/internal/model"
 	"github.com/edulinq/autograder/internal/util"
 )
 
@@ -17,7 +16,7 @@ func TestUploadScores(test *testing.T) {
 	}()
 
 	testCases := []struct {
-		role       model.CourseUserRole
+        email      string
 		permError  bool
 		failUpdate bool
 		scores     []ScoreEntry
@@ -25,9 +24,9 @@ func TestUploadScores(test *testing.T) {
 	}{
 		// Normal.
 		{
-			model.CourseRoleGrader, false, false,
+			"course-grader@test.edulinq.org", false, false,
 			[]ScoreEntry{
-				ScoreEntry{"student@test.com", 10},
+				ScoreEntry{"course-student@test.edulinq.org", 10},
 			},
 			&UploadScoresResponse{
 				Count:             1,
@@ -37,12 +36,12 @@ func TestUploadScores(test *testing.T) {
 			},
 		},
 		{
-			model.CourseRoleGrader, false, false,
+			"course-grader@test.edulinq.org", false, false,
 			[]ScoreEntry{
-				ScoreEntry{"student@test.com", 10},
-				ScoreEntry{"grader@test.com", 0},
-				ScoreEntry{"admin@test.com", -10},
-				ScoreEntry{"owner@test.com", 12.34},
+				ScoreEntry{"course-student@test.edulinq.org", 10},
+				ScoreEntry{"course-grader@test.edulinq.org", 0},
+				ScoreEntry{"course-admin@test.edulinq.org", -10},
+				ScoreEntry{"course-owner@test.edulinq.org", 12.34},
 			},
 			&UploadScoresResponse{
 				Count:             4,
@@ -53,51 +52,51 @@ func TestUploadScores(test *testing.T) {
 		},
 
 		// Permissions.
-		{model.CourseRoleOther, true, false, nil, nil},
-		{model.CourseRoleStudent, true, false, nil, nil},
+		{"course-other@test.edulinq.org", true, false, nil, nil},
+		{"course-student@test.edulinq.org", true, false, nil, nil},
 
 		// Upload fails.
 		{
-			model.CourseRoleGrader, false, true,
+			"course-grader@test.edulinq.org", false, true,
 			[]ScoreEntry{
-				ScoreEntry{"student@test.com", 10},
+				ScoreEntry{"course-student@test.edulinq.org", 10},
 			},
 			nil,
 		},
 
 		// Bad scores.
 		{
-			model.CourseRoleGrader, false, false,
+			"course-grader@test.edulinq.org", false, false,
 			[]ScoreEntry{
-				ScoreEntry{"zzz@test.com", 10},
-				ScoreEntry{"no-lms-id@test.com", 20},
-				ScoreEntry{"abc@test.com", 30},
-				ScoreEntry{"student@test.com", 10},
+				ScoreEntry{"zzz@test.edulinq.org", 10},
+				ScoreEntry{"no-lms-id@test.edulinq.org", 20},
+				ScoreEntry{"abc@test.edulinq.org", 30},
+				ScoreEntry{"course-student@test.edulinq.org", 10},
 			},
 			&UploadScoresResponse{
 				Count:      1,
 				ErrorCount: 3,
 				UnrecognizedUsers: []RowEntry{
-					RowEntry{0, "zzz@test.com"},
-					RowEntry{2, "abc@test.com"},
+					RowEntry{0, "zzz@test.edulinq.org"},
+					RowEntry{2, "abc@test.edulinq.org"},
 				},
 				NoLMSIDUsers: []RowEntry{
-					RowEntry{1, "no-lms-id@test.com"},
+					RowEntry{1, "no-lms-id@test.edulinq.org"},
 				},
 			},
 		},
 
 		// Upload will pass, but never gets called.
 		{
-			model.CourseRoleGrader, false, false,
+			"course-grader@test.edulinq.org", false, false,
 			[]ScoreEntry{
-				ScoreEntry{"zzz@test.com", 10},
+				ScoreEntry{"zzz@test.edulinq.org", 10},
 			},
 			&UploadScoresResponse{
 				Count:      0,
 				ErrorCount: 1,
 				UnrecognizedUsers: []RowEntry{
-					RowEntry{0, "zzz@test.com"},
+					RowEntry{0, "zzz@test.edulinq.org"},
 				},
 				NoLMSIDUsers: []RowEntry{},
 			},
@@ -105,15 +104,15 @@ func TestUploadScores(test *testing.T) {
 
 		// Upload will fail, but never gets called.
 		{
-			model.CourseRoleGrader, false, true,
+			"course-grader@test.edulinq.org", false, true,
 			[]ScoreEntry{
-				ScoreEntry{"zzz@test.com", 10},
+				ScoreEntry{"zzz@test.edulinq.org", 10},
 			},
 			&UploadScoresResponse{
 				Count:      0,
 				ErrorCount: 1,
 				UnrecognizedUsers: []RowEntry{
-					RowEntry{0, "zzz@test.com"},
+					RowEntry{0, "zzz@test.edulinq.org"},
 				},
 				NoLMSIDUsers: []RowEntry{},
 			},
@@ -130,7 +129,7 @@ func TestUploadScores(test *testing.T) {
 
 		lmstest.SetFailUpdateAssignmentScores(testCase.failUpdate)
 
-		response := core.SendTestAPIRequestFull(test, core.NewEndpoint(`lms/upload/scores`), fields, nil, testCase.role)
+		response := core.SendTestAPIRequestFull(test, core.NewEndpoint(`lms/upload/scores`), fields, nil, testCase.email)
 		if !response.Success {
 			expectedLocator := ""
 			if testCase.permError {

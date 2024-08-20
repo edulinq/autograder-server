@@ -18,7 +18,7 @@ func TestFetchUserAttempt(test *testing.T) {
 	}
 
 	testCases := []struct {
-		role             model.CourseUserRole
+		email            string
 		targetEmail      string
 		targetSubmission string
 		foundUser        bool
@@ -27,45 +27,45 @@ func TestFetchUserAttempt(test *testing.T) {
 		result           *model.GradingResult
 	}{
 		// Grader, self, recent.
-		{model.CourseRoleGrader, "", "", true, false, false, nil},
-		{model.CourseRoleGrader, "grader@test.com", "", true, false, false, nil},
+		{"course-grader@test.edulinq.org", "", "", true, false, false, nil},
+		{"course-grader@test.edulinq.org", "course-grader@test.edulinq.org", "", true, false, false, nil},
 
 		// Grader, self, missing.
-		{model.CourseRoleGrader, "", "ZZZ", true, false, false, nil},
-		{model.CourseRoleGrader, "grader@test.com", "ZZZ", true, false, false, nil},
+		{"course-grader@test.edulinq.org", "", "ZZZ", true, false, false, nil},
+		{"course-grader@test.edulinq.org", "course-grader@test.edulinq.org", "ZZZ", true, false, false, nil},
 
 		// Grader, other, recent.
-		{model.CourseRoleGrader, "student@test.com", "", true, true, false, studentGradingResults["1697406272"]},
+		{"course-grader@test.edulinq.org", "course-student@test.edulinq.org", "", true, true, false, studentGradingResults["1697406272"]},
 
 		// Grader, other, specific.
-		{model.CourseRoleGrader, "student@test.com", "1697406256", true, true, false, studentGradingResults["1697406256"]},
-		{model.CourseRoleGrader, "student@test.com", "1697406265", true, true, false, studentGradingResults["1697406265"]},
-		{model.CourseRoleGrader, "student@test.com", "1697406272", true, true, false, studentGradingResults["1697406272"]},
+		{"course-grader@test.edulinq.org", "course-student@test.edulinq.org", "1697406256", true, true, false, studentGradingResults["1697406256"]},
+		{"course-grader@test.edulinq.org", "course-student@test.edulinq.org", "1697406265", true, true, false, studentGradingResults["1697406265"]},
+		{"course-grader@test.com", "course-student@test.edulinq.org", "1697406272", true, true, false, studentGradingResults["1697406272"]},
 
 		// Grader, other, specific (full ID).
-		{model.CourseRoleGrader, "student@test.com", "course101::hw0::student@test.com::1697406256", true, true, false, studentGradingResults["1697406256"]},
-		{model.CourseRoleGrader, "student@test.com", "course101::hw0::student@test.com::1697406265", true, true, false, studentGradingResults["1697406265"]},
-		{model.CourseRoleGrader, "student@test.com", "course101::hw0::student@test.com::1697406272", true, true, false, studentGradingResults["1697406272"]},
+		{"course-grader@test.edulinq.org", "course-student@test.edulinq.org", "course101::hw0::student@test.edulinq.org::1697406256", true, true, false, studentGradingResults["1697406256"]},
+        {"course-grader@test.edulinq.org", "course-student@test.edulinq.org", "course101::hw0::student@test.edulinq.org::1697406265", true, true, false, studentGradingResults["1697406265"]},
+		{"course-grader@test.edulinq.org", "course-student@test.edulinq.org", "course101::hw0::student@test.edulinq.org::1697406272", true, true, false, studentGradingResults["1697406272"]},
 
 		// Grader, other, missing.
-		{model.CourseRoleGrader, "student@test.com", "ZZZ", true, false, false, nil},
+		{"course-grader@test.edulinq.org", "course-student@test.edulinq.org", "ZZZ", true, false, false, nil},
 
 		// Grader, missing, recent.
-		{model.CourseRoleGrader, "ZZZ@test.com", "", false, false, false, nil},
+		{"course-grader@test.edulinq.org", "ZZZ@test.edulinq.org", "", false, false, false, nil},
 
 		// Student, self, recent.
-		{model.CourseRoleStudent, "", "", true, true, false, studentGradingResults["1697406272"]},
-		{model.CourseRoleStudent, "student@test.com", "", true, true, false, studentGradingResults["1697406272"]},
+		{"course-student@test.edulinq.org", "", "", true, true, false, studentGradingResults["1697406272"]},
+		{"course-student@test.edulinq.org", "course-student@test.edulinq.org", "", true, true, false, studentGradingResults["1697406272"]},
 
 		// Student, self, missing.
-		{model.CourseRoleStudent, "", "ZZZ", true, false, false, nil},
-		{model.CourseRoleStudent, "student@test.com", "ZZZ", true, false, false, nil},
+		{"course-student@test.edulinq.org", "", "ZZZ", true, false, false, nil},
+		{"course-student@test.edulinq.org", "course-student@test.edulinq.org", "ZZZ", true, false, false, nil},
 
 		// Student, other, recent.
-		{model.CourseRoleStudent, "grader@test.com", "", false, false, true, nil},
+		{"course-student@test.edulinq.org", "course-grader@test.edulinq.org", "", false, false, true, nil},
 
 		// Student, other, missing.
-		{model.CourseRoleStudent, "grader@test.com", "ZZZ", true, false, true, nil},
+		{"course-student@test.edulinq.org", "course-grader@test.edulinq.org", "ZZZ", true, false, true, nil},
 	}
 
 	for i, testCase := range testCases {
@@ -74,7 +74,7 @@ func TestFetchUserAttempt(test *testing.T) {
 			"target-submission": testCase.targetSubmission,
 		}
 
-		response := core.SendTestAPIRequestFull(test, core.NewEndpoint(`courses/assignments/submissions/fetch/user/attempt`), fields, nil, testCase.role)
+		response := core.SendTestAPIRequestFull(test, core.NewEndpoint(`courses/assignments/submissions/fetch/user/attempt`), fields, nil, testCase.email)
 		if !response.Success {
 			if testCase.permError {
 				expectedLocator := "-033"

@@ -16,7 +16,7 @@ var testScore lmstypes.SubmissionScore = lmstypes.SubmissionScore{
 		&lmstypes.SubmissionComment{
 			ID:     "0987654",
 			Author: "7827",
-			Text:   "{\n\"id\": \"course101::hw0::student@test.com::1696364768\",\n\"submission-time\": \"2023-10-03T20:26:08.951546Z\",\n\"upload-time\": \"2023-10-07T13:04:54.412979316-05:00\",\n\"raw-score\": 100,\n\"score\": 100,\n\"lock\": false,\n\"late-date-usage\": 0,\n\"num-days-late\": 0,\n\"reject\": false,\n\"__autograder__v01__\": 0\n}",
+			Text:   "{\n\"id\": \"course101::hw0::student@test.edulinq.org::1696364768\",\n\"submission-time\": \"2023-10-03T20:26:08.951546Z\",\n\"upload-time\": \"2023-10-07T13:04:54.412979316-05:00\",\n\"raw-score\": 100,\n\"score\": 100,\n\"lock\": false,\n\"late-date-usage\": 0,\n\"num-days-late\": 0,\n\"reject\": false,\n\"__autograder__v01__\": 0\n}",
 			Time:   "",
 		},
 	},

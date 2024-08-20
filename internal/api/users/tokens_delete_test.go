@@ -13,7 +13,7 @@ func TestTokensDelete(test *testing.T) {
 	db.ResetForTesting()
 	defer db.ResetForTesting()
 
-	email := "admin@test.com"
+	email := "server-admin@test.edulinq.org"
 	user := db.MustGetServerUser(email, true)
 
 	// Add a token.
@@ -65,7 +65,7 @@ func TestTokensDeleteNoTokens(test *testing.T) {
 	db.ResetForTesting()
 	defer db.ResetForTesting()
 
-	email := "admin@test.com"
+	email := "server-admin@test.edulinq.org"
 	user := db.MustGetServerUser(email, true)
 
 	if len(user.Tokens) != 0 {

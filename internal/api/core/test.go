@@ -8,7 +8,7 @@ import (
 	"github.com/edulinq/autograder/internal/common"
 	"github.com/edulinq/autograder/internal/config"
 	"github.com/edulinq/autograder/internal/db"
-	"github.com/edulinq/autograder/internal/model"
+	// "github.com/edulinq/autograder/internal/model"
 	"github.com/edulinq/autograder/internal/util"
 )
 
@@ -52,18 +52,22 @@ func APITestingMain(suite *testing.M, routes *[]*Route) {
 }
 
 func SendTestAPIRequest(test *testing.T, endpoint string, fields map[string]any) *APIResponse {
-	return SendTestAPIRequestFull(test, endpoint, fields, nil, model.CourseRoleAdmin)
+	return SendTestAPIRequestFull(test, endpoint, fields, nil, "server-admin@test.edulinq.org")
 }
 
 // Make a request to the test server using fields for
 // a standard test request plus whatever other fields are specified.
 // Provided fields will override base fields.
 // The given role will choose the user (the test course has one user per role).
-func SendTestAPIRequestFull(test *testing.T, endpoint string, fields map[string]any, paths []string, role model.CourseUserRole) *APIResponse {
+func SendTestAPIRequestFull(test *testing.T, endpoint string, fields map[string]any, paths []string, email string) *APIResponse {
 	url := serverURL + endpoint
 
-	email := role.String() + "@test.com"
-	pass := util.Sha256HexFromString(role.String())
+    user := db.MustGetServerUser(email, true)
+
+    pass := ""
+    if user != nil {
+	    pass = util.Sha256HexFromString(*user.Name)
+    }
 
 	content := map[string]any{
 		"course-id":     "course101",

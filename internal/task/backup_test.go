@@ -65,6 +65,7 @@ func doBackup(test *testing.T, dest string, expectedPath string) {
 		test.Fatalf("Could not find backup at expected location: '%s'.", expectedPath)
 	}
 
+    test.Errorf("Found the following expectedPath: '%s'.", expectedPath)
 	actualMD5, err := util.MD5FileHex(expectedPath)
 	if err != nil {
 		test.Fatalf("Failed to get MD5 from backup file: '%v'.", err)
