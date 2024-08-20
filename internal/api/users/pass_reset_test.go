@@ -21,9 +21,6 @@ func TestPassReset(test *testing.T) {
 		test.Fatalf("Response is not a success when it should be: '%v'.", response)
 	}
 
-	var responseContent PassResetResponse
-	util.MustJSONFromString(util.MustToJSON(response.Content), &responseContent)
-
 	messages := email.GetTestMessages()
 	if len(messages) != 1 {
 		test.Fatalf("Did not find the correct number of messages. Expected: 1, actual: %d.", len(messages))
@@ -36,7 +33,6 @@ func TestPassReset(test *testing.T) {
 	}
 
 	re := regexp.MustCompile(`token: '(.*?)'`)
-
 	matches := re.FindStringSubmatch(messages[0].Body)
 
 	if len(matches) != 2 {

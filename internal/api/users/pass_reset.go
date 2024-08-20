@@ -10,7 +10,7 @@ import (
 type PassResetRequest struct {
 	core.APIRequest
 
-	UserEmail string `json:"user-email"`
+	UserEmail core.NonEmptyString `json:"user-email"`
 }
 
 type PassResetResponse struct{}
@@ -18,7 +18,7 @@ type PassResetResponse struct{}
 func HandlePassReset(request *PassResetRequest) (*PassResetResponse, *core.APIError) {
 	response := &PassResetResponse{}
 
-	user, err := db.GetServerUser(request.UserEmail, false)
+	user, err := db.GetServerUser(string(request.UserEmail), false)
 	if err != nil {
 		return nil, core.NewBaseInternalError("-807", &request.APIRequest, "Failed to get server user.").Err(err)
 	}
@@ -38,7 +38,7 @@ func HandlePassReset(request *PassResetRequest) (*PassResetResponse, *core.APIEr
 	}
 
 	userOp := &model.UserOpResult{
-		Email:             request.UserEmail,
+		Email:             string(request.UserEmail),
 		Modified:          true,
 		CleartextPassword: cleartext,
 	}
