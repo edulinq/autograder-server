@@ -6,7 +6,7 @@ import (
 	"github.com/edulinq/autograder/internal/model"
 )
 
-type PeekRequest struct {
+type FetchUserPeekRequest struct {
 	core.APIRequestAssignmentContext
 	core.MinCourseRoleStudent
 
@@ -14,14 +14,14 @@ type PeekRequest struct {
 	TargetSubmission string                            `json:"target-submission"`
 }
 
-type PeekResponse struct {
+type FetchUserPeekResponse struct {
 	FoundUser       bool               `json:"found-user"`
 	FoundSubmission bool               `json:"found-submission"`
 	GradingInfo     *model.GradingInfo `json:"submission-result"`
 }
 
-func HandlePeek(request *PeekRequest) (*PeekResponse, *core.APIError) {
-	response := PeekResponse{}
+func HandleFetchUserPeek(request *FetchUserPeekRequest) (*FetchUserPeekResponse, *core.APIError) {
+	response := FetchUserPeekResponse{}
 
 	if !request.TargetUser.Found {
 		return &response, nil
