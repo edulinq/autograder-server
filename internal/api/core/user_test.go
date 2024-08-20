@@ -182,7 +182,8 @@ func TestNewUserInfos(test *testing.T) {
 
 			for _, serverUserInfo := range serverUserInfos {
 				if serverUserInfo.Type != ServerUserInfoType {
-					test.Errorf("Test %d: Unexpected user info type. Expected: '%s', actual: '%s'.", i, ServerUserInfoType, serverUserInfo.Type)
+					test.Errorf("Test %d: Unexpected server user info type. Expected: '%s', actual: '%s'.",
+						i, ServerUserInfoType, serverUserInfo.Type)
 					continue
 				}
 			}
@@ -213,7 +214,8 @@ func TestNewUserInfos(test *testing.T) {
 
 			for _, courseUserInfo := range courseUserInfos {
 				if courseUserInfo.Type != CourseUserInfoType {
-					test.Errorf("Test %d: Unexpected user info type. Expected: '%s', actual: '%s'.", i, CourseUserInfoType, courseUserInfo.Type)
+					test.Errorf("Test %d: Unexpected course user info type. Expected: '%s', actual: '%s'.",
+						i, CourseUserInfoType, courseUserInfo.Type)
 					continue
 				}
 			}
