@@ -1,7 +1,6 @@
 package submissions
 
 import (
-	"path/filepath"
 	"reflect"
 	"testing"
 
@@ -10,7 +9,7 @@ import (
 	"github.com/edulinq/autograder/internal/util"
 )
 
-func TestFetchSubmission(test *testing.T) {
+func TestFetchUserAttempt(test *testing.T) {
 	// Note that computation of these paths is deferred until test time.
 	studentGradingResults := map[string]*model.GradingResult{
 		"1697406256": model.MustLoadGradingResult(getTestSubmissionResultPath("1697406256")),
@@ -75,7 +74,7 @@ func TestFetchSubmission(test *testing.T) {
 			"target-submission": testCase.targetSubmission,
 		}
 
-		response := core.SendTestAPIRequestFull(test, core.NewEndpoint(`submissions/fetch/submission`), fields, nil, testCase.role)
+		response := core.SendTestAPIRequestFull(test, core.NewEndpoint(`courses/assignments/submissions/fetch/user/attempt`), fields, nil, testCase.role)
 		if !response.Success {
 			if testCase.permError {
 				expectedLocator := "-033"
@@ -90,7 +89,7 @@ func TestFetchSubmission(test *testing.T) {
 			continue
 		}
 
-		var responseContent FetchSubmissionResponse
+		var responseContent FetchUserAttemptResponse
 		util.MustJSONFromString(util.MustToJSON(response.Content), &responseContent)
 
 		if testCase.foundUser != responseContent.FoundUser {
@@ -113,8 +112,4 @@ func TestFetchSubmission(test *testing.T) {
 			continue
 		}
 	}
-}
-
-func getTestSubmissionResultPath(shortID string) string {
-	return filepath.Join(util.RootDirForTesting(), "testdata", "course101", "submissions", "HW0", "student@test.com", shortID, "submission-result.json")
 }

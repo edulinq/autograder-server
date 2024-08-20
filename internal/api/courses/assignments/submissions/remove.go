@@ -5,7 +5,7 @@ import (
 	"github.com/edulinq/autograder/internal/db"
 )
 
-type RemoveSubmissionRequest struct {
+type RemoveRequest struct {
 	core.APIRequestAssignmentContext
 	core.MinCourseRoleGrader
 
@@ -13,13 +13,13 @@ type RemoveSubmissionRequest struct {
 	TargetSubmission string                            `json:"target-submission"`
 }
 
-type RemoveSubmissionResponse struct {
+type RemoveResponse struct {
 	FoundUser       bool `json:"found-user"`
 	FoundSubmission bool `json:"found-submission"`
 }
 
-func HandleRemoveSubmission(request *RemoveSubmissionRequest) (*RemoveSubmissionResponse, *core.APIError) {
-	response := RemoveSubmissionResponse{}
+func HandleRemove(request *RemoveRequest) (*RemoveResponse, *core.APIError) {
+	response := RemoveResponse{}
 
 	if !request.TargetUser.Found {
 		return &response, nil

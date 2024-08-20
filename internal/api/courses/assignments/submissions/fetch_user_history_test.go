@@ -36,7 +36,7 @@ func TestHistory(test *testing.T) {
 			"target-email": testCase.target,
 		}
 
-		response := core.SendTestAPIRequestFull(test, core.NewEndpoint(`submissions/history`), fields, nil, testCase.role)
+		response := core.SendTestAPIRequestFull(test, core.NewEndpoint(`courses/assignments/submissions/fetch/user/history`), fields, nil, testCase.role)
 		if !response.Success {
 			if testCase.permError {
 				expectedLocator := "-033"
@@ -51,7 +51,7 @@ func TestHistory(test *testing.T) {
 			continue
 		}
 
-		var responseContent HistoryResponse
+		var responseContent FetchUserHistoryResponse
 		util.MustJSONFromString(util.MustToJSON(response.Content), &responseContent)
 
 		if testCase.found != responseContent.FoundUser {

@@ -9,7 +9,7 @@ import (
 	"github.com/edulinq/autograder/internal/util"
 )
 
-func TestFetchAttempts(test *testing.T) {
+func TestFetchUserAttempts(test *testing.T) {
 	// Note that computation of these paths is deferred until test time.
 	studentGradingResults := []*model.GradingResult{
 		model.MustLoadGradingResult(getTestSubmissionResultPath("1697406256")),
@@ -43,7 +43,7 @@ func TestFetchAttempts(test *testing.T) {
 			"target-email": testCase.targetEmail,
 		}
 
-		response := core.SendTestAPIRequestFull(test, core.NewEndpoint(`submissions/fetch/attempts`), field, nil, testCase.role)
+		response := core.SendTestAPIRequestFull(test, core.NewEndpoint(`courses/assignments/submissions/fetch/user/attempts`), field, nil, testCase.role)
 		if !response.Success {
 			if testCase.permError {
 				expectedLocator := "-020"
@@ -58,7 +58,7 @@ func TestFetchAttempts(test *testing.T) {
 			continue
 		}
 
-		var responseContent FetchAttemptsResponse
+		var responseContent FetchUserAttemptsResponse
 		util.MustJSONFromString(util.MustToJSON(response.Content), &responseContent)
 
 		if testCase.foundUser != responseContent.FoundUser {
