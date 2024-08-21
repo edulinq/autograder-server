@@ -44,16 +44,35 @@ Cleartext is never stored in anything other than memory (and event then it will 
 When we are working with a "password", it should always be a [SHA-256](https://en.wikipedia.org/wiki/SHA-2) hash of the cleartext.
 Any variables/arguments actually using cleartext should make that apparent with the variable name (i.e. the name should have "cleartext" in it).
 
+## Test Data
+
+To test our code, we supply test data, which can be found in the `testdata` directory. There are test courses and test users, as described below.
+
+### Test Courses
+
+Test courses allow testing of course specific code. The default test course is "course101" which contains a user for every course role.
+course101 includes a sample assignment, "HW0", and 3 test submissions made by "course-student@test.edulinq.org".
+
+There are other courses to test different scenarios:
+- course-languages: Tests courses using different langauges.
+- course-with-lms: Tests courses with an LMS.
+- course-with-zero-limit: Tests courses without a submission limit.
+- course-without-source: Tests courses without a source.
+
 ### Test Users
+
+Test users allow testing of actions made by the various role users can hold on the server.
+By default, the name and password of test users are their email without "@test.edulinq.org".
 
 All test users that are prefixed with "server-" (i.e. "server-owner@test.edulinq.org") are used to test the corresponding server roles.
 These users are not enrolled in any test courses by default.
 
-Test users without a prefix (i.e. "course-admin@test.edulinq.org") denote users with the corresponding course role.
-To test courses actions, these users are enrolled in various test courses.
+Users prefixed with "course-" (i.e. "course-owner@test.edulinq.org") are used to test the corresponding course roles.
 All of these users are given the standard server role, which is server user.
-The exception to this rule is owner@test.edulinq.org, who is also a server owner.
-This allows testing of server admin commands for users that are also enrolled in the course.
+To test courses actions, these users are enrolled in various test courses.
+
+The user "no-lms-id@test.edulinq.org" breaks the pattern and is a server user and a course admin.
+This user does not have an lms-id for any of the courses they are enrolled in.
 
 ## API Notes
 
