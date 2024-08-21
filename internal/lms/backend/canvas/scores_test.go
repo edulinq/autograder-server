@@ -16,13 +16,13 @@ var testScore lmstypes.SubmissionScore = lmstypes.SubmissionScore{
 		&lmstypes.SubmissionComment{
 			ID:     "0987654",
 			Author: "7827",
-			Text:   "{\n\"id\": \"course101::hw0::student@test.edulinq.org::1696364768\",\n\"submission-time\": \"2023-10-03T20:26:08.951546Z\",\n\"upload-time\": \"2023-10-07T13:04:54.412979316-05:00\",\n\"raw-score\": 100,\n\"score\": 100,\n\"lock\": false,\n\"late-date-usage\": 0,\n\"num-days-late\": 0,\n\"reject\": false,\n\"__autograder__v01__\": 0\n}",
+			Text:   "{\n\"id\": \"course101::hw0::course-student@test.edulinq.org::1696364768\",\n\"submission-time\": \"2023-10-03T20:26:08.951546Z\",\n\"upload-time\": \"2023-10-07T13:04:54.412979316-05:00\",\n\"raw-score\": 100,\n\"score\": 100,\n\"lock\": false,\n\"late-date-usage\": 0,\n\"num-days-late\": 0,\n\"reject\": false,\n\"__autograder__v01__\": 0\n}",
 			Time:   "",
 		},
 	},
 }
 
-func TestFetchAssignmentSccoreBase(test *testing.T) {
+func TestFetchAssignmentScoreBase(test *testing.T) {
 	score, err := testBackend.FetchAssignmentScore(TEST_ASSIGNMENT_ID, "00040")
 	if err != nil {
 		test.Fatalf("Failed to fetch assignment score: '%v'.", err)
@@ -39,7 +39,7 @@ func TestFetchAssignmentSccoreBase(test *testing.T) {
 	}
 }
 
-func TestFetchAssignmentSccoresBase(test *testing.T) {
+func TestFetchAssignmentScoresBase(test *testing.T) {
 	scores, err := testBackend.fetchAssignmentScores(TEST_ASSIGNMENT_ID, true)
 	if err != nil {
 		test.Fatalf("Failed to fetch assignment scores: '%v'.", err)

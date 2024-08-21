@@ -17,7 +17,7 @@ func TestPassChange(test *testing.T) {
 		expected PasswordChangeResponse
 	}{
 		{"spooky", PasswordChangeResponse{true, false}},
-		{"admin", PasswordChangeResponse{true, true}},
+		{"course-admin", PasswordChangeResponse{true, true}},
 	}
 
 	for i, testCase := range testCases {
@@ -25,7 +25,7 @@ func TestPassChange(test *testing.T) {
 
 		fields := map[string]any{
 			"user-email": "course-admin@test.edulinq.org",
-			"user-pass":  util.Sha256HexFromString("admin"),
+			"user-pass":  util.Sha256HexFromString("course-admin"),
 			"new-pass":   util.Sha256HexFromString(testCase.newPass),
 		}
 

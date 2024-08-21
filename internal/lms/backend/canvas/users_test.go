@@ -51,7 +51,8 @@ func TestCanvasUserGetBase(test *testing.T) {
 		}
 
 		if *testCase.expected != *user {
-			test.Errorf("Case %d: User not as expected. Expected: '%+v', Actual: '%+v'.", i, testCase.expected, user)
+			test.Errorf("Case %d: User not as expected. Expected: '%+v', Actual: '%+v'.",
+				i, util.MustToJSONIndent(testCase.expected), util.MustToJSONIndent(user))
 			continue
 		}
 	}

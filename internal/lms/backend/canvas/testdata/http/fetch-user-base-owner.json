@@ -1,5 +1,5 @@
 {
-    "URL": "https://canvas.test.edulinq.org/api/v1/courses/12345/search_users?include[]=enrollments&search_term=owner%40test.edulinq.org",
+    "URL": "https://canvas.test.com/api/v1/courses/12345/search_users?include[]=enrollments&search_term=course-owner%40test.edulinq.org",
     "Method": "GET",
     "RequestHeaders": {
         "Accept": [
@@ -15,7 +15,7 @@
             "application/json; charset=utf-8"
         ],
         "Link": [
-            "<https://canvas.test.edulinq.org/api/v1/courses/12345/users?include%5B%5D=enrollments&search_term=owner%40test.edulinq.org&page=1&per_page=10>; rel=\"current\",<https://canvas.test.edulinq.org/api/v1/courses/12345/users?include%5B%5D=enrollments&search_term=owner%40test.edulinq.org&page=1&per_page=10>; rel=\"first\",<https://canvas.test.edulinq.org/api/v1/courses/12345/users?include%5B%5D=enrollments&search_term=owner%40test.edulinq.org&page=1&per_page=10>; rel=\"last\""
+            "<https://canvas.test.com/api/v1/courses/12345/users?include%5B%5D=enrollments&search_term=course-owner%40test.edulinq.org&page=1&per_page=10>; rel=\"current\",<https://canvas.test.com/api/v1/courses/12345/users?include%5B%5D=enrollments&search_term=course-owner%40test.edulinq.org&page=1&per_page=10>; rel=\"first\",<https://canvas.test.com/api/v1/courses/12345/users?include%5B%5D=enrollments&search_term=course-owner%40test.edulinq.org&page=1&per_page=10>; rel=\"last\""
         ],
         "Status": [
             "200 OK"
@@ -24,5 +24,5 @@
             "Accept-Encoding"
         ]
     },
-    "ResponseBody": "[{\"id\":\"00010\",\"name\":\"owner\",\"created_at\":\"2017-03-02T20:40:44-08:00\",\"sortable_name\":\"owner\",\"short_name\":\"owner\",\"sis_user_id\":\"1394707\",\"integration_id\":null,\"root_account\":\"canvas.test.edulinq.org\",\"login_id\":\"course-owner@test.edulinq.org\",\"enrollments\":[{\"id\":\"2917828\",\"user_id\":\"00010\",\"course_id\":\"12345\",\"type\":\"TeacherEnrollment\",\"created_at\":\"2023-04-03T17:16:06Z\",\"updated_at\":\"2023-09-28T02:41:42Z\",\"associated_user_id\":null,\"start_at\":null,\"end_at\":null,\"course_section_id\":\"153926\",\"root_account_id\":\"1\",\"limit_privileges_to_course_section\":false,\"enrollment_state\":\"active\",\"role\":\"TeacherEnrollment\",\"role_id\":\"4\",\"last_activity_at\":\"2023-12-19T00:18:07Z\",\"last_attended_at\":null,\"total_activity_time\":368227,\"sis_account_id\":\"CSE\",\"sis_course_id\":\"2238-124092-1-01\",\"course_integration_id\":null,\"sis_section_id\":null,\"section_integration_id\":null,\"sis_user_id\":\"1394707\",\"html_url\":\"https://canvas.test.edulinq.org/courses/12345/users/00010\"}],\"email\":\"course-owner@test.edulinq.org\"}]"
+    "ResponseBody": "[{\"id\":\"00010\",\"name\":\"course-owner\",\"created_at\":\"2017-03-02T20:40:44-08:00\",\"sortable_name\":\"course-owner\",\"short_name\":\"course-owner\",\"sis_user_id\":\"1394707\",\"integration_id\":null,\"root_account\":\"canvas.test.com\",\"login_id\":\"course-owner@test.edulinq.org\",\"enrollments\":[{\"id\":\"2917828\",\"user_id\":\"00010\",\"course_id\":\"12345\",\"type\":\"TeacherEnrollment\",\"created_at\":\"2023-04-03T17:16:06Z\",\"updated_at\":\"2023-09-28T02:41:42Z\",\"associated_user_id\":null,\"start_at\":null,\"end_at\":null,\"course_section_id\":\"153926\",\"root_account_id\":\"1\",\"limit_privileges_to_course_section\":false,\"enrollment_state\":\"active\",\"role\":\"TeacherEnrollment\",\"role_id\":\"4\",\"last_activity_at\":\"2023-12-19T00:18:07Z\",\"last_attended_at\":null,\"total_activity_time\":368227,\"sis_account_id\":\"CSE\",\"sis_course_id\":\"2238-124092-1-01\",\"course_integration_id\":null,\"sis_section_id\":null,\"section_integration_id\":null,\"sis_user_id\":\"1394707\",\"html_url\":\"https://canvas.test.com/courses/12345/users/00010\"}],\"email\":\"course-owner@test.edulinq.org\"}]"
 }

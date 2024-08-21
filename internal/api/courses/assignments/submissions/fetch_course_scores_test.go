@@ -18,20 +18,20 @@ func TestFetchCourseScores(test *testing.T) {
 	}{
 		{"course-grader@test.edulinq.org", model.CourseRoleUnknown, false, map[string]string{
 			"course-other@test.edulinq.org":   "",
-			"course-student@test.edulinq.org": "course101::hw0::student@test.edulinq.org::1697406272",
+			"course-student@test.edulinq.org": "course101::hw0::course-student@test.edulinq.org::1697406272",
 			"course-grader@test.edulinq.org":  "",
 			"course-admin@test.edulinq.org":   "",
 			"course-owner@test.edulinq.org":   "",
 		}},
 		{"course-admin@test.edulinq.org", model.CourseRoleUnknown, false, map[string]string{
 			"course-other@test.edulinq.org":   "",
-			"course-student@test.edulinq.org": "course101::hw0::student@test.edulinq.org::1697406272",
+			"course-student@test.edulinq.org": "course101::hw0::course-student@test.edulinq.org::1697406272",
 			"course-grader@test.edulinq.org":  "",
 			"course-admin@test.edulinq.org":   "",
 			"course-owner@test.edulinq.org":   "",
 		}},
 		{"course-grader@test.edulinq.org", model.CourseRoleStudent, false, map[string]string{
-			"course-student@test.edulinq.org": "course101::hw0::student@test.edulinq.org::1697406272",
+			"course-student@test.edulinq.org": "course101::hw0::course-student@test.edulinq.org::1697406272",
 		}},
 		{"course-grader@test.edulinq.org", model.CourseRoleGrader, false, map[string]string{
 			"course-grader@test.edulinq.org": "",

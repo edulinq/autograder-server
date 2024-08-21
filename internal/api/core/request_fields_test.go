@@ -530,8 +530,8 @@ func TestTargetCourseUserSelfOrGrader(test *testing.T) {
 		return &testTargetCourseUserSelfOrGraderRequestType{
 			APIRequestCourseUserContext: APIRequestCourseUserContext{
 				APIRequestUserContext: APIRequestUserContext{
-					UserEmail: role.String() + "@test.edulinq.org",
-					UserPass:  util.Sha256HexFromString(role.String()),
+					UserEmail: "course-" + role.String() + "@test.edulinq.org",
+					UserPass:  util.Sha256HexFromString("course-" + role.String()),
 				},
 				CourseID: "course101",
 			},
@@ -570,8 +570,8 @@ func TestTargetCourseUserSelfOrAdmin(test *testing.T) {
 		return &testTargetCourseUserSelfOrAdminRequestType{
 			APIRequestCourseUserContext: APIRequestCourseUserContext{
 				APIRequestUserContext: APIRequestUserContext{
-					UserEmail: role.String() + "@test.edulinq.org",
-					UserPass:  util.Sha256HexFromString(role.String()),
+					UserEmail: "course-" + role.String() + "@test.edulinq.org",
+					UserPass:  util.Sha256HexFromString("course-" + role.String()),
 				},
 				CourseID: "course101",
 			},
@@ -721,8 +721,8 @@ func TestTargetCourseUser(test *testing.T) {
 		request := requestType{
 			APIRequestCourseUserContext: APIRequestCourseUserContext{
 				APIRequestUserContext: APIRequestUserContext{
-					UserEmail: testCase.role.String() + "@test.edulinq.org",
-					UserPass:  util.Sha256HexFromString(testCase.role.String()),
+					UserEmail: "course-" + testCase.role.String() + "@test.edulinq.org",
+					UserPass:  util.Sha256HexFromString("course-" + testCase.role.String()),
 				},
 				CourseID: "course101",
 			},
@@ -775,7 +775,7 @@ func TestTargetServerUser(test *testing.T) {
 		request := requestType{
 			APIRequestUserContext: APIRequestUserContext{
 				UserEmail: "course-admin@test.edulinq.org",
-				UserPass:  util.Sha256HexFromString("admin"),
+				UserPass:  util.Sha256HexFromString("course-admin"),
 			},
 			User: TargetServerUser{
 				Email: testCase.target,

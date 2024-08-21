@@ -19,35 +19,35 @@ func TestAuth(test *testing.T) {
 		noauth  bool
 		locator string
 	}{
-		{"course-owner@test.edulinq.org", "owner", false, ""},
-		{"course-admin@test.edulinq.org", "admin", false, ""},
-		{"course-grader@test.edulinq.org", "grader", false, ""},
-		{"course-student@test.edulinq.org", "student", false, ""},
-		{"course-other@test.edulinq.org", "other", false, ""},
+		{"course-owner@test.edulinq.org", "course-owner", false, ""},
+		{"course-admin@test.edulinq.org", "course-admin", false, ""},
+		{"course-grader@test.edulinq.org", "course-grader", false, ""},
+		{"course-student@test.edulinq.org", "course-student", false, ""},
+		{"course-other@test.edulinq.org", "course-other", false, ""},
 
-		{"Z", "student", false, "-013"},
-		{"Zstudent@test.edulinq.org", "student", false, "-013"},
-		{"course-student@test.edulinq.orgZ", "student", false, "-013"},
-		{"student", "student", false, "-013"},
+		{"Z", "course-student", false, "-013"},
+		{"Zstudent@test.edulinq.org", "course-student", false, "-013"},
+		{"course-student@test.edulinq.orgZ", "course-student", false, "-013"},
+		{"student", "course-student", false, "-013"},
 
 		{"course-student@test.edulinq.org", "", false, "-014"},
-		{"course-student@test.edulinq.org", "Zstudent", false, "-014"},
-		{"course-student@test.edulinq.org", "studentZ", false, "-014"},
+		{"course-student@test.edulinq.org", "Zcourse-student", false, "-014"},
+		{"course-student@test.edulinq.org", "course-studentZ", false, "-014"},
 
-		{"course-owner@test.edulinq.org", "owner", true, ""},
-		{"course-admin@test.edulinq.org", "admin", true, ""},
-		{"course-grader@test.edulinq.org", "grader", true, ""},
-		{"course-student@test.edulinq.org", "student", true, ""},
-		{"course-other@test.edulinq.org", "other", true, ""},
+		{"course-owner@test.edulinq.org", "course-owner", true, ""},
+		{"course-admin@test.edulinq.org", "course-admin", true, ""},
+		{"course-grader@test.edulinq.org", "course-grader", true, ""},
+		{"course-student@test.edulinq.org", "course-student", true, ""},
+		{"course-other@test.edulinq.org", "course-other", true, ""},
 
-		{"Z", "student", true, "-013"},
-		{"Zstudent@test.edulinq.org", "student", true, "-013"},
-		{"course-student@test.edulinq.orgZ", "student", true, "-013"},
-		{"student", "student", true, "-013"},
+		{"Z", "course-student", true, "-013"},
+		{"Zstudent@test.edulinq.org", "course-student", true, "-013"},
+		{"course-student@test.edulinq.orgZ", "course-student", true, "-013"},
+		{"student", "course-student", true, "-013"},
 
 		{"course-student@test.edulinq.org", "", true, ""},
-		{"course-student@test.edulinq.org", "Zstudent", true, ""},
-		{"course-student@test.edulinq.org", "studentZ", true, ""},
+		{"course-student@test.edulinq.org", "Zcourse-student", true, ""},
+		{"course-student@test.edulinq.org", "course-studentZ", true, ""},
 	}
 
 	oldNoAuth := config.NO_AUTH.Get()
