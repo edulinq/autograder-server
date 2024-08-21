@@ -8,7 +8,6 @@ import (
 	"github.com/edulinq/autograder/internal/common"
 	"github.com/edulinq/autograder/internal/config"
 	"github.com/edulinq/autograder/internal/db"
-	// "github.com/edulinq/autograder/internal/model"
 	"github.com/edulinq/autograder/internal/util"
 )
 
@@ -52,7 +51,7 @@ func APITestingMain(suite *testing.M, routes *[]*Route) {
 }
 
 func SendTestAPIRequest(test *testing.T, endpoint string, fields map[string]any) *APIResponse {
-	return SendTestAPIRequestFull(test, endpoint, fields, nil, "server-admin@test.edulinq.org")
+	return SendTestAPIRequestFull(test, endpoint, fields, nil, "course-admin@test.edulinq.org")
 }
 
 // Make a request to the test server using fields for

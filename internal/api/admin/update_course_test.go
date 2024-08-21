@@ -48,7 +48,7 @@ func TestUpdateCourse(test *testing.T) {
 }
 
 func reloadRequest(test *testing.T) {
-	response := core.SendTestAPIRequestFull(test, core.NewEndpoint(`admin/update/course`), nil, nil, "course-admin@test.edulinq.org")
+	response := core.SendTestAPIRequest(test, core.NewEndpoint(`admin/update/course`), nil)
 	if !response.Success {
 		test.Errorf("Response is not a success when it should be: '%v'.", response)
 	}
