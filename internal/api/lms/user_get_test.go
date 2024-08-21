@@ -47,7 +47,7 @@ func TestUserGet(test *testing.T) {
 				test.Errorf("Case %d: Response is not a success when it should be: '%v'.", i, response)
 			} else {
 				if response.Locator != expectedLocator {
-					test.Errorf("Case %d: Incorrect error returned. Expcted '%s', found '%s'.",
+					test.Errorf("Case %d: Incorrect error returned. Expected '%s', found '%s'.",
 						i, expectedLocator, response.Locator)
 				}
 			}

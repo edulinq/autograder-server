@@ -120,7 +120,7 @@ func TestFetchLogs(test *testing.T) {
 			if testCase.permError {
 				expectedLocator := "-020"
 				if response.Locator != expectedLocator {
-					test.Errorf("Case %d: Incorrect error returned on permissions error. Expcted '%s', found '%s'.",
+					test.Errorf("Case %d: Incorrect error returned on permissions error. Expected '%s', found '%s'.",
 						i, expectedLocator, response.Locator)
 				}
 			} else {

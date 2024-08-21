@@ -16,19 +16,28 @@ func TestHistory(test *testing.T) {
 		target    string
 		found     bool
 		permError bool
+		locator   string
 		expected  []*model.SubmissionHistoryItem
 	}{
 		// Self.
-		{"course-student@test.edulinq.org", "", true, false, studentHist},
-		{"course-grader@test.edulinq.org", "", true, false, []*model.SubmissionHistoryItem{}},
+		{"course-student@test.edulinq.org", "", true, false, "", studentHist},
+		{"course-grader@test.edulinq.org", "", true, false, "", []*model.SubmissionHistoryItem{}},
 
 		// Other
-		{"course-grader@test.edulinq.org", "course-student@test.edulinq.org", true, false, studentHist},
-		{"course-student@test.edulinq.org", "course-grader@test.edulinq.org", true, true, nil},
+		{"course-grader@test.edulinq.org", "course-student@test.edulinq.org", true, false, "", studentHist},
+		{"course-student@test.edulinq.org", "course-grader@test.edulinq.org", true, true, "-033", nil},
+
+		// Other, role escalation
+		{"server-admin@test.edulinq.org", "course-student@test.edulinq.org", true, false, "", studentHist},
+		{"server-owner@test.edulinq.org", "course-student@test.edulinq.org", true, false, "", studentHist},
+
+		// Invalid role escalation
+		{"server-user@test.edulinq.org", "", false, true, "-040", nil},
+		{"server-creator@test.edulinq.org", "", false, true, "-040", nil},
 
 		// Missing user.
-		{"course-student@test.edulinq.org", "ZZZ@test.edulinq.org", false, true, nil},
-		{"course-grader@test.edulinq.org", "ZZZ@test.edulinq.org", false, false, []*model.SubmissionHistoryItem{}},
+		{"course-student@test.edulinq.org", "ZZZ@test.edulinq.org", false, true, "-033", nil},
+		{"course-grader@test.edulinq.org", "ZZZ@test.edulinq.org", false, false, "", []*model.SubmissionHistoryItem{}},
 	}
 
 	for i, testCase := range testCases {
@@ -39,10 +48,9 @@ func TestHistory(test *testing.T) {
 		response := core.SendTestAPIRequestFull(test, core.NewEndpoint(`courses/assignments/submissions/fetch/user/history`), fields, nil, testCase.email)
 		if !response.Success {
 			if testCase.permError {
-				expectedLocator := "-033"
-				if response.Locator != expectedLocator {
-					test.Errorf("Case %d: Incorrect error returned on permissions error. Expcted '%s', found '%s'.",
-						i, expectedLocator, response.Locator)
+				if response.Locator != testCase.locator {
+					test.Errorf("Case %d: Incorrect error returned on permissions error. Expected '%s', found '%s'.",
+						i, testCase.locator, response.Locator)
 				}
 			} else {
 				test.Errorf("Case %d: Response is not a success when it should be: '%v'.", i, response)

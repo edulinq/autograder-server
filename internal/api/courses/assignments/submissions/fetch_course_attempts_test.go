@@ -13,12 +13,24 @@ func TestFetchCourseAttemps(test *testing.T) {
 	testCases := []struct {
 		email     string
 		permError bool
+		locator   string
 	}{
-		{"course-other@test.edulinq.org", true},
-		{"course-student@test.edulinq.org", true},
-		{"course-grader@test.edulinq.org", false},
-		{"course-admin@test.edulinq.org", false},
-		{"course-owner@test.edulinq.org", false},
+		// Invalid permissions
+		{"course-other@test.edulinq.org", true, "-020"},
+		{"course-student@test.edulinq.org", true, "-020"},
+
+		// Invalid permissions, role escalation
+		{"server-user@test.edulinq.org", true, "-040"},
+		{"server-creator@test.edulinq.org", true, "-040"},
+
+		// Valid permissions
+		{"course-grader@test.edulinq.org", false, ""},
+		{"course-admin@test.edulinq.org", false, ""},
+		{"course-owner@test.edulinq.org", false, ""},
+
+		// Valid permissions, role escalation
+		{"server-admin@test.edulinq.org", false, ""},
+		{"server-owner@test.edulinq.org", false, ""},
 	}
 
 	submissions := map[string]*model.GradingResult{
@@ -33,10 +45,9 @@ func TestFetchCourseAttemps(test *testing.T) {
 		response := core.SendTestAPIRequestFull(test, core.NewEndpoint(`courses/assignments/submissions/fetch/course/attemps`), nil, nil, testCase.email)
 		if !response.Success {
 			if testCase.permError {
-				expectedLocator := "-020"
-				if response.Locator != expectedLocator {
-					test.Errorf("Case %d: Incorrect error returned on permissions error. Expcted '%s', found '%s'.",
-						i, expectedLocator, response.Locator)
+				if response.Locator != testCase.locator {
+					test.Errorf("Case %d: Incorrect error returned on permissions error. Expected '%s', found '%s'.",
+						i, testCase.locator, response.Locator)
 				}
 			} else {
 				test.Errorf("Case %d: Response is not a success when it should be: '%v'.", i, response)

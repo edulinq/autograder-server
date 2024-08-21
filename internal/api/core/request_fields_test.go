@@ -203,11 +203,11 @@ func TestNonEmptyStringField(test *testing.T) {
 		if apiErr != nil {
 			if testCase.errLoc != "" {
 				if testCase.errLoc != apiErr.Locator {
-					test.Errorf("Case %d: Incorrect error returned on empty string. Expcted '%s', found '%s'.",
+					test.Errorf("Case %d: Incorrect error returned on empty string. Expected '%s', found '%s'.",
 						i, testCase.errLoc, apiErr.Locator)
 				} else {
 					if testCase.jsonName != apiErr.AdditionalDetails["json-name"] {
-						test.Errorf("Case %d: Incorrect JSON name returned. Expcted '%s', found '%s'.",
+						test.Errorf("Case %d: Incorrect JSON name returned. Expected '%s', found '%s'.",
 							i, testCase.jsonName, apiErr.AdditionalDetails["json-name"])
 					}
 				}
@@ -297,7 +297,7 @@ func TestBadPostFilesFieldNotExported(test *testing.T) {
 
 	expectedLocator := "-028"
 	if apiErr.Locator != expectedLocator {
-		test.Fatalf("Struct with non-exported files does not return an error with the correct locator. Expcted '%s', found '%s'.",
+		test.Fatalf("Struct with non-exported files does not return an error with the correct locator. Expected '%s', found '%s'.",
 			expectedLocator, apiErr.Locator)
 	}
 }
@@ -327,7 +327,7 @@ func TestBadPostFilesNoFiles(test *testing.T) {
 
 	expectedLocator := "-030"
 	if response.Locator != expectedLocator {
-		test.Fatalf("Error does not have the correct locator. Expcted '%s', found '%s'.",
+		test.Fatalf("Error does not have the correct locator. Expected '%s', found '%s'.",
 			expectedLocator, response.Locator)
 	}
 }
@@ -363,7 +363,7 @@ func TestBadPostFilesStoreFail(test *testing.T) {
 
 	expectedLocator := "-029"
 	if response.Locator != expectedLocator {
-		test.Fatalf("Error does not have the correct locator. Expcted '%s', found '%s'.",
+		test.Fatalf("Error does not have the correct locator. Expected '%s', found '%s'.",
 			expectedLocator, response.Locator)
 	}
 }
@@ -659,7 +659,7 @@ func testTargetCourseUser[T comparable, V userGetter](test *testing.T,
 			if testCase.permError {
 				expectedLocator := "-033"
 				if expectedLocator != apiErr.Locator {
-					test.Errorf("Case %d: Incorrect error returned on permissions error. Expcted '%s', found '%s'.",
+					test.Errorf("Case %d: Incorrect error returned on permissions error. Expected '%s', found '%s'.",
 						i, expectedLocator, apiErr.Locator)
 				}
 			} else {
@@ -675,7 +675,7 @@ func testTargetCourseUser[T comparable, V userGetter](test *testing.T,
 		}
 
 		if !reflect.DeepEqual(testCase.expected, request.GetUser()) {
-			test.Errorf("Case %d: Result not as expected. Expcted '%+v', found '%+v'.",
+			test.Errorf("Case %d: Result not as expected. Expected '%+v', found '%+v'.",
 				i, testCase.expected, request.GetUser())
 		}
 	}
@@ -736,7 +736,7 @@ func TestTargetCourseUser(test *testing.T) {
 			if testCase.target == "" {
 				expectedLocator := "-034"
 				if expectedLocator != apiErr.Locator {
-					test.Errorf("Case %d: Incorrect error returned on empty string. Expcted '%s', found '%s'.",
+					test.Errorf("Case %d: Incorrect error returned on empty string. Expected '%s', found '%s'.",
 						i, expectedLocator, apiErr.Locator)
 				}
 			} else {
@@ -747,7 +747,7 @@ func TestTargetCourseUser(test *testing.T) {
 		}
 
 		if !reflect.DeepEqual(testCase.expected, request.User) {
-			test.Errorf("Case %d: Result not as expected. Expcted '%+v', found '%+v'.",
+			test.Errorf("Case %d: Result not as expected. Expected '%+v', found '%+v'.",
 				i, testCase.expected, request.User)
 		}
 	}
@@ -787,7 +787,7 @@ func TestTargetServerUser(test *testing.T) {
 			if testCase.target == "" {
 				expectedLocator := "-044"
 				if expectedLocator != apiErr.Locator {
-					test.Errorf("Case %d: Incorrect error returned on empty string. Expcted '%s', found '%s'.",
+					test.Errorf("Case %d: Incorrect error returned on empty string. Expected '%s', found '%s'.",
 						i, expectedLocator, apiErr.Locator)
 				}
 			} else {
@@ -798,14 +798,14 @@ func TestTargetServerUser(test *testing.T) {
 		}
 
 		if testCase.found != request.User.Found {
-			test.Errorf("Case %d: Found result not as expected. Expcted '%v', found '%v'.",
+			test.Errorf("Case %d: Found result not as expected. Expected '%v', found '%v'.",
 				i, testCase.found, request.User.Found)
 			continue
 		}
 
 		if testCase.found {
 			if !reflect.DeepEqual(user, request.User.User) {
-				test.Errorf("Case %d: Result not as expected. Expcted '%s', found '%s'.",
+				test.Errorf("Case %d: Result not as expected. Expected '%s', found '%s'.",
 					i, util.MustToJSONIndent(user), util.MustToJSONIndent(request.User.User))
 				continue
 			}
@@ -880,7 +880,7 @@ func TestTargetServerUserSelfOrAdmin(test *testing.T) {
 			if testCase.permError {
 				expectedLocator := "-046"
 				if expectedLocator != apiErr.Locator {
-					test.Errorf("Case %d: Incorrect error returned on permissions error. Expcted '%s', found '%s'.",
+					test.Errorf("Case %d: Incorrect error returned on permissions error. Expected '%s', found '%s'.",
 						i, expectedLocator, apiErr.Locator)
 				}
 			} else {
@@ -909,7 +909,7 @@ func TestTargetServerUserSelfOrAdmin(test *testing.T) {
 		}
 
 		if !reflect.DeepEqual(testCase.expected, request.User.User) {
-			test.Errorf("Case %d: Result not as expected. Expcted '%+v', found '%+v'.",
+			test.Errorf("Case %d: Result not as expected. Expected '%+v', found '%+v'.",
 				i, testCase.expected, request.User.User)
 		}
 	}

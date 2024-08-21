@@ -47,7 +47,7 @@ func TestGet(test *testing.T) {
 			if testCase.permError {
 				expectedLocator := "-046"
 				if response.Locator != expectedLocator {
-					test.Errorf("Case %d: Incorrect error returned. Expcted '%s', found '%s'.",
+					test.Errorf("Case %d: Incorrect error returned. Expected '%s', found '%s'.",
 						i, expectedLocator, response.Locator)
 				}
 			} else {

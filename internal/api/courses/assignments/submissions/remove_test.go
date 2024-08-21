@@ -19,41 +19,50 @@ func TestRemove(test *testing.T) {
 		foundUser        bool
 		foundSubmission  bool
 		permError        bool
+		locator          string
 	}{
 		// Grader, self, recent.
-		{"course-grader@test.edulinq.org", "", "", true, false, false},
-		{"course-grader@test.edulinq.org", "course-grader@test.edulinq.org", "", true, false, false},
+		{"course-grader@test.edulinq.org", "", "", true, false, false, ""},
+		{"course-grader@test.edulinq.org", "course-grader@test.edulinq.org", "", true, false, false, ""},
 
 		// Grader, self, missing.
-		{"course-grader@test.edulinq.org", "", "ZZZ", true, false, false},
-		{"course-grader@test.edulinq.org", "course-grader@test.edulinq.org", "ZZZ", true, false, false},
+		{"course-grader@test.edulinq.org", "", "ZZZ", true, false, false, ""},
+		{"course-grader@test.edulinq.org", "course-grader@test.edulinq.org", "ZZZ", true, false, false, ""},
 
 		// Grader, other, recent.
-		{"course-grader@test.edulinq.org", "course-student@test.edulinq.org", "", true, true, false},
+		{"course-grader@test.edulinq.org", "course-student@test.edulinq.org", "", true, true, false, ""},
 
 		// Grader, other, specific.
-		{"course-grader@test.edulinq.org", "course-student@test.edulinq.org", "1697406256", true, true, false},
-		{"course-grader@test.edulinq.org", "course-student@test.edulinq.org", "1697406265", true, true, false},
-		{"course-grader@test.edulinq.org", "course-student@test.edulinq.org", "1697406272", true, true, false},
+		{"course-grader@test.edulinq.org", "course-student@test.edulinq.org", "1697406256", true, true, false, ""},
+		{"course-grader@test.edulinq.org", "course-student@test.edulinq.org", "1697406265", true, true, false, ""},
+		{"course-grader@test.edulinq.org", "course-student@test.edulinq.org", "1697406272", true, true, false, ""},
 
 		// Grader, other, specific (full ID).
-		{"course-grader@test.edulinq.org", "course-student@test.edulinq.org", "course101::hw0::student@test.edulinq.org::1697406256", true, true, false},
-		{"course-grader@test.edulinq.org", "course-student@test.edulinq.org", "course101::hw0::student@test.edulinq.org::1697406265", true, true, false},
-		{"course-grader@test.edulinq.org", "course-student@test.edulinq.org", "course101::hw0::student@test.edulinq.org::1697406272", true, true, false},
+		{"course-grader@test.edulinq.org", "course-student@test.edulinq.org", "course101::hw0::student@test.edulinq.org::1697406256", true, true, false, ""},
+		{"course-grader@test.edulinq.org", "course-student@test.edulinq.org", "course101::hw0::student@test.edulinq.org::1697406265", true, true, false, ""},
+		{"course-grader@test.edulinq.org", "course-student@test.edulinq.org", "course101::hw0::student@test.edulinq.org::1697406272", true, true, false, ""},
 
 		// Grader, other, missing.
-		{"course-grader@test.edulinq.org", "course-student@test.edulinq.org", "ZZZ", true, false, false},
+		{"course-grader@test.edulinq.org", "course-student@test.edulinq.org", "ZZZ", true, false, false, ""},
 
 		// Grader, missing, recent.
-		{"course-grader@test.edulinq.org", "ZZZ@test.edulinq.org", "", false, false, false},
+		{"course-grader@test.edulinq.org", "ZZZ@test.edulinq.org", "", false, false, false, ""},
 
 		// Roles below grader, other, recent.
-		{"course-student@test.edulinq.org", "course-student@test.edulinq.org", "", false, false, true},
-		{"course-other@test.edulinq.org", "course-student@test.edulinq.org", "", false, false, true},
+		{"course-student@test.edulinq.org", "course-student@test.edulinq.org", "", false, false, true, "-020"},
+		{"course-other@test.edulinq.org", "course-student@test.edulinq.org", "", false, false, true, "-020"},
 
 		// Roles above grader, other, recent
-		{"course-admin@test.edulinq.org", "course-student@test.edulinq.org", "", true, true, false},
-		{"course-owner@test.edulinq.org", "course-student@test.edulinq.org", "", true, true, false},
+		{"course-admin@test.edulinq.org", "course-student@test.edulinq.org", "", true, true, false, ""},
+		{"course-owner@test.edulinq.org", "course-student@test.edulinq.org", "", true, true, false, ""},
+
+		// Role escalation, other, recent
+		{"server-admin@test.edulinq.org", "course-student@test.edulinq.org", "", true, true, false, ""},
+		{"server-owner@test.edulinq.org", "course-student@test.edulinq.org", "", true, true, false, ""},
+
+		// Invalid role escalation, other, recent
+		{"server-user@test.edulinq.org", "course-student@test.edulinq.org", "", false, false, true, "-040"},
+		{"server-creator@test.edulinq.org", "course-student@test.edulinq.org", "", false, false, true, "-040"},
 	}
 
 	for i, testCase := range testCases {
@@ -69,10 +78,9 @@ func TestRemove(test *testing.T) {
 
 		if !response.Success {
 			if testCase.permError {
-				expectedLocator := "-020"
-				if response.Locator != expectedLocator {
+				if response.Locator != testCase.locator {
 					test.Errorf("Case %d: Incorrect error returned on permissions error. Expected '%s', found '%s'.",
-						i, expectedLocator, response.Locator)
+						i, testCase.locator, response.Locator)
 				}
 			} else {
 				test.Errorf("Case %d: Response is not a success when it should be: '%v'.", i, response)
