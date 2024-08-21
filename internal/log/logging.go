@@ -46,6 +46,9 @@ var backendLock sync.Mutex
 // Option to log serially, generally only for testing.
 var backgroundBackendLogging bool = true
 
+// Option to panic instead of exit on fatal, generally only for testing.
+var panicOnFatal bool = false
+
 func SetTextWriter(newTextWriter io.StringWriter) {
 	textWriter = newTextWriter
 }
@@ -62,6 +65,16 @@ func SetBackgroundLogging(value bool) bool {
 
 	oldValue := backgroundBackendLogging
 	backgroundBackendLogging = value
+
+	return oldValue
+}
+
+func SetPanicOnFatal(value bool) bool {
+	backendLock.Lock()
+	defer backendLock.Unlock()
+
+	oldValue := panicOnFatal
+	panicOnFatal = value
 
 	return oldValue
 }
@@ -118,7 +131,7 @@ func logText(record *Record) {
 	textWriter.WriteString(record.String() + "\n")
 }
 
-func Log(level LogLevel, message string, course string, assignment string, user string, logError error, attributes map[string]any) {
+func Log(level LogLevel, message string, course string, assignment string, user string, logError error, attributes map[string]any) *Record {
 	errorMessage := ""
 	if logError != nil {
 		errorMessage = logError.Error()
@@ -138,15 +151,17 @@ func Log(level LogLevel, message string, course string, assignment string, user 
 	}
 
 	LogDirectRecord(record)
+
+	return record
 }
 
-func LogToLevel(level LogLevel, message string, args ...any) {
+func LogToLevel(level LogLevel, message string, args ...any) *Record {
 	course, assignment, user, logError, attributes, err := parseArgs(args...)
 	if err != nil {
 		Error("Failed to parse logging arguments.", err)
 	}
 
-	Log(level, message, course, assignment, user, logError, attributes)
+	return Log(level, message, course, assignment, user, logError, attributes)
 }
 
 func (this *Record) String() string {
