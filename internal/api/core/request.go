@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"reflect"
+	"strings"
 	"sync"
 
 	"github.com/edulinq/autograder/internal/common"
@@ -17,7 +18,7 @@ import (
 // Once validated, callers should feel safe calling reflection methods on this without extra checks.
 type ValidAPIRequest any
 
-var RootUserNonce sync.Map
+var RootUserNonces sync.Map
 
 type APIRequest struct {
 	// These are not provided in JSON, they are filled in during validation.
@@ -81,14 +82,24 @@ func (this *APIRequestUserContext) Validate(request any, endpoint string) *APIEr
 	}
 
 	// Check for a valid nonce and skip auth if it exists.
-	_, rootUserExists := RootUserNonce.LoadAndDelete(this.RootUserNonce)
+	_, rootUserExists := RootUserNonces.LoadAndDelete(this.RootUserNonce)
 
 	if this.RootUserNonce != "" {
 		if !rootUserExists {
-			return NewBadRequestError("-048", &this.APIRequest, "Incorrect root user nonce.")
+			return NewAuthBadRequestError("-048", this, "Incorrect root user nonce.")
 		}
 
-		this.ServerUser = &model.FakeRootUser
+		rootUser, err := db.GetServerUser(model.FakeRootUser.Email, false)
+		if err != nil {
+			return NewInternalError("-049", &APIRequestCourseUserContext{}, "Failed to fetch user.")
+		}
+
+		if rootUser.Email == "" {
+			return NewBadRequestError("-050", &this.APIRequest, "No user email specified")
+		}
+
+		this.UserEmail = rootUser.Email
+		this.ServerUser = rootUser
 	} else {
 		if this.UserEmail == "" {
 			return NewBadRequestError("-016", &this.APIRequest, "No user email specified.")
@@ -102,6 +113,10 @@ func (this *APIRequestUserContext) Validate(request any, endpoint string) *APIEr
 		if apiErr != nil {
 			return apiErr
 		}
+	}
+
+	if this.UserEmail != "root" && !strings.Contains(this.UserEmail, "@") {
+		return NewBadRequestError("-051", &this.APIRequest, "Invalid email format.")
 	}
 
 	minRole, foundRole := getMaxServerRole(request)

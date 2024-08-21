@@ -15,7 +15,14 @@ import (
 	"github.com/edulinq/autograder/internal/util"
 )
 
-func startExclusiveUnixServer() error {
+const (
+	BIT_SIZE    = 64
+	BUFFER_SIZE = 8
+)
+
+var unixSocket net.Listener
+
+func startUnixSocketServer() error {
 	var socketPath = config.UNIX_SOCKET_PATH.Get()
 
 	unixSocket, err := net.Listen("unix", socketPath)
@@ -55,8 +62,8 @@ func startExclusiveUnixServer() error {
 
 func handleUnixSocketConnection(conn net.Conn) error {
 	var port = config.WEB_PORT.Get()
-	var bufferBytes = config.BUFFER_SIZE.Get()
-	var bitSize = config.BIT_SIZE.Get()
+	var bufferBytes = BUFFER_SIZE
+	var bitSize = BIT_SIZE
 
 	jsonBuffer, err := util.ReadFromUnixSocket(conn, bufferBytes)
 	if err != nil {
@@ -68,8 +75,8 @@ func handleUnixSocketConnection(conn net.Conn) error {
 		return fmt.Errorf("Failed to generate the nonce.")
 	}
 
-	core.RootUserNonce.Store(randomNumber, true)
-	defer core.RootUserNonce.Delete(randomNumber)
+	core.RootUserNonces.Store(randomNumber, true)
+	defer core.RootUserNonces.Delete(randomNumber)
 
 	var payload map[string]any
 	err = json.Unmarshal(jsonBuffer, &payload)
