@@ -25,6 +25,10 @@ var args struct {
 	Verbose          bool   `help:"Print the entire response." short:"v"`
 }
 
+const (
+	BUFFER_SIZE = 8
+)
+
 func main() {
 	kong.Parse(&args,
 		kong.Description("Fetch a submission for a specific assignment and user."),
@@ -81,7 +85,7 @@ func main() {
 		log.Fatal("Failed to write the request buffer to the unix server.", err)
 	}
 
-	sizeBuffer := make([]byte, config.BUFFER_SIZE.Get())
+	sizeBuffer := make([]byte, BUFFER_SIZE)
 
 	_, err = conn.Read(sizeBuffer)
 	if err != nil {
@@ -107,7 +111,6 @@ func main() {
 	} else {
 		var responseContent submissions.FetchUserPeekResponse
 		util.MustJSONFromString(util.MustToJSON(response.Content), &responseContent)
-
 		fmt.Println(util.MustToJSONIndent(responseContent))
 	}
 }

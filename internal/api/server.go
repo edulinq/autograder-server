@@ -1,8 +1,10 @@
 package api
 
 import (
+	"context"
 	"fmt"
 	"net/http"
+	"os"
 	"sync"
 
 	"github.com/edulinq/autograder/internal/api/core"
@@ -10,20 +12,24 @@ import (
 	"github.com/edulinq/autograder/internal/log"
 )
 
-var API_REQUEST_CONTENT_KEY = "content"
+const API_REQUEST_CONTENT_KEY = "content"
+
+var (
+	apiServer  *http.Server
+	unixServer *http.Server
+)
 
 func StartServer() error {
 	var serverShutdown sync.WaitGroup
 	serverError := make(chan error, 2)
-	serverGracefulShutdown := make(chan bool)
 
-	serverShutdown.Add(1)
+	serverShutdown.Add(2)
 	go func() {
 		defer serverShutdown.Done()
 
-		err := startExclusiveAPIServer()
+		err := startAPIServer()
 		if err != nil {
-			log.Error("Failed to start the api server.", err)
+			log.Error("Failed to start the API server.", err)
 			serverError <- err
 		}
 	}()
@@ -31,29 +37,61 @@ func StartServer() error {
 	go func() {
 		defer serverShutdown.Done()
 
-		err := startExclusiveUnixServer()
+		err := startUnixSocketServer()
 		if err != nil {
-			log.Error("Failed to start the unix server.", err)
+			log.Error("Failed to start the Unix Socket server.", err)
 			serverError <- err
 		}
 	}()
 
 	go func() {
 		serverShutdown.Wait()
-		close(serverGracefulShutdown)
+		close(serverError)
 	}()
 
 	select {
 	case err := <-serverError:
+		StopServers()
 		return err
-	case <-serverGracefulShutdown:
-		return nil
+	case <-serverError:
+		StopServers()
 	}
+
+	return nil
 }
 
-func startExclusiveAPIServer() error {
+func startAPIServer() error {
 	var port = config.WEB_PORT.Get()
 
 	log.Info("API Server Started", log.NewAttr("port", port))
-	return http.ListenAndServe(fmt.Sprintf(":%d", port), core.GetRouteServer(GetRoutes()))
+	apiServer = &http.Server{
+		Addr:    fmt.Sprintf(":%d", port),
+		Handler: core.GetRouteServer(GetRoutes()),
+	}
+
+	return apiServer.ListenAndServe()
+}
+
+func StopServers() {
+	err := apiServer.Shutdown(context.Background())
+	if err != nil {
+		log.Fatal("Failed to stop the API server.", err)
+	}
+
+	err = os.Remove(config.PID_PATH.Get())
+	if err != nil {
+		log.Fatal("Failed to remove the PID file.", err)
+	}
+
+	if unixSocket != nil {
+		err := unixSocket.Close()
+		if err != nil {
+			log.Fatal("Failed to close the unix socket.", err)
+		}
+
+		err = os.Remove(config.UNIX_SOCKET_PATH.Get())
+		if err != nil {
+			log.Fatal("Failed to remove the unix socket file.", err)
+		}
+	}
 }
