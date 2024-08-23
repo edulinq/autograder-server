@@ -15,8 +15,8 @@ readonly TEST_SUBMISSIONS_DIRNAME='test-submissions'
 readonly DEFAULT_SERVER="http://127.0.0.1:${PORT}"
 
 # These do not actually matter, the server is run in noauth mode.
-readonly TEST_USER='admin@test.com'
-readonly TEST_PASS='admin'
+readonly TEST_USER='course-admin@test.edulinq.org'
+readonly TEST_PASS='course-admin'
 
 function run_submissions() {
     local tests_dir=$1
