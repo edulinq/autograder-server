@@ -18,9 +18,9 @@ import (
 )
 
 const (
-	API_REQUEST_CONTENT_KEY = "content"
-	API_LOCK                = "API Lock"
-	UNIX_LOCK               = "Unix Lock"
+	API_REQUEST_CONTENT_KEY      = "content"
+	API_SERVER_STOP_LOCK         = "API Lock"
+	UNIX_SOCKET_SERVER_STOP_LOCK = "Unix Lock"
 )
 
 var (
@@ -28,6 +28,7 @@ var (
 	unixSocket net.Listener
 )
 
+// Run the API and Unix Socket Server.
 func StartServer() error {
 	errorsChan := make(chan error, 2)
 
@@ -98,8 +99,8 @@ func StopServers() {
 }
 
 func StopUnixSocketServer() {
-	common.Lock(UNIX_LOCK)
-	defer common.Unlock(UNIX_LOCK)
+	common.Lock(UNIX_SOCKET_SERVER_STOP_LOCK)
+	defer common.Unlock(UNIX_SOCKET_SERVER_STOP_LOCK)
 
 	if unixSocket == nil {
 		return
@@ -120,14 +121,17 @@ func StopUnixSocketServer() {
 }
 
 func StopAPIServer() {
-	common.Lock(API_LOCK)
-	defer common.Unlock(API_LOCK)
+	common.Lock(API_SERVER_STOP_LOCK)
+	defer common.Unlock(API_SERVER_STOP_LOCK)
 
 	if apiServer == nil {
 		return
 	}
 
-	err := apiServer.Shutdown(context.Background())
+	tempApiServer := apiServer
+	apiServer = nil
+
+	err := tempApiServer.Shutdown(context.Background())
 	if err != nil {
 		log.Fatal("Failed to stop the API server.", err)
 	}
@@ -136,6 +140,4 @@ func StopAPIServer() {
 	if err != nil {
 		log.Fatal("Failed to remove the PID file.", err)
 	}
-
-	apiServer = nil
 }
