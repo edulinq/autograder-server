@@ -240,13 +240,7 @@ func Clear() error {
 		return nil
 	}
 
-	err := backend.Clear()
-	if err != nil {
-		return err
-	}
-	//TODO fix this
-	return nil
-	// return UpsertUser(&model.RootUser)
+	return backend.Clear()
 }
 
 func MustOpen() {
