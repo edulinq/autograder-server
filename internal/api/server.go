@@ -54,7 +54,7 @@ func StartServer() error {
 	errs = errors.Join(errs, <-errorsChan)
 	StopServers()
 	errs = errors.Join(errs, <-errorsChan)
-	
+
 	close(errorsChan)
 
 	return errs
@@ -124,7 +124,7 @@ func StopAPIServer() {
 	defer common.Unlock(API_LOCK)
 
 	if apiServer == nil {
-		return 
+		return
 	}
 
 	err := apiServer.Shutdown(context.Background())

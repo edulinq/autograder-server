@@ -30,7 +30,7 @@ func CMDServerTestingMain(suite *testing.M) {
 		log.SetLevelDebug()
 		var serverRun sync.WaitGroup
 		serverRun.Add(1)
-		
+
 		config.NO_AUTH.Set(false)
 
 		go func() {

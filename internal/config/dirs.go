@@ -76,7 +76,7 @@ func GetSourcesDir() string {
 	return filepath.Join(GetWorkDir(), SOURCES_DIRNAME)
 }
 
-//TODO call path
+// TODO call path
 func GetUnixSocketDir() string {
 	return filepath.Join(GetWorkDir(), UNIX_SOCKET_FILENAME)
 	// return "/tmp/autograder.sock"
