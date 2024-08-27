@@ -244,8 +244,9 @@ func Clear() error {
 	if err != nil {
 		return err
 	}
-
-	return UpsertUser(&model.RootUser)
+	//TODO fix this
+	return nil
+	// return UpsertUser(&model.RootUser)
 }
 
 func MustOpen() {

@@ -10,8 +10,8 @@ import (
 const (
 	WORK_DIR_BASENAME = "autograder"
 
-	PID_FILENAME         = "autograder.pid"
-	UNIX_SOCKET_FILENAME = "autograder.sock"
+	PID_FILENAME         = "grade.pid"
+	UNIX_SOCKET_FILENAME = "a.sock"
 
 	BACKUP_DIRNAME        = "backup"
 	CACHE_DIRNAME         = "cache"
@@ -78,8 +78,8 @@ func GetSourcesDir() string {
 
 //TODO call path
 func GetUnixSocketDir() string {
-	// return filepath.Join(GetWorkDir(), UNIX_SOCKET_FILENAME)
-	return "/tmp/autograder.sock"
+	return filepath.Join(GetWorkDir(), UNIX_SOCKET_FILENAME)
+	// return "/tmp/autograder.sock"
 }
 
 func GetPidDir() string {

@@ -210,6 +210,15 @@
             }
         }
     },
+    "root": {
+        "email": "root",
+        "name": null,
+        "server-role": "root",
+        "salt": null,
+        "password": null,
+        "tokens": [],
+        "course-info": {}
+    },
     "server-admin@test.com": {
         "email": "server-admin@test.com",
         "name": "server-admin",

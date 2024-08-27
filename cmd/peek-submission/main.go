@@ -39,7 +39,8 @@ func main() {
 		log.Fatal("Failed to load config options.", err)
 	}
 
-	socketPath := config.GetUnixSocketDir()
+	var socketPath = config.GetUnixSocketDir()
+
 	conn, err := net.Dial("unix", socketPath)
 	if err != nil {
 		log.Fatal("Failed to dial the unix socket.", err)

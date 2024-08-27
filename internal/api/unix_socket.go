@@ -18,7 +18,6 @@ const (
 	BUFFER_SIZE = 8
 )
 
-
 func runUnixSocketServer() (err error) {
 	defer func() {
 		value := recover()
