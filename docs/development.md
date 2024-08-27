@@ -64,15 +64,12 @@ There are other courses to test different scenarios:
 Test users allow testing of actions made by the various role users can hold on the server.
 By default, the name and password of test users are their email without "@test.edulinq.org".
 
-All test users that are prefixed with "server-" (i.e. "server-owner@test.edulinq.org") are used to test the corresponding server roles.
+Users prefixed with "server-" (i.e. "server-owner@test.edulinq.org") are used to test the corresponding server roles.
 These users are not enrolled in any test courses by default.
 
 Users prefixed with "course-" (i.e. "course-owner@test.edulinq.org") are used to test the corresponding course roles.
 All of these users are given the standard server role, which is server user.
 To test courses actions, these users are enrolled in various test courses.
-
-The user "no-lms-id@test.edulinq.org" breaks the pattern and is a server user and a course admin.
-This user does not have an lms-id for any of the courses they are enrolled in.
 
 ## API Notes
 

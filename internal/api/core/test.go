@@ -3,6 +3,7 @@ package core
 import (
 	"net/http/httptest"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/edulinq/autograder/internal/common"
@@ -51,7 +52,7 @@ func APITestingMain(suite *testing.M, routes *[]*Route) {
 }
 
 func SendTestAPIRequest(test *testing.T, endpoint string, fields map[string]any) *APIResponse {
-	return SendTestAPIRequestFull(test, endpoint, fields, nil, "course-admin@test.edulinq.org")
+	return SendTestAPIRequestFull(test, endpoint, fields, nil, "course-admin")
 }
 
 // Make a request to the test server using fields for
@@ -61,11 +62,14 @@ func SendTestAPIRequest(test *testing.T, endpoint string, fields map[string]any)
 func SendTestAPIRequestFull(test *testing.T, endpoint string, fields map[string]any, paths []string, email string) *APIResponse {
 	url := serverURL + endpoint
 
+	if !strings.Contains(email, "@") {
+		email = email + "@test.edulinq.org"
+	}
 	user := db.MustGetServerUser(email, true)
 
 	pass := ""
 	if user != nil {
-		pass = util.Sha256HexFromString(*user.Name)
+		pass = util.Sha256HexFromString(user.GetName(false))
 	}
 
 	content := map[string]any{

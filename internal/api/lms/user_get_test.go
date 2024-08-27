@@ -16,17 +16,17 @@ func TestUserGet(test *testing.T) {
 		permError bool
 		expected  *core.CourseUserInfo
 	}{
-		{"course-grader@test.edulinq.org", "course-other@test.edulinq.org", false, &core.CourseUserInfo{"course-other@test.edulinq.org", "course-other", model.CourseRoleOther, "lms-course-other@test.edulinq.org"}},
-		{"course-grader@test.edulinq.org", "course-student@test.edulinq.org", false, &core.CourseUserInfo{"course-student@test.edulinq.org", "course-student", model.CourseRoleStudent, "lms-course-student@test.edulinq.org"}},
-		{"course-grader@test.edulinq.org", "course-grader@test.edulinq.org", false, &core.CourseUserInfo{"course-grader@test.edulinq.org", "course-grader", model.CourseRoleGrader, "lms-course-grader@test.edulinq.org"}},
-		{"course-grader@test.edulinq.org", "course-admin@test.edulinq.org", false, &core.CourseUserInfo{"course-admin@test.edulinq.org", "course-admin", model.CourseRoleAdmin, "lms-course-admin@test.edulinq.org"}},
-		{"course-grader@test.edulinq.org", "course-owner@test.edulinq.org", false, &core.CourseUserInfo{"course-owner@test.edulinq.org", "course-owner", model.CourseRoleOwner, "lms-course-owner@test.edulinq.org"}},
+		{"course-grader", "course-other@test.edulinq.org", false, &core.CourseUserInfo{"course-other@test.edulinq.org", "course-other", model.CourseRoleOther, "lms-course-other@test.edulinq.org"}},
+		{"course-grader", "course-student@test.edulinq.org", false, &core.CourseUserInfo{"course-student@test.edulinq.org", "course-student", model.CourseRoleStudent, "lms-course-student@test.edulinq.org"}},
+		{"course-grader", "course-grader@test.edulinq.org", false, &core.CourseUserInfo{"course-grader@test.edulinq.org", "course-grader", model.CourseRoleGrader, "lms-course-grader@test.edulinq.org"}},
+		{"course-grader", "course-admin@test.edulinq.org", false, &core.CourseUserInfo{"course-admin@test.edulinq.org", "course-admin", model.CourseRoleAdmin, "lms-course-admin@test.edulinq.org"}},
+		{"course-grader", "course-owner@test.edulinq.org", false, &core.CourseUserInfo{"course-owner@test.edulinq.org", "course-owner", model.CourseRoleOwner, "lms-course-owner@test.edulinq.org"}},
 
-		{"course-student@test.edulinq.org", "course-student@test.edulinq.org", true, nil},
+		{"course-student", "course-student@test.edulinq.org", true, nil},
 
-		{"course-grader@test.edulinq.org", "", false, nil},
+		{"course-grader", "", false, nil},
 
-		{"course-grader@test.edulinq.org", "ZZZ", false, nil},
+		{"course-grader", "ZZZ", false, nil},
 	}
 
 	for i, testCase := range testCases {

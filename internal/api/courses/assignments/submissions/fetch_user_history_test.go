@@ -20,24 +20,24 @@ func TestHistory(test *testing.T) {
 		expected  []*model.SubmissionHistoryItem
 	}{
 		// Self.
-		{"course-student@test.edulinq.org", "", true, false, "", studentHist},
-		{"course-grader@test.edulinq.org", "", true, false, "", []*model.SubmissionHistoryItem{}},
+		{"course-student", "", true, false, "", studentHist},
+		{"course-grader", "", true, false, "", []*model.SubmissionHistoryItem{}},
 
 		// Other
-		{"course-grader@test.edulinq.org", "course-student@test.edulinq.org", true, false, "", studentHist},
-		{"course-student@test.edulinq.org", "course-grader@test.edulinq.org", true, true, "-033", nil},
+		{"course-grader", "course-student@test.edulinq.org", true, false, "", studentHist},
+		{"course-student", "course-grader@test.edulinq.org", true, true, "-033", nil},
 
 		// Other, role escalation
-		{"server-admin@test.edulinq.org", "course-student@test.edulinq.org", true, false, "", studentHist},
-		{"server-owner@test.edulinq.org", "course-student@test.edulinq.org", true, false, "", studentHist},
+		{"server-admin", "course-student@test.edulinq.org", true, false, "", studentHist},
+		{"server-owner", "course-student@test.edulinq.org", true, false, "", studentHist},
 
 		// Invalid role escalation
-		{"server-user@test.edulinq.org", "", false, true, "-040", nil},
-		{"server-creator@test.edulinq.org", "", false, true, "-040", nil},
+		{"server-user", "", false, true, "-040", nil},
+		{"server-creator", "", false, true, "-040", nil},
 
 		// Missing user.
-		{"course-student@test.edulinq.org", "ZZZ@test.edulinq.org", false, true, "-033", nil},
-		{"course-grader@test.edulinq.org", "ZZZ@test.edulinq.org", false, false, "", []*model.SubmissionHistoryItem{}},
+		{"course-student", "ZZZ@test.edulinq.org", false, true, "-033", nil},
+		{"course-grader", "ZZZ@test.edulinq.org", false, false, "", []*model.SubmissionHistoryItem{}},
 	}
 
 	for i, testCase := range testCases {

@@ -26,23 +26,23 @@ func TestFetchUserAttempts(test *testing.T) {
 		result      []*model.GradingResult
 	}{
 		// Grader, self.
-		{"course-grader@test.edulinq.org", "", true, false, "", []*model.GradingResult{}},
-		{"course-grader@test.edulinq.org", "course-grader@test.edulinq.org", true, false, "", []*model.GradingResult{}},
+		{"course-grader", "", true, false, "", []*model.GradingResult{}},
+		{"course-grader", "course-grader@test.edulinq.org", true, false, "", []*model.GradingResult{}},
 
 		// Grader, other.
-		{"course-grader@test.edulinq.org", "course-student@test.edulinq.org", true, false, "", studentGradingResults},
+		{"course-grader", "course-student@test.edulinq.org", true, false, "", studentGradingResults},
 
 		// Grader, missing.
-		{"course-grader@test.edulinq.org", "ZZZ@test.edulinq.org", false, false, "", []*model.GradingResult{}},
+		{"course-grader", "ZZZ@test.edulinq.org", false, false, "", []*model.GradingResult{}},
 
 		// Role escalation, other.
-		{"server-admin@test.edulinq.org", "course-student@test.edulinq.org", true, false, "", studentGradingResults},
+		{"server-admin", "course-student@test.edulinq.org", true, false, "", studentGradingResults},
 
 		// Invalid role escalation.
-		{"server-user@test.edulinq.org", "", true, true, "-040", nil},
+		{"server-user", "", true, true, "-040", nil},
 
 		// Student, self.
-		{"course-student@test.edulinq.org", "", true, true, "-020", nil},
+		{"course-student", "", true, true, "-020", nil},
 	}
 
 	for i, testCase := range testCases {

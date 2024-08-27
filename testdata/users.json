@@ -184,32 +184,6 @@
             }
         }
     },
-    "no-lms-id@test.edulinq.org": {
-        "email": "no-lms-id@test.edulinq.org",
-        "name": "no-lms-id",
-        "server-role": "user",
-        "salt": "2d3ecb56a6d429e580db9a8c9f117717",
-        "password": {
-            "id": "3876aed7-0c60-4a17-bdf6-f350dbc8e2be",
-            "hex-digest": "4ddbd2eef282a729bcf7cfdacd107efe7c636e437842bc161ff5fa6ab19af4a7",
-            "source": "password",
-            "name": "password",
-            "CreationTime": "2000-01-01T12:00:00Z",
-            "AccessTime": "2000-01-01T12:00:00Z"
-        },
-        "tokens": [],
-        "course-info": {
-            "course-languages": {
-                "role": "admin"
-            },
-            "course-with-lms": {
-                "role": "admin"
-            },
-            "course-without-source": {
-                "role": "admin"
-            }
-        }
-    },
     "server-admin@test.edulinq.org": {
         "email": "server-admin@test.edulinq.org",
         "name": "server-admin",

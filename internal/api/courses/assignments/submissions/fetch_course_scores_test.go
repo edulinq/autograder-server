@@ -18,53 +18,53 @@ func TestFetchCourseScores(test *testing.T) {
 		ids        map[string]string
 	}{
 		// Valid permissions
-		{"course-grader@test.edulinq.org", model.CourseRoleUnknown, false, "", map[string]string{
+		{"course-grader", model.CourseRoleUnknown, false, "", map[string]string{
 			"course-other@test.edulinq.org":   "",
 			"course-student@test.edulinq.org": "course101::hw0::course-student@test.edulinq.org::1697406272",
 			"course-grader@test.edulinq.org":  "",
 			"course-admin@test.edulinq.org":   "",
 			"course-owner@test.edulinq.org":   "",
 		}},
-		{"course-admin@test.edulinq.org", model.CourseRoleUnknown, false, "", map[string]string{
+		{"course-admin", model.CourseRoleUnknown, false, "", map[string]string{
 			"course-other@test.edulinq.org":   "",
 			"course-student@test.edulinq.org": "course101::hw0::course-student@test.edulinq.org::1697406272",
 			"course-grader@test.edulinq.org":  "",
 			"course-admin@test.edulinq.org":   "",
 			"course-owner@test.edulinq.org":   "",
 		}},
-		{"course-grader@test.edulinq.org", model.CourseRoleStudent, false, "", map[string]string{
+		{"course-grader", model.CourseRoleStudent, false, "", map[string]string{
 			"course-student@test.edulinq.org": "course101::hw0::course-student@test.edulinq.org::1697406272",
 		}},
-		{"course-grader@test.edulinq.org", model.CourseRoleGrader, false, "", map[string]string{
+		{"course-grader", model.CourseRoleGrader, false, "", map[string]string{
 			"course-grader@test.edulinq.org": "",
 		}},
 
 		// Valid permissions, role escalation
-		{"server-admin@test.edulinq.org", model.CourseRoleUnknown, false, "", map[string]string{
+		{"server-admin", model.CourseRoleUnknown, false, "", map[string]string{
 			"course-other@test.edulinq.org":   "",
 			"course-student@test.edulinq.org": "course101::hw0::course-student@test.edulinq.org::1697406272",
 			"course-grader@test.edulinq.org":  "",
 			"course-admin@test.edulinq.org":   "",
 			"course-owner@test.edulinq.org":   "",
 		}},
-		{"server-admin@test.edulinq.org", model.CourseRoleStudent, false, "", map[string]string{
+		{"server-admin", model.CourseRoleStudent, false, "", map[string]string{
 			"course-student@test.edulinq.org": "course101::hw0::course-student@test.edulinq.org::1697406272",
 		}},
-		{"server-admin@test.edulinq.org", model.CourseRoleGrader, false, "", map[string]string{
+		{"server-admin", model.CourseRoleGrader, false, "", map[string]string{
 			"course-grader@test.edulinq.org": "",
 		}},
 
 		// Invalid permissions
-		{"course-student@test.edulinq.org", model.CourseRoleUnknown, true, "-020", nil},
-		{"course-student@test.edulinq.org", model.CourseRoleStudent, true, "-020", nil},
-		{"course-other@test.edulinq.org", model.CourseRoleUnknown, true, "-020", nil},
-		{"course-other@test.edulinq.org", model.CourseRoleGrader, true, "-020", nil},
+		{"course-student", model.CourseRoleUnknown, true, "-020", nil},
+		{"course-student", model.CourseRoleStudent, true, "-020", nil},
+		{"course-other", model.CourseRoleUnknown, true, "-020", nil},
+		{"course-other", model.CourseRoleGrader, true, "-020", nil},
 
 		// Invalid permissions, role escalation
-		{"server-user@test.edulinq.org", model.CourseRoleUnknown, true, "-040", nil},
-		{"server-user@test.edulinq.org", model.CourseRoleStudent, true, "-040", nil},
-		{"server-creator@test.edulinq.org", model.CourseRoleUnknown, true, "-040", nil},
-		{"server-creator@test.edulinq.org", model.CourseRoleGrader, true, "-040", nil},
+		{"server-user", model.CourseRoleUnknown, true, "-040", nil},
+		{"server-user", model.CourseRoleStudent, true, "-040", nil},
+		{"server-creator", model.CourseRoleUnknown, true, "-040", nil},
+		{"server-creator", model.CourseRoleGrader, true, "-040", nil},
 	}
 
 	for i, testCase := range testCases {

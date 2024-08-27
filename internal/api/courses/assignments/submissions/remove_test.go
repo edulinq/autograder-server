@@ -22,47 +22,47 @@ func TestRemove(test *testing.T) {
 		locator          string
 	}{
 		// Grader, self, recent.
-		{"course-grader@test.edulinq.org", "", "", true, false, false, ""},
-		{"course-grader@test.edulinq.org", "course-grader@test.edulinq.org", "", true, false, false, ""},
+		{"course-grader", "", "", true, false, false, ""},
+		{"course-grader", "course-grader@test.edulinq.org", "", true, false, false, ""},
 
 		// Grader, self, missing.
-		{"course-grader@test.edulinq.org", "", "ZZZ", true, false, false, ""},
-		{"course-grader@test.edulinq.org", "course-grader@test.edulinq.org", "ZZZ", true, false, false, ""},
+		{"course-grader", "", "ZZZ", true, false, false, ""},
+		{"course-grader", "course-grader@test.edulinq.org", "ZZZ", true, false, false, ""},
 
 		// Grader, other, recent.
-		{"course-grader@test.edulinq.org", "course-student@test.edulinq.org", "", true, true, false, ""},
+		{"course-grader", "course-student@test.edulinq.org", "", true, true, false, ""},
 
 		// Grader, other, specific.
-		{"course-grader@test.edulinq.org", "course-student@test.edulinq.org", "1697406256", true, true, false, ""},
-		{"course-grader@test.edulinq.org", "course-student@test.edulinq.org", "1697406265", true, true, false, ""},
-		{"course-grader@test.edulinq.org", "course-student@test.edulinq.org", "1697406272", true, true, false, ""},
+		{"course-grader", "course-student@test.edulinq.org", "1697406256", true, true, false, ""},
+		{"course-grader", "course-student@test.edulinq.org", "1697406265", true, true, false, ""},
+		{"course-grader", "course-student@test.edulinq.org", "1697406272", true, true, false, ""},
 
 		// Grader, other, specific (full ID).
-		{"course-grader@test.edulinq.org", "course-student@test.edulinq.org", "course101::hw0::student@test.edulinq.org::1697406256", true, true, false, ""},
-		{"course-grader@test.edulinq.org", "course-student@test.edulinq.org", "course101::hw0::student@test.edulinq.org::1697406265", true, true, false, ""},
-		{"course-grader@test.edulinq.org", "course-student@test.edulinq.org", "course101::hw0::student@test.edulinq.org::1697406272", true, true, false, ""},
+		{"course-grader", "course-student@test.edulinq.org", "course101::hw0::student@test.edulinq.org::1697406256", true, true, false, ""},
+		{"course-grader", "course-student@test.edulinq.org", "course101::hw0::student@test.edulinq.org::1697406265", true, true, false, ""},
+		{"course-grader", "course-student@test.edulinq.org", "course101::hw0::student@test.edulinq.org::1697406272", true, true, false, ""},
 
 		// Grader, other, missing.
-		{"course-grader@test.edulinq.org", "course-student@test.edulinq.org", "ZZZ", true, false, false, ""},
+		{"course-grader", "course-student@test.edulinq.org", "ZZZ", true, false, false, ""},
 
 		// Grader, missing, recent.
-		{"course-grader@test.edulinq.org", "ZZZ@test.edulinq.org", "", false, false, false, ""},
+		{"course-grader", "ZZZ@test.edulinq.org", "", false, false, false, ""},
 
 		// Roles below grader, other, recent.
-		{"course-student@test.edulinq.org", "course-student@test.edulinq.org", "", false, false, true, "-020"},
-		{"course-other@test.edulinq.org", "course-student@test.edulinq.org", "", false, false, true, "-020"},
+		{"course-student", "course-student@test.edulinq.org", "", false, false, true, "-020"},
+		{"course-other", "course-student@test.edulinq.org", "", false, false, true, "-020"},
 
 		// Roles above grader, other, recent
-		{"course-admin@test.edulinq.org", "course-student@test.edulinq.org", "", true, true, false, ""},
-		{"course-owner@test.edulinq.org", "course-student@test.edulinq.org", "", true, true, false, ""},
+		{"course-admin", "course-student@test.edulinq.org", "", true, true, false, ""},
+		{"course-owner", "course-student@test.edulinq.org", "", true, true, false, ""},
 
 		// Role escalation, other, recent
-		{"server-admin@test.edulinq.org", "course-student@test.edulinq.org", "", true, true, false, ""},
-		{"server-owner@test.edulinq.org", "course-student@test.edulinq.org", "", true, true, false, ""},
+		{"server-admin", "course-student@test.edulinq.org", "", true, true, false, ""},
+		{"server-owner", "course-student@test.edulinq.org", "", true, true, false, ""},
 
 		// Invalid role escalation, other, recent
-		{"server-user@test.edulinq.org", "course-student@test.edulinq.org", "", false, false, true, "-040"},
-		{"server-creator@test.edulinq.org", "course-student@test.edulinq.org", "", false, false, true, "-040"},
+		{"server-user", "course-student@test.edulinq.org", "", false, false, true, "-040"},
+		{"server-creator", "course-student@test.edulinq.org", "", false, false, true, "-040"},
 	}
 
 	for i, testCase := range testCases {

@@ -16,21 +16,21 @@ func TestFetchCourseAttemps(test *testing.T) {
 		locator   string
 	}{
 		// Invalid permissions
-		{"course-other@test.edulinq.org", true, "-020"},
-		{"course-student@test.edulinq.org", true, "-020"},
+		{"course-other", true, "-020"},
+		{"course-student", true, "-020"},
 
 		// Invalid permissions, role escalation
-		{"server-user@test.edulinq.org", true, "-040"},
-		{"server-creator@test.edulinq.org", true, "-040"},
+		{"server-user", true, "-040"},
+		{"server-creator", true, "-040"},
 
 		// Valid permissions
-		{"course-grader@test.edulinq.org", false, ""},
-		{"course-admin@test.edulinq.org", false, ""},
-		{"course-owner@test.edulinq.org", false, ""},
+		{"course-grader", false, ""},
+		{"course-admin", false, ""},
+		{"course-owner", false, ""},
 
 		// Valid permissions, role escalation
-		{"server-admin@test.edulinq.org", false, ""},
-		{"server-owner@test.edulinq.org", false, ""},
+		{"server-admin", false, ""},
+		{"server-owner", false, ""},
 	}
 
 	submissions := map[string]*model.GradingResult{

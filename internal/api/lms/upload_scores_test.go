@@ -5,11 +5,14 @@ import (
 	"testing"
 
 	"github.com/edulinq/autograder/internal/api/core"
+	"github.com/edulinq/autograder/internal/db"
 	lmstest "github.com/edulinq/autograder/internal/lms/backend/test"
+	"github.com/edulinq/autograder/internal/model"
 	"github.com/edulinq/autograder/internal/util"
 )
 
 func TestUploadScores(test *testing.T) {
+	defer db.ResetForTesting()
 	// Reset the LMS adapter.
 	defer func() {
 		lmstest.SetFailUpdateAssignmentScores(false)
@@ -19,12 +22,13 @@ func TestUploadScores(test *testing.T) {
 		email      string
 		permError  bool
 		failUpdate bool
+		addUsers   map[string]*model.CourseUser
 		scores     []ScoreEntry
 		expected   *UploadScoresResponse
 	}{
 		// Normal.
 		{
-			"course-grader@test.edulinq.org", false, false,
+			"course-grader", false, false, nil,
 			[]ScoreEntry{
 				ScoreEntry{"course-student@test.edulinq.org", 10},
 			},
@@ -36,7 +40,7 @@ func TestUploadScores(test *testing.T) {
 			},
 		},
 		{
-			"course-grader@test.edulinq.org", false, false,
+			"course-grader", false, false, nil,
 			[]ScoreEntry{
 				ScoreEntry{"course-student@test.edulinq.org", 10},
 				ScoreEntry{"course-grader@test.edulinq.org", 0},
@@ -52,12 +56,12 @@ func TestUploadScores(test *testing.T) {
 		},
 
 		// Permissions.
-		{"course-other@test.edulinq.org", true, false, nil, nil},
-		{"course-student@test.edulinq.org", true, false, nil, nil},
+		{"course-other", true, false, nil, nil, nil},
+		{"course-student", true, false, nil, nil, nil},
 
 		// Upload fails.
 		{
-			"course-grader@test.edulinq.org", false, true,
+			"course-grader", false, true, nil,
 			[]ScoreEntry{
 				ScoreEntry{"course-student@test.edulinq.org", 10},
 			},
@@ -66,7 +70,10 @@ func TestUploadScores(test *testing.T) {
 
 		// Bad scores.
 		{
-			"course-grader@test.edulinq.org", false, false,
+			"course-grader", false, false,
+			map[string]*model.CourseUser{
+				"no-lms-id@test.edulinq.org": &model.CourseUser{"no-lms-id@test.edulinq.org", nil, model.CourseRoleStudent, nil},
+			},
 			[]ScoreEntry{
 				ScoreEntry{"zzz@test.edulinq.org", 10},
 				ScoreEntry{"no-lms-id@test.edulinq.org", 20},
@@ -88,7 +95,7 @@ func TestUploadScores(test *testing.T) {
 
 		// Upload will pass, but never gets called.
 		{
-			"course-grader@test.edulinq.org", false, false,
+			"course-grader", false, false, nil,
 			[]ScoreEntry{
 				ScoreEntry{"zzz@test.edulinq.org", 10},
 			},
@@ -104,7 +111,7 @@ func TestUploadScores(test *testing.T) {
 
 		// Upload will fail, but never gets called.
 		{
-			"course-grader@test.edulinq.org", false, true,
+			"course-grader", false, true, nil,
 			[]ScoreEntry{
 				ScoreEntry{"zzz@test.edulinq.org", 10},
 			},
@@ -119,9 +126,17 @@ func TestUploadScores(test *testing.T) {
 		},
 	}
 
+	TEST_COURSE_ID := "course-with-lms"
+
 	for i, testCase := range testCases {
+		db.ResetForTesting()
+
+		if testCase.addUsers != nil {
+			db.UpsertCourseUsers(db.MustGetCourse(TEST_COURSE_ID), testCase.addUsers)
+		}
+
 		fields := map[string]any{
-			"course-id": "course-with-lms",
+			"course-id": TEST_COURSE_ID,
 			// ID does not matter, test LMS will accept all ids.
 			"assignment-lms-id": "foo",
 			"scores":            testCase.scores,
@@ -154,7 +169,8 @@ func TestUploadScores(test *testing.T) {
 		util.MustJSONFromString(util.MustToJSON(response.Content), &responseContent)
 
 		if !reflect.DeepEqual(testCase.expected, &responseContent) {
-			test.Errorf("Case %d: Unexpected result. Expected: '%+v', actual: '%+v'.", i, testCase.expected, responseContent)
+			test.Errorf("Case %d: Unexpected result. Expected: '%+v', actual: '%+v'.",
+				i, util.MustToJSONIndent(testCase.expected), util.MustToJSONIndent(responseContent))
 			continue
 		}
 	}
