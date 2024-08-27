@@ -121,7 +121,7 @@ func CompareServerUserInfoPointer(a *ServerUserInfo, b *ServerUserInfo) int {
 	return strings.Compare(a.Email, b.Email)
 }
 
-func CompareServerUserInfo(a ServerUserInfo, b *ServerUserInfo) int {
+func CompareServerUserInfo(a ServerUserInfo, b ServerUserInfo) int {
 	return strings.Compare(a.Email, b.Email)
 }
 
