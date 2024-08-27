@@ -39,8 +39,7 @@ func main() {
 		log.Fatal("Failed to load config options.", err)
 	}
 
-	socketPath := config.UNIX_SOCKET_PATH.Get()
-
+	socketPath := config.GetUnixSocketDir()
 	conn, err := net.Dial("unix", socketPath)
 	if err != nil {
 		log.Fatal("Failed to dial the unix socket.", err)
@@ -104,6 +103,10 @@ func main() {
 	err = json.Unmarshal(responseBuffer, &response)
 	if err != nil {
 		log.Fatal("Failed to unmarshal the API response.", err)
+	}
+
+	if !response.Success {
+		log.Fatal("Failed to make an api request. Status: '%d' ", response.HTTPStatus)
 	}
 
 	if args.Verbose {

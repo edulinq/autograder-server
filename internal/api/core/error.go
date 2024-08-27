@@ -266,7 +266,7 @@ func NewInternalError(locator string, request *APIRequestCourseUserContext, inte
 	return err
 }
 
-func NewUsertContextInternalError(locator string, request *APIRequestUserContext, internalMessage string) *APIError {
+func NewUserContextInternalError(locator string, request *APIRequestUserContext, internalMessage string) *APIError {
 	err := &APIError{
 		RequestID:    request.RequestID,
 		Locator:      locator,

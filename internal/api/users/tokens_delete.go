@@ -18,7 +18,7 @@ type TokensDeleteResponse struct {
 func HandleTokensDelete(request *TokensDeleteRequest) (*TokensDeleteResponse, *core.APIError) {
 	found, err := db.DeleteUserToken(request.ServerUser.Email, string(request.TokenID))
 	if err != nil {
-		return nil, core.NewUsertContextInternalError("-803", &request.APIRequestUserContext,
+		return nil, core.NewUserContextInternalError("-803", &request.APIRequestUserContext,
 			"Failed to delete user token.").Err(err)
 	}
 

@@ -43,7 +43,7 @@ type ServerUser struct {
 	CourseInfo map[string]*UserCourseInfo `json:"course-info"`
 }
 
-var FakeRootUser = ServerUser{
+var RootUser = ServerUser{
 	Email: "root",
 	Role:  ServerRoleRoot,
 }
@@ -68,7 +68,7 @@ func (this *ServerUser) Validate() error {
 		}
 	}
 
-	if this.Role == ServerRoleRoot && this.Email != FakeRootUser.Email {
+	if this.Role == ServerRoleRoot && this.Email != RootUser.Email {
 		return fmt.Errorf("User '%s' has a root server role. Normal users are not allowed to have this role.", this.Email)
 	}
 

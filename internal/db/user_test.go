@@ -579,9 +579,9 @@ func (this *DBTests) DBTestRootUserValidation(test *testing.T) {
 	defer ResetForTesting()
 	ResetForTesting()
 
-	UpsertUser(&model.FakeRootUser)
+	UpsertUser(&model.RootUser)
 
-	rootUser, err := GetServerUser(model.FakeRootUser.Email, true)
+	rootUser, err := GetServerUser(model.RootUser.Email, true)
 	if err != nil {
 		test.Fatalf("Failed to get root user: '%v'.", err)
 	}

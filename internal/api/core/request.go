@@ -89,13 +89,14 @@ func (this *APIRequestUserContext) Validate(request any, endpoint string) *APIEr
 			return NewAuthBadRequestError("-048", this, "Incorrect root user nonce.")
 		}
 
-		rootUser, err := db.GetServerUser(model.FakeRootUser.Email, false)
+		//TODO model.rootuseremail
+		rootUser, err := db.GetServerUser(model.RootUser.Email, true)
 		if err != nil {
-			return NewInternalError("-049", &APIRequestCourseUserContext{}, "Failed to fetch user.")
+			return NewUserContextInternalError("-049", this, "Failed to fetch root user.")
 		}
 
-		if rootUser.Email == "" {
-			return NewBadRequestError("-050", &this.APIRequest, "No user email specified")
+		if rootUser == nil {
+			return NewUserContextInternalError("-050", this, "Root user doesn't exist.")
 		}
 
 		this.UserEmail = rootUser.Email

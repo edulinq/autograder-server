@@ -4,9 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net"
-	"os"
-	"os/signal"
-	"syscall"
+	"path/filepath"
 
 	"github.com/edulinq/autograder/internal/api/core"
 	"github.com/edulinq/autograder/internal/common"
@@ -20,33 +18,41 @@ const (
 	BUFFER_SIZE = 8
 )
 
-var unixSocket net.Listener
 
-func startUnixSocketServer() error {
-	var socketPath = config.UNIX_SOCKET_PATH.Get()
+func runUnixSocketServer() (err error) {
+	defer func() {
+		value := recover()
+		if value == nil {
+			return
+		}
 
-	unixSocket, err := net.Listen("unix", socketPath)
-	if err != nil {
-		log.Fatal("Failed to listen on a Unix socket.", err)
-	}
-
-	defer os.Remove(socketPath)
-	defer unixSocket.Close()
-
-	c := make(chan os.Signal, 1)
-	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
-	go func() {
-		<-c
-		os.Remove(socketPath)
-		unixSocket.Close()
+		err = fmt.Errorf("Unix socket panicked: '%v'.", value)
 	}()
 
-	log.Info("Unix Server Started", log.NewAttr("unix_socket", socketPath))
+	var socketPath = config.GetUnixSocketDir()
+	util.MkDir(filepath.Dir(socketPath))
+
+	unixSocket, err = net.Listen("unix", socketPath)
+	if err != nil {
+		log.Error("Failed to listen on a Unix socket.", err)
+		return err
+	}
+
+	defer StopUnixSocketServer()
+
+	log.Info("Unix Socket Server Started", log.NewAttr("unix_socket", socketPath))
 
 	for {
 		connection, err := unixSocket.Accept()
 		if err != nil {
-			log.Error("Failed to accept a unix connection.", err)
+			log.Info("Unix Socket Server Stopped", log.NewAttr("unix_socket", socketPath))
+
+			if unixSocket == nil {
+				return nil
+			}
+
+			log.Error("Unix socket server returned an error.", err)
+			return err
 		}
 
 		go func() {

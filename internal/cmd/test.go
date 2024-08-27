@@ -2,15 +2,13 @@ package cmd
 
 import (
 	"fmt"
-	"net/http/httptest"
 	"os"
 	"path/filepath"
-	"strconv"
-	"strings"
+	"sync"
 	"testing"
+	"time"
 
 	"github.com/edulinq/autograder/internal/api"
-	"github.com/edulinq/autograder/internal/api/core"
 	"github.com/edulinq/autograder/internal/config"
 	"github.com/edulinq/autograder/internal/db"
 	"github.com/edulinq/autograder/internal/log"
@@ -23,20 +21,27 @@ const (
 	STDERR_FILENAME = "stderr.txt"
 )
 
-var server *httptest.Server
-var oldServerPort int
-
 // Common setup for all CMD tests that require a server.
 func CMDServerTestingMain(suite *testing.M) {
 	// Run inside a func so defers will run before os.Exit().
 	code := func() int {
 		db.PrepForTestingMain()
-		defer db.CleanupTestingMain()
-
+		// defer db.CleanupTestingMain()
+		log.SetLevelDebug()
+		var serverRun sync.WaitGroup
+		serverRun.Add(1)
+		
 		config.NO_AUTH.Set(false)
 
-		startTestServer()
-		defer stopTestServer()
+		go func() {
+			serverRun.Done()
+			api.StartServer()
+		}()
+
+		serverRun.Wait()
+		time.Sleep(1 * time.Second)
+
+		defer api.StopServers()
 
 		return suite.Run()
 	}()
@@ -72,7 +77,6 @@ func RunCMDTest(test *testing.T, mainFunc func(), args []string) (string, string
 	err := runCMD(mainFunc, args)
 
 	// Put back stdout.
-	os.Stdout.Close()
 	os.Stdout = oldStdout
 	stdout := util.MustReadFile(stdoutPath)
 
@@ -112,30 +116,4 @@ func runCMD(mainFunc func(), args []string) (err error) {
 	mainFunc()
 
 	return err
-}
-
-func startTestServer() {
-	if server != nil {
-		panic("Test server already started.")
-	}
-
-	server = httptest.NewServer(core.GetRouteServer(api.GetRoutes()))
-
-	parts := strings.Split(server.URL, ":")
-	newPort, err := strconv.Atoi(parts[len(parts)-1])
-	if err != nil {
-		panic(fmt.Sprintf("Cannot get port from server URL ('%s'): '%v'.", server.URL, err))
-	}
-
-	oldServerPort = config.WEB_PORT.Get()
-	config.WEB_PORT.Set(newPort)
-}
-
-func stopTestServer() {
-	if server != nil {
-		server.Close()
-
-		server = nil
-		config.WEB_PORT.Set(oldServerPort)
-	}
 }

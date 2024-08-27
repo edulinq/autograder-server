@@ -160,7 +160,7 @@ func baseCheckRequestTargetServerUser(endpoint string, apiRequest any, fieldInde
 	userContext := userContextValue.Interface().(APIRequestUserContext)
 
 	if !fieldType.IsExported() {
-		return nil, NewUsertContextInternalError("-043", &userContext, "Field must be exported.").
+		return nil, NewUserContextInternalError("-043", &userContext, "Field must be exported.").
 			Add("struct-name", structName).Add("field-name", fieldType.Name).Add("field-type", fieldName)
 	}
 
@@ -189,7 +189,7 @@ func checkRequestTargetServerUser(endpoint string, apiRequest any, fieldIndex in
 
 	user, err := db.GetServerUser(field.Email, true)
 	if err != nil {
-		return NewUsertContextInternalError("-045", userContext, "Failed to fetch user from DB.").
+		return NewUserContextInternalError("-045", userContext, "Failed to fetch user from DB.").
 			Add("email", field.Email).Err(err)
 	}
 
@@ -230,7 +230,7 @@ func checkRequestTargetServerUserSelfOrRole(endpoint string, apiRequest any, fie
 
 	user, err := db.GetServerUser(field.Email, true)
 	if err != nil {
-		return NewUsertContextInternalError("-047", userContext, "Failed to fetch user from DB.").
+		return NewUserContextInternalError("-047", userContext, "Failed to fetch user from DB.").
 			Add("email", field.Email).Err(err)
 	}
 

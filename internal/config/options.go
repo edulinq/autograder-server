@@ -31,7 +31,7 @@ var (
 	EMAIL_USER = MustNewStringOption("email.user", "", "SMTP username for emails sent from the autograder.")
 
 	// Docker
-	DOCKER_DISABLE = MustNewBoolOption("docker.disable", false, "Disable the use of docker (usually for testing).")
+	DOCKER_DISABLE = MustNewBoolOption("docker.disable", true, "Disable the use of docker (usually for testing).")
 
 	// Tasks
 	NO_TASKS           = MustNewBoolOption("tasks.disable", false, "Disable all scheduled tasks.")
@@ -43,8 +43,6 @@ var (
 	// Server
 	WEB_PORT             = MustNewIntOption("web.port", 8080, "The port for the web interface to serve on.")
 	WEB_MAX_FILE_SIZE_KB = MustNewIntOption("web.maxsizekb", 2*1024, "The maximum allowed file size (in KB) submitted via POST request. The default is 2048 KB (2 MB).")
-	UNIX_SOCKET_PATH     = MustNewStringOption("unix.socket", GetUnixSocketDir(), "The unix socket file for CMD requests to serve on.")
-	PID_PATH             = MustNewStringOption("pid.path", GetPidDir(), "The pid file to ensure only one instance of a server runs at a time.")
 
 	// Database
 	DB_TYPE   = MustNewStringOption("db.type", "disk", "The type of database to use.")

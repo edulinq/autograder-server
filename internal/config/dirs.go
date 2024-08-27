@@ -5,8 +5,6 @@ import (
 	"path/filepath"
 
 	"github.com/adrg/xdg"
-	"github.com/edulinq/autograder/internal/log"
-	"github.com/edulinq/autograder/internal/util"
 )
 
 const (
@@ -78,24 +76,12 @@ func GetSourcesDir() string {
 	return filepath.Join(GetWorkDir(), SOURCES_DIRNAME)
 }
 
+//TODO call path
 func GetUnixSocketDir() string {
-	unixSocketDir := filepath.Join(GetWorkDir(), "tmp")
-
-	err := util.MkDir(unixSocketDir)
-	if err != nil {
-		log.Error("Error creating Unix Socket directory.", err)
-	}
-
-	return filepath.Join(unixSocketDir, UNIX_SOCKET_FILENAME)
+	// return filepath.Join(GetWorkDir(), UNIX_SOCKET_FILENAME)
+	return "/tmp/autograder.sock"
 }
 
 func GetPidDir() string {
-	pidDir := filepath.Join(GetWorkDir(), "tmp")
-
-	err := util.MkDir(pidDir)
-	if err != nil {
-		log.Error("Error creating PID directory.", err)
-	}
-
-	return filepath.Join(pidDir, PID_FILENAME)
+	return filepath.Join(GetWorkDir(), PID_FILENAME)
 }

@@ -3,9 +3,6 @@ package server
 import (
 	"fmt"
 	"os"
-	"os/signal"
-	"strconv"
-	"syscall"
 
 	"github.com/edulinq/autograder/internal/api"
 	"github.com/edulinq/autograder/internal/common"
@@ -20,24 +17,10 @@ import (
 func Start() error {
 	log.Info("Autograder Version", log.NewAttr("version", util.GetAutograderFullVersion()))
 
-	var pidFilePath = config.PID_PATH.Get()
+	var pidFilePath = config.GetPidDir()
 
-	if _, err := os.Stat(pidFilePath); err == nil {
-		data, err := os.ReadFile(pidFilePath)
-		if err == nil {
-			pid, err := strconv.Atoi(string(data))
-			if err == nil {
-				process, err := os.FindProcess(pid)
-				if err == nil {
-					err = process.Signal(syscall.Signal(0))
-					if err == nil {
-						return fmt.Errorf("Another instance of the autograder server is already running.")
-					} else {
-						os.Remove(pidFilePath)
-					}
-				}
-			}
-		}
+	if !common.CheckAndHandlePIDFile(pidFilePath) {
+		return fmt.Errorf("Another instance of the autograder server is already running.")
 	}
 
 	err := common.CreatePIDFile()
@@ -45,15 +28,7 @@ func Start() error {
 		return fmt.Errorf("Could not create PID file.")
 	}
 
-	defer os.Remove(pidFilePath)
-
-	c := make(chan os.Signal, 1)
-	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
-	go func() {
-		<-c
-		os.Remove(pidFilePath)
-		os.Exit(1)
-	}()
+	defer api.StopAPIServer()
 
 	workingDir, err := os.Getwd()
 	if err != nil {
