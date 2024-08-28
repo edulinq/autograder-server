@@ -1,12 +1,12 @@
 {
-    "admin@test.com": {
-        "email": "admin@test.com",
-        "name": "admin",
+    "course-admin@test.edulinq.org": {
+        "email": "course-admin@test.edulinq.org",
+        "name": "course-admin",
         "server-role": "user",
         "salt": "c72f85ab94f66b49b4e93cb0d0776fc7",
         "password": {
-            "id": "6bc78a24-e987-4cf0-a575-da5dab94b42d",
-            "hex-digest": "9e9b6743a3fff9f56eb183f13cd34d810db94c5deb13e6a494d30ccc267eb00c",
+            "id": "ada14ed3-cc9f-49d3-b910-bb5874fbcce0",
+            "hex-digest": "841adfc8e2020a678c383fb56e9459da77c75fb813ab9e443a582902de0fecf6",
             "source": "password",
             "name": "password",
             "CreationTime": "2000-01-01T12:00:00Z",
@@ -16,15 +16,15 @@
         "course-info": {
             "course-languages": {
                 "role": "admin",
-                "lms-id": "lms-admin@test.com"
+                "lms-id": "lms-course-admin@test.edulinq.org"
             },
             "course-with-lms": {
                 "role": "admin",
-                "lms-id": "lms-admin@test.com"
+                "lms-id": "lms-course-admin@test.edulinq.org"
             },
             "course-without-source": {
                 "role": "admin",
-                "lms-id": "lms-admin@test.com"
+                "lms-id": "lms-course-admin@test.edulinq.org"
             },
             "course101": {
                 "role": "admin",
@@ -36,14 +36,14 @@
             }
         }
     },
-    "grader@test.com": {
-        "email": "grader@test.com",
-        "name": "grader",
+    "course-grader@test.edulinq.org": {
+        "email": "course-grader@test.edulinq.org",
+        "name": "course-grader",
         "server-role": "user",
         "salt": "a853844be59b339ec45733eddeee41cd",
         "password": {
-            "id": "a041f679-0567-495b-8dde-6c2329e094a0",
-            "hex-digest": "9c33fae839ad63474a677e871aeb4cdb63ab7089774a83fd8ad01a28b45f4271",
+            "id": "fd22640e-9801-41c2-bd9e-2cb67781e42f",
+            "hex-digest": "f511fa2bd83e5423b29356d798d20a214de9534e4d64fb3956a184b1a91cc66a",
             "source": "password",
             "name": "password",
             "CreationTime": "2000-01-01T12:00:00Z",
@@ -53,15 +53,15 @@
         "course-info": {
             "course-languages": {
                 "role": "grader",
-                "lms-id": "lms-grader@test.com"
+                "lms-id": "lms-course-grader@test.edulinq.org"
             },
             "course-with-lms": {
                 "role": "grader",
-                "lms-id": "lms-grader@test.com"
+                "lms-id": "lms-course-grader@test.edulinq.org"
             },
             "course-without-source": {
                 "role": "grader",
-                "lms-id": "lms-grader@test.com"
+                "lms-id": "lms-course-grader@test.edulinq.org"
             },
             "course101": {
                 "role": "grader",
@@ -73,40 +73,14 @@
             }
         }
     },
-    "no-lms-id@test.com": {
-        "email": "no-lms-id@test.com",
-        "name": "no-lms-id",
-        "server-role": "user",
-        "salt": "2d3ecb56a6d429e580db9a8c9f117717",
-        "password": {
-            "id": "3876aed7-0c60-4a17-bdf6-f350dbc8e2be",
-            "hex-digest": "4ddbd2eef282a729bcf7cfdacd107efe7c636e437842bc161ff5fa6ab19af4a7",
-            "source": "password",
-            "name": "password",
-            "CreationTime": "2000-01-01T12:00:00Z",
-            "AccessTime": "2000-01-01T12:00:00Z"
-        },
-        "tokens": [],
-        "course-info": {
-            "course-languages": {
-                "role": "admin"
-            },
-            "course-with-lms": {
-                "role": "admin"
-            },
-            "course-without-source": {
-                "role": "admin"
-            }
-        }
-    },
-    "other@test.com": {
-        "email": "other@test.com",
-        "name": "other",
+    "course-other@test.edulinq.org": {
+        "email": "course-other@test.edulinq.org",
+        "name": "course-other",
         "server-role": "user",
         "salt": "72f9b3fdeec2724d3e47edb617295f95",
         "password": {
-            "id": "a632c6c9-6575-4c84-a8db-faac7a5c02ef",
-            "hex-digest": "d21868008248115a72109ccddb008043e12e0d37a0001a325c1afc6a66899c2a",
+            "id": "21030916-3a97-4cbc-820d-d8f2df109ff6",
+            "hex-digest": "0b3420a7c188254522f4aecebe427d0e3fda03067e6289b7524914de26cedb11",
             "source": "password",
             "name": "password",
             "CreationTime": "2000-01-01T12:00:00Z",
@@ -116,15 +90,15 @@
         "course-info": {
             "course-languages": {
                 "role": "other",
-                "lms-id": "lms-other@test.com"
+                "lms-id": "lms-course-other@test.edulinq.org"
             },
             "course-with-lms": {
                 "role": "other",
-                "lms-id": "lms-other@test.com"
+                "lms-id": "lms-course-other@test.edulinq.org"
             },
             "course-without-source": {
                 "role": "other",
-                "lms-id": "lms-other@test.com"
+                "lms-id": "lms-course-other@test.edulinq.org"
             },
             "course101": {
                 "role": "other",
@@ -136,14 +110,14 @@
             }
         }
     },
-    "owner@test.com": {
-        "email": "owner@test.com",
-        "name": "owner",
-        "server-role": "owner",
+    "course-owner@test.edulinq.org": {
+        "email": "course-owner@test.edulinq.org",
+        "name": "course-owner",
+        "server-role": "user",
         "salt": "c61fe4f62b132d3908843e9c00f45c98",
         "password": {
-            "id": "20e79fe3-4afa-4dd7-a6ed-416a32b7310a",
-            "hex-digest": "a8f8cc96aba145d957bf5934bba22a43aff98684e2df44d2fc214c1cfd51ea8d",
+            "id": "2e1e1f71-0537-44b8-b3bd-e886e636ab0c",
+            "hex-digest": "200217c44f4c36e5d6380c1c6fb639a9f1749dc81a79b13261fa2cd5806f3d06",
             "source": "password",
             "name": "password",
             "CreationTime": "2000-01-01T12:00:00Z",
@@ -153,15 +127,15 @@
         "course-info": {
             "course-languages": {
                 "role": "owner",
-                "lms-id": "lms-owner@test.com"
+                "lms-id": "lms-course-owner@test.edulinq.org"
             },
             "course-with-lms": {
                 "role": "owner",
-                "lms-id": "lms-owner@test.com"
+                "lms-id": "lms-course-owner@test.edulinq.org"
             },
             "course-without-source": {
                 "role": "owner",
-                "lms-id": "lms-owner@test.com"
+                "lms-id": "lms-course-owner@test.edulinq.org"
             },
             "course101": {
                 "role": "owner",
@@ -173,14 +147,14 @@
             }
         }
     },
-    "student@test.com": {
-        "email": "student@test.com",
-        "name": "student",
+    "course-student@test.edulinq.org": {
+        "email": "course-student@test.edulinq.org",
+        "name": "course-student",
         "server-role": "user",
         "salt": "ea3a6c7d493148e01a8faff25956dc28",
         "password": {
-            "id": "5c26811e-c30a-4f8e-8fcb-1ebe5719e5d9",
-            "hex-digest": "9b2e4fb77dc9282894a257bf54c5469b276152ea677612c44e04762970045b10",
+            "id": "04c6b410-cd17-48ec-a872-8d3ca5ecdb4a",
+            "hex-digest": "9188d2d8ec097dffd93ce06e16ab01d0344d648923fbc45535e93ad16c5d8c58",
             "source": "password",
             "name": "password",
             "CreationTime": "2000-01-01T12:00:00Z",
@@ -190,15 +164,15 @@
         "course-info": {
             "course-languages": {
                 "role": "student",
-                "lms-id": "lms-student@test.com"
+                "lms-id": "lms-course-student@test.edulinq.org"
             },
             "course-with-lms": {
                 "role": "student",
-                "lms-id": "lms-student@test.com"
+                "lms-id": "lms-course-student@test.edulinq.org"
             },
             "course-without-source": {
                 "role": "student",
-                "lms-id": "lms-student@test.com"
+                "lms-id": "lms-course-student@test.edulinq.org"
             },
             "course101": {
                 "role": "student",
@@ -209,15 +183,6 @@
                 "lms-id": ""
             }
         }
-    },
-    "root": {
-        "email": "root",
-        "name": null,
-        "server-role": "root",
-        "salt": null,
-        "password": null,
-        "tokens": [],
-        "course-info": {}
     },
     "server-admin@test.com": {
         "email": "server-admin@test.com",
@@ -235,8 +200,8 @@
         "tokens": [],
         "course-info": {}
     },
-    "server-creator@test.com": {
-        "email": "server-creator@test.com",
+    "server-creator@test.edulinq.org": {
+        "email": "server-creator@test.edulinq.org",
         "name": "server-creator",
         "server-role": "creator",
         "salt": "dba7e9d474fdaa86096d09f1166700994a526b775eb2ce1295c351723e9323f6",
@@ -251,8 +216,8 @@
         "tokens": [],
         "course-info": {}
     },
-    "server-owner@test.com": {
-        "email": "server-owner@test.com",
+    "server-owner@test.edulinq.org": {
+        "email": "server-owner@test.edulinq.org",
         "name": "server-owner",
         "server-role": "owner",
         "salt": "079fc4ea12af4ba0ebfa131b3dd3de664b2cae1ac2b7c49ce4ec66d56b2acfa3",
@@ -267,8 +232,8 @@
         "tokens": [],
         "course-info": {}
     },
-    "server-user@test.com": {
-        "email": "server-user@test.com",
+    "server-user@test.edulinq.org": {
+        "email": "server-user@test.edulinq.org",
         "name": "server-user",
         "server-role": "user",
         "salt": "c66b1d9533c87838e0c364bd014150691990ed007d59632cabce77206e8351a3",

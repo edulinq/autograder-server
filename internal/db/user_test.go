@@ -95,7 +95,7 @@ func (this *DBTests) DBTestUserGetServerUserBase(test *testing.T) {
 	defer ResetForTesting()
 	ResetForTesting()
 
-	email := "student@test.com"
+	email := "course-student@test.edulinq.org"
 	expected := mustLoadTestServerUsers()[email]
 
 	user, err := GetServerUser(email, true)
@@ -117,7 +117,7 @@ func (this *DBTests) DBTestUserGetServerUserNoTokens(test *testing.T) {
 	defer ResetForTesting()
 	ResetForTesting()
 
-	email := "student@test.com"
+	email := "course-student@test.edulinq.org"
 	expected := mustLoadTestServerUsers()[email]
 	expected.Tokens = nil
 
@@ -157,7 +157,7 @@ func (this *DBTests) DBTestUserGetCourseUserBase(test *testing.T) {
 	ResetForTesting()
 
 	course := MustGetTestCourse()
-	email := "student@test.com"
+	email := "course-student@test.edulinq.org"
 
 	expected, err := mustLoadTestServerUsers()[email].ToCourseUser(course.ID, false)
 	if err != nil {
@@ -201,7 +201,7 @@ func (this *DBTests) DBTestUserGetCourseUserNotEnrolled(test *testing.T) {
 	ResetForTesting()
 
 	course := MustGetTestCourse()
-	email := "student@test.com"
+	email := "course-student@test.edulinq.org"
 
 	_, _, err := RemoveUserFromCourse(course, email)
 	if err != nil {
@@ -222,7 +222,7 @@ func (this *DBTests) DBTestUserUpsertUserInsert(test *testing.T) {
 	defer ResetForTesting()
 	ResetForTesting()
 
-	email := "new@test.com"
+	email := "new@test.edulinq.org"
 	name := "new"
 
 	expected := &model.ServerUser{
@@ -259,7 +259,7 @@ func (this *DBTests) DBTestUserUpsertUserUpdate(test *testing.T) {
 	defer ResetForTesting()
 	ResetForTesting()
 
-	email := "student@test.com"
+	email := "course-student@test.edulinq.org"
 	expected := mustLoadTestServerUsers()[email]
 
 	newExpectedName := "Test Name"
@@ -304,7 +304,7 @@ func (this *DBTests) DBTestUserUpsertUserEmptyUpdate(test *testing.T) {
 	defer ResetForTesting()
 	ResetForTesting()
 
-	email := "student@test.com"
+	email := "course-student@test.edulinq.org"
 	expected := mustLoadTestServerUsers()[email]
 
 	user, err := GetServerUser(email, true)
@@ -344,7 +344,7 @@ func (this *DBTests) DBTestUserUpsertCourseUserInsert(test *testing.T) {
 	ResetForTesting()
 
 	course := MustGetTestCourse()
-	email := "new@test.com"
+	email := "new@test.edulinq.org"
 	name := "new"
 
 	expected := &model.CourseUser{
@@ -377,7 +377,7 @@ func (this *DBTests) DBTestUserDeleteUserBase(test *testing.T) {
 	defer ResetForTesting()
 	ResetForTesting()
 
-	email := "student@test.com"
+	email := "course-student@test.edulinq.org"
 
 	exists, err := DeleteUser(email)
 	if err != nil {
@@ -434,9 +434,9 @@ func (this *DBTests) DBTestUserRemoveUserFromCourseBase(test *testing.T) {
 		exists   bool
 		enrolled bool
 	}{
-		{"student@test.com", true, true},
+		{"course-student@test.edulinq.org", true, true},
 		// Note that we will not reset between test cases.
-		{"student@test.com", true, false},
+		{"course-student@test.edulinq.org", true, false},
 		{"ZZZ", false, false},
 	}
 
@@ -472,7 +472,7 @@ func (this *DBTests) DBTestUserDeleteTokenBase(test *testing.T) {
 	defer ResetForTesting()
 	ResetForTesting()
 
-	email := "admin@test.com"
+	email := "course-admin@test.edulinq.org"
 
 	// Add a token.
 	user := MustGetServerUser(email, true)

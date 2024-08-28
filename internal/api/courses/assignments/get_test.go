@@ -20,14 +20,14 @@ func TestGet(test *testing.T) {
 		permError bool
 	}{
 		// Invalid permissions.
-		{"server-user@test.com", true},
-		{"server-creator@test.com", true},
+		{"server-user@test.edulinq.org", true},
+		{"server-creator@test.edulinq.org", true},
 
 		// Valid permissions.
-		{"server-admin@test.com", false},
-		{"server-owner@test.com", false},
-		{"admin@test.com", false},
-		{"other@test.com", false},
+		{"server-admin@test.edulinq.org", false},
+		{"server-owner@test.edulinq.org", false},
+		{"course-admin@test.edulinq.org", false},
+		{"course-other@test.edulinq.org", false},
 	}
 
 	for i, testCase := range testCases {

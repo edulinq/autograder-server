@@ -19,7 +19,7 @@ func (this *DBTests) DBTestCourseUpdateCourseFromSourceBase(test *testing.T) {
 		test.Fatalf("Unexpected pre-remove user count. Expected 5, found %d.", count)
 	}
 
-	exists, enrolled, err := RemoveUserFromCourse(course, "student@test.com")
+	exists, enrolled, err := RemoveUserFromCourse(course, "course-student@test.edulinq.org")
 	if err != nil {
 		test.Fatalf("Error when removing the user: '%v'.", err)
 	}
@@ -65,7 +65,7 @@ func (this *DBTests) DBTestCourseUpdateCourseFromSourceSkip(test *testing.T) {
 		test.Fatalf("Unexpected pre-remove user count. Expected 5, found %d.", count)
 	}
 
-	exists, enrolled, err := RemoveUserFromCourse(course, "student@test.com")
+	exists, enrolled, err := RemoveUserFromCourse(course, "course-student@test.edulinq.org")
 	if err != nil {
 		test.Fatalf("Error when removing the user: '%v'.", err)
 	}

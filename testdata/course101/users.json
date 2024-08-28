@@ -1,27 +1,27 @@
 {
-    "admin@test.com": {
-        "email": "admin@test.com",
-        "name": "admin",
+    "course-admin@test.edulinq.org": {
+        "email": "course-admin@test.edulinq.org",
+        "name": "course-admin",
         "role": "admin"
     },
-    "grader@test.com": {
-        "email": "grader@test.com",
-        "name": "grader",
+    "course-grader@test.edulinq.org": {
+        "email": "course-grader@test.edulinq.org",
+        "name": "course-grader",
         "role": "grader"
     },
-    "other@test.com": {
-        "email": "other@test.com",
-        "name": "other",
+    "course-other@test.edulinq.org": {
+        "email": "course-other@test.edulinq.org",
+        "name": "course-other",
         "role": "other"
     },
-    "owner@test.com": {
-        "email": "owner@test.com",
-        "name": "owner",
+    "course-owner@test.edulinq.org": {
+        "email": "course-owner@test.edulinq.org",
+        "name": "course-owner",
         "role": "owner"
     },
-    "student@test.com": {
-        "email": "student@test.com",
-        "name": "student",
+    "course-student@test.edulinq.org": {
+        "email": "course-student@test.edulinq.org",
+        "name": "course-student",
         "role": "student"
     }
 }

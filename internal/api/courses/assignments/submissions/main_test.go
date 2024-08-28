@@ -14,5 +14,5 @@ func TestMain(suite *testing.M) {
 }
 
 func getTestSubmissionResultPath(shortID string) string {
-	return filepath.Join(util.RootDirForTesting(), "testdata", "course101", "submissions", "HW0", "student@test.com", shortID, "submission-result.json")
+	return filepath.Join(util.RootDirForTesting(), "testdata", "course101", "submissions", "HW0", "course-student@test.edulinq.org", shortID, "submission-result.json")
 }

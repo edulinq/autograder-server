@@ -12,23 +12,32 @@ import (
 
 func TestHistory(test *testing.T) {
 	testCases := []struct {
-		role      model.CourseUserRole
+		email     string
 		target    string
 		found     bool
 		permError bool
+		locator   string
 		expected  []*model.SubmissionHistoryItem
 	}{
 		// Self.
-		{model.CourseRoleStudent, "", true, false, studentHist},
-		{model.CourseRoleGrader, "", true, false, []*model.SubmissionHistoryItem{}},
+		{"course-student", "", true, false, "", studentHist},
+		{"course-grader", "", true, false, "", []*model.SubmissionHistoryItem{}},
 
 		// Other
-		{model.CourseRoleGrader, "student@test.com", true, false, studentHist},
-		{model.CourseRoleStudent, "grader@test.com", true, true, nil},
+		{"course-grader", "course-student@test.edulinq.org", true, false, "", studentHist},
+		{"course-student", "course-grader@test.edulinq.org", true, true, "-033", nil},
+
+		// Other, role escalation
+		{"server-admin", "course-student@test.edulinq.org", true, false, "", studentHist},
+		{"server-owner", "course-student@test.edulinq.org", true, false, "", studentHist},
+
+		// Invalid role escalation
+		{"server-user", "", false, true, "-040", nil},
+		{"server-creator", "", false, true, "-040", nil},
 
 		// Missing user.
-		{model.CourseRoleStudent, "ZZZ@test.com", false, true, nil},
-		{model.CourseRoleGrader, "ZZZ@test.com", false, false, []*model.SubmissionHistoryItem{}},
+		{"course-student", "ZZZ@test.edulinq.org", false, true, "-033", nil},
+		{"course-grader", "ZZZ@test.edulinq.org", false, false, "", []*model.SubmissionHistoryItem{}},
 	}
 
 	for i, testCase := range testCases {
@@ -36,13 +45,12 @@ func TestHistory(test *testing.T) {
 			"target-email": testCase.target,
 		}
 
-		response := core.SendTestAPIRequestFull(test, core.NewEndpoint(`courses/assignments/submissions/fetch/user/history`), fields, nil, testCase.role)
+		response := core.SendTestAPIRequestFull(test, core.NewEndpoint(`courses/assignments/submissions/fetch/user/history`), fields, nil, testCase.email)
 		if !response.Success {
 			if testCase.permError {
-				expectedLocator := "-033"
-				if response.Locator != expectedLocator {
-					test.Errorf("Case %d: Incorrect error returned on permissions error. Expcted '%s', found '%s'.",
-						i, expectedLocator, response.Locator)
+				if response.Locator != testCase.locator {
+					test.Errorf("Case %d: Incorrect error returned on permissions error. Expected '%s', found '%s'.",
+						i, testCase.locator, response.Locator)
 				}
 			} else {
 				test.Errorf("Case %d: Response is not a success when it should be: '%v'.", i, response)
@@ -74,33 +82,33 @@ func TestHistory(test *testing.T) {
 
 var studentHist []*model.SubmissionHistoryItem = []*model.SubmissionHistoryItem{
 	&model.SubmissionHistoryItem{
-		ID:               "course101::hw0::student@test.com::1697406256",
+		ID:               "course101::hw0::course-student@test.edulinq.org::1697406256",
 		ShortID:          "1697406256",
 		CourseID:         "course101",
 		AssignmentID:     "hw0",
-		User:             "student@test.com",
+		User:             "course-student@test.edulinq.org",
 		Message:          "",
 		MaxPoints:        2,
 		Score:            0,
 		GradingStartTime: common.MustTimestampFromString("2023-10-15T21:44:16.840060+00:00"),
 	},
 	&model.SubmissionHistoryItem{
-		ID:               "course101::hw0::student@test.com::1697406265",
+		ID:               "course101::hw0::course-student@test.edulinq.org::1697406265",
 		ShortID:          "1697406265",
 		CourseID:         "course101",
 		AssignmentID:     "hw0",
-		User:             "student@test.com",
+		User:             "course-student@test.edulinq.org",
 		Message:          "",
 		MaxPoints:        2,
 		Score:            1,
 		GradingStartTime: common.MustTimestampFromString("2023-10-15T21:44:26.445382+00:00"),
 	},
 	&model.SubmissionHistoryItem{
-		ID:               "course101::hw0::student@test.com::1697406272",
+		ID:               "course101::hw0::course-student@test.edulinq.org::1697406272",
 		ShortID:          "1697406272",
 		CourseID:         "course101",
 		AssignmentID:     "hw0",
-		User:             "student@test.com",
+		User:             "course-student@test.edulinq.org",
 		Message:          "",
 		MaxPoints:        2,
 		Score:            2,

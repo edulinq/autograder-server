@@ -16,14 +16,14 @@ import (
 )
 
 func TestEmailLogsBase(test *testing.T) {
-	to := []string{"test1@test.com", "test2@test.com"}
+	to := []string{"test1@test.edulinq.org", "test2@test.edulinq.org"}
 	query := common.RawLogQuery{}
 
 	runTest(test, to, false, query, 1, 3)
 }
 
 func TestEmailLogsEmptyNoEmail(test *testing.T) {
-	to := []string{"test1@test.com", "test2@test.com"}
+	to := []string{"test1@test.edulinq.org", "test2@test.edulinq.org"}
 	query := common.RawLogQuery{
 		LevelString: log.LEVEL_STRING_FATAL,
 	}
@@ -32,7 +32,7 @@ func TestEmailLogsEmptyNoEmail(test *testing.T) {
 }
 
 func TestEmailLogsEmptyYesEmail(test *testing.T) {
-	to := []string{"test1@test.com", "test2@test.com"}
+	to := []string{"test1@test.edulinq.org", "test2@test.edulinq.org"}
 	query := common.RawLogQuery{
 		LevelString: log.LEVEL_STRING_FATAL,
 	}

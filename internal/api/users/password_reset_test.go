@@ -26,7 +26,7 @@ func TestPassReset(test *testing.T) {
 		test.Fatalf("Did not find the correct number of messages. Expected: 1, actual: %d.", len(messages))
 	}
 
-	to := []string{"admin@test.com"}
+	to := []string{"course-admin@test.edulinq.org"}
 	if !reflect.DeepEqual(to, messages[0].To) {
 		test.Fatalf("Unexpected message recipients. Expected: [%s], actual: [%s].",
 			strings.Join(to, ", "), strings.Join(messages[0].To, ", "))
@@ -39,7 +39,7 @@ func TestPassReset(test *testing.T) {
 		test.Fatalf("Unexpected number of regexp matches. Expected: 2, actual: %d.", len(matches))
 	}
 
-	user, err := db.GetServerUser("admin@test.com", true)
+	user, err := db.GetServerUser("course-admin@test.edulinq.org", true)
 	if err != nil {
 		test.Fatalf("Failed to get saved user: '%v'.", err)
 	}
