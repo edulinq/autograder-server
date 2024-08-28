@@ -16,36 +16,36 @@ func (this *DBTests) DBTestRemoveSubmission(test *testing.T) {
 		isRemoved        bool
 	}{
 		// Specific email, specific submission.
-		{"student@test.com", "1697406256", true},
-		{"student@test.com", "1697406265", true},
-		{"student@test.com", "1697406272", true},
+		{"course-student@test.edulinq.org", "1697406256", true},
+		{"course-student@test.edulinq.org", "1697406265", true},
+		{"course-student@test.edulinq.org", "1697406272", true},
 
 		// Specific email, specific submission (full ID).
-		{"student@test.com", "course101::hw0::student@test.com::1697406256", true},
-		{"student@test.com", "course101::hw0::student@test.com::1697406265", true},
-		{"student@test.com", "course101::hw0::student@test.com::1697406272", true},
+		{"course-student@test.edulinq.org", "course101::hw0::student@test.edulinq.org::1697406256", true},
+		{"course-student@test.edulinq.org", "course101::hw0::student@test.edulinq.org::1697406265", true},
+		{"course-student@test.edulinq.org", "course101::hw0::student@test.edulinq.org::1697406272", true},
 
 		// Specific email, missing submission.
-		{"student@test.com", "ZZZ", false},
+		{"course-student@test.edulinq.org", "ZZZ", false},
 
 		// Specific email, recent submission.
-		{"student@test.com", "", true},
+		{"course-student@test.edulinq.org", "", true},
 
 		// Missing email, specific submission.
-		{"ZZZ@test.com", "1697406256", false},
-		{"ZZZ@test.com", "1697406265", false},
-		{"ZZZ@test.com", "1697406272", false},
+		{"ZZZ@test.edulinq.org", "1697406256", false},
+		{"ZZZ@test.edulinq.org", "1697406265", false},
+		{"ZZZ@test.edulinq.org", "1697406272", false},
 
 		// Missing email, missing submission.
-		{"ZZZ@test.com", "ZZZ", false},
+		{"ZZZ@test.edulinq.org", "ZZZ", false},
 
 		// Missing email, specific submission (full ID).
-		{"ZZZ@test.com", "course101::hw0::student@test.com::1697406256", false},
-		{"ZZZ@test.com", "course101::hw0::student@test.com::1697406265", false},
-		{"ZZZ@test.com", "course101::hw0::student@test.com::1697406272", false},
+		{"ZZZ@test.edulinq.org", "course101::hw0::student@test.edulinq.org::1697406256", false},
+		{"ZZZ@test.edulinq.org", "course101::hw0::student@test.edulinq.org::1697406265", false},
+		{"ZZZ@test.edulinq.org", "course101::hw0::student@test.edulinq.org::1697406272", false},
 
 		// Missing email, recent submission.
-		{"ZZZ@test.com", "", false},
+		{"ZZZ@test.edulinq.org", "", false},
 	}
 
 	for i, testCase := range testCases {
@@ -79,7 +79,7 @@ func (this *DBTests) DBTestFetchAttempts(test *testing.T) {
 	assignment := MustGetTestAssignment()
 
 	// Case A
-	studentAttempts, err := GetSubmissionAttempts(assignment, "student@test.com")
+	studentAttempts, err := GetSubmissionAttempts(assignment, "course-student@test.edulinq.org")
 	if err != nil {
 		test.Fatalf("Failed to get student attempts when should be a success: '%v'.", err)
 	}
@@ -89,7 +89,7 @@ func (this *DBTests) DBTestFetchAttempts(test *testing.T) {
 	}
 
 	// Case B
-	graderAttempts, err := GetSubmissionAttempts(assignment, "grader@test.com")
+	graderAttempts, err := GetSubmissionAttempts(assignment, "course-grader@test.edulinq.org")
 	if err != nil {
 		test.Fatalf("Failed to get grader attempts when should be a success (with empty result): '%v'.", err)
 	}
@@ -100,14 +100,14 @@ func (this *DBTests) DBTestFetchAttempts(test *testing.T) {
 
 	// Case C
 	graderSubmission := studentAttempts[0]
-	graderSubmission.Info.User = "grader@test.com"
+	graderSubmission.Info.User = "course-grader@test.edulinq.org"
 
 	err = SaveSubmission(assignment, graderSubmission)
 	if err != nil {
 		test.Fatalf("Failed to save grader submission: '%v'.", err)
 	}
 
-	graderAttempts, err = GetSubmissionAttempts(assignment, "grader@test.com")
+	graderAttempts, err = GetSubmissionAttempts(assignment, "course-grader@test.edulinq.org")
 	if err != nil {
 		test.Fatalf("Failed to get grader attempts when there should be one: '%v'.", err)
 	}
@@ -122,7 +122,7 @@ func (this *DBTests) DBTestFetchAttempts(test *testing.T) {
 	}
 
 	// Case D
-	isRemoved, err := RemoveSubmission(assignment, "grader@test.com", "")
+	isRemoved, err := RemoveSubmission(assignment, "course-grader@test.edulinq.org", "")
 	if err != nil {
 		test.Fatalf("Failed to remove grader submission: '%v'.", err)
 	}
@@ -131,7 +131,7 @@ func (this *DBTests) DBTestFetchAttempts(test *testing.T) {
 		test.Fatalf("Returned false from RemoveSubmission() when should be true.")
 	}
 
-	graderAttempts, err = GetSubmissionAttempts(assignment, "grader@test.com")
+	graderAttempts, err = GetSubmissionAttempts(assignment, "course-grader@test.edulinq.org")
 	if err != nil {
 		test.Fatalf("Failed to get grader attempts when should be a success (with empty result): '%v'.", err)
 	}

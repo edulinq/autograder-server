@@ -21,7 +21,7 @@ func TestUpdateCourse(test *testing.T) {
 		test.Fatalf("Unexpected pre-remove user count. Expected 5, found %d.", count)
 	}
 
-	exists, enrolled, err := db.RemoveUserFromCourse(course, "student@test.com")
+	exists, enrolled, err := db.RemoveUserFromCourse(course, "course-student@test.edulinq.org")
 	if err != nil {
 		test.Fatalf("Error when removing the user: '%v'.", err)
 	}
@@ -48,7 +48,7 @@ func TestUpdateCourse(test *testing.T) {
 }
 
 func reloadRequest(test *testing.T) {
-	response := core.SendTestAPIRequestFull(test, core.NewEndpoint(`admin/update/course`), nil, nil, model.CourseRoleAdmin)
+	response := core.SendTestAPIRequest(test, core.NewEndpoint(`admin/update/course`), nil)
 	if !response.Success {
 		test.Errorf("Response is not a success when it should be: '%v'.", response)
 	}

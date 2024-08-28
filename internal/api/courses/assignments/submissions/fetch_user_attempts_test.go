@@ -18,24 +18,31 @@ func TestFetchUserAttempts(test *testing.T) {
 	}
 
 	testCases := []struct {
-		role        model.CourseUserRole
+		email       string
 		targetEmail string
 		foundUser   bool
 		permError   bool
+		locator     string
 		result      []*model.GradingResult
 	}{
 		// Grader, self.
-		{model.CourseRoleGrader, "", true, false, []*model.GradingResult{}},
-		{model.CourseRoleGrader, "grader@test.com", true, false, []*model.GradingResult{}},
+		{"course-grader", "", true, false, "", []*model.GradingResult{}},
+		{"course-grader", "course-grader@test.edulinq.org", true, false, "", []*model.GradingResult{}},
 
 		// Grader, other.
-		{model.CourseRoleGrader, "student@test.com", true, false, studentGradingResults},
+		{"course-grader", "course-student@test.edulinq.org", true, false, "", studentGradingResults},
 
 		// Grader, missing.
-		{model.CourseRoleGrader, "ZZZ@test.com", false, false, []*model.GradingResult{}},
+		{"course-grader", "ZZZ@test.edulinq.org", false, false, "", []*model.GradingResult{}},
+
+		// Role escalation, other.
+		{"server-admin", "course-student@test.edulinq.org", true, false, "", studentGradingResults},
+
+		// Invalid role escalation.
+		{"server-user", "", true, true, "-040", nil},
 
 		// Student, self.
-		{model.CourseRoleStudent, "", true, true, nil},
+		{"course-student", "", true, true, "-020", nil},
 	}
 
 	for i, testCase := range testCases {
@@ -43,13 +50,12 @@ func TestFetchUserAttempts(test *testing.T) {
 			"target-email": testCase.targetEmail,
 		}
 
-		response := core.SendTestAPIRequestFull(test, core.NewEndpoint(`courses/assignments/submissions/fetch/user/attempts`), field, nil, testCase.role)
+		response := core.SendTestAPIRequestFull(test, core.NewEndpoint(`courses/assignments/submissions/fetch/user/attempts`), field, nil, testCase.email)
 		if !response.Success {
 			if testCase.permError {
-				expectedLocator := "-020"
-				if response.Locator != expectedLocator {
-					test.Errorf("Case %d: Incorrect error returned on permissions error. Expcted '%s', found '%s'.",
-						i, expectedLocator, response.Locator)
+				if response.Locator != testCase.locator {
+					test.Errorf("Case %d: Incorrect error returned on permissions error. Expected '%s', found '%s'.",
+						i, testCase.locator, response.Locator)
 				}
 			} else {
 				test.Errorf("Case %d: Response is not a success when it should be: '%v'.", i, response)

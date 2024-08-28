@@ -51,8 +51,8 @@ func (this *DBTests) DBTestResolveCourseUsers(test *testing.T) {
 
 		// This is a test to ensure the output is sorted.
 		{
-			[]string{"b@test.com", "a@test.com", "c@test.com"},
-			[]string{"a@test.com", "b@test.com", "c@test.com"},
+			[]string{"b@test.edulinq.org", "a@test.edulinq.org", "c@test.edulinq.org"},
+			[]string{"a@test.edulinq.org", "b@test.edulinq.org", "c@test.edulinq.org"},
 			nil,
 			[]string{},
 			0,
@@ -60,8 +60,8 @@ func (this *DBTests) DBTestResolveCourseUsers(test *testing.T) {
 
 		// This is a test to ensure miscapitalized emails only get returned once.
 		{
-			[]string{"a@test.com", "A@tesT.CoM", "A@TESt.COM"},
-			[]string{"a@test.com"},
+			[]string{"a@test.edulinq.org", "A@tesT.EduLiNq.OrG", "A@TESt.EDuLINQ.ORG"},
+			[]string{"a@test.edulinq.org"},
 			nil,
 			[]string{},
 			0,
@@ -70,7 +70,7 @@ func (this *DBTests) DBTestResolveCourseUsers(test *testing.T) {
 		// This is a basic test to ensure that a role gets mapped to the correct email.
 		{
 			[]string{"admin"},
-			[]string{"admin@test.com"},
+			[]string{"course-admin@test.edulinq.org"},
 			nil,
 			[]string{},
 			0,
@@ -79,7 +79,7 @@ func (this *DBTests) DBTestResolveCourseUsers(test *testing.T) {
 		// This is a test for our all roles character, the *.
 		{
 			[]string{"*"},
-			[]string{"admin@test.com", "grader@test.com", "other@test.com", "owner@test.com", "student@test.com"},
+			[]string{"course-admin@test.edulinq.org", "course-grader@test.edulinq.org", "course-other@test.edulinq.org", "course-owner@test.edulinq.org", "course-student@test.edulinq.org"},
 			nil,
 			[]string{},
 			0,
@@ -88,8 +88,8 @@ func (this *DBTests) DBTestResolveCourseUsers(test *testing.T) {
 		// This test case is given redundant roles and emails.
 		// It tests to ensures we do not produce duplicates on this input.
 		{
-			[]string{"other", "*", "grader@test.com"},
-			[]string{"admin@test.com", "grader@test.com", "other@test.com", "owner@test.com", "student@test.com"},
+			[]string{"other", "*", "course-grader@test.edulinq.org"},
+			[]string{"course-admin@test.edulinq.org", "course-grader@test.edulinq.org", "course-other@test.edulinq.org", "course-owner@test.edulinq.org", "course-student@test.edulinq.org"},
 			nil,
 			[]string{},
 			0,
@@ -98,7 +98,7 @@ func (this *DBTests) DBTestResolveCourseUsers(test *testing.T) {
 		// This test case tests if miscapitalized roles still function.
 		{
 			[]string{"OTHER"},
-			[]string{"other@test.com"},
+			[]string{"course-other@test.edulinq.org"},
 			nil,
 			[]string{},
 			0,
@@ -116,10 +116,10 @@ func (this *DBTests) DBTestResolveCourseUsers(test *testing.T) {
 		// This test adds new Users to the course and ensures we retrieve all emails for the given role.
 		{
 			[]string{"student"},
-			[]string{"a_student@test.com", "b_student@test.com", "student@test.com"},
+			[]string{"a_student@test.edulinq.org", "b_student@test.edulinq.org", "course-student@test.edulinq.org"},
 			[]*model.CourseUser{
-				&model.CourseUser{"a_student@test.com", nil, model.CourseRoleStudent, nil},
-				&model.CourseUser{"b_student@test.com", nil, model.CourseRoleStudent, nil},
+				&model.CourseUser{"a_student@test.edulinq.org", nil, model.CourseRoleStudent, nil},
+				&model.CourseUser{"b_student@test.edulinq.org", nil, model.CourseRoleStudent, nil},
 			},
 			[]string{},
 			0,
@@ -127,8 +127,8 @@ func (this *DBTests) DBTestResolveCourseUsers(test *testing.T) {
 
 		// This is a test case to see if we properly trim whitespace.
 		{
-			[]string{"\t\n student    ", "\n \t testing@test.com", "\t\n     \t    \n"},
-			[]string{"student@test.com", "testing@test.com"},
+			[]string{"\t\n student    ", "\n \t testing@test.edulinq.org", "\t\n     \t    \n"},
+			[]string{"course-student@test.edulinq.org", "testing@test.edulinq.org"},
 			nil,
 			[]string{},
 			0,
@@ -137,9 +137,9 @@ func (this *DBTests) DBTestResolveCourseUsers(test *testing.T) {
 		// This test case removes the only user from the "owner" role, so we check that a role without any users still functions properly.
 		{
 			[]string{"owner", "student"},
-			[]string{"student@test.com"},
+			[]string{"course-student@test.edulinq.org"},
 			nil,
-			[]string{"owner@test.com"},
+			[]string{"course-owner@test.edulinq.org"},
 			0,
 		},
 
@@ -148,7 +148,7 @@ func (this *DBTests) DBTestResolveCourseUsers(test *testing.T) {
 			[]string{"owner"},
 			[]string{},
 			nil,
-			[]string{"owner@test.com"},
+			[]string{"course-owner@test.edulinq.org"},
 			0,
 		},
 	}

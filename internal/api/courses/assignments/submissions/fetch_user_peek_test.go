@@ -4,61 +4,79 @@ import (
 	"testing"
 
 	"github.com/edulinq/autograder/internal/api/core"
-	"github.com/edulinq/autograder/internal/model"
 	"github.com/edulinq/autograder/internal/util"
 )
 
 func TestFetchUserPeek(test *testing.T) {
 	// There are two options, which makes for four general test cases.
 	testCases := []struct {
-		role             model.CourseUserRole
+		email            string
 		targetEmail      string
 		targetSubmission string
 		score            float64
 		foundUser        bool
 		foundSubmission  bool
 		permError        bool
+		locator          string
 	}{
 		// Grader, self, recent.
-		{model.CourseRoleGrader, "", "", -1.0, true, false, false},
-		{model.CourseRoleGrader, "grader@test.com", "", -1.0, true, false, false},
+		{"course-grader", "", "", -1.0, true, false, false, ""},
+		{"course-grader", "course-grader@test.edulinq.org", "", -1.0, true, false, false, ""},
 
 		// Grader, self, missing.
-		{model.CourseRoleGrader, "", "ZZZ", -1.0, true, false, false},
-		{model.CourseRoleGrader, "grader@test.com", "ZZZ", -1.0, true, false, false},
+		{"course-grader", "", "ZZZ", -1.0, true, false, false, ""},
+		{"course-grader", "course-grader@test.edulinq.org", "ZZZ", -1.0, true, false, false, ""},
 
 		// Grader, other, recent.
-		{model.CourseRoleGrader, "student@test.com", "", 2.0, true, true, false},
+		{"course-grader", "course-student@test.edulinq.org", "", 2.0, true, true, false, ""},
 
 		// Grader, other, specific.
-		{model.CourseRoleGrader, "student@test.com", "1697406256", 0.0, true, true, false},
-		{model.CourseRoleGrader, "student@test.com", "1697406265", 1.0, true, true, false},
-		{model.CourseRoleGrader, "student@test.com", "1697406272", 2.0, true, true, false},
+		{"course-grader", "course-student@test.edulinq.org", "1697406256", 0.0, true, true, false, ""},
+		{"course-grader", "course-student@test.edulinq.org", "1697406265", 1.0, true, true, false, ""},
+		{"course-grader", "course-student@test.edulinq.org", "1697406272", 2.0, true, true, false, ""},
 
 		// Grader, other, specific (full ID).
-		{model.CourseRoleGrader, "student@test.com", "course101::hw0::student@test.com::1697406256", 0.0, true, true, false},
-		{model.CourseRoleGrader, "student@test.com", "course101::hw0::student@test.com::1697406265", 1.0, true, true, false},
-		{model.CourseRoleGrader, "student@test.com", "course101::hw0::student@test.com::1697406272", 2.0, true, true, false},
+		{"course-grader", "course-student@test.edulinq.org", "course101::hw0::course-student@test.edulinq.org::1697406256", 0.0, true, true, false, ""},
+		{"course-grader", "course-student@test.edulinq.org", "course101::hw0::course-student@test.edulinq.org::1697406265", 1.0, true, true, false, ""},
+		{"course-grader", "course-student@test.edulinq.org", "course101::hw0::course-student@test.edulinq.org::1697406272", 2.0, true, true, false, ""},
 
 		// Grader, other, missing.
-		{model.CourseRoleGrader, "student@test.com", "ZZZ", -1.0, true, false, false},
+		{"course-grader", "course-student@test.edulinq.org", "ZZZ", -1.0, true, false, false, ""},
 
 		// Grader, missing, recent.
-		{model.CourseRoleGrader, "ZZZ@test.com", "", -1.0, false, false, false},
+		{"course-grader", "ZZZ@test.edulinq.org", "", -1.0, false, false, false, ""},
+
+		// Role escalation, other, recent.
+		{"server-admin", "course-student@test.edulinq.org", "", 2.0, true, true, false, ""},
+
+		// Role escalation, other, specific.
+		{"server-admin", "course-student@test.edulinq.org", "1697406256", 0.0, true, true, false, ""},
+
+		// Role escalation, other, missing.
+		{"server-admin", "course-student@test.edulinq.org", "ZZZ", -1.0, true, false, false, ""},
+
+		// Role escalation, missing, recent.
+		{"server-admin", "ZZZ@test.edulinq.org", "", -1.0, false, false, false, ""},
 
 		// Student, self, recent.
-		{model.CourseRoleStudent, "", "", 2.0, true, true, false},
-		{model.CourseRoleStudent, "student@test.com", "", 2.0, true, true, false},
+		{"course-student", "", "", 2.0, true, true, false, ""},
+		{"course-student", "course-student@test.edulinq.org", "", 2.0, true, true, false, ""},
 
 		// Student, self, missing.
-		{model.CourseRoleStudent, "", "ZZZ", -1.0, true, false, false},
-		{model.CourseRoleStudent, "student@test.com", "ZZZ", -1.0, true, false, false},
+		{"course-student", "", "ZZZ", -1.0, true, false, false, ""},
+		{"course-student", "course-student@test.edulinq.org", "ZZZ", -1.0, true, false, false, ""},
 
 		// Student, other, recent.
-		{model.CourseRoleStudent, "grader@test.com", "", -1.0, false, false, true},
+		{"course-student", "course-grader@test.edulinq.org", "", -1.0, false, false, true, "-033"},
 
 		// Student, other, missing.
-		{model.CourseRoleStudent, "grader@test.com", "ZZZ", -1.0, false, false, true},
+		{"course-student", "course-grader@test.edulinq.org", "ZZZ", -1.0, false, false, true, "-033"},
+
+		// Invalid role escalation, other, recent.
+		{"server-user", "course-grader@test.edulinq.org", "", -1.0, false, false, true, "-040"},
+
+		// Invalid role escalation, other, missing.
+		{"server-user", "course-grader@test.edulinq.org", "ZZZ", -1.0, false, false, true, "-040"},
 	}
 
 	for i, testCase := range testCases {
@@ -67,13 +85,12 @@ func TestFetchUserPeek(test *testing.T) {
 			"target-submission": testCase.targetSubmission,
 		}
 
-		response := core.SendTestAPIRequestFull(test, core.NewEndpoint(`courses/assignments/submissions/fetch/user/peek`), fields, nil, testCase.role)
+		response := core.SendTestAPIRequestFull(test, core.NewEndpoint(`courses/assignments/submissions/fetch/user/peek`), fields, nil, testCase.email)
 		if !response.Success {
 			if testCase.permError {
-				expectedLocator := "-033"
-				if response.Locator != expectedLocator {
-					test.Errorf("Case %d: Incorrect error returned on permissions error. Expcted '%s', found '%s'.",
-						i, expectedLocator, response.Locator)
+				if response.Locator != testCase.locator {
+					test.Errorf("Case %d: Incorrect error returned on permissions error. Expected '%s', found '%s'.",
+						i, testCase.locator, response.Locator)
 				}
 			} else {
 				test.Errorf("Case %d: Response is not a success when it should be: '%v'.", i, response)
