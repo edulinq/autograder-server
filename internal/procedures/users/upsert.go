@@ -13,23 +13,23 @@ import (
 // Upserting should only be done by server or course admins,
 // it should not be used for self creation.
 type UpsertUsersOptions struct {
-	RawUsers []*model.RawUserData
+	RawUsers []*model.RawUserData `json:"raw-users"`
 
-	SkipInserts bool
-	SkipUpdates bool
+	SkipInserts bool `json:"skip-inserts"`
+	SkipUpdates bool `json:"skip-updates"`
 
 	// Send any relevant email (usually about creation or password changing).
-	SendEmails bool
+	SendEmails bool `json:"send-emails"`
 
 	// Do not actually commit any changes or send any emails regardless of |SendEmails|.
-	DryRun bool
+	DryRun bool `json:"dry-run"`
 
 	// The authority of the user making this add request.
 	// The server role should always be set, but the course role can be unknown.
 	// The email is necessary to lower the permissions for a self update.
-	ContextEmail      string
-	ContextServerRole model.ServerUserRole
-	ContextCourseRole model.CourseUserRole
+	ContextEmail      string               `json:"-"`
+	ContextServerRole model.ServerUserRole `json:"-"`
+	ContextCourseRole model.CourseUserRole `json:"-"`
 }
 
 // Call upsertUser() for multiple users.
