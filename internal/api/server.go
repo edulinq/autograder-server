@@ -127,7 +127,10 @@ func StopAPIServer() {
 		return
 	}
 
-	err := apiServer.Shutdown(context.Background())
+	tempApiServer := apiServer
+	apiServer = nil
+
+	err := tempApiServer.Shutdown(context.Background())
 	if err != nil {
 		log.Fatal("Failed to stop the API server.", err)
 	}
@@ -137,5 +140,4 @@ func StopAPIServer() {
 		log.Fatal("Failed to remove the PID file.", err)
 	}
 
-	apiServer = nil
 }
