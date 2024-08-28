@@ -62,6 +62,7 @@ func SendTestAPIRequest(test *testing.T, endpoint string, fields map[string]any)
 func SendTestAPIRequestFull(test *testing.T, endpoint string, fields map[string]any, paths []string, email string) *APIResponse {
 	url := serverURL + endpoint
 
+	// If an email is provided without an @, we will suffix the email with the common test domain.
 	if !strings.Contains(email, "@") {
 		email = email + "@test.edulinq.org"
 	}
