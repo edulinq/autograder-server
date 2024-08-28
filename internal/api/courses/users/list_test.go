@@ -25,30 +25,33 @@ func TestList(test *testing.T) {
 	testCases := []struct {
 		email     string
 		permError bool
+		locator   string
 	}{
 		// Invalid permissions.
-		{"other@test.com", true},
-		{"student@test.com", true},
+		{"course-other", true, "-020"},
+		{"course-student", true, "-020"},
+
+		// Invalid permissions, role escalation.
+		{"server-user", true, "-040"},
+		{"server-creator", true, "-040"},
 
 		// Valid permissions.
-		{"grader@test.com", false},
-		{"admin@test.com", false},
-		{"owner@test.com", false},
+		{"course-grader", false, ""},
+		{"course-admin", false, ""},
+		{"course-owner", false, ""},
+
+		// Valid permissions, role escalation.
+		{"server-admin", false, ""},
+		{"server-owner", false, ""},
 	}
 
 	for i, testCase := range testCases {
-		fields := map[string]any{
-			"user-email": testCase.email,
-			"user-pass":  util.Sha256HexFromString(*usersMap[testCase.email].Name),
-		}
-
-		response := core.SendTestAPIRequest(test, core.NewEndpoint(`courses/users/list`), fields)
+		response := core.SendTestAPIRequestFull(test, core.NewEndpoint(`courses/users/list`), nil, nil, testCase.email)
 		if !response.Success {
 			if testCase.permError {
-				expectedLocator := "-020"
-				if response.Locator != expectedLocator {
+				if response.Locator != testCase.locator {
 					test.Errorf("Case %d: Incorrect error returned. Expected '%s', found '%s'.",
-						i, expectedLocator, response.Locator)
+						i, testCase.locator, response.Locator)
 				}
 			} else {
 				test.Errorf("Case %d: Response is not a success when it should be: '%v'.", i, response)

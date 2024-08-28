@@ -31,6 +31,7 @@ type ServerUserInfo struct {
 	Courses map[string]EnrollmentInfo `json:"courses"`
 }
 
+// An API-safe representation of enrollment information.
 type EnrollmentInfo struct {
 	CourseID   string               `json:"id"`
 	CourseName string               `json:"name"`

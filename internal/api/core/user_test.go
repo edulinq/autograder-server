@@ -13,26 +13,26 @@ import (
 func TestNewUserInfos(test *testing.T) {
 	users := db.MustGetServerUsers()
 
-	serverUsers := []*model.ServerUser{
-		users["student@test.com"],
-		users["admin@test.com"],
-		users["grader@test.com"],
-	}
-
 	testCases := []struct {
 		toCourseUser   bool
+		serverUsers    []*model.ServerUser
 		serverExpected []*ServerUserInfo
 		courseExpected []*CourseUserInfo
 	}{
-		// Compare ServerUserInfos.
+		// ServerUserInfos, course information.
 		{
 			false,
+			[]*model.ServerUser{
+				users["course-student@test.edulinq.org"],
+				users["course-admin@test.edulinq.org"],
+				users["course-grader@test.edulinq.org"],
+			},
 			[]*ServerUserInfo{
 				{
 					UserInfo: UserInfo{
 						Type:  ServerUserInfoType,
-						Email: "admin@test.com",
-						Name:  "admin",
+						Email: "course-admin@test.edulinq.org",
+						Name:  "course-admin",
 					},
 					Role: model.GetServerUserRole("user"),
 					Courses: map[string]EnrollmentInfo{
@@ -66,8 +66,8 @@ func TestNewUserInfos(test *testing.T) {
 				{
 					UserInfo: UserInfo{
 						Type:  ServerUserInfoType,
-						Email: "grader@test.com",
-						Name:  "grader",
+						Email: "course-grader@test.edulinq.org",
+						Name:  "course-grader",
 					},
 					Role: model.GetServerUserRole("user"),
 					Courses: map[string]EnrollmentInfo{
@@ -101,8 +101,8 @@ func TestNewUserInfos(test *testing.T) {
 				{
 					UserInfo: UserInfo{
 						Type:  ServerUserInfoType,
-						Email: "student@test.com",
-						Name:  "student",
+						Email: "course-student@test.edulinq.org",
+						Name:  "course-student",
 					},
 					Role: model.GetServerUserRole("user"),
 					Courses: map[string]EnrollmentInfo{
@@ -137,16 +137,61 @@ func TestNewUserInfos(test *testing.T) {
 			nil,
 		},
 
-		// Compare CourseUserInfos.
+		// ServerUserInfo, no course information.
+		{
+			false,
+			[]*model.ServerUser{
+				users["server-user@test.edulinq.org"],
+				users["server-admin@test.edulinq.org"],
+				users["server-owner@test.edulinq.org"],
+			},
+			[]*ServerUserInfo{
+				{
+					UserInfo: UserInfo{
+						Type:  ServerUserInfoType,
+						Email: "server-admin@test.edulinq.org",
+						Name:  "server-admin",
+					},
+					Role:    model.GetServerUserRole("admin"),
+					Courses: map[string]EnrollmentInfo{},
+				},
+				{
+					UserInfo: UserInfo{
+						Type:  ServerUserInfoType,
+						Email: "server-owner@test.edulinq.org",
+						Name:  "server-owner",
+					},
+					Role:    model.GetServerUserRole("owner"),
+					Courses: map[string]EnrollmentInfo{},
+				},
+				{
+					UserInfo: UserInfo{
+						Type:  ServerUserInfoType,
+						Email: "server-user@test.edulinq.org",
+						Name:  "server-user",
+					},
+					Role:    model.GetServerUserRole("user"),
+					Courses: map[string]EnrollmentInfo{},
+				},
+			},
+			nil,
+		},
+
+		// CourseUserInfos, enrolled in course.
 		{
 			true,
+			[]*model.ServerUser{
+				users["course-student@test.edulinq.org"],
+				users["course-admin@test.edulinq.org"],
+				users["course-grader@test.edulinq.org"],
+			},
 			nil,
 			[]*CourseUserInfo{
 				{
 					UserInfo: UserInfo{
 						Type:  CourseUserInfoType,
-						Email: "admin@test.com",
-						Name:  "admin",
+						Email: "course-admin@test.edulinq.org",
+						Name:  "course-admin",
 					},
 					Role:  model.GetCourseUserRole("admin"),
 					LMSID: "",
@@ -154,8 +199,8 @@ func TestNewUserInfos(test *testing.T) {
 				{
 					UserInfo: UserInfo{
 						Type:  CourseUserInfoType,
-						Email: "grader@test.com",
-						Name:  "grader",
+						Email: "course-grader@test.edulinq.org",
+						Name:  "course-grader",
 					},
 					Role:  model.GetCourseUserRole("grader"),
 					LMSID: "",
@@ -163,20 +208,61 @@ func TestNewUserInfos(test *testing.T) {
 				{
 					UserInfo: UserInfo{
 						Type:  CourseUserInfoType,
-						Email: "student@test.com",
-						Name:  "student",
+						Email: "course-student@test.edulinq.org",
+						Name:  "course-student",
 					},
 					Role:  model.GetCourseUserRole("student"),
 					LMSID: "",
 				},
 			},
 		},
+
+		// CourseUserInfos, not enrolled, role escalation.
+		{
+			true,
+			[]*model.ServerUser{
+				users["server-admin@test.edulinq.org"],
+				users["server-owner@test.edulinq.org"],
+			},
+			nil,
+			[]*CourseUserInfo{
+				{
+					UserInfo: UserInfo{
+						Type:  CourseUserInfoType,
+						Email: "server-admin@test.edulinq.org",
+						Name:  "server-admin",
+					},
+					Role:  model.GetCourseUserRole("owner"),
+					LMSID: "",
+				},
+				{
+					UserInfo: UserInfo{
+						Type:  CourseUserInfoType,
+						Email: "server-owner@test.edulinq.org",
+						Name:  "server-owner",
+					},
+					Role:  model.GetCourseUserRole("owner"),
+					LMSID: "",
+				},
+			},
+		},
+
+		// CourseUserInfos, not enrolled, no role escalation.
+		{
+			true,
+			[]*model.ServerUser{
+				users["server-user@test.edulinq.org"],
+				users["server-creator@test.edulinq.org"],
+			},
+			nil,
+			[]*CourseUserInfo{},
+		},
 	}
 
 	for i, testCase := range testCases {
 		if !testCase.toCourseUser {
-			serverUserInfos := make([]*ServerUserInfo, 0, len(serverUsers))
-			for _, user := range serverUsers {
+			serverUserInfos := make([]*ServerUserInfo, 0, len(testCase.serverUsers))
+			for _, user := range testCase.serverUsers {
 				serverUserInfos = append(serverUserInfos, MustNewServerUserInfo(user))
 			}
 
@@ -196,15 +282,17 @@ func TestNewUserInfos(test *testing.T) {
 				continue
 			}
 		} else {
-			courseUsers := make([]*model.CourseUser, 0, len(serverUsers))
-			for _, user := range serverUsers {
+			courseUsers := make([]*model.CourseUser, 0, len(testCase.serverUsers))
+			for _, user := range testCase.serverUsers {
 				courseUser, err := user.ToCourseUser(db.TEST_COURSE_ID, true)
 				if err != nil {
 					test.Errorf("Test %d: Failed to convert a server user into a course user.", i)
 					continue
 				}
 
-				courseUsers = append(courseUsers, courseUser)
+				if courseUser != nil {
+					courseUsers = append(courseUsers, courseUser)
+				}
 			}
 
 			courseUserInfos := make([]*CourseUserInfo, 0, len(courseUsers))
