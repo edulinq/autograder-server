@@ -21,12 +21,12 @@ func TestPeekBase(test *testing.T) {
 		targetSubmission    string
 		expectedSubmimssion string
 	}{
-		{"student@test.com", "course101", "hw0", "", "1697406272"},
-		{"student@test.com", "course101", "hw0", "1697406272", "1697406272"},
-		{"student@test.com", "course101", "hw0", "course101::hw0::student@test.com::1697406256", "1697406256"},
+		{"course-student@test.edulinq.org", "course101", "hw0", "", "1697406272"},
+		{"course-student@test.edulinq.org", "course101", "hw0", "1697406272", "1697406272"},
+		{"course-student@test.edulinq.org", "course101", "hw0", "course101::hw0::student@test.com::1697406256", "1697406256"},
 
-		{"admin@test.com", "course101", "hw0", "", ""},
-		{"student@test.com", "course101", "hw0", "ZZZ", ""},
+		{"course-admin@test.edulinq.org", "course101", "hw0", "", ""},
+		{"course-student@test.edulinq.org", "course101", "hw0", "ZZZ", ""},
 	}
 
 	for i, testCase := range testCases {
