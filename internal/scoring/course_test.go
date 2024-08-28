@@ -38,7 +38,7 @@ func TestCourseScoringEmptyStudent(test *testing.T) {
 	course.Assignments["hw0"].LMSID = "001"
 
 	// Change a user with no submissions into a student.
-	user, err := db.GetCourseUser(course, "other@test.com")
+	user, err := db.GetCourseUser(course, "course-other@test.edulinq.org")
 	if err != nil {
 		test.Fatalf("Failed to get user: '%v'.", err)
 	}

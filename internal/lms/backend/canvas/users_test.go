@@ -15,29 +15,29 @@ func TestCanvasUserGetBase(test *testing.T) {
 		expected *lmstypes.User
 	}{
 		{
-			"owner@test.com",
+			"course-owner@test.edulinq.org",
 			&lmstypes.User{
 				ID:    "00010",
-				Name:  "owner",
-				Email: "owner@test.com",
+				Name:  "course-owner",
+				Email: "course-owner@test.edulinq.org",
 				Role:  model.CourseRoleOwner,
 			},
 		},
 		{
-			"admin@test.com",
+			"course-admin@test.edulinq.org",
 			&lmstypes.User{
 				ID:    "00020",
-				Name:  "admin",
-				Email: "admin@test.com",
+				Name:  "course-admin",
+				Email: "course-admin@test.edulinq.org",
 				Role:  model.CourseRoleAdmin,
 			},
 		},
 		{
-			"student@test.com",
+			"course-student@test.edulinq.org",
 			&lmstypes.User{
 				ID:    "00040",
-				Name:  "student",
-				Email: "student@test.com",
+				Name:  "course-student",
+				Email: "course-student@test.edulinq.org",
 				Role:  model.CourseRoleStudent,
 			},
 		},
@@ -51,7 +51,8 @@ func TestCanvasUserGetBase(test *testing.T) {
 		}
 
 		if *testCase.expected != *user {
-			test.Errorf("Case %d: User not as expected. Expected: '%+v', Actual: '%+v'.", i, testCase.expected, user)
+			test.Errorf("Case %d: User not as expected. Expected: '%+v', Actual: '%+v'.",
+				i, util.MustToJSONIndent(testCase.expected), util.MustToJSONIndent(user))
 			continue
 		}
 	}
@@ -61,20 +62,20 @@ func TestCanvasUsersGetBase(test *testing.T) {
 	expected := []*lmstypes.User{
 		&lmstypes.User{
 			ID:    "00040",
-			Name:  "student",
-			Email: "student@test.com",
+			Name:  "course-student",
+			Email: "course-student@test.edulinq.org",
 			Role:  model.CourseRoleStudent,
 		},
 		&lmstypes.User{
 			ID:    "00020",
-			Name:  "admin",
-			Email: "admin@test.com",
+			Name:  "course-admin",
+			Email: "course-admin@test.edulinq.org",
 			Role:  model.CourseRoleAdmin,
 		},
 		&lmstypes.User{
 			ID:    "00010",
-			Name:  "owner",
-			Email: "owner@test.com",
+			Name:  "course-owner",
+			Email: "course-owner@test.edulinq.org",
 			Role:  model.CourseRoleOwner,
 		},
 	}

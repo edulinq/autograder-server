@@ -16,7 +16,7 @@ func TestReportBase(test *testing.T) {
 
 	course := db.MustGetTestCourse()
 
-	to := []string{"test1@test.com", "test2@test.com"}
+	to := []string{"test1@test.edulinq.org", "test2@test.edulinq.org"}
 
 	task := &tasks.ReportTask{
 		BaseTask: &tasks.BaseTask{

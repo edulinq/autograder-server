@@ -151,10 +151,10 @@ func TestLogQueryBase(test *testing.T) {
 
 		{
 			RawLogQuery{
-				TargetUser: "admin@test.com",
+				TargetUser: "course-admin@test.edulinq.org",
 			},
 			ParsedLogQuery{
-				UserID: "admin@test.com",
+				UserID: "course-admin@test.edulinq.org",
 			},
 			[]string{},
 			false,
