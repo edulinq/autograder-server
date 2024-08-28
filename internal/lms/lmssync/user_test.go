@@ -34,7 +34,7 @@ func TestCourseSyncLMSUserEmails(test *testing.T) {
 
 	course.GetLMSAdapter().SyncUserAttributes = true
 
-	emails := []string{"student@test.com"}
+	emails := []string{"course-student@test.edulinq.org"}
 	results, err := SyncLMSUserEmails(course, emails, false, false)
 	if err != nil {
 		test.Fatalf("Got an error when syncing known user: '%v'.", err)
@@ -50,7 +50,7 @@ func TestCourseSyncLMSUserEmails(test *testing.T) {
 		test.Fatalf("Result modified flag not set.")
 	}
 
-	emails = []string{"ZZZ@test.com"}
+	emails = []string{"ZZZ@test.edulinq.org"}
 	results, err = SyncLMSUserEmails(course, emails, false, false)
 	if err != nil {
 		test.Fatalf("Got an error when syncing unknown user: '%v'.", err)
@@ -193,17 +193,17 @@ func testingUsers(users []*lmstypes.User) []*lmstypes.User {
 	// Remove other.
 	removeIndex := -1
 	for i, user := range users {
-		if user.Email == "other@test.com" {
+		if user.Email == "course-other@test.edulinq.org" {
 			removeIndex = i
-		} else if user.Email == "student@test.com" {
+		} else if user.Email == "course-student@test.edulinq.org" {
 			// student will only have their LMS ID added, no other changes.
-		} else if user.Email == "grader@test.com" {
+		} else if user.Email == "course-grader@test.edulinq.org" {
 			// grader will have their name changed.
 			user.Name = "Changed Name"
-		} else if user.Email == "admin@test.com" {
+		} else if user.Email == "course-admin@test.edulinq.org" {
 			// admin will have their role changed.
 			user.Role = model.CourseRoleOwner
-		} else if user.Email == "owner@test.com" {
+		} else if user.Email == "course-owner@test.edulinq.org" {
 			// owner will not have anything changed (so we must manually remove their email).
 			user.ID = ""
 		}
@@ -213,9 +213,9 @@ func testingUsers(users []*lmstypes.User) []*lmstypes.User {
 
 	// Make an add user.
 	addUser := &lmstypes.User{
-		ID:    "lms-add@test.com",
+		ID:    "lms-add@test.edulinq.org",
 		Name:  "add",
-		Email: "add@test.com",
+		Email: "add@test.edulinq.org",
 		Role:  model.CourseRoleStudent,
 	}
 	users = append(users, addUser)

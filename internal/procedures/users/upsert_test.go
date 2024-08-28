@@ -32,7 +32,7 @@ func TestUpsertUser(test *testing.T) {
 			options: UpsertUsersOptions{
 				RawUsers: []*model.RawUserData{
 					&model.RawUserData{
-						Email: "new@test.com",
+						Email: "new@test.edulinq.org",
 						Name:  "new",
 						Role:  model.GetServerUserRoleString(model.ServerRoleUser),
 						Pass:  "1234",
@@ -41,12 +41,12 @@ func TestUpsertUser(test *testing.T) {
 				ContextServerRole: model.ServerRoleAdmin,
 			},
 			expected: &model.UserOpResult{
-				Email:   "new@test.com",
+				Email:   "new@test.edulinq.org",
 				Added:   true,
 				Emailed: true,
 			},
 			expectedUser: &model.ServerUser{
-				Email:    "new@test.com",
+				Email:    "new@test.edulinq.org",
 				Name:     util.StringPointer("new"),
 				Salt:     PLACEHOLDER_SALT,
 				Password: PLACEHOLDER_PASSWORD_TOKEN,
@@ -60,7 +60,7 @@ func TestUpsertUser(test *testing.T) {
 			options: UpsertUsersOptions{
 				RawUsers: []*model.RawUserData{
 					&model.RawUserData{
-						Email:       "new@test.com",
+						Email:       "new@test.edulinq.org",
 						Name:        "new",
 						Role:        model.GetServerUserRoleString(model.ServerRoleUser),
 						Pass:        "1234",
@@ -72,13 +72,13 @@ func TestUpsertUser(test *testing.T) {
 				ContextServerRole: model.ServerRoleAdmin,
 			},
 			expected: &model.UserOpResult{
-				Email:    "new@test.com",
+				Email:    "new@test.edulinq.org",
 				Added:    true,
 				Emailed:  true,
 				Enrolled: []string{"new-course"},
 			},
 			expectedUser: &model.ServerUser{
-				Email:    "new@test.com",
+				Email:    "new@test.edulinq.org",
 				Name:     util.StringPointer("new"),
 				Salt:     PLACEHOLDER_SALT,
 				Password: PLACEHOLDER_PASSWORD_TOKEN,
@@ -98,18 +98,18 @@ func TestUpsertUser(test *testing.T) {
 			options: UpsertUsersOptions{
 				RawUsers: []*model.RawUserData{
 					&model.RawUserData{
-						Email: "student@test.com",
+						Email: "course-student@test.edulinq.org",
 						Name:  "new",
 					},
 				},
 				ContextServerRole: model.ServerRoleAdmin,
 			},
 			expected: &model.UserOpResult{
-				Email:    "student@test.com",
+				Email:    "course-student@test.edulinq.org",
 				Modified: true,
 			},
 			expectedUser: &model.ServerUser{
-				Email:    "student@test.com",
+				Email:    "course-student@test.edulinq.org",
 				Name:     util.StringPointer("new"),
 				Salt:     PLACEHOLDER_SALT,
 				Password: PLACEHOLDER_PASSWORD_TOKEN,
@@ -118,15 +118,15 @@ func TestUpsertUser(test *testing.T) {
 				CourseInfo: map[string]*model.UserCourseInfo{
 					"course-languages": &model.UserCourseInfo{
 						Role:  model.CourseRoleStudent,
-						LMSID: util.StringPointer("lms-student@test.com"),
+						LMSID: util.StringPointer("lms-course-student@test.edulinq.org"),
 					},
 					"course-with-lms": &model.UserCourseInfo{
 						Role:  model.CourseRoleStudent,
-						LMSID: util.StringPointer("lms-student@test.com"),
+						LMSID: util.StringPointer("lms-course-student@test.edulinq.org"),
 					},
 					"course-without-source": &model.UserCourseInfo{
 						Role:  model.CourseRoleStudent,
-						LMSID: util.StringPointer("lms-student@test.com"),
+						LMSID: util.StringPointer("lms-course-student@test.edulinq.org"),
 					},
 					"course101": &model.UserCourseInfo{
 						Role: model.CourseRoleStudent,
@@ -143,7 +143,7 @@ func TestUpsertUser(test *testing.T) {
 			options: UpsertUsersOptions{
 				RawUsers: []*model.RawUserData{
 					&model.RawUserData{
-						Email:       "student@test.com",
+						Email:       "course-student@test.edulinq.org",
 						Course:      "new-course",
 						CourseRole:  model.GetCourseUserRoleString(model.CourseRoleStudent),
 						CourseLMSID: "new-lms",
@@ -152,14 +152,14 @@ func TestUpsertUser(test *testing.T) {
 				ContextServerRole: model.ServerRoleAdmin,
 			},
 			expected: &model.UserOpResult{
-				Email:    "student@test.com",
+				Email:    "course-student@test.edulinq.org",
 				Modified: true,
 				Emailed:  true,
 				Enrolled: []string{"new-course"},
 			},
 			expectedUser: &model.ServerUser{
-				Email:    "student@test.com",
-				Name:     util.StringPointer("student"),
+				Email:    "course-student@test.edulinq.org",
+				Name:     util.StringPointer("course-student"),
 				Salt:     PLACEHOLDER_SALT,
 				Password: PLACEHOLDER_PASSWORD_TOKEN,
 				Role:     model.ServerRoleUser,
@@ -167,15 +167,15 @@ func TestUpsertUser(test *testing.T) {
 				CourseInfo: map[string]*model.UserCourseInfo{
 					"course-languages": &model.UserCourseInfo{
 						Role:  model.CourseRoleStudent,
-						LMSID: util.StringPointer("lms-student@test.com"),
+						LMSID: util.StringPointer("lms-course-student@test.edulinq.org"),
 					},
 					"course-with-lms": &model.UserCourseInfo{
 						Role:  model.CourseRoleStudent,
-						LMSID: util.StringPointer("lms-student@test.com"),
+						LMSID: util.StringPointer("lms-course-student@test.edulinq.org"),
 					},
 					"course-without-source": &model.UserCourseInfo{
 						Role:  model.CourseRoleStudent,
-						LMSID: util.StringPointer("lms-student@test.com"),
+						LMSID: util.StringPointer("lms-course-student@test.edulinq.org"),
 					},
 					"course101": &model.UserCourseInfo{
 						Role: model.CourseRoleStudent,
@@ -196,7 +196,7 @@ func TestUpsertUser(test *testing.T) {
 			options: UpsertUsersOptions{
 				RawUsers: []*model.RawUserData{
 					&model.RawUserData{
-						Email:      "student@test.com",
+						Email:      "course-student@test.edulinq.org",
 						Course:     "course101",
 						CourseRole: model.GetCourseUserRoleString(model.CourseRoleGrader),
 					},
@@ -204,12 +204,12 @@ func TestUpsertUser(test *testing.T) {
 				ContextServerRole: model.ServerRoleAdmin,
 			},
 			expected: &model.UserOpResult{
-				Email:    "student@test.com",
+				Email:    "course-student@test.edulinq.org",
 				Modified: true,
 			},
 			expectedUser: &model.ServerUser{
-				Email:    "student@test.com",
-				Name:     util.StringPointer("student"),
+				Email:    "course-student@test.edulinq.org",
+				Name:     util.StringPointer("course-student"),
 				Salt:     PLACEHOLDER_SALT,
 				Password: PLACEHOLDER_PASSWORD_TOKEN,
 				Role:     model.ServerRoleUser,
@@ -217,15 +217,15 @@ func TestUpsertUser(test *testing.T) {
 				CourseInfo: map[string]*model.UserCourseInfo{
 					"course-languages": &model.UserCourseInfo{
 						Role:  model.CourseRoleStudent,
-						LMSID: util.StringPointer("lms-student@test.com"),
+						LMSID: util.StringPointer("lms-course-student@test.edulinq.org"),
 					},
 					"course-with-lms": &model.UserCourseInfo{
 						Role:  model.CourseRoleStudent,
-						LMSID: util.StringPointer("lms-student@test.com"),
+						LMSID: util.StringPointer("lms-course-student@test.edulinq.org"),
 					},
 					"course-without-source": &model.UserCourseInfo{
 						Role:  model.CourseRoleStudent,
-						LMSID: util.StringPointer("lms-student@test.com"),
+						LMSID: util.StringPointer("lms-course-student@test.edulinq.org"),
 					},
 					"course101": &model.UserCourseInfo{
 						Role: model.CourseRoleGrader,
@@ -242,7 +242,7 @@ func TestUpsertUser(test *testing.T) {
 			options: UpsertUsersOptions{
 				RawUsers: []*model.RawUserData{
 					&model.RawUserData{
-						Email:      "student@test.com",
+						Email:      "course-student@test.edulinq.org",
 						Course:     "course101",
 						CourseRole: model.GetCourseUserRoleString(model.CourseRoleGrader),
 					},
@@ -251,12 +251,12 @@ func TestUpsertUser(test *testing.T) {
 				ContextCourseRole: model.CourseRoleAdmin,
 			},
 			expected: &model.UserOpResult{
-				Email:    "student@test.com",
+				Email:    "course-student@test.edulinq.org",
 				Modified: true,
 			},
 			expectedUser: &model.ServerUser{
-				Email:    "student@test.com",
-				Name:     util.StringPointer("student"),
+				Email:    "course-student@test.edulinq.org",
+				Name:     util.StringPointer("course-student"),
 				Salt:     PLACEHOLDER_SALT,
 				Password: PLACEHOLDER_PASSWORD_TOKEN,
 				Role:     model.ServerRoleUser,
@@ -264,15 +264,15 @@ func TestUpsertUser(test *testing.T) {
 				CourseInfo: map[string]*model.UserCourseInfo{
 					"course-languages": &model.UserCourseInfo{
 						Role:  model.CourseRoleStudent,
-						LMSID: util.StringPointer("lms-student@test.com"),
+						LMSID: util.StringPointer("lms-course-student@test.edulinq.org"),
 					},
 					"course-with-lms": &model.UserCourseInfo{
 						Role:  model.CourseRoleStudent,
-						LMSID: util.StringPointer("lms-student@test.com"),
+						LMSID: util.StringPointer("lms-course-student@test.edulinq.org"),
 					},
 					"course-without-source": &model.UserCourseInfo{
 						Role:  model.CourseRoleStudent,
-						LMSID: util.StringPointer("lms-student@test.com"),
+						LMSID: util.StringPointer("lms-course-student@test.edulinq.org"),
 					},
 					"course101": &model.UserCourseInfo{
 						Role: model.CourseRoleGrader,
@@ -289,20 +289,20 @@ func TestUpsertUser(test *testing.T) {
 			options: UpsertUsersOptions{
 				RawUsers: []*model.RawUserData{
 					&model.RawUserData{
-						Email: "student@test.com",
+						Email: "course-student@test.edulinq.org",
 						Name:  "new",
 					},
 				},
-				ContextEmail:      "student@test.com",
+				ContextEmail:      "course-student@test.edulinq.org",
 				ContextServerRole: model.ServerRoleUser,
 				ContextCourseRole: model.CourseRoleStudent,
 			},
 			expected: &model.UserOpResult{
-				Email:    "student@test.com",
+				Email:    "course-student@test.edulinq.org",
 				Modified: true,
 			},
 			expectedUser: &model.ServerUser{
-				Email:    "student@test.com",
+				Email:    "course-student@test.edulinq.org",
 				Name:     util.StringPointer("new"),
 				Salt:     PLACEHOLDER_SALT,
 				Password: PLACEHOLDER_PASSWORD_TOKEN,
@@ -311,15 +311,15 @@ func TestUpsertUser(test *testing.T) {
 				CourseInfo: map[string]*model.UserCourseInfo{
 					"course-languages": &model.UserCourseInfo{
 						Role:  model.CourseRoleStudent,
-						LMSID: util.StringPointer("lms-student@test.com"),
+						LMSID: util.StringPointer("lms-course-student@test.edulinq.org"),
 					},
 					"course-with-lms": &model.UserCourseInfo{
 						Role:  model.CourseRoleStudent,
-						LMSID: util.StringPointer("lms-student@test.com"),
+						LMSID: util.StringPointer("lms-course-student@test.edulinq.org"),
 					},
 					"course-without-source": &model.UserCourseInfo{
 						Role:  model.CourseRoleStudent,
-						LMSID: util.StringPointer("lms-student@test.com"),
+						LMSID: util.StringPointer("lms-course-student@test.edulinq.org"),
 					},
 					"course101": &model.UserCourseInfo{
 						Role: model.CourseRoleStudent,
@@ -336,19 +336,19 @@ func TestUpsertUser(test *testing.T) {
 			options: UpsertUsersOptions{
 				RawUsers: []*model.RawUserData{
 					&model.RawUserData{
-						Email: "student@test.com",
+						Email: "course-student@test.edulinq.org",
 						Name:  "new",
 					},
 				},
-				ContextEmail:      "student@test.com",
+				ContextEmail:      "course-student@test.edulinq.org",
 				ContextServerRole: model.ServerRoleUser,
 			},
 			expected: &model.UserOpResult{
-				Email:    "student@test.com",
+				Email:    "course-student@test.edulinq.org",
 				Modified: true,
 			},
 			expectedUser: &model.ServerUser{
-				Email:    "student@test.com",
+				Email:    "course-student@test.edulinq.org",
 				Name:     util.StringPointer("new"),
 				Salt:     PLACEHOLDER_SALT,
 				Password: PLACEHOLDER_PASSWORD_TOKEN,
@@ -357,15 +357,15 @@ func TestUpsertUser(test *testing.T) {
 				CourseInfo: map[string]*model.UserCourseInfo{
 					"course-languages": &model.UserCourseInfo{
 						Role:  model.CourseRoleStudent,
-						LMSID: util.StringPointer("lms-student@test.com"),
+						LMSID: util.StringPointer("lms-course-student@test.edulinq.org"),
 					},
 					"course-with-lms": &model.UserCourseInfo{
 						Role:  model.CourseRoleStudent,
-						LMSID: util.StringPointer("lms-student@test.com"),
+						LMSID: util.StringPointer("lms-course-student@test.edulinq.org"),
 					},
 					"course-without-source": &model.UserCourseInfo{
 						Role:  model.CourseRoleStudent,
-						LMSID: util.StringPointer("lms-student@test.com"),
+						LMSID: util.StringPointer("lms-course-student@test.edulinq.org"),
 					},
 					"course101": &model.UserCourseInfo{
 						Role: model.CourseRoleStudent,
@@ -382,19 +382,19 @@ func TestUpsertUser(test *testing.T) {
 			options: UpsertUsersOptions{
 				RawUsers: []*model.RawUserData{
 					&model.RawUserData{
-						Email: "server-admin@test.com",
+						Email: "server-admin@test.edulinq.org",
 						Role:  model.GetServerUserRoleString(model.ServerRoleUser),
 					},
 				},
-				ContextEmail:      "server-admin@test.com",
+				ContextEmail:      "server-admin@test.edulinq.org",
 				ContextServerRole: model.ServerRoleAdmin,
 			},
 			expected: &model.UserOpResult{
-				Email:    "server-admin@test.com",
+				Email:    "server-admin@test.edulinq.org",
 				Modified: true,
 			},
 			expectedUser: &model.ServerUser{
-				Email:    "server-admin@test.com",
+				Email:    "server-admin@test.edulinq.org",
 				Name:     util.StringPointer("server-admin"),
 				Salt:     PLACEHOLDER_SALT,
 				Password: PLACEHOLDER_PASSWORD_TOKEN,
@@ -409,22 +409,22 @@ func TestUpsertUser(test *testing.T) {
 			options: UpsertUsersOptions{
 				RawUsers: []*model.RawUserData{
 					&model.RawUserData{
-						Email:      "admin@test.com",
+						Email:      "course-admin@test.edulinq.org",
 						Course:     "course101",
 						CourseRole: model.GetCourseUserRoleString(model.CourseRoleStudent),
 					},
 				},
-				ContextEmail:      "admin@test.com",
+				ContextEmail:      "course-admin@test.edulinq.org",
 				ContextServerRole: model.ServerRoleUser,
 				ContextCourseRole: model.CourseRoleAdmin,
 			},
 			expected: &model.UserOpResult{
-				Email:    "admin@test.com",
+				Email:    "course-admin@test.edulinq.org",
 				Modified: true,
 			},
 			expectedUser: &model.ServerUser{
-				Email:    "admin@test.com",
-				Name:     util.StringPointer("admin"),
+				Email:    "course-admin@test.edulinq.org",
+				Name:     util.StringPointer("course-admin"),
 				Salt:     PLACEHOLDER_SALT,
 				Password: PLACEHOLDER_PASSWORD_TOKEN,
 				Role:     model.ServerRoleUser,
@@ -432,15 +432,15 @@ func TestUpsertUser(test *testing.T) {
 				CourseInfo: map[string]*model.UserCourseInfo{
 					"course-languages": &model.UserCourseInfo{
 						Role:  model.CourseRoleAdmin,
-						LMSID: util.StringPointer("lms-admin@test.com"),
+						LMSID: util.StringPointer("lms-course-admin@test.edulinq.org"),
 					},
 					"course-with-lms": &model.UserCourseInfo{
 						Role:  model.CourseRoleAdmin,
-						LMSID: util.StringPointer("lms-admin@test.com"),
+						LMSID: util.StringPointer("lms-course-admin@test.edulinq.org"),
 					},
 					"course-without-source": &model.UserCourseInfo{
 						Role:  model.CourseRoleAdmin,
-						LMSID: util.StringPointer("lms-admin@test.com"),
+						LMSID: util.StringPointer("lms-course-admin@test.edulinq.org"),
 					},
 					"course101": &model.UserCourseInfo{
 						Role: model.CourseRoleStudent,
@@ -457,19 +457,19 @@ func TestUpsertUser(test *testing.T) {
 			options: UpsertUsersOptions{
 				RawUsers: []*model.RawUserData{
 					&model.RawUserData{
-						Email: "student@test.com",
+						Email: "course-student@test.edulinq.org",
 						Pass:  "1234",
 					},
 				},
 				ContextServerRole: model.ServerRoleAdmin,
 			},
 			expected: &model.UserOpResult{
-				Email:    "student@test.com",
+				Email:    "course-student@test.edulinq.org",
 				Modified: true,
 			},
 			expectedUser: &model.ServerUser{
-				Email:    "student@test.com",
-				Name:     util.StringPointer("student"),
+				Email:    "course-student@test.edulinq.org",
+				Name:     util.StringPointer("course-student"),
 				Salt:     PLACEHOLDER_SALT,
 				Password: PLACEHOLDER_PASSWORD_TOKEN,
 				Role:     model.ServerRoleUser,
@@ -477,15 +477,15 @@ func TestUpsertUser(test *testing.T) {
 				CourseInfo: map[string]*model.UserCourseInfo{
 					"course-languages": &model.UserCourseInfo{
 						Role:  model.CourseRoleStudent,
-						LMSID: util.StringPointer("lms-student@test.com"),
+						LMSID: util.StringPointer("lms-course-student@test.edulinq.org"),
 					},
 					"course-with-lms": &model.UserCourseInfo{
 						Role:  model.CourseRoleStudent,
-						LMSID: util.StringPointer("lms-student@test.com"),
+						LMSID: util.StringPointer("lms-course-student@test.edulinq.org"),
 					},
 					"course-without-source": &model.UserCourseInfo{
 						Role:  model.CourseRoleStudent,
-						LMSID: util.StringPointer("lms-student@test.com"),
+						LMSID: util.StringPointer("lms-course-student@test.edulinq.org"),
 					},
 					"course101": &model.UserCourseInfo{
 						Role: model.CourseRoleStudent,
@@ -502,18 +502,18 @@ func TestUpsertUser(test *testing.T) {
 			options: UpsertUsersOptions{
 				RawUsers: []*model.RawUserData{
 					&model.RawUserData{
-						Email: "student@test.com",
-						Pass:  util.Sha256HexFromString("student"),
+						Email: "course-student@test.edulinq.org",
+						Pass:  util.Sha256HexFromString("course-student"),
 					},
 				},
 				ContextServerRole: model.ServerRoleAdmin,
 			},
 			expected: &model.UserOpResult{
-				Email: "student@test.com",
+				Email: "course-student@test.edulinq.org",
 			},
 			expectedUser: &model.ServerUser{
-				Email:    "student@test.com",
-				Name:     util.StringPointer("student"),
+				Email:    "course-student@test.edulinq.org",
+				Name:     util.StringPointer("course-student"),
 				Salt:     PLACEHOLDER_SALT,
 				Password: PLACEHOLDER_PASSWORD_TOKEN,
 				Role:     model.ServerRoleUser,
@@ -521,15 +521,15 @@ func TestUpsertUser(test *testing.T) {
 				CourseInfo: map[string]*model.UserCourseInfo{
 					"course-languages": &model.UserCourseInfo{
 						Role:  model.CourseRoleStudent,
-						LMSID: util.StringPointer("lms-student@test.com"),
+						LMSID: util.StringPointer("lms-course-student@test.edulinq.org"),
 					},
 					"course-with-lms": &model.UserCourseInfo{
 						Role:  model.CourseRoleStudent,
-						LMSID: util.StringPointer("lms-student@test.com"),
+						LMSID: util.StringPointer("lms-course-student@test.edulinq.org"),
 					},
 					"course-without-source": &model.UserCourseInfo{
 						Role:  model.CourseRoleStudent,
-						LMSID: util.StringPointer("lms-student@test.com"),
+						LMSID: util.StringPointer("lms-course-student@test.edulinq.org"),
 					},
 					"course101": &model.UserCourseInfo{
 						Role: model.CourseRoleStudent,
@@ -546,20 +546,20 @@ func TestUpsertUser(test *testing.T) {
 			options: UpsertUsersOptions{
 				RawUsers: []*model.RawUserData{
 					&model.RawUserData{
-						Email: "new@test.com",
+						Email: "new@test.edulinq.org",
 						Role:  model.GetServerUserRoleString(model.ServerRoleUser),
 					},
 				},
 				ContextServerRole: model.ServerRoleAdmin,
 			},
 			expected: &model.UserOpResult{
-				Email:             "new@test.com",
+				Email:             "new@test.edulinq.org",
 				Added:             true,
 				Emailed:           true,
 				CleartextPassword: PLACEHOLDER_PASSWORD_CLEARTEXT,
 			},
 			expectedUser: &model.ServerUser{
-				Email:    "new@test.com",
+				Email:    "new@test.edulinq.org",
 				Salt:     PLACEHOLDER_SALT,
 				Password: PLACEHOLDER_PASSWORD_TOKEN,
 				Role:     model.ServerRoleUser,
@@ -572,7 +572,7 @@ func TestUpsertUser(test *testing.T) {
 			options: UpsertUsersOptions{
 				RawUsers: []*model.RawUserData{
 					&model.RawUserData{
-						Email: "new@test.com",
+						Email: "new@test.edulinq.org",
 						Role:  model.GetServerUserRoleString(model.ServerRoleUser),
 					},
 				},
@@ -580,13 +580,13 @@ func TestUpsertUser(test *testing.T) {
 				ContextCourseRole: model.CourseRoleAdmin,
 			},
 			expected: &model.UserOpResult{
-				Email:             "new@test.com",
+				Email:             "new@test.edulinq.org",
 				Added:             true,
 				Emailed:           true,
 				CleartextPassword: PLACEHOLDER_PASSWORD_CLEARTEXT,
 			},
 			expectedUser: &model.ServerUser{
-				Email:    "new@test.com",
+				Email:    "new@test.edulinq.org",
 				Salt:     PLACEHOLDER_SALT,
 				Password: PLACEHOLDER_PASSWORD_TOKEN,
 				Role:     model.ServerRoleUser,
@@ -599,7 +599,7 @@ func TestUpsertUser(test *testing.T) {
 			options: UpsertUsersOptions{
 				RawUsers: []*model.RawUserData{
 					&model.RawUserData{
-						Email:      "owner@test.com",
+						Email:      "course-owner@test.edulinq.org",
 						Course:     "course101",
 						CourseRole: model.GetCourseUserRoleString(model.CourseRoleAdmin),
 					},
@@ -607,28 +607,28 @@ func TestUpsertUser(test *testing.T) {
 				ContextServerRole: model.ServerRoleAdmin,
 			},
 			expected: &model.UserOpResult{
-				Email:    "owner@test.com",
+				Email:    "course-owner@test.edulinq.org",
 				Modified: true,
 			},
 			expectedUser: &model.ServerUser{
-				Email:    "owner@test.com",
-				Name:     util.StringPointer("owner"),
+				Email:    "course-owner@test.edulinq.org",
+				Name:     util.StringPointer("course-owner"),
 				Salt:     PLACEHOLDER_SALT,
 				Password: PLACEHOLDER_PASSWORD_TOKEN,
-				Role:     model.ServerRoleOwner,
+				Role:     model.ServerRoleUser,
 				Tokens:   []*model.Token{},
 				CourseInfo: map[string]*model.UserCourseInfo{
 					"course-languages": &model.UserCourseInfo{
 						Role:  model.CourseRoleOwner,
-						LMSID: util.StringPointer("lms-owner@test.com"),
+						LMSID: util.StringPointer("lms-course-owner@test.edulinq.org"),
 					},
 					"course-with-lms": &model.UserCourseInfo{
 						Role:  model.CourseRoleOwner,
-						LMSID: util.StringPointer("lms-owner@test.com"),
+						LMSID: util.StringPointer("lms-course-owner@test.edulinq.org"),
 					},
 					"course-without-source": &model.UserCourseInfo{
 						Role:  model.CourseRoleOwner,
-						LMSID: util.StringPointer("lms-owner@test.com"),
+						LMSID: util.StringPointer("lms-course-owner@test.edulinq.org"),
 					},
 					"course101": &model.UserCourseInfo{
 						Role: model.CourseRoleAdmin,
@@ -647,7 +647,7 @@ func TestUpsertUser(test *testing.T) {
 			options: UpsertUsersOptions{
 				RawUsers: []*model.RawUserData{
 					&model.RawUserData{
-						Email: "new@test.com",
+						Email: "new@test.edulinq.org",
 					},
 				},
 			},
@@ -663,13 +663,13 @@ func TestUpsertUser(test *testing.T) {
 			options: UpsertUsersOptions{
 				RawUsers: []*model.RawUserData{
 					&model.RawUserData{
-						Email: "new@test.com",
+						Email: "new@test.edulinq.org",
 					},
 				},
 				ContextCourseRole: model.CourseRoleOwner,
 			},
 			expected: &model.UserOpResult{
-				Email:        "new@test.com",
+				Email:        "new@test.edulinq.org",
 				SystemErrors: []string{"Users must have a server role to upsert users."},
 			},
 			expectedUser: nil,
@@ -680,14 +680,14 @@ func TestUpsertUser(test *testing.T) {
 			options: UpsertUsersOptions{
 				RawUsers: []*model.RawUserData{
 					&model.RawUserData{
-						Email: "new@test.com",
+						Email: "new@test.edulinq.org",
 						Role:  model.GetServerUserRoleString(model.ServerRoleOwner),
 					},
 				},
 				ContextServerRole: model.ServerRoleAdmin,
 			},
 			expected: &model.UserOpResult{
-				Email:            "new@test.com",
+				Email:            "new@test.edulinq.org",
 				ValidationErrors: []string{"User has a server role of 'admin', which is not high enough to upsert a user with server role of 'owner'."},
 			},
 			expectedUser: nil,
@@ -698,13 +698,13 @@ func TestUpsertUser(test *testing.T) {
 			options: UpsertUsersOptions{
 				RawUsers: []*model.RawUserData{
 					&model.RawUserData{
-						Email: "new@test.com",
+						Email: "new@test.edulinq.org",
 					},
 				},
 				ContextServerRole: model.ServerRoleUser,
 			},
 			expected: &model.UserOpResult{
-				Email:            "new@test.com",
+				Email:            "new@test.edulinq.org",
 				ValidationErrors: []string{"User has an insufficient server role of 'user' and no course role to insert users."},
 			},
 			expectedUser: nil,
@@ -715,7 +715,7 @@ func TestUpsertUser(test *testing.T) {
 			options: UpsertUsersOptions{
 				RawUsers: []*model.RawUserData{
 					&model.RawUserData{
-						Email:      "new@test.com",
+						Email:      "new@test.edulinq.org",
 						Role:       model.GetServerUserRoleString(model.ServerRoleUser),
 						Course:     "new-course",
 						CourseRole: model.GetCourseUserRoleString(model.CourseRoleStudent),
@@ -725,7 +725,7 @@ func TestUpsertUser(test *testing.T) {
 				ContextCourseRole: model.CourseRoleStudent,
 			},
 			expected: &model.UserOpResult{
-				Email:            "new@test.com",
+				Email:            "new@test.edulinq.org",
 				ValidationErrors: []string{"User has a course role of 'student', which is not high enough to insert users."},
 			},
 			expectedUser: nil,
@@ -736,7 +736,7 @@ func TestUpsertUser(test *testing.T) {
 			options: UpsertUsersOptions{
 				RawUsers: []*model.RawUserData{
 					&model.RawUserData{
-						Email:      "new@test.com",
+						Email:      "new@test.edulinq.org",
 						Role:       model.GetServerUserRoleString(model.ServerRoleUser),
 						Course:     "new-course",
 						CourseRole: model.GetCourseUserRoleString(model.CourseRoleOwner),
@@ -746,7 +746,7 @@ func TestUpsertUser(test *testing.T) {
 				ContextCourseRole: model.CourseRoleAdmin,
 			},
 			expected: &model.UserOpResult{
-				Email:            "new@test.com",
+				Email:            "new@test.edulinq.org",
 				ValidationErrors: []string{"User has a course role of 'admin', which is not high enough to insert a user with course role of 'owner'."},
 			},
 			expectedUser: nil,
@@ -757,14 +757,14 @@ func TestUpsertUser(test *testing.T) {
 			options: UpsertUsersOptions{
 				RawUsers: []*model.RawUserData{
 					&model.RawUserData{
-						Email: "owner@test.com",
+						Email: "server-owner@test.edulinq.org",
 						Name:  "new",
 					},
 				},
 				ContextServerRole: model.ServerRoleAdmin,
 			},
 			expected: &model.UserOpResult{
-				Email:            "owner@test.com",
+				Email:            "server-owner@test.edulinq.org",
 				ValidationErrors: []string{"User has a server role of 'admin', which is not high enough to update a user with server role of 'owner'."},
 			},
 			expectedUser: nil,
@@ -775,7 +775,7 @@ func TestUpsertUser(test *testing.T) {
 			options: UpsertUsersOptions{
 				RawUsers: []*model.RawUserData{
 					&model.RawUserData{
-						Email:      "owner@test.com",
+						Email:      "course-owner@test.edulinq.org",
 						Course:     "course101",
 						CourseRole: model.GetCourseUserRoleString(model.CourseRoleGrader),
 					},
@@ -784,7 +784,7 @@ func TestUpsertUser(test *testing.T) {
 				ContextCourseRole: model.CourseRoleAdmin,
 			},
 			expected: &model.UserOpResult{
-				Email:            "owner@test.com",
+				Email:            "course-owner@test.edulinq.org",
 				ValidationErrors: []string{"User has a course role of 'admin', which is not high enough to update a user with course role of 'owner'."},
 			},
 			expectedUser: nil,
@@ -795,16 +795,16 @@ func TestUpsertUser(test *testing.T) {
 			options: UpsertUsersOptions{
 				RawUsers: []*model.RawUserData{
 					&model.RawUserData{
-						Email: "student@test.com",
+						Email: "course-student@test.edulinq.org",
 						Name:  "new",
 					},
 				},
-				ContextEmail:      "ZZZ@test.com",
+				ContextEmail:      "ZZZ@test.edulinq.org",
 				ContextServerRole: model.ServerRoleUser,
 				ContextCourseRole: model.CourseRoleStudent,
 			},
 			expected: &model.UserOpResult{
-				Email:            "student@test.com",
+				Email:            "course-student@test.edulinq.org",
 				ValidationErrors: []string{"User has a server role of 'user', which is not high enough to update server-level information for another user."},
 			},
 			expectedUser: nil,
@@ -815,18 +815,18 @@ func TestUpsertUser(test *testing.T) {
 			options: UpsertUsersOptions{
 				RawUsers: []*model.RawUserData{
 					&model.RawUserData{
-						Email:       "student@test.com",
+						Email:       "course-student@test.edulinq.org",
 						Course:      "course101",
 						CourseRole:  model.GetCourseUserRoleString(model.CourseRoleStudent),
 						CourseLMSID: "new",
 					},
 				},
-				ContextEmail:      "ZZZ@test.com",
+				ContextEmail:      "ZZZ@test.edulinq.org",
 				ContextServerRole: model.ServerRoleUser,
 				ContextCourseRole: model.CourseRoleStudent,
 			},
 			expected: &model.UserOpResult{
-				Email:            "student@test.com",
+				Email:            "course-student@test.edulinq.org",
 				ValidationErrors: []string{"User has a course role of 'student', which is not high enough to update course-level information for another user."},
 			},
 			expectedUser: nil,
@@ -837,15 +837,15 @@ func TestUpsertUser(test *testing.T) {
 			options: UpsertUsersOptions{
 				RawUsers: []*model.RawUserData{
 					&model.RawUserData{
-						Email: "admin@test.com",
+						Email: "course-admin@test.edulinq.org",
 						Role:  model.GetServerUserRoleString(model.ServerRoleOwner),
 					},
 				},
-				ContextEmail:      "admin@test.com",
+				ContextEmail:      "course-admin@test.edulinq.org",
 				ContextServerRole: model.ServerRoleAdmin,
 			},
 			expected: &model.UserOpResult{
-				Email:            "admin@test.com",
+				Email:            "course-admin@test.edulinq.org",
 				ValidationErrors: []string{"User has a server role of 'admin', which is not high enough to upsert a user with server role of 'owner'."},
 			},
 			expectedUser: nil,
@@ -856,17 +856,17 @@ func TestUpsertUser(test *testing.T) {
 			options: UpsertUsersOptions{
 				RawUsers: []*model.RawUserData{
 					&model.RawUserData{
-						Email:      "grader@test.com",
+						Email:      "course-grader@test.edulinq.org",
 						Course:     "course101",
 						CourseRole: model.GetCourseUserRoleString(model.CourseRoleAdmin),
 					},
 				},
-				ContextEmail:      "grader@test.com",
+				ContextEmail:      "course-grader@test.edulinq.org",
 				ContextServerRole: model.ServerRoleCourseCreator,
 				ContextCourseRole: model.CourseRoleGrader,
 			},
 			expected: &model.UserOpResult{
-				Email:            "grader@test.com",
+				Email:            "course-grader@test.edulinq.org",
 				ValidationErrors: []string{"User has a course role of 'grader', which is not high enough to modify course roles."},
 			},
 			expectedUser: nil,
@@ -877,15 +877,15 @@ func TestUpsertUser(test *testing.T) {
 			options: UpsertUsersOptions{
 				RawUsers: []*model.RawUserData{
 					&model.RawUserData{
-						Email: "grader@test.com",
+						Email: "server-creator@test.edulinq.org",
 						Role:  model.GetServerUserRoleString(model.ServerRoleUser),
 					},
 				},
 				ContextServerRole: model.ServerRoleCourseCreator,
 			},
 			expected: &model.UserOpResult{
-				Email:            "grader@test.com",
-				ValidationErrors: []string{"User has a server role of 'creator', which is not high enough to update server-level information for another user."},
+				Email:            "server-creator@test.edulinq.org",
+				ValidationErrors: []string{"User has a server role of 'creator', which is not high enough to modify server roles."},
 			},
 			expectedUser: nil,
 		},
@@ -895,17 +895,17 @@ func TestUpsertUser(test *testing.T) {
 			options: UpsertUsersOptions{
 				RawUsers: []*model.RawUserData{
 					&model.RawUserData{
-						Email:      "grader@test.com",
+						Email:      "course-grader@test.edulinq.org",
 						Course:     "course101",
 						CourseRole: model.GetCourseUserRoleString(model.CourseRoleStudent),
 					},
 				},
-				ContextEmail:      "grader@test.com",
-				ContextServerRole: model.ServerRoleCourseCreator,
+				ContextEmail:      "course-grader@test.edulinq.org",
+				ContextServerRole: model.ServerRoleUser,
 				ContextCourseRole: model.CourseRoleGrader,
 			},
 			expected: &model.UserOpResult{
-				Email:            "grader@test.com",
+				Email:            "course-grader@test.edulinq.org",
 				ValidationErrors: []string{"User has a course role of 'grader', which is not high enough to modify course roles."},
 			},
 			expectedUser: nil,
@@ -919,15 +919,15 @@ func TestUpsertUser(test *testing.T) {
 			options: UpsertUsersOptions{
 				RawUsers: []*model.RawUserData{
 					&model.RawUserData{
-						Email:  "student@test.com",
+						Email:  "course-student@test.edulinq.org",
 						Course: "new-course",
 					},
 				},
 				ContextServerRole: model.ServerRoleAdmin,
 			},
 			expected: &model.UserOpResult{
-				Email:            "student@test.com",
-				ValidationErrors: []string{"User 'student@test.com' has an invalid course info 'new-course': 'Unknown course role.'."},
+				Email:            "course-student@test.edulinq.org",
+				ValidationErrors: []string{"User 'course-student@test.edulinq.org' has an invalid course info 'new-course': 'Unknown course role.'."},
 			},
 			expectedUser: nil,
 		},

@@ -5,29 +5,32 @@ import (
 	"testing"
 
 	"github.com/edulinq/autograder/internal/api/core"
+	"github.com/edulinq/autograder/internal/db"
 	lmstest "github.com/edulinq/autograder/internal/lms/backend/test"
 	"github.com/edulinq/autograder/internal/model"
 	"github.com/edulinq/autograder/internal/util"
 )
 
 func TestUploadScores(test *testing.T) {
+	defer db.ResetForTesting()
 	// Reset the LMS adapter.
 	defer func() {
 		lmstest.SetFailUpdateAssignmentScores(false)
 	}()
 
 	testCases := []struct {
-		role       model.CourseUserRole
+		email      string
 		permError  bool
 		failUpdate bool
+		addUsers   map[string]*model.CourseUser
 		scores     []ScoreEntry
 		expected   *UploadScoresResponse
 	}{
 		// Normal.
 		{
-			model.CourseRoleGrader, false, false,
+			"course-grader", false, false, nil,
 			[]ScoreEntry{
-				ScoreEntry{"student@test.com", 10},
+				ScoreEntry{"course-student@test.edulinq.org", 10},
 			},
 			&UploadScoresResponse{
 				Count:             1,
@@ -37,12 +40,12 @@ func TestUploadScores(test *testing.T) {
 			},
 		},
 		{
-			model.CourseRoleGrader, false, false,
+			"course-grader", false, false, nil,
 			[]ScoreEntry{
-				ScoreEntry{"student@test.com", 10},
-				ScoreEntry{"grader@test.com", 0},
-				ScoreEntry{"admin@test.com", -10},
-				ScoreEntry{"owner@test.com", 12.34},
+				ScoreEntry{"course-student@test.edulinq.org", 10},
+				ScoreEntry{"course-grader@test.edulinq.org", 0},
+				ScoreEntry{"course-admin@test.edulinq.org", -10},
+				ScoreEntry{"course-owner@test.edulinq.org", 12.34},
 			},
 			&UploadScoresResponse{
 				Count:             4,
@@ -53,51 +56,54 @@ func TestUploadScores(test *testing.T) {
 		},
 
 		// Permissions.
-		{model.CourseRoleOther, true, false, nil, nil},
-		{model.CourseRoleStudent, true, false, nil, nil},
+		{"course-other", true, false, nil, nil, nil},
+		{"course-student", true, false, nil, nil, nil},
 
 		// Upload fails.
 		{
-			model.CourseRoleGrader, false, true,
+			"course-grader", false, true, nil,
 			[]ScoreEntry{
-				ScoreEntry{"student@test.com", 10},
+				ScoreEntry{"course-student@test.edulinq.org", 10},
 			},
 			nil,
 		},
 
 		// Bad scores.
 		{
-			model.CourseRoleGrader, false, false,
+			"course-grader", false, false,
+			map[string]*model.CourseUser{
+				"no-lms-id@test.edulinq.org": &model.CourseUser{"no-lms-id@test.edulinq.org", nil, model.CourseRoleStudent, nil},
+			},
 			[]ScoreEntry{
-				ScoreEntry{"zzz@test.com", 10},
-				ScoreEntry{"no-lms-id@test.com", 20},
-				ScoreEntry{"abc@test.com", 30},
-				ScoreEntry{"student@test.com", 10},
+				ScoreEntry{"zzz@test.edulinq.org", 10},
+				ScoreEntry{"no-lms-id@test.edulinq.org", 20},
+				ScoreEntry{"abc@test.edulinq.org", 30},
+				ScoreEntry{"course-student@test.edulinq.org", 10},
 			},
 			&UploadScoresResponse{
 				Count:      1,
 				ErrorCount: 3,
 				UnrecognizedUsers: []RowEntry{
-					RowEntry{0, "zzz@test.com"},
-					RowEntry{2, "abc@test.com"},
+					RowEntry{0, "zzz@test.edulinq.org"},
+					RowEntry{2, "abc@test.edulinq.org"},
 				},
 				NoLMSIDUsers: []RowEntry{
-					RowEntry{1, "no-lms-id@test.com"},
+					RowEntry{1, "no-lms-id@test.edulinq.org"},
 				},
 			},
 		},
 
 		// Upload will pass, but never gets called.
 		{
-			model.CourseRoleGrader, false, false,
+			"course-grader", false, false, nil,
 			[]ScoreEntry{
-				ScoreEntry{"zzz@test.com", 10},
+				ScoreEntry{"zzz@test.edulinq.org", 10},
 			},
 			&UploadScoresResponse{
 				Count:      0,
 				ErrorCount: 1,
 				UnrecognizedUsers: []RowEntry{
-					RowEntry{0, "zzz@test.com"},
+					RowEntry{0, "zzz@test.edulinq.org"},
 				},
 				NoLMSIDUsers: []RowEntry{},
 			},
@@ -105,24 +111,32 @@ func TestUploadScores(test *testing.T) {
 
 		// Upload will fail, but never gets called.
 		{
-			model.CourseRoleGrader, false, true,
+			"course-grader", false, true, nil,
 			[]ScoreEntry{
-				ScoreEntry{"zzz@test.com", 10},
+				ScoreEntry{"zzz@test.edulinq.org", 10},
 			},
 			&UploadScoresResponse{
 				Count:      0,
 				ErrorCount: 1,
 				UnrecognizedUsers: []RowEntry{
-					RowEntry{0, "zzz@test.com"},
+					RowEntry{0, "zzz@test.edulinq.org"},
 				},
 				NoLMSIDUsers: []RowEntry{},
 			},
 		},
 	}
 
+	TEST_COURSE_ID := "course-with-lms"
+
 	for i, testCase := range testCases {
+		db.ResetForTesting()
+
+		if testCase.addUsers != nil {
+			db.UpsertCourseUsers(db.MustGetCourse(TEST_COURSE_ID), testCase.addUsers)
+		}
+
 		fields := map[string]any{
-			"course-id": "course-with-lms",
+			"course-id": TEST_COURSE_ID,
 			// ID does not matter, test LMS will accept all ids.
 			"assignment-lms-id": "foo",
 			"scores":            testCase.scores,
@@ -130,7 +144,7 @@ func TestUploadScores(test *testing.T) {
 
 		lmstest.SetFailUpdateAssignmentScores(testCase.failUpdate)
 
-		response := core.SendTestAPIRequestFull(test, core.NewEndpoint(`lms/upload/scores`), fields, nil, testCase.role)
+		response := core.SendTestAPIRequestFull(test, core.NewEndpoint(`lms/upload/scores`), fields, nil, testCase.email)
 		if !response.Success {
 			expectedLocator := ""
 			if testCase.permError {
@@ -143,7 +157,7 @@ func TestUploadScores(test *testing.T) {
 				test.Errorf("Case %d: Response is not a success when it should be: '%v'.", i, response)
 			} else {
 				if response.Locator != expectedLocator {
-					test.Errorf("Case %d: Incorrect error returned. Expcted '%s', found '%s'.",
+					test.Errorf("Case %d: Incorrect error returned. Expected '%s', found '%s'.",
 						i, expectedLocator, response.Locator)
 				}
 			}
@@ -155,7 +169,8 @@ func TestUploadScores(test *testing.T) {
 		util.MustJSONFromString(util.MustToJSON(response.Content), &responseContent)
 
 		if !reflect.DeepEqual(testCase.expected, &responseContent) {
-			test.Errorf("Case %d: Unexpected result. Expected: '%+v', actual: '%+v'.", i, testCase.expected, responseContent)
+			test.Errorf("Case %d: Unexpected result. Expected: '%+v', actual: '%+v'.",
+				i, util.MustToJSONIndent(testCase.expected), util.MustToJSONIndent(responseContent))
 			continue
 		}
 	}

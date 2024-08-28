@@ -9,7 +9,7 @@ import (
 	"github.com/edulinq/autograder/internal/docker"
 )
 
-const BASE_TEST_USER = "student@test.com"
+const BASE_TEST_USER = "course-student@test.edulinq.org"
 const TEST_MESSAGE = ""
 
 func TestDockerSubmissions(test *testing.T) {

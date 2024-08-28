@@ -135,8 +135,8 @@ func TestUserCourseUserName(test *testing.T) {
 		FallbackName string
 	}{
 		{util.StringPointer("alice"), "alice", "alice"},
-		{util.StringPointer(""), "", "alice@test.com"},
-		{nil, "", "alice@test.com"},
+		{util.StringPointer(""), "", "alice@test.edulinq.org"},
+		{nil, "", "alice@test.edulinq.org"},
 	}
 
 	for i, testCase := range testCases {
@@ -170,7 +170,7 @@ func TestUserCourseUserName(test *testing.T) {
 
 func TestUserCourseUserToServerUser(test *testing.T) {
 	minConversionCourseUser := &ServerUser{
-		Email:  "alice@test.com",
+		Email:  "alice@test.edulinq.org",
 		Name:   util.StringPointer("Alice"),
 		Role:   ServerRoleUnknown,
 		Salt:   nil,
@@ -240,7 +240,7 @@ func TestUserCourseUserMustToRow(test *testing.T) {
 		{
 			baseTestCourseUser,
 			[]string{
-				"alice@test.com",
+				"alice@test.edulinq.org",
 				"Alice",
 				"student",
 				"alice",
@@ -271,7 +271,7 @@ func TestUserCourseUserMustToRow(test *testing.T) {
 		{
 			setCourseUserName(baseTestCourseUser, util.StringPointer("foo")),
 			[]string{
-				"alice@test.com",
+				"alice@test.edulinq.org",
 				"foo",
 				"student",
 				"alice",
@@ -280,7 +280,7 @@ func TestUserCourseUserMustToRow(test *testing.T) {
 		{
 			setCourseUserName(baseTestCourseUser, nil),
 			[]string{
-				"alice@test.com",
+				"alice@test.edulinq.org",
 				"",
 				"student",
 				"alice",
@@ -291,7 +291,7 @@ func TestUserCourseUserMustToRow(test *testing.T) {
 		{
 			setCourseCourseUserRole(baseTestCourseUser, CourseRoleGrader),
 			[]string{
-				"alice@test.com",
+				"alice@test.edulinq.org",
 				"Alice",
 				"grader",
 				"alice",
@@ -302,7 +302,7 @@ func TestUserCourseUserMustToRow(test *testing.T) {
 		{
 			setCourseUserLMSID(baseTestCourseUser, util.StringPointer("foo")),
 			[]string{
-				"alice@test.com",
+				"alice@test.edulinq.org",
 				"Alice",
 				"student",
 				"foo",
@@ -311,7 +311,7 @@ func TestUserCourseUserMustToRow(test *testing.T) {
 		{
 			setCourseUserLMSID(baseTestCourseUser, nil),
 			[]string{
-				"alice@test.com",
+				"alice@test.edulinq.org",
 				"Alice",
 				"student",
 				"",
@@ -355,7 +355,7 @@ func setCourseUserLMSID(user *CourseUser, lmsID *string) *CourseUser {
 }
 
 var baseTestCourseUser *CourseUser = &CourseUser{
-	Email: "alice@test.com",
+	Email: "alice@test.edulinq.org",
 	Name:  util.StringPointer("Alice"),
 	Role:  CourseRoleStudent,
 	LMSID: util.StringPointer("alice"),
