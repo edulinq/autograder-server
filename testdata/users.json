@@ -193,8 +193,8 @@
         "tokens": [],
         "course-info": {}
     },
-    "server-admin@test.com": {
-        "email": "server-admin@test.com",
+    "server-admin@test.edulinq.org": {
+        "email": "server-admin@test.edulinq.org",
         "name": "server-admin",
         "server-role": "admin",
         "salt": "8c6d9026147e4a7c7168b690b1d23347cffe85e4723772ee7899a84f71d76356",
