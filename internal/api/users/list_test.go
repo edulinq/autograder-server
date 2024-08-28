@@ -23,21 +23,16 @@ func TestList(test *testing.T) {
 		permError bool
 	}{
 		// Invalid permissions.
-		{"server-user@test.com", true},
-		{"server-creator@test.com", true},
+		{"server-user", true},
+		{"server-creator", true},
 
 		// Valid permissions.
-		{"server-admin@test.com", false},
-		{"server-owner@test.com", false},
+		{"server-admin", false},
+		{"server-owner", false},
 	}
 
 	for i, testCase := range testCases {
-		fields := map[string]any{
-			"user-email": testCase.email,
-			"user-pass":  util.Sha256HexFromString(*usersMap[testCase.email].Name),
-		}
-
-		response := core.SendTestAPIRequest(test, core.NewEndpoint(`users/list`), fields)
+		response := core.SendTestAPIRequestFull(test, core.NewEndpoint(`users/list`), nil, nil, testCase.email)
 		if !response.Success {
 			if testCase.permError {
 				expectedLocator := "-041"
