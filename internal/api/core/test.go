@@ -58,14 +58,14 @@ func SendTestAPIRequest(test *testing.T, endpoint string, fields map[string]any)
 // Make a request to the test server using fields for
 // a standard test request plus whatever other fields are specified.
 // Provided fields will override base fields.
-// The given role will choose the user (the test course has one user per role).
+// If an email is provided without an "@", we will suffix the email with the common test domain.
 func SendTestAPIRequestFull(test *testing.T, endpoint string, fields map[string]any, paths []string, email string) *APIResponse {
 	url := serverURL + endpoint
 
-	// If an email is provided without an @, we will suffix the email with the common test domain.
 	if !strings.Contains(email, "@") {
 		email = email + "@test.edulinq.org"
 	}
+
 	user := db.MustGetServerUser(email, true)
 
 	pass := ""
