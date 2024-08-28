@@ -18,16 +18,30 @@ func TestList(test *testing.T) {
 		course    string
 	}{
 		// Invalid permissions.
-		{"server-user@test.com", true, "course-without-source"},
-		{"server-creator@test.com", true, "course-without-source"},
+		{"server-user@test.edulinq.org", true, "course-without-source"},
+		{"server-creator@test.edulinq.org", true, "course-without-source"},
 
 		// Valid permissions
 		// Empty
-		{"server-admin@test.com", false, "course-without-source"},
+		{"course-admin@test.edulinq.org", false, "course-without-source"},
+		{"course-owner@test.edulinq.org", false, "course-without-source"},
 		// One Assignment
-		{"server-owner@test.com", false, "course101-with-zero-limit"},
+		{"course-grader@test.edulinq.org", false, "course101-with-zero-limit"},
+		{"course-student@test.edulinq.org", false, "course101-with-zero-limit"},
 		// Multiple Assignments
-		{"admin@test.com", false, "course-languages"},
+		{"course-admin@test.edulinq.org", false, "course-languages"},
+		{"course-other@test.edulinq.org", false, "course-languages"},
+
+		// Valid permissions, role escalation
+		// Empty
+		{"server-admin@test.edulinq.org", false, "course-without-source"},
+		{"server-owner@test.edulinq.org", false, "course-without-source"},
+		// One Assignment
+		{"server-admin@test.edulinq.org", false, "course101-with-zero-limit"},
+		{"server-owner@test.edulinq.org", false, "course101-with-zero-limit"},
+		// Multiple Assignments
+		{"server-admin@test.edulinq.org", false, "course-without-source"},
+		{"server-owner@test.edulinq.org", false, "course-without-source"},
 	}
 
 	for i, testCase := range testCases {

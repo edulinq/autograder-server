@@ -11,42 +11,42 @@ import (
 
 func TestUserGet(test *testing.T) {
 	testCases := []struct {
-		role      model.CourseUserRole
+		email     string
 		target    string
 		permError bool
 		expected  *core.CourseUserInfo
 	}{
-		{model.CourseRoleGrader, "other@test.com", false, &core.CourseUserInfo{
-			core.UserInfo{core.CourseUserInfoType, "other@test.com", "other"},
+		{"course-grader", "course-other@test.edulinq.org", false, &core.CourseUserInfo{
+			core.UserInfo{core.CourseUserInfoType, "course-other@test.edulinq.org", "course-other"},
 			model.CourseRoleOther,
-			"lms-other@test.com"},
+			"lms-course-other@test.edulinq.org"},
 		},
-		{model.CourseRoleGrader, "student@test.com", false, &core.CourseUserInfo{
-			core.UserInfo{core.CourseUserInfoType, "student@test.com", "student"},
+		{"course-grader", "course-student@test.edulinq.org", false, &core.CourseUserInfo{
+			core.UserInfo{core.CourseUserInfoType, "course-student@test.edulinq.org", "course-student"},
 			model.CourseRoleStudent,
-			"lms-student@test.com"},
+			"lms-course-student@test.edulinq.org"},
 		},
-		{model.CourseRoleGrader, "grader@test.com", false, &core.CourseUserInfo{
-			core.UserInfo{core.CourseUserInfoType, "grader@test.com", "grader"},
+		{"course-grader", "course-grader@test.edulinq.org", false, &core.CourseUserInfo{
+			core.UserInfo{core.CourseUserInfoType, "course-grader@test.edulinq.org", "course-grader"},
 			model.CourseRoleGrader,
-			"lms-grader@test.com"},
+			"lms-course-grader@test.edulinq.org"},
 		},
-		{model.CourseRoleGrader, "admin@test.com", false, &core.CourseUserInfo{
-			core.UserInfo{core.CourseUserInfoType, "admin@test.com", "admin"},
+		{"course-grader", "course-admin@test.edulinq.org", false, &core.CourseUserInfo{
+			core.UserInfo{core.CourseUserInfoType, "course-admin@test.edulinq.org", "course-admin"},
 			model.CourseRoleAdmin,
-			"lms-admin@test.com"},
+			"lms-course-admin@test.edulinq.org"},
 		},
-		{model.CourseRoleGrader, "owner@test.com", false, &core.CourseUserInfo{
-			core.UserInfo{core.CourseUserInfoType, "owner@test.com", "owner"},
+		{"course-grader", "course-owner@test.edulinq.org", false, &core.CourseUserInfo{
+			core.UserInfo{core.CourseUserInfoType, "course-owner@test.edulinq.org", "course-owner"},
 			model.CourseRoleOwner,
-			"lms-owner@test.com"},
+			"lms-course-owner@test.edulinq.org"},
 		},
 
-		{model.CourseRoleStudent, "student@test.com", true, nil},
+		{"course-student", "course-student@test.edulinq.org", true, nil},
 
-		{model.CourseRoleGrader, "", false, nil},
+		{"course-grader", "", false, nil},
 
-		{model.CourseRoleGrader, "ZZZ", false, nil},
+		{"course-grader", "ZZZ", false, nil},
 	}
 
 	for i, testCase := range testCases {
@@ -54,7 +54,7 @@ func TestUserGet(test *testing.T) {
 			"target-email": testCase.target,
 		}
 
-		response := core.SendTestAPIRequestFull(test, core.NewEndpoint(`lms/user/get`), fields, nil, testCase.role)
+		response := core.SendTestAPIRequestFull(test, core.NewEndpoint(`lms/user/get`), fields, nil, testCase.email)
 		if !response.Success {
 			expectedLocator := ""
 			if testCase.permError {
@@ -67,7 +67,7 @@ func TestUserGet(test *testing.T) {
 				test.Errorf("Case %d: Response is not a success when it should be: '%v'.", i, response)
 			} else {
 				if response.Locator != expectedLocator {
-					test.Errorf("Case %d: Incorrect error returned. Expcted '%s', found '%s'.",
+					test.Errorf("Case %d: Incorrect error returned. Expected '%s', found '%s'.",
 						i, expectedLocator, response.Locator)
 				}
 			}

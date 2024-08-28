@@ -7,10 +7,10 @@ import (
 	"github.com/edulinq/autograder/internal/util"
 )
 
-var studentPass string = util.Sha256HexFromString("student")
+var studentPass string = util.Sha256HexFromString("course-student")
 
 var standardUserContext APIRequestUserContext = APIRequestUserContext{
-	UserEmail: "student@test.com",
+	UserEmail: "course-student@test.edulinq.org",
 	UserPass:  studentPass,
 }
 
@@ -112,17 +112,17 @@ func (this *baseAssignmentAPIRequest) GetTestValues() testValues {
 
 var validBaseAPIRequestTestCases []baseAPIRequestTestCase = []baseAPIRequestTestCase{
 	baseAPIRequestTestCase{
-		Payload:    fmt.Sprintf(`{"course-id": "course101", "assignment-id": "hw0", "user-email": "student@test.com", "user-pass": "%s"}`, studentPass),
+		Payload:    fmt.Sprintf(`{"course-id": "course101", "assignment-id": "hw0", "user-email": "course-student@test.edulinq.org", "user-pass": "%s"}`, studentPass),
 		testValues: testValues{A: "", B: 0},
 	},
 }
 
 var invalidBaseAPIRequestTestCases []baseAPIRequestTestCase = []baseAPIRequestTestCase{
 	baseAPIRequestTestCase{Payload: "{}"},
-	baseAPIRequestTestCase{Payload: fmt.Sprintf(`{"assignment-id": "hw0", "user-email": "student@test.com", "user-pass": "%s"}`, studentPass)},
-	baseAPIRequestTestCase{Payload: fmt.Sprintf(`{"course-id": "course101", "user-email": "student@test.com", "user-pass": "%s"}`, studentPass)},
+	baseAPIRequestTestCase{Payload: fmt.Sprintf(`{"assignment-id": "hw0", "user-email": "course-student@test.edulinq.org", "user-pass": "%s"}`, studentPass)},
+	baseAPIRequestTestCase{Payload: fmt.Sprintf(`{"course-id": "course101", "user-email": "course-student@test.edulinq.org", "user-pass": "%s"}`, studentPass)},
 	baseAPIRequestTestCase{Payload: fmt.Sprintf(`{"course-id": "course101", "assignment-id": "hw0", "user-pass": "%s"}`, studentPass)},
-	baseAPIRequestTestCase{Payload: `{"course-id": "course101", "assignment-id": "hw0", "user-email": "student@test.com"}`},
+	baseAPIRequestTestCase{Payload: `{"course-id": "course101", "assignment-id": "hw0", "user-email": "course-student@test.edulinq.org"}`},
 }
 
 var invalidJSONTestCases []baseAPIRequestTestCase = []baseAPIRequestTestCase{
