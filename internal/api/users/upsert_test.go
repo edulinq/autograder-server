@@ -5,12 +5,15 @@ import (
 	"testing"
 
 	"github.com/edulinq/autograder/internal/api/core"
+	"github.com/edulinq/autograder/internal/db"
 	"github.com/edulinq/autograder/internal/model"
 	"github.com/edulinq/autograder/internal/procedures/users"
 	"github.com/edulinq/autograder/internal/util"
 )
 
 func TestUpsert(test *testing.T) {
+	defer db.ResetForTesting()
+
 	testCases := []struct {
 		email     string
 		permError bool
@@ -18,8 +21,103 @@ func TestUpsert(test *testing.T) {
 		expected  []*model.UserOpResult
 	}{
 		// Valid permissions.
-		{"server-admin", false, &users.UpsertUsersOptions{}, []*model.UserOpResult{}},
-		{"server-owner", false, &users.UpsertUsersOptions{}, []*model.UserOpResult{}},
+		// New user without course.
+		{
+			email:     "server-admin",
+			permError: false,
+			options: &users.UpsertUsersOptions{
+				RawUsers: []*model.RawUserData{
+					&model.RawUserData{
+						Email: "new@test.edulinq.org",
+						Name:  "new",
+						Role:  model.GetServerUserRoleString(model.ServerRoleUser),
+						Pass:  "1234",
+					},
+				},
+				SendEmails: true,
+			},
+			expected: []*model.UserOpResult{
+				&model.UserOpResult{
+					Email:   "new@test.edulinq.org",
+					Added:   true,
+					Emailed: true,
+				},
+			},
+		},
+
+		// New user with course.
+		{
+			email:     "server-admin",
+			permError: false,
+			options: &users.UpsertUsersOptions{
+				RawUsers: []*model.RawUserData{
+					&model.RawUserData{
+						Email:       "new@test.edulinq.org",
+						Name:        "new",
+						Role:        model.GetServerUserRoleString(model.ServerRoleUser),
+						Pass:        "1234",
+						Course:      "new-course",
+						CourseRole:  model.GetCourseUserRoleString(model.CourseRoleStudent),
+						CourseLMSID: "new-lms",
+					},
+				},
+				SendEmails: true,
+			},
+			expected: []*model.UserOpResult{
+				&model.UserOpResult{
+					Email:    "new@test.edulinq.org",
+					Added:    true,
+					Emailed:  true,
+					Enrolled: []string{"new-course"},
+				},
+			},
+		},
+
+		// Update user without course.
+		{
+			email:     "server-owner",
+			permError: false,
+			options: &users.UpsertUsersOptions{
+				RawUsers: []*model.RawUserData{
+					&model.RawUserData{
+						Email: "course-student@test.edulinq.org",
+						Name:  "new",
+					},
+				},
+				SendEmails: true,
+			},
+			expected: []*model.UserOpResult{
+				&model.UserOpResult{
+					Email:    "course-student@test.edulinq.org",
+					Modified: true,
+				},
+			},
+		},
+
+		// Update user with course (enroll).
+		{
+			email:     "server-owner",
+			permError: false,
+			options: &users.UpsertUsersOptions{
+				RawUsers: []*model.RawUserData{
+					&model.RawUserData{
+						Email:       "course-student@test.edulinq.org",
+						Course:      "new-course",
+						CourseRole:  model.GetCourseUserRoleString(model.CourseRoleStudent),
+						CourseLMSID: "new-lms",
+					},
+				},
+				SendEmails: true,
+			},
+			expected: []*model.UserOpResult{
+				&model.UserOpResult{
+					Email:    "course-student@test.edulinq.org",
+					Modified: true,
+					Emailed:  true,
+					Enrolled: []string{"new-course"},
+				},
+			},
+		},
 
 		// Invalid permissions.
 		{"server-user", true, nil, nil},
@@ -27,6 +125,8 @@ func TestUpsert(test *testing.T) {
 	}
 
 	for i, testCase := range testCases {
+		db.ResetForTesting()
+
 		fields := map[string]any{
 			"options": testCase.options,
 		}

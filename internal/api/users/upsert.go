@@ -14,7 +14,7 @@ type UpsertRequest struct {
 }
 
 type UpsertResponse struct {
-	Results []*model.UserOpResult `json:"results"`
+	Results []*model.UserOpResult
 }
 
 func HandleUpsert(request *UpsertRequest) (*UpsertResponse, *core.APIError) {
