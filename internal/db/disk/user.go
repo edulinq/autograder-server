@@ -35,7 +35,7 @@ func (this *backend) GetCourseUsers(course *model.Course) (map[string]*model.Cou
 	return courseUsers, nil
 }
 
-func (this *backend) GetServerUser(email string, includeTokens bool) (*model.ServerUser, error) {
+func (this *backend) GetServerUser(email string) (*model.ServerUser, error) {
 	users, err := this.getServerUsersLock(true)
 	if err != nil {
 		return nil, err
@@ -44,10 +44,6 @@ func (this *backend) GetServerUser(email string, includeTokens bool) (*model.Ser
 	user, exists := users[email]
 	if !exists {
 		return nil, nil
-	}
-
-	if !includeTokens {
-		user.Tokens = nil
 	}
 
 	return user, nil
