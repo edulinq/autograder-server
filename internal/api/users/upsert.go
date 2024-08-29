@@ -10,11 +10,11 @@ type UpsertRequest struct {
 	core.APIRequestUserContext
 	core.MinServerRoleAdmin
 
-	Options users.UpsertUsersOptions
+	Options users.UpsertUsersOptions `json:"options"`
 }
 
 type UpsertResponse struct {
-	Results []*model.UserOpResult
+	Results []*model.UserOpResult `json:"results"`
 }
 
 func HandleUpsert(request *UpsertRequest) (*UpsertResponse, *core.APIError) {
