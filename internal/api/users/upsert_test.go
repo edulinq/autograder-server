@@ -120,15 +120,19 @@ func TestUpsert(test *testing.T) {
 		},
 
 		// Invalid permissions.
-		{"server-user", true, nil, nil},
-		{"server-creator", true, nil, nil},
+		{"server-user", true, &users.UpsertUsersOptions{}, nil},
+		{"server-creator", true, &users.UpsertUsersOptions{}, nil},
 	}
 
 	for i, testCase := range testCases {
 		db.ResetForTesting()
 
 		fields := map[string]any{
-			"options": testCase.options,
+			"raw-users":    testCase.options.RawUsers,
+			"skip-inserts": testCase.options.SkipInserts,
+			"skip-updates": testCase.options.SkipUpdates,
+			"dry-run":      testCase.options.DryRun,
+			"send-emails":  testCase.options.SendEmails,
 		}
 
 		response := core.SendTestAPIRequestFull(test, core.NewEndpoint(`users/upsert`), fields, nil, testCase.email)
