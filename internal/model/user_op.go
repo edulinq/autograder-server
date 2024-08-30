@@ -1,6 +1,8 @@
 package model
 
 import (
+	"fmt"
+
 	"github.com/edulinq/autograder/internal/util"
 )
 
@@ -40,13 +42,13 @@ type UserOpResult struct {
 	// The following error occurred during this operation because of the provided data,
 	// i.e., they are caused by the calling user.
 	// All error messages should be safe for users.
-	ValidationErrors []string `json:"validation-errors,omitempty"`
+	ValidationErrors []*ModelError `json:"validation-errors,omitempty"`
 
 	// The following error occurred during this operation, but not because of the provided,
 	// i.e., they are the system's fault.
 	// These errors are not guarenteed to be safe for users,
 	// and the calling code should decide how they should be managed.
-	SystemErrors []string `json:"system-errors,omitempty"`
+	SystemErrors []*ModelError `json:"system-errors,omitempty"`
 
 	// The following cleartext password was generated during this operation.
 	// Care should be taken to not expose their field.
@@ -72,17 +74,22 @@ type UserOpResultsCounts struct {
 	CleartextPassword int
 }
 
-func NewValidationErrorUserOpResult(email string, err error) *UserOpResult {
+func NewUserOpResultValidationError(locator string, email string, err error) *UserOpResult {
 	return &UserOpResult{
-		Email:            email,
-		ValidationErrors: []string{err.Error()},
+		Email: email,
+		ValidationErrors: []*ModelError{
+			NewModelError(locator, err.Error(), fmt.Sprintf("You have insufficient permissions for the requested operation.")),
+		},
 	}
 }
 
-func NewSystemErrorUserOpResult(email string, err error) *UserOpResult {
+func NewUserOpResultSystemError(locator string, email string, err error) *UserOpResult {
 	return &UserOpResult{
-		Email:        email,
-		SystemErrors: []string{err.Error()},
+		Email: email,
+		SystemErrors: []*ModelError{
+			NewModelError(locator, err.Error(),
+				fmt.Sprintf("The server failed to process your request. Please contact an administrator with this ID '%s'.", locator)),
+		},
 	}
 }
 

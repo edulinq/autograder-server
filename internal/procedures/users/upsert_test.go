@@ -13,6 +13,7 @@ import (
 var PLACEHOLDER_PASSWORD_CLEARTEXT string = "<placeholder_pass>"
 var PLACEHOLDER_SALT *string = util.StringPointer("abcd")
 var PLACEHOLDER_PASSWORD_TOKEN *model.Token = model.MustNewToken(PLACEHOLDER_PASSWORD_CLEARTEXT, *PLACEHOLDER_SALT, model.TokenSourcePassword, "password")
+var VALIDATION_ERROR_EXTERNAL_MESSAGE = "You have insufficient permissions for the requested operation."
 
 func TestUpsertUser(test *testing.T) {
 	db.ResetForTesting()
@@ -652,8 +653,14 @@ func TestUpsertUser(test *testing.T) {
 				},
 			},
 			expected: &model.UserOpResult{
-				Email:        "",
-				SystemErrors: []string{"No authority/roles were provided when adding a user."},
+				Email: "",
+				SystemErrors: []*model.ModelError{
+					&model.ModelError{
+						Locator:         "-1001",
+						InternalMessage: "No authority/roles were provided when adding a user.",
+						ExternalMessage: "The server failed to process your request. Please contact an administrator with this ID '-1001'.",
+					},
+				},
 			},
 			expectedUser: nil,
 		},
@@ -669,8 +676,14 @@ func TestUpsertUser(test *testing.T) {
 				ContextCourseRole: model.CourseRoleOwner,
 			},
 			expected: &model.UserOpResult{
-				Email:        "new@test.edulinq.org",
-				SystemErrors: []string{"Users must have a server role to upsert users."},
+				Email: "new@test.edulinq.org",
+				SystemErrors: []*model.ModelError{
+					&model.ModelError{
+						Locator:         "-1010",
+						InternalMessage: "Users must have a server role to upsert users.",
+						ExternalMessage: "The server failed to process your request. Please contact an administrator with this ID '-1010'.",
+					},
+				},
 			},
 			expectedUser: nil,
 		},
@@ -687,8 +700,14 @@ func TestUpsertUser(test *testing.T) {
 				ContextServerRole: model.ServerRoleAdmin,
 			},
 			expected: &model.UserOpResult{
-				Email:            "new@test.edulinq.org",
-				ValidationErrors: []string{"User has a server role of 'admin', which is not high enough to upsert a user with server role of 'owner'."},
+				Email: "new@test.edulinq.org",
+				ValidationErrors: []*model.ModelError{
+					&model.ModelError{
+						Locator:         "-1011",
+						InternalMessage: "User has a server role of 'admin', which is not high enough to upsert a user with server role of 'owner'.",
+						ExternalMessage: VALIDATION_ERROR_EXTERNAL_MESSAGE,
+					},
+				},
 			},
 			expectedUser: nil,
 		},
@@ -704,8 +723,14 @@ func TestUpsertUser(test *testing.T) {
 				ContextServerRole: model.ServerRoleUser,
 			},
 			expected: &model.UserOpResult{
-				Email:            "new@test.edulinq.org",
-				ValidationErrors: []string{"User has an insufficient server role of 'user' and no course role to insert users."},
+				Email: "new@test.edulinq.org",
+				ValidationErrors: []*model.ModelError{
+					&model.ModelError{
+						Locator:         "-1012",
+						InternalMessage: "User has an insufficient server role of 'user' and no course role to insert users.",
+						ExternalMessage: VALIDATION_ERROR_EXTERNAL_MESSAGE,
+					},
+				},
 			},
 			expectedUser: nil,
 		},
@@ -725,8 +750,14 @@ func TestUpsertUser(test *testing.T) {
 				ContextCourseRole: model.CourseRoleStudent,
 			},
 			expected: &model.UserOpResult{
-				Email:            "new@test.edulinq.org",
-				ValidationErrors: []string{"User has a course role of 'student', which is not high enough to insert users."},
+				Email: "new@test.edulinq.org",
+				ValidationErrors: []*model.ModelError{
+					&model.ModelError{
+						Locator:         "-1014",
+						InternalMessage: "User has a course role of 'student', which is not high enough to insert users.",
+						ExternalMessage: VALIDATION_ERROR_EXTERNAL_MESSAGE,
+					},
+				},
 			},
 			expectedUser: nil,
 		},
@@ -746,8 +777,14 @@ func TestUpsertUser(test *testing.T) {
 				ContextCourseRole: model.CourseRoleAdmin,
 			},
 			expected: &model.UserOpResult{
-				Email:            "new@test.edulinq.org",
-				ValidationErrors: []string{"User has a course role of 'admin', which is not high enough to insert a user with course role of 'owner'."},
+				Email: "new@test.edulinq.org",
+				ValidationErrors: []*model.ModelError{
+					&model.ModelError{
+						Locator:         "-1013",
+						InternalMessage: "User has a course role of 'admin', which is not high enough to insert a user with course role of 'owner'.",
+						ExternalMessage: VALIDATION_ERROR_EXTERNAL_MESSAGE,
+					},
+				},
 			},
 			expectedUser: nil,
 		},
@@ -764,8 +801,14 @@ func TestUpsertUser(test *testing.T) {
 				ContextServerRole: model.ServerRoleAdmin,
 			},
 			expected: &model.UserOpResult{
-				Email:            "server-owner@test.edulinq.org",
-				ValidationErrors: []string{"User has a server role of 'admin', which is not high enough to update a user with server role of 'owner'."},
+				Email: "server-owner@test.edulinq.org",
+				ValidationErrors: []*model.ModelError{
+					&model.ModelError{
+						Locator:         "-1016",
+						InternalMessage: "User has a server role of 'admin', which is not high enough to update a user with server role of 'owner'.",
+						ExternalMessage: VALIDATION_ERROR_EXTERNAL_MESSAGE,
+					},
+				},
 			},
 			expectedUser: nil,
 		},
@@ -784,8 +827,14 @@ func TestUpsertUser(test *testing.T) {
 				ContextCourseRole: model.CourseRoleAdmin,
 			},
 			expected: &model.UserOpResult{
-				Email:            "course-owner@test.edulinq.org",
-				ValidationErrors: []string{"User has a course role of 'admin', which is not high enough to update a user with course role of 'owner'."},
+				Email: "course-owner@test.edulinq.org",
+				ValidationErrors: []*model.ModelError{
+					&model.ModelError{
+						Locator:         "-1019",
+						InternalMessage: "User has a course role of 'admin', which is not high enough to update a user with course role of 'owner'.",
+						ExternalMessage: VALIDATION_ERROR_EXTERNAL_MESSAGE,
+					},
+				},
 			},
 			expectedUser: nil,
 		},
@@ -804,8 +853,14 @@ func TestUpsertUser(test *testing.T) {
 				ContextCourseRole: model.CourseRoleStudent,
 			},
 			expected: &model.UserOpResult{
-				Email:            "course-student@test.edulinq.org",
-				ValidationErrors: []string{"User has a server role of 'user', which is not high enough to update server-level information for another user."},
+				Email: "course-student@test.edulinq.org",
+				ValidationErrors: []*model.ModelError{
+					&model.ModelError{
+						Locator:         "-1017",
+						InternalMessage: "User has a server role of 'user', which is not high enough to update server-level information for another user.",
+						ExternalMessage: VALIDATION_ERROR_EXTERNAL_MESSAGE,
+					},
+				},
 			},
 			expectedUser: nil,
 		},
@@ -826,8 +881,14 @@ func TestUpsertUser(test *testing.T) {
 				ContextCourseRole: model.CourseRoleStudent,
 			},
 			expected: &model.UserOpResult{
-				Email:            "course-student@test.edulinq.org",
-				ValidationErrors: []string{"User has a course role of 'student', which is not high enough to update course-level information for another user."},
+				Email: "course-student@test.edulinq.org",
+				ValidationErrors: []*model.ModelError{
+					&model.ModelError{
+						Locator:         "-1020",
+						InternalMessage: "User has a course role of 'student', which is not high enough to update course-level information for another user.",
+						ExternalMessage: VALIDATION_ERROR_EXTERNAL_MESSAGE,
+					},
+				},
 			},
 			expectedUser: nil,
 		},
@@ -845,8 +906,14 @@ func TestUpsertUser(test *testing.T) {
 				ContextServerRole: model.ServerRoleAdmin,
 			},
 			expected: &model.UserOpResult{
-				Email:            "course-admin@test.edulinq.org",
-				ValidationErrors: []string{"User has a server role of 'admin', which is not high enough to upsert a user with server role of 'owner'."},
+				Email: "course-admin@test.edulinq.org",
+				ValidationErrors: []*model.ModelError{
+					&model.ModelError{
+						Locator:         "-1011",
+						InternalMessage: "User has a server role of 'admin', which is not high enough to upsert a user with server role of 'owner'.",
+						ExternalMessage: VALIDATION_ERROR_EXTERNAL_MESSAGE,
+					},
+				},
 			},
 			expectedUser: nil,
 		},
@@ -866,8 +933,14 @@ func TestUpsertUser(test *testing.T) {
 				ContextCourseRole: model.CourseRoleGrader,
 			},
 			expected: &model.UserOpResult{
-				Email:            "course-grader@test.edulinq.org",
-				ValidationErrors: []string{"User has a course role of 'grader', which is not high enough to modify course roles."},
+				Email: "course-grader@test.edulinq.org",
+				ValidationErrors: []*model.ModelError{
+					&model.ModelError{
+						Locator:         "-1018",
+						InternalMessage: "User has a course role of 'grader', which is not high enough to modify course roles.",
+						ExternalMessage: VALIDATION_ERROR_EXTERNAL_MESSAGE,
+					},
+				},
 			},
 			expectedUser: nil,
 		},
@@ -884,8 +957,14 @@ func TestUpsertUser(test *testing.T) {
 				ContextServerRole: model.ServerRoleCourseCreator,
 			},
 			expected: &model.UserOpResult{
-				Email:            "server-creator@test.edulinq.org",
-				ValidationErrors: []string{"User has a server role of 'creator', which is not high enough to modify server roles."},
+				Email: "server-creator@test.edulinq.org",
+				ValidationErrors: []*model.ModelError{
+					&model.ModelError{
+						Locator:         "-1015",
+						InternalMessage: "User has a server role of 'creator', which is not high enough to modify server roles.",
+						ExternalMessage: VALIDATION_ERROR_EXTERNAL_MESSAGE,
+					},
+				},
 			},
 			expectedUser: nil,
 		},
@@ -905,8 +984,14 @@ func TestUpsertUser(test *testing.T) {
 				ContextCourseRole: model.CourseRoleGrader,
 			},
 			expected: &model.UserOpResult{
-				Email:            "course-grader@test.edulinq.org",
-				ValidationErrors: []string{"User has a course role of 'grader', which is not high enough to modify course roles."},
+				Email: "course-grader@test.edulinq.org",
+				ValidationErrors: []*model.ModelError{
+					&model.ModelError{
+						Locator:         "-1018",
+						InternalMessage: "User has a course role of 'grader', which is not high enough to modify course roles.",
+						ExternalMessage: VALIDATION_ERROR_EXTERNAL_MESSAGE,
+					},
+				},
 			},
 			expectedUser: nil,
 		},
@@ -926,8 +1011,14 @@ func TestUpsertUser(test *testing.T) {
 				ContextServerRole: model.ServerRoleAdmin,
 			},
 			expected: &model.UserOpResult{
-				Email:            "course-student@test.edulinq.org",
-				ValidationErrors: []string{"User 'course-student@test.edulinq.org' has an invalid course info 'new-course': 'Unknown course role.'."},
+				Email: "course-student@test.edulinq.org",
+				ValidationErrors: []*model.ModelError{
+					&model.ModelError{
+						Locator:         "-1003",
+						InternalMessage: "User 'course-student@test.edulinq.org' has an invalid course info 'new-course': 'Unknown course role.'.",
+						ExternalMessage: VALIDATION_ERROR_EXTERNAL_MESSAGE,
+					},
+				},
 			},
 			expectedUser: nil,
 		},
@@ -1000,7 +1091,7 @@ func testUpsertDryRun(test *testing.T, caseIndex int, sendEmails bool, options U
 		expected.CleartextPassword = result.CleartextPassword
 	}
 
-	if !reflect.DeepEqual(expected, result) {
+	if !reflect.DeepEqual(util.MustToJSON(expected), util.MustToJSON(result)) {
 		test.Errorf("Case (dry run, email: %v) %d: Result is not as expected. Expected: '%s', Actual: '%s'.", sendEmails, caseIndex,
 			util.MustToJSONIndent(expected), util.MustToJSONIndent(result))
 		return false
@@ -1043,7 +1134,7 @@ func testUpsert(test *testing.T, caseIndex int, sendEmails bool, options UpsertU
 		expected.CleartextPassword = result.CleartextPassword
 	}
 
-	if !reflect.DeepEqual(expected, result) {
+	if !reflect.DeepEqual(util.MustToJSON(expected), util.MustToJSON(result)) {
 		test.Errorf("Case (wet run, email: %v) %d: Result is not as expected. Expected: '%s', Actual: '%s'.", sendEmails, caseIndex,
 			util.MustToJSONIndent(expected), util.MustToJSONIndent(result))
 		return false

@@ -103,10 +103,7 @@ func syncLMSUsers(course *model.Course, dryRun bool, sendEmails bool, skipMissin
 		if adapter.SyncUserRemoves {
 			_, _, err := db.RemoveUserFromCourse(course, email)
 			if err != nil {
-				results = append(results, &model.UserOpResult{
-					Email:        email,
-					SystemErrors: []string{err.Error()},
-				})
+				results = append(results, model.NewUserOpResultSystemError("-1020", email, err))
 			} else {
 				results = append(results, &model.UserOpResult{
 					Email:    email,
