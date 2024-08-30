@@ -17,15 +17,15 @@ func TestPassChange(test *testing.T) {
 		expected PasswordChangeResponse
 	}{
 		{"spooky", PasswordChangeResponse{true, false}},
-		{"admin", PasswordChangeResponse{true, true}},
+		{"course-admin", PasswordChangeResponse{true, true}},
 	}
 
 	for i, testCase := range testCases {
 		db.ResetForTesting()
 
 		fields := map[string]any{
-			"user-email": "admin@test.com",
-			"user-pass":  util.Sha256HexFromString("admin"),
+			"user-email": "course-admin@test.edulinq.org",
+			"user-pass":  util.Sha256HexFromString("course-admin"),
 			"new-pass":   util.Sha256HexFromString(testCase.newPass),
 		}
 
@@ -44,7 +44,7 @@ func TestPassChange(test *testing.T) {
 			continue
 		}
 
-		user, err := db.GetServerUser("admin@test.com", true)
+		user, err := db.GetServerUser("course-admin@test.edulinq.org")
 		if err != nil {
 			test.Errorf("Case %d: Failed to get saved user: '%v'.", i, err)
 			continue

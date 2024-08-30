@@ -12,7 +12,7 @@ func TestTokensCreate(test *testing.T) {
 	db.ResetForTesting()
 	defer db.ResetForTesting()
 
-	user, err := db.GetServerUser("admin@test.com", true)
+	user, err := db.GetServerUser("course-admin@test.edulinq.org")
 	if err != nil {
 		test.Fatalf("Failed to get initial user: '%v'.", err)
 	}
@@ -24,7 +24,7 @@ func TestTokensCreate(test *testing.T) {
 		test.Fatalf("Response not successful: '%s'.", util.MustToJSONIndent(response))
 	}
 
-	user, err = db.GetServerUser("admin@test.com", true)
+	user, err = db.GetServerUser("course-admin@test.edulinq.org")
 	if err != nil {
 		test.Fatalf("Failed to get saved user: '%v'.", err)
 	}

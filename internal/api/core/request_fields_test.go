@@ -65,7 +65,7 @@ func TestBadUsersFieldNotExported(test *testing.T) {
 			}{
 				APIRequestCourseUserContext: APIRequestCourseUserContext{
 					APIRequestUserContext: APIRequestUserContext{
-						UserEmail: "student@test.com",
+						UserEmail: "course-student@test.edulinq.org",
 						UserPass:  studentPass,
 					},
 					CourseID: "course101",
@@ -78,7 +78,7 @@ func TestBadUsersFieldNotExported(test *testing.T) {
 				targetServerUser TargetServerUser
 			}{
 				APIRequestUserContext: APIRequestUserContext{
-					UserEmail: "student@test.com",
+					UserEmail: "course-student@test.edulinq.org",
 					UserPass:  studentPass,
 				},
 			},
@@ -89,7 +89,7 @@ func TestBadUsersFieldNotExported(test *testing.T) {
 				targetServerUser TargetServerUserSelfOrAdmin
 			}{
 				APIRequestUserContext: APIRequestUserContext{
-					UserEmail: "student@test.com",
+					UserEmail: "course-student@test.edulinq.org",
 					UserPass:  studentPass,
 				},
 			},
@@ -102,7 +102,7 @@ func TestBadUsersFieldNotExported(test *testing.T) {
 			}{
 				APIRequestCourseUserContext: APIRequestCourseUserContext{
 					APIRequestUserContext: APIRequestUserContext{
-						UserEmail: "student@test.com",
+						UserEmail: "course-student@test.edulinq.org",
 						UserPass:  studentPass,
 					},
 					CourseID: "course101",
@@ -117,7 +117,7 @@ func TestBadUsersFieldNotExported(test *testing.T) {
 			}{
 				APIRequestCourseUserContext: APIRequestCourseUserContext{
 					APIRequestUserContext: APIRequestUserContext{
-						UserEmail: "student@test.com",
+						UserEmail: "course-student@test.edulinq.org",
 						UserPass:  studentPass,
 					},
 					CourseID: "course101",
@@ -132,7 +132,7 @@ func TestBadUsersFieldNotExported(test *testing.T) {
 			}{
 				APIRequestCourseUserContext: APIRequestCourseUserContext{
 					APIRequestUserContext: APIRequestUserContext{
-						UserEmail: "student@test.com",
+						UserEmail: "course-student@test.edulinq.org",
 						UserPass:  studentPass,
 					},
 					CourseID: "course101",
@@ -203,11 +203,11 @@ func TestNonEmptyStringField(test *testing.T) {
 		if apiErr != nil {
 			if testCase.errLoc != "" {
 				if testCase.errLoc != apiErr.Locator {
-					test.Errorf("Case %d: Incorrect error returned on empty string. Expcted '%s', found '%s'.",
+					test.Errorf("Case %d: Incorrect error returned on empty string. Expected '%s', found '%s'.",
 						i, testCase.errLoc, apiErr.Locator)
 				} else {
 					if testCase.jsonName != apiErr.AdditionalDetails["json-name"] {
-						test.Errorf("Case %d: Incorrect JSON name returned. Expcted '%s', found '%s'.",
+						test.Errorf("Case %d: Incorrect JSON name returned. Expected '%s', found '%s'.",
 							i, testCase.jsonName, apiErr.AdditionalDetails["json-name"])
 					}
 				}
@@ -266,7 +266,7 @@ func TestGoodPostFiles(test *testing.T) {
 		filepath.Join(util.RootDirForTesting(), "testdata", "files", "a.txt"),
 	}
 
-	response := SendTestAPIRequestFull(test, endpoint, nil, paths, model.CourseRoleAdmin)
+	response := SendTestAPIRequestFull(test, endpoint, nil, paths, "course-admin")
 	if response.Content != nil {
 		test.Fatalf("Handler gave an error: '%s'.", response.Content)
 	}
@@ -297,7 +297,7 @@ func TestBadPostFilesFieldNotExported(test *testing.T) {
 
 	expectedLocator := "-028"
 	if apiErr.Locator != expectedLocator {
-		test.Fatalf("Struct with non-exported files does not return an error with the correct locator. Expcted '%s', found '%s'.",
+		test.Fatalf("Struct with non-exported files does not return an error with the correct locator. Expected '%s', found '%s'.",
 			expectedLocator, apiErr.Locator)
 	}
 }
@@ -320,14 +320,14 @@ func TestBadPostFilesNoFiles(test *testing.T) {
 
 	paths := []string{}
 
-	response := SendTestAPIRequestFull(test, endpoint, nil, paths, model.CourseRoleAdmin)
+	response := SendTestAPIRequestFull(test, endpoint, nil, paths, "course-admin")
 	if response.Success {
 		test.Fatalf("Request did not generate an error: '%v'.", response)
 	}
 
 	expectedLocator := "-030"
 	if response.Locator != expectedLocator {
-		test.Fatalf("Error does not have the correct locator. Expcted '%s', found '%s'.",
+		test.Fatalf("Error does not have the correct locator. Expected '%s', found '%s'.",
 			expectedLocator, response.Locator)
 	}
 }
@@ -356,14 +356,14 @@ func TestBadPostFilesStoreFail(test *testing.T) {
 	util.SetTempDirForTesting(os.DevNull)
 	defer util.SetTempDirForTesting("")
 
-	response := SendTestAPIRequestFull(test, endpoint, nil, paths, model.CourseRoleAdmin)
+	response := SendTestAPIRequestFull(test, endpoint, nil, paths, "course-admin")
 	if response.Success {
 		test.Fatalf("Request did not generate an error: '%v'.", response)
 	}
 
 	expectedLocator := "-029"
 	if response.Locator != expectedLocator {
-		test.Fatalf("Error does not have the correct locator. Expcted '%s', found '%s'.",
+		test.Fatalf("Error does not have the correct locator. Expected '%s', found '%s'.",
 			expectedLocator, response.Locator)
 	}
 }
@@ -395,7 +395,7 @@ func TestBadPostFilesFileSizeExceeded(test *testing.T) {
 		filepath.Join(util.RootDirForTesting(), "testdata", "files", "1092bytes.txt"),
 	}
 
-	response := SendTestAPIRequestFull(test, endpoint, nil, paths, model.CourseRoleAdmin)
+	response := SendTestAPIRequestFull(test, endpoint, nil, paths, "course-admin")
 	if response.Success {
 		test.Fatalf("Request did not generate an error: '%v'.", response)
 	}
@@ -438,7 +438,7 @@ func testTargetCourseUserJSON[T comparable](test *testing.T, createTargetType fu
 	}{
 		{`""`, createTargetType(TargetCourseUser{false, "", nil})},
 		{`"a"`, createTargetType(TargetCourseUser{false, "a", nil})},
-		{`"student@test.com"`, createTargetType(TargetCourseUser{false, "student@test.com", nil})},
+		{`"course-student@test.edulinq.org"`, createTargetType(TargetCourseUser{false, "course-student@test.edulinq.org", nil})},
 		{`"a\"b\"c"`, createTargetType(TargetCourseUser{false, `a"b"c`, nil})},
 	}
 
@@ -491,7 +491,7 @@ func testTargetServerUserJSON[T comparable](test *testing.T, createTargetType fu
 	}{
 		{`""`, createTargetType(TargetServerUser{false, "", nil})},
 		{`"a"`, createTargetType(TargetServerUser{false, "a", nil})},
-		{`"student@test.com"`, createTargetType(TargetServerUser{false, "student@test.com", nil})},
+		{`"course-student@test.edulinq.org"`, createTargetType(TargetServerUser{false, "course-student@test.edulinq.org", nil})},
 		{`"a\"b\"c"`, createTargetType(TargetServerUser{false, `a"b"c`, nil})},
 	}
 
@@ -530,8 +530,8 @@ func TestTargetCourseUserSelfOrGrader(test *testing.T) {
 		return &testTargetCourseUserSelfOrGraderRequestType{
 			APIRequestCourseUserContext: APIRequestCourseUserContext{
 				APIRequestUserContext: APIRequestUserContext{
-					UserEmail: role.String() + "@test.com",
-					UserPass:  util.Sha256HexFromString(role.String()),
+					UserEmail: "course-" + role.String() + "@test.edulinq.org",
+					UserPass:  util.Sha256HexFromString("course-" + role.String()),
 				},
 				CourseID: "course101",
 			},
@@ -570,8 +570,8 @@ func TestTargetCourseUserSelfOrAdmin(test *testing.T) {
 		return &testTargetCourseUserSelfOrAdminRequestType{
 			APIRequestCourseUserContext: APIRequestCourseUserContext{
 				APIRequestUserContext: APIRequestUserContext{
-					UserEmail: role.String() + "@test.com",
-					UserPass:  util.Sha256HexFromString(role.String()),
+					UserEmail: "course-" + role.String() + "@test.edulinq.org",
+					UserPass:  util.Sha256HexFromString("course-" + role.String()),
 				},
 				CourseID: "course101",
 			},
@@ -624,25 +624,25 @@ func testTargetCourseUser[T comparable, V userGetter](test *testing.T,
 	}{
 		// Self.
 		{model.CourseRoleStudent, "", false,
-			createTargetType(TargetCourseUser{true, "student@test.com", users["student@test.com"]})},
-		{model.CourseRoleStudent, "student@test.com", false,
-			createTargetType(TargetCourseUser{true, "student@test.com", users["student@test.com"]})},
+			createTargetType(TargetCourseUser{true, "course-student@test.edulinq.org", users["course-student@test.edulinq.org"]})},
+		{model.CourseRoleStudent, "course-student@test.edulinq.org", false,
+			createTargetType(TargetCourseUser{true, "course-student@test.edulinq.org", users["course-student@test.edulinq.org"]})},
 		{model.CourseRoleGrader, "", false,
-			createTargetType(TargetCourseUser{true, "grader@test.com", users["grader@test.com"]})},
-		{model.CourseRoleGrader, "grader@test.com", false,
-			createTargetType(TargetCourseUser{true, "grader@test.com", users["grader@test.com"]})},
+			createTargetType(TargetCourseUser{true, "course-grader@test.edulinq.org", users["course-grader@test.edulinq.org"]})},
+		{model.CourseRoleGrader, "course-grader@test.edulinq.org", false,
+			createTargetType(TargetCourseUser{true, "course-grader@test.edulinq.org", users["course-grader@test.edulinq.org"]})},
 
 		// Other.
-		{model.CourseRoleOther, "student@test.com", isNonSelfPermError(model.CourseRoleOther),
-			createTargetType(TargetCourseUser{true, "student@test.com", users["student@test.com"]})},
-		{model.CourseRoleStudent, "grader@test.com", isNonSelfPermError(model.CourseRoleStudent),
-			createTargetType(TargetCourseUser{true, "grader@test.com", users["grader@test.com"]})},
-		{model.CourseRoleGrader, "student@test.com", isNonSelfPermError(model.CourseRoleGrader),
-			createTargetType(TargetCourseUser{true, "student@test.com", users["student@test.com"]})},
-		{model.CourseRoleAdmin, "student@test.com", isNonSelfPermError(model.CourseRoleAdmin),
-			createTargetType(TargetCourseUser{true, "student@test.com", users["student@test.com"]})},
-		{model.CourseRoleOwner, "student@test.com", isNonSelfPermError(model.CourseRoleOwner),
-			createTargetType(TargetCourseUser{true, "student@test.com", users["student@test.com"]})},
+		{model.CourseRoleOther, "course-student@test.edulinq.org", isNonSelfPermError(model.CourseRoleOther),
+			createTargetType(TargetCourseUser{true, "course-student@test.edulinq.org", users["course-student@test.edulinq.org"]})},
+		{model.CourseRoleStudent, "course-grader@test.edulinq.org", isNonSelfPermError(model.CourseRoleStudent),
+			createTargetType(TargetCourseUser{true, "course-grader@test.edulinq.org", users["course-grader@test.edulinq.org"]})},
+		{model.CourseRoleGrader, "course-student@test.edulinq.org", isNonSelfPermError(model.CourseRoleGrader),
+			createTargetType(TargetCourseUser{true, "course-student@test.edulinq.org", users["course-student@test.edulinq.org"]})},
+		{model.CourseRoleAdmin, "course-student@test.edulinq.org", isNonSelfPermError(model.CourseRoleAdmin),
+			createTargetType(TargetCourseUser{true, "course-student@test.edulinq.org", users["course-student@test.edulinq.org"]})},
+		{model.CourseRoleOwner, "course-student@test.edulinq.org", isNonSelfPermError(model.CourseRoleOwner),
+			createTargetType(TargetCourseUser{true, "course-student@test.edulinq.org", users["course-student@test.edulinq.org"]})},
 
 		// Not found.
 		{model.CourseRoleGrader, "ZZZ", isNonSelfPermError(model.CourseRoleGrader),
@@ -659,7 +659,7 @@ func testTargetCourseUser[T comparable, V userGetter](test *testing.T,
 			if testCase.permError {
 				expectedLocator := "-033"
 				if expectedLocator != apiErr.Locator {
-					test.Errorf("Case %d: Incorrect error returned on permissions error. Expcted '%s', found '%s'.",
+					test.Errorf("Case %d: Incorrect error returned on permissions error. Expected '%s', found '%s'.",
 						i, expectedLocator, apiErr.Locator)
 				}
 			} else {
@@ -675,7 +675,7 @@ func testTargetCourseUser[T comparable, V userGetter](test *testing.T,
 		}
 
 		if !reflect.DeepEqual(testCase.expected, request.GetUser()) {
-			test.Errorf("Case %d: Result not as expected. Expcted '%+v', found '%+v'.",
+			test.Errorf("Case %d: Result not as expected. Expected '%+v', found '%+v'.",
 				i, testCase.expected, request.GetUser())
 		}
 	}
@@ -701,17 +701,17 @@ func TestTargetCourseUser(test *testing.T) {
 		target   string
 		expected TargetCourseUser
 	}{
-		{model.CourseRoleStudent, "student@test.com", TargetCourseUser{true, "student@test.com", users["student@test.com"]}},
-		{model.CourseRoleGrader, "grader@test.com", TargetCourseUser{true, "grader@test.com", users["grader@test.com"]}},
+		{model.CourseRoleStudent, "course-student@test.edulinq.org", TargetCourseUser{true, "course-student@test.edulinq.org", users["course-student@test.edulinq.org"]}},
+		{model.CourseRoleGrader, "course-grader@test.edulinq.org", TargetCourseUser{true, "course-grader@test.edulinq.org", users["course-grader@test.edulinq.org"]}},
 
 		{model.CourseRoleStudent, "", TargetCourseUser{}},
 		{model.CourseRoleGrader, "", TargetCourseUser{}},
 
-		{model.CourseRoleOther, "student@test.com", TargetCourseUser{true, "student@test.com", users["student@test.com"]}},
-		{model.CourseRoleStudent, "grader@test.com", TargetCourseUser{true, "grader@test.com", users["grader@test.com"]}},
-		{model.CourseRoleGrader, "student@test.com", TargetCourseUser{true, "student@test.com", users["student@test.com"]}},
-		{model.CourseRoleAdmin, "student@test.com", TargetCourseUser{true, "student@test.com", users["student@test.com"]}},
-		{model.CourseRoleOwner, "student@test.com", TargetCourseUser{true, "student@test.com", users["student@test.com"]}},
+		{model.CourseRoleOther, "course-student@test.edulinq.org", TargetCourseUser{true, "course-student@test.edulinq.org", users["course-student@test.edulinq.org"]}},
+		{model.CourseRoleStudent, "course-grader@test.edulinq.org", TargetCourseUser{true, "course-grader@test.edulinq.org", users["course-grader@test.edulinq.org"]}},
+		{model.CourseRoleGrader, "course-student@test.edulinq.org", TargetCourseUser{true, "course-student@test.edulinq.org", users["course-student@test.edulinq.org"]}},
+		{model.CourseRoleAdmin, "course-student@test.edulinq.org", TargetCourseUser{true, "course-student@test.edulinq.org", users["course-student@test.edulinq.org"]}},
+		{model.CourseRoleOwner, "course-student@test.edulinq.org", TargetCourseUser{true, "course-student@test.edulinq.org", users["course-student@test.edulinq.org"]}},
 
 		// Not found.
 		{model.CourseRoleGrader, "ZZZ", TargetCourseUser{false, "ZZZ", nil}},
@@ -721,8 +721,8 @@ func TestTargetCourseUser(test *testing.T) {
 		request := requestType{
 			APIRequestCourseUserContext: APIRequestCourseUserContext{
 				APIRequestUserContext: APIRequestUserContext{
-					UserEmail: testCase.role.String() + "@test.com",
-					UserPass:  util.Sha256HexFromString(testCase.role.String()),
+					UserEmail: "course-" + testCase.role.String() + "@test.edulinq.org",
+					UserPass:  util.Sha256HexFromString("course-" + testCase.role.String()),
 				},
 				CourseID: "course101",
 			},
@@ -736,7 +736,7 @@ func TestTargetCourseUser(test *testing.T) {
 			if testCase.target == "" {
 				expectedLocator := "-034"
 				if expectedLocator != apiErr.Locator {
-					test.Errorf("Case %d: Incorrect error returned on empty string. Expcted '%s', found '%s'.",
+					test.Errorf("Case %d: Incorrect error returned on empty string. Expected '%s', found '%s'.",
 						i, expectedLocator, apiErr.Locator)
 				}
 			} else {
@@ -747,7 +747,7 @@ func TestTargetCourseUser(test *testing.T) {
 		}
 
 		if !reflect.DeepEqual(testCase.expected, request.User) {
-			test.Errorf("Case %d: Result not as expected. Expcted '%+v', found '%+v'.",
+			test.Errorf("Case %d: Result not as expected. Expected '%+v', found '%+v'.",
 				i, testCase.expected, request.User)
 		}
 	}
@@ -760,22 +760,22 @@ func TestTargetServerUser(test *testing.T) {
 		User TargetServerUser
 	}
 
-	user := db.MustGetServerUser("student@test.com", true)
+	user := db.MustGetServerUser("course-student@test.edulinq.org")
 
 	testCases := []struct {
 		target string
 		found  bool
 	}{
 		{"", false},
-		{"student@test.com", true},
+		{"course-student@test.edulinq.org", true},
 		{"ZZZ", false},
 	}
 
 	for i, testCase := range testCases {
 		request := requestType{
 			APIRequestUserContext: APIRequestUserContext{
-				UserEmail: "admin@test.com",
-				UserPass:  util.Sha256HexFromString("admin"),
+				UserEmail: "course-admin@test.edulinq.org",
+				UserPass:  util.Sha256HexFromString("course-admin"),
 			},
 			User: TargetServerUser{
 				Email: testCase.target,
@@ -787,7 +787,7 @@ func TestTargetServerUser(test *testing.T) {
 			if testCase.target == "" {
 				expectedLocator := "-044"
 				if expectedLocator != apiErr.Locator {
-					test.Errorf("Case %d: Incorrect error returned on empty string. Expcted '%s', found '%s'.",
+					test.Errorf("Case %d: Incorrect error returned on empty string. Expected '%s', found '%s'.",
 						i, expectedLocator, apiErr.Locator)
 				}
 			} else {
@@ -798,14 +798,14 @@ func TestTargetServerUser(test *testing.T) {
 		}
 
 		if testCase.found != request.User.Found {
-			test.Errorf("Case %d: Found result not as expected. Expcted '%v', found '%v'.",
+			test.Errorf("Case %d: Found result not as expected. Expected '%v', found '%v'.",
 				i, testCase.found, request.User.Found)
 			continue
 		}
 
 		if testCase.found {
 			if !reflect.DeepEqual(user, request.User.User) {
-				test.Errorf("Case %d: Result not as expected. Expcted '%s', found '%s'.",
+				test.Errorf("Case %d: Result not as expected. Expected '%s', found '%s'.",
 					i, util.MustToJSONIndent(user), util.MustToJSONIndent(request.User.User))
 				continue
 			}
@@ -836,30 +836,30 @@ func TestTargetServerUserSelfOrAdmin(test *testing.T) {
 		expected    *model.ServerUser
 	}{
 		// Self, empty.
-		{users["server-user@test.com"], "", false, users["server-user@test.com"]},
-		{users["server-creator@test.com"], "", false, users["server-creator@test.com"]},
-		{users["server-admin@test.com"], "", false, users["server-admin@test.com"]},
-		{users["server-owner@test.com"], "", false, users["server-owner@test.com"]},
+		{users["server-user@test.edulinq.org"], "", false, users["server-user@test.edulinq.org"]},
+		{users["server-creator@test.edulinq.org"], "", false, users["server-creator@test.edulinq.org"]},
+		{users["server-admin@test.edulinq.org"], "", false, users["server-admin@test.edulinq.org"]},
+		{users["server-owner@test.edulinq.org"], "", false, users["server-owner@test.edulinq.org"]},
 
 		// Self, email.
-		{users["server-user@test.com"], "server-user@test.com", false, users["server-user@test.com"]},
-		{users["server-creator@test.com"], "server-creator@test.com", false, users["server-creator@test.com"]},
-		{users["server-admin@test.com"], "server-admin@test.com", false, users["server-admin@test.com"]},
-		{users["server-owner@test.com"], "server-owner@test.com", false, users["server-owner@test.com"]},
+		{users["server-user@test.edulinq.org"], "server-user@test.edulinq.org", false, users["server-user@test.edulinq.org"]},
+		{users["server-creator@test.edulinq.org"], "server-creator@test.edulinq.org", false, users["server-creator@test.edulinq.org"]},
+		{users["server-admin@test.edulinq.org"], "server-admin@test.edulinq.org", false, users["server-admin@test.edulinq.org"]},
+		{users["server-owner@test.edulinq.org"], "server-owner@test.edulinq.org", false, users["server-owner@test.edulinq.org"]},
 
 		// Other, bad permissions.
-		{users["server-creator@test.com"], "server-user@test.com", true, nil},
-		{users["server-creator@test.com"], "server-admin@test.com", true, nil},
-		{users["server-creator@test.com"], "server-owner@test.com", true, nil},
+		{users["server-creator@test.edulinq.org"], "server-user@test.edulinq.org", true, nil},
+		{users["server-creator@test.edulinq.org"], "server-admin@test.edulinq.org", true, nil},
+		{users["server-creator@test.edulinq.org"], "server-owner@test.edulinq.org", true, nil},
 
 		// Other, good permissions.
-		{users["server-admin@test.com"], "server-user@test.com", false, users["server-user@test.com"]},
-		{users["server-admin@test.com"], "server-creator@test.com", false, users["server-creator@test.com"]},
-		{users["server-admin@test.com"], "server-owner@test.com", false, users["server-owner@test.com"]},
+		{users["server-admin@test.edulinq.org"], "server-user@test.edulinq.org", false, users["server-user@test.edulinq.org"]},
+		{users["server-admin@test.edulinq.org"], "server-creator@test.edulinq.org", false, users["server-creator@test.edulinq.org"]},
+		{users["server-admin@test.edulinq.org"], "server-owner@test.edulinq.org", false, users["server-owner@test.edulinq.org"]},
 
 		// Not found.
-		{users["server-creator@test.com"], "ZZZ", true, nil},
-		{users["server-admin@test.com"], "ZZZ", false, nil},
+		{users["server-creator@test.edulinq.org"], "ZZZ", true, nil},
+		{users["server-admin@test.edulinq.org"], "ZZZ", false, nil},
 	}
 
 	for i, testCase := range testCases {
@@ -880,7 +880,7 @@ func TestTargetServerUserSelfOrAdmin(test *testing.T) {
 			if testCase.permError {
 				expectedLocator := "-046"
 				if expectedLocator != apiErr.Locator {
-					test.Errorf("Case %d: Incorrect error returned on permissions error. Expcted '%s', found '%s'.",
+					test.Errorf("Case %d: Incorrect error returned on permissions error. Expected '%s', found '%s'.",
 						i, expectedLocator, apiErr.Locator)
 				}
 			} else {
@@ -909,7 +909,7 @@ func TestTargetServerUserSelfOrAdmin(test *testing.T) {
 		}
 
 		if !reflect.DeepEqual(testCase.expected, request.User.User) {
-			test.Errorf("Case %d: Result not as expected. Expcted '%+v', found '%+v'.",
+			test.Errorf("Case %d: Result not as expected. Expected '%+v', found '%+v'.",
 				i, testCase.expected, request.User.User)
 		}
 	}

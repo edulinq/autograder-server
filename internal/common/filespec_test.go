@@ -229,16 +229,16 @@ var testCasesParseValidation []*testCaseParseValidation = []*testCaseParseValida
 
 	// URL.
 	&testCaseParseValidation{
-		`{"type": "url", "path": "http://www.test.com/abc.zip"}`,
+		`{"type": "url", "path": "http://www.test.edulinq.org/abc.zip"}`,
 		true, true,
-		FileSpec{Type: FILESPEC_TYPE_URL, Path: "http://www.test.com/abc.zip", Dest: "abc.zip"},
-		`{"type":"url","path":"http://www.test.com/abc.zip","dest":"abc.zip"}`,
+		FileSpec{Type: FILESPEC_TYPE_URL, Path: "http://www.test.edulinq.org/abc.zip", Dest: "abc.zip"},
+		`{"type":"url","path":"http://www.test.edulinq.org/abc.zip","dest":"abc.zip"}`,
 	},
 	&testCaseParseValidation{
-		`{"type": "url", "path": "http://www.test.com/abc.zip", "dest": "xyz.txt"}`,
+		`{"type": "url", "path": "http://www.test.edulinq.org/abc.zip", "dest": "xyz.txt"}`,
 		true, true,
-		FileSpec{Type: FILESPEC_TYPE_URL, Path: "http://www.test.com/abc.zip", Dest: "xyz.txt"},
-		`{"type":"url","path":"http://www.test.com/abc.zip","dest":"xyz.txt"}`,
+		FileSpec{Type: FILESPEC_TYPE_URL, Path: "http://www.test.edulinq.org/abc.zip", Dest: "xyz.txt"},
+		`{"type":"url","path":"http://www.test.edulinq.org/abc.zip","dest":"xyz.txt"}`,
 	},
 
 	// Validate failures.

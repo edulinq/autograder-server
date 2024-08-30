@@ -28,7 +28,11 @@ func runUnixSocketServer() (err error) {
 		err = fmt.Errorf("Unix socket panicked: '%v'.", value)
 	}()
 
-	var socketPath = config.GetUnixSocketDir()
+	socketPath, err := common.WriteAndReturnUnixSocketPath()
+	if err != nil {
+		return err
+	}
+
 	util.MkDir(filepath.Dir(socketPath))
 
 	unixSocket, err = net.Listen("unix", socketPath)

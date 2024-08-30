@@ -13,8 +13,8 @@ func TestTokensDelete(test *testing.T) {
 	db.ResetForTesting()
 	defer db.ResetForTesting()
 
-	email := "admin@test.com"
-	user := db.MustGetServerUser(email, true)
+	email := "course-admin@test.edulinq.org"
+	user := db.MustGetServerUser(email)
 
 	// Add a token.
 
@@ -29,7 +29,7 @@ func TestTokensDelete(test *testing.T) {
 	}
 
 	// Re-fetch and ensure the token exists.
-	user = db.MustGetServerUser(email, true)
+	user = db.MustGetServerUser(email)
 
 	initialTokenCount := len(user.Tokens)
 	if initialTokenCount == 0 {
@@ -52,7 +52,7 @@ func TestTokensDelete(test *testing.T) {
 		test.Fatalf("Could not find token to delete.")
 	}
 
-	user = db.MustGetServerUser(email, true)
+	user = db.MustGetServerUser(email)
 
 	newTokenCount := len(user.Tokens)
 
@@ -65,8 +65,8 @@ func TestTokensDeleteNoTokens(test *testing.T) {
 	db.ResetForTesting()
 	defer db.ResetForTesting()
 
-	email := "admin@test.com"
-	user := db.MustGetServerUser(email, true)
+	email := "course-admin@test.edulinq.org"
+	user := db.MustGetServerUser(email)
 
 	if len(user.Tokens) != 0 {
 		test.Fatalf("Test user has tokens.")
@@ -88,7 +88,7 @@ func TestTokensDeleteNoTokens(test *testing.T) {
 		test.Fatalf("Found token to delete (when there should not be one).")
 	}
 
-	user = db.MustGetServerUser(email, true)
+	user = db.MustGetServerUser(email)
 
 	if len(user.Tokens) != 0 {
 		test.Fatalf("User somehow gained tokens...")

@@ -6,13 +6,12 @@ import (
 	"strconv"
 	"syscall"
 
-	"github.com/edulinq/autograder/internal/config"
 	"github.com/edulinq/autograder/internal/log"
 	"github.com/edulinq/autograder/internal/util"
 )
 
 func CreatePIDFile() error {
-	var pidFilePath = config.GetPidDir()
+	var pidFilePath = GetStatusPath()
 
 	exists := util.IsFile(pidFilePath)
 	if exists {
@@ -30,19 +29,18 @@ func CreatePIDFile() error {
 	return nil
 }
 
-func CheckAndHandlePIDFile(pidFilePath string) bool {
-	if util.IsFile(pidFilePath) {
-		data, err := util.ReadFile(pidFilePath)
+func CheckAndHandlePid(pid int) bool {
+	statusPath := GetStatusPath()
+
+	if util.IsFile(statusPath) {
+		var statusJson StatusInfo
+		err := util.JSONFromFile(statusPath, &statusJson)
 		if err != nil {
-			log.Warn("Failed to read PID file.", err)
-			return true
+			log.Warn("Failed to convert file to json.")
+			return false
 		}
 
-		pid, err := strconv.Atoi(data)
-		if err != nil {
-			log.Warn("PID value is a string '%s', but could not be converted to an int: %w.", data, err)
-			return true
-		}
+		pid := statusJson.Pid
 
 		process, err := os.FindProcess(pid)
 		if err != nil {
@@ -53,7 +51,7 @@ func CheckAndHandlePIDFile(pidFilePath string) bool {
 		err = process.Signal(syscall.Signal(0))
 		if err != nil {
 			log.Warn("Removing stale PID file.", err)
-			util.RemoveDirent(pidFilePath)
+			util.RemoveDirent(statusPath)
 			return true
 		} else {
 			log.Warn("Another instance of the autograder server is already running.")

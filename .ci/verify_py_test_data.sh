@@ -11,14 +11,12 @@ readonly TESTS_DIR="${BASE_DIR}/testdata"
 
 readonly TEMP_DIR='/tmp/__autograder__/autograder-py'
 
-readonly SERVER_URL="http://127.0.0.1:${PORT}"
-
 function verify_test_data() {
     echo "Verifying test data."
 
     cd "${TEMP_DIR}"
 
-    ./.ci/verify_test_api_requests.py --server "${SERVER_URL}"
+    ./.ci/verify_test_api_requests.py --port "${PORT}"
     return $?
 }
 

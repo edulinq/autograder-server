@@ -94,8 +94,8 @@ func runAPIServer() (err error) {
 }
 
 func StopServers() {
-	StopAPIServer()
 	StopUnixSocketServer()
+	StopAPIServer()
 }
 
 func StopUnixSocketServer() {
@@ -114,9 +114,9 @@ func StopUnixSocketServer() {
 		log.Fatal("Failed to close the unix socket.", err)
 	}
 
-	err = util.RemoveDirent(config.GetUnixSocketDir())
+	err = util.RemoveDirent(common.GetStatusPath())
 	if err != nil {
-		log.Fatal("Failed to remove the unix socket file.", err)
+		log.Fatal("Failed to remove the status file.", err)
 	}
 }
 
@@ -136,8 +136,8 @@ func StopAPIServer() {
 		log.Fatal("Failed to stop the API server.", err)
 	}
 
-	err = util.RemoveDirent(config.GetPidDir())
+	err = util.RemoveDirent(common.GetStatusPath())
 	if err != nil {
-		log.Fatal("Failed to remove the PID file.", err)
+		log.Fatal("Failed to remove the status file.", err)
 	}
 }

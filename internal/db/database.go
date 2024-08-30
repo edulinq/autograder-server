@@ -80,8 +80,7 @@ type Backend interface {
 
 	// Get a specific server user.
 	// Returns nil if no matching user exists.
-	// If |includeTokens| is false, then the token map should be nil.
-	GetServerUser(email string, includeTokens bool) (*model.ServerUser, error)
+	GetServerUser(email string) (*model.ServerUser, error)
 
 	// Upsert the given users.
 	// Only fields to be updated should be non-nil (excluding email, which will always exist).
@@ -240,7 +239,12 @@ func Clear() error {
 		return nil
 	}
 
-	return backend.Clear()
+	err := backend.Clear()
+	if err != nil {
+		return err
+	}
+
+	return UpsertUser(&model.RootUser)
 }
 
 func MustOpen() {

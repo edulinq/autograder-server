@@ -18,54 +18,73 @@ func TestFetchUserAttempt(test *testing.T) {
 	}
 
 	testCases := []struct {
-		role             model.CourseUserRole
+		email            string
 		targetEmail      string
 		targetSubmission string
 		foundUser        bool
 		foundSubmission  bool
 		permError        bool
+		locator          string
 		result           *model.GradingResult
 	}{
 		// Grader, self, recent.
-		{model.CourseRoleGrader, "", "", true, false, false, nil},
-		{model.CourseRoleGrader, "grader@test.com", "", true, false, false, nil},
+		{"course-grader", "", "", true, false, false, "", nil},
+		{"course-grader", "course-grader@test.edulinq.org", "", true, false, false, "", nil},
 
 		// Grader, self, missing.
-		{model.CourseRoleGrader, "", "ZZZ", true, false, false, nil},
-		{model.CourseRoleGrader, "grader@test.com", "ZZZ", true, false, false, nil},
+		{"course-grader", "", "ZZZ", true, false, false, "", nil},
+		{"course-grader", "course-grader@test.edulinq.org", "ZZZ", true, false, false, "", nil},
 
 		// Grader, other, recent.
-		{model.CourseRoleGrader, "student@test.com", "", true, true, false, studentGradingResults["1697406272"]},
+		{"course-grader", "course-student@test.edulinq.org", "", true, true, false, "", studentGradingResults["1697406272"]},
 
 		// Grader, other, specific.
-		{model.CourseRoleGrader, "student@test.com", "1697406256", true, true, false, studentGradingResults["1697406256"]},
-		{model.CourseRoleGrader, "student@test.com", "1697406265", true, true, false, studentGradingResults["1697406265"]},
-		{model.CourseRoleGrader, "student@test.com", "1697406272", true, true, false, studentGradingResults["1697406272"]},
+		{"course-grader", "course-student@test.edulinq.org", "1697406256", true, true, false, "", studentGradingResults["1697406256"]},
+		{"course-grader", "course-student@test.edulinq.org", "1697406265", true, true, false, "", studentGradingResults["1697406265"]},
+		{"course-grader", "course-student@test.edulinq.org", "1697406272", true, true, false, "", studentGradingResults["1697406272"]},
 
 		// Grader, other, specific (full ID).
-		{model.CourseRoleGrader, "student@test.com", "course101::hw0::student@test.com::1697406256", true, true, false, studentGradingResults["1697406256"]},
-		{model.CourseRoleGrader, "student@test.com", "course101::hw0::student@test.com::1697406265", true, true, false, studentGradingResults["1697406265"]},
-		{model.CourseRoleGrader, "student@test.com", "course101::hw0::student@test.com::1697406272", true, true, false, studentGradingResults["1697406272"]},
+		{"course-grader", "course-student@test.edulinq.org", "course101::hw0::course-student@test.edulinq.org::1697406256", true, true, false, "", studentGradingResults["1697406256"]},
+		{"course-grader", "course-student@test.edulinq.org", "course101::hw0::course-student@test.edulinq.org::1697406265", true, true, false, "", studentGradingResults["1697406265"]},
+		{"course-grader", "course-student@test.edulinq.org", "course101::hw0::course-student@test.edulinq.org::1697406272", true, true, false, "", studentGradingResults["1697406272"]},
 
 		// Grader, other, missing.
-		{model.CourseRoleGrader, "student@test.com", "ZZZ", true, false, false, nil},
+		{"course-grader", "course-student@test.edulinq.org", "ZZZ", true, false, false, "", nil},
 
 		// Grader, missing, recent.
-		{model.CourseRoleGrader, "ZZZ@test.com", "", false, false, false, nil},
+		{"course-grader", "ZZZ@test.edulinq.org", "", false, false, false, "", nil},
+
+		// Role escalation, other, recent.
+		{"server-admin", "course-student@test.edulinq.org", "", true, true, false, "", studentGradingResults["1697406272"]},
+
+		// Role escalation, other, specific.
+		{"server-admin", "course-student@test.edulinq.org", "1697406256", true, true, false, "", studentGradingResults["1697406256"]},
+
+		// Role escalation, other, missing.
+		{"server-admin", "course-student@test.edulinq.org", "ZZZ", true, false, false, "", nil},
+
+		// Role escalation, missing, recent.
+		{"server-admin", "ZZZ@test.edulinq.org", "", false, false, false, "", nil},
 
 		// Student, self, recent.
-		{model.CourseRoleStudent, "", "", true, true, false, studentGradingResults["1697406272"]},
-		{model.CourseRoleStudent, "student@test.com", "", true, true, false, studentGradingResults["1697406272"]},
+		{"course-student", "", "", true, true, false, "", studentGradingResults["1697406272"]},
+		{"course-student", "course-student@test.edulinq.org", "", true, true, false, "", studentGradingResults["1697406272"]},
 
 		// Student, self, missing.
-		{model.CourseRoleStudent, "", "ZZZ", true, false, false, nil},
-		{model.CourseRoleStudent, "student@test.com", "ZZZ", true, false, false, nil},
+		{"course-student", "", "ZZZ", true, false, false, "", nil},
+		{"course-student", "course-student@test.edulinq.org", "ZZZ", true, false, false, "", nil},
 
 		// Student, other, recent.
-		{model.CourseRoleStudent, "grader@test.com", "", false, false, true, nil},
+		{"course-student", "course-grader@test.edulinq.org", "", false, false, true, "-033", nil},
 
 		// Student, other, missing.
-		{model.CourseRoleStudent, "grader@test.com", "ZZZ", true, false, true, nil},
+		{"course-student", "course-grader@test.edulinq.org", "ZZZ", true, false, true, "-033", nil},
+
+		// Invalid role escalation, other, recent.
+		{"server-user", "course-grader@test.edulinq.org", "ZZZ", true, false, true, "-040", nil},
+
+		// Invalid role escation, other, missing.
+		{"server-user", "course-grader@test.edulinq.org", "ZZZ", true, false, true, "-040", nil},
 	}
 
 	for i, testCase := range testCases {
@@ -74,13 +93,12 @@ func TestFetchUserAttempt(test *testing.T) {
 			"target-submission": testCase.targetSubmission,
 		}
 
-		response := core.SendTestAPIRequestFull(test, core.NewEndpoint(`courses/assignments/submissions/fetch/user/attempt`), fields, nil, testCase.role)
+		response := core.SendTestAPIRequestFull(test, core.NewEndpoint(`courses/assignments/submissions/fetch/user/attempt`), fields, nil, testCase.email)
 		if !response.Success {
 			if testCase.permError {
-				expectedLocator := "-033"
-				if response.Locator != expectedLocator {
-					test.Errorf("Case %d: Incorrect error returned on permissions error. Expcted '%s', found '%s'.",
-						i, expectedLocator, response.Locator)
+				if response.Locator != testCase.locator {
+					test.Errorf("Case %d: Incorrect error returned on permissions error. Expected '%s', found '%s'.",
+						i, testCase.locator, response.Locator)
 				}
 			} else {
 				test.Errorf("Case %d: Response is not a success when it should be: '%v'.", i, response)

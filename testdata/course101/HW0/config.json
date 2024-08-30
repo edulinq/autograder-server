@@ -1,6 +1,6 @@
 {
-    "user": "student@test.com",
-    "pass": "student",
+    "user": "course-student@test.edulinq.org",
+    "pass": "course-student",
     "server": "http://127.0.0.1:8080",
     "course": "course101",
     "assignment": "hw0"

@@ -11,6 +11,7 @@ import (
 
 	"github.com/edulinq/autograder/internal/api/core"
 	"github.com/edulinq/autograder/internal/api/courses/assignments/submissions"
+	"github.com/edulinq/autograder/internal/common"
 	"github.com/edulinq/autograder/internal/config"
 	"github.com/edulinq/autograder/internal/log"
 	"github.com/edulinq/autograder/internal/util"
@@ -39,7 +40,10 @@ func main() {
 		log.Fatal("Failed to load config options.", err)
 	}
 
-	var socketPath = config.GetUnixSocketDir()
+	socketPath, err := common.WriteAndReturnUnixSocketPath()
+	if err != nil {
+		log.Fatal("Failed to get unix socket path.", err)
+	}
 
 	conn, err := net.Dial("unix", socketPath)
 	if err != nil {

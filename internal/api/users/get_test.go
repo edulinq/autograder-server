@@ -20,19 +20,19 @@ func TestGet(test *testing.T) {
 		expected    *model.ServerUser
 	}{
 		// Self, empty.
-		{users["student@test.com"], "", false, users["student@test.com"]},
-		{users["server-creator@test.com"], "", false, users["server-creator@test.com"]},
-		{users["server-admin@test.com"], "", false, users["server-admin@test.com"]},
+		{users["course-student@test.edulinq.org"], "", false, users["course-student@test.edulinq.org"]},
+		{users["server-creator@test.edulinq.org"], "", false, users["server-creator@test.edulinq.org"]},
+		{users["server-admin@test.edulinq.org"], "", false, users["server-admin@test.edulinq.org"]},
 
 		// Other, bad permissions.
-		{users["server-creator@test.com"], "student@test.com", true, nil},
+		{users["server-creator@test.edulinq.org"], "course-student@test.edulinq.org", true, nil},
 
 		// Other, good permissions.
-		{users["server-admin@test.com"], "student@test.com", false, users["student@test.com"]},
+		{users["server-admin@test.edulinq.org"], "course-student@test.edulinq.org", false, users["course-student@test.edulinq.org"]},
 
 		// Missing
-		{users["server-creator@test.com"], "ZZZ", true, nil},
-		{users["server-admin@test.com"], "ZZZ", false, nil},
+		{users["server-creator@test.edulinq.org"], "ZZZ", true, nil},
+		{users["server-admin@test.edulinq.org"], "ZZZ", false, nil},
 	}
 
 	for i, testCase := range testCases {
@@ -47,7 +47,7 @@ func TestGet(test *testing.T) {
 			if testCase.permError {
 				expectedLocator := "-046"
 				if response.Locator != expectedLocator {
-					test.Errorf("Case %d: Incorrect error returned. Expcted '%s', found '%s'.",
+					test.Errorf("Case %d: Incorrect error returned. Expected '%s', found '%s'.",
 						i, expectedLocator, response.Locator)
 				}
 			} else {
