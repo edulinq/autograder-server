@@ -13,10 +13,7 @@ import (
 	"github.com/edulinq/autograder/internal/util"
 )
 
-const (
-	BIT_SIZE    = 64
-	BUFFER_SIZE = 8
-)
+const NONCE_BYTE_SIZE = 64
 
 func runUnixSocketServer() (err error) {
 	defer func() {
@@ -28,27 +25,26 @@ func runUnixSocketServer() (err error) {
 		err = fmt.Errorf("Unix socket panicked: '%v'.", value)
 	}()
 
-	socketPath, err := common.WriteAndReturnUnixSocketPath()
+	unixSocketPath, err := common.WriteAndReturnUnixSocketPath()
 	if err != nil {
 		return err
 	}
 
-	util.MkDir(filepath.Dir(socketPath))
+	util.MkDir(filepath.Dir(unixSocketPath))
 
-	unixSocket, err = net.Listen("unix", socketPath)
+	unixSocket, err = net.Listen("unix", unixSocketPath)
 	if err != nil {
 		log.Error("Failed to listen on a Unix socket.", err)
 		return err
 	}
-
 	defer StopUnixSocketServer()
 
-	log.Info("Unix Socket Server Started", log.NewAttr("unix_socket", socketPath))
+	log.Info("Unix Socket Server Started", log.NewAttr("unix_socket", unixSocketPath))
 
 	for {
 		connection, err := unixSocket.Accept()
 		if err != nil {
-			log.Info("Unix Socket Server Stopped", log.NewAttr("unix_socket", socketPath))
+			log.Info("Unix Socket Server Stopped", log.NewAttr("unix_socket", unixSocketPath))
 
 			if unixSocket == nil {
 				return nil
@@ -71,15 +67,13 @@ func runUnixSocketServer() (err error) {
 
 func handleUnixSocketConnection(conn net.Conn) error {
 	var port = config.WEB_PORT.Get()
-	var bufferBytes = BUFFER_SIZE
-	var bitSize = BIT_SIZE
 
-	jsonBuffer, err := util.ReadFromUnixSocket(conn, bufferBytes)
+	jsonBuffer, err := util.ReadFromUnixSocket(conn)
 	if err != nil {
-		return fmt.Errorf("Failed to read from UNIX socket.")
+		return fmt.Errorf("Failed to read from the unix socket.")
 	}
 
-	randomNumber, err := util.RandHex(bitSize)
+	randomNumber, err := util.RandHex(NONCE_BYTE_SIZE)
 	if err != nil {
 		return fmt.Errorf("Failed to generate the nonce.")
 	}
@@ -119,10 +113,9 @@ func handleUnixSocketConnection(conn net.Conn) error {
 	}
 
 	jsonResponseBytes := []byte(responseText)
-
 	err = util.WriteToUnixSocket(conn, jsonResponseBytes)
 	if err != nil {
-		return err
+		return fmt.Errorf("Failed to write to the unix socket.")
 	}
 
 	return nil

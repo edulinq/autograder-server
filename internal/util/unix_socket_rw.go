@@ -6,8 +6,10 @@ import (
 	"net"
 )
 
-func ReadFromUnixSocket(conn net.Conn, bufferBytes int) ([]byte, error) {
-	sizeBuffer := make([]byte, bufferBytes)
+const BUFFER_SIZE = 8
+
+func ReadFromUnixSocket(conn net.Conn) ([]byte, error) {
+	sizeBuffer := make([]byte, BUFFER_SIZE)
 
 	_, err := conn.Read(sizeBuffer)
 	if err != nil {

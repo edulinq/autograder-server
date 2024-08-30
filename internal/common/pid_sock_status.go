@@ -10,8 +10,8 @@ import (
 )
 
 const (
-	PID_FILENAME         = "grade.pid"
-	UNIX_SOCKET_FILENAME = "a.sock"
+	PID_FILENAME         = "autograder.pid"
+	UNIX_SOCKET_FILENAME = "autograder.sock"
 	STATUS_FILENAME      = "status.json"
 	UNIX_SOCKET_RANDNUM  = 32
 )
@@ -38,7 +38,7 @@ func WriteAndHandlePidStatus() error {
 
 	err := util.ToJSONFile(status, statusPath)
 	if err != nil {
-		return fmt.Errorf("Failed to write status to json: %w", err)
+		return fmt.Errorf("Failed to write the pid to json.")
 	}
 
 	return nil

@@ -1,8 +1,6 @@
 package main
 
 import (
-	"bytes"
-	"encoding/binary"
 	"encoding/json"
 	"fmt"
 	"net"
@@ -26,10 +24,6 @@ var args struct {
 	Verbose          bool   `help:"Print the entire response." short:"v"`
 }
 
-const (
-	BUFFER_SIZE = 8
-)
-
 func main() {
 	kong.Parse(&args,
 		kong.Description("Fetch a submission for a specific assignment and user."),
@@ -49,7 +43,6 @@ func main() {
 	if err != nil {
 		log.Fatal("Failed to dial the unix socket.", err)
 	}
-
 	defer conn.Close()
 
 	request := submissions.FetchUserPeekRequest{
@@ -74,34 +67,15 @@ func main() {
 
 	jsonRequest := util.MustToJSONIndent(requestMap)
 	jsonBytes := []byte(jsonRequest)
-	requestBuffer := new(bytes.Buffer)
-	size := uint64(len(jsonBytes))
 
-	err = binary.Write(requestBuffer, binary.BigEndian, size)
+	err = util.WriteToUnixSocket(conn, jsonBytes)
 	if err != nil {
-		log.Fatal("Failed to write message size to the request buffer.", err)
+		log.Fatal("Failed to write the request to the unix socket.", err)
 	}
 
-	requestBuffer.Write(jsonBytes)
-
-	_, err = conn.Write(requestBuffer.Bytes())
+	responseBuffer, err := util.ReadFromUnixSocket(conn)
 	if err != nil {
-		log.Fatal("Failed to write the request buffer to the unix server.", err)
-	}
-
-	sizeBuffer := make([]byte, BUFFER_SIZE)
-
-	_, err = conn.Read(sizeBuffer)
-	if err != nil {
-		log.Fatal("Failed to read the size of the response buffer.", err)
-	}
-
-	size = binary.BigEndian.Uint64(sizeBuffer)
-	responseBuffer := make([]byte, size)
-
-	_, err = conn.Read(responseBuffer)
-	if err != nil {
-		log.Fatal("Failed to read the response.", err)
+		log.Fatal("Failed to read the response from the unix socket.", err)
 	}
 
 	var response core.APIResponse
@@ -111,7 +85,7 @@ func main() {
 	}
 
 	if !response.Success {
-		log.Fatal("Failed to make an api request. Status: '%d' ", response.HTTPStatus)
+		log.Fatal("Failed to make an api request through the unix socket.", response.HTTPStatus)
 	}
 
 	if args.Verbose {

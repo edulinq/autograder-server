@@ -26,7 +26,7 @@ func CMDServerTestingMain(suite *testing.M) {
 	// Run inside a func so defers will run before os.Exit().
 	code := func() int {
 		db.PrepForTestingMain()
-		// defer db.CleanupTestingMain()
+		defer db.CleanupTestingMain()
 		log.SetLevelDebug()
 		var serverRun sync.WaitGroup
 		serverRun.Add(1)
@@ -39,7 +39,7 @@ func CMDServerTestingMain(suite *testing.M) {
 		}()
 
 		serverRun.Wait()
-		time.Sleep(1 * time.Second)
+		time.Sleep(100 * time.Millisecond)
 
 		defer api.StopServers()
 

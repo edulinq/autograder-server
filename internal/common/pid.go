@@ -1,33 +1,12 @@
 package common
 
 import (
-	"fmt"
 	"os"
-	"strconv"
 	"syscall"
 
 	"github.com/edulinq/autograder/internal/log"
 	"github.com/edulinq/autograder/internal/util"
 )
-
-func CreatePIDFile() error {
-	var pidFilePath = GetStatusPath()
-
-	exists := util.IsFile(pidFilePath)
-	if exists {
-		return fmt.Errorf("Another instance of the autograder server is already running.")
-	}
-
-	pid := os.Getpid()
-	pidString := strconv.Itoa(pid)
-
-	err := util.WriteFile(pidString, pidFilePath)
-	if err != nil {
-		return fmt.Errorf("Failed to write to the PID file.")
-	}
-
-	return nil
-}
 
 func CheckAndHandlePid(pid int) bool {
 	statusPath := GetStatusPath()

@@ -74,6 +74,7 @@ func runAPIServer() (err error) {
 	var port = config.WEB_PORT.Get()
 
 	log.Info("API Server Started", log.NewAttr("port", port))
+
 	apiServer = &http.Server{
 		Addr:    fmt.Sprintf(":%d", port),
 		Handler: core.GetRouteServer(GetRoutes()),
