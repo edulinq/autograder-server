@@ -184,15 +184,6 @@
             }
         }
     },
-    "root": {
-        "email": "root",
-        "name": null,
-        "server-role": "root",
-        "salt": null,
-        "password": null,
-        "tokens": [],
-        "course-info": {}
-    },
     "server-admin@test.edulinq.org": {
         "email": "server-admin@test.edulinq.org",
         "name": "server-admin",

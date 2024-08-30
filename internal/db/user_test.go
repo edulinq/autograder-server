@@ -22,6 +22,13 @@ func (this *DBTests) DBTestUserGetServerUsersBase(test *testing.T) {
 		test.Fatalf("Could not get server users: '%v'.", err)
 	}
 
+	_, exists := users["root"]
+	if !exists {
+		test.Fatalf("Couldn't find the root user in server users.")
+	}
+
+	delete(users, "root")
+
 	if len(users) == 0 {
 		test.Fatalf("Found no server users.")
 	}
@@ -43,8 +50,14 @@ func (this *DBTests) DBTestUserGetServerUsersEmpty(test *testing.T) {
 		test.Fatalf("Could not get server users: '%v'.", err)
 	}
 
-	if len(users) != 0 {
-		test.Fatalf("Found server users when there should have been none: '%s'.", util.MustToJSONIndent(users))
+	if len(users) != 1 {
+		test.Fatalf("Found server users other than root when there should have been none: '%s'.", util.MustToJSONIndent(users))
+	}
+
+	for _, user := range users {
+		if user.Email != "root" {
+			test.Fatalf("Found server user '%s' when root should be the only server user.", user.Email)
+		}
 	}
 }
 

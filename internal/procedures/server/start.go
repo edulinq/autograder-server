@@ -6,7 +6,6 @@ import (
 
 	"github.com/edulinq/autograder/internal/api"
 	"github.com/edulinq/autograder/internal/common"
-	"github.com/edulinq/autograder/internal/config"
 	"github.com/edulinq/autograder/internal/db"
 	"github.com/edulinq/autograder/internal/log"
 	"github.com/edulinq/autograder/internal/model"
@@ -17,28 +16,15 @@ import (
 func Start() error {
 	log.Info("Autograder Version", log.NewAttr("version", util.GetAutograderFullVersion()))
 
-	var pidFilePath = config.GetPidDir()
-
-	if !common.CheckAndHandlePIDFile(pidFilePath) {
-		return fmt.Errorf("Another instance of the autograder server is already running.")
-	}
-
-	err := common.CreatePIDFile()
+	err := common.WriteAndHandlePidStatus()
 	if err != nil {
-		return fmt.Errorf("Could not create PID file.")
+		return err
 	}
 
 	defer api.StopAPIServer()
 
-	workingDir, err := os.Getwd()
-	if err != nil {
-		return fmt.Errorf("Could not get working directory.")
-	}
-
 	db.MustOpen()
 	defer db.MustClose()
-
-	log.Info("Running server with working directory.", log.NewAttr("dir", workingDir))
 
 	_, err = db.AddCourses()
 	if err != nil {
@@ -58,6 +44,12 @@ func Start() error {
 
 	// Cleanup any temp dirs.
 	defer util.RemoveRecordedTempDirs()
+
+	workingDir, err := os.Getwd()
+	if err != nil {
+		return fmt.Errorf("Could not get working directory.")
+	}
+	log.Info("Running server with working directory.", log.NewAttr("dir", workingDir))
 
 	err = api.StartServer()
 	if err != nil {
