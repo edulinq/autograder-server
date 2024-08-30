@@ -18,7 +18,7 @@ type PasswordResetResponse struct{}
 func HandlePasswordReset(request *PasswordResetRequest) (*PasswordResetResponse, *core.APIError) {
 	response := &PasswordResetResponse{}
 
-	user, err := db.GetServerUser(string(request.UserEmail), false)
+	user, err := db.GetServerUser(string(request.UserEmail))
 	if err != nil {
 		return nil, core.NewBaseInternalError("-807", &request.APIRequest, "Failed to get server user.").Err(err)
 	}

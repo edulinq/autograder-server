@@ -760,7 +760,7 @@ func TestTargetServerUser(test *testing.T) {
 		User TargetServerUser
 	}
 
-	user := db.MustGetServerUser("course-student@test.edulinq.org", true)
+	user := db.MustGetServerUser("course-student@test.edulinq.org")
 
 	testCases := []struct {
 		target string
