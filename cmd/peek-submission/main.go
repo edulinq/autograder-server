@@ -34,7 +34,7 @@ func main() {
 		log.Fatal("Failed to load config options.", err)
 	}
 
-	socketPath, err := common.WriteAndReturnUnixSocketPath()
+	socketPath, err := common.GetUnixSocketPath()
 	if err != nil {
 		log.Fatal("Failed to get the unix socket path.", err)
 	}
@@ -84,7 +84,7 @@ func main() {
 	}
 
 	if !response.Success {
-		log.Fatal("Failed to make an api request through the unix socket.", response.HTTPStatus)
+		log.Fatal("Failed to make an API request through the unix socket.", response.HTTPStatus)
 	}
 
 	if args.Verbose {

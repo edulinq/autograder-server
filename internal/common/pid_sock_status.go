@@ -59,7 +59,7 @@ func WriteAndHandlePidStatus() error {
 	return nil
 }
 
-func WriteAndReturnUnixSocketPath() (string, error) {
+func GetUnixSocketPath() (string, error) {
 	Lock(PID_SOCK_LOCK)
 	defer Unlock(PID_SOCK_LOCK)
 

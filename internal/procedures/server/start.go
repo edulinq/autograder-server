@@ -2,10 +2,10 @@ package server
 
 import (
 	"fmt"
-	"os"
 
 	"github.com/edulinq/autograder/internal/api"
 	"github.com/edulinq/autograder/internal/common"
+	"github.com/edulinq/autograder/internal/config"
 	"github.com/edulinq/autograder/internal/db"
 	"github.com/edulinq/autograder/internal/log"
 	"github.com/edulinq/autograder/internal/model"
@@ -17,6 +17,8 @@ func Start() error {
 	defer api.StopServers()
 
 	log.Info("Autograder Version.", log.NewAttr("version", util.GetAutograderFullVersion()))
+
+	log.Info("Running server with working directory.", log.NewAttr("dir", config.GetWorkDir()))
 
 	err := common.WriteAndHandlePidStatus()
 	if err != nil {
@@ -44,12 +46,6 @@ func Start() error {
 
 	// Cleanup any temp dirs.
 	defer util.RemoveRecordedTempDirs()
-
-	workingDir, err := os.Getwd()
-	if err != nil {
-		return fmt.Errorf("Could not get working directory.")
-	}
-	log.Info("Running server with working directory.", log.NewAttr("dir", workingDir))
 
 	err = api.StartServers()
 	if err != nil {

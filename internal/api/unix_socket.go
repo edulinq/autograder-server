@@ -25,7 +25,7 @@ func runUnixSocketServer() (err error) {
 		err = fmt.Errorf("Unix socket panicked: '%v'.", value)
 	}()
 
-	unixSocketPath, err := common.WriteAndReturnUnixSocketPath()
+	unixSocketPath, err := common.GetUnixSocketPath()
 	if err != nil {
 		return err
 	}

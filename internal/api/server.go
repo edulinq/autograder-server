@@ -73,7 +73,7 @@ func runAPIServer() (err error) {
 
 	var port = config.WEB_PORT.Get()
 
-	log.Info("API Server Started", log.NewAttr("port", port))
+	log.Info("API Server Started.", log.NewAttr("port", port))
 
 	apiServer = &http.Server{
 		Addr:    fmt.Sprintf(":%d", port),
@@ -85,7 +85,7 @@ func runAPIServer() (err error) {
 		err = nil
 	}
 
-	log.Info("API Server Stopped", log.NewAttr("port", port))
+	log.Info("API Server Stopped.", log.NewAttr("port", port))
 
 	if err != nil {
 		log.Error("API server returned an error.", err)
