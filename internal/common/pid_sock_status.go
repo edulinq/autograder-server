@@ -14,6 +14,7 @@ const (
 	UNIX_SOCKET_FILENAME = "autograder.sock"
 	STATUS_FILENAME      = "status.json"
 	UNIX_SOCKET_RANDNUM  = 32
+	PID_SOCK_LOCK        = "pid_sock_lock"
 )
 
 type StatusInfo struct {
@@ -26,36 +27,53 @@ func GetStatusPath() string {
 }
 
 func WriteAndHandlePidStatus() error {
+	Lock(PID_SOCK_LOCK)
+	defer Unlock(PID_SOCK_LOCK)
+
 	statusPath := GetStatusPath()
 	pid := os.Getpid()
+	var statusJson StatusInfo
 
 	if !CheckAndHandlePid() {
 		return fmt.Errorf("Failed to check and handle the pid.")
 	}
 
-	var status StatusInfo
-	status.Pid = pid
+	if util.IsFile(statusPath) {
+		err := util.JSONFromFile(statusPath, &statusJson)
+		if err != nil {
+			return fmt.Errorf("Failed to read existing status file.")
+		}
 
-	err := util.ToJSONFile(status, statusPath)
+		statusJson.Pid = pid
+
+		return nil
+	}
+
+	statusJson.Pid = pid
+
+	err := util.ToJSONFile(statusJson, statusPath)
 	if err != nil {
-		return fmt.Errorf("Failed to write the pid to json.")
+		return fmt.Errorf("Failed to write the pid.")
 	}
 
 	return nil
 }
 
 func WriteAndReturnUnixSocketPath() (string, error) {
+	Lock(PID_SOCK_LOCK)
+	defer Unlock(PID_SOCK_LOCK)
+
 	statusPath := GetStatusPath()
-	var status StatusInfo
+	var statusJson StatusInfo
 
 	if util.IsFile(statusPath) {
-		err := util.JSONFromFile(statusPath, &status)
+		err := util.JSONFromFile(statusPath, &statusJson)
 		if err != nil {
-			return "", fmt.Errorf("Failed to read existing status file")
+			return "", fmt.Errorf("Failed to read existing status file.")
 		}
 
-		if status.UnixSocketPath != "" {
-			return status.UnixSocketPath, nil
+		if statusJson.UnixSocketPath != "" {
+			return statusJson.UnixSocketPath, nil
 		}
 	}
 
@@ -65,11 +83,11 @@ func WriteAndReturnUnixSocketPath() (string, error) {
 	}
 
 	socketPath := filepath.Join("/tmp", fmt.Sprintf("autograder-%s.sock", unixFileNumber))
-	status.UnixSocketPath = socketPath
+	statusJson.UnixSocketPath = socketPath
 
-	err = util.ToJSONFile(status, statusPath)
+	err = util.ToJSONFile(statusJson, statusPath)
 	if err != nil {
-		return "", fmt.Errorf("Failed to write status to json: %w", err)
+		return "", fmt.Errorf("Failed to write the unix socket path.")
 	}
 
 	return socketPath, nil

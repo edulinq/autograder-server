@@ -13,6 +13,7 @@ func CheckAndHandlePid() bool {
 
 	if util.IsFile(statusPath) {
 		var statusJson StatusInfo
+
 		err := util.JSONFromFile(statusPath, &statusJson)
 		if err != nil {
 			log.Error("Failed to convert file to json.", err)

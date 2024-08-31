@@ -14,6 +14,8 @@ import (
 )
 
 func Start() error {
+	defer api.StopServers()
+
 	log.Info("Autograder Version.", log.NewAttr("version", util.GetAutograderFullVersion()))
 
 	err := common.WriteAndHandlePidStatus()
@@ -53,8 +55,6 @@ func Start() error {
 	if err != nil {
 		return fmt.Errorf("Failed to start server.")
 	}
-	defer api.StopServers()
-
 
 	log.Info("Server closed.")
 	return nil
