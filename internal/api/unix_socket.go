@@ -39,12 +39,12 @@ func runUnixSocketServer() (err error) {
 	}
 	defer StopUnixSocketServer()
 
-	log.Info("Unix Socket Server Started", log.NewAttr("unix_socket", unixSocketPath))
+	log.Info("Unix Socket Server Started.", log.NewAttr("unix_socket", unixSocketPath))
 
 	for {
 		connection, err := unixSocket.Accept()
 		if err != nil {
-			log.Info("Unix Socket Server Stopped", log.NewAttr("unix_socket", unixSocketPath))
+			log.Info("Unix Socket Server Stopped.", log.NewAttr("unix_socket", unixSocketPath))
 
 			if unixSocket == nil {
 				return nil
@@ -73,13 +73,13 @@ func handleUnixSocketConnection(conn net.Conn) error {
 		return fmt.Errorf("Failed to read from the unix socket.")
 	}
 
-	randomNumber, err := util.RandHex(NONCE_BYTE_SIZE)
+	randomNonce, err := util.RandHex(NONCE_BYTE_SIZE)
 	if err != nil {
 		return fmt.Errorf("Failed to generate the nonce.")
 	}
 
-	core.RootUserNonces.Store(randomNumber, true)
-	defer core.RootUserNonces.Delete(randomNumber)
+	core.RootUserNonces.Store(randomNonce, true)
+	defer core.RootUserNonces.Delete(randomNonce)
 
 	var payload map[string]any
 	err = json.Unmarshal(jsonBuffer, &payload)
@@ -97,7 +97,7 @@ func handleUnixSocketConnection(conn net.Conn) error {
 		return fmt.Errorf("Failed to find the 'request' key in the request.")
 	}
 
-	content["root-user-nonce"] = randomNumber
+	content["root-user-nonce"] = randomNonce
 	formContent, err := json.Marshal(content)
 	if err != nil {
 		return fmt.Errorf("Failed to marshal the request's content.")

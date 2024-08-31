@@ -14,21 +14,19 @@ import (
 )
 
 func Start() error {
-	log.Info("Autograder Version", log.NewAttr("version", util.GetAutograderFullVersion()))
+	log.Info("Autograder Version.", log.NewAttr("version", util.GetAutograderFullVersion()))
 
 	err := common.WriteAndHandlePidStatus()
 	if err != nil {
 		return err
 	}
 
-	defer api.StopAPIServer()
-
 	db.MustOpen()
 	defer db.MustClose()
 
 	_, err = db.AddCourses()
 	if err != nil {
-		log.Fatal("Could not load courses", err)
+		log.Fatal("Could not load courses.", err)
 	}
 
 	courses := db.MustGetCourses()
@@ -51,10 +49,12 @@ func Start() error {
 	}
 	log.Info("Running server with working directory.", log.NewAttr("dir", workingDir))
 
-	err = api.StartServer()
+	err = api.StartServers()
 	if err != nil {
 		return fmt.Errorf("Failed to start server.")
 	}
+	defer api.StopServers()
+
 
 	log.Info("Server closed.")
 	return nil

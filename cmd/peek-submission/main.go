@@ -36,7 +36,7 @@ func main() {
 
 	socketPath, err := common.WriteAndReturnUnixSocketPath()
 	if err != nil {
-		log.Fatal("Failed to get unix socket path.", err)
+		log.Fatal("Failed to get the unix socket path.", err)
 	}
 
 	conn, err := net.Dial("unix", socketPath)
@@ -67,7 +67,6 @@ func main() {
 
 	jsonRequest := util.MustToJSONIndent(requestMap)
 	jsonBytes := []byte(jsonRequest)
-
 	err = util.WriteToUnixSocket(conn, jsonBytes)
 	if err != nil {
 		log.Fatal("Failed to write the request to the unix socket.", err)

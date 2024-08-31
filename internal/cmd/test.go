@@ -35,7 +35,7 @@ func CMDServerTestingMain(suite *testing.M) {
 
 		go func() {
 			serverRun.Done()
-			api.StartServer()
+			api.StartServers()
 		}()
 
 		serverRun.Wait()

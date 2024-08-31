@@ -29,7 +29,7 @@ func WriteAndHandlePidStatus() error {
 	statusPath := GetStatusPath()
 	pid := os.Getpid()
 
-	if !CheckAndHandlePid(pid) {
+	if !CheckAndHandlePid() {
 		return fmt.Errorf("Failed to check and handle the pid.")
 	}
 

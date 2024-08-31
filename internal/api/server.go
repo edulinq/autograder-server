@@ -29,7 +29,7 @@ var (
 )
 
 // Run the API and Unix Socket Server.
-func StartServer() error {
+func StartServers() error {
 	errorsChan := make(chan error, 2)
 
 	go func() {
