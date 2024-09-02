@@ -73,7 +73,7 @@ func RunCMDTest(test *testing.T, mainFunc func(), args []string) (string, string
 
 	os.Stderr = util.MustCreateFile(stderrPath)
 
-	// Run
+	// Run.
 	err := runCMD(mainFunc, args)
 
 	// Put back stdout.

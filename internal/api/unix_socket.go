@@ -59,7 +59,7 @@ func runUnixSocketServer() (err error) {
 
 			err := handleUnixSocketConnection(connection)
 			if err != nil {
-				log.Error("Error handling Unix socket connection.", err)
+				log.Error("Error handling the unix socket connection.", err)
 			}
 		}()
 	}
