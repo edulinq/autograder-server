@@ -38,17 +38,6 @@ func WriteAndHandlePidStatus() error {
 		return fmt.Errorf("Failed to check and handle the pid.")
 	}
 
-	if util.IsFile(statusPath) {
-		err := util.JSONFromFile(statusPath, &statusJson)
-		if err != nil {
-			return fmt.Errorf("Failed to read existing status file.")
-		}
-
-		statusJson.Pid = pid
-
-		return nil
-	}
-
 	statusJson.Pid = pid
 
 	err := util.ToJSONFile(statusJson, statusPath)
@@ -79,7 +68,7 @@ func GetUnixSocketPath() (string, error) {
 
 	unixFileNumber, err := util.RandHex(UNIX_SOCKET_RANDNUM)
 	if err != nil {
-		return "", fmt.Errorf("Failed to generate random number: %w", err)
+		return "", fmt.Errorf("Failed to generate a random number for the unix socket path.")
 	}
 
 	socketPath := filepath.Join("/tmp", fmt.Sprintf("autograder-%s.sock", unixFileNumber))
@@ -87,7 +76,7 @@ func GetUnixSocketPath() (string, error) {
 
 	err = util.ToJSONFile(statusJson, statusPath)
 	if err != nil {
-		return "", fmt.Errorf("Failed to write the unix socket path.")
+		return "", fmt.Errorf("Failed to write the unix socket path to the status file.")
 	}
 
 	return socketPath, nil

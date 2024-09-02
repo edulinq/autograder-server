@@ -597,7 +597,7 @@ func (this *DBTests) DBTestRootUserValidation(test *testing.T) {
 
 	rootUser, err := GetServerUser(model.RootUser.Email)
 	if err != nil {
-		test.Fatal("Failed to get root user.", err)
+		test.Fatal("Failed to get the root user.", err)
 	}
 
 	if rootUser == nil {

@@ -18,8 +18,6 @@ func Start() error {
 
 	log.Info("Autograder Version.", log.NewAttr("version", util.GetAutograderFullVersion()))
 
-	log.Info("Running server with working directory.", log.NewAttr("dir", config.GetWorkDir()))
-
 	err := common.WriteAndHandlePidStatus()
 	if err != nil {
 		return err
@@ -27,6 +25,8 @@ func Start() error {
 
 	db.MustOpen()
 	defer db.MustClose()
+
+	log.Info("Running server with working directory.", log.NewAttr("dir", config.GetWorkDir()))
 
 	_, err = db.AddCourses()
 	if err != nil {
