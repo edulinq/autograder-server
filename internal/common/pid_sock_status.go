@@ -58,7 +58,7 @@ func GetUnixSocketPath() (string, error) {
 	if util.IsFile(statusPath) {
 		err := util.JSONFromFile(statusPath, &statusJson)
 		if err != nil {
-			return "", fmt.Errorf("Failed to read existing status file.")
+			return "", fmt.Errorf("Failed to read the existing status file.")
 		}
 
 		if statusJson.UnixSocketPath != "" {
