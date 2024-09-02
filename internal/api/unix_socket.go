@@ -34,7 +34,7 @@ func runUnixSocketServer() (err error) {
 
 	unixSocket, err = net.Listen("unix", unixSocketPath)
 	if err != nil {
-		log.Error("Failed to listen on a Unix socket.", err)
+		log.Error("Failed to listen on the unix socket.", err)
 		return err
 	}
 	defer StopUnixSocketServer()

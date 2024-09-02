@@ -71,13 +71,13 @@ func GetUnixSocketPath() (string, error) {
 		return "", fmt.Errorf("Failed to generate a random number for the unix socket path.")
 	}
 
-	socketPath := filepath.Join("/tmp", fmt.Sprintf("autograder-%s.sock", unixFileNumber))
-	statusJson.UnixSocketPath = socketPath
+	unixSocketPath := filepath.Join("/tmp", fmt.Sprintf("autograder-%s.sock", unixFileNumber))
+	statusJson.UnixSocketPath = unixSocketPath
 
 	err = util.ToJSONFile(statusJson, statusPath)
 	if err != nil {
 		return "", fmt.Errorf("Failed to write the unix socket path to the status file.")
 	}
 
-	return socketPath, nil
+	return unixSocketPath, nil
 }
