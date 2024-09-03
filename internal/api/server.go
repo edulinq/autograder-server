@@ -1,31 +1,14 @@
 package api
 
 import (
-	"context"
 	"errors"
-	"fmt"
-	"net"
-	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
 
-	"github.com/edulinq/autograder/internal/api/core"
+	"github.com/edulinq/autograder/internal/api/server"
 	"github.com/edulinq/autograder/internal/common"
-	"github.com/edulinq/autograder/internal/config"
-	"github.com/edulinq/autograder/internal/log"
 	"github.com/edulinq/autograder/internal/util"
-)
-
-const (
-	API_REQUEST_CONTENT_KEY      = "content"
-	API_SERVER_STOP_LOCK         = "API_STOP_LOCK"
-	UNIX_SOCKET_SERVER_STOP_LOCK = "UNIX_SOCKET_STOP_LOCK"
-)
-
-var (
-	apiServer  *http.Server
-	unixSocket net.Listener
 )
 
 // Run the API and Unix Socket Server.
@@ -34,15 +17,16 @@ func StartServer() error {
 	if err != nil {
 		return err
 	}
+	defer util.RemoveDirent(common.GetStatusPath())
 
 	errorsChan := make(chan error, 2)
 
 	go func() {
-		errorsChan <- runAPIServer()
+		errorsChan <- server.RunAPIServer(GetRoutes())
 	}()
 
 	go func() {
-		errorsChan <- runUnixSocketServer()
+		errorsChan <- server.RunUnixSocketServer()
 	}()
 
 	// Gracefully shutdown on Control-C (SIGINT).
@@ -66,85 +50,7 @@ func StartServer() error {
 	return errs
 }
 
-func runAPIServer() (err error) {
-	defer func() {
-		value := recover()
-		if value == nil {
-			return
-		}
-
-		err = fmt.Errorf("API server panicked: '%v'.", value)
-	}()
-
-	var port = config.WEB_PORT.Get()
-
-	log.Info("API Server Started.", log.NewAttr("port", port))
-
-	apiServer = &http.Server{
-		Addr:    fmt.Sprintf(":%d", port),
-		Handler: core.GetRouteServer(GetRoutes()),
-	}
-
-	err = apiServer.ListenAndServe()
-	if err == http.ErrServerClosed {
-		// Set err to nil if the server stopped due to a graceful shutdown.
-		err = nil
-	}
-
-	log.Info("API Server Stopped.", log.NewAttr("port", port))
-
-	if err != nil {
-		log.Error("API server returned an error.", err)
-	}
-
-	return err
-}
-
 func StopServers() {
-	StopUnixSocketServer()
-	StopAPIServer()
-}
-
-func StopUnixSocketServer() {
-	common.Lock(UNIX_SOCKET_SERVER_STOP_LOCK)
-	defer common.Unlock(UNIX_SOCKET_SERVER_STOP_LOCK)
-
-	if unixSocket == nil {
-		return
-	}
-
-	tempUnixSocket := unixSocket
-	unixSocket = nil
-
-	err := tempUnixSocket.Close()
-	if err != nil {
-		log.Fatal("Failed to close the unix socket.", err)
-	}
-
-	err = util.RemoveDirent(common.GetStatusPath())
-	if err != nil {
-		log.Fatal("Failed to remove the status file.", err)
-	}
-}
-
-func StopAPIServer() {
-	common.Lock(API_SERVER_STOP_LOCK)
-	defer common.Unlock(API_SERVER_STOP_LOCK)
-
-	if apiServer == nil {
-		return
-	}
-
-	tempApiServer := apiServer
-	apiServer = nil
-
-	err := tempApiServer.Shutdown(context.Background())
-	if err != nil {
-		log.Fatal("Failed to stop the API server.", err)
-	}
-
-	err = util.RemoveDirent(common.GetStatusPath())
-	if err != nil {
-		log.Fatal("Failed to remove the status file.", err)
-	}
+	server.StopUnixSocketServer()
+	server.StopAPIServer()
 }

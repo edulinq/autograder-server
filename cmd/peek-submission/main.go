@@ -7,9 +7,9 @@ import (
 
 	"github.com/alecthomas/kong"
 
-	"github.com/edulinq/autograder/internal/api"
 	"github.com/edulinq/autograder/internal/api/core"
 	"github.com/edulinq/autograder/internal/api/courses/assignments/submissions"
+	"github.com/edulinq/autograder/internal/api/server"
 	"github.com/edulinq/autograder/internal/common"
 	"github.com/edulinq/autograder/internal/config"
 	"github.com/edulinq/autograder/internal/log"
@@ -62,8 +62,8 @@ func main() {
 	}
 
 	requestMap := map[string]interface{}{
-		api.ENDPOINT_KEY: core.NewEndpoint(`courses/assignments/submissions/fetch/user/peek`),
-		api.REQUEST_KEY:  request,
+		server.ENDPOINT_KEY: core.NewEndpoint(`courses/assignments/submissions/fetch/user/peek`),
+		server.REQUEST_KEY:  request,
 	}
 
 	jsonRequest := util.MustToJSONIndent(requestMap)

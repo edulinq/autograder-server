@@ -1,4 +1,4 @@
-package api
+package server
 
 import (
 	"encoding/json"
@@ -14,13 +14,17 @@ import (
 )
 
 const (
-	NONCE_SIZE_BYTES = 64
-	ENDPOINT_KEY     = "endpoint"
-	REQUEST_KEY      = "request"
-	NONCE_KEY        = "root-user-nonce"
+	UNIX_SOCKET_SERVER_STOP_LOCK = "UNIX_SOCKET_STOP_LOCK"
+	API_REQUEST_CONTENT_KEY      = "content"
+	NONCE_SIZE_BYTES             = 64
+	ENDPOINT_KEY                 = "endpoint"
+	REQUEST_KEY                  = "request"
+	NONCE_KEY                    = "root-user-nonce"
 )
 
-func runUnixSocketServer() (err error) {
+var unixSocket net.Listener
+
+func RunUnixSocketServer() (err error) {
 	defer func() {
 		value := recover()
 		if value == nil {
@@ -126,4 +130,21 @@ func handleUnixSocketConnection(connection net.Conn) error {
 	}
 
 	return nil
+}
+
+func StopUnixSocketServer() {
+	common.Lock(UNIX_SOCKET_SERVER_STOP_LOCK)
+	defer common.Unlock(UNIX_SOCKET_SERVER_STOP_LOCK)
+
+	if unixSocket == nil {
+		return
+	}
+
+	tempUnixSocket := unixSocket
+	unixSocket = nil
+
+	err := tempUnixSocket.Close()
+	if err != nil {
+		log.Fatal("Failed to close the unix socket.", err)
+	}
 }
