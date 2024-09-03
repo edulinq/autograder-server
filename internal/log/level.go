@@ -27,12 +27,33 @@ const (
 	LEVEL_STRING_OFF   = "OFF"
 )
 
+// textLevel controls the level of the logger outputting to the text writer.
 var textLevel LogLevel = LevelInfo
+
+// backendLevel controls the level of the logger outputting to the backend.
 var backendLevel LogLevel = LevelInfo
 
+func GetTextLevel() LogLevel {
+	return textLevel
+}
+
+func GetBackendLevel() LogLevel {
+	return backendLevel
+}
+
+func SetTextLevel(newLevel LogLevel) LogLevel {
+	oldLevel := textLevel
+	textLevel = newLevel
+	return oldLevel
+}
+
+func SetBackendLevel(newLevel LogLevel) LogLevel {
+	oldLevel := backendLevel
+	backendLevel = newLevel
+	return oldLevel
+}
+
 // Set the two logging levels.
-// The textLevel controls the level of the logger outputting to the text writer.
-// The backendLevel controls the level of the logger outputting to the backend.
 func SetLevels(newTextLevel LogLevel, newBackendLevel LogLevel) {
 	textLevel = newTextLevel
 	backendLevel = newBackendLevel

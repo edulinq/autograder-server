@@ -18,7 +18,7 @@ func FullCourseScoringAndUpload(course *model.Course, dryRun bool) error {
 			continue
 		}
 
-		log.Debug("Scoring course assignment.", course, assignment,
+		log.Trace("Scoring course assignment.", course, assignment,
 			log.NewAttr("index", i),
 			log.NewAttr("dry-run", dryRun))
 

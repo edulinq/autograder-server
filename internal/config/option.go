@@ -58,6 +58,10 @@ func MustNewBoolOption(key string, defaultValue bool, description string) *BoolO
 	return &BoolOption{mustNewOption(key, defaultValue, description)}
 }
 
+func (this *baseOption) IsSet() bool {
+	return Has(this.Key)
+}
+
 func (this *StringOption) Get() string {
 	return GetStringDefault(this.Key, this.DefaultValue.(string))
 }

@@ -1078,7 +1078,7 @@ func testUpsertDryRun(test *testing.T, caseIndex int, sendEmails bool, options U
 
 	expected.Emailed = expected.Emailed && sendEmails
 
-	beforeUser := db.MustGetServerUser(expected.Email, true)
+	beforeUser := db.MustGetServerUser(expected.Email)
 
 	result := UpsertUser(options)
 	if result == nil {
@@ -1097,7 +1097,7 @@ func testUpsertDryRun(test *testing.T, caseIndex int, sendEmails bool, options U
 		return false
 	}
 
-	afterUser := db.MustGetServerUser(expected.Email, true)
+	afterUser := db.MustGetServerUser(expected.Email)
 	if !reflect.DeepEqual(beforeUser, afterUser) {
 		test.Errorf("Case (dry run, email: %v) %d: User was changed during a dry run. Before: '%s', After: '%s'.", sendEmails, caseIndex,
 			util.MustToJSONIndent(beforeUser), util.MustToJSONIndent(afterUser))
@@ -1145,7 +1145,7 @@ func testUpsert(test *testing.T, caseIndex int, sendEmails bool, options UpsertU
 		return true
 	}
 
-	actualUser := db.MustGetServerUser(expectedUser.Email, true)
+	actualUser := db.MustGetServerUser(expectedUser.Email)
 
 	if actualUser == nil {
 		test.Errorf("Case (wet run, email: %v) %d: Could not find expected user '%s' in database.", sendEmails, caseIndex, expectedUser.Email)

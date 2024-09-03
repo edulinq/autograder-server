@@ -37,7 +37,7 @@ func (this *backend) LoadCourse(path string) (*model.Course, error) {
 		return nil, err
 	}
 
-	log.Debug("Loaded disk course.",
+	log.Trace("Loaded disk course.",
 		log.NewAttr("database", "disk"), log.NewAttr("path", path),
 		log.NewAttr("id", course.GetID()), log.NewAttr("num-assignments", len(course.Assignments)))
 

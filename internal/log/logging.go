@@ -66,12 +66,17 @@ func SetBackgroundLogging(value bool) bool {
 	return oldValue
 }
 
-func LogDirectRecord(record *Record) {
-	logText(record)
-	logBackend(record)
+func LogDirectRecord(record *Record, logText bool, logBackend bool) {
+	if logText {
+		logToText(record)
+	}
+
+	if logBackend {
+		logToBackend(record)
+	}
 }
 
-func logBackend(record *Record) {
+func logToBackend(record *Record) {
 	if (backend == nil) || (record == nil) {
 		return
 	}
@@ -92,7 +97,7 @@ func logBackend(record *Record) {
 				UnixMicro: time.Now().UnixMicro(),
 				Error:     err.Error(),
 			}
-			logText(errRecord)
+			logToText(errRecord)
 		}
 	}
 
@@ -103,7 +108,7 @@ func logBackend(record *Record) {
 	}
 }
 
-func logText(record *Record) {
+func logToText(record *Record) {
 	if (textWriter == nil) || (record == nil) {
 		return
 	}
@@ -119,6 +124,10 @@ func logText(record *Record) {
 }
 
 func Log(level LogLevel, message string, course string, assignment string, user string, logError error, attributes map[string]any) {
+	LogFull(level, true, true, message, course, assignment, user, logError, attributes)
+}
+
+func LogFull(level LogLevel, logText bool, logBackend bool, message string, course string, assignment string, user string, logError error, attributes map[string]any) {
 	errorMessage := ""
 	if logError != nil {
 		errorMessage = logError.Error()
@@ -137,7 +146,7 @@ func Log(level LogLevel, message string, course string, assignment string, user 
 		Attributes: attributes,
 	}
 
-	LogDirectRecord(record)
+	LogDirectRecord(record, logText, logBackend)
 }
 
 func LogToLevel(level LogLevel, message string, args ...any) {
@@ -147,6 +156,16 @@ func LogToLevel(level LogLevel, message string, args ...any) {
 	}
 
 	Log(level, message, course, assignment, user, logError, attributes)
+}
+
+func LogToSplitLevels(textLevel LogLevel, backendLevel LogLevel, message string, args ...any) {
+	course, assignment, user, logError, attributes, err := parseArgs(args...)
+	if err != nil {
+		Error("Failed to parse logging arguments.", err)
+	}
+
+	LogFull(textLevel, true, false, message, course, assignment, user, logError, attributes)
+	LogFull(backendLevel, false, true, message, course, assignment, user, logError, attributes)
 }
 
 func (this *Record) String() string {

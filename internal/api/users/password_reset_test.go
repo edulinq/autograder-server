@@ -39,7 +39,7 @@ func TestPassReset(test *testing.T) {
 		test.Fatalf("Unexpected number of regexp matches. Expected: 2, actual: %d.", len(matches))
 	}
 
-	user, err := db.GetServerUser("course-admin@test.edulinq.org", true)
+	user, err := db.GetServerUser("course-admin@test.edulinq.org")
 	if err != nil {
 		test.Fatalf("Failed to get saved user: '%v'.", err)
 	}

@@ -187,7 +187,7 @@ func checkRequestTargetServerUser(endpoint string, apiRequest any, fieldIndex in
 			Add("struct-name", structName).Add("field-name", fieldType.Name).Add("json-name", jsonName)
 	}
 
-	user, err := db.GetServerUser(field.Email, true)
+	user, err := db.GetServerUser(field.Email)
 	if err != nil {
 		return NewUsertContextInternalError("-045", userContext, "Failed to fetch user from DB.").
 			Add("email", field.Email).Err(err)
@@ -228,7 +228,7 @@ func checkRequestTargetServerUserSelfOrRole(endpoint string, apiRequest any, fie
 		return NewBadServerPermissionsError("-046", userContext, minRole, "Non-Self Target User")
 	}
 
-	user, err := db.GetServerUser(field.Email, true)
+	user, err := db.GetServerUser(field.Email)
 	if err != nil {
 		return NewUsertContextInternalError("-047", userContext, "Failed to fetch user from DB.").
 			Add("email", field.Email).Err(err)

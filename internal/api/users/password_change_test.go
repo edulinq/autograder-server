@@ -44,7 +44,7 @@ func TestPassChange(test *testing.T) {
 			continue
 		}
 
-		user, err := db.GetServerUser("course-admin@test.edulinq.org", true)
+		user, err := db.GetServerUser("course-admin@test.edulinq.org")
 		if err != nil {
 			test.Errorf("Case %d: Failed to get saved user: '%v'.", i, err)
 			continue
