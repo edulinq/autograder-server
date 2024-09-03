@@ -1091,9 +1091,9 @@ func testUpsertDryRun(test *testing.T, caseIndex int, sendEmails bool, options U
 		expected.CleartextPassword = result.CleartextPassword
 	}
 
-	if !reflect.DeepEqual(util.MustToJSON(expected), util.MustToJSON(result)) {
-		test.Errorf("Case (dry run, email: %v) %d: Result is not as expected. Expected: '%s', Actual: '%s'.", sendEmails, caseIndex,
-			util.MustToJSONIndent(expected), util.MustToJSONIndent(result))
+	if !reflect.DeepEqual(expected, result) {
+		test.Errorf("Case (dry run, email: %v) %d: Result is not as expected. Expected: '%+v', Actual: '%+v'.", sendEmails, caseIndex,
+			expected, result)
 		return false
 	}
 
@@ -1134,9 +1134,9 @@ func testUpsert(test *testing.T, caseIndex int, sendEmails bool, options UpsertU
 		expected.CleartextPassword = result.CleartextPassword
 	}
 
-	if !reflect.DeepEqual(util.MustToJSON(expected), util.MustToJSON(result)) {
-		test.Errorf("Case (wet run, email: %v) %d: Result is not as expected. Expected: '%s', Actual: '%s'.", sendEmails, caseIndex,
-			util.MustToJSONIndent(expected), util.MustToJSONIndent(result))
+	if !reflect.DeepEqual(expected, result) {
+		test.Errorf("Case (wet run, email: %v) %d: Result is not as expected. Expected: '%+v', Actual: '%+v'.", sendEmails, caseIndex,
+			expected, result)
 		return false
 	}
 
