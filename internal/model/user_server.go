@@ -59,6 +59,10 @@ func (this *ServerUser) Validate() error {
 		return fmt.Errorf("User email is empty.")
 	}
 
+	if this.Email != "root" && !strings.Contains(this.Email, "@") {
+        return fmt.Errorf("User email '%s' has an invalid format.", this.Email)
+	}
+
 	if this.Name != nil {
 		name := strings.TrimSpace(*this.Name)
 		this.Name = &name

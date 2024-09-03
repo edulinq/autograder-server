@@ -22,11 +22,13 @@ func (this *DBTests) DBTestUserGetServerUsersBase(test *testing.T) {
 		test.Fatalf("Could not get server users: '%v'.", err)
 	}
 
+	// Check if root is a server user.
 	_, exists := users["root"]
 	if !exists {
 		test.Fatalf("Couldn't find the root user in server users.")
 	}
 
+	// Remove root from the server users since we're comparing it with test users.
 	delete(users, "root")
 
 	if len(users) == 0 {

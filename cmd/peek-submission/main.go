@@ -7,6 +7,7 @@ import (
 
 	"github.com/alecthomas/kong"
 
+	"github.com/edulinq/autograder/internal/api"
 	"github.com/edulinq/autograder/internal/api/core"
 	"github.com/edulinq/autograder/internal/api/courses/assignments/submissions"
 	"github.com/edulinq/autograder/internal/common"
@@ -20,7 +21,7 @@ var args struct {
 	TargetEmail      string `help:"Email of the user to fetch." arg:""`
 	CourseID         string `help:"ID of the course." arg:""`
 	AssignmentID     string `help:"ID of the assignment." arg:""`
-	TargetSubmission string `help:"ID of the submission." arg:"" optional:""`
+	TargetSubmission string `help:"ID of the submission. Defaults to latest submission." arg:"" optional:""`
 	Verbose          bool   `help:"Print the entire response." short:"v"`
 }
 
@@ -39,11 +40,11 @@ func main() {
 		log.Fatal("Failed to get the unix socket path.", err)
 	}
 
-	conn, err := net.Dial("unix", socketPath)
+	connection, err := net.Dial("unix", socketPath)
 	if err != nil {
 		log.Fatal("Failed to dial the unix socket.", err)
 	}
-	defer conn.Close()
+	defer connection.Close()
 
 	request := submissions.FetchUserPeekRequest{
 		APIRequestAssignmentContext: core.APIRequestAssignmentContext{
@@ -61,18 +62,18 @@ func main() {
 	}
 
 	requestMap := map[string]interface{}{
-		"endpoint": core.NewEndpoint(`courses/assignments/submissions/fetch/user/peek`),
-		"request":  request,
+		api.ENDPOINT_KEY: core.NewEndpoint(`courses/assignments/submissions/fetch/user/peek`),
+		api.REQUEST_KEY:  request,
 	}
 
 	jsonRequest := util.MustToJSONIndent(requestMap)
 	jsonBytes := []byte(jsonRequest)
-	err = util.WriteToUnixSocket(conn, jsonBytes)
+	err = util.WriteToUnixSocket(connection, jsonBytes)
 	if err != nil {
 		log.Fatal("Failed to write the request to the unix socket.", err)
 	}
 
-	responseBuffer, err := util.ReadFromUnixSocket(conn)
+	responseBuffer, err := util.ReadFromUnixSocket(connection)
 	if err != nil {
 		log.Fatal("Failed to read the response from the unix socket.", err)
 	}
@@ -84,7 +85,12 @@ func main() {
 	}
 
 	if !response.Success {
-		log.Fatal("Failed to make an API request through the unix socket.", response.HTTPStatus)
+		message := "Request to the autograder failed."
+		if response.Message != "" {
+			message = fmt.Sprintf("Failed to complete operation: %s", response.Message)
+		}
+
+		log.Error("API request was not successful.", log.NewAttr("message", message), log.NewAttr("http-status", response.HTTPStatus))
 	}
 
 	if args.Verbose {

@@ -13,7 +13,12 @@ import (
 	"github.com/edulinq/autograder/internal/util"
 )
 
-const NONCE_BYTE_SIZE = 64
+const (
+	NONCE_SIZE_BYTES = 64
+	ENDPOINT_KEY     = "endpoint"
+	REQUEST_KEY      = "request"
+	NONCE_KEY        = "root-user-nonce"
+)
 
 func runUnixSocketServer() (err error) {
 	defer func() {
@@ -65,15 +70,17 @@ func runUnixSocketServer() (err error) {
 	}
 }
 
-func handleUnixSocketConnection(conn net.Conn) error {
+// Read the request from the unix socket, generate and store a nonce, add the nonce to the request,
+// send the request to the API endpoint, and write the response back to the unix socket.
+func handleUnixSocketConnection(connection net.Conn) error {
 	var port = config.WEB_PORT.Get()
 
-	jsonBuffer, err := util.ReadFromUnixSocket(conn)
+	jsonBuffer, err := util.ReadFromUnixSocket(connection)
 	if err != nil {
 		return fmt.Errorf("Failed to read from the unix socket.")
 	}
 
-	randomNonce, err := util.RandHex(NONCE_BYTE_SIZE)
+	randomNonce, err := util.RandHex(NONCE_SIZE_BYTES)
 	if err != nil {
 		return fmt.Errorf("Failed to generate the nonce.")
 	}
@@ -87,17 +94,17 @@ func handleUnixSocketConnection(conn net.Conn) error {
 		return fmt.Errorf("Failed to unmarshal the request buffer into the payload.")
 	}
 
-	endpoint, exists := payload["endpoint"].(string)
+	endpoint, exists := payload[ENDPOINT_KEY].(string)
 	if !exists {
 		return fmt.Errorf("Failed to find the 'endpoint' key in the request.")
 	}
 
-	content, exists := payload["request"].(map[string]any)
+	content, exists := payload[REQUEST_KEY].(map[string]any)
 	if !exists {
 		return fmt.Errorf("Failed to find the 'request' key in the request.")
 	}
 
-	content["root-user-nonce"] = randomNonce
+	content[NONCE_KEY] = randomNonce
 	formContent, err := json.Marshal(content)
 	if err != nil {
 		return fmt.Errorf("Failed to marshal the request's content.")
@@ -113,7 +120,7 @@ func handleUnixSocketConnection(conn net.Conn) error {
 	}
 
 	jsonResponseBytes := []byte(responseText)
-	err = util.WriteToUnixSocket(conn, jsonResponseBytes)
+	err = util.WriteToUnixSocket(connection, jsonResponseBytes)
 	if err != nil {
 		return fmt.Errorf("Failed to write to the unix socket.")
 	}

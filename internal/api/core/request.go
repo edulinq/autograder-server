@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"net/http"
 	"reflect"
-	"strings"
 	"sync"
 
 	"github.com/edulinq/autograder/internal/common"
@@ -18,6 +17,9 @@ import (
 // Once validated, callers should feel safe calling reflection methods on this without extra checks.
 type ValidAPIRequest any
 
+// A random nonce is generated for each root user request (CMDs),
+// gets stored in RootUserNonces, and gets attached to the request.
+// It's later validated on the server to confirm the request came from a valid root user.
 var RootUserNonces sync.Map
 
 type APIRequest struct {
@@ -112,10 +114,6 @@ func (this *APIRequestUserContext) Validate(request any, endpoint string) *APIEr
 		if apiErr != nil {
 			return apiErr
 		}
-	}
-
-	if this.UserEmail != "root" && !strings.Contains(this.UserEmail, "@") {
-		return NewBadRequestError("-051", &this.APIRequest, "Invalid email format.")
 	}
 
 	minRole, foundRole := getMaxServerRole(request)

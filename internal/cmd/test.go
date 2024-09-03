@@ -27,7 +27,9 @@ func CMDServerTestingMain(suite *testing.M) {
 	code := func() int {
 		db.PrepForTestingMain()
 		defer db.CleanupTestingMain()
+
 		log.SetLevelDebug()
+
 		var serverRun sync.WaitGroup
 		serverRun.Add(1)
 
@@ -35,13 +37,14 @@ func CMDServerTestingMain(suite *testing.M) {
 
 		go func() {
 			serverRun.Done()
-			api.StartServers()
+			api.StartServer()
 		}()
+		defer api.StopServers()
 
 		serverRun.Wait()
-		time.Sleep(100 * time.Millisecond)
 
-		defer api.StopServers()
+		// Small sleep to allow the server to start up.
+		time.Sleep(100 * time.Millisecond)
 
 		return suite.Run()
 	}()

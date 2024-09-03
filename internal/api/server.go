@@ -19,8 +19,8 @@ import (
 
 const (
 	API_REQUEST_CONTENT_KEY      = "content"
-	API_SERVER_STOP_LOCK         = "API Lock"
-	UNIX_SOCKET_SERVER_STOP_LOCK = "Unix Lock"
+	API_SERVER_STOP_LOCK         = "API_STOP_LOCK"
+	UNIX_SOCKET_SERVER_STOP_LOCK = "UNIX_SOCKET_STOP_LOCK"
 )
 
 var (
@@ -29,7 +29,12 @@ var (
 )
 
 // Run the API and Unix Socket Server.
-func StartServers() error {
+func StartServer() error {
+	err := common.WriteAndHandleStatusFile()
+	if err != nil {
+		return err
+	}
+
 	errorsChan := make(chan error, 2)
 
 	go func() {
@@ -40,7 +45,7 @@ func StartServers() error {
 		errorsChan <- runUnixSocketServer()
 	}()
 
-	// Handle server shutdowns for control c.
+	// Gracefully shutdown on Control-C (SIGINT).
 	shutdownSignal := make(chan os.Signal, 1)
 	signal.Notify(shutdownSignal, syscall.SIGINT, syscall.SIGTERM)
 	go func() {
@@ -82,6 +87,7 @@ func runAPIServer() (err error) {
 
 	err = apiServer.ListenAndServe()
 	if err == http.ErrServerClosed {
+		// Set err to nil if the server stopped due to a graceful shutdown.
 		err = nil
 	}
 

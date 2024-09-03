@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"github.com/edulinq/autograder/internal/api"
-	"github.com/edulinq/autograder/internal/common"
 	"github.com/edulinq/autograder/internal/config"
 	"github.com/edulinq/autograder/internal/db"
 	"github.com/edulinq/autograder/internal/log"
@@ -18,13 +17,17 @@ func Start() error {
 
 	log.Info("Autograder Version.", log.NewAttr("version", util.GetAutograderFullVersion()))
 
-	err := common.WriteAndHandlePidStatus()
+	err := db.Open()
 	if err != nil {
-		return err
+		log.Fatal("Failed to open the database.", err)
 	}
 
-	db.MustOpen()
-	defer db.MustClose()
+	defer func() {
+		err := db.Close()
+		if err != nil {
+			log.Error("Failed to close the database.", err)
+		}
+	}()
 
 	log.Info("Running server with working directory.", log.NewAttr("dir", config.GetWorkDir()))
 
@@ -33,7 +36,11 @@ func Start() error {
 		log.Fatal("Could not load courses.", err)
 	}
 
-	courses := db.MustGetCourses()
+	courses, err := db.GetCourses()
+	if err != nil {
+		log.Fatal("Failed to get courses.", err)
+	}
+
 	log.Info("Loaded course(s).", log.NewAttr("count", len(courses)))
 
 	// Startup courses (in the background).
@@ -47,7 +54,7 @@ func Start() error {
 	// Cleanup any temp dirs.
 	defer util.RemoveRecordedTempDirs()
 
-	err = api.StartServers()
+	err = api.StartServer()
 	if err != nil {
 		return fmt.Errorf("Failed to start server.")
 	}

@@ -6,12 +6,12 @@ import (
 	"net"
 )
 
-const BUFFER_SIZE = 8
+const RESPONSE_BUFFER_SIZE = 8
 
-func ReadFromUnixSocket(conn net.Conn) ([]byte, error) {
-	sizeBuffer := make([]byte, BUFFER_SIZE)
+func ReadFromUnixSocket(connection net.Conn) ([]byte, error) {
+	sizeBuffer := make([]byte, RESPONSE_BUFFER_SIZE)
 
-	_, err := conn.Read(sizeBuffer)
+	_, err := connection.Read(sizeBuffer)
 	if err != nil {
 		return nil, err
 	}
@@ -19,7 +19,7 @@ func ReadFromUnixSocket(conn net.Conn) ([]byte, error) {
 	size := binary.BigEndian.Uint64(sizeBuffer)
 	jsonBuffer := make([]byte, size)
 
-	_, err = conn.Read(jsonBuffer)
+	_, err = connection.Read(jsonBuffer)
 	if err != nil {
 		return nil, err
 	}
@@ -27,7 +27,7 @@ func ReadFromUnixSocket(conn net.Conn) ([]byte, error) {
 	return jsonBuffer, nil
 }
 
-func WriteToUnixSocket(conn net.Conn, data []byte) error {
+func WriteToUnixSocket(connection net.Conn, data []byte) error {
 	size := uint64(len(data))
 	responseBuffer := new(bytes.Buffer)
 
@@ -38,7 +38,7 @@ func WriteToUnixSocket(conn net.Conn, data []byte) error {
 
 	responseBuffer.Write(data)
 
-	_, err = conn.Write(responseBuffer.Bytes())
+	_, err = connection.Write(responseBuffer.Bytes())
 	if err != nil {
 		return err
 	}

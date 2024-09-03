@@ -8,34 +8,32 @@ import (
 	"github.com/edulinq/autograder/internal/util"
 )
 
-func CheckAndHandlePid() bool {
+func CheckAndHandleStalePid() bool {
 	statusPath := GetStatusPath()
 
-	if util.IsFile(statusPath) {
-		var statusJson StatusInfo
-
-		err := util.JSONFromFile(statusPath, &statusJson)
-		if err != nil {
-			log.Error("Failed to read the existing status file.", err)
-			return false
-		}
-
-		jsonPid := statusJson.Pid
-		if jsonPid == 0 {
-			return true
-		}
-
-		process, _ := os.FindProcess(jsonPid)
-		err = process.Signal(syscall.Signal(0))
-		if err != nil {
-			log.Warn("Removing stale pid.")
-			statusJson.Pid = 0
-			return true
-		} else {
-			log.Warn("Another instance of the autograder server is already running.")
-			return false
-		}
+	if !util.IsFile(statusPath) {
+		return true
 	}
 
-	return true
+	var statusJson StatusInfo
+
+	err := util.JSONFromFile(statusPath, &statusJson)
+	if err != nil {
+		log.Error("Failed to read the existing status file.", err)
+		return false
+	}
+
+	if statusJson.Pid == 0 {
+		return true
+	}
+
+	process, _ := os.FindProcess(statusJson.Pid)
+	err = process.Signal(syscall.Signal(0))
+	if err != nil {
+		log.Warn("Removing stale status file.")
+		util.RemoveDirent(GetStatusPath())
+		return true
+	} else {
+		return false
+	}
 }

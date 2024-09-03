@@ -22,6 +22,7 @@ func (this *backend) GetCourseUsers(course *model.Course) (map[string]*model.Cou
 
 	courseUsers := make(map[string]*model.CourseUser)
 	for email, user := range users {
+		// Don't include root as a course user.
 		if email == "root" {
 			continue
 		}
