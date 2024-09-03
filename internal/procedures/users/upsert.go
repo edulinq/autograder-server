@@ -77,7 +77,7 @@ func upsertUser(options UpsertUsersOptions, index int) *model.UserOpResult {
 	}
 
 	// Check if this is an update or insert.
-	oldUser, err := db.GetServerUser(newUser.Email, true)
+	oldUser, err := db.GetServerUser(newUser.Email)
 	if err != nil {
 		return model.NewSystemErrorUserOpResult(newUser.Email, err)
 	}
