@@ -66,7 +66,7 @@ func SendTestAPIRequestFull(test *testing.T, endpoint string, fields map[string]
 		email = email + "@test.edulinq.org"
 	}
 
-	user := db.MustGetServerUser(email, true)
+	user := db.MustGetServerUser(email)
 
 	pass := ""
 	if user != nil {

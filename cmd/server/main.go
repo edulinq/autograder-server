@@ -47,7 +47,6 @@ func main() {
 
 	// Startup courses (in the background).
 	for _, course := range courses {
-		log.Info("Loaded course.", course)
 		go func(course *model.Course) {
 			pcourses.UpdateCourse(course, true)
 		}(course)

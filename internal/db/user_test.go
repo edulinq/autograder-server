@@ -98,7 +98,7 @@ func (this *DBTests) DBTestUserGetServerUserBase(test *testing.T) {
 	email := "course-student@test.edulinq.org"
 	expected := mustLoadTestServerUsers()[email]
 
-	user, err := GetServerUser(email, true)
+	user, err := GetServerUser(email)
 	if err != nil {
 		test.Fatalf("Could not get server user ('%s'): '%v'.", email, err)
 	}
@@ -119,9 +119,8 @@ func (this *DBTests) DBTestUserGetServerUserNoTokens(test *testing.T) {
 
 	email := "course-student@test.edulinq.org"
 	expected := mustLoadTestServerUsers()[email]
-	expected.Tokens = nil
 
-	user, err := GetServerUser(email, false)
+	user, err := GetServerUser(email)
 	if err != nil {
 		test.Fatalf("Could not get server user ('%s'): '%v'.", email, err)
 	}
@@ -142,7 +141,7 @@ func (this *DBTests) DBTestUserGetServerUserMissing(test *testing.T) {
 
 	email := "ZZZ"
 
-	user, err := GetServerUser(email, false)
+	user, err := GetServerUser(email)
 	if err != nil {
 		test.Fatalf("Could not get server user ('%s'): '%v'.", email, err)
 	}
@@ -240,7 +239,7 @@ func (this *DBTests) DBTestUserUpsertUserInsert(test *testing.T) {
 		test.Fatalf("Could not upsert user '%s': '%v'.", email, err)
 	}
 
-	newUser, err := GetServerUser(email, true)
+	newUser, err := GetServerUser(email)
 	if err != nil {
 		test.Fatalf("Could not get (new) server user ('%s'): '%v'.", email, err)
 	}
@@ -265,7 +264,7 @@ func (this *DBTests) DBTestUserUpsertUserUpdate(test *testing.T) {
 	newExpectedName := "Test Name"
 	expected.Name = &newExpectedName
 
-	user, err := GetServerUser(email, true)
+	user, err := GetServerUser(email)
 	if err != nil {
 		test.Fatalf("Could not get server user ('%s'): '%v'.", email, err)
 	}
@@ -285,7 +284,7 @@ func (this *DBTests) DBTestUserUpsertUserUpdate(test *testing.T) {
 		test.Fatalf("Could not upsert user '%s': '%v'.", email, err)
 	}
 
-	newUser, err := GetServerUser(email, true)
+	newUser, err := GetServerUser(email)
 	if err != nil {
 		test.Fatalf("Could not get (new) server user ('%s'): '%v'.", email, err)
 	}
@@ -307,7 +306,7 @@ func (this *DBTests) DBTestUserUpsertUserEmptyUpdate(test *testing.T) {
 	email := "course-student@test.edulinq.org"
 	expected := mustLoadTestServerUsers()[email]
 
-	user, err := GetServerUser(email, true)
+	user, err := GetServerUser(email)
 	if err != nil {
 		test.Fatalf("Could not get server user ('%s'): '%v'.", email, err)
 	}
@@ -324,7 +323,7 @@ func (this *DBTests) DBTestUserUpsertUserEmptyUpdate(test *testing.T) {
 		test.Fatalf("Could not upsert user '%s': '%v'.", email, err)
 	}
 
-	newUser, err := GetServerUser(email, true)
+	newUser, err := GetServerUser(email)
 	if err != nil {
 		test.Fatalf("Could not get (new) server user ('%s'): '%v'.", email, err)
 	}
@@ -388,7 +387,7 @@ func (this *DBTests) DBTestUserDeleteUserBase(test *testing.T) {
 		test.Fatalf("Told that user ('%s') did not exist, when it should have.", email)
 	}
 
-	user, err := GetServerUser(email, true)
+	user, err := GetServerUser(email)
 	if err != nil {
 		test.Fatalf("Could not get (new) server user ('%s'): '%v'.", email, err)
 	}
@@ -413,7 +412,7 @@ func (this *DBTests) DBTestUserDeleteUserMissing(test *testing.T) {
 		test.Fatalf("Told that user ('%s') exists, when it should not.", email)
 	}
 
-	user, err := GetServerUser(email, true)
+	user, err := GetServerUser(email)
 	if err != nil {
 		test.Fatalf("Could not get (new) server user ('%s'): '%v'.", email, err)
 	}
@@ -475,7 +474,7 @@ func (this *DBTests) DBTestUserDeleteTokenBase(test *testing.T) {
 	email := "course-admin@test.edulinq.org"
 
 	// Add a token.
-	user := MustGetServerUser(email, true)
+	user := MustGetServerUser(email)
 
 	_, _, err := user.CreateRandomToken("test", model.TokenSourceServer)
 	if err != nil {
@@ -488,7 +487,7 @@ func (this *DBTests) DBTestUserDeleteTokenBase(test *testing.T) {
 	}
 
 	// Re-fetch and ensure the token exists.
-	user = MustGetServerUser(email, true)
+	user = MustGetServerUser(email)
 
 	if len(user.Tokens) != 1 {
 		test.Fatalf("Incorrect number of tokens. Expected: 1, Actual: %d.", len(user.Tokens))
@@ -509,7 +508,7 @@ func (this *DBTests) DBTestUserDeleteTokenBase(test *testing.T) {
 	}
 
 	for i, testCase := range testCases {
-		initialCount := len(MustGetServerUser(email, true).Tokens)
+		initialCount := len(MustGetServerUser(email).Tokens)
 		expectedCount := initialCount
 
 		removed, err := DeleteUserToken(testCase.email, testCase.id)
@@ -525,7 +524,7 @@ func (this *DBTests) DBTestUserDeleteTokenBase(test *testing.T) {
 			expectedCount--
 		}
 
-		newCount := len(MustGetServerUser(email, true).Tokens)
+		newCount := len(MustGetServerUser(email).Tokens)
 		if expectedCount != newCount {
 			test.Fatalf("Case %d: Unexpected token count. Expected: %v, Actual: %v.", i, expectedCount, newCount)
 		}

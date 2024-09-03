@@ -36,16 +36,16 @@ func GetCourseUsers(course *model.Course) (map[string]*model.CourseUser, error) 
 }
 
 // See Backend.
-func GetServerUser(email string, includeTokens bool) (*model.ServerUser, error) {
+func GetServerUser(email string) (*model.ServerUser, error) {
 	if backend == nil {
 		return nil, fmt.Errorf("Database has not been opened.")
 	}
 
-	return backend.GetServerUser(email, includeTokens)
+	return backend.GetServerUser(email)
 }
 
-func MustGetServerUser(email string, includeTokens bool) *model.ServerUser {
-	user, err := GetServerUser(email, includeTokens)
+func MustGetServerUser(email string) *model.ServerUser {
+	user, err := GetServerUser(email)
 	if err != nil {
 		log.Fatal("Faled to get server user.", err, log.NewUserAttr(email))
 	}
@@ -78,7 +78,7 @@ func GetCourseUser(course *model.Course, email string) (*model.CourseUser, error
 		return nil, fmt.Errorf("Database has not been opened.")
 	}
 
-	serverUser, err := backend.GetServerUser(email, false)
+	serverUser, err := backend.GetServerUser(email)
 	if err != nil {
 		return nil, err
 	}
@@ -132,7 +132,7 @@ func DeleteUser(email string) (bool, error) {
 		return false, fmt.Errorf("Database has not been opened.")
 	}
 
-	user, err := GetServerUser(email, false)
+	user, err := GetServerUser(email)
 	if err != nil {
 		return false, err
 	}
@@ -151,7 +151,7 @@ func RemoveUserFromCourse(course *model.Course, email string) (bool, bool, error
 		return false, false, fmt.Errorf("Database has not been opened.")
 	}
 
-	user, err := GetServerUser(email, false)
+	user, err := GetServerUser(email)
 	if err != nil {
 		return false, false, err
 	}

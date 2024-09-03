@@ -187,10 +187,10 @@ func scheduleTask(courseID string, target tasks.ScheduledTask, timerID string, r
 	}
 
 	if when == nil {
-		log.Debug("Catchup task scheduled.", log.NewCourseAttr(courseID), log.NewAttr("task", target.GetID()))
+		log.Trace("Catchup task scheduled.", log.NewCourseAttr(courseID), log.NewAttr("task", target.GetID()))
 	} else {
 		nextRunTime := time.Now().Add(nextRunDuration)
-		log.Debug("Task scheduled.", log.NewCourseAttr(courseID), log.NewAttr("task", target.GetID()),
+		log.Trace("Task scheduled.", log.NewCourseAttr(courseID), log.NewAttr("task", target.GetID()),
 			log.NewAttr("timer-id", timerID), log.NewAttr("when", when.String()), log.NewAttr("next-time", nextRunTime))
 	}
 
@@ -270,7 +270,7 @@ func runTask(courseID string, target tasks.ScheduledTask, timerID string, runFun
 	// Skip this task if it was run too recently.
 	lastRunDuration := now.Sub(lastRunTime)
 	if lastRunDuration < (time.Duration(config.TASK_MIN_REST_SECS.Get()) * time.Second) {
-		log.Debug("Skipping task run, last run was too recent.",
+		log.Trace("Skipping task run, last run was too recent.",
 			log.NewCourseAttr(courseID), log.NewAttr("task", taskID), log.NewAttr("last-run", lastRunTime))
 		return true
 	}

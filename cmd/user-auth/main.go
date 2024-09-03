@@ -36,7 +36,7 @@ func main() {
 }
 
 func run() int {
-	user, err := db.GetServerUser(args.Email, true)
+	user, err := db.GetServerUser(args.Email)
 	if err != nil {
 		log.Fatal("Failed to get user.", err)
 	}

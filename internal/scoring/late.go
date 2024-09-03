@@ -231,7 +231,7 @@ func updateLateDays(policy model.LateGradingPolicy, assignment *model.Assignment
 	}
 
 	if dryRun {
-		log.Info("Dry Run: Skipping upload of late days.", assignment, log.NewAttr("grades", grades))
+		log.Debug("Dry Run: Skipping upload of late days.", assignment, log.NewAttr("grades", grades))
 	} else {
 		err := lms.UpdateAssignmentScores(assignment.GetCourse(), policy.LateDaysLMSID, grades)
 		if err != nil {
@@ -254,7 +254,7 @@ func updateLateDays(policy model.LateGradingPolicy, assignment *model.Assignment
 	}
 
 	if dryRun {
-		log.Info("Dry Run: Skipping update of late day comments.", assignment, log.NewAttr("comments", comments))
+		log.Debug("Dry Run: Skipping update of late day comments.", assignment, log.NewAttr("comments", comments))
 	} else {
 		err := lms.UpdateComments(assignment.GetCourse(), policy.LateDaysLMSID, comments)
 		if err != nil {

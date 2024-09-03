@@ -33,7 +33,7 @@ func runNoDockerGrader(assignment *model.Assignment, submissionPath string, opti
 	if !options.LeaveTempDir {
 		defer os.RemoveAll(tempDir)
 	} else {
-		log.Info("Leaving behind temp grading dir.", log.NewAttr("path", tempDir))
+		log.Debug("Leaving behind temp grading dir.", log.NewAttr("path", tempDir))
 	}
 
 	cmd, err := getAssignmentInvocation(assignment, tempDir, inputDir, outputDir, workDir)

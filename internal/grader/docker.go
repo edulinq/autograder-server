@@ -27,7 +27,7 @@ func runDockerGrader(assignment *model.Assignment, submissionPath string, option
 	if !options.LeaveTempDir {
 		defer os.RemoveAll(tempDir)
 	} else {
-		log.Info("Leaving behind temp grading dir.", assignment, log.NewAttr("path", tempDir))
+		log.Debug("Leaving behind temp grading dir.", assignment, log.NewAttr("path", tempDir))
 	}
 
 	// Copy over submission files to the temp input dir.

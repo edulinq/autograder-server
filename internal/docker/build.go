@@ -46,7 +46,7 @@ func BuildImageWithOptions(imageSource ImageSource, options *BuildOptions) error
 	}
 
 	if config.DEBUG.Get() {
-		log.Info("Leaving behind temp building dir.", imageSource, log.NewAttr("path", tempDir))
+		log.Debug("Leaving behind temp building dir.", imageSource, log.NewAttr("path", tempDir))
 	} else {
 		defer os.RemoveAll(tempDir)
 	}
@@ -87,7 +87,7 @@ func buildImage(imageSource ImageSource, buildOptions types.ImageBuildOptions, t
 	}
 
 	output := collectBuildOutput(imageSource, response)
-	log.Debug("Image Build Output", imageSource, log.NewAttr("image-build-output", output))
+	log.Trace("Image Build Output", imageSource, log.NewAttr("image-build-output", output))
 
 	return nil
 }
