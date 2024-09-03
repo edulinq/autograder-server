@@ -2,8 +2,7 @@
 
 readonly THIS_DIR="$(cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd | xargs realpath)"
 readonly ROOT_DIR="${THIS_DIR}/.."
-readonly API_DIR="${ROOT_DIR}/internal/api"
-readonly PROCEDURES_DIR="${ROOT_DIR}/internal/procedures"
+readonly INTERNAL_DIR="${ROOT_DIR}/internal"
 
 function main() {
     if [[ $# -ne 0 ]]; then
@@ -15,39 +14,24 @@ function main() {
 
     cd "${ROOT_DIR}"
 
-    echo "API Locators:"
+    local packages_to_check=("api" "procedures" "lms")
 
-    for path in "${API_DIR}"/* ; do
-        dir=$(basename "${path}")
+    for package in "${packages_to_check[@]}"; do
+        for path in "${INTERNAL_DIR}/${package}"/* ; do
+            dir=$(basename "${path}")
+            parent_dir=$(basename $(dirname "${path}"))
 
-        if [[ ! -d "${path}" ]] ; then
-            continue
-        fi
+            if [[ ! -d "${path}" ]] ; then
+                continue
+            fi
 
-        local largestLocator=$(grep -R '("-' "${path}" | sed 's/^.*"\(-[0-9]\{3\}\)".*$/\1/' | sort | uniq | tail -n 1)
-        # Remove input zero padding (so bash does not think the numebr is octal.
-        local cleanLargestLocator=$(echo "${largestLocator}" | sed -E 's/-0+/-/g')
-        local nextLocator=$(printf "%04d" "$((cleanLargestLocator - 1))")
+            local largestLocator=$(grep -R '("-' "${path}" | sed 's/^.*"\(-[0-9]\{3,4\}\)".*$/\1/' | sort | uniq | tail -n 1)
+            # Remove input zero padding (so bash does not think the numebr is octal.
+            local cleanLargestLocator=$(echo "${largestLocator}" | sed -E 's/-0+/-/g')
+            local nextLocator=$(printf "%04d" "$((cleanLargestLocator - 1))")
 
-        echo -e "Package: $(printf "%-12s" "${dir}"),\tMax Locator: $(printf "%-4s" "${largestLocator}"),\tNext Locator: ${nextLocator}"
-    done
-
-    echo ""
-    echo "Procedure Locators:"
-
-    for path in "${PROCEDURES_DIR}"/* ; do
-        dir=$(basename "${path}")
-
-        if [[ ! -d "${path}" ]] ; then
-            continue
-        fi
-
-        local largestLocator=$(grep -R '("-' "${path}" | sed 's/^.*"\(-[0-9]\{4\}\)".*$/\1/' | sort | uniq | tail -n 1)
-        # Remove input zero padding (so bash does not think the numebr is octal.
-        local cleanLargestLocator=$(echo "${largestLocator}" | sed -E 's/-0+/-/g')
-        local nextLocator=$(printf "%04d" "$((cleanLargestLocator - 1))")
-
-        echo -e "Package: $(printf "%-12s" "${dir}"),\tMax Locator: $(printf "%-4s" "${largestLocator}"),\tNext Locator: ${nextLocator}"
+            echo -e "Package: $(printf "%-20s" "${parent_dir}/${dir}"),\tMax Locator: $(printf "%-5s" "${largestLocator}"),\tNext Locator: ${nextLocator}"
+        done
     done
 
     return 0
