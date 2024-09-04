@@ -61,7 +61,7 @@ func runUnixSocketServer() (err error) {
 			}
 
 			if err != nil {
-				log.Error("Unix socket server returned an error.", err)
+				log.Error("Unix socket server returned an error.")
 			}
 
 			return err

@@ -57,5 +57,6 @@ func Start() (err error) {
 	}
 
 	log.Info("Server closed.")
+
 	return err
 }
