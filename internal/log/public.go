@@ -31,12 +31,7 @@ func Fatal(message string, args ...any) {
 func FatalWithCode(code int, message string, args ...any) {
 	SetBackgroundLogging(false)
 
-	record := LogToLevel(LevelFatal, message, args...)
-
-	if panicOnFatal {
-		panic(record)
-	}
-
+	LogToLevel(LevelFatal, message, args...)
 	os.Exit(code)
 }
 

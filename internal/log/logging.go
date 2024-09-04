@@ -46,6 +46,19 @@ var backendLock sync.Mutex
 // Option to log serially, generally only for testing.
 var backgroundBackendLogging bool = true
 
+// Option to panic instead of exit on fatal, generally only for testing.
+var panicOnFatal bool = false
+
+func SetPanicOnFatal(value bool) bool {
+	backendLock.Lock()
+	defer backendLock.Unlock()
+
+	oldValue := panicOnFatal
+	panicOnFatal = value
+
+	return oldValue
+}
+
 func SetTextWriter(newTextWriter io.StringWriter) {
 	textWriter = newTextWriter
 }
