@@ -199,9 +199,9 @@ func Open() error {
 		return err
 	}
 
-	err = UpsertUser(&model.RootUser)
+	err = InitializeRootUser()
 	if err != nil {
-		return err
+		return fmt.Errorf("Failed to initialize the root user: %w", err)
 	}
 
 	// We are probably running unit tests, load the test data.
@@ -244,7 +244,12 @@ func Clear() error {
 		return err
 	}
 
-	return UpsertUser(&model.RootUser)
+	err = InitializeRootUser()
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func MustOpen() {

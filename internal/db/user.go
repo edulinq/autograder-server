@@ -167,3 +167,22 @@ func RemoveUserFromCourse(course *model.Course, email string) (bool, bool, error
 
 	return true, true, backend.RemoveUserFromCourse(course, email)
 }
+
+func InitializeRootUser() error {
+	rootUser := model.ServerUser {
+		Email: model.RootUserEmail,
+		Role: model.ServerRoleRoot,
+	}
+
+	err := rootUser.Validate()
+	if err != nil {
+		return fmt.Errorf("Failed to validate the root user: %w", err)
+	}
+
+	err = UpsertUser(&rootUser)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

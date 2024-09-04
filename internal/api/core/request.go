@@ -90,7 +90,7 @@ func (this *APIRequestUserContext) Validate(request any, endpoint string) *APIEr
 			return NewAuthBadRequestError("-048", this, "Incorrect root user nonce.")
 		}
 
-		rootUser, err := db.GetServerUser(model.RootUser.Email)
+		rootUser, err := db.GetServerUser(model.RootUserEmail)
 		if err != nil {
 			return NewUserContextInternalError("-049", this, "Failed to get the root user.")
 		}
