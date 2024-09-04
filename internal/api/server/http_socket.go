@@ -15,7 +15,7 @@ var apiServer *http.Server
 
 const API_SERVER_STOP_LOCK = "API_STOP_LOCK"
 
-func RunAPIServer(routes *[]*core.Route) (err error) {
+func runAPIServer(routes *[]*core.Route) (err error) {
 	defer func() {
 		value := recover()
 		if value == nil {
@@ -49,7 +49,7 @@ func RunAPIServer(routes *[]*core.Route) (err error) {
 	return err
 }
 
-func StopAPIServer() {
+func stopAPIServer() {
 	common.Lock(API_SERVER_STOP_LOCK)
 	defer common.Unlock(API_SERVER_STOP_LOCK)
 

@@ -1,4 +1,4 @@
-package api
+package server
 
 import (
 	"errors"
@@ -6,12 +6,12 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/edulinq/autograder/internal/api/server"
+	"github.com/edulinq/autograder/internal/api"
 	"github.com/edulinq/autograder/internal/common"
 	"github.com/edulinq/autograder/internal/util"
 )
 
-// Run the API and Unix Socket Server.
+// Run the autograder server and listen on an http and unix socket.
 func StartServer() error {
 	err := common.WriteAndHandleStatusFile()
 	if err != nil {
@@ -22,11 +22,11 @@ func StartServer() error {
 	errorsChan := make(chan error, 2)
 
 	go func() {
-		errorsChan <- server.RunAPIServer(GetRoutes())
+		errorsChan <- runAPIServer(api.GetRoutes())
 	}()
 
 	go func() {
-		errorsChan <- server.RunUnixSocketServer()
+		errorsChan <- runUnixSocketServer()
 	}()
 
 	// Gracefully shutdown on Control-C (SIGINT).
@@ -35,14 +35,14 @@ func StartServer() error {
 	go func() {
 		<-shutdownSignal
 		signal.Stop(shutdownSignal)
-		StopServers()
+		StopServer()
 	}()
 
 	// Wait for at least one error (or nil) to stop both servers,
 	// then wait for the next error (or nil).
 	var errs error = nil
 	errs = errors.Join(errs, <-errorsChan)
-	StopServers()
+	StopServer()
 	errs = errors.Join(errs, <-errorsChan)
 
 	close(errorsChan)
@@ -50,7 +50,7 @@ func StartServer() error {
 	return errs
 }
 
-func StopServers() {
-	server.StopUnixSocketServer()
-	server.StopAPIServer()
+func StopServer() {
+	stopUnixSocketServer()
+	stopAPIServer()
 }

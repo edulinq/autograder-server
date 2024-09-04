@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/edulinq/autograder/internal/api"
+	"github.com/edulinq/autograder/internal/api/server"
 	"github.com/edulinq/autograder/internal/config"
 	"github.com/edulinq/autograder/internal/db"
 	"github.com/edulinq/autograder/internal/log"
@@ -37,9 +37,9 @@ func CMDServerTestingMain(suite *testing.M) {
 
 		go func() {
 			serverRun.Done()
-			api.StartServer()
+			server.StartServer()
 		}()
-		defer api.StopServers()
+		defer server.StopServer()
 
 		serverRun.Wait()
 

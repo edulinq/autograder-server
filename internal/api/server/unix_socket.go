@@ -24,7 +24,7 @@ const (
 
 var unixSocket net.Listener
 
-func RunUnixSocketServer() (err error) {
+func runUnixSocketServer() (err error) {
 	defer func() {
 		value := recover()
 		if value == nil {
@@ -46,7 +46,7 @@ func RunUnixSocketServer() (err error) {
 		log.Error("Failed to listen on the unix socket.", err)
 		return err
 	}
-	defer StopUnixSocketServer()
+	defer stopUnixSocketServer()
 
 	log.Info("Unix Socket Server Started.", log.NewAttr("unix_socket", unixSocketPath))
 
@@ -132,7 +132,7 @@ func handleUnixSocketConnection(connection net.Conn) error {
 	return nil
 }
 
-func StopUnixSocketServer() {
+func stopUnixSocketServer() {
 	common.Lock(UNIX_SOCKET_SERVER_STOP_LOCK)
 	defer common.Unlock(UNIX_SOCKET_SERVER_STOP_LOCK)
 

@@ -1,9 +1,10 @@
 package server
 
 import (
+	"errors"
 	"fmt"
 
-	"github.com/edulinq/autograder/internal/api"
+	"github.com/edulinq/autograder/internal/api/server"
 	"github.com/edulinq/autograder/internal/config"
 	"github.com/edulinq/autograder/internal/db"
 	"github.com/edulinq/autograder/internal/log"
@@ -12,33 +13,30 @@ import (
 	"github.com/edulinq/autograder/internal/util"
 )
 
-func Start() error {
-	defer api.StopServers()
+func Start() (err error) {
+	defer server.StopServer()
 
 	log.Info("Autograder Version.", log.NewAttr("version", util.GetAutograderFullVersion()))
 
-	err := db.Open()
+	err = db.Open()
 	if err != nil {
-		log.Fatal("Failed to open the database.", err)
+		return fmt.Errorf("Failed to open the database: '%w'.", err)
 	}
 
 	defer func() {
-		err := db.Close()
-		if err != nil {
-			log.Error("Failed to close the database.", err)
-		}
+		err = errors.Join(err, db.Close())
 	}()
 
 	log.Info("Running server with working directory.", log.NewAttr("dir", config.GetWorkDir()))
 
 	_, err = db.AddCourses()
 	if err != nil {
-		log.Fatal("Could not load courses.", err)
+		return fmt.Errorf("Failed to load courses: '%w'.", err)
 	}
 
 	courses, err := db.GetCourses()
 	if err != nil {
-		log.Fatal("Failed to get courses.", err)
+		return fmt.Errorf("Failed to get courses: '%w'.", err)
 	}
 
 	log.Info("Loaded course(s).", log.NewAttr("count", len(courses)))
@@ -53,11 +51,11 @@ func Start() error {
 	// Cleanup any temp dirs.
 	defer util.RemoveRecordedTempDirs()
 
-	err = api.StartServer()
+	err = server.StartServer()
 	if err != nil {
-		return fmt.Errorf("Failed to start server.")
+		return fmt.Errorf("Failed to start the server: '%w'.", err)
 	}
 
 	log.Info("Server closed.")
-	return nil
+	return err
 }
