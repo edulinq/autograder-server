@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 
@@ -22,7 +23,7 @@ func runAPIServer(routes *[]*core.Route) (err error) {
 			return
 		}
 
-		err = fmt.Errorf("API server panicked: '%v'.", value)
+		err = errors.Join(err, fmt.Errorf("API server panicked: '%v'.", value))
 	}()
 
 	var port = config.WEB_PORT.Get()
@@ -36,7 +37,7 @@ func runAPIServer(routes *[]*core.Route) (err error) {
 
 	err = apiServer.ListenAndServe()
 	if err == http.ErrServerClosed {
-		// Set err to nil if the server stopped due to a graceful shutdown.
+		// Set err to nil if the API server stopped due to a graceful shutdown.
 		err = nil
 	}
 
@@ -62,6 +63,6 @@ func stopAPIServer() {
 
 	err := tempApiServer.Shutdown(context.Background())
 	if err != nil {
-		log.Fatal("Failed to stop the API server.", err)
+		log.Error("Failed to stop the API server.", err)
 	}
 }

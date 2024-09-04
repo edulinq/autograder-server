@@ -2,6 +2,7 @@ package server
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net"
 	"path/filepath"
@@ -14,12 +15,12 @@ import (
 )
 
 const (
-	UNIX_SOCKET_SERVER_STOP_LOCK = "UNIX_SOCKET_STOP_LOCK"
 	API_REQUEST_CONTENT_KEY      = "content"
-	NONCE_SIZE_BYTES             = 64
 	ENDPOINT_KEY                 = "endpoint"
-	REQUEST_KEY                  = "request"
 	NONCE_KEY                    = "root-user-nonce"
+	NONCE_SIZE_BYTES             = 64
+	REQUEST_KEY                  = "request"
+	UNIX_SOCKET_SERVER_STOP_LOCK = "UNIX_SOCKET_STOP_LOCK"
 )
 
 var unixSocket net.Listener
@@ -31,7 +32,7 @@ func runUnixSocketServer() (err error) {
 			return
 		}
 
-		err = fmt.Errorf("Unix socket panicked: '%v'.", value)
+		err = errors.Join(err, fmt.Errorf("Unix socket panicked: '%v'.", value))
 	}()
 
 	unixSocketPath, err := common.GetUnixSocketPath()
@@ -43,8 +44,7 @@ func runUnixSocketServer() (err error) {
 
 	unixSocket, err = net.Listen("unix", unixSocketPath)
 	if err != nil {
-		log.Error("Failed to listen on the unix socket.", err)
-		return err
+		return fmt.Errorf("Failed to listen on the unix socket: '%w'.", err)
 	}
 	defer stopUnixSocketServer()
 
@@ -56,10 +56,14 @@ func runUnixSocketServer() (err error) {
 			log.Info("Unix Socket Server Stopped.", log.NewAttr("unix_socket", unixSocketPath))
 
 			if unixSocket == nil {
-				return nil
+				// Set err to nil if the unix socket gracefully closed.
+				err = nil
 			}
 
-			log.Error("Unix socket server returned an error.", err)
+			if err != nil {
+				log.Error("Unix socket server returned an error.", err)
+			}
+
 			return err
 		}
 
@@ -81,12 +85,12 @@ func handleUnixSocketConnection(connection net.Conn) error {
 
 	jsonBuffer, err := util.ReadFromUnixSocket(connection)
 	if err != nil {
-		return fmt.Errorf("Failed to read from the unix socket.")
+		return fmt.Errorf("Failed to read from the unix socket: '%w'.", err)
 	}
 
 	randomNonce, err := util.RandHex(NONCE_SIZE_BYTES)
 	if err != nil {
-		return fmt.Errorf("Failed to generate the nonce.")
+		return fmt.Errorf("Failed to generate the nonce: '%w'.", err)
 	}
 
 	core.RootUserNonces.Store(randomNonce, true)
@@ -95,7 +99,7 @@ func handleUnixSocketConnection(connection net.Conn) error {
 	var payload map[string]any
 	err = json.Unmarshal(jsonBuffer, &payload)
 	if err != nil {
-		return fmt.Errorf("Failed to unmarshal the request buffer into the payload.")
+		return fmt.Errorf("Failed to unmarshal the request buffer into the payload: '%w'.", err)
 	}
 
 	endpoint, exists := payload[ENDPOINT_KEY].(string)
@@ -111,7 +115,7 @@ func handleUnixSocketConnection(connection net.Conn) error {
 	content[NONCE_KEY] = randomNonce
 	formContent, err := json.Marshal(content)
 	if err != nil {
-		return fmt.Errorf("Failed to marshal the request's content.")
+		return fmt.Errorf("Failed to marshal the request's content: '%w'.", err)
 	}
 
 	form := make(map[string]string)
@@ -120,13 +124,13 @@ func handleUnixSocketConnection(connection net.Conn) error {
 	url := fmt.Sprintf("http://127.0.0.1:%d%s", port, endpoint)
 	responseText, err := common.PostNoCheck(url, form)
 	if err != nil {
-		return fmt.Errorf("Failed to POST an API request.")
+		return fmt.Errorf("Failed to POST an API request: '%w'.", err)
 	}
 
 	jsonResponseBytes := []byte(responseText)
 	err = util.WriteToUnixSocket(connection, jsonResponseBytes)
 	if err != nil {
-		return fmt.Errorf("Failed to write to the unix socket.")
+		return fmt.Errorf("Failed to write to the unix socket: '%w'.", err)
 	}
 
 	return nil
@@ -145,6 +149,6 @@ func stopUnixSocketServer() {
 
 	err := tempUnixSocket.Close()
 	if err != nil {
-		log.Fatal("Failed to close the unix socket.", err)
+		log.Error("Failed to close the unix socket.", err)
 	}
 }

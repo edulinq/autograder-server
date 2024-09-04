@@ -21,7 +21,7 @@ var args struct {
 	TargetEmail      string `help:"Email of the user to fetch." arg:""`
 	CourseID         string `help:"ID of the course." arg:""`
 	AssignmentID     string `help:"ID of the assignment." arg:""`
-	TargetSubmission string `help:"ID of the submission. Defaults to latest submission." arg:"" optional:""`
+	TargetSubmission string `help:"ID of the submission. Defaults to latest the submission." arg:"" optional:""`
 	Verbose          bool   `help:"Print the entire response." short:"v"`
 }
 

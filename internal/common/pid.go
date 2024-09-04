@@ -8,7 +8,7 @@ import (
 	"github.com/edulinq/autograder/internal/util"
 )
 
-func CheckAndHandleStalePid() bool {
+func checkAndHandleStalePid() bool {
 	statusPath := GetStatusPath()
 
 	if !util.IsFile(statusPath) {
