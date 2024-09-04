@@ -169,9 +169,9 @@ func RemoveUserFromCourse(course *model.Course, email string) (bool, bool, error
 }
 
 func InitializeRootUser() error {
-	rootUser := model.ServerUser {
+	rootUser := model.ServerUser{
 		Email: model.RootUserEmail,
-		Role: model.ServerRoleRoot,
+		Role:  model.ServerRoleRoot,
 	}
 
 	err := rootUser.Validate()

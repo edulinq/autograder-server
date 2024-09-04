@@ -57,7 +57,7 @@ func (this *ServerUser) Validate() error {
 	}
 
 	if this.Email != RootUserEmail && !strings.Contains(this.Email, "@") {
-        return fmt.Errorf("User email '%s' has an invalid format.", this.Email)
+		return fmt.Errorf("User email '%s' has an invalid format.", this.Email)
 	}
 
 	if this.Name != nil {

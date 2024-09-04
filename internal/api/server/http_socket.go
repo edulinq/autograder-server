@@ -11,7 +11,7 @@ import (
 	"github.com/edulinq/autograder/internal/log"
 )
 
-var apiServer  *http.Server
+var apiServer *http.Server
 
 const API_SERVER_STOP_LOCK = "API_STOP_LOCK"
 
