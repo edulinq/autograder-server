@@ -10,10 +10,9 @@ import (
 )
 
 const (
-	UNIX_SOCKET_FILENAME           = "autograder.sock"
+	PID_SOCK_LOCK                  = "PID_SOCK_LOCK"
 	STATUS_FILENAME                = "status.json"
 	UNIX_SOCKET_RANDNUM_SIZE_BYTES = 32
-	PID_SOCK_LOCK                  = "PID_SOCK_LOCK"
 )
 
 type StatusInfo struct {

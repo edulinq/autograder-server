@@ -176,7 +176,7 @@ func initializeRootUser() error {
 
 	err := rootUser.Validate()
 	if err != nil {
-		return fmt.Errorf("Failed to validate the root user: %w", err)
+		return fmt.Errorf("Failed to validate the root user: '%w'.", err)
 	}
 
 	err = UpsertUser(&rootUser)
