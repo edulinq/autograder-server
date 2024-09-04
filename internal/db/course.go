@@ -104,7 +104,7 @@ func loadCourse(path string) (*model.Course, error) {
 		return nil, fmt.Errorf("Failed to validate course from path '%s': '%w'.", path, err)
 	}
 
-	log.Info("Loaded course.", course, log.NewAttr("path", path), log.NewAttr("num-assignments", len(course.Assignments)))
+	log.Debug("Loaded course.", course, log.NewAttr("path", path), log.NewAttr("num-assignments", len(course.Assignments)))
 
 	return course, nil
 }
@@ -160,14 +160,12 @@ func AddCoursesFromDir(baseDir string, source *common.FileSpec) ([]string, error
 		return nil, fmt.Errorf("Database has not been opened.")
 	}
 
-	log.Debug("Searching for courses.", log.NewAttr("dir", baseDir))
-
 	configPaths, err := util.FindFiles(model.COURSE_CONFIG_FILENAME, baseDir)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to search for course configs in '%s': '%w'.", baseDir, err)
 	}
 
-	log.Debug("Number of importable course configs found.", log.NewAttr("count", len(configPaths)))
+	log.Debug("Number of importable course configs found.", log.NewAttr("count", len(configPaths)), log.NewAttr("dir", baseDir))
 
 	courseIDs := make([]string, 0, len(configPaths))
 	for _, configPath := range configPaths {

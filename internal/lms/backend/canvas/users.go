@@ -84,7 +84,7 @@ func (this *CanvasBackend) FetchUser(email string) (*lmstypes.User, error) {
 	}
 
 	if len(pageUsers) != 1 {
-		log.Info("Did not find exactly one matching user in canvas.",
+		log.Warn("Did not find exactly one matching user in canvas.",
 			log.NewAttr("email", email), log.NewAttr("num-results", len(pageUsers)))
 		return nil, nil
 	}

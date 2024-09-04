@@ -50,6 +50,11 @@ func EnableUnitTestingMode() error {
 	// Change the base dir to a temp dir.
 	BASE_DIR.Set(tempWorkDir)
 
+	// Upgrade the backend logging level to debug if no other level is set through config.
+	if !LOG_BACKEND_LEVEL.IsSet() {
+		LOG_BACKEND_LEVEL.Set(log.LevelDebug.String())
+	}
+
 	// Copy over test courses.
 	testsDir := filepath.Join(util.RootDirForTesting(), TESTS_DIRNAME)
 	outTestsDir := filepath.Join(GetCourseImportDir(), TESTS_DIRNAME)
