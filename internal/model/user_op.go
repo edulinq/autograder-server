@@ -44,7 +44,7 @@ type UserOpResult struct {
 	// All error messages should be safe for users.
 	ValidationErrors []*ModelError `json:"validation-errors,omitempty"`
 
-	// The following error occurred during this operation, but not because of the provided,
+	// The following error occurred during this operation, but not because of the provided data,
 	// i.e., they are the system's fault.
 	// These errors are not guarenteed to be safe for users,
 	// and the calling code should decide how they should be managed.
@@ -100,6 +100,18 @@ func (this *UserOpResult) HasErrors() bool {
 func (this *UserOpResult) MustClone() *UserOpResult {
 	var clone UserOpResult
 	util.MustJSONFromString(util.MustToJSON(this), &clone)
+
+	// Clone the ModelErrors to preservee non exported fields.
+	clone.ValidationErrors = make([]*ModelError, 0, len(this.ValidationErrors))
+	for i := range this.ValidationErrors {
+		clone.ValidationErrors = append(clone.ValidationErrors, this.ValidationErrors[i].MustClone())
+	}
+
+	clone.SystemErrors = make([]*ModelError, 0, len(this.SystemErrors))
+	for i := range this.SystemErrors {
+		clone.SystemErrors = append(clone.SystemErrors, this.SystemErrors[i].MustClone())
+	}
+
 	return &clone
 }
 

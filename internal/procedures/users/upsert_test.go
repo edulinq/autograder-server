@@ -1091,9 +1091,33 @@ func testUpsertDryRun(test *testing.T, caseIndex int, sendEmails bool, options U
 		expected.CleartextPassword = result.CleartextPassword
 	}
 
+	if !model.ModelErrorSlicesEquals(expected.ValidationErrors, result.ValidationErrors) {
+		expectedValidationErrors := model.DereferenceModelErrors(expected.ValidationErrors)
+		actualValidationErrors := model.DereferenceModelErrors(result.ValidationErrors)
+
+		test.Errorf("Case (dry run, email: %v) %d: Validation Errors are not as expected. Expected: '%+v', actual: '%+v'.",
+			sendEmails, caseIndex, expectedValidationErrors, actualValidationErrors)
+		return false
+	}
+
+	if !model.ModelErrorSlicesEquals(expected.SystemErrors, result.SystemErrors) {
+		expectedSystemErrors := model.DereferenceModelErrors(expected.SystemErrors)
+		actualSystemErrors := model.DereferenceModelErrors(result.SystemErrors)
+
+		test.Errorf("Case (dry run, email: %v) %d: System Errors are not as expected. Expected: '%+v', actual: '%+v'.",
+			sendEmails, caseIndex, expectedSystemErrors, actualSystemErrors)
+		return false
+	}
+
+	// Clear expected errors so we can use reflection.
+	expected.ValidationErrors = []*model.ModelError{}
+	result.ValidationErrors = []*model.ModelError{}
+	expected.SystemErrors = []*model.ModelError{}
+	result.SystemErrors = []*model.ModelError{}
+
 	if !reflect.DeepEqual(expected, result) {
-		test.Errorf("Case (dry run, email: %v) %d: Result is not as expected. Expected: '%+v', Actual: '%+v'.", sendEmails, caseIndex,
-			expected, result)
+		test.Errorf("Case (dry run, email: %v) %d: Result is not as expected. Expected: '%+v', Actual: '%+v'.",
+			sendEmails, caseIndex, expected, result)
 		return false
 	}
 
@@ -1134,9 +1158,33 @@ func testUpsert(test *testing.T, caseIndex int, sendEmails bool, options UpsertU
 		expected.CleartextPassword = result.CleartextPassword
 	}
 
+	if !model.ModelErrorSlicesEquals(expected.ValidationErrors, result.ValidationErrors) {
+		expectedValidationErrors := model.DereferenceModelErrors(expected.ValidationErrors)
+		actualValidationErrors := model.DereferenceModelErrors(result.ValidationErrors)
+
+		test.Errorf("Case (wet run, email: %v) %d: Validation Errors are not as expected. Expected: '%+v', actual: '%+v'.",
+			sendEmails, caseIndex, expectedValidationErrors, actualValidationErrors)
+		return false
+	}
+
+	if !model.ModelErrorSlicesEquals(expected.SystemErrors, result.SystemErrors) {
+		expectedSystemErrors := model.DereferenceModelErrors(expected.SystemErrors)
+		actualSystemErrors := model.DereferenceModelErrors(result.SystemErrors)
+
+		test.Errorf("Case (wet run, email: %v) %d: System Errors are not as expected. Expected: '%+v', actual: '%+v'.",
+			sendEmails, caseIndex, expectedSystemErrors, actualSystemErrors)
+		return false
+	}
+
+	// Clear expected errors so we can use reflection.
+	expected.ValidationErrors = []*model.ModelError{}
+	result.ValidationErrors = []*model.ModelError{}
+	expected.SystemErrors = []*model.ModelError{}
+	result.SystemErrors = []*model.ModelError{}
+
 	if !reflect.DeepEqual(expected, result) {
-		test.Errorf("Case (wet run, email: %v) %d: Result is not as expected. Expected: '%+v', Actual: '%+v'.", sendEmails, caseIndex,
-			expected, result)
+		test.Errorf("Case (wet run, email: %v) %d: Result is not as expected. Expected: '%+v', Actual: '%+v'.",
+			sendEmails, caseIndex, expected, result)
 		return false
 	}
 
