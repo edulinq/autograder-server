@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Check for duplicate API and procedure locators.
+# Check for duplicate locators.
 # This does not work for locators that are on a different line from the locator creation function call.
 # Specifically, we will look for 'Error("-' to indicate where locators are defined.
 
@@ -20,7 +20,7 @@ function main() {
 
     local duplicateLocators=$(grep -R 'Error("-' "${INTERNAL_DIR}" | sed 's/^.*"\(-[0-9]\{3,\}\)".*$/\1/' | sort | uniq -c | grep -ZvE '^\s+1\s+' | sed 's/^\s*\([0-9]\+\)\s\+\(-[0-9]\{3,\}\)$/\2/')
 
-    if [[ -z ${duplicateLocators} ]]; then
+    if [[ -z ${duplicateLocators} ]] ; then
         echo "No duplicate locators found."
         return 0
     fi
@@ -28,7 +28,7 @@ function main() {
     echo "Found duplicate locators."
 
     for duplicateLocator in ${duplicateLocators} ; do
-        echo "${duplicateocator}:"
+        echo "${duplicateLocator}:"
         grep -R --line-number "Error(\"${duplicateLocator}\"" "${INTERNAL_DIR}" | sed 's/^/\t/'
     done
 
