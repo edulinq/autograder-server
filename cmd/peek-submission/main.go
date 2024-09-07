@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net"
+	"os"
 
 	"github.com/alecthomas/kong"
 
@@ -21,7 +22,7 @@ var args struct {
 	TargetEmail      string `help:"Email of the user to fetch." arg:""`
 	CourseID         string `help:"ID of the course." arg:""`
 	AssignmentID     string `help:"ID of the assignment." arg:""`
-	TargetSubmission string `help:"ID of the submission. Defaults to latest the submission." arg:"" optional:""`
+	TargetSubmission string `help:"ID of the submission. Defaults to the latest submission." arg:"" optional:""`
 	Verbose          bool   `help:"Print the entire response." short:"v"`
 }
 
@@ -68,12 +69,12 @@ func main() {
 
 	jsonRequest := util.MustToJSONIndent(requestMap)
 	jsonBytes := []byte(jsonRequest)
-	err = util.WriteToUnixSocket(connection, jsonBytes)
+	err = util.WriteToNetworkConnection(connection, jsonBytes)
 	if err != nil {
 		log.Fatal("Failed to write the request to the unix socket.", err)
 	}
 
-	responseBuffer, err := util.ReadFromUnixSocket(connection)
+	responseBuffer, err := util.ReadFromNetworkConnection(connection)
 	if err != nil {
 		log.Fatal("Failed to read the response from the unix socket.", err)
 	}
@@ -90,7 +91,13 @@ func main() {
 			message = fmt.Sprintf("Failed to complete operation: %s", response.Message)
 		}
 
-		log.Error("API request was not successful.", log.NewAttr("message", message), log.NewAttr("http-status", response.HTTPStatus))
+		if args.Verbose {
+			fmt.Println(util.MustToJSONIndent(response))
+		} else {
+			fmt.Println(message)
+		}
+
+		os.Exit(0)
 	}
 
 	if args.Verbose {

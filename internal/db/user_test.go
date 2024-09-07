@@ -22,7 +22,7 @@ func (this *DBTests) DBTestUserGetServerUsersBase(test *testing.T) {
 		test.Fatalf("Could not get server users: '%v'.", err)
 	}
 
-	// Check if root is a server user.
+	// Check that root is a server user.
 	_, exists := users[model.RootUserEmail]
 	if !exists {
 		test.Fatalf("Couldn't find the root user in server users.")

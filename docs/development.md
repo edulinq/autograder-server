@@ -130,6 +130,8 @@ Here are three common regex standards you may encounter, along with key consider
 
 A server instance is defined by its working directory,
 so anything that wants to interact with a server (including a cmd) needs to make sure they share the same working directory.
-This can be done by setting the base directory in the command line whenever interacting with the server (-c dirs.base).
-e.g. go run cmd/peek-submission/main.go course-student@test.edulinq.org course101 hw0 -c dirs.base="${WORKING_DIRECTORY}"
+This can be done by setting the base directory in the command line whenever interacting with the server (-c dirs.base), e.g.,
+```
+go run cmd/peek-submission/main.go course-student@test.edulinq.org course101 hw0 -c dirs.base="${/path/to/working/directory}"
+```
 

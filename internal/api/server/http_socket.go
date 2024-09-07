@@ -14,7 +14,7 @@ import (
 
 var apiServer *http.Server
 
-const API_SERVER_STOP_LOCK = "API_STOP_LOCK"
+const API_SERVER_STOP_LOCK = "internal.api.server.API_STOP_LOCK"
 
 func runAPIServer(routes *[]*core.Route) (err error) {
 	defer func() {

@@ -4,8 +4,10 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"syscall"
 
 	"github.com/edulinq/autograder/internal/config"
+	"github.com/edulinq/autograder/internal/log"
 	"github.com/edulinq/autograder/internal/util"
 )
 
@@ -32,8 +34,13 @@ func WriteAndHandleStatusFile() error {
 	pid := os.Getpid()
 	var statusJson StatusInfo
 
-	if !checkAndHandleStalePid() {
-		return fmt.Errorf("Failed to check and handle the pid.")
+	ok, err := checkAndHandleStalePid()
+	if !ok {
+		if err != nil {
+			return err
+		}
+
+		return fmt.Errorf("Failed to create the status file.")
 	}
 
 	statusJson.Pid = pid
@@ -42,7 +49,7 @@ func WriteAndHandleStatusFile() error {
 	if err != nil {
 		return fmt.Errorf("Failed to generate a random number for the unix socket path: '%w'.", err)
 	}
-	statusJson.UnixSocketPath = fmt.Sprintf("/tmp/autograder-%s.sock", unixFileNumber)
+	statusJson.UnixSocketPath = filepath.Join("/tmp", fmt.Sprintf("autograder-%s.sock", unixFileNumber))
 
 	err = util.ToJSONFile(statusJson, statusPath)
 	if err != nil {
@@ -50,6 +57,31 @@ func WriteAndHandleStatusFile() error {
 	}
 
 	return nil
+}
+
+func checkAndHandleStalePid() (bool, error) {
+	statusPath := GetStatusPath()
+
+	if !util.IsFile(statusPath) {
+		return true, nil
+	}
+
+	var statusJson StatusInfo
+
+	err := util.JSONFromFile(statusPath, &statusJson)
+	if err != nil {
+		return false, fmt.Errorf("Failed to read the existing status file: '%w'.", err)
+	}
+
+	process, _ := os.FindProcess(statusJson.Pid)
+	err = process.Signal(syscall.Signal(0))
+	if err != nil {
+		log.Warn("Removing stale status file.")
+		util.RemoveDirent(GetStatusPath())
+		return true, nil
+	} else {
+		return false, nil
+	}
 }
 
 func GetUnixSocketPath() (string, error) {
@@ -68,9 +100,9 @@ func GetUnixSocketPath() (string, error) {
 		return "", fmt.Errorf("Failed to read the existing status file: '%w'.", err)
 	}
 
-	if statusJson.UnixSocketPath != "" {
-		return statusJson.UnixSocketPath, nil
-	} else {
+	if statusJson.UnixSocketPath == "" {
 		return "", fmt.Errorf("The unix socket path is empty.")
 	}
+
+	return statusJson.UnixSocketPath, nil
 }

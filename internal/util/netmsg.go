@@ -3,12 +3,19 @@ package util
 import (
 	"bytes"
 	"encoding/binary"
+	"fmt"
 	"net"
 )
 
-const RESPONSE_BUFFER_SIZE = 8
+const (
+	MAX_FORM_MEM_SIZE_BYTES = 10 << 20 // 20 MB
+	RESPONSE_BUFFER_SIZE    = 8
+)
 
-func ReadFromUnixSocket(connection net.Conn) ([]byte, error) {
+// Read a message from a network connection.
+// First 8 bytes: the size of the message being read.
+// Remaining bytes: the message content.
+func ReadFromNetworkConnection(connection net.Conn) ([]byte, error) {
 	sizeBuffer := make([]byte, RESPONSE_BUFFER_SIZE)
 
 	_, err := connection.Read(sizeBuffer)
@@ -27,8 +34,16 @@ func ReadFromUnixSocket(connection net.Conn) ([]byte, error) {
 	return jsonBuffer, nil
 }
 
-func WriteToUnixSocket(connection net.Conn, data []byte) error {
+// Write a message to a network connection.
+// First 8 bytes: the size of the message being written.
+// Remaining bytes: the message content.
+func WriteToNetworkConnection(connection net.Conn, data []byte) error {
 	size := uint64(len(data))
+
+	if size > MAX_FORM_MEM_SIZE_BYTES {
+		return fmt.Errorf("Payload size is too large.")
+	}
+
 	responseBuffer := new(bytes.Buffer)
 
 	err := binary.Write(responseBuffer, binary.BigEndian, size)

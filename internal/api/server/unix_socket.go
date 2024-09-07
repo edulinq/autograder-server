@@ -15,12 +15,11 @@ import (
 )
 
 const (
-	API_REQUEST_CONTENT_KEY      = "content"
 	ENDPOINT_KEY                 = "endpoint"
 	NONCE_KEY                    = "root-user-nonce"
 	NONCE_SIZE_BYTES             = 64
 	REQUEST_KEY                  = "request"
-	UNIX_SOCKET_SERVER_STOP_LOCK = "UNIX_SOCKET_STOP_LOCK"
+	UNIX_SOCKET_SERVER_STOP_LOCK = "internal.api.server.UNIX_SOCKET_STOP_LOCK"
 )
 
 var unixSocket net.Listener
@@ -83,7 +82,7 @@ func runUnixSocketServer() (err error) {
 func handleUnixSocketConnection(connection net.Conn) error {
 	var port = config.WEB_PORT.Get()
 
-	jsonBuffer, err := util.ReadFromUnixSocket(connection)
+	jsonBuffer, err := util.ReadFromNetworkConnection(connection)
 	if err != nil {
 		return fmt.Errorf("Failed to read from the unix socket: '%w'.", err)
 	}
@@ -119,7 +118,7 @@ func handleUnixSocketConnection(connection net.Conn) error {
 	}
 
 	form := make(map[string]string)
-	form[API_REQUEST_CONTENT_KEY] = string(formContent)
+	form[core.API_REQUEST_CONTENT_KEY] = string(formContent)
 
 	url := fmt.Sprintf("http://127.0.0.1:%d%s", port, endpoint)
 	responseText, err := common.PostNoCheck(url, form)
@@ -128,7 +127,7 @@ func handleUnixSocketConnection(connection net.Conn) error {
 	}
 
 	jsonResponseBytes := []byte(responseText)
-	err = util.WriteToUnixSocket(connection, jsonResponseBytes)
+	err = util.WriteToNetworkConnection(connection, jsonResponseBytes)
 	if err != nil {
 		return fmt.Errorf("Failed to write to the unix socket: '%w'.", err)
 	}
