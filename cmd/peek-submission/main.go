@@ -62,7 +62,7 @@ func main() {
 		TargetSubmission: args.TargetSubmission,
 	}
 
-	requestMap := map[string]interface{}{
+	requestMap := map[string]any{
 		server.ENDPOINT_KEY: core.NewEndpoint(`courses/assignments/submissions/fetch/user/peek`),
 		server.REQUEST_KEY:  request,
 	}

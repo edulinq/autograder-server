@@ -1,6 +1,7 @@
 package common
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -26,9 +27,11 @@ func GetStatusPath() string {
 	return filepath.Join(config.GetWorkDir(), STATUS_FILENAME)
 }
 
-func WriteAndHandleStatusFile() error {
+func WriteAndHandleStatusFile() (err error) {
 	Lock(PID_SOCK_LOCK)
-	defer Unlock(PID_SOCK_LOCK)
+	defer func() {
+		err = errors.Join(err, Unlock(PID_SOCK_LOCK))
+	}()
 
 	statusPath := GetStatusPath()
 	pid := os.Getpid()
@@ -56,7 +59,7 @@ func WriteAndHandleStatusFile() error {
 		return fmt.Errorf("Failed to write the pid to the status file: '%w'.", err)
 	}
 
-	return nil
+	return err
 }
 
 func checkAndHandleStalePid() (bool, error) {
