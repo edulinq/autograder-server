@@ -56,7 +56,7 @@ func WriteAndHandleStatusFile() (err error) {
 
 	err = util.ToJSONFile(statusJson, statusPath)
 	if err != nil {
-		return fmt.Errorf("Failed to write the pid to the status file: '%w'.", err)
+		return fmt.Errorf("Failed to write to the status file: '%w'.", err)
 	}
 
 	return err
@@ -73,7 +73,7 @@ func checkAndHandleStalePid() (bool, error) {
 
 	err := util.JSONFromFile(statusPath, &statusJson)
 	if err != nil {
-		return false, fmt.Errorf("Failed to read the existing status file: '%w'.", err)
+		return false, fmt.Errorf("Failed to read the status file: '%w'.", err)
 	}
 
 	process, _ := os.FindProcess(statusJson.Pid)
