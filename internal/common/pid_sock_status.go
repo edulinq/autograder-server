@@ -80,16 +80,23 @@ func checkAndHandleStalePid() (bool, error) {
 	err = process.Signal(syscall.Signal(0))
 	if err != nil {
 		log.Warn("Removing stale status file.")
-		util.RemoveDirent(GetStatusPath())
+
+		err := util.RemoveDirent(GetStatusPath())
+		if err != nil {
+			return false, fmt.Errorf("Failed to remove the status file: '%w'.", err)
+		}
+
 		return true, nil
 	} else {
 		return false, nil
 	}
 }
 
-func GetUnixSocketPath() (string, error) {
-	Lock(PID_SOCK_LOCK)
-	defer Unlock(PID_SOCK_LOCK)
+func GetUnixSocketPath() (path string, err error) {
+	ReadLock(PID_SOCK_LOCK)
+	defer func() {
+		err = errors.Join(err, ReadUnlock(PID_SOCK_LOCK))
+	}()
 
 	statusPath := GetStatusPath()
 	if !util.IsFile(statusPath) {
@@ -98,7 +105,7 @@ func GetUnixSocketPath() (string, error) {
 
 	var statusJson StatusInfo
 
-	err := util.JSONFromFile(statusPath, &statusJson)
+	err = util.JSONFromFile(statusPath, &statusJson)
 	if err != nil {
 		return "", fmt.Errorf("Failed to read the existing status file: '%w'.", err)
 	}
