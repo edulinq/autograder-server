@@ -39,7 +39,10 @@ func runUnixSocketServer() (err error) {
 		return err
 	}
 
-	util.MkDir(filepath.Dir(unixSocketPath))
+	err = util.MkDir(filepath.Dir(unixSocketPath))
+	if err != nil {
+		return fmt.Errorf("Failed to create the unix socket: '%w'.", err)
+	}
 
 	unixSocket, err = net.Listen("unix", unixSocketPath)
 	if err != nil {
@@ -49,31 +52,45 @@ func runUnixSocketServer() (err error) {
 
 	log.Info("Unix Socket Server Started.", log.NewAttr("unix_socket", unixSocketPath))
 
+	errorChan := make(chan error, 1)
+
 	for {
-		connection, err := unixSocket.Accept()
-		if err != nil {
-			log.Info("Unix Socket Server Stopped.", log.NewAttr("unix_socket", unixSocketPath))
-
-			if unixSocket == nil {
-				// Set err to nil if the unix socket gracefully closed.
-				err = nil
-			}
-
-			if err != nil {
-				log.Error("Unix socket server returned an error.")
-			}
-
+		select {
+		case err = <-errorChan:
+			close(errorChan)
 			return err
-		}
-
-		go func() {
-			defer connection.Close()
-
-			err := handleUnixSocketConnection(connection)
+		default:
+			connection, err := unixSocket.Accept()
 			if err != nil {
-				log.Error("Error handling the unix socket connection.", err)
+				log.Info("Unix Socket Server Stopped.", log.NewAttr("unix_socket", unixSocketPath))
+
+				if unixSocket == nil {
+					err = nil // Set err to nil if the unix socket gracefully closed.
+				}
+
+				if err != nil {
+					log.Error("Unix socket server returned an error.")
+				}
+
+				close(errorChan)
+
+				return err
 			}
-		}()
+
+			go func() {
+				defer func() {
+					err := connection.Close()
+					if err != nil {
+						errorChan <- fmt.Errorf("Failed to close the connection: '%w'.", err)
+					}
+				}()
+
+				err = handleUnixSocketConnection(connection)
+				if err != nil {
+					log.Error("Error handling the unix socket connection.", err)
+				}
+			}()
+		}
 	}
 }
 

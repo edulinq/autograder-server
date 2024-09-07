@@ -37,8 +37,7 @@ func runAPIServer(routes *[]*core.Route) (err error) {
 
 	err = apiServer.ListenAndServe()
 	if err == http.ErrServerClosed {
-		// Set err to nil if the API server stopped due to a graceful shutdown.
-		err = nil
+		err = nil // Set err to nil if the API server stopped due to a graceful shutdown.
 	}
 
 	log.Info("API Server Stopped.", log.NewAttr("port", port))
