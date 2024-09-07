@@ -12,12 +12,15 @@ import (
 )
 
 // Run the autograder server and listen on an http and unix socket.
-func StartServer() error {
-	err := common.WriteAndHandleStatusFile()
+func StartServer() (err error) {
+	err = common.WriteAndHandleStatusFile()
 	if err != nil {
 		return err
 	}
-	defer util.RemoveDirent(common.GetStatusPath())
+
+	defer func() {
+		err = errors.Join(err, util.RemoveDirent(common.GetStatusPath()))
+	}()
 
 	errorsChan := make(chan error, 2)
 
@@ -40,14 +43,13 @@ func StartServer() error {
 
 	// Wait for at least one error (or nil) to stop both servers,
 	// then wait for the next error (or nil).
-	var errs error = nil
-	errs = errors.Join(errs, <-errorsChan)
+	err = errors.Join(err, <-errorsChan)
 	StopServer()
-	errs = errors.Join(errs, <-errorsChan)
+	err = errors.Join(err, <-errorsChan)
 
 	close(errorsChan)
 
-	return errs
+	return err
 }
 
 func StopServer() {
