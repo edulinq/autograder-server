@@ -9,9 +9,12 @@ import (
 )
 
 func TestUpdateCourse(test *testing.T) {
+	db.MustOpen()
+	defer db.MustClose()
 	// Remove a user and ensure the user is back after a reload.
 
 	// Leave the course in a good state after the test.
+	db.ResetForTesting()
 	defer db.ResetForTesting()
 
 	course := db.MustGetTestCourse()
@@ -48,7 +51,7 @@ func TestUpdateCourse(test *testing.T) {
 }
 
 func reloadRequest(test *testing.T) {
-	response := core.SendTestAPIRequest(test, core.NewEndpoint(`admin/update/course`), nil)
+	response := core.SendTestAPIRequest(test, core.NewEndpoint(`courses/admin/update`), nil)
 	if !response.Success {
 		test.Errorf("Response is not a success when it should be: '%v'.", response)
 	}
