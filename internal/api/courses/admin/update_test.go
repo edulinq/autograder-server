@@ -9,8 +9,6 @@ import (
 )
 
 func TestUpdateCourse(test *testing.T) {
-	db.MustOpen()
-	defer db.MustClose()
 	// Remove a user and ensure the user is back after a reload.
 
 	// Leave the course in a good state after the test.
