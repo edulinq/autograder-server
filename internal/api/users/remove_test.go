@@ -1,6 +1,7 @@
 package users
 
 import (
+	"reflect"
 	"testing"
 
 	"github.com/edulinq/autograder/internal/api/core"
@@ -27,19 +28,25 @@ func TestUserRemove(test *testing.T) {
 		{"server-admin", "server-user@test.edulinq.org", false, "", RemoveResponse{true}},
 
 		// Invalid permissions.
-		{"server-creator", "server-user@test.edulinq.org", true, "-041", RemoveResponse{true}},
-		{"server-user", "server-user@test.edulinq.org", true, "-041", RemoveResponse{true}},
+		{"server-creator", "server-user@test.edulinq.org", true, "-041", RemoveResponse{false}},
+		{"server-user", "server-user@test.edulinq.org", true, "-041", RemoveResponse{false}},
 
 		// Target user is not found.
 		{"server-owner", "ZZZ", false, "", RemoveResponse{false}},
 
 		// Complex invalid permissions.
-		{"server-admin", "server-owner@test.edulinq.org", true, "-811", RemoveResponse{true}},
-		{"server-owner", "server-owner@test.edulinq.org", true, "-811", RemoveResponse{true}},
+		{"server-admin", "server-owner@test.edulinq.org", true, "-811", RemoveResponse{false}},
+		{"server-owner", "server-owner@test.edulinq.org", true, "-811", RemoveResponse{false}},
 	}
 
 	for i, testCase := range testCases {
 		db.ResetForTesting()
+
+		initialUser, err := db.GetServerUser(testCase.target)
+		if err != nil {
+			test.Errorf("Case %d: Failed to get initial user: '%v'.", i, err)
+			continue
+		}
 
 		fields := map[string]any{
 			"target-email": testCase.target,
@@ -52,12 +59,12 @@ func TestUserRemove(test *testing.T) {
 				if testCase.locator != response.Locator {
 					test.Errorf("Case %d: Incorrect error returned. Expected '%s', found '%s'.",
 						i, testCase.locator, response.Locator)
+					continue
 				}
 			} else {
 				test.Errorf("Case %d: Response is not a success when it should be: '%v'.", i, response)
+				continue
 			}
-
-			continue
 		}
 
 		var responseContent RemoveResponse
@@ -69,21 +76,25 @@ func TestUserRemove(test *testing.T) {
 			continue
 		}
 
-		if !testCase.expected.FoundUser {
-			continue
-		}
-
-		// Ensure that the user is removed.
-
 		user, err := db.GetServerUser(testCase.target)
 		if err != nil {
-			test.Errorf("Case %d: Failed to get removed user: '%v'.", i, err)
+			test.Errorf("Case %d: Failed to get user: '%v'.", i, err)
 			continue
 		}
 
-		if user != nil {
-			test.Errorf("Case %d: User not removed from DB: '%+v'.", i, user)
-			continue
+		if !testCase.expected.FoundUser {
+			// Ensure that the user is NOT removed.
+			if !reflect.DeepEqual(initialUser, user) {
+				test.Errorf("Case %d: Unexpected user change. Expected: '%+v', actual: '%+v'.",
+					i, initialUser, user)
+				continue
+			}
+		} else {
+			// Ensure that the user is removed.
+			if user != nil {
+				test.Errorf("Case %d: User not removed from DB: '%+v'.", i, user)
+				continue
+			}
 		}
 	}
 }
