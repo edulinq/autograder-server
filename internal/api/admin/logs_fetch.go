@@ -34,7 +34,7 @@ func HandleFetchLogs(request *FetchLogsRequest) (*FetchLogsResponse, *core.APIEr
 	if parsedQuery.UserID != "" {
 		fullUser, err := db.GetCourseUser(request.Course, parsedQuery.UserID)
 		if err != nil {
-			return nil, core.NewInternalError("-205", &request.APIRequestCourseUserContext, "Failed to get target user.").
+			return nil, core.NewInternalError("-201", &request.APIRequestCourseUserContext, "Failed to get target user.").
 				Add("target-user", parsedQuery.UserID).Err(err)
 		}
 
@@ -53,7 +53,7 @@ func HandleFetchLogs(request *FetchLogsRequest) (*FetchLogsResponse, *core.APIEr
 	response.Records, err = db.GetLogRecords(parsedQuery.Level, parsedQuery.After,
 		request.Course.GetID(), parsedQuery.AssignmentID, parsedQuery.UserID)
 	if err != nil {
-		return nil, core.NewInternalError("-206", &request.APIRequestCourseUserContext, "Failed to get log records.").Err(err)
+		return nil, core.NewInternalError("-202", &request.APIRequestCourseUserContext, "Failed to get log records.").Err(err)
 	}
 
 	response.Success = true
