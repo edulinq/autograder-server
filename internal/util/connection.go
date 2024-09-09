@@ -8,13 +8,13 @@ import (
 )
 
 const (
-	MAX_FORM_MEM_SIZE_BYTES = 10 << 20 // 20 MB
-	RESPONSE_BUFFER_SIZE    = 8
+	MAX_SOCKET_MESSAGE_SIZE_BYTES = 2 << 30 // 2 GB
+	RESPONSE_BUFFER_SIZE          = 8
 )
 
 // Read a message from a network connection.
-// First 8 bytes: the size of the message being read.
-// Remaining bytes: the message content.
+// The first 8 bytes is the size of the message content in bytes,
+// and the remaining bytes should be x bytes of the actual message content.
 func ReadFromNetworkConnection(connection net.Conn) ([]byte, error) {
 	sizeBuffer := make([]byte, RESPONSE_BUFFER_SIZE)
 
@@ -24,8 +24,11 @@ func ReadFromNetworkConnection(connection net.Conn) ([]byte, error) {
 	}
 
 	size := binary.BigEndian.Uint64(sizeBuffer)
-	jsonBuffer := make([]byte, size)
+	if size > MAX_SOCKET_MESSAGE_SIZE_BYTES {
+		fmt.Println("Message content is too large to read.")
+	}
 
+	jsonBuffer := make([]byte, size)
 	_, err = connection.Read(jsonBuffer)
 	if err != nil {
 		return nil, err
@@ -40,8 +43,8 @@ func ReadFromNetworkConnection(connection net.Conn) ([]byte, error) {
 func WriteToNetworkConnection(connection net.Conn, data []byte) error {
 	size := uint64(len(data))
 
-	if size > MAX_FORM_MEM_SIZE_BYTES {
-		return fmt.Errorf("Payload size is too large.")
+	if size > MAX_SOCKET_MESSAGE_SIZE_BYTES {
+		return fmt.Errorf("Message content is too large to write.")
 	}
 
 	responseBuffer := new(bytes.Buffer)

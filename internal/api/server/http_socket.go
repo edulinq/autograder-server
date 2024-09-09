@@ -51,12 +51,7 @@ func runAPIServer(routes *[]*core.Route) (err error) {
 
 func stopAPIServer() {
 	common.Lock(API_SERVER_STOP_LOCK)
-	defer func() {
-		err := common.Unlock(API_SERVER_STOP_LOCK)
-		if err != nil {
-			log.Error("Failed to unlock the api server stop lock: '%w'.", err)
-		}
-	}()
+	defer common.Unlock(API_SERVER_STOP_LOCK)
 
 	if apiServer == nil {
 		return

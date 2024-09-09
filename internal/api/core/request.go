@@ -19,8 +19,8 @@ type ValidAPIRequest any
 
 // A random nonce is generated for each root user request (CMDs).
 // The nonce is stored in RootUserNonces and is attached to the request.
-// It's later validated when processing the request through the http socket
-// to confirm it originated from a valid root user through the unix socket.
+// It's later validated when processing the request through the http socket and then immediately deleted
+// to confirm the request came from a valid root user through the unix socket.
 var RootUserNonces sync.Map
 
 type APIRequest struct {

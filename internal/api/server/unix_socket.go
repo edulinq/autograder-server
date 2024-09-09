@@ -154,12 +154,7 @@ func handleUnixSocketConnection(connection net.Conn) error {
 
 func stopUnixSocketServer() {
 	common.Lock(UNIX_SOCKET_SERVER_STOP_LOCK)
-	defer func() {
-		err := common.Unlock(UNIX_SOCKET_SERVER_STOP_LOCK)
-		if err != nil {
-			log.Error("Failed to unlock the unix socket server stop lock: '%w'.", err)
-		}
-	}()
+	defer common.Unlock(UNIX_SOCKET_SERVER_STOP_LOCK)
 
 	if unixSocket == nil {
 		return

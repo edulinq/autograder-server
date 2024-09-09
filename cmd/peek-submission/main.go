@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net"
-	"os"
 
 	"github.com/alecthomas/kong"
 
@@ -84,22 +83,6 @@ func main() {
 	if err != nil {
 		log.Fatal("Failed to unmarshal the API response.", err)
 	}
-
-	if !response.Success {
-		message := "Request to the autograder failed."
-		if response.Message != "" {
-			message = fmt.Sprintf("Failed to complete operation: %s", response.Message)
-		}
-
-		if args.Verbose {
-			fmt.Println(util.MustToJSONIndent(response))
-		} else {
-			fmt.Println(message)
-		}
-
-		os.Exit(0)
-	}
-
 	if args.Verbose {
 		fmt.Println(util.MustToJSONIndent(response))
 	} else {

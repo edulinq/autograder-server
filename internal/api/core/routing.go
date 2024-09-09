@@ -40,6 +40,8 @@ type Route struct {
 	handler RouteHandler
 }
 
+const MAX_FORM_MEM_SIZE_BYTES = 10 << 20 // 20 MB
+
 // Get a function to pass to http.HandlerFunc().
 func GetRouteServer(routes *[]*Route) http.HandlerFunc {
 	return func(response http.ResponseWriter, request *http.Request) {
@@ -208,7 +210,7 @@ func createAPIRequest(request *http.Request, apiHandler ValidAPIHandler) (ValidA
 
 	// If this request is multipart, then parse the form.
 	if strings.Contains(strings.Join(request.Header["Content-Type"], " "), "multipart/form-data") {
-		err := request.ParseMultipartForm(util.MAX_FORM_MEM_SIZE_BYTES)
+		err := request.ParseMultipartForm(MAX_FORM_MEM_SIZE_BYTES)
 		if err != nil {
 			return nil, NewBareBadRequestError("-003", endpoint,
 				fmt.Sprintf("POST request is improperly formatted.")).

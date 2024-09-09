@@ -1,7 +1,6 @@
 package common
 
 import (
-	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -27,11 +26,33 @@ func GetStatusPath() string {
 	return filepath.Join(config.GetWorkDir(), STATUS_FILENAME)
 }
 
-func WriteAndHandleStatusFile() (err error) {
+func GetUnixSocketPath() (string, error) {
+	ReadLock(PID_SOCK_LOCK)
+	defer ReadUnlock(PID_SOCK_LOCK)
+
+	statusPath := GetStatusPath()
+	if !util.IsFile(statusPath) {
+		return "", fmt.Errorf("Status file '%s' does not exist.", statusPath)
+	}
+
+	var statusJson StatusInfo
+
+	err := util.JSONFromFile(statusPath, &statusJson)
+	if err != nil {
+		return "", fmt.Errorf("Failed to read the existing status file '%s': '%w'.", statusPath, err)
+	}
+
+	if statusJson.UnixSocketPath == "" {
+		return "", fmt.Errorf("The unix socket path is empty.")
+	}
+
+	return statusJson.UnixSocketPath, nil
+}
+
+
+func WriteAndHandleStatusFile() error {
 	Lock(PID_SOCK_LOCK)
-	defer func() {
-		err = errors.Join(err, Unlock(PID_SOCK_LOCK))
-	}()
+	Unlock(PID_SOCK_LOCK)
 
 	statusPath := GetStatusPath()
 	pid := os.Getpid()
@@ -43,7 +64,7 @@ func WriteAndHandleStatusFile() (err error) {
 			return err
 		}
 
-		return fmt.Errorf("Failed to create the status file.")
+		return fmt.Errorf("Failed to create the status file '%s'.", statusPath)
 	}
 
 	statusJson.Pid = pid
@@ -52,16 +73,19 @@ func WriteAndHandleStatusFile() (err error) {
 	if err != nil {
 		return fmt.Errorf("Failed to generate a random number for the unix socket path: '%w'.", err)
 	}
-	statusJson.UnixSocketPath = filepath.Join("/tmp", fmt.Sprintf("autograder-%s.sock", unixFileNumber))
+	statusJson.UnixSocketPath = filepath.Join("/", "tmp", fmt.Sprintf("autograder-%s.sock", unixFileNumber))
 
 	err = util.ToJSONFile(statusJson, statusPath)
 	if err != nil {
-		return fmt.Errorf("Failed to write to the status file: '%w'.", err)
+		return fmt.Errorf("Failed to write to the status file '%s': '%w'.", statusPath, err)
 	}
 
-	return err
+	return nil
 }
 
+// Returns (true, nil) if it's safe to create the status file,
+// (false, nil) if another instance of the server is running,
+// or (false, err) if there are issues reading or removing the status file.
 func checkAndHandleStalePid() (bool, error) {
 	statusPath := GetStatusPath()
 
@@ -70,49 +94,33 @@ func checkAndHandleStalePid() (bool, error) {
 	}
 
 	var statusJson StatusInfo
-
 	err := util.JSONFromFile(statusPath, &statusJson)
 	if err != nil {
-		return false, fmt.Errorf("Failed to read the status file: '%w'.", err)
+		return false, fmt.Errorf("Failed to read the status file '%s': '%w'.", statusPath, err)
 	}
 
-	process, _ := os.FindProcess(statusJson.Pid)
-	err = process.Signal(syscall.Signal(0))
-	if err != nil {
-		log.Warn("Removing stale status file.")
-
-		err := util.RemoveDirent(GetStatusPath())
-		if err != nil {
-			return false, fmt.Errorf("Failed to remove the status file: '%w'.", err)
-		}
-
-		return true, nil
-	} else {
+	if isAlive(statusJson.Pid) {
 		return false, nil
+	} else {
+		log.Warn("Removing stale status file '%s'.", statusPath)
+
+		err := util.RemoveDirent(statusPath)
+		if err != nil {
+            return false, fmt.Errorf("Failed to remove the status file '%s': '%w'.", statusPath, err)
+		}
 	}
+
+	return true, nil
 }
 
-func GetUnixSocketPath() (path string, err error) {
-	ReadLock(PID_SOCK_LOCK)
-	defer func() {
-		err = errors.Join(err, ReadUnlock(PID_SOCK_LOCK))
-	}()
-
-	statusPath := GetStatusPath()
-	if !util.IsFile(statusPath) {
-		return "", fmt.Errorf("The status path doesn't exist.")
-	}
-
-	var statusJson StatusInfo
-
-	err = util.JSONFromFile(statusPath, &statusJson)
+// Check if the pid is currently being used. 
+// Returns true if the pid is active and false if the pid is inactive.
+func isAlive(pid int) bool {
+	process, _ := os.FindProcess(pid)
+	err := process.Signal(syscall.Signal(0))
 	if err != nil {
-		return "", fmt.Errorf("Failed to read the existing status file: '%w'.", err)
+		return false
 	}
 
-	if statusJson.UnixSocketPath == "" {
-		return "", fmt.Errorf("The unix socket path is empty.")
-	}
-
-	return statusJson.UnixSocketPath, nil
+	return true
 }
