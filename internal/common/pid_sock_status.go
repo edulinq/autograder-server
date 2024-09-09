@@ -49,7 +49,6 @@ func GetUnixSocketPath() (string, error) {
 	return statusJson.UnixSocketPath, nil
 }
 
-
 func WriteAndHandleStatusFile() error {
 	Lock(PID_SOCK_LOCK)
 	Unlock(PID_SOCK_LOCK)
@@ -106,14 +105,14 @@ func checkAndHandleStalePid() (bool, error) {
 
 		err := util.RemoveDirent(statusPath)
 		if err != nil {
-            return false, fmt.Errorf("Failed to remove the status file '%s': '%w'.", statusPath, err)
+			return false, fmt.Errorf("Failed to remove the status file '%s': '%w'.", statusPath, err)
 		}
 	}
 
 	return true, nil
 }
 
-// Check if the pid is currently being used. 
+// Check if the pid is currently being used.
 // Returns true if the pid is active and false if the pid is inactive.
 func isAlive(pid int) bool {
 	process, _ := os.FindProcess(pid)
