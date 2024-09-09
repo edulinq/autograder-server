@@ -55,8 +55,6 @@ func CleanupTestingMain() {
 func AddTestUsers() error {
 	path := filepath.Join(config.GetCourseImportDir(), "testdata", model.USERS_FILENAME)
 
-    // TODO: Remove.
-    fmt.Printf("Path: '%v'.", path)
 	users, err := model.LoadServerUsersFile(path)
 	if err != nil {
 		return fmt.Errorf("Could not open test users file '%s': '%w'.", path, err)
