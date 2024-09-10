@@ -340,7 +340,7 @@ func sendUserOpEmail(result *model.UserOpResult, options UpsertUsersOptions) {
 	if !options.DryRun {
 		err := email.SendMessage(message)
 		if err != nil {
-			result.SystemErrors = append(result.SystemErrors, model.NewModelError("-1021", "", fmt.Sprintf("Failed to send email: '%v'.", err)))
+			result.CommunicationError = model.NewLocatableError("-1021", false, "", fmt.Sprintf("Failed to send email: '%v'.", err))
 			emailSent = false
 		}
 	}

@@ -18,7 +18,7 @@ func TestUpsert(test *testing.T) {
 		email     string
 		permError bool
 		options   *users.UpsertUsersOptions
-		expected  []*model.UserOpResult
+		expected  []*model.UserOpResponse
 	}{
 		// Valid permissions.
 		// New user without course.
@@ -36,8 +36,8 @@ func TestUpsert(test *testing.T) {
 				},
 				SendEmails: true,
 			},
-			expected: []*model.UserOpResult{
-				&model.UserOpResult{
+			expected: []*model.UserOpResponse{
+				&model.UserOpResponse{
 					Email:   "new@test.edulinq.org",
 					Added:   true,
 					Emailed: true,
@@ -63,8 +63,8 @@ func TestUpsert(test *testing.T) {
 				},
 				SendEmails: true,
 			},
-			expected: []*model.UserOpResult{
-				&model.UserOpResult{
+			expected: []*model.UserOpResponse{
+				&model.UserOpResponse{
 					Email:    "new@test.edulinq.org",
 					Added:    true,
 					Emailed:  true,
@@ -86,8 +86,8 @@ func TestUpsert(test *testing.T) {
 				},
 				SendEmails: true,
 			},
-			expected: []*model.UserOpResult{
-				&model.UserOpResult{
+			expected: []*model.UserOpResponse{
+				&model.UserOpResponse{
 					Email:    "course-student@test.edulinq.org",
 					Modified: true,
 				},
@@ -109,8 +109,8 @@ func TestUpsert(test *testing.T) {
 				},
 				SendEmails: true,
 			},
-			expected: []*model.UserOpResult{
-				&model.UserOpResult{
+			expected: []*model.UserOpResponse{
+				&model.UserOpResponse{
 					Email:    "course-student@test.edulinq.org",
 					Modified: true,
 					Emailed:  true,
@@ -159,7 +159,7 @@ func TestUpsert(test *testing.T) {
 		util.MustJSONFromString(util.MustToJSON(response.Content), &responseContent)
 
 		if !reflect.DeepEqual(testCase.expected, responseContent.Results) {
-			test.Errorf("Case %d: Unexpected user op result. Expected: '%s', actual: '%s'.",
+			test.Errorf("Case %d: Unexpected user op response. Expected: '%s', actual: '%s'.",
 				i, util.MustToJSONIndent(testCase.expected), util.MustToJSONIndent(responseContent.Results))
 			continue
 		}

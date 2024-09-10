@@ -1,89 +1,43 @@
 package model
 
-// A general reporesentation of errors that can be generated at the model level.
-type ModelError struct {
+// A general representation of locatable errors that can be generated.
+type LocatableError struct {
 	// The locator for the error which is not exported.
-	Locator string `json:"-"`
+	Locator string
+
+	// A flag for authentication errors so we know to hide locators before responding.
+	AuthError bool
 
 	// The internal message for the error which is not exported.
-	InternalMessage string `json:"-"`
+	InternalMessage string
 
 	// The external message of the error which MUST be user friendly.
-	ExternalMessage string `json:"external-message"`
+	ExternalMessage string
 }
 
-func NewModelError(locator string, internalMessage string, externalMessage string) *ModelError {
-	return &ModelError{
+type LocatableErrorResponse struct {
+	Locator string `json:"locator"`
+	Message string `json:"message"`
+}
+
+func NewLocatableError(locator string, authError bool, internalMessage string, externalMessage string) *LocatableError {
+	return &LocatableError{
 		Locator:         locator,
+		AuthError:       authError,
 		InternalMessage: internalMessage,
 		ExternalMessage: externalMessage,
 	}
 }
 
-func (this *ModelError) MustClone() *ModelError {
-	clone := ModelError{
-		Locator:         this.Locator,
-		InternalMessage: this.InternalMessage,
-		ExternalMessage: this.ExternalMessage,
+func (this *LocatableError) ToResponse() *LocatableErrorResponse {
+	// Remove the locator for authentication errors.
+	locator := this.Locator
+	if this.AuthError {
+		locator = ""
 	}
 
-	return &clone
-}
-
-func DereferenceModelErrors(errors []*ModelError) []ModelError {
-	result := make([]ModelError, len(errors))
-
-	for i, err := range errors {
-		if err != nil {
-			result[i] = ModelError{
-				Locator:         err.Locator,
-				InternalMessage: err.InternalMessage,
-				ExternalMessage: err.ExternalMessage,
-			}
-		}
+	return &LocatableErrorResponse{
+		Locator: locator,
+		Message: this.ExternalMessage,
 	}
-
-	return result
-}
-
-func (this ModelError) Equals(other ModelError) bool {
-	if this.Locator != other.Locator {
-		return false
-	}
-
-	if this.InternalMessage != other.InternalMessage {
-		return false
-	}
-
-	if this.ExternalMessage != other.ExternalMessage {
-		return false
-	}
-
-	return true
-}
-
-func ModelErrorSlicesEquals(a []*ModelError, b []*ModelError) bool {
-	if len(a) != len(b) {
-		return false
-	}
-
-	for i := range a {
-		if a[i] == b[i] {
-			continue
-		}
-
-		if a[i] == nil {
-			return false
-		}
-
-		if b[i] == nil {
-			return false
-		}
-
-		if !a[i].Equals(*b[i]) {
-			return false
-		}
-	}
-
-	return true
 }

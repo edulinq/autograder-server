@@ -17,22 +17,22 @@ type UpsertRequest struct {
 }
 
 type UpsertResponse struct {
-	Results []*model.UserOpResult `json:"results"`
+	Results []*model.UserOpResponse `json:"results"`
 }
 
 func HandleUpsert(request *UpsertRequest) (*UpsertResponse, *core.APIError) {
 	request.ContextEmail = request.UserEmail
 	request.ContextServerRole = request.ServerUser.Role
 
-	var response UpsertResponse
-	response.Results = users.UpsertUsers(request.UpsertUsersOptions)
+    results := users.UpsertUsers(request.UpsertUsersOptions)
 
-	// Clear any potential cleartext passwords before sending the response.
-	for i := range response.Results {
-		response.Results[i].CleartextPassword = ""
+	var response UpsertResponse
+	// Convert UserOpResults to user friendly UserOpResponses.
+	for _, result := range results {
+        response.Results = append(response.Results, result.ToResponse())
 	}
 
-	slices.SortFunc(response.Results, func(a, b *model.UserOpResult) int {
+	slices.SortFunc(response.Results, func(a, b *model.UserOpResponse) int {
 		if a == b {
 			return 0
 		}
