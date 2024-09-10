@@ -140,19 +140,33 @@ func (this *UserOpResult) MustClone() *UserOpResult {
 }
 
 func (this *UserOpResult) ToResponse() *UserOpResponse {
+	var valErrorResponse, sysErrorResponse, commErrorResponse *LocatableErrorResponse
+
+	if this.ValidationError != nil {
+		valErrorResponse = this.ValidationError.ToResponse()
+	}
+
+	if this.SystemError != nil {
+		sysErrorResponse = this.SystemError.ToResponse()
+	}
+
+	if this.CommunicationError != nil {
+		commErrorResponse = this.CommunicationError.ToResponse()
+	}
+
 	return &UserOpResponse{
 		Email:              this.Email,
 		Added:              this.Added,
 		Modified:           this.Modified,
-		Removed:            this.Modified,
+		Removed:            this.Removed,
 		Skipped:            this.Skipped,
 		NotExists:          this.NotExists,
 		Emailed:            this.Emailed,
 		Enrolled:           this.Enrolled,
 		Dropped:            this.Dropped,
-		ValidationError:    this.ValidationError.ToResponse(),
-		SystemError:        this.SystemError.ToResponse(),
-		CommunicationError: this.SystemError.ToResponse(),
+		ValidationError:    valErrorResponse,
+		SystemError:        sysErrorResponse,
+		CommunicationError: commErrorResponse,
 	}
 }
 

@@ -656,7 +656,7 @@ func TestUpsertUser(test *testing.T) {
 				Email: "",
 				SystemError: &model.LocatableError{
 					Locator:         "-1001",
-                    AuthError:       false,
+					AuthError:       false,
 					InternalMessage: "No authority/roles were provided when adding a user.",
 					ExternalMessage: "The server failed to process your request. Please contact an administrator with this ID '-1001'.",
 				},
@@ -678,7 +678,7 @@ func TestUpsertUser(test *testing.T) {
 				Email: "new@test.edulinq.org",
 				SystemError: &model.LocatableError{
 					Locator:         "-1010",
-                    AuthError:       false,
+					AuthError:       false,
 					InternalMessage: "Users must have a server role to upsert users.",
 					ExternalMessage: "The server failed to process your request. Please contact an administrator with this ID '-1010'.",
 				},
@@ -701,7 +701,7 @@ func TestUpsertUser(test *testing.T) {
 				Email: "new@test.edulinq.org",
 				ValidationError: &model.LocatableError{
 					Locator:         "-1011",
-                    AuthError:       true,
+					AuthError:       true,
 					InternalMessage: "User has a server role of 'admin', which is not high enough to upsert a user with server role of 'owner'.",
 					ExternalMessage: VALIDATION_ERROR_EXTERNAL_MESSAGE,
 				},
@@ -723,7 +723,7 @@ func TestUpsertUser(test *testing.T) {
 				Email: "new@test.edulinq.org",
 				ValidationError: &model.LocatableError{
 					Locator:         "-1012",
-                    AuthError:       true,
+					AuthError:       true,
 					InternalMessage: "User has an insufficient server role of 'user' and no course role to insert users.",
 					ExternalMessage: VALIDATION_ERROR_EXTERNAL_MESSAGE,
 				},
@@ -749,7 +749,7 @@ func TestUpsertUser(test *testing.T) {
 				Email: "new@test.edulinq.org",
 				ValidationError: &model.LocatableError{
 					Locator:         "-1014",
-                    AuthError:       true,
+					AuthError:       true,
 					InternalMessage: "User has a course role of 'student', which is not high enough to insert users.",
 					ExternalMessage: VALIDATION_ERROR_EXTERNAL_MESSAGE,
 				},
@@ -775,7 +775,7 @@ func TestUpsertUser(test *testing.T) {
 				Email: "new@test.edulinq.org",
 				ValidationError: &model.LocatableError{
 					Locator:         "-1013",
-                    AuthError:       true,
+					AuthError:       true,
 					InternalMessage: "User has a course role of 'admin', which is not high enough to insert a user with course role of 'owner'.",
 					ExternalMessage: VALIDATION_ERROR_EXTERNAL_MESSAGE,
 				},
@@ -798,7 +798,7 @@ func TestUpsertUser(test *testing.T) {
 				Email: "server-owner@test.edulinq.org",
 				ValidationError: &model.LocatableError{
 					Locator:         "-1016",
-                    AuthError:       true,
+					AuthError:       true,
 					InternalMessage: "User has a server role of 'admin', which is not high enough to update a user with server role of 'owner'.",
 					ExternalMessage: VALIDATION_ERROR_EXTERNAL_MESSAGE,
 				},
@@ -823,7 +823,7 @@ func TestUpsertUser(test *testing.T) {
 				Email: "course-owner@test.edulinq.org",
 				ValidationError: &model.LocatableError{
 					Locator:         "-1019",
-                    AuthError:       true,
+					AuthError:       true,
 					InternalMessage: "User has a course role of 'admin', which is not high enough to update a user with course role of 'owner'.",
 					ExternalMessage: VALIDATION_ERROR_EXTERNAL_MESSAGE,
 				},
@@ -848,7 +848,7 @@ func TestUpsertUser(test *testing.T) {
 				Email: "course-student@test.edulinq.org",
 				ValidationError: &model.LocatableError{
 					Locator:         "-1017",
-                    AuthError:       true,
+					AuthError:       true,
 					InternalMessage: "User has a server role of 'user', which is not high enough to update server-level information for another user.",
 					ExternalMessage: VALIDATION_ERROR_EXTERNAL_MESSAGE,
 				},
@@ -875,7 +875,7 @@ func TestUpsertUser(test *testing.T) {
 				Email: "course-student@test.edulinq.org",
 				ValidationError: &model.LocatableError{
 					Locator:         "-1020",
-                    AuthError:       true,
+					AuthError:       true,
 					InternalMessage: "User has a course role of 'student', which is not high enough to update course-level information for another user.",
 					ExternalMessage: VALIDATION_ERROR_EXTERNAL_MESSAGE,
 				},
@@ -899,7 +899,7 @@ func TestUpsertUser(test *testing.T) {
 				Email: "course-admin@test.edulinq.org",
 				ValidationError: &model.LocatableError{
 					Locator:         "-1011",
-                    AuthError:       true,
+					AuthError:       true,
 					InternalMessage: "User has a server role of 'admin', which is not high enough to upsert a user with server role of 'owner'.",
 					ExternalMessage: VALIDATION_ERROR_EXTERNAL_MESSAGE,
 				},
@@ -925,7 +925,7 @@ func TestUpsertUser(test *testing.T) {
 				Email: "course-grader@test.edulinq.org",
 				ValidationError: &model.LocatableError{
 					Locator:         "-1018",
-                    AuthError:       true,
+					AuthError:       true,
 					InternalMessage: "User has a course role of 'grader', which is not high enough to modify course roles.",
 					ExternalMessage: VALIDATION_ERROR_EXTERNAL_MESSAGE,
 				},
@@ -948,7 +948,7 @@ func TestUpsertUser(test *testing.T) {
 				Email: "server-creator@test.edulinq.org",
 				ValidationError: &model.LocatableError{
 					Locator:         "-1015",
-                    AuthError:       true,
+					AuthError:       true,
 					InternalMessage: "User has a server role of 'creator', which is not high enough to modify server roles.",
 					ExternalMessage: VALIDATION_ERROR_EXTERNAL_MESSAGE,
 				},
@@ -974,7 +974,7 @@ func TestUpsertUser(test *testing.T) {
 				Email: "course-grader@test.edulinq.org",
 				ValidationError: &model.LocatableError{
 					Locator:         "-1018",
-                    AuthError:       true,
+					AuthError:       true,
 					InternalMessage: "User has a course role of 'grader', which is not high enough to modify course roles.",
 					ExternalMessage: VALIDATION_ERROR_EXTERNAL_MESSAGE,
 				},
@@ -1000,7 +1000,7 @@ func TestUpsertUser(test *testing.T) {
 				Email: "course-student@test.edulinq.org",
 				ValidationError: &model.LocatableError{
 					Locator:         "-1003",
-                    AuthError:       true,
+					AuthError:       true,
 					InternalMessage: "User 'course-student@test.edulinq.org' has an invalid course info 'new-course': 'Unknown course role.'.",
 					ExternalMessage: VALIDATION_ERROR_EXTERNAL_MESSAGE,
 				},

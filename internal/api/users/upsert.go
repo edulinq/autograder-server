@@ -24,12 +24,12 @@ func HandleUpsert(request *UpsertRequest) (*UpsertResponse, *core.APIError) {
 	request.ContextEmail = request.UserEmail
 	request.ContextServerRole = request.ServerUser.Role
 
-    results := users.UpsertUsers(request.UpsertUsersOptions)
+	results := users.UpsertUsers(request.UpsertUsersOptions)
 
 	var response UpsertResponse
 	// Convert UserOpResults to user friendly UserOpResponses.
 	for _, result := range results {
-        response.Results = append(response.Results, result.ToResponse())
+		response.Results = append(response.Results, result.ToResponse())
 	}
 
 	slices.SortFunc(response.Results, func(a, b *model.UserOpResponse) int {
