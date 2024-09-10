@@ -1,6 +1,7 @@
 package core
 
 import (
+	"errors"
 	"fmt"
 	"slices"
 	"strings"
@@ -13,20 +14,21 @@ import (
 type UserInfoType string
 
 const (
-	ServerUserInfoType = "ServerType"
-	CourseUserInfoType = "CourseType"
+	ServerUserInfoType = "Server"
+	CourseUserInfoType = "Course"
 )
 
-// These fields must be embedded into any API-safe representation of a user.
-type UserInfo struct {
+// This type must be embedded into any API-safe representation of a user.
+type BaseUserInfo struct {
 	Type  UserInfoType `json:"type"`
 	Email string       `json:"email"`
 	Name  string       `json:"name"`
 }
 
 // An API-safe representation of a server user.
+// Embed the BaseUserInfo and use ServerUserInfoType as the type.
 type ServerUserInfo struct {
-	UserInfo
+	BaseUserInfo
 	Role    model.ServerUserRole      `json:"role"`
 	Courses map[string]EnrollmentInfo `json:"courses"`
 }
@@ -39,15 +41,16 @@ type EnrollmentInfo struct {
 }
 
 // An API-safe representation of a course user.
+// Embed the BaseUserInfo and use CourseUserInfoType as the type.
 type CourseUserInfo struct {
-	UserInfo
+	BaseUserInfo
 	Role  model.CourseUserRole `json:"role"`
 	LMSID string               `json:"lms-id"`
 }
 
 func NewServerUserInfo(user *model.ServerUser) (*ServerUserInfo, error) {
 	info := &ServerUserInfo{
-		UserInfo: UserInfo{
+		BaseUserInfo: BaseUserInfo{
 			Type:  ServerUserInfoType,
 			Email: user.Email,
 			Name:  user.GetDisplayName(),
@@ -82,14 +85,21 @@ func MustNewServerUserInfo(user *model.ServerUser) *ServerUserInfo {
 }
 
 func NewServerUserInfos(users []*model.ServerUser) ([]*ServerUserInfo, error) {
+	var errs error
+
 	infos := make([]*ServerUserInfo, 0, len(users))
 	for _, user := range users {
 		info, err := NewServerUserInfo(user)
 		if err != nil {
-			return nil, fmt.Errorf("Failed to get server user info for user '%s'.", user.Email)
+			err = fmt.Errorf("Failed to get server user info for user '%s': '%w'.", user.Email, err)
+			errs = errors.Join(errs, err)
 		}
 
 		infos = append(infos, info)
+	}
+
+	if errs != nil {
+		return nil, fmt.Errorf("Found errors while creating new server user infos: '%w'.", errs)
 	}
 
 	slices.SortFunc(infos, CompareServerUserInfoPointer)
@@ -119,7 +129,7 @@ func CompareServerUserInfoPointer(a *ServerUserInfo, b *ServerUserInfo) int {
 		return -1
 	}
 
-	return strings.Compare(a.Email, b.Email)
+	return CompareServerUserInfo(*a, *b)
 }
 
 func CompareServerUserInfo(a ServerUserInfo, b ServerUserInfo) int {
@@ -128,7 +138,7 @@ func CompareServerUserInfo(a ServerUserInfo, b ServerUserInfo) int {
 
 func NewCourseUserInfo(user *model.CourseUser) *CourseUserInfo {
 	info := &CourseUserInfo{
-		UserInfo: UserInfo{
+		BaseUserInfo: BaseUserInfo{
 			Type:  CourseUserInfoType,
 			Email: user.Email,
 			Name:  user.GetDisplayName(),
@@ -164,7 +174,7 @@ func CompareCourseUserInfoPointer(a *CourseUserInfo, b *CourseUserInfo) int {
 		return -1
 	}
 
-	return strings.Compare(a.Email, b.Email)
+	return CompareCourseUserInfo(*a, *b)
 }
 
 func CompareCourseUserInfo(a CourseUserInfo, b CourseUserInfo) int {

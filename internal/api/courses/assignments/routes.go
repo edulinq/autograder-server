@@ -4,7 +4,6 @@ package assignments
 
 import (
 	"github.com/edulinq/autograder/internal/api/core"
-	"github.com/edulinq/autograder/internal/api/courses/assignments/submissions"
 )
 
 var routes []*core.Route = []*core.Route{
@@ -13,7 +12,5 @@ var routes []*core.Route = []*core.Route{
 }
 
 func GetRoutes() *[]*core.Route {
-	routes = append(routes, *(submissions.GetRoutes())...)
-
 	return &routes
 }

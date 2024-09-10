@@ -16,30 +16,65 @@ func TestUserGet(test *testing.T) {
 		permError bool
 		expected  *core.CourseUserInfo
 	}{
-		{"course-grader", "course-other@test.edulinq.org", false, &core.CourseUserInfo{
-			core.UserInfo{core.CourseUserInfoType, "course-other@test.edulinq.org", "course-other"},
-			model.CourseRoleOther,
-			"lms-course-other@test.edulinq.org"},
+		{
+			"course-grader", "course-other@test.edulinq.org", false,
+			&core.CourseUserInfo{
+				core.BaseUserInfo{
+					core.CourseUserInfoType,
+					"course-other@test.edulinq.org",
+					"course-other",
+				},
+				model.CourseRoleOther,
+				"lms-course-other@test.edulinq.org",
+			},
 		},
-		{"course-grader", "course-student@test.edulinq.org", false, &core.CourseUserInfo{
-			core.UserInfo{core.CourseUserInfoType, "course-student@test.edulinq.org", "course-student"},
-			model.CourseRoleStudent,
-			"lms-course-student@test.edulinq.org"},
+		{
+			"course-grader", "course-student@test.edulinq.org", false,
+			&core.CourseUserInfo{
+				core.BaseUserInfo{
+					core.CourseUserInfoType,
+					"course-student@test.edulinq.org",
+					"course-student",
+				},
+				model.CourseRoleStudent,
+				"lms-course-student@test.edulinq.org",
+			},
 		},
-		{"course-grader", "course-grader@test.edulinq.org", false, &core.CourseUserInfo{
-			core.UserInfo{core.CourseUserInfoType, "course-grader@test.edulinq.org", "course-grader"},
-			model.CourseRoleGrader,
-			"lms-course-grader@test.edulinq.org"},
+		{
+			"course-grader", "course-grader@test.edulinq.org", false,
+			&core.CourseUserInfo{
+				core.BaseUserInfo{
+					core.CourseUserInfoType,
+					"course-grader@test.edulinq.org",
+					"course-grader",
+				},
+				model.CourseRoleGrader,
+				"lms-course-grader@test.edulinq.org",
+			},
 		},
-		{"course-grader", "course-admin@test.edulinq.org", false, &core.CourseUserInfo{
-			core.UserInfo{core.CourseUserInfoType, "course-admin@test.edulinq.org", "course-admin"},
-			model.CourseRoleAdmin,
-			"lms-course-admin@test.edulinq.org"},
+		{
+			"course-grader", "course-admin@test.edulinq.org", false,
+			&core.CourseUserInfo{
+				core.BaseUserInfo{
+					core.CourseUserInfoType,
+					"course-admin@test.edulinq.org",
+					"course-admin",
+				},
+				model.CourseRoleAdmin,
+				"lms-course-admin@test.edulinq.org",
+			},
 		},
-		{"course-grader", "course-owner@test.edulinq.org", false, &core.CourseUserInfo{
-			core.UserInfo{core.CourseUserInfoType, "course-owner@test.edulinq.org", "course-owner"},
-			model.CourseRoleOwner,
-			"lms-course-owner@test.edulinq.org"},
+		{
+			"course-grader", "course-owner@test.edulinq.org", false,
+			&core.CourseUserInfo{
+				core.BaseUserInfo{
+					core.CourseUserInfoType,
+					"course-owner@test.edulinq.org",
+					"course-owner",
+				},
+				model.CourseRoleOwner,
+				"lms-course-owner@test.edulinq.org",
+			},
 		},
 
 		{"course-student", "course-student@test.edulinq.org", true, nil},

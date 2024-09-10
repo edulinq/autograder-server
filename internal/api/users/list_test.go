@@ -18,6 +18,8 @@ func TestList(test *testing.T) {
 		users = append(users, user)
 	}
 
+	expectedInfos := core.MustNewServerUserInfos(users)
+
 	testCases := []struct {
 		email     string
 		permError bool
@@ -55,7 +57,6 @@ func TestList(test *testing.T) {
 		var responseContent ListResponse
 		util.MustJSONFromString(util.MustToJSON(response.Content), &responseContent)
 
-		expectedInfos := core.MustNewServerUserInfos(users)
 		if !reflect.DeepEqual(expectedInfos, responseContent.Users) {
 			test.Errorf("Case %d: Unexpected users information. Expected: '%s', actual: '%s'.",
 				i, util.MustToJSONIndent(expectedInfos), util.MustToJSONIndent(responseContent.Users))

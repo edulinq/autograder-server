@@ -1,9 +1,10 @@
 package users
 
 import (
+	"slices"
+
 	"github.com/edulinq/autograder/internal/api/core"
 	"github.com/edulinq/autograder/internal/db"
-	"github.com/edulinq/autograder/internal/model"
 )
 
 type ListRequest struct {
@@ -22,16 +23,18 @@ func HandleList(request *ListRequest) (*ListResponse, *core.APIError) {
 			"Failed to get server users from database.").Err(err)
 	}
 
-	users := make([]*model.ServerUser, 0, len(usersMap))
+	infos := make([]*core.ServerUserInfo, 0, len(usersMap))
 	for _, user := range usersMap {
-		users = append(users, user)
+		info, err := core.NewServerUserInfo(user)
+		if err != nil {
+			return nil, core.NewUsertContextInternalError("-814", &request.APIRequestUserContext,
+				"Failed to get server user info.").Err(err)
+		}
+
+		infos = append(infos, info)
 	}
 
-	infos, err := core.NewServerUserInfos(users)
-	if err != nil {
-		return nil, core.NewUsertContextInternalError("-814", &request.APIRequestUserContext,
-			"Failed to get server user infos.").Err(err)
-	}
+	slices.SortFunc(infos, core.CompareServerUserInfoPointer)
 
 	response := ListResponse{infos}
 
