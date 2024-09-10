@@ -14,8 +14,8 @@ import (
 type UserInfoType string
 
 const (
-	ServerUserInfoType = "Server"
-	CourseUserInfoType = "Course"
+	ServerUserInfoType = "server"
+	CourseUserInfoType = "course"
 )
 
 // This type must be embedded into any API-safe representation of a user.
