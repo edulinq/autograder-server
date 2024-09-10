@@ -25,7 +25,7 @@ func (this *DBTests) DBTestUserGetServerUsersBase(test *testing.T) {
 	// Check that root is a server user.
 	_, exists := users[model.RootUserEmail]
 	if !exists {
-		test.Fatalf("Couldn't find the root user in server users.")
+		test.Fatalf("Could not find the root user in server users.")
 	}
 
 	// Remove root from the server users since we're comparing server users with test server users.
@@ -53,7 +53,7 @@ func (this *DBTests) DBTestUserGetServerUsersEmpty(test *testing.T) {
 	}
 
 	if len(users) == 0 {
-		test.Fatalf("Couldn't find the root user after clearing the database.")
+		test.Fatalf("Could not find the root user after clearing the database.")
 	}
 
 	for _, user := range users {

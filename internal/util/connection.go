@@ -39,7 +39,7 @@ func ReadFromNetworkConnection(connection net.Conn) ([]byte, error) {
 
 // Write a message to a network connection.
 // The first 8 bytes is the size of the message content in bytes.
-// The remaining bytes should be x bytes of the actual the message content.
+// The remaining bytes should be x bytes of the actual message content.
 func WriteToNetworkConnection(connection net.Conn, data []byte) error {
 	size := uint64(len(data))
 
