@@ -36,7 +36,6 @@ func GetUnixSocketPath() (string, error) {
 	}
 
 	var statusJson StatusInfo
-
 	err := util.JSONFromFile(statusPath, &statusJson)
 	if err != nil {
 		return "", fmt.Errorf("Failed to read the existing status file '%s': '%w'.", statusPath, err)
@@ -58,12 +57,12 @@ func WriteAndHandleStatusFile() error {
 	var statusJson StatusInfo
 
 	ok, err := checkAndHandleStalePid()
+	if err != nil {
+		return err
+	}
 	if !ok {
-		if err != nil {
-			return err
-		}
-
 		return fmt.Errorf("Failed to create the status file '%s'.", statusPath)
+
 	}
 
 	statusJson.Pid = pid
@@ -113,7 +112,7 @@ func checkAndHandleStalePid() (bool, error) {
 }
 
 // Check if the pid is currently being used.
-// Returns true if the pid is active and false if the pid is inactive.
+// Returns false if the pid is inactive and true if the pid is active.
 func isAlive(pid int) bool {
 	process, _ := os.FindProcess(pid)
 	err := process.Signal(syscall.Signal(0))

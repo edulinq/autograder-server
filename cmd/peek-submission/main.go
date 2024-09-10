@@ -83,6 +83,7 @@ func main() {
 	if err != nil {
 		log.Fatal("Failed to unmarshal the API response.", err)
 	}
+
 	if args.Verbose {
 		fmt.Println(util.MustToJSONIndent(response))
 	} else {

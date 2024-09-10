@@ -28,7 +28,7 @@ func (this *DBTests) DBTestUserGetServerUsersBase(test *testing.T) {
 		test.Fatalf("Couldn't find the root user in server users.")
 	}
 
-	// Remove root from the server users since we're comparing it with test users.
+	// Remove root from the server users since we're comparing server users with test server users.
 	delete(users, model.RootUserEmail)
 
 	if len(users) == 0 {

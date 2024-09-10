@@ -53,7 +53,7 @@ func Start() (err error) {
 
 	err = server.StartServer()
 	if err != nil {
-		return fmt.Errorf("Failed to start the server: '%w'.", err)
+		return fmt.Errorf("Error during server startup sequence: '%w'.", err)
 	}
 
 	log.Info("Server closed.")
