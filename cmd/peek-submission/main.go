@@ -92,6 +92,7 @@ func main() {
 		}
 
 		fmt.Println(output)
+
 		os.Exit(2)
 	}
 

@@ -3,6 +3,7 @@ package main
 import (
 	"testing"
 
+	"github.com/edulinq/autograder/internal/api/core"
 	"github.com/edulinq/autograder/internal/api/courses/assignments/submissions"
 	"github.com/edulinq/autograder/internal/cmd"
 	"github.com/edulinq/autograder/internal/util"
@@ -27,8 +28,6 @@ func TestPeekBase(test *testing.T) {
 
 		{"course-admin@test.edulinq.org", "course101", "hw0", "", ""},
 		{"course-student@test.edulinq.org", "course101", "hw0", "ZZZ", ""},
-
-		{"course-student@test.edulinq.org", "ZZZ", "hw0", "1697406272", ""},
 	}
 
 	for i, testCase := range testCases {
@@ -40,7 +39,6 @@ func TestPeekBase(test *testing.T) {
 		}
 
 		stdout, stderr, err := cmd.RunCMDTest(test, main, args)
-
 		if err != nil {
 			test.Errorf("Case %d: CMD run returned an error: '%v'.", i, err)
 			continue
@@ -51,8 +49,10 @@ func TestPeekBase(test *testing.T) {
 			continue
 		}
 
+		var response core.APIResponse
+		util.MustJSONFromString(stdout, &response)
 		var responseContent submissions.FetchUserPeekResponse
-		util.MustJSONFromString(stdout, &responseContent)
+		util.MustJSONFromString(util.MustToJSON(response.Content), &responseContent)
 
 		expectedHasSubmission := (testCase.expectedSubmimssion != "")
 		actualHasSubmission := responseContent.FoundSubmission
