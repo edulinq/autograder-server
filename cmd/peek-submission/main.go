@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net"
+	"os"
 
 	"github.com/alecthomas/kong"
 
@@ -22,7 +23,7 @@ var args struct {
 	CourseID         string `help:"ID of the course." arg:""`
 	AssignmentID     string `help:"ID of the assignment." arg:""`
 	TargetSubmission string `help:"ID of the submission. Defaults to the latest submission." arg:"" optional:""`
-	Verbose          bool   `help:"Print the entire response." short:"v"`
+	ShortForm         bool  `help:"Use short form output." long:"short-form"`
 }
 
 func main() {
@@ -84,11 +85,21 @@ func main() {
 		log.Fatal("Failed to unmarshal the API response.", err)
 	}
 
-	if args.Verbose {
-		fmt.Println(util.MustToJSONIndent(response))
-	} else {
+	if !response.Success {
+		output := response.Message
+		if !args.ShortForm {
+			output = util.MustToJSONIndent(response)
+		}
+
+		fmt.Println(output)
+		os.Exit(2)
+	}
+
+	if args.ShortForm{
 		var responseContent submissions.FetchUserPeekResponse
 		util.MustJSONFromString(util.MustToJSON(response.Content), &responseContent)
 		fmt.Println(util.MustToJSONIndent(responseContent))
+	} else {
+		fmt.Println(util.MustToJSONIndent(response))
 	}
 }

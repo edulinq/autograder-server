@@ -27,6 +27,8 @@ func TestPeekBase(test *testing.T) {
 
 		{"course-admin@test.edulinq.org", "course101", "hw0", "", ""},
 		{"course-student@test.edulinq.org", "course101", "hw0", "ZZZ", ""},
+
+		{"course-student@test.edulinq.org", "ZZZ", "hw0", "1697406272", ""},
 	}
 
 	for i, testCase := range testCases {
