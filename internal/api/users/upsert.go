@@ -21,7 +21,7 @@ type UpsertResponse struct {
 }
 
 func HandleUpsert(request *UpsertRequest) (*UpsertResponse, *core.APIError) {
-	request.ContextEmail = request.UserEmail
+	request.ContextEmail = request.ServerUser.Email
 	request.ContextServerRole = request.ServerUser.Role
 
 	results := users.UpsertUsers(request.UpsertUsersOptions)
@@ -32,21 +32,7 @@ func HandleUpsert(request *UpsertRequest) (*UpsertResponse, *core.APIError) {
 		response.Results = append(response.Results, result.ToResponse())
 	}
 
-	slices.SortFunc(response.Results, func(a, b *model.UserOpResponse) int {
-		if a == b {
-			return 0
-		}
-
-		if a == nil {
-			return 1
-		}
-
-		if b == nil {
-			return -1
-		}
-
-		return strings.Compare(a.Email, b.Email)
-	})
+	slices.SortFunc(response.Results, model.CompareUserOpResponsePointer)
 
 	return &response, nil
 }

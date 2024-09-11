@@ -1,12 +1,12 @@
 package model
 
-// A general representation of locatable errors that can be generated.
+// A general representation of errors that have a definite source location.
 type LocatableError struct {
 	// The locator for the error which is not exported.
 	Locator string
 
-	// A flag for authentication errors so we know to hide locators before responding.
-	AuthError bool
+	// A flag for knowing when to hide locators before responding.
+	HideLocator bool
 
 	// The internal message for the error which is not exported.
 	InternalMessage string
@@ -20,10 +20,10 @@ type LocatableErrorResponse struct {
 	Message string `json:"message"`
 }
 
-func NewLocatableError(locator string, authError bool, internalMessage string, externalMessage string) *LocatableError {
+func NewLocatableError(locator string, hideLocator bool, internalMessage string, externalMessage string) *LocatableError {
 	return &LocatableError{
 		Locator:         locator,
-		AuthError:       authError,
+		HideLocator:       hideLocator,
 		InternalMessage: internalMessage,
 		ExternalMessage: externalMessage,
 	}
@@ -32,7 +32,7 @@ func NewLocatableError(locator string, authError bool, internalMessage string, e
 func (this *LocatableError) ToResponse() *LocatableErrorResponse {
 	// Remove the locator for authentication errors.
 	locator := this.Locator
-	if this.AuthError {
+	if this.HideLocator {
 		locator = ""
 	}
 

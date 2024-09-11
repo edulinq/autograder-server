@@ -170,6 +170,26 @@ func (this *UserOpResult) ToResponse() *UserOpResponse {
 	}
 }
 
+func CompareUserOpResponsePointer(a *UserOpResponse, b *UserOpResponse) int {
+    if a == b {
+        return 0
+    }
+
+    if a == nil {
+        return 1
+    }
+
+    if b == nil {
+        return -1
+    }
+
+    return CompareUserOpResponse(*a, *b)
+}
+
+func CompareUserOpResponse(a UserOpResponse, b UserOpResponse) int {
+    return strings.Compare(a.Email, b.Email)
+}
+
 func GetUserOpResultsCounts(results []*UserOpResult) *UserOpResultsCounts {
 	counts := UserOpResultsCounts{}
 
