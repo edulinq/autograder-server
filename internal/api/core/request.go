@@ -17,7 +17,7 @@ import (
 // Once validated, callers should feel safe calling reflection methods on this without extra checks.
 type ValidAPIRequest any
 
-// A random nonce is generated for each root user request (CMDs).
+// A random nonce is generated for each root user request (e.g. CMDs).
 // The nonce is stored in RootUserNonces and is attached to the request.
 // It's later validated when processing the request through the http socket and then immediately deleted
 // to confirm the request came from a valid root user through the unix socket.

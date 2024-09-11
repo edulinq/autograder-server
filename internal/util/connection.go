@@ -8,7 +8,7 @@ import (
 )
 
 const (
-	MAX_SOCKET_MESSAGE_SIZE_BYTES = 2 << 30 // 2 GB
+	MAX_SOCKET_MESSAGE_SIZE_BYTES = 2 * 1024 * 1024 * 1024 // 2 GB
 	RESPONSE_BUFFER_SIZE          = 8
 )
 

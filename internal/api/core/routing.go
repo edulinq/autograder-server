@@ -40,7 +40,7 @@ type Route struct {
 	handler RouteHandler
 }
 
-const MAX_FORM_MEM_SIZE_BYTES = 10 << 20 // 20 MB
+const MAX_FORM_MEM_SIZE_BYTES = 20 * 1024 * 1024 // 20 MB
 
 // Get a function to pass to http.HandlerFunc().
 func GetRouteServer(routes *[]*Route) http.HandlerFunc {

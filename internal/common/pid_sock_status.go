@@ -12,7 +12,7 @@ import (
 )
 
 const (
-	PID_SOCK_LOCK                  = "PID_SOCK_LOCK"
+	PID_SOCK_LOCK                  = "internal.common.PID_SOCK_LOCK"
 	STATUS_FILENAME                = "status.json"
 	UNIX_SOCKET_RANDNUM_SIZE_BYTES = 32
 )
@@ -60,9 +60,9 @@ func WriteAndHandleStatusFile() error {
 	if err != nil {
 		return err
 	}
+
 	if !ok {
 		return fmt.Errorf("Failed to create the status file '%s'.", statusPath)
-
 	}
 
 	statusJson.Pid = pid
@@ -71,6 +71,7 @@ func WriteAndHandleStatusFile() error {
 	if err != nil {
 		return fmt.Errorf("Failed to generate a random number for the unix socket path: '%w'.", err)
 	}
+
 	statusJson.UnixSocketPath = filepath.Join("/", "tmp", fmt.Sprintf("autograder-%s.sock", unixFileNumber))
 
 	err = util.ToJSONFile(statusJson, statusPath)

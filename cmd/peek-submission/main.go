@@ -23,7 +23,7 @@ var args struct {
 	CourseID         string `help:"ID of the course." arg:""`
 	AssignmentID     string `help:"ID of the assignment." arg:""`
 	TargetSubmission string `help:"ID of the submission. Defaults to the latest submission." arg:"" optional:""`
-	ShortForm         bool  `help:"Use short form output." long:"short-form"`
+	ShortForm        bool   `help:"Use short form output." long:"short-form"`
 }
 
 func main() {
@@ -96,7 +96,7 @@ func main() {
 		os.Exit(2)
 	}
 
-	if args.ShortForm{
+	if args.ShortForm {
 		var responseContent submissions.FetchUserPeekResponse
 		util.MustJSONFromString(util.MustToJSON(response.Content), &responseContent)
 		fmt.Println(util.MustToJSONIndent(responseContent))
