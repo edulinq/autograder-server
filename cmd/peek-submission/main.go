@@ -45,6 +45,7 @@ func main() {
 	if err != nil {
 		log.Fatal("Failed to dial the unix socket.", err)
 	}
+
 	defer connection.Close()
 
 	request := submissions.FetchUserPeekRequest{
