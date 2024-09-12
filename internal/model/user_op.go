@@ -64,7 +64,7 @@ type UserOpResult struct {
 	CommunicationError *LocatableError
 
 	// The following cleartext password was generated during this operation.
-	// Care should be taken to not expose their field.
+	// Care should be taken to not expose this field.
 	CleartextPassword string
 }
 

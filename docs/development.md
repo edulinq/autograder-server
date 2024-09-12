@@ -73,22 +73,27 @@ To test courses actions, these users are enrolled in various test courses.
 
 ## Locatable Errors
 
-We allocate top-level blocks of 1000 locators to different pacakges. See the list below for blocks that are already allocated locators.
-Within a top-level block, the top level package can allocate sub-blocks of locators to subpackages.
+All locators are negative numbers and only exist within `internal`.
+Each top-level package within `internal` can be allocated blocks of 1000 locators.
+See the table below for blocks that are already allocated locators.
+After being alloacted locators, the package can allocate sub-blocks of the locators to subpackages.
 Use `scripts/get_max_locators.sh` to determine the next locator to use within a certain package.
 If a package you are working on requires locatable errors, the package gets the next chunk of 1000 locators.
 Update this document to include the new top-level allocation.
 
+### Top-Level Package Allocations
+
+|Package    |Upper Bound |Lower Bound |
+|-----------|------------|------------|
+|API        |-001        |-999        |
+|Procedures |-1000       |-1999       |
+|LMS        |-2000       |-2999       |
+
 ### API Errors
 
-All API errors are locatable errors. We allocate 3 digit negative numbers (-001 to -999) as the locators for all API errors.
+All API errors are locatable errors.
+We allocate 3 digit negative numbers (-001 to -999) as the locators for all API errors.
 Within this range, each package in the API package is given a range of locators.
-
-### Top-level Allocations
-
-API:        -001  to -999
-Procedures: -1000 to -1999
-LMS:        -2000 to -2999
 
 ## API Notes
 

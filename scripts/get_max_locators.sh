@@ -7,12 +7,12 @@ readonly INTERNAL_DIR="${ROOT_DIR}/internal"
 function process_directory() {
     local path="$1"
 
-    local dir=$(basename "${path}")
-    local parent_dir=$(basename "$(dirname "${path}")")
+    local dirname=$(basename "${path}")
+    local parent_dirname=$(basename "$(dirname "${path}")")
 
-    local largestLocator=$(grep -RoP '("\-[0-9]{3,4}")' "${path}" 2>/dev/null | sed 's/^.*"\(-[0-9]\{3,4\}\)".*$/\1/' | sort | uniq | tail -n 1)
+    local largestLocator=$(grep -RoEh '("\-[0-9]{3,4}")' "${path}" 2>/dev/null | sed 's/^.*"\(-[0-9]\{3,4\}\)".*$/\1/' | sort | uniq | tail -n 1)
 
-    if [[ -z "${largestLocator}" ]]; then
+    if [[ -z "${largestLocator}" ]] ; then
         return 0
     fi
 
@@ -20,13 +20,13 @@ function process_directory() {
     local cleanLargestLocator=$(echo "${largestLocator}" | sed -E 's/-0+/-/g')
     local nextLocator=$(printf "%04d" "$((cleanLargestLocator - 1))")
 
-    echo -e "Package: $(printf "%-20s" "${parent_dir}/${dir}"),\tMax Locator: $(printf "%-5s" "${largestLocator}"),\tNext Locator: ${nextLocator}"
+    echo -e "Package: $(printf "%-20s" "${parent_dirname}/${dirname}"),\tMax Locator: $(printf "%-5s" "${largestLocator}"),\tNext Locator: ${nextLocator}"
 
     return 1
 }
 
 function main() {
-    if [[ $# -ne 0 ]]; then
+    if [[ $# -ne 0 ]] ; then
         echo "USAGE: $0"
         exit 1
     fi
@@ -38,15 +38,13 @@ function main() {
     for dir in "${INTERNAL_DIR}"/* ; do
         local found=0
         for path in "${dir}"/* ; do
-            if [[ -d "${path}" ]]; then
+            if [[ -d "${path}" ]] ; then
                 process_directory "${path}"
-                if [[ $? -eq 1 ]]; then
-                    found=1
-                fi
+                (( found += $? ))
             fi
         done
 
-        if [[ ${found} -eq 0 ]]; then
+        if [[ ${found} -eq 0 ]] ; then
             process_directory "${dir}"
         fi
     done
