@@ -10,18 +10,53 @@ import (
 	"github.com/edulinq/autograder/internal/util"
 )
 
-func TestNewUserInfos(test *testing.T) {
+func TestNewServerUserInfos(test *testing.T) {
 	users := db.MustGetServerUsers()
 
 	testCases := []struct {
-		toCourseUser   bool
-		serverUsers    []*model.ServerUser
-		serverExpected []*ServerUserInfo
-		courseExpected []*CourseUserInfo
+		serverUsers []*model.ServerUser
+		expected    []*ServerUserInfo
 	}{
+		// ServerUserInfo, no course information.
+		{
+			[]*model.ServerUser{
+				users["server-user@test.edulinq.org"],
+				users["server-admin@test.edulinq.org"],
+				users["server-owner@test.edulinq.org"],
+			},
+			[]*ServerUserInfo{
+				{
+					BaseUserInfo: BaseUserInfo{
+						Type:  ServerUserInfoType,
+						Email: "server-admin@test.edulinq.org",
+						Name:  "server-admin",
+					},
+					Role:    model.GetServerUserRole("admin"),
+					Courses: map[string]EnrollmentInfo{},
+				},
+				{
+					BaseUserInfo: BaseUserInfo{
+						Type:  ServerUserInfoType,
+						Email: "server-owner@test.edulinq.org",
+						Name:  "server-owner",
+					},
+					Role:    model.GetServerUserRole("owner"),
+					Courses: map[string]EnrollmentInfo{},
+				},
+				{
+					BaseUserInfo: BaseUserInfo{
+						Type:  ServerUserInfoType,
+						Email: "server-user@test.edulinq.org",
+						Name:  "server-user",
+					},
+					Role:    model.GetServerUserRole("user"),
+					Courses: map[string]EnrollmentInfo{},
+				},
+			},
+		},
+
 		// ServerUserInfos, course information.
 		{
-			false,
 			[]*model.ServerUser{
 				users["course-student@test.edulinq.org"],
 				users["course-admin@test.edulinq.org"],
@@ -29,7 +64,7 @@ func TestNewUserInfos(test *testing.T) {
 			},
 			[]*ServerUserInfo{
 				{
-					UserInfo: UserInfo{
+					BaseUserInfo: BaseUserInfo{
 						Type:  ServerUserInfoType,
 						Email: "course-admin@test.edulinq.org",
 						Name:  "course-admin",
@@ -64,7 +99,7 @@ func TestNewUserInfos(test *testing.T) {
 					},
 				},
 				{
-					UserInfo: UserInfo{
+					BaseUserInfo: BaseUserInfo{
 						Type:  ServerUserInfoType,
 						Email: "course-grader@test.edulinq.org",
 						Name:  "course-grader",
@@ -99,7 +134,7 @@ func TestNewUserInfos(test *testing.T) {
 					},
 				},
 				{
-					UserInfo: UserInfo{
+					BaseUserInfo: BaseUserInfo{
 						Type:  ServerUserInfoType,
 						Email: "course-student@test.edulinq.org",
 						Name:  "course-student",
@@ -134,61 +169,50 @@ func TestNewUserInfos(test *testing.T) {
 					},
 				},
 			},
-			nil,
 		},
+	}
 
-		// ServerUserInfo, no course information.
-		{
-			false,
-			[]*model.ServerUser{
-				users["server-user@test.edulinq.org"],
-				users["server-admin@test.edulinq.org"],
-				users["server-owner@test.edulinq.org"],
-			},
-			[]*ServerUserInfo{
-				{
-					UserInfo: UserInfo{
-						Type:  ServerUserInfoType,
-						Email: "server-admin@test.edulinq.org",
-						Name:  "server-admin",
-					},
-					Role:    model.GetServerUserRole("admin"),
-					Courses: map[string]EnrollmentInfo{},
-				},
-				{
-					UserInfo: UserInfo{
-						Type:  ServerUserInfoType,
-						Email: "server-owner@test.edulinq.org",
-						Name:  "server-owner",
-					},
-					Role:    model.GetServerUserRole("owner"),
-					Courses: map[string]EnrollmentInfo{},
-				},
-				{
-					UserInfo: UserInfo{
-						Type:  ServerUserInfoType,
-						Email: "server-user@test.edulinq.org",
-						Name:  "server-user",
-					},
-					Role:    model.GetServerUserRole("user"),
-					Courses: map[string]EnrollmentInfo{},
-				},
-			},
-			nil,
-		},
+	for i, testCase := range testCases {
+		serverUserInfos := make([]*ServerUserInfo, 0, len(testCase.serverUsers))
+		for _, user := range testCase.serverUsers {
+			serverUserInfos = append(serverUserInfos, MustNewServerUserInfo(user))
+		}
 
+		for _, serverUserInfo := range serverUserInfos {
+			if serverUserInfo.Type != ServerUserInfoType {
+				test.Errorf("Test %d: Unexpected server user info type. Expected: '%s', actual: '%s'.",
+					i, ServerUserInfoType, serverUserInfo.Type)
+				continue
+			}
+		}
+
+		slices.SortFunc(serverUserInfos, CompareServerUserInfoPointer)
+
+		if !reflect.DeepEqual(testCase.expected, serverUserInfos) {
+			test.Errorf("Test %d: Unexpected result. Expected: '%s', actual: '%s'.",
+				i, util.MustToJSONIndent(testCase.expected), util.MustToJSONIndent(serverUserInfos))
+			continue
+		}
+	}
+}
+
+func TestNewCourseUserInfos(test *testing.T) {
+	users := db.MustGetServerUsers()
+
+	testCases := []struct {
+		serverUsers []*model.ServerUser
+		expected    []*CourseUserInfo
+	}{
 		// CourseUserInfos, enrolled in course.
 		{
-			true,
 			[]*model.ServerUser{
 				users["course-student@test.edulinq.org"],
 				users["course-admin@test.edulinq.org"],
 				users["course-grader@test.edulinq.org"],
 			},
-			nil,
 			[]*CourseUserInfo{
 				{
-					UserInfo: UserInfo{
+					BaseUserInfo: BaseUserInfo{
 						Type:  CourseUserInfoType,
 						Email: "course-admin@test.edulinq.org",
 						Name:  "course-admin",
@@ -197,7 +221,7 @@ func TestNewUserInfos(test *testing.T) {
 					LMSID: "",
 				},
 				{
-					UserInfo: UserInfo{
+					BaseUserInfo: BaseUserInfo{
 						Type:  CourseUserInfoType,
 						Email: "course-grader@test.edulinq.org",
 						Name:  "course-grader",
@@ -206,7 +230,7 @@ func TestNewUserInfos(test *testing.T) {
 					LMSID: "",
 				},
 				{
-					UserInfo: UserInfo{
+					BaseUserInfo: BaseUserInfo{
 						Type:  CourseUserInfoType,
 						Email: "course-student@test.edulinq.org",
 						Name:  "course-student",
@@ -219,15 +243,13 @@ func TestNewUserInfos(test *testing.T) {
 
 		// CourseUserInfos, not enrolled, role escalation.
 		{
-			true,
 			[]*model.ServerUser{
 				users["server-admin@test.edulinq.org"],
 				users["server-owner@test.edulinq.org"],
 			},
-			nil,
 			[]*CourseUserInfo{
 				{
-					UserInfo: UserInfo{
+					BaseUserInfo: BaseUserInfo{
 						Type:  CourseUserInfoType,
 						Email: "server-admin@test.edulinq.org",
 						Name:  "server-admin",
@@ -236,7 +258,7 @@ func TestNewUserInfos(test *testing.T) {
 					LMSID: "",
 				},
 				{
-					UserInfo: UserInfo{
+					BaseUserInfo: BaseUserInfo{
 						Type:  CourseUserInfoType,
 						Email: "server-owner@test.edulinq.org",
 						Name:  "server-owner",
@@ -249,72 +271,47 @@ func TestNewUserInfos(test *testing.T) {
 
 		// CourseUserInfos, not enrolled, no role escalation.
 		{
-			true,
 			[]*model.ServerUser{
 				users["server-user@test.edulinq.org"],
 				users["server-creator@test.edulinq.org"],
 			},
-			nil,
 			[]*CourseUserInfo{},
 		},
 	}
 
 	for i, testCase := range testCases {
-		if !testCase.toCourseUser {
-			serverUserInfos := make([]*ServerUserInfo, 0, len(testCase.serverUsers))
-			for _, user := range testCase.serverUsers {
-				serverUserInfos = append(serverUserInfos, MustNewServerUserInfo(user))
-			}
-
-			for _, serverUserInfo := range serverUserInfos {
-				if serverUserInfo.Type != ServerUserInfoType {
-					test.Errorf("Test %d: Unexpected server user info type. Expected: '%s', actual: '%s'.",
-						i, ServerUserInfoType, serverUserInfo.Type)
-					continue
-				}
-			}
-
-			slices.SortFunc(serverUserInfos, CompareServerUserInfoPointer)
-
-			if !reflect.DeepEqual(testCase.serverExpected, serverUserInfos) {
-				test.Errorf("Test %d: Unexpected result. Expected: '%s', actual: '%s'.",
-					i, util.MustToJSONIndent(testCase.serverExpected), util.MustToJSONIndent(serverUserInfos))
+		courseUsers := make([]*model.CourseUser, 0, len(testCase.serverUsers))
+		for _, user := range testCase.serverUsers {
+			courseUser, err := user.ToCourseUser(db.TEST_COURSE_ID, true)
+			if err != nil {
+				test.Errorf("Test %d: Failed to convert a server user into a course user.", i)
 				continue
 			}
-		} else {
-			courseUsers := make([]*model.CourseUser, 0, len(testCase.serverUsers))
-			for _, user := range testCase.serverUsers {
-				courseUser, err := user.ToCourseUser(db.TEST_COURSE_ID, true)
-				if err != nil {
-					test.Errorf("Test %d: Failed to convert a server user into a course user.", i)
-					continue
-				}
 
-				if courseUser != nil {
-					courseUsers = append(courseUsers, courseUser)
-				}
+			if courseUser != nil {
+				courseUsers = append(courseUsers, courseUser)
 			}
+		}
 
-			courseUserInfos := make([]*CourseUserInfo, 0, len(courseUsers))
-			for _, courseUser := range courseUsers {
-				courseUserInfos = append(courseUserInfos, NewCourseUserInfo(courseUser))
-			}
+		courseUserInfos := make([]*CourseUserInfo, 0, len(courseUsers))
+		for _, courseUser := range courseUsers {
+			courseUserInfos = append(courseUserInfos, NewCourseUserInfo(courseUser))
+		}
 
-			for _, courseUserInfo := range courseUserInfos {
-				if courseUserInfo.Type != CourseUserInfoType {
-					test.Errorf("Test %d: Unexpected course user info type. Expected: '%s', actual: '%s'.",
-						i, CourseUserInfoType, courseUserInfo.Type)
-					continue
-				}
-			}
-
-			slices.SortFunc(courseUserInfos, CompareCourseUserInfoPointer)
-
-			if !reflect.DeepEqual(testCase.courseExpected, courseUserInfos) {
-				test.Errorf("Test %d: Unexpected result. Expected: '%s', actual: '%s'.",
-					i, util.MustToJSONIndent(testCase.courseExpected), util.MustToJSONIndent(courseUserInfos))
+		for _, courseUserInfo := range courseUserInfos {
+			if courseUserInfo.Type != CourseUserInfoType {
+				test.Errorf("Test %d: Unexpected course user info type. Expected: '%s', actual: '%s'.",
+					i, CourseUserInfoType, courseUserInfo.Type)
 				continue
 			}
+		}
+
+		slices.SortFunc(courseUserInfos, CompareCourseUserInfoPointer)
+
+		if !reflect.DeepEqual(testCase.expected, courseUserInfos) {
+			test.Errorf("Test %d: Unexpected result. Expected: '%s', actual: '%s'.",
+				i, util.MustToJSONIndent(testCase.expected), util.MustToJSONIndent(courseUserInfos))
+			continue
 		}
 	}
 }

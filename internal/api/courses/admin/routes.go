@@ -1,4 +1,4 @@
-package assignments
+package admin
 
 // All the API endpoints handled by this package.
 
@@ -7,8 +7,7 @@ import (
 )
 
 var routes []*core.Route = []*core.Route{
-	core.NewAPIRoute(core.NewEndpoint(`courses/assignments/get`), HandleGet),
-	core.NewAPIRoute(core.NewEndpoint(`courses/assignments/list`), HandleList),
+	core.NewAPIRoute(core.NewEndpoint(`courses/admin/update`), HandleUpdate),
 }
 
 func GetRoutes() *[]*core.Route {
