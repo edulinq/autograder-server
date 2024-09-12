@@ -85,15 +85,15 @@ Update this document to include the new top-level allocation.
 
 |Package    |Upper Bound |Lower Bound |
 |-----------|------------|------------|
-|API        |-001        |-999        |
-|Procedures |-1000       |-1999       |
-|LMS        |-2000       |-2999       |
+|api        |-001        |-999        |
+|procedures |-1000       |-1999       |
+|lms        |-2000       |-2999       |
 
 ### API Errors
 
 All API errors are locatable errors.
 We allocate 3 digit negative numbers (-001 to -999) as the locators for all API errors.
-Within this range, each package in the API package is given a range of locators.
+Within this range, each package in the API package is given a range of 100 locators.
 
 ## API Notes
 
