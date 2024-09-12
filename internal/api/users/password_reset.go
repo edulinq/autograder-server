@@ -38,8 +38,10 @@ func HandlePasswordReset(request *PasswordResetRequest) (*PasswordResetResponse,
 	}
 
 	userOp := &model.UserOpResult{
-		Email:             string(request.UserEmail),
-		Modified:          true,
+		BaseUserOpResult: model.BaseUserOpResult{
+			Email:    string(request.UserEmail),
+			Modified: true,
+		},
 		CleartextPassword: cleartext,
 	}
 

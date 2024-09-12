@@ -18,7 +18,7 @@ func TestUpsert(test *testing.T) {
 		email     string
 		permError bool
 		options   *users.UpsertUsersOptions
-		expected  []*model.UserOpResponse
+		expected  []*model.ExternalUserOpResult
 	}{
 		// Valid permissions.
 		// New user without course.
@@ -36,11 +36,13 @@ func TestUpsert(test *testing.T) {
 				},
 				SendEmails: true,
 			},
-			expected: []*model.UserOpResponse{
-				&model.UserOpResponse{
-					Email:   "new@test.edulinq.org",
-					Added:   true,
-					Emailed: true,
+			expected: []*model.ExternalUserOpResult{
+				&model.ExternalUserOpResult{
+					BaseUserOpResult: model.BaseUserOpResult{
+						Email:   "new@test.edulinq.org",
+						Added:   true,
+						Emailed: true,
+					},
 				},
 			},
 		},
@@ -63,12 +65,14 @@ func TestUpsert(test *testing.T) {
 				},
 				SendEmails: true,
 			},
-			expected: []*model.UserOpResponse{
-				&model.UserOpResponse{
-					Email:    "new@test.edulinq.org",
-					Added:    true,
-					Emailed:  true,
-					Enrolled: []string{"new-course"},
+			expected: []*model.ExternalUserOpResult{
+				&model.ExternalUserOpResult{
+					BaseUserOpResult: model.BaseUserOpResult{
+						Email:    "new@test.edulinq.org",
+						Added:    true,
+						Emailed:  true,
+						Enrolled: []string{"new-course"},
+					},
 				},
 			},
 		},
@@ -86,10 +90,12 @@ func TestUpsert(test *testing.T) {
 				},
 				SendEmails: true,
 			},
-			expected: []*model.UserOpResponse{
-				&model.UserOpResponse{
-					Email:    "course-student@test.edulinq.org",
-					Modified: true,
+			expected: []*model.ExternalUserOpResult{
+				&model.ExternalUserOpResult{
+					BaseUserOpResult: model.BaseUserOpResult{
+						Email:    "course-student@test.edulinq.org",
+						Modified: true,
+					},
 				},
 			},
 		},
@@ -109,12 +115,14 @@ func TestUpsert(test *testing.T) {
 				},
 				SendEmails: true,
 			},
-			expected: []*model.UserOpResponse{
-				&model.UserOpResponse{
-					Email:    "course-student@test.edulinq.org",
-					Modified: true,
-					Emailed:  true,
-					Enrolled: []string{"new-course"},
+			expected: []*model.ExternalUserOpResult{
+				&model.ExternalUserOpResult{
+					BaseUserOpResult: model.BaseUserOpResult{
+						Email:    "course-student@test.edulinq.org",
+						Modified: true,
+						Emailed:  true,
+						Enrolled: []string{"new-course"},
+					},
 				},
 			},
 		},
@@ -122,6 +130,7 @@ func TestUpsert(test *testing.T) {
 		// Invalid permissions.
 		{"server-user", true, &users.UpsertUsersOptions{}, nil},
 		{"server-creator", true, &users.UpsertUsersOptions{}, nil},
+		{"course-admin", true, &users.UpsertUsersOptions{}, nil},
 	}
 
 	for i, testCase := range testCases {

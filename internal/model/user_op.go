@@ -2,42 +2,49 @@ package model
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/edulinq/autograder/internal/util"
 )
 
 // A general representation of the result of operations that modify a user in any way (add, remove, enroll, drop, etc).
-// All user-facing functions (essentially non-db functions) should return an instance or collection of these objects.
-type UserOpResult struct {
+type BaseUserOpResult struct {
 	// The email/id of the target user.
-	Email string
+	Email string `json:"email"`
 
 	// The user was added to the server.
-	Added bool
+	Added bool `json:"added,omitempty"`
 
 	// The user existed before this operation and was edited (including enrollment changes).
-	Modified bool
+	Modified bool `json:"modified,omitempty"`
 
 	// The user existed before this operation and was removed.
-	Removed bool
+	Removed bool `json:"removed,omitempty"`
 
 	// The user was skipped (often because they already exist).
-	Skipped bool
+	Skipped bool `json:"skipped,omitempty"`
 
 	// The user did not exist before this operation and does not exist after.
 	// This may also be an error depending on the semantics of the operation.
-	NotExists bool
+	NotExists bool `json:"not-exists,omitempty"`
 
 	// The user was emailed during the course of this operation.
 	// This is more than just GetEmail() was called, an actual email was sent
 	// (or would have been sent if this operation was during a dry-run).
-	Emailed bool
+	Emailed bool `json:"emailed,omitempty"`
 
 	// The user was enrolled in the following courses (by id).
-	Enrolled []string
+	Enrolled []string `json:"enrolled,omitempty"`
 
 	// The user was removed from the following courses (by id).
-	Dropped []string
+	Dropped []string `json:"dropped,omitempty"`
+}
+
+// A general representation of the result of operations that modify a user in any way (add, remove, enroll, drop, etc).
+// All user-facing functions (essentially non-db functions) should return an instance or collection of these objects.
+type UserOpResult struct {
+	// Embed BaseUserOpResult for basic fields, see above.
+	BaseUserOpResult
 
 	// The following error occurred during this operation because of the provided data,
 	// i.e., they are caused by the calling user.
@@ -64,33 +71,18 @@ type UserOpResult struct {
 // A user safe representation of the UserOpResult struct.
 // Notably all errors will be converted to responses and the cleartext password field is removed.
 // For descriptions of shared fields, see UserOpResult above.
-type UserOpResponse struct {
-	Email string `json:"email"`
-
-	Added bool `json:"added,omitempty"`
-
-	Modified bool `json:"modified,omitempty"`
-
-	Removed bool `json:"removed,omitempty"`
-
-	Skipped bool `json:"skipped,omitempty"`
-
-	NotExists bool `json:"not-exists,omitempty"`
-
-	Emailed bool `json:"emailed,omitempty"`
-
-	Enrolled []string `json:"enrolled,omitempty"`
-
-	Dropped []string `json:"dropped,omitempty"`
+type ExternalUserOpResult struct {
+	// Embed BaseUserOpResult for basic fields, see above.
+	BaseUserOpResult
 
 	// A user safe representation of a validation error, which will not include a locator.
-	ValidationError *LocatableErrorResponse `json:"validation-error,omitempty"`
+	ValidationError *ExternalLocatableError `json:"validation-error,omitempty"`
 
 	// A user safe representation of a system error.
-	SystemError *LocatableErrorResponse `json:"system-error,omitempty"`
+	SystemError *ExternalLocatableError `json:"system-error,omitempty"`
 
 	// A user safe representation of a communication error.
-	CommunicationError *LocatableErrorResponse `json:"communication-error,omitempty"`
+	CommunicationError *ExternalLocatableError `json:"communication-error,omitempty"`
 }
 
 // A struct containg counts summarizing results.
@@ -115,14 +107,18 @@ type UserOpResultsCounts struct {
 
 func NewUserOpResultValidationError(locator string, email string, err error) *UserOpResult {
 	return &UserOpResult{
-		Email:           email,
+		BaseUserOpResult: BaseUserOpResult{
+			Email: email,
+		},
 		ValidationError: NewLocatableError(locator, true, err.Error(), fmt.Sprintf("You have insufficient permissions for the requested operation.")),
 	}
 }
 
 func NewUserOpResultSystemError(locator string, email string, err error) *UserOpResult {
 	return &UserOpResult{
-		Email: email,
+		BaseUserOpResult: BaseUserOpResult{
+			Email: email,
+		},
 		SystemError: NewLocatableError(locator, false, err.Error(),
 			fmt.Sprintf("The server failed to process your request. Please contact an administrator with this ID '%s'.", locator)),
 	}
@@ -139,55 +135,47 @@ func (this *UserOpResult) MustClone() *UserOpResult {
 	return &clone
 }
 
-func (this *UserOpResult) ToResponse() *UserOpResponse {
-	var valErrorResponse, sysErrorResponse, commErrorResponse *LocatableErrorResponse
+func (this *UserOpResult) ToResponse() *ExternalUserOpResult {
+	var externalValError, externalSysError, externalCommError *ExternalLocatableError
 
 	if this.ValidationError != nil {
-		valErrorResponse = this.ValidationError.ToResponse()
+		externalValError = this.ValidationError.ToExternalError()
 	}
 
 	if this.SystemError != nil {
-		sysErrorResponse = this.SystemError.ToResponse()
+		externalSysError = this.SystemError.ToExternalError()
 	}
 
 	if this.CommunicationError != nil {
-		commErrorResponse = this.CommunicationError.ToResponse()
+		externalCommError = this.CommunicationError.ToExternalError()
 	}
 
-	return &UserOpResponse{
-		Email:              this.Email,
-		Added:              this.Added,
-		Modified:           this.Modified,
-		Removed:            this.Removed,
-		Skipped:            this.Skipped,
-		NotExists:          this.NotExists,
-		Emailed:            this.Emailed,
-		Enrolled:           this.Enrolled,
-		Dropped:            this.Dropped,
-		ValidationError:    valErrorResponse,
-		SystemError:        sysErrorResponse,
-		CommunicationError: commErrorResponse,
+	return &ExternalUserOpResult{
+		BaseUserOpResult:   this.BaseUserOpResult,
+		ValidationError:    externalValError,
+		SystemError:        externalSysError,
+		CommunicationError: externalCommError,
 	}
 }
 
-func CompareUserOpResponsePointer(a *UserOpResponse, b *UserOpResponse) int {
-    if a == b {
-        return 0
-    }
+func CompareExternalUserOpResultPointer(a *ExternalUserOpResult, b *ExternalUserOpResult) int {
+	if a == b {
+		return 0
+	}
 
-    if a == nil {
-        return 1
-    }
+	if a == nil {
+		return 1
+	}
 
-    if b == nil {
-        return -1
-    }
+	if b == nil {
+		return -1
+	}
 
-    return CompareUserOpResponse(*a, *b)
+	return CompareExternalUserOpResult(*a, *b)
 }
 
-func CompareUserOpResponse(a UserOpResponse, b UserOpResponse) int {
-    return strings.Compare(a.Email, b.Email)
+func CompareExternalUserOpResult(a ExternalUserOpResult, b ExternalUserOpResult) int {
+	return strings.Compare(a.Email, b.Email)
 }
 
 func GetUserOpResultsCounts(results []*UserOpResult) *UserOpResultsCounts {

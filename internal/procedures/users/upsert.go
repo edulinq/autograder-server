@@ -97,8 +97,10 @@ func upsertUser(options UpsertUsersOptions, index int) *model.UserOpResult {
 	// This user was skipped.
 	if result == nil {
 		return &model.UserOpResult{
-			Email:   newUser.Email,
-			Skipped: true,
+			BaseUserOpResult: model.BaseUserOpResult{
+				Email:   newUser.Email,
+				Skipped: true,
+			},
 		}
 	}
 
@@ -115,8 +117,10 @@ func insertUser(user *model.ServerUser, options UpsertUsersOptions, rawData *mod
 	}
 
 	result = &model.UserOpResult{
-		Email: user.Email,
-		Added: true,
+		BaseUserOpResult: model.BaseUserOpResult{
+			Email: user.Email,
+			Added: true,
+		},
 	}
 
 	// New users need authnetication information.
@@ -184,9 +188,11 @@ func updateUser(newUser *model.ServerUser, user *model.ServerUser, options Upser
 	}
 
 	result = &model.UserOpResult{
-		Email:    user.Email,
-		Modified: changed,
-		Enrolled: enrolledCourses,
+		BaseUserOpResult: model.BaseUserOpResult{
+			Email:    user.Email,
+			Modified: changed,
+			Enrolled: enrolledCourses,
+		},
 	}
 
 	return result

@@ -2,7 +2,6 @@ package users
 
 import (
 	"slices"
-	"strings"
 
 	"github.com/edulinq/autograder/internal/api/core"
 	"github.com/edulinq/autograder/internal/model"
@@ -17,7 +16,7 @@ type UpsertRequest struct {
 }
 
 type UpsertResponse struct {
-	Results []*model.UserOpResponse `json:"results"`
+	Results []*model.ExternalUserOpResult `json:"results"`
 }
 
 func HandleUpsert(request *UpsertRequest) (*UpsertResponse, *core.APIError) {
@@ -27,12 +26,12 @@ func HandleUpsert(request *UpsertRequest) (*UpsertResponse, *core.APIError) {
 	results := users.UpsertUsers(request.UpsertUsersOptions)
 
 	var response UpsertResponse
-	// Convert UserOpResults to user friendly UserOpResponses.
+	// Convert UserOpResults to user friendly ExternalUserOpResults.
 	for _, result := range results {
 		response.Results = append(response.Results, result.ToResponse())
 	}
 
-	slices.SortFunc(response.Results, model.CompareUserOpResponsePointer)
+	slices.SortFunc(response.Results, model.CompareExternalUserOpResultPointer)
 
 	return &response, nil
 }

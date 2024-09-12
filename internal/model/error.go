@@ -15,7 +15,10 @@ type LocatableError struct {
 	ExternalMessage string
 }
 
-type LocatableErrorResponse struct {
+// A user safe version of locatable errors.
+// All LocatableErrors must be converted to ExternalLocatableErrors
+// if it is to be given to a user.
+type ExternalLocatableError struct {
 	Locator string `json:"locator"`
 	Message string `json:"message"`
 }
@@ -23,20 +26,20 @@ type LocatableErrorResponse struct {
 func NewLocatableError(locator string, hideLocator bool, internalMessage string, externalMessage string) *LocatableError {
 	return &LocatableError{
 		Locator:         locator,
-		HideLocator:       hideLocator,
+		HideLocator:     hideLocator,
 		InternalMessage: internalMessage,
 		ExternalMessage: externalMessage,
 	}
 }
 
-func (this *LocatableError) ToResponse() *LocatableErrorResponse {
-	// Remove the locator for authentication errors.
+func (this *LocatableError) ToExternalError() *ExternalLocatableError {
+	// Hide the locator if necessary.
 	locator := this.Locator
 	if this.HideLocator {
 		locator = ""
 	}
 
-	return &LocatableErrorResponse{
+	return &ExternalLocatableError{
 		Locator: locator,
 		Message: this.ExternalMessage,
 	}
