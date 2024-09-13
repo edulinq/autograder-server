@@ -60,7 +60,7 @@ func TestPeekBase(test *testing.T) {
 		}
 
 		if exitCode != testCase.expectedExitCode {
-			test.Errorf("Unexpected exit code. Expected: %d, Got: %d", testCase.expectedExitCode, exitCode)
+			test.Errorf("Unexpected exit code. Expected: %d, Actual: %d", testCase.expectedExitCode, exitCode)
 			continue
 		}
 
