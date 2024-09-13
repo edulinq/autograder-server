@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net"
-	"os"
 
 	"github.com/alecthomas/kong"
 
@@ -94,7 +93,7 @@ func main() {
 
 		fmt.Println(output)
 
-		os.Exit(2)
+		util.Exit(2)
 	}
 
 	if args.ShortForm {

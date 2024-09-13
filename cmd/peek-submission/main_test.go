@@ -21,13 +21,18 @@ func TestPeekBase(test *testing.T) {
 		assignmentID        string
 		targetSubmission    string
 		expectedSubmimssion string
+		expectedExitCode    int
 	}{
-		{"course-student@test.edulinq.org", "course101", "hw0", "", "1697406272"},
-		{"course-student@test.edulinq.org", "course101", "hw0", "1697406272", "1697406272"},
-		{"course-student@test.edulinq.org", "course101", "hw0", "course101::hw0::student@test.com::1697406256", "1697406256"},
+		{"course-student@test.edulinq.org", "course101", "hw0", "", "1697406272", 0},
+		{"course-student@test.edulinq.org", "course101", "hw0", "1697406272", "1697406272", 0},
+		{"course-student@test.edulinq.org", "course101", "hw0", "course101::hw0::student@test.com::1697406256", "1697406256", 0},
 
-		{"course-admin@test.edulinq.org", "course101", "hw0", "", ""},
-		{"course-student@test.edulinq.org", "course101", "hw0", "ZZZ", ""},
+		{"course-admin@test.edulinq.org", "course101", "hw0", "", "", 0},
+		{"course-student@test.edulinq.org", "course101", "hw0", "ZZZ", "", 0},
+
+		{"course-student@test.edulinq.org", "ZZZ", "hw0", "", "", 2},
+		{"course-student@test.edulinq.org", "course101", "ZZZ", "", "", 2},
+		{"course-student@test.edulinq.org", "ZZZ", "ZZZ", "", "", 2},
 	}
 
 	for i, testCase := range testCases {
@@ -38,6 +43,11 @@ func TestPeekBase(test *testing.T) {
 			testCase.targetSubmission,
 		}
 
+		var exitCode int
+		util.Exit = func(code int) {
+			exitCode = code
+		}
+
 		stdout, stderr, err := cmd.RunCMDTest(test, main, args)
 		if err != nil {
 			test.Errorf("Case %d: CMD run returned an error: '%v'.", i, err)
@@ -46,6 +56,15 @@ func TestPeekBase(test *testing.T) {
 
 		if len(stderr) > 0 {
 			test.Errorf("Case %d: CMD has content in stderr: '%s'.", i, stderr)
+			continue
+		}
+
+		if exitCode != testCase.expectedExitCode {
+			test.Errorf("Unexpected exit code. Expected: %d, Got: %d", testCase.expectedExitCode, exitCode)
+			continue
+		}
+
+		if testCase.expectedExitCode != 0 {
 			continue
 		}
 
