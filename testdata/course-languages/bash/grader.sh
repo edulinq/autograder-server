@@ -19,7 +19,7 @@ function main() {
     if [[ ! -d $(dirname "${outputPath}") ]] ; then
         outputPath="$(basename "${outputPath}")"
     fi
-    
+
     # Run grader.
     grade "${outputPath}"
     if [[ $? -ne 0 ]] ; then
@@ -33,10 +33,10 @@ function main() {
 function grade() {
     # Source the student's assignment file.
     source "${THIS_DIR}/assignment.sh"
-    
+
     local score=10
     local message=""
-    
+
     test_add 1 2 3 "basic" || { score=$((score-2)); message+="Missed test case 'basic'. "; }
     test_add 0 2 2 "one zero" || { score=$((score-2)); message+="Missed test case 'one zero'. "; }
     test_add 0 0 0 "all zero" || { score=$((score-2)); message+="Missed test case 'all zero'. "; }

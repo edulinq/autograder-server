@@ -1,12 +1,10 @@
-package common
+package log
 
 import (
 	"reflect"
 	"testing"
-	"time"
 
-	"github.com/edulinq/autograder/internal/log"
-	"github.com/edulinq/autograder/internal/util"
+	"github.com/edulinq/autograder/internal/timestamp"
 )
 
 const ASSIGNMENT_ID = "exists"
@@ -19,7 +17,7 @@ func TestLogQueryBase(test *testing.T) {
 		replaceTime bool
 	}{
 		{
-			RawLogQuery{},
+			RawLogQuery{AfterString: "0"},
 			ParsedLogQuery{},
 			[]string{},
 			false,
@@ -27,7 +25,7 @@ func TestLogQueryBase(test *testing.T) {
 
 		{
 			RawLogQuery{
-				LevelString: log.LEVEL_STRING_INFO,
+				LevelString: LEVEL_STRING_INFO,
 			},
 			ParsedLogQuery{},
 			[]string{},
@@ -35,10 +33,10 @@ func TestLogQueryBase(test *testing.T) {
 		},
 		{
 			RawLogQuery{
-				LevelString: log.LEVEL_STRING_DEBUG,
+				LevelString: LEVEL_STRING_DEBUG,
 			},
 			ParsedLogQuery{
-				Level: log.LevelDebug,
+				Level: LevelDebug,
 			},
 			[]string{},
 			false,
@@ -57,7 +55,7 @@ func TestLogQueryBase(test *testing.T) {
 				AfterString: "2000-01-02T03:04:05Z",
 			},
 			ParsedLogQuery{
-				After: MustTimestampFromString("2000-01-02T03:04:05Z").MustTime(),
+				After: timestamp.MustGuessFromString("2000-01-02T03:04:05Z"),
 			},
 			[]string{},
 			false,
@@ -66,10 +64,10 @@ func TestLogQueryBase(test *testing.T) {
 			RawLogQuery{
 				AfterString: "2000-01-02",
 			},
-			ParsedLogQuery{},
-			[]string{
-				`Could not parse 'after' component of log query ('2000-01-02'): 'Failed to parse timestamp string '2000-01-02': 'parsing time "2000-01-02" as "2006-01-02T15:04:05Z07:00": cannot parse "" as "T"'.'.`,
+			ParsedLogQuery{
+				After: timestamp.MustGuessFromString("2000-01-02T00:00:00Z"),
 			},
+			[]string{},
 			false,
 		},
 
@@ -78,7 +76,7 @@ func TestLogQueryBase(test *testing.T) {
 				PastString: "24h",
 			},
 			ParsedLogQuery{
-				After: MustTimestampFromString("2000-01-02T03:04:05Z").MustTime(),
+				After: timestamp.MustGuessFromString("2000-01-02T03:04:05Z"),
 			},
 			[]string{},
 			// Do not try to match the actual time (it will be flaky), just replace it.
@@ -111,7 +109,7 @@ func TestLogQueryBase(test *testing.T) {
 				PastString:  "24h",
 			},
 			ParsedLogQuery{
-				After: MustTimestampFromString("2000-01-02T03:04:05Z").MustTime(),
+				After: timestamp.MustGuessFromString("2000-01-02T03:04:05Z"),
 			},
 			[]string{},
 			// Do not try to match the actual time (it will be flaky), just replace it.
@@ -128,24 +126,26 @@ func TestLogQueryBase(test *testing.T) {
 			[]string{},
 			false,
 		},
+		// Will be handled by validation (not parsing).
 		{
 			RawLogQuery{
 				AssignmentID: "!!!",
 			},
-			ParsedLogQuery{},
-			[]string{
-				"Could not parse 'assignment' component of log query ('!!!'): 'IDs must only have letters, digits, and single sequences of periods, underscores, and hyphens, found '!!!'.'.",
+			ParsedLogQuery{
+				AssignmentID: "!!!",
 			},
+			[]string{},
 			false,
 		},
+		// Will be handled by validation (not parsing).
 		{
 			RawLogQuery{
 				AssignmentID: "ZZZ",
 			},
-			ParsedLogQuery{},
-			[]string{
-				"Unknown assignment given for 'assignment' component of log query ('ZZZ').",
+			ParsedLogQuery{
+				AssignmentID: "ZZZ",
 			},
+			[]string{},
 			false,
 		},
 
@@ -162,11 +162,11 @@ func TestLogQueryBase(test *testing.T) {
 	}
 
 	for i, testCase := range testCases {
-		actual, errors := testCase.query.ParseStrings(fakeCourse{})
+		actual, errors := testCase.query.ParseStrings()
 
 		if !reflect.DeepEqual(testCase.errors, errors) {
-			test.Fatalf("Case %d: Errors not as expected. Expected: '%s', Actual: '%s'.", i,
-				util.MustToJSONIndent(testCase.errors), util.MustToJSONIndent(errors))
+			test.Fatalf("Case %d: Errors not as expected. Expected: '%v', Actual: '%v'.", i,
+				testCase.errors, errors)
 		}
 
 		if testCase.replaceTime {
@@ -174,41 +174,35 @@ func TestLogQueryBase(test *testing.T) {
 		}
 
 		if testCase.expected != *actual {
-			test.Fatalf("Case %d: Parsed query not as expected. Expected: '%s', Actual: '%s'.", i,
-				util.MustToJSONIndent(testCase.expected), util.MustToJSONIndent(*actual))
+			test.Fatalf("Case %d: Parsed query not as expected. Expected: '%v', Actual: '%v'.", i,
+				testCase.expected, *actual)
 		}
 	}
 }
 
 func TestLogQueryParseTiming(test *testing.T) {
-	now := MustTimestampFromString("2000-01-02T03:04:05Z").MustTime()
+	now := timestamp.MustGuessFromString("2000-01-02T03:04:05Z")
 
 	testCases := []struct {
 		afterString string
 		pastString  string
-		expected    time.Time
+		expected    timestamp.Timestamp
 	}{
-		{"", "", time.Time{}},
-		{"2000-01-01T03:04:05Z", "", MustTimestampFromString("2000-01-01T03:04:05Z").MustTime()},
-		{"", "24h", MustTimestampFromString("2000-01-01T03:04:05Z").MustTime()},
-		{"2000-01-01T03:04:05Z", "1h", MustTimestampFromString("2000-01-02T02:04:05Z").MustTime()},
+		{"", "", timestamp.Zero()},
+		{"2000-01-01T03:04:05Z", "", timestamp.MustGuessFromString("2000-01-01T03:04:05Z")},
+		{"", "24h", timestamp.MustGuessFromString("2000-01-01T03:04:05Z")},
+		{"2000-01-01T03:04:05Z", "1h", timestamp.MustGuessFromString("2000-01-02T02:04:05Z")},
 	}
 
 	for i, testCase := range testCases {
-		actual, err := ParseLogQueryTiming(now, testCase.afterString, testCase.pastString)
+		actual, err := parseLogQueryTiming(now, testCase.afterString, testCase.pastString)
 		if err != nil {
 			test.Fatalf("Case %d: Unexpected error: '%v'.", i, err)
 		}
 
-		if !testCase.expected.Equal(actual) {
+		if testCase.expected != actual {
 			test.Fatalf("Case %d: Time mismatch. Expected: '%s', Actual: '%s'.", i,
-				testCase.expected.String(), actual.String())
+				testCase.expected.SafeString(), actual.SafeString())
 		}
 	}
-}
-
-type fakeCourse struct{}
-
-func (this fakeCourse) HasAssignment(id string) bool {
-	return (id == ASSIGNMENT_ID)
 }

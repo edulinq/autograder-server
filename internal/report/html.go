@@ -94,7 +94,7 @@ var assignmentReportTemplate string = `
         <div class='ag-header'>
             <h2>Assignment: {{ .AssignmentName }}</h2>
             <p>Number of Submissions: {{ .NumberOfSubmissions }}</p>
-            <p>Latest Submission: {{ .LatestSubmission.ShouldPrettyString }}</p>
+            <p>Latest Submission: {{ .LatestSubmission.UnsafePrettyString }}</p>
         </div>
         <div class='ag-body'>
             <table>

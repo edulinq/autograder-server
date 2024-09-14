@@ -9,6 +9,7 @@ import (
 	"github.com/edulinq/autograder/internal/common"
 	"github.com/edulinq/autograder/internal/docker"
 	"github.com/edulinq/autograder/internal/log"
+	"github.com/edulinq/autograder/internal/timestamp"
 	"github.com/edulinq/autograder/internal/util"
 )
 
@@ -22,8 +23,8 @@ type Assignment struct {
 	Name   string `json:"name"`
 	SortID string `json:"sort-id,omitempty"`
 
-	DueDate   common.Timestamp `json:"due-date,omitempty"`
-	MaxPoints float64          `json:"max-points,omitempty"`
+	DueDate   *timestamp.Timestamp `json:"due-date,omitempty"`
+	MaxPoints float64              `json:"max-points,omitempty"`
 
 	LMSID      string             `json:"lms-id,omitempty"`
 	LatePolicy *LateGradingPolicy `json:"late-policy,omitempty"`
@@ -111,11 +112,6 @@ func (this *Assignment) Validate() error {
 	this.ID, err = common.ValidateID(this.ID)
 	if err != nil {
 		return err
-	}
-
-	err = this.DueDate.Validate()
-	if err != nil {
-		return fmt.Errorf("Due date is not a valid timestamp: '%w'.", err)
 	}
 
 	if this.MaxPoints < 0.0 {

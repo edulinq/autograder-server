@@ -4,22 +4,22 @@ import (
 	"fmt"
 	"math"
 	"strings"
-	"time"
 
 	"github.com/edulinq/autograder/internal/common"
 	"github.com/edulinq/autograder/internal/lms"
 	"github.com/edulinq/autograder/internal/lms/lmstypes"
 	"github.com/edulinq/autograder/internal/log"
 	"github.com/edulinq/autograder/internal/model"
+	"github.com/edulinq/autograder/internal/timestamp"
 	"github.com/edulinq/autograder/internal/util"
 )
 
 const LATE_DAYS_STRUCT_VERSION = "1.0.0"
 
 type LateDaysInfo struct {
-	AvailableDays int              `json:"available-days"`
-	UploadTime    common.Timestamp `json:"upload-time"`
-	AllocatedDays map[string]int   `json:"allocated-days"`
+	AvailableDays int                 `json:"available-days"`
+	UploadTime    timestamp.Timestamp `json:"upload-time"`
+	AllocatedDays map[string]int      `json:"allocated-days"`
 
 	// A distinct key so we can recognize this as an autograder object.
 	AutograderStructVersion string `json:"__autograder__version__"`
@@ -87,16 +87,9 @@ func ApplyLatePolicy(
 }
 
 // Apply a common policy.
-func applyBaselinePolicy(assignment *model.Assignment, policy model.LateGradingPolicy, users map[string]*model.CourseUser, scores map[string]*model.ScoringInfo, dueDate time.Time) {
+func applyBaselinePolicy(assignment *model.Assignment, policy model.LateGradingPolicy, users map[string]*model.CourseUser, scores map[string]*model.ScoringInfo, dueDate timestamp.Timestamp) {
 	for email, score := range scores {
-		scoreTime, err := score.SubmissionTime.Time()
-		if err != nil {
-			log.Warn("Cannot parse score time.", err, assignment, log.NewUserAttr(email))
-			score.Reject = true
-			continue
-		}
-
-		score.NumDaysLate = computeLateDays(dueDate, scoreTime)
+		score.NumDaysLate = computeLateDays(dueDate, score.SubmissionTime)
 
 		_, ok := users[email]
 		if !ok {
@@ -189,7 +182,7 @@ func applyLateDaysPolicy(
 		if allocatedDays != lateDaysToUse {
 			lateDays.AvailableDays = lateDaysAvailable - lateDaysToUse
 			lateDays.AllocatedDays[assignment.GetID()] = lateDaysToUse
-			lateDays.UploadTime = common.NowTimestamp()
+			lateDays.UploadTime = timestamp.Now()
 
 			lateDaysToUpdate[studentLMSID] = lateDays
 		}
@@ -215,15 +208,10 @@ func updateLateDays(policy model.LateGradingPolicy, assignment *model.Assignment
 			})
 		}
 
-		instance, err := lateInfo.UploadTime.Time()
-		if err != nil {
-			return fmt.Errorf("Failed to convert upload time: '%w'.", err)
-		}
-
 		gradeInfo := lmstypes.SubmissionScore{
 			UserID:   lmsUserID,
 			Score:    float64(lateInfo.AvailableDays),
-			Time:     instance,
+			Time:     &lateInfo.UploadTime,
 			Comments: uploadComments,
 		}
 
@@ -317,7 +305,7 @@ func fetchLateDays(policy model.LateGradingPolicy, assignment *model.Assignment)
 		}
 
 		info.AvailableDays = postedLateDays
-		info.UploadTime = common.NowTimestamp()
+		info.UploadTime = timestamp.Now()
 		info.AutograderStructVersion = LATE_DAYS_STRUCT_VERSION
 
 		lateDays[lmsLateDaysScore.UserID] = &info
@@ -326,10 +314,13 @@ func fetchLateDays(policy model.LateGradingPolicy, assignment *model.Assignment)
 	return lateDays, nil
 }
 
-func computeLateDays(dueDate time.Time, submissionTime time.Time) int {
-	if dueDate.After(submissionTime) {
+func computeLateDays(dueDate timestamp.Timestamp, submissionTime timestamp.Timestamp) int {
+	if dueDate >= submissionTime {
 		return 0
 	}
 
-	return int(math.Ceil(submissionTime.Sub(dueDate).Hours() / 24.0))
+	delta := submissionTime.ToMSecs() - dueDate.ToMSecs()
+
+	// Convert delta (msecs) to seconds -> minutes -> hours -> days.
+	return int(delta / 1000.0 / 60.0 / 60.0 / 24.0)
 }

@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/edulinq/autograder/internal/common"
 	"github.com/edulinq/autograder/internal/log"
 	"github.com/edulinq/autograder/internal/model"
+	"github.com/edulinq/autograder/internal/timestamp"
 	"github.com/edulinq/autograder/internal/util"
 )
 
@@ -39,7 +39,7 @@ type APIError struct {
 	RequestID    string
 	Locator      string
 	Endpoint     string
-	Timestamp    common.Timestamp
+	Timestamp    timestamp.Timestamp
 	LogLevel     log.LogLevel
 	HTTPStatus   int
 	InternalText string
@@ -65,7 +65,7 @@ func (this *APIError) Log() {
 		log.NewAttr("api-request-id", this.RequestID),
 		log.NewAttr("locator", this.Locator),
 		log.NewAttr("api-endpoint", this.Endpoint),
-		log.NewAttr("timestamp", this.Timestamp.String()),
+		log.NewAttr("timestamp", this.Timestamp),
 		log.NewAttr("http-status", this.HTTPStatus),
 		log.NewAttr("internal-text", this.InternalText),
 		log.NewAttr("response-text", this.ResponseText))
@@ -140,7 +140,7 @@ func (this *APIError) ToResponse() *APIResponse {
 		Locator:        locator,
 		ServerVersion:  util.GetAutograderFullVersion(),
 		StartTimestamp: this.Timestamp,
-		EndTimestamp:   common.NowTimestamp(),
+		EndTimestamp:   timestamp.Now(),
 		HTTPStatus:     this.HTTPStatus,
 		Success:        (this.HTTPStatus == HTTP_STATUS_GOOD),
 		Message:        this.ResponseText,
@@ -186,7 +186,7 @@ func NewBareBadRequestError(locator string, endpoint string, message string) *AP
 		RequestID:    locator,
 		Locator:      locator,
 		Endpoint:     endpoint,
-		Timestamp:    common.NowTimestamp(),
+		Timestamp:    timestamp.Now(),
 		LogLevel:     log.LevelInfo,
 		HTTPStatus:   HTTP_STATUS_BAD_REQUEST,
 		InternalText: message,
@@ -303,7 +303,7 @@ func NewBareInternalError(locator string, endpoint string, internalMessage strin
 		RequestID:    locator,
 		Locator:      locator,
 		Endpoint:     endpoint,
-		Timestamp:    common.NowTimestamp(),
+		Timestamp:    timestamp.Now(),
 		LogLevel:     log.LevelError,
 		HTTPStatus:   HTTP_STATUS_SERVER_ERROR,
 		InternalText: internalMessage,

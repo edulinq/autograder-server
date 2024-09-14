@@ -9,11 +9,12 @@ import (
 	"github.com/edulinq/autograder/internal/api/core"
 	"github.com/edulinq/autograder/internal/db"
 	"github.com/edulinq/autograder/internal/log"
+	"github.com/edulinq/autograder/internal/timestamp"
 	"github.com/edulinq/autograder/internal/util"
 )
 
 func TestFetchLogs(test *testing.T) {
-	timeBeforeLogs := time.Now().Format(time.RFC3339)
+	timeBeforeLogs := timestamp.Now()
 
 	oldValue := log.SetBackgroundLogging(false)
 	defer log.SetBackgroundLogging(oldValue)
@@ -79,7 +80,7 @@ func TestFetchLogs(test *testing.T) {
 		},
 	}
 
-	timeAfterLogs := time.Now().Add(10 * time.Second).Format(time.RFC3339)
+	timeAfterLogs := timestamp.FromMSecs(timestamp.Now().ToMSecs() + (10 * 1000))
 
 	testCases := []struct {
 		email           string
@@ -96,14 +97,12 @@ func TestFetchLogs(test *testing.T) {
 		{"course-admin", false, "", "", "", "", nil, allRecords[2:]},
 		{"course-admin", false, "trace", "", "", "", nil, allRecords},
 
-		{"course-admin", false, "", timeBeforeLogs, "", "", nil, allRecords[2:]},
-		{"course-admin", false, "", timeAfterLogs, "", "", nil, []*log.Record{}},
+		{"course-admin", false, "", timeBeforeLogs.SafeString(), "", "", nil, allRecords[2:]},
+		{"course-admin", false, "", timeAfterLogs.SafeString(), "", "", nil, []*log.Record{}},
 
 		// Parse Errors.
 		{"course-admin", false, "ZZZ", "", "", "", []string{"Could not parse 'level' component of log query ('ZZZ'): 'Unknown log level 'ZZZ'.'."}, nil},
-		{"course-admin", false, "", "ZZZ", "", "", []string{`Could not parse 'after' component of log query ('ZZZ'): 'Failed to parse timestamp string 'ZZZ': 'parsing time "ZZZ" as "2006-01-02T15:04:05Z07:00": cannot parse "ZZZ" as "2006"'.'.`}, nil},
-		{"course-admin", false, "", "", "!ZZZ", "", []string{"Could not parse 'assignment' component of log query ('!ZZZ'): 'IDs must only have letters, digits, and single sequences of periods, underscores, and hyphens, found '!zzz'.'."}, nil},
-		{"course-admin", false, "", "", "ZZZ", "", []string{"Unknown assignment given for 'assignment' component of log query ('ZZZ')."}, nil},
+		{"course-admin", false, "", "ZZZ", "", "", []string{`Could not parse 'after' component of log query ('ZZZ'): 'Could not guess time 'ZZZ'.'.`}, nil},
 		{"course-admin", false, "", "", "", "ZZZ", []string{"Could not find user: 'ZZZ'."}, nil},
 	}
 
@@ -152,7 +151,7 @@ func TestFetchLogs(test *testing.T) {
 
 		// Remove timestamps.
 		for _, record := range responseContent.Records {
-			record.UnixMicro = 0
+			record.Timestamp = timestamp.Zero()
 		}
 
 		// Filter out records not related to this test.

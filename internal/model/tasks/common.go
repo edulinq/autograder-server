@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"strings"
 	"sync"
-	"time"
 
 	"github.com/edulinq/autograder/internal/common"
 	"github.com/edulinq/autograder/internal/config"
@@ -27,7 +26,7 @@ type ScheduledTask interface {
 	GetTimes() []*common.ScheduledTime
 	// Get the minimum time between task runs.
 	// The boolean return will be false if there are no times (infinite durtion).
-	GetMinDuration() (time.Duration, bool)
+	GetMinDurationMS() (int64, bool)
 	String() string
 	Validate(TaskCourse) error
 	GetLock() *sync.Mutex
@@ -60,20 +59,20 @@ func (this *BaseTask) GetTimes() []*common.ScheduledTime {
 	return this.When
 }
 
-func (this *BaseTask) GetMinDuration() (time.Duration, bool) {
+func (this *BaseTask) GetMinDurationMS() (int64, bool) {
 	if len(this.When) == 0 {
-		return time.Duration(0), false
+		return 0, false
 	}
 
 	var minDuration int64 = -1
 	for _, when := range this.When {
-		duration := when.TotalNanosecs()
+		duration := when.TotalMSecs()
 		if (minDuration < 0) || (duration < minDuration) {
 			minDuration = duration
 		}
 	}
 
-	return time.Duration(minDuration), true
+	return minDuration, true
 }
 
 func (this *BaseTask) String() string {

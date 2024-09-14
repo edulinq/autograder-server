@@ -3,7 +3,7 @@ package core
 import (
 	"reflect"
 
-	"github.com/edulinq/autograder/internal/common"
+	"github.com/edulinq/autograder/internal/timestamp"
 	"github.com/edulinq/autograder/internal/util"
 )
 
@@ -12,8 +12,8 @@ type APIResponse struct {
 	Locator       string `json:"locator"`
 	ServerVersion string `json:"server-version"`
 
-	StartTimestamp common.Timestamp `json:"start-timestamp"`
-	EndTimestamp   common.Timestamp `json:"end-timestamp"`
+	StartTimestamp timestamp.Timestamp `json:"start-timestamp"`
+	EndTimestamp   timestamp.Timestamp `json:"end-timestamp"`
 
 	HTTPStatus int  `json:"status"`
 	Success    bool `json:"success"`
@@ -27,13 +27,13 @@ func (this *APIResponse) String() string {
 }
 
 func NewAPIResponse(request ValidAPIRequest, content any) *APIResponse {
-	id, timestamp := getRequestInfo(request)
+	id, startTime := getRequestInfo(request)
 
 	return &APIResponse{
 		ID:             id,
 		ServerVersion:  util.GetAutograderFullVersion(),
-		StartTimestamp: timestamp,
-		EndTimestamp:   common.NowTimestamp(),
+		StartTimestamp: startTime,
+		EndTimestamp:   timestamp.Now(),
 		HTTPStatus:     HTTP_STATUS_GOOD,
 		Success:        true,
 		Message:        "",
@@ -42,12 +42,12 @@ func NewAPIResponse(request ValidAPIRequest, content any) *APIResponse {
 }
 
 // Reflexively get the request ID and timestamp from a request.
-func getRequestInfo(request ValidAPIRequest) (string, common.Timestamp) {
+func getRequestInfo(request ValidAPIRequest) (string, timestamp.Timestamp) {
 	id := ""
-	timestamp := common.NowTimestamp()
+	startTime := timestamp.Now()
 
 	if request == nil {
-		return id, timestamp
+		return id, startTime
 	}
 
 	reflectValue := reflect.ValueOf(request).Elem()
@@ -59,8 +59,8 @@ func getRequestInfo(request ValidAPIRequest) (string, common.Timestamp) {
 
 	timestampValue := reflectValue.FieldByName("Timestamp")
 	if timestampValue.IsValid() {
-		timestamp = timestampValue.Interface().(common.Timestamp)
+		startTime = timestampValue.Interface().(timestamp.Timestamp)
 	}
 
-	return id, timestamp
+	return id, startTime
 }

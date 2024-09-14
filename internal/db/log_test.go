@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/edulinq/autograder/internal/log"
+	"github.com/edulinq/autograder/internal/timestamp"
 	"github.com/edulinq/autograder/internal/util"
 )
 
@@ -73,7 +74,7 @@ func (this *DBTests) DBTestGetLogsLevel(test *testing.T) {
 	}
 
 	for i, level := range levels {
-		records, err := GetLogRecords(level, time.Time{}, "", "", "")
+		records, err := GetLogRecords(level, timestamp.Zero(), "", "", "")
 		if err != nil {
 			test.Errorf("Level '%s': Failed to get log records: '%v'.", level.String(), err)
 			continue
@@ -81,7 +82,7 @@ func (this *DBTests) DBTestGetLogsLevel(test *testing.T) {
 
 		// Remove the timestamp.
 		for _, record := range records {
-			record.UnixMicro = 0
+			record.Timestamp = timestamp.Zero()
 		}
 
 		expectedRecords := allRecords[i:len(allRecords)]
@@ -111,19 +112,19 @@ func (this *DBTests) DBTestGetLogsTime(test *testing.T) {
 	log.SetLevels(log.LevelOff, log.LevelTrace)
 	defer log.SetLevelFatal()
 
-	beginning := time.Now()
+	beginning := timestamp.Now()
 	time.Sleep(2 * time.Millisecond)
 
 	log.Info("A")
 	time.Sleep(2 * time.Millisecond)
 
-	middle := time.Now()
+	middle := timestamp.Now()
 	time.Sleep(2 * time.Millisecond)
 
 	log.Info("B")
 
 	time.Sleep(2 * time.Millisecond)
-	end := time.Now()
+	end := timestamp.Now()
 
 	allRecords := []*log.Record{
 		&log.Record{
@@ -142,7 +143,7 @@ func (this *DBTests) DBTestGetLogsTime(test *testing.T) {
 		},
 	}
 
-	times := []time.Time{
+	times := []timestamp.Timestamp{
 		beginning, middle, end,
 	}
 
@@ -155,7 +156,7 @@ func (this *DBTests) DBTestGetLogsTime(test *testing.T) {
 
 		// Remove the timestamp.
 		for _, record := range records {
-			record.UnixMicro = 0
+			record.Timestamp = timestamp.Zero()
 		}
 
 		expectedRecords := allRecords[i:len(allRecords)]
@@ -199,7 +200,7 @@ func (this *DBTests) DBTestGetLogsContext(test *testing.T) {
 	}
 
 	for i, testCase := range testCases {
-		records, err := GetLogRecords(log.LevelTrace, time.Time{}, testCase.courseID, testCase.assignmentID, testCase.userID)
+		records, err := GetLogRecords(log.LevelTrace, timestamp.Zero(), testCase.courseID, testCase.assignmentID, testCase.userID)
 		if err != nil {
 			test.Errorf("Case %d: Failed to get log records: '%v'.", i, err)
 			continue
@@ -207,7 +208,7 @@ func (this *DBTests) DBTestGetLogsContext(test *testing.T) {
 
 		// Remove the timestamp.
 		for _, record := range records {
-			record.UnixMicro = 0
+			record.Timestamp = timestamp.Zero()
 		}
 
 		if len(testCase.expectedRecords) != len(records) {

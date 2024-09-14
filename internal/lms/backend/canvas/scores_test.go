@@ -1,8 +1,8 @@
 package canvas
 
 import (
+	"reflect"
 	"testing"
-	"time"
 
 	"github.com/edulinq/autograder/internal/lms/lmstypes"
 	"github.com/edulinq/autograder/internal/util"
@@ -11,12 +11,12 @@ import (
 var testScore lmstypes.SubmissionScore = lmstypes.SubmissionScore{
 	UserID: "00040",
 	Score:  100.0,
-	Time:   time.Time{},
+	Time:   nil,
 	Comments: []*lmstypes.SubmissionComment{
 		&lmstypes.SubmissionComment{
 			ID:     "0987654",
 			Author: "7827",
-			Text:   "{\n\"id\": \"course101::hw0::course-student@test.edulinq.org::1696364768\",\n\"submission-time\": \"2023-10-03T20:26:08.951546Z\",\n\"upload-time\": \"2023-10-07T13:04:54.412979316-05:00\",\n\"raw-score\": 100,\n\"score\": 100,\n\"lock\": false,\n\"late-date-usage\": 0,\n\"num-days-late\": 0,\n\"reject\": false,\n\"__autograder__v01__\": 0\n}",
+			Text:   "{\n\"id\": \"course101::hw0::course-student@test.edulinq.org::1696364768\",\n\"submission-time\":1234,\n\"upload-time\":1235,\n\"raw-score\": 100,\n\"score\": 100,\n\"lock\": false,\n\"late-date-usage\": 0,\n\"num-days-late\": 0,\n\"reject\": false,\n\"__autograder__v01__\": 0\n}",
 			Time:   "",
 		},
 	},
@@ -28,14 +28,9 @@ func TestFetchAssignmentScoreBase(test *testing.T) {
 		test.Fatalf("Failed to fetch assignment score: '%v'.", err)
 	}
 
-	// Can't compare directly because of time.Time.
-	// Use JSON instead.
-	expectedJSON := util.MustToJSONIndent(testScore)
-	actualJSON := util.MustToJSONIndent(score)
-
-	if expectedJSON != actualJSON {
+	if !reflect.DeepEqual(&testScore, score) {
 		test.Fatalf("Score not as expected. Expected: '%s', Actual: '%s'.",
-			expectedJSON, actualJSON)
+			util.MustToJSONIndent(testScore), util.MustToJSONIndent(score))
 	}
 }
 
@@ -51,13 +46,8 @@ func TestFetchAssignmentScoresBase(test *testing.T) {
 		&testScore,
 	}
 
-	// Can't compare directly because of time.Time.
-	// Use JSON instead.
-	expectedJSON := util.MustToJSONIndent(expected)
-	actualJSON := util.MustToJSONIndent(scores)
-
-	if expectedJSON != actualJSON {
+	if !reflect.DeepEqual(expected, scores) {
 		test.Fatalf("Scores not as expected. Expected: '%s', Actual: '%s'.",
-			expectedJSON, actualJSON)
+			util.MustToJSONIndent(expected), util.MustToJSONIndent(scores))
 	}
 }

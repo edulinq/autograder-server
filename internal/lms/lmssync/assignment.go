@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/edulinq/autograder/internal/common"
 	"github.com/edulinq/autograder/internal/db"
 	"github.com/edulinq/autograder/internal/lms"
 	"github.com/edulinq/autograder/internal/lms/lmstypes"
@@ -100,8 +99,8 @@ func mergeAssignment(localAssignment *model.Assignment, lmsAssignment *lmstypes.
 		changed = true
 	}
 
-	if localAssignment.DueDate.IsZero() && (lmsAssignment.DueDate != nil) && !lmsAssignment.DueDate.IsZero() {
-		localAssignment.DueDate = common.TimestampFromTime(*lmsAssignment.DueDate)
+	if (localAssignment.DueDate == nil) && (lmsAssignment.DueDate != nil) {
+		localAssignment.DueDate = lmsAssignment.DueDate
 		changed = true
 	}
 

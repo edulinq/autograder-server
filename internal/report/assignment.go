@@ -2,13 +2,12 @@ package report
 
 import (
 	"fmt"
-	"time"
 
 	"gonum.org/v1/gonum/stat"
 
-	"github.com/edulinq/autograder/internal/common"
 	"github.com/edulinq/autograder/internal/db"
 	"github.com/edulinq/autograder/internal/model"
+	"github.com/edulinq/autograder/internal/timestamp"
 	"github.com/edulinq/autograder/internal/util"
 )
 
@@ -19,7 +18,7 @@ const (
 type AssignmentScoringReport struct {
 	AssignmentName      string                        `json:"assignment-name"`
 	NumberOfSubmissions int                           `json:"number-of-submissions"`
-	LatestSubmission    common.Timestamp              `json:"latest-submission"`
+	LatestSubmission    timestamp.Timestamp           `json:"latest-submission"`
 	Questions           []*ScoringReportQuestionStats `json:"questions"`
 }
 
@@ -77,35 +76,30 @@ func GetAssignmentScoringReport(assignment *model.Assignment) (*AssignmentScorin
 	report := AssignmentScoringReport{
 		AssignmentName:      assignment.GetName(),
 		NumberOfSubmissions: numSubmissions,
-		LatestSubmission:    common.TimestampFromTime(lastSubmissionTime),
+		LatestSubmission:    lastSubmissionTime,
 		Questions:           questions,
 	}
 
 	return &report, nil
 }
 
-func fetchScores(assignment *model.Assignment) ([]string, map[string][]float64, time.Time, error) {
+func fetchScores(assignment *model.Assignment) ([]string, map[string][]float64, timestamp.Timestamp, error) {
 	results, err := db.GetRecentSubmissions(assignment, model.CourseRoleStudent)
 	if err != nil {
-		return nil, nil, time.Time{}, fmt.Errorf("Failed to get recent submission results: '%w'.", err)
+		return nil, nil, timestamp.Zero(), fmt.Errorf("Failed to get recent submission results: '%w'.", err)
 	}
 
 	questionNames := make([]string, 0)
 	scores := make(map[string][]float64)
-	lastSubmissionTime := time.Time{}
+	lastSubmissionTime := timestamp.Zero()
 
 	for _, result := range results {
 		if result == nil {
 			continue
 		}
 
-		resultTime, err := result.GradingStartTime.Time()
-		if err != nil {
-			return nil, nil, time.Time{}, fmt.Errorf("Failed to get submission result time: '%w'.", err)
-		}
-
-		if resultTime.After(lastSubmissionTime) {
-			lastSubmissionTime = resultTime
+		if result.GradingStartTime > lastSubmissionTime {
+			lastSubmissionTime = result.GradingStartTime
 		}
 
 		if len(questionNames) == 0 {

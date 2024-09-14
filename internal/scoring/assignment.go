@@ -3,7 +3,6 @@ package scoring
 import (
 	"fmt"
 	"strings"
-	"time"
 
 	"github.com/edulinq/autograder/internal/common"
 	"github.com/edulinq/autograder/internal/db"
@@ -11,6 +10,7 @@ import (
 	"github.com/edulinq/autograder/internal/lms/lmstypes"
 	"github.com/edulinq/autograder/internal/log"
 	"github.com/edulinq/autograder/internal/model"
+	"github.com/edulinq/autograder/internal/timestamp"
 	"github.com/edulinq/autograder/internal/util"
 )
 
@@ -156,7 +156,7 @@ func filterFinalScores(
 			continue
 		}
 
-		scoringInfo.UploadTime = common.NowTimestamp()
+		scoringInfo.UploadTime = timestamp.Now()
 
 		// Check the existing comment last so we can decide if this comment needs to be updated.
 		existingComment := existingComments[lmsID]
@@ -191,16 +191,10 @@ func filterFinalScores(
 			}
 		}
 
-		scoringTime, err := scoringInfo.SubmissionTime.Time()
-		if err != nil {
-			log.Warn("Failed to get scoring time, using now.", err, assignment, log.NewUserAttr(email))
-			scoringTime = time.Now()
-		}
-
 		lmsScore := lmstypes.SubmissionScore{
 			UserID:   lmsID,
 			Score:    scoringInfo.Score,
-			Time:     scoringTime,
+			Time:     &scoringInfo.SubmissionTime,
 			Comments: uploadComments,
 		}
 

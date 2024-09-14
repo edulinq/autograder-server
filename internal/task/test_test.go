@@ -9,6 +9,7 @@ import (
 	"github.com/edulinq/autograder/internal/config"
 	"github.com/edulinq/autograder/internal/db"
 	"github.com/edulinq/autograder/internal/model/tasks"
+	"github.com/edulinq/autograder/internal/timestamp"
 )
 
 func TestTaskBase(test *testing.T) {
@@ -20,7 +21,7 @@ func TestTaskBase(test *testing.T) {
 	config.TASK_MIN_REST_SECS.Set(-1)
 	defer config.TASK_MIN_REST_SECS.Set(oldRestTime)
 
-	count := runTestTask(test, 5)
+	count := runTestTask(test, 1)
 
 	if count <= 1 {
 		test.Fatalf("Not enough test tasks were run (%d run). (It's possible for this to be flaky on a very busy machine).", count)
@@ -37,7 +38,7 @@ func TestTaskSkipRecent(test *testing.T) {
 	config.TASK_MIN_REST_SECS.Set(10 * 60)
 	defer config.TASK_MIN_REST_SECS.Set(oldRestTime)
 
-	count := runTestTask(test, 5)
+	count := runTestTask(test, 1)
 
 	if count != 1 {
 		test.Fatalf("Incorrect number of runs. Expected exactly 1, got %d.", count)
@@ -56,7 +57,7 @@ func TestTaskCatchup(test *testing.T) {
 
 	// Set the last run for this task to be far in the past
 	// (but not a zero time).
-	err := db.LogTaskCompletion("course101", "course101::test", time.Time{}.Add(time.Second))
+	err := db.LogTaskCompletion("course101", "course101::test", timestamp.Timestamp(1))
 	if err != nil {
 		test.Fatalf("Failed to log task completion: '%v'.", err)
 	}
@@ -81,7 +82,7 @@ func TestTaskNoCatchup(test *testing.T) {
 	defer config.TASK_MIN_REST_SECS.Set(oldRestTime)
 
 	// Set the last run for this task to be right now.
-	err := db.LogTaskCompletion("course101", "course101::test", time.Now())
+	err := db.LogTaskCompletion("course101", "course101::test", timestamp.Now())
 	if err != nil {
 		test.Fatalf("Failed to log task completion: '%v'.", err)
 	}
@@ -113,7 +114,7 @@ func TestPanic(test *testing.T) {
 
 // Run a basic test task.
 // Return the number of times the task was run.
-func runTestTask(test *testing.T, everyUSecs int64) int {
+func runTestTask(test *testing.T, everyMSecs int64) int {
 	counter := make(chan int, 100)
 
 	function := func(payload any) error {
@@ -122,10 +123,10 @@ func runTestTask(test *testing.T, everyUSecs int64) int {
 		return nil
 	}
 
-	return runTestTaskWithFun(test, everyUSecs, counter, function)
+	return runTestTaskWithFun(test, everyMSecs, counter, function)
 }
 
-func runTestTaskWithFun(test *testing.T, everyUSecs int64, counter chan int, baseFunction func(any) error) int {
+func runTestTaskWithFun(test *testing.T, everyMSecs int64, counter chan int, baseFunction func(any) error) int {
 	defer StopAll()
 
 	course := db.MustGetTestCourse()
@@ -155,7 +156,7 @@ func runTestTaskWithFun(test *testing.T, everyUSecs int64, counter chan int, bas
 			When: []*common.ScheduledTime{
 				&common.ScheduledTime{
 					Every: common.DurationSpec{
-						Microseconds: everyUSecs,
+						Milliseconds: everyMSecs,
 					},
 				},
 			},
@@ -176,7 +177,7 @@ func runTestTaskWithFun(test *testing.T, everyUSecs int64, counter chan int, bas
 	}
 
 	// Schedule a timer to trigger the wait group in case the task is never fired.
-	zeroTimer := time.AfterFunc(250*time.Microsecond, func() {
+	zeroTimer := time.AfterFunc(10*time.Millisecond, func() {
 		signalWaitGroup.Do(signalWaitGroupFunction)
 	})
 
@@ -186,8 +187,8 @@ func runTestTaskWithFun(test *testing.T, everyUSecs int64, counter chan int, bas
 	// Stop the timer if the task has fired (or if the timer fired).
 	zeroTimer.Stop()
 
-	// Wait for the task to fuinish.
-	time.Sleep(1000 * time.Microsecond)
+	// Wait for the task to finish.
+	time.Sleep(10 * time.Millisecond)
 
 	// Stop the task.
 	StopCourse(course.GetID())
