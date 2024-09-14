@@ -203,12 +203,13 @@ func (this *Course) GetCacheDir() string {
 }
 
 func (this *Course) HasAssignment(id string) bool {
-	_, ok := this.Assignments[id]
-	return ok
+	return (this.GetAssignment(id) != nil)
 }
 
 // Get an assignment, or nil if the assignment does not exist.
 func (this *Course) GetAssignment(id string) *Assignment {
+	id, _ = common.ValidateID(id)
+
 	assignment, ok := this.Assignments[id]
 	if !ok {
 		return nil

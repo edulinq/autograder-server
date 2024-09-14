@@ -167,7 +167,7 @@ type Backend interface {
 
 	// Get any logs that that match the specific requirements.
 	// Each parameter (except for the log level) can be passed with a zero value, in which case it will not be used for filtering.
-	GetLogRecords(level log.LogLevel, after timestamp.Timestamp, courseID string, assignmentID string, userID string) ([]*log.Record, error)
+	GetLogRecords(query log.ParsedLogQuery) ([]*log.Record, error)
 }
 
 func Open() error {

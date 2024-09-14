@@ -28,7 +28,7 @@ type ParsedLogQuery struct {
 	After        timestamp.Timestamp
 	CourseID     string
 	AssignmentID string
-	UserID       string
+	UserEmail    string
 }
 
 // Parse a raw log query and return a version with clean attributes.
@@ -55,7 +55,7 @@ func (this RawLogQuery) Parse() (*ParsedLogQuery, []error) {
 		errs = append(errs, err)
 	}
 
-	parsed.UserID = this.TargetUser
+	parsed.UserEmail = this.TargetUser
 
 	return &parsed, errs
 }
@@ -192,7 +192,7 @@ func (this ParsedLogQuery) String() string {
 	}
 	builder.WriteString(fmt.Sprintf(", Assignment: '%s'", assignment))
 
-	user := this.UserID
+	user := this.UserEmail
 	if user == "" {
 		user = "< all users >"
 	}

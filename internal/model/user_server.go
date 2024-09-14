@@ -159,6 +159,11 @@ func (this *ServerUser) GetCourseRole(courseID string) CourseUserRole {
 	return info.Role
 }
 
+func (this *ServerUser) IsEnrolled(courseID string) bool {
+	_, exists := this.CourseInfo[courseID]
+	return exists
+}
+
 // Convert this server user into a course user for the specific course.
 // Set escalateServerAdmin to true if high level server users should be escalated to a course owner.
 // Will return (nil, nil) if the user is not escalated and not enrolled in the given course.
