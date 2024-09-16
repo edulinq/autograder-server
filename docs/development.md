@@ -71,6 +71,30 @@ Users prefixed with "course-" (i.e. "course-owner@test.edulinq.org") are used to
 All of these users are given the standard server role, which is server user.
 To test courses actions, these users are enrolled in various test courses.
 
+## Locatable Errors
+
+All locators are negative numbers and only exist within `internal`.
+Each top-level package within `internal` can be allocated blocks of 1000 locators.
+See the table below for blocks that are already allocated locators.
+After being alloacted locators, the package can allocate sub-blocks of the locators to subpackages.
+Use `scripts/get_max_locators.sh` to determine the next locator to use within a certain package.
+If a package you are working on requires locatable errors, the package gets the next chunk of 1000 locators.
+Update this document to include the new top-level allocation.
+
+### Top-Level Package Allocations
+
+|Package    |Upper Bound |Lower Bound |
+|-----------|------------|------------|
+|api        |-001        |-999        |
+|procedures |-1000       |-1999       |
+|lms        |-2000       |-2999       |
+
+### API Errors
+
+All API errors are locatable errors.
+We allocate 3 digit negative numbers (-001 to -999) as the locators for all API errors.
+Within this range, each package in the API package is given a range of 100 locators.
+
 ## API Notes
 
 ### Passwords/Tokens
