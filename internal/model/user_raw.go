@@ -16,6 +16,41 @@ type RawUserData struct {
 	CourseLMSID string `json:"course-lms-id" help:"LMS ID for the new user in the specified course."`
 }
 
+// Raw/dirty data for a course user.
+// This struct is used for raw data coming from a single course.
+type RawCourseUserData struct {
+	Email       string `json:"email"`
+	Name        string `json:"name"`
+	CourseRole  string `json:"course-role"`
+	CourseLMSID string `json:"course-lms-id"`
+}
+
+func (this *RawCourseUserData) ToRawUserData(course *Course) *RawUserData {
+	rawUserData := &RawUserData{
+		Email:       this.Email,
+		Name:        this.Name,
+		Role:        "",
+		Pass:        "",
+		Course:      course.GetID(),
+		CourseRole:  this.CourseRole,
+		CourseLMSID: this.CourseLMSID,
+	}
+
+	return rawUserData
+}
+
+func ToRawUserDatas(rawCourseUsers []*RawCourseUserData, course *Course) []*RawUserData {
+	rawUsers := make([]*RawUserData, 0, len(rawCourseUsers))
+
+	for _, rawCourseUser := range rawCourseUsers {
+		if rawCourseUser != nil {
+			rawUsers = append(rawUsers, rawCourseUser.ToRawUserData(course))
+		}
+	}
+
+	return rawUsers
+}
+
 // Get a server user representation of this data.
 // Passwords will NOT be converted into tokens (as the source salt is unknown).
 func (this *RawUserData) ToServerUser() (*ServerUser, error) {
