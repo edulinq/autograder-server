@@ -192,7 +192,7 @@ func TestEnroll(test *testing.T) {
 			},
 		},
 
-		// Update user without course.
+		// Update user server info without course.
 		{
 			email:     "course-owner",
 			permError: false,
@@ -201,6 +201,35 @@ func TestEnroll(test *testing.T) {
 				&model.RawCourseUserData{
 					Email: "course-student@test.edulinq.org",
 					Name:  "new",
+				},
+			},
+			sendEmails:  true,
+			skipInserts: false,
+			skipUpdates: false,
+			dryRun:      false,
+			expected: []*model.ExternalUserOpResult{
+				&model.ExternalUserOpResult{
+					BaseUserOpResult: model.BaseUserOpResult{
+						Email: "course-student@test.edulinq.org",
+					},
+					ValidationError: &model.ExternalLocatableError{
+						Locator: "",
+						Message: VALIDATION_ERROR_EXTERNAL_MESSAGE,
+					},
+				},
+			},
+		},
+
+		// Update user server info, name, with course (enroll).
+		{
+			email:     "course-owner",
+			permError: false,
+			locator:   "",
+			rawCourseUsers: []*model.RawCourseUserData{
+				&model.RawCourseUserData{
+					Email:      "course-student@test.edulinq.org",
+					Name:       "new",
+					CourseRole: model.GetCourseUserRoleString(model.CourseRoleStudent),
 				},
 			},
 			sendEmails:  true,
