@@ -14,7 +14,7 @@ func TestList(test *testing.T) {
 	course := db.MustGetCourse(db.TEST_COURSE_ID)
 	usersMap, err := db.GetCourseUsers(course)
 	if err != nil {
-		test.Fatalf("Unable to get course users.")
+		test.Fatalf("Unable to get course users: '%w'.", err)
 	}
 
 	users := make([]*model.CourseUser, 0, len(usersMap))
