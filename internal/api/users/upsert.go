@@ -28,7 +28,7 @@ func HandleUpsert(request *UpsertRequest) (*UpsertResponse, *core.APIError) {
 	var response UpsertResponse
 	// Convert UserOpResults to user friendly ExternalUserOpResults.
 	for _, result := range results {
-		response.Results = append(response.Results, result.ToResponse())
+		response.Results = append(response.Results, result.ToExternalResult())
 	}
 
 	slices.SortFunc(response.Results, model.CompareExternalUserOpResultPointer)

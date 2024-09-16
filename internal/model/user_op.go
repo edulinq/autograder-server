@@ -135,7 +135,7 @@ func (this *UserOpResult) MustClone() *UserOpResult {
 	return &clone
 }
 
-func (this *UserOpResult) ToResponse() *ExternalUserOpResult {
+func (this *UserOpResult) ToExternalResult() *ExternalUserOpResult {
 	var externalValError, externalSysError, externalCommError *ExternalLocatableError
 
 	if this.ValidationError != nil {
