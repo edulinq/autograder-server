@@ -12,7 +12,7 @@ import (
 )
 
 // Run the autograder server and listen on an http and unix socket.
-func StartServer() (err error) {
+func RunServer() (err error) {
 	err = common.WriteAndHandleStatusFile()
 	if err != nil {
 		return err

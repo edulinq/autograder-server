@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"net"
 
@@ -22,7 +21,7 @@ var args struct {
 	CourseID         string `help:"ID of the course." arg:""`
 	AssignmentID     string `help:"ID of the assignment." arg:""`
 	TargetSubmission string `help:"ID of the submission. Defaults to the latest submission." arg:"" optional:""`
-	ShortForm        bool   `help:"Use short form output." long:"short-form"`
+	Short            bool   `help:"Use short form output."`
 }
 
 func main() {
@@ -80,14 +79,11 @@ func main() {
 	}
 
 	var response core.APIResponse
-	err = json.Unmarshal(responseBuffer, &response)
-	if err != nil {
-		log.Fatal("Failed to unmarshal the API response.", err)
-	}
+	util.MustJSONFromBytes(responseBuffer, &response)
 
 	if !response.Success {
 		output := response.Message
-		if !args.ShortForm {
+		if !args.Short {
 			output = util.MustToJSONIndent(response)
 		}
 
@@ -96,7 +92,7 @@ func main() {
 		util.Exit(2)
 	}
 
-	if args.ShortForm {
+	if args.Short {
 		var responseContent submissions.FetchUserPeekResponse
 		util.MustJSONFromString(util.MustToJSON(response.Content), &responseContent)
 		fmt.Println(util.MustToJSONIndent(responseContent))

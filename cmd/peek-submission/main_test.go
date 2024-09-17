@@ -43,10 +43,7 @@ func TestPeekBase(test *testing.T) {
 			testCase.targetSubmission,
 		}
 
-		var exitCode int
-		util.Exit = func(code int) {
-			exitCode = code
-		}
+		util.ShouldExit = false
 
 		stdout, stderr, err := cmd.RunCMDTest(test, main, args)
 		if err != nil {
@@ -59,8 +56,9 @@ func TestPeekBase(test *testing.T) {
 			continue
 		}
 
-		if exitCode != testCase.expectedExitCode {
-			test.Errorf("Unexpected exit code. Expected: %d, Actual: %d", testCase.expectedExitCode, exitCode)
+		actualExitCode := util.GetLastExitCode()
+		if actualExitCode != testCase.expectedExitCode {
+			test.Errorf("Case %d: Unexpected exit code. Expected: %d, Actual: %d", i, testCase.expectedExitCode, actualExitCode)
 			continue
 		}
 

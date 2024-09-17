@@ -37,7 +37,7 @@ func CMDServerTestingMain(suite *testing.M) {
 
 		go func() {
 			serverRun.Done()
-			server.StartServer()
+			server.RunServer()
 		}()
 		defer server.StopServer()
 

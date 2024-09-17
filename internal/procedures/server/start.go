@@ -27,7 +27,7 @@ func Start() (err error) {
 		err = errors.Join(err, db.Close())
 	}()
 
-	log.Info("Running server with working directory.", log.NewAttr("dir", config.GetWorkDir()))
+	log.Debug("Running server with working directory.", log.NewAttr("dir", config.GetWorkDir()))
 
 	_, err = db.AddCourses()
 	if err != nil {
@@ -39,7 +39,7 @@ func Start() (err error) {
 		return fmt.Errorf("Failed to get courses: '%w'.", err)
 	}
 
-	log.Info("Loaded course(s).", log.NewAttr("count", len(courses)))
+	log.Debug("Loaded course(s).", log.NewAttr("count", len(courses)))
 
 	// Startup courses (in the background).
 	for _, course := range courses {
@@ -51,12 +51,12 @@ func Start() (err error) {
 	// Cleanup any temp dirs.
 	defer util.RemoveRecordedTempDirs()
 
-	err = server.StartServer()
+	err = server.RunServer()
 	if err != nil {
 		return fmt.Errorf("Error during server startup sequence: '%w'.", err)
 	}
 
-	log.Info("Server closed.")
+	log.Debug("Server closed.")
 
 	return err
 }
