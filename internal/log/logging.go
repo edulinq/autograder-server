@@ -10,19 +10,16 @@ import (
 	"os"
 	"strings"
 	"sync"
-	"time"
-)
 
-const (
-	PRETTY_TIME_FORMAT = time.RFC3339
+	"github.com/edulinq/autograder/internal/timestamp"
 )
 
 type Record struct {
 	// Core Attributes
-	Level     LogLevel `json:"level"`
-	Message   string   `json:"message"`
-	UnixMicro int64    `json:"unix-time"`
-	Error     string   `json:"error,omitempty"`
+	Level     LogLevel            `json:"level"`
+	Message   string              `json:"message"`
+	Timestamp timestamp.Timestamp `json:"timestamp"`
+	Error     string              `json:"error,omitempty"`
 
 	// Context Attributes
 	Course     string `json:"course,omitempty"`
@@ -107,7 +104,7 @@ func logToBackend(record *Record) {
 			errRecord := &Record{
 				Level:     LevelError,
 				Message:   "Failed to log to storage backend.",
-				UnixMicro: time.Now().UnixMicro(),
+				Timestamp: timestamp.Now(),
 				Error:     err.Error(),
 			}
 			logToText(errRecord)
@@ -149,7 +146,7 @@ func LogFull(level LogLevel, logText bool, logBackend bool, message string, cour
 	record := &Record{
 		Level:     level,
 		Message:   message,
-		UnixMicro: time.Now().UnixMicro(),
+		Timestamp: timestamp.Now(),
 		Error:     errorMessage,
 
 		Course:     course,
@@ -184,8 +181,7 @@ func LogToSplitLevels(textLevel LogLevel, backendLevel LogLevel, message string,
 func (this *Record) String() string {
 	builder := strings.Builder{}
 
-	timestamp := time.UnixMicro(this.UnixMicro).Format(PRETTY_TIME_FORMAT)
-	builder.WriteString(fmt.Sprintf("%s [%5s] %s", timestamp, this.Level.String(), this.Message))
+	builder.WriteString(fmt.Sprintf("%s [%5s] %s", this.Timestamp.SafeString(), this.Level.String(), this.Message))
 
 	attributes := make(map[string]any, len(this.Attributes)+3)
 	for key, value := range this.Attributes {

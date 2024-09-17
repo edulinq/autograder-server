@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"github.com/edulinq/autograder/internal/api/core"
-	"github.com/edulinq/autograder/internal/common"
 	"github.com/edulinq/autograder/internal/db"
 	"github.com/edulinq/autograder/internal/log"
 )
@@ -13,7 +12,7 @@ type FetchLogsRequest struct {
 	core.APIRequestCourseUserContext
 	core.MinCourseRoleAdmin
 
-	common.RawLogQuery
+	log.RawLogQuery
 }
 
 type FetchLogsResponse struct {
@@ -25,7 +24,7 @@ type FetchLogsResponse struct {
 func HandleFetchLogs(request *FetchLogsRequest) (*FetchLogsResponse, *core.APIError) {
 	var response FetchLogsResponse
 
-	parsedQuery, messages := request.RawLogQuery.ParseStrings(request.Course)
+	parsedQuery, messages := request.RawLogQuery.ParseStrings()
 	if len(messages) > 0 {
 		response.ErrorMessages = messages
 		return &response, nil

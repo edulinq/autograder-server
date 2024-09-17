@@ -6,9 +6,9 @@ import (
 	"io"
 	"os"
 	"path/filepath"
-	"time"
 
 	"github.com/edulinq/autograder/internal/log"
+	"github.com/edulinq/autograder/internal/timestamp"
 	"github.com/edulinq/autograder/internal/util"
 )
 
@@ -38,7 +38,7 @@ func (this *backend) LogDirect(record *log.Record) error {
 	return nil
 }
 
-func (this *backend) GetLogRecords(level log.LogLevel, after time.Time, courseID string, assignmentID string, userID string) ([]*log.Record, error) {
+func (this *backend) GetLogRecords(level log.LogLevel, after timestamp.Timestamp, courseID string, assignmentID string, userID string) ([]*log.Record, error) {
 	this.logLock.RLock()
 	defer this.logLock.RUnlock()
 
@@ -91,7 +91,7 @@ func (this *backend) GetLogRecords(level log.LogLevel, after time.Time, courseID
 	return records, nil
 }
 
-func keepRecord(record *log.Record, level log.LogLevel, after time.Time, courseID string, assignmentID string, userID string) (bool, error) {
+func keepRecord(record *log.Record, level log.LogLevel, after timestamp.Timestamp, courseID string, assignmentID string, userID string) (bool, error) {
 	if record.Level < level {
 		return false, nil
 	}
@@ -108,11 +108,8 @@ func keepRecord(record *log.Record, level log.LogLevel, after time.Time, courseI
 		return false, nil
 	}
 
-	if !after.IsZero() {
-		recordTime := time.UnixMicro(record.UnixMicro)
-		if !recordTime.After(after) {
-			return false, nil
-		}
+	if record.Timestamp < after {
+		return false, nil
 	}
 
 	return true, nil

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/edulinq/autograder/internal/common"
+	"github.com/edulinq/autograder/internal/timestamp"
 	"github.com/edulinq/autograder/internal/util"
 )
 
@@ -28,24 +28,24 @@ type GradingInfo struct {
 	Score        float64 `json:"score"`
 
 	// Information generally filled out by the grader.
-	Name             string            `json:"name"`
-	Questions        []*GradedQuestion `json:"questions"`
-	GradingStartTime common.Timestamp  `json:"grading_start_time"`
-	GradingEndTime   common.Timestamp  `json:"grading_end_time"`
-	Prologue         string            `json:"prologue,omitempty"`
-	Epilogue         string            `json:"epilogue,omitempty"`
+	Name             string              `json:"name"`
+	Questions        []*GradedQuestion   `json:"questions"`
+	GradingStartTime timestamp.Timestamp `json:"grading_start_time"`
+	GradingEndTime   timestamp.Timestamp `json:"grading_end_time"`
+	Prologue         string              `json:"prologue,omitempty"`
+	Epilogue         string              `json:"epilogue,omitempty"`
 
 	// Additional pass-through information that the grader can use.
 	AdditionalInfo map[string]any `json:"additional-info"`
 }
 
 type GradedQuestion struct {
-	Name             string           `json:"name"`
-	MaxPoints        float64          `json:"max_points"`
-	Score            float64          `json:"score"`
-	Message          string           `json:"message"`
-	GradingStartTime common.Timestamp `json:"grading_start_time"`
-	GradingEndTime   common.Timestamp `json:"grading_end_time"`
+	Name             string              `json:"name"`
+	MaxPoints        float64             `json:"max_points"`
+	Score            float64             `json:"score"`
+	Message          string              `json:"message"`
+	GradingStartTime timestamp.Timestamp `json:"grading_start_time"`
+	GradingEndTime   timestamp.Timestamp `json:"grading_end_time"`
 }
 
 func (this *GradingResult) HasTextOutput() bool {
@@ -99,7 +99,7 @@ func (this GradingInfo) Report() string {
 	var builder strings.Builder
 
 	builder.WriteString(fmt.Sprintf("Autograder transcript for assignment: %s.\n", this.Name))
-	builder.WriteString(fmt.Sprintf("Grading started at %s and ended at %s.\n", this.GradingStartTime, this.GradingEndTime))
+	builder.WriteString(fmt.Sprintf("Grading started at %s and ended at %s.\n", this.GradingStartTime.SafeString(), this.GradingEndTime.SafeString()))
 
 	totalScore := 0.0
 	maxScore := 0.0

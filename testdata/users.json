@@ -9,8 +9,8 @@
             "hex-digest": "841adfc8e2020a678c383fb56e9459da77c75fb813ab9e443a582902de0fecf6",
             "source": "password",
             "name": "password",
-            "CreationTime": "2000-01-01T12:00:00Z",
-            "AccessTime": "2000-01-01T12:00:00Z"
+            "CreationTime": 0,
+            "AccessTime": 0
         },
         "tokens": [],
         "course-info": {
@@ -46,8 +46,8 @@
             "hex-digest": "f511fa2bd83e5423b29356d798d20a214de9534e4d64fb3956a184b1a91cc66a",
             "source": "password",
             "name": "password",
-            "CreationTime": "2000-01-01T12:00:00Z",
-            "AccessTime": "2000-01-01T12:00:00Z"
+            "CreationTime": 0,
+            "AccessTime": 0
         },
         "tokens": [],
         "course-info": {
@@ -83,8 +83,8 @@
             "hex-digest": "0b3420a7c188254522f4aecebe427d0e3fda03067e6289b7524914de26cedb11",
             "source": "password",
             "name": "password",
-            "CreationTime": "2000-01-01T12:00:00Z",
-            "AccessTime": "2000-01-01T12:00:00Z"
+            "CreationTime": 0,
+            "AccessTime": 0
         },
         "tokens": [],
         "course-info": {
@@ -120,8 +120,8 @@
             "hex-digest": "200217c44f4c36e5d6380c1c6fb639a9f1749dc81a79b13261fa2cd5806f3d06",
             "source": "password",
             "name": "password",
-            "CreationTime": "2000-01-01T12:00:00Z",
-            "AccessTime": "2000-01-01T12:00:00Z"
+            "CreationTime": 0,
+            "AccessTime": 0
         },
         "tokens": [],
         "course-info": {
@@ -157,8 +157,8 @@
             "hex-digest": "9188d2d8ec097dffd93ce06e16ab01d0344d648923fbc45535e93ad16c5d8c58",
             "source": "password",
             "name": "password",
-            "CreationTime": "2000-01-01T12:00:00Z",
-            "AccessTime": "2000-01-01T12:00:00Z"
+            "CreationTime": 0,
+            "AccessTime": 0
         },
         "tokens": [],
         "course-info": {
@@ -194,8 +194,8 @@
             "hex-digest": "fc4b34a5fc240db90cc3f1d81993a392c858afbce5e650dff2754eb54dbbabec",
             "source": "password",
             "name": "password",
-            "creation-time": "2024-07-15T09:49:13-04:00",
-            "access-time": "2024-07-15T09:49:13-04:00"
+            "creation-time": 0,
+            "access-time": 0
         },
         "tokens": [],
         "course-info": {}
@@ -210,8 +210,8 @@
             "hex-digest": "f4e77e82622376eb2433e9f1b4bc0e8ae1fe4e85124c64f12d3353ca2dfe4454",
             "source": "password",
             "name": "password",
-            "creation-time": "2024-07-15T09:49:41-04:00",
-            "access-time": "2024-07-15T09:49:41-04:00"
+            "creation-time": 0,
+            "access-time": 0
         },
         "tokens": [],
         "course-info": {}
@@ -226,8 +226,8 @@
             "hex-digest": "802047ad02de27abbe567bfe4c038a3764e979b4c10a44a7a08bf3fcb2f74c9e",
             "source": "password",
             "name": "password",
-            "creation-time": "2024-07-15T09:48:57-04:00",
-            "access-time": "2024-07-15T09:48:57-04:00"
+            "creation-time": 0,
+            "access-time": 0
         },
         "tokens": [],
         "course-info": {}
@@ -242,8 +242,8 @@
             "hex-digest": "8c95dbc49b86b732b53683cc0a535a512127c2f3a09c577a68a7ea632544c4b9",
             "source": "password",
             "name": "password",
-            "creation-time": "2024-07-15T09:49:56-04:00",
-            "access-time": "2024-07-15T09:49:56-04:00"
+            "creation-time": 0,
+            "access-time": 0
         },
         "tokens": [],
         "course-info": {}

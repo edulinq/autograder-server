@@ -8,6 +8,7 @@ import (
 	"github.com/edulinq/autograder/internal/config"
 	"github.com/edulinq/autograder/internal/db"
 	"github.com/edulinq/autograder/internal/model"
+	"github.com/edulinq/autograder/internal/timestamp"
 )
 
 // Reasons a submission can be rejected.
@@ -26,16 +27,22 @@ func (this *RejectMaxAttempts) String() string {
 type RejectWindowMax struct {
 	Max                int
 	WindowDuration     common.DurationSpec
-	EarliestSubmission time.Time
+	EarliestSubmission timestamp.Timestamp
 }
 
 func (this *RejectWindowMax) String() string {
-	nextTime := this.EarliestSubmission.Add(time.Duration(this.WindowDuration.TotalNanosecs()))
-	delta := nextTime.Sub(time.Now())
+	return this.fullString(timestamp.Now())
+}
+
+func (this *RejectWindowMax) fullString(now timestamp.Timestamp) string {
+	nextTime := timestamp.FromMSecs(this.EarliestSubmission.ToMSecs() + this.WindowDuration.TotalMSecs())
+	deltaMS := nextTime.ToMSecs() - now.ToMSecs()
+	deltaString := time.Duration(deltaMS * int64(time.Millisecond)).String()
+
 	return fmt.Sprintf("Reached the number of max attempts (%d) within submission window (%s)."+
 		" Next allowed submission time is %s (in %s).",
 		this.Max, this.WindowDuration.ShortString(),
-		nextTime.Format(time.RFC1123), delta.String())
+		nextTime.SafeMessage(), deltaString)
 }
 
 func checkForRejection(assignment *model.Assignment, submissionPath string, user string, message string) (RejectReason, error) {
@@ -67,7 +74,7 @@ func checkSubmissionLimit(assignment *model.Assignment, email string) (RejectRea
 		return nil, nil
 	}
 
-	now := time.Now()
+	now := timestamp.Now()
 
 	history, err := db.GetSubmissionHistory(assignment, email)
 	if err != nil {
@@ -95,26 +102,21 @@ func checkSubmissionLimit(assignment *model.Assignment, email string) (RejectRea
 }
 
 func checkSubmissionLimitWindow(window *model.SubmittionLimitWindow,
-	history []*model.SubmissionHistoryItem, now time.Time) (RejectReason, error) {
+	history []*model.SubmissionHistoryItem, now timestamp.Timestamp) (RejectReason, error) {
 	if len(history) < window.AllowedAttempts {
 		return nil, nil
 	}
 
-	windowStart := now.Add(time.Duration(-window.Duration.TotalNanosecs()))
-	earliestTime := time.Time{}
+	windowStart := timestamp.FromMSecs(now.ToMSecs() - window.Duration.TotalMSecs())
+	earliestTime := timestamp.Zero()
 
 	windowCount := 0
 	for _, item := range history {
-		itemTime, err := item.GradingStartTime.Time()
-		if err != nil {
-			return nil, fmt.Errorf("Unable to deserialize submission (%s) time ('%s'): '%w'.", item.ID, item.GradingStartTime, err)
-		}
-
-		if itemTime.After(windowStart) {
+		if item.GradingStartTime > windowStart {
 			windowCount++
 
-			if earliestTime.IsZero() || earliestTime.After(itemTime) {
-				earliestTime = itemTime
+			if earliestTime.IsZero() || (earliestTime > item.GradingStartTime) {
+				earliestTime = item.GradingStartTime
 			}
 		}
 	}

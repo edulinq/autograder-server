@@ -9,6 +9,7 @@ import (
 	"github.com/edulinq/autograder/internal/config"
 	"github.com/edulinq/autograder/internal/db"
 	"github.com/edulinq/autograder/internal/model"
+	"github.com/edulinq/autograder/internal/timestamp"
 )
 
 var SUBMISSION_RELPATH string = filepath.Join("test-submissions", "solution")
@@ -55,6 +56,32 @@ func TestRejectSubmissionMaxWindowAttemptsAdmin(test *testing.T) {
 	testMaxWindowAttemps(test, "course-grader@test.edulinq.org", false)
 }
 
+func TestRejectWindowMaxMessage(test *testing.T) {
+	now := timestamp.Timestamp(0)
+
+	testCases := []struct {
+		input    RejectWindowMax
+		expected string
+	}{
+		{
+			RejectWindowMax{1, common.DurationSpec{Hours: 1}, timestamp.Timestamp(0)},
+			"Reached the number of max attempts (1) within submission window (every 1 hours). Next allowed submission time is <timestamp:3600000> (in 1h0m0s).",
+		},
+		{
+			RejectWindowMax{1, common.DurationSpec{Days: 1, Hours: 1}, timestamp.Timestamp(0)},
+			"Reached the number of max attempts (1) within submission window (every 1 days, 1 hours). Next allowed submission time is <timestamp:90000000> (in 25h0m0s).",
+		},
+	}
+
+	for i, testCase := range testCases {
+		actual := testCase.input.fullString(now)
+		if testCase.expected != actual {
+			test.Errorf("Case %d: Message does not match. Expected: '%s', Actual: '%s'.", i, testCase.expected, actual)
+			continue
+		}
+	}
+}
+
 func testMaxWindowAttemps(test *testing.T, user string, expectReject bool) {
 	db.ResetForTesting()
 	defer db.ResetForTesting()
@@ -73,15 +100,10 @@ func testMaxWindowAttemps(test *testing.T, user string, expectReject bool) {
 	// Make a submission that should pass.
 	result, _, _ := submitForRejection(test, assignment, user, nil)
 
-	expectedTime, err := result.Info.GradingStartTime.Time()
-	if err != nil {
-		test.Fatalf("Failed to parse expected time: '%v'.", err)
-	}
-
 	// Make a submission that should be rejected.
 	var reason RejectReason
 	if expectReject {
-		reason = &RejectWindowMax{1, duration, expectedTime}
+		reason = &RejectWindowMax{1, duration, result.Info.GradingStartTime}
 	}
 
 	submitForRejection(test, assignment, user, reason)

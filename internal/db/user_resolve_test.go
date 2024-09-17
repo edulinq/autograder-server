@@ -7,6 +7,7 @@ import (
 
 	"github.com/edulinq/autograder/internal/log"
 	"github.com/edulinq/autograder/internal/model"
+	"github.com/edulinq/autograder/internal/timestamp"
 )
 
 func (this *DBTests) DBTestResolveCourseUsers(test *testing.T) {
@@ -177,7 +178,7 @@ func (this *DBTests) DBTestResolveCourseUsers(test *testing.T) {
 			continue
 		}
 
-		logs, err := GetLogRecords(log.LevelWarn, time.Time{}, "", "", "")
+		logs, err := GetLogRecords(log.LevelWarn, timestamp.Zero(), "", "", "")
 		if err != nil {
 			test.Errorf("Case %d (%+v): Error getting log records.", i, testCase)
 			continue

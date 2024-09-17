@@ -14,26 +14,26 @@
             "max_points": 1,
             "score": 1,
             "message": "",
-            "grading_start_time": "2023-10-15T21:44:26Z",
-            "grading_end_time": "2023-10-15T21:44:26Z"
+            "grading_start_time": 1697406266000,
+            "grading_end_time": 1697406266000
         },
         {
             "name": "Q2",
             "max_points": 1,
             "score": 0,
             "message": "NotImplemented returned.",
-            "grading_start_time": "2023-10-15T21:44:26Z",
-            "grading_end_time": "2023-10-15T21:44:26Z"
+            "grading_start_time": 1697406266000,
+            "grading_end_time": 1697406266000
         },
         {
             "name": "Style",
             "max_points": 0,
             "score": 0,
             "message": "Style is clean!",
-            "grading_start_time": "2023-10-15T21:44:26Z",
-            "grading_end_time": "2023-10-15T21:44:26Z"
+            "grading_start_time": 1697406266000,
+            "grading_end_time": 1697406266000
         }
     ],
-    "grading_start_time": "2023-10-15T21:44:26Z",
-    "grading_end_time": "2023-10-15T21:44:26Z"
+    "grading_start_time": 1697406266000,
+    "grading_end_time": 1697406266000
 }

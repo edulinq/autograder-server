@@ -4,13 +4,15 @@ import (
 	"fmt"
 	"testing"
 	"time"
+
+	"github.com/edulinq/autograder/internal/timestamp"
 )
 
-// 2023-10-01 00:00 Sunday
-var baseTime time.Time = time.Date(2023, time.October, 1, 0, 0, 0, 0, time.UTC)
+// 2023-10-01 00:00 UTC Sunday
+var baseTime timestamp.Timestamp = timestamp.FromGoTime(time.Date(2023, time.October, 1, 0, 0, 0, 0, time.UTC))
 
 const (
-	NSECS_PER_USEC = int64(time.Microsecond)
+	NSECS_PER_MSEC = int64(time.Millisecond)
 	NSECS_PER_SEC  = int64(time.Second)
 	NSECS_PER_MIN  = int64(time.Minute)
 	NSECS_PER_HOUR = int64(time.Hour)
@@ -20,7 +22,7 @@ const (
 type timeSpecTestCase struct {
 	ID            string
 	TimeSpec      timeSpec
-	NextTime      time.Time
+	NextTime      timestamp.Timestamp
 	TotalNanosecs int64
 	IsEmpty       bool
 	String        string
@@ -90,11 +92,11 @@ func TestScheduledTimeValidTestCases(test *testing.T) {
 
 		nextTime := testCase.TimeSpec.ComputeNextTime(baseTime)
 		if testCase.NextTime != nextTime {
-			test.Errorf("Case %d (%s) -- Incorrect next time. Expected: '%s', found: '%s'.", i, testCase.ID, testCase.NextTime, nextTime)
+			test.Errorf("Case %d (%s) -- Incorrect next time. Expected: '%s', found: '%s'.", i, testCase.ID, testCase.NextTime.SafeString(), nextTime.SafeString())
 			continue
 		}
 
-		totalNanosecs := testCase.TimeSpec.TotalNanosecs()
+		totalNanosecs := testCase.TimeSpec.TotalMSecs() * 1000 * 1000
 		if testCase.TotalNanosecs != totalNanosecs {
 			test.Errorf("Case %d (%s) -- Incorrect total nanosecs. Expected: %d, found: %d.", i, testCase.ID, testCase.TotalNanosecs, totalNanosecs)
 			continue
@@ -126,7 +128,7 @@ func TestScheduledTimeInvalidTestCases(test *testing.T) {
 
 type durationSpecTestCase struct {
 	TimeSpec      *DurationSpec
-	NextTime      time.Time
+	NextTime      timestamp.Timestamp
 	TotalNanosecs int64
 	IsEmpty       bool
 	String        string
@@ -134,7 +136,7 @@ type durationSpecTestCase struct {
 
 type timeOfDaySpecTestCase struct {
 	TimeSpec      TimeOfDaySpec
-	NextTime      time.Time
+	NextTime      timestamp.Timestamp
 	TotalNanosecs int64
 	IsEmpty       bool
 	String        string
@@ -143,42 +145,42 @@ type timeOfDaySpecTestCase struct {
 var validDurationCases []durationSpecTestCase = []durationSpecTestCase{
 	durationSpecTestCase{
 		TimeSpec:      &DurationSpec{0, 0, 0, 0, 0},
-		NextTime:      time.Date(2023, time.October, 1, 0, 0, 0, 0, time.UTC),
+		NextTime:      timestamp.FromGoTime(time.Date(2023, time.October, 1, 0, 0, 0, 0, time.UTC)),
 		TotalNanosecs: 0,
 		IsEmpty:       true,
 		String:        fmt.Sprintf("every 0 days, 0 hours, 0 minutes, 0 seconds; (0 total seconds)"),
 	},
 	durationSpecTestCase{
 		TimeSpec:      &DurationSpec{1, 0, 0, 0, 0},
-		NextTime:      time.Date(2023, time.October, 2, 0, 0, 0, 0, time.UTC),
+		NextTime:      timestamp.FromGoTime(time.Date(2023, time.October, 2, 0, 0, 0, 0, time.UTC)),
 		TotalNanosecs: NSECS_PER_DAY,
 		IsEmpty:       false,
 		String:        fmt.Sprintf("every 1 days, 0 hours, 0 minutes, 0 seconds; (%d total seconds)", (NSECS_PER_DAY / int64(time.Second))),
 	},
 	durationSpecTestCase{
 		TimeSpec:      &DurationSpec{0, 1, 0, 0, 0},
-		NextTime:      time.Date(2023, time.October, 1, 1, 0, 0, 0, time.UTC),
+		NextTime:      timestamp.FromGoTime(time.Date(2023, time.October, 1, 1, 0, 0, 0, time.UTC)),
 		TotalNanosecs: NSECS_PER_HOUR,
 		IsEmpty:       false,
 		String:        fmt.Sprintf("every 0 days, 1 hours, 0 minutes, 0 seconds; (%d total seconds)", (NSECS_PER_HOUR / int64(time.Second))),
 	},
 	durationSpecTestCase{
 		TimeSpec:      &DurationSpec{0, 0, 1, 0, 0},
-		NextTime:      time.Date(2023, time.October, 1, 0, 1, 0, 0, time.UTC),
+		NextTime:      timestamp.FromGoTime(time.Date(2023, time.October, 1, 0, 1, 0, 0, time.UTC)),
 		TotalNanosecs: NSECS_PER_MIN,
 		IsEmpty:       false,
 		String:        fmt.Sprintf("every 0 days, 0 hours, 1 minutes, 0 seconds; (%d total seconds)", (NSECS_PER_MIN / int64(time.Second))),
 	},
 	durationSpecTestCase{
 		TimeSpec:      &DurationSpec{0, 0, 0, 1, 0},
-		NextTime:      time.Date(2023, time.October, 1, 0, 0, 1, 0, time.UTC),
+		NextTime:      timestamp.FromGoTime(time.Date(2023, time.October, 1, 0, 0, 1, 0, time.UTC)),
 		TotalNanosecs: int64(time.Second),
 		IsEmpty:       false,
 		String:        fmt.Sprintf("every 0 days, 0 hours, 0 minutes, 1 seconds; (1 total seconds)"),
 	},
 	durationSpecTestCase{
 		TimeSpec:      &DurationSpec{1, 2, 3, 4, 0},
-		NextTime:      time.Date(2023, time.October, 2, 2, 3, 4, 0, time.UTC),
+		NextTime:      timestamp.FromGoTime(time.Date(2023, time.October, 2, 2, 3, 4, 0, time.UTC)),
 		TotalNanosecs: 1*NSECS_PER_DAY + 2*NSECS_PER_HOUR + 3*NSECS_PER_MIN + 4*NSECS_PER_SEC,
 		IsEmpty:       false,
 		String:        fmt.Sprintf("every 1 days, 2 hours, 3 minutes, 4 seconds; (%d total seconds)", ((1*NSECS_PER_DAY + 2*NSECS_PER_HOUR + 3*NSECS_PER_MIN + 4*NSECS_PER_SEC) / int64(time.Second))),
@@ -190,74 +192,65 @@ var validDurationCases []durationSpecTestCase = []durationSpecTestCase{
 			MAX_HOURS - 1,
 			MAX_MINS - 1,
 			MAX_SECS - 1,
-			MAX_USECS - 1,
+			MAX_MSECS - 1,
 		},
-		NextTime: mustParseTime("2169-11-18T17:18:25.685476Z"),
+		NextTime: timestamp.MustGuessFromString("2169-11-18T17:18:25.684Z"),
 		TotalNanosecs: (MAX_DAYS-1)*NSECS_PER_DAY +
 			(MAX_HOURS-1)*NSECS_PER_HOUR +
 			(MAX_MINS-1)*NSECS_PER_MIN +
 			(MAX_SECS-1)*NSECS_PER_SEC +
-			(MAX_USECS-1)*NSECS_PER_USEC,
+			(MAX_MSECS-1)*NSECS_PER_MSEC,
 		IsEmpty: false,
 		String:  fmt.Sprintf("every 10674 days, 256203 hours, 15372285 minutes, 922337202 seconds; (4611575905 total seconds)"),
 	},
 }
 
-func mustParseTime(text string) time.Time {
-	instance, err := time.Parse(time.RFC3339Nano, text)
-	if err != nil {
-		panic(err)
-	}
-
-	return instance
-}
-
 var validTimeOfDayCases []timeOfDaySpecTestCase = []timeOfDaySpecTestCase{
 	timeOfDaySpecTestCase{
 		TimeSpec:      TimeOfDaySpec(""),
-		NextTime:      time.Date(2023, time.October, 1, 0, 0, 0, 0, time.UTC),
+		NextTime:      timestamp.FromGoTime(time.Date(2023, time.October, 1, 0, 0, 0, 0, time.UTC)),
 		TotalNanosecs: NSECS_PER_DAY,
 		IsEmpty:       true,
 		String:        fmt.Sprintf("daily at 00:00:00."),
 	},
 	timeOfDaySpecTestCase{
 		TimeSpec:      TimeOfDaySpec("00:00"),
-		NextTime:      time.Date(2023, time.October, 1, 0, 0, 0, 0, time.UTC),
+		NextTime:      timestamp.FromGoTime(time.Date(2023, time.October, 1, 0, 0, 0, 0, time.UTC)),
 		TotalNanosecs: NSECS_PER_DAY,
 		IsEmpty:       false,
 		String:        fmt.Sprintf("daily at 00:00:00."),
 	},
 	timeOfDaySpecTestCase{
 		TimeSpec:      TimeOfDaySpec("11:59"),
-		NextTime:      time.Date(2023, time.October, 1, 11, 59, 0, 0, time.UTC),
+		NextTime:      timestamp.FromGoTime(time.Date(2023, time.October, 1, 11, 59, 0, 0, time.UTC)),
 		TotalNanosecs: NSECS_PER_DAY,
 		IsEmpty:       false,
 		String:        fmt.Sprintf("daily at 11:59:00."),
 	},
 	timeOfDaySpecTestCase{
 		TimeSpec:      TimeOfDaySpec("23:59"),
-		NextTime:      time.Date(2023, time.October, 1, 23, 59, 0, 0, time.UTC),
+		NextTime:      timestamp.FromGoTime(time.Date(2023, time.October, 1, 23, 59, 0, 0, time.UTC)),
 		TotalNanosecs: NSECS_PER_DAY,
 		IsEmpty:       false,
 		String:        fmt.Sprintf("daily at 23:59:00."),
 	},
 	timeOfDaySpecTestCase{
 		TimeSpec:      TimeOfDaySpec("01:02"),
-		NextTime:      time.Date(2023, time.October, 1, 1, 2, 0, 0, time.UTC),
+		NextTime:      timestamp.FromGoTime(time.Date(2023, time.October, 1, 1, 2, 0, 0, time.UTC)),
 		TotalNanosecs: NSECS_PER_DAY,
 		IsEmpty:       false,
 		String:        fmt.Sprintf("daily at 01:02:00."),
 	},
 	timeOfDaySpecTestCase{
 		TimeSpec:      TimeOfDaySpec("01:02:03"),
-		NextTime:      time.Date(2023, time.October, 1, 1, 2, 3, 0, time.UTC),
+		NextTime:      timestamp.FromGoTime(time.Date(2023, time.October, 1, 1, 2, 3, 0, time.UTC)),
 		TotalNanosecs: NSECS_PER_DAY,
 		IsEmpty:       false,
 		String:        fmt.Sprintf("daily at 01:02:03."),
 	},
 	timeOfDaySpecTestCase{
 		TimeSpec:      TimeOfDaySpec("01:02:03.04"),
-		NextTime:      time.Date(2023, time.October, 1, 1, 2, 3, 4e7, time.UTC),
+		NextTime:      timestamp.FromGoTime(time.Date(2023, time.October, 1, 1, 2, 3, 4e7, time.UTC)),
 		TotalNanosecs: NSECS_PER_DAY,
 		IsEmpty:       false,
 		String:        fmt.Sprintf("daily at 01:02:03."),
@@ -276,7 +269,7 @@ var invalidTestCases []timeSpec = []timeSpec{
 	&DurationSpec{0, MAX_HOURS, 0, 0, 0},
 	&DurationSpec{0, 0, MAX_MINS, 0, 0},
 	&DurationSpec{0, 0, 0, MAX_SECS, 0},
-	&DurationSpec{0, 0, 0, 0, MAX_USECS},
+	&DurationSpec{0, 0, 0, 0, MAX_MSECS},
 
 	TimeOfDaySpec("1"),
 	TimeOfDaySpec("1 PM"),

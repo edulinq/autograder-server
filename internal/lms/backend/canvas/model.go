@@ -5,6 +5,7 @@ import (
 
 	"github.com/edulinq/autograder/internal/lms/lmstypes"
 	"github.com/edulinq/autograder/internal/model"
+	"github.com/edulinq/autograder/internal/timestamp"
 )
 
 type User struct {
@@ -17,7 +18,7 @@ type User struct {
 type SubmissionScore struct {
 	UserID   string               `json:"user_id"`
 	Score    float64              `json:"score"`
-	Time     time.Time            `json:"submitted_at"`
+	Time     *time.Time           `json:"submitted_at"`
 	Comments []*SubmissionComment `json:"submission_comments"`
 }
 
@@ -106,7 +107,7 @@ func (this *SubmissionScore) ToLMSType() *lmstypes.SubmissionScore {
 	return &lmstypes.SubmissionScore{
 		UserID:   this.UserID,
 		Score:    this.Score,
-		Time:     this.Time,
+		Time:     timestamp.FromGoTimePointer(this.Time),
 		Comments: comments,
 	}
 }
@@ -125,7 +126,7 @@ func (this *Assignment) ToLMSType() *lmstypes.Assignment {
 		ID:          this.ID,
 		Name:        this.Name,
 		LMSCourseID: this.CanvasCourseID,
-		DueDate:     this.DueDate,
+		DueDate:     timestamp.FromGoTimePointer(this.DueDate),
 		MaxPoints:   this.MaxPoints,
 	}
 }

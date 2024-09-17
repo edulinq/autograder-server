@@ -10,6 +10,7 @@ import (
 	"github.com/edulinq/autograder/internal/config"
 	"github.com/edulinq/autograder/internal/db"
 	"github.com/edulinq/autograder/internal/model"
+	"github.com/edulinq/autograder/internal/timestamp"
 	"github.com/edulinq/autograder/internal/util"
 )
 
@@ -25,9 +26,9 @@ var RootUserNonces sync.Map
 
 type APIRequest struct {
 	// These are not provided in JSON, they are filled in during validation.
-	RequestID string           `json:"-"`
-	Endpoint  string           `json:"-"`
-	Timestamp common.Timestamp `json:"-"`
+	RequestID string              `json:"-"`
+	Endpoint  string              `json:"-"`
+	Timestamp timestamp.Timestamp `json:"-"`
 
 	// This request is being used as part of a test.
 	TestingMode bool `json:"-"`
@@ -66,7 +67,7 @@ type APIRequestAssignmentContext struct {
 func (this *APIRequest) Validate(request any, endpoint string) *APIError {
 	this.RequestID = util.UUID()
 	this.Endpoint = endpoint
-	this.Timestamp = common.NowTimestamp()
+	this.Timestamp = timestamp.Now()
 
 	this.TestingMode = config.TESTING_MODE.Get()
 

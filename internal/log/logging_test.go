@@ -5,6 +5,8 @@ import (
 	"reflect"
 	"strings"
 	"testing"
+
+	"github.com/edulinq/autograder/internal/timestamp"
 )
 
 func TestLogTextBase(test *testing.T) {
@@ -217,7 +219,7 @@ func TestBackendLogging(test *testing.T) {
 
 	for i, expectedRecord := range expectedRecords {
 		// Remove the timestamp.
-		backend.records[i].UnixMicro = 0
+		backend.records[i].Timestamp = timestamp.Zero()
 
 		if !reflect.DeepEqual(expectedRecord, backend.records[i]) {
 			test.Errorf("Case %d: Record does not match. Expected: '%+v', Actual: '%+v'.", i, expectedRecord, backend.records[i])
