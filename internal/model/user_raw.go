@@ -25,6 +25,7 @@ type RawCourseUserData struct {
 	CourseLMSID string `json:"course-lms-id"`
 }
 
+// Convert RawCourseUserData to RawUserData for a course.
 func (this *RawCourseUserData) ToRawUserData(course *Course) *RawUserData {
 	rawUserData := &RawUserData{
 		Email:       this.Email,
@@ -39,6 +40,8 @@ func (this *RawCourseUserData) ToRawUserData(course *Course) *RawUserData {
 	return rawUserData
 }
 
+// Convenience function to convert a slice of RawCourseUserData's to RawUserData.
+// The returned slice can be shorter in length than the original slice if it contains nil values.
 func ToRawUserDatas(rawCourseUsers []*RawCourseUserData, course *Course) []*RawUserData {
 	rawUsers := make([]*RawUserData, 0, len(rawCourseUsers))
 
@@ -78,7 +81,7 @@ func (this *RawUserData) ToServerUser() (*ServerUser, error) {
 		}
 	}
 
-	return user, user.Validate()
+	return user, user.validate(false)
 }
 
 // Does this data have server-level user information?

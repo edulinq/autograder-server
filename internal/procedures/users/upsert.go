@@ -322,6 +322,12 @@ func checkCourseUpdatePermissions(newUser *model.ServerUser, oldUser *model.Serv
 			fmt.Errorf("User has a course role of '%s', which is not high enough to update a user with course role of '%s'.", options.ContextCourseRole.String(), oldCourseRole.String()))
 	}
 
+	// Cannot update a user to have a higher course role than the context user.
+	if options.ContextCourseRole < newCourseRole {
+		return model.NewUserOpResultValidationError("-1022", newUser.Email,
+			fmt.Errorf("User has a course role of '%s', which is not high enough to update a user to a course role of '%s'.", options.ContextCourseRole.String(), newCourseRole.String()))
+	}
+
 	// Cannot modify course data unless you are an admin or self.
 	if (oldUser.Email != options.ContextEmail) && (options.ContextCourseRole < model.CourseRoleAdmin) {
 		return model.NewUserOpResultValidationError("-1020", newUser.Email,

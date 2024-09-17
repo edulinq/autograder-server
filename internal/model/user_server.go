@@ -49,6 +49,10 @@ type UserCourseInfo struct {
 }
 
 func (this *ServerUser) Validate() error {
+    return this.validate(true)
+}
+
+func (this *ServerUser) validate(checkAll bool) error {
 	this.Email = strings.TrimSpace(this.Email)
 	if this.Email == "" {
 		return fmt.Errorf("User email is empty.")
@@ -62,6 +66,12 @@ func (this *ServerUser) Validate() error {
 			return fmt.Errorf("User '%s' has an empty (but not nil) name.", this.Email)
 		}
 	}
+
+    if checkAll {
+        if this.Role == ServerRoleUnknown {
+            return fmt.Errorf("User '%s' has an unknown server role. Normal users are not allowed to have this role.", this.Email)
+        }
+    }
 
 	if this.Role == ServerRoleRoot {
 		return fmt.Errorf("User '%s' has a root server role. Normal users are not allowed to have this role.", this.Email)
@@ -258,6 +268,41 @@ func (this *ServerUser) Merge(other *ServerUser) (bool, error) {
 
 	return changed, nil
 }
+
+// // Get a server user representation of the RawUserData and merge it with the server user.
+// // We will not validate the RawUserData fully because it can contain an unknown server role BEFORE the merge.
+// func (this *ServerUser) RawMerge(other *RawUserData) (bool, error) {
+// 	user := &ServerUser{
+// 		Email: other.Email,
+// 		Name:  nil,
+// 		Role:  GetServerUserRole(other.Role),
+// 		Salt:  nil,
+
+// 		Tokens:     make([]*Token, 0),
+// 		CourseInfo: make(map[string]*UserCourseInfo, 0),
+// 	}
+
+// 	if other.Name != "" {
+// 		user.Name = util.StringPointer(other.Name)
+// 	}
+
+// 	if other.Course != "" {
+// 		user.CourseInfo[other.Course] = &UserCourseInfo{
+// 			Role: GetCourseUserRole(other.CourseRole),
+// 		}
+
+// 		if other.CourseLMSID != "" {
+// 			user.CourseInfo[other.Course].LMSID = &other.CourseLMSID
+// 		}
+// 	}
+
+//     err := user.validate(false)
+//     if err != nil {
+//         return false, err
+//     }
+
+//     return this.Merge(user)
+// }
 
 // Set the password for a user.
 // Note that this will replace the current password token (if it exists).

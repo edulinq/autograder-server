@@ -27,7 +27,7 @@ func TestEnroll(test *testing.T) {
 		expected       []*model.ExternalUserOpResult
 	}{
 		// Valid permissions.
-		// New user with course (enroll).
+		// New user (enroll).
 		{
 			email:     "course-admin",
 			permError: false,
@@ -56,7 +56,7 @@ func TestEnroll(test *testing.T) {
 			},
 		},
 
-		// Update user course role with course (enroll).
+		// Update user course role (enroll).
 		{
 			email:     "course-owner",
 			permError: false,
@@ -183,6 +183,34 @@ func TestEnroll(test *testing.T) {
 				&model.ExternalUserOpResult{
 					BaseUserOpResult: model.BaseUserOpResult{
 						Email: "new@test.edulinq.org",
+					},
+					ValidationError: &model.ExternalLocatableError{
+						Locator: "",
+						Message: VALIDATION_ERROR_EXTERNAL_MESSAGE,
+					},
+				},
+			},
+		},
+
+        // Promote existing user to a higher course role.
+		{
+			email:     "course-admin",
+			permError: false,
+			locator:   "",
+			rawCourseUsers: []*model.RawCourseUserData{
+				&model.RawCourseUserData{
+					Email: "course-student@test.edulinq.org",
+                    CourseRole: model.GetCourseUserRoleString(model.CourseRoleOwner),
+				},
+			},
+			sendEmails:  true,
+			skipInserts: false,
+			skipUpdates: false,
+			dryRun:      false,
+			expected: []*model.ExternalUserOpResult{
+				&model.ExternalUserOpResult{
+					BaseUserOpResult: model.BaseUserOpResult{
+						Email: "course-student@test.edulinq.org",
 					},
 					ValidationError: &model.ExternalLocatableError{
 						Locator: "",
