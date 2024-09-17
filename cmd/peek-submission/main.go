@@ -90,6 +90,7 @@ func main() {
 		fmt.Println(output)
 
 		util.Exit(2)
+		return
 	}
 
 	if args.Short {

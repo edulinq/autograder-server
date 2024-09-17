@@ -22,17 +22,18 @@ func TestPeekBase(test *testing.T) {
 		targetSubmission    string
 		expectedSubmimssion string
 		expectedExitCode    int
+		expectedLocator     string
 	}{
-		{"course-student@test.edulinq.org", "course101", "hw0", "", "1697406272", 0},
-		{"course-student@test.edulinq.org", "course101", "hw0", "1697406272", "1697406272", 0},
-		{"course-student@test.edulinq.org", "course101", "hw0", "course101::hw0::student@test.com::1697406256", "1697406256", 0},
+		{"course-student@test.edulinq.org", "course101", "hw0", "", "1697406272", 0, ""},
+		{"course-student@test.edulinq.org", "course101", "hw0", "1697406272", "1697406272", 0, ""},
+		{"course-student@test.edulinq.org", "course101", "hw0", "course101::hw0::student@test.com::1697406256", "1697406256", 0, ""},
 
-		{"course-admin@test.edulinq.org", "course101", "hw0", "", "", 0},
-		{"course-student@test.edulinq.org", "course101", "hw0", "ZZZ", "", 0},
+		{"course-admin@test.edulinq.org", "course101", "hw0", "", "", 0, ""},
+		{"course-student@test.edulinq.org", "course101", "hw0", "ZZZ", "", 0, ""},
 
-		{"course-student@test.edulinq.org", "ZZZ", "hw0", "", "", 2},
-		{"course-student@test.edulinq.org", "course101", "ZZZ", "", "", 2},
-		{"course-student@test.edulinq.org", "ZZZ", "ZZZ", "", "", 2},
+		{"course-student@test.edulinq.org", "ZZZ", "hw0", "", "", 2, "-018"},
+		{"course-student@test.edulinq.org", "course101", "ZZZ", "", "", 2, "-022"},
+		{"course-student@test.edulinq.org", "ZZZ", "ZZZ", "", "", 2, "-018"},
 	}
 
 	for i, testCase := range testCases {
@@ -43,6 +44,11 @@ func TestPeekBase(test *testing.T) {
 			testCase.targetSubmission,
 		}
 
+		oldExitCode := util.GetLastExitCode()
+		defer func() {
+			util.SetExitCode(oldExitCode)
+		}()
+	
 		util.ShouldExit = false
 
 		stdout, stderr, err := cmd.RunCMDTest(test, main, args)
@@ -62,12 +68,18 @@ func TestPeekBase(test *testing.T) {
 			continue
 		}
 
+		var response core.APIResponse
+		util.MustJSONFromString(stdout, &response)
+		
+		if response.Locator != testCase.expectedLocator {
+			test.Errorf("Case %d: Unexpected locator code. Expected: %s, Actual: %s", i, testCase.expectedLocator, response.Locator)
+			continue
+		}
+
 		if testCase.expectedExitCode != 0 {
 			continue
 		}
 
-		var response core.APIResponse
-		util.MustJSONFromString(stdout, &response)
 		var responseContent submissions.FetchUserPeekResponse
 		util.MustJSONFromString(util.MustToJSON(response.Content), &responseContent)
 

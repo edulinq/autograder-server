@@ -51,8 +51,8 @@ func TestAuth(test *testing.T) {
 
 		{"root", "", true, "-051"},
 		{"root", "", false, "-051"},
-		{"root", "course-root", true, "-051"},
-		{"root", "course-root", false, "-051"},
+		{"root", "root", true, "-051"},
+		{"root", "root", false, "-051"},
 	}
 
 	oldNoAuth := config.NO_AUTH.Get()

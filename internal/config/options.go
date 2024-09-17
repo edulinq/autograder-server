@@ -31,7 +31,7 @@ var (
 	EMAIL_USER = MustNewStringOption("email.user", "", "SMTP username for emails sent from the autograder.")
 
 	// Docker
-	DOCKER_DISABLE = MustNewBoolOption("docker.disable", false, "Disable the use of docker (usually for testing).")
+	DOCKER_DISABLE = MustNewBoolOption("docker.disable", true, "Disable the use of docker (usually for testing).")
 
 	// Tasks
 	NO_TASKS           = MustNewBoolOption("tasks.disable", false, "Disable all scheduled tasks.")
