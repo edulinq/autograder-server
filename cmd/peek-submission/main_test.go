@@ -64,7 +64,7 @@ func TestPeekBase(test *testing.T) {
 
 		actualExitCode := util.GetLastExitCode()
 		if actualExitCode != testCase.expectedExitCode {
-			test.Errorf("Case %d: Unexpected exit code. Expected: %d, Actual: %d", i, testCase.expectedExitCode, actualExitCode)
+			test.Errorf("Case %d: Unexpected exit code. Expected: '%d', Actual: '%d'.", i, testCase.expectedExitCode, actualExitCode)
 			continue
 		}
 
@@ -72,7 +72,7 @@ func TestPeekBase(test *testing.T) {
 		util.MustJSONFromString(stdout, &response)
 
 		if response.Locator != testCase.expectedLocator {
-			test.Errorf("Case %d: Unexpected locator code. Expected: %s, Actual: %s", i, testCase.expectedLocator, response.Locator)
+			test.Errorf("Case %d: Unexpected locator code. Expected: '%s', Actual: '%s'.", i, testCase.expectedLocator, response.Locator)
 			continue
 		}
 
