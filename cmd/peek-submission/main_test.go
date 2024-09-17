@@ -23,18 +23,24 @@ func TestPeekBase(test *testing.T) {
 		expectedSubmimssion string
 		expectedExitCode    int
 		expectedLocator     string
+		logLevel            string
 	}{
-		{"course-student@test.edulinq.org", "course101", "hw0", "", "1697406272", 0, ""},
-		{"course-student@test.edulinq.org", "course101", "hw0", "1697406272", "1697406272", 0, ""},
-		{"course-student@test.edulinq.org", "course101", "hw0", "course101::hw0::student@test.com::1697406256", "1697406256", 0, ""},
+		{"course-student@test.edulinq.org", "course101", "hw0", "", "1697406272", 0, "", ""},
+		{"course-student@test.edulinq.org", "course101", "hw0", "1697406272", "1697406272", 0, "", ""},
+		{"course-student@test.edulinq.org", "course101", "hw0", "course101::hw0::student@test.com::1697406256", "1697406256", 0, "", ""},
 
-		{"course-admin@test.edulinq.org", "course101", "hw0", "", "", 0, ""},
-		{"course-student@test.edulinq.org", "course101", "hw0", "ZZZ", "", 0, ""},
+		{"course-admin@test.edulinq.org", "course101", "hw0", "", "", 0, "", ""},
+		{"course-student@test.edulinq.org", "course101", "hw0", "ZZZ", "", 0, "", ""},
 
-		{"course-student@test.edulinq.org", "ZZZ", "hw0", "", "", 2, "-018"},
-		{"course-student@test.edulinq.org", "course101", "ZZZ", "", "", 2, "-022"},
-		{"course-student@test.edulinq.org", "ZZZ", "ZZZ", "", "", 2, "-018"},
+		{"course-student@test.edulinq.org", "ZZZ", "hw0", "", "", 2, "-018", "error"},
+		{"course-student@test.edulinq.org", "course101", "ZZZ", "", "", 2, "-022", "error"},
+		{"course-student@test.edulinq.org", "ZZZ", "ZZZ", "", "", 2, "-018", "error"},
 	}
+
+	util.ShouldExit = false
+	defer func() {
+		util.ShouldExit = true
+	}()
 
 	for i, testCase := range testCases {
 		args := []string{
@@ -42,14 +48,13 @@ func TestPeekBase(test *testing.T) {
 			testCase.courseID,
 			testCase.assignmentID,
 			testCase.targetSubmission,
+			"--log-level", testCase.logLevel,
 		}
 
 		oldExitCode := util.GetLastExitCode()
 		defer func() {
 			util.SetExitCode(oldExitCode)
 		}()
-
-		util.ShouldExit = false
 
 		stdout, stderr, err := cmd.RunCMDTest(test, main, args)
 		if err != nil {

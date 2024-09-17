@@ -28,8 +28,6 @@ func CMDServerTestingMain(suite *testing.M) {
 		db.PrepForTestingMain()
 		defer db.CleanupTestingMain()
 
-		log.SetLevelDebug()
-
 		var serverRun sync.WaitGroup
 		serverRun.Add(1)
 
@@ -39,6 +37,7 @@ func CMDServerTestingMain(suite *testing.M) {
 			serverRun.Done()
 			server.RunServer()
 		}()
+
 		defer server.StopServer()
 
 		serverRun.Wait()
