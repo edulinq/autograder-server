@@ -48,7 +48,7 @@ func TestPeekBase(test *testing.T) {
 		defer func() {
 			util.SetExitCode(oldExitCode)
 		}()
-	
+
 		util.ShouldExit = false
 
 		stdout, stderr, err := cmd.RunCMDTest(test, main, args)
@@ -70,7 +70,7 @@ func TestPeekBase(test *testing.T) {
 
 		var response core.APIResponse
 		util.MustJSONFromString(stdout, &response)
-		
+
 		if response.Locator != testCase.expectedLocator {
 			test.Errorf("Case %d: Unexpected locator code. Expected: %s, Actual: %s", i, testCase.expectedLocator, response.Locator)
 			continue
