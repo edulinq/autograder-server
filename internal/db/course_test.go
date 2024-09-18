@@ -1,10 +1,12 @@
 package db
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/edulinq/autograder/internal/common"
 	"github.com/edulinq/autograder/internal/model"
+	"github.com/edulinq/autograder/internal/util"
 )
 
 // Update a course from a path source.
@@ -48,6 +50,7 @@ func (this *DBTests) DBTestCourseUpdateCourseFromSourceBase(test *testing.T) {
 
 	count = countUsers(test, newCourse)
 	if count != 5 {
+		fmt.Printf("newCourse: '%s'.", util.MustToJSONIndent(newCourse))
 		test.Fatalf("Unexpected post-update user count. Expected 5, found %d.", count)
 	}
 }
@@ -112,5 +115,6 @@ func countUsers(test *testing.T, course *model.Course) int {
 		test.Fatalf("Failed to get users: '%v'.", err)
 	}
 
+	fmt.Printf("countUsers found the following users: '%s'.", util.MustToJSONIndent(users))
 	return len(users)
 }

@@ -1,13 +1,11 @@
 package users
 
 import (
-    "fmt"
 	"slices"
 
 	"github.com/edulinq/autograder/internal/api/core"
 	"github.com/edulinq/autograder/internal/model"
 	"github.com/edulinq/autograder/internal/procedures/users"
-	"github.com/edulinq/autograder/internal/util"
 )
 
 type EnrollRequest struct {
@@ -46,9 +44,7 @@ func HandleEnroll(request *EnrollRequest) (*EnrollResponse, *core.APIError) {
 		ContextCourseRole: request.User.Role,
 	}
 
-    fmt.Printf("Sending options: '%s'.", util.MustToJSONIndent(options))
 	results := users.UpsertUsers(options)
-    fmt.Printf("Recieved results: '%s'.", util.MustToJSONIndent(results))
 
 	var response EnrollResponse
 	// Convert UserOpResults to user friendly ExternalUserOpResults.

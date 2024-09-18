@@ -192,15 +192,15 @@ func TestEnroll(test *testing.T) {
 			},
 		},
 
-        // Promote existing user to a higher course role.
+		// Promote existing user to a higher course role.
 		{
 			email:     "course-admin",
 			permError: false,
 			locator:   "",
 			rawCourseUsers: []*model.RawCourseUserData{
 				&model.RawCourseUserData{
-					Email: "course-student@test.edulinq.org",
-                    CourseRole: model.GetCourseUserRoleString(model.CourseRoleOwner),
+					Email:      "course-student@test.edulinq.org",
+					CourseRole: model.GetCourseUserRoleString(model.CourseRoleOwner),
 				},
 			},
 			sendEmails:  true,

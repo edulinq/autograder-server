@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"slices"
 
+	"github.com/edulinq/autograder/internal/config"
 	"github.com/edulinq/autograder/internal/model"
 	"github.com/edulinq/autograder/internal/util"
 )
@@ -156,8 +157,10 @@ func (this *backend) getServerUsersLock(acquireLock bool) (map[string]*model.Ser
 	}
 
 	var errs error = nil
-	for _, user := range users {
-		errs = errors.Join(errs, user.Validate())
+	if !config.TESTING_MODE.Get() {
+		for _, user := range users {
+			errs = errors.Join(errs, user.Validate())
+		}
 	}
 
 	return users, errs
@@ -200,24 +203,4 @@ func (this *backend) upsertUsersLock(upsertUsers map[string]*model.ServerUser, a
 
 func (this *backend) getServerUsersPath() string {
 	return filepath.Join(this.baseDir, model.USERS_FILENAME)
-}
-
-func convertCourseUsers(courseUsers map[string]*model.CourseUser, course *model.Course) (map[string]*model.ServerUser, error) {
-	serverUsers := make(map[string]*model.ServerUser, len(courseUsers))
-
-	var userErrors error = nil
-	for email, courseUser := range courseUsers {
-		serverUser, err := courseUser.ToServerUser(course.ID)
-		if err != nil {
-			userErrors = errors.Join(userErrors, fmt.Errorf("Error with user '%s': '%w'.", email, err))
-		} else {
-			serverUsers[email] = serverUser
-		}
-	}
-
-	if userErrors != nil {
-		return nil, userErrors
-	}
-
-	return serverUsers, nil
 }

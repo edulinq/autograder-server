@@ -49,7 +49,7 @@ type UserCourseInfo struct {
 }
 
 func (this *ServerUser) Validate() error {
-    return this.validate(true)
+	return this.validate(true)
 }
 
 func (this *ServerUser) validate(checkAll bool) error {
@@ -67,11 +67,11 @@ func (this *ServerUser) validate(checkAll bool) error {
 		}
 	}
 
-    if checkAll {
-        if this.Role == ServerRoleUnknown {
-            return fmt.Errorf("User '%s' has an unknown server role. Normal users are not allowed to have this role.", this.Email)
-        }
-    }
+	if checkAll {
+		if this.Role == ServerRoleUnknown {
+			return fmt.Errorf("User '%s' has an unknown server role. Normal users are not allowed to have this role.", this.Email)
+		}
+	}
 
 	if this.Role == ServerRoleRoot {
 		return fmt.Errorf("User '%s' has a root server role. Normal users are not allowed to have this role.", this.Email)
