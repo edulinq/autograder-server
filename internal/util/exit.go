@@ -7,8 +7,8 @@ import (
 )
 
 var (
-	ShouldExitForTesting = true
 	lastExitCode         = 0
+	ShouldExitForTesting = true
 )
 
 func Exit(code int) {
