@@ -42,6 +42,11 @@ func TestPeekBase(test *testing.T) {
 		util.ShouldExit = true
 	}()
 
+	oldExitCode := util.GetLastExitCode()
+	defer func() {
+		util.SetExitCode(oldExitCode)
+	}()
+
 	for i, testCase := range testCases {
 		args := []string{
 			testCase.targetEmail,
@@ -50,11 +55,6 @@ func TestPeekBase(test *testing.T) {
 			testCase.targetSubmission,
 			"--log-level", testCase.logLevel,
 		}
-
-		oldExitCode := util.GetLastExitCode()
-		defer func() {
-			util.SetExitCode(oldExitCode)
-		}()
 
 		stdout, stderr, err := cmd.RunCMDTest(test, main, args)
 		if err != nil {
