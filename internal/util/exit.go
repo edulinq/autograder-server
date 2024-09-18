@@ -7,23 +7,20 @@ import (
 )
 
 var (
-	ShouldExit   = true
-	LastExitCode = 0
+	ShouldExitForTesting = true
+	lastExitCode         = 0
 )
 
 func Exit(code int) {
-	SetExitCode(code)
+	log.Debug("Exiting.", log.NewAttr("code", code))
 
-	if ShouldExit {
-		log.Debug("Exiting with code.", log.NewAttr("code", code))
+	lastExitCode = code
+
+	if ShouldExitForTesting {
 		os.Exit(code)
 	}
 }
 
 func GetLastExitCode() int {
-	return LastExitCode
-}
-
-func SetExitCode(code int) {
-	LastExitCode = code
+	return lastExitCode
 }

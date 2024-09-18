@@ -51,13 +51,30 @@ func CMDServerTestingMain(suite *testing.M) {
 	os.Exit(code)
 }
 
-func RunCMDTest(test *testing.T, mainFunc func(), args []string) (string, string, error) {
+func RunCMDTest(test *testing.T, mainFunc func(), args []string) (string, string, int, error) {
+	// Suppress exits to capture exit codes.
+	util.ShouldExitForTesting = false
+	defer func() {
+		util.ShouldExitForTesting = true
+	}()
+
 	tempDir := util.MustMkDirTemp("autograder-testing-cmd-")
 	stdoutPath := filepath.Join(tempDir, STDOUT_FILENAME)
 	stderrPath := filepath.Join(tempDir, STDERR_FILENAME)
 
 	// Add in a dummy first arg.
 	args = append([]string{TESTING_ARG0}, args...)
+
+	// Ensure log levels are reset to their original state.
+	oldTextLogLevel := log.GetTextLevel()
+	oldBackendLogLevel := log.GetBackendLevel()
+	defer func() {
+		log.SetTextLevel(oldTextLogLevel)
+		log.SetBackendLevel(oldBackendLogLevel)
+	}()
+
+	// Force the log level to fatal.
+	args = append(args, "--log-level", log.LevelFatal.String())
 
 	// Setup stdout capture.
 	oldStdout := os.Stdout
@@ -87,7 +104,9 @@ func RunCMDTest(test *testing.T, mainFunc func(), args []string) (string, string
 	os.Stderr = oldStderr
 	stderr := util.MustReadFile(stderrPath)
 
-	return stdout, stderr, err
+	exitCode := util.GetLastExitCode()
+
+	return stdout, stderr, exitCode, err
 }
 
 func runCMD(mainFunc func(), args []string) (err error) {
