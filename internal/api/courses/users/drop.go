@@ -26,7 +26,7 @@ func HandleDrop(request *DropRequest) (*DropResponse, *core.APIError) {
 
 	response.FoundUser = true
 
-	if (request.ServerUser.Role < model.ServerRoleAdmin) && (request.TargetCourseUser.User.Role >= request.User.Role) {
+	if !checkDropPermissions(request) {
 		return nil, core.NewBadCoursePermissionsError("-612", &request.APIRequestCourseUserContext, request.TargetCourseUser.User.Role,
 			"Cannot drop a user with an equal or higher role.").Add("target-course-user", request.TargetCourseUser.User.Email)
 	}
@@ -38,4 +38,18 @@ func HandleDrop(request *DropRequest) (*DropResponse, *core.APIError) {
 	}
 
 	return &response, nil
+}
+
+func checkDropPermissions(request *DropRequest) bool {
+	// If the request is from a server admin or above, they can drop anyone from the course.
+	if request.ServerUser.Role >= model.ServerRoleAdmin {
+		return true
+	}
+
+	// Non-server admin can only drop users with lower course roles than themselves.
+	if request.User.Role > request.TargetCourseUser.User.Role {
+		return true
+	}
+
+	return false
 }

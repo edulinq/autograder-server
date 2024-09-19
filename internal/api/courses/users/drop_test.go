@@ -27,8 +27,8 @@ func TestUserDrop(test *testing.T) {
 		{"course-owner", "course-admin@test.edulinq.org", false, "", DropResponse{true}},
 
 		// Valid permissions, role escalation.
-		{"server-owner", "course-other@test.edulinq.org", false, "", DropResponse{true}},
-		{"server-owner", "course-student@test.edulinq.org", false, "", DropResponse{true}},
+		{"server-admin", "course-other@test.edulinq.org", false, "", DropResponse{true}},
+		{"server-admin", "course-student@test.edulinq.org", false, "", DropResponse{true}},
 		{"server-admin", "course-grader@test.edulinq.org", false, "", DropResponse{true}},
 		{"server-admin", "course-admin@test.edulinq.org", false, "", DropResponse{true}},
 		{"server-admin", "course-owner@test.edulinq.org", false, "", DropResponse{true}},
@@ -38,11 +38,14 @@ func TestUserDrop(test *testing.T) {
 		{"course-grader", "course-other@test.edulinq.org", true, "-020", DropResponse{false}},
 
 		// Invalid permissions, role escalation.
-		{"server-creator", "server-user@test.edulinq.org", true, "-040", DropResponse{false}},
-		{"server-user", "server-user@test.edulinq.org", true, "-040", DropResponse{false}},
+		{"server-creator", "course-other@test.edulinq.org", true, "-040", DropResponse{false}},
+		{"server-user", "course-other@test.edulinq.org", true, "-040", DropResponse{false}},
 
 		// Target user is not found.
 		{"course-owner", "ZZZ", false, "", DropResponse{false}},
+
+		// Target user not enrolled in course.
+		{"course-owner", "server-user@test.edulinq.org", false, "", DropResponse{false}},
 
 		// Complex invalid permissions, removing someone with equal or higher course roles.
 		{"course-admin", "course-admin@test.edulinq.org", true, "-612", DropResponse{false}},
