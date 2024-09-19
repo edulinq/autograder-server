@@ -18,12 +18,11 @@ var args struct {
 	OUT string `help:"Redirects the output to the given file in JSON format." default:""`
 }
 
-type Version struct{
-	Short string `json:"short-version"`
-	Hash string `json:"git-hash"`
+type Version struct {
+	Short  string `json:"short-version"`
+	Hash   string `json:"git-hash"`
 	Status string `json:"status"`
 }
-
 
 func main() {
 	kong.Parse(&args,
@@ -35,24 +34,24 @@ func main() {
 		log.Fatal("Could not load config options.", err)
 	}
 
-	if !(args.OUT == ""){
+	if !(args.OUT == "") {
 		versionJSONPath := util.ShouldAbs(filepath.Join(util.ShouldGetThisDir(), "..", "..", args.OUT))
 
-		versionSplice := strings.Split(util.GetAutograderFullVersion(),"-")
+		versionSplice := strings.Split(util.GetAutograderFullVersion(), "-")
 
-		version:= Version{
-			Short: util.GetAutograderVersion(),
-			Hash : versionSplice[1],
+		version := Version{
+			Short:  util.GetAutograderVersion(),
+			Hash:   versionSplice[1],
 			Status: versionSplice[2],
 		}
 
-		err := util.ToJSONFileIndentCustom(&version,versionJSONPath,""," ")
+		err := util.ToJSONFileIndentCustom(&version, versionJSONPath, "", " ")
 		if err != nil {
 			log.Error("Failed to write to the JSON file", err, log.NewAttr("path", versionJSONPath))
-	
+
 		}
 
-		return 
+		return
 	}
 
 	fmt.Println("Autograder")
