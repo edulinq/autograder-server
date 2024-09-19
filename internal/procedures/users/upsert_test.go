@@ -850,26 +850,25 @@ func TestUpsertUser(test *testing.T) {
 			expectedUser: nil,
 		},
 
-		// TODO!!
-		// Update server role a user that has a higher server role.
+		// Update server role to a higher server role than the context user.
 		{
 			options: UpsertUsersOptions{
 				RawUsers: []*model.RawUserData{
 					&model.RawUserData{
-						Email: "server-owner@test.edulinq.org",
-						Name:  "new",
+						Email: "server-user@test.edulinq.org",
+						Role:  "owner",
 					},
 				},
 				ContextServerRole: model.ServerRoleAdmin,
 			},
 			expected: &model.UserOpResult{
 				BaseUserOpResult: model.BaseUserOpResult{
-					Email: "server-owner@test.edulinq.org",
+					Email: "server-user@test.edulinq.org",
 				},
 				ValidationError: &model.LocatableError{
-					Locator:         "-1016",
+					Locator:         "-1011",
 					HideLocator:     true,
-					InternalMessage: "User has a server role of 'admin', which is not high enough to update a user with server role of 'owner'.",
+					InternalMessage: "User has a server role of 'admin', which is not high enough to upsert a user with server role of 'owner'.",
 					ExternalMessage: VALIDATION_ERROR_EXTERNAL_MESSAGE,
 				},
 			},

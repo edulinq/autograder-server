@@ -123,6 +123,13 @@ func insertUser(user *model.ServerUser, options UpsertUsersOptions, rawData *mod
 		},
 	}
 
+	// Ensure all users have a valid role.
+	// Can get unknown server roles when processing requests from course level
+	// operations, since they cannnot set server roles.
+	if user.Role == model.ServerRoleUnknown {
+		user.Role = model.ServerRoleUser
+	}
+
 	// New users need authnetication information.
 	user.Salt = util.StringPointer(model.ShouldNewRandomSalt())
 
@@ -140,6 +147,11 @@ func insertUser(user *model.ServerUser, options UpsertUsersOptions, rawData *mod
 
 	for courseID, _ := range user.CourseInfo {
 		result.Enrolled = append(result.Enrolled, courseID)
+	}
+
+	err = user.Validate()
+	if err != nil {
+		return model.NewUserOpResultValidationError("-1023", user.Email, err)
 	}
 
 	if !options.DryRun {

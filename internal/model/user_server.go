@@ -269,41 +269,6 @@ func (this *ServerUser) Merge(other *ServerUser) (bool, error) {
 	return changed, nil
 }
 
-// // Get a server user representation of the RawUserData and merge it with the server user.
-// // We will not validate the RawUserData fully because it can contain an unknown server role BEFORE the merge.
-// func (this *ServerUser) RawMerge(other *RawUserData) (bool, error) {
-// 	user := &ServerUser{
-// 		Email: other.Email,
-// 		Name:  nil,
-// 		Role:  GetServerUserRole(other.Role),
-// 		Salt:  nil,
-
-// 		Tokens:     make([]*Token, 0),
-// 		CourseInfo: make(map[string]*UserCourseInfo, 0),
-// 	}
-
-// 	if other.Name != "" {
-// 		user.Name = util.StringPointer(other.Name)
-// 	}
-
-// 	if other.Course != "" {
-// 		user.CourseInfo[other.Course] = &UserCourseInfo{
-// 			Role: GetCourseUserRole(other.CourseRole),
-// 		}
-
-// 		if other.CourseLMSID != "" {
-// 			user.CourseInfo[other.Course].LMSID = &other.CourseLMSID
-// 		}
-// 	}
-
-//     err := user.validate(false)
-//     if err != nil {
-//         return false, err
-//     }
-
-//     return this.Merge(user)
-// }
-
 // Set the password for a user.
 // Note that this will replace the current password token (if it exists).
 // Return true if the new password was set.

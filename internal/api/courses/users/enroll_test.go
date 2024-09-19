@@ -27,7 +27,7 @@ func TestEnroll(test *testing.T) {
 		expected       []*model.ExternalUserOpResult
 	}{
 		// Valid permissions.
-		// New user (enroll).
+		// New user.
 		{
 			email:     "course-admin",
 			permError: false,
@@ -56,7 +56,7 @@ func TestEnroll(test *testing.T) {
 			},
 		},
 
-		// Update user course role (enroll).
+		// Update user course role.
 		{
 			email:     "course-owner",
 			permError: false,
@@ -81,7 +81,7 @@ func TestEnroll(test *testing.T) {
 			},
 		},
 
-		// Update user lms with course (enroll).
+		// Update user lms with course.
 		{
 			email:     "course-owner",
 			permError: false,
@@ -108,7 +108,7 @@ func TestEnroll(test *testing.T) {
 		},
 
 		// Valid permissions, role escalation.
-		// New user with course (enroll).
+		// New user with course.
 		{
 			email:     "server-admin",
 			permError: false,
@@ -137,7 +137,7 @@ func TestEnroll(test *testing.T) {
 			},
 		},
 
-		// Update user with course (enroll).
+		// Update user with course.
 		{
 			email:     "server-admin",
 			permError: false,
@@ -211,6 +211,34 @@ func TestEnroll(test *testing.T) {
 				&model.ExternalUserOpResult{
 					BaseUserOpResult: model.BaseUserOpResult{
 						Email: "course-student@test.edulinq.org",
+					},
+					ValidationError: &model.ExternalLocatableError{
+						Locator: "",
+						Message: VALIDATION_ERROR_EXTERNAL_MESSAGE,
+					},
+				},
+			},
+		},
+
+		// Demote existing user with a higher course role.
+		{
+			email:     "course-admin",
+			permError: false,
+			locator:   "",
+			rawCourseUsers: []*model.RawCourseUserData{
+				&model.RawCourseUserData{
+					Email:      "course-owner@test.edulinq.org",
+					CourseRole: model.GetCourseUserRoleString(model.CourseRoleStudent),
+				},
+			},
+			sendEmails:  true,
+			skipInserts: false,
+			skipUpdates: false,
+			dryRun:      false,
+			expected: []*model.ExternalUserOpResult{
+				&model.ExternalUserOpResult{
+					BaseUserOpResult: model.BaseUserOpResult{
+						Email: "course-owner@test.edulinq.org",
 					},
 					ValidationError: &model.ExternalLocatableError{
 						Locator: "",
