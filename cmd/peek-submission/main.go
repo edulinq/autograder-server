@@ -1,18 +1,13 @@
 package main
 
 import (
-	"fmt"
-	"net"
-
 	"github.com/alecthomas/kong"
 
 	"github.com/edulinq/autograder/internal/api/core"
 	"github.com/edulinq/autograder/internal/api/courses/assignments/submissions"
-	"github.com/edulinq/autograder/internal/api/server"
-	"github.com/edulinq/autograder/internal/common"
+	"github.com/edulinq/autograder/internal/cmd"
 	"github.com/edulinq/autograder/internal/config"
 	"github.com/edulinq/autograder/internal/log"
-	"github.com/edulinq/autograder/internal/util"
 )
 
 var args struct {
@@ -34,18 +29,6 @@ func main() {
 		log.Fatal("Failed to load config options.", err)
 	}
 
-	socketPath, err := common.GetUnixSocketPath()
-	if err != nil {
-		log.Fatal("Failed to get the unix socket path.", err)
-	}
-
-	connection, err := net.Dial("unix", socketPath)
-	if err != nil {
-		log.Fatal("Failed to dial the unix socket.", err)
-	}
-
-	defer connection.Close()
-
 	request := submissions.FetchUserPeekRequest{
 		APIRequestAssignmentContext: core.APIRequestAssignmentContext{
 			APIRequestCourseUserContext: core.APIRequestCourseUserContext{
@@ -61,43 +44,10 @@ func main() {
 		TargetSubmission: args.TargetSubmission,
 	}
 
-	requestMap := map[string]any{
-		server.ENDPOINT_KEY: core.NewEndpoint(`courses/assignments/submissions/fetch/user/peek`),
-		server.REQUEST_KEY:  request,
-	}
-
-	jsonRequest := util.MustToJSONIndent(requestMap)
-	jsonBytes := []byte(jsonRequest)
-	err = util.WriteToNetworkConnection(connection, jsonBytes)
+	response, err := cmd.SendCMDRequest(`courses/assignments/submissions/fetch/user/peek`, request)
 	if err != nil {
-		log.Fatal("Failed to write the request to the unix socket.", err)
+		log.Fatal("Failed to send the CMD request.", err)
 	}
 
-	responseBuffer, err := util.ReadFromNetworkConnection(connection)
-	if err != nil {
-		log.Fatal("Failed to read the response from the unix socket.", err)
-	}
-
-	var response core.APIResponse
-	util.MustJSONFromBytes(responseBuffer, &response)
-
-	if !response.Success {
-		output := response.Message
-		if !args.Short {
-			output = util.MustToJSONIndent(response)
-		}
-
-		fmt.Println(output)
-
-		util.Exit(2)
-		return
-	}
-
-	if args.Short {
-		var responseContent submissions.FetchUserPeekResponse
-		util.MustJSONFromString(util.MustToJSON(response.Content), &responseContent)
-		fmt.Println(util.MustToJSONIndent(responseContent))
-	} else {
-		fmt.Println(util.MustToJSONIndent(response))
-	}
+	cmd.PrintCMDRequest(response, submissions.FetchUserPeekResponse{}, args.Short)
 }
