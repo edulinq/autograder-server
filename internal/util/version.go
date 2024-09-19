@@ -19,6 +19,7 @@ type Version struct {
 	Short  string `json:"short-version"`
 	Hash   string `json:"git-hash"`
 	Status string `json:"status"`
+	Api    int    `json:"api-version"`
 }
 
 func GetAutograderVersion() string {
@@ -91,9 +92,5 @@ func GetAutograderFullVersion() string {
 		return shortVersion + "-" + gitHash + "-" + status
 	}
 
-	shortVersion = readVersion.Short
-	gitHash = readVersion.Hash
-	status = readVersion.Status
-
-	return shortVersion + "-" + gitHash + "-" + status
+	return readVersion.Short + "-" + readVersion.Hash + "-" + readVersion.Status
 }
