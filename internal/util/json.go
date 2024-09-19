@@ -62,12 +62,21 @@ func JSONFromBytes(data []byte, target any) error {
 	return nil
 }
 
+func MustJSONMapFromString(data string) map[string]any {
+	result, err := JSONMapFromString(data)
+	if err != nil {
+		log.Fatal("Could not create JSON map from string.", err, log.NewAttr("string", data))
+	}
+
+	return result
+}
+
 func JSONMapFromString(data string) (map[string]any, error) {
 	target := make(map[string]any)
 
 	err := json.Unmarshal([]byte(data), &target)
 	if err != nil {
-		return nil, fmt.Errorf("Could not unmarshal JSON map from string(%s): '%w'.", data, err)
+		return nil, fmt.Errorf("Could not unmarshal JSON map from string (%s): '%w'.", data, err)
 	}
 
 	return target, nil

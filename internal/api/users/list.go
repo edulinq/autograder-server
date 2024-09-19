@@ -19,7 +19,7 @@ type ListResponse struct {
 func HandleList(request *ListRequest) (*ListResponse, *core.APIError) {
 	usersMap, err := db.GetServerUsers()
 	if err != nil {
-		return nil, core.NewUsertContextInternalError("-813", &request.APIRequestUserContext,
+		return nil, core.NewUserContextInternalError("-813", &request.APIRequestUserContext,
 			"Failed to get server users from database.").Err(err)
 	}
 
@@ -27,7 +27,7 @@ func HandleList(request *ListRequest) (*ListResponse, *core.APIError) {
 	for _, user := range usersMap {
 		info, err := core.NewServerUserInfo(user)
 		if err != nil {
-			return nil, core.NewUsertContextInternalError("-814", &request.APIRequestUserContext,
+			return nil, core.NewUserContextInternalError("-814", &request.APIRequestUserContext,
 				"Failed to get server user info.").Err(err)
 		}
 

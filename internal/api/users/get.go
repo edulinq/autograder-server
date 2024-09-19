@@ -27,7 +27,7 @@ func HandleGet(request *GetRequest) (*GetResponse, *core.APIError) {
 
 	info, err := core.NewServerUserInfo(request.TargetUser.User)
 	if err != nil {
-		return nil, core.NewUsertContextInternalError("-804", &request.APIRequestUserContext,
+		return nil, core.NewUserContextInternalError("-804", &request.APIRequestUserContext,
 			"Failed to get server user info.").Err(err)
 	}
 
