@@ -246,14 +246,15 @@ func (this *DBTests) DBTestUserUpsertUserInsert(test *testing.T) {
 	expected := &model.ServerUser{
 		Email: email,
 		Name:  &name,
+		Role:  model.GetServerUserRole("user"),
 	}
 
-	// err := expected.Validate()
-	// if err != nil {
-	// 	test.Fatalf("Failed to validated upsert user: '%v'.", err)
-	// }
+	err := expected.Validate()
+	if err != nil {
+		test.Fatalf("Failed to validated upsert user: '%v'.", err)
+	}
 
-	err := UpsertUser(expected)
+	err = UpsertUser(expected)
 	if err != nil {
 		test.Fatalf("Could not upsert user '%s': '%v'.", email, err)
 	}
