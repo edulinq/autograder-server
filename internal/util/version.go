@@ -22,7 +22,7 @@ type Version struct{
 }
 
 func GetAutograderVersion() string {
-	versionPath := ShouldAbs(filepath.Join(ShouldGetThisDir(), "..", "..", VERSION_FILENAME))
+	versionPath := ShouldAbs(filepath.Join(ShouldGetThisDir(), "..", "..",VERSION_FILENAME))
 	if !IsFile(versionPath) {
 		log.Error("Version file does not exist.", log.NewAttr("path", versionPath))
 		return UNKNOWN_VERSION
