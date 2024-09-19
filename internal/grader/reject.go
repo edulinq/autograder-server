@@ -31,14 +31,18 @@ type RejectWindowMax struct {
 }
 
 func (this *RejectWindowMax) String() string {
+	return this.fullString(timestamp.Now())
+}
+
+func (this *RejectWindowMax) fullString(now timestamp.Timestamp) string {
 	nextTime := timestamp.FromMSecs(this.EarliestSubmission.ToMSecs() + this.WindowDuration.TotalMSecs())
-	deltaMS := nextTime.ToMSecs() - timestamp.Now().ToMSecs()
+	deltaMS := nextTime.ToMSecs() - now.ToMSecs()
 	deltaString := time.Duration(deltaMS * int64(time.Millisecond)).String()
 
 	return fmt.Sprintf("Reached the number of max attempts (%d) within submission window (%s)."+
 		" Next allowed submission time is %s (in %s).",
 		this.Max, this.WindowDuration.ShortString(),
-		nextTime.SafeString(), deltaString)
+		nextTime.SafeMessage(), deltaString)
 }
 
 func checkForRejection(assignment *model.Assignment, submissionPath string, user string, message string) (RejectReason, error) {

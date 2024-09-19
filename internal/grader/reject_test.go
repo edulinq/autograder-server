@@ -9,6 +9,7 @@ import (
 	"github.com/edulinq/autograder/internal/config"
 	"github.com/edulinq/autograder/internal/db"
 	"github.com/edulinq/autograder/internal/model"
+	"github.com/edulinq/autograder/internal/timestamp"
 )
 
 var SUBMISSION_RELPATH string = filepath.Join("test-submissions", "solution")
@@ -53,6 +54,32 @@ func TestRejectSubmissionMaxWindowAttempts(test *testing.T) {
 
 func TestRejectSubmissionMaxWindowAttemptsAdmin(test *testing.T) {
 	testMaxWindowAttemps(test, "course-grader@test.edulinq.org", false)
+}
+
+func TestRejectWindowMaxMessage(test *testing.T) {
+	now := timestamp.Timestamp(0)
+
+	testCases := []struct {
+		input    RejectWindowMax
+		expected string
+	}{
+		{
+			RejectWindowMax{1, common.DurationSpec{Hours: 1}, timestamp.Timestamp(0)},
+			"Reached the number of max attempts (1) within submission window (every 1 hours). Next allowed submission time is <timestamp:3600000> (in 1h0m0s).",
+		},
+		{
+			RejectWindowMax{1, common.DurationSpec{Days: 1, Hours: 1}, timestamp.Timestamp(0)},
+			"Reached the number of max attempts (1) within submission window (every 1 days, 1 hours). Next allowed submission time is <timestamp:90000000> (in 25h0m0s).",
+		},
+	}
+
+	for i, testCase := range testCases {
+		actual := testCase.input.fullString(now)
+		if testCase.expected != actual {
+			test.Errorf("Case %d: Message does not match. Expected: '%s', Actual: '%s'.", i, testCase.expected, actual)
+			continue
+		}
+	}
 }
 
 func testMaxWindowAttemps(test *testing.T, user string, expectReject bool) {

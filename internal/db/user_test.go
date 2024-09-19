@@ -22,6 +22,15 @@ func (this *DBTests) DBTestUserGetServerUsersBase(test *testing.T) {
 		test.Fatalf("Could not get server users: '%v'.", err)
 	}
 
+	// Check that root is a server user.
+	_, exists := users[model.RootUserEmail]
+	if !exists {
+		test.Fatalf("Could not find the root user in server users.")
+	}
+
+	// Remove root from the server users since we're comparing server users with test server users.
+	delete(users, model.RootUserEmail)
+
 	if len(users) == 0 {
 		test.Fatalf("Found no server users.")
 	}
@@ -43,8 +52,18 @@ func (this *DBTests) DBTestUserGetServerUsersEmpty(test *testing.T) {
 		test.Fatalf("Could not get server users: '%v'.", err)
 	}
 
-	if len(users) != 0 {
-		test.Fatalf("Found server users when there should have been none: '%s'.", util.MustToJSONIndent(users))
+	if len(users) == 0 {
+		test.Fatalf("Could not find the root user after clearing the database.")
+	}
+
+	for _, user := range users {
+		if user.Email != model.RootUserEmail {
+			test.Fatalf("Found server user '%s' when root should be the only server user.", user.Email)
+		}
+	}
+
+	if len(users) > 1 {
+		test.Fatalf("Found more than one root user in the database.")
 	}
 }
 
@@ -572,4 +591,23 @@ func convertToCourseUsers(test *testing.T, course *model.Course, serverUsers map
 	}
 
 	return courseUsers
+}
+
+func (this *DBTests) DBTestRootUserValidation(test *testing.T) {
+	defer ResetForTesting()
+	ResetForTesting()
+
+	rootUser, err := GetServerUser(model.RootUserEmail)
+	if err != nil {
+		test.Fatal("Failed to get the root user.", err)
+	}
+
+	if rootUser == nil {
+		test.Fatal("Root user not found.")
+	}
+
+	err = rootUser.Validate()
+	if err != nil {
+		test.Fatal("Root user validation failed.", err)
+	}
 }

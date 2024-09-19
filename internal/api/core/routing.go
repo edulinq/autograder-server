@@ -11,6 +11,7 @@ import (
 	"runtime"
 	"strings"
 
+	"github.com/edulinq/autograder/internal/api/static"
 	"github.com/edulinq/autograder/internal/config"
 	"github.com/edulinq/autograder/internal/log"
 	"github.com/edulinq/autograder/internal/util"
@@ -26,7 +27,7 @@ type RouteHandler func(response http.ResponseWriter, request *http.Request) erro
 // Thus alias is not actually used (any and reflection are used), but shows what the structure is.
 type APIHandler func(*any) (*any, *APIError)
 
-// A handler that has been reflexively verifed.
+// A handler that has been reflexively verified.
 // Once validated, callers should feel safe calling reflection methods on this without extra checks.
 type ValidAPIHandler any
 
@@ -40,7 +41,7 @@ type Route struct {
 	handler RouteHandler
 }
 
-const MAX_FORM_MEM_SIZE_BYTES = 10 << 20 // 20 MB
+const MAX_FORM_MEM_SIZE_BYTES = 20 * 1024 * 1024 // 20 MB
 
 // Get a function to pass to http.HandlerFunc().
 func GetRouteServer(routes *[]*Route) http.HandlerFunc {
@@ -80,6 +81,14 @@ func ServeRoutes(routes *[]*Route, response http.ResponseWriter, request *http.R
 			http.Error(response, "Server Error", http.StatusInternalServerError)
 		}
 
+		return
+	}
+
+	// If this path does not look like an API request and static fallback is enabled,
+	// the try to match the path with a static path.
+	if config.WEB_STATIC_FALLBACK.Get() && !strings.HasPrefix(request.URL.Path, CURRENT_PREFIX) {
+		log.Trace("Attempting Static Fallback", log.NewAttr("method", request.Method), log.NewAttr("url", request.URL.Path))
+		static.Handle(response, request)
 		return
 	}
 
