@@ -8,9 +8,9 @@ import (
 )
 
 type APIResponse struct {
-	ID            string `json:"id"`
-	Locator       string `json:"locator"`
-	ServerVersion string `json:"server-version"`
+	ID            string       `json:"id"`
+	Locator       string       `json:"locator"`
+	ServerVersion util.Version `json:"server-version"`
 
 	StartTimestamp timestamp.Timestamp `json:"start-timestamp"`
 	EndTimestamp   timestamp.Timestamp `json:"end-timestamp"`

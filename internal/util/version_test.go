@@ -14,7 +14,7 @@ func TestVersionShort(test *testing.T) {
 
 func TestVersionFull(test *testing.T) {
 	version := GetAutograderFullVersion()
-	if strings.HasPrefix(version, UNKNOWN_VERSION) {
+	if strings.HasPrefix(version.Short, UNKNOWN_VERSION) {
 		test.Fatalf("Did not get an actual version (check error log).")
 	}
 }

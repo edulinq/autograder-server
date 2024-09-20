@@ -89,20 +89,38 @@ func ComputeAutograderFullVersion() (gitHash string, gitStatus string) {
 	return hash[0:HASH_LENGTH], status
 }
 
-func GetAutograderFullVersion() string {
+func GetAutograderFullVersion() Version {
 	var gitHash string
 	var status string
+
+	versionOut := Version{
+		Short:  UNKNOWN_VERSION,
+		Hash:   UNKNOWN_HASH,
+		Status: "",
+		Api:    UNKNOWN_API,
+	}
 
 	readVersion, err := ReadVersionFromJSON()
 	if err != nil {
 		log.Error("Failed to read the version from JSON file.")
-		return UNKNOWN_VERSION
+		return versionOut
 	}
 
 	if readVersion.Hash == UNKNOWN_HASH {
 		gitHash, status = ComputeAutograderFullVersion()
-		return GetAutograderVersion() + "-" + gitHash + "-" + status
+
+		versionOut.Short = GetAutograderVersion()
+		versionOut.Hash = gitHash
+		versionOut.Status = status
+		versionOut.Api = MustGetAPIVersion()
+
+		return versionOut
 	}
 
-	return readVersion.Short + "-" + readVersion.Hash + "-" + readVersion.Status
+	versionOut.Short = readVersion.Short
+	versionOut.Hash = readVersion.Hash
+	versionOut.Status = readVersion.Status
+	versionOut.Api = readVersion.Api
+
+	return versionOut
 }

@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"path/filepath"
-	"strings"
 
 	"github.com/alecthomas/kong"
 
@@ -29,21 +28,20 @@ func main() {
 
 	if args.Out == "" {
 		fmt.Printf("Short Version: %s\n", util.GetAutograderVersion())
-		fmt.Printf("Full  Version: %s\n", util.GetAutograderFullVersion())
+
+		fullVersion := util.GetAutograderVersion() + "-" + util.GetAutograderFullVersion().Hash
+		if util.GetAutograderFullVersion().Status != "" {
+			fullVersion = fullVersion + "-" + util.GetAutograderFullVersion().Status
+		}
+
+		fmt.Printf("Full  Version: %s\n", fullVersion)
 		fmt.Printf("API   Version: %d\n", util.MustGetAPIVersion())
 		return
 	}
 
 	versionJSONPath := util.ShouldAbs(filepath.Join(util.ShouldGetThisDir(), "..", "..", args.Out))
 
-	versionSplice := strings.Split(util.GetAutograderFullVersion(), "-")
-
-	version := util.Version{
-		Short:  util.GetAutograderVersion(),
-		Hash:   versionSplice[1],
-		Status: versionSplice[2],
-		Api:    util.MustGetAPIVersion(),
-	}
+	version := util.GetAutograderFullVersion()
 
 	err = util.ToJSONFileIndent(&version, versionJSONPath)
 	if err != nil {
