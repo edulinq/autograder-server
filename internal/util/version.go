@@ -20,14 +20,14 @@ const (
 type Version struct {
 	Short  string `json:"short-version"`
 	Hash   string `json:"git-hash"`
-	Status string `json:"status"`
+	Status bool `json:"isDirty"`
 	Api    int    `json:"api-version"`
 }
 
 func (v Version) FullVersion() string {
 	fullVersion := v.Short + "-" + v.Hash
-	if v.Status != "" {
-		fullVersion = fullVersion + "-" + v.Status
+	if v.Status {
+		fullVersion = fullVersion + "-" + DIRTY_SUFFIX
 	}
 
 	return fullVersion
@@ -56,7 +56,7 @@ func ReadVersionFromJSON() (*Version, error) {
 	readVersion := Version{
 		Short:  UNKNOWN_VERSION,
 		Hash:   UNKNOWN_HASH,
-		Status: UNKNOWN_VERSION,
+		Status: true,
 		Api:    UNKNOWN_API,
 	}
 
@@ -75,7 +75,7 @@ func ReadVersionFromJSON() (*Version, error) {
 	return &readVersion, nil
 }
 
-func ComputeAutograderFullVersion() (gitHash string, gitStatus string) {
+func ComputeAutograderFullVersion() (gitHash string, gitStatus bool) {
 	repoPath := ShouldAbs(filepath.Join(ShouldGetThisDir(), "..", ".."))
 
 	hash, err := GitGetCommitHash(repoPath)
@@ -84,28 +84,22 @@ func ComputeAutograderFullVersion() (gitHash string, gitStatus string) {
 		hash = UNKNOWN_HASH
 	}
 
-	var status string
-
 	isDirty, err := GitRepoIsDirtyHack(repoPath)
 	if err != nil {
-		status = UNKNOWN_VERSION
-	}
+		return hash[0:HASH_LENGTH], true
+	} 
 
-	if isDirty {
-		status = DIRTY_SUFFIX
-	}
-
-	return hash[0:HASH_LENGTH], status
+	return hash[0:HASH_LENGTH], isDirty
 }
 
 func GetAutograderFullVersion() Version {
 	var gitHash string
-	var status string
+	var status bool
 
 	versionOut := Version{
 		Short:  UNKNOWN_VERSION,
 		Hash:   UNKNOWN_HASH,
-		Status: "",
+		Status: true,
 		Api:    UNKNOWN_API,
 	}
 
