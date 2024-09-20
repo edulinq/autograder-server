@@ -20,7 +20,7 @@ const (
 type Version struct {
 	Short  string `json:"short-version"`
 	Hash   string `json:"git-hash"`
-	Status bool `json:"isDirty"`
+	Status bool   `json:"isDirty"`
 	Api    int    `json:"api-version"`
 }
 
@@ -87,7 +87,7 @@ func ComputeAutograderFullVersion() (gitHash string, gitStatus bool) {
 	isDirty, err := GitRepoIsDirtyHack(repoPath)
 	if err != nil {
 		return hash[0:HASH_LENGTH], true
-	} 
+	}
 
 	return hash[0:HASH_LENGTH], isDirty
 }
