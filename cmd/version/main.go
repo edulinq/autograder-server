@@ -26,7 +26,7 @@ func main() {
 	}
 
 	version := util.GetAutograderVersion()
-	
+
 	if args.Out == "" {
 		fmt.Printf("Short Version: %s\n", version.Short)
 		fmt.Printf("Full  Version: %s\n", util.Version.FullVersion(version))
