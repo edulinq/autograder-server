@@ -7,7 +7,6 @@ import (
 
 	"github.com/alecthomas/kong"
 
-	"github.com/edulinq/autograder/internal/api/core"
 	"github.com/edulinq/autograder/internal/config"
 	"github.com/edulinq/autograder/internal/log"
 	"github.com/edulinq/autograder/internal/util"
@@ -31,7 +30,7 @@ func main() {
 	if args.Out == "" {
 		fmt.Printf("Short Version: %s\n", util.GetAutograderVersion())
 		fmt.Printf("Full  Version: %s\n", util.GetAutograderFullVersion())
-		fmt.Printf("API   Version: %d\n", core.API_VERSION)
+		fmt.Printf("API   Version: %d\n", util.MustGetAPIVersion())
 		return
 	}
 
@@ -43,6 +42,7 @@ func main() {
 		Short:  util.GetAutograderVersion(),
 		Hash:   versionSplice[1],
 		Status: versionSplice[2],
+		Api:    util.MustGetAPIVersion(),
 	}
 
 	err = util.ToJSONFileIndent(&version, versionJSONPath)
