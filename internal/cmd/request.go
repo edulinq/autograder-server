@@ -11,8 +11,20 @@ import (
 	"github.com/edulinq/autograder/internal/util"
 )
 
+func SendAndPrintCMDRequest(endpoint string, request any, responseType any, shortForm bool) error {
+    response, err := sendCMDRequest(endpoint, request)
+    if err != nil {
+        return fmt.Errorf("Failed to send the CMD request: '%w'.", err)
+    }
+
+    printCMDResponse(response, responseType, shortForm)
+
+    return nil
+}
+
+
 // Send a CMD request to the unix socket and return the response.
-func SendCMDRequest(endpoint string, request any) (core.APIResponse, error) {
+func sendCMDRequest(endpoint string, request any) (core.APIResponse, error) {
 	socketPath, err := common.GetUnixSocketPath()
 	if err != nil {
 		return core.APIResponse{}, fmt.Errorf("Failed to get the unix socket path: '%w'.", err)
@@ -51,7 +63,7 @@ func SendCMDRequest(endpoint string, request any) (core.APIResponse, error) {
 	return response, nil
 }
 
-func PrintCMDResponse(response core.APIResponse, responseType any, shortForm bool) {
+func printCMDResponse(response core.APIResponse, responseType any, shortForm bool) {
 	if !response.Success {
 		output := response.Message
 		if !shortForm {

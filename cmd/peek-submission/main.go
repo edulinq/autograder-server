@@ -44,10 +44,8 @@ func main() {
 		TargetSubmission: args.TargetSubmission,
 	}
 
-	response, err := cmd.SendCMDRequest(`courses/assignments/submissions/fetch/user/peek`, request)
+	err = cmd.SendAndPrintCMDRequest(`courses/assignments/submissions/fetch/user/peek`, request, submissions.FetchUserPeekResponse{}, args.Short)
 	if err != nil {
-		log.Fatal("Failed to send the CMD request.", err)
+		log.Fatal("Failed to peek the user's submission.", err)
 	}
-
-	cmd.PrintCMDResponse(response, submissions.FetchUserPeekResponse{}, args.Short)
 }
