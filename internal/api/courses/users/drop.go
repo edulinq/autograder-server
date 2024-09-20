@@ -26,30 +26,31 @@ func HandleDrop(request *DropRequest) (*DropResponse, *core.APIError) {
 
 	response.FoundUser = true
 
-	if !checkDropPermissions(request) {
-		return nil, core.NewBadCoursePermissionsError("-612", &request.APIRequestCourseUserContext, request.TargetCourseUser.User.Role,
-			"Cannot drop a user with an equal or higher role.").Add("target-course-user", request.TargetCourseUser.User.Email)
+	permErr := checkDropPermissions(request)
+	if permErr != nil {
+		return nil, permErr
 	}
 
 	_, _, err := db.RemoveUserFromCourse(request.Course, request.TargetCourseUser.User.Email)
 	if err != nil {
-		return nil, core.NewInternalError("-613", &request.APIRequestCourseUserContext,
+		return nil, core.NewInternalError("-612", &request.APIRequestCourseUserContext,
 			"Failed to drop user.").Err(err).Add("target-course-user", request.TargetCourseUser.User.Email)
 	}
 
 	return &response, nil
 }
 
-func checkDropPermissions(request *DropRequest) bool {
+func checkDropPermissions(request *DropRequest) *core.APIError {
 	// If the request is from a server admin or above, they can drop anyone from the course.
 	if request.ServerUser.Role >= model.ServerRoleAdmin {
-		return true
+		return nil
 	}
 
 	// Non-server admin can only drop users with lower course roles than themselves.
 	if request.User.Role > request.TargetCourseUser.User.Role {
-		return true
+		return nil
 	}
 
-	return false
+	return core.NewBadCoursePermissionsError("-613", &request.APIRequestCourseUserContext, request.TargetCourseUser.User.Role,
+		"Cannot drop a user with an equal or higher role.").Add("target-course-user", request.TargetCourseUser.User.Email)
 }

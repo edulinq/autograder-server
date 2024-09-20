@@ -48,9 +48,9 @@ func TestUserDrop(test *testing.T) {
 		{"course-owner", "server-user@test.edulinq.org", false, "", DropResponse{false}},
 
 		// Complex invalid permissions, removing someone with equal or higher course roles.
-		{"course-admin", "course-admin@test.edulinq.org", true, "-612", DropResponse{false}},
-		{"course-admin", "course-owner@test.edulinq.org", true, "-612", DropResponse{false}},
-		{"course-owner", "course-owner@test.edulinq.org", true, "-612", DropResponse{false}},
+		{"course-admin", "course-admin@test.edulinq.org", true, "-613", DropResponse{false}},
+		{"course-admin", "course-owner@test.edulinq.org", true, "-613", DropResponse{false}},
+		{"course-owner", "course-owner@test.edulinq.org", true, "-613", DropResponse{false}},
 	}
 
 	for i, testCase := range testCases {
