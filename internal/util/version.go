@@ -24,11 +24,19 @@ type Version struct {
 	Api    int    `json:"api-version"`
 }
 
+func (v Version) FullVersion() string {
+	fullVersion := v.Short + "-" + v.Hash
+	if v.Status != "" {
+		fullVersion = fullVersion + "-" + v.Status
+	}
+
+	return fullVersion
+}
+
 func MustGetAPIVersion() int {
 	version, err := ReadVersionFromJSON()
 	if err != nil {
-		log.Fatal("Failed to read the version from JSON file.")
-		return UNKNOWN_API
+		log.Fatal("Failed to read the version from JSON file.", err)
 	}
 
 	return version.Api
@@ -45,11 +53,12 @@ func GetAutograderVersion() string {
 }
 
 func ReadVersionFromJSON() (*Version, error) {
-	var readVersion Version
-	readVersion.Short = UNKNOWN_VERSION
-	readVersion.Hash = UNKNOWN_HASH
-	readVersion.Status = UNKNOWN_VERSION
-	readVersion.Api = UNKNOWN_API
+	readVersion := Version{
+		Short:  UNKNOWN_VERSION,
+		Hash:   UNKNOWN_HASH,
+		Status: UNKNOWN_VERSION,
+		Api:    UNKNOWN_API,
+	}
 
 	versionPath := ShouldAbs(filepath.Join(ShouldGetThisDir(), "..", "..", VERSION_FILENAME))
 	if !IsFile(versionPath) {
