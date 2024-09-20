@@ -26,11 +26,12 @@ func main() {
 	}
 
 	if args.Out == "" {
-		fmt.Printf("Short Version: %s\n", util.GetAutograderVersion())
-		fmt.Printf("Full  Version: %s\n", util.Version.FullVersion(util.GetAutograderFullVersion()))
-		fmt.Printf("API   Version: %d\n", util.MustGetAPIVersion())
+		version := util.GetAutograderVersion()
+		fmt.Printf("Short Version: %s\n", version.Short)
+		fmt.Printf("Full  Version: %s\n", util.Version.FullVersion(version))
+		fmt.Printf("API   Version: %d\n", version.Api)
 	} else {
-		version := util.GetAutograderFullVersion()
+		version := util.GetAutograderVersion()
 
 		err = util.ToJSONFileIndent(&version, args.Out)
 		if err != nil {

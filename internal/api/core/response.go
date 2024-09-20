@@ -31,7 +31,7 @@ func NewAPIResponse(request ValidAPIRequest, content any) *APIResponse {
 
 	return &APIResponse{
 		ID:             id,
-		ServerVersion:  util.GetAutograderFullVersion(),
+		ServerVersion:  util.GetAutograderVersion(),
 		StartTimestamp: startTime,
 		EndTimestamp:   timestamp.Now(),
 		HTTPStatus:     HTTP_STATUS_GOOD,
