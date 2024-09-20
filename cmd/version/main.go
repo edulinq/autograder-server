@@ -25,14 +25,13 @@ func main() {
 		log.Fatal("Could not load config options.", err)
 	}
 
+	version := util.GetAutograderVersion()
+	
 	if args.Out == "" {
-		version := util.GetAutograderVersion()
 		fmt.Printf("Short Version: %s\n", version.Short)
 		fmt.Printf("Full  Version: %s\n", util.Version.FullVersion(version))
 		fmt.Printf("API   Version: %d\n", version.Api)
 	} else {
-		version := util.GetAutograderVersion()
-
 		err = util.ToJSONFileIndent(&version, args.Out)
 		if err != nil {
 			log.Error("Failed to write to the JSON file", err, log.NewAttr("path", args.Out))
