@@ -49,5 +49,5 @@ func main() {
 		log.Fatal("Failed to send the CMD request.", err)
 	}
 
-	cmd.PrintCMDRequest(response, submissions.FetchUserPeekResponse{}, args.Short)
+	cmd.PrintCMDResponse(response, submissions.FetchUserPeekResponse{}, args.Short)
 }

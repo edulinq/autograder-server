@@ -51,7 +51,7 @@ func SendCMDRequest(endpoint string, request any) (core.APIResponse, error) {
 	return response, nil
 }
 
-func PrintCMDRequest(response core.APIResponse, responseType any, shortForm bool) {
+func PrintCMDResponse(response core.APIResponse, responseType any, shortForm bool) {
 	if !response.Success {
 		output := response.Message
 		if !shortForm {
