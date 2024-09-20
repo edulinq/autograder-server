@@ -45,7 +45,7 @@ func MustGetAPIVersion() int {
 func getAutograderVersion() string {
 	version, err := versionFromJSON()
 	if err != nil {
-		log.Error("Failed to read the version from JSON file.")
+		log.Error("Failed to read the version from JSON file.", err)
 		return UNKNOWN_VERSION
 	}
 
@@ -63,13 +63,13 @@ func versionFromJSON() (Version, error) {
 	versionPath := ShouldAbs(filepath.Join(ShouldGetThisDir(), "..", "..", VERSION_FILENAME))
 	if !IsFile(versionPath) {
 		log.Error("Version file does not exist.", log.NewAttr("path", versionPath))
-		return version, fmt.Errorf("Version file does not exist.")
+		return version, fmt.Errorf("Version file does not exist.", log.NewAttr("path", versionPath))
 	}
 
 	err := JSONFromFile(versionPath, &version)
 	if err != nil {
 		log.Error("Failed to read the version from JSON file.", err, log.NewAttr("path", versionPath))
-		return version, fmt.Errorf("Failed to read the version from JSON file %s.", log.NewAttr("path", versionPath))
+		return version, fmt.Errorf("Failed to read the version from JSON file %s.", err, log.NewAttr("path", versionPath))
 	}
 
 	return version, nil
@@ -105,7 +105,7 @@ func GetAutograderVersion() Version {
 
 	readVersion, err := versionFromJSON()
 	if err != nil {
-		log.Error("Failed to read the version from JSON file.")
+		log.Error("Failed to read the version from JSON file.", err)
 		return versionOut
 	}
 
