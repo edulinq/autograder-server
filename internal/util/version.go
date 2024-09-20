@@ -63,13 +63,13 @@ func versionFromJSON() (Version, error) {
 	versionPath := ShouldAbs(filepath.Join(ShouldGetThisDir(), "..", "..", VERSION_FILENAME))
 	if !IsFile(versionPath) {
 		log.Error("Version file does not exist.", log.NewAttr("path", versionPath))
-		return version, fmt.Errorf("Version file does not exist.", log.NewAttr("path", versionPath))
+		return version, fmt.Errorf("Version file does not exist.")
 	}
 
 	err := JSONFromFile(versionPath, &version)
 	if err != nil {
 		log.Error("Failed to read the version from JSON file.", err, log.NewAttr("path", versionPath))
-		return version, fmt.Errorf("Failed to read the version from JSON file %s.", err, log.NewAttr("path", versionPath))
+		return version, fmt.Errorf("Failed to read the version from JSON file %s.", log.NewAttr("path", versionPath))
 	}
 
 	return version, nil
