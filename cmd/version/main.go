@@ -27,13 +27,13 @@ func main() {
 
 	version, err := util.GetAutograderVersion()
 	if err != nil {
-		log.Error("Failed to get the autograder version.", err)
+		log.Fatal("Failed to get the autograder version.", err)
 	}
 
 	if args.Out == "" {
-		fmt.Printf("Short Version: %s\n", version.Short)
-		fmt.Printf("Full  Version: %s\n", util.Version.String(version))
-		fmt.Printf("API   Version: %d\n", version.Api)
+		fmt.Printf("Short Version: '%s'\n", version.Short)
+		fmt.Printf("Full  Version: '%s'\n", util.Version.String(version))
+		fmt.Printf("API   Version: '%d'\n", version.Api)
 
 		return
 	}
