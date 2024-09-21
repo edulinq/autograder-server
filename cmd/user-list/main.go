@@ -57,9 +57,17 @@ func listServerUsers(emails []string, table bool) {
 
 	if len(emails) > 0 {
 		response.Content = filterUsersByEmail(responseContent, emails)
+		util.MustJSONFromString(util.MustToJSON(response.Content), &responseContent)
 	}
 
-	cmd.PrintCMDResponse(response, users.ListResponse{}, args.Short)
+	if table {
+		fmt.Println(strings.Join(model.COURSE_USER_ROW_COLUMNS, "\t"))
+		for _, user := range responseContent.Users {
+			fmt.Println(strings.Join(user.MustToRow(), "\t"))
+		}
+	} else {
+		cmd.PrintCMDResponse(response, users.ListResponse{}, args.Short)
+	}
 }
 
 func listCourseUsers(emails []string, courseID string, table bool) {
