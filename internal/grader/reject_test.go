@@ -12,13 +12,16 @@ import (
 	"github.com/edulinq/autograder/internal/timestamp"
 )
 
+const TEST_COURSE_ID = "course-languages"
+const TEST_ASSIGNMENT_ID = "bash"
+
 var SUBMISSION_RELPATH string = filepath.Join("test-submissions", "solution")
 
 func TestRejectSubmissionMaxAttempts(test *testing.T) {
 	db.ResetForTesting()
 	defer db.ResetForTesting()
 
-	assignment := db.MustGetTestAssignment()
+	assignment := db.MustGetAssignment(TEST_COURSE_ID, TEST_ASSIGNMENT_ID)
 
 	// Set the max submissions to zero.
 	maxValue := 0
@@ -32,7 +35,7 @@ func TestRejectSubmissionMaxAttemptsInfinite(test *testing.T) {
 	db.ResetForTesting()
 	defer db.ResetForTesting()
 
-	assignment := db.MustGetTestAssignment()
+	assignment := db.MustGetAssignment(TEST_COURSE_ID, TEST_ASSIGNMENT_ID)
 
 	// Set the max submissions to empty (infinite).
 	assignment.SubmissionLimit = &model.SubmissionLimitInfo{}
@@ -86,7 +89,7 @@ func testMaxWindowAttemps(test *testing.T, user string, expectReject bool) {
 	db.ResetForTesting()
 	defer db.ResetForTesting()
 
-	assignment := db.MustGetTestAssignment()
+	assignment := db.MustGetAssignment(TEST_COURSE_ID, TEST_ASSIGNMENT_ID)
 	duration := common.DurationSpec{Days: 1000}
 
 	// Set the submission limit window to 1 attempt in a large duration.
