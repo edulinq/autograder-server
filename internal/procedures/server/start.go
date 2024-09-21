@@ -16,7 +16,12 @@ import (
 func Start() (err error) {
 	defer server.StopServer()
 
-	log.Info("Autograder Version.", log.NewAttr("version", util.GetAutograderVersion()))
+	version, err := util.GetAutograderVersion()
+	if err != nil {
+		log.Error("Failed to get the autograder version.", err)
+	}
+
+	log.Info("Autograder Version.", log.NewAttr("version", version))
 
 	err = db.Open()
 	if err != nil {

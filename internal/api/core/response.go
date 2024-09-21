@@ -3,6 +3,7 @@ package core
 import (
 	"reflect"
 
+	"github.com/edulinq/autograder/internal/log"
 	"github.com/edulinq/autograder/internal/timestamp"
 	"github.com/edulinq/autograder/internal/util"
 )
@@ -29,9 +30,14 @@ func (this *APIResponse) String() string {
 func NewAPIResponse(request ValidAPIRequest, content any) *APIResponse {
 	id, startTime := getRequestInfo(request)
 
+	version, err := util.GetAutograderVersion()
+	if err != nil {
+		log.Error("Failed to get the autograder version.", err)
+	}
+
 	return &APIResponse{
 		ID:             id,
-		ServerVersion:  util.GetAutograderVersion(),
+		ServerVersion:  version,
 		StartTimestamp: startTime,
 		EndTimestamp:   timestamp.Now(),
 		HTTPStatus:     HTTP_STATUS_GOOD,

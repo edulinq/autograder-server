@@ -12,7 +12,7 @@ import (
 
 var args struct {
 	config.ConfigArgs
-	Out string `help:"Writes the output to the given file in JSON format."`
+	Out string `help:"Optional output JSON file. If provided, the output will be written to the specified file in JSON format."`
 }
 
 func main() {
@@ -25,16 +25,21 @@ func main() {
 		log.Fatal("Could not load config options.", err)
 	}
 
-	version := util.GetAutograderVersion()
+	version, err := util.GetAutograderVersion()
+	if err != nil {
+		log.Error("Failed to get the autograder version.", err)
+	}
 
 	if args.Out == "" {
 		fmt.Printf("Short Version: %s\n", version.Short)
-		fmt.Printf("Full  Version: %s\n", util.Version.FullVersion(version))
+		fmt.Printf("Full  Version: %s\n", util.Version.String(version))
 		fmt.Printf("API   Version: %d\n", version.Api)
-	} else {
-		err = util.ToJSONFileIndent(&version, args.Out)
-		if err != nil {
-			log.Error("Failed to write to the JSON file", err, log.NewAttr("path", args.Out))
-		}
+
+		return
+	}
+
+	err = util.ToJSONFileIndent(&version, args.Out)
+	if err != nil {
+		log.Fatal("Failed to write to the JSON file", err, log.NewAttr("path", args.Out))
 	}
 }

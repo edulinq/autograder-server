@@ -135,10 +135,15 @@ func (this *APIError) ToResponse() *APIResponse {
 		locator = ""
 	}
 
+	version, err := util.GetAutograderVersion()
+	if err != nil {
+		log.Error("Failed to get the autograder version.", err)
+	}
+
 	return &APIResponse{
 		ID:             this.RequestID,
 		Locator:        locator,
-		ServerVersion:  util.GetAutograderVersion(),
+		ServerVersion:  version,
 		StartTimestamp: this.Timestamp,
 		EndTimestamp:   timestamp.Now(),
 		HTTPStatus:     this.HTTPStatus,
