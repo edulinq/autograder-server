@@ -31,9 +31,9 @@ func TestGet(test *testing.T) {
 
 		// Other, bad permissions.
 		{"course-student", "couse-admin@test.edulinq.org", true, "-033", nil},
-		{"course-grader", "course-admin@test.edulinq.org", true, "-033", nil},
 
 		// Other, good permissions.
+		{"course-grader", "course-student@test.edulinq.org", false, "", users["course-student@test.edulinq.org"]},
 		{"course-admin", "course-student@test.edulinq.org", false, "", users["course-student@test.edulinq.org"]},
 		{"course-owner", "course-student@test.edulinq.org", false, "", users["course-student@test.edulinq.org"]},
 
