@@ -3,6 +3,7 @@ package util
 import (
 	"errors"
 	"os"
+	"path/filepath"
 	"sync"
 
 	"github.com/edulinq/autograder/internal/log"
@@ -10,7 +11,7 @@ import (
 
 const DEFAULT_MKDIR_PERMS os.FileMode = 0755
 
-var tempDir string = ""
+var tempDir string = filepath.Join("/", "tmp", "autograder-temp")
 var tempDirMutex sync.Mutex
 var createdTempDirs []string
 
@@ -30,6 +31,10 @@ func MustMkDirTemp(prefix string) string {
 func MkDirTemp(prefix string) (string, error) {
 	tempDirMutex.Lock()
 	defer tempDirMutex.Unlock()
+
+	if tempDir != "" {
+		MkDir(tempDir)
+	}
 
 	dir, err := os.MkdirTemp(tempDir, prefix)
 	if err != nil {
