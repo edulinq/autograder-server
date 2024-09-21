@@ -51,7 +51,7 @@ func versionFromJSON() (Version, error) {
 
 	err := JSONFromFile(versionPath, &version)
 	if err != nil {
-		return version, fmt.Errorf("Failed to read the version from JSON file '%s'.", versionPath)
+		return version, err
 	}
 
 	return version, nil
