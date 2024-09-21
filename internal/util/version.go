@@ -1,6 +1,7 @@
 package util
 
 import (
+	"errors"
 	"fmt"
 	"path/filepath"
 
@@ -12,7 +13,7 @@ const (
 	UNKNOWN_HASH     string = "????????"
 	VERSION_FILENAME string = "VERSION.json"
 	DIRTY_SUFFIX     string = "dirty"
-	UNKNOWN_API      int    = 0
+	UNKNOWN_API      int    = -1
 	HASH_LENGTH      int    = 8
 )
 
@@ -62,36 +63,29 @@ func readVersion() (Version, error) {
 	return version, nil
 }
 
-func getGitInfo() (string, bool) {
+func getGitInfo() (string, bool, error) {
 	repoPath := ShouldAbs(filepath.Join(ShouldGetThisDir(), "..", ".."))
 
 	hash, err := GitGetCommitHash(repoPath)
 	if err != nil {
-		log.Error("Failed to get commit hash.", err, log.NewAttr("path", repoPath))
-		hash = UNKNOWN_HASH
+		return UNKNOWN_HASH, true, err
 	}
 
 	isDirty, err := GitRepoIsDirtyHack(repoPath)
 	if err != nil {
-		log.Error("Failed to get state of the git repository ", err, log.NewAttr("path", repoPath))
-		return hash[0:HASH_LENGTH], true
+		return hash[0:HASH_LENGTH], true, err
 	}
 
-	return hash[0:HASH_LENGTH], isDirty
+	return hash[0:HASH_LENGTH], isDirty, nil
 }
 
 func GetAutograderVersion() (Version, error) {
-	version, err := readVersion()
-	if err != nil {
-		return version, err
-	}
+	var gitErr error
+	version, versionErr := readVersion()
 
 	if version.Hash == UNKNOWN_HASH {
-		gitHash, isDirty := getGitInfo()
-
-		version.Hash = gitHash
-		version.IsDirty = isDirty
+		version.Hash, version.IsDirty, gitErr = getGitInfo()
 	}
 
-	return version, nil
+	return version, errors.Join(versionErr, gitErr)
 }

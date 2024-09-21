@@ -27,7 +27,7 @@ func main() {
 
 	version, err := util.GetAutograderVersion()
 	if err != nil {
-		log.Fatal("Failed to get the autograder version.", err)
+		log.Error("Failed to get the autograder version.", err)
 	}
 
 	if args.Out == "" {
