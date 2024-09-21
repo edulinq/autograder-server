@@ -3,11 +3,11 @@ package core
 import (
 	"fmt"
 	"strings"
+
+	"github.com/edulinq/autograder/internal/util"
 )
 
-const API_VERSION int = 3
-
-var CURRENT_PREFIX string = fmt.Sprintf("/api/v%02d", API_VERSION)
+var CURRENT_PREFIX string = fmt.Sprintf("/api/v%02d", util.MustGetAPIVersion())
 
 // Get an endpoint using the current prefix.
 func NewEndpoint(suffix string) string {
