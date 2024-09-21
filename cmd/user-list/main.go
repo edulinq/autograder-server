@@ -61,7 +61,7 @@ func listServerUsers(emails []string, table bool) {
 	}
 
 	if table {
-		fmt.Println(strings.Join(model.COURSE_USER_ROW_COLUMNS, "\t"))
+		fmt.Println(strings.Join(model.SERVER_USER_ROW_COLUMNS, "\t"))
 		for _, user := range responseContent.Users {
 			fmt.Println(strings.Join(user.MustToRow(), "\t"))
 		}

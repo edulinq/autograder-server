@@ -187,5 +187,6 @@ func (this *ServerUserInfo) MustToRow() []string {
 		this.Email,
 		util.PointerToString(&this.BaseUserInfo.Name),
 		this.Role.String(),
+		string(this.Type),
 	}
 }

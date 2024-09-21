@@ -8,7 +8,7 @@ import (
 	"github.com/edulinq/autograder/internal/util"
 )
 
-var COURSE_USER_ROW_COLUMNS []string = []string{"email", "name", "role"}
+var COURSE_USER_ROW_COLUMNS []string = []string{"email", "name", "role", "lms-id"}
 
 // CourseUsers represent users enrolled in a course (in any role including owner).
 // They only contain a users information that is relevant to the course.
