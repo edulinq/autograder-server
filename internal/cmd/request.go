@@ -3,28 +3,27 @@ package cmd
 import (
 	"fmt"
 	"net"
+	"reflect"
 
 	"github.com/edulinq/autograder/internal/api/core"
-	"github.com/edulinq/autograder/internal/api/courses/assignments/submissions"
 	"github.com/edulinq/autograder/internal/api/server"
 	"github.com/edulinq/autograder/internal/common"
 	"github.com/edulinq/autograder/internal/util"
 )
 
 func SendAndPrintCMDRequest(endpoint string, request any, responseType any, shortForm bool) error {
-    response, err := sendCMDRequest(endpoint, request)
-    if err != nil {
-        return fmt.Errorf("Failed to send the CMD request: '%w'.", err)
-    }
+	response, err := SendCMDRequest(endpoint, request)
+	if err != nil {
+		return fmt.Errorf("Failed to send the CMD request: '%w'.", err)
+	}
 
-    printCMDResponse(response, responseType, shortForm)
+	PrintCMDResponse(response, responseType, shortForm)
 
-    return nil
+	return nil
 }
 
-
 // Send a CMD request to the unix socket and return the response.
-func sendCMDRequest(endpoint string, request any) (core.APIResponse, error) {
+func SendCMDRequest(endpoint string, request any) (core.APIResponse, error) {
 	socketPath, err := common.GetUnixSocketPath()
 	if err != nil {
 		return core.APIResponse{}, fmt.Errorf("Failed to get the unix socket path: '%w'.", err)
@@ -63,7 +62,7 @@ func sendCMDRequest(endpoint string, request any) (core.APIResponse, error) {
 	return response, nil
 }
 
-func printCMDResponse(response core.APIResponse, responseType any, shortForm bool) {
+func PrintCMDResponse(response core.APIResponse, responseType any, shortForm bool) {
 	if !response.Success {
 		output := response.Message
 		if !shortForm {
@@ -77,7 +76,7 @@ func printCMDResponse(response core.APIResponse, responseType any, shortForm boo
 	}
 
 	if shortForm {
-		var responseContent submissions.FetchUserPeekResponse
+		responseContent := reflect.New(reflect.TypeOf(responseType)).Interface()
 		util.MustJSONFromString(util.MustToJSON(response.Content), &responseContent)
 		fmt.Println(util.MustToJSONIndent(responseContent))
 	} else {
