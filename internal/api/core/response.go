@@ -32,7 +32,7 @@ func NewAPIResponse(request ValidAPIRequest, content any) *APIResponse {
 
 	version, err := util.GetAutograderVersion()
 	if err != nil {
-		log.Error("Failed to get the autograder version.", err)
+		log.Warn("Failed to get the autograder version.", err)
 	}
 
 	return &APIResponse{

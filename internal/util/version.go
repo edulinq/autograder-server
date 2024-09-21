@@ -33,7 +33,7 @@ func (this Version) String() string {
 }
 
 func MustGetAPIVersion() int {
-	version, err := versionFromJSON()
+	version, err := readVersion()
 	if err != nil {
 		log.Fatal("Failed to read the version from JSON file.", err)
 	}
@@ -41,8 +41,13 @@ func MustGetAPIVersion() int {
 	return version.Api
 }
 
-func versionFromJSON() (Version, error) {
-	var version Version
+func readVersion() (Version, error) {
+	version := Version{
+		Short:   UNKNOWN_VERSION,
+		Hash:    UNKNOWN_HASH,
+		IsDirty: true,
+		Api:     UNKNOWN_API,
+	}
 
 	versionPath := ShouldAbs(filepath.Join(ShouldGetThisDir(), "..", "..", VERSION_FILENAME))
 	if !IsFile(versionPath) {
@@ -76,12 +81,12 @@ func getGitInfo() (string, bool) {
 }
 
 func GetAutograderVersion() (Version, error) {
-	version, err := versionFromJSON()
+	version, err := readVersion()
 	if err != nil {
 		return version, err
 	}
 
-	if version.Hash == "" {
+	if version.Hash == UNKNOWN_HASH {
 		gitHash, isDirty := getGitInfo()
 
 		version.Hash = gitHash
