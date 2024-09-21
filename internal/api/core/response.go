@@ -3,14 +3,15 @@ package core
 import (
 	"reflect"
 
+	"github.com/edulinq/autograder/internal/log"
 	"github.com/edulinq/autograder/internal/timestamp"
 	"github.com/edulinq/autograder/internal/util"
 )
 
 type APIResponse struct {
-	ID            string `json:"id"`
-	Locator       string `json:"locator"`
-	ServerVersion string `json:"server-version"`
+	ID            string       `json:"id"`
+	Locator       string       `json:"locator"`
+	ServerVersion util.Version `json:"server-version"`
 
 	StartTimestamp timestamp.Timestamp `json:"start-timestamp"`
 	EndTimestamp   timestamp.Timestamp `json:"end-timestamp"`
@@ -29,9 +30,14 @@ func (this *APIResponse) String() string {
 func NewAPIResponse(request ValidAPIRequest, content any) *APIResponse {
 	id, startTime := getRequestInfo(request)
 
+	version, err := util.GetAutograderVersion()
+	if err != nil {
+		log.Warn("Failed to get the autograder version.", err)
+	}
+
 	return &APIResponse{
 		ID:             id,
-		ServerVersion:  util.GetAutograderFullVersion(),
+		ServerVersion:  version,
 		StartTimestamp: startTime,
 		EndTimestamp:   timestamp.Now(),
 		HTTPStatus:     HTTP_STATUS_GOOD,
