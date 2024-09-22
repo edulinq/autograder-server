@@ -39,7 +39,7 @@ func main() {
 	}
 }
 
-func listServerUsers(emails []string, table bool) error{
+func listServerUsers(emails []string, table bool) error {
 	request := users.ListRequest{}
 
 	response, err := cmd.SendCMDRequest(`users/list`, request)
@@ -63,7 +63,7 @@ func listServerUsers(emails []string, table bool) error{
 	} else {
 		cmd.PrintCMDResponse(response, users.ListResponse{}, args.Short)
 	}
-	
+
 	return nil
 }
 
