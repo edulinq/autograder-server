@@ -1,4 +1,3 @@
-# Latest Build Size
 FROM golang:1.22.6-alpine3.20 AS build-stage
 
 RUN apk update
@@ -6,25 +5,37 @@ RUN apk add --no-cache bash git
 
 WORKDIR /autograder-server
 
+# Extracts version information from the Git repository and saves it to VERSION.json
 COPY . ./full-copy
+RUN cd full-copy && go run ./cmd/version/main.go --out=VERSION.json && mv VERSION.json ..
+RUN rm -rf ./full-copy
 
+# Copies over only whats nessesary
 COPY ./cmd/ cmd/
 COPY ./internal/ internal/
 COPY ./scripts/ scripts/
 COPY ./testdata/ testdata/
 COPY ./go.* ./
 COPY ./LICENSE ./
-COPY ./VERSION.json ./
 
 COPY ./docker/entrypoint.sh ./
 RUN chmod 0775 entrypoint.sh
 
-RUN cd full-copy && ./scripts/build.sh 
-RUN cd full-copy && AUTOGRADER__DOCKER__DISABLE='true' ./scripts/run_tests.sh
-RUN cd full-copy && go run ./cmd/version/main.go --out=VERSION.json && mv VERSION.json ..
+# Builds and tests to verify the binaries will always run
+RUN ./scripts/build.sh
+RUN AUTOGRADER__DOCKER__DISABLE='true' ./scripts/run_tests.sh
+RUN rm -rf ./bin
 
-RUN rm -rf ./full-copy
+# Clean up unnecessary files and directories to reduce the image size.
+# - Remove 'testdata' directories from Go packages.
+# - Delete test files (*_test.go) from Go packages.
+# - Remove cached ZIP files from Go module downloads.
+# - Clear the Go build cache to further minimize image size.
 RUN apk del git
+RUN find /go/pkg/ -name 'testdata' | xargs rm -rf
+RUN find /go/pkg/ -name '*_test.go' | xargs rm -rf
+RUN find /go/pkg/mod/cache/download/ -name '*.zip' | xargs rm
+RUN rm -rf /root/.cache/go-build/
 RUN rm -rf \
     /usr/local/go/api \
     /usr/local/go/test \
@@ -42,23 +53,18 @@ RUN rm -rf \
     /usr/local/go/src/cmd/pack \
     /usr/local/go/src/cmd/buildid \
     /usr/local/go/src/cmd/nm \
-    /usr/local/go/src/cmd/addr2line \ 
+    /usr/local/go/src/cmd/addr2line \
     /usr/local/go/src/cmd/covdata \
     /usr/local/go/src/cmd/fix \
     /usr/local/go/src/cmd/doc \
-    /usr/local/go/src/cmd/objdump \ 
+    /usr/local/go/src/cmd/objdump \
     /usr/local/go/src/cmd/cgo \
     /usr/local/go/src/cmd/pprof \
     /usr/local/go/src/cmd/trace
 
-RUN find /go/pkg/ -name 'testdata' | xargs rm -rf
-RUN find /go/pkg/ -name '*_test.go' | xargs rm -rf
-RUN find /go/pkg/mod/cache/download/ -name '*.zip' | xargs rm 
-RUN rm -rf /root/.cache/go-build/
-
-
 FROM scratch AS final-stage
 
+# Since we're starting from a empty base image (scratch) we need to set the environment variables
 ENV GOLANG_VERSION=1.22.6
 ENV GOTOOLCHAIN=local
 ENV GOPATH=/go
