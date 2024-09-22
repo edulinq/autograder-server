@@ -180,6 +180,13 @@ This will ensure that the server executable is up-to-date before running it.
 Second we used the `--unit-testing` flag,
 which will set some testing options, create a clean new database, and load the test courses (inside the `testdata directory).
 
+Additionally, when running the server in --unit-testing mode, the server will load options from environment variables. This allows you to customize your testing experience, such as running unit tests in debug mode or storing HTTP requests for inspection. The available configuration options can be found in the `internal/config/options` file.
+
+To set a configuration option, prefix the environment variable with `AUTOGRADER__` and assign it the desired value. For example, to enable debug mode 
+
+```
+AUTOGRADER__DEBUG='true' go run ./cmd/server/main.go --unit-testing
+```
 ## Running Tests
 
 This repository comes with several types of tests.

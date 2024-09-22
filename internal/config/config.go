@@ -41,6 +41,8 @@ func EnableUnitTestingMode() error {
 	return EnableUnitTestingModeFull(true)
 }
 
+// Set all the configurations for unit testing mode
+// This unit testing mode supports loading environment variables through the loadEnv argument.
 func EnableUnitTestingModeFull(loadEnv bool) error {
 	TESTING_MODE.Set(true)
 	NO_TASKS.Set(true)
