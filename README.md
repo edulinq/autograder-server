@@ -23,8 +23,8 @@ The autograding effort is broken into three main parts:
 ## Installation
 
 This project uses Go 1.21.
-Development and deployment are intended for a Linux environment,
-but all Go code is written in a platform independent fashion.
+Development and deployment are intended for a Linux environment.
+Temporary file management relies on POSIX (i.e Linux, MacOS, WSL) conventions 
 
 All code that is not intended to be exported (used in packages outside of the autograder) is in the `internal` package/directory.
 Since this is a server and not a library, that is the majority of the code.
