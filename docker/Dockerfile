@@ -30,7 +30,7 @@ RUN rm -rf ./bin
 # - Uninstall unesseray packages.
 RUN apk del git
 
-# - Remove 'testdata' directories from Go packages.
+# - Remove 'testdata' directories from Go packages, these are not nessesary in production.
 # - Delete test files (*_test.go) from Go packages, these are not nessesary in production.
 # - Remove cached ZIP files from Go module downloads, these are not nessesary for building only for downloading.
 RUN find /go/pkg/ -name 'testdata' | xargs rm -rf
@@ -40,7 +40,8 @@ RUN find /go/pkg/mod/cache/download/ -name '*.zip' | xargs rm
 # - Clear the Go build cache.
 RUN rm -rf /root/.cache/go-build/
 
-# - Remove unnessesary dependancies in Go sorce code and pakges.
+# - Remove unnessesary tools in Go sorce code and packages.
+# These are need for debugging and testing which we dont need in Autograder image.
 RUN rm -rf \
     /usr/local/go/api \
     /usr/local/go/test \
