@@ -72,8 +72,8 @@ For example:
 ./bin/logs-example --config log.level=debug
 ```
 
-Option can also be set by environment variable by prefix the enviromental
-varible with `AUTOGRADER__` and assign it the desired value. 
+Option can also be set by environment variable by prefix the environmental
+variable with `AUTOGRADER__` and assign it the desired value. 
 For example:
 ```
 AUTOGRADER__DOCKER__DISABLE='true' ./scripts/run_tests.sh
@@ -189,7 +189,7 @@ which will set some testing options, create a clean new database, and load the t
 
 Additionally, when running the server in `--unit-testing` mode,
 some config options may be over written by tests but environment variables will always be reloaded. 
-For avalible config options see the [config section](#configuration) of this document.
+For available config options see the [config section](#configuration) of this document.
 
 ## Running Tests
 
