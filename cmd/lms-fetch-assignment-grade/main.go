@@ -65,5 +65,5 @@ func main() {
 	comments := strings.Join(textComments, ";")
 
 	fmt.Println("lms_user_id\tscore\ttime\tcomments")
-	fmt.Printf("%s\t%s\t%s\t%s\n", score.UserID, util.FloatToStr(score.Score), score.Time, comments)
+	fmt.Printf("%s\t%s\t%s\t%s\n", score.UserID, util.FloatToStr(score.Score), score.Time.SafeString(), comments)
 }

@@ -8,8 +8,8 @@ import (
 
 	"golang.org/x/crypto/argon2"
 
-	"github.com/edulinq/autograder/internal/common"
 	"github.com/edulinq/autograder/internal/log"
+	"github.com/edulinq/autograder/internal/timestamp"
 	"github.com/edulinq/autograder/internal/util"
 )
 
@@ -31,12 +31,12 @@ const (
 // Tokens refer to any hex string that is used for authentication.
 // They can come from different sources but all act the same.
 type Token struct {
-	ID           string           `json:"id"`
-	HexDigest    string           `json:"hex-digest"`
-	Source       TokenSource      `json:"source"`
-	Name         string           `json:"name"`
-	CreationTime common.Timestamp `json:"creation-time"`
-	AccessTime   common.Timestamp `json:"access-time"`
+	ID           string              `json:"id"`
+	HexDigest    string              `json:"hex-digest"`
+	Source       TokenSource         `json:"source"`
+	Name         string              `json:"name"`
+	CreationTime timestamp.Timestamp `json:"creation-time"`
+	AccessTime   timestamp.Timestamp `json:"access-time"`
 }
 
 const (
@@ -64,7 +64,7 @@ func NewToken(input string, salt string, source TokenSource, name string) (*Toke
 
 	digest := hex.EncodeToString(digestBytes)
 
-	now := common.NowTimestamp()
+	now := timestamp.Now()
 
 	token := &Token{
 		ID:           util.UUID(),
@@ -148,7 +148,7 @@ func NewRandomSalt() (string, error) {
 // If the input matches, then true will be returned and the token's access time will be set,
 // false will otherwise be returned.
 func (this *Token) Check(input string, salt string) (bool, error) {
-	now := common.NowTimestamp()
+	now := timestamp.Now()
 
 	thisDigestBytes, err := hex.DecodeString(this.HexDigest)
 	if err != nil {

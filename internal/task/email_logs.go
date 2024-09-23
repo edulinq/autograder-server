@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/edulinq/autograder/internal/common"
 	"github.com/edulinq/autograder/internal/db"
 	"github.com/edulinq/autograder/internal/email"
 	"github.com/edulinq/autograder/internal/log"
@@ -25,8 +24,8 @@ func RunEmailLogsTask(course *model.Course, rawTask tasks.ScheduledTask) (bool, 
 	return true, RunEmailLogs(task.RawLogQuery, course, task.To, task.SendEmpty)
 }
 
-func RunEmailLogs(rawQuery common.RawLogQuery, course *model.Course, to []string, sendEmpty bool) error {
-	parsedQuery, err := rawQuery.ParseJoin(course)
+func RunEmailLogs(rawQuery log.RawLogQuery, course *model.Course, to []string, sendEmpty bool) error {
+	parsedQuery, err := rawQuery.ParseJoin()
 	if err != nil {
 		return err
 	}

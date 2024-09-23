@@ -5,8 +5,8 @@ import (
 	"testing"
 
 	"github.com/edulinq/autograder/internal/api/core"
-	"github.com/edulinq/autograder/internal/common"
 	"github.com/edulinq/autograder/internal/model"
+	"github.com/edulinq/autograder/internal/timestamp"
 	"github.com/edulinq/autograder/internal/util"
 )
 
@@ -90,7 +90,7 @@ var studentHist []*model.SubmissionHistoryItem = []*model.SubmissionHistoryItem{
 		Message:          "",
 		MaxPoints:        2,
 		Score:            0,
-		GradingStartTime: common.MustTimestampFromString("2023-10-15T21:44:16.840060+00:00"),
+		GradingStartTime: timestamp.Timestamp(1697406256000),
 	},
 	&model.SubmissionHistoryItem{
 		ID:               "course101::hw0::course-student@test.edulinq.org::1697406265",
@@ -101,7 +101,7 @@ var studentHist []*model.SubmissionHistoryItem = []*model.SubmissionHistoryItem{
 		Message:          "",
 		MaxPoints:        2,
 		Score:            1,
-		GradingStartTime: common.MustTimestampFromString("2023-10-15T21:44:26.445382+00:00"),
+		GradingStartTime: timestamp.Timestamp(1697406266000),
 	},
 	&model.SubmissionHistoryItem{
 		ID:               "course101::hw0::course-student@test.edulinq.org::1697406272",
@@ -112,6 +112,6 @@ var studentHist []*model.SubmissionHistoryItem = []*model.SubmissionHistoryItem{
 		Message:          "",
 		MaxPoints:        2,
 		Score:            2,
-		GradingStartTime: common.MustTimestampFromString("2023-10-15T21:44:33.157275+00:00"),
+		GradingStartTime: timestamp.Timestamp(1697406273000),
 	},
 }

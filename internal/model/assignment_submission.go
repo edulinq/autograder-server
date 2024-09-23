@@ -38,7 +38,7 @@ func (this SubmittionLimitWindow) Validate() error {
 		return fmt.Errorf("Submission limit window has invalid duration: '%w'.", err)
 	}
 
-	if this.Duration.TotalNanosecs() == 0 {
+	if this.Duration.TotalMSecs() == 0 {
 		return fmt.Errorf("Submission limit window has duration needs to be non-empty.")
 	}
 

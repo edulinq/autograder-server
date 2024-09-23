@@ -4,6 +4,8 @@ import (
 	"errors"
 	"os"
 	"sync"
+
+	"github.com/edulinq/autograder/internal/log"
 )
 
 const DEFAULT_MKDIR_PERMS os.FileMode = 0755
@@ -14,6 +16,15 @@ var createdTempDirs []string
 
 func SetTempDirForTesting(newTempDir string) {
 	tempDir = newTempDir
+}
+
+func MustMkDirTemp(prefix string) string {
+	path, err := MkDirTemp(prefix)
+	if err != nil {
+		log.Fatal("Failed to create temp path.", log.NewAttr("path", path))
+	}
+
+	return path
 }
 
 func MkDirTemp(prefix string) (string, error) {

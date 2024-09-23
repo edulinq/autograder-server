@@ -1,9 +1,8 @@
 package lmstypes
 
 import (
-	"time"
-
 	"github.com/edulinq/autograder/internal/model"
+	"github.com/edulinq/autograder/internal/timestamp"
 )
 
 type User struct {
@@ -16,7 +15,7 @@ type User struct {
 type SubmissionScore struct {
 	UserID   string
 	Score    float64
-	Time     time.Time
+	Time     *timestamp.Timestamp
 	Comments []*SubmissionComment
 }
 
@@ -31,7 +30,7 @@ type Assignment struct {
 	ID          string
 	Name        string
 	LMSCourseID string
-	DueDate     *time.Time
+	DueDate     *timestamp.Timestamp
 	MaxPoints   float64
 }
 

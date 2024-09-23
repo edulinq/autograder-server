@@ -48,6 +48,11 @@ func TestAuth(test *testing.T) {
 		{"course-student@test.edulinq.org", "", true, ""},
 		{"course-student@test.edulinq.org", "Zcourse-student", true, ""},
 		{"course-student@test.edulinq.org", "course-studentZ", true, ""},
+
+		{"root", "", true, "-051"},
+		{"root", "", false, "-051"},
+		{"root", "root", true, "-051"},
+		{"root", "root", false, "-051"},
 	}
 
 	oldNoAuth := config.NO_AUTH.Get()

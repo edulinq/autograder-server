@@ -4,8 +4,8 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/edulinq/autograder/internal/common"
 	"github.com/edulinq/autograder/internal/db"
+	"github.com/edulinq/autograder/internal/timestamp"
 	"github.com/edulinq/autograder/internal/util"
 )
 
@@ -53,7 +53,7 @@ var expected *CourseScoringReport = &CourseScoringReport{
 		&AssignmentScoringReport{
 			AssignmentName:      "Homework 0",
 			NumberOfSubmissions: 1,
-			LatestSubmission:    common.MustTimestampFromString("2023-10-15T21:44:33Z"),
+			LatestSubmission:    timestamp.MustGuessFromString("2023-10-15T21:44:33Z"),
 			Questions: []*ScoringReportQuestionStats{
 				&ScoringReportQuestionStats{
 					QuestionName: "Q1",

@@ -9,6 +9,7 @@ import (
 	"github.com/edulinq/autograder/internal/db"
 	"github.com/edulinq/autograder/internal/docker"
 	"github.com/edulinq/autograder/internal/model"
+	"github.com/edulinq/autograder/internal/timestamp"
 	"github.com/edulinq/autograder/internal/util"
 )
 
@@ -70,7 +71,7 @@ func Grade(assignment *model.Assignment, submissionPath string, user string, mes
 	var stdout string
 	var stderr string
 
-	startTimestamp := common.NowTimestamp()
+	startTimestamp := timestamp.Now()
 
 	if options.NoDocker {
 		gradingInfo, outputFileContents, stdout, stderr, err = runNoDockerGrader(assignment, submissionPath, options, fullSubmissionID)
@@ -78,7 +79,7 @@ func Grade(assignment *model.Assignment, submissionPath string, user string, mes
 		gradingInfo, outputFileContents, stdout, stderr, err = runDockerGrader(assignment, submissionPath, options, fullSubmissionID)
 	}
 
-	endTimestamp := common.NowTimestamp()
+	endTimestamp := timestamp.Now()
 
 	// Copy over stdout and stderr even if an error occured.
 	gradingResult.Stdout = stdout

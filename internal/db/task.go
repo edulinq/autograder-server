@@ -2,10 +2,11 @@ package db
 
 import (
 	"fmt"
-	"time"
+
+	"github.com/edulinq/autograder/internal/timestamp"
 )
 
-func LogTaskCompletion(courseID string, taskID string, instance time.Time) error {
+func LogTaskCompletion(courseID string, taskID string, instance timestamp.Timestamp) error {
 	if backend == nil {
 		return fmt.Errorf("Database has not been opened.")
 	}
@@ -13,9 +14,9 @@ func LogTaskCompletion(courseID string, taskID string, instance time.Time) error
 	return backend.LogTaskCompletion(courseID, taskID, instance)
 }
 
-func GetLastTaskCompletion(courseID string, taskID string) (time.Time, error) {
+func GetLastTaskCompletion(courseID string, taskID string) (timestamp.Timestamp, error) {
 	if backend == nil {
-		return time.Time{}, fmt.Errorf("Database has not been opened.")
+		return timestamp.Zero(), fmt.Errorf("Database has not been opened.")
 	}
 
 	return backend.GetLastTaskCompletion(courseID, taskID)

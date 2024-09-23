@@ -2,14 +2,13 @@ package main
 
 import (
 	"fmt"
-	"time"
 
 	"github.com/alecthomas/kong"
 
 	"github.com/edulinq/autograder/internal/config"
 	"github.com/edulinq/autograder/internal/db"
 	"github.com/edulinq/autograder/internal/log"
-	"github.com/edulinq/autograder/internal/util"
+	"github.com/edulinq/autograder/internal/timestamp"
 )
 
 var args struct {
@@ -41,9 +40,9 @@ func main() {
 		log.Fatal("Could not parse logging level.", err)
 	}
 
-	after := time.Time{}
+	after := timestamp.Zero()
 	if args.Time != "" {
-		after, err = util.GuessTime(args.Time)
+		after, err = timestamp.GuessFromString(args.Time)
 		if err != nil {
 			log.Fatal("Could not parse time.", err)
 		}
