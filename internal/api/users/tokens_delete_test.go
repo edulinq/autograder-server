@@ -11,6 +11,7 @@ import (
 
 func TestTokensDelete(test *testing.T) {
 	db.ResetForTesting()
+	db.MustClearTestUserTokens()
 	defer db.ResetForTesting()
 
 	email := "course-admin@test.edulinq.org"
@@ -63,6 +64,7 @@ func TestTokensDelete(test *testing.T) {
 
 func TestTokensDeleteNoTokens(test *testing.T) {
 	db.ResetForTesting()
+	db.MustClearTestUserTokens()
 	defer db.ResetForTesting()
 
 	email := "course-admin@test.edulinq.org"

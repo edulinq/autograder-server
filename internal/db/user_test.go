@@ -489,6 +489,7 @@ func (this *DBTests) DBTestUserRemoveUserFromCourseBase(test *testing.T) {
 func (this *DBTests) DBTestUserDeleteTokenBase(test *testing.T) {
 	defer ResetForTesting()
 	ResetForTesting()
+	MustClearTestUserTokens()
 
 	email := "course-admin@test.edulinq.org"
 

@@ -980,6 +980,7 @@ func cloneTestServerUser(user *model.ServerUser) *model.ServerUser {
 
 func testUpsertDryRun(test *testing.T, caseIndex int, sendEmails bool, options UpsertUsersOptions, expected *model.UserOpResult) bool {
 	db.ResetForTesting()
+	db.MustClearTestUserTokens()
 	email.ClearTestMessages()
 
 	options.DryRun = true
@@ -1025,6 +1026,7 @@ func testUpsertDryRun(test *testing.T, caseIndex int, sendEmails bool, options U
 
 func testUpsert(test *testing.T, caseIndex int, sendEmails bool, options UpsertUsersOptions, expected *model.UserOpResult, expectedUser *model.ServerUser) bool {
 	db.ResetForTesting()
+	db.MustClearTestUserTokens()
 	email.ClearTestMessages()
 
 	options.DryRun = false
