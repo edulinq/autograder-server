@@ -9,7 +9,6 @@ import (
 	"github.com/edulinq/autograder/internal/db"
 	"github.com/edulinq/autograder/internal/log"
 	"github.com/edulinq/autograder/internal/model"
-	"github.com/edulinq/autograder/internal/util"
 )
 
 var SERVER_USER_INFO_ROW_COLUMNS []string = []string{"email", "name", "server-role", "course-name", "course-role"}
@@ -182,13 +181,4 @@ func CompareCourseUserInfoPointer(a *CourseUserInfo, b *CourseUserInfo) int {
 
 func CompareCourseUserInfo(a CourseUserInfo, b CourseUserInfo) int {
 	return strings.Compare(a.Email, b.Email)
-}
-
-func (this *ServerUserInfo) MustToRow() []string {
-	return []string{
-		this.Email,
-		util.PointerToString(&this.BaseUserInfo.Name),
-		this.Role.String(),
-		string(this.Type),
-	}
 }
