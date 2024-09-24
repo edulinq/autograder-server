@@ -242,15 +242,16 @@ validate that the pre-scripted responses matches the real responses.
 The autograder can also be run from a [docker](https://www.docker.com/) container either 
 by building the image from the source code with Dockerfile or pulling it from Docker Hub.
 
-To build the image form source code navigate to autograder-server/ and run:
+To build the image form source code navigate to autograder-server/ directory and run:
 ```
 docker build -f docker/Dockerfile -t autograder .
 ```
 
 To run the container run:
 ```
-docker run -it --rm -v /var/run/docker.sock:/var/run/docker.sock -v /tmp/autograder-temp/:/tmp/autograder-temp autograder <command>    
+docker run -it --rm -v /var/run/docker.sock:/var/run/docker.sock -v /tmp/autograder-temp/:/tmp/autograder-temp autograder version 
 ```
+
 
 To expose a port to the container (for running the server) add:
 ```
