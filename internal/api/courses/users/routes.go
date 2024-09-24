@@ -8,6 +8,7 @@ import (
 
 var routes []*core.Route = []*core.Route{
 	core.NewAPIRoute(core.NewEndpoint(`courses/users/get`), HandleGet),
+	core.NewAPIRoute(core.NewEndpoint(`courses/users/list`), HandleList),
 }
 
 func GetRoutes() *[]*core.Route {
