@@ -11,7 +11,11 @@ import (
 )
 
 func TestList(test *testing.T) {
-	course := db.MustGetCourse(db.TEST_COURSE_ID)
+	db.ResetForTesting()
+	defer db.ResetForTesting()
+
+	course := db.MustGetTestCourse()
+
 	usersMap, err := db.GetCourseUsers(course)
 	if err != nil {
 		test.Fatalf("Unable to get course users: '%v'.", err)
@@ -75,5 +79,35 @@ func TestList(test *testing.T) {
 				i, util.MustToJSONIndent(expectedInfos), util.MustToJSONIndent(responseContent.Users))
 			continue
 		}
+	}
+}
+
+func TestListEmptyCourse(test *testing.T) {
+	db.ResetForTesting()
+	defer db.ResetForTesting()
+
+	course := db.MustGetTestCourse()
+
+	users, err := db.GetCourseUsers(course)
+	for _, user := range users {
+		_, _, err = db.RemoveUserFromCourse(course, user.Email)
+		if err != nil {
+			test.Fatalf("Error when removing the user: '%v'.", err)
+		}
+	}
+
+	expectedInfos := core.NewCourseUserInfos([]*model.CourseUser{})
+
+	response := core.SendTestAPIRequestFull(test, core.NewEndpoint(`courses/users/list`), nil, nil, "server-admin")
+	if !response.Success {
+		test.Fatalf("Response is not a success when it should be: '%v'.", response)
+	}
+
+	var responseContent ListResponse
+	util.MustJSONFromString(util.MustToJSON(response.Content), &responseContent)
+
+	if !reflect.DeepEqual(expectedInfos, responseContent.Users) {
+		test.Fatalf("Unexpected users information. Expected: '%s', actual: '%s'.",
+			util.MustToJSONIndent(expectedInfos), util.MustToJSONIndent(responseContent.Users))
 	}
 }

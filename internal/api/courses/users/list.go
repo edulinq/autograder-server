@@ -21,9 +21,7 @@ func HandleList(request *ListRequest) (*ListResponse, *core.APIError) {
 		users = append(users, user)
 	}
 
-	infos := core.NewCourseUserInfos(users)
-
-	response := ListResponse{infos}
+	response := ListResponse{core.NewCourseUserInfos(users)}
 
 	return &response, nil
 }
