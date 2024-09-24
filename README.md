@@ -208,7 +208,6 @@ For developers who need the latest version, a script in the `./ci` directory can
 The base tests are created with Go's `testing` standard library package,
 and can therefore be run using `go test`.
 The `scripts/run_tests.sh` script runs `go test` for each package:
-
 ```
 ./scripts/run_tests.sh
 ```
@@ -244,7 +243,7 @@ by building the image from the source code with Dockerfile or pulling it from Do
 
 The autograder container requires two mounts. The first is `/var/run/docker.sock`,
 the socket that the Docker daemon listens on. The second is the autograder's temporary directory `/tmp/autograder-temp/`.
-Both mounts rely on POSIX standers.
+Both mounts rely on a POSIX system.
 
 To build the image form source code navigate to autograder-server/ directory and run:
 ```
