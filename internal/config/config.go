@@ -42,7 +42,7 @@ func EnableUnitTestingMode() error {
 }
 
 // Sets configuration options and logging to debug if not already set,
-// Changes base directory to a temp directory and copies test data in there. 
+// Changes base directory to a temp directory and copies test data in there.
 // If loadEnv is true it loads environmental variables.
 func EnableUnitTestingModeFull(loadEnv bool) error {
 	TESTING_MODE.Set(true)
