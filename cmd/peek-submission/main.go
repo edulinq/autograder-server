@@ -16,7 +16,7 @@ var args struct {
 	CourseID         string `help:"ID of the course." arg:""`
 	AssignmentID     string `help:"ID of the assignment." arg:""`
 	TargetSubmission string `help:"ID of the submission. Defaults to the latest submission." arg:"" optional:""`
-	Short            bool   `help:"Use short form output."`
+	Verbose          bool   `help:"Use verbose output to show full request/response without specific formatting." default:"false"`
 }
 
 func main() {
@@ -44,7 +44,7 @@ func main() {
 		TargetSubmission: args.TargetSubmission,
 	}
 
-	err = cmd.SendAndPrintCMDRequest(`courses/assignments/submissions/fetch/user/peek`, request, submissions.FetchUserPeekResponse{}, args.Short)
+	err = cmd.SendAndPrintCMDRequest(`courses/assignments/submissions/fetch/user/peek`, request, submissions.FetchUserPeekResponse{}, args.Verbose)
 	if err != nil {
 		log.Fatal("Failed to peek the user's submission.", err)
 	}

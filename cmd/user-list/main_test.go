@@ -19,20 +19,12 @@ func TestServerUserListBase(test *testing.T) {
 	testCases := []struct {
 		expectedNumUsers string
 		expectedExitCode int
-		filteredUsers    []string
 	}{
-		{"10", 0, []string{}},
-		{"1", 0, []string{"root"}},
-		{"2", 0, []string{"root", "course-admin@test.edulinq.org"}},
-		{"1", 0, []string{"root", "ZZZ"}},
+		{"10", 0},
 	}
 
 	for i, testCase := range testCases {
 		args := []string{}
-
-		if len(testCase.filteredUsers) > 0 {
-			args = append(args, testCase.filteredUsers...)
-		}
 
 		stdout, stderr, exitCode, err := cmd.RunCMDTest(test, main, args)
 		if err != nil {
