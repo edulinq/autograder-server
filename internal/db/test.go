@@ -74,16 +74,3 @@ func MustAddTestUsers() {
 		log.Fatal("Failed to load test users.", err)
 	}
 }
-
-func MustClearTestUserTokens() {
-	users := MustGetServerUsers()
-
-	for _, user := range users {
-		for _, token := range user.Tokens {
-			_, err := DeleteUserToken(user.Email, token.ID)
-			if err != nil {
-				log.Fatal("Failed to clear test user tokens.", err)
-			}
-		}
-	}
-}
