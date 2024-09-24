@@ -89,6 +89,10 @@ func TestListEmptyCourse(test *testing.T) {
 	course := db.MustGetTestCourse()
 
 	users, err := db.GetCourseUsers(course)
+	if err != nil {
+		test.Fatalf("Error when getting course users: '%v'.", err)
+	}
+
 	for _, user := range users {
 		_, _, err = db.RemoveUserFromCourse(course, user.Email)
 		if err != nil {
