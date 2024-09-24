@@ -41,7 +41,10 @@ func EnableUnitTestingMode() error {
 	return EnableUnitTestingModeFull(true)
 }
 
-// Changes the base directory to be a temp directory to cleanly store testing data in temp dir.
+// - Sets configuration options
+// - Changes base directory to a temp directory
+// - Sets logging to debug if not already set
+// - Copies test data into the working directory.
 // This unit testing mode supports loading environment variables through the loadEnv argument.
 func EnableUnitTestingModeFull(loadEnv bool) error {
 	TESTING_MODE.Set(true)
