@@ -27,21 +27,22 @@ RUN AUTOGRADER__DOCKER__DISABLE='true' ./scripts/run_tests.sh
 RUN rm -rf ./bin
 
 # Clean up unnecessary files and directories to reduce the image size.
-# - Uninstall unesseray packages.
+
+# Uninstall unesseray packages.
 RUN apk del git
 
-# - Remove 'testdata' directories from Go packages, these are not nessesary in production.
-# - Delete test files (*_test.go) from Go packages, these are not nessesary in production.
-# - Remove cached ZIP files from Go module downloads, these are not nessesary for building only for downloading.
+# Remove 'testdata' and test files (*_test.go) from Go packages, these are not nessesary in production.
 RUN find /go/pkg/ -name 'testdata' | xargs rm -rf
 RUN find /go/pkg/ -name '*_test.go' | xargs rm -rf
+
+# Remove cached ZIP files from Go module downloads, these are not nessesary for building only for downloading.
 RUN find /go/pkg/mod/cache/download/ -name '*.zip' | xargs rm
 
-# - Clear the Go build cache.
+# Clear the Go build cache.
 RUN rm -rf /root/.cache/go-build/
 
-# - Remove unnessesary tools in Go sorce code and packages.
-# These are need for debugging and testing which we dont need in Autograder image.
+# Remove unnessesary tools in Go sorce code and packages.
+# These are needed for debugging and testing which we dont need in autograder image.
 RUN rm -rf \
     /usr/local/go/api \
     /usr/local/go/test \
@@ -75,6 +76,7 @@ ENV GOLANG_VERSION=1.22.6
 ENV GOTOOLCHAIN=local
 ENV GOPATH=/go
 ENV PATH=$GOPATH/bin:/usr/local/go/bin:$PATH
+
 COPY --from=build-stage / /
 
 WORKDIR /autograder-server

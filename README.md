@@ -240,7 +240,9 @@ validate that the pre-scripted responses matches the real responses.
 ### Running in a Docker Container
 
 The autograder can also be run from a [docker](https://www.docker.com/) container either 
-by building the image from the source code with Dockerfile or pulling it from Docker Hub.
+by building the image from the source code with Dockerfile or pulling it from Docker Hub. 
+
+The autograder container requires two mounts. The first is `/var/run/docker.sock`, the socket that the Docker daemon listens on. The second is the autograder's temporary directory `/tmp/autograder-temp/`. Both mounts rely on POSIX standers.
 
 To build the image form source code navigate to autograder-server/ directory and run:
 ```
@@ -249,16 +251,24 @@ docker build -f docker/Dockerfile -t autograder .
 
 To run the container run:
 ```
-docker run -it --rm -v /var/run/docker.sock:/var/run/docker.sock -v /tmp/autograder-temp/:/tmp/autograder-temp autograder version 
+docker run -it --rm -v /var/run/docker.sock:/var/run/docker.sock -v /tmp/autograder-temp/:/tmp/autograder-temp autograder <command>
+```
+
+The command can be any command form the `cmd` folder. For example:
+```
+docker run -it --rm -v /var/run/docker.sock:/var/run/docker.sock -v /tmp/autograder-temp/:/tmp/autograder-temp autograder version
 ```
 
 
-To expose a port to the container (for running the server) add:
+If you want to run the server you need to add `-p` flag to the the command, as shown below:
 ```
--p <port>:<port>
+-p <host port>:<container port> 
 ```
 
-Running a server would look something like:
+
+The final command looks like this (running on autograders default port 8080):
 ```
-docker run -it --rm -p 8080:8080 -v /var/run/docker.sock:/var/run/docker.sock -v /tmp/autograder-temp/:/tmp/autograder-temp autograder server
+docker run -it --rm -p 8080:8080 -v /var/run/docker.sock:/var/run/docker.sock -v /tmp/autograder-temp/:/tmp/autograder-temp autograder server 
 ```
+
+If you want to further customize the command like changing the port you need to adjust the `-p` command and look at [Running the Server section](#running-the-server)
