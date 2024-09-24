@@ -255,7 +255,7 @@ To run the container run:
 docker run -it --rm -v /var/run/docker.sock:/var/run/docker.sock -v /tmp/autograder-temp/:/tmp/autograder-temp autograder <command>
 ```
 
-The `<command>` can be any command form the `cmd` folder. For example:
+The `<command>` can be any command form the `cmd` folder. For example it can be `version`:
 ```
 docker run -it --rm -v /var/run/docker.sock:/var/run/docker.sock -v /tmp/autograder-temp/:/tmp/autograder-temp autograder version
 ```
@@ -270,4 +270,5 @@ The final command looks like this (running on autograders default port 8080):
 docker run -it --rm -p 8080:8080 -v /var/run/docker.sock:/var/run/docker.sock -v /tmp/autograder-temp/:/tmp/autograder-temp autograder server 
 ```
 
-If you want to further customize the command like changing the port you need to adjust the `-p` command and look at [Running the Server section](#running-the-server)
+If you want to further customize the command like changing the port
+ou need to adjust the `-p` command and look at [Running the Server section](#running-the-server)
