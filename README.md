@@ -209,6 +209,7 @@ For developers who need the latest version, a script in the `./ci` directory can
 The base tests are created with Go's `testing` standard library package,
 and can therefore be run using `go test`.
 The `scripts/run_tests.sh` script runs `go test` for each package:
+
 ```
 ./scripts/run_tests.sh
 ```
@@ -221,6 +222,7 @@ and ensures that the response matches the expected output.
 
 To find test submissions, the `testdata` directory will be searched for `assignment.json` files.
 Then, an adjacent `test-submissions` directory is looked for.
+
 ```
 ./.ci/run_remote_tests.sh
 ```
@@ -231,21 +233,27 @@ As part of the tests for the Python interface,
 the test suite will mock an autograder server using pre-scripted responses.
 To ensure that these responses are correct, this repository can run an official autograder server and
 validate that the pre-scripted responses matches the real responses.
+
 ```
 ./.ci/verify_py_test_data.sh
 ```
 
-### Running Autograder in a Docker Container
+### Running in a Docker Container
 
-The autograder can also be run from a container either 
-by building the image from the source code with Dockerfile or pulling it from Dockerhub.
+The autograder can also be run from a [docker](https://www.docker.com/) container either 
+by building the image from the source code with Dockerfile or pulling it from Docker Hub.
+
+To build the image form source code navigate to autograder-server/ and run:
+```
+docker build -f docker/Dockerfile -t autograder .
+```
 
 To run the container run:
 ```
 docker run -it --rm -v /var/run/docker.sock:/var/run/docker.sock -v /tmp/autograder-temp/:/tmp/autograder-temp autograder <command>    
 ```
 
-To expose a port to the container add:
+To expose a port to the container (for running the server) add:
 ```
 -p <port>:<port>
 ```

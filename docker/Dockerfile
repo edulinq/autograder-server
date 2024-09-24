@@ -5,12 +5,12 @@ RUN apk add --no-cache bash git
 
 WORKDIR /autograder-server
 
-# Extracts version information from the Git repository and saves it to VERSION.json.
+# Extract version information from the Git repository and save it to VERSION.json.
 COPY . ./full-copy
 RUN cd full-copy && go run cmd/version/main.go --out=../VERSION.json
 RUN rm -rf ./full-copy
 
-# Copies over only whats nessesary.
+# Copie over only what's nessesary.
 COPY ./cmd/ cmd/
 COPY ./internal/ internal/
 COPY ./scripts/ scripts/
@@ -21,7 +21,7 @@ COPY ./LICENSE ./
 COPY ./docker/entrypoint.sh ./
 RUN chmod 0775 entrypoint.sh
 
-# Builds and tests to verify the binaries will always run.
+# Build and test to verify the binaries will always run.
 RUN ./scripts/build.sh
 RUN AUTOGRADER__DOCKER__DISABLE='true' ./scripts/run_tests.sh
 RUN rm -rf ./bin
