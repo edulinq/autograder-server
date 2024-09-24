@@ -71,8 +71,8 @@ For example:
 ./bin/logs-example --config log.level=debug
 ```
 
-Options can also be set by environment variables by prefix the option keys
-with `AUTOGRADER__` and replacing the `.` them with `__`. 
+Options can also be set using environmental variables by prefixing the option keys
+with `AUTOGRADER__` and replacing any `.` with `__`.
 For example option key `docker.disable` can be set by:
 ```
 AUTOGRADER__DOCKER__DISABLE='true' ./scripts/run_tests.sh
@@ -187,8 +187,7 @@ Second we used the `--unit-testing` flag,
 which will set some testing options, create a clean new database, and load the test courses (inside the `testdata directory).
 
 Additionally, when running the server in `--unit-testing` mode,
-the server (any executable in the cmd directory) will already have loaded options from environment variables.
-Config options that are set with config.json will get overwritten by tests but environment variables will always be reloaded.
+most configs may get overwritten but environmental variables will not get overwritten.
 For more information about config options see the [config section](#configuration) of this document.
 
 ## Running Tests
