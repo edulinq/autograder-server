@@ -41,9 +41,9 @@ func EnableUnitTestingMode() error {
 	return EnableUnitTestingModeFull(true)
 }
 
-// Sets system configurations to assume that we are doing unit testing.
-// Changes the base directory to a temp directory and copies test data in there.
-// If loadEnv is true it loads environmental variables.
+// Sets system configurations for unit testing.
+// Changes the base directory to a temp directory and copies over test data.
+// If loadEnv is true, loads environmental variables.
 func EnableUnitTestingModeFull(loadEnv bool) error {
 	TESTING_MODE.Set(true)
 	NO_TASKS.Set(true)

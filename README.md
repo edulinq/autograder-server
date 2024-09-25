@@ -188,7 +188,7 @@ which will set some testing options, create a clean new database, and load the t
 
 Additionally, when running the server in `--unit-testing` mode,
 most configs may get overwritten by the testing infrastructure but environmental variables will not get overwritten.
-For more information about config options see the [config section](#configuration) of this document.
+For more information about config options see the [Configuration section](#configuration) of this document.
 
 ## Running Tests
 
