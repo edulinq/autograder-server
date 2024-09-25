@@ -239,7 +239,7 @@ validate that the pre-scripted responses matches the real responses.
 ### Running in a Docker Container
 
 The autograder can also be run from a [Docker](https://www.docker.com/) container either
-by building the image from source or pulling it from Docker Hub.
+by building the image from source or pulling it from [Docker Hub](https://hub.docker.com/u/edulinq).
 
 The autograder container requires two mounts. 
 The first is `/var/run/docker.sock`, the socket that the Docker daemon listens on. 
