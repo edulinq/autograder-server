@@ -63,7 +63,6 @@ func SendCMDRequest(endpoint string, request any) (core.APIResponse, error) {
 	return response, nil
 }
 
-// Print the CMD response in it's expected format.
 func PrintCMDResponse(request any, response core.APIResponse, responseType any, verbose bool) {
 	if verbose {
 		fmt.Printf("\nAutograder Request:\n---\n%s\n---\n", util.MustToJSONIndent(request))
