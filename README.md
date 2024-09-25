@@ -71,6 +71,13 @@ For example:
 ./bin/logs-example --config log.level=debug
 ```
 
+Options can also be set using environmental variables by prefixing the option keys
+with `AUTOGRADER__` and replacing any `.` with `__`.
+For example option key `docker.disable` can be set by:
+```
+AUTOGRADER__DOCKER__DISABLE='true' ./scripts/run_tests.sh
+```
+
 ### Directories
 
 The primary directory the autograder will use for storing information is referred to as the "work directory",
@@ -179,6 +186,10 @@ This will ensure that the server executable is up-to-date before running it.
 Second we used the `--unit-testing` flag,
 which will set some testing options, create a clean new database, and load the test courses (inside the `testdata directory).
 
+Additionally, when running the server in `--unit-testing` mode,
+most configs may get overwritten by the testing infrastructure but environmental variables will not get overwritten.
+For more information about config options see the [Configuration section](#configuration) of this document.
+
 ## Running Tests
 
 This repository comes with several types of tests.
@@ -190,19 +201,6 @@ and can also be run using the `./.ci/run_all.sh` script:
 
 Users may also choose to run them individually.
 
-### Installing the Python Interface
-
-Some tests require the Python interface to be installed.
-For general users, installing via pip is sufficient:
-```
-pip install autograder-py
-```
-
-For developers who need the latest version, a script in the `./ci` directory can be used to install from source:
-```
-./.ci/install_py_interface.sh
-```
-
 ### Base Tests
 
 The base tests are created with Go's `testing` standard library package,
@@ -212,26 +210,45 @@ The `scripts/run_tests.sh` script runs `go test` for each package:
 ./scripts/run_tests.sh
 ```
 
-### Remote Tests
+### Running in a Docker Container
 
-Remote tests are tests that start an instance of the autograder server,
-sends the server test submissions via the Python interface,
-and ensures that the response matches the expected output.
+The autograder can also be run from a [Docker](https://www.docker.com/) container either
+by building the image from source or pulling it from [Docker Hub](https://hub.docker.com/u/edulinq).
 
-To find test submissions, the `testdata` directory will be searched for `assignment.json` files.
-Then, an adjacent `test-submissions` directory is looked for.
+The autograder container requires two mounts.
+The first is `/var/run/docker.sock`, the socket that the Docker daemon listens on.
+The second is the autograder's temporary directory `/tmp/autograder-temp/`.
+Both mounts rely on a POSIX system.
 
+There are two versions of the autograder-server image.
+The "slim" image is as small as possible and rebuilds artifacts from source each time.
+The "prebuilt" image is larger and contains prebuilt binaries of each artifact (and thus runs faster).
+To build the images, you can use the following commands from the repository's root directory:
 ```
-./.ci/run_remote_tests.sh
+docker build -f docker/slim/Dockerfile -t autograder-server-slim .
+docker build -f docker/prebuilt/Dockerfile -t autograder-server-prebuilt .
 ```
 
-### Verifying Python Test Data
+Either image may be used for the following commands.
+To use the existing images on Docker Hub,
+you can use `edulinq/autograder-server-slim` or `edulinq/autograder-server-prebuilt`.
 
-As part of the tests for the Python interface,
-the test suite will mock an autograder server using pre-scripted responses.
-To ensure that these responses are correct, this repository can run an official autograder server and
-validate that the pre-scripted responses matches the real responses.
-
+To run the container run:
 ```
-./.ci/verify_py_test_data.sh
+docker run -it --rm -v /var/run/docker.sock:/var/run/docker.sock -v /tmp/autograder-temp/:/tmp/autograder-temp autograder-server-prebuilt <command>
+```
+
+Where `<command>` can be any command form the `cmd` folder. For example it can be `version`:
+```
+docker run -it --rm -v /var/run/docker.sock:/var/run/docker.sock -v /tmp/autograder-temp/:/tmp/autograder-temp autograder-server-prebuilt version
+```
+
+If you want to run the server, it could be useful to add the -p flag to the command, as shown below:
+```
+-p <host port>:<container port>
+```
+
+For example, you may use the following command (which uses the autograder's default port of 8080).:
+```
+docker run -it --rm -p 8080:8080 -v /var/run/docker.sock:/var/run/docker.sock -v /tmp/autograder-temp/:/tmp/autograder-temp autograder-server-prebuilt server
 ```

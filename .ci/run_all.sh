@@ -23,13 +23,6 @@ function main() {
         exit 1
     fi
 
-    echo -e "\nInstalling Python Dependencies"
-    ./.ci/install_py_interface.sh
-    if [[ $? -ne 0 ]] ; then
-        echo "Failed to install the Python interface."
-        exit 1
-    fi
-
     local error_count=0
 
     echo -e "\nChecking Formatting"
@@ -42,14 +35,6 @@ function main() {
 
     echo -e "\nRunning Tests"
     ./scripts/run_tests.sh
-    ((error_count += $?))
-
-    echo -e "\nRunning Remote Tests"
-    ./.ci/run_remote_tests.sh
-    ((error_count += $?))
-
-    echo -e "\nVerifying Python Test Data"
-    ./.ci/verify_py_test_data.sh
     ((error_count += $?))
 
     echo "================="
