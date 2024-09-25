@@ -187,7 +187,7 @@ Second we used the `--unit-testing` flag,
 which will set some testing options, create a clean new database, and load the test courses (inside the `testdata directory).
 
 Additionally, when running the server in `--unit-testing` mode,
-most configs may get overwritten but environmental variables will not get overwritten.
+most configs may get overwritten by the testing infrastructure but environmental variables will not get overwritten.
 For more information about config options see the [config section](#configuration) of this document.
 
 ## Running Tests
