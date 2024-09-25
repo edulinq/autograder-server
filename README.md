@@ -238,14 +238,15 @@ validate that the pre-scripted responses matches the real responses.
 
 ### Running in a Docker Container
 
-The autograder can also be run from a [docker](https://www.docker.com/) container either
-by building the image from the source code with Dockerfile or pulling it from Docker Hub.
+The autograder can also be run from a [Docker](https://www.docker.com/) container either
+by building the image from source or pulling it from Docker Hub.
 
-The autograder container requires two mounts. The first is `/var/run/docker.sock`,
-the socket that the Docker daemon listens on. The second is the autograder's temporary directory `/tmp/autograder-temp/`.
+The autograder container requires two mounts. 
+The first is `/var/run/docker.sock`, the socket that the Docker daemon listens on. 
+The second is the autograder's temporary directory `/tmp/autograder-temp/`.
 Both mounts rely on a POSIX system.
 
-To build the image form source code navigate to autograder-server/ directory and run:
+To build the image (with the name/tag "autograder") form source navigate to the repository's root directory and run:
 ```
 docker build -f docker/Dockerfile -t autograder .
 ```
@@ -255,20 +256,17 @@ To run the container run:
 docker run -it --rm -v /var/run/docker.sock:/var/run/docker.sock -v /tmp/autograder-temp/:/tmp/autograder-temp autograder <command>
 ```
 
-The `<command>` can be any command form the `cmd` folder. For example it can be `version`:
+Where `<command>` can be any command form the `cmd` folder. For example it can be `version`:
 ```
 docker run -it --rm -v /var/run/docker.sock:/var/run/docker.sock -v /tmp/autograder-temp/:/tmp/autograder-temp autograder version
 ```
 
-If you want to run the server you need to add `-p` flag to the the command, as shown below:
+If you want to run the server, it could be useful to add the -p flag to the command, as shown below:
 ```
 -p <host port>:<container port> 
 ```
 
-The final command looks like this (running on autograders default port 8080):
+For example, you may use the following command (which uses the autograder's default port of 8080).:
 ```
 docker run -it --rm -p 8080:8080 -v /var/run/docker.sock:/var/run/docker.sock -v /tmp/autograder-temp/:/tmp/autograder-temp autograder server 
 ```
-
-If you want to further customize the command like changing the port
-ou need to adjust the `-p` command and look at [Running the Server section](#running-the-server)

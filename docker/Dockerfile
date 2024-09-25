@@ -10,7 +10,7 @@ COPY . ./full-copy
 RUN cd full-copy && go run cmd/version/main.go --out=../VERSION.json
 RUN rm -rf ./full-copy
 
-# Copie over only what's nessesary.
+# Copy over only what's nessesary.
 COPY ./cmd/ cmd/
 COPY ./internal/ internal/
 COPY ./scripts/ scripts/
@@ -35,7 +35,7 @@ RUN apk del git
 RUN find /go/pkg/ -name 'testdata' | xargs rm -rf
 RUN find /go/pkg/ -name '*_test.go' | xargs rm -rf
 
-# Remove cached ZIP files from Go module downloads, these are not nessesary for building only for downloading.
+# Remove cached zip files from Go module downloads, these are not nessesary for building only for downloading.
 RUN find /go/pkg/mod/cache/download/ -name '*.zip' | xargs rm
 
 # Clear the Go build cache.
@@ -69,6 +69,8 @@ RUN rm -rf \
     /usr/local/go/src/cmd/pprof \
     /usr/local/go/src/cmd/trace
 
+# This is going to be a muti-stage build so we can trim down the layers.
+# For more information about muti-stage builds check out https://docs.docker.com/build/building/multi-stage/.
 FROM scratch AS final-stage
 
 # Since we're starting from a empty base image (scratch) we need to set the environment variables.
