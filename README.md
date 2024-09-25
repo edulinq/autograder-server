@@ -246,3 +246,38 @@ validate that the pre-scripted responses matches the real responses.
 ```
 ./.ci/verify_py_test_data.sh
 ```
+
+### Running in a Docker Container
+
+The autograder can also be run from a [Docker](https://www.docker.com/) container either
+by building the image from source or pulling it from [Docker Hub](https://hub.docker.com/u/edulinq).
+
+The autograder container requires two mounts. 
+The first is `/var/run/docker.sock`, the socket that the Docker daemon listens on. 
+The second is the autograder's temporary directory `/tmp/autograder-temp/`.
+Both mounts rely on a POSIX system.
+
+To build the image (with the name/tag "autograder") form source navigate to the repository's root directory and run:
+```
+docker build -f docker/Dockerfile -t autograder .
+```
+
+To run the container run:
+```
+docker run -it --rm -v /var/run/docker.sock:/var/run/docker.sock -v /tmp/autograder-temp/:/tmp/autograder-temp autograder <command>
+```
+
+Where `<command>` can be any command form the `cmd` folder. For example it can be `version`:
+```
+docker run -it --rm -v /var/run/docker.sock:/var/run/docker.sock -v /tmp/autograder-temp/:/tmp/autograder-temp autograder version
+```
+
+If you want to run the server, it could be useful to add the -p flag to the command, as shown below:
+```
+-p <host port>:<container port> 
+```
+
+For example, you may use the following command (which uses the autograder's default port of 8080).:
+```
+docker run -it --rm -p 8080:8080 -v /var/run/docker.sock:/var/run/docker.sock -v /tmp/autograder-temp/:/tmp/autograder-temp autograder server 
+```
