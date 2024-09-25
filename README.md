@@ -201,19 +201,6 @@ and can also be run using the `./.ci/run_all.sh` script:
 
 Users may also choose to run them individually.
 
-### Installing the Python Interface
-
-Some tests require the Python interface to be installed.
-For general users, installing via pip is sufficient:
-```
-pip install autograder-py
-```
-
-For developers who need the latest version, a script in the `./ci` directory can be used to install from source:
-```
-./.ci/install_py_interface.sh
-```
-
 ### Base Tests
 
 The base tests are created with Go's `testing` standard library package,
@@ -221,30 +208,6 @@ and can therefore be run using `go test`.
 The `scripts/run_tests.sh` script runs `go test` for each package:
 ```
 ./scripts/run_tests.sh
-```
-
-### Remote Tests
-
-Remote tests are tests that start an instance of the autograder server,
-sends the server test submissions via the Python interface,
-and ensures that the response matches the expected output.
-
-To find test submissions, the `testdata` directory will be searched for `assignment.json` files.
-Then, an adjacent `test-submissions` directory is looked for.
-
-```
-./.ci/run_remote_tests.sh
-```
-
-### Verifying Python Test Data
-
-As part of the tests for the Python interface,
-the test suite will mock an autograder server using pre-scripted responses.
-To ensure that these responses are correct, this repository can run an official autograder server and
-validate that the pre-scripted responses matches the real responses.
-
-```
-./.ci/verify_py_test_data.sh
 ```
 
 ### Running in a Docker Container
