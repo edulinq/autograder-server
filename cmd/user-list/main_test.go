@@ -1,12 +1,12 @@
 package main
 
 import (
-	"strconv"
+	"sort"
 	"testing"
 
-	"github.com/edulinq/autograder/internal/api/core"
 	"github.com/edulinq/autograder/internal/api/users"
 	"github.com/edulinq/autograder/internal/cmd"
+	"github.com/edulinq/autograder/internal/db"
 	"github.com/edulinq/autograder/internal/util"
 )
 
@@ -17,10 +17,17 @@ func TestMain(suite *testing.M) {
 
 func TestServerUserListBase(test *testing.T) {
 	testCases := []struct {
-		expectedNumUsers string
+		expectedNumUsers int
 		expectedExitCode int
 	}{
-		{"10", 0},
+		{10, 0},
+	}
+
+	serverUsersMap := db.MustGetServerUsers()
+
+	expectedEmailList := make([]string, 0, len(serverUsersMap))
+	for _, user := range serverUsersMap {
+		expectedEmailList = append(expectedEmailList, user.Email)
 	}
 
 	for i, testCase := range testCases {
@@ -42,21 +49,27 @@ func TestServerUserListBase(test *testing.T) {
 			continue
 		}
 
-		var response core.APIResponse
-		util.MustJSONFromString(stdout, &response)
 		var responseContent users.ListResponse
-		util.MustJSONFromString(util.MustToJSON(response.Content), &responseContent)
+		util.MustJSONFromString(stdout, &responseContent)
 
-		expectedUsers, err := strconv.Atoi(testCase.expectedNumUsers)
-		if err != nil {
-			test.Errorf("Case %d: Failed to convert string to int.", i)
+		actualNumUsers := len(responseContent.Users)
+		if testCase.expectedNumUsers != actualNumUsers {
+			test.Errorf("Case %d: Unexpected number of server users. Expected: '%d', Actual: '%d'.", i, testCase.expectedNumUsers, actualNumUsers)
 			continue
 		}
 
-		actualUsers := len(responseContent.Users)
-		if expectedUsers != actualUsers {
-			test.Errorf("Case %d: Unexpected number of server users. Expected: '%d', Actual: '%d'.", i, expectedUsers, actualUsers)
-			continue
+		actualEmailList := make([]string, 0, len(responseContent.Users))
+		for _, user := range responseContent.Users {
+			actualEmailList = append(actualEmailList, user.Email)
+		}
+
+		sort.Strings(expectedEmailList)
+		sort.Strings(actualEmailList)
+
+		for email := range expectedEmailList {
+			if expectedEmailList[email] != actualEmailList[email] {
+				test.Errorf("Case %d: Unexpected server user. Expected: '%s', Actual: '%s'.", i, expectedEmailList[email], actualEmailList[email])
+			}
 		}
 	}
 }

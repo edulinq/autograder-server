@@ -8,7 +8,6 @@ import (
 	"github.com/edulinq/autograder/internal/api/core"
 	"github.com/edulinq/autograder/internal/api/server"
 	"github.com/edulinq/autograder/internal/common"
-	"github.com/edulinq/autograder/internal/config"
 	"github.com/edulinq/autograder/internal/util"
 )
 
@@ -18,11 +17,7 @@ func SendAndPrintCMDRequest(endpoint string, request any, responseType any, verb
 		return fmt.Errorf("Failed to send the CMD request: '%w'.", err)
 	}
 
-	if verbose {
-		PrintVerboseCMDResponse(request, response, responseType)
-	} else {
-		PrintCMDResponse(response, responseType)
-	}
+	PrintCMDResponse(request, response, responseType, verbose)
 
 	return nil
 }
@@ -69,38 +64,15 @@ func SendCMDRequest(endpoint string, request any) (core.APIResponse, error) {
 }
 
 // Print the CMD response in it's expected format.
-// If in testing mode, print the CMD as a core.APIResponse type.
-func PrintCMDResponse(response core.APIResponse, responseType any) {
-	testingMode := config.TESTING_MODE.Get()
-
-	if !response.Success {
-		if testingMode {
-			fmt.Println(util.MustToJSONIndent(response))
-		} else {
-			fmt.Println(response.Message)
-		}
-
-		util.Exit(2)
-		return
+func PrintCMDResponse(request any, response core.APIResponse, responseType any, verbose bool) {
+	if verbose {
+		fmt.Printf("\nAutograder Request:\n---\n%s\n---\n", util.MustToJSONIndent(request))
+		fmt.Printf("\nAutograder Response:\n---\n%s\n---\n", util.MustToJSONIndent(response))
 	}
 
-	if testingMode {
-		fmt.Println(util.MustToJSONIndent(response))
-		return
-	}
-
-	responseContent := reflect.New(reflect.TypeOf(responseType)).Interface()
-	util.MustJSONFromString(util.MustToJSON(response.Content), &responseContent)
-	fmt.Println(util.MustToJSONIndent(responseContent))
-}
-
-func PrintVerboseCMDResponse(request any, response core.APIResponse, responseType any) {
-	fmt.Println("Request:")
-	fmt.Println(util.MustToJSONIndent(request))
-	fmt.Println("Response:")
-	fmt.Println(util.MustToJSONIndent(response))
-
 	if !response.Success {
+		fmt.Println(response.Message)
+
 		util.Exit(2)
 		return
 	}

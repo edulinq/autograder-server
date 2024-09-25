@@ -60,6 +60,10 @@ func TestPeekBase(test *testing.T) {
 			continue
 		}
 
+		if testCase.expectedExitCode != 0 {
+			continue
+		}
+
 		var response core.APIResponse
 		util.MustJSONFromString(stdout, &response)
 
@@ -68,12 +72,8 @@ func TestPeekBase(test *testing.T) {
 			continue
 		}
 
-		if testCase.expectedExitCode != 0 {
-			continue
-		}
-
 		var responseContent submissions.FetchUserPeekResponse
-		util.MustJSONFromString(util.MustToJSON(response.Content), &responseContent)
+		util.MustJSONFromString(stdout, &responseContent)
 
 		expectedHasSubmission := (testCase.expectedSubmimssion != "")
 		actualHasSubmission := responseContent.FoundSubmission

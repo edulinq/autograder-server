@@ -11,7 +11,7 @@ const INDENT = "    "
 
 var rows [][]string
 
-func ListUsers(users []*core.ServerUserInfo, courseUsers bool, table bool) {
+func ListUsers(users []*core.ServerUserInfo, table bool) {
 	if table {
 		listServerUsersTable(users)
 	} else {

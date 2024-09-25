@@ -47,18 +47,16 @@ func listServerUsers(table bool) error {
 	util.MustJSONFromString(util.MustToJSON(response.Content), &responseContent)
 
 	if config.TESTING_MODE.Get() {
-		cmd.PrintCMDResponse(response, users.ListResponse{})
+		cmd.PrintCMDResponse(request, response, users.ListResponse{}, args.Verbose)
 		return nil
 	}
 
 	if args.Verbose {
-		fmt.Println("Request:")
-		fmt.Println(util.MustToJSONIndent(request))
-		fmt.Println("Response:")
-		fmt.Println(util.MustToJSONIndent(response))
+		fmt.Printf("\nAutograder Request:\n---\n%s\n---\n", util.MustToJSONIndent(request))
+		fmt.Printf("\nAutograder Response:\n---\n%s\n---\n", util.MustToJSONIndent(response))
 	}
 
-	cmd.ListUsers(responseContent.Users, false, args.Table)
+	cmd.ListUsers(responseContent.Users, args.Table)
 
 	return nil
 }
