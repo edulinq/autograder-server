@@ -252,32 +252,40 @@ validate that the pre-scripted responses matches the real responses.
 The autograder can also be run from a [Docker](https://www.docker.com/) container either
 by building the image from source or pulling it from [Docker Hub](https://hub.docker.com/u/edulinq).
 
-The autograder container requires two mounts. 
-The first is `/var/run/docker.sock`, the socket that the Docker daemon listens on. 
+The autograder container requires two mounts.
+The first is `/var/run/docker.sock`, the socket that the Docker daemon listens on.
 The second is the autograder's temporary directory `/tmp/autograder-temp/`.
 Both mounts rely on a POSIX system.
 
-To build the image (with the name/tag "autograder") form source navigate to the repository's root directory and run:
+There are two versions of the autograder-server image.
+The "slim" image is as small as possible and rebuilds artifacts from source each time.
+The "prebuilt" image is larger and contains prebuilt binaries of each artifact (and thus runs faster).
+To build the images, you can use the following commands from the repository's root directory:
 ```
-docker build -f docker/Dockerfile -t autograder .
+docker build -f docker/slim/Dockerfile -t autograder-server-slim .
+docker build -f docker/prebuilt/Dockerfile -t autograder-server-prebuilt .
 ```
+
+Either image may be used for the following commands.
+To use the existing images on Docker Hub,
+you can use `edulinq/autograder-server-slim` or `edulinq/autograder-server-prebuilt`.
 
 To run the container run:
 ```
-docker run -it --rm -v /var/run/docker.sock:/var/run/docker.sock -v /tmp/autograder-temp/:/tmp/autograder-temp autograder <command>
+docker run -it --rm -v /var/run/docker.sock:/var/run/docker.sock -v /tmp/autograder-temp/:/tmp/autograder-temp autograder-server-prebuilt <command>
 ```
 
 Where `<command>` can be any command form the `cmd` folder. For example it can be `version`:
 ```
-docker run -it --rm -v /var/run/docker.sock:/var/run/docker.sock -v /tmp/autograder-temp/:/tmp/autograder-temp autograder version
+docker run -it --rm -v /var/run/docker.sock:/var/run/docker.sock -v /tmp/autograder-temp/:/tmp/autograder-temp autograder-server-prebuilt version
 ```
 
 If you want to run the server, it could be useful to add the -p flag to the command, as shown below:
 ```
--p <host port>:<container port> 
+-p <host port>:<container port>
 ```
 
 For example, you may use the following command (which uses the autograder's default port of 8080).:
 ```
-docker run -it --rm -p 8080:8080 -v /var/run/docker.sock:/var/run/docker.sock -v /tmp/autograder-temp/:/tmp/autograder-temp autograder server 
+docker run -it --rm -p 8080:8080 -v /var/run/docker.sock:/var/run/docker.sock -v /tmp/autograder-temp/:/tmp/autograder-temp autograder-server-prebuilt server
 ```

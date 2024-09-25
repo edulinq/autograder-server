@@ -83,10 +83,18 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Build Image
+      - name: Build Image - Slim
         uses: docker/build-push-action@v5
         with:
           context: .
-          file: docker/Dockerfile
+          file: docker/slim/Dockerfile
           push: true
-          tags: edulinq/autograder-server:latest
+          tags: edulinq/autograder-server-slim:latest
+
+      - name: Build Image - Prebuilt
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: docker/prebuilt/Dockerfile
+          push: true
+          tags: edulinq/autograder-server-prebuilt:latest

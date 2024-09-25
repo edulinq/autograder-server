@@ -18,7 +18,7 @@ COPY ./testdata/ testdata/
 COPY ./go.* ./
 COPY ./LICENSE ./
 
-COPY ./docker/entrypoint.sh ./
+COPY ./docker/slim/entrypoint.sh ./
 RUN chmod 0775 entrypoint.sh
 
 # Build and test to verify the binaries will always run.
