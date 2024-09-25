@@ -71,6 +71,13 @@ For example:
 ./bin/logs-example --config log.level=debug
 ```
 
+Options can also be set using environmental variables by prefixing the option keys
+with `AUTOGRADER__` and replacing any `.` with `__`.
+For example option key `docker.disable` can be set by:
+```
+AUTOGRADER__DOCKER__DISABLE='true' ./scripts/run_tests.sh
+```
+
 ### Directories
 
 The primary directory the autograder will use for storing information is referred to as the "work directory",
@@ -178,6 +185,10 @@ First, we ran the server using `go run`,
 This will ensure that the server executable is up-to-date before running it.
 Second we used the `--unit-testing` flag,
 which will set some testing options, create a clean new database, and load the test courses (inside the `testdata directory).
+
+Additionally, when running the server in `--unit-testing` mode,
+most configs may get overwritten by the testing infrastructure but environmental variables will not get overwritten.
+For more information about config options see the [Configuration section](#configuration) of this document.
 
 ## Running Tests
 
