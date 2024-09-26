@@ -492,21 +492,8 @@ func (this *DBTests) DBTestUserDeleteTokenBase(test *testing.T) {
 
 	email := "course-admin@test.edulinq.org"
 
-	// Add a token.
+	// Ensure the token exists.
 	user := MustGetServerUser(email)
-
-	_, _, err := user.CreateRandomToken("test", model.TokenSourceServer)
-	if err != nil {
-		test.Fatalf("Failed to create token: '%v'.", err)
-	}
-
-	err = UpsertUser(user)
-	if err != nil {
-		test.Fatalf("Could not upsert user: '%v'.", err)
-	}
-
-	// Re-fetch and ensure the token exists.
-	user = MustGetServerUser(email)
 
 	if len(user.Tokens) != 1 {
 		test.Fatalf("Incorrect number of tokens. Expected: 1, Actual: %d.", len(user.Tokens))

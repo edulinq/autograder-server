@@ -12,7 +12,16 @@
             "CreationTime": 0,
             "AccessTime": 0
         },
-        "tokens": [],
+        "tokens": [
+            {
+                "id": "df0a1f16-9cd8-4395-8509-10ae314fe6fc",
+                "hex-digest": "74f72731825e660f5720ffe86e71103c5534171f1e4ef9fe2d8c73d0121ef192",
+                "source": "user",
+                "name": "test",
+                "creation-time": 1727118291215,
+                "access-time": 1727118291215
+            }
+        ],
         "course-info": {
             "course-languages": {
                 "role": "admin",
