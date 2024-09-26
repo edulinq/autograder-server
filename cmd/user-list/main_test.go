@@ -1,6 +1,7 @@
 package main
 
 import (
+	"reflect"
 	"sort"
 	"testing"
 
@@ -66,10 +67,8 @@ func TestServerUserListBase(test *testing.T) {
 		sort.Strings(expectedEmailList)
 		sort.Strings(actualEmailList)
 
-		for email := range expectedEmailList {
-			if expectedEmailList[email] != actualEmailList[email] {
-				test.Errorf("Case %d: Unexpected server user. Expected: '%s', Actual: '%s'.", i, expectedEmailList[email], actualEmailList[email])
-			}
+		if !reflect.DeepEqual(actualEmailList, expectedEmailList) {
+			test.Errorf("Case %d: Server user email lists do not match. Expected: '%v', Actual: '%v'.", i, expectedEmailList, actualEmailList)
 		}
 	}
 }
