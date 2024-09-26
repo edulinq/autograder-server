@@ -60,7 +60,12 @@ func syncLMSUsers(course *model.Course, dryRun bool, sendEmails bool, skipMissin
 	if !adapter.SyncUsers() {
 		results := make([]*model.UserOpResult, 0, len(lmsUsers))
 		for email, _ := range lmsUsers {
-			results = append(results, &model.UserOpResult{Email: email, Skipped: true})
+			results = append(results, &model.UserOpResult{
+				BaseUserOpResult: model.BaseUserOpResult{
+					Email:   email,
+					Skipped: true,
+				},
+			})
 		}
 		return results, nil
 	}
@@ -103,21 +108,22 @@ func syncLMSUsers(course *model.Course, dryRun bool, sendEmails bool, skipMissin
 		if adapter.SyncUserRemoves {
 			_, _, err := db.RemoveUserFromCourse(course, email)
 			if err != nil {
-				results = append(results, &model.UserOpResult{
-					Email:        email,
-					SystemErrors: []string{err.Error()},
-				})
+				results = append(results, model.NewUserOpResultSystemError("-2001", email, err))
 			} else {
 				results = append(results, &model.UserOpResult{
-					Email:    email,
-					Modified: true,
-					Dropped:  []string{course.GetID()},
+					BaseUserOpResult: model.BaseUserOpResult{
+						Email:    email,
+						Modified: true,
+						Dropped:  []string{course.GetID()},
+					},
 				})
 			}
 		} else {
 			results = append(results, &model.UserOpResult{
-				Email:   email,
-				Skipped: true,
+				BaseUserOpResult: model.BaseUserOpResult{
+					Email:   email,
+					Skipped: true,
+				},
 			})
 		}
 	}

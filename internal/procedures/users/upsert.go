@@ -13,23 +13,23 @@ import (
 // Upserting should only be done by server or course admins,
 // it should not be used for self creation.
 type UpsertUsersOptions struct {
-	RawUsers []*model.RawUserData
+	RawUsers []*model.RawUserData `json:"raw-users"`
 
-	SkipInserts bool
-	SkipUpdates bool
+	SkipInserts bool `json:"skip-inserts"`
+	SkipUpdates bool `json:"skip-updates"`
 
 	// Send any relevant email (usually about creation or password changing).
-	SendEmails bool
+	SendEmails bool `json:"send-emails"`
 
 	// Do not actually commit any changes or send any emails regardless of |SendEmails|.
-	DryRun bool
+	DryRun bool `json:"dry-run"`
 
 	// The authority of the user making this add request.
 	// The server role should always be set, but the course role can be unknown.
 	// The email is necessary to lower the permissions for a self update.
-	ContextEmail      string
-	ContextServerRole model.ServerUserRole
-	ContextCourseRole model.CourseUserRole
+	ContextEmail      string               `json:"-"`
+	ContextServerRole model.ServerUserRole `json:"-"`
+	ContextCourseRole model.CourseUserRole `json:"-"`
 }
 
 // Call upsertUser() for multiple users.
@@ -52,14 +52,14 @@ func UpsertUser(options UpsertUsersOptions) *model.UserOpResult {
 // Note that the returned errors are split into two categories in the UserOpResult structure: validation and system.
 // Validation errors are errors coming from the data/user (like an invalid email).
 // System errors are errors that should not happen regardless of the data.
-// Essentially, system errors are out fault and validation errors are the user's fault.
+// Essentially, system errors are our fault and validation errors are the user's fault.
 func upsertUser(options UpsertUsersOptions, index int) *model.UserOpResult {
 	if (options.ContextServerRole == model.ServerRoleUnknown) && (options.ContextCourseRole == model.CourseRoleUnknown) {
-		return model.NewSystemErrorUserOpResult("", fmt.Errorf("No authority/roles were provided when adding a user."))
+		return model.NewUserOpResultSystemError("-1001", "", fmt.Errorf("No authority/roles were provided when adding a user."))
 	}
 
 	if (index < 0) || (index >= len(options.RawUsers)) {
-		return model.NewSystemErrorUserOpResult("", fmt.Errorf("User index out of bounds. Got %d, must be in [0, %d).", index, len(options.RawUsers)))
+		return model.NewUserOpResultSystemError("-1002", "", fmt.Errorf("User index out of bounds. Got %d, must be in [0, %d).", index, len(options.RawUsers)))
 	}
 
 	rawData := options.RawUsers[index]
@@ -67,7 +67,7 @@ func upsertUser(options UpsertUsersOptions, index int) *model.UserOpResult {
 	// Construct and validate a user with the raw data.
 	newUser, err := rawData.ToServerUser()
 	if err != nil {
-		return model.NewValidationErrorUserOpResult(rawData.Email, err)
+		return model.NewUserOpResultValidationError("-1003", rawData.Email, err)
 	}
 
 	// Check that the context user has permissions to create the new user.
@@ -79,7 +79,7 @@ func upsertUser(options UpsertUsersOptions, index int) *model.UserOpResult {
 	// Check if this is an update or insert.
 	oldUser, err := db.GetServerUser(newUser.Email)
 	if err != nil {
-		return model.NewSystemErrorUserOpResult(newUser.Email, err)
+		return model.NewUserOpResultSystemError("-1004", newUser.Email, err)
 	}
 
 	if oldUser == nil {
@@ -97,8 +97,10 @@ func upsertUser(options UpsertUsersOptions, index int) *model.UserOpResult {
 	// This user was skipped.
 	if result == nil {
 		return &model.UserOpResult{
-			Email:   newUser.Email,
-			Skipped: true,
+			BaseUserOpResult: model.BaseUserOpResult{
+				Email:   newUser.Email,
+				Skipped: true,
+			},
 		}
 	}
 
@@ -115,8 +117,10 @@ func insertUser(user *model.ServerUser, options UpsertUsersOptions, rawData *mod
 	}
 
 	result = &model.UserOpResult{
-		Email: user.Email,
-		Added: true,
+		BaseUserOpResult: model.BaseUserOpResult{
+			Email: user.Email,
+			Added: true,
+		},
 	}
 
 	// New users need authnetication information.
@@ -131,7 +135,7 @@ func insertUser(user *model.ServerUser, options UpsertUsersOptions, rawData *mod
 	}
 
 	if err != nil {
-		return model.NewSystemErrorUserOpResult(user.Email, fmt.Errorf("Failed to set new password: '%w'.", err))
+		return model.NewUserOpResultSystemError("-1005", user.Email, fmt.Errorf("Failed to set new password: '%w'.", err))
 	}
 
 	for courseID, _ := range user.CourseInfo {
@@ -141,7 +145,7 @@ func insertUser(user *model.ServerUser, options UpsertUsersOptions, rawData *mod
 	if !options.DryRun {
 		err := db.UpsertUser(user)
 		if err != nil {
-			return model.NewSystemErrorUserOpResult(user.Email, fmt.Errorf("Failed to insert user: '%w'.", err))
+			return model.NewUserOpResultSystemError("-1006", user.Email, fmt.Errorf("Failed to insert user: '%w'.", err))
 		}
 	}
 
@@ -164,13 +168,13 @@ func updateUser(newUser *model.ServerUser, user *model.ServerUser, options Upser
 
 	changed, err := user.Merge(newUser)
 	if err != nil {
-		return model.NewValidationErrorUserOpResult(newUser.Email, err)
+		return model.NewUserOpResultValidationError("-1007", newUser.Email, err)
 	}
 
 	if rawData.Pass != "" {
 		passChanged, err := user.SetPassword(rawData.Pass)
 		if err != nil {
-			return model.NewSystemErrorUserOpResult(newUser.Email, err)
+			return model.NewUserOpResultSystemError("-1008", newUser.Email, err)
 		}
 
 		changed = (changed || passChanged)
@@ -179,14 +183,16 @@ func updateUser(newUser *model.ServerUser, user *model.ServerUser, options Upser
 	if !options.DryRun {
 		err := db.UpsertUser(user)
 		if err != nil {
-			return model.NewSystemErrorUserOpResult(user.Email, fmt.Errorf("Failed to update user: '%w'.", err))
+			return model.NewUserOpResultSystemError("-1009", user.Email, fmt.Errorf("Failed to update user: '%w'.", err))
 		}
 	}
 
 	result = &model.UserOpResult{
-		Email:    user.Email,
-		Modified: changed,
-		Enrolled: enrolledCourses,
+		BaseUserOpResult: model.BaseUserOpResult{
+			Email:    user.Email,
+			Modified: changed,
+			Enrolled: enrolledCourses,
+		},
 	}
 
 	return result
@@ -197,13 +203,13 @@ func updateUser(newUser *model.ServerUser, user *model.ServerUser, options Upser
 func checkBaseUpsertPermissions(user *model.ServerUser, options UpsertUsersOptions) *model.UserOpResult {
 	// Users must be known to the server before insert.
 	if options.ContextServerRole == model.ServerRoleUnknown {
-		return model.NewSystemErrorUserOpResult(user.Email,
+		return model.NewUserOpResultSystemError("-1010", user.Email,
 			fmt.Errorf("Users must have a server role to upsert users."))
 	}
 
 	// Regardless of course role, users with higher server permissions cannot be inserted.
 	if options.ContextServerRole < user.Role {
-		return model.NewValidationErrorUserOpResult(user.Email,
+		return model.NewUserOpResultValidationError("-1011", user.Email,
 			fmt.Errorf("User has a server role of '%s', which is not high enough to upsert a user with server role of '%s'.", options.ContextServerRole.String(), user.Role.String()))
 	}
 
@@ -220,7 +226,7 @@ func checkInsertPermissions(user *model.ServerUser, rawData *model.RawUserData, 
 
 	// The user has no course role and insufficient server role.
 	if options.ContextCourseRole == model.CourseRoleUnknown {
-		return model.NewValidationErrorUserOpResult(user.Email,
+		return model.NewUserOpResultValidationError("-1012", user.Email,
 			fmt.Errorf("User has an insufficient server role of '%s' and no course role to insert users.", options.ContextServerRole.String()))
 	}
 
@@ -230,13 +236,13 @@ func checkInsertPermissions(user *model.ServerUser, rawData *model.RawUserData, 
 
 	// Check the relative course credentials.
 	if options.ContextCourseRole < courseRole {
-		return model.NewValidationErrorUserOpResult(user.Email,
+		return model.NewUserOpResultValidationError("-1013", user.Email,
 			fmt.Errorf("User has a course role of '%s', which is not high enough to insert a user with course role of '%s'.", options.ContextCourseRole.String(), courseRole.String()))
 	}
 
 	// The user's course-level credentials need to be high enough to insert.
 	if options.ContextCourseRole < model.CourseRoleAdmin {
-		return model.NewValidationErrorUserOpResult(user.Email,
+		return model.NewUserOpResultValidationError("-1014", user.Email,
 			fmt.Errorf("User has a course role of '%s', which is not high enough to insert users.", options.ContextCourseRole.String()))
 	}
 
@@ -274,19 +280,19 @@ func checkServerUpdatePermissions(newUser *model.ServerUser, oldUser *model.Serv
 	// Server roles can only be modified by server admins.
 	hasServerRoleChange := ((newUser.Role != model.ServerRoleUnknown) && (newUser.Role != oldUser.Role))
 	if hasServerRoleChange && (options.ContextServerRole < model.ServerRoleAdmin) {
-		return model.NewValidationErrorUserOpResult(newUser.Email,
+		return model.NewUserOpResultValidationError("-1015", newUser.Email,
 			fmt.Errorf("User has a server role of '%s', which is not high enough to modify server roles.", options.ContextServerRole.String()))
 	}
 
 	// Cannot modify server data on a user that has higher server role.
 	if options.ContextServerRole < oldUser.Role {
-		return model.NewValidationErrorUserOpResult(newUser.Email,
+		return model.NewUserOpResultValidationError("-1016", newUser.Email,
 			fmt.Errorf("User has a server role of '%s', which is not high enough to update a user with server role of '%s'.", options.ContextServerRole.String(), oldUser.Role.String()))
 	}
 
 	// Cannot modify server data unless you are an admin or self.
 	if (oldUser.Email != options.ContextEmail) && (options.ContextServerRole < model.ServerRoleAdmin) {
-		return model.NewValidationErrorUserOpResult(newUser.Email,
+		return model.NewUserOpResultValidationError("-1017", newUser.Email,
 			fmt.Errorf("User has a server role of '%s', which is not high enough to update server-level information for another user.", options.ContextServerRole.String()))
 	}
 
@@ -306,19 +312,19 @@ func checkCourseUpdatePermissions(newUser *model.ServerUser, oldUser *model.Serv
 	// Course roles can only be modified by course admins.
 	hasCourseRoleChange := ((newCourseRole != model.CourseRoleUnknown) && (oldCourseRole != newCourseRole))
 	if hasCourseRoleChange && (options.ContextCourseRole < model.CourseRoleAdmin) {
-		return model.NewValidationErrorUserOpResult(newUser.Email,
+		return model.NewUserOpResultValidationError("-1018", newUser.Email,
 			fmt.Errorf("User has a course role of '%s', which is not high enough to modify course roles.", options.ContextCourseRole.String()))
 	}
 
 	// Cannot update course data on a user that has higher course role.
 	if options.ContextCourseRole < oldCourseRole {
-		return model.NewValidationErrorUserOpResult(newUser.Email,
+		return model.NewUserOpResultValidationError("-1019", newUser.Email,
 			fmt.Errorf("User has a course role of '%s', which is not high enough to update a user with course role of '%s'.", options.ContextCourseRole.String(), oldCourseRole.String()))
 	}
 
 	// Cannot modify course data unless you are an admin or self.
 	if (oldUser.Email != options.ContextEmail) && (options.ContextCourseRole < model.CourseRoleAdmin) {
-		return model.NewValidationErrorUserOpResult(newUser.Email,
+		return model.NewUserOpResultValidationError("-1020", newUser.Email,
 			fmt.Errorf("User has a course role of '%s', which is not high enough to update course-level information for another user.", options.ContextCourseRole.String()))
 	}
 
@@ -340,7 +346,7 @@ func sendUserOpEmail(result *model.UserOpResult, options UpsertUsersOptions) {
 	if !options.DryRun {
 		err := email.SendMessage(message)
 		if err != nil {
-			result.SystemErrors = append(result.SystemErrors, fmt.Sprintf("Failed to send email: '%v'.", err))
+			result.CommunicationError = model.NewLocatableError("-1021", false, "", fmt.Sprintf("Failed to send email: '%v'.", err))
 			emailSent = false
 		}
 	}
