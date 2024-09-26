@@ -14,6 +14,7 @@ import (
 	"github.com/edulinq/autograder/internal/log"
 	"github.com/edulinq/autograder/internal/model"
 	"github.com/edulinq/autograder/internal/model/tasks"
+	"github.com/edulinq/autograder/internal/timestamp"
 )
 
 var timersLock sync.Mutex
@@ -103,7 +104,7 @@ func Schedule(course *model.Course, target tasks.ScheduledTask) error {
 // and seeing if it has been at least that long since the task has been run.
 // Return true of a catchup task needs to be run.
 func checkForCatchup(courseID string, target tasks.ScheduledTask) (bool, error) {
-	minDuration, exists := target.GetMinDuration()
+	minDuration, exists := target.GetMinDurationMS()
 	if !exists {
 		return false, nil
 	}
@@ -118,8 +119,8 @@ func checkForCatchup(courseID string, target tasks.ScheduledTask) (bool, error) 
 		return false, nil
 	}
 
-	currentDuration := time.Now().Sub(lastRunTime)
-	return (currentDuration > minDuration), nil
+	currentDuration := timestamp.Now() - lastRunTime
+	return (currentDuration.ToMSecs() > minDuration), nil
 }
 
 // Schedule a task.
@@ -141,13 +142,13 @@ func scheduleTask(courseID string, target tasks.ScheduledTask, timerID string, r
 	taskLock.Lock()
 	defer taskLock.Unlock()
 
-	nextRunDuration := 5 * time.Microsecond
+	nextRunInMS := int64(5)
 	if when != nil {
 		nextRunTime := when.ComputeNextTimeFromNow()
-		nextRunDuration = nextRunTime.Sub(time.Now())
+		nextRunInMS = nextRunTime.ToMSecs() - timestamp.Now().ToMSecs()
 	}
 
-	timer := time.AfterFunc(nextRunDuration, func() {
+	timer := time.AfterFunc(time.Duration(nextRunInMS*int64(time.Millisecond)), func() {
 		// Ensure that this task does not start too quickly.
 		// We will acquire this lock for the duration of the task run later.
 		taskLock.Lock()
@@ -189,7 +190,7 @@ func scheduleTask(courseID string, target tasks.ScheduledTask, timerID string, r
 	if when == nil {
 		log.Trace("Catchup task scheduled.", log.NewCourseAttr(courseID), log.NewAttr("task", target.GetID()))
 	} else {
-		nextRunTime := time.Now().Add(nextRunDuration)
+		nextRunTime := timestamp.FromMSecs(timestamp.Now().ToMSecs() + nextRunInMS)
 		log.Trace("Task scheduled.", log.NewCourseAttr(courseID), log.NewAttr("task", target.GetID()),
 			log.NewAttr("timer-id", timerID), log.NewAttr("when", when.String()), log.NewAttr("next-time", nextRunTime))
 	}
@@ -247,7 +248,7 @@ func runTask(courseID string, target tasks.ScheduledTask, timerID string, runFun
 	defer target.GetLock().Unlock()
 
 	taskID := target.GetID()
-	now := time.Now()
+	now := timestamp.Now()
 
 	info := getTimerInfo(courseID, timerID)
 	if info == nil {
@@ -268,8 +269,8 @@ func runTask(courseID string, target tasks.ScheduledTask, timerID string, runFun
 	}
 
 	// Skip this task if it was run too recently.
-	lastRunDuration := now.Sub(lastRunTime)
-	if lastRunDuration < (time.Duration(config.TASK_MIN_REST_SECS.Get()) * time.Second) {
+	lastRunDurationMS := int64(now.ToMSecs() - lastRunTime.ToMSecs())
+	if lastRunDurationMS < int64(config.TASK_MIN_REST_SECS.Get()*1000) {
 		log.Trace("Skipping task run, last run was too recent.",
 			log.NewCourseAttr(courseID), log.NewAttr("task", taskID), log.NewAttr("last-run", lastRunTime))
 		return true

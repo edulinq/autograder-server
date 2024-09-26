@@ -17,14 +17,14 @@ import (
 
 func TestEmailLogsBase(test *testing.T) {
 	to := []string{"test1@test.edulinq.org", "test2@test.edulinq.org"}
-	query := common.RawLogQuery{}
+	query := log.RawLogQuery{}
 
 	runTest(test, to, false, query, 1, 3)
 }
 
 func TestEmailLogsEmptyNoEmail(test *testing.T) {
 	to := []string{"test1@test.edulinq.org", "test2@test.edulinq.org"}
-	query := common.RawLogQuery{
+	query := log.RawLogQuery{
 		LevelString: log.LEVEL_STRING_FATAL,
 	}
 
@@ -33,14 +33,14 @@ func TestEmailLogsEmptyNoEmail(test *testing.T) {
 
 func TestEmailLogsEmptyYesEmail(test *testing.T) {
 	to := []string{"test1@test.edulinq.org", "test2@test.edulinq.org"}
-	query := common.RawLogQuery{
+	query := log.RawLogQuery{
 		LevelString: log.LEVEL_STRING_FATAL,
 	}
 
 	runTest(test, to, true, query, 1, 0)
 }
 
-func runTest(test *testing.T, to []string, sendEmpty bool, query common.RawLogQuery, numMessages int, numRecords int) {
+func runTest(test *testing.T, to []string, sendEmpty bool, query log.RawLogQuery, numMessages int, numRecords int) {
 	db.ResetForTesting()
 	defer db.ResetForTesting()
 

@@ -149,3 +149,14 @@ Here are three common regex standards you may encounter, along with key consider
 #### `sed`
 - **Use**: The `-E` flag to enable ERE.
 - **Reason**: BRE behavior is inconsistent across different operating systems.
+
+## Shared Working Directory for Server Interactions
+
+A server instance is defined by its working directory,
+so anything that wants to interact with a server (including a cmd) needs to make sure they share the same working directory.
+This can be done by setting the base directory in the command line whenever interacting with the server (-c dirs.base).
+For example:
+```
+go run cmd/peek-submission/main.go course-student@test.edulinq.org course101 hw0 -c dirs.base="/path/to/working/directory"
+```
+

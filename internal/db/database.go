@@ -9,12 +9,12 @@ package db
 import (
 	"fmt"
 	"sync"
-	"time"
 
 	"github.com/edulinq/autograder/internal/config"
 	"github.com/edulinq/autograder/internal/db/disk"
 	"github.com/edulinq/autograder/internal/log"
 	"github.com/edulinq/autograder/internal/model"
+	"github.com/edulinq/autograder/internal/timestamp"
 )
 
 var backend Backend
@@ -154,11 +154,11 @@ type Backend interface {
 
 	// Record that a task has been completed.
 	// The DB is only required to keep the most recently completed task with the given course/ID.
-	LogTaskCompletion(courseID string, taskID string, instance time.Time) error
+	LogTaskCompletion(courseID string, taskID string, instance timestamp.Timestamp) error
 
 	// Get the last time a task with the given course/ID was completed.
-	// Will return a zero time (time.Time{}).
-	GetLastTaskCompletion(courseID string, taskID string) (time.Time, error)
+	// Will return a zero time (timestamp.Zero()).
+	GetLastTaskCompletion(courseID string, taskID string) (timestamp.Timestamp, error)
 
 	// Logging operations.
 
@@ -167,7 +167,7 @@ type Backend interface {
 
 	// Get any logs that that match the specific requirements.
 	// Each parameter (except for the log level) can be passed with a zero value, in which case it will not be used for filtering.
-	GetLogRecords(level log.LogLevel, after time.Time, courseID string, assignmentID string, userID string) ([]*log.Record, error)
+	GetLogRecords(level log.LogLevel, after timestamp.Timestamp, courseID string, assignmentID string, userID string) ([]*log.Record, error)
 }
 
 func Open() error {
@@ -189,7 +189,7 @@ func Open() error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("Failed to open database: %w.", err)
+		return fmt.Errorf("Failed to open database: '%w'.", err)
 	}
 
 	log.SetStorageBackend(backend)
@@ -197,6 +197,11 @@ func Open() error {
 	err = backend.EnsureTables()
 	if err != nil {
 		return err
+	}
+
+	err = initializeRootUser()
+	if err != nil {
+		return fmt.Errorf("Failed to initialize the root user: '%w'.", err)
 	}
 
 	// We are probably running unit tests, load the test data.
@@ -234,7 +239,17 @@ func Clear() error {
 		return nil
 	}
 
-	return backend.Clear()
+	err := backend.Clear()
+	if err != nil {
+		return err
+	}
+
+	err = initializeRootUser()
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func MustOpen() {

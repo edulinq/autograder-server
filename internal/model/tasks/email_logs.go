@@ -3,7 +3,7 @@ package tasks
 import (
 	"fmt"
 
-	"github.com/edulinq/autograder/internal/common"
+	"github.com/edulinq/autograder/internal/log"
 )
 
 type EmailLogsTask struct {
@@ -12,7 +12,7 @@ type EmailLogsTask struct {
 	To        []string `json:"to"`
 	SendEmpty bool     `json:"send-empty"`
 
-	common.RawLogQuery
+	log.RawLogQuery
 }
 
 func (this *EmailLogsTask) Validate(course TaskCourse) error {
@@ -27,7 +27,7 @@ func (this *EmailLogsTask) Validate(course TaskCourse) error {
 		return fmt.Errorf("EmailLogs task is not disabled, but no email recipients are declared.")
 	}
 
-	_, err = this.RawLogQuery.ParseJoin(course)
+	_, err = this.RawLogQuery.ParseJoin()
 	if err != nil {
 		return err
 	}

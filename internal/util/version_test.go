@@ -1,20 +1,20 @@
 package util
 
 import (
-	"strings"
 	"testing"
 )
 
-func TestVersionShort(test *testing.T) {
-	version := GetAutograderVersion()
-	if version == UNKNOWN_VERSION {
+func TestVersion(test *testing.T) {
+	version, err := GetAutograderVersion()
+	if err != nil {
+		test.Fatalf("Failed to get autograder version: %s", err)
+	}
+
+	if version.Short == UNKNOWN_VERSION {
 		test.Fatalf("Did not get an actual version (check error log).")
 	}
-}
 
-func TestVersionFull(test *testing.T) {
-	version := GetAutograderFullVersion()
-	if strings.HasPrefix(version, UNKNOWN_VERSION) {
-		test.Fatalf("Did not get an actual version (check error log).")
+	if version.Api == UNKNOWN_API {
+		test.Fatalf("Did not get an actual API version (check error log).")
 	}
 }

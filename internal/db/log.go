@@ -2,12 +2,12 @@ package db
 
 import (
 	"fmt"
-	"time"
 
 	"github.com/edulinq/autograder/internal/log"
+	"github.com/edulinq/autograder/internal/timestamp"
 )
 
-func GetLogRecords(level log.LogLevel, after time.Time, courseID string, assignmentID string, userID string) ([]*log.Record, error) {
+func GetLogRecords(level log.LogLevel, after timestamp.Timestamp, courseID string, assignmentID string, userID string) ([]*log.Record, error) {
 	if backend == nil {
 		return nil, fmt.Errorf("Database has not been opened.")
 	}

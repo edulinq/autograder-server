@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/edulinq/autograder/internal/common"
+	"github.com/edulinq/autograder/internal/timestamp"
 	"github.com/edulinq/autograder/internal/util"
 )
 
@@ -14,7 +15,7 @@ func TestScoringInfoStruct(test *testing.T) {
 	testCases := []*ScoringInfo{
 		nil,
 		&ScoringInfo{},
-		&ScoringInfo{"foo", common.NowTimestamp(), common.NowTimestamp(), 1.0, 2.0, false, 1, 2, true, SCORING_INFO_STRUCT_VERSION, "foo", "bar"},
+		&ScoringInfo{"foo", timestamp.Zero(), timestamp.Zero(), 1.0, 2.0, false, 1, 2, true, SCORING_INFO_STRUCT_VERSION, "foo", "bar"},
 	}
 
 	for _, testCase := range testCases {

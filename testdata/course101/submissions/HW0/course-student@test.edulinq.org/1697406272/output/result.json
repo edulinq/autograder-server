@@ -6,26 +6,26 @@
             "max_points": 1,
             "score": 1,
             "message": "",
-            "grading_start_time": "2023-11-11T22:13:42.592335+00:00",
-            "grading_end_time": "2023-11-11T22:13:42.592371+00:00"
+            "grading_start_time": 1699740822592,
+            "grading_end_time": 1699740822592
         },
         {
             "name": "Q2",
             "max_points": 1,
             "score": 1,
             "message": "",
-            "grading_start_time": "2023-11-11T22:13:42.595235+00:00",
-            "grading_end_time": "2023-11-11T22:13:42.595267+00:00"
+            "grading_start_time": 1699740822595,
+            "grading_end_time": 1699740822595
         },
         {
             "name": "Style",
             "max_points": 0,
             "score": 0,
             "message": "Style is clean!",
-            "grading_start_time": "2023-11-11T22:13:42.598251+00:00",
-            "grading_end_time": "2023-11-11T22:13:42.627650+00:00"
+            "grading_start_time": 1699740822598,
+            "grading_end_time": 1699740822627
         }
     ],
-    "grading_start_time": "2023-11-11T22:13:42.590141+00:00",
-    "grading_end_time": "2023-11-11T22:13:42.629262+00:00"
+    "grading_start_time": 1699740822590,
+    "grading_end_time": 1699740822629
 }

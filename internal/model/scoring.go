@@ -1,21 +1,21 @@
 package model
 
 import (
-	"github.com/edulinq/autograder/internal/common"
+	"github.com/edulinq/autograder/internal/timestamp"
 )
 
 const SCORING_INFO_STRUCT_VERSION = "1.0.0"
 
 type ScoringInfo struct {
-	ID             string           `json:"id"`
-	SubmissionTime common.Timestamp `json:"submission-time"`
-	UploadTime     common.Timestamp `json:"upload-time"`
-	RawScore       float64          `json:"raw-score"`
-	Score          float64          `json:"score"`
-	Lock           bool             `json:"lock"`
-	LateDayUsage   int              `json:"late-date-usage"`
-	NumDaysLate    int              `json:"num-days-late"`
-	Reject         bool             `json:"reject"`
+	ID             string              `json:"id"`
+	SubmissionTime timestamp.Timestamp `json:"submission-time"`
+	UploadTime     timestamp.Timestamp `json:"upload-time"`
+	RawScore       float64             `json:"raw-score"`
+	Score          float64             `json:"score"`
+	Lock           bool                `json:"lock"`
+	LateDayUsage   int                 `json:"late-date-usage"`
+	NumDaysLate    int                 `json:"num-days-late"`
+	Reject         bool                `json:"reject"`
 
 	// A distinct key so we can recognize this as an autograder object.
 	AutograderStructVersion string `json:"__autograder__version__"`

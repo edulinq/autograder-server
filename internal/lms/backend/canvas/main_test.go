@@ -10,7 +10,6 @@ import (
 	"os"
 	"strings"
 	"testing"
-	"time"
 
 	"github.com/edulinq/autograder/internal/common"
 	"github.com/edulinq/autograder/internal/db"
@@ -152,13 +151,4 @@ func stopTestServer() {
 		server = nil
 		serverURL = ""
 	}
-}
-
-func mustParseTime(text string) *time.Time {
-	instance, err := time.Parse(time.RFC3339, text)
-	if err != nil {
-		panic(fmt.Sprintf("Failed to parse time '%s': '%v'.", text, err))
-	}
-
-	return &instance
 }

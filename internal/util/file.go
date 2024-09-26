@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"os"
 	"strings"
+
+	"github.com/edulinq/autograder/internal/log"
 )
 
 func ReadFile(path string) (string, error) {
@@ -52,4 +54,22 @@ func ReadSeparatedFile(path string, delim string, skipRows int) ([][]string, err
 	}
 
 	return rows, nil
+}
+
+func MustCreateFile(path string) *os.File {
+	file, err := os.Create(path)
+	if err != nil {
+		log.Fatal("Unable to create file.", err, log.NewAttr("path", path))
+	}
+
+	return file
+}
+
+func MustReadFile(path string) string {
+	data, err := ReadFile(path)
+	if err != nil {
+		log.Fatal("Unable to read file.", err, log.NewAttr("path", path))
+	}
+
+	return data
 }
