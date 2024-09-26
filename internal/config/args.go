@@ -99,7 +99,7 @@ func HandleConfigArgsFull(args ConfigArgs, cwd string, skipEnv bool) error {
 	}
 
 	if args.UnitTesting {
-		err := EnableUnitTestingMode()
+		err := EnableUnitTestingModeFull(false)
 		if err != nil {
 			return err
 		}

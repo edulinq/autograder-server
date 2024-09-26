@@ -38,6 +38,13 @@ func MustEnableUnitTestingMode() {
 }
 
 func EnableUnitTestingMode() error {
+	return EnableUnitTestingModeFull(true)
+}
+
+// Sets system configurations for unit testing.
+// Changes the base directory to a temp directory and copies over test data.
+// If loadEnv is true, loads environmental variables.
+func EnableUnitTestingModeFull(loadEnv bool) error {
 	TESTING_MODE.Set(true)
 	NO_TASKS.Set(true)
 	LOAD_TEST_DATA.Set(true)
@@ -62,6 +69,10 @@ func EnableUnitTestingMode() error {
 	err = util.CopyDir(testsDir, outTestsDir, false)
 	if err != nil {
 		return fmt.Errorf("Failed to copy test data into working dir: '%w'.", err)
+	}
+
+	if loadEnv {
+		LoadEnv()
 	}
 
 	return nil
