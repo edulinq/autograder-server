@@ -263,7 +263,7 @@ func NewInternalError(locator string, request *APIRequestCourseUserContext, inte
 		LogLevel:     log.LevelError,
 		HTTPStatus:   HTTP_STATUS_SERVER_ERROR,
 		InternalText: internalMessage,
-		ResponseText: fmt.Sprintf("The server failed to process your request. Please contact an adimistrator with this ID '%s'.", request.RequestID),
+		ResponseText: fmt.Sprintf("The server failed to process your request. Please contact an administrator with this ID '%s'.", request.RequestID),
 		CourseID:     request.CourseID,
 		UserEmail:    request.UserEmail,
 	}
@@ -280,7 +280,7 @@ func NewUserContextInternalError(locator string, request *APIRequestUserContext,
 		LogLevel:     log.LevelError,
 		HTTPStatus:   HTTP_STATUS_SERVER_ERROR,
 		InternalText: internalMessage,
-		ResponseText: fmt.Sprintf("The server failed to process your request. Please contact an adimistrator with this ID '%s'.", request.RequestID),
+		ResponseText: fmt.Sprintf("The server failed to process your request. Please contact an administrator with this ID '%s'.", request.RequestID),
 		UserEmail:    request.UserEmail,
 	}
 
@@ -296,7 +296,7 @@ func NewBaseInternalError(locator string, request *APIRequest, internalMessage s
 		LogLevel:     log.LevelError,
 		HTTPStatus:   HTTP_STATUS_SERVER_ERROR,
 		InternalText: internalMessage,
-		ResponseText: fmt.Sprintf("The server failed to process your request. Please contact an adimistrator with this ID '%s'.", request.RequestID),
+		ResponseText: fmt.Sprintf("The server failed to process your request. Please contact an administrator with this ID '%s'.", request.RequestID),
 	}
 
 	return err
@@ -312,7 +312,7 @@ func NewBareInternalError(locator string, endpoint string, internalMessage strin
 		LogLevel:     log.LevelError,
 		HTTPStatus:   HTTP_STATUS_SERVER_ERROR,
 		InternalText: internalMessage,
-		ResponseText: fmt.Sprintf("The server failed to process your request. Please contact an adimistrator with this ID '%s'.", locator),
+		ResponseText: fmt.Sprintf("The server failed to process your request. Please contact an administrator with this ID '%s'.", locator),
 	}
 
 	return err

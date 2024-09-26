@@ -131,14 +131,14 @@ func TestCourseSyncLMSUsers(test *testing.T) {
 		}
 
 		expected = 0
-		if expected != counts.ValidationErrors {
-			test.Errorf("Case %d (%s): Unexpected number of validation errors. Expected: %d, Actual: %d.", i, label, expected, counts.ValidationErrors)
+		if expected != counts.ValidationError {
+			test.Errorf("Case %d (%s): Unexpected number of validation errors. Expected: %d, Actual: %d.", i, label, expected, counts.ValidationError)
 			continue
 		}
 
 		expected = 0
-		if expected != counts.SystemErrors {
-			test.Errorf("Case %d (%s): Unexpected number of system errors. Expected: %d, Actual: %d.", i, label, expected, counts.SystemErrors)
+		if expected != counts.SystemError {
+			test.Errorf("Case %d (%s): Unexpected number of system errors. Expected: %d, Actual: %d.", i, label, expected, counts.SystemError)
 			continue
 		}
 

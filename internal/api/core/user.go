@@ -67,6 +67,11 @@ func NewServerUserInfo(user *model.ServerUser) (*ServerUserInfo, error) {
 			return nil, fmt.Errorf("Failed to get course '%s' for user '%s'.", courseID, user.Email)
 		}
 
+		if course == nil {
+			log.Warn("User has a course that does not exist.", user, log.NewCourseAttr(courseID))
+			continue
+		}
+
 		info.Courses[course.GetID()] = EnrollmentInfo{
 			CourseID:   course.GetID(),
 			CourseName: course.GetName(),

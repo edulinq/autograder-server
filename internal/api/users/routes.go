@@ -15,6 +15,7 @@ var routes []*core.Route = []*core.Route{
 	core.NewAPIRoute(core.NewEndpoint(`users/remove`), HandleRemove),
 	core.NewAPIRoute(core.NewEndpoint(`users/tokens/create`), HandleTokensCreate),
 	core.NewAPIRoute(core.NewEndpoint(`users/tokens/delete`), HandleTokensDelete),
+	core.NewAPIRoute(core.NewEndpoint(`users/upsert`), HandleUpsert),
 }
 
 func GetRoutes() *[]*core.Route {

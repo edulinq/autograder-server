@@ -13,15 +13,16 @@ All these packages (except cmd) live in `internal`.
  2. log
  3. util
  4. config
- 5. common, email
- 6. docker
- 7. model
- 8. db
- 9. grader, procedures/logs
- 10. procedures/users, report
- 11. lms
- 12. scoring
- 13. task
- 14. procedures/courses
- 15. api
- 16. cmd
+ 5. common
+ 6. email
+ 7. docker
+ 8. model
+ 9. db
+ 10. grader, procedures/logs
+ 11. procedures/users, report
+ 12. lms
+ 13. scoring
+ 14. task
+ 15. procedures/courses
+ 16. api
+ 17. cmd

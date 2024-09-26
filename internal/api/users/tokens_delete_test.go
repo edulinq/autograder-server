@@ -5,7 +5,6 @@ import (
 
 	"github.com/edulinq/autograder/internal/api/core"
 	"github.com/edulinq/autograder/internal/db"
-	"github.com/edulinq/autograder/internal/model"
 	"github.com/edulinq/autograder/internal/util"
 )
 
@@ -15,21 +14,6 @@ func TestTokensDelete(test *testing.T) {
 
 	email := "course-admin@test.edulinq.org"
 	user := db.MustGetServerUser(email)
-
-	// Add a token.
-
-	_, _, err := user.CreateRandomToken("test", model.TokenSourceServer)
-	if err != nil {
-		test.Fatalf("Failed to create token: '%v'.", err)
-	}
-
-	err = db.UpsertUser(user)
-	if err != nil {
-		test.Fatalf("Could not upsert user: '%v'.", err)
-	}
-
-	// Re-fetch and ensure the token exists.
-	user = db.MustGetServerUser(email)
 
 	initialTokenCount := len(user.Tokens)
 	if initialTokenCount == 0 {
@@ -65,7 +49,7 @@ func TestTokensDeleteNoTokens(test *testing.T) {
 	db.ResetForTesting()
 	defer db.ResetForTesting()
 
-	email := "course-admin@test.edulinq.org"
+	email := "server-admin@test.edulinq.org"
 	user := db.MustGetServerUser(email)
 
 	if len(user.Tokens) != 0 {

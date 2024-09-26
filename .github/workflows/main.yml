@@ -28,8 +28,8 @@ jobs:
       - name: Check Formatting
         run: ./scripts/check_formatting.sh
 
-      - name: Check Duplicate API Locators
-        run: ./scripts/check_duplicate_api_locators.sh
+      - name: Check Duplicate Locators
+        run: ./scripts/check_duplicate_locators.sh
 
       - name: Run Base Tests
         env:
