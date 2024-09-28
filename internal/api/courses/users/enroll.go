@@ -47,6 +47,7 @@ func HandleEnroll(request *EnrollRequest) (*EnrollResponse, *core.APIError) {
 	results := users.UpsertUsers(options)
 
 	var response EnrollResponse
+
 	// Convert UserOpResults to user friendly ExternalUserOpResults.
 	for _, result := range results {
 		response.Results = append(response.Results, result.ToExternalResult())

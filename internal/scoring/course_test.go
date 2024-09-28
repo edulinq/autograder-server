@@ -38,13 +38,13 @@ func TestCourseScoringEmptyStudent(test *testing.T) {
 	course.Assignments["hw0"].LMSID = "001"
 
 	// Change a user with no submissions into a student.
-	user, err := db.GetCourseUser(course, "course-other@test.edulinq.org")
+	user, err := db.GetServerUser("course-other@test.edulinq.org")
 	if err != nil {
 		test.Fatalf("Failed to get user: '%v'.", err)
 	}
 
-	user.Role = model.CourseRoleStudent
-	err = db.UpsertCourseUser(course, user)
+	user.CourseInfo[db.TEST_COURSE_ID].Role = model.CourseRoleStudent
+	err = db.UpsertUser(user)
 	if err != nil {
 		test.Fatalf("Failed to save user: '%v'.", err)
 	}

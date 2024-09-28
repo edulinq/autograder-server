@@ -6,7 +6,6 @@ import (
 	"path/filepath"
 	"slices"
 
-	"github.com/edulinq/autograder/internal/config"
 	"github.com/edulinq/autograder/internal/model"
 	"github.com/edulinq/autograder/internal/util"
 )
@@ -162,10 +161,8 @@ func (this *backend) getServerUsersLock(acquireLock bool) (map[string]*model.Ser
 	}
 
 	var errs error = nil
-	if !config.TESTING_MODE.Get() {
-		for _, user := range users {
-			errs = errors.Join(errs, user.Validate())
-		}
+	for _, user := range users {
+		errs = errors.Join(errs, user.Validate())
 	}
 
 	return users, errs

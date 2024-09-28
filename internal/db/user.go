@@ -1,7 +1,6 @@
 package db
 
 import (
-	"errors"
 	"fmt"
 
 	"github.com/edulinq/autograder/internal/log"
@@ -94,33 +93,6 @@ func GetCourseUser(course *model.Course, email string) (*model.CourseUser, error
 func UpsertUser(user *model.ServerUser) error {
 	users := map[string]*model.ServerUser{user.Email: user}
 	return UpsertUsers(users)
-}
-
-// Convenience function for UpsertUsers() with course users.
-func UpsertCourseUsers(course *model.Course, users map[string]*model.CourseUser) error {
-	serverUsers := make(map[string]*model.ServerUser, len(users))
-
-	var userErrors error = nil
-	for email, user := range users {
-		serverUser, err := user.ToServerUser(course.ID)
-		if err != nil {
-			userErrors = errors.Join(userErrors, fmt.Errorf("Invalid user '%s': '%w'.", email, err))
-		} else {
-			serverUsers[email] = serverUser
-		}
-	}
-
-	if userErrors != nil {
-		return fmt.Errorf("Found errors when processing users: '%w'.", userErrors)
-	}
-
-	return UpsertUsers(serverUsers)
-}
-
-// Convenience function for UpsertCourseUsers() with a single user.
-func UpsertCourseUser(course *model.Course, user *model.CourseUser) error {
-	users := map[string]*model.CourseUser{user.Email: user}
-	return UpsertCourseUsers(course, users)
 }
 
 // Delete a user from the server.
