@@ -24,11 +24,12 @@ var (
 	LOG_BACKEND_LEVEL = MustNewStringOption("log.backend.level", "INFO", "The default logging level for the backend (database) logger.")
 
 	// Email
-	EMAIL_FROM = MustNewStringOption("email.from", "", "From address for emails sent from the autograder.")
-	EMAIL_HOST = MustNewStringOption("email.host", "", "SMTP host for emails sent from the autograder.")
-	EMAIL_PASS = MustNewStringOption("email.pass", "", "SMTP password for emails sent from the autograder.")
-	EMAIL_PORT = MustNewStringOption("email.port", "", "SMTP port for emails sent from the autograder.")
-	EMAIL_USER = MustNewStringOption("email.user", "", "SMTP username for emails sent from the autograder.")
+	EMAIL_FROM                 = MustNewStringOption("email.from", "", "From address for emails sent from the autograder.")
+	EMAIL_HOST                 = MustNewStringOption("email.host", "", "SMTP host for emails sent from the autograder.")
+	EMAIL_PASS                 = MustNewStringOption("email.pass", "", "SMTP password for emails sent from the autograder.")
+	EMAIL_PORT                 = MustNewStringOption("email.port", "", "SMTP port for emails sent from the autograder.")
+	EMAIL_USER                 = MustNewStringOption("email.user", "", "SMTP username for emails sent from the autograder.")
+	EMAIL_SMTP_IDLE_TIMEOUT_MS = MustNewIntOption("email.smtp.idle", 2000, "Consider an SMTP connection idle if no emails are sent for this number of milliseconds.")
 
 	// Docker
 	DOCKER_DISABLE = MustNewBoolOption("docker.disable", false, "Disable the use of docker (usually for testing).")

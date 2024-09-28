@@ -11,8 +11,12 @@ import (
 type User struct {
 	ID          string       `json:"id"`
 	Name        string       `json:"name"`
-	Email       string       `json:"login_id"`
 	Enrollments []Enrollment `json:"enrollments"`
+
+	// Newer versions of Canvas do not supply the "login_id" field.
+	// We will grab both look for either.
+	Email   string `json:"email"`
+	LoginID string `json:"login_id"`
 }
 
 type SubmissionScore struct {
@@ -90,10 +94,15 @@ func (this *User) GetRole() model.CourseUserRole {
 }
 
 func (this *User) ToLMSType() *lmstypes.User {
+	email := this.LoginID
+	if email == "" {
+		email = this.Email
+	}
+
 	return &lmstypes.User{
 		ID:    this.ID,
 		Name:  this.Name,
-		Email: this.Email,
+		Email: email,
 		Role:  this.GetRole(),
 	}
 }

@@ -449,7 +449,16 @@ func TestUpsertUser(test *testing.T) {
 				Salt:     PLACEHOLDER_SALT,
 				Password: PLACEHOLDER_PASSWORD_TOKEN,
 				Role:     model.ServerRoleUser,
-				Tokens:   []*model.Token{},
+				Tokens: []*model.Token{
+					&model.Token{
+						ID:           "df0a1f16-9cd8-4395-8509-10ae314fe6fc",
+						HexDigest:    "74f72731825e660f5720ffe86e71103c5534171f1e4ef9fe2d8c73d0121ef192",
+						Source:       "user",
+						Name:         "test",
+						CreationTime: 1727118291215,
+						AccessTime:   1727118291215,
+					},
+				},
 				CourseInfo: map[string]*model.UserCourseInfo{
 					"course-languages": &model.UserCourseInfo{
 						Role:  model.CourseRoleAdmin,
