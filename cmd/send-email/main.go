@@ -43,4 +43,9 @@ func main() {
 	if err != nil {
 		log.Fatal("Could not send email.", err)
 	}
+
+	err = email.Close()
+	if err != nil {
+		log.Fatal("Failed to close SMTP connection.", err)
+	}
 }
