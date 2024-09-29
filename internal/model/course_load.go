@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"path/filepath"
 
+	"github.com/edulinq/autograder/internal/config"
 	"github.com/edulinq/autograder/internal/util"
 )
 
@@ -32,23 +33,21 @@ func LoadCourseFromPath(path string) (*Course, error) {
 	return course, nil
 }
 
-func FullLoadCourseFromPath(path string) (*Course, map[string]*CourseUser, []*GradingResult, error) {
+func FullLoadCourseFromPath(path string) (*Course, []*GradingResult, error) {
 	course, err := LoadCourseFromPath(path)
 	if err != nil {
-		return nil, nil, nil, err
+		return nil, nil, err
 	}
 
-	users, err := loadStaticCourseUsers(path)
-	if err != nil {
-		return nil, nil, nil, fmt.Errorf("Failed to load static users for course config '%s': '%w'.", path, err)
+	submissions := []*GradingResult{}
+	if config.TESTING_MODE.Get() {
+		submissions, err = loadStaticSubmissions(path)
+		if err != nil {
+			return nil, nil, fmt.Errorf("Failed to load static submissions for course config '%s': '%w'.", path, err)
+		}
 	}
 
-	submissions, err := loadStaticSubmissions(path)
-	if err != nil {
-		return nil, nil, nil, fmt.Errorf("Failed to load static submissions for course config '%s': '%w'.", path, err)
-	}
-
-	return course, users, submissions, nil
+	return course, submissions, nil
 }
 
 // Load just the course config (and validate).

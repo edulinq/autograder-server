@@ -246,6 +246,7 @@ func (this *DBTests) DBTestUserUpsertUserInsert(test *testing.T) {
 	expected := &model.ServerUser{
 		Email: email,
 		Name:  &name,
+		Role:  model.ServerRoleUser,
 	}
 
 	err := expected.Validate()
@@ -353,40 +354,6 @@ func (this *DBTests) DBTestUserUpsertUserEmptyUpdate(test *testing.T) {
 
 	if !reflect.DeepEqual(expected, newUser) {
 		test.Fatalf("Server user does not match. Expected: '%s', Actual: '%s'.",
-			util.MustToJSONIndent(expected), util.MustToJSONIndent(newUser))
-	}
-}
-
-func (this *DBTests) DBTestUserUpsertCourseUserInsert(test *testing.T) {
-	defer ResetForTesting()
-	ResetForTesting()
-
-	course := MustGetTestCourse()
-	email := "new@test.edulinq.org"
-	name := "new"
-
-	expected := &model.CourseUser{
-		Email: email,
-		Name:  &name,
-		Role:  model.CourseRoleStudent,
-	}
-
-	err := UpsertCourseUser(course, expected)
-	if err != nil {
-		test.Fatalf("Could not upsert user '%s': '%v'.", email, err)
-	}
-
-	newUser, err := GetCourseUser(course, email)
-	if err != nil {
-		test.Fatalf("Could not get (new) course user ('%s'): '%v'.", email, err)
-	}
-
-	if newUser == nil {
-		test.Fatalf("Got nil (new) course user ('%s').", email)
-	}
-
-	if !reflect.DeepEqual(expected, newUser) {
-		test.Fatalf("Course user does not match. Expected: '%s', Actual: '%s'.",
 			util.MustToJSONIndent(expected), util.MustToJSONIndent(newUser))
 	}
 }

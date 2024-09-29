@@ -32,7 +32,7 @@ func (this *backend) LoadCourse(path string) (*model.Course, error) {
 	common.Lock(path)
 	defer common.Unlock(path)
 
-	course, courseUsers, submissions, err := model.FullLoadCourseFromPath(path)
+	course, submissions, err := model.FullLoadCourseFromPath(path)
 	if err != nil {
 		return nil, err
 	}
@@ -42,16 +42,6 @@ func (this *backend) LoadCourse(path string) (*model.Course, error) {
 		log.NewAttr("id", course.GetID()), log.NewAttr("num-assignments", len(course.Assignments)))
 
 	err = this.saveCourseLock(course, false)
-	if err != nil {
-		return nil, err
-	}
-
-	serverUsers, err := convertCourseUsers(courseUsers, course)
-	if err != nil {
-		return nil, fmt.Errorf("Found invalid users in course ('%s'): '%w'.", path, err)
-	}
-
-	err = this.UpsertUsers(serverUsers)
 	if err != nil {
 		return nil, err
 	}

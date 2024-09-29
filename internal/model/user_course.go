@@ -85,6 +85,9 @@ func (this *CourseUser) GetLMSID() string {
 	return *this.LMSID
 }
 
+// Note that this function is potentially dangerous because
+// we are converting from a type with less information into
+// a type with more information.
 func (this *CourseUser) ToServerUser(courseID string) (*ServerUser, error) {
 	serverUser := &ServerUser{
 		Email:      this.Email,
@@ -92,7 +95,7 @@ func (this *CourseUser) ToServerUser(courseID string) (*ServerUser, error) {
 		CourseInfo: map[string]*UserCourseInfo{courseID: &UserCourseInfo{Role: this.Role, LMSID: this.LMSID}},
 	}
 
-	return serverUser, serverUser.Validate()
+	return serverUser, serverUser.validate(false)
 }
 
 func (this *CourseUser) MustToRow() []string {

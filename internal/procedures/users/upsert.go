@@ -13,7 +13,7 @@ import (
 // Upserting should only be done by server or course admins,
 // it should not be used for self creation.
 type UpsertUsersOptions struct {
-	RawUsers []*model.RawUserData `json:"raw-users"`
+	RawUsers []*model.RawServerUserData `json:"raw-users"`
 
 	SkipInserts bool `json:"skip-inserts"`
 	SkipUpdates bool `json:"skip-updates"`
@@ -110,7 +110,7 @@ func upsertUser(options UpsertUsersOptions, index int) *model.UserOpResult {
 	return result
 }
 
-func insertUser(user *model.ServerUser, options UpsertUsersOptions, rawData *model.RawUserData) *model.UserOpResult {
+func insertUser(user *model.ServerUser, options UpsertUsersOptions, rawData *model.RawServerUserData) *model.UserOpResult {
 	result := checkInsertPermissions(user, rawData, options)
 	if result != nil {
 		return result
@@ -121,6 +121,13 @@ func insertUser(user *model.ServerUser, options UpsertUsersOptions, rawData *mod
 			Email: user.Email,
 			Added: true,
 		},
+	}
+
+	// Ensure all users have a valid role.
+	// Can get unknown server roles when processing requests from course level
+	// operations, since they cannnot set server roles.
+	if user.Role == model.ServerRoleUnknown {
+		user.Role = model.ServerRoleUser
 	}
 
 	// New users need authnetication information.
@@ -142,6 +149,11 @@ func insertUser(user *model.ServerUser, options UpsertUsersOptions, rawData *mod
 		result.Enrolled = append(result.Enrolled, courseID)
 	}
 
+	err = user.Validate()
+	if err != nil {
+		return model.NewUserOpResultValidationError("-1023", user.Email, err)
+	}
+
 	if !options.DryRun {
 		err := db.UpsertUser(user)
 		if err != nil {
@@ -152,7 +164,7 @@ func insertUser(user *model.ServerUser, options UpsertUsersOptions, rawData *mod
 	return result
 }
 
-func updateUser(newUser *model.ServerUser, user *model.ServerUser, options UpsertUsersOptions, rawData *model.RawUserData) *model.UserOpResult {
+func updateUser(newUser *model.ServerUser, user *model.ServerUser, options UpsertUsersOptions, rawData *model.RawServerUserData) *model.UserOpResult {
 	result := checkUpdatePermissions(newUser, user, rawData, options)
 	if result != nil {
 		return result
@@ -218,7 +230,7 @@ func checkBaseUpsertPermissions(user *model.ServerUser, options UpsertUsersOptio
 
 // Check permissions specific to an insert.
 // This assumes that checkBaseUpsertPermissions() has already been called and passed.
-func checkInsertPermissions(user *model.ServerUser, rawData *model.RawUserData, options UpsertUsersOptions) *model.UserOpResult {
+func checkInsertPermissions(user *model.ServerUser, rawData *model.RawServerUserData, options UpsertUsersOptions) *model.UserOpResult {
 	// After relative server roles are checked (in common permissions check), admins can do whatever.
 	if options.ContextServerRole >= model.ServerRoleAdmin {
 		return nil
@@ -253,7 +265,7 @@ func checkInsertPermissions(user *model.ServerUser, rawData *model.RawUserData, 
 // This assumes that checkBaseUpsertPermissions() has already been called and passed.
 // To check permissions, we will split the update into "server changes" and "course changes".
 // For example, a user may be a server admin, but they can srill be edited by a course admin if only course changes are being made.
-func checkUpdatePermissions(newUser *model.ServerUser, oldUser *model.ServerUser, rawData *model.RawUserData, options UpsertUsersOptions) *model.UserOpResult {
+func checkUpdatePermissions(newUser *model.ServerUser, oldUser *model.ServerUser, rawData *model.RawServerUserData, options UpsertUsersOptions) *model.UserOpResult {
 	// Check permissions for server-level changes.
 	hasServerChanges := rawData.HasServerInfo()
 	if hasServerChanges {
@@ -276,7 +288,7 @@ func checkUpdatePermissions(newUser *model.ServerUser, oldUser *model.ServerUser
 }
 
 // Check permissions for updates on server-level data.
-func checkServerUpdatePermissions(newUser *model.ServerUser, oldUser *model.ServerUser, rawData *model.RawUserData, options UpsertUsersOptions) *model.UserOpResult {
+func checkServerUpdatePermissions(newUser *model.ServerUser, oldUser *model.ServerUser, rawData *model.RawServerUserData, options UpsertUsersOptions) *model.UserOpResult {
 	// Server roles can only be modified by server admins.
 	hasServerRoleChange := ((newUser.Role != model.ServerRoleUnknown) && (newUser.Role != oldUser.Role))
 	if hasServerRoleChange && (options.ContextServerRole < model.ServerRoleAdmin) {
@@ -300,7 +312,7 @@ func checkServerUpdatePermissions(newUser *model.ServerUser, oldUser *model.Serv
 }
 
 // Check permissions for updates on course-level data.
-func checkCourseUpdatePermissions(newUser *model.ServerUser, oldUser *model.ServerUser, rawData *model.RawUserData, options UpsertUsersOptions) *model.UserOpResult {
+func checkCourseUpdatePermissions(newUser *model.ServerUser, oldUser *model.ServerUser, rawData *model.RawServerUserData, options UpsertUsersOptions) *model.UserOpResult {
 	// Server admins can do whatever they want on course information.
 	if options.ContextServerRole >= model.ServerRoleAdmin {
 		return nil
@@ -320,6 +332,12 @@ func checkCourseUpdatePermissions(newUser *model.ServerUser, oldUser *model.Serv
 	if options.ContextCourseRole < oldCourseRole {
 		return model.NewUserOpResultValidationError("-1019", newUser.Email,
 			fmt.Errorf("User has a course role of '%s', which is not high enough to update a user with course role of '%s'.", options.ContextCourseRole.String(), oldCourseRole.String()))
+	}
+
+	// Cannot update a user to have a higher course role than the context user.
+	if options.ContextCourseRole < newCourseRole {
+		return model.NewUserOpResultValidationError("-1022", newUser.Email,
+			fmt.Errorf("User has a course role of '%s', which is not high enough to update a user to a course role of '%s'.", options.ContextCourseRole.String(), newCourseRole.String()))
 	}
 
 	// Cannot modify course data unless you are an admin or self.

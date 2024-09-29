@@ -10,7 +10,7 @@ function process_directory() {
     local dirname=$(basename "${path}")
     local parent_dirname=$(basename "$(dirname "${path}")")
 
-    local largestLocator=$(grep -RoEh '("\-[0-9]{3,4}")' "${path}" 2>/dev/null | sed 's/^.*"\(-[0-9]\{3,4\}\)".*$/\1/' | sort | uniq | tail -n 1)
+    local largestLocator=$(grep -RoEhI '("\-[0-9]{3,4}")' "${path}" 2>/dev/null | sed 's/^.*"\(-[0-9]\{3,4\}\)".*$/\1/' | sort | uniq | tail -n 1)
 
     if [[ -z "${largestLocator}" ]] ; then
         return 0

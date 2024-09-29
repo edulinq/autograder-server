@@ -31,8 +31,8 @@ func TestUpsertUser(test *testing.T) {
 		// New user without course.
 		{
 			options: UpsertUsersOptions{
-				RawUsers: []*model.RawUserData{
-					&model.RawUserData{
+				RawUsers: []*model.RawServerUserData{
+					&model.RawServerUserData{
 						Email: "new@test.edulinq.org",
 						Name:  "new",
 						Role:  model.GetServerUserRoleString(model.ServerRoleUser),
@@ -61,8 +61,8 @@ func TestUpsertUser(test *testing.T) {
 		// New user with course.
 		{
 			options: UpsertUsersOptions{
-				RawUsers: []*model.RawUserData{
-					&model.RawUserData{
+				RawUsers: []*model.RawServerUserData{
+					&model.RawServerUserData{
 						Email:       "new@test.edulinq.org",
 						Name:        "new",
 						Role:        model.GetServerUserRoleString(model.ServerRoleUser),
@@ -101,8 +101,8 @@ func TestUpsertUser(test *testing.T) {
 		// Update user without course.
 		{
 			options: UpsertUsersOptions{
-				RawUsers: []*model.RawUserData{
-					&model.RawUserData{
+				RawUsers: []*model.RawServerUserData{
+					&model.RawServerUserData{
 						Email: "course-student@test.edulinq.org",
 						Name:  "new",
 					},
@@ -148,8 +148,8 @@ func TestUpsertUser(test *testing.T) {
 		// Update user with course (enroll).
 		{
 			options: UpsertUsersOptions{
-				RawUsers: []*model.RawUserData{
-					&model.RawUserData{
+				RawUsers: []*model.RawServerUserData{
+					&model.RawServerUserData{
 						Email:       "course-student@test.edulinq.org",
 						Course:      "new-course",
 						CourseRole:  model.GetCourseUserRoleString(model.CourseRoleStudent),
@@ -203,8 +203,8 @@ func TestUpsertUser(test *testing.T) {
 		// Update course information.
 		{
 			options: UpsertUsersOptions{
-				RawUsers: []*model.RawUserData{
-					&model.RawUserData{
+				RawUsers: []*model.RawServerUserData{
+					&model.RawServerUserData{
 						Email:      "course-student@test.edulinq.org",
 						Course:     "course101",
 						CourseRole: model.GetCourseUserRoleString(model.CourseRoleGrader),
@@ -251,8 +251,8 @@ func TestUpsertUser(test *testing.T) {
 		// Update course information using course (not server) permissions.
 		{
 			options: UpsertUsersOptions{
-				RawUsers: []*model.RawUserData{
-					&model.RawUserData{
+				RawUsers: []*model.RawServerUserData{
+					&model.RawServerUserData{
 						Email:      "course-student@test.edulinq.org",
 						Course:     "course101",
 						CourseRole: model.GetCourseUserRoleString(model.CourseRoleGrader),
@@ -300,8 +300,8 @@ func TestUpsertUser(test *testing.T) {
 		// Update self with non-admin permissions.
 		{
 			options: UpsertUsersOptions{
-				RawUsers: []*model.RawUserData{
-					&model.RawUserData{
+				RawUsers: []*model.RawServerUserData{
+					&model.RawServerUserData{
 						Email: "course-student@test.edulinq.org",
 						Name:  "new",
 					},
@@ -349,8 +349,8 @@ func TestUpsertUser(test *testing.T) {
 		// Update self with non-admin permissions and no course.
 		{
 			options: UpsertUsersOptions{
-				RawUsers: []*model.RawUserData{
-					&model.RawUserData{
+				RawUsers: []*model.RawServerUserData{
+					&model.RawServerUserData{
 						Email: "course-student@test.edulinq.org",
 						Name:  "new",
 					},
@@ -397,8 +397,8 @@ func TestUpsertUser(test *testing.T) {
 		// Self demote (server).
 		{
 			options: UpsertUsersOptions{
-				RawUsers: []*model.RawUserData{
-					&model.RawUserData{
+				RawUsers: []*model.RawServerUserData{
+					&model.RawServerUserData{
 						Email: "server-admin@test.edulinq.org",
 						Role:  model.GetServerUserRoleString(model.ServerRoleUser),
 					},
@@ -426,8 +426,8 @@ func TestUpsertUser(test *testing.T) {
 		// TODO: This test does not fully test the functionality. We need a server non-admin and a course admin.
 		{
 			options: UpsertUsersOptions{
-				RawUsers: []*model.RawUserData{
-					&model.RawUserData{
+				RawUsers: []*model.RawServerUserData{
+					&model.RawServerUserData{
 						Email:      "course-admin@test.edulinq.org",
 						Course:     "course101",
 						CourseRole: model.GetCourseUserRoleString(model.CourseRoleStudent),
@@ -485,8 +485,8 @@ func TestUpsertUser(test *testing.T) {
 		// Set a new password.
 		{
 			options: UpsertUsersOptions{
-				RawUsers: []*model.RawUserData{
-					&model.RawUserData{
+				RawUsers: []*model.RawServerUserData{
+					&model.RawServerUserData{
 						Email: "course-student@test.edulinq.org",
 						Pass:  "1234",
 					},
@@ -532,8 +532,8 @@ func TestUpsertUser(test *testing.T) {
 		// Set a duplicate password.
 		{
 			options: UpsertUsersOptions{
-				RawUsers: []*model.RawUserData{
-					&model.RawUserData{
+				RawUsers: []*model.RawServerUserData{
+					&model.RawServerUserData{
 						Email: "course-student@test.edulinq.org",
 						Pass:  util.Sha256HexFromString("course-student"),
 					},
@@ -578,8 +578,8 @@ func TestUpsertUser(test *testing.T) {
 		// New user without password.
 		{
 			options: UpsertUsersOptions{
-				RawUsers: []*model.RawUserData{
-					&model.RawUserData{
+				RawUsers: []*model.RawServerUserData{
+					&model.RawServerUserData{
 						Email: "new@test.edulinq.org",
 						Role:  model.GetServerUserRoleString(model.ServerRoleUser),
 					},
@@ -606,8 +606,8 @@ func TestUpsertUser(test *testing.T) {
 		// Add a user from a course (but not server) admin.
 		{
 			options: UpsertUsersOptions{
-				RawUsers: []*model.RawUserData{
-					&model.RawUserData{
+				RawUsers: []*model.RawServerUserData{
+					&model.RawServerUserData{
 						Email: "new@test.edulinq.org",
 						Role:  model.GetServerUserRoleString(model.ServerRoleUser),
 					},
@@ -635,8 +635,8 @@ func TestUpsertUser(test *testing.T) {
 		// Update course information on a user with higher server role.
 		{
 			options: UpsertUsersOptions{
-				RawUsers: []*model.RawUserData{
-					&model.RawUserData{
+				RawUsers: []*model.RawServerUserData{
+					&model.RawServerUserData{
 						Email:      "course-owner@test.edulinq.org",
 						Course:     "course101",
 						CourseRole: model.GetCourseUserRoleString(model.CourseRoleAdmin),
@@ -685,8 +685,8 @@ func TestUpsertUser(test *testing.T) {
 		// Add a user wihout a any roles.
 		{
 			options: UpsertUsersOptions{
-				RawUsers: []*model.RawUserData{
-					&model.RawUserData{
+				RawUsers: []*model.RawServerUserData{
+					&model.RawServerUserData{
 						Email: "new@test.edulinq.org",
 					},
 				},
@@ -708,8 +708,8 @@ func TestUpsertUser(test *testing.T) {
 		// Add a user with only a course role.
 		{
 			options: UpsertUsersOptions{
-				RawUsers: []*model.RawUserData{
-					&model.RawUserData{
+				RawUsers: []*model.RawServerUserData{
+					&model.RawServerUserData{
 						Email: "new@test.edulinq.org",
 					},
 				},
@@ -732,8 +732,8 @@ func TestUpsertUser(test *testing.T) {
 		// Add a user with a higher server role.
 		{
 			options: UpsertUsersOptions{
-				RawUsers: []*model.RawUserData{
-					&model.RawUserData{
+				RawUsers: []*model.RawServerUserData{
+					&model.RawServerUserData{
 						Email: "new@test.edulinq.org",
 						Role:  model.GetServerUserRoleString(model.ServerRoleOwner),
 					},
@@ -757,8 +757,8 @@ func TestUpsertUser(test *testing.T) {
 		// Add a user with only an insufficient server role.
 		{
 			options: UpsertUsersOptions{
-				RawUsers: []*model.RawUserData{
-					&model.RawUserData{
+				RawUsers: []*model.RawServerUserData{
+					&model.RawServerUserData{
 						Email: "new@test.edulinq.org",
 					},
 				},
@@ -781,8 +781,8 @@ func TestUpsertUser(test *testing.T) {
 		// Add a user without proper server or course roles.
 		{
 			options: UpsertUsersOptions{
-				RawUsers: []*model.RawUserData{
-					&model.RawUserData{
+				RawUsers: []*model.RawServerUserData{
+					&model.RawServerUserData{
 						Email:      "new@test.edulinq.org",
 						Role:       model.GetServerUserRoleString(model.ServerRoleUser),
 						Course:     "new-course",
@@ -809,8 +809,8 @@ func TestUpsertUser(test *testing.T) {
 		// Add a user that has a higher course role.
 		{
 			options: UpsertUsersOptions{
-				RawUsers: []*model.RawUserData{
-					&model.RawUserData{
+				RawUsers: []*model.RawServerUserData{
+					&model.RawServerUserData{
 						Email:      "new@test.edulinq.org",
 						Role:       model.GetServerUserRoleString(model.ServerRoleUser),
 						Course:     "new-course",
@@ -834,11 +834,38 @@ func TestUpsertUser(test *testing.T) {
 			expectedUser: nil,
 		},
 
+		// Update a user to have a higher course role than the context user.
+		{
+			options: UpsertUsersOptions{
+				RawUsers: []*model.RawServerUserData{
+					&model.RawServerUserData{
+						Email:      "course-grader@test.edulinq.org",
+						Course:     "course101",
+						CourseRole: model.GetCourseUserRoleString(model.CourseRoleOwner),
+					},
+				},
+				ContextServerRole: model.ServerRoleUser,
+				ContextCourseRole: model.CourseRoleAdmin,
+			},
+			expected: &model.UserOpResult{
+				BaseUserOpResult: model.BaseUserOpResult{
+					Email: "course-grader@test.edulinq.org",
+				},
+				ValidationError: &model.LocatableError{
+					Locator:         "-1022",
+					HideLocator:     true,
+					InternalMessage: "User has a course role of 'admin', which is not high enough to update a user to a course role of 'owner'.",
+					ExternalMessage: VALIDATION_ERROR_EXTERNAL_MESSAGE,
+				},
+			},
+			expectedUser: nil,
+		},
+
 		// Update server information on a user that has a higher server role.
 		{
 			options: UpsertUsersOptions{
-				RawUsers: []*model.RawUserData{
-					&model.RawUserData{
+				RawUsers: []*model.RawServerUserData{
+					&model.RawServerUserData{
 						Email: "server-owner@test.edulinq.org",
 						Name:  "new",
 					},
@@ -859,11 +886,36 @@ func TestUpsertUser(test *testing.T) {
 			expectedUser: nil,
 		},
 
+		// Update server role to a higher server role than the context user.
+		{
+			options: UpsertUsersOptions{
+				RawUsers: []*model.RawServerUserData{
+					&model.RawServerUserData{
+						Email: "server-user@test.edulinq.org",
+						Role:  "owner",
+					},
+				},
+				ContextServerRole: model.ServerRoleAdmin,
+			},
+			expected: &model.UserOpResult{
+				BaseUserOpResult: model.BaseUserOpResult{
+					Email: "server-user@test.edulinq.org",
+				},
+				ValidationError: &model.LocatableError{
+					Locator:         "-1011",
+					HideLocator:     true,
+					InternalMessage: "User has a server role of 'admin', which is not high enough to upsert a user with server role of 'owner'.",
+					ExternalMessage: VALIDATION_ERROR_EXTERNAL_MESSAGE,
+				},
+			},
+			expectedUser: nil,
+		},
+
 		// Update course information on a user that has a higher course role.
 		{
 			options: UpsertUsersOptions{
-				RawUsers: []*model.RawUserData{
-					&model.RawUserData{
+				RawUsers: []*model.RawServerUserData{
+					&model.RawServerUserData{
 						Email:      "course-owner@test.edulinq.org",
 						Course:     "course101",
 						CourseRole: model.GetCourseUserRoleString(model.CourseRoleGrader),
@@ -889,8 +941,8 @@ func TestUpsertUser(test *testing.T) {
 		// Update non-self with non-admin permissions (server).
 		{
 			options: UpsertUsersOptions{
-				RawUsers: []*model.RawUserData{
-					&model.RawUserData{
+				RawUsers: []*model.RawServerUserData{
+					&model.RawServerUserData{
 						Email: "course-student@test.edulinq.org",
 						Name:  "new",
 					},
@@ -916,8 +968,8 @@ func TestUpsertUser(test *testing.T) {
 		// Update non-self with non-admin permissions (course).
 		{
 			options: UpsertUsersOptions{
-				RawUsers: []*model.RawUserData{
-					&model.RawUserData{
+				RawUsers: []*model.RawServerUserData{
+					&model.RawServerUserData{
 						Email:       "course-student@test.edulinq.org",
 						Course:      "course101",
 						CourseRole:  model.GetCourseUserRoleString(model.CourseRoleStudent),
@@ -945,8 +997,8 @@ func TestUpsertUser(test *testing.T) {
 		// Cannot self promote (server).
 		{
 			options: UpsertUsersOptions{
-				RawUsers: []*model.RawUserData{
-					&model.RawUserData{
+				RawUsers: []*model.RawServerUserData{
+					&model.RawServerUserData{
 						Email: "course-admin@test.edulinq.org",
 						Role:  model.GetServerUserRoleString(model.ServerRoleOwner),
 					},
@@ -971,8 +1023,8 @@ func TestUpsertUser(test *testing.T) {
 		// Cannot self promote (course).
 		{
 			options: UpsertUsersOptions{
-				RawUsers: []*model.RawUserData{
-					&model.RawUserData{
+				RawUsers: []*model.RawServerUserData{
+					&model.RawServerUserData{
 						Email:      "course-grader@test.edulinq.org",
 						Course:     "course101",
 						CourseRole: model.GetCourseUserRoleString(model.CourseRoleAdmin),
@@ -999,8 +1051,8 @@ func TestUpsertUser(test *testing.T) {
 		// Non-admins cannot self demote (server).
 		{
 			options: UpsertUsersOptions{
-				RawUsers: []*model.RawUserData{
-					&model.RawUserData{
+				RawUsers: []*model.RawServerUserData{
+					&model.RawServerUserData{
 						Email: "server-creator@test.edulinq.org",
 						Role:  model.GetServerUserRoleString(model.ServerRoleUser),
 					},
@@ -1024,8 +1076,8 @@ func TestUpsertUser(test *testing.T) {
 		// Non-admins cannot self demote (course).
 		{
 			options: UpsertUsersOptions{
-				RawUsers: []*model.RawUserData{
-					&model.RawUserData{
+				RawUsers: []*model.RawServerUserData{
+					&model.RawServerUserData{
 						Email:      "course-grader@test.edulinq.org",
 						Course:     "course101",
 						CourseRole: model.GetCourseUserRoleString(model.CourseRoleStudent),
@@ -1055,8 +1107,8 @@ func TestUpsertUser(test *testing.T) {
 		// Update user with course (enroll) without a role.
 		{
 			options: UpsertUsersOptions{
-				RawUsers: []*model.RawUserData{
-					&model.RawUserData{
+				RawUsers: []*model.RawServerUserData{
+					&model.RawServerUserData{
 						Email:  "course-student@test.edulinq.org",
 						Course: "new-course",
 					},
@@ -1071,6 +1123,30 @@ func TestUpsertUser(test *testing.T) {
 					Locator:         "-1003",
 					HideLocator:     true,
 					InternalMessage: "User 'course-student@test.edulinq.org' has an invalid course info 'new-course': 'Unknown course role.'.",
+					ExternalMessage: VALIDATION_ERROR_EXTERNAL_MESSAGE,
+				},
+			},
+			expectedUser: nil,
+		},
+
+		// Insert a user that fails to validate (bad name).
+		{
+			options: UpsertUsersOptions{
+				RawUsers: []*model.RawServerUserData{
+					&model.RawServerUserData{
+						Email: "new-user",
+					},
+				},
+				ContextServerRole: model.ServerRoleAdmin,
+			},
+			expected: &model.UserOpResult{
+				BaseUserOpResult: model.BaseUserOpResult{
+					Email: "new-user",
+				},
+				ValidationError: &model.LocatableError{
+					Locator:         "-1003",
+					HideLocator:     true,
+					InternalMessage: "User email 'new-user' has an invalid format.",
 					ExternalMessage: VALIDATION_ERROR_EXTERNAL_MESSAGE,
 				},
 			},
