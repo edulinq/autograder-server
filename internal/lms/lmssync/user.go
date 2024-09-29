@@ -75,9 +75,9 @@ func syncLMSUsers(course *model.Course, dryRun bool, sendEmails bool, skipMissin
 		return nil, fmt.Errorf("Failed to fetch course users: '%w'.", err)
 	}
 
-	usersData := make([]*model.RawUserData, 0, len(lmsUsers))
+	usersData := make([]*model.RawServerUserData, 0, len(lmsUsers))
 	for _, lmsUser := range lmsUsers {
-		usersData = append(usersData, lmsUser.ToRawUserData(course.GetID()))
+		usersData = append(usersData, lmsUser.ToRawServerUserData(course.GetID()))
 	}
 
 	upsertOptions := users.UpsertUsersOptions{

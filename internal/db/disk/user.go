@@ -206,23 +206,3 @@ func (this *backend) upsertUsersLock(upsertUsers map[string]*model.ServerUser, a
 func (this *backend) getServerUsersPath() string {
 	return filepath.Join(this.baseDir, model.USERS_FILENAME)
 }
-
-func convertCourseUsers(courseUsers map[string]*model.CourseUser, course *model.Course) (map[string]*model.ServerUser, error) {
-	serverUsers := make(map[string]*model.ServerUser, len(courseUsers))
-
-	var userErrors error = nil
-	for email, courseUser := range courseUsers {
-		serverUser, err := courseUser.ToServerUser(course.ID)
-		if err != nil {
-			userErrors = errors.Join(userErrors, fmt.Errorf("Error with user '%s': '%w'.", email, err))
-		} else {
-			serverUsers[email] = serverUser
-		}
-	}
-
-	if userErrors != nil {
-		return nil, userErrors
-	}
-
-	return serverUsers, nil
-}
