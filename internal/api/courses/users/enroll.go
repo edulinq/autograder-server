@@ -29,7 +29,7 @@ type EnrollResponse struct {
 }
 
 func HandleEnroll(request *EnrollRequest) (*EnrollResponse, *core.APIError) {
-	rawUsers := model.ToRawUserDatas(request.RawCourseUsers, request.Course)
+	rawUsers := model.ToRawServerUserDatas(request.RawCourseUsers, request.Course)
 
 	options := users.UpsertUsersOptions{
 		RawUsers: rawUsers,

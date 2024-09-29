@@ -246,7 +246,7 @@ func (this *DBTests) DBTestUserUpsertUserInsert(test *testing.T) {
 	expected := &model.ServerUser{
 		Email: email,
 		Name:  &name,
-		Role:  model.GetServerUserRole("user"),
+		Role:  model.ServerRoleUser,
 	}
 
 	err := expected.Validate()

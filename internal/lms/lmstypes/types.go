@@ -34,8 +34,8 @@ type Assignment struct {
 	MaxPoints   float64
 }
 
-func (this *User) ToRawUserData(courseID string) *model.RawUserData {
-	data := &model.RawUserData{
+func (this *User) ToRawServerUserData(courseID string) *model.RawServerUserData {
+	data := &model.RawServerUserData{
 		Email:       this.Email,
 		Name:        this.Name,
 		Course:      courseID,
