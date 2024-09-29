@@ -32,8 +32,6 @@ jobs:
         run: ./scripts/check_duplicate_locators.sh
 
       - name: Run Base Tests
-        env:
-          AUTOGRADER__DOCKER__DISABLE: 'true'
         run: ./scripts/run_tests.sh
 
   docker-deploy-latest:
