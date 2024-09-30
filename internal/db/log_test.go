@@ -201,8 +201,12 @@ func (this *DBTests) DBTestGetLogsContext(test *testing.T) {
 	defer log.SetLevelFatal()
 
 	log.Info("msg", log.NewCourseAttr("C"))
-	log.Info("msg", log.NewAssignmentAttr("A"))
+	log.Info("msg", log.NewCourseAttr("C"), log.NewAssignmentAttr("A"))
 	log.Info("msg", log.NewUserAttr("U"))
+
+	courseRecord := &log.Record{log.LevelInfo, "msg", 0, "", "C", "", "", nil}
+	assignmentRecord := &log.Record{log.LevelInfo, "msg", 0, "", "C", "A", "", nil}
+	userRecord := &log.Record{log.LevelInfo, "msg", 0, "", "", "", "U", nil}
 
 	testCases := []struct {
 		courseID        string
@@ -210,9 +214,18 @@ func (this *DBTests) DBTestGetLogsContext(test *testing.T) {
 		userID          string
 		expectedRecords []*log.Record
 	}{
-		{"C", "", "", []*log.Record{&log.Record{log.LevelInfo, "msg", 0, "", "C", "", "", nil}}},
-		{"", "A", "", []*log.Record{&log.Record{log.LevelInfo, "msg", 0, "", "", "A", "", nil}}},
-		{"", "", "U", []*log.Record{&log.Record{log.LevelInfo, "msg", 0, "", "", "", "U", nil}}},
+		{"C", "", "", []*log.Record{courseRecord, assignmentRecord}},
+		{"C", "A", "", []*log.Record{assignmentRecord}},
+		{"", "", "U", []*log.Record{userRecord}},
+
+		// Assignment queries must have courses.
+		{"", "A", "", []*log.Record{}},
+
+		{"", "", "", []*log.Record{
+			courseRecord,
+			assignmentRecord,
+			userRecord,
+		}},
 	}
 
 	for i, testCase := range testCases {

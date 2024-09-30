@@ -1,6 +1,7 @@
 package log
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"strings"
@@ -8,6 +9,8 @@ import (
 
 	"github.com/edulinq/autograder/internal/timestamp"
 )
+
+const MARSHAL_ERROR string = "<error>"
 
 // A representation of a query for server log records.
 // A raw query can be processed (validated for structure and permissions)
@@ -18,11 +21,13 @@ type RawLogQuery struct {
 	LevelString  string `json:"level"`
 	AfterString  string `json:"after"`
 	PastString   string `json:"past"`
-	AssignmentID string `json:"target-assignment"`
 	CourseID     string `json:"target-course"`
+	AssignmentID string `json:"target-assignment"`
 	TargetUser   string `json:"target-email"`
 }
 
+// The fully parsed query to be executed.
+// A full query is the conjunction of the present fields.
 type ParsedLogQuery struct {
 	Level        LogLevel
 	After        timestamp.Timestamp
@@ -50,9 +55,19 @@ func (this RawLogQuery) Parse() (*ParsedLogQuery, []error) {
 		errs = append(errs, err)
 	}
 
-	parsed.AssignmentID, err = parseLogQueryAssignmentID(this.AssignmentID)
+	parsed.CourseID, err = parseLogQueryID(this.CourseID)
 	if err != nil {
 		errs = append(errs, err)
+	}
+
+	parsed.AssignmentID, err = parseLogQueryID(this.AssignmentID)
+	if err != nil {
+		errs = append(errs, err)
+	}
+
+	// Assignment must have a course.
+	if (parsed.AssignmentID != "") && (parsed.CourseID == "") {
+		errs = append(errs, fmt.Errorf("Log queries with an assignment must also have a course."))
 	}
 
 	parsed.UserEmail = this.TargetUser
@@ -167,12 +182,21 @@ func parseLogQueryPastDuration(pastString string) (timestamp.Timestamp, error) {
 	return timestamp.FromGoTimeDuration(pastDuration), nil
 }
 
-func parseLogQueryAssignmentID(assignmentString string) (string, error) {
-	if assignmentString == "" {
+func parseLogQueryID(id string) (string, error) {
+	if id == "" {
 		return "", nil
 	}
 
-	return strings.TrimSpace(assignmentString), nil
+	return strings.TrimSpace(id), nil
+}
+
+func (this RawLogQuery) String() string {
+	text, err := json.Marshal(this)
+	if err != nil {
+		return MARSHAL_ERROR
+	}
+
+	return string(text)
 }
 
 func (this ParsedLogQuery) String() string {
@@ -185,6 +209,12 @@ func (this ParsedLogQuery) String() string {
 		after = "< all time >"
 	}
 	builder.WriteString(fmt.Sprintf(", After: '%s'", after))
+
+	course := this.CourseID
+	if course == "" {
+		course = "< all courses >"
+	}
+	builder.WriteString(fmt.Sprintf(", Course: '%s'", course))
 
 	assignment := this.AssignmentID
 	if assignment == "" {

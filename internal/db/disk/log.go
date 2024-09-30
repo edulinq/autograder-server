@@ -99,7 +99,10 @@ func keepRecord(record *log.Record, query log.ParsedLogQuery) (bool, error) {
 		return false, nil
 	}
 
-	if (query.AssignmentID != "") && (record.Assignment != query.AssignmentID) {
+	// Assignment ID will only be matched on if the course ID also matches.
+	courseMatch := ((query.CourseID != "") && (record.Course == query.CourseID))
+
+	if (query.AssignmentID != "") && (!courseMatch || (record.Assignment != query.AssignmentID)) {
 		return false, nil
 	}
 

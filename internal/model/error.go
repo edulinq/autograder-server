@@ -1,5 +1,11 @@
 package model
 
+import (
+	"fmt"
+
+	"github.com/edulinq/autograder/internal/log"
+)
+
 // A general representation of errors that have a definite source location.
 type LocatableError struct {
 	// The locator for the error which is not exported.
@@ -42,5 +48,20 @@ func (this *LocatableError) ToExternalError() *ExternalLocatableError {
 	return &ExternalLocatableError{
 		Locator: locator,
 		Message: this.ExternalMessage,
+	}
+}
+
+// Convert to a standard error.
+// This is NOT external.
+func (this *LocatableError) ToError() error {
+	return fmt.Errorf("Locatable Error -- Locator: '%s', Internal Message: '%s', External Message: '%s'.", this.Locator, this.InternalMessage, this.ExternalMessage)
+}
+
+// Allow for easy logging.
+func (this *LocatableError) LogValue() []*log.Attr {
+	return []*log.Attr{
+		log.NewAttr("locator", this.Locator),
+		log.NewAttr("internal-message", this.InternalMessage),
+		log.NewAttr("external-message", this.ExternalMessage),
 	}
 }

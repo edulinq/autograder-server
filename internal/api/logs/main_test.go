@@ -1,4 +1,4 @@
-package admin
+package logs
 
 import (
 	"testing"

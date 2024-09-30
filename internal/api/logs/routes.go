@@ -1,4 +1,4 @@
-package admin
+package logs
 
 // All the API endpoints handled by this package.
 
@@ -7,7 +7,7 @@ import (
 )
 
 var routes []*core.Route = []*core.Route{
-	core.NewAPIRoute(core.NewEndpoint(`admin/logs/fetch`), HandleFetchLogs),
+	core.NewAPIRoute(core.NewEndpoint(`logs/query`), HandleQuery),
 }
 
 func GetRoutes() *[]*core.Route {
