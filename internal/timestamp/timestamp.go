@@ -148,3 +148,14 @@ func (this *Timestamp) SafeString() string {
 func (this Timestamp) UnsafePrettyString() string {
 	return this.ToGoTime().Format(STRING_FORMAT_UNSAFE)
 }
+
+// Convert the timestamp to a string format meant to be embedded (and later retrieved via regex) into a string message.
+// This format is readable by a human (if they understand epochs) and by a machine (via regex).
+// Format: /<timestamp:(-?\d+|nil)>/.
+func (this *Timestamp) SafeMessage() string {
+	if this == nil {
+		return "<timestamp:nil>"
+	}
+
+	return fmt.Sprintf("<timestamp:%d>", int64(*this))
+}

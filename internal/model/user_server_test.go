@@ -99,7 +99,7 @@ func TestUserServerUserValidate(test *testing.T) {
 			baseTestServerUser.Password,
 			baseTestServerUser.Tokens,
 			baseTestServerUser.CourseInfo,
-			setServerUserRole(baseTestServerUser, ServerRoleUnknown),
+			nil,
 		},
 		{
 			baseTestServerUser.Email,
@@ -380,6 +380,106 @@ func TestUserServerUserValidate(test *testing.T) {
 			}
 
 			test.Errorf("Case %d: User did not validate: '%v'.", i, err)
+			continue
+		}
+
+		if testCase.Expected == nil {
+			test.Errorf("Case %d: Expected failure did not happen: '%s'.", i, util.MustToJSONIndent(user))
+			continue
+		}
+
+		if !reflect.DeepEqual(testCase.Expected, user) {
+			test.Errorf("Case %d: User not as expected. Expected: '%s', Actual: '%s'.",
+				i, util.MustToJSONIndent(testCase.Expected), util.MustToJSONIndent(user))
+			continue
+		}
+	}
+}
+
+func TestUserServerUserWeakValidate(test *testing.T) {
+	testCases := []struct {
+		Email          string
+		Name           *string
+		Role           ServerUserRole
+		Salt           *string
+		Password       *Token
+		Tokens         []*Token
+		CourseInfo     map[string]*UserCourseInfo
+		strongValError bool
+		weakValError   bool
+		Expected       *ServerUser
+	}{
+		// Passes strong, passes weak.
+		{
+			baseTestServerUser.Email,
+			baseTestServerUser.Name,
+			baseTestServerUser.Role,
+			baseTestServerUser.Salt,
+			baseTestServerUser.Password,
+			baseTestServerUser.Tokens,
+			baseTestServerUser.CourseInfo,
+			false,
+			false,
+			baseTestServerUser,
+		},
+
+		// Fails strong, passes weak.
+		{
+			baseTestServerUser.Email,
+			baseTestServerUser.Name,
+			ServerRoleUnknown,
+			baseTestServerUser.Salt,
+			baseTestServerUser.Password,
+			baseTestServerUser.Tokens,
+			baseTestServerUser.CourseInfo,
+			true,
+			false,
+			setServerUserRole(baseTestServerUser, ServerRoleUnknown),
+		},
+
+		// Fails strong, fails weak.
+		{
+			baseTestServerUser.Email,
+			baseTestServerUser.Name,
+			ServerRoleRoot,
+			baseTestServerUser.Salt,
+			baseTestServerUser.Password,
+			baseTestServerUser.Tokens,
+			baseTestServerUser.CourseInfo,
+			true,
+			true,
+			nil,
+		},
+	}
+
+	for i, testCase := range testCases {
+		user := &ServerUser{
+			Email:      testCase.Email,
+			Name:       testCase.Name,
+			Role:       testCase.Role,
+			Salt:       testCase.Salt,
+			Password:   testCase.Password,
+			Tokens:     testCase.Tokens,
+			CourseInfo: testCase.CourseInfo,
+		}
+
+		err := user.Validate()
+		if err != nil {
+			if !testCase.strongValError {
+				test.Errorf("Case %d: User did not pass strong validation: '%v'.", i, err)
+				continue
+			}
+		}
+
+		// Test weak user validation.
+		err = user.validate(false)
+		if err != nil {
+			if !testCase.weakValError {
+				test.Errorf("Case %d: User did not pass weak validation: '%v'.", i, err)
+				continue
+			}
+
+			// Expected failure on both validations.
 			continue
 		}
 

@@ -1,7 +1,6 @@
 package db
 
 import (
-	"errors"
 	"fmt"
 
 	"github.com/edulinq/autograder/internal/log"
@@ -96,33 +95,6 @@ func UpsertUser(user *model.ServerUser) error {
 	return UpsertUsers(users)
 }
 
-// Convenience function for UpsertUsers() with course users.
-func UpsertCourseUsers(course *model.Course, users map[string]*model.CourseUser) error {
-	serverUsers := make(map[string]*model.ServerUser, len(users))
-
-	var userErrors error = nil
-	for email, user := range users {
-		serverUser, err := user.ToServerUser(course.ID)
-		if err != nil {
-			userErrors = errors.Join(userErrors, fmt.Errorf("Invalid user '%s': '%w'.", email, err))
-		} else {
-			serverUsers[email] = serverUser
-		}
-	}
-
-	if userErrors != nil {
-		return fmt.Errorf("Found errors when processing users: '%w'.", userErrors)
-	}
-
-	return UpsertUsers(serverUsers)
-}
-
-// Convenience function for UpsertCourseUsers() with a single user.
-func UpsertCourseUser(course *model.Course, user *model.CourseUser) error {
-	users := map[string]*model.CourseUser{user.Email: user}
-	return UpsertCourseUsers(course, users)
-}
-
 // Delete a user from the server.
 // Returns a boolean indicating if the user exists.
 // If true, then the user exists and was removed.
@@ -166,4 +138,23 @@ func RemoveUserFromCourse(course *model.Course, email string) (bool, bool, error
 	}
 
 	return true, true, backend.RemoveUserFromCourse(course, email)
+}
+
+func initializeRootUser() error {
+	rootUser := model.ServerUser{
+		Email: model.RootUserEmail,
+		Role:  model.ServerRoleRoot,
+	}
+
+	err := rootUser.Validate()
+	if err != nil {
+		return fmt.Errorf("Failed to validate the root user: '%w'.", err)
+	}
+
+	err = UpsertUser(&rootUser)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

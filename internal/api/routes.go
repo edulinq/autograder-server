@@ -7,6 +7,7 @@ import (
 	"github.com/edulinq/autograder/internal/api/core"
 	"github.com/edulinq/autograder/internal/api/courses"
 	"github.com/edulinq/autograder/internal/api/lms"
+	"github.com/edulinq/autograder/internal/api/static"
 	"github.com/edulinq/autograder/internal/api/users"
 )
 
@@ -15,8 +16,8 @@ var baseRoutes = []*core.Route{
 	core.NewRedirect("GET", `/`, `/static/index.html`),
 	core.NewRedirect("GET", `/index.html`, `/static/index.html`),
 
-	core.NewRoute("GET", `/static`, handleStatic),
-	core.NewRoute("GET", `/static/.*`, handleStatic),
+	core.NewRoute("GET", `/static`, static.Handle),
+	core.NewRoute("GET", `/static/.*`, static.Handle),
 }
 
 func GetRoutes() *[]*core.Route {

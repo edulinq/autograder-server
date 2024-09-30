@@ -11,7 +11,7 @@ func TestFullLoadCourseBase(test *testing.T) {
 	courseID := "course101"
 	testPath := filepath.Join(config.GetCourseImportDir(), "testdata", courseID, COURSE_CONFIG_FILENAME)
 
-	course, users, submissions, err := FullLoadCourseFromPath(testPath)
+	course, submissions, err := FullLoadCourseFromPath(testPath)
 	if err != nil {
 		test.Fatalf("Failed to load course: '%v'.", err)
 	}
@@ -22,10 +22,6 @@ func TestFullLoadCourseBase(test *testing.T) {
 
 	if len(course.Assignments) != 1 {
 		test.Fatalf("Unexpected number of assignments. Expected %d, Actual: %d.", 1, len(course.Assignments))
-	}
-
-	if len(users) != 5 {
-		test.Fatalf("Unexpected number of users. Expected %d, Actual: %d.", 5, len(users))
 	}
 
 	if len(submissions) != 3 {

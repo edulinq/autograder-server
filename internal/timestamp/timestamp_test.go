@@ -116,6 +116,31 @@ func TestTimestampGuessTime(test *testing.T) {
 	}
 }
 
+func TestTimestampMessage(test *testing.T) {
+	testCases := []struct {
+		input    *Timestamp
+		expected string
+	}{
+		{nil, "<timestamp:nil>"},
+		{newTimestampPointer(0), "<timestamp:0>"},
+		{newTimestampPointer(1), "<timestamp:1>"},
+		{newTimestampPointer(-1), "<timestamp:-1>"},
+	}
+
+	for i, testCase := range testCases {
+		actual := testCase.input.SafeMessage()
+		if testCase.expected != actual {
+			test.Errorf("Case %d: Message not as expected. Actual: %v, Expected: %v.", i, actual, testCase.expected)
+			continue
+		}
+	}
+}
+
+func newTimestampPointer(value int64) *Timestamp {
+	timestamp := Timestamp(value)
+	return &timestamp
+}
+
 func TestTimestampComparisons(test *testing.T) {
 	smaller := Timestamp(0)
 	sameAsSmaller := Zero()

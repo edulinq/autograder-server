@@ -43,15 +43,25 @@ type ServerUser struct {
 	CourseInfo map[string]*UserCourseInfo `json:"course-info"`
 }
 
+var RootUserEmail = "root"
+
 type UserCourseInfo struct {
 	Role  CourseUserRole `json:"role"`
 	LMSID *string        `json:"lms-id"`
 }
 
 func (this *ServerUser) Validate() error {
+	return this.validate(true)
+}
+
+func (this *ServerUser) validate(checkAll bool) error {
 	this.Email = strings.TrimSpace(this.Email)
 	if this.Email == "" {
 		return fmt.Errorf("User email is empty.")
+	}
+
+	if this.Email != RootUserEmail && !strings.Contains(this.Email, "@") {
+		return fmt.Errorf("User email '%s' has an invalid format.", this.Email)
 	}
 
 	if this.Name != nil {
@@ -63,7 +73,13 @@ func (this *ServerUser) Validate() error {
 		}
 	}
 
-	if this.Role == ServerRoleRoot {
+	if checkAll {
+		if this.Role == ServerRoleUnknown {
+			return fmt.Errorf("User '%s' has an unknown server role. Normal users are not allowed to have this role.", this.Email)
+		}
+	}
+
+	if this.Role == ServerRoleRoot && this.Email != RootUserEmail {
 		return fmt.Errorf("User '%s' has a root server role. Normal users are not allowed to have this role.", this.Email)
 	}
 

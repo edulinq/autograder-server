@@ -18,11 +18,13 @@ func TestUploadScores(test *testing.T) {
 		lmstest.SetFailUpdateAssignmentScores(false)
 	}()
 
+	TEST_COURSE_ID := "course-with-lms"
+
 	testCases := []struct {
 		email      string
 		permError  bool
 		failUpdate bool
-		addUsers   map[string]*model.CourseUser
+		addUsers   map[string]*model.ServerUser
 		scores     []ScoreEntry
 		expected   *UploadScoresResponse
 	}{
@@ -71,8 +73,18 @@ func TestUploadScores(test *testing.T) {
 		// Bad scores.
 		{
 			"course-grader", false, false,
-			map[string]*model.CourseUser{
-				"no-lms-id@test.edulinq.org": &model.CourseUser{"no-lms-id@test.edulinq.org", nil, model.CourseRoleStudent, nil},
+			map[string]*model.ServerUser{
+				"no-lms-id@test.edulinq.org": &model.ServerUser{
+					Email: "no-lms-id@test.edulinq.org",
+					Name:  nil,
+					Role:  model.ServerRoleUser,
+					CourseInfo: map[string]*model.UserCourseInfo{
+						TEST_COURSE_ID: &model.UserCourseInfo{
+							Role:  model.CourseRoleStudent,
+							LMSID: nil,
+						},
+					},
+				},
 			},
 			[]ScoreEntry{
 				ScoreEntry{"zzz@test.edulinq.org", 10},
@@ -126,13 +138,11 @@ func TestUploadScores(test *testing.T) {
 		},
 	}
 
-	TEST_COURSE_ID := "course-with-lms"
-
 	for i, testCase := range testCases {
 		db.ResetForTesting()
 
 		if testCase.addUsers != nil {
-			db.UpsertCourseUsers(db.MustGetCourse(TEST_COURSE_ID), testCase.addUsers)
+			db.UpsertUsers(testCase.addUsers)
 		}
 
 		fields := map[string]any{

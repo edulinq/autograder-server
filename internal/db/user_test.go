@@ -22,6 +22,15 @@ func (this *DBTests) DBTestUserGetServerUsersBase(test *testing.T) {
 		test.Fatalf("Could not get server users: '%v'.", err)
 	}
 
+	// Check that root is a server user.
+	_, exists := users[model.RootUserEmail]
+	if !exists {
+		test.Fatalf("Could not find the root user in server users.")
+	}
+
+	// Remove root from the server users since we're comparing server users with test server users.
+	delete(users, model.RootUserEmail)
+
 	if len(users) == 0 {
 		test.Fatalf("Found no server users.")
 	}
@@ -43,8 +52,18 @@ func (this *DBTests) DBTestUserGetServerUsersEmpty(test *testing.T) {
 		test.Fatalf("Could not get server users: '%v'.", err)
 	}
 
-	if len(users) != 0 {
-		test.Fatalf("Found server users when there should have been none: '%s'.", util.MustToJSONIndent(users))
+	if len(users) == 0 {
+		test.Fatalf("Could not find the root user after clearing the database.")
+	}
+
+	for _, user := range users {
+		if user.Email != model.RootUserEmail {
+			test.Fatalf("Found server user '%s' when root should be the only server user.", user.Email)
+		}
+	}
+
+	if len(users) > 1 {
+		test.Fatalf("Found more than one root user in the database.")
 	}
 }
 
@@ -227,6 +246,7 @@ func (this *DBTests) DBTestUserUpsertUserInsert(test *testing.T) {
 	expected := &model.ServerUser{
 		Email: email,
 		Name:  &name,
+		Role:  model.ServerRoleUser,
 	}
 
 	err := expected.Validate()
@@ -338,40 +358,6 @@ func (this *DBTests) DBTestUserUpsertUserEmptyUpdate(test *testing.T) {
 	}
 }
 
-func (this *DBTests) DBTestUserUpsertCourseUserInsert(test *testing.T) {
-	defer ResetForTesting()
-	ResetForTesting()
-
-	course := MustGetTestCourse()
-	email := "new@test.edulinq.org"
-	name := "new"
-
-	expected := &model.CourseUser{
-		Email: email,
-		Name:  &name,
-		Role:  model.CourseRoleStudent,
-	}
-
-	err := UpsertCourseUser(course, expected)
-	if err != nil {
-		test.Fatalf("Could not upsert user '%s': '%v'.", email, err)
-	}
-
-	newUser, err := GetCourseUser(course, email)
-	if err != nil {
-		test.Fatalf("Could not get (new) course user ('%s'): '%v'.", email, err)
-	}
-
-	if newUser == nil {
-		test.Fatalf("Got nil (new) course user ('%s').", email)
-	}
-
-	if !reflect.DeepEqual(expected, newUser) {
-		test.Fatalf("Course user does not match. Expected: '%s', Actual: '%s'.",
-			util.MustToJSONIndent(expected), util.MustToJSONIndent(newUser))
-	}
-}
-
 func (this *DBTests) DBTestUserDeleteUserBase(test *testing.T) {
 	defer ResetForTesting()
 	ResetForTesting()
@@ -473,21 +459,8 @@ func (this *DBTests) DBTestUserDeleteTokenBase(test *testing.T) {
 
 	email := "course-admin@test.edulinq.org"
 
-	// Add a token.
+	// Ensure the token exists.
 	user := MustGetServerUser(email)
-
-	_, _, err := user.CreateRandomToken("test", model.TokenSourceServer)
-	if err != nil {
-		test.Fatalf("Failed to create token: '%v'.", err)
-	}
-
-	err = UpsertUser(user)
-	if err != nil {
-		test.Fatalf("Could not upsert user: '%v'.", err)
-	}
-
-	// Re-fetch and ensure the token exists.
-	user = MustGetServerUser(email)
 
 	if len(user.Tokens) != 1 {
 		test.Fatalf("Incorrect number of tokens. Expected: 1, Actual: %d.", len(user.Tokens))
@@ -572,4 +545,23 @@ func convertToCourseUsers(test *testing.T, course *model.Course, serverUsers map
 	}
 
 	return courseUsers
+}
+
+func (this *DBTests) DBTestRootUserValidation(test *testing.T) {
+	defer ResetForTesting()
+	ResetForTesting()
+
+	rootUser, err := GetServerUser(model.RootUserEmail)
+	if err != nil {
+		test.Fatal("Failed to get the root user.", err)
+	}
+
+	if rootUser == nil {
+		test.Fatal("Root user not found.")
+	}
+
+	err = rootUser.Validate()
+	if err != nil {
+		test.Fatal("Root user validation failed.", err)
+	}
 }

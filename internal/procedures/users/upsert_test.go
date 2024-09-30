@@ -13,6 +13,7 @@ import (
 var PLACEHOLDER_PASSWORD_CLEARTEXT string = "<placeholder_pass>"
 var PLACEHOLDER_SALT *string = util.StringPointer("abcd")
 var PLACEHOLDER_PASSWORD_TOKEN *model.Token = model.MustNewToken(PLACEHOLDER_PASSWORD_CLEARTEXT, *PLACEHOLDER_SALT, model.TokenSourcePassword, "password")
+var VALIDATION_ERROR_EXTERNAL_MESSAGE = "You have insufficient permissions for the requested operation."
 
 func TestUpsertUser(test *testing.T) {
 	db.ResetForTesting()
@@ -30,8 +31,8 @@ func TestUpsertUser(test *testing.T) {
 		// New user without course.
 		{
 			options: UpsertUsersOptions{
-				RawUsers: []*model.RawUserData{
-					&model.RawUserData{
+				RawUsers: []*model.RawServerUserData{
+					&model.RawServerUserData{
 						Email: "new@test.edulinq.org",
 						Name:  "new",
 						Role:  model.GetServerUserRoleString(model.ServerRoleUser),
@@ -41,9 +42,11 @@ func TestUpsertUser(test *testing.T) {
 				ContextServerRole: model.ServerRoleAdmin,
 			},
 			expected: &model.UserOpResult{
-				Email:   "new@test.edulinq.org",
-				Added:   true,
-				Emailed: true,
+				BaseUserOpResult: model.BaseUserOpResult{
+					Email:   "new@test.edulinq.org",
+					Added:   true,
+					Emailed: true,
+				},
 			},
 			expectedUser: &model.ServerUser{
 				Email:    "new@test.edulinq.org",
@@ -58,8 +61,8 @@ func TestUpsertUser(test *testing.T) {
 		// New user with course.
 		{
 			options: UpsertUsersOptions{
-				RawUsers: []*model.RawUserData{
-					&model.RawUserData{
+				RawUsers: []*model.RawServerUserData{
+					&model.RawServerUserData{
 						Email:       "new@test.edulinq.org",
 						Name:        "new",
 						Role:        model.GetServerUserRoleString(model.ServerRoleUser),
@@ -72,10 +75,12 @@ func TestUpsertUser(test *testing.T) {
 				ContextServerRole: model.ServerRoleAdmin,
 			},
 			expected: &model.UserOpResult{
-				Email:    "new@test.edulinq.org",
-				Added:    true,
-				Emailed:  true,
-				Enrolled: []string{"new-course"},
+				BaseUserOpResult: model.BaseUserOpResult{
+					Email:    "new@test.edulinq.org",
+					Added:    true,
+					Emailed:  true,
+					Enrolled: []string{"new-course"},
+				},
 			},
 			expectedUser: &model.ServerUser{
 				Email:    "new@test.edulinq.org",
@@ -96,8 +101,8 @@ func TestUpsertUser(test *testing.T) {
 		// Update user without course.
 		{
 			options: UpsertUsersOptions{
-				RawUsers: []*model.RawUserData{
-					&model.RawUserData{
+				RawUsers: []*model.RawServerUserData{
+					&model.RawServerUserData{
 						Email: "course-student@test.edulinq.org",
 						Name:  "new",
 					},
@@ -105,8 +110,10 @@ func TestUpsertUser(test *testing.T) {
 				ContextServerRole: model.ServerRoleAdmin,
 			},
 			expected: &model.UserOpResult{
-				Email:    "course-student@test.edulinq.org",
-				Modified: true,
+				BaseUserOpResult: model.BaseUserOpResult{
+					Email:    "course-student@test.edulinq.org",
+					Modified: true,
+				},
 			},
 			expectedUser: &model.ServerUser{
 				Email:    "course-student@test.edulinq.org",
@@ -141,8 +148,8 @@ func TestUpsertUser(test *testing.T) {
 		// Update user with course (enroll).
 		{
 			options: UpsertUsersOptions{
-				RawUsers: []*model.RawUserData{
-					&model.RawUserData{
+				RawUsers: []*model.RawServerUserData{
+					&model.RawServerUserData{
 						Email:       "course-student@test.edulinq.org",
 						Course:      "new-course",
 						CourseRole:  model.GetCourseUserRoleString(model.CourseRoleStudent),
@@ -152,10 +159,12 @@ func TestUpsertUser(test *testing.T) {
 				ContextServerRole: model.ServerRoleAdmin,
 			},
 			expected: &model.UserOpResult{
-				Email:    "course-student@test.edulinq.org",
-				Modified: true,
-				Emailed:  true,
-				Enrolled: []string{"new-course"},
+				BaseUserOpResult: model.BaseUserOpResult{
+					Email:    "course-student@test.edulinq.org",
+					Modified: true,
+					Emailed:  true,
+					Enrolled: []string{"new-course"},
+				},
 			},
 			expectedUser: &model.ServerUser{
 				Email:    "course-student@test.edulinq.org",
@@ -194,8 +203,8 @@ func TestUpsertUser(test *testing.T) {
 		// Update course information.
 		{
 			options: UpsertUsersOptions{
-				RawUsers: []*model.RawUserData{
-					&model.RawUserData{
+				RawUsers: []*model.RawServerUserData{
+					&model.RawServerUserData{
 						Email:      "course-student@test.edulinq.org",
 						Course:     "course101",
 						CourseRole: model.GetCourseUserRoleString(model.CourseRoleGrader),
@@ -204,8 +213,10 @@ func TestUpsertUser(test *testing.T) {
 				ContextServerRole: model.ServerRoleAdmin,
 			},
 			expected: &model.UserOpResult{
-				Email:    "course-student@test.edulinq.org",
-				Modified: true,
+				BaseUserOpResult: model.BaseUserOpResult{
+					Email:    "course-student@test.edulinq.org",
+					Modified: true,
+				},
 			},
 			expectedUser: &model.ServerUser{
 				Email:    "course-student@test.edulinq.org",
@@ -240,8 +251,8 @@ func TestUpsertUser(test *testing.T) {
 		// Update course information using course (not server) permissions.
 		{
 			options: UpsertUsersOptions{
-				RawUsers: []*model.RawUserData{
-					&model.RawUserData{
+				RawUsers: []*model.RawServerUserData{
+					&model.RawServerUserData{
 						Email:      "course-student@test.edulinq.org",
 						Course:     "course101",
 						CourseRole: model.GetCourseUserRoleString(model.CourseRoleGrader),
@@ -251,8 +262,10 @@ func TestUpsertUser(test *testing.T) {
 				ContextCourseRole: model.CourseRoleAdmin,
 			},
 			expected: &model.UserOpResult{
-				Email:    "course-student@test.edulinq.org",
-				Modified: true,
+				BaseUserOpResult: model.BaseUserOpResult{
+					Email:    "course-student@test.edulinq.org",
+					Modified: true,
+				},
 			},
 			expectedUser: &model.ServerUser{
 				Email:    "course-student@test.edulinq.org",
@@ -287,8 +300,8 @@ func TestUpsertUser(test *testing.T) {
 		// Update self with non-admin permissions.
 		{
 			options: UpsertUsersOptions{
-				RawUsers: []*model.RawUserData{
-					&model.RawUserData{
+				RawUsers: []*model.RawServerUserData{
+					&model.RawServerUserData{
 						Email: "course-student@test.edulinq.org",
 						Name:  "new",
 					},
@@ -298,8 +311,10 @@ func TestUpsertUser(test *testing.T) {
 				ContextCourseRole: model.CourseRoleStudent,
 			},
 			expected: &model.UserOpResult{
-				Email:    "course-student@test.edulinq.org",
-				Modified: true,
+				BaseUserOpResult: model.BaseUserOpResult{
+					Email:    "course-student@test.edulinq.org",
+					Modified: true,
+				},
 			},
 			expectedUser: &model.ServerUser{
 				Email:    "course-student@test.edulinq.org",
@@ -334,8 +349,8 @@ func TestUpsertUser(test *testing.T) {
 		// Update self with non-admin permissions and no course.
 		{
 			options: UpsertUsersOptions{
-				RawUsers: []*model.RawUserData{
-					&model.RawUserData{
+				RawUsers: []*model.RawServerUserData{
+					&model.RawServerUserData{
 						Email: "course-student@test.edulinq.org",
 						Name:  "new",
 					},
@@ -344,8 +359,10 @@ func TestUpsertUser(test *testing.T) {
 				ContextServerRole: model.ServerRoleUser,
 			},
 			expected: &model.UserOpResult{
-				Email:    "course-student@test.edulinq.org",
-				Modified: true,
+				BaseUserOpResult: model.BaseUserOpResult{
+					Email:    "course-student@test.edulinq.org",
+					Modified: true,
+				},
 			},
 			expectedUser: &model.ServerUser{
 				Email:    "course-student@test.edulinq.org",
@@ -380,8 +397,8 @@ func TestUpsertUser(test *testing.T) {
 		// Self demote (server).
 		{
 			options: UpsertUsersOptions{
-				RawUsers: []*model.RawUserData{
-					&model.RawUserData{
+				RawUsers: []*model.RawServerUserData{
+					&model.RawServerUserData{
 						Email: "server-admin@test.edulinq.org",
 						Role:  model.GetServerUserRoleString(model.ServerRoleUser),
 					},
@@ -390,8 +407,10 @@ func TestUpsertUser(test *testing.T) {
 				ContextServerRole: model.ServerRoleAdmin,
 			},
 			expected: &model.UserOpResult{
-				Email:    "server-admin@test.edulinq.org",
-				Modified: true,
+				BaseUserOpResult: model.BaseUserOpResult{
+					Email:    "server-admin@test.edulinq.org",
+					Modified: true,
+				},
 			},
 			expectedUser: &model.ServerUser{
 				Email:    "server-admin@test.edulinq.org",
@@ -407,8 +426,8 @@ func TestUpsertUser(test *testing.T) {
 		// TODO: This test does not fully test the functionality. We need a server non-admin and a course admin.
 		{
 			options: UpsertUsersOptions{
-				RawUsers: []*model.RawUserData{
-					&model.RawUserData{
+				RawUsers: []*model.RawServerUserData{
+					&model.RawServerUserData{
 						Email:      "course-admin@test.edulinq.org",
 						Course:     "course101",
 						CourseRole: model.GetCourseUserRoleString(model.CourseRoleStudent),
@@ -419,8 +438,10 @@ func TestUpsertUser(test *testing.T) {
 				ContextCourseRole: model.CourseRoleAdmin,
 			},
 			expected: &model.UserOpResult{
-				Email:    "course-admin@test.edulinq.org",
-				Modified: true,
+				BaseUserOpResult: model.BaseUserOpResult{
+					Email:    "course-admin@test.edulinq.org",
+					Modified: true,
+				},
 			},
 			expectedUser: &model.ServerUser{
 				Email:    "course-admin@test.edulinq.org",
@@ -428,7 +449,16 @@ func TestUpsertUser(test *testing.T) {
 				Salt:     PLACEHOLDER_SALT,
 				Password: PLACEHOLDER_PASSWORD_TOKEN,
 				Role:     model.ServerRoleUser,
-				Tokens:   []*model.Token{},
+				Tokens: []*model.Token{
+					&model.Token{
+						ID:           "df0a1f16-9cd8-4395-8509-10ae314fe6fc",
+						HexDigest:    "74f72731825e660f5720ffe86e71103c5534171f1e4ef9fe2d8c73d0121ef192",
+						Source:       "user",
+						Name:         "test",
+						CreationTime: 1727118291215,
+						AccessTime:   1727118291215,
+					},
+				},
 				CourseInfo: map[string]*model.UserCourseInfo{
 					"course-languages": &model.UserCourseInfo{
 						Role:  model.CourseRoleAdmin,
@@ -455,8 +485,8 @@ func TestUpsertUser(test *testing.T) {
 		// Set a new password.
 		{
 			options: UpsertUsersOptions{
-				RawUsers: []*model.RawUserData{
-					&model.RawUserData{
+				RawUsers: []*model.RawServerUserData{
+					&model.RawServerUserData{
 						Email: "course-student@test.edulinq.org",
 						Pass:  "1234",
 					},
@@ -464,8 +494,10 @@ func TestUpsertUser(test *testing.T) {
 				ContextServerRole: model.ServerRoleAdmin,
 			},
 			expected: &model.UserOpResult{
-				Email:    "course-student@test.edulinq.org",
-				Modified: true,
+				BaseUserOpResult: model.BaseUserOpResult{
+					Email:    "course-student@test.edulinq.org",
+					Modified: true,
+				},
 			},
 			expectedUser: &model.ServerUser{
 				Email:    "course-student@test.edulinq.org",
@@ -500,8 +532,8 @@ func TestUpsertUser(test *testing.T) {
 		// Set a duplicate password.
 		{
 			options: UpsertUsersOptions{
-				RawUsers: []*model.RawUserData{
-					&model.RawUserData{
+				RawUsers: []*model.RawServerUserData{
+					&model.RawServerUserData{
 						Email: "course-student@test.edulinq.org",
 						Pass:  util.Sha256HexFromString("course-student"),
 					},
@@ -509,7 +541,9 @@ func TestUpsertUser(test *testing.T) {
 				ContextServerRole: model.ServerRoleAdmin,
 			},
 			expected: &model.UserOpResult{
-				Email: "course-student@test.edulinq.org",
+				BaseUserOpResult: model.BaseUserOpResult{
+					Email: "course-student@test.edulinq.org",
+				},
 			},
 			expectedUser: &model.ServerUser{
 				Email:    "course-student@test.edulinq.org",
@@ -544,8 +578,8 @@ func TestUpsertUser(test *testing.T) {
 		// New user without password.
 		{
 			options: UpsertUsersOptions{
-				RawUsers: []*model.RawUserData{
-					&model.RawUserData{
+				RawUsers: []*model.RawServerUserData{
+					&model.RawServerUserData{
 						Email: "new@test.edulinq.org",
 						Role:  model.GetServerUserRoleString(model.ServerRoleUser),
 					},
@@ -553,9 +587,11 @@ func TestUpsertUser(test *testing.T) {
 				ContextServerRole: model.ServerRoleAdmin,
 			},
 			expected: &model.UserOpResult{
-				Email:             "new@test.edulinq.org",
-				Added:             true,
-				Emailed:           true,
+				BaseUserOpResult: model.BaseUserOpResult{
+					Email:   "new@test.edulinq.org",
+					Added:   true,
+					Emailed: true,
+				},
 				CleartextPassword: PLACEHOLDER_PASSWORD_CLEARTEXT,
 			},
 			expectedUser: &model.ServerUser{
@@ -570,8 +606,8 @@ func TestUpsertUser(test *testing.T) {
 		// Add a user from a course (but not server) admin.
 		{
 			options: UpsertUsersOptions{
-				RawUsers: []*model.RawUserData{
-					&model.RawUserData{
+				RawUsers: []*model.RawServerUserData{
+					&model.RawServerUserData{
 						Email: "new@test.edulinq.org",
 						Role:  model.GetServerUserRoleString(model.ServerRoleUser),
 					},
@@ -580,9 +616,11 @@ func TestUpsertUser(test *testing.T) {
 				ContextCourseRole: model.CourseRoleAdmin,
 			},
 			expected: &model.UserOpResult{
-				Email:             "new@test.edulinq.org",
-				Added:             true,
-				Emailed:           true,
+				BaseUserOpResult: model.BaseUserOpResult{
+					Email:   "new@test.edulinq.org",
+					Added:   true,
+					Emailed: true,
+				},
 				CleartextPassword: PLACEHOLDER_PASSWORD_CLEARTEXT,
 			},
 			expectedUser: &model.ServerUser{
@@ -597,8 +635,8 @@ func TestUpsertUser(test *testing.T) {
 		// Update course information on a user with higher server role.
 		{
 			options: UpsertUsersOptions{
-				RawUsers: []*model.RawUserData{
-					&model.RawUserData{
+				RawUsers: []*model.RawServerUserData{
+					&model.RawServerUserData{
 						Email:      "course-owner@test.edulinq.org",
 						Course:     "course101",
 						CourseRole: model.GetCourseUserRoleString(model.CourseRoleAdmin),
@@ -607,8 +645,10 @@ func TestUpsertUser(test *testing.T) {
 				ContextServerRole: model.ServerRoleAdmin,
 			},
 			expected: &model.UserOpResult{
-				Email:    "course-owner@test.edulinq.org",
-				Modified: true,
+				BaseUserOpResult: model.BaseUserOpResult{
+					Email:    "course-owner@test.edulinq.org",
+					Modified: true,
+				},
 			},
 			expectedUser: &model.ServerUser{
 				Email:    "course-owner@test.edulinq.org",
@@ -645,15 +685,22 @@ func TestUpsertUser(test *testing.T) {
 		// Add a user wihout a any roles.
 		{
 			options: UpsertUsersOptions{
-				RawUsers: []*model.RawUserData{
-					&model.RawUserData{
+				RawUsers: []*model.RawServerUserData{
+					&model.RawServerUserData{
 						Email: "new@test.edulinq.org",
 					},
 				},
 			},
 			expected: &model.UserOpResult{
-				Email:        "",
-				SystemErrors: []string{"No authority/roles were provided when adding a user."},
+				BaseUserOpResult: model.BaseUserOpResult{
+					Email: "",
+				},
+				SystemError: &model.LocatableError{
+					Locator:         "-1001",
+					HideLocator:     false,
+					InternalMessage: "No authority/roles were provided when adding a user.",
+					ExternalMessage: "The server failed to process your request. Please contact an administrator with this ID '-1001'.",
+				},
 			},
 			expectedUser: nil,
 		},
@@ -661,16 +708,23 @@ func TestUpsertUser(test *testing.T) {
 		// Add a user with only a course role.
 		{
 			options: UpsertUsersOptions{
-				RawUsers: []*model.RawUserData{
-					&model.RawUserData{
+				RawUsers: []*model.RawServerUserData{
+					&model.RawServerUserData{
 						Email: "new@test.edulinq.org",
 					},
 				},
 				ContextCourseRole: model.CourseRoleOwner,
 			},
 			expected: &model.UserOpResult{
-				Email:        "new@test.edulinq.org",
-				SystemErrors: []string{"Users must have a server role to upsert users."},
+				BaseUserOpResult: model.BaseUserOpResult{
+					Email: "new@test.edulinq.org",
+				},
+				SystemError: &model.LocatableError{
+					Locator:         "-1010",
+					HideLocator:     false,
+					InternalMessage: "Users must have a server role to upsert users.",
+					ExternalMessage: "The server failed to process your request. Please contact an administrator with this ID '-1010'.",
+				},
 			},
 			expectedUser: nil,
 		},
@@ -678,8 +732,8 @@ func TestUpsertUser(test *testing.T) {
 		// Add a user with a higher server role.
 		{
 			options: UpsertUsersOptions{
-				RawUsers: []*model.RawUserData{
-					&model.RawUserData{
+				RawUsers: []*model.RawServerUserData{
+					&model.RawServerUserData{
 						Email: "new@test.edulinq.org",
 						Role:  model.GetServerUserRoleString(model.ServerRoleOwner),
 					},
@@ -687,8 +741,15 @@ func TestUpsertUser(test *testing.T) {
 				ContextServerRole: model.ServerRoleAdmin,
 			},
 			expected: &model.UserOpResult{
-				Email:            "new@test.edulinq.org",
-				ValidationErrors: []string{"User has a server role of 'admin', which is not high enough to upsert a user with server role of 'owner'."},
+				BaseUserOpResult: model.BaseUserOpResult{
+					Email: "new@test.edulinq.org",
+				},
+				ValidationError: &model.LocatableError{
+					Locator:         "-1011",
+					HideLocator:     true,
+					InternalMessage: "User has a server role of 'admin', which is not high enough to upsert a user with server role of 'owner'.",
+					ExternalMessage: VALIDATION_ERROR_EXTERNAL_MESSAGE,
+				},
 			},
 			expectedUser: nil,
 		},
@@ -696,16 +757,23 @@ func TestUpsertUser(test *testing.T) {
 		// Add a user with only an insufficient server role.
 		{
 			options: UpsertUsersOptions{
-				RawUsers: []*model.RawUserData{
-					&model.RawUserData{
+				RawUsers: []*model.RawServerUserData{
+					&model.RawServerUserData{
 						Email: "new@test.edulinq.org",
 					},
 				},
 				ContextServerRole: model.ServerRoleUser,
 			},
 			expected: &model.UserOpResult{
-				Email:            "new@test.edulinq.org",
-				ValidationErrors: []string{"User has an insufficient server role of 'user' and no course role to insert users."},
+				BaseUserOpResult: model.BaseUserOpResult{
+					Email: "new@test.edulinq.org",
+				},
+				ValidationError: &model.LocatableError{
+					Locator:         "-1012",
+					HideLocator:     true,
+					InternalMessage: "User has an insufficient server role of 'user' and no course role to insert users.",
+					ExternalMessage: VALIDATION_ERROR_EXTERNAL_MESSAGE,
+				},
 			},
 			expectedUser: nil,
 		},
@@ -713,8 +781,8 @@ func TestUpsertUser(test *testing.T) {
 		// Add a user without proper server or course roles.
 		{
 			options: UpsertUsersOptions{
-				RawUsers: []*model.RawUserData{
-					&model.RawUserData{
+				RawUsers: []*model.RawServerUserData{
+					&model.RawServerUserData{
 						Email:      "new@test.edulinq.org",
 						Role:       model.GetServerUserRoleString(model.ServerRoleUser),
 						Course:     "new-course",
@@ -725,8 +793,15 @@ func TestUpsertUser(test *testing.T) {
 				ContextCourseRole: model.CourseRoleStudent,
 			},
 			expected: &model.UserOpResult{
-				Email:            "new@test.edulinq.org",
-				ValidationErrors: []string{"User has a course role of 'student', which is not high enough to insert users."},
+				BaseUserOpResult: model.BaseUserOpResult{
+					Email: "new@test.edulinq.org",
+				},
+				ValidationError: &model.LocatableError{
+					Locator:         "-1014",
+					HideLocator:     true,
+					InternalMessage: "User has a course role of 'student', which is not high enough to insert users.",
+					ExternalMessage: VALIDATION_ERROR_EXTERNAL_MESSAGE,
+				},
 			},
 			expectedUser: nil,
 		},
@@ -734,8 +809,8 @@ func TestUpsertUser(test *testing.T) {
 		// Add a user that has a higher course role.
 		{
 			options: UpsertUsersOptions{
-				RawUsers: []*model.RawUserData{
-					&model.RawUserData{
+				RawUsers: []*model.RawServerUserData{
+					&model.RawServerUserData{
 						Email:      "new@test.edulinq.org",
 						Role:       model.GetServerUserRoleString(model.ServerRoleUser),
 						Course:     "new-course",
@@ -746,8 +821,42 @@ func TestUpsertUser(test *testing.T) {
 				ContextCourseRole: model.CourseRoleAdmin,
 			},
 			expected: &model.UserOpResult{
-				Email:            "new@test.edulinq.org",
-				ValidationErrors: []string{"User has a course role of 'admin', which is not high enough to insert a user with course role of 'owner'."},
+				BaseUserOpResult: model.BaseUserOpResult{
+					Email: "new@test.edulinq.org",
+				},
+				ValidationError: &model.LocatableError{
+					Locator:         "-1013",
+					HideLocator:     true,
+					InternalMessage: "User has a course role of 'admin', which is not high enough to insert a user with course role of 'owner'.",
+					ExternalMessage: VALIDATION_ERROR_EXTERNAL_MESSAGE,
+				},
+			},
+			expectedUser: nil,
+		},
+
+		// Update a user to have a higher course role than the context user.
+		{
+			options: UpsertUsersOptions{
+				RawUsers: []*model.RawServerUserData{
+					&model.RawServerUserData{
+						Email:      "course-grader@test.edulinq.org",
+						Course:     "course101",
+						CourseRole: model.GetCourseUserRoleString(model.CourseRoleOwner),
+					},
+				},
+				ContextServerRole: model.ServerRoleUser,
+				ContextCourseRole: model.CourseRoleAdmin,
+			},
+			expected: &model.UserOpResult{
+				BaseUserOpResult: model.BaseUserOpResult{
+					Email: "course-grader@test.edulinq.org",
+				},
+				ValidationError: &model.LocatableError{
+					Locator:         "-1022",
+					HideLocator:     true,
+					InternalMessage: "User has a course role of 'admin', which is not high enough to update a user to a course role of 'owner'.",
+					ExternalMessage: VALIDATION_ERROR_EXTERNAL_MESSAGE,
+				},
 			},
 			expectedUser: nil,
 		},
@@ -755,8 +864,8 @@ func TestUpsertUser(test *testing.T) {
 		// Update server information on a user that has a higher server role.
 		{
 			options: UpsertUsersOptions{
-				RawUsers: []*model.RawUserData{
-					&model.RawUserData{
+				RawUsers: []*model.RawServerUserData{
+					&model.RawServerUserData{
 						Email: "server-owner@test.edulinq.org",
 						Name:  "new",
 					},
@@ -764,8 +873,40 @@ func TestUpsertUser(test *testing.T) {
 				ContextServerRole: model.ServerRoleAdmin,
 			},
 			expected: &model.UserOpResult{
-				Email:            "server-owner@test.edulinq.org",
-				ValidationErrors: []string{"User has a server role of 'admin', which is not high enough to update a user with server role of 'owner'."},
+				BaseUserOpResult: model.BaseUserOpResult{
+					Email: "server-owner@test.edulinq.org",
+				},
+				ValidationError: &model.LocatableError{
+					Locator:         "-1016",
+					HideLocator:     true,
+					InternalMessage: "User has a server role of 'admin', which is not high enough to update a user with server role of 'owner'.",
+					ExternalMessage: VALIDATION_ERROR_EXTERNAL_MESSAGE,
+				},
+			},
+			expectedUser: nil,
+		},
+
+		// Update server role to a higher server role than the context user.
+		{
+			options: UpsertUsersOptions{
+				RawUsers: []*model.RawServerUserData{
+					&model.RawServerUserData{
+						Email: "server-user@test.edulinq.org",
+						Role:  "owner",
+					},
+				},
+				ContextServerRole: model.ServerRoleAdmin,
+			},
+			expected: &model.UserOpResult{
+				BaseUserOpResult: model.BaseUserOpResult{
+					Email: "server-user@test.edulinq.org",
+				},
+				ValidationError: &model.LocatableError{
+					Locator:         "-1011",
+					HideLocator:     true,
+					InternalMessage: "User has a server role of 'admin', which is not high enough to upsert a user with server role of 'owner'.",
+					ExternalMessage: VALIDATION_ERROR_EXTERNAL_MESSAGE,
+				},
 			},
 			expectedUser: nil,
 		},
@@ -773,8 +914,8 @@ func TestUpsertUser(test *testing.T) {
 		// Update course information on a user that has a higher course role.
 		{
 			options: UpsertUsersOptions{
-				RawUsers: []*model.RawUserData{
-					&model.RawUserData{
+				RawUsers: []*model.RawServerUserData{
+					&model.RawServerUserData{
 						Email:      "course-owner@test.edulinq.org",
 						Course:     "course101",
 						CourseRole: model.GetCourseUserRoleString(model.CourseRoleGrader),
@@ -784,8 +925,15 @@ func TestUpsertUser(test *testing.T) {
 				ContextCourseRole: model.CourseRoleAdmin,
 			},
 			expected: &model.UserOpResult{
-				Email:            "course-owner@test.edulinq.org",
-				ValidationErrors: []string{"User has a course role of 'admin', which is not high enough to update a user with course role of 'owner'."},
+				BaseUserOpResult: model.BaseUserOpResult{
+					Email: "course-owner@test.edulinq.org",
+				},
+				ValidationError: &model.LocatableError{
+					Locator:         "-1019",
+					HideLocator:     true,
+					InternalMessage: "User has a course role of 'admin', which is not high enough to update a user with course role of 'owner'.",
+					ExternalMessage: VALIDATION_ERROR_EXTERNAL_MESSAGE,
+				},
 			},
 			expectedUser: nil,
 		},
@@ -793,8 +941,8 @@ func TestUpsertUser(test *testing.T) {
 		// Update non-self with non-admin permissions (server).
 		{
 			options: UpsertUsersOptions{
-				RawUsers: []*model.RawUserData{
-					&model.RawUserData{
+				RawUsers: []*model.RawServerUserData{
+					&model.RawServerUserData{
 						Email: "course-student@test.edulinq.org",
 						Name:  "new",
 					},
@@ -804,8 +952,15 @@ func TestUpsertUser(test *testing.T) {
 				ContextCourseRole: model.CourseRoleStudent,
 			},
 			expected: &model.UserOpResult{
-				Email:            "course-student@test.edulinq.org",
-				ValidationErrors: []string{"User has a server role of 'user', which is not high enough to update server-level information for another user."},
+				BaseUserOpResult: model.BaseUserOpResult{
+					Email: "course-student@test.edulinq.org",
+				},
+				ValidationError: &model.LocatableError{
+					Locator:         "-1017",
+					HideLocator:     true,
+					InternalMessage: "User has a server role of 'user', which is not high enough to update server-level information for another user.",
+					ExternalMessage: VALIDATION_ERROR_EXTERNAL_MESSAGE,
+				},
 			},
 			expectedUser: nil,
 		},
@@ -813,8 +968,8 @@ func TestUpsertUser(test *testing.T) {
 		// Update non-self with non-admin permissions (course).
 		{
 			options: UpsertUsersOptions{
-				RawUsers: []*model.RawUserData{
-					&model.RawUserData{
+				RawUsers: []*model.RawServerUserData{
+					&model.RawServerUserData{
 						Email:       "course-student@test.edulinq.org",
 						Course:      "course101",
 						CourseRole:  model.GetCourseUserRoleString(model.CourseRoleStudent),
@@ -826,8 +981,15 @@ func TestUpsertUser(test *testing.T) {
 				ContextCourseRole: model.CourseRoleStudent,
 			},
 			expected: &model.UserOpResult{
-				Email:            "course-student@test.edulinq.org",
-				ValidationErrors: []string{"User has a course role of 'student', which is not high enough to update course-level information for another user."},
+				BaseUserOpResult: model.BaseUserOpResult{
+					Email: "course-student@test.edulinq.org",
+				},
+				ValidationError: &model.LocatableError{
+					Locator:         "-1020",
+					HideLocator:     true,
+					InternalMessage: "User has a course role of 'student', which is not high enough to update course-level information for another user.",
+					ExternalMessage: VALIDATION_ERROR_EXTERNAL_MESSAGE,
+				},
 			},
 			expectedUser: nil,
 		},
@@ -835,8 +997,8 @@ func TestUpsertUser(test *testing.T) {
 		// Cannot self promote (server).
 		{
 			options: UpsertUsersOptions{
-				RawUsers: []*model.RawUserData{
-					&model.RawUserData{
+				RawUsers: []*model.RawServerUserData{
+					&model.RawServerUserData{
 						Email: "course-admin@test.edulinq.org",
 						Role:  model.GetServerUserRoleString(model.ServerRoleOwner),
 					},
@@ -845,8 +1007,15 @@ func TestUpsertUser(test *testing.T) {
 				ContextServerRole: model.ServerRoleAdmin,
 			},
 			expected: &model.UserOpResult{
-				Email:            "course-admin@test.edulinq.org",
-				ValidationErrors: []string{"User has a server role of 'admin', which is not high enough to upsert a user with server role of 'owner'."},
+				BaseUserOpResult: model.BaseUserOpResult{
+					Email: "course-admin@test.edulinq.org",
+				},
+				ValidationError: &model.LocatableError{
+					Locator:         "-1011",
+					HideLocator:     true,
+					InternalMessage: "User has a server role of 'admin', which is not high enough to upsert a user with server role of 'owner'.",
+					ExternalMessage: VALIDATION_ERROR_EXTERNAL_MESSAGE,
+				},
 			},
 			expectedUser: nil,
 		},
@@ -854,8 +1023,8 @@ func TestUpsertUser(test *testing.T) {
 		// Cannot self promote (course).
 		{
 			options: UpsertUsersOptions{
-				RawUsers: []*model.RawUserData{
-					&model.RawUserData{
+				RawUsers: []*model.RawServerUserData{
+					&model.RawServerUserData{
 						Email:      "course-grader@test.edulinq.org",
 						Course:     "course101",
 						CourseRole: model.GetCourseUserRoleString(model.CourseRoleAdmin),
@@ -866,8 +1035,15 @@ func TestUpsertUser(test *testing.T) {
 				ContextCourseRole: model.CourseRoleGrader,
 			},
 			expected: &model.UserOpResult{
-				Email:            "course-grader@test.edulinq.org",
-				ValidationErrors: []string{"User has a course role of 'grader', which is not high enough to modify course roles."},
+				BaseUserOpResult: model.BaseUserOpResult{
+					Email: "course-grader@test.edulinq.org",
+				},
+				ValidationError: &model.LocatableError{
+					Locator:         "-1018",
+					HideLocator:     true,
+					InternalMessage: "User has a course role of 'grader', which is not high enough to modify course roles.",
+					ExternalMessage: VALIDATION_ERROR_EXTERNAL_MESSAGE,
+				},
 			},
 			expectedUser: nil,
 		},
@@ -875,8 +1051,8 @@ func TestUpsertUser(test *testing.T) {
 		// Non-admins cannot self demote (server).
 		{
 			options: UpsertUsersOptions{
-				RawUsers: []*model.RawUserData{
-					&model.RawUserData{
+				RawUsers: []*model.RawServerUserData{
+					&model.RawServerUserData{
 						Email: "server-creator@test.edulinq.org",
 						Role:  model.GetServerUserRoleString(model.ServerRoleUser),
 					},
@@ -884,8 +1060,15 @@ func TestUpsertUser(test *testing.T) {
 				ContextServerRole: model.ServerRoleCourseCreator,
 			},
 			expected: &model.UserOpResult{
-				Email:            "server-creator@test.edulinq.org",
-				ValidationErrors: []string{"User has a server role of 'creator', which is not high enough to modify server roles."},
+				BaseUserOpResult: model.BaseUserOpResult{
+					Email: "server-creator@test.edulinq.org",
+				},
+				ValidationError: &model.LocatableError{
+					Locator:         "-1015",
+					HideLocator:     true,
+					InternalMessage: "User has a server role of 'creator', which is not high enough to modify server roles.",
+					ExternalMessage: VALIDATION_ERROR_EXTERNAL_MESSAGE,
+				},
 			},
 			expectedUser: nil,
 		},
@@ -893,8 +1076,8 @@ func TestUpsertUser(test *testing.T) {
 		// Non-admins cannot self demote (course).
 		{
 			options: UpsertUsersOptions{
-				RawUsers: []*model.RawUserData{
-					&model.RawUserData{
+				RawUsers: []*model.RawServerUserData{
+					&model.RawServerUserData{
 						Email:      "course-grader@test.edulinq.org",
 						Course:     "course101",
 						CourseRole: model.GetCourseUserRoleString(model.CourseRoleStudent),
@@ -905,8 +1088,15 @@ func TestUpsertUser(test *testing.T) {
 				ContextCourseRole: model.CourseRoleGrader,
 			},
 			expected: &model.UserOpResult{
-				Email:            "course-grader@test.edulinq.org",
-				ValidationErrors: []string{"User has a course role of 'grader', which is not high enough to modify course roles."},
+				BaseUserOpResult: model.BaseUserOpResult{
+					Email: "course-grader@test.edulinq.org",
+				},
+				ValidationError: &model.LocatableError{
+					Locator:         "-1018",
+					HideLocator:     true,
+					InternalMessage: "User has a course role of 'grader', which is not high enough to modify course roles.",
+					ExternalMessage: VALIDATION_ERROR_EXTERNAL_MESSAGE,
+				},
 			},
 			expectedUser: nil,
 		},
@@ -917,8 +1107,8 @@ func TestUpsertUser(test *testing.T) {
 		// Update user with course (enroll) without a role.
 		{
 			options: UpsertUsersOptions{
-				RawUsers: []*model.RawUserData{
-					&model.RawUserData{
+				RawUsers: []*model.RawServerUserData{
+					&model.RawServerUserData{
 						Email:  "course-student@test.edulinq.org",
 						Course: "new-course",
 					},
@@ -926,8 +1116,39 @@ func TestUpsertUser(test *testing.T) {
 				ContextServerRole: model.ServerRoleAdmin,
 			},
 			expected: &model.UserOpResult{
-				Email:            "course-student@test.edulinq.org",
-				ValidationErrors: []string{"User 'course-student@test.edulinq.org' has an invalid course info 'new-course': 'Unknown course role.'."},
+				BaseUserOpResult: model.BaseUserOpResult{
+					Email: "course-student@test.edulinq.org",
+				},
+				ValidationError: &model.LocatableError{
+					Locator:         "-1003",
+					HideLocator:     true,
+					InternalMessage: "User 'course-student@test.edulinq.org' has an invalid course info 'new-course': 'Unknown course role.'.",
+					ExternalMessage: VALIDATION_ERROR_EXTERNAL_MESSAGE,
+				},
+			},
+			expectedUser: nil,
+		},
+
+		// Insert a user that fails to validate (bad name).
+		{
+			options: UpsertUsersOptions{
+				RawUsers: []*model.RawServerUserData{
+					&model.RawServerUserData{
+						Email: "new-user",
+					},
+				},
+				ContextServerRole: model.ServerRoleAdmin,
+			},
+			expected: &model.UserOpResult{
+				BaseUserOpResult: model.BaseUserOpResult{
+					Email: "new-user",
+				},
+				ValidationError: &model.LocatableError{
+					Locator:         "-1003",
+					HideLocator:     true,
+					InternalMessage: "User email 'new-user' has an invalid format.",
+					ExternalMessage: VALIDATION_ERROR_EXTERNAL_MESSAGE,
+				},
 			},
 			expectedUser: nil,
 		},
@@ -1001,8 +1222,8 @@ func testUpsertDryRun(test *testing.T, caseIndex int, sendEmails bool, options U
 	}
 
 	if !reflect.DeepEqual(expected, result) {
-		test.Errorf("Case (dry run, email: %v) %d: Result is not as expected. Expected: '%s', Actual: '%s'.", sendEmails, caseIndex,
-			util.MustToJSONIndent(expected), util.MustToJSONIndent(result))
+		test.Errorf("Case (dry run, email: %v) %d: Result is not as expected. Expected: '%s', Actual: '%s'.",
+			sendEmails, caseIndex, util.MustToJSONIndent(expected), util.MustToJSONIndent(result))
 		return false
 	}
 
@@ -1044,8 +1265,8 @@ func testUpsert(test *testing.T, caseIndex int, sendEmails bool, options UpsertU
 	}
 
 	if !reflect.DeepEqual(expected, result) {
-		test.Errorf("Case (wet run, email: %v) %d: Result is not as expected. Expected: '%s', Actual: '%s'.", sendEmails, caseIndex,
-			util.MustToJSONIndent(expected), util.MustToJSONIndent(result))
+		test.Errorf("Case (wet run, email: %v) %d: Result is not as expected. Expected: '%s', Actual: '%s'.",
+			sendEmails, caseIndex, util.MustToJSONIndent(expected), util.MustToJSONIndent(result))
 		return false
 	}
 

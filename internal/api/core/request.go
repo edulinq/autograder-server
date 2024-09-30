@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"reflect"
+	"sync"
 
 	"github.com/edulinq/autograder/internal/common"
 	"github.com/edulinq/autograder/internal/config"
@@ -16,6 +17,12 @@ import (
 // An api request that has been reflexively verifed.
 // Once validated, callers should feel safe calling reflection methods on this without extra checks.
 type ValidAPIRequest any
+
+// A random nonce is generated for each root user request (e.g. CMDs).
+// The nonce is stored in RootUserNonces and is attached to the request.
+// It's later validated when processing the request through the http socket and then immediately deleted
+// to confirm the request came from a valid root user through the unix socket.
+var RootUserNonces sync.Map
 
 type APIRequest struct {
 	// These are not provided in JSON, they are filled in during validation.
@@ -31,8 +38,9 @@ type APIRequest struct {
 type APIRequestUserContext struct {
 	APIRequest
 
-	UserEmail string `json:"user-email"`
-	UserPass  string `json:"user-pass"`
+	UserEmail     string `json:"user-email"`
+	UserPass      string `json:"user-pass"`
+	RootUserNonce string `json:"root-user-nonce"`
 
 	ServerUser *model.ServerUser `json:"-"`
 }
@@ -77,17 +85,37 @@ func (this *APIRequestUserContext) Validate(request any, endpoint string) *APIEr
 		return apiErr
 	}
 
-	if this.UserEmail == "" {
-		return NewBadRequestError("-016", &this.APIRequest, "No user email specified.")
-	}
+	if this.RootUserNonce != "" {
+		// Check for a valid nonce and skip auth if it exists.
+		_, rootUserExists := RootUserNonces.LoadAndDelete(this.RootUserNonce)
+		if !rootUserExists {
+			return NewAuthBadRequestError("-048", this, "Incorrect root user nonce.")
+		}
 
-	if this.UserPass == "" {
-		return NewBadRequestError("-017", &this.APIRequest, "No user password specified.")
-	}
+		rootUser, err := db.GetServerUser(model.RootUserEmail)
+		if err != nil {
+			return NewUserContextInternalError("-049", this, "Failed to get the root user.")
+		}
 
-	this.ServerUser, apiErr = this.Auth()
-	if apiErr != nil {
-		return apiErr
+		if rootUser == nil {
+			return NewUserContextInternalError("-050", this, "Root user not found.")
+		}
+
+		this.UserEmail = rootUser.Email
+		this.ServerUser = rootUser
+	} else {
+		if this.UserEmail == "" {
+			return NewBadRequestError("-016", &this.APIRequest, "No user email specified.")
+		}
+
+		if this.UserPass == "" {
+			return NewBadRequestError("-017", &this.APIRequest, "No user password specified.")
+		}
+
+		this.ServerUser, apiErr = this.Auth()
+		if apiErr != nil {
+			return apiErr
+		}
 	}
 
 	minRole, foundRole := getMaxServerRole(request)

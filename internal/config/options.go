@@ -24,11 +24,12 @@ var (
 	LOG_BACKEND_LEVEL = MustNewStringOption("log.backend.level", "INFO", "The default logging level for the backend (database) logger.")
 
 	// Email
-	EMAIL_FROM = MustNewStringOption("email.from", "", "From address for emails sent from the autograder.")
-	EMAIL_HOST = MustNewStringOption("email.host", "", "SMTP host for emails sent from the autograder.")
-	EMAIL_PASS = MustNewStringOption("email.pass", "", "SMTP password for emails sent from the autograder.")
-	EMAIL_PORT = MustNewStringOption("email.port", "", "SMTP port for emails sent from the autograder.")
-	EMAIL_USER = MustNewStringOption("email.user", "", "SMTP username for emails sent from the autograder.")
+	EMAIL_FROM                 = MustNewStringOption("email.from", "", "From address for emails sent from the autograder.")
+	EMAIL_HOST                 = MustNewStringOption("email.host", "", "SMTP host for emails sent from the autograder.")
+	EMAIL_PASS                 = MustNewStringOption("email.pass", "", "SMTP password for emails sent from the autograder.")
+	EMAIL_PORT                 = MustNewStringOption("email.port", "", "SMTP port for emails sent from the autograder.")
+	EMAIL_USER                 = MustNewStringOption("email.user", "", "SMTP username for emails sent from the autograder.")
+	EMAIL_SMTP_IDLE_TIMEOUT_MS = MustNewIntOption("email.smtp.idle", 2000, "Consider an SMTP connection idle if no emails are sent for this number of milliseconds.")
 
 	// Docker
 	DOCKER_DISABLE = MustNewBoolOption("docker.disable", false, "Disable the use of docker (usually for testing).")
@@ -43,10 +44,12 @@ var (
 	// Server
 	WEB_PORT             = MustNewIntOption("web.port", 8080, "The port for the web interface to serve on.")
 	WEB_MAX_FILE_SIZE_KB = MustNewIntOption("web.maxsizekb", 2*1024, "The maximum allowed file size (in KB) submitted via POST request. The default is 2048 KB (2 MB).")
+	WEB_STATIC_ROOT      = MustNewStringOption("web.static.root", "", "The root directory to serve as part of the static portion of the API. Defaults to empty string, which indicates the embedded static directory.")
+	WEB_STATIC_FALLBACK  = MustNewBoolOption("web.static.fallback", false, "For any unmatched route (potential 404) that does not have an API prefix, try to match it in the static root before giving the final 404.")
 
 	// Database
 	DB_TYPE   = MustNewStringOption("db.type", "disk", "The type of database to use.")
-	DB_PG_URI = MustNewStringOption("db.pg.uri", "", "Connection string to connect to a Postgres Databse. Empty if not using Postgres.")
+	DB_PG_URI = MustNewStringOption("db.pg.uri", "", "Connection string to connect to a Postgres Database. Empty if not using Postgres.")
 
 	STALELOCK_DURATION_SECS = MustNewIntOption("lockmanager.staleduration", 2*60*60, "Number of seconds a lock can be unused before getting removed.")
 )
