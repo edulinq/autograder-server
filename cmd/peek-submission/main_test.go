@@ -43,24 +43,14 @@ func TestPeekBase(test *testing.T) {
 			testCase.targetSubmission,
 		}
 
-		stdout, stderr, exitCode, err := cmd.RunCMDTest(test, main, args)
+		stdout, err := cmd.RunCommonCMDTests(test, main, args, testCase.expectedExitCode, i)
 		if err != nil {
-			test.Errorf("Case %d: CMD run returned an error: '%v'.", i, err)
-			continue
-		}
-
-		if exitCode != testCase.expectedExitCode {
-			test.Errorf("Case %d: Unexpected exit code. Expected: '%d', Actual: '%d'.", i, testCase.expectedExitCode, exitCode)
+			test.Errorf("Error running common CMD tests: '%v'.", err)
 			continue
 		}
 
 		if testCase.expectedErrorMessage != "" && stdout != testCase.expectedErrorMessage {
 			test.Errorf("Case: %d: Unexpected error message. Expected: '%s', Actual: '%s'.", i, testCase.expectedErrorMessage, stdout)
-		}
-
-		if len(stderr) > 0 {
-			test.Errorf("Case %d: CMD has content in stderr: '%s'.", i, stderr)
-			continue
 		}
 
 		if testCase.expectedExitCode != 0 {

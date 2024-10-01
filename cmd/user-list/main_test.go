@@ -30,51 +30,46 @@ func TestServerUserListBase(test *testing.T) {
 	expectedServerUserInfos := core.MustNewServerUserInfos(serverUsers)
 
 	testCases := []struct {
-		expectedNumUsers int
 		expectedExitCode int
+		expectedNumUsers int
 		table            bool
 	}{
-		{10, 0, false},
-		{10, 0, true},
+		{0, 10, false},
+		{0, 10, true},
 	}
 
 	for i, testCase := range testCases {
 		args := []string{}
+
 		if testCase.table {
 			args = append(args, "--table")
 		}
 
-		stdout, stderr, exitCode, err := cmd.RunCMDTest(test, main, args)
+		stdout, err := cmd.RunCommonCMDTests(test, main, args, testCase.expectedExitCode, i)
 		if err != nil {
-			test.Errorf("Case %d: CMD run returned an error: '%v'.", i, err)
-			continue
-		}
-
-		if len(stderr) > 0 {
-			test.Errorf("Case %d: CMD has content in stderr: '%s'.", i, stderr)
-			continue
-		}
-
-		if testCase.expectedExitCode != exitCode {
-			test.Errorf("Case %d: Unexpected exit code. Expected: '%d', Actual: '%d'.", i, testCase.expectedExitCode, exitCode)
+			test.Errorf("Error running common CMD tests: '%v'.", err)
 			continue
 		}
 
 		if testCase.table {
 			oldStdout := os.Stdout
-			r, w, _ := os.Pipe()
-			os.Stdout = w
+			readPipe, writePipe, err := os.Pipe()
+			if err != nil {
+				test.Errorf("Case %d: Failed to create pipe: '%v'.", i, err)
+			}
+
+			os.Stdout = writePipe
 
 			cmd.ListServerUsersTable(expectedServerUserInfos)
 
-			w.Close()
+			writePipe.Close()
 
 			os.Stdout = oldStdout
 
-			var buf bytes.Buffer
-			buf.ReadFrom(r)
+			var outputBuffer bytes.Buffer
+			outputBuffer.ReadFrom(readPipe)
 
-			capturedOutput := buf.String()
+			capturedOutput := outputBuffer.String()
 
 			if capturedOutput != stdout {
 				test.Errorf("Case %d: Table server user infos do not match. Expected: '%s', Actual: '%s'.", i, capturedOutput, stdout)

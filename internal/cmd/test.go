@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -137,4 +138,21 @@ func runCMD(mainFunc func(), args []string) (err error) {
 	mainFunc()
 
 	return err
+}
+
+func RunCommonCMDTests(test *testing.T, mainFunc func(), args []string, expectedExitCode int, index int) (output string, errs error) {
+	stdout, stderr, exitCode, err := RunCMDTest(test, mainFunc, args)
+	if err != nil {
+		errs = errors.Join(errs, fmt.Errorf("Case %d: CMD run returned an error: '%v'.", index, err))
+	}
+
+	if len(stderr) > 0 {
+		errs = errors.Join(errs, fmt.Errorf("Case %d: CMD has content in stderr: '%s'.", index, stderr))
+	}
+
+	if expectedExitCode != exitCode {
+		errs = errors.Join(errs, fmt.Errorf("Case %d: Unexpected exit code. Expected: '%d', Actual: '%d'.", index, expectedExitCode, exitCode))
+	}
+
+	return stdout, errs
 }
