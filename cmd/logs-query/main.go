@@ -8,7 +8,8 @@ import (
 	"github.com/edulinq/autograder/internal/config"
 	"github.com/edulinq/autograder/internal/db"
 	"github.com/edulinq/autograder/internal/log"
-	"github.com/edulinq/autograder/internal/timestamp"
+	"github.com/edulinq/autograder/internal/model"
+	"github.com/edulinq/autograder/internal/procedures/logs"
 )
 
 var args struct {
@@ -35,25 +36,26 @@ func main() {
 	db.MustOpen()
 	defer db.MustClose()
 
-	level, err := log.ParseLevel(args.Level)
+	user := db.MustGetServerUser(model.RootUserEmail)
+
+	query := log.RawLogQuery{
+		LevelString:  args.Level,
+		AfterString:  args.Time,
+		CourseID:     args.Course,
+		AssignmentID: args.Assignment,
+		TargetUser:   args.User,
+	}
+
+	records, locatableErr, err := logs.Query(query, user)
 	if err != nil {
-		log.Fatal("Could not parse logging level.", err)
+		log.Fatal("Failed to query logs.", err)
 	}
 
-	after := timestamp.Zero()
-	if args.Time != "" {
-		after, err = timestamp.GuessFromString(args.Time)
-		if err != nil {
-			log.Fatal("Could not parse time.", err)
-		}
+	if locatableErr != nil {
+		log.Fatal("Invalid logs query.", locatableErr)
 	}
 
-	logs, err := db.GetLogRecords(level, after, args.Course, args.Assignment, args.User)
-	if err != nil {
-		log.Fatal("Failed to fetch logs.", err)
-	}
-
-	for _, log := range logs {
-		fmt.Println(log.String())
+	for _, record := range records {
+		fmt.Println(record.String())
 	}
 }

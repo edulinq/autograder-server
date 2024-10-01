@@ -17,34 +17,27 @@ func TestUpdateCourse(test *testing.T) {
 
 	course := db.MustGetTestCourse()
 
-	count := countUsers(test, course)
-	if count != 5 {
-		test.Fatalf("Unexpected pre-remove user count. Expected 5, found %d.", count)
+	count := countAssignments(test, course)
+	if count != 1 {
+		test.Fatalf("Unexpected pre-remove assignment count. Expected 1, found %d.", count)
 	}
 
-	exists, enrolled, err := db.RemoveUserFromCourse(course, "course-student@test.edulinq.org")
-	if err != nil {
-		test.Fatalf("Error when removing the user: '%v'.", err)
-	}
+	// Remove the assignment by deleting the key.
+	delete(course.Assignments, db.TEST_ASSIGNMENT_ID)
 
-	if !exists {
-		test.Fatalf("User does not exist.")
-	}
-
-	if !enrolled {
-		test.Fatalf("User was not enrolled in course.")
-	}
-
-	count = countUsers(test, course)
-	if count != 4 {
-		test.Fatalf("Unexpected post-remove user count. Expected 4, found %d.", count)
+	count = countAssignments(test, course)
+	if count != 0 {
+		test.Fatalf("Unexpected post-remove assignment count. Expected 0, found %d.", count)
 	}
 
 	reloadRequest(test)
 
-	count = countUsers(test, course)
-	if count != 5 {
-		test.Fatalf("Unexpected post-reload user count. Expected 5, found %d.", count)
+	// Must get the course from the db to see updates.
+	course = db.MustGetTestCourse()
+
+	count = countAssignments(test, course)
+	if count != 1 {
+		test.Fatalf("Unexpected post-update assignment count. Expected 1, found %d.", count)
 	}
 }
 
@@ -55,11 +48,8 @@ func reloadRequest(test *testing.T) {
 	}
 }
 
-func countUsers(test *testing.T, course *model.Course) int {
-	users, err := db.GetCourseUsers(course)
-	if err != nil {
-		test.Fatalf("Failed to get users: '%v'.", err)
-	}
+func countAssignments(test *testing.T, course *model.Course) int {
+	assignments := course.GetAssignments()
 
-	return len(users)
+	return len(assignments)
 }

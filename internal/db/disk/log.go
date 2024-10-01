@@ -8,7 +8,6 @@ import (
 	"path/filepath"
 
 	"github.com/edulinq/autograder/internal/log"
-	"github.com/edulinq/autograder/internal/timestamp"
 	"github.com/edulinq/autograder/internal/util"
 )
 
@@ -38,7 +37,7 @@ func (this *backend) LogDirect(record *log.Record) error {
 	return nil
 }
 
-func (this *backend) GetLogRecords(level log.LogLevel, after timestamp.Timestamp, courseID string, assignmentID string, userID string) ([]*log.Record, error) {
+func (this *backend) GetLogRecords(query log.ParsedLogQuery) ([]*log.Record, error) {
 	this.logLock.RLock()
 	defer this.logLock.RUnlock()
 
@@ -76,7 +75,7 @@ func (this *backend) GetLogRecords(level log.LogLevel, after timestamp.Timestamp
 			return nil, fmt.Errorf("Failed to convert log line %d from file '%s' to JSON: '%w'.", lineno, path, err)
 		}
 
-		keep, err := keepRecord(&record, level, after, courseID, assignmentID, userID)
+		keep, err := keepRecord(&record, query)
 		if err != nil {
 			return nil, fmt.Errorf("Failed to filter log line %d from file '%s': '%w'.", lineno, path, err)
 		}
@@ -91,24 +90,27 @@ func (this *backend) GetLogRecords(level log.LogLevel, after timestamp.Timestamp
 	return records, nil
 }
 
-func keepRecord(record *log.Record, level log.LogLevel, after timestamp.Timestamp, courseID string, assignmentID string, userID string) (bool, error) {
-	if record.Level < level {
+func keepRecord(record *log.Record, query log.ParsedLogQuery) (bool, error) {
+	if record.Level < query.Level {
 		return false, nil
 	}
 
-	if (courseID != "") && (record.Course != courseID) {
+	if (query.CourseID != "") && (record.Course != query.CourseID) {
 		return false, nil
 	}
 
-	if (assignmentID != "") && (record.Assignment != assignmentID) {
+	// Assignment ID will only be matched on if the course ID also matches.
+	courseMatch := ((query.CourseID != "") && (record.Course == query.CourseID))
+
+	if (query.AssignmentID != "") && (!courseMatch || (record.Assignment != query.AssignmentID)) {
 		return false, nil
 	}
 
-	if (userID != "") && (record.User != userID) {
+	if (query.UserEmail != "") && (record.User != query.UserEmail) {
 		return false, nil
 	}
 
-	if record.Timestamp < after {
+	if record.Timestamp < query.After {
 		return false, nil
 	}
 

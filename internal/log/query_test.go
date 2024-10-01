@@ -7,7 +7,10 @@ import (
 	"github.com/edulinq/autograder/internal/timestamp"
 )
 
-const ASSIGNMENT_ID = "exists"
+const (
+	COURSE_ID     = "exists-course"
+	ASSIGNMENT_ID = "exists-assignment"
+)
 
 func TestLogQueryBase(test *testing.T) {
 	testCases := []struct {
@@ -118,9 +121,44 @@ func TestLogQueryBase(test *testing.T) {
 
 		{
 			RawLogQuery{
+				CourseID: COURSE_ID,
+			},
+			ParsedLogQuery{
+				CourseID: COURSE_ID,
+			},
+			[]string{},
+			false,
+		},
+		// Will be handled by validation (not parsing).
+		{
+			RawLogQuery{
+				CourseID: "!!!",
+			},
+			ParsedLogQuery{
+				CourseID: "!!!",
+			},
+			[]string{},
+			false,
+		},
+		// Will be handled by validation (not parsing).
+		{
+			RawLogQuery{
+				CourseID: "ZZZ",
+			},
+			ParsedLogQuery{
+				CourseID: "ZZZ",
+			},
+			[]string{},
+			false,
+		},
+
+		{
+			RawLogQuery{
+				CourseID:     COURSE_ID,
 				AssignmentID: ASSIGNMENT_ID,
 			},
 			ParsedLogQuery{
+				CourseID:     COURSE_ID,
 				AssignmentID: ASSIGNMENT_ID,
 			},
 			[]string{},
@@ -129,9 +167,11 @@ func TestLogQueryBase(test *testing.T) {
 		// Will be handled by validation (not parsing).
 		{
 			RawLogQuery{
+				CourseID:     COURSE_ID,
 				AssignmentID: "!!!",
 			},
 			ParsedLogQuery{
+				CourseID:     COURSE_ID,
 				AssignmentID: "!!!",
 			},
 			[]string{},
@@ -140,12 +180,26 @@ func TestLogQueryBase(test *testing.T) {
 		// Will be handled by validation (not parsing).
 		{
 			RawLogQuery{
+				CourseID:     COURSE_ID,
 				AssignmentID: "ZZZ",
 			},
 			ParsedLogQuery{
+				CourseID:     COURSE_ID,
 				AssignmentID: "ZZZ",
 			},
 			[]string{},
+			false,
+		},
+
+		// Assignments must have a course.
+		{
+			RawLogQuery{
+				AssignmentID: ASSIGNMENT_ID,
+			},
+			ParsedLogQuery{},
+			[]string{
+				"Log queries with an assignment must also have a course.",
+			},
 			false,
 		},
 
@@ -154,7 +208,7 @@ func TestLogQueryBase(test *testing.T) {
 				TargetUser: "course-admin@test.edulinq.org",
 			},
 			ParsedLogQuery{
-				UserID: "course-admin@test.edulinq.org",
+				UserEmail: "course-admin@test.edulinq.org",
 			},
 			[]string{},
 			false,
@@ -162,11 +216,21 @@ func TestLogQueryBase(test *testing.T) {
 	}
 
 	for i, testCase := range testCases {
+		// Ensure raw queries can cleanly convert to JSON.
+		if testCase.query.String() == MARSHAL_ERROR {
+			test.Errorf("Case %d: Could not marshal query.", i)
+			continue
+		}
+
 		actual, errors := testCase.query.ParseStrings()
 
 		if !reflect.DeepEqual(testCase.errors, errors) {
-			test.Fatalf("Case %d: Errors not as expected. Expected: '%v', Actual: '%v'.", i,
-				testCase.errors, errors)
+			test.Errorf("Case %d: Errors not as expected. Expected: '%v', Actual: '%v'.", i, testCase.errors, errors)
+			continue
+		}
+
+		if len(testCase.errors) > 0 {
+			continue
 		}
 
 		if testCase.replaceTime {

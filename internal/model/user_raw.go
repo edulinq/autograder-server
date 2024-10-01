@@ -6,7 +6,7 @@ import (
 
 // Raw/dirty data for a user.
 // This struct can be directly embedded for Kong arguments.
-type RawUserData struct {
+type RawServerUserData struct {
 	Email       string `json:"email" help:"Email for the user." arg:"" required:""`
 	Name        string `json:"name" help:"Name for the user."`
 	Role        string `json:"role" help:"Server role for the user. Defaults to 'user'." default:"user"`
@@ -16,9 +16,47 @@ type RawUserData struct {
 	CourseLMSID string `json:"course-lms-id" help:"LMS ID for the new user in the specified course."`
 }
 
+// Raw/dirty data for a course user.
+// This struct is used for raw data coming from a single course.
+type RawCourseUserData struct {
+	Email       string `json:"email"`
+	Name        string `json:"name"`
+	CourseRole  string `json:"course-role"`
+	CourseLMSID string `json:"course-lms-id"`
+}
+
+// Convert RawCourseUserData to RawServerUserData for a course.
+func (this *RawCourseUserData) ToRawServerUserData(course *Course) *RawServerUserData {
+	rawUserData := &RawServerUserData{
+		Email:       this.Email,
+		Name:        this.Name,
+		Role:        "",
+		Pass:        "",
+		Course:      course.GetID(),
+		CourseRole:  this.CourseRole,
+		CourseLMSID: this.CourseLMSID,
+	}
+
+	return rawUserData
+}
+
+// Convenience function to convert a slice of RawCourseUserData's to RawServerUserData.
+// The returned slice can be shorter in length than the original slice if it contains nil values.
+func ToRawServerUserDatas(rawCourseUsers []*RawCourseUserData, course *Course) []*RawServerUserData {
+	rawUsers := make([]*RawServerUserData, 0, len(rawCourseUsers))
+
+	for _, rawCourseUser := range rawCourseUsers {
+		if rawCourseUser != nil {
+			rawUsers = append(rawUsers, rawCourseUser.ToRawServerUserData(course))
+		}
+	}
+
+	return rawUsers
+}
+
 // Get a server user representation of this data.
 // Passwords will NOT be converted into tokens (as the source salt is unknown).
-func (this *RawUserData) ToServerUser() (*ServerUser, error) {
+func (this *RawServerUserData) ToServerUser() (*ServerUser, error) {
 	user := &ServerUser{
 		Email: this.Email,
 		Name:  nil,
@@ -43,15 +81,15 @@ func (this *RawUserData) ToServerUser() (*ServerUser, error) {
 		}
 	}
 
-	return user, user.Validate()
+	return user, user.validate(false)
 }
 
 // Does this data have server-level user information?
-func (this *RawUserData) HasServerInfo() bool {
+func (this *RawServerUserData) HasServerInfo() bool {
 	return (this.Name != "") || (this.Role != "")
 }
 
 // Does this data have course-level user information?
-func (this *RawUserData) HasCourseInfo() bool {
+func (this *RawServerUserData) HasCourseInfo() bool {
 	return (this.Course != "") || (this.CourseRole != "") || (this.CourseLMSID != "")
 }

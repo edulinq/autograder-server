@@ -26,8 +26,8 @@ func TestUpsert(test *testing.T) {
 			email:     "server-admin",
 			permError: false,
 			options: &users.UpsertUsersOptions{
-				RawUsers: []*model.RawUserData{
-					&model.RawUserData{
+				RawUsers: []*model.RawServerUserData{
+					&model.RawServerUserData{
 						Email: "new@test.edulinq.org",
 						Name:  "new",
 						Role:  model.GetServerUserRoleString(model.ServerRoleUser),
@@ -52,8 +52,8 @@ func TestUpsert(test *testing.T) {
 			email:     "server-admin",
 			permError: false,
 			options: &users.UpsertUsersOptions{
-				RawUsers: []*model.RawUserData{
-					&model.RawUserData{
+				RawUsers: []*model.RawServerUserData{
+					&model.RawServerUserData{
 						Email:       "new@test.edulinq.org",
 						Name:        "new",
 						Role:        model.GetServerUserRoleString(model.ServerRoleUser),
@@ -82,8 +82,8 @@ func TestUpsert(test *testing.T) {
 			email:     "server-owner",
 			permError: false,
 			options: &users.UpsertUsersOptions{
-				RawUsers: []*model.RawUserData{
-					&model.RawUserData{
+				RawUsers: []*model.RawServerUserData{
+					&model.RawServerUserData{
 						Email: "course-student@test.edulinq.org",
 						Name:  "new",
 					},
@@ -105,8 +105,8 @@ func TestUpsert(test *testing.T) {
 			email:     "server-owner",
 			permError: false,
 			options: &users.UpsertUsersOptions{
-				RawUsers: []*model.RawUserData{
-					&model.RawUserData{
+				RawUsers: []*model.RawServerUserData{
+					&model.RawServerUserData{
 						Email:       "course-student@test.edulinq.org",
 						Course:      "new-course",
 						CourseRole:  model.GetCourseUserRoleString(model.CourseRoleStudent),

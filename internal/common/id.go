@@ -8,7 +8,7 @@ import (
 
 // Return a cleaned ID, or an error if the ID cannot be cleaned.
 func ValidateID(id string) (string, error) {
-	id = strings.ToLower(id)
+	id = strings.TrimSpace(strings.ToLower(id))
 
 	if !regexp.MustCompile(`^[a-z0-9\._\-]+$`).MatchString(id) {
 		return "", fmt.Errorf("IDs must only have letters, digits, and single sequences of periods, underscores, and hyphens, found '%s'.", id)

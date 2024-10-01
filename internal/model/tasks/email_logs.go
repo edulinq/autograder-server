@@ -34,3 +34,7 @@ func (this *EmailLogsTask) Validate(course TaskCourse) error {
 
 	return nil
 }
+
+func (this *EmailLogsTask) String() string {
+	return this.BaseTask.String()
+}

@@ -74,7 +74,15 @@ func (this *DBTests) DBTestGetLogsLevel(test *testing.T) {
 	}
 
 	for i, level := range levels {
-		records, err := GetLogRecords(level, timestamp.Zero(), "", "", "")
+		query := log.ParsedLogQuery{
+			Level:        level,
+			After:        timestamp.Zero(),
+			CourseID:     "",
+			AssignmentID: "",
+			UserEmail:    "",
+		}
+
+		records, err := GetLogRecords(query)
 		if err != nil {
 			test.Errorf("Level '%s': Failed to get log records: '%v'.", level.String(), err)
 			continue
@@ -148,7 +156,15 @@ func (this *DBTests) DBTestGetLogsTime(test *testing.T) {
 	}
 
 	for i, instance := range times {
-		records, err := GetLogRecords(log.LevelTrace, instance, "", "", "")
+		query := log.ParsedLogQuery{
+			Level:        log.LevelTrace,
+			After:        instance,
+			CourseID:     "",
+			AssignmentID: "",
+			UserEmail:    "",
+		}
+
+		records, err := GetLogRecords(query)
 		if err != nil {
 			test.Errorf("Case %d: Failed to get log records: '%v'.", i, err)
 			continue
@@ -185,8 +201,12 @@ func (this *DBTests) DBTestGetLogsContext(test *testing.T) {
 	defer log.SetLevelFatal()
 
 	log.Info("msg", log.NewCourseAttr("C"))
-	log.Info("msg", log.NewAssignmentAttr("A"))
+	log.Info("msg", log.NewCourseAttr("C"), log.NewAssignmentAttr("A"))
 	log.Info("msg", log.NewUserAttr("U"))
+
+	courseRecord := &log.Record{log.LevelInfo, "msg", 0, "", "C", "", "", nil}
+	assignmentRecord := &log.Record{log.LevelInfo, "msg", 0, "", "C", "A", "", nil}
+	userRecord := &log.Record{log.LevelInfo, "msg", 0, "", "", "", "U", nil}
 
 	testCases := []struct {
 		courseID        string
@@ -194,13 +214,30 @@ func (this *DBTests) DBTestGetLogsContext(test *testing.T) {
 		userID          string
 		expectedRecords []*log.Record
 	}{
-		{"C", "", "", []*log.Record{&log.Record{log.LevelInfo, "msg", 0, "", "C", "", "", nil}}},
-		{"", "A", "", []*log.Record{&log.Record{log.LevelInfo, "msg", 0, "", "", "A", "", nil}}},
-		{"", "", "U", []*log.Record{&log.Record{log.LevelInfo, "msg", 0, "", "", "", "U", nil}}},
+		{"C", "", "", []*log.Record{courseRecord, assignmentRecord}},
+		{"C", "A", "", []*log.Record{assignmentRecord}},
+		{"", "", "U", []*log.Record{userRecord}},
+
+		// Assignment queries must have courses.
+		{"", "A", "", []*log.Record{}},
+
+		{"", "", "", []*log.Record{
+			courseRecord,
+			assignmentRecord,
+			userRecord,
+		}},
 	}
 
 	for i, testCase := range testCases {
-		records, err := GetLogRecords(log.LevelTrace, timestamp.Zero(), testCase.courseID, testCase.assignmentID, testCase.userID)
+		query := log.ParsedLogQuery{
+			Level:        log.LevelTrace,
+			After:        timestamp.Zero(),
+			CourseID:     testCase.courseID,
+			AssignmentID: testCase.assignmentID,
+			UserEmail:    testCase.userID,
+		}
+
+		records, err := GetLogRecords(query)
 		if err != nil {
 			test.Errorf("Case %d: Failed to get log records: '%v'.", i, err)
 			continue

@@ -49,6 +49,10 @@ type UserCourseInfo struct {
 }
 
 func (this *ServerUser) Validate() error {
+	return this.validate(true)
+}
+
+func (this *ServerUser) validate(checkAll bool) error {
 	this.Email = strings.TrimSpace(this.Email)
 	if this.Email == "" {
 		return fmt.Errorf("User email is empty.")
@@ -64,6 +68,12 @@ func (this *ServerUser) Validate() error {
 
 		if name == "" {
 			return fmt.Errorf("User '%s' has an empty (but not nil) name.", this.Email)
+		}
+	}
+
+	if checkAll {
+		if this.Role == ServerRoleUnknown {
+			return fmt.Errorf("User '%s' has an unknown server role. Normal users are not allowed to have this role.", this.Email)
 		}
 	}
 
@@ -161,6 +171,11 @@ func (this *ServerUser) GetCourseRole(courseID string) CourseUserRole {
 	}
 
 	return info.Role
+}
+
+func (this *ServerUser) IsEnrolled(courseID string) bool {
+	_, exists := this.CourseInfo[courseID]
+	return exists
 }
 
 // Convert this server user into a course user for the specific course.

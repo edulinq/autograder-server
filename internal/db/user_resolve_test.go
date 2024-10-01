@@ -7,7 +7,6 @@ import (
 
 	"github.com/edulinq/autograder/internal/log"
 	"github.com/edulinq/autograder/internal/model"
-	"github.com/edulinq/autograder/internal/timestamp"
 )
 
 func (this *DBTests) DBTestResolveCourseUsers(test *testing.T) {
@@ -28,7 +27,7 @@ func (this *DBTests) DBTestResolveCourseUsers(test *testing.T) {
 	testCases := []struct {
 		input          []string
 		expectedOutput []string
-		addUsers       []*model.CourseUser
+		addUsers       map[string]*model.ServerUser
 		removeUsers    []string
 		numWarnings    int
 	}{
@@ -118,9 +117,29 @@ func (this *DBTests) DBTestResolveCourseUsers(test *testing.T) {
 		{
 			[]string{"student"},
 			[]string{"a_student@test.edulinq.org", "b_student@test.edulinq.org", "course-student@test.edulinq.org"},
-			[]*model.CourseUser{
-				&model.CourseUser{"a_student@test.edulinq.org", nil, model.CourseRoleStudent, nil},
-				&model.CourseUser{"b_student@test.edulinq.org", nil, model.CourseRoleStudent, nil},
+			map[string]*model.ServerUser{
+				"a_student@test.edulinq.org": &model.ServerUser{
+					Email: "a_student@test.edulinq.org",
+					Name:  nil,
+					Role:  model.ServerRoleUser,
+					CourseInfo: map[string]*model.UserCourseInfo{
+						TEST_COURSE_ID: &model.UserCourseInfo{
+							Role:  model.CourseRoleStudent,
+							LMSID: nil,
+						},
+					},
+				},
+				"b_student@test.edulinq.org": &model.ServerUser{
+					Email: "b_student@test.edulinq.org",
+					Name:  nil,
+					Role:  model.ServerRoleUser,
+					CourseInfo: map[string]*model.UserCourseInfo{
+						TEST_COURSE_ID: &model.UserCourseInfo{
+							Role:  model.CourseRoleStudent,
+							LMSID: nil,
+						},
+					},
+				},
 			},
 			[]string{},
 			0,
@@ -158,8 +177,8 @@ func (this *DBTests) DBTestResolveCourseUsers(test *testing.T) {
 		ResetForTesting()
 		course := MustGetCourse(TEST_COURSE_ID)
 
-		for _, newUser := range testCase.addUsers {
-			UpsertCourseUser(course, newUser)
+		if testCase.addUsers != nil {
+			UpsertUsers(testCase.addUsers)
 		}
 
 		for _, removeUser := range testCase.removeUsers {
@@ -178,7 +197,7 @@ func (this *DBTests) DBTestResolveCourseUsers(test *testing.T) {
 			continue
 		}
 
-		logs, err := GetLogRecords(log.LevelWarn, timestamp.Zero(), "", "", "")
+		logs, err := GetLogRecords(log.ParsedLogQuery{Level: log.LevelWarn})
 		if err != nil {
 			test.Errorf("Case %d (%+v): Error getting log records.", i, testCase)
 			continue
