@@ -53,21 +53,21 @@ func TestServerUserListBase(test *testing.T) {
 
 		if testCase.table {
 			oldStdout := os.Stdout
-			readPipe, writePipe, err := os.Pipe()
+			read, write, err := os.Pipe()
 			if err != nil {
 				test.Errorf("Case %d: Failed to create pipe: '%v'.", i, err)
 			}
 
-			os.Stdout = writePipe
+			os.Stdout = write
 
 			cmd.ListServerUsersTable(expectedServerUserInfos)
 
-			writePipe.Close()
+			write.Close()
 
 			os.Stdout = oldStdout
 
 			var outputBuffer bytes.Buffer
-			outputBuffer.ReadFrom(readPipe)
+			outputBuffer.ReadFrom(read)
 
 			capturedOutput := outputBuffer.String()
 
