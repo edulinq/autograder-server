@@ -11,13 +11,21 @@ import (
 	"github.com/edulinq/autograder/internal/util"
 )
 
-func SendAndPrintCMDRequest(endpoint string, request any, responseType any, verbose bool) error {
+type CommonCMDArgs struct {
+	Verbose bool `help:"Use verbose output to show full request/response without specific formatting." default:"false"`
+}
+
+func SendAndPrintCMDRequest(endpoint string, request any, responseType any, verbose bool, customPrint func()) error {
 	response, err := SendCMDRequest(endpoint, request)
 	if err != nil {
 		return fmt.Errorf("Failed to send the CMD request: '%w'.", err)
 	}
 
-	PrintCMDResponse(request, response, responseType, verbose)
+	if customPrint != nil {
+		PrintCMDResponseFull(request, response, responseType, verbose, customPrint)
+	} else {
+		PrintCMDResponseFull(request, response, responseType, verbose, nil)
+	}
 
 	return nil
 }
@@ -63,14 +71,13 @@ func SendCMDRequest(endpoint string, request any) (core.APIResponse, error) {
 	return response, nil
 }
 
+func PrintCMDResponse(request any, response core.APIResponse, responseType any) {
+	PrintCMDResponseFull(request, response, responseType, false, nil)
+}
+
 // Print the CMD response in it's expected JSON format.
 // If verbose is true, it also displays the complete request and response.
-func PrintCMDResponse(request any, response core.APIResponse, responseType any, verbose bool) {
-	if verbose {
-		fmt.Printf("\nAutograder Request:\n---\n%s\n---\n", util.MustToJSONIndent(request))
-		fmt.Printf("\nAutograder Response:\n---\n%s\n---\n", util.MustToJSONIndent(response))
-	}
-
+func PrintCMDResponseFull(request any, response core.APIResponse, responseType any, verbose bool, customPrint func()) {
 	if !response.Success {
 		fmt.Println(response.Message)
 
@@ -78,7 +85,16 @@ func PrintCMDResponse(request any, response core.APIResponse, responseType any, 
 		return
 	}
 
-	responseContent := reflect.New(reflect.TypeOf(responseType)).Interface()
-	util.MustJSONFromString(util.MustToJSON(response.Content), &responseContent)
-	fmt.Println(util.MustToJSONIndent(responseContent))
+	if verbose {
+		fmt.Printf("\nAutograder Request:\n---\n%s\n---\n", util.MustToJSONIndent(request))
+		fmt.Printf("\nAutograder Response:\n---\n%s\n---\n", util.MustToJSONIndent(response))
+	}
+
+	if customPrint != nil {
+		customPrint()
+	} else {
+		responseContent := reflect.New(reflect.TypeOf(responseType)).Interface()
+		util.MustJSONFromString(util.MustToJSON(response.Content), &responseContent)
+		fmt.Println(util.MustToJSONIndent(responseContent))
+	}
 }

@@ -11,8 +11,6 @@ import (
 	"github.com/edulinq/autograder/internal/model"
 )
 
-var SERVER_USER_INFO_ROW_COLUMNS []string = []string{"email", "name", "server-role", "course-name", "course-role"}
-
 type UserInfoType string
 
 const (

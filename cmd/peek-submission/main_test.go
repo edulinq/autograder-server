@@ -3,7 +3,6 @@ package main
 import (
 	"testing"
 
-	"github.com/edulinq/autograder/internal/api/core"
 	"github.com/edulinq/autograder/internal/api/courses/assignments/submissions"
 	"github.com/edulinq/autograder/internal/cmd"
 	"github.com/edulinq/autograder/internal/util"
@@ -16,23 +15,24 @@ func TestMain(suite *testing.M) {
 
 func TestPeekBase(test *testing.T) {
 	testCases := []struct {
-		targetEmail         string
-		courseID            string
-		assignmentID        string
-		targetSubmission    string
-		expectedSubmimssion string
-		expectedExitCode    int
+		targetEmail          string
+		courseID             string
+		assignmentID         string
+		targetSubmission     string
+		expectedSubmission   string
+		expectedExitCode     int
+		expectedErrorMessage string
 	}{
-		{"course-student@test.edulinq.org", "course101", "hw0", "", "1697406272", 0},
-		{"course-student@test.edulinq.org", "course101", "hw0", "1697406272", "1697406272", 0},
-		{"course-student@test.edulinq.org", "course101", "hw0", "course101::hw0::student@test.com::1697406256", "1697406256", 0},
+		{"course-student@test.edulinq.org", "course101", "hw0", "", "1697406272", 0, ""},
+		{"course-student@test.edulinq.org", "course101", "hw0", "1697406272", "1697406272", 0, ""},
+		{"course-student@test.edulinq.org", "course101", "hw0", "course101::hw0::student@test.com::1697406256", "1697406256", 0, ""},
 
-		{"course-admin@test.edulinq.org", "course101", "hw0", "", "", 0},
-		{"course-student@test.edulinq.org", "course101", "hw0", "ZZZ", "", 0},
+		{"course-admin@test.edulinq.org", "course101", "hw0", "", "", 0, ""},
+		{"course-student@test.edulinq.org", "course101", "hw0", "ZZZ", "", 0, ""},
 
-		{"course-student@test.edulinq.org", "ZZZ", "hw0", "", "", 2},
-		{"course-student@test.edulinq.org", "course101", "ZZZ", "", "", 2},
-		{"course-student@test.edulinq.org", "ZZZ", "ZZZ", "", "", 2},
+		{"course-student@test.edulinq.org", "ZZZ", "hw0", "", "", 2, "Could not find course: 'ZZZ'.\n"},
+		{"course-student@test.edulinq.org", "course101", "zzz", "", "", 2, "Could not find assignment: 'zzz'.\n"},
+		{"course-student@test.edulinq.org", "ZZZ", "zzz", "", "", 2, "Could not find course: 'ZZZ'.\n"},
 	}
 
 	for i, testCase := range testCases {
@@ -49,13 +49,17 @@ func TestPeekBase(test *testing.T) {
 			continue
 		}
 
-		if len(stderr) > 0 {
-			test.Errorf("Case %d: CMD has content in stderr: '%s'.", i, stderr)
+		if exitCode != testCase.expectedExitCode {
+			test.Errorf("Case %d: Unexpected exit code. Expected: '%d', Actual: '%d'.", i, testCase.expectedExitCode, exitCode)
 			continue
 		}
 
-		if exitCode != testCase.expectedExitCode {
-			test.Errorf("Case %d: Unexpected exit code. Expected: '%d', Actual: '%d'.", i, testCase.expectedExitCode, exitCode)
+		if testCase.expectedErrorMessage != "" && stdout != testCase.expectedErrorMessage {
+			test.Errorf("Case: %d: Unexpected error message. Expected: '%s', Actual: '%s'.", i, testCase.expectedErrorMessage, stdout)
+		}
+
+		if len(stderr) > 0 {
+			test.Errorf("Case %d: CMD has content in stderr: '%s'.", i, stderr)
 			continue
 		}
 
@@ -63,13 +67,10 @@ func TestPeekBase(test *testing.T) {
 			continue
 		}
 
-		var response core.APIResponse
-		util.MustJSONFromString(stdout, &response)
-
 		var responseContent submissions.FetchUserPeekResponse
 		util.MustJSONFromString(stdout, &responseContent)
 
-		expectedHasSubmission := (testCase.expectedSubmimssion != "")
+		expectedHasSubmission := (testCase.expectedSubmission != "")
 		actualHasSubmission := responseContent.FoundSubmission
 		if expectedHasSubmission != actualHasSubmission {
 			test.Errorf("Case %d: Incorrect submission existence. Expected: '%v', Actual: '%v'.", i, expectedHasSubmission, actualHasSubmission)
@@ -80,8 +81,8 @@ func TestPeekBase(test *testing.T) {
 			continue
 		}
 
-		if testCase.expectedSubmimssion != responseContent.GradingInfo.ShortID {
-			test.Errorf("Case %d: Incorrect submission ID. Expected: '%s', Actual: '%s'.", i, testCase.expectedSubmimssion, responseContent.GradingInfo.ShortID)
+		if testCase.expectedSubmission != responseContent.GradingInfo.ShortID {
+			test.Errorf("Case %d: Incorrect submission ID. Expected: '%s', Actual: '%s'.", i, testCase.expectedSubmission, responseContent.GradingInfo.ShortID)
 			continue
 		}
 	}

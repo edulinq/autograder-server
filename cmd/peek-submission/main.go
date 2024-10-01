@@ -12,11 +12,12 @@ import (
 
 var args struct {
 	config.ConfigArgs
+	cmd.CommonCMDArgs
+
 	TargetEmail      string `help:"Email of the user to fetch." arg:""`
 	CourseID         string `help:"ID of the course." arg:""`
 	AssignmentID     string `help:"ID of the assignment." arg:""`
 	TargetSubmission string `help:"ID of the submission. Defaults to the latest submission." arg:"" optional:""`
-	Verbose          bool   `help:"Use verbose output to show full request/response without specific formatting." default:"false"`
 }
 
 func main() {
@@ -44,7 +45,7 @@ func main() {
 		TargetSubmission: args.TargetSubmission,
 	}
 
-	err = cmd.SendAndPrintCMDRequest(`courses/assignments/submissions/fetch/user/peek`, request, submissions.FetchUserPeekResponse{}, args.Verbose)
+	err = cmd.SendAndPrintCMDRequest(`courses/assignments/submissions/fetch/user/peek`, request, submissions.FetchUserPeekResponse{}, args.Verbose, nil)
 	if err != nil {
 		log.Fatal("Failed to peek the user's submission.", err)
 	}

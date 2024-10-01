@@ -1,13 +1,16 @@
 package main
 
 import (
+	"bytes"
+	"os"
 	"reflect"
-	"sort"
 	"testing"
 
+	"github.com/edulinq/autograder/internal/api/core"
 	"github.com/edulinq/autograder/internal/api/users"
 	"github.com/edulinq/autograder/internal/cmd"
 	"github.com/edulinq/autograder/internal/db"
+	"github.com/edulinq/autograder/internal/model"
 	"github.com/edulinq/autograder/internal/util"
 )
 
@@ -17,22 +20,29 @@ func TestMain(suite *testing.M) {
 }
 
 func TestServerUserListBase(test *testing.T) {
+	serverUsersMap := db.MustGetServerUsers()
+
+	serverUsers := make([]*model.ServerUser, 0, len(serverUsersMap))
+	for _, user := range serverUsersMap {
+		serverUsers = append(serverUsers, user)
+	}
+
+	expectedServerUserInfos := core.MustNewServerUserInfos(serverUsers)
+
 	testCases := []struct {
 		expectedNumUsers int
 		expectedExitCode int
+		table            bool
 	}{
-		{10, 0},
-	}
-
-	serverUsersMap := db.MustGetServerUsers()
-
-	expectedEmailList := make([]string, 0, len(serverUsersMap))
-	for _, user := range serverUsersMap {
-		expectedEmailList = append(expectedEmailList, user.Email)
+		{10, 0, false},
+		{10, 0, true},
 	}
 
 	for i, testCase := range testCases {
 		args := []string{}
+		if testCase.table {
+			args = append(args, "--table")
+		}
 
 		stdout, stderr, exitCode, err := cmd.RunCMDTest(test, main, args)
 		if err != nil {
@@ -50,25 +60,33 @@ func TestServerUserListBase(test *testing.T) {
 			continue
 		}
 
-		var responseContent users.ListResponse
-		util.MustJSONFromString(stdout, &responseContent)
+		if testCase.table {
+			oldStdout := os.Stdout
+			r, w, _ := os.Pipe()
+			os.Stdout = w
 
-		actualNumUsers := len(responseContent.Users)
-		if testCase.expectedNumUsers != actualNumUsers {
-			test.Errorf("Case %d: Unexpected number of server users. Expected: '%d', Actual: '%d'.", i, testCase.expectedNumUsers, actualNumUsers)
-			continue
-		}
+			cmd.ListServerUsersTable(expectedServerUserInfos)
 
-		actualEmailList := make([]string, 0, len(responseContent.Users))
-		for _, user := range responseContent.Users {
-			actualEmailList = append(actualEmailList, user.Email)
-		}
+			w.Close()
 
-		sort.Strings(expectedEmailList)
-		sort.Strings(actualEmailList)
+			os.Stdout = oldStdout
 
-		if !reflect.DeepEqual(actualEmailList, expectedEmailList) {
-			test.Errorf("Case %d: Server user email lists do not match. Expected: '%v', Actual: '%v'.", i, expectedEmailList, actualEmailList)
+			var buf bytes.Buffer
+			buf.ReadFrom(r)
+
+			capturedOutput := buf.String()
+
+			if capturedOutput != stdout {
+				test.Errorf("Case %d: Table server user infos do not match. Expected: '%s', Actual: '%s'.", i, capturedOutput, stdout)
+			}
+
+		} else {
+			var responseContent users.ListResponse
+			util.MustJSONFromString(stdout, &responseContent)
+
+			if !reflect.DeepEqual(expectedServerUserInfos, responseContent.Users) {
+				test.Errorf("Case %d: Server user infos do not match. Expected: '%v', Actual: '%v'.", i, expectedServerUserInfos, responseContent.Users)
+			}
 		}
 	}
 }

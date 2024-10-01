@@ -1,8 +1,6 @@
 package main
 
 import (
-	"fmt"
-
 	"github.com/alecthomas/kong"
 
 	"github.com/edulinq/autograder/internal/api/users"
@@ -14,9 +12,9 @@ import (
 
 var args struct {
 	config.ConfigArgs
+	cmd.CommonCMDArgs
 
-	Table   bool `help:"Output data to stdout as a TSV." default:"false"`
-	Verbose bool `help:"Use verbose output to show full request/response without specific formatting." default:"false"`
+	Table bool `help:"Output data to stdout as a TSV." default:"false"`
 }
 
 func main() {
@@ -29,34 +27,19 @@ func main() {
 		log.Fatal("Could not load config options.", err)
 	}
 
-	err = listServerUsers(args.Table)
-	if err != nil {
-		log.Fatal("Failed to list server users.", err)
-	}
-}
-
-func listServerUsers(table bool) error {
 	request := users.ListRequest{}
 
 	response, err := cmd.SendCMDRequest(`users/list`, request)
 	if err != nil {
-		return fmt.Errorf("Failed to send the list server users CMD request: '%w'.", err)
+		log.Fatal("Failed to send the list server users CMD request: '%w'.", err)
 	}
 
 	var responseContent users.ListResponse
 	util.MustJSONFromString(util.MustToJSON(response.Content), &responseContent)
 
-	if config.TESTING_MODE.Get() {
-		cmd.PrintCMDResponse(request, response, users.ListResponse{}, args.Verbose)
-		return nil
+	if args.Table {
+		cmd.PrintCMDResponseFull(request, response, users.ListResponse{}, args.Verbose, func() { cmd.ListServerUsersTable(responseContent.Users) })
+	} else {
+		cmd.PrintCMDResponseFull(request, response, users.ListResponse{}, args.Verbose, nil)
 	}
-
-	if args.Verbose {
-		fmt.Printf("\nAutograder Request:\n---\n%s\n---\n", util.MustToJSONIndent(request))
-		fmt.Printf("\nAutograder Response:\n---\n%s\n---\n", util.MustToJSONIndent(response))
-	}
-
-	cmd.ListUsers(responseContent.Users, args.Table)
-
-	return nil
 }
