@@ -9,7 +9,7 @@ import (
 	"github.com/edulinq/autograder/internal/config"
 	"github.com/edulinq/autograder/internal/db"
 	"github.com/edulinq/autograder/internal/log"
-	"github.com/edulinq/autograder/internal/util"
+	"github.com/edulinq/autograder/internal/procedures/courses"
 )
 
 var args struct {
@@ -35,20 +35,9 @@ func main() {
 		log.Fatal("Failed to parse FileSpec.", err)
 	}
 
-	tempDir, err := util.MkDirTemp("autograder-add-course-source-")
+	courseIDs, err := courses.AddFromFileSpec(spec)
 	if err != nil {
-		log.Fatal("Failed to make temp source dir.", err)
-	}
-	defer util.RemoveDirent(tempDir)
-
-	err = spec.CopyTarget(common.ShouldGetCWD(), tempDir, false)
-	if err != nil {
-		log.Fatal("Failed to copy source.", err)
-	}
-
-	courseIDs, err := db.AddCoursesFromDir(tempDir, spec)
-	if err != nil {
-		log.Fatal("Failed to add course dir.", err)
+		log.Fatal("Failed to add courses from FileSpec.", err)
 	}
 
 	fmt.Printf("Added %d courses.\n", len(courseIDs))
