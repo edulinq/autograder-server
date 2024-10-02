@@ -88,8 +88,7 @@ func MustGetCourses() map[string]*model.Course {
 }
 
 // Load a course into the database from an existing path.
-// This is meant for existing courses, for new courses use AddCourse().
-func loadCourse(path string) (*model.Course, error) {
+func LoadCourse(path string) (*model.Course, error) {
 	if backend == nil {
 		return nil, fmt.Errorf("Database has not been opened.")
 	}
@@ -186,7 +185,7 @@ func AddCourse(path string, source *common.FileSpec) (*model.Course, error) {
 		return nil, fmt.Errorf("Database has not been opened.")
 	}
 
-	course, err := loadCourse(path)
+	course, err := LoadCourse(path)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to load course config '%s': '%w'.", path, err)
 	}
@@ -293,7 +292,7 @@ func UpdateCourseFromSource(course *model.Course) (*model.Course, bool, error) {
 
 	configPath := util.ShouldAbs(configPaths[0])
 
-	newCourse, err := loadCourse(configPath)
+	newCourse, err := LoadCourse(configPath)
 	if err != nil {
 		return nil, false, fmt.Errorf("Failed to load updated course: '%w'.", err)
 	}

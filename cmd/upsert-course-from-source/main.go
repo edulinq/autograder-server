@@ -10,11 +10,13 @@ import (
 	"github.com/edulinq/autograder/internal/db"
 	"github.com/edulinq/autograder/internal/log"
 	"github.com/edulinq/autograder/internal/procedures/courses"
+	"github.com/edulinq/autograder/internal/util"
 )
 
 var args struct {
 	config.ConfigArgs
 	Source string `help:"The source to add a course from." arg:""`
+	DryRun bool   `help:"Do not actually do the operation, just state what you would do." default:"false"`
 }
 
 func main() {
@@ -35,13 +37,19 @@ func main() {
 		log.Fatal("Failed to parse FileSpec.", err)
 	}
 
-	courseIDs, err := courses.AddFromFileSpec(spec)
+	options := courses.CourseUpsertOptions{
+		ContextUser: db.MustGetRoot(),
+		DryRun:      args.DryRun,
+	}
+
+	results, userErrorMessage, err := courses.UpsertFromFileSpec(spec, options)
 	if err != nil {
 		log.Fatal("Failed to add courses from FileSpec.", err)
 	}
 
-	fmt.Printf("Added %d courses.\n", len(courseIDs))
-	for _, courseID := range courseIDs {
-		fmt.Printf("    %s\n", courseID)
+	if userErrorMessage != "" {
+		log.Fatal(userErrorMessage)
 	}
+
+	fmt.Println(util.MustToJSONIndent(results))
 }

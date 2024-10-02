@@ -23,6 +23,11 @@ func (this *backend) ClearCourse(course *model.Course) error {
 		return fmt.Errorf("Failed to remove course dir for '%s': '%w'.", course.GetID(), err)
 	}
 
+	err = this.clearCourseUsers(course)
+	if err != nil {
+		return fmt.Errorf("Failed to drop users from removed course: '%w'.", err)
+	}
+
 	return nil
 }
 

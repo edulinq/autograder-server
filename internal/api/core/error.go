@@ -168,6 +168,22 @@ func NewBadRequestError(locator string, request *APIRequest, message string) *AP
 	}
 }
 
+func NewBadUserRequestError(locator string, request *APIRequestUserContext, message string) *APIError {
+	err := &APIError{
+		RequestID:    request.RequestID,
+		Locator:      locator,
+		Endpoint:     request.Endpoint,
+		Timestamp:    request.Timestamp,
+		LogLevel:     log.LevelInfo,
+		HTTPStatus:   HTTP_STATUS_BAD_REQUEST,
+		InternalText: message,
+		ResponseText: message,
+		UserEmail:    request.UserEmail,
+	}
+
+	return err
+}
+
 func NewBadCourseRequestError(locator string, request *APIRequestCourseUserContext, message string) *APIError {
 	err := &APIError{
 		RequestID:    request.RequestID,
