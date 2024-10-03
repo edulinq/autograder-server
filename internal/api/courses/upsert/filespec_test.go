@@ -29,7 +29,7 @@ func TestFileSpec(test *testing.T) {
 		{"server-creator", testdataDir, "", 5, 5},
 		{"server-creator", emptyDir, "", 0, 0},
 
-		{"server-creator", "", "-615", 0, 0},
+		{"server-creator", "", "-614", 0, 0},
 
 		{"server-user", emptyDir, "-041", 0, 0},
 	}

@@ -22,15 +22,10 @@ func HandleFileSpec(request *FileSpecRequest) (*FileSpecResponse, *core.APIError
 	options := request.CourseUpsertOptions
 	options.ContextUser = request.ServerUser
 
-	results, userError, err := courses.UpsertFromFileSpec(&request.FileSpec, options)
+	results, err := courses.UpsertFromFileSpec(&request.FileSpec, options)
 	if err != nil {
-		return nil, core.NewUserContextInternalError("-614", &request.APIRequestUserContext,
-			"Failed to upsert course from FileSpec.").Err(err).Add("filespec", request.FileSpec)
-	}
-
-	if userError != "" {
-		return nil, core.NewBadUserRequestError("-615", &request.APIRequestUserContext,
-			userError).Add("filespec", request.FileSpec)
+		return nil, core.NewBadUserRequestError("-614", &request.APIRequestUserContext,
+			"Failed to upsert course from FileSpec.").Err(err)
 	}
 
 	return &FileSpecResponse{results}, nil

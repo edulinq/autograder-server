@@ -14,6 +14,10 @@ func (this *TestLMSBackend) FetchUsers() ([]*lmstypes.User, error) {
 		return nil, fmt.Errorf("Failed to get course for local users: '%w'.", err)
 	}
 
+	if course == nil {
+		return nil, fmt.Errorf("Could not find course '%s' for LMS adapter.", this.CourseID)
+	}
+
 	courseUsers, err := db.GetCourseUsers(course)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to get local users: '%w'.", err)

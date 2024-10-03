@@ -42,13 +42,9 @@ func main() {
 		DryRun:      args.DryRun,
 	}
 
-	results, userErrorMessage, err := courses.UpsertFromFileSpec(spec, options)
+	results, err := courses.UpsertFromFileSpec(spec, options)
 	if err != nil {
 		log.Fatal("Failed to add courses from FileSpec.", err)
-	}
-
-	if userErrorMessage != "" {
-		log.Fatal(userErrorMessage)
 	}
 
 	fmt.Println(util.MustToJSONIndent(results))

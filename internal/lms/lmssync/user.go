@@ -2,6 +2,7 @@ package lmssync
 
 import (
 	"fmt"
+	"slices"
 
 	"github.com/edulinq/autograder/internal/db"
 	"github.com/edulinq/autograder/internal/lms"
@@ -67,6 +68,8 @@ func syncLMSUsers(course *model.Course, dryRun bool, sendEmails bool, skipMissin
 				},
 			})
 		}
+
+		slices.SortFunc(results, model.CompareUserOpResultPointer)
 		return results, nil
 	}
 
@@ -93,6 +96,7 @@ func syncLMSUsers(course *model.Course, dryRun bool, sendEmails bool, skipMissin
 
 	// Remove any remaining users from the course.
 	if skipMissing {
+		slices.SortFunc(results, model.CompareUserOpResultPointer)
 		return results, nil
 	}
 
@@ -128,5 +132,6 @@ func syncLMSUsers(course *model.Course, dryRun bool, sendEmails bool, skipMissin
 		}
 	}
 
+	slices.SortFunc(results, model.CompareUserOpResultPointer)
 	return results, nil
 }

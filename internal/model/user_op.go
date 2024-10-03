@@ -158,6 +158,26 @@ func (this *UserOpResult) ToExternalResult() *ExternalUserOpResult {
 	}
 }
 
+func CompareUserOpResultPointer(a *UserOpResult, b *UserOpResult) int {
+	if a == b {
+		return 0
+	}
+
+	if a == nil {
+		return 1
+	}
+
+	if b == nil {
+		return -1
+	}
+
+	return CompareUserOpResult(*a, *b)
+}
+
+func CompareUserOpResult(a UserOpResult, b UserOpResult) int {
+	return strings.Compare(a.Email, b.Email)
+}
+
 func CompareExternalUserOpResultPointer(a *ExternalUserOpResult, b *ExternalUserOpResult) int {
 	if a == b {
 		return 0
