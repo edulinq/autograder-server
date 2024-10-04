@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	MIN_TIME_BETWEEN_EMAILS_MSEC = 100
+	MIN_TIME_BETWEEN_EMAILS_MSEC = 250
 	LOCK_KEY                     = "internal.email"
 )
 
