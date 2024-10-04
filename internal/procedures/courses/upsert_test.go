@@ -15,7 +15,7 @@ import (
 func TestUpsertBase(test *testing.T) {
 	defer db.ResetForTesting()
 
-	testdataDir := filepath.Join(config.GetCourseImportDir(), "testdata")
+	testdataDir := config.GetTestdataDir()
 	course101Path := filepath.Join(testdataDir, "course101", model.COURSE_CONFIG_FILENAME)
 
 	emptyDir := util.MustMkDirTemp("test-internal.procedures.courses.upsert-empty-")

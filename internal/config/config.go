@@ -17,9 +17,6 @@ import (
 const ENV_PREFIX = "AUTOGRADER__"
 const ENV_DOT_REPLACEMENT = "__"
 
-// The test courses are always stored in here.
-const TESTS_DIRNAME = "testdata"
-
 const CONFIG_FILENAME = "config.json"
 const SECRETS_FILENAME = "secrets.json"
 
@@ -63,10 +60,9 @@ func EnableUnitTestingModeFull(loadEnv bool) error {
 	}
 
 	// Copy over test courses.
-	testsDir := filepath.Join(util.RootDirForTesting(), TESTS_DIRNAME)
-	outTestsDir := filepath.Join(GetCourseImportDir(), TESTS_DIRNAME)
+	testsDir := filepath.Join(util.RootDirForTesting(), TESTDATA_DIRNAME)
 
-	err = util.CopyDir(testsDir, outTestsDir, false)
+	err = util.CopyDir(testsDir, GetTestdataDir(), false)
 	if err != nil {
 		return fmt.Errorf("Failed to copy test data into working dir: '%w'.", err)
 	}

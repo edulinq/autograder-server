@@ -71,7 +71,7 @@ type testCaseCopy struct {
 }
 
 func TestFileSpecCopy(test *testing.T) {
-	for i, testCase := range testCasesCopy {
+	for i, testCase := range getCopyTestCases() {
 		err := testCase.Spec.Validate()
 		if err != nil {
 			test.Errorf("Case %d: Failed to validate (%+v): '%v'.", i, testCase.Spec, err)
@@ -87,7 +87,7 @@ func TestFileSpecCopy(test *testing.T) {
 
 		destDir := filepath.Join(tempDir, "dest")
 
-		err = testCase.Spec.CopyTarget(config.GetCourseImportDir(), destDir, testCase.OnlyContents)
+		err = testCase.Spec.CopyTarget(config.GetTestdataDir(), destDir, testCase.OnlyContents)
 		if err != nil {
 			test.Errorf("Case %d: Failed to copy target (%+v): '%v'.", i, testCase.Spec, err)
 			continue
@@ -113,37 +113,40 @@ func TestFileSpecCopy(test *testing.T) {
 	}
 }
 
-var testCasesCopy []*testCaseCopy = []*testCaseCopy{
-	&testCaseCopy{
-		FileSpec{Type: "path", Path: filepath.Join(util.RootDirForTesting(), "testdata", "files", "filespec_test", "spec.txt")},
-		false,
-		"4b6070442f731cb7a83b18e0145c6be1",
-	},
-	&testCaseCopy{
-		FileSpec{Type: "path", Path: filepath.Join(util.RootDirForTesting(), "testdata", "files", "filespec_test")},
-		false,
-		"7bf405075ec83eec2c44ac44ce3385c2",
-	},
-	&testCaseCopy{
-		FileSpec{Type: "path", Path: filepath.Join(util.RootDirForTesting(), "testdata", "files", "filespec_test")},
-		true,
-		"4b6070442f731cb7a83b18e0145c6be1",
-	},
-	&testCaseCopy{
-		FileSpec{Type: "path", Path: filepath.Join(util.RootDirForTesting(), "testdata", "files", "filespec_test", "spec.txt"), Dest: "test.txt"},
-		false,
-		"6911edb915da8cd1fdf1e4b1483d604e",
-	},
-	&testCaseCopy{
-		FileSpec{Type: "path", Path: filepath.Join(util.RootDirForTesting(), "testdata", "files", "filespec_test"), Dest: "test"},
-		false,
-		"720b5768bf364f35c316976e549f1bcd",
-	},
-	&testCaseCopy{
-		FileSpec{Type: "path", Path: filepath.Join(util.RootDirForTesting(), "testdata", "files", "filespec_test"), Dest: "test"},
-		true,
-		"720b5768bf364f35c316976e549f1bcd",
-	},
+// Note that this needs to be a function instead of a variable since the testing base dir does not get set until after static init.
+func getCopyTestCases() []*testCaseCopy {
+	return []*testCaseCopy{
+		&testCaseCopy{
+			FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", "filespec_test", "spec.txt")},
+			false,
+			"4b6070442f731cb7a83b18e0145c6be1",
+		},
+		&testCaseCopy{
+			FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", "filespec_test")},
+			false,
+			"7bf405075ec83eec2c44ac44ce3385c2",
+		},
+		&testCaseCopy{
+			FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", "filespec_test")},
+			true,
+			"4b6070442f731cb7a83b18e0145c6be1",
+		},
+		&testCaseCopy{
+			FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", "filespec_test", "spec.txt"), Dest: "test.txt"},
+			false,
+			"6911edb915da8cd1fdf1e4b1483d604e",
+		},
+		&testCaseCopy{
+			FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", "filespec_test"), Dest: "test"},
+			false,
+			"720b5768bf364f35c316976e549f1bcd",
+		},
+		&testCaseCopy{
+			FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", "filespec_test"), Dest: "test"},
+			true,
+			"720b5768bf364f35c316976e549f1bcd",
+		},
+	}
 }
 
 var testCasesParseValidation []*testCaseParseValidation = []*testCaseParseValidation{

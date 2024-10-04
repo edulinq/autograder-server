@@ -10,13 +10,14 @@ import (
 const (
 	WORK_DIR_BASENAME = "autograder"
 
-	BACKUP_DIRNAME        = "backup"
-	CACHE_DIRNAME         = "cache"
-	CONFIG_DIRNAME        = "config"
-	COURSE_IMPORT_DIRNAME = "course_import"
-	DATABASE_DIRNAME      = "database"
-	LOGS_DIRNAME          = "logs"
-	SOURCES_DIRNAME       = "sources"
+	BACKUP_DIRNAME   = "backup"
+	CACHE_DIRNAME    = "cache"
+	CONFIG_DIRNAME   = "config"
+	DATABASE_DIRNAME = "database"
+	LOGS_DIRNAME     = "logs"
+	SOURCES_DIRNAME  = "sources"
+
+	TESTDATA_DIRNAME = "testdata"
 )
 
 func GetDefaultBaseDir() string {
@@ -57,8 +58,8 @@ func GetConfigDir() string {
 	return filepath.Join(GetWorkDir(), CONFIG_DIRNAME)
 }
 
-func GetCourseImportDir() string {
-	return filepath.Join(GetWorkDir(), COURSE_IMPORT_DIRNAME)
+func GetTestdataDir() string {
+	return filepath.Join(GetWorkDir(), TESTDATA_DIRNAME)
 }
 
 func GetDatabaseDir() string {

@@ -49,12 +49,9 @@ type Backend interface {
 	// Returns (nil, nil) if the course does not exist.
 	GetCourse(courseID string) (*model.Course, error)
 
-	// Load a course into the database and return the course.
-	// This implies loading a course directory from a config and saving it in the db.
-	// Will search for and load any assignments, users, and submissions
-	// located in the same directory tree.
-	// Override any existing settings for this course.
-	LoadCourse(path string) (*model.Course, error)
+	// Add a course to the database specifically for testing purposes.
+	// This course may include test submissions that must also be added.
+	AddTestCourse(path string) (*model.Course, error)
 
 	// Explicitly save a course (which includes all course assignments).
 	SaveCourse(course *model.Course) error
@@ -206,12 +203,12 @@ func Open() error {
 
 	// We are probably running unit tests, load the test data.
 	if config.LOAD_TEST_DATA.Get() {
-		_, err = AddCourses()
+		err = addTestCourses()
 		if err != nil {
 			return fmt.Errorf("Failed to load test courses: '%w'.", err)
 		}
 
-		err = AddTestUsers()
+		err = addTestUsers()
 		if err != nil {
 			return fmt.Errorf("Failed to load test users: '%w'.", err)
 		}

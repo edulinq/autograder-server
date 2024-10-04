@@ -37,7 +37,7 @@ func runSubmissionTests(test *testing.T, parallel bool, useDocker bool) {
 	defer db.ResetForTesting()
 
 	// Directory where all the test courses and other materials are located.
-	baseDir := config.GetCourseImportDir()
+	baseDir := config.GetTestdataDir()
 
 	if useDocker {
 		for _, course := range db.MustGetCourses() {

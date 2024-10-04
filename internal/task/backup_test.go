@@ -11,14 +11,13 @@ import (
 	"github.com/edulinq/autograder/internal/util"
 )
 
-const EXPECTED_MD5 = "0f617c3eb903bbea83963856d7d21d52"
+const EXPECTED_MD5 = "696a4a5f8a81fdf2aa5c50b589ca4bc9"
 
 func TestBackupTempDir(test *testing.T) {
 	tempDir, err := util.MkDirTemp("autograder-test-task-backup-")
 	if err != nil {
 		test.Fatalf("Failed to create temp dir: '%v'.", err)
 	}
-	defer util.RemoveDirent(tempDir)
 
 	doBackup(test, tempDir, filepath.Join(tempDir, "course101-test.zip"))
 }
@@ -32,7 +31,6 @@ func TestBackupOptionsDir(test *testing.T) {
 	if err != nil {
 		test.Fatalf("Failed to create temp dir: '%v'.", err)
 	}
-	defer util.RemoveDirent(tempDir)
 
 	oldValue := config.TASK_BACKUP_DIR.Get()
 	config.TASK_BACKUP_DIR.Set(tempDir)

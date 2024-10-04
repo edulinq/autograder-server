@@ -94,9 +94,12 @@ func (this *DBTests) DBTestUserGetCourseUsersEmpty(test *testing.T) {
 		test.Fatalf("Could not find any users when there should be some.")
 	}
 
-	// Clear the db (users) and re-add the courses without server-level users..
+	// Clear the db (users) and re-add the courses without server-level users.
 	MustClear()
-	MustAddCourses()
+	err = addTestCourses()
+	if err != nil {
+		test.Fatalf("Failed to add test courses: '%v'.", err)
+	}
 
 	course = MustGetCourse("course-languages")
 
@@ -521,7 +524,7 @@ func testCourseUsers(test *testing.T, course *model.Course, expected map[string]
 }
 
 func mustLoadTestServerUsers() map[string]*model.ServerUser {
-	path := filepath.Join(config.GetCourseImportDir(), "testdata", model.USERS_FILENAME)
+	path := filepath.Join(config.GetTestdataDir(), model.USERS_FILENAME)
 
 	users, err := model.LoadServerUsersFile(path)
 	if err != nil {

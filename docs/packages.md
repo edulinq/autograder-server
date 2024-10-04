@@ -21,8 +21,8 @@ All these packages (except cmd) live in `internal`.
  10. grader, procedures/logs
  11. procedures/users, report
  12. lms
- 13. scoring
- 14. task
- 15. procedures/courses
+ 13. procedures/courses
+ 14. scoring
+ 15. task
  16. api
  17. cmd

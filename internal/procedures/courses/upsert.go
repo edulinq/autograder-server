@@ -8,7 +8,7 @@ import (
 	"github.com/edulinq/autograder/internal/db"
 	"github.com/edulinq/autograder/internal/lms/lmssync"
 	"github.com/edulinq/autograder/internal/model"
-	"github.com/edulinq/autograder/internal/task"
+	"github.com/edulinq/autograder/internal/model/tasks"
 	"github.com/edulinq/autograder/internal/util"
 )
 
@@ -38,7 +38,7 @@ func upsertFromConfigPath(path string, options CourseUpsertOptions) (*CourseUpse
 
 	// If we are doing an update, stop any existing tasks.
 	if result.Updated && !options.DryRun {
-		task.StopCourse(course.GetID())
+		tasks.Handler.StopCourse(course.GetID())
 	}
 
 	// Update Source Directory
@@ -86,7 +86,7 @@ func upsertFromConfigPath(path string, options CourseUpsertOptions) (*CourseUpse
 	// Schedule Tasks
 	if !options.DryRun && !options.SkipTasks {
 		for _, courseTask := range course.GetTasks() {
-			err = task.Schedule(course, courseTask)
+			err = tasks.Handler.Schedule(course, courseTask)
 			if err != nil {
 				return nil, result.CourseID, fmt.Errorf("Failed to schedule task '%s': '%w'.", courseTask.String(), err)
 			}
@@ -185,8 +185,13 @@ func syncSource(course *model.Course, options CourseUpsertOptions) (*model.Cours
 
 // Copy over contents from the given directory into the course's canonical source dir.
 func updateSourceDirFromConfigPath(configPath string, course *model.Course) error {
-	baseDir := filepath.Dir(configPath)
-	sourceDir := course.GetBaseSourceDir()
+	baseDir := util.ShouldAbs(filepath.Dir(configPath))
+	sourceDir := util.ShouldAbs(course.GetBaseSourceDir())
+
+	// Check if we are updating from the same source.
+	if baseDir == sourceDir {
+		return nil
+	}
 
 	if util.PathExists(sourceDir) {
 		err := util.RemoveDirent(sourceDir)

@@ -42,6 +42,10 @@ var stoppedTasks map[string]bool = make(map[string]bool)
 // The boolean return indicates if a task should be scheduled again.
 type RunFunc func(*model.Course, tasks.ScheduledTask) (bool, error)
 
+func init() {
+	go watchHandle()
+}
+
 func Schedule(course *model.Course, target tasks.ScheduledTask) error {
 	if target.IsDisabled() || config.NO_TASKS.Get() {
 		return nil

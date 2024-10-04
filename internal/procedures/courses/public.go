@@ -10,6 +10,13 @@ import (
 	"github.com/edulinq/autograder/internal/util"
 )
 
+// Update a course from it's local source directory.
+// This effectifly just triggers a normal update.
+func UpdateFromLocalSource(course *model.Course, options CourseUpsertOptions) (*CourseUpsertResult, error) {
+	result, _, err := upsertFromConfigPath(course.GetSourceConfigPath(), options)
+	return result, err
+}
+
 // Upsert any courses represented by the given filespec.
 // Any error that occurs will be returned.
 // If an error occurs within the context of a course,

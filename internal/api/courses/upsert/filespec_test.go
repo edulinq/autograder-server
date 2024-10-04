@@ -14,7 +14,7 @@ import (
 func TestFileSpec(test *testing.T) {
 	defer db.ResetForTesting()
 
-	testdataDir := filepath.Join(config.GetCourseImportDir(), "testdata")
+	testdataDir := config.GetTestdataDir()
 
 	emptyDir := util.MustMkDirTemp("test-internal.api.courses.upsert.filespec-")
 

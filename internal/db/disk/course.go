@@ -5,7 +5,6 @@ import (
 	"path/filepath"
 
 	"github.com/edulinq/autograder/internal/common"
-	"github.com/edulinq/autograder/internal/log"
 	"github.com/edulinq/autograder/internal/model"
 	"github.com/edulinq/autograder/internal/util"
 )
@@ -31,7 +30,7 @@ func (this *backend) ClearCourse(course *model.Course) error {
 	return nil
 }
 
-func (this *backend) LoadCourse(path string) (*model.Course, error) {
+func (this *backend) AddTestCourse(path string) (*model.Course, error) {
 	path = util.ShouldAbs(path)
 
 	common.Lock(path)
@@ -41,10 +40,6 @@ func (this *backend) LoadCourse(path string) (*model.Course, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	log.Trace("Loaded disk course.",
-		log.NewAttr("database", "disk"), log.NewAttr("path", path),
-		log.NewAttr("id", course.GetID()), log.NewAttr("num-assignments", len(course.Assignments)))
 
 	err = this.saveCourseLock(course, false)
 	if err != nil {

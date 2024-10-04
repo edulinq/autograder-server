@@ -5,18 +5,17 @@ import (
 
 	"github.com/alecthomas/kong"
 
-	"github.com/edulinq/autograder/internal/common"
 	"github.com/edulinq/autograder/internal/config"
 	"github.com/edulinq/autograder/internal/db"
 	"github.com/edulinq/autograder/internal/log"
 	"github.com/edulinq/autograder/internal/procedures/courses"
+	"github.com/edulinq/autograder/internal/util"
 )
 
 var args struct {
 	config.ConfigArgs
 	Course string `help:"ID of the course." arg:""`
-	Source string `help:"An optional new source for the course."`
-	Clear  bool   `help:"Clear the course before updating." default:"false"`
+	DryRun bool   `help:"Do not actually do the operation, just state what you would do." default:"false"`
 }
 
 func main() {
@@ -34,35 +33,15 @@ func main() {
 
 	course := db.MustGetCourse(args.Course)
 
-	if args.Clear {
-		err := db.ClearCourse(course)
-		if err != nil {
-			log.Fatal("Failed to clear course.", err, course)
-		}
+	options := courses.CourseUpsertOptions{
+		ContextUser: db.MustGetRoot(),
+		DryRun:      args.DryRun,
 	}
 
-	if args.Source != "" {
-		spec, err := common.ParseFileSpec(args.Source)
-		if err != nil {
-			log.Fatal("Failed to parse FileSpec.", err, course)
-		}
-
-		course.Source = spec
-
-		err = db.SaveCourse(course)
-		if err != nil {
-			log.Fatal("Failed to save course.", err, course)
-		}
-	}
-
-	updated, err := courses.UpdateCourse(course, false)
+	result, err := courses.UpdateFromLocalSource(course, options)
 	if err != nil {
 		log.Fatal("Failed to update course.", err, course)
 	}
 
-	if updated {
-		fmt.Println("Course updated.")
-	} else {
-		fmt.Println("No update available.")
-	}
+	fmt.Println(util.MustToJSONIndent(result))
 }
