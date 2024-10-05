@@ -15,7 +15,6 @@ var (
 	KEEP_BUILD_DIRS   = MustNewBoolOption("build.keep", false, "Keep artifacts/dirs used when building (not building the server itself, but things like assignment images).")
 	UNIT_TESTING_MODE = MustNewBoolOption("testing", false, "Assume tests are being run, which may alter some operations.")
 	LOAD_TEST_DATA    = MustNewBoolOption("testdata.load", false, "Load test data when the database opens.")
-	NO_AUTH           = MustNewBoolOption("api.noauth", false, "Disable authentication on the API.")
 	STORE_HTTP        = MustNewStringOption("http.store", "", "Store HTTP requests made by the server to the specified directory.")
 
 	// Logging

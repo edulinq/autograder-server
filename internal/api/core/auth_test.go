@@ -3,7 +3,6 @@ package core
 import (
 	"testing"
 
-	"github.com/edulinq/autograder/internal/config"
 	"github.com/edulinq/autograder/internal/util"
 )
 
@@ -16,47 +15,26 @@ func TestAuth(test *testing.T) {
 	testCases := []struct {
 		email   string
 		pass    string
-		noauth  bool
 		locator string
 	}{
-		{"course-owner@test.edulinq.org", "course-owner", false, ""},
-		{"course-admin@test.edulinq.org", "course-admin", false, ""},
-		{"course-grader@test.edulinq.org", "course-grader", false, ""},
-		{"course-student@test.edulinq.org", "course-student", false, ""},
-		{"course-other@test.edulinq.org", "course-other", false, ""},
+		{"course-owner@test.edulinq.org", "course-owner", ""},
+		{"course-admin@test.edulinq.org", "course-admin", ""},
+		{"course-grader@test.edulinq.org", "course-grader", ""},
+		{"course-student@test.edulinq.org", "course-student", ""},
+		{"course-other@test.edulinq.org", "course-other", ""},
 
-		{"Z", "course-student", false, "-013"},
-		{"Zstudent@test.edulinq.org", "course-student", false, "-013"},
-		{"course-student@test.edulinq.orgZ", "course-student", false, "-013"},
-		{"student", "course-student", false, "-013"},
+		{"Z", "course-student", "-013"},
+		{"Zstudent@test.edulinq.org", "course-student", "-013"},
+		{"course-student@test.edulinq.orgZ", "course-student", "-013"},
+		{"student", "course-student", "-013"},
 
-		{"course-student@test.edulinq.org", "", false, "-014"},
-		{"course-student@test.edulinq.org", "Zcourse-student", false, "-014"},
-		{"course-student@test.edulinq.org", "course-studentZ", false, "-014"},
+		{"course-student@test.edulinq.org", "", "-014"},
+		{"course-student@test.edulinq.org", "Zcourse-student", "-014"},
+		{"course-student@test.edulinq.org", "course-studentZ", "-014"},
 
-		{"course-owner@test.edulinq.org", "course-owner", true, ""},
-		{"course-admin@test.edulinq.org", "course-admin", true, ""},
-		{"course-grader@test.edulinq.org", "course-grader", true, ""},
-		{"course-student@test.edulinq.org", "course-student", true, ""},
-		{"course-other@test.edulinq.org", "course-other", true, ""},
-
-		{"Z", "course-student", true, "-013"},
-		{"Zstudent@test.edulinq.org", "course-student", true, "-013"},
-		{"course-student@test.edulinq.orgZ", "course-student", true, "-013"},
-		{"student", "course-student", true, "-013"},
-
-		{"course-student@test.edulinq.org", "", true, ""},
-		{"course-student@test.edulinq.org", "Zcourse-student", true, ""},
-		{"course-student@test.edulinq.org", "course-studentZ", true, ""},
-
-		{"root", "", true, "-051"},
-		{"root", "", false, "-051"},
-		{"root", "root", true, "-051"},
-		{"root", "root", false, "-051"},
+		{"root", "", "-051"},
+		{"root", "root", "-051"},
 	}
-
-	oldNoAuth := config.NO_AUTH.Get()
-	defer config.NO_AUTH.Set(oldNoAuth)
 
 	for i, testCase := range testCases {
 		request := baseAPIRequest{
@@ -66,7 +44,6 @@ func TestAuth(test *testing.T) {
 			},
 		}
 
-		config.NO_AUTH.Set(testCase.noauth)
 		apiErr := ValidateAPIRequest(nil, &request, "")
 
 		if (apiErr == nil) && (testCase.locator != "") {

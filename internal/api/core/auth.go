@@ -1,9 +1,7 @@
 package core
 
 import (
-	"github.com/edulinq/autograder/internal/config"
 	"github.com/edulinq/autograder/internal/db"
-	"github.com/edulinq/autograder/internal/log"
 	"github.com/edulinq/autograder/internal/model"
 )
 
@@ -22,11 +20,6 @@ func (this *APIRequestUserContext) Auth() (*model.ServerUser, *APIError) {
 
 	if user == nil {
 		return nil, NewAuthBadRequestError("-013", this, "Unknown User")
-	}
-
-	if config.NO_AUTH.Get() {
-		log.Debug("Authentication Disabled.", log.NewUserAttr(this.UserEmail))
-		return user, nil
 	}
 
 	auth, err := user.Auth(this.UserPass)
