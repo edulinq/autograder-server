@@ -23,7 +23,7 @@ type GradeOptions struct {
 func GetDefaultGradeOptions() GradeOptions {
 	return GradeOptions{
 		NoDocker:     config.DOCKER_DISABLE.Get(),
-		LeaveTempDir: config.DEBUG.Get(),
+		LeaveTempDir: config.KEEP_BUILD_DIRS.Get(),
 	}
 }
 

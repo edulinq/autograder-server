@@ -11,8 +11,8 @@ var (
 		"The base dir for autograder to store data."+
 			" SHOULD NOT be set in config files (to prevent cycles), only on the command-line.")
 
-	// Debug / Testing
-	DEBUG             = MustNewBoolOption("debug", false, "Enable general debugging.")
+	// Debugging / Testing
+	KEEP_BUILD_DIRS   = MustNewBoolOption("build.keep", false, "Keep artifacts/dirs used when building (not building the server itself, but things like assignment images).")
 	UNIT_TESTING_MODE = MustNewBoolOption("testing", false, "Assume tests are being run, which may alter some operations.")
 	LOAD_TEST_DATA    = MustNewBoolOption("testdata.load", false, "Load test data when the database opens.")
 	NO_AUTH           = MustNewBoolOption("api.noauth", false, "Disable authentication on the API.")
