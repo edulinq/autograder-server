@@ -1,10 +1,11 @@
 package cmd
 
 import (
-	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -140,19 +141,55 @@ func runCMD(mainFunc func(), args []string) (err error) {
 	return err
 }
 
-func RunCommonCMDTests(test *testing.T, mainFunc func(), args []string, expectedExitCode int, index int) (output string, errs error) {
+type CommonCMDTestCases struct {
+	ExpectedExitCode int
+	ExpectedStdout   string
+	ExpectedStderr   string
+}
+
+func RunCommonCMDTests(test *testing.T, mainFunc func(), args []string, commonCases CommonCMDTestCases, prefix string) (string, string, int) {
 	stdout, stderr, exitCode, err := RunCMDTest(test, mainFunc, args)
 	if err != nil {
-		errs = errors.Join(errs, fmt.Errorf("Case %d: CMD run returned an error: '%v'.", index, err))
+		test.Errorf("%sCMD run returned an error: '%v'.", prefix, err)
+	}
+
+	if commonCases.ExpectedStderr != "" {
+		if commonCases.ExpectedStderr != stderr {
+			test.Errorf("%sUnexpected stderr. Expected: '%s', Actual: '%s'.", prefix, commonCases.ExpectedStderr, stderr)
+		}
 	}
 
 	if len(stderr) > 0 {
-		errs = errors.Join(errs, fmt.Errorf("Case %d: CMD has content in stderr: '%s'.", index, stderr))
+		test.Errorf("%sCMD has content in stderr: '%s'.", prefix, stderr)
 	}
 
-	if expectedExitCode != exitCode {
-		errs = errors.Join(errs, fmt.Errorf("Case %d: Unexpected exit code. Expected: '%d', Actual: '%d'.", index, expectedExitCode, exitCode))
+	if commonCases.ExpectedExitCode != exitCode {
+		test.Errorf("%sUnexpected exit code. Expected: '%d', Actual: '%d'.", prefix, commonCases.ExpectedExitCode, exitCode)
 	}
 
-	return stdout, errs
+	if !compareOutputs(commonCases.ExpectedStdout, stdout) {
+		test.Errorf("%sUnexpected output. Expected:\n'%s',\nActual:\n'%s'.", prefix, commonCases.ExpectedStdout, stdout)
+	}
+
+	return stdout, stderr, exitCode
+}
+
+func compareOutputs(expected string, actual string) bool {
+	expectedLines := strings.Split(expected, "\n")
+	actualLines := strings.Split(actual, "\n")
+
+	if len(expectedLines) != len(actualLines) {
+		return false
+	}
+
+	for i := range expectedLines {
+		expectedNormalized := regexp.MustCompile(`\s+`).ReplaceAllString(expectedLines[i], " ")
+		actualNormalized := regexp.MustCompile(`\s+`).ReplaceAllString(actualLines[i], " ")
+
+		if expectedNormalized != actualNormalized {
+			return false
+		}
+	}
+
+	return true
 }

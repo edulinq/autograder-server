@@ -7,12 +7,11 @@ import (
 	"github.com/edulinq/autograder/internal/cmd"
 	"github.com/edulinq/autograder/internal/config"
 	"github.com/edulinq/autograder/internal/log"
-	"github.com/edulinq/autograder/internal/util"
 )
 
 var args struct {
 	config.ConfigArgs
-	cmd.CommonCMDArgs
+	cmd.CommonOptions
 
 	Table bool `help:"Output data to stdout as a TSV." default:"false"`
 }
@@ -29,17 +28,9 @@ func main() {
 
 	request := users.ListRequest{}
 
-	response, err := cmd.SendCMDRequest(`users/list`, request)
-	if err != nil {
-		log.Fatal("Failed to send the list server users CMD request: '%w'.", err)
-	}
-
-	var responseContent users.ListResponse
-	util.MustJSONFromString(util.MustToJSON(response.Content), &responseContent)
-
 	if args.Table {
-		cmd.PrintCMDResponseFull(request, response, users.ListResponse{}, args.Verbose, func() { cmd.ListServerUsersTable(responseContent.Users) })
+		cmd.MustHandleCMDRequestAndExitFull(`users/list`, request, users.ListResponse{}, args.CommonOptions, cmd.ListServerUsersTable)
 	} else {
-		cmd.PrintCMDResponseFull(request, response, users.ListResponse{}, args.Verbose, nil)
+		cmd.MustHandleCMDRequestAndExitFull(`users/list`, request, users.ListResponse{}, args.CommonOptions, nil)
 	}
 }

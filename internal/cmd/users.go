@@ -1,22 +1,38 @@
 package cmd
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/edulinq/autograder/internal/api/core"
+	"github.com/edulinq/autograder/internal/api/users"
 	"github.com/edulinq/autograder/internal/util"
 )
 
-func ListServerUsersTable(users []*core.ServerUserInfo) {
-	headers := []string{"email", "name", "server-role", "courses"}
-	fmt.Println(strings.Join(headers, "\t"))
+func ListServerUsersTable(response core.APIResponse) string {
+	var responseContent users.ListResponse
+	util.MustJSONFromString(util.MustToJSON(response.Content), &responseContent)
 
-	for _, user := range users {
+	var serverUsersTable strings.Builder
+	headers := []string{"email", "name", "server-role", "courses"}
+
+	serverUsersTable.WriteString(strings.Join(headers, "\t") + "\n")
+
+	for i, user := range responseContent.Users {
 		coursesJSON := util.MustToJSONIndent(user.Courses)
 
-		row := []string{user.Email, user.Name, user.Role.String(), string(coursesJSON)}
+		serverUsersTable.WriteString(user.Email)
+		serverUsersTable.WriteString("\t")
+		serverUsersTable.WriteString(user.Name)
+		serverUsersTable.WriteString("\t")
+		serverUsersTable.WriteString(user.Role.String())
+		serverUsersTable.WriteString("\t")
+		serverUsersTable.WriteString(coursesJSON)
 
-		fmt.Println(strings.Join(row, "\t"))
+		// Only add a newline if this is not the last user
+		if i < len(responseContent.Users)-1 {
+			serverUsersTable.WriteString("\n")
+		}
 	}
+
+	return serverUsersTable.String()
 }

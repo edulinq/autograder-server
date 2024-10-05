@@ -11,22 +11,30 @@ import (
 	"github.com/edulinq/autograder/internal/util"
 )
 
-type CommonCMDArgs struct {
+type CommonOptions struct {
 	Verbose bool `help:"Use verbose output to show full request/response without specific formatting." default:"false"`
 }
 
-func SendAndPrintCMDRequest(endpoint string, request any, responseType any, verbose bool, customPrint func()) error {
+func MustHandleCMDRequestAndExit(endpoint string, request any, responseType any) error {
+	return MustHandleCMDRequestAndExitFull(endpoint, request, responseType, CommonOptions{}, nil)
+}
+
+func MustHandleCMDRequestAndExitFull(endpoint string, request any, responseType any, commonArgs CommonOptions, customPrintFunc any) error {
 	response, err := SendCMDRequest(endpoint, request)
 	if err != nil {
 		return fmt.Errorf("Failed to send the CMD request: '%w'.", err)
 	}
 
-	if customPrint != nil {
-		PrintCMDResponseFull(request, response, responseType, verbose, customPrint)
-	} else {
-		PrintCMDResponseFull(request, response, responseType, verbose, nil)
+	if !response.Success {
+		fmt.Println(response.Message)
+
+		util.Exit(2)
+		return nil
 	}
 
+	PrintCMDResponseFull(request, response, responseType, commonArgs, customPrintFunc)
+
+	util.Exit(0)
 	return nil
 }
 
@@ -72,26 +80,25 @@ func SendCMDRequest(endpoint string, request any) (core.APIResponse, error) {
 }
 
 func PrintCMDResponse(request any, response core.APIResponse, responseType any) {
-	PrintCMDResponseFull(request, response, responseType, false, nil)
+	PrintCMDResponseFull(request, response, responseType, CommonOptions{}, nil)
 }
 
-// Print the CMD response in it's expected JSON format.
+// Print the CMD response in it's expected or custom format.
 // If verbose is true, it also displays the complete request and response.
-func PrintCMDResponseFull(request any, response core.APIResponse, responseType any, verbose bool, customPrint func()) {
-	if !response.Success {
-		fmt.Println(response.Message)
-
-		util.Exit(2)
-		return
-	}
-
-	if verbose {
+func PrintCMDResponseFull(request any, response core.APIResponse, responseType any, options CommonOptions, customPrintFunc any) {
+	if options.Verbose {
 		fmt.Printf("\nAutograder Request:\n---\n%s\n---\n", util.MustToJSONIndent(request))
 		fmt.Printf("\nAutograder Response:\n---\n%s\n---\n", util.MustToJSONIndent(response))
 	}
 
-	if customPrint != nil {
-		customPrint()
+	if customPrintFunc != nil {
+		customPrintFuncValue := reflect.ValueOf(customPrintFunc)
+
+		responseValue := reflect.ValueOf(response)
+		responseSlice := []reflect.Value{responseValue}
+
+		response := customPrintFuncValue.Call(responseSlice)[0]
+		fmt.Println(response)
 	} else {
 		responseContent := reflect.New(reflect.TypeOf(responseType)).Interface()
 		util.MustJSONFromString(util.MustToJSON(response.Content), &responseContent)
