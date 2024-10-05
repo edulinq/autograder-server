@@ -11,7 +11,6 @@ import (
 	"time"
 
 	"github.com/edulinq/autograder/internal/api/server"
-	"github.com/edulinq/autograder/internal/config"
 	"github.com/edulinq/autograder/internal/db"
 	"github.com/edulinq/autograder/internal/log"
 	"github.com/edulinq/autograder/internal/util"
@@ -32,8 +31,6 @@ func CMDServerTestingMain(suite *testing.M) {
 
 		var serverRun sync.WaitGroup
 		serverRun.Add(1)
-
-		config.NO_AUTH.Set(false)
 
 		go func() {
 			serverRun.Done()

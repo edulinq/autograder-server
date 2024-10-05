@@ -7,7 +7,6 @@ import (
 	"testing"
 
 	"github.com/edulinq/autograder/internal/common"
-	"github.com/edulinq/autograder/internal/config"
 	"github.com/edulinq/autograder/internal/db"
 	"github.com/edulinq/autograder/internal/util"
 )
@@ -39,8 +38,6 @@ func APITestingMain(suite *testing.M, routes *[]*Route) {
 	code := func() int {
 		db.PrepForTestingMain()
 		defer db.CleanupTestingMain()
-
-		config.NO_AUTH.Set(false)
 
 		startTestServer(routes)
 		defer stopTestServer()

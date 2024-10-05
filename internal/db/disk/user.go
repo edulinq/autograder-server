@@ -203,6 +203,27 @@ func (this *backend) upsertUsersLock(upsertUsers map[string]*model.ServerUser, a
 	return nil
 }
 
+func (this *backend) clearCourseUsers(course *model.Course) error {
+	this.userLock.Lock()
+	defer this.userLock.Unlock()
+
+	users, err := this.getServerUsersLock(false)
+	if err != nil {
+		return err
+	}
+
+	for _, user := range users {
+		delete(user.CourseInfo, course.ID)
+	}
+
+	err = util.ToJSONFileIndent(users, this.getServerUsersPath())
+	if err != nil {
+		return fmt.Errorf("Unable to save user's file: '%w'.", err)
+	}
+
+	return err
+}
+
 func (this *backend) getServerUsersPath() string {
 	return filepath.Join(this.baseDir, model.USERS_FILENAME)
 }

@@ -17,9 +17,6 @@ import (
 const ENV_PREFIX = "AUTOGRADER__"
 const ENV_DOT_REPLACEMENT = "__"
 
-// The test courses are always stored in here.
-const TESTS_DIRNAME = "testdata"
-
 const CONFIG_FILENAME = "config.json"
 const SECRETS_FILENAME = "secrets.json"
 
@@ -45,7 +42,7 @@ func EnableUnitTestingMode() error {
 // Changes the base directory to a temp directory and copies over test data.
 // If loadEnv is true, loads environmental variables.
 func EnableUnitTestingModeFull(loadEnv bool) error {
-	TESTING_MODE.Set(true)
+	UNIT_TESTING_MODE.Set(true)
 	NO_TASKS.Set(true)
 	LOAD_TEST_DATA.Set(true)
 
@@ -63,10 +60,9 @@ func EnableUnitTestingModeFull(loadEnv bool) error {
 	}
 
 	// Copy over test courses.
-	testsDir := filepath.Join(util.RootDirForTesting(), TESTS_DIRNAME)
-	outTestsDir := filepath.Join(GetCourseImportDir(), TESTS_DIRNAME)
+	testsDir := filepath.Join(util.RootDirForTesting(), TESTDATA_DIRNAME)
 
-	err = util.CopyDir(testsDir, outTestsDir, false)
+	err = util.CopyDir(testsDir, GetTestdataDir(), false)
 	if err != nil {
 		return fmt.Errorf("Failed to copy test data into working dir: '%w'.", err)
 	}
@@ -76,17 +72,6 @@ func EnableUnitTestingModeFull(loadEnv bool) error {
 	}
 
 	return nil
-}
-
-// A mode intended for testing on the CLI.
-func EnableTestingMode() {
-	TESTING_MODE.Set(true)
-	NO_AUTH.Set(true)
-	NO_STORE.Set(true)
-	NO_TASKS.Set(true)
-
-	DEBUG.Set(true)
-	InitLoggingFromConfig()
 }
 
 func LoadConfigFromDir(dir string) error {

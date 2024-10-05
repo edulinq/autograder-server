@@ -191,7 +191,7 @@ func sendAPIResponse(apiRequest ValidAPIRequest, response http.ResponseWriter,
 	}
 
 	// When in testing mode, allow cross-origin requests.
-	if config.TESTING_MODE.Get() {
+	if config.UNIT_TESTING_MODE.Get() {
 		response.Header().Set("Access-Control-Allow-Origin", "*")
 	}
 

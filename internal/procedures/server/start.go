@@ -34,23 +34,16 @@ func Start() (err error) {
 
 	log.Debug("Running server with working directory.", log.NewAttr("dir", config.GetWorkDir()))
 
-	_, err = db.AddCourses()
-	if err != nil {
-		return fmt.Errorf("Failed to load courses: '%w'.", err)
-	}
-
 	courses, err := db.GetCourses()
 	if err != nil {
 		return fmt.Errorf("Failed to get courses: '%w'.", err)
 	}
 
-	log.Debug("Loaded course(s).", log.NewAttr("count", len(courses)))
+	log.Debug("Found course(s).", log.NewAttr("count", len(courses)))
 
 	// Startup courses (in the background).
 	for _, course := range courses {
-		go func(course *model.Course) {
-			pcourses.UpdateCourse(course, true)
-		}(course)
+		go startCourse(course)
 	}
 
 	// Cleanup any temp dirs.
@@ -64,4 +57,20 @@ func Start() (err error) {
 	log.Debug("Server closed.")
 
 	return err
+}
+
+func startCourse(course *model.Course) {
+	root, err := db.GetRoot()
+	if err != nil {
+		log.Error("Failed to get root for course update.", err, course)
+	}
+
+	options := pcourses.CourseUpsertOptions{
+		ContextUser: root,
+	}
+
+	_, err = pcourses.UpdateFromLocalSource(course, options)
+	if err != nil {
+		log.Error("Failed to update course.", err, course)
+	}
 }

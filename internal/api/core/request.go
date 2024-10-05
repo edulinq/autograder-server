@@ -7,7 +7,6 @@ import (
 	"sync"
 
 	"github.com/edulinq/autograder/internal/common"
-	"github.com/edulinq/autograder/internal/config"
 	"github.com/edulinq/autograder/internal/db"
 	"github.com/edulinq/autograder/internal/model"
 	"github.com/edulinq/autograder/internal/timestamp"
@@ -29,9 +28,6 @@ type APIRequest struct {
 	RequestID string              `json:"-"`
 	Endpoint  string              `json:"-"`
 	Timestamp timestamp.Timestamp `json:"-"`
-
-	// This request is being used as part of a test.
-	TestingMode bool `json:"-"`
 }
 
 // Context for a request that has a user (pretty much the lowest level of request).
@@ -68,8 +64,6 @@ func (this *APIRequest) Validate(request any, endpoint string) *APIError {
 	this.RequestID = util.UUID()
 	this.Endpoint = endpoint
 	this.Timestamp = timestamp.Now()
-
-	this.TestingMode = config.TESTING_MODE.Get()
 
 	return nil
 }

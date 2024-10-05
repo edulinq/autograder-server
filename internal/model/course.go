@@ -1,6 +1,7 @@
 package model
 
 import (
+	"errors"
 	"fmt"
 	"path/filepath"
 	"slices"
@@ -198,6 +199,18 @@ func (this *Course) BuildAssignmentImages(force bool, quick bool, options *docke
 	return goodImageNames, errors
 }
 
+// A simpler interface to BuildAssignmentImages().
+func (this *Course) BuildAssignmentImagesDefault() ([]string, error) {
+	var err error = nil
+
+	imageNames, buildErrs := this.BuildAssignmentImages(false, false, docker.NewBuildOptions())
+	for imageName, buildErr := range buildErrs {
+		err = errors.Join(err, fmt.Errorf("Failed to build image '%s': '%w'.", imageName, buildErr))
+	}
+
+	return imageNames, err
+}
+
 func (this *Course) GetCacheDir() string {
 	return filepath.Join(config.GetCacheDir(), "course_"+this.ID)
 }
@@ -240,4 +253,8 @@ func (this *Course) GetSortedAssignments() []*Assignment {
 
 func (this *Course) GetBaseSourceDir() string {
 	return filepath.Join(config.GetSourcesDir(), this.GetID())
+}
+
+func (this *Course) GetSourceConfigPath() string {
+	return filepath.Join(this.GetBaseSourceDir(), COURSE_CONFIG_FILENAME)
 }

@@ -11,13 +11,11 @@ var (
 		"The base dir for autograder to store data."+
 			" SHOULD NOT be set in config files (to prevent cycles), only on the command-line.")
 
-	// Debug / Testing
-	DEBUG          = MustNewBoolOption("debug", false, "Enable general debugging.")
-	NO_STORE       = MustNewBoolOption("grader.nostore", false, "Do not store grading output (submissions).")
-	TESTING_MODE   = MustNewBoolOption("testing", false, "Assume tests are being run, which may alter some operations.")
-	LOAD_TEST_DATA = MustNewBoolOption("testdata.load", false, "Load test data when the database opens.")
-	NO_AUTH        = MustNewBoolOption("api.noauth", false, "Disable authentication on the API.")
-	STORE_HTTP     = MustNewStringOption("http.store", "", "Store HTTP requests made by the server to the specified directory.")
+	// Debugging / Testing
+	KEEP_BUILD_DIRS   = MustNewBoolOption("build.keep", false, "Keep artifacts/dirs used when building (not building the server itself, but things like assignment images).")
+	UNIT_TESTING_MODE = MustNewBoolOption("testing", false, "Assume tests are being run, which may alter some operations.")
+	LOAD_TEST_DATA    = MustNewBoolOption("testdata.load", false, "Load test data when the database opens.")
+	STORE_HTTP        = MustNewStringOption("http.store", "", "Store HTTP requests made by the server to the specified directory.")
 
 	// Logging
 	LOG_TEXT_LEVEL    = MustNewStringOption("log.text.level", "INFO", "The default logging level for the text (stderr) logger.")

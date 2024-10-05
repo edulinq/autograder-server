@@ -49,23 +49,23 @@ type UserOpResult struct {
 	// The following error occurred during this operation because of the provided data,
 	// i.e., they are caused by the calling user.
 	// All error messages should be safe for users.
-	ValidationError *LocatableError
+	ValidationError *LocatableError `json:"validation-error,omitempty"`
 
 	// The following error occurred during this operation, but not because of the provided data,
 	// i.e., they are the system's fault.
-	// These errors are not guarenteed to be safe for users,
+	// These errors are not guaranteed to be safe for users,
 	// and the calling code should decide how they should be managed.
-	SystemError *LocatableError
+	SystemError *LocatableError `json:"system-error,omitempty"`
 
 	// The following error occurred during this operation, but not because of the provided data,
 	// i.e., the system was unable to communicate the results.
-	// These errors are not guarenteed to be safe for users,
+	// These errors are not guaranteed to be safe for users,
 	// and the calling code should decide how they should be managed.
-	CommunicationError *LocatableError
+	CommunicationError *LocatableError `json:"communication-error,omitempty"`
 
 	// The following cleartext password was generated during this operation.
 	// Care should be taken to not expose this field.
-	CleartextPassword string
+	CleartextPassword string `json:"cleartext-password,omitempty"`
 }
 
 // A user safe representation of the UserOpResult struct.
@@ -85,7 +85,7 @@ type ExternalUserOpResult struct {
 	CommunicationError *ExternalLocatableError `json:"communication-error,omitempty"`
 }
 
-// A struct containg counts summarizing results.
+// A struct containing counts summarizing results.
 // Each value will get +1 for a result that has a matching non-empty value.
 // This means that enrollment/errors will only get +1 regardless of the number of members over 0.
 // Mainly useful for testing.
@@ -156,6 +156,26 @@ func (this *UserOpResult) ToExternalResult() *ExternalUserOpResult {
 		SystemError:        externalSysError,
 		CommunicationError: externalCommError,
 	}
+}
+
+func CompareUserOpResultPointer(a *UserOpResult, b *UserOpResult) int {
+	if a == b {
+		return 0
+	}
+
+	if a == nil {
+		return 1
+	}
+
+	if b == nil {
+		return -1
+	}
+
+	return CompareUserOpResult(*a, *b)
+}
+
+func CompareUserOpResult(a UserOpResult, b UserOpResult) int {
+	return strings.Compare(a.Email, b.Email)
 }
 
 func CompareExternalUserOpResultPointer(a *ExternalUserOpResult, b *ExternalUserOpResult) int {

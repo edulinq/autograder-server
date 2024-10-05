@@ -23,7 +23,7 @@ type GradeOptions struct {
 func GetDefaultGradeOptions() GradeOptions {
 	return GradeOptions{
 		NoDocker:     config.DOCKER_DISABLE.Get(),
-		LeaveTempDir: config.DEBUG.Get(),
+		LeaveTempDir: config.KEEP_BUILD_DIRS.Get(),
 	}
 }
 
@@ -110,11 +110,9 @@ func Grade(assignment *model.Assignment, submissionPath string, user string, mes
 	gradingResult.Info = gradingInfo
 	gradingResult.OutputFilesGZip = outputFileContents
 
-	if !config.NO_STORE.Get() {
-		err = db.SaveSubmission(assignment, &gradingResult)
-		if err != nil {
-			return &gradingResult, nil, fmt.Errorf("Failed to save grading result: '%w'.", err)
-		}
+	err = db.SaveSubmission(assignment, &gradingResult)
+	if err != nil {
+		return &gradingResult, nil, fmt.Errorf("Failed to save grading result: '%w'.", err)
 	}
 
 	return &gradingResult, nil, nil

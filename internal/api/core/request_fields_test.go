@@ -263,7 +263,7 @@ func TestGoodPostFiles(test *testing.T) {
 	routes = append(routes, NewAPIRoute(endpoint, handler))
 
 	paths := []string{
-		filepath.Join(util.RootDirForTesting(), "testdata", "files", "a.txt"),
+		filepath.Join(config.GetTestdataDir(), "files", "a.txt"),
 	}
 
 	response := SendTestAPIRequestFull(test, endpoint, nil, paths, "course-admin")
@@ -349,7 +349,7 @@ func TestBadPostFilesStoreFail(test *testing.T) {
 	routes = append(routes, NewAPIRoute(endpoint, handler))
 
 	paths := []string{
-		filepath.Join(util.RootDirForTesting(), "testdata", "files", "a.txt"),
+		filepath.Join(config.GetTestdataDir(), "files", "a.txt"),
 	}
 
 	// Ensure that storing the files will fail.
@@ -392,7 +392,7 @@ func TestBadPostFilesFileSizeExceeded(test *testing.T) {
 
 	// Two paths provided: a.txt is under the size limit, 1092bytes.txt is over the size limit.
 	paths := []string{
-		filepath.Join(util.RootDirForTesting(), "testdata", "files", "1092bytes.txt"),
+		filepath.Join(config.GetTestdataDir(), "files", "1092bytes.txt"),
 	}
 
 	response := SendTestAPIRequestFull(test, endpoint, nil, paths, "course-admin")

@@ -115,8 +115,8 @@ func testMaxWindowAttemps(test *testing.T, user string, expectReject bool) {
 func submitForRejection(test *testing.T, assignment *model.Assignment, user string, expectedRejection RejectReason) (
 	*model.GradingResult, RejectReason, error) {
 	// Disable testing mode to check for rejection.
-	config.TESTING_MODE.Set(false)
-	defer config.TESTING_MODE.Set(true)
+	config.UNIT_TESTING_MODE.Set(false)
+	defer config.UNIT_TESTING_MODE.Set(true)
 
 	submissionPath := filepath.Join(assignment.GetSourceDir(), SUBMISSION_RELPATH)
 

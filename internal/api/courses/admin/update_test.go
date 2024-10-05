@@ -5,51 +5,35 @@ import (
 
 	"github.com/edulinq/autograder/internal/api/core"
 	"github.com/edulinq/autograder/internal/db"
-	"github.com/edulinq/autograder/internal/model"
 )
 
+// Change the course name and ensure it is back after an update.
 func TestUpdateCourse(test *testing.T) {
-	// Remove a user and ensure the user is back after a reload.
-
-	// Leave the course in a good state after the test.
 	db.ResetForTesting()
 	defer db.ResetForTesting()
 
+	testName := "ZZZ"
+
+	// Change the course's name.
 	course := db.MustGetTestCourse()
+	course.Name = testName
+	db.MustSaveCourse(course)
 
-	count := countAssignments(test, course)
-	if count != 1 {
-		test.Fatalf("Unexpected pre-remove assignment count. Expected 1, found %d.", count)
-	}
-
-	// Remove the assignment by deleting the key.
-	delete(course.Assignments, db.TEST_ASSIGNMENT_ID)
-
-	count = countAssignments(test, course)
-	if count != 0 {
-		test.Fatalf("Unexpected post-remove assignment count. Expected 0, found %d.", count)
-	}
-
-	reloadRequest(test)
-
-	// Must get the course from the db to see updates.
+	// Verify name change.
 	course = db.MustGetTestCourse()
-
-	count = countAssignments(test, course)
-	if count != 1 {
-		test.Fatalf("Unexpected post-update assignment count. Expected 1, found %d.", count)
+	if course.Name != testName {
+		test.Fatalf("Test name was not saved.")
 	}
-}
 
-func reloadRequest(test *testing.T) {
+	// Update.
 	response := core.SendTestAPIRequest(test, core.NewEndpoint(`courses/admin/update`), nil)
 	if !response.Success {
 		test.Errorf("Response is not a success when it should be: '%v'.", response)
 	}
-}
 
-func countAssignments(test *testing.T, course *model.Course) int {
-	assignments := course.GetAssignments()
-
-	return len(assignments)
+	// Verify name change is gone.
+	course = db.MustGetTestCourse()
+	if course.Name == testName {
+		test.Fatalf("Name change survived update.")
+	}
 }

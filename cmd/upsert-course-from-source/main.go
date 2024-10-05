@@ -9,12 +9,14 @@ import (
 	"github.com/edulinq/autograder/internal/config"
 	"github.com/edulinq/autograder/internal/db"
 	"github.com/edulinq/autograder/internal/log"
+	"github.com/edulinq/autograder/internal/procedures/courses"
 	"github.com/edulinq/autograder/internal/util"
 )
 
 var args struct {
 	config.ConfigArgs
 	Source string `help:"The source to add a course from." arg:""`
+	DryRun bool   `help:"Do not actually do the operation, just state what you would do." default:"false"`
 }
 
 func main() {
@@ -35,24 +37,15 @@ func main() {
 		log.Fatal("Failed to parse FileSpec.", err)
 	}
 
-	tempDir, err := util.MkDirTemp("autograder-add-course-source-")
-	if err != nil {
-		log.Fatal("Failed to make temp source dir.", err)
-	}
-	defer util.RemoveDirent(tempDir)
-
-	err = spec.CopyTarget(common.ShouldGetCWD(), tempDir, false)
-	if err != nil {
-		log.Fatal("Failed to copy source.", err)
+	options := courses.CourseUpsertOptions{
+		ContextUser: db.MustGetRoot(),
+		DryRun:      args.DryRun,
 	}
 
-	courseIDs, err := db.AddCoursesFromDir(tempDir, spec)
+	results, err := courses.UpsertFromFileSpec(spec, options)
 	if err != nil {
-		log.Fatal("Failed to add course dir.", err)
+		log.Fatal("Failed to add courses from FileSpec.", err)
 	}
 
-	fmt.Printf("Added %d courses.\n", len(courseIDs))
-	for _, courseID := range courseIDs {
-		fmt.Printf("    %s\n", courseID)
-	}
+	fmt.Println(util.MustToJSONIndent(results))
 }

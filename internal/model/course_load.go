@@ -40,7 +40,7 @@ func FullLoadCourseFromPath(path string) (*Course, []*GradingResult, error) {
 	}
 
 	submissions := []*GradingResult{}
-	if config.TESTING_MODE.Get() {
+	if config.UNIT_TESTING_MODE.Get() {
 		submissions, err = loadStaticSubmissions(path)
 		if err != nil {
 			return nil, nil, fmt.Errorf("Failed to load static submissions for course config '%s': '%w'.", path, err)

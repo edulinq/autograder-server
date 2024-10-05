@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	MIN_TIME_BETWEEN_EMAILS_MSEC = 100
+	MIN_TIME_BETWEEN_EMAILS_MSEC = 250
 	LOCK_KEY                     = "internal.email"
 )
 
@@ -60,7 +60,7 @@ func Send(to []string, subject string, body string, html bool) error {
 // This prevents some email providers (like gmail) from complaining about too many SMTP connections.
 func SendMessage(message *Message) error {
 	// In testing mode, just store the message.
-	if config.TESTING_MODE.Get() {
+	if config.UNIT_TESTING_MODE.Get() {
 		testMessages = append(testMessages, message)
 		return nil
 	}
