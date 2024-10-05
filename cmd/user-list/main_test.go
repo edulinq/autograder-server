@@ -7,22 +7,22 @@ import (
 	"github.com/edulinq/autograder/internal/cmd"
 )
 
+var testCases = []struct {
+	expectedExitCode int
+	table            bool
+	expectedStdout   string
+	expectedStderr   string
+}{
+	{0, false, expectedServerUserList, ""},
+	{0, true, expectedServerUserListTable, ""},
+}
+
 // Use the common main for all tests in this package.
 func TestMain(suite *testing.M) {
 	cmd.CMDServerTestingMain(suite)
 }
 
 func TestServerUserListBase(test *testing.T) {
-	testCases := []struct {
-		expectedExitCode int
-		table            bool
-		expectedStdout   string
-		expectedStderr   string
-	}{
-		{0, false, expectedServerUserList, ""},
-		{0, true, expectedServerUserListTable, ""},
-	}
-
 	for i, testCase := range testCases {
 		args := []string{}
 
@@ -37,5 +37,20 @@ func TestServerUserListBase(test *testing.T) {
 		}
 
 		cmd.RunCommonCMDTests(test, main, args, commonCases, fmt.Sprintf("Case %d: ", i))
+	}
+}
+
+func TestServerUserListVerbose(test *testing.T) {
+	for i, testCase := range testCases {
+		args := []string{}
+
+		if testCase.table {
+			args = append(args, "--table")
+		}
+
+		_, _, _, err := cmd.RunCMDTest(test, main, args)
+		if err != nil {
+			test.Errorf("Case %d: CMD run returned an error: '%v'.", i, err)
+		}
 	}
 }
