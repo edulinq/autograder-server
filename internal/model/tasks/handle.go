@@ -39,7 +39,7 @@ func (this *TasksHandler) StopCourse(courseID string) {
 	defer this.lock.Unlock()
 
 	// Skip in testing mode.
-	if config.TESTING_MODE.Get() {
+	if config.UNIT_TESTING_MODE.Get() {
 		return
 	}
 
@@ -57,7 +57,7 @@ func (this *TasksHandler) Schedule(course any, target ScheduledTask) error {
 	defer this.lock.Unlock()
 
 	// Skip in testing mode.
-	if config.TESTING_MODE.Get() {
+	if config.UNIT_TESTING_MODE.Get() {
 		return nil
 	}
 

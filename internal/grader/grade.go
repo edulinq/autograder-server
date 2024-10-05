@@ -110,11 +110,9 @@ func Grade(assignment *model.Assignment, submissionPath string, user string, mes
 	gradingResult.Info = gradingInfo
 	gradingResult.OutputFilesGZip = outputFileContents
 
-	if !config.NO_STORE.Get() {
-		err = db.SaveSubmission(assignment, &gradingResult)
-		if err != nil {
-			return &gradingResult, nil, fmt.Errorf("Failed to save grading result: '%w'.", err)
-		}
+	err = db.SaveSubmission(assignment, &gradingResult)
+	if err != nil {
+		return &gradingResult, nil, fmt.Errorf("Failed to save grading result: '%w'.", err)
 	}
 
 	return &gradingResult, nil, nil

@@ -9,7 +9,7 @@ import (
 )
 
 func ShouldGetCWD() string {
-	if config.TESTING_MODE.Get() {
+	if config.UNIT_TESTING_MODE.Get() {
 		return util.RootDirForTesting()
 	}
 

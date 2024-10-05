@@ -75,8 +75,8 @@ func TestRejectSubmissionMaxAttempts(test *testing.T) {
 	defer db.ResetForTesting()
 
 	// Disable testing mode to check for rejection.
-	config.TESTING_MODE.Set(false)
-	defer config.TESTING_MODE.Set(true)
+	config.UNIT_TESTING_MODE.Set(false)
+	defer config.UNIT_TESTING_MODE.Set(true)
 
 	// Note that we are using a submission from a different assignment.
 	assignment := db.MustGetTestAssignment()

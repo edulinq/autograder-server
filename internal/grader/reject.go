@@ -51,7 +51,7 @@ func checkForRejection(assignment *model.Assignment, submissionPath string, user
 
 func checkSubmissionLimit(assignment *model.Assignment, email string) (RejectReason, error) {
 	// Do not check for submission limits in testing mode.
-	if config.TESTING_MODE.Get() {
+	if config.UNIT_TESTING_MODE.Get() {
 		return nil, nil
 	}
 

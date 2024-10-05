@@ -42,7 +42,7 @@ func EnableUnitTestingMode() error {
 // Changes the base directory to a temp directory and copies over test data.
 // If loadEnv is true, loads environmental variables.
 func EnableUnitTestingModeFull(loadEnv bool) error {
-	TESTING_MODE.Set(true)
+	UNIT_TESTING_MODE.Set(true)
 	NO_TASKS.Set(true)
 	LOAD_TEST_DATA.Set(true)
 
@@ -72,17 +72,6 @@ func EnableUnitTestingModeFull(loadEnv bool) error {
 	}
 
 	return nil
-}
-
-// A mode intended for testing on the CLI.
-func EnableTestingMode() {
-	TESTING_MODE.Set(true)
-	NO_AUTH.Set(true)
-	NO_STORE.Set(true)
-	NO_TASKS.Set(true)
-
-	DEBUG.Set(true)
-	InitLoggingFromConfig()
 }
 
 func LoadConfigFromDir(dir string) error {
