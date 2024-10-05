@@ -29,7 +29,7 @@ func ListServerUsersTable(response core.APIResponse) string {
 		serverUsersTable.WriteString(coursesJSON)
 
 		// Only add a newline if this is not the last user
-		if i < len(responseContent.Users) - 1 {
+		if i < len(responseContent.Users)-1 {
 			serverUsersTable.WriteString("\n")
 		}
 	}
