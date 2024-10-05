@@ -19,7 +19,7 @@ func MustHandleCMDRequestAndExit(endpoint string, request any, responseType any)
 	return MustHandleCMDRequestAndExitFull(endpoint, request, responseType, CommonOptions{}, nil)
 }
 
-func MustHandleCMDRequestAndExitFull(endpoint string, request any, responseType any, commonArgs CommonOptions, customPrintFunc any) error {
+func MustHandleCMDRequestAndExitFull(endpoint string, request any, responseType any, options CommonOptions, customPrintFunc any) error {
 	response, err := SendCMDRequest(endpoint, request)
 	if err != nil {
 		return fmt.Errorf("Failed to send the CMD request: '%w'.", err)
@@ -32,7 +32,7 @@ func MustHandleCMDRequestAndExitFull(endpoint string, request any, responseType 
 		return nil
 	}
 
-	PrintCMDResponseFull(request, response, responseType, commonArgs, customPrintFunc)
+	PrintCMDResponseFull(request, response, responseType, options, customPrintFunc)
 
 	util.Exit(0)
 	return nil

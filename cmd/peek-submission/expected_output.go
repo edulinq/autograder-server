@@ -151,13 +151,3 @@ const incorrectSubmission = `{
     "submission-result": null
 }
 `
-
-const incorrectCourse = `2024-10-04T19:43:59.364-07:00 [ERROR] Failed to parse logging arguments. | Logging argument 0 is an unknown type 'string': 'Could not find course: 'ZZZ'.'.
-2024-10-04T19:43:59.364-07:00 [ERROR] API response was not successful.
-exit status 2
-`
-
-const incorrectAssignment = `2024-10-04T19:44:47.09-07:00 [ERROR] Failed to parse logging arguments. | Logging argument 0 is an unknown type 'string': 'Could not find assignment: 'zzz'.'.
-2024-10-04T19:44:47.09-07:00 [ERROR] API response was not successful.
-exit status 2
-`
