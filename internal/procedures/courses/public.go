@@ -19,6 +19,17 @@ func UpdateFromLocalSource(course *model.Course, options CourseUpsertOptions) (*
 
 // Upsert any courses represented by the given zip file.
 // See UpsertFromFileSpec for error semantics.
+func UpsertFromZipFile(path string, options CourseUpsertOptions) ([]CourseUpsertResult, error) {
+	blob, err := util.ReadBinaryFile(path)
+	if err != nil {
+		return nil, fmt.Errorf("Failed to read zip file: '%w'.", err)
+	}
+
+	return UpsertFromZipBlob(blob, options)
+}
+
+// Upsert any courses represented by the given zip blob.
+// See UpsertFromFileSpec for error semantics.
 func UpsertFromZipBlob(blob []byte, options CourseUpsertOptions) ([]CourseUpsertResult, error) {
 	tempDir, err := util.MkDirTemp("autograder-upsert-course-zip-")
 	if err != nil {

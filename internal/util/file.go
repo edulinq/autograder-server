@@ -10,12 +10,21 @@ import (
 )
 
 func ReadFile(path string) (string, error) {
-	data, err := os.ReadFile(path)
+	data, err := ReadBinaryFile(path)
 	if err != nil {
-		return "", fmt.Errorf("Failed to read file '%s': '%w'.", path, err)
+		return "", err
 	}
 
 	return string(data[:]), nil
+}
+
+func ReadBinaryFile(path string) ([]byte, error) {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return nil, fmt.Errorf("Failed to read file '%s': '%w'.", path, err)
+	}
+
+	return data, nil
 }
 
 func WriteBinaryFile(data []byte, path string) error {
