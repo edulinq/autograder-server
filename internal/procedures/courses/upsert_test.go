@@ -96,18 +96,6 @@ func TestUpsertBase(test *testing.T) {
 			},
 			"",
 		},
-		{
-			// This test should not strictly fail,
-			// but because of the LMS testing infrastructure it will fail.
-			course101Path,
-			CourseUpsertOptions{
-				DryRun:      true,
-				ContextUser: db.MustGetServerUser("server-creator@test.edulinq.org"),
-			},
-			true,
-			nil,
-			"Could not find course 'course101' for LMS adapter.",
-		},
 
 		// Errors
 		{

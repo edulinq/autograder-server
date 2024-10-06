@@ -47,13 +47,11 @@ func ResetForTesting() {
 func CleanupTestingMain() {
 	MustClose()
 
-	/* TEST
 	// Remove any temp directories.
 	err := util.RemoveRecordedTempDirs()
 	if err != nil {
 		log.Error("Error when removing temp dirs.", err)
 	}
-	*/
 }
 
 func addTestCourse(configPath string) (*model.Course, error) {
