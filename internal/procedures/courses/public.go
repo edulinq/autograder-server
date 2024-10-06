@@ -17,6 +17,23 @@ func UpdateFromLocalSource(course *model.Course, options CourseUpsertOptions) (*
 	return result, err
 }
 
+// Upsert any courses represented by the given zip file.
+// See UpsertFromFileSpec for error semantics.
+func UpsertFromZipBlob(blob []byte, options CourseUpsertOptions) ([]CourseUpsertResult, error) {
+	tempDir, err := util.MkDirTemp("autograder-upsert-course-zip-")
+	if err != nil {
+		return nil, fmt.Errorf("Failed to make temp dir: '%w'.", err)
+	}
+	defer util.RemoveDirent(tempDir)
+
+	err = util.UnzipFromBytes(blob, tempDir)
+	if err != nil {
+		return nil, fmt.Errorf("Failed to unzip payload: '%w'.", err)
+	}
+
+	return UpsertFromDir(tempDir, options)
+}
+
 // Upsert any courses represented by the given filespec.
 // Any error that occurs will be returned.
 // If an error occurs within the context of a course,
@@ -31,21 +48,25 @@ func UpsertFromFileSpec(spec *common.FileSpec, options CourseUpsertOptions) ([]C
 		return nil, fmt.Errorf("Given FileSpec is not valid: '%w'.", err)
 	}
 
-	tempDir, err := util.MkDirTemp("autograder-upsert-course-source-")
+	tempDir, err := util.MkDirTemp("autograder-upsert-course-filespec-")
 	if err != nil {
-		return nil, fmt.Errorf("Failed to make temp source dir: '%w'.", err)
+		return nil, fmt.Errorf("Failed to make temp dir: '%w'.", err)
 	}
 	defer util.RemoveDirent(tempDir)
 
 	err = spec.CopyTarget(common.ShouldGetCWD(), tempDir, false)
 	if err != nil {
-		return nil, fmt.Errorf("Failed to copy source: '%w'.", err)
+		return nil, fmt.Errorf("Failed to copy file spec: '%w'.", err)
 	}
 
 	return UpsertFromDir(tempDir, options)
 }
 
 func UpsertFromDir(baseDir string, options CourseUpsertOptions) ([]CourseUpsertResult, error) {
+	if !util.IsDir(baseDir) {
+		return nil, fmt.Errorf("Expecting a dir (course dir), but target ('%s') is file or does not exist.", baseDir)
+	}
+
 	configPaths, err := util.FindFiles(model.COURSE_CONFIG_FILENAME, baseDir)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to search for course configs in '%s': '%w'.", baseDir, err)

@@ -1,6 +1,7 @@
 package courses
 
 import (
+	"fmt"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -12,6 +13,97 @@ import (
 	"github.com/edulinq/autograder/internal/util"
 )
 
+type basePublicUpsertTestCase struct {
+	options              CourseUpsertOptions
+	clearCourses         bool
+	expectedResultCount  int
+	expectedSuccessCount int
+	expectedErrorPart    string
+}
+
+func TestUpsertFromZipBlob(test *testing.T) {
+	defer db.ResetForTesting()
+
+	testdataDir := config.GetTestdataDir()
+	course101Dir := filepath.Join(testdataDir, "course101")
+
+	emptyDir := util.MustMkDirTemp("test-internal.procedures.courses.upsert-zip-empty-")
+
+	testCases := []struct {
+		path    string
+		corrupt bool
+		basePublicUpsertTestCase
+	}{
+		{
+			course101Dir,
+			false,
+			basePublicUpsertTestCase{
+				CourseUpsertOptions{
+					ContextUser: db.MustGetServerUser("server-creator@test.edulinq.org"),
+				},
+				false,
+				1, 1,
+				"",
+			},
+		},
+		{
+			testdataDir,
+			false,
+			basePublicUpsertTestCase{
+				CourseUpsertOptions{
+					ContextUser: db.MustGetServerUser("server-creator@test.edulinq.org"),
+				},
+				false,
+				5, 5,
+				"",
+			},
+		},
+		{
+			emptyDir,
+			false,
+			basePublicUpsertTestCase{
+				CourseUpsertOptions{
+					ContextUser: db.MustGetServerUser("server-creator@test.edulinq.org"),
+				},
+				false,
+				0, 0,
+				"",
+			},
+		},
+
+		// Errors
+		{
+			course101Dir,
+			true,
+			basePublicUpsertTestCase{
+				CourseUpsertOptions{
+					ContextUser: db.MustGetServerUser("server-creator@test.edulinq.org"),
+				},
+				false,
+				0, 0,
+				"Failed to unzip payload",
+			},
+		},
+	}
+
+	for i, testCase := range testCases {
+		prepUpsertTest(test, testCase.basePublicUpsertTestCase)
+
+		blob, err := util.ZipToBytes(testCase.path, "", true)
+		if err != nil {
+			test.Errorf("Case %d: Failed to zip payload: '%v'.", i, err)
+			continue
+		}
+
+		if testCase.corrupt {
+			blob = []byte{0, 1, 2, 3, 4, 5, 6, 7}
+		}
+
+		actualResults, err := UpsertFromZipBlob(blob, testCase.options)
+		processResult(test, testCase.basePublicUpsertTestCase, actualResults, err, fmt.Sprintf("Case %d: ", i))
+	}
+}
+
 func TestUpsertFromFileSpec(test *testing.T) {
 	defer db.ResetForTesting()
 
@@ -19,174 +111,183 @@ func TestUpsertFromFileSpec(test *testing.T) {
 	course101Dir := filepath.Join(testdataDir, "course101")
 	course101ConfigPath := filepath.Join(course101Dir, model.COURSE_CONFIG_FILENAME)
 
-	emptyDir := util.MustMkDirTemp("test-internal.procedures.courses.upsert-empty-")
+	emptyDir := util.MustMkDirTemp("test-internal.procedures.courses.upsert-filespec-empty-")
 
-	missingDir := util.MustMkDirTemp("test-internal.procedures.courses.upsert-missing-")
+	missingDir := util.MustMkDirTemp("test-internal.procedures.courses.upsert-filespec-missing-")
 	err := util.RemoveDirent(missingDir)
 	if err != nil {
 		test.Fatalf("Failed to remove dir: '%v'.", err)
 	}
 
-	badJSONDir := util.MustMkDirTemp("test-internal.procedures.courses.upsert-badJSON-")
+	badJSONDir := util.MustMkDirTemp("test-internal.procedures.courses.upsert-filespec-badJSON-")
 	err = util.WriteFile("{", filepath.Join(badJSONDir, model.COURSE_CONFIG_FILENAME))
 	if err != nil {
 		test.Fatalf("Failed to write bad JSON course config: '%v'.", err)
 	}
 
-	invalidConfigDir := util.MustMkDirTemp("test-internal.procedures.courses.upsert-invalidConfig-")
+	invalidConfigDir := util.MustMkDirTemp("test-internal.procedures.courses.upsert-filespec-invalidConfig-")
 	err = util.WriteFile(`{"id": "_i!@#"}`, filepath.Join(invalidConfigDir, model.COURSE_CONFIG_FILENAME))
 	if err != nil {
 		test.Fatalf("Failed to write invalid config course config: '%v'.", err)
 	}
 
-	// When comparing course-specific results,
-	// we will only check if matching courses contains the provided error string.
-	// Then, both messages will be zeroed.
-
 	testCases := []struct {
-		path                 string
-		options              CourseUpsertOptions
-		clearCourses         bool
-		expectedResultCount  int
-		expectedSuccessCount int
-		expectedErrorPart    string
+		path string
+		basePublicUpsertTestCase
 	}{
 		{
 			course101Dir,
-			CourseUpsertOptions{
-				ContextUser: db.MustGetServerUser("server-creator@test.edulinq.org"),
+			basePublicUpsertTestCase{
+				CourseUpsertOptions{
+					ContextUser: db.MustGetServerUser("server-creator@test.edulinq.org"),
+				},
+				false,
+				1, 1,
+				"",
 			},
-			false,
-			1, 1,
-			"",
 		},
 		{
 			testdataDir,
-			CourseUpsertOptions{
-				ContextUser: db.MustGetServerUser("server-creator@test.edulinq.org"),
+			basePublicUpsertTestCase{
+				CourseUpsertOptions{
+					ContextUser: db.MustGetServerUser("server-creator@test.edulinq.org"),
+				},
+				false,
+				5, 5,
+				"",
 			},
-			false,
-			5, 5,
-			"",
 		},
 		{
 			emptyDir,
-			CourseUpsertOptions{
-				ContextUser: db.MustGetServerUser("server-creator@test.edulinq.org"),
+			basePublicUpsertTestCase{
+				CourseUpsertOptions{
+					ContextUser: db.MustGetServerUser("server-creator@test.edulinq.org"),
+				},
+				false,
+				0, 0,
+				"",
 			},
-			false,
-			0, 0,
-			"",
 		},
 		{
 			course101Dir,
-			CourseUpsertOptions{
-				ContextUser: db.MustGetServerUser("server-creator@test.edulinq.org"),
+			basePublicUpsertTestCase{
+				CourseUpsertOptions{
+					ContextUser: db.MustGetServerUser("server-creator@test.edulinq.org"),
+				},
+				false,
+				1, 1,
+				"",
 			},
-			false,
-			1, 1,
-			"",
 		},
 		{
 			course101ConfigPath,
-			CourseUpsertOptions{
-				ContextUser: db.MustGetServerUser("server-creator@test.edulinq.org"),
+			basePublicUpsertTestCase{
+				CourseUpsertOptions{
+					ContextUser: db.MustGetServerUser("server-creator@test.edulinq.org"),
+				},
+				false,
+				1, 1,
+				"",
 			},
-			false,
-			1, 1,
-			"",
 		},
 
 		{
 			course101Dir,
-			CourseUpsertOptions{
-				ContextUser: db.MustGetServerUser("server-creator@test.edulinq.org"),
-				DryRun:      true,
+			basePublicUpsertTestCase{
+				CourseUpsertOptions{
+					ContextUser: db.MustGetServerUser("server-creator@test.edulinq.org"),
+					DryRun:      true,
+				},
+				false,
+				1, 1,
+				"",
 			},
-			false,
-			1, 1,
-			"",
 		},
 
 		// Errors
 		{
 			missingDir,
-			CourseUpsertOptions{
-				ContextUser: db.MustGetServerUser("server-creator@test.edulinq.org"),
+			basePublicUpsertTestCase{
+				CourseUpsertOptions{
+					ContextUser: db.MustGetServerUser("server-creator@test.edulinq.org"),
+				},
+				false,
+				0, 0,
+				"Source dirent for copy does not exist",
 			},
-			false,
-			0, 0,
-			"Source dirent for copy does not exist",
 		},
 		{
 			badJSONDir,
-			CourseUpsertOptions{
-				ContextUser: db.MustGetServerUser("server-creator@test.edulinq.org"),
+			basePublicUpsertTestCase{
+				CourseUpsertOptions{
+					ContextUser: db.MustGetServerUser("server-creator@test.edulinq.org"),
+				},
+				false,
+				0, 0,
+				"Could not unmarshal JSON file",
 			},
-			false,
-			0, 0,
-			"Could not unmarshal JSON file",
 		},
 		{
 			invalidConfigDir,
-			CourseUpsertOptions{
-				ContextUser: db.MustGetServerUser("server-creator@test.edulinq.org"),
+			basePublicUpsertTestCase{
+				CourseUpsertOptions{
+					ContextUser: db.MustGetServerUser("server-creator@test.edulinq.org"),
+				},
+				false,
+				0, 0,
+				"Could not validate course config",
 			},
-			false,
-			0, 0,
-			"Could not validate course config",
 		},
 		{
 			"",
-			CourseUpsertOptions{
-				ContextUser: db.MustGetServerUser("server-creator@test.edulinq.org"),
+			basePublicUpsertTestCase{
+				CourseUpsertOptions{
+					ContextUser: db.MustGetServerUser("server-creator@test.edulinq.org"),
+				},
+				false,
+				0, 0,
+				"A path FileSpec cannot have an empty path.",
 			},
-			false,
-			0, 0,
-			"A path FileSpec cannot have an empty path.",
 		},
 
 		// Creates
 		{
 			course101Dir,
-			CourseUpsertOptions{
-				ContextUser: db.MustGetServerUser("server-creator@test.edulinq.org"),
+			basePublicUpsertTestCase{
+				CourseUpsertOptions{
+					ContextUser: db.MustGetServerUser("server-creator@test.edulinq.org"),
+				},
+				true,
+				1, 1,
+				"",
 			},
-			true,
-			1, 1,
-			"",
 		},
 		{
 			testdataDir,
-			CourseUpsertOptions{
-				ContextUser: db.MustGetServerUser("server-creator@test.edulinq.org"),
+			basePublicUpsertTestCase{
+				CourseUpsertOptions{
+					ContextUser: db.MustGetServerUser("server-creator@test.edulinq.org"),
+				},
+				true,
+				5, 5,
+				"",
 			},
-			true,
-			5, 5,
-			"",
 		},
 		{
 			emptyDir,
-			CourseUpsertOptions{
-				ContextUser: db.MustGetServerUser("server-creator@test.edulinq.org"),
+			basePublicUpsertTestCase{
+				CourseUpsertOptions{
+					ContextUser: db.MustGetServerUser("server-creator@test.edulinq.org"),
+				},
+				true,
+				0, 0,
+				"",
 			},
-			true,
-			0, 0,
-			"",
 		},
 	}
 
 	for i, testCase := range testCases {
-		db.ResetForTesting()
-
-		if testCase.clearCourses {
-			for _, course := range db.MustGetCourses() {
-				err := db.ClearCourse(course)
-				if err != nil {
-					test.Fatalf("Failed to clear course '%s': '%v'.", course.ID, err)
-				}
-			}
-		}
+		prepUpsertTest(test, testCase.basePublicUpsertTestCase)
 
 		filespec := &common.FileSpec{
 			Type: common.FILESPEC_TYPE_PATH,
@@ -194,39 +295,56 @@ func TestUpsertFromFileSpec(test *testing.T) {
 		}
 
 		actualResults, err := UpsertFromFileSpec(filespec, testCase.options)
-		if err != nil {
-			if testCase.expectedErrorPart == "" {
-				test.Errorf("Case %d: Got an unexpected error: '%v'.", i, err)
-				continue
-			}
+		processResult(test, testCase.basePublicUpsertTestCase, actualResults, err, fmt.Sprintf("Case %d: ", i))
+	}
+}
 
-			if !strings.Contains(err.Error(), testCase.expectedErrorPart) {
-				test.Errorf("Case %d: Error does not contain expected substring. Substring: '%s', Full Error: '%s'.", i, testCase.expectedErrorPart, err.Error())
-			}
+func prepUpsertTest(test *testing.T, testCase basePublicUpsertTestCase) {
+	db.ResetForTesting()
 
-			continue
-		}
-
-		if testCase.expectedErrorPart != "" {
-			test.Errorf("Case %d: Did not get expected error.", i)
-			continue
-		}
-
-		if testCase.expectedResultCount != len(actualResults) {
-			test.Errorf("Case %d: Unexpected number of results. Expected %d, Actual: %d.", i, testCase.expectedResultCount, len(actualResults))
-			continue
-		}
-
-		actualSuccessCount := 0
-		for _, result := range actualResults {
-			if result.Success {
-				actualSuccessCount++
+	if testCase.clearCourses {
+		for _, course := range db.MustGetCourses() {
+			err := db.ClearCourse(course)
+			if err != nil {
+				test.Fatalf("Failed to clear course '%s': '%v'.", course.ID, err)
 			}
 		}
+	}
+}
 
-		if testCase.expectedSuccessCount != actualSuccessCount {
-			test.Errorf("Case %d: Unexpected number of successes. Expected %d, Actual: %d.", i, testCase.expectedSuccessCount, actualSuccessCount)
-			continue
+func processResult(test *testing.T, testCase basePublicUpsertTestCase, actualResults []CourseUpsertResult, err error, prefix string) {
+	if err != nil {
+		if testCase.expectedErrorPart == "" {
+			test.Errorf("%sGot an unexpected error: '%v'.", prefix, err)
+			return
 		}
+
+		if !strings.Contains(err.Error(), testCase.expectedErrorPart) {
+			test.Errorf("%sError does not contain expected substring. Substring: '%s', Full Error: '%s'.", prefix, testCase.expectedErrorPart, err.Error())
+		}
+
+		return
+	}
+
+	if testCase.expectedErrorPart != "" {
+		test.Errorf("%sDid not get expected error.", prefix)
+		return
+	}
+
+	if testCase.expectedResultCount != len(actualResults) {
+		test.Errorf("%sUnexpected number of results. Expected %d, Actual: %d.", prefix, testCase.expectedResultCount, len(actualResults))
+		return
+	}
+
+	actualSuccessCount := 0
+	for _, result := range actualResults {
+		if result.Success {
+			actualSuccessCount++
+		}
+	}
+
+	if testCase.expectedSuccessCount != actualSuccessCount {
+		test.Errorf("%sUnexpected number of successes. Expected %d, Actual: %d.", prefix, testCase.expectedSuccessCount, actualSuccessCount)
+		return
 	}
 }
