@@ -5,6 +5,7 @@ import (
 
 	"github.com/edulinq/autograder/internal/db"
 	"github.com/edulinq/autograder/internal/lms/lmstypes"
+	"github.com/edulinq/autograder/internal/log"
 	"github.com/edulinq/autograder/internal/model"
 )
 
@@ -15,7 +16,8 @@ func (this *TestLMSBackend) FetchUsers() ([]*lmstypes.User, error) {
 	}
 
 	if course == nil {
-		return nil, fmt.Errorf("Could not find course '%s' for LMS adapter.", this.CourseID)
+		log.Warn("Could not find course for LMS adapter.", log.NewCourseAttr(this.CourseID))
+		return make([]*lmstypes.User, 0), nil
 	}
 
 	courseUsers, err := db.GetCourseUsers(course)

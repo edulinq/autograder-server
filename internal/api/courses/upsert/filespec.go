@@ -14,11 +14,7 @@ type FileSpecRequest struct {
 	FileSpec common.FileSpec `json:"filespec"`
 }
 
-type FileSpecResponse struct {
-	Results []courses.CourseUpsertResult `json:"results"`
-}
-
-func HandleFileSpec(request *FileSpecRequest) (*FileSpecResponse, *core.APIError) {
+func HandleFileSpec(request *FileSpecRequest) (*UpsertResponse, *core.APIError) {
 	options := request.CourseUpsertOptions
 	options.ContextUser = request.ServerUser
 
@@ -28,5 +24,5 @@ func HandleFileSpec(request *FileSpecRequest) (*FileSpecResponse, *core.APIError
 			"Failed to upsert course from FileSpec.").Err(err)
 	}
 
-	return &FileSpecResponse{results}, nil
+	return &UpsertResponse{results}, nil
 }

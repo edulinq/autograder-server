@@ -10,6 +10,9 @@ import (
 // Forever watch the task handle created in model/tasks for requests.
 // This handle allows for package to not rely on the task package explicitly for simple operations.
 func watchHandle() {
+	// We are now ready to accept calls from the model's handler.
+	tasks.Handler.InitFromTask()
+
 	for {
 		select {
 		case courseID := <-tasks.Handler.StopCourseChan:
