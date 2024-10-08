@@ -90,22 +90,13 @@ func PrintCMDResponseFull(request any, response core.APIResponse, responseType a
 
 	if !response.Success {
 		log.Error("API response was unsuccessful.", log.NewAttr("message", response.Message))
-		// fmt.Println(response.Message)
+
 		util.Exit(2)
 		return
 	}
 
 	if customPrintFunc != nil {
-
-		response := customPrintFunc(response)
-
-		// customPrintFuncValue := reflect.ValueOf(customPrintFunc)
-
-		// responseValue := reflect.ValueOf(response)
-		// responseSlice := []reflect.Value{responseValue}
-
-		// response := customPrintFuncValue.Call(responseSlice)[0]
-		fmt.Println(response)
+		fmt.Println(customPrintFunc(response))
 	} else {
 		responseContent := reflect.New(reflect.TypeOf(responseType)).Interface()
 		util.MustJSONFromString(util.MustToJSON(response.Content), &responseContent)

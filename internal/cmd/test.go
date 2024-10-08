@@ -71,9 +71,6 @@ func RunCMDTest(test *testing.T, mainFunc func(), args []string) (string, string
 		log.SetBackendLevel(oldBackendLogLevel)
 	}()
 
-	// Force the log level to fatal.
-	// args = append(args, "--log-level", log.LevelFatal.String())
-
 	// Setup stdout capture.
 	oldStdout := os.Stdout
 	defer func() {

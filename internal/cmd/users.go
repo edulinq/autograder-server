@@ -13,8 +13,8 @@ func ListServerUsersTable(response core.APIResponse) string {
 	util.MustJSONFromString(util.MustToJSON(response.Content), &responseContent)
 
 	var serverUsersTable strings.Builder
-	headers := []string{"email", "name", "server-role", "courses"}
 
+	headers := []string{"email", "name", "server-role", "courses"}
 	serverUsersTable.WriteString(strings.Join(headers, "\t") + "\n")
 
 	for i, user := range responseContent.Users {
@@ -22,15 +22,13 @@ func ListServerUsersTable(response core.APIResponse) string {
 			serverUsersTable.WriteString("\n")
 		}
 
-		coursesJSON := util.MustToJSONIndent(user.Courses)
-
 		serverUsersTable.WriteString(user.Email)
 		serverUsersTable.WriteString("\t")
 		serverUsersTable.WriteString(user.Name)
 		serverUsersTable.WriteString("\t")
 		serverUsersTable.WriteString(user.Role.String())
 		serverUsersTable.WriteString("\t")
-		serverUsersTable.WriteString(coursesJSON)
+		serverUsersTable.WriteString(util.MustToJSONIndent(user.Courses))
 	}
 
 	return serverUsersTable.String()

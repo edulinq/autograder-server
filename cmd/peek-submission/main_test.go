@@ -8,11 +8,11 @@ import (
 )
 
 var testCases = []struct {
-	cmd.CommonCMDTestCases // Embedding common case data at the beginning
-	targetEmail            string
-	courseID               string
-	assignmentID           string
-	targetSubmission       string
+	cmd.CommonCMDTestCases
+	targetEmail      string
+	courseID         string
+	assignmentID     string
+	targetSubmission string
 }{
 	{cmd.CommonCMDTestCases{0, latestSubmission, ""}, "course-student@test.edulinq.org", "course101", "hw0", ""},
 	{cmd.CommonCMDTestCases{0, specificSubmissionShort, ""}, "course-student@test.edulinq.org", "course101", "hw0", "1697406272"},
