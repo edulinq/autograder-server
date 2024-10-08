@@ -28,9 +28,10 @@ func main() {
 
 	request := users.ListRequest{}
 
+	var printFunc cmd.CMDPrintHandler = nil
 	if args.Table {
-		cmd.MustHandleCMDRequestAndExitFull(`users/list`, request, users.ListResponse{}, args.CommonOptions, cmd.ListServerUsersTable)
-	} else {
-		cmd.MustHandleCMDRequestAndExitFull(`users/list`, request, users.ListResponse{}, args.CommonOptions, nil)
+		printFunc = cmd.ListServerUsersTable
 	}
+
+	cmd.MustHandleCMDRequestAndExitFull(`users/list`, request, users.ListResponse{}, args.CommonOptions, printFunc)
 }

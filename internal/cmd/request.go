@@ -8,34 +8,31 @@ import (
 	"github.com/edulinq/autograder/internal/api/core"
 	"github.com/edulinq/autograder/internal/api/server"
 	"github.com/edulinq/autograder/internal/common"
+	"github.com/edulinq/autograder/internal/log"
 	"github.com/edulinq/autograder/internal/util"
 )
 
 type CommonOptions struct {
-	Verbose bool `help:"Use verbose output to show full request/response without specific formatting." default:"false"`
+	Verbose bool `help:"Use verbose output to show the full request/response. Output may not adhere to a valid format/filetype." default:"false"`
 }
 
-func MustHandleCMDRequestAndExit(endpoint string, request any, responseType any) error {
-	return MustHandleCMDRequestAndExitFull(endpoint, request, responseType, CommonOptions{}, nil)
+type CMDPrintHandler func(response core.APIResponse) string
+
+func MustHandleCMDRequestAndExit(endpoint string, request any, responseType any) {
+	MustHandleCMDRequestAndExitFull(endpoint, request, responseType, CommonOptions{}, nil)
 }
 
-func MustHandleCMDRequestAndExitFull(endpoint string, request any, responseType any, options CommonOptions, customPrintFunc any) error {
+func MustHandleCMDRequestAndExitFull(endpoint string, request any, responseType any, options CommonOptions, customPrintFunc CMDPrintHandler) {
 	response, err := SendCMDRequest(endpoint, request)
 	if err != nil {
-		return fmt.Errorf("Failed to send the CMD request: '%w'.", err)
-	}
-
-	if !response.Success {
-		fmt.Println(response.Message)
-
-		util.Exit(2)
-		return nil
+		log.Fatal("Failed to send the CMD request", err)
 	}
 
 	PrintCMDResponseFull(request, response, responseType, options, customPrintFunc)
 
-	util.Exit(0)
-	return nil
+	if response.Success {
+		util.Exit(0)
+	}
 }
 
 // Send a CMD request to the unix socket and return the response.
@@ -85,19 +82,29 @@ func PrintCMDResponse(request any, response core.APIResponse, responseType any) 
 
 // Print the CMD response in it's expected or custom format.
 // If verbose is true, it also displays the complete request and response.
-func PrintCMDResponseFull(request any, response core.APIResponse, responseType any, options CommonOptions, customPrintFunc any) {
+func PrintCMDResponseFull(request any, response core.APIResponse, responseType any, options CommonOptions, customPrintFunc CMDPrintHandler) {
 	if options.Verbose {
 		fmt.Printf("\nAutograder Request:\n---\n%s\n---\n", util.MustToJSONIndent(request))
 		fmt.Printf("\nAutograder Response:\n---\n%s\n---\n", util.MustToJSONIndent(response))
 	}
 
+	if !response.Success {
+		log.Error("API response was unsuccessful.", log.NewAttr("message", response.Message))
+		// fmt.Println(response.Message)
+		util.Exit(2)
+		return
+	}
+
 	if customPrintFunc != nil {
-		customPrintFuncValue := reflect.ValueOf(customPrintFunc)
 
-		responseValue := reflect.ValueOf(response)
-		responseSlice := []reflect.Value{responseValue}
+		response := customPrintFunc(response)
 
-		response := customPrintFuncValue.Call(responseSlice)[0]
+		// customPrintFuncValue := reflect.ValueOf(customPrintFunc)
+
+		// responseValue := reflect.ValueOf(response)
+		// responseSlice := []reflect.Value{responseValue}
+
+		// response := customPrintFuncValue.Call(responseSlice)[0]
 		fmt.Println(response)
 	} else {
 		responseContent := reflect.New(reflect.TypeOf(responseType)).Interface()

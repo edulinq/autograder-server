@@ -8,24 +8,21 @@ import (
 )
 
 var testCases = []struct {
-	targetEmail        string
-	courseID           string
-	assignmentID       string
-	targetSubmission   string
-	expectedSubmission string
-	expectedExitCode   int
-	expectedStdout     string
-	expectedStderr     string
+	cmd.CommonCMDTestCases // Embedding common case data at the beginning
+	targetEmail            string
+	courseID               string
+	assignmentID           string
+	targetSubmission       string
 }{
-	{"course-student@test.edulinq.org", "course101", "hw0", "", "1697406272", 0, latestSubmission, ""},
-	{"course-student@test.edulinq.org", "course101", "hw0", "1697406272", "1697406272", 0, specificSubmissionShort, ""},
-	{"course-student@test.edulinq.org", "course101", "hw0", "course101::hw0::student@test.com::1697406256", "1697406256", 0, specificSubmissionLong, ""},
+	{cmd.CommonCMDTestCases{0, latestSubmission, ""}, "course-student@test.edulinq.org", "course101", "hw0", ""},
+	{cmd.CommonCMDTestCases{0, specificSubmissionShort, ""}, "course-student@test.edulinq.org", "course101", "hw0", "1697406272"},
+	{cmd.CommonCMDTestCases{0, specificSubmissionLong, ""}, "course-student@test.edulinq.org", "course101", "hw0", "course101::hw0::student@test.com::1697406256"},
 
-	{"course-admin@test.edulinq.org", "course101", "hw0", "", "", 0, noSubmission, ""},
-	{"course-student@test.edulinq.org", "course101", "hw0", "ZZZ", "", 0, incorrectSubmission, ""},
+	{cmd.CommonCMDTestCases{0, noSubmission, ""}, "course-admin@test.edulinq.org", "course101", "hw0", ""},
+	{cmd.CommonCMDTestCases{0, incorrectSubmission, ""}, "course-student@test.edulinq.org", "course101", "hw0", "ZZZ"},
 
-	{"course-student@test.edulinq.org", "ZZZ", "hw0", "", "", 2, "Could not find course: 'ZZZ'.\n", ""},
-	{"course-student@test.edulinq.org", "course101", "zzz", "", "", 2, "Could not find assignment: 'zzz'.\n", ""},
+	{cmd.CommonCMDTestCases{2, "", incorrectCourse}, "course-student@test.edulinq.org", "ZZZ", "hw0", ""},
+	{cmd.CommonCMDTestCases{2, "", incorrectAssignment}, "course-student@test.edulinq.org", "course101", "zzz", ""},
 }
 
 // Use the common main for all tests in this package.
@@ -42,29 +39,8 @@ func TestPeekBase(test *testing.T) {
 			testCase.targetSubmission,
 		}
 
-		commonCases := cmd.CommonCMDTestCases{
-			ExpectedExitCode: testCase.expectedExitCode,
-			ExpectedStdout:   testCase.expectedStdout,
-			ExpectedStderr:   testCase.expectedStderr,
-		}
+		cmd.RunCommonCMDTests(test, main, args, testCase.CommonCMDTestCases, fmt.Sprintf("Case %d: ", i))
 
-		cmd.RunCommonCMDTests(test, main, args, commonCases, fmt.Sprintf("Case %d: ", i))
-	}
-}
-
-func TestPeekVerbose(test *testing.T) {
-	for i, testCase := range testCases {
-		args := []string{
-			testCase.targetEmail,
-			testCase.courseID,
-			testCase.assignmentID,
-			testCase.targetSubmission,
-			"--verbose",
-		}
-
-		_, _, _, err := cmd.RunCMDTest(test, main, args)
-		if err != nil {
-			test.Errorf("Case %d: CMD run returned an error: '%v'.", i, err)
-		}
+		cmd.RunVerboseCMDTests(test, main, args, fmt.Sprintf("Case %d: ", i))
 	}
 }

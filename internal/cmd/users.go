@@ -18,6 +18,10 @@ func ListServerUsersTable(response core.APIResponse) string {
 	serverUsersTable.WriteString(strings.Join(headers, "\t") + "\n")
 
 	for i, user := range responseContent.Users {
+		if i > 0 {
+			serverUsersTable.WriteString("\n")
+		}
+
 		coursesJSON := util.MustToJSONIndent(user.Courses)
 
 		serverUsersTable.WriteString(user.Email)
@@ -27,11 +31,6 @@ func ListServerUsersTable(response core.APIResponse) string {
 		serverUsersTable.WriteString(user.Role.String())
 		serverUsersTable.WriteString("\t")
 		serverUsersTable.WriteString(coursesJSON)
-
-		// Only add a newline if this is not the last user
-		if i < len(responseContent.Users)-1 {
-			serverUsersTable.WriteString("\n")
-		}
 	}
 
 	return serverUsersTable.String()

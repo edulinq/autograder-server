@@ -8,13 +8,11 @@ import (
 )
 
 var testCases = []struct {
-	expectedExitCode int
-	table            bool
-	expectedStdout   string
-	expectedStderr   string
+	cmd.CommonCMDTestCases
+	table bool
 }{
-	{0, false, expectedServerUserList, ""},
-	{0, true, expectedServerUserListTable, ""},
+	{cmd.CommonCMDTestCases{0, expectedServerUserList, ""}, false},
+	{cmd.CommonCMDTestCases{0, expectedServerUserListTable, ""}, true},
 }
 
 // Use the common main for all tests in this package.
@@ -30,27 +28,8 @@ func TestServerUserListBase(test *testing.T) {
 			args = append(args, "--table")
 		}
 
-		commonCases := cmd.CommonCMDTestCases{
-			ExpectedExitCode: testCase.expectedExitCode,
-			ExpectedStdout:   testCase.expectedStdout,
-			ExpectedStderr:   testCase.expectedStderr,
-		}
+		cmd.RunCommonCMDTests(test, main, args, testCase.CommonCMDTestCases, fmt.Sprintf("Case %d: ", i))
 
-		cmd.RunCommonCMDTests(test, main, args, commonCases, fmt.Sprintf("Case %d: ", i))
-	}
-}
-
-func TestServerUserListVerbose(test *testing.T) {
-	for i, testCase := range testCases {
-		args := []string{}
-
-		if testCase.table {
-			args = append(args, "--table")
-		}
-
-		_, _, _, err := cmd.RunCMDTest(test, main, args)
-		if err != nil {
-			test.Errorf("Case %d: CMD run returned an error: '%v'.", i, err)
-		}
+		cmd.RunVerboseCMDTests(test, main, args, fmt.Sprintf("Case %d: ", i))
 	}
 }

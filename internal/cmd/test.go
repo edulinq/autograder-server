@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"regexp"
 	"strings"
 	"sync"
 	"testing"
@@ -73,7 +72,7 @@ func RunCMDTest(test *testing.T, mainFunc func(), args []string) (string, string
 	}()
 
 	// Force the log level to fatal.
-	args = append(args, "--log-level", log.LevelFatal.String())
+	// args = append(args, "--log-level", log.LevelFatal.String())
 
 	// Setup stdout capture.
 	oldStdout := os.Stdout
@@ -87,8 +86,12 @@ func RunCMDTest(test *testing.T, mainFunc func(), args []string) (string, string
 	oldStderr := os.Stderr
 	defer func() {
 		os.Stderr = oldStderr
+		log.SetTextWriter(oldStderr)
 	}()
 
+	stderrFile := util.MustCreateFile(stderrPath)
+	os.Stderr = stderrFile
+	log.SetTextWriter(stderrFile)
 	os.Stderr = util.MustCreateFile(stderrPath)
 
 	// Run.
@@ -150,43 +153,30 @@ func RunCommonCMDTests(test *testing.T, mainFunc func(), args []string, commonCa
 		test.Errorf("%sCMD run returned an error: '%v'.", prefix, err)
 	}
 
-	if commonCases.ExpectedStderr != "" {
-		if commonCases.ExpectedStderr != stderr {
-			test.Errorf("%sUnexpected stderr. Expected: '%s', Actual: '%s'.", prefix, commonCases.ExpectedStderr, stderr)
-		}
+	if len(stderr) > 0 && commonCases.ExpectedStderr == "" {
+		test.Errorf("%sCMD has content in stderr: '%s'.", prefix, stderr)
 	}
 
-	if len(stderr) > 0 {
-		test.Errorf("%sCMD has content in stderr: '%s'.", prefix, stderr)
+	if !strings.Contains(stderr, commonCases.ExpectedStderr) {
+		test.Errorf("%sUnexpected stderr. Expected substring: '%s', Actual stderr: '%s'.", prefix, commonCases.ExpectedStderr, stderr)
 	}
 
 	if commonCases.ExpectedExitCode != exitCode {
 		test.Errorf("%sUnexpected exit code. Expected: '%d', Actual: '%d'.", prefix, commonCases.ExpectedExitCode, exitCode)
 	}
 
-	if !compareOutputs(commonCases.ExpectedStdout, stdout) {
+	if commonCases.ExpectedStdout != stdout {
 		test.Errorf("%sUnexpected output. Expected:\n'%s',\nActual:\n'%s'.", prefix, commonCases.ExpectedStdout, stdout)
 	}
 
 	return stdout, stderr, exitCode
 }
 
-func compareOutputs(expected string, actual string) bool {
-	expectedLines := strings.Split(expected, "\n")
-	actualLines := strings.Split(actual, "\n")
+func RunVerboseCMDTests(test *testing.T, mainFunc func(), args []string, prefix string) {
+	args = append(args, "--verbose")
 
-	if len(expectedLines) != len(actualLines) {
-		return false
+	_, _, _, err := RunCMDTest(test, mainFunc, args)
+	if err != nil {
+		test.Errorf("%sCMD run returned an error when testing verbose: '%v'.", prefix, err)
 	}
-
-	for i := range expectedLines {
-		expectedNormalized := regexp.MustCompile(`\s+`).ReplaceAllString(expectedLines[i], " ")
-		actualNormalized := regexp.MustCompile(`\s+`).ReplaceAllString(actualLines[i], " ")
-
-		if expectedNormalized != actualNormalized {
-			return false
-		}
-	}
-
-	return true
 }

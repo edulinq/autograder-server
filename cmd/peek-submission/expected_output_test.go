@@ -151,3 +151,7 @@ const incorrectSubmission = `{
     "submission-result": null
 }
 `
+
+const incorrectCourse = `{"message":"Could not find course: 'ZZZ'."}`
+
+const incorrectAssignment = `{"message":"Could not find assignment: 'zzz'."}`

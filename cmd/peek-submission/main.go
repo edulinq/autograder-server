@@ -45,8 +45,5 @@ func main() {
 		TargetSubmission: args.TargetSubmission,
 	}
 
-	err = cmd.MustHandleCMDRequestAndExitFull(`courses/assignments/submissions/fetch/user/peek`, request, submissions.FetchUserPeekResponse{}, args.CommonOptions, nil)
-	if err != nil {
-		log.Fatal("Failed to peek the user's submission.", err)
-	}
+	cmd.MustHandleCMDRequestAndExitFull(`courses/assignments/submissions/fetch/user/peek`, request, submissions.FetchUserPeekResponse{}, args.CommonOptions, nil)
 }

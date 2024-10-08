@@ -206,8 +206,8 @@ const expectedServerUserList = `{
 }
 `
 
-const expectedServerUserListTable = `email  name    server-role     courses
-course-admin@test.edulinq.org   course-admin    user    {
+const expectedServerUserListTable = `email	name	server-role	courses
+course-admin@test.edulinq.org	course-admin	user	{
     "course-languages": {
         "id": "course-languages",
         "name": "Course Using Different Languages.",
@@ -234,7 +234,7 @@ course-admin@test.edulinq.org   course-admin    user    {
         "role": "admin"
     }
 }
-course-grader@test.edulinq.org  course-grader   user    {
+course-grader@test.edulinq.org	course-grader	user	{
     "course-languages": {
         "id": "course-languages",
         "name": "Course Using Different Languages.",
@@ -261,7 +261,7 @@ course-grader@test.edulinq.org  course-grader   user    {
         "role": "grader"
     }
 }
-course-other@test.edulinq.org   course-other    user    {
+course-other@test.edulinq.org	course-other	user	{
     "course-languages": {
         "id": "course-languages",
         "name": "Course Using Different Languages.",
@@ -288,7 +288,7 @@ course-other@test.edulinq.org   course-other    user    {
         "role": "other"
     }
 }
-course-owner@test.edulinq.org   course-owner    user    {
+course-owner@test.edulinq.org	course-owner	user	{
     "course-languages": {
         "id": "course-languages",
         "name": "Course Using Different Languages.",
@@ -315,7 +315,7 @@ course-owner@test.edulinq.org   course-owner    user    {
         "role": "owner"
     }
 }
-course-student@test.edulinq.org course-student  user    {
+course-student@test.edulinq.org	course-student	user	{
     "course-languages": {
         "id": "course-languages",
         "name": "Course Using Different Languages.",
@@ -342,9 +342,9 @@ course-student@test.edulinq.org course-student  user    {
         "role": "student"
     }
 }
-root    root    root    {}
-server-admin@test.edulinq.org   server-admin    admin   {}
-server-creator@test.edulinq.org server-creator  creator {}
-server-owner@test.edulinq.org   server-owner    owner   {}
-server-user@test.edulinq.org    server-user     user    {}
+root	root	root	{}
+server-admin@test.edulinq.org	server-admin	admin	{}
+server-creator@test.edulinq.org	server-creator	creator	{}
+server-owner@test.edulinq.org	server-owner	owner	{}
+server-user@test.edulinq.org	server-user	user	{}
 `
