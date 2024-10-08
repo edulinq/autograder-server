@@ -7,7 +7,7 @@ import (
 )
 
 var routes []*core.Route = []*core.Route{
-	core.NewAPIRoute(core.NewEndpoint(`courses/admin/update`), HandleUpdate),
+	core.NewAPIRoute(`courses/admin/update`, HandleUpdate),
 }
 
 func GetRoutes() *[]*core.Route {

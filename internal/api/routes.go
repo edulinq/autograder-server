@@ -3,6 +3,8 @@ package api
 // All routes handled by the server.
 
 import (
+	"strings"
+
 	"github.com/edulinq/autograder/internal/api/core"
 	"github.com/edulinq/autograder/internal/api/courses"
 	"github.com/edulinq/autograder/internal/api/lms"
@@ -30,4 +32,16 @@ func GetRoutes() *[]*core.Route {
 	routes = append(routes, *(users.GetRoutes())...)
 
 	return &routes
+}
+
+func Describe() string {
+	var builder strings.Builder
+
+	routes := GetRoutes()
+	for _, route := range *routes {
+		builder.WriteString(route.Suffix)
+		builder.WriteString("\n")
+	}
+
+	return builder.String()
 }

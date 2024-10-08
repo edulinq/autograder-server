@@ -7,15 +7,15 @@ import (
 )
 
 var routes []*core.Route = []*core.Route{
-	core.NewAPIRoute(core.NewEndpoint(`users/auth`), HandleAuth),
-	core.NewAPIRoute(core.NewEndpoint(`users/get`), HandleGet),
-	core.NewAPIRoute(core.NewEndpoint(`users/list`), HandleList),
-	core.NewAPIRoute(core.NewEndpoint(`users/password/change`), HandlePasswordChange),
-	core.NewAPIRoute(core.NewEndpoint(`users/password/reset`), HandlePasswordReset),
-	core.NewAPIRoute(core.NewEndpoint(`users/remove`), HandleRemove),
-	core.NewAPIRoute(core.NewEndpoint(`users/tokens/create`), HandleTokensCreate),
-	core.NewAPIRoute(core.NewEndpoint(`users/tokens/delete`), HandleTokensDelete),
-	core.NewAPIRoute(core.NewEndpoint(`users/upsert`), HandleUpsert),
+	core.NewAPIRoute(`users/auth`, HandleAuth),
+	core.NewAPIRoute(`users/get`, HandleGet),
+	core.NewAPIRoute(`users/list`, HandleList),
+	core.NewAPIRoute(`users/password/change`, HandlePasswordChange),
+	core.NewAPIRoute(`users/password/reset`, HandlePasswordReset),
+	core.NewAPIRoute(`users/remove`, HandleRemove),
+	core.NewAPIRoute(`users/tokens/create`, HandleTokensCreate),
+	core.NewAPIRoute(`users/tokens/delete`, HandleTokensDelete),
+	core.NewAPIRoute(`users/upsert`, HandleUpsert),
 }
 
 func GetRoutes() *[]*core.Route {

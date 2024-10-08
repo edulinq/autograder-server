@@ -7,8 +7,8 @@ import (
 )
 
 var routes []*core.Route = []*core.Route{
-	core.NewAPIRoute(core.NewEndpoint(`courses/upsert/filespec`), HandleFileSpec),
-	core.NewAPIRoute(core.NewEndpoint(`courses/upsert/zip`), HandleZipFile),
+	core.NewAPIRoute(`courses/upsert/filespec`, HandleFileSpec),
+	core.NewAPIRoute(`courses/upsert/zip`, HandleZipFile),
 }
 
 func GetRoutes() *[]*core.Route {

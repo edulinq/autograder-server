@@ -36,9 +36,10 @@ const API_REQUEST_CONTENT_KEY = "content"
 
 // Inspired by https://benhoyt.com/writings/go-routing/
 type Route struct {
-	method  string
-	regex   *regexp.Regexp
-	handler RouteHandler
+	Method  string
+	Suffix  string
+	Regex   *regexp.Regexp
+	Handler RouteHandler
 }
 
 const MAX_FORM_MEM_SIZE_BYTES = 20 * 1024 * 1024 // 20 MB
@@ -66,16 +67,16 @@ func ServeRoutes(routes *[]*Route, response http.ResponseWriter, request *http.R
 			log.Warn("Found nil route.", log.NewAttr("index", i))
 		}
 
-		if route.method != request.Method {
+		if route.Method != request.Method {
 			continue
 		}
 
-		match = route.regex.MatchString(request.URL.Path)
+		match = route.Regex.MatchString(request.URL.Path)
 		if !match {
 			continue
 		}
 
-		err := route.handler(response, request)
+		err := route.Handler(response, request)
 		if err != nil {
 			log.Error("Handler had an error.", err, log.NewAttr("path", request.URL.Path))
 			http.Error(response, "Server Error", http.StatusInternalServerError)
@@ -95,19 +96,19 @@ func ServeRoutes(routes *[]*Route, response http.ResponseWriter, request *http.R
 	http.NotFound(response, request)
 }
 
-func NewRoute(method string, pattern string, handler RouteHandler) *Route {
-	return &Route{method, regexp.MustCompile("^" + pattern + "$"), handler}
+func NewRoute(method string, suffix string, handler RouteHandler) *Route {
+	return &Route{method, suffix, regexp.MustCompile("^" + NewEndpoint(suffix) + "$"), handler}
 }
 
-func NewRedirect(method string, pattern string, target string) *Route {
+func NewRedirect(method string, suffix string, target string) *Route {
 	redirectFunc := func(response http.ResponseWriter, request *http.Request) error {
 		return handleRedirect(target, response, request)
 	}
 
-	return &Route{method, regexp.MustCompile("^" + pattern + "$"), redirectFunc}
+	return &Route{method, suffix, regexp.MustCompile("^" + NewEndpoint(suffix) + "$"), redirectFunc}
 }
 
-func NewAPIRoute(pattern string, apiHandler any) *Route {
+func NewAPIRoute(suffix string, apiHandler any) *Route {
 	handler := func(response http.ResponseWriter, request *http.Request) (err error) {
 		// Recover from any panic.
 		defer func() {
@@ -129,7 +130,7 @@ func NewAPIRoute(pattern string, apiHandler any) *Route {
 		return err
 	}
 
-	return &Route{"POST", regexp.MustCompile("^" + pattern + "$"), handler}
+	return &Route{"POST", suffix, regexp.MustCompile("^" + NewEndpoint(suffix) + "$"), handler}
 }
 
 func handleRedirect(target string, response http.ResponseWriter, request *http.Request) error {

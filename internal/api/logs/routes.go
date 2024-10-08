@@ -7,7 +7,7 @@ import (
 )
 
 var routes []*core.Route = []*core.Route{
-	core.NewAPIRoute(core.NewEndpoint(`logs/query`), HandleQuery),
+	core.NewAPIRoute(`logs/query`, HandleQuery),
 }
 
 func GetRoutes() *[]*core.Route {
