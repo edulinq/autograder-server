@@ -1,4 +1,4 @@
-package main
+package userlist
 
 import (
 	"github.com/alecthomas/kong"

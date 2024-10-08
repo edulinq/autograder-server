@@ -1,4 +1,4 @@
-package main
+package userlist
 
 const expectedServerUserList = `{
     "users": [

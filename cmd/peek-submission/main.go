@@ -1,4 +1,4 @@
-package main
+package peek
 
 import (
 	"github.com/alecthomas/kong"

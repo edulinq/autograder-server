@@ -1,4 +1,4 @@
-package main
+package peek
 
 const latestSubmission = `{
     "found-user": true,

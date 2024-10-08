@@ -1,4 +1,4 @@
-package main
+package userlist
 
 import (
 	"fmt"
