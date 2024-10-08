@@ -18,7 +18,7 @@ func TestUploadScores(test *testing.T) {
 		lmstest.SetFailUpdateAssignmentScores(false)
 	}()
 
-	TEST_COURSE_ID := "course-with-lms"
+	TEST_COURSE_ID := "course101"
 
 	testCases := []struct {
 		email      string

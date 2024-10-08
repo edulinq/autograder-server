@@ -52,12 +52,7 @@ To test our code, we supply test data, which can be found in the `testdata` dire
 
 Test courses allow testing of course specific code. The default test course is "course101" which contains a user for every course role.
 course101 includes a sample assignment, "HW0", and 3 test submissions made by "course-student@test.edulinq.org".
-
-There are other courses to test different scenarios:
-- course-languages: Tests courses using different langauges.
-- course-with-lms: Tests courses with an LMS.
-- course-with-zero-limit: Tests courses without a submission limit.
-- course-without-source: Tests courses without a source.
+There is another test course that has assignments using different languages: "course-languages".
 
 ### Test Users
 
@@ -76,7 +71,7 @@ To test courses actions, these users are enrolled in various test courses.
 All locators are negative numbers and only exist within `internal`.
 Each top-level package within `internal` can be allocated blocks of 1000 locators.
 See the table below for blocks that are already allocated locators.
-After being alloacted locators, the package can allocate sub-blocks of the locators to subpackages.
+After being allocated locators, the package can allocate sub-blocks of the locators to subpackages.
 Use `scripts/get_max_locators.sh` to determine the next locator to use within a certain package.
 If a package you are working on requires locatable errors, the package gets the next chunk of 1000 locators.
 Update this document to include the new top-level allocation.

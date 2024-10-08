@@ -95,6 +95,13 @@ func UpsertUser(user *model.ServerUser) error {
 	return UpsertUsers(users)
 }
 
+func MustUpsertUser(user *model.ServerUser) {
+	err := UpsertUser(user)
+	if err != nil {
+		log.Fatal("Faled to upsert user.", err, user)
+	}
+}
+
 // Delete a user from the server.
 // Returns a boolean indicating if the user exists.
 // If true, then the user exists and was removed.
