@@ -131,6 +131,14 @@ func TestUpsertFromFileSpec(test *testing.T) {
 		test.Fatalf("Failed to write invalid config course config: '%v'.", err)
 	}
 
+	// Zip up a dir and point to the zip as a filespec.
+	tempZipBase := util.MustMkDirTemp("test-internal.procedures.courses.upsert-filespec-zip-")
+	tempZipPath := filepath.Join(tempZipBase, "test.zip")
+	err = util.Zip(course101Dir, tempZipPath, true)
+	if err != nil {
+		test.Fatalf("Failed to create temp zip: '%v'.", err)
+	}
+
 	testCases := []struct {
 		path string
 		basePublicUpsertTestCase
@@ -190,13 +198,25 @@ func TestUpsertFromFileSpec(test *testing.T) {
 				"",
 			},
 		},
-
 		{
 			course101Dir,
 			basePublicUpsertTestCase{
 				CourseUpsertOptions{
 					ContextUser: db.MustGetServerUser("server-creator@test.edulinq.org"),
 					DryRun:      true,
+				},
+				false,
+				1, 1,
+				"",
+			},
+		},
+
+		// Point to a Zip File,
+		{
+			tempZipPath,
+			basePublicUpsertTestCase{
+				CourseUpsertOptions{
+					ContextUser: db.MustGetServerUser("server-creator@test.edulinq.org"),
 				},
 				false,
 				1, 1,
