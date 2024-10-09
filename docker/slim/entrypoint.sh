@@ -4,6 +4,13 @@ readonly THIS_DIR="$(cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd | xargs realpa
 readonly CMD_DIR="${THIS_DIR}/cmd"
 
 function main(){
+    if [[ $# -eq 0 ]]; then
+        echo "USAGE: $0"
+        exit 1
+    fi
+
+    trap exit SIGINT
+
     local executable=$1
     shift 1
 
