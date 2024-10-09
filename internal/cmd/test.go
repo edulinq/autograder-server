@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -70,9 +71,6 @@ func RunCMDTest(test *testing.T, mainFunc func(), args []string) (string, string
 		log.SetBackendLevel(oldBackendLogLevel)
 	}()
 
-	// Force the log level to fatal.
-	args = append(args, "--log-level", log.LevelFatal.String())
-
 	// Setup stdout capture.
 	oldStdout := os.Stdout
 	defer func() {
@@ -85,8 +83,12 @@ func RunCMDTest(test *testing.T, mainFunc func(), args []string) (string, string
 	oldStderr := os.Stderr
 	defer func() {
 		os.Stderr = oldStderr
+		log.SetTextWriter(oldStderr)
 	}()
 
+	stderrFile := util.MustCreateFile(stderrPath)
+	os.Stderr = stderrFile
+	log.SetTextWriter(stderrFile)
 	os.Stderr = util.MustCreateFile(stderrPath)
 
 	// Run.
@@ -134,4 +136,44 @@ func runCMD(mainFunc func(), args []string) (err error) {
 	mainFunc()
 
 	return err
+}
+
+type CommonCMDTestCases struct {
+	ExpectedExitCode int
+	ExpectedStdout   string
+	ExpectedStderr   string
+}
+
+func RunCommonCMDTests(test *testing.T, mainFunc func(), args []string, commonCases CommonCMDTestCases, prefix string) (string, string, int) {
+	stdout, stderr, exitCode, err := RunCMDTest(test, mainFunc, args)
+	if err != nil {
+		test.Errorf("%sCMD run returned an error: '%v'.", prefix, err)
+	}
+
+	if len(stderr) > 0 && commonCases.ExpectedStderr == "" {
+		test.Errorf("%sCMD has content in stderr: '%s'.", prefix, stderr)
+	}
+
+	if !strings.Contains(stderr, commonCases.ExpectedStderr) {
+		test.Errorf("%sUnexpected stderr. Expected substring: '%s', Actual stderr: '%s'.", prefix, commonCases.ExpectedStderr, stderr)
+	}
+
+	if commonCases.ExpectedExitCode != exitCode {
+		test.Errorf("%sUnexpected exit code. Expected: '%d', Actual: '%d'.", prefix, commonCases.ExpectedExitCode, exitCode)
+	}
+
+	if commonCases.ExpectedStdout != stdout {
+		test.Errorf("%sUnexpected output. Expected:\n'%s',\nActual:\n'%s'.", prefix, commonCases.ExpectedStdout, stdout)
+	}
+
+	return stdout, stderr, exitCode
+}
+
+func RunVerboseCMDTests(test *testing.T, mainFunc func(), args []string, prefix string) {
+	args = append(args, "--verbose")
+
+	_, _, _, err := RunCMDTest(test, mainFunc, args)
+	if err != nil {
+		test.Errorf("%sCMD run returned an error when testing verbose: '%v'.", prefix, err)
+	}
 }

@@ -12,8 +12,6 @@ import (
 	"github.com/edulinq/autograder/internal/util"
 )
 
-var SERVER_USER_ROW_COLUMNS []string = []string{"email", "name", "server-role", "salt", "password", "tokens", "course-info"}
-
 // ServerUsers represent general users that exist on a server.
 // They may or may not be enrolled in courses.
 // ServerUsers should generally only be used for server-level activities,

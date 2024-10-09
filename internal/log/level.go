@@ -60,7 +60,7 @@ func SetLevels(newTextLevel LogLevel, newBackendLevel LogLevel) {
 }
 
 // Parse a logging level from text.
-// Will return INFO and an erorr on error.
+// Will return INFO and an error on error.
 func ParseLevel(rawText string) (LogLevel, error) {
 	text := strings.ToUpper(strings.TrimSpace(rawText))
 	switch text {
