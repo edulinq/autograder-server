@@ -23,11 +23,21 @@ These images are built and deployed automatically in this repository's CI.
 The latest version will always reflect the most recent passing version of the `main` branch of this repo.
 For any example code we will be using the prebuilt image, but either image will work.
 
-To run the images, the autograder container requires two mounts:
+To run the images, the autograder container must mount two directories:
  - `/var/run/docker.sock` -- The socket that the Docker daemon listens on.
  - `/tmp/autograder-temp/` -- The autograder's temporary directory.
 
 Note that both mounts rely on a POSIX system.
+
+To persist data between container runs,
+an additional directory must be mounted: the autograder base/data directory.
+When running the autograder directly (not in a Docker container),
+this values is set either with the `AUTOGRADER__DIRS__BASE` environmental variable,
+or with using the command line option `-c dirs.base='<DATA_DIR>'`.
+This directory defaults to the system's [XDG_DATA_HOME](https://specifications.freedesktop.org/basedir-spec/latest/) value.
+Below are some defaults based on operating system:
+ - Linux -- `~/.local/share`
+ - Mac -- `~/Library/Application Support`
 
 ### Running with the Docker CLI
 
@@ -61,6 +71,20 @@ docker run -it --rm \
     -v /tmp/autograder-temp/:/tmp/autograder-temp \
     edulinq/autograder-server-prebuilt server
 ```
+
+To ensure your changes persist between container runs,
+make sure that you mount your data directory.
+For example if you are on Linux,
+you could use the following command:
+```
+docker run -it --rm \
+    -v /var/run/docker.sock:/var/run/docker.sock \
+    -v /tmp/autograder-temp/:/tmp/autograder-temp \
+    -v $(realpath ~/.local/share):/data \
+    edulinq/autograder-server-prebuilt version
+```
+
+Note the use of `realpath`, because `docker run` requires absolute paths.
 
 ### Running with the Python Script
 
