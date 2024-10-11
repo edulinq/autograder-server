@@ -13,7 +13,7 @@ import (
 )
 
 type CommonOptions struct {
-	Verbose bool `help:"Add the full request and response to the output. Note: the output will include extra details beyond the expected format." default:"false"`
+	Verbose bool `help:"Add the full request and response to the output. Be aware that the output will include extra details beyond the expected format." default:"false"`
 }
 
 type CustomFormat func(response core.APIResponse) string
@@ -79,6 +79,7 @@ func PrintCMDResponse(request any, response core.APIResponse, responseType any) 
 }
 
 // Print the CMD response in it's expected or custom format.
+// customPrintFunc defines a function that takes the CMD response and formats it into a custom output.
 // If verbose is true, it also displays the complete request and response.
 func PrintCMDResponseFull(request any, response core.APIResponse, responseType any, options CommonOptions, customPrintFunc CustomFormat) int {
 	if options.Verbose {

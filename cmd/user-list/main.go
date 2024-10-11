@@ -13,7 +13,7 @@ var args struct {
 	config.ConfigArgs
 	cmd.CommonOptions
 
-	Table bool `help:"Output data to stdout as a TSV." default:"false"`
+	Table bool `help:"Output data as a TSV." default:"false"`
 }
 
 func main() {

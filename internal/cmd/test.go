@@ -78,7 +78,7 @@ func ensureServerStopped() {
 		}
 
 		// Small sleep before checking again.
-		time.Sleep(500 * time.Millisecond)
+		time.Sleep(100 * time.Millisecond)
 	}
 }
 
