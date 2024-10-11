@@ -81,5 +81,6 @@ ENV PATH=$GOPATH/bin:/usr/local/go/bin:$PATH
 COPY --from=build-stage / /
 
 WORKDIR /autograder-server
+RUN mkdir -p /data
 
 ENTRYPOINT ["./entrypoint.sh"]

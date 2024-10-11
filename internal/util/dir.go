@@ -71,3 +71,23 @@ func RemoveRecordedTempDirs() error {
 
 	return errs
 }
+
+// If this dir has a single dirent, return its path.
+// If there is not exactly one dirent (or this is not a dir), then return an empty string.
+func GetSingleDirent(dir string) string {
+	if !IsDir(dir) {
+		return ""
+	}
+
+	dirents, err := os.ReadDir(dir)
+	if err != nil {
+		log.Warn("Could not list dir for single dirent.", err, log.NewAttr("dir", dir))
+		return ""
+	}
+
+	if len(dirents) != 1 {
+		return ""
+	}
+
+	return filepath.Join(dir, dirents[0].Name())
+}

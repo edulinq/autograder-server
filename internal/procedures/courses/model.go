@@ -16,7 +16,7 @@ type CourseUpsertOptions struct {
 
 	SkipSourceSync  bool `json:"skip-source-sync"`
 	SkipLMSSync     bool `json:"skip-lms-sync"`
-	SkipBuildImages bool `json:"skip-building-images"`
+	SkipBuildImages bool `json:"skip-build-images"`
 	SkipTasks       bool `json:"skip-tasks"`
 
 	DryRun     bool `json:"dry-run"`

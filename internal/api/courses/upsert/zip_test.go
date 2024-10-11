@@ -21,7 +21,7 @@ func TestZipFile(test *testing.T) {
 
 	testCases := []commonTestCase{
 		{"server-creator", course101Dir, "", 1, 1},
-		{"server-creator", testdataDir, "", 5, 5},
+		{"server-creator", testdataDir, "", 2, 2},
 		{"server-creator", emptyDir, "", 0, 0},
 
 		{"server-user", course101Dir, "-041", 0, 0},

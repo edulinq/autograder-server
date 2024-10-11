@@ -97,6 +97,72 @@ func TestUpsertBase(test *testing.T) {
 			"",
 		},
 
+		// Skips
+		{
+			course101Path,
+			CourseUpsertOptions{
+				ContextUser:    db.MustGetServerUser("server-creator@test.edulinq.org"),
+				SkipSourceSync: true,
+			},
+			false,
+			&CourseUpsertResult{
+				CourseID:              "course101",
+				Success:               true,
+				Updated:               true,
+				LMSSyncResult:         standardLMSSyncResult,
+				BuiltAssignmentImages: standardBuildImages,
+			},
+			"",
+		},
+		{
+			course101Path,
+			CourseUpsertOptions{
+				ContextUser: db.MustGetServerUser("server-creator@test.edulinq.org"),
+				SkipLMSSync: true,
+			},
+			false,
+			&CourseUpsertResult{
+				CourseID:              "course101",
+				Success:               true,
+				Updated:               true,
+				LMSSyncResult:         nil,
+				BuiltAssignmentImages: standardBuildImages,
+			},
+			"",
+		},
+		{
+			course101Path,
+			CourseUpsertOptions{
+				ContextUser:     db.MustGetServerUser("server-creator@test.edulinq.org"),
+				SkipBuildImages: true,
+			},
+			false,
+			&CourseUpsertResult{
+				CourseID:              "course101",
+				Success:               true,
+				Updated:               true,
+				LMSSyncResult:         standardLMSSyncResult,
+				BuiltAssignmentImages: nil,
+			},
+			"",
+		},
+		{
+			course101Path,
+			CourseUpsertOptions{
+				ContextUser: db.MustGetServerUser("server-creator@test.edulinq.org"),
+				SkipTasks:   true,
+			},
+			false,
+			&CourseUpsertResult{
+				CourseID:              "course101",
+				Success:               true,
+				Updated:               true,
+				LMSSyncResult:         standardLMSSyncResult,
+				BuiltAssignmentImages: standardBuildImages,
+			},
+			"",
+		},
+
 		// Errors
 		{
 			"",

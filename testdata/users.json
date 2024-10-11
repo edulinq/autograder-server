@@ -27,21 +27,9 @@
                 "role": "admin",
                 "lms-id": "lms-course-admin@test.edulinq.org"
             },
-            "course-with-lms": {
-                "role": "admin",
-                "lms-id": "lms-course-admin@test.edulinq.org"
-            },
-            "course-without-source": {
-                "role": "admin",
-                "lms-id": "lms-course-admin@test.edulinq.org"
-            },
             "course101": {
                 "role": "admin",
-                "lms-id": ""
-            },
-            "course101-with-zero-limit": {
-                "role": "admin",
-                "lms-id": ""
+                "lms-id": "lms-course-admin@test.edulinq.org"
             }
         }
     },
@@ -64,21 +52,9 @@
                 "role": "grader",
                 "lms-id": "lms-course-grader@test.edulinq.org"
             },
-            "course-with-lms": {
-                "role": "grader",
-                "lms-id": "lms-course-grader@test.edulinq.org"
-            },
-            "course-without-source": {
-                "role": "grader",
-                "lms-id": "lms-course-grader@test.edulinq.org"
-            },
             "course101": {
                 "role": "grader",
-                "lms-id": ""
-            },
-            "course101-with-zero-limit": {
-                "role": "grader",
-                "lms-id": ""
+                "lms-id": "lms-course-grader@test.edulinq.org"
             }
         }
     },
@@ -101,21 +77,9 @@
                 "role": "other",
                 "lms-id": "lms-course-other@test.edulinq.org"
             },
-            "course-with-lms": {
-                "role": "other",
-                "lms-id": "lms-course-other@test.edulinq.org"
-            },
-            "course-without-source": {
-                "role": "other",
-                "lms-id": "lms-course-other@test.edulinq.org"
-            },
             "course101": {
                 "role": "other",
-                "lms-id": ""
-            },
-            "course101-with-zero-limit": {
-                "role": "other",
-                "lms-id": ""
+                "lms-id": "lms-course-other@test.edulinq.org"
             }
         }
     },
@@ -138,21 +102,9 @@
                 "role": "owner",
                 "lms-id": "lms-course-owner@test.edulinq.org"
             },
-            "course-with-lms": {
-                "role": "owner",
-                "lms-id": "lms-course-owner@test.edulinq.org"
-            },
-            "course-without-source": {
-                "role": "owner",
-                "lms-id": "lms-course-owner@test.edulinq.org"
-            },
             "course101": {
                 "role": "owner",
-                "lms-id": ""
-            },
-            "course101-with-zero-limit": {
-                "role": "owner",
-                "lms-id": ""
+                "lms-id": "lms-course-owner@test.edulinq.org"
             }
         }
     },
@@ -175,21 +127,9 @@
                 "role": "student",
                 "lms-id": "lms-course-student@test.edulinq.org"
             },
-            "course-with-lms": {
-                "role": "student",
-                "lms-id": "lms-course-student@test.edulinq.org"
-            },
-            "course-without-source": {
-                "role": "student",
-                "lms-id": "lms-course-student@test.edulinq.org"
-            },
             "course101": {
                 "role": "student",
-                "lms-id": ""
-            },
-            "course101-with-zero-limit": {
-                "role": "student",
-                "lms-id": ""
+                "lms-id": "lms-course-student@test.edulinq.org"
             }
         }
     },
