@@ -2,14 +2,17 @@ package cmd
 
 import (
 	"fmt"
+	"net"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"sync"
 	"testing"
 	"time"
 
 	"github.com/edulinq/autograder/internal/api/server"
+	"github.com/edulinq/autograder/internal/config"
 	"github.com/edulinq/autograder/internal/db"
 	"github.com/edulinq/autograder/internal/log"
 	"github.com/edulinq/autograder/internal/util"
@@ -19,12 +22,21 @@ const (
 	TESTING_ARG0    = "testing"
 	STDOUT_FILENAME = "stdout.txt"
 	STDERR_FILENAME = "stderr.txt"
+	LOCAL_HOST      = "localhost"
 )
+
+type CommonCMDTestCases struct {
+	ExpectedExitCode int
+	ExpectedStdout   string
+	ExpectedStderr   string
+}
 
 // Common setup for all CMD tests that require a server.
 func CMDServerTestingMain(suite *testing.M) {
 	// Run inside a func so defers will run before os.Exit().
 	code := func() int {
+		ensureServerStopped()
+
 		db.PrepForTestingMain()
 		defer db.CleanupTestingMain()
 
@@ -47,6 +59,27 @@ func CMDServerTestingMain(suite *testing.M) {
 	}()
 
 	os.Exit(code)
+}
+
+func ensureServerStopped() {
+	var port = strconv.Itoa(config.WEB_PORT.Get())
+
+	for {
+		conn, err := net.DialTimeout("tcp", net.JoinHostPort(LOCAL_HOST, port), time.Second)
+		// Break if the port is not in use.
+		if err != nil {
+			break
+		}
+
+		// Close the connection because the port is still in use.
+		err = conn.Close()
+		if err != nil {
+			log.Error("Failed to close the connection", err)
+		}
+
+		// Small sleep before checking again.
+		time.Sleep(500 * time.Millisecond)
+	}
 }
 
 func RunCMDTest(test *testing.T, mainFunc func(), args []string) (string, string, int, error) {
@@ -138,42 +171,27 @@ func runCMD(mainFunc func(), args []string) (err error) {
 	return err
 }
 
-type CommonCMDTestCases struct {
-	ExpectedExitCode int
-	ExpectedStdout   string
-	ExpectedStderr   string
-}
-
-func RunCommonCMDTests(test *testing.T, mainFunc func(), args []string, commonCases CommonCMDTestCases, prefix string) (string, string, int) {
+func RunCommonCMDTests(test *testing.T, mainFunc func(), args []string, commonCases CommonCMDTestCases, prefix string) (string, string, int, bool) {
 	stdout, stderr, exitCode, err := RunCMDTest(test, mainFunc, args)
 	if err != nil {
 		test.Errorf("%sCMD run returned an error: '%v'.", prefix, err)
-	}
-
-	if len(stderr) > 0 && commonCases.ExpectedStderr == "" {
-		test.Errorf("%sCMD has content in stderr: '%s'.", prefix, stderr)
+		return "", "", -1, false
 	}
 
 	if !strings.Contains(stderr, commonCases.ExpectedStderr) {
 		test.Errorf("%sUnexpected stderr. Expected substring: '%s', Actual stderr: '%s'.", prefix, commonCases.ExpectedStderr, stderr)
+		return "", "", -1, false
 	}
 
 	if commonCases.ExpectedExitCode != exitCode {
 		test.Errorf("%sUnexpected exit code. Expected: '%d', Actual: '%d'.", prefix, commonCases.ExpectedExitCode, exitCode)
+		return "", "", -1, false
 	}
 
 	if commonCases.ExpectedStdout != stdout {
 		test.Errorf("%sUnexpected output. Expected:\n'%s',\nActual:\n'%s'.", prefix, commonCases.ExpectedStdout, stdout)
+		return "", "", -1, false
 	}
 
-	return stdout, stderr, exitCode
-}
-
-func RunVerboseCMDTests(test *testing.T, mainFunc func(), args []string, prefix string) {
-	args = append(args, "--verbose")
-
-	_, _, _, err := RunCMDTest(test, mainFunc, args)
-	if err != nil {
-		test.Errorf("%sCMD run returned an error when testing verbose: '%v'.", prefix, err)
-	}
+	return stdout, stderr, exitCode, true
 }

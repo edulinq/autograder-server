@@ -1,4 +1,4 @@
-package peek
+package main
 
 import (
 	"fmt"
@@ -14,15 +14,67 @@ var testCases = []struct {
 	assignmentID     string
 	targetSubmission string
 }{
-	{cmd.CommonCMDTestCases{0, latestSubmission, ""}, "course-student@test.edulinq.org", "course101", "hw0", ""},
-	{cmd.CommonCMDTestCases{0, specificSubmissionShort, ""}, "course-student@test.edulinq.org", "course101", "hw0", "1697406272"},
-	{cmd.CommonCMDTestCases{0, specificSubmissionLong, ""}, "course-student@test.edulinq.org", "course101", "hw0", "course101::hw0::student@test.com::1697406256"},
-
-	{cmd.CommonCMDTestCases{0, noSubmission, ""}, "course-admin@test.edulinq.org", "course101", "hw0", ""},
-	{cmd.CommonCMDTestCases{0, incorrectSubmission, ""}, "course-student@test.edulinq.org", "course101", "hw0", "ZZZ"},
-
-	{cmd.CommonCMDTestCases{2, "", incorrectCourse}, "course-student@test.edulinq.org", "ZZZ", "hw0", ""},
-	{cmd.CommonCMDTestCases{2, "", incorrectAssignment}, "course-student@test.edulinq.org", "course101", "zzz", ""},
+	{
+		CommonCMDTestCases: cmd.CommonCMDTestCases{
+			ExpectedStdout: LATEST_SUBMISSION,
+		},
+		targetEmail:  "course-student@test.edulinq.org",
+		courseID:     "course101",
+		assignmentID: "hw0",
+	},
+	{
+		CommonCMDTestCases: cmd.CommonCMDTestCases{
+			ExpectedStdout: SPECIFIC_SUBMISSION_SHORT,
+		},
+		targetEmail:      "course-student@test.edulinq.org",
+		courseID:         "course101",
+		assignmentID:     "hw0",
+		targetSubmission: "1697406272",
+	},
+	{
+		CommonCMDTestCases: cmd.CommonCMDTestCases{
+			ExpectedStdout: SPECIFIC_SUBMISSION_LONG,
+		},
+		targetEmail:      "course-student@test.edulinq.org",
+		courseID:         "course101",
+		assignmentID:     "hw0",
+		targetSubmission: "course101::hw0::student@test.com::1697406256",
+	},
+	{
+		CommonCMDTestCases: cmd.CommonCMDTestCases{
+			ExpectedStdout: NO_SUBMISSION,
+		},
+		targetEmail:  "course-admin@test.edulinq.org",
+		courseID:     "course101",
+		assignmentID: "hw0",
+	},
+	{
+		CommonCMDTestCases: cmd.CommonCMDTestCases{
+			ExpectedStdout: INCORRECT_SUBMISSION,
+		},
+		targetEmail:      "course-student@test.edulinq.org",
+		courseID:         "course101",
+		assignmentID:     "hw0",
+		targetSubmission: "ZZZ",
+	},
+	{
+		CommonCMDTestCases: cmd.CommonCMDTestCases{
+			ExpectedExitCode: 2,
+			ExpectedStderr:   `{"message":"Could not find course: 'ZZZ'."}`,
+		},
+		targetEmail:  "course-student@test.edulinq.org",
+		courseID:     "ZZZ",
+		assignmentID: "hw0",
+	},
+	{
+		CommonCMDTestCases: cmd.CommonCMDTestCases{
+			ExpectedExitCode: 2,
+			ExpectedStderr:   `{"message":"Could not find assignment: 'zzz'."}`,
+		},
+		targetEmail:  "course-student@test.edulinq.org",
+		courseID:     "course101",
+		assignmentID: "zzz",
+	},
 }
 
 // Use the common main for all tests in this package.
@@ -40,7 +92,5 @@ func TestPeekBase(test *testing.T) {
 		}
 
 		cmd.RunCommonCMDTests(test, main, args, testCase.CommonCMDTestCases, fmt.Sprintf("Case %d: ", i))
-
-		cmd.RunVerboseCMDTests(test, main, args, fmt.Sprintf("Case %d: ", i))
 	}
 }

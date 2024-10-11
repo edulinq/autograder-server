@@ -1,6 +1,6 @@
-package userlist
+package main
 
-const expectedServerUserList = `{
+const EXPECTED_SERVER_USER_LIST = `{
     "users": [
         {
             "type": "server",
@@ -206,7 +206,7 @@ const expectedServerUserList = `{
 }
 `
 
-const expectedServerUserListTable = `email	name	server-role	courses
+const EXPECTED_SERVER_USER_LIST_TABLE = `email	name	server-role	courses
 course-admin@test.edulinq.org	course-admin	user	{
     "course-languages": {
         "id": "course-languages",

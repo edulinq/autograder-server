@@ -1,6 +1,6 @@
-package peek
+package main
 
-const latestSubmission = `{
+const LATEST_SUBMISSION = `{
     "found-user": true,
     "found-submission": true,
     "submission-result": {
@@ -46,7 +46,7 @@ const latestSubmission = `{
 }
 `
 
-const specificSubmissionShort = `{
+const SPECIFIC_SUBMISSION_SHORT = `{
     "found-user": true,
     "found-submission": true,
     "submission-result": {
@@ -92,7 +92,7 @@ const specificSubmissionShort = `{
 }
 `
 
-const specificSubmissionLong = `{
+const SPECIFIC_SUBMISSION_LONG = `{
     "found-user": true,
     "found-submission": true,
     "submission-result": {
@@ -138,20 +138,16 @@ const specificSubmissionLong = `{
 }
 `
 
-const noSubmission = `{
+const NO_SUBMISSION = `{
     "found-user": true,
     "found-submission": false,
     "submission-result": null
 }
 `
 
-const incorrectSubmission = `{
+const INCORRECT_SUBMISSION = `{
     "found-user": true,
     "found-submission": false,
     "submission-result": null
 }
 `
-
-const incorrectCourse = `{"message":"Could not find course: 'ZZZ'."}`
-
-const incorrectAssignment = `{"message":"Could not find assignment: 'zzz'."}`

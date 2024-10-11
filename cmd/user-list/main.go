@@ -1,4 +1,4 @@
-package userlist
+package main
 
 import (
 	"github.com/alecthomas/kong"
@@ -28,7 +28,7 @@ func main() {
 
 	request := users.ListRequest{}
 
-	var printFunc cmd.CMDPrintHandler = nil
+	var printFunc cmd.CustomFormat = nil
 	if args.Table {
 		printFunc = cmd.ListServerUsersTable
 	}

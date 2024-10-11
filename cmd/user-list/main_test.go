@@ -1,4 +1,4 @@
-package userlist
+package main
 
 import (
 	"fmt"
@@ -8,11 +8,20 @@ import (
 )
 
 var testCases = []struct {
-	cmd.CommonCMDTestCases
-	table bool
+	CommonCMDTestCases cmd.CommonCMDTestCases
+	table              bool
 }{
-	{cmd.CommonCMDTestCases{0, expectedServerUserList, ""}, false},
-	{cmd.CommonCMDTestCases{0, expectedServerUserListTable, ""}, true},
+	{
+		CommonCMDTestCases: cmd.CommonCMDTestCases{
+			ExpectedStdout: EXPECTED_SERVER_USER_LIST,
+		},
+	},
+	{
+		CommonCMDTestCases: cmd.CommonCMDTestCases{
+			ExpectedStdout: EXPECTED_SERVER_USER_LIST_TABLE,
+		},
+		table: true,
+	},
 }
 
 // Use the common main for all tests in this package.
@@ -29,7 +38,16 @@ func TestServerUserListBase(test *testing.T) {
 		}
 
 		cmd.RunCommonCMDTests(test, main, args, testCase.CommonCMDTestCases, fmt.Sprintf("Case %d: ", i))
+	}
+}
 
-		cmd.RunVerboseCMDTests(test, main, args, fmt.Sprintf("Case %d: ", i))
+// Test to ensure that the verbose flag doesn't cause an error.
+// Since the verbose flag is common code, we only need to test it for one CMD.
+func TestServerUserListVerbose(test *testing.T) {
+	args := []string{"--verbose"}
+
+	_, _, _, err := cmd.RunCMDTest(test, main, args)
+	if err != nil {
+		test.Errorf("CMD run returned an error when testing verbose: '%v'.", err)
 	}
 }
