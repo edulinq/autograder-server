@@ -33,7 +33,7 @@ var (
 	DOCKER_DISABLE = MustNewBoolOption("docker.disable", false, "Disable the use of docker (usually for testing).")
 
 	// Tasks
-	NO_TASKS           = MustNewBoolOption("tasks.disable", false, "Disable all scheduled tasks.")
+	NO_TASKS           = MustNewBoolOption("tasks.disable", true, "Disable all scheduled tasks.")
 	TASK_MIN_REST_SECS = MustNewIntOption("tasks.minrest", 5*60,
 		"The minimum time (in seconds) between invocations of the same task."+
 			" A task instance that tries to run too quickly will be skipped.")
