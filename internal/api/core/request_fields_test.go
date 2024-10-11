@@ -266,7 +266,7 @@ func TestGoodPostFiles(test *testing.T) {
 		filepath.Join(config.GetTestdataDir(), "files", "a.txt"),
 	}
 
-	response := SendTestAPIRequestFull(test, endpoint, nil, paths, "course-admin")
+	response := SendTestAPIRequestFull(test, NewEndpoint(endpoint), nil, paths, "course-admin")
 	if response.Content != nil {
 		test.Fatalf("Handler gave an error: '%s'.", response.Content)
 	}
@@ -320,7 +320,7 @@ func TestBadPostFilesNoFiles(test *testing.T) {
 
 	paths := []string{}
 
-	response := SendTestAPIRequestFull(test, endpoint, nil, paths, "course-admin")
+	response := SendTestAPIRequestFull(test, NewEndpoint(endpoint), nil, paths, "course-admin")
 	if response.Success {
 		test.Fatalf("Request did not generate an error: '%v'.", response)
 	}
@@ -356,7 +356,7 @@ func TestBadPostFilesStoreFail(test *testing.T) {
 	util.SetTempDirForTesting(os.DevNull)
 	defer util.SetTempDirForTesting("")
 
-	response := SendTestAPIRequestFull(test, endpoint, nil, paths, "course-admin")
+	response := SendTestAPIRequestFull(test, NewEndpoint(endpoint), nil, paths, "course-admin")
 	if response.Success {
 		test.Fatalf("Request did not generate an error: '%v'.", response)
 	}
@@ -395,7 +395,7 @@ func TestBadPostFilesFileSizeExceeded(test *testing.T) {
 		filepath.Join(config.GetTestdataDir(), "files", "1092bytes.txt"),
 	}
 
-	response := SendTestAPIRequestFull(test, endpoint, nil, paths, "course-admin")
+	response := SendTestAPIRequestFull(test, NewEndpoint(endpoint), nil, paths, "course-admin")
 	if response.Success {
 		test.Fatalf("Request did not generate an error: '%v'.", response)
 	}

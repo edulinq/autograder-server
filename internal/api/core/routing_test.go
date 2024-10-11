@@ -26,7 +26,7 @@ func TestAPIPanic(test *testing.T) {
 
 	routes = append(routes, NewAPIRoute(endpoint, handler))
 
-	response := SendTestAPIRequest(test, endpoint, nil)
+	response := SendTestAPIRequest(test, NewEndpoint(endpoint), nil)
 	if response.Locator != "-001" {
 		test.Fatalf("Response does not have panic locator of '-501', actual locator: '%s'.", response.Locator)
 	}
@@ -61,7 +61,7 @@ func TestMalformedHandlers(test *testing.T) {
 		endpoint := fmt.Sprintf("/test/api/malformed/handler/%d", i)
 		routes = append(routes, NewAPIRoute(endpoint, testCase.handler))
 
-		response := SendTestAPIRequest(test, endpoint, nil)
+		response := SendTestAPIRequest(test, NewEndpoint(endpoint), nil)
 		if response.Locator != testCase.locator {
 			test.Errorf("Case %d -- Expected response locator of '%s', found response locator of '%s'. Response: [%v]", i, testCase.locator, response.Locator, response)
 		}
@@ -86,7 +86,7 @@ func TestBadRequestEmptyContent(test *testing.T) {
 	handler := func(request *BaseTestRequest) (*any, *APIError) { return nil, nil }
 	routes = append(routes, NewAPIRoute(endpoint, handler))
 
-	url := serverURL + endpoint
+	url := serverURL + NewEndpoint(endpoint)
 
 	for i, testCase := range testCases {
 		responseText, err := common.PostNoCheck(url, testCase.form)
@@ -126,7 +126,7 @@ func TestNonMarshalableResponse(test *testing.T) {
 
 	routes = append(routes, NewAPIRoute(endpoint, handler))
 
-	response := SendTestAPIRequest(test, endpoint, nil)
+	response := SendTestAPIRequest(test, NewEndpoint(endpoint), nil)
 	if response.Locator != "-002" {
 		test.Fatalf("Response does not locator of '-531', actual locator: '%s'.", response.Locator)
 	}
