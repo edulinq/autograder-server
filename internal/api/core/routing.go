@@ -34,49 +34,107 @@ type ValidAPIHandler any
 // Post form key for request content.
 const API_REQUEST_CONTENT_KEY = "content"
 
+type Route interface {
+	GetDescription() string
+	GetMethod() string
+	GetRegex() *regexp.Regexp
+	GetSuffix() string
+	Handle(response http.ResponseWriter, request *http.Request) error
+}
+
 // Inspired by https://benhoyt.com/writings/go-routing/
-type Route struct {
-	Method  string
-	Suffix  string
-	Regex   *regexp.Regexp
-	Handler RouteHandler
+type BaseRoute struct {
+	Method      string
+	Suffix      string
+	Regex       *regexp.Regexp
+	Handler     RouteHandler
+	Description string
+}
+
+type APIRoute struct {
+	BaseRoute
+	Request  any
+	Response any
 }
 
 const MAX_FORM_MEM_SIZE_BYTES = 20 * 1024 * 1024 // 20 MB
 
+func (route *BaseRoute) GetDescription() string {
+	return route.Description
+}
+
+func (route *BaseRoute) GetMethod() string {
+	return route.Method
+}
+
+func (route *BaseRoute) GetRegex() *regexp.Regexp {
+	return route.Regex
+}
+
+func (route *BaseRoute) GetSuffix() string {
+	return route.Suffix
+}
+
+func (route *BaseRoute) Handle(response http.ResponseWriter, request *http.Request) error {
+	return route.Handler(response, request)
+}
+
+func (route *APIRoute) GetDescription() string {
+	return route.Description
+}
+
+func (route *APIRoute) GetMethod() string {
+	return route.Method
+}
+
+func (route *APIRoute) GetRegex() *regexp.Regexp {
+	return route.Regex
+}
+
+func (route *APIRoute) GetSuffix() string {
+	return route.Suffix
+}
+
+func (route *APIRoute) Handle(response http.ResponseWriter, request *http.Request) error {
+	return route.Handler(response, request)
+}
+
 // Get a function to pass to http.HandlerFunc().
-func GetRouteServer(routes *[]*Route) http.HandlerFunc {
+func GetRouteServer(routes *[]Route) http.HandlerFunc {
 	return func(response http.ResponseWriter, request *http.Request) {
 		ServeRoutes(routes, response, request)
 	}
 }
 
-func ServeRoutes(routes *[]*Route, response http.ResponseWriter, request *http.Request) {
+func ServeRoutes(routes *[]Route, response http.ResponseWriter, request *http.Request) {
 	log.Debug("Incoming Request", log.NewAttr("method", request.Method), log.NewAttr("url", request.URL.Path))
 
 	if routes == nil {
 		http.NotFound(response, request)
 	}
 
-	var i int
-	var route *Route
+	// var i int
+	// var routePointer *Route
+	var route Route
 	var match bool
 
-	for i, route = range *routes {
-		if route == nil {
-			log.Warn("Found nil route.", log.NewAttr("index", i))
-		}
+	for _, route = range *routes {
+		// if routePointer == nil {
+		//     log.Warn("Found nil route.", log.NewAttr("index", i))
+		// }
 
-		if route.Method != request.Method {
+		// route = *routePointer
+
+		if route.GetMethod() != request.Method {
 			continue
 		}
 
-		match = route.Regex.MatchString(request.URL.Path)
+		match = route.GetRegex().MatchString(request.URL.Path)
 		if !match {
 			continue
 		}
 
-		err := route.Handler(response, request)
+		err := route.Handle(response, request)
 		if err != nil {
 			log.Error("Handler had an error.", err, log.NewAttr("path", request.URL.Path))
 			http.Error(response, "Server Error", http.StatusInternalServerError)
@@ -96,19 +154,31 @@ func ServeRoutes(routes *[]*Route, response http.ResponseWriter, request *http.R
 	http.NotFound(response, request)
 }
 
-func NewRoute(method string, suffix string, handler RouteHandler) *Route {
-	return &Route{method, suffix, regexp.MustCompile("^" + NewEndpoint(suffix) + "$"), handler}
+func NewRoute(method string, suffix string, handler RouteHandler, description string) *BaseRoute {
+	return &BaseRoute{
+		Method:      method,
+		Suffix:      suffix,
+		Regex:       regexp.MustCompile("^" + NewEndpoint(suffix) + "$"),
+		Handler:     handler,
+		Description: description,
+	}
 }
 
-func NewRedirect(method string, suffix string, target string) *Route {
+func NewRedirect(method string, suffix string, target string, description string) *BaseRoute {
 	redirectFunc := func(response http.ResponseWriter, request *http.Request) error {
 		return handleRedirect(target, response, request)
 	}
 
-	return &Route{method, suffix, regexp.MustCompile("^" + NewEndpoint(suffix) + "$"), redirectFunc}
+	return &BaseRoute{
+		Method:      method,
+		Suffix:      suffix,
+		Regex:       regexp.MustCompile("^" + NewEndpoint(suffix) + "$"),
+		Handler:     redirectFunc,
+		Description: description,
+	}
 }
 
-func NewAPIRoute(suffix string, apiHandler any) *Route {
+func NewAPIRoute(suffix string, apiHandler any, description string) *APIRoute {
 	handler := func(response http.ResponseWriter, request *http.Request) (err error) {
 		// Recover from any panic.
 		defer func() {
@@ -130,7 +200,18 @@ func NewAPIRoute(suffix string, apiHandler any) *Route {
 		return err
 	}
 
-	return &Route{"POST", suffix, regexp.MustCompile("^" + NewEndpoint(suffix) + "$"), handler}
+	// TODO: Unpack request and response fields via reflection and put into struct.
+	return &APIRoute{
+		BaseRoute: BaseRoute{
+			Method:      "POST",
+			Suffix:      suffix,
+			Regex:       regexp.MustCompile("^" + NewEndpoint(suffix) + "$"),
+			Handler:     handler,
+			Description: description,
+		},
+		Request:  nil,
+		Response: nil,
+	}
 }
 
 func handleRedirect(target string, response http.ResponseWriter, request *http.Request) error {

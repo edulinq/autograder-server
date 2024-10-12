@@ -14,7 +14,7 @@ import (
 var server *httptest.Server
 var serverURL string
 
-func startTestServer(routes *[]*Route) {
+func startTestServer(routes *[]Route) {
 	if server != nil {
 		panic("Test server already started.")
 	}
@@ -33,7 +33,7 @@ func stopTestServer() {
 }
 
 // Common setup for all API tests.
-func APITestingMain(suite *testing.M, routes *[]*Route) {
+func APITestingMain(suite *testing.M, routes *[]Route) {
 	// Run inside a func so defers will run before os.Exit().
 	code := func() int {
 		db.PrepForTestingMain()

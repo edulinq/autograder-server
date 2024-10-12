@@ -13,17 +13,17 @@ import (
 	"github.com/edulinq/autograder/internal/api/users"
 )
 
-var baseRoutes = []*core.Route{
-	core.NewRedirect("GET", ``, `/static/index.html`),
-	core.NewRedirect("GET", `/`, `/static/index.html`),
-	core.NewRedirect("GET", `/index.html`, `/static/index.html`),
+var baseRoutes = []core.Route{
+	core.NewRedirect("GET", ``, `/static/index.html`, "TODO: Description."),
+	core.NewRedirect("GET", `/`, `/static/index.html`, "TODO: Description."),
+	core.NewRedirect("GET", `/index.html`, `/static/index.html`, "TODO: Description."),
 
-	core.NewRoute("GET", `/static`, static.Handle),
-	core.NewRoute("GET", `/static/.*`, static.Handle),
+	core.NewRoute("GET", `/static`, static.Handle, "TODO: Description."),
+	core.NewRoute("GET", `/static/.*`, static.Handle, "TODO: Description."),
 }
 
-func GetRoutes() *[]*core.Route {
-	routes := make([]*core.Route, 0)
+func GetRoutes() *[]core.Route {
+	routes := make([]core.Route, 0)
 
 	routes = append(routes, baseRoutes...)
 	routes = append(routes, *(courses.GetRoutes())...)
@@ -39,7 +39,7 @@ func Describe() string {
 
 	routes := GetRoutes()
 	for _, route := range *routes {
-		builder.WriteString(route.Suffix)
+		builder.WriteString(route.GetSuffix())
 		builder.WriteString("\n")
 	}
 
