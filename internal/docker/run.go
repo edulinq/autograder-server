@@ -5,7 +5,6 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/mount"
 	"github.com/docker/docker/pkg/stdcopy"
@@ -58,13 +57,13 @@ func RunContainer(logId log.Loggable, imageName string, inputDir string, outputD
 		return "", "", fmt.Errorf("Failed to create container '%s': '%w'.", name, err)
 	}
 
-	err = docker.ContainerStart(ctx, containerInstance.ID, types.ContainerStartOptions{})
+	err = docker.ContainerStart(ctx, containerInstance.ID, container.StartOptions{})
 	if err != nil {
 		return "", "", fmt.Errorf("Failed to start container '%s' (%s): '%w'.", name, containerInstance.ID, err)
 	}
 
 	// Get the output reader before the container dies.
-	out, err := docker.ContainerLogs(ctx, containerInstance.ID, types.ContainerLogsOptions{
+	out, err := docker.ContainerLogs(ctx, containerInstance.ID, container.LogsOptions{
 		ShowStdout: true,
 		ShowStderr: true,
 		Follow:     true,
