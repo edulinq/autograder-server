@@ -57,8 +57,10 @@ func BuildImageWithOptions(imageSource ImageSource, options *BuildOptions) error
 	}
 
 	buildOptions := types.ImageBuildOptions{
-		Tags:       []string{imageInfo.Name},
-		Dockerfile: "Dockerfile",
+		Tags:        []string{imageInfo.Name},
+		Dockerfile:  "Dockerfile",
+		Remove:      true,
+		ForceRemove: true,
 	}
 
 	if options.Rebuild {
