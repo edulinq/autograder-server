@@ -298,7 +298,7 @@ func fetchLateDays(policy model.LateGradingPolicy, assignment *model.Assignment)
 		if foundComment {
 			if info.AvailableDays != postedLateDays {
 				log.Warn("Mismatch in the posted late days and the number found in the autograder comment.",
-					assignment, log.NewAttr("posted-days", postedLateDays), log.NewAttr("comment-days", info.AvailableDays))
+					assignment, log.NewAttr("posted-days", postedLateDays), log.NewAttr("comment-days", info.AvailableDays), log.NewAttr("user-lms-id", lmsLateDaysScore.UserID))
 			}
 		} else {
 			info.AllocatedDays = make(map[string]int)

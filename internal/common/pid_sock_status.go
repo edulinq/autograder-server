@@ -101,7 +101,7 @@ func checkAndHandleStalePid() (bool, error) {
 	if isAlive(statusJson.Pid) {
 		return false, nil
 	} else {
-		log.Warn("Removing stale status file '%s'.", statusPath)
+		log.Warn("Removing stale status file.", log.NewAttr("path", statusPath))
 
 		err := util.RemoveDirent(statusPath)
 		if err != nil {
