@@ -29,7 +29,12 @@ func main() {
 }
 
 func run() int {
-	fmt.Print(api.Describe())
+	description, err := api.Describe()
+	if err != nil {
+		log.Fatal("Unable to describe API endpoints.", err)
+	}
+
+	fmt.Print(description)
 
 	return 0
 }
