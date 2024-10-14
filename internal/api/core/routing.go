@@ -113,10 +113,15 @@ func ServeRoutes(routes *[]Route, response http.ResponseWriter, request *http.Re
 		http.NotFound(response, request)
 	}
 
+	var i int
 	var route Route
 	var match bool
 
-	for _, route = range *routes {
+	for i, route = range *routes {
+		if route == nil {
+			log.Warn("Found nil route.", log.NewAttr("index", i))
+		}
+
 		if route.GetMethod() != request.Method {
 			continue
 		}
