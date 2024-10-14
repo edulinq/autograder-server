@@ -7,7 +7,7 @@ import (
 )
 
 var routes []*core.Route = []*core.Route{
-	core.NewAPIRoute(core.NewEndpoint(`courses/assignments/submissions/fetch/course/attemps`), HandleFetchCourseAttemps),
+	core.NewAPIRoute(core.NewEndpoint(`courses/assignments/submissions/fetch/course/attempts`), HandleFetchCourseAttempts),
 	core.NewAPIRoute(core.NewEndpoint(`courses/assignments/submissions/fetch/course/scores`), HandleFetchCourseScores),
 
 	core.NewAPIRoute(core.NewEndpoint(`courses/assignments/submissions/fetch/user/attempt`), HandleFetchUserAttempt),

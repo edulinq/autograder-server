@@ -52,11 +52,11 @@ func TestRejectSubmissionMaxAttemptsInfinite(test *testing.T) {
 }
 
 func TestRejectSubmissionMaxWindowAttempts(test *testing.T) {
-	testMaxWindowAttemps(test, "course-other@test.edulinq.org", true)
+	testMaxWindowAttempts(test, "course-other@test.edulinq.org", true)
 }
 
 func TestRejectSubmissionMaxWindowAttemptsAdmin(test *testing.T) {
-	testMaxWindowAttemps(test, "course-grader@test.edulinq.org", false)
+	testMaxWindowAttempts(test, "course-grader@test.edulinq.org", false)
 }
 
 func TestRejectWindowMaxMessage(test *testing.T) {
@@ -85,7 +85,7 @@ func TestRejectWindowMaxMessage(test *testing.T) {
 	}
 }
 
-func testMaxWindowAttemps(test *testing.T, user string, expectReject bool) {
+func testMaxWindowAttempts(test *testing.T, user string, expectReject bool) {
 	db.ResetForTesting()
 	defer db.ResetForTesting()
 
