@@ -33,7 +33,6 @@ func RunContainer(logId log.Loggable, imageName string, inputDir string, outputD
 			NetworkDisabled: true,
 		},
 		&container.HostConfig{
-			AutoRemove: true,
 			Mounts: []mount.Mount{
 				mount.Mount{
 					Type:     "bind",
@@ -57,6 +56,19 @@ func RunContainer(logId log.Loggable, imageName string, inputDir string, outputD
 		return "", "", fmt.Errorf("Failed to create container '%s': '%w'.", name, err)
 	}
 
+	defer func() {
+		err = docker.ContainerRemove(ctx, containerInstance.ID, container.RemoveOptions{
+			RemoveVolumes: true,
+			RemoveLinks:   true,
+			Force:         true,
+		})
+		if err != nil {
+			log.Warn("Failed to remove container.",
+				err, logId,
+				log.NewAttr("container-name", name), log.NewAttr("container-id", containerInstance.ID))
+		}
+	}()
+
 	err = docker.ContainerStart(ctx, containerInstance.ID, container.StartOptions{})
 	if err != nil {
 		return "", "", fmt.Errorf("Failed to start container '%s' (%s): '%w'.", name, containerInstance.ID, err)
@@ -74,8 +86,9 @@ func RunContainer(logId log.Loggable, imageName string, inputDir string, outputD
 			err, logId,
 			log.NewAttr("container-name", name), log.NewAttr("container-id", containerInstance.ID))
 		out = nil
+	} else {
+		defer out.Close()
 	}
-	defer out.Close()
 
 	statusChan, errorChan := docker.ContainerWait(ctx, containerInstance.ID, container.WaitConditionNotRunning)
 	select {
