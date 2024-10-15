@@ -76,24 +76,9 @@ func TestNewServerUserInfos(test *testing.T) {
 							CourseName: "Course Using Different Languages.",
 							Role:       model.GetCourseUserRole("admin"),
 						},
-						"course-with-lms": {
-							CourseID:   "course-with-lms",
-							CourseName: "Course With LMS",
-							Role:       model.GetCourseUserRole("admin"),
-						},
-						"course-without-source": {
-							CourseID:   "course-without-source",
-							CourseName: "Course Without Source",
-							Role:       model.GetCourseUserRole("admin"),
-						},
 						"course101": {
 							CourseID:   "course101",
 							CourseName: "Course 101",
-							Role:       model.GetCourseUserRole("admin"),
-						},
-						"course101-with-zero-limit": {
-							CourseID:   "course101-with-zero-limit",
-							CourseName: "Course 101 - With Zero Limit",
 							Role:       model.GetCourseUserRole("admin"),
 						},
 					},
@@ -111,24 +96,9 @@ func TestNewServerUserInfos(test *testing.T) {
 							CourseName: "Course Using Different Languages.",
 							Role:       model.GetCourseUserRole("grader"),
 						},
-						"course-with-lms": {
-							CourseID:   "course-with-lms",
-							CourseName: "Course With LMS",
-							Role:       model.GetCourseUserRole("grader"),
-						},
-						"course-without-source": {
-							CourseID:   "course-without-source",
-							CourseName: "Course Without Source",
-							Role:       model.GetCourseUserRole("grader"),
-						},
 						"course101": {
 							CourseID:   "course101",
 							CourseName: "Course 101",
-							Role:       model.GetCourseUserRole("grader"),
-						},
-						"course101-with-zero-limit": {
-							CourseID:   "course101-with-zero-limit",
-							CourseName: "Course 101 - With Zero Limit",
 							Role:       model.GetCourseUserRole("grader"),
 						},
 					},
@@ -146,24 +116,9 @@ func TestNewServerUserInfos(test *testing.T) {
 							CourseName: "Course Using Different Languages.",
 							Role:       model.GetCourseUserRole("student"),
 						},
-						"course-with-lms": {
-							CourseID:   "course-with-lms",
-							CourseName: "Course With LMS",
-							Role:       model.GetCourseUserRole("student"),
-						},
-						"course-without-source": {
-							CourseID:   "course-without-source",
-							CourseName: "Course Without Source",
-							Role:       model.GetCourseUserRole("student"),
-						},
 						"course101": {
 							CourseID:   "course101",
 							CourseName: "Course 101",
-							Role:       model.GetCourseUserRole("student"),
-						},
-						"course101-with-zero-limit": {
-							CourseID:   "course101-with-zero-limit",
-							CourseName: "Course 101 - With Zero Limit",
 							Role:       model.GetCourseUserRole("student"),
 						},
 					},
@@ -218,7 +173,7 @@ func TestNewCourseUserInfos(test *testing.T) {
 						Name:  "course-admin",
 					},
 					Role:  model.GetCourseUserRole("admin"),
-					LMSID: "",
+					LMSID: "lms-course-admin@test.edulinq.org",
 				},
 				{
 					BaseUserInfo: BaseUserInfo{
@@ -227,7 +182,7 @@ func TestNewCourseUserInfos(test *testing.T) {
 						Name:  "course-grader",
 					},
 					Role:  model.GetCourseUserRole("grader"),
-					LMSID: "",
+					LMSID: "lms-course-grader@test.edulinq.org",
 				},
 				{
 					BaseUserInfo: BaseUserInfo{
@@ -236,7 +191,7 @@ func TestNewCourseUserInfos(test *testing.T) {
 						Name:  "course-student",
 					},
 					Role:  model.GetCourseUserRole("student"),
-					LMSID: "",
+					LMSID: "lms-course-student@test.edulinq.org",
 				},
 			},
 		},

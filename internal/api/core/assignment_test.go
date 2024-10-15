@@ -5,20 +5,29 @@ import (
 	"testing"
 
 	"github.com/edulinq/autograder/internal/db"
+	"github.com/edulinq/autograder/internal/model"
 	"github.com/edulinq/autograder/internal/util"
 )
 
 func TestNewAssignmentInfos(test *testing.T) {
+	db.ResetForTesting()
+	defer db.ResetForTesting()
+
+	emptyCourse := &model.Course{ID: "empty-course"}
+	db.MustSaveCourse(emptyCourse)
+
 	testCases := []struct {
 		course   string
 		expected []*AssignmentInfo
 	}{
 		// Empty
-		{"course-without-source", []*AssignmentInfo{}},
+		{"empty-course", []*AssignmentInfo{}},
+
 		// One Assignment
-		{"course101-with-zero-limit", []*AssignmentInfo{
+		{"course101", []*AssignmentInfo{
 			&AssignmentInfo{"hw0", "Homework 0"},
 		}},
+
 		// Multiple Assignments
 		{"course-languages", []*AssignmentInfo{
 			&AssignmentInfo{"bash", "bash"},

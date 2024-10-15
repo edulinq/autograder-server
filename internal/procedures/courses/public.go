@@ -3,7 +3,9 @@ package courses
 import (
 	"errors"
 	"fmt"
+	"path/filepath"
 	"slices"
+	"strings"
 
 	"github.com/edulinq/autograder/internal/common"
 	"github.com/edulinq/autograder/internal/model"
@@ -68,6 +70,13 @@ func UpsertFromFileSpec(spec *common.FileSpec, options CourseUpsertOptions) ([]C
 	err = spec.CopyTarget(common.ShouldGetCWD(), tempDir, false)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to copy file spec: '%w'.", err)
+	}
+
+	// Check if the filespec target was a zip file.
+	targetPath := util.GetSingleDirent(tempDir)
+	extension := strings.ToLower(filepath.Ext(targetPath))
+	if extension == ".zip" {
+		return UpsertFromZipFile(targetPath, options)
 	}
 
 	return UpsertFromDir(tempDir, options)

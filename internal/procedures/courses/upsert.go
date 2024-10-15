@@ -70,18 +70,22 @@ func upsertFromConfigPath(path string, options CourseUpsertOptions) (*CourseUpse
 	}
 
 	// Sync LMS
-	err = syncLMS(course, options, result)
-	if err != nil {
-		return nil, result.CourseID, fmt.Errorf("Failed to sync course with LMS: '%w'.", err)
+	if !options.SkipLMSSync {
+		err = syncLMS(course, options, result)
+		if err != nil {
+			return nil, result.CourseID, fmt.Errorf("Failed to sync course with LMS: '%w'.", err)
+		}
 	}
 
 	// Build Images
-	builtImages, err := course.BuildAssignmentImagesDefault()
-	if err != nil {
-		return nil, result.CourseID, fmt.Errorf("Failed to build assignment images: '%w'.", err)
-	}
+	if !options.SkipBuildImages {
+		builtImages, err := course.BuildAssignmentImagesDefault()
+		if err != nil {
+			return nil, result.CourseID, fmt.Errorf("Failed to build assignment images: '%w'.", err)
+		}
 
-	result.BuiltAssignmentImages = builtImages
+		result.BuiltAssignmentImages = builtImages
+	}
 
 	// Schedule Tasks
 	if !options.DryRun && !options.SkipTasks {

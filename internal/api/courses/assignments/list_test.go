@@ -6,42 +6,45 @@ import (
 
 	"github.com/edulinq/autograder/internal/api/core"
 	"github.com/edulinq/autograder/internal/db"
+	"github.com/edulinq/autograder/internal/model"
 	"github.com/edulinq/autograder/internal/util"
 )
 
 func TestList(test *testing.T) {
+	db.ResetForTesting()
+	defer db.ResetForTesting()
+
 	users := db.MustGetServerUsers()
+
+	emptyCourse := &model.Course{ID: "empty-course"}
+	db.MustSaveCourse(emptyCourse)
 
 	testCases := []struct {
 		email     string
 		permError bool
 		course    string
 	}{
-		// Invalid permissions.
-		{"server-user@test.edulinq.org", true, "course-without-source"},
-		{"server-creator@test.edulinq.org", true, "course-without-source"},
+		// Invalid Permissions
+		{"server-user@test.edulinq.org", true, "course101"},
+		{"server-creator@test.edulinq.org", true, "course101"},
 
-		// Valid permissions
-		// Empty
-		{"course-admin@test.edulinq.org", false, "course-without-source"},
-		{"course-owner@test.edulinq.org", false, "course-without-source"},
-		// One Assignment
-		{"course-grader@test.edulinq.org", false, "course101-with-zero-limit"},
-		{"course-student@test.edulinq.org", false, "course101-with-zero-limit"},
-		// Multiple Assignments
-		{"course-admin@test.edulinq.org", false, "course-languages"},
-		{"course-other@test.edulinq.org", false, "course-languages"},
+		// Valid Permissions
+		{"course-other@test.edulinq.org", false, "course101"},
+		{"course-student@test.edulinq.org", false, "course101"},
+		{"course-grader@test.edulinq.org", false, "course101"},
+		{"course-admin@test.edulinq.org", false, "course101"},
+		{"course-owner@test.edulinq.org", false, "course101"},
+		{"server-admin@test.edulinq.org", false, "course101"},
+		{"server-owner@test.edulinq.org", false, "course101"},
 
-		// Valid permissions, role escalation
 		// Empty
-		{"server-admin@test.edulinq.org", false, "course-without-source"},
-		{"server-owner@test.edulinq.org", false, "course-without-source"},
+		{"server-admin@test.edulinq.org", false, "empty-course"},
+
 		// One Assignment
-		{"server-admin@test.edulinq.org", false, "course101-with-zero-limit"},
-		{"server-owner@test.edulinq.org", false, "course101-with-zero-limit"},
+		{"server-admin@test.edulinq.org", false, "course101"},
+
 		// Multiple Assignments
-		{"server-admin@test.edulinq.org", false, "course-without-source"},
-		{"server-owner@test.edulinq.org", false, "course-without-source"},
+		{"server-admin@test.edulinq.org", false, "course-languages"},
 	}
 
 	for i, testCase := range testCases {

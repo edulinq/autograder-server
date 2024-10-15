@@ -5,7 +5,6 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/mount"
 	"github.com/docker/docker/pkg/stdcopy"
@@ -34,7 +33,6 @@ func RunContainer(logId log.Loggable, imageName string, inputDir string, outputD
 			NetworkDisabled: true,
 		},
 		&container.HostConfig{
-			AutoRemove: true,
 			Mounts: []mount.Mount{
 				mount.Mount{
 					Type:     "bind",
@@ -58,13 +56,26 @@ func RunContainer(logId log.Loggable, imageName string, inputDir string, outputD
 		return "", "", fmt.Errorf("Failed to create container '%s': '%w'.", name, err)
 	}
 
-	err = docker.ContainerStart(ctx, containerInstance.ID, types.ContainerStartOptions{})
+	defer func() {
+		err = docker.ContainerRemove(ctx, containerInstance.ID, container.RemoveOptions{
+			RemoveVolumes: true,
+			RemoveLinks:   true,
+			Force:         true,
+		})
+		if err != nil {
+			log.Warn("Failed to remove container.",
+				err, logId,
+				log.NewAttr("container-name", name), log.NewAttr("container-id", containerInstance.ID))
+		}
+	}()
+
+	err = docker.ContainerStart(ctx, containerInstance.ID, container.StartOptions{})
 	if err != nil {
 		return "", "", fmt.Errorf("Failed to start container '%s' (%s): '%w'.", name, containerInstance.ID, err)
 	}
 
 	// Get the output reader before the container dies.
-	out, err := docker.ContainerLogs(ctx, containerInstance.ID, types.ContainerLogsOptions{
+	out, err := docker.ContainerLogs(ctx, containerInstance.ID, container.LogsOptions{
 		ShowStdout: true,
 		ShowStderr: true,
 		Follow:     true,
@@ -75,8 +86,9 @@ func RunContainer(logId log.Loggable, imageName string, inputDir string, outputD
 			err, logId,
 			log.NewAttr("container-name", name), log.NewAttr("container-id", containerInstance.ID))
 		out = nil
+	} else {
+		defer out.Close()
 	}
-	defer out.Close()
 
 	statusChan, errorChan := docker.ContainerWait(ctx, containerInstance.ID, container.WaitConditionNotRunning)
 	select {

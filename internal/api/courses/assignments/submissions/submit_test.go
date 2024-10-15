@@ -8,6 +8,7 @@ import (
 	"github.com/edulinq/autograder/internal/config"
 	"github.com/edulinq/autograder/internal/db"
 	"github.com/edulinq/autograder/internal/grader"
+	"github.com/edulinq/autograder/internal/model"
 	"github.com/edulinq/autograder/internal/util"
 )
 
@@ -78,12 +79,18 @@ func TestRejectSubmissionMaxAttempts(test *testing.T) {
 	config.UNIT_TESTING_MODE.Set(false)
 	defer config.UNIT_TESTING_MODE.Set(true)
 
+	course := db.MustGetCourse("course101")
+	course.SubmissionLimit = &model.SubmissionLimitInfo{
+		Max: util.IntPointer(0),
+	}
+	db.MustSaveCourse(course)
+
 	// Note that we are using a submission from a different assignment.
 	assignment := db.MustGetTestAssignment()
 	paths := []string{filepath.Join(assignment.GetSourceDir(), SUBMISSION_RELPATH)}
 
 	fields := map[string]any{
-		"course-id":     "course101-with-zero-limit",
+		"course-id":     "course101",
 		"assignment-id": "hw0",
 	}
 

@@ -10,6 +10,7 @@ import (
 	lmstest "github.com/edulinq/autograder/internal/lms/backend/test"
 	"github.com/edulinq/autograder/internal/lms/lmstypes"
 	"github.com/edulinq/autograder/internal/model"
+	"github.com/edulinq/autograder/internal/util"
 )
 
 type SyncLMSTestCase struct {
@@ -30,11 +31,18 @@ func TestCourseSyncLMSUserEmails(test *testing.T) {
 	reset()
 	defer reset()
 
+	// Alter the LMS id for the user.
+	email := "course-student@test.edulinq.org"
+
+	user := db.MustGetServerUser(email)
+	user.CourseInfo["course101"].LMSID = util.StringPointer("ZZZ")
+	db.MustUpsertUser(user)
+
 	course := db.MustGetTestCourse()
 
 	course.GetLMSAdapter().SyncUserAttributes = true
 
-	emails := []string{"course-student@test.edulinq.org"}
+	emails := []string{email}
 	results, err := SyncLMSUserEmails(course, emails, false, false)
 	if err != nil {
 		test.Fatalf("Got an error when syncing known user: '%v'.", err)
@@ -75,10 +83,10 @@ func TestCourseSyncLMSUsers(test *testing.T) {
 		enrolled int
 		dropped  int
 	}{
-		{true, true, true, 1, 4, 0, 1, 1},
-		{true, true, false, 1, 3, 1, 1, 0},
-		{true, false, true, 0, 4, 1, 0, 1},
-		{true, false, false, 0, 3, 2, 0, 0},
+		{true, true, true, 1, 3, 0, 1, 1},
+		{true, true, false, 1, 2, 1, 1, 0},
+		{true, false, true, 0, 3, 1, 0, 1},
+		{true, false, false, 0, 2, 2, 0, 0},
 		{false, true, true, 1, 1, 4, 1, 1},
 		{false, true, false, 1, 0, 5, 1, 0},
 		{false, false, true, 0, 1, 5, 0, 1},

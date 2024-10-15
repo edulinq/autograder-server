@@ -9,7 +9,7 @@ import (
 	"github.com/edulinq/autograder/internal/util"
 )
 
-func TestFetchCourseAttemps(test *testing.T) {
+func TestFetchCourseAttempts(test *testing.T) {
 	testCases := []struct {
 		email     string
 		permError bool
@@ -56,7 +56,7 @@ func TestFetchCourseAttemps(test *testing.T) {
 			continue
 		}
 
-		var responseContent FetchCourseAttempsResponse
+		var responseContent FetchCourseAttemptsResponse
 		util.MustJSONFromString(util.MustToJSON(response.Content), &responseContent)
 
 		if !reflect.DeepEqual(submissions, responseContent.GradingResults) {

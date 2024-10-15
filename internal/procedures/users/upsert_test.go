@@ -127,19 +127,9 @@ func TestUpsertUser(test *testing.T) {
 						Role:  model.CourseRoleStudent,
 						LMSID: util.StringPointer("lms-course-student@test.edulinq.org"),
 					},
-					"course-with-lms": &model.UserCourseInfo{
-						Role:  model.CourseRoleStudent,
-						LMSID: util.StringPointer("lms-course-student@test.edulinq.org"),
-					},
-					"course-without-source": &model.UserCourseInfo{
-						Role:  model.CourseRoleStudent,
-						LMSID: util.StringPointer("lms-course-student@test.edulinq.org"),
-					},
 					"course101": &model.UserCourseInfo{
-						Role: model.CourseRoleStudent,
-					},
-					"course101-with-zero-limit": &model.UserCourseInfo{
-						Role: model.CourseRoleStudent,
+						Role:  model.CourseRoleStudent,
+						LMSID: util.StringPointer("lms-course-student@test.edulinq.org"),
 					},
 				},
 			},
@@ -178,19 +168,9 @@ func TestUpsertUser(test *testing.T) {
 						Role:  model.CourseRoleStudent,
 						LMSID: util.StringPointer("lms-course-student@test.edulinq.org"),
 					},
-					"course-with-lms": &model.UserCourseInfo{
-						Role:  model.CourseRoleStudent,
-						LMSID: util.StringPointer("lms-course-student@test.edulinq.org"),
-					},
-					"course-without-source": &model.UserCourseInfo{
-						Role:  model.CourseRoleStudent,
-						LMSID: util.StringPointer("lms-course-student@test.edulinq.org"),
-					},
 					"course101": &model.UserCourseInfo{
-						Role: model.CourseRoleStudent,
-					},
-					"course101-with-zero-limit": &model.UserCourseInfo{
-						Role: model.CourseRoleStudent,
+						Role:  model.CourseRoleStudent,
+						LMSID: util.StringPointer("lms-course-student@test.edulinq.org"),
 					},
 					"new-course": &model.UserCourseInfo{
 						Role:  model.CourseRoleStudent,
@@ -230,19 +210,9 @@ func TestUpsertUser(test *testing.T) {
 						Role:  model.CourseRoleStudent,
 						LMSID: util.StringPointer("lms-course-student@test.edulinq.org"),
 					},
-					"course-with-lms": &model.UserCourseInfo{
-						Role:  model.CourseRoleStudent,
-						LMSID: util.StringPointer("lms-course-student@test.edulinq.org"),
-					},
-					"course-without-source": &model.UserCourseInfo{
-						Role:  model.CourseRoleStudent,
-						LMSID: util.StringPointer("lms-course-student@test.edulinq.org"),
-					},
 					"course101": &model.UserCourseInfo{
-						Role: model.CourseRoleGrader,
-					},
-					"course101-with-zero-limit": &model.UserCourseInfo{
-						Role: model.CourseRoleStudent,
+						Role:  model.CourseRoleGrader,
+						LMSID: util.StringPointer("lms-course-student@test.edulinq.org"),
 					},
 				},
 			},
@@ -279,19 +249,9 @@ func TestUpsertUser(test *testing.T) {
 						Role:  model.CourseRoleStudent,
 						LMSID: util.StringPointer("lms-course-student@test.edulinq.org"),
 					},
-					"course-with-lms": &model.UserCourseInfo{
-						Role:  model.CourseRoleStudent,
-						LMSID: util.StringPointer("lms-course-student@test.edulinq.org"),
-					},
-					"course-without-source": &model.UserCourseInfo{
-						Role:  model.CourseRoleStudent,
-						LMSID: util.StringPointer("lms-course-student@test.edulinq.org"),
-					},
 					"course101": &model.UserCourseInfo{
-						Role: model.CourseRoleGrader,
-					},
-					"course101-with-zero-limit": &model.UserCourseInfo{
-						Role: model.CourseRoleStudent,
+						Role:  model.CourseRoleGrader,
+						LMSID: util.StringPointer("lms-course-student@test.edulinq.org"),
 					},
 				},
 			},
@@ -328,19 +288,9 @@ func TestUpsertUser(test *testing.T) {
 						Role:  model.CourseRoleStudent,
 						LMSID: util.StringPointer("lms-course-student@test.edulinq.org"),
 					},
-					"course-with-lms": &model.UserCourseInfo{
-						Role:  model.CourseRoleStudent,
-						LMSID: util.StringPointer("lms-course-student@test.edulinq.org"),
-					},
-					"course-without-source": &model.UserCourseInfo{
-						Role:  model.CourseRoleStudent,
-						LMSID: util.StringPointer("lms-course-student@test.edulinq.org"),
-					},
 					"course101": &model.UserCourseInfo{
-						Role: model.CourseRoleStudent,
-					},
-					"course101-with-zero-limit": &model.UserCourseInfo{
-						Role: model.CourseRoleStudent,
+						Role:  model.CourseRoleStudent,
+						LMSID: util.StringPointer("lms-course-student@test.edulinq.org"),
 					},
 				},
 			},
@@ -376,19 +326,9 @@ func TestUpsertUser(test *testing.T) {
 						Role:  model.CourseRoleStudent,
 						LMSID: util.StringPointer("lms-course-student@test.edulinq.org"),
 					},
-					"course-with-lms": &model.UserCourseInfo{
-						Role:  model.CourseRoleStudent,
-						LMSID: util.StringPointer("lms-course-student@test.edulinq.org"),
-					},
-					"course-without-source": &model.UserCourseInfo{
-						Role:  model.CourseRoleStudent,
-						LMSID: util.StringPointer("lms-course-student@test.edulinq.org"),
-					},
 					"course101": &model.UserCourseInfo{
-						Role: model.CourseRoleStudent,
-					},
-					"course101-with-zero-limit": &model.UserCourseInfo{
-						Role: model.CourseRoleStudent,
+						Role:  model.CourseRoleStudent,
+						LMSID: util.StringPointer("lms-course-student@test.edulinq.org"),
 					},
 				},
 			},
@@ -464,19 +404,9 @@ func TestUpsertUser(test *testing.T) {
 						Role:  model.CourseRoleAdmin,
 						LMSID: util.StringPointer("lms-course-admin@test.edulinq.org"),
 					},
-					"course-with-lms": &model.UserCourseInfo{
-						Role:  model.CourseRoleAdmin,
-						LMSID: util.StringPointer("lms-course-admin@test.edulinq.org"),
-					},
-					"course-without-source": &model.UserCourseInfo{
-						Role:  model.CourseRoleAdmin,
-						LMSID: util.StringPointer("lms-course-admin@test.edulinq.org"),
-					},
 					"course101": &model.UserCourseInfo{
-						Role: model.CourseRoleStudent,
-					},
-					"course101-with-zero-limit": &model.UserCourseInfo{
-						Role: model.CourseRoleAdmin,
+						Role:  model.CourseRoleStudent,
+						LMSID: util.StringPointer("lms-course-admin@test.edulinq.org"),
 					},
 				},
 			},
@@ -511,19 +441,9 @@ func TestUpsertUser(test *testing.T) {
 						Role:  model.CourseRoleStudent,
 						LMSID: util.StringPointer("lms-course-student@test.edulinq.org"),
 					},
-					"course-with-lms": &model.UserCourseInfo{
-						Role:  model.CourseRoleStudent,
-						LMSID: util.StringPointer("lms-course-student@test.edulinq.org"),
-					},
-					"course-without-source": &model.UserCourseInfo{
-						Role:  model.CourseRoleStudent,
-						LMSID: util.StringPointer("lms-course-student@test.edulinq.org"),
-					},
 					"course101": &model.UserCourseInfo{
-						Role: model.CourseRoleStudent,
-					},
-					"course101-with-zero-limit": &model.UserCourseInfo{
-						Role: model.CourseRoleStudent,
+						Role:  model.CourseRoleStudent,
+						LMSID: util.StringPointer("lms-course-student@test.edulinq.org"),
 					},
 				},
 			},
@@ -557,19 +477,9 @@ func TestUpsertUser(test *testing.T) {
 						Role:  model.CourseRoleStudent,
 						LMSID: util.StringPointer("lms-course-student@test.edulinq.org"),
 					},
-					"course-with-lms": &model.UserCourseInfo{
-						Role:  model.CourseRoleStudent,
-						LMSID: util.StringPointer("lms-course-student@test.edulinq.org"),
-					},
-					"course-without-source": &model.UserCourseInfo{
-						Role:  model.CourseRoleStudent,
-						LMSID: util.StringPointer("lms-course-student@test.edulinq.org"),
-					},
 					"course101": &model.UserCourseInfo{
-						Role: model.CourseRoleStudent,
-					},
-					"course101-with-zero-limit": &model.UserCourseInfo{
-						Role: model.CourseRoleStudent,
+						Role:  model.CourseRoleStudent,
+						LMSID: util.StringPointer("lms-course-student@test.edulinq.org"),
 					},
 				},
 			},
@@ -662,19 +572,9 @@ func TestUpsertUser(test *testing.T) {
 						Role:  model.CourseRoleOwner,
 						LMSID: util.StringPointer("lms-course-owner@test.edulinq.org"),
 					},
-					"course-with-lms": &model.UserCourseInfo{
-						Role:  model.CourseRoleOwner,
-						LMSID: util.StringPointer("lms-course-owner@test.edulinq.org"),
-					},
-					"course-without-source": &model.UserCourseInfo{
-						Role:  model.CourseRoleOwner,
-						LMSID: util.StringPointer("lms-course-owner@test.edulinq.org"),
-					},
 					"course101": &model.UserCourseInfo{
-						Role: model.CourseRoleAdmin,
-					},
-					"course101-with-zero-limit": &model.UserCourseInfo{
-						Role: model.CourseRoleOwner,
+						Role:  model.CourseRoleAdmin,
+						LMSID: util.StringPointer("lms-course-owner@test.edulinq.org"),
 					},
 				},
 			},

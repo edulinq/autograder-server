@@ -21,7 +21,7 @@ func TestFileSpec(test *testing.T) {
 
 	testCases := []commonTestCase{
 		{"server-creator", filepath.Join(testdataDir, "course101"), "", 1, 1},
-		{"server-creator", testdataDir, "", 5, 5},
+		{"server-creator", testdataDir, "", 2, 2},
 		{"server-creator", emptyDir, "", 0, 0},
 
 		{"server-creator", "", "-614", 0, 0},
