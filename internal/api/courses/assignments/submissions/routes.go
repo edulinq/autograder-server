@@ -7,7 +7,7 @@ import (
 )
 
 var routes []core.Route = []core.Route{
-	core.NewAPIRoute(`courses/assignments/submissions/fetch/course/attempts`, HandleFetchCourseAttemps,
+	core.NewAPIRoute(`courses/assignments/submissions/fetch/course/attempts`, HandleFetchCourseAttempts,
 		"Get all recent submissions and grading information for this assignment."),
 	core.NewAPIRoute(`courses/assignments/submissions/fetch/course/scores`, HandleFetchCourseScores,
 		"Get a summary of the most recent scores for this assignment."),
