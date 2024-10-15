@@ -322,5 +322,5 @@ func computeLateDays(dueDate timestamp.Timestamp, submissionTime timestamp.Times
 	delta := submissionTime.ToMSecs() - dueDate.ToMSecs()
 
 	// Convert delta (msecs) to seconds -> minutes -> hours -> days.
-	return int(delta / 1000.0 / 60.0 / 60.0 / 24.0)
+	return int(math.Ceil(float64(delta) / 1000.0 / 60.0 / 60.0 / 24.0))
 }
