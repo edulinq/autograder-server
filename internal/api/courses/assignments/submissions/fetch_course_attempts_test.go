@@ -9,7 +9,7 @@ import (
 	"github.com/edulinq/autograder/internal/util"
 )
 
-func TestFetchCourseAttemps(test *testing.T) {
+func TestFetchCourseAttempts(test *testing.T) {
 	testCases := []struct {
 		email     string
 		permError bool
@@ -42,7 +42,7 @@ func TestFetchCourseAttemps(test *testing.T) {
 	}
 
 	for i, testCase := range testCases {
-		response := core.SendTestAPIRequestFull(test, core.NewEndpoint(`courses/assignments/submissions/fetch/course/attemps`), nil, nil, testCase.email)
+		response := core.SendTestAPIRequestFull(test, core.NewEndpoint(`courses/assignments/submissions/fetch/course/attempts`), nil, nil, testCase.email)
 		if !response.Success {
 			if testCase.permError {
 				if response.Locator != testCase.locator {
@@ -56,7 +56,7 @@ func TestFetchCourseAttemps(test *testing.T) {
 			continue
 		}
 
-		var responseContent FetchCourseAttempsResponse
+		var responseContent FetchCourseAttemptsResponse
 		util.MustJSONFromString(util.MustToJSON(response.Content), &responseContent)
 
 		if !reflect.DeepEqual(submissions, responseContent.GradingResults) {
