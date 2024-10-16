@@ -42,6 +42,13 @@ jobs:
 
     if: ${{ github.event_name == 'push' && github.repository_owner == 'edulinq' && (github.ref == 'refs/heads/main') }}
 
+    # To speed up image building, use a matrix and have each instance build one of the images.
+    strategy:
+      fail-fast: true
+      matrix:
+        image-type: ['prebuilt', 'slim']
+        platform: ['linux/amd64', 'linux/arm64']
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -58,20 +65,11 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Build Image - Slim
+      - name: Build Image -- ${{ matrix.image-type }} - ${{ matrix.platform }}
         uses: docker/build-push-action@v6
         with:
           context: .
-          file: docker/slim/Dockerfile
-          platforms: linux/amd64,linux/arm64
+          file: docker/${{ matrix.image-type }}/Dockerfile
+          platforms: ${{ matrix.platform }}
           push: true
-          tags: edulinq/autograder-server-slim:latest
-
-      - name: Build Image - Prebuilt
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          file: docker/prebuilt/Dockerfile
-          platforms: linux/amd64,linux/arm64
-          push: true
-          tags: edulinq/autograder-server-prebuilt:latest
+          tags: edulinq/autograder-server-${{ matrix.image-type }}:latest
