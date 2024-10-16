@@ -15,6 +15,7 @@ type TokensDeleteResponse struct {
 	Found bool `json:"found"`
 }
 
+// Delete an authentication token.
 func HandleTokensDelete(request *TokensDeleteRequest) (*TokensDeleteResponse, *core.APIError) {
 	found, err := db.DeleteUserToken(request.ServerUser.Email, string(request.TokenID))
 	if err != nil {

@@ -14,6 +14,7 @@ type FileSpecRequest struct {
 	FileSpec common.FileSpec `json:"filespec"`
 }
 
+// Upsert a course using a filespec.
 func HandleFileSpec(request *FileSpecRequest) (*UpsertResponse, *core.APIError) {
 	options := request.CourseUpsertOptions
 	options.ContextUser = request.ServerUser

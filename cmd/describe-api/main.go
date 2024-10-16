@@ -29,7 +29,7 @@ func main() {
 }
 
 func run() int {
-	description, err := api.Describe()
+	description, err := api.DescribeToJSON(api.Describe())
 	if err != nil {
 		log.Fatal("Unable to describe API endpoints.", err)
 	}

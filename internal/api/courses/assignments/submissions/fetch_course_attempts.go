@@ -17,6 +17,7 @@ type FetchCourseAttemptsResponse struct {
 	GradingResults map[string]*model.GradingResult `json:"grading-results"`
 }
 
+// Get all recent submissions and grading information for this assignment.
 func HandleFetchCourseAttempts(request *FetchCourseAttemptsRequest) (*FetchCourseAttemptsResponse, *core.APIError) {
 	results, err := db.GetRecentSubmissionContents(request.Assignment, request.FilterRole)
 	if err != nil {

@@ -15,6 +15,7 @@ type PasswordResetRequest struct {
 
 type PasswordResetResponse struct{}
 
+// Reset to a random password that will be emailed to you.
 func HandlePasswordReset(request *PasswordResetRequest) (*PasswordResetResponse, *core.APIError) {
 	response := &PasswordResetResponse{}
 

@@ -16,6 +16,7 @@ type RemoveResponse struct {
 	FoundUser bool `json:"found-user"`
 }
 
+// Remove a user from the server.
 func HandleRemove(request *RemoveRequest) (*RemoveResponse, *core.APIError) {
 	response := RemoveResponse{}
 

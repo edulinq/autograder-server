@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"net/http"
 	"reflect"
-	"regexp"
 	"runtime"
 	"strings"
 
@@ -34,70 +33,7 @@ type ValidAPIHandler any
 // Post form key for request content.
 const API_REQUEST_CONTENT_KEY = "content"
 
-type Route interface {
-	GetDescription() string
-	GetMethod() string
-	GetRegex() *regexp.Regexp
-	GetSuffix() string
-	Handle(response http.ResponseWriter, request *http.Request) error
-}
-
-// Inspired by https://benhoyt.com/writings/go-routing/
-type BaseRoute struct {
-	Method      string
-	Suffix      string
-	Regex       *regexp.Regexp
-	Handler     RouteHandler
-	Description string
-}
-
-type APIRoute struct {
-	BaseRoute
-	Request  reflect.Type
-	Response reflect.Type
-}
-
 const MAX_FORM_MEM_SIZE_BYTES = 20 * 1024 * 1024 // 20 MB
-
-func (route *BaseRoute) GetDescription() string {
-	return route.Description
-}
-
-func (route *BaseRoute) GetMethod() string {
-	return route.Method
-}
-
-func (route *BaseRoute) GetRegex() *regexp.Regexp {
-	return route.Regex
-}
-
-func (route *BaseRoute) GetSuffix() string {
-	return route.Suffix
-}
-
-func (route *BaseRoute) Handle(response http.ResponseWriter, request *http.Request) error {
-	return route.Handler(response, request)
-}
-
-func (route *APIRoute) GetDescription() string {
-	return route.Description
-}
-
-func (route *APIRoute) GetMethod() string {
-	return route.Method
-}
-
-func (route *APIRoute) GetRegex() *regexp.Regexp {
-	return route.Regex
-}
-
-func (route *APIRoute) GetSuffix() string {
-	return route.Suffix
-}
-
-func (route *APIRoute) Handle(response http.ResponseWriter, request *http.Request) error {
-	return route.Handler(response, request)
-}
 
 // Get a function to pass to http.HandlerFunc().
 func GetRouteServer(routes *[]Route) http.HandlerFunc {
@@ -149,71 +85,6 @@ func ServeRoutes(routes *[]Route, response http.ResponseWriter, request *http.Re
 	}
 
 	http.NotFound(response, request)
-}
-
-func NewRoute(method string, suffix string, handler RouteHandler, description string) *BaseRoute {
-	return &BaseRoute{
-		Method:      method,
-		Suffix:      suffix,
-		Regex:       regexp.MustCompile("^" + NewEndpoint(suffix) + "$"),
-		Handler:     handler,
-		Description: description,
-	}
-}
-
-func NewRedirect(method string, suffix string, target string, description string) *BaseRoute {
-	redirectFunc := func(response http.ResponseWriter, request *http.Request) error {
-		return handleRedirect(target, response, request)
-	}
-
-	return &BaseRoute{
-		Method:      method,
-		Suffix:      suffix,
-		Regex:       regexp.MustCompile("^" + NewEndpoint(suffix) + "$"),
-		Handler:     redirectFunc,
-		Description: description,
-	}
-}
-
-func NewAPIRoute(suffix string, apiHandler any, description string) *APIRoute {
-	var endpointPath string
-
-	handler := func(response http.ResponseWriter, request *http.Request) (err error) {
-		// Recover from any panic.
-		defer func() {
-			value := recover()
-			if value == nil {
-				return
-			}
-
-			log.Error("Recovered from a panic when handling an API endpoint.",
-				log.NewAttr("value", value), log.NewAttr("endpoint", request.URL.Path))
-			apiErr := NewBareInternalError("-001", request.URL.Path, "Recovered from a panic when handling an API endpoint.").
-				Add("value", value)
-
-			err = sendAPIResponse(nil, response, nil, apiErr, false)
-		}()
-
-		endpointPath = request.URL.Path
-
-		err = handleAPIEndpoint(response, request, apiHandler)
-
-		return err
-	}
-
-	_, requestType, responseType, _ := validateAPIHandler(endpointPath, apiHandler)
-
-	return &APIRoute{
-		BaseRoute: BaseRoute{
-			Method:      "POST",
-			Suffix:      suffix,
-			Regex:       regexp.MustCompile("^" + NewEndpoint(suffix) + "$"),
-			Handler:     handler,
-			Description: description,
-		},
-		Request:  requestType,
-		Response: responseType,
-	}
 }
 
 func handleRedirect(target string, response http.ResponseWriter, request *http.Request) error {
@@ -356,6 +227,7 @@ func allocateAPIRequest(endpoint string, apiHandler ValidAPIHandler) (any, *APIE
 }
 
 // Reflexively ensure that the api handler is of the correct type/format (e.g. looks like APIHandler).
+// Returns a ValidAPIHandler, the reflect.Type of the input struct and first output struct, and an APIError.
 // Once you have a ValidAPIHandler, there is no need to check before doing reflection operations.
 func validateAPIHandler(endpoint string, apiHandler any) (ValidAPIHandler, reflect.Type, reflect.Type, *APIError) {
 	reflectValue := reflect.ValueOf(apiHandler)

@@ -13,12 +13,22 @@ import (
 )
 
 var baseRoutes = []core.Route{
-	core.NewRedirect("GET", ``, `/static/index.html`, "Redirects to the main static index page."),
-	core.NewRedirect("GET", `/`, `/static/index.html`, "Redirects the root path to the main static index page."),
-	core.NewRedirect("GET", `/index.html`, `/static/index.html`, "Redirects the index page to the main static index page."),
+	core.NewRedirect("GET", ``, `/static/index.html`),
+	core.NewRedirect("GET", `/`, `/static/index.html`),
+	core.NewRedirect("GET", `/index.html`, `/static/index.html`),
 
-	core.NewRoute("GET", `/static`, static.Handle, "Serves static resources."),
-	core.NewRoute("GET", `/static/.*`, static.Handle, "Serves static resources for any path under '/static'."),
+	core.NewBaseRoute("GET", `/static`, static.Handle),
+	core.NewBaseRoute("GET", `/static/.*`, static.Handle),
+}
+
+type APIDescription struct {
+	Endpoints map[string]map[string]EndpointDescription
+}
+
+type EndpointDescription struct {
+	Description  string
+	RequestType  string
+	ResponseType string
 }
 
 func GetRoutes() *[]core.Route {
@@ -33,24 +43,32 @@ func GetRoutes() *[]core.Route {
 	return &routes
 }
 
-func Describe() (string, error) {
+func Describe() *APIDescription {
 	routes := GetRoutes()
 
-	endpointMap := make(map[string]map[string]string)
+	endpointMap := make(map[string]EndpointDescription)
 	for _, route := range *routes {
 		apiRoute, ok := route.(*core.APIRoute)
 		if ok {
-			endpointMap[apiRoute.GetSuffix()] = map[string]string{
-				"description":  apiRoute.GetDescription(),
-				"requestType":  apiRoute.Request.String(),
-				"responseType": apiRoute.Response.String(),
+			endpointMap[apiRoute.GetBasePath()] = EndpointDescription{
+				Description:  apiRoute.GetDescription(),
+				RequestType:  apiRoute.Request.String(),
+				ResponseType: apiRoute.Response.String(),
 			}
 		}
 	}
 
-	endpoints := map[string]any{
-		"endpoints": endpointMap,
+	return &APIDescription{
+		Endpoints: map[string]map[string]EndpointDescription{
+			"endpoints": endpointMap,
+		},
+	}
+}
+
+func DescribeToJSON(description *APIDescription) (string, error) {
+	if description == nil {
+		return "", nil
 	}
 
-	return util.ToJSONIndent(endpoints)
+	return util.ToJSONIndent(description.Endpoints)
 }
