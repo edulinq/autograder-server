@@ -30,10 +30,7 @@ func main() {
 }
 
 func run() int {
-	description, err := util.ToJSONIndent(api.Describe())
-	if err != nil {
-		log.Fatal("Unable to convert API description to JSON.", err)
-	}
+	description := util.MustToJSONIndent(api.Describe())
 
 	fmt.Print(description)
 

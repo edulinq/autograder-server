@@ -74,7 +74,7 @@ func TestQuery(test *testing.T) {
 		var fields map[string]any
 		util.MustJSONFromString(util.MustToJSON(testCase.query), &fields)
 
-		response := core.SendTestAPIRequestFull(test, core.NewEndpoint(`logs/query`), fields, nil, testCase.email)
+		response := core.SendTestAPIRequestFull(test, core.makeFullAPIPath(`logs/query`), fields, nil, testCase.email)
 		if !response.Success {
 			test.Errorf("Case %d: Response is not a success when it should be: '%v'.", i, response)
 			continue

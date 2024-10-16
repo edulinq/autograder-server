@@ -324,7 +324,7 @@ func TestEnroll(test *testing.T) {
 			"send-emails":      testCase.sendEmails,
 		}
 
-		response := core.SendTestAPIRequestFull(test, core.NewEndpoint(`courses/users/enroll`), fields, nil, testCase.email)
+		response := core.SendTestAPIRequestFull(test, core.makeFullAPIPath(`courses/users/enroll`), fields, nil, testCase.email)
 		if !response.Success {
 			if testCase.permError {
 				if response.Locator != testCase.locator {

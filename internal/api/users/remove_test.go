@@ -52,7 +52,7 @@ func TestUserRemove(test *testing.T) {
 			"target-email": testCase.target,
 		}
 
-		response := core.SendTestAPIRequestFull(test, core.NewEndpoint(`users/remove`), fields, nil, testCase.email)
+		response := core.SendTestAPIRequestFull(test, core.makeFullAPIPath(`users/remove`), fields, nil, testCase.email)
 
 		if !response.Success {
 			if testCase.permError {

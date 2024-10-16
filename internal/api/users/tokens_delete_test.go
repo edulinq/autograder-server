@@ -24,7 +24,7 @@ func TestTokensDelete(test *testing.T) {
 		"token-id": user.Tokens[0].ID,
 	}
 
-	response := core.SendTestAPIRequest(test, core.NewEndpoint("users/tokens/delete"), args)
+	response := core.SendTestAPIRequest(test, core.makeFullAPIPath("users/tokens/delete"), args)
 	if !response.Success {
 		test.Fatalf("Response not successful: '%s'.", util.MustToJSONIndent(response))
 	}
@@ -60,7 +60,7 @@ func TestTokensDeleteNoTokens(test *testing.T) {
 		"token-id": "abc123",
 	}
 
-	response := core.SendTestAPIRequest(test, core.NewEndpoint("users/tokens/delete"), args)
+	response := core.SendTestAPIRequest(test, core.makeFullAPIPath("users/tokens/delete"), args)
 	if !response.Success {
 		test.Fatalf("Response not successful: '%s'.", util.MustToJSONIndent(response))
 	}

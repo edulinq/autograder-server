@@ -154,7 +154,7 @@ func TestUploadScores(test *testing.T) {
 
 		lmstest.SetFailUpdateAssignmentScores(testCase.failUpdate)
 
-		response := core.SendTestAPIRequestFull(test, core.NewEndpoint(`lms/upload/scores`), fields, nil, testCase.email)
+		response := core.SendTestAPIRequestFull(test, core.makeFullAPIPath(`lms/upload/scores`), fields, nil, testCase.email)
 		if !response.Success {
 			expectedLocator := ""
 			if testCase.permError {

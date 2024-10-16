@@ -74,7 +74,7 @@ func TestRemove(test *testing.T) {
 			"target-submission": testCase.targetSubmission,
 		}
 
-		response := core.SendTestAPIRequestFull(test, core.NewEndpoint(`courses/assignments/submissions/remove`), fields, nil, testCase.email)
+		response := core.SendTestAPIRequestFull(test, core.makeFullAPIPath(`courses/assignments/submissions/remove`), fields, nil, testCase.email)
 
 		if !response.Success {
 			if testCase.permError {

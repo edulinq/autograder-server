@@ -45,7 +45,7 @@ func TestHistory(test *testing.T) {
 			"target-email": testCase.target,
 		}
 
-		response := core.SendTestAPIRequestFull(test, core.NewEndpoint(`courses/assignments/submissions/fetch/user/history`), fields, nil, testCase.email)
+		response := core.SendTestAPIRequestFull(test, core.makeFullAPIPath(`courses/assignments/submissions/fetch/user/history`), fields, nil, testCase.email)
 		if !response.Success {
 			if testCase.permError {
 				if response.Locator != testCase.locator {
