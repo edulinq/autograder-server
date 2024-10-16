@@ -32,7 +32,7 @@ func Start() (err error) {
 		err = errors.Join(err, db.Close())
 	}()
 
-	log.Debug("Running server with working directory.", log.NewAttr("dir", config.GetWorkDir()))
+	log.Info("Running server with working directory.", log.NewAttr("dir", config.GetWorkDir()))
 
 	courses, err := db.GetCourses()
 	if err != nil {
