@@ -28,6 +28,7 @@ type EnrollResponse struct {
 	Results []*model.ExternalUserOpResult `json:"results"`
 }
 
+// Enroll one or more users to the course.
 func HandleEnroll(request *EnrollRequest) (*EnrollResponse, *core.APIError) {
 	rawUsers := model.ToRawServerUserDatas(request.RawCourseUsers, request.Course)
 

@@ -18,6 +18,7 @@ type RemoveResponse struct {
 	FoundSubmission bool `json:"found-submission"`
 }
 
+// Remove a specified submission. Defaults to the most recent submission.
 func HandleRemove(request *RemoveRequest) (*RemoveResponse, *core.APIError) {
 	response := RemoveResponse{}
 

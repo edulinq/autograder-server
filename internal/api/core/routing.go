@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"net/http"
 	"reflect"
-	"regexp"
 	"runtime"
 	"strings"
 
@@ -34,23 +33,16 @@ type ValidAPIHandler any
 // Post form key for request content.
 const API_REQUEST_CONTENT_KEY = "content"
 
-// Inspired by https://benhoyt.com/writings/go-routing/
-type Route struct {
-	method  string
-	regex   *regexp.Regexp
-	handler RouteHandler
-}
-
 const MAX_FORM_MEM_SIZE_BYTES = 20 * 1024 * 1024 // 20 MB
 
 // Get a function to pass to http.HandlerFunc().
-func GetRouteServer(routes *[]*Route) http.HandlerFunc {
+func GetRouteServer(routes *[]Route) http.HandlerFunc {
 	return func(response http.ResponseWriter, request *http.Request) {
 		ServeRoutes(routes, response, request)
 	}
 }
 
-func ServeRoutes(routes *[]*Route, response http.ResponseWriter, request *http.Request) {
+func ServeRoutes(routes *[]Route, response http.ResponseWriter, request *http.Request) {
 	log.Debug("Incoming Request", log.NewAttr("method", request.Method), log.NewAttr("url", request.URL.Path))
 
 	if routes == nil {
@@ -58,7 +50,7 @@ func ServeRoutes(routes *[]*Route, response http.ResponseWriter, request *http.R
 	}
 
 	var i int
-	var route *Route
+	var route Route
 	var match bool
 
 	for i, route = range *routes {
@@ -66,16 +58,16 @@ func ServeRoutes(routes *[]*Route, response http.ResponseWriter, request *http.R
 			log.Warn("Found nil route.", log.NewAttr("index", i))
 		}
 
-		if route.method != request.Method {
+		if route.GetMethod() != request.Method {
 			continue
 		}
 
-		match = route.regex.MatchString(request.URL.Path)
+		match = route.GetRegex().MatchString(request.URL.Path)
 		if !match {
 			continue
 		}
 
-		err := route.handler(response, request)
+		err := route.Handle(response, request)
 		if err != nil {
 			log.Error("Handler had an error.", err, log.NewAttr("path", request.URL.Path))
 			http.Error(response, "Server Error", http.StatusInternalServerError)
@@ -95,43 +87,6 @@ func ServeRoutes(routes *[]*Route, response http.ResponseWriter, request *http.R
 	http.NotFound(response, request)
 }
 
-func NewRoute(method string, pattern string, handler RouteHandler) *Route {
-	return &Route{method, regexp.MustCompile("^" + pattern + "$"), handler}
-}
-
-func NewRedirect(method string, pattern string, target string) *Route {
-	redirectFunc := func(response http.ResponseWriter, request *http.Request) error {
-		return handleRedirect(target, response, request)
-	}
-
-	return &Route{method, regexp.MustCompile("^" + pattern + "$"), redirectFunc}
-}
-
-func NewAPIRoute(pattern string, apiHandler any) *Route {
-	handler := func(response http.ResponseWriter, request *http.Request) (err error) {
-		// Recover from any panic.
-		defer func() {
-			value := recover()
-			if value == nil {
-				return
-			}
-
-			log.Error("Recovered from a panic when handling an API endpoint.",
-				log.NewAttr("value", value), log.NewAttr("endpoint", request.URL.Path))
-			apiErr := NewBareInternalError("-001", request.URL.Path, "Recovered from a panic when handling an API endpoint.").
-				Add("value", value)
-
-			err = sendAPIResponse(nil, response, nil, apiErr, false)
-		}()
-
-		err = handleAPIEndpoint(response, request, apiHandler)
-
-		return err
-	}
-
-	return &Route{"POST", regexp.MustCompile("^" + pattern + "$"), handler}
-}
-
 func handleRedirect(target string, response http.ResponseWriter, request *http.Request) error {
 	http.Redirect(response, request, target, 301)
 	return nil
@@ -139,7 +94,7 @@ func handleRedirect(target string, response http.ResponseWriter, request *http.R
 
 func handleAPIEndpoint(response http.ResponseWriter, request *http.Request, apiHandler any) error {
 	// Ensure the handler looks good.
-	validAPIHandler, apiErr := validateAPIHandler(request.URL.Path, apiHandler)
+	validAPIHandler, _, _, apiErr := validateAPIHandler(request.URL.Path, apiHandler)
 	if apiErr != nil {
 		return sendAPIResponse(nil, response, nil, apiErr, false)
 	}
@@ -272,50 +227,51 @@ func allocateAPIRequest(endpoint string, apiHandler ValidAPIHandler) (any, *APIE
 }
 
 // Reflexively ensure that the api handler is of the correct type/format (e.g. looks like APIHandler).
+// Returns the handler, the type of the handler's input, the type of the handler's output, and an error.
 // Once you have a ValidAPIHandler, there is no need to check before doing reflection operations.
-func validateAPIHandler(endpoint string, apiHandler any) (ValidAPIHandler, *APIError) {
+func validateAPIHandler(endpoint string, apiHandler any) (ValidAPIHandler, reflect.Type, reflect.Type, *APIError) {
 	reflectValue := reflect.ValueOf(apiHandler)
 	reflectType := reflect.TypeOf(apiHandler)
 
 	if reflectValue.Kind() != reflect.Func {
-		return nil, NewBareInternalError("-006", endpoint, "API handler is not a function.").
+		return nil, nil, nil, NewBareInternalError("-006", endpoint, "API handler is not a function.").
 			Add("kind", reflectValue.Kind().String())
 	}
 
 	funcInfo := getFuncInfo(apiHandler)
 
 	if reflectType.NumIn() != 1 {
-		return nil, NewBareInternalError("-007", endpoint, "API handler does not have exactly 1 argument.").
+		return nil, nil, nil, NewBareInternalError("-007", endpoint, "API handler does not have exactly 1 argument.").
 			Add("num-in", reflectType.NumIn()).
 			Add("function-info", funcInfo)
 	}
 	argumentType := reflectType.In(0)
 
 	if argumentType.Kind() != reflect.Pointer {
-		return nil, NewBareInternalError("-008", endpoint, "API handler's argument is not a pointer.").
+		return nil, nil, nil, NewBareInternalError("-008", endpoint, "API handler's argument is not a pointer.").
 			Add("kind", argumentType.Kind().String()).
 			Add("function-info", funcInfo)
 	}
 
 	if reflectType.NumOut() != 2 {
-		return nil, NewBareInternalError("-009", endpoint, "API handler does not return exactly 2 arguments.").
+		return nil, nil, nil, NewBareInternalError("-009", endpoint, "API handler does not return exactly 2 arguments.").
 			Add("num-out", reflectType.NumOut()).
 			Add("function-info", funcInfo)
 	}
 
 	if reflectType.Out(0).Kind() != reflect.Pointer {
-		return nil, NewBareInternalError("-010", endpoint, "API handler's first return value is not a pointer.").
+		return nil, nil, nil, NewBareInternalError("-010", endpoint, "API handler's first return value is not a pointer.").
 			Add("kind", reflectType.Out(0).Kind().String()).
 			Add("function-info", funcInfo)
 	}
 
 	if reflectType.Out(1) != reflect.TypeOf((*APIError)(nil)) {
-		return nil, NewBareInternalError("-011", endpoint, "API handler's second return value is a *APIError.").
+		return nil, nil, nil, NewBareInternalError("-011", endpoint, "API handler's second return value is a *APIError.").
 			Add("type", reflectType.Out(1).String()).
 			Add("function-info", funcInfo)
 	}
 
-	return ValidAPIHandler(apiHandler), nil
+	return ValidAPIHandler(apiHandler), reflectType.In(0), reflectType.Out(0), nil
 }
 
 type funcRuntimeInfo struct {

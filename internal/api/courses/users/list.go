@@ -15,6 +15,7 @@ type ListResponse struct {
 	Users []*core.CourseUserInfo `json:"users"`
 }
 
+// List the users in the course.
 func HandleList(request *ListRequest) (*ListResponse, *core.APIError) {
 	users := make([]*model.CourseUser, 0, len(request.Users))
 	for _, user := range request.Users {

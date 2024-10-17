@@ -13,6 +13,7 @@ type ListResponse struct {
 	Assignments []*core.AssignmentInfo `json:"assignments"`
 }
 
+// List the assignments in the course.
 func HandleList(request *ListRequest) (*ListResponse, *core.APIError) {
 	response := ListResponse{
 		Assignments: core.NewAssignmentInfos(request.Course.GetSortedAssignments()),

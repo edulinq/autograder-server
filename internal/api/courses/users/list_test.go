@@ -52,7 +52,7 @@ func TestList(test *testing.T) {
 	}
 
 	for i, testCase := range testCases {
-		response := core.SendTestAPIRequestFull(test, core.NewEndpoint(`courses/users/list`), nil, nil, testCase.email)
+		response := core.SendTestAPIRequestFull(test, `courses/users/list`, nil, nil, testCase.email)
 		if !response.Success {
 			if testCase.permError {
 				if response.Locator != testCase.locator {
@@ -102,7 +102,7 @@ func TestListEmptyCourse(test *testing.T) {
 
 	expectedInfos := core.NewCourseUserInfos([]*model.CourseUser{})
 
-	response := core.SendTestAPIRequestFull(test, core.NewEndpoint(`courses/users/list`), nil, nil, "server-admin")
+	response := core.SendTestAPIRequestFull(test, `courses/users/list`, nil, nil, "server-admin")
 	if !response.Success {
 		test.Fatalf("Response is not a success when it should be: '%v'.", response)
 	}

@@ -33,6 +33,8 @@ type RowEntry struct {
 	Entry any `json:"entry"`
 }
 
+// Upload scores from a tab-separated file to the course's LMS.
+// The file should not have headers, and should have two columns: email and score.
 func HandleUploadScores(request *UploadScoresRequest) (*UploadScoresResponse, *core.APIError) {
 	if request.Course.GetLMSAdapter() == nil {
 		return nil, core.NewBadRequestError("-405", &request.APIRequest, "Course is not linked to an LMS.").

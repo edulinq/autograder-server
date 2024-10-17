@@ -20,6 +20,7 @@ type QueryResponse struct {
 	Records []*log.Record                 `json:"results"`
 }
 
+// Query log entries from the autograder server.
 func HandleQuery(request *QueryRequest) (*QueryResponse, *core.APIError) {
 	var response QueryResponse
 

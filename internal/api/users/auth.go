@@ -12,6 +12,7 @@ type AuthResponse struct {
 	Success bool `json:"success"`
 }
 
+// Authenticate as a user.
 func HandleAuth(request *AuthRequest) (*AuthResponse, *core.APIError) {
 	response := AuthResponse{true}
 

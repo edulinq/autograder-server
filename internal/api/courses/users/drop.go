@@ -17,6 +17,7 @@ type DropResponse struct {
 	FoundUser bool `json:"found-user"`
 }
 
+// Drop a user from the course.
 func HandleDrop(request *DropRequest) (*DropResponse, *core.APIError) {
 	response := DropResponse{}
 

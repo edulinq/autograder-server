@@ -11,8 +11,8 @@ import (
 	"github.com/edulinq/autograder/internal/api/courses/users"
 )
 
-func GetRoutes() *[]*core.Route {
-	routes := make([]*core.Route, 0)
+func GetRoutes() *[]core.Route {
+	routes := make([]core.Route, 0)
 
 	routes = append(routes, *(admin.GetRoutes())...)
 	routes = append(routes, *(assignments.GetRoutes())...)

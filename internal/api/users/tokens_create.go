@@ -17,6 +17,7 @@ type TokensCreateResponse struct {
 	TokenCleartext string `json:"token-cleartext"`
 }
 
+// Create a new authentication token.
 func HandleTokensCreate(request *TokensCreateRequest) (*TokensCreateResponse, *core.APIError) {
 	token, cleartext, err := request.ServerUser.CreateRandomToken(request.Name, model.TokenSourceUser)
 	if err != nil {

@@ -18,6 +18,7 @@ type FetchUserHistoryResponse struct {
 	History   []*model.SubmissionHistoryItem `json:"history"`
 }
 
+// Get a summary of the submissions for this assignment.
 func HandleFetchUserHistory(request *FetchUserHistoryRequest) (*FetchUserHistoryResponse, *core.APIError) {
 	response := FetchUserHistoryResponse{
 		FoundUser: false,

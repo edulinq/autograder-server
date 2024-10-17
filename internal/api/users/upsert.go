@@ -19,6 +19,7 @@ type UpsertResponse struct {
 	Results []*model.ExternalUserOpResult `json:"results"`
 }
 
+// Upsert one or more users to the server (update if exists, insert otherwise).
 func HandleUpsert(request *UpsertRequest) (*UpsertResponse, *core.APIError) {
 	request.ContextEmail = request.ServerUser.Email
 	request.ContextServerRole = request.ServerUser.Role

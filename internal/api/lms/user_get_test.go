@@ -89,7 +89,7 @@ func TestUserGet(test *testing.T) {
 			"target-email": testCase.target,
 		}
 
-		response := core.SendTestAPIRequestFull(test, core.NewEndpoint(`lms/user/get`), fields, nil, testCase.email)
+		response := core.SendTestAPIRequestFull(test, `lms/user/get`, fields, nil, testCase.email)
 		if !response.Success {
 			expectedLocator := ""
 			if testCase.permError {

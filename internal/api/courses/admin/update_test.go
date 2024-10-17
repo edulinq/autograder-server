@@ -26,7 +26,7 @@ func TestUpdateCourse(test *testing.T) {
 	}
 
 	// Update.
-	response := core.SendTestAPIRequest(test, core.NewEndpoint(`courses/admin/update`), nil)
+	response := core.SendTestAPIRequest(test, `courses/admin/update`, nil)
 	if !response.Success {
 		test.Errorf("Response is not a success when it should be: '%v'.", response)
 	}

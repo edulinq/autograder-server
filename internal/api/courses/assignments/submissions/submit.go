@@ -23,6 +23,7 @@ type SubmitResponse struct {
 	GradingInfo   *model.GradingInfo `json:"result"`
 }
 
+// Submit an assignment submission to the autograder.
 func HandleSubmit(request *SubmitRequest) (*SubmitResponse, *core.APIError) {
 	response := SubmitResponse{}
 

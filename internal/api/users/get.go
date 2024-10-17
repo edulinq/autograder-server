@@ -16,6 +16,7 @@ type GetResponse struct {
 	User  *core.ServerUserInfo `json:"user"`
 }
 
+// Get the information for a server user.
 func HandleGet(request *GetRequest) (*GetResponse, *core.APIError) {
 	response := GetResponse{}
 
