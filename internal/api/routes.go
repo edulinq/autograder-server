@@ -9,7 +9,6 @@ import (
 	"github.com/edulinq/autograder/internal/api/logs"
 	"github.com/edulinq/autograder/internal/api/static"
 	"github.com/edulinq/autograder/internal/api/users"
-	"github.com/edulinq/autograder/internal/util"
 )
 
 var baseRoutes = []core.Route{
@@ -22,13 +21,12 @@ var baseRoutes = []core.Route{
 }
 
 type APIDescription struct {
-	Endpoints map[string]map[string]EndpointDescription
+	Endpoints map[string]EndpointDescription `json:"endpoints"`
 }
 
 type EndpointDescription struct {
-	Description  string
-	RequestType  string
-	ResponseType string
+	RequestType  string `json:"request-type"`
+	ResponseType string `json:"response-type"`
 }
 
 func GetRoutes() *[]core.Route {
@@ -49,26 +47,17 @@ func Describe() *APIDescription {
 	endpointMap := make(map[string]EndpointDescription)
 	for _, route := range *routes {
 		apiRoute, ok := route.(*core.APIRoute)
-		if ok {
-			endpointMap[apiRoute.GetBasePath()] = EndpointDescription{
-				Description:  apiRoute.GetDescription(),
-				RequestType:  apiRoute.Request.String(),
-				ResponseType: apiRoute.Response.String(),
-			}
+		if !ok {
+			continue
+		}
+
+		endpointMap[apiRoute.GetBasePath()] = EndpointDescription{
+			RequestType:  apiRoute.RequestType.String(),
+			ResponseType: apiRoute.ResponseType.String(),
 		}
 	}
 
 	return &APIDescription{
-		Endpoints: map[string]map[string]EndpointDescription{
-			"endpoints": endpointMap,
-		},
+		Endpoints: endpointMap,
 	}
-}
-
-func DescribeToJSON(description *APIDescription) (string, error) {
-	if description == nil {
-		return "", nil
-	}
-
-	return util.ToJSONIndent(description.Endpoints)
 }

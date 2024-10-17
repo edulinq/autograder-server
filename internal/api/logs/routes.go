@@ -7,7 +7,7 @@ import (
 )
 
 var routes []core.Route = []core.Route{
-	core.NewAPIRoute(`logs/query`, HandleQuery, "Query log entries from the autograder server."),
+	core.NewAPIRoute(`logs/query`, HandleQuery),
 }
 
 func GetRoutes() *[]core.Route {

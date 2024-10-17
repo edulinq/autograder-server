@@ -227,7 +227,7 @@ func allocateAPIRequest(endpoint string, apiHandler ValidAPIHandler) (any, *APIE
 }
 
 // Reflexively ensure that the api handler is of the correct type/format (e.g. looks like APIHandler).
-// Returns a ValidAPIHandler, the reflect.Type of the input struct and first output struct, and an APIError.
+// Returns the handler, the type of the input struct, the type of the first output struct, and an error.
 // Once you have a ValidAPIHandler, there is no need to check before doing reflection operations.
 func validateAPIHandler(endpoint string, apiHandler any) (ValidAPIHandler, reflect.Type, reflect.Type, *APIError) {
 	reflectValue := reflect.ValueOf(apiHandler)

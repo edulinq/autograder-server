@@ -7,10 +7,10 @@ import (
 )
 
 var routes []core.Route = []core.Route{
-	core.NewAPIRoute(`courses/users/drop`, HandleDrop, "Drop a user from the course."),
-	core.NewAPIRoute(`courses/users/enroll`, HandleEnroll, "Enroll one or more users to the course."),
-	core.NewAPIRoute(`courses/users/get`, HandleGet, "Get the information for a course user."),
-	core.NewAPIRoute(`courses/users/list`, HandleList, "List the users in the course."),
+	core.NewAPIRoute(`courses/users/drop`, HandleDrop),
+	core.NewAPIRoute(`courses/users/enroll`, HandleEnroll),
+	core.NewAPIRoute(`courses/users/get`, HandleGet),
+	core.NewAPIRoute(`courses/users/list`, HandleList),
 }
 
 func GetRoutes() *[]core.Route {

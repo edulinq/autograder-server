@@ -7,9 +7,8 @@ import (
 )
 
 var routes []core.Route = []core.Route{
-	core.NewAPIRoute(`lms/user/get`, HandleUserGet, "Get information for an LMS user."),
-	core.NewAPIRoute(`lms/upload/scores`, HandleUploadScores,
-		"Upload scores from a tab-separated file to the course's LMS. The file should not have headers, and should have two columns: email and score."),
+	core.NewAPIRoute(`lms/user/get`, HandleUserGet),
+	core.NewAPIRoute(`lms/upload/scores`, HandleUploadScores),
 }
 
 func GetRoutes() *[]core.Route {

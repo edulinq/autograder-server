@@ -260,7 +260,7 @@ func TestGoodPostFiles(test *testing.T) {
 		return nil, nil
 	}
 
-	routes = append(routes, NewAPIRoute(endpoint, handler, "Test good post files."))
+	routes = append(routes, NewAPIRoute(endpoint, handler))
 
 	paths := []string{
 		filepath.Join(config.GetTestdataDir(), "files", "a.txt"),
@@ -316,7 +316,7 @@ func TestBadPostFilesNoFiles(test *testing.T) {
 		return nil, nil
 	}
 
-	routes = append(routes, NewAPIRoute(endpoint, handler, "Test bad post files no files."))
+	routes = append(routes, NewAPIRoute(endpoint, handler))
 
 	paths := []string{}
 
@@ -346,7 +346,7 @@ func TestBadPostFilesStoreFail(test *testing.T) {
 		return nil, nil
 	}
 
-	routes = append(routes, NewAPIRoute(endpoint, handler, "Test bad post files store fail."))
+	routes = append(routes, NewAPIRoute(endpoint, handler))
 
 	paths := []string{
 		filepath.Join(config.GetTestdataDir(), "files", "a.txt"),
@@ -388,7 +388,7 @@ func TestBadPostFilesFileSizeExceeded(test *testing.T) {
 		return nil, nil
 	}
 
-	routes = append(routes, NewAPIRoute(endpoint, handler, "Test bad post files file size exceeded."))
+	routes = append(routes, NewAPIRoute(endpoint, handler))
 
 	// Two paths provided: a.txt is under the size limit, 1092bytes.txt is over the size limit.
 	paths := []string{

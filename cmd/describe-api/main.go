@@ -9,6 +9,7 @@ import (
 	"github.com/edulinq/autograder/internal/api"
 	"github.com/edulinq/autograder/internal/config"
 	"github.com/edulinq/autograder/internal/log"
+	"github.com/edulinq/autograder/internal/util"
 )
 
 var args struct {
@@ -29,9 +30,9 @@ func main() {
 }
 
 func run() int {
-	description, err := api.DescribeToJSON(api.Describe())
+	description, err := util.ToJSONIndent(api.Describe())
 	if err != nil {
-		log.Fatal("Unable to describe API endpoints.", err)
+		log.Fatal("Unable to convert API description to JSON.", err)
 	}
 
 	fmt.Print(description)

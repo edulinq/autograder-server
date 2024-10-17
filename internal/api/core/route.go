@@ -25,9 +25,8 @@ type BaseRoute struct {
 
 type APIRoute struct {
 	BaseRoute
-	Description string
-	Request     reflect.Type
-	Response    reflect.Type
+	RequestType  reflect.Type
+	ResponseType reflect.Type
 }
 
 func (this *BaseRoute) GetMethod() string {
@@ -44,10 +43,6 @@ func (this *BaseRoute) GetBasePath() string {
 
 func (this *BaseRoute) Handle(response http.ResponseWriter, request *http.Request) error {
 	return this.Handler(response, request)
-}
-
-func (this *APIRoute) GetDescription() string {
-	return this.Description
 }
 
 func NewBaseRoute(method string, basePath string, handler RouteHandler) *BaseRoute {
@@ -72,9 +67,7 @@ func NewRedirect(method string, basePath string, target string) *BaseRoute {
 	}
 }
 
-func NewAPIRoute(basePath string, apiHandler any, description string) *APIRoute {
-	var endpointPath string
-
+func NewAPIRoute(basePath string, apiHandler any) *APIRoute {
 	handler := func(response http.ResponseWriter, request *http.Request) (err error) {
 		// Recover from any panic.
 		defer func() {
@@ -91,27 +84,26 @@ func NewAPIRoute(basePath string, apiHandler any, description string) *APIRoute 
 			err = sendAPIResponse(nil, response, nil, apiErr, false)
 		}()
 
-		endpointPath = request.URL.Path
-
 		err = handleAPIEndpoint(response, request, apiHandler)
 
 		return err
 	}
 
-	_, requestType, responseType, err := validateAPIHandler(endpointPath, apiHandler)
+	fullPath := NewEndpoint(basePath)
+
+	_, requestType, responseType, err := validateAPIHandler(fullPath, apiHandler)
 	if err != nil {
-		log.Warn("Error while validating API handler.", err, log.NewAttr("endpoint", endpointPath))
+		log.Warn("Error while validating API handler.", err, log.NewAttr("endpoint", fullPath))
 	}
 
 	return &APIRoute{
 		BaseRoute: BaseRoute{
 			Method:   "POST",
 			BasePath: basePath,
-			Regex:    regexp.MustCompile("^" + NewEndpoint(basePath) + "$"),
+			Regex:    regexp.MustCompile("^" + fullPath + "$"),
 			Handler:  handler,
 		},
-		Description: description,
-		Request:     requestType,
-		Response:    responseType,
+		RequestType:  requestType,
+		ResponseType: responseType,
 	}
 }
