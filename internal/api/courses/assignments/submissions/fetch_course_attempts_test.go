@@ -42,7 +42,7 @@ func TestFetchCourseAttempts(test *testing.T) {
 	}
 
 	for i, testCase := range testCases {
-		response := core.SendTestAPIRequestFull(test, core.makeFullAPIPath(`courses/assignments/submissions/fetch/course/attempts`), nil, nil, testCase.email)
+		response := core.SendTestAPIRequestFull(test, `courses/assignments/submissions/fetch/course/attempts`, nil, nil, testCase.email)
 		if !response.Success {
 			if testCase.permError {
 				if response.Locator != testCase.locator {

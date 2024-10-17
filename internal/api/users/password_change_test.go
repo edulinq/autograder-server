@@ -29,7 +29,7 @@ func TestPassChange(test *testing.T) {
 			"new-pass":   util.Sha256HexFromString(testCase.newPass),
 		}
 
-		response := core.SendTestAPIRequest(test, core.makeFullAPIPath(`users/password/change`), fields)
+		response := core.SendTestAPIRequest(test, `users/password/change`, fields)
 		if !response.Success {
 			test.Errorf("Case %d: Response is not a success when it should be: '%v'.", i, response)
 			continue

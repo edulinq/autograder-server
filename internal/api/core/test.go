@@ -57,7 +57,7 @@ func SendTestAPIRequest(test *testing.T, endpoint string, fields map[string]any)
 // Provided fields will override base fields.
 // If an email is provided without an "@", we will suffix the email with the common test domain.
 func SendTestAPIRequestFull(test *testing.T, endpoint string, fields map[string]any, paths []string, email string) *APIResponse {
-	url := serverURL + endpoint
+	url := serverURL + MakeFullAPIPath(endpoint)
 
 	if !strings.Contains(email, "@") {
 		email = email + "@test.edulinq.org"

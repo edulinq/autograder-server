@@ -93,7 +93,7 @@ func TestFetchUserAttempt(test *testing.T) {
 			"target-submission": testCase.targetSubmission,
 		}
 
-		response := core.SendTestAPIRequestFull(test, core.makeFullAPIPath(`courses/assignments/submissions/fetch/user/attempt`), fields, nil, testCase.email)
+		response := core.SendTestAPIRequestFull(test, `courses/assignments/submissions/fetch/user/attempt`, fields, nil, testCase.email)
 		if !response.Success {
 			if testCase.permError {
 				if response.Locator != testCase.locator {

@@ -114,6 +114,8 @@ func handleUnixSocketConnection(connection net.Conn) error {
 		return fmt.Errorf("Failed to find the 'endpoint' key in the request.")
 	}
 
+	endpoint = core.MakeFullAPIPath(endpoint)
+
 	content, exists := payload[REQUEST_KEY].(map[string]any)
 	if !exists {
 		return fmt.Errorf("Failed to find the 'request' key in the request.")

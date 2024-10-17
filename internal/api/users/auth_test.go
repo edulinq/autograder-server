@@ -37,7 +37,7 @@ func TestUsersAuth(test *testing.T) {
 			"user-pass":  util.Sha256HexFromString(testCase.pass),
 		}
 
-		response := core.SendTestAPIRequest(test, core.makeFullAPIPath("users/auth"), fields)
+		response := core.SendTestAPIRequest(test, `users/auth`, fields)
 		if testCase.expected != response.Success {
 			test.Errorf("Case %d: Unexpected result. Expected: '%t', actual: '%t'.", i, testCase.expected, response.Success)
 			continue

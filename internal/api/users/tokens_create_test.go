@@ -19,7 +19,7 @@ func TestTokensCreate(test *testing.T) {
 
 	initialTokenCount := len(user.Tokens)
 
-	response := core.SendTestAPIRequest(test, core.makeFullAPIPath("users/tokens/create"), nil)
+	response := core.SendTestAPIRequest(test, `users/tokens/create`, nil)
 	if !response.Success {
 		test.Fatalf("Response not successful: '%s'.", util.MustToJSONIndent(response))
 	}

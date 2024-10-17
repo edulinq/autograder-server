@@ -26,7 +26,7 @@ func TestSubmit(test *testing.T) {
 			"assignment-id": testSubmission.Assignment.GetID(),
 		}
 
-		response := core.SendTestAPIRequestFull(test, core.makeFullAPIPath(`courses/assignments/submissions/submit`), fields, testSubmission.Files, "course-student")
+		response := core.SendTestAPIRequestFull(test, `courses/assignments/submissions/submit`, fields, testSubmission.Files, "course-student")
 		if !response.Success {
 			test.Errorf("Case %d: Response is not a success when it should be: '%v'.", i, response)
 			continue
@@ -94,7 +94,7 @@ func TestRejectSubmissionMaxAttempts(test *testing.T) {
 		"assignment-id": "hw0",
 	}
 
-	response := core.SendTestAPIRequestFull(test, core.makeFullAPIPath(`courses/assignments/submissions/submit`), fields, paths, "course-student")
+	response := core.SendTestAPIRequestFull(test, `courses/assignments/submissions/submit`, fields, paths, "course-student")
 	if !response.Success {
 		test.Fatalf("Response is not a success when it should be: '%v'.", response)
 	}

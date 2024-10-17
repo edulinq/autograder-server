@@ -62,7 +62,7 @@ func main() {
 	}
 
 	requestMap := map[string]any{
-		server.ENDPOINT_KEY: core.makeFullAPIPath(`courses/assignments/submissions/fetch/user/peek`),
+		server.ENDPOINT_KEY: `courses/assignments/submissions/fetch/user/peek`,
 		server.REQUEST_KEY:  request,
 	}
 

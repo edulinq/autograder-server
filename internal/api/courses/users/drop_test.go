@@ -66,7 +66,7 @@ func TestUserDrop(test *testing.T) {
 			"target-email": testCase.target,
 		}
 
-		response := core.SendTestAPIRequestFull(test, core.makeFullAPIPath(`courses/users/drop`), fields, nil, testCase.email)
+		response := core.SendTestAPIRequestFull(test, `courses/users/drop`, fields, nil, testCase.email)
 
 		if !response.Success {
 			if testCase.permError {

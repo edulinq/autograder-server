@@ -39,7 +39,7 @@ func TestFileSpec(test *testing.T) {
 			},
 		}
 
-		response := core.SendTestAPIRequestFull(test, core.makeFullAPIPath(`courses/upsert/filespec`), fields, nil, testCase.email)
+		response := core.SendTestAPIRequestFull(test, `courses/upsert/filespec`, fields, nil, testCase.email)
 
 		processRsponse(test, response, testCase, fmt.Sprintf("Case %d: ", i))
 	}
