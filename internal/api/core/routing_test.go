@@ -86,7 +86,7 @@ func TestBadRequestEmptyContent(test *testing.T) {
 	handler := func(request *BaseTestRequest) (*any, *APIError) { return nil, nil }
 	routes = append(routes, NewAPIRoute(endpoint, handler))
 
-	url := serverURL + endpoint
+	url := serverURL + MakeFullAPIPath(endpoint)
 
 	for i, testCase := range testCases {
 		responseText, err := common.PostNoCheck(url, testCase.form)

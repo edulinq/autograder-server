@@ -6,10 +6,10 @@ import (
 	"github.com/edulinq/autograder/internal/api/core"
 )
 
-var routes []*core.Route = []*core.Route{
-	core.NewAPIRoute(core.NewEndpoint(`logs/query`), HandleQuery),
+var routes []core.Route = []core.Route{
+	core.NewAPIRoute(`logs/query`, HandleQuery),
 }
 
-func GetRoutes() *[]*core.Route {
+func GetRoutes() *[]core.Route {
 	return &routes
 }

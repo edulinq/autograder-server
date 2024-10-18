@@ -18,6 +18,7 @@ type FetchUserAttemptsResponse struct {
 	GradingResults []*model.GradingResult `json:"grading-results"`
 }
 
+// Get all submission attempts made by a user along with all grading information.
 func HandleFetchUserAttempts(request *FetchUserAttemptsRequest) (*FetchUserAttemptsResponse, *core.APIError) {
 	response := FetchUserAttemptsResponse{
 		FoundUser:      false,

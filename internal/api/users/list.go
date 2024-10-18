@@ -16,6 +16,7 @@ type ListResponse struct {
 	Users []*core.ServerUserInfo `json:"users"`
 }
 
+// List the users on the server.
 func HandleList(request *ListRequest) (*ListResponse, *core.APIError) {
 	usersMap, err := db.GetServerUsers()
 	if err != nil {

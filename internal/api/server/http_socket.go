@@ -16,7 +16,7 @@ var apiServer *http.Server
 
 const API_SERVER_STOP_LOCK = "internal.api.server.API_STOP_LOCK"
 
-func runAPIServer(routes *[]*core.Route) (err error) {
+func runAPIServer(routes *[]core.Route) (err error) {
 	defer func() {
 		value := recover()
 		if value == nil {

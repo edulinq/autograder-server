@@ -20,6 +20,7 @@ type FetchUserPeekResponse struct {
 	GradingInfo     *model.GradingInfo `json:"submission-result"`
 }
 
+// Get a copy of the grading report for the specified submission. Does not submit a new submission.
 func HandleFetchUserPeek(request *FetchUserPeekRequest) (*FetchUserPeekResponse, *core.APIError) {
 	response := FetchUserPeekResponse{}
 

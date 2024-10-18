@@ -14,7 +14,7 @@ import (
 var server *httptest.Server
 var serverURL string
 
-func startTestServer(routes *[]*Route) {
+func startTestServer(routes *[]Route) {
 	if server != nil {
 		panic("Test server already started.")
 	}
@@ -33,7 +33,7 @@ func stopTestServer() {
 }
 
 // Common setup for all API tests.
-func APITestingMain(suite *testing.M, routes *[]*Route) {
+func APITestingMain(suite *testing.M, routes *[]Route) {
 	// Run inside a func so defers will run before os.Exit().
 	code := func() int {
 		db.PrepForTestingMain()
@@ -55,9 +55,10 @@ func SendTestAPIRequest(test *testing.T, endpoint string, fields map[string]any)
 // Make a request to the test server using fields for
 // a standard test request plus whatever other fields are specified.
 // Provided fields will override base fields.
+// The base API path will be expanded to the full API path.
 // If an email is provided without an "@", we will suffix the email with the common test domain.
-func SendTestAPIRequestFull(test *testing.T, endpoint string, fields map[string]any, paths []string, email string) *APIResponse {
-	url := serverURL + endpoint
+func SendTestAPIRequestFull(test *testing.T, basePath string, fields map[string]any, paths []string, email string) *APIResponse {
+	url := serverURL + MakeFullAPIPath(basePath)
 
 	if !strings.Contains(email, "@") {
 		email = email + "@test.edulinq.org"

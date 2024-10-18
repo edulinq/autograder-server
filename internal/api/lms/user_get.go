@@ -18,6 +18,7 @@ type UserGetResponse struct {
 	User         *core.CourseUserInfo `json:"user"`
 }
 
+// Get information for an LMS user.
 func HandleUserGet(request *UserGetRequest) (*UserGetResponse, *core.APIError) {
 	if request.Course.GetLMSAdapter() == nil {
 		return nil, core.NewBadRequestError("-401", &request.APIRequest, "Course is not linked to an LMS.").

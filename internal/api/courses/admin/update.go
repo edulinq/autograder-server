@@ -14,6 +14,7 @@ type UpdateResponse struct {
 	Result *courses.CourseUpsertResult `json:"result"`
 }
 
+// Update an existing course.
 func HandleUpdate(request *UpdateRequest) (*UpdateResponse, *core.APIError) {
 	options := courses.CourseUpsertOptions{
 		ContextUser: request.ServerUser,
