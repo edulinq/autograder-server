@@ -55,7 +55,7 @@ func SendTestAPIRequest(test *testing.T, endpoint string, fields map[string]any)
 // Make a request to the test server using fields for
 // a standard test request plus whatever other fields are specified.
 // Provided fields will override base fields.
-// The base path will be expanded to the full API path.
+// The base API path will be expanded to the full API path.
 // If an email is provided without an "@", we will suffix the email with the common test domain.
 func SendTestAPIRequestFull(test *testing.T, basePath string, fields map[string]any, paths []string, email string) *APIResponse {
 	url := serverURL + MakeFullAPIPath(basePath)

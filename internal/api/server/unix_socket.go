@@ -15,8 +15,7 @@ import (
 )
 
 const (
-	// Store the base path of the API endpoint in the key.
-	// It will be expanded to the full API path.
+	// Base path for the API endpoint.
 	ENDPOINT_KEY                 = "endpoint"
 	NONCE_KEY                    = "root-user-nonce"
 	NONCE_SIZE_BYTES             = 64
