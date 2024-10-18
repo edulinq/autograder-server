@@ -30,9 +30,7 @@ func main() {
 }
 
 func run() int {
-	description := util.MustToJSONIndent(api.Describe())
-
-	fmt.Print(description)
+	fmt.Print(util.MustToJSONIndent(api.Describe()))
 
 	return 0
 }
