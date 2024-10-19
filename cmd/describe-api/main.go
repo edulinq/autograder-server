@@ -7,6 +7,7 @@ import (
 	"github.com/alecthomas/kong"
 
 	"github.com/edulinq/autograder/internal/api"
+	"github.com/edulinq/autograder/internal/api/core"
 	"github.com/edulinq/autograder/internal/config"
 	"github.com/edulinq/autograder/internal/log"
 	"github.com/edulinq/autograder/internal/util"
@@ -30,7 +31,7 @@ func main() {
 }
 
 func run() int {
-	fmt.Print(util.MustToJSONIndent(api.Describe()))
+	fmt.Print(util.MustToJSONIndent(core.Describe(api.GetRoutes())))
 
 	return 0
 }
