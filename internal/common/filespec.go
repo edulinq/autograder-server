@@ -84,7 +84,7 @@ func (this *FileSpec) UnmarshalJSON(data []byte) error {
 		return nil
 	}
 
-	// Check for a string (path FileSpec).
+	// Check for a string (path or URL FileSpec).
 	if strings.HasPrefix(rawText, `"`) {
 		var text string
 		err := json.Unmarshal(data, &text)
@@ -92,8 +92,14 @@ func (this *FileSpec) UnmarshalJSON(data []byte) error {
 			return err
 		}
 
-		this.Type = FILESPEC_TYPE_PATH
 		this.Path = strings.TrimSpace(text)
+
+		if strings.HasPrefix(this.Path, "http") {
+			this.Type = FILESPEC_TYPE_URL
+		} else {
+			this.Type = FILESPEC_TYPE_PATH
+		}
+
 		return nil
 	}
 
