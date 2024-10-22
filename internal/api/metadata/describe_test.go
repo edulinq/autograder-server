@@ -17,7 +17,7 @@ func TestMetadataDescribe(test *testing.T) {
 	var responseContent DescribeResponse
 	util.MustJSONFromString(util.MustToJSON(response.Content), &responseContent)
 
-	expected := core.Describe(core.GetServerRoutes())
+	expected := DescribeResponse{*core.Describe(core.GetServerRoutes())}
 	if !reflect.DeepEqual(expected, responseContent) {
 		test.Fatalf("Unexpected API description. Expected: '%s', actual: '%s'.",
 			util.MustToJSONIndent(expected), util.MustToJSONIndent(responseContent))

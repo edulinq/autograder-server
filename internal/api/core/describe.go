@@ -1,7 +1,7 @@
 package core
 
 // Server routes will be empty until RunServer() is called.
-var serverRoutes = []Route{}
+var serverRoutes []Route
 
 type APIDescription struct {
 	Endpoints map[string]EndpointDescription `json:"endpoints"`
@@ -16,13 +16,13 @@ func SetServerRoutes(routes []Route) {
 	serverRoutes = routes
 }
 
-func GetServerRoutes() *[]Route {
-	return &serverRoutes
+func GetServerRoutes() []Route {
+	return serverRoutes
 }
 
-func Describe(routes *[]Route) *APIDescription {
+func Describe(routes []Route) *APIDescription {
 	endpointMap := make(map[string]EndpointDescription)
-	for _, route := range *routes {
+	for _, route := range routes {
 		apiRoute, ok := route.(*APIRoute)
 		if !ok {
 			continue

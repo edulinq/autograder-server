@@ -19,6 +19,8 @@ func startTestServer(routes *[]Route) {
 		panic("Test server already started.")
 	}
 
+	SetServerRoutes(*routes)
+
 	server = httptest.NewServer(GetRouteServer(routes))
 	serverURL = server.URL
 }
