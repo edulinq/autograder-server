@@ -19,7 +19,7 @@ func RunServer() (err error) {
 		return err
 	}
 
-	core.SetServerRoutes(*api.GetRoutes())
+	core.SetAPIDescription(*api.Describe(*api.GetRoutes()))
 
 	defer func() {
 		err = errors.Join(err, util.RemoveDirent(common.GetStatusPath()))

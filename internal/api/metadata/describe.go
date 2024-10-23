@@ -14,7 +14,7 @@ type DescribeResponse struct {
 
 // Describe all endpoints on the server.
 func HandleDescribe(request *DescribeRequest) (*DescribeResponse, *core.APIError) {
-	response := DescribeResponse{*core.Describe(core.GetServerRoutes())}
+	response := DescribeResponse{core.GetAPIDescription()}
 
 	return &response, nil
 }

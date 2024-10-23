@@ -25,6 +25,9 @@ jobs:
       - name: Build
         run: ./scripts/build.sh
 
+      - name: Update API Description
+        run: ./scripts/update_api_description.sh
+
       - name: Check Formatting
         run: ./scripts/check_formatting.sh
 
