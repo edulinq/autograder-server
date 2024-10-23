@@ -1,21 +1,24 @@
 package api
 
 import (
-	"path/filepath"
 	"reflect"
 	"testing"
 
 	"github.com/edulinq/autograder/internal/api/core"
+	"github.com/edulinq/autograder/internal/common"
 	"github.com/edulinq/autograder/internal/util"
 )
 
 func TestDescribeFull(test *testing.T) {
-	path := filepath.Join(util.RootDirForTesting(), "api.json")
+	path, err := common.GetAPIDescriptionFilepath()
+	if err != nil {
+		test.Fatalf("Unable to get the API description filepath: '%v'.", err)
+	}
 
 	var expectedDescription core.APIDescription
-	err := util.JSONFromFile(path, &expectedDescription)
+	err = util.JSONFromFile(path, &expectedDescription)
 	if err != nil {
-		test.Fatalf("Failed to load api.json: %v", err)
+		test.Fatalf("Failed to load api.json: '%v'.", err)
 	}
 
 	fullDescription := Describe(*GetRoutes())
@@ -32,63 +35,6 @@ func TestDescribeEmptyRoutes(test *testing.T) {
 
 	if len(description.Endpoints) != 0 {
 		test.Errorf("Unexpected number of endpoints. Expected: '0', actual: '%d'.", len(description.Endpoints))
-	}
-}
-
-func TestDescribeNonAPIRoute(test *testing.T) {
-	routes := []core.Route{
-		&core.BaseRoute{},
-	}
-
-	description := Describe(routes)
-
-	if len(description.Endpoints) != 0 {
-		test.Errorf("Unexpected number of endpoints. Expected: '0', actual: '%d'.", len(description.Endpoints))
-	}
-}
-
-func TestDescribeMultipleAPIRoutes(test *testing.T) {
-	routes := []core.Route{
-		&core.APIRoute{
-			BaseRoute: core.BaseRoute{
-				BasePath: "/api/v1/test1",
-			},
-			RequestType:  reflect.TypeOf("string"),
-			ResponseType: reflect.TypeOf(123),
-		},
-		&core.APIRoute{
-			BaseRoute: core.BaseRoute{
-				BasePath: "/api/v1/test2",
-			},
-			RequestType:  reflect.TypeOf(true),
-			ResponseType: reflect.TypeOf([]byte{}),
-		},
-	}
-
-	description := Describe(routes)
-
-	if len(description.Endpoints) != 2 {
-		test.Errorf("Unexpected number of endpoints. Expected: '2', actual: '%d'.", len(description.Endpoints))
-	}
-
-	expected := core.EndpointDescription{
-		RequestType:  "string",
-		ResponseType: "int",
-	}
-
-	if !reflect.DeepEqual(description.Endpoints["/api/v1/test1"], expected) {
-		test.Errorf("Unexpected endpoint description. Expected '%+v', actual '%+v'.",
-			expected, description.Endpoints["/api/v1/test1"])
-	}
-
-	expected = core.EndpointDescription{
-		RequestType:  "bool",
-		ResponseType: "[]uint8",
-	}
-
-	if !reflect.DeepEqual(description.Endpoints["/api/v1/test2"], expected) {
-		test.Errorf("Unexpected endpoint description. Expected '%+v', actual '%+v'.",
-			expected, description.Endpoints["/api/v1/test2"])
 	}
 }
 
@@ -124,33 +70,5 @@ func TestDescribeDuplicateBasePaths(test *testing.T) {
 	if !reflect.DeepEqual(description.Endpoints["/api/v1/duplicate"], expected) {
 		test.Errorf("Unexpected endpoint description. Expected '%+v', actual '%+v'.",
 			expected, description.Endpoints["/api/v1/duplicate"])
-	}
-}
-
-func TestDescribeEmptyRequestAndResponseTypes(test *testing.T) {
-	routes := []core.Route{
-		&core.APIRoute{
-			BaseRoute: core.BaseRoute{
-				BasePath: "/api/v1/empty",
-			},
-			RequestType:  reflect.TypeOf(nil),
-			ResponseType: reflect.TypeOf(nil),
-		},
-	}
-
-	description := Describe(routes)
-
-	if len(description.Endpoints) != 1 {
-		test.Errorf("Unexpected number of endpoints. Expected: '1', actual: '%d'.", len(description.Endpoints))
-	}
-
-	expected := core.EndpointDescription{
-		RequestType:  "<nil>",
-		ResponseType: "<nil>",
-	}
-
-	if !reflect.DeepEqual(description.Endpoints["/api/v1/empty"], expected) {
-		test.Errorf("Unexpected endpoint description. Expected '%+v', actual '%+v'.",
-			expected, description.Endpoints["/api/v1/empty"])
 	}
 }

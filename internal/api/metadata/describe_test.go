@@ -9,6 +9,8 @@ import (
 )
 
 func TestMetadataDescribe(test *testing.T) {
+	oldDescription := core.GetAPIDescription()
+
 	// Cache a dummy APIDescription for testing.
 	description := core.APIDescription{
 		Endpoints: map[string]core.EndpointDescription{
@@ -20,6 +22,7 @@ func TestMetadataDescribe(test *testing.T) {
 	}
 
 	core.SetAPIDescription(description)
+	defer core.SetAPIDescription(oldDescription)
 
 	response := core.SendTestAPIRequest(test, `metadata/describe`, nil)
 	if !response.Success {

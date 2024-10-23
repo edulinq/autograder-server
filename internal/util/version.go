@@ -50,7 +50,7 @@ func readVersion() (Version, error) {
 		Api:     UNKNOWN_API,
 	}
 
-	versionPath := ShouldAbs(filepath.Join(ShouldGetThisDir(), "..", "..", VERSION_FILENAME))
+	versionPath := ShouldAbs(filepath.Join(ShouldGetThisDir(), "..", "..", "resources", VERSION_FILENAME))
 	if !IsFile(versionPath) {
 		return version, fmt.Errorf("Version path '%s' does not exist.", versionPath)
 	}
