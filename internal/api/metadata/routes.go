@@ -7,7 +7,7 @@ import (
 )
 
 var routes []core.Route = []core.Route{
-	core.NewAPIRoute(`metadata/describe`, HandleDescribe),
+	core.MustNewAPIRoute(`metadata/describe`, HandleDescribe),
 }
 
 func GetRoutes() *[]core.Route {

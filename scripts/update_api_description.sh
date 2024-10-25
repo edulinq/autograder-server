@@ -18,14 +18,12 @@ function main() {
     mkdir -p "${OUT_DIR}"
 
     go run cmd/describe-api/main.go > "${OUT_FILE}"
-
-    if [ $? -eq 0 ]; then
-        echo "API description successfully updated in api.json."
-    else
-        echo "Failed to update api.json."
+    if [ $? -ne 0 ]; then
+        echo "Failed to update ${OUT_FILE}."
         return 1
     fi
 
+    echo "API description successfully updated in ${OUT_FILE}."
     return 0
 }
 

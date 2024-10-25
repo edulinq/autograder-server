@@ -4,7 +4,7 @@ import (
 	"github.com/edulinq/autograder/internal/api/core"
 )
 
-// Routes must be validated before calling Describe.
+// Routes must be validated before calling Describe().
 func Describe(routes []core.Route) *core.APIDescription {
 	endpointMap := make(map[string]core.EndpointDescription)
 	for _, route := range routes {

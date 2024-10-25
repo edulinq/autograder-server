@@ -7,8 +7,8 @@ import (
 )
 
 var routes []core.Route = []core.Route{
-	core.NewAPIRoute(`lms/user/get`, HandleUserGet),
-	core.NewAPIRoute(`lms/upload/scores`, HandleUploadScores),
+	core.MustNewAPIRoute(`lms/user/get`, HandleUserGet),
+	core.MustNewAPIRoute(`lms/upload/scores`, HandleUploadScores),
 }
 
 func GetRoutes() *[]core.Route {
