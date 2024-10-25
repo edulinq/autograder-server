@@ -1,0 +1,9 @@
+{
+    "id": "assignment-01",
+    "name": "Assignment 01",
+    "static-files": [
+        "grader.py"
+    ],
+    "invocation": "python3 grader.py",
+    "image": "edulinq/grader.python-alpine"
+}

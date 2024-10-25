@@ -235,7 +235,7 @@ func toDockerfile(imageInfo *ImageInfo, workDir string) (string, error) {
 	// Set the working directory.
 	lines = append(lines, fmt.Sprintf("WORKDIR %s", DOCKER_BASE_DIR), "")
 
-	// Copy over the config and post-os script files.
+	// Copy over the config and post-op script files.
 	lines = append(lines, fmt.Sprintf("COPY %s %s", DOCKER_CONFIG_FILENAME, DOCKER_CONFIG_PATH), "")
 	lines = append(lines, fmt.Sprintf("COPY %s %s", DOCKER_POST_SUBMISSION_OPS_FILENAME, DOCKER_POST_SUBMISSION_OPS_PATH), "")
 
