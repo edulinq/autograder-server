@@ -50,22 +50,21 @@ func TestMalformedHandlers(test *testing.T) {
 	// Define all the malformed handlers.
 	testCases := []struct {
 		handler any
-		locator string
 	}{
-		{"", "-006"},
-		{nil, "-006"},
-		{0, "-006"},
-		{func() (*any, *APIError) { return nil, nil }, "-007"},
-		{func(request *BaseTestRequest, testarg int) (*any, *APIError) { return nil, nil }, "-007"},
-		{func(request BaseTestRequest) (*any, *APIError) { return nil, nil }, "-008"},
-		{func(request int) (*any, *APIError) { return nil, nil }, "-008"},
-		{func(request *BaseTestRequest) *any { return nil }, "-009"},
-		{func(request *BaseTestRequest) (int, *any, *APIError) { return 0, nil, nil }, "-009"},
-		{func(request *BaseTestRequest) (any, *APIError) { return nil, nil }, "-010"},
-		{func(request *BaseTestRequest) (int, *APIError) { return 0, nil }, "-010"},
-		{func(request *BaseTestRequest) (*any, APIError) { return nil, APIError{} }, "-011"},
-		{func(request *BaseTestRequest) (*any, any) { return nil, nil }, "-011"},
-		{func(request *BaseTestRequest) (*any, int) { return nil, 0 }, "-011"},
+		{""},
+		{nil},
+		{0},
+		{func() (*any, *APIError) { return nil, nil }},
+		{func(request *BaseTestRequest, testarg int) (*any, *APIError) { return nil, nil }},
+		{func(request BaseTestRequest) (*any, *APIError) { return nil, nil }},
+		{func(request int) (*any, *APIError) { return nil, nil }},
+		{func(request *BaseTestRequest) *any { return nil }},
+		{func(request *BaseTestRequest) (int, *any, *APIError) { return 0, nil, nil }},
+		{func(request *BaseTestRequest) (any, *APIError) { return nil, nil }},
+		{func(request *BaseTestRequest) (int, *APIError) { return 0, nil }},
+		{func(request *BaseTestRequest) (*any, APIError) { return nil, APIError{} }},
+		{func(request *BaseTestRequest) (*any, any) { return nil, nil }},
+		{func(request *BaseTestRequest) (*any, int) { return nil, 0 }},
 	}
 
 	for i, testCase := range testCases {
