@@ -1,9 +1,7 @@
-package util
+package log
 
 import (
 	"os"
-
-	"github.com/edulinq/autograder/internal/log"
 )
 
 var (
@@ -12,7 +10,7 @@ var (
 )
 
 func Exit(code int) {
-	log.Debug("Exiting.", log.NewAttr("code", code))
+	Debug("Exiting.", NewAttr("code", code))
 
 	lastExitCode = code
 

@@ -50,9 +50,9 @@ func CMDServerTestingMain(suite *testing.M) {
 
 func RunCMDTest(test *testing.T, mainFunc func(), args []string) (string, string, int, error) {
 	// Suppress exits to capture exit codes.
-	util.ShouldExitForTesting = false
+	log.ShouldExitForTesting = false
 	defer func() {
-		util.ShouldExitForTesting = true
+		log.ShouldExitForTesting = true
 	}()
 
 	tempDir := util.MustMkDirTemp("autograder-testing-cmd-")
@@ -101,7 +101,7 @@ func RunCMDTest(test *testing.T, mainFunc func(), args []string) (string, string
 	os.Stderr = oldStderr
 	stderr := util.MustReadFile(stderrPath)
 
-	exitCode := util.GetLastExitCode()
+	exitCode := log.GetLastExitCode()
 
 	return stdout, stderr, exitCode, err
 }

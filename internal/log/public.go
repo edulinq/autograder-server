@@ -1,9 +1,5 @@
 package log
 
-import (
-	"os"
-)
-
 func Trace(message string, args ...any) {
 	LogToLevel(LevelTrace, message, args...)
 }
@@ -32,7 +28,7 @@ func FatalWithCode(code int, message string, args ...any) {
 	SetBackgroundLogging(false)
 
 	LogToLevel(LevelFatal, message, args...)
-	os.Exit(code)
+	Exit(code)
 }
 
 func SetLevel(level LogLevel) {
