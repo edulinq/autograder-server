@@ -45,6 +45,8 @@ func LoadGradingResult(resultPath string) (*GradingResult, error) {
 	baseSubmissionDir := filepath.Dir(resultPath)
 	submissionInputDir := filepath.Join(baseSubmissionDir, common.GRADING_INPUT_DIRNAME)
 	submissionOutputDir := filepath.Join(baseSubmissionDir, common.GRADING_OUTPUT_DIRNAME)
+	stdoutPath := filepath.Join(baseSubmissionDir, common.SUBMISSION_STDOUT_FILENAME)
+	stderrPath := filepath.Join(baseSubmissionDir, common.SUBMISSION_STDERR_FILENAME)
 
 	var gradingInfo GradingInfo
 	err := util.JSONFromFile(resultPath, &gradingInfo)
@@ -70,10 +72,28 @@ func LoadGradingResult(resultPath string) (*GradingResult, error) {
 		return nil, fmt.Errorf("Unable to gzip files in submission output dir '%s': '%w'.", submissionOutputDir, err)
 	}
 
+	stdout := ""
+	if util.PathExists(stdoutPath) {
+		stdout, err = util.ReadFile(stdoutPath)
+		if err != nil {
+			return nil, fmt.Errorf("Failed to read stdout file '%s': '%w'.", stdoutPath, err)
+		}
+	}
+
+	stderr := ""
+	if util.PathExists(stderrPath) {
+		stderr, err = util.ReadFile(stderrPath)
+		if err != nil {
+			return nil, fmt.Errorf("Failed to read stderr file '%s': '%w'.", stderrPath, err)
+		}
+	}
+
 	return &GradingResult{
 		Info:            &gradingInfo,
 		InputFilesGZip:  inputFileContents,
 		OutputFilesGZip: outputFileContents,
+		Stdout:          stdout,
+		Stderr:          stderr,
 	}, nil
 }
 
