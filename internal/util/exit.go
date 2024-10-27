@@ -12,3 +12,7 @@ func Exit(code int) {
 func GetLastExitCode() int {
 	return log.GetLastExitCode()
 }
+
+func ShouldExitForTesting(status bool) {
+	log.ShouldExitForTesting = status
+}
