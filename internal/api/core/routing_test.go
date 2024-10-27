@@ -42,10 +42,9 @@ func TestMalformedHandlers(test *testing.T) {
 		log.ShouldExitForTesting = true
 	}()
 
-	// Suppress stderr to ignore Fatal log messages.
-	oldTextWriter := log.GetTextWriter()
-	log.SetTextWriter(nil)
-	defer log.SetTextWriter(oldTextWriter)
+	oldLogLevel := log.GetTextLevel()
+	log.SetTextLevel(log.LevelOff)
+	defer log.SetTextLevel(oldLogLevel)
 
 	// Define all the malformed handlers.
 	testCases := []struct {
@@ -75,8 +74,8 @@ func TestMalformedHandlers(test *testing.T) {
 
 		// Verify the process exited with the correct error.
 		exitCode := log.GetLastExitCode()
-		if exitCode != 3 {
-			test.Errorf("Case %d: Unexpected exit code. Expected: '3', actual: '%d'.", i, exitCode)
+		if exitCode != log.EXIT_CONFIG {
+			test.Errorf("Case %d: Unexpected exit code. Expected: '%d', actual: '%d'.", i, log.EXIT_CONFIG, exitCode)
 		}
 	}
 }

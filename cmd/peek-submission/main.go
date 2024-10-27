@@ -89,7 +89,7 @@ func main() {
 
 		fmt.Println(output)
 
-		log.Exit(2)
+		util.Exit(2)
 		return
 	}
 

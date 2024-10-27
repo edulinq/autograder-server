@@ -60,10 +60,6 @@ func SetTextWriter(newTextWriter io.StringWriter) {
 	textWriter = newTextWriter
 }
 
-func GetTextWriter() io.StringWriter {
-	return textWriter
-}
-
 func SetStorageBackend(newBackend StorageBackend) {
 	backend = newBackend
 }

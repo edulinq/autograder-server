@@ -93,7 +93,7 @@ func MustNewAPIRoute(basePath string, apiHandler any) *APIRoute {
 
 	_, requestType, responseType, err := validateAPIHandler(fullPath, apiHandler)
 	if err != nil {
-		log.FatalWithCode(3, "Error while validating API handler.", err, log.NewAttr("endpoint", fullPath))
+		log.FatalExitConfig("Error while validating API handler.", err, log.NewAttr("endpoint", fullPath))
 	}
 
 	return &APIRoute{
