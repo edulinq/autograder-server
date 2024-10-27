@@ -40,7 +40,7 @@ func loadStaticSubmissions(courseConfigPath string) ([]*GradingResult, error) {
 	return submissions, nil
 }
 
-// Load a full standard grading result froma result path.
+// Load a full standard grading result from a result path.
 func LoadGradingResult(resultPath string) (*GradingResult, error) {
 	baseSubmissionDir := filepath.Dir(resultPath)
 	submissionInputDir := filepath.Join(baseSubmissionDir, common.GRADING_INPUT_DIRNAME)
