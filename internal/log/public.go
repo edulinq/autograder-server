@@ -1,7 +1,7 @@
 package log
 
 import (
-	"os"
+	"github.com/edulinq/autograder/internal/exit"
 )
 
 func Trace(message string, args ...any) {
@@ -32,7 +32,7 @@ func FatalWithCode(code int, message string, args ...any) {
 	SetBackgroundLogging(false)
 
 	LogToLevel(LevelFatal, message, args...)
-	os.Exit(code)
+	exit.Exit(code)
 }
 
 func SetLevel(level LogLevel) {

@@ -30,7 +30,7 @@ func main() {
 }
 
 func run() int {
-	fmt.Print(util.MustToJSONIndent(api.Describe()))
+	fmt.Print(util.MustToJSONIndent(api.Describe(*api.GetRoutes())))
 
 	return 0
 }

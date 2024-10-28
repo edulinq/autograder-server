@@ -7,7 +7,7 @@ WORKDIR /autograder-server
 
 # Extract version information from the Git repository and save it to VERSION.json.
 COPY . ./full-copy
-RUN cd full-copy && go run cmd/version/main.go --out=../VERSION.json
+RUN cd full-copy && go run cmd/version/main.go --out=../resources/VERSION.json
 RUN rm -rf ./full-copy
 
 # Copy over only what's nessesary.
