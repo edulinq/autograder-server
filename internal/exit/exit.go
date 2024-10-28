@@ -4,9 +4,9 @@ import (
 	"os"
 )
 
-// Well-known exit codes (sysexits.h).
+// Well-known exit codes [sysexits.h](https://man.freebsd.org/cgi/man.cgi?sysexits).
 const (
-	EXIT_CONFIG = 78
+	EXIT_SOFTWARE = 70
 )
 
 var (

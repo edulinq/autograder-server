@@ -73,8 +73,8 @@ func TestMalformedHandlers(test *testing.T) {
 
 		// Verify the process exited with the correct error.
 		exitCode := exit.GetLastExitCode()
-		if exitCode != exit.EXIT_CONFIG {
-			test.Errorf("Case %d: Unexpected exit code. Expected: '%d', actual: '%d'.", i, exit.EXIT_CONFIG, exitCode)
+		if exitCode != exit.EXIT_SOFTWARE {
+			test.Errorf("Case %d: Unexpected exit code. Expected: '%d', actual: '%d'.", i, exit.EXIT_SOFTWARE, exitCode)
 		}
 	}
 }
