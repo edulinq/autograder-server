@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/edulinq/autograder/internal/common"
+	"github.com/edulinq/autograder/internal/exit"
 	"github.com/edulinq/autograder/internal/log"
 	"github.com/edulinq/autograder/internal/util"
 )
@@ -37,10 +38,8 @@ func TestAPIPanic(test *testing.T) {
 // Specifically, we are focusing on testing validateAPIHandler().
 func TestMalformedHandlers(test *testing.T) {
 	// Suppress exits to capture exit codes.
-	log.ShouldExitForTesting = false
-	defer func() {
-		log.ShouldExitForTesting = true
-	}()
+	exit.SetShouldExitForTesting(false)
+	defer exit.SetShouldExitForTesting(true)
 
 	oldLogLevel := log.GetTextLevel()
 	log.SetTextLevel(log.LevelOff)
@@ -73,9 +72,9 @@ func TestMalformedHandlers(test *testing.T) {
 		MustNewAPIRoute(endpoint, testCase.handler)
 
 		// Verify the process exited with the correct error.
-		exitCode := log.GetLastExitCode()
-		if exitCode != log.EXIT_CONFIG {
-			test.Errorf("Case %d: Unexpected exit code. Expected: '%d', actual: '%d'.", i, log.EXIT_CONFIG, exitCode)
+		exitCode := exit.GetLastExitCode()
+		if exitCode != exit.EXIT_CONFIG {
+			test.Errorf("Case %d: Unexpected exit code. Expected: '%d', actual: '%d'.", i, exit.EXIT_CONFIG, exitCode)
 		}
 	}
 }

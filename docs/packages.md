@@ -9,7 +9,7 @@ Most subpackages have not been listed as they either share their parent's level,
 or they are a shim/header/interface.
 All these packages (except cmd) live in `internal`.
 
- 1. timestamp
+ 1. exit, timestamp
  2. log
  3. util
  4. config

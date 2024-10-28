@@ -10,6 +10,7 @@ import (
 
 	"github.com/edulinq/autograder/internal/api/server"
 	"github.com/edulinq/autograder/internal/db"
+	"github.com/edulinq/autograder/internal/exit"
 	"github.com/edulinq/autograder/internal/log"
 	"github.com/edulinq/autograder/internal/util"
 )
@@ -50,8 +51,8 @@ func CMDServerTestingMain(suite *testing.M) {
 
 func RunCMDTest(test *testing.T, mainFunc func(), args []string) (string, string, int, error) {
 	// Suppress exits to capture exit codes.
-	util.ShouldExitForTesting(false)
-	defer util.ShouldExitForTesting(true)
+	exit.SetShouldExitForTesting(false)
+	defer exit.SetShouldExitForTesting(true)
 
 	tempDir := util.MustMkDirTemp("autograder-testing-cmd-")
 	stdoutPath := filepath.Join(tempDir, STDOUT_FILENAME)
@@ -99,7 +100,7 @@ func RunCMDTest(test *testing.T, mainFunc func(), args []string) (string, string
 	os.Stderr = oldStderr
 	stderr := util.MustReadFile(stderrPath)
 
-	exitCode := util.GetLastExitCode()
+	exitCode := exit.GetLastExitCode()
 
 	return stdout, stderr, exitCode, err
 }

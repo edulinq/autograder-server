@@ -5,6 +5,7 @@ import (
 	"reflect"
 	"regexp"
 
+	"github.com/edulinq/autograder/internal/exit"
 	"github.com/edulinq/autograder/internal/log"
 )
 
@@ -93,7 +94,7 @@ func MustNewAPIRoute(basePath string, apiHandler any) *APIRoute {
 
 	_, requestType, responseType, err := validateAPIHandler(fullPath, apiHandler)
 	if err != nil {
-		log.FatalExitConfig("Error while validating API handler.", err, log.NewAttr("endpoint", fullPath))
+		log.FatalWithCode(exit.EXIT_CONFIG, "Error while validating API handler.", err, log.NewAttr("endpoint", fullPath))
 	}
 
 	return &APIRoute{

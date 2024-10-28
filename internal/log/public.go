@@ -1,8 +1,7 @@
 package log
 
-// Well-known exit codes (sysexits.h).
-const (
-	EXIT_CONFIG = 78
+import (
+	"github.com/edulinq/autograder/internal/exit"
 )
 
 func Trace(message string, args ...any) {
@@ -29,15 +28,11 @@ func Fatal(message string, args ...any) {
 	FatalWithCode(1, message, args...)
 }
 
-func FatalExitConfig(message string, args ...any) {
-	FatalWithCode(EXIT_CONFIG, message, args...)
-}
-
 func FatalWithCode(code int, message string, args ...any) {
 	SetBackgroundLogging(false)
 
 	LogToLevel(LevelFatal, message, args...)
-	ExitForUtil(code)
+	exit.Exit(code)
 }
 
 func SetLevel(level LogLevel) {
