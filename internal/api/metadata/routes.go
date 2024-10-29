@@ -1,4 +1,4 @@
-package admin
+package metadata
 
 // All the API endpoints handled by this package.
 
@@ -7,7 +7,7 @@ import (
 )
 
 var routes []core.Route = []core.Route{
-	core.MustNewAPIRoute(`courses/admin/update`, HandleUpdate),
+	core.MustNewAPIRoute(`metadata/describe`, HandleDescribe),
 }
 
 func GetRoutes() *[]core.Route {

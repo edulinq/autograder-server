@@ -5,6 +5,7 @@ import (
 	"reflect"
 	"regexp"
 
+	"github.com/edulinq/autograder/internal/exit"
 	"github.com/edulinq/autograder/internal/log"
 )
 
@@ -67,7 +68,7 @@ func NewRedirect(method string, basePath string, target string) *BaseRoute {
 	}
 }
 
-func NewAPIRoute(basePath string, apiHandler any) *APIRoute {
+func MustNewAPIRoute(basePath string, apiHandler any) *APIRoute {
 	handler := func(response http.ResponseWriter, request *http.Request) (err error) {
 		// Recover from any panic.
 		defer func() {
@@ -93,7 +94,7 @@ func NewAPIRoute(basePath string, apiHandler any) *APIRoute {
 
 	_, requestType, responseType, err := validateAPIHandler(fullPath, apiHandler)
 	if err != nil {
-		log.Error("Error while validating API handler.", err, log.NewAttr("endpoint", fullPath))
+		log.FatalWithCode(exit.EXIT_SOFTWARE, "Error while validating API handler.", err, log.NewAttr("endpoint", fullPath))
 	}
 
 	return &APIRoute{

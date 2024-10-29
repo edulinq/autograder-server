@@ -7,6 +7,7 @@ import (
 	"syscall"
 
 	"github.com/edulinq/autograder/internal/api"
+	"github.com/edulinq/autograder/internal/api/core"
 	"github.com/edulinq/autograder/internal/common"
 	"github.com/edulinq/autograder/internal/util"
 )
@@ -17,6 +18,8 @@ func RunServer() (err error) {
 	if err != nil {
 		return err
 	}
+
+	core.SetAPIDescription(*api.Describe(*api.GetRoutes()))
 
 	defer func() {
 		err = errors.Join(err, util.RemoveDirent(common.GetStatusPath()))

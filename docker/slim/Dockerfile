@@ -5,9 +5,12 @@ RUN apk add --no-cache bash git
 
 WORKDIR /autograder-server
 
+# Initially copy some static resource files.
+COPY ./resources/ resources/
+
 # Extract version information from the Git repository and save it to VERSION.json.
 COPY . ./full-copy
-RUN cd full-copy && go run cmd/version/main.go --out=../VERSION.json
+RUN cd full-copy && go run cmd/version/main.go --out=../resources/VERSION.json
 RUN rm -rf ./full-copy
 
 # Copy over only what's nessesary.

@@ -11,6 +11,7 @@ import (
 	"github.com/edulinq/autograder/internal/api/server"
 	"github.com/edulinq/autograder/internal/common"
 	"github.com/edulinq/autograder/internal/config"
+	"github.com/edulinq/autograder/internal/exit"
 	"github.com/edulinq/autograder/internal/log"
 	"github.com/edulinq/autograder/internal/util"
 )
@@ -89,7 +90,7 @@ func main() {
 
 		fmt.Println(output)
 
-		util.Exit(2)
+		exit.Exit(2)
 		return
 	}
 
