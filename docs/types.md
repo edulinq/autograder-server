@@ -56,11 +56,11 @@ TOOD
 | `submission-limit` | \*SubmissionLimit  | false    | The default submission limit to enforce for all assignments in this course. |
 | `source`           | \*FileSpec         | false    | The canonical source for a course. This should point to where the autograder can fetch the most up-to-date version of this course. |
 | `lms`              | \*LMSAdapter       | false    | Information about how this course can interact with its Learning Management System (LMS). |
-| `backup`           | list[\*BackupTask]        | false    | Specifications for tasks to backup the course. |
-| `course-update`    | list[\*CourseUpdateTask]  | false    | Specifications for tasks to update this course using its source.
-| `report`           | list[\*ReportTask]        | false    | Specifications for tasks to send out a report detailing assignment submissions and scores. |
-| `scoring-upload`   | list[\*ScoringUploadTask] | false    | Specifications for tasks to perform a full scoring of all assignments and upload scores to the course's LMS. |
-| `email-logs`       | list[\*EmailLogsTask]     | false    | Specifications for tasks to email log entries. |
+| `backup`           | list[BackupTask]        | false    | Specifications for tasks to backup the course. |
+| `course-update`    | list[CourseUpdateTask]  | false    | Specifications for tasks to update this course using its source.
+| `report`           | list[ReportTask]        | false    | Specifications for tasks to send out a report detailing assignment submissions and scores. |
+| `scoring-upload`   | list[ScoringUploadTask] | false    | Specifications for tasks to perform a full scoring of all assignments and upload scores to the course's LMS. |
+| `email-logs`       | list[EmailLogsTask]     | false    | Specifications for tasks to email log entries. |
 
 TODO
 
@@ -106,7 +106,134 @@ submission
 
 ## Tasks
 
-TODO
+Tasks are asynchronous processes for a course.
+Each specific task will have some common fields.
+
+| Name      | Type                | Required | Description |
+|-----------|---------------------|----------|-------------|
+| `disable` | Boolean             | false    | Set to true to disable this task from running. |
+| `when`    | list[ScheduledTime] | false    | When to run this task. Usually contains just one time, but multiple are allowed. |
+
+### Scheduled Time (ScheduledTime)
+
+A `ScheduedTime` describes when to run a task.
+It has two exclusive fields that allow for different ways of describing run times: `every` and `daily`.
+One and only one of the two fields must be populated.
+
+| Name    | Type        | Required | Description |
+|---------|-------------|----------|-------------|
+| `every` | DurationSpec  | false    | Specifies the period between task runs. |
+| `daily` | TimeOfDaySpec | false    | Specifies when a task should run each day. |
+
+#### every - Duration Specification (DurationSpec)
+
+A DurationSpec allows you to specify the period between task runs, e.g., "every 4 hours".
+This type has several fields that represent time units.
+
+| Name      | Type    | Required | Description |
+|-----------|---------|----------|-------------|
+| `days`    | Integer | false    | Days        |
+| `hours`   | Integer | false    | Hours       |
+| `minutes` | Integer | false    | Minutes     |
+| `seconds` | Integer | false    | Seconds     |
+
+Here are some general rules for a DurationSpec are:
+ - No negative values.
+ - At least one field must be populated.
+ - Total time must not 100 days.
+
+**Examples**
+
+"every 4 hours"
+```json
+{
+    "when": [{
+        "every": {
+            "hours": 4
+        }
+    }]
+}
+```
+
+"every 1 day, 2 hours, 3 minutes, and 4 seconds"
+```json
+{
+    "when": [{
+        "every": {
+            "days": 1,
+            "hours": 2,
+            "minutes": 3,
+            "seconds": 4
+        }
+    }]
+}
+```
+
+"(every 4 hours) and (every 7 days)"
+```json
+{
+    "when": [
+        {
+            "every": {
+                "hours": 4
+            }
+        },
+        {
+            "every": {
+                "days": 7
+            }
+        }
+    ]
+}
+```
+
+#### daily - Time of Day Specification (TimeOfDaySpec)
+
+A TimeOfDaySpec allows you to specify when a task should be run each day.
+Using this implies that you want the task to run once a day, and you are selecting when to run it each day.
+
+A TimeOfDaySpec is just a string formatted either as:
+ - `HH:MM`
+ - `HH:MM:SS`
+
+All times MUST be formatted in [24-hour time](https://en.wikipedia.org/wiki/24-hour_clock).
+The timezone of the server will be used to interpret this time.
+
+**Examples**
+
+"every day at 23:59 (11:59 PM)"
+```json
+{
+    "when": [{
+        "daily": "23:59"
+    }]
+}
+```
+
+"every day at 12:34:56"
+```json
+{
+    "when": [{
+        "daily": "12:34:56"
+    }]
+}
+```
+
+"(every 4 hours) and (every day at 23:59)"
+```json
+{
+    "when": [
+        {
+            "every": {
+                "hours": 4
+            }
+        },
+        {
+            "daily": "23:59"
+        }
+    ]
+}
+```
 
 ### Backup Task (BackupTask)
 
