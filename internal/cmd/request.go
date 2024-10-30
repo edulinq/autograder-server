@@ -13,24 +13,29 @@ import (
 )
 
 type CommonOptions struct {
-	Verbose bool `help:"Add the full request and response to the output. Be aware that the output will include extra details beyond the expected format." default:"false"`
+	Verbose bool `help:"Add the full request and response to the output. Be aware that the output will include extra text beyond the expected format." default:"false"`
 }
 
-type CustomFormat func(response core.APIResponse) string
+type CustomResponseFormatter func(response core.APIResponse) string
 
 func MustHandleCMDRequestAndExit(endpoint string, request any, responseType any) {
 	MustHandleCMDRequestAndExitFull(endpoint, request, responseType, CommonOptions{}, nil)
 }
 
-func MustHandleCMDRequestAndExitFull(endpoint string, request any, responseType any, options CommonOptions, customPrintFunc CustomFormat) {
+func MustHandleCMDRequestAndExitFull(endpoint string, request any, responseType any, options CommonOptions, customPrintFunc CustomResponseFormatter) {
 	response, err := SendCMDRequest(endpoint, request)
 	if err != nil {
-		log.Fatal("Failed to send the CMD request", err)
+		log.Fatal("Failed to send the CMD request.", err)
 	}
 
-	exitCode := PrintCMDResponseFull(request, response, responseType, options, customPrintFunc)
+	if !response.Success {
+		util.Exit(2)
+		return
+	}
 
-	util.Exit(exitCode)
+	PrintCMDResponseFull(request, response, responseType, options, customPrintFunc)
+
+	util.Exit(0)
 }
 
 // Send a CMD request to the unix socket and return the response.
@@ -44,7 +49,6 @@ func SendCMDRequest(endpoint string, request any) (core.APIResponse, error) {
 	if err != nil {
 		return core.APIResponse{}, fmt.Errorf("Failed to dial the unix socket: '%w'", err)
 	}
-
 	defer connection.Close()
 
 	requestMap := map[string]any{
@@ -74,14 +78,14 @@ func SendCMDRequest(endpoint string, request any) (core.APIResponse, error) {
 	return response, nil
 }
 
-func PrintCMDResponse(request any, response core.APIResponse, responseType any) int {
-	return PrintCMDResponseFull(request, response, responseType, CommonOptions{}, nil)
+func PrintCMDResponse(request any, response core.APIResponse, responseType any) {
+	PrintCMDResponseFull(request, response, responseType, CommonOptions{}, nil)
 }
 
 // Print the CMD response in it's expected or custom format.
 // customPrintFunc defines a function that takes the CMD response and formats it into a custom output.
 // If verbose is true, it also displays the complete request and response.
-func PrintCMDResponseFull(request any, response core.APIResponse, responseType any, options CommonOptions, customPrintFunc CustomFormat) int {
+func PrintCMDResponseFull(request any, response core.APIResponse, responseType any, options CommonOptions, customPrintFunc CustomResponseFormatter) {
 	if options.Verbose {
 		fmt.Printf("\nAutograder Request:\n---\n%s\n---\n", util.MustToJSONIndent(request))
 		fmt.Printf("\nAutograder Response:\n---\n%s\n---\n", util.MustToJSONIndent(response))
@@ -89,7 +93,6 @@ func PrintCMDResponseFull(request any, response core.APIResponse, responseType a
 
 	if !response.Success {
 		log.Error("API response was unsuccessful.", log.NewAttr("message", response.Message))
-		return 2
 	}
 
 	if customPrintFunc != nil {
@@ -99,6 +102,4 @@ func PrintCMDResponseFull(request any, response core.APIResponse, responseType a
 		util.MustJSONFromString(util.MustToJSON(response.Content), &responseContent)
 		fmt.Println(util.MustToJSONIndent(responseContent))
 	}
-
-	return 0
 }
