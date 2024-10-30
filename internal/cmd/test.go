@@ -25,7 +25,7 @@ const (
 	LOCAL_HOST      = "localhost"
 )
 
-type CommonCMDTestCases struct {
+type CMDTestParameters struct {
 	ExpectedExitCode        int
 	ExpectedStdout          string
 	ExpectedStderrSubstring string
@@ -171,25 +171,25 @@ func runCMD(mainFunc func(), args []string) (err error) {
 	return err
 }
 
-func RunCommonCMDTests(test *testing.T, mainFunc func(), args []string, commonCases CommonCMDTestCases, prefix string) (string, string, int, bool) {
-	stdout, stderr, exitCode, err := RunCMDTest(test, mainFunc, args, commonCases.LogLevel)
+func RunCommonCMDTests(test *testing.T, mainFunc func(), args []string, cmdParameters CMDTestParameters, prefix string) (string, string, int, bool) {
+	stdout, stderr, exitCode, err := RunCMDTest(test, mainFunc, args, cmdParameters.LogLevel)
 	if err != nil {
 		test.Errorf("%sCMD run returned an error: '%v'.", prefix, err)
 		return "", "", -1, false
 	}
 
-	if commonCases.ExpectedExitCode != exitCode {
-		test.Errorf("%sUnexpected exit code. Expected: '%d', Actual: '%d'.", prefix, commonCases.ExpectedExitCode, exitCode)
+	if cmdParameters.ExpectedExitCode != exitCode {
+		test.Errorf("%sUnexpected exit code. Expected: '%d', Actual: '%d'.", prefix, cmdParameters.ExpectedExitCode, exitCode)
 		return "", "", -1, false
 	}
 
-	if !strings.Contains(stderr, commonCases.ExpectedStderrSubstring) {
-		test.Errorf("%sUnexpected stderr. Expected substring: '%s', Actual stderr: '%s'.", prefix, commonCases.ExpectedStderrSubstring, stderr)
+	if !strings.Contains(stderr, cmdParameters.ExpectedStderrSubstring) {
+		test.Errorf("%sUnexpected stderr. Expected substring: '%s', Actual stderr: '%s'.", prefix, cmdParameters.ExpectedStderrSubstring, stderr)
 		return "", "", -1, false
 	}
 
-	if commonCases.ExpectedStdout != stdout {
-		test.Errorf("%sUnexpected output. Expected:\n'%s',\nActual:\n'%s'.", prefix, commonCases.ExpectedStdout, stdout)
+	if cmdParameters.ExpectedStdout != stdout {
+		test.Errorf("%sUnexpected output. Expected: \n'%s', \n Actual: \n'%s'.", prefix, cmdParameters.ExpectedStdout, stdout)
 		return "", "", -1, false
 	}
 
