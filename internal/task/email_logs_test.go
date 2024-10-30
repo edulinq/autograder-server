@@ -66,9 +66,9 @@ func runTest(test *testing.T, to []string, sendEmpty bool, query log.RawLogQuery
 			Disable: false,
 			When:    []*common.ScheduledTime{},
 		},
-		To:          to,
-		SendEmpty:   sendEmpty,
-		RawLogQuery: query,
+		To:        to,
+		SendEmpty: sendEmpty,
+		RawQuery:  query,
 	}
 
 	_, err := RunEmailLogsTask(course, task)

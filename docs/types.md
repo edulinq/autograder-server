@@ -24,6 +24,16 @@ Identifiers must only have letters, digits, periods, underscores, and hyphens.
 The non-alphanumeric characters cannot be repeated in a sequence (e.g. you can have two periods, just not in a row).
 Identifiers must start and end with alphanumeric characters.
 
+### Email
+
+Underlying Type: String
+
+An email address.
+
+When used in the context of a course,
+a star ("\*") may be used to reference all users
+and a course role ("other", "student", "grader", "admin", or "owner") may be used to include all course members with that role.
+
 ### Timestamp
 
 Underlying Type: Integer (64 bit signed)
@@ -56,11 +66,11 @@ TOOD
 | `submission-limit` | \*SubmissionLimit  | false    | The default submission limit to enforce for all assignments in this course. |
 | `source`           | \*FileSpec         | false    | The canonical source for a course. This should point to where the autograder can fetch the most up-to-date version of this course. |
 | `lms`              | \*LMSAdapter       | false    | Information about how this course can interact with its Learning Management System (LMS). |
-| `backup`           | list[BackupTask]        | false    | Specifications for tasks to backup the course. |
-| `course-update`    | list[CourseUpdateTask]  | false    | Specifications for tasks to update this course using its source.
-| `report`           | list[ReportTask]        | false    | Specifications for tasks to send out a report detailing assignment submissions and scores. |
-| `scoring-upload`   | list[ScoringUploadTask] | false    | Specifications for tasks to perform a full scoring of all assignments and upload scores to the course's LMS. |
-| `email-logs`       | list[EmailLogsTask]     | false    | Specifications for tasks to email log entries. |
+| `backup`           | List[BackupTask]        | false    | Specifications for tasks to backup the course. |
+| `course-update`    | List[CourseUpdateTask]  | false    | Specifications for tasks to update this course using its source.
+| `report`           | List[ReportTask]        | false    | Specifications for tasks to send out a report detailing assignment submissions and scores. |
+| `scoring-upload`   | List[ScoringUploadTask] | false    | Specifications for tasks to perform a full scoring of all assignments and upload scores to the course's LMS. |
+| `email-logs`       | List[EmailLogsTask]     | false    | Specifications for tasks to email log entries. |
 
 TODO
 
@@ -79,13 +89,13 @@ JSON
 | `late-policy`      | \*LatePolicy       | false    | The late policy to use for this assignment. Overrides any late policy set on the course level. |
 | `submission-limit` | \*SubmissionLimit  | false    | The submission limit to enforce for this assignment. Overrides any limits set on the course level. |
 | `image`            | String             | true     | The base Docker image to use for this assignment. |
-| `pre-static-docker-commands`  | list[String]   | false | A list of Docker commands to run before static files are copied into the image. |
-| `post-static-docker-commands` | list[String]   | false | A list of Docker commands to run after static files are copied into the image. |
-| `invocation`                  | list[String]   | false | The command to run when the grading container is launched (Docker's `CMD`). If not set, the image's default `ENTRYPOINT/CMD` is used. |
-| `static-files`                | list[FileSpec] | false | A list of files to copy into the image's `/work` directory. |
-| `pre-static-files-ops`        | list[FileOP]   | false | A list of file operations to run before static files are copied into the image. |
-| `post-static-files-ops`       | list[FileOP]   | false | A list of file operations to run after static files are copied into the image. |
-| `post-submission-files-ops`   | list[FileOP]   | false | A list of file operations to run after a student's code is available in the `/input` directory. |
+| `pre-static-docker-commands`  | List[String]   | false | A list of Docker commands to run before static files are copied into the image. |
+| `post-static-docker-commands` | List[String]   | false | A list of Docker commands to run after static files are copied into the image. |
+| `invocation`                  | List[String]   | false | The command to run when the grading container is launched (Docker's `CMD`). If not set, the image's default `ENTRYPOINT/CMD` is used. |
+| `static-files`                | List[FileSpec] | false | A list of files to copy into the image's `/work` directory. |
+| `pre-static-files-ops`        | List[FileOP]   | false | A list of file operations to run before static files are copied into the image. |
+| `post-static-files-ops`       | List[FileOP]   | false | A list of file operations to run after static files are copied into the image. |
+| `post-submission-files-ops`   | List[FileOP]   | false | A list of file operations to run after a student's code is available in the `/input` directory. |
 
 LMS sync.
 `lms-id` or name match.
@@ -101,7 +111,7 @@ pre-static file ops
 static
 post-static file ops
 post-static docker
-invoation
+invocation
 submission
 
 ## Tasks
@@ -112,7 +122,12 @@ Each specific task will have some common fields.
 | Name      | Type                | Required | Description |
 |-----------|---------------------|----------|-------------|
 | `disable` | Boolean             | false    | Set to true to disable this task from running. |
-| `when`    | list[ScheduledTime] | false    | When to run this task. Usually contains just one time, but multiple are allowed. |
+| `when`    | List[ScheduledTime] | false    | When to run this task. Usually contains just one time, but multiple are allowed. |
+
+Tasks are often specified as lists.
+This allows you to create multiple instantiations of the same task that have different configurations.
+For example, you may want one task to email you WARNING logs every week,
+but another task that emails you ERROR logs every day.
 
 ### Scheduled Time (ScheduledTime)
 
@@ -237,21 +252,152 @@ The timezone of the server will be used to interpret this time.
 
 ### Backup Task (BackupTask)
 
-TODO
+A backup task backs up the course information to the server's backup location.
+This task has no additional configuration options.
+
+Basic Example:
+```json
+{
+    ... the rest of a course object ...
+    "backup": [{
+        "when": [{
+            "daily": "01:00"
+        }]
+    }]
+}
+```
 
 ### Course Update Task (CourseUpdateTask)
 
-TODO
+Course update tasks will update a course from source and perform the standard update protocol
+(syncing with the LMS, build assignment images, etc).
+This task has no additional configuration.
+
+Basic Example:
+```json
+{
+    ... the rest of a course object ...
+    "course-update": [{
+        "when": [{
+            "daily": "02:00"
+        }]
+    }]
+}
+```
 
 ### Report Task (ReportTask)
 
-TODO
+The report task sends an email to the target users summarizing the current submissions for each assignment.
+
+| Name         | Type        | Required | Description |
+|--------------|-------------|----------|-------------|
+| `to`         | List[Email] | true     | A list of emails to send the report to. |
+| `send-empty` | Boolean     | false    | If true, the report will still be sent even if no submissions have been made. |
+
+Basic Example:
+```json
+{
+    ... the rest of a course object ...
+    "report": [{
+        "when": [{
+            "daily": "03:00"
+        }],
+        "to": [
+            "alice@test.edulinq.org",
+            "bob@test.edulinq.org"
+        ]
+    }]
+}
+```
 
 ### Scoring Upload Task (ScoringUploadTask)
 
-TODO
+A scoring upload task performs a full scoring
+(including reexamining already scored/due assignments) and uploads to scores to the course's LMS.
+This task will also recompute late information in the case that any factors have changed
+(e.g., a late submission was removed, a due date changed, or a student was given additional late days).
+This task has no additional configuration options.
+
+Basic Example:
+```json
+{
+    ... the rest of a course object ...
+    "scoring-upload": [{
+        "when": [{
+            "daily": "04:00"
+        }]
+    }]
+}
+```
 
 ### Email Logs Task (EmailLogsTask)
+
+The email logs task sends an email to the target users containing matching logs.
+
+| Name         | Type        | Required | Description |
+|--------------|-------------|----------|-------------|
+| `to`         | List[Email] | true     | A list of emails to send the results to. |
+| `send-empty` | Boolean     | false    | If true, the email will still be sent even if no query results were found. |
+| `query`      | LogQuery    | true     | The log query to execute. |
+
+Basic Example:
+```json
+{
+    ... the rest of a course object ...
+    "email-logs": [{
+        "when": [{
+            "daily": "05:00"
+        }],
+        "to": [
+            "alice@test.edulinq.org",
+            "bob@test.edulinq.org"
+        ],
+        "query": {
+            "past": "24h",
+            "level": "ERROR"
+        }
+    }]
+}
+```
+
+An example using multiple queries.
+Email Alice every day with the day's ERROR logs,
+and email Bob every hour with the hour's WARN (which include ERROR) logs.
+```json
+{
+    ... the rest of a course object ...
+    "email-logs": [
+        {
+            "when": [{
+                "daily": "05:00"
+            }],
+            "to": [
+                "alice@test.edulinq.org"
+            ],
+            "query": {
+                "past": "24h",
+                "level": "ERROR"
+            }
+        },
+        {
+            "when": [{
+                "every": {
+                    "hours": 1
+                }
+            }],
+            "to": [
+                "bob@test.edulinq.org"
+            ],
+            "query": {
+                "past": "1h",
+                "level": "WARN"
+            }
+        }
+    ]
+}
+```
+
+## Log Query (LogQuery)
 
 TODO
 
