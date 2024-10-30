@@ -18,7 +18,7 @@ var apiServer *http.Server
 const API_SERVER_STOP_LOCK = "internal.api.server.API_SERVER_STOP_LOCK"
 const PORT_USAGE_CHECK_LOCK = "internal.api.server.PORT_USAGE_CHECK_LOCK"
 
-func runAPIServer(routes *[]*core.Route) (err error) {
+func runAPIServer(routes *[]core.Route) (err error) {
 	var port = config.WEB_PORT.Get()
 
 	common.Lock(PORT_USAGE_CHECK_LOCK)

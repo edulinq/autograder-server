@@ -15,6 +15,7 @@ import (
 )
 
 const (
+	// Base path for the API endpoint.
 	ENDPOINT_KEY                 = "endpoint"
 	NONCE_KEY                    = "root-user-nonce"
 	NONCE_SIZE_BYTES             = 64
@@ -109,10 +110,12 @@ func handleUnixSocketConnection(connection net.Conn) error {
 		return fmt.Errorf("Failed to unmarshal the request buffer into the payload: '%w'.", err)
 	}
 
-	endpoint, exists := payload[ENDPOINT_KEY].(string)
+	basePath, exists := payload[ENDPOINT_KEY].(string)
 	if !exists {
 		return fmt.Errorf("Failed to find the 'endpoint' key in the request.")
 	}
+
+	fullAPIPath := core.MakeFullAPIPath(basePath)
 
 	content, exists := payload[REQUEST_KEY].(map[string]any)
 	if !exists {
@@ -128,7 +131,7 @@ func handleUnixSocketConnection(connection net.Conn) error {
 	form := make(map[string]string)
 	form[core.API_REQUEST_CONTENT_KEY] = string(formContent)
 
-	url := fmt.Sprintf("http://127.0.0.1:%d%s", port, endpoint)
+	url := fmt.Sprintf("http://127.0.0.1:%d%s", port, fullAPIPath)
 	responseText, err := common.PostNoCheck(url, form)
 	if err != nil {
 		return fmt.Errorf("Failed to POST an API request: '%w'.", err)

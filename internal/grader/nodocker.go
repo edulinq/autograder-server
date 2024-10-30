@@ -16,7 +16,7 @@ import (
 
 const PYTHON_AUTOGRADER_INVOCATION = "python3 -m autograder.cli.grading.grade-dir --grader <grader> --dir <basedir> --outpath <outpath>"
 const PYTHON_GRADER_FILENAME = "grader.py"
-const PYTHON_DOCKER_IMAGE_BASENAME = "autograder.python"
+const PYTHON_DOCKER_IMAGE_BASENAME = "edulinq/grader.python"
 
 func runNoDockerGrader(assignment *model.Assignment, submissionPath string, options GradeOptions, fullSubmissionID string) (
 	*model.GradingInfo, map[string][]byte, string, string, error) {

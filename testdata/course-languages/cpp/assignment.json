@@ -6,8 +6,12 @@
         "grader.cpp",
         "assignment.h"
     ],
-    "image": "edulinq/autograder.base",
+    "image": "edulinq/grader.base-ubuntu",
     "invocation": ["bash", "./grader.sh"],
+    "post-static-docker-commands": [
+        "RUN apt-get update",
+        "RUN apt-get install -y build-essential"
+    ],
     "post-submission-files-ops": [
         ["cp", "input/assignment.cpp", "work/assignment.cpp"]
     ]

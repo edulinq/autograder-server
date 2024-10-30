@@ -2,6 +2,7 @@ package db
 
 import (
 	"reflect"
+	"strings"
 	"testing"
 
 	"github.com/edulinq/autograder/internal/util"
@@ -140,3 +141,47 @@ func (this *DBTests) DBTestFetchAttempts(test *testing.T) {
 		test.Fatalf("Unexpected result length. Expected: '%d', Actual: '%d'.", 0, len(graderAttempts))
 	}
 }
+
+// Ensure that stdout and stderr are fetched cleanly.
+func (this *DBTests) DBTestGetSubmissionContentsStdoutStderr(test *testing.T) {
+	ResetForTesting()
+	defer ResetForTesting()
+
+	assignment := MustGetTestAssignment()
+
+	result, err := GetSubmissionContents(assignment, "course-student@test.edulinq.org", "1697406256")
+	if err != nil {
+		test.Fatalf("Failed to get attempt: '%v'.", err)
+	}
+
+	expectedStdout := strings.TrimSpace(baseExpectedStdout)
+	expectedStderr := strings.TrimSpace(baseExpectedStderr)
+
+	actualStdout := strings.TrimSpace(result.Stdout)
+	actualStderr := strings.TrimSpace(result.Stderr)
+
+	if expectedStdout != actualStdout {
+		test.Fatalf("Stdout does not match. Expected: '%s', Actual: '%s'.", expectedStdout, actualStdout)
+	}
+
+	if expectedStderr != actualStderr {
+		test.Fatalf("Stderr does not match. Expected: '%s', Actual: '%s'.", expectedStderr, actualStderr)
+	}
+}
+
+const baseExpectedStdout string = `
+Autograder transcript for assignment: HW0.
+Grading started at 2023-11-11 22:13 and ended at 2023-11-11 22:13.
+Q1: 0 / 1
+   NotImplemented returned.
+Q2: 0 / 1
+   NotImplemented returned.
+Style: 0 / 0
+   Style is clean!
+
+Total: 0 / 2
+`
+
+const baseExpectedStderr string = `
+    Dummy Stderr
+`

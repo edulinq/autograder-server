@@ -36,7 +36,7 @@ func TestGet(test *testing.T) {
 			"user-pass":  util.Sha256HexFromString(*users[testCase.email].Name),
 		}
 
-		response := core.SendTestAPIRequest(test, core.NewEndpoint(`courses/assignments/get`), fields)
+		response := core.SendTestAPIRequest(test, `courses/assignments/get`, fields)
 		if !response.Success {
 			if testCase.permError {
 				expectedLocator := "-040"

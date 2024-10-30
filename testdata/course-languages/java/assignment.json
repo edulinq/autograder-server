@@ -5,7 +5,7 @@
         "grader.sh",
         "Grader.java"
     ],
-    "image": "edulinq/autograder.base",
+    "image": "edulinq/grader.base-ubuntu",
     "invocation": ["bash", "./grader.sh"],
     "post-static-docker-commands": [
         "RUN apt-get update",

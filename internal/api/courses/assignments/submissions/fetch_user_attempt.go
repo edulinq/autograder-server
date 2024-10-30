@@ -20,6 +20,7 @@ type FetchUserAttemptResponse struct {
 	GradingResult   *model.GradingResult `json:"grading-result"`
 }
 
+// Get a submission along with all grading information.
 func HandleFetchUserAttempt(request *FetchUserAttemptRequest) (*FetchUserAttemptResponse, *core.APIError) {
 	response := FetchUserAttemptResponse{}
 

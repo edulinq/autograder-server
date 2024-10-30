@@ -43,17 +43,17 @@ func TestComputeLateDays(test *testing.T) {
 	}{
 		{timestamp.Timestamp(0), timestamp.Timestamp(0), 0},
 		{timestamp.Timestamp(0), timestamp.Timestamp(-1), 0},
-		{timestamp.Timestamp(0), timestamp.Timestamp(dayMSecs - 1), 0},
 
 		{timestamp.Timestamp(dayMSecs), timestamp.Timestamp(dayMSecs), 0},
 		{timestamp.Timestamp(dayMSecs), timestamp.Timestamp(dayMSecs - 1), 0},
-		{timestamp.Timestamp(dayMSecs), timestamp.Timestamp((2 * dayMSecs) - 1), 0},
 
 		{timestamp.Timestamp(0), timestamp.Timestamp(dayMSecs), 1},
-		{timestamp.Timestamp(0), timestamp.Timestamp(dayMSecs + 1), 1},
+		{timestamp.Timestamp(0), timestamp.Timestamp(dayMSecs + 1), 2},
+		{timestamp.Timestamp(0), timestamp.Timestamp(dayMSecs - 1), 1},
 
-		{timestamp.Timestamp(0), timestamp.Timestamp(2 * dayMSecs), 2},
-		{timestamp.Timestamp(0), timestamp.Timestamp((2 * dayMSecs) + 1), 2},
+		{timestamp.Timestamp(dayMSecs), timestamp.Timestamp((2 * dayMSecs) - 1), 1},
+		{timestamp.Timestamp(dayMSecs), timestamp.Timestamp((2 * dayMSecs) + 0), 1},
+		{timestamp.Timestamp(dayMSecs), timestamp.Timestamp((2 * dayMSecs) + 1), 2},
 	}
 
 	for i, testCase := range testCases {

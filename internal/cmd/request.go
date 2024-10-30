@@ -8,6 +8,7 @@ import (
 	"github.com/edulinq/autograder/internal/api/core"
 	"github.com/edulinq/autograder/internal/api/server"
 	"github.com/edulinq/autograder/internal/common"
+	"github.com/edulinq/autograder/internal/exit"
 	"github.com/edulinq/autograder/internal/log"
 	"github.com/edulinq/autograder/internal/util"
 )
@@ -29,13 +30,13 @@ func MustHandleCMDRequestAndExitFull(endpoint string, request any, responseType 
 	}
 
 	if !response.Success {
-		util.Exit(2)
+		exit.Exit(2)
 		return
 	}
 
 	PrintCMDResponseFull(request, response, responseType, options, customPrintFunc)
 
-	util.Exit(0)
+	exit.Exit(0)
 }
 
 // Send a CMD request to the unix socket and return the response.
@@ -52,7 +53,7 @@ func SendCMDRequest(endpoint string, request any) (core.APIResponse, error) {
 	defer connection.Close()
 
 	requestMap := map[string]any{
-		server.ENDPOINT_KEY: core.NewEndpoint(endpoint),
+		server.ENDPOINT_KEY: endpoint,
 		server.REQUEST_KEY:  request,
 	}
 

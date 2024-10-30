@@ -1,0 +1,124 @@
+{
+    "endpoints": {
+        "courses/admin/update": {
+            "request-type": "*admin.UpdateRequest",
+            "response-type": "*admin.UpdateResponse"
+        },
+        "courses/assignments/get": {
+            "request-type": "*assignments.GetRequest",
+            "response-type": "*assignments.GetResponse"
+        },
+        "courses/assignments/list": {
+            "request-type": "*assignments.ListRequest",
+            "response-type": "*assignments.ListResponse"
+        },
+        "courses/assignments/submissions/fetch/course/attempts": {
+            "request-type": "*submissions.FetchCourseAttemptsRequest",
+            "response-type": "*submissions.FetchCourseAttemptsResponse"
+        },
+        "courses/assignments/submissions/fetch/course/scores": {
+            "request-type": "*submissions.FetchCourseScoresRequest",
+            "response-type": "*submissions.FetchCourseScoresResponse"
+        },
+        "courses/assignments/submissions/fetch/user/attempt": {
+            "request-type": "*submissions.FetchUserAttemptRequest",
+            "response-type": "*submissions.FetchUserAttemptResponse"
+        },
+        "courses/assignments/submissions/fetch/user/attempts": {
+            "request-type": "*submissions.FetchUserAttemptsRequest",
+            "response-type": "*submissions.FetchUserAttemptsResponse"
+        },
+        "courses/assignments/submissions/fetch/user/history": {
+            "request-type": "*submissions.FetchUserHistoryRequest",
+            "response-type": "*submissions.FetchUserHistoryResponse"
+        },
+        "courses/assignments/submissions/fetch/user/peek": {
+            "request-type": "*submissions.FetchUserPeekRequest",
+            "response-type": "*submissions.FetchUserPeekResponse"
+        },
+        "courses/assignments/submissions/remove": {
+            "request-type": "*submissions.RemoveRequest",
+            "response-type": "*submissions.RemoveResponse"
+        },
+        "courses/assignments/submissions/submit": {
+            "request-type": "*submissions.SubmitRequest",
+            "response-type": "*submissions.SubmitResponse"
+        },
+        "courses/upsert/filespec": {
+            "request-type": "*upsert.FileSpecRequest",
+            "response-type": "*upsert.UpsertResponse"
+        },
+        "courses/upsert/zip": {
+            "request-type": "*upsert.ZipFileRequest",
+            "response-type": "*upsert.UpsertResponse"
+        },
+        "courses/users/drop": {
+            "request-type": "*users.DropRequest",
+            "response-type": "*users.DropResponse"
+        },
+        "courses/users/enroll": {
+            "request-type": "*users.EnrollRequest",
+            "response-type": "*users.EnrollResponse"
+        },
+        "courses/users/get": {
+            "request-type": "*users.GetRequest",
+            "response-type": "*users.GetResponse"
+        },
+        "courses/users/list": {
+            "request-type": "*users.ListRequest",
+            "response-type": "*users.ListResponse"
+        },
+        "lms/upload/scores": {
+            "request-type": "*lms.UploadScoresRequest",
+            "response-type": "*lms.UploadScoresResponse"
+        },
+        "lms/user/get": {
+            "request-type": "*lms.UserGetRequest",
+            "response-type": "*lms.UserGetResponse"
+        },
+        "logs/query": {
+            "request-type": "*logs.QueryRequest",
+            "response-type": "*logs.QueryResponse"
+        },
+        "metadata/describe": {
+            "request-type": "*metadata.DescribeRequest",
+            "response-type": "*metadata.DescribeResponse"
+        },
+        "users/auth": {
+            "request-type": "*users.AuthRequest",
+            "response-type": "*users.AuthResponse"
+        },
+        "users/get": {
+            "request-type": "*users.GetRequest",
+            "response-type": "*users.GetResponse"
+        },
+        "users/list": {
+            "request-type": "*users.ListRequest",
+            "response-type": "*users.ListResponse"
+        },
+        "users/password/change": {
+            "request-type": "*users.PasswordChangeRequest",
+            "response-type": "*users.PasswordChangeResponse"
+        },
+        "users/password/reset": {
+            "request-type": "*users.PasswordResetRequest",
+            "response-type": "*users.PasswordResetResponse"
+        },
+        "users/remove": {
+            "request-type": "*users.RemoveRequest",
+            "response-type": "*users.RemoveResponse"
+        },
+        "users/tokens/create": {
+            "request-type": "*users.TokensCreateRequest",
+            "response-type": "*users.TokensCreateResponse"
+        },
+        "users/tokens/delete": {
+            "request-type": "*users.TokensDeleteRequest",
+            "response-type": "*users.TokensDeleteResponse"
+        },
+        "users/upsert": {
+            "request-type": "*users.UpsertRequest",
+            "response-type": "*users.UpsertResponse"
+        }
+    }
+}

@@ -15,6 +15,9 @@ const (
 	DIRTY_SUFFIX     string = "dirty"
 	UNKNOWN_API      int    = -1
 	HASH_LENGTH      int    = 8
+
+	API_DESCRIPTION_FILENAME = "api.json"
+	RESOURCES_DIRNAME        = "resources"
 )
 
 type Version struct {
@@ -42,6 +45,19 @@ func MustGetAPIVersion() int {
 	return version.Api
 }
 
+func GetResourcesDir() string {
+	return ShouldAbs(filepath.Join(ShouldGetThisDir(), "..", "..", RESOURCES_DIRNAME))
+}
+
+func GetAPIDescriptionFilepath() (string, error) {
+	apiPath := ShouldAbs(filepath.Join(GetResourcesDir(), API_DESCRIPTION_FILENAME))
+	if !IsFile(apiPath) {
+		return apiPath, fmt.Errorf("API description path '%s' does not exist.", apiPath)
+	}
+
+	return apiPath, nil
+}
+
 func readVersion() (Version, error) {
 	version := Version{
 		Short:   UNKNOWN_VERSION,
@@ -50,7 +66,7 @@ func readVersion() (Version, error) {
 		Api:     UNKNOWN_API,
 	}
 
-	versionPath := ShouldAbs(filepath.Join(ShouldGetThisDir(), "..", "..", VERSION_FILENAME))
+	versionPath := ShouldAbs(filepath.Join(GetResourcesDir(), VERSION_FILENAME))
 	if !IsFile(versionPath) {
 		return version, fmt.Errorf("Version path '%s' does not exist.", versionPath)
 	}

@@ -18,6 +18,7 @@ type FetchCourseScoresResponse struct {
 	SubmissionInfos map[string]*model.SubmissionHistoryItem `json:"submission-infos"`
 }
 
+// Get a summary of the most recent scores for this assignment.
 func HandleFetchCourseScores(request *FetchCourseScoresRequest) (*FetchCourseScoresResponse, *core.APIError) {
 	submissionInfos, err := db.GetRecentSubmissionSurvey(request.Assignment, request.FilterRole)
 	if err != nil {

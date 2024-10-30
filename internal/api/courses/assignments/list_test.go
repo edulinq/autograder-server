@@ -54,7 +54,7 @@ func TestList(test *testing.T) {
 			"course-id":  testCase.course,
 		}
 
-		response := core.SendTestAPIRequest(test, core.NewEndpoint(`courses/assignments/list`), fields)
+		response := core.SendTestAPIRequest(test, `courses/assignments/list`, fields)
 		if !response.Success {
 			if testCase.permError {
 				expectedLocator := "-040"

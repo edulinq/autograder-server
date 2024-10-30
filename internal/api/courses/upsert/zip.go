@@ -16,6 +16,7 @@ type ZipFileRequest struct {
 	Files core.POSTFiles
 }
 
+// Upsert a course using a zip file.
 func HandleZipFile(request *ZipFileRequest) (*UpsertResponse, *core.APIError) {
 	if len(request.Files.Filenames) != 1 {
 		return nil, core.NewBadUserRequestError("-615", &request.APIRequestUserContext,

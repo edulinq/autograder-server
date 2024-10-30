@@ -16,6 +16,7 @@ type PasswordChangeResponse struct {
 	Duplicate bool `json:"duplicate"`
 }
 
+// Change your password to the one provided.
 func HandlePasswordChange(request *PasswordChangeRequest) (*PasswordChangeResponse, *core.APIError) {
 	success, err := request.ServerUser.SetPassword(request.NewPass)
 	if err != nil {

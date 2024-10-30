@@ -41,7 +41,7 @@ func TestZipFile(test *testing.T) {
 
 		fields := map[string]any{}
 
-		response := core.SendTestAPIRequestFull(test, core.NewEndpoint(`courses/upsert/zip`), fields, []string{tempPath}, testCase.email)
+		response := core.SendTestAPIRequestFull(test, `courses/upsert/zip`, fields, []string{tempPath}, testCase.email)
 
 		processRsponse(test, response, testCase, fmt.Sprintf("Case %d: ", i))
 	}

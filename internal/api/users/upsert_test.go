@@ -144,7 +144,7 @@ func TestUpsert(test *testing.T) {
 			"send-emails":  testCase.options.SendEmails,
 		}
 
-		response := core.SendTestAPIRequestFull(test, core.NewEndpoint(`users/upsert`), fields, nil, testCase.email)
+		response := core.SendTestAPIRequestFull(test, `users/upsert`, fields, nil, testCase.email)
 		if !response.Success {
 			if testCase.permError {
 				expectedLocator := "-041"

@@ -72,7 +72,7 @@ func TestFetchCourseScores(test *testing.T) {
 			"filter-role": testCase.filterRole,
 		}
 
-		response := core.SendTestAPIRequestFull(test, core.NewEndpoint(`courses/assignments/submissions/fetch/course/scores`), fields, nil, testCase.email)
+		response := core.SendTestAPIRequestFull(test, `courses/assignments/submissions/fetch/course/scores`, fields, nil, testCase.email)
 		if !response.Success {
 			if testCase.permError {
 				if response.Locator != testCase.locator {

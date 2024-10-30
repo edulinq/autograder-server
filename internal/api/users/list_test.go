@@ -34,7 +34,7 @@ func TestList(test *testing.T) {
 	}
 
 	for i, testCase := range testCases {
-		response := core.SendTestAPIRequestFull(test, core.NewEndpoint(`users/list`), nil, nil, testCase.email)
+		response := core.SendTestAPIRequestFull(test, `users/list`, nil, nil, testCase.email)
 		if !response.Success {
 			if testCase.permError {
 				expectedLocator := "-041"

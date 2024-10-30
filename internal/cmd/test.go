@@ -13,6 +13,7 @@ import (
 	"github.com/edulinq/autograder/internal/api/server"
 	"github.com/edulinq/autograder/internal/config"
 	"github.com/edulinq/autograder/internal/db"
+	"github.com/edulinq/autograder/internal/exit"
 	"github.com/edulinq/autograder/internal/log"
 	"github.com/edulinq/autograder/internal/util"
 )
@@ -82,10 +83,8 @@ func getUnusedPort() (int, error) {
 
 func RunCMDTest(test *testing.T, mainFunc func(), args []string, logLevel log.LogLevel) (string, string, int, error) {
 	// Suppress exits to capture exit codes.
-	util.ShouldExitForTesting = false
-	defer func() {
-		util.ShouldExitForTesting = true
-	}()
+	exit.SetShouldExitForTesting(false)
+	defer exit.SetShouldExitForTesting(true)
 
 	tempDir := util.MustMkDirTemp("autograder-testing-cmd-")
 	stdoutPath := filepath.Join(tempDir, STDOUT_FILENAME)
@@ -137,7 +136,7 @@ func RunCMDTest(test *testing.T, mainFunc func(), args []string, logLevel log.Lo
 	os.Stderr = oldStderr
 	stderr := util.MustReadFile(stderrPath)
 
-	exitCode := util.GetLastExitCode()
+	exitCode := exit.GetLastExitCode()
 
 	return stdout, stderr, exitCode, err
 }
