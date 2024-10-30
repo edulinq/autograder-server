@@ -30,7 +30,11 @@ func MustHandleCMDRequestAndExitFull(endpoint string, request any, responseType 
 	}
 
 	if !response.Success {
+		log.Error("API response was unsuccessful.", log.NewAttr("message", response.Message))
+
 		exit.Exit(2)
+
+		// Return after setting the exit code to avoid overwriting it during tests.
 		return
 	}
 
@@ -90,10 +94,6 @@ func PrintCMDResponseFull(request any, response core.APIResponse, responseType a
 	if options.Verbose {
 		fmt.Printf("\nAutograder Request:\n---\n%s\n---\n", util.MustToJSONIndent(request))
 		fmt.Printf("\nAutograder Response:\n---\n%s\n---\n", util.MustToJSONIndent(response))
-	}
-
-	if !response.Success {
-		log.Error("API response was unsuccessful.", log.NewAttr("message", response.Message))
 	}
 
 	if customPrintFunc != nil {

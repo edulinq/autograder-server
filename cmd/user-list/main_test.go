@@ -43,7 +43,7 @@ func TestServerUserListBase(test *testing.T) {
 }
 
 // Test to ensure that the verbose flag doesn't cause an error.
-// // Since the verbose flag is common code, we only need to test it for one CMD.
+// Since the verbose flag is common code, we only need to test it for one CMD.
 func TestServerUserListVerbose(test *testing.T) {
 	args := []string{"--verbose"}
 
