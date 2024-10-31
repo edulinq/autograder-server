@@ -42,7 +42,7 @@ func CMDServerTestingMain(suite *testing.M) {
 		exit.Exit(1)
 	}
 
-	// Run inside a func so defers will run before os.Exit().
+	// Run inside a func so defers will run before exit.Exit().
 	code := func() int {
 		defer config.WEB_PORT.Set(config.WEB_PORT.Get())
 		config.WEB_PORT.Set(port)
