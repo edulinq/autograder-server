@@ -54,7 +54,12 @@ func CMDServerTestingMain(suite *testing.M) {
 
 		go func() {
 			serverRun.Done()
-			server.RunServer()
+
+			err := server.RunServer()
+			if err != nil {
+				log.Error("Failed to run the server.", err)
+				exit.Exit(1)
+			}
 		}()
 
 		defer server.StopServer()
