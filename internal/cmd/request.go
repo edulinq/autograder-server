@@ -26,13 +26,13 @@ func MustHandleCMDRequestAndExit(endpoint string, request any, responseType any)
 func MustHandleCMDRequestAndExitFull(endpoint string, request any, responseType any, options CommonOptions, customPrintFunc CustomResponseFormatter) {
 	response, err := SendCMDRequest(endpoint, request)
 	if err != nil {
-		log.Fatal("Failed to send the CMD request.", err)
+		log.Fatal("Failed to send the CMD request.", err, log.NewAttr("endpoint", endpoint))
 	}
 
 	if !response.Success {
 		log.Error("API response was unsuccessful.", log.NewAttr("message", response.Message))
 
-		exit.Exit(2)
+		exit.Exit(1)
 
 		// Return after setting the exit code to avoid overwriting it during tests.
 		return
@@ -76,6 +76,7 @@ func SendCMDRequest(endpoint string, request any) (core.APIResponse, error) {
 
 	var response core.APIResponse
 	util.MustJSONFromBytes(responseBuffer, &response)
+
 	if err != nil {
 		return core.APIResponse{}, fmt.Errorf("Failed to unmarshal the API response: '%w'.", err)
 	}

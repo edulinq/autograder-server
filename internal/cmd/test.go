@@ -37,8 +37,7 @@ func CMDServerTestingMain(suite *testing.M) {
 
 	port, err := getUnusedPort()
 	if err != nil {
-		log.Error("Failed to get an unused port.", err)
-		exit.Exit(1)
+		log.Fatal("Failed to get an unused port.", err)
 	}
 
 	// Run inside a func so defers will run before exit.Exit().
@@ -57,8 +56,7 @@ func CMDServerTestingMain(suite *testing.M) {
 
 			err := server.RunServer()
 			if err != nil {
-				log.Error("Failed to run the server.", err)
-				exit.Exit(1)
+				log.Fatal("Failed to run the server.", err)
 			}
 		}()
 

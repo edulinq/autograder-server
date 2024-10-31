@@ -54,13 +54,14 @@ func listServerUsersTable(response core.APIResponse) string {
 			serverUsersTable.WriteString("\n")
 		}
 
-		serverUsersTable.WriteString(user.Email)
-		serverUsersTable.WriteString("\t")
-		serverUsersTable.WriteString(user.Name)
-		serverUsersTable.WriteString("\t")
-		serverUsersTable.WriteString(user.Role.String())
-		serverUsersTable.WriteString("\t")
-		serverUsersTable.WriteString(util.MustToJSONIndent(user.Courses))
+		row := []string{
+			user.Email,
+			user.Name,
+			user.Role.String(),
+			util.MustToJSONIndent(user.Courses),
+		}
+
+		serverUsersTable.WriteString(strings.Join(row, "\t"))
 	}
 
 	return serverUsersTable.String()
