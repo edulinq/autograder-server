@@ -52,7 +52,7 @@ func SendCMDRequest(endpoint string, request any) (core.APIResponse, error) {
 
 	connection, err := net.Dial("unix", socketPath)
 	if err != nil {
-		return core.APIResponse{}, fmt.Errorf("Failed to dial the unix socket: '%w'", err)
+		return core.APIResponse{}, fmt.Errorf("Failed to dial the unix socket: '%w'.", err)
 	}
 	defer connection.Close()
 
