@@ -25,7 +25,7 @@ const (
 	LOCAL_HOST      = "localhost"
 )
 
-type CMDTestParameters struct {
+type CommonCMDTestCase struct {
 	ExpectedExitCode        int
 	ExpectedStdout          string
 	ExpectedStderrSubstring string
@@ -39,7 +39,7 @@ func CMDServerTestingMain(suite *testing.M) {
 	port, err := getUnusedPort()
 	if err != nil {
 		log.Error("Failed to get an unused port.", err)
-		os.Exit(1)
+		exit.Exit(1)
 	}
 
 	// Run inside a func so defers will run before os.Exit().
@@ -68,7 +68,7 @@ func CMDServerTestingMain(suite *testing.M) {
 		return suite.Run()
 	}()
 
-	os.Exit(code)
+	exit.Exit(code)
 }
 
 func getUnusedPort() (int, error) {
@@ -171,25 +171,25 @@ func runCMD(mainFunc func(), args []string) (err error) {
 	return err
 }
 
-func RunCommonCMDTests(test *testing.T, mainFunc func(), args []string, cmdParameters CMDTestParameters, prefix string) (string, string, int, bool) {
-	stdout, stderr, exitCode, err := RunCMDTest(test, mainFunc, args, cmdParameters.LogLevel)
+func RunCommonCMDTests(test *testing.T, mainFunc func(), args []string, commonTestCase CommonCMDTestCase, prefix string) (string, string, int, bool) {
+	stdout, stderr, exitCode, err := RunCMDTest(test, mainFunc, args, commonTestCase.LogLevel)
 	if err != nil {
 		test.Errorf("%sCMD run returned an error: '%v'.", prefix, err)
 		return "", "", -1, false
 	}
 
-	if cmdParameters.ExpectedExitCode != exitCode {
-		test.Errorf("%sUnexpected exit code. Expected: '%d', Actual: '%d'.", prefix, cmdParameters.ExpectedExitCode, exitCode)
+	if commonTestCase.ExpectedExitCode != exitCode {
+		test.Errorf("%sUnexpected exit code. Expected: '%d', Actual: '%d'.", prefix, commonTestCase.ExpectedExitCode, exitCode)
 		return "", "", -1, false
 	}
 
-	if !strings.Contains(stderr, cmdParameters.ExpectedStderrSubstring) {
-		test.Errorf("%sUnexpected stderr. Expected substring: '%s', Actual stderr: '%s'.", prefix, cmdParameters.ExpectedStderrSubstring, stderr)
+	if !strings.Contains(stderr, commonTestCase.ExpectedStderrSubstring) {
+		test.Errorf("%sUnexpected stderr. Expected substring: '%s', Actual stderr: '%s'.", prefix, commonTestCase.ExpectedStderrSubstring, stderr)
 		return "", "", -1, false
 	}
 
-	if cmdParameters.ExpectedStdout != stdout {
-		test.Errorf("%sUnexpected output. Expected: \n'%s', \n Actual: \n'%s'.", prefix, cmdParameters.ExpectedStdout, stdout)
+	if commonTestCase.ExpectedStdout != stdout {
+		test.Errorf("%sUnexpected output. Expected: \n'%s', \n Actual: \n'%s'.", prefix, commonTestCase.ExpectedStdout, stdout)
 		return "", "", -1, false
 	}
 

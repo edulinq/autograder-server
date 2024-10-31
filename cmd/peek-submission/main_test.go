@@ -14,14 +14,14 @@ func TestMain(suite *testing.M) {
 
 func TestPeekBase(test *testing.T) {
 	testCases := []struct {
-		cmd.CMDTestParameters
+		cmd.CommonCMDTestCase
 		targetEmail      string
 		courseID         string
 		assignmentID     string
 		targetSubmission string
 	}{
 		{
-			CMDTestParameters: cmd.CMDTestParameters{
+			CommonCMDTestCase: cmd.CommonCMDTestCase{
 				ExpectedStdout: SUBMISSION_1697406272,
 			},
 			targetEmail:  "course-student@test.edulinq.org",
@@ -29,7 +29,7 @@ func TestPeekBase(test *testing.T) {
 			assignmentID: "hw0",
 		},
 		{
-			CMDTestParameters: cmd.CMDTestParameters{
+			CommonCMDTestCase: cmd.CommonCMDTestCase{
 				ExpectedStdout: SUBMISSION_1697406272,
 			},
 			targetEmail:      "course-student@test.edulinq.org",
@@ -38,7 +38,7 @@ func TestPeekBase(test *testing.T) {
 			targetSubmission: "1697406272",
 		},
 		{
-			CMDTestParameters: cmd.CMDTestParameters{
+			CommonCMDTestCase: cmd.CommonCMDTestCase{
 				ExpectedStdout: SUBMISSION_1697406272,
 			},
 			targetEmail:      "course-student@test.edulinq.org",
@@ -47,7 +47,7 @@ func TestPeekBase(test *testing.T) {
 			targetSubmission: "course101::hw0::student@test.com::1697406272",
 		},
 		{
-			CMDTestParameters: cmd.CMDTestParameters{
+			CommonCMDTestCase: cmd.CommonCMDTestCase{
 				ExpectedStdout: NO_SUBMISSION,
 			},
 			targetEmail:  "course-admin@test.edulinq.org",
@@ -55,7 +55,7 @@ func TestPeekBase(test *testing.T) {
 			assignmentID: "hw0",
 		},
 		{
-			CMDTestParameters: cmd.CMDTestParameters{
+			CommonCMDTestCase: cmd.CommonCMDTestCase{
 				ExpectedStdout: INCORRECT_SUBMISSION,
 			},
 			targetEmail:      "course-student@test.edulinq.org",
@@ -64,18 +64,18 @@ func TestPeekBase(test *testing.T) {
 			targetSubmission: "ZZZ",
 		},
 		{
-			CMDTestParameters: cmd.CMDTestParameters{
+			CommonCMDTestCase: cmd.CommonCMDTestCase{
 				ExpectedExitCode:        2,
-				ExpectedStderrSubstring: `"Could not find course: 'ZZZ'."`,
+				ExpectedStderrSubstring: `Could not find course: 'ZZZ'.`,
 			},
 			targetEmail:  "course-student@test.edulinq.org",
 			courseID:     "ZZZ",
 			assignmentID: "hw0",
 		},
 		{
-			CMDTestParameters: cmd.CMDTestParameters{
+			CommonCMDTestCase: cmd.CommonCMDTestCase{
 				ExpectedExitCode:        2,
-				ExpectedStderrSubstring: `"Could not find assignment: 'zzz'."`,
+				ExpectedStderrSubstring: `Could not find assignment: 'zzz'.`,
 			},
 			targetEmail:  "course-student@test.edulinq.org",
 			courseID:     "course101",
@@ -91,6 +91,6 @@ func TestPeekBase(test *testing.T) {
 			testCase.targetSubmission,
 		}
 
-		cmd.RunCommonCMDTests(test, main, args, testCase.CMDTestParameters, fmt.Sprintf("Case %d: ", i))
+		cmd.RunCommonCMDTests(test, main, args, testCase.CommonCMDTestCase, fmt.Sprintf("Case %d: ", i))
 	}
 }

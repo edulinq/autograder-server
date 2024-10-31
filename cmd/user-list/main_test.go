@@ -15,16 +15,16 @@ func TestMain(suite *testing.M) {
 
 func TestServerUserListBase(test *testing.T) {
 	testCases := []struct {
-		CommonCMDTestCases cmd.CMDTestParameters
-		table              bool
+		CommonCMDTestCase cmd.CommonCMDTestCase
+		table             bool
 	}{
 		{
-			CommonCMDTestCases: cmd.CMDTestParameters{
+			CommonCMDTestCase: cmd.CommonCMDTestCase{
 				ExpectedStdout: EXPECTED_SERVER_USER_LIST,
 			},
 		},
 		{
-			CommonCMDTestCases: cmd.CMDTestParameters{
+			CommonCMDTestCase: cmd.CommonCMDTestCase{
 				ExpectedStdout: EXPECTED_SERVER_USER_LIST_TABLE,
 			},
 			table: true,
@@ -38,7 +38,7 @@ func TestServerUserListBase(test *testing.T) {
 			args = append(args, "--table")
 		}
 
-		cmd.RunCommonCMDTests(test, main, args, testCase.CommonCMDTestCases, fmt.Sprintf("Case %d: ", i))
+		cmd.RunCommonCMDTests(test, main, args, testCase.CommonCMDTestCase, fmt.Sprintf("Case %d: ", i))
 	}
 }
 

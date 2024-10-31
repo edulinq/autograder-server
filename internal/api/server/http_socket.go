@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"net"
 	"net/http"
 
 	"github.com/edulinq/autograder/internal/api/core"
@@ -15,18 +14,17 @@ import (
 
 var apiServer *http.Server
 
-const API_SERVER_STOP_LOCK = "internal.api.server.API_SERVER_STOP_LOCK"
-const PORT_USAGE_CHECK_LOCK = "internal.api.server.PORT_USAGE_CHECK_LOCK"
+const API_SERVER_LOCK = "internal.api.server.API_SERVER_LOCK"
 
 func runAPIServer(routes *[]core.Route) (err error) {
 	var port = config.WEB_PORT.Get()
 
-	common.Lock(PORT_USAGE_CHECK_LOCK)
-	err = checkPortInUse(port)
-	if err != nil {
-		return err
+	common.Lock(API_SERVER_LOCK)
+	if apiServer != nil {
+		common.Unlock(API_SERVER_LOCK)
+		return fmt.Errorf("API server is already running.")
 	}
-	common.Unlock(PORT_USAGE_CHECK_LOCK)
+	common.Unlock(API_SERVER_LOCK)
 
 	defer func() {
 		value := recover()
@@ -60,8 +58,8 @@ func runAPIServer(routes *[]core.Route) (err error) {
 }
 
 func stopAPIServer() {
-	common.Lock(API_SERVER_STOP_LOCK)
-	defer common.Unlock(API_SERVER_STOP_LOCK)
+	common.Lock(API_SERVER_LOCK)
+	defer common.Unlock(API_SERVER_LOCK)
 
 	if apiServer == nil {
 		return
@@ -74,18 +72,4 @@ func stopAPIServer() {
 	if err != nil {
 		log.Error("Failed to stop the API server.", err)
 	}
-}
-
-func checkPortInUse(port int) error {
-	listener, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
-	if err != nil {
-		return fmt.Errorf("Port '%d' is already in use or not available: '%w'.", port, err)
-	}
-
-	err = listener.Close()
-	if err != nil {
-		return fmt.Errorf("Failed to close the listener after checking port usage: '%w'.", err)
-	}
-
-	return nil
 }
