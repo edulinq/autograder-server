@@ -22,7 +22,6 @@ const (
 	TESTING_ARG0    = "testing"
 	STDOUT_FILENAME = "stdout.txt"
 	STDERR_FILENAME = "stderr.txt"
-	LOCAL_HOST      = "localhost"
 )
 
 type CommonCMDTestCase struct {
