@@ -114,6 +114,21 @@ post-static docker
 invocation
 submission
 
+## Roles
+
+TODO
+
+In general, a higher role is always allowed when a lower role is required.
+For example, an API endpoint may say that is requires a server admin,
+but a server owner (which has more privlege than an admin) will always suffice.
+Imaging that the phrase "or greater" is always omitted.
+
+### Server Roles
+
+TODL
+
+### Course Roles
+
 ## Tasks
 
 Tasks are asynchronous processes for a course.
@@ -397,9 +412,49 @@ and email Bob every hour with the hour's WARN (which include ERROR) logs.
 }
 ```
 
-## Log Query (LogQuery)
+## Logging
 
-TODO
+Logging is a core functionality of the autograder and there are some relevant types a user should be aware of.
+
+### Level (LogLevel)
+
+As with most logging infrastructure, logs are assigned a level.
+Server administrators can set the level that they wish to record to stderr and the database respectively
+using the `log.text.level` and `log.backend.level` options.
+When a level is set, all logs at or above that level are included.
+Log levels are one of the following strings.
+
+| Level   | Description |
+|---------|-------------|
+| `TRACE` | The lowest level available. Used for fine-grained detail (like loop counters) while debugging. |
+| `DEBUG` | A logging level to use when debugging. |
+| `INFO`  | The default logging level. Includes messages that those running the server may find useful. |
+| `WARN`  | Warnings that do not stop the server from running, but are good to know about. |
+| `ERROR` | Errors that do not crash the server, but imped certain functionality. Errors should be addressed as soon as possible. |
+| `FATAL` | Critical errors that the server cannot recover from. Should only occur as soon as the server starts, not during prolonged running. |
+| `OFF`   | Turns off all logging. |
+
+The default level is `INFO`.
+
+### Log Query (LogQuery)
+
+A log query is a structured object that can be used to retrieve relevant log records.
+A query returns all records where all non-empty fields match.
+
+| Name                | Type       | Required | Description |
+|---------------------|------------|----------|-------------|
+| `level`             | LogLevel   | false    | Matches records at or above this log level. Defaults to "INFO" |
+| `after`             | String     | false    | Matches records after this time. The string should formatted either as [RFC 3339](https://en.wikipedia.org/wiki/ISO_8601#RFCs) or an integer ([milliseconds since UNIX epoch](https://en.wikipedia.org/wiki/Unix_time)). |
+| `past`              | String     | false    | Matches records that have been logged within this duration (e.g., "in the past hour"). Must have the pattern \<int\>\<unit\> where the units may be "s" (seconds), "m" (minutes), or "h" (hours). For example: "2h" for two hours. |
+| `target-course`     | Identifier | false    | Matches records about the given course. |
+| `target-assignment` | Identifier | false    | Matches records about the given assignment. If present, the query must also have `target-course` populated. |
+| `target-email`      | Email      | false    | Matches records about the given user/email. |
+
+The contents of a query determine the required permissions for that query.
+The general rules are:
+ - Sever admins can make any query.
+ - A user can always query for logs about themselves.
+ - A course admin can always query for logs about their course.
 
 ## LMS Adapter (LMSAdapter)
 
