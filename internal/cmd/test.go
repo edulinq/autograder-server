@@ -183,7 +183,7 @@ func RunCommonCMDTests(test *testing.T, mainFunc func(), args []string, commonTe
 	}
 
 	if !strings.Contains(stderr, commonTestCase.ExpectedStderrSubstring) {
-		test.Errorf("%sUnexpected stderr. Expected substring: '%s', Actual stderr: '%s'.", prefix, commonTestCase.ExpectedStderrSubstring, stderr)
+		test.Errorf("%sUnexpected stderr substring. Expected stderr substring: '%s', Actual stderr: '%s'.", prefix, commonTestCase.ExpectedStderrSubstring, stderr)
 		return "", "", -1, false
 	}
 
