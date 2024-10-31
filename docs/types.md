@@ -116,18 +116,44 @@ submission
 
 ## Roles
 
-TODO
+Roles are used to define privileges for a user within the server and each course.
+All users will have a single "server role" that defines their abilities on the server,
+as well as a "course role" for each course they are enrolled in.
+Roles are externally represented by case-insensitive strings.
 
 In general, a higher role is always allowed when a lower role is required.
 For example, an API endpoint may say that is requires a server admin,
-but a server owner (which has more privlege than an admin) will always suffice.
+but a server owner (which has more privilege than an admin) will always suffice.
 Imaging that the phrase "or greater" is always omitted.
 
-### Server Roles
+### Server Roles (ServerRole)
 
-TODL
+Server roles determine a user's abilities on the server.
+Every user has exactly one server role.
+Roles further down the list are considered more privileged.
 
-### Course Roles
+| Role      | Description |
+|-----------|-------------|
+| `user`    | The default role for server users. |
+| `creator` | Creators are allowed to create courses (which they will own), but are otherwise the same as users. |
+| `admin`   | Server administrators. Generally allowed to do any operation on the server. |
+| `owner`   | Server owners. |
+
+Users with a role of admin are free to execute any operation that require course-specific permissions.
+
+### Course Roles (CourseRole)
+
+Course roles determine a user's abilities within a specific course.
+A user enrolled in a course will have exactly one course role associated with that course.
+Roles further down the list are considered more privileged.
+
+| Role      | Description |
+|-----------|-------------|
+| `other`   | Course members who are not allowed to make submissions, but otherwise observe the course. |
+| `student` | Standard course members who submit assignments and can view only their own work. |
+| `grader`  | Course members who have access to submissions/grades for all students. These users have full access to the **content** of the course, but **cannot administer** it (e.g. they can see all the users but cannot edit them). |
+| `admin`   | Course members who can administrate the course. These users have full access to the content of the course and can administer it. |
+| `owner`   | Owners of the course. |
 
 ## Tasks
 
