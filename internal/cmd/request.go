@@ -32,7 +32,7 @@ func MustHandleCMDRequestAndExitFull(endpoint string, request any, responseType 
 	if !response.Success {
 		log.Fatal("API Request was unsuccessful.", log.NewAttr("message", response.Message))
 
-		// Return after log.Fatal sets the exit code to 1 to avoid overwriting the exit code during tests.
+		// Return after log.Fatal() sets the exit code to 1 to avoid overwriting the exit code during tests.
 		return
 	}
 
@@ -74,10 +74,6 @@ func SendCMDRequest(endpoint string, request any) (core.APIResponse, error) {
 
 	var response core.APIResponse
 	util.MustJSONFromBytes(responseBuffer, &response)
-
-	if err != nil {
-		return core.APIResponse{}, fmt.Errorf("Failed to unmarshal the API response: '%w'.", err)
-	}
 
 	return response, nil
 }

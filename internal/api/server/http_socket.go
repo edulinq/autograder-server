@@ -26,6 +26,7 @@ func runAPIServer(routes *[]core.Route) (err error) {
 		err = errors.Join(err, fmt.Errorf("API server panicked: '%v'.", value))
 	}()
 
+	// Unlock API_SERVER_LOCK explicitly on each code path to ensure proper release regardless of the outcome.
 	common.Lock(API_SERVER_LOCK)
 	if apiServer != nil {
 		common.Unlock(API_SERVER_LOCK)
