@@ -30,11 +30,9 @@ func MustHandleCMDRequestAndExitFull(endpoint string, request any, responseType 
 	}
 
 	if !response.Success {
-		log.Error("API response was unsuccessful.", log.NewAttr("message", response.Message))
+		log.Fatal("API Request was unsuccessful.", log.NewAttr("message", response.Message))
 
-		exit.Exit(1)
-
-		// Return after setting the exit code to avoid overwriting it during tests.
+		// Return after log.Fatal sets the exit code to 1 to avoid overwriting the exit code during tests.
 		return
 	}
 
