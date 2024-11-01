@@ -2,13 +2,16 @@ package cmd
 
 import (
 	"fmt"
+	"net"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 	"testing"
 	"time"
 
 	"github.com/edulinq/autograder/internal/api/server"
+	"github.com/edulinq/autograder/internal/config"
 	"github.com/edulinq/autograder/internal/db"
 	"github.com/edulinq/autograder/internal/exit"
 	"github.com/edulinq/autograder/internal/log"
@@ -21,10 +24,27 @@ const (
 	STDERR_FILENAME = "stderr.txt"
 )
 
+type CommonCMDTestCase struct {
+	ExpectedExitCode        int
+	ExpectedStdout          string
+	ExpectedStderrSubstring string
+	LogLevel                log.LogLevel
+}
+
 // Common setup for all CMD tests that require a server.
 func CMDServerTestingMain(suite *testing.M) {
-	// Run inside a func so defers will run before os.Exit().
+	server.StopServer()
+
+	port, err := getUnusedPort()
+	if err != nil {
+		log.Fatal("Failed to get an unused port.", err)
+	}
+
+	// Run inside a func so defers will run before exit.Exit().
 	code := func() int {
+		defer config.WEB_PORT.Set(config.WEB_PORT.Get())
+		config.WEB_PORT.Set(port)
+
 		db.PrepForTestingMain()
 		defer db.CleanupTestingMain()
 
@@ -33,7 +53,11 @@ func CMDServerTestingMain(suite *testing.M) {
 
 		go func() {
 			serverRun.Done()
-			server.RunServer()
+
+			err := server.RunServer()
+			if err != nil {
+				log.Fatal("Failed to run the server.", err)
+			}
 		}()
 
 		defer server.StopServer()
@@ -46,10 +70,20 @@ func CMDServerTestingMain(suite *testing.M) {
 		return suite.Run()
 	}()
 
-	os.Exit(code)
+	exit.Exit(code)
 }
 
-func RunCMDTest(test *testing.T, mainFunc func(), args []string) (string, string, int, error) {
+func getUnusedPort() (int, error) {
+	listener, err := net.Listen("tcp", ":0")
+	if err != nil {
+		return 0, err
+	}
+	listener.Close()
+
+	return listener.Addr().(*net.TCPAddr).Port, nil
+}
+
+func RunCMDTest(test *testing.T, mainFunc func(), args []string, logLevel log.LogLevel) (string, string, int, error) {
 	// Suppress exits to capture exit codes.
 	exit.SetShouldExitForTesting(false)
 	defer exit.SetShouldExitForTesting(true)
@@ -69,8 +103,7 @@ func RunCMDTest(test *testing.T, mainFunc func(), args []string) (string, string
 		log.SetBackendLevel(oldBackendLogLevel)
 	}()
 
-	// Force the log level to fatal.
-	args = append(args, "--log-level", log.LevelFatal.String())
+	args = append(args, "--log-level", logLevel.String())
 
 	// Setup stdout capture.
 	oldStdout := os.Stdout
@@ -84,8 +117,13 @@ func RunCMDTest(test *testing.T, mainFunc func(), args []string) (string, string
 	oldStderr := os.Stderr
 	defer func() {
 		os.Stderr = oldStderr
+		log.SetTextWriter(oldStderr)
 	}()
 
+	// Capture the logging and stderr output to the same file.
+	stderrFile := util.MustCreateFile(stderrPath)
+	os.Stderr = stderrFile
+	log.SetTextWriter(stderrFile)
 	os.Stderr = util.MustCreateFile(stderrPath)
 
 	// Run.
@@ -133,4 +171,29 @@ func runCMD(mainFunc func(), args []string) (err error) {
 	mainFunc()
 
 	return err
+}
+
+func RunCommonCMDTests(test *testing.T, mainFunc func(), args []string, commonTestCase CommonCMDTestCase, prefix string) (string, string, int, bool) {
+	stdout, stderr, exitCode, err := RunCMDTest(test, mainFunc, args, commonTestCase.LogLevel)
+	if err != nil {
+		test.Errorf("%sCMD run returned an error: '%v'.", prefix, err)
+		return "", "", -1, false
+	}
+
+	if commonTestCase.ExpectedExitCode != exitCode {
+		test.Errorf("%sUnexpected exit code. Expected: '%d', Actual: '%d'.", prefix, commonTestCase.ExpectedExitCode, exitCode)
+		return "", "", -1, false
+	}
+
+	if !strings.Contains(stderr, commonTestCase.ExpectedStderrSubstring) {
+		test.Errorf("%sUnexpected stderr substring. Expected stderr substring: '%s', Actual stderr: '%s'.", prefix, commonTestCase.ExpectedStderrSubstring, stderr)
+		return "", "", -1, false
+	}
+
+	if commonTestCase.ExpectedStdout != stdout {
+		test.Errorf("%sUnexpected output. Expected: \n'%s', \n Actual: \n'%s'.", prefix, commonTestCase.ExpectedStdout, stdout)
+		return "", "", -1, false
+	}
+
+	return stdout, stderr, exitCode, true
 }
