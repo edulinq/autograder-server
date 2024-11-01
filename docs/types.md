@@ -484,11 +484,94 @@ The general rules are:
 
 ## LMS Adapter (LMSAdapter)
 
-TODO
+A [Leaning Management System](https://en.wikipedia.org/wiki/Learning_management_system) (LMS) is a system that is used to administer courses and track student grades.
+The most popular are [Canvas](https://en.wikipedia.org/wiki/Instructure), [Blackboard](https://en.wikipedia.org/wiki/Blackboard_Learn), and [Moodle](https://en.wikipedia.org/wiki/Moodle).
+
+An LMS adapter contains all the information necessary to link an autograder course with an LMS course.
+
+| Name                   | Type       | Required | Description |
+|------------------------|------------|----------|-------------|
+| `type`                 | String     | true     | The type of the LMS being connected to. Currently the only valid value is "canvas". |
+| `base-url`             | String     | true     | The base URL of the LMS instance the course lives on, e.g. "https://canvas.university.edu". |
+| `course-id`            | String     | true     | The course identifier within the LMS. (This is not the autograder course id.) |
+| `api-token`            | String     | false    | The token used to authenticate API requests to the LMS. |
+| `sync-user-attributes` | Boolean    | false    | Sync attributes of users (e.g. name) when syncing users between the autograder and LMS. |
+| `sync-user-adds`       | Boolean    | false    | Sync new users when syncing users between the autograder and LMS. |
+| `sync-user-removes`    | Boolean    | false    | Sync removed users when syncing users between the autograder and LMS. Note that this can cause issues if you have manually added users that do not appear in your LMS. |
+| `sync-assignments`     | Boolean    | false    | Try to sync assignment details (name, due date, etc) when syncing with the LMS. |
 
 ## Late Policy (LatePolicy)
 
-TODO
+The autograder can apply one of several late policies to an assignment.
+The late policy for an assignment may be set in either the course or assignment configs.
+When set in the course config, assignments may override the behavior for a specific assignment by specifying their own policy.
+
+All late policies share common fields:
+
+| Name                   | Type       | Required | Description |
+|------------------------|------------|----------|-------------|
+| `type`                 | String     | true     | The type of late policy being used. Valid values are: `baseline`, `constant-penalty`, `percentage-penalty`, and `late-days`. |
+| `reject-after-days`    | Integer    | false    | After this number of days past the assignment due date, do not accept any more submissions. Submissions past this time are fully ignored, they will not be neither stored nor stored. A zero (or no) value will result in submissions never being rejected for being late. |
+
+### Baseline Late Policy (baseline)
+
+The `baseline` policy will not remove points for tardiness, but will still reject submissions that are too late.
+
+### Constant Penalty Late Policy (constant-penalty)
+
+The `constant-penalty` late policy will apply a constant penalty for each day a submission is late.
+
+| Name      | Type  | Required | Description |
+|-----------|-------|----------|-------------|
+| `penalty` | Float | true     | The penalty to apply for each day of being late. Must be greater than zero. |
+
+### Percentage Penalty Late Policy (percentage-penalty)
+
+The `percentage-penalty` late policy will deduct a percentage of an assignment's max points for each day a submission is late.
+
+| Name      | Type  | Required | Description |
+|-----------|-------|----------|-------------|
+| `penalty` | Float | true     | The proportion of the assignment's max points to apply as a penalty for each day of being late. Must be in larger than 0.0 and less than or equal to 1.0. |
+
+### Late Days Late Policy (late-days)
+
+The `late-days` late policy is a more complicated late policy that allows each student to use their own bank of late or grace days.
+Below is a textual description (which may be hard to follow).
+Below the textual description are examples that may be easier to follow.
+
+At the start of the term, each student is given a specific amount of late days (3-5 is common).
+For each assignment, a student may use a pre-determined maximum number of late days.
+When a student turns in an assignment late, first their effective grace days is computed by taking the minimum of
+the number of actual days late, the number of remaining grace days the student has available, and the number of maximum late days the assignment allows student's to use.
+If the number of effective grace days is not sufficient to cover the number of actual days the assignment is late,
+then each remaining late day is penalized in the same way as the `percentage-penalty` late policy.
+
+| Name               | Type    | Required | Description |
+|--------------------|---------|----------|-------------|
+| `penalty`          | Float   | true     | The proportion of the assignment's max points to apply as a penalty for each day of being late (after applying grace days). Must be in larger than 0.0 and less than or equal to 1.0. |
+| `max-late-days`    | Integer | true     | The maximum number of late days students may expend on this assignment. Must be less than or equal to `reject-after-days`. |
+| `late-days-lms-id` | String  | true     | The LMS ID for the assignment that will be used to track late days for each student. This assignment is usually not included in the final grade, but serves as a great place for students to view how many late days they have left. The autograder should have permissions to read and write this assignment. Instructors should populate it with the initial number of available late days for each student. |
+
+For example:
+```json
+{
+    "type": "late-days",
+    "reject-after-days": 4,
+    "penalty": 0.10,
+    "max-late-days": 2,
+    "late-days-lms-id": "ABC123"
+}
+```
+
+Using the above configuration, let's look at a few examples:
+| Student | Days Late | Grace Days Available | Used Late Days | Raw Score | Final Score | Notes |
+|---------|-----------|----------------------|----------------|-----------|-------------|-------|
+| Alice   | 0         | 5                    | 0              | 100       | 100         | Nothing is used when the assignment is not late. |
+| Bob     | 1         | 5                    | 1              | 100       | 100         | Bob used 1 late day, but receives no penalty (since he had enough late days to use). |
+| Claire  | 2         | 2                    | 2              | 100       | 100         | With this submission, Claire has now used all her late days. There is no penalty for this submission, but will be next time. |
+| Doug    | 3         | 5                    | 2              | 100       | 90          | Although Doug has many late days, the assignment allows a maximum of 2 late days. He will be penalized for 1 day. |
+| Emma    | 4         | 2                    | 2              | 100       | 80          | Emma used all their late days and will still need to be penalized for 2 more days. |
+| Francis | 5         | 2                    | 0              | ?         | ?           | Francis submitted too late. Their submission has been rejected and will not receive a formal score. No late days will be used. |
 
 ## Submission Limit (SubmissionLimit)
 
