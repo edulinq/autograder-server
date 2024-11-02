@@ -48,6 +48,7 @@ func main() {
 func listCourseUsersTable(response core.APIResponse) string {
 	var responseContent users.ListResponse
 	util.MustJSONFromString(util.MustToJSON(response.Content), &responseContent)
+
 	var courseUsersTable strings.Builder
 
 	headers := []string{"email", "name", "course-role", "LMSID"}
