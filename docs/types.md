@@ -575,10 +575,164 @@ Using the above configuration, let's look at a few examples:
 
 ## Submission Limit (SubmissionLimit)
 
-TODO
+Submission limits put a limit on the number or rate of submissions a student can make to an assignment.
+There are multiple types of submission, and they call all be used.
+A submission is rejected if any of the specified limits trigger.
+Submission limits are not enforced for course graders.
+
+| Name               | Type                    | Required | Description |
+|--------------------|-------------------------|----------|-------------|
+| `max-attempts`     | \*Integer               | false    | This is the total number of max submissions a student is allowed to have. |
+| `window`           | \*SubmissionLimitWindow | false    | This specifies a sliding window limiting the number of submissions. |
+
+### Submission Limit Window (SubmissionLimitWindow)
+
+| Name               | Type    | Required | Description |
+|--------------------|---------|----------|-------------|
+| `allowed-attempts` | Integer | true     | The number of allowed submissions within this window. |
+| `duration`         | String  | true     | The size of the window. Must have the pattern \<int\>\<unit\> where the units may be "s" (seconds), "m" (minutes), or "h" (hours). For example: "2h" for two hours. |
 
 ## File Specification (FileSpec)
 
-TODO
+A file specification (FileSpec) defines how to access a specific file (or dir).
+At it easiest it is just the path to a file, but can also specify things like a URL or Git repository.
+FileSpecs are used for things like specifying the canonical source for a course or the files that an assignment grader requires.
+
+All types of FileSpecs share some common fields:
+
+| Name       | Type   | Required | Description |
+|------------|--------|----------|-------------|
+| `type`     | String | true     | The type of FileSpec. Must be one of: "path", "git", or "url". |
+| `path`     | String | true     | The path to the resource this FileSpec points to. Will take different forms depending on the type. |
+| `dest`     | String | false    | The name to refer to the FileSpec once it has been fetched. If not specified, this is inferred from the path (e.g. the name of the file). |
+| `username` | String | false    | The username for authentication. |
+| `token`    | String | false    | The token/password for authentication. We recommend using tokens with fine-grained read-only access when possible. |
+
+### FileSpec -- Path
+
+A FileSpec with `type` equal to `path` points to an absolute or relative path accessible from the current machine.
+When a relative path is specified, additional context is required to know the relative base.
+For example, a FileSpec in an assignment config is relative to the assignment directory (the directory where the `assignment.json` file lives).
+
+In most cases where a FileSpec is parsed from a string, e.g., most command-line cases, a path FileSpec can be given as a normal path instead of a JSON object.
+`type` and `path` will be set properly, and `dest` will be defaulted to the given path's base name.
+
+**Examples**
+
+Here are some examples that all attempt to point to the README for this repository.
+
+Absolute Path (assumes this repo is at the root directory):
+```json
+{
+    "type": "path",
+    "path": "/autograder-server/README.md"
+}
+```
+
+Relative Path (assumes this directory is the relative base):
+```json
+{
+    "type": "path",
+    "path": "../README.md"
+}
+```
+
+Rename the output file to "instructions.md":
+```json
+{
+    "type": "path",
+    "path": "/autograder-server/README.md",
+    "dest": "instructions.md"
+}
+```
+
+### FileSpec -- URL
+
+A FileSpec with `type` equal to `url` points to a resource accessible with an HTTP GET request.
+
+Like the path-type FileSpec, a URL FileSpec can be parsed from a string,
+as long as the string starts with "http" (note that this includes "https").
+
+**Examples**
+
+Standard URL (note that for GitHub we are pointing to the raw content and not the webpage):
+```json
+{
+    "type": "url",
+    "path": "https://raw.githubusercontent.com/edulinq/autograder-server/refs/heads/main/README.md"
+}
+```
+
+Rename the output file to "instructions.md":
+```json
+{
+    "type": "url",
+    "path": "https://raw.githubusercontent.com/edulinq/autograder-server/refs/heads/main/README.md",
+    "dest": "instructions.md"
+}
+```
+
+
+### FileSpec -- Git
+
+A FileSpec with `type` equal to `git` points to a Git repository accessible with either no credentials or using `username` and `token`.
+The `path` field should be a Git URL.
+HTTP URLs are preferred  over SSH unless you setup SSH keys on your autograder server ahead of time.
+
+| Name        | Type   | Required | Description |
+|-------------|--------|----------|-------------|
+| `reference` | String | false    | The name of the git reference to use, e.g., commit hash, branch name, or tag name. Defaults to the repository's default branch. |
+
+When using a Git FileSpec, it is strongly recommended to include a reference.
+This allows you to more closely control the exact files you are getting.
+For a course source, specifying a non-default branch as a reference allows you to develop without worrying about accidentally pushing changes to the autograder.
+For an assignment resource, specifying a commit hash allows to autograder to know if a file has changes and the assignment's Docker container needs to be rebuilt.
+
+**Examples**
+
+A simple repository using the default branch without authentication:
+```json
+{
+    "type": "git",
+    "path": "https://github.com/edulinq/autograder-server"
+}
+```
+
+Rename the output directory from "autograder-server" to "ag-server":
+```json
+{
+    "type": "git",
+    "path": "https://github.com/edulinq/autograder-server",
+    "dest": "ag-server"
+}
+```
+
+Use a specific branch:
+```json
+{
+    "type": "git",
+    "path": "https://github.com/edulinq/autograder-server",
+    "reference": "my-cool-branch"
+}
+```
+
+Use a specific commit hash:
+```json
+{
+    "type": "git",
+    "path": "https://github.com/edulinq/autograder-server",
+    "reference": "3d5584c1a11307ffdb0ba1c8bb86f40bc36731f4"
+}
+```
+
+Authenticate against a private repository:
+```json
+{
+    "type": "git",
+    "path": "https://github.com/edulinq/autograder-server-secret",
+    "username": "secret-name",
+    "token': "ghp_abc123"
+}
+```
 
 ## File Operation (FileOP)
