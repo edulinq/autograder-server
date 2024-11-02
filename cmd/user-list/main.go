@@ -1,29 +1,28 @@
 package main
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/alecthomas/kong"
 
+	"github.com/edulinq/autograder/internal/api/core"
+	"github.com/edulinq/autograder/internal/api/users"
+	"github.com/edulinq/autograder/internal/cmd"
 	"github.com/edulinq/autograder/internal/config"
-	"github.com/edulinq/autograder/internal/db"
 	"github.com/edulinq/autograder/internal/log"
-	"github.com/edulinq/autograder/internal/model"
 	"github.com/edulinq/autograder/internal/util"
 )
 
 var args struct {
 	config.ConfigArgs
+	cmd.CommonOptions
 
-	Emails []string `help:"Optional list of users to limit the results to (leave empty for all users)." arg:"" optional:""`
-	Course string   `help:"Only include user enrolled in this course."`
-	Table  bool     `help:"Output data to stdout as a TSV." default:"false"`
+	Table bool `help:"Output data as a TSV." default:"false"`
 }
 
 func main() {
 	kong.Parse(&args,
-		kong.Description("List users on the server (default) or from the specified course."),
+		kong.Description("List users on the server."),
 	)
 
 	err := config.HandleConfigArgs(args.ConfigArgs)
@@ -31,64 +30,38 @@ func main() {
 		log.Fatal("Could not load config options.", err)
 	}
 
-	db.MustOpen()
-	defer db.MustClose()
+	request := users.ListRequest{}
 
-	if args.Course == "" {
-		listServerUsers(args.Emails, args.Table)
-	} else {
-		listCourseUsers(args.Emails, args.Course, args.Table)
+	var printFunc cmd.CustomResponseFormatter = nil
+	if args.Table {
+		printFunc = listServerUsersTable
 	}
+
+	cmd.MustHandleCMDRequestAndExitFull(`users/list`, request, users.ListResponse{}, args.CommonOptions, printFunc)
 }
 
-func listServerUsers(emails []string, table bool) {
-	users, err := db.GetServerUsers()
-	if err != nil {
-		log.Fatal("Failed to get server users.", err)
-	}
+func listServerUsersTable(response core.APIResponse) string {
+	var responseContent users.ListResponse
+	util.MustJSONFromString(util.MustToJSON(response.Content), &responseContent)
 
-	if len(emails) > 0 {
-		newUsers := make(map[string]*model.ServerUser, len(emails))
-		for _, email := range emails {
-			newUsers[email] = users[email]
+	var serverUsersTable strings.Builder
+
+	headers := []string{"email", "name", "server-role", "courses"}
+	serverUsersTable.WriteString(strings.Join(headers, "\t") + "\n")
+
+	for i, user := range responseContent.Users {
+		if i > 0 {
+			serverUsersTable.WriteString("\n")
 		}
 
-		users = newUsers
+		serverUsersTable.WriteString(user.Email)
+		serverUsersTable.WriteString("\t")
+		serverUsersTable.WriteString(user.Name)
+		serverUsersTable.WriteString("\t")
+		serverUsersTable.WriteString(user.Role.String())
+		serverUsersTable.WriteString("\t")
+		serverUsersTable.WriteString(util.MustToJSON(user.Courses))
 	}
 
-	if table {
-		fmt.Println(strings.Join(model.SERVER_USER_ROW_COLUMNS, "\t"))
-		for _, user := range users {
-			fmt.Println(strings.Join(user.MustToRow(), "\t"))
-		}
-	} else {
-		fmt.Println(util.MustToJSONIndent(users))
-	}
-}
-
-func listCourseUsers(emails []string, courseID string, table bool) {
-	course := db.MustGetCourse(courseID)
-
-	users, err := db.GetCourseUsers(course)
-	if err != nil {
-		log.Fatal("Failed to get course users.", err)
-	}
-
-	if len(emails) > 0 {
-		newUsers := make(map[string]*model.CourseUser, len(emails))
-		for _, email := range emails {
-			newUsers[email] = users[email]
-		}
-
-		users = newUsers
-	}
-
-	if table {
-		fmt.Println(strings.Join(model.COURSE_USER_ROW_COLUMNS, "\t"))
-		for _, user := range users {
-			fmt.Println(strings.Join(user.MustToRow(), "\t"))
-		}
-	} else {
-		fmt.Println(util.MustToJSONIndent(users))
-	}
+	return serverUsersTable.String()
 }

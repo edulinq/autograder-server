@@ -14,7 +14,7 @@ import (
 
 var apiServer *http.Server
 
-const API_SERVER_STOP_LOCK = "internal.api.server.API_STOP_LOCK"
+const API_SERVER_LOCK = "internal.api.server.API_SERVER_LOCK"
 
 func runAPIServer(routes *[]core.Route) (err error) {
 	defer func() {
@@ -26,6 +26,13 @@ func runAPIServer(routes *[]core.Route) (err error) {
 		err = errors.Join(err, fmt.Errorf("API server panicked: '%v'.", value))
 	}()
 
+	// Unlock API_SERVER_LOCK explicitly on each code path to ensure proper release regardless of the outcome.
+	common.Lock(API_SERVER_LOCK)
+	if apiServer != nil {
+		common.Unlock(API_SERVER_LOCK)
+		return fmt.Errorf("API server is already running.")
+	}
+
 	var port = config.WEB_PORT.Get()
 
 	log.Info("API Server Started.", log.NewAttr("port", port))
@@ -34,6 +41,8 @@ func runAPIServer(routes *[]core.Route) (err error) {
 		Addr:    fmt.Sprintf(":%d", port),
 		Handler: core.GetRouteServer(routes),
 	}
+
+	common.Unlock(API_SERVER_LOCK)
 
 	err = apiServer.ListenAndServe()
 	if err == http.ErrServerClosed {
@@ -51,8 +60,8 @@ func runAPIServer(routes *[]core.Route) (err error) {
 }
 
 func stopAPIServer() {
-	common.Lock(API_SERVER_STOP_LOCK)
-	defer common.Unlock(API_SERVER_STOP_LOCK)
+	common.Lock(API_SERVER_LOCK)
+	defer common.Unlock(API_SERVER_LOCK)
 
 	if apiServer == nil {
 		return
