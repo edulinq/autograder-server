@@ -93,9 +93,9 @@ JSON
 | `post-static-docker-commands` | List[String]   | false | A list of Docker commands to run after static files are copied into the image. |
 | `invocation`                  | List[String]   | false | The command to run when the grading container is launched (Docker's `CMD`). If not set, the image's default `ENTRYPOINT/CMD` is used. |
 | `static-files`                | List[FileSpec] | false | A list of files to copy into the image's `/work` directory. |
-| `pre-static-files-ops`        | List[FileOP]   | false | A list of file operations to run before static files are copied into the image. |
-| `post-static-files-ops`       | List[FileOP]   | false | A list of file operations to run after static files are copied into the image. |
-| `post-submission-files-ops`   | List[FileOP]   | false | A list of file operations to run after a student's code is available in the `/input` directory. |
+| `pre-static-files-ops`        | List[FileOp]   | false | A list of file operations to run before static files are copied into the image. |
+| `post-static-files-ops`       | List[FileOp]   | false | A list of file operations to run after static files are copied into the image. |
+| `post-submission-files-ops`   | List[FileOp]   | false | A list of file operations to run after a student's code is available in the `/input` directory. |
 
 LMS sync.
 `lms-id` or name match.
@@ -735,4 +735,29 @@ Authenticate against a private repository:
 }
 ```
 
-## File Operation (FileOP)
+## File Operation (FileOp)
+
+A file operation (FileOp) is a description of a simple file operation.
+FileOps are always lists of strings (typically three strings) representing the operation.
+
+The currently supported FileOps are copy (`cp`) and move/rename (`mv`).
+Those familiar with POSIX file operations should already be familiar with `cp` and `mv`.
+These operations take no options or flags (like `-r` or `-f`),
+the autograder will handle those details.
+There are just two arguments: source and destination.
+
+**Examples**
+
+Copy a directory:
+```json
+    "file-operations": [
+        ["cp", "autograder-server", "autograder-server-copy"]
+    ]
+```
+
+Move/rename a file:
+```json
+    "file-operations": [
+        ["mv", "foo.txt", "bar.txt"]
+    ]
+```
