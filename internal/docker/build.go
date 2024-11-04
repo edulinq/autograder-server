@@ -227,7 +227,7 @@ func toDockerfile(imageInfo *ImageInfo, workDir string) (string, error) {
 
 	// Ensure standard directories are created.
 	lines = append(lines, "# Core directories")
-	for _, dir := range []string{DOCKER_BASE_DIR, DOCKER_INPUT_DIR, DOCKER_OUTPUT_DIR, DOCKER_WORK_DIR} {
+	for _, dir := range []string{DOCKER_BASE_DIR, DOCKER_INPUT_DIR, DOCKER_OUTPUT_DIR, DOCKER_WORK_DIR, DOCKER_SCRIPTS_DIR} {
 		lines = append(lines, fmt.Sprintf("RUN mkdir -p '%s'", dir))
 	}
 	lines = append(lines, "")

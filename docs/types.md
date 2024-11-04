@@ -23,6 +23,7 @@ An Identifier is a String used to identify specific entities (like courses or as
 Identifiers must only have letters, digits, periods, underscores, and hyphens.
 The non-alphanumeric characters cannot be repeated in a sequence (e.g. you can have two periods, just not in a row).
 Identifiers must start and end with alphanumeric characters.
+Identifiers are case insensitive (they are always stored in lower case).
 
 ### Email
 
@@ -56,11 +57,18 @@ For example, a `*Integer` field can take a normal Integer (e.g. `123`) or a `nul
 
 ## Course
 
-TOOD
+A course is the core organizational unit in the autograder.
+Users may be enrolled in as many courses as available, but can have only one [roles](#course-roles--courseRole) within that course.
+
+A course in the autograder is mainly comprised of:
+ - An Identifier
+ - Users (with various [roles](#course-roles--courseRole)
+ - [Assignments](#assignment)
+ - [Tasks](#tasks)
 
 | Name               | Type               | Required | Description |
 |--------------------|--------------------|----------|-------------|
-| `id`               | Identifier         | true     | Identifier for an course. Must be unique within a server. |
+| `id`               | Identifier         | true     | Identifier for an course. Must be unique within a server. It is recommended to add term and section information were applicable, e.g., `course101-fall24-section01` or `course101-f24-s01`. |
 | `name`             | String             | false    | Display name for an course. Defaults to the course's Identifier. |
 | `late-policy`      | \*LatePolicy       | false    | The default late policy to use for all assignments in this course. |
 | `submission-limit` | \*SubmissionLimit  | false    | The default submission limit to enforce for all assignments in this course. |
@@ -72,11 +80,13 @@ TOOD
 | `scoring-upload`   | List[ScoringUploadTask] | false    | Specifications for tasks to perform a full scoring of all assignments and upload scores to the course's LMS. |
 | `email-logs`       | List[EmailLogsTask]     | false    | Specifications for tasks to email log entries. |
 
-TODO
+Depending on your LMS, you may also think of an autograder course as a "section",
+or specific instantiation of a course in a term.
 
 ## Assignment
 
-JSON
+Assignments represent common gradable activities in a course.
+The fields of an assignment are as follows:
 
 | Name               | Type               | Required | Description |
 |--------------------|--------------------|----------|-------------|
@@ -97,22 +107,98 @@ JSON
 | `post-static-files-ops`       | List[FileOp]   | false | A list of file operations to run after static files are copied into the image. |
 | `post-submission-files-ops`   | List[FileOp]   | false | A list of file operations to run after a student's code is available in the `/input` directory. |
 
-LMS sync.
-`lms-id` or name match.
+Note that there are few required fields.
 
-TODO
+### Assignment Grading Images
 
-TODO - Move to LMS documentation
-Fields synced by LMS: `name`, `due-date`, `max-points`, `lms-id`\*
+For each assignment, a [Docker image](https://www.docker.com/) is constructed using the assignment's configuration.
+This image is then invoked each time a student's submission needs to be graded,
+creating an identical and isolated grading environment for each student.
 
-Build stages
-pre-static docker
-pre-static file ops
-static
-post-static file ops
-post-static docker
-invocation
-submission
+Images will be created with some default directories:
+ - `/autograder` -- The base directory for autograder materials. When running commands, this is the default directory.
+ - `/autograder/input` -- Where student code is places. This directory is read-only.
+ - `/autograder/output` -- Where the output of grading (specifically `/autograder/output/results.json`) should be written.
+ - `/autograder/work` -- The "working" directory for grading. All static files are copied here.
+ - `/autograder/scripts` -- Where miscellaneous scripts are located.
+
+The general grading workflow is as follows:
+ - Student makes a submission request to the autograder.
+ - The autograder copies the student's code to a temporary location.
+ - The assignment image is invoked with two mounts/volumes:
+    - `/autograder/input` (read-only) which contains the student's submission.
+    - `/autograder/output` where the grader is expected to write the results of grading (`/autograder/output/results.json`).
+ - After the grading container stops running, the autograder collects the grading artifacts (results.json, stdout, and stderr), and inserts them into the database.
+ - The autograder now responds to the student's submission request with a summary of the results.
+
+Building an assignment image can seem daunting, so here we will run through the different options in the order they are executed.
+
+`image`  
+The first component of an assignment image is the base Docker image.
+This can be any image specification that can appear in a [Docker FROM statement](https://docs.docker.com/reference/dockerfile/#from).
+We recommend that you specify a specific tag version or digest so you can be sure the assignment is using the correct image.
+This project maintains [some general images](https://github.com/edulinq/autograder-docker) that you can use,
+or you can create your own custom images.
+
+`pre-static-docker-commands`  
+This is a list of commands that we will blindly copy into the assignment's Docker file before static files are copied.
+This is a good opportunity to install system dependencies in your image.
+These commands do not just include POSIX commands that you would use with [RUN](https://docs.docker.com/reference/dockerfile/#run), but any Dockerfile commands like
+[ADD](https://docs.docker.com/reference/dockerfile/#add),
+[ENV](https://docs.docker.com/reference/dockerfile/#env),
+or [USER](https://docs.docker.com/reference/dockerfile/#user).
+Note that we cannot guarantee that the commands you add here will not break the image (so you should test locally).
+The `build.keep` config option is useful for keeping around Docker build directories (contexts) for manual inspection.
+
+`pre-static-files-ops`  
+These [FileOps](#file-operation--fileop) are run inside the Docker context (build directory) before copying in static files.
+Therefore, these commands are not in the Docker image itself, but can modify the files that will then go into the image.
+As per standard Docker building rules, only files inside the Docker context can be accessed.
+These files operations are generally not useful for most common cases,
+the `post-static-file-ops` tends to be more useful.
+
+`static-files`  
+These files (FileSpecs) will be copied into the assignment image's `/autograder/work` directory.
+All path-based FileSpecs must be relative paths,
+and they are all relative to the directory the `assignment.json` is located in.
+
+`post-static-files-ops`  
+These [FileOps](#file-operation--fileop) are run inside the Docker context (build directory) before copying in static files.
+Therefore, these commands are not in the Docker image itself, but can modify the files that will then go into the image.
+As per standard Docker building rules, only files inside the Docker context can be accessed.
+Note that static files are copied into the `work` directory, and this command is executed inside the parent of the `work` directory.
+So if you want to access static files, you will have to path inside the `work` directory.
+
+`post-static-docker-commands`  
+These commands are added to the Dockerfile after the static files are copied.
+This is a good opportunity to move around your static files to their preferred location.
+
+`post-submission-files-ops`  
+Post submission file operations are intended to be run after the student has submitted their code (and that code is available in the `/autograder/input` directory).
+When the assignment image is created, the post submission file operations are written to `/autograder/scripts/post-submission-ops.sh`.
+It is the responsibility of the assignment image to execute this file before starting the grader.
+The [provided images](https://github.com/edulinq/autograder-docker) already do that,
+but you will have to ensure it is done if you create any custom images.
+
+`invocation`  
+The invocation is the command to run your actual grader (the Docker image's [CMD](https://docs.docker.com/reference/dockerfile/#cmd)).
+We recommend that you wrap your grader in a shell script for easy control and invocation.
+The invocation will take place (by default) in the `/autograder` directory.
+
+### Assignments and the LMS
+
+Certain assignment information can be synced to the autograder from the course's LMS.
+Information that can be synced:
+ - `name` (see below)
+ - `lms-id` (see below)
+ - `due-date`
+ - `max-points`
+
+Before information is synced over, an autograder assignment must match up to an LMS assignment.
+The most direct way to match is to populate the `lms-id` field with the LMS identifier for the assignment.
+However, this would require updating the `lmd-id` field for each section/term.
+You can also ensure that the assignment names in the autograder and LMS are the same (and there are no other assignments with the same name).
+On a full name match, then autograder will sync over the `lms-id` from the course's LMS.
 
 ## Roles
 
