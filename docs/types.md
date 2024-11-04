@@ -17,33 +17,33 @@ Extra keys will generally be ignored.
    - [Assignment Grading Images](#assignment-grading-images)
    - [Assignments and the LMS](#assignments-and-the-lms)
  - [Roles](#roles)
-   - [Server Roles (ServerRole)](#server-roles--serverrole)
-   - [Course Roles (CourseRole)](#course-roles--courserole)
+   - [Server Roles (ServerRole)](#server-roles-serverrole)
+   - [Course Roles (CourseRole)](#course-roles-courserole)
  - [Tasks](#tasks)
-   - [Scheduled Time (ScheduledTime)](#scheduled-time--scheduledtime)
-     - [every - Duration Specification (DurationSpec)](#every---duration-specification--durationspec)
-     - [daily - Time of Day Specification (TimeOfDaySpec)](#daily---time-of-day-specification--timeofdayspec)
-   - [Backup Task (BackupTask)](#backup-task--backuptask)
-   - [Course Update Task (CourseUpdateTask)](#course-update-task--courseupdatetask)
-   - [Report Task (ReportTask)](#report-task--reporttask)
-   - [Scoring Upload Task (ScoringUploadTask)](#scoring-upload-task--scoringuploadtask)
-   - [Email Logs Task (EmailLogsTask)](#email-logs-task--emaillogstask)
+   - [Scheduled Time (ScheduledTime)](#scheduled-time-scheduledtime)
+     - [every - Duration Specification (DurationSpec)](#every---duration-specification-durationspec)
+     - [daily - Time of Day Specification (TimeOfDaySpec)](#daily---time-of-day-specification-timeofdayspec)
+   - [Backup Task (BackupTask)](#backup-task-backuptask)
+   - [Course Update Task (CourseUpdateTask)](#course-update-task-courseupdatetask)
+   - [Report Task (ReportTask)](#report-task-reporttask)
+   - [Scoring Upload Task (ScoringUploadTask)](#scoring-upload-task-scoringuploadtask)
+   - [Email Logs Task (EmailLogsTask)](#email-logs-task-emaillogstask)
  - [Logging](#logging)
-   - [Level (LogLevel)](#level--loglevel)
-   - [Log Query (LogQuery)](#log-query--logquery)
- - [LMS Adapter (LMSAdapter)](#lms-adapter--lmsadapter)
- - [Late Policy (LatePolicy)](#late-policy--latepolicy)
-   - [Baseline Late Policy (baseline)](#baseline-late-policy--baseline)
-   - [Constant Penalty Late Policy (constant-penalty)](#constant-penalty-late-policy--constant-penalty)
-   - [Percentage Penalty Late Policy (percentage-penalty)](#percentage-penalty-late-policy--percentage-penalty)
-   - [Late Days Late Policy (late-days)](#late-days-late-policy--late-days)
- - [Submission Limit (SubmissionLimit)](#submission-limit--submissionlimit)
-   - [Submission Limit Window (SubmissionLimitWindow)](#submission-limit-window--submissionlimitwindow)
- - [File Specification (FileSpec)](#file-specification--filespec)
+   - [Level (LogLevel)](#level-loglevel)
+   - [Log Query (LogQuery)](#log-query-logquery)
+ - [LMS Adapter (LMSAdapter)](#lms-adapter-lmsadapter)
+ - [Late Policy (LatePolicy)](#late-policy-latepolicy)
+   - [Baseline Late Policy (baseline)](#baseline-late-policy-baseline)
+   - [Constant Penalty Late Policy (constant-penalty)](#constant-penalty-late-policy-constant-penalty)
+   - [Percentage Penalty Late Policy (percentage-penalty)](#percentage-penalty-late-policy-percentage-penalty)
+   - [Late Days Late Policy (late-days)](#late-days-late-policy-late-days)
+ - [Submission Limit (SubmissionLimit)](#submission-limit-submissionlimit)
+   - [Submission Limit Window (SubmissionLimitWindow)](#submission-limit-window-submissionlimitwindow)
+ - [File Specification (FileSpec)](#file-specification-filespec)
    - [FileSpec -- Path](#filespec----path)
    - [FileSpec -- URL](#filespec----url)
    - [FileSpec -- Git](#filespec----git)
- - [File Operation (FileOp)](#file-operation--fileop)
+ - [File Operation (FileOp)](#file-operation-fileop)
 
 ## Semantic Types
 
@@ -94,11 +94,11 @@ For example, a `*Integer` field can take a normal Integer (e.g. `123`) or a `nul
 ## Course
 
 A course is the core organizational unit in the autograder.
-Users may be enrolled in as many courses as available, but can have only one [roles](#course-roles--courseRole) within that course.
+Users may be enrolled in as many courses as available, but can have only one [role](#course-roles-courseRole) within that course.
 
 A course in the autograder is mainly comprised of:
  - An Identifier
- - Users (with various [roles](#course-roles--courseRole)
+ - Users (with various [roles](#course-roles-courseRole)
  - [Assignments](#assignment)
  - [Tasks](#tasks)
 
@@ -187,7 +187,7 @@ Note that we cannot guarantee that the commands you add here will not break the 
 The `build.keep` config option is useful for keeping around Docker build directories (contexts) for manual inspection.
 
 `pre-static-files-ops`  
-These [FileOps](#file-operation--fileop) are run inside the Docker context (build directory) before copying in static files.
+These [FileOps](#file-operation-fileop) are run inside the Docker context (build directory) before copying in static files.
 Therefore, these commands are not in the Docker image itself, but can modify the files that will then go into the image.
 As per standard Docker building rules, only files inside the Docker context can be accessed.
 These files operations are generally not useful for most common cases,
@@ -199,7 +199,7 @@ All path-based FileSpecs must be relative paths,
 and they are all relative to the directory the `assignment.json` is located in.
 
 `post-static-files-ops`  
-These [FileOps](#file-operation--fileop) are run inside the Docker context (build directory) before copying in static files.
+These [FileOps](#file-operation-fileop) are run inside the Docker context (build directory) before copying in static files.
 Therefore, these commands are not in the Docker image itself, but can modify the files that will then go into the image.
 As per standard Docker building rules, only files inside the Docker context can be accessed.
 Note that static files are copied into the `work` directory, and this command is executed inside the parent of the `work` directory.
@@ -853,7 +853,7 @@ Authenticate against a private repository:
     "type": "git",
     "path": "https://github.com/edulinq/autograder-server-secret",
     "username": "secret-name",
-    "token': "ghp_abc123"
+    "token": "ghp_abc123"
 }
 ```
 
