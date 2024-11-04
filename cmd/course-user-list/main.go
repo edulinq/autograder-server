@@ -23,7 +23,7 @@ var args struct {
 
 func main() {
 	kong.Parse(&args,
-		kong.Description("List course users from a specific course."),
+		kong.Description("List the users in the course."),
 	)
 
 	err := config.HandleConfigArgs(args.ConfigArgs)
