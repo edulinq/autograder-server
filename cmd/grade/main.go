@@ -38,7 +38,7 @@ func main() {
 
 	assignment := db.MustGetAssignment(args.Course, args.Assignment)
 
-	result, reject, err := grader.Grade(assignment, args.Submission, args.User, args.Message, args.CheckRejection, grader.GetDefaultGradeOptions())
+	result, reject, softError, err := grader.Grade(assignment, args.Submission, args.User, args.Message, args.CheckRejection, grader.GetDefaultGradeOptions())
 	if err != nil {
 		if (result != nil) && result.HasTextOutput() {
 			fmt.Println("Grading failed, but output was recovered:")
@@ -49,6 +49,10 @@ func main() {
 
 	if reject != nil {
 		log.Fatal("Submission was rejected.", assignment, log.NewAttr("reject-reason", reject.String()))
+	}
+
+	if softError != "" {
+		log.Fatal("Submission got a soft error.", assignment, log.NewAttr("soft-error", softError))
 	}
 
 	if args.OutPath != "" {

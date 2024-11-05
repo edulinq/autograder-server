@@ -7,6 +7,7 @@ import (
 	"sync"
 
 	"github.com/edulinq/autograder/internal/common"
+	"github.com/edulinq/autograder/internal/config"
 	"github.com/edulinq/autograder/internal/docker"
 	"github.com/edulinq/autograder/internal/log"
 	"github.com/edulinq/autograder/internal/timestamp"
@@ -156,6 +157,14 @@ func (this *Assignment) Validate() error {
 	err = this.ImageInfo.Validate()
 	if err != nil {
 		return fmt.Errorf("Failed to validate docker information: '%w'.", err)
+	}
+
+	systemMaxRuntimeSecs := config.DOCKER_RUNTIME_MAX_SECS.Get()
+	if this.ImageInfo.MaxRuntimeSecs > systemMaxRuntimeSecs {
+		log.Warn("Specified docker max runtime is greater than the max runtime allowed by the server, lowering assignment max runtime.",
+			this,
+			log.NewAttr("assignment-max-runtime", this.ImageInfo.MaxRuntimeSecs), log.NewAttr("server-max-runtime", systemMaxRuntimeSecs))
+		this.ImageInfo.MaxRuntimeSecs = systemMaxRuntimeSecs
 	}
 
 	return nil

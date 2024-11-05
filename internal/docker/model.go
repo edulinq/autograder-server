@@ -24,6 +24,8 @@ type ImageInfo struct {
 
 	PostSubmissionFileOperations []common.FileOperation `json:"post-submission-files-ops,omitempty"`
 
+	MaxRuntimeSecs int `json:"max-runtime-secs,omitempty"`
+
 	// Fields that are not part of the JSON and are set after deserialization.
 
 	Name string `json:"-"`
@@ -113,6 +115,10 @@ func (this *ImageInfo) Validate() error {
 	err = common.ValidateFileOperations(this.PostSubmissionFileOperations)
 	if err != nil {
 		return fmt.Errorf("Failed to validate post-submission file operations: '%w'.", err)
+	}
+
+	if this.MaxRuntimeSecs < 0 {
+		return fmt.Errorf("Max runtime seconds must be non-negative, found: %d.", this.MaxRuntimeSecs)
 	}
 
 	return nil
