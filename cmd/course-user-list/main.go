@@ -51,7 +51,7 @@ func listCourseUsersTable(response core.APIResponse) string {
 
 	var courseUsersTable strings.Builder
 
-	headers := []string{"email", "name", "course-role", "LMSID"}
+	headers := []string{"email", "name", "role", "lms-id"}
 	courseUsersTable.WriteString(strings.Join(headers, "\t") + "\n")
 
 	for i, user := range responseContent.Users {
