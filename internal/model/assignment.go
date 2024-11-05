@@ -167,6 +167,10 @@ func (this *Assignment) Validate() error {
 		this.ImageInfo.MaxRuntimeSecs = systemMaxRuntimeSecs
 	}
 
+	if this.ImageInfo.MaxRuntimeSecs == 0 {
+		this.ImageInfo.MaxRuntimeSecs = systemMaxRuntimeSecs
+	}
+
 	return nil
 }
 
