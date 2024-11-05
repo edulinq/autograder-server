@@ -134,6 +134,7 @@ The fields of an assignment are as follows:
 | `lms-id`           | String             | false    | The LMS Identifier for this assignment. May be synced with the LMS if the assignment's name matches. |
 | `late-policy`      | \*LatePolicy       | false    | The late policy to use for this assignment. Overrides any late policy set on the course level. |
 | `submission-limit` | \*SubmissionLimit  | false    | The submission limit to enforce for this assignment. Overrides any limits set on the course level. |
+| `max-runtime-secs` | Integer            | false    | The maximum number of sections a grader is allowed to run before being killed (cannot be greater than system limit set by `docker.runtime.max` config option. |
 | `image`            | String             | true     | The base Docker image to use for this assignment. |
 | `pre-static-docker-commands`  | List[String]   | false | A list of Docker commands to run before static files are copied into the image. |
 | `post-static-docker-commands` | List[String]   | false | A list of Docker commands to run after static files are copied into the image. |
