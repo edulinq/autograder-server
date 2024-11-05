@@ -30,7 +30,8 @@ var (
 	EMAIL_SMTP_IDLE_TIMEOUT_MS = MustNewIntOption("email.smtp.idle", 2000, "Consider an SMTP connection idle if no emails are sent for this number of milliseconds.")
 
 	// Docker
-	DOCKER_DISABLE = MustNewBoolOption("docker.disable", false, "Disable the use of docker (usually for testing).")
+	DOCKER_DISABLE          = MustNewBoolOption("docker.disable", false, "Disable the use of docker (usually for testing).")
+	DOCKER_RUNTIME_MAX_SECS = MustNewIntOption("docker.runtime.max", 60*5, "The maximum number of seconds a Docker container can be running for.")
 
 	// Tasks
 	NO_TASKS           = MustNewBoolOption("tasks.disable", false, "Disable all scheduled tasks.")

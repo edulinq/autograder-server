@@ -1,9 +1,11 @@
 package docker
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/mount"
@@ -13,17 +15,19 @@ import (
 	"github.com/edulinq/autograder/internal/util"
 )
 
-func RunContainer(logId log.Loggable, imageName string, inputDir string, outputDir string, gradingID string) (string, string, error) {
+// Run a container.
+// Returns: (stdout, stderr, timeout?, error)
+func RunContainer(logId log.Loggable, imageName string, inputDir string, outputDir string, baseID string, maxRuntimeSecs int) (string, string, bool, error) {
 	ctx, docker, err := getDockerClient()
 	if err != nil {
-		return "", "", err
+		return "", "", false, err
 	}
 	defer docker.Close()
 
 	inputDir = util.ShouldAbs(inputDir)
 	outputDir = util.ShouldAbs(outputDir)
 
-	name := cleanContainerName(fmt.Sprintf("%s-%s", gradingID, util.UUID()))
+	name := cleanContainerName(fmt.Sprintf("%s-%s", baseID, util.UUID()))
 
 	containerInstance, err := docker.ContainerCreate(
 		ctx,
@@ -53,14 +57,17 @@ func RunContainer(logId log.Loggable, imageName string, inputDir string, outputD
 		name)
 
 	if err != nil {
-		return "", "", fmt.Errorf("Failed to create container '%s': '%w'.", name, err)
+		return "", "", false, fmt.Errorf("Failed to create container '%s': '%w'.", name, err)
 	}
 
 	defer func() {
+		// The container should have already gracefull exited.
+		// If not, kill it without any grace.
+		// Ignore any errors.
+		docker.ContainerKill(ctx, containerInstance.ID, "KILL")
+
 		err = docker.ContainerRemove(ctx, containerInstance.ID, container.RemoveOptions{
-			RemoveVolumes: true,
-			RemoveLinks:   true,
-			Force:         true,
+			Force: true,
 		})
 		if err != nil {
 			log.Warn("Failed to remove container.",
@@ -71,7 +78,7 @@ func RunContainer(logId log.Loggable, imageName string, inputDir string, outputD
 
 	err = docker.ContainerStart(ctx, containerInstance.ID, container.StartOptions{})
 	if err != nil {
-		return "", "", fmt.Errorf("Failed to start container '%s' (%s): '%w'.", name, containerInstance.ID, err)
+		return "", "", false, fmt.Errorf("Failed to start container '%s' (%s): '%w'.", name, containerInstance.ID, err)
 	}
 
 	// Get the output reader before the container dies.
@@ -90,11 +97,26 @@ func RunContainer(logId log.Loggable, imageName string, inputDir string, outputD
 		defer out.Close()
 	}
 
-	statusChan, errorChan := docker.ContainerWait(ctx, containerInstance.ID, container.WaitConditionNotRunning)
+	timeout := false
+	timeoutContext := ctx
+	var cancel context.CancelFunc
+	if maxRuntimeSecs > 0 {
+		timeoutContext, cancel = context.WithTimeout(ctx, time.Duration(maxRuntimeSecs)*time.Second)
+		defer cancel()
+	}
+
+	statusChan, errorChan := docker.ContainerWait(timeoutContext, containerInstance.ID, container.WaitConditionNotRunning)
 	select {
 	case err := <-errorChan:
 		if err != nil {
-			return "", "", fmt.Errorf("Got an error when running container '%s' (%s): '%w'.", name, containerInstance.ID, err)
+			// On a timeout, kill the container without any grace, exit this select, and try to recover the output.
+			if err.Error() == "context deadline exceeded" {
+				docker.ContainerKill(ctx, containerInstance.ID, "KILL")
+				timeout = true
+				break
+			}
+
+			return "", "", false, fmt.Errorf("Got an error when running container '%s' (%s): '%w'.", name, containerInstance.ID, err)
 		}
 	case <-statusChan:
 		// Waiting is complete.
@@ -121,7 +143,7 @@ func RunContainer(logId log.Loggable, imageName string, inputDir string, outputD
 			log.NewAttr("stderr", stderr))
 	}
 
-	return stdout, stderr, nil
+	return stdout, stderr, timeout, nil
 }
 
 func cleanContainerName(text string) string {

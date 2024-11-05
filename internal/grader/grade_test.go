@@ -2,11 +2,14 @@ package grader
 
 import (
 	"fmt"
+	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/edulinq/autograder/internal/config"
 	"github.com/edulinq/autograder/internal/db"
 	"github.com/edulinq/autograder/internal/docker"
+	"github.com/edulinq/autograder/internal/util"
 )
 
 const BASE_TEST_USER = "course-student@test.edulinq.org"
@@ -73,7 +76,7 @@ func runSubmissionTests(test *testing.T, parallel bool, useDocker bool) {
 				test.Parallel()
 			}
 
-			result, reject, err := Grade(testSubmission.Assignment, testSubmission.Dir, user, TEST_MESSAGE, false, gradeOptions)
+			result, reject, softError, err := Grade(testSubmission.Assignment, testSubmission.Dir, user, TEST_MESSAGE, false, gradeOptions)
 			if err != nil {
 				if result != nil {
 					fmt.Println("--- stdout ---")
@@ -92,6 +95,10 @@ func runSubmissionTests(test *testing.T, parallel bool, useDocker bool) {
 				test.Fatalf("Submission was rejected: '%s'.", reject.String())
 			}
 
+			if softError != "" {
+				test.Fatalf("Submission got a soft error: '%s'.", softError)
+			}
+
 			if !result.Info.Equals(*testSubmission.TestSubmission.GradingInfo, !testSubmission.TestSubmission.IgnoreMessages) {
 				test.Fatalf("Actual output:\n---\n%v\n---\ndoes not match expected output:\n---\n%v\n---\n.",
 					result.Info, testSubmission.TestSubmission.GradingInfo)
@@ -106,5 +113,53 @@ func runSubmissionTests(test *testing.T, parallel bool, useDocker bool) {
 
 	if len(failedTests) > 0 {
 		test.Fatalf("Failed to run submission test(s): '%s'.", failedTests)
+	}
+}
+
+func TestGradeTimeout(test *testing.T) {
+	if config.DOCKER_DISABLE.Get() {
+		test.Skip("Docker is disabled, skipping test.")
+	}
+
+	if !docker.CanAccessDocker() {
+		test.Fatal("Could not access docker.")
+	}
+
+	db.ResetForTesting()
+	defer db.ResetForTesting()
+
+	submissionDir := filepath.Join(util.ShouldGetThisDir(), "testdata", "bash-sleep")
+
+	assignment := db.MustGetAssignment("course-languages", "bash")
+
+	// Set a short timeout, which should ensure this submission runs out of time.
+	assignment.MaxRuntimeSecs = 1
+
+	result, reject, softError, err := Grade(assignment, submissionDir, "course-student@test.edulinq.org", "", false, GradeOptions{})
+	if err != nil {
+		if result != nil {
+			fmt.Println("--- stdout ---")
+			fmt.Println(result.Stdout)
+			fmt.Println("--------------")
+
+			fmt.Println("--- stderr ---")
+			fmt.Println(result.Stderr)
+			fmt.Println("--------------")
+		}
+
+		test.Fatalf("Failed to grade assignment: '%v'.", err)
+	}
+
+	if reject != nil {
+		test.Fatalf("Submission was rejected: '%s'.", reject.String())
+	}
+
+	if softError == "" {
+		test.Fatalf("Submission did not get a soft error.")
+	}
+
+	expectedSubstring := "Submission has ran for too long and was killed."
+	if !strings.Contains(softError, expectedSubstring) {
+		test.Fatalf("Submission did not get the correct soft error. Expected substring: '%s', Actual string: '%s'.", expectedSubstring, softError)
 	}
 }
