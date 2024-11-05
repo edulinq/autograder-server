@@ -15,7 +15,6 @@ var args struct {
 	cmd.CommonOptions
 
 	CourseID string `help:"ID of the course." arg:""`
-	Table    bool   `help:"Output data as a TSV." default:"false"`
 }
 
 func main() {
