@@ -1,35 +1,49 @@
 package docker
 
 import (
+	"bytes"
+	"context"
 	"fmt"
+	"io"
 	"regexp"
 	"strings"
+	"sync"
+	"time"
 
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/mount"
 	"github.com/docker/docker/pkg/stdcopy"
 
+	"github.com/edulinq/autograder/internal/config"
 	"github.com/edulinq/autograder/internal/log"
 	"github.com/edulinq/autograder/internal/util"
 )
 
-func RunContainer(logId log.Loggable, imageName string, inputDir string, outputDir string, gradingID string) (string, string, error) {
+type containerOutput struct {
+	Stdout    string
+	Stderr    string
+	Truncated bool
+	Err       error
+}
+
+// Run a container.
+// Returns: (stdout, stderr, timeout?, error)
+func RunContainer(logId log.Loggable, imageName string, inputDir string, outputDir string, baseID string, maxRuntimeSecs int) (string, string, bool, error) {
 	ctx, docker, err := getDockerClient()
 	if err != nil {
-		return "", "", err
+		return "", "", false, err
 	}
 	defer docker.Close()
 
 	inputDir = util.ShouldAbs(inputDir)
 	outputDir = util.ShouldAbs(outputDir)
 
-	name := cleanContainerName(fmt.Sprintf("%s-%s", gradingID, util.UUID()))
+	name := cleanContainerName(fmt.Sprintf("%s-%s", baseID, util.UUID()))
 
 	containerInstance, err := docker.ContainerCreate(
 		ctx,
 		&container.Config{
 			Image:           imageName,
-			Tty:             false,
 			NetworkDisabled: true,
 		},
 		&container.HostConfig{
@@ -47,20 +61,27 @@ func RunContainer(logId log.Loggable, imageName string, inputDir string, outputD
 					ReadOnly: false,
 				},
 			},
+			LogConfig: container.LogConfig{
+				// Don't store any logs, we will copy stdout/stderr directly.
+				Type: "none",
+			},
 		},
 		nil,
 		nil,
 		name)
 
 	if err != nil {
-		return "", "", fmt.Errorf("Failed to create container '%s': '%w'.", name, err)
+		return "", "", false, fmt.Errorf("Failed to create container '%s': '%w'.", name, err)
 	}
 
 	defer func() {
+		// The container should have already gracefully exited.
+		// If not, kill it without any grace.
+		// Ignore any errors.
+		docker.ContainerKill(ctx, containerInstance.ID, "KILL")
+
 		err = docker.ContainerRemove(ctx, containerInstance.ID, container.RemoveOptions{
-			RemoveVolumes: true,
-			RemoveLinks:   true,
-			Force:         true,
+			Force: true,
 		})
 		if err != nil {
 			log.Warn("Failed to remove container.",
@@ -69,59 +90,69 @@ func RunContainer(logId log.Loggable, imageName string, inputDir string, outputD
 		}
 	}()
 
+	// Attach to the container so we can get stdout and stderr.
+	connection, err := docker.ContainerAttach(ctx, containerInstance.ID, container.AttachOptions{
+		Stream: true,
+		Stdout: true,
+		Stderr: true,
+	})
+	if err != nil {
+		return "", "", false, fmt.Errorf("Failed to attach to container '%s' (%s): '%w'.", name, containerInstance.ID, err)
+	}
+	defer connection.Conn.Close()
+
+	// Handle copying (and possibly truncating) stdout/stderr.
+	outputWaitGroup := &sync.WaitGroup{}
+	outputWaitGroup.Add(1)
+	output := &containerOutput{}
+	go handleContainerOutput(output, outputWaitGroup, connection.Reader)
+
 	err = docker.ContainerStart(ctx, containerInstance.ID, container.StartOptions{})
 	if err != nil {
-		return "", "", fmt.Errorf("Failed to start container '%s' (%s): '%w'.", name, containerInstance.ID, err)
+		return "", "", false, fmt.Errorf("Failed to start container '%s' (%s): '%w'.", name, containerInstance.ID, err)
 	}
 
-	// Get the output reader before the container dies.
-	out, err := docker.ContainerLogs(ctx, containerInstance.ID, container.LogsOptions{
-		ShowStdout: true,
-		ShowStderr: true,
-		Follow:     true,
-	})
-
-	if err != nil {
-		log.Warn("Failed to get output from container (but run did not throw an error).",
-			err, logId,
-			log.NewAttr("container-name", name), log.NewAttr("container-id", containerInstance.ID))
-		out = nil
-	} else {
-		defer out.Close()
+	// Set a timeout for the container.
+	timeout := false
+	timeoutContext := ctx
+	var cancel context.CancelFunc
+	if maxRuntimeSecs > 0 {
+		timeoutContext, cancel = context.WithTimeout(ctx, time.Duration(maxRuntimeSecs)*time.Second)
+		defer cancel()
 	}
 
-	statusChan, errorChan := docker.ContainerWait(ctx, containerInstance.ID, container.WaitConditionNotRunning)
+	// wait for the container to finish.
+	statusChan, errorChan := docker.ContainerWait(timeoutContext, containerInstance.ID, container.WaitConditionNotRunning)
 	select {
 	case err := <-errorChan:
 		if err != nil {
-			return "", "", fmt.Errorf("Got an error when running container '%s' (%s): '%w'.", name, containerInstance.ID, err)
+			// On a timeout, kill the container without any grace, exit this select, and try to recover the output.
+			if err.Error() == "context deadline exceeded" {
+				docker.ContainerKill(ctx, containerInstance.ID, "KILL")
+				timeout = true
+				break
+			}
+
+			return "", "", false, fmt.Errorf("Got an error when running container '%s' (%s): '%w'.", name, containerInstance.ID, err)
 		}
 	case <-statusChan:
 		// Waiting is complete.
 	}
 
-	stdout := ""
-	stderr := ""
+	// Wait for output to get copied.
+	outputWaitGroup.Wait()
 
-	// Read the output after the container is done.
-	if out != nil {
-		outBuffer := new(strings.Builder)
-		errBuffer := new(strings.Builder)
+	log.Debug("Container output.",
+		logId,
+		log.NewAttr("container-name", name),
+		log.NewAttr("container-id", containerInstance.ID),
+		log.NewAttr("stdout", output.Stdout),
+		log.NewAttr("stderr", output.Stderr),
+		log.NewAttr("output-truncated", output.Truncated),
+		output.Err,
+	)
 
-		stdcopy.StdCopy(outBuffer, errBuffer, out)
-
-		stdout = outBuffer.String()
-		stderr = errBuffer.String()
-
-		log.Debug("Container output.",
-			logId,
-			log.NewAttr("container-name", name),
-			log.NewAttr("container-id", containerInstance.ID),
-			log.NewAttr("stdout", stdout),
-			log.NewAttr("stderr", stderr))
-	}
-
-	return stdout, stderr, nil
+	return output.Stdout, output.Stderr, timeout, nil
 }
 
 func cleanContainerName(text string) string {
@@ -134,4 +165,49 @@ func cleanContainerName(text string) string {
 	}
 
 	return text
+}
+
+// Read a maximum amount from the container's stdout/stderr, parse the two from the common stream, and signal completion.
+func handleContainerOutput(output *containerOutput, outputWaitGroup *sync.WaitGroup, containerStream io.Reader) {
+	defer outputWaitGroup.Done()
+
+	maxSizeKB := config.DOCKER_MAX_OUTPUT_SIZE_KB.Get()
+	bufferLen := maxSizeKB * 1024
+
+	// Make the first full (or short) read.
+	buffer := make([]byte, bufferLen)
+	_, err := io.ReadFull(containerStream, buffer)
+	if (err != nil) && (err != io.EOF) && (err != io.ErrUnexpectedEOF) {
+		output.Err = fmt.Errorf("Failed to read container output into temporary buffer: '%w'.", err)
+		return
+	}
+
+	// Check for too much output.
+	overflowBuffer := make([]byte, 1)
+	readCount, _ := containerStream.Read(overflowBuffer)
+	if readCount == 1 {
+		output.Truncated = true
+	}
+
+	// Parse stdout and stderr out of the output stream.
+	outBuffer := new(strings.Builder)
+	errBuffer := new(strings.Builder)
+
+	stdcopy.StdCopy(outBuffer, errBuffer, bytes.NewReader(buffer))
+
+	// Denote truncated streams.
+	if output.Truncated {
+		message := fmt.Sprintf("\n\nCombined output (stdout + stderr) exceeds maximum size (%d KB), output has been truncated.", maxSizeKB)
+
+		if outBuffer.Len() > 0 {
+			outBuffer.WriteString(message)
+		}
+
+		if errBuffer.Len() > 0 {
+			errBuffer.WriteString(message)
+		}
+	}
+
+	output.Stdout = outBuffer.String()
+	output.Stderr = errBuffer.String()
 }
