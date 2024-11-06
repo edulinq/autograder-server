@@ -163,3 +163,56 @@ func TestGradeTimeout(test *testing.T) {
 		test.Fatalf("Submission did not get the correct soft error. Expected substring: '%s', Actual string: '%s'.", expectedSubstring, softError)
 	}
 }
+
+func TestGradeTruncatedOutputNoTruncation(test *testing.T) {
+	testTruncatedOutput(test, 10, false)
+}
+
+func TestGradeTruncatedOutputTruncation(test *testing.T) {
+	testTruncatedOutput(test, 1, true)
+}
+
+func testTruncatedOutput(test *testing.T, sizeKB int, expectedTruncated bool) {
+	if config.DOCKER_DISABLE.Get() {
+		test.Skip("Docker is disabled, skipping test.")
+	}
+
+	if !docker.CanAccessDocker() {
+		test.Fatal("Could not access docker.")
+	}
+
+	db.ResetForTesting()
+	defer db.ResetForTesting()
+
+	defer config.DOCKER_MAX_OUTPUT_SIZE_KB.Set(config.DOCKER_MAX_OUTPUT_SIZE_KB.Get())
+	config.DOCKER_MAX_OUTPUT_SIZE_KB.Set(sizeKB)
+
+	submissionDir := filepath.Join(util.ShouldGetThisDir(), "testdata", "bash-outputsize")
+
+	assignment := db.MustGetAssignment("course-languages", "bash")
+
+	result, reject, softError, err := Grade(assignment, submissionDir, "course-student@test.edulinq.org", "", false, GradeOptions{})
+	if err != nil {
+		test.Fatalf("Failed to grade assignment: '%v'.", err)
+	}
+
+	if reject != nil {
+		test.Fatalf("Submission was rejected: '%s'.", reject.String())
+	}
+
+	if softError != "" {
+		test.Fatalf("Submission got a soft error: '%s'.", softError)
+	}
+
+	expectedSubstring := "Combined output (stdout + stderr) exceeds maximum size"
+
+	if expectedTruncated {
+		if !strings.Contains(result.Stdout, expectedSubstring) {
+			test.Fatalf("Output was not truncated when it should have been.")
+		}
+	} else {
+		if strings.Contains(result.Stdout, expectedSubstring) {
+			test.Fatalf("Output was truncated when it should not have been.")
+		}
+	}
+}

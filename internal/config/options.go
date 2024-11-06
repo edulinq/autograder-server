@@ -30,8 +30,9 @@ var (
 	EMAIL_SMTP_IDLE_TIMEOUT_MS = MustNewIntOption("email.smtp.idle", 2000, "Consider an SMTP connection idle if no emails are sent for this number of milliseconds.")
 
 	// Docker
-	DOCKER_DISABLE          = MustNewBoolOption("docker.disable", false, "Disable the use of docker (usually for testing).")
-	DOCKER_RUNTIME_MAX_SECS = MustNewIntOption("docker.runtime.max", 60*5, "The maximum number of seconds a Docker container can be running for.")
+	DOCKER_DISABLE            = MustNewBoolOption("docker.disable", false, "Disable the use of docker (usually for testing).")
+	DOCKER_RUNTIME_MAX_SECS   = MustNewIntOption("docker.runtime.max", 60*5, "The maximum number of seconds a Docker container can be running for.")
+	DOCKER_MAX_OUTPUT_SIZE_KB = MustNewIntOption("docker.output.maxsize", 2*1024, "The maximum allowed size (in KB) for stdout and stderr (the total maximum two times this). The default is 2048 KB (2 MB).")
 
 	// Tasks
 	NO_TASKS           = MustNewBoolOption("tasks.disable", false, "Disable all scheduled tasks.")
@@ -42,7 +43,7 @@ var (
 
 	// Server
 	WEB_PORT             = MustNewIntOption("web.port", 8080, "The port for the web interface to serve on.")
-	WEB_MAX_FILE_SIZE_KB = MustNewIntOption("web.maxsizekb", 2*1024, "The maximum allowed file size (in KB) submitted via POST request. The default is 2048 KB (2 MB).")
+	WEB_MAX_FILE_SIZE_KB = MustNewIntOption("web.maxsize", 2*1024, "The maximum allowed file size (in KB) submitted via POST request. The default is 2048 KB (2 MB).")
 	WEB_STATIC_ROOT      = MustNewStringOption("web.static.root", "", "The root directory to serve as part of the static portion of the API. Defaults to empty string, which indicates the embedded static directory.")
 	WEB_STATIC_FALLBACK  = MustNewBoolOption("web.static.fallback", false, "For any unmatched route (potential 404) that does not have an API prefix, try to match it in the static root before giving the final 404.")
 
