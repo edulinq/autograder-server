@@ -34,6 +34,13 @@ func TestCourseUserGetBase(test *testing.T) {
 		},
 		{
 			CommonCMDTestCase: cmd.CommonCMDTestCase{
+				ExpectedStdout: USER_NOT_FOUND,
+			},
+			targetEmail: "server-admin@test.edulinq.org",
+			courseID:    "course101",
+		},
+		{
+			CommonCMDTestCase: cmd.CommonCMDTestCase{
 				ExpectedExitCode:        1,
 				ExpectedStderrSubstring: `Could not find course: 'ZZZ'."`,
 			},
