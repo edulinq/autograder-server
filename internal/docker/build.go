@@ -56,11 +56,14 @@ func BuildImageWithOptions(imageSource ImageSource, options *BuildOptions) error
 		return err
 	}
 
+	// Don't remove build artifacts when testing (it slows down tests).
+	removeBuildArtifacts := !config.UNIT_TESTING_MODE.Get()
+
 	buildOptions := types.ImageBuildOptions{
 		Tags:        []string{imageInfo.Name},
 		Dockerfile:  "Dockerfile",
-		Remove:      true,
-		ForceRemove: true,
+		Remove:      removeBuildArtifacts,
+		ForceRemove: removeBuildArtifacts,
 	}
 
 	if options.Rebuild {

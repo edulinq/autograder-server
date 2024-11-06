@@ -27,7 +27,7 @@ type SubmitResponse struct {
 func HandleSubmit(request *SubmitRequest) (*SubmitResponse, *core.APIError) {
 	response := SubmitResponse{}
 
-	result, reject, err := grader.GradeDefault(request.Assignment, request.Files.TempDir, request.User.Email, request.Message)
+	result, reject, failureMessage, err := grader.GradeDefault(request.Assignment, request.Files.TempDir, request.User.Email, request.Message)
 	if err != nil {
 		stdout := ""
 		stderr := ""
@@ -37,7 +37,7 @@ func HandleSubmit(request *SubmitRequest) (*SubmitResponse, *core.APIError) {
 			stderr = result.Stderr
 		}
 
-		log.LogToSplitLevels(log.LevelDebug, log.LevelInfo, "Submission grading failed.", err, request.Assignment, log.NewAttr("stdout", stdout), log.NewAttr("stderr", stderr), request.User)
+		log.LogToSplitLevels(log.LevelDebug, log.LevelInfo, "Submission failed internally.", err, request.Assignment, log.NewAttr("stdout", stdout), log.NewAttr("stderr", stderr), request.User)
 
 		return &response, nil
 	}
@@ -47,6 +47,13 @@ func HandleSubmit(request *SubmitRequest) (*SubmitResponse, *core.APIError) {
 
 		response.Rejected = true
 		response.Message = reject.String()
+		return &response, nil
+	}
+
+	if failureMessage != "" {
+		log.LogToSplitLevels(log.LevelTrace, log.LevelDebug, "Submission got a soft error.", request.Assignment, log.NewAttr("message", failureMessage), log.NewAttr("request", request), request.User)
+
+		response.Message = failureMessage
 		return &response, nil
 	}
 
