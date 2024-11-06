@@ -30,6 +30,9 @@ func main() {
 		log.Fatal("Could not load config options.", err)
 	}
 
+	
+	cmd.StartCMDServer()
+
 	request := users.ListRequest{}
 
 	var printFunc cmd.CustomResponseFormatter = nil

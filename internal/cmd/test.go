@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/edulinq/autograder/internal/api/server"
+
 	"github.com/edulinq/autograder/internal/config"
 	"github.com/edulinq/autograder/internal/db"
 	"github.com/edulinq/autograder/internal/exit"
@@ -81,6 +82,26 @@ func getUnusedPort() (int, error) {
 	listener.Close()
 
 	return listener.Addr().(*net.TCPAddr).Port, nil
+}
+
+func StartCMDServer() {
+	// if config.UNIT_TESTING_MODE.Get() {
+	// 	return
+	// }
+	// defer server.StopServer()
+	
+	fmt.Println("work dir: ", config.GetWorkDir())
+
+	// go func() {
+	// 	err := procedures.Start()
+	// 	if err != nil {
+	// 		log.Fatal("Failed to run the server.", err)
+	// 	}
+	// }()
+
+	// fmt.Println("2")
+	// time.Sleep(100 * time.Millisecond)
+
 }
 
 func RunCMDTest(test *testing.T, mainFunc func(), args []string, logLevel log.LogLevel) (string, string, int, error) {
