@@ -32,7 +32,7 @@ var (
 	// Docker
 	DOCKER_DISABLE            = MustNewBoolOption("docker.disable", false, "Disable the use of docker (usually for testing).")
 	DOCKER_RUNTIME_MAX_SECS   = MustNewIntOption("docker.runtime.max", 60*5, "The maximum number of seconds a Docker container can be running for.")
-	DOCKER_MAX_OUTPUT_SIZE_KB = MustNewIntOption("docker.output.maxsize", 2*1024, "The maximum allowed size (in KB) for stdout and stderr (the total maximum two times this). The default is 2048 KB (2 MB).")
+	DOCKER_MAX_OUTPUT_SIZE_KB = MustNewIntOption("docker.output.maxsize", 4*1024, "The maximum allowed size (in KB) for stdout and stderr combined. The default is 4096 KB (4 MB).")
 
 	// Tasks
 	NO_TASKS           = MustNewBoolOption("tasks.disable", false, "Disable all scheduled tasks.")

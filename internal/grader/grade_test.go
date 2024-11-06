@@ -165,7 +165,7 @@ func TestGradeTimeout(test *testing.T) {
 }
 
 func TestGradeTruncatedOutputNoTruncation(test *testing.T) {
-	testTruncatedOutput(test, 10, false)
+	testTruncatedOutput(test, 20, false)
 }
 
 func TestGradeTruncatedOutputTruncation(test *testing.T) {

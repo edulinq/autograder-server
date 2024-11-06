@@ -172,7 +172,7 @@ func handleContainerOutput(output *containerOutput, outputWaitGroup *sync.WaitGr
 	defer outputWaitGroup.Done()
 
 	maxSizeKB := config.DOCKER_MAX_OUTPUT_SIZE_KB.Get()
-	bufferLen := 2 * maxSizeKB * 1024
+	bufferLen := maxSizeKB * 1024
 
 	// Make the first full (or short) read.
 	buffer := make([]byte, bufferLen)
