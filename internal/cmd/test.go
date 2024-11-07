@@ -27,8 +27,8 @@ const (
 )
 
 var (
-	cmd_testing = false
-	old_port    = 0
+	isTesting bool
+	old_port  = 0
 )
 
 type CommonCMDTestCase struct {
@@ -51,7 +51,7 @@ func CMDServerTestingMain(suite *testing.M) {
 	code := func() int {
 		defer config.WEB_PORT.Set(config.WEB_PORT.Get())
 		config.WEB_PORT.Set(port)
-		cmd_testing = true
+		SetCMDTestMode(true)
 
 		db.PrepForTestingMain()
 		defer db.CleanupTestingMain()
@@ -69,8 +69,8 @@ func CMDServerTestingMain(suite *testing.M) {
 		}()
 
 		defer func() {
+			SetCMDTestMode(false)
 			server.StopServer()
-			cmd_testing = false
 		}()
 
 		serverRun.Wait()
@@ -92,11 +92,6 @@ func getUnusedPort() (int, error) {
 }
 
 func MustStartCMDServer() {
-	// Don't start the server during tests (since tests already start their own server).
-	if cmd_testing {
-		return
-	}
-
 	port, err := getUnusedPort()
 	if err != nil {
 		log.Fatal("Failed to get an unused port.", err)
@@ -117,13 +112,16 @@ func MustStartCMDServer() {
 }
 
 func MustStopCMDServer() {
-	// Don't stop the server during tests (since tests already stop their server).
-	if cmd_testing {
-		return
-	}
-
 	server.StopServer()
 	config.WEB_PORT.Set(old_port)
+}
+
+func SetCMDTestMode(enabled bool) {
+	isTesting = enabled
+}
+
+func IsTesting() bool {
+	return isTesting
 }
 
 func RunCMDTest(test *testing.T, mainFunc func(), args []string, logLevel log.LogLevel) (string, string, int, error) {
