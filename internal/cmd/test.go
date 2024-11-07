@@ -53,7 +53,6 @@ func CMDServerTestingMain(suite *testing.M) {
 		config.WEB_PORT.Set(port)
 		cmd_testing = true
 
-
 		db.PrepForTestingMain()
 		defer db.CleanupTestingMain()
 
