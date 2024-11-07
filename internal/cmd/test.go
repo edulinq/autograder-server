@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/edulinq/autograder/internal/api/server"
+	procedures "github.com/edulinq/autograder/internal/procedures/server"
 
 	"github.com/edulinq/autograder/internal/config"
 	"github.com/edulinq/autograder/internal/db"
@@ -25,6 +26,11 @@ const (
 	STDERR_FILENAME = "stderr.txt"
 )
 
+var (
+	cmd_testing = false
+	old_port    = 0
+)
+
 type CommonCMDTestCase struct {
 	ExpectedExitCode        int
 	ExpectedStdout          string
@@ -35,6 +41,11 @@ type CommonCMDTestCase struct {
 // Common setup for all CMD tests that require a server.
 func CMDServerTestingMain(suite *testing.M) {
 	server.StopServer()
+
+	cmd_testing = true
+	defer func() {
+		cmd_testing = false
+	}()
 
 	port, err := getUnusedPort()
 	if err != nil {
@@ -65,9 +76,6 @@ func CMDServerTestingMain(suite *testing.M) {
 
 		serverRun.Wait()
 
-		// Small sleep to allow the server to start up.
-		time.Sleep(100 * time.Millisecond)
-
 		return suite.Run()
 	}()
 
@@ -84,24 +92,39 @@ func getUnusedPort() (int, error) {
 	return listener.Addr().(*net.TCPAddr).Port, nil
 }
 
-func StartCMDServer() {
-	// if config.UNIT_TESTING_MODE.Get() {
-	// 	return
-	// }
-	// defer server.StopServer()
-	
-	fmt.Println("work dir: ", config.GetWorkDir())
+func MustStartCMDServer() {
+	// Don't start the server during tests (since tests already start their own server).
+	if cmd_testing {
+		return
+	}
 
-	// go func() {
-	// 	err := procedures.Start()
-	// 	if err != nil {
-	// 		log.Fatal("Failed to run the server.", err)
-	// 	}
-	// }()
+	port, err := getUnusedPort()
+	if err != nil {
+		log.Fatal("Failed to get an unused port.", err)
+	}
 
-	// fmt.Println("2")
-	// time.Sleep(100 * time.Millisecond)
+	old_port = config.WEB_PORT.Get()
+	config.WEB_PORT.Set(port)
 
+	go func() {
+		err = procedures.Start()
+		if err != nil {
+			log.Fatal("Failed to run the server.", err)
+		}
+	}()
+
+	// Small sleep to allow the server to start up.
+	time.Sleep(100 * time.Millisecond)
+}
+
+func MustStopCMDServer() {
+	// Don't stop the server during tests (since tests already stop their server).
+	if cmd_testing {
+		return
+	}
+
+	server.StopServer()
+	config.WEB_PORT.Set(old_port)
 }
 
 func RunCMDTest(test *testing.T, mainFunc func(), args []string, logLevel log.LogLevel) (string, string, int, error) {

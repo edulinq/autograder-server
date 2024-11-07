@@ -24,10 +24,15 @@ func MustHandleCMDRequestAndExit(endpoint string, request any, responseType any)
 }
 
 func MustHandleCMDRequestAndExitFull(endpoint string, request any, responseType any, options CommonOptions, customPrintFunc CustomResponseFormatter) {
+	MustStartCMDServer()
+
 	response, err := SendCMDRequest(endpoint, request)
 	if err != nil {
+		MustStopCMDServer()
 		log.Fatal("Failed to send the CMD request.", err, log.NewAttr("endpoint", endpoint))
 	}
+
+	MustStopCMDServer()
 
 	if !response.Success {
 		log.Fatal("API Request was unsuccessful.", log.NewAttr("message", response.Message))
