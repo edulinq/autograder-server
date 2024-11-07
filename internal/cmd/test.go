@@ -52,6 +52,10 @@ func CMDServerTestingMain(suite *testing.M) {
 		defer config.WEB_PORT.Set(config.WEB_PORT.Get())
 		config.WEB_PORT.Set(port)
 		SetCMDTestMode(true)
+		defer func() {
+			fmt.Println("Setting false!")
+			SetCMDTestMode(false)
+		}()
 
 		db.PrepForTestingMain()
 		defer db.CleanupTestingMain()
@@ -68,10 +72,7 @@ func CMDServerTestingMain(suite *testing.M) {
 			}
 		}()
 
-		defer func() {
-			SetCMDTestMode(false)
-			server.StopServer()
-		}()
+		defer server.StopServer()
 
 		serverRun.Wait()
 
