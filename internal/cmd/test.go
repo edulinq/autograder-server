@@ -42,11 +42,6 @@ type CommonCMDTestCase struct {
 func CMDServerTestingMain(suite *testing.M) {
 	server.StopServer()
 
-	cmd_testing = true
-	defer func() {
-		cmd_testing = false
-	}()
-
 	port, err := getUnusedPort()
 	if err != nil {
 		log.Fatal("Failed to get an unused port.", err)
@@ -56,6 +51,8 @@ func CMDServerTestingMain(suite *testing.M) {
 	code := func() int {
 		defer config.WEB_PORT.Set(config.WEB_PORT.Get())
 		config.WEB_PORT.Set(port)
+		cmd_testing = true
+
 
 		db.PrepForTestingMain()
 		defer db.CleanupTestingMain()
@@ -72,7 +69,10 @@ func CMDServerTestingMain(suite *testing.M) {
 			}
 		}()
 
-		defer server.StopServer()
+		defer func() {
+			server.StopServer()
+			cmd_testing = false
+		}()
 
 		serverRun.Wait()
 
@@ -109,7 +109,7 @@ func MustStartCMDServer() {
 	go func() {
 		err = procedures.Start()
 		if err != nil {
-			log.Fatal("Failed to run the server.", err)
+			log.Fatal("Failed to start the server.", err)
 		}
 	}()
 
