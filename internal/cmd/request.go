@@ -35,6 +35,7 @@ func MustHandleCMDRequestAndExitFull(endpoint string, request any, responseType 
 	}
 
 	if !IsTesting() {
+		fmt.Println("Got in here.")
 		MustStopCMDServer()
 	}
 
