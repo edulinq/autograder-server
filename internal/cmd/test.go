@@ -28,7 +28,7 @@ const (
 
 var (
 	isTesting bool
-	old_port    = 0
+	old_port  = 0
 )
 
 type CommonCMDTestCase struct {
@@ -52,7 +52,7 @@ func CMDServerTestingMain(suite *testing.M) {
 		defer config.WEB_PORT.Set(config.WEB_PORT.Get())
 		config.WEB_PORT.Set(port)
 		SetCMDTestMode(true)
-		defer func ()  {
+		defer func() {
 			fmt.Println("Setting false!")
 			SetCMDTestMode(false)
 		}()
@@ -118,11 +118,11 @@ func MustStopCMDServer() {
 }
 
 func SetCMDTestMode(enabled bool) {
-    isTesting = enabled
+	isTesting = enabled
 }
 
 func IsTesting() bool {
-    return isTesting
+	return isTesting
 }
 
 func RunCMDTest(test *testing.T, mainFunc func(), args []string, logLevel log.LogLevel) (string, string, int, error) {
