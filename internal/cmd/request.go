@@ -31,7 +31,7 @@ func MustHandleCMDRequestAndExitFull(endpoint string, request any, responseType 
 
 	response, err := SendCMDRequest(endpoint, request)
 	if err != nil {
-		// MustStopCMDServer()
+		MustStopCMDServer()
 		log.Fatal("Failed to send the CMD request.", err, log.NewAttr("endpoint", endpoint))
 	}
 
