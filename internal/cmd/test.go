@@ -27,7 +27,7 @@ const (
 
 var (
 	isTesting bool
-	old_port  int
+	oldPort   int
 )
 
 type CommonCMDTestCase struct {
@@ -100,7 +100,7 @@ func MustStartCMDServer() {
 		log.Fatal("Failed to get an unused port.", err)
 	}
 
-	old_port = config.WEB_PORT.Get()
+	oldPort = config.WEB_PORT.Get()
 	config.WEB_PORT.Set(port)
 
 	var serverStart sync.WaitGroup
@@ -121,7 +121,7 @@ func MustStartCMDServer() {
 
 func StopCMDServer() {
 	server.StopServer()
-	config.WEB_PORT.Set(old_port)
+	config.WEB_PORT.Set(oldPort)
 }
 
 func SetCMDTestMode(enabled bool) {
