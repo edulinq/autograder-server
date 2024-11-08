@@ -11,12 +11,11 @@ import (
 	"time"
 
 	"github.com/edulinq/autograder/internal/api/server"
-	procedures "github.com/edulinq/autograder/internal/procedures/server"
-
 	"github.com/edulinq/autograder/internal/config"
 	"github.com/edulinq/autograder/internal/db"
 	"github.com/edulinq/autograder/internal/exit"
 	"github.com/edulinq/autograder/internal/log"
+	pserver "github.com/edulinq/autograder/internal/procedures/server"
 	"github.com/edulinq/autograder/internal/util"
 )
 
@@ -110,7 +109,7 @@ func MustStartCMDServer() {
 	go func() {
 		serverRun.Done()
 
-		err = procedures.Start()
+		err = pserver.Start()
 		if err != nil {
 			log.Fatal("Failed to start the server.", err)
 		}
@@ -120,7 +119,7 @@ func MustStartCMDServer() {
 	time.Sleep(100 * time.Millisecond)
 }
 
-func MustStopCMDServer() {
+func StopCMDServer() {
 	server.StopServer()
 	config.WEB_PORT.Set(old_port)
 }
