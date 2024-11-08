@@ -51,6 +51,7 @@ func CMDServerTestingMain(suite *testing.M) {
 	code := func() int {
 		defer config.WEB_PORT.Set(config.WEB_PORT.Get())
 		config.WEB_PORT.Set(port)
+
 		SetCMDTestMode(true)
 		defer func() {
 			fmt.Println("Setting false!")
@@ -75,6 +76,9 @@ func CMDServerTestingMain(suite *testing.M) {
 		defer server.StopServer()
 
 		serverRun.Wait()
+
+		// Small sleep to allow the server to start up.
+		time.Sleep(100 * time.Millisecond)
 
 		return suite.Run()
 	}()
