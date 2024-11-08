@@ -115,6 +115,8 @@ func MustStartCMDServer() {
 		}
 	}()
 
+	serverStart.Wait()
+
 	// Small sleep to allow the server to start up.
 	time.Sleep(100 * time.Millisecond)
 }
