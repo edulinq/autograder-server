@@ -104,7 +104,12 @@ func MustStartCMDServer() {
 	old_port = config.WEB_PORT.Get()
 	config.WEB_PORT.Set(port)
 
+	var serverRun sync.WaitGroup
+	serverRun.Add(1)
+
 	go func() {
+		serverRun.Done()
+
 		err = procedures.Start()
 		if err != nil {
 			log.Fatal("Failed to start the server.", err)
