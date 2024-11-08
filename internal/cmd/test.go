@@ -122,7 +122,6 @@ func SetCMDTestMode(enabled bool) {
 }
 
 func IsTesting() bool {
-	fmt.Println("isTesting: ", isTesting)
 	return isTesting
 }
 
