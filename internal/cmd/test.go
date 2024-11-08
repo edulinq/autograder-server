@@ -103,11 +103,11 @@ func MustStartCMDServer() {
 	old_port = config.WEB_PORT.Get()
 	config.WEB_PORT.Set(port)
 
-	var serverRun sync.WaitGroup
-	serverRun.Add(1)
+	var serverStart sync.WaitGroup
+	serverStart.Add(1)
 
 	go func() {
-		serverRun.Done()
+		serverStart.Done()
 
 		err = pserver.Start()
 		if err != nil {
