@@ -54,7 +54,6 @@ func CMDServerTestingMain(suite *testing.M) {
 
 		SetCMDTestMode(true)
 		defer func() {
-			fmt.Println("Setting false!")
 			SetCMDTestMode(false)
 		}()
 

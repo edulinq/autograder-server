@@ -25,7 +25,6 @@ func MustHandleCMDRequestAndExit(endpoint string, request any, responseType any)
 
 func MustHandleCMDRequestAndExitFull(endpoint string, request any, responseType any, options CommonOptions, customPrintFunc CustomResponseFormatter) {
 	if !IsTesting() {
-		fmt.Println("In here")
 		MustStartCMDServer()
 	}
 
@@ -36,7 +35,6 @@ func MustHandleCMDRequestAndExitFull(endpoint string, request any, responseType 
 	}
 
 	if !IsTesting() {
-		fmt.Println("Got in here.")
 		MustStopCMDServer()
 	}
 
