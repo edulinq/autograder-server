@@ -28,7 +28,7 @@ const (
 
 var (
 	isTesting bool
-	old_port  = 0
+	old_port  int
 )
 
 type CommonCMDTestCase struct {
