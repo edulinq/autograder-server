@@ -5,6 +5,12 @@ Grader for a sample assignment.
 
 We expect the student's code to provide the add() function,
 which should take two ints and return the sum of those two ints.
+
+This grader can be invoked using the autograder Python interface (e.g., `autograder.cli.grading.grade-dir`),
+or directly:
+```
+./grader.py -s my-submission-directory
+``
 """
 
 import sys
@@ -17,7 +23,7 @@ import autograder.question
 class Assignment1(autograder.assignment.Assignment):
     def __init__(self, **kwargs):
         super().__init__(questions = [
-            Add(10),
+            Add(10, "Question 1: Add"),
         ], **kwargs)
 
 # Create a question for each thing we want to test.

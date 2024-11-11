@@ -15,6 +15,7 @@ Extra keys will generally be ignored.
  - [Course](#course)
  - [Assignment](#assignment)
    - [Assignment Grading Images](#assignment-grading-images)
+   - [Grader Output](#grader-output)
    - [Assignments and the LMS](#assignments-and-the-lms)
  - [Roles](#roles)
    - [Server Roles (ServerRole)](#server-roles-serverrole)
@@ -155,7 +156,7 @@ creating an identical and isolated grading environment for each student.
 Images will be created with some default directories:
  - `/autograder` -- The base directory for autograder materials. When running commands, this is the default directory.
  - `/autograder/input` -- Where student code is places. This directory is read-only.
- - `/autograder/output` -- Where the output of grading (specifically `/autograder/output/results.json`) should be written.
+ - `/autograder/output` -- Where the [output of grading](#grader-output) (specifically `/autograder/output/results.json`) should be written.
  - `/autograder/work` -- The "working" directory for grading. All static files are copied here.
  - `/autograder/scripts` -- Where miscellaneous scripts are located.
 
@@ -221,6 +222,33 @@ but you will have to ensure it is done if you create any custom images.
 The invocation is the command to run your actual grader (the Docker image's [CMD](https://docs.docker.com/reference/dockerfile/#cmd)).
 We recommend that you wrap your grader in a shell script for easy control and invocation.
 The invocation will take place (by default) in the `/autograder` directory.
+
+### Grader Output
+
+When a grader finishes running, it is supposed to create a JSON file (`/autograder/output/results.json`)
+that describes the result of grader.
+The fields for this file are as follows:
+| Name                 | Type                 | Required | Description |
+|----------------------|----------------------|----------|-------------|
+| `name`               | String               | true     | The name of the assignment. This is used as a display name when formatting output for students. |
+| `questions`          | List[GradedQuestion] | true     | The result of grading each question. |
+| `grading_start_time` | Timestamp            | false    | The time grading started for this assignment. Will default to when the autograder attempted to start the grading container. |
+| `grading_end_time`   | Timestamp            | false    | The time grading ended for this assignment. Will default to when the grading container finishes. |
+| `prologue`           | String               | false    | Optional text to include that the beginning of a grading report. |
+| `epilogue`           | String               | false    | Optional text to include that the end of a grading report. |
+
+Each question (`GradedQuestion`) has the following fields:
+| Name                 | Type                 | Required | Description |
+|----------------------|----------------------|----------|-------------|
+| `name`               | String               | true     | The display name for the question. |
+| `max_points`         | Float                | true     | The maximum score possible (not including extra credit) for this question. |
+| `score`              | Float                | true     | The score this submission received on this question. |
+| `message`            | String               | false    | Optional grading notes to send the student. This is where feedback should be sent to students about missed points. |
+| `grading_start_time` | Timestamp            | false    | The time grading started for this question. |
+| `grading_end_time`   | Timestamp            | false    | The time grading ended for this question. |
+
+Note that all grading output will be visible to the student who made the submissions.
+So, it should not contain any information about grading that students should not see (like inputs to hidden test cases).
 
 ### Assignments and the LMS
 
