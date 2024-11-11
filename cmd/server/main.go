@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/alecthomas/kong"
 
+	"github.com/edulinq/autograder/internal/common"
 	"github.com/edulinq/autograder/internal/config"
 	"github.com/edulinq/autograder/internal/log"
 	"github.com/edulinq/autograder/internal/procedures/server"
@@ -19,7 +20,16 @@ func main() {
 		log.Fatal("Could not load config options.", err)
 	}
 
-	err = server.Start("primary-server")
+	ok, err := common.CheckServerCreator(common.CmdServer)
+	if err != nil {
+		log.Fatal("Failed to start the server.", err)
+	}
+
+	if !ok {
+		log.Fatal("A CMD server is running.")
+	}
+
+	err = server.Start(common.PrimaryServer)
 	if err != nil {
 		log.Fatal("Failed to start the server.", err)
 	}

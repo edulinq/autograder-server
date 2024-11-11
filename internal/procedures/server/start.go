@@ -48,7 +48,6 @@ func Start(creator string) (err error) {
 
 	// Cleanup any temp dirs.
 	defer util.RemoveRecordedTempDirs()
-
 	err = server.RunServer(creator)
 	if err != nil {
 		return fmt.Errorf("Error during server startup sequence: '%w'.", err)
