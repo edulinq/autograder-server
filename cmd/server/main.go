@@ -20,15 +20,6 @@ func main() {
 		log.Fatal("Could not load config options.", err)
 	}
 
-	ok, err := common.CheckServerCreator(common.CmdServer)
-	if err != nil {
-		log.Fatal("Failed to start the server.", err)
-	}
-
-	if !ok {
-		log.Fatal("A CMD server is running.")
-	}
-
 	err = server.Start(common.PrimaryServer)
 	if err != nil {
 		log.Fatal("Failed to start the server.", err)
