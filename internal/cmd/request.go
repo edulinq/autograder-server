@@ -28,7 +28,7 @@ func MustHandleCMDRequestAndExitFull(endpoint string, request any, responseType 
 	var err error
 
 	func() {
-		defer stopCMDServer()
+		defer mustStopCMDServer()
 		mustStartCMDServer()
 
 		response, err = SendCMDRequest(endpoint, request)

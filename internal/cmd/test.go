@@ -90,7 +90,6 @@ func getUnusedPort() (int, error) {
 }
 
 func mustStartCMDServer() error {
-	// Don't start the server if there is a test running a server.
 	ok, err := common.CheckServerCreator(common.CmdTestServer)
 	if err != nil {
 		return err
@@ -129,14 +128,14 @@ func mustStartCMDServer() error {
 	return nil
 }
 
-func stopCMDServer() {
-	running, err := common.IsPrimaryServerRunning()
+func mustStopCMDServer() {
+	ok, err := common.IsPrimaryServerRunning()
 	if err != nil {
 		log.Fatal("Failed to check if the primary server is running.", err)
 	}
 
-	// Don't stop the server if the primary server is running
-	if !running {
+	// Don't stop the server if the primary server is running.
+	if !ok {
 		return
 	}
 

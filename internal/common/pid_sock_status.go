@@ -55,6 +55,9 @@ func GetUnixSocketPath() (string, error) {
 	return statusJson.UnixSocketPath, nil
 }
 
+// Returns (true, nil) if the status file was successfully written,
+// (false, nil) if the server creator check failed and no status file was written,
+// or (false, err) if there was an error during the process.
 func WriteAndHandleStatusFile(creator string) (bool, error) {
 	Lock(PID_SOCK_LOCK)
 	Unlock(PID_SOCK_LOCK)
@@ -162,7 +165,7 @@ func CheckServerCreator(creator string) (bool, error) {
 
 	var statusJson StatusInfo
 	if err := util.JSONFromFile(statusPath, &statusJson); err != nil {
-		return false, fmt.Errorf("failed to read status file '%s': '%w'.", statusPath, err)
+		return false, fmt.Errorf("Failed to read status file '%s': '%w'.", statusPath, err)
 	}
 
 	if statusJson.ServerCreator == CmdTestServer {
@@ -185,63 +188,30 @@ func CheckServerCreator(creator string) (bool, error) {
 	return true, nil
 }
 
-// Returns (true, nil) if there is an active cmd server running,
-// (false, nil) if there isn't a server running with the inputted creator,
-// (false, err) if there is an error checking or if another server is running.
-// func IsServerCreator(creator string) (bool, error) {
-// 	notRunning, err := checkAndHandleStalePid()
-// 	if err != nil {
-// 		return false, err
-// 	}
-
-// 	if !notRunning {
-// 		return false, fmt.Errorf("Another server is running.")
-// 	}
-
-// 	statusPath := GetStatusPath()
-
-// 	if !util.IsFile(statusPath) {
-// 		return false, nil
-// 	}
-
-// 	var statusJson StatusInfo
-// 	err = util.JSONFromFile(statusPath, &statusJson)
-// 	if err != nil {
-// 		return false, fmt.Errorf("Failed to read the status file '%s': '%w'.", statusPath, err)
-// 	}
-
-// 	if statusJson.ServerCreator == creator {
-// 		return true, nil
-// 	}
-
-// 	return false, nil
-// }
-
+// Returns (true, nil) if the primary server is running,
+// (false, nil) if the primary server is not running,
+// or (false, err) if there are issues with the status file.
 func IsPrimaryServerRunning() (bool, error) {
-	// First check if any server is running by checking for stale PIDs
 	notRunning, err := checkAndHandleStalePid()
 	if err != nil {
-		return false, fmt.Errorf("error checking server status: %w", err)
+		return false, fmt.Errorf("Failed to check the server status: '%w'.", err)
 	}
 
 	if notRunning {
-		// No server is running
 		return false, nil
 	}
 
-	// A server is running, now check if it's the primary server
 	statusPath := GetStatusPath()
 	if !util.IsFile(statusPath) {
-		return false, fmt.Errorf("server is running but status file not found at '%s'", statusPath)
+		return false, fmt.Errorf("Server is running but status file not found: '%s'.", statusPath)
 	}
 
 	var statusJson StatusInfo
 	err = util.JSONFromFile(statusPath, &statusJson)
 	if err != nil {
-		return false, fmt.Errorf("failed to read status file '%s': %w", statusPath, err)
+		return false, fmt.Errorf("Failed to read the status file '%s': '%w'.", statusPath, err)
 	}
 
-	// Return true only if the server creator is "primary-server"
 	if statusJson.ServerCreator == "primary-server" {
 		return true, nil
 	}
