@@ -20,6 +20,7 @@ const (
 type StatusInfo struct {
 	Pid            int    `json:"pid"`
 	UnixSocketPath string `json:"unix_socket_path"`
+	ServerCreator  string `json:"server_creator"`
 }
 
 func GetStatusPath() string {
@@ -48,7 +49,7 @@ func GetUnixSocketPath() (string, error) {
 	return statusJson.UnixSocketPath, nil
 }
 
-func WriteAndHandleStatusFile() error {
+func WriteAndHandleStatusFile(creator string) (bool, error) {
 	Lock(PID_SOCK_LOCK)
 	Unlock(PID_SOCK_LOCK)
 
@@ -56,30 +57,41 @@ func WriteAndHandleStatusFile() error {
 	pid := os.Getpid()
 	var statusJson StatusInfo
 
-	ok, err := checkAndHandleStalePid()
+	ok, err := checkServerCreator(creator)
 	if err != nil {
-		return err
+		return false, err
 	}
 
 	if !ok {
-		return fmt.Errorf("Failed to create the status file '%s'.", statusPath)
+		return false, nil
+	}
+
+	ok, err = checkAndHandleStalePid()
+	if err != nil {
+		return false, err
+	}
+
+	if !ok {
+		return false, fmt.Errorf("Failed to create the status file '%s'.", statusPath)
 	}
 
 	statusJson.Pid = pid
 
 	unixFileNumber, err := util.RandHex(UNIX_SOCKET_RANDNUM_SIZE_BYTES)
 	if err != nil {
-		return fmt.Errorf("Failed to generate a random number for the unix socket path: '%w'.", err)
+		return false, fmt.Errorf("Failed to generate a random number for the unix socket path: '%w'.", err)
 	}
 
 	statusJson.UnixSocketPath = filepath.Join("/", "tmp", fmt.Sprintf("autograder-%s.sock", unixFileNumber))
 
+	statusJson.ServerCreator = creator
+
 	err = util.ToJSONFile(statusJson, statusPath)
 	if err != nil {
-		return fmt.Errorf("Failed to write to the status file '%s': '%w'.", statusPath, err)
+		return false, fmt.Errorf("Failed to write to the status file '%s': '%w'.", statusPath, err)
 	}
 
-	return nil
+	return true, nil
 }
 
 // Returns (true, nil) if it's safe to create the status file,
@@ -118,6 +130,67 @@ func isAlive(pid int) bool {
 	process, _ := os.FindProcess(pid)
 	err := process.Signal(syscall.Signal(0))
 	if err != nil {
+		return false
+	}
+
+	return true
+}
+
+// Returns (true, nil) if it's safe to continue starting a server,
+// (false, nil) if a cmd should connect to the running primary server instead of starting it's own,
+// (false, err) if there are issues reading or removing the status file, or if multiple cmds are trying to start their own servers.
+func checkServerCreator(creator string) (bool, error) {
+	// Check if any server is actively running.
+	notRunning, err := checkAndHandleStalePid()
+	if err != nil {
+		fmt.Println("1")
+		return false, err
+	}
+
+	if notRunning {
+		return true, nil // No server running, safe to start.
+	}
+
+	statusPath := GetStatusPath()
+	if !util.IsFile(statusPath) {
+		return false, fmt.Errorf("Server is running but status file not found at '%s'.", statusPath)
+	}
+
+	var statusJson StatusInfo
+	if err := util.JSONFromFile(statusPath, &statusJson); err != nil {
+		return false, fmt.Errorf("failed to read status file '%s': '%w'.", statusPath, err)
+	}
+
+	// If a cmd is trying to start the server while the primary server is running,
+	// have the cmd use the primary server.
+	if creator == "cmd-server" && statusJson.ServerCreator == "primary-server" {
+		log.Info("Connecting to the primary server.")
+		return false, nil
+	}
+
+	// If a cmd is trying to start the server while a cmd server is running,
+	// don't allow the cmd to start a server.
+	if creator == "cmd-server" && statusJson.ServerCreator == "cmd-server" {
+		return false, fmt.Errorf("A CMD has already started a server.")
+	}
+
+	return true, nil
+}
+
+func CheckServerStop() bool {
+	statusPath := GetStatusPath()
+
+	if !util.IsFile(statusPath) {
+		log.Error("Status file does not exist.", statusPath)
+	}
+
+	var statusJson StatusInfo
+	err := util.JSONFromFile(statusPath, &statusJson)
+	if err != nil {
+		log.Error("Failed to read the status file.", statusPath, err)
+	}
+
+	if statusJson.ServerCreator == "primary-server" {
 		return false
 	}
 

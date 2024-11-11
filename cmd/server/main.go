@@ -19,7 +19,7 @@ func main() {
 		log.Fatal("Could not load config options.", err)
 	}
 
-	err = server.Start()
+	err = server.Start("primary-server")
 	if err != nil {
 		log.Fatal("Failed to start the server.", err)
 	}

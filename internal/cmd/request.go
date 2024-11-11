@@ -8,6 +8,7 @@ import (
 	"github.com/edulinq/autograder/internal/api/core"
 	"github.com/edulinq/autograder/internal/api/server"
 	"github.com/edulinq/autograder/internal/common"
+	"github.com/edulinq/autograder/internal/config"
 	"github.com/edulinq/autograder/internal/exit"
 	"github.com/edulinq/autograder/internal/log"
 	"github.com/edulinq/autograder/internal/util"
@@ -24,18 +25,20 @@ func MustHandleCMDRequestAndExit(endpoint string, request any, responseType any)
 }
 
 func MustHandleCMDRequestAndExitFull(endpoint string, request any, responseType any, options CommonOptions, customPrintFunc CustomResponseFormatter) {
-	if !IsTesting() {
-		MustStartCMDServer()
-	}
+	var response core.APIResponse
+	var err error
 
-	response, err := SendCMDRequest(endpoint, request)
+	func() {
+		if !config.UNIT_TESTING_MODE.Get() {
+			defer stopCMDServer()
+			mustStartCMDServer()
+		}
+
+		response, err = SendCMDRequest(endpoint, request)
+	}()
+
 	if err != nil {
-		StopCMDServer()
 		log.Fatal("Failed to send the CMD request.", err, log.NewAttr("endpoint", endpoint))
-	}
-
-	if !IsTesting() {
-		StopCMDServer()
 	}
 
 	if !response.Success {

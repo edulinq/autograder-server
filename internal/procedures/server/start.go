@@ -13,7 +13,7 @@ import (
 	"github.com/edulinq/autograder/internal/util"
 )
 
-func Start() (err error) {
+func Start(creator string) (err error) {
 	defer server.StopServer()
 
 	version, err := util.GetAutograderVersion()
@@ -49,7 +49,7 @@ func Start() (err error) {
 	// Cleanup any temp dirs.
 	defer util.RemoveRecordedTempDirs()
 
-	err = server.RunServer()
+	err = server.RunServer(creator)
 	if err != nil {
 		return fmt.Errorf("Error during server startup sequence: '%w'.", err)
 	}

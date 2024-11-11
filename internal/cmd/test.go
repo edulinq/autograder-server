@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/edulinq/autograder/internal/api/server"
+	"github.com/edulinq/autograder/internal/common"
 	"github.com/edulinq/autograder/internal/config"
 	"github.com/edulinq/autograder/internal/db"
 	"github.com/edulinq/autograder/internal/exit"
@@ -26,8 +27,7 @@ const (
 )
 
 var (
-	isTesting bool
-	oldPort   int
+	oldPort int
 )
 
 type CommonCMDTestCase struct {
@@ -51,11 +51,6 @@ func CMDServerTestingMain(suite *testing.M) {
 		defer config.WEB_PORT.Set(config.WEB_PORT.Get())
 		config.WEB_PORT.Set(port)
 
-		SetCMDTestMode(true)
-		defer func() {
-			SetCMDTestMode(false)
-		}()
-
 		db.PrepForTestingMain()
 		defer db.CleanupTestingMain()
 
@@ -65,7 +60,7 @@ func CMDServerTestingMain(suite *testing.M) {
 		go func() {
 			serverRun.Done()
 
-			err := server.RunServer()
+			err := server.RunServer("cmd-server")
 			if err != nil {
 				log.Fatal("Failed to run the server.", err)
 			}
@@ -94,10 +89,10 @@ func getUnusedPort() (int, error) {
 	return listener.Addr().(*net.TCPAddr).Port, nil
 }
 
-func MustStartCMDServer() {
+func mustStartCMDServer() error {
 	port, err := getUnusedPort()
 	if err != nil {
-		log.Fatal("Failed to get an unused port.", err)
+		return fmt.Errorf("Failed to get an unused port: '%w'.", err)
 	}
 
 	oldPort = config.WEB_PORT.Get()
@@ -109,9 +104,10 @@ func MustStartCMDServer() {
 	go func() {
 		serverStart.Done()
 
-		err = pserver.Start()
+		err = pserver.Start("cmd-server")
 		if err != nil {
 			log.Fatal("Failed to start the server.", err)
+			// return fmt.Errorf("Failed to start the server: '%w'.", err)
 		}
 	}()
 
@@ -119,19 +115,18 @@ func MustStartCMDServer() {
 
 	// Small sleep to allow the server to start up.
 	time.Sleep(100 * time.Millisecond)
+
+	return nil
 }
 
-func StopCMDServer() {
+func stopCMDServer() {
+	// Don't stop the server if the primary server is running it.
+	if !common.CheckServerStop() {
+		return
+	}
+
 	server.StopServer()
 	config.WEB_PORT.Set(oldPort)
-}
-
-func SetCMDTestMode(enabled bool) {
-	isTesting = enabled
-}
-
-func IsTesting() bool {
-	return isTesting
 }
 
 func RunCMDTest(test *testing.T, mainFunc func(), args []string, logLevel log.LogLevel) (string, string, int, error) {
