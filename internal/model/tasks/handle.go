@@ -57,7 +57,7 @@ func (this *TasksHandler) StopCourse(courseID string) {
 	}
 
 	if !Handler.initialized {
-		log.Warn("Task handler called (StopCourse()) when it has not been initialized.")
+		log.Debug("Task handler called (StopCourse()) when it has not been initialized.")
 		return
 	}
 
@@ -80,7 +80,7 @@ func (this *TasksHandler) Schedule(course any, target ScheduledTask) error {
 	}
 
 	if !Handler.initialized {
-		log.Warn("Task handler called (Schedule()) when it has not been initialized.")
+		log.Debug("Task handler called (Schedule()) when it has not been initialized.")
 		return nil
 	}
 
