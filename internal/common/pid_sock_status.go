@@ -177,22 +177,38 @@ func checkServerCreator(creator string) (bool, error) {
 	return true, nil
 }
 
-func CheckServerStop() bool {
+func IsPrimaryServer() bool {
+	statusJson := mustGetStatusJson()
+
+	if statusJson.ServerCreator == "primary-server" {
+		return true
+	}
+
+	return false
+}
+
+func IsCMDTestServer() bool {
+	statusJson := mustGetStatusJson()
+
+	if statusJson.ServerCreator == "cmd-test-server" {
+		return true
+	}
+
+	return false
+}
+
+func mustGetStatusJson() StatusInfo {
 	statusPath := GetStatusPath()
 
 	if !util.IsFile(statusPath) {
-		log.Error("Status file does not exist.", statusPath)
+		log.Fatal("Status file does not exist.", statusPath)
 	}
 
 	var statusJson StatusInfo
 	err := util.JSONFromFile(statusPath, &statusJson)
 	if err != nil {
-		log.Error("Failed to read the status file.", statusPath, err)
+		log.Fatal("Failed to read the status file.", statusPath, err)
 	}
 
-	if statusJson.ServerCreator == "primary-server" {
-		return false
-	}
-
-	return true
+	return statusJson
 }

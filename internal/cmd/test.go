@@ -60,7 +60,7 @@ func CMDServerTestingMain(suite *testing.M) {
 		go func() {
 			serverRun.Done()
 
-			err := server.RunServer("cmd-server")
+			err := server.RunServer("cmd-test-server")
 			if err != nil {
 				log.Fatal("Failed to run the server.", err)
 			}
@@ -90,6 +90,11 @@ func getUnusedPort() (int, error) {
 }
 
 func mustStartCMDServer() error {
+	// Don't start the server if there is a test running a server.
+	if common.IsCMDTestServer() {
+		return nil
+	}
+
 	port, err := getUnusedPort()
 	if err != nil {
 		return fmt.Errorf("Failed to get an unused port: '%w'.", err)
@@ -107,7 +112,6 @@ func mustStartCMDServer() error {
 		err = pserver.Start("cmd-server")
 		if err != nil {
 			log.Fatal("Failed to start the server.", err)
-			// return fmt.Errorf("Failed to start the server: '%w'.", err)
 		}
 	}()
 
@@ -121,7 +125,7 @@ func mustStartCMDServer() error {
 
 func stopCMDServer() {
 	// Don't stop the server if the primary server is running it.
-	if !common.CheckServerStop() {
+	if !common.IsPrimaryServer() {
 		return
 	}
 

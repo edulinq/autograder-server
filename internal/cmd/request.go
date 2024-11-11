@@ -8,7 +8,6 @@ import (
 	"github.com/edulinq/autograder/internal/api/core"
 	"github.com/edulinq/autograder/internal/api/server"
 	"github.com/edulinq/autograder/internal/common"
-	"github.com/edulinq/autograder/internal/config"
 	"github.com/edulinq/autograder/internal/exit"
 	"github.com/edulinq/autograder/internal/log"
 	"github.com/edulinq/autograder/internal/util"
@@ -29,10 +28,8 @@ func MustHandleCMDRequestAndExitFull(endpoint string, request any, responseType 
 	var err error
 
 	func() {
-		if !config.UNIT_TESTING_MODE.Get() {
-			defer stopCMDServer()
-			mustStartCMDServer()
-		}
+		defer stopCMDServer()
+		mustStartCMDServer()
 
 		response, err = SendCMDRequest(endpoint, request)
 	}()
