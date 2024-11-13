@@ -37,6 +37,7 @@ func TestCMDStartsServer(test *testing.T) {
 }
 
 func TestCMDConnectsToPrimaryServer(test *testing.T) {
+	// Quiet server startup logs.
 	log.SetLevelFatal()
 
 	port, err := getUnusedPort()
@@ -55,6 +56,7 @@ func TestCMDConnectsToPrimaryServer(test *testing.T) {
 
 		serverStart.Done()
 
+		// Mimic starting cmd/server/main.go.
 		err := procedures.Start(common.PrimaryServer)
 		if err != nil {
 			test.Fatal("Failed to start the primary server.", err)
