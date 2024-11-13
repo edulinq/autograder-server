@@ -1,46 +1,45 @@
 # Tutorial: Creating a Course
 
-TEST -- my-autograder-server-prebuilt
+In this tutorial we are going to build a simple course and assignment for the autograder.
+This tutorial assumes no prior knowledge about the autograder,
+but general knowledge about programming and basic tools.
 
-TODO
-In this tutorial ...
-Start from no knowledge of the autograder.
-Will run using Docker.
-Will create a course and assignment from scratch.
-
-Requirements:
- - Edit files.
-   - Most config files are [JSON](https://en.wikipedia.org/wiki/JSON).
- - Docker (for both running the server and graders).
-   - For non-Docker usage, see the:
-     - Readme for running the server without Docker (TODO)
-     - Readme for running graders without Docker (TODO)
- - Python (for scripts)
- - POSIX System (e.g., Linux, BSD, Mac, WSL (Windows))
+Specific requirements for this tutorial:
+ - An ability to edit text files using your editor of choice.
+   - Most config files in this tutorial (and the autograder) are [JSON](https://en.wikipedia.org/wiki/JSON).
+ - An installed Docker instance that can be used without additional authentication.
+ - Python (>= 3.8) installed on your machine.
+ - A POSIX System (e.g., Linux, BSD, Mac, WSL (Windows)).
 
 ## Running Autograder Commands
 
 In this tutorial, we will be interacting with the autograder using a prebuilt Docker image to access admin commands for the autograder.
 Specifically, we will be using a Python script to run a Docker container to run autograder commands
 (Python Script -> Docker Container -> Autograder Commands).
-This may seem a bit confusion, but it allows you (the reader) to get started with the autograder without needing to compile anything.
+This may seem a bit confusing,
+but it allows you (the reader) to get started with the autograder without needing to compile anything.
 We do require both Python (>= 3.8) and Docker to be installed.
 
-The Docker script we are using will set various options automatically.
-To learn more about this script, see this [project's Docker documentation](../docker.md) or use the `--help` flag:
+The Docker script we are using will set various options automatically,
+but these can be overwritten if necessary.
+To learn more about this script,
+see this [project's Docker documentation](../docker.md) or use the `--help` flag:
 ```sh
 ./docker/run-docker-server.py --help
 ```
 
-Note that all commands should be run from this project/repository's root directory (the one with [README.md](../../README.md) in it).
+Note that all commands should be run from this project/repository's root directory
+(the one with [README.md](../../README.md) in it).
 
 This script (`./docker/run-docker-server.py`) is useful for running any command in [the cmd directory](../../cmd) inside a docker container.
-We refer to any executable in this directory a "CMD", and they are usually used as admin autograder commands.
-The autograder (including these CMDs) are written in the [Go programming language](https://en.wikipedia.org/wiki/Go_(programming_language)).
+We refer to any executable in this directory a "CMD" or "command",
+and they are usually used as admin autograder commands.
 For example, you can check the version of your server using the [version CMD](../../cmd/version/main.go):
 ```sh
 ./docker/run-docker-server.py version
 ```
+
+The autograder (including these CMDs) are written in the [Go programming language](https://en.wikipedia.org/wiki/Go_(programming_language)).
 
 Although we will be using the CMDs to interact with the autograder in this tutorial,
 most regular users will interact with the autograder via the [Python API](https://github.com/eriq-augustine/autograder-py)
@@ -52,9 +51,10 @@ If you choose, you can complete this entire tutorial via those interfaces as wel
 Now that we can run autograder commands, let's make a course!
 In this guide, we will make a course called "my-first-course".
 A complete instantiation of "my-first-course" is available in the [docs/tutorials/resources/my-first-course/final](my-first-course/final) directory.
-As we go along, we will make various other versions of this course to demonstrate other things.
-We encourage you to make each/edit file on your own as you progress through this guide,
-but full implementations are available for reference.
+As we go though this tutorial, we will build on our course.
+We encourage you to modify your local course as you progress,
+but this tutorial will use pre-made versions of the course in various states of completion.
+All versions are available in the [docs/tutorials/resources/my-first-course](my-first-course) directory.
 
 A course is specified by a directory containing a JSON file called `course.json`.
 We call the `course.json` file the "course config",
@@ -67,6 +67,9 @@ To start, a course config just needs to specify an identifier for your course:
     "id": "my-first-course"
 }
 ```
+
+For a complete description of all the fields a course can have,
+see the [course section of the types documentation](../types.md#course).
 
 Once we have our `course.json` file, we can add it to our local autograder using the `upsert-course-from-filespec` CMD:
 ```sh
@@ -91,27 +94,27 @@ You will get some output like:
 ]
 ```
 
-Let's break apart this command a bit to understand it:
- - `./docker/run-docker-server.py` -- The script we are running. We have seen this before.
- - `--mount docs:/tmp/docs` -- This tells the script that we need to mount our docs directory inside our Docker container. This allows us to accsss data on our host machine (like our new course) inside our Docker container.
- - `upsert-course-from-filespec` -- The CMD we are running.
- - `/tmp/docs/tutorials/resources/my-first-course/initial-course` -- The path (inside our Docker container) to our course we are adding.
+Let's look at the various parts of this command a bit to better understand it:
+ - `./docker/run-docker-server.py`
+   - The script we are running.
+     We have seen this earlier in this tutorial.
+ - `--mount docs:/tmp/docs`
+   - This tells the script that we need to mount our `docs` directory inside our Docker container.
+     This allows us to access data on our host machine (like our new course) inside our Docker container.
+     We are just mounting the entire `docs` directory so we don't have to change it as we go through this tutorial.
+ - `upsert-course-from-filespec`
+   - The CMD we are running.
+ - `/tmp/docs/tutorials/resources/my-first-course/initial-course`
+   - The path (inside our Docker container) to the course we are adding.
 
-Note that we will be using various differnt directories that hold versions of this tutorial course as we build it up from scratch.
-You can use these as you go through the tutorial,
-or you can build your course yourself as you progress through this tutorial and use the same directory each time.
+As we saw in our command's output, the autograder successfully added our course.
+Note that since the CMDs are intended to be administrative tools,
+they are executed with the highest level of permissions and the output may not be formatted for a human (it is just raw JSON).
 
+### Bad Course Configurations
 
-
-
-
-For a complete description of all the fields a course can have,
-see the [course section of the types documentation](../types.md#course).
-
-TEST
-
-
-Note that all JSON config files in the autograder are strict JSON and don't accept things like trailing commas or unquoted fields.
+All JSON config files in the autograder use strict JSON,
+and don't accept things like trailing commas or unquoted fields.
 Let's see what it looks like when we use a config with bad JSON:
 ```sh
 ./docker/run-docker-server.py \
@@ -121,18 +124,18 @@ Let's see what it looks like when we use a config with bad JSON:
 ```
 
 We get some output that contains the string: "Could not unmarshal JSON file".
+If we look at the course's [course.json](my-first-course/bad-json/course.json) directory,
+we do see that we have a trailing comma after the "id" field.
 
+### Updating an Existing Course
 
-
-TODO
-
-
-
-This command can be used both to create and update courses, so you can run it over and over.
-Notice that if you run it again, the output will tell you the course was updated rather than created.
-If you do want to reset your database, you can use the `clear-db` command:
+The `upsert-course-from-filespec` command can be used both to create and update courses, so you can run it over and over.
+Notice that if you run it again, the output will tell you the course was updated rather than created:
 ```sh
-./docker/run-docker-server.py clear-db
+./docker/run-docker-server.py \
+    --mount docs:/tmp/docs \
+    upsert-course-from-filespec \
+    /tmp/docs/tutorials/resources/my-first-course/initial-course
 ```
 
 Outputs:
@@ -150,21 +153,28 @@ Outputs:
 ]
 ```
 
+If you do want to reset your database, you can use the `clear-db` command:
+```sh
+./docker/run-docker-server.py clear-db
+```
+
 ## Making an Assignment
 
 Now that we have a course, let's make an assignment!
-Like a course, as assignment is specified by a JSON config file: `assignment.json`.
-Any directory within a course directy that has as `assignment.json` file is considered a base directory for that assignment.
-The hard requirements for an assignment are the assignment config and grader.
+Like a course, an assignment is specified by a JSON config file: `assignment.json`.
+Any directory within a course directory that has as `assignment.json` file is considered the base directory for that assignment.
+Each assignment must have an assignment config and a grader.
 
-As assignment's "grader" is the program responsible for looking at a student's submission and assigning a score to it.
+An assignment's "grader" is the program responsible for looking at a student's submission and assigning a score to it.
 Naturally, this is typically the most complex and specialized component of creating a course for the autograder.
-When a grader finishes running, it is supposed to produce a JSON file representing a [grading output object](../types.md#grader-output-graderoutput) to `/output/result.json`.
-Graders may be created using any language or library you can run in your Docker image.
+When a grader finishes running, it is supposed to produce a JSON file representing a
+[grading output object](../types.md#grader-output-graderoutput) to `/output/result.json`.
+Graders may be created using any language or library you can run in your assignment's Docker image.
 One way to think of graders is like unit tests with additional feedback and partial credit.
 If you have existing grading scripts/programs,
 it should be fairly simple to modify or wrap them so that it creates the required JSON file when it finishes.
-In this tutorial, we will create a simple grader using the canonical [Python Interface Library](https://github.com/edulinq/autograder-py) for the autograder.
+In this tutorial, we will create a simple grader using the canonical
+[Python Interface Library](https://github.com/edulinq/autograder-py) for the autograder.
 
 Here are some examples of other autograder graders:
  - [Regex Grader](https://github.com/edulinq/cse-cracks-course/blob/main/assignments/regex/grader.py)
@@ -177,7 +187,8 @@ Here are some examples of other autograder graders:
   - [C++ Grader](../../testdata/course-languages/cpp/grader.cpp)
   - [Java Grader](../../testdata/course-languages/java/Grader.java)
 
-First, we need to create an assignment config:
+To get started, let's create an assignment config at
+[my-first-course/assignment-01/assignment.json](resources/my-first-course/initial-assignment/assignment-01/assignment.json):
 ```json
 {
     "id": "assignment-01",
@@ -189,9 +200,14 @@ First, we need to create an assignment config:
 ```
 
 Let's look at each field:
- - `id` -- The identifier for the assignment, similar to a course identifier.
- - `static-files` -- This is a list of files the grader needs. This can simply be relative paths (starting at the assignment directory), or [more complex file specifications](../types.md#file-specification-filespec) that can point to online resources.
- - `image` -- The base Docker image to use for our grader.
+ - `id`
+   - The identifier for the assignment, similar to a course identifier.
+ - `static-files`
+   - This is a list of files the grader needs.
+     This can simply be relative paths (starting at the assignment directory),
+     or [more complex file specifications](../types.md#file-specification-filespec) that can point to online resources.
+ - `image`
+   - The base Docker image to use for our grader.
 
 To see the full specification of the fields for an assignment config,
 see the [assignment section of the types documentation](../types.md#assignment).
@@ -230,7 +246,7 @@ and successfully built Docker images for our new assignment!
 *Sidenote:*  
 Note that our assignment config is missing the `invocation` field that tells the autograder how to run the grader program/script.
 For canonical Python grader images (`edulinq/grader.python-*`),
-the autograder already understands how to invoke those.
+the autograder already understands what the invocation should be if none is specified.
 If you put in your invocation manually, it would be:
 ```json
 {
@@ -241,7 +257,7 @@ If you put in your invocation manually, it would be:
 
 ### Testing an Assignment
 
-We no have an assignment with a grader that successfully creates a Docker image,
+We now have an assignment with a grader that successfully creates a Docker image,
 but we have not actually tested that the grader does what we want it to do.
 Let's make a few sample submissions and check the output.
 
@@ -254,35 +270,54 @@ Here are some examples of test submissions:
    - These test submissions are part of one of the test courses used for unit testing in this project.
  - [Regex Assignment](https://github.com/edulinq/cse-cracks-course/tree/main/assignments/regex/test-submissions)
    - These test submissions are a part of a fully featured sample assignment/course.
-   - This repository highlights good practices with autograder courses, including running these test submissions are part of [continuous integration](https://en.wikipedia.org/wiki/Continuous_integration)
+   - This repository highlights good practices with autograder courses,
+     including running these test submissions are part of [continuous integration](https://en.wikipedia.org/wiki/Continuous_integration)
      - [CI Script that Runs the Test Submissions](https://github.com/edulinq/cse-cracks-course/blob/main/.ci/check_graders.sh)
 
-We will create three sample submissions for this tutorial in the [resources/my-first-course/final/assignment-01/sample-submissions](resources/my-first-course/final/assignment-01/sample-submissions) directory:
+We will create three sample submissions for this tutorial in the
+[resources/my-first-course/final/assignment-01/sample-submissions](resources/my-first-course/final/assignment-01/sample-submissions) directory:
  - [not-implemented](resources/my-first-course/final/assignment-01/sample-submissions/not-implemented/submission.py)
    - This submission represents the initial code that a student is given to start the assignment.
-     Including a sample submission like this makes it easy to check that a student the number of expected points for submitting a blank assignment.
+     Including a sample submission like this makes it easy to check that a student gets the expected score for submitting a blank assignment.
      (We don't want to accidentally give a student more points for an empty solution than a wrong solution.)
  - [solution](resources/my-first-course/final/assignment-01/sample-submissions/solution/submission.py)
    - This submission represents the ideal submission a student could give.
-     Including a sample submission like this makes lets you ensure that a perfect solution gets a full score.
+     Including a sample submission like this lets you ensure that a perfect solution gets a full score.
      If there are multiple possible solutions, including multiple sample solutions is a good idea.
  - [syntax-error](resources/my-first-course/final/assignment-01/sample-submissions/syntax-error/submission.py)
-   - This submission represents s submission that does not compile/parse/run.
-     Dealing with student submissions that crashes is a hard part of writing a grader.
+   - This submission represents a submission that does not compile/parse/run.
+     Dealing with student submissions that crashes is a hard part of writing a robust grader.
      The autograder will catch these situations and give the student a zero for that submission,
      but catching these situations in the grader itself will allow you to give more detailed feedback.
 
 Now that we have sample submissions, let's run them through the autograder using the `grade` CMD.
-First let's start with the `not-implemented` submission:
+Let's start with the `not-implemented` submission:
 ```sh
 ./docker/run-docker-server.py \
-    --image my-autograder-server-prebuilt \
     --mount docs:/tmp/docs \
     grade \
     -- \
     my-first-course assignment-01 \
     --submission /tmp/docs/tutorials/resources/my-first-course/final/assignment-01/sample-submissions/not-implemented
 ```
+
+Let's break down this command:
+ - `./docker/run-docker-server.py`
+   - The script we are running (as seen before).
+ - `--mount docs:/tmp/docs`
+   - The mount for our data (as seen before).
+ - `grade`
+   - The CMD we are running (as seen before).
+ - `--`
+   - These dashes Tells the script that there are no other arguments to the script itself,
+     and everything after are arguments to the CMD.
+     This is a common POSIX convention.
+ - `my-first-course`
+   - The course we are making a submission to.
+ - `assignment-01`
+   - The assignment we are making a submission to.
+ - `--submission /tmp/docs/tutorials/resources/my-first-course/final/assignment-01/sample-submissions/not-implemented`
+   - The directory containing the code we are submitting.
 
 You should see output like:
 ```
@@ -297,12 +332,12 @@ Total: 1 / 10
 ```
 
 As expected, this submission does not get a very good score.
-If you look closely at our grader you can see the submission gets a single point via integer division.
+If you look closely at our grader you can that see the submission gets a single point because of integer division.
+(This may or may not be acceptable depending on how you want to score your assignments.)
 
 Now let's try the `solution` submission:
 ```sh
 ./docker/run-docker-server.py \
-    --image my-autograder-server-prebuilt \
     --mount docs:/tmp/docs \
     grade \
     -- \
@@ -322,7 +357,6 @@ Total: 10 / 10
 Finally, let's try out the `syntax-error` submission:
 ```sh
 ./docker/run-docker-server.py \
-    --image my-autograder-server-prebuilt \
     --mount docs:/tmp/docs \
     grade \
     -- \
