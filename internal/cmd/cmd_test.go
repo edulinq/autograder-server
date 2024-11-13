@@ -37,7 +37,7 @@ func TestCMDStartsServer(test *testing.T) {
 }
 
 func TestCMDConnectsToPrimaryServer(test *testing.T) {
-	// Quiet server startup logs.
+	// Quiet primary server startup logs.
 	log.SetLevelFatal()
 
 	port, err := getUnusedPort()
@@ -51,9 +51,8 @@ func TestCMDConnectsToPrimaryServer(test *testing.T) {
 	var serverStart sync.WaitGroup
 	serverStart.Add(1)
 
+	defer server.StopServer()
 	go func() {
-		defer server.StopServer()
-
 		serverStart.Done()
 
 		// Mimic starting cmd/server/main.go.
