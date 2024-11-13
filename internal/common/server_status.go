@@ -92,7 +92,7 @@ func WriteAndHandleStatusFile(creator string) error {
 }
 
 // Returns (true, nil) if it's safe to create the status file,
-// (false, nil) if another server is running,
+// (false, nil) if another instance of the server is running,
 // or (false, err) if there are issues reading or removing the status file.
 func checkAndHandleStalePid() (bool, error) {
 	statusPath := GetStatusPath()

@@ -37,7 +37,7 @@ func TestCMDStartsServer(test *testing.T) {
 }
 
 func TestCMDConnectsToPrimaryServer(test *testing.T) {
-	// Quiet primary server startup logs.
+	// Quiet primary server startup/shutdown logs.
 	log.SetLevelFatal()
 
 	port, err := getUnusedPort()
