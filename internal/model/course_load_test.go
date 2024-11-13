@@ -11,7 +11,7 @@ func TestFullLoadCourseBase(test *testing.T) {
 	courseID := "course101"
 	testPath := filepath.Join(config.GetTestdataDir(), courseID, COURSE_CONFIG_FILENAME)
 
-	course, submissions, err := FullLoadCourseFromPath(testPath)
+	course, submissions, err := FullLoadCourseFromPath(testPath, true)
 	if err != nil {
 		test.Fatalf("Failed to load course: '%v'.", err)
 	}
