@@ -17,8 +17,8 @@ import (
 var testCases = []struct {
 	expectedOutputSubstring string
 }{
-	{API_SERVER_START},
-	{UNIX_SERVER_START},
+	{`API Server Started.`},
+	{`Unix Socket Server Started.`},
 }
 
 func TestCMDStartsServer(test *testing.T) {
@@ -63,7 +63,7 @@ func TestCMDConnectsToPrimaryServer(test *testing.T) {
 
 	serverStart.Wait()
 
-	// Small sleep to let server startup
+	// Small sleep to allow the server to start up.
 	time.Sleep(100 * time.Millisecond)
 
 	cmd := exec.Command("go", "run", "../../cmd/user-list/main.go")
@@ -75,7 +75,7 @@ func TestCMDConnectsToPrimaryServer(test *testing.T) {
 
 	for _, testCase := range testCases {
 		if strings.Contains(string(output), testCase.expectedOutputSubstring) {
-			test.Error("CMD run started their own server when it should've connected to the primary server.")
+			test.Error("CMD run started their own server.")
 		}
 	}
 }

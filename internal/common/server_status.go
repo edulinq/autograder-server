@@ -138,7 +138,7 @@ func isAlive(pid int) bool {
 func IsServerRunning(targetServer string) (bool, error) {
 	notRunning, err := checkAndHandleStalePid()
 	if err != nil {
-		return false, fmt.Errorf("Failed to check the server status: '%w'.", err)
+		return false, err
 	}
 
 	if notRunning {

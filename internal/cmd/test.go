@@ -90,23 +90,23 @@ func getUnusedPort() (int, error) {
 }
 
 func mustStartCMDServer() error {
-	ok, err := common.IsServerRunning(common.PrimaryServer)
+	running, err := common.IsServerRunning(common.PrimaryServer)
 	if err != nil {
 		log.Fatal("Failed to check if the primary server is running.", err)
 	}
 
 	// Don't start the CMD server if the primary server is running.
-	if ok {
+	if running {
 		return nil
 	}
 
-	ok, err = common.IsServerRunning(common.CmdTestServer)
+	running, err = common.IsServerRunning(common.CmdTestServer)
 	if err != nil {
 		log.Fatal("Failed to check if the CMD test server is running.", err)
 	}
 
-	// Don't start the CMD server if the test server is running.
-	if ok {
+	// Don't start the CMD server if the CMD test server is running.
+	if running {
 		return nil
 	}
 
@@ -139,23 +139,23 @@ func mustStartCMDServer() error {
 }
 
 func stopCMDServer() {
-	ok, err := common.IsServerRunning(common.CmdTestServer)
-	if err != nil {
-		log.Fatal("Failed to check if the primary server is running.", err)
-	}
-
-	// Don't stop the server if the cmd test server is running.
-	if ok {
-		return
-	}
-
-	ok, err = common.IsServerRunning(common.PrimaryServer)
+	running, err := common.IsServerRunning(common.PrimaryServer)
 	if err != nil {
 		log.Fatal("Failed to check if the primary server is running.", err)
 	}
 
 	// Don't stop the server if the primary server is running.
-	if ok {
+	if running {
+		return
+	}
+
+	running, err = common.IsServerRunning(common.CmdTestServer)
+	if err != nil {
+		log.Fatal("Failed to check if the CMD test server is running.", err)
+	}
+
+	// Don't stop the server if the CMD test server is running.
+	if running {
 		return
 	}
 
