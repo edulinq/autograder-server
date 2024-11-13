@@ -55,10 +55,7 @@ func GetUnixSocketPath() (string, error) {
 	return statusJson.UnixSocketPath, nil
 }
 
-// Returns (true, nil) if the status file was successfully written,
-// (false, nil) if the server creator check failed and no status file was written,
-// or (false, err) if there was an error during the process.
-func WriteAndHandleStatusFile(creator string) (bool, error) {
+func WriteAndHandleStatusFile(creator string) error {
 	Lock(SERVER_STATUS_LOCK)
 	Unlock(SERVER_STATUS_LOCK)
 
@@ -68,18 +65,18 @@ func WriteAndHandleStatusFile(creator string) (bool, error) {
 
 	ok, err := checkAndHandleStalePid()
 	if err != nil {
-		return false, err
+		return err
 	}
 
 	if !ok {
-		return false, fmt.Errorf("Failed to create the status file '%s'.", statusPath)
+		return fmt.Errorf("Failed to create the status file '%s'.", statusPath)
 	}
 
 	statusJson.Pid = pid
 
 	unixFileNumber, err := util.RandHex(UNIX_SOCKET_RANDNUM_SIZE_BYTES)
 	if err != nil {
-		return false, fmt.Errorf("Failed to generate a random number for the unix socket path: '%w'.", err)
+		return fmt.Errorf("Failed to generate a random number for the unix socket path: '%w'.", err)
 	}
 
 	statusJson.UnixSocketPath = filepath.Join("/", "tmp", fmt.Sprintf("autograder-%s.sock", unixFileNumber))
@@ -88,10 +85,10 @@ func WriteAndHandleStatusFile(creator string) (bool, error) {
 
 	err = util.ToJSONFile(statusJson, statusPath)
 	if err != nil {
-		return false, fmt.Errorf("Failed to write to the status file '%s': '%w'.", statusPath, err)
+		return fmt.Errorf("Failed to write to the status file '%s': '%w'.", statusPath, err)
 	}
 
-	return true, nil
+	return nil
 }
 
 // Returns (true, nil) if it's safe to create the status file,

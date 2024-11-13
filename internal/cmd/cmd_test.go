@@ -15,7 +15,7 @@ import (
 )
 
 var testCases = []struct {
-	expectedSubstring string
+	expectedOutputSubstring string
 }{
 	{API_SERVER_START},
 	{UNIX_SERVER_START},
@@ -26,20 +26,18 @@ func TestCMDStartsServer(test *testing.T) {
 
 	output, err := cmd.CombinedOutput()
 	if err != nil {
-		test.Fatal("Failed to start the command.", err)
+		test.Fatal("Failed to run the CMD.", err)
 	}
 
 	for _, testCase := range testCases {
-		if !strings.Contains(string(output), testCase.expectedSubstring) {
-			test.Errorf("CMD run didn't start their own server.")
+		if !strings.Contains(string(output), testCase.expectedOutputSubstring) {
+			test.Error("CMD run didn't start their own server.")
 		}
 	}
 }
 
 func TestCMDConnectsToPrimaryServer(test *testing.T) {
 	log.SetLevelFatal()
-
-	var serverStart sync.WaitGroup
 
 	port, err := getUnusedPort()
 	if err != nil {
@@ -49,7 +47,9 @@ func TestCMDConnectsToPrimaryServer(test *testing.T) {
 	defer config.WEB_PORT.Set(config.WEB_PORT.Get())
 	config.WEB_PORT.Set(port)
 
+	var serverStart sync.WaitGroup
 	serverStart.Add(1)
+
 	go func() {
 		defer server.StopServer()
 
@@ -57,7 +57,7 @@ func TestCMDConnectsToPrimaryServer(test *testing.T) {
 
 		err := procedures.Start(common.PrimaryServer)
 		if err != nil {
-			test.Error("Failed to start the primary server.", err)
+			test.Fatal("Failed to start the primary server.", err)
 		}
 	}()
 
@@ -70,12 +70,12 @@ func TestCMDConnectsToPrimaryServer(test *testing.T) {
 
 	output, err := cmd.CombinedOutput()
 	if err != nil {
-		test.Errorf("Failed to start the command")
+		test.Error("Failed to run the CMD.", err)
 	}
 
 	for _, testCase := range testCases {
-		if strings.Contains(string(output), testCase.expectedSubstring) {
-			test.Error("CMD run started their own server.")
+		if strings.Contains(string(output), testCase.expectedOutputSubstring) {
+			test.Error("CMD run started their own server when it should've connected to the primary server.")
 		}
 	}
 }

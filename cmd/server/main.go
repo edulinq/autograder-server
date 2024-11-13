@@ -22,6 +22,6 @@ func main() {
 
 	err = server.Start(common.PrimaryServer)
 	if err != nil {
-		log.Fatal("Failed to start the server.", err)
+		log.Fatal("Failed to start the primary server.", err)
 	}
 }

@@ -14,13 +14,9 @@ import (
 
 // Run the autograder server and listen on an http and unix socket.
 func RunServer(creator string) (err error) {
-	ok, err := common.WriteAndHandleStatusFile(creator)
+	err = common.WriteAndHandleStatusFile(creator)
 	if err != nil {
 		return err
-	}
-
-	if !ok {
-		return
 	}
 
 	core.SetAPIDescription(*api.Describe(*api.GetRoutes()))

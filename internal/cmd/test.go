@@ -62,7 +62,7 @@ func CMDServerTestingMain(suite *testing.M) {
 
 			err := server.RunServer(common.CmdTestServer)
 			if err != nil {
-				log.Fatal("Failed to run the server.", err)
+				log.Fatal("Failed to run the CMD test server.", err)
 			}
 		}()
 
@@ -90,22 +90,22 @@ func getUnusedPort() (int, error) {
 }
 
 func mustStartCMDServer() error {
-	ok, err := common.IsServerRunning(common.CmdTestServer)
+	ok, err := common.IsServerRunning(common.PrimaryServer)
 	if err != nil {
 		log.Fatal("Failed to check if the primary server is running.", err)
 	}
 
-	// Don't start the server if the test server is running.
+	// Don't start the CMD server if the primary server is running.
 	if ok {
 		return nil
 	}
 
-	ok, err = common.IsServerRunning(common.PrimaryServer)
+	ok, err = common.IsServerRunning(common.CmdTestServer)
 	if err != nil {
-		log.Fatal("Failed to check if the primary server is running.", err)
+		log.Fatal("Failed to check if the CMD test server is running.", err)
 	}
 
-	// Don't start the server if the primary server is running.
+	// Don't start the CMD server if the test server is running.
 	if ok {
 		return nil
 	}
@@ -126,7 +126,7 @@ func mustStartCMDServer() error {
 
 		err = pserver.Start(common.CmdServer)
 		if err != nil {
-			log.Fatal("Failed to start the server.", err)
+			log.Fatal("Failed to start the CMD server.", err)
 		}
 	}()
 
