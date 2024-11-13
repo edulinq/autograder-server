@@ -55,7 +55,7 @@ func TestCMDConnectsToPrimaryServer(test *testing.T) {
 	go func() {
 		serverStart.Done()
 
-		// Mimic starting cmd/server/main.go.
+		// Mimic running cmd/server/main.go.
 		err := procedures.Start(common.PrimaryServer)
 		if err != nil {
 			test.Fatal("Failed to start the primary server.", err)

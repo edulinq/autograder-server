@@ -89,7 +89,7 @@ func getUnusedPort() (int, error) {
 	return listener.Addr().(*net.TCPAddr).Port, nil
 }
 
-func mustStartCMDServer() error {
+func mustStartCMDServer() {
 	running, err := common.IsServerRunning(common.PrimaryServer)
 	if err != nil {
 		log.Fatal("Failed to check if the primary server is running.", err)
@@ -97,7 +97,7 @@ func mustStartCMDServer() error {
 
 	// Don't start the CMD server if the primary server is running.
 	if running {
-		return nil
+		return
 	}
 
 	running, err = common.IsServerRunning(common.CmdTestServer)
@@ -107,7 +107,7 @@ func mustStartCMDServer() error {
 
 	// Don't start the CMD server if the CMD test server is running.
 	if running {
-		return nil
+		return
 	}
 
 	port, err := getUnusedPort()
@@ -134,8 +134,6 @@ func mustStartCMDServer() error {
 
 	// Small sleep to allow the server to start up.
 	time.Sleep(100 * time.Millisecond)
-
-	return nil
 }
 
 func stopCMDServer() {
