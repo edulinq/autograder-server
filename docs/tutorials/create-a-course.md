@@ -1,5 +1,7 @@
 # Tutorial: Creating a Course
 
+TEST -- my-autograder-server-prebuilt
+
 TODO
 In this tutorial ...
 Start from no knowledge of the autograder.
@@ -122,7 +124,7 @@ We get some output that contains the string: "Could not unmarshal JSON file".
 
 
 
-
+TODO
 
 
 
@@ -157,7 +159,7 @@ The hard requirements for an assignment are the assignment config and grader.
 
 As assignment's "grader" is the program responsible for looking at a student's submission and assigning a score to it.
 Naturally, this is typically the most complex and specialized component of creating a course for the autograder.
-When a grader finishes running, it is supposed to produce a JSON file representing a [grading output object](../types.md#grader-output) to `/output/result.json`.
+When a grader finishes running, it is supposed to produce a JSON file representing a [grading output object](../types.md#grader-output-graderoutput) to `/output/result.json`.
 Graders may be created using any language or library you can run in your Docker image.
 One way to think of graders is like unit tests with additional feedback and partial credit.
 If you have existing grading scripts/programs,
@@ -195,7 +197,7 @@ To see the full specification of the fields for an assignment config,
 see the [assignment section of the types documentation](../types.md#assignment).
 
 Now let's create the grader, which (as you can see in `static-files`) should be named `grader.py`.
-For breviety we won't put the full source code in this document,
+For brevity we won't put the full source code in this document,
 but you can see is at
 [resources/my-first-course/initial-assignment/assignment-01/grader.py](resources/my-first-course/initial-assignment/assignment-01/grader.py).
 
@@ -225,22 +227,10 @@ and successfully built Docker images for our new assignment!
 ]
 ```
 
-
-
-
-
-
-
-
-
-TEST
-
-
-
-
+*Sidenote:*  
 Note that our assignment config is missing the `invocation` field that tells the autograder how to run the grader program/script.
 For canonical Python grader images (`edulinq/grader.python-*`),
-the autograder already understands how to unvoke those.
+the autograder already understands how to invoke those.
 If you put in your invocation manually, it would be:
 ```json
 {
@@ -249,167 +239,127 @@ If you put in your invocation manually, it would be:
 }
 ```
 
+### Testing an Assignment
 
-Solution
-Serves as a good test of what correct code should look like.
+We no have an assignment with a grader that successfully creates a Docker image,
+but we have not actually tested that the grader does what we want it to do.
+Let's make a few sample submissions and check the output.
 
-Not implemented
-Ensure that a student submitting a blank submission gets the code you expect.
+*Sidenote:*
+Note that in a full course, we would create [test submissions](#test-submission),
+which are more formal ways to define the expected behavior in a grader.
+But, that is outside the scope for this tutorial.
+Here are some examples of test submissions:
+ - [autograder-server test course](https://github.com/edulinq/autograder-server/tree/main/testdata/course101/HW0/test-submissions).
+   - These test submissions are part of one of the test courses used for unit testing in this project.
+ - [Regex Assignment](https://github.com/edulinq/cse-cracks-course/tree/main/assignments/regex/test-submissions)
+   - These test submissions are a part of a fully featured sample assignment/course.
+   - This repository highlights good practices with autograder courses, including running these test submissions are part of [continuous integration](https://en.wikipedia.org/wiki/Continuous_integration)
+     - [CI Script that Runs the Test Submissions](https://github.com/edulinq/cse-cracks-course/blob/main/.ci/check_graders.sh)
 
-Syntax Error
-Great for testing your own grading infrastructure.
-Students will inevitably submit bad code, ideally your grader should be able to handle it without crashing.
+We will create three sample submissions for this tutorial in the [resources/my-first-course/final/assignment-01/sample-submissions](resources/my-first-course/final/assignment-01/sample-submissions) directory:
+ - [not-implemented](resources/my-first-course/final/assignment-01/sample-submissions/not-implemented/submission.py)
+   - This submission represents the initial code that a student is given to start the assignment.
+     Including a sample submission like this makes it easy to check that a student the number of expected points for submitting a blank assignment.
+     (We don't want to accidentally give a student more points for an empty solution than a wrong solution.)
+ - [solution](resources/my-first-course/final/assignment-01/sample-submissions/solution/submission.py)
+   - This submission represents the ideal submission a student could give.
+     Including a sample submission like this makes lets you ensure that a perfect solution gets a full score.
+     If there are multiple possible solutions, including multiple sample solutions is a good idea.
+ - [syntax-error](resources/my-first-course/final/assignment-01/sample-submissions/syntax-error/submission.py)
+   - This submission represents s submission that does not compile/parse/run.
+     Dealing with student submissions that crashes is a hard part of writing a grader.
+     The autograder will catch these situations and give the student a zero for that submission,
+     but catching these situations in the grader itself will allow you to give more detailed feedback.
 
-python3 -m autograder.cli.testing.test-submissions --submission test-submissions
-
-TODO: Build / Run Stages
-
-TODO: Files
-
-TODO: Testing Graders
- - It's a good idea to always make graders easy to run locally.
- - Test Submissions
- - Include Running Graders in CI
-
-TODO
-Highlight important things I'm grader
-Fallback Jason
-Run alone
-Test submissions (link to sample course ci)
-
-TODO
-Recommended test submissions
-Solution
-Empty
-No compile / bad syntax
-
----
-TEST
-
-
-
-
-
-
-### Querying Logs
-
-The autograder logs events that happen on the server.
-For a course builder, it is important that you are able to recover any warnings or errors that are logged about your course.
-To do that, you can query server logs using the `logs-query` command or `autograder.cli.logs.query` Python interface.
-
-logs-query command
+Now that we have sample submissions, let's run them through the autograder using the `grade` CMD.
+First let's start with the `not-implemented` submission:
 ```sh
-./docker/run-docker-server.py logs-query -- --unit-testing --log-level DEBUG
+./docker/run-docker-server.py \
+    --image my-autograder-server-prebuilt \
+    --mount docs:/tmp/docs \
+    grade \
+    -- \
+    my-first-course assignment-01 \
+    --submission /tmp/docs/tutorials/resources/my-first-course/final/assignment-01/sample-submissions/not-implemented
 ```
 
-or
+You should see output like:
+```
+Autograder transcript for assignment: Assignment1.
+Grading started at 2024-01-01T01:01:01.001Z and ended at 2024-01-01T01:01:01.001Z.
+Question 1: Add: 1 / 10
+    Add() did not return a correct result on test case 'zeros'.
+    Add() did not return a correct result on test case 'basic'.
+    Add() did not return a correct result on test case 'negative'.
 
-Python
+Total: 1 / 10
+```
+
+As expected, this submission does not get a very good score.
+If you look closely at our grader you can see the submission gets a single point via integer division.
+
+Now let's try the `solution` submission:
 ```sh
-python -m autograder.cli.logs.query --target-course course101 --user server-admin@test.edulinq.org --pass server-admin --server http://127.0.0.1:8080 --level DEBUG
+./docker/run-docker-server.py \
+    --image my-autograder-server-prebuilt \
+    --mount docs:/tmp/docs \
+    grade \
+    -- \
+    my-first-course assignment-01 \
+    --submission /tmp/docs/tutorials/resources/my-first-course/final/assignment-01/sample-submissions/solution
 ```
 
+Here we can see a clean 100% score:
+```
+Autograder transcript for assignment: Assignment1.
+Grading started at 2024-01-01T01:01:01.001Z and ended at 2024-01-01T01:01:01.001Z.
+Question 1: Add: 10 / 10
 
-mostly relevant 
+Total: 10 / 10
+```
 
-[logging](../types.md#logging)
-
-TODO
-
-### Clearing the Database
-
-TODO
-
-**WARNING**: This command cannot be undone, only do this in an environment you own.
-
-## Configuration
-
-TODO: We may not need this (if we are not using the server).
-
-In this section, we will cover some of the configuration you may want to set for your test server.
-For a more in-depth discussion of configuration for the autograder, see [this document](../../README.md#configuration).
-
-TODO: setting config values
-
+Finally, let's try out the `syntax-error` submission:
 ```sh
-./docker/run-docker-server.py list-options
+./docker/run-docker-server.py \
+    --image my-autograder-server-prebuilt \
+    --mount docs:/tmp/docs \
+    grade \
+    -- \
+    my-first-course assignment-01 \
+    --submission /tmp/docs/tutorials/resources/my-first-course/final/assignment-01/sample-submissions/syntax-error
 ```
 
-TODO: base dir
+Note that the submission could not be graded, but the grader still returns an appropriate result:
+```
+Autograder transcript for assignment: Assignment1.
+Grading started at 2024-01-01T01:01:01.001Z and ended at 2024-01-01T01:01:01.001Z.
+Question 1: Add: 0 / 10
+    Submission could not be graded.
 
-
-
-
-
-
----
-
-
-
-
-
-## Basic Server Control
-
-In this section, we will cover the basics of starting up and controlling an autograder server.
-Although you may already have a server deployed for you and your class,
-being able to use a server is critical for creating and testing your course.
-
-Although there are several ways to run autograder commands (build from source, use prebuilt binary, etc),
-this guide will only cover using the existing Docker image.
-Using the prebuilt Docker image is the easiest and most consistent way to run autograder commands (including the server).
-If you need instructions on installing or using Docker, see the [Official Docker documentation](https://docs.docker.com/desktop/).
-There are also many additional resources online to help you get started with docker.
-
-In this guide, we will make heavy use of a script to run the Docker container for us.
-This script sets various options automatically.
-To learn more about this script, see this [project's Docker documentation](../docker.md) or use the `--help` flag:
-```sh
-./docker/run-docker-server.py --help
+Total: 0 / 10
 ```
 
-This script (`./docker/run-docker-server.py`) is useful for running any command in [the cmd directory](../../cmd) inside a docker container.
-For example, you can check the version of your server using:
-```sh
-./docker/run-docker-server.py version
-```
+The autograder's Python library (`autograder-py`) handles this case well,
+but this is probably one of the most difficult cases for a custom grader to handle.
+The student's code behaving poorly can be very difficult to catch.
+Specifically, the following cases can be difficult to manage:
+ - Does not compile/parse/run.
+ - Takes too long to run.
+ - Outputs too much on stdout/stderr.
+ - Writes too much to disk.
 
-### Interacting with the Autograder
+The autograder deals with all these situations,
+but does not have the low-level details to handle them as gracefully as a grader can.
+For example, imagine the case of a student's code crashing on just one question.
+The autograder will see that the grader has completed but has not written out the grading result file,
+so will consider the entire grading a failure and give a zero score.
+But, a grader could possibly catch the crash/failure/error/exception for that specific question and continue grading while just assigning a zero for that question.
+You can see that this is what the autograder's Python library does.
 
 
-
-### Starting a Test Server
-
-TODO: Do we even need this?
-
-All the details of starting the server with Docker are detailed in this project's [Docker documentation](../docker.md#running-the-server),
-but the easiest way is to use our Docker Python script:
-```sh
-./docker/run-docker-server.py server
-```
-
-You should see some logging output (similar to the following) indicating that the server is running:
-```
-2024-10-20T21:02:16.692Z [ INFO] Autograder Version. | {"version":{"short-version":"0.3.0","git-hash":"c6f76d8e","is-dirty":false,"api-version":3}}
-2024-10-20T21:02:16.695Z [ INFO] API Server Started. | {"port":8080}
-2024-10-20T21:02:16.696Z [ INFO] Unix Socket Server Started. | {"unix_socket":"/tmp/autograder-4695a16cff52cec7b599b2c1e1e4f2c3.sock"}
-```
-
-When testing/debugging your course, you may also find it useful to set your logging level to debug:
-```sh
-./docker/run-docker-server.py server -- --log-level DEBUG
-```
-Note the `--` tells the script that everything after it is an argument to the autograder server and not the script itself.
-
-To stop the server, just use Ctrl-C.
-
-To run the server with preloaded courses and users (used for testing), use the `--unit-testing` flag:
-```sh
-./docker/run-docker-server.py server --unit-testing
-```
-
-### Connecting to Your Server
+## Next Steps
 
 TODO
 
-Python API
-
+Congrats!

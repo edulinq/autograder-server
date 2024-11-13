@@ -15,7 +15,8 @@ Extra keys will generally be ignored.
  - [Course](#course)
  - [Assignment](#assignment)
    - [Assignment Grading Images](#assignment-grading-images)
-   - [Grader Output](#grader-output)
+   - [Grader Output](#grader-output-graderoutput)
+   - [Test Submission](#test-submission)
    - [Assignments and the LMS](#assignments-and-the-lms)
  - [Roles](#roles)
    - [Server Roles (ServerRole)](#server-roles-serverrole)
@@ -223,11 +224,11 @@ The invocation is the command to run your actual grader (the Docker image's [CMD
 We recommend that you wrap your grader in a shell script for easy control and invocation.
 The invocation will take place (by default) in the `/autograder` directory.
 
-### Grader Output
+### Grader Output (GraderOutput)
 
 When a grader finishes running, it is supposed to create a JSON file (`/autograder/output/results.json`)
 that describes the result of grader.
-The fields for this file are as follows:
+The fields for this file (the `GraderOutput` type) are as follows:
 | Name                 | Type                 | Required | Description |
 |----------------------|----------------------|----------|-------------|
 | `name`               | String               | true     | The name of the assignment. This is used as a display name when formatting output for students. |
@@ -249,6 +250,26 @@ Each question (`GradedQuestion`) has the following fields:
 
 Note that all grading output will be visible to the student who made the submissions.
 So, it should not contain any information about grading that students should not see (like inputs to hidden test cases).
+
+### Test Submission
+
+A test submission is a directory that contains a sample submission (code) along with the expected output of the grader.
+Like courses and assignments, a test submission is identified by a specific file: `test-submission.json`.
+All other files/directories in that parent directory are considered part of the submission.
+The `test-submission.json` has the following fields:
+| Name              | Type         | Required | Description |
+|-------------------|--------------|----------|-------------|
+| `ignore_messages` | Boolean      | false    | Ignore the `messages` field when comparing expected output. Defaults to `false`. |
+| `result`          | GraderOutput | true     | The expected output to compare against. |
+
+Test submissions are very useful to have for assignments/graders.
+They give anyone working with the course reference code to look at,
+they provide a simple way to test your grader,
+they provide a pre-packaged submission to the autograder for testing autograder commands.
+We suggest that you have at least three test submissions for each assignment:
+ - A default implementation that only contains the base code provided to students (an empty implementation).
+ - A full solution that is considered the gold-standard.
+ - A solution that does not compile/parse. This allows you to test if you grader can handle broken code.
 
 ### Assignments and the LMS
 
