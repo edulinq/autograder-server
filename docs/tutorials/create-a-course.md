@@ -271,7 +271,7 @@ Here are some examples of test submissions:
  - [Regex Assignment](https://github.com/edulinq/cse-cracks-course/tree/main/assignments/regex/test-submissions)
    - These test submissions are a part of a fully featured sample assignment/course.
    - This repository highlights good practices with autograder courses,
-     including running these test submissions are part of [continuous integration](https://en.wikipedia.org/wiki/Continuous_integration)
+     including running these test submissions are part of [continuous integration (CI)](https://en.wikipedia.org/wiki/Continuous_integration)
      - [CI Script that Runs the Test Submissions](https://github.com/edulinq/cse-cracks-course/blob/main/.ci/check_graders.sh)
 
 We will create three sample submissions for this tutorial in the
@@ -394,6 +394,10 @@ You can see that this is what the autograder's Python library does.
 
 ## Next Steps
 
-TODO
+Congratulations, you have created a basic course!
 
-Congrats!
+Here are some next steps to look into:
+ - Create more graders for your other assignments.
+ - Connect your [course to your LMS](../types.md#lms-adapter-lmsadapter) (e.g., Canvas).
+ - Setup [scheduled tasks](../types.md#tasks) for your course.
+ - Setup [CI to test your graders](https://github.com/edulinq/cse-cracks-course/blob/main/.ci/check_graders.sh).
