@@ -1,0 +1,7 @@
+{
+    "id": "assignment-01",
+    "static-files": [
+        "grader.py"
+    ],
+    "image": "edulinq/grader.python-alpine"
+}

@@ -36,7 +36,7 @@ func (this *backend) AddTestCourse(path string) (*model.Course, error) {
 	common.Lock(path)
 	defer common.Unlock(path)
 
-	course, submissions, err := model.FullLoadCourseFromPath(path)
+	course, submissions, err := model.FullLoadCourseFromPath(path, true)
 	if err != nil {
 		return nil, err
 	}
@@ -108,7 +108,7 @@ func (this *backend) GetCourse(courseID string) (*model.Course, error) {
 		return nil, nil
 	}
 
-	return model.LoadCourseFromPath(path)
+	return model.LoadCourseFromPath(path, false)
 }
 
 func (this *backend) GetCourses() (map[string]*model.Course, error) {
@@ -127,7 +127,7 @@ func (this *backend) GetCourses() (map[string]*model.Course, error) {
 			common.ReadLock(configPath)
 			defer common.ReadUnlock(configPath)
 
-			course, err := model.LoadCourseFromPath(configPath)
+			course, err := model.LoadCourseFromPath(configPath, false)
 			if err != nil {
 				return fmt.Errorf("Failed to load course '%s': '%w'", configPath, err)
 			}

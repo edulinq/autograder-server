@@ -22,7 +22,7 @@ func RunEmailLogsTask(course *model.Course, rawTask tasks.ScheduledTask) (bool, 
 		return true, nil
 	}
 
-	return true, RunEmailLogs(task.RawLogQuery, course, task.To, task.SendEmpty)
+	return true, RunEmailLogs(task.RawQuery, course, task.To, task.SendEmpty)
 }
 
 func RunEmailLogs(rawQuery log.RawLogQuery, course *model.Course, to []string, sendEmpty bool) error {

@@ -59,65 +59,23 @@ go run cmd/version/main.go
 
 ## Configuration
 
-This project uses configuration options to set the behavior of its executables.
-All executables that use autograder resources use the same configuration infrastructure
-and can therefore be configured the same way and with the same options.
+The autograder server uses a tiered configuration system that includes
+files, environmental variables, and command-line options.
+This section will just highlight some key uses.
+For more information about autograder configuration (including all config options),
+see the [configuration documentation](docs/config.md).
 
-To see all the available options,
-either look in the [config/options.go](internal/config/options.go) file,
-use the `cmd/list-options` executable.
-```
-./bin/list-options
-```
+All autograder executables sets their configuration the same way,
+so you can use the same files or command-line options for each executable.
+In-general, you can set options using the `-c`/`--config` flag.
 
-Options can be set on the command-line using the `-c`/`--config` flag.
-For example:
+For example, you can set debug logging with:
 ```
 ./bin/logs-example --config log.level=debug
+
+# Or, the short version.
+./bin/logs-example --log-level debug
 ```
-
-Options can also be set using environmental variables by prefixing the option keys
-with `AUTOGRADER__` and replacing any `.` with `__`.
-For example option key `docker.disable` can be set by:
-```
-AUTOGRADER__DOCKER__DISABLE='true' ./scripts/run_tests.sh
-```
-
-### Directories
-
-The primary directory the autograder will use for storing information is referred to as the "work directory",
-and is set to `<base dir>/<instance name>`.
-Most other paths are configured to be relative to the work directory.
-
-The base directory is set through the `dirs.base` option,
-and defaults to `$XDG_DATA_HOME`.
-
-The instance name is a way to configuration a unique name for your autograder instance.
-It can be set with the `instance.name` option,
-and defaults to `autograder`.
-
-### Loading Options
-
-Configurations will be loaded in the following order (later options override earlier ones):
- 0. The command-line options are checked for `BASE_DIR`.
- 1. Load options from environmental variables.
- 2. Options are loaded from `WORK_DIR/config` (config.json then secrets.json).
- 3. Options are loaded from the current working directory (config.json then secrets.json).
- 4. Options are loaded from any files specified with `--config-path` (ordered by appearance).
- 5. Options are loaded from the command-line (`--config` / `-c`).
-
-The base directory (`dirs.base`) can ONLY be set via the command-line or environmental variables.
-This prevents cycles from the base directory changing and loading new options.
-
-### Key Configuration Options
-
-Here are several key configurations you should be aware of:
-
- - `instance.name` -- A name for this autograder instance.
- - `dirs.base` -- The "base" data directory for the autograder.
-    Caches, databases, and other files will be stored here.
- - `server.backup.dir` -- The location that course backups will be saved to.
- - `log.level` -- The logging level. Should be one of ["trace", "debug", "info", "warn", "error", "fatal"].
 
 ## Preparing for Grading
 
