@@ -50,11 +50,11 @@ If you choose, you can complete this entire tutorial via those interfaces as wel
 
 Now that we can run autograder commands, let's make a course!
 In this guide, we will make a course called "my-first-course".
-A complete instantiation of "my-first-course" is available in the [docs/tutorials/resources/my-first-course/final](my-first-course/final) directory.
+A complete instantiation of "my-first-course" is available in the [docs/tutorials/resources/my-first-course/final](resources/my-first-course/final) directory.
 As we go though this tutorial, we will build on our course.
 We encourage you to modify your local course as you progress,
 but this tutorial will use pre-made versions of the course in various states of completion.
-All versions are available in the [docs/tutorials/resources/my-first-course](my-first-course) directory.
+All versions are available in the [docs/tutorials/resources/my-first-course](resources/my-first-course) directory.
 
 A course is specified by a directory containing a JSON file called `course.json`.
 We call the `course.json` file the "course config",
@@ -124,7 +124,7 @@ Let's see what it looks like when we use a config with bad JSON:
 ```
 
 We get some output that contains the string: "Could not unmarshal JSON file".
-If we look at the course's [course.json](my-first-course/bad-json/course.json) directory,
+If we look at the course's [course.json](resources/my-first-course/bad-json/course.json) directory,
 we do see that we have a trailing comma after the "id" field.
 
 ### Updating an Existing Course
@@ -262,7 +262,7 @@ but we have not actually tested that the grader does what we want it to do.
 Let's make a few sample submissions and check the output.
 
 *Sidenote:*
-Note that in a full course, we would create [test submissions](#test-submission),
+Note that in a full course, we would create [test submissions](../types.md#test-submission),
 which are more formal ways to define the expected behavior in a grader.
 But, that is outside the scope for this tutorial.
 Here are some examples of test submissions:
