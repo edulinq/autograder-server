@@ -363,7 +363,6 @@ func TestUpsertUser(test *testing.T) {
 		},
 
 		// Self demote (course).
-		// TODO: This test does not fully test the functionality. We need a server non-admin and a course admin.
 		{
 			options: UpsertUsersOptions{
 				RawUsers: []*model.RawServerUserData{
