@@ -8,6 +8,7 @@ import (
 	"github.com/edulinq/autograder/internal/api/core"
 	"github.com/edulinq/autograder/internal/api/server"
 	"github.com/edulinq/autograder/internal/common"
+	"github.com/edulinq/autograder/internal/config"
 	"github.com/edulinq/autograder/internal/exit"
 	"github.com/edulinq/autograder/internal/log"
 	"github.com/edulinq/autograder/internal/util"
@@ -30,6 +31,15 @@ func MustHandleCMDRequestAndExitFull(endpoint string, request any, responseType 
 	// Run inside a func so defers will run before exit.Exit().
 	func() {
 		defer stopCMDServer()
+		defer config.WEB_PORT.Set(config.WEB_PORT.Get())
+
+		port, err := getUnusedPort()
+		if err != nil {
+			log.Fatal("Failed to get an unused port.", err)
+		}
+
+		config.WEB_PORT.Set(port)
+
 		startCMDServer()
 
 		response, err = SendCMDRequest(endpoint, request)

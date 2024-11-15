@@ -26,10 +26,6 @@ const (
 	STDERR_FILENAME = "stderr.txt"
 )
 
-var (
-	oldPort int
-)
-
 type CommonCMDTestCase struct {
 	ExpectedExitCode        int
 	ExpectedStdout          string
@@ -62,7 +58,7 @@ func CMDServerTestingMain(suite *testing.M) {
 
 			err := server.RunServer(common.CMD_TEST_SERVER)
 			if err != nil {
-				log.Fatal("Failed to run the CMD test server.", err)
+				log.Fatal("Failed to run the server.", err)
 			}
 		}()
 
@@ -102,23 +98,15 @@ func startCMDServer() {
 		}
 	}
 
-	port, err := getUnusedPort()
-	if err != nil {
-		log.Fatal("Failed to get an unused port.", err)
-	}
-
-	oldPort = config.WEB_PORT.Get()
-	config.WEB_PORT.Set(port)
-
 	var serverStart sync.WaitGroup
 	serverStart.Add(1)
 
 	go func() {
 		serverStart.Done()
-		fmt.Println("Starting")
+
 		err = pserver.Start(common.CMD_SERVER)
 		if err != nil {
-			log.Fatal("Failed to start the CMD server.", err)
+			log.Fatal("Failed to start the server.", err)
 		}
 	}()
 
@@ -142,9 +130,6 @@ func stopCMDServer() {
 	}
 
 	server.StopServer()
-
-	config.WEB_PORT.Set(oldPort)
-	fmt.Println("Stopping")
 }
 
 func RunCMDTest(test *testing.T, mainFunc func(), args []string, logLevel log.LogLevel) (string, string, int, error) {

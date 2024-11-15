@@ -91,7 +91,7 @@ func WriteAndHandleStatusFile(initiator ServerName) error {
 }
 
 // Returns (nil, nil) if it's safe to create the status file,
-// (*StatusInfo, nil) if another instance of the server is running,
+// (&statusJson, nil) if another instance of the server is running,
 // or (nil, err) if there are issues reading or removing the status file.
 func CheckAndHandleServerStatusFile() (*StatusInfo, error) {
 	statusPath := GetStatusPath()

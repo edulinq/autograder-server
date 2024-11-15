@@ -17,7 +17,7 @@ func TestCMDStartsServer(test *testing.T) {
 	defer util.RemoveRecordedTempDirs()
 
 	expectedSubstrings := []struct {
-		expectedOutputSubstring string
+		expectedSubstring string
 	}{
 		{`API Server Started.`},
 		{`Unix Socket Server Started.`},
@@ -27,16 +27,16 @@ func TestCMDStartsServer(test *testing.T) {
 
 	_, stderr, exitCode, err := RunCMDTest(test, userList, []string{}, log.GetTextLevel())
 	if err != nil {
-		test.Errorf("CMD run returned an error when testing verbose: '%v'.", err)
+		test.Errorf("CMD run returned an error: '%v'.", err)
 	}
 
 	if exitCode != 0 {
-		test.Errorf("Unexpected exit code. Expected: '0', Actual: '%d'", exitCode)
+		test.Errorf("Unexpected exit code. Expected: '0', Actual: '%d'.", exitCode)
 	}
 
 	for _, testCase := range expectedSubstrings {
-		if !strings.Contains(stderr, testCase.expectedOutputSubstring) {
-			test.Error("CMD run didn't start their own server.")
+		if !strings.Contains(stderr, testCase.expectedSubstring) {
+			test.Errorf("Expected substring '%s' not found in stderr: '%s'.", testCase.expectedSubstring, stderr)
 		}
 	}
 }

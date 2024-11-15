@@ -47,6 +47,7 @@ func Start(initiator common.ServerName) (err error) {
 		go startCourse(course)
 	}
 
+	// Keep temp dirs for CMD infrastructure to access after function ends.
 	if !config.UNIT_TESTING_MODE.Get() {
 		// Cleanup any temp dirs.
 		defer util.RemoveRecordedTempDirs()
