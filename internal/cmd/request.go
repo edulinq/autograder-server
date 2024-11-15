@@ -28,10 +28,10 @@ func MustHandleCMDRequestAndExitFull(endpoint string, request any, responseType 
 	var response core.APIResponse
 	var err error
 
-	// Run inside a func the defer will run before exit.Exit().
+	// Run inside a func defers will run before exit.Exit().
 	func() {
-		startedServer, oldPort := ensureServerRunning()
-		if startedServer {
+		startedCMDServer, oldPort := ensureServerRunning()
+		if startedCMDServer {
 			defer server.StopServer()
 			defer config.WEB_PORT.Set(oldPort)
 		}

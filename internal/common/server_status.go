@@ -68,7 +68,7 @@ func WriteAndHandleStatusFile(initiator ServerName) error {
 	}
 
 	if currentStatusJson != nil {
-		return fmt.Errorf("Failed to create the status file '%s'.", statusPath)
+		return fmt.Errorf("Failed to create the status file '%s' since another server is running.", statusPath)
 	}
 
 	unixFileNumber, err := util.RandHex(UNIX_SOCKET_RANDNUM_SIZE_BYTES)
