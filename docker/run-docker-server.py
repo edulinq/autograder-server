@@ -55,6 +55,12 @@ def main(args):
         '--volume', '%s:%s' % (_normlaize_path(args.temp_dir), DOCKER_CONTAINER_TEMP_DIR),
     ]
 
+    for raw_mount in args.mount:
+        host_path, container_path = _parse_mount(raw_mount)
+        command += [
+            '--volume', '%s:%s' % (host_path, container_path),
+        ]
+
     if (not args.no_data):
         if (args.data_dir is None):
             print("Could not find data directory for this system, please specify with --data-dir.", file = sys.stderr)
@@ -81,6 +87,21 @@ def main(args):
 
     result = _run(command)
     return result
+
+def _parse_mount(raw_mount):
+    parts = raw_mount.split(':')
+    if (len(parts) != 2):
+        raise ValueError("Could not parse mount paths (exactly one colon not found): '%s'." % (raw_mount))
+
+    host_path = _normlaize_path(parts[0])
+    if (not os.path.isdir(host_path)):
+        raise ValueError("Host mount path does not exist or is not a directory: '%s'." % (host_path))
+
+    container_path = parts[1]
+    if (not os.path.isabs(container_path)):
+        raise ValueError("Container mount path is not absolute: '%s'." % (container_path))
+
+    return host_path, container_path
 
 def _normlaize_path(path):
     return os.path.abspath(os.path.expanduser(os.path.expandvars(path)))
@@ -166,6 +187,15 @@ def _load_args():
     parser.add_argument('--port', dest = 'port',
         action = 'store', type = int, default = DEFAULT_HOST_PORT,
         help = 'The port to use (default: "%(default)s").')
+
+    parser.add_argument('--mount', dest = 'mount',
+        action = 'append', type = str, default = [],
+        help = ('Specify a directory to mount in the Docker container.'
+            + ' Argument must be formatted as "<host dir>:<container dir>",'
+            + ' e.g., "my-host-dir:/tmp/my-container-dir".'
+            + ' Paths cannot have a colon (":") in them.'
+            + ' The host directory can be relative, and the container dir must be absolute.'
+            + ' Can be specified multiple times.'))
 
     parser.add_argument('-d', '--docker-arg', dest = 'docker_args',
         action = 'append', type = str, default = [],

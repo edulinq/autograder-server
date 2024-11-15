@@ -92,7 +92,8 @@ func fetchTestSubmissionAssignment(testSubmissionPath string) (*model.Assignment
 		return nil, fmt.Errorf("Failed to load course '%s': '%w'.", coursePath, err)
 	}
 
-	assignment, err := model.ReadAssignmentConfig(course, assignmentPath)
+	relDir, _ := filepath.Rel(filepath.Dir(util.ShouldAbs(coursePath)), filepath.Dir(util.ShouldAbs(assignmentPath)))
+	assignment, err := model.ReadAssignmentConfig(course, assignmentPath, relDir)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to load assignment '%s': '%w'.", assignmentPath, err)
 	}

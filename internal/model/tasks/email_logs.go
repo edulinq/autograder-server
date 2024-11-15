@@ -12,7 +12,7 @@ type EmailLogsTask struct {
 	To        []string `json:"to"`
 	SendEmpty bool     `json:"send-empty"`
 
-	log.RawLogQuery
+	RawQuery log.RawLogQuery `json:"query"`
 }
 
 func (this *EmailLogsTask) Validate(course TaskCourse) error {
@@ -27,7 +27,7 @@ func (this *EmailLogsTask) Validate(course TaskCourse) error {
 		return fmt.Errorf("EmailLogs task is not disabled, but no email recipients are declared.")
 	}
 
-	_, err = this.RawLogQuery.ParseJoin()
+	_, err = this.RawQuery.ParseJoin()
 	if err != nil {
 		return err
 	}

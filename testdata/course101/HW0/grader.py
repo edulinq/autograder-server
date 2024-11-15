@@ -13,23 +13,19 @@ class HW0(Assignment):
 class Q1(Question):
     def score_question(self, submission):
         result = submission.__all__.function1()
-        if (self.check_not_implemented(result)):
-            return
+        self.check_not_implemented(result)
 
         if (not result):
             self.fail("function1() should return True.")
-            return
 
         self.full_credit()
 
 class Q2(Question):
     def score_question(self, submission):
         result = submission.__all__.function2(0)
-        if (self.check_not_implemented(result)):
-            return
+        self.check_not_implemented(result)
 
         if (result != 1):
             self.fail("function2(0) should return 1.")
-            return
 
         self.full_credit()

@@ -131,7 +131,7 @@ func prepForGrading(assignment *model.Assignment, submissionPath string, user st
 	// Ensure the assignment docker image is built.
 	err := docker.BuildImageFromSourceQuick(assignment)
 	if err != nil {
-		return "", nil, fmt.Errorf("Failed to build assignment assignment '%s' docker image: '%w'.", assignment.FullID(), err)
+		return "", nil, fmt.Errorf("Failed to build assignment '%s' docker image: '%w'.", assignment.FullID(), err)
 	}
 
 	submissionID, err := db.GetNextSubmissionID(assignment, user)
