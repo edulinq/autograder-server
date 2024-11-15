@@ -27,9 +27,10 @@ func MustHandleCMDRequestAndExitFull(endpoint string, request any, responseType 
 	var response core.APIResponse
 	var err error
 
+	// Run inside a func so defers will run before exit.Exit().
 	func() {
 		defer stopCMDServer()
-		mustStartCMDServer()
+		startCMDServer()
 
 		response, err = SendCMDRequest(endpoint, request)
 	}()

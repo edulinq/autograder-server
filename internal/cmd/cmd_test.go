@@ -1,82 +1,46 @@
 package cmd
 
 import (
-	"os/exec"
 	"strings"
-	"sync"
 	"testing"
-	"time"
 
-	"github.com/edulinq/autograder/internal/api/server"
-	"github.com/edulinq/autograder/internal/common"
+	"github.com/edulinq/autograder/internal/api/users"
 	"github.com/edulinq/autograder/internal/config"
 	"github.com/edulinq/autograder/internal/log"
-	procedures "github.com/edulinq/autograder/internal/procedures/server"
+	"github.com/edulinq/autograder/internal/util"
 )
 
-var testCases = []struct {
-	expectedOutputSubstring string
-}{
-	{`API Server Started.`},
-	{`Unix Socket Server Started.`},
-}
-
+// Test if a CMD can start and stop their own server when the primary server isn't being run.
+// Since all CMDs use the same infrastructure, we only need to test it for one CMD.
 func TestCMDStartsServer(test *testing.T) {
-	cmd := exec.Command("go", "run", "../../cmd/user-list/main.go")
+	config.UNIT_TESTING_MODE.Set(true)
+	defer util.RemoveRecordedTempDirs()
 
-	output, err := cmd.CombinedOutput()
-	if err != nil {
-		test.Fatal("Failed to run the CMD.", err)
+	expectedSubstrings := []struct {
+		expectedOutputSubstring string
+	}{
+		{`API Server Started.`},
+		{`Unix Socket Server Started.`},
+		{`API Server Stopped.`},
+		{`Unix Socket Server Stopped.`},
 	}
 
-	for _, testCase := range testCases {
-		if !strings.Contains(string(output), testCase.expectedOutputSubstring) {
+	_, stderr, exitCode, err := RunCMDTest(test, userList, []string{}, log.GetTextLevel())
+	if err != nil {
+		test.Errorf("CMD run returned an error when testing verbose: '%v'.", err)
+	}
+
+	if exitCode != 0 {
+		test.Errorf("Unexpected exit code. Expected: '0', Actual: '%d'", exitCode)
+	}
+
+	for _, testCase := range expectedSubstrings {
+		if !strings.Contains(stderr, testCase.expectedOutputSubstring) {
 			test.Error("CMD run didn't start their own server.")
 		}
 	}
 }
 
-func TestCMDConnectsToPrimaryServer(test *testing.T) {
-	// Quiet primary server startup/shutdown logs.
-	log.SetLevelFatal()
-
-	port, err := getUnusedPort()
-	if err != nil {
-		log.Fatal("Failed to get an unused port.", err)
-	}
-
-	defer config.WEB_PORT.Set(config.WEB_PORT.Get())
-	config.WEB_PORT.Set(port)
-
-	var serverStart sync.WaitGroup
-	serverStart.Add(1)
-
-	defer server.StopServer()
-	go func() {
-		serverStart.Done()
-
-		// Mimic running cmd/server/main.go.
-		err := procedures.Start(common.PrimaryServer)
-		if err != nil {
-			test.Fatal("Failed to start the primary server.", err)
-		}
-	}()
-
-	serverStart.Wait()
-
-	// Small sleep to allow the server to start up.
-	time.Sleep(100 * time.Millisecond)
-
-	cmd := exec.Command("go", "run", "../../cmd/user-list/main.go")
-
-	output, err := cmd.CombinedOutput()
-	if err != nil {
-		test.Error("Failed to run the CMD.", err)
-	}
-
-	for _, testCase := range testCases {
-		if strings.Contains(string(output), testCase.expectedOutputSubstring) {
-			test.Error("CMD run started their own server.")
-		}
-	}
+func userList() {
+	MustHandleCMDRequestAndExit(`users/list`, users.ListRequest{}, users.ListResponse{})
 }

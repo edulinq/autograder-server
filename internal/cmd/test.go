@@ -60,7 +60,7 @@ func CMDServerTestingMain(suite *testing.M) {
 		go func() {
 			serverRun.Done()
 
-			err := server.RunServer(common.CmdTestServer)
+			err := server.RunServer(common.CMD_TEST_SERVER)
 			if err != nil {
 				log.Fatal("Failed to run the CMD test server.", err)
 			}
@@ -89,25 +89,17 @@ func getUnusedPort() (int, error) {
 	return listener.Addr().(*net.TCPAddr).Port, nil
 }
 
-func mustStartCMDServer() {
-	running, err := common.IsServerRunning(common.PrimaryServer)
+func startCMDServer() {
+	currentStatusJson, err := common.CheckAndHandleServerStatusFile()
 	if err != nil {
-		log.Fatal("Failed to check if the primary server is running.", err)
+		log.Fatal("Failed to retrieve the current status file's json.", err)
 	}
 
-	// Don't start the CMD server if the primary server is running.
-	if running {
-		return
-	}
-
-	running, err = common.IsServerRunning(common.CmdTestServer)
-	if err != nil {
-		log.Fatal("Failed to check if the CMD test server is running.", err)
-	}
-
-	// Don't start the CMD server if the CMD test server is running.
-	if running {
-		return
+	if currentStatusJson != nil {
+		// Don't start the server if the primary server or cmd test server is running.
+		if currentStatusJson.ServerInitiator == string(common.PRIMARY_SERVER) || currentStatusJson.ServerInitiator == string(common.CMD_TEST_SERVER) {
+			return
+		}
 	}
 
 	port, err := getUnusedPort()
@@ -123,8 +115,8 @@ func mustStartCMDServer() {
 
 	go func() {
 		serverStart.Done()
-
-		err = pserver.Start(common.CmdServer)
+		fmt.Println("Starting")
+		err = pserver.Start(common.CMD_SERVER)
 		if err != nil {
 			log.Fatal("Failed to start the CMD server.", err)
 		}
@@ -137,28 +129,22 @@ func mustStartCMDServer() {
 }
 
 func stopCMDServer() {
-	running, err := common.IsServerRunning(common.PrimaryServer)
+	currentStatusJson, err := common.CheckAndHandleServerStatusFile()
 	if err != nil {
-		log.Fatal("Failed to check if the primary server is running.", err)
+		log.Fatal("Failed to retrieve the current status file's json.", err)
 	}
 
-	// Don't stop the server if the primary server is running.
-	if running {
-		return
-	}
-
-	running, err = common.IsServerRunning(common.CmdTestServer)
-	if err != nil {
-		log.Fatal("Failed to check if the CMD test server is running.", err)
-	}
-
-	// Don't stop the server if the CMD test server is running.
-	if running {
-		return
+	if currentStatusJson != nil {
+		// Don't stop the server if the primary server or cmd test server is running.
+		if currentStatusJson.ServerInitiator == string(common.PRIMARY_SERVER) || currentStatusJson.ServerInitiator == string(common.CMD_TEST_SERVER) {
+			return
+		}
 	}
 
 	server.StopServer()
+
 	config.WEB_PORT.Set(oldPort)
+	fmt.Println("Stopping")
 }
 
 func RunCMDTest(test *testing.T, mainFunc func(), args []string, logLevel log.LogLevel) (string, string, int, error) {
@@ -202,7 +188,6 @@ func RunCMDTest(test *testing.T, mainFunc func(), args []string, logLevel log.Lo
 	stderrFile := util.MustCreateFile(stderrPath)
 	os.Stderr = stderrFile
 	log.SetTextWriter(stderrFile)
-	os.Stderr = util.MustCreateFile(stderrPath)
 
 	// Run.
 	err := runCMD(mainFunc, args)
