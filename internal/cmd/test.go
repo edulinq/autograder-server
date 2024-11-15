@@ -26,10 +26,6 @@ const (
 	STDERR_FILENAME = "stderr.txt"
 )
 
-var (
-	oldPort int
-)
-
 type CommonCMDTestCase struct {
 	ExpectedExitCode        int
 	ExpectedStdout          string
@@ -110,7 +106,7 @@ func ensureServerRunning() (bool, int) {
 		log.Fatal("Failed to get an unused port.", err)
 	}
 
-	oldPort = config.WEB_PORT.Get()
+	oldPort := config.WEB_PORT.Get()
 	config.WEB_PORT.Set(port)
 
 	var serverStart sync.WaitGroup
