@@ -28,19 +28,13 @@ func MustHandleCMDRequestAndExitFull(endpoint string, request any, responseType 
 	var response core.APIResponse
 	var err error
 
-	// Run inside a func so defers will run before exit.Exit().
+	// Run inside a func the defer will run before exit.Exit().
 	func() {
-		defer stopCMDServer()
-		defer config.WEB_PORT.Set(config.WEB_PORT.Get())
-
-		port, err := getUnusedPort()
-		if err != nil {
-			log.Fatal("Failed to get an unused port.", err)
+		startedServer, oldPort := ensureServerRunning()
+		if startedServer {
+			defer server.StopServer()
+			defer config.WEB_PORT.Set(oldPort)
 		}
-
-		config.WEB_PORT.Set(port)
-
-		startCMDServer()
 
 		response, err = SendCMDRequest(endpoint, request)
 	}()

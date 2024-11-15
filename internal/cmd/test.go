@@ -26,6 +26,10 @@ const (
 	STDERR_FILENAME = "stderr.txt"
 )
 
+var (
+	oldPort int
+)
+
 type CommonCMDTestCase struct {
 	ExpectedExitCode        int
 	ExpectedStdout          string
@@ -85,7 +89,10 @@ func getUnusedPort() (int, error) {
 	return listener.Addr().(*net.TCPAddr).Port, nil
 }
 
-func startCMDServer() {
+// Check to see if a server is running and start one if it's not.
+// Returns (false, 0) if a server is already running
+// or (true, oldPort) if it started it's own server.
+func ensureServerRunning() (bool, int) {
 	currentStatusJson, err := common.CheckAndHandleServerStatusFile()
 	if err != nil {
 		log.Fatal("Failed to retrieve the current status file's json.", err)
@@ -94,9 +101,17 @@ func startCMDServer() {
 	if currentStatusJson != nil {
 		// Don't start the server if the primary server or cmd test server is running.
 		if currentStatusJson.ServerInitiator == string(common.PRIMARY_SERVER) || currentStatusJson.ServerInitiator == string(common.CMD_TEST_SERVER) {
-			return
+			return false, 0
 		}
 	}
+
+	port, err := getUnusedPort()
+	if err != nil {
+		log.Fatal("Failed to get an unused port.", err)
+	}
+
+	oldPort = config.WEB_PORT.Get()
+	config.WEB_PORT.Set(port)
 
 	var serverStart sync.WaitGroup
 	serverStart.Add(1)
@@ -114,22 +129,8 @@ func startCMDServer() {
 
 	// Small sleep to allow the server to start up.
 	time.Sleep(100 * time.Millisecond)
-}
 
-func stopCMDServer() {
-	currentStatusJson, err := common.CheckAndHandleServerStatusFile()
-	if err != nil {
-		log.Fatal("Failed to retrieve the current status file's json.", err)
-	}
-
-	if currentStatusJson != nil {
-		// Don't stop the server if the primary server or cmd test server is running.
-		if currentStatusJson.ServerInitiator == string(common.PRIMARY_SERVER) || currentStatusJson.ServerInitiator == string(common.CMD_TEST_SERVER) {
-			return
-		}
-	}
-
-	server.StopServer()
+	return true, oldPort
 }
 
 func RunCMDTest(test *testing.T, mainFunc func(), args []string, logLevel log.LogLevel) (string, string, int, error) {
