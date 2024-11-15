@@ -13,7 +13,9 @@ import (
 // Test if a CMD can start and stop their own server when the primary server isn't being run.
 // Since all CMDs use the same infrastructure, we only need to test it for one CMD.
 func TestCMDStartsServer(test *testing.T) {
+	defer config.UNIT_TESTING_MODE.Set(config.UNIT_TESTING_MODE.Get())
 	config.UNIT_TESTING_MODE.Set(true)
+
 	defer util.RemoveRecordedTempDirs()
 
 	expectedSubstrings := []struct {
