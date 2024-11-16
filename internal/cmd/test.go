@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"fmt"
-	"net"
 	"os"
 	"path/filepath"
 	"strings"
@@ -37,7 +36,7 @@ type CommonCMDTestCase struct {
 func CMDServerTestingMain(suite *testing.M) {
 	server.StopServer()
 
-	port, err := getUnusedPort()
+	port, err := pserver.GetUnusedPort()
 	if err != nil {
 		log.Fatal("Failed to get an unused port.", err)
 	}
@@ -75,60 +74,6 @@ func CMDServerTestingMain(suite *testing.M) {
 	exit.Exit(code)
 }
 
-func getUnusedPort() (int, error) {
-	listener, err := net.Listen("tcp", ":0")
-	if err != nil {
-		return 0, err
-	}
-	listener.Close()
-
-	return listener.Addr().(*net.TCPAddr).Port, nil
-}
-
-// Check to see if a server is running and start one if it's not.
-// Returns (false, 0) if a server is already running
-// or (true, oldPort) if it started it's own server.
-func ensureServerRunning() (bool, int) {
-	currentStatusJson, err := common.CheckAndHandleServerStatusFile()
-	if err != nil {
-		log.Fatal("Failed to retrieve the current status file's json.", err)
-	}
-
-	if currentStatusJson != nil {
-		// Don't start the server if the primary server or cmd test server is running.
-		if currentStatusJson.ServerInitiator == string(common.PRIMARY_SERVER) || currentStatusJson.ServerInitiator == string(common.CMD_TEST_SERVER) {
-			return false, 0
-		}
-	}
-
-	port, err := getUnusedPort()
-	if err != nil {
-		log.Fatal("Failed to get an unused port.", err)
-	}
-
-	oldPort := config.WEB_PORT.Get()
-	config.WEB_PORT.Set(port)
-
-	var serverStart sync.WaitGroup
-	serverStart.Add(1)
-
-	go func() {
-		serverStart.Done()
-
-		err = pserver.Start(common.CMD_SERVER)
-		if err != nil {
-			log.Fatal("Failed to start the server.", err)
-		}
-	}()
-
-	serverStart.Wait()
-
-	// Small sleep to allow the server to start up.
-	time.Sleep(100 * time.Millisecond)
-
-	return true, oldPort
-}
-
 func RunCMDTest(test *testing.T, mainFunc func(), args []string, logLevel log.LogLevel) (string, string, int, error) {
 	// Suppress exits to capture exit codes.
 	exit.SetShouldExitForTesting(false)
@@ -149,7 +94,7 @@ func RunCMDTest(test *testing.T, mainFunc func(), args []string, logLevel log.Lo
 		log.SetBackendLevel(oldBackendLogLevel)
 	}()
 
-	args = append(args, "--log-level", logLevel.String())
+	log.SetLevel(logLevel)
 
 	// Setup stdout capture.
 	oldStdout := os.Stdout

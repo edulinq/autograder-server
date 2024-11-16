@@ -1,22 +1,22 @@
 package main
 
 import (
-	"fmt"
-	"os"
-
 	"github.com/alecthomas/kong"
 
+	"github.com/edulinq/autograder/internal/api/core"
+	"github.com/edulinq/autograder/internal/api/users"
+	"github.com/edulinq/autograder/internal/cmd"
 	"github.com/edulinq/autograder/internal/config"
-	"github.com/edulinq/autograder/internal/db"
 	"github.com/edulinq/autograder/internal/log"
 	"github.com/edulinq/autograder/internal/util"
 )
 
 var args struct {
 	config.ConfigArgs
+	cmd.CommonOptions
 
-	Email string `help:"Email for the user." arg:"" required:""`
-	Token string `help:"Token for the user." arg:"" required:""`
+	Email    string `help:"Email for the user." arg:"" required:""`
+	Password string `help:"Password for the user." arg:"" required:""`
 }
 
 func main() {
@@ -29,35 +29,12 @@ func main() {
 		log.Fatal("Could not load config options.", err)
 	}
 
-	db.MustOpen()
-	defer db.MustClose()
-
-	os.Exit(run())
-}
-
-func run() int {
-	user, err := db.GetServerUser(args.Email)
-	if err != nil {
-		log.Fatal("Failed to get user.", err)
+	request := users.AuthRequest{
+		APIRequestUserContext: core.APIRequestUserContext {
+			UserEmail: args.Email,
+			UserPass: util.Sha256HexFromString(args.Password),
+		},
 	}
 
-	if user == nil {
-		fmt.Printf("User '%s' does not exist, cannot auth.\n", args.Email)
-		return 2
-	}
-
-	passHash := util.Sha256HexFromString(args.Token)
-
-	auth, err := user.Auth(passHash)
-	if err != nil {
-		log.Fatal("Failed to auth user.", err)
-	}
-
-	if auth {
-		fmt.Println("Authentication Successful")
-		return 0
-	} else {
-		fmt.Println("Authentication Failed, Bad Password")
-		return 1
-	}
+	cmd.MustHandleCMDRequestAndExitFull(`users/auth`, request, users.AuthResponse{}, args.CommonOptions, nil)
 }

@@ -11,22 +11,24 @@ import (
 	"github.com/edulinq/autograder/internal/util"
 )
 
-type ServerName string
+type ServerInitiator string
 
 const (
 	SERVER_STATUS_LOCK             = "internal.common.SERVER_STATUS_LOCK"
 	STATUS_FILENAME                = "status.json"
 	UNIX_SOCKET_RANDNUM_SIZE_BYTES = 32
+)
 
-	PRIMARY_SERVER  ServerName = "primary-server"
-	CMD_SERVER      ServerName = "cmd-server"
-	CMD_TEST_SERVER ServerName = "cmd-test-server"
+const (
+	PRIMARY_SERVER  ServerInitiator = "primary-server"
+	CMD_SERVER      ServerInitiator = "cmd-server"
+	CMD_TEST_SERVER ServerInitiator = "cmd-test-server"
 )
 
 type StatusInfo struct {
-	Pid             int    `json:"pid"`
-	UnixSocketPath  string `json:"unix-socket-path"`
-	ServerInitiator string `json:"server-initiator"`
+	Pid             int             `json:"pid"`
+	UnixSocketPath  string          `json:"unix-socket-path"`
+	ServerInitiator ServerInitiator `json:"server-initiator"`
 }
 
 func GetStatusPath() string {
@@ -55,19 +57,19 @@ func GetUnixSocketPath() (string, error) {
 	return statusJson.UnixSocketPath, nil
 }
 
-func WriteAndHandleStatusFile(initiator ServerName) error {
+func WriteAndHandleStatusFile(initiator ServerInitiator) error {
 	Lock(SERVER_STATUS_LOCK)
 	Unlock(SERVER_STATUS_LOCK)
 
 	statusPath := GetStatusPath()
 	pid := os.Getpid()
 
-	currentStatusJson, err := CheckAndHandleServerStatusFile()
+	statusInfo, err := CheckAndHandleServerStatusFile()
 	if err != nil {
 		return err
 	}
 
-	if currentStatusJson != nil {
+	if statusInfo != nil {
 		return fmt.Errorf("Failed to create the status file '%s' since another server is running.", statusPath)
 	}
 
@@ -79,7 +81,7 @@ func WriteAndHandleStatusFile(initiator ServerName) error {
 	statusJson := StatusInfo{
 		Pid:             pid,
 		UnixSocketPath:  filepath.Join("/", "tmp", fmt.Sprintf("autograder-%s.sock", unixFileNumber)),
-		ServerInitiator: string(initiator),
+		ServerInitiator: initiator,
 	}
 
 	err = util.ToJSONFile(statusJson, statusPath)
@@ -90,8 +92,8 @@ func WriteAndHandleStatusFile(initiator ServerName) error {
 	return nil
 }
 
-// Returns (nil, nil) if it's safe to create the status file,
-// (&statusJson, nil) if another instance of the server is running,
+// Returns (nil, nil) if the status file doesn't exist,
+// (&statusJson, nil) if the status file exists and another instance of the server is running,
 // or (nil, err) if there are issues reading or removing the status file.
 func CheckAndHandleServerStatusFile() (*StatusInfo, error) {
 	statusPath := GetStatusPath()

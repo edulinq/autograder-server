@@ -11,6 +11,7 @@ import (
 	"github.com/edulinq/autograder/internal/config"
 	"github.com/edulinq/autograder/internal/exit"
 	"github.com/edulinq/autograder/internal/log"
+	pserver "github.com/edulinq/autograder/internal/procedures/server"
 	"github.com/edulinq/autograder/internal/util"
 )
 
@@ -30,7 +31,7 @@ func MustHandleCMDRequestAndExitFull(endpoint string, request any, responseType 
 
 	// Run inside a func so defers will run before exit.Exit().
 	func() {
-		startedCMDServer, oldPort := ensureServerRunning()
+		startedCMDServer, oldPort := pserver.MustEnsureServerIsRunning()
 		if startedCMDServer {
 			defer server.StopServer()
 			defer config.WEB_PORT.Set(oldPort)
