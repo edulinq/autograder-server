@@ -131,4 +131,3 @@ func GetUnusedPort() (int, error) {
 
 	return listener.Addr().(*net.TCPAddr).Port, nil
 }
-

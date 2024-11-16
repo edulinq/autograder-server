@@ -30,9 +30,9 @@ func main() {
 	}
 
 	request := users.AuthRequest{
-		APIRequestUserContext: core.APIRequestUserContext {
+		APIRequestUserContext: core.APIRequestUserContext{
 			UserEmail: args.Email,
-			UserPass: util.Sha256HexFromString(args.Password),
+			UserPass:  util.Sha256HexFromString(args.Password),
 		},
 	}
 
