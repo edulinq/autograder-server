@@ -50,6 +50,7 @@ func Start(initiator common.ServerInitiator) (err error) {
 		go startCourse(course)
 	}
 
+	// Cleanup any temp dirs.
 	defer util.RemoveRecordedTempDirs()
 
 	err = server.RunServer(initiator)
@@ -79,7 +80,7 @@ func startCourse(course *model.Course) {
 }
 
 // Check to see if a server is running and start one if it's not.
-// Returns (false, 0) if a server is already running
+// Returns (false, 0) if a the primary server or cmd test server is already running
 // or (true, oldPort) if it started it's own server.
 func MustEnsureServerIsRunning() (bool, int) {
 	statusInfo, err := common.CheckAndHandleServerStatusFile()

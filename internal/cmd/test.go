@@ -94,7 +94,7 @@ func RunCMDTest(test *testing.T, mainFunc func(), args []string, logLevel log.Lo
 		log.SetBackendLevel(oldBackendLogLevel)
 	}()
 
-	log.SetLevel(logLevel)
+	args = append(args, "--log-level", logLevel.String())
 
 	// Setup stdout capture.
 	oldStdout := os.Stdout
