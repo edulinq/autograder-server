@@ -2,15 +2,15 @@ package main
 
 import (
 	"fmt"
-	"os"
 	"testing"
 
 	"github.com/edulinq/autograder/internal/cmd"
 	"github.com/edulinq/autograder/internal/db"
+	"github.com/edulinq/autograder/internal/exit"
 )
 
 func TestMain(suite *testing.M) {
-	// Run inside a func so defers will run before os.Exit().
+	// Run inside a func so defers will run before exit.Exit().
 	code := func() int {
 		db.PrepForTestingMain()
 		defer db.CleanupTestingMain()
@@ -18,7 +18,7 @@ func TestMain(suite *testing.M) {
 		return suite.Run()
 	}()
 
-	os.Exit(code)
+	exit.Exit(code)
 }
 
 // This test ensures a CMD can start its own server.
