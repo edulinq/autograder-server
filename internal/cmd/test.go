@@ -15,7 +15,6 @@ import (
 	"github.com/edulinq/autograder/internal/db"
 	"github.com/edulinq/autograder/internal/exit"
 	"github.com/edulinq/autograder/internal/log"
-	pserver "github.com/edulinq/autograder/internal/procedures/server"
 	"github.com/edulinq/autograder/internal/util"
 )
 
@@ -36,7 +35,7 @@ type CommonCMDTestCase struct {
 func CMDServerTestingMain(suite *testing.M) {
 	server.StopServer()
 
-	port, err := pserver.GetUnusedPort()
+	port, err := getUnusedPort()
 	if err != nil {
 		log.Fatal("Failed to get an unused port.", err)
 	}

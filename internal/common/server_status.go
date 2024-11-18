@@ -26,9 +26,9 @@ const (
 )
 
 type StatusInfo struct {
-	Pid             int             `json:"pid"`
-	UnixSocketPath  string          `json:"unix-socket-path"`
-	ServerInitiator ServerInitiator `json:"server-initiator"`
+	Pid            int             `json:"pid"`
+	UnixSocketPath string          `json:"unix-socket-path"`
+	Initiator      ServerInitiator `json:"server-initiator"`
 }
 
 func GetStatusPath() string {
@@ -70,7 +70,7 @@ func WriteAndHandleStatusFile(initiator ServerInitiator) error {
 	}
 
 	if statusInfo != nil {
-		return fmt.Errorf("Failed to create the status file '%s' since another server is running.", statusPath)
+		return fmt.Errorf("Cannot start server, another server is running (pid %d).", statusInfo.Pid)
 	}
 
 	unixFileNumber, err := util.RandHex(UNIX_SOCKET_RANDNUM_SIZE_BYTES)
@@ -79,9 +79,9 @@ func WriteAndHandleStatusFile(initiator ServerInitiator) error {
 	}
 
 	statusJson := StatusInfo{
-		Pid:             pid,
-		UnixSocketPath:  filepath.Join("/", "tmp", fmt.Sprintf("autograder-%s.sock", unixFileNumber)),
-		ServerInitiator: initiator,
+		Pid:            pid,
+		UnixSocketPath: filepath.Join("/", "tmp", fmt.Sprintf("autograder-%s.sock", unixFileNumber)),
+		Initiator:      initiator,
 	}
 
 	err = util.ToJSONFile(statusJson, statusPath)

@@ -9,6 +9,11 @@ import (
 	"github.com/edulinq/autograder/internal/exit"
 )
 
+const SUCCESS_AUTH = `{
+    "success": true
+}
+`
+
 func TestMain(suite *testing.M) {
 	// Run inside a func so defers will run before exit.Exit().
 	code := func() int {
@@ -22,9 +27,10 @@ func TestMain(suite *testing.M) {
 }
 
 // This test ensures a CMD can start its own server.
-// It must remain or be replaced with an equivalent test if removed.
-// CMDs always succeed in user authentication, regardless of credentials, so only one test case is needed.
+// Since this is the only test that ensures a CMD can start its own server,
+// it must remain or be replaced with an equivalent test if removed.
 func TestUserAuthBase(test *testing.T) {
+	// CMDs always succeed in user authentication, regardless of credentials, so only one test case is needed.
 	testCase := []struct {
 		cmd.CommonCMDTestCase
 		targetEmail string
