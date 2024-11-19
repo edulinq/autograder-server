@@ -15,8 +15,8 @@ var args struct {
 	config.ConfigArgs
 	cmd.CommonOptions
 
-	Email string `help:"Email for the user." arg:"" required:""`
-	Token string `help:"Token for the user." arg:"" required:""`
+	Email  string `help:"Email for the user." arg:"" required:""`
+	Tokens string `help:"Tokens for the user." arg:"" required:""`
 }
 
 func main() {
@@ -32,7 +32,7 @@ func main() {
 	request := users.AuthRequest{
 		APIRequestUserContext: core.APIRequestUserContext{
 			UserEmail: args.Email,
-			UserPass:  util.Sha256HexFromString(args.Token),
+			UserPass:  util.Sha256HexFromString(args.Tokens),
 		},
 	}
 
