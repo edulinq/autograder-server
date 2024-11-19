@@ -11,15 +11,24 @@ import (
 	"github.com/edulinq/autograder/internal/util"
 )
 
+type ServerInitiator string
+
 const (
-	PID_SOCK_LOCK                  = "internal.common.PID_SOCK_LOCK"
+	PRIMARY_SERVER  ServerInitiator = "primary-server"
+	CMD_SERVER      ServerInitiator = "cmd-server"
+	CMD_TEST_SERVER ServerInitiator = "cmd-test-server"
+)
+
+const (
+	SERVER_STATUS_LOCK             = "internal.common.SERVER_STATUS_LOCK"
 	STATUS_FILENAME                = "status.json"
 	UNIX_SOCKET_RANDNUM_SIZE_BYTES = 32
 )
 
 type StatusInfo struct {
-	Pid            int    `json:"pid"`
-	UnixSocketPath string `json:"unix_socket_path"`
+	Pid            int             `json:"pid"`
+	UnixSocketPath string          `json:"unix-socket-path"`
+	Initiator      ServerInitiator `json:"initiator"`
 }
 
 func GetStatusPath() string {
@@ -27,8 +36,8 @@ func GetStatusPath() string {
 }
 
 func GetUnixSocketPath() (string, error) {
-	ReadLock(PID_SOCK_LOCK)
-	defer ReadUnlock(PID_SOCK_LOCK)
+	ReadLock(SERVER_STATUS_LOCK)
+	defer ReadUnlock(SERVER_STATUS_LOCK)
 
 	statusPath := GetStatusPath()
 	if !util.IsFile(statusPath) {
@@ -48,31 +57,32 @@ func GetUnixSocketPath() (string, error) {
 	return statusJson.UnixSocketPath, nil
 }
 
-func WriteAndHandleStatusFile() error {
-	Lock(PID_SOCK_LOCK)
-	Unlock(PID_SOCK_LOCK)
+func WriteAndHandleStatusFile(initiator ServerInitiator) error {
+	Lock(SERVER_STATUS_LOCK)
+	defer Unlock(SERVER_STATUS_LOCK)
 
 	statusPath := GetStatusPath()
 	pid := os.Getpid()
-	var statusJson StatusInfo
 
-	ok, err := checkAndHandleStalePid()
+	statusInfo, err := CheckAndHandleServerStatusFile()
 	if err != nil {
 		return err
 	}
 
-	if !ok {
-		return fmt.Errorf("Failed to create the status file '%s'.", statusPath)
+	if statusInfo != nil {
+		return fmt.Errorf("Cannot start server, another server is running (pid %d).", statusInfo.Pid)
 	}
-
-	statusJson.Pid = pid
 
 	unixFileNumber, err := util.RandHex(UNIX_SOCKET_RANDNUM_SIZE_BYTES)
 	if err != nil {
 		return fmt.Errorf("Failed to generate a random number for the unix socket path: '%w'.", err)
 	}
 
-	statusJson.UnixSocketPath = filepath.Join("/", "tmp", fmt.Sprintf("autograder-%s.sock", unixFileNumber))
+	statusJson := StatusInfo{
+		Pid:            pid,
+		UnixSocketPath: filepath.Join("/", "tmp", fmt.Sprintf("autograder-%s.sock", unixFileNumber)),
+		Initiator:      initiator,
+	}
 
 	err = util.ToJSONFile(statusJson, statusPath)
 	if err != nil {
@@ -82,34 +92,34 @@ func WriteAndHandleStatusFile() error {
 	return nil
 }
 
-// Returns (true, nil) if it's safe to create the status file,
-// (false, nil) if another instance of the server is running,
-// or (false, err) if there are issues reading or removing the status file.
-func checkAndHandleStalePid() (bool, error) {
+// Check the status file to determine if an active server is running.
+// When there is no error, return the status file's JSON if it exists and another server is running,
+// or nil if the status file doesn't exist.
+// Otherwise, return an error if there are issues reading or removing the status file.
+func CheckAndHandleServerStatusFile() (*StatusInfo, error) {
 	statusPath := GetStatusPath()
-
 	if !util.IsFile(statusPath) {
-		return true, nil
+		return nil, nil
 	}
 
 	var statusJson StatusInfo
 	err := util.JSONFromFile(statusPath, &statusJson)
 	if err != nil {
-		return false, fmt.Errorf("Failed to read the status file '%s': '%w'.", statusPath, err)
+		return nil, fmt.Errorf("Failed to read the status file '%s': '%w'.", statusPath, err)
 	}
 
 	if isAlive(statusJson.Pid) {
-		return false, nil
+		return &statusJson, nil
 	} else {
 		log.Warn("Removing stale status file.", log.NewAttr("path", statusPath))
 
 		err := util.RemoveDirent(statusPath)
 		if err != nil {
-			return false, fmt.Errorf("Failed to remove the status file '%s': '%w'.", statusPath, err)
+			return nil, fmt.Errorf("Failed to remove the status file '%s': '%w'.", statusPath, err)
 		}
 	}
 
-	return true, nil
+	return nil, nil
 }
 
 // Check if the pid is currently being used.

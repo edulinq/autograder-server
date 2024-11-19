@@ -10,7 +10,7 @@ import (
 
 const COURSE_CONFIG_FILENAME = "course.json"
 
-func LoadCourseFromPath(path string) (*Course, error) {
+func LoadCourseFromPath(path string, isSourceDir bool) (*Course, error) {
 	course, err := ReadCourseConfig(path)
 	if err != nil {
 		return nil, fmt.Errorf("Could not load course config at '%s': '%w'.", path, err)
@@ -24,7 +24,13 @@ func LoadCourseFromPath(path string) (*Course, error) {
 	}
 
 	for _, assignmentPath := range assignmentPaths {
-		_, err := ReadAssignmentConfig(course, assignmentPath)
+		// If we are loading from a source dir, then compute the relative path to the assignment dir.
+		assignmentRelDir := ""
+		if isSourceDir {
+			assignmentRelDir, _ = filepath.Rel(util.ShouldAbs(courseDir), filepath.Dir(util.ShouldAbs(assignmentPath)))
+		}
+
+		_, err := ReadAssignmentConfig(course, assignmentPath, assignmentRelDir)
 		if err != nil {
 			return nil, fmt.Errorf("Failed to load assignment config '%s': '%w'.", assignmentPath, err)
 		}
@@ -33,8 +39,8 @@ func LoadCourseFromPath(path string) (*Course, error) {
 	return course, nil
 }
 
-func FullLoadCourseFromPath(path string) (*Course, []*GradingResult, error) {
-	course, err := LoadCourseFromPath(path)
+func FullLoadCourseFromPath(path string, isSourceDir bool) (*Course, []*GradingResult, error) {
+	course, err := LoadCourseFromPath(path, isSourceDir)
 	if err != nil {
 		return nil, nil, err
 	}

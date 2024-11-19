@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"fmt"
-	"net"
 	"os"
 	"path/filepath"
 	"strings"
@@ -11,6 +10,7 @@ import (
 	"time"
 
 	"github.com/edulinq/autograder/internal/api/server"
+	"github.com/edulinq/autograder/internal/common"
 	"github.com/edulinq/autograder/internal/config"
 	"github.com/edulinq/autograder/internal/db"
 	"github.com/edulinq/autograder/internal/exit"
@@ -35,7 +35,7 @@ type CommonCMDTestCase struct {
 func CMDServerTestingMain(suite *testing.M) {
 	server.StopServer()
 
-	port, err := getUnusedPort()
+	port, err := util.GetUnusedPort()
 	if err != nil {
 		log.Fatal("Failed to get an unused port.", err)
 	}
@@ -54,7 +54,7 @@ func CMDServerTestingMain(suite *testing.M) {
 		go func() {
 			serverRun.Done()
 
-			err := server.RunServer()
+			err := server.RunServer(common.CMD_TEST_SERVER)
 			if err != nil {
 				log.Fatal("Failed to run the server.", err)
 			}
@@ -71,16 +71,6 @@ func CMDServerTestingMain(suite *testing.M) {
 	}()
 
 	exit.Exit(code)
-}
-
-func getUnusedPort() (int, error) {
-	listener, err := net.Listen("tcp", ":0")
-	if err != nil {
-		return 0, err
-	}
-	listener.Close()
-
-	return listener.Addr().(*net.TCPAddr).Port, nil
 }
 
 func RunCMDTest(test *testing.T, mainFunc func(), args []string, logLevel log.LogLevel) (string, string, int, error) {
@@ -124,7 +114,6 @@ func RunCMDTest(test *testing.T, mainFunc func(), args []string, logLevel log.Lo
 	stderrFile := util.MustCreateFile(stderrPath)
 	os.Stderr = stderrFile
 	log.SetTextWriter(stderrFile)
-	os.Stderr = util.MustCreateFile(stderrPath)
 
 	// Run.
 	err := runCMD(mainFunc, args)
