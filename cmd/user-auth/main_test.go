@@ -33,7 +33,7 @@ func TestUserAuthBase(test *testing.T) {
 		"course-student",
 	}
 
-	// CMDs always succeed in user authentication, regardless of credentials, so only one test needs to run.
+	// CMDs always succeed in user authentication, regardless of credentials, so only one test case needs to run.
 	cmd.RunCommonCMDTests(test, main, args, commonTestCase, "")
 }
 
