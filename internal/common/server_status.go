@@ -14,15 +14,15 @@ import (
 type ServerInitiator string
 
 const (
-	SERVER_STATUS_LOCK             = "internal.common.SERVER_STATUS_LOCK"
-	STATUS_FILENAME                = "status.json"
-	UNIX_SOCKET_RANDNUM_SIZE_BYTES = 32
-)
-
-const (
 	PRIMARY_SERVER  ServerInitiator = "primary-server"
 	CMD_SERVER      ServerInitiator = "cmd-server"
 	CMD_TEST_SERVER ServerInitiator = "cmd-test-server"
+)
+
+const (
+	SERVER_STATUS_LOCK             = "internal.common.SERVER_STATUS_LOCK"
+	STATUS_FILENAME                = "status.json"
+	UNIX_SOCKET_RANDNUM_SIZE_BYTES = 32
 )
 
 type StatusInfo struct {

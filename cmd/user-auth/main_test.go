@@ -24,25 +24,17 @@ func TestMain(suite *testing.M) {
 // Since this is the only test that ensures a CMD can start its own server,
 // it must remain or be replaced with an equivalent test if removed.
 func TestUserAuthBase(test *testing.T) {
-	// CMDs always succeed in user authentication, regardless of credentials, so only one test case is needed.
-	testCase := struct {
-		cmd.CommonCMDTestCase
-		targetEmail string
-		targetPass  string
-	}{
-		CommonCMDTestCase: cmd.CommonCMDTestCase{
-			ExpectedStdout: expected_auth_output,
-		},
-		targetEmail: "course-student@test.edulinq.org",
-		targetPass:  "course-student",
+	commonTestCase := cmd.CommonCMDTestCase{
+		ExpectedStdout: expected_auth_output,
 	}
 
 	args := []string{
-		testCase.targetEmail,
-		testCase.targetPass,
+		"course-student@test.edulinq.org",
+		"course-student",
 	}
 
-	cmd.RunCommonCMDTests(test, main, args, testCase.CommonCMDTestCase, "")
+	// CMDs always succeed in user authentication, regardless of credentials, so only one test needs to run.
+	cmd.RunCommonCMDTests(test, main, args, commonTestCase, "")
 }
 
 const expected_auth_output = `{
