@@ -1,18 +1,12 @@
 package main
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/edulinq/autograder/internal/cmd"
 	"github.com/edulinq/autograder/internal/db"
 	"github.com/edulinq/autograder/internal/exit"
 )
-
-const SUCCESS_AUTH = `{
-    "success": true
-}
-`
 
 func TestMain(suite *testing.M) {
 	// Run inside a func so defers will run before exit.Exit().
@@ -31,26 +25,27 @@ func TestMain(suite *testing.M) {
 // it must remain or be replaced with an equivalent test if removed.
 func TestUserAuthBase(test *testing.T) {
 	// CMDs always succeed in user authentication, regardless of credentials, so only one test case is needed.
-	testCase := []struct {
+	testCase := struct {
 		cmd.CommonCMDTestCase
 		targetEmail string
 		targetPass  string
 	}{
-		{
-			CommonCMDTestCase: cmd.CommonCMDTestCase{
-				ExpectedStdout: SUCCESS_AUTH,
-			},
-			targetEmail: "course-student@test.edulinq.org",
-			targetPass:  "course-student",
+		CommonCMDTestCase: cmd.CommonCMDTestCase{
+			ExpectedStdout: expected_auth_output,
 		},
+		targetEmail: "course-student@test.edulinq.org",
+		targetPass:  "course-student",
 	}
 
-	for i, testCase := range testCase {
-		args := []string{
-			testCase.targetEmail,
-			testCase.targetPass,
-		}
-
-		cmd.RunCommonCMDTests(test, main, args, testCase.CommonCMDTestCase, fmt.Sprintf("Case %d: ", i))
+	args := []string{
+		testCase.targetEmail,
+		testCase.targetPass,
 	}
+
+	cmd.RunCommonCMDTests(test, main, args, testCase.CommonCMDTestCase, "")
 }
+
+const expected_auth_output = `{
+    "success": true
+}
+`

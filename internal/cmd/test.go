@@ -35,7 +35,7 @@ type CommonCMDTestCase struct {
 func CMDServerTestingMain(suite *testing.M) {
 	server.StopServer()
 
-	port, err := getUnusedPort()
+	port, err := util.GetUnusedPort()
 	if err != nil {
 		log.Fatal("Failed to get an unused port.", err)
 	}

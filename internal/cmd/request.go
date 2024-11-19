@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"net"
 	"reflect"
-	"sync"
-	"time"
 
 	"github.com/edulinq/autograder/internal/api/core"
 	"github.com/edulinq/autograder/internal/api/server"
@@ -13,7 +11,6 @@ import (
 	"github.com/edulinq/autograder/internal/config"
 	"github.com/edulinq/autograder/internal/exit"
 	"github.com/edulinq/autograder/internal/log"
-	pserver "github.com/edulinq/autograder/internal/procedures/server"
 	"github.com/edulinq/autograder/internal/util"
 )
 
@@ -115,64 +112,4 @@ func PrintCMDResponseFull(request any, response core.APIResponse, responseType a
 		util.MustJSONFromString(util.MustToJSON(response.Content), &responseContent)
 		fmt.Println(util.MustToJSONIndent(responseContent))
 	}
-}
-
-// Check to see if a server is running and start a CMD server if it's not.
-// Returns (false, 0) if the primary server or CMD test server is already running,
-// (true, oldPort) if the CMD started its own server,
-// or log.Fatal() if another CMD server is already running.
-func mustEnsureServerIsRunning() (bool, int) {
-	statusInfo, err := common.CheckAndHandleServerStatusFile()
-	if err != nil {
-		log.Fatal("Failed to retrieve the current status file's json.", err)
-	}
-
-	if statusInfo != nil {
-		// Don't start the CMD server if the primary server or CMD test server is running.
-		if statusInfo.Initiator == common.PRIMARY_SERVER || statusInfo.Initiator == common.CMD_TEST_SERVER {
-			return false, 0
-		}
-
-		// log.Fatal() if another CMD server is running since they share the same working directory.
-		if statusInfo.Initiator == common.CMD_SERVER {
-			log.Fatal("Cannot start server, another CMD server is running.", log.NewAttr("PID", statusInfo.Pid))
-		}
-	}
-
-	port, err := getUnusedPort()
-	if err != nil {
-		log.Fatal("Failed to get an unused port.", err)
-	}
-
-	oldPort := config.WEB_PORT.Get()
-	config.WEB_PORT.Set(port)
-
-	var serverStart sync.WaitGroup
-	serverStart.Add(1)
-
-	go func() {
-		serverStart.Done()
-
-		err = pserver.Start(common.CMD_SERVER)
-		if err != nil {
-			log.Fatal("Failed to start the server.", err)
-		}
-	}()
-
-	serverStart.Wait()
-
-	// Small sleep to allow the server to start up.
-	time.Sleep(100 * time.Millisecond)
-
-	return true, oldPort
-}
-
-func getUnusedPort() (int, error) {
-	listener, err := net.Listen("tcp", ":0")
-	if err != nil {
-		return 0, err
-	}
-	listener.Close()
-
-	return listener.Addr().(*net.TCPAddr).Port, nil
 }

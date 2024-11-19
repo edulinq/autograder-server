@@ -28,7 +28,7 @@ const (
 type StatusInfo struct {
 	Pid            int             `json:"pid"`
 	UnixSocketPath string          `json:"unix-socket-path"`
-	Initiator      ServerInitiator `json:"server-initiator"`
+	Initiator      ServerInitiator `json:"initiator"`
 }
 
 func GetStatusPath() string {
@@ -59,7 +59,7 @@ func GetUnixSocketPath() (string, error) {
 
 func WriteAndHandleStatusFile(initiator ServerInitiator) error {
 	Lock(SERVER_STATUS_LOCK)
-	Unlock(SERVER_STATUS_LOCK)
+	defer Unlock(SERVER_STATUS_LOCK)
 
 	statusPath := GetStatusPath()
 	pid := os.Getpid()
@@ -92,9 +92,10 @@ func WriteAndHandleStatusFile(initiator ServerInitiator) error {
 	return nil
 }
 
-// Returns (nil, nil) if the status file doesn't exist,
-// (&statusJson, nil) if the status file exists and another instance of the server is running,
-// or (nil, err) if there are issues reading or removing the status file.
+// Check the status file to determine if an active server is running.
+// When there is no error, return the status file's JSON if it exists and another server is running,
+// or nil if the status file doesn't exist.
+// Otherwise, return an error if there are issues reading or removing the status file.
 func CheckAndHandleServerStatusFile() (*StatusInfo, error) {
 	statusPath := GetStatusPath()
 	if !util.IsFile(statusPath) {

@@ -63,3 +63,13 @@ func WriteToNetworkConnection(connection net.Conn, data []byte) error {
 
 	return nil
 }
+
+func GetUnusedPort() (int, error) {
+	listener, err := net.Listen("tcp", ":0")
+	if err != nil {
+		return 0, err
+	}
+	listener.Close()
+
+	return listener.Addr().(*net.TCPAddr).Port, nil
+}
