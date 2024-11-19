@@ -34,7 +34,6 @@ func MustHandleCMDRequestAndExitFull(endpoint string, request any, responseType 
 	// Run inside a func so defers will run before exit.Exit().
 	func() {
 		startedCMDServer, oldPort := mustEnsureServerIsRunning()
-		time.Sleep(5 * time.Second)
 		if startedCMDServer {
 			defer server.StopServer()
 			defer config.WEB_PORT.Set(oldPort)
@@ -118,10 +117,10 @@ func PrintCMDResponseFull(request any, response core.APIResponse, responseType a
 	}
 }
 
-// Check to see if a server is running and start one if it's not.
-// Returns (false, 0) if the primary server or cmd test server is already running,
-// (true, oldPort) if the cmd started it's own server,
-// or log.Fatal() if another cmd server is already running.
+// Check to see if a server is running and start a CMD server if it's not.
+// Returns (false, 0) if the primary server or CMD test server is already running,
+// (true, oldPort) if the CMD started its own server,
+// or log.Fatal() if another CMD server is already running.
 func mustEnsureServerIsRunning() (bool, int) {
 	statusInfo, err := common.CheckAndHandleServerStatusFile()
 	if err != nil {
@@ -129,14 +128,14 @@ func mustEnsureServerIsRunning() (bool, int) {
 	}
 
 	if statusInfo != nil {
-		// Don't start the server if the primary server or cmd test server is running.
+		// Don't start the CMD server if the primary server or CMD test server is running.
 		if statusInfo.Initiator == common.PRIMARY_SERVER || statusInfo.Initiator == common.CMD_TEST_SERVER {
 			return false, 0
 		}
 
-		// log.Fatal() if another cmd server is running since they share the same working directory.
+		// log.Fatal() if another CMD server is running since they share the same working directory.
 		if statusInfo.Initiator == common.CMD_SERVER {
-			log.Fatal("Cannot start server, another CMD server is running.", log.NewAttr("pid", statusInfo.Pid))
+			log.Fatal("Cannot start server, another CMD server is running.", log.NewAttr("PID", statusInfo.Pid))
 		}
 	}
 
