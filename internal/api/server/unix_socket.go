@@ -136,7 +136,7 @@ func handleUnixSocketConnection(connection net.Conn) error {
 	if err != nil {
 		return fmt.Errorf("Failed to POST an API request: '%w'.", err)
 	}
-
+	fmt.Println("LLLLL")
 	jsonResponseBytes := []byte(responseText)
 	err = util.WriteToNetworkConnection(connection, jsonResponseBytes)
 	if err != nil {

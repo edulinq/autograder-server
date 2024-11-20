@@ -72,6 +72,7 @@ func SendCMDRequest(endpoint string, request any) (core.APIResponse, error) {
 		server.ENDPOINT_KEY: endpoint,
 		server.REQUEST_KEY:  request,
 	}
+	fmt.Println("reqMap: ", util.MustToJSONIndent(requestMap))
 
 	jsonRequest := util.MustToJSONIndent(requestMap)
 	jsonBytes := []byte(jsonRequest)
