@@ -232,16 +232,17 @@ func (this *FileSpec) CopyTarget(baseDir string, destDir string, onlyContents bo
 			return this.copyPath(baseDir, destDir, onlyContents)
 		}
 
-		files, err := this.MatchFiles()
+		files, err := this.matchFiles()
 		if err != nil {
-			return fmt.Errorf("Failed to resolve glob in path '%s': %w", this.Path, err)
+			return fmt.Errorf("Failed to resolve glob in path '%s': '%w'.", this.Path, err)
 		}
 
+		// Loop over each matched file and create a temporary FileSpec to copy it to the destination.
 		for _, file := range files {
 			tempFileSpec := &FileSpec{Type: FILESPEC_TYPE_PATH, Path: file}
 			err := tempFileSpec.copyPath(baseDir, destDir, onlyContents)
 			if err != nil {
-				return fmt.Errorf("Failed to copy file '%s': %w", file, err)
+				return fmt.Errorf("Failed to copy file '%s': '%w'.", file, err)
 			}
 		}
 
@@ -255,14 +256,14 @@ func (this *FileSpec) CopyTarget(baseDir string, destDir string, onlyContents bo
 	}
 }
 
-func (this *FileSpec) MatchFiles() ([]string, error) {
+func (this *FileSpec) matchFiles() ([]string, error) {
 	if !this.IsPath() {
-		return nil, fmt.Errorf("Cannot match files since this isn't a path.")
+		return nil, fmt.Errorf("Cannot match files: FileSpec must be a path.")
 	}
 
 	files, err := filepath.Glob(this.Path)
 	if err != nil {
-		return nil, fmt.Errorf("Failed to resolve glob pattern '%s': %w", this.Path, err)
+		return nil, fmt.Errorf("Failed to resolve glob pattern '%s': '%w'.", this.Path, err)
 	}
 
 	if len(files) == 0 {
@@ -273,7 +274,7 @@ func (this *FileSpec) MatchFiles() ([]string, error) {
 }
 
 func hasGlobPattern(path string) bool {
-	globRegex := regexp.MustCompile(`[*?\[\]]`)
+	globRegex := regexp.MustCompile(`[*?\\\[\]]`)
 	return globRegex.MatchString(path)
 }
 
