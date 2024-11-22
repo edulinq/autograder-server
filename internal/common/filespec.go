@@ -49,11 +49,9 @@ func (this *FileSpec) Validate() error {
 			return fmt.Errorf("A path FileSpec cannot have an empty path.")
 		}
 
-		if hasGlobPattern(this.Path) {
-			_, err := filepath.Glob(this.Path)
-			if err != nil {
-				return fmt.Errorf("Invalid glob pattern '%s': '%w'.", this.Path, err)
-			}
+		_, err := filepath.Glob(this.Path)
+		if err != nil {
+			return fmt.Errorf("Invalid glob pattern '%s': '%w'.", this.Path, err)
 		}
 	case FILESPEC_TYPE_GIT:
 		if this.Path == "" {

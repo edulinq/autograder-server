@@ -147,11 +147,6 @@ func getCopyTestCases() []*testCaseCopy {
 			"720b5768bf364f35c316976e549f1bcd",
 		},
 		&testCaseCopy{
-			FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", "filespec_test"), Dest: "test"},
-			true,
-			"720b5768bf364f35c316976e549f1bcd",
-		},
-		&testCaseCopy{
 			FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", "filespec_test", `?pec.txt`), Dest: "dest"},
 			false,
 			"4b6070442f731cb7a83b18e0145c6be1",
