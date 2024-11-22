@@ -10,6 +10,7 @@ import (
 	"net/url"
 	"path"
 	"path/filepath"
+	"regexp"
 	"strings"
 
 	"github.com/edulinq/autograder/internal/util"
@@ -46,6 +47,13 @@ func (this *FileSpec) Validate() error {
 	case FILESPEC_TYPE_PATH:
 		if this.Path == "" {
 			return fmt.Errorf("A path FileSpec cannot have an empty path.")
+		}
+
+		if hasGlobPattern(this.Path) {
+			_, err := filepath.Glob(this.Path)
+			if err != nil {
+				return fmt.Errorf("Invalid glob pattern '%s': '%w'.", this.Path, err)
+			}
 		}
 	case FILESPEC_TYPE_GIT:
 		if this.Path == "" {
@@ -209,6 +217,7 @@ func (this *FileSpec) GetPath() string {
 // Copy the target of this FileSpec in the specified location.
 // If the FileSpec has a dest, then that will be the name of the resultant dirent within destDir.
 // If the filespec is a path, then copy a dirent.
+// If the path includes a glob pattern, copy all matching dirents.
 // If the filespec is a git repo, then ensure it is cloned/updated.
 // Empty and Nil FileSpecs are no-ops.
 // |onlyContents| applies to paths that are dirs and insists that only the contents of dir
@@ -219,7 +228,24 @@ func (this *FileSpec) CopyTarget(baseDir string, destDir string, onlyContents bo
 		// no-op.
 		return nil
 	case FILESPEC_TYPE_PATH:
-		return this.copyPath(baseDir, destDir, onlyContents)
+		if !hasGlobPattern(this.Path) {
+			return this.copyPath(baseDir, destDir, onlyContents)
+		}
+
+		files, err := this.MatchFiles()
+		if err != nil {
+			return fmt.Errorf("Failed to resolve glob in path '%s': %w", this.Path, err)
+		}
+
+		for _, file := range files {
+			tempFileSpec := &FileSpec{Type: FILESPEC_TYPE_PATH, Path: file}
+			err := tempFileSpec.copyPath(baseDir, destDir, onlyContents)
+			if err != nil {
+				return fmt.Errorf("Failed to copy file '%s': %w", file, err)
+			}
+		}
+
+		return nil
 	case FILESPEC_TYPE_GIT:
 		return this.copyGit(destDir)
 	case FILESPEC_TYPE_URL:
@@ -227,6 +253,28 @@ func (this *FileSpec) CopyTarget(baseDir string, destDir string, onlyContents bo
 	default:
 		return fmt.Errorf("Unknown filespec type: '%s'.", this.Type)
 	}
+}
+
+func (this *FileSpec) MatchFiles() ([]string, error) {
+	if !this.IsPath() {
+		return nil, fmt.Errorf("Cannot match files since this isn't a path.")
+	}
+
+	files, err := filepath.Glob(this.Path)
+	if err != nil {
+		return nil, fmt.Errorf("Failed to resolve glob pattern '%s': %w", this.Path, err)
+	}
+
+	if len(files) == 0 {
+		return nil, fmt.Errorf("No files matched the pattern '%s'.", this.Path)
+	}
+
+	return files, nil
+}
+
+func hasGlobPattern(path string) bool {
+	globRegex := regexp.MustCompile(`[*?\[\]]`)
+	return globRegex.MatchString(path)
 }
 
 func (this *FileSpec) copyPath(baseDir string, destDir string, onlyContents bool) error {

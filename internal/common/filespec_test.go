@@ -146,6 +146,21 @@ func getCopyTestCases() []*testCaseCopy {
 			true,
 			"720b5768bf364f35c316976e549f1bcd",
 		},
+		&testCaseCopy{
+			FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", "filespec_test"), Dest: "test"},
+			true,
+			"720b5768bf364f35c316976e549f1bcd",
+		},
+		&testCaseCopy{
+			FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", "filespec_test", "*.txt"), Dest: "dest"},
+			false,
+			"4b6070442f731cb7a83b18e0145c6be1",
+		},
+		&testCaseCopy{
+			FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", "*_test"), Dest: "dest"},
+			true,
+			"4b6070442f731cb7a83b18e0145c6be1",
+		},
 	}
 }
 
@@ -196,6 +211,12 @@ var testCasesParseValidation []*testCaseParseValidation = []*testCaseParseValida
 		true, true,
 		FileSpec{Type: FILESPEC_TYPE_PATH, Path: "some/path", Dest: "dirname"},
 		`{"type":"path","path":"some/path","dest":"dirname"}`,
+	},
+	&testCaseParseValidation{
+		`{"type": "path", "path": "some/path/*.txt"}`,
+		true, true,
+		FileSpec{Type: FILESPEC_TYPE_PATH, Path: "some/path/*.txt"},
+		`{"type":"path","path":"some/path/*.txt"}`,
 	},
 
 	// Git.
@@ -261,6 +282,13 @@ var testCasesParseValidation []*testCaseParseValidation = []*testCaseParseValida
 
 	&testCaseParseValidation{
 		`{"type": "nil", "path": "some/path"}`,
+		true, false,
+		FileSpec{},
+		"",
+	},
+
+	&testCaseParseValidation{
+		`{"type": "path", "path": "some/[path"}`,
 		true, false,
 		FileSpec{},
 		"",
