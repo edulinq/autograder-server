@@ -248,7 +248,7 @@ func CleanupAPIrequest(apiRequest ValidAPIRequest) error {
 func validateRequestStruct(request any, endpoint string) (bool, *APIError) {
 	// Check all the fields (including embedded ones) for structures that we recognize as requests.
 	foundRequestStruct := false
-	fmt.Println("Here!")
+
 	reflectValue := reflect.ValueOf(request).Elem()
 	if reflectValue.Kind() != reflect.Struct {
 		return false, NewBareInternalError("-031", endpoint, "Request's type must be a struct.").

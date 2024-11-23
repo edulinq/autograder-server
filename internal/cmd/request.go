@@ -72,7 +72,6 @@ func SendCMDRequest(endpoint string, request any) (core.APIResponse, error) {
 		server.ENDPOINT_KEY: endpoint,
 		server.REQUEST_KEY:  request,
 	}
-	fmt.Println("reqMap: ", util.MustToJSONIndent(requestMap))
 
 	jsonRequest := util.MustToJSONIndent(requestMap)
 	jsonBytes := []byte(jsonRequest)
@@ -108,6 +107,8 @@ func PrintCMDResponseFull(request any, response core.APIResponse, responseType a
 
 	if customPrintFunc != nil {
 		fmt.Println(customPrintFunc(response))
+	} else if responseType == "" {
+		fmt.Println(util.MustToJSONIndent(response.Content))
 	} else {
 		responseContent := reflect.New(reflect.TypeOf(responseType)).Interface()
 		util.MustJSONFromString(util.MustToJSON(response.Content), &responseContent)
