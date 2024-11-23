@@ -6,7 +6,6 @@ import (
 	"github.com/edulinq/autograder/internal/api/core"
 	courseUser "github.com/edulinq/autograder/internal/api/courses/users"
 	"github.com/edulinq/autograder/internal/api/users"
-
 	"github.com/edulinq/autograder/internal/util"
 )
 

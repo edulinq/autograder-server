@@ -2,10 +2,10 @@ package main
 
 import (
 	"fmt"
-
 	"strings"
 
 	"github.com/alecthomas/kong"
+
 	"github.com/edulinq/autograder/internal/api"
 	"github.com/edulinq/autograder/internal/api/core"
 	"github.com/edulinq/autograder/internal/cmd"
@@ -19,14 +19,14 @@ var args struct {
 	config.ConfigArgs
 	cmd.CommonOptions
 
-	Endpoint   string   `help:"Endpoint of the desired action." arg:""`
-	Parameters []string `help:"Parameters for the endpoint" arg:"" optional:""`
+	Endpoint   string   `help:"Endpoint of the desired API." arg:""`
+	Parameters []string `help:"Parameter(s) for the endpoint" arg:"" optional:""`
 	Table      bool     `help:"Output data as a TSV." default:"false"`
 }
 
 func main() {
 	kong.Parse(&args,
-		kong.Description("Perform an action with the desired endpoint."),
+		kong.Description("Execute an API request to the specified endpoint."),
 	)
 
 	err := config.HandleConfigArgs(args.ConfigArgs)
@@ -42,7 +42,6 @@ func main() {
 			description = requestResponse
 			break
 		}
-
 	}
 
 	if description == (core.EndpointDescription{}) {
@@ -70,9 +69,10 @@ func main() {
 	request := map[string]any{}
 
 	for _, arg := range args.Parameters {
+		// Split the parameter into it's key and value.
 		parts := strings.SplitN(arg, ":", 2)
-		if len(parts) < 2 {
-			log.Fatal("No colon provided.")
+		if len(parts) == 1 {
+			log.Fatal("No colon provided in the parameter.", log.NewAttr("parameter", parts))
 		}
 
 		request[parts[0]] = parts[1]
