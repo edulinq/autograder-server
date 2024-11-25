@@ -13,7 +13,6 @@ func TestMain(suite *testing.M) {
 }
 
 // Test to ensure an API endpoint that requires parameters works correctly.
-// Since all CMDs use the same infrastructure, only one endpoint needs to be tested.
 func TestApiEndpointBase(test *testing.T) {
 	testCases := []struct {
 		cmd.CommonCMDTestCase
@@ -21,25 +20,28 @@ func TestApiEndpointBase(test *testing.T) {
 		targetEmail  string
 		courseID     string
 		assignmentID string
+		submissionID string
 	}{
 		{
 			CommonCMDTestCase: cmd.CommonCMDTestCase{
-				ExpectedStdout: SUBMISSION_1697406272,
+				ExpectedStdout: SUBMISSION_1697406256,
 			},
 			endpoint:     "courses/assignments/submissions/fetch/user/peek",
 			targetEmail:  "target-email:course-student@test.edulinq.org",
 			courseID:     "course-id:course101",
 			assignmentID: "assignment-id:hw0",
+			submissionID: "target-submission:1697406256",
 		},
 		{
 			CommonCMDTestCase: cmd.CommonCMDTestCase{
-				ExpectedStderrSubstring: `Failed to find the endpoint.`,
-				ExpectedExitCode:        1,
+				ExpectedStdout:   `Failed to find the endpoint 'ZZZ'.`,
+				ExpectedExitCode: 1,
 			},
 			endpoint:     "ZZZ",
 			targetEmail:  "target-email:course-student@test.edulinq.org",
 			courseID:     "course-id:course101",
 			assignmentID: "assignment-id:hw0",
+			submissionID: "target-submission:1697406256",
 		},
 		{
 			CommonCMDTestCase: cmd.CommonCMDTestCase{
@@ -50,6 +52,7 @@ func TestApiEndpointBase(test *testing.T) {
 			targetEmail:  "target-email:course-student@test.edulinq.org",
 			courseID:     "ZZZ:course101",
 			assignmentID: "assignment-id:hw0",
+			submissionID: "target-submission:1697406256",
 		},
 	}
 
@@ -59,6 +62,7 @@ func TestApiEndpointBase(test *testing.T) {
 			testCase.targetEmail,
 			testCase.courseID,
 			testCase.assignmentID,
+			testCase.submissionID,
 		}
 
 		cmd.RunCommonCMDTests(test, main, args, testCase.CommonCMDTestCase, fmt.Sprintf("Case %d: ", i))

@@ -107,7 +107,7 @@ func PrintCMDResponseFull(request any, response core.APIResponse, responseType a
 
 	if customPrintFunc != nil {
 		fmt.Println(customPrintFunc(response))
-	} else if responseType == "" {
+	} else if responseType == nil {
 		fmt.Println(util.MustToJSONIndent(response.Content))
 	} else {
 		responseContent := reflect.New(reflect.TypeOf(responseType)).Interface()
