@@ -13,7 +13,7 @@ func TestMain(suite *testing.M) {
 }
 
 // Test to ensure an API endpoint that requires parameters works correctly.
-func TestApiEndpointBase(test *testing.T) {
+func TestCallApiEndpointBase(test *testing.T) {
 	testCases := []struct {
 		cmd.CommonCMDTestCase
 		endpoint     string
@@ -34,8 +34,8 @@ func TestApiEndpointBase(test *testing.T) {
 		},
 		{
 			CommonCMDTestCase: cmd.CommonCMDTestCase{
-				ExpectedStdout:   `Failed to find the endpoint 'ZZZ'.`,
-				ExpectedExitCode: 1,
+				ExpectedStderrSubstring: `Failed to find the endpoint. | {"endpoint":"ZZZ"}`,
+				ExpectedExitCode:        1,
 			},
 			endpoint:     "ZZZ",
 			targetEmail:  "target-email:course-student@test.edulinq.org",

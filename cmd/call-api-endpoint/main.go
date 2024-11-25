@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/alecthomas/kong"
@@ -10,7 +9,6 @@ import (
 	"github.com/edulinq/autograder/internal/api/core"
 	"github.com/edulinq/autograder/internal/cmd"
 	"github.com/edulinq/autograder/internal/config"
-	"github.com/edulinq/autograder/internal/exit"
 	"github.com/edulinq/autograder/internal/log"
 )
 
@@ -43,10 +41,9 @@ func main() {
 	}
 
 	if description == nil {
-		fmt.Printf("Failed to find the endpoint '%s'.", args.Endpoint)
+		log.Fatal("Failed to find the endpoint.", log.NewAttr("endpoint", args.Endpoint))
 
-		exit.Exit(1)
-		// Return after the exit code gets set to 1 to avoid continuing on during tests.
+		// Return after log.Fatal() sets the exit code to 1 to avoid proceeding during tests.
 		return
 	}
 
