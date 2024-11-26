@@ -767,7 +767,7 @@ Submission limits are not enforced for course graders.
 ## File Specification (FileSpec)
 
 A file specification (FileSpec) defines how to access a specific file (or dir).
-At its easiest, it is just the path to a file, but can also specify things like a URL or Git repository.
+At its easiest, it is just the path to a file, but can also specify things like a URL, a Git repository, or a glob pattern for matching multiple files or directories.
 FileSpecs are used for things like specifying the canonical source for a course or the files that an assignment grader requires.
 
 All types of FileSpecs share some common fields:
@@ -782,7 +782,7 @@ All types of FileSpecs share some common fields:
 
 ### FileSpec -- Path
 
-A FileSpec with `type` equal to `path` points to an absolute or relative path accessible from the current machine.
+A FileSpec with `type` equal to `path` points to an absolute or relative path accessible from the current machine. The absolute or relative path may also include a glob pattern to target multiple files or directories.
 When a relative path is specified, additional context is required to know the relative base.
 For example, a FileSpec in an assignment config is relative to the assignment directory (the directory where the `assignment.json` file lives).
 
