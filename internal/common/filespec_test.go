@@ -147,18 +147,63 @@ func getCopyTestCases() []*testCaseCopy {
 			"720b5768bf364f35c316976e549f1bcd",
 		},
 		&testCaseCopy{
-			FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", "filespec_test", `?pec.txt`), Dest: "dest"},
-			false,
-			"4b6070442f731cb7a83b18e0145c6be1",
-		},
-		&testCaseCopy{
-			FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", "filespec_test", `[a-z]pec.txt`), Dest: "dest"},
-			false,
-			"4b6070442f731cb7a83b18e0145c6be1",
-		},
-		&testCaseCopy{
 			FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", "*_test"), Dest: "dest"},
 			true,
+			"506f7be9ae56400c4d8a62def99cd182",
+		},
+		&testCaseCopy{
+			FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", "f*_test"), Dest: "dest"},
+			true,
+			"4b6070442f731cb7a83b18e0145c6be1",
+		},
+		&testCaseCopy{
+			FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", `\**_test`), Dest: "dest"},
+			true,
+			"9e81ecbf503be179a3b0ac3549ac52e7",
+		},
+		&testCaseCopy{
+			FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", "filespec_test", "*.txt"), Dest: "dest"},
+			false,
+			"4b6070442f731cb7a83b18e0145c6be1",
+		},
+		&testCaseCopy{
+			FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", "f*_test", "*.txt"), Dest: "dest"},
+			false,
+			"4b6070442f731cb7a83b18e0145c6be1",
+		},
+		&testCaseCopy{
+			FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", `\*filespec_test`, `\*spec.txt`), Dest: "dest"},
+			false,
+			"9e81ecbf503be179a3b0ac3549ac52e7",
+		},
+		&testCaseCopy{
+			FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", "file????_test"), Dest: "dest"},
+			true,
+			"4b6070442f731cb7a83b18e0145c6be1",
+		},
+		&testCaseCopy{
+			FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", "filespec_test", "????.txt"), Dest: "dest"},
+			false,
+			"4b6070442f731cb7a83b18e0145c6be1",
+		},
+		&testCaseCopy{
+			FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", "file????_test", "????.txt"), Dest: "dest"},
+			false,
+			"4b6070442f731cb7a83b18e0145c6be1",
+		},
+		&testCaseCopy{
+			FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", "filespe[b-d]_test"), Dest: "dest"},
+			true,
+			"4b6070442f731cb7a83b18e0145c6be1",
+		},
+		&testCaseCopy{
+			FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", "filespec_test", "[r-t]pec.txt"), Dest: "dest"},
+			false,
+			"4b6070442f731cb7a83b18e0145c6be1",
+		},
+		&testCaseCopy{
+			FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", "filespe[b-d]_test", "[r-t]pec.txt"), Dest: "dest"},
+			false,
 			"4b6070442f731cb7a83b18e0145c6be1",
 		},
 	}

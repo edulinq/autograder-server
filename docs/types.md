@@ -767,7 +767,7 @@ Submission limits are not enforced for course graders.
 ## File Specification (FileSpec)
 
 A file specification (FileSpec) defines how to access a specific file (or dir).
-At it easiest it is just the path to a file, but can also specify things like a URL or Git repository.
+At its easiest, it is just the path to a file, but can also specify things like a URL or Git repository.
 FileSpecs are used for things like specifying the canonical source for a course or the files that an assignment grader requires.
 
 All types of FileSpecs share some common fields:
