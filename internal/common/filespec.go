@@ -228,7 +228,7 @@ func (this *FileSpec) CopyTarget(baseDir string, destDir string, onlyContents bo
 			return copyPath(this.Path, this.Dest, baseDir, destDir, onlyContents)
 		}
 
-		files, err := this.matchFiles()
+		files, err := this.matchTargets()
 		if err != nil {
 			return fmt.Errorf("Failed to resolve glob in path '%s': '%w'.", this.Path, err)
 		}
@@ -251,14 +251,14 @@ func (this *FileSpec) CopyTarget(baseDir string, destDir string, onlyContents bo
 	}
 }
 
-func (this *FileSpec) matchFiles() ([]string, error) {
+func (this *FileSpec) matchTargets() ([]string, error) {
 	if !this.IsPath() {
-		return nil, fmt.Errorf("Cannot match files: FileSpec must be a path.")
+		return nil, fmt.Errorf("Cannot match targets: FileSpec must be a path.")
 	}
 
 	files, err := filepath.Glob(this.Path)
 	if err != nil {
-		return nil, fmt.Errorf("Failed to resolve glob pattern '%s': '%w'.", this.Path, err)
+		return nil, fmt.Errorf("Failed to resolve the path pattern '%s': '%w'.", this.Path, err)
 	}
 
 	if len(files) == 0 {
