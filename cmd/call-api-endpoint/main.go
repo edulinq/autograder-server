@@ -17,7 +17,7 @@ var args struct {
 	cmd.CommonOptions
 
 	Endpoint   string   `help:"Endpoint of the desired API." arg:""`
-	Parameters []string `help:"Parameter for the endpoint in the format key:value, with exactly one colon separating the key and value." arg:"" optional:""`
+	Parameters []string `help:"Parameter for the endpoint in the format 'key:value', where the first colon separates the key and value (e.g., 'target-email:bob@test.edulinq.org'). Additional colons are allowed in the value." arg:"" optional:""`
 }
 
 func main() {
