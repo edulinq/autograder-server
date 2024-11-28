@@ -2,6 +2,8 @@ package common
 
 import (
 	"path/filepath"
+	"reflect"
+	"strings"
 	"testing"
 
 	"github.com/edulinq/autograder/internal/config"
@@ -65,9 +67,9 @@ func TestFileSpecParseValidation(test *testing.T) {
 }
 
 type testCaseCopy struct {
-	Spec         FileSpec
-	OnlyContents bool
-	ResultMD5    string
+	Spec                  FileSpec
+	OnlyContents          bool
+	ExpectedCopiedDirents []string
 }
 
 func TestFileSpecCopy(test *testing.T) {
@@ -93,21 +95,23 @@ func TestFileSpecCopy(test *testing.T) {
 			continue
 		}
 
-		zipPath := filepath.Join(tempDir, "contents.zip")
-		err = util.Zip(destDir, zipPath, true)
+		dirents, err := util.GetAllDirents(destDir)
 		if err != nil {
-			test.Errorf("Case %d: Failed to create zip file: '%v'.", i, err)
+			test.Errorf("Case %d: Failed to get all dirents: '%v'.", i, err)
 			continue
 		}
 
-		md5, err := util.MD5FileHex(zipPath)
-		if err != nil {
-			test.Errorf("Case %d: Failed to get zip's MD5 hash: '%v'.", i, err)
-			continue
+		copiedDirents := []string{}
+		for _, dirent := range dirents {
+			parts := strings.SplitN(dirent, "dest/", 2)
+			if len(parts) != 2 {
+				test.Errorf("Case %d: Failed to split the dirent '%v'.", i, parts)
+			}
+			copiedDirents = append(copiedDirents, parts[1])
 		}
 
-		if testCase.ResultMD5 != md5 {
-			test.Errorf("Case %d: MD5 mismatch. Expected: '%s', Actual: '%s'.", i, testCase.ResultMD5, md5)
+		if !reflect.DeepEqual(testCase.ExpectedCopiedDirents, copiedDirents) {
+			test.Errorf("Case %d: Unexpected contents copied. Expected: '%v', Actual: '%v'.", i, testCase.ExpectedCopiedDirents, copiedDirents)
 			continue
 		}
 	}
@@ -119,107 +123,107 @@ func getCopyTestCases() []*testCaseCopy {
 		&testCaseCopy{
 			FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", "filespec_test", "spec.txt")},
 			false,
-			"4b6070442f731cb7a83b18e0145c6be1",
+			[]string{"spec.txt"},
 		},
 		&testCaseCopy{
 			FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", "filespec_test")},
 			false,
-			"7bf405075ec83eec2c44ac44ce3385c2",
+			[]string{"filespec_test", "filespec_test/spec.txt"},
 		},
 		&testCaseCopy{
 			FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", "filespec_test")},
 			true,
-			"4b6070442f731cb7a83b18e0145c6be1",
+			[]string{"spec.txt"},
 		},
 		&testCaseCopy{
 			FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", "filespec_test", "spec.txt"), Dest: "test.txt"},
 			false,
-			"6911edb915da8cd1fdf1e4b1483d604e",
+			[]string{"test.txt"},
 		},
 		&testCaseCopy{
 			FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", "filespec_test"), Dest: "test"},
 			false,
-			"720b5768bf364f35c316976e549f1bcd",
+			[]string{"test", "test/spec.txt"},
 		},
 		&testCaseCopy{
 			FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", "filespec_test"), Dest: "test"},
 			true,
-			"720b5768bf364f35c316976e549f1bcd",
+			[]string{"test", "test/spec.txt"},
 		},
 		&testCaseCopy{
-			FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", "*_test"), Dest: "dest"},
+			FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", "*_test"), Dest: "test"},
 			true,
-			"87efd29f124f9a5b617517041d4d9b32",
+			[]string{"test", "test/*globSpec.txt", "test/spec.txt"},
 		},
 		&testCaseCopy{
 			FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", "f*_test"), Dest: "test"},
 			true,
-			"720b5768bf364f35c316976e549f1bcd",
+			[]string{"test", "test/spec.txt"},
 		},
 		&testCaseCopy{
 			FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", `\**_test`), Dest: "test"},
 			true,
-			"ee4f6d28452c12ea26e1b4475f8ccf8f",
+			[]string{"test", "test/*globSpec.txt"},
 		},
 		&testCaseCopy{
 			FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", "filespec_test", "*"), Dest: "test.txt"},
 			false,
-			"6911edb915da8cd1fdf1e4b1483d604e",
+			[]string{"test.txt"},
 		},
 		&testCaseCopy{
 			FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", "f*_test", "*.txt"), Dest: "test.txt"},
 			false,
-			"6911edb915da8cd1fdf1e4b1483d604e",
+			[]string{"test.txt"},
 		},
 		&testCaseCopy{
-			FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", `\*filespec_test`, `\*spec.txt`), Dest: `\*test.txt`},
+			FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", `\*globFileSpec_test`, `\*globSpec.txt`), Dest: `\*test.txt`},
 			false,
-			"8be702c1910f31ca73c3fd24519005f7",
+			[]string{`\*test.txt`},
 		},
 		&testCaseCopy{
 			FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", "file????_test"), Dest: "test"},
 			true,
-			"720b5768bf364f35c316976e549f1bcd",
+			[]string{"test", "test/spec.txt"},
 		},
 		&testCaseCopy{
 			FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", "filespec_test", "????.txt"), Dest: "test.txt"},
 			false,
-			"6911edb915da8cd1fdf1e4b1483d604e",
+			[]string{"test.txt"},
 		},
 		&testCaseCopy{
 			FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", "file????_test", "????.txt"), Dest: "test.txt"},
 			false,
-			"6911edb915da8cd1fdf1e4b1483d604e",
+			[]string{"test.txt"},
 		},
 		&testCaseCopy{
 			FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", "filespe[b-d]_test"), Dest: "test"},
 			true,
-			"720b5768bf364f35c316976e549f1bcd",
+			[]string{"test", "test/spec.txt"},
 		},
 		&testCaseCopy{
 			FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", "filespe[^d-z]_test"), Dest: "test"},
 			true,
-			"720b5768bf364f35c316976e549f1bcd",
+			[]string{"test", "test/spec.txt"},
 		},
 		&testCaseCopy{
 			FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", "filespec_test", "[r-t]pec.txt"), Dest: "test.txt"},
 			false,
-			"6911edb915da8cd1fdf1e4b1483d604e",
+			[]string{"test.txt"},
 		},
 		&testCaseCopy{
 			FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", "filespec_test", "[^a-r^t-v]pec.txt"), Dest: "test.txt"},
 			false,
-			"6911edb915da8cd1fdf1e4b1483d604e",
+			[]string{"test.txt"},
 		},
 		&testCaseCopy{
 			FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", "filespe[b-d]_test", "[r-t]pec.txt"), Dest: "test.txt"},
 			false,
-			"6911edb915da8cd1fdf1e4b1483d604e",
+			[]string{"test.txt"},
 		},
 		&testCaseCopy{
 			FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", "filespe[^d-z]_test", "[^a-r]pec.txt"), Dest: "test.txt"},
 			false,
-			"6911edb915da8cd1fdf1e4b1483d604e",
+			[]string{"test.txt"},
 		},
 	}
 }

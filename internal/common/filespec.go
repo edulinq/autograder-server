@@ -213,24 +213,21 @@ func (this *FileSpec) GetPath() string {
 
 // Copy the target of this FileSpec in the specified location.
 // If the FileSpec has a dest, then that will be the name of the resultant dirent within destDir.
-// If the filespec is a path, then copy a single dirent or all matching dirents if a glob pattern was used.
+// If the filespec is a path, then copy all matching dirents.
 // If the filespec is a git repo, then ensure it is cloned/updated.
 // Empty and Nil FileSpecs are no-ops.
 // |onlyContents| applies to paths that are dirs and insists that only the contents of dir
 // and not the base dir itself is copied.
+// |baseDir| provides the relative base.
 func (this *FileSpec) CopyTarget(baseDir string, destDir string, onlyContents bool) error {
 	switch this.Type {
 	case FILESPEC_TYPE_EMPTY, FILESPEC_TYPE_NIL:
 		// no-op.
 		return nil
 	case FILESPEC_TYPE_PATH:
-		if !strings.ContainsAny(this.Path, `[]\*^?`) {
-			return copyPath(this.Path, this.Dest, baseDir, destDir, onlyContents)
-		}
-
-		files, err := this.matchTargets()
+		files, err := this.matchTargets(baseDir)
 		if err != nil {
-			return fmt.Errorf("Failed to resolve glob in path '%s': '%w'.", this.Path, err)
+			return fmt.Errorf("Failed to match target(s) for path '%s': '%w'.", this.Path, err)
 		}
 
 		// Loop over each matched file and copy it to the destination.
@@ -251,18 +248,23 @@ func (this *FileSpec) CopyTarget(baseDir string, destDir string, onlyContents bo
 	}
 }
 
-func (this *FileSpec) matchTargets() ([]string, error) {
+func (this *FileSpec) matchTargets(baseDir string) ([]string, error) {
 	if !this.IsPath() {
 		return nil, fmt.Errorf("Cannot match targets: FileSpec must be a path.")
 	}
 
-	files, err := filepath.Glob(this.Path)
+	sourcePath := this.Path
+	if !filepath.IsAbs(sourcePath) && (baseDir != "") {
+		sourcePath = filepath.Join(baseDir, this.Path)
+	}
+
+	files, err := filepath.Glob(sourcePath)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to resolve the path pattern '%s': '%w'.", this.Path, err)
 	}
 
 	if len(files) == 0 {
-		return nil, fmt.Errorf("No files matched the pattern '%s'.", this.Path)
+		return nil, fmt.Errorf("No targets found for the path '%s'.", this.Path)
 	}
 
 	return files, nil

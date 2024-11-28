@@ -1,6 +1,6 @@
 {
     "id": "java",
-    "display-name": "A Simple Java Assignment",
+    "name": "A Simple Java Assignment",
     "static-files": [
         "grader.sh",
         "Grader.java"
