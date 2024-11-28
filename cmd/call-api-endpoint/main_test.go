@@ -18,7 +18,7 @@ func TestCallApiEndpointBase(test *testing.T) {
 		endpoint   string
 		parameters []string
 	}{
-		// Errors
+		// Errors.
 		{
 			CommonCMDTestCase: cmd.CommonCMDTestCase{
 				ExpectedStderrSubstring: `Failed to find the endpoint. | {"endpoint":"ZZZ"}`,

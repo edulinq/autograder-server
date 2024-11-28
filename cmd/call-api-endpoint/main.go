@@ -22,7 +22,7 @@ var args struct {
 
 func main() {
 	kong.Parse(&args,
-		kong.Description("Execute an API request to the specified endpoint. For more information on available API endpoints, see the API resource file at: resources/api.json"),
+		kong.Description("Execute an API request to the specified endpoint. For more information on available API endpoints, see the API resource file at: 'resources/api.json'."),
 	)
 
 	err := config.HandleConfigArgs(args.ConfigArgs)
