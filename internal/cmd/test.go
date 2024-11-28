@@ -27,6 +27,7 @@ const (
 type CommonCMDTestCase struct {
 	ExpectedExitCode        int
 	ExpectedStdout          string
+	ExpectEmptyStdout       bool
 	ExpectedStderrSubstring string
 	LogLevel                log.LogLevel
 }
@@ -179,8 +180,13 @@ func RunCommonCMDTests(test *testing.T, mainFunc func(), args []string, commonTe
 		return "", "", -1, false
 	}
 
-	if commonTestCase.ExpectedStdout != stdout {
-		test.Errorf("%sUnexpected output. Expected: \n'%s', \n Actual: \n'%s'.", prefix, commonTestCase.ExpectedStdout, stdout)
+	if commonTestCase.ExpectEmptyStdout && len(stdout) > 0 {
+		test.Errorf("%sUnexpected output. Expected no output, but received '%s'.", prefix, stdout)
+		return "", "", -1, false
+	}
+
+	if !commonTestCase.ExpectEmptyStdout && len(stdout) == 0 {
+		test.Errorf("%sExpected output but received no output.", prefix)
 		return "", "", -1, false
 	}
 

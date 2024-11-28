@@ -67,6 +67,7 @@ func TestPeekBase(test *testing.T) {
 			CommonCMDTestCase: cmd.CommonCMDTestCase{
 				ExpectedExitCode:        1,
 				ExpectedStderrSubstring: `Could not find course: 'ZZZ'.`,
+				ExpectEmptyStdout:       true,
 			},
 			targetEmail:  "course-student@test.edulinq.org",
 			courseID:     "ZZZ",
@@ -76,6 +77,7 @@ func TestPeekBase(test *testing.T) {
 			CommonCMDTestCase: cmd.CommonCMDTestCase{
 				ExpectedExitCode:        1,
 				ExpectedStderrSubstring: `Could not find assignment: 'zzz'.`,
+				ExpectEmptyStdout:       true,
 			},
 			targetEmail:  "course-student@test.edulinq.org",
 			courseID:     "course101",

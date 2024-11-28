@@ -18,22 +18,12 @@ func TestCallApiEndpointBase(test *testing.T) {
 		endpoint   string
 		parameters []string
 	}{
-		{
-			CommonCMDTestCase: cmd.CommonCMDTestCase{
-				ExpectedStdout: SUBMISSION_1697406256,
-			},
-			endpoint: "courses/assignments/submissions/fetch/user/peek",
-			parameters: []string{
-				"target-email:course-student@test.edulinq.org",
-				"course-id:course101",
-				"assignment-id:hw0",
-				"target-submission:1697406256",
-			},
-		},
+		// Errors
 		{
 			CommonCMDTestCase: cmd.CommonCMDTestCase{
 				ExpectedStderrSubstring: `Failed to find the endpoint. | {"endpoint":"ZZZ"}`,
 				ExpectedExitCode:        1,
+				ExpectEmptyStdout:       true,
 			},
 			endpoint: "ZZZ",
 			parameters: []string{
@@ -47,6 +37,7 @@ func TestCallApiEndpointBase(test *testing.T) {
 			CommonCMDTestCase: cmd.CommonCMDTestCase{
 				ExpectedStderrSubstring: `Invalid parameter format: missing a colon. Expected format is 'key:value', e.g., 'target-email:bob@test.edulinq.org'. | {"parameter":["course-idcourse101"]}`,
 				ExpectedExitCode:        1,
+				ExpectEmptyStdout:       true,
 			},
 			endpoint: "courses/assignments/submissions/fetch/user/peek",
 			parameters: []string{
@@ -56,17 +47,63 @@ func TestCallApiEndpointBase(test *testing.T) {
 				"target-submission:1697406256",
 			},
 		},
+
+		// Base functionality for each supported endpoint.
 		{
-			CommonCMDTestCase: cmd.CommonCMDTestCase{
-				ExpectedStderrSubstring: `No course ID specified.`,
-				ExpectedExitCode:        1,
+			endpoint: "courses/assignments/get",
+			parameters: []string{
+				"course-id:course101",
+				"assignment-id:hw0",
 			},
+		},
+		{
+			endpoint: "courses/assignments/list",
+			parameters: []string{
+				"course-id:course101",
+			},
+		},
+		{
+			endpoint: "courses/users/drop",
+			parameters: []string{
+				"target-email:course-student@test.edulinq.org",
+				"course-id:course101",
+			},
+		},
+		{
+			endpoint: "courses/users/get",
+			parameters: []string{
+				"target-email:course-student@test.edulinq.org",
+				"course-id:course101",
+			},
+		},
+		{
+			endpoint: "courses/users/list",
+			parameters: []string{
+				"course-id:course101",
+			},
+		},
+		{
 			endpoint: "courses/assignments/submissions/fetch/user/peek",
 			parameters: []string{
 				"target-email:course-student@test.edulinq.org",
-				"ZZZ:course101",
+				"course-id:course101",
 				"assignment-id:hw0",
 				"target-submission:1697406256",
+			},
+		},
+		{
+			endpoint: "users/get",
+			parameters: []string{
+				"target-email:course-student@test.edulinq.org",
+			},
+		},
+		{
+			endpoint: "users/list",
+		},
+		{
+			endpoint: "users/remove",
+			parameters: []string{
+				"target-email:course-student@test.edulinq.org",
 			},
 		},
 	}

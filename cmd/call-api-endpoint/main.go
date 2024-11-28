@@ -17,12 +17,12 @@ var args struct {
 	cmd.CommonOptions
 
 	Endpoint   string   `help:"Endpoint of the desired API." arg:""`
-	Parameters []string `help:"Parameter for the endpoint in the format 'key:value', where the first colon separates the key and value (e.g., 'target-email:bob@test.edulinq.org'). Additional colons are allowed in the value." arg:"" optional:""`
+	Parameters []string `help:"Parameter for the endpoint in the format 'key:value', e.g., 'id:123'." arg:"" optional:""`
 }
 
 func main() {
 	kong.Parse(&args,
-		kong.Description("Execute an API request to the specified endpoint. For more information on available API endpoints, see the API resource file at: /autograder-server/resources/api.json"),
+		kong.Description("Execute an API request to the specified endpoint. For more information on available API endpoints, see the API resource file at: resources/api.json"),
 	)
 
 	err := config.HandleConfigArgs(args.ConfigArgs)
