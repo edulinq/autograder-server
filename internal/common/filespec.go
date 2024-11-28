@@ -234,7 +234,7 @@ func (this *FileSpec) CopyTarget(baseDir string, destDir string, onlyContents bo
 		for _, file := range files {
 			err := copyPath(file, this.Dest, baseDir, destDir, onlyContents)
 			if err != nil {
-				return fmt.Errorf("Failed to copy file '%s': '%w'.", file, err)
+				return fmt.Errorf("Failed to copy target '%s': '%w'.", file, err)
 			}
 		}
 
