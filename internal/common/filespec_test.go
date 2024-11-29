@@ -72,6 +72,8 @@ type testCaseCopy struct {
 	ExpectedCopiedDirents []string
 }
 
+const PATH_SEPARATOR = "dest/"
+
 func TestFileSpecCopy(test *testing.T) {
 	for i, testCase := range getCopyTestCases() {
 		err := testCase.Spec.Validate()
@@ -103,7 +105,7 @@ func TestFileSpecCopy(test *testing.T) {
 
 		copiedDirents := []string{}
 		for _, dirent := range dirents {
-			parts := strings.SplitN(dirent, "dest/", 2)
+			parts := strings.SplitN(dirent, PATH_SEPARATOR, 2)
 			if len(parts) != 2 {
 				test.Errorf("Case %d: Failed to split the dirent '%v'.", i, parts)
 			}
@@ -128,12 +130,12 @@ func getCopyTestCases() []*testCaseCopy {
 		&testCaseCopy{
 			FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", "filespec_test")},
 			false,
-			[]string{"filespec_test", "filespec_test/spec.txt"},
+			[]string{"filespec_test", "filespec_test/spec.txt", "filespec_test/spec2.txt"},
 		},
 		&testCaseCopy{
 			FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", "filespec_test")},
 			true,
-			[]string{"spec.txt"},
+			[]string{"spec.txt", "spec2.txt"},
 		},
 		&testCaseCopy{
 			FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", "filespec_test", "spec.txt"), Dest: "test.txt"},
@@ -143,22 +145,22 @@ func getCopyTestCases() []*testCaseCopy {
 		&testCaseCopy{
 			FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", "filespec_test"), Dest: "test"},
 			false,
-			[]string{"test", "test/spec.txt"},
+			[]string{"test", "test/spec.txt", "test/spec2.txt"},
 		},
 		&testCaseCopy{
 			FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", "filespec_test"), Dest: "test"},
 			true,
-			[]string{"test", "test/spec.txt"},
+			[]string{"test", "test/spec.txt", "test/spec2.txt"},
 		},
 		&testCaseCopy{
 			FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", "*_test"), Dest: "test"},
 			true,
-			[]string{"test", "test/*globSpec.txt", "test/spec.txt"},
+			[]string{"test", "test/*globSpec.txt", "test/spec.txt", "test/spec2.txt"},
 		},
 		&testCaseCopy{
 			FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", "f*_test"), Dest: "test"},
 			true,
-			[]string{"test", "test/spec.txt"},
+			[]string{"test", "test/spec.txt", "test/spec2.txt"},
 		},
 		&testCaseCopy{
 			FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", `\**_test`), Dest: "test"},
@@ -166,9 +168,9 @@ func getCopyTestCases() []*testCaseCopy {
 			[]string{"test", "test/*globSpec.txt"},
 		},
 		&testCaseCopy{
-			FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", "filespec_test", "*"), Dest: "test.txt"},
+			FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", "filespec_test", "*")},
 			false,
-			[]string{"test.txt"},
+			[]string{"spec.txt", "spec2.txt"},
 		},
 		&testCaseCopy{
 			FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", "f*_test", "*.txt"), Dest: "test.txt"},
@@ -183,7 +185,7 @@ func getCopyTestCases() []*testCaseCopy {
 		&testCaseCopy{
 			FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", "file????_test"), Dest: "test"},
 			true,
-			[]string{"test", "test/spec.txt"},
+			[]string{"test", "test/spec.txt", "test/spec2.txt"},
 		},
 		&testCaseCopy{
 			FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", "filespec_test", "????.txt"), Dest: "test.txt"},
@@ -198,12 +200,12 @@ func getCopyTestCases() []*testCaseCopy {
 		&testCaseCopy{
 			FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", "filespe[b-d]_test"), Dest: "test"},
 			true,
-			[]string{"test", "test/spec.txt"},
+			[]string{"test", "test/spec.txt", "test/spec2.txt"},
 		},
 		&testCaseCopy{
 			FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", "filespe[^d-z]_test"), Dest: "test"},
 			true,
-			[]string{"test", "test/spec.txt"},
+			[]string{"test", "test/spec.txt", "test/spec2.txt"},
 		},
 		&testCaseCopy{
 			FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", "filespec_test", "[r-t]pec.txt"), Dest: "test.txt"},

@@ -225,16 +225,20 @@ func (this *FileSpec) CopyTarget(baseDir string, destDir string, onlyContents bo
 		// no-op.
 		return nil
 	case FILESPEC_TYPE_PATH:
-		files, err := this.matchTargets(baseDir)
+		if !filepath.IsAbs(this.Path) && (baseDir != "") {
+			this.Path = filepath.Join(baseDir, this.Path)
+		}
+
+		paths, err := this.matchTargets()
 		if err != nil {
 			return fmt.Errorf("Failed to match target(s) for path '%s': '%w'.", this.Path, err)
 		}
 
-		// Loop over each matched file and copy it to the destination.
-		for _, file := range files {
-			err := copyPath(file, this.Dest, baseDir, destDir, onlyContents)
+		// Loop over each matched path and copy it to the destination.
+		for _, path := range paths {
+			err := copyPath(path, this.Dest, destDir, onlyContents)
 			if err != nil {
-				return fmt.Errorf("Failed to copy target '%s': '%w'.", file, err)
+				return fmt.Errorf("Failed to copy target '%s': '%w'.", path, err)
 			}
 		}
 
@@ -248,34 +252,24 @@ func (this *FileSpec) CopyTarget(baseDir string, destDir string, onlyContents bo
 	}
 }
 
-func (this *FileSpec) matchTargets(baseDir string) ([]string, error) {
+func (this *FileSpec) matchTargets() ([]string, error) {
 	if !this.IsPath() {
 		return nil, fmt.Errorf("Cannot match targets: FileSpec must be a path.")
 	}
 
-	sourcePath := this.Path
-	if !filepath.IsAbs(sourcePath) && (baseDir != "") {
-		sourcePath = filepath.Join(baseDir, this.Path)
-	}
-
-	files, err := filepath.Glob(sourcePath)
+	targets, err := filepath.Glob(this.Path)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to resolve the path pattern '%s': '%w'.", this.Path, err)
 	}
 
-	if len(files) == 0 {
+	if len(targets) == 0 {
 		return nil, fmt.Errorf("No targets found for the path '%s'.", this.Path)
 	}
 
-	return files, nil
+	return targets, nil
 }
 
-func copyPath(fileSpecPath string, fileSpecDest string, baseDir string, destDir string, onlyContents bool) error {
-	sourcePath := fileSpecPath
-	if !filepath.IsAbs(sourcePath) && (baseDir != "") {
-		sourcePath = filepath.Join(baseDir, fileSpecPath)
-	}
-
+func copyPath(fileSpecPath string, fileSpecDest string, destDir string, onlyContents bool) error {
 	destPath := ""
 	if onlyContents {
 		if fileSpecDest == "" {
@@ -294,13 +288,13 @@ func copyPath(fileSpecPath string, fileSpecDest string, baseDir string, destDir 
 
 	var err error
 	if onlyContents {
-		err = util.CopyDirContents(sourcePath, destPath)
+		err = util.CopyDirContents(fileSpecPath, destPath)
 	} else {
-		err = util.CopyDirent(sourcePath, destPath, false)
+		err = util.CopyDirent(fileSpecPath, destPath, false)
 	}
 
 	if err != nil {
-		return fmt.Errorf("Failed to copy path filespec '%s' to '%s': '%w'.", sourcePath, destPath, err)
+		return fmt.Errorf("Failed to copy path filespec '%s' to '%s': '%w'.", fileSpecPath, destPath, err)
 	}
 
 	return nil
