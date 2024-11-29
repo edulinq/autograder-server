@@ -36,7 +36,6 @@ func TestCourseUserDropBase(test *testing.T) {
 			CommonCMDTestCase: cmd.CommonCMDTestCase{
 				ExpectedExitCode:        1,
 				ExpectedStderrSubstring: `Could not find course: 'ZZZ'.`,
-				ExpectEmptyStdout:       true,
 			},
 			targetEmail: "course-student@test.edulinq.org",
 			courseID:    "ZZZ",

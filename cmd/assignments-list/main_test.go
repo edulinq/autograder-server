@@ -27,7 +27,6 @@ func TestAssignmentListBase(test *testing.T) {
 			CommonCMDTestCase: cmd.CommonCMDTestCase{
 				ExpectedExitCode:        1,
 				ExpectedStderrSubstring: `Could not find course: 'ZZZ'`,
-				ExpectEmptyStdout:       true,
 			},
 			courseID: "ZZZ",
 		},

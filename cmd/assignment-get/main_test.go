@@ -29,7 +29,6 @@ func TestAssignmentGetBase(test *testing.T) {
 			CommonCMDTestCase: cmd.CommonCMDTestCase{
 				ExpectedExitCode:        1,
 				ExpectedStderrSubstring: `Could not find course: 'ZZZ'.`,
-				ExpectEmptyStdout:       true,
 			},
 			courseID:     "ZZZ",
 			assignmentID: "hw0",
@@ -38,7 +37,6 @@ func TestAssignmentGetBase(test *testing.T) {
 			CommonCMDTestCase: cmd.CommonCMDTestCase{
 				ExpectedExitCode:        1,
 				ExpectedStderrSubstring: `Could not find assignment: 'zzz'.`,
-				ExpectEmptyStdout:       true,
 			},
 			courseID:     "course101",
 			assignmentID: "zzz",
