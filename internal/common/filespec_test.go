@@ -111,7 +111,7 @@ func TestFileSpecCopy(test *testing.T) {
 		}
 
 		if !reflect.DeepEqual(testCase.ExpectedCopiedDirents, copiedDirents) {
-			test.Errorf("Case %d: Unexpected contents copied. Expected: '%v', Actual: '%v'.", i, testCase.ExpectedCopiedDirents, copiedDirents)
+			test.Errorf("Case %d: Unexpected dirents copied. Expected: '%v', Actual: '%v'.", i, testCase.ExpectedCopiedDirents, copiedDirents)
 			continue
 		}
 	}
