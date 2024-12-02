@@ -3,7 +3,6 @@ package common
 import (
 	"path/filepath"
 	"reflect"
-	"strings"
 	"testing"
 
 	"github.com/edulinq/autograder/internal/config"
@@ -72,8 +71,6 @@ type testCaseCopy struct {
 	ExpectedCopiedDirents []string
 }
 
-const PATH_SEPARATOR = "dest/"
-
 func TestFileSpecCopy(test *testing.T) {
 	for i, testCase := range getCopyTestCases() {
 		err := testCase.Spec.Validate()
@@ -105,12 +102,12 @@ func TestFileSpecCopy(test *testing.T) {
 
 		copiedDirents := []string{}
 		for _, dirent := range dirents {
-			parts := strings.SplitN(dirent, PATH_SEPARATOR, 2)
-			if len(parts) != 2 {
-				test.Errorf("Case %d: Failed to split the dirent '%v'.", i, parts)
+			relativeDirentPath, err := filepath.Rel(destDir, dirent)
+			if err != nil {
+				test.Errorf("Case %d: Failed to compute relative path for '%s': '%v'.", i, dirent, err)
 				continue
 			}
-			copiedDirents = append(copiedDirents, parts[1])
+			copiedDirents = append(copiedDirents, relativeDirentPath)
 		}
 
 		if !reflect.DeepEqual(testCase.ExpectedCopiedDirents, copiedDirents) {

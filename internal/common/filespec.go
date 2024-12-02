@@ -225,49 +225,7 @@ func (this *FileSpec) CopyTarget(baseDir string, destDir string, onlyContents bo
 		// no-op.
 		return nil
 	case FILESPEC_TYPE_PATH:
-		if !filepath.IsAbs(this.Path) && (baseDir != "") {
-			this.Path = filepath.Join(baseDir, this.Path)
-		}
-
-		destPath := ""
-		if onlyContents {
-			if this.Dest == "" {
-				destPath = destDir
-			} else {
-				destPath = filepath.Join(destDir, this.Dest)
-			}
-
-		} else {
-			filename := this.Dest
-			if filename == "" {
-				filename = filepath.Base(this.Path)
-			}
-
-			destPath = filepath.Join(destDir, filename)
-		}
-
-		paths, err := this.matchTargets()
-		if err != nil {
-			return fmt.Errorf("Failed to match target(s) for path '%s': '%w'.", this.Path, err)
-		}
-
-		// Create a new directory if multiple targets are matched.
-		if !util.PathExists(destPath) && len(paths) > 1 {
-			err := util.MkDir(destPath)
-			if err != nil {
-				return fmt.Errorf("Failed to make a directory: '%v'.", err)
-			}
-		}
-
-		// Loop over each matched path and copy it to the destination.
-		for _, path := range paths {
-			err := copyPath(path, destPath, onlyContents)
-			if err != nil {
-				return fmt.Errorf("Failed to copy target '%s': '%w'.", path, err)
-			}
-		}
-
-		return nil
+		return this.matchAndCopyTargets(baseDir, destDir, onlyContents)
 	case FILESPEC_TYPE_GIT:
 		return this.copyGit(destDir)
 	case FILESPEC_TYPE_URL:
@@ -277,21 +235,58 @@ func (this *FileSpec) CopyTarget(baseDir string, destDir string, onlyContents bo
 	}
 }
 
-func (this *FileSpec) matchTargets() ([]string, error) {
+func (this *FileSpec) matchAndCopyTargets(baseDir string, destDir string, onlyContents bool) error {
 	if !this.IsPath() {
-		return nil, fmt.Errorf("Cannot match targets: FileSpec must be a path.")
+		return fmt.Errorf("Cannot match targets: FileSpec must be a path.")
 	}
 
-	targets, err := filepath.Glob(this.Path)
+	fileSpecPath := this.Path
+	if !filepath.IsAbs(fileSpecPath) && (baseDir != "") {
+		fileSpecPath = filepath.Join(baseDir, fileSpecPath)
+	}
+
+	destPath := ""
+	if onlyContents {
+		if this.Dest == "" {
+			destPath = destDir
+		} else {
+			destPath = filepath.Join(destDir, this.Dest)
+		}
+	} else {
+		filename := this.Dest
+		if filename == "" {
+			filename = filepath.Base(this.Path)
+		}
+
+		destPath = filepath.Join(destDir, filename)
+	}
+
+	targets, err := filepath.Glob(fileSpecPath)
 	if err != nil {
-		return nil, fmt.Errorf("Failed to resolve the path pattern '%s': '%w'.", this.Path, err)
+		return fmt.Errorf("Failed to resolve the path pattern '%s': '%w'.", this.Path, err)
 	}
 
 	if len(targets) == 0 {
-		return nil, fmt.Errorf("No targets found for the path '%s'.", this.Path)
+		return fmt.Errorf("No targets found for the path '%s'.", this.Path)
 	}
 
-	return targets, nil
+	// Create a new directory if multiple targets are matched.
+	if !util.PathExists(destPath) && len(targets) > 1 {
+		err := util.MkDir(destPath)
+		if err != nil {
+			return fmt.Errorf("Failed to make a directory for the Filespec at path '%s': '%v'.", destPath, err)
+		}
+	}
+
+	// Loop over each matched path and copy it to the destination.
+	for _, target := range targets {
+		err := copyPath(target, destPath, onlyContents)
+		if err != nil {
+			return fmt.Errorf("Failed to copy target '%s': '%w'.", target, err)
+		}
+	}
+
+	return nil
 }
 
 func copyPath(fileSpecPath string, destPath string, onlyContents bool) error {
