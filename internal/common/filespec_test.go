@@ -93,7 +93,7 @@ func TestFileSpecCopy(test *testing.T) {
 
 		err = testCase.Spec.CopyTarget(config.GetTestdataDir(), destDir, testCase.OnlyContents)
 		if err != nil {
-			test.Errorf("Case %d: Failed to copy target (%+v): '%v'.", i, testCase.Spec, err)
+			test.Errorf("Case %d: Failed to copy matching targets (%+v): '%v'.", i, testCase.Spec, err)
 			continue
 		}
 
@@ -108,6 +108,7 @@ func TestFileSpecCopy(test *testing.T) {
 			parts := strings.SplitN(dirent, PATH_SEPARATOR, 2)
 			if len(parts) != 2 {
 				test.Errorf("Case %d: Failed to split the dirent '%v'.", i, parts)
+				continue
 			}
 			copiedDirents = append(copiedDirents, parts[1])
 		}
@@ -123,109 +124,103 @@ func TestFileSpecCopy(test *testing.T) {
 func getCopyTestCases() []*testCaseCopy {
 	return []*testCaseCopy{
 		&testCaseCopy{
-			FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", "filespec_test", "spec.txt")},
-			false,
-			[]string{"spec.txt"},
+			Spec:                  FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", "filespec_test", "spec.txt")},
+			ExpectedCopiedDirents: []string{"spec.txt"},
 		},
 		&testCaseCopy{
-			FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", "filespec_test")},
-			false,
-			[]string{"filespec_test", "filespec_test/spec.txt", "filespec_test/spec2.txt"},
+			Spec:                  FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", "filespec_test")},
+			ExpectedCopiedDirents: []string{"filespec_test", "filespec_test/spec.txt", "filespec_test/spec2.txt"},
 		},
 		&testCaseCopy{
-			FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", "filespec_test")},
-			true,
-			[]string{"spec.txt", "spec2.txt"},
+			Spec:                  FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", "filespec_test")},
+			OnlyContents:          true,
+			ExpectedCopiedDirents: []string{"spec.txt", "spec2.txt"},
 		},
 		&testCaseCopy{
-			FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", "filespec_test", "spec.txt"), Dest: "test.txt"},
-			false,
-			[]string{"test.txt"},
+			Spec:                  FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", "filespec_test", "spe?.txt"), Dest: "test.txt"},
+			ExpectedCopiedDirents: []string{"test.txt"},
 		},
 		&testCaseCopy{
-			FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", "filespec_test"), Dest: "test"},
-			false,
-			[]string{"test", "test/spec.txt", "test/spec2.txt"},
+			Spec:                  FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", "filespec_test"), Dest: "test"},
+			ExpectedCopiedDirents: []string{"test", "test/spec.txt", "test/spec2.txt"},
 		},
 		&testCaseCopy{
-			FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", "filespec_test"), Dest: "test"},
-			true,
-			[]string{"test", "test/spec.txt", "test/spec2.txt"},
+			Spec:                  FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", "filespec_test"), Dest: "test"},
+			OnlyContents:          true,
+			ExpectedCopiedDirents: []string{"test", "test/spec.txt", "test/spec2.txt"},
 		},
 		&testCaseCopy{
-			FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", "*_test"), Dest: "test"},
-			true,
-			[]string{"test", "test/*globSpec.txt", "test/spec.txt", "test/spec2.txt"},
+			Spec:                  FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", "*_test"), Dest: "test"},
+			OnlyContents:          true,
+			ExpectedCopiedDirents: []string{"test", "test/*globSpec.txt", "test/spec.txt", "test/spec2.txt"},
 		},
 		&testCaseCopy{
-			FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", "f*_test"), Dest: "test"},
-			true,
-			[]string{"test", "test/spec.txt", "test/spec2.txt"},
+			Spec:                  FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", "*_test")},
+			OnlyContents:          true,
+			ExpectedCopiedDirents: []string{"*globSpec.txt", "spec.txt", "spec2.txt"},
 		},
 		&testCaseCopy{
-			FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", `\**_test`), Dest: "test"},
-			true,
-			[]string{"test", "test/*globSpec.txt"},
+			Spec:                  FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", "f*_test"), Dest: "test"},
+			OnlyContents:          true,
+			ExpectedCopiedDirents: []string{"test", "test/spec.txt", "test/spec2.txt"},
 		},
 		&testCaseCopy{
-			FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", "filespec_test", "*")},
-			false,
-			[]string{"spec.txt", "spec2.txt"},
+			Spec:                  FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", `\**_test`), Dest: "test"},
+			OnlyContents:          true,
+			ExpectedCopiedDirents: []string{"test", "test/*globSpec.txt"},
 		},
 		&testCaseCopy{
-			FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", "f*_test", "*.txt"), Dest: "test.txt"},
-			false,
-			[]string{"test.txt"},
+			Spec:                  FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", "filespec_test", "*"), Dest: "test.test"},
+			ExpectedCopiedDirents: []string{"test.test", "test.test/spec.txt", "test.test/spec2.txt"},
 		},
 		&testCaseCopy{
-			FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", `\*globFileSpec_test`, `\*globSpec.txt`), Dest: `\*test.txt`},
-			false,
-			[]string{`\*test.txt`},
+			Spec:                  FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", "f*_test", "*.txt"), Dest: "test.test"},
+			ExpectedCopiedDirents: []string{"test.test", "test.test/spec.txt", "test.test/spec2.txt"},
 		},
 		&testCaseCopy{
-			FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", "file????_test"), Dest: "test"},
-			true,
-			[]string{"test", "test/spec.txt", "test/spec2.txt"},
+			Spec:                  FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", `\*globFileSpec_test`, `\*globSpec.txt`), Dest: `\*test.test`},
+			ExpectedCopiedDirents: []string{`\*test.test`},
 		},
 		&testCaseCopy{
-			FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", "filespec_test", "????.txt"), Dest: "test.txt"},
-			false,
-			[]string{"test.txt"},
+			Spec:                  FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", "file????_test"), Dest: "test"},
+			OnlyContents:          true,
+			ExpectedCopiedDirents: []string{"test", "test/spec.txt", "test/spec2.txt"},
 		},
 		&testCaseCopy{
-			FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", "file????_test", "????.txt"), Dest: "test.txt"},
-			false,
-			[]string{"test.txt"},
+			Spec:                  FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", "filespec_test", "????.txt"), Dest: "test.test"},
+			ExpectedCopiedDirents: []string{"test.test"},
 		},
 		&testCaseCopy{
-			FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", "filespe[b-d]_test"), Dest: "test"},
-			true,
-			[]string{"test", "test/spec.txt", "test/spec2.txt"},
+			Spec:                  FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", "file????_test", "????.txt"), Dest: "test.test"},
+			OnlyContents:          false,
+			ExpectedCopiedDirents: []string{"test.test"},
 		},
 		&testCaseCopy{
-			FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", "filespe[^d-z]_test"), Dest: "test"},
-			true,
-			[]string{"test", "test/spec.txt", "test/spec2.txt"},
+			Spec:                  FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", "filespe[b-d]_test"), Dest: "test"},
+			OnlyContents:          true,
+			ExpectedCopiedDirents: []string{"test", "test/spec.txt", "test/spec2.txt"},
 		},
 		&testCaseCopy{
-			FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", "filespec_test", "[r-t]pec.txt"), Dest: "test.txt"},
-			false,
-			[]string{"test.txt"},
+			Spec:                  FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", "filespe[^d-z]_test"), Dest: "test"},
+			OnlyContents:          true,
+			ExpectedCopiedDirents: []string{"test", "test/spec.txt", "test/spec2.txt"},
 		},
 		&testCaseCopy{
-			FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", "filespec_test", "[^a-r^t-v]pec.txt"), Dest: "test.txt"},
-			false,
-			[]string{"test.txt"},
+			Spec:                  FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", "filespec_test", "[r-t]pec.txt"), Dest: "test.test"},
+			OnlyContents:          false,
+			ExpectedCopiedDirents: []string{"test.test"},
 		},
 		&testCaseCopy{
-			FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", "filespe[b-d]_test", "[r-t]pec.txt"), Dest: "test.txt"},
-			false,
-			[]string{"test.txt"},
+			Spec:                  FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", "filespec_test", "[^a-r^t-v]pec.txt"), Dest: "test.test"},
+			ExpectedCopiedDirents: []string{"test.test"},
 		},
 		&testCaseCopy{
-			FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", "filespe[^d-z]_test", "[^a-r]pec.txt"), Dest: "test.txt"},
-			false,
-			[]string{"test.txt"},
+			Spec:                  FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", "filespe[b-d]_test", "[r-t]pec.txt"), Dest: "test.test"},
+			ExpectedCopiedDirents: []string{"test.test"},
+		},
+		&testCaseCopy{
+			Spec:                  FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", "filespe[^d-z]_test", "[^a-r]pec.txt"), Dest: "test.test"},
+			ExpectedCopiedDirents: []string{"test.test"},
 		},
 	}
 }

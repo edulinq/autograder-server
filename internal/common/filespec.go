@@ -229,14 +229,39 @@ func (this *FileSpec) CopyTarget(baseDir string, destDir string, onlyContents bo
 			this.Path = filepath.Join(baseDir, this.Path)
 		}
 
+		destPath := ""
+		if onlyContents {
+			if this.Dest == "" {
+				destPath = destDir
+			} else {
+				destPath = filepath.Join(destDir, this.Dest)
+			}
+
+		} else {
+			filename := this.Dest
+			if filename == "" {
+				filename = filepath.Base(this.Path)
+			}
+
+			destPath = filepath.Join(destDir, filename)
+		}
+
 		paths, err := this.matchTargets()
 		if err != nil {
 			return fmt.Errorf("Failed to match target(s) for path '%s': '%w'.", this.Path, err)
 		}
 
+		// Create a new directory if multiple targets are matched.
+		if !util.PathExists(destPath) && len(paths) > 1 {
+			err := util.MkDir(destPath)
+			if err != nil {
+				return fmt.Errorf("Failed to make a directory: '%v'.", err)
+			}
+		}
+
 		// Loop over each matched path and copy it to the destination.
 		for _, path := range paths {
-			err := copyPath(path, this.Dest, destDir, onlyContents)
+			err := copyPath(path, destPath, onlyContents)
 			if err != nil {
 				return fmt.Errorf("Failed to copy target '%s': '%w'.", path, err)
 			}
@@ -269,23 +294,7 @@ func (this *FileSpec) matchTargets() ([]string, error) {
 	return targets, nil
 }
 
-func copyPath(fileSpecPath string, fileSpecDest string, destDir string, onlyContents bool) error {
-	destPath := ""
-	if onlyContents {
-		if fileSpecDest == "" {
-			destPath = destDir
-		} else {
-			destPath = filepath.Join(destDir, fileSpecDest)
-		}
-	} else {
-		filename := fileSpecDest
-		if filename == "" {
-			filename = filepath.Base(fileSpecPath)
-		}
-
-		destPath = filepath.Join(destDir, filename)
-	}
-
+func copyPath(fileSpecPath string, destPath string, onlyContents bool) error {
 	var err error
 	if onlyContents {
 		err = util.CopyDirContents(fileSpecPath, destPath)
