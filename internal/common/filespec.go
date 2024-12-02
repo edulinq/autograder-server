@@ -225,7 +225,7 @@ func (this *FileSpec) CopyTarget(baseDir string, destDir string, onlyContents bo
 		// no-op.
 		return nil
 	case FILESPEC_TYPE_PATH:
-		return this.matchAndCopyTargets(baseDir, destDir, onlyContents)
+		return this.matchAndCopyPaths(baseDir, destDir, onlyContents)
 	case FILESPEC_TYPE_GIT:
 		return this.copyGit(destDir)
 	case FILESPEC_TYPE_URL:
@@ -235,7 +235,7 @@ func (this *FileSpec) CopyTarget(baseDir string, destDir string, onlyContents bo
 	}
 }
 
-func (this *FileSpec) matchAndCopyTargets(baseDir string, destDir string, onlyContents bool) error {
+func (this *FileSpec) matchAndCopyPaths(baseDir string, destDir string, onlyContents bool) error {
 	if !this.IsPath() {
 		return fmt.Errorf("Cannot match targets: FileSpec must be a path.")
 	}
@@ -261,17 +261,17 @@ func (this *FileSpec) matchAndCopyTargets(baseDir string, destDir string, onlyCo
 		destPath = filepath.Join(destDir, filename)
 	}
 
-	targets, err := filepath.Glob(fileSpecPath)
+	paths, err := filepath.Glob(fileSpecPath)
 	if err != nil {
 		return fmt.Errorf("Failed to resolve the path pattern '%s': '%w'.", this.Path, err)
 	}
 
-	if len(targets) == 0 {
+	if len(paths) == 0 {
 		return fmt.Errorf("No targets found for the path '%s'.", this.Path)
 	}
 
-	// Create a new directory if multiple targets are matched.
-	if !util.PathExists(destPath) && len(targets) > 1 {
+	// Create a new directory if multiple paths are matched.
+	if !util.PathExists(destPath) && len(paths) > 1 {
 		err := util.MkDir(destPath)
 		if err != nil {
 			return fmt.Errorf("Failed to make a directory for the Filespec at path '%s': '%v'.", destPath, err)
@@ -279,10 +279,10 @@ func (this *FileSpec) matchAndCopyTargets(baseDir string, destDir string, onlyCo
 	}
 
 	// Loop over each matched path and copy it to the destination.
-	for _, target := range targets {
-		err := copyPath(target, destPath, onlyContents)
+	for _, path := range paths {
+		err := copyPath(path, destPath, onlyContents)
 		if err != nil {
-			return fmt.Errorf("Failed to copy target '%s': '%w'.", target, err)
+			return fmt.Errorf("Failed to copy target '%s': '%w'.", path, err)
 		}
 	}
 
