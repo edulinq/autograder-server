@@ -46,7 +46,7 @@ func MustHandleCMDRequestAndExitFull(endpoint string, request any, responseType 
 	if !response.Success {
 		log.Fatal("API Request was unsuccessful.", log.NewAttr("message", response.Message))
 
-		// Return after log.Fatal() sets the exit code to 1 to avoid overwriting the exit code during tests.
+		// Return to prevent further execution after log.Fatal().
 		return
 	}
 
@@ -107,6 +107,8 @@ func PrintCMDResponseFull(request any, response core.APIResponse, responseType a
 
 	if customPrintFunc != nil {
 		fmt.Println(customPrintFunc(response))
+	} else if responseType == nil {
+		fmt.Println(util.MustToJSONIndent(response.Content))
 	} else {
 		responseContent := reflect.New(reflect.TypeOf(responseType)).Interface()
 		util.MustJSONFromString(util.MustToJSON(response.Content), &responseContent)
