@@ -282,7 +282,7 @@ func (this *FileSpec) matchAndCopyPaths(baseDir string, destDir string, onlyCont
 	for _, path := range paths {
 		err := copyPath(path, destPath, onlyContents)
 		if err != nil {
-			return fmt.Errorf("Failed to copy target '%s': '%w'.", path, err)
+			return fmt.Errorf("Failed to copy target at path '%s': '%w'.", path, err)
 		}
 	}
 
