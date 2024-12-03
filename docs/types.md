@@ -785,8 +785,7 @@ All types of FileSpecs share some common fields:
 
 A FileSpec with `type` equal to `path` points to an absolute or relative path accessible from the current machine.
 The path may include a glob pattern to target multiple files/directories.
-`dest` must be a directory if multiple files/directories are being copied (a new directory will be created if `dest` doesn't exist).
-An error occurs if multiple files/directories try to get copied when `dest` is an existing file.
+`dest` must be a directory if multiple files/directories are being copied, a new directory will be created if `dest` doesn't exist.
 When a relative path is specified, additional context is required to know the relative base.
 For example, a FileSpec in an assignment config is relative to the assignment directory (the directory where the `assignment.json` file lives).
 
