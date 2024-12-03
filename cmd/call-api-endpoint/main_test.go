@@ -39,6 +39,37 @@ func TestCallApiEndpointBase(test *testing.T) {
 				"target-submission:1697406256",
 			},
 		},
+		{
+			CommonCMDTestCase: cmd.CommonCMDTestCase{
+				ExpectedStderrSubstring: `Table formatting is not supported for the specified endpoint. | {"endpoint":"courses/assignments/submissions/fetch/user/peek"}`,
+				ExpectedExitCode:        1,
+			},
+			endpoint: "courses/assignments/submissions/fetch/user/peek",
+			parameters: []string{
+				"--table",
+			},
+		},
+
+		// Custom Output Formatters.
+		{
+			CommonCMDTestCase: cmd.CommonCMDTestCase{
+				ExpectedStdout: EXPECTED_SERVER_USER_LIST_TABLE,
+			},
+			endpoint: "users/list",
+			parameters: []string{
+				"--table",
+			},
+		},
+		{
+			CommonCMDTestCase: cmd.CommonCMDTestCase{
+				ExpectedStdout: EXPECTED_SERVER_USER_LIST_TABLE,
+			},
+			endpoint: "users/list",
+			parameters: []string{
+				"course-id:course101",
+				"--table",
+			},
+		},
 
 		// Base functionality for each supported endpoint.
 		{
