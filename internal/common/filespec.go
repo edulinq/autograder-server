@@ -270,14 +270,17 @@ func (this *FileSpec) copyPaths(baseDir string, destDir string, onlyContents boo
 		return fmt.Errorf("No targets found for the path '%s'.", this.Path)
 	}
 
-	if util.IsFile(destPath) && len(paths) > 1 {
-		return fmt.Errorf("Cannot copy multiple targets into the existing file '%s'.", destDir)
-	}
+	// Ensure destPath is a directory if there are multiple paths.
+	if len(paths) > 1 {
+		if util.IsFile(destPath) {
+			return fmt.Errorf("Cannot copy multiple targets into the existing file '%s'.", destDir)
+		}
 
-	if !util.PathExists(destPath) && len(paths) > 1 {
-		err := util.MkDir(destPath)
-		if err != nil {
-			return fmt.Errorf("Failed to make a directory for the Filespec at path '%s': '%v'.", destPath, err)
+		if !util.PathExists(destPath) {
+			err := util.MkDir(destPath)
+			if err != nil {
+				return fmt.Errorf("Failed to create a directory for the Filespec at path '%s': '%v'.", destPath, err)
+			}
 		}
 	}
 
