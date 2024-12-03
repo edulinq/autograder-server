@@ -54,6 +54,7 @@ func main() {
 
 	request := map[string]any{}
 	for _, arg := range args.Parameters {
+		// Split the parameter into it's key and value.
 		parts := strings.SplitN(arg, ":", 2)
 		if len(parts) != 2 {
 			log.Fatal("Invalid parameter format: missing a colon. Expected format is 'key:value', e.g., 'id:123'.", log.NewAttr("parameter", parts))
