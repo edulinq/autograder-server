@@ -67,7 +67,7 @@ func main() {
 
 	var printFunc cmd.CustomResponseFormatter
 	if args.Table {
-		printFunc = cmd.CUSTOM_OUTPUT_MAP[args.Endpoint]
+		printFunc = cmd.EndpointCustomFormatters[args.Endpoint]
 		if printFunc == nil {
 			log.Fatal("Table formatting is not supported for the specified endpoint.", log.NewAttr("endpoint", args.Endpoint))
 
@@ -93,7 +93,7 @@ func generateHelpDescription() string {
 	var customOutputEndpointList strings.Builder
 	customOutputEndpointList.WriteString("Endpoints supporting TSV formatting:\n")
 
-	for endpoint := range cmd.CUSTOM_OUTPUT_MAP {
+	for endpoint := range cmd.EndpointCustomFormatters {
 		customOutputEndpointList.WriteString(fmt.Sprintf("  - %s\n", endpoint))
 	}
 

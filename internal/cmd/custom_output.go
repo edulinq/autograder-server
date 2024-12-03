@@ -9,7 +9,7 @@ import (
 	"github.com/edulinq/autograder/internal/util"
 )
 
-var CUSTOM_OUTPUT_MAP = map[string]CustomResponseFormatter{
+var EndpointCustomFormatters = map[string]CustomResponseFormatter{
 	"users/list":         mustListServerUsersTable,
 	"courses/users/list": mustListCourseUsersTable,
 }
