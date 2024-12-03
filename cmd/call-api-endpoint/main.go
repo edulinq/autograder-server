@@ -19,7 +19,7 @@ var args struct {
 
 	Endpoint   string   `help:"Endpoint of the desired API." arg:""`
 	Parameters []string `help:"Parameter for the endpoint in the format 'key:value', e.g., 'id:123'." arg:"" optional:""`
-	Table      bool     `help:"Output data as a TSV." default:"false"`
+	Table      bool     `help:"Output data as a TSV (only supported for specific endpoints; see help for more info)." default:"false"`
 }
 
 func main() {
