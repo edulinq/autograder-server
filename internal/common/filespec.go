@@ -225,7 +225,7 @@ func (this *FileSpec) CopyTarget(baseDir string, destDir string, onlyContents bo
 		// no-op.
 		return nil
 	case FILESPEC_TYPE_PATH:
-		return this.matchAndCopyPaths(baseDir, destDir, onlyContents)
+		return this.copyPaths(baseDir, destDir, onlyContents)
 	case FILESPEC_TYPE_GIT:
 		return this.copyGit(destDir)
 	case FILESPEC_TYPE_URL:
@@ -235,7 +235,7 @@ func (this *FileSpec) CopyTarget(baseDir string, destDir string, onlyContents bo
 	}
 }
 
-func (this *FileSpec) matchAndCopyPaths(baseDir string, destDir string, onlyContents bool) error {
+func (this *FileSpec) copyPaths(baseDir string, destDir string, onlyContents bool) error {
 	if !this.IsPath() {
 		return fmt.Errorf("Cannot match targets: FileSpec must be a path.")
 	}
@@ -270,7 +270,10 @@ func (this *FileSpec) matchAndCopyPaths(baseDir string, destDir string, onlyCont
 		return fmt.Errorf("No targets found for the path '%s'.", this.Path)
 	}
 
-	// Create a new directory if multiple paths are matched.
+	if util.IsFile(destPath) && len(paths) > 1 {
+		return fmt.Errorf("Cannot copy multiple targets into the existing file '%s'.", destDir)
+	}
+
 	if !util.PathExists(destPath) && len(paths) > 1 {
 		err := util.MkDir(destPath)
 		if err != nil {

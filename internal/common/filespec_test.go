@@ -69,6 +69,7 @@ type testCaseCopy struct {
 	Spec                  FileSpec
 	OnlyContents          bool
 	ExpectedCopiedDirents []string
+	ExpectErrorForSameDir bool
 }
 
 func TestFileSpecCopy(test *testing.T) {
@@ -88,9 +89,19 @@ func TestFileSpecCopy(test *testing.T) {
 
 		destDir := filepath.Join(tempDir, "dest")
 
+		if testCase.ExpectErrorForSameDir {
+			destDir = filepath.Dir(testCase.Spec.Path)
+		}
+
 		err = testCase.Spec.CopyTarget(config.GetTestdataDir(), destDir, testCase.OnlyContents)
-		if err != nil {
+		if (!testCase.ExpectErrorForSameDir) && (err != nil) {
 			test.Errorf("Case %d: Failed to copy matching targets (%+v): '%v'.", i, testCase.Spec, err)
+			continue
+		} else if (testCase.ExpectErrorForSameDir) && (err == nil) {
+			test.Errorf("Case %d: Unexpectedly copied targets (%+v).", i, testCase.Spec)
+		}
+
+		if testCase.ExpectErrorForSameDir {
 			continue
 		}
 
@@ -169,6 +180,11 @@ func getCopyTestCases() []*testCaseCopy {
 		&testCaseCopy{
 			Spec:                  FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", "filespec_test", "*"), Dest: "test"},
 			ExpectedCopiedDirents: []string{"test", "test/spec.txt", "test/spec2.txt"},
+		},
+		&testCaseCopy{
+			Spec:                  FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", "filespec_test", "*"), Dest: "spec.txt"},
+			OnlyContents:          true,
+			ExpectErrorForSameDir: true,
 		},
 		&testCaseCopy{
 			Spec:                  FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", "filespec_test", "*.txt"), Dest: "test"},
