@@ -98,7 +98,7 @@ func TestFileSpecCopy(test *testing.T) {
 			test.Errorf("Case %d: Failed to copy matching targets (%+v): '%v'.", i, testCase.Spec, err)
 			continue
 		} else if (testCase.ExpectErrorForSameDir) && (err == nil) {
-			test.Errorf("Case %d: Unexpectedly copied targets (%+v).", i, testCase.Spec)
+			test.Errorf("Case %d: Unexpectedly copied matching targets (%+v).", i, testCase.Spec)
 		}
 
 		if testCase.ExpectErrorForSameDir {
