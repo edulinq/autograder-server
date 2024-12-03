@@ -1,6 +1,6 @@
 {
     "id": "cpp-simple",
-    "display-name": "A Simple C++ Assignment",
+    "name": "A Simple C++ Assignment",
     "static-files": [
         "grader.sh",
         "grader.cpp",

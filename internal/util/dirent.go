@@ -94,7 +94,7 @@ func CopyFile(source string, dest string) error {
 //   - `cp -r source dest`
 //
 // When onlyContents = True:
-//   - dest maxy exist (and must be a dir).
+//   - dest may exist (and must be a dir).
 //   - `cp source/* dest/`
 func CopyDir(source string, dest string, onlyContents bool) error {
 	if onlyContents {
