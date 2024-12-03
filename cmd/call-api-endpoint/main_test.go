@@ -62,9 +62,9 @@ func TestCallApiEndpointBase(test *testing.T) {
 		},
 		{
 			CommonCMDTestCase: cmd.CommonCMDTestCase{
-				ExpectedStdout: EXPECTED_SERVER_USER_LIST_TABLE,
+				ExpectedStdout: EXPECTED_COURSE_USER_LIST_TABLE,
 			},
-			endpoint: "users/list",
+			endpoint: "courses/users/list",
 			parameters: []string{
 				"course-id:course101",
 				"--table",
