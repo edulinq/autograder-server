@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"sort"
+	"strconv"
 	"strings"
 
 	"github.com/alecthomas/kong"
@@ -25,9 +26,8 @@ var args struct {
 }
 
 const (
-	USERS   = "users"
-	COURSES = "courses"
-	TYPE    = "type"
+	USERS_KEY   = "users"
+	COURSES_KEY = "courses"
 )
 
 func main() {
@@ -107,7 +107,7 @@ func printCMDResponseTable(response core.APIResponse) string {
 		return ""
 	}
 
-	users, ok := responseContent[USERS].([]any)
+	users, ok := responseContent[USERS_KEY].([]any)
 	if !ok {
 		return ""
 	}
@@ -119,24 +119,25 @@ func printCMDResponseTable(response core.APIResponse) string {
 
 	var headers []string
 	for key := range firstUser {
-		if key == COURSES {
+		if key == COURSES_KEY {
 			continue
 		}
+
 		headers = append(headers, key)
 	}
 
 	sort.Strings(headers)
 
-	// Add courses to the end of the slice for better readability in the output.
-	_, exists := firstUser[COURSES]
+	_, exists := firstUser[COURSES_KEY]
 	if exists {
-		headers = append(headers, COURSES)
+		// Add courses to the end of the slice for better readability in the output.
+		headers = append(headers, COURSES_KEY)
 	}
 
 	var usersTable strings.Builder
 	usersTable.WriteString(strings.Join(headers, "\t"))
 
-	lines := strings.Split(usersTable.String(), "\t")
+	headerKeys := strings.Split(usersTable.String(), "\t")
 
 	usersTable.WriteString("\n")
 
@@ -147,10 +148,14 @@ func printCMDResponseTable(response core.APIResponse) string {
 		}
 
 		var row []string
-		for _, key := range lines {
+		for _, key := range headerKeys {
 			switch value := userMap[key].(type) {
 			case string:
 				row = append(row, value)
+			case int:
+				row = append(row, strconv.Itoa(value))
+			case bool:
+				row = append(row, strconv.FormatBool(value))
 			default:
 				row = append(row, util.MustToJSON(value))
 			}
