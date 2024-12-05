@@ -102,6 +102,11 @@ func printCMDResponseTable(response core.APIResponse) string {
 		return ""
 	}
 
+	// Don't try to format a response that has multiple keys.
+	if len(responseContent) != 1 {
+		return ""
+	}
+
 	users, ok := responseContent[USERS].([]any)
 	if !ok {
 		return ""
