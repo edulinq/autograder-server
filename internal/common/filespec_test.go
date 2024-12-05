@@ -2,6 +2,7 @@ package common
 
 import (
 	"path/filepath"
+	"reflect"
 	"testing"
 
 	"github.com/edulinq/autograder/internal/config"
@@ -65,9 +66,10 @@ func TestFileSpecParseValidation(test *testing.T) {
 }
 
 type testCaseCopy struct {
-	Spec         FileSpec
-	OnlyContents bool
-	ResultMD5    string
+	Spec                  FileSpec
+	OnlyContents          bool
+	ExpectedCopiedDirents []string
+	ExpectErrorForSameDir bool
 }
 
 func TestFileSpecCopy(test *testing.T) {
@@ -87,27 +89,40 @@ func TestFileSpecCopy(test *testing.T) {
 
 		destDir := filepath.Join(tempDir, "dest")
 
+		if testCase.ExpectErrorForSameDir {
+			destDir = filepath.Dir(testCase.Spec.Path)
+		}
+
 		err = testCase.Spec.CopyTarget(config.GetTestdataDir(), destDir, testCase.OnlyContents)
-		if err != nil {
-			test.Errorf("Case %d: Failed to copy target (%+v): '%v'.", i, testCase.Spec, err)
+		if (!testCase.ExpectErrorForSameDir) && (err != nil) {
+			test.Errorf("Case %d: Failed to copy matching targets (%+v): '%v'.", i, testCase.Spec, err)
+			continue
+		} else if (testCase.ExpectErrorForSameDir) && (err == nil) {
+			test.Errorf("Case %d: Unexpectedly copied matching targets (%+v).", i, testCase.Spec)
+		}
+
+		if testCase.ExpectErrorForSameDir {
 			continue
 		}
 
-		zipPath := filepath.Join(tempDir, "contents.zip")
-		err = util.Zip(destDir, zipPath, true)
+		dirents, err := util.GetAllDirents(destDir)
 		if err != nil {
-			test.Errorf("Case %d: Failed to create zip file: '%v'.", i, err)
+			test.Errorf("Case %d: Failed to get all dirents: '%v'.", i, err)
 			continue
 		}
 
-		md5, err := util.MD5FileHex(zipPath)
-		if err != nil {
-			test.Errorf("Case %d: Failed to get zip's MD5 hash: '%v'.", i, err)
-			continue
+		copiedDirents := []string{}
+		for _, dirent := range dirents {
+			relativeDirentPath, err := filepath.Rel(destDir, dirent)
+			if err != nil {
+				test.Errorf("Case %d: Failed to compute relative path for '%s': '%v'.", i, dirent, err)
+				continue
+			}
+			copiedDirents = append(copiedDirents, relativeDirentPath)
 		}
 
-		if testCase.ResultMD5 != md5 {
-			test.Errorf("Case %d: MD5 mismatch. Expected: '%s', Actual: '%s'.", i, testCase.ResultMD5, md5)
+		if !reflect.DeepEqual(testCase.ExpectedCopiedDirents, copiedDirents) {
+			test.Errorf("Case %d: Unexpected dirents copied. Expected: '%v', Actual: '%v'.", i, testCase.ExpectedCopiedDirents, copiedDirents)
 			continue
 		}
 	}
@@ -117,34 +132,112 @@ func TestFileSpecCopy(test *testing.T) {
 func getCopyTestCases() []*testCaseCopy {
 	return []*testCaseCopy{
 		&testCaseCopy{
-			FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", "filespec_test", "spec.txt")},
-			false,
-			"4b6070442f731cb7a83b18e0145c6be1",
+			Spec:                  FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", "filespec_test", "spec.txt")},
+			ExpectedCopiedDirents: []string{"spec.txt"},
 		},
 		&testCaseCopy{
-			FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", "filespec_test")},
-			false,
-			"7bf405075ec83eec2c44ac44ce3385c2",
+			Spec:                  FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", "filespec_test")},
+			ExpectedCopiedDirents: []string{"filespec_test", "filespec_test/spec.txt", "filespec_test/spec2.txt"},
 		},
 		&testCaseCopy{
-			FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", "filespec_test")},
-			true,
-			"4b6070442f731cb7a83b18e0145c6be1",
+			Spec:                  FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", "filespec_test")},
+			OnlyContents:          true,
+			ExpectedCopiedDirents: []string{"spec.txt", "spec2.txt"},
 		},
 		&testCaseCopy{
-			FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", "filespec_test", "spec.txt"), Dest: "test.txt"},
-			false,
-			"6911edb915da8cd1fdf1e4b1483d604e",
+			Spec:                  FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", "filespec_test", "spe?.txt"), Dest: "test.txt"},
+			ExpectedCopiedDirents: []string{"test.txt"},
 		},
 		&testCaseCopy{
-			FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", "filespec_test"), Dest: "test"},
-			false,
-			"720b5768bf364f35c316976e549f1bcd",
+			Spec:                  FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", "filespec_test"), Dest: "test"},
+			ExpectedCopiedDirents: []string{"test", "test/spec.txt", "test/spec2.txt"},
 		},
 		&testCaseCopy{
-			FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", "filespec_test"), Dest: "test"},
-			true,
-			"720b5768bf364f35c316976e549f1bcd",
+			Spec:                  FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", "filespec_test"), Dest: "test"},
+			OnlyContents:          true,
+			ExpectedCopiedDirents: []string{"test", "test/spec.txt", "test/spec2.txt"},
+		},
+		&testCaseCopy{
+			Spec:                  FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", "*_test"), Dest: "test"},
+			OnlyContents:          true,
+			ExpectedCopiedDirents: []string{"test", "test/*globSpec.txt", "test/spec.txt", "test/spec2.txt"},
+		},
+		&testCaseCopy{
+			Spec:                  FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", "*_test")},
+			OnlyContents:          true,
+			ExpectedCopiedDirents: []string{"*globSpec.txt", "spec.txt", "spec2.txt"},
+		},
+		&testCaseCopy{
+			Spec:                  FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", "f*_test"), Dest: "test"},
+			OnlyContents:          true,
+			ExpectedCopiedDirents: []string{"test", "test/spec.txt", "test/spec2.txt"},
+		},
+		&testCaseCopy{
+			Spec:                  FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", `\**_test`), Dest: "test"},
+			OnlyContents:          true,
+			ExpectedCopiedDirents: []string{"test", "test/*globSpec.txt"},
+		},
+		&testCaseCopy{
+			Spec:                  FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", "filespec_test", "*"), Dest: "test"},
+			ExpectedCopiedDirents: []string{"test", "test/spec.txt", "test/spec2.txt"},
+		},
+		&testCaseCopy{
+			Spec:                  FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", "filespec_test", "*"), Dest: "spec.txt"},
+			OnlyContents:          true,
+			ExpectErrorForSameDir: true,
+		},
+		&testCaseCopy{
+			Spec:                  FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", "filespec_test", "*.txt"), Dest: "test"},
+			ExpectedCopiedDirents: []string{"test", "test/spec.txt", "test/spec2.txt"},
+		},
+		&testCaseCopy{
+			Spec:                  FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", "f*_test", "*.txt"), Dest: "test.test"},
+			ExpectedCopiedDirents: []string{"test.test", "test.test/spec.txt", "test.test/spec2.txt"},
+		},
+		&testCaseCopy{
+			Spec:                  FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", `\*globFileSpec_test`, `\*globSpec.txt`), Dest: `\*test.txt`},
+			ExpectedCopiedDirents: []string{`\*test.txt`},
+		},
+		&testCaseCopy{
+			Spec:                  FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", "file????_test")},
+			OnlyContents:          true,
+			ExpectedCopiedDirents: []string{"spec.txt", "spec2.txt"},
+		},
+		&testCaseCopy{
+			Spec:                  FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", "filespec_test", "????.txt"), Dest: "test.test"},
+			ExpectedCopiedDirents: []string{"test.test"},
+		},
+		&testCaseCopy{
+			Spec:                  FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", "file????_test", "????.txt"), Dest: "test.txt"},
+			OnlyContents:          false,
+			ExpectedCopiedDirents: []string{"test.txt"},
+		},
+		&testCaseCopy{
+			Spec:                  FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", "filespe[b-d]_test"), Dest: "test"},
+			OnlyContents:          true,
+			ExpectedCopiedDirents: []string{"test", "test/spec.txt", "test/spec2.txt"},
+		},
+		&testCaseCopy{
+			Spec:                  FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", "filespe[^d-z]_test"), Dest: "test"},
+			OnlyContents:          true,
+			ExpectedCopiedDirents: []string{"test", "test/spec.txt", "test/spec2.txt"},
+		},
+		&testCaseCopy{
+			Spec:                  FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", "filespec_test", "[r-t]pec.txt"), Dest: "test.txt"},
+			OnlyContents:          false,
+			ExpectedCopiedDirents: []string{"test.txt"},
+		},
+		&testCaseCopy{
+			Spec:                  FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", "filespec_test", "[^a-r^t-v]pec.txt"), Dest: "test.txt"},
+			ExpectedCopiedDirents: []string{"test.txt"},
+		},
+		&testCaseCopy{
+			Spec:                  FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", "filespe[b-d]_test", "[r-t]pec.txt"), Dest: "test.txt"},
+			ExpectedCopiedDirents: []string{"test.txt"},
+		},
+		&testCaseCopy{
+			Spec:                  FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", "filespe[^d-z]_test", "[^a-r]pec.txt"), Dest: "test.txt"},
+			ExpectedCopiedDirents: []string{"test.txt"},
 		},
 	}
 }
@@ -196,6 +289,12 @@ var testCasesParseValidation []*testCaseParseValidation = []*testCaseParseValida
 		true, true,
 		FileSpec{Type: FILESPEC_TYPE_PATH, Path: "some/path", Dest: "dirname"},
 		`{"type":"path","path":"some/path","dest":"dirname"}`,
+	},
+	&testCaseParseValidation{
+		`{"type": "path", "path": "some/path/*.txt"}`,
+		true, true,
+		FileSpec{Type: FILESPEC_TYPE_PATH, Path: "some/path/*.txt"},
+		`{"type":"path","path":"some/path/*.txt"}`,
 	},
 
 	// Git.
@@ -261,6 +360,13 @@ var testCasesParseValidation []*testCaseParseValidation = []*testCaseParseValida
 
 	&testCaseParseValidation{
 		`{"type": "nil", "path": "some/path"}`,
+		true, false,
+		FileSpec{},
+		"",
+	},
+
+	&testCaseParseValidation{
+		`{"type": "path", "path": "some/[path"}`,
 		true, false,
 		FileSpec{},
 		"",

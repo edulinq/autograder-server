@@ -47,6 +47,11 @@ func (this *FileSpec) Validate() error {
 		if this.Path == "" {
 			return fmt.Errorf("A path FileSpec cannot have an empty path.")
 		}
+
+		_, err := filepath.Match(this.Path, "")
+		if err != nil {
+			return fmt.Errorf("Invalid path pattern '%s': '%w'.", this.Path, err)
+		}
 	case FILESPEC_TYPE_GIT:
 		if this.Path == "" {
 			return fmt.Errorf("A git FileSpec cannot have an empty path.")
@@ -208,18 +213,19 @@ func (this *FileSpec) GetPath() string {
 
 // Copy the target of this FileSpec in the specified location.
 // If the FileSpec has a dest, then that will be the name of the resultant dirent within destDir.
-// If the filespec is a path, then copy a dirent.
+// If the filespec is a path, then copy all matching dirents.
 // If the filespec is a git repo, then ensure it is cloned/updated.
 // Empty and Nil FileSpecs are no-ops.
 // |onlyContents| applies to paths that are dirs and insists that only the contents of dir
 // and not the base dir itself is copied.
+// |baseDir| provides the relative base.
 func (this *FileSpec) CopyTarget(baseDir string, destDir string, onlyContents bool) error {
 	switch this.Type {
 	case FILESPEC_TYPE_EMPTY, FILESPEC_TYPE_NIL:
 		// no-op.
 		return nil
 	case FILESPEC_TYPE_PATH:
-		return this.copyPath(baseDir, destDir, onlyContents)
+		return this.copyPaths(baseDir, destDir, onlyContents)
 	case FILESPEC_TYPE_GIT:
 		return this.copyGit(destDir)
 	case FILESPEC_TYPE_URL:
@@ -229,10 +235,14 @@ func (this *FileSpec) CopyTarget(baseDir string, destDir string, onlyContents bo
 	}
 }
 
-func (this *FileSpec) copyPath(baseDir string, destDir string, onlyContents bool) error {
-	sourcePath := this.Path
-	if !filepath.IsAbs(sourcePath) && (baseDir != "") {
-		sourcePath = filepath.Join(baseDir, this.Path)
+func (this *FileSpec) copyPaths(baseDir string, destDir string, onlyContents bool) error {
+	if !this.IsPath() {
+		return fmt.Errorf("Cannot match targets: FileSpec must be a path.")
+	}
+
+	fileSpecPath := this.Path
+	if !filepath.IsAbs(fileSpecPath) && (baseDir != "") {
+		fileSpecPath = filepath.Join(baseDir, fileSpecPath)
 	}
 
 	destPath := ""
@@ -251,15 +261,50 @@ func (this *FileSpec) copyPath(baseDir string, destDir string, onlyContents bool
 		destPath = filepath.Join(destDir, filename)
 	}
 
+	paths, err := filepath.Glob(fileSpecPath)
+	if err != nil {
+		return fmt.Errorf("Failed to resolve the path pattern '%s': '%w'.", this.Path, err)
+	}
+
+	if len(paths) == 0 {
+		return fmt.Errorf("No targets found for the path '%s'.", this.Path)
+	}
+
+	// Ensure destPath is a directory if there are multiple paths.
+	if len(paths) > 1 {
+		if util.IsFile(destPath) {
+			return fmt.Errorf("Cannot copy multiple targets into the existing file '%s'.", destDir)
+		}
+
+		if !util.PathExists(destPath) {
+			err := util.MkDir(destPath)
+			if err != nil {
+				return fmt.Errorf("Failed to create a directory for the Filespec at path '%s': '%v'.", destPath, err)
+			}
+		}
+	}
+
+	// Loop over each matched path and copy it to the destination.
+	for _, path := range paths {
+		err := copyPath(path, destPath, onlyContents)
+		if err != nil {
+			return fmt.Errorf("Failed to copy target at path '%s': '%w'.", path, err)
+		}
+	}
+
+	return nil
+}
+
+func copyPath(fileSpecPath string, destPath string, onlyContents bool) error {
 	var err error
 	if onlyContents {
-		err = util.CopyDirContents(sourcePath, destPath)
+		err = util.CopyDirContents(fileSpecPath, destPath)
 	} else {
-		err = util.CopyDirent(sourcePath, destPath, false)
+		err = util.CopyDirent(fileSpecPath, destPath, false)
 	}
 
 	if err != nil {
-		return fmt.Errorf("Failed to copy path filespec '%s' to '%s': '%w'.", sourcePath, destPath, err)
+		return fmt.Errorf("Failed to copy path filespec '%s' to '%s': '%w'.", fileSpecPath, destPath, err)
 	}
 
 	return nil
