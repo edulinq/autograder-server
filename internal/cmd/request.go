@@ -105,8 +105,13 @@ func PrintCMDResponseFull(request any, response core.APIResponse, responseType a
 		fmt.Printf("\nAutograder Response:\n---\n%s\n---\n", util.MustToJSONIndent(response))
 	}
 
+	customOutput := ""
 	if customPrintFunc != nil {
-		fmt.Println(customPrintFunc(response))
+		customOutput = customPrintFunc(response)
+	}
+
+	if len(customOutput) > 0 {
+		fmt.Println(customOutput)
 	} else if responseType == nil {
 		fmt.Println(util.MustToJSONIndent(response.Content))
 	} else {

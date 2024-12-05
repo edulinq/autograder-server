@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"sort"
 	"strings"
 
 	"github.com/alecthomas/kong"
@@ -11,6 +12,7 @@ import (
 	"github.com/edulinq/autograder/internal/cmd"
 	"github.com/edulinq/autograder/internal/config"
 	"github.com/edulinq/autograder/internal/log"
+	"github.com/edulinq/autograder/internal/util"
 )
 
 var args struct {
@@ -19,8 +21,14 @@ var args struct {
 
 	Endpoint   string   `help:"Endpoint of the desired API." arg:""`
 	Parameters []string `help:"Parameter for the endpoint in the format 'key:value', e.g., 'id:123'." arg:"" optional:""`
-	Table      bool     `help:"Output data as a TSV (only supported for specific endpoints; see help for more info)." default:"false"`
+	Table      bool     `help:"Attempt to output data as a TSV. Will default to JSON." default:"false"`
 }
+
+const (
+	USERS   = "users"
+	COURSES = "courses"
+	TYPE    = "type"
+)
 
 func main() {
 	kong.Parse(&args,
@@ -68,13 +76,7 @@ func main() {
 
 	var printFunc cmd.CustomResponseFormatter
 	if args.Table {
-		printFunc = cmd.EndpointCustomFormatters[args.Endpoint]
-		if printFunc == nil {
-			log.Fatal("Table formatting is not supported for the specified endpoint.", log.NewAttr("endpoint", args.Endpoint))
-
-			// Return to prevent further execution after log.Fatal().
-			return
-		}
+		printFunc = printCMDResponseTable
 	}
 
 	cmd.MustHandleCMDRequestAndExitFull(args.Endpoint, request, nil, args.CommonOptions, printFunc)
@@ -91,12 +93,70 @@ func generateHelpDescription() string {
 		endpointList.WriteString(fmt.Sprintf("  - %s\n", endpoint))
 	}
 
-	var customOutputEndpointList strings.Builder
-	customOutputEndpointList.WriteString("Endpoints supporting TSV formatting:\n")
+	return baseDescription + endpointList.String()
+}
 
-	for endpoint := range cmd.EndpointCustomFormatters {
-		customOutputEndpointList.WriteString(fmt.Sprintf("  - %s\n", endpoint))
+func printCMDResponseTable(response core.APIResponse) string {
+	responseContent, ok := response.Content.(map[string]any)
+	if !ok {
+		return ""
 	}
 
-	return baseDescription + endpointList.String() + customOutputEndpointList.String()
+	users, ok := responseContent[USERS].([]any)
+	if !ok {
+		return ""
+	}
+
+	firstUser, ok := users[0].(map[string]any)
+	if !ok {
+		return ""
+	}
+
+	var headers []string
+	for key := range firstUser {
+		if key == COURSES {
+			continue
+		}
+		headers = append(headers, key)
+	}
+
+	sort.Strings(headers)
+
+	// Add courses to the end of the slice for better readability in the output.
+	_, exists := firstUser[COURSES]
+	if exists {
+		headers = append(headers, COURSES)
+	}
+
+	var usersTable strings.Builder
+	usersTable.WriteString(strings.Join(headers, "\t"))
+
+	lines := strings.Split(usersTable.String(), "\t")
+
+	usersTable.WriteString("\n")
+
+	for i, user := range users {
+		userMap, ok := user.(map[string]any)
+		if !ok {
+			return ""
+		}
+
+		var row []string
+		for _, key := range lines {
+			switch value := userMap[key].(type) {
+			case string:
+				row = append(row, value)
+			default:
+				row = append(row, util.MustToJSON(value))
+			}
+		}
+
+		usersTable.WriteString(strings.Join(row, "\t"))
+
+		if i < len(users)-1 {
+			usersTable.WriteString("\n")
+		}
+	}
+
+	return usersTable.String()
 }
