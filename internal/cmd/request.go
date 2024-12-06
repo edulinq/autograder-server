@@ -133,7 +133,7 @@ func AttemptApiResponseToTable(response core.APIResponse) (string, bool) {
 		return "", false
 	}
 
-	// Don't try to format a response that has multiple keys.
+	// Don't try to convert a response that has multiple keys.
 	if len(responseContent) != 1 {
 		return "", false
 	}
