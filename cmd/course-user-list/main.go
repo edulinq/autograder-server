@@ -45,7 +45,7 @@ func main() {
 	cmd.MustHandleCMDRequestAndExitFull(`courses/users/list`, request, users.ListResponse{}, args.CommonOptions, printFunc)
 }
 
-func listCourseUsersTable(response core.APIResponse) string {
+func listCourseUsersTable(response core.APIResponse) (string, bool) {
 	var responseContent users.ListResponse
 	util.MustJSONFromString(util.MustToJSON(response.Content), &responseContent)
 
@@ -68,5 +68,5 @@ func listCourseUsersTable(response core.APIResponse) string {
 		courseUsersTable.WriteString(user.LMSID)
 	}
 
-	return courseUsersTable.String()
+	return courseUsersTable.String(), true
 }

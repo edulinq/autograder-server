@@ -1,9 +1,6 @@
 package main
 
 import (
-	"fmt"
-	"sort"
-	"strconv"
 	"strings"
 
 	"github.com/alecthomas/kong"
@@ -13,7 +10,6 @@ import (
 	"github.com/edulinq/autograder/internal/cmd"
 	"github.com/edulinq/autograder/internal/config"
 	"github.com/edulinq/autograder/internal/log"
-	"github.com/edulinq/autograder/internal/util"
 )
 
 var args struct {
@@ -22,17 +18,12 @@ var args struct {
 
 	Endpoint   string   `help:"Endpoint of the desired API." arg:""`
 	Parameters []string `help:"Parameter for the endpoint in the format 'key:value', e.g., 'id:123'." arg:"" optional:""`
-	Table      bool     `help:"Attempt to output data as a TSV. Will default to JSON." default:"false"`
+	Table      bool     `help:"Attempt to output data as a TSV; defaults to JSON if there are issues." default:"false"`
 }
-
-const (
-	USERS_KEY   = "users"
-	COURSES_KEY = "courses"
-)
 
 func main() {
 	kong.Parse(&args,
-		kong.Description(generateHelpDescription()),
+		kong.Description("Execute an API request to the specified endpoint. For more information on available API endpoints, see the API resource file at: 'resources/api.json'."),
 	)
 
 	err := config.HandleConfigArgs(args.ConfigArgs)
@@ -74,99 +65,10 @@ func main() {
 		request[parts[0]] = parts[1]
 	}
 
-	var printFunc cmd.CustomResponseFormatter
+	var printFunc cmd.CustomResponseFormatter = nil
 	if args.Table {
-		printFunc = printCMDResponseTable
+		printFunc = cmd.PrintCMDResponseTable
 	}
 
 	cmd.MustHandleCMDRequestAndExitFull(args.Endpoint, request, nil, args.CommonOptions, printFunc)
-}
-
-func generateHelpDescription() string {
-	baseDescription := "Execute an API request to the specified endpoint.\n\n"
-
-	var endpointList strings.Builder
-	endpointList.WriteString("List of endpoints:\n")
-
-	apiDescription := api.Describe(*api.GetRoutes())
-	for endpoint := range apiDescription.Endpoints {
-		endpointList.WriteString(fmt.Sprintf("  - %s\n", endpoint))
-	}
-
-	return baseDescription + endpointList.String()
-}
-
-func printCMDResponseTable(response core.APIResponse) string {
-	responseContent, ok := response.Content.(map[string]any)
-	if !ok {
-		return ""
-	}
-
-	// Don't try to format a response that has multiple keys.
-	if len(responseContent) != 1 {
-		return ""
-	}
-
-	users, ok := responseContent[USERS_KEY].([]any)
-	if !ok {
-		return ""
-	}
-
-	firstUser, ok := users[0].(map[string]any)
-	if !ok {
-		return ""
-	}
-
-	var headers []string
-	for key := range firstUser {
-		if key == COURSES_KEY {
-			continue
-		}
-
-		headers = append(headers, key)
-	}
-
-	sort.Strings(headers)
-
-	_, exists := firstUser[COURSES_KEY]
-	if exists {
-		// Add courses to the end of the slice for better readability in the output.
-		headers = append(headers, COURSES_KEY)
-	}
-
-	var usersTable strings.Builder
-	usersTable.WriteString(strings.Join(headers, "\t"))
-
-	headerKeys := strings.Split(usersTable.String(), "\t")
-
-	usersTable.WriteString("\n")
-
-	for i, user := range users {
-		userMap, ok := user.(map[string]any)
-		if !ok {
-			return ""
-		}
-
-		var row []string
-		for _, key := range headerKeys {
-			switch value := userMap[key].(type) {
-			case string:
-				row = append(row, value)
-			case int:
-				row = append(row, strconv.Itoa(value))
-			case bool:
-				row = append(row, strconv.FormatBool(value))
-			default:
-				row = append(row, util.MustToJSON(value))
-			}
-		}
-
-		usersTable.WriteString(strings.Join(row, "\t"))
-
-		if i < len(users)-1 {
-			usersTable.WriteString("\n")
-		}
-	}
-
-	return usersTable.String()
 }

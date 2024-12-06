@@ -43,6 +43,16 @@ func TestCallApiEndpointBase(test *testing.T) {
 		// Custom Output Formatters.
 		{
 			CommonCMDTestCase: cmd.CommonCMDTestCase{
+				ExpectedStdout: EXPECTED_COURSE_ASSIGNMENTS_LIST_TABLE,
+			},
+			endpoint: "courses/assignments/list",
+			parameters: []string{
+				"course-id:course101",
+				"--table",
+			},
+		},
+		{
+			CommonCMDTestCase: cmd.CommonCMDTestCase{
 				ExpectedStdout: EXPECTED_SERVER_USER_LIST_TABLE,
 			},
 			endpoint: "users/list",
