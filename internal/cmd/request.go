@@ -125,8 +125,9 @@ func PrintCMDResponseFull(request any, response core.APIResponse, responseType a
 }
 
 // Attempt to convert an API response to a TSV table.
-// Returns false if there are issues or the TSV table if it was successful.
-func PrintCMDResponseTable(response core.APIResponse) (string, bool) {
+// Return ("", false) if there are issues converting the API response
+// or (customTable.String(), true) if the response got sucessfully converted.
+func AttemptApiResponseToTable(response core.APIResponse) (string, bool) {
 	responseContent, ok := response.Content.(map[string]any)
 	if !ok {
 		return "", false
@@ -137,11 +138,18 @@ func PrintCMDResponseTable(response core.APIResponse) (string, bool) {
 		return "", false
 	}
 
-	responseContentKey := reflect.ValueOf(responseContent).MapKeys()
+	responseContentKey := ""
+	for key := range responseContent {
+		responseContentKey = key
+	}
 
 	// Get the rows that will be added to the table.
-	entries, ok := responseContent[responseContentKey[0].String()].([]any)
+	entries, ok := responseContent[responseContentKey].([]any)
 	if !ok {
+		return "", false
+	}
+
+	if len(entries) == 0 {
 		return "", false
 	}
 
@@ -159,11 +167,7 @@ func PrintCMDResponseTable(response core.APIResponse) (string, bool) {
 	sort.Strings(headers)
 
 	var customTable strings.Builder
-	customTable.WriteString(strings.Join(headers, "\t"))
-
-	headerKeys := strings.Split(customTable.String(), "\t")
-
-	customTable.WriteString("\n")
+	customTable.WriteString(strings.Join(headers, "\t") + "\n")
 
 	// Turn each entry into a row of the table.
 	for i, entry := range entries {
@@ -173,7 +177,7 @@ func PrintCMDResponseTable(response core.APIResponse) (string, bool) {
 		}
 
 		var row []string
-		for _, key := range headerKeys {
+		for _, key := range headers {
 			switch value := entryMap[key].(type) {
 			case map[string]any:
 				row = append(row, util.MustToJSON(value))
@@ -184,7 +188,7 @@ func PrintCMDResponseTable(response core.APIResponse) (string, bool) {
 
 		customTable.WriteString(strings.Join(row, "\t"))
 
-		if i < len(entries)-1 {
+		if i < (len(entries) - 1) {
 			customTable.WriteString("\n")
 		}
 	}

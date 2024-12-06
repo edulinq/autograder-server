@@ -18,7 +18,7 @@ var args struct {
 
 	Endpoint   string   `help:"Endpoint of the desired API." arg:""`
 	Parameters []string `help:"Parameter for the endpoint in the format 'key:value', e.g., 'id:123'." arg:"" optional:""`
-	Table      bool     `help:"Attempt to output data as a TSV; defaults to JSON if there are issues." default:"false"`
+	Table      bool     `help:"Attempt to output data as a TSV. Fallback to JSON if there are issues." default:"false"`
 }
 
 func main() {
@@ -67,7 +67,7 @@ func main() {
 
 	var printFunc cmd.CustomResponseFormatter = nil
 	if args.Table {
-		printFunc = cmd.PrintCMDResponseTable
+		printFunc = cmd.AttemptApiResponseToTable
 	}
 
 	cmd.MustHandleCMDRequestAndExitFull(args.Endpoint, request, nil, args.CommonOptions, printFunc)
