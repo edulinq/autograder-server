@@ -124,6 +124,8 @@ func PrintCMDResponseFull(request any, response core.APIResponse, responseType a
 	}
 }
 
+// Attempt to convert an API response to a TSV table.
+// Returns false if there are issues or the TSV table if it was successful.
 func PrintCMDResponseTable(response core.APIResponse) (string, bool) {
 	responseContent, ok := response.Content.(map[string]any)
 	if !ok {
