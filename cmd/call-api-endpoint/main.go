@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/alecthomas/kong"
@@ -22,7 +23,7 @@ var args struct {
 
 func main() {
 	kong.Parse(&args,
-		kong.Description("Execute an API request to the specified endpoint. For more information on available API endpoints, see the API resource file at: 'resources/api.json'."),
+		kong.Description(generateHelpDescription()),
 	)
 
 	err := config.HandleConfigArgs(args.ConfigArgs)
@@ -62,4 +63,18 @@ func main() {
 	}
 
 	cmd.MustHandleCMDRequestAndExitFull(args.Endpoint, request, nil, args.CommonOptions, nil)
+}
+
+func generateHelpDescription() string {
+	baseDescription := "Execute an API request to the specified endpoint.\n\n"
+
+	var endpointList strings.Builder
+	endpointList.WriteString("List of endpoints:\n")
+
+	apiDescription := api.Describe(*api.GetRoutes())
+	for endpoint := range apiDescription.Endpoints {
+		endpointList.WriteString(fmt.Sprintf("  - %s\n", endpoint))
+	}
+
+	return baseDescription + endpointList.String()
 }
