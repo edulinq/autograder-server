@@ -167,7 +167,7 @@ func syncSource(course *model.Course, options CourseUpsertOptions) (*model.Cours
 	}
 
 	// Ensure this course can load correctly.
-	_, _, err = loadCourseConfig(configPaths[0], options)
+	_, _, err = loadCourseConfig(configPaths[0], false, options)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to load course from source ('%s'): '%w'.", source, err)
 	}
@@ -179,7 +179,7 @@ func syncSource(course *model.Course, options CourseUpsertOptions) (*model.Cours
 	}
 
 	// Load the course from the canonical source.
-	course, _, err = loadCourseConfig(course.GetSourceConfigPath(), options)
+	course, _, err = loadCourseConfig(course.GetSourceConfigPath(), true, options)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to load updated course from source ('%s'): '%w'.", source, err)
 	}
@@ -217,7 +217,7 @@ func updateSourceDirFromConfigPath(configPath string, course *model.Course) erro
 // nil otherwise (which may or may not have an error).
 // This does not write anything and does not assume the config is in the source directory.
 func readConfigForInitialChecks(path string, options CourseUpsertOptions, result *CourseUpsertResult) (*model.Course, error) {
-	course, originalCourseID, err := loadCourseConfig(path, options)
+	course, originalCourseID, err := loadCourseConfig(path, true, options)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to read course config: '%w'.", err)
 	}
@@ -271,8 +271,8 @@ func checkPermissions(course *model.Course, oldCourse *model.Course, options Cou
 
 // Load a course from a course config path and return the course and original ID.
 // If this is a dry run, modify the course's ID.
-func loadCourseConfig(path string, options CourseUpsertOptions) (*model.Course, string, error) {
-	course, _, err := model.FullLoadCourseFromPath(path)
+func loadCourseConfig(path string, isSource bool, options CourseUpsertOptions) (*model.Course, string, error) {
+	course, _, err := model.FullLoadCourseFromPath(path, isSource)
 	if err != nil {
 		return nil, "", err
 	}

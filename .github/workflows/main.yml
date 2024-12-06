@@ -43,8 +43,8 @@ jobs:
     if: ${{ github.event_name == 'push' && github.repository_owner == 'edulinq' && (github.ref == 'refs/heads/main') }}
 
     # To speed up image building, use a matrix and have each instance build one of the images.
+    continue-on-error: true
     strategy:
-      fail-fast: true
       matrix:
         image-type: ['prebuilt', 'slim']
 

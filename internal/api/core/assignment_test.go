@@ -30,9 +30,9 @@ func TestNewAssignmentInfos(test *testing.T) {
 
 		// Multiple Assignments
 		{"course-languages", []*AssignmentInfo{
-			&AssignmentInfo{"bash", "bash"},
-			&AssignmentInfo{"cpp-simple", "cpp-simple"},
-			&AssignmentInfo{"java", "java"},
+			&AssignmentInfo{"bash", "A Simple Bash Assignment"},
+			&AssignmentInfo{"cpp-simple", "A Simple C++ Assignment"},
+			&AssignmentInfo{"java", "A Simple Java Assignment"},
 		}},
 	}
 

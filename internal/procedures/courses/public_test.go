@@ -233,7 +233,7 @@ func TestUpsertFromFileSpec(test *testing.T) {
 				},
 				false,
 				0, 0,
-				"Source dirent for copy does not exist",
+				"No targets found",
 			},
 		},
 		{

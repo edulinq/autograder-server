@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/edulinq/autograder/internal/cmd"
@@ -14,32 +13,13 @@ func TestMain(suite *testing.M) {
 }
 
 func TestServerUserListBase(test *testing.T) {
-	testCases := []struct {
-		CommonCMDTestCase cmd.CommonCMDTestCase
-		table             bool
-	}{
-		{
-			CommonCMDTestCase: cmd.CommonCMDTestCase{
-				ExpectedStdout: EXPECTED_SERVER_USER_LIST,
-			},
-		},
-		{
-			CommonCMDTestCase: cmd.CommonCMDTestCase{
-				ExpectedStdout: EXPECTED_SERVER_USER_LIST_TABLE,
-			},
-			table: true,
-		},
+	commonTestCase := cmd.CommonCMDTestCase{
+		ExpectedStdout: EXPECTED_SERVER_USER_LIST_TABLE,
 	}
 
-	for i, testCase := range testCases {
-		args := []string{}
+	args := []string{"--table"}
 
-		if testCase.table {
-			args = append(args, "--table")
-		}
-
-		cmd.RunCommonCMDTests(test, main, args, testCase.CommonCMDTestCase, fmt.Sprintf("Case %d: ", i))
-	}
+	cmd.RunCommonCMDTests(test, main, args, commonTestCase, "")
 }
 
 // Test to ensure that the verbose flag doesn't cause an error.

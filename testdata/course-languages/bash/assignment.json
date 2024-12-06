@@ -1,6 +1,6 @@
 {
     "id": "bash",
-    "display-name": "A Simple Bash Assignment",
+    "name": "A Simple Bash Assignment",
     "static-files": [
         "grader.sh"
     ],

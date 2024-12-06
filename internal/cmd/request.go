@@ -8,6 +8,7 @@ import (
 	"github.com/edulinq/autograder/internal/api/core"
 	"github.com/edulinq/autograder/internal/api/server"
 	"github.com/edulinq/autograder/internal/common"
+	"github.com/edulinq/autograder/internal/config"
 	"github.com/edulinq/autograder/internal/exit"
 	"github.com/edulinq/autograder/internal/log"
 	"github.com/edulinq/autograder/internal/util"
@@ -24,7 +25,20 @@ func MustHandleCMDRequestAndExit(endpoint string, request any, responseType any)
 }
 
 func MustHandleCMDRequestAndExitFull(endpoint string, request any, responseType any, options CommonOptions, customPrintFunc CustomResponseFormatter) {
-	response, err := SendCMDRequest(endpoint, request)
+	var response core.APIResponse
+	var err error
+
+	// Run inside a func so defers will run before exit.Exit().
+	func() {
+		startedCMDServer, oldPort := mustEnsureServerIsRunning()
+		if startedCMDServer {
+			defer server.StopServer()
+			defer config.WEB_PORT.Set(oldPort)
+		}
+
+		response, err = SendCMDRequest(endpoint, request)
+	}()
+
 	if err != nil {
 		log.Fatal("Failed to send the CMD request.", err, log.NewAttr("endpoint", endpoint))
 	}
@@ -32,7 +46,7 @@ func MustHandleCMDRequestAndExitFull(endpoint string, request any, responseType 
 	if !response.Success {
 		log.Fatal("API Request was unsuccessful.", log.NewAttr("message", response.Message))
 
-		// Return after log.Fatal() sets the exit code to 1 to avoid overwriting the exit code during tests.
+		// Return to prevent further execution after log.Fatal().
 		return
 	}
 
@@ -93,6 +107,8 @@ func PrintCMDResponseFull(request any, response core.APIResponse, responseType a
 
 	if customPrintFunc != nil {
 		fmt.Println(customPrintFunc(response))
+	} else if responseType == nil {
+		fmt.Println(util.MustToJSONIndent(response.Content))
 	} else {
 		responseContent := reflect.New(reflect.TypeOf(responseType)).Interface()
 		util.MustJSONFromString(util.MustToJSON(response.Content), &responseContent)

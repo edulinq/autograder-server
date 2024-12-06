@@ -4,6 +4,7 @@ package docker
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -91,22 +92,26 @@ func buildImage(imageSource ImageSource, buildOptions types.ImageBuildOptions, t
 		return fmt.Errorf("Failed to run docker image build command: '%w'.", err)
 	}
 
-	output := collectBuildOutput(imageSource, response)
-	log.Trace("Image Build Output", imageSource, log.NewAttr("image-build-output", output))
+	output, err := collectBuildOutput(imageSource, response)
+	log.Trace("Image Build Output", imageSource, log.NewAttr("image-build-output", output), err)
+	if err != nil {
+		return fmt.Errorf("Found error(s) in Docker build output: '%w'.", err)
+	}
 
 	return nil
 }
 
 // Try to get the build output from a build response.
 // Note that the response may be from a failure.
-func collectBuildOutput(imageSource ImageSource, response types.ImageBuildResponse) string {
+func collectBuildOutput(imageSource ImageSource, response types.ImageBuildResponse) (string, error) {
 	if response.Body == nil {
-		return ""
+		return "", nil
 	}
 
 	defer response.Body.Close()
 
-	buildStringOutput := strings.Builder{}
+	output := strings.Builder{}
+	var errs error = nil
 
 	responseScanner := bufio.NewScanner(response.Body)
 	for responseScanner.Scan() {
@@ -119,8 +124,8 @@ func collectBuildOutput(imageSource ImageSource, response types.ImageBuildRespon
 
 		jsonData, err := util.JSONMapFromString(line)
 		if err != nil {
-			buildStringOutput.WriteString("<WARNING: The following output line was not JSON.>")
-			buildStringOutput.WriteString(line)
+			output.WriteString("<WARNING: The following output line was not JSON.>")
+			output.WriteString(line)
 		}
 
 		rawText, ok := jsonData["error"]
@@ -130,8 +135,10 @@ func collectBuildOutput(imageSource ImageSource, response types.ImageBuildRespon
 				text = "<ERROR: Docker output JSON value is not a string.>"
 			}
 
-			log.Warn("Docker image build had an error entry.", err, imageSource, log.NewAttr("message", text))
-			buildStringOutput.WriteString(text)
+			text = strings.TrimSpace(text)
+			if text != "" {
+				errs = errors.Join(errs, fmt.Errorf(text))
+			}
 		}
 
 		rawText, ok = jsonData["stream"]
@@ -141,16 +148,16 @@ func collectBuildOutput(imageSource ImageSource, response types.ImageBuildRespon
 				text = "<ERROR: Docker output JSON value is not a string.>"
 			}
 
-			buildStringOutput.WriteString(text)
+			output.WriteString(text)
 		}
 	}
 
 	err := responseScanner.Err()
 	if err != nil {
-		log.Warn("Failed to scan docker image build response.", err, imageSource)
+		errs = errors.Join(errs, fmt.Errorf("Failed to scan docker image build response: '%w'.", err))
 	}
 
-	return buildStringOutput.String()
+	return output.String(), errs
 }
 
 // Write a full docker build context (Dockerfile and static files) to the given directory.
@@ -230,7 +237,7 @@ func toDockerfile(imageInfo *ImageInfo, workDir string) (string, error) {
 
 	// Ensure standard directories are created.
 	lines = append(lines, "# Core directories")
-	for _, dir := range []string{DOCKER_BASE_DIR, DOCKER_INPUT_DIR, DOCKER_OUTPUT_DIR, DOCKER_WORK_DIR} {
+	for _, dir := range []string{DOCKER_BASE_DIR, DOCKER_INPUT_DIR, DOCKER_OUTPUT_DIR, DOCKER_WORK_DIR, DOCKER_SCRIPTS_DIR} {
 		lines = append(lines, fmt.Sprintf("RUN mkdir -p '%s'", dir))
 	}
 	lines = append(lines, "")
@@ -238,7 +245,7 @@ func toDockerfile(imageInfo *ImageInfo, workDir string) (string, error) {
 	// Set the working directory.
 	lines = append(lines, fmt.Sprintf("WORKDIR %s", DOCKER_BASE_DIR), "")
 
-	// Copy over the config and post-os script files.
+	// Copy over the config and post-op script files.
 	lines = append(lines, fmt.Sprintf("COPY %s %s", DOCKER_CONFIG_FILENAME, DOCKER_CONFIG_PATH), "")
 	lines = append(lines, fmt.Sprintf("COPY %s %s", DOCKER_POST_SUBMISSION_OPS_FILENAME, DOCKER_POST_SUBMISSION_OPS_PATH), "")
 
