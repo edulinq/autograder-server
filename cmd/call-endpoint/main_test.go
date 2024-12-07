@@ -121,18 +121,6 @@ func TestCallApiEndpointBase(test *testing.T) {
 				"--table",
 			},
 		},
-		// Test using no target-email to ensure no panic occurs when indexing inside tableMultipleKeys().
-		{
-			CommonCMDTestCase: cmd.CommonCMDTestCase{
-				IgnoreStdout: true,
-			},
-			endpoint: "courses/assignments/submissions/fetch/user/attempts",
-			parameters: []string{
-				"course-id:course101",
-				"assignment-id:hw0",
-				"--table",
-			},
-		},
 		{
 			CommonCMDTestCase: cmd.CommonCMDTestCase{
 				ExpectedStdout: EXPECTED_FETCH_USER_HISTORY_TABLE,
@@ -200,7 +188,6 @@ func TestCallApiEndpointBase(test *testing.T) {
 				"--table",
 			},
 		},
-
 		{
 			CommonCMDTestCase: cmd.CommonCMDTestCase{
 				ExpectedStdout: EXPECTED_SERVER_USER_LIST_TABLE,
@@ -405,20 +392,41 @@ func TestCallApiEndpointBase(test *testing.T) {
 	}
 }
 
-// Test using an empty list to ensure no panic occurs when indexing inside tableSingularKey().
+// Test to ensure no panic occurs when indexing into an empty list's elements during table conversion.
 func TestHandleTableConversionIndexPanic(test *testing.T) {
-	response := core.APIResponse{
-		Content: map[string]any{
-			"key": []any{},
+	testCases := []struct {
+		response core.APIResponse
+	}{
+		// Case 0: Indexing inside of generateTableFromOneKey().
+		{
+			response: core.APIResponse{
+				Content: map[string]any{
+					"key": []any{},
+				},
+			},
+		},
+		// Case 1: Indexing inside of generateTableFromMultipleKeys().
+		{
+			response: core.APIResponse{
+				Content: map[string]any{
+					"key1": []any{},
+					"key2": []any{},
+				},
+			},
 		},
 	}
 
-	defer func() {
-		value := recover()
-		if value != nil {
-			test.Errorf("Table conversion paniced when indexing into the entries when it should have been handled.")
-		}
-	}()
+	for i, testCase := range testCases {
+		// Run inside a func() so defers will run independently for each test case.
+		func() {
+			defer func() {
+				value := recover()
+				if value != nil {
+					test.Errorf("Case %d: Table conversion paniced when indexing into the entries when it should have been handled.", i)
+				}
+			}()
 
-	_, _ = cmd.ConvertApiResponseToTable(response)
+			_, _ = cmd.ConvertApiResponseToTable(testCase.response)
+		}()
+	}
 }

@@ -186,7 +186,7 @@ func generateTableFromMultipleKeys(responseContent map[string]any) (string, bool
 
 	// Turn the entry into a row of the table.
 	for i, entry := range entries {
-		var row string
+		row := ""
 		switch value := entry.(type) {
 		case map[string]any:
 			row = util.MustToJSON(value)
@@ -231,7 +231,7 @@ func generateTableFromOneKey(entries []any) (string, bool) {
 	var customTable strings.Builder
 	customTable.WriteString(strings.Join(headers, "\t"))
 
-	// Turn each entry into rows of the table.
+	// Turn each entry into a row of the table.
 	for _, entry := range entries {
 		entryMap, ok := entry.(map[string]any)
 		if !ok {
