@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/edulinq/autograder/internal/api/core"
 	"github.com/edulinq/autograder/internal/cmd"
 )
 
@@ -43,7 +44,7 @@ func TestCallApiEndpointBase(test *testing.T) {
 		// Custom Output Formatters.
 		{
 			CommonCMDTestCase: cmd.CommonCMDTestCase{
-				ExpectedStdout: EXPECTED_COURSE_ASSIGNMENTS_LIST_TABLE,
+				ExpectedStdout: EXPECTED_COURSES_ASSIGNMENTS_TABLE,
 			},
 			endpoint: "courses/assignments/list",
 			parameters: []string{
@@ -51,6 +52,155 @@ func TestCallApiEndpointBase(test *testing.T) {
 				"--table",
 			},
 		},
+		{
+			CommonCMDTestCase: cmd.CommonCMDTestCase{
+				ExpectedStdout: EXPECTED_COURSES_ASSIGNMENTS_TABLE,
+			},
+			endpoint: "courses/assignments/get",
+			parameters: []string{
+				"course-id:course101",
+				"assignment-id:hw0",
+				"--table",
+			},
+		},
+		{
+			CommonCMDTestCase: cmd.CommonCMDTestCase{
+				ExpectedStdout: EXPECTED_COURSES_USERS_GET_TABLE,
+			},
+			endpoint: "courses/users/get",
+			parameters: []string{
+				"target-email:course-student@test.edulinq.org",
+				"course-id:course101",
+				"--table",
+			},
+		},
+		{
+			CommonCMDTestCase: cmd.CommonCMDTestCase{
+				ExpectedStdout: EXPECTED_FETCH_COURSE_SCORES_TABLE,
+			},
+			endpoint: "courses/assignments/submissions/fetch/course/scores",
+			parameters: []string{
+				"course-id:course101",
+				"assignment-id:hw0",
+				"--table",
+			},
+		},
+		{
+			CommonCMDTestCase: cmd.CommonCMDTestCase{
+				ExpectedStdout: EXPECTED_FETCH_COURSE_ATTEMPTS_TABLE,
+			},
+			endpoint: "courses/assignments/submissions/fetch/course/attempts",
+			parameters: []string{
+				"course-id:course101",
+				"assignment-id:hw0",
+				"--table",
+			},
+		},
+		{
+			CommonCMDTestCase: cmd.CommonCMDTestCase{
+				ExpectedStdout: EXPECTED_FETCH_USER_ATTEMPT_TABLE,
+			},
+			endpoint: "courses/assignments/submissions/fetch/user/attempt",
+			parameters: []string{
+				"target-email:course-student@test.edulinq.org",
+				"course-id:course101",
+				"assignment-id:hw0",
+				"target-submission:1697406256",
+				"--table",
+			},
+		},
+		{
+			CommonCMDTestCase: cmd.CommonCMDTestCase{
+				ExpectedStdout: EXPECTED_FETCH_USER_ATTEMPTS_TABLE,
+			},
+			endpoint: "courses/assignments/submissions/fetch/user/attempts",
+			parameters: []string{
+				"target-email:course-student@test.edulinq.org",
+				"course-id:course101",
+				"assignment-id:hw0",
+				"--table",
+			},
+		},
+		// Test using no target-email to ensure no panic occurs when indexing inside tableMultipleKeys().
+		{
+			CommonCMDTestCase: cmd.CommonCMDTestCase{
+				IgnoreStdout: true,
+			},
+			endpoint: "courses/assignments/submissions/fetch/user/attempts",
+			parameters: []string{
+				"course-id:course101",
+				"assignment-id:hw0",
+				"--table",
+			},
+		},
+		{
+			CommonCMDTestCase: cmd.CommonCMDTestCase{
+				ExpectedStdout: EXPECTED_FETCH_USER_HISTORY_TABLE,
+			},
+			endpoint: "courses/assignments/submissions/fetch/user/history",
+			parameters: []string{
+				"target-email:course-student@test.edulinq.org",
+				"course-id:course101",
+				"assignment-id:hw0",
+				"target-submission:1697406256",
+				"--table",
+			},
+		},
+		{
+			CommonCMDTestCase: cmd.CommonCMDTestCase{
+				ExpectedStdout: EXPECTED_PEEK_TABLE,
+			},
+			endpoint: "courses/assignments/submissions/fetch/user/peek",
+			parameters: []string{
+				"target-email:course-student@test.edulinq.org",
+				"course-id:course101",
+				"assignment-id:hw0",
+				"target-submission:1697406256",
+				"--table",
+			},
+		},
+		{
+			CommonCMDTestCase: cmd.CommonCMDTestCase{
+				ExpectedStdout: EXPECTED_SUBMISSIONS_REMOVE_TABLE,
+			},
+			endpoint: "courses/assignments/submissions/remove",
+			parameters: []string{
+				"target-email:course-student@test.edulinq.org",
+				"course-id:course101",
+				"assignment-id:hw0",
+				"target-submission:1697406256",
+				"--table",
+			},
+		},
+		{
+			CommonCMDTestCase: cmd.CommonCMDTestCase{
+				ExpectedStdout: EXPECTED_LMS_USER_GET_TABLE,
+			},
+			endpoint: "lms/user/get",
+			parameters: []string{
+				"target-email:course-student@test.edulinq.org",
+				"course-id:course101",
+				"--table",
+			},
+		},
+		{
+			CommonCMDTestCase: cmd.CommonCMDTestCase{
+				ExpectedStdout: EXPECTED_DESCRIBE_TABLE,
+			},
+			endpoint:   "metadata/describe",
+			parameters: []string{"--table"},
+		},
+		{
+			CommonCMDTestCase: cmd.CommonCMDTestCase{
+				ExpectedStdout: EXPECTED_USERS_GET_TABLE,
+			},
+			endpoint: "users/get",
+			parameters: []string{
+				"target-email:course-student@test.edulinq.org",
+				"--table",
+			},
+		},
+
 		{
 			CommonCMDTestCase: cmd.CommonCMDTestCase{
 				ExpectedStdout: EXPECTED_SERVER_USER_LIST_TABLE,
@@ -62,7 +212,7 @@ func TestCallApiEndpointBase(test *testing.T) {
 		},
 		{
 			CommonCMDTestCase: cmd.CommonCMDTestCase{
-				ExpectedStdout: EXPECTED_COURSE_USER_LIST_TABLE,
+				ExpectedStdout: EXPECTED_COURSES_USERS_LIST_TABLE,
 			},
 			endpoint: "courses/users/list",
 			parameters: []string{
@@ -156,6 +306,18 @@ func TestCallApiEndpointBase(test *testing.T) {
 			CommonCMDTestCase: cmd.CommonCMDTestCase{
 				IgnoreStdout: true,
 			},
+			endpoint: "courses/assignments/submissions/fetch/user/attempts",
+			parameters: []string{
+				"target-email:course-student@test.edulinq.org",
+				"course-id:course101",
+				"assignment-id:hw0",
+			},
+		},
+
+		{
+			CommonCMDTestCase: cmd.CommonCMDTestCase{
+				IgnoreStdout: true,
+			},
 			endpoint: "courses/assignments/submissions/fetch/user/history",
 			parameters: []string{
 				"target-email:course-student@test.edulinq.org",
@@ -241,4 +403,22 @@ func TestCallApiEndpointBase(test *testing.T) {
 
 		cmd.RunCommonCMDTests(test, main, args, testCase.CommonCMDTestCase, fmt.Sprintf("Case %d: ", i))
 	}
+}
+
+// Test using an empty list to ensure no panic occurs when indexing inside tableSingularKey().
+func TestHandleTableConversionIndexPanic(test *testing.T) {
+	response := core.APIResponse{
+		Content: map[string]any{
+			"key": []any{},
+		},
+	}
+
+	defer func() {
+		value := recover()
+		if value != nil {
+			test.Errorf("Table conversion paniced when indexing into the entries when it should have been handled.")
+		}
+	}()
+
+	_, _ = cmd.ConvertApiResponseToTable(response)
 }

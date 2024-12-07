@@ -113,42 +113,104 @@ func PrintCMDResponseFull(request any, response core.APIResponse, responseType a
 		customPrintOutput, successfulConversion = customPrintFunc(response)
 	}
 
+	output := ""
 	if successfulConversion && customPrintFunc != nil {
-		fmt.Println(customPrintOutput)
+		output = customPrintOutput
 	} else if responseType == nil {
-		fmt.Println(util.MustToJSONIndent(response.Content))
+		output = util.MustToJSONIndent(response.Content)
 	} else {
 		responseContent := reflect.New(reflect.TypeOf(responseType)).Interface()
 		util.MustJSONFromString(util.MustToJSON(response.Content), &responseContent)
-		fmt.Println(util.MustToJSONIndent(responseContent))
+		output = util.MustToJSONIndent(responseContent)
 	}
+
+	fmt.Println(output)
 }
 
 // Attempt to convert an API response to a TSV table.
-// Return ("", false) if there are issues converting the API response
+// Return ("", false) if there are issues converting the API response to a table
 // or (customTable.String(), true) if the response got sucessfully converted.
-func AttemptApiResponseToTable(response core.APIResponse) (string, bool) {
+func ConvertApiResponseToTable(response core.APIResponse) (string, bool) {
 	responseContent, ok := response.Content.(map[string]any)
 	if !ok {
 		return "", false
 	}
 
-	// Don't try to convert a response that has multiple keys.
-	if len(responseContent) != 1 {
-		return "", false
+	// Case 1: Multiple keys in the response content.
+	if len(responseContent) > 1 {
+		return generateTableFromMultipleKeys(responseContent)
 	}
 
-	responseContentKey := ""
+	// Case 2: A single key in the response content.
+	// If the key's value is a map, treat it as a single row table.
+	// If the key's value is a list, treat each element in the list as a row.
+	if len(responseContent) == 1 {
+		var responseContentKey string
+		for key := range responseContent {
+			responseContentKey = key
+		}
+
+		content := responseContent[responseContentKey]
+
+		var entries []any
+		switch value := content.(type) {
+		case map[string]any:
+			entries = []any{value}
+		case []any:
+			entries = value
+		default:
+			return "", false
+		}
+
+		return generateTableFromOneKey(entries)
+	}
+
+	return "", false
+}
+
+func generateTableFromMultipleKeys(responseContent map[string]any) (string, bool) {
+	var responseContentKeys []string
 	for key := range responseContent {
-		responseContentKey = key
+		responseContentKeys = append(responseContentKeys, key)
 	}
 
-	// Get the rows that will be added to the table.
-	entries, ok := responseContent[responseContentKey].([]any)
-	if !ok {
-		return "", false
+	sort.Strings(responseContentKeys)
+
+	var entries []any
+	for _, key := range responseContentKeys {
+		entries = append(entries, responseContent[key])
 	}
 
+	var customTable strings.Builder
+	customTable.WriteString(strings.Join(responseContentKeys, "\t") + "\n")
+
+	// Turn the entry into a row of the table.
+	for i, entry := range entries {
+		var row string
+		switch value := entry.(type) {
+		case map[string]any:
+			row = util.MustToJSON(value)
+		case []any:
+			if len(value) == 0 {
+				return "", false
+			}
+
+			row = util.MustToJSON(value[0])
+		default:
+			row = fmt.Sprintf("%v", entry)
+		}
+
+		customTable.WriteString(row)
+
+		if i < (len(entries) - 1) {
+			customTable.WriteString("\t")
+		}
+	}
+
+	return customTable.String(), true
+}
+
+func generateTableFromOneKey(entries []any) (string, bool) {
 	if len(entries) == 0 {
 		return "", false
 	}
@@ -167,14 +229,16 @@ func AttemptApiResponseToTable(response core.APIResponse) (string, bool) {
 	sort.Strings(headers)
 
 	var customTable strings.Builder
-	customTable.WriteString(strings.Join(headers, "\t") + "\n")
+	customTable.WriteString(strings.Join(headers, "\t"))
 
-	// Turn each entry into a row of the table.
-	for i, entry := range entries {
+	// Turn each entry into rows of the table.
+	for _, entry := range entries {
 		entryMap, ok := entry.(map[string]any)
 		if !ok {
 			return "", false
 		}
+
+		customTable.WriteString("\n")
 
 		var row []string
 		for _, key := range headers {
@@ -187,10 +251,6 @@ func AttemptApiResponseToTable(response core.APIResponse) (string, bool) {
 		}
 
 		customTable.WriteString(strings.Join(row, "\t"))
-
-		if i < (len(entries) - 1) {
-			customTable.WriteString("\n")
-		}
 	}
 
 	return customTable.String(), true
