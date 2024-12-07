@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"net"
 	"reflect"
+	"sort"
+	"strings"
 
 	"github.com/edulinq/autograder/internal/api/core"
 	"github.com/edulinq/autograder/internal/api/server"
@@ -18,7 +20,7 @@ type CommonOptions struct {
 	Verbose bool `help:"Add the full request and response to the output. Be aware that the output will include extra text beyond the expected format." default:"false"`
 }
 
-type CustomResponseFormatter func(response core.APIResponse) string
+type CustomResponseFormatter func(response core.APIResponse) (string, bool)
 
 func MustHandleCMDRequestAndExit(endpoint string, request any, responseType any) {
 	MustHandleCMDRequestAndExitFull(endpoint, request, responseType, CommonOptions{}, nil)
@@ -105,13 +107,151 @@ func PrintCMDResponseFull(request any, response core.APIResponse, responseType a
 		fmt.Printf("\nAutograder Response:\n---\n%s\n---\n", util.MustToJSONIndent(response))
 	}
 
+	successfulConversion := false
+	customPrintOutput := ""
 	if customPrintFunc != nil {
-		fmt.Println(customPrintFunc(response))
+		customPrintOutput, successfulConversion = customPrintFunc(response)
+	}
+
+	output := ""
+	if successfulConversion && customPrintFunc != nil {
+		output = customPrintOutput
 	} else if responseType == nil {
-		fmt.Println(util.MustToJSONIndent(response.Content))
+		output = util.MustToJSONIndent(response.Content)
 	} else {
 		responseContent := reflect.New(reflect.TypeOf(responseType)).Interface()
 		util.MustJSONFromString(util.MustToJSON(response.Content), &responseContent)
-		fmt.Println(util.MustToJSONIndent(responseContent))
+		output = util.MustToJSONIndent(responseContent)
 	}
+
+	fmt.Println(output)
+}
+
+// Attempt to convert an API response to a TSV table.
+// Return ("", false) if there are issues converting the API response to a table
+// or (customTable.String(), true) if the response got sucessfully converted.
+func ConvertApiResponseToTable(response core.APIResponse) (string, bool) {
+	responseContent, ok := response.Content.(map[string]any)
+	if !ok {
+		return "", false
+	}
+
+	// Case 1: Multiple keys in the response content.
+	if len(responseContent) > 1 {
+		return generateTableFromMultipleKeys(responseContent)
+	}
+
+	// Case 2: A single key in the response content.
+	// If the key's value is a map, treat it as a single row table.
+	// If the key's value is a list, treat each element in the list as a row.
+	if len(responseContent) == 1 {
+		var responseContentKey string
+		for key := range responseContent {
+			responseContentKey = key
+		}
+
+		content := responseContent[responseContentKey]
+
+		var entries []any
+		switch value := content.(type) {
+		case map[string]any:
+			entries = []any{value}
+		case []any:
+			entries = value
+		default:
+			return "", false
+		}
+
+		return generateTableFromOneKey(entries)
+	}
+
+	return "", false
+}
+
+func generateTableFromMultipleKeys(responseContent map[string]any) (string, bool) {
+	var responseContentKeys []string
+	for key := range responseContent {
+		responseContentKeys = append(responseContentKeys, key)
+	}
+
+	sort.Strings(responseContentKeys)
+
+	var entries []any
+	for _, key := range responseContentKeys {
+		entries = append(entries, responseContent[key])
+	}
+
+	var customTable strings.Builder
+	customTable.WriteString(strings.Join(responseContentKeys, "\t") + "\n")
+
+	// Turn the entry into a row of the table.
+	for i, entry := range entries {
+		row := ""
+		switch value := entry.(type) {
+		case map[string]any:
+			row = util.MustToJSON(value)
+		case []any:
+			if len(value) == 0 {
+				return "", false
+			}
+
+			row = util.MustToJSON(value[0])
+		default:
+			row = fmt.Sprintf("%v", entry)
+		}
+
+		customTable.WriteString(row)
+
+		if i < (len(entries) - 1) {
+			customTable.WriteString("\t")
+		}
+	}
+
+	return customTable.String(), true
+}
+
+func generateTableFromOneKey(entries []any) (string, bool) {
+	if len(entries) == 0 {
+		return "", false
+	}
+
+	// Use the first entry to create the headers of the table.
+	firstEntry, ok := entries[0].(map[string]any)
+	if !ok {
+		return "", false
+	}
+
+	var headers []string
+	for key := range firstEntry {
+		headers = append(headers, key)
+	}
+
+	sort.Strings(headers)
+
+	var customTable strings.Builder
+	customTable.WriteString(strings.Join(headers, "\t"))
+
+	// Turn each entry into a row of the table.
+	for _, entry := range entries {
+		entryMap, ok := entry.(map[string]any)
+		if !ok {
+			return "", false
+		}
+
+		customTable.WriteString("\n")
+
+		var row []string
+		for _, key := range headers {
+			switch value := entryMap[key].(type) {
+			case map[string]any:
+				row = append(row, util.MustToJSON(value))
+			default:
+				row = append(row, fmt.Sprintf("%v", value))
+			}
+		}
+
+		customTable.WriteString(strings.Join(row, "\t"))
+	}
+
+	return customTable.String(), true
 }
