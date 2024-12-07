@@ -300,7 +300,6 @@ func TestCallApiEndpointBase(test *testing.T) {
 				"assignment-id:hw0",
 			},
 		},
-
 		{
 			CommonCMDTestCase: cmd.CommonCMDTestCase{
 				IgnoreStdout: true,
