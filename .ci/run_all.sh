@@ -30,7 +30,7 @@ function main() {
     ((error_count += $?))
 
     echo -e "\nChecking Duplicate API Locators"
-    ./scripts/check_duplicate_api_locators.sh
+    ./scripts/check_duplicate_locators.sh
     ((error_count += $?))
 
     echo -e "\nRunning Tests"

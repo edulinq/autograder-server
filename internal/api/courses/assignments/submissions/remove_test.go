@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/edulinq/autograder/internal/api/core"
+	"github.com/edulinq/autograder/internal/api/courses/assignments/submissions/fetch/user"
 	"github.com/edulinq/autograder/internal/db"
 	"github.com/edulinq/autograder/internal/util"
 )
@@ -89,7 +90,7 @@ func TestRemove(test *testing.T) {
 			continue
 		}
 
-		var responseContent FetchUserPeekResponse
+		var responseContent user.FetchUserPeekResponse
 		util.MustJSONFromString(util.MustToJSON(response.Content), &responseContent)
 
 		if testCase.foundUser != responseContent.FoundUser {

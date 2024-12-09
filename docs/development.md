@@ -92,6 +92,22 @@ Within this range, each package in the API package is given a range of 100 locat
 
 ## API Notes
 
+### API File Structure
+
+All API endpoints must reside in the corresponding file path from `internal/api`.
+For example, the endpoint `users/list` must reside in a directory called `internal/api/users`.
+
+Additionally, the handler for the endpoint must be in a file with the same name.
+For example, the handler for `users/list` must be in a file named `list.go`.
+
+The handler function must contain the substring `Handle`.
+For our `users/list` example, a good handler name would be `HandleList`.
+
+Putting it all together for our `users/list` example, there should be a handler with `Handle` in it's name
+in the file `list.go`, which can be located in the directory `internal/api/users`.
+
+By following these conventions, we can properly find information about every endpoint.
+
 ### Passwords/Tokens
 
 No password or token should be sent to the server as cleartext.

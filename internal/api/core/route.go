@@ -1,9 +1,13 @@
 package core
 
 import (
+	"go/ast"
+	"go/parser"
+	"go/token"
 	"net/http"
 	"reflect"
 	"regexp"
+	"strings"
 
 	"github.com/edulinq/autograder/internal/exit"
 	"github.com/edulinq/autograder/internal/log"
@@ -28,6 +32,7 @@ type APIRoute struct {
 	BaseRoute
 	RequestType  reflect.Type
 	ResponseType reflect.Type
+	Description  string
 }
 
 func (this *BaseRoute) GetMethod() string {
@@ -97,7 +102,7 @@ func MustNewAPIRoute(basePath string, apiHandler any) *APIRoute {
 		log.FatalWithCode(exit.EXIT_SOFTWARE, "Error while validating API handler.", err, log.NewAttr("endpoint", fullPath))
 	}
 
-	return &APIRoute{
+	apiRoute := APIRoute{
 		BaseRoute: BaseRoute{
 			Method:   "POST",
 			BasePath: basePath,
@@ -106,5 +111,28 @@ func MustNewAPIRoute(basePath string, apiHandler any) *APIRoute {
 		},
 		RequestType:  requestType,
 		ResponseType: responseType,
+		Description:  "",
 	}
+
+	absPath := makeAbsLocalAPIPath(basePath) + ".go"
+	fset := token.NewFileSet()
+	node, parseErr := parser.ParseFile(fset, absPath, nil, parser.ParseComments)
+	if parseErr != nil {
+		log.Warn("Error while parsing file to get API description.", parseErr, log.NewAttr("endpoint", absPath))
+		return &apiRoute
+	}
+
+	for _, decl := range node.Decls {
+		function, ok := decl.(*ast.FuncDecl)
+		if !ok {
+			continue
+		}
+
+		if strings.Contains(function.Name.Name, "Handle") && function.Doc != nil {
+			apiRoute.Description = strings.TrimSpace(function.Doc.Text())
+			break
+		}
+	}
+
+	return &apiRoute
 }
