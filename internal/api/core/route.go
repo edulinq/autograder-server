@@ -11,7 +11,6 @@ import (
 
 	"github.com/edulinq/autograder/internal/exit"
 	"github.com/edulinq/autograder/internal/log"
-	"github.com/edulinq/autograder/internal/util"
 )
 
 type Route interface {
@@ -103,10 +102,11 @@ func MustNewAPIRoute(basePath string, apiHandler any) *APIRoute {
 		log.FatalWithCode(exit.EXIT_SOFTWARE, "Error while validating API handler.", err, log.NewAttr("endpoint", fullPath))
 	}
 
-	absPath := util.ShouldAbs(basePath) + ".go"
+	absPath := makeAbsLocalAPIPath(basePath) + ".go"
 	fset := token.NewFileSet()
 	node, parseErr := parser.ParseFile(fset, absPath, nil, parser.ParseComments)
 	if parseErr != nil {
+		TODODescriptions := "TODO: basePath: '" + basePath + "'. Could not find: " + absPath
 		return &APIRoute{
 			BaseRoute: BaseRoute{
 				Method:   "POST",
@@ -116,7 +116,7 @@ func MustNewAPIRoute(basePath string, apiHandler any) *APIRoute {
 			},
 			RequestType:  requestType,
 			ResponseType: responseType,
-			Description:  "TODO NOT FOUND",
+			Description:  TODODescriptions,
 		}
 
 		// log.FatalWithCode(exit.EXIT_SOFTWARE, "Error while parsing file to get API description.", parseErr, log.NewAttr("endpoint", absPath))

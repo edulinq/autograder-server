@@ -17,7 +17,7 @@ function main() {
 
     mkdir -p "${OUT_DIR}"
 
-    go run cmd/describe-api/main.go > "${OUT_FILE}"
+    go run cmd/call-api-endpoint/main.go metadata/describe > "${OUT_FILE}"
     if [ $? -ne 0 ]; then
         echo "Failed to update ${OUT_FILE}."
         return 1
