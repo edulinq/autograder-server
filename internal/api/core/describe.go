@@ -10,6 +10,7 @@ type APIDescription struct {
 type EndpointDescription struct {
 	RequestType  string `json:"request-type"`
 	ResponseType string `json:"response-type"`
+	Description  string `json:"description"`
 }
 
 func SetAPIDescription(description APIDescription) {

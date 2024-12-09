@@ -16,6 +16,7 @@ func Describe(routes []core.Route) *core.APIDescription {
 		endpointMap[apiRoute.GetBasePath()] = core.EndpointDescription{
 			RequestType:  apiRoute.RequestType.String(),
 			ResponseType: apiRoute.ResponseType.String(),
+			Description:  apiRoute.Description,
 		}
 	}
 
