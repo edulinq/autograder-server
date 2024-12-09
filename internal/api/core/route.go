@@ -102,42 +102,7 @@ func MustNewAPIRoute(basePath string, apiHandler any) *APIRoute {
 		log.FatalWithCode(exit.EXIT_SOFTWARE, "Error while validating API handler.", err, log.NewAttr("endpoint", fullPath))
 	}
 
-	absPath := makeAbsLocalAPIPath(basePath) + ".go"
-	fset := token.NewFileSet()
-	node, parseErr := parser.ParseFile(fset, absPath, nil, parser.ParseComments)
-	if parseErr != nil {
-		TODODescriptions := "TODO: basePath: '" + basePath + "'. Could not find: " + absPath
-		return &APIRoute{
-			BaseRoute: BaseRoute{
-				Method:   "POST",
-				BasePath: basePath,
-				Regex:    regexp.MustCompile("^" + fullPath + "$"),
-				Handler:  handler,
-			},
-			RequestType:  requestType,
-			ResponseType: responseType,
-			Description:  TODODescriptions,
-		}
-
-		// log.FatalWithCode(exit.EXIT_SOFTWARE, "Error while parsing file to get API description.", parseErr, log.NewAttr("endpoint", absPath))
-	}
-
-	apiDescription := ""
-	for _, decl := range node.Decls {
-		function, ok := decl.(*ast.FuncDecl)
-		if !ok {
-			continue
-		}
-
-		if strings.Contains(function.Name.Name, "Handle") {
-			if function.Doc != nil {
-				apiDescription = strings.TrimSpace(function.Doc.Text())
-				break
-			}
-		}
-	}
-
-	return &APIRoute{
+	apiRoute := APIRoute{
 		BaseRoute: BaseRoute{
 			Method:   "POST",
 			BasePath: basePath,
@@ -146,6 +111,28 @@ func MustNewAPIRoute(basePath string, apiHandler any) *APIRoute {
 		},
 		RequestType:  requestType,
 		ResponseType: responseType,
-		Description:  apiDescription,
+		Description:  "",
 	}
+
+	absPath := makeAbsLocalAPIPath(basePath) + ".go"
+	fset := token.NewFileSet()
+	node, parseErr := parser.ParseFile(fset, absPath, nil, parser.ParseComments)
+	if parseErr != nil {
+		log.Warn("Error while parsing file to get API description.", parseErr, log.NewAttr("endpoint", absPath))
+		return &apiRoute
+	}
+
+	for _, decl := range node.Decls {
+		function, ok := decl.(*ast.FuncDecl)
+		if !ok {
+			continue
+		}
+
+		if strings.Contains(function.Name.Name, "Handle") && function.Doc != nil {
+			apiRoute.Description = strings.TrimSpace(function.Doc.Text())
+			break
+		}
+	}
+
+	return &apiRoute
 }
