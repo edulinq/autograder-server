@@ -67,7 +67,7 @@ func main() {
 
 	var printFunc cmd.CustomResponseFormatter = nil
 	if args.Table {
-		printFunc = cmd.ConvertApiResponseToTable
+		printFunc = cmd.ConvertAPIResponseToTable
 	}
 
 	cmd.MustHandleCMDRequestAndExitFull(args.Endpoint, request, nil, args.CommonOptions, printFunc)

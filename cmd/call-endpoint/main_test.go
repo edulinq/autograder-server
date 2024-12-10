@@ -45,7 +45,7 @@ func TestCallEndpoint(test *testing.T) {
 		// Single key with a list.
 		{
 			CommonCMDTestCase: cmd.CommonCMDTestCase{
-				ExpectedStdout: EXPECTED_COURSES_ASSIGNMENTS_TABLE,
+				ExpectedStdout: EXPECTED_COURSES_ASSIGNMENTS_LIST_TABLE,
 			},
 			endpoint: "courses/assignments/list",
 			parameters: []string{
@@ -53,10 +53,10 @@ func TestCallEndpoint(test *testing.T) {
 				"--table",
 			},
 		},
-		// Single key with json.
+		// Single key with a map.
 		{
 			CommonCMDTestCase: cmd.CommonCMDTestCase{
-				ExpectedStdout: EXPECTED_COURSES_ASSIGNMENTS_TABLE,
+				ExpectedStdout: EXPECTED_COURSES_ASSIGNMENTS_GET_TABLE,
 			},
 			endpoint: "courses/assignments/get",
 			parameters: []string{
@@ -68,17 +68,18 @@ func TestCallEndpoint(test *testing.T) {
 		// Multiple keys with a list.
 		{
 			CommonCMDTestCase: cmd.CommonCMDTestCase{
-				ExpectedStdout: EXPECTED_FETCH_USER_ATTEMPTS_TABLE,
+				ExpectedStdout: EXPECTED_FETCH_USER_HISTORY_TABLE,
 			},
-			endpoint: "courses/assignments/submissions/fetch/user/attempts",
+			endpoint: "courses/assignments/submissions/fetch/user/history",
 			parameters: []string{
 				"target-email:course-student@test.edulinq.org",
 				"course-id:course101",
 				"assignment-id:hw0",
+				"target-submission:1697406256",
 				"--table",
 			},
 		},
-		// Multiple keys with json.
+		// Multiple keys with a map.
 		{
 			CommonCMDTestCase: cmd.CommonCMDTestCase{
 				ExpectedStdout: EXPECTED_COURSES_USERS_GET_TABLE,
@@ -282,5 +283,5 @@ func TestTableConversion(test *testing.T) {
 		},
 	}
 
-	_, _ = cmd.ConvertApiResponseToTable(response)
+	_, _ = cmd.ConvertAPIResponseToTable(response)
 }
