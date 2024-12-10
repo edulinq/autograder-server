@@ -166,6 +166,7 @@ func ConvertApiResponseToTable(response core.APIResponse) (string, bool) {
 // Attempt to convert a slice of entries into a TSV table.
 // Headers are taken from the keys of the first entry.
 // Rows are the value's of each entry in the slice.
+// Return the table and true on a successful conversion or false if there is an issue converting.
 func convertEntriesToTable(entries []any) (string, bool) {
 	if len(entries) == 0 {
 		return "", false
