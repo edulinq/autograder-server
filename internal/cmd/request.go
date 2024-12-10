@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"net"
 	"reflect"
+	"sort"
+	"strings"
 
 	"github.com/edulinq/autograder/internal/api/core"
 	"github.com/edulinq/autograder/internal/api/server"
@@ -18,7 +20,7 @@ type CommonOptions struct {
 	Verbose bool `help:"Add the full request and response to the output. Be aware that the output will include extra text beyond the expected format." default:"false"`
 }
 
-type CustomResponseFormatter func(response core.APIResponse) string
+type CustomResponseFormatter func(response core.APIResponse) (string, bool)
 
 func MustHandleCMDRequestAndExit(endpoint string, request any, responseType any) {
 	MustHandleCMDRequestAndExitFull(endpoint, request, responseType, CommonOptions{}, nil)
@@ -105,13 +107,107 @@ func PrintCMDResponseFull(request any, response core.APIResponse, responseType a
 		fmt.Printf("\nAutograder Response:\n---\n%s\n---\n", util.MustToJSONIndent(response))
 	}
 
+	successfulConversion := false
+	customPrintOutput := ""
 	if customPrintFunc != nil {
-		fmt.Println(customPrintFunc(response))
-	} else if responseType == nil {
-		fmt.Println(util.MustToJSONIndent(response.Content))
-	} else {
-		responseContent := reflect.New(reflect.TypeOf(responseType)).Interface()
-		util.MustJSONFromString(util.MustToJSON(response.Content), &responseContent)
-		fmt.Println(util.MustToJSONIndent(responseContent))
+		customPrintOutput, successfulConversion = customPrintFunc(response)
 	}
+
+	output := ""
+	if successfulConversion {
+		output = customPrintOutput
+	} else {
+		if responseType != nil {
+			responseContent := reflect.New(reflect.TypeOf(responseType)).Interface()
+			util.MustJSONFromString(util.MustToJSON(response.Content), &responseContent)
+			output = util.MustToJSONIndent(responseContent)
+		} else {
+			output = util.MustToJSONIndent(response.Content)
+		}
+	}
+
+	fmt.Println(output)
+}
+
+// Attempt to convert an API response into a TSV table.
+// If the response content has multiple keys or a single map, it creates a single row table.
+// If it has one key with a list, the values in each element becomes a row of the table.
+// Return the table and true on a successful conversion or false if there is an issue converting.
+func ConvertApiResponseToTable(response core.APIResponse) (string, bool) {
+	responseContent, ok := response.Content.(map[string]any)
+	if !ok {
+		return "", false
+	}
+
+	if len(responseContent) == 0 {
+		return "", false
+	} else if len(responseContent) > 1 {
+		return convertEntriesToTable([]any{responseContent})
+	} else {
+		var responseContentKey string
+		for key := range responseContent {
+			responseContentKey = key
+		}
+
+		var entries []any
+		switch value := responseContent[responseContentKey].(type) {
+		case map[string]any:
+			entries = []any{value}
+		case []any:
+			entries = value
+		default:
+			return "", false
+		}
+
+		return convertEntriesToTable(entries)
+	}
+}
+
+// Attempt to convert a slice of entries into a TSV table.
+// Headers are taken from the keys of the first entry.
+// Rows are the value's of each entry in the slice.
+// Return the table and true on a successful conversion or false if there is an issue converting.
+func convertEntriesToTable(entries []any) (string, bool) {
+	if len(entries) == 0 {
+		return "", false
+	}
+
+	firstEntry, ok := entries[0].(map[string]any)
+	if !ok {
+		return "", false
+	}
+
+	var headers []string
+	for key := range firstEntry {
+		headers = append(headers, key)
+	}
+
+	sort.Strings(headers)
+
+	var customTable strings.Builder
+	customTable.WriteString(strings.Join(headers, "\t"))
+
+	// Turn each entry into a row of the table.
+	for _, entry := range entries {
+		entryMap, ok := entry.(map[string]any)
+		if !ok {
+			return "", false
+		}
+
+		var row []string
+		for _, key := range headers {
+			switch value := entryMap[key].(type) {
+			case map[string]any:
+				row = append(row, util.MustToJSON(value))
+			case []any:
+				row = append(row, util.MustToJSON(value))
+			default:
+				row = append(row, fmt.Sprintf("%v", value))
+			}
+		}
+
+		customTable.WriteString("\n" + strings.Join(row, "\t"))
+	}
+
+	return customTable.String(), true
 }
