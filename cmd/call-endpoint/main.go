@@ -19,6 +19,7 @@ var args struct {
 
 	Endpoint   string   `help:"Endpoint of the desired API." arg:""`
 	Parameters []string `help:"Parameter for the endpoint in the format 'key:value', e.g., 'id:123'." arg:"" optional:""`
+	Table      bool     `help:"Attempt to output data as a TSV. Fallback to JSON if the table conversion fails." default:"false"`
 }
 
 func main() {
@@ -29,6 +30,9 @@ func main() {
 	err := config.HandleConfigArgs(args.ConfigArgs)
 	if err != nil {
 		log.Fatal("Failed to load config options.", err)
+
+		// Return to prevent further execution after log.Fatal().
+		return
 	}
 
 	var endpointDescription *core.EndpointDescription
@@ -62,7 +66,12 @@ func main() {
 		request[parts[0]] = parts[1]
 	}
 
-	cmd.MustHandleCMDRequestAndExitFull(args.Endpoint, request, nil, args.CommonOptions, nil)
+	var printFunc cmd.CustomResponseFormatter = nil
+	if args.Table {
+		printFunc = cmd.ConvertAPIResponseToTable
+	}
+
+	cmd.MustHandleCMDRequestAndExitFull(args.Endpoint, request, nil, args.CommonOptions, printFunc)
 }
 
 func generateHelpDescription() string {
