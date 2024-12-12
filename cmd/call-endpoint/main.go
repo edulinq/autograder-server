@@ -17,14 +17,15 @@ var args struct {
 	config.ConfigArgs
 	cmd.CommonOptions
 
-	Endpoint   string   `help:"Endpoint of the desired API." arg:""`
+	Endpoint   string   `help:"Endpoint of the desired API." args:""`
 	Parameters []string `help:"Parameter for the endpoint in the format 'key:value', e.g., 'id:123'." arg:"" optional:""`
 	Table      bool     `help:"Attempt to output data as a TSV. Fallback to JSON if the table conversion fails." default:"false"`
+	List       bool     `help:"List all endpoints." default:"false"`
 }
 
 func main() {
 	kong.Parse(&args,
-		kong.Description(generateHelpDescription()),
+		kong.Description("Execute an API request to the specified endpoint."),
 	)
 
 	err := config.HandleConfigArgs(args.ConfigArgs)
@@ -34,6 +35,16 @@ func main() {
 		// Return to prevent further execution after log.Fatal().
 		return
 	}
+
+	if args.List {
+		apiDescription := api.Describe(*api.GetRoutes())
+		for endpoint := range apiDescription.Endpoints {
+			fmt.Println(endpoint)
+		}
+
+		return
+	}
+
 
 	var endpointDescription *core.EndpointDescription
 
@@ -46,7 +57,7 @@ func main() {
 	}
 
 	if endpointDescription == nil {
-		log.Fatal("Failed to find the endpoint.", log.NewAttr("endpoint", args.Endpoint))
+		log.Fatal("Failed to find the endpoint. See --list to view all endpoints.", log.NewAttr("endpoint", args.Endpoint))
 
 		// Return to prevent further execution after log.Fatal().
 		return
@@ -72,18 +83,4 @@ func main() {
 	}
 
 	cmd.MustHandleCMDRequestAndExitFull(args.Endpoint, request, nil, args.CommonOptions, printFunc)
-}
-
-func generateHelpDescription() string {
-	baseDescription := "Execute an API request to the specified endpoint.\n\n"
-
-	var endpointList strings.Builder
-	endpointList.WriteString("List of endpoints:\n")
-
-	apiDescription := api.Describe(*api.GetRoutes())
-	for endpoint := range apiDescription.Endpoints {
-		endpointList.WriteString(fmt.Sprintf("  - %s\n", endpoint))
-	}
-
-	return baseDescription + endpointList.String()
 }
