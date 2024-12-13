@@ -2,7 +2,6 @@ package core
 
 import (
 	"fmt"
-	"path/filepath"
 	"strings"
 
 	"github.com/edulinq/autograder/internal/util"
@@ -17,12 +16,4 @@ func MakeFullAPIPath(suffix string) string {
 	}
 
 	return CURRENT_PREFIX + "/" + suffix
-}
-
-func makeAbsLocalAPIPath(suffix string) string {
-	if strings.HasPrefix(suffix, "/") {
-		suffix = strings.TrimPrefix(suffix, "/")
-	}
-
-	return util.ShouldAbs(filepath.Join(util.ShouldGetThisDir(), "..", suffix))
 }
