@@ -7,74 +7,67 @@ import (
 	"testing"
 )
 
-func TestGetDescriptionFromFunctionBase(test *testing.T) {
+func TestGetDescriptionFromFunction(test *testing.T) {
 	tempDir := MustMkDirTemp("test-description-parser-")
 	path := filepath.Join(tempDir, "test_file.go")
 
-	content := `package temp
+	testCases := []struct {
+		pattern             string
+		content             string
+		expectedDescription string
+		descriptionErr      bool
+	}{
+		// Valid descriptions.
+		{`^FunctionWithComment$`, base_description, "Super helpful function comment!", false},
+		{`^FunctionWithWhitespaceComment$`, whitespace_description, "", false},
+
+		// Invalid descriptions.
+		{`^FunctionWithoutComment$`, missing_description, "", true},
+	}
+
+	for i, testCase := range testCases {
+		err := WriteFile(testCase.content, path)
+		if err != nil {
+			test.Errorf("Case %d: Failed to write content to the test file: '%v'.", i, err)
+			continue
+		}
+
+		functionNamePattern := regexp.MustCompile(testCase.pattern)
+		description, err := GetDescriptionFromFunction(path, functionNamePattern)
+		if err != nil {
+			if testCase.descriptionErr {
+				if !strings.Contains(err.Error(), "Unable to find a description") {
+					test.Errorf("Case %d: Incorrect error returned when getting function description: '%v'.", i, err)
+				}
+			} else {
+				test.Errorf("Case %d: Error while getting a description from a function: '%v'.", i, err)
+			}
+
+			continue
+		}
+
+		if testCase.descriptionErr {
+			test.Errorf("Case %d: Did not get an expected description error.", i)
+			continue
+		}
+
+		if description != testCase.expectedDescription {
+			test.Errorf("Case %d: Unexpected function description. Expected: '%s', actual: '%s'.", i, testCase.expectedDescription, description)
+			continue
+		}
+	}
+}
+
+const base_description = `package temp
 
 // Super helpful function comment!
 func FunctionWithComment(){}`
 
-	err := WriteFile(content, path)
-	if err != nil {
-		test.Fatalf("Failed to write function with comment: '%v'.", err)
-	}
-
-	re := regexp.MustCompile(`^FunctionWithComment$`)
-	description, err := GetDescriptionFromFunction(path, re)
-	if err != nil {
-		test.Fatalf("Error while getting a description from a function: '%v'.", err)
-	}
-
-	expected := "Super helpful function comment!"
-	if strings.Compare(description, expected) != 0 {
-		test.Fatalf("Unexpected function description. Expected: '%s', actual: '%s'.", expected, description)
-	}
-}
-
-func TestGetDescriptionFromFunctionMissing(test *testing.T) {
-	tempDir := MustMkDirTemp("test-description-parser-")
-	path := filepath.Join(tempDir, "test_file.go")
-
-	content := `package temp
+const missing_description = `package temp
 
 func FunctionWithoutComment(){}`
 
-	err := WriteFile(content, path)
-	if err != nil {
-		test.Fatalf("Failed to write function without comment: '%v'.", err)
-	}
-
-	re := regexp.MustCompile(`^FunctionWithoutComment$`)
-	_, err = GetDescriptionFromFunction(path, re)
-	if err == nil {
-		test.Fatalf("Missing description did not return an error.")
-	}
-}
-
-func TestGetDescriptionFromFunctionWhitespace(test *testing.T) {
-	tempDir := MustMkDirTemp("test-description-parser-")
-	path := filepath.Join(tempDir, "test_file.go")
-
-	content := `package temp
+const whitespace_description = `package temp
 
 //    	  	
 func FunctionWithWhitespaceComment(){}`
-
-	err := WriteFile(content, path)
-	if err != nil {
-		test.Fatalf("Failed to write function with whitespace comment: '%v'.", err)
-	}
-
-	re := regexp.MustCompile(`^FunctionWithWhitespaceComment$`)
-	description, err := GetDescriptionFromFunction(path, re)
-	if err != nil {
-		test.Fatalf("Error while getting a description from a function: '%v'.", err)
-	}
-
-	expected := ""
-	if strings.Compare(description, expected) != 0 {
-		test.Fatalf("Unexpected function description. Expected: '%s', actual: '%s'.", expected, description)
-	}
-}

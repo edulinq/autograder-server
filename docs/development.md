@@ -100,7 +100,7 @@ The structure of API endpoint files must follow these rules:
 2. The handler for the endpoint must be in a file with the same name.
 3. The handler function must contain the substring `Handle`.
 
-For example, the handler for `users/list` is called `HandleList` and located in the file `List.go` within the filepath `internal/api/users`.
+For example, the handler for `users/list` is called `HandleList` and located in the file `internal/api/users/list.go`.
 
 ### Passwords/Tokens
 

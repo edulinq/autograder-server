@@ -36,8 +36,8 @@ func GetDescriptionFromHandler(basePath string) (string, error) {
 		return "", fmt.Errorf("Unable to find file path to API Handler. Endpoint: '%s'. Expected path: '%s'.", basePath, absPath)
 	}
 
-	re := regexp.MustCompile(`Handle`)
-	description, err := util.GetDescriptionFromFunction(absPath, re)
+	handlePattern := regexp.MustCompile(`Handle`)
+	description, err := util.GetDescriptionFromFunction(absPath, handlePattern)
 	if err != nil {
 		return "", fmt.Errorf("Error while getting description from function: '%v'. Endpoint: '%s'.", err, basePath)
 	}

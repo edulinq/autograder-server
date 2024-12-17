@@ -9,7 +9,6 @@ import (
 	"github.com/edulinq/autograder/internal/api"
 	"github.com/edulinq/autograder/internal/api/core"
 	"github.com/edulinq/autograder/internal/common"
-	"github.com/edulinq/autograder/internal/log"
 	"github.com/edulinq/autograder/internal/util"
 )
 
@@ -20,9 +19,9 @@ func RunServer(initiator common.ServerInitiator) (err error) {
 		return err
 	}
 
-	apiDescription, errs := api.Describe(*api.GetRoutes())
-	if errs != nil {
-		log.Warn("Found errors when describing the API endpints.", errs)
+	apiDescription, err := api.Describe(*api.GetRoutes())
+	if err != nil {
+		return err
 	}
 
 	core.SetAPIDescription(*apiDescription)
