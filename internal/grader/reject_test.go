@@ -28,7 +28,7 @@ func TestRejectSubmissionMaxAttempts(test *testing.T) {
 	assignment.SubmissionLimit = &model.SubmissionLimitInfo{Max: &maxValue}
 
 	// Make a submission that should be rejected.
-	submitForRejection(test, assignment, "course-other@test.edulinq.org", &RejectMaxAttempts{0})
+	submitForRejection(test, assignment, "course-other@test.edulinq.org", false, &RejectMaxAttempts{0})
 }
 
 func TestRejectSubmissionMaxAttemptsInfinite(test *testing.T) {
@@ -41,14 +41,14 @@ func TestRejectSubmissionMaxAttemptsInfinite(test *testing.T) {
 	assignment.SubmissionLimit = &model.SubmissionLimitInfo{}
 
 	// All submissions should pass.
-	submitForRejection(test, assignment, "course-other@test.edulinq.org", nil)
+	submitForRejection(test, assignment, "course-other@test.edulinq.org", false, nil)
 
 	// Set the max submissions to nagative (infinite).
 	maxValue := -1
 	assignment.SubmissionLimit = &model.SubmissionLimitInfo{Max: &maxValue}
 
 	// All submissions should pass.
-	submitForRejection(test, assignment, "course-other@test.edulinq.org", nil)
+	submitForRejection(test, assignment, "course-other@test.edulinq.org", false, nil)
 }
 
 func TestRejectSubmissionMaxWindowAttempts(test *testing.T) {
@@ -101,7 +101,7 @@ func testMaxWindowAttempts(test *testing.T, user string, expectReject bool) {
 	}
 
 	// Make a submission that should pass.
-	result, _, _ := submitForRejection(test, assignment, user, nil)
+	result, _, _ := submitForRejection(test, assignment, user, false, nil)
 
 	// Make a submission that should be rejected.
 	var reason RejectReason
@@ -109,10 +109,10 @@ func testMaxWindowAttempts(test *testing.T, user string, expectReject bool) {
 		reason = &RejectWindowMax{1, duration, result.Info.GradingStartTime}
 	}
 
-	submitForRejection(test, assignment, user, reason)
+	submitForRejection(test, assignment, user, false, reason)
 }
 
-func submitForRejection(test *testing.T, assignment *model.Assignment, user string, expectedRejection RejectReason) (
+func submitForRejection(test *testing.T, assignment *model.Assignment, user string, ackLate bool, expectedRejection RejectReason) (
 	*model.GradingResult, RejectReason, error) {
 	// Disable testing mode to check for rejection.
 	config.UNIT_TESTING_MODE.Set(false)
@@ -125,7 +125,7 @@ func submitForRejection(test *testing.T, assignment *model.Assignment, user stri
 		test.Fatalf("Failed to validate submission limit: '%v'.", err)
 	}
 
-	result, reject, softError, err := GradeDefault(assignment, submissionPath, user, TEST_MESSAGE)
+    result, reject, softError, err := GradeDefault(assignment, submissionPath, user, TEST_MESSAGE, ackLate)
 	if err != nil {
 		test.Fatalf("Failed to grade assignment: '%v'.", err)
 	}

@@ -20,6 +20,7 @@ var args struct {
 	OutPath        string `help:"Option path to output a JSON grading result." type:"path"`
 	User           string `help:"User email for the submission." default:"testuser"`
 	Message        string `help:"Submission message." default:""`
+    AckLate        bool   `help:"Acknowledge that the assignment is being submitted late." default:"false"`
 	CheckRejection bool   `help:"Check if this submission should be rejected (bypassed by default)." default:"false"`
 }
 
@@ -38,7 +39,7 @@ func main() {
 
 	assignment := db.MustGetAssignment(args.Course, args.Assignment)
 
-	result, reject, softError, err := grader.Grade(assignment, args.Submission, args.User, args.Message, args.CheckRejection, grader.GetDefaultGradeOptions())
+	result, reject, softError, err := grader.Grade(assignment, args.Submission, args.User, args.Message, args.CheckRejection, grader.GetDefaultGradeOptions(args.AckLate))
 	if err != nil {
 		if (result != nil) && result.HasTextOutput() {
 			fmt.Println("Grading failed, but output was recovered:")
