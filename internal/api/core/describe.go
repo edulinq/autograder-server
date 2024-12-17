@@ -2,10 +2,8 @@ package core
 
 import (
 	"fmt"
-	"go/ast"
-	"go/parser"
-	"go/token"
 	"path/filepath"
+	"regexp"
 	"strings"
 
 	"github.com/edulinq/autograder/internal/util"
@@ -33,43 +31,24 @@ func GetAPIDescription() APIDescription {
 }
 
 func GetDescriptionFromHandler(basePath string) (string, error) {
-	absPath := makeAbsLocalAPIPath(basePath) + ".go"
+	absPath := getHandlerFilePath(basePath)
 	if !util.IsFile(absPath) {
 		return "", fmt.Errorf("Unable to find file path to API Handler. Endpoint: '%s'. Expected path: '%s'.", basePath, absPath)
 	}
 
-	fset := token.NewFileSet()
-	node, parseErr := parser.ParseFile(fset, absPath, nil, parser.ParseComments)
-	if parseErr != nil {
-		return "", fmt.Errorf("Error while parsing file to get API description '%v'. Endpoint: '%s'.", parseErr, basePath)
+	re := regexp.MustCompile(`Handle`)
+	description, err := util.GetDescriptionFromFunction(absPath, re)
+	if err != nil {
+		return "", fmt.Errorf("Error while getting description from function: '%v'. Endpoint: '%s'.", err, basePath)
 	}
 
-	for _, decl := range node.Decls {
-		function, ok := decl.(*ast.FuncDecl)
-		if !ok {
-			continue
-		}
-
-		if function.Name == nil {
-			continue
-		}
-
-		if function.Doc == nil {
-			continue
-		}
-
-		if strings.Contains(function.Name.Name, "Handle") {
-			return strings.TrimSpace(function.Doc.Text()), nil
-		}
-	}
-
-	return "", fmt.Errorf("Unable to find a description for an endpoint: '%s'.", basePath)
+	return description, nil
 }
 
-func makeAbsLocalAPIPath(suffix string) string {
-	if strings.HasPrefix(suffix, "/") {
-		suffix = strings.TrimPrefix(suffix, "/")
+func getHandlerFilePath(basePath string) string {
+	if strings.HasPrefix(basePath, "/") {
+		basePath = strings.TrimPrefix(basePath, "/")
 	}
 
-	return util.ShouldAbs(filepath.Join(util.ShouldGetThisDir(), "..", suffix))
+	return util.ShouldAbs(filepath.Join(util.ShouldGetThisDir(), "..", basePath)) + ".go"
 }

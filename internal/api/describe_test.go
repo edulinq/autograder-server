@@ -25,16 +25,23 @@ func TestDescribeFull(test *testing.T) {
 		test.Fatalf("Failed to describe endpoints: '%v'.", err)
 	}
 
+	if !reflect.DeepEqual(&expectedDescriptions, descriptions) {
+		test.Fatalf("Unexpected API Descriptions. Expected: '%s', actual: '%s'.",
+			util.MustToJSONIndent(expectedDescriptions), util.MustToJSONIndent(descriptions))
+	}
+}
+
+func TestDescribeEmpty(test *testing.T) {
+	descriptions, err := Describe(*GetRoutes())
+	if err != nil {
+		test.Fatalf("Failed to describe endpoints: '%v'.", err)
+	}
+
 	for endpoint, description := range descriptions.Endpoints {
 		if description.Description == "" {
 			test.Errorf("Describe found an empty description. Endpoint: '%s'.", endpoint)
 			continue
 		}
-	}
-
-	if !reflect.DeepEqual(&expectedDescriptions, descriptions) {
-		test.Fatalf("Unexpected API Descriptions. Expected: '%s', actual: '%s'.",
-			util.MustToJSONIndent(expectedDescriptions), util.MustToJSONIndent(descriptions))
 	}
 }
 
