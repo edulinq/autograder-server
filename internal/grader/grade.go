@@ -18,14 +18,14 @@ var submissionLocks sync.Map
 type GradeOptions struct {
 	NoDocker     bool
 	LeaveTempDir bool
-    AckLate      bool
+	AckLate      bool
 }
 
 func GetDefaultGradeOptions(ackLate bool) GradeOptions {
 	return GradeOptions{
 		NoDocker:     config.DOCKER_DISABLE.Get(),
 		LeaveTempDir: config.KEEP_BUILD_DIRS.Get(),
-        AckLate:      ackLate,
+		AckLate:      ackLate,
 	}
 }
 

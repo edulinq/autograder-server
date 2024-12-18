@@ -46,37 +46,37 @@ func (this *RejectWindowMax) fullString(now timestamp.Timestamp) string {
 }
 
 type RejectLateWithoutAck struct {
-    AssignmentName string
-    DueDate        timestamp.Timestamp
+	AssignmentName string
+	DueDate        timestamp.Timestamp
 }
 
 func (this *RejectLateWithoutAck) String() string {
-    return fmt.Sprintf("Attempting to submit assignment (%s) late without acknowledgement."+
-        " It was due on %s.",
-        this.AssignmentName, this.DueDate.SafeMessage())
+	return fmt.Sprintf("Attempting to submit assignment (%s) late without acknowledgement."+
+		" It was due on %s.",
+		this.AssignmentName, this.DueDate.UnsafePrettyString())
 }
 
 func checkForRejection(assignment *model.Assignment, submissionPath string, user string, message string, ackLate bool) (RejectReason, error) {
-    reason := checkLateSubmission(assignment, ackLate)
-    if reason != nil {
-        return reason, nil
-    }
+	reason := checkLateSubmission(assignment, ackLate)
+	if reason != nil {
+		return reason, nil
+	}
 
 	return checkSubmissionLimit(assignment, user)
 }
 
 func checkLateSubmission(assignment *model.Assignment, ackLate bool) RejectReason {
-    now := timestamp.Now()
+	now := timestamp.Now()
 
-    if assignment.DueDate == nil {
-        return nil
-    }
+	if assignment.DueDate == nil {
+		return nil
+	}
 
-    if (now > *assignment.DueDate) && !ackLate {
-        return &RejectLateWithoutAck{assignment.Name, *assignment.DueDate}
-    }
+	if (now > *assignment.DueDate) && !ackLate {
+		return &RejectLateWithoutAck{assignment.Name, *assignment.DueDate}
+	}
 
-    return nil
+	return nil
 }
 
 func checkSubmissionLimit(assignment *model.Assignment, email string) (RejectReason, error) {
@@ -94,7 +94,7 @@ func checkSubmissionLimit(assignment *model.Assignment, email string) (RejectRea
 		return nil, fmt.Errorf("Unable to find user: '%s'.", email)
 	}
 
-	// User that are >= grader are not subject to submission restrictions.
+	// Users that are >= grader are not subject to submission restrictions.
 	if user.Role >= model.CourseRoleGrader {
 		return nil, nil
 	}

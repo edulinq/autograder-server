@@ -13,7 +13,7 @@ type SubmitRequest struct {
 	Files core.POSTFiles
 
 	Message string `json:"message"`
-    AckLate bool   `json:"ack-late"`
+	AckLate bool   `json:"ack-late"`
 }
 
 type SubmitResponse struct {

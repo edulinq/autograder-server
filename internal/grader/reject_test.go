@@ -21,7 +21,7 @@ func TestRejectSubmissionMaxAttempts(test *testing.T) {
 	db.ResetForTesting()
 	defer db.ResetForTesting()
 
-	assignment := db.MustGetAssignment(TEST_COURSE_ID, TEST_ASSIGNMENT_ID)
+	assignment := db.MustGetTestAssignment()
 
 	// Set the max submissions to zero.
 	maxValue := 0
@@ -35,7 +35,7 @@ func TestRejectSubmissionMaxAttemptsInfinite(test *testing.T) {
 	db.ResetForTesting()
 	defer db.ResetForTesting()
 
-	assignment := db.MustGetAssignment(TEST_COURSE_ID, TEST_ASSIGNMENT_ID)
+	assignment := db.MustGetTestAssignment()
 
 	// Set the max submissions to empty (infinite).
 	assignment.SubmissionLimit = &model.SubmissionLimitInfo{}
@@ -85,11 +85,43 @@ func TestRejectWindowMaxMessage(test *testing.T) {
 	}
 }
 
+func TestRejectLateSubmissionNoAck(test *testing.T) {
+	db.ResetForTesting()
+	defer db.ResetForTesting()
+
+	assignment := db.MustGetTestAssignment()
+
+	// Set a dummy submission limit.
+	assignment.SubmissionLimit = &model.SubmissionLimitInfo{}
+
+	// Set the due date to be the Unix epoch.
+	timestamp := timestamp.Zero()
+	assignment.DueDate = &timestamp
+
+	submitForRejection(test, assignment, "course-other@test.edulinq.org", false, &RejectLateWithoutAck{assignment.Name, *assignment.DueDate})
+}
+
+func TestRejectLateSubmissionWithAck(test *testing.T) {
+	db.ResetForTesting()
+	defer db.ResetForTesting()
+
+	assignment := db.MustGetTestAssignment()
+
+	// Set a dummy submission limit.
+	assignment.SubmissionLimit = &model.SubmissionLimitInfo{}
+
+	// Set the due date to be the Unix epoch.
+	timestamp := timestamp.Zero()
+	assignment.DueDate = &timestamp
+
+	submitForRejection(test, assignment, "course-other@test.edulinq.org", true, nil)
+}
+
 func testMaxWindowAttempts(test *testing.T, user string, expectReject bool) {
 	db.ResetForTesting()
 	defer db.ResetForTesting()
 
-	assignment := db.MustGetAssignment(TEST_COURSE_ID, TEST_ASSIGNMENT_ID)
+	assignment := db.MustGetTestAssignment()
 	duration := common.DurationSpec{Days: 1000}
 
 	// Set the submission limit window to 1 attempt in a large duration.
@@ -125,7 +157,7 @@ func submitForRejection(test *testing.T, assignment *model.Assignment, user stri
 		test.Fatalf("Failed to validate submission limit: '%v'.", err)
 	}
 
-    result, reject, softError, err := GradeDefault(assignment, submissionPath, user, TEST_MESSAGE, ackLate)
+	result, reject, softError, err := GradeDefault(assignment, submissionPath, user, TEST_MESSAGE, ackLate)
 	if err != nil {
 		test.Fatalf("Failed to grade assignment: '%v'.", err)
 	}

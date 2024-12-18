@@ -20,7 +20,7 @@ var args struct {
 	OutPath        string `help:"Option path to output a JSON grading result." type:"path"`
 	User           string `help:"User email for the submission." default:"testuser"`
 	Message        string `help:"Submission message." default:""`
-    AckLate        bool   `help:"Acknowledge that the assignment is being submitted late." default:"false"`
+	AckLate        bool   `help:"Acknowledge that the assignment is being submitted late." default:"false"`
 	CheckRejection bool   `help:"Check if this submission should be rejected (bypassed by default)." default:"false"`
 }
 
