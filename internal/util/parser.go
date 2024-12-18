@@ -9,9 +9,9 @@ import (
 	"strings"
 )
 
-// This function takes a file path and a pattern that mathes the name of the target function.
-// Returns the comment attached to the target function.
-// Errors occur when the file or target function cannot be found or if the target function does not have a comment attached.
+// This function takes a file path and a pattern that matches the name of the target function.
+// Returns the comment attached to the first occurrence of the target function.
+// Errors occur when the target function cannot be found.
 func GetDescriptionFromFunction(path string, functionNamePattern *regexp.Regexp) (string, error) {
 	if !IsFile(path) {
 		return "", fmt.Errorf("Unable to find file path to function. Expected path: '%s'.", path)
@@ -33,11 +33,11 @@ func GetDescriptionFromFunction(path string, functionNamePattern *regexp.Regexp)
 			continue
 		}
 
-		if function.Doc == nil {
-			continue
-		}
-
 		if functionNamePattern.MatchString(function.Name.Name) {
+			if function.Doc == nil {
+				return "", nil
+			}
+
 			return strings.TrimSpace(function.Doc.Text()), nil
 		}
 	}

@@ -3,7 +3,6 @@ package util
 import (
 	"path/filepath"
 	"regexp"
-	"strings"
 	"testing"
 )
 
@@ -15,14 +14,11 @@ func TestGetDescriptionFromFunction(test *testing.T) {
 		pattern             string
 		content             string
 		expectedDescription string
-		descriptionErr      bool
 	}{
 		// Valid descriptions.
-		{`^FunctionWithComment$`, base_description, "Super helpful function comment!", false},
-		{`^FunctionWithWhitespaceComment$`, whitespace_description, "", false},
-
-		// Invalid descriptions.
-		{`^FunctionWithoutComment$`, missing_description, "", true},
+		{`^FunctionWithComment$`, BASE_DESCRIPTION, "Super helpful function comment!"},
+		{`^FunctionWithoutComment$`, MISSING_DESCRIPTION, ""},
+		{`^FunctionWithWhitespaceComment$`, WHITESPACE_DESCRIPTION, ""},
 	}
 
 	for i, testCase := range testCases {
@@ -35,19 +31,7 @@ func TestGetDescriptionFromFunction(test *testing.T) {
 		functionNamePattern := regexp.MustCompile(testCase.pattern)
 		description, err := GetDescriptionFromFunction(path, functionNamePattern)
 		if err != nil {
-			if testCase.descriptionErr {
-				if !strings.Contains(err.Error(), "Unable to find a description") {
-					test.Errorf("Case %d: Incorrect error returned when getting function description: '%v'.", i, err)
-				}
-			} else {
-				test.Errorf("Case %d: Error while getting a description from a function: '%v'.", i, err)
-			}
-
-			continue
-		}
-
-		if testCase.descriptionErr {
-			test.Errorf("Case %d: Did not get an expected description error.", i)
+			test.Errorf("Case %d: Error while getting a description from a function: '%v'.", i, err)
 			continue
 		}
 
@@ -58,16 +42,16 @@ func TestGetDescriptionFromFunction(test *testing.T) {
 	}
 }
 
-const base_description = `package temp
+const BASE_DESCRIPTION = `package temp
 
 // Super helpful function comment!
 func FunctionWithComment(){}`
 
-const missing_description = `package temp
+const MISSING_DESCRIPTION = `package temp
 
 func FunctionWithoutComment(){}`
 
-const whitespace_description = `package temp
+const WHITESPACE_DESCRIPTION = `package temp
 
 //    	  	
 func FunctionWithWhitespaceComment(){}`
