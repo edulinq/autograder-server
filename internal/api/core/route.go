@@ -28,6 +28,7 @@ type APIRoute struct {
 	BaseRoute
 	RequestType  reflect.Type
 	ResponseType reflect.Type
+	Description  string
 }
 
 func (this *BaseRoute) GetMethod() string {
