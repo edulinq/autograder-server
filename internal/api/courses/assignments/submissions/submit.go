@@ -12,8 +12,8 @@ type SubmitRequest struct {
 	core.MinCourseRoleStudent
 	Files core.POSTFiles
 
-	Message string `json:"message"`
-	AckLate bool   `json:"ack-late"`
+	Message   string `json:"message"`
+	AllowLate bool   `json:"allow-late"`
 }
 
 type SubmitResponse struct {
@@ -28,7 +28,7 @@ type SubmitResponse struct {
 func HandleSubmit(request *SubmitRequest) (*SubmitResponse, *core.APIError) {
 	response := SubmitResponse{}
 
-	result, reject, failureMessage, err := grader.GradeDefault(request.Assignment, request.Files.TempDir, request.User.Email, request.Message, request.AckLate)
+	result, reject, failureMessage, err := grader.GradeDefault(request.Assignment, request.Files.TempDir, request.User.Email, request.Message, request.AllowLate)
 	if err != nil {
 		stdout := ""
 		stderr := ""

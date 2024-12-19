@@ -85,7 +85,7 @@ func TestRejectWindowMaxMessage(test *testing.T) {
 	}
 }
 
-func TestRejectLateSubmissionNoAck(test *testing.T) {
+func TestRejectLateSubmissionWithoutAllow(test *testing.T) {
 	db.ResetForTesting()
 	defer db.ResetForTesting()
 
@@ -98,10 +98,10 @@ func TestRejectLateSubmissionNoAck(test *testing.T) {
 	timestamp := timestamp.Zero()
 	assignment.DueDate = &timestamp
 
-	submitForRejection(test, assignment, "course-other@test.edulinq.org", false, &RejectLateWithoutAck{assignment.Name, *assignment.DueDate})
+	submitForRejection(test, assignment, "course-other@test.edulinq.org", false, &RejectLateWithoutAllow{assignment.Name, *assignment.DueDate})
 }
 
-func TestRejectLateSubmissionWithAck(test *testing.T) {
+func TestRejectLateSubmissionWithAllow(test *testing.T) {
 	db.ResetForTesting()
 	defer db.ResetForTesting()
 
@@ -144,7 +144,7 @@ func testMaxWindowAttempts(test *testing.T, user string, expectReject bool) {
 	submitForRejection(test, assignment, user, false, reason)
 }
 
-func submitForRejection(test *testing.T, assignment *model.Assignment, user string, ackLate bool, expectedRejection RejectReason) (
+func submitForRejection(test *testing.T, assignment *model.Assignment, user string, allowLate bool, expectedRejection RejectReason) (
 	*model.GradingResult, RejectReason, error) {
 	// Disable testing mode to check for rejection.
 	config.UNIT_TESTING_MODE.Set(false)
@@ -157,7 +157,7 @@ func submitForRejection(test *testing.T, assignment *model.Assignment, user stri
 		test.Fatalf("Failed to validate submission limit: '%v'.", err)
 	}
 
-	result, reject, softError, err := GradeDefault(assignment, submissionPath, user, TEST_MESSAGE, ackLate)
+	result, reject, softError, err := GradeDefault(assignment, submissionPath, user, TEST_MESSAGE, allowLate)
 	if err != nil {
 		test.Fatalf("Failed to grade assignment: '%v'.", err)
 	}

@@ -18,21 +18,21 @@ var submissionLocks sync.Map
 type GradeOptions struct {
 	NoDocker     bool
 	LeaveTempDir bool
-	AckLate      bool
+	AllowLate    bool
 }
 
-func GetDefaultGradeOptions(ackLate bool) GradeOptions {
+func GetDefaultGradeOptions(allowLate bool) GradeOptions {
 	return GradeOptions{
 		NoDocker:     config.DOCKER_DISABLE.Get(),
 		LeaveTempDir: config.KEEP_BUILD_DIRS.Get(),
-		AckLate:      ackLate,
+		AllowLate:    allowLate,
 	}
 }
 
 // Grade with default options pulled from config.
-func GradeDefault(assignment *model.Assignment, submissionPath string, user string, message string, ackLate bool) (
+func GradeDefault(assignment *model.Assignment, submissionPath string, user string, message string, allowLate bool) (
 	*model.GradingResult, RejectReason, string, error) {
-	return Grade(assignment, submissionPath, user, message, true, GetDefaultGradeOptions(ackLate))
+	return Grade(assignment, submissionPath, user, message, true, GetDefaultGradeOptions(allowLate))
 }
 
 // Grade with custom options.
@@ -41,7 +41,7 @@ func GradeDefault(assignment *model.Assignment, submissionPath string, user stri
 func Grade(assignment *model.Assignment, submissionPath string, user string, message string, checkRejection bool, options GradeOptions) (
 	*model.GradingResult, RejectReason, string, error) {
 	if checkRejection {
-		reject, err := checkForRejection(assignment, submissionPath, user, message, options.AckLate)
+		reject, err := checkForRejection(assignment, submissionPath, user, message, options.AllowLate)
 		if err != nil {
 			return nil, nil, "", fmt.Errorf("Failed to check for rejection: '%w'.", err)
 		}

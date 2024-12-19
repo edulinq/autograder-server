@@ -45,19 +45,27 @@ func (this *RejectWindowMax) fullString(now timestamp.Timestamp) string {
 		nextTime.SafeMessage(), deltaString)
 }
 
-type RejectLateWithoutAck struct {
+type RejectLateWithoutAllow struct {
 	AssignmentName string
 	DueDate        timestamp.Timestamp
 }
 
-func (this *RejectLateWithoutAck) String() string {
-	return fmt.Sprintf("Attempting to submit assignment (%s) late without acknowledgement."+
-		" It was due on %s.",
-		this.AssignmentName, this.DueDate.UnsafePrettyString())
+func (this *RejectLateWithoutAllow) String() string {
+	return this.fullString(timestamp.Now())
 }
 
-func checkForRejection(assignment *model.Assignment, submissionPath string, user string, message string, ackLate bool) (RejectReason, error) {
-	reason := checkLateSubmission(assignment, ackLate)
+func (this *RejectLateWithoutAllow) fullString(now timestamp.Timestamp) string {
+	deltaMS := now.ToMSecs() - this.DueDate.ToMSecs()
+	deltaString := time.Duration(deltaMS * int64(time.Millisecond)).String()
+
+	return fmt.Sprintf("Attempting to submit assignment (%s) late without 'allow late'."+
+		" It was due on %s (which was %s ago). Include the 'allow late' flag to submit an assignment late."+
+		" See your interface's help section for more information.",
+		this.AssignmentName, this.DueDate.SafeMessage(), deltaString)
+}
+
+func checkForRejection(assignment *model.Assignment, submissionPath string, user string, message string, allowLate bool) (RejectReason, error) {
+	reason := checkLateSubmission(assignment, allowLate)
 	if reason != nil {
 		return reason, nil
 	}
@@ -65,15 +73,15 @@ func checkForRejection(assignment *model.Assignment, submissionPath string, user
 	return checkSubmissionLimit(assignment, user)
 }
 
-func checkLateSubmission(assignment *model.Assignment, ackLate bool) RejectReason {
+func checkLateSubmission(assignment *model.Assignment, allowLate bool) RejectReason {
 	now := timestamp.Now()
 
 	if assignment.DueDate == nil {
 		return nil
 	}
 
-	if (now > *assignment.DueDate) && !ackLate {
-		return &RejectLateWithoutAck{assignment.Name, *assignment.DueDate}
+	if (now > *assignment.DueDate) && !allowLate {
+		return &RejectLateWithoutAllow{assignment.Name, *assignment.DueDate}
 	}
 
 	return nil
