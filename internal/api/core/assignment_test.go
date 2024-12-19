@@ -31,6 +31,7 @@ func TestNewAssignmentInfos(test *testing.T) {
 		// Multiple Assignments
 		{"course-languages", []*AssignmentInfo{
 			&AssignmentInfo{"bash", "A Simple Bash Assignment"},
+			&AssignmentInfo{"bash-epoch", "A Simple Bash Assignment Due at the Unix Epoch"},
 			&AssignmentInfo{"cpp-simple", "A Simple C++ Assignment"},
 			&AssignmentInfo{"java", "A Simple Java Assignment"},
 		}},
