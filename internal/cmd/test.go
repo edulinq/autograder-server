@@ -165,23 +165,33 @@ func runCMD(mainFunc func(), args []string) (err error) {
 
 func RunCommonCMDTests(test *testing.T, mainFunc func(), args []string, commonTestCase CommonCMDTestCase, prefix string) (string, string, int, bool) {
 	stdout, stderr, exitCode, err := RunCMDTest(test, mainFunc, args, commonTestCase.LogLevel)
+
+	logOutputs := func() {
+		test.Logf("Stdout: '%s'.", stdout)
+		test.Logf("Stderr: '%s'.", stderr)
+	}
+
 	if err != nil {
 		test.Errorf("%sCMD run returned an error: '%v'.", prefix, err)
+		logOutputs()
 		return "", "", -1, false
 	}
 
 	if commonTestCase.ExpectedExitCode != exitCode {
 		test.Errorf("%sUnexpected exit code. Expected: '%d', Actual: '%d'.", prefix, commonTestCase.ExpectedExitCode, exitCode)
+		logOutputs()
 		return "", "", -1, false
 	}
 
 	if !strings.Contains(stderr, commonTestCase.ExpectedStderrSubstring) {
 		test.Errorf("%sUnexpected stderr substring. Expected stderr substring: '%s', Actual stderr: '%s'.", prefix, commonTestCase.ExpectedStderrSubstring, stderr)
+		logOutputs()
 		return "", "", -1, false
 	}
 
 	if !commonTestCase.IgnoreStdout && commonTestCase.ExpectedStdout != stdout {
 		test.Errorf("%sUnexpected output. Expected: \n'%s', \n Actual: \n'%s'.", prefix, commonTestCase.ExpectedStdout, stdout)
+		logOutputs()
 		return "", "", -1, false
 	}
 
