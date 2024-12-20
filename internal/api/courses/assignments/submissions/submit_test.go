@@ -2,6 +2,7 @@ package submissions
 
 import (
 	"path/filepath"
+	"regexp"
 	"testing"
 
 	"github.com/edulinq/autograder/internal/api/core"
@@ -9,6 +10,7 @@ import (
 	"github.com/edulinq/autograder/internal/db"
 	"github.com/edulinq/autograder/internal/grader"
 	"github.com/edulinq/autograder/internal/model"
+	"github.com/edulinq/autograder/internal/timestamp"
 	"github.com/edulinq/autograder/internal/util"
 )
 
@@ -118,5 +120,59 @@ func TestRejectSubmissionMaxAttempts(test *testing.T) {
 	if expected != responseContent.Message {
 		test.Fatalf("Did not get the expected rejection reason. Expected: '%s', Actual: '%s'.",
 			expected, responseContent.Message)
+	}
+}
+
+func TestRejectLateSubmission(test *testing.T) {
+	db.ResetForTesting()
+	defer db.ResetForTesting()
+
+	// Disable testing mode to check for rejection.
+	config.UNIT_TESTING_MODE.Set(false)
+	defer config.UNIT_TESTING_MODE.Set(true)
+
+	course := db.MustGetCourse("course101")
+	dueDate := timestamp.Zero()
+	course.Assignments["hw0"].DueDate = &dueDate
+	db.MustSaveCourse(course)
+
+	// Note that we are using a submission from a different assignment.
+	assignment := db.MustGetTestAssignment()
+	paths := []string{filepath.Join(assignment.GetSourceDir(), SUBMISSION_RELPATH)}
+
+	fields := map[string]any{
+		"course-id":     "course101",
+		"assignment-id": "hw0",
+	}
+
+	response := core.SendTestAPIRequestFull(test, `courses/assignments/submissions/submit`, fields, paths, "course-student")
+	if !response.Success {
+		test.Fatalf("Response is not a success when it should be: '%v'.", response)
+	}
+
+	var responseContent SubmitResponse
+	util.MustJSONFromString(util.MustToJSON(response.Content), &responseContent)
+
+	if responseContent.GradingSucess {
+		test.Fatalf("Response is a grading success when it should not be: '%v'.", responseContent)
+	}
+
+	if !responseContent.Rejected {
+		test.Fatalf("Response is not rejected when it should be: '%v'.", responseContent)
+	}
+
+	if responseContent.Message == "" {
+		test.Fatalf("Response does not have a reject reason when it should: '%v'.", responseContent)
+	}
+
+	timeDeltaPattern := regexp.MustCompile(`(\d+h)?(\d+m)?(\d+\.\d+s)`)
+	timeDeltaReplacement := "<time-delta:TIME>"
+
+	expected := (&grader.RejectLateWithoutAllow{course.Assignments["hw0"].Name, timestamp.Zero()}).String()
+	expected = timeDeltaPattern.ReplaceAllString(expected, timeDeltaReplacement)
+	actual := timeDeltaPattern.ReplaceAllString(responseContent.Message, timeDeltaReplacement)
+	if expected != actual {
+		test.Fatalf("Did not get the expected rejection reason. Expected: '%s', Actual: '%s'.",
+			expected, actual)
 	}
 }
