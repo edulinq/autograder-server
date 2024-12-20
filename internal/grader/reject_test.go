@@ -98,7 +98,7 @@ func TestRejectLateSubmissionWithoutAllow(test *testing.T) {
 	timestamp := timestamp.Zero()
 	assignment.DueDate = &timestamp
 
-	submitForRejection(test, assignment, "course-other@test.edulinq.org", false, &RejectLateWithoutAllow{assignment.Name, *assignment.DueDate})
+	submitForRejection(test, assignment, "course-other@test.edulinq.org", false, &RejectLate{assignment.Name, *assignment.DueDate})
 }
 
 func TestRejectLateSubmissionWithAllow(test *testing.T) {
@@ -157,7 +157,10 @@ func submitForRejection(test *testing.T, assignment *model.Assignment, user stri
 		test.Fatalf("Failed to validate submission limit: '%v'.", err)
 	}
 
-	result, reject, softError, err := GradeDefault(assignment, submissionPath, user, TEST_MESSAGE, allowLate)
+	gradeOptions := GetDefaultGradeOptions()
+	gradeOptions.AllowLate = allowLate
+
+	result, reject, softError, err := Grade(assignment, submissionPath, user, TEST_MESSAGE, true, gradeOptions)
 	if err != nil {
 		test.Fatalf("Failed to grade assignment: '%v'.", err)
 	}

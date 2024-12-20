@@ -45,22 +45,19 @@ func (this *RejectWindowMax) fullString(now timestamp.Timestamp) string {
 		nextTime.SafeMessage(), deltaString)
 }
 
-type RejectLateWithoutAllow struct {
+type RejectLate struct {
 	AssignmentName string
 	DueDate        timestamp.Timestamp
 }
 
-func (this *RejectLateWithoutAllow) String() string {
-	return this.fullString(timestamp.Now())
-}
-
-func (this *RejectLateWithoutAllow) fullString(now timestamp.Timestamp) string {
-	deltaMS := now.ToMSecs() - this.DueDate.ToMSecs()
+func (this *RejectLate) String() string {
+	deltaMS := timestamp.Now().ToMSecs() - this.DueDate.ToMSecs()
 	deltaString := time.Duration(deltaMS * int64(time.Millisecond)).String()
 
-	return fmt.Sprintf("Attempting to submit assignment (%s) late without 'allow late'."+
-		" It was due on %s (which was %s ago). Include the 'allow late' flag to submit an assignment late."+
-		" See your interface's help section for more information.",
+	return fmt.Sprintf("Attempting to submit assignment (%s) late without the 'allow late' option."+
+		" It was due on %s (which was %s ago)."+
+		" Use the 'allow late' option to submit an assignment late."+
+		" See your interface's documentation for more information.",
 		this.AssignmentName, this.DueDate.SafeMessage(), deltaString)
 }
 
@@ -74,14 +71,14 @@ func checkForRejection(assignment *model.Assignment, submissionPath string, user
 }
 
 func checkLateSubmission(assignment *model.Assignment, allowLate bool) RejectReason {
-	now := timestamp.Now()
-
 	if assignment.DueDate == nil {
 		return nil
 	}
 
+	now := timestamp.Now()
+
 	if (now > *assignment.DueDate) && !allowLate {
-		return &RejectLateWithoutAllow{assignment.Name, *assignment.DueDate}
+		return &RejectLate{assignment.Name, *assignment.DueDate}
 	}
 
 	return nil

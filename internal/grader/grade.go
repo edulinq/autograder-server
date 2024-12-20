@@ -21,18 +21,18 @@ type GradeOptions struct {
 	AllowLate    bool
 }
 
-func GetDefaultGradeOptions(allowLate bool) GradeOptions {
+func GetDefaultGradeOptions() GradeOptions {
 	return GradeOptions{
 		NoDocker:     config.DOCKER_DISABLE.Get(),
 		LeaveTempDir: config.KEEP_BUILD_DIRS.Get(),
-		AllowLate:    allowLate,
+		AllowLate:    false,
 	}
 }
 
 // Grade with default options pulled from config.
-func GradeDefault(assignment *model.Assignment, submissionPath string, user string, message string, allowLate bool) (
+func GradeDefault(assignment *model.Assignment, submissionPath string, user string, message string) (
 	*model.GradingResult, RejectReason, string, error) {
-	return Grade(assignment, submissionPath, user, message, true, GetDefaultGradeOptions(allowLate))
+	return Grade(assignment, submissionPath, user, message, true, GetDefaultGradeOptions())
 }
 
 // Grade with custom options.

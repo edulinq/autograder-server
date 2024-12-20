@@ -39,7 +39,10 @@ func main() {
 
 	assignment := db.MustGetAssignment(args.Course, args.Assignment)
 
-	result, reject, softError, err := grader.Grade(assignment, args.Submission, args.User, args.Message, args.CheckRejection, grader.GetDefaultGradeOptions(args.AllowLate))
+	gradeOptions := grader.GetDefaultGradeOptions()
+	gradeOptions.AllowLate = args.AllowLate
+
+	result, reject, softError, err := grader.Grade(assignment, args.Submission, args.User, args.Message, args.CheckRejection, gradeOptions)
 	if err != nil {
 		if (result != nil) && result.HasTextOutput() {
 			fmt.Println("Grading failed, but output was recovered:")
