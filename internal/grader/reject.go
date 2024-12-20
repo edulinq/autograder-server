@@ -74,11 +74,6 @@ func checkForRejection(assignment *model.Assignment, submissionPath string, user
 }
 
 func checkLateSubmission(assignment *model.Assignment, allowLate bool) RejectReason {
-	// Do not check for late submissions in testing mode.
-	if config.UNIT_TESTING_MODE.Get() {
-		return nil
-	}
-
 	now := timestamp.Now()
 
 	if assignment.DueDate == nil {

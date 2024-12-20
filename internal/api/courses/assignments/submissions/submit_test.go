@@ -26,6 +26,7 @@ func TestSubmit(test *testing.T) {
 		fields := map[string]any{
 			"course-id":     testSubmission.Assignment.GetCourse().GetID(),
 			"assignment-id": testSubmission.Assignment.GetID(),
+			"allow-late":    true,
 		}
 
 		response := core.SendTestAPIRequestFull(test, `courses/assignments/submissions/submit`, fields, testSubmission.Files, "course-student")
@@ -126,10 +127,6 @@ func TestRejectSubmissionMaxAttempts(test *testing.T) {
 func TestRejectLateSubmission(test *testing.T) {
 	db.ResetForTesting()
 	defer db.ResetForTesting()
-
-	// Disable testing mode to check for rejection.
-	config.UNIT_TESTING_MODE.Set(false)
-	defer config.UNIT_TESTING_MODE.Set(true)
 
 	course := db.MustGetCourse("course101")
 	dueDate := timestamp.Zero()
