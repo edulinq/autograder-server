@@ -48,7 +48,9 @@ func Start(initiator common.ServerInitiator) (err error) {
 	}
 
 	// Cleanup any temp dirs.
-	defer util.RemoveRecordedTempDirs()
+	if !config.UNIT_TESTING_MODE.Get() {
+		defer util.RemoveRecordedTempDirs()
+	}
 
 	err = server.RunServer(initiator)
 	if err != nil {
