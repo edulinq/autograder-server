@@ -42,3 +42,23 @@ func GetAssignment(rawCourseID string, rawAssignmentID string) (*model.Assignmen
 
 	return assignment, nil
 }
+
+func MustSaveAssignment(assignment *model.Assignment) {
+	err := SaveAssignment(assignment)
+	if err != nil {
+		log.Fatal("Failed to save course.", err)
+	}
+}
+
+func SaveAssignment(assignment *model.Assignment) error {
+	if backend == nil {
+		return fmt.Errorf("Database has not been opened.")
+	}
+
+	err := assignment.Validate()
+	if err != nil {
+		return fmt.Errorf("Assignment '%s' is not valid: '%w'.", assignment.GetID(), err)
+	}
+
+	return backend.SaveAssignment(assignment)
+}

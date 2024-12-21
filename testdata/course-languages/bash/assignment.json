@@ -1,6 +1,7 @@
 {
     "id": "bash",
     "name": "A Simple Bash Assignment",
+    "due-date": 0,
     "static-files": [
         "grader.sh"
     ],
