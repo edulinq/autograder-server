@@ -21,34 +21,34 @@ func TestRejectSubmissionMaxAttempts(test *testing.T) {
 	db.ResetForTesting()
 	defer db.ResetForTesting()
 
-	assignment := db.MustGetAssignment(TEST_COURSE_ID, TEST_ASSIGNMENT_ID)
+	assignment := db.MustGetTestAssignment()
 
 	// Set the max submissions to zero.
 	maxValue := 0
 	assignment.SubmissionLimit = &model.SubmissionLimitInfo{Max: &maxValue}
 
 	// Make a submission that should be rejected.
-	submitForRejection(test, assignment, "course-other@test.edulinq.org", &RejectMaxAttempts{0})
+	submitForRejection(test, assignment, "course-other@test.edulinq.org", false, &RejectMaxAttempts{0})
 }
 
 func TestRejectSubmissionMaxAttemptsInfinite(test *testing.T) {
 	db.ResetForTesting()
 	defer db.ResetForTesting()
 
-	assignment := db.MustGetAssignment(TEST_COURSE_ID, TEST_ASSIGNMENT_ID)
+	assignment := db.MustGetTestAssignment()
 
 	// Set the max submissions to empty (infinite).
 	assignment.SubmissionLimit = &model.SubmissionLimitInfo{}
 
 	// All submissions should pass.
-	submitForRejection(test, assignment, "course-other@test.edulinq.org", nil)
+	submitForRejection(test, assignment, "course-other@test.edulinq.org", false, nil)
 
 	// Set the max submissions to nagative (infinite).
 	maxValue := -1
 	assignment.SubmissionLimit = &model.SubmissionLimitInfo{Max: &maxValue}
 
 	// All submissions should pass.
-	submitForRejection(test, assignment, "course-other@test.edulinq.org", nil)
+	submitForRejection(test, assignment, "course-other@test.edulinq.org", false, nil)
 }
 
 func TestRejectSubmissionMaxWindowAttempts(test *testing.T) {
@@ -85,11 +85,43 @@ func TestRejectWindowMaxMessage(test *testing.T) {
 	}
 }
 
+func TestRejectLateSubmissionWithoutAllow(test *testing.T) {
+	db.ResetForTesting()
+	defer db.ResetForTesting()
+
+	assignment := db.MustGetTestAssignment()
+
+	// Set a dummy submission limit.
+	assignment.SubmissionLimit = &model.SubmissionLimitInfo{}
+
+	// Set the due date to be the Unix epoch.
+	timestamp := timestamp.Zero()
+	assignment.DueDate = &timestamp
+
+	submitForRejection(test, assignment, "course-other@test.edulinq.org", false, &RejectLate{assignment.Name, *assignment.DueDate})
+}
+
+func TestRejectLateSubmissionWithAllow(test *testing.T) {
+	db.ResetForTesting()
+	defer db.ResetForTesting()
+
+	assignment := db.MustGetTestAssignment()
+
+	// Set a dummy submission limit.
+	assignment.SubmissionLimit = &model.SubmissionLimitInfo{}
+
+	// Set the due date to be the Unix epoch.
+	timestamp := timestamp.Zero()
+	assignment.DueDate = &timestamp
+
+	submitForRejection(test, assignment, "course-other@test.edulinq.org", true, nil)
+}
+
 func testMaxWindowAttempts(test *testing.T, user string, expectReject bool) {
 	db.ResetForTesting()
 	defer db.ResetForTesting()
 
-	assignment := db.MustGetAssignment(TEST_COURSE_ID, TEST_ASSIGNMENT_ID)
+	assignment := db.MustGetTestAssignment()
 	duration := common.DurationSpec{Days: 1000}
 
 	// Set the submission limit window to 1 attempt in a large duration.
@@ -101,7 +133,7 @@ func testMaxWindowAttempts(test *testing.T, user string, expectReject bool) {
 	}
 
 	// Make a submission that should pass.
-	result, _, _ := submitForRejection(test, assignment, user, nil)
+	result, _, _ := submitForRejection(test, assignment, user, false, nil)
 
 	// Make a submission that should be rejected.
 	var reason RejectReason
@@ -109,10 +141,10 @@ func testMaxWindowAttempts(test *testing.T, user string, expectReject bool) {
 		reason = &RejectWindowMax{1, duration, result.Info.GradingStartTime}
 	}
 
-	submitForRejection(test, assignment, user, reason)
+	submitForRejection(test, assignment, user, false, reason)
 }
 
-func submitForRejection(test *testing.T, assignment *model.Assignment, user string, expectedRejection RejectReason) (
+func submitForRejection(test *testing.T, assignment *model.Assignment, user string, allowLate bool, expectedRejection RejectReason) (
 	*model.GradingResult, RejectReason, error) {
 	// Disable testing mode to check for rejection.
 	config.UNIT_TESTING_MODE.Set(false)
@@ -125,7 +157,10 @@ func submitForRejection(test *testing.T, assignment *model.Assignment, user stri
 		test.Fatalf("Failed to validate submission limit: '%v'.", err)
 	}
 
-	result, reject, softError, err := GradeDefault(assignment, submissionPath, user, TEST_MESSAGE)
+	gradeOptions := GetDefaultGradeOptions()
+	gradeOptions.AllowLate = allowLate
+
+	result, reject, softError, err := Grade(assignment, submissionPath, user, TEST_MESSAGE, true, gradeOptions)
 	if err != nil {
 		test.Fatalf("Failed to grade assignment: '%v'.", err)
 	}

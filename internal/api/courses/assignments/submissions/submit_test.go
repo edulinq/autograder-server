@@ -2,13 +2,16 @@ package submissions
 
 import (
 	"path/filepath"
+	"regexp"
 	"testing"
+	"time"
 
 	"github.com/edulinq/autograder/internal/api/core"
 	"github.com/edulinq/autograder/internal/config"
 	"github.com/edulinq/autograder/internal/db"
 	"github.com/edulinq/autograder/internal/grader"
 	"github.com/edulinq/autograder/internal/model"
+	"github.com/edulinq/autograder/internal/timestamp"
 	"github.com/edulinq/autograder/internal/util"
 )
 
@@ -24,6 +27,9 @@ func TestSubmit(test *testing.T) {
 		fields := map[string]any{
 			"course-id":     testSubmission.Assignment.GetCourse().GetID(),
 			"assignment-id": testSubmission.Assignment.GetID(),
+			// Ensure grading passes even if it is past the due date.
+			// Late submissions are tested thoroughly in TestRejectLateSubmission.
+			"allow-late": true,
 		}
 
 		response := core.SendTestAPIRequestFull(test, `courses/assignments/submissions/submit`, fields, testSubmission.Files, "course-student")
@@ -35,7 +41,7 @@ func TestSubmit(test *testing.T) {
 		var responseContent SubmitResponse
 		util.MustJSONFromString(util.MustToJSON(response.Content), &responseContent)
 
-		if !responseContent.GradingSucess {
+		if !responseContent.GradingSuccess {
 			test.Errorf("Case %d: Response is not a grading success when it should be: '%v'.", i, responseContent)
 			continue
 		}
@@ -85,7 +91,6 @@ func TestRejectSubmissionMaxAttempts(test *testing.T) {
 	}
 	db.MustSaveCourse(course)
 
-	// Note that we are using a submission from a different assignment.
 	assignment := db.MustGetTestAssignment()
 	paths := []string{filepath.Join(assignment.GetSourceDir(), SUBMISSION_RELPATH)}
 
@@ -102,7 +107,7 @@ func TestRejectSubmissionMaxAttempts(test *testing.T) {
 	var responseContent SubmitResponse
 	util.MustJSONFromString(util.MustToJSON(response.Content), &responseContent)
 
-	if responseContent.GradingSucess {
+	if responseContent.GradingSuccess {
 		test.Fatalf("Response is a grading success when it should not be: '%v'.", responseContent)
 	}
 
@@ -118,5 +123,98 @@ func TestRejectSubmissionMaxAttempts(test *testing.T) {
 	if expected != responseContent.Message {
 		test.Fatalf("Did not get the expected rejection reason. Expected: '%s', Actual: '%s'.",
 			expected, responseContent.Message)
+	}
+}
+
+func TestRejectLateSubmission(test *testing.T) {
+	defer db.ResetForTesting()
+
+	assignment := db.MustGetTestAssignment()
+	paths := []string{filepath.Join(assignment.GetSourceDir(), SUBMISSION_RELPATH)}
+
+	timeDeltaPattern := regexp.MustCompile(`(\d+h)?(\d+m)?(\d+\.)?\d+[mun]?s`)
+	timeDeltaReplacement := "<time-delta:TIME>"
+
+	testCases := []struct {
+		allowLate    bool
+		dueDate      timestamp.Timestamp
+		expectReject bool
+	}{
+		// Assignment due at Unix Epoch, reject without allow late.
+		{
+			allowLate:    true,
+			dueDate:      timestamp.Zero(),
+			expectReject: false,
+		},
+		{
+			allowLate:    false,
+			dueDate:      timestamp.Zero(),
+			expectReject: true,
+		},
+
+		// Assignment due tomorrow, will never reject.
+		{
+			allowLate:    true,
+			dueDate:      timestamp.FromGoTime(time.Now().Add(24 * time.Hour)),
+			expectReject: false,
+		},
+		{
+			allowLate:    false,
+			dueDate:      timestamp.FromGoTime(time.Now().Add(24 * time.Hour)),
+			expectReject: false,
+		},
+	}
+
+	for i, testCase := range testCases {
+		db.ResetForTesting()
+
+		assignment.DueDate = &testCase.dueDate
+		db.MustSaveAssignment(assignment)
+
+		fields := map[string]any{
+			"course-id":     assignment.GetCourse().GetID(),
+			"assignment-id": assignment.GetID(),
+			"allow-late":    testCase.allowLate,
+		}
+
+		response := core.SendTestAPIRequestFull(test, `courses/assignments/submissions/submit`, fields, paths, "course-student")
+		if !response.Success {
+			test.Errorf("Case %d: Response is not a success when it should be: '%v'.",
+				i, util.MustToJSONIndent(response))
+			continue
+		}
+
+		var responseContent SubmitResponse
+		util.MustJSONFromString(util.MustToJSON(response.Content), &responseContent)
+
+		// If grading succeeds when we expect it to be rejected (which sets grading success to false).
+		if responseContent.GradingSuccess == testCase.expectReject {
+			test.Errorf("Case %d: Unexpected grading success result. Expected: '%v', actual: '%v': Full content: '%v'.",
+				i, responseContent.GradingSuccess, testCase.expectReject, util.MustToJSONIndent(responseContent))
+			continue
+		}
+
+		if responseContent.Rejected != testCase.expectReject {
+			test.Errorf("Case %d: Unexpected response rejection status. Expected: '%v', actual: '%v'. Full content: '%v'.",
+				i, responseContent.Rejected, testCase.expectReject, util.MustToJSONIndent(responseContent))
+			continue
+		}
+
+		if testCase.expectReject {
+			expected := (&grader.RejectLate{assignment.Name, *assignment.DueDate}).String()
+			expected = timeDeltaPattern.ReplaceAllString(expected, timeDeltaReplacement)
+			actual := timeDeltaPattern.ReplaceAllString(responseContent.Message, timeDeltaReplacement)
+			if expected != actual {
+				test.Errorf("Case %d: Did not get the expected rejection reason. Expected: '%s', Actual: '%s'.",
+					i, expected, actual)
+				continue
+			}
+		} else {
+			if responseContent.Message != "" {
+				test.Errorf("Case %d: Response has a reject reason when it should not: '%v'.",
+					i, util.MustToJSONIndent(responseContent))
+				continue
+			}
+		}
 	}
 }

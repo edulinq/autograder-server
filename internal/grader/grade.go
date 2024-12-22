@@ -18,12 +18,14 @@ var submissionLocks sync.Map
 type GradeOptions struct {
 	NoDocker     bool
 	LeaveTempDir bool
+	AllowLate    bool
 }
 
 func GetDefaultGradeOptions() GradeOptions {
 	return GradeOptions{
 		NoDocker:     config.DOCKER_DISABLE.Get(),
 		LeaveTempDir: config.KEEP_BUILD_DIRS.Get(),
+		AllowLate:    false,
 	}
 }
 
@@ -39,7 +41,7 @@ func GradeDefault(assignment *model.Assignment, submissionPath string, user stri
 func Grade(assignment *model.Assignment, submissionPath string, user string, message string, checkRejection bool, options GradeOptions) (
 	*model.GradingResult, RejectReason, string, error) {
 	if checkRejection {
-		reject, err := checkForRejection(assignment, submissionPath, user, message)
+		reject, err := checkForRejection(assignment, submissionPath, user, message, options.AllowLate)
 		if err != nil {
 			return nil, nil, "", fmt.Errorf("Failed to check for rejection: '%w'.", err)
 		}
