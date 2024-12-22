@@ -205,8 +205,9 @@ func TestRejectLateSubmission(test *testing.T) {
 			expected = timeDeltaPattern.ReplaceAllString(expected, timeDeltaReplacement)
 			actual := timeDeltaPattern.ReplaceAllString(responseContent.Message, timeDeltaReplacement)
 			if expected != actual {
-				test.Fatalf("Case %d: Did not get the expected rejection reason. Expected: '%s', Actual: '%s'.",
+				test.Errorf("Case %d: Did not get the expected rejection reason. Expected: '%s', Actual: '%s'.",
 					i, expected, actual)
+				continue
 			}
 		} else {
 			if responseContent.Message != "" {

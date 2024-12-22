@@ -46,7 +46,7 @@ func GetAssignment(rawCourseID string, rawAssignmentID string) (*model.Assignmen
 func MustSaveAssignment(assignment *model.Assignment) {
 	err := SaveAssignment(assignment)
 	if err != nil {
-		log.Fatal("Failed to save course.", err)
+		log.Fatal("Failed to save assignment.", err)
 	}
 }
 
