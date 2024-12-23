@@ -18,15 +18,15 @@ This section provides guidance on preparing your environment.
 
 ### Prerequisites
 
-1. Python (>= 3.8)
+1. **Python (>= 3.8)**:
    If Python is not already installed on your system,
    follow the [Python Beginner’s Guide to Downloads](https://www.python.org/about/gettingstarted/) to install the appropriate version for your operating system.
 
-2. Docker
+2. **Docker**:
    To use Docker with the autograder, ensure Docker is installed and properly set up on your system.
    Follow the [Docker Get Started Guide](https://docs.docker.com/get-started/) for installation and basic usage instructions.
 
-3. POSIX-Compliant System
+3. **POSIX-Compliant System**:
    This tutorial assumes a POSIX system (Linux, BSD, macOS, or WSL for Windows) is being used. Windows users should set up WSL for compatibility.
 
 ### Why Clone the Autograder Repository?
