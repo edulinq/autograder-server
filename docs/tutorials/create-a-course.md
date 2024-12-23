@@ -30,7 +30,8 @@ This section provides guidance on preparing your environment.
 
 3. POSIX-Compliant System:
 
-   This tutorial assumes a POSIX system (Linux, BSD, macOS, or WSL for Windows) is being used. Windows users should set up WSL for compatibility.
+   This tutorial assumes a POSIX system (Linux, BSD, macOS, or WSL for Windows) is being used.
+   Windows users should set up WSL for compatibility.
 
 ### Why Clone the Autograder Repository?
 
@@ -38,11 +39,10 @@ The autograder repository contains all the required scripts, resources, and CMD 
 This simplifies the process of running scripts and following the tutorial.
 
 - Clone the repository:
-    Clone the autograder repository to access the necessary resources:
-    ```sh
-    git clone https://github.com/your-org/autograder-server.git
-    cd autograder-server
-    ```
+```sh
+git clone https://github.com/your-org/autograder-server.git
+cd autograder-server
+```
 
 While the tutorial assumes you are working directly within the cloned repository, you are not strictly required to keep your course files here.
 If you want to work in another directory while following the tutorial,
