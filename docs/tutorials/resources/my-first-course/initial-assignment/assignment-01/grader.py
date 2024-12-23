@@ -10,7 +10,7 @@ This grader can be invoked using the autograder Python interface (e.g., `autogra
 or directly:
 ```
 ./grader.py -s my-submission-directory
-``
+```
 """
 
 import sys
@@ -42,7 +42,7 @@ class Add(autograder.question.Question):
         # Then if you add more test cases, you don't need to adjust point values.
         deduction = -(max(1, self.max_points // len(test_cases)))
 
-        # Start everyone with full credit (you can also do the opposite)..
+        # Start everyone with full credit (you can also do the opposite).
         self.full_credit()
 
         for (a, b, name) in test_cases:

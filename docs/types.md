@@ -235,8 +235,8 @@ The fields for this file (the `GraderOutput` type) are as follows:
 | `questions`          | List[GradedQuestion] | true     | The result of grading each question. |
 | `grading_start_time` | Timestamp            | false    | The time grading started for this assignment. Will default to when the autograder attempted to start the grading container. |
 | `grading_end_time`   | Timestamp            | false    | The time grading ended for this assignment. Will default to when the grading container finishes. |
-| `prologue`           | String               | false    | Optional text to include that the beginning of a grading report. |
-| `epilogue`           | String               | false    | Optional text to include that the end of a grading report. |
+| `prologue`           | String               | false    | Optional text to include at the beginning of a grading report. |
+| `epilogue`           | String               | false    | Optional text to include at the end of a grading report. |
 
 Each question (`GradedQuestion`) has the following fields:
 | Name                 | Type                 | Required | Description |
