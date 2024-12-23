@@ -38,7 +38,7 @@ This section provides guidance on preparing your environment.
 The autograder repository contains all the required scripts, resources, and CMD tools needed to run administrative commands.
 This simplifies the process of running scripts and following the tutorial.
 
-- Clone the repository:
+Clone the repository using the following command:
 ```sh
 git clone https://github.com/your-org/autograder-server.git
 cd autograder-server
