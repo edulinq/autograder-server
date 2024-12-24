@@ -165,7 +165,6 @@ func runCMD(mainFunc func(), args []string) (err error) {
 
 func RunCommonCMDTests(test *testing.T, mainFunc func(), args []string, commonTestCase CommonCMDTestCase, prefix string) (string, string, int, bool) {
 	stdout, stderr, exitCode, err := RunCMDTest(test, mainFunc, args, commonTestCase.LogLevel)
-
 	if err != nil {
 		test.Errorf("%sCMD run returned an error: '%v'.", prefix, err)
 		logOutputs(test, stdout, stderr)

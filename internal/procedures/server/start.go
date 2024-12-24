@@ -50,7 +50,7 @@ func Start(initiator common.ServerInitiator) (err error) {
 		go startCourse(course)
 	}
 
-	// Don't remove temporary directories during unit testing
+	// Don't remove temp dirs during unit testing
 	// since they contain data needed during tests after this function completes.
 	if !config.UNIT_TESTING_MODE.Get() {
 		// Ensure temp dirs are removed before a CMD that started a server finishes its execution.
