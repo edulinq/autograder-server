@@ -22,7 +22,7 @@ func TestCallEndpoint(test *testing.T) {
 		// Errors.
 		{
 			CommonCMDTestCase: cmd.CommonCMDTestCase{
-				ExpectedStderrSubstring: `Failed to find the endpoint. | {"endpoint":"ZZZ"}`,
+				ExpectedStderrSubstring: `Failed to find the endpoint. See --list to view all endpoints. | {"endpoint":"ZZZ"}`,
 				ExpectedExitCode:        1,
 			},
 			endpoint: "ZZZ",
