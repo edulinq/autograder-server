@@ -4,6 +4,7 @@ import (
 	"errors"
 	"os"
 	"os/signal"
+	"sync"
 	"syscall"
 
 	"github.com/edulinq/autograder/internal/api"
@@ -11,6 +12,8 @@ import (
 	"github.com/edulinq/autograder/internal/common"
 	"github.com/edulinq/autograder/internal/util"
 )
+
+var FinishCleanup sync.WaitGroup
 
 // Run the autograder server and listen on an http and unix socket.
 func RunServer(initiator common.ServerInitiator) (err error) {

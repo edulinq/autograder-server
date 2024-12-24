@@ -29,8 +29,11 @@ func Start(initiator common.ServerInitiator) (err error) {
 		return fmt.Errorf("Failed to open the database: '%w'.", err)
 	}
 
+	// Ensure the database closes before a CMD that started a server finishes its execution.
+	server.FinishCleanup.Add(1)
 	defer func() {
 		err = errors.Join(err, db.Close())
+		server.FinishCleanup.Done()
 	}()
 
 	log.Debug("Running server with working directory.", log.NewAttr("dir", config.GetWorkDir()))
@@ -47,9 +50,15 @@ func Start(initiator common.ServerInitiator) (err error) {
 		go startCourse(course)
 	}
 
-	// Cleanup any temp dirs.
+	// Don't remove temporary directories during unit testing
+	// since they contain data needed during tests after this function completes.
 	if !config.UNIT_TESTING_MODE.Get() {
-		defer util.RemoveRecordedTempDirs()
+		// Ensure temp dirs are removed before a CMD that started a server finishes its execution.
+		server.FinishCleanup.Add(1)
+		defer func() {
+			util.RemoveRecordedTempDirs()
+			server.FinishCleanup.Done()
+		}()
 	}
 
 	err = server.RunServer(initiator)
