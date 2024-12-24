@@ -25,7 +25,7 @@ var args struct {
 
 func main() {
 	kong.Parse(&args,
-		kong.Description("Execute an API request to the specified endpoint."),
+		kong.Description("Execute an API request to a specified endpoint."),
 	)
 
 	err := config.HandleConfigArgs(args.ConfigArgs)
@@ -42,7 +42,6 @@ func main() {
 		// Return to prevent further execution after listing endpoints.
 		return
 	}
-
 
 	apiDescription, err := api.Describe(*api.GetRoutes())
 	if err != nil {
