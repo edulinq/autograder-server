@@ -45,8 +45,43 @@ func (this *RejectWindowMax) fullString(now timestamp.Timestamp) string {
 		nextTime.SafeMessage(), deltaString)
 }
 
-func checkForRejection(assignment *model.Assignment, submissionPath string, user string, message string) (RejectReason, error) {
+type RejectLate struct {
+	AssignmentName string
+	DueDate        timestamp.Timestamp
+}
+
+func (this *RejectLate) String() string {
+	deltaMS := timestamp.Now().ToMSecs() - this.DueDate.ToMSecs()
+	deltaString := time.Duration(deltaMS * int64(time.Millisecond)).String()
+
+	return fmt.Sprintf("Attempting to submit assignment (%s) late without the 'allow late' option."+
+		" It was due on %s (which was %s ago)."+
+		" Use the 'allow late' option to submit an assignment late."+
+		" See your interface's documentation for more information.",
+		this.AssignmentName, this.DueDate.SafeMessage(), deltaString)
+}
+
+func checkForRejection(assignment *model.Assignment, submissionPath string, user string, message string, allowLate bool) (RejectReason, error) {
+	reason := checkLateSubmission(assignment, allowLate)
+	if reason != nil {
+		return reason, nil
+	}
+
 	return checkSubmissionLimit(assignment, user)
+}
+
+func checkLateSubmission(assignment *model.Assignment, allowLate bool) RejectReason {
+	if assignment.DueDate == nil {
+		return nil
+	}
+
+	now := timestamp.Now()
+
+	if (now > *assignment.DueDate) && !allowLate {
+		return &RejectLate{assignment.Name, *assignment.DueDate}
+	}
+
+	return nil
 }
 
 func checkSubmissionLimit(assignment *model.Assignment, email string) (RejectReason, error) {
@@ -64,7 +99,7 @@ func checkSubmissionLimit(assignment *model.Assignment, email string) (RejectRea
 		return nil, fmt.Errorf("Unable to find user: '%s'.", email)
 	}
 
-	// User that are >= grader are not subject to submission restrictions.
+	// Users that are >= grader are not subject to submission restrictions.
 	if user.Role >= model.CourseRoleGrader {
 		return nil, nil
 	}

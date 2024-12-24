@@ -4,13 +4,15 @@ package lms
 
 import (
 	"github.com/edulinq/autograder/internal/api/core"
+	"github.com/edulinq/autograder/internal/api/lms/upload"
+	"github.com/edulinq/autograder/internal/api/lms/user"
 )
 
-var routes []core.Route = []core.Route{
-	core.MustNewAPIRoute(`lms/user/get`, HandleUserGet),
-	core.MustNewAPIRoute(`lms/upload/scores`, HandleUploadScores),
-}
-
 func GetRoutes() *[]core.Route {
+	routes := make([]core.Route, 0)
+
+	routes = append(routes, *(upload.GetRoutes())...)
+	routes = append(routes, *(user.GetRoutes())...)
+
 	return &routes
 }

@@ -19,7 +19,12 @@ func RunServer(initiator common.ServerInitiator) (err error) {
 		return err
 	}
 
-	core.SetAPIDescription(*api.Describe(*api.GetRoutes()))
+	apiDescription, err := api.Describe(*api.GetRoutes())
+	if err != nil {
+		return err
+	}
+
+	core.SetAPIDescription(*apiDescription)
 
 	defer func() {
 		err = errors.Join(err, util.RemoveDirent(common.GetStatusPath()))

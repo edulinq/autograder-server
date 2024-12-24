@@ -12,22 +12,26 @@ type SubmitRequest struct {
 	core.MinCourseRoleStudent
 	Files core.POSTFiles
 
-	Message string `json:"message"`
+	Message   string `json:"message"`
+	AllowLate bool   `json:"allow-late"`
 }
 
 type SubmitResponse struct {
 	Rejected bool   `json:"rejected"`
 	Message  string `json:"message"`
 
-	GradingSucess bool               `json:"grading-success"`
-	GradingInfo   *model.GradingInfo `json:"result"`
+	GradingSuccess bool               `json:"grading-success"`
+	GradingInfo    *model.GradingInfo `json:"result"`
 }
 
 // Submit an assignment submission to the autograder.
 func HandleSubmit(request *SubmitRequest) (*SubmitResponse, *core.APIError) {
 	response := SubmitResponse{}
 
-	result, reject, failureMessage, err := grader.GradeDefault(request.Assignment, request.Files.TempDir, request.User.Email, request.Message)
+	gradeOptions := grader.GetDefaultGradeOptions()
+	gradeOptions.AllowLate = request.AllowLate
+
+	result, reject, failureMessage, err := grader.Grade(request.Assignment, request.Files.TempDir, request.User.Email, request.Message, true, gradeOptions)
 	if err != nil {
 		stdout := ""
 		stderr := ""
@@ -57,7 +61,7 @@ func HandleSubmit(request *SubmitRequest) (*SubmitResponse, *core.APIError) {
 		return &response, nil
 	}
 
-	response.GradingSucess = true
+	response.GradingSuccess = true
 	response.GradingInfo = result.Info
 
 	return &response, nil

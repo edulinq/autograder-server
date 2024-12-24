@@ -1,122 +1,152 @@
 {
     "endpoints": {
         "courses/admin/update": {
+            "description": "Update an existing course.",
             "request-type": "*admin.UpdateRequest",
             "response-type": "*admin.UpdateResponse"
         },
         "courses/assignments/get": {
+            "description": "Get the information for a course assignment.",
             "request-type": "*assignments.GetRequest",
             "response-type": "*assignments.GetResponse"
         },
         "courses/assignments/list": {
+            "description": "List the assignments in the course.",
             "request-type": "*assignments.ListRequest",
             "response-type": "*assignments.ListResponse"
         },
         "courses/assignments/submissions/fetch/course/attempts": {
-            "request-type": "*submissions.FetchCourseAttemptsRequest",
-            "response-type": "*submissions.FetchCourseAttemptsResponse"
+            "description": "Get all recent submissions and grading information for this assignment.",
+            "request-type": "*course.FetchCourseAttemptsRequest",
+            "response-type": "*course.FetchCourseAttemptsResponse"
         },
         "courses/assignments/submissions/fetch/course/scores": {
-            "request-type": "*submissions.FetchCourseScoresRequest",
-            "response-type": "*submissions.FetchCourseScoresResponse"
+            "description": "Get a summary of the most recent scores for this assignment.",
+            "request-type": "*course.FetchCourseScoresRequest",
+            "response-type": "*course.FetchCourseScoresResponse"
         },
         "courses/assignments/submissions/fetch/user/attempt": {
-            "request-type": "*submissions.FetchUserAttemptRequest",
-            "response-type": "*submissions.FetchUserAttemptResponse"
+            "description": "Get a submission along with all grading information.",
+            "request-type": "*user.FetchUserAttemptRequest",
+            "response-type": "*user.FetchUserAttemptResponse"
         },
         "courses/assignments/submissions/fetch/user/attempts": {
-            "request-type": "*submissions.FetchUserAttemptsRequest",
-            "response-type": "*submissions.FetchUserAttemptsResponse"
+            "description": "Get all submission attempts made by a user along with all grading information.",
+            "request-type": "*user.FetchUserAttemptsRequest",
+            "response-type": "*user.FetchUserAttemptsResponse"
         },
         "courses/assignments/submissions/fetch/user/history": {
-            "request-type": "*submissions.FetchUserHistoryRequest",
-            "response-type": "*submissions.FetchUserHistoryResponse"
+            "description": "Get a summary of the submissions for this assignment.",
+            "request-type": "*user.FetchUserHistoryRequest",
+            "response-type": "*user.FetchUserHistoryResponse"
         },
         "courses/assignments/submissions/fetch/user/peek": {
-            "request-type": "*submissions.FetchUserPeekRequest",
-            "response-type": "*submissions.FetchUserPeekResponse"
+            "description": "Get a copy of the grading report for the specified submission. Does not submit a new submission.",
+            "request-type": "*user.FetchUserPeekRequest",
+            "response-type": "*user.FetchUserPeekResponse"
         },
         "courses/assignments/submissions/remove": {
+            "description": "Remove a specified submission. Defaults to the most recent submission.",
             "request-type": "*submissions.RemoveRequest",
             "response-type": "*submissions.RemoveResponse"
         },
         "courses/assignments/submissions/submit": {
+            "description": "Submit an assignment submission to the autograder.",
             "request-type": "*submissions.SubmitRequest",
             "response-type": "*submissions.SubmitResponse"
         },
         "courses/upsert/filespec": {
+            "description": "Upsert a course using a filespec.",
             "request-type": "*upsert.FileSpecRequest",
             "response-type": "*upsert.UpsertResponse"
         },
         "courses/upsert/zip": {
+            "description": "Upsert a course using a zip file.",
             "request-type": "*upsert.ZipFileRequest",
             "response-type": "*upsert.UpsertResponse"
         },
         "courses/users/drop": {
+            "description": "Drop a user from the course.",
             "request-type": "*users.DropRequest",
             "response-type": "*users.DropResponse"
         },
         "courses/users/enroll": {
+            "description": "Enroll one or more users to the course.",
             "request-type": "*users.EnrollRequest",
             "response-type": "*users.EnrollResponse"
         },
         "courses/users/get": {
+            "description": "Get the information for a course user.",
             "request-type": "*users.GetRequest",
             "response-type": "*users.GetResponse"
         },
         "courses/users/list": {
+            "description": "List the users in the course.",
             "request-type": "*users.ListRequest",
             "response-type": "*users.ListResponse"
         },
         "lms/upload/scores": {
-            "request-type": "*lms.UploadScoresRequest",
-            "response-type": "*lms.UploadScoresResponse"
+            "description": "Upload scores from a tab-separated file to the course's LMS.\nThe file should not have headers, and should have two columns: email and score.",
+            "request-type": "*upload.UploadScoresRequest",
+            "response-type": "*upload.UploadScoresResponse"
         },
         "lms/user/get": {
-            "request-type": "*lms.UserGetRequest",
-            "response-type": "*lms.UserGetResponse"
+            "description": "Get information for an LMS user.",
+            "request-type": "*user.UserGetRequest",
+            "response-type": "*user.UserGetResponse"
         },
         "logs/query": {
+            "description": "Query log entries from the autograder server.",
             "request-type": "*logs.QueryRequest",
             "response-type": "*logs.QueryResponse"
         },
         "metadata/describe": {
+            "description": "Describe all endpoints on the server.",
             "request-type": "*metadata.DescribeRequest",
             "response-type": "*metadata.DescribeResponse"
         },
         "users/auth": {
+            "description": "Authenticate as a user.",
             "request-type": "*users.AuthRequest",
             "response-type": "*users.AuthResponse"
         },
         "users/get": {
+            "description": "Get the information for a server user.",
             "request-type": "*users.GetRequest",
             "response-type": "*users.GetResponse"
         },
         "users/list": {
+            "description": "List the users on the server.",
             "request-type": "*users.ListRequest",
             "response-type": "*users.ListResponse"
         },
         "users/password/change": {
-            "request-type": "*users.PasswordChangeRequest",
-            "response-type": "*users.PasswordChangeResponse"
+            "description": "Change your password to the one provided.",
+            "request-type": "*password.PasswordChangeRequest",
+            "response-type": "*password.PasswordChangeResponse"
         },
         "users/password/reset": {
-            "request-type": "*users.PasswordResetRequest",
-            "response-type": "*users.PasswordResetResponse"
+            "description": "Reset to a random password that will be emailed to you.",
+            "request-type": "*password.PasswordResetRequest",
+            "response-type": "*password.PasswordResetResponse"
         },
         "users/remove": {
+            "description": "Remove a user from the server.",
             "request-type": "*users.RemoveRequest",
             "response-type": "*users.RemoveResponse"
         },
         "users/tokens/create": {
-            "request-type": "*users.TokensCreateRequest",
-            "response-type": "*users.TokensCreateResponse"
+            "description": "Create a new authentication token.",
+            "request-type": "*tokens.TokensCreateRequest",
+            "response-type": "*tokens.TokensCreateResponse"
         },
         "users/tokens/delete": {
-            "request-type": "*users.TokensDeleteRequest",
-            "response-type": "*users.TokensDeleteResponse"
+            "description": "Delete an authentication token.",
+            "request-type": "*tokens.TokensDeleteRequest",
+            "response-type": "*tokens.TokensDeleteResponse"
         },
         "users/upsert": {
+            "description": "Upsert one or more users to the server (update if exists, insert otherwise).",
             "request-type": "*users.UpsertRequest",
             "response-type": "*users.UpsertResponse"
         }

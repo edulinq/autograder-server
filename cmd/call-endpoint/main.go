@@ -48,7 +48,11 @@ func main() {
 
 	var endpointDescription *core.EndpointDescription
 
-	apiDescription := api.Describe(*api.GetRoutes())
+	apiDescription, err := api.Describe(*api.GetRoutes())
+	if err != nil {
+		log.Fatal("Failed to describe API endpoints.", err)
+	}
+
 	for endpoint, requestResponse := range apiDescription.Endpoints {
 		if endpoint == args.Endpoint {
 			endpointDescription = &requestResponse
