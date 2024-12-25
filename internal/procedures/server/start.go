@@ -15,7 +15,7 @@ import (
 )
 
 func Start(initiator common.ServerInitiator) (err error) {
-	defer server.StopServer()
+	defer server.StopServer(true)
 
 	version, err := util.GetAutograderVersion()
 	if err != nil {
@@ -29,7 +29,6 @@ func Start(initiator common.ServerInitiator) (err error) {
 		return fmt.Errorf("Failed to open the database: '%w'.", err)
 	}
 
-	// Ensure the database closes before a CMD that started a server finishes its execution.
 	server.FinishCleanup.Add(1)
 	defer func() {
 		err = errors.Join(err, db.Close())
@@ -50,15 +49,11 @@ func Start(initiator common.ServerInitiator) (err error) {
 		go startCourse(course)
 	}
 
-	// Don't remove temp dirs during unit testing since they are needed after this function finishes.
-	if !config.UNIT_TESTING_MODE.Get() {
-		// Ensure temp dirs are removed before a CMD that started a server finishes its execution.
-		server.FinishCleanup.Add(1)
-		defer func() {
-			util.RemoveRecordedTempDirs()
-			server.FinishCleanup.Done()
-		}()
-	}
+	server.FinishCleanup.Add(1)
+	defer func() {
+		util.RemoveRecordedTempDirs()
+		server.FinishCleanup.Done()
+	}()
 
 	err = server.RunServer(initiator)
 	if err != nil {

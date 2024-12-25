@@ -34,10 +34,7 @@ func MustHandleCMDRequestAndExitFull(endpoint string, request any, responseType 
 	func() {
 		startedCMDServer, oldPort := mustEnsureServerIsRunning()
 		if startedCMDServer {
-			// Wait for the server to finish cleaning up before this func finishes.
-			defer server.FinishCleanup.Wait()
-
-			defer server.StopServer()
+			defer server.StopServer(true)
 			defer config.WEB_PORT.Set(oldPort)
 		}
 

@@ -13,6 +13,8 @@ import (
 	"github.com/edulinq/autograder/internal/util"
 )
 
+// FinishCleanup ensures cleanup tasks execute before the server fully stops.
+// Add(1) to the WaitGroup for each defered cleanup task and call Done() when finished.
 var FinishCleanup sync.WaitGroup
 
 // Run the autograder server and listen on an http and unix socket.
@@ -29,8 +31,10 @@ func RunServer(initiator common.ServerInitiator) (err error) {
 
 	core.SetAPIDescription(*apiDescription)
 
+	FinishCleanup.Add(1)
 	defer func() {
 		err = errors.Join(err, util.RemoveDirent(common.GetStatusPath()))
+		FinishCleanup.Done()
 	}()
 
 	errorsChan := make(chan error, 2)
@@ -49,13 +53,14 @@ func RunServer(initiator common.ServerInitiator) (err error) {
 	go func() {
 		<-shutdownSignal
 		signal.Stop(shutdownSignal)
-		StopServer()
+		StopServer(true)
 	}()
 
 	// Wait for at least one error (or nil) to stop both servers,
 	// then wait for the next error (or nil).
 	err = errors.Join(err, <-errorsChan)
-	StopServer()
+	// Stop server without waiting to ensure cleanup tasks get executed.
+	StopServer(false)
 	err = errors.Join(err, <-errorsChan)
 
 	close(errorsChan)
@@ -63,7 +68,13 @@ func RunServer(initiator common.ServerInitiator) (err error) {
 	return err
 }
 
-func StopServer() {
+// waitForCleanup should always be set to true when stopping a server
+// to ensure the server is fully cleaned up by the time it's stopped.
+func StopServer(waitForCleanup bool) {
 	stopUnixSocketServer()
 	stopAPIServer()
+
+	if waitForCleanup {
+		FinishCleanup.Wait()
+	}
 }

@@ -34,7 +34,7 @@ type CommonCMDTestCase struct {
 
 // Common setup for all CMD tests that require a server.
 func CMDServerTestingMain(suite *testing.M) {
-	server.StopServer()
+	server.StopServer(true)
 
 	port, err := util.GetUnusedPort()
 	if err != nil {
@@ -61,7 +61,7 @@ func CMDServerTestingMain(suite *testing.M) {
 			}
 		}()
 
-		defer server.StopServer()
+		defer server.StopServer(true)
 
 		serverRun.Wait()
 
@@ -80,6 +80,11 @@ func RunCMDTest(test *testing.T, mainFunc func(), args []string, logLevel log.Lo
 	defer exit.SetShouldExitForTesting(true)
 
 	tempDir := util.MustMkDirTemp("autograder-testing-cmd-")
+	defer util.RemoveDirent(tempDir)
+
+	// Prevent the cmd testing dir from automatic cleanup to use during testing.
+	util.ClearRecordedTempDirs()
+
 	stdoutPath := filepath.Join(tempDir, STDOUT_FILENAME)
 	stderrPath := filepath.Join(tempDir, STDERR_FILENAME)
 
@@ -193,6 +198,10 @@ func RunCommonCMDTests(test *testing.T, mainFunc func(), args []string, commonTe
 }
 
 func logOutputs(test *testing.T, stdout string, stderr string) {
-	test.Logf("\n--- START OF STDOUT ---\n%s\n--- END OF STDOUT---", stdout)
-	test.Logf("\n--- START OF STDERR ---\n%s\n--- END OF STDERR ----", stderr)
+	test.Log("--- stdout ---")
+	test.Log(stdout)
+	test.Log("--------------")
+	test.Log("--- stderr ---")
+	test.Log(stderr)
+	test.Log("--------------")
 }
