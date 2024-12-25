@@ -51,6 +51,7 @@ func Start(initiator common.ServerInitiator) (err error) {
 
 	server.FinishCleanup.Add(1)
 	defer func() {
+		// Cleanup any temp dirs.
 		util.RemoveRecordedTempDirs()
 		server.FinishCleanup.Done()
 	}()
