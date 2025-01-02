@@ -74,3 +74,10 @@ func Median(values []float64) float64 {
 		return values[length/2]
 	}
 }
+
+// Round a float to |precision| number of decimal places,
+// e.g., RoundWithPrecision(3.14159, 2) == 3.14.
+func RoundWithPrecision(value float64, precision uint) float64 {
+	ratio := math.Pow(10, float64(precision))
+	return math.Round(value*ratio) / ratio
+}
