@@ -4,7 +4,7 @@ type testBackend struct {
 	system []*SystemMetrics
 }
 
-func (this *testBackend) StoreSystemMetrics(record *SystemMetrics) error {
+func (this *testBackend) StoreSystemStats(record *SystemMetrics) error {
 	this.system = append(this.system, record)
 	return nil
 }

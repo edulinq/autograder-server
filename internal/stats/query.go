@@ -6,9 +6,14 @@ import (
 	"github.com/edulinq/autograder/internal/timestamp"
 )
 
+type Query interface {
+	// Does this metric match the filtering conditions of this query.
+	Match(record Metric) bool
+}
+
 // The base for a stats query.
 // Note that this the semantics of this struct mean that times before UNIX epoch (negative times)
-// must be offset by at least one MS (as a zero value is treated as NOW).
+// must be offset by at least one MS (as a zero value is treated as the end of time).
 type BaseQuery struct {
 	// Limit the number of results.
 	// Take this number of results from the top.
@@ -20,12 +25,17 @@ type BaseQuery struct {
 	After timestamp.Timestamp `json:"after"`
 
 	// Only return data from before this time.
-	// A value of zero is treated as NOW here.
+	// A value of zero is treated as the end of time.
 	Before timestamp.Timestamp `json:"before"`
 
 	// Define how the results should be sorted by time.
 	// -1 for ascending, 0 for no sorting, 1 for descending.
 	Sort int `json:"sort"`
+}
+
+func (this BaseQuery) Match(record Metric) bool {
+	time := record.GetTime()
+	return (this.Before.IsZero() || (time < this.Before)) && (time > this.After)
 }
 
 func compareMetric[T Metric](order int, a T, b T) int {
@@ -47,11 +57,6 @@ func compareMetric[T Metric](order int, a T, b T) int {
 // Return a new list with only the query results.
 // The given metrics must already be sorted.
 func ApplyBaseQuery[T Metric](metrics []T, baseQuery BaseQuery) []T {
-	before := baseQuery.Before
-	if before.IsZero() {
-		before = timestamp.Now()
-	}
-
 	// Ensure the semantics of sort ordering are followed.
 	sortOrder := baseQuery.Sort
 	if sortOrder < 0 {
@@ -62,10 +67,9 @@ func ApplyBaseQuery[T Metric](metrics []T, baseQuery BaseQuery) []T {
 
 	results := make([]T, 0, len(metrics))
 
-	// First filter by time.
+	// First filter.
 	for _, metric := range metrics {
-		time := metric.GetTime()
-		if (time < before) && (time > baseQuery.After) {
+		if baseQuery.Match(metric) {
 			results = append(results, metric)
 		}
 	}

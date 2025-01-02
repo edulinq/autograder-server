@@ -11,11 +11,15 @@ import (
 	"github.com/edulinq/autograder/internal/log"
 	"github.com/edulinq/autograder/internal/model"
 	pcourses "github.com/edulinq/autograder/internal/procedures/courses"
+	"github.com/edulinq/autograder/internal/stats"
 	"github.com/edulinq/autograder/internal/util"
 )
 
 func Start(initiator common.ServerInitiator) (err error) {
 	defer server.StopServer()
+
+	// Cleanup any temp dirs.
+	defer util.RemoveRecordedTempDirs()
 
 	version, err := util.GetAutograderVersion()
 	if err != nil {
@@ -35,6 +39,10 @@ func Start(initiator common.ServerInitiator) (err error) {
 
 	log.Debug("Running server with working directory.", log.NewAttr("dir", config.GetWorkDir()))
 
+	// Start stat collection.
+	stats.StartCollection(config.STATS_SYSTEM_INTERVAL_MS.Get())
+	defer stats.StopCollection()
+
 	courses, err := db.GetCourses()
 	if err != nil {
 		return fmt.Errorf("Failed to get courses: '%w'.", err)
@@ -46,9 +54,6 @@ func Start(initiator common.ServerInitiator) (err error) {
 	for _, course := range courses {
 		go startCourse(course)
 	}
-
-	// Cleanup any temp dirs.
-	defer util.RemoveRecordedTempDirs()
 
 	err = server.RunServer(initiator)
 	if err != nil {

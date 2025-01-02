@@ -2,12 +2,18 @@ package stats
 
 var backend StorageBackend = nil
 
-func Init(newBackend StorageBackend, systemIntervalMS int) {
-	backend = newBackend
+type StorageBackend interface {
+	StoreSystemStats(record *SystemMetrics) error
+}
 
+func SetStorageBackend(newBackend StorageBackend) {
+	backend = newBackend
+}
+
+func StartCollection(systemIntervalMS int) {
 	startSystemStatsCollection(systemIntervalMS)
 }
 
-type StorageBackend interface {
-	StoreSystemMetrics(record *SystemMetrics) error
+func StopCollection() {
+	stopSystemStatsCollection()
 }

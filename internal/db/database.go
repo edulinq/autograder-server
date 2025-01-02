@@ -14,6 +14,7 @@ import (
 	"github.com/edulinq/autograder/internal/db/disk"
 	"github.com/edulinq/autograder/internal/log"
 	"github.com/edulinq/autograder/internal/model"
+	"github.com/edulinq/autograder/internal/stats"
 	"github.com/edulinq/autograder/internal/timestamp"
 )
 
@@ -162,9 +163,17 @@ type Backend interface {
 	// DB backends will also be used as logging storage backends.
 	log.StorageBackend
 
-	// Get any logs that that match the specific requirements.
+	// Get any logs that match the specific requirements.
 	// Each parameter (except for the log level) can be passed with a zero value, in which case it will not be used for filtering.
 	GetLogRecords(query log.ParsedLogQuery) ([]*log.Record, error)
+
+	// Stats operations.
+
+	// DB backends will also be used as stats storage backends.
+	stats.StorageBackend
+
+	// Get system stats that match the specific query.
+	GetSystemStats(query stats.Query) ([]*stats.SystemMetrics, error)
 }
 
 func Open() error {
@@ -189,6 +198,7 @@ func Open() error {
 		return fmt.Errorf("Failed to open database: '%w'.", err)
 	}
 
+	// Initialize the logging backend as soon as possible.
 	log.SetStorageBackend(backend)
 
 	err = backend.EnsureTables()
@@ -213,6 +223,9 @@ func Open() error {
 			return fmt.Errorf("Failed to load test users: '%w'.", err)
 		}
 	}
+
+	// Initialize the stat storage backend when we are sure this backend is ready.
+	stats.SetStorageBackend(backend)
 
 	return nil
 }

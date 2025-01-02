@@ -46,7 +46,7 @@ func collectSystemStats(systemIntervalMS int) {
 				continue
 			}
 
-			err = backend.StoreSystemMetrics(stats)
+			err = backend.StoreSystemStats(stats)
 			if err != nil {
 				log.Error("Failed to store system stats.", err)
 				continue
