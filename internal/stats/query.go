@@ -34,13 +34,13 @@ type BaseQuery struct {
 }
 
 func (this BaseQuery) Match(record Metric) bool {
-	time := record.GetTime()
+	time := record.GetTimestamp()
 	return (this.Before.IsZero() || (time < this.Before)) && (time > this.After)
 }
 
 func compareMetric[T Metric](order int, a T, b T) int {
-	aTime := a.GetTime()
-	bTime := b.GetTime()
+	aTime := a.GetTimestamp()
+	bTime := b.GetTimestamp()
 
 	if aTime == bTime {
 		return 0

@@ -24,7 +24,7 @@ func TestGetSystemMetricsBase(test *testing.T) {
 		}
 
 		// Just ensure that the result is not zero.
-		if results.Time == 0 {
+		if results.Timestamp == 0 {
 			test.Errorf("Case %d: Got a zero result: '%s'.", i, util.MustToJSONIndent(results))
 			continue
 		}

@@ -13,3 +13,11 @@ func GetSystemStats(query stats.Query) ([]*stats.SystemMetrics, error) {
 
 	return backend.GetSystemStats(query)
 }
+
+func StoreSystemStats(record *stats.SystemMetrics) error {
+	if backend == nil {
+		return fmt.Errorf("Database has not been opened.")
+	}
+
+	return backend.StoreSystemStats(record)
+}

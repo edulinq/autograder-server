@@ -105,6 +105,11 @@
             "request-type": "*metadata.DescribeRequest",
             "response-type": "*metadata.DescribeResponse"
         },
+        "stats/system/query": {
+            "description": "Query the system stats for the server.",
+            "request-type": "*system.QueryRequest",
+            "response-type": "*system.QueryResponse"
+        },
         "users/auth": {
             "description": "Authenticate as a user.",
             "request-type": "*users.AuthRequest",

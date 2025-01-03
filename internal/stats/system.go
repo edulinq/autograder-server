@@ -136,7 +136,7 @@ func GetSystemMetrics(intervalMS int) (*SystemMetrics, error) {
 
 	results := SystemMetrics{
 		BaseMetric: BaseMetric{
-			Time: timestamp.Now(),
+			Timestamp: timestamp.Now(),
 		},
 		CPUPercent:       util.RoundWithPrecision(cpuMetrics[0], 2),
 		MemPercent:       util.RoundWithPrecision(memMetrics.UsedPercent, 2),

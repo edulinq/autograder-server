@@ -5,15 +5,15 @@ import (
 )
 
 type Metric interface {
-	GetTime() timestamp.Timestamp
+	GetTimestamp() timestamp.Timestamp
 }
 
 type BaseMetric struct {
-	Time timestamp.Timestamp `json:"time"`
+	Timestamp timestamp.Timestamp `json:"timestamp"`
 }
 
-func (this BaseMetric) GetTime() timestamp.Timestamp {
-	return this.Time
+func (this BaseMetric) GetTimestamp() timestamp.Timestamp {
+	return this.Timestamp
 }
 
 type SystemMetrics struct {

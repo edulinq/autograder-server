@@ -14,7 +14,7 @@ func (this *DBTests) DBTestStoreSystemStats(test *testing.T) {
 
 	testRecord := stats.SystemMetrics{
 		BaseMetric: stats.BaseMetric{
-			Time: timestamp.Now(),
+			Timestamp: timestamp.Now(),
 		},
 		CPUPercent:       1,
 		MemPercent:       2,
