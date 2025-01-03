@@ -9,12 +9,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/edulinq/autograder/internal/api/server"
 	"github.com/edulinq/autograder/internal/common"
 	"github.com/edulinq/autograder/internal/config"
 	"github.com/edulinq/autograder/internal/db"
 	"github.com/edulinq/autograder/internal/exit"
 	"github.com/edulinq/autograder/internal/log"
+	"github.com/edulinq/autograder/internal/procedures/server"
 	"github.com/edulinq/autograder/internal/util"
 )
 
@@ -34,7 +34,10 @@ type CommonCMDTestCase struct {
 
 // Common setup for all CMD tests that require a server.
 func CMDServerTestingMain(suite *testing.M) {
-	server.StopServer(true)
+	err := server.CleanupAndStopServer()
+	if err != nil {
+		log.Fatal("Failed to cleanup and stop server before running the CMD test server.", err)
+	}
 
 	port, err := util.GetUnusedPort()
 	if err != nil {
@@ -55,13 +58,18 @@ func CMDServerTestingMain(suite *testing.M) {
 		go func() {
 			serverRun.Done()
 
-			err := server.RunServer(common.CMD_TEST_SERVER)
+			err := server.RunAndBlockServer(common.CMD_TEST_SERVER, true)
 			if err != nil {
 				log.Fatal("Failed to run the server.", err)
 			}
 		}()
 
-		defer server.StopServer(true)
+		defer func() {
+			err := server.CleanupAndStopServer()
+			if err != nil {
+				log.Fatal("Failed to cleanup and stop the CMD test server.", err)
+			}
+		}()
 
 		serverRun.Wait()
 
@@ -79,11 +87,12 @@ func RunCMDTest(test *testing.T, mainFunc func(), args []string, logLevel log.Lo
 	exit.SetShouldExitForTesting(false)
 	defer exit.SetShouldExitForTesting(true)
 
-	tempDir := util.MustMkDirTemp("autograder-testing-cmd-")
-	defer util.RemoveDirent(tempDir)
-
 	// Prevent the cmd testing dir from automatic cleanup to use during testing.
-	util.ClearRecordedTempDirs()
+	util.SetShouldRemoveTempDirs(false)
+	defer util.SetShouldRemoveTempDirs(true)
+
+	tempDir := util.MustMkDirTemp("autograder-testing-cmd-")
+	defer util.RemoveRecordedTempDirs()
 
 	stdoutPath := filepath.Join(tempDir, STDOUT_FILENAME)
 	stderrPath := filepath.Join(tempDir, STDERR_FILENAME)

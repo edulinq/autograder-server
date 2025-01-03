@@ -14,9 +14,13 @@ import (
 	"github.com/edulinq/autograder/internal/util"
 )
 
-func Start(initiator common.ServerInitiator) (err error) {
-	defer server.StopServer(true)
+type ProcedureServer struct {
+	apiServer *server.APIServer
+}
 
+var serverInstance *ProcedureServer
+
+func setupServer(initiator common.ServerInitiator) error {
 	version, err := util.GetAutograderVersion()
 	if err != nil {
 		log.Warn("Failed to get the autograder version.", err)
@@ -29,13 +33,7 @@ func Start(initiator common.ServerInitiator) (err error) {
 		return fmt.Errorf("Failed to open the database: '%w'.", err)
 	}
 
-	server.FinishCleanup.Add(1)
-	defer func() {
-		err = errors.Join(err, db.Close())
-		server.FinishCleanup.Done()
-	}()
-
-	log.Debug("Running server with working directory.", log.NewAttr("dir", config.GetWorkDir()))
+	log.Debug("Setup server with working directory.", log.NewAttr("dir", config.GetWorkDir()))
 
 	courses, err := db.GetCourses()
 	if err != nil {
@@ -49,19 +47,49 @@ func Start(initiator common.ServerInitiator) (err error) {
 		go startCourse(course)
 	}
 
-	server.FinishCleanup.Add(1)
-	defer func() {
-		// Cleanup any temp dirs.
-		util.RemoveRecordedTempDirs()
-		server.FinishCleanup.Done()
-	}()
+	return nil
+}
 
-	err = server.RunServer(initiator)
-	if err != nil {
-		return fmt.Errorf("Error during server startup sequence: '%w'.", err)
+func CleanupAndStopServer() (err error) {
+	if serverInstance == nil {
+		return nil
 	}
 
-	log.Debug("Server closed.")
+	err = errors.Join(err, db.Close())
+	err = errors.Join(err, util.RemoveRecordedTempDirs())
+
+	serverInstance.apiServer.StopServer()
+
+	serverInstance.apiServer = nil
+	serverInstance = nil
+
+	return err
+}
+
+func RunAndBlockServer(initiator common.ServerInitiator, skipSetup bool) (err error) {
+	// Run inside a func so defers will run before the function returns.
+	func() {
+		defer func() {
+			err = errors.Join(err, CleanupAndStopServer())
+		}()
+
+		serverInstance = &ProcedureServer{
+			apiServer: server.NewAPIServer(),
+		}
+
+		if !skipSetup {
+			err = setupServer(initiator)
+			if err != nil {
+				err = fmt.Errorf("Failed to setup the server: '%w'.", err)
+				return
+			}
+		}
+
+		err = serverInstance.apiServer.RunServer(initiator)
+		if err != nil {
+			err = fmt.Errorf("API server run returned an error: '%w'.", err)
+		}
+	}()
 
 	return err
 }
@@ -70,6 +98,7 @@ func startCourse(course *model.Course) {
 	root, err := db.GetRoot()
 	if err != nil {
 		log.Error("Failed to get root for course update.", err, course)
+		return
 	}
 
 	options := pcourses.CourseUpsertOptions{

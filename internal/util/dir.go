@@ -14,6 +14,7 @@ const DEFAULT_MKDIR_PERMS os.FileMode = 0755
 var tempDir string = filepath.Join("/", "tmp", "autograder-temp")
 var tempDirMutex sync.Mutex
 var createdTempDirs []string
+var shouldRemoveTempDirs bool = true
 
 func SetTempDirForTesting(newTempDir string) {
 	tempDir = newTempDir
@@ -53,7 +54,7 @@ func MkDirPerms(path string, perms os.FileMode) error {
 	return os.MkdirAll(path, perms)
 }
 
-func ClearRecordedTempDirs() {
+func clearRecordedTempDirs() {
 	createdTempDirs = nil
 }
 
@@ -62,14 +63,22 @@ func RemoveRecordedTempDirs() error {
 	tempDirMutex.Lock()
 	defer tempDirMutex.Unlock()
 
+	if !shouldRemoveTempDirs {
+		return nil
+	}
+
 	var errs error = nil
 	for _, dir := range createdTempDirs {
 		errs = errors.Join(errs, RemoveDirent(dir))
 	}
 
-	ClearRecordedTempDirs()
+	clearRecordedTempDirs()
 
 	return errs
+}
+
+func SetShouldRemoveTempDirs(shouldRemove bool) {
+	shouldRemoveTempDirs = shouldRemove
 }
 
 // If this dir has a single dirent, return its path.
