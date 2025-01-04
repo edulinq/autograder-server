@@ -17,6 +17,9 @@ var createdTempDirs []string
 var shouldRemoveTempDirs bool = true
 
 func SetTempDirForTesting(newTempDir string) {
+	tempDirMutex.Lock()
+	defer tempDirMutex.Unlock()
+
 	tempDir = newTempDir
 }
 
@@ -78,6 +81,9 @@ func RemoveRecordedTempDirs() error {
 }
 
 func SetShouldRemoveTempDirs(shouldRemove bool) {
+	tempDirMutex.Lock()
+	defer tempDirMutex.Unlock()
+
 	shouldRemoveTempDirs = shouldRemove
 }
 

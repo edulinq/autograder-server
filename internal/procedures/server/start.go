@@ -84,7 +84,11 @@ func assignAndSetupServer(initiator common.ServerInitiator, skipSetup bool) erro
 	return nil
 }
 
-func RunAndBlock(initiator common.ServerInitiator, skipSetup bool) (err error) {
+func RunAndBlock(initiator common.ServerInitiator) (err error) {
+	return RunAndBlockFull(initiator, false)
+}
+
+func RunAndBlockFull(initiator common.ServerInitiator, skipSetup bool) (err error) {
 	// Run inside a func so defers will run before the function returns.
 	func() {
 		defer func() {

@@ -20,7 +20,7 @@ func main() {
 		log.Fatal("Could not load config options.", err)
 	}
 
-	err = server.RunAndBlock(common.PRIMARY_SERVER, false)
+	err = server.RunAndBlock(common.PRIMARY_SERVER)
 	if err != nil {
 		log.Fatal("Failed to start the server.", err)
 	}

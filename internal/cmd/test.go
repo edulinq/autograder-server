@@ -58,7 +58,7 @@ func CMDServerTestingMain(suite *testing.M) {
 		go func() {
 			serverRun.Done()
 
-			err := server.RunAndBlock(common.CMD_TEST_SERVER, true)
+			err := server.RunAndBlockFull(common.CMD_TEST_SERVER, true)
 			if err != nil {
 				log.Fatal("Failed to run the server.", err)
 			}
@@ -82,18 +82,12 @@ func CMDServerTestingMain(suite *testing.M) {
 	exit.Exit(code)
 }
 
-func RunCMDTest(test *testing.T, mainFunc func(), args []string, logLevel log.LogLevel, removeTempDirsAfterEachTest bool) (string, string, int, error) {
+func RunCMDTest(test *testing.T, mainFunc func(), args []string, logLevel log.LogLevel) (string, string, int, error) {
 	// Suppress exits to capture exit codes.
 	exit.SetShouldExitForTesting(false)
 	defer exit.SetShouldExitForTesting(true)
 
-	// Retain temp dirs to use after tests complete.
 	tempDir := util.MustMkDirTemp("autograder-testing-cmd-")
-	util.SetShouldRemoveTempDirs(false)
-	if removeTempDirsAfterEachTest {
-		defer util.RemoveRecordedTempDirs()
-	}
-	defer util.SetShouldRemoveTempDirs(true)
 
 	stdoutPath := filepath.Join(tempDir, STDOUT_FILENAME)
 	stderrPath := filepath.Join(tempDir, STDERR_FILENAME)
@@ -178,8 +172,8 @@ func runCMD(mainFunc func(), args []string) (err error) {
 	return err
 }
 
-func RunCommonCMDTests(test *testing.T, mainFunc func(), args []string, commonTestCase CommonCMDTestCase, prefix string, removeTempDirsAfterEachTest bool) (string, string, int, bool) {
-	stdout, stderr, exitCode, err := RunCMDTest(test, mainFunc, args, commonTestCase.LogLevel, removeTempDirsAfterEachTest)
+func RunCommonCMDTests(test *testing.T, mainFunc func(), args []string, commonTestCase CommonCMDTestCase, prefix string) (string, string, int, bool) {
+	stdout, stderr, exitCode, err := RunCMDTest(test, mainFunc, args, commonTestCase.LogLevel)
 	if err != nil {
 		test.Errorf("%sCMD run returned an error: '%v'.", prefix, err)
 		logOutputs(test, stdout, stderr)

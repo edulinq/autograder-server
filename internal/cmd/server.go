@@ -46,7 +46,7 @@ func mustEnsureServerIsRunning() (bool, int) {
 	go func() {
 		serverStart.Done()
 
-		err = server.RunAndBlock(common.CMD_SERVER, false)
+		err = server.RunAndBlock(common.CMD_SERVER)
 		if err != nil {
 			log.Fatal("Failed to start the server.", err)
 		}
