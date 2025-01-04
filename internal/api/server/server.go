@@ -25,7 +25,7 @@ func NewAPIServer() *APIServer {
 }
 
 // Run the autograder server and listen on an http and unix socket.
-func (this *APIServer) Run(initiator common.ServerInitiator) (err error) {
+func (this *APIServer) RunAndBlock(initiator common.ServerInitiator) (err error) {
 	err = common.WriteAndHandleStatusFile(initiator)
 	if err != nil {
 		return err

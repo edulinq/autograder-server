@@ -55,7 +55,7 @@ func mustEnsureServerIsRunning() (bool, int) {
 	serverStart.Wait()
 
 	// Small sleep to allow the server to start up.
-	time.Sleep(100 * time.Millisecond)
+	time.Sleep(150 * time.Millisecond)
 
 	return true, oldPort
 }

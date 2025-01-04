@@ -41,8 +41,10 @@ func setup(initiator common.ServerInitiator) error {
 	log.Debug("Found course(s).", log.NewAttr("count", len(courses)))
 
 	// Startup courses (in the background).
-	for _, course := range courses {
-		go startCourse(course)
+	if initiator == common.PRIMARY_SERVER {
+		for _, course := range courses {
+			go startCourse(course)
+		}
 	}
 
 	return nil
@@ -56,12 +58,11 @@ func CleanupAndStop() (err error) {
 		return nil
 	}
 
+	apiServer.Stop()
+	apiServer = nil
+
 	err = errors.Join(err, db.Close())
 	err = errors.Join(err, util.RemoveRecordedTempDirs())
-
-	apiServer.Stop()
-
-	apiServer = nil
 
 	log.Debug("Server closed.")
 
@@ -102,7 +103,7 @@ func RunAndBlockFull(initiator common.ServerInitiator, skipSetup bool) (err erro
 		}
 
 		// apiServer may be nil after this call completes if CleanupAndStop() is called concurrently.
-		err = apiServer.Run(initiator)
+		err = apiServer.RunAndBlock(initiator)
 		if err != nil {
 			err = fmt.Errorf("API server run returned an error: '%w'.", err)
 			return
