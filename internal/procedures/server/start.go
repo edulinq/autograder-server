@@ -14,13 +14,11 @@ import (
 	"github.com/edulinq/autograder/internal/util"
 )
 
-type ProcedureServer struct {
-	apiServer *server.APIServer
-}
+const SERVER_LOCK = "internal.procedures.server.SERVER_LOCK"
 
-var serverInstance *ProcedureServer
+var apiServer *server.APIServer = nil
 
-func setupServer(initiator common.ServerInitiator) error {
+func setup(initiator common.ServerInitiator) error {
 	version, err := util.GetAutograderVersion()
 	if err != nil {
 		log.Warn("Failed to get the autograder version.", err)
@@ -50,44 +48,58 @@ func setupServer(initiator common.ServerInitiator) error {
 	return nil
 }
 
-func CleanupAndStopServer() (err error) {
-	if serverInstance == nil {
+func CleanupAndStop() (err error) {
+	common.Lock(SERVER_LOCK)
+	defer common.Unlock(SERVER_LOCK)
+
+	if apiServer == nil {
 		return nil
 	}
 
 	err = errors.Join(err, db.Close())
 	err = errors.Join(err, util.RemoveRecordedTempDirs())
 
-	serverInstance.apiServer.StopServer()
+	apiServer.Stop()
 
-	serverInstance.apiServer = nil
-	serverInstance = nil
+	apiServer = nil
 
 	return err
 }
 
-func RunAndBlockServer(initiator common.ServerInitiator, skipSetup bool) (err error) {
+func assignAndSetupServer(initiator common.ServerInitiator, skipSetup bool) error {
+	common.Lock(SERVER_LOCK)
+	defer common.Unlock(SERVER_LOCK)
+
+	apiServer = server.NewAPIServer()
+
+	if !skipSetup {
+		err := setup(initiator)
+		if err != nil {
+			return fmt.Errorf("Failed to setup the server: '%w'.", err)
+		}
+	}
+
+	return nil
+}
+
+func RunAndBlock(initiator common.ServerInitiator, skipSetup bool) (err error) {
 	// Run inside a func so defers will run before the function returns.
 	func() {
 		defer func() {
-			err = errors.Join(err, CleanupAndStopServer())
+			err = errors.Join(err, CleanupAndStop())
 		}()
 
-		serverInstance = &ProcedureServer{
-			apiServer: server.NewAPIServer(),
+		err = assignAndSetupServer(initiator, skipSetup)
+		if err != nil {
+			err = fmt.Errorf("Failed to assign and setup server: '%w'.", err)
+			return
 		}
 
-		if !skipSetup {
-			err = setupServer(initiator)
-			if err != nil {
-				err = fmt.Errorf("Failed to setup the server: '%w'.", err)
-				return
-			}
-		}
-
-		err = serverInstance.apiServer.RunServer(initiator)
+		// apiServer may be nil after this call completes if CleanupAndStop() is called concurrently.
+		err = apiServer.Run(initiator)
 		if err != nil {
 			err = fmt.Errorf("API server run returned an error: '%w'.", err)
+			return
 		}
 	}()
 

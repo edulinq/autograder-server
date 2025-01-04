@@ -36,7 +36,7 @@ func MustHandleCMDRequestAndExitFull(endpoint string, request any, responseType 
 		startedCMDServer, oldPort := mustEnsureServerIsRunning()
 		if startedCMDServer {
 			defer func() {
-				err := pserver.CleanupAndStopServer()
+				err := pserver.CleanupAndStop()
 				if err != nil {
 					log.Fatal("Failed to cleanup and stop the CMD server.", err)
 				}

@@ -25,7 +25,7 @@ func NewAPIServer() *APIServer {
 }
 
 // Run the autograder server and listen on an http and unix socket.
-func (this *APIServer) RunServer(initiator common.ServerInitiator) (err error) {
+func (this *APIServer) Run(initiator common.ServerInitiator) (err error) {
 	err = common.WriteAndHandleStatusFile(initiator)
 	if err != nil {
 		return err
@@ -55,14 +55,14 @@ func (this *APIServer) RunServer(initiator common.ServerInitiator) (err error) {
 	go func() {
 		<-this.shutdownSignal
 		signal.Stop(this.shutdownSignal)
-		this.StopServer()
+		this.Stop()
 	}()
 
 	// Wait for at least one error (or nil) to stop both servers,
 	// then wait for the next error (or nil).
 	err = errors.Join(err, <-this.errorsChan)
 	// Stop server without waiting to ensure cleanup tasks get executed.
-	this.StopServer()
+	this.Stop()
 	err = errors.Join(err, <-this.errorsChan)
 
 	close(this.errorsChan)
@@ -70,7 +70,7 @@ func (this *APIServer) RunServer(initiator common.ServerInitiator) (err error) {
 	return err
 }
 
-func (this *APIServer) StopServer() {
+func (this *APIServer) Stop() {
 	stopUnixSocketServer()
 	stopAPIServer()
 }

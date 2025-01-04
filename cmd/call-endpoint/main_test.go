@@ -271,7 +271,7 @@ func TestCallEndpoint(test *testing.T) {
 	for i, testCase := range testCases {
 		args := append([]string{testCase.endpoint}, testCase.parameters...)
 
-		cmd.RunCommonCMDTests(test, main, args, testCase.CommonCMDTestCase, fmt.Sprintf("Case %d: ", i))
+		cmd.RunCommonCMDTests(test, main, args, testCase.CommonCMDTestCase, fmt.Sprintf("Case %d: ", i), false)
 	}
 }
 
