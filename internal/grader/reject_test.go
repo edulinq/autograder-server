@@ -21,7 +21,8 @@ func TestRejectSubmissionMaxAttempts(test *testing.T) {
 	db.ResetForTesting()
 	defer db.ResetForTesting()
 
-	assignment := db.MustGetTestAssignment()
+	assignment := db.MustGetTestSubmissionAssignment()
+	assignment.DueDate = nil
 
 	// Set the max submissions to zero.
 	maxValue := 0
@@ -35,7 +36,8 @@ func TestRejectSubmissionMaxAttemptsInfinite(test *testing.T) {
 	db.ResetForTesting()
 	defer db.ResetForTesting()
 
-	assignment := db.MustGetTestAssignment()
+	assignment := db.MustGetTestSubmissionAssignment()
+	assignment.DueDate = nil
 
 	// Set the max submissions to empty (infinite).
 	assignment.SubmissionLimit = &model.SubmissionLimitInfo{}
@@ -89,7 +91,7 @@ func TestRejectLateSubmissionWithoutAllow(test *testing.T) {
 	db.ResetForTesting()
 	defer db.ResetForTesting()
 
-	assignment := db.MustGetTestAssignment()
+	assignment := db.MustGetTestSubmissionAssignment()
 
 	// Set a dummy submission limit.
 	assignment.SubmissionLimit = &model.SubmissionLimitInfo{}
@@ -105,7 +107,7 @@ func TestRejectLateSubmissionWithAllow(test *testing.T) {
 	db.ResetForTesting()
 	defer db.ResetForTesting()
 
-	assignment := db.MustGetTestAssignment()
+	assignment := db.MustGetTestSubmissionAssignment()
 
 	// Set a dummy submission limit.
 	assignment.SubmissionLimit = &model.SubmissionLimitInfo{}
@@ -121,7 +123,8 @@ func testMaxWindowAttempts(test *testing.T, user string, expectReject bool) {
 	db.ResetForTesting()
 	defer db.ResetForTesting()
 
-	assignment := db.MustGetTestAssignment()
+	assignment := db.MustGetTestSubmissionAssignment()
+	assignment.DueDate = nil
 	duration := common.DurationSpec{Days: 1000}
 
 	// Set the submission limit window to 1 attempt in a large duration.
