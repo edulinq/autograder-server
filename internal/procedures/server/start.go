@@ -63,6 +63,8 @@ func CleanupAndStop() (err error) {
 
 	apiServer = nil
 
+	log.Debug("Server closed.")
+
 	return err
 }
 
@@ -110,7 +112,6 @@ func startCourse(course *model.Course) {
 	root, err := db.GetRoot()
 	if err != nil {
 		log.Error("Failed to get root for course update.", err, course)
-		return
 	}
 
 	options := pcourses.CourseUpsertOptions{
