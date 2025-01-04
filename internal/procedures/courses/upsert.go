@@ -167,7 +167,7 @@ func syncSource(course *model.Course, options CourseUpsertOptions) (*model.Cours
 	}
 
 	// Ensure this course can load correctly.
-	_, _, err = loadCourseConfig(configPaths[0], false, options)
+	_, _, err = loadCourseConfig(configPaths[0], true, options)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to load course from source ('%s'): '%w'.", source, err)
 	}

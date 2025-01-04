@@ -84,7 +84,9 @@ func TestUpsertBase(test *testing.T) {
 			course101Path,
 			CourseUpsertOptions{
 				ContextUser: db.MustGetServerUser("server-creator@test.edulinq.org"),
-				DryRun:      true,
+				CourseUpsertPublicOptions: CourseUpsertPublicOptions{
+					DryRun: true,
+				},
 			},
 			false,
 			&CourseUpsertResult{
@@ -101,8 +103,10 @@ func TestUpsertBase(test *testing.T) {
 		{
 			course101Path,
 			CourseUpsertOptions{
-				ContextUser:    db.MustGetServerUser("server-creator@test.edulinq.org"),
-				SkipSourceSync: true,
+				ContextUser: db.MustGetServerUser("server-creator@test.edulinq.org"),
+				CourseUpsertPublicOptions: CourseUpsertPublicOptions{
+					SkipSourceSync: true,
+				},
 			},
 			false,
 			&CourseUpsertResult{
@@ -118,7 +122,9 @@ func TestUpsertBase(test *testing.T) {
 			course101Path,
 			CourseUpsertOptions{
 				ContextUser: db.MustGetServerUser("server-creator@test.edulinq.org"),
-				SkipLMSSync: true,
+				CourseUpsertPublicOptions: CourseUpsertPublicOptions{
+					SkipLMSSync: true,
+				},
 			},
 			false,
 			&CourseUpsertResult{
@@ -133,8 +139,10 @@ func TestUpsertBase(test *testing.T) {
 		{
 			course101Path,
 			CourseUpsertOptions{
-				ContextUser:     db.MustGetServerUser("server-creator@test.edulinq.org"),
-				SkipBuildImages: true,
+				ContextUser: db.MustGetServerUser("server-creator@test.edulinq.org"),
+				CourseUpsertPublicOptions: CourseUpsertPublicOptions{
+					SkipBuildImages: true,
+				},
 			},
 			false,
 			&CourseUpsertResult{
@@ -150,7 +158,9 @@ func TestUpsertBase(test *testing.T) {
 			course101Path,
 			CourseUpsertOptions{
 				ContextUser: db.MustGetServerUser("server-creator@test.edulinq.org"),
-				SkipTasks:   true,
+				CourseUpsertPublicOptions: CourseUpsertPublicOptions{
+					SkipTasks: true,
+				},
 			},
 			false,
 			&CourseUpsertResult{

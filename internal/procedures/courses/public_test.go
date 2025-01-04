@@ -203,7 +203,9 @@ func TestUpsertFromFileSpec(test *testing.T) {
 			basePublicUpsertTestCase{
 				CourseUpsertOptions{
 					ContextUser: db.MustGetServerUser("server-creator@test.edulinq.org"),
-					DryRun:      true,
+					CourseUpsertPublicOptions: CourseUpsertPublicOptions{
+						DryRun: true,
+					},
 				},
 				false,
 				1, 1,

@@ -42,7 +42,7 @@ func runNoDockerGrader(assignment *model.Assignment, submissionPath string, opti
 	}
 
 	// Copy over the static files (and do any file ops).
-	err = common.CopyFileSpecs(imageInfo.BaseDir, workDir, tempDir,
+	err = common.CopyFileSpecs(imageInfo.BaseDirFunc(), workDir, tempDir,
 		imageInfo.StaticFiles, false, imageInfo.PreStaticFileOperations, imageInfo.PostStaticFileOperations)
 	if err != nil {
 		return nil, nil, "", "", fmt.Errorf("Failed to copy static assignment files: '%w'.", err)
