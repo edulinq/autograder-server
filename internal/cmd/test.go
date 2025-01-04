@@ -9,12 +9,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/edulinq/autograder/internal/api/server"
 	"github.com/edulinq/autograder/internal/common"
 	"github.com/edulinq/autograder/internal/config"
 	"github.com/edulinq/autograder/internal/db"
 	"github.com/edulinq/autograder/internal/exit"
 	"github.com/edulinq/autograder/internal/log"
+	"github.com/edulinq/autograder/internal/procedures/server"
 	"github.com/edulinq/autograder/internal/util"
 )
 
@@ -34,7 +34,10 @@ type CommonCMDTestCase struct {
 
 // Common setup for all CMD tests that require a server.
 func CMDServerTestingMain(suite *testing.M) {
-	server.StopServer()
+	err := server.CleanupAndStop()
+	if err != nil {
+		log.Fatal("Failed to cleanup and stop server before running the CMD test server.", err)
+	}
 
 	port, err := util.GetUnusedPort()
 	if err != nil {
@@ -55,13 +58,18 @@ func CMDServerTestingMain(suite *testing.M) {
 		go func() {
 			serverRun.Done()
 
-			err := server.RunServer(common.CMD_TEST_SERVER)
+			err := server.RunAndBlock(common.CMD_TEST_SERVER, true)
 			if err != nil {
 				log.Fatal("Failed to run the server.", err)
 			}
 		}()
 
-		defer server.StopServer()
+		defer func() {
+			err := server.CleanupAndStop()
+			if err != nil {
+				log.Fatal("Failed to cleanup and stop the CMD test server.", err)
+			}
+		}()
 
 		serverRun.Wait()
 
@@ -74,12 +82,19 @@ func CMDServerTestingMain(suite *testing.M) {
 	exit.Exit(code)
 }
 
-func RunCMDTest(test *testing.T, mainFunc func(), args []string, logLevel log.LogLevel) (string, string, int, error) {
+func RunCMDTest(test *testing.T, mainFunc func(), args []string, logLevel log.LogLevel, removeTempDirsAfterEachTest bool) (string, string, int, error) {
 	// Suppress exits to capture exit codes.
 	exit.SetShouldExitForTesting(false)
 	defer exit.SetShouldExitForTesting(true)
 
+	// Retain temp dirs to use after tests complete.
 	tempDir := util.MustMkDirTemp("autograder-testing-cmd-")
+	util.SetShouldRemoveTempDirs(false)
+	if removeTempDirsAfterEachTest {
+		defer util.RemoveRecordedTempDirs()
+	}
+	defer util.SetShouldRemoveTempDirs(true)
+
 	stdoutPath := filepath.Join(tempDir, STDOUT_FILENAME)
 	stderrPath := filepath.Join(tempDir, STDERR_FILENAME)
 
@@ -163,27 +178,40 @@ func runCMD(mainFunc func(), args []string) (err error) {
 	return err
 }
 
-func RunCommonCMDTests(test *testing.T, mainFunc func(), args []string, commonTestCase CommonCMDTestCase, prefix string) (string, string, int, bool) {
-	stdout, stderr, exitCode, err := RunCMDTest(test, mainFunc, args, commonTestCase.LogLevel)
+func RunCommonCMDTests(test *testing.T, mainFunc func(), args []string, commonTestCase CommonCMDTestCase, prefix string, removeTempDirsAfterEachTest bool) (string, string, int, bool) {
+	stdout, stderr, exitCode, err := RunCMDTest(test, mainFunc, args, commonTestCase.LogLevel, removeTempDirsAfterEachTest)
 	if err != nil {
 		test.Errorf("%sCMD run returned an error: '%v'.", prefix, err)
+		logOutputs(test, stdout, stderr)
 		return "", "", -1, false
 	}
 
 	if commonTestCase.ExpectedExitCode != exitCode {
 		test.Errorf("%sUnexpected exit code. Expected: '%d', Actual: '%d'.", prefix, commonTestCase.ExpectedExitCode, exitCode)
+		logOutputs(test, stdout, stderr)
 		return "", "", -1, false
 	}
 
 	if !strings.Contains(stderr, commonTestCase.ExpectedStderrSubstring) {
 		test.Errorf("%sUnexpected stderr substring. Expected stderr substring: '%s', Actual stderr: '%s'.", prefix, commonTestCase.ExpectedStderrSubstring, stderr)
+		logOutputs(test, stdout, stderr)
 		return "", "", -1, false
 	}
 
 	if !commonTestCase.IgnoreStdout && commonTestCase.ExpectedStdout != stdout {
 		test.Errorf("%sUnexpected output. Expected: \n'%s', \n Actual: \n'%s'.", prefix, commonTestCase.ExpectedStdout, stdout)
+		logOutputs(test, stdout, stderr)
 		return "", "", -1, false
 	}
 
 	return stdout, stderr, exitCode, true
+}
+
+func logOutputs(test *testing.T, stdout string, stderr string) {
+	test.Log("--- stdout ---")
+	test.Log(stdout)
+	test.Log("--------------")
+	test.Log("--- stderr ---")
+	test.Log(stderr)
+	test.Log("--------------")
 }

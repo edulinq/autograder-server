@@ -24,7 +24,7 @@ func TestCMDStartsOwnServer(test *testing.T) {
 	}
 
 	// CMDs always succeed in user authentication, regardless of credentials, so only one test case needs to run.
-	cmd.RunCommonCMDTests(test, main, args, commonTestCase, "")
+	cmd.RunCommonCMDTests(test, main, args, commonTestCase, "", true)
 }
 
 const expected_auth_output = `{

@@ -13,6 +13,7 @@ import (
 	"github.com/edulinq/autograder/internal/config"
 	"github.com/edulinq/autograder/internal/exit"
 	"github.com/edulinq/autograder/internal/log"
+	pserver "github.com/edulinq/autograder/internal/procedures/server"
 	"github.com/edulinq/autograder/internal/util"
 )
 
@@ -34,7 +35,12 @@ func MustHandleCMDRequestAndExitFull(endpoint string, request any, responseType 
 	func() {
 		startedCMDServer, oldPort := mustEnsureServerIsRunning()
 		if startedCMDServer {
-			defer server.StopServer()
+			defer func() {
+				err := pserver.CleanupAndStop()
+				if err != nil {
+					log.Fatal("Failed to cleanup and stop the CMD server.", err)
+				}
+			}()
 			defer config.WEB_PORT.Set(oldPort)
 		}
 
