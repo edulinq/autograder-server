@@ -15,7 +15,7 @@ func TestCMDStartsOwnServer(test *testing.T) {
 	db.PrepForTestingMain()
 	defer db.CleanupTestingMain()
 
-	// Ensure that the sevrer we will start does not cleanup our work dir (which is a temp dir).
+	// Ensure that the server we will start does not cleanup our work dir (which is a temp dir).
 	util.SetShouldRemoveTempDirs(false)
 	defer util.RemoveRecordedTempDirs()
 	defer util.SetShouldRemoveTempDirs(true)
