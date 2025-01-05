@@ -39,7 +39,7 @@ func (this *DBTests) DBTestStoreSystemStats(test *testing.T) {
 	}
 
 	if *records[0] != testRecord {
-		test.Fatalf("Did not get the expected record back. Expected '%s', Actual: '%s'.",
+		test.Fatalf("Did not get the expected record back. Expected: '%s', Actual: '%s'.",
 			util.MustToJSONIndent(testRecord), util.MustToJSONIndent(*records[0]))
 	}
 }

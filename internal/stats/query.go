@@ -12,7 +12,7 @@ type Query interface {
 }
 
 // The base for a stats query.
-// Note that this the semantics of this struct mean that times before UNIX epoch (negative times)
+// Note that the semantics of this struct mean that times before UNIX epoch (negative times)
 // must be offset by at least one MS (as a zero value is treated as the end of time).
 type BaseQuery struct {
 	// Limit the number of results.
@@ -67,7 +67,7 @@ func ApplyBaseQuery[T Metric](metrics []T, baseQuery BaseQuery) []T {
 
 	results := make([]T, 0, len(metrics))
 
-	// First filter.
+	// First, filter.
 	for _, metric := range metrics {
 		if baseQuery.Match(metric) {
 			results = append(results, metric)

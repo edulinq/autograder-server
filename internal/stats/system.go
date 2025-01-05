@@ -93,13 +93,13 @@ func stopSystemStatsCollection() {
 // Specific metrics have quirks the caller should know about.
 //
 // CPU:
-// The get CPU statistics, we have to make an internal query, wait, make another internal query, and compare the results.
-// The provided internal is the time (in MS) that should be waited between the two internal queries
+// To get CPU statistics, we have to make an internal query, wait, make another internal query, and compare the results.
+// The provided interval is the time (in MS) that should be waited between the two internal queries
 // (longer waits generally yield more reliable results).
 // This function will block for this entire process.
 //
 // Network:
-// All known network interfaces will be averaged for the summed.
+// All known network interfaces will be summed.
 // Additionally, the numbers provided will be the total number of bytes since the last call to this function,
 // or zero if this is the first call.
 func GetSystemMetrics(intervalMS int) (*SystemMetrics, error) {
