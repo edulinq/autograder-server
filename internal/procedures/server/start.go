@@ -11,6 +11,7 @@ import (
 	"github.com/edulinq/autograder/internal/log"
 	"github.com/edulinq/autograder/internal/model"
 	pcourses "github.com/edulinq/autograder/internal/procedures/courses"
+	"github.com/edulinq/autograder/internal/stats"
 	"github.com/edulinq/autograder/internal/util"
 )
 
@@ -32,6 +33,9 @@ func setup(initiator common.ServerInitiator) error {
 	}
 
 	log.Debug("Setup server with working directory.", log.NewAttr("dir", config.GetWorkDir()))
+
+	// Start stat collection.
+	stats.StartCollection(config.STATS_SYSTEM_INTERVAL_MS.Get())
 
 	courses, err := db.GetCourses()
 	if err != nil {
@@ -57,6 +61,8 @@ func CleanupAndStop() (err error) {
 	if apiServer == nil {
 		return nil
 	}
+
+	stats.StopCollection()
 
 	apiServer.Stop()
 	apiServer = nil
