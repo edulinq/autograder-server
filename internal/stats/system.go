@@ -36,6 +36,10 @@ func collectSystemStats(systemIntervalMS int) {
 	defer cancelWait.Done()
 
 	for {
+		// Check (and return) if the context was canceled.
+		// Otherwise, gather system metrics again.
+		// Note that the natural wait/sleep in
+		// GetSystemMetrics() of systemIntervalMS controls the timing of this loop.
 		select {
 		case <-ctx.Done():
 			return

@@ -241,6 +241,10 @@ func Close() error {
 	err := backend.Close()
 	backend = nil
 
+	// Remove the other uses of the database backend.
+	log.SetStorageBackend(nil)
+	stats.SetStorageBackend(nil)
+
 	return err
 }
 
