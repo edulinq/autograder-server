@@ -15,12 +15,11 @@ import (
 	"github.com/edulinq/autograder/internal/util"
 )
 
-func Start(initiator common.ServerInitiator) (err error) {
-	defer server.StopServer()
+const SERVER_LOCK = "internal.procedures.server.SERVER_LOCK"
 
-	// Cleanup any temp dirs.
-	defer util.RemoveRecordedTempDirs()
+var apiServer *server.APIServer = nil
 
+func setup(initiator common.ServerInitiator) error {
 	version, err := util.GetAutograderVersion()
 	if err != nil {
 		log.Warn("Failed to get the autograder version.", err)
@@ -33,15 +32,10 @@ func Start(initiator common.ServerInitiator) (err error) {
 		return fmt.Errorf("Failed to open the database: '%w'.", err)
 	}
 
-	defer func() {
-		err = errors.Join(err, db.Close())
-	}()
-
-	log.Debug("Running server with working directory.", log.NewAttr("dir", config.GetWorkDir()))
+	log.Debug("Setup server with working directory.", log.NewAttr("dir", config.GetWorkDir()))
 
 	// Start stat collection.
 	stats.StartCollection(config.STATS_SYSTEM_INTERVAL_MS.Get())
-	defer stats.StopCollection()
 
 	courses, err := db.GetCourses()
 	if err != nil {
@@ -51,16 +45,76 @@ func Start(initiator common.ServerInitiator) (err error) {
 	log.Debug("Found course(s).", log.NewAttr("count", len(courses)))
 
 	// Startup courses (in the background).
-	for _, course := range courses {
-		go startCourse(course)
+	if initiator == common.PRIMARY_SERVER {
+		for _, course := range courses {
+			go startCourse(course)
+		}
 	}
 
-	err = server.RunServer(initiator)
-	if err != nil {
-		return fmt.Errorf("Error during server startup sequence: '%w'.", err)
+	return nil
+}
+
+func CleanupAndStop() (err error) {
+	common.Lock(SERVER_LOCK)
+	defer common.Unlock(SERVER_LOCK)
+
+	if apiServer == nil {
+		return nil
 	}
+
+	stats.StopCollection()
+
+	apiServer.Stop()
+	apiServer = nil
+
+	err = errors.Join(err, db.Close())
+	err = errors.Join(err, util.RemoveRecordedTempDirs())
 
 	log.Debug("Server closed.")
+
+	return err
+}
+
+func assignAndSetupServer(initiator common.ServerInitiator, skipSetup bool) error {
+	common.Lock(SERVER_LOCK)
+	defer common.Unlock(SERVER_LOCK)
+
+	apiServer = server.NewAPIServer()
+
+	if !skipSetup {
+		err := setup(initiator)
+		if err != nil {
+			return fmt.Errorf("Failed to setup the server: '%w'.", err)
+		}
+	}
+
+	return nil
+}
+
+func RunAndBlock(initiator common.ServerInitiator) (err error) {
+	return RunAndBlockFull(initiator, false)
+}
+
+func RunAndBlockFull(initiator common.ServerInitiator, skipSetup bool) (err error) {
+	// Run inside a func so defers will run before the function returns.
+	func() {
+		defer func() {
+			err = errors.Join(err, CleanupAndStop())
+		}()
+
+		err = assignAndSetupServer(initiator, skipSetup)
+		if err != nil {
+			err = fmt.Errorf("Failed to assign and setup server: '%w'.", err)
+			return
+		}
+
+		// apiServer may be nil after this call completes if CleanupAndStop() is called concurrently.
+		err = apiServer.RunAndBlock(initiator)
+		if err != nil {
+			err = fmt.Errorf("API server run returned an error: '%w'.", err)
+			return
+		}
+	}()
 
 	return err
 }

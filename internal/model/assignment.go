@@ -152,7 +152,9 @@ func (this *Assignment) Validate() error {
 	}
 
 	this.ImageInfo.Name = this.ImageName()
-	this.ImageInfo.BaseDir = this.GetSourceDir()
+	this.ImageInfo.BaseDirFunc = func() string {
+		return this.GetSourceDir()
+	}
 
 	err = this.ImageInfo.Validate()
 	if err != nil {

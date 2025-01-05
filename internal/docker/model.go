@@ -29,8 +29,10 @@ type ImageInfo struct {
 	// Fields that are not part of the JSON and are set after deserialization.
 
 	Name string `json:"-"`
+
 	// Dir used for relative paths.
-	BaseDir string `json:"-"`
+	// Using a func allows for lazy resolution of the base dir.
+	BaseDirFunc func() string `json:"-"`
 }
 
 // A subset of the image information that is passed to docker images for config during grading.
@@ -51,7 +53,11 @@ func (this *ImageInfo) Validate() error {
 		return fmt.Errorf("Missing name.")
 	}
 
-	if this.BaseDir == "" {
+	if this.BaseDirFunc == nil {
+		return fmt.Errorf("Missing base dir func.")
+	}
+
+	if this.BaseDirFunc() == "" {
 		return fmt.Errorf("Missing base dir.")
 	}
 

@@ -12,8 +12,20 @@ import (
 	"github.com/edulinq/autograder/internal/util"
 )
 
+type APIServer struct {
+	errorsChan     chan error
+	shutdownSignal chan os.Signal
+}
+
+func NewAPIServer() *APIServer {
+	return &APIServer{
+		errorsChan:     make(chan error),
+		shutdownSignal: make(chan os.Signal),
+	}
+}
+
 // Run the autograder server and listen on an http and unix socket.
-func RunServer(initiator common.ServerInitiator) (err error) {
+func (this *APIServer) RunAndBlock(initiator common.ServerInitiator) (err error) {
 	err = common.WriteAndHandleStatusFile(initiator)
 	if err != nil {
 		return err
@@ -30,37 +42,35 @@ func RunServer(initiator common.ServerInitiator) (err error) {
 		err = errors.Join(err, util.RemoveDirent(common.GetStatusPath()))
 	}()
 
-	errorsChan := make(chan error, 2)
-
 	go func() {
-		errorsChan <- runAPIServer(api.GetRoutes())
+		this.errorsChan <- runAPIServer(api.GetRoutes())
 	}()
 
 	go func() {
-		errorsChan <- runUnixSocketServer()
+		this.errorsChan <- runUnixSocketServer()
 	}()
 
 	// Gracefully shutdown on Control-C (SIGINT).
-	shutdownSignal := make(chan os.Signal, 1)
-	signal.Notify(shutdownSignal, syscall.SIGINT, syscall.SIGTERM)
+	signal.Notify(this.shutdownSignal, syscall.SIGINT, syscall.SIGTERM)
 	go func() {
-		<-shutdownSignal
-		signal.Stop(shutdownSignal)
-		StopServer()
+		<-this.shutdownSignal
+		signal.Stop(this.shutdownSignal)
+		this.Stop()
 	}()
 
 	// Wait for at least one error (or nil) to stop both servers,
 	// then wait for the next error (or nil).
-	err = errors.Join(err, <-errorsChan)
-	StopServer()
-	err = errors.Join(err, <-errorsChan)
+	err = errors.Join(err, <-this.errorsChan)
+	// Stop server without waiting to ensure cleanup tasks get executed.
+	this.Stop()
+	err = errors.Join(err, <-this.errorsChan)
 
-	close(errorsChan)
+	close(this.errorsChan)
 
 	return err
 }
 
-func StopServer() {
+func (this *APIServer) Stop() {
 	stopUnixSocketServer()
 	stopAPIServer()
 }
