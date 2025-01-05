@@ -61,6 +61,9 @@ func SetTextWriter(newTextWriter io.StringWriter) {
 }
 
 func SetStorageBackend(newBackend StorageBackend) {
+	backendLock.Lock()
+	defer backendLock.Unlock()
+
 	backend = newBackend
 }
 
@@ -98,6 +101,10 @@ func logToBackend(record *Record) {
 	backendLog := func(record *Record) {
 		backendLock.Lock()
 		defer backendLock.Unlock()
+
+		if backend == nil {
+			return
+		}
 
 		err := backend.LogDirect(record)
 		if err != nil {
