@@ -44,13 +44,17 @@ func collectSystemStats(systemIntervalMS int) {
 		case <-ctx.Done():
 			return
 		default:
+			if backend == nil {
+				return
+			}
+
 			stats, err := GetSystemMetrics(systemIntervalMS)
 			if err != nil {
 				log.Warn("Failed to collect system stats.", err)
 				continue
 			}
 
-			err = backend.StoreSystemStats(stats)
+			err = storeSystemStats(stats)
 			if err != nil {
 				log.Error("Failed to store system stats.", err)
 				continue
