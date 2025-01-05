@@ -8,6 +8,26 @@ import (
 	"reflect"
 )
 
+func AppendJSONLFile(path string, record any) error {
+	line, err := ToJSON(record)
+	if err != nil {
+		return fmt.Errorf("Failed to convert record to JSON: '%w'.", err)
+	}
+
+	file, err := os.OpenFile(path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		return fmt.Errorf("Failed to open JSONL file '%s': '%w'.", path, err)
+	}
+	defer file.Close()
+
+	_, err = file.WriteString(line + "\n")
+	if err != nil {
+		return fmt.Errorf("Failed to write record to JSONL file '%s': '%w'.", path, err)
+	}
+
+	return nil
+}
+
 func FilterJSONLFile[T any](path string, emptyRecord T, matchFunc func(record *T) bool) ([]*T, error) {
 	records := make([]*T, 0)
 

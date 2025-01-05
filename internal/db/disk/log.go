@@ -1,8 +1,6 @@
 package disk
 
 import (
-	"fmt"
-	"os"
 	"path/filepath"
 
 	"github.com/edulinq/autograder/internal/log"
@@ -15,24 +13,7 @@ func (this *backend) LogDirect(record *log.Record) error {
 	this.logLock.Lock()
 	defer this.logLock.Unlock()
 
-	line, err := util.ToJSON(record)
-	if err != nil {
-		return fmt.Errorf("Failed to convert log record to JSON: '%w'.", err)
-	}
-
-	path := this.getLogPath()
-	file, err := os.OpenFile(path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-	if err != nil {
-		return fmt.Errorf("Failed to open log file '%s': '%w'.", path, err)
-	}
-	defer file.Close()
-
-	_, err = file.WriteString(line + "\n")
-	if err != nil {
-		return fmt.Errorf("Failed to write record to log file '%s': '%w'.", path, err)
-	}
-
-	return nil
+	return util.AppendJSONLFile(this.getLogPath(), record)
 }
 
 func (this *backend) GetLogRecords(query log.ParsedLogQuery) ([]*log.Record, error) {
