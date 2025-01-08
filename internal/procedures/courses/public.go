@@ -61,6 +61,17 @@ func UpsertFromFileSpec(spec *common.FileSpec, options CourseUpsertOptions) ([]C
 		return nil, fmt.Errorf("Given FileSpec is not valid: '%w'.", err)
 	}
 
+	// Before copying the filespec, check if it is a single course.json file.
+	// If it is, then we can just directly load the course directory.
+	if (spec.IsPath()) && (filepath.Base(spec.GetPath()) == model.COURSE_CONFIG_FILENAME) {
+		result, _, err := upsertFromConfigPath(spec.GetPath(), options)
+		if err != nil {
+			return nil, err
+		}
+
+		return []CourseUpsertResult{*result}, nil
+	}
+
 	tempDir, err := util.MkDirTemp("autograder-upsert-course-filespec-")
 	if err != nil {
 		return nil, fmt.Errorf("Failed to make temp dir: '%w'.", err)
