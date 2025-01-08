@@ -18,6 +18,7 @@ import (
 )
 
 var timersLock sync.Mutex
+var initialized bool = false
 
 type timerInfo struct {
 	ID       string
@@ -42,8 +43,18 @@ var stoppedTasks map[string]bool = make(map[string]bool)
 // The boolean return indicates if a task should be scheduled again.
 type RunFunc func(*model.Course, tasks.ScheduledTask) (bool, error)
 
-func init() {
+func Init() {
+	timersLock.Lock()
+	defer timersLock.Unlock()
+
+	if initialized {
+		return
+	}
+
+	// Watch for events.
 	go watchHandle()
+
+	initialized = true
 }
 
 func Schedule(course *model.Course, target tasks.ScheduledTask) error {

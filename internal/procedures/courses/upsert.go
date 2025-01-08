@@ -98,6 +98,7 @@ func upsertFromConfigPath(path string, options CourseUpsertOptions) (*CourseUpse
 	}
 
 	// Cleanup
+
 	// Remove source if this was a dry run.
 	if options.DryRun {
 		err = util.RemoveDirent(course.GetBaseSourceDir())

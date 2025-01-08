@@ -12,6 +12,7 @@ import (
 	"github.com/edulinq/autograder/internal/model"
 	pcourses "github.com/edulinq/autograder/internal/procedures/courses"
 	"github.com/edulinq/autograder/internal/stats"
+	"github.com/edulinq/autograder/internal/task"
 	"github.com/edulinq/autograder/internal/util"
 )
 
@@ -44,8 +45,12 @@ func setup(initiator common.ServerInitiator) error {
 
 	log.Debug("Found course(s).", log.NewAttr("count", len(courses)))
 
-	// Startup courses (in the background).
+	// Only perfrom some tasks if we are running a primary server.
 	if initiator == common.PRIMARY_SERVER {
+		// Initialize the task engine.
+		task.Init()
+
+		// Startup courses (in the background).
 		for _, course := range courses {
 			go startCourse(course)
 		}
