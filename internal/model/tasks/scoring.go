@@ -2,8 +2,6 @@ package tasks
 
 import (
 	"fmt"
-
-	"github.com/edulinq/autograder/internal/log"
 )
 
 type ScoringUploadTask struct {
@@ -22,14 +20,6 @@ func (this *ScoringUploadTask) Validate(course TaskCourse) error {
 
 	if !course.HasLMSAdapter() {
 		return fmt.Errorf("Score and Upload task course must have an LMS adapter.")
-	}
-
-	lmsIDs, assignmentIDs := course.GetAssignmentLMSIDs()
-	for i, _ := range lmsIDs {
-		if lmsIDs[i] == "" {
-			log.Warn("Score and Upload course has an assignment with a missing LMS ID.",
-				log.NewCourseAttr(course.GetID()), log.NewAssignmentAttr(assignmentIDs[i]))
-		}
 	}
 
 	return nil
