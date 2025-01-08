@@ -61,13 +61,27 @@ func (this *RejectLate) String() string {
 		this.AssignmentName, this.DueDate.SafeMessage(), deltaString)
 }
 
-func checkForRejection(assignment *model.Assignment, submissionPath string, user string, message string, allowLate bool) (RejectReason, error) {
+func checkForRejection(assignment *model.Assignment, submissionPath string, email string, message string, allowLate bool) (RejectReason, error) {
+	user, err := db.GetServerUser(email)
+	if err != nil {
+		return nil, err
+	}
+
+	if user == nil {
+		return nil, fmt.Errorf("Unable to find user: '%s'.", email)
+	}
+
+	// Server admins are never rejected.
+	if user.Role >= model.ServerRoleAdmin {
+		return nil, nil
+	}
+
 	reason := checkLateSubmission(assignment, allowLate)
 	if reason != nil {
 		return reason, nil
 	}
 
-	return checkSubmissionLimit(assignment, user)
+	return checkSubmissionLimit(assignment, email)
 }
 
 func checkLateSubmission(assignment *model.Assignment, allowLate bool) RejectReason {
@@ -90,6 +104,8 @@ func checkSubmissionLimit(assignment *model.Assignment, email string) (RejectRea
 		return nil, nil
 	}
 
+	// Note that server admins were already checked for in checkForRejection(),
+	// so we don't need to worry about escalation here.
 	user, err := db.GetCourseUser(assignment.GetCourse(), email)
 	if err != nil {
 		return nil, err

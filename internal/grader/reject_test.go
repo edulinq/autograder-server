@@ -17,6 +17,22 @@ const TEST_ASSIGNMENT_ID = "bash"
 
 var SUBMISSION_RELPATH string = filepath.Join("test-submissions", "solution")
 
+// Ensure that admin submissions are never rejected.
+func TestRejectSubmissionAdminOverride(test *testing.T) {
+	db.ResetForTesting()
+	defer db.ResetForTesting()
+
+	assignment := db.MustGetTestSubmissionAssignment()
+	assignment.DueDate = nil
+
+	// Set the max submissions to zero.
+	maxValue := 0
+	assignment.SubmissionLimit = &model.SubmissionLimitInfo{Max: &maxValue}
+
+	// Make a submission that should be rejected, but is not.
+	submitForRejection(test, assignment, "server-admin@test.edulinq.org", false, nil)
+}
+
 func TestRejectSubmissionMaxAttempts(test *testing.T) {
 	db.ResetForTesting()
 	defer db.ResetForTesting()
