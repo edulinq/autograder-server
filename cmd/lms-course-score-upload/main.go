@@ -9,6 +9,7 @@ import (
 	"github.com/edulinq/autograder/internal/db"
 	"github.com/edulinq/autograder/internal/log"
 	"github.com/edulinq/autograder/internal/scoring"
+	"github.com/edulinq/autograder/internal/util"
 )
 
 var args struct {
@@ -32,10 +33,10 @@ func main() {
 
 	course := db.MustGetCourse(args.Course)
 
-	err = scoring.FullCourseScoringAndUpload(course, args.DryRun)
+	result, err := scoring.FullCourseScoringAndUpload(course, args.DryRun)
 	if err != nil {
 		log.Fatal("Failed to score and upload assignment.", err, course)
 	}
 
-	fmt.Println("Course grades uploaded.")
+	fmt.Println(util.MustToJSONIndent(result))
 }

@@ -18,5 +18,6 @@ func RunScoringUploadTask(course *model.Course, rawTask tasks.ScheduledTask) (bo
 		return true, nil
 	}
 
-	return true, scoring.FullCourseScoringAndUpload(course, task.DryRun)
+	_, err := scoring.FullCourseScoringAndUpload(course, task.DryRun)
+	return true, err
 }

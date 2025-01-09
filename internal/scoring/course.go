@@ -7,11 +7,13 @@ import (
 	"github.com/edulinq/autograder/internal/model"
 )
 
-func FullCourseScoringAndUpload(course *model.Course, dryRun bool) error {
+// Returns: {assignmentID: {email: scoringInfo, ...}, ...}.
+func FullCourseScoringAndUpload(course *model.Course, dryRun bool) (map[string]map[string]*model.ScoringInfo, error) {
 	assignments := course.GetSortedAssignments()
 
 	log.Debug("Beginning full scoring for course.", course, log.NewAttr("dry-run", dryRun))
 
+	results := make(map[string]map[string]*model.ScoringInfo, len(assignments))
 	for i, assignment := range assignments {
 		if assignment.GetLMSID() == "" {
 			log.Warn("Assignment has no LMS id, skipping scoring.", course, assignment)
@@ -22,13 +24,15 @@ func FullCourseScoringAndUpload(course *model.Course, dryRun bool) error {
 			log.NewAttr("index", i),
 			log.NewAttr("dry-run", dryRun))
 
-		err := FullAssignmentScoringAndUpload(assignment, dryRun)
+		uploadedScores, err := FullAssignmentScoringAndUpload(assignment, dryRun)
 		if err != nil {
-			return fmt.Errorf("Failed to grade assignment '%s' for course '%s': '%w'.", assignment.GetID(), course.GetID(), err)
+			return nil, fmt.Errorf("Failed to grade assignment '%s' for course '%s': '%w'.", assignment.GetID(), course.GetID(), err)
 		}
+
+		results[assignment.GetID()] = uploadedScores
 	}
 
 	log.Debug("Finished full scoring for course.", course, log.NewAttr("dry-run", dryRun))
 
-	return nil
+	return results, nil
 }

@@ -55,6 +55,11 @@
             "request-type": "*submissions.SubmitRequest",
             "response-type": "*submissions.SubmitResponse"
         },
+        "courses/lms/scores/upload": {
+            "description": "Perform a full scoring and upload scores to the course's LMS.",
+            "request-type": "*scores.UploadRequest",
+            "response-type": "*scores.UploadResponse"
+        },
         "courses/upsert/filespec": {
             "description": "Upsert a course using a filespec.",
             "request-type": "*upsert.FileSpecRequest",
