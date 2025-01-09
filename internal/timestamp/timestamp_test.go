@@ -71,6 +71,13 @@ func TestTimestamp(test *testing.T) {
 }
 
 func TestTimestampGuessTime(test *testing.T) {
+	// Force the local time to UTC for tests.
+	oldLocal := time.Local
+	time.Local = time.UTC
+	defer func() {
+		time.Local = oldLocal
+	}()
+
 	testCases := []struct {
 		value    string
 		expected Timestamp

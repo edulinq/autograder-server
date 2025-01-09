@@ -36,7 +36,7 @@ type dateTestCase struct {
 }
 
 func getTime(value string) time.Time {
-	result, err := time.Parse(time.RFC3339, value)
+	result, err := time.ParseInLocation(time.RFC3339, value, time.Local)
 	if err != nil {
 		panic(err)
 	}
@@ -45,7 +45,7 @@ func getTime(value string) time.Time {
 }
 
 func getSimpleTime(value string) time.Time {
-	result, err := time.Parse(time.DateTime, value)
+	result, err := time.ParseInLocation(time.DateTime, value, time.Local)
 	if err != nil {
 		panic(err)
 	}

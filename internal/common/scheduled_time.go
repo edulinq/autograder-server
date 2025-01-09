@@ -174,7 +174,7 @@ func (this TimeOfDaySpec) ComputeNextTime(startTime timestamp.Timestamp) timesta
 	instance, err := this.getGoTime()
 	if err != nil {
 		log.Error("Failed to parse time of day spec.", err, log.NewAttr("contents", string(this)))
-		thisGoTime, _ = time.Parse(TIME_LAYOUT_MINS, "00:00")
+		thisGoTime, _ = time.ParseInLocation(TIME_LAYOUT_MINS, "00:00", time.Local)
 	} else {
 		thisGoTime = instance
 	}
@@ -229,7 +229,7 @@ func (this TimeOfDaySpec) getGoTime() (time.Time, error) {
 		return time.Time{}, fmt.Errorf("Time of day does not look like a 24-hour time: '%s'.", timeOfDay)
 	}
 
-	instance, err := time.Parse(timeLayout, timeOfDay)
+	instance, err := time.ParseInLocation(timeLayout, timeOfDay, time.Local)
 	if err != nil {
 		return time.Time{}, fmt.Errorf("Could not parse time of day from '%s', looking for 24-hour time: '%w'.", timeOfDay, err)
 	}

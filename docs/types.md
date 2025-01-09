@@ -81,6 +81,9 @@ Timestamps represent a specific instance in time (a datetime).
 The numeric value is UNIX millisecond time (the number of milliseconds since the [UNIX epoch](https://en.wikipedia.org/wiki/Unix_time)).
 Note that the UNIX epoch is in UTC, so this type always denotes the same timezone (UTC).
 
+In cases where strings are converted to a timestamp (and that string is not all digits) and no timezone information is supplied,
+then the server's local time will be used.
+
 ### Pointer
 
 Underlying Type: \<variable\>
@@ -653,6 +656,7 @@ The general rules are:
  - Sever admins can make any query.
  - A user can always query for logs about themselves.
  - A course admin can always query for logs about their course.
+ - If not timezone is specified in `after` or `past`, the server's local timezone is used.
 
 ## LMS Adapter (LMSAdapter)
 

@@ -103,7 +103,7 @@ func GuessFromString(text string) (Timestamp, error) {
 
 	// Try all the formats, and stop at the first non-error one.
 	for _, format := range timeFormats {
-		instance, err := time.Parse(format, text)
+		instance, err := time.ParseInLocation(format, text, time.Local)
 		if err == nil {
 			return FromGoTime(instance), nil
 		}
