@@ -181,11 +181,15 @@ func (this TimeOfDaySpec) ComputeNextTime(startTime timestamp.Timestamp) timesta
 
 	startGoTime := startTime.ToGoTime()
 
+	// The scheduled time will always be in the server's local time.
+	// Adjust the start time to match.
+	startGoTime = startGoTime.In(time.Local)
+
 	// Get a time with the same date as startTime, but the time of day for this scheduled time.
 	nextTime := time.Date(
 		startGoTime.Year(), startGoTime.Month(), startGoTime.Day(),
 		thisGoTime.Hour(), thisGoTime.Minute(), thisGoTime.Second(), thisGoTime.Nanosecond(),
-		time.UTC)
+		time.Local)
 
 	// The constructed time may be before the start time.
 	for nextTime.Before(startGoTime) {

@@ -83,6 +83,13 @@ func getValidTestCases() []*timeSpecTestCase {
 }
 
 func TestScheduledTimeValidTestCases(test *testing.T) {
+	// Force the local time to UTC for tests.
+	oldLocal := time.Local
+	time.Local = time.UTC
+	defer func() {
+		time.Local = oldLocal
+	}()
+
 	for i, testCase := range getValidTestCases() {
 		err := testCase.TimeSpec.Validate()
 		if err != nil {
@@ -121,6 +128,50 @@ func TestScheduledTimeInvalidTestCases(test *testing.T) {
 		err := testCase.Validate()
 		if err == nil {
 			test.Errorf("Case %d -- Validate failed to return an error on '%#v'.", i, testCase)
+			continue
+		}
+	}
+}
+
+// Ensure that the next time computation for time of day specs respects timezone.
+func TestScheduledTimeTimeOfDayComputeNextTimezone(test *testing.T) {
+	// Ensure that we reset the local time properly.
+	oldLocal := time.Local
+	defer func() {
+		time.Local = oldLocal
+	}()
+
+	// The base time will be UNIX epoch.
+	startTime := timestamp.Zero()
+
+	// Schedule for 3AM.
+	spec := TimeOfDaySpec("3:00")
+	err := spec.Validate()
+	if err != nil {
+		test.Fatalf("Failed to validate spec: '%v'.", err)
+	}
+
+	hourOffset := int((1 * time.Hour).Seconds())
+
+	testCases := []struct {
+		label         string
+		timezone      *time.Location
+		expectedDelta timestamp.Timestamp
+	}{
+		{"UTC", time.UTC, timestamp.FromMSecs(3 * 60 * 60 * 1000)},
+		{"UTC-1", time.FixedZone("Cape Verde Time", -hourOffset), timestamp.FromMSecs(4 * 60 * 60 * 1000)},
+		{"UTC+1", time.FixedZone("Central European Time", hourOffset), timestamp.FromMSecs(2 * 60 * 60 * 1000)},
+	}
+
+	for i, testCase := range testCases {
+		time.Local = testCase.timezone
+
+		nextTime := spec.ComputeNextTime(startTime)
+		actualDelta := nextTime - startTime
+
+		if testCase.expectedDelta != actualDelta {
+			test.Errorf("Case %d: Did not get expected time diff in %s. Expected: %d, Actual: %d.",
+				i, testCase.label, testCase.expectedDelta, actualDelta)
 			continue
 		}
 	}
