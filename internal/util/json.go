@@ -206,3 +206,36 @@ func UnmarshalEnum[T comparable](data []byte, mapping map[string]T, lowerCase bo
 
 	return &value, nil
 }
+
+// Change the type of an object by serializing it to JSON and then deserializing as the new type.
+func JSONTransformTypes[T any](rawValue any, defaultValue T) (T, error) {
+	jsonString, err := ToJSON(rawValue)
+	if err != nil {
+		return defaultValue, err
+	}
+
+	err = JSONFromString(jsonString, &defaultValue)
+	return defaultValue, err
+}
+
+func MustJSONTransformTypes[T any](rawValue any, defaultValue T) T {
+	value, err := JSONTransformTypes(rawValue, defaultValue)
+	if err != nil {
+		log.Fatal("Failed to transform type via JSON serialization.", err)
+	}
+
+	return value
+}
+
+// Format a JSON object string.
+func MustFormatJSONObject(text string) string {
+	var object map[string]any
+	MustJSONFromString(text, &object)
+	return MustToJSON(object)
+}
+
+func MustFormatJSONObjectIndent(text string) string {
+	var object map[string]any
+	MustJSONFromString(text, &object)
+	return MustToJSONIndent(object)
+}
