@@ -1,6 +1,7 @@
 package util
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -175,4 +176,33 @@ func unmarshal(data any, prefix string, indent string) (string, error) {
 	}
 
 	return string(bytes), nil
+}
+
+// Marshal an enum using a map of possible values in a way that can be used for MarshalJSON().
+func MarshalEnum[T comparable](value T, mapping map[T]string) ([]byte, error) {
+	buffer := bytes.NewBufferString(`"`)
+	buffer.WriteString(mapping[value])
+	buffer.WriteString(`"`)
+	return buffer.Bytes(), nil
+}
+
+// Unmarshal an enum using a map of possible values in a way that can be used for UnmarshalJSON().
+func UnmarshalEnum[T comparable](data []byte, mapping map[string]T, lowerCase bool) (*T, error) {
+	var temp string
+
+	err := json.Unmarshal(data, &temp)
+	if err != nil {
+		return nil, err
+	}
+
+	if lowerCase {
+		temp = strings.ToLower(temp)
+	}
+
+	value, ok := mapping[temp]
+	if !ok {
+		return nil, fmt.Errorf("Found invalid value '%s' for enum %T.", temp, value)
+	}
+
+	return &value, nil
 }
