@@ -86,6 +86,8 @@ func validateTaskTypeEmailLogs(task *UserTaskInfo) error {
 
 	task.Options["query"] = rawQuery
 
+	task.Options["send-empty"] = (task.Options["send-empty"] == true)
+
 	return nil
 }
 

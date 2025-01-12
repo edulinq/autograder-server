@@ -150,13 +150,18 @@ type Backend interface {
 
 	// Task operations.
 
-	// Record that a task has been completed.
-	// The DB is only required to keep the most recently completed task with the given course/ID.
-	LogTaskCompletion(courseID string, taskID string, instance timestamp.Timestamp) error
+	// Get all the active tasks that come from the given course.
+	// The returned tasks will be keyed by the task's hash.
+	GetActiveCourseTasks(course *model.Course) (map[string]*model.FullScheduledTask, error)
 
-	// Get the last time a task with the given course/ID was completed.
-	// Will return a zero time (timestamp.Zero()).
-	GetLastTaskCompletion(courseID string, taskID string) (timestamp.Timestamp, error)
+	// Get the next active task that should be run.
+	// Return nil if there are no active tasks.
+	GetNextActiveTask() (*model.FullScheduledTask, error)
+
+	// Upsert the given tasks.
+	// The map of tasks is keyed by the task's hash (like with GetActiveCourseTasks()),
+	// and a nil value indicates that the given task should be removed.
+	UpsertActiveTasks(tasks map[string]*model.FullScheduledTask) error
 
 	// Logging operations.
 

@@ -22,6 +22,7 @@ type backend struct {
 	logLock   sync.RWMutex
 	userLock  sync.RWMutex
 	statsLock sync.RWMutex
+	tasksLock sync.RWMutex
 }
 
 func Open() (*backend, error) {
@@ -57,6 +58,9 @@ func (this *backend) Clear() error {
 
 	this.statsLock.Lock()
 	defer this.statsLock.Unlock()
+
+	this.tasksLock.Lock()
+	defer this.tasksLock.Unlock()
 
 	err := util.RemoveDirent(this.baseDir)
 	if err != nil {

@@ -15,7 +15,6 @@ type CourseUpsertPublicOptions struct {
 	SkipSourceSync  bool `json:"skip-source-sync" help:"Skip syncing the course's source." default:"false"`
 	SkipLMSSync     bool `json:"skip-lms-sync" help:"Skip syncing with the course's LMS." default:"false"`
 	SkipBuildImages bool `json:"skip-build-images" help:"Skip building the course's assignment images." default:"false"`
-	SkipTasks       bool `json:"skip-tasks" help:"Skip starting up the course's tasks." default:"false"`
 
 	DryRun     bool `json:"dry-run" help:"Do not actually do the operation, just state what you would do." default:"false"`
 	SkipEmails bool `json:"skip-emails" help:"Skip sending out emails (always true if a dry run)." default:"false"`

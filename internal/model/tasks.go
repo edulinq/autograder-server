@@ -23,8 +23,8 @@ type UserTaskInfo struct {
 }
 
 // Information about a task supplied by the autograder.
-// These fields that are controlled by the autograder and values from the user will be ignored.
 type SystemTaskInfo struct {
+	Source       TaskSource          `json:"source"`
 	LastRunTime  timestamp.Timestamp `json:"next-runtime"`
 	NextRunTime  timestamp.Timestamp `json:"next-runtime"`
 	Hash         string              `json:"hash"`
@@ -53,6 +53,10 @@ func (this *UserTaskInfo) String() string {
 }
 
 func (this *UserTaskInfo) Validate() error {
+	if this == nil {
+		return fmt.Errorf("Nil tasks are not allowed.")
+	}
+
 	if (this.When == nil) && (!this.Disable) {
 		return fmt.Errorf("Scheduled time to run ('when') is not supplied and the task is not disabled.")
 	}
@@ -69,6 +73,33 @@ func (this *UserTaskInfo) Validate() error {
 	}
 
 	return validateTaskTypes(this)
+}
+
+func (this *UserTaskInfo) ToFullCourseTask(courseID string) (*FullScheduledTask, error) {
+	hash, err := util.Sha256HashFromJSONObject(this)
+	if err != nil {
+		return nil, fmt.Errorf("Unable to make hash from task: '%w'.", err)
+	}
+
+	systemTaskInfo := SystemTaskInfo{
+		Source:      TaskSourceCourse,
+		LastRunTime: timestamp.Zero(),
+		NextRunTime: this.When.ComputeNextTimeFromNow(),
+		Hash:        hash,
+		CourseID:    courseID,
+	}
+
+	err = systemTaskInfo.Validate()
+	if err != nil {
+		return nil, fmt.Errorf("Failed to validate system task info: '%w'.", err)
+	}
+
+	fullTask := &FullScheduledTask{
+		UserTaskInfo:   *this,
+		SystemTaskInfo: systemTaskInfo,
+	}
+
+	return fullTask, fullTask.Validate()
 }
 
 func (this *SystemTaskInfo) Validate() error {
@@ -102,6 +133,22 @@ func (this *FullScheduledTask) Validate() error {
 	}
 
 	return this.SystemTaskInfo.Validate()
+}
+
+// Merge times according to task updating logic
+// (as if a new task (this) was just read in and it replacing the exiting task (oldTask)).
+func (this *FullScheduledTask) MergeTimes(oldTask *FullScheduledTask) {
+	if oldTask == nil {
+		return
+	}
+
+	// Always take the last run time from the old task.
+	this.LastRunTime = oldTask.LastRunTime
+
+	// Take the sooner of the next run times.
+	if this.NextRunTime > oldTask.NextRunTime {
+		this.NextRunTime = oldTask.NextRunTime
+	}
 }
 
 func GetTaskOptionAsType[T any](task *UserTaskInfo, key string, defaultValue T) (T, error) {

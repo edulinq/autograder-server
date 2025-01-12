@@ -87,16 +87,6 @@ func upsertFromConfigPath(path string, options CourseUpsertOptions) (*CourseUpse
 		result.BuiltAssignmentImages = builtImages
 	}
 
-	// Schedule Tasks
-	if !options.DryRun && !options.SkipTasks {
-		for _, courseTask := range course.GetTasks() {
-			err = tasks.Handler.Schedule(course, courseTask)
-			if err != nil {
-				return nil, result.CourseID, fmt.Errorf("Failed to schedule task '%s': '%w'.", courseTask.String(), err)
-			}
-		}
-	}
-
 	// Cleanup
 
 	// Remove source if this was a dry run.

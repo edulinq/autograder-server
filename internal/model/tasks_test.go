@@ -119,7 +119,8 @@ func TestUserTaskInfoValidation(test *testing.T) {
                     },
                     "to": [
                         "course-admin@test.edulinq.org"
-                    ]
+                    ],
+                    "send-empty": false
                 }
             }`,
 			"",
