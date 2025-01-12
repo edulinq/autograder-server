@@ -29,6 +29,18 @@ func (this *backend) GetActiveCourseTasks(course *model.Course) (map[string]*mod
 	return courseTasks, nil
 }
 
+func (this *backend) GetActiveTasks() (map[string]*model.FullScheduledTask, error) {
+	this.tasksLock.RLock()
+	defer this.tasksLock.RUnlock()
+
+	allTasks, err := this.getTasks()
+	if err != nil {
+		return nil, err
+	}
+
+	return allTasks, nil
+}
+
 func (this *backend) GetNextActiveTask() (*model.FullScheduledTask, error) {
 	this.tasksLock.RLock()
 	defer this.tasksLock.RUnlock()
@@ -45,7 +57,7 @@ func (this *backend) GetNextActiveTask() (*model.FullScheduledTask, error) {
 		}
 	}
 
-	return task, nil
+	return nextTask, nil
 }
 
 func (this *backend) UpsertActiveTasks(upsertTasks map[string]*model.FullScheduledTask) error {
@@ -54,7 +66,7 @@ func (this *backend) UpsertActiveTasks(upsertTasks map[string]*model.FullSchedul
 
 	allTasks, err := this.getTasks()
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	for hash, upsertTask := range upsertTasks {
@@ -65,7 +77,7 @@ func (this *backend) UpsertActiveTasks(upsertTasks map[string]*model.FullSchedul
 		}
 	}
 
-	return writeTasks(allTasks)
+	return this.writeTasks(allTasks)
 }
 
 func (this *backend) getActiveTasksPath() string {
@@ -73,9 +85,9 @@ func (this *backend) getActiveTasksPath() string {
 }
 
 func (this *backend) getTasks() (map[string]*model.FullScheduledTask, error) {
-	task := make(map[string]*model.FullScheduledTask, 0)
+	tasks := make(map[string]*model.FullScheduledTask, 0)
 
-	path := getActiveTasksPath()
+	path := this.getActiveTasksPath()
 	if !util.PathExists(path) {
 		return tasks, nil
 	}
@@ -88,8 +100,8 @@ func (this *backend) getTasks() (map[string]*model.FullScheduledTask, error) {
 	return tasks, nil
 }
 
-func (this *backend) writeTasks(task map[string]*model.FullScheduledTask) error {
-	path := getActiveTasksPath()
+func (this *backend) writeTasks(tasks map[string]*model.FullScheduledTask) error {
+	path := this.getActiveTasksPath()
 
 	err := util.MkDir(filepath.Dir(path))
 	if err != nil {

@@ -103,7 +103,7 @@ func validateEmailList(task *UserTaskInfo) error {
 
 	task.Options["to"] = to
 
-	if !task.Disable && (len(to) == 0) {
+	if !task.Disabled && (len(to) == 0) {
 		return fmt.Errorf("Task is not disabled, but no email recipients are declared in the 'to' value.")
 	}
 

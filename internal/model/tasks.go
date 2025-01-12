@@ -15,17 +15,17 @@ type FullScheduledTask struct {
 
 // Information about a task supplied by the user.
 type UserTaskInfo struct {
-	Type    TaskType              `json:"type"`
-	Name    string                `json:"name,omitempty"`
-	Disable bool                  `json:"disable,omitempty"`
-	When    *common.ScheduledTime `json:"when,omitempty"`
-	Options map[string]any        `json:"options,omitempty"`
+	Type     TaskType              `json:"type"`
+	Name     string                `json:"name,omitempty"`
+	Disabled bool                  `json:"disabled,omitempty"`
+	When     *common.ScheduledTime `json:"when,omitempty"`
+	Options  map[string]any        `json:"options,omitempty"`
 }
 
 // Information about a task supplied by the autograder.
 type SystemTaskInfo struct {
 	Source       TaskSource          `json:"source"`
-	LastRunTime  timestamp.Timestamp `json:"next-runtime"`
+	LastRunTime  timestamp.Timestamp `json:"last-runtime"`
 	NextRunTime  timestamp.Timestamp `json:"next-runtime"`
 	Hash         string              `json:"hash"`
 	CourseID     string              `json:"course-id,omitempty"`
@@ -45,7 +45,7 @@ func (this *UserTaskInfo) String() string {
 	}
 
 	disabled := " "
-	if this.Disable {
+	if this.Disabled {
 		disabled = " (disabled) "
 	}
 
@@ -57,7 +57,7 @@ func (this *UserTaskInfo) Validate() error {
 		return fmt.Errorf("Nil tasks are not allowed.")
 	}
 
-	if (this.When == nil) && (!this.Disable) {
+	if (this.When == nil) && (!this.Disabled) {
 		return fmt.Errorf("Scheduled time to run ('when') is not supplied and the task is not disabled.")
 	}
 
@@ -75,7 +75,14 @@ func (this *UserTaskInfo) Validate() error {
 	return validateTaskTypes(this)
 }
 
+// Create a full task from user-defined information.
+// The created hash will be consistent as long as the user-defined information stays the same.
+// Will return nil if the task is disabled.
 func (this *UserTaskInfo) ToFullCourseTask(courseID string) (*FullScheduledTask, error) {
+	if this.Disabled {
+		return nil, nil
+	}
+
 	hash, err := util.Sha256HashFromJSONObject(this)
 	if err != nil {
 		return nil, fmt.Errorf("Unable to make hash from task: '%w'.", err)
@@ -138,7 +145,7 @@ func (this *FullScheduledTask) Validate() error {
 // Merge times according to task updating logic
 // (as if a new task (this) was just read in and it replacing the exiting task (oldTask)).
 func (this *FullScheduledTask) MergeTimes(oldTask *FullScheduledTask) {
-	if oldTask == nil {
+	if (this == nil) || (oldTask == nil) {
 		return
 	}
 

@@ -8,15 +8,23 @@ import (
 
 func GetActiveCourseTasks(course *model.Course) (map[string]*model.FullScheduledTask, error) {
 	if backend == nil {
-		return fmt.Errorf("Database has not been opened.")
+		return nil, fmt.Errorf("Database has not been opened.")
 	}
 
 	return backend.GetActiveCourseTasks(course)
 }
 
+func GetActiveTasks() (map[string]*model.FullScheduledTask, error) {
+	if backend == nil {
+		return nil, fmt.Errorf("Database has not been opened.")
+	}
+
+	return backend.GetActiveTasks()
+}
+
 func GetNextActiveTask() (*model.FullScheduledTask, error) {
 	if backend == nil {
-		return fmt.Errorf("Database has not been opened.")
+		return nil, fmt.Errorf("Database has not been opened.")
 	}
 
 	return backend.GetNextActiveTask()
@@ -37,5 +45,5 @@ func UpsertActiveTasks(tasks map[string]*model.FullScheduledTask) error {
 		return fmt.Errorf("Database has not been opened.")
 	}
 
-	return UpsertActiveTasks(tasks)
+	return backend.UpsertActiveTasks(tasks)
 }

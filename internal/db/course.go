@@ -123,9 +123,16 @@ func upsertActiveCourseTasks(course *model.Course) error {
 	}
 
 	// Add in any new tasks and merge with any exiting tasks.
-	for _, task := range course.Tasks {
-		newTask = task.ToFullCourseTask(course.GetID())
-		newTask.MergeTimes(oldTasks[newTask.Hash])
+	for i, task := range course.Tasks {
+		newTask, err := task.ToFullCourseTask(course.GetID())
+		if err != nil {
+			return fmt.Errorf("Unable to upsert task at inded %d: '%w'.", i, err)
+		}
+
+		if newTask != nil {
+			newTask.MergeTimes(oldTasks[newTask.Hash])
+		}
+
 		newTasks[newTask.Hash] = newTask
 	}
 

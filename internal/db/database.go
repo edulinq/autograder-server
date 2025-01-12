@@ -15,7 +15,6 @@ import (
 	"github.com/edulinq/autograder/internal/log"
 	"github.com/edulinq/autograder/internal/model"
 	"github.com/edulinq/autograder/internal/stats"
-	"github.com/edulinq/autograder/internal/timestamp"
 )
 
 var backend Backend
@@ -153,6 +152,9 @@ type Backend interface {
 	// Get all the active tasks that come from the given course.
 	// The returned tasks will be keyed by the task's hash.
 	GetActiveCourseTasks(course *model.Course) (map[string]*model.FullScheduledTask, error)
+
+	// Get all the active tasks keyed by hash.
+	GetActiveTasks() (map[string]*model.FullScheduledTask, error)
 
 	// Get the next active task that should be run.
 	// Return nil if there are no active tasks.

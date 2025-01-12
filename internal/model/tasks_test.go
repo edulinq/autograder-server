@@ -10,7 +10,9 @@ import (
 	"github.com/edulinq/autograder/internal/util"
 )
 
-func TestUserTaskInfoValidation(test *testing.T) {
+func TestTaskValidationBase(test *testing.T) {
+	courseID := "course101"
+
 	testCases := []struct {
 		task                   *UserTaskInfo
 		expectedJSON           string
@@ -127,12 +129,12 @@ func TestUserTaskInfoValidation(test *testing.T) {
 		},
 		{
 			&UserTaskInfo{
-				Type:    TaskTypeCourseBackup,
-				Disable: true,
+				Type:     TaskTypeCourseBackup,
+				Disabled: true,
 			},
 			`{
                 "type": "backup",
-                "disable": true
+                "disabled": true
             }`,
 			"",
 		},
@@ -244,6 +246,29 @@ func TestUserTaskInfoValidation(test *testing.T) {
 		if !reflect.DeepEqual(testCase.task, &newTask) {
 			test.Errorf("Case %d: Unmarshaled task not as expected. Expected '%s', Actual: '%s'.",
 				i, util.MustToJSONIndent(testCase.task), util.MustToJSONIndent(newTask))
+			continue
+		}
+
+		// Test conversion to full tasks.
+		fullOldTask, err := testCase.task.ToFullCourseTask(courseID)
+		if err != nil {
+			test.Errorf("Case %d: Got an unexpected error creating the old full task: '%v'.", i, err)
+			continue
+		}
+
+		fullNewTask, err := newTask.ToFullCourseTask(courseID)
+		if err != nil {
+			test.Errorf("Case %d: Got an unexpected error creating the new full task: '%v'.", i, err)
+			continue
+		}
+
+		if (fullOldTask == nil) && (fullNewTask == nil) {
+			continue
+		}
+
+		if fullOldTask.Hash != fullNewTask.Hash {
+			test.Errorf("Case %d: Hashes of old and new full tasks do not match. Old: '%s', New: '%s'.",
+				i, util.MustToJSONIndent(fullOldTask), util.MustToJSONIndent(fullNewTask))
 			continue
 		}
 	}

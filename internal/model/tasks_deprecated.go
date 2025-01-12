@@ -9,8 +9,8 @@ func DeprecatedTaskToStandard(deprecatedTask dtasks.ScheduledTask) []*UserTaskIn
 
 	for _, when := range deprecatedTask.GetTimes() {
 		task := &UserTaskInfo{
-			Disable: deprecatedTask.IsDisabled(),
-			When:    when,
+			Disabled: deprecatedTask.IsDisabled(),
+			When:     when,
 		}
 
 		taskType := TaskTypeUnknown
