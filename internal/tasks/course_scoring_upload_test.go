@@ -16,6 +16,6 @@ func TestRunCourseScoringUploadTaskBase(test *testing.T) {
 
 	err := RunCourseScoringUploadTask(task)
 	if err != nil {
-		test.Fatalf("Got an unexpected error on backup: '%v'.", err)
+		test.Fatalf("Got an unexpected error running task: '%v'.", err)
 	}
 }

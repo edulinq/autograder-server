@@ -21,6 +21,6 @@ func TestRunCourseReportTaskBase(test *testing.T) {
 
 	err := RunCourseReportTask(task)
 	if err != nil {
-		test.Fatalf("Got an unexpected error on backup: '%v'.", err)
+		test.Fatalf("Got an unexpected error running task: '%v'.", err)
 	}
 }

@@ -98,7 +98,10 @@ func (this *UserTaskInfo) ToFullCourseTask(courseID string) (*FullScheduledTask,
 	systemTaskInfo := SystemTaskInfo{
 		Source:      TaskSourceCourse,
 		LastRunTime: timestamp.Zero(),
-		NextRunTime: this.When.ComputeNextTimeFromNow(),
+		// Compute the next run time from zero time.
+		// If this task is never merged with an existing one, then it will get run very soon.
+		// If this task is merged, then the future next run time will be used (see MergeTimes()).
+		NextRunTime: this.When.ComputeNextTime(timestamp.Zero()),
 		Hash:        hash,
 		CourseID:    courseID,
 	}
@@ -159,8 +162,10 @@ func (this *FullScheduledTask) MergeTimes(oldTask *FullScheduledTask) {
 	// Always take the last run time from the old task.
 	this.LastRunTime = oldTask.LastRunTime
 
-	// Take the sooner of the next run times.
-	if this.NextRunTime > oldTask.NextRunTime {
+	// Take the older of the next run times.
+	// Note that newly created tasks will compute their first run from zero time,
+	// but established tasks will have already run and have a older next run time..
+	if this.NextRunTime < oldTask.NextRunTime {
 		this.NextRunTime = oldTask.NextRunTime
 	}
 }

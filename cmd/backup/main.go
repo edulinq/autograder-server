@@ -9,7 +9,7 @@ import (
 	"github.com/edulinq/autograder/internal/db"
 	"github.com/edulinq/autograder/internal/log"
 	"github.com/edulinq/autograder/internal/model"
-	"github.com/edulinq/autograder/internal/task"
+	"github.com/edulinq/autograder/internal/procedures/backup"
 )
 
 var args struct {
@@ -53,7 +53,7 @@ func backupFromMap(courses map[string]*model.Course) []string {
 	errorCount := 0
 
 	for _, course := range courses {
-		err := task.RunBackup(course, "", "")
+		err := backup.BackupCourseFull(course, "", "")
 		if err != nil {
 			log.Error("Failed to backup course.", err, course)
 			errorCount++

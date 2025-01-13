@@ -9,10 +9,8 @@ import (
 	"github.com/edulinq/autograder/internal/config"
 	"github.com/edulinq/autograder/internal/db"
 	"github.com/edulinq/autograder/internal/log"
-	"github.com/edulinq/autograder/internal/model"
-	pcourses "github.com/edulinq/autograder/internal/procedures/courses"
 	"github.com/edulinq/autograder/internal/stats"
-	"github.com/edulinq/autograder/internal/task"
+	"github.com/edulinq/autograder/internal/tasks"
 	"github.com/edulinq/autograder/internal/util"
 )
 
@@ -48,12 +46,7 @@ func setup(initiator common.ServerInitiator) error {
 	// Only perfrom some tasks if we are running a primary server.
 	if initiator == common.PRIMARY_SERVER {
 		// Initialize the task engine.
-		task.Init()
-
-		// Startup courses (in the background).
-		for _, course := range courses {
-			go startCourse(course)
-		}
+		tasks.Start()
 	}
 
 	return nil
@@ -66,6 +59,8 @@ func CleanupAndStop() (err error) {
 	if apiServer == nil {
 		return nil
 	}
+
+	tasks.Stop()
 
 	stats.StopCollection()
 
@@ -122,20 +117,4 @@ func RunAndBlockFull(initiator common.ServerInitiator, skipSetup bool) (err erro
 	}()
 
 	return err
-}
-
-func startCourse(course *model.Course) {
-	root, err := db.GetRoot()
-	if err != nil {
-		log.Error("Failed to get root for course update.", err, course)
-	}
-
-	options := pcourses.CourseUpsertOptions{
-		ContextUser: root,
-	}
-
-	_, err = pcourses.UpdateFromLocalSource(course, options)
-	if err != nil {
-		log.Error("Failed to update course.", err, course)
-	}
 }

@@ -18,24 +18,32 @@ const (
 	TaskTypeCourseReport        TaskType = "report"
 	TaskTypeCourseScoringUpload TaskType = "scoring-upload"
 	TaskTypeCourseUpdate        TaskType = "update"
+
+	TaskTypeTest TaskType = "test"
 )
 
 var taskTypeToString = map[TaskType]string{
-	TaskTypeUnknown:             string(TaskTypeUnknown),
+	TaskTypeUnknown: string(TaskTypeUnknown),
+
 	TaskTypeCourseBackup:        string(TaskTypeCourseBackup),
 	TaskTypeCourseEmailLogs:     string(TaskTypeCourseEmailLogs),
 	TaskTypeCourseReport:        string(TaskTypeCourseReport),
 	TaskTypeCourseScoringUpload: string(TaskTypeCourseScoringUpload),
 	TaskTypeCourseUpdate:        string(TaskTypeCourseUpdate),
+
+	TaskTypeTest: string(TaskTypeTest),
 }
 
 var stringToTaskType = map[string]TaskType{
-	string(TaskTypeUnknown):             TaskTypeUnknown,
+	string(TaskTypeUnknown): TaskTypeUnknown,
+
 	string(TaskTypeCourseBackup):        TaskTypeCourseBackup,
 	string(TaskTypeCourseEmailLogs):     TaskTypeCourseEmailLogs,
 	string(TaskTypeCourseReport):        TaskTypeCourseReport,
 	string(TaskTypeCourseScoringUpload): TaskTypeCourseScoringUpload,
 	string(TaskTypeCourseUpdate):        TaskTypeCourseUpdate,
+
+	string(TaskTypeTest): TaskTypeTest,
 }
 
 func (this TaskType) MarshalJSON() ([]byte, error) {
@@ -63,6 +71,8 @@ func validateTaskTypes(task *UserTaskInfo) error {
 		return nil
 	case TaskTypeCourseEmailLogs:
 		return validateTaskTypeCourseEmailLogs(task)
+	case TaskTypeTest:
+		return nil
 	default:
 		return fmt.Errorf("Unknown task type: '%s'.", task.Type)
 	}

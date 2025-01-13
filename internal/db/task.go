@@ -3,6 +3,7 @@ package db
 import (
 	"fmt"
 
+	"github.com/edulinq/autograder/internal/log"
 	"github.com/edulinq/autograder/internal/model"
 )
 
@@ -38,6 +39,13 @@ func UpsertActiveTask(task *model.FullScheduledTask) error {
 	}
 
 	return UpsertActiveTasks(tasks)
+}
+
+func MustUpsertActiveTask(task *model.FullScheduledTask) {
+	err := UpsertActiveTask(task)
+	if err != nil {
+		log.Fatal("Failed to upsert task.", err)
+	}
 }
 
 func UpsertActiveTasks(tasks map[string]*model.FullScheduledTask) error {

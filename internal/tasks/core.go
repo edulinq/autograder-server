@@ -14,15 +14,15 @@ import (
 const MIN_WAIT_MSECS = 1000
 
 var (
-	lock sync.Mutex
-	run  bool = false
+	lock             sync.Mutex
+	enableTaskEngine bool = false
 )
 
 func Start() {
 	lock.Lock()
 	defer lock.Unlock()
 
-	run = true
+	enableTaskEngine = true
 	go runTasks()
 }
 
@@ -33,13 +33,13 @@ func Stop() {
 	lock.Lock()
 	defer lock.Unlock()
 
-	run = false
+	enableTaskEngine = false
 }
 
 // Run tasks until Stop() is called.
 // Even when Stop is called, no tasks will be interrupted.
 func runTasks() {
-	for run {
+	for enableTaskEngine {
 		runNextTask()
 
 		task, err := db.GetNextActiveTask()
@@ -62,7 +62,7 @@ func runNextTask() {
 	lock.Lock()
 	defer lock.Unlock()
 
-	if !run {
+	if !enableTaskEngine {
 		return
 	}
 
@@ -103,6 +103,15 @@ func runTask(task *model.FullScheduledTask) {
 		return
 	}
 
+	defer func() {
+		value := recover()
+		if value == nil {
+			return
+		}
+
+		log.Error("Task paniced.", task, log.NewAttr("recover-value", value))
+	}()
+
 	var err error = nil
 
 	switch task.Type {
@@ -116,6 +125,8 @@ func runTask(task *model.FullScheduledTask) {
 		err = RunCourseScoringUploadTask(task)
 	case model.TaskTypeCourseUpdate:
 		err = RunCourseUpdateTask(task)
+	case model.TaskTypeTest:
+		err = RunTestTask(task)
 	default:
 		log.Error("Unknown task type.", task)
 		return

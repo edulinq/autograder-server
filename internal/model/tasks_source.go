@@ -10,16 +10,19 @@ type TaskSource string
 const (
 	TaskSourceUnknown TaskSource = ""
 	TaskSourceCourse             = "course"
+	TaskSourceTest               = "test"
 )
 
 var taskSourceToString = map[TaskSource]string{
 	TaskSourceUnknown: string(TaskSourceUnknown),
 	TaskSourceCourse:  string(TaskSourceCourse),
+	TaskSourceTest:    string(TaskSourceTest),
 }
 
 var stringToTaskSource = map[string]TaskSource{
 	string(TaskSourceUnknown): TaskSourceUnknown,
 	string(TaskSourceCourse):  TaskSourceCourse,
+	string(TaskSourceTest):    TaskSourceTest,
 }
 
 func (this TaskSource) MarshalJSON() ([]byte, error) {
