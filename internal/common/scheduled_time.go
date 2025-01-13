@@ -209,7 +209,7 @@ func (this TimeOfDaySpec) String() string {
 		timeOfDay = instance.Format(time.TimeOnly)
 	}
 
-	return fmt.Sprintf("daily at %s.", timeOfDay)
+	return fmt.Sprintf("daily at %s", timeOfDay)
 }
 
 // This TimeOfDaySpec should have already been validated,

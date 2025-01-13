@@ -95,13 +95,20 @@ func (this *UserTaskInfo) ToFullCourseTask(courseID string) (*FullScheduledTask,
 		return nil, fmt.Errorf("Unable to make hash from task: '%w'.", err)
 	}
 
+	// Computing the next time depends on how the task is to be repeated: daily or periodically.
+	// Daily tasks will be computed starting at right now, so they will run the next chosen time period.
+	// Periodic ("every") tasks will be computed starting at zero time, so they will get a run in right away.
+	// However, if a periodic task has an existing run in the DB, then it will be merged and this time overwritten (see MergeTimes()).
+	// Daily tasks will also get merged, but the two tasks should share the same next run time.
+	baselineTime := timestamp.Zero()
+	if !this.When.Daily.IsEmpty() {
+		baselineTime = timestamp.Now()
+	}
+
 	systemTaskInfo := SystemTaskInfo{
 		Source:      TaskSourceCourse,
 		LastRunTime: timestamp.Zero(),
-		// Compute the next run time from zero time.
-		// If this task is never merged with an existing one, then it will get run very soon.
-		// If this task is merged, then the future next run time will be used (see MergeTimes()).
-		NextRunTime: this.When.ComputeNextTime(timestamp.Zero()),
+		NextRunTime: this.When.ComputeNextTime(baselineTime),
 		// Use a combination of the course id, type, and hashed user config as the hash.
 		Hash:     util.JoinStrings("::", courseID, string(this.Type), configHash),
 		CourseID: courseID,
@@ -163,11 +170,19 @@ func (this *FullScheduledTask) MergeTimes(oldTask *FullScheduledTask) {
 	// Always take the last run time from the old task.
 	this.LastRunTime = oldTask.LastRunTime
 
-	// Take the older of the next run times.
-	// Note that newly created tasks will compute their first run from zero time,
-	// but established tasks will have already run and have a older next run time..
-	if this.NextRunTime < oldTask.NextRunTime {
-		this.NextRunTime = oldTask.NextRunTime
+	// For daily tasks, take the earlier time.
+	// For periodic ("every") tasks, take the latter time.
+	// Note that daily tasks should share the same next run time,
+	// but a loading a task (e.g., from a course) at the exact right time could cause a skip if we took the latter time.
+
+	if !this.When.Daily.IsEmpty() {
+		if this.NextRunTime > oldTask.NextRunTime {
+			this.NextRunTime = oldTask.NextRunTime
+		}
+	} else {
+		if this.NextRunTime < oldTask.NextRunTime {
+			this.NextRunTime = oldTask.NextRunTime
+		}
 	}
 }
 

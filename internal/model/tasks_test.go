@@ -7,6 +7,7 @@ import (
 
 	"github.com/edulinq/autograder/internal/common"
 	"github.com/edulinq/autograder/internal/log"
+	"github.com/edulinq/autograder/internal/timestamp"
 	"github.com/edulinq/autograder/internal/util"
 )
 
@@ -266,10 +267,205 @@ func TestTaskValidationBase(test *testing.T) {
 			continue
 		}
 
-		if fullOldTask.Hash != fullNewTask.Hash {
-			test.Errorf("Case %d: Hashes of old and new full tasks do not match. Old: '%s', New: '%s'.",
+		if !reflect.DeepEqual(fullOldTask, fullNewTask) {
+			test.Errorf("Case %d: Full tasks not as expected. Old: '%s', New: '%s'.",
 				i, util.MustToJSONIndent(fullOldTask), util.MustToJSONIndent(fullNewTask))
 			continue
 		}
+
+		// Check full task serialization.
+		var jsonFullTask FullScheduledTask
+		util.MustJSONFromString(util.MustToJSON(fullOldTask), &jsonFullTask)
+
+		err = jsonFullTask.Validate()
+		if err != nil {
+			test.Errorf("Case %d: Unmarshaled full task had validation error: '%v'.", i, err)
+			continue
+		}
+
+		if !reflect.DeepEqual(fullOldTask, &jsonFullTask) {
+			test.Errorf("Case %d: Unmarshaled full task not as expected. Expected: '%s', Actual: '%s'.",
+				i, util.MustToJSONIndent(fullOldTask), util.MustToJSONIndent(jsonFullTask))
+			continue
+		}
 	}
+}
+
+func TestTaskToFullCourseTaskBase(test *testing.T) {
+	courseID := "course101"
+
+	// Before comparisons are made, timestamps will be adjusted to one of four values:
+	// -1 - Before zero.
+	//  0 - Zero time (unix epoch).
+	//  1 - After zero, but before 2000.
+	//  2 - After 2020.
+	splitTime := timestamp.MustGuessFromString("2000-01-01T00:00:00Z")
+
+	testCases := []struct {
+		userInfo *UserTaskInfo
+		// Only non-consistent information will need to be set (the rest is set in the test).
+		expectedSystemInfo *SystemTaskInfo
+		errorSubstring     string
+	}{
+		{
+			&UserTaskInfo{
+				Type: TaskTypeCourseBackup,
+				When: &common.ScheduledTime{
+					Daily: "3:00",
+				},
+			},
+			&SystemTaskInfo{
+				NextRunTime: timestamp.FromMSecs(2),
+			},
+			"",
+		},
+		{
+			&UserTaskInfo{
+				Type: TaskTypeCourseBackup,
+				When: &common.ScheduledTime{
+					Every: common.DurationSpec{
+						Hours: 3,
+					},
+				},
+			},
+			&SystemTaskInfo{
+				NextRunTime: timestamp.FromMSecs(1),
+			},
+			"",
+		},
+	}
+
+	for i, testCase := range testCases {
+		err := testCase.userInfo.Validate()
+		if err != nil {
+			test.Errorf("Case %d: Got an unexpected user info validation error: '%v'.", i, err)
+			continue
+		}
+
+		task, err := testCase.userInfo.ToFullCourseTask(courseID)
+		if err != nil {
+			if testCase.errorSubstring == "" {
+				test.Errorf("Case %d: Got an unexpected error: '%v'.", i, err)
+				continue
+			}
+
+			if !strings.Contains(err.Error(), testCase.errorSubstring) {
+				test.Errorf("Case %d: Error is not as expected. Expected Substring '%s', Actual: '%s'.",
+					i, testCase.errorSubstring, err.Error())
+				continue
+			}
+
+			continue
+		}
+
+		// Set consistent information.
+		testCase.expectedSystemInfo.Source = TaskSourceCourse
+		testCase.expectedSystemInfo.CourseID = courseID
+		testCase.expectedSystemInfo.Hash = task.SystemTaskInfo.Hash
+		testCase.expectedSystemInfo.LastRunTime = timestamp.Zero()
+
+		// Bucket timestamps.
+		task.SystemTaskInfo.LastRunTime = bucketTime(splitTime, task.SystemTaskInfo.LastRunTime)
+		task.SystemTaskInfo.NextRunTime = bucketTime(splitTime, task.SystemTaskInfo.NextRunTime)
+
+		if !reflect.DeepEqual(testCase.expectedSystemInfo, &task.SystemTaskInfo) {
+			test.Errorf("Case %d: System info not as expected. Expected: '%s', Actual: '%s'.",
+				i, util.MustToJSONIndent(testCase.expectedSystemInfo), util.MustToJSONIndent(&task.SystemTaskInfo))
+			continue
+		}
+	}
+}
+
+func TestMergeTimesBase(test *testing.T) {
+	earlyTime := timestamp.Zero()
+	latterTime := timestamp.Now()
+
+	earlyDailyTask := FullScheduledTask{
+		UserTaskInfo{
+			When: &common.ScheduledTime{
+				Daily: "3:00",
+			},
+		},
+		SystemTaskInfo{
+			NextRunTime: earlyTime,
+		},
+	}
+
+	latterDailyTask := FullScheduledTask{
+		UserTaskInfo{
+			When: &common.ScheduledTime{
+				Daily: "3:00",
+			},
+		},
+		SystemTaskInfo{
+			NextRunTime: latterTime,
+		},
+	}
+
+	earlyEveryTask := FullScheduledTask{
+		UserTaskInfo{
+			When: &common.ScheduledTime{
+				Every: common.DurationSpec{
+					Hours: 3,
+				},
+			},
+		},
+		SystemTaskInfo{
+			NextRunTime: earlyTime,
+		},
+	}
+
+	latterEveryTask := FullScheduledTask{
+		UserTaskInfo{
+			When: &common.ScheduledTime{
+				Every: common.DurationSpec{
+					Hours: 3,
+				},
+			},
+		},
+		SystemTaskInfo{
+			NextRunTime: latterTime,
+		},
+	}
+
+	// Daily, LHS is early.
+	lhs, rhs := earlyDailyTask, latterDailyTask
+	lhs.MergeTimes(&rhs)
+	if lhs.NextRunTime != earlyTime {
+		test.Fatalf("Daily task did not take earlier (lhs) time.")
+	}
+
+	// Daily, RHS is early.
+	lhs, rhs = latterDailyTask, earlyDailyTask
+	lhs.MergeTimes(&rhs)
+	if lhs.NextRunTime != earlyTime {
+		test.Fatalf("Daily task did not take earlier (rhs) time.")
+	}
+
+	// Every, LHS is early.
+	lhs, rhs = earlyEveryTask, latterEveryTask
+	lhs.MergeTimes(&rhs)
+	if lhs.NextRunTime != latterTime {
+		test.Fatalf("Every task did not take latter (rhs) time.")
+	}
+
+	// Every, RHS is early.
+	lhs, rhs = latterEveryTask, earlyEveryTask
+	lhs.MergeTimes(&rhs)
+	if lhs.NextRunTime != latterTime {
+		test.Fatalf("Every task did not take latter (lhs) time.")
+	}
+}
+
+func bucketTime(splitTime timestamp.Timestamp, actualTime timestamp.Timestamp) timestamp.Timestamp {
+	value := int64(0)
+	if actualTime < timestamp.Zero() {
+		value = -1
+	} else if actualTime > splitTime {
+		value = 2
+	} else if actualTime > timestamp.Zero() {
+		value = 1
+	}
+
+	return timestamp.FromMSecs(value)
 }
