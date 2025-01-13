@@ -90,7 +90,7 @@ func (this *UserTaskInfo) ToFullCourseTask(courseID string) (*FullScheduledTask,
 		return nil, nil
 	}
 
-	hash, err := util.Sha256HashFromJSONObject(this)
+	configHash, err := util.Sha256HashFromJSONObject(this)
 	if err != nil {
 		return nil, fmt.Errorf("Unable to make hash from task: '%w'.", err)
 	}
@@ -102,8 +102,9 @@ func (this *UserTaskInfo) ToFullCourseTask(courseID string) (*FullScheduledTask,
 		// If this task is never merged with an existing one, then it will get run very soon.
 		// If this task is merged, then the future next run time will be used (see MergeTimes()).
 		NextRunTime: this.When.ComputeNextTime(timestamp.Zero()),
-		Hash:        hash,
-		CourseID:    courseID,
+		// Use a combination of the course id, type, and hashed user config as the hash.
+		Hash:     util.JoinStrings("::", courseID, string(this.Type), configHash),
+		CourseID: courseID,
 	}
 
 	err = systemTaskInfo.Validate()
