@@ -14,28 +14,28 @@ const (
 	TaskTypeUnknown TaskType = ""
 
 	TaskTypeCourseBackup        TaskType = "backup"
+	TaskTypeCourseEmailLogs     TaskType = "email-logs"
 	TaskTypeCourseReport        TaskType = "report"
 	TaskTypeCourseScoringUpload TaskType = "scoring-upload"
 	TaskTypeCourseUpdate        TaskType = "update"
-	TaskTypeEmailLogs           TaskType = "email-logs"
 )
 
 var taskTypeToString = map[TaskType]string{
 	TaskTypeUnknown:             string(TaskTypeUnknown),
 	TaskTypeCourseBackup:        string(TaskTypeCourseBackup),
+	TaskTypeCourseEmailLogs:     string(TaskTypeCourseEmailLogs),
 	TaskTypeCourseReport:        string(TaskTypeCourseReport),
 	TaskTypeCourseScoringUpload: string(TaskTypeCourseScoringUpload),
 	TaskTypeCourseUpdate:        string(TaskTypeCourseUpdate),
-	TaskTypeEmailLogs:           string(TaskTypeEmailLogs),
 }
 
 var stringToTaskType = map[string]TaskType{
 	string(TaskTypeUnknown):             TaskTypeUnknown,
 	string(TaskTypeCourseBackup):        TaskTypeCourseBackup,
+	string(TaskTypeCourseEmailLogs):     TaskTypeCourseEmailLogs,
 	string(TaskTypeCourseReport):        TaskTypeCourseReport,
 	string(TaskTypeCourseScoringUpload): TaskTypeCourseScoringUpload,
 	string(TaskTypeCourseUpdate):        TaskTypeCourseUpdate,
-	string(TaskTypeEmailLogs):           TaskTypeEmailLogs,
 }
 
 func (this TaskType) MarshalJSON() ([]byte, error) {
@@ -61,14 +61,14 @@ func validateTaskTypes(task *UserTaskInfo) error {
 		return nil
 	case TaskTypeCourseUpdate:
 		return nil
-	case TaskTypeEmailLogs:
-		return validateTaskTypeEmailLogs(task)
+	case TaskTypeCourseEmailLogs:
+		return validateTaskTypeCourseEmailLogs(task)
 	default:
 		return fmt.Errorf("Unknown task type: '%s'.", task.Type)
 	}
 }
 
-func validateTaskTypeEmailLogs(task *UserTaskInfo) error {
+func validateTaskTypeCourseEmailLogs(task *UserTaskInfo) error {
 	err := validateEmailList(task)
 	if err != nil {
 		return err

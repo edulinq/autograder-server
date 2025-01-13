@@ -96,7 +96,7 @@ func TestTaskValidationBase(test *testing.T) {
 		},
 		{
 			&UserTaskInfo{
-				Type: TaskTypeEmailLogs,
+				Type: TaskTypeCourseEmailLogs,
 				When: &common.ScheduledTime{
 					Daily: "3:00",
 				},

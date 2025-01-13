@@ -8,7 +8,6 @@ import (
 	"github.com/edulinq/autograder/internal/db"
 	"github.com/edulinq/autograder/internal/lms/lmssync"
 	"github.com/edulinq/autograder/internal/model"
-	"github.com/edulinq/autograder/internal/model/tasks"
 	"github.com/edulinq/autograder/internal/util"
 )
 
@@ -34,11 +33,6 @@ func upsertFromConfigPath(path string, options CourseUpsertOptions) (*CourseUpse
 
 	if course == nil {
 		return result, UNKNOWN_COURSE_ID, nil
-	}
-
-	// If we are doing an update, stop any existing tasks.
-	if result.Updated && !options.DryRun {
-		tasks.Handler.StopCourse(course.GetID())
 	}
 
 	// Update Source Directory

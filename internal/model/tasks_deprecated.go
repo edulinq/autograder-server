@@ -25,7 +25,7 @@ func DeprecatedTaskToStandard(deprecatedTask dtasks.ScheduledTask) []*UserTaskIn
 		case *dtasks.CourseUpdateTask:
 			taskType = TaskTypeCourseUpdate
 		case *dtasks.EmailLogsTask:
-			taskType = TaskTypeEmailLogs
+			taskType = TaskTypeCourseEmailLogs
 			task.Options["to"] = oldTask.To
 			task.Options["query"] = oldTask.RawQuery
 			task.Options["send-empty"] = oldTask.SendEmpty

@@ -4,6 +4,8 @@ import (
 	"fmt"
 
 	"github.com/edulinq/autograder/internal/common"
+	"github.com/edulinq/autograder/internal/config"
+	"github.com/edulinq/autograder/internal/log"
 	"github.com/edulinq/autograder/internal/timestamp"
 	"github.com/edulinq/autograder/internal/util"
 )
@@ -65,6 +67,11 @@ func (this *UserTaskInfo) Validate() error {
 		err := this.When.Validate()
 		if err != nil {
 			return fmt.Errorf("Failed to validate scheduled time to run: '%w'.", err)
+		}
+
+		minPeriodMSecs := int64(config.TASK_MIN_PERIOD_SECS.Get() * 1000)
+		if this.When.TotalMSecs() < minPeriodMSecs {
+			return fmt.Errorf("Task is scheduled too often. Min Period (msecs): %d, Current Period (msecs): %d.", minPeriodMSecs, this.When.TotalMSecs())
 		}
 	}
 
@@ -156,6 +163,36 @@ func (this *FullScheduledTask) MergeTimes(oldTask *FullScheduledTask) {
 	if this.NextRunTime > oldTask.NextRunTime {
 		this.NextRunTime = oldTask.NextRunTime
 	}
+}
+
+// Advance the run times as if this task successfully completed a run.
+func (this *FullScheduledTask) AdvanceRunTimes() {
+	this.LastRunTime = timestamp.Now()
+	this.NextRunTime = this.When.ComputeNextTimeFromNow()
+}
+
+func (this *FullScheduledTask) LogValue() []*log.Attr {
+	attrs := []*log.Attr{
+		log.NewAttr("task-type", this.Type),
+	}
+
+	if this.Name != "" {
+		attrs = append(attrs, log.NewAttr("name", this.Name))
+	}
+
+	if this.CourseID != "" {
+		attrs = append(attrs, log.NewCourseAttr(this.CourseID))
+	}
+
+	if this.AssignmentID != "" {
+		attrs = append(attrs, log.NewAssignmentAttr(this.AssignmentID))
+	}
+
+	if this.UserEmail != "" {
+		attrs = append(attrs, log.NewUserAttr(this.UserEmail))
+	}
+
+	return attrs
 }
 
 func GetTaskOptionAsType[T any](task *UserTaskInfo, key string, defaultValue T) (T, error) {

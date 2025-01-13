@@ -18,7 +18,7 @@ All these packages (except cmd) live in `internal`.
  7. docker
  8. model
  9. db
- 10. grader, procedures/logs
+ 10. grader, procedures/backup, procedures/logs
  11. procedures/users, report
  12. lms
  13. procedures/courses

@@ -154,24 +154,6 @@ func TestUpsertBase(test *testing.T) {
 			},
 			"",
 		},
-		{
-			course101Path,
-			CourseUpsertOptions{
-				ContextUser: db.MustGetServerUser("server-creator@test.edulinq.org"),
-				CourseUpsertPublicOptions: CourseUpsertPublicOptions{
-					SkipTasks: true,
-				},
-			},
-			false,
-			&CourseUpsertResult{
-				CourseID:              "course101",
-				Success:               true,
-				Updated:               true,
-				LMSSyncResult:         standardLMSSyncResult,
-				BuiltAssignmentImages: standardBuildImages,
-			},
-			"",
-		},
 
 		// Errors
 		{

@@ -9,7 +9,8 @@ var (
 	// Directories
 	BASE_DIR = MustNewStringOption("dirs.base", GetDefaultBaseDir(),
 		"The base dir for autograder to store data."+
-			" SHOULD NOT be set in config files (to prevent cycles), only on the command-line.")
+			" SHOULD NOT be set in config files (to prevent cycles), only on the command-line or ENV.")
+	BACKUP_DIR = MustNewStringOption("dirs.backup", "", "Path to where backups are made. Defaults to inside BASE_DIR.")
 
 	// Debugging / Testing
 	KEEP_BUILD_DIRS   = MustNewBoolOption("build.keep", false, "Keep artifacts/dirs used when building (not building the server itself, but things like assignment images).")
@@ -38,11 +39,9 @@ var (
 	DOCKER_MAX_OUTPUT_SIZE_KB = MustNewIntOption("docker.output.maxsize", 4*1024, "The maximum allowed size (in KB) for stdout and stderr combined. The default is 4096 KB (4 MB).")
 
 	// Tasks
-	NO_TASKS           = MustNewBoolOption("tasks.disable", false, "Disable all scheduled tasks.")
-	TASK_MIN_REST_SECS = MustNewIntOption("tasks.minrest", 5*60,
-		"The minimum time (in seconds) between invocations of the same task."+
-			" A task instance that tries to run too quickly will be skipped.")
-	TASK_BACKUP_DIR = MustNewStringOption("tasks.backup.dir", "", "Path to where backups are made. Defaults to inside BASE_DIR.")
+	NO_TASKS             = MustNewBoolOption("tasks.disable", false, "Disable all scheduled tasks.")
+	TASK_MAX_WAIT_SECS   = MustNewIntOption("tasks.maxwait", 2*60, "The maximum wait between checking for the next task to run.")
+	TASK_MIN_PERIOD_SECS = MustNewIntOption("tasks.minperiod", 10*60, "The minimum period between the runs of the same task.")
 
 	// Server
 	WEB_PORT             = MustNewIntOption("web.port", 8080, "The port for the web interface to serve on.")
