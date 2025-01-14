@@ -56,7 +56,7 @@ func (this *RejectLate) String() string {
 
 	return fmt.Sprintf("Attempting to submit assignment (%s) late without the 'allow late' option."+
 		" It was due on %s (which was %s ago)."+
-		" Use the 'allow late' option to submit an assignment late."+
+		" Use the 'allow late' option to submit an assignment late (e.g., `--allow-late`)."+
 		" See your interface's documentation for more information.",
 		this.AssignmentName, this.DueDate.SafeMessage(), deltaString)
 }
