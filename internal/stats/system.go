@@ -16,11 +16,12 @@ import (
 )
 
 var (
-	ctx        context.Context    = nil
-	cancelFunc context.CancelFunc = nil
-	cancelWait *sync.WaitGroup    = nil
+	systemContextLock sync.Mutex
+	ctx               context.Context    = nil
+	cancelFunc        context.CancelFunc = nil
+	cancelWait        *sync.WaitGroup    = nil
 
-	statsLock         sync.Mutex
+	getStatsLock      sync.Mutex
 	lastBytesSent     uint64 = 0
 	lastBytesReceived uint64 = 0
 )
@@ -35,11 +36,11 @@ func collectSystemStats(systemIntervalMS int) {
 	cancelWait.Add(1)
 	defer cancelWait.Done()
 
-	for {
+	for ctx != nil {
 		// Check (and return) if the context was canceled.
 		// Otherwise, gather system metrics again.
 		// Note that the natural wait/sleep in
-		// GetSystemMetrics() of systemIntervalMS controls the timing of this loop.
+		// getSystemMetrics() of systemIntervalMS controls the timing of this loop.
 		select {
 		case <-ctx.Done():
 			return
@@ -48,7 +49,7 @@ func collectSystemStats(systemIntervalMS int) {
 				return
 			}
 
-			stats, err := GetSystemMetrics(systemIntervalMS)
+			stats, err := getSystemMetrics(systemIntervalMS)
 			if err != nil {
 				log.Warn("Failed to collect system stats.", err)
 				continue
@@ -65,8 +66,8 @@ func collectSystemStats(systemIntervalMS int) {
 
 // Start collecting system stats.
 func startSystemStatsCollection(systemIntervalMS int) {
-	statsLock.Lock()
-	defer statsLock.Unlock()
+	systemContextLock.Lock()
+	defer systemContextLock.Unlock()
 
 	if ctx != nil {
 		// Already collecting stats.
@@ -80,8 +81,8 @@ func startSystemStatsCollection(systemIntervalMS int) {
 }
 
 func stopSystemStatsCollection() {
-	statsLock.Lock()
-	defer statsLock.Unlock()
+	systemContextLock.Lock()
+	defer systemContextLock.Unlock()
 
 	if ctx == nil {
 		// Already done collecting stats.
@@ -110,9 +111,9 @@ func stopSystemStatsCollection() {
 // All known network interfaces will be summed.
 // Additionally, the numbers provided will be the total number of bytes since the last call to this function,
 // or zero if this is the first call.
-func GetSystemMetrics(intervalMS int) (*SystemMetrics, error) {
-	statsLock.Lock()
-	defer statsLock.Unlock()
+func getSystemMetrics(intervalMS int) (*SystemMetrics, error) {
+	getStatsLock.Lock()
+	defer getStatsLock.Unlock()
 
 	cpuMetrics, err := cpu.Percent(time.Millisecond*time.Duration(intervalMS), false)
 	if err != nil {

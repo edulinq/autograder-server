@@ -17,7 +17,7 @@ func TestGetSystemMetricsBase(test *testing.T) {
 	}
 
 	for i, testCase := range testCases {
-		results, err := GetSystemMetrics(testCase.interval)
+		results, err := getSystemMetrics(testCase.interval)
 		if err != nil {
 			test.Errorf("Case %d: Failed to get system metrics: '%v'.", i, err)
 			continue
