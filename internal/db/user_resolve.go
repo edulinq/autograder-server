@@ -9,14 +9,20 @@ import (
 	"github.com/edulinq/autograder/internal/model"
 )
 
-// Maps string representations of roles and * (all roles) to the emails for users with those roles.
-// The function takes a course and a list of strings, containing emails, roles, and * as input and returns a sorted slice of lowercase emails without duplicates.
+// Resolve course email addresses.
+// Take a course and a list of strings, containing emails specs and returns a sorted slice of lowercase emails without duplicates.
+// An email spec can be:
+// an email address,
+// a course role (which will include all course users with that role),
+// a literal "*" (which includes all users enrolled in the course),
+// or an email address preceded by a dash ("-") (which indicates that this email address should NOT be included in the final results).
 func ResolveCourseUsers(course *model.Course, emails []string) ([]string, error) {
 	if backend == nil {
 		return nil, fmt.Errorf("Database has not been opened.")
 	}
 
 	emailSet := map[string]any{}
+	removeEmailSet := map[string]any{}
 	roleSet := map[string]any{}
 
 	// Iterate over all strings, checking for emails, roles, and * (which denotes all users).
@@ -26,7 +32,10 @@ func ResolveCourseUsers(course *model.Course, emails []string) ([]string, error)
 			continue
 		}
 
-		if strings.Contains(email, "@") {
+		if strings.HasPrefix(email, "-") {
+			email = strings.TrimSpace(strings.TrimPrefix(email, "-"))
+			removeEmailSet[email] = nil
+		} else if strings.Contains(email, "@") {
 			emailSet[email] = nil
 		} else {
 			if email == "*" {
@@ -45,6 +54,7 @@ func ResolveCourseUsers(course *model.Course, emails []string) ([]string, error)
 		}
 	}
 
+	// Add users from roles.
 	if len(roleSet) > 0 {
 		users, err := GetCourseUsers(course)
 		if err != nil {
@@ -58,6 +68,11 @@ func ResolveCourseUsers(course *model.Course, emails []string) ([]string, error)
 				emailSet[strings.ToLower(user.Email)] = nil
 			}
 		}
+	}
+
+	// Remove negative users.
+	for email, _ := range removeEmailSet {
+		delete(emailSet, email)
 	}
 
 	emailSlice := make([]string, 0, len(emailSet))

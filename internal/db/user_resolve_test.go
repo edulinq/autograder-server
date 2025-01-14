@@ -171,6 +171,42 @@ func (this *DBTests) DBTestResolveCourseUsers(test *testing.T) {
 			[]string{"course-owner@test.edulinq.org"},
 			0,
 		},
+
+		// Remove a user.
+		{
+			[]string{"*", "-course-admin@test.edulinq.org"},
+			[]string{"course-grader@test.edulinq.org", "course-other@test.edulinq.org", "course-owner@test.edulinq.org", "course-student@test.edulinq.org"},
+			nil,
+			[]string{},
+			0,
+		},
+
+		// Remove multiple users.
+		{
+			[]string{"*", "-course-admin@test.edulinq.org", "- course-other@test.edulinq.org", " - course-student@test.edulinq.org"},
+			[]string{"course-grader@test.edulinq.org", "course-owner@test.edulinq.org"},
+			nil,
+			[]string{},
+			0,
+		},
+
+		// Remove a use that is not in the list.
+		{
+			[]string{"course-admin@test.edulinq.org", "-course-other@test.edulinq.org"},
+			[]string{"course-admin@test.edulinq.org"},
+			nil,
+			[]string{},
+			0,
+		},
+
+		// Remove all users.
+		{
+			[]string{"course-admin@test.edulinq.org", "-course-admin@test.edulinq.org"},
+			[]string{},
+			nil,
+			[]string{},
+			0,
+		},
 	}
 
 	for i, testCase := range testCases {
