@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"path/filepath"
 
-	"github.com/edulinq/autograder/internal/common"
 	"github.com/edulinq/autograder/internal/model"
 	"github.com/edulinq/autograder/internal/util"
 )
@@ -14,8 +13,8 @@ const DISK_DB_COURSES_DIR = "courses"
 func (this *backend) ClearCourse(course *model.Course) error {
 	path := this.getCoursePath(course)
 
-	common.Lock(path)
-	defer common.Unlock(path)
+	this.contextLock(path)
+	defer this.contextUnlock(path)
 
 	err := util.RemoveDirent(this.getCourseDir(course))
 	if err != nil {
@@ -33,8 +32,8 @@ func (this *backend) ClearCourse(course *model.Course) error {
 func (this *backend) AddTestCourse(path string) (*model.Course, error) {
 	path = util.ShouldAbs(path)
 
-	common.Lock(path)
-	defer common.Unlock(path)
+	this.contextLock(path)
+	defer this.contextUnlock(path)
 
 	course, submissions, err := model.FullLoadCourseFromPath(path, true)
 	if err != nil {
@@ -62,8 +61,8 @@ func (this *backend) saveCourseLock(course *model.Course, acquireLock bool) erro
 	path := this.getCoursePath(course)
 
 	if acquireLock {
-		common.Lock(path)
-		defer common.Unlock(path)
+		this.contextLock(path)
+		defer this.contextUnlock(path)
 	}
 
 	util.MkDir(this.getCourseDir(course))
@@ -86,8 +85,8 @@ func (this *backend) saveCourseLock(course *model.Course, acquireLock bool) erro
 func (this *backend) DumpCourse(course *model.Course, targetDir string) error {
 	path := this.getCoursePath(course)
 
-	common.ReadLock(path)
-	defer common.ReadUnlock(path)
+	this.contextReadLock(path)
+	defer this.contextReadUnlock(path)
 
 	// Just directly copy the course's dir in the DB.
 	err := util.CopyDirContents(this.getCourseDir(course), targetDir)
@@ -101,8 +100,8 @@ func (this *backend) DumpCourse(course *model.Course, targetDir string) error {
 func (this *backend) GetCourse(courseID string) (*model.Course, error) {
 	path := this.getCoursePathFromID(courseID)
 
-	common.ReadLock(path)
-	defer common.ReadUnlock(path)
+	this.contextReadLock(path)
+	defer this.contextReadUnlock(path)
 
 	if !util.PathExists(path) {
 		return nil, nil
@@ -124,8 +123,8 @@ func (this *backend) GetCourses() (map[string]*model.Course, error) {
 		err := func() error {
 			configPath = util.ShouldAbs(configPath)
 
-			common.ReadLock(configPath)
-			defer common.ReadUnlock(configPath)
+			this.contextReadLock(configPath)
+			defer this.contextReadUnlock(configPath)
 
 			course, err := model.LoadCourseFromPath(configPath, false)
 			if err != nil {
