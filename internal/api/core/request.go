@@ -136,7 +136,15 @@ func (this *APIRequestCourseUserContext) Validate(request any, endpoint string) 
 		return NewBadRequestError("-015", &this.APIRequest, "No course ID specified.")
 	}
 
-	var err error
+	id, err := common.ValidateID(this.CourseID)
+	if err != nil {
+		return NewBadRequestError("-052", &this.APIRequest,
+			fmt.Sprintf("Could not find course (course ID ('%s') is invalid).", this.CourseID)).
+			Course(this.CourseID).Err(err)
+	}
+
+	this.CourseID = id
+
 	this.Course, err = db.GetCourse(this.CourseID)
 	if err != nil {
 		return NewInternalError("-032", this, "Unable to get course").Err(err)
@@ -181,7 +189,8 @@ func (this *APIRequestAssignmentContext) Validate(request any, endpoint string) 
 
 	id, err := common.ValidateID(this.AssignmentID)
 	if err != nil {
-		return NewBadRequestError("-035", &this.APIRequest, fmt.Sprintf("Provided assignment ID is invalid: '%s'.", this.AssignmentID)).
+		return NewBadRequestError("-035", &this.APIRequest,
+			fmt.Sprintf("Could not find assignment (assignment ID ('%s') is invalid).", this.AssignmentID)).
 			Course(this.CourseID).Assignment(this.AssignmentID).Err(err)
 	}
 
