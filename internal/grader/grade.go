@@ -9,6 +9,7 @@ import (
 	"github.com/edulinq/autograder/internal/db"
 	"github.com/edulinq/autograder/internal/docker"
 	"github.com/edulinq/autograder/internal/model"
+	"github.com/edulinq/autograder/internal/stats"
 	"github.com/edulinq/autograder/internal/timestamp"
 	"github.com/edulinq/autograder/internal/util"
 )
@@ -57,6 +58,9 @@ func Grade(assignment *model.Assignment, submissionPath string, user string, mes
 	val, _ := submissionLocks.LoadOrStore(gradingKey, &sync.Mutex{})
 	lock := val.(*sync.Mutex)
 
+	// Get the grading start time right before we acquire the user's lock.
+	startTimestamp := timestamp.Now()
+
 	lock.Lock()
 	defer lock.Unlock()
 
@@ -74,8 +78,6 @@ func Grade(assignment *model.Assignment, submissionPath string, user string, mes
 	var outputFileContents map[string][]byte
 	var stdout string
 	var stderr string
-
-	startTimestamp := timestamp.Now()
 
 	softGradingError := ""
 	if options.NoDocker {
@@ -108,13 +110,8 @@ func Grade(assignment *model.Assignment, submissionPath string, user string, mes
 	gradingInfo.User = user
 	gradingInfo.Message = message
 
-	if gradingInfo.GradingStartTime.IsZero() {
-		gradingInfo.GradingStartTime = startTimestamp
-	}
-
-	if gradingInfo.GradingEndTime.IsZero() {
-		gradingInfo.GradingEndTime = endTimestamp
-	}
+	gradingInfo.GradingStartTime = startTimestamp
+	gradingInfo.GradingEndTime = endTimestamp
 
 	gradingInfo.ComputePoints()
 
@@ -125,6 +122,9 @@ func Grade(assignment *model.Assignment, submissionPath string, user string, mes
 	if err != nil {
 		return &gradingResult, nil, "", fmt.Errorf("Failed to save grading result: '%w'.", err)
 	}
+
+	// Store stats for this grading (when everything is successful).
+	stats.AsyncStoreCourseGradingTime(startTimestamp, endTimestamp, gradingInfo.CourseID, gradingInfo.AssignmentID, gradingInfo.User)
 
 	return &gradingResult, nil, "", nil
 }

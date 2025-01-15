@@ -5,10 +5,15 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"reflect"
 )
 
 func AppendJSONLFile(path string, record any) error {
+	if !PathExists(path) {
+		MkDir(filepath.Dir(path))
+	}
+
 	line, err := ToJSON(record)
 	if err != nil {
 		return fmt.Errorf("Failed to convert record to JSON: '%w'.", err)
@@ -30,6 +35,10 @@ func AppendJSONLFile(path string, record any) error {
 
 func FilterJSONLFile[T any](path string, emptyRecord T, matchFunc func(record *T) bool) ([]*T, error) {
 	records := make([]*T, 0)
+
+	if !PathExists(path) {
+		return records, nil
+	}
 
 	file, err := os.Open(path)
 	if err != nil {

@@ -13,7 +13,7 @@ All these packages (except cmd) live in `internal`.
  2. log
  3. util
  4. config
- 5. common
+ 5. common, stats
  6. email
  7. docker
  8. model

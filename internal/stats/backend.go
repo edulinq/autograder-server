@@ -5,10 +5,11 @@ import (
 )
 
 var backend StorageBackend = nil
-var backendLock sync.Mutex
+var backendLock sync.RWMutex
 
 type StorageBackend interface {
 	StoreSystemStats(record *SystemMetrics) error
+	StoreCourseMetric(record *CourseMetric) error
 }
 
 func SetStorageBackend(newBackend StorageBackend) {
@@ -27,12 +28,23 @@ func StopCollection() {
 }
 
 func storeSystemStats(record *SystemMetrics) error {
-	backendLock.Lock()
-	defer backendLock.Unlock()
+	backendLock.RLock()
+	defer backendLock.RUnlock()
 
 	if backend == nil {
 		return nil
 	}
 
 	return backend.StoreSystemStats(record)
+}
+
+func StoreCourseMetric(record *CourseMetric) error {
+	backendLock.RLock()
+	defer backendLock.RUnlock()
+
+	if backend == nil {
+		return nil
+	}
+
+	return backend.StoreCourseMetric(record)
 }

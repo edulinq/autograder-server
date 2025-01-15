@@ -181,6 +181,9 @@ type Backend interface {
 
 	// Get system stats that match the specific query.
 	GetSystemStats(query stats.Query) ([]*stats.SystemMetrics, error)
+
+	// Get course stats that match the specific query.
+	GetCourseMetrics(query stats.CourseMetricQuery) ([]*stats.CourseMetric, error)
 }
 
 func Open() error {
