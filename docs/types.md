@@ -10,6 +10,7 @@ Extra keys will generally be ignored.
  - [Semantic Types](#semantic-types)
    - [Identifier](#identifier)
    - [Email](#email)
+     - [Course Email Specification (CourseEmailSpec)](#course-email-specification-courseemailspec)
    - [Timestamp](#timestamp)
    - [Pointer](#pointer)
  - [Course](#course)
@@ -21,15 +22,15 @@ Extra keys will generally be ignored.
  - [Roles](#roles)
    - [Server Roles (ServerRole)](#server-roles-serverrole)
    - [Course Roles (CourseRole)](#course-roles-courserole)
- - [Tasks](#tasks)
-   - [Scheduled Time (ScheduledTime)](#scheduled-time-scheduledtime)
-     - [every - Duration Specification (DurationSpec)](#every---duration-specification-durationspec)
-     - [daily - Time of Day Specification (TimeOfDaySpec)](#daily---time-of-day-specification-timeofdayspec)
-   - [Backup Task (BackupTask)](#backup-task-backuptask)
-   - [Course Update Task (CourseUpdateTask)](#course-update-task-courseupdatetask)
-   - [Report Task (ReportTask)](#report-task-reporttask)
-   - [Scoring Upload Task (ScoringUploadTask)](#scoring-upload-task-scoringuploadtask)
-   - [Email Logs Task (EmailLogsTask)](#email-logs-task-emaillogstask)
+ - [Tasks (Task)](#tasks-task)
+   - [Course Backup Task](#course-backup-task)
+   - [Course Email Logs Task](#course-email-logs-task)
+   - [Course Report Task](#course-report-task)
+   - [Course Scoring Upload Task](#course-scoring-upload-task)
+   - [Course Update Task](#course-update-task)
+ - [Scheduled Time (ScheduledTime)](#scheduled-time-scheduledtime)
+   - [every - Duration Specification (DurationSpec)](#every---duration-specification-durationspec)
+   - [daily - Time of Day Specification (TimeOfDaySpec)](#daily---time-of-day-specification-timeofdayspec)
  - [Logging](#logging)
    - [Level (LogLevel)](#level-loglevel)
    - [Log Query (LogQuery)](#log-query-logquery)
@@ -69,9 +70,18 @@ Underlying Type: String
 
 An email address.
 
+#### Course Email Specification (CourseEmailSpec)
+
 When used in the context of a course,
-a star ("\*") may be used to reference all users
-and a course role ("other", "student", "grader", "admin", or "owner") may be used to include all course members with that role.
+a `CourseEmailSpec` can be used to generalize email recipients.
+The following values are allowed:
+
+ - Email - Normal email addresses may be used.
+ - "\*" - Represents all users in a course.
+ - Course Role (e.g., "student", "grader", etc) - Represents all course users with that role.
+ - Negative Email - An email address preceded by a minus sign (e.g., "-alice@test.edulinq.org")
+   will remove this address from the email recipients (even if they are not currently there).
+   This can be useful when using course roles but you want to exclude someone.
 
 ### Timestamp
 
@@ -105,7 +115,7 @@ A course in the autograder is mainly comprised of:
  - An Identifier
  - Users (with various [roles](#course-roles-courseRole)
  - [Assignments](#assignment)
- - [Tasks](#tasks)
+ - [Tasks](#tasks-task)
 
 | Name               | Type               | Required | Description |
 |--------------------|--------------------|----------|-------------|
@@ -115,11 +125,7 @@ A course in the autograder is mainly comprised of:
 | `submission-limit` | \*SubmissionLimit  | false    | The default submission limit to enforce for all assignments in this course. |
 | `source`           | \*FileSpec         | false    | The canonical source for a course. This should point to where the autograder can fetch the most up-to-date version of this course. |
 | `lms`              | \*LMSAdapter       | false    | Information about how this course can interact with its Learning Management System (LMS). |
-| `backup`           | List[BackupTask]        | false    | Specifications for tasks to backup the course. |
-| `course-update`    | List[CourseUpdateTask]  | false    | Specifications for tasks to update this course using its source.
-| `report`           | List[ReportTask]        | false    | Specifications for tasks to send out a report detailing assignment submissions and scores. |
-| `scoring-upload`   | List[ScoringUploadTask] | false    | Specifications for tasks to perform a full scoring of all assignments and upload scores to the course's LMS. |
-| `email-logs`       | List[EmailLogsTask]     | false    | Specifications for tasks to email log entries. |
+| `tasks`            | List[Task]         | false    | Specifications for tasks to run. |
 
 Depending on your LMS, you may also think of an autograder course as a "section",
 or specific instantiation of a course in a term.
@@ -330,35 +336,180 @@ Roles further down the list are considered more privileged.
 | `admin`   | Course members who can administrate the course. These users have full access to the content of the course and can administer it. |
 | `owner`   | Owners of the course. |
 
-## Tasks
+## Tasks (Task)
 
-Tasks are asynchronous processes for a course.
-Each specific task will have some common fields.
+Tasks are asynchronous processes that run on the server (usually related to a course).
+Tasks share the common structure below:
 
-| Name      | Type                | Required | Description |
-|-----------|---------------------|----------|-------------|
-| `disable` | Boolean             | false    | Set to true to disable this task from running. |
-| `when`    | List[ScheduledTime] | false    | When to run this task. Usually contains just one time, but multiple are allowed. |
+| Name       | Type          | Required | Description |
+|------------|---------------|----------|-------------|
+| `type`     | String        | true     | The type of task. All allowed types are discussed in this section. |
+| `name`     | String        | false    | A display name for this task. |
+| `disabled` | Boolean       | false    | Set to true to disable this task from running. |
+| `when`     | ScheduledTime | true     | When to run this task. |
+| `options`  | Map           | false    | Options used by the specific type of task. |
 
-Tasks are often specified as lists.
-This allows you to create multiple instantiations of the same task that have different configurations.
-For example, you may want one task to email you WARNING logs every week,
-but another task that emails you ERROR logs every day.
+The `type` of the task determines what values will be looked for in `options`.
+The available task types will be discussed in the rest of this section.
 
-### Scheduled Time (ScheduledTime)
+### Course Backup Task
 
-A `ScheduedTime` describes when to run a task.
+A backup task backs up the course information to the server's backup location.
+
+Type: `backup`
+
+No additional options.
+
+Basic Example:
+```json
+{
+    ... the rest of a course object ...
+    "tasks": [
+        {
+            "type": "backup",
+            "when": {
+                "daily": "3:00"
+            }
+        }
+    ]
+}
+```
+
+### Course Email Logs Task
+
+The email logs task sends an email to the target users containing matching logs.
+
+Type: `email-logs`
+
+Additional Options:
+| Name         | Type                  | Required | Description |
+|--------------|-----------------------|----------|-------------|
+| `to`         | List[CourseEmailSpec] | true     | A list of emails to send the results to. At least one recipient must be listed. |
+| `send-empty` | Boolean               | false    | If true, the email will still be sent even if no query results were found. |
+| `query`      | LogQuery              | true     | The log query to execute. |
+
+Basic Example:
+```json
+{
+    ... the rest of a course object ...
+    "tasks": [
+        {
+            "type": "email-logs",
+            "when": {
+                "daily": "3:00"
+            },
+            "options": {
+                "to": [
+                    "admin"
+                ],
+                "query": {
+                    "past": "24h",
+                    "level": "ERROR"
+                }
+            }
+        }
+    ]
+}
+```
+
+### Course Report Task
+
+The report task sends an email to the target users summarizing the current submissions for each assignment.
+
+Type: `report`
+
+Additional Options:
+| Name         | Type                  | Required | Description |
+|--------------|-----------------------|----------|-------------|
+| `to`         | List[CourseEmailSpec] | true     | A list of emails to send the report to. At least one recipient must be listed. |
+
+Basic Example:
+```json
+{
+    ... the rest of a course object ...
+    "tasks": [
+        {
+            "type": "report",
+            "when": {
+                "daily": "3:00"
+            },
+            "options": {
+                "to": [
+                    "owner",
+                    "admin",
+                    "alice@test.edulinq.org",
+                ]
+            }
+        }
+    ]
+}
+```
+
+### Course Scoring Upload Task
+
+A scoring upload task performs a full scoring
+(including reexamining already scored/due assignments) and uploads to scores to the course's LMS.
+This task will also recompute late information in the case that any factors have changed
+(e.g., a late submission was removed, a due date changed, or a student was given additional late days).
+This task has no additional configuration options.
+
+Type: `scoring-upload`
+
+No additional options.
+
+Basic Example:
+```json
+{
+    ... the rest of a course object ...
+    "tasks": [
+        {
+            "type": "scoring-upload",
+            "when": {
+                "daily": "3:00"
+            }
+        }
+    ]
+}
+```
+
+### Course Update Task
+
+Course update tasks will update a course from source and perform the standard update protocol
+(syncing with the LMS, build assignment images, etc).
+
+Type: `update`
+
+No additional options.
+
+Basic Example:
+```json
+{
+    ... the rest of a course object ...
+    "tasks": [
+        {
+            "type": "update",
+            "when": {
+                "daily": "3:00"
+            }
+        }
+    ]
+}
+```
+
+## Scheduled Time (ScheduledTime)
+
+A `ScheduedTime` describes when to run some procedure (usually a [Task](#tasks-task)).
 It has two exclusive fields that allow for different ways of describing run times: `every` and `daily`.
 One and only one of the two fields must be populated.
 
-| Name    | Type        | Required | Description |
-|---------|-------------|----------|-------------|
-| `every` | DurationSpec  | false    | Specifies the period between task runs. |
-| `daily` | TimeOfDaySpec | false    | Specifies when a task should run each day. |
+| Name    | Type          | Required | Description |
+|---------|---------------|----------|-------------|
+| `every` | DurationSpec  | false    | Specifies the period between procedure runs. |
+| `daily` | TimeOfDaySpec | false    | Specifies when a procedure should run each day. |
 
-#### every - Duration Specification (DurationSpec)
+### every - Duration Specification (DurationSpec)
 
-A DurationSpec allows you to specify the period between task runs, e.g., "every 4 hours".
+A DurationSpec allows you to specify the period between procedure runs, e.g., "every 4 hours".
 This type has several fields that represent time units.
 
 | Name      | Type    | Required | Description |
@@ -418,10 +569,10 @@ Here are some general rules for a DurationSpec are:
 }
 ```
 
-#### daily - Time of Day Specification (TimeOfDaySpec)
+### daily - Time of Day Specification (TimeOfDaySpec)
 
-A TimeOfDaySpec allows you to specify when a task should be run each day.
-Using this implies that you want the task to run once a day, and you are selecting when to run it each day.
+A TimeOfDaySpec allows you to specify when something will run each day.
+Using this implies that you want the procedure to run once a day, and you are selecting when to run it each day.
 
 A TimeOfDaySpec is just a string formatted either as:
  - `HH:MM`
@@ -461,153 +612,6 @@ The timezone of the server will be used to interpret this time.
         },
         {
             "daily": "23:59"
-        }
-    ]
-}
-```
-
-### Backup Task (BackupTask)
-
-A backup task backs up the course information to the server's backup location.
-This task has no additional configuration options.
-
-Basic Example:
-```json
-{
-    ... the rest of a course object ...
-    "backup": [{
-        "when": [{
-            "daily": "01:00"
-        }]
-    }]
-}
-```
-
-### Course Update Task (CourseUpdateTask)
-
-Course update tasks will update a course from source and perform the standard update protocol
-(syncing with the LMS, build assignment images, etc).
-This task has no additional configuration.
-
-Basic Example:
-```json
-{
-    ... the rest of a course object ...
-    "course-update": [{
-        "when": [{
-            "daily": "02:00"
-        }]
-    }]
-}
-```
-
-### Report Task (ReportTask)
-
-The report task sends an email to the target users summarizing the current submissions for each assignment.
-
-| Name         | Type        | Required | Description |
-|--------------|-------------|----------|-------------|
-| `to`         | List[Email] | true     | A list of emails to send the report to. |
-| `send-empty` | Boolean     | false    | If true, the report will still be sent even if no submissions have been made. |
-
-Basic Example:
-```json
-{
-    ... the rest of a course object ...
-    "report": [{
-        "when": [{
-            "daily": "03:00"
-        }],
-        "to": [
-            "alice@test.edulinq.org",
-            "bob@test.edulinq.org"
-        ]
-    }]
-}
-```
-
-### Scoring Upload Task (ScoringUploadTask)
-
-A scoring upload task performs a full scoring
-(including reexamining already scored/due assignments) and uploads to scores to the course's LMS.
-This task will also recompute late information in the case that any factors have changed
-(e.g., a late submission was removed, a due date changed, or a student was given additional late days).
-This task has no additional configuration options.
-
-Basic Example:
-```json
-{
-    ... the rest of a course object ...
-    "scoring-upload": [{
-        "when": [{
-            "daily": "04:00"
-        }]
-    }]
-}
-```
-
-### Email Logs Task (EmailLogsTask)
-
-The email logs task sends an email to the target users containing matching logs.
-
-| Name         | Type        | Required | Description |
-|--------------|-------------|----------|-------------|
-| `to`         | List[Email] | true     | A list of emails to send the results to. |
-| `send-empty` | Boolean     | false    | If true, the email will still be sent even if no query results were found. |
-| `query`      | LogQuery    | true     | The log query to execute. |
-
-Basic Example:
-```json
-{
-    ... the rest of a course object ...
-    "email-logs": [{
-        "when": [{
-            "daily": "05:00"
-        }],
-        "to": [
-            "alice@test.edulinq.org",
-            "bob@test.edulinq.org"
-        ],
-        "query": {
-            "past": "24h",
-            "level": "ERROR"
-        }
-    }]
-}
-```
-
-An example using multiple queries.
-Email Alice every day with the day's ERROR logs,
-and email Bob every hour with the hour's WARN (which include ERROR) logs.
-```json
-{
-    ... the rest of a course object ...
-    "email-logs": [
-        {
-            "when": [{
-                "daily": "05:00"
-            }],
-            "to": [
-                "alice@test.edulinq.org"
-            ],
-            "query": {
-                "past": "24h",
-                "level": "ERROR"
-            }
-        },
-        {
-            "when": [{
-                "every": {
-                    "hours": 1
-                }
-            }],
-            "to": [
-                "bob@test.edulinq.org"
-            ],
-            "query": {
-                "past": "1h",
-                "level": "WARN"
-            }
         }
     ]
 }

@@ -58,7 +58,7 @@ go run cmd/list-options/main.go
 | `build.keep`                | Boolean | false          | Keep artifacts/dirs used when building (not building the server itself, but things like assignment images). |
 | `db.type`                   | String  | "disk"         | The type of database to use. |
 | `db.pg.uri`                 | String  |                | Connection string to connect to a Postgres Database. Empty if not using Postgres. |
-| `dirs.base`                 | String  | ($XDG_DATA_HOME)[https://specifications.freedesktop.org/basedir-spec/latest/) | The base dir for autograder to store data. SHOULD NOT be set in config files (to prevent cycles), only on the command-line. |
+| `dirs.base`                 | String  | [$XDG_DATA_HOME](https://specifications.freedesktop.org/basedir-spec/latest/) | The base dir for autograder to store data. SHOULD NOT be set in config files (to prevent cycles), only on the command-line. |
 | `dirs.backup`               | String  | dirs.base      | Path to where backups are made. Defaults to inside BASE_DIR. |
 | `docker.disable`            | Boolean | false          | Disable the use of docker (usually for testing). |
 | `docker.output.maxsize`     | Integer | 4096 (4 MB)    | The maximum allowed size (in KB) for stdout and stderr combined. The default is 4096 KB (4 MB). |
