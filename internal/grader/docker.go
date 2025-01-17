@@ -6,7 +6,6 @@ import (
 	"path/filepath"
 
 	"github.com/edulinq/autograder/internal/common"
-	"github.com/edulinq/autograder/internal/config"
 	"github.com/edulinq/autograder/internal/docker"
 	"github.com/edulinq/autograder/internal/log"
 	"github.com/edulinq/autograder/internal/model"
@@ -45,7 +44,7 @@ func runDockerGrader(assignment *model.Assignment, submissionPath string, option
 	}
 
 	if timeout {
-		return nil, nil, stdout, stderr, fmt.Sprintf("Submission has ran for too long and was killed. Max assignment runtime is %d seconds (server hard limit is %d seconds). Check for infinite loops/recursion and consult with your instructors/TAs.", assignment.MaxRuntimeSecs, config.DOCKER_RUNTIME_MAX_SECS.Get()), nil
+		return nil, nil, stdout, stderr, getTimeoutMessage(assignment), nil
 	}
 
 	resultPath := filepath.Join(outputDir, common.GRADER_OUTPUT_RESULT_FILENAME)

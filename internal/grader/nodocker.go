@@ -2,11 +2,13 @@ package grader
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/edulinq/autograder/internal/common"
 	"github.com/edulinq/autograder/internal/log"
@@ -18,16 +20,20 @@ const PYTHON_AUTOGRADER_INVOCATION = "python3 -m autograder.cli.grading.grade-di
 const PYTHON_GRADER_FILENAME = "grader.py"
 const PYTHON_DOCKER_IMAGE_BASENAME = "edulinq/grader.python"
 
+// A small delay to wait for a process to finish ater already timing out.
+var noDockerTimeoutWaitDelayMS int = 10 * 1000
+
+// Returns: (result, file contents, stdout, stderr, failure message (soft failure), error (hard failure)).
 func runNoDockerGrader(assignment *model.Assignment, submissionPath string, options GradeOptions, fullSubmissionID string) (
-	*model.GradingInfo, map[string][]byte, string, string, error) {
+	*model.GradingInfo, map[string][]byte, string, string, string, error) {
 	imageInfo := assignment.GetImageInfo()
 	if imageInfo == nil {
-		return nil, nil, "", "", fmt.Errorf("No image information associated with assignment: '%s'.", assignment.FullID())
+		return nil, nil, "", "", "", fmt.Errorf("No image information associated with assignment: '%s'.", assignment.FullID())
 	}
 
 	tempDir, inputDir, outputDir, workDir, err := common.PrepTempGradingDir("nodocker")
 	if err != nil {
-		return nil, nil, "", "", err
+		return nil, nil, "", "", "", err
 	}
 
 	if !options.LeaveTempDir {
@@ -38,61 +44,79 @@ func runNoDockerGrader(assignment *model.Assignment, submissionPath string, opti
 
 	cmd, err := getAssignmentInvocation(assignment, tempDir, inputDir, outputDir, workDir)
 	if err != nil {
-		return nil, nil, "", "", err
+		return nil, nil, "", "", "", err
 	}
 
 	// Copy over the static files (and do any file ops).
 	err = common.CopyFileSpecs(imageInfo.BaseDirFunc(), workDir, tempDir,
 		imageInfo.StaticFiles, false, imageInfo.PreStaticFileOperations, imageInfo.PostStaticFileOperations)
 	if err != nil {
-		return nil, nil, "", "", fmt.Errorf("Failed to copy static assignment files: '%w'.", err)
+		return nil, nil, "", "", "", fmt.Errorf("Failed to copy static assignment files: '%w'.", err)
 	}
 
 	// Copy over the submission files (and do any file ops).
 	err = common.CopyFileSpecs(submissionPath, inputDir, tempDir,
 		[]*common.FileSpec{common.GetPathFileSpec(".")}, true, []common.FileOperation{}, imageInfo.PostSubmissionFileOperations)
 	if err != nil {
-		return nil, nil, "", "", fmt.Errorf("Failed to copy submission ssignment files: '%w'.", err)
+		return nil, nil, "", "", "", fmt.Errorf("Failed to copy submission ssignment files: '%w'.", err)
 	}
 
-	stdout, stderr, err := runCMD(cmd)
+	stdout, stderr, timeout, err := runCMD(cmd)
 	if err != nil {
-		return nil, nil, stdout, stderr,
+		return nil, nil, stdout, stderr, "",
 			fmt.Errorf("Failed to run non-docker grader for assignment '%s': '%w'.", assignment.FullID(), err)
+	}
+
+	if timeout {
+		return nil, nil, stdout, stderr, getTimeoutMessage(assignment), nil
 	}
 
 	resultPath := filepath.Join(outputDir, common.GRADER_OUTPUT_RESULT_FILENAME)
 	if !util.PathExists(resultPath) {
-		return nil, nil, stdout, stderr, fmt.Errorf("Cannot find output file ('%s') after non-docker grading.", resultPath)
+		return nil, nil, stdout, stderr, "", fmt.Errorf("Cannot find output file ('%s') after non-docker grading.", resultPath)
 	}
 
 	var gradingInfo model.GradingInfo
 	err = util.JSONFromFile(resultPath, &gradingInfo)
 	if err != nil {
-		return nil, nil, stdout, stderr, err
+		return nil, nil, stdout, stderr, "", err
 	}
 
 	fileContents, err := util.GzipDirectoryToBytes(outputDir)
 	if err != nil {
-		return nil, nil, stdout, stderr, fmt.Errorf("Failed to copy grading output '%s': '%w'.", outputDir, err)
+		return nil, nil, stdout, stderr, "", fmt.Errorf("Failed to copy grading output '%s': '%w'.", outputDir, err)
 	}
 
-	return &gradingInfo, fileContents, stdout, stderr, nil
+	return &gradingInfo, fileContents, stdout, stderr, "", nil
 }
 
-func runCMD(cmd *exec.Cmd) (string, string, error) {
+func runCMD(cmd *exec.Cmd) (string, string, bool, error) {
 	var outBuffer bytes.Buffer
 	var errBuffer bytes.Buffer
 
 	cmd.Stdout = &outBuffer
 	cmd.Stderr = &errBuffer
 
+	// Check to see if the command timed out by overwriting the cancel function to set our variable.
+	// Note that the Cancel() variable/function is already set in getAssignmentInvocation().
+	timeout := false
+	oldCancel := cmd.Cancel
+	cmd.Cancel = func() error {
+		timeout = true
+		cmd.WaitDelay = time.Duration(noDockerTimeoutWaitDelayMS) * time.Millisecond
+
+		return oldCancel()
+	}
+
 	err := cmd.Run()
+	if timeout {
+		err = nil
+	}
 
 	stdout := outBuffer.String()
 	stderr := errBuffer.String()
 
-	return stdout, stderr, err
+	return stdout, stderr, timeout, err
 }
 
 // Get a command to invoke the non-docker grader.
@@ -137,7 +161,13 @@ func getAssignmentInvocation(assignment *model.Assignment,
 		cleanCommand = append(cleanCommand, value)
 	}
 
-	cmd := exec.Command(cleanCommand[0], cleanCommand[1:]...)
+	// Set a timeout for the command.
+	timeoutContext := context.Background()
+	if assignment.MaxRuntimeSecs > 0 {
+		timeoutContext, _ = context.WithTimeout(timeoutContext, time.Duration(assignment.MaxRuntimeSecs)*time.Second)
+	}
+
+	cmd := exec.CommandContext(timeoutContext, cleanCommand[0], cleanCommand[1:]...)
 	cmd.Dir = workDir
 
 	return cmd, nil

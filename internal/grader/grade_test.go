@@ -116,7 +116,7 @@ func runSubmissionTests(test *testing.T, parallel bool, useDocker bool) {
 	}
 }
 
-func TestGradeTimeout(test *testing.T) {
+func TestGradeTimeoutDocker(test *testing.T) {
 	if config.DOCKER_DISABLE.Get() {
 		test.Skip("Docker is disabled, skipping test.")
 	}
@@ -125,6 +125,20 @@ func TestGradeTimeout(test *testing.T) {
 		test.Fatal("Could not access docker.")
 	}
 
+	testGradeTimeout(test, false)
+}
+
+func TestGradeTimeoutNoDocker(test *testing.T) {
+	oldValue := noDockerTimeoutWaitDelayMS
+	noDockerTimeoutWaitDelayMS = 10
+	defer func() {
+		noDockerTimeoutWaitDelayMS = oldValue
+	}()
+
+	testGradeTimeout(test, true)
+}
+
+func testGradeTimeout(test *testing.T, noDocker bool) {
 	db.ResetForTesting()
 	defer db.ResetForTesting()
 
@@ -135,7 +149,10 @@ func TestGradeTimeout(test *testing.T) {
 	// Set a short timeout, which should ensure this submission runs out of time.
 	assignment.MaxRuntimeSecs = 1
 
-	result, reject, softError, err := Grade(assignment, submissionDir, "course-student@test.edulinq.org", "", false, GradeOptions{})
+	options := GetDefaultGradeOptions()
+	options.NoDocker = noDocker
+
+	result, reject, softError, err := Grade(assignment, submissionDir, "course-student@test.edulinq.org", "", false, options)
 	if err != nil {
 		if result != nil {
 			fmt.Println("--- stdout ---")

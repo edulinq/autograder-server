@@ -75,7 +75,7 @@ func Grade(assignment *model.Assignment, submissionPath string, user string, mes
 
 	softGradingError := ""
 	if options.NoDocker {
-		gradingInfo, outputFileContents, stdout, stderr, err = runNoDockerGrader(assignment, submissionPath, options, fullSubmissionID)
+		gradingInfo, outputFileContents, stdout, stderr, softGradingError, err = runNoDockerGrader(assignment, submissionPath, options, fullSubmissionID)
 	} else {
 		gradingInfo, outputFileContents, stdout, stderr, softGradingError, err = runDockerGrader(assignment, submissionPath, options, fullSubmissionID)
 	}
@@ -141,4 +141,8 @@ func prepForGrading(assignment *model.Assignment, submissionPath string, user st
 	}
 
 	return submissionID, fileContents, nil
+}
+
+func getTimeoutMessage(assignment *model.Assignment) string {
+	return fmt.Sprintf("Submission has ran for too long and was killed. Max assignment runtime is %d seconds (server hard limit is %d seconds). Check for infinite loops/recursion and consult with your instructors/TAs.", assignment.MaxRuntimeSecs, config.GRADING_RUNTIME_MAX_SECS.Get())
 }

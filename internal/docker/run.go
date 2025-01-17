@@ -118,7 +118,7 @@ func RunContainer(logId log.Loggable, imageName string, inputDir string, outputD
 	timeoutContext := ctx
 	var cancel context.CancelFunc
 	if maxRuntimeSecs > 0 {
-		timeoutContext, cancel = context.WithTimeout(ctx, time.Duration(maxRuntimeSecs)*time.Second)
+		timeoutContext, cancel = context.WithTimeout(timeoutContext, time.Duration(maxRuntimeSecs)*time.Second)
 		defer cancel()
 	}
 
