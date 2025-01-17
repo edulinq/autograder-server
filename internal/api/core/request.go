@@ -8,6 +8,7 @@ import (
 
 	"github.com/edulinq/autograder/internal/common"
 	"github.com/edulinq/autograder/internal/db"
+	"github.com/edulinq/autograder/internal/log"
 	"github.com/edulinq/autograder/internal/model"
 	"github.com/edulinq/autograder/internal/timestamp"
 	"github.com/edulinq/autograder/internal/util"
@@ -203,6 +204,40 @@ func (this *APIRequestAssignmentContext) Validate(request any, endpoint string) 
 	}
 
 	return nil
+}
+
+func (this *APIRequest) LogValue() []*log.Attr {
+	return []*log.Attr{
+		log.NewAttr("id", this.RequestID),
+		log.NewAttr("endpoint", this.Endpoint),
+	}
+}
+
+func (this *APIRequestUserContext) LogValue() []*log.Attr {
+	attrs := this.APIRequest.LogValue()
+
+	attrs = append(attrs, log.NewUserAttr(this.UserEmail))
+
+	return attrs
+}
+
+// See APIRequestUserContext.Validate().
+// The server user will be converted into a course user to be stored within this request.
+func (this *APIRequestCourseUserContext) LogValue() []*log.Attr {
+	attrs := this.APIRequestUserContext.LogValue()
+
+	attrs = append(attrs, log.NewCourseAttr(this.CourseID))
+
+	return attrs
+}
+
+// See APIRequestUserContext.Validate().
+func (this *APIRequestAssignmentContext) LogValue() []*log.Attr {
+	attrs := this.APIRequestCourseUserContext.LogValue()
+
+	attrs = append(attrs, log.NewAssignmentAttr(this.AssignmentID))
+
+	return attrs
 }
 
 // Take in a pointer to an API request.

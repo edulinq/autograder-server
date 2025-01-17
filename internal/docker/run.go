@@ -74,6 +74,7 @@ func RunContainer(logId log.Loggable, imageName string, inputDir string, outputD
 		return "", "", false, fmt.Errorf("Failed to create container '%s': '%w'.", name, err)
 	}
 
+	// Ensure the container is removed.
 	defer func() {
 		// The container should have already gracefully exited.
 		// If not, kill it without any grace.

@@ -43,7 +43,7 @@ func GetRouteServer(routes *[]Route) http.HandlerFunc {
 }
 
 func ServeRoutes(routes *[]Route, response http.ResponseWriter, request *http.Request) {
-	log.Debug("Incoming Request", log.NewAttr("method", request.Method), log.NewAttr("url", request.URL.Path))
+	log.Trace("Raw Request", log.NewAttr("method", request.Method), log.NewAttr("url", request.URL.Path))
 
 	if routes == nil {
 		http.NotFound(response, request)
@@ -105,6 +105,11 @@ func handleAPIEndpoint(response http.ResponseWriter, request *http.Request, apiH
 		return sendAPIResponse(nil, response, nil, apiErr, false)
 	}
 	defer CleanupAPIrequest(apiRequest)
+
+	_, ok := apiRequest.(log.Loggable)
+	if ok {
+		log.Debug("Incoming API Request", apiRequest)
+	}
 
 	// Execute the handler.
 	apiResponse, apiErr := callHandler(apiHandler, apiRequest)
