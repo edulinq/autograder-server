@@ -3,6 +3,7 @@ package docker
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"regexp"
@@ -27,11 +28,11 @@ type containerOutput struct {
 }
 
 // Run a container.
-// Returns: (stdout, stderr, timeout?, error)
-func RunContainer(logId log.Loggable, imageName string, inputDir string, outputDir string, baseID string, maxRuntimeSecs int) (string, string, bool, error) {
-	ctx, docker, err := getDockerClient()
+// Returns: (stdout, stderr, timeout?, canceled?, error)
+func RunContainer(ctx context.Context, logId log.Loggable, imageName string, inputDir string, outputDir string, baseID string, maxRuntimeSecs int) (string, string, bool, bool, error) {
+	docker, err := getDockerClient()
 	if err != nil {
-		return "", "", false, err
+		return "", "", false, false, err
 	}
 	defer docker.Close()
 
@@ -39,6 +40,9 @@ func RunContainer(logId log.Loggable, imageName string, inputDir string, outputD
 	outputDir = util.ShouldAbs(outputDir)
 
 	name := cleanContainerName(fmt.Sprintf("%s-%s", baseID, util.UUID()))
+
+	timeout := false
+	canceled := false
 
 	containerInstance, err := docker.ContainerCreate(
 		ctx,
@@ -71,7 +75,13 @@ func RunContainer(logId log.Loggable, imageName string, inputDir string, outputD
 		name)
 
 	if err != nil {
-		return "", "", false, fmt.Errorf("Failed to create container '%s': '%w'.", name, err)
+		timeout = errors.Is(err, context.DeadlineExceeded)
+		canceled = errors.Is(err, context.Canceled)
+		if timeout || canceled {
+			return "", "", timeout, canceled, nil
+		}
+
+		return "", "", false, false, fmt.Errorf("Failed to create container '%s': '%w'.", name, err)
 	}
 
 	// Ensure the container is removed.
@@ -79,9 +89,10 @@ func RunContainer(logId log.Loggable, imageName string, inputDir string, outputD
 		// The container should have already gracefully exited.
 		// If not, kill it without any grace.
 		// Ignore any errors.
-		docker.ContainerKill(ctx, containerInstance.ID, "KILL")
+		// Note that we are not using the same context given to us (it may have been canceled).
+		docker.ContainerKill(context.Background(), containerInstance.ID, "KILL")
 
-		err = docker.ContainerRemove(ctx, containerInstance.ID, container.RemoveOptions{
+		err = docker.ContainerRemove(context.Background(), containerInstance.ID, container.RemoveOptions{
 			Force: true,
 		})
 		if err != nil {
@@ -98,7 +109,13 @@ func RunContainer(logId log.Loggable, imageName string, inputDir string, outputD
 		Stderr: true,
 	})
 	if err != nil {
-		return "", "", false, fmt.Errorf("Failed to attach to container '%s' (%s): '%w'.", name, containerInstance.ID, err)
+		timeout = errors.Is(err, context.DeadlineExceeded)
+		canceled = errors.Is(err, context.Canceled)
+		if timeout || canceled {
+			return "", "", timeout, canceled, nil
+		}
+
+		return "", "", false, false, fmt.Errorf("Failed to attach to container '%s' (%s): '%w'.", name, containerInstance.ID, err)
 	}
 	defer connection.Conn.Close()
 
@@ -110,31 +127,36 @@ func RunContainer(logId log.Loggable, imageName string, inputDir string, outputD
 
 	err = docker.ContainerStart(ctx, containerInstance.ID, container.StartOptions{})
 	if err != nil {
-		return "", "", false, fmt.Errorf("Failed to start container '%s' (%s): '%w'.", name, containerInstance.ID, err)
+		timeout = errors.Is(err, context.DeadlineExceeded)
+		canceled = errors.Is(err, context.Canceled)
+		if timeout || canceled {
+			return "", "", timeout, canceled, nil
+		}
+
+		return "", "", false, false, fmt.Errorf("Failed to start container '%s' (%s): '%w'.", name, containerInstance.ID, err)
 	}
 
 	// Set a timeout for the container.
-	timeout := false
-	timeoutContext := ctx
 	var cancel context.CancelFunc
 	if maxRuntimeSecs > 0 {
-		timeoutContext, cancel = context.WithTimeout(timeoutContext, time.Duration(maxRuntimeSecs)*time.Second)
+		ctx, cancel = context.WithTimeout(ctx, time.Duration(maxRuntimeSecs)*time.Second)
 		defer cancel()
 	}
 
-	// wait for the container to finish.
-	statusChan, errorChan := docker.ContainerWait(timeoutContext, containerInstance.ID, container.WaitConditionNotRunning)
+	// Wait for the container to finish.
+	statusChan, errorChan := docker.ContainerWait(ctx, containerInstance.ID, container.WaitConditionNotRunning)
 	select {
 	case err := <-errorChan:
 		if err != nil {
-			// On a timeout, kill the container without any grace, exit this select, and try to recover the output.
-			if err.Error() == "context deadline exceeded" {
-				docker.ContainerKill(ctx, containerInstance.ID, "KILL")
-				timeout = true
+			// On a timeout or cancel, kill the container without any grace, exit this select, and try to recover the output.
+			timeout = errors.Is(err, context.DeadlineExceeded)
+			canceled = errors.Is(err, context.Canceled)
+			if timeout || canceled {
+				docker.ContainerKill(context.Background(), containerInstance.ID, "KILL")
 				break
 			}
 
-			return "", "", false, fmt.Errorf("Got an error when running container '%s' (%s): '%w'.", name, containerInstance.ID, err)
+			return "", "", false, false, fmt.Errorf("Got an error when running container '%s' (%s): '%w'.", name, containerInstance.ID, err)
 		}
 	case <-statusChan:
 		// Waiting is complete.
@@ -149,11 +171,13 @@ func RunContainer(logId log.Loggable, imageName string, inputDir string, outputD
 		log.NewAttr("container-id", containerInstance.ID),
 		log.NewAttr("stdout", output.Stdout),
 		log.NewAttr("stderr", output.Stderr),
+		log.NewAttr("timeout", timeout),
+		log.NewAttr("canceled", canceled),
 		log.NewAttr("output-truncated", output.Truncated),
 		output.Err,
 	)
 
-	return output.Stdout, output.Stderr, timeout, nil
+	return output.Stdout, output.Stderr, timeout, canceled, nil
 }
 
 func cleanContainerName(text string) string {

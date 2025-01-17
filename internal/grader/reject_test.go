@@ -1,6 +1,7 @@
 package grader
 
 import (
+	"context"
 	"path/filepath"
 	"reflect"
 	"testing"
@@ -179,7 +180,7 @@ func submitForRejection(test *testing.T, assignment *model.Assignment, user stri
 	gradeOptions := GetDefaultGradeOptions()
 	gradeOptions.AllowLate = allowLate
 
-	result, reject, softError, err := Grade(assignment, submissionPath, user, TEST_MESSAGE, true, gradeOptions)
+	result, reject, softError, err := Grade(context.Background(), assignment, submissionPath, user, TEST_MESSAGE, true, gradeOptions)
 	if err != nil {
 		test.Fatalf("Failed to grade assignment: '%v'.", err)
 	}

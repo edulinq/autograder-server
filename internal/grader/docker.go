@@ -1,6 +1,7 @@
 package grader
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -19,8 +20,7 @@ import (
 //   - work -- Should already be created inside the docker image, will only exist within the container.
 //
 // Returns: (result, file contents, stdout, stderr, failure message (soft failure), error (hard failure)).
-func runDockerGrader(assignment *model.Assignment, submissionPath string, options GradeOptions, fullSubmissionID string) (
-	*model.GradingInfo, map[string][]byte, string, string, string, error) {
+func runDockerGrader(ctx context.Context, assignment *model.Assignment, submissionPath string, options GradeOptions, fullSubmissionID string) (*model.GradingInfo, map[string][]byte, string, string, string, error) {
 	tempDir, inputDir, outputDir, _, err := common.PrepTempGradingDir("docker")
 	if err != nil {
 		return nil, nil, "", "", "", err
@@ -38,13 +38,17 @@ func runDockerGrader(assignment *model.Assignment, submissionPath string, option
 		return nil, nil, "", "", "", fmt.Errorf("Failed to copy over submission/input contents: '%w'.", err)
 	}
 
-	stdout, stderr, timeout, err := docker.RunContainer(assignment, assignment.ImageName(), inputDir, outputDir, fullSubmissionID, assignment.MaxRuntimeSecs)
+	stdout, stderr, timeout, canceled, err := docker.RunContainer(ctx, assignment, assignment.ImageName(), inputDir, outputDir, fullSubmissionID, assignment.MaxRuntimeSecs)
 	if err != nil {
 		return nil, nil, stdout, stderr, "", err
 	}
 
 	if timeout {
 		return nil, nil, stdout, stderr, getTimeoutMessage(assignment), nil
+	}
+
+	if canceled {
+		return nil, nil, stdout, stderr, getCanceledMessage(assignment), nil
 	}
 
 	resultPath := filepath.Join(outputDir, common.GRADER_OUTPUT_RESULT_FILENAME)

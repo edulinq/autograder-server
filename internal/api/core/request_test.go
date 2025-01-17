@@ -268,7 +268,7 @@ func TestAPIRequestAssignmentContextValidateBase(test *testing.T) {
 	}
 
 	for i, testCase := range testCases {
-		err := testCase.request.Validate(baseAssignmentAPIRequest{}, "")
+		err := testCase.request.Validate(nil, baseAssignmentAPIRequest{}, "")
 		if err != nil {
 			if testCase.expectedLocator == "" {
 				test.Errorf("Case %d: Unexpected error ('%s'): '%v'.", i, err.Locator, err)

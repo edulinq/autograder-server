@@ -3,6 +3,7 @@ package grader
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"os/exec"
@@ -24,7 +25,7 @@ const PYTHON_DOCKER_IMAGE_BASENAME = "edulinq/grader.python"
 var noDockerTimeoutWaitDelayMS int = 10 * 1000
 
 // Returns: (result, file contents, stdout, stderr, failure message (soft failure), error (hard failure)).
-func runNoDockerGrader(assignment *model.Assignment, submissionPath string, options GradeOptions, fullSubmissionID string) (
+func runNoDockerGrader(ctx context.Context, assignment *model.Assignment, submissionPath string, options GradeOptions, fullSubmissionID string) (
 	*model.GradingInfo, map[string][]byte, string, string, string, error) {
 	imageInfo := assignment.GetImageInfo()
 	if imageInfo == nil {
@@ -42,7 +43,7 @@ func runNoDockerGrader(assignment *model.Assignment, submissionPath string, opti
 		log.Debug("Leaving behind temp grading dir.", log.NewAttr("path", tempDir))
 	}
 
-	cmd, err := getAssignmentInvocation(assignment, tempDir, inputDir, outputDir, workDir)
+	ctx, cmd, err := getAssignmentInvocation(ctx, assignment, tempDir, inputDir, outputDir, workDir)
 	if err != nil {
 		return nil, nil, "", "", "", err
 	}
@@ -61,7 +62,7 @@ func runNoDockerGrader(assignment *model.Assignment, submissionPath string, opti
 		return nil, nil, "", "", "", fmt.Errorf("Failed to copy submission ssignment files: '%w'.", err)
 	}
 
-	stdout, stderr, timeout, err := runCMD(cmd)
+	stdout, stderr, timeout, canceled, err := runCMD(ctx, cmd)
 	if err != nil {
 		return nil, nil, stdout, stderr, "",
 			fmt.Errorf("Failed to run non-docker grader for assignment '%s': '%w'.", assignment.FullID(), err)
@@ -69,6 +70,10 @@ func runNoDockerGrader(assignment *model.Assignment, submissionPath string, opti
 
 	if timeout {
 		return nil, nil, stdout, stderr, getTimeoutMessage(assignment), nil
+	}
+
+	if canceled {
+		return nil, nil, stdout, stderr, getCanceledMessage(assignment), nil
 	}
 
 	resultPath := filepath.Join(outputDir, common.GRADER_OUTPUT_RESULT_FILENAME)
@@ -90,41 +95,38 @@ func runNoDockerGrader(assignment *model.Assignment, submissionPath string, opti
 	return &gradingInfo, fileContents, stdout, stderr, "", nil
 }
 
-func runCMD(cmd *exec.Cmd) (string, string, bool, error) {
+func runCMD(ctx context.Context, cmd *exec.Cmd) (string, string, bool, bool, error) {
 	var outBuffer bytes.Buffer
 	var errBuffer bytes.Buffer
 
 	cmd.Stdout = &outBuffer
 	cmd.Stderr = &errBuffer
 
-	// Check to see if the command timed out by overwriting the cancel function to set our variable.
-	// Note that the Cancel() variable/function is already set in getAssignmentInvocation().
 	timeout := false
-	oldCancel := cmd.Cancel
-	cmd.Cancel = func() error {
-		timeout = true
-		cmd.WaitDelay = time.Duration(noDockerTimeoutWaitDelayMS) * time.Millisecond
-
-		return oldCancel()
-	}
+	canceled := false
 
 	err := cmd.Run()
-	if timeout {
+	if err != nil {
+		timeout = errors.Is(ctx.Err(), context.DeadlineExceeded)
+		canceled = errors.Is(ctx.Err(), context.Canceled)
+	}
+
+	if timeout || canceled {
 		err = nil
 	}
 
 	stdout := outBuffer.String()
 	stderr := errBuffer.String()
 
-	return stdout, stderr, timeout, err
+	return stdout, stderr, timeout, canceled, err
 }
 
 // Get a command to invoke the non-docker grader.
-func getAssignmentInvocation(assignment *model.Assignment,
-	baseDir string, inputDir string, outputDir string, workDir string) (*exec.Cmd, error) {
+func getAssignmentInvocation(ctx context.Context, assignment *model.Assignment,
+	baseDir string, inputDir string, outputDir string, workDir string) (context.Context, *exec.Cmd, error) {
 	imageInfo := assignment.GetImageInfo()
 	if imageInfo == nil {
-		return nil, fmt.Errorf("No image information associated with assignment: '%s'.", assignment.FullID())
+		return ctx, nil, fmt.Errorf("No image information associated with assignment: '%s'.", assignment.FullID())
 	}
 
 	var rawCommand []string = nil
@@ -139,7 +141,7 @@ func getAssignmentInvocation(assignment *model.Assignment,
 	}
 
 	if rawCommand == nil {
-		return nil, fmt.Errorf("Cannot get non-docker grader invocation for assignment: '%s'.", assignment.FullID())
+		return ctx, nil, fmt.Errorf("Cannot get non-docker grader invocation for assignment: '%s'.", assignment.FullID())
 	}
 
 	cleanCommand := make([]string, 0, len(rawCommand))
@@ -161,14 +163,24 @@ func getAssignmentInvocation(assignment *model.Assignment,
 		cleanCommand = append(cleanCommand, value)
 	}
 
-	// Set a timeout for the command.
-	timeoutContext := context.Background()
+	// Set a timeout for the command using the existing context as the parent.
+	var cancelFunc context.CancelFunc = nil
 	if assignment.MaxRuntimeSecs > 0 {
-		timeoutContext, _ = context.WithTimeout(timeoutContext, time.Duration(assignment.MaxRuntimeSecs)*time.Second)
+		ctx, cancelFunc = context.WithTimeout(ctx, time.Duration(assignment.MaxRuntimeSecs)*time.Second)
 	}
 
-	cmd := exec.CommandContext(timeoutContext, cleanCommand[0], cleanCommand[1:]...)
+	cmd := exec.CommandContext(ctx, cleanCommand[0], cleanCommand[1:]...)
 	cmd.Dir = workDir
 
-	return cmd, nil
+	// Ensure the timeout context is canceled.
+	if cancelFunc != nil {
+		oldCancel := cmd.Cancel
+		cmd.Cancel = func() error {
+			cmd.WaitDelay = time.Duration(noDockerTimeoutWaitDelayMS) * time.Millisecond
+			defer cancelFunc()
+			return oldCancel()
+		}
+	}
+
+	return ctx, cmd, nil
 }

@@ -4,6 +4,7 @@ package docker
 
 import (
 	"bufio"
+	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -81,13 +82,13 @@ func BuildImageWithOptions(imageSource ImageSource, options *BuildOptions) error
 }
 
 func buildImage(imageSource ImageSource, buildOptions types.ImageBuildOptions, tar io.ReadCloser) error {
-	ctx, docker, err := getDockerClient()
+	docker, err := getDockerClient()
 	if err != nil {
 		return err
 	}
 	defer docker.Close()
 
-	response, err := docker.ImageBuild(ctx, tar, buildOptions)
+	response, err := docker.ImageBuild(context.Background(), tar, buildOptions)
 	if err != nil {
 		return fmt.Errorf("Failed to run docker image build command: '%w'.", err)
 	}

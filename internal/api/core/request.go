@@ -1,6 +1,7 @@
 package core
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"reflect"
@@ -29,6 +30,7 @@ type APIRequest struct {
 	RequestID string              `json:"-"`
 	Endpoint  string              `json:"-"`
 	Timestamp timestamp.Timestamp `json:"-"`
+	Context   context.Context     `json:"-"`
 }
 
 // Context for a request that has a user (pretty much the lowest level of request).
@@ -61,10 +63,16 @@ type APIRequestAssignmentContext struct {
 	Assignment *model.Assignment
 }
 
-func (this *APIRequest) Validate(request any, endpoint string) *APIError {
+func (this *APIRequest) Validate(httpRequest *http.Request, request any, endpoint string) *APIError {
 	this.RequestID = util.UUID()
 	this.Endpoint = endpoint
 	this.Timestamp = timestamp.Now()
+
+	if httpRequest == nil {
+		this.Context = context.Background()
+	} else {
+		this.Context = httpRequest.Context()
+	}
 
 	return nil
 }
@@ -74,8 +82,8 @@ func (this *APIRequest) Validate(request any, endpoint string) *APIError {
 // Additionally, all context fields will be populated.
 // This means that this request will be authenticated here.
 // The full request (object that this is embedded in) is also sent.
-func (this *APIRequestUserContext) Validate(request any, endpoint string) *APIError {
-	apiErr := this.APIRequest.Validate(request, endpoint)
+func (this *APIRequestUserContext) Validate(httpRequest *http.Request, request any, endpoint string) *APIError {
+	apiErr := this.APIRequest.Validate(httpRequest, request, endpoint)
 	if apiErr != nil {
 		return apiErr
 	}
@@ -127,8 +135,8 @@ func (this *APIRequestUserContext) Validate(request any, endpoint string) *APIEr
 
 // See APIRequestUserContext.Validate().
 // The server user will be converted into a course user to be stored within this request.
-func (this *APIRequestCourseUserContext) Validate(request any, endpoint string) *APIError {
-	apiErr := this.APIRequestUserContext.Validate(request, endpoint)
+func (this *APIRequestCourseUserContext) Validate(httpRequest *http.Request, request any, endpoint string) *APIError {
+	apiErr := this.APIRequestUserContext.Validate(httpRequest, request, endpoint)
 	if apiErr != nil {
 		return apiErr
 	}
@@ -178,8 +186,8 @@ func (this *APIRequestCourseUserContext) Validate(request any, endpoint string) 
 }
 
 // See APIRequestUserContext.Validate().
-func (this *APIRequestAssignmentContext) Validate(request any, endpoint string) *APIError {
-	apiErr := this.APIRequestCourseUserContext.Validate(request, endpoint)
+func (this *APIRequestAssignmentContext) Validate(httpRequest *http.Request, request any, endpoint string) *APIError {
+	apiErr := this.APIRequestCourseUserContext.Validate(httpRequest, request, endpoint)
 	if apiErr != nil {
 		return apiErr
 	}
@@ -221,8 +229,6 @@ func (this *APIRequestUserContext) LogValue() []*log.Attr {
 	return attrs
 }
 
-// See APIRequestUserContext.Validate().
-// The server user will be converted into a course user to be stored within this request.
 func (this *APIRequestCourseUserContext) LogValue() []*log.Attr {
 	attrs := this.APIRequestUserContext.LogValue()
 
@@ -231,7 +237,6 @@ func (this *APIRequestCourseUserContext) LogValue() []*log.Attr {
 	return attrs
 }
 
-// See APIRequestUserContext.Validate().
 func (this *APIRequestAssignmentContext) LogValue() []*log.Attr {
 	attrs := this.APIRequestCourseUserContext.LogValue()
 
@@ -250,7 +255,7 @@ func ValidateAPIRequest(request *http.Request, apiRequest any, endpoint string) 
 	}
 
 	// Ensure the request has an request type embedded, and validate it.
-	foundRequestStruct, apiErr := validateRequestStruct(apiRequest, endpoint)
+	foundRequestStruct, apiErr := validateRequestStruct(request, apiRequest, endpoint)
 	if apiErr != nil {
 		return apiErr
 	}
@@ -289,11 +294,11 @@ func CleanupAPIrequest(apiRequest ValidAPIRequest) error {
 	return nil
 }
 
-func validateRequestStruct(request any, endpoint string) (bool, *APIError) {
+func validateRequestStruct(httpRequest *http.Request, rawRequest any, endpoint string) (bool, *APIError) {
 	// Check all the fields (including embedded ones) for structures that we recognize as requests.
 	foundRequestStruct := false
 
-	reflectValue := reflect.ValueOf(request).Elem()
+	reflectValue := reflect.ValueOf(rawRequest).Elem()
 	if reflectValue.Kind() != reflect.Struct {
 		return false, NewBareInternalError("-031", endpoint, "Request's type must be a struct.").
 			Add("kind", reflectValue.Kind().String())
@@ -307,7 +312,7 @@ func validateRequestStruct(request any, endpoint string) (bool, *APIError) {
 			apiRequest := fieldValue.Interface().(APIRequest)
 			foundRequestStruct = true
 
-			apiErr := apiRequest.Validate(request, endpoint)
+			apiErr := apiRequest.Validate(httpRequest, rawRequest, endpoint)
 			if apiErr != nil {
 				return false, apiErr
 			}
@@ -318,7 +323,7 @@ func validateRequestStruct(request any, endpoint string) (bool, *APIError) {
 			userRequest := fieldValue.Interface().(APIRequestUserContext)
 			foundRequestStruct = true
 
-			apiErr := userRequest.Validate(request, endpoint)
+			apiErr := userRequest.Validate(httpRequest, rawRequest, endpoint)
 			if apiErr != nil {
 				return false, apiErr
 			}
@@ -329,7 +334,7 @@ func validateRequestStruct(request any, endpoint string) (bool, *APIError) {
 			courseUserRequest := fieldValue.Interface().(APIRequestCourseUserContext)
 			foundRequestStruct = true
 
-			apiErr := courseUserRequest.Validate(request, endpoint)
+			apiErr := courseUserRequest.Validate(httpRequest, rawRequest, endpoint)
 			if apiErr != nil {
 				return false, apiErr
 			}
@@ -340,7 +345,7 @@ func validateRequestStruct(request any, endpoint string) (bool, *APIError) {
 			assignmentRequest := fieldValue.Interface().(APIRequestAssignmentContext)
 			foundRequestStruct = true
 
-			apiErr := assignmentRequest.Validate(request, endpoint)
+			apiErr := assignmentRequest.Validate(httpRequest, rawRequest, endpoint)
 			if apiErr != nil {
 				return false, apiErr
 			}

@@ -1,6 +1,7 @@
 package grader
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/edulinq/autograder/internal/common"
@@ -30,13 +31,13 @@ func GetDefaultGradeOptions() GradeOptions {
 // Grade with default options pulled from config.
 func GradeDefault(assignment *model.Assignment, submissionPath string, user string, message string) (
 	*model.GradingResult, RejectReason, string, error) {
-	return Grade(assignment, submissionPath, user, message, true, GetDefaultGradeOptions())
+	return Grade(context.Background(), assignment, submissionPath, user, message, true, GetDefaultGradeOptions())
 }
 
 // Grade with custom options.
 // Return (result, reject, softGradingError, error).
 // Full success is only when ((reject == nil) && (softGradingError == "") && (error == nil)).
-func Grade(assignment *model.Assignment, submissionPath string, user string, message string, checkRejection bool, options GradeOptions) (
+func Grade(ctx context.Context, assignment *model.Assignment, submissionPath string, user string, message string, checkRejection bool, options GradeOptions) (
 	*model.GradingResult, RejectReason, string, error) {
 	if checkRejection {
 		reject, err := checkForRejection(assignment, submissionPath, user, message, options.AllowLate)
@@ -75,9 +76,9 @@ func Grade(assignment *model.Assignment, submissionPath string, user string, mes
 
 	softGradingError := ""
 	if options.NoDocker {
-		gradingInfo, outputFileContents, stdout, stderr, softGradingError, err = runNoDockerGrader(assignment, submissionPath, options, fullSubmissionID)
+		gradingInfo, outputFileContents, stdout, stderr, softGradingError, err = runNoDockerGrader(ctx, assignment, submissionPath, options, fullSubmissionID)
 	} else {
-		gradingInfo, outputFileContents, stdout, stderr, softGradingError, err = runDockerGrader(assignment, submissionPath, options, fullSubmissionID)
+		gradingInfo, outputFileContents, stdout, stderr, softGradingError, err = runDockerGrader(ctx, assignment, submissionPath, options, fullSubmissionID)
 	}
 
 	endTimestamp := timestamp.Now()
@@ -145,4 +146,8 @@ func prepForGrading(assignment *model.Assignment, submissionPath string, user st
 
 func getTimeoutMessage(assignment *model.Assignment) string {
 	return fmt.Sprintf("Submission has ran for too long and was killed. Max assignment runtime is %d seconds (server hard limit is %d seconds). Check for infinite loops/recursion and consult with your instructors/TAs.", assignment.MaxRuntimeSecs, config.GRADING_RUNTIME_MAX_SECS.Get())
+}
+
+func getCanceledMessage(assignment *model.Assignment) string {
+	return "Grading has been canceled (usually by a broken HTTP connection)."
 }
