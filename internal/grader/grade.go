@@ -2,7 +2,6 @@ package grader
 
 import (
 	"fmt"
-	"sync"
 
 	"github.com/edulinq/autograder/internal/common"
 	"github.com/edulinq/autograder/internal/config"
@@ -13,8 +12,6 @@ import (
 	"github.com/edulinq/autograder/internal/timestamp"
 	"github.com/edulinq/autograder/internal/util"
 )
-
-var submissionLocks sync.Map
 
 type GradeOptions struct {
 	NoDocker     bool
@@ -54,15 +51,12 @@ func Grade(assignment *model.Assignment, submissionPath string, user string, mes
 
 	gradingKey := fmt.Sprintf("%s::%s::%s", assignment.GetCourse().GetID(), assignment.GetID(), user)
 
-	// Get the existing mutex, or store (and fetch) a new one.
-	val, _ := submissionLocks.LoadOrStore(gradingKey, &sync.Mutex{})
-	lock := val.(*sync.Mutex)
-
 	// Get the grading start time right before we acquire the user's lock.
 	startTimestamp := timestamp.Now()
 
-	lock.Lock()
-	defer lock.Unlock()
+	// Ensure the user can only have one submission (of each assignment) running at a time.
+	common.Lock(gradingKey)
+	defer common.Unlock(gradingKey)
 
 	submissionID, inputFileContents, err := prepForGrading(assignment, submissionPath, user)
 	if err != nil {
