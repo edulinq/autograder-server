@@ -7,6 +7,7 @@ import (
 	"slices"
 
 	"github.com/edulinq/autograder/internal/analysis/core"
+	"github.com/edulinq/autograder/internal/analysis/dolos"
 	"github.com/edulinq/autograder/internal/common"
 	"github.com/edulinq/autograder/internal/db"
 	"github.com/edulinq/autograder/internal/model"
@@ -26,8 +27,11 @@ import (
 
 // TEST - Save
 
-// TEST
-var similarityEngines []core.SimilarityEngine
+// TEST - Stats
+
+var similarityEngines []core.SimilarityEngine = []core.SimilarityEngine{
+	dolos.GetEngine(),
+}
 
 // Perform a pairwise analysis on a list of full submission IDs.
 // Note that these submissions could technically be from different courses/assignments.
@@ -39,14 +43,12 @@ var similarityEngines []core.SimilarityEngine
 // If only some results are cached,
 // then those will be fetched from the database while the rest are computed.
 func PairwiseAnalysis(fullSubmissionIDs []string) ([]*model.PairWiseAnalysis, error) {
-	// TEST - Stats
-	// TEST - Locks
-
 	results := []*model.PairWiseAnalysis{}
 	var errs error = nil
 
 	// Sort the ids so the result will be consistently ordered.
-	fullSubmissionIDs = slices.Sorted(slices.Values(fullSubmissionIDs))
+	fullSubmissionIDs = slices.Clone(fullSubmissionIDs)
+	slices.Sort(fullSubmissionIDs)
 
 	for i := 0; i < len(fullSubmissionIDs); i++ {
 		for j := i + 1; j < len(fullSubmissionIDs); j++ {
@@ -74,15 +76,22 @@ func pairwiseAnalysis(fullSubmissionIDs [2]string) (*model.PairWiseAnalysis, err
 	if err != nil {
 		return nil, fmt.Errorf("Failed to make temp dir: '%w'.", err)
 	}
+	defer util.RemoveDirent(tempDir)
+
+	lockCourseID := ""
 
 	// Collect both submissions in a temp dir.
 	var submissionDirs [2]string
 	for i, fullSubmissionID := range fullSubmissionIDs {
 		submissionDir := filepath.Join(tempDir, fullSubmissionID)
 
-		err = fetchSubmission(fullSubmissionID, submissionDir)
+		courseID, err := fetchSubmission(fullSubmissionID, submissionDir)
 		if err != nil {
 			return nil, err
+		}
+
+		if lockCourseID == "" {
+			lockCourseID = courseID
 		}
 
 		submissionDirs[i] = submissionDir
@@ -99,10 +108,12 @@ func pairwiseAnalysis(fullSubmissionIDs [2]string) (*model.PairWiseAnalysis, err
 		similarities[relpath] = make([]*model.FileSimilarity, 0, len(similarityEngines))
 
 		for _, engine := range similarityEngines {
-			similarity, err := engine.ComputeFileSimilarity([2]string{
+			paths := [2]string{
 				filepath.Join(submissionDirs[0], relpath),
 				filepath.Join(submissionDirs[1], relpath),
-			})
+			}
+
+			similarity, err := engine.ComputeFileSimilarity(paths, lockCourseID)
 			if err != nil {
 				return nil, fmt.Errorf("Unable to compute similarity for '%s' using engine '%s': '%w'", relpath, engine.GetName(), err)
 			}
@@ -121,26 +132,26 @@ func pairwiseAnalysis(fullSubmissionIDs [2]string) (*model.PairWiseAnalysis, err
 	return &analysis, nil
 }
 
-func fetchSubmission(fullID string, baseDir string) error {
+func fetchSubmission(fullID string, baseDir string) (string, error) {
 	courseID, assignmentID, userEmail, shortID, err := common.SplitFullSubmissionID(fullID)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	assignment, err := db.GetAssignment(courseID, assignmentID)
 	if err != nil {
-		return fmt.Errorf("Failed to fetch assignment %s.%s: '%w'.", courseID, assignmentID, err)
+		return "", fmt.Errorf("Failed to fetch assignment %s.%s: '%w'.", courseID, assignmentID, err)
 	}
 
 	gradingResult, err := db.GetSubmissionContents(assignment, userEmail, shortID)
 	if err != nil {
-		return fmt.Errorf("Failed to fetch submission contents for '%s': '%w'.", fullID, err)
+		return "", fmt.Errorf("Failed to fetch submission contents for '%s': '%w'.", fullID, err)
 	}
 
 	err = util.GzipBytesToDirectory(baseDir, gradingResult.InputFilesGZip)
 	if err != nil {
-		return fmt.Errorf("Failed to write submission input to temp dir: '%w'.", err)
+		return "", fmt.Errorf("Failed to write submission input to temp dir: '%w'.", err)
 	}
 
-	return nil
+	return courseID, nil
 }

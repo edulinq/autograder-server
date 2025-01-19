@@ -18,13 +18,7 @@ const BASE_TEST_USER = "course-student@test.edulinq.org"
 const TEST_MESSAGE = ""
 
 func TestDockerSubmissions(test *testing.T) {
-	if config.DOCKER_DISABLE.Get() {
-		test.Skip("Docker is disabled, skipping test.")
-	}
-
-	if !docker.CanAccessDocker() {
-		test.Fatal("Could not access docker.")
-	}
+	docker.EnsureOrSkipForTest(test)
 
 	runSubmissionTests(test, false, true)
 }
@@ -119,13 +113,7 @@ func runSubmissionTests(test *testing.T, parallel bool, useDocker bool) {
 }
 
 func TestGradeTimeoutDocker(test *testing.T) {
-	if config.DOCKER_DISABLE.Get() {
-		test.Skip("Docker is disabled, skipping test.")
-	}
-
-	if !docker.CanAccessDocker() {
-		test.Fatal("Could not access docker.")
-	}
+	docker.EnsureOrSkipForTest(test)
 
 	testGradeCancelOrTimeout(test, context.Background(), false, 1, "Submission has ran for too long and was killed.")
 }
@@ -141,13 +129,7 @@ func TestGradeTimeoutNoDocker(test *testing.T) {
 }
 
 func TestGradeMidCancelDocker(test *testing.T) {
-	if config.DOCKER_DISABLE.Get() {
-		test.Skip("Docker is disabled, skipping test.")
-	}
-
-	if !docker.CanAccessDocker() {
-		test.Fatal("Could not access docker.")
-	}
+	docker.EnsureOrSkipForTest(test)
 
 	ctx, cancelFunc := context.WithCancel(context.Background())
 	defer cancelFunc()
@@ -177,13 +159,7 @@ func TestGradeMidCancelNoDocker(test *testing.T) {
 }
 
 func TestGradePreCancelDocker(test *testing.T) {
-	if config.DOCKER_DISABLE.Get() {
-		test.Skip("Docker is disabled, skipping test.")
-	}
-
-	if !docker.CanAccessDocker() {
-		test.Fatal("Could not access docker.")
-	}
+	docker.EnsureOrSkipForTest(test)
 
 	ctx, cancelFunc := context.WithCancel(context.Background())
 	cancelFunc()
@@ -255,13 +231,7 @@ func TestGradeTruncatedOutputTruncation(test *testing.T) {
 }
 
 func testTruncatedOutput(test *testing.T, sizeKB int, expectedTruncated bool) {
-	if config.DOCKER_DISABLE.Get() {
-		test.Skip("Docker is disabled, skipping test.")
-	}
-
-	if !docker.CanAccessDocker() {
-		test.Fatal("Could not access docker.")
-	}
+	docker.EnsureOrSkipForTest(test)
 
 	db.ResetForTesting()
 	defer db.ResetForTesting()

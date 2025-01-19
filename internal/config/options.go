@@ -17,6 +17,7 @@ var (
 	UNIT_TESTING_MODE = MustNewBoolOption("testing", false, "Assume tests are being run, which may alter some operations.")
 	LOAD_TEST_DATA    = MustNewBoolOption("testdata.load", false, "Load test data when the database opens.")
 	STORE_HTTP        = MustNewStringOption("http.store", "", "Store HTTP requests made by the server to the specified directory.")
+	GITHUB_CI         = MustNewBoolOption("github.ci", false, "Inform the system that we are running in Github CI. There are some tests that cannot run properly in the Github CI environment.")
 
 	// Logging
 	LOG_TEXT_LEVEL    = MustNewStringOption("log.text.level", "INFO", "The default logging level for the text (stderr) logger.")

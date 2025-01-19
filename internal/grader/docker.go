@@ -38,7 +38,7 @@ func runDockerGrader(ctx context.Context, assignment *model.Assignment, submissi
 		return nil, nil, "", "", "", fmt.Errorf("Failed to copy over submission/input contents: '%w'.", err)
 	}
 
-	stdout, stderr, timeout, canceled, err := docker.RunContainer(ctx, assignment, assignment.ImageName(), inputDir, outputDir, fullSubmissionID, assignment.MaxRuntimeSecs)
+	stdout, stderr, timeout, canceled, err := docker.RunGradingContainer(ctx, assignment, assignment.ImageName(), inputDir, outputDir, fullSubmissionID, assignment.MaxRuntimeSecs)
 	if err != nil {
 		return nil, nil, stdout, stderr, "", err
 	}

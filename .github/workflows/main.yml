@@ -32,7 +32,7 @@ jobs:
         run: ./scripts/check_duplicate_locators.sh
 
       - name: Run Base Tests
-        run: ./scripts/run_tests.sh
+        run: AUTOGRADER__GITHUB__CI=true ./scripts/run_tests.sh
 
   docker-deploy-latest:
 

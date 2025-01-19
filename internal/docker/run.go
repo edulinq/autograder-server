@@ -27,44 +27,59 @@ type containerOutput struct {
 	Err       error
 }
 
+type MountInfo struct {
+	Source   string
+	Target   string
+	ReadOnly bool
+}
+
+// Run a grading container.
+// Returns: (stdout, stderr, timeout?, canceled?, error)
+func RunGradingContainer(ctx context.Context, logId log.Loggable, imageName string, inputDir string, outputDir string, baseID string, maxRuntimeSecs int) (string, string, bool, bool, error) {
+	mounts := []MountInfo{
+		MountInfo{
+			Source:   util.ShouldAbs(inputDir),
+			Target:   "/autograder/input",
+			ReadOnly: true,
+		},
+		MountInfo{
+			Source:   util.ShouldAbs(outputDir),
+			Target:   "/autograder/output",
+			ReadOnly: false,
+		},
+	}
+
+	return RunContainer(ctx, logId, imageName, mounts, nil, baseID, maxRuntimeSecs)
+}
+
 // Run a container.
 // Returns: (stdout, stderr, timeout?, canceled?, error)
-func RunContainer(ctx context.Context, logId log.Loggable, imageName string, inputDir string, outputDir string, baseID string, maxRuntimeSecs int) (string, string, bool, bool, error) {
+func RunContainer(ctx context.Context, logId log.Loggable, imageName string, mounts []MountInfo, cmd []string, baseID string, maxRuntimeSecs int) (string, string, bool, bool, error) {
 	docker, err := getDockerClient()
 	if err != nil {
 		return "", "", false, false, err
 	}
 	defer docker.Close()
 
-	inputDir = util.ShouldAbs(inputDir)
-	outputDir = util.ShouldAbs(outputDir)
-
 	name := cleanContainerName(fmt.Sprintf("%s-%s", baseID, util.UUID()))
 
 	timeout := false
 	canceled := false
+
+	dockerMounts := make([]mount.Mount, 0, len(mounts))
+	for _, mount := range mounts {
+		dockerMounts = append(dockerMounts, mount.ToDocker())
+	}
 
 	containerInstance, err := docker.ContainerCreate(
 		ctx,
 		&container.Config{
 			Image:           imageName,
 			NetworkDisabled: true,
+			Cmd:             cmd,
 		},
 		&container.HostConfig{
-			Mounts: []mount.Mount{
-				mount.Mount{
-					Type:     "bind",
-					Source:   inputDir,
-					Target:   "/autograder/input",
-					ReadOnly: true,
-				},
-				mount.Mount{
-					Type:     "bind",
-					Source:   outputDir,
-					Target:   "/autograder/output",
-					ReadOnly: false,
-				},
-			},
+			Mounts: dockerMounts,
 			LogConfig: container.LogConfig{
 				// Don't store any logs, we will copy stdout/stderr directly.
 				Type: "none",
@@ -235,4 +250,13 @@ func handleContainerOutput(output *containerOutput, outputWaitGroup *sync.WaitGr
 
 	output.Stdout = outBuffer.String()
 	output.Stderr = errBuffer.String()
+}
+
+func (this MountInfo) ToDocker() mount.Mount {
+	return mount.Mount{
+		Type:     "bind",
+		Source:   this.Source,
+		Target:   this.Target,
+		ReadOnly: this.ReadOnly,
+	}
 }

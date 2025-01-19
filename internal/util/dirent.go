@@ -54,7 +54,7 @@ func CopyLink(source string, dest string) error {
 	return nil
 }
 
-// Copy a file from source to dest creating any necessary parents along the way..
+// Copy a file from source to dest creating any necessary parents along the way.
 // If dest is a file, it will be truncated.
 // If dest is a dir, then the file will be created inside dest.
 func CopyFile(source string, dest string) error {

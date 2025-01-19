@@ -1,6 +1,7 @@
 package docker
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/docker/docker/client"
@@ -12,7 +13,16 @@ func CanAccessDocker() bool {
 		defer docker.Close()
 	}
 
-	return (err == nil)
+	if err != nil {
+		return false
+	}
+
+	_, err = docker.Info(context.Background())
+	if err != nil {
+		return false
+	}
+
+	return true
 }
 
 func getDockerClient() (*client.Client, error) {
