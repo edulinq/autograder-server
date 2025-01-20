@@ -1,8 +1,6 @@
 package stats
 
 import (
-	"fmt"
-
 	"github.com/edulinq/autograder/internal/config"
 	"github.com/edulinq/autograder/internal/log"
 	"github.com/edulinq/autograder/internal/timestamp"
@@ -12,8 +10,9 @@ import (
 type CourseMetricType string
 
 const (
-	CourseMetricTypeUnknown     CourseMetricType = ""
-	CourseMetricTypeGradingTime                  = "grading-time"
+	CourseMetricTypeUnknown          CourseMetricType = ""
+	CourseMetricTypeGradingTime                       = "grading-time"
+	CourseMetricTypeCodeAnalysisTime                  = "code-analysis-time"
 )
 
 type CourseMetric struct {
@@ -39,13 +38,15 @@ type CourseMetricQuery struct {
 }
 
 var courseMetricTypeToString = map[CourseMetricType]string{
-	CourseMetricTypeUnknown:     string(CourseMetricTypeUnknown),
-	CourseMetricTypeGradingTime: string(CourseMetricTypeGradingTime),
+	CourseMetricTypeUnknown:          string(CourseMetricTypeUnknown),
+	CourseMetricTypeGradingTime:      string(CourseMetricTypeGradingTime),
+	CourseMetricTypeCodeAnalysisTime: string(CourseMetricTypeCodeAnalysisTime),
 }
 
 var stringToCourseMetricType = map[string]CourseMetricType{
-	string(CourseMetricTypeUnknown):     CourseMetricTypeUnknown,
-	string(CourseMetricTypeGradingTime): CourseMetricTypeGradingTime,
+	string(CourseMetricTypeUnknown):          CourseMetricTypeUnknown,
+	string(CourseMetricTypeGradingTime):      CourseMetricTypeGradingTime,
+	string(CourseMetricTypeCodeAnalysisTime): CourseMetricTypeCodeAnalysisTime,
 }
 
 func (this CourseMetricType) MarshalJSON() ([]byte, error) {
@@ -59,6 +60,26 @@ func (this *CourseMetricType) UnmarshalJSON(data []byte) error {
 	}
 
 	return err
+}
+
+func (this *CourseMetric) LogValue() []*log.Attr {
+	attrs := []*log.Attr{
+		log.NewAttr("course-metric-type", this.Type),
+	}
+
+	if this.CourseID != "" {
+		attrs = append(attrs, log.NewCourseAttr(this.CourseID))
+	}
+
+	if this.AssignmentID != "" {
+		attrs = append(attrs, log.NewAssignmentAttr(this.AssignmentID))
+	}
+
+	if this.UserEmail != "" {
+		attrs = append(attrs, log.NewUserAttr(this.UserEmail))
+	}
+
+	return attrs
 }
 
 func (this CourseMetricQuery) Match(record *CourseMetric) bool {
@@ -89,13 +110,22 @@ func (this CourseMetricQuery) Match(record *CourseMetric) bool {
 	return true
 }
 
-// Store a grading time metric without blocking (unless this is running in test mode, then it will block).
+// Store a ccourse metric without blocking (unless this is running in test mode, then it will block).
 // Course ID is required, and all provided IDs should already be validated.
-func AsyncStoreCourseGradingTime(startTime timestamp.Timestamp, endTime timestamp.Timestamp, courseID string, assignmentID string, userEmail string) {
+func AsyncStoreCourseMetric(metric *CourseMetric) {
+	if metric == nil {
+		return
+	}
+
+	if metric.CourseID == "" {
+		log.Error("Cannot log course statistic without course ID.", metric)
+		return
+	}
+
 	storeFunc := func() {
-		err := storeCourseGradingTime(startTime, endTime, courseID, assignmentID, userEmail)
+		err := StoreCourseMetric(metric)
 		if err != nil {
-			log.Error("Failed to log course grading time.", err, log.NewCourseAttr(courseID), log.NewAssignmentAttr(assignmentID), log.NewUserAttr(userEmail))
+			log.Error("Failed to log course metric.", err, metric)
 		}
 	}
 
@@ -106,11 +136,7 @@ func AsyncStoreCourseGradingTime(startTime timestamp.Timestamp, endTime timestam
 	}
 }
 
-func storeCourseGradingTime(startTime timestamp.Timestamp, endTime timestamp.Timestamp, courseID string, assignmentID string, userEmail string) error {
-	if courseID == "" {
-		return fmt.Errorf("Cannot log course statistic without course ID.")
-	}
-
+func AsyncStoreCourseGradingTime(startTime timestamp.Timestamp, endTime timestamp.Timestamp, courseID string, assignmentID string, userEmail string) {
 	metric := &CourseMetric{
 		BaseMetric: BaseMetric{
 			Timestamp: startTime,
@@ -122,5 +148,5 @@ func storeCourseGradingTime(startTime timestamp.Timestamp, endTime timestamp.Tim
 		Value:        uint64((endTime - startTime).ToMSecs()),
 	}
 
-	return StoreCourseMetric(metric)
+	AsyncStoreCourseMetric(metric)
 }

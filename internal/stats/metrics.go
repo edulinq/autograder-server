@@ -10,6 +10,9 @@ type Metric interface {
 
 type BaseMetric struct {
 	Timestamp timestamp.Timestamp `json:"timestamp"`
+
+	// Additional attributes that are not standard enough to be formalized in fields.
+	Attributes map[string]any `json:"attributes,omitempty"`
 }
 
 func (this BaseMetric) GetTimestamp() timestamp.Timestamp {

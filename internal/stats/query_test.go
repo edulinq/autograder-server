@@ -31,17 +31,17 @@ func TestApplyBaseQueryBase(test *testing.T) {
 			simpleBaseMetrics,
 			BaseQuery{After: timestamp.FromMSecs(200)},
 			[]BaseMetric{
-				BaseMetric{timestamp.FromMSecs(300)},
-				BaseMetric{timestamp.FromMSecs(400)},
-				BaseMetric{timestamp.FromMSecs(500)},
+				BaseMetric{Timestamp: timestamp.FromMSecs(300)},
+				BaseMetric{Timestamp: timestamp.FromMSecs(400)},
+				BaseMetric{Timestamp: timestamp.FromMSecs(500)},
 			},
 		},
 		{
 			simpleBaseMetrics,
 			BaseQuery{Before: timestamp.FromMSecs(300)},
 			[]BaseMetric{
-				BaseMetric{timestamp.FromMSecs(100)},
-				BaseMetric{timestamp.FromMSecs(200)},
+				BaseMetric{Timestamp: timestamp.FromMSecs(100)},
+				BaseMetric{Timestamp: timestamp.FromMSecs(200)},
 			},
 		},
 		{
@@ -51,8 +51,8 @@ func TestApplyBaseQueryBase(test *testing.T) {
 				Before: timestamp.FromMSecs(301),
 			},
 			[]BaseMetric{
-				BaseMetric{timestamp.FromMSecs(200)},
-				BaseMetric{timestamp.FromMSecs(300)},
+				BaseMetric{Timestamp: timestamp.FromMSecs(200)},
+				BaseMetric{Timestamp: timestamp.FromMSecs(300)},
 			},
 		},
 
@@ -99,8 +99,8 @@ func TestApplyBaseQueryBase(test *testing.T) {
 				Sort:   1,
 			},
 			[]BaseMetric{
-				BaseMetric{timestamp.FromMSecs(300)},
-				BaseMetric{timestamp.FromMSecs(200)},
+				BaseMetric{Timestamp: timestamp.FromMSecs(300)},
+				BaseMetric{Timestamp: timestamp.FromMSecs(200)},
 			},
 		},
 
@@ -110,7 +110,7 @@ func TestApplyBaseQueryBase(test *testing.T) {
 			simpleBaseMetrics,
 			BaseQuery{Limit: 1},
 			[]BaseMetric{
-				BaseMetric{timestamp.FromMSecs(100)},
+				BaseMetric{Timestamp: timestamp.FromMSecs(100)},
 			},
 		},
 		{
@@ -120,7 +120,7 @@ func TestApplyBaseQueryBase(test *testing.T) {
 				Sort:  1,
 			},
 			[]BaseMetric{
-				BaseMetric{timestamp.FromMSecs(500)},
+				BaseMetric{Timestamp: timestamp.FromMSecs(500)},
 			},
 		},
 	}
@@ -135,11 +135,11 @@ func TestApplyBaseQueryBase(test *testing.T) {
 }
 
 var simpleBaseMetrics []BaseMetric = []BaseMetric{
-	BaseMetric{timestamp.FromMSecs(100)},
-	BaseMetric{timestamp.FromMSecs(200)},
-	BaseMetric{timestamp.FromMSecs(300)},
-	BaseMetric{timestamp.FromMSecs(400)},
-	BaseMetric{timestamp.FromMSecs(500)},
+	BaseMetric{Timestamp: timestamp.FromMSecs(100)},
+	BaseMetric{Timestamp: timestamp.FromMSecs(200)},
+	BaseMetric{Timestamp: timestamp.FromMSecs(300)},
+	BaseMetric{Timestamp: timestamp.FromMSecs(400)},
+	BaseMetric{Timestamp: timestamp.FromMSecs(500)},
 }
 
 var simpleBaseMetricsReverse []BaseMetric = nil

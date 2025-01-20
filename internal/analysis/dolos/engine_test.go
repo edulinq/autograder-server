@@ -32,7 +32,7 @@ func TestDolosComputeFileSimilarityBase(test *testing.T) {
 		Score:    0.666667,
 	}
 
-	result, err := engine.ComputeFileSimilarity(paths, "course101")
+	result, runTime, err := engine.ComputeFileSimilarity(paths, "course101")
 	if err != nil {
 		test.Fatalf("Failed to compute similarity: '%v'.", err)
 	}
@@ -50,5 +50,9 @@ func TestDolosComputeFileSimilarityBase(test *testing.T) {
 
 	if !util.IsClose(expectedScore, actualScore) {
 		test.Fatalf("Score not as expected. Expected: %f, Actual: %f.", expectedScore, actualScore)
+	}
+
+	if runTime <= 0 {
+		test.Fatalf("Run time is too small. It should be at least 1 ms, but is %d ms.", runTime)
 	}
 }

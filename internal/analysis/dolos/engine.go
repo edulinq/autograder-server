@@ -12,6 +12,7 @@ import (
 	"github.com/edulinq/autograder/internal/docker"
 	"github.com/edulinq/autograder/internal/log"
 	"github.com/edulinq/autograder/internal/model"
+	"github.com/edulinq/autograder/internal/timestamp"
 	"github.com/edulinq/autograder/internal/util"
 )
 
@@ -45,19 +46,21 @@ func (this *dolosEngine) IsAvailable() bool {
 	return docker.CanAccessDocker()
 }
 
-func (this *dolosEngine) ComputeFileSimilarity(paths [2]string, baseLockKey string) (*model.FileSimilarity, error) {
+func (this *dolosEngine) ComputeFileSimilarity(paths [2]string, baseLockKey string) (*model.FileSimilarity, int64, error) {
 	lockKey := fmt.Sprintf("dolos-%s", baseLockKey)
 	common.Lock(lockKey)
 	defer common.Unlock(lockKey)
 
 	err := ensureImage()
 	if err != nil {
-		return nil, fmt.Errorf("Failed to ensure Dolos docker image exists: '%w'.", err)
+		return nil, 0, fmt.Errorf("Failed to ensure Dolos docker image exists: '%w'.", err)
 	}
+
+	startTime := timestamp.Now()
 
 	tempDir, err := util.MkDirTemp("dolos-")
 	if err != nil {
-		return nil, fmt.Errorf("Failed to create temp dir: '%w'.", err)
+		return nil, 0, fmt.Errorf("Failed to create temp dir: '%w'.", err)
 	}
 	defer util.RemoveDirent(tempDir)
 
@@ -68,17 +71,17 @@ func (this *dolosEngine) ComputeFileSimilarity(paths [2]string, baseLockKey stri
 		tempPath := filepath.Join(tempDir, tempFilename)
 		err = util.CopyFile(path, tempPath)
 		if err != nil {
-			return nil, fmt.Errorf("Failed to copy file to temp dir: '%w'.", err)
+			return nil, 0, fmt.Errorf("Failed to copy file to temp dir: '%w'.", err)
 		}
 
 		err = os.Chmod(tempPath, 0664)
 		if err != nil {
-			return nil, fmt.Errorf("Failed to update permissions for temp file: '%w'.", err)
+			return nil, 0, fmt.Errorf("Failed to update permissions for temp file: '%w'.", err)
 		}
 
 		err = os.Chown(tempPath, 1000, 1000)
 		if err != nil {
-			return nil, fmt.Errorf("Failed to update ownership for temp file: '%w'.", err)
+			return nil, 0, fmt.Errorf("Failed to update ownership for temp file: '%w'.", err)
 		}
 
 		tempFilenames = append(tempFilenames, tempFilename)
@@ -102,12 +105,12 @@ func (this *dolosEngine) ComputeFileSimilarity(paths [2]string, baseLockKey stri
 	stdout, stderr, _, _, err := docker.RunContainer(context.Background(), this, getImageName(), mounts, arguments, NAME, MAX_RUNTIME_SECS)
 	if err != nil {
 		log.Debug("Failed to run Dolos container.", err, log.NewAttr("stdout", stdout), log.NewAttr("stderr", stderr))
-		return nil, fmt.Errorf("Failed to run Dolos container: '%w'.", err)
+		return nil, 0, fmt.Errorf("Failed to run Dolos container: '%w'.", err)
 	}
 
 	score, err := fetchResults(tempDir)
 	if err != nil {
-		return nil, fmt.Errorf("Failed to read output from Dolos: '%w'.", err)
+		return nil, 0, fmt.Errorf("Failed to read output from Dolos: '%w'.", err)
 	}
 
 	result := model.FileSimilarity{
@@ -117,7 +120,9 @@ func (this *dolosEngine) ComputeFileSimilarity(paths [2]string, baseLockKey stri
 		Score:    score,
 	}
 
-	return &result, nil
+	runTime := (timestamp.Now() - startTime).ToMSecs()
+
+	return &result, runTime, nil
 }
 
 func getImageName() string {

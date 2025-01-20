@@ -34,10 +34,7 @@ func TestStoreCourseGradingTimeBase(test *testing.T) {
 		Value:        100,
 	}
 
-	err := storeCourseGradingTime(timestamp.Zero(), timestamp.FromMSecs(100), "C", "A", "U")
-	if err != nil {
-		test.Fatalf("Failed to store grading time: '%v'.", err)
-	}
+	AsyncStoreCourseGradingTime(timestamp.Zero(), timestamp.FromMSecs(100), "C", "A", "U")
 
 	// Ensure that stats have been collected.
 	count := len(typedBackend.course)

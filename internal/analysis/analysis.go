@@ -13,13 +13,10 @@ import (
 	"github.com/edulinq/autograder/internal/db"
 	"github.com/edulinq/autograder/internal/log"
 	"github.com/edulinq/autograder/internal/model"
+	"github.com/edulinq/autograder/internal/stats"
 	"github.com/edulinq/autograder/internal/timestamp"
 	"github.com/edulinq/autograder/internal/util"
 )
-
-// TEST - Stats
-
-// TEST - Assignment override (e.g. language)
 
 var similarityEngines []core.SimilarityEngine = []core.SimilarityEngine{
 	dolos.GetEngine(),
@@ -110,20 +107,24 @@ func getCachedResults(fullSubmissionIDs []string) ([]*model.PairWiseAnalysis, []
 func runPairwiseAnalysis(keys []model.PairwiseKey) ([]*model.PairWiseAnalysis, error) {
 	results := make([]*model.PairWiseAnalysis, 0, len(keys))
 	var errs error = nil
+	totalRunTime := int64(0)
 
 	for _, key := range keys {
-		result, err := runSinglePairwiseAnalysis(key)
+		result, runTime, err := runSinglePairwiseAnalysis(key)
 		if err != nil {
 			errs = errors.Join(errs, fmt.Errorf("Failed to perform pairwise analysis on submissions %s: '%w'.", key.String(), err))
 		} else {
 			results = append(results, result)
+			totalRunTime += runTime
 		}
 	}
+
+	collectStats(keys, totalRunTime)
 
 	return results, errs
 }
 
-func runSinglePairwiseAnalysis(pairwiseKey model.PairwiseKey) (*model.PairWiseAnalysis, error) {
+func runSinglePairwiseAnalysis(pairwiseKey model.PairwiseKey) (*model.PairWiseAnalysis, int64, error) {
 	// Lock this key so we don't try to do the analysis multiple times.
 	lockKey := fmt.Sprintf("analysis-pairwise-%s", pairwiseKey.String())
 	common.Lock(lockKey)
@@ -132,32 +133,32 @@ func runSinglePairwiseAnalysis(pairwiseKey model.PairwiseKey) (*model.PairWiseAn
 	// Check the DB for a complete analysis.
 	result, err := db.GetSinglePairwiseAnalysis(pairwiseKey)
 	if err != nil {
-		return nil, fmt.Errorf("Failed to check DB for cached pairwise analysis for '%s': '%w'.", pairwiseKey.String(), err)
+		return nil, 0, fmt.Errorf("Failed to check DB for cached pairwise analysis for '%s': '%w'.", pairwiseKey.String(), err)
 	}
 
 	if result != nil {
-		return result, nil
+		return result, 0, nil
 	}
 
 	// Nothing cached, compute the analsis.
-	result, err = computeSinglePairwiseAnalysis(pairwiseKey)
+	result, runTime, err := computeSinglePairwiseAnalysis(pairwiseKey)
 	if err != nil {
-		return nil, fmt.Errorf("Failed to compute pairwise analysis for '%s': '%w'.", pairwiseKey.String(), err)
+		return nil, 0, fmt.Errorf("Failed to compute pairwise analysis for '%s': '%w'.", pairwiseKey.String(), err)
 	}
 
 	// Store the result.
 	err = db.StorePairwiseAnalysis([]*model.PairWiseAnalysis{result})
 	if err != nil {
-		return nil, fmt.Errorf("Failed to store pairwise analysis for '%s' in DB: '%w'.", pairwiseKey.String(), err)
+		return nil, 0, fmt.Errorf("Failed to store pairwise analysis for '%s' in DB: '%w'.", pairwiseKey.String(), err)
 	}
 
-	return result, nil
+	return result, runTime, nil
 }
 
-func computeSinglePairwiseAnalysis(pairwiseKey model.PairwiseKey) (*model.PairWiseAnalysis, error) {
+func computeSinglePairwiseAnalysis(pairwiseKey model.PairwiseKey) (*model.PairWiseAnalysis, int64, error) {
 	tempDir, err := util.MkDirTemp("pairwise-analysis-")
 	if err != nil {
-		return nil, fmt.Errorf("Failed to make temp dir: '%w'.", err)
+		return nil, 0, fmt.Errorf("Failed to make temp dir: '%w'.", err)
 	}
 	defer util.RemoveDirent(tempDir)
 
@@ -170,7 +171,7 @@ func computeSinglePairwiseAnalysis(pairwiseKey model.PairwiseKey) (*model.PairWi
 
 		courseID, err := fetchSubmission(fullSubmissionID, submissionDir)
 		if err != nil {
-			return nil, err
+			return nil, 0, err
 		}
 
 		if lockCourseID == "" {
@@ -183,10 +184,12 @@ func computeSinglePairwiseAnalysis(pairwiseKey model.PairwiseKey) (*model.PairWi
 	// Figure out what files need to be analyzed.
 	matches, unmatches, err := util.MatchFiles(submissionDirs)
 	if err != nil {
-		return nil, fmt.Errorf("Failed to find matching files: '%w'.", err)
+		return nil, 0, fmt.Errorf("Failed to find matching files: '%w'.", err)
 	}
 
+	totalRunTime := int64(0)
 	similarities := make(map[string][]*model.FileSimilarity, len(matches))
+
 	for _, relpath := range matches {
 		paths := [2]string{
 			filepath.Join(submissionDirs[0], relpath),
@@ -194,7 +197,9 @@ func computeSinglePairwiseAnalysis(pairwiseKey model.PairwiseKey) (*model.PairWi
 		}
 
 		similarities[relpath] = make([]*model.FileSimilarity, len(similarityEngines))
+		runTimes := make([]int64, len(similarityEngines))
 		errs := make([]error, len(similarityEngines))
+
 		var engineWaitGroup sync.WaitGroup
 
 		for i, engine := range similarityEngines {
@@ -204,11 +209,12 @@ func computeSinglePairwiseAnalysis(pairwiseKey model.PairwiseKey) (*model.PairWi
 			go func(index int, simEngine core.SimilarityEngine) {
 				defer engineWaitGroup.Done()
 
-				similarity, err := simEngine.ComputeFileSimilarity(paths, lockCourseID)
+				similarity, runTime, err := simEngine.ComputeFileSimilarity(paths, lockCourseID)
 				if err != nil {
 					errs[index] = fmt.Errorf("Unable to compute similarity for '%s' using engine '%s': '%w'", relpath, simEngine.GetName(), err)
 				} else {
 					similarities[relpath][index] = similarity
+					runTimes[index] = runTime
 				}
 			}(i, engine)
 		}
@@ -219,7 +225,12 @@ func computeSinglePairwiseAnalysis(pairwiseKey model.PairwiseKey) (*model.PairWi
 		// Check for errors from the children.
 		err := errors.Join(errs...)
 		if err != nil {
-			return nil, err
+			return nil, 0, err
+		}
+
+		// Sum the run times.
+		for _, runTime := range runTimes {
+			totalRunTime += runTime
 		}
 	}
 
@@ -230,7 +241,60 @@ func computeSinglePairwiseAnalysis(pairwiseKey model.PairwiseKey) (*model.PairWi
 		UnmatchedFiles:    unmatches,
 	}
 
-	return &analysis, nil
+	return &analysis, totalRunTime, nil
+}
+
+// Store stats on how long the pairwise anslysis took.
+// All represented courses will get the same time logged.
+// If only one assignment is present for a course it will be used in the metric,
+// otherwise no assignment will be used.
+func collectStats(keys []model.PairwiseKey, totalRunTime int64) {
+	// {course: assignment, ...}
+	seenIdentifiers := make(map[string]string)
+
+	for _, keyPair := range keys {
+		for _, key := range keyPair {
+			courseID, assignmentID, _, _, err := common.SplitFullSubmissionID(key)
+			if err != nil {
+				continue
+			}
+
+			assignment, ok := seenIdentifiers[courseID]
+			if !ok {
+				// This course has not been seen, enter it with the current assignment.
+				seenIdentifiers[courseID] = assignmentID
+			} else if assignmentID != assignment {
+				// This course has been seen before, and has a different assignment.
+				// Zero out the assignment (as there is more than one in the keys).
+				// With a zero value, it will never match another real assignment.
+				seenIdentifiers[courseID] = ""
+			}
+		}
+	}
+
+	if len(seenIdentifiers) == 0 {
+		log.Error("Could not find identifiers for stat collection of pairwise analysis.", log.NewAttr("keys", keys))
+		return
+	}
+
+	now := timestamp.Now()
+
+	for courseID, assignmentID := range seenIdentifiers {
+		metric := stats.CourseMetric{
+			BaseMetric: stats.BaseMetric{
+				Timestamp: now,
+				Attributes: map[string]any{
+					"anslysis-type": "pairwise",
+				},
+			},
+			Type:         stats.CourseMetricTypeCodeAnalysisTime,
+			CourseID:     courseID,
+			AssignmentID: assignmentID,
+			Value:        uint64(totalRunTime),
+		}
+
+		stats.AsyncStoreCourseMetric(&metric)
+	}
 }
 
 func fetchSubmission(fullID string, baseDir string) (string, error) {

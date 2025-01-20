@@ -10,6 +10,7 @@ import (
 	"github.com/edulinq/autograder/internal/db"
 	"github.com/edulinq/autograder/internal/docker"
 	"github.com/edulinq/autograder/internal/model"
+	"github.com/edulinq/autograder/internal/stats"
 	"github.com/edulinq/autograder/internal/timestamp"
 	"github.com/edulinq/autograder/internal/util"
 )
@@ -155,6 +156,37 @@ func TestPairwiseAnalysisFake(test *testing.T) {
 
 	// Test again, which should pull from the cache.
 	testPairwise(test, ids, expected, len(expected))
+
+	// After both runs, there should be exactly one stat record (since the second one was cached).
+	results, err := db.GetCourseMetrics(stats.CourseMetricQuery{CourseID: "course101"})
+	if err != nil {
+		test.Fatalf("Failed to do stats query: '%v'.", err)
+	}
+
+	expectedStats := []*stats.CourseMetric{
+		&stats.CourseMetric{
+			BaseMetric: stats.BaseMetric{
+				Timestamp: timestamp.Zero(),
+				Attributes: map[string]any{
+					"anslysis-type": "pairwise",
+				},
+			},
+			Type:         stats.CourseMetricTypeCodeAnalysisTime,
+			CourseID:     "course101",
+			AssignmentID: "hw0",
+			Value:        3, // 1 for each run of the fake engine.
+		},
+	}
+
+	// Zero out the query results.
+	for _, result := range results {
+		result.Timestamp = timestamp.Zero()
+	}
+
+	if !reflect.DeepEqual(expectedStats, results) {
+		test.Fatalf("Stat results not as expected. Expected: '%s', Actual: '%s'.",
+			util.MustToJSONIndent(expectedStats), util.MustToJSONIndent(results))
+	}
 }
 
 func testPairwise(test *testing.T, ids []string, expected []*model.PairWiseAnalysis, expectedInitialCacheCount int) {
@@ -214,12 +246,12 @@ func (this *fakeSimiliartyEngine) IsAvailable() bool {
 	return true
 }
 
-func (this *fakeSimiliartyEngine) ComputeFileSimilarity(paths [2]string, baseLockKey string) (*model.FileSimilarity, error) {
+func (this *fakeSimiliartyEngine) ComputeFileSimilarity(paths [2]string, baseLockKey string) (*model.FileSimilarity, int64, error) {
 	similarity := model.FileSimilarity{
 		Filename: filepath.Base(paths[0]),
 		Tool:     this.Name,
 		Score:    float64(len(filepath.Base(paths[0]))) / 100.0,
 	}
 
-	return &similarity, nil
+	return &similarity, 1, nil
 }

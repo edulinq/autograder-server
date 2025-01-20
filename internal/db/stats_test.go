@@ -1,6 +1,7 @@
 package db
 
 import (
+	"reflect"
 	"testing"
 
 	"github.com/edulinq/autograder/internal/stats"
@@ -38,7 +39,7 @@ func (this *DBTests) DBTestStoreSystemStats(test *testing.T) {
 		test.Fatalf("Did not get the correct number of records. Expected: 1, Actual: %d.", len(records))
 	}
 
-	if *records[0] != testRecord {
+	if !reflect.DeepEqual(*records[0], testRecord) {
 		test.Fatalf("Did not get the expected record back. Expected: '%s', Actual: '%s'.",
 			util.MustToJSONIndent(testRecord), util.MustToJSONIndent(*records[0]))
 	}
@@ -77,7 +78,7 @@ func (this *DBTests) DBTestStoreCourseMetrics(test *testing.T) {
 		test.Fatalf("Did not get the correct number of records. Expected: 1, Actual: %d.", len(records))
 	}
 
-	if *records[0] != testRecord {
+	if !reflect.DeepEqual(*records[0], testRecord) {
 		test.Fatalf("Did not get the expected record back. Expected: '%s', Actual: '%s'.",
 			util.MustToJSONIndent(testRecord), util.MustToJSONIndent(*records[0]))
 	}
