@@ -30,6 +30,10 @@ func GetAssignment(rawCourseID string, rawAssignmentID string) (*model.Assignmen
 		return nil, err
 	}
 
+	if course == nil {
+		return nil, fmt.Errorf("Unable to find course '%s'.", rawCourseID)
+	}
+
 	assignmentID, err := common.ValidateID(rawAssignmentID)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to validate assignment id '%s': '%w'.", rawAssignmentID, err)

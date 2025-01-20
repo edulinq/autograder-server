@@ -1,11 +1,9 @@
 package analysis
 
 import (
-	"path/filepath"
 	"reflect"
 	"testing"
 
-	"github.com/edulinq/autograder/internal/analysis/core"
 	"github.com/edulinq/autograder/internal/config"
 	"github.com/edulinq/autograder/internal/db"
 	"github.com/edulinq/autograder/internal/docker"
@@ -86,11 +84,8 @@ func TestPairwiseAnalysisFake(test *testing.T) {
 	db.ResetForTesting()
 	defer db.ResetForTesting()
 
-	oldEngines := similarityEngines
-	similarityEngines = []core.SimilarityEngine{&fakeSimiliartyEngine{"fake"}}
-	defer func() {
-		similarityEngines = oldEngines
-	}()
+	resetFunc := UseFakeEnginesForTesting()
+	defer resetFunc()
 
 	ids := []string{
 		"course101::hw0::course-student@test.edulinq.org::1697406256",
@@ -232,26 +227,4 @@ func testPairwise(test *testing.T, ids []string, expected []*model.PairWiseAnaly
 	if len(queryResult) != len(expected) {
 		test.Fatalf("Number of (post) cached anslysis results not as expected. Expected: %d, Actual: %d.", len(expected), len(queryResult))
 	}
-}
-
-type fakeSimiliartyEngine struct {
-	Name string
-}
-
-func (this *fakeSimiliartyEngine) GetName() string {
-	return this.Name
-}
-
-func (this *fakeSimiliartyEngine) IsAvailable() bool {
-	return true
-}
-
-func (this *fakeSimiliartyEngine) ComputeFileSimilarity(paths [2]string, baseLockKey string) (*model.FileSimilarity, int64, error) {
-	similarity := model.FileSimilarity{
-		Filename: filepath.Base(paths[0]),
-		Tool:     this.Name,
-		Score:    float64(len(filepath.Base(paths[0]))) / 100.0,
-	}
-
-	return &similarity, 1, nil
 }
