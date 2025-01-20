@@ -15,19 +15,17 @@ import (
 	"github.com/edulinq/autograder/internal/util"
 )
 
-// TEST - Could it be worth is to do a secondary caching at the sim tool level?
-//        Then, we could actually just do pairwise checks.
-//        This actually just sounds like the normal cache (in db) we were thinking about.
-
 // TEST - Check available engines first.
 
 // TEST - Hard error early if no Docker? Or just, if no engines.
 
-// TEST - Check Cache in DB
-
-// TEST - Save
-
 // TEST - Stats
+
+// TEST - Assignment override (e.g. language)
+
+// TEST - Engines in parallel?
+
+// TEST - Sort out blocking (and initial cache fetch) semantis.
 
 var similarityEngines []core.SimilarityEngine = []core.SimilarityEngine{
 	dolos.GetEngine(),
@@ -57,7 +55,7 @@ func PairwiseAnalysis(fullSubmissionIDs []string) ([]*model.PairWiseAnalysis, er
 			}
 
 			// Since the ids are already sorted and i < j, we can guarantee this ordering.
-			runIDs := [2]string{fullSubmissionIDs[i], fullSubmissionIDs[j]}
+			runIDs := model.NewPairwiseKey(fullSubmissionIDs[i], fullSubmissionIDs[j])
 
 			result, err := pairwiseAnalysis(runIDs)
 			if err != nil {
@@ -71,7 +69,38 @@ func PairwiseAnalysis(fullSubmissionIDs []string) ([]*model.PairWiseAnalysis, er
 	return results, errs
 }
 
-func pairwiseAnalysis(fullSubmissionIDs [2]string) (*model.PairWiseAnalysis, error) {
+func pairwiseAnalysis(pairwiseKey model.PairwiseKey) (*model.PairWiseAnalysis, error) {
+	// Lock this key so we don't try to do the analysis multiple times.
+	lockKey := fmt.Sprintf("analysis-pairwise-%s", pairwiseKey.String())
+	common.Lock(lockKey)
+	defer common.Unlock(lockKey)
+
+	// Check the DB for a complete analysis.
+	result, err := db.GetSinglePairwiseAnalysis(pairwiseKey)
+	if err != nil {
+		return nil, fmt.Errorf("Failed to check DB for cached pairwise analysis for '%s': '%w'.", pairwiseKey.String(), err)
+	}
+
+	if result != nil {
+		return result, nil
+	}
+
+	// Nothing cached, compute the analsis.
+	result, err = computePairwiseAnalysis(pairwiseKey)
+	if err != nil {
+		return nil, fmt.Errorf("Failed to compute pairwise analysis for '%s': '%w'.", pairwiseKey.String(), err)
+	}
+
+	// Store the result.
+	err = db.StorePairwiseAnalysis([]*model.PairWiseAnalysis{result})
+	if err != nil {
+		return nil, fmt.Errorf("Failed to store pairwise analysis for '%s' in DB: '%w'.", pairwiseKey.String(), err)
+	}
+
+	return result, nil
+}
+
+func computePairwiseAnalysis(pairwiseKey model.PairwiseKey) (*model.PairWiseAnalysis, error) {
 	tempDir, err := util.MkDirTemp("pairwise-analysis-")
 	if err != nil {
 		return nil, fmt.Errorf("Failed to make temp dir: '%w'.", err)
@@ -82,7 +111,7 @@ func pairwiseAnalysis(fullSubmissionIDs [2]string) (*model.PairWiseAnalysis, err
 
 	// Collect both submissions in a temp dir.
 	var submissionDirs [2]string
-	for i, fullSubmissionID := range fullSubmissionIDs {
+	for i, fullSubmissionID := range pairwiseKey {
 		submissionDir := filepath.Join(tempDir, fullSubmissionID)
 
 		courseID, err := fetchSubmission(fullSubmissionID, submissionDir)
@@ -124,7 +153,7 @@ func pairwiseAnalysis(fullSubmissionIDs [2]string) (*model.PairWiseAnalysis, err
 
 	analysis := model.PairWiseAnalysis{
 		AnalysisTimestamp: timestamp.Now(),
-		SubmissionIDs:     fullSubmissionIDs,
+		SubmissionIDs:     pairwiseKey,
 		Similarities:      similarities,
 		UnmatchedFiles:    unmatches,
 	}

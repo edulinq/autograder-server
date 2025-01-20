@@ -7,16 +7,26 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"strings"
 )
 
-func AppendJSONLFile(path string, record any) error {
+func AppendJSONLFile[T any](path string, record T) error {
+	return AppendJSONLFileMany(path, []T{record})
+}
+
+func AppendJSONLFileMany[T any](path string, records []T) error {
 	if !PathExists(path) {
 		MkDir(filepath.Dir(path))
 	}
 
-	line, err := ToJSON(record)
-	if err != nil {
-		return fmt.Errorf("Failed to convert record to JSON: '%w'.", err)
+	lines := make([]string, 0, len(records))
+	for i, record := range records {
+		line, err := ToJSON(record)
+		if err != nil {
+			return fmt.Errorf("Failed to convert record %d to JSON: '%w'.", i, err)
+		}
+
+		lines = append(lines, line)
 	}
 
 	file, err := os.OpenFile(path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
@@ -25,24 +35,23 @@ func AppendJSONLFile(path string, record any) error {
 	}
 	defer file.Close()
 
-	_, err = file.WriteString(line + "\n")
+	_, err = file.WriteString(strings.Join(lines, "\n") + "\n")
 	if err != nil {
-		return fmt.Errorf("Failed to write record to JSONL file '%s': '%w'.", path, err)
+		return fmt.Errorf("Failed to write %d records to JSONL file '%s': '%w'.", len(lines), path, err)
 	}
 
 	return nil
 }
 
-func FilterJSONLFile[T any](path string, emptyRecord T, matchFunc func(record *T) bool) ([]*T, error) {
-	records := make([]*T, 0)
-
+// Go through a JSONL file and call a functon for each record.
+func ApplyJSONLFile[T any](path string, emptyRecord T, applyFunc func(index int, record *T)) error {
 	if !PathExists(path) {
-		return records, nil
+		return nil
 	}
 
 	file, err := os.Open(path)
 	if err != nil {
-		return nil, fmt.Errorf("Failed to open JSONL file '%s': '%w'.", path, err)
+		return fmt.Errorf("Failed to open JSONL file '%s': '%w'.", path, err)
 	}
 	defer file.Close()
 
@@ -51,7 +60,7 @@ func FilterJSONLFile[T any](path string, emptyRecord T, matchFunc func(record *T
 	for {
 		line, err := readline(reader)
 		if err != nil {
-			return nil, fmt.Errorf("Failed to read line from JSONL file '%s': '%w'.", path, err)
+			return fmt.Errorf("Failed to read line %d from JSONL file '%s': '%w'.", lineno+1, path, err)
 		}
 
 		if line == nil {
@@ -64,14 +73,27 @@ func FilterJSONLFile[T any](path string, emptyRecord T, matchFunc func(record *T
 		var record *T = reflect.New(reflect.TypeOf(emptyRecord)).Interface().(*T)
 		err = JSONFromBytes(line, record)
 		if err != nil {
-			return nil, fmt.Errorf("Failed to convert line %d from JSONL file '%s' to JSON: '%w'.", lineno, path, err)
+			return fmt.Errorf("Failed to convert line %d from JSONL file '%s' to JSON: '%w'.", lineno, path, err)
 		}
 
-		if !matchFunc(record) {
-			continue
-		}
+		applyFunc(lineno-1, record)
+	}
 
-		records = append(records, record)
+	return nil
+}
+
+// Go through a JSONL file and return any records that match (matchFunc returns true).
+func FilterJSONLFile[T any](path string, emptyRecord T, matchFunc func(record *T) bool) ([]*T, error) {
+	records := make([]*T, 0)
+
+	err := ApplyJSONLFile(path, emptyRecord, func(index int, record *T) {
+		if matchFunc(record) {
+			records = append(records, record)
+		}
+	})
+
+	if err != nil {
+		return nil, err
 	}
 
 	return records, nil

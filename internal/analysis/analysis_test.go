@@ -33,10 +33,10 @@ func TestPairwiseAnalysisDefaultEngines(test *testing.T) {
 	expected := []*model.PairWiseAnalysis{
 		&model.PairWiseAnalysis{
 			AnalysisTimestamp: timestamp.Zero(),
-			SubmissionIDs: [2]string{
+			SubmissionIDs: model.NewPairwiseKey(
 				"course101::hw0::course-student@test.edulinq.org::1697406265",
 				"course101::hw0::course-student@test.edulinq.org::1697406272",
-			},
+			),
 			Similarities: map[string][]*model.FileSimilarity{
 				"submission.py": []*model.FileSimilarity{
 					&model.FileSimilarity{
@@ -96,10 +96,10 @@ func TestPairwiseAnalysisFake(test *testing.T) {
 	expected := []*model.PairWiseAnalysis{
 		&model.PairWiseAnalysis{
 			AnalysisTimestamp: timestamp.Zero(),
-			SubmissionIDs: [2]string{
+			SubmissionIDs: model.NewPairwiseKey(
 				"course101::hw0::course-student@test.edulinq.org::1697406256",
 				"course101::hw0::course-student@test.edulinq.org::1697406265",
-			},
+			),
 			Similarities: map[string][]*model.FileSimilarity{
 				"submission.py": []*model.FileSimilarity{
 					&model.FileSimilarity{
@@ -113,10 +113,10 @@ func TestPairwiseAnalysisFake(test *testing.T) {
 		},
 		&model.PairWiseAnalysis{
 			AnalysisTimestamp: timestamp.Zero(),
-			SubmissionIDs: [2]string{
+			SubmissionIDs: model.NewPairwiseKey(
 				"course101::hw0::course-student@test.edulinq.org::1697406256",
 				"course101::hw0::course-student@test.edulinq.org::1697406272",
-			},
+			),
 			Similarities: map[string][]*model.FileSimilarity{
 				"submission.py": []*model.FileSimilarity{
 					&model.FileSimilarity{
@@ -130,10 +130,10 @@ func TestPairwiseAnalysisFake(test *testing.T) {
 		},
 		&model.PairWiseAnalysis{
 			AnalysisTimestamp: timestamp.Zero(),
-			SubmissionIDs: [2]string{
+			SubmissionIDs: model.NewPairwiseKey(
 				"course101::hw0::course-student@test.edulinq.org::1697406265",
 				"course101::hw0::course-student@test.edulinq.org::1697406272",
-			},
+			),
 			Similarities: map[string][]*model.FileSimilarity{
 				"submission.py": []*model.FileSimilarity{
 					&model.FileSimilarity{
@@ -145,6 +145,28 @@ func TestPairwiseAnalysisFake(test *testing.T) {
 			},
 			UnmatchedFiles: [][2]string{},
 		},
+	}
+
+	testPairwise(test, ids, expected, 0)
+
+	// Test again, which should pull from the cache.
+	testPairwise(test, ids, expected, len(expected))
+}
+
+func testPairwise(test *testing.T, ids []string, expected []*model.PairWiseAnalysis, expectedInitialCacheCount int) {
+	// Ensure that there are no records for these in the DB.
+	queryKeys := make([]model.PairwiseKey, 0, len(expected))
+	for _, analysis := range expected {
+		queryKeys = append(queryKeys, analysis.SubmissionIDs)
+	}
+
+	queryResult, err := db.GetPairwiseAnalysis(queryKeys)
+	if err != nil {
+		test.Fatalf("Failed to do initial query for cached anslysis: '%v'.", err)
+	}
+
+	if len(queryResult) != expectedInitialCacheCount {
+		test.Fatalf("Number of (pre) cached anslysis results not as expected. Expected: %d, Actual: %d.", expectedInitialCacheCount, len(queryResult))
 	}
 
 	results, err := PairwiseAnalysis(ids)
@@ -160,6 +182,15 @@ func TestPairwiseAnalysisFake(test *testing.T) {
 	if !reflect.DeepEqual(expected, results) {
 		test.Fatalf("Results not as expected. Expected: '%s', Actual: '%s'.",
 			util.MustToJSONIndent(expected), util.MustToJSONIndent(results))
+	}
+
+	queryResult, err = db.GetPairwiseAnalysis(queryKeys)
+	if err != nil {
+		test.Fatalf("Failed to do query for cached anslysis: '%v'.", err)
+	}
+
+	if len(queryResult) != len(expected) {
+		test.Fatalf("Number of (post) cached anslysis results not as expected. Expected: %d, Actual: %d.", len(expected), len(queryResult))
 	}
 }
 

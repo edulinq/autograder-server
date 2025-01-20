@@ -24,10 +24,11 @@ type backend struct {
 	contextualLock sync.RWMutex
 
 	// Specific locks.
-	logLock   sync.RWMutex
-	userLock  sync.RWMutex
-	statsLock sync.RWMutex
-	tasksLock sync.RWMutex
+	logLock              sync.RWMutex
+	userLock             sync.RWMutex
+	statsLock            sync.RWMutex
+	tasksLock            sync.RWMutex
+	analysisPairwiseLock sync.RWMutex
 }
 
 func Open() (*backend, error) {
@@ -52,8 +53,9 @@ func (this *backend) EnsureTables() error {
 }
 
 // Acquire a contextual lock.
-// For the DB, which also involves obtaining a read lock on a general lock,
-// this will allow us to obtain all the locks when clearning the db.
+// When procedures require a contextual lock, we will also get a read lock on contextualLock.
+// This allows us to obtain a write lock on contextualLock when we need to do database-wide operations,
+// which will block out contextual lockers.
 func (this *backend) contextLock(id string) {
 	this.contextualLock.RLock()
 	common.Lock(id)
@@ -75,6 +77,8 @@ func (this *backend) contextReadUnlock(id string) {
 }
 
 func (this *backend) Clear() error {
+	// Before clearing the DB, obtain all locks.
+
 	this.contextualLock.Lock()
 	defer this.contextualLock.Unlock()
 
@@ -89,6 +93,9 @@ func (this *backend) Clear() error {
 
 	this.tasksLock.Lock()
 	defer this.tasksLock.Unlock()
+
+	this.analysisPairwiseLock.Lock()
+	defer this.analysisPairwiseLock.Unlock()
 
 	err := util.RemoveDirent(this.baseDir)
 	if err != nil {

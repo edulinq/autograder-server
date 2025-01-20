@@ -31,13 +31,13 @@ const (
 // Any ID (course, assignment, etc) passed into a backend will be sanitized.
 // Note that the database package provides more functionality than what is provided directly by a Backend.
 type Backend interface {
-	// Administrative operations.
+	// Administrative Operations
 
 	Close() error
 	Clear() error
 	EnsureTables() error
 
-	// Course operations.
+	// Course Operations
 
 	// Clear all information about a course.
 	ClearCourse(course *model.Course) error
@@ -61,12 +61,12 @@ type Backend interface {
 	// The target directory should not exist, or be empty.
 	DumpCourse(course *model.Course, targetDir string) error
 
-	// Assignment operations.
+	// Assignment Operations
 
 	// Explicitly save an assignment.
 	SaveAssignment(assignment *model.Assignment) error
 
-	// User operations.
+	// User Operations
 	// User maps always map the user's ID to an actual user pointer.
 
 	// Get all the users on the server.
@@ -96,7 +96,7 @@ type Backend interface {
 	// Return true if the user and token exists and the token was removed, false otherwise.
 	DeleteUserToken(email string, tokenID string) (bool, error)
 
-	// Submission operations.
+	// Submission Operations
 
 	// Remove a submission.
 	// Return a bool indicating whether the submission exists or not and an error if there is one.
@@ -147,7 +147,7 @@ type Backend interface {
 	// A nil map should only be returned on error.
 	GetRecentSubmissionContents(assignment *model.Assignment, filterRole model.CourseUserRole) (map[string]*model.GradingResult, error)
 
-	// Task operations.
+	// Task Operations
 
 	// Get all the active tasks that come from the given course.
 	// The returned tasks will be keyed by the task's hash.
@@ -165,7 +165,7 @@ type Backend interface {
 	// and a nil value indicates that the given task should be removed.
 	UpsertActiveTasks(tasks map[string]*model.FullScheduledTask) error
 
-	// Logging operations.
+	// Logging Operations
 
 	// DB backends will also be used as logging storage backends.
 	log.StorageBackend
@@ -174,7 +174,7 @@ type Backend interface {
 	// Each parameter (except for the log level) can be passed with a zero value, in which case it will not be used for filtering.
 	GetLogRecords(query log.ParsedLogQuery) ([]*log.Record, error)
 
-	// Stats operations.
+	// Stats Operations
 
 	// DB backends will also be used as stats storage backends.
 	stats.StorageBackend
@@ -184,6 +184,15 @@ type Backend interface {
 
 	// Get course stats that match the specific query.
 	GetCourseMetrics(query stats.CourseMetricQuery) ([]*stats.CourseMetric, error)
+
+	// Analysis Operations
+
+	// Store the results of a pairwise analysis.
+	StorePairwiseAnalysis(records []*model.PairWiseAnalysis) error
+
+	// Fetch any matching pairwise analysis results.
+	// Any key not matched in the DB will not be represented in the output.
+	GetPairwiseAnalysis(keys []model.PairwiseKey) (map[model.PairwiseKey]*model.PairWiseAnalysis, error)
 }
 
 func Open() error {
