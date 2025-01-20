@@ -10,6 +10,7 @@ import (
 	"github.com/edulinq/autograder/internal/analysis/dolos"
 	"github.com/edulinq/autograder/internal/common"
 	"github.com/edulinq/autograder/internal/db"
+	"github.com/edulinq/autograder/internal/log"
 	"github.com/edulinq/autograder/internal/model"
 	"github.com/edulinq/autograder/internal/timestamp"
 	"github.com/edulinq/autograder/internal/util"
@@ -25,8 +26,6 @@ import (
 
 // TEST - Engines in parallel?
 
-// TEST - Sort out blocking (and initial cache fetch) semantis.
-
 var similarityEngines []core.SimilarityEngine = []core.SimilarityEngine{
 	dolos.GetEngine(),
 }
@@ -40,36 +39,91 @@ var similarityEngines []core.SimilarityEngine = []core.SimilarityEngine{
 // Results will be saved to the database for use in future calls.
 // If only some results are cached,
 // then those will be fetched from the database while the rest are computed.
-func PairwiseAnalysis(fullSubmissionIDs []string) ([]*model.PairWiseAnalysis, error) {
-	results := []*model.PairWiseAnalysis{}
-	var errs error = nil
+// If blockForResults is true, then this function will block until all requested results are computed.
+// Otherwise, this function will return any cached results from the database
+// and the remaining analysis will be done asynchronously.
+// Returns: (complete results, number of pending analysis runs, error)
+func PairwiseAnalysis(fullSubmissionIDs []string, blockForResults bool) ([]*model.PairWiseAnalysis, int, error) {
+	completeAnalysis, remainingKeys, err := getCachedResults(fullSubmissionIDs)
+	if err != nil {
+		return nil, 0, err
+	}
 
+	if blockForResults {
+		results, err := runPairwiseAnalysis(remainingKeys)
+		if err != nil {
+			return nil, 0, err
+		}
+
+		completeAnalysis = append(completeAnalysis, results...)
+		remainingKeys = nil
+	} else {
+		go func() {
+			_, err := runPairwiseAnalysis(remainingKeys)
+			if err != nil {
+				log.Error("Failure during asynchronous pairwise analysis.", err)
+			}
+		}()
+	}
+
+	return completeAnalysis, len(remainingKeys), nil
+}
+
+func getCachedResults(fullSubmissionIDs []string) ([]*model.PairWiseAnalysis, []model.PairwiseKey, error) {
 	// Sort the ids so the result will be consistently ordered.
 	fullSubmissionIDs = slices.Clone(fullSubmissionIDs)
 	slices.Sort(fullSubmissionIDs)
 
+	allKeys := make([]model.PairwiseKey, 0, (len(fullSubmissionIDs) * (len(fullSubmissionIDs) - 1) / 2))
 	for i := 0; i < len(fullSubmissionIDs); i++ {
 		for j := i + 1; j < len(fullSubmissionIDs); j++ {
 			if fullSubmissionIDs[i] == fullSubmissionIDs[j] {
 				continue
 			}
 
-			// Since the ids are already sorted and i < j, we can guarantee this ordering.
-			runIDs := model.NewPairwiseKey(fullSubmissionIDs[i], fullSubmissionIDs[j])
+			allKeys = append(allKeys, model.NewPairwiseKey(fullSubmissionIDs[i], fullSubmissionIDs[j]))
+		}
+	}
 
-			result, err := pairwiseAnalysis(runIDs)
-			if err != nil {
-				errs = errors.Join(errs, fmt.Errorf("Failed to perform pairwise analysis on submissions %v: '%w'.", runIDs, err))
-			} else {
-				results = append(results, result)
-			}
+	// Get any already done analysis results from the DB.
+	dbResults, err := db.GetPairwiseAnalysis(allKeys)
+	if err != nil {
+		return nil, nil, fmt.Errorf("Failed to get cached pairwise analysis from DB: '%w'.", err)
+	}
+
+	// Split up the keys into complete and remaining.
+	completeAnalysis := make([]*model.PairWiseAnalysis, 0, len(dbResults))
+	remainingKeys := make([]model.PairwiseKey, 0, len(allKeys)-len(dbResults))
+
+	for _, key := range allKeys {
+		result, ok := dbResults[key]
+		if ok {
+			completeAnalysis = append(completeAnalysis, result)
+		} else {
+			remainingKeys = append(remainingKeys, key)
+		}
+	}
+
+	return completeAnalysis, remainingKeys, nil
+}
+
+func runPairwiseAnalysis(keys []model.PairwiseKey) ([]*model.PairWiseAnalysis, error) {
+	results := make([]*model.PairWiseAnalysis, 0, len(keys))
+	var errs error = nil
+
+	for _, key := range keys {
+		result, err := runSinglePairwiseAnalysis(key)
+		if err != nil {
+			errs = errors.Join(errs, fmt.Errorf("Failed to perform pairwise analysis on submissions %s: '%w'.", key.String(), err))
+		} else {
+			results = append(results, result)
 		}
 	}
 
 	return results, errs
 }
 
-func pairwiseAnalysis(pairwiseKey model.PairwiseKey) (*model.PairWiseAnalysis, error) {
+func runSinglePairwiseAnalysis(pairwiseKey model.PairwiseKey) (*model.PairWiseAnalysis, error) {
 	// Lock this key so we don't try to do the analysis multiple times.
 	lockKey := fmt.Sprintf("analysis-pairwise-%s", pairwiseKey.String())
 	common.Lock(lockKey)
@@ -86,7 +140,7 @@ func pairwiseAnalysis(pairwiseKey model.PairwiseKey) (*model.PairWiseAnalysis, e
 	}
 
 	// Nothing cached, compute the analsis.
-	result, err = computePairwiseAnalysis(pairwiseKey)
+	result, err = computeSinglePairwiseAnalysis(pairwiseKey)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to compute pairwise analysis for '%s': '%w'.", pairwiseKey.String(), err)
 	}
@@ -100,7 +154,7 @@ func pairwiseAnalysis(pairwiseKey model.PairwiseKey) (*model.PairWiseAnalysis, e
 	return result, nil
 }
 
-func computePairwiseAnalysis(pairwiseKey model.PairwiseKey) (*model.PairWiseAnalysis, error) {
+func computeSinglePairwiseAnalysis(pairwiseKey model.PairwiseKey) (*model.PairWiseAnalysis, error) {
 	tempDir, err := util.MkDirTemp("pairwise-analysis-")
 	if err != nil {
 		return nil, fmt.Errorf("Failed to make temp dir: '%w'.", err)

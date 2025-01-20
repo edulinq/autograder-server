@@ -51,9 +51,13 @@ func TestPairwiseAnalysisDefaultEngines(test *testing.T) {
 		},
 	}
 
-	results, err := PairwiseAnalysis(ids)
+	results, cachedCount, err := PairwiseAnalysis(ids, true)
 	if err != nil {
 		test.Fatalf("Failed to do pairwise analysis: '%v'.", err)
+	}
+
+	if cachedCount != 0 {
+		test.Fatalf("Found %d cached results, when 0 were expected.", cachedCount)
 	}
 
 	for _, result := range results {
@@ -169,9 +173,13 @@ func testPairwise(test *testing.T, ids []string, expected []*model.PairWiseAnaly
 		test.Fatalf("Number of (pre) cached anslysis results not as expected. Expected: %d, Actual: %d.", expectedInitialCacheCount, len(queryResult))
 	}
 
-	results, err := PairwiseAnalysis(ids)
+	results, cachedCount, err := PairwiseAnalysis(ids, true)
 	if err != nil {
 		test.Fatalf("Failed to do pairwise analysis: '%v'.", err)
+	}
+
+	if cachedCount != 0 {
+		test.Fatalf("Found %d cached results, when 0 were expected.", cachedCount)
 	}
 
 	// Zero out the timestamps.
