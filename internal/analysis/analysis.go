@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"path/filepath"
 	"slices"
+	"sync"
 
 	"github.com/edulinq/autograder/internal/analysis/core"
 	"github.com/edulinq/autograder/internal/analysis/dolos"
@@ -19,8 +20,6 @@ import (
 // TEST - Stats
 
 // TEST - Assignment override (e.g. language)
-
-// TEST - Engines in parallel?
 
 var similarityEngines []core.SimilarityEngine = []core.SimilarityEngine{
 	dolos.GetEngine(),
@@ -189,20 +188,38 @@ func computeSinglePairwiseAnalysis(pairwiseKey model.PairwiseKey) (*model.PairWi
 
 	similarities := make(map[string][]*model.FileSimilarity, len(matches))
 	for _, relpath := range matches {
-		similarities[relpath] = make([]*model.FileSimilarity, 0, len(similarityEngines))
+		paths := [2]string{
+			filepath.Join(submissionDirs[0], relpath),
+			filepath.Join(submissionDirs[1], relpath),
+		}
 
-		for _, engine := range similarityEngines {
-			paths := [2]string{
-				filepath.Join(submissionDirs[0], relpath),
-				filepath.Join(submissionDirs[1], relpath),
-			}
+		similarities[relpath] = make([]*model.FileSimilarity, len(similarityEngines))
+		errs := make([]error, len(similarityEngines))
+		var engineWaitGroup sync.WaitGroup
 
-			similarity, err := engine.ComputeFileSimilarity(paths, lockCourseID)
-			if err != nil {
-				return nil, fmt.Errorf("Unable to compute similarity for '%s' using engine '%s': '%w'", relpath, engine.GetName(), err)
-			}
+		for i, engine := range similarityEngines {
+			// Compute the file similarity for each engine in parallel.
+			// Note that because we know the index for each engine up-front, we don't need a channel.
+			engineWaitGroup.Add(1)
+			go func(index int, simEngine core.SimilarityEngine) {
+				defer engineWaitGroup.Done()
 
-			similarities[relpath] = append(similarities[relpath], similarity)
+				similarity, err := simEngine.ComputeFileSimilarity(paths, lockCourseID)
+				if err != nil {
+					errs[index] = fmt.Errorf("Unable to compute similarity for '%s' using engine '%s': '%w'", relpath, simEngine.GetName(), err)
+				} else {
+					similarities[relpath][index] = similarity
+				}
+			}(i, engine)
+		}
+
+		// Wait for all engines to complete.
+		engineWaitGroup.Wait()
+
+		// Check for errors from the children.
+		err := errors.Join(errs...)
+		if err != nil {
+			return nil, err
 		}
 	}
 
