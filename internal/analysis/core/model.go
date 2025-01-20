@@ -6,6 +6,7 @@ import (
 
 type SimilarityEngine interface {
 	GetName() string
+	IsAvailable() bool
 	// Get the similiarty results between two files.
 	// Working on two files (submissions) at a time will typically be less efficient than working on all files at the same time,
 	// but a lot of shorter jobs is more flexible than one large job.

@@ -16,10 +16,6 @@ import (
 	"github.com/edulinq/autograder/internal/util"
 )
 
-// TEST - Check available engines first.
-
-// TEST - Hard error early if no Docker? Or just, if no engines.
-
 // TEST - Stats
 
 // TEST - Assignment override (e.g. language)
@@ -44,6 +40,11 @@ var similarityEngines []core.SimilarityEngine = []core.SimilarityEngine{
 // and the remaining analysis will be done asynchronously.
 // Returns: (complete results, number of pending analysis runs, error)
 func PairwiseAnalysis(fullSubmissionIDs []string, blockForResults bool) ([]*model.PairWiseAnalysis, int, error) {
+	err := checkEngines()
+	if err != nil {
+		return nil, 0, err
+	}
+
 	completeAnalysis, remainingKeys, err := getCachedResults(fullSubmissionIDs)
 	if err != nil {
 		return nil, 0, err
@@ -237,4 +238,17 @@ func fetchSubmission(fullID string, baseDir string) (string, error) {
 	}
 
 	return courseID, nil
+}
+
+func checkEngines() error {
+	available := false
+	for _, engine := range similarityEngines {
+		available = available || engine.IsAvailable()
+	}
+
+	if !available {
+		return fmt.Errorf("No similarity engines are currently available (are you using docker?).")
+	}
+
+	return nil
 }

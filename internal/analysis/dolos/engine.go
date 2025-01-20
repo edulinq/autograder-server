@@ -41,6 +41,10 @@ func (this *dolosEngine) GetName() string {
 	return NAME
 }
 
+func (this *dolosEngine) IsAvailable() bool {
+	return docker.CanAccessDocker()
+}
+
 func (this *dolosEngine) ComputeFileSimilarity(paths [2]string, baseLockKey string) (*model.FileSimilarity, error) {
 	lockKey := fmt.Sprintf("dolos-%s", baseLockKey)
 	common.Lock(lockKey)
