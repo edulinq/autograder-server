@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"path/filepath"
 	"slices"
+	"strings"
 	"sync"
 
 	"github.com/edulinq/autograder/internal/analysis/core"
@@ -181,10 +182,90 @@ func computeSinglePairwiseAnalysis(pairwiseKey model.PairwiseKey) (*model.Pairwi
 		submissionDirs[i] = submissionDir
 	}
 
-	// Figure out what files need to be analyzed.
-	matches, unmatches, err := util.MatchFiles(submissionDirs)
+	fileSimilarities, unmatches, totalRunTime, err := computeFileSims(submissionDirs, lockCourseID)
+
+	analysis := model.NewPairwiseAnalysis(pairwiseKey, fileSimilarities, unmatches)
+
+	return analysis, totalRunTime, nil
+}
+
+// Prepare any source files in a direcory for analysis.
+// The source files may be changed or moved.
+// If a file is moved, then the first return (renames) will map the new relpath to the old relpath.
+func prepSourceFiles(inputDir string) (map[string]string, error) {
+	inputDir = util.ShouldAbs(inputDir)
+
+	renames := make(map[string]string, 0)
+
+	relpaths, err := util.GetAllRelativeFiles(inputDir)
 	if err != nil {
-		return nil, 0, fmt.Errorf("Failed to find matching files: '%w'.", err)
+		return nil, fmt.Errorf("Failed to get files from dir: '%w'.", err)
+	}
+
+	for _, relpath := range relpaths {
+		newPath, err := prepSourceFile(filepath.Join(inputDir, relpath))
+		if err != nil {
+			return nil, fmt.Errorf("Failed to prepare source file '%s': '%w'.", relpath, err)
+		}
+
+		if newPath != "" {
+			newRelpath := util.RelPath(newPath, inputDir)
+			renames[newRelpath] = relpath
+		}
+	}
+
+	return renames, nil
+}
+
+func prepSourceFile(path string) (string, error) {
+	ext := filepath.Ext(path)
+	if ext == ".ipynb" {
+		newPath := strings.TrimSuffix(path, ".ipynb") + ".py"
+		for util.PathExists(newPath) {
+			newPath = "_" + newPath
+		}
+
+		code, err := util.ExtractPythonCodeFromNotebookFile(path)
+		if err != nil {
+			return "", fmt.Errorf("Unable to extract Python notebook code: '%w'.", err)
+		}
+
+		err = util.WriteFile(code, newPath)
+		if err != nil {
+			return "", fmt.Errorf("Unable to write new Python file from Python notebook source: '%w'.", err)
+		}
+
+		err = util.RemoveDirent(path)
+		if err != nil {
+			return "", fmt.Errorf("Unable to remove old Python notebook file: '%w'.", err)
+		}
+
+		return newPath, nil
+	}
+
+	return "", nil
+}
+
+func computeFileSims(inputDirs [2]string, lockID string) (map[string][]*model.FileSimilarity, [][2]string, int64, error) {
+	// When preparing source code, we may rename files (e.g. for iPython notebooks).
+	// {newRelpath: oldRelpath, ...}
+	renames := make(map[string]string, 0)
+	for _, inputDir := range inputDirs {
+		partialRenames, err := prepSourceFiles(inputDir)
+		if err != nil {
+			return nil, nil, 0, fmt.Errorf("Failed to prepare source files: '%w'.", err)
+		}
+
+		// Note that we may be overriding some paths, but they shuold have the same information.
+		for newRelpath, oldRelpath := range partialRenames {
+			renames[newRelpath] = oldRelpath
+		}
+	}
+
+	// Figure out what files need to be analyzed.
+	matches, unmatches, err := util.MatchFiles(inputDirs)
+	if err != nil {
+		return nil, nil, 0, fmt.Errorf("Failed to find matching files: '%w'.", err)
 	}
 
 	totalRunTime := int64(0)
@@ -192,8 +273,8 @@ func computeSinglePairwiseAnalysis(pairwiseKey model.PairwiseKey) (*model.Pairwi
 
 	for _, relpath := range matches {
 		paths := [2]string{
-			filepath.Join(submissionDirs[0], relpath),
-			filepath.Join(submissionDirs[1], relpath),
+			filepath.Join(inputDirs[0], relpath),
+			filepath.Join(inputDirs[1], relpath),
 		}
 
 		similarities[relpath] = make([]*model.FileSimilarity, len(similarityEngines))
@@ -209,10 +290,12 @@ func computeSinglePairwiseAnalysis(pairwiseKey model.PairwiseKey) (*model.Pairwi
 			go func(index int, simEngine core.SimilarityEngine) {
 				defer engineWaitGroup.Done()
 
-				similarity, runTime, err := simEngine.ComputeFileSimilarity(paths, lockCourseID)
+				similarity, runTime, err := simEngine.ComputeFileSimilarity(paths, lockID)
 				if err != nil {
 					errs[index] = fmt.Errorf("Unable to compute similarity for '%s' using engine '%s': '%w'", relpath, simEngine.GetName(), err)
 				} else {
+					similarity.OriginalFilename = renames[relpath]
+
 					similarities[relpath][index] = similarity
 					runTimes[index] = runTime
 				}
@@ -225,7 +308,7 @@ func computeSinglePairwiseAnalysis(pairwiseKey model.PairwiseKey) (*model.Pairwi
 		// Check for errors from the children.
 		err := errors.Join(errs...)
 		if err != nil {
-			return nil, 0, err
+			return nil, nil, 0, err
 		}
 
 		// Sum the run times.
@@ -234,9 +317,7 @@ func computeSinglePairwiseAnalysis(pairwiseKey model.PairwiseKey) (*model.Pairwi
 		}
 	}
 
-	analysis := model.NewPairwiseAnalysis(pairwiseKey, similarities, unmatches)
-
-	return analysis, totalRunTime, nil
+	return similarities, unmatches, totalRunTime, nil
 }
 
 // Store stats on how long the pairwise anslysis took.

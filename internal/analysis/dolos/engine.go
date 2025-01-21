@@ -3,7 +3,6 @@ package dolos
 import (
 	"context"
 	"fmt"
-	"os"
 	"path/filepath"
 	"strconv"
 	"sync"
@@ -72,16 +71,6 @@ func (this *dolosEngine) ComputeFileSimilarity(paths [2]string, baseLockKey stri
 		err = util.CopyFile(path, tempPath)
 		if err != nil {
 			return nil, 0, fmt.Errorf("Failed to copy file to temp dir: '%w'.", err)
-		}
-
-		err = os.Chmod(tempPath, 0664)
-		if err != nil {
-			return nil, 0, fmt.Errorf("Failed to update permissions for temp file: '%w'.", err)
-		}
-
-		err = os.Chown(tempPath, 1000, 1000)
-		if err != nil {
-			return nil, 0, fmt.Errorf("Failed to update ownership for temp file: '%w'.", err)
 		}
 
 		tempFilenames = append(tempFilenames, tempFilename)

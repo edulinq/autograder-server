@@ -1,6 +1,7 @@
 package analysis
 
 import (
+	"path/filepath"
 	"reflect"
 	"testing"
 
@@ -255,5 +256,50 @@ func testPairwise(test *testing.T, ids []string, expected []*model.PairwiseAnaly
 
 	if len(queryResult) != len(expected) {
 		test.Fatalf("Number of (post) cached anslysis results not as expected. Expected: %d, Actual: %d.", len(expected), len(queryResult))
+	}
+}
+
+func TestPairwiseWithPythonNotebook(test *testing.T) {
+	db.ResetForTesting()
+	defer db.ResetForTesting()
+
+	resetFunc := UseFakeEnginesForTesting()
+	defer resetFunc()
+
+	tempDir := util.MustMkDirTemp("test-analysis-pairwise-")
+	defer util.RemoveDirent(tempDir)
+
+	err := util.CopyDir(filepath.Join(util.RootDirForTesting(), "testdata", "files", "python_notebook"), tempDir, true)
+	if err != nil {
+		test.Fatalf("Failed to prep temp dir: '%v'.", err)
+	}
+
+	paths := [2]string{
+		filepath.Join(tempDir, "ipynb"),
+		filepath.Join(tempDir, "py"),
+	}
+
+	sims, unmatches, _, err := computeFileSims(paths, "test")
+	if err != nil {
+		test.Fatalf("Failed to compute file similarity: '%v'.", err)
+	}
+
+	if len(unmatches) != 0 {
+		test.Fatalf("Unexpected number of unmatches. Expected: 0, Actual: %d, Unmatches: '%s'.", len(unmatches), util.MustToJSONIndent(unmatches))
+	}
+
+	expected := map[string][]*model.FileSimilarity{
+		"submission.py": []*model.FileSimilarity{
+			&model.FileSimilarity{
+				Filename:         "submission.py",
+				OriginalFilename: "submission.ipynb",
+				Tool:             "fake",
+				Score:            0.13,
+			},
+		},
+	}
+
+	if !reflect.DeepEqual(expected, sims) {
+		test.Fatalf("Results not as expected. Expected: '%s', Actual: '%s'.", util.MustToJSONIndent(expected), util.MustToJSONIndent(sims))
 	}
 }

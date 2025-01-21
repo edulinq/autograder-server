@@ -39,11 +39,12 @@ type PairwiseAnalysis struct {
 }
 
 type FileSimilarity struct {
-	Filename string         `json:"filename"`
-	Tool     string         `json:"tool"`
-	Version  string         `json:"version"`
-	Options  map[string]any `json:"options,omitempty"`
-	Score    float64        `json:"score"`
+	Filename         string         `json:"filename"`
+	OriginalFilename string         `json:"original-filename,omitempty"`
+	Tool             string         `json:"tool"`
+	Version          string         `json:"version"`
+	Options          map[string]any `json:"options,omitempty"`
+	Score            float64        `json:"score"`
 }
 
 type PairwiseAnalysisSummary struct {
