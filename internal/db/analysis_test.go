@@ -19,19 +19,19 @@ func (this *DBTests) DBTestGetPairwiseAnalysisBase(test *testing.T) {
 
 	testCases := []struct {
 		keys     []model.PairwiseKey
-		expected map[model.PairwiseKey]*model.PairWiseAnalysis
+		expected map[model.PairwiseKey]*model.PairwiseAnalysis
 	}{
 		{
 			[]model.PairwiseKey{},
-			map[model.PairwiseKey]*model.PairWiseAnalysis{},
+			map[model.PairwiseKey]*model.PairwiseAnalysis{},
 		},
 		{
 			[]model.PairwiseKey{model.NewPairwiseKey("A", "Z")},
-			map[model.PairwiseKey]*model.PairWiseAnalysis{},
+			map[model.PairwiseKey]*model.PairwiseAnalysis{},
 		},
 		{
 			[]model.PairwiseKey{testPairwiseRecords[0].SubmissionIDs},
-			map[model.PairwiseKey]*model.PairWiseAnalysis{
+			map[model.PairwiseKey]*model.PairwiseAnalysis{
 				testPairwiseRecords[0].SubmissionIDs: testPairwiseRecords[0],
 			},
 		},
@@ -40,7 +40,7 @@ func (this *DBTests) DBTestGetPairwiseAnalysisBase(test *testing.T) {
 				testPairwiseRecords[0].SubmissionIDs,
 				model.NewPairwiseKey("A", "Z"),
 			},
-			map[model.PairwiseKey]*model.PairWiseAnalysis{
+			map[model.PairwiseKey]*model.PairwiseAnalysis{
 				testPairwiseRecords[0].SubmissionIDs: testPairwiseRecords[0],
 			},
 		},
@@ -49,7 +49,7 @@ func (this *DBTests) DBTestGetPairwiseAnalysisBase(test *testing.T) {
 				testPairwiseRecords[0].SubmissionIDs,
 				testPairwiseRecords[2].SubmissionIDs,
 			},
-			map[model.PairwiseKey]*model.PairWiseAnalysis{
+			map[model.PairwiseKey]*model.PairwiseAnalysis{
 				testPairwiseRecords[0].SubmissionIDs: testPairwiseRecords[0],
 				testPairwiseRecords[2].SubmissionIDs: testPairwiseRecords[2],
 			},
@@ -71,8 +71,8 @@ func (this *DBTests) DBTestGetPairwiseAnalysisBase(test *testing.T) {
 	}
 }
 
-var testPairwiseRecords []*model.PairWiseAnalysis = []*model.PairWiseAnalysis{
-	&model.PairWiseAnalysis{
+var testPairwiseRecords []*model.PairwiseAnalysis = []*model.PairwiseAnalysis{
+	&model.PairwiseAnalysis{
 		AnalysisTimestamp: timestamp.Zero(),
 		SubmissionIDs: model.NewPairwiseKey(
 			"course101::hw0::course-student@test.edulinq.org::1697406256",
@@ -89,7 +89,7 @@ var testPairwiseRecords []*model.PairWiseAnalysis = []*model.PairWiseAnalysis{
 		},
 		UnmatchedFiles: [][2]string{},
 	},
-	&model.PairWiseAnalysis{
+	&model.PairwiseAnalysis{
 		AnalysisTimestamp: timestamp.Zero(),
 		SubmissionIDs: model.NewPairwiseKey(
 			"course101::hw0::course-student@test.edulinq.org::1697406256",
@@ -106,7 +106,7 @@ var testPairwiseRecords []*model.PairWiseAnalysis = []*model.PairWiseAnalysis{
 		},
 		UnmatchedFiles: [][2]string{},
 	},
-	&model.PairWiseAnalysis{
+	&model.PairwiseAnalysis{
 		AnalysisTimestamp: timestamp.Zero(),
 		SubmissionIDs: model.NewPairwiseKey(
 			"course101::hw0::course-student@test.edulinq.org::1697406265",

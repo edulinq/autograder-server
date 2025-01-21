@@ -17,22 +17,35 @@ import (
 // - "<course id>::<assignment id>::<user email>::<submission short id>" - This is the same as a full submission id.
 // - "<course id>::<assignment id>::<user email>" - The user's most recent submission for this assignment.
 // - "<course id>::<assignment id>" - The most recent submission for all students (not just users).
-// Returns: (resolved full submission ids, all seen courses, error)
-func ResolveSubmissionSpecs(submissionSpecs []string) ([]string, []string, error) {
+// Returns: (resolved full submission ids, all seen courses, user errors, system errors)
+func ResolveSubmissionSpecs(submissionSpecs []string) ([]string, []string, error, error) {
 	submissionIDs := make(map[string]bool)
 	seenCourses := make(map[string]bool)
-	var errs error = nil
+
+	var systemErrors error = nil
+	var userErrors error = nil
 
 	for i, submissionSpec := range submissionSpecs {
 		courseID, assignmentID, userEmail, submissionShortID, err := splitSubmissionSpec(submissionSpec)
 		if err != nil {
-			errs = errors.Join(errs, fmt.Errorf("Submission spec at index %d had an error: '%w'.", i, err))
+			userErrors = errors.Join(userErrors, fmt.Errorf("Submission spec at index %d had an error: '%w'.", i, err))
 			continue
 		}
 
-		assignment, err := db.GetAssignment(courseID, assignmentID)
+		course, err := db.GetCourse(courseID)
 		if err != nil {
-			errs = errors.Join(errs, fmt.Errorf("Failed to fetch assignment (%s.%s): '%w'.", courseID, assignmentID, err))
+			systemErrors = errors.Join(systemErrors, fmt.Errorf("Failed to fetch course (%s): '%w'.", courseID, err))
+			continue
+		}
+
+		if course == nil {
+			userErrors = errors.Join(userErrors, fmt.Errorf("Course not found: %s.", courseID))
+			continue
+		}
+
+		assignment := course.GetAssignment(assignmentID)
+		if assignment == nil {
+			userErrors = errors.Join(userErrors, fmt.Errorf("Assignment not found %s.%s.", courseID, assignmentID))
 			continue
 		}
 
@@ -40,7 +53,7 @@ func ResolveSubmissionSpecs(submissionSpecs []string) ([]string, []string, error
 			// Most recent submissions for entire course.
 			submissions, err := db.GetRecentSubmissions(assignment, model.CourseRoleStudent)
 			if err != nil {
-				errs = errors.Join(errs, fmt.Errorf("Failed to fetch submissions (%s): '%w'.", submissionSpec, err))
+				systemErrors = errors.Join(systemErrors, fmt.Errorf("Failed to fetch submissions (%s): '%w'.", submissionSpec, err))
 				continue
 			}
 
@@ -57,12 +70,12 @@ func ResolveSubmissionSpecs(submissionSpecs []string) ([]string, []string, error
 			// The DB uses the same function for both of these (with an empty submission short ID for the former).
 			submission, err := db.GetSubmissionResult(assignment, userEmail, submissionShortID)
 			if err != nil {
-				errs = errors.Join(errs, fmt.Errorf("Failed to fetch submission (%s): '%w'.", submissionSpec, err))
+				systemErrors = errors.Join(systemErrors, fmt.Errorf("Failed to fetch submission (%s): '%w'.", submissionSpec, err))
 				continue
 			}
 
 			if submission == nil {
-				errs = errors.Join(errs, fmt.Errorf("Could not find submission %s.", submissionSpec))
+				userErrors = errors.Join(userErrors, fmt.Errorf("Could not find submission %s.", submissionSpec))
 				continue
 			}
 
@@ -83,11 +96,11 @@ func ResolveSubmissionSpecs(submissionSpecs []string) ([]string, []string, error
 	}
 	slices.Sort(courses)
 
-	if errs != nil {
-		return nil, nil, errs
+	if (userErrors != nil) || (systemErrors != nil) {
+		return nil, nil, userErrors, systemErrors
 	}
 
-	return ids, courses, nil
+	return ids, courses, nil, nil
 }
 
 func splitSubmissionSpec(submissionSpec string) (string, string, string, string, error) {

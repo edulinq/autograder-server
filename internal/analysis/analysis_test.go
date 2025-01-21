@@ -29,8 +29,8 @@ func TestPairwiseAnalysisDefaultEngines(test *testing.T) {
 		"course101::hw0::course-student@test.edulinq.org::1697406272",
 	}
 
-	expected := []*model.PairWiseAnalysis{
-		&model.PairWiseAnalysis{
+	expected := []*model.PairwiseAnalysis{
+		&model.PairwiseAnalysis{
 			AnalysisTimestamp: timestamp.Zero(),
 			SubmissionIDs: model.NewPairwiseKey(
 				"course101::hw0::course-student@test.edulinq.org::1697406265",
@@ -47,6 +47,10 @@ func TestPairwiseAnalysisDefaultEngines(test *testing.T) {
 				},
 			},
 			UnmatchedFiles: [][2]string{},
+			MeanSimilarities: map[string]float64{
+				"submission.py": 0,
+			},
+			TotalMeanSimilarity: 0,
 		},
 	}
 
@@ -64,6 +68,7 @@ func TestPairwiseAnalysisDefaultEngines(test *testing.T) {
 		result.AnalysisTimestamp = timestamp.Zero()
 
 		// We only care that the scores are above zero.
+
 		for i, similarity := range result.Similarities["submission.py"] {
 			if similarity.Score <= 0 {
 				test.Fatalf("Similairty from '%s' (index %d) is not above zero, found %f.", similarity.Tool, i, similarity.Score)
@@ -71,6 +76,18 @@ func TestPairwiseAnalysisDefaultEngines(test *testing.T) {
 
 			// Zero out score after check.
 			similarity.Score = 0
+		}
+
+		meanSim := result.MeanSimilarities["submission.py"]
+		result.MeanSimilarities["submission.py"] = 0
+		if meanSim <= 0 {
+			test.Fatalf("Mean similairty is not above zero, found %f.", meanSim)
+		}
+
+		totalMeanSim := result.TotalMeanSimilarity
+		result.TotalMeanSimilarity = 0
+		if totalMeanSim <= 0 {
+			test.Fatalf("Total mean similairty is not above zero, found %f.", totalMeanSim)
 		}
 	}
 
@@ -93,8 +110,8 @@ func TestPairwiseAnalysisFake(test *testing.T) {
 		"course101::hw0::course-student@test.edulinq.org::1697406272",
 	}
 
-	expected := []*model.PairWiseAnalysis{
-		&model.PairWiseAnalysis{
+	expected := []*model.PairwiseAnalysis{
+		&model.PairwiseAnalysis{
 			AnalysisTimestamp: timestamp.Zero(),
 			SubmissionIDs: model.NewPairwiseKey(
 				"course101::hw0::course-student@test.edulinq.org::1697406256",
@@ -110,8 +127,12 @@ func TestPairwiseAnalysisFake(test *testing.T) {
 				},
 			},
 			UnmatchedFiles: [][2]string{},
+			MeanSimilarities: map[string]float64{
+				"submission.py": 0.13,
+			},
+			TotalMeanSimilarity: 0.13,
 		},
-		&model.PairWiseAnalysis{
+		&model.PairwiseAnalysis{
 			AnalysisTimestamp: timestamp.Zero(),
 			SubmissionIDs: model.NewPairwiseKey(
 				"course101::hw0::course-student@test.edulinq.org::1697406256",
@@ -127,8 +148,12 @@ func TestPairwiseAnalysisFake(test *testing.T) {
 				},
 			},
 			UnmatchedFiles: [][2]string{},
+			MeanSimilarities: map[string]float64{
+				"submission.py": 0.13,
+			},
+			TotalMeanSimilarity: 0.13,
 		},
-		&model.PairWiseAnalysis{
+		&model.PairwiseAnalysis{
 			AnalysisTimestamp: timestamp.Zero(),
 			SubmissionIDs: model.NewPairwiseKey(
 				"course101::hw0::course-student@test.edulinq.org::1697406265",
@@ -144,6 +169,10 @@ func TestPairwiseAnalysisFake(test *testing.T) {
 				},
 			},
 			UnmatchedFiles: [][2]string{},
+			MeanSimilarities: map[string]float64{
+				"submission.py": 0.13,
+			},
+			TotalMeanSimilarity: 0.13,
 		},
 	}
 
@@ -184,7 +213,7 @@ func TestPairwiseAnalysisFake(test *testing.T) {
 	}
 }
 
-func testPairwise(test *testing.T, ids []string, expected []*model.PairWiseAnalysis, expectedInitialCacheCount int) {
+func testPairwise(test *testing.T, ids []string, expected []*model.PairwiseAnalysis, expectedInitialCacheCount int) {
 	// Ensure that there are no records for these in the DB.
 	queryKeys := make([]model.PairwiseKey, 0, len(expected))
 	for _, analysis := range expected {

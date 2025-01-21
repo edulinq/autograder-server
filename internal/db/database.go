@@ -188,11 +188,11 @@ type Backend interface {
 	// Analysis Operations
 
 	// Store the results of a pairwise analysis.
-	StorePairwiseAnalysis(records []*model.PairWiseAnalysis) error
+	StorePairwiseAnalysis(records []*model.PairwiseAnalysis) error
 
 	// Fetch any matching pairwise analysis results.
 	// Any key not matched in the DB will not be represented in the output.
-	GetPairwiseAnalysis(keys []model.PairwiseKey) (map[model.PairwiseKey]*model.PairWiseAnalysis, error)
+	GetPairwiseAnalysis(keys []model.PairwiseKey) (map[model.PairwiseKey]*model.PairwiseAnalysis, error)
 }
 
 func Open() error {

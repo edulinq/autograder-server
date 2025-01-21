@@ -8,7 +8,7 @@ import (
 
 // Get a single pairwise analysis result.
 // If the key is not matched, return nil.
-func GetSinglePairwiseAnalysis(key model.PairwiseKey) (*model.PairWiseAnalysis, error) {
+func GetSinglePairwiseAnalysis(key model.PairwiseKey) (*model.PairwiseAnalysis, error) {
 	results, err := GetPairwiseAnalysis([]model.PairwiseKey{key})
 	if err != nil {
 		return nil, err
@@ -17,7 +17,7 @@ func GetSinglePairwiseAnalysis(key model.PairwiseKey) (*model.PairWiseAnalysis, 
 	return results[key], nil
 }
 
-func GetPairwiseAnalysis(keys []model.PairwiseKey) (map[model.PairwiseKey]*model.PairWiseAnalysis, error) {
+func GetPairwiseAnalysis(keys []model.PairwiseKey) (map[model.PairwiseKey]*model.PairwiseAnalysis, error) {
 	if backend == nil {
 		return nil, fmt.Errorf("Database has not been opened.")
 	}
@@ -25,7 +25,7 @@ func GetPairwiseAnalysis(keys []model.PairwiseKey) (map[model.PairwiseKey]*model
 	return backend.GetPairwiseAnalysis(keys)
 }
 
-func StorePairwiseAnalysis(records []*model.PairWiseAnalysis) error {
+func StorePairwiseAnalysis(records []*model.PairwiseAnalysis) error {
 	if backend == nil {
 		return fmt.Errorf("Database has not been opened.")
 	}

@@ -15,10 +15,10 @@ func TestResolveSubmissionSpecsBase(test *testing.T) {
 	AddTestSubmissions(test)
 
 	testCases := []struct {
-		input                  []string
-		expectedIDs            []string
-		expectedCourses        []string
-		expectedErrorSubstring string
+		input                      []string
+		expectedIDs                []string
+		expectedCourses            []string
+		expectedUserErrorSubstring string
 	}{
 		{
 			[]string{"course101::hw0::course-student@test.edulinq.org::1697406256"},
@@ -96,13 +96,13 @@ func TestResolveSubmissionSpecsBase(test *testing.T) {
 			[]string{"course101::ZZZ::course-student@test.edulinq.org::1697406256"},
 			nil,
 			nil,
-			"Unable to find assignment",
+			"Assignment not found",
 		},
 		{
 			[]string{"ZZZ::hw0::course-student@test.edulinq.org::1697406256"},
 			nil,
 			nil,
-			"Unable to find course",
+			"Course not found",
 		},
 		{
 			[]string{"course101"},
@@ -119,24 +119,29 @@ func TestResolveSubmissionSpecsBase(test *testing.T) {
 	}
 
 	for i, testCase := range testCases {
-		ids, courses, err := ResolveSubmissionSpecs(testCase.input)
-		if err != nil {
-			if testCase.expectedErrorSubstring == "" {
-				test.Errorf("Case %d: Unexpected error: '%v'.", i, err)
+		ids, courses, userErrors, systemErrors := ResolveSubmissionSpecs(testCase.input)
+		if systemErrors != nil {
+			test.Errorf("Case %d: Unexpected system error: '%v'.", i, systemErrors)
+			continue
+		}
+
+		if userErrors != nil {
+			if testCase.expectedUserErrorSubstring == "" {
+				test.Errorf("Case %d: Unexpected user error: '%v'.", i, userErrors)
 				continue
 			}
 
-			if !strings.Contains(err.Error(), testCase.expectedErrorSubstring) {
+			if !strings.Contains(userErrors.Error(), testCase.expectedUserErrorSubstring) {
 				test.Errorf("Case %d: Error does not contain expected substring. Substring: '%s', Error: '%s'.",
-					i, testCase.expectedErrorSubstring, err.Error())
+					i, testCase.expectedUserErrorSubstring, userErrors.Error())
 				continue
 			}
 
 			continue
 		}
 
-		if testCase.expectedErrorSubstring != "" {
-			test.Errorf("Case %d: Did not get an expected error with substring '%s'.", i, testCase.expectedErrorSubstring)
+		if testCase.expectedUserErrorSubstring != "" {
+			test.Errorf("Case %d: Did not get an expected error with substring '%s'.", i, testCase.expectedUserErrorSubstring)
 			continue
 		}
 

@@ -15,6 +15,11 @@
             "request-type": "*assignments.ListRequest",
             "response-type": "*assignments.ListResponse"
         },
+        "courses/assignments/submissions/analysis/pairwise": {
+            "description": "Get the result of a pairwise analysis for the specified submissions.",
+            "request-type": "*analysis.PairwiseRequest",
+            "response-type": "*analysis.PairwiseResponse"
+        },
         "courses/assignments/submissions/fetch/course/attempts": {
             "description": "Get all recent submissions and grading information for this assignment.",
             "request-type": "*course.FetchCourseAttemptsRequest",

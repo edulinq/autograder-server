@@ -35,7 +35,7 @@ var similarityEngines []core.SimilarityEngine = []core.SimilarityEngine{
 // Otherwise, this function will return any cached results from the database
 // and the remaining analysis will be done asynchronously.
 // Returns: (complete results, number of pending analysis runs, error)
-func PairwiseAnalysis(fullSubmissionIDs []string, blockForResults bool) ([]*model.PairWiseAnalysis, int, error) {
+func PairwiseAnalysis(fullSubmissionIDs []string, blockForResults bool) ([]*model.PairwiseAnalysis, int, error) {
 	err := checkEngines()
 	if err != nil {
 		return nil, 0, err
@@ -66,7 +66,7 @@ func PairwiseAnalysis(fullSubmissionIDs []string, blockForResults bool) ([]*mode
 	return completeAnalysis, len(remainingKeys), nil
 }
 
-func getCachedResults(fullSubmissionIDs []string) ([]*model.PairWiseAnalysis, []model.PairwiseKey, error) {
+func getCachedResults(fullSubmissionIDs []string) ([]*model.PairwiseAnalysis, []model.PairwiseKey, error) {
 	// Sort the ids so the result will be consistently ordered.
 	fullSubmissionIDs = slices.Clone(fullSubmissionIDs)
 	slices.Sort(fullSubmissionIDs)
@@ -89,7 +89,7 @@ func getCachedResults(fullSubmissionIDs []string) ([]*model.PairWiseAnalysis, []
 	}
 
 	// Split up the keys into complete and remaining.
-	completeAnalysis := make([]*model.PairWiseAnalysis, 0, len(dbResults))
+	completeAnalysis := make([]*model.PairwiseAnalysis, 0, len(dbResults))
 	remainingKeys := make([]model.PairwiseKey, 0, len(allKeys)-len(dbResults))
 
 	for _, key := range allKeys {
@@ -104,8 +104,8 @@ func getCachedResults(fullSubmissionIDs []string) ([]*model.PairWiseAnalysis, []
 	return completeAnalysis, remainingKeys, nil
 }
 
-func runPairwiseAnalysis(keys []model.PairwiseKey) ([]*model.PairWiseAnalysis, error) {
-	results := make([]*model.PairWiseAnalysis, 0, len(keys))
+func runPairwiseAnalysis(keys []model.PairwiseKey) ([]*model.PairwiseAnalysis, error) {
+	results := make([]*model.PairwiseAnalysis, 0, len(keys))
 	var errs error = nil
 	totalRunTime := int64(0)
 
@@ -124,7 +124,7 @@ func runPairwiseAnalysis(keys []model.PairwiseKey) ([]*model.PairWiseAnalysis, e
 	return results, errs
 }
 
-func runSinglePairwiseAnalysis(pairwiseKey model.PairwiseKey) (*model.PairWiseAnalysis, int64, error) {
+func runSinglePairwiseAnalysis(pairwiseKey model.PairwiseKey) (*model.PairwiseAnalysis, int64, error) {
 	// Lock this key so we don't try to do the analysis multiple times.
 	lockKey := fmt.Sprintf("analysis-pairwise-%s", pairwiseKey.String())
 	common.Lock(lockKey)
@@ -147,7 +147,7 @@ func runSinglePairwiseAnalysis(pairwiseKey model.PairwiseKey) (*model.PairWiseAn
 	}
 
 	// Store the result.
-	err = db.StorePairwiseAnalysis([]*model.PairWiseAnalysis{result})
+	err = db.StorePairwiseAnalysis([]*model.PairwiseAnalysis{result})
 	if err != nil {
 		return nil, 0, fmt.Errorf("Failed to store pairwise analysis for '%s' in DB: '%w'.", pairwiseKey.String(), err)
 	}
@@ -155,7 +155,7 @@ func runSinglePairwiseAnalysis(pairwiseKey model.PairwiseKey) (*model.PairWiseAn
 	return result, runTime, nil
 }
 
-func computeSinglePairwiseAnalysis(pairwiseKey model.PairwiseKey) (*model.PairWiseAnalysis, int64, error) {
+func computeSinglePairwiseAnalysis(pairwiseKey model.PairwiseKey) (*model.PairwiseAnalysis, int64, error) {
 	tempDir, err := util.MkDirTemp("pairwise-analysis-")
 	if err != nil {
 		return nil, 0, fmt.Errorf("Failed to make temp dir: '%w'.", err)
@@ -234,14 +234,9 @@ func computeSinglePairwiseAnalysis(pairwiseKey model.PairwiseKey) (*model.PairWi
 		}
 	}
 
-	analysis := model.PairWiseAnalysis{
-		AnalysisTimestamp: timestamp.Now(),
-		SubmissionIDs:     pairwiseKey,
-		Similarities:      similarities,
-		UnmatchedFiles:    unmatches,
-	}
+	analysis := model.NewPairwiseAnalysis(pairwiseKey, similarities, unmatches)
 
-	return &analysis, totalRunTime, nil
+	return analysis, totalRunTime, nil
 }
 
 // Store stats on how long the pairwise anslysis took.

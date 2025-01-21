@@ -10,6 +10,14 @@ import (
 
 const EPSILON = 1e-5
 
+type AggregateValues struct {
+	Count  int     `json:"count"`
+	Mean   float64 `json:"mean"`
+	Median float64 `json:"median"`
+	Min    float64 `json:"min"`
+	Max    float64 `json:"max"`
+}
+
 func IsClose(a float64, b float64) bool {
 	return math.Abs(a-b) < EPSILON
 }
@@ -61,7 +69,6 @@ func MinMax(values []float64) (float64, float64) {
 	return min, max
 }
 
-// Will sort the input slice.
 func Median(values []float64) float64 {
 	slices.Sort(values)
 
@@ -73,6 +80,48 @@ func Median(values []float64) float64 {
 	} else {
 		return values[length/2]
 	}
+}
+
+// Input values will be sorted (in place).
+func ComputeAggregates(values []float64) AggregateValues {
+	if (values == nil) || (len(values) == 0) {
+		return AggregateValues{}
+	}
+
+	median := Median(values)
+	min := 0.0
+	max := 0.0
+	mean := 0.0
+
+	for i, value := range values {
+		if (i == 0) || (value < min) {
+			min = value
+		}
+
+		if (i == 0) || (value > max) {
+			max = value
+		}
+
+		mean += value
+	}
+
+	mean /= float64(len(values))
+
+	return AggregateValues{
+		Count:  len(values),
+		Mean:   mean,
+		Median: median,
+		Min:    min,
+		Max:    max,
+	}
+}
+
+func (this AggregateValues) Equals(other AggregateValues) bool {
+	return ((this.Count == other.Count) &&
+		IsClose(this.Mean, other.Mean) &&
+		IsClose(this.Median, other.Median) &&
+		IsClose(this.Min, other.Min) &&
+		IsClose(this.Max, other.Max))
 }
 
 // Round a float to |precision| number of decimal places,

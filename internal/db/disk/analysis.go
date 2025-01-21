@@ -9,19 +9,19 @@ import (
 
 const DISK_DB_ANALYSIS_PAIRWISE_FILENAME = "analysis-pairwise.jsonl"
 
-func (this *backend) GetPairwiseAnalysis(keys []model.PairwiseKey) (map[model.PairwiseKey]*model.PairWiseAnalysis, error) {
+func (this *backend) GetPairwiseAnalysis(keys []model.PairwiseKey) (map[model.PairwiseKey]*model.PairwiseAnalysis, error) {
 	this.analysisPairwiseLock.RLock()
 	defer this.analysisPairwiseLock.RUnlock()
 
 	// Build a lookup that we will also use for storage.
-	results := make(map[model.PairwiseKey]*model.PairWiseAnalysis, len(keys))
+	results := make(map[model.PairwiseKey]*model.PairwiseAnalysis, len(keys))
 	for _, key := range keys {
 		results[key] = nil
 	}
 
 	path := this.getAnalysisPairwisePath()
 
-	err := util.ApplyJSONLFile(path, model.PairWiseAnalysis{}, func(index int, record *model.PairWiseAnalysis) {
+	err := util.ApplyJSONLFile(path, model.PairwiseAnalysis{}, func(index int, record *model.PairwiseAnalysis) {
 		_, ok := results[record.SubmissionIDs]
 		if ok {
 			results[record.SubmissionIDs] = record
@@ -38,7 +38,7 @@ func (this *backend) GetPairwiseAnalysis(keys []model.PairwiseKey) (map[model.Pa
 	return results, err
 }
 
-func (this *backend) StorePairwiseAnalysis(records []*model.PairWiseAnalysis) error {
+func (this *backend) StorePairwiseAnalysis(records []*model.PairwiseAnalysis) error {
 	this.analysisPairwiseLock.Lock()
 	defer this.analysisPairwiseLock.Unlock()
 

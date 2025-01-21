@@ -4,6 +4,7 @@ package submissions
 
 import (
 	"github.com/edulinq/autograder/internal/api/core"
+	"github.com/edulinq/autograder/internal/api/courses/assignments/submissions/analysis"
 	"github.com/edulinq/autograder/internal/api/courses/assignments/submissions/fetch"
 )
 
@@ -16,6 +17,7 @@ func GetRoutes() *[]core.Route {
 	routes := make([]core.Route, 0)
 
 	routes = append(routes, baseRoutes...)
+	routes = append(routes, *(analysis.GetRoutes())...)
 	routes = append(routes, *(fetch.GetRoutes())...)
 
 	return &routes
