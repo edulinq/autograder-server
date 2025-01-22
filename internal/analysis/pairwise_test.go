@@ -60,7 +60,7 @@ func TestPairwiseAnalysisDefaultEngines(test *testing.T) {
 		},
 	}
 
-	results, pendingCount, err := PairwiseAnalysis(ids, true)
+	results, pendingCount, err := PairwiseAnalysis(ids, true, "course-admin@test.edulinq.org")
 	if err != nil {
 		test.Fatalf("Failed to do pairwise analysis: '%v'.", err)
 	}
@@ -204,6 +204,7 @@ func TestPairwiseAnalysisFake(test *testing.T) {
 			Type:         stats.CourseMetricTypeCodeAnalysisTime,
 			CourseID:     "course101",
 			AssignmentID: "hw0",
+			UserEmail:    "server-admin@test.edulinq.org",
 			Value:        3, // 1 for each run of the fake engine.
 		},
 	}
@@ -235,7 +236,7 @@ func testPairwise(test *testing.T, ids []string, expected []*model.PairwiseAnaly
 		test.Fatalf("Number of (pre) cached anslysis results not as expected. Expected: %d, Actual: %d.", expectedInitialCacheCount, len(queryResult))
 	}
 
-	results, pendingCount, err := PairwiseAnalysis(ids, true)
+	results, pendingCount, err := PairwiseAnalysis(ids, true, "server-admin@test.edulinq.org")
 	if err != nil {
 		test.Fatalf("Failed to do pairwise analysis: '%v'.", err)
 	}

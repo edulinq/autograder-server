@@ -42,7 +42,7 @@ func HandlePairwise(request *PairwiseRequest) (*PairwiseResponse, *core.APIError
 			"User does not have permissions (server admin or course admin in all present courses.")
 	}
 
-	results, pendingCount, err := analysis.PairwiseAnalysis(fullSubmissionIDs, request.WaitForCompletion)
+	results, pendingCount, err := analysis.PairwiseAnalysis(fullSubmissionIDs, request.WaitForCompletion, request.ServerUser.Email)
 	if err != nil {
 		return nil, core.NewUserContextInternalError("-622", &request.APIRequestUserContext, "Failed to perform pairwise analysis.").
 			Err(err)

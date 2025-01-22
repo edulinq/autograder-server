@@ -31,6 +31,7 @@ var similarityEngines []core.SimilarityEngine = []core.SimilarityEngine{
 // The LHS's course will be used for contextual locking,
 // so only one instance of analysis can be performed at the same time for each (course, tool) pair.
 // All courses present in the analysis will have runtime stats logged for it.
+// The passed in email should be the user that requested this analysis, stats will be logged with that email.
 // Results will be saved to the database for use in future calls.
 // If only some results are cached,
 // then those will be fetched from the database while the rest are computed.
@@ -38,7 +39,7 @@ var similarityEngines []core.SimilarityEngine = []core.SimilarityEngine{
 // Otherwise, this function will return any cached results from the database
 // and the remaining analysis will be done asynchronously.
 // Returns: (complete results, number of pending analysis runs, error)
-func PairwiseAnalysis(fullSubmissionIDs []string, blockForResults bool) ([]*model.PairwiseAnalysis, int, error) {
+func PairwiseAnalysis(fullSubmissionIDs []string, blockForResults bool, initiatorEmail string) ([]*model.PairwiseAnalysis, int, error) {
 	err := checkEngines()
 	if err != nil {
 		return nil, 0, err
@@ -50,7 +51,7 @@ func PairwiseAnalysis(fullSubmissionIDs []string, blockForResults bool) ([]*mode
 	}
 
 	if blockForResults {
-		results, err := runPairwiseAnalysis(remainingKeys)
+		results, err := runPairwiseAnalysis(remainingKeys, initiatorEmail)
 		if err != nil {
 			return nil, 0, err
 		}
@@ -59,7 +60,7 @@ func PairwiseAnalysis(fullSubmissionIDs []string, blockForResults bool) ([]*mode
 		remainingKeys = nil
 	} else {
 		go func() {
-			_, err := runPairwiseAnalysis(remainingKeys)
+			_, err := runPairwiseAnalysis(remainingKeys, initiatorEmail)
 			if err != nil {
 				log.Error("Failure during asynchronous pairwise analysis.", err)
 			}
@@ -107,7 +108,7 @@ func getCachedResults(fullSubmissionIDs []string) ([]*model.PairwiseAnalysis, []
 	return completeAnalysis, remainingKeys, nil
 }
 
-func runPairwiseAnalysis(keys []model.PairwiseKey) ([]*model.PairwiseAnalysis, error) {
+func runPairwiseAnalysis(keys []model.PairwiseKey, initiatorEmail string) ([]*model.PairwiseAnalysis, error) {
 	results := make([]*model.PairwiseAnalysis, 0, len(keys))
 	var errs error = nil
 	totalRunTime := int64(0)
@@ -122,7 +123,7 @@ func runPairwiseAnalysis(keys []model.PairwiseKey) ([]*model.PairwiseAnalysis, e
 		}
 	}
 
-	collectStats(keys, totalRunTime)
+	collectStats(keys, totalRunTime, initiatorEmail)
 
 	return results, errs
 }
@@ -342,7 +343,11 @@ func computeFileSims(inputDirs [2]string, lockID string) (map[string][]*model.Fi
 // All represented courses will get the same time logged.
 // If only one assignment is present for a course it will be used in the metric,
 // otherwise no assignment will be used.
-func collectStats(keys []model.PairwiseKey, totalRunTime int64) {
+func collectStats(keys []model.PairwiseKey, totalRunTime int64, initiatorEmail string) {
+	if totalRunTime <= 0 {
+		return
+	}
+
 	// {course: assignment, ...}
 	seenIdentifiers := make(map[string]string)
 
@@ -384,6 +389,7 @@ func collectStats(keys []model.PairwiseKey, totalRunTime int64) {
 			Type:         stats.CourseMetricTypeCodeAnalysisTime,
 			CourseID:     courseID,
 			AssignmentID: assignmentID,
+			UserEmail:    initiatorEmail,
 			Value:        uint64(totalRunTime),
 		}
 
