@@ -10,6 +10,7 @@ import (
 
 	"github.com/edulinq/autograder/internal/analysis/core"
 	"github.com/edulinq/autograder/internal/analysis/dolos"
+	"github.com/edulinq/autograder/internal/analysis/jplag"
 	"github.com/edulinq/autograder/internal/common"
 	"github.com/edulinq/autograder/internal/db"
 	"github.com/edulinq/autograder/internal/log"
@@ -21,6 +22,7 @@ import (
 
 var similarityEngines []core.SimilarityEngine = []core.SimilarityEngine{
 	dolos.GetEngine(),
+	jplag.GetEngine(),
 }
 
 // Perform a pairwise analysis on a list of full submission IDs.
@@ -183,6 +185,9 @@ func computeSinglePairwiseAnalysis(pairwiseKey model.PairwiseKey) (*model.Pairwi
 	}
 
 	fileSimilarities, unmatches, totalRunTime, err := computeFileSims(submissionDirs, lockCourseID)
+	if err != nil {
+		return nil, 0, fmt.Errorf("Failed to compute similarities for %v: '%w'.", pairwiseKey, err)
+	}
 
 	analysis := model.NewPairwiseAnalysis(pairwiseKey, fileSimilarities, unmatches)
 
@@ -277,7 +282,7 @@ func computeFileSims(inputDirs [2]string, lockID string) (map[string][]*model.Fi
 			filepath.Join(inputDirs[1], relpath),
 		}
 
-		similarities[relpath] = make([]*model.FileSimilarity, len(similarityEngines))
+		tempSimilarities := make([]*model.FileSimilarity, len(similarityEngines))
 		runTimes := make([]int64, len(similarityEngines))
 		errs := make([]error, len(similarityEngines))
 
@@ -296,7 +301,7 @@ func computeFileSims(inputDirs [2]string, lockID string) (map[string][]*model.Fi
 				} else {
 					similarity.OriginalFilename = renames[relpath]
 
-					similarities[relpath][index] = similarity
+					tempSimilarities[index] = similarity
 					runTimes[index] = runTime
 				}
 			}(i, engine)
@@ -305,10 +310,23 @@ func computeFileSims(inputDirs [2]string, lockID string) (map[string][]*model.Fi
 		// Wait for all engines to complete.
 		engineWaitGroup.Wait()
 
+		// Collect all the similarities.
+		similarities[relpath] = make([]*model.FileSimilarity, 0, len(similarityEngines))
+		for _, similarity := range tempSimilarities {
+			if similarity != nil {
+				similarities[relpath] = append(similarities[relpath], similarity)
+			}
+		}
+
 		// Check for errors from the children.
 		err := errors.Join(errs...)
 		if err != nil {
-			return nil, nil, 0, err
+			// If at least one engine worked, don't error out, just log.
+			if len(similarities[relpath]) > 0 {
+				log.Warn("Not all engines successfully computed similarity. Some engines did complete successfully.", err)
+			} else {
+				return nil, nil, 0, err
+			}
 		}
 
 		// Sum the run times.
@@ -320,7 +338,7 @@ func computeFileSims(inputDirs [2]string, lockID string) (map[string][]*model.Fi
 	return similarities, unmatches, totalRunTime, nil
 }
 
-// Store stats on how long the pairwise anslysis took.
+// Store stats on how long the pairwise analysis took.
 // All represented courses will get the same time logged.
 // If only one assignment is present for a course it will be used in the metric,
 // otherwise no assignment will be used.

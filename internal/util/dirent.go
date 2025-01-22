@@ -1,8 +1,10 @@
 package util
 
 import (
+	"errors"
 	"fmt"
 	"io"
+	"io/fs"
 	"os"
 	"path/filepath"
 )
@@ -158,4 +160,38 @@ func CopyDirContents(source string, dest string) error {
 	}
 
 	return nil
+}
+
+// Recursivly changes the mode of any files and dirs.
+func RecursiveChmod(basePath string, fileMode os.FileMode, dirMode os.FileMode) error {
+	basePath = ShouldAbs(basePath)
+
+	if IsFile(basePath) {
+		err := os.Chmod(basePath, fileMode)
+		if err != nil {
+			return fmt.Errorf("Failed to change mode of '%s': '%w'.", basePath, err)
+		}
+	}
+
+	var errs error
+	err := filepath.WalkDir(basePath, func(path string, dirent fs.DirEntry, err error) error {
+		if err != nil {
+			errs = errors.Join(errs, err)
+			return nil
+		}
+
+		mode := fileMode
+		if dirent.IsDir() {
+			mode = dirMode
+		}
+
+		err = os.Chmod(path, mode)
+		if err != nil {
+			errs = errors.Join(errs, fmt.Errorf("Failed to change mode of '%s': '%w'.", path, err))
+		}
+
+		return nil
+	})
+
+	return errors.Join(errs, err)
 }

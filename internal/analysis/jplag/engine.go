@@ -1,4 +1,4 @@
-package dolos
+package jplag
 
 import (
 	"context"
@@ -16,14 +16,16 @@ import (
 )
 
 const (
-	NAME         = "dolos"
-	VERSION      = "2.9.0"
-	DOCKER_IMAGE = "ghcr.io/dodona-edu/dolos-cli"
+	NAME         = "jplag"
+	VERSION      = "5.1.0.2"
+	DOCKER_IMAGE = "ghcr.io/edulinq/jplag-docker"
 
 	MAX_RUNTIME_SECS = 2 * 60
 
 	OUT_DIRNAME  = "out"
-	OUT_FILENAME = "pairs.csv"
+	OUT_FILENAME = "results.csv"
+
+	DEFAULT_MIN_TOKENS = 12
 )
 
 var (
@@ -31,42 +33,52 @@ var (
 	imageLock sync.Mutex
 )
 
-type dolosEngine struct{}
-
-func GetEngine() *dolosEngine {
-	return &dolosEngine{}
+type JPlagEngine struct {
+	MinTokens int
 }
 
-func (this *dolosEngine) GetName() string {
+func GetEngine() *JPlagEngine {
+	return &JPlagEngine{
+		MinTokens: DEFAULT_MIN_TOKENS,
+	}
+}
+
+func (this *JPlagEngine) GetName() string {
 	return NAME
 }
 
-func (this *dolosEngine) IsAvailable() bool {
+func (this *JPlagEngine) IsAvailable() bool {
 	return docker.CanAccessDocker()
 }
 
-func (this *dolosEngine) ComputeFileSimilarity(paths [2]string, baseLockKey string) (*model.FileSimilarity, int64, error) {
-	lockKey := fmt.Sprintf("dolos-%s", baseLockKey)
+func (this *JPlagEngine) ComputeFileSimilarity(paths [2]string, baseLockKey string) (*model.FileSimilarity, int64, error) {
+	lockKey := fmt.Sprintf("jplag-%s", baseLockKey)
 	common.Lock(lockKey)
 	defer common.Unlock(lockKey)
 
 	err := ensureImage()
 	if err != nil {
-		return nil, 0, fmt.Errorf("Failed to ensure Dolos docker image exists: '%w'.", err)
+		return nil, 0, fmt.Errorf("Failed to ensure JPlag docker image exists: '%w'.", err)
 	}
 
 	startTime := timestamp.Now()
 
-	tempDir, err := util.MkDirTemp("dolos-")
+	tempDir, err := util.MkDirTemp("jplag-")
 	if err != nil {
 		return nil, 0, fmt.Errorf("Failed to create temp dir: '%w'.", err)
 	}
 	defer util.RemoveDirent(tempDir)
 
+	srcDir := filepath.Join(tempDir, "src")
+	err = util.MkDir(srcDir)
+	if err != nil {
+		return nil, 0, fmt.Errorf("Failed to create temp src dir: '%w'.", err)
+	}
+
 	tempFilenames := make([]string, 0, 2)
 	for i, path := range paths {
 		tempFilename := fmt.Sprintf("%d%s", i, filepath.Ext(path))
-		tempPath := filepath.Join(tempDir, tempFilename)
+		tempPath := filepath.Join(srcDir, tempFilename)
 		err = util.CopyFile(path, tempPath)
 		if err != nil {
 			return nil, 0, fmt.Errorf("Failed to copy file to temp dir: '%w'.", err)
@@ -84,28 +96,28 @@ func (this *dolosEngine) ComputeFileSimilarity(paths [2]string, baseLockKey stri
 	mounts := []docker.MountInfo{
 		docker.MountInfo{
 			Source:   tempDir,
-			Target:   "/dolos",
+			Target:   "/jplag",
 			ReadOnly: false,
 		},
 	}
 
 	arguments := []string{
-		"run",
-		"--output-format", "csv",
-		tempFilenames[0],
-		tempFilenames[1],
-		"--output-destination", OUT_DIRNAME,
+		"--mode", "RUN",
+		"--csv-export",
+		"--language", getLanguage(tempFilenames[0]),
+		"--min-tokens", fmt.Sprintf("%d", this.MinTokens),
+		"/jplag/src",
 	}
 
 	stdout, stderr, _, _, err := docker.RunContainer(context.Background(), this, getImageName(), mounts, arguments, NAME, MAX_RUNTIME_SECS)
 	if err != nil {
-		log.Debug("Failed to run Dolos container.", err, log.NewAttr("stdout", stdout), log.NewAttr("stderr", stderr))
-		return nil, 0, fmt.Errorf("Failed to run Dolos container: '%w'.", err)
+		log.Debug("Failed to run JPlag container.", err, log.NewAttr("stdout", stdout), log.NewAttr("stderr", stderr))
+		return nil, 0, fmt.Errorf("Failed to run JPlag container: '%w'.", err)
 	}
 
 	score, err := fetchResults(tempDir)
 	if err != nil {
-		return nil, 0, fmt.Errorf("Failed to read output from Dolos: '%w'.", err)
+		return nil, 0, fmt.Errorf("Failed to read output from JPlag: '%w'.", err)
 	}
 
 	result := model.FileSimilarity{
@@ -135,12 +147,12 @@ func ensureImage() error {
 func fetchResults(tempDir string) (float64, error) {
 	path := filepath.Join(tempDir, OUT_DIRNAME, OUT_FILENAME)
 	if !util.PathExists(path) {
-		return 0.0, fmt.Errorf("Dolos output file does not exist: '%s'.", path)
+		return 0.0, fmt.Errorf("JPlag output file does not exist: '%s'.", path)
 	}
 
 	rows, err := util.ReadSeparatedFile(path, ",", 1)
 	if err != nil {
-		return 0.0, fmt.Errorf("Failed to read Dolos output file: '%w'.", err)
+		return 0.0, fmt.Errorf("Failed to read JPlag output file: '%w'.", err)
 	}
 
 	numRows := len(rows)
@@ -149,20 +161,20 @@ func fetchResults(tempDir string) (float64, error) {
 		numCols = len(rows[0])
 	}
 
-	if (numRows != 1) || (numCols != 10) {
-		return 0.0, fmt.Errorf("Shape of Dolos output is not correct. Expected (1 x 10), found (%d x %d).", numRows, numCols)
+	if (numRows != 1) || (numCols != 4) {
+		return 0.0, fmt.Errorf("Shape of JPlag output is not correct. Expected (1 x 4), found (%d x %d).", numRows, numCols)
 	}
 
-	valueString := rows[0][5]
+	valueString := rows[0][2]
 	value, err := strconv.ParseFloat(valueString, 64)
 	if err != nil {
-		return 0.0, fmt.Errorf("Failed to parse Dolos similarity value to a float '%s': '%w'.", valueString, err)
+		return 0.0, fmt.Errorf("Failed to parse JPlag similarity value to a float '%s': '%w'.", valueString, err)
 	}
 
 	return value, nil
 }
 
-func (this *dolosEngine) LogValue() []*log.Attr {
+func (this *JPlagEngine) LogValue() []*log.Attr {
 	return []*log.Attr{
 		log.NewAttr("similarity-engine", NAME),
 		log.NewAttr("version", VERSION),

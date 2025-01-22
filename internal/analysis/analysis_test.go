@@ -5,7 +5,8 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/edulinq/autograder/internal/config"
+	"github.com/edulinq/autograder/internal/analysis/dolos"
+	"github.com/edulinq/autograder/internal/analysis/jplag"
 	"github.com/edulinq/autograder/internal/db"
 	"github.com/edulinq/autograder/internal/docker"
 	"github.com/edulinq/autograder/internal/model"
@@ -15,15 +16,13 @@ import (
 )
 
 func TestPairwiseAnalysisDefaultEngines(test *testing.T) {
-	// The Dolos container has some strange permission issues when run on Github Actions.
-	if config.GITHUB_CI.Get() {
-		test.Skip("Skipping on Github Actions.")
-	}
-
 	docker.EnsureOrSkipForTest(test)
 
 	db.ResetForTesting()
 	defer db.ResetForTesting()
+
+	// Override a setting for JPlag for testing.
+	similarityEngines[1].(*jplag.JPlagEngine).MinTokens = 5
 
 	ids := []string{
 		"course101::hw0::course-student@test.edulinq.org::1697406265",
@@ -41,8 +40,14 @@ func TestPairwiseAnalysisDefaultEngines(test *testing.T) {
 				"submission.py": []*model.FileSimilarity{
 					&model.FileSimilarity{
 						Filename: "submission.py",
-						Tool:     "dolos",
-						Version:  "2.9.0",
+						Tool:     dolos.NAME,
+						Version:  dolos.VERSION,
+						Score:    0,
+					},
+					&model.FileSimilarity{
+						Filename: "submission.py",
+						Tool:     jplag.NAME,
+						Version:  jplag.VERSION,
 						Score:    0,
 					},
 				},
@@ -55,13 +60,13 @@ func TestPairwiseAnalysisDefaultEngines(test *testing.T) {
 		},
 	}
 
-	results, cachedCount, err := PairwiseAnalysis(ids, true)
+	results, pendingCount, err := PairwiseAnalysis(ids, true)
 	if err != nil {
 		test.Fatalf("Failed to do pairwise analysis: '%v'.", err)
 	}
 
-	if cachedCount != 0 {
-		test.Fatalf("Found %d cached results, when 0 were expected.", cachedCount)
+	if pendingCount != 0 {
+		test.Fatalf("Found %d pending results, when 0 were expected.", pendingCount)
 	}
 
 	for _, result := range results {
@@ -230,13 +235,13 @@ func testPairwise(test *testing.T, ids []string, expected []*model.PairwiseAnaly
 		test.Fatalf("Number of (pre) cached anslysis results not as expected. Expected: %d, Actual: %d.", expectedInitialCacheCount, len(queryResult))
 	}
 
-	results, cachedCount, err := PairwiseAnalysis(ids, true)
+	results, pendingCount, err := PairwiseAnalysis(ids, true)
 	if err != nil {
 		test.Fatalf("Failed to do pairwise analysis: '%v'.", err)
 	}
 
-	if cachedCount != 0 {
-		test.Fatalf("Found %d cached results, when 0 were expected.", cachedCount)
+	if pendingCount != 0 {
+		test.Fatalf("Found %d pending results, when 0 were expected.", pendingCount)
 	}
 
 	// Zero out the timestamps.
