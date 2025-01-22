@@ -5,18 +5,12 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/edulinq/autograder/internal/config"
 	"github.com/edulinq/autograder/internal/docker"
 	"github.com/edulinq/autograder/internal/model"
 	"github.com/edulinq/autograder/internal/util"
 )
 
 func TestDolosComputeFileSimilarityBase(test *testing.T) {
-	// The Dolos container has some strange permission issues when run on Github Actions.
-	if config.GITHUB_CI.Get() {
-		test.Skip("Skipping on Github Actions.")
-	}
-
 	docker.EnsureOrSkipForTest(test)
 
 	engine := GetEngine()

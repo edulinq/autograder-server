@@ -3,6 +3,7 @@ package dolos
 import (
 	"context"
 	"fmt"
+	"os"
 	"path/filepath"
 	"strconv"
 	"sync"
@@ -63,6 +64,12 @@ func (this *dolosEngine) ComputeFileSimilarity(paths [2]string, baseLockKey stri
 	}
 	defer util.RemoveDirent(tempDir)
 
+	// Ensure permissions are very open because UID/GID will not be properly aligned.
+	err = os.Chmod(tempDir, 0777)
+	if err != nil {
+		return nil, 0, fmt.Errorf("Failed to set permissions for temp dir: '%w'.", err)
+	}
+
 	tempFilenames := make([]string, 0, 2)
 
 	for i, path := range paths {
@@ -71,6 +78,11 @@ func (this *dolosEngine) ComputeFileSimilarity(paths [2]string, baseLockKey stri
 		err = util.CopyFile(path, tempPath)
 		if err != nil {
 			return nil, 0, fmt.Errorf("Failed to copy file to temp dir: '%w'.", err)
+		}
+
+		err = os.Chmod(tempPath, 0666)
+		if err != nil {
+			return nil, 0, fmt.Errorf("Failed to set permissions for source file: '%w'.", err)
 		}
 
 		tempFilenames = append(tempFilenames, tempFilename)
