@@ -14,8 +14,6 @@ import (
 	"github.com/edulinq/autograder/internal/util"
 )
 
-const MSECS_PER_HOUR float64 = float64(1000.0 * 60.0 * 60.0)
-
 func IndividualAnalysis(fullSubmissionIDs []string, blockForResults bool, initiatorEmail string) ([]*model.IndividualAnalysis, int, error) {
 	completeAnalysis, remainingIDs, err := getCachedIndividualResults(fullSubmissionIDs)
 	if err != nil {
@@ -183,8 +181,7 @@ func computeDelta(analysis *model.IndividualAnalysis, assignment *model.Assignme
 		return fmt.Errorf("Failed to analyze previous submission for delta computation: '%w'.", err)
 	}
 
-	timeDeltaMSecs := float64((analysis.SubmissionStartTime - previousAnalysis.SubmissionStartTime).ToMSecs())
-	timeDeltaHours := timeDeltaMSecs / MSECS_PER_HOUR
+	timeDeltaHours := float64((analysis.SubmissionStartTime - previousAnalysis.SubmissionStartTime).ToHours())
 
 	analysis.LinesOfCodeDelta = (analysis.LinesOfCode - previousAnalysis.LinesOfCode)
 	analysis.ScoreDelta = (analysis.Score - previousAnalysis.Score)
