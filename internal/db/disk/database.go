@@ -24,11 +24,12 @@ type backend struct {
 	contextualLock sync.RWMutex
 
 	// Specific locks.
-	logLock              sync.RWMutex
-	userLock             sync.RWMutex
-	statsLock            sync.RWMutex
-	tasksLock            sync.RWMutex
-	analysisPairwiseLock sync.RWMutex
+	logLock                sync.RWMutex
+	userLock               sync.RWMutex
+	statsLock              sync.RWMutex
+	tasksLock              sync.RWMutex
+	analysisIndividualLock sync.RWMutex
+	analysisPairwiseLock   sync.RWMutex
 }
 
 func Open() (*backend, error) {
@@ -93,6 +94,9 @@ func (this *backend) Clear() error {
 
 	this.tasksLock.Lock()
 	defer this.tasksLock.Unlock()
+
+	this.analysisIndividualLock.Lock()
+	defer this.analysisIndividualLock.Unlock()
 
 	this.analysisPairwiseLock.Lock()
 	defer this.analysisPairwiseLock.Unlock()

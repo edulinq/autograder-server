@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"path/filepath"
 	"slices"
-	"strings"
 	"sync"
 
 	"github.com/edulinq/autograder/internal/analysis/core"
@@ -15,8 +14,6 @@ import (
 	"github.com/edulinq/autograder/internal/db"
 	"github.com/edulinq/autograder/internal/log"
 	"github.com/edulinq/autograder/internal/model"
-	"github.com/edulinq/autograder/internal/stats"
-	"github.com/edulinq/autograder/internal/timestamp"
 	"github.com/edulinq/autograder/internal/util"
 )
 
@@ -45,7 +42,7 @@ func PairwiseAnalysis(fullSubmissionIDs []string, blockForResults bool, initiato
 		return nil, 0, err
 	}
 
-	completeAnalysis, remainingKeys, err := getCachedResults(fullSubmissionIDs)
+	completeAnalysis, remainingKeys, err := getCachedPairwiseResults(fullSubmissionIDs)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -70,7 +67,7 @@ func PairwiseAnalysis(fullSubmissionIDs []string, blockForResults bool, initiato
 	return completeAnalysis, len(remainingKeys), nil
 }
 
-func getCachedResults(fullSubmissionIDs []string) ([]*model.PairwiseAnalysis, []model.PairwiseKey, error) {
+func getCachedPairwiseResults(fullSubmissionIDs []string) ([]*model.PairwiseAnalysis, []model.PairwiseKey, error) {
 	// Sort the ids so the result will be consistently ordered.
 	fullSubmissionIDs = slices.Clone(fullSubmissionIDs)
 	slices.Sort(fullSubmissionIDs)
@@ -123,7 +120,7 @@ func runPairwiseAnalysis(keys []model.PairwiseKey, initiatorEmail string) ([]*mo
 		}
 	}
 
-	collectStats(keys, totalRunTime, initiatorEmail)
+	collectPairwiseStats(keys, totalRunTime, initiatorEmail)
 
 	return results, errs
 }
@@ -173,13 +170,13 @@ func computeSinglePairwiseAnalysis(pairwiseKey model.PairwiseKey) (*model.Pairwi
 	for i, fullSubmissionID := range pairwiseKey {
 		submissionDir := filepath.Join(tempDir, fullSubmissionID)
 
-		courseID, err := fetchSubmission(fullSubmissionID, submissionDir)
+		gradingResult, _, err := fetchSubmission(fullSubmissionID, submissionDir)
 		if err != nil {
 			return nil, 0, err
 		}
 
 		if lockCourseID == "" {
-			lockCourseID = courseID
+			lockCourseID = gradingResult.Info.CourseID
 		}
 
 		submissionDirs[i] = submissionDir
@@ -193,63 +190,6 @@ func computeSinglePairwiseAnalysis(pairwiseKey model.PairwiseKey) (*model.Pairwi
 	analysis := model.NewPairwiseAnalysis(pairwiseKey, fileSimilarities, unmatches)
 
 	return analysis, totalRunTime, nil
-}
-
-// Prepare any source files in a direcory for analysis.
-// The source files may be changed or moved.
-// If a file is moved, then the first return (renames) will map the new relpath to the old relpath.
-func prepSourceFiles(inputDir string) (map[string]string, error) {
-	inputDir = util.ShouldAbs(inputDir)
-
-	renames := make(map[string]string, 0)
-
-	relpaths, err := util.GetAllRelativeFiles(inputDir)
-	if err != nil {
-		return nil, fmt.Errorf("Failed to get files from dir: '%w'.", err)
-	}
-
-	for _, relpath := range relpaths {
-		newPath, err := prepSourceFile(filepath.Join(inputDir, relpath))
-		if err != nil {
-			return nil, fmt.Errorf("Failed to prepare source file '%s': '%w'.", relpath, err)
-		}
-
-		if newPath != "" {
-			newRelpath := util.RelPath(newPath, inputDir)
-			renames[newRelpath] = relpath
-		}
-	}
-
-	return renames, nil
-}
-
-func prepSourceFile(path string) (string, error) {
-	ext := filepath.Ext(path)
-	if ext == ".ipynb" {
-		newPath := strings.TrimSuffix(path, ".ipynb") + ".py"
-		for util.PathExists(newPath) {
-			newPath = "_" + newPath
-		}
-
-		code, err := util.ExtractPythonCodeFromNotebookFile(path)
-		if err != nil {
-			return "", fmt.Errorf("Unable to extract Python notebook code: '%w'.", err)
-		}
-
-		err = util.WriteFile(code, newPath)
-		if err != nil {
-			return "", fmt.Errorf("Unable to write new Python file from Python notebook source: '%w'.", err)
-		}
-
-		err = util.RemoveDirent(path)
-		if err != nil {
-			return "", fmt.Errorf("Unable to remove old Python notebook file: '%w'.", err)
-		}
-
-		return newPath, nil
-	}
-
-	return "", nil
 }
 
 func computeFileSims(inputDirs [2]string, lockID string) (map[string][]*model.FileSimilarity, [][2]string, int64, error) {
@@ -339,88 +279,6 @@ func computeFileSims(inputDirs [2]string, lockID string) (map[string][]*model.Fi
 	return similarities, unmatches, totalRunTime, nil
 }
 
-// Store stats on how long the pairwise analysis took.
-// All represented courses will get the same time logged.
-// If only one assignment is present for a course it will be used in the metric,
-// otherwise no assignment will be used.
-func collectStats(keys []model.PairwiseKey, totalRunTime int64, initiatorEmail string) {
-	if totalRunTime <= 0 {
-		return
-	}
-
-	// {course: assignment, ...}
-	seenIdentifiers := make(map[string]string)
-
-	for _, keyPair := range keys {
-		for _, key := range keyPair {
-			courseID, assignmentID, _, _, err := common.SplitFullSubmissionID(key)
-			if err != nil {
-				continue
-			}
-
-			assignment, ok := seenIdentifiers[courseID]
-			if !ok {
-				// This course has not been seen, enter it with the current assignment.
-				seenIdentifiers[courseID] = assignmentID
-			} else if assignmentID != assignment {
-				// This course has been seen before, and has a different assignment.
-				// Zero out the assignment (as there is more than one in the keys).
-				// With a zero value, it will never match another real assignment.
-				seenIdentifiers[courseID] = ""
-			}
-		}
-	}
-
-	if len(seenIdentifiers) == 0 {
-		log.Error("Could not find identifiers for stat collection of pairwise analysis.", log.NewAttr("keys", keys))
-		return
-	}
-
-	now := timestamp.Now()
-
-	for courseID, assignmentID := range seenIdentifiers {
-		metric := stats.CourseMetric{
-			BaseMetric: stats.BaseMetric{
-				Timestamp: now,
-				Attributes: map[string]any{
-					"anslysis-type": "pairwise",
-				},
-			},
-			Type:         stats.CourseMetricTypeCodeAnalysisTime,
-			CourseID:     courseID,
-			AssignmentID: assignmentID,
-			UserEmail:    initiatorEmail,
-			Value:        uint64(totalRunTime),
-		}
-
-		stats.AsyncStoreCourseMetric(&metric)
-	}
-}
-
-func fetchSubmission(fullID string, baseDir string) (string, error) {
-	courseID, assignmentID, userEmail, shortID, err := common.SplitFullSubmissionID(fullID)
-	if err != nil {
-		return "", err
-	}
-
-	assignment, err := db.GetAssignment(courseID, assignmentID)
-	if err != nil {
-		return "", fmt.Errorf("Failed to fetch assignment %s.%s: '%w'.", courseID, assignmentID, err)
-	}
-
-	gradingResult, err := db.GetSubmissionContents(assignment, userEmail, shortID)
-	if err != nil {
-		return "", fmt.Errorf("Failed to fetch submission contents for '%s': '%w'.", fullID, err)
-	}
-
-	err = util.GzipBytesToDirectory(baseDir, gradingResult.InputFilesGZip)
-	if err != nil {
-		return "", fmt.Errorf("Failed to write submission input to temp dir: '%w'.", err)
-	}
-
-	return courseID, nil
-}
-
 func checkEngines() error {
 	available := false
 	for _, engine := range similarityEngines {
@@ -432,4 +290,15 @@ func checkEngines() error {
 	}
 
 	return nil
+}
+
+func collectPairwiseStats(keys []model.PairwiseKey, totalRunTime int64, initiatorEmail string) {
+	fullSubmissionIDs := make([]string, 0, len(keys)*2)
+	for _, keyPair := range keys {
+		for _, key := range keyPair {
+			fullSubmissionIDs = append(fullSubmissionIDs, key)
+		}
+	}
+
+	collectAnalysisStats(fullSubmissionIDs, totalRunTime, initiatorEmail, "pairwise")
 }

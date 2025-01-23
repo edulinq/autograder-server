@@ -8,6 +8,69 @@ import (
 	"github.com/edulinq/autograder/internal/timestamp"
 )
 
+func (this *DBTests) DBTestGetIndividualAnalysisBase(test *testing.T) {
+	ResetForTesting()
+	defer ResetForTesting()
+
+	err := StoreIndividualAnalysis(testIndividualRecords)
+	if err != nil {
+		test.Fatalf("Failed to store initial records: '%v'.", err)
+	}
+
+	testCases := []struct {
+		fullSubmissionIDs []string
+		expected          map[string]*model.IndividualAnalysis
+	}{
+		{
+			[]string{},
+			map[string]*model.IndividualAnalysis{},
+		},
+		{
+			[]string{"A"},
+			map[string]*model.IndividualAnalysis{},
+		},
+		{
+			[]string{testIndividualRecords[0].FullID},
+			map[string]*model.IndividualAnalysis{
+				testIndividualRecords[0].FullID: testIndividualRecords[0],
+			},
+		},
+		{
+			[]string{
+				testIndividualRecords[0].FullID,
+				"A",
+			},
+			map[string]*model.IndividualAnalysis{
+				testIndividualRecords[0].FullID: testIndividualRecords[0],
+			},
+		},
+		{
+			[]string{
+				testIndividualRecords[0].FullID,
+				testIndividualRecords[2].FullID,
+			},
+			map[string]*model.IndividualAnalysis{
+				testIndividualRecords[0].FullID: testIndividualRecords[0],
+				testIndividualRecords[2].FullID: testIndividualRecords[2],
+			},
+		},
+	}
+
+	for i, testCase := range testCases {
+		results, err := GetIndividualAnalysis(testCase.fullSubmissionIDs)
+		if err != nil {
+			test.Errorf("Case %d: Failed to get records: '%v'.", i, err)
+			continue
+		}
+
+		if !reflect.DeepEqual(testCase.expected, results) {
+			test.Errorf("Case %d: Results not as expected. Expected: '%v', Actual: '%v'.",
+				i, testCase.expected, results)
+			continue
+		}
+	}
+}
+
 func (this *DBTests) DBTestGetPairwiseAnalysisBase(test *testing.T) {
 	ResetForTesting()
 	defer ResetForTesting()
@@ -71,6 +134,21 @@ func (this *DBTests) DBTestGetPairwiseAnalysisBase(test *testing.T) {
 	}
 }
 
+var testIndividualRecords []*model.IndividualAnalysis = []*model.IndividualAnalysis{
+	&model.IndividualAnalysis{
+		AnalysisTimestamp: timestamp.Zero(),
+		FullID:            "course101::hw0::course-student@test.edulinq.org::1697406256",
+	},
+	&model.IndividualAnalysis{
+		AnalysisTimestamp: timestamp.Zero(),
+		FullID:            "course101::hw0::course-student@test.edulinq.org::1697406265",
+	},
+	&model.IndividualAnalysis{
+		AnalysisTimestamp: timestamp.Zero(),
+		FullID:            "course101::hw0::course-student@test.edulinq.org::1697406272",
+	},
+}
+
 var testPairwiseRecords []*model.PairwiseAnalysis = []*model.PairwiseAnalysis{
 	&model.PairwiseAnalysis{
 		AnalysisTimestamp: timestamp.Zero(),
@@ -81,9 +159,11 @@ var testPairwiseRecords []*model.PairwiseAnalysis = []*model.PairwiseAnalysis{
 		Similarities: map[string][]*model.FileSimilarity{
 			"submission.py": []*model.FileSimilarity{
 				&model.FileSimilarity{
-					Filename: "submission.py",
-					Tool:     "fake",
-					Score:    0.13,
+					AnalysisFileInfo: model.AnalysisFileInfo{
+						Filename: "submission.py",
+					},
+					Tool:  "fake",
+					Score: 0.13,
 				},
 			},
 		},
@@ -98,9 +178,11 @@ var testPairwiseRecords []*model.PairwiseAnalysis = []*model.PairwiseAnalysis{
 		Similarities: map[string][]*model.FileSimilarity{
 			"submission.py": []*model.FileSimilarity{
 				&model.FileSimilarity{
-					Filename: "submission.py",
-					Tool:     "fake",
-					Score:    0.13,
+					AnalysisFileInfo: model.AnalysisFileInfo{
+						Filename: "submission.py",
+					},
+					Tool:  "fake",
+					Score: 0.13,
 				},
 			},
 		},
@@ -115,9 +197,11 @@ var testPairwiseRecords []*model.PairwiseAnalysis = []*model.PairwiseAnalysis{
 		Similarities: map[string][]*model.FileSimilarity{
 			"submission.py": []*model.FileSimilarity{
 				&model.FileSimilarity{
-					Filename: "submission.py",
-					Tool:     "fake",
-					Score:    0.13,
+					AnalysisFileInfo: model.AnalysisFileInfo{
+						Filename: "submission.py",
+					},
+					Tool:  "fake",
+					Score: 0.13,
 				},
 			},
 		},

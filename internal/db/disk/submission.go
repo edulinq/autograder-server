@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"slices"
 	"time"
 
 	"github.com/edulinq/autograder/internal/common"
@@ -85,6 +86,31 @@ func (this *backend) GetNextSubmissionID(assignment *model.Assignment, email str
 	return fmt.Sprintf("%d", submissionID), nil
 }
 
+func (this *backend) GetPreviousSubmissionID(assignment *model.Assignment, email string, shortSubmissionID string) (string, error) {
+	history, err := this.GetSubmissionHistory(assignment, email)
+	if err != nil {
+		return "", err
+	}
+
+	if len(history) <= 1 {
+		return "", nil
+	}
+
+	index := -1
+	for i, item := range history {
+		if item.ShortID == shortSubmissionID {
+			index = i
+			break
+		}
+	}
+
+	if index <= 0 {
+		return "", nil
+	}
+
+	return history[index-1].ID, nil
+}
+
 func (this *backend) GetSubmissionResult(assignment *model.Assignment, email string, shortSubmissionID string) (*model.GradingInfo, error) {
 	var err error
 
@@ -143,6 +169,10 @@ func (this *backend) GetSubmissionHistory(assignment *model.Assignment, email st
 
 		history = append(history, gradingInfo.ToHistoryItem())
 	}
+
+	slices.SortFunc(history, func(a *model.SubmissionHistoryItem, b *model.SubmissionHistoryItem) int {
+		return int((a.GradingStartTime - b.GradingStartTime).ToMSecs())
+	})
 
 	return history, nil
 }

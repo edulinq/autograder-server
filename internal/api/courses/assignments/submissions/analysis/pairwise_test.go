@@ -101,9 +101,11 @@ func TestPairwiseBase(test *testing.T) {
 				Similarities: map[string][]*model.FileSimilarity{
 					"submission.py": []*model.FileSimilarity{
 						&model.FileSimilarity{
-							Filename: "submission.py",
-							Tool:     "fake",
-							Score:    0.13,
+							AnalysisFileInfo: model.AnalysisFileInfo{
+								Filename: "submission.py",
+							},
+							Tool:  "fake",
+							Score: 0.13,
 						},
 					},
 				},

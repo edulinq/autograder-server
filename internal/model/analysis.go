@@ -11,20 +11,32 @@ type PairwiseKey [2]string
 
 const PAIRWISE_KEY_DELIM string = "||"
 
+type AnalysisFileInfo struct {
+	Filename         string `json:"filename"`
+	OriginalFilename string `json:"original-filename,omitempty"`
+	LinesOfCode      int    `json:"lines-of-code"`
+}
+
 type IndividualAnalysis struct {
 	AnalysisTimestamp timestamp.Timestamp `json:"analysis-timestamp"`
 
+	FullID       string `json:"submission-id"`
+	ShortID      string `json:"short-id"`
+	CourseID     string `json:"course-id"`
+	AssignmentID string `json:"assignment-id"`
+	UserEmail    string `json:"user-email"`
+
 	SubmissionStartTime timestamp.Timestamp `json:"submission-start-time"`
-	Files               []string            `json:"files"`
+	Score               float64             `json:"score"`
 
-	LinesOfCode int     `json:"lines-of-code"`
-	Score       float64 `json:"score"`
+	Files       []AnalysisFileInfo `json:"files"`
+	LinesOfCode int                `json:"lines-of-code"`
 
-	LinesOfCodeDelta float64 `json:"lines-of-code-delta"`
+	LinesOfCodeDelta int     `json:"lines-of-code-delta"`
 	ScoreDelta       float64 `json:"score-delta"`
 
-	LinesOfCodeVelocity float64 `json:"lines-of-code-velocity"`
-	ScoreVelocity       float64 `json:"score-velocity"`
+	LinesOfCodeVelocity float64 `json:"lines-of-code-per-hour"`
+	ScoreVelocity       float64 `json:"score-per-hour"`
 }
 
 type PairwiseAnalysis struct {
@@ -39,12 +51,12 @@ type PairwiseAnalysis struct {
 }
 
 type FileSimilarity struct {
-	Filename         string         `json:"filename"`
-	OriginalFilename string         `json:"original-filename,omitempty"`
-	Tool             string         `json:"tool"`
-	Version          string         `json:"version"`
-	Options          map[string]any `json:"options,omitempty"`
-	Score            float64        `json:"score"`
+	AnalysisFileInfo
+
+	Tool    string         `json:"tool"`
+	Version string         `json:"version"`
+	Options map[string]any `json:"options,omitempty"`
+	Score   float64        `json:"score"`
 }
 
 type PairwiseAnalysisSummary struct {

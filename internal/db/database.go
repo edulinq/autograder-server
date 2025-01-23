@@ -109,6 +109,9 @@ type Backend interface {
 	// Get the next short submission ID.
 	GetNextSubmissionID(assignment *model.Assignment, email string) (string, error)
 
+	// Get the submission ID of the submission before this one (or empty string if this is the first one).
+	GetPreviousSubmissionID(assignment *model.Assignment, email string, shortSubmissionID string) (string, error)
+
 	// Get a history of all submissions for this assignment and user.
 	GetSubmissionHistory(assignment *model.Assignment, email string) ([]*model.SubmissionHistoryItem, error)
 
@@ -187,12 +190,19 @@ type Backend interface {
 
 	// Analysis Operations
 
-	// Store the results of a pairwise analysis.
-	StorePairwiseAnalysis(records []*model.PairwiseAnalysis) error
+	// Fetch any matching individual analysis results.
+	// Any id not matched in the DB will not be represented in the output.
+	GetIndividualAnalysis(fullSubmissionIDs []string) (map[string]*model.IndividualAnalysis, error)
 
 	// Fetch any matching pairwise analysis results.
 	// Any key not matched in the DB will not be represented in the output.
 	GetPairwiseAnalysis(keys []model.PairwiseKey) (map[model.PairwiseKey]*model.PairwiseAnalysis, error)
+
+	// Store the results of a individual analysis.
+	StoreIndividualAnalysis(records []*model.IndividualAnalysis) error
+
+	// Store the results of a pairwise analysis.
+	StorePairwiseAnalysis(records []*model.PairwiseAnalysis) error
 }
 
 func Open() error {

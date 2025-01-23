@@ -39,16 +39,20 @@ func TestPairwiseAnalysisDefaultEngines(test *testing.T) {
 			Similarities: map[string][]*model.FileSimilarity{
 				"submission.py": []*model.FileSimilarity{
 					&model.FileSimilarity{
-						Filename: "submission.py",
-						Tool:     dolos.NAME,
-						Version:  dolos.VERSION,
-						Score:    0,
+						AnalysisFileInfo: model.AnalysisFileInfo{
+							Filename: "submission.py",
+						},
+						Tool:    dolos.NAME,
+						Version: dolos.VERSION,
+						Score:   0,
 					},
 					&model.FileSimilarity{
-						Filename: "submission.py",
-						Tool:     jplag.NAME,
-						Version:  jplag.VERSION,
-						Score:    0,
+						AnalysisFileInfo: model.AnalysisFileInfo{
+							Filename: "submission.py",
+						},
+						Tool:    jplag.NAME,
+						Version: jplag.VERSION,
+						Score:   0,
 					},
 				},
 			},
@@ -126,9 +130,11 @@ func TestPairwiseAnalysisFake(test *testing.T) {
 			Similarities: map[string][]*model.FileSimilarity{
 				"submission.py": []*model.FileSimilarity{
 					&model.FileSimilarity{
-						Filename: "submission.py",
-						Tool:     "fake",
-						Score:    0.13,
+						AnalysisFileInfo: model.AnalysisFileInfo{
+							Filename: "submission.py",
+						},
+						Tool:  "fake",
+						Score: 0.13,
 					},
 				},
 			},
@@ -147,9 +153,11 @@ func TestPairwiseAnalysisFake(test *testing.T) {
 			Similarities: map[string][]*model.FileSimilarity{
 				"submission.py": []*model.FileSimilarity{
 					&model.FileSimilarity{
-						Filename: "submission.py",
-						Tool:     "fake",
-						Score:    0.13,
+						AnalysisFileInfo: model.AnalysisFileInfo{
+							Filename: "submission.py",
+						},
+						Tool:  "fake",
+						Score: 0.13,
 					},
 				},
 			},
@@ -168,9 +176,11 @@ func TestPairwiseAnalysisFake(test *testing.T) {
 			Similarities: map[string][]*model.FileSimilarity{
 				"submission.py": []*model.FileSimilarity{
 					&model.FileSimilarity{
-						Filename: "submission.py",
-						Tool:     "fake",
-						Score:    0.13,
+						AnalysisFileInfo: model.AnalysisFileInfo{
+							Filename: "submission.py",
+						},
+						Tool:  "fake",
+						Score: 0.13,
 					},
 				},
 			},
@@ -221,7 +231,7 @@ func TestPairwiseAnalysisFake(test *testing.T) {
 }
 
 func testPairwise(test *testing.T, ids []string, expected []*model.PairwiseAnalysis, expectedInitialCacheCount int) {
-	// Ensure that there are no records for these in the DB.
+	// Check for records in the DB.
 	queryKeys := make([]model.PairwiseKey, 0, len(expected))
 	for _, analysis := range expected {
 		queryKeys = append(queryKeys, analysis.SubmissionIDs)
@@ -297,10 +307,12 @@ func TestPairwiseWithPythonNotebook(test *testing.T) {
 	expected := map[string][]*model.FileSimilarity{
 		"submission.py": []*model.FileSimilarity{
 			&model.FileSimilarity{
-				Filename:         "submission.py",
-				OriginalFilename: "submission.ipynb",
-				Tool:             "fake",
-				Score:            0.13,
+				AnalysisFileInfo: model.AnalysisFileInfo{
+					Filename:         "submission.py",
+					OriginalFilename: "submission.ipynb",
+				},
+				Tool:  "fake",
+				Score: 0.13,
 			},
 		},
 	}

@@ -24,9 +24,11 @@ func (this *fakeSimiliartyEngine) IsAvailable() bool {
 
 func (this *fakeSimiliartyEngine) ComputeFileSimilarity(paths [2]string, baseLockKey string) (*model.FileSimilarity, int64, error) {
 	similarity := model.FileSimilarity{
-		Filename: filepath.Base(paths[0]),
-		Tool:     this.Name,
-		Score:    float64(len(filepath.Base(paths[0]))) / 100.0,
+		AnalysisFileInfo: model.AnalysisFileInfo{
+			Filename: filepath.Base(paths[0]),
+		},
+		Tool:  this.Name,
+		Score: float64(len(filepath.Base(paths[0]))) / 100.0,
 	}
 
 	return &similarity, 1, nil
