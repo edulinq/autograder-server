@@ -18,7 +18,8 @@ type AnalysisFileInfo struct {
 }
 
 type FileSimilarity struct {
-	AnalysisFileInfo
+	Filename         string `json:"filename"`
+	OriginalFilename string `json:"original-filename,omitempty"`
 
 	Tool    string         `json:"tool"`
 	Version string         `json:"version"`

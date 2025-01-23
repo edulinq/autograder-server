@@ -121,12 +121,10 @@ func (this *JPlagEngine) ComputeFileSimilarity(paths [2]string, baseLockKey stri
 	}
 
 	result := model.FileSimilarity{
-		AnalysisFileInfo: model.AnalysisFileInfo{
-			Filename: filepath.Base(paths[0]),
-		},
-		Tool:    NAME,
-		Version: VERSION,
-		Score:   score,
+		Filename: filepath.Base(paths[0]),
+		Tool:     NAME,
+		Version:  VERSION,
+		Score:    score,
 	}
 
 	runTime := (timestamp.Now() - startTime).ToMSecs()

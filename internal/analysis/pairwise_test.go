@@ -21,8 +21,14 @@ func TestPairwiseAnalysisDefaultEngines(test *testing.T) {
 	db.ResetForTesting()
 	defer db.ResetForTesting()
 
+	// Force the use of the default engines.
+	forceDefaultEnginesForTesting = true
+	defer func() {
+		forceDefaultEnginesForTesting = false
+	}()
+
 	// Override a setting for JPlag for testing.
-	similarityEngines[1].(*jplag.JPlagEngine).MinTokens = 5
+	defaultSimilarityEngines[1].(*jplag.JPlagEngine).MinTokens = 5
 
 	ids := []string{
 		"course101::hw0::course-student@test.edulinq.org::1697406265",
@@ -39,20 +45,16 @@ func TestPairwiseAnalysisDefaultEngines(test *testing.T) {
 			Similarities: map[string][]*model.FileSimilarity{
 				"submission.py": []*model.FileSimilarity{
 					&model.FileSimilarity{
-						AnalysisFileInfo: model.AnalysisFileInfo{
-							Filename: "submission.py",
-						},
-						Tool:    dolos.NAME,
-						Version: dolos.VERSION,
-						Score:   0,
+						Filename: "submission.py",
+						Tool:     dolos.NAME,
+						Version:  dolos.VERSION,
+						Score:    0,
 					},
 					&model.FileSimilarity{
-						AnalysisFileInfo: model.AnalysisFileInfo{
-							Filename: "submission.py",
-						},
-						Tool:    jplag.NAME,
-						Version: jplag.VERSION,
-						Score:   0,
+						Filename: "submission.py",
+						Tool:     jplag.NAME,
+						Version:  jplag.VERSION,
+						Score:    0,
 					},
 				},
 			},
@@ -111,9 +113,6 @@ func TestPairwiseAnalysisFake(test *testing.T) {
 	db.ResetForTesting()
 	defer db.ResetForTesting()
 
-	resetFunc := UseFakeEnginesForTesting()
-	defer resetFunc()
-
 	ids := []string{
 		"course101::hw0::course-student@test.edulinq.org::1697406256",
 		"course101::hw0::course-student@test.edulinq.org::1697406265",
@@ -130,11 +129,10 @@ func TestPairwiseAnalysisFake(test *testing.T) {
 			Similarities: map[string][]*model.FileSimilarity{
 				"submission.py": []*model.FileSimilarity{
 					&model.FileSimilarity{
-						AnalysisFileInfo: model.AnalysisFileInfo{
-							Filename: "submission.py",
-						},
-						Tool:  "fake",
-						Score: 0.13,
+						Filename: "submission.py",
+						Tool:     "fake",
+						Version:  "0.0.1",
+						Score:    0.13,
 					},
 				},
 			},
@@ -153,11 +151,10 @@ func TestPairwiseAnalysisFake(test *testing.T) {
 			Similarities: map[string][]*model.FileSimilarity{
 				"submission.py": []*model.FileSimilarity{
 					&model.FileSimilarity{
-						AnalysisFileInfo: model.AnalysisFileInfo{
-							Filename: "submission.py",
-						},
-						Tool:  "fake",
-						Score: 0.13,
+						Filename: "submission.py",
+						Tool:     "fake",
+						Version:  "0.0.1",
+						Score:    0.13,
 					},
 				},
 			},
@@ -176,11 +173,10 @@ func TestPairwiseAnalysisFake(test *testing.T) {
 			Similarities: map[string][]*model.FileSimilarity{
 				"submission.py": []*model.FileSimilarity{
 					&model.FileSimilarity{
-						AnalysisFileInfo: model.AnalysisFileInfo{
-							Filename: "submission.py",
-						},
-						Tool:  "fake",
-						Score: 0.13,
+						Filename: "submission.py",
+						Tool:     "fake",
+						Version:  "0.0.1",
+						Score:    0.13,
 					},
 				},
 			},
@@ -279,9 +275,6 @@ func TestPairwiseWithPythonNotebook(test *testing.T) {
 	db.ResetForTesting()
 	defer db.ResetForTesting()
 
-	resetFunc := UseFakeEnginesForTesting()
-	defer resetFunc()
-
 	tempDir := util.MustMkDirTemp("test-analysis-pairwise-")
 	defer util.RemoveDirent(tempDir)
 
@@ -307,12 +300,11 @@ func TestPairwiseWithPythonNotebook(test *testing.T) {
 	expected := map[string][]*model.FileSimilarity{
 		"submission.py": []*model.FileSimilarity{
 			&model.FileSimilarity{
-				AnalysisFileInfo: model.AnalysisFileInfo{
-					Filename:         "submission.py",
-					OriginalFilename: "submission.ipynb",
-				},
-				Tool:  "fake",
-				Score: 0.13,
+				Filename:         "submission.py",
+				OriginalFilename: "submission.ipynb",
+				Tool:             "fake",
+				Version:          "0.0.1",
+				Score:            0.13,
 			},
 		},
 	}

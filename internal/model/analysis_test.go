@@ -145,35 +145,27 @@ func TestNewPairwiseAnalysisSummaryBase(test *testing.T) {
 	sims1 := map[string][]*FileSimilarity{
 		"a.py": []*FileSimilarity{
 			&FileSimilarity{
-				AnalysisFileInfo: AnalysisFileInfo{
-					Filename:         "a.py",
-					OriginalFilename: "a.ipynb",
-				},
-				Tool:  "1",
-				Score: 0.10,
+				Filename:         "a.py",
+				OriginalFilename: "a.ipynb",
+				Tool:             "1",
+				Score:            0.10,
 			},
 			&FileSimilarity{
-				AnalysisFileInfo: AnalysisFileInfo{
-					Filename: "a.py",
-				},
-				Tool:  "2",
-				Score: 0.20,
+				Filename: "a.py",
+				Tool:     "2",
+				Score:    0.20,
 			},
 		},
 		"b.py": []*FileSimilarity{
 			&FileSimilarity{
-				AnalysisFileInfo: AnalysisFileInfo{
-					Filename: "b.py",
-				},
-				Tool:  "1",
-				Score: 0.30,
+				Filename: "b.py",
+				Tool:     "1",
+				Score:    0.30,
 			},
 			&FileSimilarity{
-				AnalysisFileInfo: AnalysisFileInfo{
-					Filename: "b.py",
-				},
-				Tool:  "2",
-				Score: 0.40,
+				Filename: "b.py",
+				Tool:     "2",
+				Score:    0.40,
 			},
 		},
 	}
@@ -181,20 +173,16 @@ func TestNewPairwiseAnalysisSummaryBase(test *testing.T) {
 	sims2 := map[string][]*FileSimilarity{
 		"b.py": []*FileSimilarity{
 			&FileSimilarity{
-				AnalysisFileInfo: AnalysisFileInfo{
-					Filename: "b.py",
-				},
-				Tool:  "1",
-				Score: 0.50,
+				Filename: "b.py",
+				Tool:     "1",
+				Score:    0.50,
 			},
 		},
 		"c.py": []*FileSimilarity{
 			&FileSimilarity{
-				AnalysisFileInfo: AnalysisFileInfo{
-					Filename: "c.py",
-				},
-				Tool:  "2",
-				Score: 0.60,
+				Filename: "c.py",
+				Tool:     "2",
+				Score:    0.60,
 			},
 		},
 	}
@@ -202,20 +190,16 @@ func TestNewPairwiseAnalysisSummaryBase(test *testing.T) {
 	sims3 := map[string][]*FileSimilarity{
 		"b.py": []*FileSimilarity{
 			&FileSimilarity{
-				AnalysisFileInfo: AnalysisFileInfo{
-					Filename: "b.py",
-				},
-				Tool:  "2",
-				Score: 0.70,
+				Filename: "b.py",
+				Tool:     "2",
+				Score:    0.70,
 			},
 		},
 		"c.py": []*FileSimilarity{
 			&FileSimilarity{
-				AnalysisFileInfo: AnalysisFileInfo{
-					Filename: "c.py",
-				},
-				Tool:  "3",
-				Score: 0.80,
+				Filename: "c.py",
+				Tool:     "3",
+				Score:    0.80,
 			},
 		},
 	}

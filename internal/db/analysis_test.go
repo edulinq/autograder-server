@@ -159,11 +159,10 @@ var testPairwiseRecords []*model.PairwiseAnalysis = []*model.PairwiseAnalysis{
 		Similarities: map[string][]*model.FileSimilarity{
 			"submission.py": []*model.FileSimilarity{
 				&model.FileSimilarity{
-					AnalysisFileInfo: model.AnalysisFileInfo{
-						Filename: "submission.py",
-					},
-					Tool:  "fake",
-					Score: 0.13,
+					Filename: "submission.py",
+					Tool:     "fake",
+					Version:  "0.0.1",
+					Score:    0.13,
 				},
 			},
 		},
@@ -178,11 +177,10 @@ var testPairwiseRecords []*model.PairwiseAnalysis = []*model.PairwiseAnalysis{
 		Similarities: map[string][]*model.FileSimilarity{
 			"submission.py": []*model.FileSimilarity{
 				&model.FileSimilarity{
-					AnalysisFileInfo: model.AnalysisFileInfo{
-						Filename: "submission.py",
-					},
-					Tool:  "fake",
-					Score: 0.13,
+					Filename: "submission.py",
+					Tool:     "fake",
+					Version:  "0.0.1",
+					Score:    0.13,
 				},
 			},
 		},
@@ -197,11 +195,10 @@ var testPairwiseRecords []*model.PairwiseAnalysis = []*model.PairwiseAnalysis{
 		Similarities: map[string][]*model.FileSimilarity{
 			"submission.py": []*model.FileSimilarity{
 				&model.FileSimilarity{
-					AnalysisFileInfo: model.AnalysisFileInfo{
-						Filename: "submission.py",
-					},
-					Tool:  "fake",
-					Score: 0.13,
+					Filename: "submission.py",
+					Tool:     "fake",
+					Version:  "0.0.1",
+					Score:    0.13,
 				},
 			},
 		},

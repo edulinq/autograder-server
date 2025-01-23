@@ -4,18 +4,16 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/edulinq/autograder/internal/analysis/core"
 	"github.com/edulinq/autograder/internal/db"
 	"github.com/edulinq/autograder/internal/model"
 	"github.com/edulinq/autograder/internal/util"
 )
 
 type fakeSimiliartyEngine struct {
-	Name string
 }
 
 func (this *fakeSimiliartyEngine) GetName() string {
-	return this.Name
+	return "fake"
 }
 
 func (this *fakeSimiliartyEngine) IsAvailable() bool {
@@ -24,27 +22,13 @@ func (this *fakeSimiliartyEngine) IsAvailable() bool {
 
 func (this *fakeSimiliartyEngine) ComputeFileSimilarity(paths [2]string, baseLockKey string) (*model.FileSimilarity, int64, error) {
 	similarity := model.FileSimilarity{
-		AnalysisFileInfo: model.AnalysisFileInfo{
-			Filename: filepath.Base(paths[0]),
-		},
-		Tool:  this.Name,
-		Score: float64(len(filepath.Base(paths[0]))) / 100.0,
+		Filename: filepath.Base(paths[0]),
+		Tool:     this.GetName(),
+		Version:  "0.0.1",
+		Score:    float64(len(filepath.Base(paths[0]))) / 100.0,
 	}
 
 	return &similarity, 1, nil
-}
-
-// Use the fake engines for testing.
-// Return a func to reset the engines to their past state.
-func UseFakeEnginesForTesting() func() {
-	oldEngines := similarityEngines
-	resetFunc := func() {
-		similarityEngines = oldEngines
-	}
-
-	similarityEngines = []core.SimilarityEngine{&fakeSimiliartyEngine{"fake"}}
-
-	return resetFunc
 }
 
 func AddTestSubmissions(test *testing.T) {

@@ -9,12 +9,10 @@ import (
 
 func TestJPlagComputeFileSimilarityBase(test *testing.T) {
 	expected := &model.FileSimilarity{
-		AnalysisFileInfo: model.AnalysisFileInfo{
-			Filename: "submission.py",
-		},
-		Tool:    NAME,
-		Version: VERSION,
-		Score:   1.0,
+		Filename: "submission.py",
+		Tool:     NAME,
+		Version:  VERSION,
+		Score:    1.0,
 	}
 
 	// Lower the token minimum for testing.

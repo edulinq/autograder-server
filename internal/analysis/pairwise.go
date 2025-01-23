@@ -11,16 +11,21 @@ import (
 	"github.com/edulinq/autograder/internal/analysis/dolos"
 	"github.com/edulinq/autograder/internal/analysis/jplag"
 	"github.com/edulinq/autograder/internal/common"
+	"github.com/edulinq/autograder/internal/config"
 	"github.com/edulinq/autograder/internal/db"
 	"github.com/edulinq/autograder/internal/log"
 	"github.com/edulinq/autograder/internal/model"
 	"github.com/edulinq/autograder/internal/util"
 )
 
-var similarityEngines []core.SimilarityEngine = []core.SimilarityEngine{
+var defaultSimilarityEngines []core.SimilarityEngine = []core.SimilarityEngine{
 	dolos.GetEngine(),
 	jplag.GetEngine(),
 }
+
+// Unit testing will use a fake engine.
+// This will force testing to use the real engines.
+var forceDefaultEnginesForTesting bool = false
 
 // Perform a pairwise analysis on a list of full submission IDs.
 // Note that these submissions could technically be from different courses/assignments.
@@ -37,7 +42,7 @@ var similarityEngines []core.SimilarityEngine = []core.SimilarityEngine{
 // and the remaining analysis will be done asynchronously.
 // Returns: (complete results, number of pending analysis runs, error)
 func PairwiseAnalysis(fullSubmissionIDs []string, blockForResults bool, initiatorEmail string) ([]*model.PairwiseAnalysis, int, error) {
-	err := checkEngines()
+	_, err := getEngines()
 	if err != nil {
 		return nil, 0, err
 	}
@@ -193,6 +198,11 @@ func computeSinglePairwiseAnalysis(pairwiseKey model.PairwiseKey) (*model.Pairwi
 }
 
 func computeFileSims(inputDirs [2]string, lockID string) (map[string][]*model.FileSimilarity, [][2]string, int64, error) {
+	engines, err := getEngines()
+	if err != nil {
+		return nil, nil, 0, err
+	}
+
 	// When preparing source code, we may rename files (e.g. for iPython notebooks).
 	// {newRelpath: oldRelpath, ...}
 	renames := make(map[string]string, 0)
@@ -223,13 +233,13 @@ func computeFileSims(inputDirs [2]string, lockID string) (map[string][]*model.Fi
 			filepath.Join(inputDirs[1], relpath),
 		}
 
-		tempSimilarities := make([]*model.FileSimilarity, len(similarityEngines))
-		runTimes := make([]int64, len(similarityEngines))
-		errs := make([]error, len(similarityEngines))
+		tempSimilarities := make([]*model.FileSimilarity, len(engines))
+		runTimes := make([]int64, len(engines))
+		errs := make([]error, len(engines))
 
 		var engineWaitGroup sync.WaitGroup
 
-		for i, engine := range similarityEngines {
+		for i, engine := range engines {
 			// Compute the file similarity for each engine in parallel.
 			// Note that because we know the index for each engine up-front, we don't need a channel.
 			engineWaitGroup.Add(1)
@@ -252,7 +262,7 @@ func computeFileSims(inputDirs [2]string, lockID string) (map[string][]*model.Fi
 		engineWaitGroup.Wait()
 
 		// Collect all the similarities.
-		similarities[relpath] = make([]*model.FileSimilarity, 0, len(similarityEngines))
+		similarities[relpath] = make([]*model.FileSimilarity, 0, len(engines))
 		for _, similarity := range tempSimilarities {
 			if similarity != nil {
 				similarities[relpath] = append(similarities[relpath], similarity)
@@ -279,17 +289,23 @@ func computeFileSims(inputDirs [2]string, lockID string) (map[string][]*model.Fi
 	return similarities, unmatches, totalRunTime, nil
 }
 
-func checkEngines() error {
-	available := false
-	for _, engine := range similarityEngines {
-		available = available || engine.IsAvailable()
+func getEngines() ([]core.SimilarityEngine, error) {
+	if !forceDefaultEnginesForTesting && config.UNIT_TESTING_MODE.Get() {
+		return []core.SimilarityEngine{&fakeSimiliartyEngine{}}, nil
 	}
 
-	if !available {
-		return fmt.Errorf("No similarity engines are currently available (are you using docker?).")
+	engines := make([]core.SimilarityEngine, 0, len(defaultSimilarityEngines))
+	for _, engine := range defaultSimilarityEngines {
+		if engine.IsAvailable() {
+			engines = append(engines, engine)
+		}
 	}
 
-	return nil
+	if len(engines) == 0 {
+		return nil, fmt.Errorf("No similarity engines are currently available (are you using docker?).")
+	}
+
+	return engines, nil
 }
 
 func collectPairwiseStats(keys []model.PairwiseKey, totalRunTime int64, initiatorEmail string) {

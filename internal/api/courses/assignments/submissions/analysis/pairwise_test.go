@@ -4,7 +4,6 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/edulinq/autograder/internal/analysis"
 	"github.com/edulinq/autograder/internal/api/core"
 	"github.com/edulinq/autograder/internal/db"
 	"github.com/edulinq/autograder/internal/model"
@@ -15,9 +14,6 @@ import (
 func TestPairwiseBase(test *testing.T) {
 	db.ResetForTesting()
 	defer db.ResetForTesting()
-
-	resetFunc := analysis.UseFakeEnginesForTesting()
-	defer resetFunc()
 
 	// Make an initial request, but don't wait.
 
@@ -105,11 +101,10 @@ func TestPairwiseBase(test *testing.T) {
 				Similarities: map[string][]*model.FileSimilarity{
 					"submission.py": []*model.FileSimilarity{
 						&model.FileSimilarity{
-							AnalysisFileInfo: model.AnalysisFileInfo{
-								Filename: "submission.py",
-							},
-							Tool:  "fake",
-							Score: 0.13,
+							Filename: "submission.py",
+							Tool:     "fake",
+							Version:  "0.0.1",
+							Score:    0.13,
 						},
 					},
 				},

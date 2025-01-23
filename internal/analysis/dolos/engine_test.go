@@ -9,12 +9,10 @@ import (
 
 func TestDolosComputeFileSimilarityBase(test *testing.T) {
 	expected := &model.FileSimilarity{
-		AnalysisFileInfo: model.AnalysisFileInfo{
-			Filename: "submission.py",
-		},
-		Tool:    NAME,
-		Version: VERSION,
-		Score:   0.666667,
+		Filename: "submission.py",
+		Tool:     NAME,
+		Version:  VERSION,
+		Score:    0.666667,
 	}
 
 	core.RunEngineTestComputeFileSimilarityBase(test, GetEngine(), expected)
