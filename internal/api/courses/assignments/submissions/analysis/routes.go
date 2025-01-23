@@ -7,6 +7,7 @@ import (
 )
 
 var routes []core.Route = []core.Route{
+	core.MustNewAPIRoute(`courses/assignments/submissions/analysis/individual`, HandleIndividual),
 	core.MustNewAPIRoute(`courses/assignments/submissions/analysis/pairwise`, HandlePairwise),
 }
 

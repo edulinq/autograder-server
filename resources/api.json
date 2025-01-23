@@ -15,6 +15,11 @@
             "request-type": "*assignments.ListRequest",
             "response-type": "*assignments.ListResponse"
         },
+        "courses/assignments/submissions/analysis/individual": {
+            "description": "Get the result of a individual analysis for the specified submissions.",
+            "request-type": "*analysis.IndividualRequest",
+            "response-type": "*analysis.IndividualResponse"
+        },
         "courses/assignments/submissions/analysis/pairwise": {
             "description": "Get the result of a pairwise analysis for the specified submissions.",
             "request-type": "*analysis.PairwiseRequest",

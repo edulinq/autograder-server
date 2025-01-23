@@ -172,11 +172,11 @@ func NewIndividualAnalysisSummary(results []*IndividualAnalysis, pendingCount in
 		}
 
 		scores = append(scores, result.Score)
-		locs = append(scores, float64(result.LinesOfCode))
-		locDeltas = append(scores, float64(result.LinesOfCodeDelta))
-		scoreDeltas = append(scores, result.ScoreDelta)
-		locVelocities = append(scores, result.LinesOfCodeVelocity)
-		scoreVelocities = append(scores, result.ScoreVelocity)
+		locs = append(locs, float64(result.LinesOfCode))
+		locDeltas = append(locDeltas, float64(result.LinesOfCodeDelta))
+		scoreDeltas = append(scoreDeltas, result.ScoreDelta)
+		locVelocities = append(locVelocities, result.LinesOfCodeVelocity)
+		scoreVelocities = append(scoreVelocities, result.ScoreVelocity)
 	}
 
 	aggregateLOCPerFile := make(map[string]util.AggregateValues, len(locPerFiles))
@@ -252,5 +252,62 @@ func NewPairwiseAnalysisSummary(results []*PairwiseAnalysis, pendingCount int) *
 		},
 		AggregateMeanSimilarities:      aggregateMeanSimilarities,
 		AggregateTotalMeanSimilarities: util.ComputeAggregates(totalMeanSim),
+	}
+}
+
+func (this *IndividualAnalysis) RoundWithPrecision(precision uint) {
+	if this == nil {
+		return
+	}
+
+	this.Score = util.RoundWithPrecision(this.Score, precision)
+	this.ScoreDelta = util.RoundWithPrecision(this.ScoreDelta, precision)
+	this.LinesOfCodeVelocity = util.RoundWithPrecision(this.LinesOfCodeVelocity, precision)
+	this.ScoreVelocity = util.RoundWithPrecision(this.ScoreVelocity, precision)
+}
+
+func (this *PairwiseAnalysis) RoundWithPrecision(precision uint) {
+	if this == nil {
+		return
+	}
+
+	for _, sims := range this.Similarities {
+		for _, sim := range sims {
+			sim.Score = util.RoundWithPrecision(sim.Score, precision)
+		}
+	}
+
+	this.TotalMeanSimilarity = util.RoundWithPrecision(this.TotalMeanSimilarity, precision)
+
+	for key, value := range this.MeanSimilarities {
+		this.MeanSimilarities[key] = util.RoundWithPrecision(value, precision)
+	}
+}
+
+func (this *IndividualAnalysisSummary) RoundWithPrecision(precision uint) {
+	if this == nil {
+		return
+	}
+
+	this.AggregateScore = this.AggregateScore.RoundWithPrecision(precision)
+	this.AggregateLinesOfCode = this.AggregateLinesOfCode.RoundWithPrecision(precision)
+	this.AggregateLinesOfCodeDelta = this.AggregateLinesOfCodeDelta.RoundWithPrecision(precision)
+	this.AggregateScoreDelta = this.AggregateScoreDelta.RoundWithPrecision(precision)
+	this.AggregateLinesOfCodeVelocity = this.AggregateLinesOfCodeVelocity.RoundWithPrecision(precision)
+	this.AggregateScoreVelocity = this.AggregateScoreVelocity.RoundWithPrecision(precision)
+
+	for key, sim := range this.AggregateLinesOfCodePerFile {
+		this.AggregateLinesOfCodePerFile[key] = sim.RoundWithPrecision(precision)
+	}
+}
+
+func (this *PairwiseAnalysisSummary) RoundWithPrecision(precision uint) {
+	if this == nil {
+		return
+	}
+
+	this.AggregateTotalMeanSimilarities = this.AggregateTotalMeanSimilarities.RoundWithPrecision(precision)
+	for key, sim := range this.AggregateMeanSimilarities {
+		this.AggregateMeanSimilarities[key] = sim.RoundWithPrecision(precision)
 	}
 }

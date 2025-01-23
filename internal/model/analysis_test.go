@@ -74,38 +74,38 @@ func TestNewIndividualAnalysisSummaryBase(test *testing.T) {
 			Max:    30,
 		},
 		AggregateLinesOfCode: util.AggregateValues{
-			Count:  4,
-			Mean:   20,
+			Count:  3,
+			Mean:   23.33,
 			Median: 20,
-			Min:    10,
-			Max:    30,
-		},
-		AggregateLinesOfCodeDelta: util.AggregateValues{
-			Count:  4,
-			Mean:   23.75,
-			Median: 25,
-			Min:    10,
-			Max:    35,
-		},
-		AggregateScoreDelta: util.AggregateValues{
-			Count:  4,
-			Mean:   25,
-			Median: 25,
 			Min:    10,
 			Max:    40,
 		},
+		AggregateLinesOfCodeDelta: util.AggregateValues{
+			Count:  3,
+			Mean:   16.67,
+			Median: 15,
+			Min:    0,
+			Max:    35,
+		},
+		AggregateScoreDelta: util.AggregateValues{
+			Count:  3,
+			Mean:   20,
+			Median: 20,
+			Min:    0,
+			Max:    40,
+		},
 		AggregateLinesOfCodeVelocity: util.AggregateValues{
-			Count:  4,
-			Mean:   26.25,
+			Count:  3,
+			Mean:   23.33,
 			Median: 25,
-			Min:    10,
+			Min:    0,
 			Max:    45,
 		},
 		AggregateScoreVelocity: util.AggregateValues{
-			Count:  4,
-			Mean:   27.50,
-			Median: 25,
-			Min:    10,
+			Count:  3,
+			Mean:   26.67,
+			Median: 30,
+			Min:    0,
 			Max:    50,
 		},
 		AggregateLinesOfCodePerFile: map[string]util.AggregateValues{
@@ -133,19 +133,8 @@ func TestNewIndividualAnalysisSummaryBase(test *testing.T) {
 	actual.LastTimestamp = timestamp.Zero()
 
 	// Normalize values.
-	values := []*IndividualAnalysisSummary{expected, actual}
-	for _, value := range values {
-		value.AggregateScore = value.AggregateScore.RoundWithPrecision(2)
-		value.AggregateLinesOfCode = value.AggregateLinesOfCode.RoundWithPrecision(2)
-		value.AggregateLinesOfCodeDelta = value.AggregateLinesOfCodeDelta.RoundWithPrecision(2)
-		value.AggregateScoreDelta = value.AggregateScoreDelta.RoundWithPrecision(2)
-		value.AggregateLinesOfCodeVelocity = value.AggregateLinesOfCodeVelocity.RoundWithPrecision(2)
-		value.AggregateScoreVelocity = value.AggregateScoreVelocity.RoundWithPrecision(2)
-
-		for key, sim := range value.AggregateLinesOfCodePerFile {
-			value.AggregateLinesOfCodePerFile[key] = sim.RoundWithPrecision(2)
-		}
-	}
+	expected.RoundWithPrecision(2)
+	actual.RoundWithPrecision(2)
 
 	if !reflect.DeepEqual(expected, actual) {
 		test.Fatalf("Incorrect result. Expected: '%s', Actual: '%s'.", util.MustToJSONIndent(expected), util.MustToJSONIndent(actual))
@@ -284,13 +273,8 @@ func TestNewPairwiseAnalysisSummaryBase(test *testing.T) {
 	actual.LastTimestamp = timestamp.Zero()
 
 	// Normalize values.
-	values := []*PairwiseAnalysisSummary{expected, actual}
-	for _, value := range values {
-		value.AggregateTotalMeanSimilarities = value.AggregateTotalMeanSimilarities.RoundWithPrecision(2)
-		for key, sim := range value.AggregateMeanSimilarities {
-			value.AggregateMeanSimilarities[key] = sim.RoundWithPrecision(2)
-		}
-	}
+	expected.RoundWithPrecision(2)
+	actual.RoundWithPrecision(2)
 
 	if !reflect.DeepEqual(expected, actual) {
 		test.Fatalf("Incorrect result. Expected: '%s', Actual: '%s'.", util.MustToJSONIndent(expected), util.MustToJSONIndent(actual))
