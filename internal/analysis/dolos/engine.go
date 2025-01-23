@@ -92,6 +92,7 @@ func (this *dolosEngine) ComputeFileSimilarity(paths [2]string, baseLockKey stri
 	arguments := []string{
 		"run",
 		"--output-format", "csv",
+		"--language", getLanguage(tempFilenames[0]),
 		tempFilenames[0],
 		tempFilenames[1],
 		"--output-destination", OUT_DIRNAME,
@@ -105,6 +106,7 @@ func (this *dolosEngine) ComputeFileSimilarity(paths [2]string, baseLockKey stri
 
 	score, err := fetchResults(tempDir)
 	if err != nil {
+		log.Debug("Failed to read output from Dolos.", err, log.NewAttr("stdout", stdout), log.NewAttr("stderr", stderr))
 		return nil, 0, fmt.Errorf("Failed to read output from Dolos: '%w'.", err)
 	}
 

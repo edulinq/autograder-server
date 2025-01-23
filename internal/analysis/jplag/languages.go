@@ -6,7 +6,8 @@ import (
 )
 
 const (
-	DEFAULT_LANGUAGE = "text"
+	DEFAULT_LANGUAGE   = "text"
+	FALLBACK_EXTENSION = ".txt"
 
 	LANG_C          = "c"
 	LANG_CPP        = "cpp"
@@ -35,9 +36,11 @@ var extensionToLanguage map[string]string = map[string]string{
 
 	".cpp": LANG_CPP,
 	".c++": LANG_CPP,
+	".cxx": LANG_CPP,
 	".cc":  LANG_CPP,
 	".cp":  LANG_CPP,
 	".h++": LANG_CPP,
+	".hxx": LANG_CPP,
 	".hh":  LANG_CPP,
 	".hpp": LANG_CPP,
 
@@ -56,13 +59,16 @@ var extensionToLanguage map[string]string = map[string]string{
 
 	".ll": LANG_LLVMIR,
 
-	".py": LANG_PYTHON3,
+	".py":  LANG_PYTHON3,
+	".py3": LANG_PYTHON3,
 
 	".r": LANG_RLANG,
 
-	".rs": LANG_RUST,
+	".rs":   LANG_RUST,
+	".rlib": LANG_RUST,
 
 	".scala": LANG_SCALA,
+	".sc":    LANG_SCALA,
 
 	".scm": LANG_SCHEME,
 	".sps": LANG_SCHEME,

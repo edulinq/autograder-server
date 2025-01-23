@@ -75,9 +75,19 @@ func (this *JPlagEngine) ComputeFileSimilarity(paths [2]string, baseLockKey stri
 		return nil, 0, fmt.Errorf("Failed to create temp src dir: '%w'.", err)
 	}
 
+	originalFilename := filepath.Base(paths[0])
+	language := getLanguage(originalFilename)
+
 	tempFilenames := make([]string, 0, 2)
 	for i, path := range paths {
-		tempFilename := fmt.Sprintf("%d%s", i, filepath.Ext(path))
+		extension := filepath.Ext(path)
+		if language == DEFAULT_LANGUAGE {
+			// JPlag is very strict about file extensions.
+			// If we are using the fallback language, change the extension.
+			extension = FALLBACK_EXTENSION
+		}
+
+		tempFilename := fmt.Sprintf("%d%s", i, extension)
 		tempPath := filepath.Join(srcDir, tempFilename)
 		err = util.CopyFile(path, tempPath)
 		if err != nil {
@@ -117,11 +127,12 @@ func (this *JPlagEngine) ComputeFileSimilarity(paths [2]string, baseLockKey stri
 
 	score, err := fetchResults(tempDir)
 	if err != nil {
+		log.Debug("Failed to read output from JPlag.", err, log.NewAttr("stdout", stdout), log.NewAttr("stderr", stderr))
 		return nil, 0, fmt.Errorf("Failed to read output from JPlag: '%w'.", err)
 	}
 
 	result := model.FileSimilarity{
-		Filename: filepath.Base(paths[0]),
+		Filename: originalFilename,
 		Tool:     NAME,
 		Version:  VERSION,
 		Score:    score,

@@ -250,6 +250,7 @@ func computeFileSims(inputDirs [2]string, lockID string) (map[string][]*model.Fi
 				if err != nil {
 					errs[index] = fmt.Errorf("Unable to compute similarity for '%s' using engine '%s': '%w'", relpath, simEngine.GetName(), err)
 				} else {
+					similarity.Filename = relpath
 					similarity.OriginalFilename = renames[relpath]
 
 					tempSimilarities[index] = similarity

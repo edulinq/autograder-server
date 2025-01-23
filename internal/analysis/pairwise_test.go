@@ -15,7 +15,7 @@ import (
 	"github.com/edulinq/autograder/internal/util"
 )
 
-func TestPairwiseAnalysisDefaultEngines(test *testing.T) {
+func TestPairwiseAnalysisDefaultEnginesBase(test *testing.T) {
 	docker.EnsureOrSkipForTest(test)
 
 	db.ResetForTesting()
@@ -311,5 +311,35 @@ func TestPairwiseWithPythonNotebook(test *testing.T) {
 
 	if !reflect.DeepEqual(expected, sims) {
 		test.Fatalf("Results not as expected. Expected: '%s', Actual: '%s'.", util.MustToJSONIndent(expected), util.MustToJSONIndent(sims))
+	}
+}
+
+// A test for special files that seem to cause trouble with the engines.
+func TestPairwiseAnalysisDefaultEnginesSpecificFiles(test *testing.T) {
+	docker.EnsureOrSkipForTest(test)
+
+	// Override a setting for JPlag for testing.
+	defaultSimilarityEngines[1].(*jplag.JPlagEngine).MinTokens = 5
+
+	testPaths := []string{
+		filepath.Join(util.RootDirForTesting(), "testdata", "files", "sim_engine", "config.json"),
+	}
+
+	for _, path := range testPaths {
+		for _, engine := range defaultSimilarityEngines {
+			sim, _, err := engine.ComputeFileSimilarity([2]string{path, path}, "test")
+			if err != nil {
+				test.Errorf("Engine '%s' failed to compute similarity on '%s': '%v'.",
+					engine.GetName(), path, err)
+				continue
+			}
+
+			expected := 1.0
+			if !util.IsClose(expected, sim.Score) {
+				test.Errorf("Engine '%s' got an unexpected score on self-similarity with '%s'. Expected: %f, Actual: %f.",
+					engine.GetName(), path, expected, sim.Score)
+				continue
+			}
+		}
 	}
 }
