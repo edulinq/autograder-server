@@ -17,6 +17,24 @@ type AnalysisFileInfo struct {
 	LinesOfCode      int    `json:"lines-of-code"`
 }
 
+type FileSimilarity struct {
+	AnalysisFileInfo
+
+	Tool    string         `json:"tool"`
+	Version string         `json:"version"`
+	Options map[string]any `json:"options,omitempty"`
+	Score   float64        `json:"score"`
+}
+
+type AnalysisSummary struct {
+	Complete      bool `json:"complete"`
+	CompleteCount int  `json:"complete-count"`
+	PendingCount  int  `json:"pending-count"`
+
+	FirstTimestamp timestamp.Timestamp `json:"first-timestamp"`
+	LastTimestamp  timestamp.Timestamp `json:"last-timestamp"`
+}
+
 type IndividualAnalysis struct {
 	AnalysisTimestamp timestamp.Timestamp `json:"analysis-timestamp"`
 
@@ -39,6 +57,21 @@ type IndividualAnalysis struct {
 	ScoreVelocity       float64 `json:"score-per-hour"`
 }
 
+type IndividualAnalysisSummary struct {
+	AnalysisSummary
+
+	AggregateScore util.AggregateValues `json:"aggregate-score"`
+
+	AggregateLinesOfCode        util.AggregateValues            `json:"aggregate-lines-of-code"`
+	AggregateLinesOfCodePerFile map[string]util.AggregateValues `json:"aggregate-lines-of-code-per-file"`
+
+	AggregateLinesOfCodeDelta util.AggregateValues `json:"aggregate-lines-of-code-delta"`
+	AggregateScoreDelta       util.AggregateValues `json:"aggregate-score-delta"`
+
+	AggregateLinesOfCodeVelocity util.AggregateValues `json:"aggregate-lines-of-code-per-hour"`
+	AggregateScoreVelocity       util.AggregateValues `json:"aggregate-score-per-hour"`
+}
+
 type PairwiseAnalysis struct {
 	AnalysisTimestamp timestamp.Timestamp `json:"analysis-timestamp"`
 	SubmissionIDs     PairwiseKey         `json:"submission-ids"`
@@ -50,22 +83,8 @@ type PairwiseAnalysis struct {
 	TotalMeanSimilarity float64            `json:"total-mean-similarity"`
 }
 
-type FileSimilarity struct {
-	AnalysisFileInfo
-
-	Tool    string         `json:"tool"`
-	Version string         `json:"version"`
-	Options map[string]any `json:"options,omitempty"`
-	Score   float64        `json:"score"`
-}
-
 type PairwiseAnalysisSummary struct {
-	Complete      bool `json:"complete"`
-	CompleteCount int  `json:"complete-count"`
-	PendingCount  int  `json:"pending-count"`
-
-	FirstTimestamp timestamp.Timestamp `json:"first-timestamp"`
-	LastTimestamp  timestamp.Timestamp `json:"last-timestamp"`
+	AnalysisSummary
 
 	AggregateMeanSimilarities      map[string]util.AggregateValues `json:"aggregate-mean-similarities"`
 	AggregateTotalMeanSimilarities util.AggregateValues            `json:"aggregate-total-mean-similarity"`
@@ -114,14 +133,85 @@ func NewPairwiseAnalysis(pairwiseKey PairwiseKey, similarities map[string][]*Fil
 	}
 }
 
+func NewIndividualAnalysisSummary(results []*IndividualAnalysis, pendingCount int) *IndividualAnalysisSummary {
+	if len(results) == 0 {
+		return &IndividualAnalysisSummary{
+			AnalysisSummary: AnalysisSummary{
+				Complete:       (pendingCount == 0),
+				CompleteCount:  0,
+				PendingCount:   pendingCount,
+				FirstTimestamp: timestamp.Zero(),
+				LastTimestamp:  timestamp.Zero(),
+			},
+		}
+	}
+
+	firstTimestamp := timestamp.Zero()
+	lastTimestamp := timestamp.Zero()
+
+	scores := make([]float64, 0, len(results))
+	locs := make([]float64, 0, len(results))
+	locDeltas := make([]float64, 0, len(results))
+	scoreDeltas := make([]float64, 0, len(results))
+	locVelocities := make([]float64, 0, len(results))
+	scoreVelocities := make([]float64, 0, len(results))
+
+	locPerFiles := make(map[string][]float64)
+
+	for i, result := range results {
+		if (i == 0) || (result.AnalysisTimestamp < firstTimestamp) {
+			firstTimestamp = result.AnalysisTimestamp
+		}
+
+		if (i == 0) || (result.AnalysisTimestamp > lastTimestamp) {
+			lastTimestamp = result.AnalysisTimestamp
+		}
+
+		for _, info := range result.Files {
+			locPerFiles[info.Filename] = append(locPerFiles[info.Filename], float64(info.LinesOfCode))
+		}
+
+		scores = append(scores, result.Score)
+		locs = append(scores, float64(result.LinesOfCode))
+		locDeltas = append(scores, float64(result.LinesOfCodeDelta))
+		scoreDeltas = append(scores, result.ScoreDelta)
+		locVelocities = append(scores, result.LinesOfCodeVelocity)
+		scoreVelocities = append(scores, result.ScoreVelocity)
+	}
+
+	aggregateLOCPerFile := make(map[string]util.AggregateValues, len(locPerFiles))
+	for relpath, locValues := range locPerFiles {
+		aggregateLOCPerFile[relpath] = util.ComputeAggregates(locValues)
+	}
+
+	return &IndividualAnalysisSummary{
+		AnalysisSummary: AnalysisSummary{
+			Complete:       (pendingCount == 0),
+			CompleteCount:  len(results),
+			PendingCount:   pendingCount,
+			FirstTimestamp: firstTimestamp,
+			LastTimestamp:  lastTimestamp,
+		},
+		AggregateScore:               util.ComputeAggregates(scores),
+		AggregateLinesOfCode:         util.ComputeAggregates(locs),
+		AggregateLinesOfCodePerFile:  aggregateLOCPerFile,
+		AggregateLinesOfCodeDelta:    util.ComputeAggregates(locDeltas),
+		AggregateScoreDelta:          util.ComputeAggregates(scoreDeltas),
+		AggregateLinesOfCodeVelocity: util.ComputeAggregates(locVelocities),
+		AggregateScoreVelocity:       util.ComputeAggregates(scoreVelocities),
+	}
+}
+
 func NewPairwiseAnalysisSummary(results []*PairwiseAnalysis, pendingCount int) *PairwiseAnalysisSummary {
 	if len(results) == 0 {
 		return &PairwiseAnalysisSummary{
-			Complete:       (pendingCount == 0),
-			CompleteCount:  0,
-			PendingCount:   pendingCount,
-			FirstTimestamp: timestamp.Zero(),
-			LastTimestamp:  timestamp.Zero(),
+			AnalysisSummary: AnalysisSummary{
+				Complete:       (pendingCount == 0),
+				CompleteCount:  0,
+				PendingCount:   pendingCount,
+				FirstTimestamp: timestamp.Zero(),
+				LastTimestamp:  timestamp.Zero(),
+			},
 		}
 	}
 
@@ -153,11 +243,13 @@ func NewPairwiseAnalysisSummary(results []*PairwiseAnalysis, pendingCount int) *
 	}
 
 	return &PairwiseAnalysisSummary{
-		Complete:                       (pendingCount == 0),
-		CompleteCount:                  len(results),
-		PendingCount:                   pendingCount,
-		FirstTimestamp:                 firstTimestamp,
-		LastTimestamp:                  lastTimestamp,
+		AnalysisSummary: AnalysisSummary{
+			Complete:       (pendingCount == 0),
+			CompleteCount:  len(results),
+			PendingCount:   pendingCount,
+			FirstTimestamp: firstTimestamp,
+			LastTimestamp:  lastTimestamp,
+		},
 		AggregateMeanSimilarities:      aggregateMeanSimilarities,
 		AggregateTotalMeanSimilarities: util.ComputeAggregates(totalMeanSim),
 	}

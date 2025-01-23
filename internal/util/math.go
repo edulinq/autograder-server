@@ -124,6 +124,16 @@ func (this AggregateValues) Equals(other AggregateValues) bool {
 		IsClose(this.Max, other.Max))
 }
 
+func (this AggregateValues) RoundWithPrecision(precision uint) AggregateValues {
+	return AggregateValues{
+		Count:  this.Count,
+		Mean:   RoundWithPrecision(this.Mean, precision),
+		Median: RoundWithPrecision(this.Median, precision),
+		Min:    RoundWithPrecision(this.Min, precision),
+		Max:    RoundWithPrecision(this.Max, precision),
+	}
+}
+
 // Round a float to |precision| number of decimal places,
 // e.g., RoundWithPrecision(3.14159, 2) == 3.14.
 func RoundWithPrecision(value float64, precision uint) float64 {

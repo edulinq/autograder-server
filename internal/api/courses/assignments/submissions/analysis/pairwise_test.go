@@ -42,9 +42,11 @@ func TestPairwiseBase(test *testing.T) {
 	expected := PairwiseResponse{
 		Complete: false,
 		Summary: &model.PairwiseAnalysisSummary{
-			Complete:      false,
-			CompleteCount: 0,
-			PendingCount:  1,
+			AnalysisSummary: model.AnalysisSummary{
+				Complete:      false,
+				CompleteCount: 0,
+				PendingCount:  1,
+			},
 		},
 		Results: []*model.PairwiseAnalysis{},
 	}
@@ -69,11 +71,13 @@ func TestPairwiseBase(test *testing.T) {
 	expected = PairwiseResponse{
 		Complete: true,
 		Summary: &model.PairwiseAnalysisSummary{
-			Complete:       true,
-			CompleteCount:  1,
-			PendingCount:   0,
-			FirstTimestamp: timestamp.Zero(),
-			LastTimestamp:  timestamp.Zero(),
+			AnalysisSummary: model.AnalysisSummary{
+				Complete:       true,
+				CompleteCount:  1,
+				PendingCount:   0,
+				FirstTimestamp: timestamp.Zero(),
+				LastTimestamp:  timestamp.Zero(),
+			},
 			AggregateMeanSimilarities: map[string]util.AggregateValues{
 				"submission.py": util.AggregateValues{
 					Count:  1,
