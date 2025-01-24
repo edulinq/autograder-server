@@ -16,6 +16,7 @@ func TestBackupTempDir(test *testing.T) {
 	if err != nil {
 		test.Fatalf("Failed to create temp dir: '%v'.", err)
 	}
+	defer util.RemoveDirent(tempDir)
 
 	doBackup(test, tempDir, filepath.Join(tempDir, "course101-test.zip"))
 }
@@ -29,6 +30,7 @@ func TestBackupOptionsDir(test *testing.T) {
 	if err != nil {
 		test.Fatalf("Failed to create temp dir: '%v'.", err)
 	}
+	defer util.RemoveDirent(tempDir)
 
 	oldValue := config.BACKUP_DIR.Get()
 	config.BACKUP_DIR.Set(tempDir)

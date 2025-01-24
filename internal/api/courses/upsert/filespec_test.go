@@ -18,6 +18,7 @@ func TestFileSpec(test *testing.T) {
 	testdataDir := config.GetTestdataDir()
 
 	emptyDir := util.MustMkDirTemp("test-internal.api.courses.upsert.filespec-")
+	defer util.RemoveDirent(emptyDir)
 
 	testCases := []commonTestCase{
 		{"server-creator", filepath.Join(testdataDir, "course101"), "", 1, 1},

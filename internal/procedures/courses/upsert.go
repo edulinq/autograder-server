@@ -131,6 +131,7 @@ func syncSource(course *model.Course, options CourseUpsertOptions) (*model.Cours
 	if err != nil {
 		return nil, fmt.Errorf("Failed to make temp dir for source update: '%w'.", err)
 	}
+	defer util.RemoveDirent(tempDir)
 
 	err = source.CopyTarget(common.ShouldGetCWD(), tempDir, false)
 	if err != nil {

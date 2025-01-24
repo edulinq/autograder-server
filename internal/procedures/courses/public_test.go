@@ -28,6 +28,7 @@ func TestUpsertFromZipBlob(test *testing.T) {
 	course101Dir := filepath.Join(testdataDir, "course101")
 
 	emptyDir := util.MustMkDirTemp("test-internal.procedures.courses.upsert-zip-empty-")
+	defer util.RemoveDirent(emptyDir)
 
 	testCases := []struct {
 		path    string
@@ -112,6 +113,7 @@ func TestUpsertFromFileSpec(test *testing.T) {
 	course101ConfigPath := filepath.Join(course101Dir, model.COURSE_CONFIG_FILENAME)
 
 	emptyDir := util.MustMkDirTemp("test-internal.procedures.courses.upsert-filespec-empty-")
+	defer util.RemoveDirent(emptyDir)
 
 	missingDir := util.MustMkDirTemp("test-internal.procedures.courses.upsert-filespec-missing-")
 	err := util.RemoveDirent(missingDir)
@@ -120,12 +122,14 @@ func TestUpsertFromFileSpec(test *testing.T) {
 	}
 
 	badJSONDir := util.MustMkDirTemp("test-internal.procedures.courses.upsert-filespec-badJSON-")
+	defer util.RemoveDirent(badJSONDir)
 	err = util.WriteFile("{", filepath.Join(badJSONDir, model.COURSE_CONFIG_FILENAME))
 	if err != nil {
 		test.Fatalf("Failed to write bad JSON course config: '%v'.", err)
 	}
 
 	invalidConfigDir := util.MustMkDirTemp("test-internal.procedures.courses.upsert-filespec-invalidConfig-")
+	defer util.RemoveDirent(invalidConfigDir)
 	err = util.WriteFile(`{"id": "_i!@#"}`, filepath.Join(invalidConfigDir, model.COURSE_CONFIG_FILENAME))
 	if err != nil {
 		test.Fatalf("Failed to write invalid config course config: '%v'.", err)
@@ -133,6 +137,7 @@ func TestUpsertFromFileSpec(test *testing.T) {
 
 	// Zip up a dir and point to the zip as a filespec.
 	tempZipBase := util.MustMkDirTemp("test-internal.procedures.courses.upsert-filespec-zip-")
+	defer util.RemoveDirent(tempZipBase)
 	tempZipPath := filepath.Join(tempZipBase, "test.zip")
 	err = util.Zip(course101Dir, tempZipPath, true)
 	if err != nil {

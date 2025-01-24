@@ -3,7 +3,6 @@ package grader
 import (
 	"context"
 	"fmt"
-	"os"
 	"path/filepath"
 
 	"github.com/edulinq/autograder/internal/common"
@@ -27,7 +26,7 @@ func runDockerGrader(ctx context.Context, assignment *model.Assignment, submissi
 	}
 
 	if !options.LeaveTempDir {
-		defer os.RemoveAll(tempDir)
+		defer util.RemoveDirent(tempDir)
 	} else {
 		log.Debug("Leaving behind temp grading dir.", assignment, log.NewAttr("path", tempDir))
 	}

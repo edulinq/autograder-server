@@ -5,7 +5,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
@@ -38,7 +37,7 @@ func runNoDockerGrader(ctx context.Context, assignment *model.Assignment, submis
 	}
 
 	if !options.LeaveTempDir {
-		defer os.RemoveAll(tempDir)
+		defer util.RemoveDirent(tempDir)
 	} else {
 		log.Debug("Leaving behind temp grading dir.", log.NewAttr("path", tempDir))
 	}
