@@ -13,6 +13,7 @@ func TestNewIndividualAnalysisSummaryBase(test *testing.T) {
 		&IndividualAnalysis{
 			Score:               10,
 			LinesOfCode:         10,
+			SubmissionTimeDelta: 0,
 			LinesOfCodeDelta:    0,
 			ScoreDelta:          0,
 			LinesOfCodeVelocity: 0,
@@ -27,6 +28,7 @@ func TestNewIndividualAnalysisSummaryBase(test *testing.T) {
 		&IndividualAnalysis{
 			Score:               20,
 			LinesOfCode:         40,
+			SubmissionTimeDelta: 12,
 			LinesOfCodeDelta:    15,
 			ScoreDelta:          20,
 			LinesOfCodeVelocity: 25,
@@ -45,6 +47,7 @@ func TestNewIndividualAnalysisSummaryBase(test *testing.T) {
 		&IndividualAnalysis{
 			Score:               30,
 			LinesOfCode:         20,
+			SubmissionTimeDelta: 32,
 			LinesOfCodeDelta:    35,
 			ScoreDelta:          40,
 			LinesOfCodeVelocity: 45,
@@ -79,6 +82,13 @@ func TestNewIndividualAnalysisSummaryBase(test *testing.T) {
 			Median: 20,
 			Min:    10,
 			Max:    40,
+		},
+		AggregateSubmissionTimeDelta: util.AggregateValues{
+			Count:  3,
+			Mean:   14.67,
+			Median: 12,
+			Min:    0,
+			Max:    32,
 		},
 		AggregateLinesOfCodeDelta: util.AggregateValues{
 			Count:  3,

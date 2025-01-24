@@ -51,8 +51,9 @@ type IndividualAnalysis struct {
 	Files       []AnalysisFileInfo `json:"files"`
 	LinesOfCode int                `json:"lines-of-code"`
 
-	LinesOfCodeDelta int     `json:"lines-of-code-delta"`
-	ScoreDelta       float64 `json:"score-delta"`
+	SubmissionTimeDelta int64   `json:"submission-time-delta"`
+	LinesOfCodeDelta    int     `json:"lines-of-code-delta"`
+	ScoreDelta          float64 `json:"score-delta"`
 
 	LinesOfCodeVelocity float64 `json:"lines-of-code-per-hour"`
 	ScoreVelocity       float64 `json:"score-per-hour"`
@@ -66,8 +67,9 @@ type IndividualAnalysisSummary struct {
 	AggregateLinesOfCode        util.AggregateValues            `json:"aggregate-lines-of-code"`
 	AggregateLinesOfCodePerFile map[string]util.AggregateValues `json:"aggregate-lines-of-code-per-file"`
 
-	AggregateLinesOfCodeDelta util.AggregateValues `json:"aggregate-lines-of-code-delta"`
-	AggregateScoreDelta       util.AggregateValues `json:"aggregate-score-delta"`
+	AggregateSubmissionTimeDelta util.AggregateValues `json:"aggregate-submission-time-delta"`
+	AggregateLinesOfCodeDelta    util.AggregateValues `json:"aggregate-lines-of-code-delta"`
+	AggregateScoreDelta          util.AggregateValues `json:"aggregate-score-delta"`
 
 	AggregateLinesOfCodeVelocity util.AggregateValues `json:"aggregate-lines-of-code-per-hour"`
 	AggregateScoreVelocity       util.AggregateValues `json:"aggregate-score-per-hour"`
@@ -152,6 +154,7 @@ func NewIndividualAnalysisSummary(results []*IndividualAnalysis, pendingCount in
 
 	scores := make([]float64, 0, len(results))
 	locs := make([]float64, 0, len(results))
+	timeDeltas := make([]float64, 0, len(results))
 	locDeltas := make([]float64, 0, len(results))
 	scoreDeltas := make([]float64, 0, len(results))
 	locVelocities := make([]float64, 0, len(results))
@@ -174,6 +177,7 @@ func NewIndividualAnalysisSummary(results []*IndividualAnalysis, pendingCount in
 
 		scores = append(scores, result.Score)
 		locs = append(locs, float64(result.LinesOfCode))
+		timeDeltas = append(timeDeltas, float64(result.SubmissionTimeDelta))
 		locDeltas = append(locDeltas, float64(result.LinesOfCodeDelta))
 		scoreDeltas = append(scoreDeltas, result.ScoreDelta)
 		locVelocities = append(locVelocities, result.LinesOfCodeVelocity)
@@ -196,6 +200,7 @@ func NewIndividualAnalysisSummary(results []*IndividualAnalysis, pendingCount in
 		AggregateScore:               util.ComputeAggregates(scores),
 		AggregateLinesOfCode:         util.ComputeAggregates(locs),
 		AggregateLinesOfCodePerFile:  aggregateLOCPerFile,
+		AggregateSubmissionTimeDelta: util.ComputeAggregates(timeDeltas),
 		AggregateLinesOfCodeDelta:    util.ComputeAggregates(locDeltas),
 		AggregateScoreDelta:          util.ComputeAggregates(scoreDeltas),
 		AggregateLinesOfCodeVelocity: util.ComputeAggregates(locVelocities),
@@ -292,6 +297,7 @@ func (this *IndividualAnalysisSummary) RoundWithPrecision(precision uint) {
 
 	this.AggregateScore = this.AggregateScore.RoundWithPrecision(precision)
 	this.AggregateLinesOfCode = this.AggregateLinesOfCode.RoundWithPrecision(precision)
+	this.AggregateSubmissionTimeDelta = this.AggregateSubmissionTimeDelta.RoundWithPrecision(precision)
 	this.AggregateLinesOfCodeDelta = this.AggregateLinesOfCodeDelta.RoundWithPrecision(precision)
 	this.AggregateScoreDelta = this.AggregateScoreDelta.RoundWithPrecision(precision)
 	this.AggregateLinesOfCodeVelocity = this.AggregateLinesOfCodeVelocity.RoundWithPrecision(precision)

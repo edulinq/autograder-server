@@ -181,8 +181,10 @@ func computeDelta(analysis *model.IndividualAnalysis, assignment *model.Assignme
 		return fmt.Errorf("Failed to analyze previous submission for delta computation: '%w'.", err)
 	}
 
-	timeDeltaHours := float64((analysis.SubmissionStartTime - previousAnalysis.SubmissionStartTime).ToHours())
+	timeDelta := (analysis.SubmissionStartTime - previousAnalysis.SubmissionStartTime)
+	timeDeltaHours := timeDelta.ToHours()
 
+	analysis.SubmissionTimeDelta = timeDelta.ToMSecs()
 	analysis.LinesOfCodeDelta = (analysis.LinesOfCode - previousAnalysis.LinesOfCode)
 	analysis.ScoreDelta = (analysis.Score - previousAnalysis.Score)
 

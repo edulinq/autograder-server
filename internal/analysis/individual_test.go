@@ -40,8 +40,9 @@ func TestIndividualAnalysisBase(test *testing.T) {
 			},
 			LinesOfCode: 4,
 
-			LinesOfCodeDelta: 0,
-			ScoreDelta:       1,
+			SubmissionTimeDelta: 10000,
+			LinesOfCodeDelta:    0,
+			ScoreDelta:          1,
 
 			LinesOfCodeVelocity: 0,
 			ScoreVelocity:       360,
