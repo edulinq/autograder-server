@@ -20,6 +20,8 @@ import (
 	"github.com/edulinq/autograder/internal/util"
 )
 
+var extraInitTimeSecs int = 5
+
 type containerOutput struct {
 	Stdout    string
 	Stderr    string
@@ -69,6 +71,15 @@ func RunContainer(ctx context.Context, logId log.Loggable, imageName string, mou
 	dockerMounts := make([]mount.Mount, 0, len(mounts))
 	for _, mount := range mounts {
 		dockerMounts = append(dockerMounts, mount.ToDocker())
+	}
+
+	// Set a timeout for the container.
+	// Note that we are doing this before actually starting the container to (hopefully) stop any long running when creating or starting the container.
+	// We will add a small amount to the timeout to compensate for using the same timeout when creating and starting.
+	var cancel context.CancelFunc
+	if maxRuntimeSecs > 0 {
+		ctx, cancel = context.WithTimeout(ctx, time.Duration(maxRuntimeSecs+extraInitTimeSecs)*time.Second)
+		defer cancel()
 	}
 
 	containerInstance, err := docker.ContainerCreate(
@@ -149,13 +160,6 @@ func RunContainer(ctx context.Context, logId log.Loggable, imageName string, mou
 		}
 
 		return "", "", false, false, fmt.Errorf("Failed to start container '%s' (%s): '%w'.", name, containerInstance.ID, err)
-	}
-
-	// Set a timeout for the container.
-	var cancel context.CancelFunc
-	if maxRuntimeSecs > 0 {
-		ctx, cancel = context.WithTimeout(ctx, time.Duration(maxRuntimeSecs)*time.Second)
-		defer cancel()
 	}
 
 	// Wait for the container to finish.
@@ -258,5 +262,15 @@ func (this MountInfo) ToDocker() mount.Mount {
 		Source:   this.Source,
 		Target:   this.Target,
 		ReadOnly: this.ReadOnly,
+	}
+}
+
+// Set the value and return a function to reset it back to its original state.
+func SetExtraInitTimeSecsForTesting(newValue int) func() {
+	oldValue := extraInitTimeSecs
+	extraInitTimeSecs = newValue
+
+	return func() {
+		extraInitTimeSecs = oldValue
 	}
 }

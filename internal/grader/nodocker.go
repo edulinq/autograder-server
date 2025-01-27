@@ -20,7 +20,7 @@ const PYTHON_AUTOGRADER_INVOCATION = "python3 -m autograder.cli.grading.grade-di
 const PYTHON_GRADER_FILENAME = "grader.py"
 const PYTHON_DOCKER_IMAGE_BASENAME = "edulinq/grader.python"
 
-// A small delay to wait for a process to finish ater already timing out.
+// A small delay to wait for a process to finish after already timing out.
 var noDockerTimeoutWaitDelayMS int = 10 * 1000
 
 // Returns: (result, file contents, stdout, stderr, failure message (soft failure), error (hard failure)).
@@ -182,4 +182,14 @@ func getAssignmentInvocation(ctx context.Context, assignment *model.Assignment,
 	}
 
 	return ctx, cmd, nil
+}
+
+// Set the value and return a function to reset it back to its original state.
+func SetNoDockerTimeoutWaitDelayMSForTesting(newValue int) func() {
+	oldValue := noDockerTimeoutWaitDelayMS
+	noDockerTimeoutWaitDelayMS = newValue
+
+	return func() {
+		noDockerTimeoutWaitDelayMS = oldValue
+	}
 }

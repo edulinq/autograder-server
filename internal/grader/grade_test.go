@@ -115,15 +115,15 @@ func runSubmissionTests(test *testing.T, parallel bool, useDocker bool) {
 func TestGradeTimeoutDocker(test *testing.T) {
 	docker.EnsureOrSkipForTest(test)
 
+	resetFunc := docker.SetExtraInitTimeSecsForTesting(0)
+	defer resetFunc()
+
 	testGradeCancelOrTimeout(test, context.Background(), false, 1, "Submission has ran for too long and was killed.")
 }
 
 func TestGradeTimeoutNoDocker(test *testing.T) {
-	oldValue := noDockerTimeoutWaitDelayMS
-	noDockerTimeoutWaitDelayMS = 10
-	defer func() {
-		noDockerTimeoutWaitDelayMS = oldValue
-	}()
+	resetFunc := SetNoDockerTimeoutWaitDelayMSForTesting(10)
+	defer resetFunc()
 
 	testGradeCancelOrTimeout(test, context.Background(), true, 1, "Submission has ran for too long and was killed.")
 }
@@ -138,15 +138,12 @@ func TestGradeMidCancelDocker(test *testing.T) {
 		cancelFunc()
 	}()
 
-	testGradeCancelOrTimeout(test, ctx, false, 10, "Grading has been canceled")
+	testGradeCancelOrTimeout(test, ctx, false, 5, "Grading has been canceled")
 }
 
 func TestGradeMidCancelNoDocker(test *testing.T) {
-	oldValue := noDockerTimeoutWaitDelayMS
-	noDockerTimeoutWaitDelayMS = 10
-	defer func() {
-		noDockerTimeoutWaitDelayMS = oldValue
-	}()
+	resetFunc := SetNoDockerTimeoutWaitDelayMSForTesting(10)
+	defer resetFunc()
 
 	ctx, cancelFunc := context.WithCancel(context.Background())
 	defer cancelFunc()
@@ -155,7 +152,7 @@ func TestGradeMidCancelNoDocker(test *testing.T) {
 		cancelFunc()
 	}()
 
-	testGradeCancelOrTimeout(test, ctx, true, 10, "Grading has been canceled")
+	testGradeCancelOrTimeout(test, ctx, true, 5, "Grading has been canceled")
 }
 
 func TestGradePreCancelDocker(test *testing.T) {
@@ -164,15 +161,12 @@ func TestGradePreCancelDocker(test *testing.T) {
 	ctx, cancelFunc := context.WithCancel(context.Background())
 	cancelFunc()
 
-	testGradeCancelOrTimeout(test, ctx, false, 10, "Grading has been canceled")
+	testGradeCancelOrTimeout(test, ctx, false, 5, "Grading has been canceled")
 }
 
 func TestGradePreCancelNoDocker(test *testing.T) {
-	oldValue := noDockerTimeoutWaitDelayMS
-	noDockerTimeoutWaitDelayMS = 10
-	defer func() {
-		noDockerTimeoutWaitDelayMS = oldValue
-	}()
+	resetFunc := SetNoDockerTimeoutWaitDelayMSForTesting(10)
+	defer resetFunc()
 
 	ctx, cancelFunc := context.WithCancel(context.Background())
 	cancelFunc()
