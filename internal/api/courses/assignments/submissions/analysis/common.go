@@ -10,9 +10,9 @@ func checkPermissions(user *model.ServerUser, courses []string) bool {
 		return true
 	}
 
-	// Regular server users need to be at least an admin in every course they are making requests for.
+	// Regular server users need to be at least a grader in every course they are making requests for.
 	for _, course := range courses {
-		if user.GetCourseRole(course) < model.CourseRoleAdmin {
+		if user.GetCourseRole(course) < model.CourseRoleGrader {
 			return false
 		}
 	}

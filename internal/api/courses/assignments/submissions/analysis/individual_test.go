@@ -219,7 +219,7 @@ func TestIndividualCheckPermissions(test *testing.T) {
 			false,
 		},
 		{
-			db.MustGetServerUser("course-admin@test.edulinq.org"),
+			db.MustGetServerUser("course-grader@test.edulinq.org"),
 			[]string{"course101"},
 			true,
 		},
@@ -229,7 +229,7 @@ func TestIndividualCheckPermissions(test *testing.T) {
 			false,
 		},
 		{
-			db.MustGetServerUser("course-admin@test.edulinq.org"),
+			db.MustGetServerUser("course-grader@test.edulinq.org"),
 			[]string{"course101", "course-languages"},
 			true,
 		},
