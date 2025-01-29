@@ -3,6 +3,7 @@ package grader
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/edulinq/autograder/internal/common"
 	"github.com/edulinq/autograder/internal/config"
@@ -13,6 +14,10 @@ import (
 	"github.com/edulinq/autograder/internal/timestamp"
 	"github.com/edulinq/autograder/internal/util"
 )
+
+// Allow for a little extra runtime for setup/cleaup when running the grader.
+// This extra time is just for the safety context around the actual graders (which have their own timeouts).
+const extraRunTimeSecs int = 10
 
 type GradeOptions struct {
 	NoDocker     bool
@@ -69,21 +74,11 @@ func Grade(ctx context.Context, assignment *model.Assignment, submissionPath str
 
 	fullSubmissionID := common.CreateFullSubmissionID(assignment.GetCourse().GetID(), assignment.GetID(), user, submissionID)
 
-	var gradingInfo *model.GradingInfo
-	var outputFileContents map[string][]byte
-	var stdout string
-	var stderr string
-
-	softGradingError := ""
-	if options.NoDocker {
-		gradingInfo, outputFileContents, stdout, stderr, softGradingError, err = runNoDockerGrader(ctx, assignment, submissionPath, options, fullSubmissionID)
-	} else {
-		gradingInfo, outputFileContents, stdout, stderr, softGradingError, err = runDockerGrader(ctx, assignment, submissionPath, options, fullSubmissionID)
-	}
+	gradingInfo, outputFileContents, stdout, stderr, softGradingError, err := runGrader(ctx, assignment, submissionPath, options, fullSubmissionID)
 
 	endTimestamp := timestamp.Now()
 
-	// Copy over stdout and stderr even if an error occured.
+	// Copy over stdout and stderr even if an error occurred.
 	gradingResult.Stdout = stdout
 	gradingResult.Stderr = stderr
 
@@ -104,7 +99,6 @@ func Grade(ctx context.Context, assignment *model.Assignment, submissionPath str
 	gradingInfo.AssignmentID = assignment.GetID()
 	gradingInfo.User = user
 	gradingInfo.Message = message
-
 	gradingInfo.GradingStartTime = startTimestamp
 	gradingInfo.GradingEndTime = endTimestamp
 
@@ -150,4 +144,49 @@ func getTimeoutMessage(assignment *model.Assignment) string {
 
 func getCanceledMessage(assignment *model.Assignment) string {
 	return "Grading has been canceled (usually by a broken HTTP connection)."
+}
+
+// Add an additional level for waiting for timeouts.
+// Timeouts should be handled a level below this (e.g., docker or exec),
+// but this is an additional layer just in case there are issues at that level.
+func runGrader(ctx context.Context, assignment *model.Assignment, submissionPath string, options GradeOptions, fullSubmissionID string) (*model.GradingInfo, map[string][]byte, string, string, string, error) {
+	// Create a timeout context based on the background context.
+	// Note that we are not basing it on ctx (which may cancel at the HTTP level) so that the grader can handle the appropriate messages.
+	timeoutCtx, cancel := context.WithTimeout(context.Background(), time.Duration(assignment.MaxRuntimeSecs+extraRunTimeSecs)*time.Second)
+	defer cancel()
+
+	var gradingInfo *model.GradingInfo
+	var outputFileContents map[string][]byte
+	var stdout string
+	var stderr string
+	var softGradingError string
+	var err error
+
+	successChan := make(chan bool, 1)
+
+	// Run the grader in a gofunc so we can check for a timeout.
+	go func() {
+		if options.NoDocker {
+			gradingInfo, outputFileContents, stdout, stderr, softGradingError, err = runNoDockerGrader(ctx, assignment, submissionPath, options, fullSubmissionID)
+		} else {
+			gradingInfo, outputFileContents, stdout, stderr, softGradingError, err = runDockerGrader(ctx, assignment, submissionPath, options, fullSubmissionID)
+		}
+
+		// The grader has finished without timing out.
+		successChan <- true
+
+	}()
+
+	// Wait for the context to finish or timeout.
+	select {
+	case <-successChan:
+		// Success
+		return gradingInfo, outputFileContents, stdout, stderr, softGradingError, err
+	case <-timeoutCtx.Done():
+		// Timeout
+		// We must return very general results (which is why we prefer to catch this at the grader level).
+		return nil, nil, "", "", getTimeoutMessage(assignment), nil
+	}
+
+	return nil, nil, "", "", "", fmt.Errorf("Grading (and timeout) failed.")
 }
