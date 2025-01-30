@@ -6,7 +6,6 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/edulinq/autograder/internal/db"
 	"github.com/edulinq/autograder/internal/log"
 	"github.com/edulinq/autograder/internal/model"
 )
@@ -35,9 +34,8 @@ type ServerUserInfo struct {
 
 // An API-safe representation of enrollment information.
 type EnrollmentInfo struct {
-	CourseID   string               `json:"id"`
-	CourseName string               `json:"name"`
-	Role       model.CourseUserRole `json:"role"`
+	CourseID string               `json:"id"`
+	Role     model.CourseUserRole `json:"role"`
 }
 
 // An API-safe representation of a course user.
@@ -60,20 +58,9 @@ func NewServerUserInfo(user *model.ServerUser) (*ServerUserInfo, error) {
 	}
 
 	for courseID, courseInfo := range user.CourseInfo {
-		course, err := db.GetCourse(courseID)
-		if err != nil {
-			return nil, fmt.Errorf("Failed to get course '%s' for user '%s'.", courseID, user.Email)
-		}
-
-		if course == nil {
-			log.Warn("User has a course that does not exist.", user, log.NewCourseAttr(courseID))
-			continue
-		}
-
-		info.Courses[course.GetID()] = EnrollmentInfo{
-			CourseID:   course.GetID(),
-			CourseName: course.GetName(),
-			Role:       courseInfo.Role,
+		info.Courses[courseID] = EnrollmentInfo{
+			CourseID: courseID,
+			Role:     courseInfo.Role,
 		}
 	}
 
