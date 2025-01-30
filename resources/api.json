@@ -130,6 +130,11 @@
             "request-type": "*system.QueryRequest",
             "response-type": "*system.QueryResponse"
         },
+        "system/stacks": {
+            "description": "Get stack traces for all the currently running routines (threads) on the server.",
+            "request-type": "*system.StacksRequest",
+            "response-type": "*system.StacksResponse"
+        },
         "users/auth": {
             "description": "Authenticate as a user.",
             "request-type": "*users.AuthRequest",
