@@ -59,6 +59,11 @@ func Zero() Timestamp {
 	return Timestamp(0)
 }
 
+func ZeroPointer() *Timestamp {
+	value := Zero()
+	return &value
+}
+
 func FromGoTime(instance time.Time) Timestamp {
 	return Timestamp(instance.UnixMilli())
 }

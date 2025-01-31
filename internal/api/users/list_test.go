@@ -18,7 +18,7 @@ func TestList(test *testing.T) {
 		users = append(users, user)
 	}
 
-	expectedInfos := core.MustNewServerUserInfos(users)
+	expectedInfos := core.NewServerUserInfos(users)
 
 	testCases := []struct {
 		email     string

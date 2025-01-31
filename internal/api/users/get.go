@@ -2,6 +2,7 @@ package users
 
 import (
 	"github.com/edulinq/autograder/internal/api/core"
+	"github.com/edulinq/autograder/internal/db"
 )
 
 type GetRequest struct {
@@ -12,8 +13,9 @@ type GetRequest struct {
 }
 
 type GetResponse struct {
-	Found bool                 `json:"found"`
-	User  *core.ServerUserInfo `json:"user"`
+	Found   bool                        `json:"found"`
+	User    *core.ServerUserInfo        `json:"user"`
+	Courses map[string]*core.CourseInfo `json:"courses"`
 }
 
 // Get the information for a server user.
@@ -25,14 +27,20 @@ func HandleGet(request *GetRequest) (*GetResponse, *core.APIError) {
 	}
 
 	response.Found = true
+	response.User = core.NewServerUserInfo(request.TargetUser.User)
 
-	info, err := core.NewServerUserInfo(request.TargetUser.User)
-	if err != nil {
-		return nil, core.NewUserContextInternalError("-804", &request.APIRequestUserContext,
-			"Failed to get server user info.").Err(err)
+	response.Courses = make(map[string]*core.CourseInfo, len(request.TargetUser.User.CourseInfo))
+	for courseID, _ := range request.TargetUser.User.CourseInfo {
+		course, err := db.GetCourse(courseID)
+		if err != nil {
+			return nil, core.NewUserContextInternalError("-804", &request.APIRequestUserContext,
+				"Failed to get user's course.").Err(err).Course(courseID)
+		}
+
+		if course != nil {
+			response.Courses[courseID] = core.NewCourseInfo(course)
+		}
 	}
-
-	response.User = info
 
 	return &response, nil
 }

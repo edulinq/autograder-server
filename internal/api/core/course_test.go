@@ -6,6 +6,7 @@ import (
 
 	"github.com/edulinq/autograder/internal/db"
 	"github.com/edulinq/autograder/internal/model"
+	"github.com/edulinq/autograder/internal/timestamp"
 	"github.com/edulinq/autograder/internal/util"
 )
 
@@ -25,14 +26,14 @@ func TestNewAssignmentInfos(test *testing.T) {
 
 		// One Assignment
 		{"course101", []*AssignmentInfo{
-			&AssignmentInfo{"hw0", "Homework 0"},
+			&AssignmentInfo{ID: "hw0", Name: "Homework 0"},
 		}},
 
 		// Multiple Assignments
 		{"course-languages", []*AssignmentInfo{
-			&AssignmentInfo{"bash", "A Simple Bash Assignment"},
-			&AssignmentInfo{"cpp-simple", "A Simple C++ Assignment"},
-			&AssignmentInfo{"java", "A Simple Java Assignment"},
+			&AssignmentInfo{ID: "bash", Name: "A Simple Bash Assignment", DueDate: timestamp.ZeroPointer()},
+			&AssignmentInfo{ID: "cpp-simple", Name: "A Simple C++ Assignment"},
+			&AssignmentInfo{ID: "java", Name: "A Simple Java Assignment"},
 		}},
 	}
 

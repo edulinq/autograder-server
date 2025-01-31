@@ -124,7 +124,7 @@ func TestNewServerUserInfos(test *testing.T) {
 	for i, testCase := range testCases {
 		serverUserInfos := make([]*ServerUserInfo, 0, len(testCase.serverUsers))
 		for _, user := range testCase.serverUsers {
-			serverUserInfos = append(serverUserInfos, MustNewServerUserInfo(user))
+			serverUserInfos = append(serverUserInfos, NewServerUserInfo(user))
 		}
 
 		for _, serverUserInfo := range serverUserInfos {

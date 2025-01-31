@@ -26,13 +26,7 @@ func HandleList(request *ListRequest) (*ListResponse, *core.APIError) {
 
 	infos := make([]*core.ServerUserInfo, 0, len(usersMap))
 	for _, user := range usersMap {
-		info, err := core.NewServerUserInfo(user)
-		if err != nil {
-			return nil, core.NewUserContextInternalError("-814", &request.APIRequestUserContext,
-				"Failed to get server user info.").Err(err)
-		}
-
-		infos = append(infos, info)
+		infos = append(infos, core.NewServerUserInfo(user))
 	}
 
 	slices.SortFunc(infos, core.CompareServerUserInfoPointer)
