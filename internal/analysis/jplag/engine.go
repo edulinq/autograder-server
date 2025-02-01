@@ -17,7 +17,7 @@ import (
 
 const (
 	NAME         = "jplag"
-	VERSION      = "5.1.0.2"
+	VERSION      = "5.1.0.4"
 	DOCKER_IMAGE = "ghcr.io/edulinq/jplag-docker"
 
 	MAX_RUNTIME_SECS = 2 * 60

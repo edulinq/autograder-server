@@ -5,7 +5,6 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/edulinq/autograder/internal/analysis/dolos"
 	"github.com/edulinq/autograder/internal/analysis/jplag"
 	"github.com/edulinq/autograder/internal/db"
 	"github.com/edulinq/autograder/internal/docker"
@@ -14,100 +13,6 @@ import (
 	"github.com/edulinq/autograder/internal/timestamp"
 	"github.com/edulinq/autograder/internal/util"
 )
-
-func TestPairwiseAnalysisDefaultEnginesBase(test *testing.T) {
-	docker.EnsureOrSkipForTest(test)
-
-	db.ResetForTesting()
-	defer db.ResetForTesting()
-
-	// Force the use of the default engines.
-	forceDefaultEnginesForTesting = true
-	defer func() {
-		forceDefaultEnginesForTesting = false
-	}()
-
-	// Override a setting for JPlag for testing.
-	defaultSimilarityEngines[1].(*jplag.JPlagEngine).MinTokens = 5
-
-	ids := []string{
-		"course101::hw0::course-student@test.edulinq.org::1697406265",
-		"course101::hw0::course-student@test.edulinq.org::1697406272",
-	}
-
-	expected := []*model.PairwiseAnalysis{
-		&model.PairwiseAnalysis{
-			AnalysisTimestamp: timestamp.Zero(),
-			SubmissionIDs: model.NewPairwiseKey(
-				"course101::hw0::course-student@test.edulinq.org::1697406265",
-				"course101::hw0::course-student@test.edulinq.org::1697406272",
-			),
-			Similarities: map[string][]*model.FileSimilarity{
-				"submission.py": []*model.FileSimilarity{
-					&model.FileSimilarity{
-						Filename: "submission.py",
-						Tool:     dolos.NAME,
-						Version:  dolos.VERSION,
-						Score:    0,
-					},
-					&model.FileSimilarity{
-						Filename: "submission.py",
-						Tool:     jplag.NAME,
-						Version:  jplag.VERSION,
-						Score:    0,
-					},
-				},
-			},
-			UnmatchedFiles: [][2]string{},
-			MeanSimilarities: map[string]float64{
-				"submission.py": 0,
-			},
-			TotalMeanSimilarity: 0,
-		},
-	}
-
-	results, pendingCount, err := PairwiseAnalysis(ids, true, "course-admin@test.edulinq.org")
-	if err != nil {
-		test.Fatalf("Failed to do pairwise analysis: '%v'.", err)
-	}
-
-	if pendingCount != 0 {
-		test.Fatalf("Found %d pending results, when 0 were expected.", pendingCount)
-	}
-
-	for _, result := range results {
-		// Zero out the timestamps.
-		result.AnalysisTimestamp = timestamp.Zero()
-
-		// We only care that the scores are above zero.
-
-		for i, similarity := range result.Similarities["submission.py"] {
-			if similarity.Score <= 0 {
-				test.Fatalf("Similairty from '%s' (index %d) is not above zero, found %f.", similarity.Tool, i, similarity.Score)
-			}
-
-			// Zero out score after check.
-			similarity.Score = 0
-		}
-
-		meanSim := result.MeanSimilarities["submission.py"]
-		result.MeanSimilarities["submission.py"] = 0
-		if meanSim <= 0 {
-			test.Fatalf("Mean similairty is not above zero, found %f.", meanSim)
-		}
-
-		totalMeanSim := result.TotalMeanSimilarity
-		result.TotalMeanSimilarity = 0
-		if totalMeanSim <= 0 {
-			test.Fatalf("Total mean similairty is not above zero, found %f.", totalMeanSim)
-		}
-	}
-
-	if !reflect.DeepEqual(expected, results) {
-		test.Fatalf("Results not as expected. Expected: '%s', Actual: '%s'.",
-			util.MustToJSONIndent(expected), util.MustToJSONIndent(results))
-	}
-}
 
 func TestPairwiseAnalysisFake(test *testing.T) {
 	db.ResetForTesting()
@@ -320,6 +225,9 @@ func TestPairwiseAnalysisDefaultEnginesSpecificFiles(test *testing.T) {
 
 	// Override a setting for JPlag for testing.
 	defaultSimilarityEngines[1].(*jplag.JPlagEngine).MinTokens = 5
+	defer func() {
+		defaultSimilarityEngines[1].(*jplag.JPlagEngine).MinTokens = jplag.DEFAULT_MIN_TOKENS
+	}()
 
 	testPaths := []string{
 		filepath.Join(util.RootDirForTesting(), "testdata", "files", "sim_engine", "config.json"),

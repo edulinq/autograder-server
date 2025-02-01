@@ -1,6 +1,7 @@
 package dolos
 
 import (
+	"runtime"
 	"testing"
 
 	"github.com/edulinq/autograder/internal/analysis/core"
@@ -8,6 +9,10 @@ import (
 )
 
 func TestDolosComputeFileSimilarityBase(test *testing.T) {
+	if runtime.GOARCH != "amd64" {
+		test.Skip("Dolos only runs on amd64.")
+	}
+
 	expected := &model.FileSimilarity{
 		Filename: "submission.py",
 		Tool:     NAME,

@@ -17,8 +17,8 @@ import (
 
 const (
 	NAME         = "dolos"
-	VERSION      = "2.9.0"
-	DOCKER_IMAGE = "ghcr.io/dodona-edu/dolos-cli"
+	VERSION      = "2.9.0.1"
+	DOCKER_IMAGE = "ghcr.io/edulinq/dolos-docker"
 
 	MAX_RUNTIME_SECS = 2 * 60
 
@@ -90,12 +90,11 @@ func (this *dolosEngine) ComputeFileSimilarity(paths [2]string, baseLockKey stri
 	}
 
 	arguments := []string{
-		"run",
 		"--output-format", "csv",
+		"--output-destination", OUT_DIRNAME,
 		"--language", getLanguage(tempFilenames[0]),
 		tempFilenames[0],
 		tempFilenames[1],
-		"--output-destination", OUT_DIRNAME,
 	}
 
 	stdout, stderr, _, _, err := docker.RunContainer(context.Background(), this, getImageName(), mounts, arguments, NAME, MAX_RUNTIME_SECS)
