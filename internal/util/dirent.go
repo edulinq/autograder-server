@@ -7,10 +7,17 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+
+	"github.com/edulinq/autograder/internal/log"
 )
 
 func RemoveDirent(path string) error {
-	return os.RemoveAll(path)
+	err := os.RemoveAll(path)
+	if err != nil {
+		log.Debug("Failed to remove dirent.", err, log.NewAttr("path", path))
+	}
+
+	return err
 }
 
 // Copy a file or directory into dest.
