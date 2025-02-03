@@ -114,7 +114,7 @@ func runContainerInternal(ctx context.Context, logId log.Loggable, imageName str
 		dockerMounts = append(dockerMounts, mount.ToDocker())
 	}
 
-	log.Trace("Creating container.", log.NewAttr("name", name))
+	log.Debug("Creating container.", log.NewAttr("name", name))
 	containerInstance, err := docker.ContainerCreate(
 		ctx,
 		&container.Config{
@@ -225,8 +225,8 @@ func runContainerInternal(ctx context.Context, logId log.Loggable, imageName str
 	log.Trace("Waiting for container output.", log.NewAttr("name", name))
 	outputWaitGroup.Wait()
 
-	log.Trace("Done with container.", log.NewAttr("name", name))
-	log.Debug("Container output.",
+	log.Debug("Done with container.", log.NewAttr("name", name))
+	log.Trace("Container output.",
 		logId,
 		log.NewAttr("container-name", name),
 		log.NewAttr("container-id", containerInstance.ID),
