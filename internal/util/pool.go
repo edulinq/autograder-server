@@ -2,6 +2,7 @@ package util
 
 import (
 	"fmt"
+	"sync"
 )
 
 // Do a map function (one result for one input) with a parallel pool of workers.
@@ -30,7 +31,8 @@ func RunParallelPoolMap[InputType any, OutputType any](poolSize int, workItems [
 
 	resultQueue := make(chan ResultItem, poolSize)
 	workQueue := make(chan WorkItem, poolSize)
-	doneChan := make(chan bool, poolSize+1) // +1 for the parent thread.
+	doneChan := make(chan bool, poolSize)
+	exitWaitGroup := sync.WaitGroup{}
 
 	// Load work.
 	go func() {
@@ -50,15 +52,18 @@ func RunParallelPoolMap[InputType any, OutputType any](poolSize int, workItems [
 			}
 		}
 
-		// Got all the results, signal completion to all the workers and the parent.
-		for i := 0; i < (poolSize + 1); i++ {
+		// Got all the results, signal completion to all the workers.
+		for i := 0; i < (poolSize); i++ {
 			doneChan <- true
 		}
 	}()
 
 	// Dispatch workers.
+	exitWaitGroup.Add(poolSize)
 	for i := 0; i < poolSize; i++ {
 		go func() {
+			defer exitWaitGroup.Done()
+
 			for {
 				select {
 				case workItem := <-workQueue:
@@ -72,7 +77,8 @@ func RunParallelPoolMap[InputType any, OutputType any](poolSize int, workItems [
 	}
 
 	// Wait for completion.
-	<-doneChan
+	// Technically we could wait on the done channel, but this will ensure that all workers have exited.
+	exitWaitGroup.Wait()
 
 	return results, workErrors, nil
 }

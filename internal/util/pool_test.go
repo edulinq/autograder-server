@@ -2,6 +2,7 @@ package util
 
 import (
 	"reflect"
+	"runtime"
 	"testing"
 )
 
@@ -36,6 +37,9 @@ func TestRunParallelPoolMapBase(test *testing.T) {
 	}
 
 	for i, testCase := range testCases {
+		// Count the number of active threads before running.
+		startThreadCount := runtime.NumGoroutine()
+
 		actual, workErrors, err := RunParallelPoolMap(testCase.numThreads, input, workFunc)
 		if err != nil {
 			if !testCase.hasError {
@@ -57,6 +61,13 @@ func TestRunParallelPoolMapBase(test *testing.T) {
 
 		if !reflect.DeepEqual(expected, actual) {
 			test.Errorf("Case %d: Result not as expected. Expected: '%s', Actual: '%s'.", i, MustToJSONIndent(expected), MustToJSONIndent(actual))
+		}
+
+		// Check for the thread count last (this gives the workers a small bit of extra time to exit).
+		endThreadCount := runtime.NumGoroutine()
+		if startThreadCount != endThreadCount {
+			test.Errorf("Case %d: Starting and ending thread count differ. Start: %d, End: %d.", i, startThreadCount, endThreadCount)
+			continue
 		}
 	}
 }
