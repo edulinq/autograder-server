@@ -7,7 +7,6 @@ import (
 	"strconv"
 	"sync"
 
-	"github.com/edulinq/autograder/internal/common"
 	"github.com/edulinq/autograder/internal/docker"
 	"github.com/edulinq/autograder/internal/log"
 	"github.com/edulinq/autograder/internal/model"
@@ -51,11 +50,7 @@ func (this *JPlagEngine) IsAvailable() bool {
 	return docker.CanAccessDocker()
 }
 
-func (this *JPlagEngine) ComputeFileSimilarity(paths [2]string, baseLockKey string) (*model.FileSimilarity, int64, error) {
-	lockKey := fmt.Sprintf("jplag-%s", baseLockKey)
-	common.Lock(lockKey)
-	defer common.Unlock(lockKey)
-
+func (this *JPlagEngine) ComputeFileSimilarity(paths [2]string) (*model.FileSimilarity, int64, error) {
 	err := ensureImage()
 	if err != nil {
 		return nil, 0, fmt.Errorf("Failed to ensure JPlag docker image exists: '%w'.", err)

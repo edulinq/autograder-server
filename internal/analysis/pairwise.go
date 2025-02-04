@@ -110,18 +110,49 @@ func getCachedPairwiseResults(fullSubmissionIDs []string) ([]*model.PairwiseAnal
 	return completeAnalysis, remainingKeys, nil
 }
 
+// Lock based on course and then run the analysis in a parallel pool.
 func runPairwiseAnalysis(keys []model.PairwiseKey, initiatorEmail string) ([]*model.PairwiseAnalysis, error) {
+	if len(keys) == 0 {
+		return nil, nil
+	}
+
+	// Lock based on the first seen course.
+	// This is to prevent multiple requests using up all the cores.
+	lockCourseID, _, _, _, err := common.SplitFullSubmissionID(keys[0][0])
+	if err != nil {
+		return nil, fmt.Errorf("Unable to get locking course: '%w'.", err)
+	}
+
+	lockKey := fmt.Sprintf("analysis-pairwise-course-%s", lockCourseID)
+	common.Lock(lockKey)
+	defer common.Unlock(lockKey)
+
+	poolSize := config.ANALYSIS_PAIRWISE_COURSE_POOL_SIZE.Get()
+	type PoolResult struct {
+		Result  *model.PairwiseAnalysis
+		RunTime int64
+		Error   error
+	}
+
+	poolResults, _, err := util.RunParallelPoolMap(poolSize, keys, func(key model.PairwiseKey) (PoolResult, error) {
+		result, runTime, err := runSinglePairwiseAnalysis(key)
+		if err != nil {
+			err = fmt.Errorf("Failed to perform pairwise analysis on submissions %s: '%w'.", key.String(), err)
+		}
+
+		return PoolResult{result, runTime, err}, nil
+	})
+
 	results := make([]*model.PairwiseAnalysis, 0, len(keys))
 	var errs error = nil
 	totalRunTime := int64(0)
 
-	for _, key := range keys {
-		result, runTime, err := runSinglePairwiseAnalysis(key)
-		if err != nil {
-			errs = errors.Join(errs, fmt.Errorf("Failed to perform pairwise analysis on submissions %s: '%w'.", key.String(), err))
+	for _, poolResult := range poolResults {
+		if poolResult.Error != nil {
+			errs = errors.Join(errs, poolResult.Error)
 		} else {
-			results = append(results, result)
-			totalRunTime += runTime
+			results = append(results, poolResult.Result)
+			totalRunTime += poolResult.RunTime
 		}
 	}
 
@@ -168,26 +199,20 @@ func computeSinglePairwiseAnalysis(pairwiseKey model.PairwiseKey) (*model.Pairwi
 	}
 	defer util.RemoveDirent(tempDir)
 
-	lockCourseID := ""
-
 	// Collect both submissions in a temp dir.
 	var submissionDirs [2]string
 	for i, fullSubmissionID := range pairwiseKey {
 		submissionDir := filepath.Join(tempDir, fullSubmissionID)
 
-		gradingResult, _, err := fetchSubmission(fullSubmissionID, submissionDir)
+		_, _, err := fetchSubmission(fullSubmissionID, submissionDir)
 		if err != nil {
 			return nil, 0, err
-		}
-
-		if lockCourseID == "" {
-			lockCourseID = gradingResult.Info.CourseID
 		}
 
 		submissionDirs[i] = submissionDir
 	}
 
-	fileSimilarities, unmatches, totalRunTime, err := computeFileSims(submissionDirs, lockCourseID)
+	fileSimilarities, unmatches, totalRunTime, err := computeFileSims(submissionDirs)
 	if err != nil {
 		return nil, 0, fmt.Errorf("Failed to compute similarities for %v: '%w'.", pairwiseKey, err)
 	}
@@ -197,7 +222,7 @@ func computeSinglePairwiseAnalysis(pairwiseKey model.PairwiseKey) (*model.Pairwi
 	return analysis, totalRunTime, nil
 }
 
-func computeFileSims(inputDirs [2]string, lockID string) (map[string][]*model.FileSimilarity, [][2]string, int64, error) {
+func computeFileSims(inputDirs [2]string) (map[string][]*model.FileSimilarity, [][2]string, int64, error) {
 	engines, err := getEngines()
 	if err != nil {
 		return nil, nil, 0, err
@@ -246,7 +271,7 @@ func computeFileSims(inputDirs [2]string, lockID string) (map[string][]*model.Fi
 			go func(index int, simEngine core.SimilarityEngine) {
 				defer engineWaitGroup.Done()
 
-				similarity, runTime, err := simEngine.ComputeFileSimilarity(paths, lockID)
+				similarity, runTime, err := simEngine.ComputeFileSimilarity(paths)
 				if err != nil {
 					errs[index] = fmt.Errorf("Unable to compute similarity for '%s' using engine '%s': '%w'", relpath, simEngine.GetName(), err)
 				} else {
@@ -310,6 +335,10 @@ func getEngines() ([]core.SimilarityEngine, error) {
 }
 
 func collectPairwiseStats(keys []model.PairwiseKey, totalRunTime int64, initiatorEmail string) {
+	if totalRunTime <= 0 {
+		return
+	}
+
 	fullSubmissionIDs := make([]string, 0, len(keys)*2)
 	for _, keyPair := range keys {
 		for _, key := range keyPair {

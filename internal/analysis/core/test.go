@@ -18,7 +18,7 @@ func RunEngineTestComputeFileSimilarityBase(test *testing.T, engine SimilarityEn
 		filepath.Join(util.RootDirForTesting(), "testdata", "course101", "HW0", "test-submissions", "partial", "submission.py"),
 	}
 
-	result, runTime, err := engine.ComputeFileSimilarity(paths, "course101")
+	result, runTime, err := engine.ComputeFileSimilarity(paths)
 	if err != nil {
 		test.Fatalf("Failed to compute similarity: '%v'.", err)
 	}
