@@ -59,6 +59,8 @@ func lock(key string, read bool) {
 		lock.mutex.Lock()
 	}
 
+	log.Trace("Lock", log.NewAttr("read", read), log.NewAttr("key", key))
+
 	lock.lockCount++
 	lock.timestamp = time.Now()
 }
@@ -79,14 +81,16 @@ func unlock(key string, read bool) error {
 		return fmt.Errorf("Tried to unlock a lock that is already unlocked with key '%s'", key)
 	}
 
+	lock.lockCount--
+	lock.timestamp = time.Now()
+
+	log.Trace("Unlock", log.NewAttr("read", read), log.NewAttr("key", key))
+
 	if read {
 		lock.mutex.RUnlock()
 	} else {
 		lock.mutex.Unlock()
 	}
-
-	lock.lockCount--
-	lock.timestamp = time.Now()
 
 	return nil
 }
