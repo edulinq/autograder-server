@@ -36,6 +36,10 @@ func MustMkDirTemp(prefix string) string {
 }
 
 func MkDirTemp(prefix string) (string, error) {
+	return MkDirTempFull(prefix, true)
+}
+
+func MkDirTempFull(prefix string, cleanupTempDir bool) (string, error) {
 	tempDirMutex.Lock()
 	defer tempDirMutex.Unlock()
 
@@ -48,7 +52,10 @@ func MkDirTemp(prefix string) (string, error) {
 		return "", err
 	}
 
-	createdTempDirs = append(createdTempDirs, dir)
+	if cleanupTempDir {
+		createdTempDirs = append(createdTempDirs, dir)
+	}
+
 	return dir, nil
 }
 

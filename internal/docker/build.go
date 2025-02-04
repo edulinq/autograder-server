@@ -41,13 +41,14 @@ func BuildImage(imageSource ImageSource) error {
 
 func BuildImageWithOptions(imageSource ImageSource, options *BuildOptions) error {
 	imageInfo := imageSource.GetImageInfo()
+	leaveBuildDir := config.KEEP_BUILD_DIRS.Get()
 
-	tempDir, err := util.MkDirTemp(TEMPDIR_PREFIX + imageInfo.Name + "-")
+	tempDir, err := util.MkDirTempFull(TEMPDIR_PREFIX+imageInfo.Name+"-", !leaveBuildDir)
 	if err != nil {
 		return fmt.Errorf("Failed to create temp build directory for '%s': '%w'.", imageInfo.Name, err)
 	}
 
-	if config.KEEP_BUILD_DIRS.Get() {
+	if leaveBuildDir {
 		log.Debug("Leaving behind image building dir.", imageSource, log.NewAttr("path", tempDir))
 	} else {
 		defer util.RemoveDirent(tempDir)

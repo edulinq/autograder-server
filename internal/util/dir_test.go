@@ -50,3 +50,29 @@ func TestMatchFilesBase(test *testing.T) {
 			MustToJSONIndent(expectedUnmatches), MustToJSONIndent(unmatches))
 	}
 }
+
+func TestMkTempDirCleanup(test *testing.T) {
+	cleanupTempDir, err := MkDirTempFull("test-util-dir-", true)
+	if err != nil {
+		test.Fatalf("Failed to create cleanup temp dir: '%v'.", err)
+	}
+
+	noCleanupTempDir, err := MkDirTempFull("test-util-dir-", false)
+	if err != nil {
+		test.Fatalf("Failed to create no-cleanup temp dir: '%v'.", err)
+	}
+	defer RemoveDirent(noCleanupTempDir)
+
+	err = RemoveRecordedTempDirs()
+	if err != nil {
+		test.Fatalf("Failed to remove recorded temp dirs: '%v'.", err)
+	}
+
+	if PathExists(cleanupTempDir) {
+		test.Fatalf("Cleanup temp dir exists when it should have been cleaned up.")
+	}
+
+	if !PathExists(noCleanupTempDir) {
+		test.Fatalf("No-Cleanup temp dir does not exist when it should not have been cleaned up.")
+	}
+}
