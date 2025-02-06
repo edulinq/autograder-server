@@ -12,11 +12,14 @@ type CourseMetricType string
 const (
 	CourseMetricTypeUnknown          CourseMetricType = ""
 	CourseMetricTypeGradingTime                       = "grading-time"
-	CourseMetricTypeTaskDuration                      = "task-duration"
+	CourseMetricTypeTaskTime                          = "task-time"
 	CourseMetricTypeCodeAnalysisTime                  = "code-analysis-time"
 )
 
-const TASK_KEY = "task"
+const (
+	ATTRIBUTE_KEY_TASK     = "task-name"
+	ATTRIBUTE_KEY_ANALYSIS = "analysis-type"
+)
 
 type CourseMetric struct {
 	BaseMetric
@@ -154,13 +157,13 @@ func AsyncStoreCourseGradingTime(startTime timestamp.Timestamp, endTime timestam
 	AsyncStoreCourseMetric(metric)
 }
 
-func AsyncStoreCourseTaskDuration(startTime timestamp.Timestamp, endTime timestamp.Timestamp, courseID string, assignmentID string, userEmail string, task string) {
+func AsyncStoreCourseTaskTime(startTime timestamp.Timestamp, endTime timestamp.Timestamp, courseID string, assignmentID string, userEmail string, taskName string) {
 	metric := &CourseMetric{
 		BaseMetric: BaseMetric{
 			Timestamp:  startTime,
-			Attributes: map[string]any{TASK_KEY: task},
+			Attributes: map[string]any{ATTRIBUTE_KEY_TASK: taskName},
 		},
-		Type:         CourseMetricTypeTaskDuration,
+		Type:         CourseMetricTypeTaskTime,
 		CourseID:     courseID,
 		AssignmentID: assignmentID,
 		UserEmail:    userEmail,

@@ -57,13 +57,13 @@ func TestStoreCourseGradingTimeBase(test *testing.T) {
 	)
 }
 
-func TestStoreCourseTaskDurationBase(test *testing.T) {
+func TestStoreCourseTaskTimeBase(test *testing.T) {
 	expected := &CourseMetric{
 		BaseMetric: BaseMetric{
 			Timestamp:  timestamp.Zero(),
-			Attributes: map[string]any{TASK_KEY: "T"},
+			Attributes: map[string]any{ATTRIBUTE_KEY_TASK: "T"},
 		},
-		Type:         CourseMetricTypeTaskDuration,
+		Type:         CourseMetricTypeTaskTime,
 		CourseID:     "C",
 		AssignmentID: "A",
 		UserEmail:    "U",
@@ -72,7 +72,7 @@ func TestStoreCourseTaskDurationBase(test *testing.T) {
 
 	runStoreCourseMetricTest(
 		test,
-		func() { AsyncStoreCourseTaskDuration(timestamp.Zero(), timestamp.FromMSecs(100), "C", "A", "U", "T") },
+		func() { AsyncStoreCourseTaskTime(timestamp.Zero(), timestamp.FromMSecs(100), "C", "A", "U", "T") },
 		expected,
 	)
 }

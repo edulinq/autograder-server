@@ -88,10 +88,9 @@ func runNextTask() {
 
 	log.Debug("Task started.", task)
 	runTask(task)
-	endTimestamp := timestamp.Now()
 	log.Debug("Task finished.", task)
 
-	stats.AsyncStoreCourseTaskDuration(startTimestamp, endTimestamp, task.CourseID, task.AssignmentID, task.UserEmail, task.Name)
+	stats.AsyncStoreCourseTaskTime(startTimestamp, timestamp.Now(), task.CourseID, task.AssignmentID, task.UserEmail, task.Name)
 
 	task.AdvanceRunTimes()
 

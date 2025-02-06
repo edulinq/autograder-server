@@ -109,7 +109,7 @@ func TestPairwiseAnalysisFake(test *testing.T) {
 			BaseMetric: stats.BaseMetric{
 				Timestamp: timestamp.Zero(),
 				Attributes: map[string]any{
-					"anslysis-type": "pairwise",
+					stats.ATTRIBUTE_KEY_ANALYSIS: "pairwise",
 				},
 			},
 			Type:         stats.CourseMetricTypeCodeAnalysisTime,

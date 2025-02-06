@@ -141,7 +141,7 @@ func collectAnalysisStats(fullSubmissionIDs []string, totalRunTime int64, initia
 			BaseMetric: stats.BaseMetric{
 				Timestamp: now,
 				Attributes: map[string]any{
-					"anslysis-type": analysisType,
+					stats.ATTRIBUTE_KEY_ANALYSIS: analysisType,
 				},
 			},
 			Type:         stats.CourseMetricTypeCodeAnalysisTime,

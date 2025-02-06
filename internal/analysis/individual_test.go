@@ -65,7 +65,7 @@ func TestIndividualAnalysisBase(test *testing.T) {
 			BaseMetric: stats.BaseMetric{
 				Timestamp: timestamp.Zero(),
 				Attributes: map[string]any{
-					"anslysis-type": "individual",
+					stats.ATTRIBUTE_KEY_ANALYSIS: "individual",
 				},
 			},
 			Type:         stats.CourseMetricTypeCodeAnalysisTime,
