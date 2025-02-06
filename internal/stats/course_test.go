@@ -8,7 +8,7 @@ import (
 	"github.com/edulinq/autograder/internal/util"
 )
 
-func runCourseMetricTest(test *testing.T, storeFunc func(), expectedMetric *CourseMetric) {
+func runStoreCourseMetricTest(test *testing.T, storeFunc func(), expectedMetric *CourseMetric) {
 	defer clearBackend()
 
 	// Ensure that there is no backend set during testing.
@@ -50,7 +50,7 @@ func TestStoreCourseGradingTimeBase(test *testing.T) {
 		Value:        100,
 	}
 
-	runCourseMetricTest(
+	runStoreCourseMetricTest(
 		test,
 		func() { AsyncStoreCourseGradingTime(timestamp.Zero(), timestamp.FromMSecs(100), "C", "A", "U") },
 		expected,
@@ -70,7 +70,7 @@ func TestStoreCourseTaskDurationBase(test *testing.T) {
 		Value:        100,
 	}
 
-	runCourseMetricTest(
+	runStoreCourseMetricTest(
 		test,
 		func() { AsyncStoreCourseTaskDuration(timestamp.Zero(), timestamp.FromMSecs(100), "C", "A", "U", "T") },
 		expected,
