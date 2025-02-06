@@ -154,7 +154,7 @@ func AsyncStoreCourseGradingTime(startTime timestamp.Timestamp, endTime timestam
 	AsyncStoreCourseMetric(metric)
 }
 
-func AsyncStoreCourseStatDuration(startTime timestamp.Timestamp, endTime timestamp.Timestamp, courseID string, assignmentID string, userEmail string, task string) {
+func AsyncStoreCourseTaskDuration(startTime timestamp.Timestamp, endTime timestamp.Timestamp, courseID string, assignmentID string, userEmail string, task string) {
 	metric := &CourseMetric{
 		BaseMetric: BaseMetric{
 			Timestamp:  startTime,

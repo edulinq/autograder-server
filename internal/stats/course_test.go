@@ -57,7 +57,7 @@ func TestStoreCourseGradingTimeBase(test *testing.T) {
 	)
 }
 
-func TestStoreCourseStatDurationBase(test *testing.T) {
+func TestStoreCourseTaskDurationBase(test *testing.T) {
 	expected := &CourseMetric{
 		BaseMetric: BaseMetric{
 			Timestamp:  timestamp.Zero(),
@@ -72,7 +72,7 @@ func TestStoreCourseStatDurationBase(test *testing.T) {
 
 	runCourseMetricTest(
 		test,
-		func() { AsyncStoreCourseStatDuration(timestamp.Zero(), timestamp.FromMSecs(100), "C", "A", "U", "T") },
+		func() { AsyncStoreCourseTaskDuration(timestamp.Zero(), timestamp.FromMSecs(100), "C", "A", "U", "T") },
 		expected,
 	)
 }
