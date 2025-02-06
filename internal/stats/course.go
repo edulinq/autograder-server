@@ -17,7 +17,7 @@ const (
 )
 
 const (
-	ATTRIBUTE_KEY_TASK     = "task-name"
+	ATTRIBUTE_KEY_TASK     = "task-type"
 	ATTRIBUTE_KEY_ANALYSIS = "analysis-type"
 )
 
@@ -157,11 +157,11 @@ func AsyncStoreCourseGradingTime(startTime timestamp.Timestamp, endTime timestam
 	AsyncStoreCourseMetric(metric)
 }
 
-func AsyncStoreCourseTaskTime(startTime timestamp.Timestamp, endTime timestamp.Timestamp, courseID string, assignmentID string, userEmail string, taskName string) {
+func AsyncStoreCourseTaskTime(startTime timestamp.Timestamp, endTime timestamp.Timestamp, courseID string, assignmentID string, userEmail string, taskType string) {
 	metric := &CourseMetric{
 		BaseMetric: BaseMetric{
 			Timestamp:  startTime,
-			Attributes: map[string]any{ATTRIBUTE_KEY_TASK: taskName},
+			Attributes: map[string]any{ATTRIBUTE_KEY_TASK: taskType},
 		},
 		Type:         CourseMetricTypeTaskTime,
 		CourseID:     courseID,
