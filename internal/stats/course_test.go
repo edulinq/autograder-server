@@ -8,7 +8,7 @@ import (
 	"github.com/edulinq/autograder/internal/util"
 )
 
-func TestStoreCourseGradingTimeBase(test *testing.T) {
+func runCourseMetricTest(test *testing.T, storeFunc func(), expectedMetric *CourseMetric) {
 	defer clearBackend()
 
 	// Ensure that there is no backend set during testing.
@@ -23,6 +23,22 @@ func TestStoreCourseGradingTimeBase(test *testing.T) {
 		test.Fatalf("Found stored stats (%d) before collection.", len(typedBackend.course))
 	}
 
+	storeFunc()
+
+	// Ensure that stats have been collected.
+	count := len(typedBackend.course)
+	if count != 1 {
+		test.Fatalf("Got an unexpected number of metrics. Expected: 1, Actual: %d.", len(typedBackend.course))
+	}
+
+	// Compare the stored metric with the expected one.
+	if !reflect.DeepEqual(expectedMetric, typedBackend.course[0]) {
+		test.Fatalf("Stored metric is not as expected. Expected: '%s', Actual: '%s'.",
+			util.MustToJSONIndent(expectedMetric), util.MustToJSONIndent(typedBackend.course[0]))
+	}
+}
+
+func TestStoreCourseGradingTimeBase(test *testing.T) {
 	expected := &CourseMetric{
 		BaseMetric: BaseMetric{
 			Timestamp: timestamp.Zero(),
@@ -34,35 +50,14 @@ func TestStoreCourseGradingTimeBase(test *testing.T) {
 		Value:        100,
 	}
 
-	AsyncStoreCourseGradingTime(timestamp.Zero(), timestamp.FromMSecs(100), "C", "A", "U")
-
-	// Ensure that stats have been collected.
-	count := len(typedBackend.course)
-	if count != 1 {
-		test.Fatalf("Got an unexpected number of metrics. Expected: 1, Actual: %d.", len(typedBackend.course))
-	}
-
-	if !reflect.DeepEqual(expected, typedBackend.course[0]) {
-		test.Fatalf("Stored metric is not as expected. Expected: '%s', Actual: '%s'.",
-			util.MustToJSONIndent(expected), util.MustToJSONIndent(typedBackend.course[0]))
-	}
+	runCourseMetricTest(
+		test,
+		func() { AsyncStoreCourseGradingTime(timestamp.Zero(), timestamp.FromMSecs(100), "C", "A", "U") },
+		expected,
+	)
 }
 
 func TestStoreCourseStatDurationBase(test *testing.T) {
-	defer clearBackend()
-
-	// Ensure that there is no backend set during testing.
-	if backend != nil {
-		test.Fatalf("Stats backend should not be set during testing.")
-	}
-
-	typedBackend := makeTestBackend()
-	backend = typedBackend
-
-	if len(typedBackend.course) != 0 {
-		test.Fatalf("Found stored stats (%d) before collection.", len(typedBackend.course))
-	}
-
 	expected := &CourseMetric{
 		BaseMetric: BaseMetric{
 			Timestamp:  timestamp.Zero(),
@@ -75,16 +70,9 @@ func TestStoreCourseStatDurationBase(test *testing.T) {
 		Value:        100,
 	}
 
-	AsyncStoreCourseStatDuration(timestamp.Zero(), timestamp.FromMSecs(100), "C", "A", "U", "T")
-
-	// Ensure that stats have been collected.
-	count := len(typedBackend.course)
-	if count != 1 {
-		test.Fatalf("Got an unexpected number of metrics. Expected: 1, Actual: %d.", len(typedBackend.course))
-	}
-
-	if !reflect.DeepEqual(expected, typedBackend.course[0]) {
-		test.Fatalf("Stored metric is not as expected. Expected: '%s', Actual: '%s'.",
-			util.MustToJSONIndent(expected), util.MustToJSONIndent(typedBackend.course[0]))
-	}
+	runCourseMetricTest(
+		test,
+		func() { AsyncStoreCourseStatDuration(timestamp.Zero(), timestamp.FromMSecs(100), "C", "A", "U", "T") },
+		expected,
+	)
 }
