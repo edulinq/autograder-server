@@ -128,6 +128,206 @@ func TestFileSpecCopy(test *testing.T) {
 	}
 }
 
+func TestFileSpecDestPath(test *testing.T) {
+	testCases := []struct {
+		spec         FileSpec
+		destDir      string
+		expectedDest string
+	}{
+		{
+			spec: FileSpec{
+				Type: FILESPEC_TYPE_PATH,
+				Path: filepath.Join(config.GetTestdataDir(), "files", "filespec_test", "spec.txt"),
+				Dest: "",
+			},
+			destDir:      "test",
+			expectedDest: "test",
+		},
+		{
+			spec: FileSpec{
+				Type: FILESPEC_TYPE_PATH,
+				Path: filepath.Join(config.GetTestdataDir(), "files", "filespec_test", "spec.txt"),
+				Dest: "/a.txt",
+			},
+			destDir:      "test",
+			expectedDest: "/a.txt",
+		},
+		{
+			spec: FileSpec{
+				Type: FILESPEC_TYPE_PATH,
+				Path: filepath.Join(config.GetTestdataDir(), "files", "filespec_test", "spec.txt"),
+				Dest: "a.txt",
+			},
+			destDir:      "test",
+			expectedDest: "test/a.txt",
+		},
+		{
+			spec: FileSpec{
+				Type: FILESPEC_TYPE_PATH,
+				Path: filepath.Join(config.GetTestdataDir(), "files", "filespec_test", "spec.txt"),
+				Dest: "",
+			},
+			destDir:      "",
+			expectedDest: "",
+		},
+		{
+			spec: FileSpec{
+				Type: FILESPEC_TYPE_PATH,
+				Path: filepath.Join(config.GetTestdataDir(), "files", "filespec_test", "spec.txt"),
+				Dest: "/a.txt",
+			},
+			destDir:      "",
+			expectedDest: "/a.txt",
+		},
+		{
+			spec: FileSpec{
+				Type: FILESPEC_TYPE_PATH,
+				Path: filepath.Join(config.GetTestdataDir(), "files", "filespec_test", "spec.txt"),
+				Dest: "a.txt",
+			},
+			destDir:      "",
+			expectedDest: "a.txt",
+		},
+		{
+			spec: FileSpec{
+				Type: FILESPEC_TYPE_EMPTY,
+			},
+			destDir:      "test",
+			expectedDest: "test",
+		},
+		{
+			spec: FileSpec{
+				Type: FILESPEC_TYPE_NIL,
+			},
+			destDir:      "test",
+			expectedDest: "test",
+		},
+		{
+			spec: FileSpec{
+				Type: FILESPEC_TYPE_GIT,
+				Path: "http://github.com/edulinq/foo.git",
+				Dest: "",
+			},
+			destDir:      "",
+			expectedDest: "foo",
+		},
+		{
+			spec: FileSpec{
+				Type: FILESPEC_TYPE_GIT,
+				Path: "http://github.com/edulinq/foo.git",
+				Dest: "",
+			},
+			destDir:      "test",
+			expectedDest: "test/foo",
+		},
+		{
+			spec: FileSpec{
+				Type: FILESPEC_TYPE_GIT,
+				Path: "http://github.com/edulinq/foo.git",
+				Dest: "bar",
+			},
+			destDir:      "",
+			expectedDest: "bar",
+		},
+		{
+			spec: FileSpec{
+				Type: FILESPEC_TYPE_GIT,
+				Path: "http://github.com/edulinq/foo.git",
+				Dest: "bar",
+			},
+			destDir:      "test",
+			expectedDest: "test/bar",
+		},
+		{
+			spec: FileSpec{
+				Type: FILESPEC_TYPE_GIT,
+				Path: "http://github.com/edulinq/foo.git",
+				Dest: "/bar",
+			},
+			destDir:      "",
+			expectedDest: "/bar",
+		},
+		{
+			spec: FileSpec{
+				Type: FILESPEC_TYPE_GIT,
+				Path: "http://github.com/edulinq/foo.git",
+				Dest: "/bar",
+			},
+			destDir:      "test",
+			expectedDest: "/bar",
+		},
+
+		{
+			spec: FileSpec{
+				Type: FILESPEC_TYPE_URL,
+				Path: "http://test.edulinq.org/abc.zip",
+				Dest: "",
+			},
+			destDir:      "",
+			expectedDest: "abc.zip",
+		},
+		{
+			spec: FileSpec{
+				Type: FILESPEC_TYPE_URL,
+				Path: "http://test.edulinq.org/abc.zip",
+				Dest: "",
+			},
+			destDir:      "test",
+			expectedDest: "test/abc.zip",
+		},
+		{
+			spec: FileSpec{
+				Type: FILESPEC_TYPE_URL,
+				Path: "http://test.edulinq.org/abc.zip",
+				Dest: "bar.zip",
+			},
+			destDir:      "",
+			expectedDest: "bar.zip",
+		},
+		{
+			spec: FileSpec{
+				Type: FILESPEC_TYPE_URL,
+				Path: "http://test.edulinq.org/abc.zip",
+				Dest: "bar.zip",
+			},
+			destDir:      "test",
+			expectedDest: "test/bar.zip",
+		},
+		{
+			spec: FileSpec{
+				Type: FILESPEC_TYPE_URL,
+				Path: "http://test.edulinq.org/abc.zip",
+				Dest: "/bar.zip",
+			},
+			destDir:      "",
+			expectedDest: "/bar.zip",
+		},
+		{
+			spec: FileSpec{
+				Type: FILESPEC_TYPE_URL,
+				Path: "http://test.edulinq.org/abc.zip",
+				Dest: "/bar.zip",
+			},
+			destDir:      "test",
+			expectedDest: "/bar.zip",
+		},
+	}
+
+	for i, testCase := range testCases {
+		err := testCase.spec.Validate()
+		if err != nil {
+			test.Errorf("Case %d: Spec does not validate: '%v'.", i, err)
+			continue
+		}
+
+		actualDest := testCase.spec.GetDest(testCase.destDir)
+		if testCase.expectedDest != actualDest {
+			test.Errorf("Case %d: Unexpected dest. Expected: '%s', Actual: '%s'.", i, testCase.expectedDest, actualDest)
+			continue
+		}
+	}
+}
+
 // Note that this needs to be a function instead of a variable since the testing base dir does not get set until after static init.
 func getCopyTestCases() []*testCaseCopy {
 	return []*testCaseCopy{

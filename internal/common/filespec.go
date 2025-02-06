@@ -211,6 +211,16 @@ func (this *FileSpec) GetPath() string {
 	return this.Path
 }
 
+// Get the path of this FileSpec's dest given the provided base dir.
+// Note that specs may ignore the base dir if the current dest is absolute.
+func (this *FileSpec) GetDest(baseDir string) string {
+	if filepath.IsAbs(this.Dest) {
+		return this.Dest
+	}
+
+	return filepath.Join(baseDir, this.Dest)
+}
+
 // Copy the target of this FileSpec in the specified location.
 // If the FileSpec has a dest, then that will be the name of the resultant dirent within destDir.
 // If the filespec is a path, then copy all matching dirents.
@@ -246,7 +256,9 @@ func (this *FileSpec) copyPaths(baseDir string, destDir string, onlyContents boo
 	}
 
 	destPath := ""
-	if onlyContents {
+	if filepath.IsAbs(this.Dest) {
+		destPath = this.Dest
+	} else if onlyContents {
 		if this.Dest == "" {
 			destPath = destDir
 		} else {
@@ -311,7 +323,7 @@ func copyPath(fileSpecPath string, destPath string, onlyContents bool) error {
 }
 
 func (this *FileSpec) copyGit(destDir string) error {
-	destPath := filepath.Join(destDir, this.Dest)
+	destPath := this.GetDest(destDir)
 
 	if util.PathExists(destPath) {
 		err := util.RemoveDirent(destPath)
@@ -330,7 +342,7 @@ func (this *FileSpec) copyGit(destDir string) error {
 }
 
 func (this *FileSpec) downloadURL(destDir string) error {
-	destPath := filepath.Join(destDir, this.Dest)
+	destPath := this.GetDest(destDir)
 
 	if util.PathExists(destPath) {
 		err := util.RemoveDirent(destPath)
