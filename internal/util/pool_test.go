@@ -4,6 +4,7 @@ import (
 	"reflect"
 	"runtime"
 	"testing"
+	"time"
 )
 
 func TestRunParallelPoolMapBase(test *testing.T) {
@@ -64,6 +65,7 @@ func TestRunParallelPoolMapBase(test *testing.T) {
 		}
 
 		// Check for the thread count last (this gives the workers a small bit of extra time to exit).
+		time.Sleep(25 * time.Millisecond)
 		endThreadCount := runtime.NumGoroutine()
 		if startThreadCount != endThreadCount {
 			test.Errorf("Case %d: Starting and ending thread count differ. Start: %d, End: %d.", i, startThreadCount, endThreadCount)
