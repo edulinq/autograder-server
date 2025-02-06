@@ -8,6 +8,7 @@ import (
 	"github.com/edulinq/autograder/internal/db"
 	"github.com/edulinq/autograder/internal/log"
 	"github.com/edulinq/autograder/internal/model"
+	"github.com/edulinq/autograder/internal/stats"
 	"github.com/edulinq/autograder/internal/timestamp"
 )
 
@@ -80,14 +81,17 @@ func runNextTask() {
 		return
 	}
 
-	now := timestamp.Now()
-	if task.NextRunTime > now {
+	startTimestamp := timestamp.Now()
+	if task.NextRunTime > startTimestamp {
 		return
 	}
 
 	log.Debug("Task started.", task)
 	runTask(task)
+	endTimestamp := timestamp.Now()
 	log.Debug("Task finished.", task)
+
+	stats.AsyncStoreCourseStatDuration(startTimestamp, endTimestamp, task.CourseID, task.AssignmentID, task.UserEmail, task.Name)
 
 	task.AdvanceRunTimes()
 

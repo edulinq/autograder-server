@@ -12,8 +12,11 @@ type CourseMetricType string
 const (
 	CourseMetricTypeUnknown          CourseMetricType = ""
 	CourseMetricTypeGradingTime                       = "grading-time"
+	CourseMetricTypeTaskDuration                      = "task-duration"
 	CourseMetricTypeCodeAnalysisTime                  = "code-analysis-time"
 )
+
+const TASK_KEY = "task"
 
 type CourseMetric struct {
 	BaseMetric
@@ -110,7 +113,7 @@ func (this CourseMetricQuery) Match(record *CourseMetric) bool {
 	return true
 }
 
-// Store a ccourse metric without blocking (unless this is running in test mode, then it will block).
+// Store a course metric without blocking (unless this is running in test mode, then it will block).
 // Course ID is required, and all provided IDs should already be validated.
 func AsyncStoreCourseMetric(metric *CourseMetric) {
 	if metric == nil {
@@ -142,6 +145,22 @@ func AsyncStoreCourseGradingTime(startTime timestamp.Timestamp, endTime timestam
 			Timestamp: startTime,
 		},
 		Type:         CourseMetricTypeGradingTime,
+		CourseID:     courseID,
+		AssignmentID: assignmentID,
+		UserEmail:    userEmail,
+		Value:        uint64((endTime - startTime).ToMSecs()),
+	}
+
+	AsyncStoreCourseMetric(metric)
+}
+
+func AsyncStoreCourseStatDuration(startTime timestamp.Timestamp, endTime timestamp.Timestamp, courseID string, assignmentID string, userEmail string, task string) {
+	metric := &CourseMetric{
+		BaseMetric: BaseMetric{
+			Timestamp:  startTime,
+			Attributes: map[string]any{TASK_KEY: task},
+		},
+		Type:         CourseMetricTypeTaskDuration,
 		CourseID:     courseID,
 		AssignmentID: assignmentID,
 		UserEmail:    userEmail,
