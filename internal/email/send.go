@@ -83,7 +83,14 @@ func SendMessage(message *Message) error {
 
 	lastEmailTime = timestamp.Now()
 
-	return sendEmail(message.To, content)
+	err := sendEmail(message.To, content)
+	if err != nil {
+		log.Warn("Failed to send email.", log.NewAttr("to", message.To), log.NewAttr("subject", message.Subject))
+		return err
+	}
+
+	log.Trace("Sent email.", log.NewAttr("to", message.To), log.NewAttr("subject", message.Subject))
+	return nil
 }
 
 // Send the message.
