@@ -163,7 +163,7 @@ func runPairwiseAnalysis(keys []model.PairwiseKey, initiatorEmail string) ([]*mo
 
 func runSinglePairwiseAnalysis(pairwiseKey model.PairwiseKey) (*model.PairwiseAnalysis, int64, error) {
 	// Lock this key so we don't try to do the analysis multiple times.
-	lockKey := fmt.Sprintf("analysis-pairwise-%s", pairwiseKey.String())
+	lockKey := fmt.Sprintf("analysis-pairwise-single-%s", pairwiseKey.String())
 	common.Lock(lockKey)
 	defer common.Unlock(lockKey)
 

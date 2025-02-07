@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-const DEFAULT_STACK_BUFFER_SIZE = 1 << 16 // 64k
+const DEFAULT_STACK_BUFFER_SIZE = 1 << 18 // 256k
 
 var nameRegex = regexp.MustCompile(`^(.*) \[(.*)\]:$`)
 var fileLineRegex = regexp.MustCompile(`^(.*):(\d+)(\s([\+\-]0x\S+))?$`)
@@ -47,7 +47,7 @@ func getStackTraces(includeAll bool) []*CallStack {
 		writeLength := runtime.Stack(buffer, includeAll)
 		if writeLength == length {
 			// The write filled the whole buffer, there may be more.
-			length *= 2
+			length *= 8
 		} else {
 			// The write was short, we got everything.
 			buffer = buffer[0:writeLength]
