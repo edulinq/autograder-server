@@ -9,8 +9,8 @@ import (
 	"regexp"
 	"strings"
 	"sync"
-	"time"
 
+	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/mount"
 	"github.com/docker/docker/client"
@@ -58,56 +58,47 @@ func RunGradingContainer(ctx context.Context, logId log.Loggable, imageName stri
 // Run a container.
 // Returns: (stdout, stderr, timeout?, canceled?, error)
 func RunContainer(ctx context.Context, logId log.Loggable, imageName string, mounts []MountInfo, cmd []string, baseID string, maxRuntimeSecs int) (string, string, bool, bool, error) {
-	// Set a timeout for the container.
-	// We are doing this before actually starting the container to (hopefully) stop any long running when creating or starting the container.
-	// Note that this timeout context is not based on the passed-in context.
-	// We will add a small amount to the timeout to compensate for using the same timeout when creating and starting.
-	var timeoutCtx context.Context = context.Background()
-	var cancel context.CancelFunc
-	successChan := make(chan bool, 1)
-
-	if maxRuntimeSecs > 0 {
-		timeoutCtx, cancel = context.WithTimeout(context.Background(), time.Duration(maxRuntimeSecs+extraInitTimeSecs)*time.Second)
-		defer cancel()
-	}
-
 	var stdout string
 	var stderr string
 	var timeout bool
 	var canceled bool
 	var err error
 
-	go func() {
-		stdout, stderr, timeout, canceled, err = runContainerInternal(ctx, logId, imageName, mounts, cmd, baseID, maxRuntimeSecs)
-		successChan <- true
-	}()
-
-	select {
-	case <-successChan:
-		// Success
-		return stdout, stderr, timeout, canceled, err
-	case <-timeoutCtx.Done():
-		// Timeout
-		return "", "", true, false, nil
+	runFunc := func(softTimeoutCtx context.Context) {
+		stdout, stderr, err = runContainerInternal(softTimeoutCtx, logId, imageName, mounts, cmd, baseID)
 	}
 
-	return "", "", false, false, fmt.Errorf("Docker container run (and timeout) failed.")
+	if maxRuntimeSecs > 0 {
+		softTimeoutMS := int64(maxRuntimeSecs * 1000)
+		hardTimeoutMS := int64((maxRuntimeSecs + extraInitTimeSecs) * 1000)
+		timeout = !util.RunWithTimeoutFull(softTimeoutMS, hardTimeoutMS, ctx, runFunc)
+	} else {
+		runFunc(ctx)
+	}
+
+	timeout = timeout || errors.Is(ctx.Err(), context.DeadlineExceeded)
+	canceled = errors.Is(ctx.Err(), context.Canceled)
+
+	// Clear the error if it was caused by a timeout or cancel.
+	if timeout || canceled {
+		err = nil
+	}
+
+	return stdout, stderr, timeout, canceled, err
 }
 
 // An inner run container helper.
 // We split these up to allow for better timeout guarantees
 // (we can't fully trust Docker to timeout properly).
-func runContainerInternal(ctx context.Context, logId log.Loggable, imageName string, mounts []MountInfo, cmd []string, baseID string, maxRuntimeSecs int) (string, string, bool, bool, error) {
+// This function does not try to enforce any timeouts (aside from passing along the context), that is left to callers.
+func runContainerInternal(ctx context.Context, logId log.Loggable, imageName string, mounts []MountInfo, cmd []string, baseID string) (string, string, error) {
 	docker, err := getDockerClient()
 	if err != nil {
-		return "", "", false, false, err
+		return "", "", err
 	}
 	defer docker.Close()
 
 	name := cleanContainerName(fmt.Sprintf("%s-%s", baseID, util.UUID()))
-
-	timeout := false
-	canceled := false
 
 	dockerMounts := make([]mount.Mount, 0, len(mounts))
 	for _, mount := range mounts {
@@ -134,13 +125,7 @@ func runContainerInternal(ctx context.Context, logId log.Loggable, imageName str
 		name)
 
 	if err != nil {
-		timeout = errors.Is(err, context.DeadlineExceeded)
-		canceled = errors.Is(err, context.Canceled)
-		if timeout || canceled {
-			return "", "", timeout, canceled, nil
-		}
-
-		return "", "", false, false, fmt.Errorf("Failed to create container '%s': '%w'.", name, err)
+		return "", "", fmt.Errorf("Failed to create container '%s': '%w'.", name, err)
 	}
 
 	// Ensure the container is removed (in the background).
@@ -156,13 +141,7 @@ func runContainerInternal(ctx context.Context, logId log.Loggable, imageName str
 		Stderr: true,
 	})
 	if err != nil {
-		timeout = errors.Is(err, context.DeadlineExceeded)
-		canceled = errors.Is(err, context.Canceled)
-		if timeout || canceled {
-			return "", "", timeout, canceled, nil
-		}
-
-		return "", "", false, false, fmt.Errorf("Failed to attach to container '%s' (%s): '%w'.", name, containerInstance.ID, err)
+		return "", "", fmt.Errorf("Failed to attach to container '%s' (%s): '%w'.", name, containerInstance.ID, err)
 	}
 	defer connection.Conn.Close()
 
@@ -170,25 +149,12 @@ func runContainerInternal(ctx context.Context, logId log.Loggable, imageName str
 	outputWaitGroup := &sync.WaitGroup{}
 	outputWaitGroup.Add(1)
 	output := &containerOutput{}
-	go handleContainerOutput(output, outputWaitGroup, connection.Reader)
-
-	// Set a timeout for the container.
-	var cancel context.CancelFunc
-	if maxRuntimeSecs > 0 {
-		ctx, cancel = context.WithTimeout(ctx, time.Duration(maxRuntimeSecs)*time.Second)
-		defer cancel()
-	}
+	go handleContainerOutput(ctx, output, outputWaitGroup, connection)
 
 	log.Trace("Starting container.", log.NewAttr("name", name))
 	err = docker.ContainerStart(ctx, containerInstance.ID, container.StartOptions{})
 	if err != nil {
-		timeout = errors.Is(err, context.DeadlineExceeded)
-		canceled = errors.Is(err, context.Canceled)
-		if timeout || canceled {
-			return "", "", timeout, canceled, nil
-		}
-
-		return "", "", false, false, fmt.Errorf("Failed to start container '%s' (%s): '%w'.", name, containerInstance.ID, err)
+		return "", "", fmt.Errorf("Failed to start container '%s' (%s): '%w'.", name, containerInstance.ID, err)
 	}
 
 	// Wait for the container to finish.
@@ -198,13 +164,13 @@ func runContainerInternal(ctx context.Context, logId log.Loggable, imageName str
 	case err := <-errorChan:
 		if err != nil {
 			// On a timeout or cancel exit this select, and try to recover the output.
-			timeout = errors.Is(err, context.DeadlineExceeded)
-			canceled = errors.Is(err, context.Canceled)
+			timeout := errors.Is(err, context.DeadlineExceeded)
+			canceled := errors.Is(err, context.Canceled)
 			if timeout || canceled {
 				break
 			}
 
-			return "", "", false, false, fmt.Errorf("Got an error when running container '%s' (%s): '%w'.", name, containerInstance.ID, err)
+			return "", "", fmt.Errorf("Got an error when running container '%s' (%s): '%w'.", name, containerInstance.ID, err)
 		}
 	case <-statusChan:
 		// Waiting is complete.
@@ -212,33 +178,25 @@ func runContainerInternal(ctx context.Context, logId log.Loggable, imageName str
 		// The context finished but the result has not shown on the error chan (yet).
 	}
 
-	timeout = timeout || errors.Is(ctx.Err(), context.DeadlineExceeded)
-	canceled = canceled || errors.Is(ctx.Err(), context.Canceled)
-
-	// If the container has been canceled, then don't even try to recover the output.
-	// We do not want to wait on reading from the output stream.
-	if canceled {
-		return output.Stdout, output.Stderr, timeout, canceled, nil
-	}
-
 	// Wait for output to get copied.
 	log.Trace("Waiting for container output.", log.NewAttr("name", name))
 	outputWaitGroup.Wait()
 
 	log.Debug("Done with container.", log.NewAttr("name", name))
+
 	log.Trace("Container output.",
 		logId,
 		log.NewAttr("container-name", name),
 		log.NewAttr("container-id", containerInstance.ID),
 		log.NewAttr("stdout", output.Stdout),
 		log.NewAttr("stderr", output.Stderr),
-		log.NewAttr("timeout", timeout),
-		log.NewAttr("canceled", canceled),
+		log.NewAttr("timeout", errors.Is(ctx.Err(), context.DeadlineExceeded)),
+		log.NewAttr("canceled", errors.Is(ctx.Err(), context.Canceled)),
 		log.NewAttr("output-truncated", output.Truncated),
 		output.Err,
 	)
 
-	return output.Stdout, output.Stderr, timeout, canceled, nil
+	return output.Stdout, output.Stderr, nil
 }
 
 func cleanContainerName(text string) string {
@@ -254,9 +212,30 @@ func cleanContainerName(text string) string {
 }
 
 // Read a maximum amount from the container's stdout/stderr, parse the two from the common stream, and signal completion.
-func handleContainerOutput(output *containerOutput, outputWaitGroup *sync.WaitGroup, containerStream io.Reader) {
+func handleContainerOutput(ctx context.Context, output *containerOutput, outputWaitGroup *sync.WaitGroup, connection types.HijackedResponse) {
 	defer outputWaitGroup.Done()
 
+	// Closing the connection should also close the reader and stop any waiting read operations.
+	defer connection.Conn.Close()
+
+	successChan := make(chan bool, 1)
+
+	// Start trying to read in another thread.
+	go func() {
+		handleContainerOutputInternal(output, connection.Reader)
+		successChan <- true
+	}()
+
+	// Wait for either the context or read to complete.
+	select {
+	case <-successChan:
+		return
+	case <-ctx.Done():
+		return
+	}
+}
+
+func handleContainerOutputInternal(output *containerOutput, containerStream io.Reader) {
 	maxSizeKB := config.DOCKER_MAX_OUTPUT_SIZE_KB.Get()
 	bufferLen := maxSizeKB * 1024
 
@@ -321,7 +300,6 @@ func killContainer(docker *client.Client, name string, id string) {
 	// The container should have already gracefully exited.
 	// If not, kill it without any grace.
 	// Ignore any errors.
-	log.Trace("killing container.", log.NewAttr("name", name), log.NewAttr("id", id))
 	docker.ContainerKill(context.Background(), id, "KILL")
 
 	err := docker.ContainerRemove(context.Background(), id, container.RemoveOptions{

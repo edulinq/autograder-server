@@ -3,7 +3,6 @@ package grader
 import (
 	"context"
 	"fmt"
-	"time"
 
 	"github.com/edulinq/autograder/internal/common"
 	"github.com/edulinq/autograder/internal/config"
@@ -150,11 +149,6 @@ func getCanceledMessage(assignment *model.Assignment) string {
 // Timeouts should be handled a level below this (e.g., docker or exec),
 // but this is an additional layer just in case there are issues at that level.
 func runGrader(ctx context.Context, assignment *model.Assignment, submissionPath string, options GradeOptions, fullSubmissionID string) (*model.GradingInfo, map[string][]byte, string, string, string, error) {
-	// Create a timeout context based on the background context.
-	// Note that we are not basing it on ctx (which may cancel at the HTTP level) so that the grader can handle the appropriate messages.
-	timeoutCtx, cancel := context.WithTimeout(context.Background(), time.Duration(assignment.MaxRuntimeSecs+extraRunTimeSecs)*time.Second)
-	defer cancel()
-
 	var gradingInfo *model.GradingInfo
 	var outputFileContents map[string][]byte
 	var stdout string
@@ -162,31 +156,22 @@ func runGrader(ctx context.Context, assignment *model.Assignment, submissionPath
 	var softGradingError string
 	var err error
 
-	successChan := make(chan bool, 1)
-
-	// Run the grader in a gofunc so we can check for a timeout.
-	go func() {
+	runFunc := func() {
 		if options.NoDocker {
 			gradingInfo, outputFileContents, stdout, stderr, softGradingError, err = runNoDockerGrader(ctx, assignment, submissionPath, options, fullSubmissionID)
 		} else {
 			gradingInfo, outputFileContents, stdout, stderr, softGradingError, err = runDockerGrader(ctx, assignment, submissionPath, options, fullSubmissionID)
 		}
+	}
 
-		// The grader has finished without timing out.
-		successChan <- true
+	timeoutMS := int64((assignment.MaxRuntimeSecs + extraRunTimeSecs) * 1000)
+	ok := util.RunWithTimeout(timeoutMS, runFunc)
 
-	}()
-
-	// Wait for the context to finish or timeout.
-	select {
-	case <-successChan:
-		// Success
-		return gradingInfo, outputFileContents, stdout, stderr, softGradingError, err
-	case <-timeoutCtx.Done():
+	if !ok {
 		// Timeout
 		// We must return very general results (which is why we prefer to catch this at the grader level).
 		return nil, nil, "", "", getTimeoutMessage(assignment), nil
 	}
 
-	return nil, nil, "", "", "", fmt.Errorf("Grading (and timeout) failed.")
+	return gradingInfo, outputFileContents, stdout, stderr, softGradingError, err
 }
