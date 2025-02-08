@@ -65,10 +65,11 @@ func TestRunParallelPoolMapBase(test *testing.T) {
 		}
 
 		// Check for the thread count last (this gives the workers a small bit of extra time to exit).
+		// Note that there may be other tests with stray threads, so we are allowed to have less than when we started.
 		time.Sleep(25 * time.Millisecond)
 		endThreadCount := runtime.NumGoroutine()
-		if startThreadCount != endThreadCount {
-			test.Errorf("Case %d: Starting and ending thread count differ. Start: %d, End: %d.", i, startThreadCount, endThreadCount)
+		if startThreadCount < endThreadCount {
+			test.Errorf("Case %d: Ended with more threads than we started with. Start: %d, End: %d.", i, startThreadCount, endThreadCount)
 			continue
 		}
 	}
