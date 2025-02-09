@@ -32,7 +32,8 @@ var (
 	EMAIL_PASS                 = MustNewStringOption("email.pass", "", "SMTP password for emails sent from the autograder.")
 	EMAIL_PORT                 = MustNewStringOption("email.port", "", "SMTP port for emails sent from the autograder.")
 	EMAIL_USER                 = MustNewStringOption("email.user", "", "SMTP username for emails sent from the autograder.")
-	EMAIL_SMTP_IDLE_TIMEOUT_MS = MustNewIntOption("email.smtp.idle", 2000, "Consider an SMTP connection idle if no emails are sent for this number of milliseconds.")
+	EMAIL_SMTP_IDLE_TIMEOUT_MS = MustNewIntOption("email.smtp.idle", 2*60*1000, "Consider an SMTP connection idle if no emails are sent for this number of milliseconds.")
+	EMAIL_MIN_PERIOD           = MustNewIntOption("email.smtp.minperiod", 250, "The minimum time (in MS) between sending emails.")
 
 	// Docker
 	DOCKER_DISABLE            = MustNewBoolOption("docker.disable", false, "Disable the use of docker (usually for testing).")
