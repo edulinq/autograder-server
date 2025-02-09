@@ -7,6 +7,7 @@ import (
 	"slices"
 
 	"github.com/edulinq/autograder/internal/common"
+	"github.com/edulinq/autograder/internal/config"
 	"github.com/edulinq/autograder/internal/db"
 	"github.com/edulinq/autograder/internal/log"
 	"github.com/edulinq/autograder/internal/model"
@@ -67,18 +68,49 @@ func getCachedIndividualResults(fullSubmissionIDs []string) ([]*model.Individual
 	return completeAnalysis, remainingIDs, nil
 }
 
+// Lock based on course and then run the analysis in a parallel pool.
 func runIndividualAnalysis(fullSubmissionIDs []string, initiatorEmail string) ([]*model.IndividualAnalysis, error) {
+	if len(fullSubmissionIDs) == 0 {
+		return nil, nil
+	}
+
+	// Lock based on the first seen course.
+	// This is to prevent multiple requests using up all the cores.
+	lockCourseID, _, _, _, err := common.SplitFullSubmissionID(fullSubmissionIDs[0])
+	if err != nil {
+		return nil, fmt.Errorf("Unable to get locking course: '%w'.", err)
+	}
+
+	lockKey := fmt.Sprintf("analysis-individual-course-%s", lockCourseID)
+	common.Lock(lockKey)
+	defer common.Unlock(lockKey)
+
+	poolSize := config.ANALYSIS_INDIVIDUAL_COURSE_POOL_SIZE.Get()
+	type PoolResult struct {
+		Result  *model.IndividualAnalysis
+		RunTime int64
+		Error   error
+	}
+
+	poolResults, _, err := util.RunParallelPoolMap(poolSize, fullSubmissionIDs, func(fullSubmissionID string) (PoolResult, error) {
+		result, runTime, err := runSingleIndividualAnalysis(fullSubmissionID)
+		if err != nil {
+			err = fmt.Errorf("Failed to perform individual analysis on submission %s: '%w'.", fullSubmissionID, err)
+		}
+
+		return PoolResult{result, runTime, err}, nil
+	})
+
 	results := make([]*model.IndividualAnalysis, 0, len(fullSubmissionIDs))
 	var errs error = nil
 	totalRunTime := int64(0)
 
-	for _, fullSubmissionID := range fullSubmissionIDs {
-		result, runTime, err := runSingleIndividualAnalysis(fullSubmissionID)
-		if err != nil {
-			errs = errors.Join(errs, fmt.Errorf("Failed to perform individual analysis on submission %s: '%w'.", fullSubmissionID, err))
+	for _, poolResult := range poolResults {
+		if poolResult.Error != nil {
+			errs = errors.Join(errs, poolResult.Error)
 		} else {
-			results = append(results, result)
-			totalRunTime += runTime
+			results = append(results, poolResult.Result)
+			totalRunTime += poolResult.RunTime
 		}
 	}
 

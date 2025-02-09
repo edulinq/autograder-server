@@ -58,7 +58,8 @@ var (
 	DB_PG_URI = MustNewStringOption("db.pg.uri", "", "Connection string to connect to a Postgres Database. Empty if not using Postgres.")
 
 	// Code Analysis
-	ANALYSIS_PAIRWISE_COURSE_POOL_SIZE = MustNewIntOption("analysis.pairwise.poolsize", 1, "The number of parallel workers per course when computing pairwise analysis.")
+	ANALYSIS_INDIVIDUAL_COURSE_POOL_SIZE = MustNewIntOption("analysis.individual.poolsize", 1, "The number of parallel workers per course when computing individual analysis.")
+	ANALYSIS_PAIRWISE_COURSE_POOL_SIZE   = MustNewIntOption("analysis.pairwise.poolsize", 1, "The number of parallel workers per course when computing pairwise analysis.")
 
 	STALELOCK_DURATION_SECS = MustNewIntOption("lockmanager.staleduration", 2*60*60, "Number of seconds a lock can be unused before getting removed.")
 )
