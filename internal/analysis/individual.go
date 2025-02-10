@@ -167,13 +167,14 @@ func computeSingleIndividualAnalysis(fullSubmissionID string, computeDeltas bool
 		return nil, err
 	}
 
-	fileInfos, loc, err := individualFileAnalysis(submissionDir)
+	fileInfos, skipped, loc, err := individualFileAnalysis(submissionDir, assignment)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to compute individual analysis for %v: '%w'.", fullSubmissionID, err)
 	}
 
 	analysis := &model.IndividualAnalysis{
 		AnalysisTimestamp: timestamp.Now(),
+		Options:           assignment.AnalysisOptions,
 
 		FullID:       gradingResult.Info.ID,
 		ShortID:      gradingResult.Info.ShortID,
@@ -184,8 +185,9 @@ func computeSingleIndividualAnalysis(fullSubmissionID string, computeDeltas bool
 		SubmissionStartTime: gradingResult.Info.GradingStartTime,
 		Score:               gradingResult.Info.Score,
 
-		Files:       fileInfos,
-		LinesOfCode: loc,
+		Files:        fileInfos,
+		SkippedFiles: skipped,
+		LinesOfCode:  loc,
 	}
 
 	if computeDeltas {
@@ -228,25 +230,32 @@ func computeDelta(analysis *model.IndividualAnalysis, assignment *model.Assignme
 	return nil
 }
 
-func individualFileAnalysis(submissionDir string) ([]model.AnalysisFileInfo, int, error) {
+func individualFileAnalysis(submissionDir string, assignment *model.Assignment) ([]model.AnalysisFileInfo, []string, int, error) {
 	renames, err := prepSourceFiles(submissionDir)
 	if err != nil {
-		return nil, 0, fmt.Errorf("Failed to prepare source files: '%w'.", err)
+		return nil, nil, 0, fmt.Errorf("Failed to prepare source files: '%w'.", err)
 	}
 
 	relpaths, err := util.GetAllRelativeFiles(submissionDir)
 	if err != nil {
-		return nil, 0, fmt.Errorf("Failed to get files: '%w'.", err)
+		return nil, nil, 0, fmt.Errorf("Failed to get files: '%w'.", err)
 	}
 
 	totalLOC := 0
 	infos := make([]model.AnalysisFileInfo, 0, len(relpaths))
+	skipped := make([]string, 0)
 
 	for _, relpath := range relpaths {
+		// Check if this file should be skipped because of inclusions/exclusions.
+		if (assignment.AnalysisOptions != nil) && !assignment.AnalysisOptions.MatchRelpath(relpath) {
+			skipped = append(skipped, relpath)
+			continue
+		}
+
 		path := filepath.Join(submissionDir, relpath)
 		loc, _, err := util.LinesOfCode(path)
 		if err != nil {
-			return nil, 0, fmt.Errorf("Unable to count lines of code for '%s': '%w'.", relpath, err)
+			return nil, nil, 0, fmt.Errorf("Unable to count lines of code for '%s': '%w'.", relpath, err)
 		}
 
 		info := model.AnalysisFileInfo{
@@ -259,7 +268,7 @@ func individualFileAnalysis(submissionDir string) ([]model.AnalysisFileInfo, int
 		infos = append(infos, info)
 	}
 
-	return infos, totalLOC, nil
+	return infos, skipped, totalLOC, nil
 }
 
 func collectIndividualStats(fullSubmissionIDs []string, totalRunTime int64, initiatorEmail string) {

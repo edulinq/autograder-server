@@ -199,33 +199,39 @@ func computeSinglePairwiseAnalysis(pairwiseKey model.PairwiseKey) (*model.Pairwi
 	}
 	defer util.RemoveDirent(tempDir)
 
+	var optionsAssignment *model.Assignment = nil
+
 	// Collect both submissions in a temp dir.
 	var submissionDirs [2]string
 	for i, fullSubmissionID := range pairwiseKey {
 		submissionDir := filepath.Join(tempDir, fullSubmissionID)
 
-		_, _, err := fetchSubmission(fullSubmissionID, submissionDir)
+		_, assignment, err := fetchSubmission(fullSubmissionID, submissionDir)
 		if err != nil {
 			return nil, 0, err
+		}
+
+		if optionsAssignment == nil {
+			optionsAssignment = assignment
 		}
 
 		submissionDirs[i] = submissionDir
 	}
 
-	fileSimilarities, unmatches, totalRunTime, err := computeFileSims(submissionDirs)
+	fileSimilarities, unmatches, skipped, totalRunTime, err := computeFileSims(submissionDirs, optionsAssignment)
 	if err != nil {
 		return nil, 0, fmt.Errorf("Failed to compute similarities for %v: '%w'.", pairwiseKey, err)
 	}
 
-	analysis := model.NewPairwiseAnalysis(pairwiseKey, fileSimilarities, unmatches)
+	analysis := model.NewPairwiseAnalysis(pairwiseKey, fileSimilarities, unmatches, skipped)
 
 	return analysis, totalRunTime, nil
 }
 
-func computeFileSims(inputDirs [2]string) (map[string][]*model.FileSimilarity, [][2]string, int64, error) {
+func computeFileSims(inputDirs [2]string, assignment *model.Assignment) (map[string][]*model.FileSimilarity, [][2]string, []string, int64, error) {
 	engines, err := getEngines()
 	if err != nil {
-		return nil, nil, 0, err
+		return nil, nil, nil, 0, err
 	}
 
 	// When preparing source code, we may rename files (e.g. for iPython notebooks).
@@ -234,7 +240,7 @@ func computeFileSims(inputDirs [2]string) (map[string][]*model.FileSimilarity, [
 	for _, inputDir := range inputDirs {
 		partialRenames, err := prepSourceFiles(inputDir)
 		if err != nil {
-			return nil, nil, 0, fmt.Errorf("Failed to prepare source files: '%w'.", err)
+			return nil, nil, nil, 0, fmt.Errorf("Failed to prepare source files: '%w'.", err)
 		}
 
 		// Note that we may be overriding some paths, but they shuold have the same information.
@@ -246,13 +252,20 @@ func computeFileSims(inputDirs [2]string) (map[string][]*model.FileSimilarity, [
 	// Figure out what files need to be analyzed.
 	matches, unmatches, err := util.MatchFiles(inputDirs)
 	if err != nil {
-		return nil, nil, 0, fmt.Errorf("Failed to find matching files: '%w'.", err)
+		return nil, nil, nil, 0, fmt.Errorf("Failed to find matching files: '%w'.", err)
 	}
 
 	totalRunTime := int64(0)
 	similarities := make(map[string][]*model.FileSimilarity, len(matches))
+	skipped := make([]string, 0)
 
 	for _, relpath := range matches {
+		// Check if this file should be skipped because of inclusions/exclusions.
+		if (assignment != nil) && (assignment.AnalysisOptions != nil) && !assignment.AnalysisOptions.MatchRelpath(relpath) {
+			skipped = append(skipped, relpath)
+			continue
+		}
+
 		paths := [2]string{
 			filepath.Join(inputDirs[0], relpath),
 			filepath.Join(inputDirs[1], relpath),
@@ -302,7 +315,7 @@ func computeFileSims(inputDirs [2]string) (map[string][]*model.FileSimilarity, [
 			if len(similarities[relpath]) > 0 {
 				log.Warn("Not all engines successfully computed similarity. Some engines did complete successfully.", err)
 			} else {
-				return nil, nil, 0, err
+				return nil, nil, nil, 0, err
 			}
 		}
 
@@ -312,7 +325,7 @@ func computeFileSims(inputDirs [2]string) (map[string][]*model.FileSimilarity, [
 		}
 	}
 
-	return similarities, unmatches, totalRunTime, nil
+	return similarities, unmatches, skipped, totalRunTime, nil
 }
 
 func getEngines() ([]core.SimilarityEngine, error) {

@@ -1,6 +1,10 @@
 package model
 
 import (
+	"errors"
+	"fmt"
+	"regexp"
+
 	"github.com/edulinq/autograder/internal/timestamp"
 	"github.com/edulinq/autograder/internal/util"
 )
@@ -9,7 +13,18 @@ import (
 // Should always be an ordered (lexicographically) pair of full submissions IDs.
 type PairwiseKey [2]string
 
-const PAIRWISE_KEY_DELIM string = "||"
+const (
+	PAIRWISE_KEY_DELIM    string = "||"
+	DEFAULT_INCLUDE_REGEX string = ".+"
+)
+
+type AnalysisOptions struct {
+	IncludePatterns []string `json:"include-patterns,omitempty"`
+	ExcludePatterns []string `json:"exclude-patterns,omitempty"`
+
+	IncludeRegexes []*regexp.Regexp `json:"-"`
+	ExcludeRegexes []*regexp.Regexp `json:"-"`
+}
 
 type AnalysisFileInfo struct {
 	Filename         string `json:"filename"`
@@ -37,6 +52,8 @@ type AnalysisSummary struct {
 }
 
 type IndividualAnalysis struct {
+	Options *AnalysisOptions `json:"options,omitempty"`
+
 	AnalysisTimestamp timestamp.Timestamp `json:"analysis-timestamp"`
 
 	FullID       string `json:"submission-id"`
@@ -48,8 +65,9 @@ type IndividualAnalysis struct {
 	SubmissionStartTime timestamp.Timestamp `json:"submission-start-time"`
 	Score               float64             `json:"score"`
 
-	Files       []AnalysisFileInfo `json:"files"`
-	LinesOfCode int                `json:"lines-of-code"`
+	Files        []AnalysisFileInfo `json:"files"`
+	SkippedFiles []string           `json:"skipped-files"`
+	LinesOfCode  int                `json:"lines-of-code"`
 
 	SubmissionTimeDelta int64   `json:"submission-time-delta"`
 	LinesOfCodeDelta    int     `json:"lines-of-code-delta"`
@@ -76,11 +94,14 @@ type IndividualAnalysisSummary struct {
 }
 
 type PairwiseAnalysis struct {
+	Options *AnalysisOptions `json:"options,omitempty"`
+
 	AnalysisTimestamp timestamp.Timestamp `json:"analysis-timestamp"`
 	SubmissionIDs     PairwiseKey         `json:"submission-ids"`
 
 	Similarities   map[string][]*FileSimilarity `json:"similarities"`
 	UnmatchedFiles [][2]string                  `json:"unmatched-files"`
+	SkippedFiles   []string                     `json:"skipped-files"`
 
 	MeanSimilarities    map[string]float64 `json:"mean-similarities"`
 	TotalMeanSimilarity float64            `json:"total-mean-similarity"`
@@ -100,11 +121,64 @@ func NewPairwiseKey(fullSubmissionID1 string, fullSubmissionID2 string) Pairwise
 	})
 }
 
+func (this *AnalysisOptions) Validate() error {
+	var errs error
+
+	this.IncludeRegexes = make([]*regexp.Regexp, 0, len(this.IncludePatterns))
+	for _, pattern := range this.IncludePatterns {
+		regex, err := regexp.Compile(pattern)
+		if err != nil {
+			errs = errors.Join(errs, fmt.Errorf("Failed to compile include pattern `%s`: '%w'.", pattern, err))
+		} else {
+			this.IncludeRegexes = append(this.IncludeRegexes, regex)
+		}
+	}
+
+	this.ExcludeRegexes = make([]*regexp.Regexp, 0, len(this.ExcludePatterns))
+	for _, pattern := range this.ExcludePatterns {
+		regex, err := regexp.Compile(pattern)
+		if err != nil {
+			errs = errors.Join(errs, fmt.Errorf("Failed to compile exclude pattern `%s`: '%w'.", pattern, err))
+		} else {
+			this.ExcludeRegexes = append(this.ExcludeRegexes, regex)
+		}
+	}
+
+	if len(this.IncludeRegexes) == 0 {
+		this.IncludeRegexes = append(this.IncludeRegexes, regexp.MustCompile(DEFAULT_INCLUDE_REGEX))
+	}
+
+	return errs
+}
+
+// Check the inclusion/exclusion to see if a given relpah is allowed.
+func (this *AnalysisOptions) MatchRelpath(relpath string) bool {
+	match := false
+	for _, regex := range this.IncludeRegexes {
+		if regex.MatchString(relpath) {
+			match = true
+			break
+		}
+	}
+
+	if !match {
+		return false
+	}
+
+	for _, regex := range this.ExcludeRegexes {
+		if regex.MatchString(relpath) {
+			return false
+		}
+	}
+
+	return true
+}
+
 func (this *PairwiseKey) String() string {
 	return this[0] + PAIRWISE_KEY_DELIM + this[1]
 }
 
-func NewPairwiseAnalysis(pairwiseKey PairwiseKey, similarities map[string][]*FileSimilarity, unmatches [][2]string) *PairwiseAnalysis {
+func NewPairwiseAnalysis(pairwiseKey PairwiseKey, similarities map[string][]*FileSimilarity, unmatches [][2]string, skipped []string) *PairwiseAnalysis {
 	meanSimilarities := make(map[string]float64, len(similarities))
 	totalMeanSimilarity := 0.0
 
@@ -131,6 +205,7 @@ func NewPairwiseAnalysis(pairwiseKey PairwiseKey, similarities map[string][]*Fil
 		SubmissionIDs:       pairwiseKey,
 		Similarities:        similarities,
 		UnmatchedFiles:      unmatches,
+		SkippedFiles:        skipped,
 		MeanSimilarities:    meanSimilarities,
 		TotalMeanSimilarity: totalMeanSimilarity,
 	}

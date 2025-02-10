@@ -155,6 +155,7 @@ func TestIndividualBase(test *testing.T) {
 						LinesOfCode: 4,
 					},
 				},
+				SkippedFiles: []string{},
 			},
 			&model.IndividualAnalysis{
 				AnalysisTimestamp:   timestamp.Zero(),
@@ -177,6 +178,7 @@ func TestIndividualBase(test *testing.T) {
 						LinesOfCode: 4,
 					},
 				},
+				SkippedFiles: []string{},
 			},
 		},
 	}

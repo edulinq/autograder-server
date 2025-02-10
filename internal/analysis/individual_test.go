@@ -38,7 +38,8 @@ func TestIndividualAnalysisBase(test *testing.T) {
 					LinesOfCode: 4,
 				},
 			},
-			LinesOfCode: 4,
+			SkippedFiles: []string{},
+			LinesOfCode:  4,
 
 			SubmissionTimeDelta: 10000,
 			LinesOfCodeDelta:    0,
@@ -124,5 +125,99 @@ func testIndividual(test *testing.T, ids []string, expected []*model.IndividualA
 
 	if len(queryResult) != len(expected) {
 		test.Fatalf("Number of (post) cached anslysis results not as expected. Expected: %d, Actual: %d.", len(expected), len(queryResult))
+	}
+}
+
+func TestIndividualAnalysisIncludeExclude(test *testing.T) {
+	db.ResetForTesting()
+	defer db.ResetForTesting()
+
+	testCases := []struct {
+		options       *model.AnalysisOptions
+		expectedCount int
+	}{
+		{
+			nil,
+			1,
+		},
+		{
+			&model.AnalysisOptions{
+				IncludePatterns: []string{
+					`\.c$`,
+				},
+			},
+			0,
+		},
+		{
+			&model.AnalysisOptions{
+				ExcludePatterns: []string{
+					`\.c$`,
+				},
+			},
+			1,
+		},
+		{
+			&model.AnalysisOptions{
+				ExcludePatterns: []string{
+					`\.py$`,
+				},
+			},
+			0,
+		},
+	}
+
+	assignment := db.MustGetTestAssignment()
+	submissionIDs := []string{"course101::hw0::course-student@test.edulinq.org::1697406265"}
+	relpath := "submission.py"
+	baseCount := 1
+
+	for i, testCase := range testCases {
+		db.ResetForTesting()
+
+		if testCase.options != nil {
+			err := testCase.options.Validate()
+			if err != nil {
+				test.Errorf("Case %d: Options is invalid: '%v'.", i, err)
+				continue
+			}
+		}
+
+		assignment.AnalysisOptions = testCase.options
+		db.MustSaveAssignment(assignment)
+
+		results, pendingCount, err := IndividualAnalysis(submissionIDs, true, "server-admin@test.edulinq.org")
+		if err != nil {
+			test.Errorf("Case %d: Failed to perform analysis: '%v'.", i, err)
+			continue
+		}
+
+		if pendingCount != 0 {
+			test.Errorf("Case %d: Found %d pending results, when 0 were expected.", i, pendingCount)
+			continue
+		}
+
+		if len(results) != 1 {
+			test.Errorf("Case %d: Found %d results, when 1 was expected.", i, len(results))
+			continue
+		}
+
+		if testCase.expectedCount != len(results[0].Files) {
+			test.Errorf("Case %d: Unexpected number of result files. Expected: %d, Actual: %d.",
+				i, testCase.expectedCount, len(results[0].Files))
+			continue
+		}
+
+		if (baseCount - testCase.expectedCount) != len(results[0].SkippedFiles) {
+			test.Errorf("Case %d: Unexpected number of skipped files. Expected: %d, Actual: %d.",
+				i, (baseCount - testCase.expectedCount), len(results[0].SkippedFiles))
+			continue
+		}
+
+		if testCase.expectedCount == 0 {
+			if relpath != results[0].SkippedFiles[0] {
+				test.Errorf("Case %d: Unexpected skipped file. Expected: '%s', Actual: '%s'.",
+					i, relpath, results[0].SkippedFiles[0])
+			}
+		}
 	}
 }

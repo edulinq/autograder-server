@@ -13,12 +13,14 @@ Extra keys will generally be ignored.
      - [Course Email Specification (CourseEmailSpec)](#course-email-specification-courseemailspec)
    - [Timestamp](#timestamp)
    - [Pointer](#pointer)
+   - [Regex](#regex)
  - [Course](#course)
  - [Assignment](#assignment)
    - [Assignment Grading Images](#assignment-grading-images)
    - [Grader Output](#grader-output-graderoutput)
    - [Test Submission](#test-submission)
    - [Assignments and the LMS](#assignments-and-the-lms)
+   - [Analysis Options (AnalysisOptions)](#analysis-options-analysisoptions)
  - [Roles](#roles)
    - [Server Roles (ServerRole)](#server-roles-serverrole)
    - [Course Roles (CourseRole)](#course-roles-courserole)
@@ -106,6 +108,14 @@ In JSON, a field with a pointer type can take either the base value or `null`.
 There is no need to use any addressing or referencing operators (e.g., `&`) in your JSON, the autograder will handle that automatically.
 For example, a `*Integer` field can take a normal Integer (e.g. `123`) or a `null` value.
 
+### Regex
+
+Underlying Type: String
+
+A [regular expression](https://en.wikipedia.org/wiki/Regular_expression).
+All regular expressions will use the standard regular expression [library](https://pkg.go.dev/regexp) in Go,
+which uses the [RE2 Regular Expression Syntax](https://github.com/google/re2/wiki/Syntax).
+
 ## Course
 
 A course is the core organizational unit in the autograder.
@@ -146,6 +156,7 @@ The fields of an assignment are as follows:
 | `late-policy`      | \*LatePolicy       | false    | The late policy to use for this assignment. Overrides any late policy set on the course level. |
 | `submission-limit` | \*SubmissionLimit  | false    | The submission limit to enforce for this assignment. Overrides any limits set on the course level. |
 | `max-runtime-secs` | Integer            | false    | The maximum number of sections a grader is allowed to run before being killed (cannot be greater than system limit set by `docker.runtime.max` config option. |
+| `analysis-options` | AnalysisOptions    | false    | Options for code analysis. |
 | `image`            | String             | true     | The base Docker image to use for this assignment. |
 | `pre-static-docker-commands`  | List[String]   | false | A list of Docker commands to run before static files are copied into the image. |
 | `post-static-docker-commands` | List[String]   | false | A list of Docker commands to run after static files are copied into the image. |
@@ -294,6 +305,35 @@ The most direct way to match is to populate the `lms-id` field with the LMS iden
 However, this would require updating the `lmd-id` field for each section/term.
 You can also ensure that the assignment names in the autograder and LMS are the same (and there are no other assignments with the same name).
 On a full name match, then autograder will sync over the `lms-id` from the course's LMS.
+
+### Analysis Options (AnalysisOptions)
+
+The analysis options type allows options to be passed to code analysis for assignments.
+It has the following fields:
+| Name                 | Type                 | Required | Description |
+|----------------------|----------------------|----------|-------------|
+| `include-patterns`   | List[Regex]          | false    | Any source file eligible for code analysis must match at least one of these patterns. When not specified or empty, ".+" (match any non-empty value) will be used. |
+| `exclude-patterns`   | List[Regex]          | false    | Any source file that matches any of these matters will not be used in code analysis. |
+
+During a pairwise code analysis,
+the options of the assignment for the submission with the [lexicographically](https://en.wikipedia.org/wiki/Lexicographic_order) smaller id will always be used.
+
+#### Include/Exclude Patterns
+
+The include/exclude patterns decide which source files will be included in code analysis for each assignment.
+When working with these patterns, keep the following in mind:
+
+1. The include/exclude patterns are not [globs](https://en.wikipedia.org/wiki/Glob_(programming)),
+    like you may find in a shell/command-line.
+    Instead, they are full [Regular Expressions](#regex).
+2. The patterns operate not on just the filename, but the entire relative path of the submission file.
+    So, if a student submits the files [`README.md`, `src/code.c`], then you could use the pattern `src/.+` to match everything in the `src` directory.
+3. Inclusions are processed before exclusions.
+    So an exclusion pattern of `.*` will exclude everything, regardless of any inclusion patterns.
+4. Some source files may be transformed and renamed for analysis.
+    The inclusion/exclusion patterns apply after renaming and transformation.
+    For example, [iPython Notebooks](https://en.wikipedia.org/wiki/Project_Jupyter#Documents) with the `.ipynb` extensions
+    will have their code Python extracted and renamed to `.py`.
 
 ## Roles
 

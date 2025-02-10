@@ -34,6 +34,8 @@ type Assignment struct {
 
 	docker.ImageInfo
 
+	AnalysisOptions *AnalysisOptions `json:"analysis-options,omitempty"`
+
 	// Ignore these fields in JSON.
 	RelSourceDir string  `json:"_rel_source-dir"`
 	Course       *Course `json:"-"`
@@ -171,6 +173,13 @@ func (this *Assignment) Validate() error {
 
 	if this.ImageInfo.MaxRuntimeSecs == 0 {
 		this.ImageInfo.MaxRuntimeSecs = systemMaxRuntimeSecs
+	}
+
+	if this.AnalysisOptions != nil {
+		err = this.AnalysisOptions.Validate()
+		if err != nil {
+			return fmt.Errorf("Failed to validate analysis options: '%w'.", err)
+		}
 	}
 
 	return nil

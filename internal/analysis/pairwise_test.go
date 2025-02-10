@@ -42,6 +42,7 @@ func TestPairwiseAnalysisFake(test *testing.T) {
 				},
 			},
 			UnmatchedFiles: [][2]string{},
+			SkippedFiles:   []string{},
 			MeanSimilarities: map[string]float64{
 				"submission.py": 0.13,
 			},
@@ -64,6 +65,7 @@ func TestPairwiseAnalysisFake(test *testing.T) {
 				},
 			},
 			UnmatchedFiles: [][2]string{},
+			SkippedFiles:   []string{},
 			MeanSimilarities: map[string]float64{
 				"submission.py": 0.13,
 			},
@@ -86,6 +88,7 @@ func TestPairwiseAnalysisFake(test *testing.T) {
 				},
 			},
 			UnmatchedFiles: [][2]string{},
+			SkippedFiles:   []string{},
 			MeanSimilarities: map[string]float64{
 				"submission.py": 0.13,
 			},
@@ -193,7 +196,7 @@ func TestPairwiseWithPythonNotebook(test *testing.T) {
 		filepath.Join(tempDir, "py"),
 	}
 
-	sims, unmatches, _, err := computeFileSims(paths)
+	sims, unmatches, _, _, err := computeFileSims(paths, nil)
 	if err != nil {
 		test.Fatalf("Failed to compute file similarity: '%v'.", err)
 	}
@@ -247,6 +250,103 @@ func TestPairwiseAnalysisDefaultEnginesSpecificFiles(test *testing.T) {
 				test.Errorf("Engine '%s' got an unexpected score on self-similarity with '%s'. Expected: %f, Actual: %f.",
 					engine.GetName(), path, expected, sim.Score)
 				continue
+			}
+		}
+	}
+}
+
+func TestPairwiseAnalysisIncludeExclude(test *testing.T) {
+	db.ResetForTesting()
+	defer db.ResetForTesting()
+
+	testCases := []struct {
+		options       *model.AnalysisOptions
+		expectedCount int
+	}{
+		{
+			nil,
+			1,
+		},
+		{
+			&model.AnalysisOptions{
+				IncludePatterns: []string{
+					`\.c$`,
+				},
+			},
+			0,
+		},
+		{
+			&model.AnalysisOptions{
+				ExcludePatterns: []string{
+					`\.c$`,
+				},
+			},
+			1,
+		},
+		{
+			&model.AnalysisOptions{
+				ExcludePatterns: []string{
+					`\.py$`,
+				},
+			},
+			0,
+		},
+	}
+
+	assignment := db.MustGetTestAssignment()
+	ids := []string{
+		"course101::hw0::course-student@test.edulinq.org::1697406256",
+		"course101::hw0::course-student@test.edulinq.org::1697406265",
+	}
+	relpath := "submission.py"
+	baseCount := 1
+
+	for i, testCase := range testCases {
+		db.ResetForTesting()
+
+		if testCase.options != nil {
+			err := testCase.options.Validate()
+			if err != nil {
+				test.Errorf("Case %d: Options is invalid: '%v'.", i, err)
+				continue
+			}
+		}
+
+		assignment.AnalysisOptions = testCase.options
+		db.MustSaveAssignment(assignment)
+
+		results, pendingCount, err := PairwiseAnalysis(ids, true, "server-admin@test.edulinq.org")
+		if err != nil {
+			test.Errorf("Case %d: Failed to perform analysis: '%v'.", i, err)
+			continue
+		}
+
+		if pendingCount != 0 {
+			test.Errorf("Case %d: Found %d pending results, when 0 were expected.", i, pendingCount)
+			continue
+		}
+
+		if len(results) != 1 {
+			test.Errorf("Case %d: Found %d results, when 1 was expected.", i, len(results))
+			continue
+		}
+
+		if testCase.expectedCount != len(results[0].Similarities) {
+			test.Errorf("Case %d: Unexpected number of result similarities. Expected: %d, Actual: %d.",
+				i, testCase.expectedCount, len(results[0].Similarities))
+			continue
+		}
+
+		if (baseCount - testCase.expectedCount) != len(results[0].SkippedFiles) {
+			test.Errorf("Case %d: Unexpected number of skipped files. Expected: %d, Actual: %d.",
+				i, (baseCount - testCase.expectedCount), len(results[0].SkippedFiles))
+			continue
+		}
+
+		if testCase.expectedCount == 0 {
+			if relpath != results[0].SkippedFiles[0] {
+				test.Errorf("Case %d: Unexpected skipped file. Expected: '%s', Actual: '%s'.",
+					i, relpath, results[0].SkippedFiles[0])
 			}
 		}
 	}

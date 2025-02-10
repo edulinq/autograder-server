@@ -2,11 +2,170 @@ package model
 
 import (
 	"reflect"
+	"regexp"
 	"testing"
 
 	"github.com/edulinq/autograder/internal/timestamp"
 	"github.com/edulinq/autograder/internal/util"
 )
+
+func TestAnalysisOptionsValidateBase(test *testing.T) {
+	testCases := []struct {
+		input    *AnalysisOptions
+		expected *AnalysisOptions
+		hasError bool
+	}{
+		{
+			&AnalysisOptions{},
+			&AnalysisOptions{
+				IncludeRegexes: []*regexp.Regexp{
+					regexp.MustCompile(DEFAULT_INCLUDE_REGEX),
+				},
+				ExcludeRegexes: []*regexp.Regexp{},
+			},
+			false,
+		},
+		{
+			&AnalysisOptions{
+				IncludePatterns: []string{
+					"ZZZ",
+				},
+			},
+			&AnalysisOptions{
+				IncludePatterns: []string{
+					"ZZZ",
+				},
+				IncludeRegexes: []*regexp.Regexp{
+					regexp.MustCompile("ZZZ"),
+				},
+				ExcludeRegexes: []*regexp.Regexp{},
+			},
+			false,
+		},
+		{
+			&AnalysisOptions{
+				IncludePatterns: []string{
+					"(error",
+				},
+			},
+			nil,
+			true,
+		},
+	}
+
+	for i, testCase := range testCases {
+		err := testCase.input.Validate()
+		if err != nil {
+			if !testCase.hasError {
+				test.Errorf("Case %d: Unexpected error: '%v'.", i, err)
+			}
+
+			continue
+		}
+
+		if testCase.hasError {
+			test.Errorf("Case %d: Did not get expected error.", i)
+			continue
+		}
+
+		if !reflect.DeepEqual(testCase.expected, testCase.input) {
+			test.Errorf("Case %d: Result not as expected. Expected: '%+v', Actual: '%+v'.",
+				i, testCase.expected, testCase.input)
+			continue
+		}
+	}
+}
+
+func TestAnalysisOptionsMatchRelpathBase(test *testing.T) {
+	testCases := []struct {
+		options  *AnalysisOptions
+		relpath  string
+		expected bool
+	}{
+		// Default values.
+		{
+			&AnalysisOptions{},
+			"ZZZ",
+			true,
+		},
+		{
+			&AnalysisOptions{},
+			"",
+			false,
+		},
+
+		// (include && exclude).
+		{
+			&AnalysisOptions{
+				IncludePatterns: []string{
+					"A",
+				},
+				ExcludePatterns: []string{
+					"B",
+				},
+			},
+			"AB",
+			false,
+		},
+
+		// (include && !exclude).
+		{
+			&AnalysisOptions{
+				IncludePatterns: []string{
+					"A",
+				},
+				ExcludePatterns: []string{
+					"B",
+				},
+			},
+			"AC",
+			true,
+		},
+
+		// (!include && exclude).
+		{
+			&AnalysisOptions{
+				IncludePatterns: []string{
+					"A",
+				},
+				ExcludePatterns: []string{
+					"B",
+				},
+			},
+			"B",
+			false,
+		},
+
+		// (!include && !exclude).
+		{
+			&AnalysisOptions{
+				IncludePatterns: []string{
+					"A",
+				},
+				ExcludePatterns: []string{
+					"B",
+				},
+			},
+			"Z",
+			false,
+		},
+	}
+
+	for i, testCase := range testCases {
+		err := testCase.options.Validate()
+		if err != nil {
+			test.Errorf("Case %d: Options do not validate: '%v'.", i, err)
+			continue
+		}
+
+		actual := testCase.options.MatchRelpath(testCase.relpath)
+		if testCase.expected != actual {
+			test.Errorf("Case %d: Result not as expected. Expected: '%v', Actual: '%v'.",
+				i, testCase.expected, actual)
+			continue
+		}
+	}
+}
 
 func TestNewIndividualAnalysisSummaryBase(test *testing.T) {
 	input := []*IndividualAnalysis{
@@ -215,9 +374,9 @@ func TestNewPairwiseAnalysisSummaryBase(test *testing.T) {
 	}
 
 	input := []*PairwiseAnalysis{
-		NewPairwiseAnalysis(NewPairwiseKey("A", "B"), sims1, nil),
-		NewPairwiseAnalysis(NewPairwiseKey("C", "D"), sims2, nil),
-		NewPairwiseAnalysis(NewPairwiseKey("E", "F"), sims3, nil),
+		NewPairwiseAnalysis(NewPairwiseKey("A", "B"), sims1, nil, nil),
+		NewPairwiseAnalysis(NewPairwiseKey("C", "D"), sims2, nil, nil),
+		NewPairwiseAnalysis(NewPairwiseKey("E", "F"), sims3, nil, nil),
 	}
 
 	expected := &PairwiseAnalysisSummary{
