@@ -310,10 +310,10 @@ On a full name match, then autograder will sync over the `lms-id` from the cours
 
 The analysis options type allows options to be passed to code analysis for assignments.
 It has the following fields:
-| Name                 | Type                 | Required | Description |
-|----------------------|----------------------|----------|-------------|
-| `include-patterns`   | List[Regex]          | false    | Any source file eligible for code analysis must match at least one of these patterns. When not specified or empty, ".+" (match any non-empty value) will be used. |
-| `exclude-patterns`   | List[Regex]          | false    | Any source file that matches any of these matters will not be used in code analysis. |
+| Name                 | Type        | Required | Description |
+|----------------------|-------------|----------|-------------|
+| `include-patterns`   | List[Regex] | false    | Any source file eligible for code analysis must match at least one of these patterns. When not specified or empty, ".+" will be used (which will match any non-empty value). |
+| `exclude-patterns`   | List[Regex] | false    | Any source file that matches any of these patterns will not be used in code analysis. |
 
 During a pairwise code analysis,
 the options of the assignment for the submission with the [lexicographically](https://en.wikipedia.org/wiki/Lexicographic_order) smaller id will always be used.
