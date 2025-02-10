@@ -961,26 +961,33 @@ Authenticate against a private repository:
 ## File Operation (FileOp)
 
 A file operation (FileOp) is a description of a simple file operation.
-FileOps are always lists of strings (typically three strings) representing the operation.
+FileOps are always lists of strings (typically two or three strings) representing the operation and its arguments.
+The general idea is to support very basic commands that can be easily implemented on any system that may encounter them.
 
-The currently supported FileOps are copy (`cp`) and move/rename (`mv`).
-Those familiar with POSIX file operations should already be familiar with `cp` and `mv`.
-These operations take no options or flags (like `-r` or `-f`),
-the autograder will handle those details.
-There are just two arguments: source and destination.
+Any path contained within a file operation must obey the following rules:
+ - Must be relative.
+ - Must not point outside the base/current directory (e.g., `../a.txt`).
+ - Must be a POSIX path (use forward slashes as separators).
+ - Must not point just to the current directory (`.`).
+   The path must point to a path within the current directory (e.g., `a.txt` or even `./a.txt`), not the directory itself.
+
+Below are the currently supported file operations:
+| Long Name | Short Name | Arguments              | Description |
+| `copy`    | `cp`       | source path, dest path | Copy the source path to the dest path. The source path may be a file or directory. |
+| `move`    | `mv`       | source path, dest path | Move (or rename) the source path to the dest path. The source path may be a file or directory. |
 
 **Examples**
 
 Copy a directory:
 ```json
     "file-operations": [
-        ["cp", "autograder-server", "autograder-server-copy"]
+        ["copy", "autograder-server", "autograder-server-copy"]
     ]
 ```
 
 Move/rename a file:
 ```json
     "file-operations": [
-        ["mv", "foo.txt", "bar.txt"]
+        ["move", "foo.txt", "bar.txt"]
     ]
 ```

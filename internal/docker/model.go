@@ -19,10 +19,10 @@ type ImageInfo struct {
 
 	StaticFiles []*common.FileSpec `json:"static-files,omitempty"`
 
-	PreStaticFileOperations  []common.FileOperation `json:"pre-static-files-ops,omitempty"`
-	PostStaticFileOperations []common.FileOperation `json:"post-static-files-ops,omitempty"`
+	PreStaticFileOperations  []*common.FileOperation `json:"pre-static-files-ops,omitempty"`
+	PostStaticFileOperations []*common.FileOperation `json:"post-static-files-ops,omitempty"`
 
-	PostSubmissionFileOperations []common.FileOperation `json:"post-submission-files-ops,omitempty"`
+	PostSubmissionFileOperations []*common.FileOperation `json:"post-submission-files-ops,omitempty"`
 
 	MaxRuntimeSecs int `json:"max-runtime-secs,omitempty"`
 
@@ -37,8 +37,8 @@ type ImageInfo struct {
 
 // A subset of the image information that is passed to docker images for config during grading.
 type GradingConfig struct {
-	Name                         string                 `json:"name"`
-	PostSubmissionFileOperations []common.FileOperation `json:"post-submission-files-ops,omitempty"`
+	Name                         string                  `json:"name"`
+	PostSubmissionFileOperations []*common.FileOperation `json:"post-submission-files-ops,omitempty"`
 }
 
 func (this *ImageInfo) GetGradingConfig() *GradingConfig {
@@ -97,7 +97,7 @@ func (this *ImageInfo) Validate() error {
 	}
 
 	if this.PreStaticFileOperations == nil {
-		this.PreStaticFileOperations = make([]common.FileOperation, 0)
+		this.PreStaticFileOperations = make([]*common.FileOperation, 0)
 	}
 
 	err := common.ValidateFileOperations(this.PreStaticFileOperations)
@@ -106,7 +106,7 @@ func (this *ImageInfo) Validate() error {
 	}
 
 	if this.PostStaticFileOperations == nil {
-		this.PostStaticFileOperations = make([]common.FileOperation, 0)
+		this.PostStaticFileOperations = make([]*common.FileOperation, 0)
 	}
 
 	err = common.ValidateFileOperations(this.PostStaticFileOperations)
@@ -115,7 +115,7 @@ func (this *ImageInfo) Validate() error {
 	}
 
 	if this.PostSubmissionFileOperations == nil {
-		this.PostSubmissionFileOperations = make([]common.FileOperation, 0)
+		this.PostSubmissionFileOperations = make([]*common.FileOperation, 0)
 	}
 
 	err = common.ValidateFileOperations(this.PostSubmissionFileOperations)

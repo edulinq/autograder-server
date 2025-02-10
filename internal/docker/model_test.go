@@ -20,10 +20,10 @@ func TestImageInfoStruct(test *testing.T) {
 			Invocation:               []string{"a"},
 			StaticFiles:              []*common.FileSpec{},
 			PreStaticFileOperations:  nil,
-			PostStaticFileOperations: []common.FileOperation{},
-			PostSubmissionFileOperations: []common.FileOperation{
-				common.FileOperation([]string{"a"}),
-				common.FileOperation([]string{"b", "c"}),
+			PostStaticFileOperations: []*common.FileOperation{},
+			PostSubmissionFileOperations: []*common.FileOperation{
+				common.NewFileOperation([]string{"a"}),
+				common.NewFileOperation([]string{"b", "c"}),
 			},
 			Name: "foo",
 			BaseDirFunc: func() string {
