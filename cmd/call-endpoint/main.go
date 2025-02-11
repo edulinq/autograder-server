@@ -43,6 +43,13 @@ func main() {
 		return
 	}
 
+	if args.Endpoint == "" {
+		log.Error("Please enter an endpoint. See --list to view all endpoints.")
+
+		// Return to prevent further execution after log.Error().
+		return
+	}
+
 	apiDescription, err := api.Describe(*api.GetRoutes())
 	if err != nil {
 		log.Fatal("Failed to describe API endpoints.", err)
@@ -91,7 +98,7 @@ func listAPIEndpoints() {
 		log.Fatal("Failed to describe API endpoints: '%w'.", err)
 	}
 
-	for endpoint := range apiDescription.Endpoints {
+	for endpoint, _ := range apiDescription.Endpoints {
 		fmt.Println(endpoint)
 	}
 }
