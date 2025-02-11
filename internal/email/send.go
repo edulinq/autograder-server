@@ -6,8 +6,8 @@ import (
 	"net/smtp"
 	"time"
 
-	"github.com/edulinq/autograder/internal/common"
 	"github.com/edulinq/autograder/internal/config"
+	"github.com/edulinq/autograder/internal/lockmanager"
 	"github.com/edulinq/autograder/internal/log"
 	"github.com/edulinq/autograder/internal/timestamp"
 )
@@ -65,8 +65,8 @@ func SendMessage(message *Message) error {
 	}
 
 	// Only send one email at a time.
-	common.Lock(LOCK_KEY)
-	defer common.Unlock(LOCK_KEY)
+	lockmanager.Lock(LOCK_KEY)
+	defer lockmanager.Unlock(LOCK_KEY)
 
 	content := message.ToContent()
 
@@ -179,8 +179,8 @@ func closeIdleConnection() {
 
 	for {
 		func() {
-			common.Lock(LOCK_KEY)
-			defer common.Unlock(LOCK_KEY)
+			lockmanager.Lock(LOCK_KEY)
+			defer lockmanager.Unlock(LOCK_KEY)
 
 			// The email system was closed.
 			if smtpConnection == nil {
@@ -213,8 +213,8 @@ func closeIdleConnection() {
 // Close the SMTP connection.
 // Will acquire the email lock.
 func Close() error {
-	common.Lock(LOCK_KEY)
-	defer common.Unlock(LOCK_KEY)
+	lockmanager.Lock(LOCK_KEY)
+	defer lockmanager.Unlock(LOCK_KEY)
 
 	return closeWithLock()
 }

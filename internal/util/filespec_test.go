@@ -1,13 +1,10 @@
-package common
+package util
 
 import (
 	"path/filepath"
 	"reflect"
 	"strings"
 	"testing"
-
-	"github.com/edulinq/autograder/internal/config"
-	"github.com/edulinq/autograder/internal/util"
 )
 
 type testCaseParseValidation struct {
@@ -679,13 +676,13 @@ func TestFileSpecValidateBase(test *testing.T) {
 		}
 
 		if testCase.errorSubstring != "" {
-			test.Errorf("Case %d: Did not get expected error '%s'.", i, util.MustToJSONIndent(testCase.spec))
+			test.Errorf("Case %d: Did not get expected error '%s'.", i, MustToJSONIndent(testCase.spec))
 			continue
 		}
 
 		if !reflect.DeepEqual(testCase.expected, testCase.spec) {
 			test.Errorf("Case %d: Spec not as expected. Expected: '%s', Actual: '%s'.",
-				i, util.MustToJSONIndent(testCase.expected), util.MustToJSONIndent(testCase.spec))
+				i, MustToJSONIndent(testCase.expected), MustToJSONIndent(testCase.spec))
 			continue
 		}
 	}
@@ -694,7 +691,7 @@ func TestFileSpecValidateBase(test *testing.T) {
 func TestFileSpecParseValidation(test *testing.T) {
 	for i, testCase := range testCasesParseValidation {
 		var spec FileSpec
-		err := util.JSONFromString(testCase.Text, &spec)
+		err := JSONFromString(testCase.Text, &spec)
 
 		if testCase.Parses && (err != nil) {
 			test.Errorf("Case %d: Could not unmarshal FileSpec '%s': '%v'.", i, testCase.Text, err)
@@ -726,7 +723,7 @@ func TestFileSpecParseValidation(test *testing.T) {
 			continue
 		}
 
-		jsonString, err := util.ToJSON(spec)
+		jsonString, err := ToJSON(spec)
 		if err != nil {
 			test.Errorf("Case %d: Could not marshal FileSpec '%+v': '%v'.", i, spec, err)
 			continue
@@ -753,21 +750,21 @@ func TestFileSpecCopy(test *testing.T) {
 			continue
 		}
 
-		tempDir, err := util.MkDirTemp("autograder-test-filespec-copy-")
+		tempDir, err := MkDirTemp("autograder-test-filespec-copy-")
 		if err != nil {
 			test.Errorf("Case %d: Failed to create temp dir: '%v'.", i, err)
 			continue
 		}
-		defer util.RemoveDirent(tempDir)
+		defer RemoveDirent(tempDir)
 
 		destDir := filepath.Join(tempDir, "dest")
 		if testCase.ExpectErrorForSameDir {
 			destDir = filepath.Dir(testCase.Spec.Path)
 		} else {
-			util.MustMkDir(destDir)
+			MustMkDir(destDir)
 		}
 
-		err = testCase.Spec.CopyTarget(config.GetTestdataDir(), destDir)
+		err = testCase.Spec.CopyTarget(TestdataDirForTesting(), destDir)
 		if (!testCase.ExpectErrorForSameDir) && (err != nil) {
 			test.Errorf("Case %d: Failed to copy matching targets (%+v): '%v'.", i, testCase.Spec, err)
 			continue
@@ -779,7 +776,7 @@ func TestFileSpecCopy(test *testing.T) {
 			continue
 		}
 
-		dirents, err := util.GetAllDirents(destDir)
+		dirents, err := GetAllDirents(destDir)
 		if err != nil {
 			test.Errorf("Case %d: Failed to get all dirents: '%v'.", i, err)
 			continue
@@ -811,7 +808,7 @@ func TestFileSpecDestPath(test *testing.T) {
 		{
 			spec: FileSpec{
 				Type: FILESPEC_TYPE_PATH,
-				Path: filepath.Join(config.GetTestdataDir(), "files", "filespec_test", "spec.txt"),
+				Path: filepath.Join(TestdataDirForTesting(), "files", "filespec_test", "spec.txt"),
 				Dest: "",
 			},
 			destDir:      "test",
@@ -820,7 +817,7 @@ func TestFileSpecDestPath(test *testing.T) {
 		{
 			spec: FileSpec{
 				Type: FILESPEC_TYPE_PATH,
-				Path: filepath.Join(config.GetTestdataDir(), "files", "filespec_test", "spec.txt"),
+				Path: filepath.Join(TestdataDirForTesting(), "files", "filespec_test", "spec.txt"),
 				Dest: "/a.txt",
 			},
 			destDir:      "test",
@@ -829,7 +826,7 @@ func TestFileSpecDestPath(test *testing.T) {
 		{
 			spec: FileSpec{
 				Type: FILESPEC_TYPE_PATH,
-				Path: filepath.Join(config.GetTestdataDir(), "files", "filespec_test", "spec.txt"),
+				Path: filepath.Join(TestdataDirForTesting(), "files", "filespec_test", "spec.txt"),
 				Dest: "a.txt",
 			},
 			destDir:      "test",
@@ -838,7 +835,7 @@ func TestFileSpecDestPath(test *testing.T) {
 		{
 			spec: FileSpec{
 				Type: FILESPEC_TYPE_PATH,
-				Path: filepath.Join(config.GetTestdataDir(), "files", "filespec_test", "spec.txt"),
+				Path: filepath.Join(TestdataDirForTesting(), "files", "filespec_test", "spec.txt"),
 				Dest: "",
 			},
 			destDir:      "",
@@ -847,7 +844,7 @@ func TestFileSpecDestPath(test *testing.T) {
 		{
 			spec: FileSpec{
 				Type: FILESPEC_TYPE_PATH,
-				Path: filepath.Join(config.GetTestdataDir(), "files", "filespec_test", "spec.txt"),
+				Path: filepath.Join(TestdataDirForTesting(), "files", "filespec_test", "spec.txt"),
 				Dest: "/a.txt",
 			},
 			destDir:      "",
@@ -856,7 +853,7 @@ func TestFileSpecDestPath(test *testing.T) {
 		{
 			spec: FileSpec{
 				Type: FILESPEC_TYPE_PATH,
-				Path: filepath.Join(config.GetTestdataDir(), "files", "filespec_test", "spec.txt"),
+				Path: filepath.Join(TestdataDirForTesting(), "files", "filespec_test", "spec.txt"),
 				Dest: "a.txt",
 			},
 			destDir:      "",
@@ -1008,28 +1005,28 @@ func getCopyTestCases() []*testCaseCopy {
 		&testCaseCopy{
 			Spec: FileSpec{
 				Type: "path",
-				Path: filepath.Join(config.GetTestdataDir(), "files", "filespec_test", "spec.txt"),
+				Path: filepath.Join(TestdataDirForTesting(), "files", "filespec_test", "spec.txt"),
 			},
 			ExpectedCopiedDirents: []string{"spec.txt"},
 		},
 		&testCaseCopy{
 			Spec: FileSpec{
 				Type: "path",
-				Path: filepath.Join(config.GetTestdataDir(), "files", "filespec_test"),
+				Path: filepath.Join(TestdataDirForTesting(), "files", "filespec_test"),
 			},
 			ExpectedCopiedDirents: []string{"filespec_test", "filespec_test/spec.txt", "filespec_test/spec2.txt"},
 		},
 		&testCaseCopy{
 			Spec: FileSpec{
 				Type: "path",
-				Path: filepath.Join(config.GetTestdataDir(), "files", "filespec_test", "*"),
+				Path: filepath.Join(TestdataDirForTesting(), "files", "filespec_test", "*"),
 			},
 			ExpectedCopiedDirents: []string{"spec.txt", "spec2.txt"},
 		},
 		&testCaseCopy{
 			Spec: FileSpec{
 				Type: "path",
-				Path: filepath.Join(config.GetTestdataDir(), "files", "filespec_test", "spe?.txt"),
+				Path: filepath.Join(TestdataDirForTesting(), "files", "filespec_test", "spe?.txt"),
 				Dest: "test.txt",
 			},
 			ExpectedCopiedDirents: []string{"test.txt"},
@@ -1037,7 +1034,7 @@ func getCopyTestCases() []*testCaseCopy {
 		&testCaseCopy{
 			Spec: FileSpec{
 				Type: "path",
-				Path: filepath.Join(config.GetTestdataDir(), "files", "filespec_test"),
+				Path: filepath.Join(TestdataDirForTesting(), "files", "filespec_test"),
 				Dest: "test",
 			},
 			ExpectedCopiedDirents: []string{"test", "test/spec.txt", "test/spec2.txt"},
@@ -1045,7 +1042,7 @@ func getCopyTestCases() []*testCaseCopy {
 		&testCaseCopy{
 			Spec: FileSpec{
 				Type: "path",
-				Path: filepath.Join(config.GetTestdataDir(), "files", "filespec_test", "*"),
+				Path: filepath.Join(TestdataDirForTesting(), "files", "filespec_test", "*"),
 				Dest: "test",
 			},
 			ExpectedCopiedDirents: []string{"test", "test/spec.txt", "test/spec2.txt"},
@@ -1053,7 +1050,7 @@ func getCopyTestCases() []*testCaseCopy {
 		&testCaseCopy{
 			Spec: FileSpec{
 				Type: "path",
-				Path: filepath.Join(config.GetTestdataDir(), "files", "*_test", "*"),
+				Path: filepath.Join(TestdataDirForTesting(), "files", "*_test", "*"),
 				Dest: "test",
 			},
 			ExpectedCopiedDirents: []string{"test", "test/*globSpec.txt", "test/spec.txt", "test/spec2.txt"},
@@ -1061,14 +1058,14 @@ func getCopyTestCases() []*testCaseCopy {
 		&testCaseCopy{
 			Spec: FileSpec{
 				Type: "path",
-				Path: filepath.Join(config.GetTestdataDir(), "files", "*_test", "*"),
+				Path: filepath.Join(TestdataDirForTesting(), "files", "*_test", "*"),
 			},
 			ExpectedCopiedDirents: []string{"*globSpec.txt", "spec.txt", "spec2.txt"},
 		},
 		&testCaseCopy{
 			Spec: FileSpec{
 				Type: "path",
-				Path: filepath.Join(config.GetTestdataDir(), "files", "f*_test", "*"),
+				Path: filepath.Join(TestdataDirForTesting(), "files", "f*_test", "*"),
 				Dest: "test",
 			},
 			ExpectedCopiedDirents: []string{"test", "test/spec.txt", "test/spec2.txt"},
@@ -1077,7 +1074,7 @@ func getCopyTestCases() []*testCaseCopy {
 		&testCaseCopy{
 			Spec: FileSpec{
 				Type: "path",
-				Path: filepath.Join(config.GetTestdataDir(), "files", `\**_test`, "*"),
+				Path: filepath.Join(TestdataDirForTesting(), "files", `\**_test`, "*"),
 				Dest: "test.txt",
 			},
 			ExpectedCopiedDirents: []string{"test.txt"},
@@ -1085,7 +1082,7 @@ func getCopyTestCases() []*testCaseCopy {
 		&testCaseCopy{
 			Spec: FileSpec{
 				Type: "path",
-				Path: filepath.Join(config.GetTestdataDir(), "files", "filespec_test", "*"),
+				Path: filepath.Join(TestdataDirForTesting(), "files", "filespec_test", "*"),
 				Dest: "test",
 			},
 			ExpectedCopiedDirents: []string{"test", "test/spec.txt", "test/spec2.txt"},
@@ -1093,7 +1090,7 @@ func getCopyTestCases() []*testCaseCopy {
 		&testCaseCopy{
 			Spec: FileSpec{
 				Type: "path",
-				Path: filepath.Join(config.GetTestdataDir(), "files", "filespec_test", "*"),
+				Path: filepath.Join(TestdataDirForTesting(), "files", "filespec_test", "*"),
 				Dest: "spec.txt",
 			},
 			ExpectErrorForSameDir: true,
@@ -1101,7 +1098,7 @@ func getCopyTestCases() []*testCaseCopy {
 		&testCaseCopy{
 			Spec: FileSpec{
 				Type: "path",
-				Path: filepath.Join(config.GetTestdataDir(), "files", "filespec_test", "*.txt"),
+				Path: filepath.Join(TestdataDirForTesting(), "files", "filespec_test", "*.txt"),
 				Dest: "test",
 			},
 			ExpectedCopiedDirents: []string{"test", "test/spec.txt", "test/spec2.txt"},
@@ -1109,7 +1106,7 @@ func getCopyTestCases() []*testCaseCopy {
 		&testCaseCopy{
 			Spec: FileSpec{
 				Type: "path",
-				Path: filepath.Join(config.GetTestdataDir(), "files", "f*_test", "*.txt"),
+				Path: filepath.Join(TestdataDirForTesting(), "files", "f*_test", "*.txt"),
 				Dest: "test.test",
 			},
 			ExpectedCopiedDirents: []string{"test.test", "test.test/spec.txt", "test.test/spec2.txt"},
@@ -1117,7 +1114,7 @@ func getCopyTestCases() []*testCaseCopy {
 		&testCaseCopy{
 			Spec: FileSpec{
 				Type: "path",
-				Path: filepath.Join(config.GetTestdataDir(), "files", `\*globFileSpec_test`, `\*globSpec.txt`),
+				Path: filepath.Join(TestdataDirForTesting(), "files", `\*globFileSpec_test`, `\*globSpec.txt`),
 				Dest: `\*test.txt`,
 			},
 			ExpectedCopiedDirents: []string{`\*test.txt`},
@@ -1125,14 +1122,14 @@ func getCopyTestCases() []*testCaseCopy {
 		&testCaseCopy{
 			Spec: FileSpec{
 				Type: "path",
-				Path: filepath.Join(config.GetTestdataDir(), "files", "file????_test", "*"),
+				Path: filepath.Join(TestdataDirForTesting(), "files", "file????_test", "*"),
 			},
 			ExpectedCopiedDirents: []string{"spec.txt", "spec2.txt"},
 		},
 		&testCaseCopy{
 			Spec: FileSpec{
 				Type: "path",
-				Path: filepath.Join(config.GetTestdataDir(), "files", "filespec_test", "????.txt"),
+				Path: filepath.Join(TestdataDirForTesting(), "files", "filespec_test", "????.txt"),
 				Dest: "test.test",
 			},
 			ExpectedCopiedDirents: []string{"test.test"},
@@ -1140,7 +1137,7 @@ func getCopyTestCases() []*testCaseCopy {
 		&testCaseCopy{
 			Spec: FileSpec{
 				Type: "path",
-				Path: filepath.Join(config.GetTestdataDir(), "files", "file????_test", "????.txt"),
+				Path: filepath.Join(TestdataDirForTesting(), "files", "file????_test", "????.txt"),
 				Dest: "test.txt",
 			},
 			ExpectedCopiedDirents: []string{"test.txt"},
@@ -1148,7 +1145,7 @@ func getCopyTestCases() []*testCaseCopy {
 		&testCaseCopy{
 			Spec: FileSpec{
 				Type: "path",
-				Path: filepath.Join(config.GetTestdataDir(), "files", "filespe[b-d]_test", "*"),
+				Path: filepath.Join(TestdataDirForTesting(), "files", "filespe[b-d]_test", "*"),
 				Dest: "test",
 			},
 			ExpectedCopiedDirents: []string{"test", "test/spec.txt", "test/spec2.txt"},
@@ -1156,7 +1153,7 @@ func getCopyTestCases() []*testCaseCopy {
 		&testCaseCopy{
 			Spec: FileSpec{
 				Type: "path",
-				Path: filepath.Join(config.GetTestdataDir(), "files", "filespe[^d-z]_test", "*"),
+				Path: filepath.Join(TestdataDirForTesting(), "files", "filespe[^d-z]_test", "*"),
 				Dest: "test",
 			},
 			ExpectedCopiedDirents: []string{"test", "test/spec.txt", "test/spec2.txt"},
@@ -1164,7 +1161,7 @@ func getCopyTestCases() []*testCaseCopy {
 		&testCaseCopy{
 			Spec: FileSpec{
 				Type: "path",
-				Path: filepath.Join(config.GetTestdataDir(), "files", "filespec_test", "[r-t]pec.txt"),
+				Path: filepath.Join(TestdataDirForTesting(), "files", "filespec_test", "[r-t]pec.txt"),
 				Dest: "test.txt",
 			},
 			ExpectedCopiedDirents: []string{"test.txt"},
@@ -1172,7 +1169,7 @@ func getCopyTestCases() []*testCaseCopy {
 		&testCaseCopy{
 			Spec: FileSpec{
 				Type: "path",
-				Path: filepath.Join(config.GetTestdataDir(), "files", "filespec_test", "[^a-r^t-v]pec.txt"),
+				Path: filepath.Join(TestdataDirForTesting(), "files", "filespec_test", "[^a-r^t-v]pec.txt"),
 				Dest: "test.txt",
 			},
 			ExpectedCopiedDirents: []string{"test.txt"},
@@ -1180,7 +1177,7 @@ func getCopyTestCases() []*testCaseCopy {
 		&testCaseCopy{
 			Spec: FileSpec{
 				Type: "path",
-				Path: filepath.Join(config.GetTestdataDir(), "files", "filespe[b-d]_test", "[r-t]pec.txt"),
+				Path: filepath.Join(TestdataDirForTesting(), "files", "filespe[b-d]_test", "[r-t]pec.txt"),
 				Dest: "test.txt",
 			},
 			ExpectedCopiedDirents: []string{"test.txt"},
@@ -1188,7 +1185,7 @@ func getCopyTestCases() []*testCaseCopy {
 		&testCaseCopy{
 			Spec: FileSpec{
 				Type: "path",
-				Path: filepath.Join(config.GetTestdataDir(), "files", "filespe[^d-z]_test", "[^a-r]pec.txt"),
+				Path: filepath.Join(TestdataDirForTesting(), "files", "filespe[^d-z]_test", "[^a-r]pec.txt"),
 				Dest: "test.txt",
 			},
 			ExpectedCopiedDirents: []string{"test.txt"},

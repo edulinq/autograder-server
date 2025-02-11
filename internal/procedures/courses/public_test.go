@@ -6,7 +6,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/edulinq/autograder/internal/common"
 	"github.com/edulinq/autograder/internal/config"
 	"github.com/edulinq/autograder/internal/db"
 	"github.com/edulinq/autograder/internal/model"
@@ -316,8 +315,8 @@ func TestUpsertFromFileSpec(test *testing.T) {
 	for i, testCase := range testCases {
 		prepUpsertTest(test, testCase.basePublicUpsertTestCase)
 
-		filespec := &common.FileSpec{
-			Type: common.FILESPEC_TYPE_PATH,
+		filespec := &util.FileSpec{
+			Type: util.FILESPEC_TYPE_PATH,
 			Path: testCase.path,
 		}
 

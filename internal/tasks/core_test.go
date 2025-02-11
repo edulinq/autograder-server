@@ -3,10 +3,10 @@ package tasks
 import (
 	"testing"
 
-	"github.com/edulinq/autograder/internal/common"
 	"github.com/edulinq/autograder/internal/db"
 	"github.com/edulinq/autograder/internal/model"
 	"github.com/edulinq/autograder/internal/timestamp"
+	"github.com/edulinq/autograder/internal/util"
 )
 
 func TestTaskCoreRunOneTask(test *testing.T) {
@@ -24,7 +24,7 @@ func TestTaskCoreRunOneTask(test *testing.T) {
 	task := &model.FullScheduledTask{
 		UserTaskInfo: model.UserTaskInfo{
 			Type: model.TaskTypeTest,
-			When: &common.ScheduledTime{
+			When: &util.ScheduledTime{
 				Daily: "0:00",
 			},
 		},

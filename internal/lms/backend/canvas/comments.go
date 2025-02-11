@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/edulinq/autograder/internal/common"
 	"github.com/edulinq/autograder/internal/lms/lmstypes"
+	"github.com/edulinq/autograder/internal/util"
 )
 
 func (this *CanvasBackend) UpdateComments(assignmentID string, comments []*lmstypes.SubmissionComment) error {
@@ -36,7 +36,7 @@ func (this *CanvasBackend) UpdateComment(assignmentID string, comment *lmstypes.
 	form["comment"] = comment.Text
 
 	headers := this.standardHeaders()
-	_, _, err := common.PutWithHeaders(url, form, headers)
+	_, _, err := util.PutWithHeaders(url, form, headers)
 
 	if err != nil {
 		return fmt.Errorf("Failed to update comments: '%w'.", err)

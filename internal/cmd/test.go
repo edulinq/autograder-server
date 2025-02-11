@@ -9,12 +9,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/edulinq/autograder/internal/common"
 	"github.com/edulinq/autograder/internal/config"
 	"github.com/edulinq/autograder/internal/db"
 	"github.com/edulinq/autograder/internal/exit"
 	"github.com/edulinq/autograder/internal/log"
 	"github.com/edulinq/autograder/internal/procedures/server"
+	"github.com/edulinq/autograder/internal/systemserver"
 	"github.com/edulinq/autograder/internal/util"
 )
 
@@ -58,7 +58,7 @@ func CMDServerTestingMain(suite *testing.M) {
 		go func() {
 			serverRun.Done()
 
-			err := server.RunAndBlockFull(common.CMD_TEST_SERVER, true)
+			err := server.RunAndBlockFull(systemserver.CMD_TEST_SERVER, true)
 			if err != nil {
 				log.Fatal("Failed to run the server.", err)
 			}

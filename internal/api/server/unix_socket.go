@@ -8,9 +8,10 @@ import (
 	"path/filepath"
 
 	"github.com/edulinq/autograder/internal/api/core"
-	"github.com/edulinq/autograder/internal/common"
 	"github.com/edulinq/autograder/internal/config"
+	"github.com/edulinq/autograder/internal/lockmanager"
 	"github.com/edulinq/autograder/internal/log"
+	"github.com/edulinq/autograder/internal/systemserver"
 	"github.com/edulinq/autograder/internal/util"
 )
 
@@ -35,7 +36,7 @@ func runUnixSocketServer() (err error) {
 		err = errors.Join(err, fmt.Errorf("Unix socket panicked: '%v'.", value))
 	}()
 
-	unixSocketPath, err := common.GetUnixSocketPath()
+	unixSocketPath, err := systemserver.GetUnixSocketPath()
 	if err != nil {
 		return err
 	}
@@ -132,7 +133,7 @@ func handleUnixSocketConnection(connection net.Conn) error {
 	form[core.API_REQUEST_CONTENT_KEY] = string(formContent)
 
 	url := fmt.Sprintf("http://127.0.0.1:%d%s", port, fullAPIPath)
-	responseText, err := common.PostNoCheck(url, form)
+	responseText, err := util.PostNoCheck(url, form)
 	if err != nil {
 		return fmt.Errorf("Failed to POST an API request: '%w'.", err)
 	}
@@ -147,8 +148,8 @@ func handleUnixSocketConnection(connection net.Conn) error {
 }
 
 func stopUnixSocketServer() {
-	common.Lock(UNIX_SOCKET_SERVER_STOP_LOCK)
-	defer common.Unlock(UNIX_SOCKET_SERVER_STOP_LOCK)
+	lockmanager.Lock(UNIX_SOCKET_SERVER_STOP_LOCK)
+	defer lockmanager.Unlock(UNIX_SOCKET_SERVER_STOP_LOCK)
 
 	if unixSocket == nil {
 		return

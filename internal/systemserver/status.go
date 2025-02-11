@@ -1,4 +1,4 @@
-package common
+package systemserver
 
 import (
 	"fmt"
@@ -7,6 +7,7 @@ import (
 	"syscall"
 
 	"github.com/edulinq/autograder/internal/config"
+	"github.com/edulinq/autograder/internal/lockmanager"
 	"github.com/edulinq/autograder/internal/log"
 	"github.com/edulinq/autograder/internal/util"
 )
@@ -36,8 +37,8 @@ func GetStatusPath() string {
 }
 
 func GetUnixSocketPath() (string, error) {
-	ReadLock(SERVER_STATUS_LOCK)
-	defer ReadUnlock(SERVER_STATUS_LOCK)
+	lockmanager.ReadLock(SERVER_STATUS_LOCK)
+	defer lockmanager.ReadUnlock(SERVER_STATUS_LOCK)
 
 	statusPath := GetStatusPath()
 	if !util.IsFile(statusPath) {
@@ -58,8 +59,8 @@ func GetUnixSocketPath() (string, error) {
 }
 
 func WriteAndHandleStatusFile(initiator ServerInitiator) error {
-	Lock(SERVER_STATUS_LOCK)
-	defer Unlock(SERVER_STATUS_LOCK)
+	lockmanager.Lock(SERVER_STATUS_LOCK)
+	defer lockmanager.Unlock(SERVER_STATUS_LOCK)
 
 	statusPath := GetStatusPath()
 	pid := os.Getpid()

@@ -9,8 +9,8 @@ import (
 	"path/filepath"
 	"sync"
 
-	"github.com/edulinq/autograder/internal/common"
 	"github.com/edulinq/autograder/internal/config"
+	"github.com/edulinq/autograder/internal/lockmanager"
 	"github.com/edulinq/autograder/internal/log"
 	"github.com/edulinq/autograder/internal/util"
 )
@@ -59,22 +59,22 @@ func (this *backend) EnsureTables() error {
 // which will block out contextual lockers.
 func (this *backend) contextLock(id string) {
 	this.contextualLock.RLock()
-	common.Lock(id)
+	lockmanager.Lock(id)
 }
 
 func (this *backend) contextReadLock(id string) {
 	this.contextualLock.RLock()
-	common.ReadLock(id)
+	lockmanager.ReadLock(id)
 }
 
 func (this *backend) contextUnlock(id string) {
 	this.contextualLock.RUnlock()
-	common.Unlock(id)
+	lockmanager.Unlock(id)
 }
 
 func (this *backend) contextReadUnlock(id string) {
 	this.contextualLock.RUnlock()
-	common.ReadUnlock(id)
+	lockmanager.ReadUnlock(id)
 }
 
 func (this *backend) Clear() error {

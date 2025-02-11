@@ -51,7 +51,7 @@ func UpsertFromZipBlob(blob []byte, options CourseUpsertOptions) ([]CourseUpsert
 // Any error that occurs will be returned.
 // If an error occurs within the context of a course,
 // then it will be placed in both the course's message and joined to the returned error.
-func UpsertFromFileSpec(spec *common.FileSpec, options CourseUpsertOptions) ([]CourseUpsertResult, error) {
+func UpsertFromFileSpec(spec *util.FileSpec, options CourseUpsertOptions) ([]CourseUpsertResult, error) {
 	if spec == nil {
 		return nil, fmt.Errorf("No FileSpec provided.")
 	}

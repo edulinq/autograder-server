@@ -17,11 +17,11 @@ type FullScheduledTask struct {
 
 // Information about a task supplied by the user.
 type UserTaskInfo struct {
-	Type     TaskType              `json:"type"`
-	Name     string                `json:"name,omitempty"`
-	Disabled bool                  `json:"disabled,omitempty"`
-	When     *common.ScheduledTime `json:"when,omitempty"`
-	Options  map[string]any        `json:"options,omitempty"`
+	Type     TaskType            `json:"type"`
+	Name     string              `json:"name,omitempty"`
+	Disabled bool                `json:"disabled,omitempty"`
+	When     *util.ScheduledTime `json:"when,omitempty"`
+	Options  map[string]any      `json:"options,omitempty"`
 }
 
 // Information about a task supplied by the autograder.

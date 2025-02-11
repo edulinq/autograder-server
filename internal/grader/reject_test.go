@@ -6,11 +6,11 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/edulinq/autograder/internal/common"
 	"github.com/edulinq/autograder/internal/config"
 	"github.com/edulinq/autograder/internal/db"
 	"github.com/edulinq/autograder/internal/model"
 	"github.com/edulinq/autograder/internal/timestamp"
+	"github.com/edulinq/autograder/internal/util"
 )
 
 const TEST_COURSE_ID = "course-languages"
@@ -86,11 +86,11 @@ func TestRejectWindowMaxMessage(test *testing.T) {
 		expected string
 	}{
 		{
-			RejectWindowMax{1, common.DurationSpec{Hours: 1}, timestamp.Timestamp(0)},
+			RejectWindowMax{1, util.DurationSpec{Hours: 1}, timestamp.Timestamp(0)},
 			"Reached the number of max attempts (1) within submission window (every 1 hours). Next allowed submission time is <timestamp:3600000> (in 1h0m0s).",
 		},
 		{
-			RejectWindowMax{1, common.DurationSpec{Days: 1, Hours: 1}, timestamp.Timestamp(0)},
+			RejectWindowMax{1, util.DurationSpec{Days: 1, Hours: 1}, timestamp.Timestamp(0)},
 			"Reached the number of max attempts (1) within submission window (every 1 days, 1 hours). Next allowed submission time is <timestamp:90000000> (in 25h0m0s).",
 		},
 	}
@@ -142,7 +142,7 @@ func testMaxWindowAttempts(test *testing.T, user string, expectReject bool) {
 
 	assignment := db.MustGetTestSubmissionAssignment()
 	assignment.DueDate = nil
-	duration := common.DurationSpec{Days: 1000}
+	duration := util.DurationSpec{Days: 1000}
 
 	// Set the submission limit window to 1 attempt in a large duration.
 	assignment.SubmissionLimit = &model.SubmissionLimitInfo{

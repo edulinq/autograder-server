@@ -11,7 +11,6 @@ import (
 
 	"github.com/docker/docker/api/types/image"
 
-	"github.com/edulinq/autograder/internal/common"
 	"github.com/edulinq/autograder/internal/config"
 	"github.com/edulinq/autograder/internal/log"
 	"github.com/edulinq/autograder/internal/util"
@@ -125,13 +124,13 @@ func CheckFileChanges(imageSource ImageSource, quick bool) (bool, error) {
 		}
 
 		switch filespec.Type {
-		case common.FILESPEC_TYPE_EMPTY, common.FILESPEC_TYPE_NIL, common.FILESPEC_TYPE_URL:
+		case util.FILESPEC_TYPE_EMPTY, util.FILESPEC_TYPE_NIL, util.FILESPEC_TYPE_URL:
 			// no-op.
 			continue
-		case common.FILESPEC_TYPE_PATH:
+		case util.FILESPEC_TYPE_PATH:
 			// Collect paths to test all at once.
 			paths = append(paths, filepath.Join(baseDir, filespec.GetPath()))
-		case common.FILESPEC_TYPE_GIT:
+		case util.FILESPEC_TYPE_GIT:
 			// Check git refs for changes.
 
 			if filespec.Reference == "" {

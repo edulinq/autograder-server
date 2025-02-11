@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/edulinq/autograder/internal/common"
+	"github.com/edulinq/autograder/internal/lockmanager"
 )
 
 const (
@@ -17,11 +17,11 @@ const (
 )
 
 func (this *CanvasBackend) getAPILock() {
-	common.Lock(this.getLockKey())
+	lockmanager.Lock(this.getLockKey())
 }
 
 func (this *CanvasBackend) releaseAPILock() {
-	common.Unlock(this.getLockKey())
+	lockmanager.Unlock(this.getLockKey())
 }
 
 // Lock based on the API token.

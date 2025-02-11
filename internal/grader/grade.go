@@ -8,6 +8,7 @@ import (
 	"github.com/edulinq/autograder/internal/config"
 	"github.com/edulinq/autograder/internal/db"
 	"github.com/edulinq/autograder/internal/docker"
+	"github.com/edulinq/autograder/internal/lockmanager"
 	"github.com/edulinq/autograder/internal/model"
 	"github.com/edulinq/autograder/internal/stats"
 	"github.com/edulinq/autograder/internal/timestamp"
@@ -60,8 +61,8 @@ func Grade(ctx context.Context, assignment *model.Assignment, submissionPath str
 	startTimestamp := timestamp.Now()
 
 	// Ensure the user can only have one submission (of each assignment) running at a time.
-	common.Lock(gradingKey)
-	defer common.Unlock(gradingKey)
+	lockmanager.Lock(gradingKey)
+	defer lockmanager.Unlock(gradingKey)
 
 	submissionID, inputFileContents, err := prepForGrading(assignment, submissionPath, user)
 	if err != nil {

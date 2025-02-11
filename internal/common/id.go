@@ -10,11 +10,15 @@ import (
 func ValidateID(id string) (string, error) {
 	id = strings.TrimSpace(strings.ToLower(id))
 
+	if id == "" {
+		return "", fmt.Errorf("IDs may not be empty.")
+	}
+
 	if !regexp.MustCompile(`^[a-z0-9\._\-]+$`).MatchString(id) {
 		return "", fmt.Errorf("IDs must only have letters, digits, and single sequences of periods, underscores, and hyphens, found '%s'.", id)
 	}
 
-	if regexp.MustCompile(`(^[\._\-])|(^[\._\-])$`).MatchString(id) {
+	if regexp.MustCompile(`(^[\._\-])|([\._\-])$`).MatchString(id) {
 		return "", fmt.Errorf("IDs cannot start or end with periods, underscores, or hyphens, found '%s'.", id)
 	}
 

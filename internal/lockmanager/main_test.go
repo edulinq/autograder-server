@@ -1,4 +1,4 @@
-package common
+package lockmanager
 
 // Note that this file is largely a copy of db/test.go.
 // The content is repeated to avoid an import cycle.

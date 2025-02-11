@@ -34,7 +34,7 @@ func HandleConfigArgs(args ConfigArgs) error {
 }
 
 func HandleConfigArgsFull(args ConfigArgs, cwd string, skipEnv bool) error {
-	defer InitLoggingFromConfig()
+	defer InitSystemWithConfig()
 
 	if cwd == "" {
 		cwd = shouldGetCWD()

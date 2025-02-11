@@ -11,6 +11,7 @@ import (
 	dtasks "github.com/edulinq/autograder/internal/deprecated/model/tasks"
 	"github.com/edulinq/autograder/internal/docker"
 	"github.com/edulinq/autograder/internal/log"
+	"github.com/edulinq/autograder/internal/util"
 )
 
 const SOURCES_DIRNAME = "sources"
@@ -20,7 +21,7 @@ type Course struct {
 	ID   string `json:"id"`
 	Name string `json:"name"`
 
-	Source *common.FileSpec `json:"source"`
+	Source *util.FileSpec `json:"source"`
 
 	LMS *LMSAdapter `json:"lms,omitempty"`
 
@@ -63,7 +64,7 @@ func (this *Course) GetDisplayName() string {
 	return this.ID
 }
 
-func (this *Course) GetSource() *common.FileSpec {
+func (this *Course) GetSource() *util.FileSpec {
 	return this.Source
 }
 

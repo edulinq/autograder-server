@@ -1,4 +1,4 @@
-package common
+package util
 
 import (
 	"errors"
@@ -9,8 +9,6 @@ import (
 	"strings"
 
 	"github.com/alessio/shellescape"
-
-	"github.com/edulinq/autograder/internal/util"
 )
 
 // File operations represent simple file operations.
@@ -143,7 +141,7 @@ func (this *FileOperation) Exec(baseDir string) error {
 		sourcePath := resolvePath(parts[1], baseDir, false)
 		destPath := resolvePath(parts[2], baseDir, false)
 
-		return util.CopyDirent(sourcePath, destPath, false)
+		return CopyDirent(sourcePath, destPath, false)
 	} else if command == FILE_OP_LONG_MOVE {
 		sourcePath := resolvePath(parts[1], baseDir, false)
 		destPath := resolvePath(parts[2], baseDir, false)
@@ -179,36 +177,6 @@ func ExecFileOperations(operations []*FileOperation, baseDir string) error {
 		if err != nil {
 			return fmt.Errorf("Failed to exec file operation '%s': '%w'.", operation.String(), err)
 		}
-	}
-
-	return nil
-}
-
-// Copy over assignment filespecs.
-// 1) Do pre-copy operations.
-// 2) Copy.
-// 3) Do post-copy operations.
-func CopyFileSpecsWithOps(
-	sourceDir string, destDir string, baseDir string, filespecs []*FileSpec,
-	preOperations []*FileOperation, postOperations []*FileOperation) error {
-	// Do pre ops.
-	err := ExecFileOperations(preOperations, baseDir)
-	if err != nil {
-		return fmt.Errorf("Failed to do pre file operation: '%w'.", err)
-	}
-
-	// Copy files.
-	for _, filespec := range filespecs {
-		err = filespec.CopyTarget(sourceDir, destDir)
-		if err != nil {
-			return fmt.Errorf("Failed to handle FileSpec '%s': '%w'", filespec, err)
-		}
-	}
-
-	// Do post ops.
-	err = ExecFileOperations(postOperations, baseDir)
-	if err != nil {
-		return fmt.Errorf("Failed to do post file operation: '%w'.", err)
 	}
 
 	return nil

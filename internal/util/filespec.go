@@ -1,4 +1,4 @@
-package common
+package util
 
 // Filespecs are specifications for file-like objects.
 // They could be for a plain file/dir (just a path),
@@ -12,8 +12,6 @@ import (
 	"path"
 	"path/filepath"
 	"strings"
-
-	"github.com/edulinq/autograder/internal/util"
 )
 
 type FileSpecType string
@@ -181,7 +179,7 @@ func ParseFileSpec(contents string) (*FileSpec, error) {
 	}
 
 	var spec FileSpec
-	err := util.JSONFromString(contents, &spec)
+	err := JSONFromString(contents, &spec)
 	if err != nil {
 		return nil, err
 	}
@@ -257,7 +255,7 @@ func (this *FileSpec) GetPath() string {
 // Get the path of this FileSpec's dest given the provided base dir.
 // Note that specs may ignore the base dir if the current dest is absolute.
 func (this *FileSpec) GetDest(baseDir string) string {
-	return util.JoinIfNotAbs(this.Dest, baseDir)
+	return JoinIfNotAbs(this.Dest, baseDir)
 }
 
 // Copy the target of this FileSpec in the specified location.
@@ -305,7 +303,7 @@ func (this *FileSpec) copyPaths(baseDir string, baseDestDir string) error {
 
 	// If there are multiple paths, the dest cannot point to a file.
 	destPath := this.GetDest(baseDestDir)
-	if (len(paths) > 1) && (this.Dest != "") && util.IsFile(destPath) {
+	if (len(paths) > 1) && (this.Dest != "") && IsFile(destPath) {
 		return fmt.Errorf("Found multiple paths (via glob), but dest is a file. Dest must be a dir.")
 	}
 
@@ -318,8 +316,8 @@ func (this *FileSpec) copyPaths(baseDir string, baseDestDir string) error {
 	}
 
 	for _, path := range paths {
-		// Note that util.CopyDirent() will handle when dest is a file or dir.
-		err := util.CopyDirent(path, destPath, false)
+		// Note that CopyDirent() will handle when dest is a file or dir.
+		err := CopyDirent(path, destPath, false)
 		if err != nil {
 			return fmt.Errorf("Failed to copy path '%s' to '%s': '%w'.", path, destPath, err)
 		}
@@ -331,33 +329,33 @@ func (this *FileSpec) copyPaths(baseDir string, baseDestDir string) error {
 func (this *FileSpec) copyGit(destDir string) error {
 	destPath := this.GetDest(destDir)
 
-	if util.PathExists(destPath) {
-		err := util.RemoveDirent(destPath)
+	if PathExists(destPath) {
+		err := RemoveDirent(destPath)
 		if err != nil {
 			return fmt.Errorf("Failed to remove existing destination for git FileSpec ('%s'): '%w'.", destPath, err)
 		}
 	}
 
-	err := util.MkDir(filepath.Dir(destPath))
+	err := MkDir(filepath.Dir(destPath))
 	if err != nil {
 		return fmt.Errorf("Failed to make dir for git FileSpec ('%s'): '%w'.", destPath, err)
 	}
 
-	_, err = util.GitEnsureRepo(this.Path, destPath, true, this.Reference, this.Username, this.Token)
+	_, err = GitEnsureRepo(this.Path, destPath, true, this.Reference, this.Username, this.Token)
 	return err
 }
 
 func (this *FileSpec) downloadURL(destDir string) error {
 	destPath := this.GetDest(destDir)
 
-	if util.PathExists(destPath) {
-		err := util.RemoveDirent(destPath)
+	if PathExists(destPath) {
+		err := RemoveDirent(destPath)
 		if err != nil {
 			return fmt.Errorf("Failed to remove existing destination for URL FileSpec ('%s'): '%w'.", destPath, err)
 		}
 	}
 
-	err := util.MkDir(filepath.Dir(destDir))
+	err := MkDir(filepath.Dir(destDir))
 	if err != nil {
 		return fmt.Errorf("Failed to make dir for URL FileSpec ('%s'): '%w'.", destPath, err)
 	}
@@ -367,9 +365,39 @@ func (this *FileSpec) downloadURL(destDir string) error {
 		return err
 	}
 
-	err = util.WriteBinaryFile(content, destPath)
+	err = WriteBinaryFile(content, destPath)
 	if err != nil {
 		return fmt.Errorf("Failed to write output '%s': '%w'.", destPath, err)
+	}
+
+	return nil
+}
+
+// Copy over filespecs with ops.
+// 1) Do pre-copy operations.
+// 2) Copy.
+// 3) Do post-copy operations.
+func CopyFileSpecsWithOps(
+	sourceDir string, destDir string, baseDir string, filespecs []*FileSpec,
+	preOperations []*FileOperation, postOperations []*FileOperation) error {
+	// Do pre ops.
+	err := ExecFileOperations(preOperations, baseDir)
+	if err != nil {
+		return fmt.Errorf("Failed to do pre file operation: '%w'.", err)
+	}
+
+	// Copy files.
+	for _, filespec := range filespecs {
+		err = filespec.CopyTarget(sourceDir, destDir)
+		if err != nil {
+			return fmt.Errorf("Failed to handle FileSpec '%s': '%w'", filespec, err)
+		}
+	}
+
+	// Do post ops.
+	err = ExecFileOperations(postOperations, baseDir)
+	if err != nil {
+		return fmt.Errorf("Failed to do post file operation: '%w'.", err)
 	}
 
 	return nil

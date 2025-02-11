@@ -5,11 +5,12 @@ import (
 	"fmt"
 
 	"github.com/edulinq/autograder/internal/api/server"
-	"github.com/edulinq/autograder/internal/common"
 	"github.com/edulinq/autograder/internal/config"
 	"github.com/edulinq/autograder/internal/db"
+	"github.com/edulinq/autograder/internal/lockmanager"
 	"github.com/edulinq/autograder/internal/log"
 	"github.com/edulinq/autograder/internal/stats"
+	"github.com/edulinq/autograder/internal/systemserver"
 	"github.com/edulinq/autograder/internal/tasks"
 	"github.com/edulinq/autograder/internal/util"
 )
@@ -18,7 +19,7 @@ const SERVER_LOCK = "internal.procedures.server.SERVER_LOCK"
 
 var apiServer *server.APIServer = nil
 
-func setup(initiator common.ServerInitiator) error {
+func setup(initiator systemserver.ServerInitiator) error {
 	version, err := util.GetAutograderVersion()
 	if err != nil {
 		log.Warn("Failed to get the autograder version.", err)
@@ -44,7 +45,7 @@ func setup(initiator common.ServerInitiator) error {
 	log.Debug("Found course(s).", log.NewAttr("count", len(courses)))
 
 	// Only perfrom some tasks if we are running a primary server.
-	if initiator == common.PRIMARY_SERVER {
+	if initiator == systemserver.PRIMARY_SERVER {
 		// Initialize the task engine.
 		tasks.Start()
 	}
@@ -53,8 +54,8 @@ func setup(initiator common.ServerInitiator) error {
 }
 
 func CleanupAndStop() (err error) {
-	common.Lock(SERVER_LOCK)
-	defer common.Unlock(SERVER_LOCK)
+	lockmanager.Lock(SERVER_LOCK)
+	defer lockmanager.Unlock(SERVER_LOCK)
 
 	if apiServer == nil {
 		return nil
@@ -75,9 +76,9 @@ func CleanupAndStop() (err error) {
 	return err
 }
 
-func assignAndSetupServer(initiator common.ServerInitiator, skipSetup bool) error {
-	common.Lock(SERVER_LOCK)
-	defer common.Unlock(SERVER_LOCK)
+func assignAndSetupServer(initiator systemserver.ServerInitiator, skipSetup bool) error {
+	lockmanager.Lock(SERVER_LOCK)
+	defer lockmanager.Unlock(SERVER_LOCK)
 
 	apiServer = server.NewAPIServer()
 
@@ -91,11 +92,11 @@ func assignAndSetupServer(initiator common.ServerInitiator, skipSetup bool) erro
 	return nil
 }
 
-func RunAndBlock(initiator common.ServerInitiator) (err error) {
+func RunAndBlock(initiator systemserver.ServerInitiator) (err error) {
 	return RunAndBlockFull(initiator, false)
 }
 
-func RunAndBlockFull(initiator common.ServerInitiator, skipSetup bool) (err error) {
+func RunAndBlockFull(initiator systemserver.ServerInitiator, skipSetup bool) (err error) {
 	// Run inside a func so defers will run before the function returns.
 	func() {
 		defer func() {

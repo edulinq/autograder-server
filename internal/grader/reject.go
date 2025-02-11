@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/edulinq/autograder/internal/common"
 	"github.com/edulinq/autograder/internal/config"
 	"github.com/edulinq/autograder/internal/db"
 	"github.com/edulinq/autograder/internal/model"
 	"github.com/edulinq/autograder/internal/timestamp"
+	"github.com/edulinq/autograder/internal/util"
 )
 
 // Reasons a submission can be rejected.
@@ -26,7 +26,7 @@ func (this *RejectMaxAttempts) String() string {
 
 type RejectWindowMax struct {
 	Max                int
-	WindowDuration     common.DurationSpec
+	WindowDuration     util.DurationSpec
 	EarliestSubmission timestamp.Timestamp
 }
 

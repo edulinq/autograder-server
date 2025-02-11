@@ -1,4 +1,4 @@
-package common
+package lockmanager
 
 // Tests in this file will deal with locking, unlocking, and checking for stale locks (sometimes on multiple threads).
 // Since this can quickly get confusing, we will have comments for each test using the following syntax:

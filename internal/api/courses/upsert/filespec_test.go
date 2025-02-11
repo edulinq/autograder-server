@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"github.com/edulinq/autograder/internal/api/core"
-	"github.com/edulinq/autograder/internal/common"
 	"github.com/edulinq/autograder/internal/config"
 	"github.com/edulinq/autograder/internal/db"
 	"github.com/edulinq/autograder/internal/util"
@@ -35,7 +34,7 @@ func TestFileSpec(test *testing.T) {
 
 		fields := map[string]any{
 			"filespec": map[string]any{
-				"type": common.FILESPEC_TYPE_PATH,
+				"type": util.FILESPEC_TYPE_PATH,
 				"path": testCase.path,
 			},
 		}

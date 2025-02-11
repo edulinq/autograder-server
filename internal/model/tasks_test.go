@@ -5,7 +5,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/edulinq/autograder/internal/common"
 	"github.com/edulinq/autograder/internal/log"
 	"github.com/edulinq/autograder/internal/timestamp"
 	"github.com/edulinq/autograder/internal/util"
@@ -24,7 +23,7 @@ func TestTaskValidationBase(test *testing.T) {
 		{
 			&UserTaskInfo{
 				Type: TaskTypeCourseBackup,
-				When: &common.ScheduledTime{
+				When: &util.ScheduledTime{
 					Daily: "3:00",
 				},
 			},
@@ -40,7 +39,7 @@ func TestTaskValidationBase(test *testing.T) {
 		{
 			&UserTaskInfo{
 				Type: TaskTypeCourseReport,
-				When: &common.ScheduledTime{
+				When: &util.ScheduledTime{
 					Daily: "3:00",
 				},
 				Options: map[string]any{
@@ -66,7 +65,7 @@ func TestTaskValidationBase(test *testing.T) {
 		{
 			&UserTaskInfo{
 				Type: TaskTypeCourseScoringUpload,
-				When: &common.ScheduledTime{
+				When: &util.ScheduledTime{
 					Daily: "3:00",
 				},
 			},
@@ -82,7 +81,7 @@ func TestTaskValidationBase(test *testing.T) {
 		{
 			&UserTaskInfo{
 				Type: TaskTypeCourseUpdate,
-				When: &common.ScheduledTime{
+				When: &util.ScheduledTime{
 					Daily: "3:00",
 				},
 			},
@@ -98,7 +97,7 @@ func TestTaskValidationBase(test *testing.T) {
 		{
 			&UserTaskInfo{
 				Type: TaskTypeCourseEmailLogs,
-				When: &common.ScheduledTime{
+				When: &util.ScheduledTime{
 					Daily: "3:00",
 				},
 				Options: map[string]any{
@@ -144,7 +143,7 @@ func TestTaskValidationBase(test *testing.T) {
 		{
 			&UserTaskInfo{
 				Type: TaskTypeUnknown,
-				When: &common.ScheduledTime{
+				When: &util.ScheduledTime{
 					Daily: "3:00",
 				},
 			},
@@ -154,7 +153,7 @@ func TestTaskValidationBase(test *testing.T) {
 		{
 			&UserTaskInfo{
 				Type: "ZZZ",
-				When: &common.ScheduledTime{
+				When: &util.ScheduledTime{
 					Daily: "3:00",
 				},
 			},
@@ -171,7 +170,7 @@ func TestTaskValidationBase(test *testing.T) {
 		{
 			&UserTaskInfo{
 				Type: TaskTypeCourseBackup,
-				When: &common.ScheduledTime{
+				When: &util.ScheduledTime{
 					Daily: "ZZZ",
 				},
 			},
@@ -181,7 +180,7 @@ func TestTaskValidationBase(test *testing.T) {
 		{
 			&UserTaskInfo{
 				Type: TaskTypeCourseReport,
-				When: &common.ScheduledTime{
+				When: &util.ScheduledTime{
 					Daily: "3:00",
 				},
 			},
@@ -191,7 +190,7 @@ func TestTaskValidationBase(test *testing.T) {
 		{
 			&UserTaskInfo{
 				Type: TaskTypeCourseReport,
-				When: &common.ScheduledTime{
+				When: &util.ScheduledTime{
 					Daily: "3:00",
 				},
 				Options: map[string]any{
@@ -310,7 +309,7 @@ func TestTaskToFullCourseTaskBase(test *testing.T) {
 		{
 			&UserTaskInfo{
 				Type: TaskTypeCourseBackup,
-				When: &common.ScheduledTime{
+				When: &util.ScheduledTime{
 					Daily: "3:00",
 				},
 			},
@@ -322,8 +321,8 @@ func TestTaskToFullCourseTaskBase(test *testing.T) {
 		{
 			&UserTaskInfo{
 				Type: TaskTypeCourseBackup,
-				When: &common.ScheduledTime{
-					Every: common.DurationSpec{
+				When: &util.ScheduledTime{
+					Every: util.DurationSpec{
 						Hours: 3,
 					},
 				},
@@ -382,7 +381,7 @@ func TestMergeTimesBase(test *testing.T) {
 
 	earlyDailyTask := FullScheduledTask{
 		UserTaskInfo{
-			When: &common.ScheduledTime{
+			When: &util.ScheduledTime{
 				Daily: "3:00",
 			},
 		},
@@ -393,7 +392,7 @@ func TestMergeTimesBase(test *testing.T) {
 
 	latterDailyTask := FullScheduledTask{
 		UserTaskInfo{
-			When: &common.ScheduledTime{
+			When: &util.ScheduledTime{
 				Daily: "3:00",
 			},
 		},
@@ -404,8 +403,8 @@ func TestMergeTimesBase(test *testing.T) {
 
 	earlyEveryTask := FullScheduledTask{
 		UserTaskInfo{
-			When: &common.ScheduledTime{
-				Every: common.DurationSpec{
+			When: &util.ScheduledTime{
+				Every: util.DurationSpec{
 					Hours: 3,
 				},
 			},
@@ -417,8 +416,8 @@ func TestMergeTimesBase(test *testing.T) {
 
 	latterEveryTask := FullScheduledTask{
 		UserTaskInfo{
-			When: &common.ScheduledTime{
-				Every: common.DurationSpec{
+			When: &util.ScheduledTime{
+				Every: util.DurationSpec{
 					Hours: 3,
 				},
 			},

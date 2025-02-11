@@ -9,6 +9,7 @@ import (
 	"github.com/edulinq/autograder/internal/common"
 	"github.com/edulinq/autograder/internal/config"
 	"github.com/edulinq/autograder/internal/db"
+	"github.com/edulinq/autograder/internal/lockmanager"
 	"github.com/edulinq/autograder/internal/log"
 	"github.com/edulinq/autograder/internal/model"
 	"github.com/edulinq/autograder/internal/timestamp"
@@ -82,8 +83,8 @@ func runIndividualAnalysis(fullSubmissionIDs []string, initiatorEmail string) ([
 	}
 
 	lockKey := fmt.Sprintf("analysis-individual-course-%s", lockCourseID)
-	common.Lock(lockKey)
-	defer common.Unlock(lockKey)
+	lockmanager.Lock(lockKey)
+	defer lockmanager.Unlock(lockKey)
 
 	poolSize := config.ANALYSIS_INDIVIDUAL_COURSE_POOL_SIZE.Get()
 	type PoolResult struct {
@@ -122,8 +123,8 @@ func runIndividualAnalysis(fullSubmissionIDs []string, initiatorEmail string) ([
 func runSingleIndividualAnalysis(fullSubmissionID string) (*model.IndividualAnalysis, int64, error) {
 	// Lock this id so we don't try to do the analysis multiple times.
 	lockKey := fmt.Sprintf("analysis-individual-%s", fullSubmissionID)
-	common.Lock(lockKey)
-	defer common.Unlock(lockKey)
+	lockmanager.Lock(lockKey)
+	defer lockmanager.Unlock(lockKey)
 
 	startTime := timestamp.Now()
 

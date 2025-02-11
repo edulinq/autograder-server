@@ -268,6 +268,10 @@ func RootDirForTesting() string {
 	return ShouldAbs(filepath.Join(ShouldAbs(ShouldGetThisDir()), "..", ".."))
 }
 
+func TestdataDirForTesting() string {
+	return filepath.Join(RootDirForTesting(), "testdata")
+}
+
 // Return path if it is absolute,
 // otherwise return the join of baseDir and path.
 func JoinIfNotAbs(path string, baseDir string) string {

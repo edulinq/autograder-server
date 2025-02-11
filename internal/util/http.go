@@ -1,4 +1,4 @@
-package common
+package util
 
 // Unless marked as "raw", all functions here assume that the respone body it textual.
 
@@ -13,10 +13,11 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/edulinq/autograder/internal/config"
 	"github.com/edulinq/autograder/internal/log"
-	"github.com/edulinq/autograder/internal/util"
 )
+
+// Set from config.STORE_HTTP when the config is initialized.
+var storeHTTPDir string = ""
 
 // A representation of an HTTP request.
 type SavedHTTPRequest struct {
@@ -27,6 +28,12 @@ type SavedHTTPRequest struct {
 	ResponseCode    int
 	ResponseHeaders map[string][]string
 	ResponseBody    string
+}
+
+func SetStoreHTTPDir(value string) string {
+	oldValue := storeHTTPDir
+	storeHTTPDir = value
+	return oldValue
 }
 
 // Get a binary response.
@@ -182,7 +189,7 @@ func doRequest(uri string, request *http.Request, verb string, checkResult bool)
 	}
 	body := string(rawBody)
 
-	if config.STORE_HTTP.Get() != "" {
+	if storeHTTPDir != "" {
 		request := SavedHTTPRequest{
 			URL:             uri,
 			Method:          request.Method,
@@ -209,20 +216,20 @@ func doRequest(uri string, request *http.Request, verb string, checkResult bool)
 }
 
 func writeRequest(request *SavedHTTPRequest) error {
-	baseDir := config.STORE_HTTP.Get()
+	baseDir := storeHTTPDir
 	if baseDir == "" {
 		return fmt.Errorf("No base dir provided.")
 	}
 
-	err := util.MkDir(baseDir)
+	err := MkDir(baseDir)
 	if err != nil {
 		return fmt.Errorf("Failed to create dir to store HTTP requests '%s': '%w'.", baseDir, err)
 	}
 
-	filename := fmt.Sprintf("%s.json", util.UUID())
+	filename := fmt.Sprintf("%s.json", UUID())
 	path := filepath.Join(baseDir, filename)
 
-	err = util.ToJSONFileIndent(request, path)
+	err = ToJSONFileIndent(request, path)
 	if err != nil {
 		return fmt.Errorf("Failed to write JSON file '%s': '%w'.", path, err)
 	}

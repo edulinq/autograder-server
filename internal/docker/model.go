@@ -3,7 +3,7 @@ package docker
 import (
 	"fmt"
 
-	"github.com/edulinq/autograder/internal/common"
+	"github.com/edulinq/autograder/internal/util"
 )
 
 const (
@@ -17,12 +17,12 @@ type ImageInfo struct {
 
 	Invocation []string `json:"invocation,omitempty"`
 
-	StaticFiles []*common.FileSpec `json:"static-files,omitempty"`
+	StaticFiles []*util.FileSpec `json:"static-files,omitempty"`
 
-	PreStaticFileOperations  []*common.FileOperation `json:"pre-static-files-ops,omitempty"`
-	PostStaticFileOperations []*common.FileOperation `json:"post-static-files-ops,omitempty"`
+	PreStaticFileOperations  []*util.FileOperation `json:"pre-static-files-ops,omitempty"`
+	PostStaticFileOperations []*util.FileOperation `json:"post-static-files-ops,omitempty"`
 
-	PostSubmissionFileOperations []*common.FileOperation `json:"post-submission-files-ops,omitempty"`
+	PostSubmissionFileOperations []*util.FileOperation `json:"post-submission-files-ops,omitempty"`
 
 	MaxRuntimeSecs int `json:"max-runtime-secs,omitempty"`
 
@@ -37,8 +37,8 @@ type ImageInfo struct {
 
 // A subset of the image information that is passed to docker images for config during grading.
 type GradingConfig struct {
-	Name                         string                  `json:"name"`
-	PostSubmissionFileOperations []*common.FileOperation `json:"post-submission-files-ops,omitempty"`
+	Name                         string                `json:"name"`
+	PostSubmissionFileOperations []*util.FileOperation `json:"post-submission-files-ops,omitempty"`
 }
 
 func (this *ImageInfo) GetGradingConfig() *GradingConfig {
@@ -82,7 +82,7 @@ func (this *ImageInfo) Validate() error {
 	}
 
 	if this.StaticFiles == nil {
-		this.StaticFiles = make([]*common.FileSpec, 0)
+		this.StaticFiles = make([]*util.FileSpec, 0)
 	}
 
 	for _, staticFile := range this.StaticFiles {
@@ -97,28 +97,28 @@ func (this *ImageInfo) Validate() error {
 	}
 
 	if this.PreStaticFileOperations == nil {
-		this.PreStaticFileOperations = make([]*common.FileOperation, 0)
+		this.PreStaticFileOperations = make([]*util.FileOperation, 0)
 	}
 
-	err := common.ValidateFileOperations(this.PreStaticFileOperations)
+	err := util.ValidateFileOperations(this.PreStaticFileOperations)
 	if err != nil {
 		return fmt.Errorf("Failed to validate pre-static file operations: '%w'.", err)
 	}
 
 	if this.PostStaticFileOperations == nil {
-		this.PostStaticFileOperations = make([]*common.FileOperation, 0)
+		this.PostStaticFileOperations = make([]*util.FileOperation, 0)
 	}
 
-	err = common.ValidateFileOperations(this.PostStaticFileOperations)
+	err = util.ValidateFileOperations(this.PostStaticFileOperations)
 	if err != nil {
 		return fmt.Errorf("Failed to validate post-static file operations: '%w'.", err)
 	}
 
 	if this.PostSubmissionFileOperations == nil {
-		this.PostSubmissionFileOperations = make([]*common.FileOperation, 0)
+		this.PostSubmissionFileOperations = make([]*util.FileOperation, 0)
 	}
 
-	err = common.ValidateFileOperations(this.PostSubmissionFileOperations)
+	err = util.ValidateFileOperations(this.PostSubmissionFileOperations)
 	if err != nil {
 		return fmt.Errorf("Failed to validate post-submission file operations: '%w'.", err)
 	}

@@ -6,7 +6,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/edulinq/autograder/internal/common"
 	"github.com/edulinq/autograder/internal/db"
 	"github.com/edulinq/autograder/internal/util"
 )
@@ -90,9 +89,9 @@ func SendTestAPIRequestFull(test *testing.T, basePath string, fields map[string]
 	var err error
 
 	if len(paths) == 0 {
-		responseText, err = common.PostNoCheck(url, form)
+		responseText, err = util.PostNoCheck(url, form)
 	} else {
-		responseText, err = common.PostFiles(url, form, paths, false)
+		responseText, err = util.PostFiles(url, form, paths, false)
 	}
 
 	if err != nil {

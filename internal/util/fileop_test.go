@@ -1,12 +1,10 @@
-package common
+package util
 
 import (
 	"path/filepath"
 	"reflect"
 	"strings"
 	"testing"
-
-	"github.com/edulinq/autograder/internal/util"
 )
 
 func TestFileOpValidateBase(test *testing.T) {
@@ -236,7 +234,7 @@ func TestFileOpToUnix(test *testing.T) {
 
 func TestFileOpCopyBase(test *testing.T) {
 	tempDir := prepTempDir(test)
-	defer util.RemoveDirent(tempDir)
+	defer RemoveDirent(tempDir)
 
 	op := FileOperation([]string{"cp", "a.txt", "b.txt"})
 
@@ -251,12 +249,12 @@ func TestFileOpCopyBase(test *testing.T) {
 	}
 
 	// Getting the hash afer the operation will ensure the file still exists.
-	expectedHash, err := util.MD5FileHex(filepath.Join(tempDir, "a.txt"))
+	expectedHash, err := MD5FileHex(filepath.Join(tempDir, "a.txt"))
 	if err != nil {
 		test.Fatalf("Failed to get expected hash: '%v'.", err)
 	}
 
-	actualHash, err := util.MD5FileHex(filepath.Join(tempDir, "b.txt"))
+	actualHash, err := MD5FileHex(filepath.Join(tempDir, "b.txt"))
 	if err != nil {
 		test.Fatalf("Failed to get actual hash: '%v'.", err)
 	}
@@ -268,7 +266,7 @@ func TestFileOpCopyBase(test *testing.T) {
 
 func TestFileOpMoveBase(test *testing.T) {
 	tempDir := prepTempDir(test)
-	defer util.RemoveDirent(tempDir)
+	defer RemoveDirent(tempDir)
 
 	op := FileOperation([]string{"mv", "a.txt", "b.txt"})
 
@@ -277,7 +275,7 @@ func TestFileOpMoveBase(test *testing.T) {
 		test.Fatalf("Failed to validate: '%v'.", err)
 	}
 
-	expectedHash, err := util.MD5FileHex(filepath.Join(tempDir, "a.txt"))
+	expectedHash, err := MD5FileHex(filepath.Join(tempDir, "a.txt"))
 	if err != nil {
 		test.Fatalf("Failed to get expected hash: '%v'.", err)
 	}
@@ -287,11 +285,11 @@ func TestFileOpMoveBase(test *testing.T) {
 		test.Fatalf("Failed to exec: '%v'.", err)
 	}
 
-	if util.PathExists(filepath.Join(tempDir, "a.txt")) {
+	if PathExists(filepath.Join(tempDir, "a.txt")) {
 		test.Fatalf("Source of move still exists.")
 	}
 
-	actualHash, err := util.MD5FileHex(filepath.Join(tempDir, "b.txt"))
+	actualHash, err := MD5FileHex(filepath.Join(tempDir, "b.txt"))
 	if err != nil {
 		test.Fatalf("Failed to get actual hash: '%v'.", err)
 	}
@@ -302,12 +300,12 @@ func TestFileOpMoveBase(test *testing.T) {
 }
 
 func prepTempDir(test *testing.T) string {
-	tempDir, err := util.MkDirTemp("autograder-testing-fileop-")
+	tempDir, err := MkDirTemp("autograder-testing-fileop-")
 	if err != nil {
 		test.Fatalf("Failed to create temp dir: '%v'.", err)
 	}
 
-	err = util.WriteFile("AAA\n", filepath.Join(tempDir, "a.txt"))
+	err = WriteFile("AAA\n", filepath.Join(tempDir, "a.txt"))
 	if err != nil {
 		test.Fatalf("Failed to write test file: '%v'.", err)
 	}

@@ -8,7 +8,7 @@ import (
 
 	"github.com/edulinq/autograder/internal/api"
 	"github.com/edulinq/autograder/internal/api/core"
-	"github.com/edulinq/autograder/internal/common"
+	"github.com/edulinq/autograder/internal/systemserver"
 	"github.com/edulinq/autograder/internal/util"
 )
 
@@ -25,8 +25,8 @@ func NewAPIServer() *APIServer {
 }
 
 // Run the autograder server and listen on an http and unix socket.
-func (this *APIServer) RunAndBlock(initiator common.ServerInitiator) (err error) {
-	err = common.WriteAndHandleStatusFile(initiator)
+func (this *APIServer) RunAndBlock(initiator systemserver.ServerInitiator) (err error) {
+	err = systemserver.WriteAndHandleStatusFile(initiator)
 	if err != nil {
 		return err
 	}
@@ -39,7 +39,7 @@ func (this *APIServer) RunAndBlock(initiator common.ServerInitiator) (err error)
 	core.SetAPIDescription(*apiDescription)
 
 	defer func() {
-		err = errors.Join(err, util.RemoveDirent(common.GetStatusPath()))
+		err = errors.Join(err, util.RemoveDirent(systemserver.GetStatusPath()))
 	}()
 
 	go func() {

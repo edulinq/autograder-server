@@ -5,7 +5,6 @@ import (
 
 	"github.com/alecthomas/kong"
 
-	"github.com/edulinq/autograder/internal/common"
 	"github.com/edulinq/autograder/internal/config"
 	"github.com/edulinq/autograder/internal/db"
 	"github.com/edulinq/autograder/internal/log"
@@ -33,7 +32,7 @@ func main() {
 	db.MustOpen()
 	defer db.MustClose()
 
-	spec, err := common.ParseFileSpec(args.Source)
+	spec, err := util.ParseFileSpec(args.Source)
 	if err != nil {
 		log.Fatal("Failed to parse FileSpec.", err)
 	}
