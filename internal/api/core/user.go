@@ -1,13 +1,9 @@
 package core
 
 import (
-	"errors"
-	"fmt"
 	"slices"
 	"strings"
 
-	"github.com/edulinq/autograder/internal/db"
-	"github.com/edulinq/autograder/internal/log"
 	"github.com/edulinq/autograder/internal/model"
 )
 
@@ -35,9 +31,8 @@ type ServerUserInfo struct {
 
 // An API-safe representation of enrollment information.
 type EnrollmentInfo struct {
-	CourseID   string               `json:"id"`
-	CourseName string               `json:"name"`
-	Role       model.CourseUserRole `json:"role"`
+	CourseID string               `json:"id"`
+	Role     model.CourseUserRole `json:"role"`
 }
 
 // An API-safe representation of a course user.
@@ -48,7 +43,7 @@ type CourseUserInfo struct {
 	LMSID string               `json:"lms-id"`
 }
 
-func NewServerUserInfo(user *model.ServerUser) (*ServerUserInfo, error) {
+func NewServerUserInfo(user *model.ServerUser) *ServerUserInfo {
 	info := &ServerUserInfo{
 		BaseUserInfo: BaseUserInfo{
 			Type:  ServerUserInfoType,
@@ -60,63 +55,22 @@ func NewServerUserInfo(user *model.ServerUser) (*ServerUserInfo, error) {
 	}
 
 	for courseID, courseInfo := range user.CourseInfo {
-		course, err := db.GetCourse(courseID)
-		if err != nil {
-			return nil, fmt.Errorf("Failed to get course '%s' for user '%s'.", courseID, user.Email)
+		info.Courses[courseID] = EnrollmentInfo{
+			CourseID: courseID,
+			Role:     courseInfo.Role,
 		}
-
-		if course == nil {
-			log.Warn("User has a course that does not exist.", user, log.NewCourseAttr(courseID))
-			continue
-		}
-
-		info.Courses[course.GetID()] = EnrollmentInfo{
-			CourseID:   course.GetID(),
-			CourseName: course.GetName(),
-			Role:       courseInfo.Role,
-		}
-	}
-
-	return info, nil
-}
-
-func MustNewServerUserInfo(user *model.ServerUser) *ServerUserInfo {
-	info, err := NewServerUserInfo(user)
-	if err != nil {
-		log.Fatal("Failed to convert server user to API info.", err, user)
 	}
 
 	return info
 }
 
-func NewServerUserInfos(users []*model.ServerUser) ([]*ServerUserInfo, error) {
-	var errs error
-
+func NewServerUserInfos(users []*model.ServerUser) []*ServerUserInfo {
 	infos := make([]*ServerUserInfo, 0, len(users))
 	for _, user := range users {
-		info, err := NewServerUserInfo(user)
-		if err != nil {
-			err = fmt.Errorf("Failed to get server user info for user '%s': '%w'.", user.Email, err)
-			errs = errors.Join(errs, err)
-		}
-
-		infos = append(infos, info)
-	}
-
-	if errs != nil {
-		return nil, fmt.Errorf("Found errors while creating new server user infos: '%w'.", errs)
+		infos = append(infos, NewServerUserInfo(user))
 	}
 
 	slices.SortFunc(infos, CompareServerUserInfoPointer)
-
-	return infos, nil
-}
-
-func MustNewServerUserInfos(users []*model.ServerUser) []*ServerUserInfo {
-	infos, err := NewServerUserInfos(users)
-	if err != nil {
-		log.Fatal("Failed to convert server users to API infos.", err, users)
-	}
 
 	return infos
 }

@@ -72,14 +72,12 @@ func TestNewServerUserInfos(test *testing.T) {
 					Role: model.GetServerUserRole("user"),
 					Courses: map[string]EnrollmentInfo{
 						"course-languages": {
-							CourseID:   "course-languages",
-							CourseName: "Course Using Different Languages.",
-							Role:       model.GetCourseUserRole("admin"),
+							CourseID: "course-languages",
+							Role:     model.GetCourseUserRole("admin"),
 						},
 						"course101": {
-							CourseID:   "course101",
-							CourseName: "Course 101",
-							Role:       model.GetCourseUserRole("admin"),
+							CourseID: "course101",
+							Role:     model.GetCourseUserRole("admin"),
 						},
 					},
 				},
@@ -92,14 +90,12 @@ func TestNewServerUserInfos(test *testing.T) {
 					Role: model.GetServerUserRole("user"),
 					Courses: map[string]EnrollmentInfo{
 						"course-languages": {
-							CourseID:   "course-languages",
-							CourseName: "Course Using Different Languages.",
-							Role:       model.GetCourseUserRole("grader"),
+							CourseID: "course-languages",
+							Role:     model.GetCourseUserRole("grader"),
 						},
 						"course101": {
-							CourseID:   "course101",
-							CourseName: "Course 101",
-							Role:       model.GetCourseUserRole("grader"),
+							CourseID: "course101",
+							Role:     model.GetCourseUserRole("grader"),
 						},
 					},
 				},
@@ -112,14 +108,12 @@ func TestNewServerUserInfos(test *testing.T) {
 					Role: model.GetServerUserRole("user"),
 					Courses: map[string]EnrollmentInfo{
 						"course-languages": {
-							CourseID:   "course-languages",
-							CourseName: "Course Using Different Languages.",
-							Role:       model.GetCourseUserRole("student"),
+							CourseID: "course-languages",
+							Role:     model.GetCourseUserRole("student"),
 						},
 						"course101": {
-							CourseID:   "course101",
-							CourseName: "Course 101",
-							Role:       model.GetCourseUserRole("student"),
+							CourseID: "course101",
+							Role:     model.GetCourseUserRole("student"),
 						},
 					},
 				},
@@ -130,7 +124,7 @@ func TestNewServerUserInfos(test *testing.T) {
 	for i, testCase := range testCases {
 		serverUserInfos := make([]*ServerUserInfo, 0, len(testCase.serverUsers))
 		for _, user := range testCase.serverUsers {
-			serverUserInfos = append(serverUserInfos, MustNewServerUserInfo(user))
+			serverUserInfos = append(serverUserInfos, NewServerUserInfo(user))
 		}
 
 		for _, serverUserInfo := range serverUserInfos {

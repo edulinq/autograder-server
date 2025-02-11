@@ -34,6 +34,8 @@ type Assignment struct {
 
 	docker.ImageInfo
 
+	AnalysisOptions *AnalysisOptions `json:"analysis-options,omitempty"`
+
 	// Ignore these fields in JSON.
 	RelSourceDir string  `json:"_rel_source-dir"`
 	Course       *Course `json:"-"`
@@ -152,16 +154,18 @@ func (this *Assignment) Validate() error {
 	}
 
 	this.ImageInfo.Name = this.ImageName()
-	this.ImageInfo.BaseDir = this.GetSourceDir()
+	this.ImageInfo.BaseDirFunc = func() string {
+		return this.GetSourceDir()
+	}
 
 	err = this.ImageInfo.Validate()
 	if err != nil {
 		return fmt.Errorf("Failed to validate docker information: '%w'.", err)
 	}
 
-	systemMaxRuntimeSecs := config.DOCKER_RUNTIME_MAX_SECS.Get()
+	systemMaxRuntimeSecs := config.GRADING_RUNTIME_MAX_SECS.Get()
 	if this.ImageInfo.MaxRuntimeSecs > systemMaxRuntimeSecs {
-		log.Warn("Specified docker max runtime is greater than the max runtime allowed by the server, lowering assignment max runtime.",
+		log.Warn("Specified grading max runtime is greater than the max runtime allowed by the server, lowering assignment max runtime.",
 			this,
 			log.NewAttr("assignment-max-runtime", this.ImageInfo.MaxRuntimeSecs), log.NewAttr("server-max-runtime", systemMaxRuntimeSecs))
 		this.ImageInfo.MaxRuntimeSecs = systemMaxRuntimeSecs
@@ -169,6 +173,13 @@ func (this *Assignment) Validate() error {
 
 	if this.ImageInfo.MaxRuntimeSecs == 0 {
 		this.ImageInfo.MaxRuntimeSecs = systemMaxRuntimeSecs
+	}
+
+	if this.AnalysisOptions != nil {
+		err = this.AnalysisOptions.Validate()
+		if err != nil {
+			return fmt.Errorf("Failed to validate analysis options: '%w'.", err)
+		}
 	}
 
 	return nil

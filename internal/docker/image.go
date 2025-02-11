@@ -1,12 +1,16 @@
 package docker
 
 import (
+	"bytes"
+	"context"
 	"errors"
 	"fmt"
+	"io"
 	"path/filepath"
 	"sync"
 
-	"github.com/edulinq/autograder/internal/common"
+	"github.com/docker/docker/api/types/image"
+
 	"github.com/edulinq/autograder/internal/config"
 	"github.com/edulinq/autograder/internal/log"
 	"github.com/edulinq/autograder/internal/util"
@@ -120,13 +124,13 @@ func CheckFileChanges(imageSource ImageSource, quick bool) (bool, error) {
 		}
 
 		switch filespec.Type {
-		case common.FILESPEC_TYPE_EMPTY, common.FILESPEC_TYPE_NIL, common.FILESPEC_TYPE_URL:
+		case util.FILESPEC_TYPE_EMPTY, util.FILESPEC_TYPE_NIL, util.FILESPEC_TYPE_URL:
 			// no-op.
 			continue
-		case common.FILESPEC_TYPE_PATH:
+		case util.FILESPEC_TYPE_PATH:
 			// Collect paths to test all at once.
 			paths = append(paths, filepath.Join(baseDir, filespec.GetPath()))
-		case common.FILESPEC_TYPE_GIT:
+		case util.FILESPEC_TYPE_GIT:
 			// Check git refs for changes.
 
 			if filespec.Reference == "" {
@@ -153,4 +157,53 @@ func CheckFileChanges(imageSource ImageSource, quick bool) (bool, error) {
 	}
 
 	return (gitChanges || pathChanges), nil
+}
+
+// Make sure the image (which should include the verion) exists.
+// If it does not exist, it will be pulled.
+// To check if the image is listed, the RepoTags field will be checked for the image's name.
+func EnsureImage(name string) error {
+	docker, err := getDockerClient()
+	if err != nil {
+		return err
+	}
+	defer docker.Close()
+
+	images, err := docker.ImageList(context.Background(), image.ListOptions{})
+	if err != nil {
+		return fmt.Errorf("Failed to list docker images: '%w'.", err)
+	}
+
+	for _, image := range images {
+		for _, tag := range image.RepoTags {
+			if tag == name {
+				return nil
+			}
+		}
+	}
+
+	log.Debug("Did not find image locally, attempting pull.", log.NewAttr("name", name))
+
+	return PullImage(name)
+}
+
+func PullImage(name string) error {
+	docker, err := getDockerClient()
+	if err != nil {
+		return err
+	}
+	defer docker.Close()
+
+	output, err := docker.ImagePull(context.Background(), name, image.PullOptions{})
+	if err != nil {
+		return fmt.Errorf("Failed to run docker image pull command: '%w'.", err)
+	}
+	defer output.Close()
+
+	var buffer bytes.Buffer
+	io.Copy(&buffer, output)
+
+	log.Debug("Image Pull", log.NewAttr("name", name), log.NewAttr("output", buffer.String()))
+
+	return nil
 }

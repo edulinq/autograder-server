@@ -15,9 +15,11 @@ func (this *backend) SaveAssignment(assignment *model.Assignment) error {
 }
 
 func (this *backend) saveAssignmentLock(assignment *model.Assignment, acquireLock bool) error {
+	path := this.getAssignmentPath(assignment)
+
 	if acquireLock {
-		this.lock.Lock()
-		defer this.lock.Unlock()
+		this.contextLock(path)
+		defer this.contextUnlock(path)
 	}
 
 	util.MkDir(this.getAssignmentDir(assignment))

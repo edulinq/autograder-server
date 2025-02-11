@@ -7,8 +7,8 @@ import (
 	"net/http"
 
 	"github.com/edulinq/autograder/internal/api/core"
-	"github.com/edulinq/autograder/internal/common"
 	"github.com/edulinq/autograder/internal/config"
+	"github.com/edulinq/autograder/internal/lockmanager"
 	"github.com/edulinq/autograder/internal/log"
 )
 
@@ -27,9 +27,9 @@ func runAPIServer(routes *[]core.Route) (err error) {
 	}()
 
 	// Unlock API_SERVER_LOCK explicitly on each code path to ensure proper release regardless of the outcome.
-	common.Lock(API_SERVER_LOCK)
+	lockmanager.Lock(API_SERVER_LOCK)
 	if apiServer != nil {
-		common.Unlock(API_SERVER_LOCK)
+		lockmanager.Unlock(API_SERVER_LOCK)
 		return fmt.Errorf("API server is already running.")
 	}
 
@@ -42,7 +42,7 @@ func runAPIServer(routes *[]core.Route) (err error) {
 		Handler: core.GetRouteServer(routes),
 	}
 
-	common.Unlock(API_SERVER_LOCK)
+	lockmanager.Unlock(API_SERVER_LOCK)
 
 	err = apiServer.ListenAndServe()
 	if err == http.ErrServerClosed {
@@ -60,8 +60,8 @@ func runAPIServer(routes *[]core.Route) (err error) {
 }
 
 func stopAPIServer() {
-	common.Lock(API_SERVER_LOCK)
-	defer common.Unlock(API_SERVER_LOCK)
+	lockmanager.Lock(API_SERVER_LOCK)
+	defer lockmanager.Unlock(API_SERVER_LOCK)
 
 	if apiServer == nil {
 		return

@@ -1,9 +1,11 @@
 package disk
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
+	"slices"
 	"time"
 
 	"github.com/edulinq/autograder/internal/common"
@@ -12,43 +14,52 @@ import (
 )
 
 func (this *backend) saveSubmissionsLock(course *model.Course, submissions []*model.GradingResult, acquireLock bool) error {
-	if acquireLock {
-		this.lock.Lock()
-		defer this.lock.Unlock()
-	}
+	var errs error = nil
 
 	for _, submission := range submissions {
-		baseDir := this.getSubmissionDirFromResult(submission.Info)
-		err := util.MkDir(baseDir)
-		if err != nil {
-			return fmt.Errorf("Failed to make submission dir '%s': '%w'.", baseDir, err)
-		}
+		errs = errors.Join(errs, this.saveSubmissionLock(course, submission, acquireLock))
+	}
 
-		resultPath := filepath.Join(baseDir, model.SUBMISSION_RESULT_FILENAME)
-		err = util.ToJSONFileIndent(submission.Info, resultPath)
-		if err != nil {
-			return fmt.Errorf("Failed to write submission result '%s': '%w'.", resultPath, err)
-		}
+	return errs
+}
 
-		err = util.GzipBytesToDirectory(filepath.Join(baseDir, common.GRADING_INPUT_DIRNAME), submission.InputFilesGZip)
-		if err != nil {
-			return fmt.Errorf("Failed to write submission input files: '%w'.", err)
-		}
+func (this *backend) saveSubmissionLock(course *model.Course, submission *model.GradingResult, acquireLock bool) error {
+	baseDir := this.getSubmissionDirFromResult(submission.Info)
 
-		err = util.GzipBytesToDirectory(filepath.Join(baseDir, common.GRADING_OUTPUT_DIRNAME), submission.OutputFilesGZip)
-		if err != nil {
-			return fmt.Errorf("Failed to write submission input files: '%w'.", err)
-		}
+	if acquireLock {
+		this.contextLock(baseDir)
+		defer this.contextUnlock(baseDir)
+	}
 
-		err = util.WriteFile(submission.Stdout, filepath.Join(baseDir, common.SUBMISSION_STDOUT_FILENAME))
-		if err != nil {
-			return fmt.Errorf("Failed to write submission stdout file: '%w'.", err)
-		}
+	err := util.MkDir(baseDir)
+	if err != nil {
+		return fmt.Errorf("Failed to make submission dir '%s': '%w'.", baseDir, err)
+	}
 
-		err = util.WriteFile(submission.Stderr, filepath.Join(baseDir, common.SUBMISSION_STDERR_FILENAME))
-		if err != nil {
-			return fmt.Errorf("Failed to write submission stderr file: '%w'.", err)
-		}
+	resultPath := filepath.Join(baseDir, model.SUBMISSION_RESULT_FILENAME)
+	err = util.ToJSONFileIndent(submission.Info, resultPath)
+	if err != nil {
+		return fmt.Errorf("Failed to write submission result '%s': '%w'.", resultPath, err)
+	}
+
+	err = util.GzipBytesToDirectory(filepath.Join(baseDir, common.GRADING_INPUT_DIRNAME), submission.InputFilesGZip)
+	if err != nil {
+		return fmt.Errorf("Failed to write submission input files: '%w'.", err)
+	}
+
+	err = util.GzipBytesToDirectory(filepath.Join(baseDir, common.GRADING_OUTPUT_DIRNAME), submission.OutputFilesGZip)
+	if err != nil {
+		return fmt.Errorf("Failed to write submission input files: '%w'.", err)
+	}
+
+	err = util.WriteFile(submission.Stdout, filepath.Join(baseDir, common.SUBMISSION_STDOUT_FILENAME))
+	if err != nil {
+		return fmt.Errorf("Failed to write submission stdout file: '%w'.", err)
+	}
+
+	err = util.WriteFile(submission.Stderr, filepath.Join(baseDir, common.SUBMISSION_STDERR_FILENAME))
+	if err != nil {
+		return fmt.Errorf("Failed to write submission stderr file: '%w'.", err)
 	}
 
 	return nil
@@ -73,6 +84,31 @@ func (this *backend) GetNextSubmissionID(assignment *model.Assignment, email str
 	}
 
 	return fmt.Sprintf("%d", submissionID), nil
+}
+
+func (this *backend) GetPreviousSubmissionID(assignment *model.Assignment, email string, shortSubmissionID string) (string, error) {
+	history, err := this.GetSubmissionHistory(assignment, email)
+	if err != nil {
+		return "", err
+	}
+
+	if len(history) <= 1 {
+		return "", nil
+	}
+
+	index := -1
+	for i, item := range history {
+		if item.ShortID == shortSubmissionID {
+			index = i
+			break
+		}
+	}
+
+	if index <= 0 {
+		return "", nil
+	}
+
+	return history[index-1].ID, nil
 }
 
 func (this *backend) GetSubmissionResult(assignment *model.Assignment, email string, shortSubmissionID string) (*model.GradingInfo, error) {
@@ -133,6 +169,10 @@ func (this *backend) GetSubmissionHistory(assignment *model.Assignment, email st
 
 		history = append(history, gradingInfo.ToHistoryItem())
 	}
+
+	slices.SortFunc(history, func(a *model.SubmissionHistoryItem, b *model.SubmissionHistoryItem) int {
+		return int((a.GradingStartTime - b.GradingStartTime).ToMSecs())
+	})
 
 	return history, nil
 }

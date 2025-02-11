@@ -14,14 +14,24 @@ func CreateFullSubmissionID(courseID string, assignmentID string, email string, 
 	return util.JoinStrings(SUBMISSION_ID_DELIM, courseID, assignmentID, email, shortSubmissionID)
 }
 
-func SplitFullSubmissionID(fullSubmissionID string) []string {
+// Split a full submission ID and return: course id, assignment id, user email, and short id.
+func SplitFullSubmissionID(fullSubmissionID string) (string, string, string, string, error) {
+	parts := splitFullSubmissionID(fullSubmissionID)
+	if len(parts) != 4 {
+		return "", "", "", "", fmt.Errorf("Malformed full submission ID '%s'. Expected 4 components, found %d.", fullSubmissionID, len(parts))
+	}
+
+	return parts[0], parts[1], parts[2], parts[3], nil
+}
+
+func splitFullSubmissionID(fullSubmissionID string) []string {
 	return strings.Split(fullSubmissionID, SUBMISSION_ID_DELIM)
 }
 
 // Get the short submission ID from either a full or short submission ID.
 // Accepted inputs are: full id, short id, empty string.
 func GetShortSubmissionID(submissionID string) string {
-	parts := SplitFullSubmissionID(submissionID)
+	parts := splitFullSubmissionID(submissionID)
 	return parts[len(parts)-1]
 }
 

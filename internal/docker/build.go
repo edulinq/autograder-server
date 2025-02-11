@@ -4,6 +4,7 @@ package docker
 
 import (
 	"bufio"
+	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -40,16 +41,17 @@ func BuildImage(imageSource ImageSource) error {
 
 func BuildImageWithOptions(imageSource ImageSource, options *BuildOptions) error {
 	imageInfo := imageSource.GetImageInfo()
+	leaveBuildDir := config.KEEP_BUILD_DIRS.Get()
 
-	tempDir, err := util.MkDirTemp(TEMPDIR_PREFIX + imageInfo.Name + "-")
+	tempDir, err := util.MkDirTempFull(TEMPDIR_PREFIX+imageInfo.Name+"-", !leaveBuildDir)
 	if err != nil {
 		return fmt.Errorf("Failed to create temp build directory for '%s': '%w'.", imageInfo.Name, err)
 	}
 
-	if config.KEEP_BUILD_DIRS.Get() {
+	if leaveBuildDir {
 		log.Debug("Leaving behind image building dir.", imageSource, log.NewAttr("path", tempDir))
 	} else {
-		defer os.RemoveAll(tempDir)
+		defer util.RemoveDirent(tempDir)
 	}
 
 	err = writeDockerContext(imageInfo, tempDir)
@@ -81,13 +83,13 @@ func BuildImageWithOptions(imageSource ImageSource, options *BuildOptions) error
 }
 
 func buildImage(imageSource ImageSource, buildOptions types.ImageBuildOptions, tar io.ReadCloser) error {
-	ctx, docker, err := getDockerClient()
+	docker, err := getDockerClient()
 	if err != nil {
 		return err
 	}
 	defer docker.Close()
 
-	response, err := docker.ImageBuild(ctx, tar, buildOptions)
+	response, err := docker.ImageBuild(context.Background(), tar, buildOptions)
 	if err != nil {
 		return fmt.Errorf("Failed to run docker image build command: '%w'.", err)
 	}
@@ -168,8 +170,8 @@ func writeDockerContext(imageInfo *ImageInfo, dir string) error {
 	}
 
 	// Copy over the static files (and do any file ops).
-	err = common.CopyFileSpecs(imageInfo.BaseDir, workDir, dir,
-		imageInfo.StaticFiles, false, imageInfo.PreStaticFileOperations, imageInfo.PostStaticFileOperations)
+	err = util.CopyFileSpecsWithOps(imageInfo.BaseDirFunc(), workDir, dir,
+		imageInfo.StaticFiles, imageInfo.PreStaticFileOperations, imageInfo.PostStaticFileOperations)
 	if err != nil {
 		return fmt.Errorf("Failed to copy static imageInfo files: '%w'.", err)
 	}

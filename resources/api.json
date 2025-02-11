@@ -15,6 +15,16 @@
             "request-type": "*assignments.ListRequest",
             "response-type": "*assignments.ListResponse"
         },
+        "courses/assignments/submissions/analysis/individual": {
+            "description": "Get the result of a individual analysis for the specified submissions.",
+            "request-type": "*analysis.IndividualRequest",
+            "response-type": "*analysis.IndividualResponse"
+        },
+        "courses/assignments/submissions/analysis/pairwise": {
+            "description": "Get the result of a pairwise analysis for the specified submissions.",
+            "request-type": "*analysis.PairwiseRequest",
+            "response-type": "*analysis.PairwiseResponse"
+        },
         "courses/assignments/submissions/fetch/course/attempts": {
             "description": "Get all recent submissions and grading information for this assignment.",
             "request-type": "*course.FetchCourseAttemptsRequest",
@@ -54,6 +64,16 @@
             "description": "Submit an assignment submission to the autograder.",
             "request-type": "*submissions.SubmitRequest",
             "response-type": "*submissions.SubmitResponse"
+        },
+        "courses/lms/scores/upload": {
+            "description": "Perform a full scoring and upload scores to the course's LMS.",
+            "request-type": "*scores.UploadRequest",
+            "response-type": "*scores.UploadResponse"
+        },
+        "courses/stats/query": {
+            "description": "Query metrics for a specific course.\nOnly the context course can be queried for, the target-course field will be ignored for this endpoint.",
+            "request-type": "*stats.QueryRequest",
+            "response-type": "*stats.QueryResponse"
         },
         "courses/upsert/filespec": {
             "description": "Upsert a course using a filespec.",
@@ -104,6 +124,16 @@
             "description": "Describe all endpoints on the server.",
             "request-type": "*metadata.DescribeRequest",
             "response-type": "*metadata.DescribeResponse"
+        },
+        "stats/system/query": {
+            "description": "Query the system stats for the server.",
+            "request-type": "*system.QueryRequest",
+            "response-type": "*system.QueryResponse"
+        },
+        "system/stacks": {
+            "description": "Get stack traces for all the currently running routines (threads) on the server.",
+            "request-type": "*system.StacksRequest",
+            "response-type": "*system.StacksResponse"
         },
         "users/auth": {
             "description": "Authenticate as a user.",

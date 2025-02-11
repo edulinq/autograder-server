@@ -1,10 +1,7 @@
 package model
 
 import (
-	"bytes"
-	"encoding/json"
-	"fmt"
-	"strings"
+	"github.com/edulinq/autograder/internal/util"
 )
 
 // Course user roles represent a user's role within a single course.
@@ -64,28 +61,14 @@ func (this CourseUserRole) String() string {
 }
 
 func (this CourseUserRole) MarshalJSON() ([]byte, error) {
-	buffer := bytes.NewBufferString(`"`)
-	buffer.WriteString(courseRoleToString[this])
-	buffer.WriteString(`"`)
-	return buffer.Bytes(), nil
+	return util.MarshalEnum(this, courseRoleToString)
 }
 
 func (this *CourseUserRole) UnmarshalJSON(data []byte) error {
-	var temp string
-
-	err := json.Unmarshal(data, &temp)
-	if err != nil {
-		return err
+	value, err := util.UnmarshalEnum(data, stringToCourseUserRole, true)
+	if err == nil {
+		*this = *value
 	}
 
-	temp = strings.ToLower(temp)
-
-	var ok bool
-	*this, ok = stringToCourseUserRole[temp]
-	if !ok {
-		*this = CourseRoleUnknown
-		return fmt.Errorf("CourseRoleUnknown CourseUserRole value: '%s'.", temp)
-	}
-
-	return nil
+	return err
 }

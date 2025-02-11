@@ -1,14 +1,23 @@
 package util
 
 import (
+	"errors"
 	"fmt"
 	"io"
+	"io/fs"
 	"os"
 	"path/filepath"
+
+	"github.com/edulinq/autograder/internal/log"
 )
 
 func RemoveDirent(path string) error {
-	return os.RemoveAll(path)
+	err := os.RemoveAll(path)
+	if err != nil {
+		log.Debug("Failed to remove dirent.", err, log.NewAttr("path", path))
+	}
+
+	return err
 }
 
 // Copy a file or directory into dest.
@@ -54,7 +63,7 @@ func CopyLink(source string, dest string) error {
 	return nil
 }
 
-// Copy a file from source to dest creating any necessary parents along the way..
+// Copy a file from source to dest creating any necessary parents along the way.
 // If dest is a file, it will be truncated.
 // If dest is a dir, then the file will be created inside dest.
 func CopyFile(source string, dest string) error {
@@ -90,8 +99,8 @@ func CopyFile(source string, dest string) error {
 
 // Copy a directory (or just it's contents) into dest.
 // When onlyContents = False:
-//   - dest must not exist.
-//   - `cp -r source dest`
+//   - if dest exists, then the source will be copied into it.
+//   - if dest does not exist, then the source will be copied to dest
 //
 // When onlyContents = True:
 //   - dest may exist (and must be a dir).
@@ -106,14 +115,19 @@ func CopyDir(source string, dest string, onlyContents bool) error {
 
 // Copy a directory (including it's contents) to a new path.
 // Any non-existent parents will be created.
-// dest must not exist.
+// If dest exists source will be copied inside it, else source will be copied to dest.
 func CopyDirWhole(source string, dest string) error {
 	if !IsDir(source) {
 		return fmt.Errorf("Source of whole directory copy ('%s') does not exist or is not a dir.", source)
 	}
 
+	if IsFile(dest) {
+		return fmt.Errorf("Destination of whole directory copy ('%s') already exists and is a file.", dest)
+	}
+
+	// The path already exists (and is a dir), copy inside of it.
 	if PathExists(dest) {
-		return fmt.Errorf("Destination of whole directory copy ('%s') already exists.", dest)
+		dest = filepath.Join(dest, filepath.Base(source))
 	}
 
 	err := os.MkdirAll(dest, 0755)
@@ -158,4 +172,38 @@ func CopyDirContents(source string, dest string) error {
 	}
 
 	return nil
+}
+
+// Recursivly changes the mode of any files and dirs.
+func RecursiveChmod(basePath string, fileMode os.FileMode, dirMode os.FileMode) error {
+	basePath = ShouldAbs(basePath)
+
+	if IsFile(basePath) {
+		err := os.Chmod(basePath, fileMode)
+		if err != nil {
+			return fmt.Errorf("Failed to change mode of '%s': '%w'.", basePath, err)
+		}
+	}
+
+	var errs error
+	err := filepath.WalkDir(basePath, func(path string, dirent fs.DirEntry, err error) error {
+		if err != nil {
+			errs = errors.Join(errs, err)
+			return nil
+		}
+
+		mode := fileMode
+		if dirent.IsDir() {
+			mode = dirMode
+		}
+
+		err = os.Chmod(path, mode)
+		if err != nil {
+			errs = errors.Join(errs, fmt.Errorf("Failed to change mode of '%s': '%w'.", path, err))
+		}
+
+		return nil
+	})
+
+	return errors.Join(errs, err)
 }

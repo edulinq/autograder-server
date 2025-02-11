@@ -11,16 +11,19 @@ const (
 	DRY_RUN_PREFIX    = "__autograder_dryrun__"
 )
 
+type CourseUpsertPublicOptions struct {
+	SkipSourceSync  bool `json:"skip-source-sync" help:"Skip syncing the course's source." default:"false"`
+	SkipLMSSync     bool `json:"skip-lms-sync" help:"Skip syncing with the course's LMS." default:"false"`
+	SkipBuildImages bool `json:"skip-build-images" help:"Skip building the course's assignment images." default:"false"`
+
+	DryRun     bool `json:"dry-run" help:"Do not actually do the operation, just state what you would do." default:"false"`
+	SkipEmails bool `json:"skip-emails" help:"Skip sending out emails (always true if a dry run)." default:"false"`
+}
+
 type CourseUpsertOptions struct {
 	ContextUser *model.ServerUser `json:"-"`
 
-	SkipSourceSync  bool `json:"skip-source-sync"`
-	SkipLMSSync     bool `json:"skip-lms-sync"`
-	SkipBuildImages bool `json:"skip-build-images"`
-	SkipTasks       bool `json:"skip-tasks"`
-
-	DryRun     bool `json:"dry-run"`
-	SkipEmails bool `json:"skip-emails"`
+	CourseUpsertPublicOptions
 }
 
 type CourseUpsertResult struct {

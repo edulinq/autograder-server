@@ -95,7 +95,53 @@ func SaveCourse(course *model.Course) error {
 		return fmt.Errorf("Course '%s' is not valid: '%w'.", course.GetID(), err)
 	}
 
-	return backend.SaveCourse(course)
+	err = backend.SaveCourse(course)
+	if err != nil {
+		return err
+	}
+
+	// Upsert any active tasks.
+	err = upsertActiveCourseTasks(course)
+	if err != nil {
+		return fmt.Errorf("Failed to upsert active tasks for course '%s': '%w'.", course.GetID(), err)
+	}
+
+	return nil
+}
+
+func upsertActiveCourseTasks(course *model.Course) error {
+	// Get the current active tasks for this course.
+	oldTasks, err := backend.GetActiveCourseTasks(course)
+	if err != nil {
+		return err
+	}
+
+	// Start with the assumption that we will remove all active tasks.
+	newTasks := make(map[string]*model.FullScheduledTask, len(oldTasks))
+	for hash, _ := range oldTasks {
+		newTasks[hash] = nil
+	}
+
+	// Add in any new tasks and merge with any exiting tasks.
+	for i, task := range course.Tasks {
+		newTask, err := task.ToFullCourseTask(course.GetID())
+		if err != nil {
+			return fmt.Errorf("Unable to upsert task at inded %d: '%w'.", i, err)
+		}
+
+		if newTask != nil {
+			newTask.MergeTimes(oldTasks[newTask.Hash])
+		}
+
+		newTasks[newTask.Hash] = newTask
+	}
+
+	// Save.
+	if len(newTasks) > 0 {
+		err = backend.UpsertActiveTasks(newTasks)
+	}
+
+	return err
 }
 
 func MustSaveCourse(course *model.Course) {

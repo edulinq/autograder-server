@@ -1,19 +1,23 @@
 package grader
 
 import (
+	"context"
 	"fmt"
-	"sync"
 
 	"github.com/edulinq/autograder/internal/common"
 	"github.com/edulinq/autograder/internal/config"
 	"github.com/edulinq/autograder/internal/db"
 	"github.com/edulinq/autograder/internal/docker"
+	"github.com/edulinq/autograder/internal/lockmanager"
 	"github.com/edulinq/autograder/internal/model"
+	"github.com/edulinq/autograder/internal/stats"
 	"github.com/edulinq/autograder/internal/timestamp"
 	"github.com/edulinq/autograder/internal/util"
 )
 
-var submissionLocks sync.Map
+// Allow for a little extra runtime for setup/cleaup when running the grader.
+// This extra time is just for the safety context around the actual graders (which have their own timeouts).
+const extraRunTimeSecs int = 10
 
 type GradeOptions struct {
 	NoDocker     bool
@@ -32,13 +36,13 @@ func GetDefaultGradeOptions() GradeOptions {
 // Grade with default options pulled from config.
 func GradeDefault(assignment *model.Assignment, submissionPath string, user string, message string) (
 	*model.GradingResult, RejectReason, string, error) {
-	return Grade(assignment, submissionPath, user, message, true, GetDefaultGradeOptions())
+	return Grade(context.Background(), assignment, submissionPath, user, message, true, GetDefaultGradeOptions())
 }
 
 // Grade with custom options.
 // Return (result, reject, softGradingError, error).
 // Full success is only when ((reject == nil) && (softGradingError == "") && (error == nil)).
-func Grade(assignment *model.Assignment, submissionPath string, user string, message string, checkRejection bool, options GradeOptions) (
+func Grade(ctx context.Context, assignment *model.Assignment, submissionPath string, user string, message string, checkRejection bool, options GradeOptions) (
 	*model.GradingResult, RejectReason, string, error) {
 	if checkRejection {
 		reject, err := checkForRejection(assignment, submissionPath, user, message, options.AllowLate)
@@ -53,12 +57,12 @@ func Grade(assignment *model.Assignment, submissionPath string, user string, mes
 
 	gradingKey := fmt.Sprintf("%s::%s::%s", assignment.GetCourse().GetID(), assignment.GetID(), user)
 
-	// Get the existing mutex, or store (and fetch) a new one.
-	val, _ := submissionLocks.LoadOrStore(gradingKey, &sync.Mutex{})
-	lock := val.(*sync.Mutex)
+	// Get the grading start time right before we acquire the user's lock.
+	startTimestamp := timestamp.Now()
 
-	lock.Lock()
-	defer lock.Unlock()
+	// Ensure the user can only have one submission (of each assignment) running at a time.
+	lockmanager.Lock(gradingKey)
+	defer lockmanager.Unlock(gradingKey)
 
 	submissionID, inputFileContents, err := prepForGrading(assignment, submissionPath, user)
 	if err != nil {
@@ -70,23 +74,11 @@ func Grade(assignment *model.Assignment, submissionPath string, user string, mes
 
 	fullSubmissionID := common.CreateFullSubmissionID(assignment.GetCourse().GetID(), assignment.GetID(), user, submissionID)
 
-	var gradingInfo *model.GradingInfo
-	var outputFileContents map[string][]byte
-	var stdout string
-	var stderr string
-
-	startTimestamp := timestamp.Now()
-
-	softGradingError := ""
-	if options.NoDocker {
-		gradingInfo, outputFileContents, stdout, stderr, err = runNoDockerGrader(assignment, submissionPath, options, fullSubmissionID)
-	} else {
-		gradingInfo, outputFileContents, stdout, stderr, softGradingError, err = runDockerGrader(assignment, submissionPath, options, fullSubmissionID)
-	}
+	gradingInfo, outputFileContents, stdout, stderr, softGradingError, err := runGrader(ctx, assignment, submissionPath, options, fullSubmissionID)
 
 	endTimestamp := timestamp.Now()
 
-	// Copy over stdout and stderr even if an error occured.
+	// Copy over stdout and stderr even if an error occurred.
 	gradingResult.Stdout = stdout
 	gradingResult.Stderr = stderr
 
@@ -107,14 +99,8 @@ func Grade(assignment *model.Assignment, submissionPath string, user string, mes
 	gradingInfo.AssignmentID = assignment.GetID()
 	gradingInfo.User = user
 	gradingInfo.Message = message
-
-	if gradingInfo.GradingStartTime.IsZero() {
-		gradingInfo.GradingStartTime = startTimestamp
-	}
-
-	if gradingInfo.GradingEndTime.IsZero() {
-		gradingInfo.GradingEndTime = endTimestamp
-	}
+	gradingInfo.GradingStartTime = startTimestamp
+	gradingInfo.GradingEndTime = endTimestamp
 
 	gradingInfo.ComputePoints()
 
@@ -125,6 +111,9 @@ func Grade(assignment *model.Assignment, submissionPath string, user string, mes
 	if err != nil {
 		return &gradingResult, nil, "", fmt.Errorf("Failed to save grading result: '%w'.", err)
 	}
+
+	// Store stats for this grading (when everything is successful).
+	stats.AsyncStoreCourseGradingTime(startTimestamp, endTimestamp, gradingInfo.CourseID, gradingInfo.AssignmentID, gradingInfo.User)
 
 	return &gradingResult, nil, "", nil
 }
@@ -147,4 +136,43 @@ func prepForGrading(assignment *model.Assignment, submissionPath string, user st
 	}
 
 	return submissionID, fileContents, nil
+}
+
+func getTimeoutMessage(assignment *model.Assignment) string {
+	return fmt.Sprintf("Submission has ran for too long and was killed. Max assignment runtime is %d seconds (server hard limit is %d seconds). Check for infinite loops/recursion and consult with your instructors/TAs.", assignment.MaxRuntimeSecs, config.GRADING_RUNTIME_MAX_SECS.Get())
+}
+
+func getCanceledMessage(assignment *model.Assignment) string {
+	return "Grading has been canceled (usually by a broken HTTP connection)."
+}
+
+// Add an additional level for waiting for timeouts.
+// Timeouts should be handled a level below this (e.g., docker or exec),
+// but this is an additional layer just in case there are issues at that level.
+func runGrader(ctx context.Context, assignment *model.Assignment, submissionPath string, options GradeOptions, fullSubmissionID string) (*model.GradingInfo, map[string][]byte, string, string, string, error) {
+	var gradingInfo *model.GradingInfo
+	var outputFileContents map[string][]byte
+	var stdout string
+	var stderr string
+	var softGradingError string
+	var err error
+
+	runFunc := func() {
+		if options.NoDocker {
+			gradingInfo, outputFileContents, stdout, stderr, softGradingError, err = runNoDockerGrader(ctx, assignment, submissionPath, options, fullSubmissionID)
+		} else {
+			gradingInfo, outputFileContents, stdout, stderr, softGradingError, err = runDockerGrader(ctx, assignment, submissionPath, options, fullSubmissionID)
+		}
+	}
+
+	timeoutMS := int64((assignment.MaxRuntimeSecs + extraRunTimeSecs) * 1000)
+	ok := util.RunWithTimeout(timeoutMS, runFunc)
+
+	if !ok {
+		// Timeout
+		// We must return very general results (which is why we prefer to catch this at the grader level).
+		return nil, nil, "", "", getTimeoutMessage(assignment), nil
+	}
+
+	return gradingInfo, outputFileContents, stdout, stderr, softGradingError, err
 }

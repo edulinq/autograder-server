@@ -32,7 +32,7 @@ jobs:
         run: ./scripts/check_duplicate_locators.sh
 
       - name: Run Base Tests
-        run: ./scripts/run_tests.sh
+        run: AUTOGRADER__GITHUB__CI=true ./scripts/run_tests.sh
 
   docker-deploy-latest:
 
@@ -43,7 +43,6 @@ jobs:
     if: ${{ github.event_name == 'push' && github.repository_owner == 'edulinq' && (github.ref == 'refs/heads/main') }}
 
     # To speed up image building, use a matrix and have each instance build one of the images.
-    continue-on-error: true
     strategy:
       matrix:
         image-type: ['prebuilt', 'slim']

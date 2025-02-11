@@ -10,26 +10,29 @@ Extra keys will generally be ignored.
  - [Semantic Types](#semantic-types)
    - [Identifier](#identifier)
    - [Email](#email)
+     - [Course Email Specification (CourseEmailSpec)](#course-email-specification-courseemailspec)
    - [Timestamp](#timestamp)
    - [Pointer](#pointer)
+   - [Regex](#regex)
  - [Course](#course)
  - [Assignment](#assignment)
    - [Assignment Grading Images](#assignment-grading-images)
    - [Grader Output](#grader-output-graderoutput)
    - [Test Submission](#test-submission)
    - [Assignments and the LMS](#assignments-and-the-lms)
+   - [Analysis Options (AnalysisOptions)](#analysis-options-analysisoptions)
  - [Roles](#roles)
    - [Server Roles (ServerRole)](#server-roles-serverrole)
    - [Course Roles (CourseRole)](#course-roles-courserole)
- - [Tasks](#tasks)
-   - [Scheduled Time (ScheduledTime)](#scheduled-time-scheduledtime)
-     - [every - Duration Specification (DurationSpec)](#every---duration-specification-durationspec)
-     - [daily - Time of Day Specification (TimeOfDaySpec)](#daily---time-of-day-specification-timeofdayspec)
-   - [Backup Task (BackupTask)](#backup-task-backuptask)
-   - [Course Update Task (CourseUpdateTask)](#course-update-task-courseupdatetask)
-   - [Report Task (ReportTask)](#report-task-reporttask)
-   - [Scoring Upload Task (ScoringUploadTask)](#scoring-upload-task-scoringuploadtask)
-   - [Email Logs Task (EmailLogsTask)](#email-logs-task-emaillogstask)
+ - [Tasks (Task)](#tasks-task)
+   - [Course Backup Task](#course-backup-task)
+   - [Course Email Logs Task](#course-email-logs-task)
+   - [Course Report Task](#course-report-task)
+   - [Course Scoring Upload Task](#course-scoring-upload-task)
+   - [Course Update Task](#course-update-task)
+ - [Scheduled Time (ScheduledTime)](#scheduled-time-scheduledtime)
+   - [every - Duration Specification (DurationSpec)](#every---duration-specification-durationspec)
+   - [daily - Time of Day Specification (TimeOfDaySpec)](#daily---time-of-day-specification-timeofdayspec)
  - [Logging](#logging)
    - [Level (LogLevel)](#level-loglevel)
    - [Log Query (LogQuery)](#log-query-logquery)
@@ -69,9 +72,18 @@ Underlying Type: String
 
 An email address.
 
+#### Course Email Specification (CourseEmailSpec)
+
 When used in the context of a course,
-a star ("\*") may be used to reference all users
-and a course role ("other", "student", "grader", "admin", or "owner") may be used to include all course members with that role.
+a `CourseEmailSpec` can be used to generalize email recipients.
+The following values are allowed:
+
+ - Email - Normal email addresses may be used.
+ - "\*" - Represents all users in a course.
+ - Course Role (e.g., "student", "grader", etc) - Represents all course users with that role.
+ - Negative Email - An email address preceded by a minus sign (e.g., "-alice@test.edulinq.org")
+   will remove this address from the email recipients (even if they are not currently there).
+   This can be useful when using course roles but you want to exclude someone.
 
 ### Timestamp
 
@@ -80,6 +92,9 @@ Underlying Type: Integer (64 bit signed)
 Timestamps represent a specific instance in time (a datetime).
 The numeric value is UNIX millisecond time (the number of milliseconds since the [UNIX epoch](https://en.wikipedia.org/wiki/Unix_time)).
 Note that the UNIX epoch is in UTC, so this type always denotes the same timezone (UTC).
+
+In cases where strings are converted to a timestamp (and that string is not all digits) and no timezone information is supplied,
+then the server's local time will be used.
 
 ### Pointer
 
@@ -93,6 +108,14 @@ In JSON, a field with a pointer type can take either the base value or `null`.
 There is no need to use any addressing or referencing operators (e.g., `&`) in your JSON, the autograder will handle that automatically.
 For example, a `*Integer` field can take a normal Integer (e.g. `123`) or a `null` value.
 
+### Regex
+
+Underlying Type: String
+
+A [regular expression](https://en.wikipedia.org/wiki/Regular_expression).
+All regular expressions will use the standard regular expression [library](https://pkg.go.dev/regexp) in Go,
+which uses the [RE2 Regular Expression Syntax](https://github.com/google/re2/wiki/Syntax).
+
 ## Course
 
 A course is the core organizational unit in the autograder.
@@ -102,7 +125,7 @@ A course in the autograder is mainly comprised of:
  - An Identifier
  - Users (with various [roles](#course-roles-courseRole)
  - [Assignments](#assignment)
- - [Tasks](#tasks)
+ - [Tasks](#tasks-task)
 
 | Name               | Type               | Required | Description |
 |--------------------|--------------------|----------|-------------|
@@ -112,11 +135,7 @@ A course in the autograder is mainly comprised of:
 | `submission-limit` | \*SubmissionLimit  | false    | The default submission limit to enforce for all assignments in this course. |
 | `source`           | \*FileSpec         | false    | The canonical source for a course. This should point to where the autograder can fetch the most up-to-date version of this course. |
 | `lms`              | \*LMSAdapter       | false    | Information about how this course can interact with its Learning Management System (LMS). |
-| `backup`           | List[BackupTask]        | false    | Specifications for tasks to backup the course. |
-| `course-update`    | List[CourseUpdateTask]  | false    | Specifications for tasks to update this course using its source.
-| `report`           | List[ReportTask]        | false    | Specifications for tasks to send out a report detailing assignment submissions and scores. |
-| `scoring-upload`   | List[ScoringUploadTask] | false    | Specifications for tasks to perform a full scoring of all assignments and upload scores to the course's LMS. |
-| `email-logs`       | List[EmailLogsTask]     | false    | Specifications for tasks to email log entries. |
+| `tasks`            | List[Task]         | false    | Specifications for tasks to run. |
 
 Depending on your LMS, you may also think of an autograder course as a "section",
 or specific instantiation of a course in a term.
@@ -137,6 +156,7 @@ The fields of an assignment are as follows:
 | `late-policy`      | \*LatePolicy       | false    | The late policy to use for this assignment. Overrides any late policy set on the course level. |
 | `submission-limit` | \*SubmissionLimit  | false    | The submission limit to enforce for this assignment. Overrides any limits set on the course level. |
 | `max-runtime-secs` | Integer            | false    | The maximum number of sections a grader is allowed to run before being killed (cannot be greater than system limit set by `docker.runtime.max` config option. |
+| `analysis-options` | AnalysisOptions    | false    | Options for code analysis. |
 | `image`            | String             | true     | The base Docker image to use for this assignment. |
 | `pre-static-docker-commands`  | List[String]   | false | A list of Docker commands to run before static files are copied into the image. |
 | `post-static-docker-commands` | List[String]   | false | A list of Docker commands to run after static files are copied into the image. |
@@ -286,6 +306,35 @@ However, this would require updating the `lmd-id` field for each section/term.
 You can also ensure that the assignment names in the autograder and LMS are the same (and there are no other assignments with the same name).
 On a full name match, then autograder will sync over the `lms-id` from the course's LMS.
 
+### Analysis Options (AnalysisOptions)
+
+The analysis options type allows options to be passed to code analysis for assignments.
+It has the following fields:
+| Name                 | Type        | Required | Description |
+|----------------------|-------------|----------|-------------|
+| `include-patterns`   | List[Regex] | false    | Any source file eligible for code analysis must match at least one of these patterns. When not specified or empty, ".+" will be used (which will match any non-empty value). |
+| `exclude-patterns`   | List[Regex] | false    | Any source file that matches any of these patterns will not be used in code analysis. |
+
+During a pairwise code analysis,
+the options of the assignment for the submission with the [lexicographically](https://en.wikipedia.org/wiki/Lexicographic_order) smaller id will always be used.
+
+#### Include/Exclude Patterns
+
+The include/exclude patterns decide which source files will be included in code analysis for each assignment.
+When working with these patterns, keep the following in mind:
+
+1. The include/exclude patterns are not [globs](https://en.wikipedia.org/wiki/Glob_(programming)),
+    like you may find in a shell/command-line.
+    Instead, they are full [Regular Expressions](#regex).
+2. The patterns operate not on just the filename, but the entire relative path of the submission file.
+    So, if a student submits the files [`README.md`, `src/code.c`], then you could use the pattern `src/.+` to match everything in the `src` directory.
+3. Inclusions are processed before exclusions.
+    So an exclusion pattern of `.*` will exclude everything, regardless of any inclusion patterns.
+4. Some source files may be transformed and renamed for analysis.
+    The inclusion/exclusion patterns apply after renaming and transformation.
+    For example, [iPython Notebooks](https://en.wikipedia.org/wiki/Project_Jupyter#Documents) with the `.ipynb` extensions
+    will have their code Python extracted and renamed to `.py`.
+
 ## Roles
 
 Roles are used to define privileges for a user within the server and each course.
@@ -327,35 +376,180 @@ Roles further down the list are considered more privileged.
 | `admin`   | Course members who can administrate the course. These users have full access to the content of the course and can administer it. |
 | `owner`   | Owners of the course. |
 
-## Tasks
+## Tasks (Task)
 
-Tasks are asynchronous processes for a course.
-Each specific task will have some common fields.
+Tasks are asynchronous processes that run on the server (usually related to a course).
+Tasks share the common structure below:
 
-| Name      | Type                | Required | Description |
-|-----------|---------------------|----------|-------------|
-| `disable` | Boolean             | false    | Set to true to disable this task from running. |
-| `when`    | List[ScheduledTime] | false    | When to run this task. Usually contains just one time, but multiple are allowed. |
+| Name       | Type          | Required | Description |
+|------------|---------------|----------|-------------|
+| `type`     | String        | true     | The type of task. All allowed types are discussed in this section. |
+| `name`     | String        | false    | A display name for this task. |
+| `disabled` | Boolean       | false    | Set to true to disable this task from running. |
+| `when`     | ScheduledTime | true     | When to run this task. |
+| `options`  | Map           | false    | Options used by the specific type of task. |
 
-Tasks are often specified as lists.
-This allows you to create multiple instantiations of the same task that have different configurations.
-For example, you may want one task to email you WARNING logs every week,
-but another task that emails you ERROR logs every day.
+The `type` of the task determines what values will be looked for in `options`.
+The available task types will be discussed in the rest of this section.
 
-### Scheduled Time (ScheduledTime)
+### Course Backup Task
 
-A `ScheduedTime` describes when to run a task.
+A backup task backs up the course information to the server's backup location.
+
+Type: `backup`
+
+No additional options.
+
+Basic Example:
+```json
+{
+    ... the rest of a course object ...
+    "tasks": [
+        {
+            "type": "backup",
+            "when": {
+                "daily": "3:00"
+            }
+        }
+    ]
+}
+```
+
+### Course Email Logs Task
+
+The email logs task sends an email to the target users containing matching logs.
+
+Type: `email-logs`
+
+Additional Options:
+| Name         | Type                  | Required | Description |
+|--------------|-----------------------|----------|-------------|
+| `to`         | List[CourseEmailSpec] | true     | A list of emails to send the results to. At least one recipient must be listed. |
+| `send-empty` | Boolean               | false    | If true, the email will still be sent even if no query results were found. |
+| `query`      | LogQuery              | true     | The log query to execute. |
+
+Basic Example:
+```json
+{
+    ... the rest of a course object ...
+    "tasks": [
+        {
+            "type": "email-logs",
+            "when": {
+                "daily": "3:00"
+            },
+            "options": {
+                "to": [
+                    "admin"
+                ],
+                "query": {
+                    "past": "24h",
+                    "level": "ERROR"
+                }
+            }
+        }
+    ]
+}
+```
+
+### Course Report Task
+
+The report task sends an email to the target users summarizing the current submissions for each assignment.
+
+Type: `report`
+
+Additional Options:
+| Name         | Type                  | Required | Description |
+|--------------|-----------------------|----------|-------------|
+| `to`         | List[CourseEmailSpec] | true     | A list of emails to send the report to. At least one recipient must be listed. |
+
+Basic Example:
+```json
+{
+    ... the rest of a course object ...
+    "tasks": [
+        {
+            "type": "report",
+            "when": {
+                "daily": "3:00"
+            },
+            "options": {
+                "to": [
+                    "owner",
+                    "admin",
+                    "alice@test.edulinq.org",
+                ]
+            }
+        }
+    ]
+}
+```
+
+### Course Scoring Upload Task
+
+A scoring upload task performs a full scoring
+(including reexamining already scored/due assignments) and uploads to scores to the course's LMS.
+This task will also recompute late information in the case that any factors have changed
+(e.g., a late submission was removed, a due date changed, or a student was given additional late days).
+This task has no additional configuration options.
+
+Type: `scoring-upload`
+
+No additional options.
+
+Basic Example:
+```json
+{
+    ... the rest of a course object ...
+    "tasks": [
+        {
+            "type": "scoring-upload",
+            "when": {
+                "daily": "3:00"
+            }
+        }
+    ]
+}
+```
+
+### Course Update Task
+
+Course update tasks will update a course from source and perform the standard update protocol
+(syncing with the LMS, build assignment images, etc).
+
+Type: `update`
+
+No additional options.
+
+Basic Example:
+```json
+{
+    ... the rest of a course object ...
+    "tasks": [
+        {
+            "type": "update",
+            "when": {
+                "daily": "3:00"
+            }
+        }
+    ]
+}
+```
+
+## Scheduled Time (ScheduledTime)
+
+A `ScheduedTime` describes when to run some procedure (usually a [Task](#tasks-task)).
 It has two exclusive fields that allow for different ways of describing run times: `every` and `daily`.
 One and only one of the two fields must be populated.
 
-| Name    | Type        | Required | Description |
-|---------|-------------|----------|-------------|
-| `every` | DurationSpec  | false    | Specifies the period between task runs. |
-| `daily` | TimeOfDaySpec | false    | Specifies when a task should run each day. |
+| Name    | Type          | Required | Description |
+|---------|---------------|----------|-------------|
+| `every` | DurationSpec  | false    | Specifies the period between procedure runs. |
+| `daily` | TimeOfDaySpec | false    | Specifies when a procedure should run each day. |
 
-#### every - Duration Specification (DurationSpec)
+### every - Duration Specification (DurationSpec)
 
-A DurationSpec allows you to specify the period between task runs, e.g., "every 4 hours".
+A DurationSpec allows you to specify the period between procedure runs, e.g., "every 4 hours".
 This type has several fields that represent time units.
 
 | Name      | Type    | Required | Description |
@@ -415,10 +609,10 @@ Here are some general rules for a DurationSpec are:
 }
 ```
 
-#### daily - Time of Day Specification (TimeOfDaySpec)
+### daily - Time of Day Specification (TimeOfDaySpec)
 
-A TimeOfDaySpec allows you to specify when a task should be run each day.
-Using this implies that you want the task to run once a day, and you are selecting when to run it each day.
+A TimeOfDaySpec allows you to specify when something will run each day.
+Using this implies that you want the procedure to run once a day, and you are selecting when to run it each day.
 
 A TimeOfDaySpec is just a string formatted either as:
  - `HH:MM`
@@ -458,153 +652,6 @@ The timezone of the server will be used to interpret this time.
         },
         {
             "daily": "23:59"
-        }
-    ]
-}
-```
-
-### Backup Task (BackupTask)
-
-A backup task backs up the course information to the server's backup location.
-This task has no additional configuration options.
-
-Basic Example:
-```json
-{
-    ... the rest of a course object ...
-    "backup": [{
-        "when": [{
-            "daily": "01:00"
-        }]
-    }]
-}
-```
-
-### Course Update Task (CourseUpdateTask)
-
-Course update tasks will update a course from source and perform the standard update protocol
-(syncing with the LMS, build assignment images, etc).
-This task has no additional configuration.
-
-Basic Example:
-```json
-{
-    ... the rest of a course object ...
-    "course-update": [{
-        "when": [{
-            "daily": "02:00"
-        }]
-    }]
-}
-```
-
-### Report Task (ReportTask)
-
-The report task sends an email to the target users summarizing the current submissions for each assignment.
-
-| Name         | Type        | Required | Description |
-|--------------|-------------|----------|-------------|
-| `to`         | List[Email] | true     | A list of emails to send the report to. |
-| `send-empty` | Boolean     | false    | If true, the report will still be sent even if no submissions have been made. |
-
-Basic Example:
-```json
-{
-    ... the rest of a course object ...
-    "report": [{
-        "when": [{
-            "daily": "03:00"
-        }],
-        "to": [
-            "alice@test.edulinq.org",
-            "bob@test.edulinq.org"
-        ]
-    }]
-}
-```
-
-### Scoring Upload Task (ScoringUploadTask)
-
-A scoring upload task performs a full scoring
-(including reexamining already scored/due assignments) and uploads to scores to the course's LMS.
-This task will also recompute late information in the case that any factors have changed
-(e.g., a late submission was removed, a due date changed, or a student was given additional late days).
-This task has no additional configuration options.
-
-Basic Example:
-```json
-{
-    ... the rest of a course object ...
-    "scoring-upload": [{
-        "when": [{
-            "daily": "04:00"
-        }]
-    }]
-}
-```
-
-### Email Logs Task (EmailLogsTask)
-
-The email logs task sends an email to the target users containing matching logs.
-
-| Name         | Type        | Required | Description |
-|--------------|-------------|----------|-------------|
-| `to`         | List[Email] | true     | A list of emails to send the results to. |
-| `send-empty` | Boolean     | false    | If true, the email will still be sent even if no query results were found. |
-| `query`      | LogQuery    | true     | The log query to execute. |
-
-Basic Example:
-```json
-{
-    ... the rest of a course object ...
-    "email-logs": [{
-        "when": [{
-            "daily": "05:00"
-        }],
-        "to": [
-            "alice@test.edulinq.org",
-            "bob@test.edulinq.org"
-        ],
-        "query": {
-            "past": "24h",
-            "level": "ERROR"
-        }
-    }]
-}
-```
-
-An example using multiple queries.
-Email Alice every day with the day's ERROR logs,
-and email Bob every hour with the hour's WARN (which include ERROR) logs.
-```json
-{
-    ... the rest of a course object ...
-    "email-logs": [
-        {
-            "when": [{
-                "daily": "05:00"
-            }],
-            "to": [
-                "alice@test.edulinq.org"
-            ],
-            "query": {
-                "past": "24h",
-                "level": "ERROR"
-            }
-        },
-        {
-            "when": [{
-                "every": {
-                    "hours": 1
-                }
-            }],
-            "to": [
-                "bob@test.edulinq.org"
-            ],
-            "query": {
-                "past": "1h",
-                "level": "WARN"
-            }
         }
     ]
 }
@@ -653,6 +700,7 @@ The general rules are:
  - Sever admins can make any query.
  - A user can always query for logs about themselves.
  - A course admin can always query for logs about their course.
+ - If not timezone is specified in `after` or `past`, the server's local timezone is used.
 
 ## LMS Adapter (LMSAdapter)
 
@@ -913,26 +961,33 @@ Authenticate against a private repository:
 ## File Operation (FileOp)
 
 A file operation (FileOp) is a description of a simple file operation.
-FileOps are always lists of strings (typically three strings) representing the operation.
+FileOps are always lists of strings (typically two or three strings) representing the operation and its arguments.
+The general idea is to support very basic commands that can be easily implemented on any system that may encounter them.
 
-The currently supported FileOps are copy (`cp`) and move/rename (`mv`).
-Those familiar with POSIX file operations should already be familiar with `cp` and `mv`.
-These operations take no options or flags (like `-r` or `-f`),
-the autograder will handle those details.
-There are just two arguments: source and destination.
+Any path contained within a file operation must obey the following rules:
+ - Must be relative.
+ - Must not point outside the base/current directory (e.g., `../a.txt`).
+ - Must be a POSIX path (use forward slashes as separators).
+ - Must not point just to the current directory (`.`).
+   The path must point to a path within the current directory (e.g., `a.txt` or even `./a.txt`), not the directory itself.
+
+Below are the currently supported file operations:
+| Long Name | Short Name | Arguments              | Description |
+| `copy`    | `cp`       | source path, dest path | Copy the source path to the dest path. The source path may be a file or directory. |
+| `move`    | `mv`       | source path, dest path | Move (or rename) the source path to the dest path. The source path may be a file or directory. |
 
 **Examples**
 
 Copy a directory:
 ```json
     "file-operations": [
-        ["cp", "autograder-server", "autograder-server-copy"]
+        ["copy", "autograder-server", "autograder-server-copy"]
     ]
 ```
 
 Move/rename a file:
 ```json
     "file-operations": [
-        ["mv", "foo.txt", "bar.txt"]
+        ["move", "foo.txt", "bar.txt"]
     ]
 ```

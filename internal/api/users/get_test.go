@@ -7,10 +7,11 @@ import (
 	"github.com/edulinq/autograder/internal/api/core"
 	"github.com/edulinq/autograder/internal/db"
 	"github.com/edulinq/autograder/internal/model"
+	"github.com/edulinq/autograder/internal/timestamp"
 	"github.com/edulinq/autograder/internal/util"
 )
 
-func TestGet(test *testing.T) {
+func TestGetBase(test *testing.T) {
 	users := db.MustGetServerUsers()
 
 	testCases := []struct {
@@ -75,11 +76,79 @@ func TestGet(test *testing.T) {
 			continue
 		}
 
-		expectedInfo := core.MustNewServerUserInfo(testCase.expected)
+		expectedInfo := core.NewServerUserInfo(testCase.expected)
 		if !reflect.DeepEqual(expectedInfo, responseContent.User) {
 			test.Errorf("Case %d: Unexpected user result. Expected: '%s', actual: '%s'.",
 				i, util.MustToJSONIndent(expectedInfo), util.MustToJSONIndent(responseContent.User))
 			continue
 		}
+	}
+}
+
+func TestGetSingle(test *testing.T) {
+	response := core.SendTestAPIRequestFull(test, `users/get`, nil, nil, "course-admin")
+	if !response.Success {
+		test.Fatalf("Response is not a success when it should be: '%v'.", response)
+	}
+
+	var responseContent GetResponse
+	util.MustJSONFromString(util.MustToJSON(response.Content), &responseContent)
+
+	expected := GetResponse{
+		Found: true,
+		User: &core.ServerUserInfo{
+			BaseUserInfo: core.BaseUserInfo{
+				Type:  core.ServerUserInfoType,
+				Email: "course-admin@test.edulinq.org",
+				Name:  "course-admin",
+			},
+			Role: model.ServerRoleUser,
+			Courses: map[string]core.EnrollmentInfo{
+				"course-languages": core.EnrollmentInfo{
+					CourseID: "course-languages",
+					Role:     model.CourseRoleAdmin,
+				},
+				"course101": core.EnrollmentInfo{
+					CourseID: "course101",
+					Role:     model.CourseRoleAdmin,
+				},
+			},
+		},
+		Courses: map[string]*core.CourseInfo{
+			"course-languages": &core.CourseInfo{
+				ID:   "course-languages",
+				Name: "Course Using Different Languages",
+				Assignments: map[string]*core.AssignmentInfo{
+					"bash": &core.AssignmentInfo{
+						ID:      "bash",
+						Name:    "A Simple Bash Assignment",
+						DueDate: timestamp.ZeroPointer(),
+					},
+					"cpp-simple": &core.AssignmentInfo{
+						ID:   "cpp-simple",
+						Name: "A Simple C++ Assignment",
+					},
+					"java": &core.AssignmentInfo{
+						ID:   "java",
+						Name: "A Simple Java Assignment",
+					},
+				},
+			},
+			"course101": &core.CourseInfo{
+				ID:   "course101",
+				Name: "Course 101",
+				Assignments: map[string]*core.AssignmentInfo{
+					"hw0": &core.AssignmentInfo{
+						ID:   "hw0",
+						Name: "Homework 0",
+					},
+				},
+			},
+		},
+	}
+
+	if !reflect.DeepEqual(expected, responseContent) {
+		test.Fatalf("Unexpected result. Expected: '%s', actual: '%s'.",
+			util.MustToJSONIndent(expected), util.MustToJSONIndent(responseContent))
 	}
 }

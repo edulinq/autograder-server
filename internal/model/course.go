@@ -8,9 +8,10 @@ import (
 
 	"github.com/edulinq/autograder/internal/common"
 	"github.com/edulinq/autograder/internal/config"
+	dtasks "github.com/edulinq/autograder/internal/deprecated/model/tasks"
 	"github.com/edulinq/autograder/internal/docker"
 	"github.com/edulinq/autograder/internal/log"
-	"github.com/edulinq/autograder/internal/model/tasks"
+	"github.com/edulinq/autograder/internal/util"
 )
 
 const SOURCES_DIRNAME = "sources"
@@ -20,7 +21,7 @@ type Course struct {
 	ID   string `json:"id"`
 	Name string `json:"name"`
 
-	Source *common.FileSpec `json:"source"`
+	Source *util.FileSpec `json:"source"`
 
 	LMS *LMSAdapter `json:"lms,omitempty"`
 
@@ -30,15 +31,17 @@ type Course struct {
 	// A common submission limit that assignments can inherit.
 	SubmissionLimit *SubmissionLimitInfo `json:"submission-limit,omitempty"`
 
-	Backup        []*tasks.BackupTask        `json:"backup,omitempty"`
-	CourseUpdate  []*tasks.CourseUpdateTask  `json:"course-update,omitempty"`
-	Report        []*tasks.ReportTask        `json:"report,omitempty"`
-	ScoringUpload []*tasks.ScoringUploadTask `json:"scoring-upload,omitempty"`
-	EmailLogs     []*tasks.EmailLogsTask     `json:"email-logs,omitempty"`
+	// Deprecated
+	Backup        []*dtasks.BackupTask        `json:"backup,omitempty"`
+	CourseUpdate  []*dtasks.CourseUpdateTask  `json:"course-update,omitempty"`
+	Report        []*dtasks.ReportTask        `json:"report,omitempty"`
+	ScoringUpload []*dtasks.ScoringUploadTask `json:"scoring-upload,omitempty"`
+	EmailLogs     []*dtasks.EmailLogsTask     `json:"email-logs,omitempty"`
+
+	Tasks []*UserTaskInfo `json:"tasks,omitempty"`
 
 	// Internal fields the autograder will set.
-	Assignments    map[string]*Assignment `json:"-"`
-	scheduledTasks []tasks.ScheduledTask  `json:"-"`
+	Assignments map[string]*Assignment `json:"-"`
 }
 
 func (this *Course) GetID() string {
@@ -61,7 +64,7 @@ func (this *Course) GetDisplayName() string {
 	return this.ID
 }
 
-func (this *Course) GetSource() *common.FileSpec {
+func (this *Course) GetSource() *util.FileSpec {
 	return this.Source
 }
 
@@ -83,10 +86,6 @@ func (this *Course) GetAssignmentLMSIDs() ([]string, []string) {
 	}
 
 	return lmsIDs, assignmentIDs
-}
-
-func (this *Course) GetTasks() []tasks.ScheduledTask {
-	return this.scheduledTasks
 }
 
 // Ensure this course makes sense.
@@ -122,38 +121,45 @@ func (this *Course) Validate() error {
 		}
 	}
 
-	// Register tasks.
-	this.scheduledTasks = make([]tasks.ScheduledTask, 0)
-
-	for _, task := range this.Backup {
-		this.scheduledTasks = append(this.scheduledTasks, task)
+	if this.Tasks == nil {
+		this.Tasks = make([]*UserTaskInfo, 0)
 	}
 
-	for _, task := range this.CourseUpdate {
-		this.scheduledTasks = append(this.scheduledTasks, task)
-	}
-
-	for _, task := range this.Report {
-		this.scheduledTasks = append(this.scheduledTasks, task)
-	}
-
-	for _, task := range this.ScoringUpload {
-		this.scheduledTasks = append(this.scheduledTasks, task)
-	}
-
-	for _, task := range this.EmailLogs {
-		this.scheduledTasks = append(this.scheduledTasks, task)
-	}
+	// DEP: This is deprecated and will be removed when then the individual task types are.
+	this.convertDeprecatedTasks()
 
 	// Validate tasks.
-	for _, task := range this.scheduledTasks {
-		err = task.Validate(this)
+	for i, task := range this.Tasks {
+		err = task.Validate()
 		if err != nil {
-			return err
+			return fmt.Errorf("Failed to validate task at index %d: '%w'.", i, err)
 		}
 	}
 
 	return nil
+}
+
+// Convert deprecated tasks and add them to the task list.
+func (this *Course) convertDeprecatedTasks() {
+	for _, task := range this.Backup {
+		this.Tasks = append(this.Tasks, DeprecatedTaskToStandard(task)...)
+	}
+
+	for _, task := range this.CourseUpdate {
+		this.Tasks = append(this.Tasks, DeprecatedTaskToStandard(task)...)
+	}
+
+	for _, task := range this.Report {
+		this.Tasks = append(this.Tasks, DeprecatedTaskToStandard(task)...)
+	}
+
+	for _, task := range this.ScoringUpload {
+		this.Tasks = append(this.Tasks, DeprecatedTaskToStandard(task)...)
+	}
+
+	for _, task := range this.EmailLogs {
+		this.Tasks = append(this.Tasks, DeprecatedTaskToStandard(task)...)
+	}
 }
 
 func (this *Course) AddAssignment(assignment *Assignment) error {

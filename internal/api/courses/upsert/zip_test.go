@@ -18,6 +18,7 @@ func TestZipFile(test *testing.T) {
 	course101Dir := filepath.Join(testdataDir, "course101")
 
 	emptyDir := util.MustMkDirTemp("test-internal.api.courses.upsert.zip-empty-")
+	defer util.RemoveDirent(emptyDir)
 
 	testCases := []commonTestCase{
 		{"server-creator", course101Dir, "", 1, 1},
@@ -31,6 +32,8 @@ func TestZipFile(test *testing.T) {
 		db.ResetForTesting()
 
 		tempDir := util.MustMkDirTemp("test-internal.api.courses.upsert.zip-prep-")
+		defer util.RemoveDirent(tempDir)
+
 		tempPath := filepath.Join(tempDir, "test.zip")
 
 		err := util.Zip(testCase.path, tempPath, true)

@@ -31,6 +31,15 @@ func GetNextSubmissionID(assignment *model.Assignment, email string) (string, er
 	return backend.GetNextSubmissionID(assignment, email)
 }
 
+func GetPreviousSubmissionID(assignment *model.Assignment, email string, submissionID string) (string, error) {
+	if backend == nil {
+		return "", fmt.Errorf("Database has not been opened.")
+	}
+
+	shortSubmissionID := common.GetShortSubmissionID(submissionID)
+	return backend.GetPreviousSubmissionID(assignment, email, shortSubmissionID)
+}
+
 func GetSubmissionHistory(assignment *model.Assignment, email string) ([]*model.SubmissionHistoryItem, error) {
 	if backend == nil {
 		return nil, fmt.Errorf("Database has not been opened.")

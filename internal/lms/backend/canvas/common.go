@@ -4,8 +4,9 @@ import (
 	"fmt"
 	neturl "net/url"
 	"strings"
-	"sync"
 	"time"
+
+	"github.com/edulinq/autograder/internal/lockmanager"
 )
 
 const (
@@ -15,25 +16,19 @@ const (
 	UPLOAD_SLEEP_TIME_SEC        = int64(0.5 * float64(time.Second))
 )
 
-// Lock for each API token being used.
-// Note that it is possible to have multiple backends with the same token.
-// {string: *sync.Mutex}.
-var apiLocks sync.Map
-
 func (this *CanvasBackend) getAPILock() {
-	this.ensureAPILock()
-	lock, _ := apiLocks.Load(this.APIToken)
-	lock.(*sync.Mutex).Lock()
+	lockmanager.Lock(this.getLockKey())
 }
 
 func (this *CanvasBackend) releaseAPILock() {
-	this.ensureAPILock()
-	lock, _ := apiLocks.Load(this.APIToken)
-	lock.(*sync.Mutex).Unlock()
+	lockmanager.Unlock(this.getLockKey())
 }
 
-func (this *CanvasBackend) ensureAPILock() {
-	apiLocks.LoadOrStore(this.APIToken, &sync.Mutex{})
+// Lock based on the API token.
+// Multiple courses can have the same token authenticating requests,
+// and Canvas does rate limiting by token, not course.
+func (this *CanvasBackend) getLockKey() string {
+	return fmt.Sprintf("canvas::%s", this.APIToken)
 }
 
 func (this *CanvasBackend) standardHeaders() map[string][]string {

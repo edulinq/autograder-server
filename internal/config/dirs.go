@@ -35,19 +35,19 @@ func GetWorkDir() string {
 	return filepath.Join(BASE_DIR.Get(), serverName)
 }
 
-func GetBackupDir() string {
+func GetBaseBackupDir() string {
 	return filepath.Join(GetWorkDir(), BACKUP_DIRNAME)
 }
 
-// Get the backup directory for a task, which will check TASK_BACKUP_DIR first,
-// and then return GetBackupDir() if the option is empty.
-func GetTaskBackupDir() string {
-	dir := TASK_BACKUP_DIR.Get()
+// Get the backup directory, which will check BACKUP_DIR first,
+// and then return GetBaseBackupDir() if the option is empty.
+func GetBackupDir() string {
+	dir := BACKUP_DIR.Get()
 	if dir != "" {
 		return dir
 	}
 
-	return GetBackupDir()
+	return GetBaseBackupDir()
 }
 
 func GetCacheDir() string {

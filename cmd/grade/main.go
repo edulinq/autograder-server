@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/alecthomas/kong"
@@ -42,7 +43,7 @@ func main() {
 	gradeOptions := grader.GetDefaultGradeOptions()
 	gradeOptions.AllowLate = args.AllowLate
 
-	result, reject, softError, err := grader.Grade(assignment, args.Submission, args.User, args.Message, args.CheckRejection, gradeOptions)
+	result, reject, softError, err := grader.Grade(context.Background(), assignment, args.Submission, args.User, args.Message, args.CheckRejection, gradeOptions)
 	if err != nil {
 		if (result != nil) && result.HasTextOutput() {
 			fmt.Println("Grading failed, but output was recovered:")

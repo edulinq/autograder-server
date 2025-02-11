@@ -2,8 +2,11 @@ package util
 
 import (
 	"errors"
+	"fmt"
+	"io/fs"
 	"os"
 	"path/filepath"
+	"slices"
 	"sync"
 
 	"github.com/edulinq/autograder/internal/log"
@@ -14,8 +17,12 @@ const DEFAULT_MKDIR_PERMS os.FileMode = 0755
 var tempDir string = filepath.Join("/", "tmp", "autograder-temp")
 var tempDirMutex sync.Mutex
 var createdTempDirs []string
+var shouldRemoveTempDirs bool = true
 
 func SetTempDirForTesting(newTempDir string) {
+	tempDirMutex.Lock()
+	defer tempDirMutex.Unlock()
+
 	tempDir = newTempDir
 }
 
@@ -29,6 +36,10 @@ func MustMkDirTemp(prefix string) string {
 }
 
 func MkDirTemp(prefix string) (string, error) {
+	return MkDirTempFull(prefix, true)
+}
+
+func MkDirTempFull(prefix string, cleanupTempDir bool) (string, error) {
 	tempDirMutex.Lock()
 	defer tempDirMutex.Unlock()
 
@@ -41,7 +52,10 @@ func MkDirTemp(prefix string) (string, error) {
 		return "", err
 	}
 
-	createdTempDirs = append(createdTempDirs, dir)
+	if cleanupTempDir {
+		createdTempDirs = append(createdTempDirs, dir)
+	}
+
 	return dir, nil
 }
 
@@ -49,11 +63,18 @@ func MkDir(path string) error {
 	return MkDirPerms(path, DEFAULT_MKDIR_PERMS)
 }
 
+func MustMkDir(path string) {
+	err := MkDir(path)
+	if err != nil {
+		log.Fatal("Failed to create dir.", log.NewAttr("path", path))
+	}
+}
+
 func MkDirPerms(path string, perms os.FileMode) error {
 	return os.MkdirAll(path, perms)
 }
 
-func ClearRecordedTempDirs() {
+func clearRecordedTempDirs() {
 	createdTempDirs = nil
 }
 
@@ -62,14 +83,25 @@ func RemoveRecordedTempDirs() error {
 	tempDirMutex.Lock()
 	defer tempDirMutex.Unlock()
 
+	if !shouldRemoveTempDirs {
+		return nil
+	}
+
 	var errs error = nil
 	for _, dir := range createdTempDirs {
 		errs = errors.Join(errs, RemoveDirent(dir))
 	}
 
-	ClearRecordedTempDirs()
+	clearRecordedTempDirs()
 
 	return errs
+}
+
+func SetShouldRemoveTempDirs(shouldRemove bool) {
+	tempDirMutex.Lock()
+	defer tempDirMutex.Unlock()
+
+	shouldRemoveTempDirs = shouldRemove
 }
 
 // If this dir has a single dirent, return its path.
@@ -90,4 +122,99 @@ func GetSingleDirent(dir string) string {
 	}
 
 	return filepath.Join(dir, dirents[0].Name())
+}
+
+// Take in two dirs and list all the files that match by relative path and don't match.
+// Matches will be specified by just listing the matching relative paths.
+// Non-matches will be specified with a slice of arrays, where the index of the dir with the file will have the relative path and the other will have an empty string.
+func MatchFiles(dirs [2]string) ([]string, [][2]string, error) {
+	// Track which dirs have each file.
+	allFiles := map[string][]bool{}
+
+	for i, dir := range dirs {
+		relpaths, err := GetAllRelativeFiles(dirs[i])
+		if err != nil {
+			return nil, nil, fmt.Errorf("Failed to get relative files for '%s': '%w'.", dir, err)
+		}
+
+		for _, relpath := range relpaths {
+			_, exists := allFiles[relpath]
+			if !exists {
+				allFiles[relpath] = make([]bool, len(dirs))
+			}
+
+			allFiles[relpath][i] = true
+		}
+	}
+
+	// Sort the keys.
+	sortedKeys := make([]string, 0, len(allFiles))
+	for relpath, _ := range allFiles {
+		sortedKeys = append(sortedKeys, relpath)
+	}
+	slices.Sort(sortedKeys)
+
+	// Collect the results.
+	matches := []string{}
+	unmatches := [][len(dirs)]string{}
+
+	for _, relpath := range sortedKeys {
+		matchInfo := allFiles[relpath]
+
+		match := true
+		var unmatchRow [len(dirs)]string
+
+		for i, value := range matchInfo {
+			match = match && value
+			if value {
+				unmatchRow[i] = relpath
+			}
+		}
+
+		if match {
+			matches = append(matches, relpath)
+		} else {
+			unmatches = append(unmatches, unmatchRow)
+		}
+	}
+
+	return matches, unmatches, nil
+}
+
+// Recursively get all files in a directory.
+// The result paths will be relative to the dirent.
+// To get all dirents with absolute paths, use GetAllDirents().
+func GetAllRelativeFiles(basePath string) ([]string, error) {
+	basePath = ShouldAbs(basePath)
+	relpaths := make([]string, 0)
+
+	if IsFile(basePath) {
+		return relpaths, nil
+	}
+
+	err := filepath.WalkDir(basePath, func(path string, dirent fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+
+		if basePath == path {
+			return nil
+		}
+
+		if dirent.IsDir() {
+			return nil
+		}
+
+		relpath := RelPath(path, basePath)
+		relpaths = append(relpaths, relpath)
+		return nil
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	slices.Sort(relpaths)
+
+	return relpaths, nil
 }

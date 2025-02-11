@@ -143,11 +143,6 @@ func (this *backend) DeleteUserToken(email string, tokenID string) (bool, error)
 }
 
 func (this *backend) getServerUsersLock(acquireLock bool) (map[string]*model.ServerUser, error) {
-	if acquireLock {
-		this.userLock.RLock()
-		defer this.userLock.RUnlock()
-	}
-
 	users := make(map[string]*model.ServerUser)
 
 	path := this.getServerUsersPath()
@@ -155,7 +150,17 @@ func (this *backend) getServerUsersLock(acquireLock bool) (map[string]*model.Ser
 		return users, nil
 	}
 
-	err := util.JSONFromFile(path, &users)
+	// Run in a func to ensure the lock is released.
+	getUsers := func() error {
+		if acquireLock {
+			this.userLock.RLock()
+			defer this.userLock.RUnlock()
+		}
+
+		return util.JSONFromFile(path, &users)
+	}
+
+	err := getUsers()
 	if err != nil {
 		return nil, err
 	}

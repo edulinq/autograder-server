@@ -8,7 +8,6 @@ import (
 	"github.com/edulinq/autograder/internal/db"
 	"github.com/edulinq/autograder/internal/lms/lmssync"
 	"github.com/edulinq/autograder/internal/model"
-	"github.com/edulinq/autograder/internal/model/tasks"
 	"github.com/edulinq/autograder/internal/util"
 )
 
@@ -34,11 +33,6 @@ func upsertFromConfigPath(path string, options CourseUpsertOptions) (*CourseUpse
 
 	if course == nil {
 		return result, UNKNOWN_COURSE_ID, nil
-	}
-
-	// If we are doing an update, stop any existing tasks.
-	if result.Updated && !options.DryRun {
-		tasks.Handler.StopCourse(course.GetID())
 	}
 
 	// Update Source Directory
@@ -87,17 +81,8 @@ func upsertFromConfigPath(path string, options CourseUpsertOptions) (*CourseUpse
 		result.BuiltAssignmentImages = builtImages
 	}
 
-	// Schedule Tasks
-	if !options.DryRun && !options.SkipTasks {
-		for _, courseTask := range course.GetTasks() {
-			err = tasks.Handler.Schedule(course, courseTask)
-			if err != nil {
-				return nil, result.CourseID, fmt.Errorf("Failed to schedule task '%s': '%w'.", courseTask.String(), err)
-			}
-		}
-	}
-
 	// Cleanup
+
 	// Remove source if this was a dry run.
 	if options.DryRun {
 		err = util.RemoveDirent(course.GetBaseSourceDir())
@@ -146,8 +131,9 @@ func syncSource(course *model.Course, options CourseUpsertOptions) (*model.Cours
 	if err != nil {
 		return nil, fmt.Errorf("Failed to make temp dir for source update: '%w'.", err)
 	}
+	defer util.RemoveDirent(tempDir)
 
-	err = source.CopyTarget(common.ShouldGetCWD(), tempDir, false)
+	err = source.CopyTarget(common.ShouldGetCWD(), tempDir)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to copy source ('%s') to temp dir: '%w'.", source, err)
 	}
@@ -167,7 +153,7 @@ func syncSource(course *model.Course, options CourseUpsertOptions) (*model.Cours
 	}
 
 	// Ensure this course can load correctly.
-	_, _, err = loadCourseConfig(configPaths[0], false, options)
+	_, _, err = loadCourseConfig(configPaths[0], true, options)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to load course from source ('%s'): '%w'.", source, err)
 	}

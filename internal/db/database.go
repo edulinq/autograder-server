@@ -14,7 +14,7 @@ import (
 	"github.com/edulinq/autograder/internal/db/disk"
 	"github.com/edulinq/autograder/internal/log"
 	"github.com/edulinq/autograder/internal/model"
-	"github.com/edulinq/autograder/internal/timestamp"
+	"github.com/edulinq/autograder/internal/stats"
 )
 
 var backend Backend
@@ -31,13 +31,13 @@ const (
 // Any ID (course, assignment, etc) passed into a backend will be sanitized.
 // Note that the database package provides more functionality than what is provided directly by a Backend.
 type Backend interface {
-	// Administrative operations.
+	// Administrative Operations
 
 	Close() error
 	Clear() error
 	EnsureTables() error
 
-	// Course operations.
+	// Course Operations
 
 	// Clear all information about a course.
 	ClearCourse(course *model.Course) error
@@ -61,12 +61,12 @@ type Backend interface {
 	// The target directory should not exist, or be empty.
 	DumpCourse(course *model.Course, targetDir string) error
 
-	// Assignment operations.
+	// Assignment Operations
 
 	// Explicitly save an assignment.
 	SaveAssignment(assignment *model.Assignment) error
 
-	// User operations.
+	// User Operations
 	// User maps always map the user's ID to an actual user pointer.
 
 	// Get all the users on the server.
@@ -96,7 +96,7 @@ type Backend interface {
 	// Return true if the user and token exists and the token was removed, false otherwise.
 	DeleteUserToken(email string, tokenID string) (bool, error)
 
-	// Submission operations.
+	// Submission Operations
 
 	// Remove a submission.
 	// Return a bool indicating whether the submission exists or not and an error if there is one.
@@ -108,6 +108,9 @@ type Backend interface {
 
 	// Get the next short submission ID.
 	GetNextSubmissionID(assignment *model.Assignment, email string) (string, error)
+
+	// Get the submission ID of the submission before this one (or empty string if this is the first one).
+	GetPreviousSubmissionID(assignment *model.Assignment, email string, shortSubmissionID string) (string, error)
 
 	// Get a history of all submissions for this assignment and user.
 	GetSubmissionHistory(assignment *model.Assignment, email string) ([]*model.SubmissionHistoryItem, error)
@@ -147,24 +150,59 @@ type Backend interface {
 	// A nil map should only be returned on error.
 	GetRecentSubmissionContents(assignment *model.Assignment, filterRole model.CourseUserRole) (map[string]*model.GradingResult, error)
 
-	// Task operations.
+	// Task Operations
 
-	// Record that a task has been completed.
-	// The DB is only required to keep the most recently completed task with the given course/ID.
-	LogTaskCompletion(courseID string, taskID string, instance timestamp.Timestamp) error
+	// Get all the active tasks that come from the given course.
+	// The returned tasks will be keyed by the task's hash.
+	GetActiveCourseTasks(course *model.Course) (map[string]*model.FullScheduledTask, error)
 
-	// Get the last time a task with the given course/ID was completed.
-	// Will return a zero time (timestamp.Zero()).
-	GetLastTaskCompletion(courseID string, taskID string) (timestamp.Timestamp, error)
+	// Get all the active tasks keyed by hash.
+	GetActiveTasks() (map[string]*model.FullScheduledTask, error)
 
-	// Logging operations.
+	// Get the next active task that should be run.
+	// Return nil if there are no active tasks.
+	GetNextActiveTask() (*model.FullScheduledTask, error)
+
+	// Upsert the given tasks.
+	// The map of tasks is keyed by the task's hash (like with GetActiveCourseTasks()),
+	// and a nil value indicates that the given task should be removed.
+	UpsertActiveTasks(tasks map[string]*model.FullScheduledTask) error
+
+	// Logging Operations
 
 	// DB backends will also be used as logging storage backends.
 	log.StorageBackend
 
-	// Get any logs that that match the specific requirements.
+	// Get any logs that match the specific requirements.
 	// Each parameter (except for the log level) can be passed with a zero value, in which case it will not be used for filtering.
 	GetLogRecords(query log.ParsedLogQuery) ([]*log.Record, error)
+
+	// Stats Operations
+
+	// DB backends will also be used as stats storage backends.
+	stats.StorageBackend
+
+	// Get system stats that match the specific query.
+	GetSystemStats(query stats.Query) ([]*stats.SystemMetrics, error)
+
+	// Get course stats that match the specific query.
+	GetCourseMetrics(query stats.CourseMetricQuery) ([]*stats.CourseMetric, error)
+
+	// Analysis Operations
+
+	// Fetch any matching individual analysis results.
+	// Any id not matched in the DB will not be represented in the output.
+	GetIndividualAnalysis(fullSubmissionIDs []string) (map[string]*model.IndividualAnalysis, error)
+
+	// Fetch any matching pairwise analysis results.
+	// Any key not matched in the DB will not be represented in the output.
+	GetPairwiseAnalysis(keys []model.PairwiseKey) (map[model.PairwiseKey]*model.PairwiseAnalysis, error)
+
+	// Store the results of a individual analysis.
+	StoreIndividualAnalysis(records []*model.IndividualAnalysis) error
+
+	// Store the results of a pairwise analysis.
+	StorePairwiseAnalysis(records []*model.PairwiseAnalysis) error
 }
 
 func Open() error {
@@ -189,6 +227,7 @@ func Open() error {
 		return fmt.Errorf("Failed to open database: '%w'.", err)
 	}
 
+	// Initialize the logging backend as soon as possible.
 	log.SetStorageBackend(backend)
 
 	err = backend.EnsureTables()
@@ -214,6 +253,9 @@ func Open() error {
 		}
 	}
 
+	// Initialize the stat storage backend when we are sure this backend is ready.
+	stats.SetStorageBackend(backend)
+
 	return nil
 }
 
@@ -227,6 +269,10 @@ func Close() error {
 
 	err := backend.Close()
 	backend = nil
+
+	// Remove the other uses of the database backend.
+	log.SetStorageBackend(nil)
+	stats.SetStorageBackend(nil)
 
 	return err
 }

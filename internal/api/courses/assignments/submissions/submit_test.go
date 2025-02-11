@@ -15,7 +15,7 @@ import (
 	"github.com/edulinq/autograder/internal/util"
 )
 
-var SUBMISSION_RELPATH string = filepath.Join("test-submissions", "solution", "submission.py")
+var SUBMISSION_RELPATH string = filepath.Join("test-submissions", "solution", "assignment.sh")
 
 func TestSubmit(test *testing.T) {
 	testSubmissions, err := grader.GetTestSubmissions(config.GetTestdataDir(), !config.DOCKER_DISABLE.Get())
@@ -91,7 +91,7 @@ func TestRejectSubmissionMaxAttempts(test *testing.T) {
 	}
 	db.MustSaveCourse(course)
 
-	assignment := db.MustGetTestAssignment()
+	assignment := db.MustGetTestSubmissionAssignment()
 	paths := []string{filepath.Join(assignment.GetSourceDir(), SUBMISSION_RELPATH)}
 
 	fields := map[string]any{
@@ -129,7 +129,7 @@ func TestRejectSubmissionMaxAttempts(test *testing.T) {
 func TestRejectLateSubmission(test *testing.T) {
 	defer db.ResetForTesting()
 
-	assignment := db.MustGetTestAssignment()
+	assignment := db.MustGetTestSubmissionAssignment()
 	paths := []string{filepath.Join(assignment.GetSourceDir(), SUBMISSION_RELPATH)}
 
 	timeDeltaPattern := regexp.MustCompile(`(\d+h)?(\d+m)?(\d+\.)?\d+[mun]?s`)

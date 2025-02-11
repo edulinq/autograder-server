@@ -8,6 +8,8 @@ import (
 
 func TestGetDescriptionFromFunction(test *testing.T) {
 	tempDir := MustMkDirTemp("test-description-parser-")
+	defer RemoveDirent(tempDir)
+
 	path := filepath.Join(tempDir, "test_file.go")
 
 	testCases := []struct {

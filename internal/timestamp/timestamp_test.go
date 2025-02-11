@@ -71,6 +71,13 @@ func TestTimestamp(test *testing.T) {
 }
 
 func TestTimestampGuessTime(test *testing.T) {
+	// Force the local time to UTC for tests.
+	oldLocal := time.Local
+	time.Local = time.UTC
+	defer func() {
+		time.Local = oldLocal
+	}()
+
 	testCases := []struct {
 		value    string
 		expected Timestamp
@@ -168,5 +175,28 @@ func TestTimestampComparisons(test *testing.T) {
 
 	if larger < smaller {
 		test.Fatalf("< failed.")
+	}
+}
+
+func TestTimestampDurationOutput(test *testing.T) {
+	timestamp := FromMSecs(86400000)
+
+	testCases := []struct {
+		expected float64
+		actual   float64
+		label    string
+	}{
+		{86400000, float64(timestamp.ToMSecs()), "msecs"},
+		{86400, timestamp.ToSecs(), "secs"},
+		{1440, timestamp.ToMins(), "mins"},
+		{24, timestamp.ToHours(), "hours"},
+		{1, timestamp.ToDays(), "days"},
+	}
+
+	for i, testCase := range testCases {
+		delta := testCase.expected - testCase.actual
+		if delta > 1e-5 {
+			test.Errorf("Case %d: Incorrect value for %s. Expected: %f, Actual: %f.", i, testCase.label, testCase.expected, testCase.actual)
+		}
 	}
 }
