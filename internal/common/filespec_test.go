@@ -3,6 +3,7 @@ package common
 import (
 	"path/filepath"
 	"reflect"
+	"strings"
 	"testing"
 
 	"github.com/edulinq/autograder/internal/config"
@@ -15,6 +16,679 @@ type testCaseParseValidation struct {
 	Validates        bool
 	ExpectedFileSpec FileSpec
 	ExpectedJSON     string
+}
+
+func TestFileSpecValidateBase(test *testing.T) {
+	// Note that the expected file spec will not be validated (it should be constructed valid).
+	testCases := []struct {
+		spec           *FileSpec
+		onlyLocalPaths bool
+		expected       *FileSpec
+		errorSubstring string
+	}{
+		// Base
+		{
+			&FileSpec{
+				Type: FILESPEC_TYPE_EMPTY,
+			},
+			false,
+			&FileSpec{
+				Type: FILESPEC_TYPE_EMPTY,
+			},
+			"",
+		},
+		{
+			&FileSpec{
+				Type: FILESPEC_TYPE_NIL,
+			},
+			false,
+			&FileSpec{
+				Type: FILESPEC_TYPE_NIL,
+			},
+			"",
+		},
+		{
+			&FileSpec{
+				Type: FILESPEC_TYPE_PATH,
+				Path: "a",
+			},
+			false,
+			&FileSpec{
+				Type: FILESPEC_TYPE_PATH,
+				Path: "a",
+			},
+			"",
+		},
+		{
+			&FileSpec{
+				Type: FILESPEC_TYPE_PATH,
+				Path: "a",
+				Dest: " ",
+			},
+			false,
+			&FileSpec{
+				Type: FILESPEC_TYPE_PATH,
+				Path: "a",
+			},
+			"",
+		},
+		{
+			&FileSpec{
+				Type: FILESPEC_TYPE_GIT,
+				Path: "a.git",
+				Dest: "b",
+			},
+			false,
+			&FileSpec{
+				Type: FILESPEC_TYPE_GIT,
+				Path: "a.git",
+				Dest: "b",
+			},
+			"",
+		},
+		{
+			&FileSpec{
+				Type: FILESPEC_TYPE_GIT,
+				Path: "a.git",
+				Dest: "/b",
+			},
+			false,
+			&FileSpec{
+				Type: FILESPEC_TYPE_GIT,
+				Path: "a.git",
+				Dest: "/b",
+			},
+			"",
+		},
+		{
+			&FileSpec{
+				Type: FILESPEC_TYPE_GIT,
+				Path: "a.git",
+				Dest: "a/b",
+			},
+			false,
+			&FileSpec{
+				Type: FILESPEC_TYPE_GIT,
+				Path: "a.git",
+				Dest: "a/b",
+			},
+			"",
+		},
+		{
+			&FileSpec{
+				Type: FILESPEC_TYPE_URL,
+				Path: "http://test.edulinq.org/a.zip",
+				Dest: "b",
+			},
+			false,
+			&FileSpec{
+				Type: FILESPEC_TYPE_URL,
+				Path: "http://test.edulinq.org/a.zip",
+				Dest: "b",
+			},
+			"",
+		},
+		{
+			&FileSpec{
+				Type: FILESPEC_TYPE_URL,
+				Path: "a.zip",
+				Dest: "b.zip",
+			},
+			false,
+			&FileSpec{
+				Type: FILESPEC_TYPE_URL,
+				Path: "a.zip",
+				Dest: "b.zip",
+			},
+			"",
+		},
+		{
+			&FileSpec{
+				Type: FILESPEC_TYPE_URL,
+				Path: "a.zip",
+				Dest: "/b.zip",
+			},
+			false,
+			&FileSpec{
+				Type: FILESPEC_TYPE_URL,
+				Path: "a.zip",
+				Dest: "/b.zip",
+			},
+			"",
+		},
+		{
+			&FileSpec{
+				Type: FILESPEC_TYPE_URL,
+				Path: "a.zip",
+				Dest: "a/b.zip",
+			},
+			false,
+			&FileSpec{
+				Type: FILESPEC_TYPE_URL,
+				Path: "a.zip",
+				Dest: "a/b.zip",
+			},
+			"",
+		},
+		// Casing
+		{
+			&FileSpec{
+				Type: "EmPtY",
+			},
+			false,
+			&FileSpec{
+				Type: FILESPEC_TYPE_EMPTY,
+			},
+			"",
+		},
+		// Normalize Paths
+		{
+			&FileSpec{
+				Type: FILESPEC_TYPE_PATH,
+				Path: " a  	",
+			},
+			false,
+			&FileSpec{
+				Type: FILESPEC_TYPE_PATH,
+				Path: "a",
+			},
+			"",
+		},
+		{
+			&FileSpec{
+				Type: FILESPEC_TYPE_PATH,
+				Path: "a/../b",
+			},
+			false,
+			&FileSpec{
+				Type: FILESPEC_TYPE_PATH,
+				Path: "b",
+			},
+			"",
+		},
+		{
+			&FileSpec{
+				Type: FILESPEC_TYPE_PATH,
+				Path: "a/",
+			},
+			false,
+			&FileSpec{
+				Type: FILESPEC_TYPE_PATH,
+				Path: "a",
+			},
+			"",
+		},
+		{
+			&FileSpec{
+				Type: FILESPEC_TYPE_PATH,
+				Path: "a//b",
+			},
+			false,
+			&FileSpec{
+				Type: FILESPEC_TYPE_PATH,
+				Path: "a/b",
+			},
+			"",
+		},
+		{
+			&FileSpec{
+				Type: FILESPEC_TYPE_PATH,
+				Path: "./a",
+			},
+			false,
+			&FileSpec{
+				Type: FILESPEC_TYPE_PATH,
+				Path: "a",
+			},
+			"",
+		},
+		{
+			&FileSpec{
+				Type: FILESPEC_TYPE_PATH,
+				Path: "/",
+			},
+			false,
+			&FileSpec{
+				Type: FILESPEC_TYPE_PATH,
+				Path: "/",
+			},
+			"",
+		},
+		{
+			&FileSpec{
+				Type: FILESPEC_TYPE_PATH,
+				Path: "/a",
+			},
+			false,
+			&FileSpec{
+				Type: FILESPEC_TYPE_PATH,
+				Path: "/a",
+			},
+			"",
+		},
+		{
+			&FileSpec{
+				Type: FILESPEC_TYPE_PATH,
+				Path: "a/..",
+			},
+			false,
+			&FileSpec{
+				Type: FILESPEC_TYPE_PATH,
+				Path: ".",
+			},
+			"",
+		},
+		{
+			&FileSpec{
+				Type: FILESPEC_TYPE_PATH,
+				Path: ".",
+			},
+			false,
+			&FileSpec{
+				Type: FILESPEC_TYPE_PATH,
+				Path: ".",
+			},
+			"",
+		},
+		{
+			&FileSpec{
+				Type: FILESPEC_TYPE_PATH,
+				Path: "..",
+			},
+			false,
+			&FileSpec{
+				Type: FILESPEC_TYPE_PATH,
+				Path: "..",
+			},
+			"",
+		},
+		{
+			&FileSpec{
+				Type: FILESPEC_TYPE_PATH,
+				Path: "../a",
+			},
+			false,
+			&FileSpec{
+				Type: FILESPEC_TYPE_PATH,
+				Path: "../a",
+			},
+			"",
+		},
+		{
+			&FileSpec{
+				Type: FILESPEC_TYPE_PATH,
+				Path: "a/../..",
+			},
+			false,
+			&FileSpec{
+				Type: FILESPEC_TYPE_PATH,
+				Path: "..",
+			},
+			"",
+		},
+		{
+			&FileSpec{
+				Type: FILESPEC_TYPE_PATH,
+				Path: "a/../../b",
+			},
+			false,
+			&FileSpec{
+				Type: FILESPEC_TYPE_PATH,
+				Path: "../b",
+			},
+			"",
+		},
+		{
+			&FileSpec{
+				Type: FILESPEC_TYPE_GIT,
+				Path: "a.git",
+			},
+			false,
+			&FileSpec{
+				Type: FILESPEC_TYPE_GIT,
+				Path: "a.git",
+				Dest: "a",
+			},
+			"",
+		},
+		{
+			&FileSpec{
+				Type: FILESPEC_TYPE_GIT,
+				Path: "a/b",
+			},
+			false,
+			&FileSpec{
+				Type: FILESPEC_TYPE_GIT,
+				Path: "a/b",
+				Dest: "b",
+			},
+			"",
+		},
+		{
+			&FileSpec{
+				Type: FILESPEC_TYPE_GIT,
+				Path: "a.git",
+				Dest: "a/b/..",
+			},
+			false,
+			&FileSpec{
+				Type: FILESPEC_TYPE_GIT,
+				Path: "a.git",
+				Dest: "a",
+			},
+			"",
+		},
+		{
+			&FileSpec{
+				Type: FILESPEC_TYPE_URL,
+				Path: "a.zip",
+			},
+			false,
+			&FileSpec{
+				Type: FILESPEC_TYPE_URL,
+				Path: "a.zip",
+				Dest: "a.zip",
+			},
+			"",
+		},
+		{
+			&FileSpec{
+				Type: FILESPEC_TYPE_URL,
+				Path: "a/b",
+			},
+			false,
+			&FileSpec{
+				Type: FILESPEC_TYPE_URL,
+				Path: "a/b",
+				Dest: "b",
+			},
+			"",
+		},
+		{
+			&FileSpec{
+				Type: FILESPEC_TYPE_URL,
+				Path: "a.zip",
+				Dest: "a/b/..",
+			},
+			false,
+			&FileSpec{
+				Type: FILESPEC_TYPE_URL,
+				Path: "a.zip",
+				Dest: "a",
+			},
+			"",
+		},
+
+		// Errors
+
+		// Empty
+		{
+			nil,
+			false,
+			nil,
+			"File spec is nil",
+		},
+		{
+			&FileSpec{},
+			false,
+			nil,
+			"Unknown FileSpec type",
+		},
+		// Invalid Contents
+		{
+			&FileSpec{
+				Type: FILESPEC_TYPE_EMPTY,
+				Path: "a",
+			},
+			false,
+			nil,
+			"An empty/nil FileSpec should have no other fields set",
+		},
+		{
+			&FileSpec{
+				Type: FILESPEC_TYPE_EMPTY,
+				Dest: "a",
+			},
+			false,
+			nil,
+			"An empty/nil FileSpec should have no other fields set",
+		},
+		{
+			&FileSpec{
+				Type:      FILESPEC_TYPE_EMPTY,
+				Reference: "a",
+			},
+			false,
+			nil,
+			"An empty/nil FileSpec should have no other fields set",
+		},
+		{
+			&FileSpec{
+				Type:     FILESPEC_TYPE_EMPTY,
+				Username: "a",
+			},
+			false,
+			nil,
+			"An empty/nil FileSpec should have no other fields set",
+		},
+		{
+			&FileSpec{
+				Type:  FILESPEC_TYPE_EMPTY,
+				Token: "a",
+			},
+			false,
+			nil,
+			"An empty/nil FileSpec should have no other fields set",
+		},
+		{
+			&FileSpec{
+				Type: FILESPEC_TYPE_NIL,
+				Path: "a",
+			},
+			false,
+			nil,
+			"An empty/nil FileSpec should have no other fields set",
+		},
+		{
+			&FileSpec{
+				Type: FILESPEC_TYPE_NIL,
+				Dest: "a",
+			},
+			false,
+			nil,
+			"An empty/nil FileSpec should have no other fields set",
+		},
+		{
+			&FileSpec{
+				Type:      FILESPEC_TYPE_NIL,
+				Reference: "a",
+			},
+			false,
+			nil,
+			"An empty/nil FileSpec should have no other fields set",
+		},
+		{
+			&FileSpec{
+				Type:     FILESPEC_TYPE_NIL,
+				Username: "a",
+			},
+			false,
+			nil,
+			"An empty/nil FileSpec should have no other fields set",
+		},
+		{
+			&FileSpec{
+				Type:  FILESPEC_TYPE_NIL,
+				Token: "a",
+			},
+			false,
+			nil,
+			"An empty/nil FileSpec should have no other fields set",
+		},
+		{
+			&FileSpec{
+				Type: FILESPEC_TYPE_PATH,
+			},
+			false,
+			nil,
+			"path cannot be empty",
+		},
+		{
+			&FileSpec{
+				Type:      FILESPEC_TYPE_PATH,
+				Path:      "a",
+				Reference: "b",
+			},
+			false,
+			nil,
+			"should not have reference, username, or token fields set",
+		},
+		{
+			&FileSpec{
+				Type:     FILESPEC_TYPE_PATH,
+				Path:     "a",
+				Username: "b",
+			},
+			false,
+			nil,
+			"should not have reference, username, or token fields set",
+		},
+		{
+			&FileSpec{
+				Type:  FILESPEC_TYPE_PATH,
+				Path:  "a",
+				Token: "b",
+			},
+			false,
+			nil,
+			"should not have reference, username, or token fields set",
+		},
+		{
+			&FileSpec{
+				Type: FILESPEC_TYPE_GIT,
+			},
+			false,
+			nil,
+			"cannot have an empty path",
+		},
+		{
+			&FileSpec{
+				Type: FILESPEC_TYPE_URL,
+			},
+			false,
+			nil,
+			"cannot have an empty path",
+		},
+		// Path Errors
+		{
+			&FileSpec{
+				Type: FILESPEC_TYPE_PATH,
+				Path: "",
+			},
+			false,
+			nil,
+			"cannot be empty",
+		},
+		{
+			&FileSpec{
+				Type: FILESPEC_TYPE_PATH,
+				Path: "/a",
+			},
+			true,
+			nil,
+			"not allowed to be absolute",
+		},
+		{
+			&FileSpec{
+				Type: FILESPEC_TYPE_PATH,
+				Path: "/",
+			},
+			true,
+			nil,
+			"not allowed to be absolute",
+		},
+		{
+			&FileSpec{
+				Type: FILESPEC_TYPE_PATH,
+				Path: "..",
+			},
+			true,
+			nil,
+			"points outside of the its base directory",
+		},
+		{
+			&FileSpec{
+				Type: FILESPEC_TYPE_PATH,
+				Path: "../a",
+			},
+			true,
+			nil,
+			"points outside of the its base directory",
+		},
+		{
+			&FileSpec{
+				Type: FILESPEC_TYPE_PATH,
+				Path: "a/../..",
+			},
+			true,
+			nil,
+			"points outside of the its base directory",
+		},
+		{
+			&FileSpec{
+				Type: FILESPEC_TYPE_PATH,
+				Path: "a/../../b",
+			},
+			true,
+			nil,
+			"points outside of the its base directory",
+		},
+		{
+			&FileSpec{
+				Type: FILESPEC_TYPE_PATH,
+				Path: "a",
+				Dest: "/b",
+			},
+			true,
+			nil,
+			"not allowed to be absolute",
+		},
+		// Unknown Type
+		{
+			&FileSpec{
+				Type: "ZZZ",
+			},
+			false,
+			nil,
+			"Unknown FileSpec type",
+		},
+	}
+
+	for i, testCase := range testCases {
+		err := testCase.spec.ValidateFull(testCase.onlyLocalPaths)
+		if err != nil {
+			if testCase.errorSubstring != "" {
+				if !strings.Contains(err.Error(), testCase.errorSubstring) {
+					test.Errorf("Case %d: Did not get expected error outpout. Expected Substring '%s', Actual Error: '%v'.", i, testCase.errorSubstring, err)
+				}
+			} else {
+				test.Errorf("Case %d: Failed to validate spec '%+v': '%v'.", i, testCase.spec, err)
+			}
+
+			continue
+		}
+
+		if testCase.errorSubstring != "" {
+			test.Errorf("Case %d: Did not get expected error '%s'.", i, util.MustToJSONIndent(testCase.spec))
+			continue
+		}
+
+		if !reflect.DeepEqual(testCase.expected, testCase.spec) {
+			test.Errorf("Case %d: Spec not as expected. Expected: '%s', Actual: '%s'.",
+				i, util.MustToJSONIndent(testCase.expected), util.MustToJSONIndent(testCase.spec))
+			continue
+		}
+	}
 }
 
 func TestFileSpecParseValidation(test *testing.T) {
@@ -67,7 +741,6 @@ func TestFileSpecParseValidation(test *testing.T) {
 
 type testCaseCopy struct {
 	Spec                  FileSpec
-	OnlyContents          bool
 	ExpectedCopiedDirents []string
 	ExpectErrorForSameDir bool
 }
@@ -88,12 +761,13 @@ func TestFileSpecCopy(test *testing.T) {
 		defer util.RemoveDirent(tempDir)
 
 		destDir := filepath.Join(tempDir, "dest")
-
 		if testCase.ExpectErrorForSameDir {
 			destDir = filepath.Dir(testCase.Spec.Path)
+		} else {
+			util.MustMkDir(destDir)
 		}
 
-		err = testCase.Spec.CopyTarget(config.GetTestdataDir(), destDir, testCase.OnlyContents)
+		err = testCase.Spec.CopyTarget(config.GetTestdataDir(), destDir)
 		if (!testCase.ExpectErrorForSameDir) && (err != nil) {
 			test.Errorf("Case %d: Failed to copy matching targets (%+v): '%v'.", i, testCase.Spec, err)
 			continue
@@ -332,111 +1006,191 @@ func TestFileSpecDestPath(test *testing.T) {
 func getCopyTestCases() []*testCaseCopy {
 	return []*testCaseCopy{
 		&testCaseCopy{
-			Spec:                  FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", "filespec_test", "spec.txt")},
+			Spec: FileSpec{
+				Type: "path",
+				Path: filepath.Join(config.GetTestdataDir(), "files", "filespec_test", "spec.txt"),
+			},
 			ExpectedCopiedDirents: []string{"spec.txt"},
 		},
 		&testCaseCopy{
-			Spec:                  FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", "filespec_test")},
+			Spec: FileSpec{
+				Type: "path",
+				Path: filepath.Join(config.GetTestdataDir(), "files", "filespec_test"),
+			},
 			ExpectedCopiedDirents: []string{"filespec_test", "filespec_test/spec.txt", "filespec_test/spec2.txt"},
 		},
 		&testCaseCopy{
-			Spec:                  FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", "filespec_test")},
-			OnlyContents:          true,
+			Spec: FileSpec{
+				Type: "path",
+				Path: filepath.Join(config.GetTestdataDir(), "files", "filespec_test", "*"),
+			},
 			ExpectedCopiedDirents: []string{"spec.txt", "spec2.txt"},
 		},
 		&testCaseCopy{
-			Spec:                  FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", "filespec_test", "spe?.txt"), Dest: "test.txt"},
+			Spec: FileSpec{
+				Type: "path",
+				Path: filepath.Join(config.GetTestdataDir(), "files", "filespec_test", "spe?.txt"),
+				Dest: "test.txt",
+			},
 			ExpectedCopiedDirents: []string{"test.txt"},
 		},
 		&testCaseCopy{
-			Spec:                  FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", "filespec_test"), Dest: "test"},
+			Spec: FileSpec{
+				Type: "path",
+				Path: filepath.Join(config.GetTestdataDir(), "files", "filespec_test"),
+				Dest: "test",
+			},
 			ExpectedCopiedDirents: []string{"test", "test/spec.txt", "test/spec2.txt"},
 		},
 		&testCaseCopy{
-			Spec:                  FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", "filespec_test"), Dest: "test"},
-			OnlyContents:          true,
+			Spec: FileSpec{
+				Type: "path",
+				Path: filepath.Join(config.GetTestdataDir(), "files", "filespec_test", "*"),
+				Dest: "test",
+			},
 			ExpectedCopiedDirents: []string{"test", "test/spec.txt", "test/spec2.txt"},
 		},
 		&testCaseCopy{
-			Spec:                  FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", "*_test"), Dest: "test"},
-			OnlyContents:          true,
+			Spec: FileSpec{
+				Type: "path",
+				Path: filepath.Join(config.GetTestdataDir(), "files", "*_test", "*"),
+				Dest: "test",
+			},
 			ExpectedCopiedDirents: []string{"test", "test/*globSpec.txt", "test/spec.txt", "test/spec2.txt"},
 		},
 		&testCaseCopy{
-			Spec:                  FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", "*_test")},
-			OnlyContents:          true,
+			Spec: FileSpec{
+				Type: "path",
+				Path: filepath.Join(config.GetTestdataDir(), "files", "*_test", "*"),
+			},
 			ExpectedCopiedDirents: []string{"*globSpec.txt", "spec.txt", "spec2.txt"},
 		},
 		&testCaseCopy{
-			Spec:                  FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", "f*_test"), Dest: "test"},
-			OnlyContents:          true,
+			Spec: FileSpec{
+				Type: "path",
+				Path: filepath.Join(config.GetTestdataDir(), "files", "f*_test", "*"),
+				Dest: "test",
+			},
+			ExpectedCopiedDirents: []string{"test", "test/spec.txt", "test/spec2.txt"},
+		},
+		// Only one file is matched, so it will be renamed.
+		&testCaseCopy{
+			Spec: FileSpec{
+				Type: "path",
+				Path: filepath.Join(config.GetTestdataDir(), "files", `\**_test`, "*"),
+				Dest: "test.txt",
+			},
+			ExpectedCopiedDirents: []string{"test.txt"},
+		},
+		&testCaseCopy{
+			Spec: FileSpec{
+				Type: "path",
+				Path: filepath.Join(config.GetTestdataDir(), "files", "filespec_test", "*"),
+				Dest: "test",
+			},
 			ExpectedCopiedDirents: []string{"test", "test/spec.txt", "test/spec2.txt"},
 		},
 		&testCaseCopy{
-			Spec:                  FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", `\**_test`), Dest: "test"},
-			OnlyContents:          true,
-			ExpectedCopiedDirents: []string{"test", "test/*globSpec.txt"},
-		},
-		&testCaseCopy{
-			Spec:                  FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", "filespec_test", "*"), Dest: "test"},
-			ExpectedCopiedDirents: []string{"test", "test/spec.txt", "test/spec2.txt"},
-		},
-		&testCaseCopy{
-			Spec:                  FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", "filespec_test", "*"), Dest: "spec.txt"},
-			OnlyContents:          true,
+			Spec: FileSpec{
+				Type: "path",
+				Path: filepath.Join(config.GetTestdataDir(), "files", "filespec_test", "*"),
+				Dest: "spec.txt",
+			},
 			ExpectErrorForSameDir: true,
 		},
 		&testCaseCopy{
-			Spec:                  FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", "filespec_test", "*.txt"), Dest: "test"},
+			Spec: FileSpec{
+				Type: "path",
+				Path: filepath.Join(config.GetTestdataDir(), "files", "filespec_test", "*.txt"),
+				Dest: "test",
+			},
 			ExpectedCopiedDirents: []string{"test", "test/spec.txt", "test/spec2.txt"},
 		},
 		&testCaseCopy{
-			Spec:                  FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", "f*_test", "*.txt"), Dest: "test.test"},
+			Spec: FileSpec{
+				Type: "path",
+				Path: filepath.Join(config.GetTestdataDir(), "files", "f*_test", "*.txt"),
+				Dest: "test.test",
+			},
 			ExpectedCopiedDirents: []string{"test.test", "test.test/spec.txt", "test.test/spec2.txt"},
 		},
 		&testCaseCopy{
-			Spec:                  FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", `\*globFileSpec_test`, `\*globSpec.txt`), Dest: `\*test.txt`},
+			Spec: FileSpec{
+				Type: "path",
+				Path: filepath.Join(config.GetTestdataDir(), "files", `\*globFileSpec_test`, `\*globSpec.txt`),
+				Dest: `\*test.txt`,
+			},
 			ExpectedCopiedDirents: []string{`\*test.txt`},
 		},
 		&testCaseCopy{
-			Spec:                  FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", "file????_test")},
-			OnlyContents:          true,
+			Spec: FileSpec{
+				Type: "path",
+				Path: filepath.Join(config.GetTestdataDir(), "files", "file????_test", "*"),
+			},
 			ExpectedCopiedDirents: []string{"spec.txt", "spec2.txt"},
 		},
 		&testCaseCopy{
-			Spec:                  FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", "filespec_test", "????.txt"), Dest: "test.test"},
+			Spec: FileSpec{
+				Type: "path",
+				Path: filepath.Join(config.GetTestdataDir(), "files", "filespec_test", "????.txt"),
+				Dest: "test.test",
+			},
 			ExpectedCopiedDirents: []string{"test.test"},
 		},
 		&testCaseCopy{
-			Spec:                  FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", "file????_test", "????.txt"), Dest: "test.txt"},
-			OnlyContents:          false,
+			Spec: FileSpec{
+				Type: "path",
+				Path: filepath.Join(config.GetTestdataDir(), "files", "file????_test", "????.txt"),
+				Dest: "test.txt",
+			},
 			ExpectedCopiedDirents: []string{"test.txt"},
 		},
 		&testCaseCopy{
-			Spec:                  FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", "filespe[b-d]_test"), Dest: "test"},
-			OnlyContents:          true,
+			Spec: FileSpec{
+				Type: "path",
+				Path: filepath.Join(config.GetTestdataDir(), "files", "filespe[b-d]_test", "*"),
+				Dest: "test",
+			},
 			ExpectedCopiedDirents: []string{"test", "test/spec.txt", "test/spec2.txt"},
 		},
 		&testCaseCopy{
-			Spec:                  FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", "filespe[^d-z]_test"), Dest: "test"},
-			OnlyContents:          true,
+			Spec: FileSpec{
+				Type: "path",
+				Path: filepath.Join(config.GetTestdataDir(), "files", "filespe[^d-z]_test", "*"),
+				Dest: "test",
+			},
 			ExpectedCopiedDirents: []string{"test", "test/spec.txt", "test/spec2.txt"},
 		},
 		&testCaseCopy{
-			Spec:                  FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", "filespec_test", "[r-t]pec.txt"), Dest: "test.txt"},
-			OnlyContents:          false,
+			Spec: FileSpec{
+				Type: "path",
+				Path: filepath.Join(config.GetTestdataDir(), "files", "filespec_test", "[r-t]pec.txt"),
+				Dest: "test.txt",
+			},
 			ExpectedCopiedDirents: []string{"test.txt"},
 		},
 		&testCaseCopy{
-			Spec:                  FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", "filespec_test", "[^a-r^t-v]pec.txt"), Dest: "test.txt"},
+			Spec: FileSpec{
+				Type: "path",
+				Path: filepath.Join(config.GetTestdataDir(), "files", "filespec_test", "[^a-r^t-v]pec.txt"),
+				Dest: "test.txt",
+			},
 			ExpectedCopiedDirents: []string{"test.txt"},
 		},
 		&testCaseCopy{
-			Spec:                  FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", "filespe[b-d]_test", "[r-t]pec.txt"), Dest: "test.txt"},
+			Spec: FileSpec{
+				Type: "path",
+				Path: filepath.Join(config.GetTestdataDir(), "files", "filespe[b-d]_test", "[r-t]pec.txt"),
+				Dest: "test.txt",
+			},
 			ExpectedCopiedDirents: []string{"test.txt"},
 		},
 		&testCaseCopy{
-			Spec:                  FileSpec{Type: "path", Path: filepath.Join(config.GetTestdataDir(), "files", "filespe[^d-z]_test", "[^a-r]pec.txt"), Dest: "test.txt"},
+			Spec: FileSpec{
+				Type: "path",
+				Path: filepath.Join(config.GetTestdataDir(), "files", "filespe[^d-z]_test", "[^a-r]pec.txt"),
+				Dest: "test.txt",
+			},
 			ExpectedCopiedDirents: []string{"test.txt"},
 		},
 	}

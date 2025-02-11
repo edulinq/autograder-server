@@ -49,14 +49,14 @@ func runNoDockerGrader(ctx context.Context, assignment *model.Assignment, submis
 
 	// Copy over the static files (and do any file ops).
 	err = common.CopyFileSpecsWithOps(imageInfo.BaseDirFunc(), workDir, tempDir,
-		imageInfo.StaticFiles, false, imageInfo.PreStaticFileOperations, imageInfo.PostStaticFileOperations)
+		imageInfo.StaticFiles, imageInfo.PreStaticFileOperations, imageInfo.PostStaticFileOperations)
 	if err != nil {
 		return nil, nil, "", "", "", fmt.Errorf("Failed to copy static assignment files: '%w'.", err)
 	}
 
 	// Copy over the submission files (and do any file ops).
 	err = common.CopyFileSpecsWithOps(submissionPath, inputDir, tempDir,
-		[]*common.FileSpec{common.GetPathFileSpec(".")}, true, []*common.FileOperation{}, imageInfo.PostSubmissionFileOperations)
+		[]*common.FileSpec{common.GetPathFileSpec("*")}, []*common.FileOperation{}, imageInfo.PostSubmissionFileOperations)
 	if err != nil {
 		return nil, nil, "", "", "", fmt.Errorf("Failed to copy submission ssignment files: '%w'.", err)
 	}

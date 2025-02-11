@@ -78,7 +78,7 @@ func UpsertFromFileSpec(spec *common.FileSpec, options CourseUpsertOptions) ([]C
 	}
 	defer util.RemoveDirent(tempDir)
 
-	err = spec.CopyTarget(common.ShouldGetCWD(), tempDir, false)
+	err = spec.CopyTarget(common.ShouldGetCWD(), tempDir)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to copy file spec: '%w'.", err)
 	}

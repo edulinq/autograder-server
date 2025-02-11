@@ -273,7 +273,7 @@ func TestUpsertFromFileSpec(test *testing.T) {
 				},
 				false,
 				0, 0,
-				"A path FileSpec cannot have an empty path.",
+				"path cannot be empty",
 			},
 		},
 

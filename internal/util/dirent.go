@@ -99,8 +99,8 @@ func CopyFile(source string, dest string) error {
 
 // Copy a directory (or just it's contents) into dest.
 // When onlyContents = False:
-//   - dest must not exist.
-//   - `cp -r source dest`
+//   - if dest exists, then the source will be copied into it.
+//   - if dest does not exist, then the source will be copied to dest
 //
 // When onlyContents = True:
 //   - dest may exist (and must be a dir).
@@ -115,14 +115,19 @@ func CopyDir(source string, dest string, onlyContents bool) error {
 
 // Copy a directory (including it's contents) to a new path.
 // Any non-existent parents will be created.
-// dest must not exist.
+// If dest exists source will be copied inside it, else source will be copied to dest.
 func CopyDirWhole(source string, dest string) error {
 	if !IsDir(source) {
 		return fmt.Errorf("Source of whole directory copy ('%s') does not exist or is not a dir.", source)
 	}
 
+	if IsFile(dest) {
+		return fmt.Errorf("Destination of whole directory copy ('%s') already exists and is a file.", dest)
+	}
+
+	// The path already exists (and is a dir), copy inside of it.
 	if PathExists(dest) {
-		return fmt.Errorf("Destination of whole directory copy ('%s') already exists.", dest)
+		dest = filepath.Join(dest, filepath.Base(source))
 	}
 
 	err := os.MkdirAll(dest, 0755)

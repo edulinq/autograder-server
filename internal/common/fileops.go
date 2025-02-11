@@ -189,8 +189,7 @@ func ExecFileOperations(operations []*FileOperation, baseDir string) error {
 // 2) Copy.
 // 3) Do post-copy operations.
 func CopyFileSpecsWithOps(
-	sourceDir string, destDir string, baseDir string,
-	filespecs []*FileSpec, onlyContents bool,
+	sourceDir string, destDir string, baseDir string, filespecs []*FileSpec,
 	preOperations []*FileOperation, postOperations []*FileOperation) error {
 	// Do pre ops.
 	err := ExecFileOperations(preOperations, baseDir)
@@ -200,7 +199,7 @@ func CopyFileSpecsWithOps(
 
 	// Copy files.
 	for _, filespec := range filespecs {
-		err = filespec.CopyTarget(sourceDir, destDir, onlyContents)
+		err = filespec.CopyTarget(sourceDir, destDir)
 		if err != nil {
 			return fmt.Errorf("Failed to handle FileSpec '%s': '%w'", filespec, err)
 		}

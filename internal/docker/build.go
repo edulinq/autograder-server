@@ -171,7 +171,7 @@ func writeDockerContext(imageInfo *ImageInfo, dir string) error {
 
 	// Copy over the static files (and do any file ops).
 	err = common.CopyFileSpecsWithOps(imageInfo.BaseDirFunc(), workDir, dir,
-		imageInfo.StaticFiles, false, imageInfo.PreStaticFileOperations, imageInfo.PostStaticFileOperations)
+		imageInfo.StaticFiles, imageInfo.PreStaticFileOperations, imageInfo.PostStaticFileOperations)
 	if err != nil {
 		return fmt.Errorf("Failed to copy static imageInfo files: '%w'.", err)
 	}

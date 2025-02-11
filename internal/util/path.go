@@ -267,3 +267,13 @@ func RelPath(child string, parent string) string {
 func RootDirForTesting() string {
 	return ShouldAbs(filepath.Join(ShouldAbs(ShouldGetThisDir()), "..", ".."))
 }
+
+// Return path if it is absolute,
+// otherwise return the join of baseDir and path.
+func JoinIfNotAbs(path string, baseDir string) string {
+	if filepath.IsAbs(path) {
+		return path
+	}
+
+	return filepath.Join(baseDir, path)
+}

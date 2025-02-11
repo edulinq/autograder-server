@@ -63,6 +63,13 @@ func MkDir(path string) error {
 	return MkDirPerms(path, DEFAULT_MKDIR_PERMS)
 }
 
+func MustMkDir(path string) {
+	err := MkDir(path)
+	if err != nil {
+		log.Fatal("Failed to create dir.", log.NewAttr("path", path))
+	}
+}
+
 func MkDirPerms(path string, perms os.FileMode) error {
 	return os.MkdirAll(path, perms)
 }

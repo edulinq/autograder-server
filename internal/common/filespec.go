@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/url"
+	"os"
 	"path"
 	"path/filepath"
 	"strings"
@@ -35,8 +36,22 @@ type FileSpec struct {
 }
 
 func (this *FileSpec) Validate() error {
+	return this.ValidateFull(false)
+}
+
+func (this *FileSpec) ValidateFull(onlyLocalPaths bool) error {
+	if this == nil {
+		return fmt.Errorf("File spec is nil.")
+	}
+
 	this.Type = FileSpecType(strings.ToLower(strings.TrimSpace(string(this.Type))))
-	var err error
+
+	// Trim all fields.
+	this.Path = strings.TrimSpace(this.Path)
+	this.Dest = strings.TrimSpace(this.Dest)
+	this.Reference = strings.TrimSpace(this.Reference)
+	this.Username = strings.TrimSpace(this.Username)
+	this.Token = strings.TrimSpace(this.Token)
 
 	switch this.Type {
 	case FILESPEC_TYPE_EMPTY, FILESPEC_TYPE_NIL:
@@ -44,18 +59,39 @@ func (this *FileSpec) Validate() error {
 			return fmt.Errorf("An empty/nil FileSpec should have no other fields set.")
 		}
 	case FILESPEC_TYPE_PATH:
-		if this.Path == "" {
-			return fmt.Errorf("A path FileSpec cannot have an empty path.")
+		if (this.Reference != "") || (this.Username != "") || (this.Token != "") {
+			return fmt.Errorf("An path FileSpec should not have reference, username, or token fields set.")
 		}
 
-		_, err := filepath.Match(this.Path, "")
+		cleanPath, err := cleanFilePath(this.Path, false, onlyLocalPaths)
+		if err != nil {
+			return fmt.Errorf("Invalid path field for FileSpec: '%w'.", err)
+		}
+
+		this.Path = cleanPath
+
+		_, err = filepath.Match(this.Path, "")
 		if err != nil {
 			return fmt.Errorf("Invalid path pattern '%s': '%w'.", this.Path, err)
 		}
+
+		cleanDest, err := cleanFilePath(this.Dest, true, onlyLocalPaths)
+		if err != nil {
+			return fmt.Errorf("Invalid dest field for FileSpec: '%w'.", err)
+		}
+
+		this.Dest = cleanDest
 	case FILESPEC_TYPE_GIT:
 		if this.Path == "" {
 			return fmt.Errorf("A git FileSpec cannot have an empty path.")
 		}
+
+		cleanDest, err := cleanFilePath(this.Dest, true, onlyLocalPaths)
+		if err != nil {
+			return fmt.Errorf("Invalid dest field for FileSpec: '%w'.", err)
+		}
+
+		this.Dest = cleanDest
 
 		if this.Dest == "" {
 			this.Dest, err = getURLBaseName(this.Path, true)
@@ -68,10 +104,17 @@ func (this *FileSpec) Validate() error {
 			return fmt.Errorf("A url FileSpec cannot have an empty path.")
 		}
 
+		cleanDest, err := cleanFilePath(this.Dest, true, onlyLocalPaths)
+		if err != nil {
+			return fmt.Errorf("Invalid dest field for FileSpec: '%w'.", err)
+		}
+
+		this.Dest = cleanDest
+
 		if this.Dest == "" {
 			this.Dest, err = getURLBaseName(this.Path, false)
 			if err != nil {
-				return fmt.Errorf("Failed to parse git URL: '%w'.", err)
+				return fmt.Errorf("Failed to parse URL: '%w'.", err)
 			}
 		}
 	default:
@@ -214,11 +257,7 @@ func (this *FileSpec) GetPath() string {
 // Get the path of this FileSpec's dest given the provided base dir.
 // Note that specs may ignore the base dir if the current dest is absolute.
 func (this *FileSpec) GetDest(baseDir string) string {
-	if filepath.IsAbs(this.Dest) {
-		return this.Dest
-	}
-
-	return filepath.Join(baseDir, this.Dest)
+	return util.JoinIfNotAbs(this.Dest, baseDir)
 }
 
 // Copy the target of this FileSpec in the specified location.
@@ -226,16 +265,14 @@ func (this *FileSpec) GetDest(baseDir string) string {
 // If the filespec is a path, then copy all matching dirents.
 // If the filespec is a git repo, then ensure it is cloned/updated.
 // Empty and Nil FileSpecs are no-ops.
-// |onlyContents| applies to paths that are dirs and insists that only the contents of dir
-// and not the base dir itself is copied.
 // |baseDir| provides the relative base.
-func (this *FileSpec) CopyTarget(baseDir string, destDir string, onlyContents bool) error {
+func (this *FileSpec) CopyTarget(baseDir string, destDir string) error {
 	switch this.Type {
 	case FILESPEC_TYPE_EMPTY, FILESPEC_TYPE_NIL:
 		// no-op.
 		return nil
 	case FILESPEC_TYPE_PATH:
-		return this.copyPaths(baseDir, destDir, onlyContents)
+		return this.copyPaths(baseDir, destDir)
 	case FILESPEC_TYPE_GIT:
 		return this.copyGit(destDir)
 	case FILESPEC_TYPE_URL:
@@ -245,34 +282,18 @@ func (this *FileSpec) CopyTarget(baseDir string, destDir string, onlyContents bo
 	}
 }
 
-func (this *FileSpec) copyPaths(baseDir string, destDir string, onlyContents bool) error {
+func (this *FileSpec) copyPaths(baseDir string, baseDestDir string) error {
 	if !this.IsPath() {
 		return fmt.Errorf("Cannot match targets: FileSpec must be a path.")
 	}
 
+	// Resolve relative paths.
 	fileSpecPath := this.Path
 	if !filepath.IsAbs(fileSpecPath) && (baseDir != "") {
 		fileSpecPath = filepath.Join(baseDir, fileSpecPath)
 	}
 
-	destPath := ""
-	if filepath.IsAbs(this.Dest) {
-		destPath = this.Dest
-	} else if onlyContents {
-		if this.Dest == "" {
-			destPath = destDir
-		} else {
-			destPath = filepath.Join(destDir, this.Dest)
-		}
-	} else {
-		filename := this.Dest
-		if filename == "" {
-			filename = filepath.Base(this.Path)
-		}
-
-		destPath = filepath.Join(destDir, filename)
-	}
-
+	// Resolve globs.
 	paths, err := filepath.Glob(fileSpecPath)
 	if err != nil {
 		return fmt.Errorf("Failed to resolve the path pattern '%s': '%w'.", this.Path, err)
@@ -282,41 +303,26 @@ func (this *FileSpec) copyPaths(baseDir string, destDir string, onlyContents boo
 		return fmt.Errorf("No targets found for the path '%s'.", this.Path)
 	}
 
-	// Ensure destPath is a directory if there are multiple paths.
+	// If there are multiple paths, the dest cannot point to a file.
+	destPath := this.GetDest(baseDestDir)
+	if (len(paths) > 1) && (this.Dest != "") && util.IsFile(destPath) {
+		return fmt.Errorf("Found multiple paths (via glob), but dest is a file. Dest must be a dir.")
+	}
+
+	// If there are multiple paths, make sure the dest dir already exists.
 	if len(paths) > 1 {
-		if util.IsFile(destPath) {
-			return fmt.Errorf("Cannot copy multiple targets into the existing file '%s'.", destDir)
-		}
-
-		if !util.PathExists(destPath) {
-			err := util.MkDir(destPath)
-			if err != nil {
-				return fmt.Errorf("Failed to create a directory for the Filespec at path '%s': '%v'.", destPath, err)
-			}
-		}
-	}
-
-	// Loop over each matched path and copy it to the destination.
-	for _, path := range paths {
-		err := copyPath(path, destPath, onlyContents)
+		err := os.MkdirAll(destPath, 0755)
 		if err != nil {
-			return fmt.Errorf("Failed to copy target at path '%s': '%w'.", path, err)
+			return fmt.Errorf("Failed to make destination dir '%s': '%w'.", destPath, err)
 		}
 	}
 
-	return nil
-}
-
-func copyPath(fileSpecPath string, destPath string, onlyContents bool) error {
-	var err error
-	if onlyContents {
-		err = util.CopyDirContents(fileSpecPath, destPath)
-	} else {
-		err = util.CopyDirent(fileSpecPath, destPath, false)
-	}
-
-	if err != nil {
-		return fmt.Errorf("Failed to copy path filespec '%s' to '%s': '%w'.", fileSpecPath, destPath, err)
+	for _, path := range paths {
+		// Note that util.CopyDirent() will handle when dest is a file or dir.
+		err := util.CopyDirent(path, destPath, false)
+		if err != nil {
+			return fmt.Errorf("Failed to copy path '%s' to '%s': '%w'.", path, destPath, err)
+		}
 	}
 
 	return nil
@@ -388,4 +394,30 @@ func getURLBaseName(uri string, removeExt bool) (string, error) {
 	}
 
 	return baseName, nil
+}
+
+func cleanFilePath(rawPath string, allowEmpty bool, onlyLocalPaths bool) (string, error) {
+	path := strings.TrimSpace(rawPath)
+
+	if path == "" {
+		if allowEmpty {
+			return "", nil
+		}
+
+		return "", fmt.Errorf("File path cannot be empty.")
+	}
+
+	path = filepath.Clean(path)
+
+	if onlyLocalPaths {
+		if filepath.IsAbs(path) {
+			return "", fmt.Errorf("File path '%s' is not allowed to be absolute.", rawPath)
+		}
+
+		if !filepath.IsLocal(path) {
+			return "", fmt.Errorf("File path '%s' points outside of the its base directory.", rawPath)
+		}
+	}
+
+	return path, nil
 }
