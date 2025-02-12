@@ -170,11 +170,17 @@ func (this *FileOperation) Exec(baseDir string) error {
 	if command == FILE_OP_LONG_COPY {
 		sourcePath := resolvePath(parts[1], baseDir, false)
 		destPath := resolvePath(parts[2], baseDir, false)
+		if sourcePath == destPath {
+			return nil
+		}
 
 		return CopyDirent(sourcePath, destPath, false)
 	} else if command == FILE_OP_LONG_MOVE {
 		sourcePath := resolvePath(parts[1], baseDir, false)
 		destPath := resolvePath(parts[2], baseDir, false)
+		if sourcePath == destPath {
+			return nil
+		}
 
 		return os.Rename(sourcePath, destPath)
 	} else if command == FILE_OP_LONG_MKDIR {
