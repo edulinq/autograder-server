@@ -22,6 +22,9 @@ const (
 
 	FILE_OP_LONG_MOVE  = "move"
 	FILE_OP_SHORT_MOVE = "mv"
+
+	FILE_OP_LONG_MKDIR  = "make-dir"
+	FILE_OP_SHORT_MKDIR = "mkdir"
 )
 
 // The long name is the canonical name.
@@ -31,12 +34,16 @@ var fileOpNormalName map[string]string = map[string]string{
 
 	FILE_OP_SHORT_MOVE: FILE_OP_LONG_MOVE,
 	FILE_OP_LONG_MOVE:  FILE_OP_LONG_MOVE,
+
+	FILE_OP_SHORT_MKDIR: FILE_OP_LONG_MKDIR,
+	FILE_OP_LONG_MKDIR:  FILE_OP_LONG_MKDIR,
 }
 
 // The number of operations for each file operation.
 var fileOpNumArgs map[string]int = map[string]int{
-	FILE_OP_LONG_COPY: 2,
-	FILE_OP_LONG_MOVE: 2,
+	FILE_OP_LONG_COPY:  2,
+	FILE_OP_LONG_MOVE:  2,
+	FILE_OP_LONG_MKDIR: 1,
 }
 
 func NewFileOperation(parts []string) *FileOperation {
@@ -125,6 +132,14 @@ func (this *FileOperation) ToUnix(baseDir string) string {
 			sourcePath,
 			destPath,
 		}
+	} else if command == FILE_OP_LONG_MKDIR {
+		path := resolvePath(parts[1], baseDir, true)
+
+		result = []string{
+			"mkdir",
+			"-p",
+			path,
+		}
 	} else {
 		return fmt.Sprintf("echo 'Invalid FileOperation: \"%s\"'.", this.String())
 	}
@@ -147,6 +162,9 @@ func (this *FileOperation) Exec(baseDir string) error {
 		destPath := resolvePath(parts[2], baseDir, false)
 
 		return os.Rename(sourcePath, destPath)
+	} else if command == FILE_OP_LONG_MKDIR {
+		path := resolvePath(parts[1], baseDir, false)
+		return MkDir(path)
 	} else {
 		return fmt.Errorf("Unknown file operation: '%s'.", command)
 	}

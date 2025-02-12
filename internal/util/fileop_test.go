@@ -35,6 +35,16 @@ func TestFileOpValidateBase(test *testing.T) {
 			NewFileOperation([]string{"move", "a", "b"}),
 			"",
 		},
+		{
+			NewFileOperation([]string{"make-dir", "a"}),
+			NewFileOperation([]string{"make-dir", "a"}),
+			"",
+		},
+		{
+			NewFileOperation([]string{"mkdir", "a"}),
+			NewFileOperation([]string{"make-dir", "a"}),
+			"",
+		},
 
 		// Casing
 		{
@@ -115,15 +125,20 @@ func TestFileOpValidateBase(test *testing.T) {
 			nil,
 			"Incorrect number of arguments",
 		},
+		{
+			NewFileOperation([]string{"make-dir"}),
+			nil,
+			"Incorrect number of arguments",
+		},
+		{
+			NewFileOperation([]string{"make-dir", "a", "b"}),
+			nil,
+			"Incorrect number of arguments",
+		},
 
 		// Unknown Command
 		{
 			NewFileOperation([]string{"zzz", "a", "b"}),
-			nil,
-			"Unknown file operation",
-		},
-		{
-			NewFileOperation([]string{"mkdir", "a"}),
 			nil,
 			"Unknown file operation",
 		},
@@ -186,7 +201,7 @@ func TestFileOpValidateBase(test *testing.T) {
 		}
 
 		if testCase.errorSubstring != "" {
-			test.Errorf("Case %d: Did not get expected error.", i)
+			test.Errorf("Case %d: Did not get expected error on '%+v'.", i, testCase.operation)
 			continue
 		}
 
@@ -206,15 +221,16 @@ func TestFileOpToUnix(test *testing.T) {
 	}{
 		{FileOperation([]string{"cp", "a", "b"}), "cp -r /tmp/test/a /tmp/test/b"},
 		{FileOperation([]string{"mv", "a", "b"}), "mv /tmp/test/a /tmp/test/b"},
-
-		{FileOperation([]string{"CP", "a", "b"}), "cp -r /tmp/test/a /tmp/test/b"},
-		{FileOperation([]string{"MV", "a", "b"}), "mv /tmp/test/a /tmp/test/b"},
+		{FileOperation([]string{"mkdir", "a"}), "mkdir -p /tmp/test/a"},
+		{FileOperation([]string{"mkdir", "a/b"}), "mkdir -p /tmp/test/a/b"},
 
 		{FileOperation([]string{"cp", "a A", "b B"}), "cp -r '/tmp/test/a A' '/tmp/test/b B'"},
 		{FileOperation([]string{"mv", "a A", "b B"}), "mv '/tmp/test/a A' '/tmp/test/b B'"},
+		{FileOperation([]string{"mkdir", "a A"}), "mkdir -p '/tmp/test/a A'"},
 
 		{FileOperation([]string{"cp", "\"a\"", "'b'"}), "cp -r '/tmp/test/\"a\"' '/tmp/test/'\"'\"'b'\"'\"''"},
 		{FileOperation([]string{"mv", "\"a\"", "'b'"}), "mv '/tmp/test/\"a\"' '/tmp/test/'\"'\"'b'\"'\"''"},
+		{FileOperation([]string{"mkdir", "\"a\"/'b'"}), "mkdir -p '/tmp/test/\"a\"/'\"'\"'b'\"'\"''"},
 	}
 
 	for i, testCase := range testCases {
@@ -296,6 +312,80 @@ func TestFileOpMoveBase(test *testing.T) {
 
 	if expectedHash != actualHash {
 		test.Fatalf("Hashes to not match. Expected: '%s', Actual: '%s'.", expectedHash, actualHash)
+	}
+}
+
+func TestFileOpMkdirBase(test *testing.T) {
+	alreadtExistsDirname := "already_exists"
+	alreadtExistsFilename := "already_exists.txt"
+
+	testCases := []struct {
+		path           string
+		errorSubstring string
+	}{
+		{
+			"a",
+			"",
+		},
+		{
+			"a/b",
+			"",
+		},
+		{
+			"a/../b",
+			"",
+		},
+		{
+			alreadtExistsDirname,
+			"",
+		},
+		{
+			alreadtExistsDirname + "/a",
+			"",
+		},
+		{
+			alreadtExistsFilename,
+			"not a directory",
+		},
+		{
+			alreadtExistsFilename + "/a",
+			"not a directory",
+		},
+	}
+
+	for i, testCase := range testCases {
+		op := NewFileOperation([]string{"mkdir", testCase.path})
+		err := op.Validate()
+		if err != nil {
+			test.Errorf("Case %d: Failed to validate op '%+v': '%v'.", i, op, err)
+			continue
+		}
+
+		tempDir := MustMkDirTemp("testing-fileop-mkdir-")
+		defer RemoveDirent(tempDir)
+
+		// Make some existing entries.
+		MustMkDir(filepath.Join(tempDir, alreadtExistsDirname))
+		MustCreateFile(filepath.Join(tempDir, alreadtExistsFilename))
+
+		err = op.Exec(tempDir)
+		if err != nil {
+			if testCase.errorSubstring != "" {
+				if !strings.Contains(err.Error(), testCase.errorSubstring) {
+					test.Errorf("Case %d: Did not get expected error outpout. Expected Substring '%s', Actual Error: '%v'.", i, testCase.errorSubstring, err)
+				}
+			} else {
+				test.Errorf("Case %d: Failed to exec '%+v': '%v'.", i, op, err)
+			}
+
+			continue
+		}
+
+		expectedPath := filepath.Join(tempDir, testCase.path)
+		if !IsDir(expectedPath) {
+			test.Errorf("Case %d: Target directory does not exist (or is not a dir) '%s'.", i, expectedPath)
+			continue
+		}
 	}
 }
 
