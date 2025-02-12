@@ -308,15 +308,15 @@ func TestFileOpCopyGlob(test *testing.T) {
 	tempDir := prepTempDir(test)
 	defer RemoveDirent(tempDir)
 
-	alreadyExistsDirname := "already_exists"
-	MustMkDir(filepath.Join(tempDir, alreadyExistsDirname))
+	copySubDir := "cp-sub-dir"
+	MustMkDir(filepath.Join(tempDir, copySubDir))
 
 	err := WriteFile("CCC\n", filepath.Join(tempDir, "c.txt"))
 	if err != nil {
 		test.Fatalf("Failed to write test file: '%v'.", err)
 	}
 
-	op := FileOperation([]string{"cp", "*.txt", alreadyExistsDirname})
+	op := FileOperation([]string{"cp", "*.txt", copySubDir})
 
 	err = op.Validate()
 	if err != nil {
@@ -334,7 +334,7 @@ func TestFileOpCopyGlob(test *testing.T) {
 			test.Fatalf("Failed to get expected hash: '%v'.", err)
 		}
 
-		actualHash, err := MD5FileHex(filepath.Join(tempDir, alreadyExistsDirname, filename))
+		actualHash, err := MD5FileHex(filepath.Join(tempDir, copySubDir, filename))
 		if err != nil {
 			test.Fatalf("Failed to get actual hash: '%v'.", err)
 		}
@@ -377,6 +377,90 @@ func TestFileOpMoveBase(test *testing.T) {
 
 	if expectedHash != actualHash {
 		test.Fatalf("Hashes to not match. Expected: '%s', Actual: '%s'.", expectedHash, actualHash)
+	}
+}
+
+func TestFileOpMoveGlobBase(test *testing.T) {
+	tempDir := prepTempDir(test)
+	defer RemoveDirent(tempDir)
+
+	op := FileOperation([]string{"mv", "a*", "b.txt"})
+
+	err := op.Validate()
+	if err != nil {
+		test.Fatalf("Failed to validate: '%v'.", err)
+	}
+
+	expectedHash, err := MD5FileHex(filepath.Join(tempDir, "a.txt"))
+	if err != nil {
+		test.Fatalf("Failed to get expected hash: '%v'.", err)
+	}
+
+	err = op.Exec(tempDir)
+	if err != nil {
+		test.Fatalf("Failed to exec: '%v'.", err)
+	}
+
+	if PathExists(filepath.Join(tempDir, "a.txt")) {
+		test.Fatalf("Source of move still exists.")
+	}
+
+	actualHash, err := MD5FileHex(filepath.Join(tempDir, "b.txt"))
+	if err != nil {
+		test.Fatalf("Failed to get actual hash: '%v'.", err)
+	}
+
+	if expectedHash != actualHash {
+		test.Fatalf("Hashes to not match. Expected: '%s', Actual: '%s'.", expectedHash, actualHash)
+	}
+}
+
+func TestFileOpMoveGlobDir(test *testing.T) {
+	tempDir := prepTempDir(test)
+	defer RemoveDirent(tempDir)
+
+	moveSubDirname := "mv-sub-dir"
+	MustMkDir(filepath.Join(tempDir, moveSubDirname))
+
+	err := WriteFile("CCC\n", filepath.Join(tempDir, "c.txt"))
+	if err != nil {
+		test.Fatalf("Failed to write test file: '%v'.", err)
+	}
+
+	op := FileOperation([]string{"mv", "*.txt", moveSubDirname})
+
+	err = op.Validate()
+	if err != nil {
+		test.Fatalf("Failed to validate: '%v'.", err)
+	}
+
+	filenames := []string{"a.txt", "c.txt"}
+	expectedHash := make(map[string]string, 0)
+	for _, filename := range filenames {
+		expectedHash[filename], err = MD5FileHex(filepath.Join(tempDir, filename))
+		if err != nil {
+			test.Fatalf("Failed to get expected hash: '%v'.", err)
+		}
+	}
+
+	err = op.Exec(tempDir)
+	if err != nil {
+		test.Fatalf("Failed to exec: '%v'.", err)
+	}
+
+	for _, filename := range filenames {
+		if PathExists(filepath.Join(tempDir, filename)) {
+			test.Fatalf("Source of move still exists.")
+		}
+
+		actualHash, err := MD5FileHex(filepath.Join(tempDir, moveSubDirname, filename))
+		if err != nil {
+			test.Fatalf("Failed to get actual hash: '%v'.", err)
+		}
+
+		if expectedHash[filename] != actualHash {
+			test.Fatalf("Hashes to not match. Expected: '%s', Actual: '%s'.", expectedHash[filename], actualHash)
+		}
 	}
 }
 

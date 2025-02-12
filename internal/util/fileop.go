@@ -195,7 +195,12 @@ func (this *FileOperation) Exec(baseDir string) error {
 		}
 
 		for _, sourcePath := range sourcePaths {
-			err = os.Rename(sourcePath, destPath)
+			finalDestPath := destPath
+			if IsDir(destPath) {
+				finalDestPath = filepath.Join(destPath, filepath.Base(sourcePath))
+			}
+
+			err = os.Rename(sourcePath, finalDestPath)
 			if err != nil {
 				errs = errors.Join(errs, err)
 			}
