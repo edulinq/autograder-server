@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"sort"
+	"slices"
 	"strings"
 
 	"github.com/alecthomas/kong"
@@ -26,14 +26,12 @@ var args struct {
 
 func main() {
 	kong.Parse(&args,
-		kong.Description("Call an endpoint to perform an API request."),
+		kong.Description("Call an endpoint."),
 	)
 
 	err := config.HandleConfigArgs(args.ConfigArgs)
 	if err != nil {
 		log.Fatal("Failed to load config options.", err)
-
-		// Return to prevent further execution after log.Fatal().
 		return
 	}
 
@@ -44,8 +42,6 @@ func main() {
 
 	if args.Endpoint == "" {
 		log.Error("Please enter an endpoint. Use --list to view all endpoints.")
-
-		// Return to prevent further execution after log.Error().
 		return
 	}
 
@@ -64,8 +60,6 @@ func main() {
 
 	if endpointDescription == nil {
 		log.Fatal("Failed to find the endpoint. Use --list to view all endpoints.", log.NewAttr("endpoint", args.Endpoint))
-
-		// Return to prevent further execution after log.Fatal().
 		return
 	}
 
@@ -102,7 +96,7 @@ func listAPIEndpoints() {
 		endpoints = append(endpoints, endpoint)
 	}
 
-	sort.Strings(endpoints)
+	slices.Sort(endpoints)
 
 	for _, endpoint := range endpoints {
 		fmt.Println(endpoint)
