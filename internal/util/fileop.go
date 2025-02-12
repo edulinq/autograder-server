@@ -171,9 +171,6 @@ func (this *FileOperation) Exec(baseDir string) error {
 	if command == FILE_OP_LONG_COPY {
 		sourcePathGlob := resolvePath(parts[1], baseDir, false)
 		destPath := resolvePath(parts[2], baseDir, false)
-		if sourcePathGlob == destPath {
-			return nil
-		}
 
 		sourcePaths, err := filepath.Glob(sourcePathGlob)
 		if err != nil {
@@ -181,6 +178,10 @@ func (this *FileOperation) Exec(baseDir string) error {
 		}
 
 		for _, sourcePath := range sourcePaths {
+			if sourcePath == destPath {
+				continue
+			}
+
 			err = CopyDirent(sourcePath, destPath, false)
 			if err != nil {
 				errs = errors.Join(errs, err)
@@ -191,9 +192,6 @@ func (this *FileOperation) Exec(baseDir string) error {
 	} else if command == FILE_OP_LONG_MOVE {
 		sourcePathGlob := resolvePath(parts[1], baseDir, false)
 		destPath := resolvePath(parts[2], baseDir, false)
-		if sourcePathGlob == destPath {
-			return nil
-		}
 
 		sourcePaths, err := filepath.Glob(sourcePathGlob)
 		if err != nil {
@@ -204,6 +202,10 @@ func (this *FileOperation) Exec(baseDir string) error {
 			finalDestPath := destPath
 			if IsDir(destPath) {
 				finalDestPath = filepath.Join(destPath, filepath.Base(sourcePath))
+			}
+
+			if sourcePath == finalDestPath {
+				continue
 			}
 
 			err = os.Rename(sourcePath, finalDestPath)
