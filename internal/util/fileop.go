@@ -167,16 +167,41 @@ func (this *FileOperation) Exec(baseDir string) error {
 	parts := []string(*this)
 	command := parts[0]
 
+	var errs error = nil
 	if command == FILE_OP_LONG_COPY {
-		sourcePath := resolvePath(parts[1], baseDir, false)
+		sourcePathGlob := resolvePath(parts[1], baseDir, false)
 		destPath := resolvePath(parts[2], baseDir, false)
 
-		return CopyDirent(sourcePath, destPath, false)
+		sourcePaths, err := filepath.Glob(sourcePathGlob)
+		if err != nil {
+			fmt.Errorf("Failed to resolve glob '%s': '%w'.", sourcePathGlob, err)
+		}
+
+		for _, sourcePath := range sourcePaths {
+			err = CopyDirent(sourcePath, destPath, false)
+			if err != nil {
+				errs = errors.Join(errs, err)
+			}
+		}
+
+		return errs
 	} else if command == FILE_OP_LONG_MOVE {
-		sourcePath := resolvePath(parts[1], baseDir, false)
+		sourcePathGlob := resolvePath(parts[1], baseDir, false)
 		destPath := resolvePath(parts[2], baseDir, false)
 
-		return os.Rename(sourcePath, destPath)
+		sourcePaths, err := filepath.Glob(sourcePathGlob)
+		if err != nil {
+			fmt.Errorf("Failed to resolve glob '%s': '%w'.", sourcePathGlob, err)
+		}
+
+		for _, sourcePath := range sourcePaths {
+			err = os.Rename(sourcePath, destPath)
+			if err != nil {
+				errs = errors.Join(errs, err)
+			}
+		}
+
+		return errs
 	} else if command == FILE_OP_LONG_MKDIR {
 		path := resolvePath(parts[1], baseDir, false)
 		return MkDir(path)

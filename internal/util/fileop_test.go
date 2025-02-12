@@ -304,6 +304,47 @@ func TestFileOpCopyBase(test *testing.T) {
 	}
 }
 
+func TestFileOpCopyGlob(test *testing.T) {
+	tempDir := prepTempDir(test)
+	defer RemoveDirent(tempDir)
+
+	alreadyExistsDirname := "already_exists"
+	MustMkDir(filepath.Join(tempDir, alreadyExistsDirname))
+
+	err := WriteFile("CCC\n", filepath.Join(tempDir, "c.txt"))
+	if err != nil {
+		test.Fatalf("Failed to write test file: '%v'.", err)
+	}
+
+	op := FileOperation([]string{"cp", "*.txt", alreadyExistsDirname})
+
+	err = op.Validate()
+	if err != nil {
+		test.Fatalf("Failed to validate: '%v'.", err)
+	}
+
+	err = op.Exec(tempDir)
+	if err != nil {
+		test.Fatalf("Failed to exec: '%v'.", err)
+	}
+
+	for _, filename := range []string{"a.txt", "c.txt"} {
+		expectedHash, err := MD5FileHex(filepath.Join(tempDir, filename))
+		if err != nil {
+			test.Fatalf("Failed to get expected hash: '%v'.", err)
+		}
+
+		actualHash, err := MD5FileHex(filepath.Join(tempDir, alreadyExistsDirname, filename))
+		if err != nil {
+			test.Fatalf("Failed to get actual hash: '%v'.", err)
+		}
+
+		if expectedHash != actualHash {
+			test.Fatalf("Hashes to not match. Expected: '%s', Actual: '%s'.", expectedHash, actualHash)
+		}
+	}
+}
+
 func TestFileOpMoveBase(test *testing.T) {
 	tempDir := prepTempDir(test)
 	defer RemoveDirent(tempDir)
@@ -340,8 +381,8 @@ func TestFileOpMoveBase(test *testing.T) {
 }
 
 func TestFileOpMkdirBase(test *testing.T) {
-	alreadtExistsDirname := "already_exists"
-	alreadtExistsFilename := "already_exists.txt"
+	alreadyExistsDirname := "already_exists"
+	alreadyExistsFilename := "already_exists.txt"
 
 	testCases := []struct {
 		path           string
@@ -360,19 +401,19 @@ func TestFileOpMkdirBase(test *testing.T) {
 			"",
 		},
 		{
-			alreadtExistsDirname,
+			alreadyExistsDirname,
 			"",
 		},
 		{
-			alreadtExistsDirname + "/a",
+			alreadyExistsDirname + "/a",
 			"",
 		},
 		{
-			alreadtExistsFilename,
+			alreadyExistsFilename,
 			"not a directory",
 		},
 		{
-			alreadtExistsFilename + "/a",
+			alreadyExistsFilename + "/a",
 			"not a directory",
 		},
 	}
@@ -389,8 +430,8 @@ func TestFileOpMkdirBase(test *testing.T) {
 		defer RemoveDirent(tempDir)
 
 		// Make some existing entries.
-		MustMkDir(filepath.Join(tempDir, alreadtExistsDirname))
-		MustCreateFile(filepath.Join(tempDir, alreadtExistsFilename))
+		MustMkDir(filepath.Join(tempDir, alreadyExistsDirname))
+		MustCreateFile(filepath.Join(tempDir, alreadyExistsFilename))
 
 		err = op.Exec(tempDir)
 		if err != nil {
@@ -414,10 +455,10 @@ func TestFileOpMkdirBase(test *testing.T) {
 }
 
 func TestFileOpRemoveBase(test *testing.T) {
-	alreadtExistsDirname := "already_exists"
-	alreadtExistsFilename := "already_exists.txt"
-	alreadtExistsFilePosixRelpath := alreadtExistsDirname + "/" + alreadtExistsFilename
-	alreadtExistsFileRelpath := filepath.Join(alreadtExistsDirname, alreadtExistsFilename)
+	alreadyExistsDirname := "already_exists"
+	alreadyExistsFilename := "already_exists.txt"
+	alreadyExistsFilePosixRelpath := alreadyExistsDirname + "/" + alreadyExistsFilename
+	alreadyExistsFileRelpath := filepath.Join(alreadyExistsDirname, alreadyExistsFilename)
 
 	testCases := []struct {
 		path           string
@@ -436,15 +477,15 @@ func TestFileOpRemoveBase(test *testing.T) {
 			"",
 		},
 		{
-			alreadtExistsDirname,
+			alreadyExistsDirname,
 			"",
 		},
 		{
-			alreadtExistsDirname + "/a",
+			alreadyExistsDirname + "/a",
 			"",
 		},
 		{
-			alreadtExistsFilePosixRelpath,
+			alreadyExistsFilePosixRelpath,
 			"",
 		},
 	}
@@ -461,8 +502,8 @@ func TestFileOpRemoveBase(test *testing.T) {
 		defer RemoveDirent(tempDir)
 
 		// Make some existing entries.
-		MustMkDir(filepath.Join(tempDir, alreadtExistsDirname))
-		MustCreateFile(filepath.Join(tempDir, alreadtExistsFileRelpath))
+		MustMkDir(filepath.Join(tempDir, alreadyExistsDirname))
+		MustCreateFile(filepath.Join(tempDir, alreadyExistsFileRelpath))
 
 		err = op.Exec(tempDir)
 		if err != nil {
