@@ -972,9 +972,12 @@ Any path contained within a file operation must obey the following rules:
    The path must point to a path within the current directory (e.g., `a.txt` or even `./a.txt`), not the directory itself.
 
 Below are the currently supported file operations:
-| Long Name | Short Name | Arguments              | Description |
-| `copy`    | `cp`       | source path, dest path | Copy the source path to the dest path. The source path may be a file or directory. |
-| `move`    | `mv`       | source path, dest path | Move (or rename) the source path to the dest path. The source path may be a file or directory. |
+| Long Name  | Short Name | Arguments              | POSIX Equivalent | Description |
+|------------|------------|------------------------|------------------|-------------|
+| `copy`     | `cp`       | source path, dest path | `cp -r`          | Copy the source path to the dest path. The source path may be a file or directory. |
+| `move`     | `mv`       | source path, dest path | `mv`             | Move (or rename) the source path to the dest path. The source path may be a file or directory. |
+| `make-dir` | `mkdir`    | path                   | `mkdir -p`       | Create a directory at the given path. The path make already exist. Any required parent directories will be created. |
+| `remove`   | `rm`       | path                   | `rm -rf`         | Remove the given path. The path may be a file or directory. The path may not exist. |
 
 **Examples**
 

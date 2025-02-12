@@ -45,6 +45,16 @@ func TestFileOpValidateBase(test *testing.T) {
 			NewFileOperation([]string{"make-dir", "a"}),
 			"",
 		},
+		{
+			NewFileOperation([]string{"remove", "a"}),
+			NewFileOperation([]string{"remove", "a"}),
+			"",
+		},
+		{
+			NewFileOperation([]string{"rm", "a"}),
+			NewFileOperation([]string{"remove", "a"}),
+			"",
+		},
 
 		// Casing
 		{
@@ -132,6 +142,16 @@ func TestFileOpValidateBase(test *testing.T) {
 		},
 		{
 			NewFileOperation([]string{"make-dir", "a", "b"}),
+			nil,
+			"Incorrect number of arguments",
+		},
+		{
+			NewFileOperation([]string{"remove"}),
+			nil,
+			"Incorrect number of arguments",
+		},
+		{
+			NewFileOperation([]string{"remove", "a", "b"}),
 			nil,
 			"Incorrect number of arguments",
 		},
@@ -223,14 +243,18 @@ func TestFileOpToUnix(test *testing.T) {
 		{FileOperation([]string{"mv", "a", "b"}), "mv /tmp/test/a /tmp/test/b"},
 		{FileOperation([]string{"mkdir", "a"}), "mkdir -p /tmp/test/a"},
 		{FileOperation([]string{"mkdir", "a/b"}), "mkdir -p /tmp/test/a/b"},
+		{FileOperation([]string{"rm", "a"}), "rm -rf /tmp/test/a"},
+		{FileOperation([]string{"rm", "a/b"}), "rm -rf /tmp/test/a/b"},
 
 		{FileOperation([]string{"cp", "a A", "b B"}), "cp -r '/tmp/test/a A' '/tmp/test/b B'"},
 		{FileOperation([]string{"mv", "a A", "b B"}), "mv '/tmp/test/a A' '/tmp/test/b B'"},
 		{FileOperation([]string{"mkdir", "a A"}), "mkdir -p '/tmp/test/a A'"},
+		{FileOperation([]string{"rm", "a A"}), "rm -rf '/tmp/test/a A'"},
 
 		{FileOperation([]string{"cp", "\"a\"", "'b'"}), "cp -r '/tmp/test/\"a\"' '/tmp/test/'\"'\"'b'\"'\"''"},
 		{FileOperation([]string{"mv", "\"a\"", "'b'"}), "mv '/tmp/test/\"a\"' '/tmp/test/'\"'\"'b'\"'\"''"},
 		{FileOperation([]string{"mkdir", "\"a\"/'b'"}), "mkdir -p '/tmp/test/\"a\"/'\"'\"'b'\"'\"''"},
+		{FileOperation([]string{"rm", "\"a\"/'b'"}), "rm -rf '/tmp/test/\"a\"/'\"'\"'b'\"'\"''"},
 	}
 
 	for i, testCase := range testCases {
@@ -384,6 +408,78 @@ func TestFileOpMkdirBase(test *testing.T) {
 		expectedPath := filepath.Join(tempDir, testCase.path)
 		if !IsDir(expectedPath) {
 			test.Errorf("Case %d: Target directory does not exist (or is not a dir) '%s'.", i, expectedPath)
+			continue
+		}
+	}
+}
+
+func TestFileOpRemoveBase(test *testing.T) {
+	alreadtExistsDirname := "already_exists"
+	alreadtExistsFilename := "already_exists.txt"
+	alreadtExistsFilePosixRelpath := alreadtExistsDirname + "/" + alreadtExistsFilename
+	alreadtExistsFileRelpath := filepath.Join(alreadtExistsDirname, alreadtExistsFilename)
+
+	testCases := []struct {
+		path           string
+		errorSubstring string
+	}{
+		{
+			"a",
+			"",
+		},
+		{
+			"a/b",
+			"",
+		},
+		{
+			"a/../b",
+			"",
+		},
+		{
+			alreadtExistsDirname,
+			"",
+		},
+		{
+			alreadtExistsDirname + "/a",
+			"",
+		},
+		{
+			alreadtExistsFilePosixRelpath,
+			"",
+		},
+	}
+
+	for i, testCase := range testCases {
+		op := NewFileOperation([]string{"rm", testCase.path})
+		err := op.Validate()
+		if err != nil {
+			test.Errorf("Case %d: Failed to validate op '%+v': '%v'.", i, op, err)
+			continue
+		}
+
+		tempDir := MustMkDirTemp("testing-fileop-mkdir-")
+		defer RemoveDirent(tempDir)
+
+		// Make some existing entries.
+		MustMkDir(filepath.Join(tempDir, alreadtExistsDirname))
+		MustCreateFile(filepath.Join(tempDir, alreadtExistsFileRelpath))
+
+		err = op.Exec(tempDir)
+		if err != nil {
+			if testCase.errorSubstring != "" {
+				if !strings.Contains(err.Error(), testCase.errorSubstring) {
+					test.Errorf("Case %d: Did not get expected error outpout. Expected Substring '%s', Actual Error: '%v'.", i, testCase.errorSubstring, err)
+				}
+			} else {
+				test.Errorf("Case %d: Failed to exec '%+v': '%v'.", i, op, err)
+			}
+
+			continue
+		}
+
+		expectedPath := filepath.Join(tempDir, testCase.path)
+		if PathExists(expectedPath) {
+			test.Errorf("Case %d: Target path exists when is should have been removed '%s'.", i, expectedPath)
 			continue
 		}
 	}
