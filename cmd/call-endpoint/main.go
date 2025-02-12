@@ -69,8 +69,6 @@ func main() {
 		parts := strings.SplitN(arg, ":", 2)
 		if len(parts) != 2 {
 			log.Fatal("Invalid parameter format: missing a colon. Expected format is 'key:value', e.g., 'id:123'.", log.NewAttr("parameter", parts))
-
-			// Return to prevent further execution after log.Fatal().
 			return
 		}
 
