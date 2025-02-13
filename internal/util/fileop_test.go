@@ -83,6 +83,11 @@ func TestFileOpValidateBase(test *testing.T) {
 
 		// Normalize Paths
 		{
+			NewFileOperation([]string{"copy", " a ", "\tb\n"}),
+			NewFileOperation([]string{"copy", "a", "b"}),
+			"",
+		},
+		{
 			NewFileOperation([]string{"copy", "c/../a", "b"}),
 			NewFileOperation([]string{"copy", "a", "b"}),
 			"",
@@ -385,13 +390,13 @@ func TestFileOpMoveBase(test *testing.T) {
 			"",
 		},
 		{
-			"a",
-			"b",
-			"no such file or directory",
-		},
-		{
 			alreadyExistsFilePosixRelpath,
 			"a/b",
+			"",
+		},
+		{
+			"a",
+			"b",
 			"no such file or directory",
 		},
 		{

@@ -48,7 +48,10 @@ func CopyLink(source string, dest string) error {
 		dest = filepath.Join(dest, filepath.Base(source))
 	}
 
-	MkDir(filepath.Dir(dest))
+	err := MkDir(filepath.Dir(dest))
+	if err != nil {
+		return fmt.Errorf("Failed to create destination directory for copy ('%s'): '%w'.", dest, err)
+	}
 
 	target, err := os.Readlink(source)
 	if err != nil {
@@ -75,7 +78,7 @@ func CopyFile(source string, dest string) error {
 		dest = filepath.Join(dest, filepath.Base(source))
 	}
 
-	os.MkdirAll(filepath.Dir(dest), 0755)
+	MkDir(filepath.Dir(dest))
 
 	sourceIO, err := os.Open(source)
 	if err != nil {
@@ -130,7 +133,7 @@ func CopyDirWhole(source string, dest string) error {
 		dest = filepath.Join(dest, filepath.Base(source))
 	}
 
-	err := os.MkdirAll(dest, 0755)
+	err := MkDir(dest)
 	if err != nil {
 		return fmt.Errorf("Failed to create destination of whole directory copy ('%s'): '%w'.", dest, err)
 	}
@@ -172,6 +175,15 @@ func CopyDirContents(source string, dest string) error {
 	}
 
 	return nil
+}
+
+func MoveDirent(source string, dest string) error {
+	err := MkDir(filepath.Dir(dest))
+	if err != nil {
+		return fmt.Errorf("Failed to create destination directory for move ('%s'): '%w'.", dest, err)
+	}
+
+	return os.Rename(source, dest)
 }
 
 // Recursivly changes the mode of any files and dirs.

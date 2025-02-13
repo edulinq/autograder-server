@@ -22,6 +22,9 @@ type AnalysisOptions struct {
 	IncludePatterns []string `json:"include-patterns,omitempty"`
 	ExcludePatterns []string `json:"exclude-patterns,omitempty"`
 
+	TemplateFiles   []*util.FileSpec      `json:"template-files,omitempty"`
+	TemplateFileOps []*util.FileOperation `json:"template-file-ops,omitempty"`
+
 	IncludeRegexes []*regexp.Regexp `json:"-"`
 	ExcludeRegexes []*regexp.Regexp `json:"-"`
 }
@@ -122,6 +125,21 @@ func NewPairwiseKey(fullSubmissionID1 string, fullSubmissionID2 string) Pairwise
 }
 
 func (this *AnalysisOptions) Validate() error {
+	if this == nil {
+		return fmt.Errorf("Analysis options cannot be nil.")
+	}
+
+	var errs error
+
+	errs = errors.Join(errs, this.validateIncludeExclude())
+	errs = errors.Join(errs, this.validateTemplateFiles())
+
+	return errs
+}
+
+// Include/Exclude patterns must be valid regular expressions.
+// If no include patterns are supplied, DEFAULT_INCLUDE_REGEX is used.
+func (this *AnalysisOptions) validateIncludeExclude() error {
 	var errs error
 
 	this.IncludeRegexes = make([]*regexp.Regexp, 0, len(this.IncludePatterns))

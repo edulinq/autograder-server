@@ -310,13 +310,25 @@ On a full name match, then autograder will sync over the `lms-id` from the cours
 
 The analysis options type allows options to be passed to code analysis for assignments.
 It has the following fields:
-| Name                 | Type        | Required | Description |
-|----------------------|-------------|----------|-------------|
-| `include-patterns`   | List[Regex] | false    | Any source file eligible for code analysis must match at least one of these patterns. When not specified or empty, ".+" will be used (which will match any non-empty value). |
-| `exclude-patterns`   | List[Regex] | false    | Any source file that matches any of these patterns will not be used in code analysis. |
+| Name               | Type           | Required | Description |
+|--------------------|----------------|----------|-------------|
+| `include-patterns` | List[Regex]    | false    | Any source file eligible for code analysis must match at least one of these patterns. When not specified or empty, ".+" will be used (which will match any non-empty value). |
+| `exclude-patterns` | List[Regex]    | false    | Any source file that matches any of these patterns will not be used in code analysis. |
+| `template-files`   | List[FileSpec] | false    | A list of files to use as "templates" during pairwise analysis. Similarity engines can try to ignore template/boilerplate code when computing similarities. Any file paths must be local (relative). |
+| `template-file-ops`| List[FileOp]   | false    | A list of file operations to transform the template files with. |
 
 During a pairwise code analysis,
 the options of the assignment for the submission with the [lexicographically](https://en.wikipedia.org/wiki/Lexicographic_order) smaller id will always be used.
+
+Template files allow you to specify code that pairwise similarity engines should ignore when computing code similarity (e.g. boilerplate code).
+To align template files with files that students submit,
+the [relative path](https://en.wikipedia.org/wiki/Path_(computing)#Absolute_and_relative_paths) ob both files must match exactly.
+This means that if students are submitting files and not directories then just the filenames need to match,
+if students are submitting directories then the template files must be in directories with the same name.
+When fetching and setting up the template files, the file specs (`template-files`) will be fetched from the assignment's base directory,
+and the file operations (`template-file-ops`) will be executed in a directory that only has the fetched template files in it.
+This means that you should use the `template-files` to collect the files you need,
+and `template-file-ops` to move around and adjust those files so they properly match student submissions.
 
 #### Include/Exclude Patterns
 

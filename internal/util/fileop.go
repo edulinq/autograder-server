@@ -3,7 +3,6 @@ package util
 import (
 	"errors"
 	"fmt"
-	"os"
 	gopath "path"
 	"path/filepath"
 	"strings"
@@ -83,7 +82,7 @@ func (this *FileOperation) Validate() error {
 
 	// Check all path arguments.
 	for i := 1; i < len(parts); i++ {
-		path := parts[i]
+		path := strings.TrimSpace(parts[i])
 
 		if strings.Contains(path, "\\") {
 			return fmt.Errorf("Argument at index %d ('%s') contains a backslash ('\\') or is not a POSIX path.", i, parts[i])
@@ -182,7 +181,7 @@ func (this *FileOperation) Exec(baseDir string) error {
 			return nil
 		}
 
-		return os.Rename(sourcePath, destPath)
+		return MoveDirent(sourcePath, destPath)
 	} else if command == FILE_OP_LONG_MKDIR {
 		path := resolvePath(parts[1], baseDir, false)
 		return MkDir(path)
