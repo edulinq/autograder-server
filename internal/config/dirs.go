@@ -10,12 +10,13 @@ import (
 const (
 	WORK_DIR_BASENAME = "autograder"
 
-	BACKUP_DIRNAME   = "backup"
-	CACHE_DIRNAME    = "cache"
-	CONFIG_DIRNAME   = "config"
-	DATABASE_DIRNAME = "database"
-	LOGS_DIRNAME     = "logs"
-	SOURCES_DIRNAME  = "sources"
+	BACKUP_DIRNAME    = "backup"
+	CACHE_DIRNAME     = "cache"
+	CONFIG_DIRNAME    = "config"
+	DATABASE_DIRNAME  = "database"
+	LOGS_DIRNAME      = "logs"
+	SOURCES_DIRNAME   = "sources"
+	TEMPLATES_DIRNAME = "templates"
 
 	TESTDATA_DIRNAME = "testdata"
 )
@@ -72,4 +73,8 @@ func GetLogsDir() string {
 
 func GetSourcesDir() string {
 	return filepath.Join(GetWorkDir(), SOURCES_DIRNAME)
+}
+
+func GetTemplatesDir() string {
+	return filepath.Join(GetWorkDir(), TEMPLATES_DIRNAME)
 }

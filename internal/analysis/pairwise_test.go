@@ -18,6 +18,8 @@ func TestPairwiseAnalysisFake(test *testing.T) {
 	db.ResetForTesting()
 	defer db.ResetForTesting()
 
+	assignment := db.MustGetTestAssignment()
+
 	ids := []string{
 		"course101::hw0::course-student@test.edulinq.org::1697406256",
 		"course101::hw0::course-student@test.edulinq.org::1697406265",
@@ -26,6 +28,7 @@ func TestPairwiseAnalysisFake(test *testing.T) {
 
 	expected := []*model.PairwiseAnalysis{
 		&model.PairwiseAnalysis{
+			Options:           assignment.AnalysisOptions,
 			AnalysisTimestamp: timestamp.Zero(),
 			SubmissionIDs: model.NewPairwiseKey(
 				"course101::hw0::course-student@test.edulinq.org::1697406256",
@@ -49,6 +52,7 @@ func TestPairwiseAnalysisFake(test *testing.T) {
 			TotalMeanSimilarity: 0.13,
 		},
 		&model.PairwiseAnalysis{
+			Options:           assignment.AnalysisOptions,
 			AnalysisTimestamp: timestamp.Zero(),
 			SubmissionIDs: model.NewPairwiseKey(
 				"course101::hw0::course-student@test.edulinq.org::1697406256",
@@ -72,6 +76,7 @@ func TestPairwiseAnalysisFake(test *testing.T) {
 			TotalMeanSimilarity: 0.13,
 		},
 		&model.PairwiseAnalysis{
+			Options:           assignment.AnalysisOptions,
 			AnalysisTimestamp: timestamp.Zero(),
 			SubmissionIDs: model.NewPairwiseKey(
 				"course101::hw0::course-student@test.edulinq.org::1697406265",

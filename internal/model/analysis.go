@@ -24,9 +24,6 @@ type AnalysisOptions struct {
 
 	TemplateFiles   []*util.FileSpec      `json:"template-files,omitempty"`
 	TemplateFileOps []*util.FileOperation `json:"template-file-ops,omitempty"`
-
-	IncludeRegexes []*regexp.Regexp `json:"-"`
-	ExcludeRegexes []*regexp.Regexp `json:"-"`
 }
 
 type AnalysisFileInfo struct {
@@ -142,28 +139,22 @@ func (this *AnalysisOptions) Validate() error {
 func (this *AnalysisOptions) validateIncludeExclude() error {
 	var errs error
 
-	this.IncludeRegexes = make([]*regexp.Regexp, 0, len(this.IncludePatterns))
+	if len(this.IncludePatterns) == 0 {
+		this.IncludePatterns = append(this.IncludePatterns, DEFAULT_INCLUDE_REGEX)
+	}
+
 	for _, pattern := range this.IncludePatterns {
-		regex, err := regexp.Compile(pattern)
+		_, err := regexp.Compile(pattern)
 		if err != nil {
 			errs = errors.Join(errs, fmt.Errorf("Failed to compile include pattern `%s`: '%w'.", pattern, err))
-		} else {
-			this.IncludeRegexes = append(this.IncludeRegexes, regex)
 		}
 	}
 
-	this.ExcludeRegexes = make([]*regexp.Regexp, 0, len(this.ExcludePatterns))
 	for _, pattern := range this.ExcludePatterns {
-		regex, err := regexp.Compile(pattern)
+		_, err := regexp.Compile(pattern)
 		if err != nil {
 			errs = errors.Join(errs, fmt.Errorf("Failed to compile exclude pattern `%s`: '%w'.", pattern, err))
-		} else {
-			this.ExcludeRegexes = append(this.ExcludeRegexes, regex)
 		}
-	}
-
-	if len(this.IncludeRegexes) == 0 {
-		this.IncludeRegexes = append(this.IncludeRegexes, regexp.MustCompile(DEFAULT_INCLUDE_REGEX))
 	}
 
 	return errs
@@ -172,7 +163,8 @@ func (this *AnalysisOptions) validateIncludeExclude() error {
 // Check the inclusion/exclusion to see if a given relpah is allowed.
 func (this *AnalysisOptions) MatchRelpath(relpath string) bool {
 	match := false
-	for _, regex := range this.IncludeRegexes {
+	for _, pattern := range this.IncludePatterns {
+		regex := regexp.MustCompile(pattern)
 		if regex.MatchString(relpath) {
 			match = true
 			break
@@ -183,7 +175,8 @@ func (this *AnalysisOptions) MatchRelpath(relpath string) bool {
 		return false
 	}
 
-	for _, regex := range this.ExcludeRegexes {
+	for _, pattern := range this.ExcludePatterns {
+		regex := regexp.MustCompile(pattern)
 		if regex.MatchString(relpath) {
 			return false
 		}
@@ -196,7 +189,7 @@ func (this *PairwiseKey) String() string {
 	return this[0] + PAIRWISE_KEY_DELIM + this[1]
 }
 
-func NewPairwiseAnalysis(pairwiseKey PairwiseKey, similarities map[string][]*FileSimilarity, unmatches [][2]string, skipped []string) *PairwiseAnalysis {
+func NewPairwiseAnalysis(pairwiseKey PairwiseKey, assignment *Assignment, similarities map[string][]*FileSimilarity, unmatches [][2]string, skipped []string) *PairwiseAnalysis {
 	meanSimilarities := make(map[string]float64, len(similarities))
 	totalMeanSimilarity := 0.0
 
@@ -218,7 +211,13 @@ func NewPairwiseAnalysis(pairwiseKey PairwiseKey, similarities map[string][]*Fil
 		totalMeanSimilarity /= float64(len(similarities))
 	}
 
+	var options *AnalysisOptions
+	if assignment != nil {
+		options = assignment.AnalysisOptions
+	}
+
 	return &PairwiseAnalysis{
+		Options:             options,
 		AnalysisTimestamp:   timestamp.Now(),
 		SubmissionIDs:       pairwiseKey,
 		Similarities:        similarities,

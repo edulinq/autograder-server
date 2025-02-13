@@ -13,5 +13,13 @@
     ],
     "post-submission-files-ops": [
         ["cp", "input/Assignment.java", "work/Assignment.java"]
-    ]
+    ],
+    "analysis-options": {
+        "include-patterns": [
+            "Assignment.java"
+        ],
+        "template-files": [
+            "test-submissions/not-implemented/Assignment.java"
+        ]
+    }
 }

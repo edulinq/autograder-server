@@ -15,6 +15,8 @@ func TestPairwiseBase(test *testing.T) {
 	db.ResetForTesting()
 	defer db.ResetForTesting()
 
+	assignment := db.MustGetTestAssignment()
+
 	// Make an initial request, but don't wait.
 
 	email := "server-admin"
@@ -93,6 +95,7 @@ func TestPairwiseBase(test *testing.T) {
 		},
 		Results: []*model.PairwiseAnalysis{
 			&model.PairwiseAnalysis{
+				Options:           assignment.AnalysisOptions,
 				AnalysisTimestamp: timestamp.Zero(),
 				SubmissionIDs: model.NewPairwiseKey(
 					"course101::hw0::course-student@test.edulinq.org::1697406256",

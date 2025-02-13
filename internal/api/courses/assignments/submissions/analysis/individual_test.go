@@ -15,6 +15,8 @@ func TestIndividualBase(test *testing.T) {
 	db.ResetForTesting()
 	defer db.ResetForTesting()
 
+	assignment := db.MustGetTestAssignment()
+
 	// Make an initial request, but don't wait.
 
 	email := "server-admin"
@@ -135,6 +137,7 @@ func TestIndividualBase(test *testing.T) {
 		},
 		Results: []*model.IndividualAnalysis{
 			&model.IndividualAnalysis{
+				Options:             assignment.AnalysisOptions,
 				AnalysisTimestamp:   timestamp.Zero(),
 				FullID:              "course101::hw0::course-student@test.edulinq.org::1697406256",
 				ShortID:             "1697406256",
@@ -158,6 +161,7 @@ func TestIndividualBase(test *testing.T) {
 				SkippedFiles: []string{},
 			},
 			&model.IndividualAnalysis{
+				Options:             assignment.AnalysisOptions,
 				AnalysisTimestamp:   timestamp.Zero(),
 				FullID:              "course101::hw0::course-student@test.edulinq.org::1697406265",
 				ShortID:             "1697406265",

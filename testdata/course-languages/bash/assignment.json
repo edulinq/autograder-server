@@ -9,5 +9,13 @@
     "invocation": ["bash", "./grader.sh"],
     "post-submission-files-ops": [
         ["cp", "input/assignment.sh", "work/assignment.sh"]
-    ]
+    ],
+    "analysis-options": {
+        "include-patterns": [
+            "assignment.sh"
+        ],
+        "template-files": [
+            "test-submissions/not-implemented/assignment.sh"
+        ]
+    }
 }

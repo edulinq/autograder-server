@@ -224,7 +224,7 @@ func computeSinglePairwiseAnalysis(pairwiseKey model.PairwiseKey) (*model.Pairwi
 		return nil, 0, fmt.Errorf("Failed to compute similarities for %v: '%w'.", pairwiseKey, err)
 	}
 
-	analysis := model.NewPairwiseAnalysis(pairwiseKey, fileSimilarities, unmatches, skipped)
+	analysis := model.NewPairwiseAnalysis(pairwiseKey, optionsAssignment, fileSimilarities, unmatches, skipped)
 
 	return analysis, totalRunTime, nil
 }

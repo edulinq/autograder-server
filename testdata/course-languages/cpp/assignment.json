@@ -14,5 +14,13 @@
     ],
     "post-submission-files-ops": [
         ["cp", "input/assignment.cpp", "work/assignment.cpp"]
-    ]
+    ],
+    "analysis-options": {
+        "include-patterns": [
+            "assignment.cpp"
+        ],
+        "template-files": [
+            "test-submissions/not-implemented/assignment.cpp"
+        ]
+    }
 }

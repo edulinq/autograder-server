@@ -14,8 +14,6 @@ import (
 	"github.com/edulinq/autograder/internal/util"
 )
 
-const SOURCES_DIRNAME = "sources"
-
 type Course struct {
 	// Required fields.
 	ID   string `json:"id"`
@@ -217,6 +215,22 @@ func (this *Course) BuildAssignmentImagesDefault() ([]string, error) {
 	return imageNames, err
 }
 
+func (this *Course) FetchAssignmentTemplateFiles() (map[string][]string, error) {
+	result := make(map[string][]string, len(this.Assignments))
+	var errs error = nil
+
+	for _, assignment := range this.Assignments {
+		relpaths, err := assignment.FetchTemplateFiles()
+		if err != nil {
+			errs = errors.Join(errs, err)
+		} else {
+			result[assignment.ID] = relpaths
+		}
+	}
+
+	return result, errs
+}
+
 func (this *Course) GetCacheDir() string {
 	return filepath.Join(config.GetCacheDir(), "course_"+this.ID)
 }
@@ -259,6 +273,10 @@ func (this *Course) GetSortedAssignments() []*Assignment {
 
 func (this *Course) GetBaseSourceDir() string {
 	return filepath.Join(config.GetSourcesDir(), this.GetID())
+}
+
+func (this *Course) GetTemplatesDir() string {
+	return filepath.Join(config.GetTemplatesDir(), this.GetID())
 }
 
 func (this *Course) GetSourceConfigPath() string {

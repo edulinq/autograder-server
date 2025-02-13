@@ -3,7 +3,6 @@ package model
 import (
 	"path/filepath"
 	"reflect"
-	"regexp"
 	"strings"
 	"testing"
 
@@ -20,12 +19,9 @@ func TestAnalysisOptionsValidateBase(test *testing.T) {
 		{
 			&AnalysisOptions{},
 			&AnalysisOptions{
-				IncludeRegexes: []*regexp.Regexp{
-					regexp.MustCompile(DEFAULT_INCLUDE_REGEX),
+				IncludePatterns: []string{
+					DEFAULT_INCLUDE_REGEX,
 				},
-				ExcludeRegexes:  []*regexp.Regexp{},
-				TemplateFiles:   []*util.FileSpec{},
-				TemplateFileOps: []*util.FileOperation{},
 			},
 			"",
 		},
@@ -45,14 +41,6 @@ func TestAnalysisOptionsValidateBase(test *testing.T) {
 				ExcludePatterns: []string{
 					"ZZZ",
 				},
-				IncludeRegexes: []*regexp.Regexp{
-					regexp.MustCompile("AAA"),
-				},
-				ExcludeRegexes: []*regexp.Regexp{
-					regexp.MustCompile("ZZZ"),
-				},
-				TemplateFiles:   []*util.FileSpec{},
-				TemplateFileOps: []*util.FileOperation{},
 			},
 			"",
 		},
@@ -69,10 +57,9 @@ func TestAnalysisOptionsValidateBase(test *testing.T) {
 				},
 			},
 			&AnalysisOptions{
-				IncludeRegexes: []*regexp.Regexp{
-					regexp.MustCompile(DEFAULT_INCLUDE_REGEX),
+				IncludePatterns: []string{
+					DEFAULT_INCLUDE_REGEX,
 				},
-				ExcludeRegexes: []*regexp.Regexp{},
 				TemplateFiles: []*util.FileSpec{
 					&util.FileSpec{
 						Type: util.FILESPEC_TYPE_PATH,
@@ -509,9 +496,9 @@ func TestNewPairwiseAnalysisSummaryBase(test *testing.T) {
 	}
 
 	input := []*PairwiseAnalysis{
-		NewPairwiseAnalysis(NewPairwiseKey("A", "B"), sims1, nil, nil),
-		NewPairwiseAnalysis(NewPairwiseKey("C", "D"), sims2, nil, nil),
-		NewPairwiseAnalysis(NewPairwiseKey("E", "F"), sims3, nil, nil),
+		NewPairwiseAnalysis(NewPairwiseKey("A", "B"), nil, sims1, nil, nil),
+		NewPairwiseAnalysis(NewPairwiseKey("C", "D"), nil, sims2, nil, nil),
+		NewPairwiseAnalysis(NewPairwiseKey("E", "F"), nil, sims3, nil, nil),
 	}
 
 	expected := &PairwiseAnalysisSummary{
@@ -644,7 +631,7 @@ func TestAnalysisOptionsFetchTemplateFilesBase(test *testing.T) {
 		tempDir := util.MustMkDirTemp("test-analysis-fetch-templates-")
 		defer util.RemoveDirent(tempDir)
 
-		err = testCase.options.FetchTemplateFiles(baseDir, tempDir)
+		actualRelpaths, err := testCase.options.FetchTemplateFiles(baseDir, tempDir)
 		if err != nil {
 			if testCase.errorSubstring != "" {
 				if !strings.Contains(err.Error(), testCase.errorSubstring) {
@@ -659,12 +646,6 @@ func TestAnalysisOptionsFetchTemplateFilesBase(test *testing.T) {
 
 		if testCase.errorSubstring != "" {
 			test.Errorf("Case %d: Did not get expected error: '%s'.", i, testCase.errorSubstring)
-			continue
-		}
-
-		actualRelpaths, err := util.GetAllRelativeFiles(tempDir)
-		if err != nil {
-			test.Errorf("Case %d: Failed to get relpaths: '%v'.", i, err)
 			continue
 		}
 

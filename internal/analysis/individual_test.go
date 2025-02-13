@@ -15,6 +15,8 @@ func TestIndividualAnalysisBase(test *testing.T) {
 	db.ResetForTesting()
 	defer db.ResetForTesting()
 
+	assignment := db.MustGetTestAssignment()
+
 	ids := []string{
 		"course101::hw0::course-student@test.edulinq.org::1697406265",
 	}
@@ -22,6 +24,7 @@ func TestIndividualAnalysisBase(test *testing.T) {
 	expected := []*model.IndividualAnalysis{
 		&model.IndividualAnalysis{
 			AnalysisTimestamp: timestamp.Zero(),
+			Options:           assignment.AnalysisOptions,
 
 			FullID:       ids[0],
 			ShortID:      "1697406265",

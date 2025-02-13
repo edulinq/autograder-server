@@ -81,6 +81,16 @@ func upsertFromConfigPath(path string, options CourseUpsertOptions) (*CourseUpse
 		result.BuiltAssignmentImages = builtImages
 	}
 
+	// Fetch Template Files
+	if !options.SkipTemplateFiles {
+		relpaths, err := course.FetchAssignmentTemplateFiles()
+		if err != nil {
+			return nil, result.CourseID, fmt.Errorf("Failed to fetch assignment template files: '%w'.", err)
+		}
+
+		result.AssignmentTemplateFiles = relpaths
+	}
+
 	// Cleanup
 
 	// Remove source if this was a dry run.
