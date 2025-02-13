@@ -174,7 +174,11 @@ func (this *FileOperation) Exec(baseDir string) error {
 
 		sourcePaths, err := filepath.Glob(sourcePathGlob)
 		if err != nil {
-			fmt.Errorf("Failed to resolve glob '%s': '%w'.", sourcePathGlob, err)
+			return fmt.Errorf("Failed to resolve glob '%s': '%w'.", sourcePathGlob, err)
+		}
+
+		if sourcePaths == nil {
+			return fmt.Errorf("Unable to find source path.")
 		}
 
 		for _, sourcePath := range sourcePaths {
@@ -195,17 +199,17 @@ func (this *FileOperation) Exec(baseDir string) error {
 
 		sourcePaths, err := filepath.Glob(sourcePathGlob)
 		if err != nil {
-			fmt.Errorf("Failed to resolve glob '%s': '%w'.", sourcePathGlob, err)
+			return fmt.Errorf("Failed to resolve glob '%s': '%w'.", sourcePathGlob, err)
+		}
+
+		if sourcePaths == nil {
+			return fmt.Errorf("Unable to find source path.")
 		}
 
 		for _, sourcePath := range sourcePaths {
 			finalDestPath := destPath
 			if IsDir(destPath) {
 				finalDestPath = filepath.Join(destPath, filepath.Base(sourcePath))
-			}
-
-			if sourcePath == finalDestPath {
-				continue
 			}
 
 			err = os.Rename(sourcePath, finalDestPath)

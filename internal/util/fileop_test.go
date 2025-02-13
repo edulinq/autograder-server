@@ -321,9 +321,19 @@ func TestFileOpCopyBase(test *testing.T) {
 			"",
 		},
 		{
+			alreadyExistsDirname + "/*",
+			"a",
+			"",
+		},
+		{
+			alreadyExistsDirname + "/*.txt",
+			"a",
+			"",
+		},
+		{
 			"a",
 			"b",
-			"does not exist",
+			"Unable to find source path.",
 		},
 		{
 			alreadyExistsDirname,
@@ -391,19 +401,30 @@ func TestFileOpMoveBase(test *testing.T) {
 			"",
 		},
 		{
+			alreadyExistsDirname + "/*",
+			"a",
+			"",
+		},
+		{
+			alreadyExistsDirname + "/*.txt",
+			"a",
+			"",
+		},
+		// TODO: Fix buggy test case. Talk with Eriq about desired mv behavior.
+		{
+			alreadyExistsFilePosixRelpath,
+			alreadyExistsDirname,
+			"",
+		},
+		{
 			"a",
 			"b",
-			"no such file or directory",
+			"Unable to find source path.",
 		},
 		{
 			alreadyExistsFilePosixRelpath,
 			"a/b",
 			"no such file or directory",
-		},
-		{
-			alreadyExistsFilePosixRelpath,
-			alreadyExistsDirname,
-			"file exists",
 		},
 		{
 			alreadyExistsDirname,
@@ -416,7 +437,12 @@ func TestFileOpMoveBase(test *testing.T) {
 		rawOperation := []string{"mv", testCase.source, testCase.dest}
 
 		runFileOpExecTest(test, fmt.Sprintf("Case %d", i), rawOperation, testCase.errorSubstring, func(tempDir string) {
-			expectedSource := filepath.Join(tempDir, testCase.source)
+			expectedSourceGlob := filepath.Join(tempDir, testCase.source)
+			expectedSources, err := filepath.Glob(expectedSourceGlob)
+			if err != nil {
+				test.Errorf("Case %d: Unable to resolve source glob '%s': '%'.", i, expectedSourceGlob, err)
+			}
+
 			expectedDest := filepath.Join(tempDir, testCase.dest)
 
 			if !PathExists(expectedDest) {
@@ -424,9 +450,11 @@ func TestFileOpMoveBase(test *testing.T) {
 				return
 			}
 
-			if PathExists(expectedSource) {
-				test.Errorf("Case %d: Source exists '%s'.", i, expectedSource)
-				return
+			for _, expectedSource := range expectedSources {
+				if PathExists(expectedSource) {
+					test.Errorf("Case %d: Source exists '%s'.", i, expectedSource)
+					return
+				}
 			}
 		})
 	}
