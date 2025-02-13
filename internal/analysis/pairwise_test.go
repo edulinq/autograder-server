@@ -201,7 +201,7 @@ func TestPairwiseWithPythonNotebook(test *testing.T) {
 		filepath.Join(tempDir, "py"),
 	}
 
-	sims, unmatches, _, _, err := computeFileSims(paths, nil)
+	sims, unmatches, _, _, err := computeFileSims(paths, nil, nil)
 	if err != nil {
 		test.Fatalf("Failed to compute file similarity: '%v'.", err)
 	}
@@ -224,6 +224,40 @@ func TestPairwiseWithPythonNotebook(test *testing.T) {
 
 	if !reflect.DeepEqual(expected, sims) {
 		test.Fatalf("Results not as expected. Expected: '%s', Actual: '%s'.", util.MustToJSONIndent(expected), util.MustToJSONIndent(sims))
+	}
+}
+
+// Ensure that the default engines run.
+// Full output checking will be left to the fake engine.
+func TestPairwiseAnalysisDefaultEnginesBase(test *testing.T) {
+	docker.EnsureOrSkipForTest(test)
+
+	forceDefaultEnginesForTesting = true
+	defer func() {
+		forceDefaultEnginesForTesting = false
+	}()
+
+	defaultSimilarityEngines[1].(*jplag.JPlagEngine).MinTokens = 5
+	defer func() {
+		defaultSimilarityEngines[1].(*jplag.JPlagEngine).MinTokens = jplag.DEFAULT_MIN_TOKENS
+	}()
+
+	ids := []string{
+		"course101::hw0::course-student@test.edulinq.org::1697406256",
+		"course101::hw0::course-student@test.edulinq.org::1697406272",
+	}
+
+	results, pendingCount, err := PairwiseAnalysis(ids, true, "server-admin@test.edulinq.org")
+	if err != nil {
+		test.Fatalf("Failed to do pairwise analysis: '%v'.", err)
+	}
+
+	if pendingCount != 0 {
+		test.Fatalf("Found %d pending results, when 0 were expected.", pendingCount)
+	}
+
+	if len(results) != 1 {
+		test.Fatalf("Number of results not as expected. Expected: %d, Actual: %d.", 1, len(results))
 	}
 }
 

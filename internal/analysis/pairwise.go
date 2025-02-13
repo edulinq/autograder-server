@@ -128,6 +128,9 @@ func runPairwiseAnalysis(keys []model.PairwiseKey, initiatorEmail string) ([]*mo
 	lockmanager.Lock(lockKey)
 	defer lockmanager.Unlock(lockKey)
 
+	templateFileStore := NewTemplateFileStore()
+	defer templateFileStore.Close()
+
 	poolSize := config.ANALYSIS_PAIRWISE_COURSE_POOL_SIZE.Get()
 	type PoolResult struct {
 		Result  *model.PairwiseAnalysis
@@ -136,7 +139,7 @@ func runPairwiseAnalysis(keys []model.PairwiseKey, initiatorEmail string) ([]*mo
 	}
 
 	poolResults, _, err := util.RunParallelPoolMap(poolSize, keys, func(key model.PairwiseKey) (PoolResult, error) {
-		result, runTime, err := runSinglePairwiseAnalysis(key)
+		result, runTime, err := runSinglePairwiseAnalysis(key, templateFileStore)
 		if err != nil {
 			err = fmt.Errorf("Failed to perform pairwise analysis on submissions %s: '%w'.", key.String(), err)
 		}
@@ -162,7 +165,7 @@ func runPairwiseAnalysis(keys []model.PairwiseKey, initiatorEmail string) ([]*mo
 	return results, errs
 }
 
-func runSinglePairwiseAnalysis(pairwiseKey model.PairwiseKey) (*model.PairwiseAnalysis, int64, error) {
+func runSinglePairwiseAnalysis(pairwiseKey model.PairwiseKey, templateFileStore *TemplateFileStore) (*model.PairwiseAnalysis, int64, error) {
 	// Lock this key so we don't try to do the analysis multiple times.
 	lockKey := fmt.Sprintf("analysis-pairwise-single-%s", pairwiseKey.String())
 	lockmanager.Lock(lockKey)
@@ -179,7 +182,7 @@ func runSinglePairwiseAnalysis(pairwiseKey model.PairwiseKey) (*model.PairwiseAn
 	}
 
 	// Nothing cached, compute the analsis.
-	result, runTime, err := computeSinglePairwiseAnalysis(pairwiseKey)
+	result, runTime, err := computeSinglePairwiseAnalysis(pairwiseKey, templateFileStore)
 	if err != nil {
 		return nil, 0, fmt.Errorf("Failed to compute pairwise analysis for '%s': '%w'.", pairwiseKey.String(), err)
 	}
@@ -193,7 +196,7 @@ func runSinglePairwiseAnalysis(pairwiseKey model.PairwiseKey) (*model.PairwiseAn
 	return result, runTime, nil
 }
 
-func computeSinglePairwiseAnalysis(pairwiseKey model.PairwiseKey) (*model.PairwiseAnalysis, int64, error) {
+func computeSinglePairwiseAnalysis(pairwiseKey model.PairwiseKey, templateFileStore *TemplateFileStore) (*model.PairwiseAnalysis, int64, error) {
 	tempDir, err := util.MkDirTemp("pairwise-analysis-")
 	if err != nil {
 		return nil, 0, fmt.Errorf("Failed to make temp dir: '%w'.", err)
@@ -219,7 +222,7 @@ func computeSinglePairwiseAnalysis(pairwiseKey model.PairwiseKey) (*model.Pairwi
 		submissionDirs[i] = submissionDir
 	}
 
-	fileSimilarities, unmatches, skipped, totalRunTime, err := computeFileSims(submissionDirs, optionsAssignment)
+	fileSimilarities, unmatches, skipped, totalRunTime, err := computeFileSims(submissionDirs, optionsAssignment, templateFileStore)
 	if err != nil {
 		return nil, 0, fmt.Errorf("Failed to compute similarities for %v: '%w'.", pairwiseKey, err)
 	}
@@ -229,10 +232,18 @@ func computeSinglePairwiseAnalysis(pairwiseKey model.PairwiseKey) (*model.Pairwi
 	return analysis, totalRunTime, nil
 }
 
-func computeFileSims(inputDirs [2]string, assignment *model.Assignment) (map[string][]*model.FileSimilarity, [][2]string, []string, int64, error) {
+func computeFileSims(inputDirs [2]string, assignment *model.Assignment, templateFileStore *TemplateFileStore) (map[string][]*model.FileSimilarity, [][2]string, []string, int64, error) {
 	engines, err := getEngines()
 	if err != nil {
 		return nil, nil, nil, 0, err
+	}
+
+	templateDir := ""
+	if templateFileStore != nil {
+		templateDir, err = templateFileStore.GetTemplatePath(assignment)
+		if err != nil {
+			return nil, nil, nil, 0, fmt.Errorf("Failed to get template files: '%w'.", err)
+		}
 	}
 
 	// When preparing source code, we may rename files (e.g. for iPython notebooks).
@@ -267,6 +278,15 @@ func computeFileSims(inputDirs [2]string, assignment *model.Assignment) (map[str
 			continue
 		}
 
+		// Check for the template file.
+		templatePath := ""
+		if templateDir != "" {
+			path := filepath.Join(templateDir, relpath)
+			if util.IsFile(path) {
+				templatePath = path
+			}
+		}
+
 		paths := [2]string{
 			filepath.Join(inputDirs[0], relpath),
 			filepath.Join(inputDirs[1], relpath),
@@ -285,7 +305,7 @@ func computeFileSims(inputDirs [2]string, assignment *model.Assignment) (map[str
 			go func(index int, simEngine core.SimilarityEngine) {
 				defer engineWaitGroup.Done()
 
-				similarity, runTime, err := simEngine.ComputeFileSimilarity(paths, "")
+				similarity, runTime, err := simEngine.ComputeFileSimilarity(paths, templatePath)
 				if err != nil {
 					errs[index] = fmt.Errorf("Unable to compute similarity for '%s' using engine '%s': '%w'", relpath, simEngine.GetName(), err)
 				} else {

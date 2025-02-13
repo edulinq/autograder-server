@@ -95,6 +95,12 @@ func addTestCourse(configPath string) (*model.Course, error) {
 		return nil, fmt.Errorf("Failed to copy source dir from '%s' to '%s': '%w'.", baseDir, sourceDir, err)
 	}
 
+	// Fetch any template files.
+	_, err = course.FetchAssignmentTemplateFiles()
+	if err != nil {
+		return nil, fmt.Errorf("Failed to fetch assignment template files: '%w'.", err)
+	}
+
 	return course, nil
 }
 
