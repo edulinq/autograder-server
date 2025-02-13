@@ -21,8 +21,9 @@ const (
 
 	MAX_RUNTIME_SECS = 2 * 60
 
-	OUT_DIRNAME  = "out"
-	OUT_FILENAME = "results.csv"
+	OUT_DIRNAME       = "out"
+	OUT_FILENAME      = "results.csv"
+	TEMPLATE_FILENAME = "template"
 
 	DEFAULT_MIN_TOKENS = 12
 )
@@ -50,7 +51,7 @@ func (this *JPlagEngine) IsAvailable() bool {
 	return docker.CanAccessDocker()
 }
 
-func (this *JPlagEngine) ComputeFileSimilarity(paths [2]string) (*model.FileSimilarity, int64, error) {
+func (this *JPlagEngine) ComputeFileSimilarity(paths [2]string, templatePath string) (*model.FileSimilarity, int64, error) {
 	err := ensureImage()
 	if err != nil {
 		return nil, 0, fmt.Errorf("Failed to ensure JPlag docker image exists: '%w'.", err)
@@ -70,12 +71,19 @@ func (this *JPlagEngine) ComputeFileSimilarity(paths [2]string) (*model.FileSimi
 		return nil, 0, fmt.Errorf("Failed to create temp src dir: '%w'.", err)
 	}
 
+	templateDir := filepath.Join(tempDir, "template")
+	err = util.MkDir(templateDir)
+	if err != nil {
+		return nil, 0, fmt.Errorf("Failed to create temp template dir: '%w'.", err)
+	}
+
 	originalFilename := filepath.Base(paths[0])
 	language := getLanguage(originalFilename)
 
+	extension := ""
 	tempFilenames := make([]string, 0, 2)
 	for i, path := range paths {
-		extension := filepath.Ext(path)
+		extension = filepath.Ext(path)
 		if language == DEFAULT_LANGUAGE {
 			// JPlag is very strict about file extensions.
 			// If we are using the fallback language, change the extension.
@@ -90,6 +98,15 @@ func (this *JPlagEngine) ComputeFileSimilarity(paths [2]string) (*model.FileSimi
 		}
 
 		tempFilenames = append(tempFilenames, tempFilename)
+	}
+
+	templateFilename := fmt.Sprintf("%s%s", TEMPLATE_FILENAME, extension)
+	tempTemplatePath := filepath.Join(templateDir, templateFilename)
+	if templatePath != "" {
+		err = util.CopyFile(templatePath, tempTemplatePath)
+		if err != nil {
+			return nil, 0, fmt.Errorf("Failed to copy template file to temp dir: '%w'.", err)
+		}
 	}
 
 	// Ensure permissions are very open because UID/GID will not be properly aligned.
@@ -112,6 +129,10 @@ func (this *JPlagEngine) ComputeFileSimilarity(paths [2]string) (*model.FileSimi
 		"--language", getLanguage(tempFilenames[0]),
 		"--min-tokens", fmt.Sprintf("%d", this.MinTokens),
 		"/jplag/src",
+	}
+
+	if templatePath != "" {
+		arguments = append(arguments, "--base-code", "template")
 	}
 
 	stdout, stderr, _, _, err := docker.RunContainer(context.Background(), this, getImageName(), mounts, arguments, NAME, MAX_RUNTIME_SECS)

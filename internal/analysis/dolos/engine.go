@@ -21,8 +21,9 @@ const (
 
 	MAX_RUNTIME_SECS = 2 * 60
 
-	OUT_DIRNAME  = "out"
-	OUT_FILENAME = "pairs.csv"
+	OUT_DIRNAME       = "out"
+	OUT_FILENAME      = "pairs.csv"
+	TEMPLATE_FILENAME = "template"
 )
 
 var (
@@ -44,7 +45,7 @@ func (this *dolosEngine) IsAvailable() bool {
 	return docker.CanAccessDocker()
 }
 
-func (this *dolosEngine) ComputeFileSimilarity(paths [2]string) (*model.FileSimilarity, int64, error) {
+func (this *dolosEngine) ComputeFileSimilarity(paths [2]string, templatePath string) (*model.FileSimilarity, int64, error) {
 	err := ensureImage()
 	if err != nil {
 		return nil, 0, fmt.Errorf("Failed to ensure Dolos docker image exists: '%w'.", err)
@@ -70,6 +71,15 @@ func (this *dolosEngine) ComputeFileSimilarity(paths [2]string) (*model.FileSimi
 		tempFilenames = append(tempFilenames, tempFilename)
 	}
 
+	templateFilename := fmt.Sprintf("%s%s", TEMPLATE_FILENAME, filepath.Ext(templatePath))
+	tempTemplatePath := filepath.Join(tempDir, templateFilename)
+	if templatePath != "" {
+		err = util.CopyFile(templatePath, tempTemplatePath)
+		if err != nil {
+			return nil, 0, fmt.Errorf("Failed to copy template file to temp dir: '%w'.", err)
+		}
+	}
+
 	// Ensure permissions are very open because UID/GID will not be properly aligned.
 	err = util.RecursiveChmod(tempDir, 0666, 0777)
 	if err != nil {
@@ -90,6 +100,10 @@ func (this *dolosEngine) ComputeFileSimilarity(paths [2]string) (*model.FileSimi
 		"--language", getLanguage(tempFilenames[0]),
 		tempFilenames[0],
 		tempFilenames[1],
+	}
+
+	if templatePath != "" {
+		arguments = append(arguments, "--ignore", templateFilename)
 	}
 
 	stdout, stderr, _, _, err := docker.RunContainer(context.Background(), this, getImageName(), mounts, arguments, NAME, MAX_RUNTIME_SECS)
