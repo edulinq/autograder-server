@@ -10,15 +10,15 @@ import (
 	"github.com/edulinq/autograder/internal/util"
 )
 
-func TestAnalysisOptionsValidateBase(test *testing.T) {
+func TestAssignmentAnalysisOptionsValidateBase(test *testing.T) {
 	testCases := []struct {
-		input          *AnalysisOptions
-		expected       *AnalysisOptions
+		input          *AssignmentAnalysisOptions
+		expected       *AssignmentAnalysisOptions
 		errorSubstring string
 	}{
 		{
-			&AnalysisOptions{},
-			&AnalysisOptions{
+			&AssignmentAnalysisOptions{},
+			&AssignmentAnalysisOptions{
 				IncludePatterns: []string{
 					DEFAULT_INCLUDE_REGEX,
 				},
@@ -26,7 +26,7 @@ func TestAnalysisOptionsValidateBase(test *testing.T) {
 			"",
 		},
 		{
-			&AnalysisOptions{
+			&AssignmentAnalysisOptions{
 				IncludePatterns: []string{
 					"AAA",
 				},
@@ -34,7 +34,7 @@ func TestAnalysisOptionsValidateBase(test *testing.T) {
 					"ZZZ",
 				},
 			},
-			&AnalysisOptions{
+			&AssignmentAnalysisOptions{
 				IncludePatterns: []string{
 					"AAA",
 				},
@@ -45,7 +45,7 @@ func TestAnalysisOptionsValidateBase(test *testing.T) {
 			"",
 		},
 		{
-			&AnalysisOptions{
+			&AssignmentAnalysisOptions{
 				TemplateFiles: []*util.FileSpec{
 					&util.FileSpec{
 						Type: util.FILESPEC_TYPE_PATH,
@@ -56,7 +56,7 @@ func TestAnalysisOptionsValidateBase(test *testing.T) {
 					util.NewFileOperation([]string{"copy", " a/../b ", "c"}),
 				},
 			},
-			&AnalysisOptions{
+			&AssignmentAnalysisOptions{
 				IncludePatterns: []string{
 					DEFAULT_INCLUDE_REGEX,
 				},
@@ -83,7 +83,7 @@ func TestAnalysisOptionsValidateBase(test *testing.T) {
 		},
 		// Bad Include/Exclude Patterns
 		{
-			&AnalysisOptions{
+			&AssignmentAnalysisOptions{
 				IncludePatterns: []string{
 					"(error",
 				},
@@ -92,7 +92,7 @@ func TestAnalysisOptionsValidateBase(test *testing.T) {
 			"Failed to compile include pattern",
 		},
 		{
-			&AnalysisOptions{
+			&AssignmentAnalysisOptions{
 				ExcludePatterns: []string{
 					"(error",
 				},
@@ -102,7 +102,7 @@ func TestAnalysisOptionsValidateBase(test *testing.T) {
 		},
 		// Bad Template Paths
 		{
-			&AnalysisOptions{
+			&AssignmentAnalysisOptions{
 				TemplateFiles: []*util.FileSpec{
 					&util.FileSpec{
 						Type: util.FILESPEC_TYPE_PATH,
@@ -114,7 +114,7 @@ func TestAnalysisOptionsValidateBase(test *testing.T) {
 			"not allowed to be absolute",
 		},
 		{
-			&AnalysisOptions{
+			&AssignmentAnalysisOptions{
 				TemplateFiles: []*util.FileSpec{
 					&util.FileSpec{
 						Type: util.FILESPEC_TYPE_PATH,
@@ -126,7 +126,7 @@ func TestAnalysisOptionsValidateBase(test *testing.T) {
 			"outside of the its base directory",
 		},
 		{
-			&AnalysisOptions{
+			&AssignmentAnalysisOptions{
 				TemplateFiles: []*util.FileSpec{
 					&util.FileSpec{
 						Type: util.FILESPEC_TYPE_URL,
@@ -139,7 +139,7 @@ func TestAnalysisOptionsValidateBase(test *testing.T) {
 			"outside of the its base directory",
 		},
 		{
-			&AnalysisOptions{
+			&AssignmentAnalysisOptions{
 				TemplateFiles: []*util.FileSpec{
 					&util.FileSpec{
 						Type: util.FILESPEC_TYPE_GIT,
@@ -152,7 +152,7 @@ func TestAnalysisOptionsValidateBase(test *testing.T) {
 			"outside of the its base directory",
 		},
 		{
-			&AnalysisOptions{
+			&AssignmentAnalysisOptions{
 				TemplateFileOps: []*util.FileOperation{
 					util.NewFileOperation([]string{"copy", "/a", "b"}),
 				},
@@ -161,7 +161,7 @@ func TestAnalysisOptionsValidateBase(test *testing.T) {
 			"Only relative paths are allowed",
 		},
 		{
-			&AnalysisOptions{
+			&AssignmentAnalysisOptions{
 				TemplateFileOps: []*util.FileOperation{
 					util.NewFileOperation([]string{"copy", "../a", "b"}),
 				},
@@ -198,27 +198,27 @@ func TestAnalysisOptionsValidateBase(test *testing.T) {
 	}
 }
 
-func TestAnalysisOptionsMatchRelpathBase(test *testing.T) {
+func TestAssignmentAnalysisOptionsMatchRelpathBase(test *testing.T) {
 	testCases := []struct {
-		options  *AnalysisOptions
+		options  *AssignmentAnalysisOptions
 		relpath  string
 		expected bool
 	}{
 		// Default values.
 		{
-			&AnalysisOptions{},
+			&AssignmentAnalysisOptions{},
 			"ZZZ",
 			true,
 		},
 		{
-			&AnalysisOptions{},
+			&AssignmentAnalysisOptions{},
 			"",
 			false,
 		},
 
 		// (include && exclude).
 		{
-			&AnalysisOptions{
+			&AssignmentAnalysisOptions{
 				IncludePatterns: []string{
 					"A",
 				},
@@ -232,7 +232,7 @@ func TestAnalysisOptionsMatchRelpathBase(test *testing.T) {
 
 		// (include && !exclude).
 		{
-			&AnalysisOptions{
+			&AssignmentAnalysisOptions{
 				IncludePatterns: []string{
 					"A",
 				},
@@ -246,7 +246,7 @@ func TestAnalysisOptionsMatchRelpathBase(test *testing.T) {
 
 		// (!include && exclude).
 		{
-			&AnalysisOptions{
+			&AssignmentAnalysisOptions{
 				IncludePatterns: []string{
 					"A",
 				},
@@ -260,7 +260,7 @@ func TestAnalysisOptionsMatchRelpathBase(test *testing.T) {
 
 		// (!include && !exclude).
 		{
-			&AnalysisOptions{
+			&AssignmentAnalysisOptions{
 				IncludePatterns: []string{
 					"A",
 				},
@@ -556,19 +556,19 @@ func TestNewPairwiseAnalysisSummaryBase(test *testing.T) {
 	}
 }
 
-func TestAnalysisOptionsFetchTemplateFilesBase(test *testing.T) {
+func TestAssignmentAnalysisOptionsFetchTemplateFilesBase(test *testing.T) {
 	testCases := []struct {
-		options          *AnalysisOptions
+		options          *AssignmentAnalysisOptions
 		expectedRelpaths []string
 		errorSubstring   string
 	}{
 		{
-			&AnalysisOptions{},
+			&AssignmentAnalysisOptions{},
 			[]string{},
 			"",
 		},
 		{
-			&AnalysisOptions{
+			&AssignmentAnalysisOptions{
 				TemplateFiles: []*util.FileSpec{
 					&util.FileSpec{
 						Type: util.FILESPEC_TYPE_PATH,
@@ -582,7 +582,7 @@ func TestAnalysisOptionsFetchTemplateFilesBase(test *testing.T) {
 			"",
 		},
 		{
-			&AnalysisOptions{
+			&AssignmentAnalysisOptions{
 				TemplateFiles: []*util.FileSpec{
 					&util.FileSpec{
 						Type: util.FILESPEC_TYPE_PATH,
@@ -600,7 +600,7 @@ func TestAnalysisOptionsFetchTemplateFilesBase(test *testing.T) {
 			"",
 		},
 		{
-			&AnalysisOptions{
+			&AssignmentAnalysisOptions{
 				TemplateFiles: []*util.FileSpec{
 					&util.FileSpec{
 						Type: util.FILESPEC_TYPE_PATH,

@@ -95,7 +95,7 @@ func TestPairwiseBase(test *testing.T) {
 		},
 		Results: []*model.PairwiseAnalysis{
 			&model.PairwiseAnalysis{
-				Options:           assignment.AnalysisOptions,
+				Options:           assignment.AssignmentAnalysisOptions,
 				AnalysisTimestamp: timestamp.Zero(),
 				SubmissionIDs: model.NewPairwiseKey(
 					"course101::hw0::course-student@test.edulinq.org::1697406256",

@@ -19,7 +19,7 @@ const (
 	DEFAULT_INCLUDE_REGEX string = ".+"
 )
 
-type AnalysisOptions struct {
+type AssignmentAnalysisOptions struct {
 	IncludePatterns []string `json:"include-patterns,omitempty"`
 	ExcludePatterns []string `json:"exclude-patterns,omitempty"`
 
@@ -53,7 +53,7 @@ type AnalysisSummary struct {
 }
 
 type IndividualAnalysis struct {
-	Options *AnalysisOptions `json:"options,omitempty"`
+	Options *AssignmentAnalysisOptions `json:"options,omitempty"`
 
 	AnalysisTimestamp timestamp.Timestamp `json:"analysis-timestamp"`
 
@@ -95,7 +95,7 @@ type IndividualAnalysisSummary struct {
 }
 
 type PairwiseAnalysis struct {
-	Options *AnalysisOptions `json:"options,omitempty"`
+	Options *AssignmentAnalysisOptions `json:"options,omitempty"`
 
 	AnalysisTimestamp timestamp.Timestamp `json:"analysis-timestamp"`
 	SubmissionIDs     PairwiseKey         `json:"submission-ids"`
@@ -122,7 +122,7 @@ func NewPairwiseKey(fullSubmissionID1 string, fullSubmissionID2 string) Pairwise
 	})
 }
 
-func (this *AnalysisOptions) Validate() error {
+func (this *AssignmentAnalysisOptions) Validate() error {
 	if this == nil {
 		return fmt.Errorf("Analysis options cannot be nil.")
 	}
@@ -137,7 +137,7 @@ func (this *AnalysisOptions) Validate() error {
 
 // Include/Exclude patterns must be valid regular expressions.
 // If no include patterns are supplied, DEFAULT_INCLUDE_REGEX is used.
-func (this *AnalysisOptions) validateIncludeExclude() error {
+func (this *AssignmentAnalysisOptions) validateIncludeExclude() error {
 	var errs error
 
 	if len(this.IncludePatterns) == 0 {
@@ -162,7 +162,7 @@ func (this *AnalysisOptions) validateIncludeExclude() error {
 }
 
 // Check the inclusion/exclusion to see if a given relpah is allowed.
-func (this *AnalysisOptions) MatchRelpath(relpath string) bool {
+func (this *AssignmentAnalysisOptions) MatchRelpath(relpath string) bool {
 	match := false
 	for _, pattern := range this.IncludePatterns {
 		regex := regexp.MustCompile(pattern)
@@ -212,9 +212,9 @@ func NewPairwiseAnalysis(pairwiseKey PairwiseKey, assignment *Assignment, simila
 		totalMeanSimilarity /= float64(len(similarities))
 	}
 
-	var options *AnalysisOptions
+	var options *AssignmentAnalysisOptions
 	if assignment != nil {
-		options = assignment.AnalysisOptions
+		options = assignment.AssignmentAnalysisOptions
 	}
 
 	return &PairwiseAnalysis{

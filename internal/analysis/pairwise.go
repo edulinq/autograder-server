@@ -294,7 +294,7 @@ func computeFileSims(inputDirs [2]string, assignment *model.Assignment, template
 
 	for _, relpath := range matches {
 		// Check if this file should be skipped because of inclusions/exclusions.
-		if (assignment != nil) && (assignment.AnalysisOptions != nil) && !assignment.AnalysisOptions.MatchRelpath(relpath) {
+		if (assignment != nil) && (assignment.AssignmentAnalysisOptions != nil) && !assignment.AssignmentAnalysisOptions.MatchRelpath(relpath) {
 			skipped = append(skipped, relpath)
 			continue
 		}

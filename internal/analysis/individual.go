@@ -190,7 +190,7 @@ func computeSingleIndividualAnalysis(fullSubmissionID string, computeDeltas bool
 
 	analysis := &model.IndividualAnalysis{
 		AnalysisTimestamp: timestamp.Now(),
-		Options:           assignment.AnalysisOptions,
+		Options:           assignment.AssignmentAnalysisOptions,
 
 		FullID:       gradingResult.Info.ID,
 		ShortID:      gradingResult.Info.ShortID,
@@ -263,7 +263,7 @@ func individualFileAnalysis(submissionDir string, assignment *model.Assignment) 
 
 	for _, relpath := range relpaths {
 		// Check if this file should be skipped because of inclusions/exclusions.
-		if (assignment.AnalysisOptions != nil) && !assignment.AnalysisOptions.MatchRelpath(relpath) {
+		if (assignment.AssignmentAnalysisOptions != nil) && !assignment.AssignmentAnalysisOptions.MatchRelpath(relpath) {
 			skipped = append(skipped, relpath)
 			continue
 		}

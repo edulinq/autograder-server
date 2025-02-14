@@ -29,7 +29,7 @@ func TestPairwiseAnalysisFake(test *testing.T) {
 
 	expected := []*model.PairwiseAnalysis{
 		&model.PairwiseAnalysis{
-			Options:           assignment.AnalysisOptions,
+			Options:           assignment.AssignmentAnalysisOptions,
 			AnalysisTimestamp: timestamp.Zero(),
 			SubmissionIDs: model.NewPairwiseKey(
 				"course101::hw0::course-student@test.edulinq.org::1697406256",
@@ -53,7 +53,7 @@ func TestPairwiseAnalysisFake(test *testing.T) {
 			TotalMeanSimilarity: 0.13,
 		},
 		&model.PairwiseAnalysis{
-			Options:           assignment.AnalysisOptions,
+			Options:           assignment.AssignmentAnalysisOptions,
 			AnalysisTimestamp: timestamp.Zero(),
 			SubmissionIDs: model.NewPairwiseKey(
 				"course101::hw0::course-student@test.edulinq.org::1697406256",
@@ -77,7 +77,7 @@ func TestPairwiseAnalysisFake(test *testing.T) {
 			TotalMeanSimilarity: 0.13,
 		},
 		&model.PairwiseAnalysis{
-			Options:           assignment.AnalysisOptions,
+			Options:           assignment.AssignmentAnalysisOptions,
 			AnalysisTimestamp: timestamp.Zero(),
 			SubmissionIDs: model.NewPairwiseKey(
 				"course101::hw0::course-student@test.edulinq.org::1697406265",
@@ -310,7 +310,7 @@ func TestPairwiseAnalysisIncludeExclude(test *testing.T) {
 	defer db.ResetForTesting()
 
 	testCases := []struct {
-		options       *model.AnalysisOptions
+		options       *model.AssignmentAnalysisOptions
 		expectedCount int
 	}{
 		{
@@ -318,7 +318,7 @@ func TestPairwiseAnalysisIncludeExclude(test *testing.T) {
 			1,
 		},
 		{
-			&model.AnalysisOptions{
+			&model.AssignmentAnalysisOptions{
 				IncludePatterns: []string{
 					`\.c$`,
 				},
@@ -326,7 +326,7 @@ func TestPairwiseAnalysisIncludeExclude(test *testing.T) {
 			0,
 		},
 		{
-			&model.AnalysisOptions{
+			&model.AssignmentAnalysisOptions{
 				ExcludePatterns: []string{
 					`\.c$`,
 				},
@@ -334,7 +334,7 @@ func TestPairwiseAnalysisIncludeExclude(test *testing.T) {
 			1,
 		},
 		{
-			&model.AnalysisOptions{
+			&model.AssignmentAnalysisOptions{
 				ExcludePatterns: []string{
 					`\.py$`,
 				},
@@ -362,7 +362,7 @@ func TestPairwiseAnalysisIncludeExclude(test *testing.T) {
 			}
 		}
 
-		assignment.AnalysisOptions = testCase.options
+		assignment.AssignmentAnalysisOptions = testCase.options
 		db.MustSaveAssignment(assignment)
 
 		options := AnalysisOptions{

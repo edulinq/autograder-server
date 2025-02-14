@@ -32,7 +32,7 @@ type Assignment struct {
 
 	docker.ImageInfo
 
-	AnalysisOptions *AnalysisOptions `json:"analysis-options,omitempty"`
+	AssignmentAnalysisOptions *AssignmentAnalysisOptions `json:"analysis-options,omitempty"`
 
 	// Ignore these fields in JSON.
 	RelSourceDir string  `json:"_rel_source-dir"`
@@ -177,8 +177,8 @@ func (this *Assignment) Validate() error {
 		this.ImageInfo.MaxRuntimeSecs = systemMaxRuntimeSecs
 	}
 
-	if this.AnalysisOptions != nil {
-		err = this.AnalysisOptions.Validate()
+	if this.AssignmentAnalysisOptions != nil {
+		err = this.AssignmentAnalysisOptions.Validate()
 		if err != nil {
 			return fmt.Errorf("Failed to validate analysis options: '%w'.", err)
 		}
@@ -206,11 +206,11 @@ func (this *Assignment) GetImageLock() *sync.Mutex {
 }
 
 func (this *Assignment) FetchTemplateFiles() ([]string, error) {
-	if this.AnalysisOptions == nil {
+	if this.AssignmentAnalysisOptions == nil {
 		return []string{}, nil
 	}
 
-	if len(this.AnalysisOptions.TemplateFiles) == 0 {
+	if len(this.AssignmentAnalysisOptions.TemplateFiles) == 0 {
 		return []string{}, nil
 	}
 
@@ -220,7 +220,7 @@ func (this *Assignment) FetchTemplateFiles() ([]string, error) {
 		return []string{}, fmt.Errorf("Failed to make template dir '%s': '%w'.", destDir, err)
 	}
 
-	relpaths, err := this.AnalysisOptions.FetchTemplateFiles(this.GetSourceDir(), destDir)
+	relpaths, err := this.AssignmentAnalysisOptions.FetchTemplateFiles(this.GetSourceDir(), destDir)
 	if err != nil {
 		return []string{}, fmt.Errorf("Failed to fetch template files: '%w'.", err)
 	}

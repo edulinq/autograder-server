@@ -25,7 +25,7 @@ func TestIndividualAnalysisBase(test *testing.T) {
 	expected := []*model.IndividualAnalysis{
 		&model.IndividualAnalysis{
 			AnalysisTimestamp: timestamp.Zero(),
-			Options:           assignment.AnalysisOptions,
+			Options:           assignment.AssignmentAnalysisOptions,
 
 			FullID:       ids[0],
 			ShortID:      "1697406265",
@@ -142,7 +142,7 @@ func TestIndividualAnalysisIncludeExclude(test *testing.T) {
 	defer db.ResetForTesting()
 
 	testCases := []struct {
-		options       *model.AnalysisOptions
+		options       *model.AssignmentAnalysisOptions
 		expectedCount int
 	}{
 		{
@@ -150,7 +150,7 @@ func TestIndividualAnalysisIncludeExclude(test *testing.T) {
 			1,
 		},
 		{
-			&model.AnalysisOptions{
+			&model.AssignmentAnalysisOptions{
 				IncludePatterns: []string{
 					`\.c$`,
 				},
@@ -158,7 +158,7 @@ func TestIndividualAnalysisIncludeExclude(test *testing.T) {
 			0,
 		},
 		{
-			&model.AnalysisOptions{
+			&model.AssignmentAnalysisOptions{
 				ExcludePatterns: []string{
 					`\.c$`,
 				},
@@ -166,7 +166,7 @@ func TestIndividualAnalysisIncludeExclude(test *testing.T) {
 			1,
 		},
 		{
-			&model.AnalysisOptions{
+			&model.AssignmentAnalysisOptions{
 				ExcludePatterns: []string{
 					`\.py$`,
 				},
@@ -191,7 +191,7 @@ func TestIndividualAnalysisIncludeExclude(test *testing.T) {
 			}
 		}
 
-		assignment.AnalysisOptions = testCase.options
+		assignment.AssignmentAnalysisOptions = testCase.options
 		db.MustSaveAssignment(assignment)
 
 		options := AnalysisOptions{

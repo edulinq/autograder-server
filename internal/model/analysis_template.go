@@ -8,7 +8,7 @@ import (
 )
 
 // Both file specs and file ops for templare files must be valid and local only (relative).
-func (this *AnalysisOptions) validateTemplateFiles() error {
+func (this *AssignmentAnalysisOptions) validateTemplateFiles() error {
 	var errs error
 
 	for i, spec := range this.TemplateFiles {
@@ -31,7 +31,7 @@ func (this *AnalysisOptions) validateTemplateFiles() error {
 // Fetch template files using the file specs from the baseDir,
 // and then execute any file operations on the target dir.
 // Return the relative paths to all the final template files.
-func (this *AnalysisOptions) FetchTemplateFiles(baseDir string, destDir string) ([]string, error) {
+func (this *AssignmentAnalysisOptions) FetchTemplateFiles(baseDir string, destDir string) ([]string, error) {
 	for i, spec := range this.TemplateFiles {
 		err := spec.CopyTarget(baseDir, destDir)
 		if err != nil {
