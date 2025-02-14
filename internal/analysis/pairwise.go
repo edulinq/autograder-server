@@ -38,22 +38,22 @@ var forceDefaultEnginesForTesting bool = false
 // Results will be saved to the database for use in future calls.
 // If only some results are cached,
 // then those will be fetched from the database while the rest are computed.
-// If blockForResults is true, then this function will block until all requested results are computed.
+// If options.WaitForCompletion is true, then this function will block until all requested results are computed.
 // Otherwise, this function will return any cached results from the database
 // and the remaining analysis will be done asynchronously.
 // Returns: (complete results, number of pending analysis runs, error)
-func PairwiseAnalysis(fullSubmissionIDs []string, blockForResults bool, initiatorEmail string) ([]*model.PairwiseAnalysis, int, error) {
+func PairwiseAnalysis(options AnalysisOptions, initiatorEmail string) ([]*model.PairwiseAnalysis, int, error) {
 	_, err := getEngines()
 	if err != nil {
 		return nil, 0, err
 	}
 
-	completeAnalysis, remainingKeys, err := getCachedPairwiseResults(fullSubmissionIDs)
+	completeAnalysis, remainingKeys, err := getCachedPairwiseResults(options.ResolvedSubmissionIDs)
 	if err != nil {
 		return nil, 0, err
 	}
 
-	if blockForResults {
+	if options.WaitForCompletion {
 		results, err := runPairwiseAnalysis(remainingKeys, initiatorEmail)
 		if err != nil {
 			return nil, 0, err

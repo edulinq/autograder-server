@@ -155,7 +155,12 @@ func testPairwise(test *testing.T, ids []string, expected []*model.PairwiseAnaly
 		test.Fatalf("Number of (pre) cached anslysis results not as expected. Expected: %d, Actual: %d.", expectedInitialCacheCount, len(queryResult))
 	}
 
-	results, pendingCount, err := PairwiseAnalysis(ids, true, "server-admin@test.edulinq.org")
+	options := AnalysisOptions{
+		ResolvedSubmissionIDs: ids,
+		WaitForCompletion:     true,
+	}
+
+	results, pendingCount, err := PairwiseAnalysis(options, "server-admin@test.edulinq.org")
 	if err != nil {
 		test.Fatalf("Failed to do pairwise analysis: '%v'.", err)
 	}
@@ -247,7 +252,12 @@ func TestPairwiseAnalysisDefaultEnginesBase(test *testing.T) {
 		"course101::hw0::course-student@test.edulinq.org::1697406272",
 	}
 
-	results, pendingCount, err := PairwiseAnalysis(ids, true, "server-admin@test.edulinq.org")
+	options := AnalysisOptions{
+		ResolvedSubmissionIDs: ids,
+		WaitForCompletion:     true,
+	}
+
+	results, pendingCount, err := PairwiseAnalysis(options, "server-admin@test.edulinq.org")
 	if err != nil {
 		test.Fatalf("Failed to do pairwise analysis: '%v'.", err)
 	}
@@ -354,7 +364,12 @@ func TestPairwiseAnalysisIncludeExclude(test *testing.T) {
 		assignment.AnalysisOptions = testCase.options
 		db.MustSaveAssignment(assignment)
 
-		results, pendingCount, err := PairwiseAnalysis(ids, true, "server-admin@test.edulinq.org")
+		options := AnalysisOptions{
+			ResolvedSubmissionIDs: ids,
+			WaitForCompletion:     true,
+		}
+
+		results, pendingCount, err := PairwiseAnalysis(options, "server-admin@test.edulinq.org")
 		if err != nil {
 			test.Errorf("Case %d: Failed to perform analysis: '%v'.", i, err)
 			continue

@@ -14,6 +14,13 @@ import (
 	"github.com/edulinq/autograder/internal/util"
 )
 
+type AnalysisOptions struct {
+	RawSubmissionSpecs []string `json:"submissions"`
+	WaitForCompletion  bool     `json:"wait-for-completion"`
+
+	ResolvedSubmissionIDs []string `json:"-"`
+}
+
 // Prepare any source files in a direcory for analysis.
 // The source files may be changed or moved.
 // If a file is moved, then the first return (renames) will map the new relpath to the old relpath.

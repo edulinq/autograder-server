@@ -102,7 +102,12 @@ func testIndividual(test *testing.T, ids []string, expected []*model.IndividualA
 		test.Fatalf("Number of (pre) cached anslysis results not as expected. Expected: %d, Actual: %d.", expectedInitialCacheCount, len(queryResult))
 	}
 
-	results, pendingCount, err := IndividualAnalysis(ids, true, "server-admin@test.edulinq.org")
+	options := AnalysisOptions{
+		ResolvedSubmissionIDs: ids,
+		WaitForCompletion:     true,
+	}
+
+	results, pendingCount, err := IndividualAnalysis(options, "server-admin@test.edulinq.org")
 	if err != nil {
 		test.Fatalf("Failed to do individual analysis: '%v'.", err)
 	}
@@ -188,7 +193,12 @@ func TestIndividualAnalysisIncludeExclude(test *testing.T) {
 		assignment.AnalysisOptions = testCase.options
 		db.MustSaveAssignment(assignment)
 
-		results, pendingCount, err := IndividualAnalysis(submissionIDs, true, "server-admin@test.edulinq.org")
+		options := AnalysisOptions{
+			ResolvedSubmissionIDs: submissionIDs,
+			WaitForCompletion:     true,
+		}
+
+		results, pendingCount, err := IndividualAnalysis(options, "server-admin@test.edulinq.org")
 		if err != nil {
 			test.Errorf("Case %d: Failed to perform analysis: '%v'.", i, err)
 			continue

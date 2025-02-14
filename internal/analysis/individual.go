@@ -16,13 +16,13 @@ import (
 	"github.com/edulinq/autograder/internal/util"
 )
 
-func IndividualAnalysis(fullSubmissionIDs []string, blockForResults bool, initiatorEmail string) ([]*model.IndividualAnalysis, int, error) {
-	completeAnalysis, remainingIDs, err := getCachedIndividualResults(fullSubmissionIDs)
+func IndividualAnalysis(options AnalysisOptions, initiatorEmail string) ([]*model.IndividualAnalysis, int, error) {
+	completeAnalysis, remainingIDs, err := getCachedIndividualResults(options.ResolvedSubmissionIDs)
 	if err != nil {
 		return nil, 0, err
 	}
 
-	if blockForResults {
+	if options.WaitForCompletion {
 		results, err := runIndividualAnalysis(remainingIDs, initiatorEmail)
 		if err != nil {
 			return nil, 0, err
