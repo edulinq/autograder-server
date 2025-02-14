@@ -17,7 +17,7 @@ import (
 )
 
 func IndividualAnalysis(options AnalysisOptions, initiatorEmail string) ([]*model.IndividualAnalysis, int, error) {
-	completeAnalysis, remainingIDs, err := getCachedIndividualResults(options.ResolvedSubmissionIDs)
+	completeAnalysis, remainingIDs, err := getCachedIndividualResults(options)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -42,10 +42,15 @@ func IndividualAnalysis(options AnalysisOptions, initiatorEmail string) ([]*mode
 	return completeAnalysis, len(remainingIDs), nil
 }
 
-func getCachedIndividualResults(fullSubmissionIDs []string) ([]*model.IndividualAnalysis, []string, error) {
+func getCachedIndividualResults(options AnalysisOptions) ([]*model.IndividualAnalysis, []string, error) {
 	// Sort the ids so the result will be consistently ordered.
-	fullSubmissionIDs = slices.Clone(fullSubmissionIDs)
+	fullSubmissionIDs := slices.Clone(options.ResolvedSubmissionIDs)
 	slices.Sort(fullSubmissionIDs)
+
+	// If we are overwriting the cache, don't query the DB for any of the cached results.
+	if options.OverwriteCache {
+		return make([]*model.IndividualAnalysis, 0), fullSubmissionIDs, nil
+	}
 
 	// Get any already done analysis results from the DB.
 	dbResults, err := db.GetIndividualAnalysis(fullSubmissionIDs)
@@ -85,6 +90,14 @@ func runIndividualAnalysis(options AnalysisOptions, fullSubmissionIDs []string, 
 	lockKey := fmt.Sprintf("analysis-individual-course-%s", lockCourseID)
 	lockmanager.Lock(lockKey)
 	defer lockmanager.Unlock(lockKey)
+
+	// If we are overwriting the cache, then remove all the old entries.
+	if options.OverwriteCache && !options.DryRun {
+		err := db.RemoveIndividualAnalysis(fullSubmissionIDs)
+		if err != nil {
+			fmt.Errorf("Failed to remove old individual analysis cache entries: '%w'.", err)
+		}
+	}
 
 	poolSize := config.ANALYSIS_INDIVIDUAL_COURSE_POOL_SIZE.Get()
 	type PoolResult struct {

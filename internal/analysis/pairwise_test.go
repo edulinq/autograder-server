@@ -4,6 +4,7 @@ import (
 	"path/filepath"
 	"reflect"
 	"testing"
+	"time"
 
 	"github.com/edulinq/autograder/internal/analysis/jplag"
 	"github.com/edulinq/autograder/internal/db"
@@ -411,6 +412,8 @@ func TestPairwiseAnalysisCountBase(test *testing.T) {
 
 	testCases := []struct {
 		options              AnalysisOptions
+		preload              bool
+		wait                 bool
 		expectedResultCount  int
 		expectedPendingCount int
 		expectedCacheCount   int
@@ -423,6 +426,7 @@ func TestPairwiseAnalysisCountBase(test *testing.T) {
 				},
 				WaitForCompletion: true,
 			},
+			preload:              false,
 			expectedResultCount:  1,
 			expectedPendingCount: 0,
 			expectedCacheCount:   1,
@@ -432,6 +436,7 @@ func TestPairwiseAnalysisCountBase(test *testing.T) {
 				ResolvedSubmissionIDs: []string{},
 				WaitForCompletion:     true,
 			},
+			preload:              false,
 			expectedResultCount:  0,
 			expectedPendingCount: 0,
 			expectedCacheCount:   0,
@@ -445,14 +450,128 @@ func TestPairwiseAnalysisCountBase(test *testing.T) {
 				WaitForCompletion: true,
 				DryRun:            true,
 			},
+			preload:              false,
 			expectedResultCount:  1,
 			expectedPendingCount: 0,
 			expectedCacheCount:   0,
+		},
+		{
+			options: AnalysisOptions{
+				ResolvedSubmissionIDs: []string{
+					"course101::hw0::course-student@test.edulinq.org::1697406256",
+					"course101::hw0::course-student@test.edulinq.org::1697406265",
+				},
+				WaitForCompletion: true,
+				OverwriteCache:    true,
+			},
+			preload:              false,
+			expectedResultCount:  1,
+			expectedPendingCount: 0,
+			expectedCacheCount:   1,
+		},
+		{
+			options: AnalysisOptions{
+				ResolvedSubmissionIDs: []string{
+					"course101::hw0::course-student@test.edulinq.org::1697406256",
+					"course101::hw0::course-student@test.edulinq.org::1697406265",
+				},
+				WaitForCompletion: true,
+				OverwriteCache:    true,
+				DryRun:            true,
+			},
+			preload:              false,
+			expectedResultCount:  1,
+			expectedPendingCount: 0,
+			expectedCacheCount:   0,
+		},
+
+		// Preload
+
+		{
+			options: AnalysisOptions{
+				ResolvedSubmissionIDs: []string{
+					"course101::hw0::course-student@test.edulinq.org::1697406256",
+					"course101::hw0::course-student@test.edulinq.org::1697406265",
+				},
+				WaitForCompletion: false,
+			},
+			preload:              true,
+			expectedResultCount:  1,
+			expectedPendingCount: 0,
+			expectedCacheCount:   1,
+		},
+		{
+			options: AnalysisOptions{
+				ResolvedSubmissionIDs: []string{},
+				WaitForCompletion:     false,
+			},
+			preload:              true,
+			expectedResultCount:  0,
+			expectedPendingCount: 0,
+			expectedCacheCount:   0,
+		},
+		{
+			options: AnalysisOptions{
+				ResolvedSubmissionIDs: []string{
+					"course101::hw0::course-student@test.edulinq.org::1697406256",
+					"course101::hw0::course-student@test.edulinq.org::1697406265",
+				},
+				WaitForCompletion: false,
+				DryRun:            true,
+			},
+			preload:              true,
+			expectedResultCount:  1,
+			expectedPendingCount: 0,
+			expectedCacheCount:   1,
+		},
+		{
+			options: AnalysisOptions{
+				ResolvedSubmissionIDs: []string{
+					"course101::hw0::course-student@test.edulinq.org::1697406256",
+					"course101::hw0::course-student@test.edulinq.org::1697406265",
+				},
+				WaitForCompletion: false,
+				OverwriteCache:    true,
+			},
+			preload:              true,
+			wait:                 true,
+			expectedResultCount:  0,
+			expectedPendingCount: 1,
+			expectedCacheCount:   1,
+		},
+		{
+			options: AnalysisOptions{
+				ResolvedSubmissionIDs: []string{
+					"course101::hw0::course-student@test.edulinq.org::1697406256",
+					"course101::hw0::course-student@test.edulinq.org::1697406265",
+				},
+				WaitForCompletion: false,
+				OverwriteCache:    true,
+				DryRun:            true,
+			},
+			preload:              true,
+			wait:                 true,
+			expectedResultCount:  0,
+			expectedPendingCount: 1,
+			expectedCacheCount:   1,
 		},
 	}
 
 	for i, testCase := range testCases {
 		db.ResetForTesting()
+
+		if testCase.preload {
+			preloadOptions := AnalysisOptions{
+				ResolvedSubmissionIDs: testCase.options.ResolvedSubmissionIDs,
+				WaitForCompletion:     true,
+			}
+
+			_, _, err := PairwiseAnalysis(preloadOptions, "server-admin@test.edulinq.org")
+			if err != nil {
+				test.Errorf("Case %d: Failed to preload analysis: '%v'.", i, err)
+				continue
+			}
+		}
 
 		results, pendingCount, err := PairwiseAnalysis(testCase.options, "server-admin@test.edulinq.org")
 		if err != nil {
@@ -470,6 +589,11 @@ func TestPairwiseAnalysisCountBase(test *testing.T) {
 			test.Errorf("Case %d: Unexpected number of pending results. Expected: %d, Actual: %d.",
 				i, testCase.expectedPendingCount, pendingCount)
 			continue
+		}
+
+		// Wait long enough for the analysis to finish.
+		if testCase.wait {
+			time.Sleep(time.Duration(100) * time.Millisecond)
 		}
 
 		dbResults, err := db.GetPairwiseAnalysis(createPairwiseKeys(testCase.options.ResolvedSubmissionIDs))

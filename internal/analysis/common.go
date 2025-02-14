@@ -15,14 +15,23 @@ import (
 )
 
 type AnalysisOptions struct {
-	DryRun             bool     `json:"dry-run"`
+	// Don't save anything.
+	DryRun bool `json:"dry-run"`
+
+	// Replace any entries currently in the cache,
+	// and do not return any cached entries (when not waiting for completion).
+	OverwriteCache bool `json:"overwrite-cache"`
+
+	// The raw submission specifications to analyze.
 	RawSubmissionSpecs []string `json:"submissions"`
-	WaitForCompletion  bool     `json:"wait-for-completion"`
+
+	// Wait for the entire analysis to complete and return all results.
+	WaitForCompletion bool `json:"wait-for-completion"`
 
 	ResolvedSubmissionIDs []string `json:"-"`
 }
 
-// Prepare any source files in a direcory for analysis.
+// Prepare any source files in a directory for analysis.
 // The source files may be changed or moved.
 // If a file is moved, then the first return (renames) will map the new relpath to the old relpath.
 func prepSourceFiles(inputDir string) (map[string]string, error) {

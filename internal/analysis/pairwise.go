@@ -48,7 +48,7 @@ func PairwiseAnalysis(options AnalysisOptions, initiatorEmail string) ([]*model.
 		return nil, 0, err
 	}
 
-	completeAnalysis, remainingKeys, err := getCachedPairwiseResults(options.ResolvedSubmissionIDs)
+	completeAnalysis, remainingKeys, err := getCachedPairwiseResults(options)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -92,8 +92,13 @@ func createPairwiseKeys(fullSubmissionIDs []string) []model.PairwiseKey {
 	return allKeys
 }
 
-func getCachedPairwiseResults(fullSubmissionIDs []string) ([]*model.PairwiseAnalysis, []model.PairwiseKey, error) {
-	allKeys := createPairwiseKeys(fullSubmissionIDs)
+func getCachedPairwiseResults(options AnalysisOptions) ([]*model.PairwiseAnalysis, []model.PairwiseKey, error) {
+	allKeys := createPairwiseKeys(options.ResolvedSubmissionIDs)
+
+	// If we are overwriting the cache, don't query the DB for any of the cached results.
+	if options.OverwriteCache {
+		return make([]*model.PairwiseAnalysis, 0), allKeys, nil
+	}
 
 	// Get any already done analysis results from the DB.
 	dbResults, err := db.GetPairwiseAnalysis(allKeys)
@@ -133,6 +138,14 @@ func runPairwiseAnalysis(options AnalysisOptions, keys []model.PairwiseKey, init
 	lockKey := fmt.Sprintf("analysis-pairwise-course-%s", lockCourseID)
 	lockmanager.Lock(lockKey)
 	defer lockmanager.Unlock(lockKey)
+
+	// If we are overwriting the cache, then remove all the old entries.
+	if options.OverwriteCache && !options.DryRun {
+		err := db.RemovePairwiseAnalysis(keys)
+		if err != nil {
+			fmt.Errorf("Failed to remove old individual analysis cache entries: '%w'.", err)
+		}
+	}
 
 	templateFileStore := NewTemplateFileStore()
 	defer templateFileStore.Close()

@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"regexp"
+	"strings"
 
 	"github.com/edulinq/autograder/internal/timestamp"
 	"github.com/edulinq/autograder/internal/util"
@@ -409,4 +410,13 @@ func (this *PairwiseAnalysisSummary) RoundWithPrecision(precision uint) {
 	for key, sim := range this.AggregateMeanSimilarities {
 		this.AggregateMeanSimilarities[key] = sim.RoundWithPrecision(precision)
 	}
+}
+
+func ComparePairwiseKey(a PairwiseKey, b PairwiseKey) int {
+	value := strings.Compare(a[0], b[0])
+	if value != 0 {
+		return value
+	}
+
+	return strings.Compare(a[1], b[1])
 }
