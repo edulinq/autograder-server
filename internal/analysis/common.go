@@ -15,6 +15,7 @@ import (
 )
 
 type AnalysisOptions struct {
+	DryRun             bool     `json:"dry-run"`
 	RawSubmissionSpecs []string `json:"submissions"`
 	WaitForCompletion  bool     `json:"wait-for-completion"`
 

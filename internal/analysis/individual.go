@@ -23,7 +23,7 @@ func IndividualAnalysis(options AnalysisOptions, initiatorEmail string) ([]*mode
 	}
 
 	if options.WaitForCompletion {
-		results, err := runIndividualAnalysis(remainingIDs, initiatorEmail)
+		results, err := runIndividualAnalysis(options, remainingIDs, initiatorEmail)
 		if err != nil {
 			return nil, 0, err
 		}
@@ -32,7 +32,7 @@ func IndividualAnalysis(options AnalysisOptions, initiatorEmail string) ([]*mode
 		remainingIDs = nil
 	} else {
 		go func() {
-			_, err := runIndividualAnalysis(remainingIDs, initiatorEmail)
+			_, err := runIndividualAnalysis(options, remainingIDs, initiatorEmail)
 			if err != nil {
 				log.Error("Failure during asynchronous individual analysis.", err)
 			}
@@ -70,7 +70,7 @@ func getCachedIndividualResults(fullSubmissionIDs []string) ([]*model.Individual
 }
 
 // Lock based on course and then run the analysis in a parallel pool.
-func runIndividualAnalysis(fullSubmissionIDs []string, initiatorEmail string) ([]*model.IndividualAnalysis, error) {
+func runIndividualAnalysis(options AnalysisOptions, fullSubmissionIDs []string, initiatorEmail string) ([]*model.IndividualAnalysis, error) {
 	if len(fullSubmissionIDs) == 0 {
 		return nil, nil
 	}
@@ -94,7 +94,7 @@ func runIndividualAnalysis(fullSubmissionIDs []string, initiatorEmail string) ([
 	}
 
 	poolResults, _, err := util.RunParallelPoolMap(poolSize, fullSubmissionIDs, func(fullSubmissionID string) (PoolResult, error) {
-		result, runTime, err := runSingleIndividualAnalysis(fullSubmissionID)
+		result, runTime, err := runSingleIndividualAnalysis(options, fullSubmissionID)
 		if err != nil {
 			err = fmt.Errorf("Failed to perform individual analysis on submission %s: '%w'.", fullSubmissionID, err)
 		}
@@ -120,7 +120,7 @@ func runIndividualAnalysis(fullSubmissionIDs []string, initiatorEmail string) ([
 	return results, errs
 }
 
-func runSingleIndividualAnalysis(fullSubmissionID string) (*model.IndividualAnalysis, int64, error) {
+func runSingleIndividualAnalysis(options AnalysisOptions, fullSubmissionID string) (*model.IndividualAnalysis, int64, error) {
 	// Lock this id so we don't try to do the analysis multiple times.
 	lockKey := fmt.Sprintf("analysis-individual-%s", fullSubmissionID)
 	lockmanager.Lock(lockKey)
@@ -145,9 +145,11 @@ func runSingleIndividualAnalysis(fullSubmissionID string) (*model.IndividualAnal
 	}
 
 	// Store the result.
-	err = db.StoreIndividualAnalysis([]*model.IndividualAnalysis{result})
-	if err != nil {
-		return nil, 0, fmt.Errorf("Failed to store individual analysis for '%s' in DB: '%w'.", fullSubmissionID, err)
+	if !options.DryRun {
+		err = db.StoreIndividualAnalysis([]*model.IndividualAnalysis{result})
+		if err != nil {
+			return nil, 0, fmt.Errorf("Failed to store individual analysis for '%s' in DB: '%w'.", fullSubmissionID, err)
+		}
 	}
 
 	runTime := int64(timestamp.Now() - startTime)

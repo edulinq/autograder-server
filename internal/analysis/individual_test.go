@@ -234,3 +234,81 @@ func TestIndividualAnalysisIncludeExclude(test *testing.T) {
 		}
 	}
 }
+
+func TestIndividualAnalysisCountBase(test *testing.T) {
+	defer db.ResetForTesting()
+
+	testCases := []struct {
+		options              AnalysisOptions
+		expectedResultCount  int
+		expectedPendingCount int
+		expectedCacheCount   int
+	}{
+		{
+			options: AnalysisOptions{
+				ResolvedSubmissionIDs: []string{
+					"course101::hw0::course-student@test.edulinq.org::1697406256",
+				},
+				WaitForCompletion: true,
+			},
+			expectedResultCount:  1,
+			expectedPendingCount: 0,
+			expectedCacheCount:   1,
+		},
+		{
+			options: AnalysisOptions{
+				ResolvedSubmissionIDs: []string{},
+				WaitForCompletion:     true,
+			},
+			expectedResultCount:  0,
+			expectedPendingCount: 0,
+			expectedCacheCount:   0,
+		},
+		{
+			options: AnalysisOptions{
+				ResolvedSubmissionIDs: []string{
+					"course101::hw0::course-student@test.edulinq.org::1697406256",
+				},
+				WaitForCompletion: true,
+				DryRun:            true,
+			},
+			expectedResultCount:  1,
+			expectedPendingCount: 0,
+			expectedCacheCount:   0,
+		},
+	}
+
+	for i, testCase := range testCases {
+		db.ResetForTesting()
+
+		results, pendingCount, err := IndividualAnalysis(testCase.options, "server-admin@test.edulinq.org")
+		if err != nil {
+			test.Errorf("Case %d: Failed to do analysis: '%v'.", i, err)
+			continue
+		}
+
+		if testCase.expectedResultCount != len(results) {
+			test.Errorf("Case %d: Unexpected number of results. Expected: %d, Actual: %d.",
+				i, testCase.expectedResultCount, len(results))
+			continue
+		}
+
+		if testCase.expectedPendingCount != pendingCount {
+			test.Errorf("Case %d: Unexpected number of pending results. Expected: %d, Actual: %d.",
+				i, testCase.expectedPendingCount, pendingCount)
+			continue
+		}
+
+		dbResults, err := db.GetIndividualAnalysis(testCase.options.ResolvedSubmissionIDs)
+		if err != nil {
+			test.Errorf("Case %d: Failed to do get db results: '%v'.", i, err)
+			continue
+		}
+
+		if testCase.expectedCacheCount != len(dbResults) {
+			test.Errorf("Case %d: Unexpected number of db results. Expected: %d, Actual: %d.",
+				i, testCase.expectedCacheCount, len(dbResults))
+			continue
+		}
+	}
+}

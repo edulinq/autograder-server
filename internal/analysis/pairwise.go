@@ -54,7 +54,7 @@ func PairwiseAnalysis(options AnalysisOptions, initiatorEmail string) ([]*model.
 	}
 
 	if options.WaitForCompletion {
-		results, err := runPairwiseAnalysis(remainingKeys, initiatorEmail)
+		results, err := runPairwiseAnalysis(options, remainingKeys, initiatorEmail)
 		if err != nil {
 			return nil, 0, err
 		}
@@ -63,7 +63,7 @@ func PairwiseAnalysis(options AnalysisOptions, initiatorEmail string) ([]*model.
 		remainingKeys = nil
 	} else {
 		go func() {
-			_, err := runPairwiseAnalysis(remainingKeys, initiatorEmail)
+			_, err := runPairwiseAnalysis(options, remainingKeys, initiatorEmail)
 			if err != nil {
 				log.Error("Failure during asynchronous pairwise analysis.", err)
 			}
@@ -73,7 +73,7 @@ func PairwiseAnalysis(options AnalysisOptions, initiatorEmail string) ([]*model.
 	return completeAnalysis, len(remainingKeys), nil
 }
 
-func getCachedPairwiseResults(fullSubmissionIDs []string) ([]*model.PairwiseAnalysis, []model.PairwiseKey, error) {
+func createPairwiseKeys(fullSubmissionIDs []string) []model.PairwiseKey {
 	// Sort the ids so the result will be consistently ordered.
 	fullSubmissionIDs = slices.Clone(fullSubmissionIDs)
 	slices.Sort(fullSubmissionIDs)
@@ -88,6 +88,12 @@ func getCachedPairwiseResults(fullSubmissionIDs []string) ([]*model.PairwiseAnal
 			allKeys = append(allKeys, model.NewPairwiseKey(fullSubmissionIDs[i], fullSubmissionIDs[j]))
 		}
 	}
+
+	return allKeys
+}
+
+func getCachedPairwiseResults(fullSubmissionIDs []string) ([]*model.PairwiseAnalysis, []model.PairwiseKey, error) {
+	allKeys := createPairwiseKeys(fullSubmissionIDs)
 
 	// Get any already done analysis results from the DB.
 	dbResults, err := db.GetPairwiseAnalysis(allKeys)
@@ -112,7 +118,7 @@ func getCachedPairwiseResults(fullSubmissionIDs []string) ([]*model.PairwiseAnal
 }
 
 // Lock based on course and then run the analysis in a parallel pool.
-func runPairwiseAnalysis(keys []model.PairwiseKey, initiatorEmail string) ([]*model.PairwiseAnalysis, error) {
+func runPairwiseAnalysis(options AnalysisOptions, keys []model.PairwiseKey, initiatorEmail string) ([]*model.PairwiseAnalysis, error) {
 	if len(keys) == 0 {
 		return nil, nil
 	}
@@ -139,7 +145,7 @@ func runPairwiseAnalysis(keys []model.PairwiseKey, initiatorEmail string) ([]*mo
 	}
 
 	poolResults, _, err := util.RunParallelPoolMap(poolSize, keys, func(key model.PairwiseKey) (PoolResult, error) {
-		result, runTime, err := runSinglePairwiseAnalysis(key, templateFileStore)
+		result, runTime, err := runSinglePairwiseAnalysis(options, key, templateFileStore)
 		if err != nil {
 			err = fmt.Errorf("Failed to perform pairwise analysis on submissions %s: '%w'.", key.String(), err)
 		}
@@ -165,7 +171,7 @@ func runPairwiseAnalysis(keys []model.PairwiseKey, initiatorEmail string) ([]*mo
 	return results, errs
 }
 
-func runSinglePairwiseAnalysis(pairwiseKey model.PairwiseKey, templateFileStore *TemplateFileStore) (*model.PairwiseAnalysis, int64, error) {
+func runSinglePairwiseAnalysis(options AnalysisOptions, pairwiseKey model.PairwiseKey, templateFileStore *TemplateFileStore) (*model.PairwiseAnalysis, int64, error) {
 	// Lock this key so we don't try to do the analysis multiple times.
 	lockKey := fmt.Sprintf("analysis-pairwise-single-%s", pairwiseKey.String())
 	lockmanager.Lock(lockKey)
@@ -188,9 +194,11 @@ func runSinglePairwiseAnalysis(pairwiseKey model.PairwiseKey, templateFileStore 
 	}
 
 	// Store the result.
-	err = db.StorePairwiseAnalysis([]*model.PairwiseAnalysis{result})
-	if err != nil {
-		return nil, 0, fmt.Errorf("Failed to store pairwise analysis for '%s' in DB: '%w'.", pairwiseKey.String(), err)
+	if !options.DryRun {
+		err = db.StorePairwiseAnalysis([]*model.PairwiseAnalysis{result})
+		if err != nil {
+			return nil, 0, fmt.Errorf("Failed to store pairwise analysis for '%s' in DB: '%w'.", pairwiseKey.String(), err)
+		}
 	}
 
 	return result, runTime, nil
