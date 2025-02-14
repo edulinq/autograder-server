@@ -35,6 +35,11 @@ func upsertFromConfigPath(path string, options CourseUpsertOptions) (*CourseUpse
 		return result, UNKNOWN_COURSE_ID, nil
 	}
 
+	// Cleanup the source dir if this is a dry run.
+	if options.DryRun {
+		defer util.RemoveDirent(course.GetBaseSourceDir())
+	}
+
 	// Update Source Directory
 	err = updateSourceDirFromConfigPath(path, course)
 	if err != nil {
@@ -89,15 +94,10 @@ func upsertFromConfigPath(path string, options CourseUpsertOptions) (*CourseUpse
 		}
 
 		result.AssignmentTemplateFiles = relpaths
-	}
 
-	// Cleanup
-
-	// Remove source if this was a dry run.
-	if options.DryRun {
-		err = util.RemoveDirent(course.GetBaseSourceDir())
-		if err != nil {
-			return nil, result.CourseID, fmt.Errorf("Failed to remove dry run source dir: '%w'.", err)
+		// Cleanup if this is a dry run.
+		if options.DryRun {
+			defer util.RemoveDirent(course.GetTemplatesDir())
 		}
 	}
 
