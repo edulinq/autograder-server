@@ -17,6 +17,7 @@ type PairwiseRequest struct {
 
 type PairwiseResponse struct {
 	Complete bool                           `json:"complete"`
+	Options  analysis.AnalysisOptions       `json:"options"`
 	Summary  *model.PairwiseAnalysisSummary `json:"summary"`
 	Results  []*model.PairwiseAnalysis      `json:"results"`
 }
@@ -51,6 +52,7 @@ func HandlePairwise(request *PairwiseRequest) (*PairwiseResponse, *core.APIError
 
 	response := PairwiseResponse{
 		Complete: (pendingCount == 0),
+		Options:  request.AnalysisOptions,
 		Summary:  model.NewPairwiseAnalysisSummary(results, pendingCount),
 		Results:  results,
 	}

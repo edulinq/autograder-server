@@ -4,6 +4,7 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/edulinq/autograder/internal/analysis"
 	"github.com/edulinq/autograder/internal/api/core"
 	"github.com/edulinq/autograder/internal/db"
 	"github.com/edulinq/autograder/internal/model"
@@ -19,12 +20,14 @@ func TestIndividualBase(test *testing.T) {
 
 	// Make an initial request, but don't wait.
 
+	submissions := []string{
+		"course101::hw0::course-student@test.edulinq.org::1697406256",
+		"course101::hw0::course-student@test.edulinq.org::1697406265",
+	}
+
 	email := "server-admin"
 	fields := map[string]any{
-		"submissions": []string{
-			"course101::hw0::course-student@test.edulinq.org::1697406256",
-			"course101::hw0::course-student@test.edulinq.org::1697406265",
-		},
+		"submissions":         submissions,
 		"wait-for-completion": false,
 	}
 
@@ -39,6 +42,9 @@ func TestIndividualBase(test *testing.T) {
 	// First round should have nothing, because we are not waiting for completion.
 	expected := IndividualResponse{
 		Complete: false,
+		Options: analysis.AnalysisOptions{
+			RawSubmissionSpecs: submissions,
+		},
 		Summary: &model.IndividualAnalysisSummary{
 			AnalysisSummary: model.AnalysisSummary{
 				Complete:      false,
@@ -68,6 +74,10 @@ func TestIndividualBase(test *testing.T) {
 	// Second round should be complete.
 	expected = IndividualResponse{
 		Complete: true,
+		Options: analysis.AnalysisOptions{
+			RawSubmissionSpecs: submissions,
+			WaitForCompletion:  true,
+		},
 		Summary: &model.IndividualAnalysisSummary{
 			AnalysisSummary: model.AnalysisSummary{
 				Complete:       true,

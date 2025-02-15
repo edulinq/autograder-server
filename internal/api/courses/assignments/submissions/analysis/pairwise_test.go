@@ -4,6 +4,7 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/edulinq/autograder/internal/analysis"
 	"github.com/edulinq/autograder/internal/api/core"
 	"github.com/edulinq/autograder/internal/db"
 	"github.com/edulinq/autograder/internal/model"
@@ -19,12 +20,14 @@ func TestPairwiseBase(test *testing.T) {
 
 	// Make an initial request, but don't wait.
 
+	submissions := []string{
+		"course101::hw0::course-student@test.edulinq.org::1697406256",
+		"course101::hw0::course-student@test.edulinq.org::1697406265",
+	}
+
 	email := "server-admin"
 	fields := map[string]any{
-		"submissions": []string{
-			"course101::hw0::course-student@test.edulinq.org::1697406256",
-			"course101::hw0::course-student@test.edulinq.org::1697406265",
-		},
+		"submissions":         submissions,
 		"wait-for-completion": false,
 	}
 
@@ -39,6 +42,9 @@ func TestPairwiseBase(test *testing.T) {
 	// First round should have nothing, because we are not waiting for completion.
 	expected := PairwiseResponse{
 		Complete: false,
+		Options: analysis.AnalysisOptions{
+			RawSubmissionSpecs: submissions,
+		},
 		Summary: &model.PairwiseAnalysisSummary{
 			AnalysisSummary: model.AnalysisSummary{
 				Complete:      false,
@@ -68,6 +74,10 @@ func TestPairwiseBase(test *testing.T) {
 	// Second round should be complete.
 	expected = PairwiseResponse{
 		Complete: true,
+		Options: analysis.AnalysisOptions{
+			RawSubmissionSpecs: submissions,
+			WaitForCompletion:  true,
+		},
 		Summary: &model.PairwiseAnalysisSummary{
 			AnalysisSummary: model.AnalysisSummary{
 				Complete:       true,

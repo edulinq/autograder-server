@@ -223,7 +223,9 @@ func (this *Course) FetchAssignmentTemplateFiles() (map[string][]string, error) 
 		relpaths, err := assignment.FetchTemplateFiles()
 		if err != nil {
 			errs = errors.Join(errs, err)
-		} else {
+		}
+
+		if len(relpaths) > 0 {
 			result[assignment.ID] = relpaths
 		}
 	}

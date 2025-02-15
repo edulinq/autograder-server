@@ -17,6 +17,7 @@ type IndividualRequest struct {
 
 type IndividualResponse struct {
 	Complete bool                             `json:"complete"`
+	Options  analysis.AnalysisOptions         `json:"options"`
 	Summary  *model.IndividualAnalysisSummary `json:"summary"`
 	Results  []*model.IndividualAnalysis      `json:"results"`
 }
@@ -51,6 +52,7 @@ func HandleIndividual(request *IndividualRequest) (*IndividualResponse, *core.AP
 
 	response := IndividualResponse{
 		Complete: (pendingCount == 0),
+		Options:  request.AnalysisOptions,
 		Summary:  model.NewIndividualAnalysisSummary(results, pendingCount),
 		Results:  results,
 	}
