@@ -19,10 +19,10 @@ type ImageInfo struct {
 
 	StaticFiles []*util.FileSpec `json:"static-files,omitempty"`
 
-	PreStaticFileOperations  []*util.FileOperation `json:"pre-static-files-ops,omitempty"`
-	PostStaticFileOperations []*util.FileOperation `json:"post-static-files-ops,omitempty"`
+	PreStaticFileOperations  []*util.FileOperation `json:"pre-static-file-ops,omitempty"`
+	PostStaticFileOperations []*util.FileOperation `json:"post-static-file-ops,omitempty"`
 
-	PostSubmissionFileOperations []*util.FileOperation `json:"post-submission-files-ops,omitempty"`
+	PostSubmissionFileOperations []*util.FileOperation `json:"post-submission-file-ops,omitempty"`
 
 	MaxRuntimeSecs int `json:"max-runtime-secs,omitempty"`
 
@@ -38,7 +38,7 @@ type ImageInfo struct {
 // A subset of the image information that is passed to docker images for config during grading.
 type GradingConfig struct {
 	Name                         string                `json:"name"`
-	PostSubmissionFileOperations []*util.FileOperation `json:"post-submission-files-ops,omitempty"`
+	PostSubmissionFileOperations []*util.FileOperation `json:"post-submission-file-ops,omitempty"`
 }
 
 func (this *ImageInfo) GetGradingConfig() *GradingConfig {

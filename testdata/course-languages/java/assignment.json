@@ -11,7 +11,7 @@
         "RUN apt-get update",
         "RUN apt-get install -y openjdk-11-jdk"
     ],
-    "post-submission-files-ops": [
+    "post-submission-file-ops": [
         ["cp", "input/Assignment.java", "work/Assignment.java"]
     ],
     "analysis-options": {

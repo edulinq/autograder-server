@@ -162,9 +162,9 @@ The fields of an assignment are as follows:
 | `post-static-docker-commands` | List[String]   | false | A list of Docker commands to run after static files are copied into the image. |
 | `invocation`                  | List[String]   | false | The command to run when the grading container is launched (Docker's `CMD`). If not set, the image's default `ENTRYPOINT/CMD` is used. |
 | `static-files`                | List[FileSpec] | false | A list of files to copy into the image's `/work` directory. |
-| `pre-static-files-ops`        | List[FileOp]   | false | A list of file operations to run before static files are copied into the image. |
-| `post-static-files-ops`       | List[FileOp]   | false | A list of file operations to run after static files are copied into the image. |
-| `post-submission-files-ops`   | List[FileOp]   | false | A list of file operations to run after a student's code is available in the `/input` directory. |
+| `pre-static-file-ops`        | List[FileOp]   | false | A list of file operations to run before static files are copied into the image. |
+| `post-static-file-ops`       | List[FileOp]   | false | A list of file operations to run after static files are copied into the image. |
+| `post-submission-file-ops`   | List[FileOp]   | false | A list of file operations to run after a student's code is available in the `/input` directory. |
 
 Note that there are few required fields.
 
@@ -209,7 +209,7 @@ or [USER](https://docs.docker.com/reference/dockerfile/#user).
 Note that we cannot guarantee that the commands you add here will not break the image (so you should test locally).
 The `build.keep` config option is useful for keeping around Docker build directories (contexts) for manual inspection.
 
-`pre-static-files-ops`  
+`pre-static-file-ops`  
 These [FileOps](#file-operation-fileop) are run inside the Docker context (build directory) before copying in static files.
 Therefore, these commands are not in the Docker image itself, but can modify the files that will then go into the image.
 As per standard Docker building rules, only files inside the Docker context can be accessed.
@@ -221,7 +221,7 @@ These files (FileSpecs) will be copied into the assignment image's `/autograder/
 All path-based FileSpecs must be relative paths,
 and they are all relative to the directory the `assignment.json` is located in.
 
-`post-static-files-ops`  
+`post-static-file-ops`  
 These [FileOps](#file-operation-fileop) are run inside the Docker context (build directory) before copying in static files.
 Therefore, these commands are not in the Docker image itself, but can modify the files that will then go into the image.
 As per standard Docker building rules, only files inside the Docker context can be accessed.
@@ -232,7 +232,7 @@ So if you want to access static files, you will have to path inside the `work` d
 These commands are added to the Dockerfile after the static files are copied.
 This is a good opportunity to move around your static files to their preferred location.
 
-`post-submission-files-ops`  
+`post-submission-file-ops`  
 Post submission file operations are intended to be run after the student has submitted their code (and that code is available in the `/autograder/input` directory).
 When the assignment image is created, the post submission file operations are written to `/autograder/scripts/post-submission-ops.sh`.
 It is the responsibility of the assignment image to execute this file before starting the grader.
