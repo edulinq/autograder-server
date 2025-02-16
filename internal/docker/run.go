@@ -92,11 +92,13 @@ func RunContainer(ctx context.Context, logId log.Loggable, imageName string, mou
 // (we can't fully trust Docker to timeout properly).
 // This function does not try to enforce any timeouts (aside from passing along the context), that is left to callers.
 func runContainerInternal(ctx context.Context, logId log.Loggable, imageName string, mounts []MountInfo, cmd []string, baseID string) (string, string, error) {
+	// Get a docker client.
+	// Note that cleaning this up needs to wait until after we are sure the container is dead.
+	// This means we won't be defering the close right away (see cleanupRun()).
 	docker, err := getDockerClient()
 	if err != nil {
 		return "", "", err
 	}
-	defer docker.Close()
 
 	name := cleanContainerName(fmt.Sprintf("%s-%s", baseID, util.UUID()))
 
@@ -125,12 +127,13 @@ func runContainerInternal(ctx context.Context, logId log.Loggable, imageName str
 		name)
 
 	if err != nil {
+		docker.Close()
 		return "", "", fmt.Errorf("Failed to create container '%s': '%w'.", name, err)
 	}
 
-	// Ensure the container is removed (in the background).
+	// Now that we have the container, we can schedule cleanup in the background.
 	defer func() {
-		go killContainer(docker, name, containerInstance.ID)
+		go cleanupRun(docker, name, containerInstance.ID)
 	}()
 
 	// Attach to the container so we can get stdout and stderr.
@@ -143,7 +146,7 @@ func runContainerInternal(ctx context.Context, logId log.Loggable, imageName str
 	if err != nil {
 		return "", "", fmt.Errorf("Failed to attach to container '%s' (%s): '%w'.", name, containerInstance.ID, err)
 	}
-	defer connection.Conn.Close()
+	defer connection.Close()
 
 	// Handle copying (and possibly truncating) stdout/stderr.
 	outputWaitGroup := &sync.WaitGroup{}
@@ -216,7 +219,7 @@ func handleContainerOutput(ctx context.Context, output *containerOutput, outputW
 	defer outputWaitGroup.Done()
 
 	// Closing the connection should also close the reader and stop any waiting read operations.
-	defer connection.Conn.Close()
+	defer connection.Close()
 
 	successChan := make(chan bool, 1)
 
@@ -307,5 +310,16 @@ func killContainer(docker *client.Client, name string, id string) {
 	})
 	if err != nil {
 		log.Warn("Failed to remove container.", err, log.NewAttr("name", name), log.NewAttr("id", id))
+	}
+}
+
+// Cleanup any leftovers from the running the container.
+// This should generally be called in another go routine to prevent blocking.
+func cleanupRun(docker *client.Client, containerName string, containerID string) {
+	killContainer(docker, containerName, containerID)
+
+	err := docker.Close()
+	if err != nil {
+		log.Warn("Failed to close docker client connection.", err)
 	}
 }

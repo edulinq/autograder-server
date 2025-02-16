@@ -11,13 +11,16 @@ type StacksRequest struct {
 }
 
 type StacksResponse struct {
+	Count  int               `json:"count"`
 	Stacks []*util.CallStack `json:"stacks"`
 }
 
 // Get stack traces for all the currently running routines (threads) on the server.
 func HandleStacks(request *StacksRequest) (*StacksResponse, *core.APIError) {
+	stacks := util.GetAllStackTraces()
 	response := StacksResponse{
-		Stacks: util.GetAllStackTraces(),
+		Count:  len(stacks),
+		Stacks: stacks,
 	}
 
 	return &response, nil
