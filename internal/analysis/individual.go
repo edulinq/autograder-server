@@ -142,17 +142,19 @@ func runSingleIndividualAnalysis(options AnalysisOptions, fullSubmissionID strin
 	startTime := timestamp.Now()
 
 	// Check the DB for a complete analysis.
-	result, err := db.GetSingleIndividualAnalysis(fullSubmissionID)
-	if err != nil {
-		return nil, 0, fmt.Errorf("Failed to check DB for cached individual analysis for '%s': '%w'.", fullSubmissionID, err)
-	}
+	if !options.OverwriteCache {
+		result, err := db.GetSingleIndividualAnalysis(fullSubmissionID)
+		if err != nil {
+			return nil, 0, fmt.Errorf("Failed to check DB for cached individual analysis for '%s': '%w'.", fullSubmissionID, err)
+		}
 
-	if result != nil {
-		return result, 0, nil
+		if result != nil {
+			return result, 0, nil
+		}
 	}
 
 	// Nothing cached, compute the analsis.
-	result, err = computeSingleIndividualAnalysis(fullSubmissionID, true)
+	result, err := computeSingleIndividualAnalysis(fullSubmissionID, true)
 	if err != nil {
 		return nil, 0, fmt.Errorf("Failed to compute individual analysis for '%s': '%w'.", fullSubmissionID, err)
 	}

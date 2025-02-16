@@ -191,13 +191,15 @@ func runSinglePairwiseAnalysis(options AnalysisOptions, pairwiseKey model.Pairwi
 	defer lockmanager.Unlock(lockKey)
 
 	// Check the DB for a complete analysis.
-	result, err := db.GetSinglePairwiseAnalysis(pairwiseKey)
-	if err != nil {
-		return nil, 0, fmt.Errorf("Failed to check DB for cached pairwise analysis for '%s': '%w'.", pairwiseKey.String(), err)
-	}
+	if !options.OverwriteCache {
+		result, err := db.GetSinglePairwiseAnalysis(pairwiseKey)
+		if err != nil {
+			return nil, 0, fmt.Errorf("Failed to check DB for cached pairwise analysis for '%s': '%w'.", pairwiseKey.String(), err)
+		}
 
-	if result != nil {
-		return result, 0, nil
+		if result != nil {
+			return result, 0, nil
+		}
 	}
 
 	// Nothing cached, compute the analsis.
