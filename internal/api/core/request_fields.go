@@ -62,6 +62,7 @@ type TargetServerUserSelfOrAdmin struct {
 
 // Same as TargetServerUserSelfOrAdmin, but in the context of a course user and a grader context user.
 // Therefore, the context user only has to be a grader in the context course (or the target user themself).
+// When targeting yourself, the user can be a server admin (and will be escalated to course owner for the request).
 // The existence of this type in a struct also indicates that the request is at least a APIRequestCourseUserContext.
 type TargetCourseUserSelfOrGrader struct {
 	TargetCourseUser
@@ -315,6 +316,10 @@ func checkRequestTargetCourseUserSelfOrRole(endpoint string, apiRequest any, fie
 	field := reflectField.Interface().(TargetCourseUser)
 	if field.Email == "" {
 		field.Email = courseContext.User.Email
+
+		// If the user (which is the target of this request) is a server admin,
+		// insert them into the course users (they have already been escalated).
+		users[courseContext.User.Email] = courseContext.User
 	}
 
 	// Operations not on self require higher permissions.
