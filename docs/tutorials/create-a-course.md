@@ -11,6 +11,44 @@ Specific requirements for this tutorial:
  - Python (>= 3.8) installed on your machine.
  - A POSIX System (e.g., Linux, BSD, Mac, WSL (Windows)).
 
+## Getting Started
+
+Before diving into the tutorial, ensure you meet the prerequisites and understand the recommended setup.
+This section provides guidance on preparing your environment.
+
+### Prerequisites
+
+1. Python (>= 3.8):
+
+   If Python is not already installed on your system,
+   follow the [Python Beginner’s Guide to Downloads](https://www.python.org/about/gettingstarted/) to install the appropriate version for your operating system.
+
+2. Docker:
+
+   To use Docker with the autograder, ensure Docker is installed and properly set up on your system.
+   Follow the [Docker Get Started Guide](https://docs.docker.com/get-started/) for installation and basic usage instructions.
+
+3. POSIX-Compliant System:
+
+   This tutorial assumes a POSIX system (Linux, BSD, macOS, or WSL for Windows) is being used.
+   Windows users should set up WSL for compatibility.
+
+### Why Clone the Autograder Repository?
+
+The autograder repository contains all the required scripts, resources, and CMD tools needed to run administrative commands.
+This simplifies the process of running scripts and following the tutorial.
+
+Clone the repository using the following command:
+```sh
+git clone https://github.com/your-org/autograder-server.git
+cd autograder-server
+```
+
+While the tutorial assumes you are working directly within the cloned repository, you are not strictly required to keep your course files here.
+If you want to work in another directory while following the tutorial,
+you may copy over necessary files from the tutorial and modify relative file paths as needed.
+Although possible, we strongly recommend working from the autograder repository for the duration of the tutorial.
+
 ## Running Autograder Commands
 
 In this tutorial, we will be interacting with the autograder using a prebuilt Docker image to access admin commands for the autograder.
