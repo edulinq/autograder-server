@@ -80,7 +80,7 @@ The following values are allowed:
 
  - Email - Normal email addresses may be used.
  - "\*" - Represents all users in a course.
- - Course Role (e.g., "student", "grader", etc) - Represents all course users with that role.
+ - [Course Role](#course-roles-courserole) (e.g., "student", "grader", etc) - Represents all course users with that role.
  - Negative Email - An email address preceded by a minus sign (e.g., "-alice@test.edulinq.org")
    will remove this address from the email recipients (even if they are not currently there).
    This can be useful when using course roles but you want to exclude someone.
