@@ -224,7 +224,7 @@ func TestFileOpValidateBase(test *testing.T) {
 		if err != nil {
 			if testCase.errorSubstring != "" {
 				if !strings.Contains(err.Error(), testCase.errorSubstring) {
-					test.Errorf("Case %d: Did not get expected error outpout. Expected Substring '%s', Actual Error: '%v'.", i, testCase.errorSubstring, err)
+					test.Errorf("Case %d: Did not get expected error output. Expected Substring '%s', Actual Error: '%v'.", i, testCase.errorSubstring, err)
 				}
 			} else {
 				test.Errorf("Case %d: Failed to validate operation '%+v': '%v'.", i, testCase.operation, err)
@@ -404,10 +404,12 @@ func TestFileOpMoveBase(test *testing.T) {
 			alreadyExistsDirname,
 			"file exists",
 		},
+		// This case outputs a slightly different error on some Mac versions.
+		// Let the error substring be very general for this case.
 		{
 			alreadyExistsDirname,
 			alreadyExistsFilePosixRelpath,
-			"invalid argument",
+			"rename",
 		},
 	}
 
