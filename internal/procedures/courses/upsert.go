@@ -7,6 +7,7 @@ import (
 	"github.com/edulinq/autograder/internal/common"
 	"github.com/edulinq/autograder/internal/db"
 	"github.com/edulinq/autograder/internal/lms/lmssync"
+	"github.com/edulinq/autograder/internal/lockmanager"
 	"github.com/edulinq/autograder/internal/model"
 	"github.com/edulinq/autograder/internal/util"
 )
@@ -30,6 +31,10 @@ func upsertFromConfigPath(path string, options CourseUpsertOptions) (*CourseUpse
 	if err != nil {
 		return nil, UNKNOWN_COURSE_ID, fmt.Errorf("Failed to perform initial checks on course: '%w'.", err)
 	}
+
+	lockKey := fmt.Sprintf("course-upsert-%s", course.ID)
+	lockmanager.Lock(lockKey)
+	defer lockmanager.Unlock(lockKey)
 
 	if course == nil {
 		return result, UNKNOWN_COURSE_ID, nil
