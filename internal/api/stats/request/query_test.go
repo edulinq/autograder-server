@@ -1,7 +1,6 @@
 package request
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/edulinq/autograder/internal/api/core"
@@ -57,7 +56,6 @@ func TestQuery(test *testing.T) {
 		util.MustJSONFromString(util.MustToJSON(response.Content), &responseContent)
 
 		if len(testCase.expectedValues) != len(responseContent.Records) {
-			fmt.Println("response: ", util.MustToJSONIndent(responseContent))
 			test.Errorf("Case %d: Unexpected number of records. Expected: %d, Actual: %d.", i, len(testCase.expectedValues), len(responseContent.Records))
 			continue
 		}

@@ -15,13 +15,13 @@ func TestStoreRequestMetric(test *testing.T) {
 		BaseMetric: BaseMetric{
 			Timestamp: timestamp.Zero(),
 		},
+		Sender:       "1",
 		Endpoint:     "E",
-		Locator:      "1",
+		Duration:     100,
+		UserEmail:    "U",
 		CourseID:     "C",
 		AssignmentID: "A",
-		UserEmail:    "U",
-		Sender:       "2",
-		Duration:     100,
+		Locator:      "2",
 	}
 
 	// Ensure that there is no backend set during testing.
@@ -36,7 +36,7 @@ func TestStoreRequestMetric(test *testing.T) {
 		test.Fatalf("Found stored stats (%d) before collection.", len(typedBackend.request))
 	}
 
-	AsyncStoreRequestMetric(timestamp.Zero(), timestamp.FromMSecs(100), "C", "A", "U", "E", "1", "2")
+	AsyncStoreRequestMetric(timestamp.Zero(), timestamp.FromMSecs(100), "1", "E", "U", "C", "A", "2")
 
 	// Ensure that stats have been collected.
 	count := len(typedBackend.request)

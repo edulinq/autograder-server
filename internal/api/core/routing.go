@@ -108,7 +108,6 @@ func handleAPIEndpoint(response http.ResponseWriter, request *http.Request, apiH
 	if apiErr != nil {
 		return sendAPIResponse(nil, response, nil, apiErr, false, startTime, request.RemoteAddr)
 	}
-
 	defer CleanupAPIrequest(apiRequest)
 
 	_, ok := apiRequest.(log.Loggable)
@@ -158,7 +157,7 @@ func sendAPIResponse(apiRequest ValidAPIRequest, response http.ResponseWriter,
 	// Don't log request stats when in testing mode.
 	if !config.UNIT_TESTING_MODE.Get() {
 		endpoint, userEmail, courseID, assignmentID, locator := getRequestInfoForStats(apiRequest, apiErr)
-		stats.AsyncStoreRequestMetric(startTime, apiResponse.EndTimestamp, courseID, assignmentID, userEmail, endpoint, locator, sender)
+		stats.AsyncStoreRequestMetric(startTime, apiResponse.EndTimestamp, sender, endpoint, userEmail, courseID, assignmentID, locator)
 	}
 
 	// When in testing mode, allow cross-origin requests.

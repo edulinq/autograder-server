@@ -22,7 +22,7 @@ type RequestMetricQuery struct {
 	BaseMetric
 }
 
-func AsyncStoreRequestMetric(startTime timestamp.Timestamp, endTime timestamp.Timestamp, courseID string, assignmentID string, userEmail string, endpoint string, locator string, sender string) {
+func AsyncStoreRequestMetric(startTime timestamp.Timestamp, endTime timestamp.Timestamp, sender string, endpoint string, userEmail string, courseID string, assignmentID string, locator string) {
 	metric := &RequestMetric{
 		BaseMetric: BaseMetric{
 			Timestamp: startTime,
