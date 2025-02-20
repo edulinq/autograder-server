@@ -12,9 +12,9 @@ type RequestMetric struct {
 	Sender       string `json:"sender"`
 	Endpoint     string `json:"endpoint"`
 	Duration     uint64 `json:"duration"`
+	UserEmail    string `json:"user,omitempty"`
 	CourseID     string `json:"course,omitempty"`
 	AssignmentID string `json:"assignment,omitempty"`
-	UserEmail    string `json:"user,omitempty"`
 	Locator      string `json:"locator,omitempty"`
 }
 

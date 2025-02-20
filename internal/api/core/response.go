@@ -72,9 +72,11 @@ func getRequestInfoForAPIResponse(request ValidAPIRequest) (string, timestamp.Ti
 	return id, startTime
 }
 
-// Get request values from a ValidAPIRequest and an APIError, both of which may be nil.
+// Get the endpoint, userEmail, courseID, assignmentID, and locator
+// from a ValidAPIRequest and an APIError, both of which may be nil.
 func getRequestInfoForStats(request ValidAPIRequest, apiError *APIError) (string, string, string, string, string) {
-	endpoint, courseID, assignmentID, userEmail, locator := getAPIRequestInfoForStats(request)
+	endpoint, userEmail, courseID, assignmentID := getValidAPIRequestInfoForStats(request)
+	locator := ""
 
 	if apiError != nil {
 		endpoint = util.GetStringWithDefault(endpoint, apiError.Endpoint)
@@ -87,22 +89,27 @@ func getRequestInfoForStats(request ValidAPIRequest, apiError *APIError) (string
 	return endpoint, userEmail, courseID, assignmentID, locator
 }
 
-func getAPIRequestInfoForStats(request ValidAPIRequest) (string, string, string, string, string) {
-	if request == nil {
-		return "", "", "", "", ""
-	}
-
+// Reflexively get the endpoint, userEmail, courseID, and assignmentID from a ValidAPIRequest.
+func getValidAPIRequestInfoForStats(request ValidAPIRequest) (string, string, string, string) {
 	endpoint := ""
+	userEmail := ""
 	courseID := ""
 	assignmentID := ""
-	userEmail := ""
-	locator := ""
+
+	if request == nil {
+		return endpoint, userEmail, courseID, assignmentID
+	}
 
 	reflectValue := reflect.ValueOf(request).Elem()
 
 	endpointValue := reflectValue.FieldByName("Endpoint")
 	if endpointValue.IsValid() {
 		endpoint = fmt.Sprintf("%s", endpointValue.Interface())
+	}
+
+	userEmailValue := reflectValue.FieldByName("UserEmail")
+	if userEmailValue.IsValid() {
+		userEmail = fmt.Sprintf("%s", userEmailValue.Interface())
 	}
 
 	courseIDValue := reflectValue.FieldByName("CourseID")
@@ -115,10 +122,5 @@ func getAPIRequestInfoForStats(request ValidAPIRequest) (string, string, string,
 		assignmentID = fmt.Sprintf("%s", assignmentIDValue.Interface())
 	}
 
-	userEmailValue := reflectValue.FieldByName("UserEmail")
-	if userEmailValue.IsValid() {
-		userEmail = fmt.Sprintf("%s", userEmailValue.Interface())
-	}
-
-	return endpoint, userEmail, courseID, assignmentID, locator
+	return endpoint, userEmail, courseID, assignmentID
 }

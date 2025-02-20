@@ -86,7 +86,7 @@ var testRecords []*stats.RequestMetric = []*stats.RequestMetric{
 		CourseID:     "C1",
 		AssignmentID: "A1",
 		UserEmail:    "U1",
-		Locator:      "10",
+		Locator:      "11",
 	},
 	&stats.RequestMetric{
 		BaseMetric: stats.BaseMetric{
@@ -98,7 +98,7 @@ var testRecords []*stats.RequestMetric = []*stats.RequestMetric{
 		CourseID:     "C2",
 		AssignmentID: "A2",
 		UserEmail:    "U2",
-		Locator:      "11",
+		Locator:      "22",
 	},
 	&stats.RequestMetric{
 		BaseMetric: stats.BaseMetric{
@@ -110,6 +110,6 @@ var testRecords []*stats.RequestMetric = []*stats.RequestMetric{
 		CourseID:     "C3",
 		AssignmentID: "A3",
 		UserEmail:    "U3",
-		Locator:      "13",
+		Locator:      "33",
 	},
 }
