@@ -10,6 +10,7 @@ var backendLock sync.RWMutex
 type StorageBackend interface {
 	StoreSystemStats(record *SystemMetrics) error
 	StoreCourseMetric(record *CourseMetric) error
+	StoreRequestMetric(record *RequestMetric) error
 }
 
 func SetStorageBackend(newBackend StorageBackend) {
@@ -47,4 +48,15 @@ func StoreCourseMetric(record *CourseMetric) error {
 	}
 
 	return backend.StoreCourseMetric(record)
+}
+
+func StoreRequestMetric(record *RequestMetric) error {
+	backendLock.RLock()
+	defer backendLock.RUnlock()
+
+	if backend == nil {
+		return nil
+	}
+
+	return backend.StoreRequestMetric(record)
 }

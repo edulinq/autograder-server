@@ -83,3 +83,26 @@ func (this *DBTests) DBTestStoreCourseMetrics(test *testing.T) {
 			util.MustToJSONIndent(testRecord), util.MustToJSONIndent(*records[0]))
 	}
 }
+
+func (this *DBTests) DBTestStoreRequestMetrics(test *testing.T) {
+	Clear()
+	defer Clear()
+
+	testRecord := stats.RequestMetric{
+		BaseMetric: stats.BaseMetric{
+			Timestamp: timestamp.Now(),
+		},
+		CourseID:     "C",
+		AssignmentID: "A",
+		UserEmail:    "U",
+		Endpoint:     "E",
+		Locator:      "1",
+		IPAddress:    "2",
+		Value:        100,
+	}
+
+	err := backend.StoreRequestMetric(&testRecord)
+	if err != nil {
+		test.Fatalf("Failed to store stats: '%v'.", err)
+	}
+}

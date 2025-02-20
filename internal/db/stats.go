@@ -37,3 +37,11 @@ func StoreCourseMetric(record *stats.CourseMetric) error {
 
 	return backend.StoreCourseMetric(record)
 }
+
+func StoreRequestMetric(record *stats.RequestMetric) error {
+	if backend == nil {
+		return fmt.Errorf("Database has not been opened.")
+	}
+
+	return backend.StoreRequestMetric(record)
+}

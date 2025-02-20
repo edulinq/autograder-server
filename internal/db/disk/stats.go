@@ -10,6 +10,7 @@ import (
 
 const SYSTEM_STATS_FILENAME = "stats.jsonl"
 const COURSE_STATS_FILENAME = "course-stats.jsonl"
+const REQUEST_STATS_FILENAME = "request-stats.jsonl"
 
 func (this *backend) StoreSystemStats(record *stats.SystemMetrics) error {
 	this.statsLock.Lock()
@@ -40,6 +41,15 @@ func (this *backend) StoreCourseMetric(record *stats.CourseMetric) error {
 	return util.AppendJSONLFile(path, record)
 }
 
+func (this *backend) StoreRequestMetric(record *stats.RequestMetric) error {
+	path := this.getRequestStatsPath()
+
+	this.requestLock.Lock()
+	defer this.requestLock.Unlock()
+
+	return util.AppendJSONLFile(path, record)
+}
+
 func (this *backend) GetCourseMetrics(query stats.CourseMetricQuery) ([]*stats.CourseMetric, error) {
 	if query.CourseID == "" {
 		return nil, fmt.Errorf("When querying for course metrics, course ID must not be empty.")
@@ -63,4 +73,8 @@ func (this *backend) getSystemStatsPath() string {
 
 func (this *backend) getCourseStatsPath(courseID string) string {
 	return filepath.Join(this.getCourseDirFromID(courseID), COURSE_STATS_FILENAME)
+}
+
+func (this *backend) getRequestStatsPath() string {
+	return filepath.Join(this.baseDir, REQUEST_STATS_FILENAME)
 }

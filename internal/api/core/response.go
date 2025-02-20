@@ -1,6 +1,7 @@
 package core
 
 import (
+	"fmt"
 	"reflect"
 
 	"github.com/edulinq/autograder/internal/log"
@@ -69,4 +70,48 @@ func getRequestInfo(request ValidAPIRequest) (string, timestamp.Timestamp) {
 	}
 
 	return id, startTime
+}
+
+// Reflexively get request values for request stats.
+// Fall back to apiError values if missing.
+func getRequestStats(request ValidAPIRequest, apiError *APIError) (string, string, string, string, string) {
+	courseID := ""
+	assignmentID := ""
+	userEmail := ""
+	endpoint := ""
+	locator := ""
+
+	if request != nil {
+		reflectValue := reflect.ValueOf(request).Elem()
+
+		courseIDValue := reflectValue.FieldByName("CourseID")
+		if courseIDValue.IsValid() {
+			courseID = fmt.Sprintf("%s", courseIDValue.Interface())
+		}
+
+		assignmentIDValue := reflectValue.FieldByName("AssignmentID")
+		if assignmentIDValue.IsValid() {
+			assignmentID = fmt.Sprintf("%s", assignmentIDValue.Interface())
+		}
+
+		userEmailValue := reflectValue.FieldByName("UserEmail")
+		if userEmailValue.IsValid() {
+			userEmail = fmt.Sprintf("%s", userEmailValue.Interface())
+		}
+
+		endpointValue := reflectValue.FieldByName("Endpoint")
+		if endpointValue.IsValid() {
+			endpoint = fmt.Sprintf("%s", endpointValue.Interface())
+		}
+	}
+
+	if apiError != nil {
+		courseID = util.GetFirstNonEmptyString(courseID, apiError.CourseID)
+		assignmentID = util.GetFirstNonEmptyString(assignmentID, apiError.AssignmentID)
+		userEmail = util.GetFirstNonEmptyString(userEmail, apiError.UserEmail)
+		endpoint = util.GetFirstNonEmptyString(endpoint, apiError.Endpoint)
+		locator = apiError.Locator
+	}
+
+	return locator, courseID, assignmentID, userEmail, endpoint
 }

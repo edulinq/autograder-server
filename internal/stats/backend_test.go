@@ -1,8 +1,9 @@
 package stats
 
 type testBackend struct {
-	system []*SystemMetrics
-	course []*CourseMetric
+	system  []*SystemMetrics
+	course  []*CourseMetric
+	request []*RequestMetric
 }
 
 func (this *testBackend) StoreSystemStats(record *SystemMetrics) error {
@@ -12,6 +13,11 @@ func (this *testBackend) StoreSystemStats(record *SystemMetrics) error {
 
 func (this *testBackend) StoreCourseMetric(record *CourseMetric) error {
 	this.course = append(this.course, record)
+	return nil
+}
+
+func (this *testBackend) StoreRequestMetric(record *RequestMetric) error {
+	this.request = append(this.request, record)
 	return nil
 }
 
