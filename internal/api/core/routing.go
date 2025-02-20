@@ -155,7 +155,7 @@ func sendAPIResponse(apiRequest ValidAPIRequest, response http.ResponseWriter,
 		}
 	}
 
-	locator, courseID, assignmentID, userEmail, endpoint := getRequestStats(apiRequest, apiErr)
+	locator, courseID, assignmentID, userEmail, endpoint := getRequestInfoForStats(apiRequest, apiErr)
 	stats.AsyncStoreRequestMetric(startTime, apiResponse.EndTimestamp, courseID, assignmentID, userEmail, endpoint, locator, ipAddress)
 
 	// When in testing mode, allow cross-origin requests.

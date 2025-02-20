@@ -29,7 +29,7 @@ func (this *APIResponse) String() string {
 }
 
 func NewAPIResponse(request ValidAPIRequest, content any) *APIResponse {
-	id, startTime := getRequestInfo(request)
+	id, startTime := getRequestInfoForAPIResponse(request)
 
 	version, err := util.GetAutograderVersion()
 	if err != nil {
@@ -49,7 +49,7 @@ func NewAPIResponse(request ValidAPIRequest, content any) *APIResponse {
 }
 
 // Reflexively get the request ID and timestamp from a request.
-func getRequestInfo(request ValidAPIRequest) (string, timestamp.Timestamp) {
+func getRequestInfoForAPIResponse(request ValidAPIRequest) (string, timestamp.Timestamp) {
 	id := ""
 	startTime := timestamp.Now()
 
@@ -72,9 +72,8 @@ func getRequestInfo(request ValidAPIRequest) (string, timestamp.Timestamp) {
 	return id, startTime
 }
 
-// Reflexively get request values for request stats.
-// Fall back to apiError values if missing.
-func getRequestStats(request ValidAPIRequest, apiError *APIError) (string, string, string, string, string) {
+// Get request values from a valid API request and an apiError if non-nil.
+func getRequestInfoForStats(request ValidAPIRequest, apiError *APIError) (string, string, string, string, string) {
 	courseID := ""
 	assignmentID := ""
 	userEmail := ""
