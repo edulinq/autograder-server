@@ -90,7 +90,7 @@ Note the use of `realpath`, because `docker run` requires absolute paths.
 
 We provide a convenience script that run the container using the same Docker CLI as above,
 but has the default values builtin.
-This script lives at [docker/run-docker-server.py](docker/run-docker-server.py),
+This script lives at [docker/run-docker-server.py](../docker/run-docker-server.py),
 and will use all the defaults mentioned above automatically.
 
 For example, to run the above `version` command, you can use:
