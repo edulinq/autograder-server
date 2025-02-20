@@ -129,7 +129,6 @@ func handleAPIEndpoint(response http.ResponseWriter, request *http.Request, apiH
 // most callers should set it to false.
 func sendAPIResponse(apiRequest ValidAPIRequest, response http.ResponseWriter,
 	content any, apiErr *APIError, hardFail bool, startTime timestamp.Timestamp, ipAddress string) error {
-
 	var apiResponse *APIResponse = nil
 
 	if apiErr != nil {
@@ -152,7 +151,7 @@ func sendAPIResponse(apiRequest ValidAPIRequest, response http.ResponseWriter,
 
 			payload, _ = util.ToJSON(apiResponse)
 		} else {
-			return sendAPIResponse(apiRequest, response, nil, apiErr, true, timestamp.Now(), ipAddress)
+			return sendAPIResponse(apiRequest, response, nil, apiErr, true, startTime, ipAddress)
 		}
 	}
 
