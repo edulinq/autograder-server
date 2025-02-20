@@ -19,7 +19,7 @@ func JoinStrings(delim string, parts ...string) string {
 	return strings.Join(parts, delim)
 }
 
-func GetFirstNonEmptyString(primary string, fallback string) string {
+func GetStringWithDefault(primary string, fallback string) string {
 	if primary != "" {
 		return primary
 	}

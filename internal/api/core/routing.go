@@ -128,7 +128,7 @@ func handleAPIEndpoint(response http.ResponseWriter, request *http.Request, apiH
 // |hardFail| controls whether we should try to wrap an error and call this method again (so we don't infinite loop),
 // most callers should set it to false.
 func sendAPIResponse(apiRequest ValidAPIRequest, response http.ResponseWriter,
-	content any, apiErr *APIError, hardFail bool, startTime timestamp.Timestamp, ipAddress string) error {
+	content any, apiErr *APIError, hardFail bool, startTime timestamp.Timestamp, sender string) error {
 	var apiResponse *APIResponse = nil
 
 	if apiErr != nil {
@@ -151,12 +151,15 @@ func sendAPIResponse(apiRequest ValidAPIRequest, response http.ResponseWriter,
 
 			payload, _ = util.ToJSON(apiResponse)
 		} else {
-			return sendAPIResponse(apiRequest, response, nil, apiErr, true, startTime, ipAddress)
+			return sendAPIResponse(apiRequest, response, nil, apiErr, true, startTime, sender)
 		}
 	}
 
-	locator, courseID, assignmentID, userEmail, endpoint := getRequestInfoForStats(apiRequest, apiErr)
-	stats.AsyncStoreRequestMetric(startTime, apiResponse.EndTimestamp, courseID, assignmentID, userEmail, endpoint, locator, ipAddress)
+	// Don't log request stats when in testing mode.
+	if !config.UNIT_TESTING_MODE.Get() {
+		endpoint, userEmail, courseID, assignmentID, locator := getRequestInfoForStats(apiRequest, apiErr)
+		stats.AsyncStoreRequestMetric(startTime, apiResponse.EndTimestamp, courseID, assignmentID, userEmail, endpoint, locator, sender)
+	}
 
 	// When in testing mode, allow cross-origin requests.
 	if config.UNIT_TESTING_MODE.Get() {

@@ -20,8 +20,8 @@ func TestStoreRequestMetric(test *testing.T) {
 		CourseID:     "C",
 		AssignmentID: "A",
 		UserEmail:    "U",
-		IPAddress:    "2",
-		Value:        100,
+		Sender:       "2",
+		Duration:     100,
 	}
 
 	// Ensure that there is no backend set during testing.

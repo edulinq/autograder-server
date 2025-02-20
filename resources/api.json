@@ -125,6 +125,11 @@
             "request-type": "*metadata.DescribeRequest",
             "response-type": "*metadata.DescribeResponse"
         },
+        "stats/request/query": {
+            "request-type": "*request.QueryRequest",
+            "response-type": "*request.QueryResponse",
+            "description": "Query the API request stats for the server."
+        },
         "stats/system/query": {
             "description": "Query the system stats for the server.",
             "request-type": "*system.QueryRequest",

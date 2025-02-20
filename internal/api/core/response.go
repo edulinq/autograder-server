@@ -72,45 +72,53 @@ func getRequestInfoForAPIResponse(request ValidAPIRequest) (string, timestamp.Ti
 	return id, startTime
 }
 
-// Get request values from a valid API request and an apiError if non-nil.
+// Get request values from a ValidAPIRequest and an APIError, both of which may be nil.
 func getRequestInfoForStats(request ValidAPIRequest, apiError *APIError) (string, string, string, string, string) {
-	courseID := ""
-	assignmentID := ""
-	userEmail := ""
-	endpoint := ""
-	locator := ""
-
-	if request != nil {
-		reflectValue := reflect.ValueOf(request).Elem()
-
-		courseIDValue := reflectValue.FieldByName("CourseID")
-		if courseIDValue.IsValid() {
-			courseID = fmt.Sprintf("%s", courseIDValue.Interface())
-		}
-
-		assignmentIDValue := reflectValue.FieldByName("AssignmentID")
-		if assignmentIDValue.IsValid() {
-			assignmentID = fmt.Sprintf("%s", assignmentIDValue.Interface())
-		}
-
-		userEmailValue := reflectValue.FieldByName("UserEmail")
-		if userEmailValue.IsValid() {
-			userEmail = fmt.Sprintf("%s", userEmailValue.Interface())
-		}
-
-		endpointValue := reflectValue.FieldByName("Endpoint")
-		if endpointValue.IsValid() {
-			endpoint = fmt.Sprintf("%s", endpointValue.Interface())
-		}
-	}
+	endpoint, courseID, assignmentID, userEmail, locator := getAPIRequestInfoForStats(request)
 
 	if apiError != nil {
-		courseID = util.GetFirstNonEmptyString(courseID, apiError.CourseID)
-		assignmentID = util.GetFirstNonEmptyString(assignmentID, apiError.AssignmentID)
-		userEmail = util.GetFirstNonEmptyString(userEmail, apiError.UserEmail)
-		endpoint = util.GetFirstNonEmptyString(endpoint, apiError.Endpoint)
+		endpoint = util.GetStringWithDefault(endpoint, apiError.Endpoint)
+		courseID = util.GetStringWithDefault(courseID, apiError.CourseID)
+		assignmentID = util.GetStringWithDefault(assignmentID, apiError.AssignmentID)
+		userEmail = util.GetStringWithDefault(userEmail, apiError.UserEmail)
 		locator = apiError.Locator
 	}
 
-	return locator, courseID, assignmentID, userEmail, endpoint
+	return endpoint, userEmail, courseID, assignmentID, locator
+}
+
+func getAPIRequestInfoForStats(request ValidAPIRequest) (string, string, string, string, string) {
+	if request == nil {
+		return "", "", "", "", ""
+	}
+
+	endpoint := ""
+	courseID := ""
+	assignmentID := ""
+	userEmail := ""
+	locator := ""
+
+	reflectValue := reflect.ValueOf(request).Elem()
+
+	endpointValue := reflectValue.FieldByName("Endpoint")
+	if endpointValue.IsValid() {
+		endpoint = fmt.Sprintf("%s", endpointValue.Interface())
+	}
+
+	courseIDValue := reflectValue.FieldByName("CourseID")
+	if courseIDValue.IsValid() {
+		courseID = fmt.Sprintf("%s", courseIDValue.Interface())
+	}
+
+	assignmentIDValue := reflectValue.FieldByName("AssignmentID")
+	if assignmentIDValue.IsValid() {
+		assignmentID = fmt.Sprintf("%s", assignmentIDValue.Interface())
+	}
+
+	userEmailValue := reflectValue.FieldByName("UserEmail")
+	if userEmailValue.IsValid() {
+		userEmail = fmt.Sprintf("%s", userEmailValue.Interface())
+	}
+
+	return endpoint, userEmail, courseID, assignmentID, locator
 }

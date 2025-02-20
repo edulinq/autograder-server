@@ -92,17 +92,33 @@ func (this *DBTests) DBTestStoreRequestMetrics(test *testing.T) {
 		BaseMetric: stats.BaseMetric{
 			Timestamp: timestamp.Now(),
 		},
+		Sender:       "2",
+		Endpoint:     "E",
+		Duration:     100,
 		CourseID:     "C",
 		AssignmentID: "A",
 		UserEmail:    "U",
-		Endpoint:     "E",
 		Locator:      "1",
-		IPAddress:    "2",
-		Value:        100,
 	}
 
 	err := backend.StoreRequestMetric(&testRecord)
 	if err != nil {
 		test.Fatalf("Failed to store stats: '%v'.", err)
+	}
+
+	query := stats.BaseQuery{}
+
+	records, err := GetRequestMetrics(query)
+	if err != nil {
+		test.Fatalf("Failed to fetch stats: '%v'.", err)
+	}
+
+	if len(records) != 1 {
+		test.Fatalf("Did not get the correct number of records. Expected: 1, Actual: %d.", len(records))
+	}
+
+	if !reflect.DeepEqual(*records[0], testRecord) {
+		test.Fatalf("Did not get the expected record back. Expected: '%s', Actual: '%s'.",
+			util.MustToJSONIndent(testRecord), util.MustToJSONIndent(*records[0]))
 	}
 }

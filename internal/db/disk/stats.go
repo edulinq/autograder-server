@@ -20,10 +20,10 @@ func (this *backend) StoreSystemStats(record *stats.SystemMetrics) error {
 }
 
 func (this *backend) GetSystemStats(query stats.Query) ([]*stats.SystemMetrics, error) {
+	path := this.getSystemStatsPath()
+
 	this.statsLock.RLock()
 	defer this.statsLock.RUnlock()
-
-	path := this.getSystemStatsPath()
 
 	records, err := util.FilterJSONLFile(path, stats.SystemMetrics{}, func(record *stats.SystemMetrics) bool {
 		return query.Match(record)
@@ -65,6 +65,19 @@ func (this *backend) StoreRequestMetric(record *stats.RequestMetric) error {
 	defer this.requestLock.Unlock()
 
 	return util.AppendJSONLFile(path, record)
+}
+
+func (this *backend) GetRequestMetrics(query stats.Query) ([]*stats.RequestMetric, error) {
+	path := this.getRequestStatsPath()
+
+	this.requestLock.RLock()
+	defer this.requestLock.RUnlock()
+
+	records, err := util.FilterJSONLFile(path, stats.RequestMetric{}, func(record *stats.RequestMetric) bool {
+		return query.Match(record)
+	})
+
+	return records, err
 }
 
 func (this *backend) getSystemStatsPath() string {

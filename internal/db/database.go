@@ -188,6 +188,9 @@ type Backend interface {
 	// Get course stats that match the specific query.
 	GetCourseMetrics(query stats.CourseMetricQuery) ([]*stats.CourseMetric, error)
 
+	// Get API request stats that match the specific query.
+	GetRequestMetrics(query stats.Query) ([]*stats.RequestMetric, error)
+
 	// Analysis Operations
 
 	// Fetch any matching individual analysis results.

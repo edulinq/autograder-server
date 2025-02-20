@@ -9,16 +9,20 @@ import (
 type RequestMetric struct {
 	BaseMetric
 
+	Sender       string `json:"sender"`
 	Endpoint     string `json:"endpoint"`
-	Locator      string `json:"locator,omitempty"`
+	Duration     uint64 `json:"duration"`
 	CourseID     string `json:"course,omitempty"`
 	AssignmentID string `json:"assignment,omitempty"`
 	UserEmail    string `json:"user,omitempty"`
-	IPAddress    string `json:ip-address`
-	Value        uint64 `json:"duration"`
+	Locator      string `json:"locator,omitempty"`
 }
 
-func AsyncStoreRequestMetric(startTime timestamp.Timestamp, endTime timestamp.Timestamp, courseID string, assignmentID string, userEmail string, endpoint string, locator string, ipAddress string) {
+type RequestMetricQuery struct {
+	BaseMetric
+}
+
+func AsyncStoreRequestMetric(startTime timestamp.Timestamp, endTime timestamp.Timestamp, courseID string, assignmentID string, userEmail string, endpoint string, locator string, sender string) {
 	metric := &RequestMetric{
 		BaseMetric: BaseMetric{
 			Timestamp: startTime,
@@ -28,8 +32,8 @@ func AsyncStoreRequestMetric(startTime timestamp.Timestamp, endTime timestamp.Ti
 		CourseID:     courseID,
 		AssignmentID: assignmentID,
 		UserEmail:    userEmail,
-		IPAddress:    ipAddress,
-		Value:        uint64((endTime - startTime).ToMSecs()),
+		Sender:       sender,
+		Duration:     uint64((endTime - startTime).ToMSecs()),
 	}
 
 	storeFunc := func() {
