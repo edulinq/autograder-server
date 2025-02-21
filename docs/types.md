@@ -844,10 +844,12 @@ All types of FileSpecs share some common fields:
 ### FileSpec -- Path
 
 A FileSpec with `type` equal to `path` points to an absolute or relative path accessible from the current machine.
-The path may include a glob pattern to target multiple files/directories.
 `dest` must be a directory if multiple files/directories are being copied, a new directory will be created if `dest` doesn't exist.
 When a relative path is specified, additional context is required to know the relative base.
 For example, a FileSpec in an assignment config is relative to the assignment directory (the directory where the `assignment.json` file lives).
+
+The path may include a glob pattern to target multiple files/directories.
+Glob patterns must follow Go [glob pattern standard](https://pkg.go.dev/path/filepath#Match).
 
 In most cases where a FileSpec is parsed from a string, e.g., most command-line cases, a path FileSpec can be given as a normal path instead of a JSON object.
 `type` and `path` will be set properly, and `dest` will be defaulted to the given path's base name.
@@ -878,6 +880,14 @@ Rename the output file to "instructions.md":
     "type": "path",
     "path": "/autograder-server/README.md",
     "dest": "instructions.md"
+}
+```
+
+Multiple files with a glob:
+```json
+{
+    "type": "path",
+    "path": "test_cases/*.c"
 }
 ```
 
