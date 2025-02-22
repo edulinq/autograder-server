@@ -10,11 +10,24 @@ import (
 	"strings"
 
 	"github.com/edulinq/autograder/internal/log"
+	hujson "github.com/tailscale/hujson"
 )
 
 const DEFAULT_PREFIX = ""
 const DEFAULT_INDENT = "    "
 
+func standardizeAndMarshal(data []byte, target any) (error) {
+	standardizedData, err := hujson.Standardize(data)
+	if err != nil {
+		return fmt.Errorf("Could not standardize JSON data: '%w'.", err)
+	}
+	err = json.Unmarshal(standardizedData, target)
+	if err != nil {
+		return fmt.Errorf("Could not unmarshal JSON data: '%w'.", err)
+	}
+	return nil
+}
+	
 // The target must be a pointer.
 func JSONFromFile(path string, target any) error {
 	file, err := os.Open(path)
@@ -27,8 +40,7 @@ func JSONFromFile(path string, target any) error {
 	if err != nil {
 		return fmt.Errorf("Could not read JSON file (%s): '%w'.", path, err)
 	}
-
-	err = json.Unmarshal(data, target)
+	err = standardizeAndMarshal(data, target)
 	if err != nil {
 		return fmt.Errorf("Could not unmarshal JSON file (%s): '%w'.", path, err)
 	}
@@ -55,11 +67,10 @@ func MustJSONFromBytes(data []byte, target any) {
 }
 
 func JSONFromBytes(data []byte, target any) error {
-	err := json.Unmarshal(data, target)
+	err := standardizeAndMarshal(data, target)
 	if err != nil {
-		return fmt.Errorf("Could not unmarshal JSON bytes/string (%s): '%w'.", string(data), err)
+		return fmt.Errorf("Could not unmarshal JSON data: '%w'.", err)
 	}
-
 	return nil
 }
 
@@ -75,7 +86,7 @@ func MustJSONMapFromString(data string) map[string]any {
 func JSONMapFromString(data string) (map[string]any, error) {
 	target := make(map[string]any)
 
-	err := json.Unmarshal([]byte(data), &target)
+	err := standardizeAndMarshal([]byte(data), &target)
 	if err != nil {
 		return nil, fmt.Errorf("Could not unmarshal JSON map from string (%s): '%w'.", data, err)
 	}
