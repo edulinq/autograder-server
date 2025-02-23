@@ -7,14 +7,18 @@ import (
 	"io/fs"
 	"net/http"
 	"os"
+	gopath "path"
 	"path/filepath"
 	"strings"
 
 	"github.com/edulinq/autograder/internal/config"
 )
 
-//go:embed data
+//go:embed autograder-web/site
 var staticDir embed.FS
+
+// Note that an embeded FS always has forward slashes as path separators.
+var staticPrefixPath = gopath.Join("autograder-web", "site")
 
 // General function for opening our path objects.
 // When called with a file (not dir) target, file must also implement io.Seeker.
@@ -24,8 +28,10 @@ func Handle(response http.ResponseWriter, request *http.Request) error {
 	// Remove leading and trailing slashes.
 	path := strings.Trim(request.URL.Path, "/")
 
-	root := config.WEB_STATIC_ROOT.Get()
+	// Remove the static prefix (remember that this is a URL path)..
+	path = strings.TrimPrefix(path, "static/")
 
+	root := config.WEB_STATIC_ROOT.Get()
 	if root == "" {
 		return serveEmbeddedDir(path, response, request)
 	}
@@ -35,6 +41,9 @@ func Handle(response http.ResponseWriter, request *http.Request) error {
 
 func serveEmbeddedDir(path string, response http.ResponseWriter, request *http.Request) error {
 	open := func(path string) (fs.File, error) {
+		// Add the prefix for this embeded FS.
+		path = gopath.Join(staticPrefixPath, path)
+
 		return staticDir.Open(path)
 	}
 
@@ -42,12 +51,6 @@ func serveEmbeddedDir(path string, response http.ResponseWriter, request *http.R
 }
 
 func serveOutsideDir(basepath string, root string, response http.ResponseWriter, request *http.Request) error {
-	// Remove the static prefix or the common root path.
-	// Trimming the static path should be fine, since they are both URL paths,
-	// trimming the root is fragile and hacky at best.
-	basepath = strings.TrimPrefix(basepath, "static/")
-	basepath = strings.TrimPrefix("/"+basepath+"/", root)
-
 	path := filepath.Join(root, basepath)
 
 	open := func(path string) (fs.File, error) {
@@ -76,7 +79,7 @@ func serve(path string, response http.ResponseWriter, request *http.Request, ope
 
 	// Don't serve dirs. 301 to index.html.
 	if stat.IsDir() {
-		path = filepath.Join("/", path, "index.html")
+		path = gopath.Join("/", path, "index.html")
 		http.Redirect(response, request, path, 301)
 		return nil
 	}
