@@ -56,43 +56,49 @@ func TestRequestLog(test *testing.T) {
 			if testCase.permErrorLocator != "" {
 				if testCase.permErrorLocator != response.Locator {
 					test.Errorf("Case %d: Incorrect locator on perm error. Expected: '%s', Actual: '%s'.", i, testCase.permErrorLocator, response.Locator)
+					continue
 				}
 			} else {
 				test.Errorf("Case %d: Response is not a success when it should be: '%v'.", i, response)
+				continue
 			}
 		}
 
-		metric, err := db.GetAPIRequestMetrics(testCase.query)
+		metrics, err := db.GetAPIRequestMetrics(testCase.query)
 		if err != nil {
 			test.Errorf("Case %d: Unable to get API request metrics: '%v'.", i, err)
 			continue
 		}
 
-		if len(metric) == 0 {
+		if len(metrics) == 0 {
 			test.Errorf("Case %d: No request metrics collected.", i)
 			continue
 		}
 
-		if metric[0].Timestamp == 0 {
-			test.Errorf("Case %d: Timestamp field was not properly populated: '%v'.", i, metric)
+		metric := metrics[0]
+
+		if metric.Timestamp == 0 {
+			test.Errorf("Case %d: Timestamp field was not properly populated: '%v'.", i, util.MustToJSONIndent(metric))
 			continue
 		}
 
-		if metric[0].Sender == "" {
-			test.Errorf("Case %d: Sender field was not properly populated: '%v'.", i, metric)
+		if metric.Sender == "" {
+			test.Errorf("Case %d: Sender field was not properly populated: '%v'.", i, util.MustToJSONIndent(metric))
 			continue
 		}
 
-		if metric[0].Duration == 0 {
-			test.Errorf("Case %d: Duration field was not properly populated: '%v'.", i, metric)
+		if metric.Duration == 0 {
+			test.Errorf("Case %d: Duration field was not properly populated: '%v'.", i, util.MustToJSONIndent(metric))
+			continue
 		}
 
-		metric[0].Timestamp = 0
-		metric[0].Sender = ""
-		metric[0].Duration = 0
+		// Zero out non-deterministic fields.
+		metric.Timestamp = 0
+		metric.Sender = ""
+		metric.Duration = 0
 
-		if !reflect.DeepEqual(metric[0], testCase.expectedMetric) {
-			test.Errorf("Case %d: Stored metric is not as expected. Expected: '%v', Actual: %v", i, util.MustToJSONIndent(testCase.expectedMetric), util.MustToJSONIndent(metric[0]))
+		if !reflect.DeepEqual(metric, testCase.expectedMetric) {
+			test.Errorf("Case %d: Stored metric is not as expected. Expected: '%v', Actual: %v", i, util.MustToJSONIndent(testCase.expectedMetric), util.MustToJSONIndent(metric))
 			continue
 		}
 	}

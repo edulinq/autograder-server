@@ -10,7 +10,7 @@ import (
 
 const SYSTEM_STATS_FILENAME = "stats.jsonl"
 const COURSE_STATS_FILENAME = "course-stats.jsonl"
-const REQUEST_STATS_FILENAME = "request-stats.jsonl"
+const REQUEST_STATS_FILENAME = "api-request-stats.jsonl"
 
 func (this *backend) StoreSystemStats(record *stats.SystemMetrics) error {
 	this.statsLock.Lock()
