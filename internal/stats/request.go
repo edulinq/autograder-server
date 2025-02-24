@@ -6,7 +6,7 @@ import (
 	"github.com/edulinq/autograder/internal/timestamp"
 )
 
-type RequestMetric struct {
+type APIRequestMetric struct {
 	BaseMetric
 
 	Sender       string `json:"sender"`
@@ -18,12 +18,12 @@ type RequestMetric struct {
 	Locator      string `json:"locator,omitempty"`
 }
 
-type RequestMetricQuery struct {
+type APIRequestMetricQuery struct {
 	BaseMetric
 }
 
-func AsyncStoreRequestMetric(startTime timestamp.Timestamp, endTime timestamp.Timestamp, sender string, endpoint string, userEmail string, courseID string, assignmentID string, locator string) {
-	metric := &RequestMetric{
+func AsyncStoreAPIRequestMetric(startTime timestamp.Timestamp, endTime timestamp.Timestamp, sender string, endpoint string, userEmail string, courseID string, assignmentID string, locator string) {
+	metric := &APIRequestMetric{
 		BaseMetric: BaseMetric{
 			Timestamp: startTime,
 		},
@@ -37,9 +37,9 @@ func AsyncStoreRequestMetric(startTime timestamp.Timestamp, endTime timestamp.Ti
 	}
 
 	storeFunc := func() {
-		err := StoreRequestMetric(metric)
+		err := StoreAPIRequestMetric(metric)
 		if err != nil {
-			log.Error("Failed to log request metric.", err, metric)
+			log.Error("Failed to log API request metric.", err, metric)
 		}
 	}
 

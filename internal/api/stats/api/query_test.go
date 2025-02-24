@@ -1,4 +1,4 @@
-package request
+package api
 
 import (
 	"testing"
@@ -24,21 +24,22 @@ func TestQuery(test *testing.T) {
 		{"server-admin", false, stats.BaseQuery{Sort: 1}, []int{300, 200, 100}},
 		{"server-admin", false, stats.BaseQuery{After: timestamp.FromMSecs(150)}, []int{200, 300}},
 
-		{"server-user", true, stats.BaseQuery{}, []int{}},
-	}
-
-	for _, record := range testRecords {
-		err := db.StoreRequestMetric(record)
-		if err != nil {
-			test.Fatalf("Failed to store test record: '%v'.", err)
-		}
+		{"server-user", true, stats.BaseQuery{}, nil},
 	}
 
 	for i, testCase := range testCases {
+		db.ResetForTesting()
+		for _, record := range testRecords {
+			err := db.StoreAPIRequestMetric(record)
+			if err != nil {
+				test.Fatalf("Failed to store test record: '%v'.", err)
+			}
+		}
+
 		var fields map[string]any
 		util.MustJSONFromString(util.MustToJSON(testCase.query), &fields)
 
-		response := core.SendTestAPIRequestFull(test, `stats/request/query`, fields, nil, testCase.email)
+		response := core.SendTestAPIRequestFull(test, `stats/api/query`, fields, nil, testCase.email)
 		if !response.Success {
 			if testCase.permError {
 				expectedLocator := "-041"
@@ -73,8 +74,8 @@ func TestQuery(test *testing.T) {
 	}
 }
 
-var testRecords []*stats.RequestMetric = []*stats.RequestMetric{
-	&stats.RequestMetric{
+var testRecords []*stats.APIRequestMetric = []*stats.APIRequestMetric{
+	&stats.APIRequestMetric{
 		BaseMetric: stats.BaseMetric{
 			Timestamp: timestamp.FromMSecs(100),
 		},
@@ -86,7 +87,7 @@ var testRecords []*stats.RequestMetric = []*stats.RequestMetric{
 		UserEmail:    "U1",
 		Locator:      "11",
 	},
-	&stats.RequestMetric{
+	&stats.APIRequestMetric{
 		BaseMetric: stats.BaseMetric{
 			Timestamp: timestamp.FromMSecs(200),
 		},
@@ -98,7 +99,7 @@ var testRecords []*stats.RequestMetric = []*stats.RequestMetric{
 		UserEmail:    "U2",
 		Locator:      "22",
 	},
-	&stats.RequestMetric{
+	&stats.APIRequestMetric{
 		BaseMetric: stats.BaseMetric{
 			Timestamp: timestamp.FromMSecs(300),
 		},

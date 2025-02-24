@@ -1,4 +1,4 @@
-package request
+package api
 
 import (
 	"github.com/edulinq/autograder/internal/api/core"
@@ -14,12 +14,12 @@ type QueryRequest struct {
 }
 
 type QueryResponse struct {
-	Records []*stats.RequestMetric `json:"results"`
+	Records []*stats.APIRequestMetric `json:"results"`
 }
 
 // Query the API request stats for the server.
 func HandleQuery(request *QueryRequest) (*QueryResponse, *core.APIError) {
-	records, err := db.GetRequestMetrics(request.BaseQuery)
+	records, err := db.GetAPIRequestMetrics(request.BaseQuery)
 	if err != nil {
 		return nil, core.NewUserContextInternalError("-301", &request.APIRequestUserContext, "Failed to query request stats.").Err(err)
 	}

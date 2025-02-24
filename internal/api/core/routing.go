@@ -154,11 +154,8 @@ func sendAPIResponse(apiRequest ValidAPIRequest, response http.ResponseWriter,
 		}
 	}
 
-	// Don't log request stats when in testing mode.
-	if !config.UNIT_TESTING_MODE.Get() {
-		endpoint, userEmail, courseID, assignmentID, locator := getRequestInfoForStats(apiRequest, apiErr)
-		stats.AsyncStoreRequestMetric(startTime, apiResponse.EndTimestamp, sender, endpoint, userEmail, courseID, assignmentID, locator)
-	}
+	endpoint, userEmail, courseID, assignmentID, locator := getRequestInfo(apiRequest, apiErr)
+	stats.AsyncStoreAPIRequestMetric(startTime, apiResponse.EndTimestamp, sender, endpoint, userEmail, courseID, assignmentID, locator)
 
 	// When in testing mode, allow cross-origin requests.
 	if config.UNIT_TESTING_MODE.Get() {

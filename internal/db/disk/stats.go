@@ -58,8 +58,8 @@ func (this *backend) GetCourseMetrics(query stats.CourseMetricQuery) ([]*stats.C
 	return records, err
 }
 
-func (this *backend) StoreRequestMetric(record *stats.RequestMetric) error {
-	path := this.getRequestStatsPath()
+func (this *backend) StoreAPIRequestMetric(record *stats.APIRequestMetric) error {
+	path := this.getAPIRequestStatsPath()
 
 	this.requestLock.Lock()
 	defer this.requestLock.Unlock()
@@ -67,13 +67,13 @@ func (this *backend) StoreRequestMetric(record *stats.RequestMetric) error {
 	return util.AppendJSONLFile(path, record)
 }
 
-func (this *backend) GetRequestMetrics(query stats.Query) ([]*stats.RequestMetric, error) {
-	path := this.getRequestStatsPath()
+func (this *backend) GetAPIRequestMetrics(query stats.Query) ([]*stats.APIRequestMetric, error) {
+	path := this.getAPIRequestStatsPath()
 
 	this.requestLock.RLock()
 	defer this.requestLock.RUnlock()
 
-	records, err := util.FilterJSONLFile(path, stats.RequestMetric{}, func(record *stats.RequestMetric) bool {
+	records, err := util.FilterJSONLFile(path, stats.APIRequestMetric{}, func(record *stats.APIRequestMetric) bool {
 		return query.Match(record)
 	})
 
@@ -88,6 +88,6 @@ func (this *backend) getCourseStatsPath(courseID string) string {
 	return filepath.Join(this.getCourseDirFromID(courseID), COURSE_STATS_FILENAME)
 }
 
-func (this *backend) getRequestStatsPath() string {
+func (this *backend) getAPIRequestStatsPath() string {
 	return filepath.Join(this.baseDir, REQUEST_STATS_FILENAME)
 }

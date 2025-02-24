@@ -4,7 +4,7 @@ package stats
 
 import (
 	"github.com/edulinq/autograder/internal/api/core"
-	"github.com/edulinq/autograder/internal/api/stats/request"
+	"github.com/edulinq/autograder/internal/api/stats/api"
 	"github.com/edulinq/autograder/internal/api/stats/system"
 )
 
@@ -12,7 +12,7 @@ func GetRoutes() *[]core.Route {
 	routes := make([]core.Route, 0)
 
 	routes = append(routes, *(system.GetRoutes())...)
-	routes = append(routes, *(request.GetRoutes())...)
+	routes = append(routes, *(api.GetRoutes())...)
 
 	return &routes
 }

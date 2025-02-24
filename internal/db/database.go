@@ -182,15 +182,6 @@ type Backend interface {
 	// DB backends will also be used as stats storage backends.
 	stats.StorageBackend
 
-	// Get system stats that match the specific query.
-	GetSystemStats(query stats.Query) ([]*stats.SystemMetrics, error)
-
-	// Get course stats that match the specific query.
-	GetCourseMetrics(query stats.CourseMetricQuery) ([]*stats.CourseMetric, error)
-
-	// Get API request stats that match the specific query.
-	GetRequestMetrics(query stats.Query) ([]*stats.RequestMetric, error)
-
 	// Analysis Operations
 
 	// Fetch any matching individual analysis results.

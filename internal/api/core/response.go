@@ -74,8 +74,8 @@ func getRequestInfoForAPIResponse(request ValidAPIRequest) (string, timestamp.Ti
 
 // Get the endpoint, userEmail, courseID, assignmentID, and locator
 // from a ValidAPIRequest and an APIError, both of which may be nil.
-func getRequestInfoForStats(request ValidAPIRequest, apiError *APIError) (string, string, string, string, string) {
-	endpoint, userEmail, courseID, assignmentID := getValidAPIRequestInfoForStats(request)
+func getRequestInfo(request ValidAPIRequest, apiError *APIError) (string, string, string, string, string) {
+	endpoint, userEmail, courseID, assignmentID := getBasicAPIRequestInfo(request)
 	locator := ""
 
 	if apiError != nil {
@@ -90,7 +90,7 @@ func getRequestInfoForStats(request ValidAPIRequest, apiError *APIError) (string
 }
 
 // Reflexively get the endpoint, userEmail, courseID, and assignmentID from a ValidAPIRequest.
-func getValidAPIRequestInfoForStats(request ValidAPIRequest) (string, string, string, string) {
+func getBasicAPIRequestInfo(request ValidAPIRequest) (string, string, string, string) {
 	endpoint := ""
 	userEmail := ""
 	courseID := ""

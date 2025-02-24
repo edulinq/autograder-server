@@ -30,7 +30,7 @@ func (this *DBTests) DBTestStoreSystemStats(test *testing.T) {
 		test.Fatalf("Failed to store stats: '%v'.", err)
 	}
 
-	records, err := GetSystemStats(query)
+	records, err := backend.GetSystemStats(query)
 	if err != nil {
 		test.Fatalf("Failed to fetch stats: '%v'.", err)
 	}
@@ -69,7 +69,7 @@ func (this *DBTests) DBTestStoreCourseMetrics(test *testing.T) {
 		test.Fatalf("Failed to store stats: '%v'.", err)
 	}
 
-	records, err := GetCourseMetrics(query)
+	records, err := backend.GetCourseMetrics(query)
 	if err != nil {
 		test.Fatalf("Failed to fetch stats: '%v'.", err)
 	}
@@ -84,11 +84,11 @@ func (this *DBTests) DBTestStoreCourseMetrics(test *testing.T) {
 	}
 }
 
-func (this *DBTests) DBTestStoreRequestMetrics(test *testing.T) {
+func (this *DBTests) DBTestStoreAPIRequestMetrics(test *testing.T) {
 	Clear()
 	defer Clear()
 
-	testRecord := stats.RequestMetric{
+	testRecord := stats.APIRequestMetric{
 		BaseMetric: stats.BaseMetric{
 			Timestamp: timestamp.Now(),
 		},
@@ -101,14 +101,14 @@ func (this *DBTests) DBTestStoreRequestMetrics(test *testing.T) {
 		Locator:      "1",
 	}
 
-	err := backend.StoreRequestMetric(&testRecord)
+	err := backend.StoreAPIRequestMetric(&testRecord)
 	if err != nil {
 		test.Fatalf("Failed to store stats: '%v'.", err)
 	}
 
 	query := stats.BaseQuery{}
 
-	records, err := GetRequestMetrics(query)
+	records, err := backend.GetAPIRequestMetrics(query)
 	if err != nil {
 		test.Fatalf("Failed to fetch stats: '%v'.", err)
 	}

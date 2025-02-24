@@ -8,10 +8,10 @@ import (
 	"github.com/edulinq/autograder/internal/util"
 )
 
-func TestStoreRequestMetric(test *testing.T) {
+func TestStoreAPIRequestMetric(test *testing.T) {
 	defer clearBackend()
 
-	expectedMetric := &RequestMetric{
+	expectedMetric := &APIRequestMetric{
 		BaseMetric: BaseMetric{
 			Timestamp: timestamp.Zero(),
 		},
@@ -36,7 +36,7 @@ func TestStoreRequestMetric(test *testing.T) {
 		test.Fatalf("Found stored stats (%d) before collection.", len(typedBackend.request))
 	}
 
-	AsyncStoreRequestMetric(timestamp.Zero(), timestamp.FromMSecs(100), "1", "E", "U", "C", "A", "2")
+	AsyncStoreAPIRequestMetric(timestamp.Zero(), timestamp.FromMSecs(100), "1", "E", "U", "C", "A", "2")
 
 	// Ensure that stats have been collected.
 	count := len(typedBackend.request)
@@ -49,5 +49,4 @@ func TestStoreRequestMetric(test *testing.T) {
 		test.Fatalf("Stored metric is not as expected. Expected: '%s', Actual: '%s'.",
 			util.MustToJSONIndent(expectedMetric), util.MustToJSONIndent(typedBackend.request[0]))
 	}
-
 }
