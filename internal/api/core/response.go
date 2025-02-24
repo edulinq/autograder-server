@@ -29,7 +29,7 @@ func (this *APIResponse) String() string {
 }
 
 func NewAPIResponse(request ValidAPIRequest, content any) *APIResponse {
-	id, startTime := getRequestInfoForAPIResponse(request)
+	id, startTime := getRequestIDAndTimestamp(request)
 
 	version, err := util.GetAutograderVersion()
 	if err != nil {
@@ -49,7 +49,7 @@ func NewAPIResponse(request ValidAPIRequest, content any) *APIResponse {
 }
 
 // Reflexively get the request ID and timestamp from a request.
-func getRequestInfoForAPIResponse(request ValidAPIRequest) (string, timestamp.Timestamp) {
+func getRequestIDAndTimestamp(request ValidAPIRequest) (string, timestamp.Timestamp) {
 	id := ""
 	startTime := timestamp.Now()
 
