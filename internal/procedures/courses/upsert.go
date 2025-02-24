@@ -7,6 +7,7 @@ import (
 	"github.com/edulinq/autograder/internal/common"
 	"github.com/edulinq/autograder/internal/db"
 	"github.com/edulinq/autograder/internal/lms/lmssync"
+	"github.com/edulinq/autograder/internal/lockmanager"
 	"github.com/edulinq/autograder/internal/model"
 	"github.com/edulinq/autograder/internal/util"
 )
@@ -31,8 +32,17 @@ func upsertFromConfigPath(path string, options CourseUpsertOptions) (*CourseUpse
 		return nil, UNKNOWN_COURSE_ID, fmt.Errorf("Failed to perform initial checks on course: '%w'.", err)
 	}
 
+	lockKey := fmt.Sprintf("course-upsert-%s", course.ID)
+	lockmanager.Lock(lockKey)
+	defer lockmanager.Unlock(lockKey)
+
 	if course == nil {
 		return result, UNKNOWN_COURSE_ID, nil
+	}
+
+	// Cleanup the source dir if this is a dry run.
+	if options.DryRun {
+		defer util.RemoveDirent(course.GetBaseSourceDir())
 	}
 
 	// Update Source Directory
@@ -81,13 +91,18 @@ func upsertFromConfigPath(path string, options CourseUpsertOptions) (*CourseUpse
 		result.BuiltAssignmentImages = builtImages
 	}
 
-	// Cleanup
-
-	// Remove source if this was a dry run.
-	if options.DryRun {
-		err = util.RemoveDirent(course.GetBaseSourceDir())
+	// Fetch Template Files
+	if !options.SkipTemplateFiles {
+		relpaths, err := course.FetchAssignmentTemplateFiles()
 		if err != nil {
-			return nil, result.CourseID, fmt.Errorf("Failed to remove dry run source dir: '%w'.", err)
+			return nil, result.CourseID, fmt.Errorf("Failed to fetch assignment template files: '%w'.", err)
+		}
+
+		result.AssignmentTemplateFiles = relpaths
+
+		// Cleanup if this is a dry run.
+		if options.DryRun {
+			defer util.RemoveDirent(course.GetTemplatesDir())
 		}
 	}
 

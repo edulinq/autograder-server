@@ -83,6 +83,11 @@ func TestFileOpValidateBase(test *testing.T) {
 
 		// Normalize Paths
 		{
+			NewFileOperation([]string{"copy", " a ", "\tb\n"}),
+			NewFileOperation([]string{"copy", "a", "b"}),
+			"",
+		},
+		{
 			NewFileOperation([]string{"copy", "c/../a", "b"}),
 			NewFileOperation([]string{"copy", "a", "b"}),
 			"",
@@ -219,7 +224,7 @@ func TestFileOpValidateBase(test *testing.T) {
 		if err != nil {
 			if testCase.errorSubstring != "" {
 				if !strings.Contains(err.Error(), testCase.errorSubstring) {
-					test.Errorf("Case %d: Did not get expected error outpout. Expected Substring '%s', Actual Error: '%v'.", i, testCase.errorSubstring, err)
+					test.Errorf("Case %d: Did not get expected error output. Expected Substring '%s', Actual Error: '%v'.", i, testCase.errorSubstring, err)
 				}
 			} else {
 				test.Errorf("Case %d: Failed to validate operation '%+v': '%v'.", i, testCase.operation, err)
@@ -410,6 +415,16 @@ func TestFileOpMoveBase(test *testing.T) {
 			"a",
 			"",
 		},
+		{
+			alreadyExistsFilePosixRelpath,
+			"a/b",
+			"",
+		},
+		{
+			"a",
+			"b",
+			"no such file or directory",
+		},
 		// TODO: Fix buggy test case. Talk with Eriq about desired mv behavior.
 		{
 			alreadyExistsFilePosixRelpath,
@@ -426,10 +441,12 @@ func TestFileOpMoveBase(test *testing.T) {
 			"a/b",
 			"no such file or directory",
 		},
+		// This case outputs a slightly different error on some Mac versions.
+		// Let the error substring be very general for this case.
 		{
 			alreadyExistsDirname,
 			alreadyExistsFilePosixRelpath,
-			"invalid argument",
+			"rename",
 		},
 	}
 

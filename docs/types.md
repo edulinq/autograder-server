@@ -80,7 +80,7 @@ The following values are allowed:
 
  - Email - Normal email addresses may be used.
  - "\*" - Represents all users in a course.
- - Course Role (e.g., "student", "grader", etc) - Represents all course users with that role.
+ - [Course Role](#course-roles-courserole) (e.g., "student", "grader", etc) - Represents all course users with that role.
  - Negative Email - An email address preceded by a minus sign (e.g., "-alice@test.edulinq.org")
    will remove this address from the email recipients (even if they are not currently there).
    This can be useful when using course roles but you want to exclude someone.
@@ -162,9 +162,9 @@ The fields of an assignment are as follows:
 | `post-static-docker-commands` | List[String]   | false | A list of Docker commands to run after static files are copied into the image. |
 | `invocation`                  | List[String]   | false | The command to run when the grading container is launched (Docker's `CMD`). If not set, the image's default `ENTRYPOINT/CMD` is used. |
 | `static-files`                | List[FileSpec] | false | A list of files to copy into the image's `/work` directory. |
-| `pre-static-files-ops`        | List[FileOp]   | false | A list of file operations to run before static files are copied into the image. |
-| `post-static-files-ops`       | List[FileOp]   | false | A list of file operations to run after static files are copied into the image. |
-| `post-submission-files-ops`   | List[FileOp]   | false | A list of file operations to run after a student's code is available in the `/input` directory. |
+| `pre-static-file-ops`        | List[FileOp]   | false | A list of file operations to run before static files are copied into the image. |
+| `post-static-file-ops`       | List[FileOp]   | false | A list of file operations to run after static files are copied into the image. |
+| `post-submission-file-ops`   | List[FileOp]   | false | A list of file operations to run after a student's code is available in the `/input` directory. |
 
 Note that there are few required fields.
 
@@ -209,7 +209,7 @@ or [USER](https://docs.docker.com/reference/dockerfile/#user).
 Note that we cannot guarantee that the commands you add here will not break the image (so you should test locally).
 The `build.keep` config option is useful for keeping around Docker build directories (contexts) for manual inspection.
 
-`pre-static-files-ops`  
+`pre-static-file-ops`  
 These [FileOps](#file-operation-fileop) are run inside the Docker context (build directory) before copying in static files.
 Therefore, these commands are not in the Docker image itself, but can modify the files that will then go into the image.
 As per standard Docker building rules, only files inside the Docker context can be accessed.
@@ -221,7 +221,7 @@ These files (FileSpecs) will be copied into the assignment image's `/autograder/
 All path-based FileSpecs must be relative paths,
 and they are all relative to the directory the `assignment.json` is located in.
 
-`post-static-files-ops`  
+`post-static-file-ops`  
 These [FileOps](#file-operation-fileop) are run inside the Docker context (build directory) before copying in static files.
 Therefore, these commands are not in the Docker image itself, but can modify the files that will then go into the image.
 As per standard Docker building rules, only files inside the Docker context can be accessed.
@@ -232,7 +232,7 @@ So if you want to access static files, you will have to path inside the `work` d
 These commands are added to the Dockerfile after the static files are copied.
 This is a good opportunity to move around your static files to their preferred location.
 
-`post-submission-files-ops`  
+`post-submission-file-ops`  
 Post submission file operations are intended to be run after the student has submitted their code (and that code is available in the `/autograder/input` directory).
 When the assignment image is created, the post submission file operations are written to `/autograder/scripts/post-submission-ops.sh`.
 It is the responsibility of the assignment image to execute this file before starting the grader.
@@ -310,13 +310,25 @@ On a full name match, then autograder will sync over the `lms-id` from the cours
 
 The analysis options type allows options to be passed to code analysis for assignments.
 It has the following fields:
-| Name                 | Type        | Required | Description |
-|----------------------|-------------|----------|-------------|
-| `include-patterns`   | List[Regex] | false    | Any source file eligible for code analysis must match at least one of these patterns. When not specified or empty, ".+" will be used (which will match any non-empty value). |
-| `exclude-patterns`   | List[Regex] | false    | Any source file that matches any of these patterns will not be used in code analysis. |
+| Name               | Type           | Required | Description |
+|--------------------|----------------|----------|-------------|
+| `include-patterns` | List[Regex]    | false    | Any source file eligible for code analysis must match at least one of these patterns. When not specified or empty, ".+" will be used (which will match any non-empty value). |
+| `exclude-patterns` | List[Regex]    | false    | Any source file that matches any of these patterns will not be used in code analysis. |
+| `template-files`   | List[FileSpec] | false    | A list of files to use as "templates" during pairwise analysis. Similarity engines can try to ignore template/boilerplate code when computing similarities. Any file paths must be local (relative). |
+| `template-file-ops`| List[FileOp]   | false    | A list of file operations to transform the template files with. |
 
 During a pairwise code analysis,
 the options of the assignment for the submission with the [lexicographically](https://en.wikipedia.org/wiki/Lexicographic_order) smaller id will always be used.
+
+Template files allow you to specify code that pairwise similarity engines should ignore when computing code similarity (e.g. boilerplate code).
+To align template files with files that students submit,
+the [relative path](https://en.wikipedia.org/wiki/Path_(computing)#Absolute_and_relative_paths) ob both files must match exactly.
+This means that if students are submitting files and not directories then just the filenames need to match,
+if students are submitting directories then the template files must be in directories with the same name.
+When fetching and setting up the template files, the file specs (`template-files`) will be fetched from the assignment's base directory,
+and the file operations (`template-file-ops`) will be executed in a directory that only has the fetched template files in it.
+This means that you should use the `template-files` to collect the files you need,
+and `template-file-ops` to move around and adjust those files so they properly match student submissions.
 
 #### Include/Exclude Patterns
 
@@ -832,10 +844,12 @@ All types of FileSpecs share some common fields:
 ### FileSpec -- Path
 
 A FileSpec with `type` equal to `path` points to an absolute or relative path accessible from the current machine.
-The path may include a glob pattern to target multiple files/directories.
 `dest` must be a directory if multiple files/directories are being copied, a new directory will be created if `dest` doesn't exist.
 When a relative path is specified, additional context is required to know the relative base.
 For example, a FileSpec in an assignment config is relative to the assignment directory (the directory where the `assignment.json` file lives).
+
+The path may include a glob pattern to target multiple files/directories.
+Glob patterns must follow Go [glob pattern standard](https://pkg.go.dev/path/filepath#Match).
 
 In most cases where a FileSpec is parsed from a string, e.g., most command-line cases, a path FileSpec can be given as a normal path instead of a JSON object.
 `type` and `path` will be set properly, and `dest` will be defaulted to the given path's base name.
@@ -866,6 +880,14 @@ Rename the output file to "instructions.md":
     "type": "path",
     "path": "/autograder-server/README.md",
     "dest": "instructions.md"
+}
+```
+
+Multiple files with a glob:
+```json
+{
+    "type": "path",
+    "path": "test_cases/*.c"
 }
 ```
 

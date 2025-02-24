@@ -12,19 +12,19 @@ type IndividualRequest struct {
 	core.APIRequestUserContext
 	core.MinServerRoleUser
 
-	SubmissionSpecs   []string `json:"submissions"`
-	WaitForCompletion bool     `json:"wait-for-completion"`
+	analysis.AnalysisOptions
 }
 
 type IndividualResponse struct {
 	Complete bool                             `json:"complete"`
+	Options  analysis.AnalysisOptions         `json:"options"`
 	Summary  *model.IndividualAnalysisSummary `json:"summary"`
 	Results  []*model.IndividualAnalysis      `json:"results"`
 }
 
 // Get the result of a individual analysis for the specified submissions.
 func HandleIndividual(request *IndividualRequest) (*IndividualResponse, *core.APIError) {
-	fullSubmissionIDs, courses, userErrors, systemErrors := analysis.ResolveSubmissionSpecs(request.SubmissionSpecs)
+	fullSubmissionIDs, courses, userErrors, systemErrors := analysis.ResolveSubmissionSpecs(request.RawSubmissionSpecs)
 
 	if systemErrors != nil {
 		return nil, core.NewUserContextInternalError("-623", &request.APIRequestUserContext, "Failed to resolve submission specs.").
@@ -42,7 +42,9 @@ func HandleIndividual(request *IndividualRequest) (*IndividualResponse, *core.AP
 			"User does not have permissions (server admin or course admin in all present courses.")
 	}
 
-	results, pendingCount, err := analysis.IndividualAnalysis(fullSubmissionIDs, request.WaitForCompletion, request.ServerUser.Email)
+	request.ResolvedSubmissionIDs = fullSubmissionIDs
+
+	results, pendingCount, err := analysis.IndividualAnalysis(request.AnalysisOptions, request.ServerUser.Email)
 	if err != nil {
 		return nil, core.NewUserContextInternalError("-626", &request.APIRequestUserContext, "Failed to perform individual analysis.").
 			Err(err)
@@ -50,6 +52,7 @@ func HandleIndividual(request *IndividualRequest) (*IndividualResponse, *core.AP
 
 	response := IndividualResponse{
 		Complete: (pendingCount == 0),
+		Options:  request.AnalysisOptions,
 		Summary:  model.NewIndividualAnalysisSummary(results, pendingCount),
 		Results:  results,
 	}

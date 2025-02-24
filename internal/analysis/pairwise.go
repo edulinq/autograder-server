@@ -38,23 +38,23 @@ var forceDefaultEnginesForTesting bool = false
 // Results will be saved to the database for use in future calls.
 // If only some results are cached,
 // then those will be fetched from the database while the rest are computed.
-// If blockForResults is true, then this function will block until all requested results are computed.
+// If options.WaitForCompletion is true, then this function will block until all requested results are computed.
 // Otherwise, this function will return any cached results from the database
 // and the remaining analysis will be done asynchronously.
 // Returns: (complete results, number of pending analysis runs, error)
-func PairwiseAnalysis(fullSubmissionIDs []string, blockForResults bool, initiatorEmail string) ([]*model.PairwiseAnalysis, int, error) {
+func PairwiseAnalysis(options AnalysisOptions, initiatorEmail string) ([]*model.PairwiseAnalysis, int, error) {
 	_, err := getEngines()
 	if err != nil {
 		return nil, 0, err
 	}
 
-	completeAnalysis, remainingKeys, err := getCachedPairwiseResults(fullSubmissionIDs)
+	completeAnalysis, remainingKeys, err := getCachedPairwiseResults(options)
 	if err != nil {
 		return nil, 0, err
 	}
 
-	if blockForResults {
-		results, err := runPairwiseAnalysis(remainingKeys, initiatorEmail)
+	if options.WaitForCompletion {
+		results, err := runPairwiseAnalysis(options, remainingKeys, initiatorEmail)
 		if err != nil {
 			return nil, 0, err
 		}
@@ -63,7 +63,7 @@ func PairwiseAnalysis(fullSubmissionIDs []string, blockForResults bool, initiato
 		remainingKeys = nil
 	} else {
 		go func() {
-			_, err := runPairwiseAnalysis(remainingKeys, initiatorEmail)
+			_, err := runPairwiseAnalysis(options, remainingKeys, initiatorEmail)
 			if err != nil {
 				log.Error("Failure during asynchronous pairwise analysis.", err)
 			}
@@ -73,7 +73,7 @@ func PairwiseAnalysis(fullSubmissionIDs []string, blockForResults bool, initiato
 	return completeAnalysis, len(remainingKeys), nil
 }
 
-func getCachedPairwiseResults(fullSubmissionIDs []string) ([]*model.PairwiseAnalysis, []model.PairwiseKey, error) {
+func createPairwiseKeys(fullSubmissionIDs []string) []model.PairwiseKey {
 	// Sort the ids so the result will be consistently ordered.
 	fullSubmissionIDs = slices.Clone(fullSubmissionIDs)
 	slices.Sort(fullSubmissionIDs)
@@ -87,6 +87,17 @@ func getCachedPairwiseResults(fullSubmissionIDs []string) ([]*model.PairwiseAnal
 
 			allKeys = append(allKeys, model.NewPairwiseKey(fullSubmissionIDs[i], fullSubmissionIDs[j]))
 		}
+	}
+
+	return allKeys
+}
+
+func getCachedPairwiseResults(options AnalysisOptions) ([]*model.PairwiseAnalysis, []model.PairwiseKey, error) {
+	allKeys := createPairwiseKeys(options.ResolvedSubmissionIDs)
+
+	// If we are overwriting the cache, don't query the DB for any of the cached results.
+	if options.OverwriteCache {
+		return make([]*model.PairwiseAnalysis, 0), allKeys, nil
 	}
 
 	// Get any already done analysis results from the DB.
@@ -112,7 +123,7 @@ func getCachedPairwiseResults(fullSubmissionIDs []string) ([]*model.PairwiseAnal
 }
 
 // Lock based on course and then run the analysis in a parallel pool.
-func runPairwiseAnalysis(keys []model.PairwiseKey, initiatorEmail string) ([]*model.PairwiseAnalysis, error) {
+func runPairwiseAnalysis(options AnalysisOptions, keys []model.PairwiseKey, initiatorEmail string) ([]*model.PairwiseAnalysis, error) {
 	if len(keys) == 0 {
 		return nil, nil
 	}
@@ -128,6 +139,17 @@ func runPairwiseAnalysis(keys []model.PairwiseKey, initiatorEmail string) ([]*mo
 	lockmanager.Lock(lockKey)
 	defer lockmanager.Unlock(lockKey)
 
+	// If we are overwriting the cache, then remove all the old entries.
+	if options.OverwriteCache && !options.DryRun {
+		err := db.RemovePairwiseAnalysis(keys)
+		if err != nil {
+			fmt.Errorf("Failed to remove old individual analysis cache entries: '%w'.", err)
+		}
+	}
+
+	templateFileStore := NewTemplateFileStore()
+	defer templateFileStore.Close()
+
 	poolSize := config.ANALYSIS_PAIRWISE_COURSE_POOL_SIZE.Get()
 	type PoolResult struct {
 		Result  *model.PairwiseAnalysis
@@ -136,7 +158,7 @@ func runPairwiseAnalysis(keys []model.PairwiseKey, initiatorEmail string) ([]*mo
 	}
 
 	poolResults, _, err := util.RunParallelPoolMap(poolSize, keys, func(key model.PairwiseKey) (PoolResult, error) {
-		result, runTime, err := runSinglePairwiseAnalysis(key)
+		result, runTime, err := runSinglePairwiseAnalysis(options, key, templateFileStore)
 		if err != nil {
 			err = fmt.Errorf("Failed to perform pairwise analysis on submissions %s: '%w'.", key.String(), err)
 		}
@@ -162,38 +184,42 @@ func runPairwiseAnalysis(keys []model.PairwiseKey, initiatorEmail string) ([]*mo
 	return results, errs
 }
 
-func runSinglePairwiseAnalysis(pairwiseKey model.PairwiseKey) (*model.PairwiseAnalysis, int64, error) {
+func runSinglePairwiseAnalysis(options AnalysisOptions, pairwiseKey model.PairwiseKey, templateFileStore *TemplateFileStore) (*model.PairwiseAnalysis, int64, error) {
 	// Lock this key so we don't try to do the analysis multiple times.
 	lockKey := fmt.Sprintf("analysis-pairwise-single-%s", pairwiseKey.String())
 	lockmanager.Lock(lockKey)
 	defer lockmanager.Unlock(lockKey)
 
 	// Check the DB for a complete analysis.
-	result, err := db.GetSinglePairwiseAnalysis(pairwiseKey)
-	if err != nil {
-		return nil, 0, fmt.Errorf("Failed to check DB for cached pairwise analysis for '%s': '%w'.", pairwiseKey.String(), err)
-	}
+	if !options.OverwriteCache {
+		result, err := db.GetSinglePairwiseAnalysis(pairwiseKey)
+		if err != nil {
+			return nil, 0, fmt.Errorf("Failed to check DB for cached pairwise analysis for '%s': '%w'.", pairwiseKey.String(), err)
+		}
 
-	if result != nil {
-		return result, 0, nil
+		if result != nil {
+			return result, 0, nil
+		}
 	}
 
 	// Nothing cached, compute the analsis.
-	result, runTime, err := computeSinglePairwiseAnalysis(pairwiseKey)
+	result, runTime, err := computeSinglePairwiseAnalysis(pairwiseKey, templateFileStore)
 	if err != nil {
 		return nil, 0, fmt.Errorf("Failed to compute pairwise analysis for '%s': '%w'.", pairwiseKey.String(), err)
 	}
 
 	// Store the result.
-	err = db.StorePairwiseAnalysis([]*model.PairwiseAnalysis{result})
-	if err != nil {
-		return nil, 0, fmt.Errorf("Failed to store pairwise analysis for '%s' in DB: '%w'.", pairwiseKey.String(), err)
+	if !options.DryRun {
+		err = db.StorePairwiseAnalysis([]*model.PairwiseAnalysis{result})
+		if err != nil {
+			return nil, 0, fmt.Errorf("Failed to store pairwise analysis for '%s' in DB: '%w'.", pairwiseKey.String(), err)
+		}
 	}
 
 	return result, runTime, nil
 }
 
-func computeSinglePairwiseAnalysis(pairwiseKey model.PairwiseKey) (*model.PairwiseAnalysis, int64, error) {
+func computeSinglePairwiseAnalysis(pairwiseKey model.PairwiseKey, templateFileStore *TemplateFileStore) (*model.PairwiseAnalysis, int64, error) {
 	tempDir, err := util.MkDirTemp("pairwise-analysis-")
 	if err != nil {
 		return nil, 0, fmt.Errorf("Failed to make temp dir: '%w'.", err)
@@ -219,20 +245,28 @@ func computeSinglePairwiseAnalysis(pairwiseKey model.PairwiseKey) (*model.Pairwi
 		submissionDirs[i] = submissionDir
 	}
 
-	fileSimilarities, unmatches, skipped, totalRunTime, err := computeFileSims(submissionDirs, optionsAssignment)
+	fileSimilarities, unmatches, skipped, totalRunTime, err := computeFileSims(submissionDirs, optionsAssignment, templateFileStore)
 	if err != nil {
 		return nil, 0, fmt.Errorf("Failed to compute similarities for %v: '%w'.", pairwiseKey, err)
 	}
 
-	analysis := model.NewPairwiseAnalysis(pairwiseKey, fileSimilarities, unmatches, skipped)
+	analysis := model.NewPairwiseAnalysis(pairwiseKey, optionsAssignment, fileSimilarities, unmatches, skipped)
 
 	return analysis, totalRunTime, nil
 }
 
-func computeFileSims(inputDirs [2]string, assignment *model.Assignment) (map[string][]*model.FileSimilarity, [][2]string, []string, int64, error) {
+func computeFileSims(inputDirs [2]string, assignment *model.Assignment, templateFileStore *TemplateFileStore) (map[string][]*model.FileSimilarity, [][2]string, []string, int64, error) {
 	engines, err := getEngines()
 	if err != nil {
 		return nil, nil, nil, 0, err
+	}
+
+	templateDir := ""
+	if templateFileStore != nil {
+		templateDir, err = templateFileStore.GetTemplatePath(assignment)
+		if err != nil {
+			return nil, nil, nil, 0, fmt.Errorf("Failed to get template files: '%w'.", err)
+		}
 	}
 
 	// When preparing source code, we may rename files (e.g. for iPython notebooks).
@@ -262,9 +296,18 @@ func computeFileSims(inputDirs [2]string, assignment *model.Assignment) (map[str
 
 	for _, relpath := range matches {
 		// Check if this file should be skipped because of inclusions/exclusions.
-		if (assignment != nil) && (assignment.AnalysisOptions != nil) && !assignment.AnalysisOptions.MatchRelpath(relpath) {
+		if (assignment != nil) && (assignment.AssignmentAnalysisOptions != nil) && !assignment.AssignmentAnalysisOptions.MatchRelpath(relpath) {
 			skipped = append(skipped, relpath)
 			continue
+		}
+
+		// Check for the template file.
+		templatePath := ""
+		if templateDir != "" {
+			path := filepath.Join(templateDir, relpath)
+			if util.IsFile(path) {
+				templatePath = path
+			}
 		}
 
 		paths := [2]string{
@@ -285,7 +328,7 @@ func computeFileSims(inputDirs [2]string, assignment *model.Assignment) (map[str
 			go func(index int, simEngine core.SimilarityEngine) {
 				defer engineWaitGroup.Done()
 
-				similarity, runTime, err := simEngine.ComputeFileSimilarity(paths)
+				similarity, runTime, err := simEngine.ComputeFileSimilarity(paths, templatePath)
 				if err != nil {
 					errs[index] = fmt.Errorf("Unable to compute similarity for '%s' using engine '%s': '%w'", relpath, simEngine.GetName(), err)
 				} else {

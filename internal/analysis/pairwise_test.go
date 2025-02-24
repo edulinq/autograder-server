@@ -4,6 +4,7 @@ import (
 	"path/filepath"
 	"reflect"
 	"testing"
+	"time"
 
 	"github.com/edulinq/autograder/internal/analysis/jplag"
 	"github.com/edulinq/autograder/internal/db"
@@ -18,6 +19,8 @@ func TestPairwiseAnalysisFake(test *testing.T) {
 	db.ResetForTesting()
 	defer db.ResetForTesting()
 
+	assignment := db.MustGetTestAssignment()
+
 	ids := []string{
 		"course101::hw0::course-student@test.edulinq.org::1697406256",
 		"course101::hw0::course-student@test.edulinq.org::1697406265",
@@ -26,6 +29,7 @@ func TestPairwiseAnalysisFake(test *testing.T) {
 
 	expected := []*model.PairwiseAnalysis{
 		&model.PairwiseAnalysis{
+			Options:           assignment.AssignmentAnalysisOptions,
 			AnalysisTimestamp: timestamp.Zero(),
 			SubmissionIDs: model.NewPairwiseKey(
 				"course101::hw0::course-student@test.edulinq.org::1697406256",
@@ -49,6 +53,7 @@ func TestPairwiseAnalysisFake(test *testing.T) {
 			TotalMeanSimilarity: 0.13,
 		},
 		&model.PairwiseAnalysis{
+			Options:           assignment.AssignmentAnalysisOptions,
 			AnalysisTimestamp: timestamp.Zero(),
 			SubmissionIDs: model.NewPairwiseKey(
 				"course101::hw0::course-student@test.edulinq.org::1697406256",
@@ -72,6 +77,7 @@ func TestPairwiseAnalysisFake(test *testing.T) {
 			TotalMeanSimilarity: 0.13,
 		},
 		&model.PairwiseAnalysis{
+			Options:           assignment.AssignmentAnalysisOptions,
 			AnalysisTimestamp: timestamp.Zero(),
 			SubmissionIDs: model.NewPairwiseKey(
 				"course101::hw0::course-student@test.edulinq.org::1697406265",
@@ -150,7 +156,12 @@ func testPairwise(test *testing.T, ids []string, expected []*model.PairwiseAnaly
 		test.Fatalf("Number of (pre) cached anslysis results not as expected. Expected: %d, Actual: %d.", expectedInitialCacheCount, len(queryResult))
 	}
 
-	results, pendingCount, err := PairwiseAnalysis(ids, true, "server-admin@test.edulinq.org")
+	options := AnalysisOptions{
+		ResolvedSubmissionIDs: ids,
+		WaitForCompletion:     true,
+	}
+
+	results, pendingCount, err := PairwiseAnalysis(options, "server-admin@test.edulinq.org")
 	if err != nil {
 		test.Fatalf("Failed to do pairwise analysis: '%v'.", err)
 	}
@@ -196,7 +207,7 @@ func TestPairwiseWithPythonNotebook(test *testing.T) {
 		filepath.Join(tempDir, "py"),
 	}
 
-	sims, unmatches, _, _, err := computeFileSims(paths, nil)
+	sims, unmatches, _, _, err := computeFileSims(paths, nil, nil)
 	if err != nil {
 		test.Fatalf("Failed to compute file similarity: '%v'.", err)
 	}
@@ -222,6 +233,45 @@ func TestPairwiseWithPythonNotebook(test *testing.T) {
 	}
 }
 
+// Ensure that the default engines run.
+// Full output checking will be left to the fake engine.
+func TestPairwiseAnalysisDefaultEnginesBase(test *testing.T) {
+	docker.EnsureOrSkipForTest(test)
+
+	forceDefaultEnginesForTesting = true
+	defer func() {
+		forceDefaultEnginesForTesting = false
+	}()
+
+	defaultSimilarityEngines[1].(*jplag.JPlagEngine).MinTokens = 5
+	defer func() {
+		defaultSimilarityEngines[1].(*jplag.JPlagEngine).MinTokens = jplag.DEFAULT_MIN_TOKENS
+	}()
+
+	ids := []string{
+		"course101::hw0::course-student@test.edulinq.org::1697406256",
+		"course101::hw0::course-student@test.edulinq.org::1697406272",
+	}
+
+	options := AnalysisOptions{
+		ResolvedSubmissionIDs: ids,
+		WaitForCompletion:     true,
+	}
+
+	results, pendingCount, err := PairwiseAnalysis(options, "server-admin@test.edulinq.org")
+	if err != nil {
+		test.Fatalf("Failed to do pairwise analysis: '%v'.", err)
+	}
+
+	if pendingCount != 0 {
+		test.Fatalf("Found %d pending results, when 0 were expected.", pendingCount)
+	}
+
+	if len(results) != 1 {
+		test.Fatalf("Number of results not as expected. Expected: %d, Actual: %d.", 1, len(results))
+	}
+}
+
 // A test for special files that seem to cause trouble with the engines.
 func TestPairwiseAnalysisDefaultEnginesSpecificFiles(test *testing.T) {
 	docker.EnsureOrSkipForTest(test)
@@ -238,7 +288,7 @@ func TestPairwiseAnalysisDefaultEnginesSpecificFiles(test *testing.T) {
 
 	for _, path := range testPaths {
 		for _, engine := range defaultSimilarityEngines {
-			sim, _, err := engine.ComputeFileSimilarity([2]string{path, path})
+			sim, _, err := engine.ComputeFileSimilarity([2]string{path, path}, "")
 			if err != nil {
 				test.Errorf("Engine '%s' failed to compute similarity on '%s': '%v'.",
 					engine.GetName(), path, err)
@@ -260,7 +310,7 @@ func TestPairwiseAnalysisIncludeExclude(test *testing.T) {
 	defer db.ResetForTesting()
 
 	testCases := []struct {
-		options       *model.AnalysisOptions
+		options       *model.AssignmentAnalysisOptions
 		expectedCount int
 	}{
 		{
@@ -268,7 +318,7 @@ func TestPairwiseAnalysisIncludeExclude(test *testing.T) {
 			1,
 		},
 		{
-			&model.AnalysisOptions{
+			&model.AssignmentAnalysisOptions{
 				IncludePatterns: []string{
 					`\.c$`,
 				},
@@ -276,7 +326,7 @@ func TestPairwiseAnalysisIncludeExclude(test *testing.T) {
 			0,
 		},
 		{
-			&model.AnalysisOptions{
+			&model.AssignmentAnalysisOptions{
 				ExcludePatterns: []string{
 					`\.c$`,
 				},
@@ -284,7 +334,7 @@ func TestPairwiseAnalysisIncludeExclude(test *testing.T) {
 			1,
 		},
 		{
-			&model.AnalysisOptions{
+			&model.AssignmentAnalysisOptions{
 				ExcludePatterns: []string{
 					`\.py$`,
 				},
@@ -312,10 +362,15 @@ func TestPairwiseAnalysisIncludeExclude(test *testing.T) {
 			}
 		}
 
-		assignment.AnalysisOptions = testCase.options
+		assignment.AssignmentAnalysisOptions = testCase.options
 		db.MustSaveAssignment(assignment)
 
-		results, pendingCount, err := PairwiseAnalysis(ids, true, "server-admin@test.edulinq.org")
+		options := AnalysisOptions{
+			ResolvedSubmissionIDs: ids,
+			WaitForCompletion:     true,
+		}
+
+		results, pendingCount, err := PairwiseAnalysis(options, "server-admin@test.edulinq.org")
 		if err != nil {
 			test.Errorf("Case %d: Failed to perform analysis: '%v'.", i, err)
 			continue
@@ -347,6 +402,499 @@ func TestPairwiseAnalysisIncludeExclude(test *testing.T) {
 			if relpath != results[0].SkippedFiles[0] {
 				test.Errorf("Case %d: Unexpected skipped file. Expected: '%s', Actual: '%s'.",
 					i, relpath, results[0].SkippedFiles[0])
+			}
+		}
+	}
+}
+
+func TestPairwiseAnalysisCountBase(test *testing.T) {
+	defer db.ResetForTesting()
+
+	ids := []string{
+		"course101::hw0::course-student@test.edulinq.org::1697406256",
+		"course101::hw0::course-student@test.edulinq.org::1697406265",
+	}
+
+	testCases := []struct {
+		options                   AnalysisOptions
+		preload                   bool
+		wait                      bool
+		expectedCacheSetOnPreload bool
+		expectedResultIsFromCache bool
+		expectedResultCount       int
+		expectedPendingCount      int
+		expectedCacheCount        int
+	}{
+		// Empty
+		{
+			options: AnalysisOptions{
+				ResolvedSubmissionIDs: []string{},
+				WaitForCompletion:     true,
+			},
+			preload:                   false,
+			expectedCacheSetOnPreload: false,
+			expectedResultIsFromCache: false,
+			expectedResultCount:       0,
+			expectedPendingCount:      0,
+			expectedCacheCount:        0,
+		},
+
+		// Base, No Preload
+
+		{
+			options: AnalysisOptions{
+				ResolvedSubmissionIDs: ids,
+				DryRun:                false,
+				OverwriteCache:        false,
+				WaitForCompletion:     false,
+			},
+			preload:                   false,
+			expectedCacheSetOnPreload: false,
+			expectedResultIsFromCache: false,
+			expectedResultCount:       0,
+			expectedPendingCount:      1,
+			expectedCacheCount:        0,
+		},
+		{
+			options: AnalysisOptions{
+				ResolvedSubmissionIDs: ids,
+				DryRun:                true,
+				OverwriteCache:        false,
+				WaitForCompletion:     false,
+			},
+			preload:                   false,
+			expectedCacheSetOnPreload: false,
+			expectedResultIsFromCache: false,
+			expectedResultCount:       0,
+			expectedPendingCount:      1,
+			expectedCacheCount:        0,
+		},
+		{
+			options: AnalysisOptions{
+				ResolvedSubmissionIDs: ids,
+				DryRun:                false,
+				OverwriteCache:        true,
+				WaitForCompletion:     false,
+			},
+			preload:                   false,
+			expectedCacheSetOnPreload: false,
+			expectedResultIsFromCache: false,
+			expectedResultCount:       0,
+			expectedPendingCount:      1,
+			expectedCacheCount:        0,
+		},
+		{
+			options: AnalysisOptions{
+				ResolvedSubmissionIDs: ids,
+				DryRun:                true,
+				OverwriteCache:        true,
+				WaitForCompletion:     false,
+			},
+			preload:                   false,
+			expectedCacheSetOnPreload: false,
+			expectedResultIsFromCache: false,
+			expectedResultCount:       0,
+			expectedPendingCount:      1,
+			expectedCacheCount:        0,
+		},
+		{
+			options: AnalysisOptions{
+				ResolvedSubmissionIDs: ids,
+				DryRun:                false,
+				OverwriteCache:        false,
+				WaitForCompletion:     true,
+			},
+			preload:                   false,
+			expectedCacheSetOnPreload: false,
+			expectedResultIsFromCache: false,
+			expectedResultCount:       1,
+			expectedPendingCount:      0,
+			expectedCacheCount:        1,
+		},
+		{
+			options: AnalysisOptions{
+				ResolvedSubmissionIDs: ids,
+				DryRun:                true,
+				OverwriteCache:        false,
+				WaitForCompletion:     true,
+			},
+			preload:                   false,
+			expectedCacheSetOnPreload: false,
+			expectedResultIsFromCache: false,
+			expectedResultCount:       1,
+			expectedPendingCount:      0,
+			expectedCacheCount:        0,
+		},
+		{
+			options: AnalysisOptions{
+				ResolvedSubmissionIDs: ids,
+				DryRun:                false,
+				OverwriteCache:        true,
+				WaitForCompletion:     true,
+			},
+			preload:                   false,
+			expectedCacheSetOnPreload: false,
+			expectedResultIsFromCache: false,
+			expectedResultCount:       1,
+			expectedPendingCount:      0,
+			expectedCacheCount:        1,
+		},
+		{
+			options: AnalysisOptions{
+				ResolvedSubmissionIDs: ids,
+				DryRun:                true,
+				OverwriteCache:        true,
+				WaitForCompletion:     true,
+			},
+			preload:                   false,
+			expectedCacheSetOnPreload: false,
+			expectedResultIsFromCache: false,
+			expectedResultCount:       1,
+			expectedPendingCount:      0,
+			expectedCacheCount:        0,
+		},
+
+		// Base, Preload
+
+		{
+			options: AnalysisOptions{
+				ResolvedSubmissionIDs: ids,
+				DryRun:                false,
+				OverwriteCache:        false,
+				WaitForCompletion:     false,
+			},
+			preload:                   true,
+			expectedCacheSetOnPreload: true,
+			expectedResultIsFromCache: true,
+			expectedResultCount:       1,
+			expectedPendingCount:      0,
+			expectedCacheCount:        1,
+		},
+		{
+			options: AnalysisOptions{
+				ResolvedSubmissionIDs: ids,
+				DryRun:                true,
+				OverwriteCache:        false,
+				WaitForCompletion:     false,
+			},
+			preload:                   true,
+			expectedCacheSetOnPreload: true,
+			expectedResultIsFromCache: true,
+			expectedResultCount:       1,
+			expectedPendingCount:      0,
+			expectedCacheCount:        1,
+		},
+		{
+			options: AnalysisOptions{
+				ResolvedSubmissionIDs: ids,
+				DryRun:                false,
+				OverwriteCache:        true,
+				WaitForCompletion:     false,
+			},
+			preload:                   true,
+			wait:                      true,
+			expectedCacheSetOnPreload: false,
+			expectedResultIsFromCache: false,
+			expectedResultCount:       0,
+			expectedPendingCount:      1,
+			expectedCacheCount:        1,
+		},
+		{
+			options: AnalysisOptions{
+				ResolvedSubmissionIDs: ids,
+				DryRun:                true,
+				OverwriteCache:        true,
+				WaitForCompletion:     false,
+			},
+			preload:                   true,
+			expectedCacheSetOnPreload: true,
+			expectedResultIsFromCache: false,
+			expectedResultCount:       0,
+			expectedPendingCount:      1,
+			expectedCacheCount:        1,
+		},
+		{
+			options: AnalysisOptions{
+				ResolvedSubmissionIDs: ids,
+				DryRun:                false,
+				OverwriteCache:        false,
+				WaitForCompletion:     true,
+			},
+			preload:                   true,
+			expectedCacheSetOnPreload: true,
+			expectedResultIsFromCache: true,
+			expectedResultCount:       1,
+			expectedPendingCount:      0,
+			expectedCacheCount:        1,
+		},
+		{
+			options: AnalysisOptions{
+				ResolvedSubmissionIDs: ids,
+				DryRun:                true,
+				OverwriteCache:        false,
+				WaitForCompletion:     true,
+			},
+			preload:                   true,
+			expectedCacheSetOnPreload: true,
+			expectedResultIsFromCache: true,
+			expectedResultCount:       1,
+			expectedPendingCount:      0,
+			expectedCacheCount:        1,
+		},
+		{
+			options: AnalysisOptions{
+				ResolvedSubmissionIDs: ids,
+				DryRun:                false,
+				OverwriteCache:        true,
+				WaitForCompletion:     true,
+			},
+			preload:                   true,
+			expectedCacheSetOnPreload: false,
+			expectedResultIsFromCache: false,
+			expectedResultCount:       1,
+			expectedPendingCount:      0,
+			expectedCacheCount:        1,
+		},
+		{
+			options: AnalysisOptions{
+				ResolvedSubmissionIDs: ids,
+				DryRun:                true,
+				OverwriteCache:        true,
+				WaitForCompletion:     true,
+			},
+			preload:                   true,
+			expectedCacheSetOnPreload: true,
+			expectedResultIsFromCache: false,
+			expectedResultCount:       1,
+			expectedPendingCount:      0,
+			expectedCacheCount:        1,
+		},
+
+		/*
+			{
+				options: AnalysisOptions{
+					ResolvedSubmissionIDs: []string{
+						"course101::hw0::course-student@test.edulinq.org::1697406256",
+						"course101::hw0::course-student@test.edulinq.org::1697406265",
+					},
+					WaitForCompletion: true,
+				},
+				preload:              false,
+				expectedResultCount:  1,
+				expectedPendingCount: 0,
+				expectedCacheCount:   1,
+			},
+			{
+				options: AnalysisOptions{
+					ResolvedSubmissionIDs: []string{},
+					WaitForCompletion:     true,
+				},
+				preload:              false,
+				expectedResultCount:  0,
+				expectedPendingCount: 0,
+				expectedCacheCount:   0,
+			},
+			{
+				options: AnalysisOptions{
+					ResolvedSubmissionIDs: []string{
+						"course101::hw0::course-student@test.edulinq.org::1697406256",
+						"course101::hw0::course-student@test.edulinq.org::1697406265",
+					},
+					WaitForCompletion: true,
+					DryRun:            true,
+				},
+				preload:              false,
+				expectedResultCount:  1,
+				expectedPendingCount: 0,
+				expectedCacheCount:   0,
+			},
+			{
+				options: AnalysisOptions{
+					ResolvedSubmissionIDs: []string{
+						"course101::hw0::course-student@test.edulinq.org::1697406256",
+						"course101::hw0::course-student@test.edulinq.org::1697406265",
+					},
+					WaitForCompletion: true,
+					OverwriteCache:    true,
+				},
+				preload:              false,
+				expectedResultCount:  1,
+				expectedPendingCount: 0,
+				expectedCacheCount:   1,
+			},
+			{
+				options: AnalysisOptions{
+					ResolvedSubmissionIDs: []string{
+						"course101::hw0::course-student@test.edulinq.org::1697406256",
+						"course101::hw0::course-student@test.edulinq.org::1697406265",
+					},
+					WaitForCompletion: true,
+					OverwriteCache:    true,
+					DryRun:            true,
+				},
+				preload:              false,
+				expectedResultCount:  1,
+				expectedPendingCount: 0,
+				expectedCacheCount:   0,
+			},
+
+			// Preload
+
+			{
+				options: AnalysisOptions{
+					ResolvedSubmissionIDs: []string{
+						"course101::hw0::course-student@test.edulinq.org::1697406256",
+						"course101::hw0::course-student@test.edulinq.org::1697406265",
+					},
+					WaitForCompletion: false,
+				},
+				preload:              true,
+				expectedResultCount:  1,
+				expectedPendingCount: 0,
+				expectedCacheCount:   1,
+			},
+			{
+				options: AnalysisOptions{
+					ResolvedSubmissionIDs: []string{},
+					WaitForCompletion:     false,
+				},
+				preload:              true,
+				expectedResultCount:  0,
+				expectedPendingCount: 0,
+				expectedCacheCount:   0,
+			},
+			{
+				options: AnalysisOptions{
+					ResolvedSubmissionIDs: []string{
+						"course101::hw0::course-student@test.edulinq.org::1697406256",
+						"course101::hw0::course-student@test.edulinq.org::1697406265",
+					},
+					WaitForCompletion: false,
+					DryRun:            true,
+				},
+				preload:              true,
+				expectedResultCount:  1,
+				expectedPendingCount: 0,
+				expectedCacheCount:   1,
+			},
+			{
+				options: AnalysisOptions{
+					ResolvedSubmissionIDs: []string{
+						"course101::hw0::course-student@test.edulinq.org::1697406256",
+						"course101::hw0::course-student@test.edulinq.org::1697406265",
+					},
+					WaitForCompletion: false,
+					OverwriteCache:    true,
+				},
+				preload:              true,
+				wait:                 true,
+				expectedResultCount:  0,
+				expectedPendingCount: 1,
+				expectedCacheCount:   1,
+			},
+			{
+				options: AnalysisOptions{
+					ResolvedSubmissionIDs: []string{
+						"course101::hw0::course-student@test.edulinq.org::1697406256",
+						"course101::hw0::course-student@test.edulinq.org::1697406265",
+					},
+					WaitForCompletion: false,
+					OverwriteCache:    true,
+					DryRun:            true,
+				},
+				preload:              true,
+				wait:                 true,
+				expectedResultCount:  0,
+				expectedPendingCount: 1,
+				expectedCacheCount:   1,
+			},
+		*/
+	}
+
+	for i, testCase := range testCases {
+		db.ResetForTesting()
+
+		if testCase.preload {
+			preloadOptions := AnalysisOptions{
+				ResolvedSubmissionIDs: testCase.options.ResolvedSubmissionIDs,
+				WaitForCompletion:     true,
+			}
+
+			_, _, err := PairwiseAnalysis(preloadOptions, "server-admin@test.edulinq.org")
+			if err != nil {
+				test.Errorf("Case %d: Failed to preload analysis: '%v'.", i, err)
+				continue
+			}
+		}
+
+		// Mark now and sleep for a very small amount of time.
+		time.Sleep(time.Duration(5) * time.Millisecond)
+		startTime := timestamp.Now()
+		time.Sleep(time.Duration(5) * time.Millisecond)
+
+		results, pendingCount, err := PairwiseAnalysis(testCase.options, "server-admin@test.edulinq.org")
+		if err != nil {
+			test.Errorf("Case %d: Failed to do analysis: '%v'.", i, err)
+			continue
+		}
+
+		if testCase.expectedResultCount != len(results) {
+			test.Errorf("Case %d: Unexpected number of results. Expected: %d, Actual: %d.",
+				i, testCase.expectedResultCount, len(results))
+			continue
+		}
+
+		if testCase.expectedPendingCount != pendingCount {
+			test.Errorf("Case %d: Unexpected number of pending results. Expected: %d, Actual: %d.",
+				i, testCase.expectedPendingCount, pendingCount)
+			continue
+		}
+
+		// Check if the result was from the cache using the start time.
+		if len(results) > 0 {
+			resultTime := results[0].AnalysisTimestamp
+			resultIsFromCache := (resultTime <= startTime)
+
+			if testCase.expectedResultIsFromCache != resultIsFromCache {
+				test.Errorf("Case %d: Unexpected result being from cache. Expected: %v, Actual: %v.",
+					i, testCase.expectedResultIsFromCache, resultIsFromCache)
+				continue
+			}
+		}
+
+		// Wait long enough for the analysis to finish.
+		if testCase.wait {
+			time.Sleep(time.Duration(100) * time.Millisecond)
+		}
+
+		dbResults, err := db.GetPairwiseAnalysis(createPairwiseKeys(testCase.options.ResolvedSubmissionIDs))
+		if err != nil {
+			test.Errorf("Case %d: Failed to do get db results: '%v'.", i, err)
+			continue
+		}
+
+		if testCase.expectedCacheCount != len(dbResults) {
+			test.Errorf("Case %d: Unexpected number of db results. Expected: %d, Actual: %d.",
+				i, testCase.expectedCacheCount, len(dbResults))
+			continue
+		}
+
+		if len(dbResults) == 0 {
+			continue
+		}
+
+		// Check if the cache was set on preload by comparing the analysis time.
+		key := model.NewPairwiseKey(testCase.options.ResolvedSubmissionIDs[0], testCase.options.ResolvedSubmissionIDs[1])
+		cacheTime := dbResults[key].AnalysisTimestamp
+		if testCase.expectedCacheSetOnPreload {
+			if cacheTime > startTime {
+				test.Errorf("Case %d: Cache entry was set after preload.", i)
+				continue
+			}
+		} else {
+			if cacheTime < startTime {
+				test.Errorf("Case %d: Cache entry was set during preload.", i)
+				continue
 			}
 		}
 	}

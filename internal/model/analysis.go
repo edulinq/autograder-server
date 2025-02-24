@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"regexp"
+	"strings"
 
 	"github.com/edulinq/autograder/internal/timestamp"
 	"github.com/edulinq/autograder/internal/util"
@@ -18,12 +19,12 @@ const (
 	DEFAULT_INCLUDE_REGEX string = ".+"
 )
 
-type AnalysisOptions struct {
+type AssignmentAnalysisOptions struct {
 	IncludePatterns []string `json:"include-patterns,omitempty"`
 	ExcludePatterns []string `json:"exclude-patterns,omitempty"`
 
-	IncludeRegexes []*regexp.Regexp `json:"-"`
-	ExcludeRegexes []*regexp.Regexp `json:"-"`
+	TemplateFiles   []*util.FileSpec      `json:"template-files,omitempty"`
+	TemplateFileOps []*util.FileOperation `json:"template-file-ops,omitempty"`
 }
 
 type AnalysisFileInfo struct {
@@ -52,7 +53,7 @@ type AnalysisSummary struct {
 }
 
 type IndividualAnalysis struct {
-	Options *AnalysisOptions `json:"options,omitempty"`
+	Options *AssignmentAnalysisOptions `json:"options,omitempty"`
 
 	AnalysisTimestamp timestamp.Timestamp `json:"analysis-timestamp"`
 
@@ -94,7 +95,7 @@ type IndividualAnalysisSummary struct {
 }
 
 type PairwiseAnalysis struct {
-	Options *AnalysisOptions `json:"options,omitempty"`
+	Options *AssignmentAnalysisOptions `json:"options,omitempty"`
 
 	AnalysisTimestamp timestamp.Timestamp `json:"analysis-timestamp"`
 	SubmissionIDs     PairwiseKey         `json:"submission-ids"`
@@ -121,40 +122,50 @@ func NewPairwiseKey(fullSubmissionID1 string, fullSubmissionID2 string) Pairwise
 	})
 }
 
-func (this *AnalysisOptions) Validate() error {
+func (this *AssignmentAnalysisOptions) Validate() error {
+	if this == nil {
+		return fmt.Errorf("Analysis options cannot be nil.")
+	}
+
 	var errs error
 
-	this.IncludeRegexes = make([]*regexp.Regexp, 0, len(this.IncludePatterns))
+	errs = errors.Join(errs, this.validateIncludeExclude())
+	errs = errors.Join(errs, this.validateTemplateFiles())
+
+	return errs
+}
+
+// Include/Exclude patterns must be valid regular expressions.
+// If no include patterns are supplied, DEFAULT_INCLUDE_REGEX is used.
+func (this *AssignmentAnalysisOptions) validateIncludeExclude() error {
+	var errs error
+
+	if len(this.IncludePatterns) == 0 {
+		this.IncludePatterns = append(this.IncludePatterns, DEFAULT_INCLUDE_REGEX)
+	}
+
 	for _, pattern := range this.IncludePatterns {
-		regex, err := regexp.Compile(pattern)
+		_, err := regexp.Compile(pattern)
 		if err != nil {
 			errs = errors.Join(errs, fmt.Errorf("Failed to compile include pattern `%s`: '%w'.", pattern, err))
-		} else {
-			this.IncludeRegexes = append(this.IncludeRegexes, regex)
 		}
 	}
 
-	this.ExcludeRegexes = make([]*regexp.Regexp, 0, len(this.ExcludePatterns))
 	for _, pattern := range this.ExcludePatterns {
-		regex, err := regexp.Compile(pattern)
+		_, err := regexp.Compile(pattern)
 		if err != nil {
 			errs = errors.Join(errs, fmt.Errorf("Failed to compile exclude pattern `%s`: '%w'.", pattern, err))
-		} else {
-			this.ExcludeRegexes = append(this.ExcludeRegexes, regex)
 		}
-	}
-
-	if len(this.IncludeRegexes) == 0 {
-		this.IncludeRegexes = append(this.IncludeRegexes, regexp.MustCompile(DEFAULT_INCLUDE_REGEX))
 	}
 
 	return errs
 }
 
 // Check the inclusion/exclusion to see if a given relpah is allowed.
-func (this *AnalysisOptions) MatchRelpath(relpath string) bool {
+func (this *AssignmentAnalysisOptions) MatchRelpath(relpath string) bool {
 	match := false
-	for _, regex := range this.IncludeRegexes {
+	for _, pattern := range this.IncludePatterns {
+		regex := regexp.MustCompile(pattern)
 		if regex.MatchString(relpath) {
 			match = true
 			break
@@ -165,7 +176,8 @@ func (this *AnalysisOptions) MatchRelpath(relpath string) bool {
 		return false
 	}
 
-	for _, regex := range this.ExcludeRegexes {
+	for _, pattern := range this.ExcludePatterns {
+		regex := regexp.MustCompile(pattern)
 		if regex.MatchString(relpath) {
 			return false
 		}
@@ -178,7 +190,7 @@ func (this *PairwiseKey) String() string {
 	return this[0] + PAIRWISE_KEY_DELIM + this[1]
 }
 
-func NewPairwiseAnalysis(pairwiseKey PairwiseKey, similarities map[string][]*FileSimilarity, unmatches [][2]string, skipped []string) *PairwiseAnalysis {
+func NewPairwiseAnalysis(pairwiseKey PairwiseKey, assignment *Assignment, similarities map[string][]*FileSimilarity, unmatches [][2]string, skipped []string) *PairwiseAnalysis {
 	meanSimilarities := make(map[string]float64, len(similarities))
 	totalMeanSimilarity := 0.0
 
@@ -200,7 +212,13 @@ func NewPairwiseAnalysis(pairwiseKey PairwiseKey, similarities map[string][]*Fil
 		totalMeanSimilarity /= float64(len(similarities))
 	}
 
+	var options *AssignmentAnalysisOptions
+	if assignment != nil {
+		options = assignment.AssignmentAnalysisOptions
+	}
+
 	return &PairwiseAnalysis{
+		Options:             options,
 		AnalysisTimestamp:   timestamp.Now(),
 		SubmissionIDs:       pairwiseKey,
 		Similarities:        similarities,
@@ -392,4 +410,13 @@ func (this *PairwiseAnalysisSummary) RoundWithPrecision(precision uint) {
 	for key, sim := range this.AggregateMeanSimilarities {
 		this.AggregateMeanSimilarities[key] = sim.RoundWithPrecision(precision)
 	}
+}
+
+func ComparePairwiseKey(a PairwiseKey, b PairwiseKey) int {
+	value := strings.Compare(a[0], b[0])
+	if value != 0 {
+		return value
+	}
+
+	return strings.Compare(a[1], b[1])
 }

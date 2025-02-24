@@ -44,7 +44,7 @@ func AppendJSONLFileMany[T any](path string, records []T) error {
 }
 
 // Go through a JSONL file and call a functon for each record.
-func ApplyJSONLFile[T any](path string, emptyRecord T, applyFunc func(index int, record *T)) error {
+func ApplyJSONLFile[T any](path string, emptyRecord T, applyFunc func(index int, record *T, line string)) error {
 	if !PathExists(path) {
 		return nil
 	}
@@ -76,7 +76,7 @@ func ApplyJSONLFile[T any](path string, emptyRecord T, applyFunc func(index int,
 			return fmt.Errorf("Failed to convert line %d from JSONL file '%s' to JSON: '%w'.", lineno, path, err)
 		}
 
-		applyFunc(lineno-1, record)
+		applyFunc(lineno-1, record, strings.TrimSpace(string(line)))
 	}
 
 	return nil
@@ -86,7 +86,7 @@ func ApplyJSONLFile[T any](path string, emptyRecord T, applyFunc func(index int,
 func FilterJSONLFile[T any](path string, emptyRecord T, matchFunc func(record *T) bool) ([]*T, error) {
 	records := make([]*T, 0)
 
-	err := ApplyJSONLFile(path, emptyRecord, func(index int, record *T) {
+	err := ApplyJSONLFile(path, emptyRecord, func(index int, record *T, line string) {
 		if matchFunc(record) {
 			records = append(records, record)
 		}
@@ -121,4 +121,64 @@ func readline(reader *bufio.Reader) ([]byte, error) {
 	}
 
 	return fullLine, err
+}
+
+// Remove any entry from the file where the function returns true.
+// Because files may be large, this will be done in a streaming fashion
+// where records that are not removed are written to a temp file.
+// Once complete, the temp file will be moved over the actual file.
+// The caller should ensure that this file is not touched by anyone else for the duration of this call.
+// On most errors, the old file will remain the same.
+// The exception is if there is an error on the file move operation.
+func RemoveEntriesJSONLFile[T any](path string, emptyRecord T, shouldRemoveFunc func(record *T) bool) error {
+	tempDir, err := MkDirTemp("jsonl-remove-entries-")
+	if err != nil {
+		return fmt.Errorf("Failed to create temp dir: '%w'.", err)
+	}
+	defer RemoveDirent(tempDir)
+
+	tempPath := filepath.Join(tempDir, "temp.jsonl")
+	file, err := os.Create(tempPath)
+	if err != nil {
+		return fmt.Errorf("Failed to create temp file: '%w'.", err)
+	}
+	defer RemoveDirent(tempPath)
+	defer file.Close()
+
+	var writeError error
+	applyFunc := func(index int, record *T, line string) {
+		if writeError != nil {
+			return
+		}
+
+		if shouldRemoveFunc(record) {
+			return
+		}
+
+		_, err := file.WriteString(line + "\n")
+		if err != nil {
+			writeError = fmt.Errorf("Failed to write to temp file: '%w'.", err)
+		}
+	}
+
+	err = ApplyJSONLFile(path, emptyRecord, applyFunc)
+	if err != nil {
+		return fmt.Errorf("Failed to read existing JSONL file: '%w'.", err)
+	}
+
+	if writeError != nil {
+		return writeError
+	}
+
+	err = file.Close()
+	if err != nil {
+		return fmt.Errorf("Failed to close temp file: '%w'.", err)
+	}
+
+	err = MoveDirent(tempPath, path)
+	if err != nil {
+		return fmt.Errorf("Failed to move temp file over existing JSONL file: '%w'.", err)
+	}
+
+	return nil
 }

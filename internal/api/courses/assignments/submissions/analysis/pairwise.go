@@ -12,19 +12,19 @@ type PairwiseRequest struct {
 	core.APIRequestUserContext
 	core.MinServerRoleUser
 
-	SubmissionSpecs   []string `json:"submissions"`
-	WaitForCompletion bool     `json:"wait-for-completion"`
+	analysis.AnalysisOptions
 }
 
 type PairwiseResponse struct {
 	Complete bool                           `json:"complete"`
+	Options  analysis.AnalysisOptions       `json:"options"`
 	Summary  *model.PairwiseAnalysisSummary `json:"summary"`
 	Results  []*model.PairwiseAnalysis      `json:"results"`
 }
 
 // Get the result of a pairwise analysis for the specified submissions.
 func HandlePairwise(request *PairwiseRequest) (*PairwiseResponse, *core.APIError) {
-	fullSubmissionIDs, courses, userErrors, systemErrors := analysis.ResolveSubmissionSpecs(request.SubmissionSpecs)
+	fullSubmissionIDs, courses, userErrors, systemErrors := analysis.ResolveSubmissionSpecs(request.RawSubmissionSpecs)
 
 	if systemErrors != nil {
 		return nil, core.NewUserContextInternalError("-619", &request.APIRequestUserContext, "Failed to resolve submission specs.").
@@ -42,7 +42,9 @@ func HandlePairwise(request *PairwiseRequest) (*PairwiseResponse, *core.APIError
 			"User does not have permissions (server admin or course admin in all present courses.")
 	}
 
-	results, pendingCount, err := analysis.PairwiseAnalysis(fullSubmissionIDs, request.WaitForCompletion, request.ServerUser.Email)
+	request.ResolvedSubmissionIDs = fullSubmissionIDs
+
+	results, pendingCount, err := analysis.PairwiseAnalysis(request.AnalysisOptions, request.ServerUser.Email)
 	if err != nil {
 		return nil, core.NewUserContextInternalError("-622", &request.APIRequestUserContext, "Failed to perform pairwise analysis.").
 			Err(err)
@@ -50,6 +52,7 @@ func HandlePairwise(request *PairwiseRequest) (*PairwiseResponse, *core.APIError
 
 	response := PairwiseResponse{
 		Complete: (pendingCount == 0),
+		Options:  request.AnalysisOptions,
 		Summary:  model.NewPairwiseAnalysisSummary(results, pendingCount),
 		Results:  results,
 	}

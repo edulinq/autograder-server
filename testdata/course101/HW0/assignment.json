@@ -4,5 +4,13 @@
     "static-files": [
         "grader.py"
     ],
-    "image": "edulinq/grader.python-alpine"
+    "image": "edulinq/grader.python-alpine",
+    "analysis-options": {
+        "include-patterns": [
+            "submission.py"
+        ],
+        "template-files": [
+            "test-submissions/not_implemented/submission.py"
+        ]
+    }
 }

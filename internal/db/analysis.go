@@ -44,6 +44,22 @@ func GetSinglePairwiseAnalysis(key model.PairwiseKey) (*model.PairwiseAnalysis, 
 	return results[key], nil
 }
 
+func RemoveIndividualAnalysis(fullSubmissionIDs []string) error {
+	if backend == nil {
+		return fmt.Errorf("Database has not been opened.")
+	}
+
+	return backend.RemoveIndividualAnalysis(fullSubmissionIDs)
+}
+
+func RemovePairwiseAnalysis(keys []model.PairwiseKey) error {
+	if backend == nil {
+		return fmt.Errorf("Database has not been opened.")
+	}
+
+	return backend.RemovePairwiseAnalysis(keys)
+}
+
 func StoreIndividualAnalysis(records []*model.IndividualAnalysis) error {
 	if backend == nil {
 		return fmt.Errorf("Database has not been opened.")

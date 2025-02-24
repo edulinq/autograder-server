@@ -16,14 +16,14 @@ import (
 	"github.com/edulinq/autograder/internal/util"
 )
 
-func IndividualAnalysis(fullSubmissionIDs []string, blockForResults bool, initiatorEmail string) ([]*model.IndividualAnalysis, int, error) {
-	completeAnalysis, remainingIDs, err := getCachedIndividualResults(fullSubmissionIDs)
+func IndividualAnalysis(options AnalysisOptions, initiatorEmail string) ([]*model.IndividualAnalysis, int, error) {
+	completeAnalysis, remainingIDs, err := getCachedIndividualResults(options)
 	if err != nil {
 		return nil, 0, err
 	}
 
-	if blockForResults {
-		results, err := runIndividualAnalysis(remainingIDs, initiatorEmail)
+	if options.WaitForCompletion {
+		results, err := runIndividualAnalysis(options, remainingIDs, initiatorEmail)
 		if err != nil {
 			return nil, 0, err
 		}
@@ -32,7 +32,7 @@ func IndividualAnalysis(fullSubmissionIDs []string, blockForResults bool, initia
 		remainingIDs = nil
 	} else {
 		go func() {
-			_, err := runIndividualAnalysis(remainingIDs, initiatorEmail)
+			_, err := runIndividualAnalysis(options, remainingIDs, initiatorEmail)
 			if err != nil {
 				log.Error("Failure during asynchronous individual analysis.", err)
 			}
@@ -42,10 +42,15 @@ func IndividualAnalysis(fullSubmissionIDs []string, blockForResults bool, initia
 	return completeAnalysis, len(remainingIDs), nil
 }
 
-func getCachedIndividualResults(fullSubmissionIDs []string) ([]*model.IndividualAnalysis, []string, error) {
+func getCachedIndividualResults(options AnalysisOptions) ([]*model.IndividualAnalysis, []string, error) {
 	// Sort the ids so the result will be consistently ordered.
-	fullSubmissionIDs = slices.Clone(fullSubmissionIDs)
+	fullSubmissionIDs := slices.Clone(options.ResolvedSubmissionIDs)
 	slices.Sort(fullSubmissionIDs)
+
+	// If we are overwriting the cache, don't query the DB for any of the cached results.
+	if options.OverwriteCache {
+		return make([]*model.IndividualAnalysis, 0), fullSubmissionIDs, nil
+	}
 
 	// Get any already done analysis results from the DB.
 	dbResults, err := db.GetIndividualAnalysis(fullSubmissionIDs)
@@ -70,7 +75,7 @@ func getCachedIndividualResults(fullSubmissionIDs []string) ([]*model.Individual
 }
 
 // Lock based on course and then run the analysis in a parallel pool.
-func runIndividualAnalysis(fullSubmissionIDs []string, initiatorEmail string) ([]*model.IndividualAnalysis, error) {
+func runIndividualAnalysis(options AnalysisOptions, fullSubmissionIDs []string, initiatorEmail string) ([]*model.IndividualAnalysis, error) {
 	if len(fullSubmissionIDs) == 0 {
 		return nil, nil
 	}
@@ -86,6 +91,14 @@ func runIndividualAnalysis(fullSubmissionIDs []string, initiatorEmail string) ([
 	lockmanager.Lock(lockKey)
 	defer lockmanager.Unlock(lockKey)
 
+	// If we are overwriting the cache, then remove all the old entries.
+	if options.OverwriteCache && !options.DryRun {
+		err := db.RemoveIndividualAnalysis(fullSubmissionIDs)
+		if err != nil {
+			fmt.Errorf("Failed to remove old individual analysis cache entries: '%w'.", err)
+		}
+	}
+
 	poolSize := config.ANALYSIS_INDIVIDUAL_COURSE_POOL_SIZE.Get()
 	type PoolResult struct {
 		Result  *model.IndividualAnalysis
@@ -94,7 +107,7 @@ func runIndividualAnalysis(fullSubmissionIDs []string, initiatorEmail string) ([
 	}
 
 	poolResults, _, err := util.RunParallelPoolMap(poolSize, fullSubmissionIDs, func(fullSubmissionID string) (PoolResult, error) {
-		result, runTime, err := runSingleIndividualAnalysis(fullSubmissionID)
+		result, runTime, err := runSingleIndividualAnalysis(options, fullSubmissionID)
 		if err != nil {
 			err = fmt.Errorf("Failed to perform individual analysis on submission %s: '%w'.", fullSubmissionID, err)
 		}
@@ -120,7 +133,7 @@ func runIndividualAnalysis(fullSubmissionIDs []string, initiatorEmail string) ([
 	return results, errs
 }
 
-func runSingleIndividualAnalysis(fullSubmissionID string) (*model.IndividualAnalysis, int64, error) {
+func runSingleIndividualAnalysis(options AnalysisOptions, fullSubmissionID string) (*model.IndividualAnalysis, int64, error) {
 	// Lock this id so we don't try to do the analysis multiple times.
 	lockKey := fmt.Sprintf("analysis-individual-%s", fullSubmissionID)
 	lockmanager.Lock(lockKey)
@@ -129,25 +142,29 @@ func runSingleIndividualAnalysis(fullSubmissionID string) (*model.IndividualAnal
 	startTime := timestamp.Now()
 
 	// Check the DB for a complete analysis.
-	result, err := db.GetSingleIndividualAnalysis(fullSubmissionID)
-	if err != nil {
-		return nil, 0, fmt.Errorf("Failed to check DB for cached individual analysis for '%s': '%w'.", fullSubmissionID, err)
-	}
+	if !options.OverwriteCache {
+		result, err := db.GetSingleIndividualAnalysis(fullSubmissionID)
+		if err != nil {
+			return nil, 0, fmt.Errorf("Failed to check DB for cached individual analysis for '%s': '%w'.", fullSubmissionID, err)
+		}
 
-	if result != nil {
-		return result, 0, nil
+		if result != nil {
+			return result, 0, nil
+		}
 	}
 
 	// Nothing cached, compute the analsis.
-	result, err = computeSingleIndividualAnalysis(fullSubmissionID, true)
+	result, err := computeSingleIndividualAnalysis(fullSubmissionID, true)
 	if err != nil {
 		return nil, 0, fmt.Errorf("Failed to compute individual analysis for '%s': '%w'.", fullSubmissionID, err)
 	}
 
 	// Store the result.
-	err = db.StoreIndividualAnalysis([]*model.IndividualAnalysis{result})
-	if err != nil {
-		return nil, 0, fmt.Errorf("Failed to store individual analysis for '%s' in DB: '%w'.", fullSubmissionID, err)
+	if !options.DryRun {
+		err = db.StoreIndividualAnalysis([]*model.IndividualAnalysis{result})
+		if err != nil {
+			return nil, 0, fmt.Errorf("Failed to store individual analysis for '%s' in DB: '%w'.", fullSubmissionID, err)
+		}
 	}
 
 	runTime := int64(timestamp.Now() - startTime)
@@ -175,7 +192,7 @@ func computeSingleIndividualAnalysis(fullSubmissionID string, computeDeltas bool
 
 	analysis := &model.IndividualAnalysis{
 		AnalysisTimestamp: timestamp.Now(),
-		Options:           assignment.AnalysisOptions,
+		Options:           assignment.AssignmentAnalysisOptions,
 
 		FullID:       gradingResult.Info.ID,
 		ShortID:      gradingResult.Info.ShortID,
@@ -248,7 +265,7 @@ func individualFileAnalysis(submissionDir string, assignment *model.Assignment) 
 
 	for _, relpath := range relpaths {
 		// Check if this file should be skipped because of inclusions/exclusions.
-		if (assignment.AnalysisOptions != nil) && !assignment.AnalysisOptions.MatchRelpath(relpath) {
+		if (assignment.AssignmentAnalysisOptions != nil) && !assignment.AssignmentAnalysisOptions.MatchRelpath(relpath) {
 			skipped = append(skipped, relpath)
 			continue
 		}

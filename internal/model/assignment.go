@@ -14,8 +14,6 @@ import (
 	"github.com/edulinq/autograder/internal/util"
 )
 
-const DEFAULT_SUBMISSIONS_DIR = "_submissions"
-
 const FILE_CACHE_FILENAME = "filecache.json"
 const CACHE_FILENAME = "cache.json"
 
@@ -34,7 +32,7 @@ type Assignment struct {
 
 	docker.ImageInfo
 
-	AnalysisOptions *AnalysisOptions `json:"analysis-options,omitempty"`
+	AssignmentAnalysisOptions *AssignmentAnalysisOptions `json:"analysis-options,omitempty"`
 
 	// Ignore these fields in JSON.
 	RelSourceDir string  `json:"_rel_source-dir"`
@@ -102,6 +100,10 @@ func (this *Assignment) GetImageInfo() *docker.ImageInfo {
 
 func (this *Assignment) GetSourceDir() string {
 	return filepath.Join(this.Course.GetBaseSourceDir(), this.RelSourceDir)
+}
+
+func (this *Assignment) GetTemplatesDir() string {
+	return filepath.Join(this.Course.GetTemplatesDir(), this.ID)
 }
 
 // Ensure that the assignment is formatted correctly.
@@ -175,8 +177,8 @@ func (this *Assignment) Validate() error {
 		this.ImageInfo.MaxRuntimeSecs = systemMaxRuntimeSecs
 	}
 
-	if this.AnalysisOptions != nil {
-		err = this.AnalysisOptions.Validate()
+	if this.AssignmentAnalysisOptions != nil {
+		err = this.AssignmentAnalysisOptions.Validate()
 		if err != nil {
 			return fmt.Errorf("Failed to validate analysis options: '%w'.", err)
 		}
@@ -201,6 +203,29 @@ func (this *Assignment) GetFileCachePath() string {
 
 func (this *Assignment) GetImageLock() *sync.Mutex {
 	return this.imageLock
+}
+
+func (this *Assignment) FetchTemplateFiles() ([]string, error) {
+	if this.AssignmentAnalysisOptions == nil {
+		return []string{}, nil
+	}
+
+	if len(this.AssignmentAnalysisOptions.TemplateFiles) == 0 {
+		return []string{}, nil
+	}
+
+	destDir := this.GetTemplatesDir()
+	err := util.MkDir(destDir)
+	if err != nil {
+		return []string{}, fmt.Errorf("Failed to make template dir '%s': '%w'.", destDir, err)
+	}
+
+	relpaths, err := this.AssignmentAnalysisOptions.FetchTemplateFiles(this.GetSourceDir(), destDir)
+	if err != nil {
+		return []string{}, fmt.Errorf("Failed to fetch template files: '%w'.", err)
+	}
+
+	return relpaths, nil
 }
 
 func CompareAssignments(a *Assignment, b *Assignment) int {

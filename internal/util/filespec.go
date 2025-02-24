@@ -12,6 +12,8 @@ import (
 	"path"
 	"path/filepath"
 	"strings"
+
+	"github.com/edulinq/autograder/internal/log"
 )
 
 type FileSpecType string
@@ -35,6 +37,20 @@ type FileSpec struct {
 
 func (this *FileSpec) Validate() error {
 	return this.ValidateFull(false)
+}
+
+func (this *FileSpec) String() string {
+	if this == nil {
+		return "<nil>"
+	}
+
+	value, err := ToJSON(this)
+	if err != nil {
+		log.Error("FileSpec could not marshal to JSON.", err)
+		return "<error>"
+	}
+
+	return value
 }
 
 func (this *FileSpec) ValidateFull(onlyLocalPaths bool) error {

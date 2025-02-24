@@ -1,70 +1,192 @@
 package model
 
 import (
+	"path/filepath"
 	"reflect"
-	"regexp"
+	"strings"
 	"testing"
 
 	"github.com/edulinq/autograder/internal/timestamp"
 	"github.com/edulinq/autograder/internal/util"
 )
 
-func TestAnalysisOptionsValidateBase(test *testing.T) {
+func TestAssignmentAnalysisOptionsValidateBase(test *testing.T) {
 	testCases := []struct {
-		input    *AnalysisOptions
-		expected *AnalysisOptions
-		hasError bool
+		input          *AssignmentAnalysisOptions
+		expected       *AssignmentAnalysisOptions
+		errorSubstring string
 	}{
 		{
-			&AnalysisOptions{},
-			&AnalysisOptions{
-				IncludeRegexes: []*regexp.Regexp{
-					regexp.MustCompile(DEFAULT_INCLUDE_REGEX),
+			&AssignmentAnalysisOptions{},
+			&AssignmentAnalysisOptions{
+				IncludePatterns: []string{
+					DEFAULT_INCLUDE_REGEX,
 				},
-				ExcludeRegexes: []*regexp.Regexp{},
 			},
-			false,
+			"",
 		},
 		{
-			&AnalysisOptions{
+			&AssignmentAnalysisOptions{
 				IncludePatterns: []string{
+					"AAA",
+				},
+				ExcludePatterns: []string{
 					"ZZZ",
 				},
 			},
-			&AnalysisOptions{
+			&AssignmentAnalysisOptions{
 				IncludePatterns: []string{
+					"AAA",
+				},
+				ExcludePatterns: []string{
 					"ZZZ",
 				},
-				IncludeRegexes: []*regexp.Regexp{
-					regexp.MustCompile("ZZZ"),
-				},
-				ExcludeRegexes: []*regexp.Regexp{},
 			},
-			false,
+			"",
 		},
 		{
-			&AnalysisOptions{
+			&AssignmentAnalysisOptions{
+				TemplateFiles: []*util.FileSpec{
+					&util.FileSpec{
+						Type: util.FILESPEC_TYPE_PATH,
+						Path: " a/../b ",
+					},
+				},
+				TemplateFileOps: []*util.FileOperation{
+					util.NewFileOperation([]string{"copy", " a/../b ", "c"}),
+				},
+			},
+			&AssignmentAnalysisOptions{
+				IncludePatterns: []string{
+					DEFAULT_INCLUDE_REGEX,
+				},
+				TemplateFiles: []*util.FileSpec{
+					&util.FileSpec{
+						Type: util.FILESPEC_TYPE_PATH,
+						Path: "b",
+					},
+				},
+				TemplateFileOps: []*util.FileOperation{
+					util.NewFileOperation([]string{"copy", "b", "c"}),
+				},
+			},
+			"",
+		},
+
+		// Errors
+
+		// Nil
+		{
+			nil,
+			nil,
+			"cannot be nil",
+		},
+		// Bad Include/Exclude Patterns
+		{
+			&AssignmentAnalysisOptions{
 				IncludePatterns: []string{
 					"(error",
 				},
 			},
 			nil,
-			true,
+			"Failed to compile include pattern",
+		},
+		{
+			&AssignmentAnalysisOptions{
+				ExcludePatterns: []string{
+					"(error",
+				},
+			},
+			nil,
+			"Failed to compile exclude pattern",
+		},
+		// Bad Template Paths
+		{
+			&AssignmentAnalysisOptions{
+				TemplateFiles: []*util.FileSpec{
+					&util.FileSpec{
+						Type: util.FILESPEC_TYPE_PATH,
+						Path: "/a",
+					},
+				},
+			},
+			nil,
+			"not allowed to be absolute",
+		},
+		{
+			&AssignmentAnalysisOptions{
+				TemplateFiles: []*util.FileSpec{
+					&util.FileSpec{
+						Type: util.FILESPEC_TYPE_PATH,
+						Path: "../a",
+					},
+				},
+			},
+			nil,
+			"outside of the its base directory",
+		},
+		{
+			&AssignmentAnalysisOptions{
+				TemplateFiles: []*util.FileSpec{
+					&util.FileSpec{
+						Type: util.FILESPEC_TYPE_URL,
+						Path: "http://test.edulinq.org/a.zip",
+						Dest: "../a.zip",
+					},
+				},
+			},
+			nil,
+			"outside of the its base directory",
+		},
+		{
+			&AssignmentAnalysisOptions{
+				TemplateFiles: []*util.FileSpec{
+					&util.FileSpec{
+						Type: util.FILESPEC_TYPE_GIT,
+						Path: "http://test.edulinq.org/a.git",
+						Dest: "../a",
+					},
+				},
+			},
+			nil,
+			"outside of the its base directory",
+		},
+		{
+			&AssignmentAnalysisOptions{
+				TemplateFileOps: []*util.FileOperation{
+					util.NewFileOperation([]string{"copy", "/a", "b"}),
+				},
+			},
+			nil,
+			"Only relative paths are allowed",
+		},
+		{
+			&AssignmentAnalysisOptions{
+				TemplateFileOps: []*util.FileOperation{
+					util.NewFileOperation([]string{"copy", "../a", "b"}),
+				},
+			},
+			nil,
+			"outside of the its base directory",
 		},
 	}
 
 	for i, testCase := range testCases {
 		err := testCase.input.Validate()
 		if err != nil {
-			if !testCase.hasError {
-				test.Errorf("Case %d: Unexpected error: '%v'.", i, err)
+			if testCase.errorSubstring != "" {
+				if !strings.Contains(err.Error(), testCase.errorSubstring) {
+					test.Errorf("Case %d: Did not get expected error outpout. Expected Substring '%s', Actual Error: '%v'.", i, testCase.errorSubstring, err)
+				}
+			} else {
+				test.Errorf("Case %d: Failed to validate '%+v': '%v'.", i, testCase.input, err)
 			}
 
 			continue
 		}
 
-		if testCase.hasError {
-			test.Errorf("Case %d: Did not get expected error.", i)
+		if testCase.errorSubstring != "" {
+			test.Errorf("Case %d: Did not get expected error: '%s'.", i, testCase.errorSubstring)
 			continue
 		}
 
@@ -76,27 +198,27 @@ func TestAnalysisOptionsValidateBase(test *testing.T) {
 	}
 }
 
-func TestAnalysisOptionsMatchRelpathBase(test *testing.T) {
+func TestAssignmentAnalysisOptionsMatchRelpathBase(test *testing.T) {
 	testCases := []struct {
-		options  *AnalysisOptions
+		options  *AssignmentAnalysisOptions
 		relpath  string
 		expected bool
 	}{
 		// Default values.
 		{
-			&AnalysisOptions{},
+			&AssignmentAnalysisOptions{},
 			"ZZZ",
 			true,
 		},
 		{
-			&AnalysisOptions{},
+			&AssignmentAnalysisOptions{},
 			"",
 			false,
 		},
 
 		// (include && exclude).
 		{
-			&AnalysisOptions{
+			&AssignmentAnalysisOptions{
 				IncludePatterns: []string{
 					"A",
 				},
@@ -110,7 +232,7 @@ func TestAnalysisOptionsMatchRelpathBase(test *testing.T) {
 
 		// (include && !exclude).
 		{
-			&AnalysisOptions{
+			&AssignmentAnalysisOptions{
 				IncludePatterns: []string{
 					"A",
 				},
@@ -124,7 +246,7 @@ func TestAnalysisOptionsMatchRelpathBase(test *testing.T) {
 
 		// (!include && exclude).
 		{
-			&AnalysisOptions{
+			&AssignmentAnalysisOptions{
 				IncludePatterns: []string{
 					"A",
 				},
@@ -138,7 +260,7 @@ func TestAnalysisOptionsMatchRelpathBase(test *testing.T) {
 
 		// (!include && !exclude).
 		{
-			&AnalysisOptions{
+			&AssignmentAnalysisOptions{
 				IncludePatterns: []string{
 					"A",
 				},
@@ -374,9 +496,9 @@ func TestNewPairwiseAnalysisSummaryBase(test *testing.T) {
 	}
 
 	input := []*PairwiseAnalysis{
-		NewPairwiseAnalysis(NewPairwiseKey("A", "B"), sims1, nil, nil),
-		NewPairwiseAnalysis(NewPairwiseKey("C", "D"), sims2, nil, nil),
-		NewPairwiseAnalysis(NewPairwiseKey("E", "F"), sims3, nil, nil),
+		NewPairwiseAnalysis(NewPairwiseKey("A", "B"), nil, sims1, nil, nil),
+		NewPairwiseAnalysis(NewPairwiseKey("C", "D"), nil, sims2, nil, nil),
+		NewPairwiseAnalysis(NewPairwiseKey("E", "F"), nil, sims3, nil, nil),
 	}
 
 	expected := &PairwiseAnalysisSummary{
@@ -431,5 +553,106 @@ func TestNewPairwiseAnalysisSummaryBase(test *testing.T) {
 
 	if !reflect.DeepEqual(expected, actual) {
 		test.Fatalf("Incorrect result. Expected: '%s', Actual: '%s'.", util.MustToJSONIndent(expected), util.MustToJSONIndent(actual))
+	}
+}
+
+func TestAssignmentAnalysisOptionsFetchTemplateFilesBase(test *testing.T) {
+	testCases := []struct {
+		options          *AssignmentAnalysisOptions
+		expectedRelpaths []string
+		errorSubstring   string
+	}{
+		{
+			&AssignmentAnalysisOptions{},
+			[]string{},
+			"",
+		},
+		{
+			&AssignmentAnalysisOptions{
+				TemplateFiles: []*util.FileSpec{
+					&util.FileSpec{
+						Type: util.FILESPEC_TYPE_PATH,
+						Path: "a.txt",
+					},
+				},
+			},
+			[]string{
+				"a.txt",
+			},
+			"",
+		},
+		{
+			&AssignmentAnalysisOptions{
+				TemplateFiles: []*util.FileSpec{
+					&util.FileSpec{
+						Type: util.FILESPEC_TYPE_PATH,
+						Path: "a.txt",
+					},
+				},
+				TemplateFileOps: []*util.FileOperation{
+					util.NewFileOperation([]string{"copy", "a.txt", "b/c.txt"}),
+				},
+			},
+			[]string{
+				"a.txt",
+				filepath.Join("b", "c.txt"),
+			},
+			"",
+		},
+		{
+			&AssignmentAnalysisOptions{
+				TemplateFiles: []*util.FileSpec{
+					&util.FileSpec{
+						Type: util.FILESPEC_TYPE_PATH,
+						Path: "a.txt",
+					},
+				},
+				TemplateFileOps: []*util.FileOperation{
+					util.NewFileOperation([]string{"move", "a.txt", "b/c.txt"}),
+				},
+			},
+			[]string{
+				filepath.Join("b", "c.txt"),
+			},
+			"",
+		},
+	}
+
+	// The base for the file specs.
+	baseDir := filepath.Join(util.TestdataDirForTesting(), "files")
+
+	for i, testCase := range testCases {
+		err := testCase.options.Validate()
+		if err != nil {
+			test.Errorf("Case %d: Failed to validate options: '%v'.", i, err)
+			continue
+		}
+
+		tempDir := util.MustMkDirTemp("test-analysis-fetch-templates-")
+		defer util.RemoveDirent(tempDir)
+
+		actualRelpaths, err := testCase.options.FetchTemplateFiles(baseDir, tempDir)
+		if err != nil {
+			if testCase.errorSubstring != "" {
+				if !strings.Contains(err.Error(), testCase.errorSubstring) {
+					test.Errorf("Case %d: Did not get expected error outpout. Expected Substring '%s', Actual Error: '%v'.", i, testCase.errorSubstring, err)
+				}
+			} else {
+				test.Errorf("Case %d: Failed to fetch template files '%+v': '%v'.", i, testCase.options, err)
+			}
+
+			continue
+		}
+
+		if testCase.errorSubstring != "" {
+			test.Errorf("Case %d: Did not get expected error: '%s'.", i, testCase.errorSubstring)
+			continue
+		}
+
+		if !reflect.DeepEqual(testCase.expectedRelpaths, actualRelpaths) {
+			test.Errorf("Case %d: Result relpaths not as expected. Expected: '%v', Actual: '%v'.",
+				i, testCase.expectedRelpaths, actualRelpaths)
+			continue
+		}
 	}
 }

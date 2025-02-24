@@ -7,7 +7,15 @@
     ],
     "image": "edulinq/grader.base-alpine",
     "invocation": ["bash", "./grader.sh"],
-    "post-submission-files-ops": [
+    "post-submission-file-ops": [
         ["cp", "input/assignment.sh", "work/assignment.sh"]
-    ]
+    ],
+    "analysis-options": {
+        "include-patterns": [
+            "assignment.sh"
+        ],
+        "template-files": [
+            "test-submissions/not-implemented/assignment.sh"
+        ]
+    }
 }

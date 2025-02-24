@@ -10,15 +10,27 @@ import (
 	"github.com/edulinq/autograder/internal/util"
 )
 
-func RunEngineTestComputeFileSimilarityBase(test *testing.T, engine SimilarityEngine, expected *model.FileSimilarity) {
+var (
+	baseTestRelDir        = filepath.Join("testdata", "files", "sim_engine", "test-submissions")
+	solutionRelPath       = filepath.Join(baseTestRelDir, "solution", "submission.py")
+	partialRelPath        = filepath.Join(baseTestRelDir, "partial", "submission.py")
+	notImplementedRelPath = filepath.Join(baseTestRelDir, "not_implemented", "submission.py")
+)
+
+func RunEngineTestComputeFileSimilarityBase(test *testing.T, engine SimilarityEngine, includeTemplate bool, expected *model.FileSimilarity) {
 	docker.EnsureOrSkipForTest(test)
 
 	paths := [2]string{
-		filepath.Join(util.RootDirForTesting(), "testdata", "course101", "HW0", "test-submissions", "solution", "submission.py"),
-		filepath.Join(util.RootDirForTesting(), "testdata", "course101", "HW0", "test-submissions", "partial", "submission.py"),
+		filepath.Join(util.RootDirForTesting(), solutionRelPath),
+		filepath.Join(util.RootDirForTesting(), partialRelPath),
 	}
 
-	result, runTime, err := engine.ComputeFileSimilarity(paths)
+	templatePath := ""
+	if includeTemplate {
+		templatePath = filepath.Join(util.RootDirForTesting(), notImplementedRelPath)
+	}
+
+	result, runTime, err := engine.ComputeFileSimilarity(paths, templatePath)
 	if err != nil {
 		test.Fatalf("Failed to compute similarity: '%v'.", err)
 	}

@@ -198,6 +198,14 @@ type Backend interface {
 	// Any key not matched in the DB will not be represented in the output.
 	GetPairwiseAnalysis(keys []model.PairwiseKey) (map[model.PairwiseKey]*model.PairwiseAnalysis, error)
 
+	// Remove any matching individual analysis results.
+	// The database is allowed to sort the passed in slice.
+	RemoveIndividualAnalysis(fullSubmissionIDs []string) error
+
+	// Remove any matching pairwise analysis results.
+	// The database is allowed to sort the passed in slice.
+	RemovePairwiseAnalysis(keys []model.PairwiseKey) error
+
 	// Store the results of a individual analysis.
 	StoreIndividualAnalysis(records []*model.IndividualAnalysis) error
 

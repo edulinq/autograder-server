@@ -10,7 +10,7 @@ import (
 )
 
 // Resolve course email addresses.
-// Take a course and a list of strings, containing emails specs and returns a sorted slice of lowercase emails without duplicates.
+// Take a course and a list of strings (containing emails specs) and returns a sorted slice of lowercase emails without duplicates.
 // An email spec can be:
 // an email address,
 // a course role (which will include all course users with that role),

@@ -622,33 +622,77 @@ func testTargetCourseUser[T comparable, V userGetter](test *testing.T,
 		permError bool
 		expected  T
 	}{
-		// Self.
-		{model.CourseRoleStudent, "", false,
-			createTargetType(TargetCourseUser{true, "course-student@test.edulinq.org", users["course-student@test.edulinq.org"]})},
-		{model.CourseRoleStudent, "course-student@test.edulinq.org", false,
-			createTargetType(TargetCourseUser{true, "course-student@test.edulinq.org", users["course-student@test.edulinq.org"]})},
-		{model.CourseRoleGrader, "", false,
-			createTargetType(TargetCourseUser{true, "course-grader@test.edulinq.org", users["course-grader@test.edulinq.org"]})},
-		{model.CourseRoleGrader, "course-grader@test.edulinq.org", false,
-			createTargetType(TargetCourseUser{true, "course-grader@test.edulinq.org", users["course-grader@test.edulinq.org"]})},
+		// Self
+		{
+			role:      model.CourseRoleStudent,
+			target:    "",
+			permError: false,
+			expected:  createTargetType(TargetCourseUser{true, "course-student@test.edulinq.org", users["course-student@test.edulinq.org"]}),
+		},
+		{
+			role:      model.CourseRoleStudent,
+			target:    "course-student@test.edulinq.org",
+			permError: false,
+			expected:  createTargetType(TargetCourseUser{true, "course-student@test.edulinq.org", users["course-student@test.edulinq.org"]}),
+		},
+		{
+			role:      model.CourseRoleGrader,
+			target:    "",
+			permError: false,
+			expected:  createTargetType(TargetCourseUser{true, "course-grader@test.edulinq.org", users["course-grader@test.edulinq.org"]}),
+		},
+		{
+			role:      model.CourseRoleGrader,
+			target:    "course-grader@test.edulinq.org",
+			permError: false,
+			expected:  createTargetType(TargetCourseUser{true, "course-grader@test.edulinq.org", users["course-grader@test.edulinq.org"]}),
+		},
 
-		// Other.
-		{model.CourseRoleOther, "course-student@test.edulinq.org", isNonSelfPermError(model.CourseRoleOther),
-			createTargetType(TargetCourseUser{true, "course-student@test.edulinq.org", users["course-student@test.edulinq.org"]})},
-		{model.CourseRoleStudent, "course-grader@test.edulinq.org", isNonSelfPermError(model.CourseRoleStudent),
-			createTargetType(TargetCourseUser{true, "course-grader@test.edulinq.org", users["course-grader@test.edulinq.org"]})},
-		{model.CourseRoleGrader, "course-student@test.edulinq.org", isNonSelfPermError(model.CourseRoleGrader),
-			createTargetType(TargetCourseUser{true, "course-student@test.edulinq.org", users["course-student@test.edulinq.org"]})},
-		{model.CourseRoleAdmin, "course-student@test.edulinq.org", isNonSelfPermError(model.CourseRoleAdmin),
-			createTargetType(TargetCourseUser{true, "course-student@test.edulinq.org", users["course-student@test.edulinq.org"]})},
-		{model.CourseRoleOwner, "course-student@test.edulinq.org", isNonSelfPermError(model.CourseRoleOwner),
-			createTargetType(TargetCourseUser{true, "course-student@test.edulinq.org", users["course-student@test.edulinq.org"]})},
+		// Other
+		{
+			role:      model.CourseRoleOther,
+			target:    "course-student@test.edulinq.org",
+			permError: isNonSelfPermError(model.CourseRoleOther),
+			expected:  createTargetType(TargetCourseUser{true, "course-student@test.edulinq.org", users["course-student@test.edulinq.org"]}),
+		},
+		{
+			role:      model.CourseRoleStudent,
+			target:    "course-grader@test.edulinq.org",
+			permError: isNonSelfPermError(model.CourseRoleStudent),
+			expected:  createTargetType(TargetCourseUser{true, "course-grader@test.edulinq.org", users["course-grader@test.edulinq.org"]}),
+		},
+		{
+			role:      model.CourseRoleGrader,
+			target:    "course-student@test.edulinq.org",
+			permError: isNonSelfPermError(model.CourseRoleGrader),
+			expected:  createTargetType(TargetCourseUser{true, "course-student@test.edulinq.org", users["course-student@test.edulinq.org"]}),
+		},
+		{
+			role:      model.CourseRoleAdmin,
+			target:    "course-student@test.edulinq.org",
+			permError: isNonSelfPermError(model.CourseRoleAdmin),
+			expected:  createTargetType(TargetCourseUser{true, "course-student@test.edulinq.org", users["course-student@test.edulinq.org"]}),
+		},
+		{
+			role:      model.CourseRoleOwner,
+			target:    "course-student@test.edulinq.org",
+			permError: isNonSelfPermError(model.CourseRoleOwner),
+			expected:  createTargetType(TargetCourseUser{true, "course-student@test.edulinq.org", users["course-student@test.edulinq.org"]}),
+		},
 
-		// Not found.
-		{model.CourseRoleGrader, "ZZZ", isNonSelfPermError(model.CourseRoleGrader),
-			createTargetType(TargetCourseUser{false, "ZZZ", nil})},
-		{model.CourseRoleAdmin, "ZZZ", isNonSelfPermError(model.CourseRoleAdmin),
-			createTargetType(TargetCourseUser{false, "ZZZ", nil})},
+		// Not Found
+		{
+			role:      model.CourseRoleGrader,
+			target:    "ZZZ",
+			permError: isNonSelfPermError(model.CourseRoleGrader),
+			expected:  createTargetType(TargetCourseUser{false, "ZZZ", nil}),
+		},
+		{
+			role:      model.CourseRoleAdmin,
+			target:    "ZZZ",
+			permError: isNonSelfPermError(model.CourseRoleAdmin),
+			expected:  createTargetType(TargetCourseUser{false, "ZZZ", nil}),
+		},
 	}
 
 	for i, testCase := range testCases {
@@ -911,6 +955,202 @@ func TestTargetServerUserSelfOrAdmin(test *testing.T) {
 		if !reflect.DeepEqual(testCase.expected, request.User.User) {
 			test.Errorf("Case %d: Result not as expected. Expected '%+v', found '%+v'.",
 				i, testCase.expected, request.User.User)
+		}
+	}
+}
+
+func TestTargetCourseUserSelfOrAdminEscalation(test *testing.T) {
+	type requestType struct {
+		APIRequestCourseUserContext
+		MinCourseRoleStudent
+
+		User TargetCourseUserSelfOrAdmin
+	}
+
+	testCases := []struct {
+		name    string
+		locator string
+	}{
+		// Missing
+		{
+			"ZZZ",
+			"-013",
+		},
+
+		// Course User
+		{
+			"course-other",
+			"-020",
+		},
+		{
+			"course-student",
+			"",
+		},
+		{
+			"course-grader",
+			"",
+		},
+		{
+			"course-admin",
+			"",
+		},
+		{
+			"course-owner",
+			"",
+		},
+
+		// Server User
+		{
+			"server-user",
+			"-040",
+		},
+		{
+			"server-admin",
+			"",
+		},
+		{
+			"server-owner",
+			"",
+		},
+	}
+
+	for i, testCase := range testCases {
+		email := testCase.name + "@test.edulinq.org"
+
+		request := &requestType{
+			APIRequestCourseUserContext: APIRequestCourseUserContext{
+				APIRequestUserContext: APIRequestUserContext{
+					UserEmail: email,
+					UserPass:  util.Sha256HexFromString(testCase.name),
+				},
+				CourseID: "course101",
+			},
+		}
+
+		apiErr := ValidateAPIRequest(nil, request, "")
+		if apiErr != nil {
+			if testCase.locator != "" {
+				if testCase.locator != apiErr.Locator {
+					test.Errorf("Case %d: Locator not as expected. Expected: '%s', Actual: '%s'.", i, testCase.locator, apiErr.Locator)
+				}
+			} else {
+				test.Errorf("Case %d: Got unexpected error: '%v'.", i, apiErr)
+			}
+
+			continue
+		}
+
+		if testCase.locator != "" {
+			test.Errorf("Case %d: Did not get expected error locator: '%s'.", i, testCase.locator)
+			continue
+		}
+
+		if !request.User.Found {
+			test.Errorf("Case %d: User not found with successful locator.", i)
+			continue
+		}
+
+		if request.User.User == nil {
+			test.Errorf("Case %d: User is nil with successful locator.", i)
+			continue
+		}
+	}
+}
+
+func TestTargetCourseUserSelfOrGraderEscalation(test *testing.T) {
+	type requestType struct {
+		APIRequestCourseUserContext
+		MinCourseRoleStudent
+
+		User TargetCourseUserSelfOrGrader
+	}
+
+	testCases := []struct {
+		name    string
+		locator string
+	}{
+		// Missing
+		{
+			"ZZZ",
+			"-013",
+		},
+
+		// Course User
+		{
+			"course-other",
+			"-020",
+		},
+		{
+			"course-student",
+			"",
+		},
+		{
+			"course-grader",
+			"",
+		},
+		{
+			"course-admin",
+			"",
+		},
+		{
+			"course-owner",
+			"",
+		},
+
+		// Server User
+		{
+			"server-user",
+			"-040",
+		},
+		{
+			"server-admin",
+			"",
+		},
+		{
+			"server-owner",
+			"",
+		},
+	}
+
+	for i, testCase := range testCases {
+		email := testCase.name + "@test.edulinq.org"
+
+		request := &requestType{
+			APIRequestCourseUserContext: APIRequestCourseUserContext{
+				APIRequestUserContext: APIRequestUserContext{
+					UserEmail: email,
+					UserPass:  util.Sha256HexFromString(testCase.name),
+				},
+				CourseID: "course101",
+			},
+		}
+
+		apiErr := ValidateAPIRequest(nil, request, "")
+		if apiErr != nil {
+			if testCase.locator != "" {
+				if testCase.locator != apiErr.Locator {
+					test.Errorf("Case %d: Locator not as expected. Expected: '%s', Actual: '%s'.", i, testCase.locator, apiErr.Locator)
+				}
+			} else {
+				test.Errorf("Case %d: Got unexpected error: '%v'.", i, apiErr)
+			}
+
+			continue
+		}
+
+		if testCase.locator != "" {
+			test.Errorf("Case %d: Did not get expected error locator: '%s'.", i, testCase.locator)
+			continue
+		}
+
+		if !request.User.Found {
+			test.Errorf("Case %d: User not found with successful locator.", i)
+			continue
+		}
+
+		if request.User.User == nil {
+			test.Errorf("Case %d: User is nil with successful locator.", i)
+			continue
 		}
 	}
 }
