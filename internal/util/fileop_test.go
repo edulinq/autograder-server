@@ -338,7 +338,7 @@ func TestFileOpCopyBase(test *testing.T) {
 		{
 			"a",
 			"b",
-			"Unable to find source path.",
+			"Unable to find source path",
 		},
 		{
 			alreadyExistsDirname,
@@ -421,12 +421,6 @@ func TestFileOpMoveBase(test *testing.T) {
 			"",
 		},
 		{
-			"a",
-			"b",
-			"no such file or directory",
-		},
-		// TODO: Fix buggy test case. Talk with Eriq about desired mv behavior.
-		{
 			alreadyExistsFilePosixRelpath,
 			alreadyExistsDirname,
 			"",
@@ -434,12 +428,7 @@ func TestFileOpMoveBase(test *testing.T) {
 		{
 			"a",
 			"b",
-			"Unable to find source path.",
-		},
-		{
-			alreadyExistsFilePosixRelpath,
-			"a/b",
-			"no such file or directory",
+			"Unable to find source path",
 		},
 		// This case outputs a slightly different error on some Mac versions.
 		// Let the error substring be very general for this case.
@@ -461,13 +450,21 @@ func TestFileOpMoveBase(test *testing.T) {
 			}
 
 			expectedDest := filepath.Join(tempDir, testCase.dest)
-
-			if !PathExists(expectedDest) {
-				test.Errorf("Case %d: Dest does not exist '%s'.", i, expectedDest)
-				return
-			}
-
+			finalExpectedDest := expectedDest
 			for _, expectedSource := range expectedSources {
+				if IsDir(expectedDest) {
+					finalExpectedDest = filepath.Join(expectedDest, filepath.Base(expectedSource))
+				}
+
+				if !PathExists(finalExpectedDest) {
+					test.Errorf("Case %d: Dest does not exist '%s'.", i, finalExpectedDest)
+					return
+				}
+
+				if expectedSource == finalExpectedDest {
+					continue
+				}
+
 				if PathExists(expectedSource) {
 					test.Errorf("Case %d: Source exists '%s'.", i, expectedSource)
 					return

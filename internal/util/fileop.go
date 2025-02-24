@@ -171,13 +171,9 @@ func (this *FileOperation) Exec(baseDir string) error {
 		sourcePathGlob := resolvePath(parts[1], baseDir, false)
 		destPath := resolvePath(parts[2], baseDir, false)
 
-		sourcePaths, err := filepath.Glob(sourcePathGlob)
+		sourcePaths, err := resolveGlobs(sourcePathGlob)
 		if err != nil {
-			return fmt.Errorf("Failed to resolve glob '%s': '%w'.", sourcePathGlob, err)
-		}
-
-		if sourcePaths == nil {
-			return fmt.Errorf("Unable to find source path.")
+			return fmt.Errorf("Failed to resolve globs '%s': '%w'.", sourcePathGlob, err)
 		}
 
 		for _, sourcePath := range sourcePaths {
@@ -196,13 +192,9 @@ func (this *FileOperation) Exec(baseDir string) error {
 		sourcePathGlob := resolvePath(parts[1], baseDir, false)
 		destPath := resolvePath(parts[2], baseDir, false)
 
-		sourcePaths, err := filepath.Glob(sourcePathGlob)
+		sourcePaths, err := resolveGlobs(sourcePathGlob)
 		if err != nil {
-			return fmt.Errorf("Failed to resolve glob '%s': '%w'.", sourcePathGlob, err)
-		}
-
-		if sourcePaths == nil {
-			return fmt.Errorf("Unable to find source path.")
+			return fmt.Errorf("Failed to resolve globs '%s': '%w'.", sourcePathGlob, err)
 		}
 
 		for _, sourcePath := range sourcePaths {
@@ -271,11 +263,19 @@ func resolvePath(path string, baseDir string, forceUnix bool) string {
 	return path
 }
 
-func expandGlobs(globPath string) ([]string, error) {
+func resolveGlobs(globPath string) ([]string, error) {
 	paths, err := filepath.Glob(globPath)
 	if err != nil {
 		return nil, err
 	}
 
+	if paths == nil {
+		return nil, fmt.Errorf("Unable to find source path: 'no such file or directory'.")
+	}
+
+	// TODO(Lucas): Add validation to expand globs.
+	/*for _, path := range paths {
+
+	  }*/
 	return paths, nil
 }
