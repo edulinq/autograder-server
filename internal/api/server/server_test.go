@@ -13,7 +13,7 @@ import (
 	"github.com/edulinq/autograder/internal/util"
 )
 
-const TEST_SHORT_WAIT_MS int = 50
+const TEST_SHORT_WAIT_MS int = 100
 
 var (
 	certPath = filepath.Join(util.TestdataDirForTesting(), "certs", "ssl", "test-ssl.crt")
@@ -139,7 +139,11 @@ func runServerTestBase(test *testing.T) {
 }
 
 // All other configs should already be set.
-func runServerTestBaseFull(test *testing.T, endpoint string, fields map[string]any, email string, expectedLocator string, prefix string) {
+func runServerTestBaseFull(test *testing.T, endpoint string, fields map[string]any, email string, expectedLocator  string, prefix string) {
+	// Sometimes CI does not kill old servers fast enough.
+	util.RemoveDirent(systemserver.GetStatusPath())
+	time.Sleep(time.Duration(TEST_SHORT_WAIT_MS) * time.Millisecond)
+
 	server := NewAPIServer()
 	defer server.Stop()
 
@@ -174,7 +178,4 @@ func runServerTestBaseFull(test *testing.T, endpoint string, fields map[string]a
 	// Wait for the server to stop.
 	server.Stop()
 	serverStopWaitGroup.Wait()
-
-	// Wait for a small time to ensure all stopping operations are done.
-	time.Sleep(time.Duration(TEST_SHORT_WAIT_MS) * time.Millisecond)
 }
