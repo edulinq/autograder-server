@@ -9,7 +9,7 @@ import (
 type APIRequestMetric struct {
 	BaseMetric
 
-	CourseAssignmentUserMetric
+	CourseAssignmentEmailMetric
 
 	Sender   string `json:"sender"`
 	Endpoint string `json:"endpoint"`
@@ -20,7 +20,7 @@ type APIRequestMetric struct {
 type APIRequestMetricQuery struct {
 	BaseQuery
 
-	CourseAssignmentUserQuery
+	CourseAssignmentEmailQuery
 
 	Sender   string `json:"target-sender"`
 	Endpoint string `json:"target-endpoint"`
@@ -68,7 +68,7 @@ func AsyncStoreAPIRequestMetric(startTime timestamp.Timestamp, endTime timestamp
 		BaseMetric: BaseMetric{
 			Timestamp: startTime,
 		},
-		CourseAssignmentUserMetric: CourseAssignmentUserMetric{
+		CourseAssignmentEmailMetric: CourseAssignmentEmailMetric{
 			CourseID:     courseID,
 			AssignmentID: assignmentID,
 			UserEmail:    userEmail,

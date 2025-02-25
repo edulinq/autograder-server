@@ -15,7 +15,7 @@ type BaseMetric struct {
 	Attributes map[string]any `json:"attributes,omitempty"`
 }
 
-type CourseAssignmentUserMetric struct {
+type CourseAssignmentEmailMetric struct {
 	CourseID     string `json:"course,omitempty"`
 	AssignmentID string `json:"assignment,omitempty"`
 	UserEmail    string `json:"user,omitempty"`

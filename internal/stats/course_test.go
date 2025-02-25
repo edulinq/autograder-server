@@ -43,7 +43,7 @@ func TestStoreCourseGradingTimeBase(test *testing.T) {
 		BaseMetric: BaseMetric{
 			Timestamp: timestamp.Zero(),
 		},
-		CourseAssignmentUserMetric: CourseAssignmentUserMetric{
+		CourseAssignmentEmailMetric: CourseAssignmentEmailMetric{
 			CourseID:     "C",
 			AssignmentID: "A",
 			UserEmail:    "U",
@@ -65,7 +65,7 @@ func TestStoreCourseTaskTimeBase(test *testing.T) {
 			Timestamp:  timestamp.Zero(),
 			Attributes: map[string]any{ATTRIBUTE_KEY_TASK: "T"},
 		},
-		CourseAssignmentUserMetric: CourseAssignmentUserMetric{
+		CourseAssignmentEmailMetric: CourseAssignmentEmailMetric{
 			CourseID:     "C",
 			AssignmentID: "A",
 			UserEmail:    "U",

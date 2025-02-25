@@ -61,8 +61,8 @@ func (this *backend) GetCourseMetrics(query stats.CourseMetricQuery) ([]*stats.C
 func (this *backend) StoreAPIRequestMetric(record *stats.APIRequestMetric) error {
 	path := this.getAPIRequestStatsPath()
 
-	this.requestLock.Lock()
-	defer this.requestLock.Unlock()
+	this.apiRequestLock.Lock()
+	defer this.apiRequestLock.Unlock()
 
 	return util.AppendJSONLFile(path, record)
 }
@@ -70,8 +70,8 @@ func (this *backend) StoreAPIRequestMetric(record *stats.APIRequestMetric) error
 func (this *backend) GetAPIRequestMetrics(query stats.APIRequestMetricQuery) ([]*stats.APIRequestMetric, error) {
 	path := this.getAPIRequestStatsPath()
 
-	this.requestLock.RLock()
-	defer this.requestLock.RUnlock()
+	this.apiRequestLock.RLock()
+	defer this.apiRequestLock.RUnlock()
 
 	records, err := util.FilterJSONLFile(path, stats.APIRequestMetric{}, func(record *stats.APIRequestMetric) bool {
 		return query.Match(record)

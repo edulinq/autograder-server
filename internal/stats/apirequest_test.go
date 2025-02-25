@@ -15,7 +15,7 @@ func TestStoreAPIRequestMetric(test *testing.T) {
 		BaseMetric: BaseMetric{
 			Timestamp: timestamp.Zero(),
 		},
-		CourseAssignmentUserMetric: CourseAssignmentUserMetric{
+		CourseAssignmentEmailMetric: CourseAssignmentEmailMetric{
 			UserEmail:    "U",
 			CourseID:     "C",
 			AssignmentID: "A",

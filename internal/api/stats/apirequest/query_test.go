@@ -26,12 +26,12 @@ func TestQuery(test *testing.T) {
 		{"server-admin", "", stats.APIRequestMetricQuery{BaseQuery: stats.BaseQuery{After: timestamp.FromMSecs(150)}}, []int{200, 300}},
 
 		// Course Specifc
-		{"server-admin", "", stats.APIRequestMetricQuery{CourseAssignmentUserQuery: stats.CourseAssignmentUserQuery{AssignmentID: "A2"}}, []int{200}},
-		{"server-admin", "", stats.APIRequestMetricQuery{CourseAssignmentUserQuery: stats.CourseAssignmentUserQuery{AssignmentID: "zzz"}}, nil},
-		{"server-admin", "", stats.APIRequestMetricQuery{CourseAssignmentUserQuery: stats.CourseAssignmentUserQuery{UserEmail: "U1"}}, []int{100, 200}},
-		{"server-admin", "", stats.APIRequestMetricQuery{CourseAssignmentUserQuery: stats.CourseAssignmentUserQuery{UserEmail: "zzz"}}, nil},
-		{"server-admin", "", stats.APIRequestMetricQuery{CourseAssignmentUserQuery: stats.CourseAssignmentUserQuery{CourseID: "C1"}}, []int{100}},
-		{"server-admin", "", stats.APIRequestMetricQuery{CourseAssignmentUserQuery: stats.CourseAssignmentUserQuery{CourseID: "zzz"}}, nil},
+		{"server-admin", "", stats.APIRequestMetricQuery{CourseAssignmentEmailQuery: stats.CourseAssignmentEmailQuery{AssignmentID: "A2"}}, []int{200}},
+		{"server-admin", "", stats.APIRequestMetricQuery{CourseAssignmentEmailQuery: stats.CourseAssignmentEmailQuery{AssignmentID: "zzz"}}, nil},
+		{"server-admin", "", stats.APIRequestMetricQuery{CourseAssignmentEmailQuery: stats.CourseAssignmentEmailQuery{UserEmail: "U1"}}, []int{100, 200}},
+		{"server-admin", "", stats.APIRequestMetricQuery{CourseAssignmentEmailQuery: stats.CourseAssignmentEmailQuery{UserEmail: "zzz"}}, nil},
+		{"server-admin", "", stats.APIRequestMetricQuery{CourseAssignmentEmailQuery: stats.CourseAssignmentEmailQuery{CourseID: "C1"}}, []int{100}},
+		{"server-admin", "", stats.APIRequestMetricQuery{CourseAssignmentEmailQuery: stats.CourseAssignmentEmailQuery{CourseID: "zzz"}}, nil},
 
 		// Endpoint Specific
 		{"server-admin", "", stats.APIRequestMetricQuery{Endpoint: "E1"}, []int{100}},
@@ -100,7 +100,7 @@ var testRecords []*stats.APIRequestMetric = []*stats.APIRequestMetric{
 		BaseMetric: stats.BaseMetric{
 			Timestamp: timestamp.FromMSecs(100),
 		},
-		CourseAssignmentUserMetric: stats.CourseAssignmentUserMetric{
+		CourseAssignmentEmailMetric: stats.CourseAssignmentEmailMetric{
 			CourseID:     "C1",
 			AssignmentID: "A1",
 			UserEmail:    "U1",
@@ -114,7 +114,7 @@ var testRecords []*stats.APIRequestMetric = []*stats.APIRequestMetric{
 		BaseMetric: stats.BaseMetric{
 			Timestamp: timestamp.FromMSecs(200),
 		},
-		CourseAssignmentUserMetric: stats.CourseAssignmentUserMetric{
+		CourseAssignmentEmailMetric: stats.CourseAssignmentEmailMetric{
 			CourseID:     "C2",
 			AssignmentID: "A2",
 			UserEmail:    "U1",
@@ -128,7 +128,7 @@ var testRecords []*stats.APIRequestMetric = []*stats.APIRequestMetric{
 		BaseMetric: stats.BaseMetric{
 			Timestamp: timestamp.FromMSecs(300),
 		},
-		CourseAssignmentUserMetric: stats.CourseAssignmentUserMetric{
+		CourseAssignmentEmailMetric: stats.CourseAssignmentEmailMetric{
 			CourseID:     "C3",
 			AssignmentID: "A3",
 			UserEmail:    "U3",

@@ -14,7 +14,7 @@ import (
 
 // Test API request logs are properly stored.
 // This test needs to be in the server package to access all endpoints and share the server testing infrastructure.
-func TestRequestLog(test *testing.T) {
+func TestAPIRequestLog(test *testing.T) {
 	defer db.ResetForTesting()
 
 	testCases := []struct {
@@ -30,7 +30,7 @@ func TestRequestLog(test *testing.T) {
 			endpoint: "users/list",
 			expectedMetric: &stats.APIRequestMetric{
 				Endpoint: "/api/v03/users/list",
-				CourseAssignmentUserMetric: stats.CourseAssignmentUserMetric{
+				CourseAssignmentEmailMetric: stats.CourseAssignmentEmailMetric{
 					UserEmail: "server-admin@test.edulinq.org",
 				},
 			},
@@ -42,7 +42,7 @@ func TestRequestLog(test *testing.T) {
 			endpoint: "courses/users/list",
 			expectedMetric: &stats.APIRequestMetric{
 				Endpoint: "/api/v03/courses/users/list",
-				CourseAssignmentUserMetric: stats.CourseAssignmentUserMetric{
+				CourseAssignmentEmailMetric: stats.CourseAssignmentEmailMetric{
 					UserEmail: "server-admin@test.edulinq.org",
 					CourseID:  "course101",
 				},
@@ -55,7 +55,7 @@ func TestRequestLog(test *testing.T) {
 			endpoint: "courses/assignments/get",
 			expectedMetric: &stats.APIRequestMetric{
 				Endpoint: "/api/v03/courses/assignments/get",
-				CourseAssignmentUserMetric: stats.CourseAssignmentUserMetric{
+				CourseAssignmentEmailMetric: stats.CourseAssignmentEmailMetric{
 					UserEmail:    "server-admin@test.edulinq.org",
 					CourseID:     "course101",
 					AssignmentID: "hw0",
@@ -70,7 +70,7 @@ func TestRequestLog(test *testing.T) {
 			expectedLocator: "-041",
 			expectedMetric: &stats.APIRequestMetric{
 				Endpoint: "/api/v03/users/list",
-				CourseAssignmentUserMetric: stats.CourseAssignmentUserMetric{
+				CourseAssignmentEmailMetric: stats.CourseAssignmentEmailMetric{
 					UserEmail: "course-student@test.edulinq.org",
 				},
 				Locator: "-041",
@@ -84,7 +84,7 @@ func TestRequestLog(test *testing.T) {
 			expectedLocator: "-020",
 			expectedMetric: &stats.APIRequestMetric{
 				Endpoint: "/api/v03/courses/users/list",
-				CourseAssignmentUserMetric: stats.CourseAssignmentUserMetric{
+				CourseAssignmentEmailMetric: stats.CourseAssignmentEmailMetric{
 					UserEmail: "course-student@test.edulinq.org",
 					CourseID:  "course101",
 				},
@@ -111,7 +111,7 @@ func TestRequestLog(test *testing.T) {
 			expectedLocator: "-022",
 			expectedMetric: &stats.APIRequestMetric{
 				Endpoint: "/api/v03/courses/assignments/get",
-				CourseAssignmentUserMetric: stats.CourseAssignmentUserMetric{
+				CourseAssignmentEmailMetric: stats.CourseAssignmentEmailMetric{
 					CourseID:     "course101",
 					AssignmentID: "zzz",
 				},
@@ -149,6 +149,7 @@ func TestRequestLog(test *testing.T) {
 			continue
 		}
 
+		// Take the first metric since we only make one API request per test case.
 		metric := metrics[0]
 
 		if metric.Timestamp == 0 {

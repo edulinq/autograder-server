@@ -53,7 +53,7 @@ func (this *DBTests) DBTestStoreCourseMetrics(test *testing.T) {
 		BaseMetric: stats.BaseMetric{
 			Timestamp: timestamp.Now(),
 		},
-		CourseAssignmentUserMetric: stats.CourseAssignmentUserMetric{
+		CourseAssignmentEmailMetric: stats.CourseAssignmentEmailMetric{
 			CourseID:     "C",
 			AssignmentID: "A",
 			UserEmail:    "U",
@@ -63,7 +63,7 @@ func (this *DBTests) DBTestStoreCourseMetrics(test *testing.T) {
 	}
 
 	query := stats.CourseMetricQuery{
-		CourseAssignmentUserQuery: stats.CourseAssignmentUserQuery{
+		CourseAssignmentEmailQuery: stats.CourseAssignmentEmailQuery{
 			CourseID: "C",
 		},
 	}
@@ -96,7 +96,7 @@ func (this *DBTests) DBTestStoreAPIRequestMetrics(test *testing.T) {
 		BaseMetric: stats.BaseMetric{
 			Timestamp: timestamp.Now(),
 		},
-		CourseAssignmentUserMetric: stats.CourseAssignmentUserMetric{
+		CourseAssignmentEmailMetric: stats.CourseAssignmentEmailMetric{
 			CourseID:     "C",
 			AssignmentID: "A",
 			UserEmail:    "U",

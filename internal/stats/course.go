@@ -24,7 +24,7 @@ const (
 type CourseMetric struct {
 	BaseMetric
 
-	CourseAssignmentUserMetric
+	CourseAssignmentEmailMetric
 
 	Type CourseMetricType `json:"type"`
 
@@ -34,7 +34,7 @@ type CourseMetric struct {
 type CourseMetricQuery struct {
 	BaseQuery
 
-	CourseAssignmentUserQuery
+	CourseAssignmentEmailQuery
 
 	Type CourseMetricType `json:"target-type"`
 }
@@ -143,7 +143,7 @@ func AsyncStoreCourseGradingTime(startTime timestamp.Timestamp, endTime timestam
 		BaseMetric: BaseMetric{
 			Timestamp: startTime,
 		},
-		CourseAssignmentUserMetric: CourseAssignmentUserMetric{
+		CourseAssignmentEmailMetric: CourseAssignmentEmailMetric{
 			CourseID:     courseID,
 			AssignmentID: assignmentID,
 			UserEmail:    userEmail,
@@ -161,7 +161,7 @@ func AsyncStoreCourseTaskTime(startTime timestamp.Timestamp, endTime timestamp.T
 			Timestamp:  startTime,
 			Attributes: map[string]any{ATTRIBUTE_KEY_TASK: taskType},
 		},
-		CourseAssignmentUserMetric: CourseAssignmentUserMetric{
+		CourseAssignmentEmailMetric: CourseAssignmentEmailMetric{
 			CourseID:     courseID,
 			AssignmentID: assignmentID,
 			UserEmail:    userEmail,
