@@ -379,9 +379,25 @@ func TestFileOpCopyBase(test *testing.T) {
 		},
 		{
 			alreadyExistsDirname + "/*",
+			startingEmptyDirname,
+			"",
+		},
+		{
+			alreadyExistsDirname + "/*.txt",
+			startingEmptyDirname,
+			"",
+		},
+		{
+			alreadyExistsDirname,
+			startingEmptyDirname,
+			"",
+		},
+		{
+			alreadyExistsDirname + "/*",
 			"a",
 			"",
 		},
+		// This will create a directory called "a.txt".
 		{
 			alreadyExistsDirname + "/*",
 			"a.txt",
@@ -392,19 +408,15 @@ func TestFileOpCopyBase(test *testing.T) {
 			"a",
 			"",
 		},
+		// This will create a directory called "a.txt".
 		{
 			alreadyExistsDirname + "/*.txt",
 			"a.txt",
-			"",
-		},
-		{
-			alreadyExistsDirname + "/*.txt",
-			alreadyExistsFilename,
 			"",
 		},
 		{
 			"*",
-			"a.txt",
+			"a",
 			"",
 		},
 		{
@@ -416,6 +428,11 @@ func TestFileOpCopyBase(test *testing.T) {
 			alreadyExistsDirname,
 			alreadyExistsFilePosixRelpath,
 			"already exists",
+		},
+		{
+			alreadyExistsDirname + "/*.txt",
+			alreadyExistsFilename,
+			"does not exist or is not a dir",
 		},
 	}
 
@@ -478,33 +495,55 @@ func TestFileOpMoveBase(test *testing.T) {
 			"",
 		},
 		{
-			alreadyExistsDirname + "/*",
-			"a",
-			"",
-		},
-		{
-			alreadyExistsDirname + "/*",
-			"a.txt",
-			"",
-		},
-		{
-			alreadyExistsDirname + "/*.txt",
-			"a",
-			"",
-		},
-		{
-			alreadyExistsDirname + "/*.txt",
-			"a.txt",
-			"",
-		},
-		{
 			alreadyExistsFilePosixRelpath,
 			"a/b",
 			"",
 		},
 		{
 			alreadyExistsFilePosixRelpath,
+			startingEmptyDirname,
+			"",
+		},
+		{
+			alreadyExistsDirname + "/*",
+			startingEmptyDirname,
+			"",
+		},
+		{
+			alreadyExistsDirname + "/*.txt",
+			startingEmptyDirname,
+			"",
+		},
+		{
 			alreadyExistsDirname,
+			startingEmptyDirname,
+			"",
+		},
+		{
+			alreadyExistsDirname + "/*",
+			"a",
+			"",
+		},
+		// This will create a directory called "a.txt".
+		{
+			alreadyExistsDirname + "/*",
+			"a.txt",
+			"",
+		},
+		{
+			alreadyExistsDirname + "/*.txt",
+			"a",
+			"",
+		},
+		// This will create a directory called "a.txt".
+		{
+			alreadyExistsDirname + "/*.txt",
+			"a.txt",
+			"",
+		},
+		{
+			"*",
+			"a",
 			"",
 		},
 		{
@@ -534,10 +573,6 @@ func TestFileOpMoveBase(test *testing.T) {
 			expectedDest := filepath.Join(tempDir, testCase.dest)
 			finalExpectedDest := expectedDest
 			for _, expectedSource := range expectedSources {
-				if IsDir(expectedDest) {
-					finalExpectedDest = filepath.Join(expectedDest, filepath.Base(expectedSource))
-				}
-
 				if !PathExists(finalExpectedDest) {
 					test.Errorf("Case %d: Dest does not exist '%s'.", i, finalExpectedDest)
 					return

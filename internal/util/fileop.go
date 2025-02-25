@@ -171,22 +171,9 @@ func (this *FileOperation) Exec(baseDir string) error {
 		sourcePathGlob := resolvePath(parts[1], baseDir, false)
 		destPath := resolvePath(parts[2], baseDir, false)
 
-		sourcePaths, err := resolveGlobs(sourcePathGlob)
+		sourcePaths, err := prepForGlobs(sourcePathGlob, destPath)
 		if err != nil {
-			return fmt.Errorf("Failed to resolve globs '%s': '%w'.", sourcePathGlob, err)
-		}
-
-		if len(sourcePaths) > 1 {
-			if !PathExists(destPath) {
-				err := MkDir(destPath)
-				if err != nil {
-					return fmt.Errorf("Failed to create dest dir '%s': '%w'.", destPath, err)
-				}
-			}
-
-			if !IsDir(destPath) {
-				return fmt.Errorf("Dest of a multi-file copy ('%s') does not exist or is not a dir.", destPath)
-			}
+			return fmt.Errorf("Failed to prep globs '%s' for a copy: '%w'.", sourcePathGlob, err)
 		}
 
 		for _, sourcePath := range sourcePaths {
@@ -205,9 +192,9 @@ func (this *FileOperation) Exec(baseDir string) error {
 		sourcePathGlob := resolvePath(parts[1], baseDir, false)
 		destPath := resolvePath(parts[2], baseDir, false)
 
-		sourcePaths, err := resolveGlobs(sourcePathGlob)
+		sourcePaths, err := prepForGlobs(sourcePathGlob, destPath)
 		if err != nil {
-			return fmt.Errorf("Failed to resolve globs '%s': '%w'.", sourcePathGlob, err)
+			return fmt.Errorf("Failed to prep globs '%s' for a move: '%w'.", sourcePathGlob, err)
 		}
 
 		for _, sourcePath := range sourcePaths {
@@ -276,19 +263,22 @@ func resolvePath(path string, baseDir string, forceUnix bool) string {
 	return path
 }
 
-func resolveGlobs(globPath string) ([]string, error) {
-	paths, err := filepath.Glob(globPath)
+func prepForGlobs(globPath string, destPath string) ([]string, error) {
+	sourcePaths, err := filepath.Glob(globPath)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("Failed to resolve globs '%s': '%w'.", globPath, err)
 	}
 
-	if paths == nil {
-		return nil, fmt.Errorf("Unable to find source path: 'no such file or directory'.")
+	if sourcePaths == nil {
+		return nil, fmt.Errorf("Unable to find source path: '%s'.", globPath)
 	}
 
-	// TODO(Lucas): Add validation to expand globs.
-	/*for _, path := range paths {
+	if len(sourcePaths) > 1 {
+		err = EnsureDir(destPath)
+		if err != nil {
+			return nil, fmt.Errorf("Failed to ensure dest ('%s') of multi-file glob is a dir: '%w'.", destPath, err)
+		}
+	}
 
-	  }*/
-	return paths, nil
+	return sourcePaths, nil
 }
