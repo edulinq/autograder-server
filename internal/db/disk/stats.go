@@ -10,14 +10,7 @@ import (
 
 const SYSTEM_STATS_FILENAME = "stats.jsonl"
 const COURSE_STATS_FILENAME = "course-stats.jsonl"
-const REQUEST_STATS_FILENAME = "api-request-stats.jsonl"
-
-func (this *backend) StoreSystemStats(record *stats.SystemMetrics) error {
-	this.statsLock.Lock()
-	defer this.statsLock.Unlock()
-
-	return util.AppendJSONLFile(this.getSystemStatsPath(), record)
-}
+const API_REQUEST_STATS_FILENAME = "api-request-stats.jsonl"
 
 func (this *backend) GetSystemStats(query stats.Query) ([]*stats.SystemMetrics, error) {
 	path := this.getSystemStatsPath()
@@ -32,13 +25,11 @@ func (this *backend) GetSystemStats(query stats.Query) ([]*stats.SystemMetrics, 
 	return records, err
 }
 
-func (this *backend) StoreCourseMetric(record *stats.CourseMetric) error {
-	path := this.getCourseStatsPath(record.CourseID)
+func (this *backend) StoreSystemStats(record *stats.SystemMetrics) error {
+	this.statsLock.Lock()
+	defer this.statsLock.Unlock()
 
-	this.contextLock(path)
-	defer this.contextUnlock(path)
-
-	return util.AppendJSONLFile(path, record)
+	return util.AppendJSONLFile(this.getSystemStatsPath(), record)
 }
 
 func (this *backend) GetCourseMetrics(query stats.CourseMetricQuery) ([]*stats.CourseMetric, error) {
@@ -58,11 +49,11 @@ func (this *backend) GetCourseMetrics(query stats.CourseMetricQuery) ([]*stats.C
 	return records, err
 }
 
-func (this *backend) StoreAPIRequestMetric(record *stats.APIRequestMetric) error {
-	path := this.getAPIRequestStatsPath()
+func (this *backend) StoreCourseMetric(record *stats.CourseMetric) error {
+	path := this.getCourseStatsPath(record.CourseID)
 
-	this.apiRequestLock.Lock()
-	defer this.apiRequestLock.Unlock()
+	this.contextLock(path)
+	defer this.contextUnlock(path)
 
 	return util.AppendJSONLFile(path, record)
 }
@@ -80,6 +71,15 @@ func (this *backend) GetAPIRequestMetrics(query stats.APIRequestMetricQuery) ([]
 	return records, err
 }
 
+func (this *backend) StoreAPIRequestMetric(record *stats.APIRequestMetric) error {
+	path := this.getAPIRequestStatsPath()
+
+	this.apiRequestLock.Lock()
+	defer this.apiRequestLock.Unlock()
+
+	return util.AppendJSONLFile(path, record)
+}
+
 func (this *backend) getSystemStatsPath() string {
 	return filepath.Join(this.baseDir, SYSTEM_STATS_FILENAME)
 }
@@ -89,5 +89,5 @@ func (this *backend) getCourseStatsPath(courseID string) string {
 }
 
 func (this *backend) getAPIRequestStatsPath() string {
-	return filepath.Join(this.baseDir, REQUEST_STATS_FILENAME)
+	return filepath.Join(this.baseDir, API_REQUEST_STATS_FILENAME)
 }

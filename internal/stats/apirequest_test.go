@@ -17,11 +17,11 @@ func TestStoreAPIRequestMetric(test *testing.T) {
 		},
 		Sender:       "1",
 		Endpoint:     "E",
-		Duration:     100,
 		UserEmail:    "U",
 		CourseID:     "C",
 		AssignmentID: "A",
 		Locator:      "2",
+		Duration:     100,
 	}
 
 	// Ensure that there is no backend set during testing.

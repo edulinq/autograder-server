@@ -36,7 +36,7 @@ var (
 	EMAIL_MIN_PERIOD           = MustNewIntOption("email.smtp.minperiod", 250, "The minimum time (in MS) between sending emails.")
 
 	// Docker
-	DOCKER_DISABLE            = MustNewBoolOption("docker.disable", false, "Disable the use of docker (usually for testing).")
+	DOCKER_DISABLE            = MustNewBoolOption("docker.disable", true, "Disable the use of docker (usually for testing).")
 	DOCKER_MAX_OUTPUT_SIZE_KB = MustNewIntOption("docker.output.maxsize", 4*1024, "The maximum allowed size (in KB) for stdout and stderr combined. The default is 4096 KB (4 MB).")
 
 	// Grading

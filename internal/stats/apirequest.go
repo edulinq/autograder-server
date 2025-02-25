@@ -11,9 +11,9 @@ type APIRequestMetric struct {
 
 	Sender       string `json:"sender"`
 	Endpoint     string `json:"endpoint"`
-	CourseID     string `json:"course,omitempty"`
-	AssignmentID string `json:"assignment,omitempty"`
 	UserEmail    string `json:"user,omitempty"`
+	AssignmentID string `json:"assignment,omitempty"`
+	CourseID     string `json:"course,omitempty"`
 	Locator      string `json:"locator,omitempty"`
 
 	Duration uint64 `json:"duration"`
@@ -24,9 +24,9 @@ type APIRequestMetricQuery struct {
 
 	Sender       string `json:"target-sender"`
 	Endpoint     string `json:"target-endpoint"`
+	UserEmail    string `json:"target-user,omitempty"`
 	CourseID     string `json:"target-course,omitempty"`
 	AssignmentID string `json:"target-assignment,omitempty"`
-	UserEmail    string `json:"target-user,omitempty"`
 	Locator      string `json:"target-locator"`
 }
 
@@ -71,12 +71,12 @@ func AsyncStoreAPIRequestMetric(startTime timestamp.Timestamp, endTime timestamp
 		BaseMetric: BaseMetric{
 			Timestamp: startTime,
 		},
+		Sender:       sender,
+		Endpoint:     endpoint,
+		UserEmail:    userEmail,
 		CourseID:     courseID,
 		AssignmentID: assignmentID,
-		UserEmail:    userEmail,
-		Endpoint:     endpoint,
 		Locator:      locator,
-		Sender:       sender,
 		Duration:     uint64((endTime - startTime).ToMSecs()),
 	}
 

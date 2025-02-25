@@ -73,10 +73,10 @@ func TestIndividualAnalysisBase(test *testing.T) {
 					stats.ATTRIBUTE_KEY_ANALYSIS: "individual",
 				},
 			},
+			Type:         stats.CourseMetricTypeCodeAnalysisTime,
 			CourseID:     "course101",
 			AssignmentID: "hw0",
 			UserEmail:    "server-admin@test.edulinq.org",
-			Type:         stats.CourseMetricTypeCodeAnalysisTime,
 			Value:        0,
 		},
 	}

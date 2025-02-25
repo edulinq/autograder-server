@@ -86,30 +86,30 @@ var testRecords []*stats.CourseMetric = []*stats.CourseMetric{
 		BaseMetric: stats.BaseMetric{
 			Timestamp: timestamp.FromMSecs(100),
 		},
+		Type:         stats.CourseMetricTypeGradingTime,
 		CourseID:     db.TEST_COURSE_ID,
 		AssignmentID: "A1",
 		UserEmail:    "U1",
-		Type:         stats.CourseMetricTypeGradingTime,
 		Value:        100,
 	},
 	&stats.CourseMetric{
 		BaseMetric: stats.BaseMetric{
 			Timestamp: timestamp.FromMSecs(200),
 		},
+		Type:         stats.CourseMetricTypeUnknown,
 		CourseID:     db.TEST_COURSE_ID,
 		AssignmentID: "A2",
 		UserEmail:    "U1",
-		Type:         stats.CourseMetricTypeUnknown,
 		Value:        200,
 	},
 	&stats.CourseMetric{
 		BaseMetric: stats.BaseMetric{
 			Timestamp: timestamp.FromMSecs(300),
 		},
+		Type:         stats.CourseMetricTypeGradingTime,
 		CourseID:     db.TEST_COURSE_ID,
 		AssignmentID: "A3",
 		UserEmail:    "U2",
-		Type:         stats.CourseMetricTypeGradingTime,
 		Value:        300,
 	},
 }

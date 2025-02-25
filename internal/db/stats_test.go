@@ -53,10 +53,10 @@ func (this *DBTests) DBTestStoreCourseMetrics(test *testing.T) {
 		BaseMetric: stats.BaseMetric{
 			Timestamp: timestamp.Now(),
 		},
+		Type:         stats.CourseMetricTypeGradingTime,
 		CourseID:     "C",
 		AssignmentID: "A",
 		UserEmail:    "U",
-		Type:         stats.CourseMetricTypeGradingTime,
 		Value:        100,
 	}
 
@@ -92,13 +92,13 @@ func (this *DBTests) DBTestStoreAPIRequestMetrics(test *testing.T) {
 		BaseMetric: stats.BaseMetric{
 			Timestamp: timestamp.Now(),
 		},
-		CourseID:     "C",
-		AssignmentID: "A",
-		UserEmail:    "U",
 		Sender:       "2",
 		Endpoint:     "E",
-		Duration:     100,
+		UserEmail:    "U",
+		CourseID:     "C",
+		AssignmentID: "A",
 		Locator:      "1",
+		Duration:     100,
 	}
 
 	err := StoreAPIRequestMetric(&testRecord)

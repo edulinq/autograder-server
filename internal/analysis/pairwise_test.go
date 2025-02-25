@@ -121,10 +121,10 @@ func TestPairwiseAnalysisFake(test *testing.T) {
 					stats.ATTRIBUTE_KEY_ANALYSIS: "pairwise",
 				},
 			},
+			Type:         stats.CourseMetricTypeCodeAnalysisTime,
 			CourseID:     "course101",
 			AssignmentID: "hw0",
 			UserEmail:    "server-admin@test.edulinq.org",
-			Type:         stats.CourseMetricTypeCodeAnalysisTime,
 			Value:        3, // 1 for each run of the fake engine.
 		},
 	}

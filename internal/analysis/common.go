@@ -161,10 +161,10 @@ func collectAnalysisStats(fullSubmissionIDs []string, totalRunTime int64, initia
 					stats.ATTRIBUTE_KEY_ANALYSIS: analysisType,
 				},
 			},
+			Type:         stats.CourseMetricTypeCodeAnalysisTime,
 			CourseID:     courseID,
 			AssignmentID: assignmentID,
 			UserEmail:    initiatorEmail,
-			Type:         stats.CourseMetricTypeCodeAnalysisTime,
 			Value:        uint64(totalRunTime),
 		}
 
