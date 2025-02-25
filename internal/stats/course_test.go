@@ -48,7 +48,7 @@ func TestStoreCourseGradingTimeBase(test *testing.T) {
 			AssignmentID: "A",
 			UserEmail:    "U",
 		},
-		Type: CourseMetricTypeGradingTime,
+		Type:  CourseMetricTypeGradingTime,
 		Value: 100,
 	}
 

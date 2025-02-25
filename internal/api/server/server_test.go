@@ -139,7 +139,7 @@ func runServerTestBase(test *testing.T) {
 }
 
 // All other configs should already be set.
-func runServerTestBaseFull(test *testing.T, endpoint string, fields map[string]any, email string, expectedLocator  string, prefix string) {
+func runServerTestBaseFull(test *testing.T, endpoint string, fields map[string]any, email string, expectedLocator string, prefix string) {
 	// Sometimes CI does not kill old servers fast enough.
 	util.RemoveDirent(systemserver.GetStatusPath())
 	time.Sleep(time.Duration(TEST_SHORT_WAIT_MS) * time.Millisecond)
