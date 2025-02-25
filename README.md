@@ -27,10 +27,14 @@ The autograding effort is broken into three main parts:
    - [Python Interface](https://github.com/edulinq/autograder-py)
    - [Sample Course](https://github.com/edulinq/cse-cracks-course)
 
-## Installation
+## Building
 
 This project uses Go 1.21.
 Development and deployment of this project rely on POSIX systems (e.g., Linux, macOS, WSL).
+
+The built-in web GUI is stored in a git submodule,
+so you should clone with `--recurse-submodules` if you need that component.
+See the [Git documentation](https://git-scm.com/book/en/v2/Git-Tools-Submodules) for more information.
 
 All code that is not intended to be exported (used in packages outside of the autograder) is in the `internal` package/directory.
 Since this is a server and not a library, that is the majority of the code.
@@ -43,13 +47,18 @@ Users without Docker can run the server without Docker (see below).
 The project adheres to standard Go standards,
 so the `go` tool can be used to build, test, manage, etc.
 Additionally, the `scripts/build.sh` script is provided which will build all executables in this project into the `bin` directory.
-
-```
+```sh
 ./scripts/build.sh
 ```
 
 All executable mains are kept in the `cmd` directory.
 Each includes a usage and responds to the `--help` flag.
+
+Tests can be run using the standard `go test` tool chain.
+You can also use the `scripts/run_tests.sh` script for running all tests:
+```sh
+./scripts/run_tests.sh
+```
 
 ## Running Executables
 

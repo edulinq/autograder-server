@@ -41,7 +41,7 @@ func MustHandleCMDRequestAndExitFull(endpoint string, request any, responseType 
 					log.Fatal("Failed to cleanup and stop the CMD server.", err)
 				}
 			}()
-			defer config.WEB_PORT.Set(oldPort)
+			defer config.WEB_HTTP_PORT.Set(oldPort)
 		}
 
 		response, err = SendCMDRequest(endpoint, request)

@@ -1,0 +1,4 @@
+[submodule "internal/api/static/autograder-web"]
+    path = internal/api/static/autograder-web
+    # Relative to the autograder-server repo's URL.
+    url = ../autograder-web.git

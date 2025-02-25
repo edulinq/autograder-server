@@ -37,8 +37,8 @@ func mustEnsureServerIsRunning() (bool, int) {
 		log.Fatal("Failed to get an unused port.", err)
 	}
 
-	oldPort := config.WEB_PORT.Get()
-	config.WEB_PORT.Set(port)
+	oldPort := config.WEB_HTTP_PORT.Get()
+	config.WEB_HTTP_PORT.Set(port)
 
 	var serverStart sync.WaitGroup
 	serverStart.Add(1)

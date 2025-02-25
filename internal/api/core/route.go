@@ -51,7 +51,7 @@ func NewBaseRoute(method string, basePath string, handler RouteHandler) *BaseRou
 	return &BaseRoute{
 		Method:   method,
 		BasePath: basePath,
-		Regex:    regexp.MustCompile("^" + MakeFullAPIPath(basePath) + "$"),
+		Regex:    regexp.MustCompile("^" + basePath + "$"),
 		Handler:  handler,
 	}
 }
@@ -61,12 +61,7 @@ func NewRedirect(method string, basePath string, target string) *BaseRoute {
 		return handleRedirect(target, response, request)
 	}
 
-	return &BaseRoute{
-		Method:   method,
-		BasePath: basePath,
-		Regex:    regexp.MustCompile("^" + MakeFullAPIPath(basePath) + "$"),
-		Handler:  redirectFunc,
-	}
+	return NewBaseRoute(method, basePath, redirectFunc)
 }
 
 func MustNewAPIRoute(basePath string, apiHandler any) *APIRoute {

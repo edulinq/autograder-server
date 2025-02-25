@@ -31,6 +31,12 @@ func stopTestServer() {
 	}
 }
 
+func SetTestServerURL(url string) string {
+	oldURL := serverURL
+	serverURL = url
+	return oldURL
+}
+
 // Common setup for all API tests.
 func APITestingMain(suite *testing.M, routes *[]Route) {
 	// Run inside a func so defers will run before os.Exit().
