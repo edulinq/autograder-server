@@ -164,4 +164,7 @@ func runServerTestBase(test *testing.T) {
 	// Wait for the server to stop.
 	server.Stop()
 	serverStopWaitGroup.Wait()
+
+	// Wait for a small time to ensure all stopping operations are done.
+	time.Sleep(time.Duration(TEST_SHORT_WAIT_MS) * time.Millisecond)
 }
