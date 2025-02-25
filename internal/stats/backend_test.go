@@ -1,9 +1,9 @@
 package stats
 
 type testBackend struct {
-	system  []*SystemMetrics
-	course  []*CourseMetric
-	request []*APIRequestMetric
+	system     []*SystemMetrics
+	course     []*CourseMetric
+	apiRequest []*APIRequestMetric
 }
 
 func (this *testBackend) StoreSystemStats(record *SystemMetrics) error {
@@ -25,19 +25,19 @@ func (this *testBackend) GetCourseMetrics(query CourseMetricQuery) ([]*CourseMet
 }
 
 func (this *testBackend) StoreAPIRequestMetric(record *APIRequestMetric) error {
-	this.request = append(this.request, record)
+	this.apiRequest = append(this.apiRequest, record)
 	return nil
 }
 
 func (this *testBackend) GetAPIRequestMetrics(query APIRequestMetricQuery) ([]*APIRequestMetric, error) {
-	return this.request, nil
+	return this.apiRequest, nil
 }
 
 func makeTestBackend() *testBackend {
 	return &testBackend{
-		system:  make([]*SystemMetrics, 0, 100),
-		course:  make([]*CourseMetric, 0, 100),
-		request: make([]*APIRequestMetric, 0, 100),
+		system:     make([]*SystemMetrics, 0, 100),
+		course:     make([]*CourseMetric, 0, 100),
+		apiRequest: make([]*APIRequestMetric, 0, 100),
 	}
 }
 

@@ -34,21 +34,21 @@ func TestStoreAPIRequestMetric(test *testing.T) {
 	typedBackend := makeTestBackend()
 	backend = typedBackend
 
-	if len(typedBackend.request) != 0 {
-		test.Fatalf("Found stored stats (%d) before collection.", len(typedBackend.request))
+	if len(typedBackend.apiRequest) != 0 {
+		test.Fatalf("Found stored stats (%d) before collection.", len(typedBackend.apiRequest))
 	}
 
 	AsyncStoreAPIRequestMetric(timestamp.Zero(), timestamp.FromMSecs(100), "1", "E", "U", "C", "A", "2")
 
 	// Ensure that stats have been collected.
-	count := len(typedBackend.request)
+	count := len(typedBackend.apiRequest)
 	if count != 1 {
-		test.Fatalf("Got an unexpected number of metrics. Expected: 1, Actual: %d.", len(typedBackend.request))
+		test.Fatalf("Got an unexpected number of metrics. Expected: 1, Actual: %d.", len(typedBackend.apiRequest))
 	}
 
 	// Compare the stored metric with the expected one.
-	if !reflect.DeepEqual(expectedMetric, typedBackend.request[0]) {
+	if !reflect.DeepEqual(expectedMetric, typedBackend.apiRequest[0]) {
 		test.Fatalf("Stored metric is not as expected. Expected: '%s', Actual: '%s'.",
-			util.MustToJSONIndent(expectedMetric), util.MustToJSONIndent(typedBackend.request[0]))
+			util.MustToJSONIndent(expectedMetric), util.MustToJSONIndent(typedBackend.apiRequest[0]))
 	}
 }
