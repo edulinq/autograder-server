@@ -48,12 +48,12 @@ var (
 	TASK_MIN_PERIOD_SECS = MustNewIntOption("tasks.minperiod", 10*60, "The minimum period between the runs of the same task.")
 
 	// Server
-	WEB_HTTP_PORT        = MustNewIntOption("web.http.port", 8080, "The port for the http web interface to serve on.")
-	WEB_HTTP_REDIRECT    = MustNewBoolOption("web.http.redirect", true, "When https is enabled, redirect http traffic to https.")
-	WEB_HTTPS_PORT       = MustNewIntOption("web.https.port", 8081, "The port for the https web interface to serve on.")
+	WEB_HTTP_PORT        = MustNewIntOption("web.http.port", 8080, "The port to serve HTTP traffic on. Standard is 80 (but requires root to use).")
+	WEB_HTTP_REDIRECT    = MustNewBoolOption("web.http.redirect", true, "Redirect HTTP traffic to HTTPS. Only used if HTTPS is enabled.")
+	WEB_HTTPS_ENABLE     = MustNewBoolOption("web.https.enable", false, "Enable HTTPS. A certificate and key must be provided.")
+	WEB_HTTPS_PORT       = MustNewIntOption("web.https.port", 8081, "The port to serve HTTPS traffic on. Standard is 443 (but requires root to use).")
 	WEB_HTTPS_CERT       = MustNewStringOption("web.https.cert", "", "The path to a PEM encoded SSL certificate file. The certificate file may contain intermediate certificates following the leaf certificate to form a certificate chain.")
 	WEB_HTTPS_KEY        = MustNewStringOption("web.https.key", "", "The path to a PEM encoded SSL key file.")
-	WEB_HTTPS_ENABLE     = MustNewBoolOption("web.https.enable", false, "Enable https. A certificate and key must be provided.")
 	WEB_MAX_FILE_SIZE_KB = MustNewIntOption("web.maxsize", 2*1024, "The maximum allowed file size (in KB) submitted via POST request. The default is 2048 KB (2 MB).")
 	WEB_STATIC_ROOT      = MustNewStringOption("web.static.root", "", "The root directory to serve as part of the static portion of the API. Defaults to empty string, which indicates the embedded static directory.")
 	WEB_STATIC_FALLBACK  = MustNewBoolOption("web.static.fallback", false, "For any unmatched route (potential 404) that does not have an API prefix, try to match it in the static root before giving the final 404.")

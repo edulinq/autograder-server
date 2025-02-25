@@ -81,7 +81,12 @@ go run cmd/list-options/main.go
 | `tasks.minrest`                | Integer | 300 (5 mins)    | The minimum time (in seconds) between invocations of the same task. A task instance that tries to run too quickly will be skipped. |
 | `testing`                      | Boolean | false           | Assume tests are being run, which may alter some operations. |
 | `testdata.load`                | Boolean | false           | Load test data when the database opens. |
-| `web.port`                     | Integer | 8080            | The port for the web interface to serve on. |
+| `web.http.port`                | Integer | 8080            | The port to serve HTTP traffic on. Standard is 80 (but requires root to use). |
+| `web.http.redirect`            | Boolean | false           | Redirect HTTP traffic to HTTPS. Only used if HTTPS is enabled. |
+| `web.https.enable`             | Boolean | false           | Enable HTTPS. A certificate and key must be provided. |
+| `web.https.port`               | Integer | 8081            | The port to serve HTTPS traffic on. Standard is 443 (but requires root to use). |
+| `web.https.cert`               | String  |                 | The path to a PEM encoded SSL certificate file. The certificate file may contain intermediate certificates following the leaf certificate to form a certificate chain. |
+| `web.https.key`                | String  |                 | The path to a PEM encoded SSL key file. |
 | `web.maxsize`                  | Integer | 2048 (2 MB)     | The maximum allowed file size (in KB) submitted via POST request. The default is 2048 KB (2 MB). |
 | `web.static.root`              | String  |                 | The root directory to serve as part of the static portion of the API. Defaults to empty string, which indicates the embedded static directory. |
 | `web.static.fallback`          | Boolean | false           | For any unmatched route (potential 404) that does not have an API prefix, try to match it in the static root before giving the final 404. |
