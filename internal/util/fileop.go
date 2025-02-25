@@ -176,6 +176,19 @@ func (this *FileOperation) Exec(baseDir string) error {
 			return fmt.Errorf("Failed to resolve globs '%s': '%w'.", sourcePathGlob, err)
 		}
 
+		if len(sourcePaths) > 1 {
+			if !PathExists(destPath) {
+				err := MkDir(destPath)
+				if err != nil {
+					return fmt.Errorf("Failed to create dest dir '%s': '%w'.", destPath, err)
+				}
+			}
+
+			if !IsDir(destPath) {
+				return fmt.Errorf("Dest of a multi-file copy ('%s') does not exist or is not a dir.", destPath)
+			}
+		}
+
 		for _, sourcePath := range sourcePaths {
 			if sourcePath == destPath {
 				continue

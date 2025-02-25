@@ -9,10 +9,14 @@ import (
 )
 
 var (
-	alreadyExistsDirname          = "already_exists"
-	alreadyExistsFilename         = "already_exists.txt"
-	alreadyExistsFilePosixRelpath = alreadyExistsDirname + "/" + alreadyExistsFilename
-	alreadyExistsFileRelpath      = filepath.Join(alreadyExistsDirname, alreadyExistsFilename)
+	alreadyExistsDirname             = "already_exists"
+	alreadyExistsFilename            = "already_exists.txt"
+	alreadyExistsFilePosixRelpath    = alreadyExistsDirname + "/" + alreadyExistsFilename
+	alreadyExistsFileRelpath         = filepath.Join(alreadyExistsDirname, alreadyExistsFilename)
+	alreadyExistsFilenameAlt         = "already_exists_alt.txt"
+	alreadyExistsFileAltPosixRelpath = alreadyExistsDirname + "/" + alreadyExistsFilenameAlt
+	alreadyExistsFileAltRelpath      = filepath.Join(alreadyExistsDirname, alreadyExistsFilenameAlt)
+	startingEmptyDirname             = "empty_start"
 )
 
 func TestFileOpValidateBase(test *testing.T) {
@@ -105,6 +109,33 @@ func TestFileOpValidateBase(test *testing.T) {
 		{
 			NewFileOperation([]string{"copy", "./a", "b"}),
 			NewFileOperation([]string{"copy", "a", "b"}),
+			"",
+		},
+
+		// Glob Paths
+		{
+			NewFileOperation([]string{"copy", "a/*", "b"}),
+			NewFileOperation([]string{"copy", "a/*", "b"}),
+			"",
+		},
+		{
+			NewFileOperation([]string{"copy", "a/?", "b"}),
+			NewFileOperation([]string{"copy", "a/?", "b"}),
+			"",
+		},
+		{
+			NewFileOperation([]string{"move", "a/*", "b"}),
+			NewFileOperation([]string{"move", "a/*", "b"}),
+			"",
+		},
+		{
+			NewFileOperation([]string{"move", "a/?", "b"}),
+			NewFileOperation([]string{"move", "a/?", "b"}),
+			"",
+		},
+		{
+			NewFileOperation([]string{"copy", "*/*/..", "b"}),
+			NewFileOperation([]string{"copy", "*", "b"}),
 			"",
 		},
 
@@ -208,12 +239,32 @@ func TestFileOpValidateBase(test *testing.T) {
 			"points outside of the its base directory",
 		},
 		{
+			NewFileOperation([]string{"copy", "*/../..", "b"}),
+			nil,
+			"points outside of the its base directory",
+		},
+		{
+			NewFileOperation([]string{"copy", "*/../../*", "b"}),
+			nil,
+			"points outside of the its base directory",
+		},
+		{
+			NewFileOperation([]string{"copy", "*/../../*/*", "b"}),
+			nil,
+			"points outside of the its base directory",
+		},
+		{
 			NewFileOperation([]string{"copy", ".", "b"}),
 			nil,
 			"cannot point just to the current directory",
 		},
 		{
 			NewFileOperation([]string{"copy", "a/..", "b"}),
+			nil,
+			"cannot point just to the current directory",
+		},
+		{
+			NewFileOperation([]string{"copy", "*/..", "b"}),
 			nil,
 			"cannot point just to the current directory",
 		},
@@ -284,6 +335,7 @@ func TestFileOpToUnix(test *testing.T) {
 		}
 	}
 }
+
 func TestFileOpCopyBase(test *testing.T) {
 	testCases := []struct {
 		source         string
@@ -331,8 +383,28 @@ func TestFileOpCopyBase(test *testing.T) {
 			"",
 		},
 		{
+			alreadyExistsDirname + "/*",
+			"a.txt",
+			"",
+		},
+		{
 			alreadyExistsDirname + "/*.txt",
 			"a",
+			"",
+		},
+		{
+			alreadyExistsDirname + "/*.txt",
+			"a.txt",
+			"",
+		},
+		{
+			alreadyExistsDirname + "/*.txt",
+			alreadyExistsFilename,
+			"",
+		},
+		{
+			"*",
+			"a.txt",
 			"",
 		},
 		{
@@ -411,8 +483,18 @@ func TestFileOpMoveBase(test *testing.T) {
 			"",
 		},
 		{
+			alreadyExistsDirname + "/*",
+			"a.txt",
+			"",
+		},
+		{
 			alreadyExistsDirname + "/*.txt",
 			"a",
+			"",
+		},
+		{
+			alreadyExistsDirname + "/*.txt",
+			"a.txt",
 			"",
 		},
 		{
@@ -577,7 +659,10 @@ func runFileOpExecTest(test *testing.T, prefix string, rawOperation []string, er
 
 	// Make some existing entries.
 	MustMkDir(filepath.Join(tempDir, alreadyExistsDirname))
+	MustCreateFile(filepath.Join(tempDir, alreadyExistsFilename))
 	MustCreateFile(filepath.Join(tempDir, alreadyExistsFileRelpath))
+	MustCreateFile(filepath.Join(tempDir, alreadyExistsFileAltRelpath))
+	MustMkDir(filepath.Join(tempDir, startingEmptyDirname))
 
 	err = operation.Exec(tempDir)
 	if err != nil {
