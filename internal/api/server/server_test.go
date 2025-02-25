@@ -134,8 +134,12 @@ func TestServerHTTPSRedirect(test *testing.T) {
 	runServerTestBase(test)
 }
 
-// All other configs should already be set.
 func runServerTestBase(test *testing.T) {
+	runServerTestBaseFull(test, "courses/users/list", nil, "course-admin", "", "")
+}
+
+// All other configs should already be set.
+func runServerTestBaseFull(test *testing.T, endpoint string, fields map[string]any, email string, expectedLocator string, prefix string) {
 	server := NewAPIServer()
 	defer server.Stop()
 
@@ -156,9 +160,15 @@ func runServerTestBase(test *testing.T) {
 	time.Sleep(time.Duration(TEST_SHORT_WAIT_MS) * time.Millisecond)
 
 	// Send a request.
-	response := core.SendTestAPIRequest(test, "courses/users/list", nil)
+	response := core.SendTestAPIRequestFull(test, endpoint, fields, nil, email)
 	if !response.Success {
-		test.Fatalf("Got a bad response: '%s'.", util.MustToJSONIndent(response))
+		if expectedLocator != "" {
+			if expectedLocator != response.Locator {
+				test.Fatalf("%sIncorrect locator. Expected: '%s', Actual: '%s'.", prefix, expectedLocator, response.Locator)
+			}
+		} else {
+			test.Fatalf("%sResponse is not a success when it should be: '%v'.", prefix, response)
+		}
 	}
 
 	// Wait for the server to stop.

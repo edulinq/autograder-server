@@ -24,11 +24,9 @@ const (
 type CourseMetric struct {
 	BaseMetric
 
-	Type CourseMetricType `json:"type"`
+	CourseAssignmentUserMetric
 
-	CourseID     string `json:"course,omitempty"`
-	AssignmentID string `json:"assignment,omitempty"`
-	UserEmail    string `json:"user,omitempty"`
+	Type CourseMetricType `json:"type"`
 
 	Value uint64 `json:"duration"`
 }
@@ -36,11 +34,9 @@ type CourseMetric struct {
 type CourseMetricQuery struct {
 	BaseQuery
 
-	Type CourseMetricType `json:"target-type"`
+	CourseAssignmentUserQuery
 
-	CourseID     string `json:"target-course,omitempty"`
-	AssignmentID string `json:"target-assignment,omitempty"`
-	UserEmail    string `json:"target-user,omitempty"`
+	Type CourseMetricType `json:"target-type"`
 }
 
 var courseMetricTypeToString = map[CourseMetricType]string{
@@ -147,11 +143,13 @@ func AsyncStoreCourseGradingTime(startTime timestamp.Timestamp, endTime timestam
 		BaseMetric: BaseMetric{
 			Timestamp: startTime,
 		},
-		Type:         CourseMetricTypeGradingTime,
-		CourseID:     courseID,
-		AssignmentID: assignmentID,
-		UserEmail:    userEmail,
-		Value:        uint64((endTime - startTime).ToMSecs()),
+		CourseAssignmentUserMetric: CourseAssignmentUserMetric{
+			CourseID:     courseID,
+			AssignmentID: assignmentID,
+			UserEmail:    userEmail,
+		},
+		Type:  CourseMetricTypeGradingTime,
+		Value: uint64((endTime - startTime).ToMSecs()),
 	}
 
 	AsyncStoreCourseMetric(metric)
@@ -163,11 +161,13 @@ func AsyncStoreCourseTaskTime(startTime timestamp.Timestamp, endTime timestamp.T
 			Timestamp:  startTime,
 			Attributes: map[string]any{ATTRIBUTE_KEY_TASK: taskType},
 		},
-		Type:         CourseMetricTypeTaskTime,
-		CourseID:     courseID,
-		AssignmentID: assignmentID,
-		UserEmail:    userEmail,
-		Value:        uint64((endTime - startTime).ToMSecs()),
+		CourseAssignmentUserMetric: CourseAssignmentUserMetric{
+			CourseID:     courseID,
+			AssignmentID: assignmentID,
+			UserEmail:    userEmail,
+		},
+		Type:  CourseMetricTypeTaskTime,
+		Value: uint64((endTime - startTime).ToMSecs()),
 	}
 
 	AsyncStoreCourseMetric(metric)

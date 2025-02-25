@@ -10,10 +10,12 @@ var backendLock sync.RWMutex
 type StorageBackend interface {
 	StoreSystemStats(record *SystemMetrics) error
 	GetSystemStats(query Query) ([]*SystemMetrics, error)
+
 	StoreCourseMetric(record *CourseMetric) error
 	GetCourseMetrics(query CourseMetricQuery) ([]*CourseMetric, error)
+
 	StoreAPIRequestMetric(record *APIRequestMetric) error
-	GetAPIRequestMetrics(query Query) ([]*APIRequestMetric, error)
+	GetAPIRequestMetrics(query APIRequestMetricQuery) ([]*APIRequestMetric, error)
 }
 
 func SetStorageBackend(newBackend StorageBackend) {
@@ -86,7 +88,7 @@ func StoreAPIRequestMetric(record *APIRequestMetric) error {
 	return backend.StoreAPIRequestMetric(record)
 }
 
-func GetAPIRequestMetrics(query Query) ([]*APIRequestMetric, error) {
+func GetAPIRequestMetrics(query APIRequestMetricQuery) ([]*APIRequestMetric, error) {
 	backendLock.RLock()
 	defer backendLock.RUnlock()
 

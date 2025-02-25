@@ -125,9 +125,9 @@
             "request-type": "*metadata.DescribeRequest",
             "response-type": "*metadata.DescribeResponse"
         },
-        "stats/api/query": {
-            "request-type": "*api.QueryRequest",
-            "response-type": "*api.QueryResponse",
+        "stats/apirequest/query": {
+            "request-type": "*apirequest.QueryRequest",
+            "response-type": "*apirequest.QueryResponse",
             "description": "Query the API request stats for the server."
         },
         "stats/system/query": {

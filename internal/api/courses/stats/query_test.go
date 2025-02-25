@@ -26,14 +26,14 @@ func TestQuery(test *testing.T) {
 		{"server-admin", "", stats.CourseMetricQuery{BaseQuery: stats.BaseQuery{After: timestamp.FromMSecs(150)}}, []int{200, 300}},
 
 		// Course Specific
-		{"server-admin", "", stats.CourseMetricQuery{AssignmentID: "A2"}, []int{200}},
-		{"server-admin", "", stats.CourseMetricQuery{AssignmentID: "ZZZ"}, []int{}},
-		{"server-admin", "", stats.CourseMetricQuery{UserEmail: "U1"}, []int{100, 200}},
+		{"server-admin", "", stats.CourseMetricQuery{CourseAssignmentUserQuery: stats.CourseAssignmentUserQuery{AssignmentID: "A2"}}, []int{200}},
+		{"server-admin", "", stats.CourseMetricQuery{CourseAssignmentUserQuery: stats.CourseAssignmentUserQuery{AssignmentID: "ZZZ"}}, nil},
+		{"server-admin", "", stats.CourseMetricQuery{CourseAssignmentUserQuery: stats.CourseAssignmentUserQuery{UserEmail: "U1"}}, []int{100, 200}},
 		{"server-admin", "", stats.CourseMetricQuery{Type: stats.CourseMetricTypeGradingTime}, []int{100, 300}},
 
 		// Error
-		{"server-user", "-040", stats.CourseMetricQuery{}, []int{}},
-		{"course-student", "-020", stats.CourseMetricQuery{}, []int{}},
+		{"server-user", "-040", stats.CourseMetricQuery{}, nil},
+		{"course-student", "-020", stats.CourseMetricQuery{}, nil},
 	}
 
 	for _, record := range testRecords {
@@ -86,30 +86,36 @@ var testRecords []*stats.CourseMetric = []*stats.CourseMetric{
 		BaseMetric: stats.BaseMetric{
 			Timestamp: timestamp.FromMSecs(100),
 		},
-		Type:         stats.CourseMetricTypeGradingTime,
-		CourseID:     db.TEST_COURSE_ID,
-		AssignmentID: "A1",
-		UserEmail:    "U1",
-		Value:        100,
+		CourseAssignmentUserMetric: stats.CourseAssignmentUserMetric{
+			CourseID:     db.TEST_COURSE_ID,
+			AssignmentID: "A1",
+			UserEmail:    "U1",
+		},
+		Type:  stats.CourseMetricTypeGradingTime,
+		Value: 100,
 	},
 	&stats.CourseMetric{
 		BaseMetric: stats.BaseMetric{
 			Timestamp: timestamp.FromMSecs(200),
 		},
-		Type:         stats.CourseMetricTypeUnknown,
-		CourseID:     db.TEST_COURSE_ID,
-		AssignmentID: "A2",
-		UserEmail:    "U1",
-		Value:        200,
+		CourseAssignmentUserMetric: stats.CourseAssignmentUserMetric{
+			CourseID:     db.TEST_COURSE_ID,
+			AssignmentID: "A2",
+			UserEmail:    "U1",
+		},
+		Type:  stats.CourseMetricTypeUnknown,
+		Value: 200,
 	},
 	&stats.CourseMetric{
 		BaseMetric: stats.BaseMetric{
 			Timestamp: timestamp.FromMSecs(300),
 		},
-		Type:         stats.CourseMetricTypeGradingTime,
-		CourseID:     db.TEST_COURSE_ID,
-		AssignmentID: "A3",
-		UserEmail:    "U2",
-		Value:        300,
+		CourseAssignmentUserMetric: stats.CourseAssignmentUserMetric{
+			CourseID:     db.TEST_COURSE_ID,
+			AssignmentID: "A3",
+			UserEmail:    "U2",
+		},
+		Type:  stats.CourseMetricTypeGradingTime,
+		Value: 300,
 	},
 }

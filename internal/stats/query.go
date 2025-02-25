@@ -33,6 +33,12 @@ type BaseQuery struct {
 	Sort int `json:"sort"`
 }
 
+type CourseAssignmentUserQuery struct {
+	CourseID     string `json:"target-course,omitempty"`
+	AssignmentID string `json:"target-assignment,omitempty"`
+	UserEmail    string `json:"target-user,omitempty"`
+}
+
 func (this BaseQuery) Match(record Metric) bool {
 	time := record.GetTimestamp()
 	return (this.Before.IsZero() || (time < this.Before)) && (time > this.After)

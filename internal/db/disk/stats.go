@@ -67,7 +67,7 @@ func (this *backend) StoreAPIRequestMetric(record *stats.APIRequestMetric) error
 	return util.AppendJSONLFile(path, record)
 }
 
-func (this *backend) GetAPIRequestMetrics(query stats.Query) ([]*stats.APIRequestMetric, error) {
+func (this *backend) GetAPIRequestMetrics(query stats.APIRequestMetricQuery) ([]*stats.APIRequestMetric, error) {
 	path := this.getAPIRequestStatsPath()
 
 	this.requestLock.RLock()

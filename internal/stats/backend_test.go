@@ -29,7 +29,7 @@ func (this *testBackend) StoreAPIRequestMetric(record *APIRequestMetric) error {
 	return nil
 }
 
-func (this *testBackend) GetAPIRequestMetrics(query Query) ([]*APIRequestMetric, error) {
+func (this *testBackend) GetAPIRequestMetrics(query APIRequestMetricQuery) ([]*APIRequestMetric, error) {
 	return this.request, nil
 }
 

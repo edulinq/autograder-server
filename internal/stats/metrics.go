@@ -15,6 +15,12 @@ type BaseMetric struct {
 	Attributes map[string]any `json:"attributes,omitempty"`
 }
 
+type CourseAssignmentUserMetric struct {
+	CourseID     string `json:"course,omitempty"`
+	AssignmentID string `json:"assignment,omitempty"`
+	UserEmail    string `json:"user,omitempty"`
+}
+
 func (this BaseMetric) GetTimestamp() timestamp.Timestamp {
 	return this.Timestamp
 }

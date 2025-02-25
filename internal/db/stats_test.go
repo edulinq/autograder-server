@@ -25,12 +25,12 @@ func (this *DBTests) DBTestStoreSystemStats(test *testing.T) {
 
 	query := stats.BaseQuery{}
 
-	err := backend.StoreSystemStats(&testRecord)
+	err := StoreSystemStats(&testRecord)
 	if err != nil {
 		test.Fatalf("Failed to store stats: '%v'.", err)
 	}
 
-	records, err := backend.GetSystemStats(query)
+	records, err := GetSystemStats(query)
 	if err != nil {
 		test.Fatalf("Failed to fetch stats: '%v'.", err)
 	}
@@ -53,23 +53,27 @@ func (this *DBTests) DBTestStoreCourseMetrics(test *testing.T) {
 		BaseMetric: stats.BaseMetric{
 			Timestamp: timestamp.Now(),
 		},
-		Type:         stats.CourseMetricTypeGradingTime,
-		CourseID:     "C",
-		AssignmentID: "A",
-		UserEmail:    "U",
-		Value:        100,
+		CourseAssignmentUserMetric: stats.CourseAssignmentUserMetric{
+			CourseID:     "C",
+			AssignmentID: "A",
+			UserEmail:    "U",
+		},
+		Type:  stats.CourseMetricTypeGradingTime,
+		Value: 100,
 	}
 
 	query := stats.CourseMetricQuery{
-		CourseID: "C",
+		CourseAssignmentUserQuery: stats.CourseAssignmentUserQuery{
+			CourseID: "C",
+		},
 	}
 
-	err := backend.StoreCourseMetric(&testRecord)
+	err := StoreCourseMetric(&testRecord)
 	if err != nil {
 		test.Fatalf("Failed to store stats: '%v'.", err)
 	}
 
-	records, err := backend.GetCourseMetrics(query)
+	records, err := GetCourseMetrics(query)
 	if err != nil {
 		test.Fatalf("Failed to fetch stats: '%v'.", err)
 	}
@@ -92,23 +96,25 @@ func (this *DBTests) DBTestStoreAPIRequestMetrics(test *testing.T) {
 		BaseMetric: stats.BaseMetric{
 			Timestamp: timestamp.Now(),
 		},
-		Sender:       "2",
-		Endpoint:     "E",
-		Duration:     100,
-		CourseID:     "C",
-		AssignmentID: "A",
-		UserEmail:    "U",
-		Locator:      "1",
+		CourseAssignmentUserMetric: stats.CourseAssignmentUserMetric{
+			CourseID:     "C",
+			AssignmentID: "A",
+			UserEmail:    "U",
+		},
+		Sender:   "2",
+		Endpoint: "E",
+		Duration: 100,
+		Locator:  "1",
 	}
 
-	err := backend.StoreAPIRequestMetric(&testRecord)
+	err := StoreAPIRequestMetric(&testRecord)
 	if err != nil {
 		test.Fatalf("Failed to store stats: '%v'.", err)
 	}
 
-	query := stats.BaseQuery{}
+	query := stats.APIRequestMetricQuery{}
 
-	records, err := backend.GetAPIRequestMetrics(query)
+	records, err := GetAPIRequestMetrics(query)
 	if err != nil {
 		test.Fatalf("Failed to fetch stats: '%v'.", err)
 	}
