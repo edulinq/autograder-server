@@ -134,12 +134,8 @@ func TestServerHTTPSRedirect(test *testing.T) {
 	runServerTestBase(test)
 }
 
-func runServerTestBase(test *testing.T) {
-	runServerTestBaseFull(test, "courses/users/list", nil, "course-admin", "", "")
-}
-
 // All other configs should already be set.
-func runServerTestBaseFull(test *testing.T, endpoint string, fields map[string]any, email string, expectedLocator string, prefix string) {
+func runServerTestBase(test *testing.T) {
 	// Sometimes CI does not kill old servers fast enough.
 	util.RemoveDirent(systemserver.GetStatusPath())
 	time.Sleep(time.Duration(TEST_SHORT_WAIT_MS) * time.Millisecond)
@@ -164,15 +160,9 @@ func runServerTestBaseFull(test *testing.T, endpoint string, fields map[string]a
 	time.Sleep(time.Duration(TEST_SHORT_WAIT_MS) * time.Millisecond)
 
 	// Send a request.
-	response := core.SendTestAPIRequestFull(test, endpoint, fields, nil, email)
+	response := core.SendTestAPIRequest(test, "courses/users/list", nil)
 	if !response.Success {
-		if expectedLocator != "" {
-			if expectedLocator != response.Locator {
-				test.Fatalf("%sIncorrect locator. Expected: '%s', Actual: '%s'.", prefix, expectedLocator, response.Locator)
-			}
-		} else {
-			test.Fatalf("%sResponse is not a success when it should be: '%v'.", prefix, response)
-		}
+		test.Fatalf("Got a bad response: '%s'.", util.MustToJSONIndent(response))
 	}
 
 	// Wait for the server to stop.

@@ -161,13 +161,11 @@ func collectAnalysisStats(fullSubmissionIDs []string, totalRunTime int64, initia
 					stats.ATTRIBUTE_KEY_ANALYSIS: analysisType,
 				},
 			},
-			CourseAssignmentEmailMetric: stats.CourseAssignmentEmailMetric{
-				CourseID:     courseID,
-				AssignmentID: assignmentID,
-				UserEmail:    initiatorEmail,
-			},
-			Type:  stats.CourseMetricTypeCodeAnalysisTime,
-			Value: uint64(totalRunTime),
+			CourseID:     courseID,
+			AssignmentID: assignmentID,
+			UserEmail:    initiatorEmail,
+			Type:         stats.CourseMetricTypeCodeAnalysisTime,
+			Value:        uint64(totalRunTime),
 		}
 
 		stats.AsyncStoreCourseMetric(&metric)

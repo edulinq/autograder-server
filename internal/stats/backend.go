@@ -8,14 +8,14 @@ var backend StorageBackend = nil
 var backendLock sync.RWMutex
 
 type StorageBackend interface {
-	StoreSystemStats(record *SystemMetrics) error
 	GetSystemStats(query Query) ([]*SystemMetrics, error)
+	StoreSystemStats(record *SystemMetrics) error
 
-	StoreCourseMetric(record *CourseMetric) error
 	GetCourseMetrics(query CourseMetricQuery) ([]*CourseMetric, error)
+	StoreCourseMetric(record *CourseMetric) error
 
-	StoreAPIRequestMetric(record *APIRequestMetric) error
 	GetAPIRequestMetrics(query APIRequestMetricQuery) ([]*APIRequestMetric, error)
+	StoreAPIRequestMetric(record *APIRequestMetric) error
 }
 
 func SetStorageBackend(newBackend StorageBackend) {
@@ -33,17 +33,6 @@ func StopCollection() {
 	stopSystemStatsCollection()
 }
 
-func storeSystemStats(record *SystemMetrics) error {
-	backendLock.RLock()
-	defer backendLock.RUnlock()
-
-	if backend == nil {
-		return nil
-	}
-
-	return backend.StoreSystemStats(record)
-}
-
 func GetSystemStats(query Query) ([]*SystemMetrics, error) {
 	backendLock.RLock()
 	defer backendLock.RUnlock()
@@ -55,7 +44,7 @@ func GetSystemStats(query Query) ([]*SystemMetrics, error) {
 	return backend.GetSystemStats(query)
 }
 
-func StoreCourseMetric(record *CourseMetric) error {
+func storeSystemStats(record *SystemMetrics) error {
 	backendLock.RLock()
 	defer backendLock.RUnlock()
 
@@ -63,7 +52,7 @@ func StoreCourseMetric(record *CourseMetric) error {
 		return nil
 	}
 
-	return backend.StoreCourseMetric(record)
+	return backend.StoreSystemStats(record)
 }
 
 func GetCourseMetrics(query CourseMetricQuery) ([]*CourseMetric, error) {
@@ -77,7 +66,7 @@ func GetCourseMetrics(query CourseMetricQuery) ([]*CourseMetric, error) {
 	return backend.GetCourseMetrics(query)
 }
 
-func StoreAPIRequestMetric(record *APIRequestMetric) error {
+func StoreCourseMetric(record *CourseMetric) error {
 	backendLock.RLock()
 	defer backendLock.RUnlock()
 
@@ -85,7 +74,7 @@ func StoreAPIRequestMetric(record *APIRequestMetric) error {
 		return nil
 	}
 
-	return backend.StoreAPIRequestMetric(record)
+	return backend.StoreCourseMetric(record)
 }
 
 func GetAPIRequestMetrics(query APIRequestMetricQuery) ([]*APIRequestMetric, error) {
@@ -97,4 +86,15 @@ func GetAPIRequestMetrics(query APIRequestMetricQuery) ([]*APIRequestMetric, err
 	}
 
 	return backend.GetAPIRequestMetrics(query)
+}
+
+func StoreAPIRequestMetric(record *APIRequestMetric) error {
+	backendLock.RLock()
+	defer backendLock.RUnlock()
+
+	if backend == nil {
+		return nil
+	}
+
+	return backend.StoreAPIRequestMetric(record)
 }

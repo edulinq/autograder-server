@@ -15,15 +15,13 @@ func TestStoreAPIRequestMetric(test *testing.T) {
 		BaseMetric: BaseMetric{
 			Timestamp: timestamp.Zero(),
 		},
-		CourseAssignmentEmailMetric: CourseAssignmentEmailMetric{
-			UserEmail:    "U",
-			CourseID:     "C",
-			AssignmentID: "A",
-		},
-		Sender:   "1",
-		Endpoint: "E",
-		Duration: 100,
-		Locator:  "2",
+		Sender:       "1",
+		Endpoint:     "E",
+		Duration:     100,
+		UserEmail:    "U",
+		CourseID:     "C",
+		AssignmentID: "A",
+		Locator:      "2",
 	}
 
 	// Ensure that there is no backend set during testing.

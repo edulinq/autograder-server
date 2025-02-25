@@ -53,19 +53,15 @@ func (this *DBTests) DBTestStoreCourseMetrics(test *testing.T) {
 		BaseMetric: stats.BaseMetric{
 			Timestamp: timestamp.Now(),
 		},
-		CourseAssignmentEmailMetric: stats.CourseAssignmentEmailMetric{
-			CourseID:     "C",
-			AssignmentID: "A",
-			UserEmail:    "U",
-		},
-		Type:  stats.CourseMetricTypeGradingTime,
-		Value: 100,
+		CourseID:     "C",
+		AssignmentID: "A",
+		UserEmail:    "U",
+		Type:         stats.CourseMetricTypeGradingTime,
+		Value:        100,
 	}
 
 	query := stats.CourseMetricQuery{
-		CourseAssignmentEmailQuery: stats.CourseAssignmentEmailQuery{
-			CourseID: "C",
-		},
+		CourseID: "C",
 	}
 
 	err := StoreCourseMetric(&testRecord)
@@ -96,15 +92,13 @@ func (this *DBTests) DBTestStoreAPIRequestMetrics(test *testing.T) {
 		BaseMetric: stats.BaseMetric{
 			Timestamp: timestamp.Now(),
 		},
-		CourseAssignmentEmailMetric: stats.CourseAssignmentEmailMetric{
-			CourseID:     "C",
-			AssignmentID: "A",
-			UserEmail:    "U",
-		},
-		Sender:   "2",
-		Endpoint: "E",
-		Duration: 100,
-		Locator:  "1",
+		CourseID:     "C",
+		AssignmentID: "A",
+		UserEmail:    "U",
+		Sender:       "2",
+		Endpoint:     "E",
+		Duration:     100,
+		Locator:      "1",
 	}
 
 	err := StoreAPIRequestMetric(&testRecord)

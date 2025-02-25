@@ -4,9 +4,20 @@ import (
 	"testing"
 
 	"github.com/edulinq/autograder/internal/api/core"
+	"github.com/edulinq/autograder/internal/api/courses/assignments"
+	cUsers "github.com/edulinq/autograder/internal/api/courses/users"
+	"github.com/edulinq/autograder/internal/api/users"
 )
 
 // Use the common main for all tests in this package.
+// Include routes from other packages to test API request metrics across different endpoints.
 func TestMain(suite *testing.M) {
-	core.APITestingMain(suite, GetRoutes())
+	routes := []core.Route{}
+
+	routes = append(routes, *GetRoutes()...)
+	routes = append(routes, *(assignments.GetRoutes())...)
+	routes = append(routes, *(cUsers.GetRoutes())...)
+	routes = append(routes, *(users.GetRoutes())...)
+
+	core.APITestingMain(suite, &routes)
 }

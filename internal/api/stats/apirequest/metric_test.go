@@ -1,20 +1,17 @@
-package server
+package apirequest
 
 import (
-	"fmt"
 	"reflect"
 	"testing"
 
 	"github.com/edulinq/autograder/internal/api/core"
-	"github.com/edulinq/autograder/internal/config"
 	"github.com/edulinq/autograder/internal/db"
 	"github.com/edulinq/autograder/internal/stats"
 	"github.com/edulinq/autograder/internal/util"
 )
 
-// Test API request logs are properly stored.
-// This test needs to be in the server package to access all endpoints and share the server testing infrastructure.
-func TestAPIRequestLog(test *testing.T) {
+// Test API request metrics are properly stored.
+func TestMetric(test *testing.T) {
 	defer db.ResetForTesting()
 
 	testCases := []struct {
@@ -29,10 +26,8 @@ func TestAPIRequestLog(test *testing.T) {
 			email:    "server-admin",
 			endpoint: "users/list",
 			expectedMetric: &stats.APIRequestMetric{
-				Endpoint: "/api/v03/users/list",
-				CourseAssignmentEmailMetric: stats.CourseAssignmentEmailMetric{
-					UserEmail: "server-admin@test.edulinq.org",
-				},
+				Endpoint:  "/api/v03/users/list",
+				UserEmail: "server-admin@test.edulinq.org",
 			},
 		},
 
@@ -41,11 +36,9 @@ func TestAPIRequestLog(test *testing.T) {
 			email:    "server-admin",
 			endpoint: "courses/users/list",
 			expectedMetric: &stats.APIRequestMetric{
-				Endpoint: "/api/v03/courses/users/list",
-				CourseAssignmentEmailMetric: stats.CourseAssignmentEmailMetric{
-					UserEmail: "server-admin@test.edulinq.org",
-					CourseID:  "course101",
-				},
+				Endpoint:  "/api/v03/courses/users/list",
+				UserEmail: "server-admin@test.edulinq.org",
+				CourseID:  "course101",
 			},
 		},
 
@@ -54,12 +47,10 @@ func TestAPIRequestLog(test *testing.T) {
 			email:    "server-admin@test.edulinq.org",
 			endpoint: "courses/assignments/get",
 			expectedMetric: &stats.APIRequestMetric{
-				Endpoint: "/api/v03/courses/assignments/get",
-				CourseAssignmentEmailMetric: stats.CourseAssignmentEmailMetric{
-					UserEmail:    "server-admin@test.edulinq.org",
-					CourseID:     "course101",
-					AssignmentID: "hw0",
-				},
+				Endpoint:     "/api/v03/courses/assignments/get",
+				UserEmail:    "server-admin@test.edulinq.org",
+				CourseID:     "course101",
+				AssignmentID: "hw0",
 			},
 		},
 
@@ -69,11 +60,9 @@ func TestAPIRequestLog(test *testing.T) {
 			endpoint:        "users/list",
 			expectedLocator: "-041",
 			expectedMetric: &stats.APIRequestMetric{
-				Endpoint: "/api/v03/users/list",
-				CourseAssignmentEmailMetric: stats.CourseAssignmentEmailMetric{
-					UserEmail: "course-student@test.edulinq.org",
-				},
-				Locator: "-041",
+				Endpoint:  "/api/v03/users/list",
+				UserEmail: "course-student@test.edulinq.org",
+				Locator:   "-041",
 			},
 		},
 
@@ -83,12 +72,10 @@ func TestAPIRequestLog(test *testing.T) {
 			endpoint:        "courses/users/list",
 			expectedLocator: "-020",
 			expectedMetric: &stats.APIRequestMetric{
-				Endpoint: "/api/v03/courses/users/list",
-				CourseAssignmentEmailMetric: stats.CourseAssignmentEmailMetric{
-					UserEmail: "course-student@test.edulinq.org",
-					CourseID:  "course101",
-				},
-				Locator: "-020",
+				Endpoint:  "/api/v03/courses/users/list",
+				UserEmail: "course-student@test.edulinq.org",
+				CourseID:  "course101",
+				Locator:   "-020",
 			},
 		},
 
@@ -110,33 +97,29 @@ func TestAPIRequestLog(test *testing.T) {
 			fields:          map[string]any{"assignment-id": "zzz"},
 			expectedLocator: "-022",
 			expectedMetric: &stats.APIRequestMetric{
-				Endpoint: "/api/v03/courses/assignments/get",
-				CourseAssignmentEmailMetric: stats.CourseAssignmentEmailMetric{
-					CourseID:     "course101",
-					AssignmentID: "zzz",
-				},
-				Locator: "-022",
+				Endpoint:     "/api/v03/courses/assignments/get",
+				CourseID:     "course101",
+				AssignmentID: "zzz",
+				Locator:      "-022",
 			},
 		},
 	}
 
-	port, err := util.GetUnusedPort()
-	if err != nil {
-		test.Fatalf("Failed to get an unused port: '%v'.", err)
-	}
-
-	oldPort := config.WEB_HTTP_PORT.Get()
-	config.WEB_HTTP_PORT.Set(port)
-	defer config.WEB_HTTP_PORT.Set(oldPort)
-
-	// Adjust the server address for test client.
-	oldURL := core.SetTestServerURL(fmt.Sprintf("http://127.0.0.1:%d", port))
-	defer core.SetTestServerURL(oldURL)
-
 	for i, testCase := range testCases {
 		db.ResetForTesting()
 
-		runServerTestBaseFull(test, testCase.endpoint, testCase.fields, testCase.email, testCase.expectedLocator, fmt.Sprintf("Case %d: ", i))
+		response := core.SendTestAPIRequestFull(test, testCase.endpoint, testCase.fields, nil, testCase.email)
+		if !response.Success {
+			if testCase.expectedLocator != "" {
+				if testCase.expectedLocator != response.Locator {
+					test.Errorf("Case %d: Incorrect locator. Expected: '%s', Actual: '%s'.", i, testCase.expectedLocator, response.Locator)
+				}
+			} else {
+				test.Errorf("Case %d: Response is not a success when it should be: '%v'.", i, response)
+			}
+
+			continue
+		}
 
 		metrics, err := db.GetAPIRequestMetrics(stats.APIRequestMetricQuery{})
 		if err != nil {
@@ -149,7 +132,7 @@ func TestAPIRequestLog(test *testing.T) {
 			continue
 		}
 
-		// Take the first metric since we only make one API request per test case.
+		// Take the first metric since we make one API request per test case.
 		metric := metrics[0]
 
 		if metric.Timestamp == 0 {
@@ -173,7 +156,7 @@ func TestAPIRequestLog(test *testing.T) {
 		metric.Duration = 0
 
 		if !reflect.DeepEqual(metric, testCase.expectedMetric) {
-			test.Errorf("Case %d: Stored metric is not as expected. Expected: '%v', Actual: %v", i, util.MustToJSONIndent(testCase.expectedMetric), util.MustToJSONIndent(metric))
+			test.Errorf("Case %d: Stored metric is not as expected. Expected: '%v', Actual: '%v'.", i, util.MustToJSONIndent(testCase.expectedMetric), util.MustToJSONIndent(metric))
 			continue
 		}
 	}

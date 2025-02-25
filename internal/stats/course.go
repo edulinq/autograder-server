@@ -24,9 +24,11 @@ const (
 type CourseMetric struct {
 	BaseMetric
 
-	CourseAssignmentEmailMetric
-
 	Type CourseMetricType `json:"type"`
+
+	CourseID     string `json:"course,omitempty"`
+	AssignmentID string `json:"assignment,omitempty"`
+	UserEmail    string `json:"user,omitempty"`
 
 	Value uint64 `json:"duration"`
 }
@@ -34,9 +36,11 @@ type CourseMetric struct {
 type CourseMetricQuery struct {
 	BaseQuery
 
-	CourseAssignmentEmailQuery
-
 	Type CourseMetricType `json:"target-type"`
+
+	CourseID     string `json:"target-course,omitempty"`
+	AssignmentID string `json:"target-assignment,omitempty"`
+	UserEmail    string `json:"target-user,omitempty"`
 }
 
 var courseMetricTypeToString = map[CourseMetricType]string{
@@ -143,13 +147,11 @@ func AsyncStoreCourseGradingTime(startTime timestamp.Timestamp, endTime timestam
 		BaseMetric: BaseMetric{
 			Timestamp: startTime,
 		},
-		CourseAssignmentEmailMetric: CourseAssignmentEmailMetric{
-			CourseID:     courseID,
-			AssignmentID: assignmentID,
-			UserEmail:    userEmail,
-		},
-		Type:  CourseMetricTypeGradingTime,
-		Value: uint64((endTime - startTime).ToMSecs()),
+		CourseID:     courseID,
+		AssignmentID: assignmentID,
+		UserEmail:    userEmail,
+		Type:         CourseMetricTypeGradingTime,
+		Value:        uint64((endTime - startTime).ToMSecs()),
 	}
 
 	AsyncStoreCourseMetric(metric)
@@ -161,13 +163,11 @@ func AsyncStoreCourseTaskTime(startTime timestamp.Timestamp, endTime timestamp.T
 			Timestamp:  startTime,
 			Attributes: map[string]any{ATTRIBUTE_KEY_TASK: taskType},
 		},
-		CourseAssignmentEmailMetric: CourseAssignmentEmailMetric{
-			CourseID:     courseID,
-			AssignmentID: assignmentID,
-			UserEmail:    userEmail,
-		},
-		Type:  CourseMetricTypeTaskTime,
-		Value: uint64((endTime - startTime).ToMSecs()),
+		CourseID:     courseID,
+		AssignmentID: assignmentID,
+		UserEmail:    userEmail,
+		Type:         CourseMetricTypeTaskTime,
+		Value:        uint64((endTime - startTime).ToMSecs()),
 	}
 
 	AsyncStoreCourseMetric(metric)
