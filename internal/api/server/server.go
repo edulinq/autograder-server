@@ -4,6 +4,7 @@ import (
 	"errors"
 	"os"
 	"os/signal"
+	"sync"
 	"syscall"
 
 	"github.com/edulinq/autograder/internal/api"
@@ -42,13 +43,22 @@ func (this *APIServer) RunAndBlock(initiator systemserver.ServerInitiator) (err 
 		err = errors.Join(err, util.RemoveDirent(systemserver.GetStatusPath()))
 	}()
 
+	// Create a wait group for the respective servers to indicate that they are now waiting.
+	// We do this so we don't try to stop a server before it has started
+	// (e.g., if the other server failed on setup).
+	var subserverSetupWaitGroup sync.WaitGroup
+	subserverSetupWaitGroup.Add(2)
+
 	go func() {
-		this.errorsChan <- runAPIServer(api.GetRoutes())
+		this.errorsChan <- runAPIServer(api.GetRoutes(), &subserverSetupWaitGroup)
 	}()
 
 	go func() {
-		this.errorsChan <- runUnixSocketServer()
+		this.errorsChan <- runUnixSocketServer(&subserverSetupWaitGroup)
 	}()
+
+	// Wait for the subservers to be ready before trying to stop them.
+	subserverSetupWaitGroup.Wait()
 
 	// Gracefully shutdown on Control-C (SIGINT).
 	signal.Notify(this.shutdownSignal, syscall.SIGINT, syscall.SIGTERM)
@@ -61,11 +71,10 @@ func (this *APIServer) RunAndBlock(initiator systemserver.ServerInitiator) (err 
 	// Wait for at least one error (or nil) to stop both servers,
 	// then wait for the next error (or nil).
 	err = errors.Join(err, <-this.errorsChan)
+
 	// Stop server without waiting to ensure cleanup tasks get executed.
 	this.Stop()
 	err = errors.Join(err, <-this.errorsChan)
-
-	close(this.errorsChan)
 
 	return err
 }

@@ -46,8 +46,8 @@ func CMDServerTestingMain(suite *testing.M) {
 
 	// Run inside a func so defers will run before exit.Exit().
 	code := func() int {
-		defer config.WEB_PORT.Set(config.WEB_PORT.Get())
-		config.WEB_PORT.Set(port)
+		defer config.WEB_HTTP_PORT.Set(config.WEB_HTTP_PORT.Get())
+		config.WEB_HTTP_PORT.Set(port)
 
 		db.PrepForTestingMain()
 		defer db.CleanupTestingMain()

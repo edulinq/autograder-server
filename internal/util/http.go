@@ -4,6 +4,7 @@ package util
 
 import (
 	"bytes"
+	"crypto/tls"
 	"fmt"
 	"io"
 	"mime/multipart"
@@ -16,8 +17,13 @@ import (
 	"github.com/edulinq/autograder/internal/log"
 )
 
-// Set from config.STORE_HTTP when the config is initialized.
-var storeHTTPDir string = ""
+var (
+	// Set from config.STORE_HTTP when the config is initialized.
+	storeHTTPDir string = ""
+
+	// Do not validate SSL certs.
+	insecureHTTPS bool = false
+)
 
 // A representation of an HTTP request.
 type SavedHTTPRequest struct {
@@ -33,6 +39,12 @@ type SavedHTTPRequest struct {
 func SetStoreHTTPDir(value string) string {
 	oldValue := storeHTTPDir
 	storeHTTPDir = value
+	return oldValue
+}
+
+func SetInsecureHTTPS(value bool) bool {
+	oldValue := insecureHTTPS
+	insecureHTTPS = value
 	return oldValue
 }
 
@@ -176,6 +188,14 @@ func PostFiles(uri string, form map[string]string, paths []string, checkResult b
 // Returns: (body, headers (response), error)
 func doRequest(uri string, request *http.Request, verb string, checkResult bool) (string, map[string][]string, error) {
 	client := http.Client{}
+
+	if insecureHTTPS {
+		client.Transport = &http.Transport{
+			TLSClientConfig: &tls.Config{
+				InsecureSkipVerify: true,
+			},
+		}
+	}
 
 	response, err := client.Do(request)
 	if err != nil {

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net"
 	"path/filepath"
+	"sync"
 
 	"github.com/edulinq/autograder/internal/api/core"
 	"github.com/edulinq/autograder/internal/config"
@@ -26,7 +27,7 @@ const (
 
 var unixSocket net.Listener
 
-func runUnixSocketServer() (err error) {
+func runUnixSocketServer(subserverSetupWaitGroup *sync.WaitGroup) (err error) {
 	defer func() {
 		value := recover()
 		if value == nil {
@@ -36,28 +37,18 @@ func runUnixSocketServer() (err error) {
 		err = errors.Join(err, fmt.Errorf("Unix socket panicked: '%v'.", value))
 	}()
 
-	unixSocketPath, err := systemserver.GetUnixSocketPath()
+	err = createSocket()
+	subserverSetupWaitGroup.Done()
 	if err != nil {
-		return err
+		return fmt.Errorf("Failed to create UNIX socket: '%w'.", err)
 	}
 
-	err = util.MkDir(filepath.Dir(unixSocketPath))
-	if err != nil {
-		return fmt.Errorf("Failed to create the unix socket: '%w'.", err)
-	}
-
-	unixSocket, err = net.Listen("unix", unixSocketPath)
-	if err != nil {
-		return fmt.Errorf("Failed to listen on the unix socket: '%w'.", err)
-	}
 	defer stopUnixSocketServer()
-
-	log.Info("Unix Socket Server Started.", log.NewAttr("unix_socket", unixSocketPath))
 
 	for {
 		connection, err := unixSocket.Accept()
 		if err != nil {
-			log.Info("Unix Socket Server Stopped.", log.NewAttr("unix_socket", unixSocketPath))
+			log.Info("Unix Socket Server Stopped.")
 
 			if unixSocket == nil {
 				// Set err to nil if the unix socket gracefully closed.
@@ -87,10 +78,31 @@ func runUnixSocketServer() (err error) {
 	}
 }
 
+func createSocket() error {
+	unixSocketPath, err := systemserver.GetUnixSocketPath()
+	if err != nil {
+		return err
+	}
+
+	err = util.MkDir(filepath.Dir(unixSocketPath))
+	if err != nil {
+		return fmt.Errorf("Failed to create the unix socket: '%w'.", err)
+	}
+
+	unixSocket, err = net.Listen("unix", unixSocketPath)
+	if err != nil {
+		return fmt.Errorf("Failed to listen on the unix socket: '%w'.", err)
+	}
+
+	log.Info("Unix Socket Server Started.", log.NewAttr("unix_socket", unixSocketPath))
+
+	return nil
+}
+
 // Read the request from the unix socket, generate and store a nonce, add the nonce to the request,
 // send the request to the API endpoint, and write the response back to the unix socket.
 func handleUnixSocketConnection(connection net.Conn) error {
-	var port = config.WEB_PORT.Get()
+	var port = config.WEB_HTTP_PORT.Get()
 
 	jsonBuffer, err := util.ReadFromNetworkConnection(connection)
 	if err != nil {
