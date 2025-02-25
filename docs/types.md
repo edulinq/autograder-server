@@ -841,6 +841,10 @@ All types of FileSpecs share some common fields:
 | `username` | String | false    | The username for authentication. |
 | `token`    | String | false    | The token/password for authentication. We recommend using tokens with fine-grained read-only access when possible. |
 
+As a special case, some FileSpecs can be parsed from a string that is not JSON.
+The most common case of this is just using a path directly.
+A string (that does not start with `http://` or `git::`) is interpreted as a path-type FileSpec.
+
 ### FileSpec -- Path
 
 A FileSpec with `type` equal to `path` points to an absolute or relative path accessible from the current machine.
@@ -858,7 +862,7 @@ In most cases where a FileSpec is parsed from a string, e.g., most command-line 
 
 Here are some examples that all attempt to point to the README for this repository.
 
-Absolute Path (assumes this repo is at the root directory):
+Absolute path (assumes this repo is at the root directory):
 ```json
 {
     "type": "path",
@@ -866,7 +870,7 @@ Absolute Path (assumes this repo is at the root directory):
 }
 ```
 
-Relative Path (assumes this directory is the relative base):
+Relative path (assumes this directory is the relative base):
 ```json
 {
     "type": "path",
@@ -891,12 +895,17 @@ Multiple files with a glob:
 }
 ```
 
+String only:
+```json
+"/autograder-server/README.md"
+```
+
 ### FileSpec -- URL
 
 A FileSpec with `type` equal to `url` points to a resource accessible with an HTTP GET request.
 
 Like the path-type FileSpec, a URL FileSpec can be parsed from a string,
-as long as the string starts with "http" (note that this includes "https").
+as long as the string starts with "http://" or "https://".
 
 **Examples**
 
@@ -917,6 +926,11 @@ Rename the output file to "instructions.md":
 }
 ```
 
+String only:
+```json
+"https://raw.githubusercontent.com/edulinq/autograder-server/refs/heads/main/README.md"
+```
+
 
 ### FileSpec -- Git
 
@@ -933,6 +947,10 @@ This allows you to more closely control the exact files you are getting.
 For a course source, specifying a non-default branch as a reference allows you to develop without worrying about accidentally pushing changes to the autograder.
 For an assignment resource, specifying a commit hash allows to autograder to know if a file has changes and the assignment's Docker container needs to be rebuilt.
 
+Like the path-type FileSpec, a Git FileSpec can be parsed from a string.
+The strong should be formatted as: `git::<path>[@<reference>]` (where the reference is options).
+See the examples for possible usage.
+
 **Examples**
 
 A simple repository using the default branch without authentication:
@@ -940,6 +958,14 @@ A simple repository using the default branch without authentication:
 {
     "type": "git",
     "path": "https://github.com/edulinq/autograder-server"
+}
+```
+
+GitHub-style SSH path:
+```json
+{
+    "type": "git",
+    "path": "git@github.com:edulinq/autograder-server.git"
 }
 ```
 
@@ -978,6 +1004,24 @@ Authenticate against a private repository:
     "username": "secret-name",
     "token": "ghp_abc123"
 }
+```
+
+GitHub-style embedded credentials:
+```json
+{
+    "type": "git",
+    "path": "https://secret-name:ghp_abc123@github.com/edulinq/autograder-server"
+}
+```
+
+String only without reference:
+```json
+"git::https://github.com/edulinq/autograder-server"
+```
+
+String only with reference:
+```json
+"git::https://github.com/edulinq/autograder-server@my-cool-branch"
 ```
 
 ## File Operation (FileOp)

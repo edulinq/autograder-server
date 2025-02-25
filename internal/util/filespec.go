@@ -146,7 +146,7 @@ func (this *FileSpec) UnmarshalJSON(data []byte) error {
 		return nil
 	}
 
-	// Check for a string (path or URL FileSpec).
+	// Check for a string (path, url, or git FileSpec).
 	if strings.HasPrefix(rawText, `"`) {
 		var text string
 		err := json.Unmarshal(data, &text)
@@ -156,8 +156,18 @@ func (this *FileSpec) UnmarshalJSON(data []byte) error {
 
 		this.Path = strings.TrimSpace(text)
 
-		if strings.HasPrefix(this.Path, "http") {
+		if strings.HasPrefix(this.Path, "http://") || strings.HasPrefix(this.Path, "https://") {
 			this.Type = FILESPEC_TYPE_URL
+		} else if strings.HasPrefix(this.Path, "git::") {
+			this.Type = FILESPEC_TYPE_GIT
+			this.Path = strings.TrimPrefix(this.Path, "git::")
+
+			// Check for a reference.
+			parts := strings.Split(this.Path, "@")
+			if len(parts) > 1 {
+				this.Reference = parts[len(parts)-1]
+				this.Path = strings.Join(parts[0:len(parts)-1], "@")
+			}
 		} else {
 			this.Type = FILESPEC_TYPE_PATH
 		}

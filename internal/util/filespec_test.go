@@ -1247,6 +1247,13 @@ var testCasesParseValidation []*testCaseParseValidation = []*testCaseParseValida
 		FileSpec{Type: FILESPEC_TYPE_PATH, Path: "some/path/*.txt"},
 		`{"type":"path","path":"some/path/*.txt"}`,
 	},
+	// FTP is not recognized as valid URL protocol.
+	&testCaseParseValidation{
+		`"ftp://test.edulinq.org/abc.zip"`,
+		true, true,
+		FileSpec{Type: FILESPEC_TYPE_PATH, Path: "ftp:/test.edulinq.org/abc.zip"},
+		`{"type":"path","path":"ftp:/test.edulinq.org/abc.zip"}`,
+	},
 
 	// Git.
 	&testCaseParseValidation{
@@ -1279,6 +1286,31 @@ var testCasesParseValidation []*testCaseParseValidation = []*testCaseParseValida
 		FileSpec{Type: FILESPEC_TYPE_GIT, Path: "http://github.com/foo/bar.git", Dest: "baz", Reference: "main", Username: "user", Token: "pass"},
 		`{"type":"git","path":"http://github.com/foo/bar.git","dest":"baz","reference":"main","username":"user","token":"pass"}`,
 	},
+	&testCaseParseValidation{
+		`{"type": "git", "path": "http://secret-name:ghp_abc123@github.com/foo/bar.git"}`,
+		true, true,
+		FileSpec{Type: FILESPEC_TYPE_GIT, Path: "http://secret-name:ghp_abc123@github.com/foo/bar.git", Dest: "bar"},
+		`{"type":"git","path":"http://secret-name:ghp_abc123@github.com/foo/bar.git","dest":"bar"}`,
+	},
+	&testCaseParseValidation{
+		`"git::http://github.com/foo/bar.git"`,
+		true, true,
+		FileSpec{Type: FILESPEC_TYPE_GIT, Path: "http://github.com/foo/bar.git", Dest: "bar"},
+		`{"type":"git","path":"http://github.com/foo/bar.git","dest":"bar"}`,
+	},
+	&testCaseParseValidation{
+		`"git::http://github.com/foo/bar.git@main"`,
+		true, true,
+		FileSpec{Type: FILESPEC_TYPE_GIT, Path: "http://github.com/foo/bar.git", Dest: "bar", Reference: "main"},
+		`{"type":"git","path":"http://github.com/foo/bar.git","dest":"bar","reference":"main"}`,
+	},
+	// Multiple '@'s.
+	&testCaseParseValidation{
+		`"git::http://secret-name:ghp_abc123@github.com/foo/bar.git@main"`,
+		true, true,
+		FileSpec{Type: FILESPEC_TYPE_GIT, Path: "http://secret-name:ghp_abc123@github.com/foo/bar.git", Dest: "bar", Reference: "main"},
+		`{"type":"git","path":"http://secret-name:ghp_abc123@github.com/foo/bar.git","dest":"bar","reference":"main"}`,
+	},
 
 	// URL.
 	&testCaseParseValidation{
@@ -1286,6 +1318,12 @@ var testCasesParseValidation []*testCaseParseValidation = []*testCaseParseValida
 		true, true,
 		FileSpec{Type: FILESPEC_TYPE_URL, Path: "http://test.edulinq.org/abc.zip", Dest: "abc.zip"},
 		`{"type":"url","path":"http://test.edulinq.org/abc.zip","dest":"abc.zip"}`,
+	},
+	&testCaseParseValidation{
+		`"https://test.edulinq.org/abc.zip"`,
+		true, true,
+		FileSpec{Type: FILESPEC_TYPE_URL, Path: "https://test.edulinq.org/abc.zip", Dest: "abc.zip"},
+		`{"type":"url","path":"https://test.edulinq.org/abc.zip","dest":"abc.zip"}`,
 	},
 	&testCaseParseValidation{
 		`{"type": "url", "path": "http://test.edulinq.org/abc.zip"}`,
