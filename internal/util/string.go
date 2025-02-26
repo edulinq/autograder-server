@@ -18,3 +18,11 @@ func BaseString(obj any) string {
 func JoinStrings(delim string, parts ...string) string {
 	return strings.Join(parts, delim)
 }
+
+func GetStringWithDefault(primary string, fallback string) string {
+	if primary != "" {
+		return primary
+	}
+
+	return fallback
+}

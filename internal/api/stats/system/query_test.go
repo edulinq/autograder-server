@@ -24,7 +24,7 @@ func TestQuery(test *testing.T) {
 		{"server-admin", false, stats.BaseQuery{Sort: 1}, []int{300, 200, 100}},
 		{"server-admin", false, stats.BaseQuery{After: timestamp.FromMSecs(150)}, []int{200, 300}},
 
-		{"server-user", true, stats.BaseQuery{}, []int{}},
+		{"server-user", true, stats.BaseQuery{}, nil},
 	}
 
 	for _, record := range testRecords {
