@@ -10,8 +10,8 @@ import (
 	"github.com/edulinq/autograder/internal/util"
 )
 
-// Normal API tests can only use the routes defined in their packages,
-// but here, multiple routes from different packages are tested.
+// Normal API tests typically only use the routes defined in their packages,
+// but here, multiple routes (defined in ./main_test.go) from different packages are tested.
 // This ensures that different types of API requests get their metrics stored properly.
 func TestMetric(test *testing.T) {
 	defer db.ResetForTesting()
@@ -46,7 +46,7 @@ func TestMetric(test *testing.T) {
 
 		// Valid permissions, APIRequestAssignmentContext request.
 		{
-			email:    "server-admin@test.edulinq.org",
+			email:    "server-admin",
 			endpoint: "courses/assignments/get",
 			expectedMetric: &stats.APIRequestMetric{
 				Endpoint:     "/api/v03/courses/assignments/get",

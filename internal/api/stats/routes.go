@@ -11,8 +11,8 @@ import (
 func GetRoutes() *[]core.Route {
 	routes := make([]core.Route, 0)
 
-	routes = append(routes, *(system.GetRoutes())...)
 	routes = append(routes, *(apirequest.GetRoutes())...)
+	routes = append(routes, *(system.GetRoutes())...)
 
 	return &routes
 }

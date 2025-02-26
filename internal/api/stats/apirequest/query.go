@@ -21,7 +21,7 @@ type QueryResponse struct {
 func HandleQuery(request *QueryRequest) (*QueryResponse, *core.APIError) {
 	records, err := db.GetAPIRequestMetrics(request.APIRequestMetricQuery)
 	if err != nil {
-		return nil, core.NewUserContextInternalError("-301", &request.APIRequestUserContext, "Failed to query request stats.").Err(err)
+		return nil, core.NewUserContextInternalError("-301", &request.APIRequestUserContext, "Failed to query API request stats.").Err(err)
 	}
 
 	response := QueryResponse{
