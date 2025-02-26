@@ -20,6 +20,10 @@ func RemoveDirent(path string) error {
 	return err
 }
 
+func CopyDirentDefault(source string, dest string) error {
+	return CopyDirent(source, dest, false)
+}
+
 // Copy a file or directory into dest.
 // If source is a file, then dest can be a file or dir.
 // If source is a dir, then see CopyDir() for semantics.
@@ -46,6 +50,10 @@ func CopyLink(source string, dest string) error {
 
 	if IsDir(dest) {
 		dest = filepath.Join(dest, filepath.Base(source))
+	}
+
+	if source == dest {
+		return nil
 	}
 
 	err := MkDir(filepath.Dir(dest))
@@ -76,6 +84,10 @@ func CopyFile(source string, dest string) error {
 
 	if IsDir(dest) {
 		dest = filepath.Join(dest, filepath.Base(source))
+	}
+
+	if source == dest {
+		return nil
 	}
 
 	MkDir(filepath.Dir(dest))
@@ -148,6 +160,10 @@ func CopyDirContents(source string, dest string) error {
 		return fmt.Errorf("Source of directory copy ('%s') does not exist or is not a dir.", source)
 	}
 
+	if source == dest {
+		return nil
+	}
+
 	if !PathExists(dest) {
 		err := MkDir(dest)
 		if err != nil {
@@ -178,6 +194,14 @@ func CopyDirContents(source string, dest string) error {
 }
 
 func MoveDirent(source string, dest string) error {
+	if IsDir(dest) {
+		dest = filepath.Join(dest, filepath.Base(source))
+	}
+
+	if source == dest {
+		return nil
+	}
+
 	err := MkDir(filepath.Dir(dest))
 	if err != nil {
 		return fmt.Errorf("Failed to create destination directory for move ('%s'): '%w'.", dest, err)

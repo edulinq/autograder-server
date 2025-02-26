@@ -1045,6 +1045,11 @@ Below are the currently supported file operations:
 | `make-dir` | `mkdir`    | path                   | `mkdir -p`       | Create a directory at the given path. The path make already exist. Any required parent directories will be created. |
 | `remove`   | `rm`       | path                   | `rm -rf`         | Remove the given path. The path may be a file or directory. The path may not exist. |
 
+Any `move`, `copy`, or `remove` command may include [globs](https://en.wikipedia.org/wiki/Glob_%28programming%29) in the source path.
+We support the [Go standard for globs](https://pkg.go.dev/path/filepath#Match).
+All paths are simplified before globs are expanded.
+A glob path like `["copy", "*/*/..", "temp"]` will be simplified into `["copy", "*", "temp"]`.
+
 **Examples**
 
 Copy a directory:
