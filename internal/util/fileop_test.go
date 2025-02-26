@@ -111,6 +111,11 @@ func TestFileOpValidateBase(test *testing.T) {
 			NewFileOperation([]string{"copy", "a", "b"}),
 			"",
 		},
+		{
+			NewFileOperation([]string{"copy", "*/*/..", "b"}),
+			NewFileOperation([]string{"copy", "*", "b"}),
+			"",
+		},
 
 		// Glob Paths
 		{
@@ -131,11 +136,6 @@ func TestFileOpValidateBase(test *testing.T) {
 		{
 			NewFileOperation([]string{"move", "a/?", "b"}),
 			NewFileOperation([]string{"move", "a/?", "b"}),
-			"",
-		},
-		{
-			NewFileOperation([]string{"copy", "*/*/..", "b"}),
-			NewFileOperation([]string{"copy", "*", "b"}),
 			"",
 		},
 
@@ -408,7 +408,6 @@ func TestFileOpCopyBase(test *testing.T) {
 			"a",
 			"",
 		},
-		// This will create a directory called "a.txt".
 		{
 			alreadyExistsDirname + "/*.txt",
 			"a.txt",
@@ -535,7 +534,6 @@ func TestFileOpMoveBase(test *testing.T) {
 			"a",
 			"",
 		},
-		// This will create a directory called "a.txt".
 		{
 			alreadyExistsDirname + "/*.txt",
 			"a.txt",
