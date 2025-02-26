@@ -10,7 +10,8 @@ import (
 	"github.com/edulinq/autograder/internal/util"
 )
 
-// Test API request metrics are properly stored.
+// Test API request metrics are properly stored across specific endpoints.
+// The routes of these endpoints are set in TestMain.
 func TestMetric(test *testing.T) {
 	defer db.ResetForTesting()
 
