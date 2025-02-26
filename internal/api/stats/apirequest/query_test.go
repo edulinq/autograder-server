@@ -15,10 +15,10 @@ func TestQuery(test *testing.T) {
 	defer db.ResetForTesting()
 
 	testCases := []struct {
-		email            string
-		permErrorLocator string
-		query            stats.APIRequestMetricQuery
-		expectedValues   []int
+		email           string
+		expectedLocator string
+		query           stats.APIRequestMetricQuery
+		expectedValues  []int
 	}{
 		// Base
 		{"server-admin", "", stats.APIRequestMetricQuery{}, []int{100, 200, 300}},
@@ -51,6 +51,7 @@ func TestQuery(test *testing.T) {
 
 	for i, testCase := range testCases {
 		db.ResetForTesting()
+
 		for _, record := range testRecords {
 			err := db.StoreAPIRequestMetric(record)
 			if err != nil {
@@ -63,14 +64,19 @@ func TestQuery(test *testing.T) {
 
 		response := core.SendTestAPIRequestFull(test, `stats/apirequest/query`, fields, nil, testCase.email)
 		if !response.Success {
-			if testCase.permErrorLocator != "" {
-				if testCase.permErrorLocator != response.Locator {
-					test.Errorf("Case %d: Incorrect locator on perm error. Expected: '%s', Actual: '%s'.", i, testCase.permErrorLocator, response.Locator)
+			if testCase.expectedLocator != "" {
+				if testCase.expectedLocator != response.Locator {
+					test.Errorf("Case %d: Incorrect locator. Expected: '%s', Actual: '%s'.", i, testCase.expectedLocator, response.Locator)
 				}
 			} else {
 				test.Errorf("Case %d: Response is not a success when it should be: '%v'.", i, response)
 			}
 
+			continue
+		}
+
+		if testCase.expectedLocator != "" {
+			test.Errorf("Case %d: Unexpected success when locator '%s' was expected.", i, testCase.expectedLocator)
 			continue
 		}
 

@@ -39,11 +39,11 @@ func (this APIRequestMetricQuery) Match(record *APIRequestMetric) bool {
 		return false
 	}
 
-	if (this.CourseID != "") && (this.CourseID != record.CourseID) {
+	if (this.Sender != "") && (this.Sender != record.Sender) {
 		return false
 	}
 
-	if (this.AssignmentID != "") && (this.AssignmentID != record.AssignmentID) {
+	if (this.Endpoint != "") && (this.Endpoint != record.Endpoint) {
 		return false
 	}
 
@@ -51,11 +51,11 @@ func (this APIRequestMetricQuery) Match(record *APIRequestMetric) bool {
 		return false
 	}
 
-	if (this.Sender != "") && (this.Sender != record.Sender) {
+	if (this.AssignmentID != "") && (this.AssignmentID != record.AssignmentID) {
 		return false
 	}
 
-	if (this.Endpoint != "") && (this.Endpoint != record.Endpoint) {
+	if (this.CourseID != "") && (this.CourseID != record.CourseID) {
 		return false
 	}
 

@@ -5,7 +5,7 @@ import (
 
 	"github.com/edulinq/autograder/internal/api/core"
 	"github.com/edulinq/autograder/internal/api/courses/assignments"
-	cUsers "github.com/edulinq/autograder/internal/api/courses/users"
+	cusers "github.com/edulinq/autograder/internal/api/courses/users"
 	"github.com/edulinq/autograder/internal/api/users"
 )
 
@@ -16,7 +16,7 @@ func TestMain(suite *testing.M) {
 
 	routes = append(routes, *GetRoutes()...)
 	routes = append(routes, *(assignments.GetRoutes())...)
-	routes = append(routes, *(cUsers.GetRoutes())...)
+	routes = append(routes, *(cusers.GetRoutes())...)
 	routes = append(routes, *(users.GetRoutes())...)
 
 	core.APITestingMain(suite, &routes)

@@ -10,8 +10,9 @@ import (
 	"github.com/edulinq/autograder/internal/util"
 )
 
-// Test API request metrics are properly stored across specific endpoints.
-// The routes of these endpoints are set in TestMain.
+// Normal API tests can only use the routes defined in their packages,
+// but here, multiple routes from different packages are tested.
+// This ensures that different types of API requests get their metrics stored properly.
 func TestMetric(test *testing.T) {
 	defer db.ResetForTesting()
 
@@ -119,6 +120,11 @@ func TestMetric(test *testing.T) {
 				test.Errorf("Case %d: Response is not a success when it should be: '%v'.", i, response)
 			}
 
+			continue
+		}
+
+		if testCase.expectedLocator != "" {
+			test.Errorf("Case %d: Unexpected success when locator '%s' was expected.", i, testCase.expectedLocator)
 			continue
 		}
 
