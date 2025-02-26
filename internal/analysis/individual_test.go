@@ -244,7 +244,6 @@ func TestIndividualAnalysisCountBase(test *testing.T) {
 	testCases := []struct {
 		options                   AnalysisOptions
 		preload                   bool
-		wait                      bool
 		expectedCacheSetOnPreload bool
 		expectedResultIsFromCache bool
 		expectedResultCount       int
@@ -281,7 +280,7 @@ func TestIndividualAnalysisCountBase(test *testing.T) {
 			expectedResultIsFromCache: false,
 			expectedResultCount:       0,
 			expectedPendingCount:      1,
-			expectedCacheCount:        0,
+			expectedCacheCount:        1,
 		},
 		{
 			options: AnalysisOptions{
@@ -313,7 +312,7 @@ func TestIndividualAnalysisCountBase(test *testing.T) {
 			expectedResultIsFromCache: false,
 			expectedResultCount:       0,
 			expectedPendingCount:      1,
-			expectedCacheCount:        0,
+			expectedCacheCount:        1,
 		},
 		{
 			options: AnalysisOptions{
@@ -440,7 +439,6 @@ func TestIndividualAnalysisCountBase(test *testing.T) {
 				WaitForCompletion: false,
 			},
 			preload:                   true,
-			wait:                      true,
 			expectedCacheSetOnPreload: false,
 			expectedResultIsFromCache: false,
 			expectedResultCount:       0,
@@ -581,7 +579,7 @@ func TestIndividualAnalysisCountBase(test *testing.T) {
 		}
 
 		// Wait long enough for the analysis to finish.
-		if testCase.wait {
+		if !testCase.options.WaitForCompletion {
 			time.Sleep(time.Duration(100) * time.Millisecond)
 		}
 
