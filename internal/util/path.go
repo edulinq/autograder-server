@@ -108,21 +108,6 @@ func IsSymLink(path string) bool {
 	return (stat.Mode() & fs.ModeSymlink) != 0
 }
 
-func EnsureDir(path string) error {
-	if !PathExists(path) {
-		err := MkDir(path)
-		if err != nil {
-			return fmt.Errorf("Failed to create dir '%s': '%w'.", path, err)
-		}
-	}
-
-	if !IsDir(path) {
-		return fmt.Errorf("Path ('%s') does not exist or is not a dir.", path)
-	}
-
-	return nil
-}
-
 func FindFiles(filename string, dir string) ([]string, error) {
 	return FindDirents(filename, dir, true, false, true)
 }

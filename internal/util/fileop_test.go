@@ -268,6 +268,11 @@ func TestFileOpValidateBase(test *testing.T) {
 			nil,
 			"cannot point just to the current directory",
 		},
+		{
+			NewFileOperation([]string{"copy", "*/[a-z", "b"}),
+			nil,
+			"invalid path pattern",
+		},
 	}
 
 	for i, testCase := range testCases {
@@ -378,47 +383,6 @@ func TestFileOpCopyBase(test *testing.T) {
 			"",
 		},
 		{
-			alreadyExistsDirname + "/*",
-			startingEmptyDirname,
-			"",
-		},
-		{
-			alreadyExistsDirname + "/*.txt",
-			startingEmptyDirname,
-			"",
-		},
-		{
-			alreadyExistsDirname,
-			startingEmptyDirname,
-			"",
-		},
-		{
-			alreadyExistsDirname + "/*",
-			"a",
-			"",
-		},
-		// This will create a directory called "a.txt".
-		{
-			alreadyExistsDirname + "/*",
-			"a.txt",
-			"",
-		},
-		{
-			alreadyExistsDirname + "/*.txt",
-			"a",
-			"",
-		},
-		{
-			alreadyExistsDirname + "/*.txt",
-			"a.txt",
-			"",
-		},
-		{
-			"*",
-			"a",
-			"",
-		},
-		{
 			"a",
 			"b",
 			"Unable to find source path",
@@ -428,23 +392,13 @@ func TestFileOpCopyBase(test *testing.T) {
 			alreadyExistsFilePosixRelpath,
 			"already exists",
 		},
-		{
-			alreadyExistsDirname + "/*.txt",
-			alreadyExistsFilename,
-			"does not exist or is not a dir",
-		},
 	}
 
 	for i, testCase := range testCases {
 		rawOperation := []string{"cp", testCase.source, testCase.dest}
 
 		runFileOpExecTest(test, fmt.Sprintf("Case %d", i), rawOperation, testCase.errorSubstring, func(tempDir string) {
-			expectedSourceGlob := filepath.Join(tempDir, testCase.source)
-			expectedSources, err := filepath.Glob(expectedSourceGlob)
-			if err != nil {
-				test.Errorf("Case %d: Failed to resolve source glob '%s': '%v'.", i, expectedSourceGlob, err)
-			}
-
+			expectedSource := filepath.Join(tempDir, testCase.source)
 			expectedDest := filepath.Join(tempDir, testCase.dest)
 
 			if !PathExists(expectedDest) {
@@ -452,7 +406,184 @@ func TestFileOpCopyBase(test *testing.T) {
 				return
 			}
 
-			for _, expectedSource := range expectedSources {
+			if !PathExists(expectedSource) {
+				test.Errorf("Case %d: Source does not exist '%s'.", i, expectedSource)
+				return
+			}
+		})
+	}
+}
+
+func TestFileOpCopyGlob(test *testing.T) {
+	testCases := []struct {
+		source          string
+		dest            string
+		expectedSources []string
+		expectedDests   []string
+		errorSubstring  string
+	}{
+		{
+			alreadyExistsDirname + "/*",
+			startingEmptyDirname,
+			[]string{
+				alreadyExistsFileRelpath,
+				alreadyExistsFileAltRelpath,
+			},
+			[]string{
+				filepath.Join(startingEmptyDirname, alreadyExistsFilename),
+				filepath.Join(startingEmptyDirname, alreadyExistsFilenameAlt),
+			},
+			"",
+		},
+		{
+			alreadyExistsDirname + "/*.txt",
+			startingEmptyDirname,
+			[]string{
+				alreadyExistsFileRelpath,
+				alreadyExistsFileAltRelpath,
+			},
+			[]string{
+				filepath.Join(startingEmptyDirname, alreadyExistsFilename),
+				filepath.Join(startingEmptyDirname, alreadyExistsFilenameAlt),
+			},
+			"",
+		},
+		// Note, the entire directory is copied into startingEmptyDirname.
+		{
+			alreadyExistsDirname,
+			startingEmptyDirname,
+			[]string{
+				alreadyExistsFileRelpath,
+				alreadyExistsFileAltRelpath,
+			},
+			[]string{
+				filepath.Join(startingEmptyDirname, alreadyExistsFileRelpath),
+				filepath.Join(startingEmptyDirname, alreadyExistsFileAltRelpath),
+			},
+			"",
+		},
+		{
+			alreadyExistsDirname + "/*",
+			alreadyExistsDirname,
+			[]string{
+				alreadyExistsFileRelpath,
+				alreadyExistsFileAltRelpath,
+			},
+			[]string{
+				alreadyExistsFileRelpath,
+				alreadyExistsFileAltRelpath,
+			},
+			"",
+		},
+		{
+			alreadyExistsDirname + "/*",
+			"a",
+			[]string{
+				alreadyExistsFileRelpath,
+				alreadyExistsFileAltRelpath,
+			},
+			[]string{
+				filepath.Join("a", alreadyExistsFilename),
+				filepath.Join("a", alreadyExistsFilenameAlt),
+			},
+			"",
+		},
+		{
+			alreadyExistsDirname + "/*",
+			"a.txt",
+			[]string{
+				alreadyExistsFileRelpath,
+				alreadyExistsFileAltRelpath,
+			},
+			[]string{
+				filepath.Join("a.txt", alreadyExistsFilename),
+				filepath.Join("a.txt", alreadyExistsFilenameAlt),
+			},
+			"",
+		},
+		{
+			alreadyExistsDirname + "/*.txt",
+			"a",
+			[]string{
+				alreadyExistsFileRelpath,
+				alreadyExistsFileAltRelpath,
+			},
+			[]string{
+				filepath.Join("a", alreadyExistsFilename),
+				filepath.Join("a", alreadyExistsFilenameAlt),
+			},
+			"",
+		},
+		{
+			alreadyExistsDirname + "/*.txt",
+			"a.txt",
+			[]string{
+				alreadyExistsFileRelpath,
+				alreadyExistsFileAltRelpath,
+			},
+			[]string{
+				filepath.Join("a.txt", alreadyExistsFilename),
+				filepath.Join("a.txt", alreadyExistsFilenameAlt),
+			},
+			"",
+		},
+		{
+			alreadyExistsDirname + "/*.txt",
+			alreadyExistsDirname + "/*.txt",
+			[]string{
+				alreadyExistsFileRelpath,
+				alreadyExistsFileAltRelpath,
+			},
+			[]string{
+				filepath.Join(alreadyExistsDirname, "*.txt", alreadyExistsFilename),
+				filepath.Join(alreadyExistsDirname, "*.txt", alreadyExistsFilenameAlt),
+			},
+			"",
+		},
+		{
+			"*",
+			"a",
+			[]string{
+				alreadyExistsFilename,
+				alreadyExistsDirname,
+				startingEmptyDirname,
+				alreadyExistsFileRelpath,
+				alreadyExistsFileAltRelpath,
+			},
+			[]string{
+				filepath.Join("a", alreadyExistsFilename),
+				filepath.Join("a", alreadyExistsDirname),
+				filepath.Join("a", startingEmptyDirname),
+				filepath.Join("a", alreadyExistsFileRelpath),
+				filepath.Join("a", alreadyExistsFileAltRelpath),
+			},
+			"",
+		},
+		{
+			alreadyExistsDirname + "/*.txt",
+			alreadyExistsFilename,
+			[]string{},
+			[]string{},
+			"Failed to create dest dir",
+		},
+	}
+
+	for i, testCase := range testCases {
+		rawOperation := []string{"cp", testCase.source, testCase.dest}
+
+		runFileOpExecTest(test, fmt.Sprintf("Case %d", i), rawOperation, testCase.errorSubstring, func(tempDir string) {
+			for _, relExpectedDest := range testCase.expectedDests {
+				expectedDest := filepath.Join(tempDir, relExpectedDest)
+
+				if !PathExists(expectedDest) {
+					test.Errorf("Case %d: Dest does not exist '%s'.", i, expectedDest)
+					return
+				}
+			}
+
+			for _, relExpectedSource := range testCase.expectedSources {
+				expectedSource := filepath.Join(tempDir, relExpectedSource)
+
 				if !PathExists(expectedSource) {
 					test.Errorf("Case %d: Source does not exist '%s'.", i, expectedSource)
 					return
@@ -499,52 +630,6 @@ func TestFileOpMoveBase(test *testing.T) {
 			"",
 		},
 		{
-			alreadyExistsFilePosixRelpath,
-			startingEmptyDirname,
-			"",
-		},
-		{
-			alreadyExistsDirname + "/*",
-			startingEmptyDirname,
-			"",
-		},
-		{
-			alreadyExistsDirname + "/*.txt",
-			startingEmptyDirname,
-			"",
-		},
-		{
-			alreadyExistsDirname,
-			startingEmptyDirname,
-			"",
-		},
-		{
-			alreadyExistsDirname + "/*",
-			"a",
-			"",
-		},
-		// This will create a directory called "a.txt".
-		{
-			alreadyExistsDirname + "/*",
-			"a.txt",
-			"",
-		},
-		{
-			alreadyExistsDirname + "/*.txt",
-			"a",
-			"",
-		},
-		{
-			alreadyExistsDirname + "/*.txt",
-			"a.txt",
-			"",
-		},
-		{
-			"*",
-			"a",
-			"",
-		},
-		{
 			"a",
 			"b",
 			"Unable to find source path",
@@ -562,23 +647,189 @@ func TestFileOpMoveBase(test *testing.T) {
 		rawOperation := []string{"mv", testCase.source, testCase.dest}
 
 		runFileOpExecTest(test, fmt.Sprintf("Case %d", i), rawOperation, testCase.errorSubstring, func(tempDir string) {
-			expectedSourceGlob := filepath.Join(tempDir, testCase.source)
-			expectedSources, err := filepath.Glob(expectedSourceGlob)
-			if err != nil {
-				test.Errorf("Case %d: Unable to resolve source glob '%s': '%'.", i, expectedSourceGlob, err)
+			expectedSource := filepath.Join(tempDir, testCase.source)
+			expectedDest := filepath.Join(tempDir, testCase.dest)
+
+			if !PathExists(expectedDest) {
+				test.Errorf("Case %d: Dest does not exist '%s'.", i, expectedDest)
+				return
 			}
 
-			expectedDest := filepath.Join(tempDir, testCase.dest)
-			finalExpectedDest := expectedDest
-			for _, expectedSource := range expectedSources {
-				if !PathExists(finalExpectedDest) {
-					test.Errorf("Case %d: Dest does not exist '%s'.", i, finalExpectedDest)
+			if PathExists(expectedSource) {
+				test.Errorf("Case %d: Source exists '%s'.", i, expectedSource)
+				return
+			}
+		})
+	}
+}
+
+func TestFileOpMoveGlob(test *testing.T) {
+	testCases := []struct {
+		source          string
+		dest            string
+		expectedSources []string
+		expectedDests   []string
+		errorSubstring  string
+	}{
+		{
+			alreadyExistsDirname + "/*",
+			startingEmptyDirname,
+			[]string{
+				alreadyExistsFileRelpath,
+				alreadyExistsFileAltRelpath,
+			},
+			[]string{
+				filepath.Join(startingEmptyDirname, alreadyExistsFilename),
+				filepath.Join(startingEmptyDirname, alreadyExistsFilenameAlt),
+			},
+			"",
+		},
+		{
+			alreadyExistsDirname + "/*.txt",
+			startingEmptyDirname,
+			[]string{
+				alreadyExistsFileRelpath,
+				alreadyExistsFileAltRelpath,
+			},
+			[]string{
+				filepath.Join(startingEmptyDirname, alreadyExistsFilename),
+				filepath.Join(startingEmptyDirname, alreadyExistsFilenameAlt),
+			},
+			"",
+		},
+		// Note, the entire directory is copied into startingEmptyDirname.
+		{
+			alreadyExistsDirname,
+			startingEmptyDirname,
+			[]string{
+				alreadyExistsFileRelpath,
+				alreadyExistsFileAltRelpath,
+			},
+			[]string{
+				filepath.Join(startingEmptyDirname, alreadyExistsFileRelpath),
+				filepath.Join(startingEmptyDirname, alreadyExistsFileAltRelpath),
+			},
+			"",
+		},
+		{
+			alreadyExistsDirname + "/*",
+			alreadyExistsDirname,
+			// Skip checking sources, as they are the same as dest and will fail check.
+			[]string{},
+			[]string{
+				alreadyExistsFileRelpath,
+				alreadyExistsFileAltRelpath,
+			},
+			"",
+		},
+		{
+			alreadyExistsDirname + "/*",
+			"a",
+			[]string{
+				alreadyExistsFileRelpath,
+				alreadyExistsFileAltRelpath,
+			},
+			[]string{
+				filepath.Join("a", alreadyExistsFilename),
+				filepath.Join("a", alreadyExistsFilenameAlt),
+			},
+			"",
+		},
+		{
+			alreadyExistsDirname + "/*",
+			"a.txt",
+			[]string{
+				alreadyExistsFileRelpath,
+				alreadyExistsFileAltRelpath,
+			},
+			[]string{
+				filepath.Join("a.txt", alreadyExistsFilename),
+				filepath.Join("a.txt", alreadyExistsFilenameAlt),
+			},
+			"",
+		},
+		{
+			alreadyExistsDirname + "/*.txt",
+			"a",
+			[]string{
+				alreadyExistsFileRelpath,
+				alreadyExistsFileAltRelpath,
+			},
+			[]string{
+				filepath.Join("a", alreadyExistsFilename),
+				filepath.Join("a", alreadyExistsFilenameAlt),
+			},
+			"",
+		},
+		{
+			alreadyExistsDirname + "/*.txt",
+			"a.txt",
+			[]string{
+				alreadyExistsFileRelpath,
+				alreadyExistsFileAltRelpath,
+			},
+			[]string{
+				filepath.Join("a.txt", alreadyExistsFilename),
+				filepath.Join("a.txt", alreadyExistsFilenameAlt),
+			},
+			"",
+		},
+		{
+			alreadyExistsDirname + "/*.txt",
+			alreadyExistsDirname + "/*.txt",
+			[]string{
+				alreadyExistsFileRelpath,
+				alreadyExistsFileAltRelpath,
+			},
+			[]string{
+				filepath.Join(alreadyExistsDirname, "*.txt", alreadyExistsFilename),
+				filepath.Join(alreadyExistsDirname, "*.txt", alreadyExistsFilenameAlt),
+			},
+			"",
+		},
+		{
+			"*",
+			"a",
+			[]string{
+				alreadyExistsFilename,
+				alreadyExistsDirname,
+				startingEmptyDirname,
+				alreadyExistsFileRelpath,
+				alreadyExistsFileAltRelpath,
+			},
+			[]string{
+				filepath.Join("a", alreadyExistsFilename),
+				filepath.Join("a", alreadyExistsDirname),
+				filepath.Join("a", startingEmptyDirname),
+				filepath.Join("a", alreadyExistsFileRelpath),
+				filepath.Join("a", alreadyExistsFileAltRelpath),
+			},
+			"",
+		},
+		{
+			alreadyExistsDirname + "/*.txt",
+			alreadyExistsFilename,
+			[]string{},
+			[]string{},
+			"Failed to create dest dir",
+		},
+	}
+
+	for i, testCase := range testCases {
+		rawOperation := []string{"mv", testCase.source, testCase.dest}
+
+		runFileOpExecTest(test, fmt.Sprintf("Case %d", i), rawOperation, testCase.errorSubstring, func(tempDir string) {
+			for _, relExpectedDest := range testCase.expectedDests {
+				expectedDest := filepath.Join(tempDir, relExpectedDest)
+
+				if !PathExists(expectedDest) {
+					test.Errorf("Case %d: Dest does not exist '%s'.", i, expectedDest)
 					return
 				}
+			}
 
-				if expectedSource == finalExpectedDest {
-					continue
-				}
+			for _, relExpectedSource := range testCase.expectedSources {
+				expectedSource := filepath.Join(tempDir, relExpectedSource)
 
 				if PathExists(expectedSource) {
 					test.Errorf("Case %d: Source exists '%s'.", i, expectedSource)
@@ -639,30 +890,69 @@ func TestFileOpMkdirBase(test *testing.T) {
 func TestFileOpRemoveBase(test *testing.T) {
 	testCases := []struct {
 		path           string
+		expectedPaths  []string
 		errorSubstring string
 	}{
 		{
 			"a",
+			[]string{"a"},
 			"",
 		},
 		{
 			"a/b",
+			[]string{"a/b"},
 			"",
 		},
 		{
 			"a/../b",
+			[]string{"b"},
 			"",
 		},
 		{
 			alreadyExistsDirname,
+			[]string{alreadyExistsDirname},
 			"",
 		},
 		{
 			alreadyExistsDirname + "/a",
+			[]string{alreadyExistsDirname + "/a"},
 			"",
 		},
 		{
 			alreadyExistsFilePosixRelpath,
+			[]string{alreadyExistsFilePosixRelpath},
+			"",
+		},
+		{
+			alreadyExistsFilePosixRelpath,
+			[]string{alreadyExistsFilePosixRelpath},
+			"",
+		},
+		{
+			alreadyExistsDirname + "/*",
+			[]string{
+				alreadyExistsFileRelpath,
+				alreadyExistsFileAltRelpath,
+			},
+			"",
+		},
+		{
+			alreadyExistsDirname + "/*.txt",
+			[]string{
+				alreadyExistsFileRelpath,
+				alreadyExistsFileAltRelpath,
+			},
+			"",
+		},
+		{
+			"*",
+			[]string{
+				alreadyExistsFilename,
+				alreadyExistsDirname,
+				startingEmptyDirname,
+				alreadyExistsFileRelpath,
+				alreadyExistsFileAltRelpath,
+			},
 			"",
 		},
 	}
@@ -671,9 +961,11 @@ func TestFileOpRemoveBase(test *testing.T) {
 		rawOperation := []string{"rm", testCase.path}
 
 		runFileOpExecTest(test, fmt.Sprintf("Case %d", i), rawOperation, testCase.errorSubstring, func(tempDir string) {
-			expectedPath := filepath.Join(tempDir, testCase.path)
-			if PathExists(expectedPath) {
-				test.Errorf("Case %d: Target path exists when is should have been removed '%s'.", i, expectedPath)
+			for _, relExpectedPath := range testCase.expectedPaths {
+				expectedPath := filepath.Join(tempDir, relExpectedPath)
+				if PathExists(expectedPath) {
+					test.Errorf("Case %d: Target path exists when is should have been removed '%s'.", i, expectedPath)
+				}
 			}
 		})
 	}

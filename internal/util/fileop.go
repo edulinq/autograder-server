@@ -102,6 +102,11 @@ func (this *FileOperation) Validate() error {
 			return fmt.Errorf("Argument at index %d ('%s') cannot point just to the current directory. File operation paths must point to a dirent inside the current directory tree.", i, parts[i])
 		}
 
+		_, err := filepath.Match(path, "")
+		if err != nil {
+			return fmt.Errorf("Argument at index %d ('%s') contains an invalid path pattern: '%w'.", i, parts[i], err)
+		}
+
 		parts[i] = path
 	}
 
@@ -166,56 +171,22 @@ func (this *FileOperation) Exec(baseDir string) error {
 	parts := []string(*this)
 	command := parts[0]
 
-	var errs error = nil
 	if command == FILE_OP_LONG_COPY {
-		sourcePathGlob := resolvePath(parts[1], baseDir, false)
+		sourcePath := resolvePath(parts[1], baseDir, false)
 		destPath := resolvePath(parts[2], baseDir, false)
 
-		sourcePaths, err := prepForGlobs(sourcePathGlob, destPath)
-		if err != nil {
-			return fmt.Errorf("Failed to prep globs '%s' for a copy: '%w'.", sourcePathGlob, err)
-		}
-
-		for _, sourcePath := range sourcePaths {
-			if sourcePath == destPath {
-				continue
-			}
-
-			err = CopyDirent(sourcePath, destPath, false)
-			if err != nil {
-				errs = errors.Join(errs, err)
-			}
-		}
-
-		return errs
+		return handleGlobFileOperation(sourcePath, destPath, CopyDirentDefault)
 	} else if command == FILE_OP_LONG_MOVE {
-		sourcePathGlob := resolvePath(parts[1], baseDir, false)
+		sourcePath := resolvePath(parts[1], baseDir, false)
 		destPath := resolvePath(parts[2], baseDir, false)
 
-		sourcePaths, err := prepForGlobs(sourcePathGlob, destPath)
-		if err != nil {
-			return fmt.Errorf("Failed to prep globs '%s' for a move: '%w'.", sourcePathGlob, err)
-		}
-
-		for _, sourcePath := range sourcePaths {
-			finalDestPath := destPath
-			if IsDir(destPath) {
-				finalDestPath = filepath.Join(destPath, filepath.Base(sourcePath))
-			}
-
-			err = MoveDirent(sourcePath, finalDestPath)
-			if err != nil {
-				errs = errors.Join(errs, err)
-			}
-		}
-
-		return errs
+		return handleGlobFileOperation(sourcePath, destPath, MoveDirent)
 	} else if command == FILE_OP_LONG_MKDIR {
 		path := resolvePath(parts[1], baseDir, false)
 		return MkDir(path)
 	} else if command == FILE_OP_LONG_REMOVE {
 		path := resolvePath(parts[1], baseDir, false)
-		return RemoveDirent(path)
+		return handleGlobRemove(path)
 	} else {
 		return fmt.Errorf("Unknown file operation: '%s'.", command)
 	}
@@ -263,20 +234,64 @@ func resolvePath(path string, baseDir string, forceUnix bool) string {
 	return path
 }
 
+func handleGlobFileOperation(sourceGlob string, dest string, operation func(string, string) error) error {
+	sourcePaths, err := prepForGlobs(sourceGlob, dest)
+	if err != nil {
+		return fmt.Errorf("Failed to prep globs '%s' for a move: '%w'.", sourceGlob, err)
+	}
+
+	var errs error
+
+	for _, sourcePath := range sourcePaths {
+		if sourcePath == dest {
+			continue
+		}
+
+		err = operation(sourcePath, dest)
+		if err != nil {
+			errs = errors.Join(errs, err)
+		}
+	}
+
+	return errs
+}
+
+func handleGlobRemove(path string) error {
+	paths, err := filepath.Glob(path)
+	if err != nil {
+		return fmt.Errorf("Failed to resolve globs '%s': '%w'.", path, err)
+	}
+
+	var errs error
+
+	for _, path := range paths {
+		err = RemoveDirent(path)
+		if err != nil {
+			errs = errors.Join(errs, err)
+		}
+	}
+
+	return errs
+}
+
 func prepForGlobs(globPath string, destPath string) ([]string, error) {
 	sourcePaths, err := filepath.Glob(globPath)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to resolve globs '%s': '%w'.", globPath, err)
 	}
 
-	if sourcePaths == nil {
+	if len(sourcePaths) == 0 {
 		return nil, fmt.Errorf("Unable to find source path: '%s'.", globPath)
 	}
 
 	if len(sourcePaths) > 1 {
-		err = EnsureDir(destPath)
+		err = MkDir(destPath)
 		if err != nil {
-			return nil, fmt.Errorf("Failed to ensure dest ('%s') of multi-file glob is a dir: '%w'.", destPath, err)
+			return nil, fmt.Errorf("Failed to create dest dir '%s': '%w'.", destPath, err)
+		}
+
+		if !IsDir(destPath) {
+			return nil, fmt.Errorf("Path ('%s') does not exist or is not a dir.", destPath)
 		}
 	}
 
