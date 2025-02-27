@@ -1048,7 +1048,9 @@ Below are the currently supported file operations:
 Any `move`, `copy`, or `remove` command may include [globs](https://en.wikipedia.org/wiki/Glob_%28programming%29) in the source path.
 We support the [Go standard for globs](https://pkg.go.dev/path/filepath#Match).
 All paths are simplified before globs are expanded.
-A glob path like `["copy", "*/*/..", "temp"]` will be simplified into `["copy", "*", "temp"]`.
+A glob path like `*/*/..` will be simplified into `*`.
+
+Following the above POSIX equivalents, `move` and `copy` return errors if the source path cannot be found but `remove` will not.
 
 **Examples**
 

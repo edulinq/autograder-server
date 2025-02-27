@@ -138,6 +138,16 @@ func TestFileOpValidateBase(test *testing.T) {
 			NewFileOperation([]string{"move", "a/?", "b"}),
 			"",
 		},
+		{
+			NewFileOperation([]string{"copy", "a", "*/[a-z"}),
+			NewFileOperation([]string{"copy", "a", "*/[a-z"}),
+			"",
+		},
+		{
+			NewFileOperation([]string{"make-dir", "*/[a-z"}),
+			NewFileOperation([]string{"make-dir", "*/[a-z"}),
+			"",
+		},
 
 		// Errors
 
@@ -416,11 +426,10 @@ func TestFileOpCopyBase(test *testing.T) {
 
 func TestFileOpCopyGlob(test *testing.T) {
 	testCases := []struct {
-		source          string
-		dest            string
-		expectedSources []string
-		expectedDests   []string
-		errorSubstring  string
+		source         string
+		dest           string
+		expectedExists []string
+		errorSubstring string
 	}{
 		{
 			alreadyExistsDirname + "/*",
@@ -428,8 +437,6 @@ func TestFileOpCopyGlob(test *testing.T) {
 			[]string{
 				alreadyExistsFileRelpath,
 				alreadyExistsFileAltRelpath,
-			},
-			[]string{
 				filepath.Join(startingEmptyDirname, alreadyExistsFilename),
 				filepath.Join(startingEmptyDirname, alreadyExistsFilenameAlt),
 			},
@@ -441,8 +448,6 @@ func TestFileOpCopyGlob(test *testing.T) {
 			[]string{
 				alreadyExistsFileRelpath,
 				alreadyExistsFileAltRelpath,
-			},
-			[]string{
 				filepath.Join(startingEmptyDirname, alreadyExistsFilename),
 				filepath.Join(startingEmptyDirname, alreadyExistsFilenameAlt),
 			},
@@ -455,8 +460,6 @@ func TestFileOpCopyGlob(test *testing.T) {
 			[]string{
 				alreadyExistsFileRelpath,
 				alreadyExistsFileAltRelpath,
-			},
-			[]string{
 				filepath.Join(startingEmptyDirname, alreadyExistsFileRelpath),
 				filepath.Join(startingEmptyDirname, alreadyExistsFileAltRelpath),
 			},
@@ -468,8 +471,6 @@ func TestFileOpCopyGlob(test *testing.T) {
 			[]string{
 				alreadyExistsFileRelpath,
 				alreadyExistsFileAltRelpath,
-			},
-			[]string{
 				alreadyExistsFileRelpath,
 				alreadyExistsFileAltRelpath,
 			},
@@ -481,8 +482,6 @@ func TestFileOpCopyGlob(test *testing.T) {
 			[]string{
 				alreadyExistsFileRelpath,
 				alreadyExistsFileAltRelpath,
-			},
-			[]string{
 				filepath.Join("a", alreadyExistsFilename),
 				filepath.Join("a", alreadyExistsFilenameAlt),
 			},
@@ -494,8 +493,6 @@ func TestFileOpCopyGlob(test *testing.T) {
 			[]string{
 				alreadyExistsFileRelpath,
 				alreadyExistsFileAltRelpath,
-			},
-			[]string{
 				filepath.Join("a.txt", alreadyExistsFilename),
 				filepath.Join("a.txt", alreadyExistsFilenameAlt),
 			},
@@ -507,8 +504,6 @@ func TestFileOpCopyGlob(test *testing.T) {
 			[]string{
 				alreadyExistsFileRelpath,
 				alreadyExistsFileAltRelpath,
-			},
-			[]string{
 				filepath.Join("a", alreadyExistsFilename),
 				filepath.Join("a", alreadyExistsFilenameAlt),
 			},
@@ -520,8 +515,6 @@ func TestFileOpCopyGlob(test *testing.T) {
 			[]string{
 				alreadyExistsFileRelpath,
 				alreadyExistsFileAltRelpath,
-			},
-			[]string{
 				filepath.Join("a.txt", alreadyExistsFilename),
 				filepath.Join("a.txt", alreadyExistsFilenameAlt),
 			},
@@ -533,8 +526,6 @@ func TestFileOpCopyGlob(test *testing.T) {
 			[]string{
 				alreadyExistsFileRelpath,
 				alreadyExistsFileAltRelpath,
-			},
-			[]string{
 				filepath.Join(alreadyExistsDirname, "*.txt", alreadyExistsFilename),
 				filepath.Join(alreadyExistsDirname, "*.txt", alreadyExistsFilenameAlt),
 			},
@@ -549,8 +540,6 @@ func TestFileOpCopyGlob(test *testing.T) {
 				startingEmptyDirname,
 				alreadyExistsFileRelpath,
 				alreadyExistsFileAltRelpath,
-			},
-			[]string{
 				filepath.Join("a", alreadyExistsFilename),
 				filepath.Join("a", alreadyExistsDirname),
 				filepath.Join("a", startingEmptyDirname),
@@ -563,7 +552,6 @@ func TestFileOpCopyGlob(test *testing.T) {
 			alreadyExistsDirname + "/*.txt",
 			alreadyExistsFilename,
 			[]string{},
-			[]string{},
 			"Failed to create dest dir",
 		},
 	}
@@ -572,20 +560,11 @@ func TestFileOpCopyGlob(test *testing.T) {
 		rawOperation := []string{"cp", testCase.source, testCase.dest}
 
 		runFileOpExecTest(test, fmt.Sprintf("Case %d", i), rawOperation, testCase.errorSubstring, func(tempDir string) {
-			for _, relExpectedDest := range testCase.expectedDests {
-				expectedDest := filepath.Join(tempDir, relExpectedDest)
+			for _, relExpectedExists := range testCase.expectedExists {
+				expectedExists := filepath.Join(tempDir, relExpectedExists)
 
-				if !PathExists(expectedDest) {
-					test.Errorf("Case %d: Dest does not exist '%s'.", i, expectedDest)
-					return
-				}
-			}
-
-			for _, relExpectedSource := range testCase.expectedSources {
-				expectedSource := filepath.Join(tempDir, relExpectedSource)
-
-				if !PathExists(expectedSource) {
-					test.Errorf("Case %d: Source does not exist '%s'.", i, expectedSource)
+				if !PathExists(expectedExists) {
+					test.Errorf("Case %d: A path does not exist when it should '%s'.", i, expectedExists)
 					return
 				}
 			}
@@ -665,22 +644,22 @@ func TestFileOpMoveBase(test *testing.T) {
 
 func TestFileOpMoveGlob(test *testing.T) {
 	testCases := []struct {
-		source          string
-		dest            string
-		expectedSources []string
-		expectedDests   []string
-		errorSubstring  string
+		source            string
+		dest              string
+		expectedExists    []string
+		expectedNotExists []string
+		errorSubstring    string
 	}{
 		{
 			alreadyExistsDirname + "/*",
 			startingEmptyDirname,
 			[]string{
-				alreadyExistsFileRelpath,
-				alreadyExistsFileAltRelpath,
-			},
-			[]string{
 				filepath.Join(startingEmptyDirname, alreadyExistsFilename),
 				filepath.Join(startingEmptyDirname, alreadyExistsFilenameAlt),
+			},
+			[]string{
+				alreadyExistsFileRelpath,
+				alreadyExistsFileAltRelpath,
 			},
 			"",
 		},
@@ -688,12 +667,12 @@ func TestFileOpMoveGlob(test *testing.T) {
 			alreadyExistsDirname + "/*.txt",
 			startingEmptyDirname,
 			[]string{
-				alreadyExistsFileRelpath,
-				alreadyExistsFileAltRelpath,
-			},
-			[]string{
 				filepath.Join(startingEmptyDirname, alreadyExistsFilename),
 				filepath.Join(startingEmptyDirname, alreadyExistsFilenameAlt),
+			},
+			[]string{
+				alreadyExistsFileRelpath,
+				alreadyExistsFileAltRelpath,
 			},
 			"",
 		},
@@ -702,20 +681,32 @@ func TestFileOpMoveGlob(test *testing.T) {
 			alreadyExistsDirname,
 			startingEmptyDirname,
 			[]string{
-				alreadyExistsFileRelpath,
-				alreadyExistsFileAltRelpath,
-			},
-			[]string{
 				filepath.Join(startingEmptyDirname, alreadyExistsFileRelpath),
 				filepath.Join(startingEmptyDirname, alreadyExistsFileAltRelpath),
+			},
+			[]string{
+				alreadyExistsFileRelpath,
+				alreadyExistsFileAltRelpath,
 			},
 			"",
 		},
 		{
 			alreadyExistsDirname + "/*",
 			alreadyExistsDirname,
-			// Skip checking sources, as they are the same as dest and will fail check.
+			[]string{
+				alreadyExistsFileRelpath,
+				alreadyExistsFileAltRelpath,
+			},
 			[]string{},
+			"",
+		},
+		{
+			alreadyExistsDirname + "/*",
+			"a",
+			[]string{
+				filepath.Join("a", alreadyExistsFilename),
+				filepath.Join("a", alreadyExistsFilenameAlt),
+			},
 			[]string{
 				alreadyExistsFileRelpath,
 				alreadyExistsFileAltRelpath,
@@ -724,27 +715,14 @@ func TestFileOpMoveGlob(test *testing.T) {
 		},
 		{
 			alreadyExistsDirname + "/*",
-			"a",
-			[]string{
-				alreadyExistsFileRelpath,
-				alreadyExistsFileAltRelpath,
-			},
-			[]string{
-				filepath.Join("a", alreadyExistsFilename),
-				filepath.Join("a", alreadyExistsFilenameAlt),
-			},
-			"",
-		},
-		{
-			alreadyExistsDirname + "/*",
 			"a.txt",
-			[]string{
-				alreadyExistsFileRelpath,
-				alreadyExistsFileAltRelpath,
-			},
 			[]string{
 				filepath.Join("a.txt", alreadyExistsFilename),
 				filepath.Join("a.txt", alreadyExistsFilenameAlt),
+			},
+			[]string{
+				alreadyExistsFileRelpath,
+				alreadyExistsFileAltRelpath,
 			},
 			"",
 		},
@@ -752,12 +730,12 @@ func TestFileOpMoveGlob(test *testing.T) {
 			alreadyExistsDirname + "/*.txt",
 			"a",
 			[]string{
-				alreadyExistsFileRelpath,
-				alreadyExistsFileAltRelpath,
-			},
-			[]string{
 				filepath.Join("a", alreadyExistsFilename),
 				filepath.Join("a", alreadyExistsFilenameAlt),
+			},
+			[]string{
+				alreadyExistsFileRelpath,
+				alreadyExistsFileAltRelpath,
 			},
 			"",
 		},
@@ -765,25 +743,25 @@ func TestFileOpMoveGlob(test *testing.T) {
 			alreadyExistsDirname + "/*.txt",
 			"a.txt",
 			[]string{
-				alreadyExistsFileRelpath,
-				alreadyExistsFileAltRelpath,
-			},
-			[]string{
 				filepath.Join("a.txt", alreadyExistsFilename),
 				filepath.Join("a.txt", alreadyExistsFilenameAlt),
+			},
+			[]string{
+				alreadyExistsFileRelpath,
+				alreadyExistsFileAltRelpath,
 			},
 			"",
 		},
 		{
 			alreadyExistsDirname + "/*.txt",
 			alreadyExistsDirname + "/*.txt",
-			[]string{
-				alreadyExistsFileRelpath,
-				alreadyExistsFileAltRelpath,
-			},
 			[]string{
 				filepath.Join(alreadyExistsDirname, "*.txt", alreadyExistsFilename),
 				filepath.Join(alreadyExistsDirname, "*.txt", alreadyExistsFilenameAlt),
+			},
+			[]string{
+				alreadyExistsFileRelpath,
+				alreadyExistsFileAltRelpath,
 			},
 			"",
 		},
@@ -791,18 +769,18 @@ func TestFileOpMoveGlob(test *testing.T) {
 			"*",
 			"a",
 			[]string{
-				alreadyExistsFilename,
-				alreadyExistsDirname,
-				startingEmptyDirname,
-				alreadyExistsFileRelpath,
-				alreadyExistsFileAltRelpath,
-			},
-			[]string{
 				filepath.Join("a", alreadyExistsFilename),
 				filepath.Join("a", alreadyExistsDirname),
 				filepath.Join("a", startingEmptyDirname),
 				filepath.Join("a", alreadyExistsFileRelpath),
 				filepath.Join("a", alreadyExistsFileAltRelpath),
+			},
+			[]string{
+				alreadyExistsFilename,
+				alreadyExistsDirname,
+				startingEmptyDirname,
+				alreadyExistsFileRelpath,
+				alreadyExistsFileAltRelpath,
 			},
 			"",
 		},
@@ -819,20 +797,20 @@ func TestFileOpMoveGlob(test *testing.T) {
 		rawOperation := []string{"mv", testCase.source, testCase.dest}
 
 		runFileOpExecTest(test, fmt.Sprintf("Case %d", i), rawOperation, testCase.errorSubstring, func(tempDir string) {
-			for _, relExpectedDest := range testCase.expectedDests {
-				expectedDest := filepath.Join(tempDir, relExpectedDest)
+			for _, relExpectedExists := range testCase.expectedExists {
+				expectedExists := filepath.Join(tempDir, relExpectedExists)
 
-				if !PathExists(expectedDest) {
-					test.Errorf("Case %d: Dest does not exist '%s'.", i, expectedDest)
+				if !PathExists(expectedExists) {
+					test.Errorf("Case %d: A path does not exist when it should '%s'.", i, expectedExists)
 					return
 				}
 			}
 
-			for _, relExpectedSource := range testCase.expectedSources {
-				expectedSource := filepath.Join(tempDir, relExpectedSource)
+			for _, relExpectedNotExists := range testCase.expectedNotExists {
+				expectedNotExists := filepath.Join(tempDir, relExpectedNotExists)
 
-				if PathExists(expectedSource) {
-					test.Errorf("Case %d: Source exists '%s'.", i, expectedSource)
+				if PathExists(expectedNotExists) {
+					test.Errorf("Case %d: A path exists when it should not '%s'.", i, expectedNotExists)
 					return
 				}
 			}

@@ -52,6 +52,13 @@ var fileOpNumArgs map[string]int = map[string]int{
 	FILE_OP_LONG_REMOVE: 1,
 }
 
+var supportsSourceGlobs map[string]bool = map[string]bool{
+	FILE_OP_LONG_COPY:   true,
+	FILE_OP_LONG_MOVE:   true,
+	FILE_OP_LONG_MKDIR:  false,
+	FILE_OP_LONG_REMOVE: true,
+}
+
 func NewFileOperation(parts []string) *FileOperation {
 	operation := FileOperation(parts)
 	return &operation
@@ -102,12 +109,14 @@ func (this *FileOperation) Validate() error {
 			return fmt.Errorf("Argument at index %d ('%s') cannot point just to the current directory. File operation paths must point to a dirent inside the current directory tree.", i, parts[i])
 		}
 
-		_, err := filepath.Match(path, "")
-		if err != nil {
-			return fmt.Errorf("Argument at index %d ('%s') contains an invalid path pattern: '%w'.", i, parts[i], err)
-		}
-
 		parts[i] = path
+	}
+
+	if supportsSourceGlobs[command] {
+		_, err := filepath.Match(parts[1], "")
+		if err != nil {
+			return fmt.Errorf("Argument at index 1 ('%s') contains an invalid path pattern: '%w'.", parts[1], err)
+		}
 	}
 
 	return nil
@@ -175,7 +184,7 @@ func (this *FileOperation) Exec(baseDir string) error {
 		sourcePath := resolvePath(parts[1], baseDir, false)
 		destPath := resolvePath(parts[2], baseDir, false)
 
-		return handleGlobFileOperation(sourcePath, destPath, CopyDirentDefault)
+		return handleGlobFileOperation(sourcePath, destPath, CopyDirent)
 	} else if command == FILE_OP_LONG_MOVE {
 		sourcePath := resolvePath(parts[1], baseDir, false)
 		destPath := resolvePath(parts[2], baseDir, false)
@@ -237,7 +246,7 @@ func resolvePath(path string, baseDir string, forceUnix bool) string {
 func handleGlobFileOperation(sourceGlob string, dest string, operation func(string, string) error) error {
 	sourcePaths, err := prepForGlobs(sourceGlob, dest)
 	if err != nil {
-		return fmt.Errorf("Failed to prep globs '%s' for a move: '%w'.", sourceGlob, err)
+		return fmt.Errorf("Failed to prep globs '%s' for an operation: '%w'.", sourceGlob, err)
 	}
 
 	var errs error
@@ -288,10 +297,6 @@ func prepForGlobs(globPath string, destPath string) ([]string, error) {
 		err = MkDir(destPath)
 		if err != nil {
 			return nil, fmt.Errorf("Failed to create dest dir '%s': '%w'.", destPath, err)
-		}
-
-		if !IsDir(destPath) {
-			return nil, fmt.Errorf("Path ('%s') does not exist or is not a dir.", destPath)
 		}
 	}
 
