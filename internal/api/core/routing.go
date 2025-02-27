@@ -13,6 +13,8 @@ import (
 	"github.com/edulinq/autograder/internal/api/static"
 	"github.com/edulinq/autograder/internal/config"
 	"github.com/edulinq/autograder/internal/log"
+	"github.com/edulinq/autograder/internal/stats"
+	"github.com/edulinq/autograder/internal/timestamp"
 	"github.com/edulinq/autograder/internal/util"
 )
 
@@ -93,16 +95,18 @@ func handleRedirect(target string, response http.ResponseWriter, request *http.R
 }
 
 func handleAPIEndpoint(response http.ResponseWriter, request *http.Request, apiHandler any) error {
+	startTime := timestamp.Now()
+
 	// Ensure the handler looks good.
 	validAPIHandler, _, _, apiErr := validateAPIHandler(request.URL.Path, apiHandler)
 	if apiErr != nil {
-		return sendAPIResponse(nil, response, nil, apiErr, false)
+		return sendAPIResponse(nil, response, nil, apiErr, false, startTime, request.RemoteAddr)
 	}
 
 	// Get the actual request.
 	apiRequest, apiErr := createAPIRequest(request, validAPIHandler)
 	if apiErr != nil {
-		return sendAPIResponse(nil, response, nil, apiErr, false)
+		return sendAPIResponse(nil, response, nil, apiErr, false, startTime, request.RemoteAddr)
 	}
 	defer CleanupAPIrequest(apiRequest)
 
@@ -114,7 +118,7 @@ func handleAPIEndpoint(response http.ResponseWriter, request *http.Request, apiH
 	// Execute the handler.
 	apiResponse, apiErr := callHandler(apiHandler, apiRequest)
 
-	return sendAPIResponse(apiRequest, response, apiResponse, apiErr, false)
+	return sendAPIResponse(apiRequest, response, apiResponse, apiErr, false, startTime, request.RemoteAddr)
 }
 
 // Send out the result from an API call.
@@ -123,7 +127,7 @@ func handleAPIEndpoint(response http.ResponseWriter, request *http.Request, apiH
 // |hardFail| controls whether we should try to wrap an error and call this method again (so we don't infinite loop),
 // most callers should set it to false.
 func sendAPIResponse(apiRequest ValidAPIRequest, response http.ResponseWriter,
-	content any, apiErr *APIError, hardFail bool) error {
+	content any, apiErr *APIError, hardFail bool, startTime timestamp.Timestamp, sender string) error {
 	var apiResponse *APIResponse = nil
 
 	if apiErr != nil {
@@ -146,9 +150,12 @@ func sendAPIResponse(apiRequest ValidAPIRequest, response http.ResponseWriter,
 
 			payload, _ = util.ToJSON(apiResponse)
 		} else {
-			return sendAPIResponse(apiRequest, response, nil, apiErr, true)
+			return sendAPIResponse(apiRequest, response, nil, apiErr, true, startTime, sender)
 		}
 	}
+
+	endpoint, userEmail, courseID, assignmentID, locator := getRequestInfo(apiRequest, apiErr)
+	stats.AsyncStoreAPIRequestMetric(startTime, apiResponse.EndTimestamp, sender, endpoint, userEmail, courseID, assignmentID, locator)
 
 	// When in testing mode, allow cross-origin requests.
 	if config.UNIT_TESTING_MODE.Get() {
