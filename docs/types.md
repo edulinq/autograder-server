@@ -1038,17 +1038,16 @@ Any path contained within a file operation must obey the following rules:
    The path must point to a path within the current directory (e.g., `a.txt` or even `./a.txt`), not the directory itself.
 
 Below are the currently supported file operations:
-| Long Name  | Short Name | Arguments              | POSIX Equivalent | Description |
-|------------|------------|------------------------|------------------|-------------|
-| `copy`     | `cp`       | source path, dest path | `cp -r`          | Copy the source path to the dest path. The source path may be a file or directory. |
-| `move`     | `mv`       | source path, dest path | `mv`             | Move (or rename) the source path to the dest path. The source path may be a file or directory. |
-| `make-dir` | `mkdir`    | path                   | `mkdir -p`       | Create a directory at the given path. The path make already exist. Any required parent directories will be created. |
-| `remove`   | `rm`       | path                   | `rm -rf`         | Remove the given path. The path may be a file or directory. The path may not exist. |
+| Long Name  | Short Name | Arguments                   | POSIX Equivalent | Description |
+|------------|------------|-----------------------------|------------------|-------------|
+| `copy`     | `cp`       | source glob path, dest path | `cp -r`          | Copy the source path to the dest path. The source path may be a file or directory. |
+| `move`     | `mv`       | source glob path, dest path | `mv`             | Move (or rename) the source path to the dest path. The source path may be a file or directory. |
+| `make-dir` | `mkdir`    | path                        | `mkdir -p`       | Create a directory at the given path. The path make already exist. Any required parent directories will be created. |
+| `remove`   | `rm`       | glob path                   | `rm -rf`         | Remove the given path. The path may be a file or directory. The path may not exist. |
 
 Any `move`, `copy`, or `remove` command may include [globs](https://en.wikipedia.org/wiki/Glob_%28programming%29) in the source path.
 We support the [Go standard for globs](https://pkg.go.dev/path/filepath#Match).
-All paths are simplified before globs are expanded.
-A glob path like `*/*/..` will be simplified into `*`.
+All paths are simplified before globs are expanded, so a glob path like `*/*/..` will be simplified into `*`.
 
 Following the above POSIX equivalents, `move` and `copy` return errors if the source path cannot be found but `remove` will not.
 

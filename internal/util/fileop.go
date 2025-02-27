@@ -115,7 +115,7 @@ func (this *FileOperation) Validate() error {
 	if supportsSourceGlobs[command] {
 		_, err := filepath.Match(parts[1], "")
 		if err != nil {
-			return fmt.Errorf("Argument at index 1 ('%s') contains an invalid path pattern: '%w'.", parts[1], err)
+			return fmt.Errorf("Argument at index 1 ('%s') contains an invalid glob path: '%w'.", parts[1], err)
 		}
 	}
 
@@ -246,7 +246,7 @@ func resolvePath(path string, baseDir string, forceUnix bool) string {
 func handleGlobFileOperation(sourceGlob string, dest string, operation func(string, string) error) error {
 	sourcePaths, err := prepForGlobs(sourceGlob, dest)
 	if err != nil {
-		return fmt.Errorf("Failed to prep globs '%s' for an operation: '%w'.", sourceGlob, err)
+		return fmt.Errorf("Failed to prep glob path '%s' for an operation: '%w'.", sourceGlob, err)
 	}
 
 	var errs error
@@ -268,7 +268,7 @@ func handleGlobFileOperation(sourceGlob string, dest string, operation func(stri
 func handleGlobRemove(path string) error {
 	paths, err := filepath.Glob(path)
 	if err != nil {
-		return fmt.Errorf("Failed to resolve globs '%s': '%w'.", path, err)
+		return fmt.Errorf("Failed to resolve glob path '%s': '%w'.", path, err)
 	}
 
 	var errs error
@@ -286,13 +286,15 @@ func handleGlobRemove(path string) error {
 func prepForGlobs(globPath string, destPath string) ([]string, error) {
 	sourcePaths, err := filepath.Glob(globPath)
 	if err != nil {
-		return nil, fmt.Errorf("Failed to resolve globs '%s': '%w'.", globPath, err)
+		return nil, fmt.Errorf("Failed to resolve glob path '%s': '%w'.", globPath, err)
 	}
 
 	if len(sourcePaths) == 0 {
 		return nil, fmt.Errorf("Unable to find source path: '%s'.", globPath)
 	}
 
+	// If there are multiple source paths, dest path must be a directory.
+	// This is to avoid multiple sources competing over the same destination file.
 	if len(sourcePaths) > 1 {
 		err = MkDir(destPath)
 		if err != nil {

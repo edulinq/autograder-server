@@ -281,7 +281,7 @@ func TestFileOpValidateBase(test *testing.T) {
 		{
 			NewFileOperation([]string{"copy", "*/[a-z", "b"}),
 			nil,
-			"invalid path pattern",
+			"invalid glob path",
 		},
 	}
 
@@ -549,6 +549,19 @@ func TestFileOpCopyGlob(test *testing.T) {
 			"",
 		},
 		{
+			"*",
+			alreadyExistsDirname,
+			[]string{
+				alreadyExistsFilename,
+				alreadyExistsDirname,
+				startingEmptyDirname,
+				alreadyExistsFileRelpath,
+				alreadyExistsFileAltRelpath,
+				filepath.Join(alreadyExistsDirname, startingEmptyDirname),
+			},
+			"",
+		},
+		{
 			alreadyExistsDirname + "/*.txt",
 			alreadyExistsFilename,
 			[]string{},
@@ -781,6 +794,26 @@ func TestFileOpMoveGlob(test *testing.T) {
 				startingEmptyDirname,
 				alreadyExistsFileRelpath,
 				alreadyExistsFileAltRelpath,
+			},
+			"",
+		},
+		{
+			"*",
+			alreadyExistsDirname,
+			[]string{
+				alreadyExistsDirname,
+				alreadyExistsFileRelpath,
+				alreadyExistsFileAltRelpath,
+				filepath.Join(alreadyExistsDirname, startingEmptyDirname),
+			},
+			// Ensure we don't move the alreadyExistsDirname into itself.
+			[]string{
+				alreadyExistsFilename,
+				alreadyExistsFilenameAlt,
+				startingEmptyDirname,
+				filepath.Join(alreadyExistsDirname, alreadyExistsDirname),
+				filepath.Join(alreadyExistsDirname, alreadyExistsFileRelpath),
+				filepath.Join(alreadyExistsDirname, alreadyExistsFileAltRelpath),
 			},
 			"",
 		},
