@@ -81,7 +81,7 @@ func MustNewAPIRoute(basePath string, apiHandler any) *APIRoute {
 			apiErr := NewBareInternalError("-001", request.URL.Path, "Recovered from a panic when handling an API endpoint.").
 				Add("value", value)
 
-			err = sendAPIResponse(nil, response, nil, apiErr, false, startTime, request.RemoteAddr)
+			err = sendAPIResponse(nil, response, nil, apiErr, false, startTime)
 		}()
 
 		err = handleAPIEndpoint(response, request, apiHandler)

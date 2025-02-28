@@ -29,6 +29,7 @@ type APIRequest struct {
 	// These are not provided in JSON, they are filled in during validation.
 	RequestID string              `json:"-"`
 	Endpoint  string              `json:"-"`
+	Sender    string              `json:"-"`
 	Timestamp timestamp.Timestamp `json:"-"`
 	Context   context.Context     `json:"-"`
 }
@@ -72,6 +73,7 @@ func (this *APIRequest) Validate(httpRequest *http.Request, request any, endpoin
 		this.Context = context.Background()
 	} else {
 		this.Context = httpRequest.Context()
+		this.Sender = httpRequest.RemoteAddr
 	}
 
 	return nil
@@ -218,6 +220,8 @@ func (this *APIRequest) LogValue() []*log.Attr {
 	return []*log.Attr{
 		log.NewAttr("id", this.RequestID),
 		log.NewAttr("endpoint", this.Endpoint),
+		log.NewAttr("sender", this.Sender),
+		log.NewAttr("timestamp", this.Timestamp),
 	}
 }
 
@@ -355,4 +359,87 @@ func validateRequestStruct(httpRequest *http.Request, rawRequest any, endpoint s
 	}
 
 	return foundRequestStruct, nil
+}
+
+// Reflexively get the request ID and timestamp from a request.
+func getRequestIDAndTimestamp(request ValidAPIRequest) (string, timestamp.Timestamp) {
+	id := ""
+	startTime := timestamp.Now()
+
+	if request == nil {
+		return id, startTime
+	}
+
+	reflectValue := reflect.ValueOf(request).Elem()
+
+	idValue := reflectValue.FieldByName("RequestID")
+	if idValue.IsValid() {
+		id = idValue.Interface().(string)
+	}
+
+	timestampValue := reflectValue.FieldByName("Timestamp")
+	if timestampValue.IsValid() {
+		startTime = timestampValue.Interface().(timestamp.Timestamp)
+	}
+
+	return id, startTime
+}
+
+// Get the endpoint, sender, userEmail, courseID, assignmentID, and locator
+// from a ValidAPIRequest and an APIError, both of which may be nil.
+func getRequestInfo(request ValidAPIRequest, apiError *APIError) (string, string, string, string, string, string) {
+	endpoint, sender, userEmail, courseID, assignmentID := getBasicAPIRequestInfo(request)
+	locator := ""
+
+	if apiError != nil {
+		endpoint = util.GetStringWithDefault(endpoint, apiError.Endpoint)
+		courseID = util.GetStringWithDefault(courseID, apiError.CourseID)
+		assignmentID = util.GetStringWithDefault(assignmentID, apiError.AssignmentID)
+		userEmail = util.GetStringWithDefault(userEmail, apiError.UserEmail)
+		locator = apiError.Locator
+	}
+
+	return endpoint, sender, userEmail, courseID, assignmentID, locator
+}
+
+// Reflexively get the endpoint, userEmail, courseID, and assignmentID from a ValidAPIRequest.
+func getBasicAPIRequestInfo(request ValidAPIRequest) (string, string, string, string, string) {
+	endpoint := ""
+	sender := ""
+	userEmail := ""
+	courseID := ""
+	assignmentID := ""
+
+	if request == nil {
+		return endpoint, sender, userEmail, courseID, assignmentID
+	}
+
+	reflectValue := reflect.ValueOf(request).Elem()
+
+	endpointValue := reflectValue.FieldByName("Endpoint")
+	if endpointValue.IsValid() {
+		endpoint = fmt.Sprintf("%s", endpointValue.Interface())
+	}
+
+	senderValue := reflectValue.FieldByName("Sender")
+	if senderValue.IsValid() {
+		sender = fmt.Sprintf("%s", senderValue.Interface())
+	}
+
+	userEmailValue := reflectValue.FieldByName("UserEmail")
+	if userEmailValue.IsValid() {
+		userEmail = fmt.Sprintf("%s", userEmailValue.Interface())
+	}
+
+	courseIDValue := reflectValue.FieldByName("CourseID")
+	if courseIDValue.IsValid() {
+		courseID = fmt.Sprintf("%s", courseIDValue.Interface())
+	}
+
+	assignmentIDValue := reflectValue.FieldByName("AssignmentID")
+	if assignmentIDValue.IsValid() {
+		assignmentID = fmt.Sprintf("%s", assignmentIDValue.Interface())
+	}
+
+	return endpoint, sender, userEmail, courseID, assignmentID
 }
