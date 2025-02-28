@@ -39,6 +39,7 @@ type APIError struct {
 	RequestID    string
 	Locator      string
 	Endpoint     string
+	Sender       string
 	Timestamp    timestamp.Timestamp
 	LogLevel     log.LogLevel
 	HTTPStatus   int
@@ -58,13 +59,14 @@ func (this *APIError) Error() string {
 }
 
 func (this *APIError) Log() {
-	args := make([]any, 0, 16)
+	args := make([]any, 0)
 
 	args = append(args,
 		this.SourceError,
 		log.NewAttr("api-request-id", this.RequestID),
 		log.NewAttr("locator", this.Locator),
 		log.NewAttr("api-endpoint", this.Endpoint),
+		log.NewAttr("sender", this.Sender),
 		log.NewAttr("timestamp", this.Timestamp),
 		log.NewAttr("http-status", this.HTTPStatus),
 		log.NewAttr("internal-text", this.InternalText),
@@ -160,6 +162,7 @@ func NewBadRequestError(locator string, request *APIRequest, message string) *AP
 		RequestID:    request.RequestID,
 		Locator:      locator,
 		Endpoint:     request.Endpoint,
+		Sender:       request.Sender,
 		Timestamp:    request.Timestamp,
 		LogLevel:     log.LevelInfo,
 		HTTPStatus:   HTTP_STATUS_BAD_REQUEST,
@@ -173,6 +176,7 @@ func NewBadUserRequestError(locator string, request *APIRequestUserContext, mess
 		RequestID:    request.RequestID,
 		Locator:      locator,
 		Endpoint:     request.Endpoint,
+		Sender:       request.Sender,
 		Timestamp:    request.Timestamp,
 		LogLevel:     log.LevelInfo,
 		HTTPStatus:   HTTP_STATUS_BAD_REQUEST,
@@ -189,6 +193,7 @@ func NewBadCourseRequestError(locator string, request *APIRequestCourseUserConte
 		RequestID:    request.RequestID,
 		Locator:      locator,
 		Endpoint:     request.Endpoint,
+		Sender:       request.Sender,
 		Timestamp:    request.Timestamp,
 		LogLevel:     log.LevelInfo,
 		HTTPStatus:   HTTP_STATUS_BAD_REQUEST,
@@ -207,6 +212,7 @@ func NewBareBadRequestError(locator string, endpoint string, message string) *AP
 		RequestID:    locator,
 		Locator:      locator,
 		Endpoint:     endpoint,
+		Sender:       "",
 		Timestamp:    timestamp.Now(),
 		LogLevel:     log.LevelInfo,
 		HTTPStatus:   HTTP_STATUS_BAD_REQUEST,
@@ -220,6 +226,7 @@ func NewAuthBadRequestError(locator string, request *APIRequestUserContext, inte
 		RequestID:    request.RequestID,
 		Locator:      locator,
 		Endpoint:     request.Endpoint,
+		Sender:       request.Sender,
 		Timestamp:    request.Timestamp,
 		LogLevel:     log.LevelInfo,
 		HTTPStatus:   HTTP_STATUS_AUTH_ERROR,
@@ -236,6 +243,7 @@ func NewBadServerPermissionsError(locator string, request *APIRequestUserContext
 		RequestID:    request.RequestID,
 		Locator:      locator,
 		Endpoint:     request.Endpoint,
+		Sender:       request.Sender,
 		Timestamp:    request.Timestamp,
 		LogLevel:     log.LevelInfo,
 		HTTPStatus:   HTTP_PERMISSIONS_ERROR,
@@ -255,6 +263,7 @@ func NewBadCoursePermissionsError(locator string, request *APIRequestCourseUserC
 		RequestID:    request.RequestID,
 		Locator:      locator,
 		Endpoint:     request.Endpoint,
+		Sender:       request.Sender,
 		Timestamp:    request.Timestamp,
 		LogLevel:     log.LevelInfo,
 		HTTPStatus:   HTTP_PERMISSIONS_ERROR,
@@ -275,6 +284,7 @@ func NewInternalError(locator string, request *APIRequestCourseUserContext, inte
 		RequestID:    request.RequestID,
 		Locator:      locator,
 		Endpoint:     request.Endpoint,
+		Sender:       request.Sender,
 		Timestamp:    request.Timestamp,
 		LogLevel:     log.LevelError,
 		HTTPStatus:   HTTP_STATUS_SERVER_ERROR,
@@ -292,6 +302,7 @@ func NewUserContextInternalError(locator string, request *APIRequestUserContext,
 		RequestID:    request.RequestID,
 		Locator:      locator,
 		Endpoint:     request.Endpoint,
+		Sender:       request.Sender,
 		Timestamp:    request.Timestamp,
 		LogLevel:     log.LevelError,
 		HTTPStatus:   HTTP_STATUS_SERVER_ERROR,
@@ -308,6 +319,7 @@ func NewBaseInternalError(locator string, request *APIRequest, internalMessage s
 		RequestID:    request.RequestID,
 		Locator:      locator,
 		Endpoint:     request.Endpoint,
+		Sender:       request.Sender,
 		Timestamp:    request.Timestamp,
 		LogLevel:     log.LevelError,
 		HTTPStatus:   HTTP_STATUS_SERVER_ERROR,
@@ -324,6 +336,7 @@ func NewBareInternalError(locator string, endpoint string, internalMessage strin
 		RequestID:    locator,
 		Locator:      locator,
 		Endpoint:     endpoint,
+		Sender:       "",
 		Timestamp:    timestamp.Now(),
 		LogLevel:     log.LevelError,
 		HTTPStatus:   HTTP_STATUS_SERVER_ERROR,

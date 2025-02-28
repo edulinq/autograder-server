@@ -32,7 +32,7 @@ func runDockerGrader(ctx context.Context, assignment *model.Assignment, submissi
 	}
 
 	// Copy over submission files to the temp input dir.
-	err = util.CopyDirent(submissionPath, inputDir, true)
+	err = util.CopyDirentFull(submissionPath, inputDir, true)
 	if err != nil {
 		return nil, nil, "", "", "", fmt.Errorf("Failed to copy over submission/input contents: '%w'.", err)
 	}

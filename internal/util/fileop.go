@@ -52,6 +52,13 @@ var fileOpNumArgs map[string]int = map[string]int{
 	FILE_OP_LONG_REMOVE: 1,
 }
 
+var supportsSourceGlobs map[string]bool = map[string]bool{
+	FILE_OP_LONG_COPY:   true,
+	FILE_OP_LONG_MOVE:   true,
+	FILE_OP_LONG_MKDIR:  false,
+	FILE_OP_LONG_REMOVE: true,
+}
+
 func NewFileOperation(parts []string) *FileOperation {
 	operation := FileOperation(parts)
 	return &operation
@@ -103,6 +110,13 @@ func (this *FileOperation) Validate() error {
 		}
 
 		parts[i] = path
+	}
+
+	if supportsSourceGlobs[command] {
+		_, err := filepath.Match(parts[1], "")
+		if err != nil {
+			return fmt.Errorf("Argument at index 1 ('%s') contains an invalid glob path: '%w'.", parts[1], err)
+		}
 	}
 
 	return nil
@@ -169,25 +183,19 @@ func (this *FileOperation) Exec(baseDir string) error {
 	if command == FILE_OP_LONG_COPY {
 		sourcePath := resolvePath(parts[1], baseDir, false)
 		destPath := resolvePath(parts[2], baseDir, false)
-		if sourcePath == destPath {
-			return nil
-		}
 
-		return CopyDirent(sourcePath, destPath, false)
+		return handleGlobFileOperation(sourcePath, destPath, CopyDirent)
 	} else if command == FILE_OP_LONG_MOVE {
 		sourcePath := resolvePath(parts[1], baseDir, false)
 		destPath := resolvePath(parts[2], baseDir, false)
-		if sourcePath == destPath {
-			return nil
-		}
 
-		return MoveDirent(sourcePath, destPath)
+		return handleGlobFileOperation(sourcePath, destPath, MoveDirent)
 	} else if command == FILE_OP_LONG_MKDIR {
 		path := resolvePath(parts[1], baseDir, false)
 		return MkDir(path)
 	} else if command == FILE_OP_LONG_REMOVE {
 		path := resolvePath(parts[1], baseDir, false)
-		return RemoveDirent(path)
+		return handleGlobRemove(path)
 	} else {
 		return fmt.Errorf("Unknown file operation: '%s'.", command)
 	}
@@ -233,4 +241,66 @@ func resolvePath(path string, baseDir string, forceUnix bool) string {
 	}
 
 	return path
+}
+
+func handleGlobFileOperation(sourceGlob string, dest string, operation func(string, string) error) error {
+	sourcePaths, err := prepForGlobs(sourceGlob, dest)
+	if err != nil {
+		return fmt.Errorf("Failed to prep glob path '%s' for an operation: '%w'.", sourceGlob, err)
+	}
+
+	var errs error
+
+	for _, sourcePath := range sourcePaths {
+		if sourcePath == dest {
+			continue
+		}
+
+		err = operation(sourcePath, dest)
+		if err != nil {
+			errs = errors.Join(errs, err)
+		}
+	}
+
+	return errs
+}
+
+func handleGlobRemove(path string) error {
+	paths, err := filepath.Glob(path)
+	if err != nil {
+		return fmt.Errorf("Failed to resolve glob path '%s': '%w'.", path, err)
+	}
+
+	var errs error
+
+	for _, path := range paths {
+		err = RemoveDirent(path)
+		if err != nil {
+			errs = errors.Join(errs, err)
+		}
+	}
+
+	return errs
+}
+
+func prepForGlobs(globPath string, destPath string) ([]string, error) {
+	sourcePaths, err := filepath.Glob(globPath)
+	if err != nil {
+		return nil, fmt.Errorf("Failed to resolve glob path '%s': '%w'.", globPath, err)
+	}
+
+	if len(sourcePaths) == 0 {
+		return nil, fmt.Errorf("Unable to find source path: '%s'.", globPath)
+	}
+
+	// If there are multiple source paths, dest path must be a directory.
+	// This is to avoid multiple sources competing over the same destination file.
+	if len(sourcePaths) > 1 {
+		err = MkDir(destPath)
+		if err != nil {
+			return nil, fmt.Errorf("Failed to create dest dir '%s': '%w'.", destPath, err)
+		}
+	}
+
+	return sourcePaths, nil
 }

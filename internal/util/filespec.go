@@ -343,7 +343,7 @@ func (this *FileSpec) copyPaths(baseDir string, baseDestDir string) error {
 
 	for _, path := range paths {
 		// Note that CopyDirent() will handle when dest is a file or dir.
-		err := CopyDirent(path, destPath, false)
+		err := CopyDirent(path, destPath)
 		if err != nil {
 			return fmt.Errorf("Failed to copy path '%s' to '%s': '%w'.", path, destPath, err)
 		}
