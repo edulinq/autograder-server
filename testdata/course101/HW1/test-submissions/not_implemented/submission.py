@@ -1,1 +1,5 @@
-HW0/test-submissions/not_implemented/submission.py
+def function1():
+    return NotImplemented
+
+def function2(val):
+    return NotImplemented

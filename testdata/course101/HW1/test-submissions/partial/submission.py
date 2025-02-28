@@ -1,1 +1,5 @@
-HW0/test-submissions/partial/submission.py
+def function1():
+    return True
+
+def function2(val):
+    return NotImplemented

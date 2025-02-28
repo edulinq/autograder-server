@@ -27,6 +27,7 @@ func TestNewAssignmentInfos(test *testing.T) {
 		// One Assignment
 		{"course101", []*AssignmentInfo{
 			&AssignmentInfo{ID: "hw0", Name: "Homework 0"},
+			&AssignmentInfo{ID: "hw1", Name: "Homework 1"},
 		}},
 
 		// Multiple Assignments
