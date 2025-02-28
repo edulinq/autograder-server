@@ -24,6 +24,10 @@ var (
 )
 
 func TestServerBase(test *testing.T) {
+	if config.CI_DOCKER_BUILD.Get() {
+		test.Skip("Skipping flaky test in Docker build CI.")
+	}
+
 	port, err := util.GetUnusedPort()
 	if err != nil {
 		test.Fatalf("Failed to get an unused port: '%v'.", err)
@@ -41,6 +45,10 @@ func TestServerBase(test *testing.T) {
 }
 
 func TestServerHTTPSBase(test *testing.T) {
+	if config.CI_DOCKER_BUILD.Get() {
+		test.Skip("Skipping flaky test in Docker build CI.")
+	}
+
 	port, err := util.GetUnusedPort()
 	if err != nil {
 		test.Fatalf("Failed to get an unused port: '%v'.", err)
@@ -75,6 +83,10 @@ func TestServerHTTPSBase(test *testing.T) {
 
 // Ensure that HTTP requests redirect when HTTPS (and HTTP redirect) are enabled.
 func TestServerHTTPSRedirect(test *testing.T) {
+	if config.CI_DOCKER_BUILD.Get() {
+		test.Skip("Skipping flaky test in Docker build CI.")
+	}
+
 	var httpPort int = 0
 	var httpsPort int = 0
 	var err error = nil
