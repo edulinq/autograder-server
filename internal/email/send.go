@@ -45,8 +45,14 @@ func ClearTestMessages() {
 }
 
 func Send(to []string, subject string, body string, html bool) error {
+	return SendFull(to, nil, nil, subject, body, html)
+}
+
+func SendFull(to []string, cc []string, bcc []string, subject string, body string, html bool) error {
 	return SendMessage(&Message{
 		To:      to,
+		CC:      cc,
+		BCC:     bcc,
 		Subject: subject,
 		Body:    body,
 		HTML:    html,
@@ -68,8 +74,6 @@ func SendMessage(message *Message) error {
 	lockmanager.Lock(LOCK_KEY)
 	defer lockmanager.Unlock(LOCK_KEY)
 
-	content := message.ToContent()
-
 	// Sleep if we are sending emails too fast.
 	timeSinceLastEmail := timestamp.Now() - lastEmailTime
 	sleepDuration := timestamp.FromMSecs(int64(config.EMAIL_MIN_PERIOD.Get())) - timeSinceLastEmail
@@ -79,19 +83,19 @@ func SendMessage(message *Message) error {
 
 	lastEmailTime = timestamp.Now()
 
-	err := sendEmail(message.To, content)
+	err := sendMessageInternal(message)
 	if err != nil {
-		log.Warn("Failed to send email.", log.NewAttr("to", message.To), log.NewAttr("subject", message.Subject))
+		log.Warn("Failed to send email.", message)
 		return err
 	}
 
-	log.Trace("Sent email.", log.NewAttr("to", message.To), log.NewAttr("subject", message.Subject))
+	log.Trace("Sent email.", message)
 	return nil
 }
 
 // Send the message.
 // Should only be called with the email lock.
-func sendEmail(to []string, content []byte) error {
+func sendMessageInternal(message *Message) error {
 	err := ensureConnection()
 	if err != nil {
 		return err
@@ -102,7 +106,8 @@ func sendEmail(to []string, content []byte) error {
 		return fmt.Errorf("Failed to issue SMTP MAIL command: '%w'.", err)
 	}
 
-	for _, address := range to {
+	allRCPTs := append(message.To, append(message.CC, message.BCC...)...)
+	for _, address := range allRCPTs {
 		err = smtpConnection.Rcpt(address)
 		if err != nil {
 			return fmt.Errorf("Failed to issue SMTP RCPT command to '%s': '%w'.", address, err)
@@ -115,7 +120,7 @@ func sendEmail(to []string, content []byte) error {
 	}
 	defer writter.Close()
 
-	_, err = writter.Write(content)
+	_, err = writter.Write(message.ToContent())
 	if err != nil {
 		return fmt.Errorf("Failed to write message content: '%w'.", err)
 	}

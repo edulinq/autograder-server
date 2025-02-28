@@ -4,10 +4,15 @@ import (
 	"fmt"
 	"slices"
 	"strings"
+
+	"github.com/edulinq/autograder/internal/log"
+	"github.com/edulinq/autograder/internal/util"
 )
 
 type Message struct {
 	To      []string `json:"to"`
+	CC      []string `json:"cc"`
+	BCC     []string `json:"bcc"`
 	Subject string   `json:"subject"`
 	Body    string   `json:"body"`
 	HTML    bool     `json:"html"`
@@ -22,6 +27,7 @@ func (this *Message) ToContent() []byte {
 
 	content := []byte(fmt.Sprintf(
 		"To: %s\r\n"+
+			"Cc: %s\r\n"+
 			"Subject: %s\r\n"+
 			"Mime-Version: 1.0\r\n"+
 			"Content-Transfer-Encoding: quoted-printable\r\n"+
@@ -29,11 +35,21 @@ func (this *Message) ToContent() []byte {
 			"\r\n"+
 			"%s",
 		strings.Join(this.To, ", "),
+		strings.Join(this.CC, ", "),
 		this.Subject,
 		contentType,
 		this.Body))
 
 	return content
+}
+
+func (this *Message) LogValue() []*log.Attr {
+	return []*log.Attr{
+		log.NewAttr("to", this.To),
+		log.NewAttr("cc", this.CC),
+		log.NewAttr("bcc", this.BCC),
+		log.NewAttr("subject", this.Subject),
+	}
 }
 
 // An equality check (mainly for testing) that ignores the body.
@@ -46,13 +62,17 @@ func ShallowEqual(a *Message, b *Message) bool {
 		return false
 	}
 
-	aTo := a.To[:]
-	bTo := b.To[:]
+	if a.HTML != b.HTML {
+		return false
+	}
 
-	slices.Sort(aTo)
-	slices.Sort(bTo)
+	if a.Subject != b.Subject {
+		return false
+	}
 
-	return slices.Equal(aTo, bTo) && (a.Subject == b.Subject) && (a.HTML == b.HTML)
+	return util.StringsEqualsIgnoreOrdering(a.To, b.To) &&
+		util.StringsEqualsIgnoreOrdering(a.CC, b.CC) &&
+		util.StringsEqualsIgnoreOrdering(a.BCC, b.BCC)
 }
 
 func Compare(a *Message, b *Message) int {
@@ -66,23 +86,32 @@ func Compare(a *Message, b *Message) int {
 		return -1
 	}
 
-	aSortedTo := a.To
-	bSortedTo := b.To
-
-	slices.Sort(aSortedTo)
-	slices.Sort(bSortedTo)
-
-	value := slices.Compare(aSortedTo, bSortedTo)
+	value := strings.Compare(a.Subject, b.Subject)
 	if value != 0 {
 		return value
 	}
 
-	value = strings.Compare(a.Subject, b.Subject)
+	value = strings.Compare(a.Body, b.Body)
 	if value != 0 {
 		return value
 	}
 
-	return strings.Compare(a.Body, b.Body)
+	value = util.StringsCompareIgnoreOrdering(a.To, b.To)
+	if value != 0 {
+		return value
+	}
+
+	value = util.StringsCompareIgnoreOrdering(a.CC, b.CC)
+	if value != 0 {
+		return value
+	}
+
+	value = util.StringsCompareIgnoreOrdering(a.BCC, b.BCC)
+	if value != 0 {
+		return value
+	}
+
+	return 0
 }
 
 func ShallowSliceEqual(a []*Message, b []*Message) bool {
