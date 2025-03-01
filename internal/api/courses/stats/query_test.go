@@ -27,13 +27,13 @@ func TestQuery(test *testing.T) {
 
 		// Course Specific
 		{"server-admin", "", stats.CourseMetricQuery{AssignmentID: "A2"}, []int{200}},
-		{"server-admin", "", stats.CourseMetricQuery{AssignmentID: "ZZZ"}, []int{}},
+		{"server-admin", "", stats.CourseMetricQuery{AssignmentID: "ZZZ"}, nil},
 		{"server-admin", "", stats.CourseMetricQuery{UserEmail: "U1"}, []int{100, 200}},
 		{"server-admin", "", stats.CourseMetricQuery{Type: stats.CourseMetricTypeGradingTime}, []int{100, 300}},
 
 		// Error
-		{"server-user", "-040", stats.CourseMetricQuery{}, []int{}},
-		{"course-student", "-020", stats.CourseMetricQuery{}, []int{}},
+		{"server-user", "-040", stats.CourseMetricQuery{}, nil},
+		{"course-student", "-020", stats.CourseMetricQuery{}, nil},
 	}
 
 	for _, record := range testRecords {

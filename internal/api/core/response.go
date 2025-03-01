@@ -1,8 +1,6 @@
 package core
 
 import (
-	"reflect"
-
 	"github.com/edulinq/autograder/internal/log"
 	"github.com/edulinq/autograder/internal/timestamp"
 	"github.com/edulinq/autograder/internal/util"
@@ -28,7 +26,7 @@ func (this *APIResponse) String() string {
 }
 
 func NewAPIResponse(request ValidAPIRequest, content any) *APIResponse {
-	id, startTime := getRequestInfo(request)
+	id, startTime := getRequestIDAndTimestamp(request)
 
 	version, err := util.GetAutograderVersion()
 	if err != nil {
@@ -45,28 +43,4 @@ func NewAPIResponse(request ValidAPIRequest, content any) *APIResponse {
 		Message:        "",
 		Content:        content,
 	}
-}
-
-// Reflexively get the request ID and timestamp from a request.
-func getRequestInfo(request ValidAPIRequest) (string, timestamp.Timestamp) {
-	id := ""
-	startTime := timestamp.Now()
-
-	if request == nil {
-		return id, startTime
-	}
-
-	reflectValue := reflect.ValueOf(request).Elem()
-
-	idValue := reflectValue.FieldByName("RequestID")
-	if idValue.IsValid() {
-		id = idValue.Interface().(string)
-	}
-
-	timestampValue := reflectValue.FieldByName("Timestamp")
-	if timestampValue.IsValid() {
-		startTime = timestampValue.Interface().(timestamp.Timestamp)
-	}
-
-	return id, startTime
 }

@@ -4,7 +4,7 @@ import (
 	"github.com/edulinq/autograder/internal/util"
 )
 
-// Sevrer user roles represent a user's role within an autograder server instance.
+// Server user roles represent a user's role within an autograder server instance.
 type ServerUserRole int
 
 // ServerRoleUnknown is the zero value and no user should have this role (it is a validation error).
@@ -48,7 +48,7 @@ func GetServerUserRoleString(role ServerUserRole) string {
 	return serverRoleToString[role]
 }
 
-func GetAllSevrerUserRoles() map[ServerUserRole]string {
+func GetAllServerUserRoles() map[ServerUserRole]string {
 	return serverRoleToString
 }
 
