@@ -354,14 +354,19 @@ var emptyLMSSyncResult *model.LMSSyncResult = &model.LMSSyncResult{
 
 var standardBuildImages []string = []string{
 	"autograder.course101.hw0",
+	"autograder.course101.hw1",
 }
 
 var standardTemplateFiles map[string][]string = map[string][]string{
 	"hw0": {
 		"submission.py",
 	},
+	"hw1": {
+		"submission.py",
+	},
 }
 
 var standardDryRunBuildImages []string = []string{
 	"autograder.__autograder_dryrun__course101.hw0",
+	"autograder.__autograder_dryrun__course101.hw1",
 }

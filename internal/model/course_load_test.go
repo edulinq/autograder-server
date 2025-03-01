@@ -20,7 +20,7 @@ func TestFullLoadCourseBase(test *testing.T) {
 		test.Fatalf("Unexpected course ID. Expected '%s', Actual: '%s'.", courseID, course.ID)
 	}
 
-	if len(course.Assignments) != 1 {
+	if len(course.Assignments) != 2 {
 		test.Fatalf("Unexpected number of assignments. Expected %d, Actual: %d.", 1, len(course.Assignments))
 	}
 
