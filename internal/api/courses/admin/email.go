@@ -23,7 +23,7 @@ type EmailResponse struct {
 	BCC     []string `json:"bcc"`
 }
 
-// Send an email to course user(s).
+// Send an email to course users.
 func HandleEmail(request *EmailRequest) (*EmailResponse, *core.APIError) {
 	response := EmailResponse{}
 	var err error

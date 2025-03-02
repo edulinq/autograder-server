@@ -1,5 +1,10 @@
 {
     "endpoints": {
+        "courses/admin/email": {
+            "description": "Send an email to course users.",
+            "request-type": "*admin.EmailRequest",
+            "response-type": "*admin.EmailResponse"
+        },
         "courses/admin/update": {
             "description": "Update an existing course.",
             "request-type": "*admin.UpdateRequest",
@@ -126,9 +131,9 @@
             "response-type": "*metadata.DescribeResponse"
         },
         "stats/apirequest/query": {
+            "description": "Query the API request stats for the server.",
             "request-type": "*apirequest.QueryRequest",
-            "response-type": "*apirequest.QueryResponse",
-            "description": "Query the API request stats for the server."
+            "response-type": "*apirequest.QueryResponse"
         },
         "stats/system/query": {
             "description": "Query the system stats for the server.",
