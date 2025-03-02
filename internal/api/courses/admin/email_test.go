@@ -1,7 +1,6 @@
 package admin
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/edulinq/autograder/internal/api/core"
@@ -17,6 +16,7 @@ func TestEmail(test *testing.T) {
 		Message   email.Message
 		Locator   string
 		DryRun    bool
+		PermError bool
 	}{
 		// No subject.
 		{
@@ -43,7 +43,8 @@ func TestEmail(test *testing.T) {
 				To:      []string{"*"},
 				Subject: "Email from Course Student",
 			},
-			Locator: "-020",
+			Locator:   "-020",
+			PermError: true,
 		},
 		{
 			UserEmail: "course-student",
@@ -51,7 +52,8 @@ func TestEmail(test *testing.T) {
 				To:      []string{"*"},
 				Subject: "Email from Course Student",
 			},
-			Locator: "-020",
+			Locator:   "-020",
+			PermError: true,
 		},
 
 		// Invalid permissions, role escalation.
@@ -61,7 +63,8 @@ func TestEmail(test *testing.T) {
 				To:      []string{"*"},
 				Subject: "Email from Course Student",
 			},
-			Locator: "-040",
+			Locator:   "-040",
+			PermError: true,
 		},
 		{
 			UserEmail: "server-creator",
@@ -69,7 +72,8 @@ func TestEmail(test *testing.T) {
 				To:      []string{"*"},
 				Subject: "Email from Course Student",
 			},
-			Locator: "-040",
+			Locator:   "-040",
+			PermError: true,
 		},
 
 		// Valid permissions.
@@ -122,7 +126,7 @@ func TestEmail(test *testing.T) {
 		},
 	}
 
-	for _, testCase := range testCases {
+	for i, testCase := range testCases {
 		email.ClearTestMessages()
 
 		var fields map[string]any
@@ -130,7 +134,33 @@ func TestEmail(test *testing.T) {
 		fields["dry-run"] = testCase.DryRun
 
 		response := core.SendTestAPIRequestFull(test, "courses/admin/email", fields, nil, testCase.UserEmail)
-		fmt.Println(util.MustToJSONIndent(response))
-		fmt.Println(util.MustToJSONIndent(email.GetTestMessages()))
+
+		if !response.Success {
+			if testCase.PermError {
+				if response.Locator != testCase.Locator {
+					test.Errorf("Case %d: Incorrect error returned. Expected '%s', found '%s'.",
+						i, testCase.Locator, response.Locator)
+				}
+			} else if testCase.Message.Subject == "" {
+				continue
+			} else if (len(testCase.Message.To) + len(testCase.Message.CC) + len(testCase.Message.BCC)) == 0 {
+				continue
+			} else {
+				test.Errorf("Case %d: Response is not a success when it should be: '%v'.", i, response)
+			}
+
+			continue
+		}
+
+		if testCase.PermError {
+			test.Errorf("Case %d: Did not get an expected permissions error.", i)
+			continue
+		}
+
+		if testCase.DryRun {
+			if email.GetTestMessages() != nil {
+				test.Errorf("Case %d: Emails were sent when they should not have.", i)
+			}
+		}
 	}
 }
