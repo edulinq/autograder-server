@@ -47,7 +47,7 @@ func HandleEmail(request *EmailRequest) (*EmailResponse, *core.APIError) {
 		}
 	}
 
-	if len(request.To) == 0 && len(request.CC) == 0 && len(request.BCC) == 0 {
+	if (len(request.To) + len(request.CC) + len(request.BCC)) == 0 {
 		return nil, core.NewBadRequestError("-629", &request.APIRequest, "No recipients.")
 	}
 
