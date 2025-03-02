@@ -1,10 +1,12 @@
 package admin
 
 import (
+	"errors"
+	"fmt"
+
 	"github.com/edulinq/autograder/internal/api/core"
 	"github.com/edulinq/autograder/internal/db"
 	"github.com/edulinq/autograder/internal/email"
-	"github.com/edulinq/autograder/internal/log"
 )
 
 type EmailRequest struct {
@@ -17,10 +19,9 @@ type EmailRequest struct {
 }
 
 type EmailResponse struct {
-	Success bool     `json:"success"`
-	To      []string `json:"to"`
-	CC      []string `json:"cc"`
-	BCC     []string `json:"bcc"`
+	To  []string `json:"to"`
+	CC  []string `json:"cc"`
+	BCC []string `json:"bcc"`
 }
 
 // Send an email to course users.
@@ -29,36 +30,44 @@ func HandleEmail(request *EmailRequest) (*EmailResponse, *core.APIError) {
 	var err error
 
 	if request.Subject == "" {
-		return nil, core.NewBadRequestError("-627", &request.APIRequest, "No subject.")
+		return nil, core.NewBadRequestError("-627", &request.APIRequest, "No email subject provided.")
 	}
 
-	for _, section := range []string{"to", "cc", "bcc"} {
-		switch section {
-		case "to":
-			request.To, err = db.ResolveCourseUsers(request.Course, request.To)
-		case "cc":
-			request.CC, err = db.ResolveCourseUsers(request.Course, request.CC)
-		case "bcc":
-			request.BCC, err = db.ResolveCourseUsers(request.Course, request.BCC)
-		}
+	var errs error
 
-		if err != nil {
-			return nil, core.NewInternalError("-628", &request.APIRequestCourseUserContext, "Failed to resolve '"+section+"' emails.")
-		}
+	request.To, err = db.ResolveCourseUsers(request.Course, request.To)
+	if err != nil {
+		err = fmt.Errorf("Failed to resolve 'to' email addresses.")
+		errs = errors.Join(errs, err)
+	}
+
+	request.CC, err = db.ResolveCourseUsers(request.Course, request.CC)
+	if err != nil {
+		err = fmt.Errorf("Failed to resolve 'cc' email addresses.")
+		errs = errors.Join(errs, err)
+	}
+
+	request.BCC, err = db.ResolveCourseUsers(request.Course, request.BCC)
+	if err != nil {
+		err = fmt.Errorf("Failed to resolve 'bcc' email addresses.")
+		errs = errors.Join(errs, err)
+	}
+
+	if errs != nil {
+		return nil, core.NewInternalError("-628", &request.APIRequestCourseUserContext, errs.Error())
 	}
 
 	if (len(request.To) + len(request.CC) + len(request.BCC)) == 0 {
-		return nil, core.NewBadRequestError("-629", &request.APIRequest, "No recipients.")
+		return nil, core.NewBadRequestError("-629", &request.APIRequest, "No email recipients provided.")
 	}
 
 	if !request.DryRun {
-		err = email.Send(request.To, request.Subject, request.Body, false)
+		err = email.SendFull(request.To, request.CC, request.BCC, request.Subject, request.Body, false)
 		if err != nil {
-			log.Error("Failed to send email(s).", err, request)
+			return nil, core.NewInternalError("-630", &request.APIRequestCourseUserContext, "Failed to send email.")
 		}
 	}
 
-	response.Success = (err == nil)
 	response.To = request.To
 	response.CC = request.CC
 	response.BCC = request.BCC
