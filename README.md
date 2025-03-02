@@ -33,7 +33,17 @@ This project uses Go 1.21.
 Development and deployment of this project rely on POSIX systems (e.g., Linux, macOS, WSL).
 
 The built-in web GUI is stored in a git submodule,
-so you should clone with `--recurse-submodules` if you need that component.
+so you should clone with `--recurse-submodules` if you need that component:
+```sh
+git clone --recurse-submodules https://github.com/edulinq/autograder-server.git
+```
+
+To add the submodule in an existing repository, you can use:
+```sh
+git submodule init
+git submodule update
+```
+
 See the [Git documentation](https://git-scm.com/book/en/v2/Git-Tools-Submodules) for more information.
 
 All code that is not intended to be exported (used in packages outside of the autograder) is in the `internal` package/directory.

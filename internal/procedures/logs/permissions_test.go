@@ -16,7 +16,7 @@ func TestCheckPermissionsBase(test *testing.T) {
 		// Leave empty for no error.
 		expectedErrorString string
 	}{
-		// Sever admins can do what they want.
+		// Server admins can do what they want.
 		{&log.ParsedLogQuery{}, "server-admin@test.edulinq.org", ""},
 		{&log.ParsedLogQuery{CourseID: "course101"}, "server-admin@test.edulinq.org", ""},
 		{&log.ParsedLogQuery{UserEmail: "course-student@test.edulinq.org"}, "server-admin@test.edulinq.org", ""},
