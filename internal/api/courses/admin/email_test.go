@@ -156,7 +156,7 @@ func TestEmail(test *testing.T) {
 
 		response := core.SendTestAPIRequestFull(test, "courses/admin/email", fields, nil, testCase.UserEmail)
 		if !response.Success {
-			if response.Locator != testCase.Locator {
+			if testCase.Locator != response.Locator {
 				test.Errorf("Case %d: Incorrect error returned. Expected '%s', found '%s'.",
 					i, testCase.Locator, response.Locator)
 			}
@@ -164,8 +164,8 @@ func TestEmail(test *testing.T) {
 			continue
 		}
 
-		if response.Locator != "" {
-			test.Errorf("Case %d: Unexpected error. Expected '%s', found '%s'.", i, testCase.Locator, response.Locator)
+		if testCase.Locator != "" {
+			test.Errorf("Case %d: Did not get an expected error. Expected: '%s'", i, testCase.Locator)
 			continue
 		}
 
