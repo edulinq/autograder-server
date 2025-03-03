@@ -155,7 +155,6 @@ func TestEmail(test *testing.T) {
 		fields["dry-run"] = testCase.DryRun
 
 		response := core.SendTestAPIRequestFull(test, "courses/admin/email", fields, nil, testCase.UserEmail)
-
 		if !response.Success {
 			if response.Locator != testCase.Locator {
 				test.Errorf("Case %d: Incorrect error returned. Expected '%s', found '%s'.",
@@ -165,34 +164,41 @@ func TestEmail(test *testing.T) {
 			continue
 		}
 
+		if response.Locator != "" {
+			test.Errorf("Case %d: Unexpected error. Expected '%s', found '%s'.", i, testCase.Locator, response.Locator)
+			continue
+		}
+
+		testMessages := email.GetTestMessages()
 		if testCase.DryRun {
-			if len(email.GetTestMessages()) != 0 {
+			if len(testMessages) != 0 {
 				test.Errorf("Case %d: Email was sent when it should not have.", i)
 			}
 
 			continue
-		} else {
-			if len(email.GetTestMessages()) == 0 {
-				test.Errorf("Case %d: Email was not sent when it should have.", i)
-				continue
-			}
+		}
+
+		if len(testMessages) == 0 {
+			test.Errorf("Case %d: Email was not sent when it should have.", i)
+			continue
 		}
 
 		var responseContent EmailResponse
 		util.MustJSONFromString(util.MustToJSON(response.Content), &responseContent)
+		testMessage := testMessages[0]
 
 		if (len(responseContent.To) + len(responseContent.CC) + len(responseContent.BCC)) == 0 {
 			test.Errorf("Case %d: Email was sent without any recipients.", i)
 			continue
 		}
 
-		if testCase.Message.Body != email.GetTestMessages()[0].Body {
-			test.Errorf("Case %d: Unexpected body content. Expected: '%s', actual: '%s'.", i, testCase.Message.Body, email.GetTestMessages()[0].Body)
+		if testCase.Message.Body != testMessage.Body {
+			test.Errorf("Case %d: Unexpected body content. Expected: '%s', actual: '%s'.", i, testCase.Message.Body, testMessage.Body)
 			continue
 		}
 
-		if testCase.Message.HTML != email.GetTestMessages()[0].HTML {
-			test.Errorf("Case %d: Unexpected HTML value. Expected: '%t', actual: '%t'.", i, testCase.Message.HTML, email.GetTestMessages()[0].HTML)
+		if testCase.Message.HTML != testMessage.HTML {
+			test.Errorf("Case %d: Unexpected HTML value. Expected: '%t', actual: '%t'.", i, testCase.Message.HTML, testMessage.HTML)
 			continue
 		}
 	}

@@ -2,7 +2,6 @@ package admin
 
 import (
 	"errors"
-	"fmt"
 
 	"github.com/edulinq/autograder/internal/api/core"
 	"github.com/edulinq/autograder/internal/db"
@@ -36,25 +35,16 @@ func HandleEmail(request *EmailRequest) (*EmailResponse, *core.APIError) {
 	var errs error
 
 	request.To, err = db.ResolveCourseUsers(request.Course, request.To)
-	if err != nil {
-		err = fmt.Errorf("Failed to resolve 'to' email addresses.")
-		errs = errors.Join(errs, err)
-	}
+	errs = errors.Join(errs, err)
 
 	request.CC, err = db.ResolveCourseUsers(request.Course, request.CC)
-	if err != nil {
-		err = fmt.Errorf("Failed to resolve 'cc' email addresses.")
-		errs = errors.Join(errs, err)
-	}
+	errs = errors.Join(errs, err)
 
 	request.BCC, err = db.ResolveCourseUsers(request.Course, request.BCC)
-	if err != nil {
-		err = fmt.Errorf("Failed to resolve 'bcc' email addresses.")
-		errs = errors.Join(errs, err)
-	}
+	errs = errors.Join(errs, err)
 
 	if errs != nil {
-		return nil, core.NewInternalError("-628", &request.APIRequestCourseUserContext, errs.Error())
+		return nil, core.NewInternalError("-628", &request.APIRequestCourseUserContext, "Failed to resolve course users.").Err(errs)
 	}
 
 	if (len(request.To) + len(request.CC) + len(request.BCC)) == 0 {
