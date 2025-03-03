@@ -170,27 +170,29 @@ func TestEmail(test *testing.T) {
 		}
 
 		testMessages := email.GetTestMessages()
+
 		if testCase.DryRun {
 			if len(testMessages) != 0 {
-				test.Errorf("Case %d: Email was sent when it should not have.", i)
+				test.Errorf("Case %d: Unexpected emails sent. Expected '0 emails', found '%d emails'.", i, len(testMessages))
 			}
 
 			continue
 		}
 
-		if len(testMessages) == 0 {
-			test.Errorf("Case %d: Email was not sent when it should have.", i)
+		if len(testMessages) != 1 {
+			test.Errorf("Case %d: Unexpected number of emails sent. Expected '1 email', found '%d emails'.", i, len(testMessages))
 			continue
 		}
 
 		var responseContent EmailResponse
 		util.MustJSONFromString(util.MustToJSON(response.Content), &responseContent)
-		testMessage := testMessages[0]
 
 		if (len(responseContent.To) + len(responseContent.CC) + len(responseContent.BCC)) == 0 {
 			test.Errorf("Case %d: Email was sent without any recipients.", i)
 			continue
 		}
+
+		testMessage := testMessages[0]
 
 		if testCase.Message.Body != testMessage.Body {
 			test.Errorf("Case %d: Unexpected body content. Expected: '%s', actual: '%s'.", i, testCase.Message.Body, testMessage.Body)

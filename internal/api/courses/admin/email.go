@@ -25,13 +25,11 @@ type EmailResponse struct {
 
 // Send an email to course users.
 func HandleEmail(request *EmailRequest) (*EmailResponse, *core.APIError) {
-	response := EmailResponse{}
-	var err error
-
 	if request.Subject == "" {
 		return nil, core.NewBadRequestError("-627", &request.APIRequest, "No email subject provided.")
 	}
 
+	var err error
 	var errs error
 
 	request.To, err = db.ResolveCourseUsers(request.Course, request.To)
@@ -44,7 +42,7 @@ func HandleEmail(request *EmailRequest) (*EmailResponse, *core.APIError) {
 	errs = errors.Join(errs, err)
 
 	if errs != nil {
-		return nil, core.NewInternalError("-628", &request.APIRequestCourseUserContext, "Failed to resolve course users.").Err(errs)
+		return nil, core.NewInternalError("-628", &request.APIRequestCourseUserContext, "Failed to resolve email recipients.").Err(errs)
 	}
 
 	if (len(request.To) + len(request.CC) + len(request.BCC)) == 0 {
@@ -58,9 +56,11 @@ func HandleEmail(request *EmailRequest) (*EmailResponse, *core.APIError) {
 		}
 	}
 
-	response.To = request.To
-	response.CC = request.CC
-	response.BCC = request.BCC
+	response := EmailResponse{
+		To:  request.To,
+		CC:  request.CC,
+		BCC: request.BCC,
+	}
 
 	return &response, nil
 }
