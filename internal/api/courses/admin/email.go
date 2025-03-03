@@ -62,7 +62,7 @@ func HandleEmail(request *EmailRequest) (*EmailResponse, *core.APIError) {
 	}
 
 	if !request.DryRun {
-		err = email.SendFull(request.To, request.CC, request.BCC, request.Subject, request.Body, false)
+		err = email.SendFull(request.To, request.CC, request.BCC, request.Subject, request.Body, request.HTML)
 		if err != nil {
 			return nil, core.NewInternalError("-630", &request.APIRequestCourseUserContext, "Failed to send email.")
 		}

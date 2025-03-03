@@ -42,12 +42,41 @@ func TestEmail(test *testing.T) {
 			},
 		},
 
-		// Ensure recipients check occurs after resolution.
+		// CC
 		{
 			UserEmail: "course-grader",
 			Message: email.Message{
-				To:      []string{"course-student", "course-student@test.edulinq.org"},
+				CC:      []string{"course-student@test.edulinq.org"},
 				Subject: "Subject",
+			},
+		},
+
+		// BCC
+		{
+			UserEmail: "course-grader",
+			Message: email.Message{
+				BCC:     []string{"course-student@test.edulinq.org"},
+				Subject: "Subject",
+			},
+		},
+
+		// Body
+		{
+			UserEmail: "course-grader",
+			Message: email.Message{
+				To:      []string{"course-student@test.edulinq.org"},
+				Subject: "Subject",
+				Body:    "Body",
+			},
+		},
+
+		//HTML
+		{
+			UserEmail: "course-grader",
+			Message: email.Message{
+				To:      []string{"course-student@test.edulinq.org"},
+				Subject: "Subject",
+				HTML:    true,
 			},
 		},
 
@@ -106,6 +135,16 @@ func TestEmail(test *testing.T) {
 			},
 			Locator: "-629",
 		},
+
+		// No recipients after resolving email addresses.
+		{
+			UserEmail: "course-grader",
+			Message: email.Message{
+				To:      []string{"course-student", "-course-student@test.edulinq.org"},
+				Subject: "Subject",
+			},
+			Locator: "-629",
+		},
 	}
 
 	for i, testCase := range testCases {
@@ -131,6 +170,29 @@ func TestEmail(test *testing.T) {
 				test.Errorf("Case %d: Email was sent when it should not have.", i)
 			}
 
+			continue
+		} else {
+			if len(email.GetTestMessages()) == 0 {
+				test.Errorf("Case %d: Email was not sent when it should have.", i)
+				continue
+			}
+		}
+
+		var responseContent EmailResponse
+		util.MustJSONFromString(util.MustToJSON(response.Content), &responseContent)
+
+		if (len(responseContent.To) + len(responseContent.CC) + len(responseContent.BCC)) == 0 {
+			test.Errorf("Case %d: Email was sent without any recipients.", i)
+			continue
+		}
+
+		if testCase.Message.Body != email.GetTestMessages()[0].Body {
+			test.Errorf("Case %d: Unexpected body content. Expected: '%s', actual: '%s'.", i, testCase.Message.Body, email.GetTestMessages()[0].Body)
+			continue
+		}
+
+		if testCase.Message.HTML != email.GetTestMessages()[0].HTML {
+			test.Errorf("Case %d: Unexpected HTML value. Expected: '%t', actual: '%t'.", i, testCase.Message.HTML, email.GetTestMessages()[0].HTML)
 			continue
 		}
 	}
