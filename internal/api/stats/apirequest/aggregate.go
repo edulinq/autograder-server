@@ -20,8 +20,8 @@ type AggregateResponse struct {
 
 // Aggregate and filter API request metrics.
 func HandleAggregate(request *AggregateRequest) (*AggregateResponse, *core.APIError) {
-	if request.APIRequestMetricAggregate.GroupBy == "" {
-		return nil, core.NewBadRequestError("-302", &core.APIRequest{}, "No group by specified.")
+	if request.GroupBy == "" {
+		return nil, core.NewUserContextInternalError("-302", &request.APIRequestUserContext, "No group-by specified.")
 	}
 
 	records, err := db.GetFilteredAPIRequestMetrics(request.APIRequestMetricAggregate)
@@ -29,10 +29,10 @@ func HandleAggregate(request *AggregateRequest) (*AggregateResponse, *core.APIEr
 		return nil, core.NewUserContextInternalError("-303", &request.APIRequestUserContext, "Failed to aggregate API request stats.").Err(err)
 	}
 
-	records = stats.ApplyBaseQuery(records, request.APIRequestMetricAggregate.BaseQuery)
+	records = stats.ApplyBaseQuery(records, request.BaseQuery)
 
 	response := AggregateResponse{
-		Records: stats.ApplyAggregate(records, request.APIRequestMetricAggregate.GroupBy),
+		Records: stats.ApplyAggregate(records, request.GroupBy),
 	}
 
 	return &response, nil

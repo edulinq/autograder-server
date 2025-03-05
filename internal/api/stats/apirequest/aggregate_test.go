@@ -160,7 +160,6 @@ func TestAggregate(test *testing.T) {
 		},
 	}
 
-	// Run test cases
 	for i, testCase := range testCases {
 		db.ResetForTesting()
 
