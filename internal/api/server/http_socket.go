@@ -47,7 +47,7 @@ func runAPIServer(routes *[]core.Route, subserverSetupWaitGroup *sync.WaitGroup)
 
 	lockmanager.Unlock(API_SERVER_LOCK)
 
-	runAPIServerInternal()
+	err = runAPIServerInternal()
 	if err != nil {
 		log.Error("API server returned an error.", err)
 	}
