@@ -43,7 +43,7 @@ func AppendJSONLFileMany[T any](path string, records []T) error {
 	return nil
 }
 
-// Go through a JSONL file and call a functon for each record.
+// Go through a JSONL file and call a function for each record.
 func ApplyJSONLFile[T any](path string, emptyRecord T, applyFunc func(index int, record *T, line string)) error {
 	if !PathExists(path) {
 		return nil

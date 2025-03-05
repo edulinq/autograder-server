@@ -15,6 +15,7 @@ type StorageBackend interface {
 	StoreCourseMetric(record *CourseMetric) error
 
 	GetAPIRequestMetrics(query APIRequestMetricQuery) ([]*APIRequestMetric, error)
+	GetFilteredAPIRequestMetrics(query APIRequestMetricAggregate) ([]*APIRequestMetric, error)
 	StoreAPIRequestMetric(record *APIRequestMetric) error
 }
 
@@ -86,6 +87,17 @@ func GetAPIRequestMetrics(query APIRequestMetricQuery) ([]*APIRequestMetric, err
 	}
 
 	return backend.GetAPIRequestMetrics(query)
+}
+
+func GetFilteredAPIRequestMetrics(query APIRequestMetricAggregate) ([]*APIRequestMetric, error) {
+	backendLock.RLock()
+	defer backendLock.RUnlock()
+
+	if backend == nil {
+		return nil, nil
+	}
+
+	return backend.GetFilteredAPIRequestMetrics(query)
 }
 
 func StoreAPIRequestMetric(record *APIRequestMetric) error {
