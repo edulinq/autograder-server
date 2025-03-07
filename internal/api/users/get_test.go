@@ -142,10 +142,6 @@ func TestGetSingle(test *testing.T) {
 						ID:   "hw0",
 						Name: "Homework 0",
 					},
-					"hw1": &core.AssignmentInfo{
-						ID:   "hw1",
-						Name: "Homework 1",
-					},
 				},
 			},
 		},

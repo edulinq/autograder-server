@@ -5,7 +5,7 @@
     "static-files": [
         "grader.sh"
     ],
-    "image": "edulinq/grader.base-alpine",
+    "image": "ghcr.io/edulinq/grader.base:0.1.0-alpine",
     "invocation": ["bash", "./grader.sh"],
     "post-submission-file-ops": [
         ["cp", "input/assignment.sh", "work/assignment.sh"]

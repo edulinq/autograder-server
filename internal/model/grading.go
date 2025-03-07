@@ -43,8 +43,8 @@ type GradedQuestion struct {
 	Name             string              `json:"name"`
 	MaxPoints        float64             `json:"max_points"`
 	Score            float64             `json:"score"`
-	HardFail         bool                `json:"hard_fail" default:"false"`
-	Skipped          bool                `json:"skipped" default:"false"`
+	HardFail         bool                `json:"hard_fail"`
+	Skipped          bool                `json:"skipped"`
 	Message          string              `json:"message"`
 	GradingStartTime timestamp.Timestamp `json:"grading_start_time"`
 	GradingEndTime   timestamp.Timestamp `json:"grading_end_time"`

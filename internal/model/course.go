@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"path/filepath"
 	"slices"
-	"sort"
 
 	"github.com/edulinq/autograder/internal/common"
 	"github.com/edulinq/autograder/internal/config"
@@ -212,8 +211,6 @@ func (this *Course) BuildAssignmentImagesDefault() ([]string, error) {
 	for imageName, buildErr := range buildErrs {
 		err = errors.Join(err, fmt.Errorf("Failed to build image '%s': '%w'.", imageName, buildErr))
 	}
-
-	sort.Strings(imageNames)
 
 	return imageNames, err
 }

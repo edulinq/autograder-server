@@ -109,11 +109,5 @@ var expected *CourseScoringReport = &CourseScoringReport{
 				},
 			},
 		},
-		&AssignmentScoringReport{
-			AssignmentName:      "Homework 1",
-			NumberOfSubmissions: 0,
-			LatestSubmission:    0,
-			Questions:           []*ScoringReportQuestionStats{},
-		},
 	},
 }
