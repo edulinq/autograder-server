@@ -6,18 +6,24 @@
                 "name": "Q1",
                 "max_points": 1,
                 "score": 1,
+                "hard_fail": false,
+                "skipped": false,
                 "message": ""
             },
             {
                 "name": "Q2",
                 "max_points": 1,
                 "score": 0,
+                "hard_fail": true,
+                "skipped": false,
                 "message": "NotImplemented returned."
             },
             {
                 "name": "Style",
                 "max_points": 0,
                 "score": 0,
+                "hard_fail": false,
+                "skipped": true,
                 "message": "Style is clean!"
             }
         ]

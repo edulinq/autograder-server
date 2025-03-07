@@ -1,0 +1,45 @@
+{
+    "id": "course101::hw1::course-student@test.edulinq.org::1697406272",
+    "short-id": "1697406272",
+    "course-id": "course101",
+    "assignment-id": "hw1",
+    "user": "course-student@test.edulinq.org",
+    "message": "",
+    "max_points": 2,
+    "score": 2,
+    "name": "HW1",
+    "questions": [
+        {
+            "name": "Q1",
+            "max_points": 1,
+            "score": 1,
+            "hard_fail": false,
+            "skipped": false,
+            "message": "",
+            "grading_start_time": 1697406273000,
+            "grading_end_time": 1697406273000
+        },
+        {
+            "name": "Q2",
+            "max_points": 1,
+            "score": 1,
+            "hard_fail": false,
+            "skipped": false,
+            "message": "",
+            "grading_start_time": 1697406273000,
+            "grading_end_time": 1697406273000
+        },
+        {
+            "name": "Style",
+            "max_points": 0,
+            "score": 0,
+            "hard_fail": false,
+            "skipped": false,
+            "message": "Style is clean!",
+            "grading_start_time": 1697406273000,
+            "grading_end_time": 1697406273000
+        }
+    ],
+    "grading_start_time": 1697406273000,
+    "grading_end_time": 1697406273000
+}

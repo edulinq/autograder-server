@@ -1,0 +1,37 @@
+{
+    "name": "HW1",
+    "questions": [
+        {
+            "name": "Q1",
+            "max_points": 1,
+            "score": 1,
+            "hard_fail": false,
+            "skipped": false,
+            "message": "",
+            "grading_start_time": 1699740821995,
+            "grading_end_time": 1699740821995
+        },
+        {
+            "name": "Q2",
+            "max_points": 1,
+            "score": 0,
+            "hard_fail": true,
+            "skipped": false,
+            "message": "NotImplemented returned.",
+            "grading_start_time": 1699740821998,
+            "grading_end_time": 1699740821998
+        },
+        {
+            "name": "Style",
+            "max_points": 0,
+            "score": 0,
+            "hard_fail": false,
+            "skipped": true,
+            "message": "Style is clean!",
+            "grading_start_time": 1699740822001,
+            "grading_end_time": 1699740822030
+        }
+    ],
+    "grading_start_time": 1699740821993,
+    "grading_end_time": 1699740822031
+}

@@ -13,7 +13,6 @@ class HW0(Assignment):
 class Q1(Question):
     def score_question(self, submission):
         result = submission.__all__.function1()
-        self.check_not_implemented(result)
 
         if (not result):
             self.hard_fail("function1() should return True.")
@@ -23,7 +22,6 @@ class Q1(Question):
 class Q2(Question):
     def score_question(self, submission):
         result = submission.__all__.function2(0)
-        self.check_not_implemented(result)
 
         if (result != 1):
             self.hard_fail("function2(0) should return 1.")
