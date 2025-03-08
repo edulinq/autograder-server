@@ -6,7 +6,7 @@
         "grader.cpp",
         "assignment.h"
     ],
-    "image": "edulinq/grader.base-ubuntu",
+    "image": "ghcr.io/edulinq/grader.base:0.1.0-ubuntu",
     "invocation": ["bash", "./grader.sh"],
     "post-static-docker-commands": [
         "RUN apt-get update",
