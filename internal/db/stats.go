@@ -46,6 +46,14 @@ func GetAPIRequestMetrics(query stats.APIRequestMetricQuery) ([]*stats.APIReques
 	return backend.GetAPIRequestMetrics(query)
 }
 
+func GetFilteredAPIRequestMetrics(query stats.APIRequestMetricAggregate) ([]*stats.APIRequestMetric, error) {
+	if backend == nil {
+		return nil, fmt.Errorf("Database has not been opened.")
+	}
+
+	return backend.GetFilteredAPIRequestMetrics(query)
+}
+
 func StoreAPIRequestMetric(record *stats.APIRequestMetric) error {
 	if backend == nil {
 		return fmt.Errorf("Database has not been opened.")

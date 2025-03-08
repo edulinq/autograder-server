@@ -71,6 +71,19 @@ func (this *backend) GetAPIRequestMetrics(query stats.APIRequestMetricQuery) ([]
 	return records, err
 }
 
+func (this *backend) GetFilteredAPIRequestMetrics(query stats.APIRequestMetricAggregate) ([]*stats.APIRequestMetric, error) {
+	path := this.getAPIRequestStatsPath()
+
+	this.apiRequestLock.RLock()
+	defer this.apiRequestLock.RUnlock()
+
+	records, err := util.FilterJSONLFile(path, stats.APIRequestMetric{}, func(record *stats.APIRequestMetric) bool {
+		return query.Filter(record)
+	})
+
+	return records, err
+}
+
 func (this *backend) StoreAPIRequestMetric(record *stats.APIRequestMetric) error {
 	path := this.getAPIRequestStatsPath()
 

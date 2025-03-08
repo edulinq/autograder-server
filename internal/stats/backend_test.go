@@ -33,6 +33,10 @@ func (this *testBackend) GetAPIRequestMetrics(query APIRequestMetricQuery) ([]*A
 	return this.apiRequest, nil
 }
 
+func (this *testBackend) GetFilteredAPIRequestMetrics(query APIRequestMetricAggregate) ([]*APIRequestMetric, error) {
+	return this.apiRequest, nil
+}
+
 func makeTestBackend() *testBackend {
 	return &testBackend{
 		system:     make([]*SystemMetrics, 0, 100),

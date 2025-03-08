@@ -125,6 +125,11 @@
             "request-type": "*metadata.DescribeRequest",
             "response-type": "*metadata.DescribeResponse"
         },
+        "stats/apirequest/aggregate": {
+            "request-type": "*apirequest.AggregateRequest",
+            "response-type": "*apirequest.AggregateResponse",
+            "description": "Aggregate and filter API request metrics."
+        },
         "stats/apirequest/query": {
             "request-type": "*apirequest.QueryRequest",
             "response-type": "*apirequest.QueryResponse",

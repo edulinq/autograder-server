@@ -7,6 +7,7 @@ import (
 )
 
 var routes []core.Route = []core.Route{
+	core.MustNewAPIRoute(`stats/apirequest/aggregate`, HandleAggregate),
 	core.MustNewAPIRoute(`stats/apirequest/query`, HandleQuery),
 }
 
