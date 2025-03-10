@@ -631,7 +631,7 @@ func TestAssignmentAnalysisOptionsFetchTemplateFilesBase(test *testing.T) {
 		tempDir := util.MustMkDirTemp("test-analysis-fetch-templates-")
 		defer util.RemoveDirent(tempDir)
 
-		actualRelpaths, err := testCase.options.FetchTemplateFiles(baseDir, tempDir)
+		actualRelpaths, err := testCase.options.FetchTemplateFiles(baseDir, baseDir, tempDir)
 		if err != nil {
 			if testCase.errorSubstring != "" {
 				if !strings.Contains(err.Error(), testCase.errorSubstring) {

@@ -30,9 +30,10 @@ type ImageInfo struct {
 
 	Name string `json:"-"`
 
+	// Get the base and containment directories for static files.
 	// Dir used for relative paths.
 	// Using a func allows for lazy resolution of the base dir.
-	BaseDirFunc func() string `json:"-"`
+	BaseDirFunc func() (string, string) `json:"-"`
 }
 
 // A subset of the image information that is passed to docker images for config during grading.
@@ -57,7 +58,8 @@ func (this *ImageInfo) Validate() error {
 		return fmt.Errorf("Missing base dir func.")
 	}
 
-	if this.BaseDirFunc() == "" {
+	baseDir, _ := this.BaseDirFunc()
+	if baseDir == "" {
 		return fmt.Errorf("Missing base dir.")
 	}
 

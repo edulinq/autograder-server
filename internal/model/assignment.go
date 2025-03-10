@@ -156,8 +156,8 @@ func (this *Assignment) Validate() error {
 	}
 
 	this.ImageInfo.Name = this.ImageName()
-	this.ImageInfo.BaseDirFunc = func() string {
-		return this.GetSourceDir()
+	this.ImageInfo.BaseDirFunc = func() (string, string) {
+		return this.GetSourceDir(), this.Course.GetBaseSourceDir()
 	}
 
 	err = this.ImageInfo.Validate()
@@ -220,7 +220,7 @@ func (this *Assignment) FetchTemplateFiles() ([]string, error) {
 		return []string{}, fmt.Errorf("Failed to make template dir '%s': '%w'.", destDir, err)
 	}
 
-	relpaths, err := this.AssignmentAnalysisOptions.FetchTemplateFiles(this.GetSourceDir(), destDir)
+	relpaths, err := this.AssignmentAnalysisOptions.FetchTemplateFiles(this.GetSourceDir(), this.Course.GetBaseSourceDir(), destDir)
 	if err != nil {
 		return []string{}, fmt.Errorf("Failed to fetch template files: '%w'.", err)
 	}

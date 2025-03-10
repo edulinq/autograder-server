@@ -39,7 +39,7 @@ func prepSourceFiles(inputDir string) (map[string]string, error) {
 
 	renames := make(map[string]string, 0)
 
-	relpaths, err := util.GetAllRelativeFiles(inputDir)
+	relpaths, err := util.GetAllDirents(inputDir, true, true)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to get files from dir: '%w'.", err)
 	}
