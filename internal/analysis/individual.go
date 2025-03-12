@@ -254,7 +254,7 @@ func individualFileAnalysis(submissionDir string, assignment *model.Assignment) 
 		return nil, nil, 0, fmt.Errorf("Failed to prepare source files: '%w'.", err)
 	}
 
-	relpaths, err := util.GetAllRelativeFiles(submissionDir)
+	relpaths, err := util.GetAllDirents(submissionDir, true, true)
 	if err != nil {
 		return nil, nil, 0, fmt.Errorf("Failed to get files: '%w'.", err)
 	}

@@ -173,36 +173,6 @@ func FindDirents(filename string, dir string, allowFiles bool, allowDirs bool, a
 	return matches, nil
 }
 
-// Get all the dirents starting with some path (not including that path).
-// If the base path is a file, and empty slice will be returned.
-func GetAllDirents(basePath string) ([]string, error) {
-	basePath = ShouldAbs(basePath)
-	paths := make([]string, 0)
-
-	if IsFile(basePath) {
-		return paths, nil
-	}
-
-	err := filepath.WalkDir(basePath, func(path string, dirent fs.DirEntry, err error) error {
-		if err != nil {
-			return err
-		}
-
-		if basePath == path {
-			return nil
-		}
-
-		paths = append(paths, path)
-		return nil
-	})
-
-	if err != nil {
-		return nil, err
-	}
-
-	return paths, nil
-}
-
 // Get the directory of the source file calling this method.
 func ShouldGetThisDir() string {
 	// 0 is the current caller (this function), and 1 should be one frame back.
@@ -245,18 +215,26 @@ func SearchParents(basepath string, name string) string {
 	return ""
 }
 
+// Return true if the child path has the given parent (or is the parent).
+// The check is only through lexical analysis.
 // This method is not robust (in many ways) and should be generally avoided in non-testing code.
 func PathHasParent(child string, parent string) bool {
-	child = ShouldAbs(child)
-	parent = ShouldAbs(parent)
+	child = filepath.Clean(ShouldAbs(child))
+	parent = filepath.Clean(ShouldAbs(parent))
+
+	if child == parent {
+		return true
+	}
+
+	parent = parent + string(os.PathSeparator)
 
 	return strings.HasPrefix(child, parent)
 }
 
 // This method is not robust (in many ways) and should be generally avoided in non-testing code.
 func RelPath(child string, parent string) string {
-	child = ShouldAbs(child)
-	parent = ShouldAbs(parent) + "/"
+	child = filepath.Clean(ShouldAbs(child))
+	parent = filepath.Clean(ShouldAbs(parent)) + string(os.PathSeparator)
 
 	return strings.TrimPrefix(child, parent)
 }

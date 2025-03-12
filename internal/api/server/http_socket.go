@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"regexp"
+	"strings"
 	"sync"
 
 	"github.com/edulinq/autograder/internal/api/core"
@@ -17,6 +19,8 @@ import (
 
 var apiServer *http.Server = nil
 var httpRedirectServer *http.Server = nil
+
+var portRegex = regexp.MustCompile(`:\d+$`)
 
 const API_SERVER_LOCK = "internal.api.server.API_SERVER_LOCK"
 
@@ -47,7 +51,7 @@ func runAPIServer(routes *[]core.Route, subserverSetupWaitGroup *sync.WaitGroup)
 
 	lockmanager.Unlock(API_SERVER_LOCK)
 
-	runAPIServerInternal()
+	err = runAPIServerInternal()
 	if err != nil {
 		log.Error("API server returned an error.", err)
 	}
@@ -140,17 +144,41 @@ func runAPIServerInternal() error {
 }
 
 func httpRedirectHandler(response http.ResponseWriter, request *http.Request) {
+	redirectURL, err := makeHTTPSRedirect(request)
+	if err != nil {
+		log.Error("Unable to create HTTP redirect URL.", err)
+		http.Error(response, "Unable to automatically redirect HTTP traffic to HTTPS please send traffic to HTTPS.", http.StatusMisdirectedRequest)
+		return
+	}
+
+	http.Redirect(response, request, redirectURL, http.StatusPermanentRedirect)
+}
+
+func makeHTTPSRedirect(request *http.Request) (string, error) {
 	// Start with the request URL and replace components for HTTPS.
 	url := request.URL
 
-	// Append the port to the host.
-	host, _, _ := net.SplitHostPort(request.Host)
+	var err error
+	host := strings.TrimSpace(request.Host)
+	if host == "" {
+		host = url.Host
+	}
+
+	// Check for a port attached to the host.
+	// We will need to remove and replace that.
+	if portRegex.MatchString(host) {
+		host, _, err = net.SplitHostPort(host)
+		if err != nil {
+			return "", fmt.Errorf("Unable to split host from port on '%s': '%w'.", request.Host, err)
+		}
+	}
+
 	url.Host = net.JoinHostPort(host, fmt.Sprintf("%d", config.WEB_HTTPS_PORT.Get()))
 
 	// Change the scheme.
 	url.Scheme = "https"
 
-	http.Redirect(response, request, url.String(), http.StatusPermanentRedirect)
+	return url.String(), nil
 }
 
 func stopAPIServer() {

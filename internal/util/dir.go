@@ -132,7 +132,7 @@ func MatchFiles(dirs [2]string) ([]string, [][2]string, error) {
 	allFiles := map[string][]bool{}
 
 	for i, dir := range dirs {
-		relpaths, err := GetAllRelativeFiles(dirs[i])
+		relpaths, err := GetAllDirents(dirs[i], true, true)
 		if err != nil {
 			return nil, nil, fmt.Errorf("Failed to get relative files for '%s': '%w'.", dir, err)
 		}
@@ -181,15 +181,16 @@ func MatchFiles(dirs [2]string) ([]string, [][2]string, error) {
 	return matches, unmatches, nil
 }
 
-// Recursively get all files in a directory.
-// The result paths will be relative to the dirent.
-// To get all dirents with absolute paths, use GetAllDirents().
-func GetAllRelativeFiles(basePath string) ([]string, error) {
+// Recursively get all the dirents starting with some path (not including that path).
+// If the base path is a file, and empty slice will be returned.
+// Set |relPaths| to return relative instead of absolute paths.
+// Set |onlyFiles| to only return dirents that are not dirs.
+func GetAllDirents(basePath string, relPaths bool, onlyFiles bool) ([]string, error) {
 	basePath = ShouldAbs(basePath)
-	relpaths := make([]string, 0)
+	paths := make([]string, 0)
 
 	if IsFile(basePath) {
-		return relpaths, nil
+		return paths, nil
 	}
 
 	err := filepath.WalkDir(basePath, func(path string, dirent fs.DirEntry, err error) error {
@@ -201,12 +202,15 @@ func GetAllRelativeFiles(basePath string) ([]string, error) {
 			return nil
 		}
 
-		if dirent.IsDir() {
+		if onlyFiles && dirent.IsDir() {
 			return nil
 		}
 
-		relpath := RelPath(path, basePath)
-		relpaths = append(relpaths, relpath)
+		if relPaths {
+			path = RelPath(path, basePath)
+		}
+
+		paths = append(paths, path)
 		return nil
 	})
 
@@ -214,7 +218,7 @@ func GetAllRelativeFiles(basePath string) ([]string, error) {
 		return nil, err
 	}
 
-	slices.Sort(relpaths)
+	slices.Sort(paths)
 
-	return relpaths, nil
+	return paths, nil
 }
