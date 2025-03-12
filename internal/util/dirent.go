@@ -255,3 +255,26 @@ func RecursiveChmod(basePath string, fileMode os.FileMode, dirMode os.FileMode) 
 
 	return errors.Join(errs, err)
 }
+
+func SameDirent(aPath string, bPath string) (bool, error) {
+	aInfo, err := os.Stat(aPath)
+	if err != nil {
+		return false, err
+	}
+
+	bInfo, err := os.Stat(bPath)
+	if err != nil {
+		return false, err
+	}
+
+	return os.SameFile(aInfo, bInfo), nil
+}
+
+func ShouldSameDirent(aPath string, bPath string) bool {
+	result, err := SameDirent(aPath, bPath)
+	if err != nil {
+		log.Debug("Failed to check for the same dirent.", err)
+	}
+
+	return result
+}

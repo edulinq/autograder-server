@@ -317,7 +317,7 @@ func (this *FileSpec) copyPaths(sourceBaseDir string, sourceContainmentDir strin
 
 	// Get dest and check containment.
 	destPath := this.GetDest(destBaseDir)
-	if (destContainmentDir != "") && !PathHasParent(destPath, destContainmentDir) {
+	if (destContainmentDir != "") && !PathHasParentOrSelf(destPath, destContainmentDir) {
 		return fmt.Errorf("Destination breaks containment: '%s'.", this.Dest)
 	}
 
@@ -346,7 +346,7 @@ func (this *FileSpec) copyPaths(sourceBaseDir string, sourceContainmentDir strin
 
 	for _, path := range paths {
 		// Check source containment.
-		if (sourceContainmentDir != "") && !PathHasParent(path, sourceContainmentDir) {
+		if (sourceContainmentDir != "") && !PathHasParentOrSelf(path, sourceContainmentDir) {
 			return fmt.Errorf("Source breaks containment: '%s'.", this.Path)
 		}
 
@@ -363,7 +363,7 @@ func (this *FileSpec) copyPaths(sourceBaseDir string, sourceContainmentDir strin
 func (this *FileSpec) copyGit(destBaseDir string, destContainmentDir string) error {
 	// Get dest and check containment.
 	destPath := this.GetDest(destBaseDir)
-	if (destContainmentDir != "") && !PathHasParent(destPath, destContainmentDir) {
+	if (destContainmentDir != "") && !PathHasParentOrSelf(destPath, destContainmentDir) {
 		return fmt.Errorf("Destination breaks containment: '%s'.", this.Dest)
 	}
 
@@ -386,7 +386,7 @@ func (this *FileSpec) copyGit(destBaseDir string, destContainmentDir string) err
 func (this *FileSpec) downloadURL(destBaseDir string, destContainmentDir string) error {
 	// Get dest and check containment.
 	destPath := this.GetDest(destBaseDir)
-	if (destContainmentDir != "") && !PathHasParent(destPath, destContainmentDir) {
+	if (destContainmentDir != "") && !PathHasParentOrSelf(destPath, destContainmentDir) {
 		return fmt.Errorf("Destination breaks containment: '%s'.", this.Dest)
 	}
 
