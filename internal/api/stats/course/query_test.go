@@ -41,7 +41,7 @@ func TestQuery(test *testing.T) {
 		{"server-admin", "", stats.CourseMetricQuery{IncludeCourseMetricField: stats.IncludeCourseMetricField{AssignmentID: "A2"}}, []map[string]any{
 			{"assignment": "A2", "course": "course101", "duration": 200, "timestamp": 200, "type": "", "user": "U1"},
 		}},
-		{"server-admin", "", stats.CourseMetricQuery{IncludeCourseMetricField: stats.IncludeCourseMetricField{AssignmentID: "ZZZ"}}, []map[string]any{}},
+		{"server-admin", "", stats.CourseMetricQuery{IncludeCourseMetricField: stats.IncludeCourseMetricField{AssignmentID: "ZZZ"}}, nil},
 		{"server-admin", "", stats.CourseMetricQuery{IncludeCourseMetricField: stats.IncludeCourseMetricField{UserEmail: "U2"}}, []map[string]any{
 			{"assignment": "A3", "course": "course101", "duration": 300, "timestamp": 300, "type": "grading-time", "user": "U2"},
 		}},
@@ -77,10 +77,10 @@ func TestQuery(test *testing.T) {
 		{"server-admin", "", stats.CourseMetricQuery{IncludeCourseMetricField: stats.IncludeCourseMetricField{UserEmail: "U1"}, ExcludeCourseMetricField: stats.ExcludeCourseMetricField{UserEmail: "U1"}}, []map[string]any{}},
 
 		// Error.
-		{"server-user", "-040", stats.CourseMetricQuery{}, nil},
 		{"course-student", "-020", stats.CourseMetricQuery{}, nil},
-		{"server-admin", "-307", stats.CourseMetricQuery{AggregationQuery: stats.AggregationQuery{EnableAggregation: true, GroupByFields: []string{"course", "assignment"}}}, []map[string]any{}},
-		{"server-admin", "-308", stats.CourseMetricQuery{AggregationQuery: stats.AggregationQuery{EnableAggregation: true, GroupByFields: []string{"zzz"}, AggregateField: "assignment"}}, []map[string]any{}},
+		{"server-user", "-040", stats.CourseMetricQuery{}, nil},
+		{"server-admin", "-307", stats.CourseMetricQuery{AggregationQuery: stats.AggregationQuery{EnableAggregation: true, GroupByFields: []string{"course", "assignment"}}}, nil},
+		{"server-admin", "-308", stats.CourseMetricQuery{AggregationQuery: stats.AggregationQuery{EnableAggregation: true, GroupByFields: []string{"zzz"}, AggregateField: "assignment"}}, nil},
 	}
 
 	for _, record := range testRecords {

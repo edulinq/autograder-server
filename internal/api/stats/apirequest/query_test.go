@@ -106,9 +106,9 @@ func TestQuery(test *testing.T) {
 			{"assignment": "A1", "course": "C1", "duration": 100, "endpoint": "E1", "locator": "11", "sender": "1", "timestamp": 100, "user": "U1"},
 		}},
 		// Include and Exclude same fields.
-		{"server-admin", "", stats.APIRequestMetricQuery{IncludeAPIRequestMetricField: stats.IncludeAPIRequestMetricField{CourseID: "C1"}, ExcludeAPIRequestMetricField: stats.ExcludeAPIRequestMetricField{CourseID: "C1"}}, []map[string]any{}},
+		{"server-admin", "", stats.APIRequestMetricQuery{IncludeAPIRequestMetricField: stats.IncludeAPIRequestMetricField{CourseID: "C1"}, ExcludeAPIRequestMetricField: stats.ExcludeAPIRequestMetricField{CourseID: "C1"}}, nil},
 
-		// Aggregation:
+		// Aggregation.
 		// No group by, numeric aggregation.
 		{"server-admin", "", stats.APIRequestMetricQuery{AggregationQuery: stats.AggregationQuery{EnableAggregation: true, AggregateField: "timestamp"}}, []map[string]any{
 			{"count": 4, "max": 300, "mean": 225, "median": 250, "min": 100},
@@ -121,14 +121,14 @@ func TestQuery(test *testing.T) {
 			{"count": 2, "course": "C3", "max": 300, "mean": 300, "median": 300, "min": 300},
 		}},
 
-		// Multiple group bys, numeric aggregation
+		// Multiple group bys, numeric aggregation.
 		{"server-admin", "", stats.APIRequestMetricQuery{AggregationQuery: stats.AggregationQuery{EnableAggregation: true, GroupByFields: []string{"course", "assignment"}, AggregateField: "timestamp"}}, []map[string]any{
 			{"assignment": "A1", "count": 1, "course": "C2", "max": 200, "mean": 200, "median": 200, "min": 200},
 			{"assignment": "A3", "count": 2, "course": "C3", "max": 300, "mean": 300, "median": 300, "min": 300},
 			{"assignment": "A1", "count": 1, "course": "C1", "max": 100, "mean": 100, "median": 100, "min": 100},
 		}},
 
-		// No group by, non-numeric aggregation
+		// No group by, non-numeric aggregation.
 		{"server-admin", "", stats.APIRequestMetricQuery{AggregationQuery: stats.AggregationQuery{EnableAggregation: true, AggregateField: "course"}}, []map[string]any{
 			{"count": 4},
 		}},
@@ -148,10 +148,10 @@ func TestQuery(test *testing.T) {
 		}},
 
 		// Error.
-		{"server-admin", "-303", stats.APIRequestMetricQuery{AggregationQuery: stats.AggregationQuery{EnableAggregation: true, GroupByFields: []string{"course", "assignment"}}}, []map[string]any{}},
-		{"server-admin", "-304", stats.APIRequestMetricQuery{AggregationQuery: stats.AggregationQuery{EnableAggregation: true, GroupByFields: []string{"course", "assignment"}, AggregateField: "zzz"}}, []map[string]any{}},
-		{"server-admin", "-304", stats.APIRequestMetricQuery{AggregationQuery: stats.AggregationQuery{EnableAggregation: true, GroupByFields: []string{"zzz"}, AggregateField: "assignment"}}, []map[string]any{}},
-		{"server-user", "-041", stats.APIRequestMetricQuery{}, []map[string]any{}},
+		{"server-user", "-041", stats.APIRequestMetricQuery{}, nil},
+		{"server-admin", "-303", stats.APIRequestMetricQuery{AggregationQuery: stats.AggregationQuery{EnableAggregation: true, GroupByFields: []string{"course", "assignment"}}}, nil},
+		{"server-admin", "-304", stats.APIRequestMetricQuery{AggregationQuery: stats.AggregationQuery{EnableAggregation: true, GroupByFields: []string{"course", "assignment"}, AggregateField: "zzz"}}, nil},
+		{"server-admin", "-304", stats.APIRequestMetricQuery{AggregationQuery: stats.AggregationQuery{EnableAggregation: true, GroupByFields: []string{"zzz"}, AggregateField: "assignment"}}, nil},
 	}
 
 	for i, testCase := range testCases {

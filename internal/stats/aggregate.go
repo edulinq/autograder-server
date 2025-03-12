@@ -11,9 +11,9 @@ import (
 )
 
 type AggregationQuery struct {
-	EnableAggregation bool     `json:"enable-aggregation"`
-	GroupByFields     []string `json:"group-by"`
-	AggregateField    string   `json:"aggregate"`
+	EnableAggregation bool     `json:"enable-aggregation,omitempty"`
+	GroupByFields     []string `json:"group-by,omitempty"`
+	AggregateField    string   `json:"aggregate,omitempty"`
 }
 
 type QueryResponse struct {
@@ -62,7 +62,7 @@ func extractJSONTags(reflectType reflect.Type, jsonTags map[string]bool) {
 	for i := range reflectType.NumField() {
 		field := reflectType.Field(i)
 
-		// Recursively get all embedded structs.
+		// Recursively get all embedded tags.
 		if field.Anonymous {
 			extractJSONTags(field.Type, jsonTags)
 		}
@@ -75,7 +75,7 @@ func extractJSONTags(reflectType reflect.Type, jsonTags map[string]bool) {
 	}
 }
 
-// Ensure the groupByFields and aggregateFields exist in the metricType.
+// Ensure the groupByFields and aggregateField exist in the metricType.
 func validate(metricType any, groupByFields []string, aggregateField string) error {
 	reflectType := reflect.ValueOf(metricType).Type()
 
@@ -191,15 +191,15 @@ func computeGroupAggregation(groupedMetrics []map[string]any, aggregateField str
 	return aggregatedResults, nil
 }
 
-func QuerySortFuncForTesting(record1, record2 any) int {
-	jsonA, err := json.Marshal(record1)
+func QuerySortFuncForTesting(recordA, recordB any) int {
+	jsonA, err := json.Marshal(recordA)
 	if err != nil {
-		log.Fatal("Failed to marshal record1.", log.NewAttr("record1", record1), err)
+		log.Fatal("Failed to marshal recordA.", log.NewAttr("recordA", recordA), err)
 	}
 
-	jsonB, err := json.Marshal(record2)
+	jsonB, err := json.Marshal(recordB)
 	if err != nil {
-		log.Fatal("Failed to marshal record2.", log.NewAttr("record2", record2), err)
+		log.Fatal("Failed to marshal recordB.", log.NewAttr("recordB", recordB), err)
 	}
 
 	if string(jsonA) < string(jsonB) {

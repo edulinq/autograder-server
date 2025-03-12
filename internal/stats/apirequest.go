@@ -6,17 +6,6 @@ import (
 	"github.com/edulinq/autograder/internal/timestamp"
 )
 
-type APIRequestFieldType string
-
-const (
-	Sender       APIRequestFieldType = "sender"
-	Endpoint     APIRequestFieldType = "endpoint"
-	UserEmail    APIRequestFieldType = "user"
-	CourseID     APIRequestFieldType = "course"
-	AssignmentID APIRequestFieldType = "assignment"
-	Locator      APIRequestFieldType = "locator"
-)
-
 type APIRequestMetric struct {
 	BaseMetric
 

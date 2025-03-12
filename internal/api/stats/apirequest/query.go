@@ -23,6 +23,7 @@ func HandleQuery(request *QueryRequest) (*stats.QueryResponse, *core.APIError) {
 		return nil, core.NewUserContextInternalError("-301", &request.APIRequestUserContext, "Failed to query API request stats.").Err(err)
 	}
 
+	// Convert records to a general format for aggregation.
 	records = stats.ApplyBaseQuery(records, request.BaseQuery)
 	metrics, err := util.ToJsonMapSlice(records)
 	if err != nil {
@@ -37,7 +38,7 @@ func HandleQuery(request *QueryRequest) (*stats.QueryResponse, *core.APIError) {
 	}
 
 	if request.AggregateField == "" {
-		return nil, core.NewBadRequestError("-303", &request.APIRequest, "No aggregate field supplied.")
+		return nil, core.NewBadRequestError("-303", &request.APIRequest, "No aggregate field was supplied.")
 	}
 
 	aggregatedResults, err := stats.ApplyAggregation(metrics, stats.APIRequestMetric{}, request.GroupByFields, request.AggregateField)
