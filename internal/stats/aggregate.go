@@ -6,6 +6,7 @@ import (
 	"reflect"
 	"strings"
 
+	"github.com/edulinq/autograder/internal/log"
 	"github.com/edulinq/autograder/internal/util"
 )
 
@@ -191,8 +192,15 @@ func computeGroupAggregation(groupedMetrics []map[string]any, aggregateField str
 }
 
 func SortFunc(a, b any) int {
-	jsonA, _ := json.Marshal(a)
-	jsonB, _ := json.Marshal(b)
+	jsonA, err := json.Marshal(a)
+	if err != nil {
+		log.Error("Failed to marshal json (%v): '%v'.", a, err)
+	}
+
+	jsonB, err := json.Marshal(b)
+	if err != nil {
+		log.Error("Failed to marshal json (%v): '%v'.", a, err)
+	}
 
 	if string(jsonA) < string(jsonB) {
 		return -1

@@ -21,7 +21,7 @@ func TestQuery(test *testing.T) {
 		query            stats.CourseMetricQuery
 		expectedValues   []map[string]any
 	}{
-		// Base
+		// Base.
 		{"server-admin", "", stats.CourseMetricQuery{}, []map[string]any{
 			{"assignment": "A1", "course": "course101", "duration": 100, "timestamp": 100, "type": "grading-time", "user": "U1"},
 			{"assignment": "A2", "course": "course101", "duration": 200, "timestamp": 200, "type": "", "user": "U1"},
@@ -37,7 +37,7 @@ func TestQuery(test *testing.T) {
 			{"assignment": "A3", "course": "course101", "duration": 300, "timestamp": 300, "type": "grading-time", "user": "U2"},
 		}},
 
-		// Include
+		// Include.
 		{"server-admin", "", stats.CourseMetricQuery{CourseMetricInclude: stats.CourseMetricInclude{AssignmentID: "A2"}}, []map[string]any{
 			{"assignment": "A2", "course": "course101", "duration": 200, "timestamp": 200, "type": "", "user": "U1"},
 		}},
@@ -50,7 +50,7 @@ func TestQuery(test *testing.T) {
 			{"assignment": "A3", "course": "course101", "duration": 300, "timestamp": 300, "type": "grading-time", "user": "U2"},
 		}},
 
-		// Exclude
+		// Exclude.
 		{"server-admin", "", stats.CourseMetricQuery{CourseMetricExclude: stats.CourseMetricExclude{AssignmentID: "A2"}}, []map[string]any{
 			{"assignment": "A1", "course": "course101", "duration": 100, "timestamp": 100, "type": "grading-time", "user": "U1"},
 			{"assignment": "A3", "course": "course101", "duration": 300, "timestamp": 300, "type": "grading-time", "user": "U2"},
@@ -76,7 +76,7 @@ func TestQuery(test *testing.T) {
 		// Include and Exclude same fields.
 		{"server-admin", "", stats.CourseMetricQuery{CourseMetricInclude: stats.CourseMetricInclude{UserEmail: "U1"}, CourseMetricExclude: stats.CourseMetricExclude{UserEmail: "U1"}}, []map[string]any{}},
 
-		// Error
+		// Error.
 		{"server-user", "-040", stats.CourseMetricQuery{}, nil},
 		{"course-student", "-020", stats.CourseMetricQuery{}, nil},
 	}
