@@ -16,9 +16,10 @@ type testCaseParseValidation struct {
 }
 
 type testCaseCopy struct {
-	Spec                  FileSpec
-	ExpectedCopiedDirents []string
-	ErrorSubstring        string
+	Spec                    FileSpec
+	ExpectedCopiedDirents   []string
+	ErrorSubstring          string
+	MakeOutsideSymbolicLink bool
 }
 
 func TestFileSpecValidateBase(test *testing.T) {
@@ -760,6 +761,12 @@ func TestFileSpecCopy(test *testing.T) {
 		destDir := filepath.Join(tempDir, "dest")
 		MustMkDir(destDir)
 
+		if testCase.MakeOutsideSymbolicLink {
+			outsideDirPath := filepath.Join(tempDir, "outside_symlink_target_dir")
+			MustMkDir(outsideDirPath)
+			MustSymbolicLink(outsideDirPath, filepath.Join(destDir, "outside_symlink_dir"))
+		}
+
 		err = testCase.Spec.CopyTarget(TestdataDirForTesting(), TestdataDirForTesting(), destDir, destDir)
 		if err != nil {
 			if testCase.ErrorSubstring != "" {
@@ -1219,6 +1226,15 @@ func getCopyTestCases() []*testCaseCopy {
 		},
 		&testCaseCopy{
 			Spec: FileSpec{
+				Type: FILESPEC_TYPE_PATH,
+				Path: filepath.Join(TestdataDirForTesting(), "files", "a.txt"),
+				Dest: "outside_symlink_dir",
+			},
+			ErrorSubstring:          "Destination breaks containment",
+			MakeOutsideSymbolicLink: true,
+		},
+		&testCaseCopy{
+			Spec: FileSpec{
 				Type: FILESPEC_TYPE_GIT,
 				Path: "http://github.com/edulinq/test.git",
 				Dest: filepath.Join("..", "test.txt"),
@@ -1251,6 +1267,15 @@ func getCopyTestCases() []*testCaseCopy {
 		},
 		&testCaseCopy{
 			Spec: FileSpec{
+				Type: FILESPEC_TYPE_GIT,
+				Path: "http://test.edulinq.org/test.git",
+				Dest: "outside_symlink_dir",
+			},
+			ErrorSubstring:          "Destination breaks containment",
+			MakeOutsideSymbolicLink: true,
+		},
+		&testCaseCopy{
+			Spec: FileSpec{
 				Type: FILESPEC_TYPE_URL,
 				Path: "http://test.edulinq.org/test.zip",
 				Dest: filepath.Join("..", "test.txt"),
@@ -1280,6 +1305,15 @@ func getCopyTestCases() []*testCaseCopy {
 				Dest: filepath.Join("/", "tmp"),
 			},
 			ErrorSubstring: "Destination breaks containment",
+		},
+		&testCaseCopy{
+			Spec: FileSpec{
+				Type: FILESPEC_TYPE_URL,
+				Path: "http://test.edulinq.org/test.zip",
+				Dest: "outside_symlink_dir",
+			},
+			ErrorSubstring:          "Destination breaks containment",
+			MakeOutsideSymbolicLink: true,
 		},
 
 		// Breaking Containment (source)

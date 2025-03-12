@@ -178,7 +178,7 @@ func ShouldGetThisDir() string {
 	// 0 is the current caller (this function), and 1 should be one frame back.
 	_, path, _, ok := runtime.Caller(1)
 	if !ok {
-		log.Error("Could not get the stackframe for the current runtime.")
+		log.Error("Could not get the stack frame for the current runtime.")
 		return "."
 	}
 
@@ -215,26 +215,46 @@ func SearchParents(basepath string, name string) string {
 	return ""
 }
 
-// Return true if the child path has the given parent (or is the parent).
-// The check is only through lexical analysis.
-// This method is not robust (in many ways) and should be generally avoided in non-testing code.
-func PathHasParent(child string, parent string) bool {
-	child = filepath.Clean(ShouldAbs(child))
-	parent = filepath.Clean(ShouldAbs(parent))
+// Return true if the path has the given parent (or is the parent itself).
+// If the suspected parent dir does not actually exist, false will be returned.
+// The suspected child path can have terminal components that do not exist,
+// but a parent must eventually match the suspected parent for true to be returned.
+// This method will recursively walk up the path and its parents to see if they match the suspected parent.
+func PathHasParentOrSelf(path string, parent string) bool {
+	if !PathExists(parent) {
+		return false
+	}
 
-	if child == parent {
+	path = ShouldNormalizePath(path)
+	parent = ShouldNormalizePath(parent)
+
+	if ShouldSameDirent(path, parent) {
 		return true
 	}
 
-	parent = parent + string(os.PathSeparator)
+	// Check the path's parent.
+	newPath := filepath.Dir(path)
 
-	return strings.HasPrefix(child, parent)
+	// If the path and new path match, then we have hit (and already checked) the root.
+	if ShouldSameDirent(path, newPath) {
+		return false
+	}
+
+	return PathHasParentOrSelf(newPath, parent)
 }
 
-// This method is not robust (in many ways) and should be generally avoided in non-testing code.
+// Get the child's path relative to the parent.
+// This operation is purely lexical and can fail in non-trivial situations (e.g., hard links or strange mounts).
+// If the paths are the same, then "." will be returned.
+// If the path is not a child of the path, then a cleaned absolute version of the path will be returned.
+// This method is not robust (in several ways) and should not be used with user-supplied paths.
 func RelPath(child string, parent string) string {
 	child = filepath.Clean(ShouldAbs(child))
 	parent = filepath.Clean(ShouldAbs(parent)) + string(os.PathSeparator)
+
+	if child == parent {
+		return "."
+	}
 
 	return strings.TrimPrefix(child, parent)
 }
@@ -258,4 +278,18 @@ func JoinIfNotAbs(path string, baseDir string) string {
 	}
 
 	return filepath.Join(baseDir, path)
+}
+
+// Normalize a path as best as possible.
+func ShouldNormalizePath(path string) string {
+	path = filepath.Clean(path)
+	path = ShouldAbs(path)
+
+	realPath, err := filepath.EvalSymlinks(path)
+	if err != nil {
+		log.Debug("Failed to eval symlinks for realpath.", err, log.NewAttr("path", path))
+		return path
+	}
+
+	return realPath
 }
