@@ -1,6 +1,7 @@
 package apirequest
 
 import (
+	"reflect"
 	"testing"
 
 	"github.com/edulinq/autograder/internal/api/core"
@@ -10,6 +11,8 @@ import (
 	"github.com/edulinq/autograder/internal/util"
 )
 
+// Since all aggregation is done along the same code path,
+// only one metric needs to test aggregation.
 func TestQuery(test *testing.T) {
 	db.ResetForTesting()
 	defer db.ResetForTesting()
@@ -18,35 +21,136 @@ func TestQuery(test *testing.T) {
 		email           string
 		expectedLocator string
 		query           stats.APIRequestMetricQuery
-		expectedValues  []int
+		expectedValues  []map[string]any
 	}{
-		// Base
-		{"server-admin", "", stats.APIRequestMetricQuery{}, []int{100, 200, 300}},
-		{"server-admin", "", stats.APIRequestMetricQuery{BaseQuery: stats.BaseQuery{Sort: 1}}, []int{300, 200, 100}},
-		{"server-admin", "", stats.APIRequestMetricQuery{BaseQuery: stats.BaseQuery{After: timestamp.FromMSecs(150)}}, []int{200, 300}},
+		// Base.
+		{"server-admin", "", stats.APIRequestMetricQuery{AggregationQuery: stats.AggregationQuery{}}, []map[string]any{
+			{"assignment": "A1", "course": "C1", "duration": 100, "endpoint": "E1", "locator": "11", "sender": "1", "timestamp": 100, "user": "U1"},
+			{"assignment": "A1", "course": "C2", "duration": 200, "endpoint": "E2", "locator": "22", "sender": "2", "timestamp": 200, "user": "U2"},
+			{"assignment": "A3", "course": "C3", "duration": 300, "endpoint": "E3", "locator": "33", "sender": "3", "timestamp": 300, "user": "U3"},
+			{"assignment": "A3", "course": "C3", "duration": 300, "endpoint": "E3", "locator": "33", "sender": "3", "timestamp": 300, "user": "U3"},
+		}},
+		{"server-admin", "", stats.APIRequestMetricQuery{BaseQuery: stats.BaseQuery{Sort: 1}}, []map[string]any{
+			{"assignment": "A3", "course": "C3", "duration": 300, "endpoint": "E3", "locator": "33", "sender": "3", "timestamp": 300, "user": "U3"},
+			{"assignment": "A3", "course": "C3", "duration": 300, "endpoint": "E3", "locator": "33", "sender": "3", "timestamp": 300, "user": "U3"},
+			{"assignment": "A1", "course": "C2", "duration": 200, "endpoint": "E2", "locator": "22", "sender": "2", "timestamp": 200, "user": "U2"},
+			{"assignment": "A1", "course": "C1", "duration": 100, "endpoint": "E1", "locator": "11", "sender": "1", "timestamp": 100, "user": "U1"},
+		}},
+		{"server-admin", "", stats.APIRequestMetricQuery{BaseQuery: stats.BaseQuery{After: timestamp.FromMSecs(150)}}, []map[string]any{
+			{"assignment": "A1", "course": "C2", "duration": 200, "endpoint": "E2", "locator": "22", "sender": "2", "timestamp": 200, "user": "U2"},
+			{"assignment": "A3", "course": "C3", "duration": 300, "endpoint": "E3", "locator": "33", "sender": "3", "timestamp": 300, "user": "U3"},
+			{"assignment": "A3", "course": "C3", "duration": 300, "endpoint": "E3", "locator": "33", "sender": "3", "timestamp": 300, "user": "U3"},
+		}},
 
-		// Course Specifc
-		{"server-admin", "", stats.APIRequestMetricQuery{AssignmentID: "A2"}, []int{200}},
-		{"server-admin", "", stats.APIRequestMetricQuery{AssignmentID: "zzz"}, nil},
-		{"server-admin", "", stats.APIRequestMetricQuery{UserEmail: "U1"}, []int{100, 200}},
-		{"server-admin", "", stats.APIRequestMetricQuery{UserEmail: "zzz"}, nil},
-		{"server-admin", "", stats.APIRequestMetricQuery{CourseID: "C1"}, []int{100}},
-		{"server-admin", "", stats.APIRequestMetricQuery{CourseID: "zzz"}, nil},
+		// Include.
+		{"server-admin", "", stats.APIRequestMetricQuery{APIRequestMetricInclude: stats.APIRequestMetricInclude{Sender: "1"}}, []map[string]any{
+			{"assignment": "A1", "course": "C1", "duration": 100, "endpoint": "E1", "locator": "11", "sender": "1", "timestamp": 100, "user": "U1"},
+		}},
+		{"server-admin", "", stats.APIRequestMetricQuery{APIRequestMetricInclude: stats.APIRequestMetricInclude{Endpoint: "E1"}}, []map[string]any{
+			{"assignment": "A1", "course": "C1", "duration": 100, "endpoint": "E1", "locator": "11", "sender": "1", "timestamp": 100, "user": "U1"},
+		}},
+		{"server-admin", "", stats.APIRequestMetricQuery{APIRequestMetricInclude: stats.APIRequestMetricInclude{UserEmail: "U1"}}, []map[string]any{
+			{"assignment": "A1", "course": "C1", "duration": 100, "endpoint": "E1", "locator": "11", "sender": "1", "timestamp": 100, "user": "U1"},
+		}},
+		{"server-admin", "", stats.APIRequestMetricQuery{APIRequestMetricInclude: stats.APIRequestMetricInclude{CourseID: "C1"}}, []map[string]any{
+			{"assignment": "A1", "course": "C1", "duration": 100, "endpoint": "E1", "locator": "11", "sender": "1", "timestamp": 100, "user": "U1"},
+		}},
+		{"server-admin", "", stats.APIRequestMetricQuery{APIRequestMetricInclude: stats.APIRequestMetricInclude{AssignmentID: "A1"}}, []map[string]any{
+			{"assignment": "A1", "course": "C1", "duration": 100, "endpoint": "E1", "locator": "11", "sender": "1", "timestamp": 100, "user": "U1"},
+			{"assignment": "A1", "course": "C2", "duration": 200, "endpoint": "E2", "locator": "22", "sender": "2", "timestamp": 200, "user": "U2"},
+		}},
+		{"server-admin", "", stats.APIRequestMetricQuery{APIRequestMetricInclude: stats.APIRequestMetricInclude{Locator: "11"}}, []map[string]any{
+			{"assignment": "A1", "course": "C1", "duration": 100, "endpoint": "E1", "locator": "11", "sender": "1", "timestamp": 100, "user": "U1"},
+		}},
+		{"server-admin", "", stats.APIRequestMetricQuery{APIRequestMetricInclude: stats.APIRequestMetricInclude{Locator: "ZZZ"}}, []map[string]any{}},
 
-		// Endpoint Specific
-		{"server-admin", "", stats.APIRequestMetricQuery{Endpoint: "E1"}, []int{100}},
-		{"server-admin", "", stats.APIRequestMetricQuery{Endpoint: "zzz"}, nil},
+		// Exclude.
+		{"server-admin", "", stats.APIRequestMetricQuery{APIRequestMetricExclude: stats.APIRequestMetricExclude{Sender: "1"}}, []map[string]any{
+			{"assignment": "A1", "course": "C2", "duration": 200, "endpoint": "E2", "locator": "22", "sender": "2", "timestamp": 200, "user": "U2"},
+			{"assignment": "A3", "course": "C3", "duration": 300, "endpoint": "E3", "locator": "33", "sender": "3", "timestamp": 300, "user": "U3"},
+			{"assignment": "A3", "course": "C3", "duration": 300, "endpoint": "E3", "locator": "33", "sender": "3", "timestamp": 300, "user": "U3"},
+		}},
+		{"server-admin", "", stats.APIRequestMetricQuery{APIRequestMetricExclude: stats.APIRequestMetricExclude{Endpoint: "E1"}}, []map[string]any{
+			{"assignment": "A1", "course": "C2", "duration": 200, "endpoint": "E2", "locator": "22", "sender": "2", "timestamp": 200, "user": "U2"},
+			{"assignment": "A3", "course": "C3", "duration": 300, "endpoint": "E3", "locator": "33", "sender": "3", "timestamp": 300, "user": "U3"},
+			{"assignment": "A3", "course": "C3", "duration": 300, "endpoint": "E3", "locator": "33", "sender": "3", "timestamp": 300, "user": "U3"},
+		}},
+		{"server-admin", "", stats.APIRequestMetricQuery{APIRequestMetricExclude: stats.APIRequestMetricExclude{UserEmail: "U1"}}, []map[string]any{
+			{"assignment": "A1", "course": "C2", "duration": 200, "endpoint": "E2", "locator": "22", "sender": "2", "timestamp": 200, "user": "U2"},
+			{"assignment": "A3", "course": "C3", "duration": 300, "endpoint": "E3", "locator": "33", "sender": "3", "timestamp": 300, "user": "U3"},
+			{"assignment": "A3", "course": "C3", "duration": 300, "endpoint": "E3", "locator": "33", "sender": "3", "timestamp": 300, "user": "U3"},
+		}},
+		{"server-admin", "", stats.APIRequestMetricQuery{APIRequestMetricExclude: stats.APIRequestMetricExclude{CourseID: "C1"}}, []map[string]any{
+			{"assignment": "A1", "course": "C2", "duration": 200, "endpoint": "E2", "locator": "22", "sender": "2", "timestamp": 200, "user": "U2"},
+			{"assignment": "A3", "course": "C3", "duration": 300, "endpoint": "E3", "locator": "33", "sender": "3", "timestamp": 300, "user": "U3"},
+			{"assignment": "A3", "course": "C3", "duration": 300, "endpoint": "E3", "locator": "33", "sender": "3", "timestamp": 300, "user": "U3"},
+		}},
+		{"server-admin", "", stats.APIRequestMetricQuery{APIRequestMetricExclude: stats.APIRequestMetricExclude{AssignmentID: "A1"}}, []map[string]any{
+			{"assignment": "A3", "course": "C3", "duration": 300, "endpoint": "E3", "locator": "33", "sender": "3", "timestamp": 300, "user": "U3"},
+			{"assignment": "A3", "course": "C3", "duration": 300, "endpoint": "E3", "locator": "33", "sender": "3", "timestamp": 300, "user": "U3"},
+		}},
+		{"server-admin", "", stats.APIRequestMetricQuery{APIRequestMetricExclude: stats.APIRequestMetricExclude{Locator: "11"}}, []map[string]any{
+			{"assignment": "A1", "course": "C2", "duration": 200, "endpoint": "E2", "locator": "22", "sender": "2", "timestamp": 200, "user": "U2"},
+			{"assignment": "A3", "course": "C3", "duration": 300, "endpoint": "E3", "locator": "33", "sender": "3", "timestamp": 300, "user": "U3"},
+			{"assignment": "A3", "course": "C3", "duration": 300, "endpoint": "E3", "locator": "33", "sender": "3", "timestamp": 300, "user": "U3"},
+		}},
+		{"server-admin", "", stats.APIRequestMetricQuery{APIRequestMetricExclude: stats.APIRequestMetricExclude{Locator: "ZZZ"}}, []map[string]any{
+			{"assignment": "A1", "course": "C1", "duration": 100, "endpoint": "E1", "locator": "11", "sender": "1", "timestamp": 100, "user": "U1"},
+			{"assignment": "A1", "course": "C2", "duration": 200, "endpoint": "E2", "locator": "22", "sender": "2", "timestamp": 200, "user": "U2"},
+			{"assignment": "A3", "course": "C3", "duration": 300, "endpoint": "E3", "locator": "33", "sender": "3", "timestamp": 300, "user": "U3"},
+			{"assignment": "A3", "course": "C3", "duration": 300, "endpoint": "E3", "locator": "33", "sender": "3", "timestamp": 300, "user": "U3"},
+		}},
 
-		// Sender Specific
-		{"server-admin", "", stats.APIRequestMetricQuery{Sender: "1"}, []int{100}},
-		{"server-admin", "", stats.APIRequestMetricQuery{Sender: "zzz"}, nil},
+		// Include and Exclude different fields.
+		{"server-admin", "", stats.APIRequestMetricQuery{APIRequestMetricInclude: stats.APIRequestMetricInclude{AssignmentID: "A1"}, APIRequestMetricExclude: stats.APIRequestMetricExclude{Endpoint: "E2"}}, []map[string]any{
+			{"assignment": "A1", "course": "C1", "duration": 100, "endpoint": "E1", "locator": "11", "sender": "1", "timestamp": 100, "user": "U1"},
+		}},
+		// Include and Exclude same fields.
+		{"server-admin", "", stats.APIRequestMetricQuery{APIRequestMetricInclude: stats.APIRequestMetricInclude{CourseID: "C1"}, APIRequestMetricExclude: stats.APIRequestMetricExclude{CourseID: "C1"}}, []map[string]any{}},
 
-		// Locator Specific
-		{"server-admin", "", stats.APIRequestMetricQuery{Locator: "11"}, []int{100}},
-		{"server-admin", "", stats.APIRequestMetricQuery{Locator: "zzz"}, nil},
+		// Aggregation:
+		// No group by, numeric aggregation.
+		{"server-admin", "", stats.APIRequestMetricQuery{AggregationQuery: stats.AggregationQuery{EnableAggregation: true, AggregateField: "timestamp"}}, []map[string]any{
+			{"count": 4, "max": 300, "mean": 225, "median": 250, "min": 100},
+		}},
 
-		// Error
-		{"server-user", "-041", stats.APIRequestMetricQuery{}, nil},
+		// Single group by, numeric aggregation.
+		{"server-admin", "", stats.APIRequestMetricQuery{AggregationQuery: stats.AggregationQuery{EnableAggregation: true, GroupByFields: []string{"course"}, AggregateField: "timestamp"}}, []map[string]any{
+			{"count": 1, "course": "C1", "max": 100, "mean": 100, "median": 100, "min": 100},
+			{"count": 1, "course": "C2", "max": 200, "mean": 200, "median": 200, "min": 200},
+			{"count": 2, "course": "C3", "max": 300, "mean": 300, "median": 300, "min": 300},
+		}},
+
+		// Multiple group bys, numeric aggregation
+		{"server-admin", "", stats.APIRequestMetricQuery{AggregationQuery: stats.AggregationQuery{EnableAggregation: true, GroupByFields: []string{"course", "assignment"}, AggregateField: "timestamp"}}, []map[string]any{
+			{"assignment": "A1", "count": 1, "course": "C2", "max": 200, "mean": 200, "median": 200, "min": 200},
+			{"assignment": "A3", "count": 2, "course": "C3", "max": 300, "mean": 300, "median": 300, "min": 300},
+			{"assignment": "A1", "count": 1, "course": "C1", "max": 100, "mean": 100, "median": 100, "min": 100},
+		}},
+
+		// No group by, non-numeric aggregation
+		{"server-admin", "", stats.APIRequestMetricQuery{AggregationQuery: stats.AggregationQuery{EnableAggregation: true, AggregateField: "course"}}, []map[string]any{
+			{"count": 4},
+		}},
+
+		// Single group by, non-numeric aggregation.
+		{"server-admin", "", stats.APIRequestMetricQuery{AggregationQuery: stats.AggregationQuery{EnableAggregation: true, GroupByFields: []string{"course"}, AggregateField: "assignment"}}, []map[string]any{
+			{"count": 2, "course": "C3"},
+			{"count": 1, "course": "C1"},
+			{"count": 1, "course": "C2"},
+		}},
+
+		// Multiple group bys, non-numeric aggregation.
+		{"server-admin", "", stats.APIRequestMetricQuery{AggregationQuery: stats.AggregationQuery{EnableAggregation: true, GroupByFields: []string{"course", "assignment"}, AggregateField: "assignment"}}, []map[string]any{
+			{"assignment": "A3", "count": 2, "course": "C3"},
+			{"assignment": "A1", "count": 1, "course": "C1"},
+			{"assignment": "A1", "count": 1, "course": "C2"},
+		}},
+
+		// Error.
+		{"server-admin", "-302", stats.APIRequestMetricQuery{AggregationQuery: stats.AggregationQuery{EnableAggregation: true, GroupByFields: []string{"course", "assignment"}}}, []map[string]any{}},
+		{"server-admin", "-303", stats.APIRequestMetricQuery{AggregationQuery: stats.AggregationQuery{EnableAggregation: true, GroupByFields: []string{"zzz"}, AggregateField: "assignment"}}, []map[string]any{}},
+		{"server-user", "-041", stats.APIRequestMetricQuery{}, []map[string]any{}},
 	}
 
 	for i, testCase := range testCases {
@@ -80,22 +184,24 @@ func TestQuery(test *testing.T) {
 			continue
 		}
 
-		var responseContent QueryResponse
+		var responseContent stats.QueryResponse
 		util.MustJSONFromString(util.MustToJSON(response.Content), &responseContent)
 
-		if len(testCase.expectedValues) != len(responseContent.Records) {
-			test.Errorf("Case %d: Unexpected number of records. Expected: %d, Actual: %d.", i, len(testCase.expectedValues), len(responseContent.Records))
-			continue
+		actualSlice := make([]any, len(responseContent.Response))
+		for i, data := range responseContent.Response {
+			actualSlice[i] = data
 		}
 
-		match := true
-		for i, _ := range responseContent.Records {
-			expectedTimestamp := timestamp.FromMSecs(int64(testCase.expectedValues[i]))
-			match = (match && (expectedTimestamp == responseContent.Records[i].Timestamp))
+		expectedSlice := make([]any, len(testCase.expectedValues))
+		for i, data := range testCase.expectedValues {
+			expectedSlice[i] = data
 		}
 
-		if !match {
-			test.Errorf("Case %d: Unexpected record timestamps. Expected: %s, Actual: %s.", i, util.MustToJSONIndent(testCase.expectedValues), util.MustToJSONIndent(responseContent.Records))
+		expected := util.MustToGenericJSON(actualSlice, stats.SortFunc)
+		actual := util.MustToGenericJSON(expectedSlice, stats.SortFunc)
+
+		if !reflect.DeepEqual(expected, actual) {
+			test.Errorf("Case %d: Response is not as expected. Expected: '%v', Actual: '%v'.", i, util.MustToJSONIndent(testCase.expectedValues), util.MustToJSONIndent(responseContent.Response))
 			continue
 		}
 	}
@@ -120,11 +226,23 @@ var testRecords []*stats.APIRequestMetric = []*stats.APIRequestMetric{
 		},
 		Sender:       "2",
 		Endpoint:     "E2",
-		UserEmail:    "U1",
+		UserEmail:    "U2",
 		CourseID:     "C2",
-		AssignmentID: "A2",
+		AssignmentID: "A1",
 		Locator:      "22",
 		Duration:     200,
+	},
+	&stats.APIRequestMetric{
+		BaseMetric: stats.BaseMetric{
+			Timestamp: timestamp.FromMSecs(300),
+		},
+		Sender:       "3",
+		Endpoint:     "E3",
+		UserEmail:    "U3",
+		CourseID:     "C3",
+		AssignmentID: "A3",
+		Locator:      "33",
+		Duration:     300,
 	},
 	&stats.APIRequestMetric{
 		BaseMetric: stats.BaseMetric{

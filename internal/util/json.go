@@ -7,6 +7,7 @@ import (
 	"io"
 	"os"
 	"reflect"
+	"slices"
 	"strings"
 
 	"github.com/edulinq/autograder/internal/log"
@@ -78,6 +79,30 @@ func JSONMapFromString(data string) (map[string]any, error) {
 	err := json.Unmarshal([]byte(data), &target)
 	if err != nil {
 		return nil, fmt.Errorf("Could not unmarshal JSON map from string (%s): '%w'.", data, err)
+	}
+
+	return target, nil
+}
+
+func MustToJSONMapSlice(data any) []map[string]any {
+	result, err := ToJsonMapSlice(data)
+	if err != nil {
+		log.Fatal("Failed to convert object to a slice of maps.", log.NewAttr("data", data), err)
+	}
+
+	return result
+}
+
+func ToJsonMapSlice(data any) ([]map[string]any, error) {
+	jsonString, err := ToJSON(data)
+	if err != nil {
+		return nil, fmt.Errorf("Failed to convert input to JSON: '%w'.", err)
+	}
+
+	var target []map[string]any
+	err = JSONFromString(jsonString, &target)
+	if err != nil {
+		return nil, fmt.Errorf("Could not unmarshal JSON into []map[string]any: '%w'.", err)
 	}
 
 	return target, nil
@@ -238,4 +263,13 @@ func MustFormatJSONObjectIndent(text string) string {
 	var object map[string]any
 	MustJSONFromString(text, &object)
 	return MustToJSONIndent(object)
+}
+
+func MustToGenericJSON(input []any, sortFunc func(a any, b any) int) []map[string]any {
+	slices.SortFunc(input, sortFunc)
+
+	var data []map[string]any
+	MustJSONFromString(MustToJSON(input), &data)
+
+	return data
 }

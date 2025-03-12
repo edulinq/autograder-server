@@ -4,7 +4,6 @@ import (
 	"github.com/edulinq/autograder/internal/config"
 	"github.com/edulinq/autograder/internal/log"
 	"github.com/edulinq/autograder/internal/timestamp"
-	"github.com/edulinq/autograder/internal/util"
 )
 
 type APIRequestFieldType string
@@ -34,84 +33,28 @@ type APIRequestMetric struct {
 type APIRequestMetricQuery struct {
 	BaseQuery
 
-	Sender       string `json:"target-sender"`
-	Endpoint     string `json:"target-endpoint"`
-	UserEmail    string `json:"target-user,omitempty"`
-	CourseID     string `json:"target-course,omitempty"`
-	AssignmentID string `json:"target-assignment,omitempty"`
-	Locator      string `json:"target-locator"`
+	AggregationQuery
+
+	APIRequestMetricInclude
+	APIRequestMetricExclude
 }
 
-type APIRequestMetricAggregate struct {
-	BaseQuery
-
-	GroupBy APIRequestFieldType `json:"group_by"`
-
-	Filters map[APIRequestFieldType]Filter `json:"filters"`
+type APIRequestMetricInclude struct {
+	Sender       string `json:"include-sender,omitempty"`
+	Endpoint     string `json:"include-endpoint,omitempty"`
+	UserEmail    string `json:"include-user,omitempty"`
+	CourseID     string `json:"include-course,omitempty"`
+	AssignmentID string `json:"include-assignment,omitempty"`
+	Locator      string `json:"include-locator,omitempty"`
 }
 
-type Filter struct {
-	Include []string
-	Exclude []string
-}
-
-func ApplyAggregate(records []*APIRequestMetric, groupByKey APIRequestFieldType) *map[string]util.AggregateValues {
-	result := make(map[string]util.AggregateValues)
-	groups := make(map[string][]float64)
-
-	for _, metric := range records {
-		groupKey := getAPIRequestMetricFieldKey(metric, groupByKey)
-		if groupKey == "" {
-			continue
-		}
-
-		groups[groupKey] = append(groups[groupKey], float64(metric.Duration))
-	}
-
-	for key, values := range groups {
-		result[key] = util.ComputeAggregates(values)
-	}
-
-	return &result
-}
-
-func getAPIRequestMetricFieldKey(metric *APIRequestMetric, field APIRequestFieldType) string {
-	switch field {
-	case Sender:
-		return metric.Sender
-	case Endpoint:
-		return metric.Endpoint
-	case UserEmail:
-		return metric.UserEmail
-	case CourseID:
-		return metric.CourseID
-	case AssignmentID:
-		return metric.AssignmentID
-	case Locator:
-		return metric.Locator
-	default:
-		return ""
-	}
-}
-
-func (this APIRequestMetricAggregate) Filter(record *APIRequestMetric) bool {
-	if record == nil {
-		return false
-	}
-
-	for field, filter := range this.Filters {
-		groupKey := getAPIRequestMetricFieldKey(record, field)
-
-		if len(filter.Include) > 0 && !util.StringContainedInSlice(groupKey, filter.Include) {
-			return false
-		}
-
-		if len(filter.Exclude) > 0 && util.StringContainedInSlice(groupKey, filter.Exclude) {
-			return false
-		}
-	}
-
-	return true
+type APIRequestMetricExclude struct {
+	Sender       string `json:"exclude-sender,omitempty"`
+	Endpoint     string `json:"exclude-endpoint,omitempty"`
+	UserEmail    string `json:"exclude-user,omitempty"`
+	CourseID     string `json:"exclude-course,omitempty"`
+	AssignmentID string `json:"exclude-assignment,omitempty"`
+	Locator      string `json:"exclude-locator,omitempty"`
 }
 
 func (this APIRequestMetricQuery) Match(record *APIRequestMetric) bool {
@@ -123,27 +66,53 @@ func (this APIRequestMetricQuery) Match(record *APIRequestMetric) bool {
 		return false
 	}
 
-	if (this.Sender != "") && (this.Sender != record.Sender) {
+	include := this.APIRequestMetricInclude
+	if (include.Sender != "") && (include.Sender != record.Sender) {
 		return false
 	}
 
-	if (this.Endpoint != "") && (this.Endpoint != record.Endpoint) {
+	if (include.Endpoint != "") && (include.Endpoint != record.Endpoint) {
 		return false
 	}
 
-	if (this.UserEmail != "") && (this.UserEmail != record.UserEmail) {
+	if (include.UserEmail != "") && (include.UserEmail != record.UserEmail) {
 		return false
 	}
 
-	if (this.AssignmentID != "") && (this.AssignmentID != record.AssignmentID) {
+	if (include.AssignmentID != "") && (include.AssignmentID != record.AssignmentID) {
 		return false
 	}
 
-	if (this.CourseID != "") && (this.CourseID != record.CourseID) {
+	if (include.CourseID != "") && (include.CourseID != record.CourseID) {
 		return false
 	}
 
-	if (this.Locator != "") && (this.Locator != record.Locator) {
+	if (include.Locator != "") && (include.Locator != record.Locator) {
+		return false
+	}
+
+	exclude := this.APIRequestMetricExclude
+	if (exclude.Sender != "") && (exclude.Sender == record.Sender) {
+		return false
+	}
+
+	if (exclude.Endpoint != "") && (exclude.Endpoint == record.Endpoint) {
+		return false
+	}
+
+	if (exclude.UserEmail != "") && (exclude.UserEmail == record.UserEmail) {
+		return false
+	}
+
+	if (exclude.AssignmentID != "") && (exclude.AssignmentID == record.AssignmentID) {
+		return false
+	}
+
+	if (exclude.CourseID != "") && (exclude.CourseID == record.CourseID) {
+		return false
+	}
+
+	if (exclude.Locator != "") && (exclude.Locator == record.Locator) {
 		return false
 	}
 

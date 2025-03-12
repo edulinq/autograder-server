@@ -36,11 +36,26 @@ type CourseMetric struct {
 type CourseMetricQuery struct {
 	BaseQuery
 
-	Type CourseMetricType `json:"target-type"`
+	AggregationQuery
 
-	CourseID     string `json:"target-course,omitempty"`
-	AssignmentID string `json:"target-assignment,omitempty"`
-	UserEmail    string `json:"target-user,omitempty"`
+	CourseMetricInclude
+	CourseMetricExclude
+}
+
+type CourseMetricInclude struct {
+	Type CourseMetricType `json:"include-type,omitempty"`
+
+	CourseID     string `json:"include-course,omitempty"`
+	AssignmentID string `json:"include-assignment,omitempty"`
+	UserEmail    string `json:"include-user,omitempty"`
+}
+
+type CourseMetricExclude struct {
+	Type CourseMetricType `json:"exclude-type,omitempty"`
+
+	CourseID     string `json:"exclude-course,omitempty"`
+	AssignmentID string `json:"exclude-assignment,omitempty"`
+	UserEmail    string `json:"exclude-user,omitempty"`
 }
 
 var courseMetricTypeToString = map[CourseMetricType]string{
@@ -97,19 +112,37 @@ func (this CourseMetricQuery) Match(record *CourseMetric) bool {
 		return false
 	}
 
-	if (this.Type != CourseMetricTypeUnknown) && (this.Type != record.Type) {
+	include := this.CourseMetricInclude
+	if (include.Type != CourseMetricTypeUnknown) && (include.Type != record.Type) {
 		return false
 	}
 
-	if (this.CourseID != "") && (this.CourseID != record.CourseID) {
+	if (include.CourseID != "") && (include.CourseID != record.CourseID) {
 		return false
 	}
 
-	if (this.AssignmentID != "") && (this.AssignmentID != record.AssignmentID) {
+	if (include.AssignmentID != "") && (include.AssignmentID != record.AssignmentID) {
 		return false
 	}
 
-	if (this.UserEmail != "") && (this.UserEmail != record.UserEmail) {
+	if (include.UserEmail != "") && (include.UserEmail != record.UserEmail) {
+		return false
+	}
+
+	exclude := this.CourseMetricExclude
+	if (exclude.Type != CourseMetricTypeUnknown) && (exclude.Type == record.Type) {
+		return false
+	}
+
+	if (exclude.CourseID != "") && (exclude.CourseID == record.CourseID) {
+		return false
+	}
+
+	if (exclude.AssignmentID != "") && (exclude.AssignmentID == record.AssignmentID) {
+		return false
+	}
+
+	if (exclude.UserEmail != "") && (exclude.UserEmail == record.UserEmail) {
 		return false
 	}
 

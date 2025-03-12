@@ -1,4 +1,4 @@
-package stats
+package course
 
 // All the API endpoints handled by this package.
 
@@ -7,7 +7,7 @@ import (
 )
 
 var routes []core.Route = []core.Route{
-	core.MustNewAPIRoute(`courses/stats/query`, HandleQuery),
+	core.MustNewAPIRoute(`stats/course/query`, HandleQuery),
 }
 
 func GetRoutes() *[]core.Route {

@@ -33,11 +33,11 @@ func (this *backend) StoreSystemStats(record *stats.SystemMetrics) error {
 }
 
 func (this *backend) GetCourseMetrics(query stats.CourseMetricQuery) ([]*stats.CourseMetric, error) {
-	if query.CourseID == "" {
+	if query.CourseMetricInclude.CourseID == "" {
 		return nil, fmt.Errorf("When querying for course metrics, course ID must not be empty.")
 	}
 
-	path := this.getCourseStatsPath(query.CourseID)
+	path := this.getCourseStatsPath(query.CourseMetricInclude.CourseID)
 
 	this.contextReadLock(path)
 	defer this.contextReadUnlock(path)
@@ -66,19 +66,6 @@ func (this *backend) GetAPIRequestMetrics(query stats.APIRequestMetricQuery) ([]
 
 	records, err := util.FilterJSONLFile(path, stats.APIRequestMetric{}, func(record *stats.APIRequestMetric) bool {
 		return query.Match(record)
-	})
-
-	return records, err
-}
-
-func (this *backend) GetFilteredAPIRequestMetrics(query stats.APIRequestMetricAggregate) ([]*stats.APIRequestMetric, error) {
-	path := this.getAPIRequestStatsPath()
-
-	this.apiRequestLock.RLock()
-	defer this.apiRequestLock.RUnlock()
-
-	records, err := util.FilterJSONLFile(path, stats.APIRequestMetric{}, func(record *stats.APIRequestMetric) bool {
-		return query.Filter(record)
 	})
 
 	return records, err
