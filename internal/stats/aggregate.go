@@ -47,7 +47,7 @@ func ApplyAggregation(metrics []map[string]any, metricType any, groupByFields []
 	for _, groupedMetrics := range groupedMetricBuckets {
 		result, err := computeGroupAggregation(groupedMetrics, aggregateField, groupByFields)
 		if err != nil {
-			return nil, fmt.Errorf("Failed to compute aggregations: '%v'.", err)
+			return nil, fmt.Errorf("Failed to compute aggregation for metrics '%v': '%v'.", groupedMetrics, err)
 		}
 
 		if result != nil {
@@ -59,7 +59,7 @@ func ApplyAggregation(metrics []map[string]any, metricType any, groupByFields []
 }
 
 func extractJSONTags(reflectType reflect.Type, jsonTags map[string]bool) {
-	for i := 0; i < reflectType.NumField(); i++ {
+	for i := range reflectType.NumField() {
 		field := reflectType.Field(i)
 
 		// Recursively get all embedded structs.
@@ -191,15 +191,15 @@ func computeGroupAggregation(groupedMetrics []map[string]any, aggregateField str
 	return aggregatedResults, nil
 }
 
-func SortFunc(a, b any) int {
-	jsonA, err := json.Marshal(a)
+func QuerySortFuncForTesting(record1, record2 any) int {
+	jsonA, err := json.Marshal(record1)
 	if err != nil {
-		log.Error("Failed to marshal json (%v): '%v'.", a, err)
+		log.Fatal("Failed to marshal record1.", log.NewAttr("record1", record1), err)
 	}
 
-	jsonB, err := json.Marshal(b)
+	jsonB, err := json.Marshal(record2)
 	if err != nil {
-		log.Error("Failed to marshal json (%v): '%v'.", a, err)
+		log.Fatal("Failed to marshal record2.", log.NewAttr("record2", record2), err)
 	}
 
 	if string(jsonA) < string(jsonB) {
@@ -207,5 +207,6 @@ func SortFunc(a, b any) int {
 	} else if string(jsonA) > string(jsonB) {
 		return 1
 	}
+
 	return 0
 }

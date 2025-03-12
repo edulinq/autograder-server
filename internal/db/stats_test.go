@@ -61,7 +61,7 @@ func (this *DBTests) DBTestStoreCourseMetrics(test *testing.T) {
 	}
 
 	query := stats.CourseMetricQuery{
-		CourseMetricInclude: stats.CourseMetricInclude{
+		IncludeCourseMetricField: stats.IncludeCourseMetricField{
 			CourseID: "C",
 		},
 	}

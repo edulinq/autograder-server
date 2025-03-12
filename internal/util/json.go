@@ -96,13 +96,13 @@ func MustToJSONMapSlice(data any) []map[string]any {
 func ToJsonMapSlice(data any) ([]map[string]any, error) {
 	jsonString, err := ToJSON(data)
 	if err != nil {
-		return nil, fmt.Errorf("Failed to convert input to JSON: '%w'.", err)
+		return nil, fmt.Errorf("Failed to convert object to JSON: '%w'.", err)
 	}
 
 	var target []map[string]any
 	err = JSONFromString(jsonString, &target)
 	if err != nil {
-		return nil, fmt.Errorf("Could not unmarshal JSON into []map[string]any: '%w'.", err)
+		return nil, fmt.Errorf("Failed to unmarshall JSON object to a slice of maps: '%w'.", err)
 	}
 
 	return target, nil

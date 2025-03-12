@@ -20,14 +20,13 @@ type QueryRequest struct {
 func HandleQuery(request *QueryRequest) (*stats.QueryResponse, *core.APIError) {
 	records, err := db.GetAPIRequestMetrics(request.APIRequestMetricQuery)
 	if err != nil {
-		return nil, core.NewUserContextInternalError("-300", &request.APIRequestUserContext, "Failed to query API request stats.").Err(err)
+		return nil, core.NewUserContextInternalError("-301", &request.APIRequestUserContext, "Failed to query API request stats.").Err(err)
 	}
 
 	records = stats.ApplyBaseQuery(records, request.BaseQuery)
-
 	metrics, err := util.ToJsonMapSlice(records)
 	if err != nil {
-		return nil, core.NewUserContextInternalError("-301", &request.APIRequestUserContext, "Failed to convert records to a slice of maps.").Err(err)
+		return nil, core.NewUserContextInternalError("-302", &request.APIRequestUserContext, "Failed to convert records to a slice of maps.").Err(err)
 	}
 
 	queryResponse := stats.QueryResponse{}
@@ -38,16 +37,14 @@ func HandleQuery(request *QueryRequest) (*stats.QueryResponse, *core.APIError) {
 	}
 
 	if request.AggregateField == "" {
-		return nil, core.NewBadRequestError("-302", &request.APIRequest, "No aggregate field supplied.")
+		return nil, core.NewBadRequestError("-303", &request.APIRequest, "No aggregate field supplied.")
 	}
 
-	aggregateResults, err := stats.ApplyAggregation(metrics, stats.APIRequestMetric{}, request.GroupByFields, request.AggregateField)
+	aggregatedResults, err := stats.ApplyAggregation(metrics, stats.APIRequestMetric{}, request.GroupByFields, request.AggregateField)
 	if err != nil {
-		return nil, core.NewBadRequestError("-303", &request.APIRequest, "Failed to apply aggregation.").Err(err)
+		return nil, core.NewBadRequestError("-304", &request.APIRequest, "Failed to apply aggregation.").Err(err)
 	}
 
-	queryResponse.Response = aggregateResults
-
+	queryResponse.Response = aggregatedResults
 	return &queryResponse, nil
-
 }

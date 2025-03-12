@@ -35,11 +35,11 @@ type APIRequestMetricQuery struct {
 
 	AggregationQuery
 
-	APIRequestMetricInclude
-	APIRequestMetricExclude
+	IncludeAPIRequestMetricField
+	ExcludeAPIRequestMetricField
 }
 
-type APIRequestMetricInclude struct {
+type IncludeAPIRequestMetricField struct {
 	Sender       string `json:"include-sender,omitempty"`
 	Endpoint     string `json:"include-endpoint,omitempty"`
 	UserEmail    string `json:"include-user,omitempty"`
@@ -48,7 +48,7 @@ type APIRequestMetricInclude struct {
 	Locator      string `json:"include-locator,omitempty"`
 }
 
-type APIRequestMetricExclude struct {
+type ExcludeAPIRequestMetricField struct {
 	Sender       string `json:"exclude-sender,omitempty"`
 	Endpoint     string `json:"exclude-endpoint,omitempty"`
 	UserEmail    string `json:"exclude-user,omitempty"`
@@ -66,7 +66,7 @@ func (this APIRequestMetricQuery) Match(record *APIRequestMetric) bool {
 		return false
 	}
 
-	include := this.APIRequestMetricInclude
+	include := this.IncludeAPIRequestMetricField
 	if (include.Sender != "") && (include.Sender != record.Sender) {
 		return false
 	}
@@ -91,7 +91,7 @@ func (this APIRequestMetricQuery) Match(record *APIRequestMetric) bool {
 		return false
 	}
 
-	exclude := this.APIRequestMetricExclude
+	exclude := this.ExcludeAPIRequestMetricField
 	if (exclude.Sender != "") && (exclude.Sender == record.Sender) {
 		return false
 	}

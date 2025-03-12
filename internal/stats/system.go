@@ -26,6 +26,12 @@ var (
 	lastBytesReceived uint64 = 0
 )
 
+type SystemMetricQuery struct {
+	BaseQuery
+
+	AggregationQuery
+}
+
 func collectSystemStats(systemIntervalMS int) {
 	if backend == nil {
 		log.Error("Stats backend is nil, cannot collect system stats.")

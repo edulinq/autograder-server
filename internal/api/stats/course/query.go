@@ -18,18 +18,17 @@ type QueryRequest struct {
 // Only the context course can be queried for, the target-course field will be ignored for this endpoint.
 func HandleQuery(request *QueryRequest) (*stats.QueryResponse, *core.APIError) {
 	// The request must be for the given course.
-	request.CourseMetricInclude.CourseID = request.Course.ID
+	request.IncludeCourseMetricField.CourseID = request.Course.ID
 
 	records, err := db.GetCourseMetrics(request.CourseMetricQuery)
 	if err != nil {
-		return nil, core.NewInternalError("-308", &request.APIRequestCourseUserContext, "Failed to query course stats.").Err(err)
+		return nil, core.NewInternalError("-305", &request.APIRequestCourseUserContext, "Failed to query course stats.").Err(err)
 	}
 
 	records = stats.ApplyBaseQuery(records, request.CourseMetricQuery.BaseQuery)
-
 	metrics, err := util.ToJsonMapSlice(records)
 	if err != nil {
-		return nil, core.NewUserContextInternalError("-309", &request.APIRequestUserContext, "Failed to convert records to a slice of maps.").Err(err)
+		return nil, core.NewUserContextInternalError("-306", &request.APIRequestUserContext, "Failed to convert records to a slice of maps.").Err(err)
 	}
 
 	queryResponse := stats.QueryResponse{}
@@ -40,16 +39,14 @@ func HandleQuery(request *QueryRequest) (*stats.QueryResponse, *core.APIError) {
 	}
 
 	if request.AggregateField == "" {
-		return nil, core.NewBadRequestError("-310", &request.APIRequest, "No aggregate field supplied.")
+		return nil, core.NewBadRequestError("-307", &request.APIRequest, "No aggregate field supplied.")
 	}
 
-	aggregateResults, err := stats.ApplyAggregation(metrics, stats.APIRequestMetric{}, request.GroupByFields, request.AggregateField)
+	aggregatedResults, err := stats.ApplyAggregation(metrics, stats.APIRequestMetric{}, request.GroupByFields, request.AggregateField)
 	if err != nil {
-		return nil, core.NewBadRequestError("-311", &request.APIRequest, "Failed to apply aggregation.").Err(err)
+		return nil, core.NewBadRequestError("-308", &request.APIRequest, "Failed to apply aggregation.").Err(err)
 	}
 
-	queryResponse.Response = aggregateResults
-
+	queryResponse.Response = aggregatedResults
 	return &queryResponse, nil
-
 }

@@ -45,13 +45,3 @@ func StringsCompareIgnoreOrdering(a []string, b []string) int {
 	bSorted := SortStringsCopy(b)
 	return slices.Compare(aSorted, bSorted)
 }
-
-func StringContainedInSlice(str string, slice []string) bool {
-	for _, value := range slice {
-		if str == value {
-			return true
-		}
-	}
-
-	return false
-}

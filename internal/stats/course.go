@@ -38,11 +38,11 @@ type CourseMetricQuery struct {
 
 	AggregationQuery
 
-	CourseMetricInclude
-	CourseMetricExclude
+	IncludeCourseMetricField
+	ExcludeCourseMetricField
 }
 
-type CourseMetricInclude struct {
+type IncludeCourseMetricField struct {
 	Type CourseMetricType `json:"include-type,omitempty"`
 
 	CourseID     string `json:"include-course,omitempty"`
@@ -50,7 +50,7 @@ type CourseMetricInclude struct {
 	UserEmail    string `json:"include-user,omitempty"`
 }
 
-type CourseMetricExclude struct {
+type ExcludeCourseMetricField struct {
 	Type CourseMetricType `json:"exclude-type,omitempty"`
 
 	CourseID     string `json:"exclude-course,omitempty"`
@@ -112,7 +112,7 @@ func (this CourseMetricQuery) Match(record *CourseMetric) bool {
 		return false
 	}
 
-	include := this.CourseMetricInclude
+	include := this.IncludeCourseMetricField
 	if (include.Type != CourseMetricTypeUnknown) && (include.Type != record.Type) {
 		return false
 	}
@@ -129,7 +129,7 @@ func (this CourseMetricQuery) Match(record *CourseMetric) bool {
 		return false
 	}
 
-	exclude := this.CourseMetricExclude
+	exclude := this.ExcludeCourseMetricField
 	if (exclude.Type != CourseMetricTypeUnknown) && (exclude.Type == record.Type) {
 		return false
 	}

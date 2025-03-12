@@ -133,7 +133,7 @@
         "stats/system/query": {
             "description": "Query the system stats for the server.",
             "request-type": "*system.QueryRequest",
-            "response-type": "*stats.QueryResponse"
+            "response-type": "*system.QueryResponse"
         },
         "system/stacks": {
             "description": "Get stack traces for all the currently running routines (threads) on the server.",
