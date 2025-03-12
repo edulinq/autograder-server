@@ -15,7 +15,7 @@ type QueryRequest struct {
 }
 
 // Query metrics for a specific course.
-// Only the context course can be queried for, the target-course field will be ignored for this endpoint.
+// Only the context course can be queried for, the include-course field will be ignored for this endpoint.
 func HandleQuery(request *QueryRequest) (*stats.QueryResponse, *core.APIError) {
 	// The request must be for the given course.
 	request.IncludeCourseMetricField.CourseID = request.Course.ID

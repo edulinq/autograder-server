@@ -74,7 +74,7 @@ func TestQuery(test *testing.T) {
 		}},
 
 		// Include and Exclude same fields.
-		{"server-admin", "", stats.CourseMetricQuery{IncludeCourseMetricField: stats.IncludeCourseMetricField{UserEmail: "U1"}, ExcludeCourseMetricField: stats.ExcludeCourseMetricField{UserEmail: "U1"}}, []map[string]any{}},
+		{"server-admin", "", stats.CourseMetricQuery{IncludeCourseMetricField: stats.IncludeCourseMetricField{UserEmail: "U1"}, ExcludeCourseMetricField: stats.ExcludeCourseMetricField{UserEmail: "U1"}}, nil},
 
 		// Error.
 		{"course-student", "-020", stats.CourseMetricQuery{}, nil},

@@ -62,7 +62,7 @@ func TestQuery(test *testing.T) {
 		{"server-admin", "", stats.APIRequestMetricQuery{IncludeAPIRequestMetricField: stats.IncludeAPIRequestMetricField{Locator: "11"}}, []map[string]any{
 			{"assignment": "A1", "course": "C1", "duration": 100, "endpoint": "E1", "locator": "11", "sender": "1", "timestamp": 100, "user": "U1"},
 		}},
-		{"server-admin", "", stats.APIRequestMetricQuery{IncludeAPIRequestMetricField: stats.IncludeAPIRequestMetricField{Locator: "ZZZ"}}, []map[string]any{}},
+		{"server-admin", "", stats.APIRequestMetricQuery{IncludeAPIRequestMetricField: stats.IncludeAPIRequestMetricField{Locator: "ZZZ"}}, nil},
 
 		// Exclude.
 		{"server-admin", "", stats.APIRequestMetricQuery{ExcludeAPIRequestMetricField: stats.ExcludeAPIRequestMetricField{Sender: "1"}}, []map[string]any{
