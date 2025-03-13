@@ -7,6 +7,7 @@ import (
 )
 
 var routes []core.Route = []core.Route{
+	core.MustNewAPIRoute(`courses/admin/email`, HandleEmail),
 	core.MustNewAPIRoute(`courses/admin/update`, HandleUpdate),
 }
 
