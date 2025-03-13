@@ -22,12 +22,28 @@ type APIRequestMetric struct {
 type APIRequestMetricQuery struct {
 	BaseQuery
 
-	Sender       string `json:"target-sender"`
-	Endpoint     string `json:"target-endpoint"`
-	UserEmail    string `json:"target-user,omitempty"`
-	CourseID     string `json:"target-course,omitempty"`
-	AssignmentID string `json:"target-assignment,omitempty"`
-	Locator      string `json:"target-locator"`
+	AggregationQuery
+
+	IncludeAPIRequestMetricField
+	ExcludeAPIRequestMetricField
+}
+
+type IncludeAPIRequestMetricField struct {
+	Sender       string `json:"include-sender,omitempty"`
+	Endpoint     string `json:"include-endpoint,omitempty"`
+	UserEmail    string `json:"include-user,omitempty"`
+	CourseID     string `json:"include-course,omitempty"`
+	AssignmentID string `json:"include-assignment,omitempty"`
+	Locator      string `json:"include-locator,omitempty"`
+}
+
+type ExcludeAPIRequestMetricField struct {
+	Sender       string `json:"exclude-sender,omitempty"`
+	Endpoint     string `json:"exclude-endpoint,omitempty"`
+	UserEmail    string `json:"exclude-user,omitempty"`
+	CourseID     string `json:"exclude-course,omitempty"`
+	AssignmentID string `json:"exclude-assignment,omitempty"`
+	Locator      string `json:"exclude-locator,omitempty"`
 }
 
 func (this APIRequestMetricQuery) Match(record *APIRequestMetric) bool {
@@ -39,27 +55,53 @@ func (this APIRequestMetricQuery) Match(record *APIRequestMetric) bool {
 		return false
 	}
 
-	if (this.Sender != "") && (this.Sender != record.Sender) {
+	include := this.IncludeAPIRequestMetricField
+	if (include.Sender != "") && (include.Sender != record.Sender) {
 		return false
 	}
 
-	if (this.Endpoint != "") && (this.Endpoint != record.Endpoint) {
+	if (include.Endpoint != "") && (include.Endpoint != record.Endpoint) {
 		return false
 	}
 
-	if (this.UserEmail != "") && (this.UserEmail != record.UserEmail) {
+	if (include.UserEmail != "") && (include.UserEmail != record.UserEmail) {
 		return false
 	}
 
-	if (this.AssignmentID != "") && (this.AssignmentID != record.AssignmentID) {
+	if (include.AssignmentID != "") && (include.AssignmentID != record.AssignmentID) {
 		return false
 	}
 
-	if (this.CourseID != "") && (this.CourseID != record.CourseID) {
+	if (include.CourseID != "") && (include.CourseID != record.CourseID) {
 		return false
 	}
 
-	if (this.Locator != "") && (this.Locator != record.Locator) {
+	if (include.Locator != "") && (include.Locator != record.Locator) {
+		return false
+	}
+
+	exclude := this.ExcludeAPIRequestMetricField
+	if (exclude.Sender != "") && (exclude.Sender == record.Sender) {
+		return false
+	}
+
+	if (exclude.Endpoint != "") && (exclude.Endpoint == record.Endpoint) {
+		return false
+	}
+
+	if (exclude.UserEmail != "") && (exclude.UserEmail == record.UserEmail) {
+		return false
+	}
+
+	if (exclude.AssignmentID != "") && (exclude.AssignmentID == record.AssignmentID) {
+		return false
+	}
+
+	if (exclude.CourseID != "") && (exclude.CourseID == record.CourseID) {
+		return false
+	}
+
+	if (exclude.Locator != "") && (exclude.Locator == record.Locator) {
 		return false
 	}
 

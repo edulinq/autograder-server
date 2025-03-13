@@ -70,11 +70,6 @@
             "request-type": "*scores.UploadRequest",
             "response-type": "*scores.UploadResponse"
         },
-        "courses/stats/query": {
-            "description": "Query metrics for a specific course.\nOnly the context course can be queried for, the target-course field will be ignored for this endpoint.",
-            "request-type": "*stats.QueryRequest",
-            "response-type": "*stats.QueryResponse"
-        },
         "courses/upsert/filespec": {
             "description": "Upsert a course using a filespec.",
             "request-type": "*upsert.FileSpecRequest",
@@ -127,8 +122,13 @@
         },
         "stats/apirequest/query": {
             "request-type": "*apirequest.QueryRequest",
-            "response-type": "*apirequest.QueryResponse",
+            "response-type": "*stats.QueryResponse",
             "description": "Query the API request stats for the server."
+        },
+        "stats/course/query": {
+            "request-type": "*course.QueryRequest",
+            "response-type": "*stats.QueryResponse",
+            "description": "Query metrics for a specific course.\nOnly the context course can be queried for, the include-course field will be ignored for this endpoint."
         },
         "stats/system/query": {
             "description": "Query the system stats for the server.",

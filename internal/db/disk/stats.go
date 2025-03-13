@@ -33,11 +33,11 @@ func (this *backend) StoreSystemStats(record *stats.SystemMetrics) error {
 }
 
 func (this *backend) GetCourseMetrics(query stats.CourseMetricQuery) ([]*stats.CourseMetric, error) {
-	if query.CourseID == "" {
+	if query.IncludeCourseMetricField.CourseID == "" {
 		return nil, fmt.Errorf("When querying for course metrics, course ID must not be empty.")
 	}
 
-	path := this.getCourseStatsPath(query.CourseID)
+	path := this.getCourseStatsPath(query.IncludeCourseMetricField.CourseID)
 
 	this.contextReadLock(path)
 	defer this.contextReadUnlock(path)
