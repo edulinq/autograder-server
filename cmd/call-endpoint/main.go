@@ -1,6 +1,8 @@
 package main
 
 import (
+	"fmt"
+	"slices"
 	"strings"
 
 	"github.com/alecthomas/kong"
@@ -16,31 +18,39 @@ var args struct {
 	config.ConfigArgs
 	cmd.CommonOptions
 
-	Endpoint   string   `help:"Endpoint of the desired API." arg:""`
+	Endpoint   string   `help:"Endpoint of the desired API." arg:"" optional:""`
 	Parameters []string `help:"Parameter for the endpoint in the format 'key:value', e.g., 'id:123'." arg:"" optional:""`
 	Table      bool     `help:"Attempt to output data as a TSV. Fallback to JSON if the table conversion fails." default:"false"`
+	List       bool     `help:"List all API endpoints." default:"false"`
 }
 
 func main() {
 	kong.Parse(&args,
-		kong.Description("Execute an API request to the specified endpoint. For more information on available API endpoints, see the API resource file at: 'resources/api.json'."),
+		kong.Description("Call an endpoint."),
 	)
 
 	err := config.HandleConfigArgs(args.ConfigArgs)
 	if err != nil {
 		log.Fatal("Failed to load config options.", err)
-
-		// Return to prevent further execution after log.Fatal().
 		return
 	}
 
-	var endpointDescription *core.EndpointDescription
+	if args.List {
+		listAPIEndpoints()
+		return
+	}
+
+	if args.Endpoint == "" {
+		log.Error("Please enter an endpoint. Use --list to view all endpoints.")
+		return
+	}
 
 	apiDescription, err := api.Describe(*api.GetRoutes())
 	if err != nil {
 		log.Fatal("Failed to describe API endpoints.", err)
 	}
 
+	var endpointDescription *core.EndpointDescription
 	for endpoint, requestResponse := range apiDescription.Endpoints {
 		if endpoint == args.Endpoint {
 			endpointDescription = &requestResponse
@@ -49,9 +59,7 @@ func main() {
 	}
 
 	if endpointDescription == nil {
-		log.Fatal("Failed to find the endpoint.", log.NewAttr("endpoint", args.Endpoint))
-
-		// Return to prevent further execution after log.Fatal().
+		log.Fatal("Failed to find the endpoint. Use --list to view all endpoints.", log.NewAttr("endpoint", args.Endpoint))
 		return
 	}
 
@@ -61,8 +69,6 @@ func main() {
 		parts := strings.SplitN(arg, ":", 2)
 		if len(parts) != 2 {
 			log.Fatal("Invalid parameter format: missing a colon. Expected format is 'key:value', e.g., 'id:123'.", log.NewAttr("parameter", parts))
-
-			// Return to prevent further execution after log.Fatal().
 			return
 		}
 
@@ -75,4 +81,22 @@ func main() {
 	}
 
 	cmd.MustHandleCMDRequestAndExitFull(args.Endpoint, request, nil, args.CommonOptions, printFunc)
+}
+
+func listAPIEndpoints() {
+	apiDescription, err := api.Describe(*api.GetRoutes())
+	if err != nil {
+		log.Fatal("Failed to describe API endpoints: '%w'.", err)
+	}
+
+	var endpoints []string
+	for endpoint, _ := range apiDescription.Endpoints {
+		endpoints = append(endpoints, endpoint)
+	}
+
+	slices.Sort(endpoints)
+
+	for _, endpoint := range endpoints {
+		fmt.Println(endpoint)
+	}
 }

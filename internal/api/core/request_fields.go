@@ -62,6 +62,7 @@ type TargetServerUserSelfOrAdmin struct {
 
 // Same as TargetServerUserSelfOrAdmin, but in the context of a course user and a grader context user.
 // Therefore, the context user only has to be a grader in the context course (or the target user themself).
+// When targeting yourself, the user can be a server admin (and will be escalated to course owner for the request).
 // The existence of this type in a struct also indicates that the request is at least a APIRequestCourseUserContext.
 type TargetCourseUserSelfOrGrader struct {
 	TargetCourseUser
@@ -79,50 +80,67 @@ type NonEmptyString string
 func checkRequestSpecialFields(request *http.Request, apiRequest any, endpoint string) *APIError {
 	reflectValue := reflect.ValueOf(apiRequest).Elem()
 
-	for i := 0; i < reflectValue.NumField(); i++ {
-		fieldValue := reflectValue.Field(i)
+	var apiErr *APIError = nil
+	var postFiles *POSTFiles = nil
 
-		if fieldValue.Type() == reflect.TypeOf((*CourseUsers)(nil)).Elem() {
-			apiErr := checkRequestCourseUsers(endpoint, apiRequest, i)
-			if apiErr != nil {
-				return apiErr
-			}
-		} else if fieldValue.Type() == reflect.TypeOf((*TargetServerUser)(nil)).Elem() {
-			apiErr := checkRequestTargetServerUser(endpoint, apiRequest, i)
-			if apiErr != nil {
-				return apiErr
-			}
-		} else if fieldValue.Type() == reflect.TypeOf((*TargetCourseUser)(nil)).Elem() {
-			apiErr := checkRequestTargetCourseUser(endpoint, apiRequest, i)
-			if apiErr != nil {
-				return apiErr
-			}
-		} else if fieldValue.Type() == reflect.TypeOf((*TargetServerUserSelfOrAdmin)(nil)).Elem() {
-			apiErr := checkRequestTargetServerUserSelfOrAdmin(endpoint, apiRequest, i)
-			if apiErr != nil {
-				return apiErr
-			}
-		} else if fieldValue.Type() == reflect.TypeOf((*TargetCourseUserSelfOrGrader)(nil)).Elem() {
-			apiErr := checkRequestTargetCourseUserSelfOrGrader(endpoint, apiRequest, i)
-			if apiErr != nil {
-				return apiErr
-			}
-		} else if fieldValue.Type() == reflect.TypeOf((*TargetCourseUserSelfOrAdmin)(nil)).Elem() {
-			apiErr := checkRequestTargetCourseUserSelfOrAdmin(endpoint, apiRequest, i)
-			if apiErr != nil {
-				return apiErr
-			}
-		} else if fieldValue.Type() == reflect.TypeOf((*POSTFiles)(nil)).Elem() {
-			apiErr := checkRequestPostFiles(request, endpoint, apiRequest, i)
-			if apiErr != nil {
-				return apiErr
-			}
-		} else if fieldValue.Type() == reflect.TypeOf((*NonEmptyString)(nil)).Elem() {
-			apiErr := checkRequestNonEmptyString(endpoint, apiRequest, i)
-			if apiErr != nil {
-				return apiErr
+	// Use a func to better handle cleanup on error.
+	innerFunc := func() *APIError {
+		for i := 0; i < reflectValue.NumField(); i++ {
+			fieldValue := reflectValue.Field(i)
+
+			if fieldValue.Type() == reflect.TypeOf((*CourseUsers)(nil)).Elem() {
+				apiErr = checkRequestCourseUsers(endpoint, apiRequest, i)
+				if apiErr != nil {
+					return apiErr
+				}
+			} else if fieldValue.Type() == reflect.TypeOf((*TargetServerUser)(nil)).Elem() {
+				apiErr = checkRequestTargetServerUser(endpoint, apiRequest, i)
+				if apiErr != nil {
+					return apiErr
+				}
+			} else if fieldValue.Type() == reflect.TypeOf((*TargetCourseUser)(nil)).Elem() {
+				apiErr = checkRequestTargetCourseUser(endpoint, apiRequest, i)
+				if apiErr != nil {
+					return apiErr
+				}
+			} else if fieldValue.Type() == reflect.TypeOf((*TargetServerUserSelfOrAdmin)(nil)).Elem() {
+				apiErr = checkRequestTargetServerUserSelfOrAdmin(endpoint, apiRequest, i)
+				if apiErr != nil {
+					return apiErr
+				}
+			} else if fieldValue.Type() == reflect.TypeOf((*TargetCourseUserSelfOrGrader)(nil)).Elem() {
+				apiErr = checkRequestTargetCourseUserSelfOrGrader(endpoint, apiRequest, i)
+				if apiErr != nil {
+					return apiErr
+				}
+			} else if fieldValue.Type() == reflect.TypeOf((*TargetCourseUserSelfOrAdmin)(nil)).Elem() {
+				apiErr = checkRequestTargetCourseUserSelfOrAdmin(endpoint, apiRequest, i)
+				if apiErr != nil {
+					return apiErr
+				}
+			} else if fieldValue.Type() == reflect.TypeOf((*POSTFiles)(nil)).Elem() {
+				postFiles, apiErr = checkRequestPostFiles(request, endpoint, apiRequest, i)
+				if apiErr != nil {
+					return apiErr
+				}
+			} else if fieldValue.Type() == reflect.TypeOf((*NonEmptyString)(nil)).Elem() {
+				apiErr = checkRequestNonEmptyString(endpoint, apiRequest, i)
+				if apiErr != nil {
+					return apiErr
+				}
 			}
 		}
+
+		return nil
+	}
+
+	err := innerFunc()
+	if err != nil {
+		if postFiles != nil {
+			util.RemoveDirent(postFiles.TempDir)
+		}
+
+		return err
 	}
 
 	return nil
@@ -298,6 +316,10 @@ func checkRequestTargetCourseUserSelfOrRole(endpoint string, apiRequest any, fie
 	field := reflectField.Interface().(TargetCourseUser)
 	if field.Email == "" {
 		field.Email = courseContext.User.Email
+
+		// If the user (which is the target of this request) is a server admin,
+		// insert them into the course users (they have already been escalated).
+		users[courseContext.User.Email] = courseContext.User
 	}
 
 	// Operations not on self require higher permissions.
@@ -318,7 +340,11 @@ func checkRequestTargetCourseUserSelfOrRole(endpoint string, apiRequest any, fie
 	return nil
 }
 
-func checkRequestPostFiles(request *http.Request, endpoint string, apiRequest any, fieldIndex int) *APIError {
+// Get files from the POST request.
+// If successful, a pointer to the post files will be returned AND embedded in the request.
+// The returned reference is for cleanup if there is an error further up the stack,
+// if there is no error it does not need to be explicitly cleaned up (as that will happen after the request handler is done).
+func checkRequestPostFiles(request *http.Request, endpoint string, apiRequest any, fieldIndex int) (*POSTFiles, *APIError) {
 	reflectValue := reflect.ValueOf(apiRequest).Elem()
 
 	structName := reflectValue.Type().Name()
@@ -327,7 +353,7 @@ func checkRequestPostFiles(request *http.Request, endpoint string, apiRequest an
 	fieldType := reflectValue.Type().Field(fieldIndex)
 
 	if !fieldType.IsExported() {
-		return NewBareInternalError("-028", endpoint, "A POSTFiles field must be exported.").
+		return nil, NewBareInternalError("-028", endpoint, "A POSTFiles field must be exported.").
 			Add("struct-name", structName).Add("field-name", fieldType.Name)
 	}
 
@@ -336,24 +362,24 @@ func checkRequestPostFiles(request *http.Request, endpoint string, apiRequest an
 	if err != nil {
 		var fileSizeExceededError *fileSizeExceededError
 		if errors.As(err, &fileSizeExceededError) {
-			return NewBareBadRequestError("-036", endpoint, err.Error()).Err(err).
+			return nil, NewBareBadRequestError("-036", endpoint, err.Error()).Err(err).
 				Add("struct-name", structName).Add("field-name", fieldType.Name).
 				Add("filename", fileSizeExceededError.Filename).Add("file-size", fileSizeExceededError.FileSizeKB).
 				Add("max-file-size-kb", fileSizeExceededError.MaxFileSizeKB)
 		} else {
-			return NewBareInternalError("-029", endpoint, "Failed to store files from POST.").Err(err).
+			return nil, NewBareInternalError("-029", endpoint, "Failed to store files from POST.").Err(err).
 				Add("struct-name", structName).Add("field-name", fieldType.Name)
 		}
 	}
 
 	if postFiles == nil {
-		return NewBareBadRequestError("-030", endpoint, "Endpoint requires files to be provided in POST body, no files found.").
+		return nil, NewBareBadRequestError("-030", endpoint, "Endpoint requires files to be provided in POST body, no files found.").
 			Add("struct-name", structName).Add("field-name", fieldType.Name)
 	}
 
 	fieldValue.Set(reflect.ValueOf(*postFiles))
 
-	return nil
+	return postFiles, nil
 }
 
 func checkRequestNonEmptyString(endpoint string, apiRequest any, fieldIndex int) *APIError {
@@ -379,7 +405,7 @@ func cleanPostFiles(apiRequest ValidAPIRequest, fieldIndex int) *APIError {
 	reflectValue := reflect.ValueOf(apiRequest).Elem()
 	fieldValue := reflectValue.Field(fieldIndex)
 	postFiles := fieldValue.Interface().(POSTFiles)
-	os.RemoveAll(postFiles.TempDir)
+	util.RemoveDirent(postFiles.TempDir)
 
 	return nil
 }
@@ -416,7 +442,7 @@ func storeRequestFiles(request *http.Request) (*POSTFiles, error) {
 
 	err = innerFunc()
 	if err != nil {
-		os.RemoveAll(tempDir)
+		util.RemoveDirent(tempDir)
 		return nil, err
 	}
 

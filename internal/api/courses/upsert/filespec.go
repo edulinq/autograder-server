@@ -2,8 +2,8 @@ package upsert
 
 import (
 	"github.com/edulinq/autograder/internal/api/core"
-	"github.com/edulinq/autograder/internal/common"
 	"github.com/edulinq/autograder/internal/procedures/courses"
+	"github.com/edulinq/autograder/internal/util"
 )
 
 type FileSpecRequest struct {
@@ -11,7 +11,7 @@ type FileSpecRequest struct {
 	core.MinServerRoleCourseCreator
 
 	courses.CourseUpsertOptions
-	FileSpec common.FileSpec `json:"filespec"`
+	FileSpec util.FileSpec `json:"filespec"`
 }
 
 // Upsert a course using a filespec.

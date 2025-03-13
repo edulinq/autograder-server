@@ -5,13 +5,21 @@
         "grader.sh",
         "Grader.java"
     ],
-    "image": "edulinq/grader.base-ubuntu",
+    "image": "ghcr.io/edulinq/grader.base:0.1.0-ubuntu",
     "invocation": ["bash", "./grader.sh"],
     "post-static-docker-commands": [
         "RUN apt-get update",
         "RUN apt-get install -y openjdk-11-jdk"
     ],
-    "post-submission-files-ops": [
+    "post-submission-file-ops": [
         ["cp", "input/Assignment.java", "work/Assignment.java"]
-    ]
+    ],
+    "analysis-options": {
+        "include-patterns": [
+            "Assignment.java"
+        ],
+        "template-files": [
+            "test-submissions/not-implemented/Assignment.java"
+        ]
+    }
 }

@@ -3,6 +3,7 @@ package log
 import (
 	"reflect"
 	"testing"
+	"time"
 
 	"github.com/edulinq/autograder/internal/timestamp"
 )
@@ -13,6 +14,13 @@ const (
 )
 
 func TestLogQueryBase(test *testing.T) {
+	// Force the local time to UTC for tests.
+	oldLocal := time.Local
+	time.Local = time.UTC
+	defer func() {
+		time.Local = oldLocal
+	}()
+
 	testCases := []struct {
 		query       RawLogQuery
 		expected    ParsedLogQuery

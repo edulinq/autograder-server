@@ -173,42 +173,12 @@ func FindDirents(filename string, dir string, allowFiles bool, allowDirs bool, a
 	return matches, nil
 }
 
-// Get all the dirents starting with some path (not including that path).
-// If the base path is a file, and empty slice will be returned.
-func GetAllDirents(basePath string) ([]string, error) {
-	basePath = ShouldAbs(basePath)
-	paths := make([]string, 0)
-
-	if IsFile(basePath) {
-		return paths, nil
-	}
-
-	err := filepath.WalkDir(basePath, func(path string, dirent fs.DirEntry, err error) error {
-		if err != nil {
-			return err
-		}
-
-		if basePath == path {
-			return nil
-		}
-
-		paths = append(paths, path)
-		return nil
-	})
-
-	if err != nil {
-		return nil, err
-	}
-
-	return paths, nil
-}
-
 // Get the directory of the source file calling this method.
 func ShouldGetThisDir() string {
 	// 0 is the current caller (this function), and 1 should be one frame back.
 	_, path, _, ok := runtime.Caller(1)
 	if !ok {
-		log.Error("Could not get the stackframe for the current runtime.")
+		log.Error("Could not get the stack frame for the current runtime.")
 		return "."
 	}
 
@@ -245,18 +215,46 @@ func SearchParents(basepath string, name string) string {
 	return ""
 }
 
-// This method is not robust (in many ways) and should be generally avoided in non-testing code.
-func PathHasParent(child string, parent string) bool {
-	child = ShouldAbs(child)
-	parent = ShouldAbs(parent)
+// Return true if the path has the given parent (or is the parent itself).
+// If the suspected parent dir does not actually exist, false will be returned.
+// The suspected child path can have terminal components that do not exist,
+// but a parent must eventually match the suspected parent for true to be returned.
+// This method will recursively walk up the path and its parents to see if they match the suspected parent.
+func PathHasParentOrSelf(path string, parent string) bool {
+	if !PathExists(parent) {
+		return false
+	}
 
-	return strings.HasPrefix(child, parent)
+	path = ShouldNormalizePath(path)
+	parent = ShouldNormalizePath(parent)
+
+	if ShouldSameDirent(path, parent) {
+		return true
+	}
+
+	// Check the path's parent.
+	newPath := filepath.Dir(path)
+
+	// If the path and new path match, then we have hit (and already checked) the root.
+	if ShouldSameDirent(path, newPath) {
+		return false
+	}
+
+	return PathHasParentOrSelf(newPath, parent)
 }
 
-// This method is not robust (in many ways) and should be generally avoided in non-testing code.
+// Get the child's path relative to the parent.
+// This operation is purely lexical and can fail in non-trivial situations (e.g., hard links or strange mounts).
+// If the paths are the same, then "." will be returned.
+// If the path is not a child of the path, then a cleaned absolute version of the path will be returned.
+// This method is not robust (in several ways) and should not be used with user-supplied paths.
 func RelPath(child string, parent string) string {
-	child = ShouldAbs(child)
-	parent = ShouldAbs(parent) + "/"
+	child = filepath.Clean(ShouldAbs(child))
+	parent = filepath.Clean(ShouldAbs(parent)) + string(os.PathSeparator)
+
+	if child == parent {
+		return "."
+	}
 
 	return strings.TrimPrefix(child, parent)
 }
@@ -266,4 +264,32 @@ func RelPath(child string, parent string) string {
 // Should only be used for testing purposes.
 func RootDirForTesting() string {
 	return ShouldAbs(filepath.Join(ShouldAbs(ShouldGetThisDir()), "..", ".."))
+}
+
+func TestdataDirForTesting() string {
+	return filepath.Join(RootDirForTesting(), "testdata")
+}
+
+// Return path if it is absolute,
+// otherwise return the join of baseDir and path.
+func JoinIfNotAbs(path string, baseDir string) string {
+	if filepath.IsAbs(path) {
+		return path
+	}
+
+	return filepath.Join(baseDir, path)
+}
+
+// Normalize a path as best as possible.
+func ShouldNormalizePath(path string) string {
+	path = filepath.Clean(path)
+	path = ShouldAbs(path)
+
+	realPath, err := filepath.EvalSymlinks(path)
+	if err != nil {
+		log.Debug("Failed to eval symlinks for realpath.", err, log.NewAttr("path", path))
+		return path
+	}
+
+	return realPath
 }

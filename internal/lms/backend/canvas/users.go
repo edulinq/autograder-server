@@ -4,7 +4,6 @@ import (
 	"fmt"
 	neturl "net/url"
 
-	"github.com/edulinq/autograder/internal/common"
 	"github.com/edulinq/autograder/internal/lms/lmstypes"
 	"github.com/edulinq/autograder/internal/log"
 	"github.com/edulinq/autograder/internal/util"
@@ -37,7 +36,7 @@ func (this *CanvasBackend) fetchUsers(rewriteLinks bool) ([]*lmstypes.User, erro
 			}
 		}
 
-		body, responseHeaders, err := common.GetWithHeaders(url, headers)
+		body, responseHeaders, err := util.GetWithHeaders(url, headers)
 		if err != nil {
 			return nil, fmt.Errorf("Failed to fetch users: '%w'.", err)
 		}
@@ -72,7 +71,7 @@ func (this *CanvasBackend) FetchUser(email string) (*lmstypes.User, error) {
 	url := this.BaseURL + apiEndpoint
 
 	headers := this.standardHeaders()
-	body, _, err := common.GetWithHeaders(url, headers)
+	body, _, err := util.GetWithHeaders(url, headers)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to fetch user '%s': '%w'.", email, err)
 	}

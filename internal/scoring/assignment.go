@@ -16,75 +16,73 @@ import (
 
 const LOCK_COMMENT string = "__lock__"
 
-func FullAssignmentScoringAndUpload(assignment *model.Assignment, dryRun bool) error {
+func FullAssignmentScoringAndUpload(assignment *model.Assignment, dryRun bool) (map[string]*model.ScoringInfo, error) {
 	if assignment.GetCourse().GetLMSAdapter() == nil {
-		return fmt.Errorf("Assignment's course has no LMS info associated with it.")
+		return nil, fmt.Errorf("Assignment's course has no LMS info associated with it.")
 	}
 
 	users, err := db.GetCourseUsers(assignment.GetCourse())
 	if err != nil {
-		return fmt.Errorf("Failed to fetch autograder users: '%w'.", err)
+		return nil, fmt.Errorf("Failed to fetch autograder users: '%w'.", err)
 	}
 
 	lmsScores, err := lms.FetchAssignmentScores(assignment.GetCourse(), assignment.GetLMSID())
 	if err != nil {
-		return fmt.Errorf("Could not fetch LMS grades: '%w'.", err)
+		return nil, fmt.Errorf("Could not fetch LMS grades: '%w'.", err)
 	}
 
 	scoringInfos, err := db.GetExistingScoringInfos(assignment, model.CourseRoleStudent)
 	if err != nil {
-		return fmt.Errorf("Failed to get scoring information: '%w'.", err)
+		return nil, fmt.Errorf("Failed to get scoring information: '%w'.", err)
 	}
 
 	err = ApplyLatePolicy(assignment, users, scoringInfos, dryRun)
 	if err != nil {
-		return fmt.Errorf("Failed to apply late policy: '%w'.", err)
+		return nil, fmt.Errorf("Failed to apply late policy: '%w'.", err)
 	}
 
-	err = computeFinalScores(assignment, users, scoringInfos, lmsScores, dryRun)
+	uploadedScores, err := computeFinalScores(assignment, users, scoringInfos, lmsScores, dryRun)
 	if err != nil {
-		return fmt.Errorf("Failed to apply late policy: '%w'.", err)
+		return nil, fmt.Errorf("Failed to apply late policy: '%w'.", err)
 	}
 
-	return nil
+	return uploadedScores, nil
 }
 
 func computeFinalScores(
-	assignment *model.Assignment, users map[string]*model.CourseUser,
-	scoringInfos map[string]*model.ScoringInfo, lmsScores []*lmstypes.SubmissionScore,
-	dryRun bool) error {
+	assignment *model.Assignment, users map[string]*model.CourseUser, scoringInfos map[string]*model.ScoringInfo, lmsScores []*lmstypes.SubmissionScore, dryRun bool) (map[string]*model.ScoringInfo, error) {
 	var err error
 
 	// First, look through comments for locks and autograder notes.
 	locks, existingComments, err := parseComments(lmsScores)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	// Next, create the grades that will actually be uploaded and the comments that will be updated..
-	finalScores, commentsToUpdate := filterFinalScores(assignment, users, scoringInfos, locks, existingComments)
+	usedScoringInfos, finalScores, commentsToUpdate := filterFinalScores(assignment, users, scoringInfos, locks, existingComments)
 
 	// Upload the grades.
 	if dryRun {
-		log.Info("Dry Run: Skipping upload of final grades.", assignment, log.NewAttr("grades", finalScores))
+		log.Debug("Dry Run: Skipping upload of final grades.", assignment, log.NewAttr("grades", finalScores))
 	} else {
 		err = lms.UpdateAssignmentScores(assignment.GetCourse(), assignment.GetLMSID(), finalScores)
 		if err != nil {
-			return fmt.Errorf("Failed to upload final scores: '%w'.", err)
+			return nil, fmt.Errorf("Failed to upload final scores: '%w'.", err)
 		}
 	}
 
 	// Update the comments.
 	if dryRun {
-		log.Info("Dry Run: Skipping update of final comments.", assignment, log.NewAttr("comments", commentsToUpdate))
+		log.Debug("Dry Run: Skipping update of final comments.", assignment, log.NewAttr("comments", commentsToUpdate))
 	} else {
 		err = lms.UpdateComments(assignment.GetCourse(), assignment.GetLMSID(), commentsToUpdate)
 		if err != nil {
-			return fmt.Errorf("Failed to update final comments: '%w'.", err)
+			return nil, fmt.Errorf("Failed to update final comments: '%w'.", err)
 		}
 	}
 
-	return nil
+	return usedScoringInfos, nil
 }
 
 func parseComments(lmsScores []*lmstypes.SubmissionScore) (map[string]bool, map[string]*model.ScoringInfo, error) {
@@ -128,7 +126,8 @@ func filterFinalScores(
 	assignment *model.Assignment,
 	users map[string]*model.CourseUser, scoringInfos map[string]*model.ScoringInfo,
 	locks map[string]bool, existingComments map[string]*model.ScoringInfo,
-) ([]*lmstypes.SubmissionScore, []*lmstypes.SubmissionComment) {
+) (map[string]*model.ScoringInfo, []*lmstypes.SubmissionScore, []*lmstypes.SubmissionComment) {
+	usedScoringInfos := make(map[string]*model.ScoringInfo, 0)
 	finalScores := make([]*lmstypes.SubmissionScore, 0)
 	commentsToUpdate := make([]*lmstypes.SubmissionComment, 0)
 
@@ -199,7 +198,8 @@ func filterFinalScores(
 		}
 
 		finalScores = append(finalScores, &lmsScore)
+		usedScoringInfos[email] = scoringInfo
 	}
 
-	return finalScores, commentsToUpdate
+	return usedScoringInfos, finalScores, commentsToUpdate
 }

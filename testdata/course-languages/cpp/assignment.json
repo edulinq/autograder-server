@@ -6,13 +6,21 @@
         "grader.cpp",
         "assignment.h"
     ],
-    "image": "edulinq/grader.base-ubuntu",
+    "image": "ghcr.io/edulinq/grader.base:0.1.0-ubuntu",
     "invocation": ["bash", "./grader.sh"],
     "post-static-docker-commands": [
         "RUN apt-get update",
         "RUN apt-get install -y build-essential"
     ],
-    "post-submission-files-ops": [
+    "post-submission-file-ops": [
         ["cp", "input/assignment.cpp", "work/assignment.cpp"]
-    ]
+    ],
+    "analysis-options": {
+        "include-patterns": [
+            "assignment.cpp"
+        ],
+        "template-files": [
+            "test-submissions/not-implemented/assignment.cpp"
+        ]
+    }
 }

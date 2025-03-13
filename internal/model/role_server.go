@@ -1,13 +1,10 @@
 package model
 
 import (
-	"bytes"
-	"encoding/json"
-	"fmt"
-	"strings"
+	"github.com/edulinq/autograder/internal/util"
 )
 
-// Sevrer user roles represent a user's role within an autograder server instance.
+// Server user roles represent a user's role within an autograder server instance.
 type ServerUserRole int
 
 // ServerRoleUnknown is the zero value and no user should have this role (it is a validation error).
@@ -51,7 +48,7 @@ func GetServerUserRoleString(role ServerUserRole) string {
 	return serverRoleToString[role]
 }
 
-func GetAllSevrerUserRoles() map[ServerUserRole]string {
+func GetAllServerUserRoles() map[ServerUserRole]string {
 	return serverRoleToString
 }
 
@@ -64,28 +61,14 @@ func (this ServerUserRole) String() string {
 }
 
 func (this ServerUserRole) MarshalJSON() ([]byte, error) {
-	buffer := bytes.NewBufferString(`"`)
-	buffer.WriteString(serverRoleToString[this])
-	buffer.WriteString(`"`)
-	return buffer.Bytes(), nil
+	return util.MarshalEnum(this, serverRoleToString)
 }
 
 func (this *ServerUserRole) UnmarshalJSON(data []byte) error {
-	var temp string
-
-	err := json.Unmarshal(data, &temp)
-	if err != nil {
-		return err
+	value, err := util.UnmarshalEnum(data, stringToServerUserRole, true)
+	if err == nil {
+		*this = *value
 	}
 
-	temp = strings.ToLower(temp)
-
-	var ok bool
-	*this, ok = stringToServerUserRole[temp]
-	if !ok {
-		*this = ServerRoleUnknown
-		return fmt.Errorf("ServerRoleUnknown ServerUserRole value: '%s'.", temp)
-	}
-
-	return nil
+	return err
 }

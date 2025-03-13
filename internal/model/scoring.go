@@ -25,6 +25,17 @@ type ScoringInfo struct {
 	LMSCommentAuthorID string `json:"-"`
 }
 
+// A trimmed-down version of ScoringInfo meant for external usage.
+type ExternalScoringInfo struct {
+	UserEmail      string              `json:"user"`
+	AssignmentID   string              `json:"assignment"`
+	SubmissionID   string              `json:"submission-id"`
+	SubmissionTime timestamp.Timestamp `json:"submission-time"`
+	UploadTime     timestamp.Timestamp `json:"upload-time"`
+	RawScore       float64             `json:"raw-score"`
+	Score          float64             `json:"score"`
+}
+
 func (this *ScoringInfo) Equal(other *ScoringInfo) bool {
 	if (this == nil) || (other == nil) {
 		return false
@@ -39,4 +50,20 @@ func (this *ScoringInfo) Equal(other *ScoringInfo) bool {
 		this.NumDaysLate == other.NumDaysLate &&
 		this.Reject == other.Reject &&
 		this.AutograderStructVersion == other.AutograderStructVersion)
+}
+
+func (this *ScoringInfo) ToExternal(email string, assignmentID string) *ExternalScoringInfo {
+	if this == nil {
+		return nil
+	}
+
+	return &ExternalScoringInfo{
+		UserEmail:      email,
+		AssignmentID:   assignmentID,
+		SubmissionID:   this.ID,
+		SubmissionTime: this.SubmissionTime,
+		UploadTime:     this.UploadTime,
+		RawScore:       this.RawScore,
+		Score:          this.Score,
+	}
 }

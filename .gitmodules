@@ -1,0 +1,3 @@
+[submodule "internal/api/static/autograder-web"]
+    path = internal/api/static/autograder-web
+    url = https://github.com/edulinq/autograder-web.git

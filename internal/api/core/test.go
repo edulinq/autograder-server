@@ -6,7 +6,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/edulinq/autograder/internal/common"
 	"github.com/edulinq/autograder/internal/db"
 	"github.com/edulinq/autograder/internal/util"
 )
@@ -30,6 +29,12 @@ func stopTestServer() {
 		server = nil
 		serverURL = ""
 	}
+}
+
+func SetTestServerURL(url string) string {
+	oldURL := serverURL
+	serverURL = url
+	return oldURL
 }
 
 // Common setup for all API tests.
@@ -57,8 +62,8 @@ func SendTestAPIRequest(test *testing.T, endpoint string, fields map[string]any)
 // Provided fields will override base fields.
 // The base API path will be expanded to the full API path.
 // If an email is provided without an "@", we will suffix the email with the common test domain.
-func SendTestAPIRequestFull(test *testing.T, basePath string, fields map[string]any, paths []string, email string) *APIResponse {
-	url := serverURL + MakeFullAPIPath(basePath)
+func SendTestAPIRequestFull(test *testing.T, endpoint string, fields map[string]any, paths []string, email string) *APIResponse {
+	url := serverURL + MakeFullAPIPath(endpoint)
 
 	if !strings.Contains(email, "@") {
 		email = email + "@test.edulinq.org"
@@ -90,9 +95,9 @@ func SendTestAPIRequestFull(test *testing.T, basePath string, fields map[string]
 	var err error
 
 	if len(paths) == 0 {
-		responseText, err = common.PostNoCheck(url, form)
+		responseText, err = util.PostNoCheck(url, form)
 	} else {
-		responseText, err = common.PostFiles(url, form, paths, false)
+		responseText, err = util.PostFiles(url, form, paths, false)
 	}
 
 	if err != nil {

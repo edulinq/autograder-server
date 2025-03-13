@@ -1,15 +1,16 @@
 package grader
 
 import (
+	"context"
 	"path/filepath"
 	"reflect"
 	"testing"
 
-	"github.com/edulinq/autograder/internal/common"
 	"github.com/edulinq/autograder/internal/config"
 	"github.com/edulinq/autograder/internal/db"
 	"github.com/edulinq/autograder/internal/model"
 	"github.com/edulinq/autograder/internal/timestamp"
+	"github.com/edulinq/autograder/internal/util"
 )
 
 const TEST_COURSE_ID = "course-languages"
@@ -17,11 +18,28 @@ const TEST_ASSIGNMENT_ID = "bash"
 
 var SUBMISSION_RELPATH string = filepath.Join("test-submissions", "solution")
 
+// Ensure that admin submissions are never rejected.
+func TestRejectSubmissionAdminOverride(test *testing.T) {
+	db.ResetForTesting()
+	defer db.ResetForTesting()
+
+	assignment := db.MustGetTestSubmissionAssignment()
+	assignment.DueDate = nil
+
+	// Set the max submissions to zero.
+	maxValue := 0
+	assignment.SubmissionLimit = &model.SubmissionLimitInfo{Max: &maxValue}
+
+	// Make a submission that should be rejected, but is not.
+	submitForRejection(test, assignment, "server-admin@test.edulinq.org", false, nil)
+}
+
 func TestRejectSubmissionMaxAttempts(test *testing.T) {
 	db.ResetForTesting()
 	defer db.ResetForTesting()
 
-	assignment := db.MustGetTestAssignment()
+	assignment := db.MustGetTestSubmissionAssignment()
+	assignment.DueDate = nil
 
 	// Set the max submissions to zero.
 	maxValue := 0
@@ -35,7 +53,8 @@ func TestRejectSubmissionMaxAttemptsInfinite(test *testing.T) {
 	db.ResetForTesting()
 	defer db.ResetForTesting()
 
-	assignment := db.MustGetTestAssignment()
+	assignment := db.MustGetTestSubmissionAssignment()
+	assignment.DueDate = nil
 
 	// Set the max submissions to empty (infinite).
 	assignment.SubmissionLimit = &model.SubmissionLimitInfo{}
@@ -67,11 +86,11 @@ func TestRejectWindowMaxMessage(test *testing.T) {
 		expected string
 	}{
 		{
-			RejectWindowMax{1, common.DurationSpec{Hours: 1}, timestamp.Timestamp(0)},
+			RejectWindowMax{1, util.DurationSpec{Hours: 1}, timestamp.Timestamp(0)},
 			"Reached the number of max attempts (1) within submission window (every 1 hours). Next allowed submission time is <timestamp:3600000> (in 1h0m0s).",
 		},
 		{
-			RejectWindowMax{1, common.DurationSpec{Days: 1, Hours: 1}, timestamp.Timestamp(0)},
+			RejectWindowMax{1, util.DurationSpec{Days: 1, Hours: 1}, timestamp.Timestamp(0)},
 			"Reached the number of max attempts (1) within submission window (every 1 days, 1 hours). Next allowed submission time is <timestamp:90000000> (in 25h0m0s).",
 		},
 	}
@@ -89,7 +108,7 @@ func TestRejectLateSubmissionWithoutAllow(test *testing.T) {
 	db.ResetForTesting()
 	defer db.ResetForTesting()
 
-	assignment := db.MustGetTestAssignment()
+	assignment := db.MustGetTestSubmissionAssignment()
 
 	// Set a dummy submission limit.
 	assignment.SubmissionLimit = &model.SubmissionLimitInfo{}
@@ -105,7 +124,7 @@ func TestRejectLateSubmissionWithAllow(test *testing.T) {
 	db.ResetForTesting()
 	defer db.ResetForTesting()
 
-	assignment := db.MustGetTestAssignment()
+	assignment := db.MustGetTestSubmissionAssignment()
 
 	// Set a dummy submission limit.
 	assignment.SubmissionLimit = &model.SubmissionLimitInfo{}
@@ -121,8 +140,9 @@ func testMaxWindowAttempts(test *testing.T, user string, expectReject bool) {
 	db.ResetForTesting()
 	defer db.ResetForTesting()
 
-	assignment := db.MustGetTestAssignment()
-	duration := common.DurationSpec{Days: 1000}
+	assignment := db.MustGetTestSubmissionAssignment()
+	assignment.DueDate = nil
+	duration := util.DurationSpec{Days: 1000}
 
 	// Set the submission limit window to 1 attempt in a large duration.
 	assignment.SubmissionLimit = &model.SubmissionLimitInfo{
@@ -160,7 +180,7 @@ func submitForRejection(test *testing.T, assignment *model.Assignment, user stri
 	gradeOptions := GetDefaultGradeOptions()
 	gradeOptions.AllowLate = allowLate
 
-	result, reject, softError, err := Grade(assignment, submissionPath, user, TEST_MESSAGE, true, gradeOptions)
+	result, reject, softError, err := Grade(context.Background(), assignment, submissionPath, user, TEST_MESSAGE, true, gradeOptions)
 	if err != nil {
 		test.Fatalf("Failed to grade assignment: '%v'.", err)
 	}

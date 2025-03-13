@@ -6,15 +6,14 @@ import (
 	"net/smtp"
 	"time"
 
-	"github.com/edulinq/autograder/internal/common"
 	"github.com/edulinq/autograder/internal/config"
+	"github.com/edulinq/autograder/internal/lockmanager"
 	"github.com/edulinq/autograder/internal/log"
 	"github.com/edulinq/autograder/internal/timestamp"
 )
 
 const (
-	MIN_TIME_BETWEEN_EMAILS_MSEC = 250
-	LOCK_KEY                     = "internal.email"
+	LOCK_KEY = "internal.email"
 )
 
 var (
@@ -46,8 +45,14 @@ func ClearTestMessages() {
 }
 
 func Send(to []string, subject string, body string, html bool) error {
+	return SendFull(to, nil, nil, subject, body, html)
+}
+
+func SendFull(to []string, cc []string, bcc []string, subject string, body string, html bool) error {
 	return SendMessage(&Message{
 		To:      to,
+		CC:      cc,
+		BCC:     bcc,
 		Subject: subject,
 		Body:    body,
 		HTML:    html,
@@ -65,30 +70,32 @@ func SendMessage(message *Message) error {
 		return nil
 	}
 
-	// Before acquiring the email lock, initialize the email system.
-	initialize()
-
 	// Only send one email at a time.
-	common.Lock(LOCK_KEY)
-	defer common.Unlock(LOCK_KEY)
-
-	content := message.ToContent()
+	lockmanager.Lock(LOCK_KEY)
+	defer lockmanager.Unlock(LOCK_KEY)
 
 	// Sleep if we are sending emails too fast.
 	timeSinceLastEmail := timestamp.Now() - lastEmailTime
-	sleepDuration := timestamp.FromMSecs(MIN_TIME_BETWEEN_EMAILS_MSEC) - timeSinceLastEmail
+	sleepDuration := timestamp.FromMSecs(int64(config.EMAIL_MIN_PERIOD.Get())) - timeSinceLastEmail
 	if sleepDuration > 0 {
 		time.Sleep(sleepDuration.ToGoTimeDuration())
 	}
 
 	lastEmailTime = timestamp.Now()
 
-	return sendEmail(message.To, content)
+	err := sendMessageInternal(message)
+	if err != nil {
+		log.Warn("Failed to send email.", message)
+		return err
+	}
+
+	log.Trace("Sent email.", message)
+	return nil
 }
 
 // Send the message.
 // Should only be called with the email lock.
-func sendEmail(to []string, content []byte) error {
+func sendMessageInternal(message *Message) error {
 	err := ensureConnection()
 	if err != nil {
 		return err
@@ -99,7 +106,8 @@ func sendEmail(to []string, content []byte) error {
 		return fmt.Errorf("Failed to issue SMTP MAIL command: '%w'.", err)
 	}
 
-	for _, address := range to {
+	allRCPTs := append(message.To, append(message.CC, message.BCC...)...)
+	for _, address := range allRCPTs {
 		err = smtpConnection.Rcpt(address)
 		if err != nil {
 			return fmt.Errorf("Failed to issue SMTP RCPT command to '%s': '%w'.", address, err)
@@ -112,7 +120,7 @@ func sendEmail(to []string, content []byte) error {
 	}
 	defer writter.Close()
 
-	_, err = writter.Write(content)
+	_, err = writter.Write(message.ToContent())
 	if err != nil {
 		return fmt.Errorf("Failed to write message content: '%w'.", err)
 	}
@@ -147,6 +155,7 @@ func ensureConnection() error {
 
 		err = tempConnection.StartTLS(config)
 		if err != nil {
+			tempConnection.Close()
 			return fmt.Errorf("Failed to issue SMTP STARTTLS comment to server '%s': '%w'.", serverAddress, err)
 		}
 	} else {
@@ -156,48 +165,66 @@ func ensureConnection() error {
 	// Auth() will close the connection on error.
 	err = tempConnection.Auth(authInfo)
 	if err != nil {
+		tempConnection.Close()
 		return fmt.Errorf("Could not auth user '%s' against SMTP server '%s': '%w'.", username, serverAddress, err)
 	}
 
 	// The connection is ready to use.
 	smtpConnection = tempConnection
 
+	// Ensure we close the connection when it is idle.
+	go closeIdleConnection()
+
 	return nil
 }
 
-// Initialize the email system.
-// May be called many times (only the first one will happen).
-// Will acquire the email lock.
-// Regularly check if the connections should be closed.
-// Note that this is not a Go-level initialization.
-func initialize() {
-	common.Lock(LOCK_KEY)
-	defer common.Unlock(LOCK_KEY)
+// Continually check for a connection that needs to be closed.
+func closeIdleConnection() {
+	done := false
 
-	// Already initialized.
-	if isInitialized {
-		return
+	for {
+		func() {
+			lockmanager.Lock(LOCK_KEY)
+			defer lockmanager.Unlock(LOCK_KEY)
+
+			// The email system was closed.
+			if smtpConnection == nil {
+				done = true
+				return
+			}
+
+			// Check for idle timeout.
+			timeDelta := timestamp.Now() - lastEmailTime
+			if timeDelta.ToMSecs() >= int64(config.EMAIL_SMTP_IDLE_TIMEOUT_MS.Get()) {
+				err := closeWithLock()
+				if err != nil {
+					log.Warn("Failed to close SMTP connection.", err)
+				}
+				done = true
+				return
+			}
+		}()
+
+		if done {
+			break
+		}
+
+		// If we are not done, schedule the next check.
+		time.Sleep(time.Duration(config.EMAIL_SMTP_IDLE_TIMEOUT_MS.Get()) * time.Millisecond)
 	}
 
-	ticker = time.NewTicker(time.Duration(config.EMAIL_SMTP_IDLE_TIMEOUT_MS.Get()) * time.Millisecond)
-	go func() {
-		for range ticker.C {
-			err := Close()
-			if err != nil {
-				log.Warn("Failed to close SMTP connection.", err)
-			}
-		}
-	}()
-
-	isInitialized = true
 }
 
 // Close the SMTP connection.
 // Will acquire the email lock.
 func Close() error {
-	common.Lock(LOCK_KEY)
-	defer common.Unlock(LOCK_KEY)
+	lockmanager.Lock(LOCK_KEY)
+	defer lockmanager.Unlock(LOCK_KEY)
 
+	return closeWithLock()
+}
+
+func closeWithLock() error {
 	// Already closed.
 	if smtpConnection == nil {
 		return nil

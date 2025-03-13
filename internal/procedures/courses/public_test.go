@@ -6,7 +6,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/edulinq/autograder/internal/common"
 	"github.com/edulinq/autograder/internal/config"
 	"github.com/edulinq/autograder/internal/db"
 	"github.com/edulinq/autograder/internal/model"
@@ -28,6 +27,7 @@ func TestUpsertFromZipBlob(test *testing.T) {
 	course101Dir := filepath.Join(testdataDir, "course101")
 
 	emptyDir := util.MustMkDirTemp("test-internal.procedures.courses.upsert-zip-empty-")
+	defer util.RemoveDirent(emptyDir)
 
 	testCases := []struct {
 		path    string
@@ -112,6 +112,7 @@ func TestUpsertFromFileSpec(test *testing.T) {
 	course101ConfigPath := filepath.Join(course101Dir, model.COURSE_CONFIG_FILENAME)
 
 	emptyDir := util.MustMkDirTemp("test-internal.procedures.courses.upsert-filespec-empty-")
+	defer util.RemoveDirent(emptyDir)
 
 	missingDir := util.MustMkDirTemp("test-internal.procedures.courses.upsert-filespec-missing-")
 	err := util.RemoveDirent(missingDir)
@@ -120,12 +121,14 @@ func TestUpsertFromFileSpec(test *testing.T) {
 	}
 
 	badJSONDir := util.MustMkDirTemp("test-internal.procedures.courses.upsert-filespec-badJSON-")
+	defer util.RemoveDirent(badJSONDir)
 	err = util.WriteFile("{", filepath.Join(badJSONDir, model.COURSE_CONFIG_FILENAME))
 	if err != nil {
 		test.Fatalf("Failed to write bad JSON course config: '%v'.", err)
 	}
 
 	invalidConfigDir := util.MustMkDirTemp("test-internal.procedures.courses.upsert-filespec-invalidConfig-")
+	defer util.RemoveDirent(invalidConfigDir)
 	err = util.WriteFile(`{"id": "_i!@#"}`, filepath.Join(invalidConfigDir, model.COURSE_CONFIG_FILENAME))
 	if err != nil {
 		test.Fatalf("Failed to write invalid config course config: '%v'.", err)
@@ -133,6 +136,7 @@ func TestUpsertFromFileSpec(test *testing.T) {
 
 	// Zip up a dir and point to the zip as a filespec.
 	tempZipBase := util.MustMkDirTemp("test-internal.procedures.courses.upsert-filespec-zip-")
+	defer util.RemoveDirent(tempZipBase)
 	tempZipPath := filepath.Join(tempZipBase, "test.zip")
 	err = util.Zip(course101Dir, tempZipPath, true)
 	if err != nil {
@@ -203,7 +207,9 @@ func TestUpsertFromFileSpec(test *testing.T) {
 			basePublicUpsertTestCase{
 				CourseUpsertOptions{
 					ContextUser: db.MustGetServerUser("server-creator@test.edulinq.org"),
-					DryRun:      true,
+					CourseUpsertPublicOptions: CourseUpsertPublicOptions{
+						DryRun: true,
+					},
 				},
 				false,
 				1, 1,
@@ -233,7 +239,7 @@ func TestUpsertFromFileSpec(test *testing.T) {
 				},
 				false,
 				0, 0,
-				"No targets found",
+				"No source targets found",
 			},
 		},
 		{
@@ -266,7 +272,7 @@ func TestUpsertFromFileSpec(test *testing.T) {
 				},
 				false,
 				0, 0,
-				"A path FileSpec cannot have an empty path.",
+				"path cannot be empty",
 			},
 		},
 
@@ -309,8 +315,8 @@ func TestUpsertFromFileSpec(test *testing.T) {
 	for i, testCase := range testCases {
 		prepUpsertTest(test, testCase.basePublicUpsertTestCase)
 
-		filespec := &common.FileSpec{
-			Type: common.FILESPEC_TYPE_PATH,
+		filespec := &util.FileSpec{
+			Type: util.FILESPEC_TYPE_PATH,
 			Path: testCase.path,
 		}
 

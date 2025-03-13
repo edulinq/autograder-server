@@ -5,18 +5,21 @@ import (
 	"fmt"
 
 	"github.com/edulinq/autograder/internal/api/server"
-	"github.com/edulinq/autograder/internal/common"
 	"github.com/edulinq/autograder/internal/config"
 	"github.com/edulinq/autograder/internal/db"
+	"github.com/edulinq/autograder/internal/lockmanager"
 	"github.com/edulinq/autograder/internal/log"
-	"github.com/edulinq/autograder/internal/model"
-	pcourses "github.com/edulinq/autograder/internal/procedures/courses"
+	"github.com/edulinq/autograder/internal/stats"
+	"github.com/edulinq/autograder/internal/systemserver"
+	"github.com/edulinq/autograder/internal/tasks"
 	"github.com/edulinq/autograder/internal/util"
 )
 
-func Start(initiator common.ServerInitiator) (err error) {
-	defer server.StopServer()
+const SERVER_LOCK = "internal.procedures.server.SERVER_LOCK"
 
+var apiServer *server.APIServer = nil
+
+func setup(initiator systemserver.ServerInitiator) error {
 	version, err := util.GetAutograderVersion()
 	if err != nil {
 		log.Warn("Failed to get the autograder version.", err)
@@ -29,11 +32,10 @@ func Start(initiator common.ServerInitiator) (err error) {
 		return fmt.Errorf("Failed to open the database: '%w'.", err)
 	}
 
-	defer func() {
-		err = errors.Join(err, db.Close())
-	}()
+	log.Debug("Setup server with working directory.", log.NewAttr("dir", config.GetWorkDir()))
 
-	log.Debug("Running server with working directory.", log.NewAttr("dir", config.GetWorkDir()))
+	// Start stat collection.
+	stats.StartCollection(config.STATS_SYSTEM_INTERVAL_MS.Get())
 
 	courses, err := db.GetCourses()
 	if err != nil {
@@ -42,36 +44,78 @@ func Start(initiator common.ServerInitiator) (err error) {
 
 	log.Debug("Found course(s).", log.NewAttr("count", len(courses)))
 
-	// Startup courses (in the background).
-	for _, course := range courses {
-		go startCourse(course)
+	// Only perfrom some tasks if we are running a primary server.
+	if initiator == systemserver.PRIMARY_SERVER {
+		// Initialize the task engine.
+		tasks.Start()
 	}
 
-	// Cleanup any temp dirs.
-	defer util.RemoveRecordedTempDirs()
+	return nil
+}
 
-	err = server.RunServer(initiator)
-	if err != nil {
-		return fmt.Errorf("Error during server startup sequence: '%w'.", err)
+func CleanupAndStop() (err error) {
+	lockmanager.Lock(SERVER_LOCK)
+	defer lockmanager.Unlock(SERVER_LOCK)
+
+	if apiServer == nil {
+		return nil
 	}
+
+	tasks.Stop()
+
+	stats.StopCollection()
+
+	apiServer.Stop()
+	apiServer = nil
+
+	err = errors.Join(err, db.Close())
+	err = errors.Join(err, util.RemoveRecordedTempDirs())
 
 	log.Debug("Server closed.")
 
 	return err
 }
 
-func startCourse(course *model.Course) {
-	root, err := db.GetRoot()
-	if err != nil {
-		log.Error("Failed to get root for course update.", err, course)
+func assignAndSetupServer(initiator systemserver.ServerInitiator, skipSetup bool) error {
+	lockmanager.Lock(SERVER_LOCK)
+	defer lockmanager.Unlock(SERVER_LOCK)
+
+	apiServer = server.NewAPIServer()
+
+	if !skipSetup {
+		err := setup(initiator)
+		if err != nil {
+			return fmt.Errorf("Failed to setup the server: '%w'.", err)
+		}
 	}
 
-	options := pcourses.CourseUpsertOptions{
-		ContextUser: root,
-	}
+	return nil
+}
 
-	_, err = pcourses.UpdateFromLocalSource(course, options)
-	if err != nil {
-		log.Error("Failed to update course.", err, course)
-	}
+func RunAndBlock(initiator systemserver.ServerInitiator) (err error) {
+	return RunAndBlockFull(initiator, false)
+}
+
+func RunAndBlockFull(initiator systemserver.ServerInitiator, skipSetup bool) (err error) {
+	// Run inside a func so defers will run before the function returns.
+	func() {
+		defer func() {
+			err = errors.Join(err, CleanupAndStop())
+		}()
+
+		err = assignAndSetupServer(initiator, skipSetup)
+		if err != nil {
+			err = fmt.Errorf("Failed to assign and setup server: '%w'.", err)
+			return
+		}
+
+		// apiServer may be nil after this call completes if CleanupAndStop() is called concurrently.
+		err = apiServer.RunAndBlock(initiator)
+		if err != nil {
+			err = fmt.Errorf("API server run returned an error: '%w'.", err)
+			return
+		}
+	}()
+
+	return err
 }

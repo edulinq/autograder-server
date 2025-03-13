@@ -3,21 +3,55 @@ package db
 import (
 	"fmt"
 
-	"github.com/edulinq/autograder/internal/timestamp"
+	"github.com/edulinq/autograder/internal/log"
+	"github.com/edulinq/autograder/internal/model"
 )
 
-func LogTaskCompletion(courseID string, taskID string, instance timestamp.Timestamp) error {
+func GetActiveCourseTasks(course *model.Course) (map[string]*model.FullScheduledTask, error) {
+	if backend == nil {
+		return nil, fmt.Errorf("Database has not been opened.")
+	}
+
+	return backend.GetActiveCourseTasks(course)
+}
+
+func GetActiveTasks() (map[string]*model.FullScheduledTask, error) {
+	if backend == nil {
+		return nil, fmt.Errorf("Database has not been opened.")
+	}
+
+	return backend.GetActiveTasks()
+}
+
+func GetNextActiveTask() (*model.FullScheduledTask, error) {
+	if backend == nil {
+		return nil, fmt.Errorf("Database has not been opened.")
+	}
+
+	return backend.GetNextActiveTask()
+}
+
+// Upsert an active task.
+// This can be used to record that a task has been completed (upsert with updated timestamps).
+func UpsertActiveTask(task *model.FullScheduledTask) error {
+	tasks := map[string]*model.FullScheduledTask{
+		task.Hash: task,
+	}
+
+	return UpsertActiveTasks(tasks)
+}
+
+func MustUpsertActiveTask(task *model.FullScheduledTask) {
+	err := UpsertActiveTask(task)
+	if err != nil {
+		log.Fatal("Failed to upsert task.", err)
+	}
+}
+
+func UpsertActiveTasks(tasks map[string]*model.FullScheduledTask) error {
 	if backend == nil {
 		return fmt.Errorf("Database has not been opened.")
 	}
 
-	return backend.LogTaskCompletion(courseID, taskID, instance)
-}
-
-func GetLastTaskCompletion(courseID string, taskID string) (timestamp.Timestamp, error) {
-	if backend == nil {
-		return timestamp.Zero(), fmt.Errorf("Database has not been opened.")
-	}
-
-	return backend.GetLastTaskCompletion(courseID, taskID)
+	return backend.UpsertActiveTasks(tasks)
 }

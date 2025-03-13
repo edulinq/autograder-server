@@ -22,6 +22,15 @@ const SECRETS_FILENAME = "secrets.json"
 
 var configValues map[string]any = make(map[string]any)
 
+// Init any system components using the current config.
+// This should be called after the config has been set.
+// For example, this will init the logging component with the current logging levels.
+func InitSystemWithConfig() {
+	initLoggingFromConfig()
+
+	util.SetStoreHTTPDir(STORE_HTTP.Get())
+}
+
 func ToJSON() (string, error) {
 	return util.ToJSONIndent(configValues)
 }
@@ -42,6 +51,8 @@ func EnableUnitTestingMode() error {
 // Changes the base directory to a temp directory and copies over test data.
 // If loadEnv is true, loads environmental variables.
 func EnableUnitTestingModeFull(loadEnv bool) error {
+	defer InitSystemWithConfig()
+
 	UNIT_TESTING_MODE.Set(true)
 	NO_TASKS.Set(true)
 	LOAD_TEST_DATA.Set(true)

@@ -4,6 +4,7 @@ package docker
 
 import (
 	"bufio"
+	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -40,16 +41,17 @@ func BuildImage(imageSource ImageSource) error {
 
 func BuildImageWithOptions(imageSource ImageSource, options *BuildOptions) error {
 	imageInfo := imageSource.GetImageInfo()
+	leaveBuildDir := config.KEEP_BUILD_DIRS.Get()
 
-	tempDir, err := util.MkDirTemp(TEMPDIR_PREFIX + imageInfo.Name + "-")
+	tempDir, err := util.MkDirTempFull(TEMPDIR_PREFIX+imageInfo.Name+"-", !leaveBuildDir)
 	if err != nil {
 		return fmt.Errorf("Failed to create temp build directory for '%s': '%w'.", imageInfo.Name, err)
 	}
 
-	if config.KEEP_BUILD_DIRS.Get() {
+	if leaveBuildDir {
 		log.Debug("Leaving behind image building dir.", imageSource, log.NewAttr("path", tempDir))
 	} else {
-		defer os.RemoveAll(tempDir)
+		defer util.RemoveDirent(tempDir)
 	}
 
 	err = writeDockerContext(imageInfo, tempDir)
@@ -81,13 +83,13 @@ func BuildImageWithOptions(imageSource ImageSource, options *BuildOptions) error
 }
 
 func buildImage(imageSource ImageSource, buildOptions types.ImageBuildOptions, tar io.ReadCloser) error {
-	ctx, docker, err := getDockerClient()
+	docker, err := getDockerClient()
 	if err != nil {
 		return err
 	}
 	defer docker.Close()
 
-	response, err := docker.ImageBuild(ctx, tar, buildOptions)
+	response, err := docker.ImageBuild(context.Background(), tar, buildOptions)
 	if err != nil {
 		return fmt.Errorf("Failed to run docker image build command: '%w'.", err)
 	}
@@ -161,32 +163,33 @@ func collectBuildOutput(imageSource ImageSource, response types.ImageBuildRespon
 }
 
 // Write a full docker build context (Dockerfile and static files) to the given directory.
-func writeDockerContext(imageInfo *ImageInfo, dir string) error {
-	_, _, workDir, err := common.CreateStandardGradingDirs(dir)
+func writeDockerContext(imageInfo *ImageInfo, outDir string) error {
+	_, _, workDir, err := common.CreateStandardGradingDirs(outDir)
 	if err != nil {
 		return fmt.Errorf("Could not create standard grading directories: '%w'.", err)
 	}
 
 	// Copy over the static files (and do any file ops).
-	err = common.CopyFileSpecs(imageInfo.BaseDir, workDir, dir,
-		imageInfo.StaticFiles, false, imageInfo.PreStaticFileOperations, imageInfo.PostStaticFileOperations)
+	sourceBaseDir, sourceContainmentDir := imageInfo.BaseDirFunc()
+	err = util.CopyFileSpecsWithOps(sourceBaseDir, sourceContainmentDir, workDir, workDir, outDir,
+		imageInfo.StaticFiles, imageInfo.PreStaticFileOperations, imageInfo.PostStaticFileOperations)
 	if err != nil {
 		return fmt.Errorf("Failed to copy static imageInfo files: '%w'.", err)
 	}
 
-	dockerConfigPath := filepath.Join(dir, DOCKER_CONFIG_FILENAME)
+	dockerConfigPath := filepath.Join(outDir, DOCKER_CONFIG_FILENAME)
 	err = util.ToJSONFile(imageInfo.GetGradingConfig(), dockerConfigPath)
 	if err != nil {
 		return fmt.Errorf("Failed to create docker config file: '%w'.", err)
 	}
 
-	dockerPostSubmittionOpsPath := filepath.Join(dir, DOCKER_POST_SUBMISSION_OPS_FILENAME)
+	dockerPostSubmittionOpsPath := filepath.Join(outDir, DOCKER_POST_SUBMISSION_OPS_FILENAME)
 	err = writePostSubmissionOpsScript(imageInfo, dockerPostSubmittionOpsPath)
 	if err != nil {
 		return fmt.Errorf("Failed to write post-submission operations script: '%w'.", err)
 	}
 
-	dockerfilePath := filepath.Join(dir, "Dockerfile")
+	dockerfilePath := filepath.Join(outDir, "Dockerfile")
 	err = writeDockerfile(imageInfo, workDir, dockerfilePath)
 	if err != nil {
 		return err
@@ -204,7 +207,7 @@ func writePostSubmissionOpsScript(imageInfo *ImageInfo, path string) error {
 	lines = append(lines, fmt.Sprintf("# Post-Submission operations for '%s'.\n", imageInfo.Name))
 
 	for _, op := range imageInfo.PostSubmissionFileOperations {
-		lines = append(lines, op.ToUnix("."))
+		lines = append(lines, op.ToUnixForDocker("."))
 	}
 
 	err := util.WriteFile(strings.Join(lines, "\n"), path)

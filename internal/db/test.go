@@ -10,8 +10,13 @@ import (
 	"github.com/edulinq/autograder/internal/util"
 )
 
-const TEST_COURSE_ID = "course101"
-const TEST_ASSIGNMENT_ID = "hw0"
+const (
+	TEST_COURSE_ID     = "course101"
+	TEST_ASSIGNMENT_ID = "hw0"
+
+	TEST_SUBMISSION_COURSE_ID     = "course-languages"
+	TEST_SUBMISSION_ASSIGNMENT_ID = "bash"
+)
 
 func MustGetTestCourse() *model.Course {
 	return MustGetCourse(TEST_COURSE_ID)
@@ -19,6 +24,11 @@ func MustGetTestCourse() *model.Course {
 
 func MustGetTestAssignment() *model.Assignment {
 	return MustGetAssignment(TEST_COURSE_ID, TEST_ASSIGNMENT_ID)
+}
+
+// Get the test assignment that can be submitted on any machine (has the fewest dependencies).
+func MustGetTestSubmissionAssignment() *model.Assignment {
+	return MustGetAssignment(TEST_SUBMISSION_COURSE_ID, TEST_SUBMISSION_ASSIGNMENT_ID)
 }
 
 // Perform the standard actions that prep for a package's testing main.
@@ -83,6 +93,12 @@ func addTestCourse(configPath string) (*model.Course, error) {
 	err = util.CopyDirWhole(baseDir, sourceDir)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to copy source dir from '%s' to '%s': '%w'.", baseDir, sourceDir, err)
+	}
+
+	// Fetch any template files.
+	_, err = course.FetchAssignmentTemplateFiles()
+	if err != nil {
+		return nil, fmt.Errorf("Failed to fetch assignment template files: '%w'.", err)
 	}
 
 	return course, nil

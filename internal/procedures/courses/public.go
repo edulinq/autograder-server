@@ -13,7 +13,7 @@ import (
 )
 
 // Update a course from it's local source directory.
-// This effectifly just triggers a normal update.
+// This effectivly just triggers a normal update.
 func UpdateFromLocalSource(course *model.Course, options CourseUpsertOptions) (*CourseUpsertResult, error) {
 	result, _, err := upsertFromConfigPath(course.GetSourceConfigPath(), options)
 	return result, err
@@ -51,7 +51,7 @@ func UpsertFromZipBlob(blob []byte, options CourseUpsertOptions) ([]CourseUpsert
 // Any error that occurs will be returned.
 // If an error occurs within the context of a course,
 // then it will be placed in both the course's message and joined to the returned error.
-func UpsertFromFileSpec(spec *common.FileSpec, options CourseUpsertOptions) ([]CourseUpsertResult, error) {
+func UpsertFromFileSpec(spec *util.FileSpec, options CourseUpsertOptions) ([]CourseUpsertResult, error) {
 	if spec == nil {
 		return nil, fmt.Errorf("No FileSpec provided.")
 	}
@@ -61,13 +61,25 @@ func UpsertFromFileSpec(spec *common.FileSpec, options CourseUpsertOptions) ([]C
 		return nil, fmt.Errorf("Given FileSpec is not valid: '%w'.", err)
 	}
 
+	// Before copying the filespec, check if it is a single course.json file.
+	// If it is, then we can just directly load the course directory.
+	if (spec.IsPath()) && (filepath.Base(spec.GetPath()) == model.COURSE_CONFIG_FILENAME) {
+		result, _, err := upsertFromConfigPath(spec.GetPath(), options)
+		if err != nil {
+			return nil, err
+		}
+
+		return []CourseUpsertResult{*result}, nil
+	}
+
 	tempDir, err := util.MkDirTemp("autograder-upsert-course-filespec-")
 	if err != nil {
 		return nil, fmt.Errorf("Failed to make temp dir: '%w'.", err)
 	}
 	defer util.RemoveDirent(tempDir)
 
-	err = spec.CopyTarget(common.ShouldGetCWD(), tempDir, false)
+	cwd := common.ShouldGetCWD()
+	err = spec.CopyTarget(cwd, "", tempDir, tempDir)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to copy file spec: '%w'.", err)
 	}

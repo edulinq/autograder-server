@@ -29,6 +29,10 @@ type LateGradingPolicy struct {
 }
 
 func (this *LateGradingPolicy) Validate() error {
+	if this == nil {
+		return fmt.Errorf("Late policy is nil.")
+	}
+
 	this.Type = LateGradingPolicyType(strings.ToLower(string(this.Type)))
 
 	if this.RejectAfterDays < 0 {
@@ -51,7 +55,11 @@ func (this *LateGradingPolicy) Validate() error {
 			return fmt.Errorf("Policy '%s': penalty must be in (0.0, 1.0], found '%s'.", this.Type, util.FloatToStr(this.Penalty))
 		}
 
-		if (this.MaxLateDays < 1) || (this.MaxLateDays > this.RejectAfterDays) {
+		if this.MaxLateDays < 1 {
+			return fmt.Errorf("Policy '%s': max late days must be at least 1, found '%d'.", this.Type, this.MaxLateDays)
+		}
+
+		if (this.RejectAfterDays > 0) && (this.MaxLateDays > this.RejectAfterDays) {
 			return fmt.Errorf("Policy '%s': max late days must be in [1, <reject days>(%d)], found '%d'.", this.Type, this.RejectAfterDays, this.MaxLateDays)
 		}
 

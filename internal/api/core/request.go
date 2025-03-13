@@ -1,6 +1,7 @@
 package core
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"reflect"
@@ -8,6 +9,7 @@ import (
 
 	"github.com/edulinq/autograder/internal/common"
 	"github.com/edulinq/autograder/internal/db"
+	"github.com/edulinq/autograder/internal/log"
 	"github.com/edulinq/autograder/internal/model"
 	"github.com/edulinq/autograder/internal/timestamp"
 	"github.com/edulinq/autograder/internal/util"
@@ -27,7 +29,9 @@ type APIRequest struct {
 	// These are not provided in JSON, they are filled in during validation.
 	RequestID string              `json:"-"`
 	Endpoint  string              `json:"-"`
+	Sender    string              `json:"-"`
 	Timestamp timestamp.Timestamp `json:"-"`
+	Context   context.Context     `json:"-"`
 }
 
 // Context for a request that has a user (pretty much the lowest level of request).
@@ -60,10 +64,17 @@ type APIRequestAssignmentContext struct {
 	Assignment *model.Assignment
 }
 
-func (this *APIRequest) Validate(request any, endpoint string) *APIError {
+func (this *APIRequest) Validate(httpRequest *http.Request, request any, endpoint string) *APIError {
 	this.RequestID = util.UUID()
 	this.Endpoint = endpoint
 	this.Timestamp = timestamp.Now()
+
+	if httpRequest == nil {
+		this.Context = context.Background()
+	} else {
+		this.Context = httpRequest.Context()
+		this.Sender = httpRequest.RemoteAddr
+	}
 
 	return nil
 }
@@ -73,8 +84,8 @@ func (this *APIRequest) Validate(request any, endpoint string) *APIError {
 // Additionally, all context fields will be populated.
 // This means that this request will be authenticated here.
 // The full request (object that this is embedded in) is also sent.
-func (this *APIRequestUserContext) Validate(request any, endpoint string) *APIError {
-	apiErr := this.APIRequest.Validate(request, endpoint)
+func (this *APIRequestUserContext) Validate(httpRequest *http.Request, request any, endpoint string) *APIError {
+	apiErr := this.APIRequest.Validate(httpRequest, request, endpoint)
 	if apiErr != nil {
 		return apiErr
 	}
@@ -126,8 +137,8 @@ func (this *APIRequestUserContext) Validate(request any, endpoint string) *APIEr
 
 // See APIRequestUserContext.Validate().
 // The server user will be converted into a course user to be stored within this request.
-func (this *APIRequestCourseUserContext) Validate(request any, endpoint string) *APIError {
-	apiErr := this.APIRequestUserContext.Validate(request, endpoint)
+func (this *APIRequestCourseUserContext) Validate(httpRequest *http.Request, request any, endpoint string) *APIError {
+	apiErr := this.APIRequestUserContext.Validate(httpRequest, request, endpoint)
 	if apiErr != nil {
 		return apiErr
 	}
@@ -136,7 +147,15 @@ func (this *APIRequestCourseUserContext) Validate(request any, endpoint string) 
 		return NewBadRequestError("-015", &this.APIRequest, "No course ID specified.")
 	}
 
-	var err error
+	id, err := common.ValidateID(this.CourseID)
+	if err != nil {
+		return NewBadRequestError("-052", &this.APIRequest,
+			fmt.Sprintf("Could not find course (course ID ('%s') is invalid).", this.CourseID)).
+			Course(this.CourseID).Err(err)
+	}
+
+	this.CourseID = id
+
 	this.Course, err = db.GetCourse(this.CourseID)
 	if err != nil {
 		return NewInternalError("-032", this, "Unable to get course").Err(err)
@@ -169,8 +188,8 @@ func (this *APIRequestCourseUserContext) Validate(request any, endpoint string) 
 }
 
 // See APIRequestUserContext.Validate().
-func (this *APIRequestAssignmentContext) Validate(request any, endpoint string) *APIError {
-	apiErr := this.APIRequestCourseUserContext.Validate(request, endpoint)
+func (this *APIRequestAssignmentContext) Validate(httpRequest *http.Request, request any, endpoint string) *APIError {
+	apiErr := this.APIRequestCourseUserContext.Validate(httpRequest, request, endpoint)
 	if apiErr != nil {
 		return apiErr
 	}
@@ -181,7 +200,8 @@ func (this *APIRequestAssignmentContext) Validate(request any, endpoint string) 
 
 	id, err := common.ValidateID(this.AssignmentID)
 	if err != nil {
-		return NewBadRequestError("-035", &this.APIRequest, fmt.Sprintf("Provided assignment ID is invalid: '%s'.", this.AssignmentID)).
+		return NewBadRequestError("-035", &this.APIRequest,
+			fmt.Sprintf("Could not find assignment (assignment ID ('%s') is invalid).", this.AssignmentID)).
 			Course(this.CourseID).Assignment(this.AssignmentID).Err(err)
 	}
 
@@ -196,6 +216,39 @@ func (this *APIRequestAssignmentContext) Validate(request any, endpoint string) 
 	return nil
 }
 
+func (this *APIRequest) LogValue() []*log.Attr {
+	return []*log.Attr{
+		log.NewAttr("id", this.RequestID),
+		log.NewAttr("endpoint", this.Endpoint),
+		log.NewAttr("sender", this.Sender),
+		log.NewAttr("timestamp", this.Timestamp),
+	}
+}
+
+func (this *APIRequestUserContext) LogValue() []*log.Attr {
+	attrs := this.APIRequest.LogValue()
+
+	attrs = append(attrs, log.NewUserAttr(this.UserEmail))
+
+	return attrs
+}
+
+func (this *APIRequestCourseUserContext) LogValue() []*log.Attr {
+	attrs := this.APIRequestUserContext.LogValue()
+
+	attrs = append(attrs, log.NewCourseAttr(this.CourseID))
+
+	return attrs
+}
+
+func (this *APIRequestAssignmentContext) LogValue() []*log.Attr {
+	attrs := this.APIRequestCourseUserContext.LogValue()
+
+	attrs = append(attrs, log.NewAssignmentAttr(this.AssignmentID))
+
+	return attrs
+}
+
 // Take in a pointer to an API request.
 // Ensure this request has a type of known API request embedded in it and validate that embedded request.
 func ValidateAPIRequest(request *http.Request, apiRequest any, endpoint string) *APIError {
@@ -206,7 +259,7 @@ func ValidateAPIRequest(request *http.Request, apiRequest any, endpoint string) 
 	}
 
 	// Ensure the request has an request type embedded, and validate it.
-	foundRequestStruct, apiErr := validateRequestStruct(apiRequest, endpoint)
+	foundRequestStruct, apiErr := validateRequestStruct(request, apiRequest, endpoint)
 	if apiErr != nil {
 		return apiErr
 	}
@@ -245,11 +298,11 @@ func CleanupAPIrequest(apiRequest ValidAPIRequest) error {
 	return nil
 }
 
-func validateRequestStruct(request any, endpoint string) (bool, *APIError) {
+func validateRequestStruct(httpRequest *http.Request, rawRequest any, endpoint string) (bool, *APIError) {
 	// Check all the fields (including embedded ones) for structures that we recognize as requests.
 	foundRequestStruct := false
 
-	reflectValue := reflect.ValueOf(request).Elem()
+	reflectValue := reflect.ValueOf(rawRequest).Elem()
 	if reflectValue.Kind() != reflect.Struct {
 		return false, NewBareInternalError("-031", endpoint, "Request's type must be a struct.").
 			Add("kind", reflectValue.Kind().String())
@@ -263,7 +316,7 @@ func validateRequestStruct(request any, endpoint string) (bool, *APIError) {
 			apiRequest := fieldValue.Interface().(APIRequest)
 			foundRequestStruct = true
 
-			apiErr := apiRequest.Validate(request, endpoint)
+			apiErr := apiRequest.Validate(httpRequest, rawRequest, endpoint)
 			if apiErr != nil {
 				return false, apiErr
 			}
@@ -274,7 +327,7 @@ func validateRequestStruct(request any, endpoint string) (bool, *APIError) {
 			userRequest := fieldValue.Interface().(APIRequestUserContext)
 			foundRequestStruct = true
 
-			apiErr := userRequest.Validate(request, endpoint)
+			apiErr := userRequest.Validate(httpRequest, rawRequest, endpoint)
 			if apiErr != nil {
 				return false, apiErr
 			}
@@ -285,7 +338,7 @@ func validateRequestStruct(request any, endpoint string) (bool, *APIError) {
 			courseUserRequest := fieldValue.Interface().(APIRequestCourseUserContext)
 			foundRequestStruct = true
 
-			apiErr := courseUserRequest.Validate(request, endpoint)
+			apiErr := courseUserRequest.Validate(httpRequest, rawRequest, endpoint)
 			if apiErr != nil {
 				return false, apiErr
 			}
@@ -296,7 +349,7 @@ func validateRequestStruct(request any, endpoint string) (bool, *APIError) {
 			assignmentRequest := fieldValue.Interface().(APIRequestAssignmentContext)
 			foundRequestStruct = true
 
-			apiErr := assignmentRequest.Validate(request, endpoint)
+			apiErr := assignmentRequest.Validate(httpRequest, rawRequest, endpoint)
 			if apiErr != nil {
 				return false, apiErr
 			}
@@ -306,4 +359,87 @@ func validateRequestStruct(request any, endpoint string) (bool, *APIError) {
 	}
 
 	return foundRequestStruct, nil
+}
+
+// Reflexively get the request ID and timestamp from a request.
+func getRequestIDAndTimestamp(request ValidAPIRequest) (string, timestamp.Timestamp) {
+	id := ""
+	startTime := timestamp.Now()
+
+	if request == nil {
+		return id, startTime
+	}
+
+	reflectValue := reflect.ValueOf(request).Elem()
+
+	idValue := reflectValue.FieldByName("RequestID")
+	if idValue.IsValid() {
+		id = idValue.Interface().(string)
+	}
+
+	timestampValue := reflectValue.FieldByName("Timestamp")
+	if timestampValue.IsValid() {
+		startTime = timestampValue.Interface().(timestamp.Timestamp)
+	}
+
+	return id, startTime
+}
+
+// Get the endpoint, sender, userEmail, courseID, assignmentID, and locator
+// from a ValidAPIRequest and an APIError, both of which may be nil.
+func getRequestInfo(request ValidAPIRequest, apiError *APIError) (string, string, string, string, string, string) {
+	endpoint, sender, userEmail, courseID, assignmentID := getBasicAPIRequestInfo(request)
+	locator := ""
+
+	if apiError != nil {
+		endpoint = util.GetStringWithDefault(endpoint, apiError.Endpoint)
+		courseID = util.GetStringWithDefault(courseID, apiError.CourseID)
+		assignmentID = util.GetStringWithDefault(assignmentID, apiError.AssignmentID)
+		userEmail = util.GetStringWithDefault(userEmail, apiError.UserEmail)
+		locator = apiError.Locator
+	}
+
+	return endpoint, sender, userEmail, courseID, assignmentID, locator
+}
+
+// Reflexively get the endpoint, userEmail, courseID, and assignmentID from a ValidAPIRequest.
+func getBasicAPIRequestInfo(request ValidAPIRequest) (string, string, string, string, string) {
+	endpoint := ""
+	sender := ""
+	userEmail := ""
+	courseID := ""
+	assignmentID := ""
+
+	if request == nil {
+		return endpoint, sender, userEmail, courseID, assignmentID
+	}
+
+	reflectValue := reflect.ValueOf(request).Elem()
+
+	endpointValue := reflectValue.FieldByName("Endpoint")
+	if endpointValue.IsValid() {
+		endpoint = fmt.Sprintf("%s", endpointValue.Interface())
+	}
+
+	senderValue := reflectValue.FieldByName("Sender")
+	if senderValue.IsValid() {
+		sender = fmt.Sprintf("%s", senderValue.Interface())
+	}
+
+	userEmailValue := reflectValue.FieldByName("UserEmail")
+	if userEmailValue.IsValid() {
+		userEmail = fmt.Sprintf("%s", userEmailValue.Interface())
+	}
+
+	courseIDValue := reflectValue.FieldByName("CourseID")
+	if courseIDValue.IsValid() {
+		courseID = fmt.Sprintf("%s", courseIDValue.Interface())
+	}
+
+	assignmentIDValue := reflectValue.FieldByName("AssignmentID")
+	if assignmentIDValue.IsValid() {
+		assignmentID = fmt.Sprintf("%s", assignmentIDValue.Interface())
+	}
+
+	return endpoint, sender, userEmail, courseID, assignmentID
 }

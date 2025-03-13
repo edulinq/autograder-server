@@ -31,7 +31,7 @@ func HandleSubmit(request *SubmitRequest) (*SubmitResponse, *core.APIError) {
 	gradeOptions := grader.GetDefaultGradeOptions()
 	gradeOptions.AllowLate = request.AllowLate
 
-	result, reject, failureMessage, err := grader.Grade(request.Assignment, request.Files.TempDir, request.User.Email, request.Message, true, gradeOptions)
+	result, reject, failureMessage, err := grader.Grade(request.Context, request.Assignment, request.Files.TempDir, request.User.Email, request.Message, true, gradeOptions)
 	if err != nil {
 		stdout := ""
 		stderr := ""

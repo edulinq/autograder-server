@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/edulinq/autograder/internal/common"
 	"github.com/edulinq/autograder/internal/lms/lmstypes"
 	"github.com/edulinq/autograder/internal/util"
 )
@@ -19,7 +18,7 @@ func (this *CanvasBackend) FetchAssignmentScore(assignmentID string, userID stri
 	url := this.BaseURL + apiEndpoint
 
 	headers := this.standardHeaders()
-	body, _, err := common.GetWithHeaders(url, headers)
+	body, _, err := util.GetWithHeaders(url, headers)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to fetch score.")
 	}
@@ -60,7 +59,7 @@ func (this *CanvasBackend) fetchAssignmentScores(assignmentID string, rewriteLin
 			}
 		}
 
-		body, responseHeaders, err := common.GetWithHeaders(url, headers)
+		body, responseHeaders, err := util.GetWithHeaders(url, headers)
 
 		if err != nil {
 			return nil, fmt.Errorf("Failed to fetch scores.")
@@ -133,7 +132,7 @@ func (this *CanvasBackend) updateAssignmentScores(assignmentID string, scores []
 		}
 	}
 
-	_, _, err := common.PostWithHeaders(url, form, headers)
+	_, _, err := util.PostWithHeaders(url, form, headers)
 	if err != nil {
 		return fmt.Errorf("Failed to upload scores: '%w'.", err)
 	}

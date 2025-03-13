@@ -9,10 +9,11 @@ import (
 
 	"github.com/edulinq/autograder/internal/api/core"
 	"github.com/edulinq/autograder/internal/api/server"
-	"github.com/edulinq/autograder/internal/common"
 	"github.com/edulinq/autograder/internal/config"
 	"github.com/edulinq/autograder/internal/exit"
 	"github.com/edulinq/autograder/internal/log"
+	pserver "github.com/edulinq/autograder/internal/procedures/server"
+	"github.com/edulinq/autograder/internal/systemserver"
 	"github.com/edulinq/autograder/internal/util"
 )
 
@@ -34,8 +35,13 @@ func MustHandleCMDRequestAndExitFull(endpoint string, request any, responseType 
 	func() {
 		startedCMDServer, oldPort := mustEnsureServerIsRunning()
 		if startedCMDServer {
-			defer server.StopServer()
-			defer config.WEB_PORT.Set(oldPort)
+			defer func() {
+				err := pserver.CleanupAndStop()
+				if err != nil {
+					log.Fatal("Failed to cleanup and stop the CMD server.", err)
+				}
+			}()
+			defer config.WEB_HTTP_PORT.Set(oldPort)
 		}
 
 		response, err = SendCMDRequest(endpoint, request)
@@ -59,7 +65,7 @@ func MustHandleCMDRequestAndExitFull(endpoint string, request any, responseType 
 
 // Send a CMD request to the unix socket and return the response.
 func SendCMDRequest(endpoint string, request any) (core.APIResponse, error) {
-	socketPath, err := common.GetUnixSocketPath()
+	socketPath, err := systemserver.GetUnixSocketPath()
 	if err != nil {
 		return core.APIResponse{}, fmt.Errorf("Failed to get the unix socket path: '%w'.", err)
 	}

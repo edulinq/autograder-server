@@ -15,7 +15,8 @@ import (
 var args struct {
 	config.ConfigArgs
 	Course string `help:"ID of the course." arg:""`
-	DryRun bool   `help:"Do not actually do the operation, just state what you would do." default:"false"`
+
+	courses.CourseUpsertPublicOptions
 }
 
 func main() {
@@ -34,8 +35,8 @@ func main() {
 	course := db.MustGetCourse(args.Course)
 
 	options := courses.CourseUpsertOptions{
-		ContextUser: db.MustGetRoot(),
-		DryRun:      args.DryRun,
+		ContextUser:               db.MustGetRoot(),
+		CourseUpsertPublicOptions: args.CourseUpsertPublicOptions,
 	}
 
 	result, err := courses.UpdateFromLocalSource(course, options)

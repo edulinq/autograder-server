@@ -76,6 +76,220 @@ func testBaseAPIRequests(test *testing.T, testCases []baseAPIRequestTestCase, re
 	}
 }
 
+func TestAPIRequestAssignmentContextValidateBase(test *testing.T) {
+	testCases := []struct {
+		request         *APIRequestAssignmentContext
+		expectedLocator string
+	}{
+		// Base
+		{
+			&APIRequestAssignmentContext{
+				APIRequestCourseUserContext: APIRequestCourseUserContext{
+					APIRequestUserContext: APIRequestUserContext{
+						UserEmail: "server-admin@test.edulinq.org",
+						UserPass:  util.Sha256HexFromString("server-admin"),
+					},
+					CourseID: "course101",
+				},
+				AssignmentID: "hw0",
+			},
+			"",
+		},
+
+		// Errors
+
+		{
+			&APIRequestAssignmentContext{
+				APIRequestCourseUserContext: APIRequestCourseUserContext{
+					APIRequestUserContext: APIRequestUserContext{
+						UserEmail: "",
+						UserPass:  util.Sha256HexFromString("server-admin"),
+					},
+					CourseID: "course101",
+				},
+				AssignmentID: "hw0",
+			},
+			"-016",
+		},
+
+		{
+			&APIRequestAssignmentContext{
+				APIRequestCourseUserContext: APIRequestCourseUserContext{
+					APIRequestUserContext: APIRequestUserContext{
+						UserEmail: "server-admin@test.edulinq.org",
+						UserPass:  "",
+					},
+					CourseID: "course101",
+				},
+				AssignmentID: "hw0",
+			},
+			"-017",
+		},
+
+		{
+			&APIRequestAssignmentContext{
+				APIRequestCourseUserContext: APIRequestCourseUserContext{
+					APIRequestUserContext: APIRequestUserContext{
+						UserEmail: "server-admin@test.edulinq.org",
+						UserPass:  "AAA",
+					},
+					CourseID: "course101",
+				},
+				AssignmentID: "hw0",
+			},
+			"-014",
+		},
+
+		{
+			&APIRequestAssignmentContext{
+				APIRequestCourseUserContext: APIRequestCourseUserContext{
+					APIRequestUserContext: APIRequestUserContext{
+						UserEmail: "ZZZ",
+						UserPass:  util.Sha256HexFromString("server-admin"),
+					},
+					CourseID: "course101",
+				},
+				AssignmentID: "hw0",
+			},
+			"-013",
+		},
+
+		{
+			&APIRequestAssignmentContext{
+				APIRequestCourseUserContext: APIRequestCourseUserContext{
+					APIRequestUserContext: APIRequestUserContext{
+						UserEmail: "root",
+						UserPass:  util.Sha256HexFromString("server-admin"),
+					},
+					CourseID: "course101",
+				},
+				AssignmentID: "hw0",
+			},
+			"-051",
+		},
+
+		{
+			&APIRequestAssignmentContext{
+				APIRequestCourseUserContext: APIRequestCourseUserContext{
+					APIRequestUserContext: APIRequestUserContext{
+						UserEmail: "server-admin@test.edulinq.org",
+						UserPass:  util.Sha256HexFromString("server-admin"),
+					},
+					CourseID: "",
+				},
+				AssignmentID: "hw0",
+			},
+			"-015",
+		},
+
+		{
+			&APIRequestAssignmentContext{
+				APIRequestCourseUserContext: APIRequestCourseUserContext{
+					APIRequestUserContext: APIRequestUserContext{
+						UserEmail: "server-admin@test.edulinq.org",
+						UserPass:  util.Sha256HexFromString("server-admin"),
+					},
+					CourseID: "course!!!id",
+				},
+				AssignmentID: "hw0",
+			},
+			"-052",
+		},
+
+		{
+			&APIRequestAssignmentContext{
+				APIRequestCourseUserContext: APIRequestCourseUserContext{
+					APIRequestUserContext: APIRequestUserContext{
+						UserEmail: "server-admin@test.edulinq.org",
+						UserPass:  util.Sha256HexFromString("server-admin"),
+					},
+					CourseID: "ZZZ",
+				},
+				AssignmentID: "hw0",
+			},
+			"-018",
+		},
+
+		{
+			&APIRequestAssignmentContext{
+				APIRequestCourseUserContext: APIRequestCourseUserContext{
+					APIRequestUserContext: APIRequestUserContext{
+						UserEmail: "server-user@test.edulinq.org",
+						UserPass:  util.Sha256HexFromString("server-user"),
+					},
+					CourseID: "course101",
+				},
+				AssignmentID: "hw0",
+			},
+			"-040",
+		},
+
+		{
+			&APIRequestAssignmentContext{
+				APIRequestCourseUserContext: APIRequestCourseUserContext{
+					APIRequestUserContext: APIRequestUserContext{
+						UserEmail: "server-admin@test.edulinq.org",
+						UserPass:  util.Sha256HexFromString("server-admin"),
+					},
+					CourseID: "course101",
+				},
+				AssignmentID: "",
+			},
+			"-021",
+		},
+
+		{
+			&APIRequestAssignmentContext{
+				APIRequestCourseUserContext: APIRequestCourseUserContext{
+					APIRequestUserContext: APIRequestUserContext{
+						UserEmail: "server-admin@test.edulinq.org",
+						UserPass:  util.Sha256HexFromString("server-admin"),
+					},
+					CourseID: "course101",
+				},
+				AssignmentID: "hw!!!0",
+			},
+			"-035",
+		},
+
+		{
+			&APIRequestAssignmentContext{
+				APIRequestCourseUserContext: APIRequestCourseUserContext{
+					APIRequestUserContext: APIRequestUserContext{
+						UserEmail: "server-admin@test.edulinq.org",
+						UserPass:  util.Sha256HexFromString("server-admin"),
+					},
+					CourseID: "course101",
+				},
+				AssignmentID: "zzz",
+			},
+			"-022",
+		},
+	}
+
+	for i, testCase := range testCases {
+		err := testCase.request.Validate(nil, baseAssignmentAPIRequest{}, "")
+		if err != nil {
+			if testCase.expectedLocator == "" {
+				test.Errorf("Case %d: Unexpected error ('%s'): '%v'.", i, err.Locator, err)
+				continue
+			}
+
+			if testCase.expectedLocator != err.Locator {
+				test.Errorf("Case %d: Did not get the expected locator. Expected: '%s', Actual: '%s'.", i, testCase.expectedLocator, err.Locator)
+				continue
+			}
+
+			continue
+		}
+
+		if testCase.expectedLocator != "" {
+			test.Errorf("Case %d: Did not get expected error: '%s'.", i, testCase.expectedLocator)
+			continue
+		}
+	}
+}
+
 type testValues struct {
 	A string `json:"a"`
 	B int    `json:"b"`

@@ -26,6 +26,12 @@ const (
 	UNIXTIME_THRESHOLD_SECS  = 1e10
 	UNIXTIME_THRESHOLD_MSECS = 1e13
 	UNIXTIME_THRESHOLD_USECS = 1e16
+
+	// Conversions
+	MSECS_PER_SECS  = 1000
+	MSECS_PER_MINS  = MSECS_PER_SECS * 60
+	MSECS_PER_HOURS = MSECS_PER_MINS * 60
+	MSECS_PER_DAYS  = MSECS_PER_HOURS * 24
 )
 
 // The formats to try when guessing a timestamp (in order).
@@ -51,6 +57,11 @@ func Now() Timestamp {
 
 func Zero() Timestamp {
 	return Timestamp(0)
+}
+
+func ZeroPointer() *Timestamp {
+	value := Zero()
+	return &value
 }
 
 func FromGoTime(instance time.Time) Timestamp {
@@ -103,7 +114,7 @@ func GuessFromString(text string) (Timestamp, error) {
 
 	// Try all the formats, and stop at the first non-error one.
 	for _, format := range timeFormats {
-		instance, err := time.Parse(format, text)
+		instance, err := time.ParseInLocation(format, text, time.Local)
 		if err == nil {
 			return FromGoTime(instance), nil
 		}
@@ -131,6 +142,22 @@ func (this Timestamp) ToGoTime() time.Time {
 
 func (this Timestamp) ToMSecs() int64 {
 	return int64(this)
+}
+
+func (this Timestamp) ToSecs() float64 {
+	return float64(this) / MSECS_PER_SECS
+}
+
+func (this Timestamp) ToMins() float64 {
+	return float64(this) / MSECS_PER_MINS
+}
+
+func (this Timestamp) ToHours() float64 {
+	return float64(this) / MSECS_PER_HOURS
+}
+
+func (this Timestamp) ToDays() float64 {
+	return float64(this) / MSECS_PER_DAYS
 }
 
 func (this Timestamp) ToGoTimeDuration() time.Duration {

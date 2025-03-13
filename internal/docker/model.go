@@ -3,7 +3,7 @@ package docker
 import (
 	"fmt"
 
-	"github.com/edulinq/autograder/internal/common"
+	"github.com/edulinq/autograder/internal/util"
 )
 
 const (
@@ -17,26 +17,29 @@ type ImageInfo struct {
 
 	Invocation []string `json:"invocation,omitempty"`
 
-	StaticFiles []*common.FileSpec `json:"static-files,omitempty"`
+	StaticFiles []*util.FileSpec `json:"static-files,omitempty"`
 
-	PreStaticFileOperations  []common.FileOperation `json:"pre-static-files-ops,omitempty"`
-	PostStaticFileOperations []common.FileOperation `json:"post-static-files-ops,omitempty"`
+	PreStaticFileOperations  []*util.FileOperation `json:"pre-static-file-ops,omitempty"`
+	PostStaticFileOperations []*util.FileOperation `json:"post-static-file-ops,omitempty"`
 
-	PostSubmissionFileOperations []common.FileOperation `json:"post-submission-files-ops,omitempty"`
+	PostSubmissionFileOperations []*util.FileOperation `json:"post-submission-file-ops,omitempty"`
 
 	MaxRuntimeSecs int `json:"max-runtime-secs,omitempty"`
 
 	// Fields that are not part of the JSON and are set after deserialization.
 
 	Name string `json:"-"`
+
+	// Get the base and containment directories for static files.
 	// Dir used for relative paths.
-	BaseDir string `json:"-"`
+	// Using a func allows for lazy resolution of the base dir.
+	BaseDirFunc func() (string, string) `json:"-"`
 }
 
 // A subset of the image information that is passed to docker images for config during grading.
 type GradingConfig struct {
-	Name                         string                 `json:"name"`
-	PostSubmissionFileOperations []common.FileOperation `json:"post-submission-files-ops,omitempty"`
+	Name                         string                `json:"name"`
+	PostSubmissionFileOperations []*util.FileOperation `json:"post-submission-file-ops,omitempty"`
 }
 
 func (this *ImageInfo) GetGradingConfig() *GradingConfig {
@@ -51,7 +54,12 @@ func (this *ImageInfo) Validate() error {
 		return fmt.Errorf("Missing name.")
 	}
 
-	if this.BaseDir == "" {
+	if this.BaseDirFunc == nil {
+		return fmt.Errorf("Missing base dir func.")
+	}
+
+	baseDir, _ := this.BaseDirFunc()
+	if baseDir == "" {
 		return fmt.Errorf("Missing base dir.")
 	}
 
@@ -76,7 +84,7 @@ func (this *ImageInfo) Validate() error {
 	}
 
 	if this.StaticFiles == nil {
-		this.StaticFiles = make([]*common.FileSpec, 0)
+		this.StaticFiles = make([]*util.FileSpec, 0)
 	}
 
 	for _, staticFile := range this.StaticFiles {
@@ -91,28 +99,28 @@ func (this *ImageInfo) Validate() error {
 	}
 
 	if this.PreStaticFileOperations == nil {
-		this.PreStaticFileOperations = make([]common.FileOperation, 0)
+		this.PreStaticFileOperations = make([]*util.FileOperation, 0)
 	}
 
-	err := common.ValidateFileOperations(this.PreStaticFileOperations)
+	err := util.ValidateFileOperations(this.PreStaticFileOperations)
 	if err != nil {
 		return fmt.Errorf("Failed to validate pre-static file operations: '%w'.", err)
 	}
 
 	if this.PostStaticFileOperations == nil {
-		this.PostStaticFileOperations = make([]common.FileOperation, 0)
+		this.PostStaticFileOperations = make([]*util.FileOperation, 0)
 	}
 
-	err = common.ValidateFileOperations(this.PostStaticFileOperations)
+	err = util.ValidateFileOperations(this.PostStaticFileOperations)
 	if err != nil {
 		return fmt.Errorf("Failed to validate post-static file operations: '%w'.", err)
 	}
 
 	if this.PostSubmissionFileOperations == nil {
-		this.PostSubmissionFileOperations = make([]common.FileOperation, 0)
+		this.PostSubmissionFileOperations = make([]*util.FileOperation, 0)
 	}
 
-	err = common.ValidateFileOperations(this.PostSubmissionFileOperations)
+	err = util.ValidateFileOperations(this.PostSubmissionFileOperations)
 	if err != nil {
 		return fmt.Errorf("Failed to validate post-submission file operations: '%w'.", err)
 	}

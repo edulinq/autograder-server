@@ -1,12 +1,11 @@
 package grader
 
 import (
+	"context"
 	"fmt"
-	"os"
 	"path/filepath"
 
 	"github.com/edulinq/autograder/internal/common"
-	"github.com/edulinq/autograder/internal/config"
 	"github.com/edulinq/autograder/internal/docker"
 	"github.com/edulinq/autograder/internal/log"
 	"github.com/edulinq/autograder/internal/model"
@@ -20,32 +19,35 @@ import (
 //   - work -- Should already be created inside the docker image, will only exist within the container.
 //
 // Returns: (result, file contents, stdout, stderr, failure message (soft failure), error (hard failure)).
-func runDockerGrader(assignment *model.Assignment, submissionPath string, options GradeOptions, fullSubmissionID string) (
-	*model.GradingInfo, map[string][]byte, string, string, string, error) {
+func runDockerGrader(ctx context.Context, assignment *model.Assignment, submissionPath string, options GradeOptions, fullSubmissionID string) (*model.GradingInfo, map[string][]byte, string, string, string, error) {
 	tempDir, inputDir, outputDir, _, err := common.PrepTempGradingDir("docker")
 	if err != nil {
 		return nil, nil, "", "", "", err
 	}
 
 	if !options.LeaveTempDir {
-		defer os.RemoveAll(tempDir)
+		defer util.RemoveDirent(tempDir)
 	} else {
 		log.Debug("Leaving behind temp grading dir.", assignment, log.NewAttr("path", tempDir))
 	}
 
 	// Copy over submission files to the temp input dir.
-	err = util.CopyDirent(submissionPath, inputDir, true)
+	err = util.CopyDirentFull(submissionPath, inputDir, true)
 	if err != nil {
 		return nil, nil, "", "", "", fmt.Errorf("Failed to copy over submission/input contents: '%w'.", err)
 	}
 
-	stdout, stderr, timeout, err := docker.RunContainer(assignment, assignment.ImageName(), inputDir, outputDir, fullSubmissionID, assignment.MaxRuntimeSecs)
+	stdout, stderr, timeout, canceled, err := docker.RunGradingContainer(ctx, assignment, assignment.ImageName(), inputDir, outputDir, fullSubmissionID, assignment.MaxRuntimeSecs)
 	if err != nil {
 		return nil, nil, stdout, stderr, "", err
 	}
 
 	if timeout {
-		return nil, nil, stdout, stderr, fmt.Sprintf("Submission has ran for too long and was killed. Max assignment runtime is %d seconds (server hard limit is %d seconds). Check for infinite loops/recursion and consult with your instructors/TAs.", assignment.MaxRuntimeSecs, config.DOCKER_RUNTIME_MAX_SECS.Get()), nil
+		return nil, nil, stdout, stderr, getTimeoutMessage(assignment), nil
+	}
+
+	if canceled {
+		return nil, nil, stdout, stderr, getCanceledMessage(assignment), nil
 	}
 
 	resultPath := filepath.Join(outputDir, common.GRADER_OUTPUT_RESULT_FILENAME)

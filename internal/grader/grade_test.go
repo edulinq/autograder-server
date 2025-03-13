@@ -1,10 +1,12 @@
 package grader
 
 import (
+	"context"
 	"fmt"
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/edulinq/autograder/internal/config"
 	"github.com/edulinq/autograder/internal/db"
@@ -16,13 +18,7 @@ const BASE_TEST_USER = "course-student@test.edulinq.org"
 const TEST_MESSAGE = ""
 
 func TestDockerSubmissions(test *testing.T) {
-	if config.DOCKER_DISABLE.Get() {
-		test.Skip("Docker is disabled, skipping test.")
-	}
-
-	if !docker.CanAccessDocker() {
-		test.Fatal("Could not access docker.")
-	}
+	docker.EnsureOrSkipForTest(test)
 
 	runSubmissionTests(test, false, true)
 }
@@ -76,7 +72,7 @@ func runSubmissionTests(test *testing.T, parallel bool, useDocker bool) {
 				test.Parallel()
 			}
 
-			result, reject, softError, err := Grade(testSubmission.Assignment, testSubmission.Dir, user, TEST_MESSAGE, false, gradeOptions)
+			result, reject, softError, err := Grade(context.Background(), testSubmission.Assignment, testSubmission.Dir, user, TEST_MESSAGE, false, gradeOptions)
 			if err != nil {
 				if result != nil {
 					fmt.Println("--- stdout ---")
@@ -116,15 +112,69 @@ func runSubmissionTests(test *testing.T, parallel bool, useDocker bool) {
 	}
 }
 
-func TestGradeTimeout(test *testing.T) {
-	if config.DOCKER_DISABLE.Get() {
-		test.Skip("Docker is disabled, skipping test.")
-	}
+func TestGradeTimeoutDocker(test *testing.T) {
+	docker.EnsureOrSkipForTest(test)
 
-	if !docker.CanAccessDocker() {
-		test.Fatal("Could not access docker.")
-	}
+	resetFunc := docker.SetExtraInitTimeSecsForTesting(0)
+	defer resetFunc()
 
+	testGradeCancelOrTimeout(test, context.Background(), false, 1, "Submission has ran for too long and was killed.")
+}
+
+func TestGradeTimeoutNoDocker(test *testing.T) {
+	resetFunc := SetNoDockerTimeoutWaitDelayMSForTesting(10)
+	defer resetFunc()
+
+	testGradeCancelOrTimeout(test, context.Background(), true, 1, "Submission has ran for too long and was killed.")
+}
+
+func TestGradeMidCancelDocker(test *testing.T) {
+	docker.EnsureOrSkipForTest(test)
+
+	ctx, cancelFunc := context.WithCancel(context.Background())
+	defer cancelFunc()
+	go func() {
+		time.Sleep(500 * time.Millisecond)
+		cancelFunc()
+	}()
+
+	testGradeCancelOrTimeout(test, ctx, false, 5, "Grading has been canceled")
+}
+
+func TestGradeMidCancelNoDocker(test *testing.T) {
+	resetFunc := SetNoDockerTimeoutWaitDelayMSForTesting(10)
+	defer resetFunc()
+
+	ctx, cancelFunc := context.WithCancel(context.Background())
+	defer cancelFunc()
+	go func() {
+		time.Sleep(500 * time.Millisecond)
+		cancelFunc()
+	}()
+
+	testGradeCancelOrTimeout(test, ctx, true, 5, "Grading has been canceled")
+}
+
+func TestGradePreCancelDocker(test *testing.T) {
+	docker.EnsureOrSkipForTest(test)
+
+	ctx, cancelFunc := context.WithCancel(context.Background())
+	cancelFunc()
+
+	testGradeCancelOrTimeout(test, ctx, false, 5, "Grading has been canceled")
+}
+
+func TestGradePreCancelNoDocker(test *testing.T) {
+	resetFunc := SetNoDockerTimeoutWaitDelayMSForTesting(10)
+	defer resetFunc()
+
+	ctx, cancelFunc := context.WithCancel(context.Background())
+	cancelFunc()
+
+	testGradeCancelOrTimeout(test, ctx, true, 10, "Grading has been canceled")
+}
+
+func testGradeCancelOrTimeout(test *testing.T, ctx context.Context, noDocker bool, maxRuntimeSecs int, expectedSubstring string) {
 	db.ResetForTesting()
 	defer db.ResetForTesting()
 
@@ -133,9 +183,12 @@ func TestGradeTimeout(test *testing.T) {
 	assignment := db.MustGetAssignment("course-languages", "bash")
 
 	// Set a short timeout, which should ensure this submission runs out of time.
-	assignment.MaxRuntimeSecs = 1
+	assignment.MaxRuntimeSecs = maxRuntimeSecs
 
-	result, reject, softError, err := Grade(assignment, submissionDir, "course-student@test.edulinq.org", "", false, GradeOptions{})
+	options := GetDefaultGradeOptions()
+	options.NoDocker = noDocker
+
+	result, reject, softError, err := Grade(ctx, assignment, submissionDir, "course-student@test.edulinq.org", "", false, options)
 	if err != nil {
 		if result != nil {
 			fmt.Println("--- stdout ---")
@@ -158,7 +211,6 @@ func TestGradeTimeout(test *testing.T) {
 		test.Fatalf("Submission did not get a soft error.")
 	}
 
-	expectedSubstring := "Submission has ran for too long and was killed."
 	if !strings.Contains(softError, expectedSubstring) {
 		test.Fatalf("Submission did not get the correct soft error. Expected substring: '%s', Actual string: '%s'.", expectedSubstring, softError)
 	}
@@ -173,13 +225,7 @@ func TestGradeTruncatedOutputTruncation(test *testing.T) {
 }
 
 func testTruncatedOutput(test *testing.T, sizeKB int, expectedTruncated bool) {
-	if config.DOCKER_DISABLE.Get() {
-		test.Skip("Docker is disabled, skipping test.")
-	}
-
-	if !docker.CanAccessDocker() {
-		test.Fatal("Could not access docker.")
-	}
+	docker.EnsureOrSkipForTest(test)
 
 	db.ResetForTesting()
 	defer db.ResetForTesting()
@@ -191,7 +237,7 @@ func testTruncatedOutput(test *testing.T, sizeKB int, expectedTruncated bool) {
 
 	assignment := db.MustGetAssignment("course-languages", "bash")
 
-	result, reject, softError, err := Grade(assignment, submissionDir, "course-student@test.edulinq.org", "", false, GradeOptions{})
+	result, reject, softError, err := Grade(context.Background(), assignment, submissionDir, "course-student@test.edulinq.org", "", false, GetDefaultGradeOptions())
 	if err != nil {
 		test.Fatalf("Failed to grade assignment: '%v'.", err)
 	}

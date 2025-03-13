@@ -4,7 +4,7 @@ import (
 	"github.com/edulinq/autograder/internal/log"
 )
 
-func InitLoggingFromConfig() {
+func initLoggingFromConfig() {
 	textLevel, textErr := log.ParseLevel(LOG_TEXT_LEVEL.Get())
 	backendLevel, backendErr := log.ParseLevel(LOG_BACKEND_LEVEL.Get())
 

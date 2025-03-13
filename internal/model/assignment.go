@@ -14,8 +14,6 @@ import (
 	"github.com/edulinq/autograder/internal/util"
 )
 
-const DEFAULT_SUBMISSIONS_DIR = "_submissions"
-
 const FILE_CACHE_FILENAME = "filecache.json"
 const CACHE_FILENAME = "cache.json"
 
@@ -33,6 +31,8 @@ type Assignment struct {
 	SubmissionLimit *SubmissionLimitInfo `json:"submission-limit,omitempty"`
 
 	docker.ImageInfo
+
+	AssignmentAnalysisOptions *AssignmentAnalysisOptions `json:"analysis-options,omitempty"`
 
 	// Ignore these fields in JSON.
 	RelSourceDir string  `json:"_rel_source-dir"`
@@ -102,6 +102,10 @@ func (this *Assignment) GetSourceDir() string {
 	return filepath.Join(this.Course.GetBaseSourceDir(), this.RelSourceDir)
 }
 
+func (this *Assignment) GetTemplatesDir() string {
+	return filepath.Join(this.Course.GetTemplatesDir(), this.ID)
+}
+
 // Ensure that the assignment is formatted correctly.
 // Missing optional components will be defaulted correctly.
 func (this *Assignment) Validate() error {
@@ -152,16 +156,18 @@ func (this *Assignment) Validate() error {
 	}
 
 	this.ImageInfo.Name = this.ImageName()
-	this.ImageInfo.BaseDir = this.GetSourceDir()
+	this.ImageInfo.BaseDirFunc = func() (string, string) {
+		return this.GetSourceDir(), this.Course.GetBaseSourceDir()
+	}
 
 	err = this.ImageInfo.Validate()
 	if err != nil {
 		return fmt.Errorf("Failed to validate docker information: '%w'.", err)
 	}
 
-	systemMaxRuntimeSecs := config.DOCKER_RUNTIME_MAX_SECS.Get()
+	systemMaxRuntimeSecs := config.GRADING_RUNTIME_MAX_SECS.Get()
 	if this.ImageInfo.MaxRuntimeSecs > systemMaxRuntimeSecs {
-		log.Warn("Specified docker max runtime is greater than the max runtime allowed by the server, lowering assignment max runtime.",
+		log.Warn("Specified grading max runtime is greater than the max runtime allowed by the server, lowering assignment max runtime.",
 			this,
 			log.NewAttr("assignment-max-runtime", this.ImageInfo.MaxRuntimeSecs), log.NewAttr("server-max-runtime", systemMaxRuntimeSecs))
 		this.ImageInfo.MaxRuntimeSecs = systemMaxRuntimeSecs
@@ -169,6 +175,13 @@ func (this *Assignment) Validate() error {
 
 	if this.ImageInfo.MaxRuntimeSecs == 0 {
 		this.ImageInfo.MaxRuntimeSecs = systemMaxRuntimeSecs
+	}
+
+	if this.AssignmentAnalysisOptions != nil {
+		err = this.AssignmentAnalysisOptions.Validate()
+		if err != nil {
+			return fmt.Errorf("Failed to validate analysis options: '%w'.", err)
+		}
 	}
 
 	return nil
@@ -190,6 +203,29 @@ func (this *Assignment) GetFileCachePath() string {
 
 func (this *Assignment) GetImageLock() *sync.Mutex {
 	return this.imageLock
+}
+
+func (this *Assignment) FetchTemplateFiles() ([]string, error) {
+	if this.AssignmentAnalysisOptions == nil {
+		return []string{}, nil
+	}
+
+	if len(this.AssignmentAnalysisOptions.TemplateFiles) == 0 {
+		return []string{}, nil
+	}
+
+	destDir := this.GetTemplatesDir()
+	err := util.MkDir(destDir)
+	if err != nil {
+		return []string{}, fmt.Errorf("Failed to make template dir '%s': '%w'.", destDir, err)
+	}
+
+	relpaths, err := this.AssignmentAnalysisOptions.FetchTemplateFiles(this.GetSourceDir(), this.Course.GetBaseSourceDir(), destDir)
+	if err != nil {
+		return []string{}, fmt.Errorf("Failed to fetch template files: '%w'.", err)
+	}
+
+	return relpaths, nil
 }
 
 func CompareAssignments(a *Assignment, b *Assignment) int {

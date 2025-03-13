@@ -19,6 +19,7 @@ func TestUpsertBase(test *testing.T) {
 	course101Path := filepath.Join(testdataDir, "course101", model.COURSE_CONFIG_FILENAME)
 
 	emptyDir := util.MustMkDirTemp("test-internal.procedures.courses.upsert-empty-")
+	defer util.RemoveDirent(emptyDir)
 	missingPath := filepath.Join(emptyDir, model.COURSE_CONFIG_FILENAME)
 
 	missingDir := util.MustMkDirTemp("test-internal.procedures.courses.upsert-missing-")
@@ -28,6 +29,7 @@ func TestUpsertBase(test *testing.T) {
 	}
 
 	badJSONDir := util.MustMkDirTemp("test-internal.procedures.courses.upsert-badJSON-")
+	defer util.RemoveDirent(badJSONDir)
 	badJSONPath := filepath.Join(badJSONDir, model.COURSE_CONFIG_FILENAME)
 	err = util.WriteFile("{", badJSONPath)
 	if err != nil {
@@ -35,6 +37,7 @@ func TestUpsertBase(test *testing.T) {
 	}
 
 	invalidConfigDir := util.MustMkDirTemp("test-internal.procedures.courses.upsert-invalidConfig-")
+	defer util.RemoveDirent(invalidConfigDir)
 	invalidConfigPath := filepath.Join(invalidConfigDir, model.COURSE_CONFIG_FILENAME)
 	err = util.WriteFile(`{"id": "_i!@#"}`, invalidConfigPath)
 	if err != nil {
@@ -55,11 +58,12 @@ func TestUpsertBase(test *testing.T) {
 			},
 			false,
 			&CourseUpsertResult{
-				CourseID:              "course101",
-				Success:               true,
-				Updated:               true,
-				LMSSyncResult:         standardLMSSyncResult,
-				BuiltAssignmentImages: standardBuildImages,
+				CourseID:                "course101",
+				Success:                 true,
+				Updated:                 true,
+				LMSSyncResult:           standardLMSSyncResult,
+				BuiltAssignmentImages:   standardBuildImages,
+				AssignmentTemplateFiles: standardTemplateFiles,
 			},
 			"",
 		},
@@ -70,11 +74,12 @@ func TestUpsertBase(test *testing.T) {
 			},
 			true,
 			&CourseUpsertResult{
-				CourseID:              "course101",
-				Success:               true,
-				Created:               true,
-				LMSSyncResult:         emptyLMSSyncResult,
-				BuiltAssignmentImages: standardBuildImages,
+				CourseID:                "course101",
+				Success:                 true,
+				Created:                 true,
+				LMSSyncResult:           emptyLMSSyncResult,
+				BuiltAssignmentImages:   standardBuildImages,
+				AssignmentTemplateFiles: standardTemplateFiles,
 			},
 			"",
 		},
@@ -84,15 +89,18 @@ func TestUpsertBase(test *testing.T) {
 			course101Path,
 			CourseUpsertOptions{
 				ContextUser: db.MustGetServerUser("server-creator@test.edulinq.org"),
-				DryRun:      true,
+				CourseUpsertPublicOptions: CourseUpsertPublicOptions{
+					DryRun: true,
+				},
 			},
 			false,
 			&CourseUpsertResult{
-				CourseID:              "course101",
-				Success:               true,
-				Updated:               true,
-				LMSSyncResult:         standardLMSSyncResult,
-				BuiltAssignmentImages: standardDryRunBuildImages,
+				CourseID:                "course101",
+				Success:                 true,
+				Updated:                 true,
+				LMSSyncResult:           standardLMSSyncResult,
+				BuiltAssignmentImages:   standardDryRunBuildImages,
+				AssignmentTemplateFiles: standardTemplateFiles,
 			},
 			"",
 		},
@@ -101,16 +109,19 @@ func TestUpsertBase(test *testing.T) {
 		{
 			course101Path,
 			CourseUpsertOptions{
-				ContextUser:    db.MustGetServerUser("server-creator@test.edulinq.org"),
-				SkipSourceSync: true,
+				ContextUser: db.MustGetServerUser("server-creator@test.edulinq.org"),
+				CourseUpsertPublicOptions: CourseUpsertPublicOptions{
+					SkipSourceSync: true,
+				},
 			},
 			false,
 			&CourseUpsertResult{
-				CourseID:              "course101",
-				Success:               true,
-				Updated:               true,
-				LMSSyncResult:         standardLMSSyncResult,
-				BuiltAssignmentImages: standardBuildImages,
+				CourseID:                "course101",
+				Success:                 true,
+				Updated:                 true,
+				LMSSyncResult:           standardLMSSyncResult,
+				BuiltAssignmentImages:   standardBuildImages,
+				AssignmentTemplateFiles: standardTemplateFiles,
 			},
 			"",
 		},
@@ -118,31 +129,18 @@ func TestUpsertBase(test *testing.T) {
 			course101Path,
 			CourseUpsertOptions{
 				ContextUser: db.MustGetServerUser("server-creator@test.edulinq.org"),
-				SkipLMSSync: true,
+				CourseUpsertPublicOptions: CourseUpsertPublicOptions{
+					SkipLMSSync: true,
+				},
 			},
 			false,
 			&CourseUpsertResult{
-				CourseID:              "course101",
-				Success:               true,
-				Updated:               true,
-				LMSSyncResult:         nil,
-				BuiltAssignmentImages: standardBuildImages,
-			},
-			"",
-		},
-		{
-			course101Path,
-			CourseUpsertOptions{
-				ContextUser:     db.MustGetServerUser("server-creator@test.edulinq.org"),
-				SkipBuildImages: true,
-			},
-			false,
-			&CourseUpsertResult{
-				CourseID:              "course101",
-				Success:               true,
-				Updated:               true,
-				LMSSyncResult:         standardLMSSyncResult,
-				BuiltAssignmentImages: nil,
+				CourseID:                "course101",
+				Success:                 true,
+				Updated:                 true,
+				LMSSyncResult:           nil,
+				BuiltAssignmentImages:   standardBuildImages,
+				AssignmentTemplateFiles: standardTemplateFiles,
 			},
 			"",
 		},
@@ -150,7 +148,28 @@ func TestUpsertBase(test *testing.T) {
 			course101Path,
 			CourseUpsertOptions{
 				ContextUser: db.MustGetServerUser("server-creator@test.edulinq.org"),
-				SkipTasks:   true,
+				CourseUpsertPublicOptions: CourseUpsertPublicOptions{
+					SkipBuildImages: true,
+				},
+			},
+			false,
+			&CourseUpsertResult{
+				CourseID:                "course101",
+				Success:                 true,
+				Updated:                 true,
+				LMSSyncResult:           standardLMSSyncResult,
+				BuiltAssignmentImages:   nil,
+				AssignmentTemplateFiles: standardTemplateFiles,
+			},
+			"",
+		},
+		{
+			course101Path,
+			CourseUpsertOptions{
+				ContextUser: db.MustGetServerUser("server-creator@test.edulinq.org"),
+				CourseUpsertPublicOptions: CourseUpsertPublicOptions{
+					SkipTemplateFiles: true,
+				},
 			},
 			false,
 			&CourseUpsertResult{
@@ -258,11 +277,12 @@ func TestUpsertBase(test *testing.T) {
 			},
 			false,
 			&CourseUpsertResult{
-				CourseID:              "course101",
-				Success:               true,
-				Updated:               true,
-				LMSSyncResult:         standardLMSSyncResult,
-				BuiltAssignmentImages: standardBuildImages,
+				CourseID:                "course101",
+				Success:                 true,
+				Updated:                 true,
+				LMSSyncResult:           standardLMSSyncResult,
+				BuiltAssignmentImages:   standardBuildImages,
+				AssignmentTemplateFiles: standardTemplateFiles,
 			},
 			"",
 		},
@@ -334,6 +354,12 @@ var emptyLMSSyncResult *model.LMSSyncResult = &model.LMSSyncResult{
 
 var standardBuildImages []string = []string{
 	"autograder.course101.hw0",
+}
+
+var standardTemplateFiles map[string][]string = map[string][]string{
+	"hw0": {
+		"submission.py",
+	},
 }
 
 var standardDryRunBuildImages []string = []string{

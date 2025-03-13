@@ -3,7 +3,7 @@ package model
 import (
 	"fmt"
 
-	"github.com/edulinq/autograder/internal/common"
+	"github.com/edulinq/autograder/internal/util"
 )
 
 type SubmissionLimitInfo struct {
@@ -12,8 +12,8 @@ type SubmissionLimitInfo struct {
 }
 
 type SubmittionLimitWindow struct {
-	AllowedAttempts int                 `json:"allowed-attempts"`
-	Duration        common.DurationSpec `json:"duration"`
+	AllowedAttempts int               `json:"allowed-attempts"`
+	Duration        util.DurationSpec `json:"duration"`
 }
 
 func (this *SubmissionLimitInfo) Validate() error {

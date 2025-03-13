@@ -8,20 +8,28 @@ import (
 )
 
 func CanAccessDocker() bool {
-	_, docker, err := getDockerClient()
+	docker, err := getDockerClient()
 	if docker != nil {
 		defer docker.Close()
 	}
 
-	return (err == nil)
-}
-
-func getDockerClient() (context.Context, *client.Client, error) {
-	ctx := context.Background()
-	docker, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
-		return ctx, nil, fmt.Errorf("Cannot create Docker client: '%w'.", err)
+		return false
 	}
 
-	return ctx, docker, nil
+	_, err = docker.Info(context.Background())
+	if err != nil {
+		return false
+	}
+
+	return true
+}
+
+func getDockerClient() (*client.Client, error) {
+	docker, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+	if err != nil {
+		return nil, fmt.Errorf("Cannot create Docker client: '%w'.", err)
+	}
+
+	return docker, nil
 }

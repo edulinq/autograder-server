@@ -43,6 +43,8 @@ type GradedQuestion struct {
 	Name             string              `json:"name"`
 	MaxPoints        float64             `json:"max_points"`
 	Score            float64             `json:"score"`
+	HardFail         bool                `json:"hard_fail"`
+	Skipped          bool                `json:"skipped"`
 	Message          string              `json:"message"`
 	GradingStartTime timestamp.Timestamp `json:"grading_start_time"`
 	GradingEndTime   timestamp.Timestamp `json:"grading_end_time"`
@@ -156,7 +158,7 @@ func (this *GradedQuestion) Equals(other *GradedQuestion, checkMessages bool) bo
 		return false
 	}
 
-	if (this.Name != other.Name) || (this.MaxPoints != other.MaxPoints) || (this.Score != other.Score) {
+	if (this.Name != other.Name) || (this.MaxPoints != other.MaxPoints) || (this.Score != other.Score) || (this.HardFail != other.HardFail) || (this.Skipped != other.Skipped) {
 		return false
 	}
 

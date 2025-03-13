@@ -5,7 +5,6 @@ import (
 
 	"github.com/alecthomas/kong"
 
-	"github.com/edulinq/autograder/internal/common"
 	"github.com/edulinq/autograder/internal/config"
 	"github.com/edulinq/autograder/internal/db"
 	"github.com/edulinq/autograder/internal/log"
@@ -16,7 +15,8 @@ import (
 var args struct {
 	config.ConfigArgs
 	Source string `help:"The source to add a course from." arg:""`
-	DryRun bool   `help:"Do not actually do the operation, just state what you would do." default:"false"`
+
+	courses.CourseUpsertPublicOptions
 }
 
 func main() {
@@ -32,14 +32,14 @@ func main() {
 	db.MustOpen()
 	defer db.MustClose()
 
-	spec, err := common.ParseFileSpec(args.Source)
+	spec, err := util.ParseFileSpec(args.Source)
 	if err != nil {
 		log.Fatal("Failed to parse FileSpec.", err)
 	}
 
 	options := courses.CourseUpsertOptions{
-		ContextUser: db.MustGetRoot(),
-		DryRun:      args.DryRun,
+		ContextUser:               db.MustGetRoot(),
+		CourseUpsertPublicOptions: args.CourseUpsertPublicOptions,
 	}
 
 	results, err := courses.UpsertFromFileSpec(spec, options)

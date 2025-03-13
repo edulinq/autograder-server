@@ -14,8 +14,9 @@ import (
 
 var args struct {
 	config.ConfigArgs
-	Path   string `help:"Path to a zip file with one or more courses to upsert." arg:""`
-	DryRun bool   `help:"Do not actually do the operation, just state what you would do." default:"false"`
+	Path string `help:"Path to a zip file with one or more courses to upsert." arg:""`
+
+	courses.CourseUpsertPublicOptions
 }
 
 func main() {
@@ -32,8 +33,8 @@ func main() {
 	defer db.MustClose()
 
 	options := courses.CourseUpsertOptions{
-		ContextUser: db.MustGetRoot(),
-		DryRun:      args.DryRun,
+		ContextUser:               db.MustGetRoot(),
+		CourseUpsertPublicOptions: args.CourseUpsertPublicOptions,
 	}
 
 	results, err := courses.UpsertFromZipFile(args.Path, options)

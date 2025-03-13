@@ -111,7 +111,7 @@ To build the images, you can use the following commands from the repository's ro
 docker build -f docker/prebuilt/Dockerfile -t my-autograder-server-prebuilt .
 
 # Slim Image
-docker build -f docker/prebuilt/Dockerfile -t my-autograder-server-prebuilt .
+docker build -f docker/slim/Dockerfile -t my-autograder-server-slim .
 ```
 
 Note the `my-` prefix that was added to the image tags to indicate that you built them.

@@ -18,12 +18,12 @@ const MARSHAL_ERROR string = "<error>"
 // Because of some assumptions we make, log times before UNIX epoch are not supported.
 // However, since this code was created well past that only time travelers should be concerned.
 type RawLogQuery struct {
-	LevelString  string `json:"level"`
-	AfterString  string `json:"after"`
-	PastString   string `json:"past"`
-	CourseID     string `json:"target-course"`
-	AssignmentID string `json:"target-assignment"`
-	TargetUser   string `json:"target-email"`
+	LevelString  string `json:"level,omitempty"`
+	AfterString  string `json:"after,omitempty"`
+	PastString   string `json:"past,omitempty"`
+	CourseID     string `json:"target-course,omitempty"`
+	AssignmentID string `json:"target-assignment,omitempty"`
+	TargetUser   string `json:"target-email,omitempty"`
 }
 
 // The fully parsed query to be executed.

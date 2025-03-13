@@ -5,7 +5,6 @@ import (
 	"math"
 	"testing"
 
-	"github.com/edulinq/autograder/internal/common"
 	"github.com/edulinq/autograder/internal/exit"
 	"github.com/edulinq/autograder/internal/log"
 	"github.com/edulinq/autograder/internal/util"
@@ -100,7 +99,7 @@ func TestBadRequestEmptyContent(test *testing.T) {
 	url := serverURL + MakeFullAPIPath(endpoint)
 
 	for i, testCase := range testCases {
-		responseText, err := common.PostNoCheck(url, testCase.form)
+		responseText, err := util.PostNoCheck(url, testCase.form)
 		if err != nil {
 			test.Errorf("Case %d: POST returned an error: '%v'.", i, err)
 			continue

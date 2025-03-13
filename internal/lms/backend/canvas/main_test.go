@@ -11,7 +11,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/edulinq/autograder/internal/common"
 	"github.com/edulinq/autograder/internal/db"
 	"github.com/edulinq/autograder/internal/util"
 )
@@ -71,12 +70,12 @@ func startTestServer() error {
 	return nil
 }
 
-func makeHandler(requests map[string]*common.SavedHTTPRequest) http.Handler {
+func makeHandler(requests map[string]*util.SavedHTTPRequest) http.Handler {
 	return &testCanvasHandler{requests}
 }
 
 type testCanvasHandler struct {
-	requests map[string]*common.SavedHTTPRequest
+	requests map[string]*util.SavedHTTPRequest
 }
 
 func (this *testCanvasHandler) ServeHTTP(response http.ResponseWriter, request *http.Request) {
@@ -99,8 +98,8 @@ func (this *testCanvasHandler) ServeHTTP(response http.ResponseWriter, request *
 	}
 }
 
-func loadRequests() (map[string]*common.SavedHTTPRequest, error) {
-	requests := make(map[string]*common.SavedHTTPRequest)
+func loadRequests() (map[string]*util.SavedHTTPRequest, error) {
+	requests := make(map[string]*util.SavedHTTPRequest)
 
 	err := fs.WalkDir(httpDataDir, ".", func(path string, info fs.DirEntry, err error) error {
 		if err != nil {
@@ -120,7 +119,7 @@ func loadRequests() (map[string]*common.SavedHTTPRequest, error) {
 			return fmt.Errorf("Failed to read embedded test file '%s': '%w'.", path, err)
 		}
 
-		var request common.SavedHTTPRequest
+		var request util.SavedHTTPRequest
 		err = util.JSONFromString(string(data), &request)
 		if err != nil {
 			return fmt.Errorf("Failed to JSON parse test file '%s': '%w'.", path, err)

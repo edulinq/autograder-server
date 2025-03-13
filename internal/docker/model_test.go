@@ -3,7 +3,6 @@ package docker
 import (
 	"testing"
 
-	"github.com/edulinq/autograder/internal/common"
 	"github.com/edulinq/autograder/internal/util"
 )
 
@@ -18,15 +17,17 @@ func TestImageInfoStruct(test *testing.T) {
 			PreStaticDockerCommands:  nil,
 			PostStaticDockerCommands: []string{},
 			Invocation:               []string{"a"},
-			StaticFiles:              []*common.FileSpec{},
+			StaticFiles:              []*util.FileSpec{},
 			PreStaticFileOperations:  nil,
-			PostStaticFileOperations: []common.FileOperation{},
-			PostSubmissionFileOperations: []common.FileOperation{
-				common.FileOperation([]string{"a"}),
-				common.FileOperation([]string{"b", "c"}),
+			PostStaticFileOperations: []*util.FileOperation{},
+			PostSubmissionFileOperations: []*util.FileOperation{
+				util.NewFileOperation([]string{"a"}),
+				util.NewFileOperation([]string{"b", "c"}),
 			},
-			Name:    "foo",
-			BaseDir: "bar",
+			Name: "foo",
+			BaseDirFunc: func() (string, string) {
+				return "bar", "baz"
+			},
 		},
 	}
 
