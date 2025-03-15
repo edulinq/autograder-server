@@ -32,9 +32,9 @@ Then, course developers should fix the bug and watch the new test case (test sub
 
 We recommend writing a script that simplifies running a grader for an assignment.
 In `final-with-ci`, we provide a [run_grader.sh](resources/my-first-course/final-with-ci/assignment-01/run_grader.sh) to run the grader on a sample submission.
-For example, run the grader with the `not-implemented` submission as follows (within the `final-with-ci/assignment-01` directory):
+For example, run the grader with the `not-implemented` submission as follows (within the `final-with-ci` directory):
 ```
-./run_grader.sh sample-submissions/not-implemented
+./assignment-01/run_grader.sh assignment-01/sample-submissions/not-implemented
 ```
 
 You should see an output similar to:
@@ -49,14 +49,14 @@ Question 1: Add: 1 / 10
 Total: 1 / 10
 ```
 
-These scripts help course developers quickly verify the output on sample submissions.
+These scripts help course developers quickly verify the grading output given a sample submission.
 
 ## Continuous Integration
 
 After setting up sample submissions and scripts to run the graders,
 we can automatically verify the graders produce the correct results.
 
-To do so, each sample submission requires a `test-submission.json`, such this [example from not-implemented](resources/my-first-course/final-with-ci/assignment-01/sample-submissions/not-implemented/test-submission.json).
+To do so, each sample submission requires a `test-submission.json`, such as this [example for not-implemented](resources/my-first-course/final-with-ci/assignment-01/sample-submissions/not-implemented/test-submission.json).
 This allows CI to capture the output of the grader and compare the results with the expected results.
 
 With these parts in place, we can write the [CI script to check submissions](resources/my-first-course/final-with-ci/.ci/check_submissions.sh).
@@ -76,7 +76,7 @@ Success
 No issues found!
 ```
 
-If not, the script output the test submissions that did not produce the expected results.
+If not, the grader produced a different output than the `test-submission.json` expected.
 
 ## Workflow
 

@@ -408,4 +408,6 @@ Here are some next steps to look into:
  - Create more graders for your other assignments.
  - Connect your [course to your LMS](../types.md#lms-adapter-lmsadapter) (e.g., Canvas).
  - Setup [scheduled tasks](../types.md#tasks-task) for your course.
- - Setup [CI to test your graders](https://github.com/edulinq/cse-cracks-course/blob/main/.ci/check_graders.sh).
+ - Setup [CI to test your graders](create-continuous-integration.md).
+
+If you run into issues during development, check out our [troubleshooting guide](troubleshoot-a-course.md).
