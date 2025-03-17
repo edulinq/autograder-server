@@ -24,7 +24,8 @@ type EndpointDescription struct {
 }
 
 type TypeDescription struct {
-	Fields map[string]string `json:"fields"`
+	Fields map[string]string `json:"fields,omitempty"`
+	Alias  string            `json:"alias,omitempty"`
 }
 
 func SetAPIDescription(description APIDescription) {
