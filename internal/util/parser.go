@@ -5,6 +5,7 @@ import (
 	"go/ast"
 	"go/parser"
 	"go/token"
+	"reflect"
 	"regexp"
 	"strings"
 )
@@ -43,4 +44,24 @@ func GetDescriptionFromFunction(path string, functionNamePattern *regexp.Regexp)
 	}
 
 	return "", fmt.Errorf("Unable to find a description using the pattern '%s' for a function located in '%s'.", functionNamePattern.String(), path)
+}
+
+func DescribeType(reflectType reflect.Type) map[string]string {
+	if reflectType.Kind() == reflect.Pointer {
+		reflectType = reflectType.Elem()
+	}
+
+	if reflectType.Kind() != reflect.Struct {
+		return nil
+	}
+
+	description := make(map[string]string)
+
+	for i := 0; i < reflectType.NumField(); i++ {
+		field := reflectType.Field(i)
+
+		description[field.Name] = field.Type.String()
+	}
+
+	return description
 }

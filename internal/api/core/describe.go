@@ -14,12 +14,17 @@ var apiDescription APIDescription
 
 type APIDescription struct {
 	Endpoints map[string]EndpointDescription `json:"endpoints"`
+	Types     map[string]TypeDescription     `json:"types"`
 }
 
 type EndpointDescription struct {
 	RequestType  string `json:"request-type"`
 	ResponseType string `json:"response-type"`
 	Description  string `json:"description"`
+}
+
+type TypeDescription struct {
+	Fields map[string]string `json:"fields"`
 }
 
 func SetAPIDescription(description APIDescription) {
