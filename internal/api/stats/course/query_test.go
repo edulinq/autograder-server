@@ -18,69 +18,92 @@ func TestQuery(test *testing.T) {
 	testCases := []struct {
 		email           string
 		expectedLocator string
-		query           stats.CourseMetricQuery
+		query           stats.MetricQuery
 		expectedResults []map[string]any
 	}{
 		// Base.
-		{"server-admin", "", stats.CourseMetricQuery{}, []map[string]any{
-			{"assignment": "A1", "course": "course101", "duration": 100, "timestamp": 100, "type": "grading-time", "user": "U1"},
-			{"assignment": "A2", "course": "course101", "duration": 200, "timestamp": 200, "type": "", "user": "U1"},
-			{"assignment": "A3", "course": "course101", "duration": 300, "timestamp": 300, "type": "grading-time", "user": "U2"},
-		}},
-		{"server-admin", "", stats.CourseMetricQuery{BaseQuery: stats.BaseQuery{Sort: 1}}, []map[string]any{
-			{"assignment": "A3", "course": "course101", "duration": 300, "timestamp": 300, "type": "grading-time", "user": "U2"},
-			{"assignment": "A2", "course": "course101", "duration": 200, "timestamp": 200, "type": "", "user": "U1"},
-			{"assignment": "A1", "course": "course101", "duration": 100, "timestamp": 100, "type": "grading-time", "user": "U1"},
-		}},
-		{"server-admin", "", stats.CourseMetricQuery{BaseQuery: stats.BaseQuery{After: timestamp.FromMSecs(150)}}, []map[string]any{
-			{"assignment": "A2", "course": "course101", "duration": 200, "timestamp": 200, "type": "", "user": "U1"},
-			{"assignment": "A3", "course": "course101", "duration": 300, "timestamp": 300, "type": "grading-time", "user": "U2"},
-		}},
+		{
+			"server-admin",
+			"",
+			stats.MetricQuery{},
+			[]map[string]any{
+				{"assignment": "A1", "course": "course101", "duration": 100, "timestamp": 100, "type": "grading-time", "user": "U1"},
+				{"assignment": "A2", "course": "course101", "duration": 200, "timestamp": 200, "type": "", "user": "U1"},
+				{"assignment": "A3", "course": "course101", "duration": 300, "timestamp": 300, "type": "grading-time", "user": "U2"},
+			},
+		},
+		{
+			"server-admin",
+			"",
+			stats.MetricQuery{BaseQuery: stats.BaseQuery{Sort: 1}},
+			[]map[string]any{
+				{"assignment": "A3", "course": "course101", "duration": 300, "timestamp": 300, "type": "grading-time", "user": "U2"},
+				{"assignment": "A2", "course": "course101", "duration": 200, "timestamp": 200, "type": "", "user": "U1"},
+				{"assignment": "A1", "course": "course101", "duration": 100, "timestamp": 100, "type": "grading-time", "user": "U1"},
+			},
+		},
+		{
+			"server-admin",
+			"",
+			stats.MetricQuery{BaseQuery: stats.BaseQuery{After: timestamp.FromMSecs(150)}},
+			[]map[string]any{
+				{"assignment": "A2", "course": "course101", "duration": 200, "timestamp": 200, "type": "", "user": "U1"},
+				{"assignment": "A3", "course": "course101", "duration": 300, "timestamp": 300, "type": "grading-time", "user": "U2"},
+			},
+		},
 
-		// Include.
-		{"server-admin", "", stats.CourseMetricQuery{IncludeCourseMetricField: stats.IncludeCourseMetricField{AssignmentID: "A2"}}, []map[string]any{
-			{"assignment": "A2", "course": "course101", "duration": 200, "timestamp": 200, "type": "", "user": "U1"},
-		}},
-		{"server-admin", "", stats.CourseMetricQuery{IncludeCourseMetricField: stats.IncludeCourseMetricField{AssignmentID: "ZZZ"}}, nil},
-		{"server-admin", "", stats.CourseMetricQuery{IncludeCourseMetricField: stats.IncludeCourseMetricField{UserEmail: "U2"}}, []map[string]any{
-			{"assignment": "A3", "course": "course101", "duration": 300, "timestamp": 300, "type": "grading-time", "user": "U2"},
-		}},
-		{"server-admin", "", stats.CourseMetricQuery{IncludeCourseMetricField: stats.IncludeCourseMetricField{Type: stats.CourseMetricTypeGradingTime}}, []map[string]any{
-			{"assignment": "A1", "course": "course101", "duration": 100, "timestamp": 100, "type": "grading-time", "user": "U1"},
-			{"assignment": "A3", "course": "course101", "duration": 300, "timestamp": 300, "type": "grading-time", "user": "U2"},
-		}},
+		// Include one field.
+		{
+			"server-admin",
+			"",
+			stats.MetricQuery{Where: map[string]string{"assignment": "A2"}},
+			[]map[string]any{
+				{"assignment": "A2", "course": "course101", "duration": 200, "timestamp": 200, "type": "", "user": "U1"},
+			},
+		},
+		{
+			"server-admin",
+			"",
+			stats.MetricQuery{Where: map[string]string{"assignment": "ZZZ"}},
+			nil,
+		},
+		{
+			"server-admin",
+			"",
+			stats.MetricQuery{Where: map[string]string{"user": "U2"}},
+			[]map[string]any{
+				{"assignment": "A3", "course": "course101", "duration": 300, "timestamp": 300, "type": "grading-time", "user": "U2"},
+			},
+		},
+		{
+			"server-admin",
+			"",
+			stats.MetricQuery{Where: map[string]string{"type": stats.CourseMetricTypeGradingTime}},
+			[]map[string]any{
+				{"assignment": "A1", "course": "course101", "duration": 100, "timestamp": 100, "type": "grading-time", "user": "U1"},
+				{"assignment": "A3", "course": "course101", "duration": 300, "timestamp": 300, "type": "grading-time", "user": "U2"},
+			},
+		},
 
-		// Exclude.
-		{"server-admin", "", stats.CourseMetricQuery{ExcludeCourseMetricField: stats.ExcludeCourseMetricField{AssignmentID: "A2"}}, []map[string]any{
-			{"assignment": "A1", "course": "course101", "duration": 100, "timestamp": 100, "type": "grading-time", "user": "U1"},
-			{"assignment": "A3", "course": "course101", "duration": 300, "timestamp": 300, "type": "grading-time", "user": "U2"},
-		}},
-		{"server-admin", "", stats.CourseMetricQuery{ExcludeCourseMetricField: stats.ExcludeCourseMetricField{AssignmentID: "ZZZ"}}, []map[string]any{
-			{"assignment": "A1", "course": "course101", "duration": 100, "timestamp": 100, "type": "grading-time", "user": "U1"},
-			{"assignment": "A2", "course": "course101", "duration": 200, "timestamp": 200, "type": "", "user": "U1"},
-			{"assignment": "A3", "course": "course101", "duration": 300, "timestamp": 300, "type": "grading-time", "user": "U2"},
-		}},
-		{"server-admin", "", stats.CourseMetricQuery{ExcludeCourseMetricField: stats.ExcludeCourseMetricField{UserEmail: "U2"}}, []map[string]any{
-			{"assignment": "A1", "course": "course101", "duration": 100, "timestamp": 100, "type": "grading-time", "user": "U1"},
-			{"assignment": "A2", "course": "course101", "duration": 200, "timestamp": 200, "type": "", "user": "U1"},
-		}},
-		{"server-admin", "", stats.CourseMetricQuery{ExcludeCourseMetricField: stats.ExcludeCourseMetricField{Type: stats.CourseMetricTypeGradingTime}}, []map[string]any{
-			{"assignment": "A2", "course": "course101", "duration": 200, "timestamp": 200, "type": "", "user": "U1"},
-		}},
-
-		// Include and Exclude different fields.
-		{"server-admin", "", stats.CourseMetricQuery{IncludeCourseMetricField: stats.IncludeCourseMetricField{UserEmail: "U1"}, ExcludeCourseMetricField: stats.ExcludeCourseMetricField{AssignmentID: "A2"}}, []map[string]any{
-			{"assignment": "A1", "course": "course101", "duration": 100, "timestamp": 100, "type": "grading-time", "user": "U1"},
-		}},
-
-		// Include and Exclude same fields.
-		{"server-admin", "", stats.CourseMetricQuery{IncludeCourseMetricField: stats.IncludeCourseMetricField{UserEmail: "U1"}, ExcludeCourseMetricField: stats.ExcludeCourseMetricField{UserEmail: "U1"}}, nil},
+		// Include multiple fields.
+		{
+			"server-admin",
+			"",
+			stats.MetricQuery{Where: map[string]string{"user": "U1", "assignment": "A2"}},
+			[]map[string]any{
+				{"assignment": "A2", "course": "course101", "duration": 200, "timestamp": 200, "type": "", "user": "U1"},
+			},
+		},
 
 		// Error.
-		{"course-student", "-020", stats.CourseMetricQuery{}, nil},
-		{"server-user", "-040", stats.CourseMetricQuery{}, nil},
-		{"server-admin", "-307", stats.CourseMetricQuery{AggregationQuery: stats.AggregationQuery{EnableAggregation: true, GroupByFields: []string{"course", "assignment"}}}, nil},
-		{"server-admin", "-308", stats.CourseMetricQuery{AggregationQuery: stats.AggregationQuery{EnableAggregation: true, GroupByFields: []string{"zzz"}, AggregateField: "assignment"}}, nil},
+		{
+			"server-admin",
+			"-304",
+			stats.MetricQuery{AggregationQuery: stats.AggregationQuery{GroupByFields: []string{"course"}}},
+			nil,
+		},
+		{"course-student", "-020", stats.MetricQuery{}, nil},
+		{"server-user", "-040", stats.MetricQuery{}, nil},
 	}
 
 	for _, record := range testRecords {
@@ -112,7 +135,7 @@ func TestQuery(test *testing.T) {
 			continue
 		}
 
-		var responseContent stats.QueryResponse
+		var responseContent QueryResponse
 		util.MustJSONFromString(util.MustToJSON(response.Content), &responseContent)
 
 		actualSlice := make([]any, len(responseContent.Response))
@@ -125,8 +148,8 @@ func TestQuery(test *testing.T) {
 			expectedSlice[i] = data
 		}
 
-		expected := util.MustToGenericJSON(actualSlice, stats.QuerySortFuncForTesting)
-		actual := util.MustToGenericJSON(expectedSlice, stats.QuerySortFuncForTesting)
+		expected := util.MustToGenericJSONSlice(actualSlice, util.JSONCompareFunc)
+		actual := util.MustToGenericJSONSlice(expectedSlice, util.JSONCompareFunc)
 
 		if !reflect.DeepEqual(expected, actual) {
 			test.Errorf("Case %d: Response is not as expected. Expected: '%v', Actual: '%v'.", i, util.MustToJSONIndent(testCase.expectedResults), util.MustToJSONIndent(responseContent.Response))
@@ -136,7 +159,7 @@ func TestQuery(test *testing.T) {
 }
 
 var testRecords []*stats.CourseMetric = []*stats.CourseMetric{
-	&stats.CourseMetric{
+	{
 		BaseMetric: stats.BaseMetric{
 			Timestamp: timestamp.FromMSecs(100),
 		},
@@ -146,7 +169,7 @@ var testRecords []*stats.CourseMetric = []*stats.CourseMetric{
 		UserEmail:    "U1",
 		Value:        100,
 	},
-	&stats.CourseMetric{
+	{
 		BaseMetric: stats.BaseMetric{
 			Timestamp: timestamp.FromMSecs(200),
 		},
@@ -156,7 +179,7 @@ var testRecords []*stats.CourseMetric = []*stats.CourseMetric{
 		UserEmail:    "U1",
 		Value:        200,
 	},
-	&stats.CourseMetric{
+	{
 		BaseMetric: stats.BaseMetric{
 			Timestamp: timestamp.FromMSecs(300),
 		},

@@ -128,7 +128,7 @@ func TestMetric(test *testing.T) {
 			continue
 		}
 
-		metrics, err := db.GetAPIRequestMetrics(stats.APIRequestMetricQuery{})
+		metrics, err := db.GetAPIRequestMetrics(stats.MetricQuery{})
 		if err != nil {
 			test.Errorf("Case %d: Unable to get API request metrics: '%v'.", i, err)
 			continue

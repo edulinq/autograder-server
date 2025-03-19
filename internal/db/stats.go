@@ -22,7 +22,7 @@ func StoreSystemStats(record *stats.SystemMetrics) error {
 	return backend.StoreSystemStats(record)
 }
 
-func GetCourseMetrics(query stats.CourseMetricQuery) ([]*stats.CourseMetric, error) {
+func GetCourseMetrics(query stats.MetricQuery) ([]*stats.CourseMetric, error) {
 	if backend == nil {
 		return nil, fmt.Errorf("Database has not been opened.")
 	}
@@ -38,7 +38,7 @@ func StoreCourseMetric(record *stats.CourseMetric) error {
 	return backend.StoreCourseMetric(record)
 }
 
-func GetAPIRequestMetrics(query stats.APIRequestMetricQuery) ([]*stats.APIRequestMetric, error) {
+func GetAPIRequestMetrics(query stats.MetricQuery) ([]*stats.APIRequestMetric, error) {
 	if backend == nil {
 		return nil, fmt.Errorf("Database has not been opened.")
 	}

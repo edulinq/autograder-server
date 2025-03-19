@@ -4,48 +4,34 @@ import (
 	"github.com/edulinq/autograder/internal/api/core"
 	"github.com/edulinq/autograder/internal/db"
 	"github.com/edulinq/autograder/internal/stats"
-	"github.com/edulinq/autograder/internal/util"
 )
 
 type QueryRequest struct {
 	core.APIRequestUserContext
 	core.MinServerRoleAdmin
 
-	stats.APIRequestMetricQuery
+	stats.MetricQuery
+}
 
-	stats.AggregationQuery
+type QueryResponse struct {
+	Results []map[string]any `json:"results"`
 }
 
 // Query the API request stats for the server.
-func HandleQuery(request *QueryRequest) (*stats.QueryResponse, *core.APIError) {
-	records, err := db.GetAPIRequestMetrics(request.APIRequestMetricQuery)
+func HandleQuery(request *QueryRequest) (*QueryResponse, *core.APIError) {
+	records, err := db.GetAPIRequestMetrics(request.MetricQuery)
 	if err != nil {
-		return nil, core.NewUserContextInternalError("-301", &request.APIRequestUserContext, "Failed to query API request stats.").Err(err)
+		return nil, core.NewUserContextInternalError("-301", &request.APIRequestUserContext, "Failed to get API request metrics.").Err(err)
 	}
 
-	// Convert records to a general format for aggregation.
-	records = stats.ApplyBaseQuery(records, request.BaseQuery)
-	metrics, err := util.ToJsonMapSlice(records)
+	aggregatedResults, err := stats.QueryAndAggregateMetrics(records, request.MetricQuery)
 	if err != nil {
-		return nil, core.NewUserContextInternalError("-302", &request.APIRequestUserContext, "Failed to convert records to a slice of maps.").Err(err)
+		return nil, core.NewUserContextInternalError("-302", &request.APIRequestUserContext, err.Error())
 	}
 
-	queryResponse := stats.QueryResponse{}
-
-	if !request.EnableAggregation {
-		queryResponse.Response = metrics
-		return &queryResponse, nil
+	response := QueryResponse{
+		Results: aggregatedResults,
 	}
 
-	if request.AggregateField == "" {
-		return nil, core.NewBadRequestError("-303", &request.APIRequest, "No aggregate field was supplied.")
-	}
-
-	aggregatedResults, err := stats.ApplyAggregation(metrics, stats.APIRequestMetric{}, request.GroupByFields, request.AggregateField)
-	if err != nil {
-		return nil, core.NewBadRequestError("-304", &request.APIRequest, "Failed to apply aggregation.").Err(err)
-	}
-
-	queryResponse.Response = aggregatedResults
-	return &queryResponse, nil
+	return &response, nil
 }

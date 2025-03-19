@@ -74,7 +74,7 @@ func TestQuery(test *testing.T) {
 }
 
 var testRecords []*stats.SystemMetrics = []*stats.SystemMetrics{
-	&stats.SystemMetrics{
+	{
 		BaseMetric: stats.BaseMetric{
 			Timestamp: timestamp.FromMSecs(100),
 		},
@@ -83,7 +83,7 @@ var testRecords []*stats.SystemMetrics = []*stats.SystemMetrics{
 		NetBytesSent:     1,
 		NetBytesReceived: 1,
 	},
-	&stats.SystemMetrics{
+	{
 		BaseMetric: stats.BaseMetric{
 			Timestamp: timestamp.FromMSecs(200),
 		},
@@ -92,7 +92,7 @@ var testRecords []*stats.SystemMetrics = []*stats.SystemMetrics{
 		NetBytesSent:     2,
 		NetBytesReceived: 2,
 	},
-	&stats.SystemMetrics{
+	{
 		BaseMetric: stats.BaseMetric{
 			Timestamp: timestamp.FromMSecs(300),
 		},

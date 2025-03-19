@@ -108,7 +108,7 @@ func TestPairwiseAnalysisFake(test *testing.T) {
 	testPairwise(test, ids, expected, len(expected))
 
 	// After both runs, there should be exactly one stat record (since the second one was cached).
-	results, err := db.GetCourseMetrics(stats.CourseMetricQuery{IncludeCourseMetricField: stats.IncludeCourseMetricField{CourseID: "course101"}})
+	results, err := db.GetCourseMetrics(stats.MetricQuery{Where: map[string]string{"course": "course101"}})
 	if err != nil {
 		test.Fatalf("Failed to do stats query: '%v'.", err)
 	}

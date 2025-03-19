@@ -84,30 +84,6 @@ func JSONMapFromString(data string) (map[string]any, error) {
 	return target, nil
 }
 
-func MustToJSONMapSlice(data any) []map[string]any {
-	result, err := ToJsonMapSlice(data)
-	if err != nil {
-		log.Fatal("Failed to convert object to a slice of maps.", log.NewAttr("data", data), err)
-	}
-
-	return result
-}
-
-func ToJsonMapSlice(data any) ([]map[string]any, error) {
-	jsonString, err := ToJSON(data)
-	if err != nil {
-		return nil, fmt.Errorf("Failed to convert object to JSON: '%w'.", err)
-	}
-
-	var target []map[string]any
-	err = JSONFromString(jsonString, &target)
-	if err != nil {
-		return nil, fmt.Errorf("Failed to unmarshall JSON object to a slice of maps: '%w'.", err)
-	}
-
-	return target, nil
-}
-
 func MustToJSON(data any) string {
 	text, err := ToJSON(data)
 	if err != nil {
@@ -265,11 +241,31 @@ func MustFormatJSONObjectIndent(text string) string {
 	return MustToJSONIndent(object)
 }
 
-func MustToGenericJSON(input []any, sortFunc func(a any, b any) int) []map[string]any {
+func MustToGenericJSONSlice(input []any, sortFunc func(a any, b any) int) []map[string]any {
 	slices.SortFunc(input, sortFunc)
 
 	var data []map[string]any
 	MustJSONFromString(MustToJSON(input), &data)
 
 	return data
+}
+
+func JSONCompareFunc(dataA any, dataB any) int {
+	jsonA, err := ToJSON(dataA)
+	if err != nil {
+		log.Fatal("Failed to convert dataA to JSON.", log.NewAttr("dataA", dataA), err)
+	}
+
+	jsonB, err := ToJSON(dataB)
+	if err != nil {
+		log.Fatal("Failed to convert dataB to JSON.", log.NewAttr("dataB", dataB), err)
+	}
+
+	if jsonA < jsonB {
+		return -1
+	} else if jsonA > jsonB {
+		return 1
+	}
+
+	return 0
 }

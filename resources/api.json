@@ -122,12 +122,12 @@
         },
         "stats/apirequest/query": {
             "request-type": "*apirequest.QueryRequest",
-            "response-type": "*stats.QueryResponse",
+            "response-type": "*apirequest.QueryResponse",
             "description": "Query the API request stats for the server."
         },
         "stats/course/query": {
             "request-type": "*course.QueryRequest",
-            "response-type": "*stats.QueryResponse",
+            "response-type": "*course.QueryResponse",
             "description": "Query metrics for a specific course.\nOnly the context course can be queried for, the include-course field will be ignored for this endpoint."
         },
         "stats/system/query": {

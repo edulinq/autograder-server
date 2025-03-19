@@ -20,7 +20,7 @@ func (this *testBackend) StoreCourseMetric(record *CourseMetric) error {
 	return nil
 }
 
-func (this *testBackend) GetCourseMetrics(query CourseMetricQuery) ([]*CourseMetric, error) {
+func (this *testBackend) GetCourseMetrics(query MetricQuery) ([]*CourseMetric, error) {
 	return this.course, nil
 }
 
@@ -29,7 +29,7 @@ func (this *testBackend) StoreAPIRequestMetric(record *APIRequestMetric) error {
 	return nil
 }
 
-func (this *testBackend) GetAPIRequestMetrics(query APIRequestMetricQuery) ([]*APIRequestMetric, error) {
+func (this *testBackend) GetAPIRequestMetrics(query MetricQuery) ([]*APIRequestMetric, error) {
 	return this.apiRequest, nil
 }
 

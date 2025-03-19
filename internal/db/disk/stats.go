@@ -32,12 +32,12 @@ func (this *backend) StoreSystemStats(record *stats.SystemMetrics) error {
 	return util.AppendJSONLFile(this.getSystemStatsPath(), record)
 }
 
-func (this *backend) GetCourseMetrics(query stats.CourseMetricQuery) ([]*stats.CourseMetric, error) {
-	if query.IncludeCourseMetricField.CourseID == "" {
+func (this *backend) GetCourseMetrics(query stats.MetricQuery) ([]*stats.CourseMetric, error) {
+	if query.Where == nil || query.Where[stats.COURSE] == "" {
 		return nil, fmt.Errorf("When querying for course metrics, course ID must not be empty.")
 	}
 
-	path := this.getCourseStatsPath(query.IncludeCourseMetricField.CourseID)
+	path := this.getCourseStatsPath(query.Where[stats.COURSE])
 
 	this.contextReadLock(path)
 	defer this.contextReadUnlock(path)
@@ -58,7 +58,7 @@ func (this *backend) StoreCourseMetric(record *stats.CourseMetric) error {
 	return util.AppendJSONLFile(path, record)
 }
 
-func (this *backend) GetAPIRequestMetrics(query stats.APIRequestMetricQuery) ([]*stats.APIRequestMetric, error) {
+func (this *backend) GetAPIRequestMetrics(query stats.MetricQuery) ([]*stats.APIRequestMetric, error) {
 	path := this.getAPIRequestStatsPath()
 
 	this.apiRequestLock.RLock()

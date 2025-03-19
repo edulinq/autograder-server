@@ -1,42 +1,69 @@
 package stats
 
 import (
-	"encoding/json"
 	"fmt"
 	"reflect"
 	"strings"
 
-	"github.com/edulinq/autograder/internal/log"
 	"github.com/edulinq/autograder/internal/util"
 )
 
-type AggregationQuery struct {
-	EnableAggregation bool     `json:"enable-aggregation,omitempty"`
-	GroupByFields     []string `json:"group-by,omitempty"`
-	AggregateField    string   `json:"aggregate,omitempty"`
-}
-
-type QueryResponse struct {
-	Response []map[string]any `json:"response"`
-}
-
 const (
-	COUNT_KEY  = "count"
-	MAX_KEY    = "max"
-	MEAN_KEY   = "mean"
-	MEDIAN_KEY = "median"
-	MIN_KEY    = "min"
+	COUNT    = "count"
+	GROUP_BY = "group-by"
+	OVERVIEW = "overview"
+	STATS    = "stats"
 )
 
-// Aggregate metrics based on groupByFields and the aggregateField.
-func ApplyAggregation(metrics []map[string]any, metricType any, groupByFields []string, aggregateField string) ([]map[string]any, error) {
-	err := validate(metricType, groupByFields, aggregateField)
+type AggregationQuery struct {
+	GroupByFields []string `json:"group-by,omitempty"`
+	OverviewField string   `json:"overview,omitempty"`
+}
+
+func QueryAndAggregateMetrics[T Metric](metrics []T, query MetricQuery) ([]map[string]any, error) {
+	metricMapList, err := queryMetrics(metrics, query.BaseQuery)
 	if err != nil {
-		return nil, fmt.Errorf("Failed to validate data for aggregation: '%v'.", err)
+		return nil, fmt.Errorf("Failed to query metrics: '%v'.", err)
+	}
+
+	if query.OverviewField == "" && query.GroupByFields != nil {
+		return nil, fmt.Errorf("Must include an overview field when grouping by.")
+	}
+
+	// Return the queried metrics if the overview and group by field are empty.
+	if query.OverviewField == "" {
+		return metricMapList, nil
+	}
+
+	metricMapList, err = aggregateMetrics(metrics, query)
+	if err != nil {
+		return nil, fmt.Errorf("Failed to aggregate metrics: '%v'.", err)
+	}
+
+	return metricMapList, nil
+}
+
+func queryMetrics[T Metric](metrics []T, query BaseQuery) ([]map[string]any, error) {
+	metrics = ApplyBaseQuery(metrics, query)
+
+	return toJSONMetricsMapSlice(metrics)
+}
+
+func aggregateMetrics[T Metric](metrics []T, query MetricQuery) ([]map[string]any, error) {
+	var metricType T
+
+	err := validateFields(reflect.TypeOf(metricType), query.AggregationQuery)
+	if err != nil {
+		return nil, err
+	}
+
+	metricMapList, err := toJSONMetricsMapSlice(metrics)
+	if err != nil {
+		return nil, fmt.Errorf("Failed to convert metrics to JSON map slice: '%v'.", err)
 	}
 
 	// Group together metrics based on their groupByFields.
-	groupedMetricBuckets, err := groupTogetherMetrics(metrics, groupByFields, aggregateField)
+	groupedMetricBuckets, err := groupTogetherMetrics(metricMapList, query.AggregationQuery)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to group metrics: '%v'.", err)
 	}
@@ -45,9 +72,9 @@ func ApplyAggregation(metrics []map[string]any, metricType any, groupByFields []
 
 	// Aggregate on metrics that are grouped together.
 	for _, groupedMetrics := range groupedMetricBuckets {
-		result, err := computeGroupAggregation(groupedMetrics, aggregateField, groupByFields)
+		result, err := computeGroupAggregation(groupedMetrics, query)
 		if err != nil {
-			return nil, fmt.Errorf("Failed to compute aggregation for metrics '%v': '%v'.", groupedMetrics, err)
+			return nil, fmt.Errorf("Failed to compute aggregation: '%v'.", err)
 		}
 
 		if result != nil {
@@ -56,6 +83,48 @@ func ApplyAggregation(metrics []map[string]any, metricType any, groupByFields []
 	}
 
 	return aggregatedResults, nil
+}
+
+func toJSONMetricsMapSlice[T Metric](metrics []T) ([]map[string]any, error) {
+	jsonMetrics, err := util.ToJSON(metrics)
+	if err != nil {
+		return nil, err
+	}
+
+	metricMapList := make([]map[string]any, 0, len(metrics))
+	err = util.JSONFromString(jsonMetrics, &metricMapList)
+	if err != nil {
+		return nil, err
+	}
+
+	return metricMapList, nil
+}
+
+func validateFields(metricType reflect.Type, query AggregationQuery) error {
+	for _, field := range query.GroupByFields {
+		if field == query.OverviewField {
+			return fmt.Errorf("Group by and overview fields must be different.")
+		}
+	}
+
+	if metricType.Kind() == reflect.Ptr {
+		metricType = metricType.Elem()
+	}
+
+	jsonTags := make(map[string]bool)
+	extractJSONTags(metricType, jsonTags)
+
+	for _, field := range query.GroupByFields {
+		if !jsonTags[field] {
+			return fmt.Errorf("Field '%s' is not a valid group-by field.", field)
+		}
+	}
+
+	if !jsonTags[query.OverviewField] {
+		return fmt.Errorf("Field '%s' is not a valid overview field.", query.OverviewField)
+	}
+
+	return nil
 }
 
 func extractJSONTags(reflectType reflect.Type, jsonTags map[string]bool) {
@@ -75,57 +144,43 @@ func extractJSONTags(reflectType reflect.Type, jsonTags map[string]bool) {
 	}
 }
 
-// Ensure the groupByFields and aggregateField exist in the metricType.
-func validate(metricType any, groupByFields []string, aggregateField string) error {
-	reflectType := reflect.ValueOf(metricType).Type()
-
-	jsonTags := make(map[string]bool)
-	extractJSONTags(reflectType, jsonTags)
-
-	for _, field := range groupByFields {
-		if !jsonTags[field] {
-			return fmt.Errorf("Failed to validate aggregation query. '%s' is not a valid group-by field.", field)
-		}
-	}
-
-	if !jsonTags[aggregateField] {
-		return fmt.Errorf("Failed to validate aggregation query. '%s' is not a valid aggregate field.", aggregateField)
-	}
-
-	return nil
-}
-
 // Group together metrics based on their groupByFields.
-func groupTogetherMetrics(metrics []map[string]any, groupByFields []string, aggregateField string) (map[string][]map[string]any, error) {
-	groupedMetricBuckets := make(map[string][]map[string]any)
+func groupTogetherMetrics(metrics []map[string]any, query AggregationQuery) (map[string][]map[string]string, error) {
+	groupedMetricBuckets := make(map[string][]map[string]string)
 
 	for _, metric := range metrics {
 		// Skip grouping this metric if it doesn't contain all groupByFields and the aggregateField.
-		if !hasAllNeededFields(metric, groupByFields, aggregateField) {
+		if !hasAllNeededFields(metric, query) {
 			continue
 		}
 
+		// Turn all values into strings for aggregation.
+		stringMetric := make(map[string]string, len(metric))
+		for field, value := range metric {
+			stringMetric[field] = fmt.Sprintf("%v", value)
+		}
+
 		var groupFieldValues []string
-		for _, field := range groupByFields {
+		for _, field := range query.GroupByFields {
 			groupFieldValues = append(groupFieldValues, fmt.Sprintf("%v", metric[field]))
 		}
 
-		bucketKey := strings.Join(groupFieldValues, "|")
-		groupedMetricBuckets[bucketKey] = append(groupedMetricBuckets[bucketKey], metric)
+		bucketKey := strings.Join(groupFieldValues, "::")
+		groupedMetricBuckets[bucketKey] = append(groupedMetricBuckets[bucketKey], stringMetric)
 	}
 
 	return groupedMetricBuckets, nil
 }
 
-func hasAllNeededFields(metric map[string]any, groupByFields []string, aggregateField string) bool {
-	for _, field := range groupByFields {
+func hasAllNeededFields(metric map[string]any, query AggregationQuery) bool {
+	for _, field := range query.GroupByFields {
 		_, exists := metric[field]
 		if !exists {
 			return false
 		}
 	}
 
-	_, exists := metric[aggregateField]
+	_, exists := metric[query.OverviewField]
 	if !exists {
 		return false
 	}
@@ -134,79 +189,91 @@ func hasAllNeededFields(metric map[string]any, groupByFields []string, aggregate
 }
 
 // Calculate aggregations for a group of metrics.
-func computeGroupAggregation(groupedMetrics []map[string]any, aggregateField string, groupByFields []string) (map[string]any, error) {
+func computeGroupAggregation(groupedMetrics []map[string]string, query MetricQuery) (map[string]any, error) {
 	if len(groupedMetrics) == 0 {
 		return nil, nil
 	}
 
+	aggregatedResults, err := extractFields(groupedMetrics[0], query)
+	if err != nil {
+		return nil, fmt.Errorf("Failed to extract group by fields from metric '%v': '%v'.", groupedMetrics[0], err)
+	}
+
+	// Determine if aggregation should be numeric or non-numeric.
+	isNumeric := canAggregateAsNumeric(groupedMetrics[0], query.OverviewField)
+
+	if isNumeric {
+		return aggregateNumeric(groupedMetrics, aggregatedResults, query.OverviewField)
+	} else {
+		return aggregateNonNumeric(groupedMetrics, aggregatedResults)
+	}
+}
+
+func extractFields(metric map[string]string, query MetricQuery) (map[string]any, error) {
 	aggregatedResults := make(map[string]any)
+	groupByValues := make(map[string]string)
 
-	// Use the first metric in the group to extract the group-by field values.
-	firstMetric := groupedMetrics[0]
-	for _, field := range groupByFields {
-		value, exists := firstMetric[field]
-		if !exists {
-			return nil, fmt.Errorf("Failed to get the group-by field '%s' for metric '%v'.", field, firstMetric)
-		}
-
-		aggregatedResults[field] = value
+	for _, field := range query.GroupByFields {
+		value := metric[field]
+		groupByValues[field] = value
 	}
 
-	var values []float64
-	var totalCount int = 0
-
-	for _, metric := range groupedMetrics {
-		aggregateValue, exists := metric[aggregateField]
-		if !exists {
-			// Skip aggregating this metric if it doesn't have the aggregation field.
-			continue
-		}
-
-		totalCount++
-
-		aggregateValueString := fmt.Sprintf("%v", aggregateValue)
-		numericValue, err := util.StrToFloat(aggregateValueString)
-		// Only append to values if the aggregateValue was a number.
-		if err == nil {
-			values = append(values, numericValue)
-		}
-	}
-
-	if totalCount == 0 {
-		return nil, nil
-	}
-
-	aggregatedResults[COUNT_KEY] = totalCount
-
-	// Only add additional stats if aggregation was done on numeric values.
-	if len(values) > 0 {
-		stats := util.ComputeAggregates(values)
-
-		aggregatedResults[MEAN_KEY] = stats.Mean
-		aggregatedResults[MEDIAN_KEY] = stats.Median
-		aggregatedResults[MIN_KEY] = stats.Min
-		aggregatedResults[MAX_KEY] = stats.Max
-	}
+	aggregatedResults[GROUP_BY] = groupByValues
+	aggregatedResults[OVERVIEW] = query.OverviewField
 
 	return aggregatedResults, nil
 }
 
-func QuerySortFuncForTesting(recordA, recordB any) int {
-	jsonA, err := json.Marshal(recordA)
+func canAggregateAsNumeric(metric map[string]string, overviewField string) bool {
+	aggregateValue := metric[overviewField]
+	_, err := util.StrToFloat(aggregateValue)
+	if err == nil {
+		return true
+	}
+
+	return false
+}
+
+func aggregateNumeric(groupedMetrics []map[string]string, aggregateMap map[string]any, overviewField string) (map[string]any, error) {
+	var values []float64
+	statsMap := make(map[string]any)
+
+	for _, metric := range groupedMetrics {
+		aggregateValue := metric[overviewField]
+
+		numericValue, err := util.StrToFloat(aggregateValue)
+		if err != nil {
+			return nil, fmt.Errorf("Failed to convert string to float: '%v'.", err)
+		}
+
+		values = append(values, numericValue)
+	}
+
+	stats := util.ComputeAggregates(values)
+	statsJSON, err := util.ToJSON(stats)
 	if err != nil {
-		log.Fatal("Failed to marshal recordA.", log.NewAttr("recordA", recordA), err)
+		return nil, fmt.Errorf("Failed to convert stats to JSON: '%v'.", err)
 	}
 
-	jsonB, err := json.Marshal(recordB)
+	statsJSONMap, err := util.JSONMapFromString(statsJSON)
 	if err != nil {
-		log.Fatal("Failed to marshal recordB.", log.NewAttr("recordB", recordB), err)
+		return nil, fmt.Errorf("Failed to convert JSON string to JSON map: '%v'.", err)
 	}
 
-	if string(jsonA) < string(jsonB) {
-		return -1
-	} else if string(jsonA) > string(jsonB) {
-		return 1
+	for aggregateKey, aggregateValue := range statsJSONMap {
+		statsMap[aggregateKey] = aggregateValue
 	}
 
-	return 0
+	aggregateMap[STATS] = statsMap
+
+	return aggregateMap, nil
+}
+
+func aggregateNonNumeric(groupedMetrics []map[string]string, aggregateMap map[string]any) (map[string]any, error) {
+	statsMap := make(map[string]any)
+
+	statsMap[COUNT] = len(groupedMetrics)
+	aggregateMap[STATS] = statsMap
+
+	return aggregateMap, nil
 }
