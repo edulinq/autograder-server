@@ -43,5 +43,4 @@ func HandleQuery(request *QueryRequest) (*QueryResponse, *core.APIError) {
 	}
 
 	return &response, nil
-
 }
