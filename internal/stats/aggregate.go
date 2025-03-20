@@ -30,7 +30,7 @@ func QueryAndAggregateMetrics[T Metric](metrics []T, query MetricQuery) ([]map[s
 		return nil, fmt.Errorf("Must include an overview field when grouping by.")
 	}
 
-	// Return the queried metrics if the overview and group by field are empty.
+	// Return the queried metrics if the overview and group by fields are empty.
 	if query.OverviewField == "" {
 		return metricMapList, nil
 	}
@@ -149,7 +149,7 @@ func groupTogetherMetrics(metrics []map[string]any, query AggregationQuery) (map
 	groupedMetricBuckets := make(map[string][]map[string]string)
 
 	for _, metric := range metrics {
-		// Skip grouping this metric if it doesn't contain all groupByFields and the aggregateField.
+		// Skip grouping this metric if it doesn't contain all groupByFields and the overviewField.
 		if !hasAllNeededFields(metric, query) {
 			continue
 		}

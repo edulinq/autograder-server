@@ -148,33 +148,33 @@ func TestAggregation(test *testing.T) {
 			stats.MetricQuery{
 				AggregationQuery: stats.AggregationQuery{
 					GroupByFields: []string{"course", "assignment"},
-					OverviewField: "locator",
+					OverviewField: "user",
 				},
 			},
 			[]map[string]any{
 				{
 					"group-by": map[string]any{
-						"assignment": "A3",
-						"course":     "C3",
-					},
-					"overview": "locator",
-					"stats":    map[string]any{"count": 2, "max": 33, "mean": 33, "median": 33, "min": 33},
-				},
-				{
-					"group-by": map[string]any{
 						"assignment": "A1",
 						"course":     "C1",
 					},
-					"overview": "locator",
-					"stats":    map[string]any{"count": 1, "max": 11, "mean": 11, "median": 11, "min": 11},
+					"overview": "user",
+					"stats":    map[string]any{"count": 1},
 				},
 				{
 					"group-by": map[string]any{
 						"assignment": "A1",
 						"course":     "C2",
 					},
-					"overview": "locator",
-					"stats":    map[string]any{"count": 1, "max": 22, "mean": 22, "median": 22, "min": 22},
+					"overview": "user",
+					"stats":    map[string]any{"count": 1},
+				},
+				{
+					"group-by": map[string]any{
+						"assignment": "A3",
+						"course":     "C3",
+					},
+					"overview": "user",
+					"stats":    map[string]any{"count": 2},
 				},
 			},
 		},

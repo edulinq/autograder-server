@@ -128,7 +128,7 @@
         "stats/course/query": {
             "request-type": "*course.QueryRequest",
             "response-type": "*course.QueryResponse",
-            "description": "Query metrics for a specific course.\nOnly the context course can be queried for, the include-course field will be ignored for this endpoint."
+            "description": "Query metrics for a specific course.\nOnly the context course can be queried for.\nAny course specified in the MetricQuery will be ignored for this endpoint."
         },
         "stats/system/query": {
             "description": "Query the system stats for the server.",

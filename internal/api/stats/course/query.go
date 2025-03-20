@@ -18,13 +18,14 @@ type QueryResponse struct {
 }
 
 // Query metrics for a specific course.
-// Only the context course can be queried for, the include-course field will be ignored for this endpoint.
+// Only the context course can be queried for.
+// Any course specified in the MetricQuery will be ignored for this endpoint.
 func HandleQuery(request *QueryRequest) (*QueryResponse, *core.APIError) {
 	if request.Where == nil {
 		request.Where = make(map[string]string)
 	}
 
-	// The request must be for the given course.
+	// The request must be for the context course.
 	request.Where[stats.COURSE] = request.Course.ID
 
 	records, err := db.GetCourseMetrics(request.MetricQuery)
