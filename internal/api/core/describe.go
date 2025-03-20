@@ -14,18 +14,19 @@ var apiDescription APIDescription
 
 type APIDescription struct {
 	Endpoints map[string]EndpointDescription `json:"endpoints"`
-	Types     map[string]TypeDescription     `json:"types"`
 }
 
 type EndpointDescription struct {
-	RequestType  string `json:"request-type"`
-	ResponseType string `json:"response-type"`
-	Description  string `json:"description"`
+	RequestType  string            `json:"request-type"`
+	ResponseType string            `json:"response-type"`
+	Description  string            `json:"description"`
+	InputFields  map[string]string `json:"input-fields"`
+	OutputFields map[string]string `json:"output-fields"`
 }
 
 type TypeDescription struct {
-	Fields map[string]string `json:"fields,omitempty"`
-	Alias  string            `json:"alias,omitempty"`
+	Fields map[string]string
+	Alias  string
 }
 
 func SetAPIDescription(description APIDescription) {

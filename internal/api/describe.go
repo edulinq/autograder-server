@@ -5,12 +5,13 @@ import (
 	"reflect"
 
 	"github.com/edulinq/autograder/internal/api/core"
+	"github.com/edulinq/autograder/internal/util"
 )
 
 // Routes must be validated before calling Describe().
 func Describe(routes []core.Route) (*core.APIDescription, error) {
 	endpointMap := make(map[string]core.EndpointDescription)
-	typeSet := make(map[string]core.TypeDescription)
+	typeMap := make(map[string]core.TypeDescription)
 
 	var errs error = nil
 	var err error
@@ -28,83 +29,137 @@ func Describe(routes []core.Route) (*core.APIDescription, error) {
 			}
 		}
 
-		addType(apiRoute.RequestType, typeSet)
-		addType(apiRoute.ResponseType, typeSet)
+		// TODO: Change to discoverType?
+		describeType(apiRoute.RequestType, typeMap)
+		describeType(apiRoute.ResponseType, typeMap)
+
+		inputFields := resolveType(apiRoute.RequestType, typeMap)
+		outputFields := resolveType(apiRoute.ResponseType, typeMap)
 
 		endpointMap[apiRoute.GetBasePath()] = core.EndpointDescription{
 			RequestType:  apiRoute.RequestType.String(),
 			ResponseType: apiRoute.ResponseType.String(),
 			Description:  apiRoute.Description,
+			InputFields:  inputFields,
+			OutputFields: outputFields,
 		}
 	}
 
 	apiDescription := core.APIDescription{
 		Endpoints: endpointMap,
-		Types:     typeSet,
 	}
 
 	return &apiDescription, errs
 }
 
-func addType(endpointType reflect.Type, typeSet map[string]core.TypeDescription) {
-	if endpointType == nil {
+func describeType(customType reflect.Type, typeMap map[string]core.TypeDescription) {
+	if customType == nil {
 		return
 	}
 
-	if endpointType.Kind() == reflect.Pointer {
-		endpointType = endpointType.Elem()
+	if customType.Kind() == reflect.Pointer {
+		customType = customType.Elem()
 	}
 
-	// Skip built in types.
-	if endpointType.PkgPath() == "" {
+	// Skip built-in types.
+	if customType.PkgPath() == "" {
 		return
 	}
 
-	typeName := endpointType.String()
-	_, ok := typeSet[typeName]
+	typeID := getTypeID(customType)
+	// TODO: May add PkgPath to avoid type conflicts.
+	// We won't show this to the user so it's okay.
+	// Can we use the type itself as the key?
+	// If not, can we use the pointer to the type object?
+	// typeName := customType.String()
+	_, ok := typeMap[typeID]
 	if ok {
 		return
 	}
 
-	if endpointType.Kind() != reflect.Struct {
-		typeSet[typeName] = core.TypeDescription{
-			Alias: endpointType.Kind().String(),
+	// Custom types that are not structs are an alias for another type.
+	if customType.Kind() != reflect.Struct {
+		typeMap[typeID] = core.TypeDescription{
+			Alias: customType.Kind().String(),
 		}
 		return
 	}
 
-	typeSet[typeName] = core.TypeDescription{
-		Fields: describeType(endpointType, typeSet),
-	}
-}
+	fieldDescriptions := make(map[string]string)
 
-func describeType(reflectType reflect.Type, typeSet map[string]core.TypeDescription) map[string]string {
-	if reflectType == nil {
-		return map[string]string{}
-	}
-
-	if reflectType.Kind() == reflect.Pointer {
-		reflectType = reflectType.Elem()
-	}
-
-	if reflectType.Kind() != reflect.Struct {
-		return map[string]string{}
-	}
-
-	description := make(map[string]string)
-
-	for i := 0; i < reflectType.NumField(); i++ {
-		field := reflectType.Field(i)
+	for i := 0; i < customType.NumField(); i++ {
+		field := customType.Field(i)
 		fieldType := field.Type
 
 		if fieldType.Kind() == reflect.Pointer || fieldType.Kind() == reflect.Slice || fieldType.Kind() == reflect.Array {
 			fieldType = fieldType.Elem()
 		}
 
-		description[field.Name] = field.Type.String()
+		fieldDescriptions[field.Name] = field.Type.String()
 
-		addType(fieldType, typeSet)
+		describeType(fieldType, typeMap)
 	}
 
-	return description
+	typeMap[typeID] = core.TypeDescription{
+		Fields: fieldDescriptions,
+	}
+}
+
+func resolveType(customType reflect.Type, typeMap map[string]core.TypeDescription) map[string]string {
+	resolvedFields := make(map[string]string)
+
+	if customType == nil {
+		return resolvedFields
+	}
+
+	if customType.Kind() == reflect.Pointer {
+		customType = customType.Elem()
+	}
+
+	// If it's a built-in type, return it directly.
+	if customType.PkgPath() == "" {
+		return map[string]string{"value": customType.String()}
+	}
+
+	if customType.Kind() == reflect.Struct {
+		for i := 0; i < customType.NumField(); i++ {
+			field := customType.Field(i)
+
+			jsonTag := util.JSONFieldName(field)
+			if jsonTag == "" {
+				continue
+			}
+
+			fieldType := field.Type
+
+			for fieldType.Kind() == reflect.Pointer || fieldType.Kind() == reflect.Slice || fieldType.Kind() == reflect.Array {
+				fieldType = fieldType.Elem()
+			}
+
+			baseType := fieldType.String()
+			typeID := getTypeID(fieldType)
+
+			// Resolve complex types by looking through the type map.
+			typeDescription, ok := typeMap[typeID]
+			if ok {
+				if typeDescription.Alias != "" {
+					baseType = typeDescription.Alias
+				} else if len(typeDescription.Fields) > 0 {
+					nestedFields := resolveType(fieldType, typeMap)
+					for nestedTag, nestedType := range nestedFields {
+						resolvedFields[nestedTag] = nestedType
+					}
+					continue
+				}
+			}
+
+			resolvedFields[jsonTag] = baseType
+		}
+	}
+
+	return resolvedFields
+}
+
+func getTypeID(customType reflect.Type) string {
+	return customType.PkgPath() + "/" + customType.String()
 }

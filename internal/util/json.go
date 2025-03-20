@@ -148,8 +148,8 @@ func JSONFieldName(field reflect.StructField) string {
 			return ""
 		}
 
-		// This special option is allowed.
-		if part == "omitempty" {
+		// These special options are allowed.
+		if part == "omitempty" || part == "omitzero" {
 			continue
 		}
 
