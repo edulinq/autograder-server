@@ -127,7 +127,9 @@ func (this *FileOperation) String() string {
 }
 
 // Create a string that represents invoking this operation on a UNIX command-line.
-func (this *FileOperation) ToUnix(baseDir string) string {
+// It is assumed that the commands output from here will only be run in a Docker container.
+// Therefore, containment will not be checked (since it is already sandboxed).
+func (this *FileOperation) ToUnixForDocker(baseDir string) string {
 	parts := []string(*this)
 	command := parts[0]
 
@@ -184,18 +186,22 @@ func (this *FileOperation) Exec(baseDir string) error {
 		sourcePath := resolvePath(parts[1], baseDir, false)
 		destPath := resolvePath(parts[2], baseDir, false)
 
-		return handleGlobFileOperation(sourcePath, destPath, CopyDirent)
+		return handleGlobFileOperation(sourcePath, destPath, baseDir, CopyDirent)
 	} else if command == FILE_OP_LONG_MOVE {
 		sourcePath := resolvePath(parts[1], baseDir, false)
 		destPath := resolvePath(parts[2], baseDir, false)
 
-		return handleGlobFileOperation(sourcePath, destPath, MoveDirent)
+		return handleGlobFileOperation(sourcePath, destPath, baseDir, MoveDirent)
 	} else if command == FILE_OP_LONG_MKDIR {
 		path := resolvePath(parts[1], baseDir, false)
+		if !PathHasParentOrSelf(path, baseDir) {
+			return fmt.Errorf("Target path breaks containment: '%s'.", path)
+		}
+
 		return MkDir(path)
 	} else if command == FILE_OP_LONG_REMOVE {
 		path := resolvePath(parts[1], baseDir, false)
-		return handleGlobRemove(path)
+		return handleGlobRemove(path, baseDir)
 	} else {
 		return fmt.Errorf("Unknown file operation: '%s'.", command)
 	}
@@ -237,14 +243,19 @@ func resolvePath(path string, baseDir string, forceUnix bool) string {
 			path = gopath.Join(baseDir, path)
 		} else {
 			path = filepath.Join(baseDir, path)
+			path = ShouldNormalizePath(path)
 		}
 	}
 
 	return path
 }
 
-func handleGlobFileOperation(sourceGlob string, dest string, operation func(string, string) error) error {
-	sourcePaths, err := prepForGlobs(sourceGlob, dest)
+func handleGlobFileOperation(sourceGlob string, dest string, baseDir string, operation func(string, string) error) error {
+	if !PathHasParentOrSelf(dest, baseDir) {
+		return fmt.Errorf("Dest path breaks containment: '%s'.", dest)
+	}
+
+	sourcePaths, err := prepForGlobs(sourceGlob, dest, baseDir)
 	if err != nil {
 		return fmt.Errorf("Failed to prep glob path '%s' for an operation: '%w'.", sourceGlob, err)
 	}
@@ -265,13 +276,24 @@ func handleGlobFileOperation(sourceGlob string, dest string, operation func(stri
 	return errs
 }
 
-func handleGlobRemove(path string) error {
+func handleGlobRemove(path string, baseDir string) error {
 	paths, err := filepath.Glob(path)
 	if err != nil {
 		return fmt.Errorf("Failed to resolve glob path '%s': '%w'.", path, err)
 	}
 
 	var errs error
+
+	// Ensure that all the paths are contained.
+	for _, path := range paths {
+		if !PathHasParentOrSelf(path, baseDir) {
+			errs = errors.Join(errs, fmt.Errorf("Target path breaks containment: '%s'.", path))
+		}
+	}
+
+	if errs != nil {
+		return errs
+	}
 
 	for _, path := range paths {
 		err = RemoveDirent(path)
@@ -283,7 +305,7 @@ func handleGlobRemove(path string) error {
 	return errs
 }
 
-func prepForGlobs(globPath string, destPath string) ([]string, error) {
+func prepForGlobs(globPath string, destPath string, baseDir string) ([]string, error) {
 	sourcePaths, err := filepath.Glob(globPath)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to resolve glob path '%s': '%w'.", globPath, err)
@@ -291,6 +313,18 @@ func prepForGlobs(globPath string, destPath string) ([]string, error) {
 
 	if len(sourcePaths) == 0 {
 		return nil, fmt.Errorf("Unable to find source path: '%s'.", globPath)
+	}
+
+	// Ensure that all the paths are contained.
+	var errs error
+	for _, path := range sourcePaths {
+		if !PathHasParentOrSelf(path, baseDir) {
+			errs = errors.Join(errs, fmt.Errorf("Source path breaks containment: '%s'.", path))
+		}
+	}
+
+	if errs != nil {
+		return nil, errs
 	}
 
 	// If there are multiple source paths, dest path must be a directory.

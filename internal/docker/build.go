@@ -207,7 +207,7 @@ func writePostSubmissionOpsScript(imageInfo *ImageInfo, path string) error {
 	lines = append(lines, fmt.Sprintf("# Post-Submission operations for '%s'.\n", imageInfo.Name))
 
 	for _, op := range imageInfo.PostSubmissionFileOperations {
-		lines = append(lines, op.ToUnix("."))
+		lines = append(lines, op.ToUnixForDocker("."))
 	}
 
 	err := util.WriteFile(strings.Join(lines, "\n"), path)
