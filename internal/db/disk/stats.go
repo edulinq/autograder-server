@@ -12,7 +12,7 @@ const SYSTEM_STATS_FILENAME = "stats.jsonl"
 const COURSE_STATS_FILENAME = "course-stats.jsonl"
 const API_REQUEST_STATS_FILENAME = "api-request-stats.jsonl"
 
-func (this *backend) GetSystemStats(query stats.Query) ([]*stats.SystemMetrics, error) {
+func (this *backend) GetSystemStats(query stats.MetricQuery) ([]*stats.SystemMetrics, error) {
 	path := this.getSystemStatsPath()
 
 	this.statsLock.RLock()

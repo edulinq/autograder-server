@@ -11,7 +11,7 @@ func (this *testBackend) StoreSystemStats(record *SystemMetrics) error {
 	return nil
 }
 
-func (this *testBackend) GetSystemStats(query Query) ([]*SystemMetrics, error) {
+func (this *testBackend) GetSystemStats(query MetricQuery) ([]*SystemMetrics, error) {
 	return this.system, nil
 }
 

@@ -52,56 +52,7 @@ func TestQuery(test *testing.T) {
 			},
 		},
 
-		// Include one field.
-		{
-			"server-admin",
-			"",
-			stats.MetricQuery{Where: map[string]string{"assignment": "A2"}},
-			[]map[string]any{
-				{"assignment": "A2", "course": "course101", "duration": 200, "timestamp": 200, "type": "", "user": "U1"},
-			},
-		},
-		{
-			"server-admin",
-			"",
-			stats.MetricQuery{Where: map[string]string{"assignment": "ZZZ"}},
-			nil,
-		},
-		{
-			"server-admin",
-			"",
-			stats.MetricQuery{Where: map[string]string{"user": "U2"}},
-			[]map[string]any{
-				{"assignment": "A3", "course": "course101", "duration": 300, "timestamp": 300, "type": "grading-time", "user": "U2"},
-			},
-		},
-		{
-			"server-admin",
-			"",
-			stats.MetricQuery{Where: map[string]string{"type": stats.CourseMetricTypeGradingTime}},
-			[]map[string]any{
-				{"assignment": "A1", "course": "course101", "duration": 100, "timestamp": 100, "type": "grading-time", "user": "U1"},
-				{"assignment": "A3", "course": "course101", "duration": 300, "timestamp": 300, "type": "grading-time", "user": "U2"},
-			},
-		},
-
-		// Include multiple fields.
-		{
-			"server-admin",
-			"",
-			stats.MetricQuery{Where: map[string]string{"user": "U1", "assignment": "A2"}},
-			[]map[string]any{
-				{"assignment": "A2", "course": "course101", "duration": 200, "timestamp": 200, "type": "", "user": "U1"},
-			},
-		},
-
 		// Error.
-		{
-			"server-admin",
-			"-304",
-			stats.MetricQuery{AggregationQuery: stats.AggregationQuery{GroupByFields: []string{"course"}}},
-			nil,
-		},
 		{"course-student", "-020", stats.MetricQuery{}, nil},
 		{"server-user", "-040", stats.MetricQuery{}, nil},
 	}
@@ -138,8 +89,8 @@ func TestQuery(test *testing.T) {
 		var responseContent QueryResponse
 		util.MustJSONFromString(util.MustToJSON(response.Content), &responseContent)
 
-		actualSlice := make([]any, len(responseContent.Response))
-		for i, data := range responseContent.Response {
+		actualSlice := make([]any, len(responseContent.Results))
+		for i, data := range responseContent.Results {
 			actualSlice[i] = data
 		}
 
@@ -152,7 +103,7 @@ func TestQuery(test *testing.T) {
 		actual := util.MustToGenericJSONSlice(expectedSlice, util.JSONCompareFunc)
 
 		if !reflect.DeepEqual(expected, actual) {
-			test.Errorf("Case %d: Response is not as expected. Expected: '%v', Actual: '%v'.", i, util.MustToJSONIndent(testCase.expectedResults), util.MustToJSONIndent(responseContent.Response))
+			test.Errorf("Case %d: Response is not as expected. Expected: '%v', Actual: '%v'.", i, util.MustToJSONIndent(testCase.expectedResults), util.MustToJSONIndent(responseContent.Results))
 			continue
 		}
 	}

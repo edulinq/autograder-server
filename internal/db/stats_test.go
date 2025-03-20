@@ -23,7 +23,7 @@ func (this *DBTests) DBTestStoreSystemStats(test *testing.T) {
 		NetBytesReceived: 4,
 	}
 
-	query := stats.BaseQuery{}
+	query := stats.MetricQuery{}
 
 	err := StoreSystemStats(&testRecord)
 	if err != nil {

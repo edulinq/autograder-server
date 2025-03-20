@@ -11,6 +11,8 @@ import (
 	"github.com/edulinq/autograder/internal/util"
 )
 
+// Since all MetricQuery filtering happens along the same code path,
+// only one metric needs to test filtering.
 func TestQuery(test *testing.T) {
 	db.ResetForTesting()
 	defer db.ResetForTesting()
@@ -25,7 +27,7 @@ func TestQuery(test *testing.T) {
 		{
 			"server-admin",
 			"",
-			stats.MetricQuery{AggregationQuery: stats.AggregationQuery{}},
+			stats.MetricQuery{},
 			[]map[string]any{
 				{"assignment": "A1", "course": "C1", "duration": 100, "endpoint": "E1", "locator": "11", "sender": "1", "timestamp": 100, "user": "U1"},
 				{"assignment": "A1", "course": "C2", "duration": 200, "endpoint": "E2", "locator": "22", "sender": "2", "timestamp": 200, "user": "U2"},
@@ -110,6 +112,12 @@ func TestQuery(test *testing.T) {
 			stats.MetricQuery{Where: map[string]string{"locator": "ZZZ"}},
 			nil,
 		},
+		{
+			"server-admin",
+			"",
+			stats.MetricQuery{Where: map[string]string{"ZZZ": "ZZZ"}},
+			nil,
+		},
 
 		// Include multiple fields.
 		{
@@ -119,14 +127,6 @@ func TestQuery(test *testing.T) {
 			[]map[string]any{
 				{"assignment": "A1", "course": "C2", "duration": 200, "endpoint": "E2", "locator": "22", "sender": "2", "timestamp": 200, "user": "U2"},
 			},
-		},
-
-		// No aggregation field.
-		{
-			"server-admin",
-			"-302",
-			stats.MetricQuery{AggregationQuery: stats.AggregationQuery{GroupByFields: []string{"course"}}},
-			nil,
 		},
 
 		// Error.

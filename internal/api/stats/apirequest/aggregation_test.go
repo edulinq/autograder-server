@@ -184,7 +184,7 @@ func TestAggregation(test *testing.T) {
 
 		// Invalid overview field.
 		{"server-admin",
-			"-302",
+			"-303",
 			stats.MetricQuery{
 				AggregationQuery: stats.AggregationQuery{
 					GroupByFields: []string{"course", "assignment"},
@@ -196,7 +196,7 @@ func TestAggregation(test *testing.T) {
 
 		// Invalid group by field.
 		{"server-admin",
-			"-302",
+			"-303",
 			stats.MetricQuery{
 				AggregationQuery: stats.AggregationQuery{
 					GroupByFields: []string{"zzz"},
@@ -209,7 +209,7 @@ func TestAggregation(test *testing.T) {
 		// Same field in group by and overview field.
 		{
 			"server-admin",
-			"-302",
+			"-303",
 			stats.MetricQuery{
 				AggregationQuery: stats.AggregationQuery{
 					GroupByFields: []string{"course", "assignment"},
@@ -222,7 +222,7 @@ func TestAggregation(test *testing.T) {
 		// Group by field with no overview field.
 		{
 			"server-admin",
-			"-302",
+			"-303",
 			stats.MetricQuery{
 				AggregationQuery: stats.AggregationQuery{
 					GroupByFields: []string{"assignment"},

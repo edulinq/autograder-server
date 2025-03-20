@@ -14,7 +14,7 @@ type QueryRequest struct {
 }
 
 type QueryResponse struct {
-	Response []map[string]any `json:"response"`
+	Results []map[string]any `json:"results"`
 }
 
 // Query metrics for a specific course.
@@ -29,16 +29,16 @@ func HandleQuery(request *QueryRequest) (*QueryResponse, *core.APIError) {
 
 	records, err := db.GetCourseMetrics(request.MetricQuery)
 	if err != nil {
-		return nil, core.NewUserContextInternalError("-303", &request.APIRequestUserContext, "Failed to get course metrics.").Err(err)
+		return nil, core.NewUserContextInternalError("-304", &request.APIRequestUserContext, "Failed to get course metrics.").Err(err)
 	}
 
 	aggregatedResults, err := stats.QueryAndAggregateMetrics(records, request.MetricQuery)
 	if err != nil {
-		return nil, core.NewUserContextInternalError("-304", &request.APIRequestUserContext, err.Error())
+		return nil, core.NewUserContextInternalError("-305", &request.APIRequestUserContext, err.Error())
 	}
 
 	response := QueryResponse{
-		Response: aggregatedResults,
+		Results: aggregatedResults,
 	}
 
 	return &response, nil

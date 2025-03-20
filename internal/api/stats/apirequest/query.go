@@ -21,12 +21,12 @@ type QueryResponse struct {
 func HandleQuery(request *QueryRequest) (*QueryResponse, *core.APIError) {
 	records, err := db.GetAPIRequestMetrics(request.MetricQuery)
 	if err != nil {
-		return nil, core.NewUserContextInternalError("-301", &request.APIRequestUserContext, "Failed to get API request metrics.").Err(err)
+		return nil, core.NewUserContextInternalError("-302", &request.APIRequestUserContext, "Failed to get API request metrics.").Err(err)
 	}
 
 	aggregatedResults, err := stats.QueryAndAggregateMetrics(records, request.MetricQuery)
 	if err != nil {
-		return nil, core.NewUserContextInternalError("-302", &request.APIRequestUserContext, err.Error())
+		return nil, core.NewUserContextInternalError("-303", &request.APIRequestUserContext, err.Error())
 	}
 
 	response := QueryResponse{

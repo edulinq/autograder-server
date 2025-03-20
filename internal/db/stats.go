@@ -6,7 +6,7 @@ import (
 	"github.com/edulinq/autograder/internal/stats"
 )
 
-func GetSystemStats(query stats.Query) ([]*stats.SystemMetrics, error) {
+func GetSystemStats(query stats.MetricQuery) ([]*stats.SystemMetrics, error) {
 	if backend == nil {
 		return nil, fmt.Errorf("Database has not been opened.")
 	}
