@@ -136,8 +136,18 @@ func runPairwiseAnalysis(options AnalysisOptions, keys []model.PairwiseKey, init
 	}
 
 	lockKey := fmt.Sprintf("analysis-pairwise-course-%s", lockCourseID)
-	lockmanager.Lock(lockKey)
+	noLockWait := lockmanager.Lock(lockKey)
 	defer lockmanager.Unlock(lockKey)
+
+	// If we had to wait for the lock, then check again for cached results.
+	// If there are multiple requests queued up,
+	// it will be faster to do a bulk check for cached results instead of checking each one individually.
+	if !noLockWait {
+		_, keys, err = getCachedPairwiseResults(options)
+		if err != nil {
+			return nil, fmt.Errorf("Failed to re-check result cache before run: '%w'.", err)
+		}
+	}
 
 	// If we are overwriting the cache, then remove all the old entries.
 	if options.OverwriteCache && !options.DryRun {
