@@ -3,6 +3,7 @@ package api
 import (
 	"errors"
 	"reflect"
+	"strings"
 
 	"github.com/edulinq/autograder/internal/api/core"
 	"github.com/edulinq/autograder/internal/util"
@@ -29,12 +30,8 @@ func Describe(routes []core.Route) (*core.APIDescription, error) {
 			}
 		}
 
-		// TODO: Change to discoverType?
-		describeType(apiRoute.RequestType, typeMap)
-		describeType(apiRoute.ResponseType, typeMap)
-
-		inputFields := resolveType(apiRoute.RequestType, typeMap)
-		outputFields := resolveType(apiRoute.ResponseType, typeMap)
+		inputFields, _ := simplifyType(apiRoute.RequestType, typeMap)
+		outputFields, _ := simplifyType(apiRoute.ResponseType, typeMap)
 
 		endpointMap[apiRoute.GetBasePath()] = core.EndpointDescription{
 			RequestType:  apiRoute.RequestType.String(),
@@ -52,114 +49,110 @@ func Describe(routes []core.Route) (*core.APIDescription, error) {
 	return &apiDescription, errs
 }
 
-func describeType(customType reflect.Type, typeMap map[string]core.TypeDescription) {
+func simplifyType(customType reflect.Type, typeMap map[string]core.TypeDescription) (map[string]string, string) {
 	if customType == nil {
-		return
+		return map[string]string{}, "<nil>"
 	}
 
 	if customType.Kind() == reflect.Pointer {
 		customType = customType.Elem()
-	}
-
-	// Skip built-in types.
-	if customType.PkgPath() == "" {
-		return
 	}
 
 	typeID := getTypeID(customType)
-	// TODO: May add PkgPath to avoid type conflicts.
-	// We won't show this to the user so it's okay.
-	// Can we use the type itself as the key?
-	// If not, can we use the pointer to the type object?
-	// typeName := customType.String()
-	_, ok := typeMap[typeID]
+	typeDescription, ok := typeMap[typeID]
 	if ok {
-		return
+		return typeDescription, ""
 	}
 
-	// Custom types that are not structs are an alias for another type.
-	if customType.Kind() != reflect.Struct {
-		typeMap[typeID] = core.TypeDescription{
-			Alias: customType.Kind().String(),
-		}
-		return
-	}
+	simplifiedTypes := make(map[string]string)
 
-	fieldDescriptions := make(map[string]string)
-
-	for i := 0; i < customType.NumField(); i++ {
-		field := customType.Field(i)
-		fieldType := field.Type
-
-		if fieldType.Kind() == reflect.Pointer || fieldType.Kind() == reflect.Slice || fieldType.Kind() == reflect.Array {
-			fieldType = fieldType.Elem()
-		}
-
-		fieldDescriptions[field.Name] = field.Type.String()
-
-		describeType(fieldType, typeMap)
-	}
-
-	typeMap[typeID] = core.TypeDescription{
-		Fields: fieldDescriptions,
-	}
-}
-
-func resolveType(customType reflect.Type, typeMap map[string]core.TypeDescription) map[string]string {
-	resolvedFields := make(map[string]string)
-
-	if customType == nil {
-		return resolvedFields
-	}
-
-	if customType.Kind() == reflect.Pointer {
-		customType = customType.Elem()
-	}
-
-	// If it's a built-in type, return it directly.
-	if customType.PkgPath() == "" {
-		return map[string]string{"value": customType.String()}
-	}
-
-	if customType.Kind() == reflect.Struct {
+	switch customType.Kind() {
+	case reflect.Slice, reflect.Array:
+		return simplifiedTypes, simplifyArrayType(customType, typeMap)
+	case reflect.Map:
+		return simplifiedTypes, simplifyMapType(customType, typeMap)
+	case reflect.Struct:
 		for i := 0; i < customType.NumField(); i++ {
 			field := customType.Field(i)
-
 			jsonTag := util.JSONFieldName(field)
 			if jsonTag == "" {
 				continue
 			}
 
-			fieldType := field.Type
-
-			for fieldType.Kind() == reflect.Pointer || fieldType.Kind() == reflect.Slice || fieldType.Kind() == reflect.Array {
-				fieldType = fieldType.Elem()
+			fieldDescriptions, simpleDescription := simplifyType(field.Type, typeMap)
+			if len(fieldDescriptions) > 0 {
+				simplifiedTypes[jsonTag] = formatNestedFields(fieldDescriptions)
+			} else {
+				simplifiedTypes[jsonTag] = simpleDescription
 			}
-
-			baseType := fieldType.String()
-			typeID := getTypeID(fieldType)
-
-			// Resolve complex types by looking through the type map.
-			typeDescription, ok := typeMap[typeID]
-			if ok {
-				if typeDescription.Alias != "" {
-					baseType = typeDescription.Alias
-				} else if len(typeDescription.Fields) > 0 {
-					nestedFields := resolveType(fieldType, typeMap)
-					for nestedTag, nestedType := range nestedFields {
-						resolvedFields[nestedTag] = nestedType
-					}
-					continue
-				}
-			}
-
-			resolvedFields[jsonTag] = baseType
+		}
+	default:
+		// Handle built-in types.
+		if customType.PkgPath() == "" {
+			return simplifiedTypes, customType.String()
+		} else {
+			return simplifiedTypes, customType.Kind().String()
 		}
 	}
 
-	return resolvedFields
+	typeMap[typeID] = simplifiedTypes
+	return simplifiedTypes, ""
+}
+
+func simplifyArrayType(customType reflect.Type, typeMap map[string]core.TypeDescription) string {
+	if customType == nil {
+		return "<nil>"
+	}
+
+	if customType.Kind() != reflect.Slice && customType.Kind() != reflect.Array {
+		return "<error: not an array type>"
+	}
+
+	elementType := customType.Elem()
+	elementDescription, simpleDescription := simplifyType(elementType, typeMap)
+
+	var arrayDescription string
+	if len(elementDescription) > 0 {
+		arrayDescription = "[]" + formatNestedFields(elementDescription)
+	} else {
+		arrayDescription = "[]" + simpleDescription
+	}
+
+	return arrayDescription
+}
+
+func simplifyMapType(customType reflect.Type, typeMap map[string]core.TypeDescription) string {
+	if customType == nil {
+		return "<nil>"
+	}
+
+	if customType.Kind() != reflect.Map {
+		return "<error: not a map type>"
+	}
+
+	keyType := customType.Key()
+	elementType := customType.Elem()
+	elementDescription, simpleDescription := simplifyType(elementType, typeMap)
+
+	var mapDescription string
+	if len(elementDescription) > 0 {
+		mapDescription = "map[" + keyType.String() + "]{" + formatNestedFields(elementDescription) + "}"
+	} else {
+		mapDescription = "map[" + keyType.String() + "]{" + simpleDescription + "}"
+	}
+
+	return mapDescription
 }
 
 func getTypeID(customType reflect.Type) string {
 	return customType.PkgPath() + "/" + customType.String()
+}
+
+func formatNestedFields(fields map[string]string) string {
+	parts := []string{}
+	for key, value := range fields {
+		parts = append(parts, key+": "+value)
+	}
+
+	return strings.Join(parts, ", ")
 }

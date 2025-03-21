@@ -24,10 +24,7 @@ type EndpointDescription struct {
 	OutputFields map[string]string `json:"output-fields"`
 }
 
-type TypeDescription struct {
-	Fields map[string]string
-	Alias  string
-}
+type TypeDescription map[string]string
 
 func SetAPIDescription(description APIDescription) {
 	apiDescription = description
