@@ -19,6 +19,8 @@ import (
 	"github.com/edulinq/autograder/internal/util"
 )
 
+var testFailPairwiseAnalysis bool = false
+
 var defaultSimilarityEngines []core.SimilarityEngine = []core.SimilarityEngine{
 	dolos.GetEngine(),
 	jplag.GetEngine(),
@@ -257,7 +259,9 @@ func computeSinglePairwiseAnalysis(pairwiseKey model.PairwiseKey, templateFileSt
 
 	fileSimilarities, unmatches, skipped, totalRunTime, err := computeFileSims(submissionDirs, optionsAssignment, templateFileStore)
 	if err != nil {
-		return nil, 0, fmt.Errorf("Failed to compute similarities for %v: '%w'.", pairwiseKey, err)
+		message := fmt.Sprintf("Failed to compute similarities for %v: '%s'.", pairwiseKey, err.Error())
+		analysis := model.NewFailedPairwiseAnalysis(pairwiseKey, optionsAssignment, message)
+		return analysis, 0, nil
 	}
 
 	analysis := model.NewPairwiseAnalysis(pairwiseKey, optionsAssignment, fileSimilarities, unmatches, skipped)
@@ -266,6 +270,11 @@ func computeSinglePairwiseAnalysis(pairwiseKey model.PairwiseKey, templateFileSt
 }
 
 func computeFileSims(inputDirs [2]string, assignment *model.Assignment, templateFileStore *TemplateFileStore) (map[string][]*model.FileSimilarity, [][2]string, []string, int64, error) {
+	// Allow a failure for testing.
+	if testFailPairwiseAnalysis {
+		return nil, nil, nil, 0, fmt.Errorf("Test failure.")
+	}
+
 	engines, err := getEngines()
 	if err != nil {
 		return nil, nil, nil, 0, err

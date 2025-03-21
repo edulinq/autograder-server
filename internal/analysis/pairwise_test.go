@@ -3,6 +3,7 @@ package analysis
 import (
 	"path/filepath"
 	"reflect"
+	"strings"
 	"testing"
 	"time"
 
@@ -755,5 +756,48 @@ func TestPairwiseAnalysisCountBase(test *testing.T) {
 				continue
 			}
 		}
+	}
+}
+
+func TestPairwiseAnalysisFailureBase(test *testing.T) {
+	db.ResetForTesting()
+	defer db.ResetForTesting()
+
+	testFailPairwiseAnalysis = true
+	defer func() {
+		testFailPairwiseAnalysis = false
+	}()
+
+	expectedMessageSubstring := "Test failure."
+
+	ids := []string{
+		"course101::hw0::course-student@test.edulinq.org::1697406256",
+		"course101::hw0::course-student@test.edulinq.org::1697406272",
+	}
+
+	options := AnalysisOptions{
+		ResolvedSubmissionIDs: ids,
+		WaitForCompletion:     true,
+	}
+
+	results, pendingCount, err := PairwiseAnalysis(options, "server-admin@test.edulinq.org")
+	if err != nil {
+		test.Fatalf("Failed to do pairwise analysis: '%v'.", err)
+	}
+
+	if pendingCount != 0 {
+		test.Fatalf("Found %d pending results, when 0 were expected.", pendingCount)
+	}
+
+	if len(results) != 1 {
+		test.Fatalf("Number of results not as expected. Expected: %d, Actual: %d.", 1, len(results))
+	}
+
+	if !results[0].Failure {
+		test.Fatalf("Result is not a failure, when it should be.")
+	}
+
+	if !strings.Contains(results[0].FailureMessage, expectedMessageSubstring) {
+		test.Fatalf("Failure message does not contain expected substring. Expected Substring: '%s', Actual: '%s'.", expectedMessageSubstring, results[0].FailureMessage)
 	}
 }

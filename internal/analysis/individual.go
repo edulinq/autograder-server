@@ -16,6 +16,8 @@ import (
 	"github.com/edulinq/autograder/internal/util"
 )
 
+var testFailIndividualAnalysis bool = false
+
 func IndividualAnalysis(options AnalysisOptions, initiatorEmail string) ([]*model.IndividualAnalysis, int, error) {
 	completeAnalysis, remainingIDs, err := getCachedIndividualResults(options)
 	if err != nil {
@@ -163,7 +165,7 @@ func runSingleIndividualAnalysis(options AnalysisOptions, fullSubmissionID strin
 		}
 	}
 
-	// Nothing cached, compute the analsis.
+	// Nothing cached, compute the analysis.
 	result, err := computeSingleIndividualAnalysis(fullSubmissionID, true)
 	if err != nil {
 		return nil, 0, fmt.Errorf("Failed to compute individual analysis for '%s': '%w'.", fullSubmissionID, err)
@@ -195,11 +197,6 @@ func computeSingleIndividualAnalysis(fullSubmissionID string, computeDeltas bool
 		return nil, err
 	}
 
-	fileInfos, skipped, loc, err := individualFileAnalysis(submissionDir, assignment)
-	if err != nil {
-		return nil, fmt.Errorf("Failed to compute individual analysis for %v: '%w'.", fullSubmissionID, err)
-	}
-
 	analysis := &model.IndividualAnalysis{
 		AnalysisTimestamp: timestamp.Now(),
 		Options:           assignment.AssignmentAnalysisOptions,
@@ -212,11 +209,19 @@ func computeSingleIndividualAnalysis(fullSubmissionID string, computeDeltas bool
 
 		SubmissionStartTime: gradingResult.Info.GradingStartTime,
 		Score:               gradingResult.Info.Score,
-
-		Files:        fileInfos,
-		SkippedFiles: skipped,
-		LinesOfCode:  loc,
 	}
+
+	fileInfos, skipped, loc, err := individualFileAnalysis(submissionDir, assignment)
+	if err != nil {
+		analysis.Failure = true
+		analysis.FailureMessage = fmt.Sprintf("Failed to compute individual analysis for '%s': '%s'.", fullSubmissionID, err.Error())
+
+		return analysis, nil
+	}
+
+	analysis.Files = fileInfos
+	analysis.SkippedFiles = skipped
+	analysis.LinesOfCode = loc
 
 	if computeDeltas {
 		err = computeDelta(analysis, assignment, gradingResult)
@@ -259,6 +264,11 @@ func computeDelta(analysis *model.IndividualAnalysis, assignment *model.Assignme
 }
 
 func individualFileAnalysis(submissionDir string, assignment *model.Assignment) ([]model.AnalysisFileInfo, []string, int, error) {
+	// Allow a failure for testing.
+	if testFailIndividualAnalysis {
+		return nil, nil, 0, fmt.Errorf("Test failure.")
+	}
+
 	renames, err := prepSourceFiles(submissionDir)
 	if err != nil {
 		return nil, nil, 0, fmt.Errorf("Failed to prepare source files: '%w'.", err)

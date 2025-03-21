@@ -2,6 +2,7 @@ package analysis
 
 import (
 	"reflect"
+	"strings"
 	"testing"
 	"time"
 
@@ -612,5 +613,43 @@ func TestIndividualAnalysisCountBase(test *testing.T) {
 				continue
 			}
 		}
+	}
+}
+
+func TestIndividualAnalysisFailureBase(test *testing.T) {
+	db.ResetForTesting()
+	defer db.ResetForTesting()
+
+	testFailIndividualAnalysis = true
+	defer func() {
+		testFailIndividualAnalysis = false
+	}()
+
+	expectedMessageSubstring := "Test failure."
+
+	options := AnalysisOptions{
+		ResolvedSubmissionIDs: []string{"course101::hw0::course-student@test.edulinq.org::1697406265"},
+		WaitForCompletion:     true,
+	}
+
+	results, pendingCount, err := IndividualAnalysis(options, "server-admin@test.edulinq.org")
+	if err != nil {
+		test.Fatalf("Failed to perform analysis: '%v'.", err)
+	}
+
+	if pendingCount != 0 {
+		test.Fatalf("Found %d pending results, when 0 were expected.", pendingCount)
+	}
+
+	if len(results) != 1 {
+		test.Fatalf("Found %d results, when 1 was expected.", len(results))
+	}
+
+	if !results[0].Failure {
+		test.Fatalf("Result is not a failure, when it should be.")
+	}
+
+	if !strings.Contains(results[0].FailureMessage, expectedMessageSubstring) {
+		test.Fatalf("Failure message does not contain expected substring. Expected Substring: '%s', Actual: '%s'.", expectedMessageSubstring, results[0].FailureMessage)
 	}
 }
