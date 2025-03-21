@@ -19,53 +19,6 @@ type APIRequestMetric struct {
 	Duration uint64 `json:"duration"`
 }
 
-type APIRequestMetricQuery struct {
-	BaseQuery
-
-	Sender       string `json:"target-sender"`
-	Endpoint     string `json:"target-endpoint"`
-	UserEmail    string `json:"target-user,omitempty"`
-	CourseID     string `json:"target-course,omitempty"`
-	AssignmentID string `json:"target-assignment,omitempty"`
-	Locator      string `json:"target-locator"`
-}
-
-func (this APIRequestMetricQuery) Match(record *APIRequestMetric) bool {
-	if record == nil {
-		return false
-	}
-
-	if !this.BaseQuery.Match(record) {
-		return false
-	}
-
-	if (this.Sender != "") && (this.Sender != record.Sender) {
-		return false
-	}
-
-	if (this.Endpoint != "") && (this.Endpoint != record.Endpoint) {
-		return false
-	}
-
-	if (this.UserEmail != "") && (this.UserEmail != record.UserEmail) {
-		return false
-	}
-
-	if (this.AssignmentID != "") && (this.AssignmentID != record.AssignmentID) {
-		return false
-	}
-
-	if (this.CourseID != "") && (this.CourseID != record.CourseID) {
-		return false
-	}
-
-	if (this.Locator != "") && (this.Locator != record.Locator) {
-		return false
-	}
-
-	return true
-}
-
 func AsyncStoreAPIRequestMetric(startTime timestamp.Timestamp, endTime timestamp.Timestamp, sender string, endpoint string, userEmail string, courseID string, assignmentID string, locator string) {
 	metric := &APIRequestMetric{
 		BaseMetric: BaseMetric{

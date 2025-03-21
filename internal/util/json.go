@@ -7,6 +7,7 @@ import (
 	"io"
 	"os"
 	"reflect"
+	"slices"
 	"strings"
 
 	"github.com/edulinq/autograder/internal/log"
@@ -238,4 +239,33 @@ func MustFormatJSONObjectIndent(text string) string {
 	var object map[string]any
 	MustJSONFromString(text, &object)
 	return MustToJSONIndent(object)
+}
+
+func MustToGenericJSONSlice(input []any, sortFunc func(a any, b any) int) []map[string]any {
+	slices.SortFunc(input, sortFunc)
+
+	var data []map[string]any
+	MustJSONFromString(MustToJSON(input), &data)
+
+	return data
+}
+
+func JSONCompareFunc(dataA any, dataB any) int {
+	jsonA, err := ToJSON(dataA)
+	if err != nil {
+		log.Fatal("Failed to convert dataA to JSON.", log.NewAttr("dataA", dataA), err)
+	}
+
+	jsonB, err := ToJSON(dataB)
+	if err != nil {
+		log.Fatal("Failed to convert dataB to JSON.", log.NewAttr("dataB", dataB), err)
+	}
+
+	if jsonA < jsonB {
+		return -1
+	} else if jsonA > jsonB {
+		return 1
+	}
+
+	return 0
 }

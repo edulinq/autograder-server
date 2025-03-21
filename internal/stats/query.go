@@ -1,9 +1,12 @@
 package stats
 
 import (
+	"fmt"
 	"slices"
 
+	"github.com/edulinq/autograder/internal/log"
 	"github.com/edulinq/autograder/internal/timestamp"
+	"github.com/edulinq/autograder/internal/util"
 )
 
 type Query interface {
@@ -31,6 +34,41 @@ type BaseQuery struct {
 	// Define how the results should be sorted by time.
 	// -1 for ascending, 0 for no sorting, 1 for descending.
 	Sort int `json:"sort"`
+}
+
+type MetricQuery struct {
+	BaseQuery
+
+	AggregationQuery
+
+	Where map[string]string `json:"where,omitempty"`
+}
+
+func (this MetricQuery) Match(metric Metric) bool {
+	metricJson, err := util.ToJSON(metric)
+	if err != nil {
+		log.Error("Failed to convert metric to JSON.", err, metric)
+		return false
+	}
+
+	metricMap, err := util.JSONMapFromString(metricJson)
+	if err != nil {
+		log.Error("Failed to covert JSON metric to a map.", err, metricJson)
+		return false
+	}
+
+	for field, value := range this.Where {
+		fieldValue, exists := metricMap[field]
+		if !exists {
+			return false
+		}
+
+		if value != "" && fmt.Sprintf("%v", fieldValue) != value {
+			return false
+		}
+	}
+
+	return true
 }
 
 func (this BaseQuery) Match(record Metric) bool {

@@ -23,7 +23,7 @@ func (this *DBTests) DBTestStoreSystemStats(test *testing.T) {
 		NetBytesReceived: 4,
 	}
 
-	query := stats.BaseQuery{}
+	query := stats.MetricQuery{}
 
 	err := StoreSystemStats(&testRecord)
 	if err != nil {
@@ -60,8 +60,10 @@ func (this *DBTests) DBTestStoreCourseMetrics(test *testing.T) {
 		Value:        100,
 	}
 
-	query := stats.CourseMetricQuery{
-		CourseID: "C",
+	query := stats.MetricQuery{
+		Where: map[string]string{
+			"course": "C",
+		},
 	}
 
 	err := StoreCourseMetric(&testRecord)
@@ -106,7 +108,7 @@ func (this *DBTests) DBTestStoreAPIRequestMetrics(test *testing.T) {
 		test.Fatalf("Failed to store stats: '%v'.", err)
 	}
 
-	query := stats.APIRequestMetricQuery{}
+	query := stats.MetricQuery{}
 
 	records, err := GetAPIRequestMetrics(query)
 	if err != nil {
