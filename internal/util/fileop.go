@@ -263,7 +263,12 @@ func handleGlobFileOperation(sourceGlob string, dest string, baseDir string, ope
 	var errs error
 
 	for _, sourcePath := range sourcePaths {
-		if sourcePath == dest {
+		realSourcePath, err := filepath.EvalSymlinks(sourcePath)
+		if err != nil {
+			return fmt.Errorf("Failed to eval symlinks for sourcePath '%s': '%w'.", sourcePath, err)
+		}
+
+		if realSourcePath == dest {
 			continue
 		}
 
