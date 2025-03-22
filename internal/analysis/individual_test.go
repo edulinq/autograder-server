@@ -43,8 +43,7 @@ func TestIndividualAnalysisBase(test *testing.T) {
 					LinesOfCode: 4,
 				},
 			},
-			SkippedFiles: []string{},
-			LinesOfCode:  4,
+			LinesOfCode: 4,
 
 			SubmissionTimeDelta: 10000,
 			LinesOfCodeDelta:    0,
@@ -118,9 +117,17 @@ func testIndividual(test *testing.T, ids []string, expected []*model.IndividualA
 		test.Fatalf("Found %d pending results, when 0 were expected.", pendingCount)
 	}
 
-	// Zero out the timestamps.
+	// Normalize the results.
 	for _, result := range results {
+		// Zero out the timestamps.
 		result.AnalysisTimestamp = timestamp.Zero()
+
+		// Nil empty skipped files.
+		for _, result := range results {
+			if len(result.SkippedFiles) == 0 {
+				result.SkippedFiles = nil
+			}
+		}
 	}
 
 	if !reflect.DeepEqual(expected, results) {

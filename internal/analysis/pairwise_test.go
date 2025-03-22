@@ -46,8 +46,6 @@ func TestPairwiseAnalysisFake(test *testing.T) {
 					},
 				},
 			},
-			UnmatchedFiles: [][2]string{},
-			SkippedFiles:   []string{},
 			MeanSimilarities: map[string]float64{
 				"submission.py": 0.13,
 			},
@@ -70,8 +68,6 @@ func TestPairwiseAnalysisFake(test *testing.T) {
 					},
 				},
 			},
-			UnmatchedFiles: [][2]string{},
-			SkippedFiles:   []string{},
 			MeanSimilarities: map[string]float64{
 				"submission.py": 0.13,
 			},
@@ -94,8 +90,6 @@ func TestPairwiseAnalysisFake(test *testing.T) {
 					},
 				},
 			},
-			UnmatchedFiles: [][2]string{},
-			SkippedFiles:   []string{},
 			MeanSimilarities: map[string]float64{
 				"submission.py": 0.13,
 			},
@@ -171,9 +165,21 @@ func testPairwise(test *testing.T, ids []string, expected []*model.PairwiseAnaly
 		test.Fatalf("Found %d pending results, when 0 were expected.", pendingCount)
 	}
 
-	// Zero out the timestamps.
+	// Normalize the results.
 	for _, result := range results {
+		// Zero out the timestamps.
 		result.AnalysisTimestamp = timestamp.Zero()
+
+		// Nil empty skipped and unmatched files.
+		for _, result := range results {
+			if len(result.SkippedFiles) == 0 {
+				result.SkippedFiles = nil
+			}
+
+			if len(result.UnmatchedFiles) == 0 {
+				result.UnmatchedFiles = nil
+			}
+		}
 	}
 
 	if !reflect.DeepEqual(expected, results) {

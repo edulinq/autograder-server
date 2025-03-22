@@ -121,8 +121,6 @@ func TestPairwiseBase(test *testing.T) {
 						},
 					},
 				},
-				UnmatchedFiles: [][2]string{},
-				SkippedFiles:   []string{},
 				MeanSimilarities: map[string]float64{
 					"submission.py": 0.13,
 				},

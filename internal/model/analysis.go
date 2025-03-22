@@ -20,11 +20,11 @@ const (
 )
 
 type AssignmentAnalysisOptions struct {
-	IncludePatterns []string `json:"include-patterns,omitempty"`
-	ExcludePatterns []string `json:"exclude-patterns,omitempty"`
+	IncludePatterns []string `json:"include-patterns,omitempty,omitzero"`
+	ExcludePatterns []string `json:"exclude-patterns,omitempty,omitzero"`
 
-	TemplateFiles   []*util.FileSpec      `json:"template-files,omitempty"`
-	TemplateFileOps []*util.FileOperation `json:"template-file-ops,omitempty"`
+	TemplateFiles   []*util.FileSpec      `json:"template-files,omitempty,omitzero"`
+	TemplateFileOps []*util.FileOperation `json:"template-file-ops,omitempty,omitzero"`
 }
 
 type AnalysisFileInfo struct {
@@ -39,7 +39,7 @@ type FileSimilarity struct {
 
 	Tool    string         `json:"tool"`
 	Version string         `json:"version"`
-	Options map[string]any `json:"options,omitempty"`
+	Options map[string]any `json:"options,omitempty,omitzero"`
 	Score   float64        `json:"score"`
 }
 
@@ -70,8 +70,8 @@ type IndividualAnalysis struct {
 	SubmissionStartTime timestamp.Timestamp `json:"submission-start-time,omitempty"`
 	Score               float64             `json:"score,omitempty"`
 
-	Files        []AnalysisFileInfo `json:"files,omitzero"`
-	SkippedFiles []string           `json:"skipped-files,omitzero"`
+	Files        []AnalysisFileInfo `json:"files,omitempty,omitzero"`
+	SkippedFiles []string           `json:"skipped-files,omitempty,omitzero"`
 	LinesOfCode  int                `json:"lines-of-code,omitempty"`
 
 	SubmissionTimeDelta int64   `json:"submission-time-delta,omitempty"`
@@ -107,11 +107,11 @@ type PairwiseAnalysis struct {
 	Failure        bool   `json:"failure,omitempty"`
 	FailureMessage string `json:"failure-message,omitempty"`
 
-	Similarities   map[string][]*FileSimilarity `json:"similarities,omitzero"`
-	UnmatchedFiles [][2]string                  `json:"unmatched-files,omitzero"`
-	SkippedFiles   []string                     `json:"skipped-files,omitzero"`
+	Similarities   map[string][]*FileSimilarity `json:"similarities,omitempty,omitzero"`
+	UnmatchedFiles [][2]string                  `json:"unmatched-files,omitempty,omitzero"`
+	SkippedFiles   []string                     `json:"skipped-files,omitempty,omitzero"`
 
-	MeanSimilarities    map[string]float64 `json:"mean-similarities,omitzero"`
+	MeanSimilarities    map[string]float64 `json:"mean-similarities,omitempty,omitzero"`
 	TotalMeanSimilarity float64            `json:"total-mean-similarity,omitempty"`
 }
 
@@ -195,24 +195,6 @@ func (this *AssignmentAnalysisOptions) MatchRelpath(relpath string) bool {
 
 func (this *PairwiseKey) String() string {
 	return this[0] + PAIRWISE_KEY_DELIM + this[1]
-}
-
-func (this PairwiseKey) MarshalText() ([]byte, error) {
-	return []byte(this.String()), nil
-}
-
-func (this *PairwiseKey) UnmarshalText(data []byte) error {
-	temp := string(data[:])
-
-	parts := strings.Split(temp, PAIRWISE_KEY_DELIM)
-	if len(parts) != 2 {
-		return fmt.Errorf("Pairwise key has incorrect number of components ('%s'). Expected 2, found %d.", temp, len(parts))
-	}
-
-	this[0] = parts[0]
-	this[1] = parts[1]
-
-	return nil
 }
 
 func NewPairwiseAnalysis(pairwiseKey PairwiseKey, assignment *Assignment, similarities map[string][]*FileSimilarity, unmatches [][2]string, skipped []string) *PairwiseAnalysis {

@@ -137,7 +137,7 @@ func (this *DBTests) DBTestGetPairwiseAnalysisBase(test *testing.T) {
 
 		if !reflect.DeepEqual(testCase.expected, results) {
 			test.Errorf("Case %d: Results not as expected. Expected: '%s', Actual: '%s'.",
-				i, util.MustToJSONIndent(testCase.expected), util.MustToJSONIndent(results))
+				i, mustToJSONPairwiseMap(testCase.expected), mustToJSONPairwiseMap(results))
 			continue
 		}
 	}
@@ -373,7 +373,7 @@ func (this *DBTests) DBTestRemovePairwiseAnalysisBase(test *testing.T) {
 
 		if !reflect.DeepEqual(testCase.expected, results) {
 			test.Errorf("Case %d: Results not as expected. Expected: '%s', Actual: '%s'.",
-				i, util.MustToJSONIndent(testCase.expected), util.MustToJSONIndent(results))
+				i, mustToJSONPairwiseMap(testCase.expected), mustToJSONPairwiseMap(results))
 			continue
 		}
 	}
@@ -461,4 +461,14 @@ var testPairwiseRecords []*model.PairwiseAnalysis = []*model.PairwiseAnalysis{
 		Failure:        true,
 		FailureMessage: "Analysis failed.",
 	},
+}
+
+func mustToJSONPairwiseMap(input map[model.PairwiseKey]*model.PairwiseAnalysis) string {
+	output := make(map[string]*model.PairwiseAnalysis, len(input))
+
+	for key, value := range input {
+		output[key.String()] = value
+	}
+
+	return util.MustToJSONIndent(output)
 }
