@@ -2,186 +2,656 @@
     "endpoints": {
         "courses/admin/update": {
             "description": "Update an existing course.",
+            "input-fields": {
+                "MinCourseRoleAdmin": "bool",
+                "course-id": "string",
+                "root-user-nonce": "string",
+                "user-email": "string",
+                "user-pass": "string"
+            },
+            "output-fields": {
+                "result": "assignment-template-files: map[string]{[]{string}}, built-assignment-images: []{string}, course-id: string, created: bool, lms-sync-result: assignment-sync: ambiguous-matches: []{id: string, name: string}, non-matched-assignments: []{id: string, name: string}, synced-assignments: []{id: string, name: string}, unchanged-assignments: []{id: string, name: string}, user-sync: []{added: bool, cleartext-password: string, communication-error: ExternalMessage: string, HideLocator: bool, InternalMessage: string, Locator: string, dropped: []{string}, email: string, emailed: bool, enrolled: []{string}, modified: bool, not-exists: bool, removed: bool, skipped: bool, system-error: ExternalMessage: string, HideLocator: bool, InternalMessage: string, Locator: string, validation-error: ExternalMessage: string, HideLocator: bool, InternalMessage: string, Locator: string}, message: string, success: bool, updated: bool"
+            },
             "request-type": "*admin.UpdateRequest",
             "response-type": "*admin.UpdateResponse"
         },
         "courses/assignments/get": {
             "description": "Get the information for a course assignment.",
+            "input-fields": {
+                "Assignment": "_rel_source-dir: string, analysis-options: exclude-patterns: []{string}, include-patterns: []{string}, template-file-ops: []{[]{string}}, template-files: []{dest: string, path: string, reference: string, token: string, type: string, username: string}, due-date: int64, id: string, image: string, invocation: []{string}, late-policy: late-days-lms-id: string, max-late-days: int, penalty: float64, reject-after-days: int, type: string, lms-id: string, max-points: float64, max-runtime-secs: int, name: string, post-static-docker-commands: []{string}, post-static-file-ops: []{[]{string}}, post-submission-file-ops: []{[]{string}}, pre-static-docker-commands: []{string}, pre-static-file-ops: []{[]{string}}, sort-id: string, static-files: []{dest: string, path: string, reference: string, token: string, type: string, username: string}, submission-limit: max-attempts: int, window: allowed-attempts: int, duration: days: int64, hours: int64, minutes: int64, seconds: int64",
+                "MinCourseRoleOther": "bool",
+                "assignment-id": "string",
+                "course-id": "string",
+                "root-user-nonce": "string",
+                "user-email": "string",
+                "user-pass": "string"
+            },
+            "output-fields": {
+                "assignment": "due-date: int64, id: string, max-points: float64, name: string"
+            },
             "request-type": "*assignments.GetRequest",
             "response-type": "*assignments.GetResponse"
         },
         "courses/assignments/list": {
             "description": "List the assignments in the course.",
+            "input-fields": {
+                "MinCourseRoleOther": "bool",
+                "course-id": "string",
+                "root-user-nonce": "string",
+                "user-email": "string",
+                "user-pass": "string"
+            },
+            "output-fields": {
+                "assignments": "[]{due-date: int64, id: string, max-points: float64, name: string}"
+            },
             "request-type": "*assignments.ListRequest",
             "response-type": "*assignments.ListResponse"
         },
         "courses/assignments/submissions/analysis/individual": {
             "description": "Get the result of a individual analysis for the specified submissions.",
+            "input-fields": {
+                "MinServerRoleUser": "bool",
+                "dry-run": "bool",
+                "overwrite-cache": "bool",
+                "root-user-nonce": "string",
+                "submissions": "[]{string}",
+                "user-email": "string",
+                "user-pass": "string",
+                "wait-for-completion": "bool"
+            },
+            "output-fields": {
+                "complete": "bool",
+                "options": "dry-run: bool, overwrite-cache: bool, submissions: []{string}, wait-for-completion: bool",
+                "results": "[]{analysis-timestamp: int64, assignment-id: string, course-id: string, files: []{filename: string, lines-of-code: int, original-filename: string}, lines-of-code: int, lines-of-code-delta: int, lines-of-code-per-hour: float64, options: exclude-patterns: []{string}, include-patterns: []{string}, template-file-ops: []{[]{string}}, template-files: []{dest: string, path: string, reference: string, token: string, type: string, username: string}, score: float64, score-delta: float64, score-per-hour: float64, short-id: string, skipped-files: []{string}, submission-id: string, submission-start-time: int64, submission-time-delta: int64, user-email: string}",
+                "summary": "aggregate-lines-of-code: count: int, max: float64, mean: float64, median: float64, min: float64, aggregate-lines-of-code-delta: count: int, max: float64, mean: float64, median: float64, min: float64, aggregate-lines-of-code-per-file: map[string]{count: int, max: float64, mean: float64, median: float64, min: float64}, aggregate-lines-of-code-per-hour: count: int, max: float64, mean: float64, median: float64, min: float64, aggregate-score: count: int, max: float64, mean: float64, median: float64, min: float64, aggregate-score-delta: count: int, max: float64, mean: float64, median: float64, min: float64, aggregate-score-per-hour: count: int, max: float64, mean: float64, median: float64, min: float64, aggregate-submission-time-delta: count: int, max: float64, mean: float64, median: float64, min: float64, complete: bool, complete-count: int, first-timestamp: int64, last-timestamp: int64, pending-count: int"
+            },
             "request-type": "*analysis.IndividualRequest",
             "response-type": "*analysis.IndividualResponse"
         },
         "courses/assignments/submissions/analysis/pairwise": {
             "description": "Get the result of a pairwise analysis for the specified submissions.",
+            "input-fields": {
+                "MinServerRoleUser": "bool",
+                "dry-run": "bool",
+                "overwrite-cache": "bool",
+                "root-user-nonce": "string",
+                "submissions": "[]{string}",
+                "user-email": "string",
+                "user-pass": "string",
+                "wait-for-completion": "bool"
+            },
+            "output-fields": {
+                "complete": "bool",
+                "options": "dry-run: bool, overwrite-cache: bool, submissions: []{string}, wait-for-completion: bool",
+                "results": "[]{analysis-timestamp: int64, mean-similarities: map[string]{float64}, options: exclude-patterns: []{string}, include-patterns: []{string}, template-file-ops: []{[]{string}}, template-files: []{dest: string, path: string, reference: string, token: string, type: string, username: string}, similarities: map[string]{[]{filename: string, options: map[string]{interface {}}, original-filename: string, score: float64, tool: string, version: string}}, skipped-files: []{string}, submission-ids: []{string}, total-mean-similarity: float64, unmatched-files: []{[]{string}}}",
+                "summary": "aggregate-mean-similarities: map[string]{count: int, max: float64, mean: float64, median: float64, min: float64}, aggregate-total-mean-similarity: count: int, max: float64, mean: float64, median: float64, min: float64, complete: bool, complete-count: int, first-timestamp: int64, last-timestamp: int64, pending-count: int"
+            },
             "request-type": "*analysis.PairwiseRequest",
             "response-type": "*analysis.PairwiseResponse"
         },
         "courses/assignments/submissions/fetch/course/attempts": {
             "description": "Get all recent submissions and grading information for this assignment.",
+            "input-fields": {
+                "Assignment": "_rel_source-dir: string, analysis-options: exclude-patterns: []{string}, include-patterns: []{string}, template-file-ops: []{[]{string}}, template-files: []{dest: string, path: string, reference: string, token: string, type: string, username: string}, due-date: int64, id: string, image: string, invocation: []{string}, late-policy: late-days-lms-id: string, max-late-days: int, penalty: float64, reject-after-days: int, type: string, lms-id: string, max-points: float64, max-runtime-secs: int, name: string, post-static-docker-commands: []{string}, post-static-file-ops: []{[]{string}}, post-submission-file-ops: []{[]{string}}, pre-static-docker-commands: []{string}, pre-static-file-ops: []{[]{string}}, sort-id: string, static-files: []{dest: string, path: string, reference: string, token: string, type: string, username: string}, submission-limit: max-attempts: int, window: allowed-attempts: int, duration: days: int64, hours: int64, minutes: int64, seconds: int64",
+                "MinCourseRoleGrader": "bool",
+                "assignment-id": "string",
+                "course-id": "string",
+                "filter-role": "int",
+                "root-user-nonce": "string",
+                "user-email": "string",
+                "user-pass": "string"
+            },
+            "output-fields": {
+                "grading-results": "map[string]{info: additional-info: map[string]{interface {}}, assignment-id: string, course-id: string, epilogue: string, grading_end_time: int64, grading_start_time: int64, id: string, max_points: float64, message: string, name: string, prologue: string, questions: []{grading_end_time: int64, grading_start_time: int64, hard_fail: bool, max_points: float64, message: string, name: string, score: float64, skipped: bool}, score: float64, short-id: string, user: string, input-files-gzip: map[string]{[]{uint8}}, output-files-gzip: map[string]{[]{uint8}}, stderr: string, stdout: string}"
+            },
             "request-type": "*course.FetchCourseAttemptsRequest",
             "response-type": "*course.FetchCourseAttemptsResponse"
         },
         "courses/assignments/submissions/fetch/course/scores": {
             "description": "Get a summary of the most recent scores for this assignment.",
+            "input-fields": {
+                "Assignment": "_rel_source-dir: string, analysis-options: exclude-patterns: []{string}, include-patterns: []{string}, template-file-ops: []{[]{string}}, template-files: []{dest: string, path: string, reference: string, token: string, type: string, username: string}, due-date: int64, id: string, image: string, invocation: []{string}, late-policy: late-days-lms-id: string, max-late-days: int, penalty: float64, reject-after-days: int, type: string, lms-id: string, max-points: float64, max-runtime-secs: int, name: string, post-static-docker-commands: []{string}, post-static-file-ops: []{[]{string}}, post-submission-file-ops: []{[]{string}}, pre-static-docker-commands: []{string}, pre-static-file-ops: []{[]{string}}, sort-id: string, static-files: []{dest: string, path: string, reference: string, token: string, type: string, username: string}, submission-limit: max-attempts: int, window: allowed-attempts: int, duration: days: int64, hours: int64, minutes: int64, seconds: int64",
+                "MinCourseRoleGrader": "bool",
+                "assignment-id": "string",
+                "course-id": "string",
+                "filter-role": "int",
+                "root-user-nonce": "string",
+                "user-email": "string",
+                "user-pass": "string"
+            },
+            "output-fields": {
+                "submission-infos": "map[string]{assignment-id: string, course-id: string, grading_start_time: int64, id: string, max_points: float64, message: string, score: float64, short-id: string, user: string}"
+            },
             "request-type": "*course.FetchCourseScoresRequest",
             "response-type": "*course.FetchCourseScoresResponse"
         },
         "courses/assignments/submissions/fetch/user/attempt": {
             "description": "Get a submission along with all grading information.",
+            "input-fields": {
+                "Assignment": "_rel_source-dir: string, analysis-options: exclude-patterns: []{string}, include-patterns: []{string}, template-file-ops: []{[]{string}}, template-files: []{dest: string, path: string, reference: string, token: string, type: string, username: string}, due-date: int64, id: string, image: string, invocation: []{string}, late-policy: late-days-lms-id: string, max-late-days: int, penalty: float64, reject-after-days: int, type: string, lms-id: string, max-points: float64, max-runtime-secs: int, name: string, post-static-docker-commands: []{string}, post-static-file-ops: []{[]{string}}, post-submission-file-ops: []{[]{string}}, pre-static-docker-commands: []{string}, pre-static-file-ops: []{[]{string}}, sort-id: string, static-files: []{dest: string, path: string, reference: string, token: string, type: string, username: string}, submission-limit: max-attempts: int, window: allowed-attempts: int, duration: days: int64, hours: int64, minutes: int64, seconds: int64",
+                "MinCourseRoleStudent": "bool",
+                "assignment-id": "string",
+                "course-id": "string",
+                "root-user-nonce": "string",
+                "target-email": "Email: string, Found: bool, User: email: string, lms-id: string, name: string, role: int",
+                "target-submission": "string",
+                "user-email": "string",
+                "user-pass": "string"
+            },
+            "output-fields": {
+                "found-submission": "bool",
+                "found-user": "bool",
+                "grading-result": "info: additional-info: map[string]{interface {}}, assignment-id: string, course-id: string, epilogue: string, grading_end_time: int64, grading_start_time: int64, id: string, max_points: float64, message: string, name: string, prologue: string, questions: []{grading_end_time: int64, grading_start_time: int64, hard_fail: bool, max_points: float64, message: string, name: string, score: float64, skipped: bool}, score: float64, short-id: string, user: string, input-files-gzip: map[string]{[]{uint8}}, output-files-gzip: map[string]{[]{uint8}}, stderr: string, stdout: string"
+            },
             "request-type": "*user.FetchUserAttemptRequest",
             "response-type": "*user.FetchUserAttemptResponse"
         },
         "courses/assignments/submissions/fetch/user/attempts": {
             "description": "Get all submission attempts made by a user along with all grading information.",
+            "input-fields": {
+                "Assignment": "_rel_source-dir: string, analysis-options: exclude-patterns: []{string}, include-patterns: []{string}, template-file-ops: []{[]{string}}, template-files: []{dest: string, path: string, reference: string, token: string, type: string, username: string}, due-date: int64, id: string, image: string, invocation: []{string}, late-policy: late-days-lms-id: string, max-late-days: int, penalty: float64, reject-after-days: int, type: string, lms-id: string, max-points: float64, max-runtime-secs: int, name: string, post-static-docker-commands: []{string}, post-static-file-ops: []{[]{string}}, post-submission-file-ops: []{[]{string}}, pre-static-docker-commands: []{string}, pre-static-file-ops: []{[]{string}}, sort-id: string, static-files: []{dest: string, path: string, reference: string, token: string, type: string, username: string}, submission-limit: max-attempts: int, window: allowed-attempts: int, duration: days: int64, hours: int64, minutes: int64, seconds: int64",
+                "MinCourseRoleGrader": "bool",
+                "assignment-id": "string",
+                "course-id": "string",
+                "root-user-nonce": "string",
+                "target-email": "Email: string, Found: bool, User: email: string, lms-id: string, name: string, role: int",
+                "user-email": "string",
+                "user-pass": "string"
+            },
+            "output-fields": {
+                "found-user": "bool",
+                "grading-results": "[]{info: additional-info: map[string]{interface {}}, assignment-id: string, course-id: string, epilogue: string, grading_end_time: int64, grading_start_time: int64, id: string, max_points: float64, message: string, name: string, prologue: string, questions: []{grading_end_time: int64, grading_start_time: int64, hard_fail: bool, max_points: float64, message: string, name: string, score: float64, skipped: bool}, score: float64, short-id: string, user: string, input-files-gzip: map[string]{[]{uint8}}, output-files-gzip: map[string]{[]{uint8}}, stderr: string, stdout: string}"
+            },
             "request-type": "*user.FetchUserAttemptsRequest",
             "response-type": "*user.FetchUserAttemptsResponse"
         },
         "courses/assignments/submissions/fetch/user/history": {
             "description": "Get a summary of the submissions for this assignment.",
+            "input-fields": {
+                "Assignment": "_rel_source-dir: string, analysis-options: exclude-patterns: []{string}, include-patterns: []{string}, template-file-ops: []{[]{string}}, template-files: []{dest: string, path: string, reference: string, token: string, type: string, username: string}, due-date: int64, id: string, image: string, invocation: []{string}, late-policy: late-days-lms-id: string, max-late-days: int, penalty: float64, reject-after-days: int, type: string, lms-id: string, max-points: float64, max-runtime-secs: int, name: string, post-static-docker-commands: []{string}, post-static-file-ops: []{[]{string}}, post-submission-file-ops: []{[]{string}}, pre-static-docker-commands: []{string}, pre-static-file-ops: []{[]{string}}, sort-id: string, static-files: []{dest: string, path: string, reference: string, token: string, type: string, username: string}, submission-limit: max-attempts: int, window: allowed-attempts: int, duration: days: int64, hours: int64, minutes: int64, seconds: int64",
+                "MinCourseRoleStudent": "bool",
+                "assignment-id": "string",
+                "course-id": "string",
+                "root-user-nonce": "string",
+                "target-email": "Email: string, Found: bool, User: email: string, lms-id: string, name: string, role: int",
+                "user-email": "string",
+                "user-pass": "string"
+            },
+            "output-fields": {
+                "found-user": "bool",
+                "history": "[]{assignment-id: string, course-id: string, grading_start_time: int64, id: string, max_points: float64, message: string, score: float64, short-id: string, user: string}"
+            },
             "request-type": "*user.FetchUserHistoryRequest",
             "response-type": "*user.FetchUserHistoryResponse"
         },
         "courses/assignments/submissions/fetch/user/peek": {
             "description": "Get a copy of the grading report for the specified submission. Does not submit a new submission.",
+            "input-fields": {
+                "Assignment": "_rel_source-dir: string, analysis-options: exclude-patterns: []{string}, include-patterns: []{string}, template-file-ops: []{[]{string}}, template-files: []{dest: string, path: string, reference: string, token: string, type: string, username: string}, due-date: int64, id: string, image: string, invocation: []{string}, late-policy: late-days-lms-id: string, max-late-days: int, penalty: float64, reject-after-days: int, type: string, lms-id: string, max-points: float64, max-runtime-secs: int, name: string, post-static-docker-commands: []{string}, post-static-file-ops: []{[]{string}}, post-submission-file-ops: []{[]{string}}, pre-static-docker-commands: []{string}, pre-static-file-ops: []{[]{string}}, sort-id: string, static-files: []{dest: string, path: string, reference: string, token: string, type: string, username: string}, submission-limit: max-attempts: int, window: allowed-attempts: int, duration: days: int64, hours: int64, minutes: int64, seconds: int64",
+                "MinCourseRoleStudent": "bool",
+                "assignment-id": "string",
+                "course-id": "string",
+                "root-user-nonce": "string",
+                "target-email": "Email: string, Found: bool, User: email: string, lms-id: string, name: string, role: int",
+                "target-submission": "string",
+                "user-email": "string",
+                "user-pass": "string"
+            },
+            "output-fields": {
+                "found-submission": "bool",
+                "found-user": "bool",
+                "submission-result": "additional-info: map[string]{interface {}}, assignment-id: string, course-id: string, epilogue: string, grading_end_time: int64, grading_start_time: int64, id: string, max_points: float64, message: string, name: string, prologue: string, questions: []{grading_end_time: int64, grading_start_time: int64, hard_fail: bool, max_points: float64, message: string, name: string, score: float64, skipped: bool}, score: float64, short-id: string, user: string"
+            },
             "request-type": "*user.FetchUserPeekRequest",
             "response-type": "*user.FetchUserPeekResponse"
         },
         "courses/assignments/submissions/remove": {
             "description": "Remove a specified submission. Defaults to the most recent submission.",
+            "input-fields": {
+                "Assignment": "_rel_source-dir: string, analysis-options: exclude-patterns: []{string}, include-patterns: []{string}, template-file-ops: []{[]{string}}, template-files: []{dest: string, path: string, reference: string, token: string, type: string, username: string}, due-date: int64, id: string, image: string, invocation: []{string}, late-policy: late-days-lms-id: string, max-late-days: int, penalty: float64, reject-after-days: int, type: string, lms-id: string, max-points: float64, max-runtime-secs: int, name: string, post-static-docker-commands: []{string}, post-static-file-ops: []{[]{string}}, post-submission-file-ops: []{[]{string}}, pre-static-docker-commands: []{string}, pre-static-file-ops: []{[]{string}}, sort-id: string, static-files: []{dest: string, path: string, reference: string, token: string, type: string, username: string}, submission-limit: max-attempts: int, window: allowed-attempts: int, duration: days: int64, hours: int64, minutes: int64, seconds: int64",
+                "MinCourseRoleGrader": "bool",
+                "assignment-id": "string",
+                "course-id": "string",
+                "root-user-nonce": "string",
+                "target-email": "Email: string, Found: bool, User: email: string, lms-id: string, name: string, role: int",
+                "target-submission": "string",
+                "user-email": "string",
+                "user-pass": "string"
+            },
+            "output-fields": {
+                "found-submission": "bool",
+                "found-user": "bool"
+            },
             "request-type": "*submissions.RemoveRequest",
             "response-type": "*submissions.RemoveResponse"
         },
         "courses/assignments/submissions/submit": {
             "description": "Submit an assignment submission to the autograder.",
+            "input-fields": {
+                "Assignment": "_rel_source-dir: string, analysis-options: exclude-patterns: []{string}, include-patterns: []{string}, template-file-ops: []{[]{string}}, template-files: []{dest: string, path: string, reference: string, token: string, type: string, username: string}, due-date: int64, id: string, image: string, invocation: []{string}, late-policy: late-days-lms-id: string, max-late-days: int, penalty: float64, reject-after-days: int, type: string, lms-id: string, max-points: float64, max-runtime-secs: int, name: string, post-static-docker-commands: []{string}, post-static-file-ops: []{[]{string}}, post-submission-file-ops: []{[]{string}}, pre-static-docker-commands: []{string}, pre-static-file-ops: []{[]{string}}, sort-id: string, static-files: []{dest: string, path: string, reference: string, token: string, type: string, username: string}, submission-limit: max-attempts: int, window: allowed-attempts: int, duration: days: int64, hours: int64, minutes: int64, seconds: int64",
+                "Files": "",
+                "MinCourseRoleStudent": "bool",
+                "allow-late": "bool",
+                "assignment-id": "string",
+                "course-id": "string",
+                "message": "string",
+                "root-user-nonce": "string",
+                "user-email": "string",
+                "user-pass": "string"
+            },
+            "output-fields": {
+                "grading-success": "bool",
+                "message": "string",
+                "rejected": "bool",
+                "result": "additional-info: map[string]{interface {}}, assignment-id: string, course-id: string, epilogue: string, grading_end_time: int64, grading_start_time: int64, id: string, max_points: float64, message: string, name: string, prologue: string, questions: []{grading_end_time: int64, grading_start_time: int64, hard_fail: bool, max_points: float64, message: string, name: string, score: float64, skipped: bool}, score: float64, short-id: string, user: string"
+            },
             "request-type": "*submissions.SubmitRequest",
             "response-type": "*submissions.SubmitResponse"
         },
         "courses/lms/scores/upload": {
             "description": "Perform a full scoring and upload scores to the course's LMS.",
+            "input-fields": {
+                "MinCourseRoleAdmin": "bool",
+                "course-id": "string",
+                "dry-run": "bool",
+                "root-user-nonce": "string",
+                "user-email": "string",
+                "user-pass": "string"
+            },
+            "output-fields": {
+                "dry-run": "bool",
+                "results": "[]{assignment: string, raw-score: float64, score: float64, submission-id: string, submission-time: int64, upload-time: int64, user: string}"
+            },
             "request-type": "*scores.UploadRequest",
             "response-type": "*scores.UploadResponse"
         },
         "courses/stats/query": {
             "description": "Query metrics for a specific course.\nOnly the context course can be queried for, the target-course field will be ignored for this endpoint.",
+            "input-fields": {
+                "MinCourseRoleAdmin": "bool",
+                "after": "int64",
+                "before": "int64",
+                "course-id": "string",
+                "limit": "int",
+                "root-user-nonce": "string",
+                "sort": "int",
+                "target-assignment": "string",
+                "target-course": "string",
+                "target-type": "string",
+                "target-user": "string",
+                "user-email": "string",
+                "user-pass": "string"
+            },
+            "output-fields": {
+                "results": "[]{assignment: string, attributes: map[string]{interface {}}, course: string, duration: uint64, timestamp: int64, type: string, user: string}"
+            },
             "request-type": "*stats.QueryRequest",
             "response-type": "*stats.QueryResponse"
         },
         "courses/upsert/filespec": {
             "description": "Upsert a course using a filespec.",
+            "input-fields": {
+                "MinServerRoleCourseCreator": "bool",
+                "dry-run": "bool",
+                "filespec": "dest: string, path: string, reference: string, token: string, type: string, username: string",
+                "root-user-nonce": "string",
+                "skip-build-images": "bool",
+                "skip-emails": "bool",
+                "skip-lms-sync": "bool",
+                "skip-source-sync": "bool",
+                "skip-template-files": "bool",
+                "user-email": "string",
+                "user-pass": "string"
+            },
+            "output-fields": {
+                "results": "[]{assignment-template-files: map[string]{[]{string}}, built-assignment-images: []{string}, course-id: string, created: bool, lms-sync-result: assignment-sync: ambiguous-matches: []{id: string, name: string}, non-matched-assignments: []{id: string, name: string}, synced-assignments: []{id: string, name: string}, unchanged-assignments: []{id: string, name: string}, user-sync: []{added: bool, cleartext-password: string, communication-error: ExternalMessage: string, HideLocator: bool, InternalMessage: string, Locator: string, dropped: []{string}, email: string, emailed: bool, enrolled: []{string}, modified: bool, not-exists: bool, removed: bool, skipped: bool, system-error: ExternalMessage: string, HideLocator: bool, InternalMessage: string, Locator: string, validation-error: ExternalMessage: string, HideLocator: bool, InternalMessage: string, Locator: string}, message: string, success: bool, updated: bool}"
+            },
             "request-type": "*upsert.FileSpecRequest",
             "response-type": "*upsert.UpsertResponse"
         },
         "courses/upsert/zip": {
             "description": "Upsert a course using a zip file.",
+            "input-fields": {
+                "Files": "",
+                "MinServerRoleCourseCreator": "bool",
+                "dry-run": "bool",
+                "root-user-nonce": "string",
+                "skip-build-images": "bool",
+                "skip-emails": "bool",
+                "skip-lms-sync": "bool",
+                "skip-source-sync": "bool",
+                "skip-template-files": "bool",
+                "user-email": "string",
+                "user-pass": "string"
+            },
+            "output-fields": {
+                "results": "[]{assignment-template-files: map[string]{[]{string}}, built-assignment-images: []{string}, course-id: string, created: bool, lms-sync-result: assignment-sync: ambiguous-matches: []{id: string, name: string}, non-matched-assignments: []{id: string, name: string}, synced-assignments: []{id: string, name: string}, unchanged-assignments: []{id: string, name: string}, user-sync: []{added: bool, cleartext-password: string, communication-error: ExternalMessage: string, HideLocator: bool, InternalMessage: string, Locator: string, dropped: []{string}, email: string, emailed: bool, enrolled: []{string}, modified: bool, not-exists: bool, removed: bool, skipped: bool, system-error: ExternalMessage: string, HideLocator: bool, InternalMessage: string, Locator: string, validation-error: ExternalMessage: string, HideLocator: bool, InternalMessage: string, Locator: string}, message: string, success: bool, updated: bool}"
+            },
             "request-type": "*upsert.ZipFileRequest",
             "response-type": "*upsert.UpsertResponse"
         },
         "courses/users/drop": {
             "description": "Drop a user from the course.",
+            "input-fields": {
+                "MinCourseRoleAdmin": "bool",
+                "course-id": "string",
+                "root-user-nonce": "string",
+                "target-email": "Email: string, Found: bool, User: email: string, lms-id: string, name: string, role: int",
+                "user-email": "string",
+                "user-pass": "string"
+            },
+            "output-fields": {
+                "found-user": "bool"
+            },
             "request-type": "*users.DropRequest",
             "response-type": "*users.DropResponse"
         },
         "courses/users/enroll": {
             "description": "Enroll one or more users to the course.",
+            "input-fields": {
+                "MinCourseRoleAdmin": "bool",
+                "course-id": "string",
+                "dry-run": "bool",
+                "raw-course-users": "[]{course-lms-id: string, course-role: string, email: string, name: string}",
+                "root-user-nonce": "string",
+                "send-emails": "bool",
+                "skip-inserts": "bool",
+                "skip-updates": "bool",
+                "user-email": "string",
+                "user-pass": "string"
+            },
+            "output-fields": {
+                "results": "[]{added: bool, communication-error: locator: string, message: string, dropped: []{string}, email: string, emailed: bool, enrolled: []{string}, modified: bool, not-exists: bool, removed: bool, skipped: bool, system-error: locator: string, message: string, validation-error: locator: string, message: string}"
+            },
             "request-type": "*users.EnrollRequest",
             "response-type": "*users.EnrollResponse"
         },
         "courses/users/get": {
             "description": "Get the information for a course user.",
+            "input-fields": {
+                "MinCourseRoleOther": "bool",
+                "course-id": "string",
+                "root-user-nonce": "string",
+                "target-email": "Email: string, Found: bool, User: email: string, lms-id: string, name: string, role: int",
+                "user-email": "string",
+                "user-pass": "string"
+            },
+            "output-fields": {
+                "found": "bool",
+                "user": "email: string, lms-id: string, name: string, role: int, type: string"
+            },
             "request-type": "*users.GetRequest",
             "response-type": "*users.GetResponse"
         },
         "courses/users/list": {
             "description": "List the users in the course.",
+            "input-fields": {
+                "MinCourseRoleGrader": "bool",
+                "course-id": "string",
+                "root-user-nonce": "string",
+                "user-email": "string",
+                "user-pass": "string"
+            },
+            "output-fields": {
+                "users": "[]{email: string, lms-id: string, name: string, role: int, type: string}"
+            },
             "request-type": "*users.ListRequest",
             "response-type": "*users.ListResponse"
         },
         "lms/upload/scores": {
             "description": "Upload scores from a tab-separated file to the course's LMS.\nThe file should not have headers, and should have two columns: email and score.",
+            "input-fields": {
+                "MinCourseRoleGrader": "bool",
+                "assignment-lms-id": "string",
+                "course-id": "string",
+                "root-user-nonce": "string",
+                "scores": "[]{email: string, score: float64}",
+                "user-email": "string",
+                "user-pass": "string"
+            },
+            "output-fields": {
+                "count": "int",
+                "error-count": "int",
+                "no-lms-id-users": "[]{entry: interface {}, row: int}",
+                "unrecognized-users": "[]{entry: interface {}, row: int}"
+            },
             "request-type": "*upload.UploadScoresRequest",
             "response-type": "*upload.UploadScoresResponse"
         },
         "lms/user/get": {
             "description": "Get information for an LMS user.",
+            "input-fields": {
+                "MinCourseRoleGrader": "bool",
+                "course-id": "string",
+                "root-user-nonce": "string",
+                "target-email": "Email: string, Found: bool, User: email: string, lms-id: string, name: string, role: int",
+                "user-email": "string",
+                "user-pass": "string"
+            },
+            "output-fields": {
+                "found-autograder-user": "bool",
+                "found-lms-user": "bool",
+                "user": "email: string, lms-id: string, name: string, role: int, type: string"
+            },
             "request-type": "*user.UserGetRequest",
             "response-type": "*user.UserGetResponse"
         },
         "logs/query": {
             "description": "Query log entries from the autograder server.",
+            "input-fields": {
+                "MinServerRoleUser": "bool",
+                "after": "string",
+                "level": "string",
+                "past": "string",
+                "root-user-nonce": "string",
+                "target-assignment": "string",
+                "target-course": "string",
+                "target-email": "string",
+                "user-email": "string",
+                "user-pass": "string"
+            },
+            "output-fields": {
+                "error": "locator: string, message: string",
+                "results": "[]{assignment: string, attributes: map[string]{interface {}}, course: string, error: string, level: int32, message: string, timestamp: int64, user: string}",
+                "success": "bool"
+            },
             "request-type": "*logs.QueryRequest",
             "response-type": "*logs.QueryResponse"
         },
         "metadata/describe": {
             "description": "Describe all endpoints on the server.",
+            "input-fields": {},
+            "output-fields": {
+                "endpoints": "map[string]{description: string, input-fields: map[string]{string}, output-fields: map[string]{string}, request-type: string, response-type: string}"
+            },
             "request-type": "*metadata.DescribeRequest",
             "response-type": "*metadata.DescribeResponse"
         },
         "stats/apirequest/query": {
+            "description": "Query the API request stats for the server.",
+            "input-fields": {
+                "MinServerRoleAdmin": "bool",
+                "after": "int64",
+                "before": "int64",
+                "limit": "int",
+                "root-user-nonce": "string",
+                "sort": "int",
+                "target-assignment": "string",
+                "target-course": "string",
+                "target-endpoint": "string",
+                "target-locator": "string",
+                "target-sender": "string",
+                "target-user": "string",
+                "user-email": "string",
+                "user-pass": "string"
+            },
+            "output-fields": {
+                "results": "[]{assignment: string, attributes: map[string]{interface {}}, course: string, duration: uint64, endpoint: string, locator: string, sender: string, timestamp: int64, user: string}"
+            },
             "request-type": "*apirequest.QueryRequest",
-            "response-type": "*apirequest.QueryResponse",
-            "description": "Query the API request stats for the server."
+            "response-type": "*apirequest.QueryResponse"
         },
         "stats/system/query": {
             "description": "Query the system stats for the server.",
+            "input-fields": {
+                "MinServerRoleAdmin": "bool",
+                "after": "int64",
+                "before": "int64",
+                "limit": "int",
+                "root-user-nonce": "string",
+                "sort": "int",
+                "user-email": "string",
+                "user-pass": "string"
+            },
+            "output-fields": {
+                "results": "[]{attributes: map[string]{interface {}}, cpu-percent: float64, mem-percent: float64, net-bytes-received: uint64, net-bytes-sent: uint64, timestamp: int64}"
+            },
             "request-type": "*system.QueryRequest",
             "response-type": "*system.QueryResponse"
         },
         "system/stacks": {
             "description": "Get stack traces for all the currently running routines (threads) on the server.",
+            "input-fields": {
+                "MinServerRoleAdmin": "bool",
+                "root-user-nonce": "string",
+                "user-email": "string",
+                "user-pass": "string"
+            },
+            "output-fields": {
+                "count": "int",
+                "stacks": "[]{name: string, records: []{call: string, file: string, line: int, pointer: string}, status: string}"
+            },
             "request-type": "*system.StacksRequest",
             "response-type": "*system.StacksResponse"
         },
         "users/auth": {
             "description": "Authenticate as a user.",
+            "input-fields": {
+                "root-user-nonce": "string",
+                "user-email": "string",
+                "user-pass": "string"
+            },
+            "output-fields": {
+                "success": "bool"
+            },
             "request-type": "*users.AuthRequest",
             "response-type": "*users.AuthResponse"
         },
         "users/get": {
             "description": "Get the information for a server user.",
+            "input-fields": {
+                "MinServerRoleUser": "bool",
+                "root-user-nonce": "string",
+                "target-email": "Email: string, Found: bool, User: course-info: map[string]{lms-id: string, role: int}, email: string, name: string, password: access-time: int64, creation-time: int64, hex-digest: string, id: string, name: string, source: string, salt: string, server-role: int, tokens: []{access-time: int64, creation-time: int64, hex-digest: string, id: string, name: string, source: string}",
+                "user-email": "string",
+                "user-pass": "string"
+            },
+            "output-fields": {
+                "courses": "map[string]{assignments: map[string]{due-date: int64, id: string, max-points: float64, name: string}, id: string, name: string}",
+                "found": "bool",
+                "user": "courses: map[string]{id: string, role: int}, email: string, name: string, role: int, type: string"
+            },
             "request-type": "*users.GetRequest",
             "response-type": "*users.GetResponse"
         },
         "users/list": {
             "description": "List the users on the server.",
+            "input-fields": {
+                "MinServerRoleAdmin": "bool",
+                "root-user-nonce": "string",
+                "user-email": "string",
+                "user-pass": "string"
+            },
+            "output-fields": {
+                "users": "[]{courses: map[string]{id: string, role: int}, email: string, name: string, role: int, type: string}"
+            },
             "request-type": "*users.ListRequest",
             "response-type": "*users.ListResponse"
         },
         "users/password/change": {
             "description": "Change your password to the one provided.",
+            "input-fields": {
+                "new-pass": "string",
+                "root-user-nonce": "string",
+                "user-email": "string",
+                "user-pass": "string"
+            },
+            "output-fields": {
+                "duplicate": "bool",
+                "success": "bool"
+            },
             "request-type": "*password.PasswordChangeRequest",
             "response-type": "*password.PasswordChangeResponse"
         },
         "users/password/reset": {
             "description": "Reset to a random password that will be emailed to you.",
+            "input-fields": {
+                "user-email": "string"
+            },
+            "output-fields": {},
             "request-type": "*password.PasswordResetRequest",
             "response-type": "*password.PasswordResetResponse"
         },
         "users/remove": {
             "description": "Remove a user from the server.",
+            "input-fields": {
+                "MinServerRoleAdmin": "bool",
+                "root-user-nonce": "string",
+                "target-email": "Email: string, Found: bool, User: course-info: map[string]{lms-id: string, role: int}, email: string, name: string, password: access-time: int64, creation-time: int64, hex-digest: string, id: string, name: string, source: string, salt: string, server-role: int, tokens: []{access-time: int64, creation-time: int64, hex-digest: string, id: string, name: string, source: string}",
+                "user-email": "string",
+                "user-pass": "string"
+            },
+            "output-fields": {
+                "found-user": "bool"
+            },
             "request-type": "*users.RemoveRequest",
             "response-type": "*users.RemoveResponse"
         },
         "users/tokens/create": {
             "description": "Create a new authentication token.",
+            "input-fields": {
+                "name": "string",
+                "root-user-nonce": "string",
+                "user-email": "string",
+                "user-pass": "string"
+            },
+            "output-fields": {
+                "token-cleartext": "string",
+                "token-id": "string"
+            },
             "request-type": "*tokens.TokensCreateRequest",
             "response-type": "*tokens.TokensCreateResponse"
         },
         "users/tokens/delete": {
             "description": "Delete an authentication token.",
+            "input-fields": {
+                "root-user-nonce": "string",
+                "token-id": "string",
+                "user-email": "string",
+                "user-pass": "string"
+            },
+            "output-fields": {
+                "found": "bool"
+            },
             "request-type": "*tokens.TokensDeleteRequest",
             "response-type": "*tokens.TokensDeleteResponse"
         },
         "users/upsert": {
             "description": "Upsert one or more users to the server (update if exists, insert otherwise).",
+            "input-fields": {
+                "MinServerRoleAdmin": "bool",
+                "dry-run": "bool",
+                "raw-users": "[]{course: string, course-lms-id: string, course-role: string, email: string, name: string, pass: string, role: string}",
+                "root-user-nonce": "string",
+                "send-emails": "bool",
+                "skip-inserts": "bool",
+                "skip-updates": "bool",
+                "user-email": "string",
+                "user-pass": "string"
+            },
+            "output-fields": {
+                "results": "[]{added: bool, communication-error: locator: string, message: string, dropped: []{string}, email: string, emailed: bool, enrolled: []{string}, modified: bool, not-exists: bool, removed: bool, skipped: bool, system-error: locator: string, message: string, validation-error: locator: string, message: string}"
+            },
             "request-type": "*users.UpsertRequest",
             "response-type": "*users.UpsertResponse"
         }
