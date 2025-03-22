@@ -17,11 +17,11 @@ type APIDescription struct {
 }
 
 type EndpointDescription struct {
-	RequestType  string            `json:"request-type"`
-	ResponseType string            `json:"response-type"`
-	Description  string            `json:"description"`
-	InputFields  map[string]string `json:"input-fields"`
-	OutputFields map[string]string `json:"output-fields"`
+	RequestType  string          `json:"request-type"`
+	ResponseType string          `json:"response-type"`
+	Description  string          `json:"description"`
+	InputFields  TypeDescription `json:"input-fields"`
+	OutputFields TypeDescription `json:"output-fields"`
 }
 
 type TypeDescription map[string]string
