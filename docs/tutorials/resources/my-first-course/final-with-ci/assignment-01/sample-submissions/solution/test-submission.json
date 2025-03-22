@@ -1,0 +1,15 @@
+{
+    "result": {
+        "name": "Assignment1",
+        "questions": [
+            {
+                "name": "Question 1: Add",
+                "max_points": 10,
+                "score": 10,
+                "hard_fail": false,
+                "skipped": false,
+                "message": ""
+            }
+        ]
+    }
+}

@@ -11,6 +11,14 @@ Specific requirements for this tutorial:
  - Python (>= 3.8) installed on your machine.
  - A POSIX System (e.g., Linux, BSD, Mac, WSL (Windows)).
 
+## Getting Started
+
+Review the [autograder-server README](../../README.md) and clone this repository.
+
+The tutorial assumes you are working directly within the cloned repository.
+While you may work elsewhere by copying necessary files and modifying relative paths,
+we strongly recommend working from the autograder repository for the duration of the tutorial.
+
 ## Running Autograder Commands
 
 In this tutorial, we will be interacting with the autograder using a prebuilt Docker image to access admin commands for the autograder.
@@ -399,5 +407,7 @@ Congratulations, you have created a basic course!
 Here are some next steps to look into:
  - Create more graders for your other assignments.
  - Connect your [course to your LMS](../types.md#lms-adapter-lmsadapter) (e.g., Canvas).
- - Setup [scheduled tasks](../types.md#tasks) for your course.
- - Setup [CI to test your graders](https://github.com/edulinq/cse-cracks-course/blob/main/.ci/check_graders.sh).
+ - Setup [scheduled tasks](../types.md#tasks-task) for your course.
+ - Setup [CI to test your graders](create-continuous-integration.md).
+
+If you run into issues during development, check out our [troubleshooting guide](troubleshoot-a-course.md).
