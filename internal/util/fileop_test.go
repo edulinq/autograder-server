@@ -1235,6 +1235,46 @@ func TestFileOpSymlinkBreakContainment(test *testing.T) {
 	}
 }
 
+func TestFileOpGlobSymlinkSourceEqualsDest(test *testing.T) {
+	tempDir := MustMkDirTemp("test-fileop-glob-symlink-source-equals-dest-")
+	defer RemoveDirent(tempDir)
+
+	// mkdir -p already_exists
+	// touch already_exists/already_exists.txt
+	destDir := filepath.Join(tempDir, alreadyExistsDirname)
+	MustMkDir(destDir)
+	MustCreateFile(filepath.Join(destDir, alreadyExistsFilename))
+
+	// ln -s already_exists symlink_to_dest
+	symlinkPath := filepath.Join(tempDir, "symlink_to_dest")
+	MustSymbolicLink(destDir, symlinkPath)
+
+	testCases := []struct {
+		operation FileOperation
+	}{
+		{
+			FileOperation([]string{"cp", "*", alreadyExistsDirname}),
+		},
+		{
+			FileOperation([]string{"mv", "*", alreadyExistsDirname}),
+		},
+	}
+
+	for i, testCase := range testCases {
+		err := testCase.operation.Validate()
+		if err != nil {
+			test.Errorf("Case %d: Failed to validate operation '%+v': '%v'.", i, testCase.operation, err)
+			continue
+		}
+
+		err = testCase.operation.Exec(tempDir)
+		if err != nil {
+			test.Errorf("Case %d: Unexpected error when executing operation '%+v': '%v'.", i, testCase.operation, err)
+			continue
+		}
+	}
+}
+
 func runFileOpExecTest(test *testing.T, prefix string, rawOperation []string, errorSubstring string, postExec func(tempDir string)) {
 	operation := NewFileOperation(rawOperation)
 	err := operation.Validate()
