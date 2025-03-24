@@ -50,6 +50,8 @@ jobs:
         run: ./scripts/check_duplicate_locators.sh
 
       - name: Run Base Tests
+        env:
+          AUTOGRADER__DOCKER__DISABLE: ${{ startsWith(matrix.os, 'macos') }}
         run: ./scripts/run_tests.sh
 
   deploy-prebuilt:
