@@ -8,9 +8,7 @@ env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
   PLATFORMS: 'linux/amd64,linux/arm64'
-  # TEST
-  # PUSH_IMAGES: ${{ (github.ref == 'refs/heads/main') && (github.repository_owner == 'edulinq') }}
-  PUSH_IMAGES: ${{ ((github.ref == 'refs/heads/main') || (github.ref == 'refs/heads/eriq-ci-rework')) && (github.repository_owner == 'edulinq') }}
+  PUSH_IMAGES: ${{ (github.ref == 'refs/heads/main') && (github.repository_owner == 'edulinq') }}
 
 permissions:
   contents: read
@@ -57,9 +55,7 @@ jobs:
   deploy-prebuilt:
     name: Deploy Prebuilt
     needs: test
-    # TEST
-    # if: ${{ (github.ref == 'refs/heads/main') }}
-    if: ${{ (github.ref == 'refs/heads/main') || (github.ref == 'refs/heads/eriq-ci-rework') }}
+    if: ${{ (github.ref == 'refs/heads/main') }}
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout
@@ -104,9 +100,7 @@ jobs:
   deploy-slim:
     name: Deploy Slim
     needs: test
-    # TEST
-    # if: ${{ (github.ref == 'refs/heads/main') }}
-    if: ${{ (github.ref == 'refs/heads/main') || (github.ref == 'refs/heads/eriq-ci-rework') }}
+    if: ${{ (github.ref == 'refs/heads/main') }}
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout
