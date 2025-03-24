@@ -3,25 +3,10 @@ package api
 import (
 	"errors"
 	"reflect"
-	"slices"
-	"strings"
 
 	"github.com/edulinq/autograder/internal/api/core"
 	"github.com/edulinq/autograder/internal/util"
 )
-
-type internalTypeDescription struct {
-	Description core.TypeDescription
-	Alias       string
-}
-
-func (this *internalTypeDescription) String() string {
-	if len(this.Description) > 0 {
-		return formatNestedFields(this.Description)
-	} else {
-		return this.Alias
-	}
-}
 
 // Routes must be validated before calling Describe().
 func Describe(routes []core.Route) (*core.APIDescription, error) {
@@ -48,44 +33,69 @@ func Describe(routes []core.Route) (*core.APIDescription, error) {
 		outputFields := simplifyType(apiRoute.ResponseType, typeMap)
 
 		endpointMap[apiRoute.GetBasePath()] = core.EndpointDescription{
+			Description:  apiRoute.Description,
+			InputFields:  inputFields.StructFields,
+			OutputFields: outputFields.StructFields,
 			RequestType:  apiRoute.RequestType.String(),
 			ResponseType: apiRoute.ResponseType.String(),
-			Description:  apiRoute.Description,
-			InputFields:  inputFields.Description,
-			OutputFields: outputFields.Description,
 		}
 	}
 
 	apiDescription := core.APIDescription{
 		Endpoints: endpointMap,
+		Types:     typeMap,
 	}
 
 	return &apiDescription, errs
 }
 
-func simplifyType(customType reflect.Type, typeMap map[string]core.TypeDescription) internalTypeDescription {
+func GetTypeID(customType reflect.Type) string {
+	typeID := customType.String()
+	if customType.PkgPath() != "" {
+		typeID = customType.PkgPath() + "/" + typeID
+	}
+
+	return typeID
+}
+
+func simplifyType(customType reflect.Type, typeMap map[string]core.TypeDescription) core.TypeDescription {
 	if customType == nil {
-		return internalTypeDescription{Alias: "<nil>"}
+		return core.TypeDescription{}
+	}
+
+	if typeMap == nil {
+		typeMap = make(map[string]core.TypeDescription)
 	}
 
 	if customType.Kind() == reflect.Pointer {
 		customType = customType.Elem()
 	}
 
-	typeID := getTypeID(customType)
+	typeID := GetTypeID(customType)
 	typeDescription, ok := typeMap[typeID]
 	if ok {
-		return internalTypeDescription{Description: typeDescription}
+		return typeDescription
 	}
-
-	simplifiedTypes := make(map[string]string)
 
 	switch customType.Kind() {
 	case reflect.Slice, reflect.Array:
-		return simplifyArrayType(customType, typeMap)
+		elementType := customType.Elem()
+		elemTypeDescription := simplifyType(elementType, typeMap)
+
+		typeDescription.TypeID = typeID
+		typeDescription.TypeCategory = core.ArrayType
+		typeDescription.ArrayElementType = elemTypeDescription.TypeID
 	case reflect.Map:
-		return simplifyMapType(customType, typeMap)
+		elementType := customType.Elem()
+		elemTypeDescription := simplifyType(elementType, typeMap)
+
+		typeDescription.TypeID = typeID
+		typeDescription.TypeCategory = core.MapType
+		typeDescription.MapKeyType = customType.Key().String()
+		typeDescription.MapValueType = elemTypeDescription.TypeID
 	case reflect.Struct:
+		simplifiedTypes := make(map[string]string)
+
 		for i := 0; i < customType.NumField(); i++ {
 			field := customType.Field(i)
 
@@ -97,85 +107,42 @@ func simplifyType(customType reflect.Type, typeMap map[string]core.TypeDescripti
 			// Handle embedded fields.
 			if field.Anonymous {
 				embeddedFields := simplifyType(field.Type, typeMap)
-				if len(embeddedFields.Description) > 0 {
-					for fieldTag, fieldValue := range embeddedFields.Description {
+				if len(embeddedFields.StructFields) > 0 {
+					for fieldTag, fieldValue := range embeddedFields.StructFields {
 						simplifiedTypes[fieldTag] = fieldValue
 					}
-				} else if embeddedFields.Alias != "" {
-					simplifiedTypes[jsonTag] = embeddedFields.Alias
+				} else {
+					// TODO: Make sure we aren't adding bad Assignment field here.
+					simplifiedTypes[jsonTag] = core.TypeDescriptionToString(embeddedFields)
 				}
 
 				continue
 			}
 
+			jsonTag = util.JSONFieldNameFull(field, false)
+			if jsonTag == "" {
+				continue
+			}
+
 			fieldDescriptions := simplifyType(field.Type, typeMap)
-			simplifiedTypes[jsonTag] = fieldDescriptions.String()
+			simplifiedTypes[jsonTag] = core.TypeDescriptionToString(fieldDescriptions)
 		}
+
+		typeDescription.TypeID = typeID
+		typeDescription.TypeCategory = core.StructType
+		typeDescription.StructFields = simplifiedTypes
 	default:
 		// Handle built-in types.
+		typeDescription.TypeID = typeID
+		typeDescription.TypeCategory = core.BasicType
+
 		if customType.PkgPath() == "" {
-			return internalTypeDescription{Alias: customType.String()}
+			typeDescription.Alias = customType.String()
 		} else {
-			return internalTypeDescription{Alias: customType.Kind().String()}
+			typeDescription.Alias = customType.Kind().String()
 		}
 	}
 
-	typeMap[typeID] = simplifiedTypes
-	return internalTypeDescription{Description: simplifiedTypes}
-}
-
-func simplifyArrayType(customType reflect.Type, typeMap map[string]core.TypeDescription) internalTypeDescription {
-	if customType == nil {
-		return internalTypeDescription{Alias: "<nil>"}
-	}
-
-	if customType.Kind() != reflect.Slice && customType.Kind() != reflect.Array {
-		return internalTypeDescription{Alias: "<error: not an array type>"}
-	}
-
-	elementType := customType.Elem()
-	typeDescription := simplifyType(elementType, typeMap)
-
-	arrayDescription := "[]{" + typeDescription.String() + "}"
-
-	return internalTypeDescription{Alias: arrayDescription}
-}
-
-func simplifyMapType(customType reflect.Type, typeMap map[string]core.TypeDescription) internalTypeDescription {
-	if customType == nil {
-		return internalTypeDescription{Alias: "<nil>"}
-	}
-
-	if customType.Kind() != reflect.Map {
-		return internalTypeDescription{Alias: "<error: not a map type>"}
-	}
-
-	keyType := customType.Key()
-	elementType := customType.Elem()
-	typeDescription := simplifyType(elementType, typeMap)
-
-	mapDescription := "map[" + keyType.String() + "]{" + typeDescription.String() + "}"
-
-	return internalTypeDescription{Alias: mapDescription}
-}
-
-func getTypeID(customType reflect.Type) string {
-	return customType.PkgPath() + "/" + customType.String()
-}
-
-func formatNestedFields(fields map[string]string) string {
-	parts := []string{}
-
-	keys := make([]string, 0, len(fields))
-	for key := range fields {
-		keys = append(keys, key)
-	}
-
-	slices.Sort(keys)
-
-	for _, key := range keys {
-		parts = append(parts, key+": "+fields[key])
-	}
-
-	return strings.Join(parts, ", ")
+	typeMap[typeID] = typeDescription
+	return typeDescription
 }

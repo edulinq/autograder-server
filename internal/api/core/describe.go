@@ -9,22 +9,46 @@ import (
 	"github.com/edulinq/autograder/internal/util"
 )
 
+const (
+	BasicType  = "basic"
+	StructType = "struct"
+	MapType    = "map"
+	ArrayType  = "array"
+)
+
 // API Description will be empty until RunServer() is called.
 var apiDescription APIDescription
 
 type APIDescription struct {
 	Endpoints map[string]EndpointDescription `json:"endpoints"`
+	Types     map[string]TypeDescription     `json:"types"`
 }
 
 type EndpointDescription struct {
-	RequestType  string          `json:"request-type"`
-	ResponseType string          `json:"response-type"`
-	Description  string          `json:"description"`
-	InputFields  TypeDescription `json:"input-fields"`
-	OutputFields TypeDescription `json:"output-fields"`
+	Description  string            `json:"description"`
+	InputFields  map[string]string `json:"input-fields"`
+	OutputFields map[string]string `json:"output-fields"`
+	RequestType  string            `json:"request-type"`
+	ResponseType string            `json:"response-type"`
 }
 
-type TypeDescription map[string]string
+type TypeDescription struct {
+	Alias            string            `json:"alias,omitempty"`
+	TypeCategory     string            `json:"category"`
+	ArrayElementType string            `json:"element-type,omitempty"`
+	StructFields     map[string]string `json:"fields,omitempty"`
+	MapKeyType       string            `json:"key-type,omitempty"`
+	MapValueType     string            `json:"value-type,omitempty"`
+	TypeID           string            `json:"type-id"`
+}
+
+func TypeDescriptionToString(typeDescription TypeDescription) string {
+	if typeDescription.TypeCategory == BasicType {
+		return typeDescription.Alias
+	} else {
+		return typeDescription.TypeID
+	}
+}
 
 func SetAPIDescription(description APIDescription) {
 	apiDescription = description

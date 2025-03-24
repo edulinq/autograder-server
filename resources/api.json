@@ -3,6 +3,7 @@
         "courses/admin/update": {
             "description": "Update an existing course.",
             "input-fields": {
+                "APIRequest": "github.com/edulinq/autograder/internal/api/core/core.APIRequest",
                 "MinCourseRoleAdmin": "bool",
                 "course-id": "string",
                 "root-user-nonce": "string",
@@ -10,7 +11,7 @@
                 "user-pass": "string"
             },
             "output-fields": {
-                "result": "assignment-template-files: map[string]{[]{string}}, built-assignment-images: []{string}, course-id: string, created: bool, lms-sync-result: assignment-sync: ambiguous-matches: []{id: string, name: string}, non-matched-assignments: []{id: string, name: string}, synced-assignments: []{id: string, name: string}, unchanged-assignments: []{id: string, name: string}, user-sync: []{added: bool, cleartext-password: string, communication-error: ExternalMessage: string, HideLocator: bool, InternalMessage: string, Locator: string, dropped: []{string}, email: string, emailed: bool, enrolled: []{string}, modified: bool, not-exists: bool, removed: bool, skipped: bool, system-error: ExternalMessage: string, HideLocator: bool, InternalMessage: string, Locator: string, validation-error: ExternalMessage: string, HideLocator: bool, InternalMessage: string, Locator: string}, message: string, success: bool, updated: bool"
+                "result": "github.com/edulinq/autograder/internal/procedures/courses/courses.CourseUpsertResult"
             },
             "request-type": "*admin.UpdateRequest",
             "response-type": "*admin.UpdateResponse"
@@ -18,7 +19,7 @@
         "courses/assignments/get": {
             "description": "Get the information for a course assignment.",
             "input-fields": {
-                "Assignment": "_rel_source-dir: string, analysis-options: exclude-patterns: []{string}, include-patterns: []{string}, template-file-ops: []{[]{string}}, template-files: []{dest: string, path: string, reference: string, token: string, type: string, username: string}, due-date: int64, id: string, image: string, invocation: []{string}, late-policy: late-days-lms-id: string, max-late-days: int, penalty: float64, reject-after-days: int, type: string, lms-id: string, max-points: float64, max-runtime-secs: int, name: string, post-static-docker-commands: []{string}, post-static-file-ops: []{[]{string}}, post-submission-file-ops: []{[]{string}}, pre-static-docker-commands: []{string}, pre-static-file-ops: []{[]{string}}, sort-id: string, static-files: []{dest: string, path: string, reference: string, token: string, type: string, username: string}, submission-limit: max-attempts: int, window: allowed-attempts: int, duration: days: int64, hours: int64, minutes: int64, seconds: int64",
+                "APIRequest": "github.com/edulinq/autograder/internal/api/core/core.APIRequest",
                 "MinCourseRoleOther": "bool",
                 "assignment-id": "string",
                 "course-id": "string",
@@ -27,7 +28,7 @@
                 "user-pass": "string"
             },
             "output-fields": {
-                "assignment": "due-date: int64, id: string, max-points: float64, name: string"
+                "assignment": "github.com/edulinq/autograder/internal/api/core/core.AssignmentInfo"
             },
             "request-type": "*assignments.GetRequest",
             "response-type": "*assignments.GetResponse"
@@ -35,6 +36,7 @@
         "courses/assignments/list": {
             "description": "List the assignments in the course.",
             "input-fields": {
+                "APIRequest": "github.com/edulinq/autograder/internal/api/core/core.APIRequest",
                 "MinCourseRoleOther": "bool",
                 "course-id": "string",
                 "root-user-nonce": "string",
@@ -42,7 +44,7 @@
                 "user-pass": "string"
             },
             "output-fields": {
-                "assignments": "[]{due-date: int64, id: string, max-points: float64, name: string}"
+                "assignments": "[]*core.AssignmentInfo"
             },
             "request-type": "*assignments.ListRequest",
             "response-type": "*assignments.ListResponse"
@@ -50,20 +52,21 @@
         "courses/assignments/submissions/analysis/individual": {
             "description": "Get the result of a individual analysis for the specified submissions.",
             "input-fields": {
+                "APIRequest": "github.com/edulinq/autograder/internal/api/core/core.APIRequest",
                 "MinServerRoleUser": "bool",
                 "dry-run": "bool",
                 "overwrite-cache": "bool",
                 "root-user-nonce": "string",
-                "submissions": "[]{string}",
+                "submissions": "[]string",
                 "user-email": "string",
                 "user-pass": "string",
                 "wait-for-completion": "bool"
             },
             "output-fields": {
                 "complete": "bool",
-                "options": "dry-run: bool, overwrite-cache: bool, submissions: []{string}, wait-for-completion: bool",
-                "results": "[]{analysis-timestamp: int64, assignment-id: string, course-id: string, files: []{filename: string, lines-of-code: int, original-filename: string}, lines-of-code: int, lines-of-code-delta: int, lines-of-code-per-hour: float64, options: exclude-patterns: []{string}, include-patterns: []{string}, template-file-ops: []{[]{string}}, template-files: []{dest: string, path: string, reference: string, token: string, type: string, username: string}, score: float64, score-delta: float64, score-per-hour: float64, short-id: string, skipped-files: []{string}, submission-id: string, submission-start-time: int64, submission-time-delta: int64, user-email: string}",
-                "summary": "aggregate-lines-of-code: count: int, max: float64, mean: float64, median: float64, min: float64, aggregate-lines-of-code-delta: count: int, max: float64, mean: float64, median: float64, min: float64, aggregate-lines-of-code-per-file: map[string]{count: int, max: float64, mean: float64, median: float64, min: float64}, aggregate-lines-of-code-per-hour: count: int, max: float64, mean: float64, median: float64, min: float64, aggregate-score: count: int, max: float64, mean: float64, median: float64, min: float64, aggregate-score-delta: count: int, max: float64, mean: float64, median: float64, min: float64, aggregate-score-per-hour: count: int, max: float64, mean: float64, median: float64, min: float64, aggregate-submission-time-delta: count: int, max: float64, mean: float64, median: float64, min: float64, complete: bool, complete-count: int, first-timestamp: int64, last-timestamp: int64, pending-count: int"
+                "options": "github.com/edulinq/autograder/internal/analysis/analysis.AnalysisOptions",
+                "results": "[]*model.IndividualAnalysis",
+                "summary": "github.com/edulinq/autograder/internal/model/model.IndividualAnalysisSummary"
             },
             "request-type": "*analysis.IndividualRequest",
             "response-type": "*analysis.IndividualResponse"
@@ -71,20 +74,21 @@
         "courses/assignments/submissions/analysis/pairwise": {
             "description": "Get the result of a pairwise analysis for the specified submissions.",
             "input-fields": {
+                "APIRequest": "github.com/edulinq/autograder/internal/api/core/core.APIRequest",
                 "MinServerRoleUser": "bool",
                 "dry-run": "bool",
                 "overwrite-cache": "bool",
                 "root-user-nonce": "string",
-                "submissions": "[]{string}",
+                "submissions": "[]string",
                 "user-email": "string",
                 "user-pass": "string",
                 "wait-for-completion": "bool"
             },
             "output-fields": {
                 "complete": "bool",
-                "options": "dry-run: bool, overwrite-cache: bool, submissions: []{string}, wait-for-completion: bool",
-                "results": "[]{analysis-timestamp: int64, mean-similarities: map[string]{float64}, options: exclude-patterns: []{string}, include-patterns: []{string}, template-file-ops: []{[]{string}}, template-files: []{dest: string, path: string, reference: string, token: string, type: string, username: string}, similarities: map[string]{[]{filename: string, options: map[string]{interface {}}, original-filename: string, score: float64, tool: string, version: string}}, skipped-files: []{string}, submission-ids: []{string}, total-mean-similarity: float64, unmatched-files: []{[]{string}}}",
-                "summary": "aggregate-mean-similarities: map[string]{count: int, max: float64, mean: float64, median: float64, min: float64}, aggregate-total-mean-similarity: count: int, max: float64, mean: float64, median: float64, min: float64, complete: bool, complete-count: int, first-timestamp: int64, last-timestamp: int64, pending-count: int"
+                "options": "github.com/edulinq/autograder/internal/analysis/analysis.AnalysisOptions",
+                "results": "[]*model.PairwiseAnalysis",
+                "summary": "github.com/edulinq/autograder/internal/model/model.PairwiseAnalysisSummary"
             },
             "request-type": "*analysis.PairwiseRequest",
             "response-type": "*analysis.PairwiseResponse"
@@ -92,7 +96,7 @@
         "courses/assignments/submissions/fetch/course/attempts": {
             "description": "Get all recent submissions and grading information for this assignment.",
             "input-fields": {
-                "Assignment": "_rel_source-dir: string, analysis-options: exclude-patterns: []{string}, include-patterns: []{string}, template-file-ops: []{[]{string}}, template-files: []{dest: string, path: string, reference: string, token: string, type: string, username: string}, due-date: int64, id: string, image: string, invocation: []{string}, late-policy: late-days-lms-id: string, max-late-days: int, penalty: float64, reject-after-days: int, type: string, lms-id: string, max-points: float64, max-runtime-secs: int, name: string, post-static-docker-commands: []{string}, post-static-file-ops: []{[]{string}}, post-submission-file-ops: []{[]{string}}, pre-static-docker-commands: []{string}, pre-static-file-ops: []{[]{string}}, sort-id: string, static-files: []{dest: string, path: string, reference: string, token: string, type: string, username: string}, submission-limit: max-attempts: int, window: allowed-attempts: int, duration: days: int64, hours: int64, minutes: int64, seconds: int64",
+                "APIRequest": "github.com/edulinq/autograder/internal/api/core/core.APIRequest",
                 "MinCourseRoleGrader": "bool",
                 "assignment-id": "string",
                 "course-id": "string",
@@ -102,7 +106,7 @@
                 "user-pass": "string"
             },
             "output-fields": {
-                "grading-results": "map[string]{info: additional-info: map[string]{interface {}}, assignment-id: string, course-id: string, epilogue: string, grading_end_time: int64, grading_start_time: int64, id: string, max_points: float64, message: string, name: string, prologue: string, questions: []{grading_end_time: int64, grading_start_time: int64, hard_fail: bool, max_points: float64, message: string, name: string, score: float64, skipped: bool}, score: float64, short-id: string, user: string, input-files-gzip: map[string]{[]{uint8}}, output-files-gzip: map[string]{[]{uint8}}, stderr: string, stdout: string}"
+                "grading-results": "map[string]*model.GradingResult"
             },
             "request-type": "*course.FetchCourseAttemptsRequest",
             "response-type": "*course.FetchCourseAttemptsResponse"
@@ -110,7 +114,7 @@
         "courses/assignments/submissions/fetch/course/scores": {
             "description": "Get a summary of the most recent scores for this assignment.",
             "input-fields": {
-                "Assignment": "_rel_source-dir: string, analysis-options: exclude-patterns: []{string}, include-patterns: []{string}, template-file-ops: []{[]{string}}, template-files: []{dest: string, path: string, reference: string, token: string, type: string, username: string}, due-date: int64, id: string, image: string, invocation: []{string}, late-policy: late-days-lms-id: string, max-late-days: int, penalty: float64, reject-after-days: int, type: string, lms-id: string, max-points: float64, max-runtime-secs: int, name: string, post-static-docker-commands: []{string}, post-static-file-ops: []{[]{string}}, post-submission-file-ops: []{[]{string}}, pre-static-docker-commands: []{string}, pre-static-file-ops: []{[]{string}}, sort-id: string, static-files: []{dest: string, path: string, reference: string, token: string, type: string, username: string}, submission-limit: max-attempts: int, window: allowed-attempts: int, duration: days: int64, hours: int64, minutes: int64, seconds: int64",
+                "APIRequest": "github.com/edulinq/autograder/internal/api/core/core.APIRequest",
                 "MinCourseRoleGrader": "bool",
                 "assignment-id": "string",
                 "course-id": "string",
@@ -120,7 +124,7 @@
                 "user-pass": "string"
             },
             "output-fields": {
-                "submission-infos": "map[string]{assignment-id: string, course-id: string, grading_start_time: int64, id: string, max_points: float64, message: string, score: float64, short-id: string, user: string}"
+                "submission-infos": "map[string]*model.SubmissionHistoryItem"
             },
             "request-type": "*course.FetchCourseScoresRequest",
             "response-type": "*course.FetchCourseScoresResponse"
@@ -128,12 +132,12 @@
         "courses/assignments/submissions/fetch/user/attempt": {
             "description": "Get a submission along with all grading information.",
             "input-fields": {
-                "Assignment": "_rel_source-dir: string, analysis-options: exclude-patterns: []{string}, include-patterns: []{string}, template-file-ops: []{[]{string}}, template-files: []{dest: string, path: string, reference: string, token: string, type: string, username: string}, due-date: int64, id: string, image: string, invocation: []{string}, late-policy: late-days-lms-id: string, max-late-days: int, penalty: float64, reject-after-days: int, type: string, lms-id: string, max-points: float64, max-runtime-secs: int, name: string, post-static-docker-commands: []{string}, post-static-file-ops: []{[]{string}}, post-submission-file-ops: []{[]{string}}, pre-static-docker-commands: []{string}, pre-static-file-ops: []{[]{string}}, sort-id: string, static-files: []{dest: string, path: string, reference: string, token: string, type: string, username: string}, submission-limit: max-attempts: int, window: allowed-attempts: int, duration: days: int64, hours: int64, minutes: int64, seconds: int64",
+                "APIRequest": "github.com/edulinq/autograder/internal/api/core/core.APIRequest",
                 "MinCourseRoleStudent": "bool",
                 "assignment-id": "string",
                 "course-id": "string",
                 "root-user-nonce": "string",
-                "target-email": "Email: string, Found: bool, User: email: string, lms-id: string, name: string, role: int",
+                "target-email": "github.com/edulinq/autograder/internal/api/core/core.TargetCourseUserSelfOrGrader",
                 "target-submission": "string",
                 "user-email": "string",
                 "user-pass": "string"
@@ -141,7 +145,7 @@
             "output-fields": {
                 "found-submission": "bool",
                 "found-user": "bool",
-                "grading-result": "info: additional-info: map[string]{interface {}}, assignment-id: string, course-id: string, epilogue: string, grading_end_time: int64, grading_start_time: int64, id: string, max_points: float64, message: string, name: string, prologue: string, questions: []{grading_end_time: int64, grading_start_time: int64, hard_fail: bool, max_points: float64, message: string, name: string, score: float64, skipped: bool}, score: float64, short-id: string, user: string, input-files-gzip: map[string]{[]{uint8}}, output-files-gzip: map[string]{[]{uint8}}, stderr: string, stdout: string"
+                "grading-result": "github.com/edulinq/autograder/internal/model/model.GradingResult"
             },
             "request-type": "*user.FetchUserAttemptRequest",
             "response-type": "*user.FetchUserAttemptResponse"
@@ -149,18 +153,18 @@
         "courses/assignments/submissions/fetch/user/attempts": {
             "description": "Get all submission attempts made by a user along with all grading information.",
             "input-fields": {
-                "Assignment": "_rel_source-dir: string, analysis-options: exclude-patterns: []{string}, include-patterns: []{string}, template-file-ops: []{[]{string}}, template-files: []{dest: string, path: string, reference: string, token: string, type: string, username: string}, due-date: int64, id: string, image: string, invocation: []{string}, late-policy: late-days-lms-id: string, max-late-days: int, penalty: float64, reject-after-days: int, type: string, lms-id: string, max-points: float64, max-runtime-secs: int, name: string, post-static-docker-commands: []{string}, post-static-file-ops: []{[]{string}}, post-submission-file-ops: []{[]{string}}, pre-static-docker-commands: []{string}, pre-static-file-ops: []{[]{string}}, sort-id: string, static-files: []{dest: string, path: string, reference: string, token: string, type: string, username: string}, submission-limit: max-attempts: int, window: allowed-attempts: int, duration: days: int64, hours: int64, minutes: int64, seconds: int64",
+                "APIRequest": "github.com/edulinq/autograder/internal/api/core/core.APIRequest",
                 "MinCourseRoleGrader": "bool",
                 "assignment-id": "string",
                 "course-id": "string",
                 "root-user-nonce": "string",
-                "target-email": "Email: string, Found: bool, User: email: string, lms-id: string, name: string, role: int",
+                "target-email": "github.com/edulinq/autograder/internal/api/core/core.TargetCourseUserSelfOrGrader",
                 "user-email": "string",
                 "user-pass": "string"
             },
             "output-fields": {
                 "found-user": "bool",
-                "grading-results": "[]{info: additional-info: map[string]{interface {}}, assignment-id: string, course-id: string, epilogue: string, grading_end_time: int64, grading_start_time: int64, id: string, max_points: float64, message: string, name: string, prologue: string, questions: []{grading_end_time: int64, grading_start_time: int64, hard_fail: bool, max_points: float64, message: string, name: string, score: float64, skipped: bool}, score: float64, short-id: string, user: string, input-files-gzip: map[string]{[]{uint8}}, output-files-gzip: map[string]{[]{uint8}}, stderr: string, stdout: string}"
+                "grading-results": "[]*model.GradingResult"
             },
             "request-type": "*user.FetchUserAttemptsRequest",
             "response-type": "*user.FetchUserAttemptsResponse"
@@ -168,18 +172,18 @@
         "courses/assignments/submissions/fetch/user/history": {
             "description": "Get a summary of the submissions for this assignment.",
             "input-fields": {
-                "Assignment": "_rel_source-dir: string, analysis-options: exclude-patterns: []{string}, include-patterns: []{string}, template-file-ops: []{[]{string}}, template-files: []{dest: string, path: string, reference: string, token: string, type: string, username: string}, due-date: int64, id: string, image: string, invocation: []{string}, late-policy: late-days-lms-id: string, max-late-days: int, penalty: float64, reject-after-days: int, type: string, lms-id: string, max-points: float64, max-runtime-secs: int, name: string, post-static-docker-commands: []{string}, post-static-file-ops: []{[]{string}}, post-submission-file-ops: []{[]{string}}, pre-static-docker-commands: []{string}, pre-static-file-ops: []{[]{string}}, sort-id: string, static-files: []{dest: string, path: string, reference: string, token: string, type: string, username: string}, submission-limit: max-attempts: int, window: allowed-attempts: int, duration: days: int64, hours: int64, minutes: int64, seconds: int64",
+                "APIRequest": "github.com/edulinq/autograder/internal/api/core/core.APIRequest",
                 "MinCourseRoleStudent": "bool",
                 "assignment-id": "string",
                 "course-id": "string",
                 "root-user-nonce": "string",
-                "target-email": "Email: string, Found: bool, User: email: string, lms-id: string, name: string, role: int",
+                "target-email": "github.com/edulinq/autograder/internal/api/core/core.TargetCourseUserSelfOrGrader",
                 "user-email": "string",
                 "user-pass": "string"
             },
             "output-fields": {
                 "found-user": "bool",
-                "history": "[]{assignment-id: string, course-id: string, grading_start_time: int64, id: string, max_points: float64, message: string, score: float64, short-id: string, user: string}"
+                "history": "[]*model.SubmissionHistoryItem"
             },
             "request-type": "*user.FetchUserHistoryRequest",
             "response-type": "*user.FetchUserHistoryResponse"
@@ -187,12 +191,12 @@
         "courses/assignments/submissions/fetch/user/peek": {
             "description": "Get a copy of the grading report for the specified submission. Does not submit a new submission.",
             "input-fields": {
-                "Assignment": "_rel_source-dir: string, analysis-options: exclude-patterns: []{string}, include-patterns: []{string}, template-file-ops: []{[]{string}}, template-files: []{dest: string, path: string, reference: string, token: string, type: string, username: string}, due-date: int64, id: string, image: string, invocation: []{string}, late-policy: late-days-lms-id: string, max-late-days: int, penalty: float64, reject-after-days: int, type: string, lms-id: string, max-points: float64, max-runtime-secs: int, name: string, post-static-docker-commands: []{string}, post-static-file-ops: []{[]{string}}, post-submission-file-ops: []{[]{string}}, pre-static-docker-commands: []{string}, pre-static-file-ops: []{[]{string}}, sort-id: string, static-files: []{dest: string, path: string, reference: string, token: string, type: string, username: string}, submission-limit: max-attempts: int, window: allowed-attempts: int, duration: days: int64, hours: int64, minutes: int64, seconds: int64",
+                "APIRequest": "github.com/edulinq/autograder/internal/api/core/core.APIRequest",
                 "MinCourseRoleStudent": "bool",
                 "assignment-id": "string",
                 "course-id": "string",
                 "root-user-nonce": "string",
-                "target-email": "Email: string, Found: bool, User: email: string, lms-id: string, name: string, role: int",
+                "target-email": "github.com/edulinq/autograder/internal/api/core/core.TargetCourseUserSelfOrGrader",
                 "target-submission": "string",
                 "user-email": "string",
                 "user-pass": "string"
@@ -200,7 +204,7 @@
             "output-fields": {
                 "found-submission": "bool",
                 "found-user": "bool",
-                "submission-result": "additional-info: map[string]{interface {}}, assignment-id: string, course-id: string, epilogue: string, grading_end_time: int64, grading_start_time: int64, id: string, max_points: float64, message: string, name: string, prologue: string, questions: []{grading_end_time: int64, grading_start_time: int64, hard_fail: bool, max_points: float64, message: string, name: string, score: float64, skipped: bool}, score: float64, short-id: string, user: string"
+                "submission-result": "github.com/edulinq/autograder/internal/model/model.GradingInfo"
             },
             "request-type": "*user.FetchUserPeekRequest",
             "response-type": "*user.FetchUserPeekResponse"
@@ -208,12 +212,12 @@
         "courses/assignments/submissions/remove": {
             "description": "Remove a specified submission. Defaults to the most recent submission.",
             "input-fields": {
-                "Assignment": "_rel_source-dir: string, analysis-options: exclude-patterns: []{string}, include-patterns: []{string}, template-file-ops: []{[]{string}}, template-files: []{dest: string, path: string, reference: string, token: string, type: string, username: string}, due-date: int64, id: string, image: string, invocation: []{string}, late-policy: late-days-lms-id: string, max-late-days: int, penalty: float64, reject-after-days: int, type: string, lms-id: string, max-points: float64, max-runtime-secs: int, name: string, post-static-docker-commands: []{string}, post-static-file-ops: []{[]{string}}, post-submission-file-ops: []{[]{string}}, pre-static-docker-commands: []{string}, pre-static-file-ops: []{[]{string}}, sort-id: string, static-files: []{dest: string, path: string, reference: string, token: string, type: string, username: string}, submission-limit: max-attempts: int, window: allowed-attempts: int, duration: days: int64, hours: int64, minutes: int64, seconds: int64",
+                "APIRequest": "github.com/edulinq/autograder/internal/api/core/core.APIRequest",
                 "MinCourseRoleGrader": "bool",
                 "assignment-id": "string",
                 "course-id": "string",
                 "root-user-nonce": "string",
-                "target-email": "Email: string, Found: bool, User: email: string, lms-id: string, name: string, role: int",
+                "target-email": "github.com/edulinq/autograder/internal/api/core/core.TargetCourseUserSelfOrGrader",
                 "target-submission": "string",
                 "user-email": "string",
                 "user-pass": "string"
@@ -228,8 +232,7 @@
         "courses/assignments/submissions/submit": {
             "description": "Submit an assignment submission to the autograder.",
             "input-fields": {
-                "Assignment": "_rel_source-dir: string, analysis-options: exclude-patterns: []{string}, include-patterns: []{string}, template-file-ops: []{[]{string}}, template-files: []{dest: string, path: string, reference: string, token: string, type: string, username: string}, due-date: int64, id: string, image: string, invocation: []{string}, late-policy: late-days-lms-id: string, max-late-days: int, penalty: float64, reject-after-days: int, type: string, lms-id: string, max-points: float64, max-runtime-secs: int, name: string, post-static-docker-commands: []{string}, post-static-file-ops: []{[]{string}}, post-submission-file-ops: []{[]{string}}, pre-static-docker-commands: []{string}, pre-static-file-ops: []{[]{string}}, sort-id: string, static-files: []{dest: string, path: string, reference: string, token: string, type: string, username: string}, submission-limit: max-attempts: int, window: allowed-attempts: int, duration: days: int64, hours: int64, minutes: int64, seconds: int64",
-                "Files": "",
+                "APIRequest": "github.com/edulinq/autograder/internal/api/core/core.APIRequest",
                 "MinCourseRoleStudent": "bool",
                 "allow-late": "bool",
                 "assignment-id": "string",
@@ -243,7 +246,7 @@
                 "grading-success": "bool",
                 "message": "string",
                 "rejected": "bool",
-                "result": "additional-info: map[string]{interface {}}, assignment-id: string, course-id: string, epilogue: string, grading_end_time: int64, grading_start_time: int64, id: string, max_points: float64, message: string, name: string, prologue: string, questions: []{grading_end_time: int64, grading_start_time: int64, hard_fail: bool, max_points: float64, message: string, name: string, score: float64, skipped: bool}, score: float64, short-id: string, user: string"
+                "result": "github.com/edulinq/autograder/internal/model/model.GradingInfo"
             },
             "request-type": "*submissions.SubmitRequest",
             "response-type": "*submissions.SubmitResponse"
@@ -251,6 +254,7 @@
         "courses/lms/scores/upload": {
             "description": "Perform a full scoring and upload scores to the course's LMS.",
             "input-fields": {
+                "APIRequest": "github.com/edulinq/autograder/internal/api/core/core.APIRequest",
                 "MinCourseRoleAdmin": "bool",
                 "course-id": "string",
                 "dry-run": "bool",
@@ -260,7 +264,7 @@
             },
             "output-fields": {
                 "dry-run": "bool",
-                "results": "[]{assignment: string, raw-score: float64, score: float64, submission-id: string, submission-time: int64, upload-time: int64, user: string}"
+                "results": "[]*model.ExternalScoringInfo"
             },
             "request-type": "*scores.UploadRequest",
             "response-type": "*scores.UploadResponse"
@@ -268,6 +272,7 @@
         "courses/stats/query": {
             "description": "Query metrics for a specific course.\nOnly the context course can be queried for, the target-course field will be ignored for this endpoint.",
             "input-fields": {
+                "APIRequest": "github.com/edulinq/autograder/internal/api/core/core.APIRequest",
                 "MinCourseRoleAdmin": "bool",
                 "after": "int64",
                 "before": "int64",
@@ -283,7 +288,7 @@
                 "user-pass": "string"
             },
             "output-fields": {
-                "results": "[]{assignment: string, attributes: map[string]{interface {}}, course: string, duration: uint64, timestamp: int64, type: string, user: string}"
+                "results": "[]*stats.CourseMetric"
             },
             "request-type": "*stats.QueryRequest",
             "response-type": "*stats.QueryResponse"
@@ -291,9 +296,10 @@
         "courses/upsert/filespec": {
             "description": "Upsert a course using a filespec.",
             "input-fields": {
+                "APIRequest": "github.com/edulinq/autograder/internal/api/core/core.APIRequest",
                 "MinServerRoleCourseCreator": "bool",
                 "dry-run": "bool",
-                "filespec": "dest: string, path: string, reference: string, token: string, type: string, username: string",
+                "filespec": "github.com/edulinq/autograder/internal/util/util.FileSpec",
                 "root-user-nonce": "string",
                 "skip-build-images": "bool",
                 "skip-emails": "bool",
@@ -304,7 +310,7 @@
                 "user-pass": "string"
             },
             "output-fields": {
-                "results": "[]{assignment-template-files: map[string]{[]{string}}, built-assignment-images: []{string}, course-id: string, created: bool, lms-sync-result: assignment-sync: ambiguous-matches: []{id: string, name: string}, non-matched-assignments: []{id: string, name: string}, synced-assignments: []{id: string, name: string}, unchanged-assignments: []{id: string, name: string}, user-sync: []{added: bool, cleartext-password: string, communication-error: ExternalMessage: string, HideLocator: bool, InternalMessage: string, Locator: string, dropped: []{string}, email: string, emailed: bool, enrolled: []{string}, modified: bool, not-exists: bool, removed: bool, skipped: bool, system-error: ExternalMessage: string, HideLocator: bool, InternalMessage: string, Locator: string, validation-error: ExternalMessage: string, HideLocator: bool, InternalMessage: string, Locator: string}, message: string, success: bool, updated: bool}"
+                "results": "[]courses.CourseUpsertResult"
             },
             "request-type": "*upsert.FileSpecRequest",
             "response-type": "*upsert.UpsertResponse"
@@ -312,7 +318,7 @@
         "courses/upsert/zip": {
             "description": "Upsert a course using a zip file.",
             "input-fields": {
-                "Files": "",
+                "APIRequest": "github.com/edulinq/autograder/internal/api/core/core.APIRequest",
                 "MinServerRoleCourseCreator": "bool",
                 "dry-run": "bool",
                 "root-user-nonce": "string",
@@ -325,7 +331,7 @@
                 "user-pass": "string"
             },
             "output-fields": {
-                "results": "[]{assignment-template-files: map[string]{[]{string}}, built-assignment-images: []{string}, course-id: string, created: bool, lms-sync-result: assignment-sync: ambiguous-matches: []{id: string, name: string}, non-matched-assignments: []{id: string, name: string}, synced-assignments: []{id: string, name: string}, unchanged-assignments: []{id: string, name: string}, user-sync: []{added: bool, cleartext-password: string, communication-error: ExternalMessage: string, HideLocator: bool, InternalMessage: string, Locator: string, dropped: []{string}, email: string, emailed: bool, enrolled: []{string}, modified: bool, not-exists: bool, removed: bool, skipped: bool, system-error: ExternalMessage: string, HideLocator: bool, InternalMessage: string, Locator: string, validation-error: ExternalMessage: string, HideLocator: bool, InternalMessage: string, Locator: string}, message: string, success: bool, updated: bool}"
+                "results": "[]courses.CourseUpsertResult"
             },
             "request-type": "*upsert.ZipFileRequest",
             "response-type": "*upsert.UpsertResponse"
@@ -333,10 +339,11 @@
         "courses/users/drop": {
             "description": "Drop a user from the course.",
             "input-fields": {
+                "APIRequest": "github.com/edulinq/autograder/internal/api/core/core.APIRequest",
                 "MinCourseRoleAdmin": "bool",
                 "course-id": "string",
                 "root-user-nonce": "string",
-                "target-email": "Email: string, Found: bool, User: email: string, lms-id: string, name: string, role: int",
+                "target-email": "github.com/edulinq/autograder/internal/api/core/core.TargetCourseUser",
                 "user-email": "string",
                 "user-pass": "string"
             },
@@ -349,10 +356,11 @@
         "courses/users/enroll": {
             "description": "Enroll one or more users to the course.",
             "input-fields": {
+                "APIRequest": "github.com/edulinq/autograder/internal/api/core/core.APIRequest",
                 "MinCourseRoleAdmin": "bool",
                 "course-id": "string",
                 "dry-run": "bool",
-                "raw-course-users": "[]{course-lms-id: string, course-role: string, email: string, name: string}",
+                "raw-course-users": "[]*model.RawCourseUserData",
                 "root-user-nonce": "string",
                 "send-emails": "bool",
                 "skip-inserts": "bool",
@@ -361,7 +369,7 @@
                 "user-pass": "string"
             },
             "output-fields": {
-                "results": "[]{added: bool, communication-error: locator: string, message: string, dropped: []{string}, email: string, emailed: bool, enrolled: []{string}, modified: bool, not-exists: bool, removed: bool, skipped: bool, system-error: locator: string, message: string, validation-error: locator: string, message: string}"
+                "results": "[]*model.ExternalUserOpResult"
             },
             "request-type": "*users.EnrollRequest",
             "response-type": "*users.EnrollResponse"
@@ -369,16 +377,17 @@
         "courses/users/get": {
             "description": "Get the information for a course user.",
             "input-fields": {
+                "APIRequest": "github.com/edulinq/autograder/internal/api/core/core.APIRequest",
                 "MinCourseRoleOther": "bool",
                 "course-id": "string",
                 "root-user-nonce": "string",
-                "target-email": "Email: string, Found: bool, User: email: string, lms-id: string, name: string, role: int",
+                "target-email": "github.com/edulinq/autograder/internal/api/core/core.TargetCourseUserSelfOrGrader",
                 "user-email": "string",
                 "user-pass": "string"
             },
             "output-fields": {
                 "found": "bool",
-                "user": "email: string, lms-id: string, name: string, role: int, type: string"
+                "user": "github.com/edulinq/autograder/internal/api/core/core.CourseUserInfo"
             },
             "request-type": "*users.GetRequest",
             "response-type": "*users.GetResponse"
@@ -386,6 +395,7 @@
         "courses/users/list": {
             "description": "List the users in the course.",
             "input-fields": {
+                "APIRequest": "github.com/edulinq/autograder/internal/api/core/core.APIRequest",
                 "MinCourseRoleGrader": "bool",
                 "course-id": "string",
                 "root-user-nonce": "string",
@@ -393,7 +403,7 @@
                 "user-pass": "string"
             },
             "output-fields": {
-                "users": "[]{email: string, lms-id: string, name: string, role: int, type: string}"
+                "users": "[]*core.CourseUserInfo"
             },
             "request-type": "*users.ListRequest",
             "response-type": "*users.ListResponse"
@@ -401,19 +411,20 @@
         "lms/upload/scores": {
             "description": "Upload scores from a tab-separated file to the course's LMS.\nThe file should not have headers, and should have two columns: email and score.",
             "input-fields": {
+                "APIRequest": "github.com/edulinq/autograder/internal/api/core/core.APIRequest",
                 "MinCourseRoleGrader": "bool",
                 "assignment-lms-id": "string",
                 "course-id": "string",
                 "root-user-nonce": "string",
-                "scores": "[]{email: string, score: float64}",
+                "scores": "[]upload.ScoreEntry",
                 "user-email": "string",
                 "user-pass": "string"
             },
             "output-fields": {
                 "count": "int",
                 "error-count": "int",
-                "no-lms-id-users": "[]{entry: interface {}, row: int}",
-                "unrecognized-users": "[]{entry: interface {}, row: int}"
+                "no-lms-id-users": "[]upload.RowEntry",
+                "unrecognized-users": "[]upload.RowEntry"
             },
             "request-type": "*upload.UploadScoresRequest",
             "response-type": "*upload.UploadScoresResponse"
@@ -421,17 +432,18 @@
         "lms/user/get": {
             "description": "Get information for an LMS user.",
             "input-fields": {
+                "APIRequest": "github.com/edulinq/autograder/internal/api/core/core.APIRequest",
                 "MinCourseRoleGrader": "bool",
                 "course-id": "string",
                 "root-user-nonce": "string",
-                "target-email": "Email: string, Found: bool, User: email: string, lms-id: string, name: string, role: int",
+                "target-email": "github.com/edulinq/autograder/internal/api/core/core.TargetCourseUser",
                 "user-email": "string",
                 "user-pass": "string"
             },
             "output-fields": {
                 "found-autograder-user": "bool",
                 "found-lms-user": "bool",
-                "user": "email: string, lms-id: string, name: string, role: int, type: string"
+                "user": "github.com/edulinq/autograder/internal/api/core/core.CourseUserInfo"
             },
             "request-type": "*user.UserGetRequest",
             "response-type": "*user.UserGetResponse"
@@ -439,6 +451,7 @@
         "logs/query": {
             "description": "Query log entries from the autograder server.",
             "input-fields": {
+                "APIRequest": "github.com/edulinq/autograder/internal/api/core/core.APIRequest",
                 "MinServerRoleUser": "bool",
                 "after": "string",
                 "level": "string",
@@ -451,8 +464,8 @@
                 "user-pass": "string"
             },
             "output-fields": {
-                "error": "locator: string, message: string",
-                "results": "[]{assignment: string, attributes: map[string]{interface {}}, course: string, error: string, level: int32, message: string, timestamp: int64, user: string}",
+                "error": "github.com/edulinq/autograder/internal/model/model.ExternalLocatableError",
+                "results": "[]*log.Record",
                 "success": "bool"
             },
             "request-type": "*logs.QueryRequest",
@@ -460,9 +473,12 @@
         },
         "metadata/describe": {
             "description": "Describe all endpoints on the server.",
-            "input-fields": {},
+            "input-fields": {
+                "APIRequest": "github.com/edulinq/autograder/internal/api/core/core.APIRequest"
+            },
             "output-fields": {
-                "endpoints": "map[string]{description: string, input-fields: map[string]{string}, output-fields: map[string]{string}, request-type: string, response-type: string}"
+                "endpoints": "map[string]core.EndpointDescription",
+                "types": "map[string]core.TypeDescription"
             },
             "request-type": "*metadata.DescribeRequest",
             "response-type": "*metadata.DescribeResponse"
@@ -470,6 +486,7 @@
         "stats/apirequest/query": {
             "description": "Query the API request stats for the server.",
             "input-fields": {
+                "APIRequest": "github.com/edulinq/autograder/internal/api/core/core.APIRequest",
                 "MinServerRoleAdmin": "bool",
                 "after": "int64",
                 "before": "int64",
@@ -486,7 +503,7 @@
                 "user-pass": "string"
             },
             "output-fields": {
-                "results": "[]{assignment: string, attributes: map[string]{interface {}}, course: string, duration: uint64, endpoint: string, locator: string, sender: string, timestamp: int64, user: string}"
+                "results": "[]*stats.APIRequestMetric"
             },
             "request-type": "*apirequest.QueryRequest",
             "response-type": "*apirequest.QueryResponse"
@@ -494,6 +511,7 @@
         "stats/system/query": {
             "description": "Query the system stats for the server.",
             "input-fields": {
+                "APIRequest": "github.com/edulinq/autograder/internal/api/core/core.APIRequest",
                 "MinServerRoleAdmin": "bool",
                 "after": "int64",
                 "before": "int64",
@@ -504,7 +522,7 @@
                 "user-pass": "string"
             },
             "output-fields": {
-                "results": "[]{attributes: map[string]{interface {}}, cpu-percent: float64, mem-percent: float64, net-bytes-received: uint64, net-bytes-sent: uint64, timestamp: int64}"
+                "results": "[]*stats.SystemMetrics"
             },
             "request-type": "*system.QueryRequest",
             "response-type": "*system.QueryResponse"
@@ -512,6 +530,7 @@
         "system/stacks": {
             "description": "Get stack traces for all the currently running routines (threads) on the server.",
             "input-fields": {
+                "APIRequest": "github.com/edulinq/autograder/internal/api/core/core.APIRequest",
                 "MinServerRoleAdmin": "bool",
                 "root-user-nonce": "string",
                 "user-email": "string",
@@ -519,7 +538,7 @@
             },
             "output-fields": {
                 "count": "int",
-                "stacks": "[]{name: string, records: []{call: string, file: string, line: int, pointer: string}, status: string}"
+                "stacks": "[]*util.CallStack"
             },
             "request-type": "*system.StacksRequest",
             "response-type": "*system.StacksResponse"
@@ -527,6 +546,7 @@
         "users/auth": {
             "description": "Authenticate as a user.",
             "input-fields": {
+                "APIRequest": "github.com/edulinq/autograder/internal/api/core/core.APIRequest",
                 "root-user-nonce": "string",
                 "user-email": "string",
                 "user-pass": "string"
@@ -540,16 +560,17 @@
         "users/get": {
             "description": "Get the information for a server user.",
             "input-fields": {
+                "APIRequest": "github.com/edulinq/autograder/internal/api/core/core.APIRequest",
                 "MinServerRoleUser": "bool",
                 "root-user-nonce": "string",
-                "target-email": "Email: string, Found: bool, User: course-info: map[string]{lms-id: string, role: int}, email: string, name: string, password: access-time: int64, creation-time: int64, hex-digest: string, id: string, name: string, source: string, salt: string, server-role: int, tokens: []{access-time: int64, creation-time: int64, hex-digest: string, id: string, name: string, source: string}",
+                "target-email": "github.com/edulinq/autograder/internal/api/core/core.TargetServerUserSelfOrAdmin",
                 "user-email": "string",
                 "user-pass": "string"
             },
             "output-fields": {
-                "courses": "map[string]{assignments: map[string]{due-date: int64, id: string, max-points: float64, name: string}, id: string, name: string}",
+                "courses": "map[string]*core.CourseInfo",
                 "found": "bool",
-                "user": "courses: map[string]{id: string, role: int}, email: string, name: string, role: int, type: string"
+                "user": "github.com/edulinq/autograder/internal/api/core/core.ServerUserInfo"
             },
             "request-type": "*users.GetRequest",
             "response-type": "*users.GetResponse"
@@ -557,13 +578,14 @@
         "users/list": {
             "description": "List the users on the server.",
             "input-fields": {
+                "APIRequest": "github.com/edulinq/autograder/internal/api/core/core.APIRequest",
                 "MinServerRoleAdmin": "bool",
                 "root-user-nonce": "string",
                 "user-email": "string",
                 "user-pass": "string"
             },
             "output-fields": {
-                "users": "[]{courses: map[string]{id: string, role: int}, email: string, name: string, role: int, type: string}"
+                "users": "[]*core.ServerUserInfo"
             },
             "request-type": "*users.ListRequest",
             "response-type": "*users.ListResponse"
@@ -571,6 +593,7 @@
         "users/password/change": {
             "description": "Change your password to the one provided.",
             "input-fields": {
+                "APIRequest": "github.com/edulinq/autograder/internal/api/core/core.APIRequest",
                 "new-pass": "string",
                 "root-user-nonce": "string",
                 "user-email": "string",
@@ -586,6 +609,7 @@
         "users/password/reset": {
             "description": "Reset to a random password that will be emailed to you.",
             "input-fields": {
+                "APIRequest": "github.com/edulinq/autograder/internal/api/core/core.APIRequest",
                 "user-email": "string"
             },
             "output-fields": {},
@@ -595,9 +619,10 @@
         "users/remove": {
             "description": "Remove a user from the server.",
             "input-fields": {
+                "APIRequest": "github.com/edulinq/autograder/internal/api/core/core.APIRequest",
                 "MinServerRoleAdmin": "bool",
                 "root-user-nonce": "string",
-                "target-email": "Email: string, Found: bool, User: course-info: map[string]{lms-id: string, role: int}, email: string, name: string, password: access-time: int64, creation-time: int64, hex-digest: string, id: string, name: string, source: string, salt: string, server-role: int, tokens: []{access-time: int64, creation-time: int64, hex-digest: string, id: string, name: string, source: string}",
+                "target-email": "github.com/edulinq/autograder/internal/api/core/core.TargetServerUser",
                 "user-email": "string",
                 "user-pass": "string"
             },
@@ -610,6 +635,7 @@
         "users/tokens/create": {
             "description": "Create a new authentication token.",
             "input-fields": {
+                "APIRequest": "github.com/edulinq/autograder/internal/api/core/core.APIRequest",
                 "name": "string",
                 "root-user-nonce": "string",
                 "user-email": "string",
@@ -625,6 +651,7 @@
         "users/tokens/delete": {
             "description": "Delete an authentication token.",
             "input-fields": {
+                "APIRequest": "github.com/edulinq/autograder/internal/api/core/core.APIRequest",
                 "root-user-nonce": "string",
                 "token-id": "string",
                 "user-email": "string",
@@ -639,9 +666,10 @@
         "users/upsert": {
             "description": "Upsert one or more users to the server (update if exists, insert otherwise).",
             "input-fields": {
+                "APIRequest": "github.com/edulinq/autograder/internal/api/core/core.APIRequest",
                 "MinServerRoleAdmin": "bool",
                 "dry-run": "bool",
-                "raw-users": "[]{course: string, course-lms-id: string, course-role: string, email: string, name: string, pass: string, role: string}",
+                "raw-users": "[]*model.RawServerUserData",
                 "root-user-nonce": "string",
                 "send-emails": "bool",
                 "skip-inserts": "bool",
@@ -650,10 +678,1636 @@
                 "user-pass": "string"
             },
             "output-fields": {
-                "results": "[]{added: bool, communication-error: locator: string, message: string, dropped: []{string}, email: string, emailed: bool, enrolled: []{string}, modified: bool, not-exists: bool, removed: bool, skipped: bool, system-error: locator: string, message: string, validation-error: locator: string, message: string}"
+                "results": "[]*model.ExternalUserOpResult"
             },
             "request-type": "*users.UpsertRequest",
             "response-type": "*users.UpsertResponse"
+        }
+    },
+    "types": {
+        "[2]string": {
+            "category": "array",
+            "element-type": "string"
+        },
+        "[]*core.AssignmentInfo": {
+            "category": "array",
+            "element-type": "github.com/edulinq/autograder/internal/api/core/core.AssignmentInfo"
+        },
+        "[]*core.CourseUserInfo": {
+            "category": "array",
+            "element-type": "github.com/edulinq/autograder/internal/api/core/core.CourseUserInfo"
+        },
+        "[]*core.ServerUserInfo": {
+            "category": "array",
+            "element-type": "github.com/edulinq/autograder/internal/api/core/core.ServerUserInfo"
+        },
+        "[]*log.Record": {
+            "category": "array",
+            "element-type": "github.com/edulinq/autograder/internal/log/log.Record"
+        },
+        "[]*model.ExternalScoringInfo": {
+            "category": "array",
+            "element-type": "github.com/edulinq/autograder/internal/model/model.ExternalScoringInfo"
+        },
+        "[]*model.ExternalUserOpResult": {
+            "category": "array",
+            "element-type": "github.com/edulinq/autograder/internal/model/model.ExternalUserOpResult"
+        },
+        "[]*model.FileSimilarity": {
+            "category": "array",
+            "element-type": "github.com/edulinq/autograder/internal/model/model.FileSimilarity"
+        },
+        "[]*model.GradedQuestion": {
+            "category": "array",
+            "element-type": "github.com/edulinq/autograder/internal/model/model.GradedQuestion"
+        },
+        "[]*model.GradingResult": {
+            "category": "array",
+            "element-type": "github.com/edulinq/autograder/internal/model/model.GradingResult"
+        },
+        "[]*model.IndividualAnalysis": {
+            "category": "array",
+            "element-type": "github.com/edulinq/autograder/internal/model/model.IndividualAnalysis"
+        },
+        "[]*model.PairwiseAnalysis": {
+            "category": "array",
+            "element-type": "github.com/edulinq/autograder/internal/model/model.PairwiseAnalysis"
+        },
+        "[]*model.RawCourseUserData": {
+            "category": "array",
+            "element-type": "github.com/edulinq/autograder/internal/model/model.RawCourseUserData"
+        },
+        "[]*model.RawServerUserData": {
+            "category": "array",
+            "element-type": "github.com/edulinq/autograder/internal/model/model.RawServerUserData"
+        },
+        "[]*model.SubmissionHistoryItem": {
+            "category": "array",
+            "element-type": "github.com/edulinq/autograder/internal/model/model.SubmissionHistoryItem"
+        },
+        "[]*model.UserOpResult": {
+            "category": "array",
+            "element-type": "github.com/edulinq/autograder/internal/model/model.UserOpResult"
+        },
+        "[]*stats.APIRequestMetric": {
+            "category": "array",
+            "element-type": "github.com/edulinq/autograder/internal/stats/stats.APIRequestMetric"
+        },
+        "[]*stats.CourseMetric": {
+            "category": "array",
+            "element-type": "github.com/edulinq/autograder/internal/stats/stats.CourseMetric"
+        },
+        "[]*stats.SystemMetrics": {
+            "category": "array",
+            "element-type": "github.com/edulinq/autograder/internal/stats/stats.SystemMetrics"
+        },
+        "[]*util.CallStack": {
+            "category": "array",
+            "element-type": "github.com/edulinq/autograder/internal/util/util.CallStack"
+        },
+        "[]*util.FileOperation": {
+            "category": "array",
+            "element-type": "github.com/edulinq/autograder/internal/util/util.FileOperation"
+        },
+        "[]*util.FileSpec": {
+            "category": "array",
+            "element-type": "github.com/edulinq/autograder/internal/util/util.FileSpec"
+        },
+        "[][2]string": {
+            "category": "array",
+            "element-type": "[2]string"
+        },
+        "[]courses.CourseUpsertResult": {
+            "category": "array",
+            "element-type": "github.com/edulinq/autograder/internal/procedures/courses/courses.CourseUpsertResult"
+        },
+        "[]model.AnalysisFileInfo": {
+            "category": "array",
+            "element-type": "github.com/edulinq/autograder/internal/model/model.AnalysisFileInfo"
+        },
+        "[]model.AssignmentInfo": {
+            "category": "array",
+            "element-type": "github.com/edulinq/autograder/internal/model/model.AssignmentInfo"
+        },
+        "[]string": {
+            "category": "array",
+            "element-type": "string"
+        },
+        "[]uint8": {
+            "category": "array",
+            "element-type": "uint8"
+        },
+        "[]upload.RowEntry": {
+            "category": "array",
+            "element-type": "github.com/edulinq/autograder/internal/api/lms/upload/upload.RowEntry"
+        },
+        "[]upload.ScoreEntry": {
+            "category": "array",
+            "element-type": "github.com/edulinq/autograder/internal/api/lms/upload/upload.ScoreEntry"
+        },
+        "[]util.CallStackRecord": {
+            "category": "array",
+            "element-type": "github.com/edulinq/autograder/internal/util/util.CallStackRecord"
+        },
+        "bool": {
+            "alias": "bool",
+            "category": "basic"
+        },
+        "float64": {
+            "alias": "float64",
+            "category": "basic"
+        },
+        "github.com/edulinq/autograder/internal/analysis/analysis.AnalysisOptions": {
+            "category": "struct",
+            "fields": {
+                "dry-run": "bool",
+                "overwrite-cache": "bool",
+                "submissions": "[]string",
+                "wait-for-completion": "bool"
+            }
+        },
+        "github.com/edulinq/autograder/internal/api/core/core.APIDescription": {
+            "category": "struct",
+            "fields": {
+                "endpoints": "map[string]core.EndpointDescription",
+                "types": "map[string]core.TypeDescription"
+            }
+        },
+        "github.com/edulinq/autograder/internal/api/core/core.APIRequest": {
+            "category": "struct"
+        },
+        "github.com/edulinq/autograder/internal/api/core/core.APIRequestAssignmentContext": {
+            "category": "struct",
+            "fields": {
+                "APIRequest": "github.com/edulinq/autograder/internal/api/core/core.APIRequest",
+                "assignment-id": "string",
+                "course-id": "string",
+                "root-user-nonce": "string",
+                "user-email": "string",
+                "user-pass": "string"
+            }
+        },
+        "github.com/edulinq/autograder/internal/api/core/core.APIRequestCourseUserContext": {
+            "category": "struct",
+            "fields": {
+                "APIRequest": "github.com/edulinq/autograder/internal/api/core/core.APIRequest",
+                "course-id": "string",
+                "root-user-nonce": "string",
+                "user-email": "string",
+                "user-pass": "string"
+            }
+        },
+        "github.com/edulinq/autograder/internal/api/core/core.APIRequestUserContext": {
+            "category": "struct",
+            "fields": {
+                "APIRequest": "github.com/edulinq/autograder/internal/api/core/core.APIRequest",
+                "root-user-nonce": "string",
+                "user-email": "string",
+                "user-pass": "string"
+            }
+        },
+        "github.com/edulinq/autograder/internal/api/core/core.AssignmentInfo": {
+            "category": "struct",
+            "fields": {
+                "due-date": "int64",
+                "id": "string",
+                "max-points": "float64",
+                "name": "string"
+            }
+        },
+        "github.com/edulinq/autograder/internal/api/core/core.BaseUserInfo": {
+            "category": "struct",
+            "fields": {
+                "email": "string",
+                "name": "string",
+                "type": "string"
+            }
+        },
+        "github.com/edulinq/autograder/internal/api/core/core.CourseInfo": {
+            "category": "struct",
+            "fields": {
+                "assignments": "map[string]*core.AssignmentInfo",
+                "id": "string",
+                "name": "string"
+            }
+        },
+        "github.com/edulinq/autograder/internal/api/core/core.CourseUserInfo": {
+            "category": "struct",
+            "fields": {
+                "email": "string",
+                "lms-id": "string",
+                "name": "string",
+                "role": "int",
+                "type": "string"
+            }
+        },
+        "github.com/edulinq/autograder/internal/api/core/core.EndpointDescription": {
+            "category": "struct",
+            "fields": {
+                "description": "string",
+                "input-fields": "map[string]string",
+                "output-fields": "map[string]string",
+                "request-type": "string",
+                "response-type": "string"
+            }
+        },
+        "github.com/edulinq/autograder/internal/api/core/core.EnrollmentInfo": {
+            "category": "struct",
+            "fields": {
+                "id": "string",
+                "role": "int"
+            }
+        },
+        "github.com/edulinq/autograder/internal/api/core/core.MinCourseRoleAdmin": {
+            "alias": "bool",
+            "category": "basic"
+        },
+        "github.com/edulinq/autograder/internal/api/core/core.MinCourseRoleGrader": {
+            "alias": "bool",
+            "category": "basic"
+        },
+        "github.com/edulinq/autograder/internal/api/core/core.MinCourseRoleOther": {
+            "alias": "bool",
+            "category": "basic"
+        },
+        "github.com/edulinq/autograder/internal/api/core/core.MinCourseRoleStudent": {
+            "alias": "bool",
+            "category": "basic"
+        },
+        "github.com/edulinq/autograder/internal/api/core/core.MinServerRoleAdmin": {
+            "alias": "bool",
+            "category": "basic"
+        },
+        "github.com/edulinq/autograder/internal/api/core/core.MinServerRoleCourseCreator": {
+            "alias": "bool",
+            "category": "basic"
+        },
+        "github.com/edulinq/autograder/internal/api/core/core.MinServerRoleUser": {
+            "alias": "bool",
+            "category": "basic"
+        },
+        "github.com/edulinq/autograder/internal/api/core/core.NonEmptyString": {
+            "alias": "string",
+            "category": "basic"
+        },
+        "github.com/edulinq/autograder/internal/api/core/core.ServerUserInfo": {
+            "category": "struct",
+            "fields": {
+                "courses": "map[string]core.EnrollmentInfo",
+                "email": "string",
+                "name": "string",
+                "role": "int",
+                "type": "string"
+            }
+        },
+        "github.com/edulinq/autograder/internal/api/core/core.TargetCourseUser": {
+            "category": "struct"
+        },
+        "github.com/edulinq/autograder/internal/api/core/core.TargetCourseUserSelfOrGrader": {
+            "category": "struct",
+            "fields": {
+                "TargetCourseUser": "github.com/edulinq/autograder/internal/api/core/core.TargetCourseUser"
+            }
+        },
+        "github.com/edulinq/autograder/internal/api/core/core.TargetServerUser": {
+            "category": "struct"
+        },
+        "github.com/edulinq/autograder/internal/api/core/core.TargetServerUserSelfOrAdmin": {
+            "category": "struct",
+            "fields": {
+                "TargetServerUser": "github.com/edulinq/autograder/internal/api/core/core.TargetServerUser"
+            }
+        },
+        "github.com/edulinq/autograder/internal/api/core/core.TypeDescription": {
+            "category": "struct",
+            "fields": {
+                "alias": "string",
+                "category": "string",
+                "element-type": "string",
+                "fields": "map[string]string",
+                "key-type": "string",
+                "value-type": "string"
+            }
+        },
+        "github.com/edulinq/autograder/internal/api/core/core.UserInfoType": {
+            "alias": "string",
+            "category": "basic"
+        },
+        "github.com/edulinq/autograder/internal/api/courses/admin/admin.UpdateRequest": {
+            "category": "struct",
+            "fields": {
+                "APIRequest": "github.com/edulinq/autograder/internal/api/core/core.APIRequest",
+                "MinCourseRoleAdmin": "bool",
+                "course-id": "string",
+                "root-user-nonce": "string",
+                "user-email": "string",
+                "user-pass": "string"
+            }
+        },
+        "github.com/edulinq/autograder/internal/api/courses/admin/admin.UpdateResponse": {
+            "category": "struct",
+            "fields": {
+                "result": "github.com/edulinq/autograder/internal/procedures/courses/courses.CourseUpsertResult"
+            }
+        },
+        "github.com/edulinq/autograder/internal/api/courses/assignments/assignments.GetRequest": {
+            "category": "struct",
+            "fields": {
+                "APIRequest": "github.com/edulinq/autograder/internal/api/core/core.APIRequest",
+                "MinCourseRoleOther": "bool",
+                "assignment-id": "string",
+                "course-id": "string",
+                "root-user-nonce": "string",
+                "user-email": "string",
+                "user-pass": "string"
+            }
+        },
+        "github.com/edulinq/autograder/internal/api/courses/assignments/assignments.GetResponse": {
+            "category": "struct",
+            "fields": {
+                "assignment": "github.com/edulinq/autograder/internal/api/core/core.AssignmentInfo"
+            }
+        },
+        "github.com/edulinq/autograder/internal/api/courses/assignments/assignments.ListRequest": {
+            "category": "struct",
+            "fields": {
+                "APIRequest": "github.com/edulinq/autograder/internal/api/core/core.APIRequest",
+                "MinCourseRoleOther": "bool",
+                "course-id": "string",
+                "root-user-nonce": "string",
+                "user-email": "string",
+                "user-pass": "string"
+            }
+        },
+        "github.com/edulinq/autograder/internal/api/courses/assignments/assignments.ListResponse": {
+            "category": "struct",
+            "fields": {
+                "assignments": "[]*core.AssignmentInfo"
+            }
+        },
+        "github.com/edulinq/autograder/internal/api/courses/assignments/submissions/analysis/analysis.IndividualRequest": {
+            "category": "struct",
+            "fields": {
+                "APIRequest": "github.com/edulinq/autograder/internal/api/core/core.APIRequest",
+                "MinServerRoleUser": "bool",
+                "dry-run": "bool",
+                "overwrite-cache": "bool",
+                "root-user-nonce": "string",
+                "submissions": "[]string",
+                "user-email": "string",
+                "user-pass": "string",
+                "wait-for-completion": "bool"
+            }
+        },
+        "github.com/edulinq/autograder/internal/api/courses/assignments/submissions/analysis/analysis.IndividualResponse": {
+            "category": "struct",
+            "fields": {
+                "complete": "bool",
+                "options": "github.com/edulinq/autograder/internal/analysis/analysis.AnalysisOptions",
+                "results": "[]*model.IndividualAnalysis",
+                "summary": "github.com/edulinq/autograder/internal/model/model.IndividualAnalysisSummary"
+            }
+        },
+        "github.com/edulinq/autograder/internal/api/courses/assignments/submissions/analysis/analysis.PairwiseRequest": {
+            "category": "struct",
+            "fields": {
+                "APIRequest": "github.com/edulinq/autograder/internal/api/core/core.APIRequest",
+                "MinServerRoleUser": "bool",
+                "dry-run": "bool",
+                "overwrite-cache": "bool",
+                "root-user-nonce": "string",
+                "submissions": "[]string",
+                "user-email": "string",
+                "user-pass": "string",
+                "wait-for-completion": "bool"
+            }
+        },
+        "github.com/edulinq/autograder/internal/api/courses/assignments/submissions/analysis/analysis.PairwiseResponse": {
+            "category": "struct",
+            "fields": {
+                "complete": "bool",
+                "options": "github.com/edulinq/autograder/internal/analysis/analysis.AnalysisOptions",
+                "results": "[]*model.PairwiseAnalysis",
+                "summary": "github.com/edulinq/autograder/internal/model/model.PairwiseAnalysisSummary"
+            }
+        },
+        "github.com/edulinq/autograder/internal/api/courses/assignments/submissions/fetch/course/course.FetchCourseAttemptsRequest": {
+            "category": "struct",
+            "fields": {
+                "APIRequest": "github.com/edulinq/autograder/internal/api/core/core.APIRequest",
+                "MinCourseRoleGrader": "bool",
+                "assignment-id": "string",
+                "course-id": "string",
+                "filter-role": "int",
+                "root-user-nonce": "string",
+                "user-email": "string",
+                "user-pass": "string"
+            }
+        },
+        "github.com/edulinq/autograder/internal/api/courses/assignments/submissions/fetch/course/course.FetchCourseAttemptsResponse": {
+            "category": "struct",
+            "fields": {
+                "grading-results": "map[string]*model.GradingResult"
+            }
+        },
+        "github.com/edulinq/autograder/internal/api/courses/assignments/submissions/fetch/course/course.FetchCourseScoresRequest": {
+            "category": "struct",
+            "fields": {
+                "APIRequest": "github.com/edulinq/autograder/internal/api/core/core.APIRequest",
+                "MinCourseRoleGrader": "bool",
+                "assignment-id": "string",
+                "course-id": "string",
+                "filter-role": "int",
+                "root-user-nonce": "string",
+                "user-email": "string",
+                "user-pass": "string"
+            }
+        },
+        "github.com/edulinq/autograder/internal/api/courses/assignments/submissions/fetch/course/course.FetchCourseScoresResponse": {
+            "category": "struct",
+            "fields": {
+                "submission-infos": "map[string]*model.SubmissionHistoryItem"
+            }
+        },
+        "github.com/edulinq/autograder/internal/api/courses/assignments/submissions/fetch/user/user.FetchUserAttemptRequest": {
+            "category": "struct",
+            "fields": {
+                "APIRequest": "github.com/edulinq/autograder/internal/api/core/core.APIRequest",
+                "MinCourseRoleStudent": "bool",
+                "assignment-id": "string",
+                "course-id": "string",
+                "root-user-nonce": "string",
+                "target-email": "github.com/edulinq/autograder/internal/api/core/core.TargetCourseUserSelfOrGrader",
+                "target-submission": "string",
+                "user-email": "string",
+                "user-pass": "string"
+            }
+        },
+        "github.com/edulinq/autograder/internal/api/courses/assignments/submissions/fetch/user/user.FetchUserAttemptResponse": {
+            "category": "struct",
+            "fields": {
+                "found-submission": "bool",
+                "found-user": "bool",
+                "grading-result": "github.com/edulinq/autograder/internal/model/model.GradingResult"
+            }
+        },
+        "github.com/edulinq/autograder/internal/api/courses/assignments/submissions/fetch/user/user.FetchUserAttemptsRequest": {
+            "category": "struct",
+            "fields": {
+                "APIRequest": "github.com/edulinq/autograder/internal/api/core/core.APIRequest",
+                "MinCourseRoleGrader": "bool",
+                "assignment-id": "string",
+                "course-id": "string",
+                "root-user-nonce": "string",
+                "target-email": "github.com/edulinq/autograder/internal/api/core/core.TargetCourseUserSelfOrGrader",
+                "user-email": "string",
+                "user-pass": "string"
+            }
+        },
+        "github.com/edulinq/autograder/internal/api/courses/assignments/submissions/fetch/user/user.FetchUserAttemptsResponse": {
+            "category": "struct",
+            "fields": {
+                "found-user": "bool",
+                "grading-results": "[]*model.GradingResult"
+            }
+        },
+        "github.com/edulinq/autograder/internal/api/courses/assignments/submissions/fetch/user/user.FetchUserHistoryRequest": {
+            "category": "struct",
+            "fields": {
+                "APIRequest": "github.com/edulinq/autograder/internal/api/core/core.APIRequest",
+                "MinCourseRoleStudent": "bool",
+                "assignment-id": "string",
+                "course-id": "string",
+                "root-user-nonce": "string",
+                "target-email": "github.com/edulinq/autograder/internal/api/core/core.TargetCourseUserSelfOrGrader",
+                "user-email": "string",
+                "user-pass": "string"
+            }
+        },
+        "github.com/edulinq/autograder/internal/api/courses/assignments/submissions/fetch/user/user.FetchUserHistoryResponse": {
+            "category": "struct",
+            "fields": {
+                "found-user": "bool",
+                "history": "[]*model.SubmissionHistoryItem"
+            }
+        },
+        "github.com/edulinq/autograder/internal/api/courses/assignments/submissions/fetch/user/user.FetchUserPeekRequest": {
+            "category": "struct",
+            "fields": {
+                "APIRequest": "github.com/edulinq/autograder/internal/api/core/core.APIRequest",
+                "MinCourseRoleStudent": "bool",
+                "assignment-id": "string",
+                "course-id": "string",
+                "root-user-nonce": "string",
+                "target-email": "github.com/edulinq/autograder/internal/api/core/core.TargetCourseUserSelfOrGrader",
+                "target-submission": "string",
+                "user-email": "string",
+                "user-pass": "string"
+            }
+        },
+        "github.com/edulinq/autograder/internal/api/courses/assignments/submissions/fetch/user/user.FetchUserPeekResponse": {
+            "category": "struct",
+            "fields": {
+                "found-submission": "bool",
+                "found-user": "bool",
+                "submission-result": "github.com/edulinq/autograder/internal/model/model.GradingInfo"
+            }
+        },
+        "github.com/edulinq/autograder/internal/api/courses/assignments/submissions/submissions.RemoveRequest": {
+            "category": "struct",
+            "fields": {
+                "APIRequest": "github.com/edulinq/autograder/internal/api/core/core.APIRequest",
+                "MinCourseRoleGrader": "bool",
+                "assignment-id": "string",
+                "course-id": "string",
+                "root-user-nonce": "string",
+                "target-email": "github.com/edulinq/autograder/internal/api/core/core.TargetCourseUserSelfOrGrader",
+                "target-submission": "string",
+                "user-email": "string",
+                "user-pass": "string"
+            }
+        },
+        "github.com/edulinq/autograder/internal/api/courses/assignments/submissions/submissions.RemoveResponse": {
+            "category": "struct",
+            "fields": {
+                "found-submission": "bool",
+                "found-user": "bool"
+            }
+        },
+        "github.com/edulinq/autograder/internal/api/courses/assignments/submissions/submissions.SubmitRequest": {
+            "category": "struct",
+            "fields": {
+                "APIRequest": "github.com/edulinq/autograder/internal/api/core/core.APIRequest",
+                "MinCourseRoleStudent": "bool",
+                "allow-late": "bool",
+                "assignment-id": "string",
+                "course-id": "string",
+                "message": "string",
+                "root-user-nonce": "string",
+                "user-email": "string",
+                "user-pass": "string"
+            }
+        },
+        "github.com/edulinq/autograder/internal/api/courses/assignments/submissions/submissions.SubmitResponse": {
+            "category": "struct",
+            "fields": {
+                "grading-success": "bool",
+                "message": "string",
+                "rejected": "bool",
+                "result": "github.com/edulinq/autograder/internal/model/model.GradingInfo"
+            }
+        },
+        "github.com/edulinq/autograder/internal/api/courses/lms/scores/scores.UploadRequest": {
+            "category": "struct",
+            "fields": {
+                "APIRequest": "github.com/edulinq/autograder/internal/api/core/core.APIRequest",
+                "MinCourseRoleAdmin": "bool",
+                "course-id": "string",
+                "dry-run": "bool",
+                "root-user-nonce": "string",
+                "user-email": "string",
+                "user-pass": "string"
+            }
+        },
+        "github.com/edulinq/autograder/internal/api/courses/lms/scores/scores.UploadResponse": {
+            "category": "struct",
+            "fields": {
+                "dry-run": "bool",
+                "results": "[]*model.ExternalScoringInfo"
+            }
+        },
+        "github.com/edulinq/autograder/internal/api/courses/stats/stats.QueryRequest": {
+            "category": "struct",
+            "fields": {
+                "APIRequest": "github.com/edulinq/autograder/internal/api/core/core.APIRequest",
+                "MinCourseRoleAdmin": "bool",
+                "after": "int64",
+                "before": "int64",
+                "course-id": "string",
+                "limit": "int",
+                "root-user-nonce": "string",
+                "sort": "int",
+                "target-assignment": "string",
+                "target-course": "string",
+                "target-type": "string",
+                "target-user": "string",
+                "user-email": "string",
+                "user-pass": "string"
+            }
+        },
+        "github.com/edulinq/autograder/internal/api/courses/stats/stats.QueryResponse": {
+            "category": "struct",
+            "fields": {
+                "results": "[]*stats.CourseMetric"
+            }
+        },
+        "github.com/edulinq/autograder/internal/api/courses/upsert/upsert.FileSpecRequest": {
+            "category": "struct",
+            "fields": {
+                "APIRequest": "github.com/edulinq/autograder/internal/api/core/core.APIRequest",
+                "MinServerRoleCourseCreator": "bool",
+                "dry-run": "bool",
+                "filespec": "github.com/edulinq/autograder/internal/util/util.FileSpec",
+                "root-user-nonce": "string",
+                "skip-build-images": "bool",
+                "skip-emails": "bool",
+                "skip-lms-sync": "bool",
+                "skip-source-sync": "bool",
+                "skip-template-files": "bool",
+                "user-email": "string",
+                "user-pass": "string"
+            }
+        },
+        "github.com/edulinq/autograder/internal/api/courses/upsert/upsert.UpsertResponse": {
+            "category": "struct",
+            "fields": {
+                "results": "[]courses.CourseUpsertResult"
+            }
+        },
+        "github.com/edulinq/autograder/internal/api/courses/upsert/upsert.ZipFileRequest": {
+            "category": "struct",
+            "fields": {
+                "APIRequest": "github.com/edulinq/autograder/internal/api/core/core.APIRequest",
+                "MinServerRoleCourseCreator": "bool",
+                "dry-run": "bool",
+                "root-user-nonce": "string",
+                "skip-build-images": "bool",
+                "skip-emails": "bool",
+                "skip-lms-sync": "bool",
+                "skip-source-sync": "bool",
+                "skip-template-files": "bool",
+                "user-email": "string",
+                "user-pass": "string"
+            }
+        },
+        "github.com/edulinq/autograder/internal/api/courses/users/users.DropRequest": {
+            "category": "struct",
+            "fields": {
+                "APIRequest": "github.com/edulinq/autograder/internal/api/core/core.APIRequest",
+                "MinCourseRoleAdmin": "bool",
+                "course-id": "string",
+                "root-user-nonce": "string",
+                "target-email": "github.com/edulinq/autograder/internal/api/core/core.TargetCourseUser",
+                "user-email": "string",
+                "user-pass": "string"
+            }
+        },
+        "github.com/edulinq/autograder/internal/api/courses/users/users.DropResponse": {
+            "category": "struct",
+            "fields": {
+                "found-user": "bool"
+            }
+        },
+        "github.com/edulinq/autograder/internal/api/courses/users/users.EnrollRequest": {
+            "category": "struct",
+            "fields": {
+                "APIRequest": "github.com/edulinq/autograder/internal/api/core/core.APIRequest",
+                "MinCourseRoleAdmin": "bool",
+                "course-id": "string",
+                "dry-run": "bool",
+                "raw-course-users": "[]*model.RawCourseUserData",
+                "root-user-nonce": "string",
+                "send-emails": "bool",
+                "skip-inserts": "bool",
+                "skip-updates": "bool",
+                "user-email": "string",
+                "user-pass": "string"
+            }
+        },
+        "github.com/edulinq/autograder/internal/api/courses/users/users.EnrollResponse": {
+            "category": "struct",
+            "fields": {
+                "results": "[]*model.ExternalUserOpResult"
+            }
+        },
+        "github.com/edulinq/autograder/internal/api/courses/users/users.GetRequest": {
+            "category": "struct",
+            "fields": {
+                "APIRequest": "github.com/edulinq/autograder/internal/api/core/core.APIRequest",
+                "MinCourseRoleOther": "bool",
+                "course-id": "string",
+                "root-user-nonce": "string",
+                "target-email": "github.com/edulinq/autograder/internal/api/core/core.TargetCourseUserSelfOrGrader",
+                "user-email": "string",
+                "user-pass": "string"
+            }
+        },
+        "github.com/edulinq/autograder/internal/api/courses/users/users.GetResponse": {
+            "category": "struct",
+            "fields": {
+                "found": "bool",
+                "user": "github.com/edulinq/autograder/internal/api/core/core.CourseUserInfo"
+            }
+        },
+        "github.com/edulinq/autograder/internal/api/courses/users/users.ListRequest": {
+            "category": "struct",
+            "fields": {
+                "APIRequest": "github.com/edulinq/autograder/internal/api/core/core.APIRequest",
+                "MinCourseRoleGrader": "bool",
+                "course-id": "string",
+                "root-user-nonce": "string",
+                "user-email": "string",
+                "user-pass": "string"
+            }
+        },
+        "github.com/edulinq/autograder/internal/api/courses/users/users.ListResponse": {
+            "category": "struct",
+            "fields": {
+                "users": "[]*core.CourseUserInfo"
+            }
+        },
+        "github.com/edulinq/autograder/internal/api/lms/upload/upload.RowEntry": {
+            "category": "struct",
+            "fields": {
+                "entry": "interface {}",
+                "row": "int"
+            }
+        },
+        "github.com/edulinq/autograder/internal/api/lms/upload/upload.ScoreEntry": {
+            "category": "struct",
+            "fields": {
+                "email": "string",
+                "score": "float64"
+            }
+        },
+        "github.com/edulinq/autograder/internal/api/lms/upload/upload.UploadScoresRequest": {
+            "category": "struct",
+            "fields": {
+                "APIRequest": "github.com/edulinq/autograder/internal/api/core/core.APIRequest",
+                "MinCourseRoleGrader": "bool",
+                "assignment-lms-id": "string",
+                "course-id": "string",
+                "root-user-nonce": "string",
+                "scores": "[]upload.ScoreEntry",
+                "user-email": "string",
+                "user-pass": "string"
+            }
+        },
+        "github.com/edulinq/autograder/internal/api/lms/upload/upload.UploadScoresResponse": {
+            "category": "struct",
+            "fields": {
+                "count": "int",
+                "error-count": "int",
+                "no-lms-id-users": "[]upload.RowEntry",
+                "unrecognized-users": "[]upload.RowEntry"
+            }
+        },
+        "github.com/edulinq/autograder/internal/api/lms/user/user.UserGetRequest": {
+            "category": "struct",
+            "fields": {
+                "APIRequest": "github.com/edulinq/autograder/internal/api/core/core.APIRequest",
+                "MinCourseRoleGrader": "bool",
+                "course-id": "string",
+                "root-user-nonce": "string",
+                "target-email": "github.com/edulinq/autograder/internal/api/core/core.TargetCourseUser",
+                "user-email": "string",
+                "user-pass": "string"
+            }
+        },
+        "github.com/edulinq/autograder/internal/api/lms/user/user.UserGetResponse": {
+            "category": "struct",
+            "fields": {
+                "found-autograder-user": "bool",
+                "found-lms-user": "bool",
+                "user": "github.com/edulinq/autograder/internal/api/core/core.CourseUserInfo"
+            }
+        },
+        "github.com/edulinq/autograder/internal/api/logs/logs.QueryRequest": {
+            "category": "struct",
+            "fields": {
+                "APIRequest": "github.com/edulinq/autograder/internal/api/core/core.APIRequest",
+                "MinServerRoleUser": "bool",
+                "after": "string",
+                "level": "string",
+                "past": "string",
+                "root-user-nonce": "string",
+                "target-assignment": "string",
+                "target-course": "string",
+                "target-email": "string",
+                "user-email": "string",
+                "user-pass": "string"
+            }
+        },
+        "github.com/edulinq/autograder/internal/api/logs/logs.QueryResponse": {
+            "category": "struct",
+            "fields": {
+                "error": "github.com/edulinq/autograder/internal/model/model.ExternalLocatableError",
+                "results": "[]*log.Record",
+                "success": "bool"
+            }
+        },
+        "github.com/edulinq/autograder/internal/api/metadata/metadata.DescribeRequest": {
+            "category": "struct",
+            "fields": {
+                "APIRequest": "github.com/edulinq/autograder/internal/api/core/core.APIRequest"
+            }
+        },
+        "github.com/edulinq/autograder/internal/api/metadata/metadata.DescribeResponse": {
+            "category": "struct",
+            "fields": {
+                "endpoints": "map[string]core.EndpointDescription",
+                "types": "map[string]core.TypeDescription"
+            }
+        },
+        "github.com/edulinq/autograder/internal/api/stats/apirequest/apirequest.QueryRequest": {
+            "category": "struct",
+            "fields": {
+                "APIRequest": "github.com/edulinq/autograder/internal/api/core/core.APIRequest",
+                "MinServerRoleAdmin": "bool",
+                "after": "int64",
+                "before": "int64",
+                "limit": "int",
+                "root-user-nonce": "string",
+                "sort": "int",
+                "target-assignment": "string",
+                "target-course": "string",
+                "target-endpoint": "string",
+                "target-locator": "string",
+                "target-sender": "string",
+                "target-user": "string",
+                "user-email": "string",
+                "user-pass": "string"
+            }
+        },
+        "github.com/edulinq/autograder/internal/api/stats/apirequest/apirequest.QueryResponse": {
+            "category": "struct",
+            "fields": {
+                "results": "[]*stats.APIRequestMetric"
+            }
+        },
+        "github.com/edulinq/autograder/internal/api/stats/system/system.QueryRequest": {
+            "category": "struct",
+            "fields": {
+                "APIRequest": "github.com/edulinq/autograder/internal/api/core/core.APIRequest",
+                "MinServerRoleAdmin": "bool",
+                "after": "int64",
+                "before": "int64",
+                "limit": "int",
+                "root-user-nonce": "string",
+                "sort": "int",
+                "user-email": "string",
+                "user-pass": "string"
+            }
+        },
+        "github.com/edulinq/autograder/internal/api/stats/system/system.QueryResponse": {
+            "category": "struct",
+            "fields": {
+                "results": "[]*stats.SystemMetrics"
+            }
+        },
+        "github.com/edulinq/autograder/internal/api/system/system.StacksRequest": {
+            "category": "struct",
+            "fields": {
+                "APIRequest": "github.com/edulinq/autograder/internal/api/core/core.APIRequest",
+                "MinServerRoleAdmin": "bool",
+                "root-user-nonce": "string",
+                "user-email": "string",
+                "user-pass": "string"
+            }
+        },
+        "github.com/edulinq/autograder/internal/api/system/system.StacksResponse": {
+            "category": "struct",
+            "fields": {
+                "count": "int",
+                "stacks": "[]*util.CallStack"
+            }
+        },
+        "github.com/edulinq/autograder/internal/api/users/password/password.PasswordChangeRequest": {
+            "category": "struct",
+            "fields": {
+                "APIRequest": "github.com/edulinq/autograder/internal/api/core/core.APIRequest",
+                "new-pass": "string",
+                "root-user-nonce": "string",
+                "user-email": "string",
+                "user-pass": "string"
+            }
+        },
+        "github.com/edulinq/autograder/internal/api/users/password/password.PasswordChangeResponse": {
+            "category": "struct",
+            "fields": {
+                "duplicate": "bool",
+                "success": "bool"
+            }
+        },
+        "github.com/edulinq/autograder/internal/api/users/password/password.PasswordResetRequest": {
+            "category": "struct",
+            "fields": {
+                "APIRequest": "github.com/edulinq/autograder/internal/api/core/core.APIRequest",
+                "user-email": "string"
+            }
+        },
+        "github.com/edulinq/autograder/internal/api/users/password/password.PasswordResetResponse": {
+            "category": "struct"
+        },
+        "github.com/edulinq/autograder/internal/api/users/tokens/tokens.TokensCreateRequest": {
+            "category": "struct",
+            "fields": {
+                "APIRequest": "github.com/edulinq/autograder/internal/api/core/core.APIRequest",
+                "name": "string",
+                "root-user-nonce": "string",
+                "user-email": "string",
+                "user-pass": "string"
+            }
+        },
+        "github.com/edulinq/autograder/internal/api/users/tokens/tokens.TokensCreateResponse": {
+            "category": "struct",
+            "fields": {
+                "token-cleartext": "string",
+                "token-id": "string"
+            }
+        },
+        "github.com/edulinq/autograder/internal/api/users/tokens/tokens.TokensDeleteRequest": {
+            "category": "struct",
+            "fields": {
+                "APIRequest": "github.com/edulinq/autograder/internal/api/core/core.APIRequest",
+                "root-user-nonce": "string",
+                "token-id": "string",
+                "user-email": "string",
+                "user-pass": "string"
+            }
+        },
+        "github.com/edulinq/autograder/internal/api/users/tokens/tokens.TokensDeleteResponse": {
+            "category": "struct",
+            "fields": {
+                "found": "bool"
+            }
+        },
+        "github.com/edulinq/autograder/internal/api/users/users.AuthRequest": {
+            "category": "struct",
+            "fields": {
+                "APIRequest": "github.com/edulinq/autograder/internal/api/core/core.APIRequest",
+                "root-user-nonce": "string",
+                "user-email": "string",
+                "user-pass": "string"
+            }
+        },
+        "github.com/edulinq/autograder/internal/api/users/users.AuthResponse": {
+            "category": "struct",
+            "fields": {
+                "success": "bool"
+            }
+        },
+        "github.com/edulinq/autograder/internal/api/users/users.GetRequest": {
+            "category": "struct",
+            "fields": {
+                "APIRequest": "github.com/edulinq/autograder/internal/api/core/core.APIRequest",
+                "MinServerRoleUser": "bool",
+                "root-user-nonce": "string",
+                "target-email": "github.com/edulinq/autograder/internal/api/core/core.TargetServerUserSelfOrAdmin",
+                "user-email": "string",
+                "user-pass": "string"
+            }
+        },
+        "github.com/edulinq/autograder/internal/api/users/users.GetResponse": {
+            "category": "struct",
+            "fields": {
+                "courses": "map[string]*core.CourseInfo",
+                "found": "bool",
+                "user": "github.com/edulinq/autograder/internal/api/core/core.ServerUserInfo"
+            }
+        },
+        "github.com/edulinq/autograder/internal/api/users/users.ListRequest": {
+            "category": "struct",
+            "fields": {
+                "APIRequest": "github.com/edulinq/autograder/internal/api/core/core.APIRequest",
+                "MinServerRoleAdmin": "bool",
+                "root-user-nonce": "string",
+                "user-email": "string",
+                "user-pass": "string"
+            }
+        },
+        "github.com/edulinq/autograder/internal/api/users/users.ListResponse": {
+            "category": "struct",
+            "fields": {
+                "users": "[]*core.ServerUserInfo"
+            }
+        },
+        "github.com/edulinq/autograder/internal/api/users/users.RemoveRequest": {
+            "category": "struct",
+            "fields": {
+                "APIRequest": "github.com/edulinq/autograder/internal/api/core/core.APIRequest",
+                "MinServerRoleAdmin": "bool",
+                "root-user-nonce": "string",
+                "target-email": "github.com/edulinq/autograder/internal/api/core/core.TargetServerUser",
+                "user-email": "string",
+                "user-pass": "string"
+            }
+        },
+        "github.com/edulinq/autograder/internal/api/users/users.RemoveResponse": {
+            "category": "struct",
+            "fields": {
+                "found-user": "bool"
+            }
+        },
+        "github.com/edulinq/autograder/internal/api/users/users.UpsertRequest": {
+            "category": "struct",
+            "fields": {
+                "APIRequest": "github.com/edulinq/autograder/internal/api/core/core.APIRequest",
+                "MinServerRoleAdmin": "bool",
+                "dry-run": "bool",
+                "raw-users": "[]*model.RawServerUserData",
+                "root-user-nonce": "string",
+                "send-emails": "bool",
+                "skip-inserts": "bool",
+                "skip-updates": "bool",
+                "user-email": "string",
+                "user-pass": "string"
+            }
+        },
+        "github.com/edulinq/autograder/internal/api/users/users.UpsertResponse": {
+            "category": "struct",
+            "fields": {
+                "results": "[]*model.ExternalUserOpResult"
+            }
+        },
+        "github.com/edulinq/autograder/internal/log/log.LogLevel": {
+            "alias": "int32",
+            "category": "basic"
+        },
+        "github.com/edulinq/autograder/internal/log/log.RawLogQuery": {
+            "category": "struct",
+            "fields": {
+                "after": "string",
+                "level": "string",
+                "past": "string",
+                "target-assignment": "string",
+                "target-course": "string",
+                "target-email": "string"
+            }
+        },
+        "github.com/edulinq/autograder/internal/log/log.Record": {
+            "category": "struct",
+            "fields": {
+                "assignment": "string",
+                "attributes": "map[string]interface {}",
+                "course": "string",
+                "error": "string",
+                "level": "int32",
+                "message": "string",
+                "timestamp": "int64",
+                "user": "string"
+            }
+        },
+        "github.com/edulinq/autograder/internal/model/model.AnalysisFileInfo": {
+            "category": "struct",
+            "fields": {
+                "filename": "string",
+                "lines-of-code": "int",
+                "original-filename": "string"
+            }
+        },
+        "github.com/edulinq/autograder/internal/model/model.AnalysisSummary": {
+            "category": "struct",
+            "fields": {
+                "complete": "bool",
+                "complete-count": "int",
+                "first-timestamp": "int64",
+                "last-timestamp": "int64",
+                "pending-count": "int"
+            }
+        },
+        "github.com/edulinq/autograder/internal/model/model.AssignmentAnalysisOptions": {
+            "category": "struct",
+            "fields": {
+                "exclude-patterns": "[]string",
+                "include-patterns": "[]string",
+                "template-file-ops": "[]*util.FileOperation",
+                "template-files": "[]*util.FileSpec"
+            }
+        },
+        "github.com/edulinq/autograder/internal/model/model.AssignmentInfo": {
+            "category": "struct",
+            "fields": {
+                "id": "string",
+                "name": "string"
+            }
+        },
+        "github.com/edulinq/autograder/internal/model/model.AssignmentSyncResult": {
+            "category": "struct",
+            "fields": {
+                "ambiguous-matches": "[]model.AssignmentInfo",
+                "non-matched-assignments": "[]model.AssignmentInfo",
+                "synced-assignments": "[]model.AssignmentInfo",
+                "unchanged-assignments": "[]model.AssignmentInfo"
+            }
+        },
+        "github.com/edulinq/autograder/internal/model/model.BaseUserOpResult": {
+            "category": "struct",
+            "fields": {
+                "added": "bool",
+                "dropped": "[]string",
+                "email": "string",
+                "emailed": "bool",
+                "enrolled": "[]string",
+                "modified": "bool",
+                "not-exists": "bool",
+                "removed": "bool",
+                "skipped": "bool"
+            }
+        },
+        "github.com/edulinq/autograder/internal/model/model.CourseUserRole": {
+            "alias": "int",
+            "category": "basic"
+        },
+        "github.com/edulinq/autograder/internal/model/model.ExternalLocatableError": {
+            "category": "struct",
+            "fields": {
+                "locator": "string",
+                "message": "string"
+            }
+        },
+        "github.com/edulinq/autograder/internal/model/model.ExternalScoringInfo": {
+            "category": "struct",
+            "fields": {
+                "assignment": "string",
+                "raw-score": "float64",
+                "score": "float64",
+                "submission-id": "string",
+                "submission-time": "int64",
+                "upload-time": "int64",
+                "user": "string"
+            }
+        },
+        "github.com/edulinq/autograder/internal/model/model.ExternalUserOpResult": {
+            "category": "struct",
+            "fields": {
+                "added": "bool",
+                "communication-error": "github.com/edulinq/autograder/internal/model/model.ExternalLocatableError",
+                "dropped": "[]string",
+                "email": "string",
+                "emailed": "bool",
+                "enrolled": "[]string",
+                "modified": "bool",
+                "not-exists": "bool",
+                "removed": "bool",
+                "skipped": "bool",
+                "system-error": "github.com/edulinq/autograder/internal/model/model.ExternalLocatableError",
+                "validation-error": "github.com/edulinq/autograder/internal/model/model.ExternalLocatableError"
+            }
+        },
+        "github.com/edulinq/autograder/internal/model/model.FileSimilarity": {
+            "category": "struct",
+            "fields": {
+                "filename": "string",
+                "options": "map[string]interface {}",
+                "original-filename": "string",
+                "score": "float64",
+                "tool": "string",
+                "version": "string"
+            }
+        },
+        "github.com/edulinq/autograder/internal/model/model.GradedQuestion": {
+            "category": "struct",
+            "fields": {
+                "grading_end_time": "int64",
+                "grading_start_time": "int64",
+                "hard_fail": "bool",
+                "max_points": "float64",
+                "message": "string",
+                "name": "string",
+                "score": "float64",
+                "skipped": "bool"
+            }
+        },
+        "github.com/edulinq/autograder/internal/model/model.GradingInfo": {
+            "category": "struct",
+            "fields": {
+                "additional-info": "map[string]interface {}",
+                "assignment-id": "string",
+                "course-id": "string",
+                "epilogue": "string",
+                "grading_end_time": "int64",
+                "grading_start_time": "int64",
+                "id": "string",
+                "max_points": "float64",
+                "message": "string",
+                "name": "string",
+                "prologue": "string",
+                "questions": "[]*model.GradedQuestion",
+                "score": "float64",
+                "short-id": "string",
+                "user": "string"
+            }
+        },
+        "github.com/edulinq/autograder/internal/model/model.GradingResult": {
+            "category": "struct",
+            "fields": {
+                "info": "github.com/edulinq/autograder/internal/model/model.GradingInfo",
+                "input-files-gzip": "map[string][]uint8",
+                "output-files-gzip": "map[string][]uint8",
+                "stderr": "string",
+                "stdout": "string"
+            }
+        },
+        "github.com/edulinq/autograder/internal/model/model.IndividualAnalysis": {
+            "category": "struct",
+            "fields": {
+                "analysis-timestamp": "int64",
+                "assignment-id": "string",
+                "course-id": "string",
+                "files": "[]model.AnalysisFileInfo",
+                "lines-of-code": "int",
+                "lines-of-code-delta": "int",
+                "lines-of-code-per-hour": "float64",
+                "options": "github.com/edulinq/autograder/internal/model/model.AssignmentAnalysisOptions",
+                "score": "float64",
+                "score-delta": "float64",
+                "score-per-hour": "float64",
+                "short-id": "string",
+                "skipped-files": "[]string",
+                "submission-id": "string",
+                "submission-start-time": "int64",
+                "submission-time-delta": "int64",
+                "user-email": "string"
+            }
+        },
+        "github.com/edulinq/autograder/internal/model/model.IndividualAnalysisSummary": {
+            "category": "struct",
+            "fields": {
+                "aggregate-lines-of-code": "github.com/edulinq/autograder/internal/util/util.AggregateValues",
+                "aggregate-lines-of-code-delta": "github.com/edulinq/autograder/internal/util/util.AggregateValues",
+                "aggregate-lines-of-code-per-file": "map[string]util.AggregateValues",
+                "aggregate-lines-of-code-per-hour": "github.com/edulinq/autograder/internal/util/util.AggregateValues",
+                "aggregate-score": "github.com/edulinq/autograder/internal/util/util.AggregateValues",
+                "aggregate-score-delta": "github.com/edulinq/autograder/internal/util/util.AggregateValues",
+                "aggregate-score-per-hour": "github.com/edulinq/autograder/internal/util/util.AggregateValues",
+                "aggregate-submission-time-delta": "github.com/edulinq/autograder/internal/util/util.AggregateValues",
+                "complete": "bool",
+                "complete-count": "int",
+                "first-timestamp": "int64",
+                "last-timestamp": "int64",
+                "pending-count": "int"
+            }
+        },
+        "github.com/edulinq/autograder/internal/model/model.LMSSyncResult": {
+            "category": "struct",
+            "fields": {
+                "assignment-sync": "github.com/edulinq/autograder/internal/model/model.AssignmentSyncResult",
+                "user-sync": "[]*model.UserOpResult"
+            }
+        },
+        "github.com/edulinq/autograder/internal/model/model.LocatableError": {
+            "category": "struct"
+        },
+        "github.com/edulinq/autograder/internal/model/model.PairwiseAnalysis": {
+            "category": "struct",
+            "fields": {
+                "analysis-timestamp": "int64",
+                "mean-similarities": "map[string]float64",
+                "options": "github.com/edulinq/autograder/internal/model/model.AssignmentAnalysisOptions",
+                "similarities": "map[string][]*model.FileSimilarity",
+                "skipped-files": "[]string",
+                "submission-ids": "github.com/edulinq/autograder/internal/model/model.PairwiseKey",
+                "total-mean-similarity": "float64",
+                "unmatched-files": "[][2]string"
+            }
+        },
+        "github.com/edulinq/autograder/internal/model/model.PairwiseAnalysisSummary": {
+            "category": "struct",
+            "fields": {
+                "aggregate-mean-similarities": "map[string]util.AggregateValues",
+                "aggregate-total-mean-similarity": "github.com/edulinq/autograder/internal/util/util.AggregateValues",
+                "complete": "bool",
+                "complete-count": "int",
+                "first-timestamp": "int64",
+                "last-timestamp": "int64",
+                "pending-count": "int"
+            }
+        },
+        "github.com/edulinq/autograder/internal/model/model.PairwiseKey": {
+            "category": "array",
+            "element-type": "string"
+        },
+        "github.com/edulinq/autograder/internal/model/model.RawCourseUserData": {
+            "category": "struct",
+            "fields": {
+                "course-lms-id": "string",
+                "course-role": "string",
+                "email": "string",
+                "name": "string"
+            }
+        },
+        "github.com/edulinq/autograder/internal/model/model.RawServerUserData": {
+            "category": "struct",
+            "fields": {
+                "course": "string",
+                "course-lms-id": "string",
+                "course-role": "string",
+                "email": "string",
+                "name": "string",
+                "pass": "string",
+                "role": "string"
+            }
+        },
+        "github.com/edulinq/autograder/internal/model/model.ServerUserRole": {
+            "alias": "int",
+            "category": "basic"
+        },
+        "github.com/edulinq/autograder/internal/model/model.SubmissionHistoryItem": {
+            "category": "struct",
+            "fields": {
+                "assignment-id": "string",
+                "course-id": "string",
+                "grading_start_time": "int64",
+                "id": "string",
+                "max_points": "float64",
+                "message": "string",
+                "score": "float64",
+                "short-id": "string",
+                "user": "string"
+            }
+        },
+        "github.com/edulinq/autograder/internal/model/model.UserOpResult": {
+            "category": "struct",
+            "fields": {
+                "added": "bool",
+                "cleartext-password": "string",
+                "communication-error": "github.com/edulinq/autograder/internal/model/model.LocatableError",
+                "dropped": "[]string",
+                "email": "string",
+                "emailed": "bool",
+                "enrolled": "[]string",
+                "modified": "bool",
+                "not-exists": "bool",
+                "removed": "bool",
+                "skipped": "bool",
+                "system-error": "github.com/edulinq/autograder/internal/model/model.LocatableError",
+                "validation-error": "github.com/edulinq/autograder/internal/model/model.LocatableError"
+            }
+        },
+        "github.com/edulinq/autograder/internal/procedures/courses/courses.CourseUpsertOptions": {
+            "category": "struct",
+            "fields": {
+                "dry-run": "bool",
+                "skip-build-images": "bool",
+                "skip-emails": "bool",
+                "skip-lms-sync": "bool",
+                "skip-source-sync": "bool",
+                "skip-template-files": "bool"
+            }
+        },
+        "github.com/edulinq/autograder/internal/procedures/courses/courses.CourseUpsertPublicOptions": {
+            "category": "struct",
+            "fields": {
+                "dry-run": "bool",
+                "skip-build-images": "bool",
+                "skip-emails": "bool",
+                "skip-lms-sync": "bool",
+                "skip-source-sync": "bool",
+                "skip-template-files": "bool"
+            }
+        },
+        "github.com/edulinq/autograder/internal/procedures/courses/courses.CourseUpsertResult": {
+            "category": "struct",
+            "fields": {
+                "assignment-template-files": "map[string][]string",
+                "built-assignment-images": "[]string",
+                "course-id": "string",
+                "created": "bool",
+                "lms-sync-result": "github.com/edulinq/autograder/internal/model/model.LMSSyncResult",
+                "message": "string",
+                "success": "bool",
+                "updated": "bool"
+            }
+        },
+        "github.com/edulinq/autograder/internal/procedures/users/users.UpsertUsersOptions": {
+            "category": "struct",
+            "fields": {
+                "dry-run": "bool",
+                "raw-users": "[]*model.RawServerUserData",
+                "send-emails": "bool",
+                "skip-inserts": "bool",
+                "skip-updates": "bool"
+            }
+        },
+        "github.com/edulinq/autograder/internal/stats/stats.APIRequestMetric": {
+            "category": "struct",
+            "fields": {
+                "assignment": "string",
+                "attributes": "map[string]interface {}",
+                "course": "string",
+                "duration": "uint64",
+                "endpoint": "string",
+                "locator": "string",
+                "sender": "string",
+                "timestamp": "int64",
+                "user": "string"
+            }
+        },
+        "github.com/edulinq/autograder/internal/stats/stats.APIRequestMetricQuery": {
+            "category": "struct",
+            "fields": {
+                "after": "int64",
+                "before": "int64",
+                "limit": "int",
+                "sort": "int",
+                "target-assignment": "string",
+                "target-course": "string",
+                "target-endpoint": "string",
+                "target-locator": "string",
+                "target-sender": "string",
+                "target-user": "string"
+            }
+        },
+        "github.com/edulinq/autograder/internal/stats/stats.BaseMetric": {
+            "category": "struct",
+            "fields": {
+                "attributes": "map[string]interface {}",
+                "timestamp": "int64"
+            }
+        },
+        "github.com/edulinq/autograder/internal/stats/stats.BaseQuery": {
+            "category": "struct",
+            "fields": {
+                "after": "int64",
+                "before": "int64",
+                "limit": "int",
+                "sort": "int"
+            }
+        },
+        "github.com/edulinq/autograder/internal/stats/stats.CourseMetric": {
+            "category": "struct",
+            "fields": {
+                "assignment": "string",
+                "attributes": "map[string]interface {}",
+                "course": "string",
+                "duration": "uint64",
+                "timestamp": "int64",
+                "type": "string",
+                "user": "string"
+            }
+        },
+        "github.com/edulinq/autograder/internal/stats/stats.CourseMetricQuery": {
+            "category": "struct",
+            "fields": {
+                "after": "int64",
+                "before": "int64",
+                "limit": "int",
+                "sort": "int",
+                "target-assignment": "string",
+                "target-course": "string",
+                "target-type": "string",
+                "target-user": "string"
+            }
+        },
+        "github.com/edulinq/autograder/internal/stats/stats.CourseMetricType": {
+            "alias": "string",
+            "category": "basic"
+        },
+        "github.com/edulinq/autograder/internal/stats/stats.SystemMetrics": {
+            "category": "struct",
+            "fields": {
+                "attributes": "map[string]interface {}",
+                "cpu-percent": "float64",
+                "mem-percent": "float64",
+                "net-bytes-received": "uint64",
+                "net-bytes-sent": "uint64",
+                "timestamp": "int64"
+            }
+        },
+        "github.com/edulinq/autograder/internal/timestamp/timestamp.Timestamp": {
+            "alias": "int64",
+            "category": "basic"
+        },
+        "github.com/edulinq/autograder/internal/util/util.AggregateValues": {
+            "category": "struct",
+            "fields": {
+                "count": "int",
+                "max": "float64",
+                "mean": "float64",
+                "median": "float64",
+                "min": "float64"
+            }
+        },
+        "github.com/edulinq/autograder/internal/util/util.CallStack": {
+            "category": "struct",
+            "fields": {
+                "name": "string",
+                "records": "[]util.CallStackRecord",
+                "status": "string"
+            }
+        },
+        "github.com/edulinq/autograder/internal/util/util.CallStackRecord": {
+            "category": "struct",
+            "fields": {
+                "call": "string",
+                "file": "string",
+                "line": "int",
+                "pointer": "string"
+            }
+        },
+        "github.com/edulinq/autograder/internal/util/util.FileOperation": {
+            "category": "array",
+            "element-type": "string"
+        },
+        "github.com/edulinq/autograder/internal/util/util.FileSpec": {
+            "category": "struct",
+            "fields": {
+                "dest": "string",
+                "path": "string",
+                "reference": "string",
+                "token": "string",
+                "type": "string",
+                "username": "string"
+            }
+        },
+        "github.com/edulinq/autograder/internal/util/util.FileSpecType": {
+            "alias": "string",
+            "category": "basic"
+        },
+        "int": {
+            "alias": "int",
+            "category": "basic"
+        },
+        "int64": {
+            "alias": "int64",
+            "category": "basic"
+        },
+        "interface {}": {
+            "alias": "interface {}",
+            "category": "basic"
+        },
+        "map[string]*core.AssignmentInfo": {
+            "category": "map",
+            "key-type": "string",
+            "value-type": "github.com/edulinq/autograder/internal/api/core/core.AssignmentInfo"
+        },
+        "map[string]*core.CourseInfo": {
+            "category": "map",
+            "key-type": "string",
+            "value-type": "github.com/edulinq/autograder/internal/api/core/core.CourseInfo"
+        },
+        "map[string]*model.GradingResult": {
+            "category": "map",
+            "key-type": "string",
+            "value-type": "github.com/edulinq/autograder/internal/model/model.GradingResult"
+        },
+        "map[string]*model.SubmissionHistoryItem": {
+            "category": "map",
+            "key-type": "string",
+            "value-type": "github.com/edulinq/autograder/internal/model/model.SubmissionHistoryItem"
+        },
+        "map[string][]*model.FileSimilarity": {
+            "category": "map",
+            "key-type": "string",
+            "value-type": "[]*model.FileSimilarity"
+        },
+        "map[string][]string": {
+            "category": "map",
+            "key-type": "string",
+            "value-type": "[]string"
+        },
+        "map[string][]uint8": {
+            "category": "map",
+            "key-type": "string",
+            "value-type": "[]uint8"
+        },
+        "map[string]core.EndpointDescription": {
+            "category": "map",
+            "key-type": "string",
+            "value-type": "github.com/edulinq/autograder/internal/api/core/core.EndpointDescription"
+        },
+        "map[string]core.EnrollmentInfo": {
+            "category": "map",
+            "key-type": "string",
+            "value-type": "github.com/edulinq/autograder/internal/api/core/core.EnrollmentInfo"
+        },
+        "map[string]core.TypeDescription": {
+            "category": "map",
+            "key-type": "string",
+            "value-type": "github.com/edulinq/autograder/internal/api/core/core.TypeDescription"
+        },
+        "map[string]float64": {
+            "category": "map",
+            "key-type": "string",
+            "value-type": "float64"
+        },
+        "map[string]interface {}": {
+            "category": "map",
+            "key-type": "string",
+            "value-type": "interface {}"
+        },
+        "map[string]string": {
+            "category": "map",
+            "key-type": "string",
+            "value-type": "string"
+        },
+        "map[string]util.AggregateValues": {
+            "category": "map",
+            "key-type": "string",
+            "value-type": "github.com/edulinq/autograder/internal/util/util.AggregateValues"
+        },
+        "string": {
+            "alias": "string",
+            "category": "basic"
+        },
+        "uint64": {
+            "alias": "uint64",
+            "category": "basic"
+        },
+        "uint8": {
+            "alias": "uint8",
+            "category": "basic"
         }
     }
 }

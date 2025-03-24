@@ -98,76 +98,154 @@ type complexJSONStruct struct {
 func TestSimplifyType(test *testing.T) {
 	testCases := []struct {
 		customType reflect.Type
-		expected   internalTypeDescription
+		expected   core.TypeDescription
 	}{
 		// Base types to alias (no JSON tags).
-		{reflect.TypeOf((*string)(nil)).Elem(), internalTypeDescription{Alias: "string"}},
-		{reflect.TypeOf((*int)(nil)).Elem(), internalTypeDescription{Alias: "int"}},
-		{reflect.TypeOf((*int64)(nil)).Elem(), internalTypeDescription{Alias: "int64"}},
-		{reflect.TypeOf((*bool)(nil)).Elem(), internalTypeDescription{Alias: "bool"}},
+		{
+			reflect.TypeOf((*string)(nil)).Elem(),
+			core.TypeDescription{
+				TypeCategory: core.BasicType,
+				Alias:        "string",
+			},
+		},
+		{
+			reflect.TypeOf((*int)(nil)).Elem(),
+			core.TypeDescription{
+				TypeCategory: core.BasicType,
+				Alias:        "int",
+			},
+		},
+		{
+			reflect.TypeOf((*int64)(nil)).Elem(),
+			core.TypeDescription{
+				TypeCategory: core.BasicType,
+				Alias:        "int64",
+			},
+		},
+		{
+			reflect.TypeOf((*bool)(nil)).Elem(),
+			core.TypeDescription{
+				TypeCategory: core.BasicType,
+				Alias:        "bool",
+			},
+		},
 
 		// Simple wrapper types.
-		{reflect.TypeOf((*stringWrapper)(nil)).Elem(), internalTypeDescription{Alias: "string"}},
-		{reflect.TypeOf((*core.MinServerRoleAdmin)(nil)).Elem(), internalTypeDescription{Alias: "bool"}},
+		{
+			reflect.TypeOf((*stringWrapper)(nil)).Elem(),
+			core.TypeDescription{
+				TypeCategory: core.BasicType,
+				Alias:        "string",
+			},
+		},
+		{
+			reflect.TypeOf((*core.MinServerRoleAdmin)(nil)).Elem(),
+			core.TypeDescription{
+				TypeCategory: core.BasicType,
+				Alias:        "bool",
+			},
+		},
 
 		// Simple maps and arrays.
-		{reflect.TypeOf((*map[string]string)(nil)).Elem(), internalTypeDescription{Alias: "map[string]{string}"}},
-		{reflect.TypeOf((*[]string)(nil)).Elem(), internalTypeDescription{Alias: "[]{string}"}},
+		{
+			reflect.TypeOf((*map[string]string)(nil)).Elem(),
+			core.TypeDescription{
+				TypeCategory: core.MapType,
+				MapKeyType:   "string",
+				MapValueType: "string",
+			},
+		},
+		{
+			reflect.TypeOf((*[]string)(nil)).Elem(),
+			core.TypeDescription{
+				TypeCategory:     core.ArrayType,
+				ArrayElementType: "string",
+			},
+		},
 
 		// Wrapped maps and arrays.
-		{reflect.TypeOf((*simpleMapWrapper)(nil)).Elem(), internalTypeDescription{Alias: "map[string]{int}"}},
-		{reflect.TypeOf((*simpleArrayWrapper)(nil)).Elem(), internalTypeDescription{Alias: "[]{bool}"}},
+		{
+			reflect.TypeOf((*simpleMapWrapper)(nil)).Elem(),
+			core.TypeDescription{
+				TypeCategory: core.MapType,
+				MapKeyType:   "string",
+				MapValueType: "int",
+			},
+		},
+		{
+			reflect.TypeOf((*simpleArrayWrapper)(nil)).Elem(),
+			core.TypeDescription{
+				TypeCategory:     core.ArrayType,
+				ArrayElementType: "bool",
+			},
+		},
 
-		// Simple structs.
-		{reflect.TypeOf((*simpleStruct)(nil)).Elem(), internalTypeDescription{
-			Description: core.TypeDescription{
-				"BaseString": "string",
-				"BaseInt":    "int",
-				"BaseBool":   "bool",
+		// Fields without JSON tags are ignored.
+		{
+			reflect.TypeOf((*simpleStruct)(nil)).Elem(),
+			core.TypeDescription{
+				TypeCategory: core.StructType,
+				StructFields: map[string]string{},
 			},
-		}},
-		{reflect.TypeOf((*wrappedStruct)(nil)).Elem(), internalTypeDescription{
-			Description: core.TypeDescription{
-				"WrappedString": "string",
-				"WrappedMap":    "map[string]{int}",
-				"WrappedArray":  "[]{bool}",
+		},
+		{
+			reflect.TypeOf((*wrappedStruct)(nil)).Elem(),
+			core.TypeDescription{
+				TypeCategory: core.StructType,
+				StructFields: map[string]string{},
 			},
-		}},
+		},
 
 		// Simple JSON tags.
-		{reflect.TypeOf((*simpleJSONStruct)(nil)).Elem(), internalTypeDescription{
-			Description: core.TypeDescription{
-				"email":    "string",
-				"job-code": "int",
+		{
+			reflect.TypeOf((*simpleJSONStruct)(nil)).Elem(),
+			core.TypeDescription{
+				TypeCategory: core.StructType,
+				StructFields: map[string]string{
+					"email":    "string",
+					"job-code": "int",
+				},
 			},
-		}},
+		},
 
 		// Hidden JSON tags.
-		{reflect.TypeOf((*secureJSONStruct)(nil)).Elem(), internalTypeDescription{
-			Description: core.TypeDescription{
-				"first-name": "string",
-				"last-name":  "string",
+		{
+			reflect.TypeOf((*secureJSONStruct)(nil)).Elem(),
+			core.TypeDescription{
+				TypeCategory: core.StructType,
+				StructFields: map[string]string{
+					"first-name": "string",
+					"last-name":  "string",
+				},
 			},
-		}},
+		},
 
 		// Embedded fields.
-		{reflect.TypeOf((*embeddedJSONStruct)(nil)).Elem(), internalTypeDescription{
-			Description: core.TypeDescription{
-				"email":      "string",
-				"job-code":   "int",
-				"first-name": "string",
-				"last-name":  "string",
+		{
+			reflect.TypeOf((*embeddedJSONStruct)(nil)).Elem(),
+			core.TypeDescription{
+				TypeCategory: core.StructType,
+				StructFields: map[string]string{
+					"email":      "string",
+					"job-code":   "int",
+					"first-name": "string",
+					"last-name":  "string",
+				},
 			},
-		}},
+		},
 
 		// Complex fields.
-		{reflect.TypeOf((*complexJSONStruct)(nil)).Elem(), internalTypeDescription{
-			Description: core.TypeDescription{
-				"coin-value": "map[string]{int}",
-				"good-index": "[]{bool}",
-				"personnel":  "email: string, first-name: string, job-code: int, last-name: string",
+		{
+			reflect.TypeOf((*complexJSONStruct)(nil)).Elem(),
+			core.TypeDescription{
+				TypeCategory: core.StructType,
+				StructFields: map[string]string{
+					"coin-value": "map[string]{int}",
+					"good-index": "[]{bool}",
+					"personnel":  "email: string, first-name: string, job-code: int, last-name: string",
+				},
 			},
-		}},
+		},
 	}
 
 	for i, testCase := range testCases {
@@ -175,6 +253,7 @@ func TestSimplifyType(test *testing.T) {
 
 		actual := simplifyType(testCase.customType, typeMap)
 
+		testCase.expected.TypeID = GetTypeID(testCase.customType)
 		if !reflect.DeepEqual(testCase.expected, actual) {
 			test.Errorf("Case %d: Unexpected type simplification. Expected: '%v', actual: '%v'.",
 				i, util.MustToJSONIndent(testCase.expected), util.MustToJSONIndent(actual))
