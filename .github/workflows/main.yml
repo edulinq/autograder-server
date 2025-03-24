@@ -8,7 +8,11 @@ env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
   PLATFORMS: 'linux/amd64,linux/arm64'
-  PUSH_IMAGES: ${{ (github.ref == 'refs/heads/main') && (github.repository_owner == 'edulinq') }}
+  # Note that env cannot be used in `jobs.<id>.if`, so we can't use a BUILD_IMAGES env to control the deploy steps.
+  # We will build images on main or tags.
+  # BUILD_IMAGES: ${{ (github.ref == 'refs/heads/main') || (startsWith(github.ref, 'refs/tags/')) }}
+  # We will push images on tags in the edulinq org.
+  PUSH_IMAGES: ${{ startsWith(github.ref, 'refs/tags/') && (github.repository_owner == 'edulinq') }}
 
 permissions:
   contents: read
@@ -55,7 +59,7 @@ jobs:
   deploy-prebuilt:
     name: Deploy Prebuilt
     needs: test
-    if: ${{ (github.ref == 'refs/heads/main') }}
+    if: ${{ (github.ref == 'refs/heads/main') || (startsWith(github.ref, 'refs/tags/')) }}
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout
@@ -87,7 +91,7 @@ jobs:
           file: docker/prebuilt/Dockerfile
           platforms: ${{ env.PLATFORMS }}
           push: ${{ env.PUSH_IMAGES }}
-          tags: "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:prebuilt"
+          tags: "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.ref_name }}-prebuilt"
 
       - name: Generate Artifact Attestation
         uses: actions/attest-build-provenance@v2
@@ -100,7 +104,7 @@ jobs:
   deploy-slim:
     name: Deploy Slim
     needs: test
-    if: ${{ (github.ref == 'refs/heads/main') }}
+    if: ${{ (github.ref == 'refs/heads/main') || (startsWith(github.ref, 'refs/tags/')) }}
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout
@@ -132,7 +136,7 @@ jobs:
           file: docker/slim/Dockerfile
           platforms: ${{ env.PLATFORMS }}
           push: ${{ env.PUSH_IMAGES }}
-          tags: "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:slim"
+          tags: "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.ref_name }}-slim"
 
       - name: Generate Artifact Attestation
         uses: actions/attest-build-provenance@v2
