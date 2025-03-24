@@ -19,6 +19,8 @@ import (
 	"github.com/edulinq/autograder/internal/util"
 )
 
+var testFailPairwiseAnalysis bool = false
+
 var defaultSimilarityEngines []core.SimilarityEngine = []core.SimilarityEngine{
 	dolos.GetEngine(),
 	jplag.GetEngine(),
@@ -136,8 +138,18 @@ func runPairwiseAnalysis(options AnalysisOptions, keys []model.PairwiseKey, init
 	}
 
 	lockKey := fmt.Sprintf("analysis-pairwise-course-%s", lockCourseID)
-	lockmanager.Lock(lockKey)
+	noLockWait := lockmanager.Lock(lockKey)
 	defer lockmanager.Unlock(lockKey)
+
+	// If we had to wait for the lock, then check again for cached results.
+	// If there are multiple requests queued up,
+	// it will be faster to do a bulk check for cached results instead of checking each one individually.
+	if !noLockWait {
+		_, keys, err = getCachedPairwiseResults(options)
+		if err != nil {
+			return nil, fmt.Errorf("Failed to re-check result cache before run: '%w'.", err)
+		}
+	}
 
 	// If we are overwriting the cache, then remove all the old entries.
 	if options.OverwriteCache && !options.DryRun {
@@ -247,7 +259,9 @@ func computeSinglePairwiseAnalysis(pairwiseKey model.PairwiseKey, templateFileSt
 
 	fileSimilarities, unmatches, skipped, totalRunTime, err := computeFileSims(submissionDirs, optionsAssignment, templateFileStore)
 	if err != nil {
-		return nil, 0, fmt.Errorf("Failed to compute similarities for %v: '%w'.", pairwiseKey, err)
+		message := fmt.Sprintf("Failed to compute similarities for %v: '%s'.", pairwiseKey, err.Error())
+		analysis := model.NewFailedPairwiseAnalysis(pairwiseKey, optionsAssignment, message)
+		return analysis, 0, nil
 	}
 
 	analysis := model.NewPairwiseAnalysis(pairwiseKey, optionsAssignment, fileSimilarities, unmatches, skipped)
@@ -256,6 +270,11 @@ func computeSinglePairwiseAnalysis(pairwiseKey model.PairwiseKey, templateFileSt
 }
 
 func computeFileSims(inputDirs [2]string, assignment *model.Assignment, templateFileStore *TemplateFileStore) (map[string][]*model.FileSimilarity, [][2]string, []string, int64, error) {
+	// Allow a failure for testing.
+	if testFailPairwiseAnalysis {
+		return nil, nil, nil, 0, fmt.Errorf("Test failure.")
+	}
+
 	engines, err := getEngines()
 	if err != nil {
 		return nil, nil, nil, 0, err

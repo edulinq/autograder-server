@@ -2,6 +2,7 @@ package analysis
 
 import (
 	"reflect"
+	"strings"
 	"testing"
 	"time"
 
@@ -42,8 +43,7 @@ func TestIndividualAnalysisBase(test *testing.T) {
 					LinesOfCode: 4,
 				},
 			},
-			SkippedFiles: []string{},
-			LinesOfCode:  4,
+			LinesOfCode: 4,
 
 			SubmissionTimeDelta: 10000,
 			LinesOfCodeDelta:    0,
@@ -117,9 +117,17 @@ func testIndividual(test *testing.T, ids []string, expected []*model.IndividualA
 		test.Fatalf("Found %d pending results, when 0 were expected.", pendingCount)
 	}
 
-	// Zero out the timestamps.
+	// Normalize the results.
 	for _, result := range results {
+		// Zero out the timestamps.
 		result.AnalysisTimestamp = timestamp.Zero()
+
+		// Nil empty skipped files.
+		for _, result := range results {
+			if len(result.SkippedFiles) == 0 {
+				result.SkippedFiles = nil
+			}
+		}
 	}
 
 	if !reflect.DeepEqual(expected, results) {
@@ -612,5 +620,43 @@ func TestIndividualAnalysisCountBase(test *testing.T) {
 				continue
 			}
 		}
+	}
+}
+
+func TestIndividualAnalysisFailureBase(test *testing.T) {
+	db.ResetForTesting()
+	defer db.ResetForTesting()
+
+	testFailIndividualAnalysis = true
+	defer func() {
+		testFailIndividualAnalysis = false
+	}()
+
+	expectedMessageSubstring := "Test failure."
+
+	options := AnalysisOptions{
+		ResolvedSubmissionIDs: []string{"course101::hw0::course-student@test.edulinq.org::1697406265"},
+		WaitForCompletion:     true,
+	}
+
+	results, pendingCount, err := IndividualAnalysis(options, "server-admin@test.edulinq.org")
+	if err != nil {
+		test.Fatalf("Failed to perform analysis: '%v'.", err)
+	}
+
+	if pendingCount != 0 {
+		test.Fatalf("Found %d pending results, when 0 were expected.", pendingCount)
+	}
+
+	if len(results) != 1 {
+		test.Fatalf("Found %d results, when 1 was expected.", len(results))
+	}
+
+	if !results[0].Failure {
+		test.Fatalf("Result is not a failure, when it should be.")
+	}
+
+	if !strings.Contains(results[0].FailureMessage, expectedMessageSubstring) {
+		test.Fatalf("Failure message does not contain expected substring. Expected Substring: '%s', Actual: '%s'.", expectedMessageSubstring, results[0].FailureMessage)
 	}
 }
