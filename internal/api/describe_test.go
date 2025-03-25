@@ -105,32 +105,32 @@ func TestSimplifyType(test *testing.T) {
 		{
 			reflect.TypeOf((*string)(nil)).Elem(),
 			core.TypeDescription{
-				TypeCategory: core.BasicType,
-				Alias:        "string",
+				Category: core.BasicType,
+				Alias:    "string",
 			},
 			map[string]core.TypeDescription{},
 		},
 		{
 			reflect.TypeOf((*int)(nil)).Elem(),
 			core.TypeDescription{
-				TypeCategory: core.BasicType,
-				Alias:        "int",
+				Category: core.BasicType,
+				Alias:    "int",
 			},
 			map[string]core.TypeDescription{},
 		},
 		{
 			reflect.TypeOf((*int64)(nil)).Elem(),
 			core.TypeDescription{
-				TypeCategory: core.BasicType,
-				Alias:        "int64",
+				Category: core.BasicType,
+				Alias:    "int64",
 			},
 			map[string]core.TypeDescription{},
 		},
 		{
 			reflect.TypeOf((*bool)(nil)).Elem(),
 			core.TypeDescription{
-				TypeCategory: core.BasicType,
-				Alias:        "bool",
+				Category: core.BasicType,
+				Alias:    "bool",
 			},
 			map[string]core.TypeDescription{},
 		},
@@ -139,16 +139,16 @@ func TestSimplifyType(test *testing.T) {
 		{
 			reflect.TypeOf((*stringWrapper)(nil)).Elem(),
 			core.TypeDescription{
-				TypeCategory: core.BasicType,
-				Alias:        "string",
+				Category: core.BasicType,
+				Alias:    "string",
 			},
 			map[string]core.TypeDescription{},
 		},
 		{
 			reflect.TypeOf((*core.MinServerRoleAdmin)(nil)).Elem(),
 			core.TypeDescription{
-				TypeCategory: core.BasicType,
-				Alias:        "bool",
+				Category: core.BasicType,
+				Alias:    "bool",
 			},
 			map[string]core.TypeDescription{},
 		},
@@ -157,30 +157,28 @@ func TestSimplifyType(test *testing.T) {
 		{
 			reflect.TypeOf((*map[string]string)(nil)).Elem(),
 			core.TypeDescription{
-				TypeCategory: core.MapType,
-				MapKeyType:   "string",
-				MapValueType: "string",
+				Category:  core.MapType,
+				KeyType:   "string",
+				ValueType: "string",
 			},
 			map[string]core.TypeDescription{
 				"map[string]string": core.TypeDescription{
-					TypeCategory: core.MapType,
-					MapKeyType:   "string",
-					MapValueType: "string",
-					TypeID:       "map[string]string",
+					Category:  core.MapType,
+					KeyType:   "string",
+					ValueType: "string",
 				},
 			},
 		},
 		{
 			reflect.TypeOf((*[]string)(nil)).Elem(),
 			core.TypeDescription{
-				TypeCategory:     core.ArrayType,
-				ArrayElementType: "string",
+				Category:    core.ArrayType,
+				ElementType: "string",
 			},
 			map[string]core.TypeDescription{
 				"[]string": core.TypeDescription{
-					TypeCategory:     core.ArrayType,
-					ArrayElementType: "string",
-					TypeID:           "[]string",
+					Category:    core.ArrayType,
+					ElementType: "string",
 				},
 			},
 		},
@@ -189,30 +187,28 @@ func TestSimplifyType(test *testing.T) {
 		{
 			reflect.TypeOf((*simpleMapWrapper)(nil)).Elem(),
 			core.TypeDescription{
-				TypeCategory: core.MapType,
-				MapKeyType:   "string",
-				MapValueType: "int",
+				Category:  core.MapType,
+				KeyType:   "string",
+				ValueType: "int",
 			},
 			map[string]core.TypeDescription{
 				GetTypeID(reflect.TypeOf((*simpleMapWrapper)(nil)).Elem()): core.TypeDescription{
-					TypeCategory: core.MapType,
-					MapKeyType:   "string",
-					MapValueType: "int",
-					TypeID:       GetTypeID(reflect.TypeOf((*simpleMapWrapper)(nil)).Elem()),
+					Category:  core.MapType,
+					KeyType:   "string",
+					ValueType: "int",
 				},
 			},
 		},
 		{
 			reflect.TypeOf((*simpleArrayWrapper)(nil)).Elem(),
 			core.TypeDescription{
-				TypeCategory:     core.ArrayType,
-				ArrayElementType: "bool",
+				Category:    core.ArrayType,
+				ElementType: "bool",
 			},
 			map[string]core.TypeDescription{
 				GetTypeID(reflect.TypeOf((*simpleArrayWrapper)(nil)).Elem()): core.TypeDescription{
-					TypeCategory:     core.ArrayType,
-					ArrayElementType: "bool",
-					TypeID:           GetTypeID(reflect.TypeOf((*simpleArrayWrapper)(nil)).Elem()),
+					Category:    core.ArrayType,
+					ElementType: "bool",
 				},
 			},
 		},
@@ -221,28 +217,26 @@ func TestSimplifyType(test *testing.T) {
 		{
 			reflect.TypeOf((*simpleStruct)(nil)).Elem(),
 			core.TypeDescription{
-				TypeCategory: core.StructType,
-				StructFields: nil,
+				Category: core.StructType,
+				Fields:   nil,
 			},
 			map[string]core.TypeDescription{
 				GetTypeID(reflect.TypeOf((*simpleStruct)(nil)).Elem()): core.TypeDescription{
-					TypeCategory: core.StructType,
-					StructFields: nil,
-					TypeID:       GetTypeID(reflect.TypeOf((*simpleStruct)(nil)).Elem()),
+					Category: core.StructType,
+					Fields:   nil,
 				},
 			},
 		},
 		{
 			reflect.TypeOf((*wrappedStruct)(nil)).Elem(),
 			core.TypeDescription{
-				TypeCategory: core.StructType,
-				StructFields: nil,
+				Category: core.StructType,
+				Fields:   nil,
 			},
 			map[string]core.TypeDescription{
 				GetTypeID(reflect.TypeOf((*wrappedStruct)(nil)).Elem()): core.TypeDescription{
-					TypeCategory: core.StructType,
-					StructFields: nil,
-					TypeID:       GetTypeID(reflect.TypeOf((*wrappedStruct)(nil)).Elem()),
+					Category: core.StructType,
+					Fields:   nil,
 				},
 			},
 		},
@@ -251,42 +245,40 @@ func TestSimplifyType(test *testing.T) {
 		{
 			reflect.TypeOf((*simpleJSONStruct)(nil)).Elem(),
 			core.TypeDescription{
-				TypeCategory: core.StructType,
-				StructFields: map[string]string{
+				Category: core.StructType,
+				Fields: map[string]string{
 					"email":    "string",
 					"job-code": "int",
 				},
 			},
 			map[string]core.TypeDescription{
 				GetTypeID(reflect.TypeOf((*simpleJSONStruct)(nil)).Elem()): core.TypeDescription{
-					TypeCategory: core.StructType,
-					StructFields: map[string]string{
+					Category: core.StructType,
+					Fields: map[string]string{
 						"email":    "string",
 						"job-code": "int",
 					},
-					TypeID: GetTypeID(reflect.TypeOf((*simpleJSONStruct)(nil)).Elem()),
 				},
 			},
 		},
 
-		// Hidden JSON tags.
+		// Hidden JSON tags (-).
 		{
 			reflect.TypeOf((*secureJSONStruct)(nil)).Elem(),
 			core.TypeDescription{
-				TypeCategory: core.StructType,
-				StructFields: map[string]string{
+				Category: core.StructType,
+				Fields: map[string]string{
 					"first-name": "string",
 					"last-name":  "string",
 				},
 			},
 			map[string]core.TypeDescription{
 				GetTypeID(reflect.TypeOf((*secureJSONStruct)(nil)).Elem()): core.TypeDescription{
-					TypeCategory: core.StructType,
-					StructFields: map[string]string{
+					Category: core.StructType,
+					Fields: map[string]string{
 						"first-name": "string",
 						"last-name":  "string",
 					},
-					TypeID: GetTypeID(reflect.TypeOf((*secureJSONStruct)(nil)).Elem()),
 				},
 			},
 		},
@@ -295,8 +287,8 @@ func TestSimplifyType(test *testing.T) {
 		{
 			reflect.TypeOf((*embeddedJSONStruct)(nil)).Elem(),
 			core.TypeDescription{
-				TypeCategory: core.StructType,
-				StructFields: map[string]string{
+				Category: core.StructType,
+				Fields: map[string]string{
 					"email":      "string",
 					"job-code":   "int",
 					"first-name": "string",
@@ -305,30 +297,27 @@ func TestSimplifyType(test *testing.T) {
 			},
 			map[string]core.TypeDescription{
 				GetTypeID(reflect.TypeOf((*embeddedJSONStruct)(nil)).Elem()): core.TypeDescription{
-					TypeCategory: core.StructType,
-					StructFields: map[string]string{
+					Category: core.StructType,
+					Fields: map[string]string{
 						"email":      "string",
 						"first-name": "string",
 						"job-code":   "int",
 						"last-name":  "string",
 					},
-					TypeID: GetTypeID(reflect.TypeOf((*embeddedJSONStruct)(nil)).Elem()),
 				},
 				GetTypeID(reflect.TypeOf((*simpleJSONStruct)(nil)).Elem()): core.TypeDescription{
-					TypeCategory: core.StructType,
-					StructFields: map[string]string{
+					Category: core.StructType,
+					Fields: map[string]string{
 						"email":    "string",
 						"job-code": "int",
 					},
-					TypeID: GetTypeID(reflect.TypeOf((*simpleJSONStruct)(nil)).Elem()),
 				},
 				GetTypeID(reflect.TypeOf((*secureJSONStruct)(nil)).Elem()): core.TypeDescription{
-					TypeCategory: core.StructType,
-					StructFields: map[string]string{
+					Category: core.StructType,
+					Fields: map[string]string{
 						"first-name": "string",
 						"last-name":  "string",
 					},
-					TypeID: GetTypeID(reflect.TypeOf((*secureJSONStruct)(nil)).Elem()),
 				},
 			},
 		},
@@ -337,8 +326,8 @@ func TestSimplifyType(test *testing.T) {
 		{
 			reflect.TypeOf((*complexJSONStruct)(nil)).Elem(),
 			core.TypeDescription{
-				TypeCategory: core.StructType,
-				StructFields: map[string]string{
+				Category: core.StructType,
+				Fields: map[string]string{
 					"coin-value": "github.com/edulinq/autograder/internal/api/api.simpleMapWrapper",
 					"good-index": "github.com/edulinq/autograder/internal/api/api.simpleArrayWrapper",
 					"personnel":  "github.com/edulinq/autograder/internal/api/api.embeddedJSONStruct",
@@ -346,50 +335,44 @@ func TestSimplifyType(test *testing.T) {
 			},
 			map[string]core.TypeDescription{
 				GetTypeID(reflect.TypeOf((*complexJSONStruct)(nil)).Elem()): core.TypeDescription{
-					TypeCategory: core.StructType,
-					StructFields: map[string]string{
+					Category: core.StructType,
+					Fields: map[string]string{
 						"coin-value": "github.com/edulinq/autograder/internal/api/api.simpleMapWrapper",
 						"good-index": "github.com/edulinq/autograder/internal/api/api.simpleArrayWrapper",
 						"personnel":  "github.com/edulinq/autograder/internal/api/api.embeddedJSONStruct",
 					},
-					TypeID: GetTypeID(reflect.TypeOf((*complexJSONStruct)(nil)).Elem()),
 				},
 				GetTypeID(reflect.TypeOf((*embeddedJSONStruct)(nil)).Elem()): core.TypeDescription{
-					TypeCategory: core.StructType,
-					StructFields: map[string]string{
+					Category: core.StructType,
+					Fields: map[string]string{
 						"email":      "string",
 						"first-name": "string",
 						"job-code":   "int",
 						"last-name":  "string",
 					},
-					TypeID: GetTypeID(reflect.TypeOf((*embeddedJSONStruct)(nil)).Elem()),
 				},
 				GetTypeID(reflect.TypeOf((*secureJSONStruct)(nil)).Elem()): core.TypeDescription{
-					TypeCategory: core.StructType,
-					StructFields: map[string]string{
+					Category: core.StructType,
+					Fields: map[string]string{
 						"first-name": "string",
 						"last-name":  "string",
 					},
-					TypeID: GetTypeID(reflect.TypeOf((*secureJSONStruct)(nil)).Elem()),
 				},
 				GetTypeID(reflect.TypeOf((*simpleArrayWrapper)(nil)).Elem()): core.TypeDescription{
-					TypeCategory:     core.ArrayType,
-					ArrayElementType: "bool",
-					TypeID:           GetTypeID(reflect.TypeOf((*simpleArrayWrapper)(nil)).Elem()),
+					Category:    core.ArrayType,
+					ElementType: "bool",
 				},
 				GetTypeID(reflect.TypeOf((*simpleJSONStruct)(nil)).Elem()): core.TypeDescription{
-					TypeCategory: core.StructType,
-					StructFields: map[string]string{
+					Category: core.StructType,
+					Fields: map[string]string{
 						"email":    "string",
 						"job-code": "int",
 					},
-					TypeID: GetTypeID(reflect.TypeOf((*simpleJSONStruct)(nil)).Elem()),
 				},
 				GetTypeID(reflect.TypeOf((*simpleMapWrapper)(nil)).Elem()): core.TypeDescription{
-					TypeCategory: core.MapType,
-					MapKeyType:   "string",
-					MapValueType: "int",
-					TypeID:       GetTypeID(reflect.TypeOf((*simpleMapWrapper)(nil)).Elem()),
+					Category:  core.MapType,
+					KeyType:   "string",
+					ValueType: "int",
 				},
 			},
 		},
@@ -398,9 +381,8 @@ func TestSimplifyType(test *testing.T) {
 	for i, testCase := range testCases {
 		typeMap := make(map[string]core.TypeDescription)
 
-		actual := simplifyType(testCase.customType, typeMap)
+		actual, _ := simplifyType(testCase.customType, typeMap)
 
-		testCase.expectedDesc.TypeID = GetTypeID(testCase.customType)
 		if !reflect.DeepEqual(testCase.expectedDesc, actual) {
 			test.Errorf("Case %d: Unexpected type simplification. Expected: '%v', actual: '%v'.",
 				i, util.MustToJSONIndent(testCase.expectedDesc), util.MustToJSONIndent(actual))

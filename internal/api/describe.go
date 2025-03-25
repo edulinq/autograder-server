@@ -29,15 +29,16 @@ func Describe(routes []core.Route) (*core.APIDescription, error) {
 			}
 		}
 
-		inputFields := simplifyType(apiRoute.RequestType, typeMap)
-		outputFields := simplifyType(apiRoute.ResponseType, typeMap)
+		// RequestType and ResponseType must be structs, so Fields will hold the simplified types.
+		simplifiedRequest, _ := simplifyType(apiRoute.RequestType, typeMap)
+		simplifiedResponse, _ := simplifyType(apiRoute.ResponseType, typeMap)
 
 		endpointMap[apiRoute.GetBasePath()] = core.EndpointDescription{
 			Description:  apiRoute.Description,
-			InputFields:  inputFields.StructFields,
-			OutputFields: outputFields.StructFields,
 			RequestType:  apiRoute.RequestType.String(),
 			ResponseType: apiRoute.ResponseType.String(),
+			InputFields:  simplifiedRequest.Fields,
+			OutputFields: simplifiedResponse.Fields,
 		}
 	}
 
@@ -58,11 +59,12 @@ func GetTypeID(customType reflect.Type) string {
 	return typeID
 }
 
-func simplifyType(customType reflect.Type, typeMap map[string]core.TypeDescription) core.TypeDescription {
+func simplifyType(customType reflect.Type, typeMap map[string]core.TypeDescription) (core.TypeDescription, string) {
 	if customType == nil {
-		return core.TypeDescription{}
+		return core.TypeDescription{}, ""
 	}
 
+	// If typeMap is nil, the results will not be accessible outside of the function.
 	if typeMap == nil {
 		typeMap = make(map[string]core.TypeDescription)
 	}
@@ -74,25 +76,21 @@ func simplifyType(customType reflect.Type, typeMap map[string]core.TypeDescripti
 	typeID := GetTypeID(customType)
 	typeDescription, ok := typeMap[typeID]
 	if ok {
-		return typeDescription
+		return typeDescription, typeID
 	}
 
 	switch customType.Kind() {
 	case reflect.Slice, reflect.Array:
-		elementType := customType.Elem()
-		elemTypeDescription := simplifyType(elementType, typeMap)
+		_, elemTypeID := simplifyType(customType.Elem(), typeMap)
 
-		typeDescription.TypeID = typeID
-		typeDescription.TypeCategory = core.ArrayType
-		typeDescription.ArrayElementType = elemTypeDescription.TypeID
+		typeDescription.Category = core.ArrayType
+		typeDescription.ElementType = elemTypeID
 	case reflect.Map:
-		elementType := customType.Elem()
-		elemTypeDescription := simplifyType(elementType, typeMap)
+		_, elemTypeID := simplifyType(customType.Elem(), typeMap)
 
-		typeDescription.TypeID = typeID
-		typeDescription.TypeCategory = core.MapType
-		typeDescription.MapKeyType = customType.Key().String()
-		typeDescription.MapValueType = elemTypeDescription.TypeID
+		typeDescription.Category = core.MapType
+		typeDescription.KeyType = customType.Key().String()
+		typeDescription.ValueType = elemTypeID
 	case reflect.Struct:
 		simplifiedTypes := make(map[string]string)
 
@@ -106,37 +104,41 @@ func simplifyType(customType reflect.Type, typeMap map[string]core.TypeDescripti
 
 			// Handle embedded fields.
 			if field.Anonymous {
-				embeddedFields := simplifyType(field.Type, typeMap)
-				if len(embeddedFields.StructFields) > 0 {
-					for fieldTag, fieldValue := range embeddedFields.StructFields {
+				fieldDescription, fieldTypeID := simplifyType(field.Type, typeMap)
+				if len(fieldDescription.Fields) > 0 {
+					for fieldTag, fieldValue := range fieldDescription.Fields {
 						simplifiedTypes[fieldTag] = fieldValue
 					}
+				} else if fieldDescription.Category == core.BasicType {
+					simplifiedTypes[jsonTag] = fieldDescription.Alias
 				} else {
-					simplifiedTypes[jsonTag] = core.TypeDescriptionToString(embeddedFields)
+					simplifiedTypes[jsonTag] = fieldTypeID
 				}
 
 				continue
 			}
 
-			// If a field is not embedded, it must have a JSON field name.
+			// Non-embedded fields must have a JSON field name.
 			jsonTag = util.JSONFieldNameFull(field, false)
 			if jsonTag == "" {
 				continue
 			}
 
-			fieldDescriptions := simplifyType(field.Type, typeMap)
-			simplifiedTypes[jsonTag] = core.TypeDescriptionToString(fieldDescriptions)
+			fieldDescription, fieldTypeID := simplifyType(field.Type, typeMap)
+			if fieldDescription.Category == core.BasicType {
+				simplifiedTypes[jsonTag] = fieldDescription.Alias
+			} else {
+				simplifiedTypes[jsonTag] = fieldTypeID
+			}
 		}
 
-		typeDescription.TypeID = typeID
-		typeDescription.TypeCategory = core.StructType
+		typeDescription.Category = core.StructType
 		if len(simplifiedTypes) > 0 {
-			typeDescription.StructFields = simplifiedTypes
+			typeDescription.Fields = simplifiedTypes
 		}
 	default:
 		// Handle built-in types.
-		typeDescription.TypeID = typeID
-		typeDescription.TypeCategory = core.BasicType
+		typeDescription.Category = core.BasicType
 
 		if customType.PkgPath() == "" {
 			typeDescription.Alias = customType.String()
@@ -145,9 +147,9 @@ func simplifyType(customType reflect.Type, typeMap map[string]core.TypeDescripti
 		}
 	}
 
-	if typeDescription.TypeCategory != core.BasicType {
+	if typeDescription.Category != core.BasicType {
 		typeMap[typeID] = typeDescription
 	}
 
-	return typeDescription
+	return typeDescription, typeID
 }

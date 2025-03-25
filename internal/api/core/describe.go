@@ -33,21 +33,12 @@ type EndpointDescription struct {
 }
 
 type TypeDescription struct {
-	TypeID           string            `json:"type-id"`
-	TypeCategory     string            `json:"category"`
-	Alias            string            `json:"alias,omitempty"`
-	StructFields     map[string]string `json:"fields,omitempty"`
-	ArrayElementType string            `json:"element-type,omitempty"`
-	MapKeyType       string            `json:"key-type,omitempty"`
-	MapValueType     string            `json:"value-type,omitempty"`
-}
-
-func TypeDescriptionToString(typeDescription TypeDescription) string {
-	if typeDescription.TypeCategory == BasicType {
-		return typeDescription.Alias
-	} else {
-		return typeDescription.TypeID
-	}
+	Category    string            `json:"category"`
+	Alias       string            `json:"alias,omitempty"`
+	Fields      map[string]string `json:"fields,omitempty"`
+	ElementType string            `json:"element-type,omitempty"`
+	KeyType     string            `json:"key-type,omitempty"`
+	ValueType   string            `json:"value-type,omitempty"`
 }
 
 func SetAPIDescription(description APIDescription) {
