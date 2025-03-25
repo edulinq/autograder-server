@@ -168,7 +168,6 @@ func TestIndividualBase(test *testing.T) {
 						LinesOfCode: 4,
 					},
 				},
-				SkippedFiles: []string{},
 			},
 			&model.IndividualAnalysis{
 				Options:             assignment.AssignmentAnalysisOptions,
@@ -192,7 +191,6 @@ func TestIndividualBase(test *testing.T) {
 						LinesOfCode: 4,
 					},
 				},
-				SkippedFiles: []string{},
 			},
 		},
 	}

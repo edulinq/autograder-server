@@ -21,7 +21,10 @@ func TestLockBase(test *testing.T) {
 
 	key1 := "testkey1"
 
-	Lock(key1)
+	noWait := Lock(key1)
+	if !noWait {
+		test.Fatalf("Unexpected wait for the lock: '%v'.", noWait)
+	}
 
 	err := Unlock(key1)
 	if err != nil {
@@ -36,7 +39,10 @@ func TestUnlockingAnUnlockedLock(test *testing.T) {
 
 	key1 := "testkey1"
 
-	Lock(key1)
+	noWait := Lock(key1)
+	if !noWait {
+		test.Fatalf("Unexpected wait for the lock: '%v'.", noWait)
+	}
 
 	err := Unlock(key1)
 	if err != nil {
@@ -73,7 +79,10 @@ func TestMainThreadUnlocksFirstWithOneLock(test *testing.T) {
 	unlockInChildThreadFirst := make(chan bool, 1)
 
 	// Lock for the first time.
-	Lock(key1)
+	noWait := Lock(key1)
+	if !noWait {
+		test.Fatalf("Unexpected wait for the lock: '%v'.", noWait)
+	}
 
 	threadLockBlock.Add(1)
 	threadFinishBlock.Add(1)
@@ -85,7 +94,10 @@ func TestMainThreadUnlocksFirstWithOneLock(test *testing.T) {
 
 		threadLockBlock.Done()
 
-		Lock(key1)
+		noWait = Lock(key1)
+		if noWait {
+			test.Fatalf("Unexpected wait for the lock (in thread): '%v'.", noWait)
+		}
 
 		// Signal the thread locked key1.
 		unlockInChildThreadFirst <- true
@@ -134,7 +146,10 @@ func TestMainThreadUnlocksFirstWithTwoLocks(test *testing.T) {
 	var key2LockedBlock sync.WaitGroup
 	var threadFinishBlock sync.WaitGroup
 
-	Lock(key1)
+	noWait := Lock(key1)
+	if !noWait {
+		test.Fatalf("Unexpected wait for lock 1: '%v'.", noWait)
+	}
 
 	threadFinishBlock.Add(1)
 	key2LockedBlock.Add(1)
@@ -144,7 +159,10 @@ func TestMainThreadUnlocksFirstWithTwoLocks(test *testing.T) {
 		defer threadFinishBlock.Done()
 
 		// Lock key2 while key1 is already locked.
-		Lock(key2)
+		noWait = Lock(key2)
+		if !noWait {
+			test.Fatalf("Unexpected wait for lock 2: '%v'.", noWait)
+		}
 
 		key2LockedBlock.Done()
 
@@ -180,7 +198,10 @@ func TestChildThreadUnlocksFirstWithTwoLocks(test *testing.T) {
 	key2 := "testkey2"
 	var key2LockUnlockBlock sync.WaitGroup
 
-	Lock(key1)
+	noWait := Lock(key1)
+	if !noWait {
+		test.Fatalf("Unexpected wait for lock 1: '%v'.", noWait)
+	}
 
 	key2LockUnlockBlock.Add(1)
 
@@ -188,7 +209,10 @@ func TestChildThreadUnlocksFirstWithTwoLocks(test *testing.T) {
 		defer key2LockUnlockBlock.Done()
 
 		// Lock key2 while key1 is already locked.
-		Lock(key2)
+		noWait = Lock(key2)
+		if !noWait {
+			test.Fatalf("Unexpected wait for lock 2: '%v'.", noWait)
+		}
 
 		err := Unlock(key2)
 		if err != nil {
@@ -214,7 +238,11 @@ func TestStaleRetentionWithNonStaleLock(test *testing.T) {
 	var threadExecutionBlock sync.WaitGroup
 
 	// Add key1 to the lockmap and have it unlocked.
-	Lock(key1)
+	noWait := Lock(key1)
+	if !noWait {
+		test.Fatalf("Unexpected wait for the lock: '%v'.", noWait)
+	}
+
 	Unlock(key1)
 
 	threadExecutionBlock.Add(1)
@@ -245,7 +273,10 @@ func TestStaleLockRetentionWithLockedKey(test *testing.T) {
 	var staleCheckBlock sync.WaitGroup
 
 	// Add key1 to the lockmap and have it locked.
-	Lock(key1)
+	noWait := Lock(key1)
+	if !noWait {
+		test.Fatalf("Unexpected wait for the lock: '%v'.", noWait)
+	}
 
 	// Load the lockmap and set the timestamp for the lock to be considered stale.
 	val, _ := lockMap.Load(key1)
@@ -286,7 +317,11 @@ func TestLockRetentionWithMidCheckActivity(test *testing.T) {
 	var threadStartBlock sync.WaitGroup
 
 	// Add key1 to the lockmap and have it unlocked.
-	Lock(key1)
+	noWait := Lock(key1)
+	if !noWait {
+		test.Fatalf("Unexpected wait for the lock: '%v'.", noWait)
+	}
+
 	Unlock(key1)
 
 	// Load the lockmap and set the timestamp for the lock to be considered stale.
@@ -342,7 +377,11 @@ func TestStaleLockDeletion(test *testing.T) {
 	var finishThreadBlock sync.WaitGroup
 
 	// Add key1 to the lockmap and have it unlocked.
-	Lock(key1)
+	noWait := Lock(key1)
+	if !noWait {
+		test.Fatalf("Unexpected wait for the lock: '%v'.", noWait)
+	}
+
 	Unlock(key1)
 
 	// Load the lockmap and set the timestamp for the lock to be considered stale.
@@ -448,7 +487,10 @@ func TestWriteLockBlock(test *testing.T) {
 
 		writeLockBlock.Done()
 
-		Lock(key1)
+		noWait := Lock(key1)
+		if noWait {
+			test.Fatalf("Unexpected wait for the lock: '%v'.", noWait)
+		}
 
 		// Signal key1 got locked.
 		lockInThread <- true
@@ -494,7 +536,10 @@ func TestReadLockBlock(test *testing.T) {
 	var finishThreadBlock sync.WaitGroup
 	var readLockChildThreadBlock sync.WaitGroup
 
-	Lock(key1)
+	noWait := Lock(key1)
+	if !noWait {
+		test.Fatalf("Unexpected wait for the lock: '%v'.", noWait)
+	}
 
 	finishThreadBlock.Add(1)
 	readLockChildThreadBlock.Add(1)

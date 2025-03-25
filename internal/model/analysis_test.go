@@ -340,6 +340,9 @@ func TestNewIndividualAnalysisSummaryBase(test *testing.T) {
 				},
 			},
 		},
+		&IndividualAnalysis{
+			Failure: true,
+		},
 	}
 
 	expected := &IndividualAnalysisSummary{
@@ -347,6 +350,7 @@ func TestNewIndividualAnalysisSummaryBase(test *testing.T) {
 			Complete:       true,
 			CompleteCount:  3,
 			PendingCount:   0,
+			FailureCount:   1,
 			FirstTimestamp: timestamp.Zero(),
 			LastTimestamp:  timestamp.Zero(),
 		},
@@ -499,6 +503,9 @@ func TestNewPairwiseAnalysisSummaryBase(test *testing.T) {
 		NewPairwiseAnalysis(NewPairwiseKey("A", "B"), nil, sims1, nil, nil),
 		NewPairwiseAnalysis(NewPairwiseKey("C", "D"), nil, sims2, nil, nil),
 		NewPairwiseAnalysis(NewPairwiseKey("E", "F"), nil, sims3, nil, nil),
+		&PairwiseAnalysis{
+			Failure: true,
+		},
 	}
 
 	expected := &PairwiseAnalysisSummary{
@@ -506,6 +513,7 @@ func TestNewPairwiseAnalysisSummaryBase(test *testing.T) {
 			Complete:       true,
 			CompleteCount:  3,
 			PendingCount:   0,
+			FailureCount:   1,
 			FirstTimestamp: timestamp.Zero(),
 			LastTimestamp:  timestamp.Zero(),
 		},

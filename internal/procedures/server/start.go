@@ -20,7 +20,7 @@ const SERVER_LOCK = "internal.procedures.server.SERVER_LOCK"
 var apiServer *server.APIServer = nil
 
 func setup(initiator systemserver.ServerInitiator) error {
-	version, err := util.GetAutograderVersion()
+	version, err := util.GetFullCachedVersion()
 	if err != nil {
 		log.Warn("Failed to get the autograder version.", err)
 	}
