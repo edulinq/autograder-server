@@ -278,7 +278,7 @@ func validateAPIHandler(endpoint string, apiHandler any) (ValidAPIHandler, refle
 	}
 
 	if reflectType.Out(1) != reflect.TypeOf((*APIError)(nil)) {
-		return nil, nil, nil, NewBareInternalError("-011", endpoint, "API handler's second return value is not a *APIError.").
+		return nil, nil, nil, NewBareInternalError("-011", endpoint, "API handler's second return value is not an *APIError.").
 			Add("type", reflectType.Out(1).String()).
 			Add("function-info", funcInfo)
 	}

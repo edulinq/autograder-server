@@ -1,6 +1,7 @@
 package api
 
 import (
+	"fmt"
 	"reflect"
 	"testing"
 
@@ -8,58 +9,11 @@ import (
 	"github.com/edulinq/autograder/internal/util"
 )
 
-func TestDescribeFull(test *testing.T) {
-	path, err := util.GetAPIDescriptionFilepath()
-	if err != nil {
-		test.Fatalf("Unable to get the API description filepath: '%v'.", err)
-	}
-
-	var expectedDescriptions core.APIDescription
-	err = util.JSONFromFile(path, &expectedDescriptions)
-	if err != nil {
-		test.Fatalf("Failed to load api.json: '%v'.", err)
-	}
-
-	descriptions, err := Describe(*GetRoutes())
-	if err != nil {
-		test.Fatalf("Failed to describe endpoints: '%v'.", err)
-	}
-
-	if !reflect.DeepEqual(&expectedDescriptions, descriptions) {
-		test.Fatalf("Unexpected API Descriptions. Expected: '%s', actual: '%s'.",
-			util.MustToJSONIndent(expectedDescriptions), util.MustToJSONIndent(descriptions))
-	}
-}
-
-func TestDescribeEmpty(test *testing.T) {
-	descriptions, err := Describe(*GetRoutes())
-	if err != nil {
-		test.Fatalf("Failed to describe endpoints: '%v'.", err)
-	}
-
-	for endpoint, description := range descriptions.Endpoints {
-		if description.Description == "" {
-			test.Errorf("Describe found an empty description. Endpoint: '%s'.", endpoint)
-			continue
-		}
-	}
-}
-
-func TestDescribeEmptyRoutes(test *testing.T) {
-	routes := []core.Route{}
-	description, err := Describe(routes)
-	if err != nil {
-		test.Fatalf("Failed to describe endpoints: '%v'.", err)
-	}
-
-	if len(description.Endpoints) != 0 {
-		test.Errorf("Unexpected number of endpoints. Expected: '0', actual: '%d'.", len(description.Endpoints))
-	}
-}
-
 type stringWrapper string
 type simpleMapWrapper map[string]int
 type simpleArrayWrapper []bool
+
+type simplePointerWrapper *string
 
 type simpleStruct struct {
 	BaseString string
@@ -93,6 +47,91 @@ type complexJSONStruct struct {
 	CoinValue simpleMapWrapper   `json:"coin-value"`
 	GoodIndex simpleArrayWrapper `json:"good-index"`
 	Personnel embeddedJSONStruct `json:"personnel"`
+}
+
+type complexPointerStruct struct {
+	CoinValue *simpleMapWrapper   `json:"coin-value"`
+	GoodIndex *simpleArrayWrapper `json:"good-index"`
+	Personnel *embeddedJSONStruct `json:"personnel"`
+}
+
+func TestDescribeFull(test *testing.T) {
+	path, err := util.GetAPIDescriptionFilepath()
+	if err != nil {
+		test.Fatalf("Unable to get the API description filepath: '%v'.", err)
+	}
+
+	var expectedDescriptions core.APIDescription
+	err = util.JSONFromFile(path, &expectedDescriptions)
+	if err != nil {
+		test.Fatalf("Failed to load api.json: '%v'.", err)
+	}
+
+	descriptions, err := Describe(*GetRoutes())
+	if err != nil {
+		test.Fatalf("Failed to describe endpoints: '%v'.", err)
+	}
+
+	if !reflect.DeepEqual(&expectedDescriptions, descriptions) {
+		message := "Unexpected API Descriptions. "
+
+		for endpoint, expectedDesc := range expectedDescriptions.Endpoints {
+			actualDesc, ok := descriptions.Endpoints[endpoint]
+			if !ok {
+				message = message + fmt.Sprintf("Actual description does not contain an expected endpoint. Expected: '%s'.\n", endpoint)
+				continue
+			}
+
+			if !reflect.DeepEqual(expectedDesc, actualDesc) {
+				message = message + fmt.Sprintf("Unexpected endpoint description. Expected: '%v', actual: '%v'.\n",
+					expectedDesc, actualDesc)
+			}
+		}
+
+		for currentType, expectedDesc := range expectedDescriptions.Types {
+			actualDesc, ok := descriptions.Types[currentType]
+			if !ok {
+				message = message + fmt.Sprintf("Actual description does not contain an expected type. Expected: '%s'.\n", currentType)
+				continue
+			}
+
+			if !reflect.DeepEqual(expectedDesc, actualDesc) {
+				message = message + fmt.Sprintf("Unexpected type description. Expected: '%v', actual: '%v'.\n",
+					expectedDesc, actualDesc)
+			}
+		}
+
+		message = message + fmt.Sprintf("Unexpected API Descriptions. Expected: '%s', actual: '%s'.\n",
+			util.MustToJSONIndent(expectedDescriptions), util.MustToJSONIndent(descriptions))
+
+		test.Fatalf(message)
+	}
+}
+
+func TestDescribeEmpty(test *testing.T) {
+	descriptions, err := Describe(*GetRoutes())
+	if err != nil {
+		test.Fatalf("Failed to describe endpoints: '%v'.", err)
+	}
+
+	for endpoint, description := range descriptions.Endpoints {
+		if description.Description == "" {
+			test.Errorf("Describe found an empty description. Endpoint: '%s'.", endpoint)
+			continue
+		}
+	}
+}
+
+func TestDescribeEmptyRoutes(test *testing.T) {
+	routes := []core.Route{}
+	description, err := Describe(routes)
+	if err != nil {
+		test.Fatalf("Failed to describe endpoints: '%v'.", err)
+	}
+
+	if len(description.Endpoints) != 0 {
+		test.Errorf("Unexpected number of endpoints. Expected: '0', actual: '%d'.", len(description.Endpoints))
+	}
 }
 
 func TestSimplifyType(test *testing.T) {
@@ -142,7 +181,12 @@ func TestSimplifyType(test *testing.T) {
 				Category: core.BasicType,
 				Alias:    "string",
 			},
-			map[string]core.TypeDescription{},
+			map[string]core.TypeDescription{
+				GetTypeID(reflect.TypeOf((*stringWrapper)(nil)).Elem()): core.TypeDescription{
+					Category: core.BasicType,
+					Alias:    "string",
+				},
+			},
 		},
 		{
 			reflect.TypeOf((*core.MinServerRoleAdmin)(nil)).Elem(),
@@ -150,7 +194,12 @@ func TestSimplifyType(test *testing.T) {
 				Category: core.BasicType,
 				Alias:    "bool",
 			},
-			map[string]core.TypeDescription{},
+			map[string]core.TypeDescription{
+				GetTypeID(reflect.TypeOf((*core.MinServerRoleAdmin)(nil)).Elem()): core.TypeDescription{
+					Category: core.BasicType,
+					Alias:    "bool",
+				},
+			},
 		},
 
 		// Simple maps and arrays.
@@ -161,13 +210,7 @@ func TestSimplifyType(test *testing.T) {
 				KeyType:   "string",
 				ValueType: "string",
 			},
-			map[string]core.TypeDescription{
-				"map[string]string": core.TypeDescription{
-					Category:  core.MapType,
-					KeyType:   "string",
-					ValueType: "string",
-				},
-			},
+			map[string]core.TypeDescription{},
 		},
 		{
 			reflect.TypeOf((*[]string)(nil)).Elem(),
@@ -175,12 +218,7 @@ func TestSimplifyType(test *testing.T) {
 				Category:    core.ArrayType,
 				ElementType: "string",
 			},
-			map[string]core.TypeDescription{
-				"[]string": core.TypeDescription{
-					Category:    core.ArrayType,
-					ElementType: "string",
-				},
-			},
+			map[string]core.TypeDescription{},
 		},
 
 		// Wrapped maps and arrays.
@@ -376,12 +414,96 @@ func TestSimplifyType(test *testing.T) {
 				},
 			},
 		},
+
+		// Pointers to various types.
+		{
+			reflect.TypeOf((**string)(nil)).Elem(),
+			core.TypeDescription{
+				Category: core.BasicType,
+				Alias:    "string",
+			},
+			map[string]core.TypeDescription{},
+		},
+		{
+			reflect.TypeOf((**map[string]string)(nil)).Elem(),
+			core.TypeDescription{
+				Category:  core.MapType,
+				KeyType:   "string",
+				ValueType: "string",
+			},
+			map[string]core.TypeDescription{},
+		},
+
+		// Pointers inside of fields.
+		{
+			reflect.TypeOf((*simplePointerWrapper)(nil)).Elem(),
+			core.TypeDescription{
+				Category: core.BasicType,
+				Alias:    "string",
+			},
+			map[string]core.TypeDescription{},
+		},
+		{
+			reflect.TypeOf((*complexPointerStruct)(nil)).Elem(),
+			core.TypeDescription{
+				Category: core.StructType,
+				Fields: map[string]string{
+					"coin-value": "github.com/edulinq/autograder/internal/api/*api.simpleMapWrapper",
+					"good-index": "github.com/edulinq/autograder/internal/api/*api.simpleArrayWrapper",
+					"personnel":  "github.com/edulinq/autograder/internal/api/*api.embeddedJSONStruct",
+				},
+			},
+			map[string]core.TypeDescription{
+				GetTypeID(reflect.TypeOf((*complexPointerStruct)(nil)).Elem()): core.TypeDescription{
+					Category: core.StructType,
+					Fields: map[string]string{
+						"coin-value": "github.com/edulinq/autograder/internal/api/*api.simpleMapWrapper",
+						"good-index": "github.com/edulinq/autograder/internal/api/*api.simpleArrayWrapper",
+						"personnel":  "github.com/edulinq/autograder/internal/api/*api.embeddedJSONStruct",
+					},
+				},
+				// Note that the keys in typeMap do not include the pointer.
+				// TypeMap stores 'api/api.embeddedJSONStruct' instead of 'api/*api.embeddedJSONStruct'.
+				GetTypeID(reflect.TypeOf((*embeddedJSONStruct)(nil)).Elem()): core.TypeDescription{
+					Category: core.StructType,
+					Fields: map[string]string{
+						"email":      "string",
+						"first-name": "string",
+						"job-code":   "int",
+						"last-name":  "string",
+					},
+				},
+				GetTypeID(reflect.TypeOf((*secureJSONStruct)(nil)).Elem()): core.TypeDescription{
+					Category: core.StructType,
+					Fields: map[string]string{
+						"first-name": "string",
+						"last-name":  "string",
+					},
+				},
+				GetTypeID(reflect.TypeOf((*simpleArrayWrapper)(nil)).Elem()): core.TypeDescription{
+					Category:    core.ArrayType,
+					ElementType: "bool",
+				},
+				GetTypeID(reflect.TypeOf((*simpleJSONStruct)(nil)).Elem()): core.TypeDescription{
+					Category: core.StructType,
+					Fields: map[string]string{
+						"email":    "string",
+						"job-code": "int",
+					},
+				},
+				GetTypeID(reflect.TypeOf((*simpleMapWrapper)(nil)).Elem()): core.TypeDescription{
+					Category:  core.MapType,
+					KeyType:   "string",
+					ValueType: "int",
+				},
+			},
+		},
 	}
 
 	for i, testCase := range testCases {
 		typeMap := make(map[string]core.TypeDescription)
 
-		actual, _ := simplifyType(testCase.customType, typeMap)
+		actual, _ := describeType(testCase.customType, typeMap)
 
 		if !reflect.DeepEqual(testCase.expectedDesc, actual) {
 			test.Errorf("Case %d: Unexpected type simplification. Expected: '%v', actual: '%v'.",

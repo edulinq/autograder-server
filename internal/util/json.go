@@ -135,12 +135,12 @@ func JSONFieldName(field reflect.StructField) string {
 	return JSONFieldNameFull(field, true)
 }
 
-func JSONFieldNameFull(field reflect.StructField, allowEmpty bool) string {
+func JSONFieldNameFull(field reflect.StructField, fallback bool) string {
 	name := field.Name
 
 	tag := field.Tag.Get("json")
 	if tag == "" {
-		if allowEmpty {
+		if fallback {
 			return name
 		} else {
 			return ""

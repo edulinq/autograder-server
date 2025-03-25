@@ -28,8 +28,8 @@ type EndpointDescription struct {
 	Description  string            `json:"description"`
 	RequestType  string            `json:"request-type"`
 	ResponseType string            `json:"response-type"`
-	InputFields  map[string]string `json:"input-fields"`
-	OutputFields map[string]string `json:"output-fields"`
+	Input        map[string]string `json:"input"`
+	Output       map[string]string `json:"output"`
 }
 
 type TypeDescription struct {
