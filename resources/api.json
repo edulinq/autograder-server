@@ -1629,6 +1629,7 @@
             "fields": {
                 "complete": "bool",
                 "complete-count": "int",
+                "failure-count": "int",
                 "first-timestamp": "int64",
                 "last-timestamp": "int64",
                 "pending-count": "int"
@@ -1773,6 +1774,8 @@
                 "analysis-timestamp": "int64",
                 "assignment-id": "string",
                 "course-id": "string",
+                "failure": "bool",
+                "failure-message": "string",
                 "files": "[]model.AnalysisFileInfo",
                 "lines-of-code": "int",
                 "lines-of-code-delta": "int",
@@ -1802,6 +1805,7 @@
                 "aggregate-submission-time-delta": "github.com/edulinq/autograder/internal/util/util.AggregateValues",
                 "complete": "bool",
                 "complete-count": "int",
+                "failure-count": "int",
                 "first-timestamp": "int64",
                 "last-timestamp": "int64",
                 "pending-count": "int"
@@ -1821,6 +1825,8 @@
             "category": "struct",
             "fields": {
                 "analysis-timestamp": "int64",
+                "failure": "bool",
+                "failure-message": "string",
                 "mean-similarities": "map[string]float64",
                 "options": "github.com/edulinq/autograder/internal/model/*model.AssignmentAnalysisOptions",
                 "similarities": "map[string][]*model.FileSimilarity",
@@ -1837,6 +1843,7 @@
                 "aggregate-total-mean-similarity": "github.com/edulinq/autograder/internal/util/util.AggregateValues",
                 "complete": "bool",
                 "complete-count": "int",
+                "failure-count": "int",
                 "first-timestamp": "int64",
                 "last-timestamp": "int64",
                 "pending-count": "int"
