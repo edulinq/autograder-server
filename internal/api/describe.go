@@ -112,13 +112,13 @@ func simplifyType(customType reflect.Type, typeMap map[string]core.TypeDescripti
 						simplifiedTypes[fieldTag] = fieldValue
 					}
 				} else {
-					// TODO: Make sure we aren't adding bad Assignment field here.
 					simplifiedTypes[jsonTag] = core.TypeDescriptionToString(embeddedFields)
 				}
 
 				continue
 			}
 
+			// If a field is not embedded, it must have a JSON field name.
 			jsonTag = util.JSONFieldNameFull(field, false)
 			if jsonTag == "" {
 				continue
@@ -130,7 +130,9 @@ func simplifyType(customType reflect.Type, typeMap map[string]core.TypeDescripti
 
 		typeDescription.TypeID = typeID
 		typeDescription.TypeCategory = core.StructType
-		typeDescription.StructFields = simplifiedTypes
+		if len(simplifiedTypes) > 0 {
+			typeDescription.StructFields = simplifiedTypes
+		}
 	default:
 		// Handle built-in types.
 		typeDescription.TypeID = typeID
@@ -143,6 +145,9 @@ func simplifyType(customType reflect.Type, typeMap map[string]core.TypeDescripti
 		}
 	}
 
-	typeMap[typeID] = typeDescription
+	if typeDescription.TypeCategory != core.BasicType {
+		typeMap[typeID] = typeDescription
+	}
+
 	return typeDescription
 }

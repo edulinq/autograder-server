@@ -26,20 +26,20 @@ type APIDescription struct {
 
 type EndpointDescription struct {
 	Description  string            `json:"description"`
-	InputFields  map[string]string `json:"input-fields"`
-	OutputFields map[string]string `json:"output-fields"`
 	RequestType  string            `json:"request-type"`
 	ResponseType string            `json:"response-type"`
+	InputFields  map[string]string `json:"input-fields"`
+	OutputFields map[string]string `json:"output-fields"`
 }
 
 type TypeDescription struct {
-	Alias            string            `json:"alias,omitempty"`
+	TypeID           string            `json:"type-id"`
 	TypeCategory     string            `json:"category"`
-	ArrayElementType string            `json:"element-type,omitempty"`
+	Alias            string            `json:"alias,omitempty"`
 	StructFields     map[string]string `json:"fields,omitempty"`
+	ArrayElementType string            `json:"element-type,omitempty"`
 	MapKeyType       string            `json:"key-type,omitempty"`
 	MapValueType     string            `json:"value-type,omitempty"`
-	TypeID           string            `json:"type-id"`
 }
 
 func TypeDescriptionToString(typeDescription TypeDescription) string {
