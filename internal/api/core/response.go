@@ -28,7 +28,7 @@ func (this *APIResponse) String() string {
 func NewAPIResponse(request ValidAPIRequest, content any) *APIResponse {
 	id, startTime := getRequestIDAndTimestamp(request)
 
-	version, err := util.GetAutograderVersion()
+	version, err := util.GetFullCachedVersion()
 	if err != nil {
 		log.Warn("Failed to get the autograder version.", err)
 	}

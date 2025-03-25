@@ -137,7 +137,7 @@ func (this *APIError) ToResponse() *APIResponse {
 		locator = ""
 	}
 
-	version, err := util.GetAutograderVersion()
+	version, err := util.GetFullCachedVersion()
 	if err != nil {
 		log.Warn("Failed to get the autograder version.", err)
 	}
