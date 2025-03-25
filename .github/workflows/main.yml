@@ -10,9 +10,9 @@ env:
   PLATFORMS: 'linux/amd64,linux/arm64'
   # Note that env cannot be used in `jobs.<id>.if`, so we can't use a BUILD_IMAGES env to control the deploy steps.
   # We will build images on main or tags.
-  # BUILD_IMAGES: ${{ (github.ref == 'refs/heads/main') || (startsWith(github.ref, 'refs/tags/')) }}
-  # We will push images on tags in the edulinq org.
-  PUSH_IMAGES: ${{ startsWith(github.ref, 'refs/tags/') && (github.repository_owner == 'edulinq') }}
+  # BUILD_IMAGES: ${{ (github.ref == 'refs/heads/main') || (startsWith(github.ref, 'refs/tags/v')) }}
+  # We will push images on version tags in the edulinq org.
+  PUSH_IMAGES: ${{ startsWith(github.ref, 'refs/tags/v') && (github.repository_owner == 'edulinq') }}
 
 permissions:
   contents: read
@@ -56,16 +56,38 @@ jobs:
           AUTOGRADER__DOCKER__DISABLE: ${{ startsWith(matrix.os, 'macos') }}
         run: ./scripts/run_tests.sh
 
-  deploy-prebuilt:
-    name: Deploy Prebuilt
+  deploy-prebuilt-image:
+    name: Deploy Prebuilt Image
     needs: test
-    if: ${{ (github.ref == 'refs/heads/main') || (startsWith(github.ref, 'refs/tags/')) }}
+    if: ${{ (github.ref == 'refs/heads/main') || (startsWith(github.ref, 'refs/tags/v')) }}
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
           submodules: true
+
+      - name: Get Vesion From Tag
+        shell: bash {0}
+        run: |
+          # Stip 'v' prefix.
+          version=${GITHUB_REF_NAME#v}
+
+          # Store the result in the github actions env.
+          echo "VERSION=${version}" >> $GITHUB_ENV
+
+          # Check if this looks like a version tag.
+          [[ ${GITHUB_REF_NAME} =~ ^v[0-9]+\.[0-9]+\.[0-9]+ ]]
+          isVersionTag=$?
+
+          # Output some information.
+          echo "Tag: ${GITHUB_REF_NAME}"
+          echo "Version: ${version}"
+          echo "Push Images: ${PUSH_IMAGES}"
+          echo "Is Version Tag: ${isVersionTag}"
+
+          # Test that the tag looks like a version if we are pushing.
+          [[ ${PUSH_IMAGES} != 'true' ]] || [[ ${isVersionTag} -eq 0 ]]
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -91,7 +113,7 @@ jobs:
           file: docker/prebuilt/Dockerfile
           platforms: ${{ env.PLATFORMS }}
           push: ${{ env.PUSH_IMAGES }}
-          tags: "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.ref_name }}-prebuilt"
+          tags: "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.VERSION }}-prebuilt"
 
       - name: Generate Artifact Attestation
         if: ${{ env.PUSH_IMAGES == 'true' }}
@@ -101,16 +123,38 @@ jobs:
           subject-digest: ${{ steps.push.outputs.digest }}
           push-to-registry: true
 
-  deploy-slim:
-    name: Deploy Slim
+  deploy-slim-image:
+    name: Deploy Slim Image
     needs: test
-    if: ${{ (github.ref == 'refs/heads/main') || (startsWith(github.ref, 'refs/tags/')) }}
+    if: ${{ (github.ref == 'refs/heads/main') || (startsWith(github.ref, 'refs/tags/v')) }}
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
           submodules: true
+
+      - name: Get Vesion From Tag
+        shell: bash {0}
+        run: |
+          # Stip 'v' prefix.
+          version=${GITHUB_REF_NAME#v}
+
+          # Store the result in the github actions env.
+          echo "VERSION=${version}" >> $GITHUB_ENV
+
+          # Check if this looks like a version tag.
+          [[ ${GITHUB_REF_NAME} =~ ^v[0-9]+\.[0-9]+\.[0-9]+ ]]
+          isVersionTag=$?
+
+          # Output some information.
+          echo "Tag: ${GITHUB_REF_NAME}"
+          echo "Version: ${version}"
+          echo "Push Images: ${PUSH_IMAGES}"
+          echo "Is Version Tag: ${isVersionTag}"
+
+          # Test that the tag looks like a version if we are pushing.
+          [[ ${PUSH_IMAGES} != 'true' ]] || [[ ${isVersionTag} -eq 0 ]]
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -136,7 +180,7 @@ jobs:
           file: docker/slim/Dockerfile
           platforms: ${{ env.PLATFORMS }}
           push: ${{ env.PUSH_IMAGES }}
-          tags: "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.ref_name }}-slim"
+          tags: "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.VERSION }}-slim"
 
       - name: Generate Artifact Attestation
         if: ${{ env.PUSH_IMAGES == 'true' }}

@@ -25,15 +25,15 @@ func main() {
 		log.Fatal("Could not load config options.", err)
 	}
 
-	version, err := util.GetAutograderVersion()
+	version, err := util.GetFullCachedVersion()
 	if err != nil {
 		log.Fatal("Failed to get the autograder version.", err, log.NewAttr("version", version))
 	}
 
 	if args.Out == "" {
-		fmt.Printf("Short Version: %s\n", version.Short)
-		fmt.Printf("Full  Version: %s\n", version.String())
-		fmt.Printf("API   Version: %d\n", version.Api)
+		fmt.Printf("Base Version: %s\n", version.Base)
+		fmt.Printf("Full Version: %s\n", version.String())
+		fmt.Printf("API  Version: %d\n", util.MustGetAPIVersion())
 
 		return
 	}
