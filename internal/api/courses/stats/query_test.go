@@ -21,19 +21,95 @@ func TestQuery(test *testing.T) {
 		expectedValues   []int
 	}{
 		// Base
-		{"server-admin", "", stats.MetricQuery{}, []int{100, 200, 300}},
-		{"server-admin", "", stats.MetricQuery{BaseQuery: stats.BaseQuery{Sort: 1}}, []int{300, 200, 100}},
-		{"server-admin", "", stats.MetricQuery{BaseQuery: stats.BaseQuery{After: timestamp.FromMSecs(150)}}, []int{200, 300}},
+		{
+			"server-admin",
+			"",
+			stats.MetricQuery{},
+			[]int{100, 200, 300},
+		},
+		{
+			"server-admin",
+			"",
+			stats.MetricQuery{
+				BaseQuery: stats.BaseQuery{
+					Sort: 1,
+				},
+			},
+			[]int{300, 200, 100}},
+		{
+			"server-admin",
+			"",
+			stats.MetricQuery{
+				BaseQuery: stats.BaseQuery{
+					After: timestamp.FromMSecs(150),
+				},
+			},
+			[]int{200, 300},
+		},
 
 		// Course Specific
-		{"server-admin", "", stats.MetricQuery{BaseQuery: stats.BaseQuery{Where: map[string]any{stats.ASSIGNMENT_ID: "A2"}}}, []int{200}},
-		{"server-admin", "", stats.MetricQuery{BaseQuery: stats.BaseQuery{Where: map[string]any{stats.ASSIGNMENT_ID: "ZZZ"}}}, nil},
-		{"server-admin", "", stats.MetricQuery{BaseQuery: stats.BaseQuery{Where: map[string]any{stats.USER_EMAIL: "U1"}}}, []int{100, 200}},
-		{"server-admin", "", stats.MetricQuery{BaseQuery: stats.BaseQuery{Where: map[string]any{stats.TYPE: stats.CourseMetricTypeGradingTime}}}, []int{100, 300}},
+		{
+			"server-admin",
+			"",
+			stats.MetricQuery{
+				BaseQuery: stats.BaseQuery{
+					Where: map[string]any{
+						stats.ASSIGNMENT_ID: "A2",
+					},
+				},
+			},
+			[]int{200},
+		},
+		{
+			"server-admin",
+			"",
+			stats.MetricQuery{
+				BaseQuery: stats.BaseQuery{
+					Where: map[string]any{
+						stats.ASSIGNMENT_ID: "ZZZ",
+					},
+				},
+			},
+			nil,
+		},
+		{
+			"server-admin",
+			"",
+			stats.MetricQuery{
+				BaseQuery: stats.BaseQuery{
+					Where: map[string]any{
+						stats.USER_EMAIL: "U1",
+					},
+				},
+			},
+			[]int{100, 200},
+		},
+		{
+			"server-admin",
+			"",
+			stats.MetricQuery{
+				BaseQuery: stats.BaseQuery{
+					Where: map[string]any{
+						stats.TYPE: stats.CourseMetricTypeGradingTime,
+					},
+				},
+			},
+			[]int{100, 300},
+		},
 
 		// Error
-		{"server-user", "-040", stats.MetricQuery{}, nil},
-		{"course-student", "-020", stats.MetricQuery{}, nil},
+		{
+			"server-user",
+			"-040",
+			stats.MetricQuery{},
+			nil,
+		},
+		{
+			"course-student",
+			"-020",
+			stats.MetricQuery{},
+			nil,
+		},
 	}
 
 	for _, record := range testRecords {

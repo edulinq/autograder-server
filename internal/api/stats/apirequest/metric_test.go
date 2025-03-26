@@ -23,7 +23,7 @@ func TestMetric(test *testing.T) {
 		fields          map[string]any
 		expectedMetric  *stats.BaseMetric
 	}{
-		// Valid permissions, APIRequestCourseUserContext request.
+		// Valid permissions, APIRequestUserContext request.
 		{
 			email:    "server-admin",
 			endpoint: "users/list",

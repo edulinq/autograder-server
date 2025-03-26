@@ -125,7 +125,7 @@ func TestPairwiseAnalysisFake(test *testing.T) {
 				stats.COURSE_ID:              "course101",
 				stats.ASSIGNMENT_ID:          "hw0",
 				stats.USER_EMAIL:             "server-admin@test.edulinq.org",
-				stats.VALUE:                  3.0, // 1 for each run of the fake engine.
+				stats.VALUE:                  float64(3), // 1 for each run of the fake engine.
 			},
 		},
 	}

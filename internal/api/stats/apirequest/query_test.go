@@ -21,31 +21,192 @@ func TestQuery(test *testing.T) {
 		expectedValues  []int
 	}{
 		// Base
-		{"server-admin", "", stats.MetricQuery{}, []int{100, 200, 300}},
-		{"server-admin", "", stats.MetricQuery{BaseQuery: stats.BaseQuery{Sort: 1}}, []int{300, 200, 100}},
-		{"server-admin", "", stats.MetricQuery{BaseQuery: stats.BaseQuery{After: timestamp.FromMSecs(150)}}, []int{200, 300}},
+		{
+			"server-admin",
+			"",
+			stats.MetricQuery{},
+			[]int{100, 200, 300},
+		},
+		{
+			"server-admin",
+			"",
+			stats.MetricQuery{
+				BaseQuery: stats.BaseQuery{
+					Sort: 1,
+				},
+			},
+			[]int{300, 200, 100},
+		},
+		{
+			"server-admin",
+			"",
+			stats.MetricQuery{
+				BaseQuery: stats.BaseQuery{
+					After: timestamp.FromMSecs(150),
+				},
+			},
+			[]int{200, 300},
+		},
 
-		// Course Specifc
-		{"server-admin", "", stats.MetricQuery{BaseQuery: stats.BaseQuery{Where: map[string]any{stats.ASSIGNMENT_ID: "A2"}}}, []int{200}},
-		{"server-admin", "", stats.MetricQuery{BaseQuery: stats.BaseQuery{Where: map[string]any{stats.ASSIGNMENT_ID: "zzz"}}}, nil},
-		{"server-admin", "", stats.MetricQuery{BaseQuery: stats.BaseQuery{Where: map[string]any{stats.USER_EMAIL: "U1"}}}, []int{100, 200}},
-		{"server-admin", "", stats.MetricQuery{BaseQuery: stats.BaseQuery{Where: map[string]any{stats.USER_EMAIL: "zzz"}}}, nil},
-		{"server-admin", "", stats.MetricQuery{BaseQuery: stats.BaseQuery{Where: map[string]any{stats.COURSE_ID: "C1"}}}, []int{100}},
-		{"server-admin", "", stats.MetricQuery{BaseQuery: stats.BaseQuery{Where: map[string]any{stats.COURSE_ID: "zzz"}}}, nil},
+		// Course Specific
+		{
+			"server-admin",
+			"",
+			stats.MetricQuery{
+				BaseQuery: stats.BaseQuery{
+					Where: map[string]any{
+						stats.ASSIGNMENT_ID: "A2",
+					},
+				},
+			},
+			[]int{200},
+		},
+		{
+			"server-admin",
+			"",
+			stats.MetricQuery{
+				BaseQuery: stats.BaseQuery{
+					Where: map[string]any{
+						stats.ASSIGNMENT_ID: "zzz",
+					},
+				},
+			},
+			nil,
+		},
+		{
+			"server-admin",
+			"",
+			stats.MetricQuery{
+				BaseQuery: stats.BaseQuery{
+					Where: map[string]any{
+						stats.USER_EMAIL: "U1",
+					},
+				},
+			},
+			[]int{100, 200},
+		},
+		{
+			"server-admin",
+			"",
+			stats.MetricQuery{
+				BaseQuery: stats.BaseQuery{
+					Where: map[string]any{
+						stats.USER_EMAIL: "zzz",
+					},
+				},
+			},
+			nil,
+		},
+		{
+			"server-admin",
+			"",
+			stats.MetricQuery{
+				BaseQuery: stats.BaseQuery{
+					Where: map[string]any{
+						stats.COURSE_ID: "C1",
+					},
+				},
+			},
+			[]int{100},
+		},
+		{
+			"server-admin",
+			"",
+			stats.MetricQuery{
+				BaseQuery: stats.BaseQuery{
+					Where: map[string]any{
+						stats.COURSE_ID: "zzz",
+					},
+				},
+			},
+			nil,
+		},
 
 		// Endpoint Specific
-		{"server-admin", "", stats.MetricQuery{BaseQuery: stats.BaseQuery{Where: map[string]any{stats.ENDPOINT: "E1"}}}, []int{100}},
-		{"server-admin", "", stats.MetricQuery{BaseQuery: stats.BaseQuery{Where: map[string]any{stats.ENDPOINT: "zzz"}}}, nil},
+		{
+			"server-admin",
+			"",
+			stats.MetricQuery{
+				BaseQuery: stats.BaseQuery{
+					Where: map[string]any{
+						stats.ENDPOINT: "E1",
+					},
+				},
+			},
+			[]int{100},
+		},
+		{
+			"server-admin",
+			"",
+			stats.MetricQuery{
+				BaseQuery: stats.BaseQuery{
+					Where: map[string]any{
+						stats.ENDPOINT: "zzz",
+					},
+				},
+			},
+			nil,
+		},
 
 		// Sender Specific
-		{"server-admin", "", stats.MetricQuery{BaseQuery: stats.BaseQuery{Where: map[string]any{stats.SENDER: "1"}}}, []int{100}},
-		{"server-admin", "", stats.MetricQuery{BaseQuery: stats.BaseQuery{Where: map[string]any{stats.SENDER: "zzz"}}}, nil},
+		{
+			"server-admin",
+			"",
+			stats.MetricQuery{
+				BaseQuery: stats.BaseQuery{
+					Where: map[string]any{
+						stats.SENDER: "1",
+					},
+				},
+			},
+			[]int{100},
+		},
+		{
+			"server-admin",
+			"",
+			stats.MetricQuery{
+				BaseQuery: stats.BaseQuery{
+					Where: map[string]any{
+						stats.SENDER: "zzz",
+					},
+				},
+			},
+			nil,
+		},
 
 		// Locator Specific
-		{"server-admin", "", stats.MetricQuery{BaseQuery: stats.BaseQuery{Where: map[string]any{stats.LOCATOR: "11"}}}, []int{100}},
-		{"server-admin", "", stats.MetricQuery{BaseQuery: stats.BaseQuery{Where: map[string]any{stats.LOCATOR: "zzz"}}}, nil},
+		{
+			"server-admin",
+			"",
+			stats.MetricQuery{
+				BaseQuery: stats.BaseQuery{
+					Where: map[string]any{
+						stats.LOCATOR: "11",
+					},
+				},
+			},
+			[]int{100},
+		},
+		{
+			"server-admin",
+			"",
+			stats.MetricQuery{
+				BaseQuery: stats.BaseQuery{
+					Where: map[string]any{
+						stats.LOCATOR: "zzz",
+					},
+				},
+			},
+			nil,
+		},
+
 		// Error
-		{"server-user", "-041", stats.MetricQuery{}, nil},
+		{
+			"server-user",
+			"-041",
+			stats.MetricQuery{},
+			nil,
+		},
 	}
 
 	for i, testCase := range testCases {
