@@ -8,7 +8,6 @@ import (
 
 	"github.com/edulinq/autograder/internal/common"
 	"github.com/edulinq/autograder/internal/config"
-	dtasks "github.com/edulinq/autograder/internal/deprecated/model/tasks"
 	"github.com/edulinq/autograder/internal/docker"
 	"github.com/edulinq/autograder/internal/log"
 	"github.com/edulinq/autograder/internal/util"
@@ -28,13 +27,6 @@ type Course struct {
 
 	// A common submission limit that assignments can inherit.
 	SubmissionLimit *SubmissionLimitInfo `json:"submission-limit,omitempty"`
-
-	// Deprecated
-	Backup        []*dtasks.BackupTask        `json:"backup,omitempty"`
-	CourseUpdate  []*dtasks.CourseUpdateTask  `json:"course-update,omitempty"`
-	Report        []*dtasks.ReportTask        `json:"report,omitempty"`
-	ScoringUpload []*dtasks.ScoringUploadTask `json:"scoring-upload,omitempty"`
-	EmailLogs     []*dtasks.EmailLogsTask     `json:"email-logs,omitempty"`
 
 	Tasks []*UserTaskInfo `json:"tasks,omitempty"`
 
@@ -123,9 +115,6 @@ func (this *Course) Validate() error {
 		this.Tasks = make([]*UserTaskInfo, 0)
 	}
 
-	// DEP: This is deprecated and will be removed when then the individual task types are.
-	this.convertDeprecatedTasks()
-
 	// Validate tasks.
 	for i, task := range this.Tasks {
 		err = task.Validate()
@@ -135,29 +124,6 @@ func (this *Course) Validate() error {
 	}
 
 	return nil
-}
-
-// Convert deprecated tasks and add them to the task list.
-func (this *Course) convertDeprecatedTasks() {
-	for _, task := range this.Backup {
-		this.Tasks = append(this.Tasks, DeprecatedTaskToStandard(task)...)
-	}
-
-	for _, task := range this.CourseUpdate {
-		this.Tasks = append(this.Tasks, DeprecatedTaskToStandard(task)...)
-	}
-
-	for _, task := range this.Report {
-		this.Tasks = append(this.Tasks, DeprecatedTaskToStandard(task)...)
-	}
-
-	for _, task := range this.ScoringUpload {
-		this.Tasks = append(this.Tasks, DeprecatedTaskToStandard(task)...)
-	}
-
-	for _, task := range this.EmailLogs {
-		this.Tasks = append(this.Tasks, DeprecatedTaskToStandard(task)...)
-	}
 }
 
 func (this *Course) AddAssignment(assignment *Assignment) error {
