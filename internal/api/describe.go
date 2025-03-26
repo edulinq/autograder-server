@@ -81,6 +81,7 @@ func describeType(customType reflect.Type, typeMap map[string]core.TypeDescripti
 		typeMap = make(map[string]core.TypeDescription)
 	}
 
+	originalTypeID := GetTypeID(customType)
 	if customType.Kind() == reflect.Pointer {
 		customType = customType.Elem()
 	}
@@ -88,7 +89,7 @@ func describeType(customType reflect.Type, typeMap map[string]core.TypeDescripti
 	typeID := GetTypeID(customType)
 	typeDescription, ok := typeMap[typeID]
 	if ok {
-		return typeDescription, typeID
+		return typeDescription, originalTypeID
 	}
 
 	switch customType.Kind() {
@@ -121,7 +122,7 @@ func describeType(customType reflect.Type, typeMap map[string]core.TypeDescripti
 		typeMap[typeID] = typeDescription
 	}
 
-	return typeDescription, typeID
+	return typeDescription, originalTypeID
 }
 
 func describeStructFields(customType reflect.Type, typeMap map[string]core.TypeDescription) map[string]string {

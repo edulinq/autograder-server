@@ -448,18 +448,18 @@ func TestSimplifyType(test *testing.T) {
 			core.TypeDescription{
 				Category: core.StructType,
 				Fields: map[string]string{
-					"coin-value": "github.com/edulinq/autograder/internal/api/api.simpleMapWrapper",
-					"good-index": "github.com/edulinq/autograder/internal/api/api.simpleArrayWrapper",
-					"personnel":  "github.com/edulinq/autograder/internal/api/api.embeddedJSONStruct",
+					"coin-value": "github.com/edulinq/autograder/internal/api/*api.simpleMapWrapper",
+					"good-index": "github.com/edulinq/autograder/internal/api/*api.simpleArrayWrapper",
+					"personnel":  "github.com/edulinq/autograder/internal/api/*api.embeddedJSONStruct",
 				},
 			},
 			map[string]core.TypeDescription{
 				GetTypeID(reflect.TypeOf((*complexPointerStruct)(nil)).Elem()): core.TypeDescription{
 					Category: core.StructType,
 					Fields: map[string]string{
-						"coin-value": "github.com/edulinq/autograder/internal/api/api.simpleMapWrapper",
-						"good-index": "github.com/edulinq/autograder/internal/api/api.simpleArrayWrapper",
-						"personnel":  "github.com/edulinq/autograder/internal/api/api.embeddedJSONStruct",
+						"coin-value": "github.com/edulinq/autograder/internal/api/*api.simpleMapWrapper",
+						"good-index": "github.com/edulinq/autograder/internal/api/*api.simpleArrayWrapper",
+						"personnel":  "github.com/edulinq/autograder/internal/api/*api.embeddedJSONStruct",
 					},
 				},
 				// Note that the keys in typeMap do not include the pointer.
