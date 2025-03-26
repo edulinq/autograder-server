@@ -11,7 +11,7 @@
                 "user-pass": "string"
             },
             "output": {
-                "result": "github.com/edulinq/autograder/internal/procedures/courses/*courses.CourseUpsertResult"
+                "result": "github.com/edulinq/autograder/internal/procedures/courses/courses.CourseUpsertResult"
             },
             "request-type": "*admin.UpdateRequest",
             "response-type": "*admin.UpdateResponse"
@@ -28,7 +28,7 @@
                 "user-pass": "string"
             },
             "output": {
-                "assignment": "github.com/edulinq/autograder/internal/api/core/*core.AssignmentInfo"
+                "assignment": "github.com/edulinq/autograder/internal/api/core/core.AssignmentInfo"
             },
             "request-type": "*assignments.GetRequest",
             "response-type": "*assignments.GetResponse"
@@ -66,7 +66,7 @@
                 "complete": "bool",
                 "options": "github.com/edulinq/autograder/internal/analysis/analysis.AnalysisOptions",
                 "results": "[]*model.IndividualAnalysis",
-                "summary": "github.com/edulinq/autograder/internal/model/*model.IndividualAnalysisSummary"
+                "summary": "github.com/edulinq/autograder/internal/model/model.IndividualAnalysisSummary"
             },
             "request-type": "*analysis.IndividualRequest",
             "response-type": "*analysis.IndividualResponse"
@@ -88,7 +88,7 @@
                 "complete": "bool",
                 "options": "github.com/edulinq/autograder/internal/analysis/analysis.AnalysisOptions",
                 "results": "[]*model.PairwiseAnalysis",
-                "summary": "github.com/edulinq/autograder/internal/model/*model.PairwiseAnalysisSummary"
+                "summary": "github.com/edulinq/autograder/internal/model/model.PairwiseAnalysisSummary"
             },
             "request-type": "*analysis.PairwiseRequest",
             "response-type": "*analysis.PairwiseResponse"
@@ -145,7 +145,7 @@
             "output": {
                 "found-submission": "bool",
                 "found-user": "bool",
-                "grading-result": "github.com/edulinq/autograder/internal/model/*model.GradingResult"
+                "grading-result": "github.com/edulinq/autograder/internal/model/model.GradingResult"
             },
             "request-type": "*user.FetchUserAttemptRequest",
             "response-type": "*user.FetchUserAttemptResponse"
@@ -204,7 +204,7 @@
             "output": {
                 "found-submission": "bool",
                 "found-user": "bool",
-                "submission-result": "github.com/edulinq/autograder/internal/model/*model.GradingInfo"
+                "submission-result": "github.com/edulinq/autograder/internal/model/model.GradingInfo"
             },
             "request-type": "*user.FetchUserPeekRequest",
             "response-type": "*user.FetchUserPeekResponse"
@@ -246,7 +246,7 @@
                 "grading-success": "bool",
                 "message": "string",
                 "rejected": "bool",
-                "result": "github.com/edulinq/autograder/internal/model/*model.GradingInfo"
+                "result": "github.com/edulinq/autograder/internal/model/model.GradingInfo"
             },
             "request-type": "*submissions.SubmitRequest",
             "response-type": "*submissions.SubmitResponse"
@@ -387,7 +387,7 @@
             },
             "output": {
                 "found": "bool",
-                "user": "github.com/edulinq/autograder/internal/api/core/*core.CourseUserInfo"
+                "user": "github.com/edulinq/autograder/internal/api/core/core.CourseUserInfo"
             },
             "request-type": "*users.GetRequest",
             "response-type": "*users.GetResponse"
@@ -443,7 +443,7 @@
             "output": {
                 "found-autograder-user": "bool",
                 "found-lms-user": "bool",
-                "user": "github.com/edulinq/autograder/internal/api/core/*core.CourseUserInfo"
+                "user": "github.com/edulinq/autograder/internal/api/core/core.CourseUserInfo"
             },
             "request-type": "*user.UserGetRequest",
             "response-type": "*user.UserGetResponse"
@@ -464,7 +464,7 @@
                 "user-pass": "string"
             },
             "output": {
-                "error": "github.com/edulinq/autograder/internal/model/*model.ExternalLocatableError",
+                "error": "github.com/edulinq/autograder/internal/model/model.ExternalLocatableError",
                 "results": "[]*log.Record",
                 "success": "bool"
             },
@@ -570,7 +570,7 @@
             "output": {
                 "courses": "map[string]*core.CourseInfo",
                 "found": "bool",
-                "user": "github.com/edulinq/autograder/internal/api/core/*core.ServerUserInfo"
+                "user": "github.com/edulinq/autograder/internal/api/core/core.ServerUserInfo"
             },
             "request-type": "*users.GetRequest",
             "response-type": "*users.GetResponse"
@@ -875,7 +875,7 @@
         "github.com/edulinq/autograder/internal/api/courses/admin/admin.UpdateResponse": {
             "category": "struct",
             "fields": {
-                "result": "github.com/edulinq/autograder/internal/procedures/courses/*courses.CourseUpsertResult"
+                "result": "github.com/edulinq/autograder/internal/procedures/courses/courses.CourseUpsertResult"
             }
         },
         "github.com/edulinq/autograder/internal/api/courses/assignments/assignments.GetRequest": {
@@ -893,7 +893,7 @@
         "github.com/edulinq/autograder/internal/api/courses/assignments/assignments.GetResponse": {
             "category": "struct",
             "fields": {
-                "assignment": "github.com/edulinq/autograder/internal/api/core/*core.AssignmentInfo"
+                "assignment": "github.com/edulinq/autograder/internal/api/core/core.AssignmentInfo"
             }
         },
         "github.com/edulinq/autograder/internal/api/courses/assignments/assignments.ListRequest": {
@@ -933,7 +933,7 @@
                 "complete": "bool",
                 "options": "github.com/edulinq/autograder/internal/analysis/analysis.AnalysisOptions",
                 "results": "[]*model.IndividualAnalysis",
-                "summary": "github.com/edulinq/autograder/internal/model/*model.IndividualAnalysisSummary"
+                "summary": "github.com/edulinq/autograder/internal/model/model.IndividualAnalysisSummary"
             }
         },
         "github.com/edulinq/autograder/internal/api/courses/assignments/submissions/analysis/analysis.PairwiseRequest": {
@@ -956,7 +956,7 @@
                 "complete": "bool",
                 "options": "github.com/edulinq/autograder/internal/analysis/analysis.AnalysisOptions",
                 "results": "[]*model.PairwiseAnalysis",
-                "summary": "github.com/edulinq/autograder/internal/model/*model.PairwiseAnalysisSummary"
+                "summary": "github.com/edulinq/autograder/internal/model/model.PairwiseAnalysisSummary"
             }
         },
         "github.com/edulinq/autograder/internal/api/courses/assignments/submissions/fetch/course/course.FetchCourseAttemptsRequest": {
@@ -1016,7 +1016,7 @@
             "fields": {
                 "found-submission": "bool",
                 "found-user": "bool",
-                "grading-result": "github.com/edulinq/autograder/internal/model/*model.GradingResult"
+                "grading-result": "github.com/edulinq/autograder/internal/model/model.GradingResult"
             }
         },
         "github.com/edulinq/autograder/internal/api/courses/assignments/submissions/fetch/user/user.FetchUserAttemptsRequest": {
@@ -1078,7 +1078,7 @@
             "fields": {
                 "found-submission": "bool",
                 "found-user": "bool",
-                "submission-result": "github.com/edulinq/autograder/internal/model/*model.GradingInfo"
+                "submission-result": "github.com/edulinq/autograder/internal/model/model.GradingInfo"
             }
         },
         "github.com/edulinq/autograder/internal/api/courses/assignments/submissions/submissions.RemoveRequest": {
@@ -1122,7 +1122,7 @@
                 "grading-success": "bool",
                 "message": "string",
                 "rejected": "bool",
-                "result": "github.com/edulinq/autograder/internal/model/*model.GradingInfo"
+                "result": "github.com/edulinq/autograder/internal/model/model.GradingInfo"
             }
         },
         "github.com/edulinq/autograder/internal/api/courses/lms/scores/scores.UploadRequest": {
@@ -1264,7 +1264,7 @@
             "category": "struct",
             "fields": {
                 "found": "bool",
-                "user": "github.com/edulinq/autograder/internal/api/core/*core.CourseUserInfo"
+                "user": "github.com/edulinq/autograder/internal/api/core/core.CourseUserInfo"
             }
         },
         "github.com/edulinq/autograder/internal/api/courses/users/users.ListRequest": {
@@ -1337,7 +1337,7 @@
             "fields": {
                 "found-autograder-user": "bool",
                 "found-lms-user": "bool",
-                "user": "github.com/edulinq/autograder/internal/api/core/*core.CourseUserInfo"
+                "user": "github.com/edulinq/autograder/internal/api/core/core.CourseUserInfo"
             }
         },
         "github.com/edulinq/autograder/internal/api/logs/logs.QueryRequest": {
@@ -1359,7 +1359,7 @@
         "github.com/edulinq/autograder/internal/api/logs/logs.QueryResponse": {
             "category": "struct",
             "fields": {
-                "error": "github.com/edulinq/autograder/internal/model/*model.ExternalLocatableError",
+                "error": "github.com/edulinq/autograder/internal/model/model.ExternalLocatableError",
                 "results": "[]*log.Record",
                 "success": "bool"
             }
@@ -1531,7 +1531,7 @@
             "fields": {
                 "courses": "map[string]*core.CourseInfo",
                 "found": "bool",
-                "user": "github.com/edulinq/autograder/internal/api/core/*core.ServerUserInfo"
+                "user": "github.com/edulinq/autograder/internal/api/core/core.ServerUserInfo"
             }
         },
         "github.com/edulinq/autograder/internal/api/users/users.ListRequest": {
@@ -1701,7 +1701,7 @@
             "category": "struct",
             "fields": {
                 "added": "bool",
-                "communication-error": "github.com/edulinq/autograder/internal/model/*model.ExternalLocatableError",
+                "communication-error": "github.com/edulinq/autograder/internal/model/model.ExternalLocatableError",
                 "dropped": "[]string",
                 "email": "string",
                 "emailed": "bool",
@@ -1710,8 +1710,8 @@
                 "not-exists": "bool",
                 "removed": "bool",
                 "skipped": "bool",
-                "system-error": "github.com/edulinq/autograder/internal/model/*model.ExternalLocatableError",
-                "validation-error": "github.com/edulinq/autograder/internal/model/*model.ExternalLocatableError"
+                "system-error": "github.com/edulinq/autograder/internal/model/model.ExternalLocatableError",
+                "validation-error": "github.com/edulinq/autograder/internal/model/model.ExternalLocatableError"
             }
         },
         "github.com/edulinq/autograder/internal/model/model.FileSimilarity": {
@@ -1761,7 +1761,7 @@
         "github.com/edulinq/autograder/internal/model/model.GradingResult": {
             "category": "struct",
             "fields": {
-                "info": "github.com/edulinq/autograder/internal/model/*model.GradingInfo",
+                "info": "github.com/edulinq/autograder/internal/model/model.GradingInfo",
                 "input-files-gzip": "map[string][]uint8",
                 "output-files-gzip": "map[string][]uint8",
                 "stderr": "string",
@@ -1780,7 +1780,7 @@
                 "lines-of-code": "int",
                 "lines-of-code-delta": "int",
                 "lines-of-code-per-hour": "float64",
-                "options": "github.com/edulinq/autograder/internal/model/*model.AssignmentAnalysisOptions",
+                "options": "github.com/edulinq/autograder/internal/model/model.AssignmentAnalysisOptions",
                 "score": "float64",
                 "score-delta": "float64",
                 "score-per-hour": "float64",
@@ -1814,7 +1814,7 @@
         "github.com/edulinq/autograder/internal/model/model.LMSSyncResult": {
             "category": "struct",
             "fields": {
-                "assignment-sync": "github.com/edulinq/autograder/internal/model/*model.AssignmentSyncResult",
+                "assignment-sync": "github.com/edulinq/autograder/internal/model/model.AssignmentSyncResult",
                 "user-sync": "[]*model.UserOpResult"
             }
         },
@@ -1828,7 +1828,7 @@
                 "failure": "bool",
                 "failure-message": "string",
                 "mean-similarities": "map[string]float64",
-                "options": "github.com/edulinq/autograder/internal/model/*model.AssignmentAnalysisOptions",
+                "options": "github.com/edulinq/autograder/internal/model/model.AssignmentAnalysisOptions",
                 "similarities": "map[string][]*model.FileSimilarity",
                 "skipped-files": "[]string",
                 "submission-ids": "github.com/edulinq/autograder/internal/model/model.PairwiseKey",
@@ -1897,7 +1897,7 @@
             "fields": {
                 "added": "bool",
                 "cleartext-password": "string",
-                "communication-error": "github.com/edulinq/autograder/internal/model/*model.LocatableError",
+                "communication-error": "github.com/edulinq/autograder/internal/model/model.LocatableError",
                 "dropped": "[]string",
                 "email": "string",
                 "emailed": "bool",
@@ -1906,8 +1906,8 @@
                 "not-exists": "bool",
                 "removed": "bool",
                 "skipped": "bool",
-                "system-error": "github.com/edulinq/autograder/internal/model/*model.LocatableError",
-                "validation-error": "github.com/edulinq/autograder/internal/model/*model.LocatableError"
+                "system-error": "github.com/edulinq/autograder/internal/model/model.LocatableError",
+                "validation-error": "github.com/edulinq/autograder/internal/model/model.LocatableError"
             }
         },
         "github.com/edulinq/autograder/internal/procedures/courses/courses.CourseUpsertOptions": {
@@ -1939,7 +1939,7 @@
                 "built-assignment-images": "[]string",
                 "course-id": "string",
                 "created": "bool",
-                "lms-sync-result": "github.com/edulinq/autograder/internal/model/*model.LMSSyncResult",
+                "lms-sync-result": "github.com/edulinq/autograder/internal/model/model.LMSSyncResult",
                 "message": "string",
                 "success": "bool",
                 "updated": "bool"

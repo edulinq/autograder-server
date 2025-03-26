@@ -448,18 +448,18 @@ func TestSimplifyType(test *testing.T) {
 			core.TypeDescription{
 				Category: core.StructType,
 				Fields: map[string]string{
-					"coin-value": "github.com/edulinq/autograder/internal/api/*api.simpleMapWrapper",
-					"good-index": "github.com/edulinq/autograder/internal/api/*api.simpleArrayWrapper",
-					"personnel":  "github.com/edulinq/autograder/internal/api/*api.embeddedJSONStruct",
+					"coin-value": "github.com/edulinq/autograder/internal/api/api.simpleMapWrapper",
+					"good-index": "github.com/edulinq/autograder/internal/api/api.simpleArrayWrapper",
+					"personnel":  "github.com/edulinq/autograder/internal/api/api.embeddedJSONStruct",
 				},
 			},
 			map[string]core.TypeDescription{
 				GetTypeID(reflect.TypeOf((*complexPointerStruct)(nil)).Elem()): core.TypeDescription{
 					Category: core.StructType,
 					Fields: map[string]string{
-						"coin-value": "github.com/edulinq/autograder/internal/api/*api.simpleMapWrapper",
-						"good-index": "github.com/edulinq/autograder/internal/api/*api.simpleArrayWrapper",
-						"personnel":  "github.com/edulinq/autograder/internal/api/*api.embeddedJSONStruct",
+						"coin-value": "github.com/edulinq/autograder/internal/api/api.simpleMapWrapper",
+						"good-index": "github.com/edulinq/autograder/internal/api/api.simpleArrayWrapper",
+						"personnel":  "github.com/edulinq/autograder/internal/api/api.embeddedJSONStruct",
 					},
 				},
 				// Note that the keys in typeMap do not include the pointer.
@@ -508,11 +508,13 @@ func TestSimplifyType(test *testing.T) {
 		if !reflect.DeepEqual(testCase.expectedDesc, actual) {
 			test.Errorf("Case %d: Unexpected type simplification. Expected: '%v', actual: '%v'.",
 				i, util.MustToJSONIndent(testCase.expectedDesc), util.MustToJSONIndent(actual))
+			continue
 		}
 
 		if !reflect.DeepEqual(testCase.expectedTypeMap, typeMap) {
 			test.Errorf("Case %d: Unexpected type map. Expected: '%v', actual: '%v'.",
 				i, util.MustToJSONIndent(testCase.expectedTypeMap), util.MustToJSONIndent(typeMap))
+			continue
 		}
 	}
 }
