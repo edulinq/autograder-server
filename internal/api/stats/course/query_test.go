@@ -1,4 +1,4 @@
-package system
+package course
 
 import (
 	"reflect"
@@ -27,9 +27,9 @@ func TestQuery(test *testing.T) {
 			"",
 			stats.MetricQuery{},
 			[]map[string]any{
-				{"cpu-percent": 1, "mem-percent": 1, "net-bytes-received": 1, "net-bytes-sent": 1, "timestamp": 100},
-				{"cpu-percent": 2, "mem-percent": 2, "net-bytes-received": 2, "net-bytes-sent": 2, "timestamp": 200},
-				{"cpu-percent": 3, "mem-percent": 3, "net-bytes-received": 3, "net-bytes-sent": 3, "timestamp": 300},
+				{"assignment": "A1", "course": "course101", "duration": 100, "timestamp": 100, "type": "grading-time", "user": "U1"},
+				{"assignment": "A2", "course": "course101", "duration": 200, "timestamp": 200, "type": "", "user": "U1"},
+				{"assignment": "A3", "course": "course101", "duration": 300, "timestamp": 300, "type": "grading-time", "user": "U2"},
 			},
 		},
 		{
@@ -37,9 +37,9 @@ func TestQuery(test *testing.T) {
 			"",
 			stats.MetricQuery{BaseQuery: stats.BaseQuery{Sort: 1}},
 			[]map[string]any{
-				{"cpu-percent": 3, "mem-percent": 3, "net-bytes-received": 3, "net-bytes-sent": 3, "timestamp": 300},
-				{"cpu-percent": 2, "mem-percent": 2, "net-bytes-received": 2, "net-bytes-sent": 2, "timestamp": 200},
-				{"cpu-percent": 1, "mem-percent": 1, "net-bytes-received": 1, "net-bytes-sent": 1, "timestamp": 100},
+				{"assignment": "A3", "course": "course101", "duration": 300, "timestamp": 300, "type": "grading-time", "user": "U2"},
+				{"assignment": "A2", "course": "course101", "duration": 200, "timestamp": 200, "type": "", "user": "U1"},
+				{"assignment": "A1", "course": "course101", "duration": 100, "timestamp": 100, "type": "grading-time", "user": "U1"},
 			},
 		},
 		{
@@ -47,17 +47,18 @@ func TestQuery(test *testing.T) {
 			"",
 			stats.MetricQuery{BaseQuery: stats.BaseQuery{After: timestamp.FromMSecs(150)}},
 			[]map[string]any{
-				{"cpu-percent": 2, "mem-percent": 2, "net-bytes-received": 2, "net-bytes-sent": 2, "timestamp": 200},
-				{"cpu-percent": 3, "mem-percent": 3, "net-bytes-received": 3, "net-bytes-sent": 3, "timestamp": 300},
+				{"assignment": "A2", "course": "course101", "duration": 200, "timestamp": 200, "type": "", "user": "U1"},
+				{"assignment": "A3", "course": "course101", "duration": 300, "timestamp": 300, "type": "grading-time", "user": "U2"},
 			},
 		},
 
 		// Error.
-		{"server-user", "-041", stats.MetricQuery{}, nil},
+		{"course-student", "-020", stats.MetricQuery{}, nil},
+		{"server-user", "-040", stats.MetricQuery{}, nil},
 	}
 
 	for _, record := range testRecords {
-		err := db.StoreSystemStats(record)
+		err := db.StoreCourseMetric(record)
 		if err != nil {
 			test.Fatalf("Failed to store test record: '%v'.", err)
 		}
@@ -67,7 +68,7 @@ func TestQuery(test *testing.T) {
 		var fields map[string]any
 		util.MustJSONFromString(util.MustToJSON(testCase.query), &fields)
 
-		response := core.SendTestAPIRequestFull(test, `stats/system/query`, fields, nil, testCase.email)
+		response := core.SendTestAPIRequestFull(test, `stats/course/query`, fields, nil, testCase.email)
 		if !response.Success {
 			if testCase.expectedLocator != "" {
 				if testCase.expectedLocator != response.Locator {
@@ -108,32 +109,35 @@ func TestQuery(test *testing.T) {
 	}
 }
 
-var testRecords []*stats.SystemMetrics = []*stats.SystemMetrics{
+var testRecords []*stats.CourseMetric = []*stats.CourseMetric{
 	{
 		BaseMetric: stats.BaseMetric{
 			Timestamp: timestamp.FromMSecs(100),
 		},
-		CPUPercent:       1,
-		MemPercent:       1,
-		NetBytesSent:     1,
-		NetBytesReceived: 1,
+		Type:         stats.CourseMetricTypeGradingTime,
+		CourseID:     db.TEST_COURSE_ID,
+		AssignmentID: "A1",
+		UserEmail:    "U1",
+		Value:        100,
 	},
 	{
 		BaseMetric: stats.BaseMetric{
 			Timestamp: timestamp.FromMSecs(200),
 		},
-		CPUPercent:       2,
-		MemPercent:       2,
-		NetBytesSent:     2,
-		NetBytesReceived: 2,
+		Type:         stats.CourseMetricTypeUnknown,
+		CourseID:     db.TEST_COURSE_ID,
+		AssignmentID: "A2",
+		UserEmail:    "U1",
+		Value:        200,
 	},
 	{
 		BaseMetric: stats.BaseMetric{
 			Timestamp: timestamp.FromMSecs(300),
 		},
-		CPUPercent:       3,
-		MemPercent:       3,
-		NetBytesSent:     3,
-		NetBytesReceived: 3,
+		Type:         stats.CourseMetricTypeGradingTime,
+		CourseID:     db.TEST_COURSE_ID,
+		AssignmentID: "A3",
+		UserEmail:    "U2",
+		Value:        300,
 	},
 }

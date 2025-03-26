@@ -91,7 +91,7 @@ func TestServerHTTPSRedirect(test *testing.T) {
 	var httpsPort int = 0
 	var err error = nil
 
-	// This is flakey since we may not be fast enough to get two differnt ports.
+	// This is flakey since we may not be fast enough to get two different ports.
 	// Try a few times before giving up.
 	for i := 0; i < 10; i++ {
 		httpPort, err = util.GetUnusedPort()

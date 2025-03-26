@@ -19,6 +19,7 @@ const (
 const (
 	ATTRIBUTE_KEY_TASK     = "task-type"
 	ATTRIBUTE_KEY_ANALYSIS = "analysis-type"
+	COURSE                 = "course"
 )
 
 type CourseMetric struct {
@@ -31,16 +32,6 @@ type CourseMetric struct {
 	UserEmail    string `json:"user,omitempty"`
 
 	Value uint64 `json:"duration"`
-}
-
-type CourseMetricQuery struct {
-	BaseQuery
-
-	Type CourseMetricType `json:"target-type"`
-
-	CourseID     string `json:"target-course,omitempty"`
-	AssignmentID string `json:"target-assignment,omitempty"`
-	UserEmail    string `json:"target-user,omitempty"`
 }
 
 var courseMetricTypeToString = map[CourseMetricType]string{
@@ -86,34 +77,6 @@ func (this *CourseMetric) LogValue() []*log.Attr {
 	}
 
 	return attrs
-}
-
-func (this CourseMetricQuery) Match(record *CourseMetric) bool {
-	if record == nil {
-		return false
-	}
-
-	if !this.BaseQuery.Match(record) {
-		return false
-	}
-
-	if (this.Type != CourseMetricTypeUnknown) && (this.Type != record.Type) {
-		return false
-	}
-
-	if (this.CourseID != "") && (this.CourseID != record.CourseID) {
-		return false
-	}
-
-	if (this.AssignmentID != "") && (this.AssignmentID != record.AssignmentID) {
-		return false
-	}
-
-	if (this.UserEmail != "") && (this.UserEmail != record.UserEmail) {
-		return false
-	}
-
-	return true
 }
 
 // Store a course metric without blocking (unless this is running in test mode, then it will block).
