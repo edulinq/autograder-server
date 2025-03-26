@@ -48,4 +48,4 @@ jobs:
 
       - name: TEST2
         run: |
-            go run cmd/call-endpoint/main.go metadata/describe
+            go run cmd/call-endpoint/main.go metadata/describe --log-level=trace
