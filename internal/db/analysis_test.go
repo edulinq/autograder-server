@@ -389,14 +389,17 @@ var testIndividualRecords []*model.IndividualAnalysis = []*model.IndividualAnaly
 	&model.IndividualAnalysis{
 		AnalysisTimestamp: timestamp.Zero(),
 		FullID:            "course101::hw0::course-student@test.edulinq.org::1697406256",
+		CourseID:          "course101",
 	},
 	&model.IndividualAnalysis{
 		AnalysisTimestamp: timestamp.Zero(),
 		FullID:            "course101::hw0::course-student@test.edulinq.org::1697406265",
+		CourseID:          "course101",
 	},
 	&model.IndividualAnalysis{
 		AnalysisTimestamp: timestamp.Zero(),
 		FullID:            "course101::hw0::course-student@test.edulinq.org::1697406272",
+		CourseID:          "course101",
 		Failure:           true,
 		FailureMessage:    "Analysis failed.",
 	},
