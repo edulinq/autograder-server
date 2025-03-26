@@ -39,7 +39,7 @@ func ReadFromNetworkConnection(connection net.Conn) ([]byte, error) {
 	fmt.Fprintln(os.Stderr, "    ", size)
 	fmt.Fprintln(os.Stderr, "    ", len(jsonBuffer))
 	fmt.Fprintln(os.Stderr, "    ", jsonBuffer)
-	fmt.Fprintln(os.Stderr, "---\n")
+	fmt.Fprintln(os.Stderr, "----\n")
 
 	return jsonBuffer, nil
 }
@@ -55,7 +55,7 @@ func WriteToNetworkConnection(connection net.Conn, data []byte) error {
 	fmt.Fprintln(os.Stderr, "    ", size)
 	fmt.Fprintln(os.Stderr, "    ", len(data))
 	fmt.Fprintln(os.Stderr, "    ", data)
-	fmt.Fprintln(os.Stderr, "---\n")
+	fmt.Fprintln(os.Stderr, "----\n")
 
 	if size > MAX_SOCKET_MESSAGE_SIZE_BYTES {
 		return fmt.Errorf("Message content is too large to write.")
