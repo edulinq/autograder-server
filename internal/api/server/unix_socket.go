@@ -151,6 +151,10 @@ func handleUnixSocketConnection(connection net.Conn) error {
 	}
 
 	jsonResponseBytes := []byte(responseText)
+	// TEST
+	message := fmt.Sprintf("unix socket is trying to write the following bytes: '%q'.\n", jsonResponseBytes)
+	log.Trace(message)
+
 	err = util.WriteToNetworkConnection(connection, jsonResponseBytes)
 	if err != nil {
 		return fmt.Errorf("Failed to write to the unix socket: '%w'.", err)

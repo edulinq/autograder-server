@@ -6,6 +6,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/edulinq/autograder/internal/log"
 	"github.com/edulinq/autograder/internal/util"
 )
 
@@ -46,6 +47,10 @@ func SetAPIDescription(description APIDescription) {
 }
 
 func GetAPIDescription() APIDescription {
+	// TEST
+	message := fmt.Sprintf("GetAPIDescription is returning the following APIDescription: '%s'.", util.MustToJSONIndent(apiDescription))
+	log.Trace(message)
+
 	return apiDescription
 }
 

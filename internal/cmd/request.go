@@ -95,7 +95,7 @@ func SendCMDRequest(endpoint string, request any) (core.APIResponse, error) {
 	}
 
 	// TEST
-	message := fmt.Sprintf("Received the following raw data from the cmd socker: '%q'.", responseBuffer)
+	message := fmt.Sprintf("Received the following raw data from the cmd socket: '%q'\n.", responseBuffer)
 	log.Trace(message)
 
 	var response core.APIResponse
