@@ -33,7 +33,7 @@ func (this *backend) StoreSystemStats(record *stats.SystemMetrics) error {
 }
 
 func (this *backend) GetCourseMetrics(query stats.MetricQuery) ([]*stats.BaseMetric, error) {
-	courseID, ok := query.Where[stats.COURSE_ID].(string)
+	courseID, ok := query.Where[stats.COURSE_ID_KEY].(string)
 	if !ok {
 		return nil, fmt.Errorf("When querying for course metrics, course ID must not be empty.")
 	}
@@ -51,7 +51,7 @@ func (this *backend) GetCourseMetrics(query stats.MetricQuery) ([]*stats.BaseMet
 }
 
 func (this *backend) StoreCourseMetric(record *stats.BaseMetric) error {
-	courseID, ok := record.Attributes[stats.COURSE_ID].(string)
+	courseID, ok := record.Attributes[stats.COURSE_ID_KEY].(string)
 	if !ok {
 		return fmt.Errorf("No course ID was given.")
 	}

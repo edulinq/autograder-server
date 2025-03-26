@@ -4,7 +4,7 @@ import (
 	"github.com/edulinq/autograder/internal/timestamp"
 )
 
-const ATTRIBUTES = "attributes"
+const ATTRIBUTES_KEY = "attributes"
 
 type Metric interface {
 	GetTimestamp() timestamp.Timestamp

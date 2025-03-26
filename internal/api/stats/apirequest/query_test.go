@@ -55,7 +55,7 @@ func TestQuery(test *testing.T) {
 			stats.MetricQuery{
 				BaseQuery: stats.BaseQuery{
 					Where: map[string]any{
-						stats.ASSIGNMENT_ID: "A2",
+						stats.ASSIGNMENT_ID_KEY: "A2",
 					},
 				},
 			},
@@ -67,7 +67,7 @@ func TestQuery(test *testing.T) {
 			stats.MetricQuery{
 				BaseQuery: stats.BaseQuery{
 					Where: map[string]any{
-						stats.ASSIGNMENT_ID: "zzz",
+						stats.ASSIGNMENT_ID_KEY: "zzz",
 					},
 				},
 			},
@@ -79,7 +79,7 @@ func TestQuery(test *testing.T) {
 			stats.MetricQuery{
 				BaseQuery: stats.BaseQuery{
 					Where: map[string]any{
-						stats.USER_EMAIL: "U1",
+						stats.USER_EMAIL_KEY: "U1",
 					},
 				},
 			},
@@ -91,7 +91,7 @@ func TestQuery(test *testing.T) {
 			stats.MetricQuery{
 				BaseQuery: stats.BaseQuery{
 					Where: map[string]any{
-						stats.USER_EMAIL: "zzz",
+						stats.USER_EMAIL_KEY: "zzz",
 					},
 				},
 			},
@@ -103,7 +103,7 @@ func TestQuery(test *testing.T) {
 			stats.MetricQuery{
 				BaseQuery: stats.BaseQuery{
 					Where: map[string]any{
-						stats.COURSE_ID: "C1",
+						stats.COURSE_ID_KEY: "C1",
 					},
 				},
 			},
@@ -115,7 +115,7 @@ func TestQuery(test *testing.T) {
 			stats.MetricQuery{
 				BaseQuery: stats.BaseQuery{
 					Where: map[string]any{
-						stats.COURSE_ID: "zzz",
+						stats.COURSE_ID_KEY: "zzz",
 					},
 				},
 			},
@@ -129,7 +129,7 @@ func TestQuery(test *testing.T) {
 			stats.MetricQuery{
 				BaseQuery: stats.BaseQuery{
 					Where: map[string]any{
-						stats.ENDPOINT: "E1",
+						stats.ENDPOINT_KEY: "E1",
 					},
 				},
 			},
@@ -141,7 +141,7 @@ func TestQuery(test *testing.T) {
 			stats.MetricQuery{
 				BaseQuery: stats.BaseQuery{
 					Where: map[string]any{
-						stats.ENDPOINT: "zzz",
+						stats.ENDPOINT_KEY: "zzz",
 					},
 				},
 			},
@@ -155,7 +155,7 @@ func TestQuery(test *testing.T) {
 			stats.MetricQuery{
 				BaseQuery: stats.BaseQuery{
 					Where: map[string]any{
-						stats.SENDER: "1",
+						stats.SENDER_KEY: "1",
 					},
 				},
 			},
@@ -167,7 +167,7 @@ func TestQuery(test *testing.T) {
 			stats.MetricQuery{
 				BaseQuery: stats.BaseQuery{
 					Where: map[string]any{
-						stats.SENDER: "zzz",
+						stats.SENDER_KEY: "zzz",
 					},
 				},
 			},
@@ -181,7 +181,7 @@ func TestQuery(test *testing.T) {
 			stats.MetricQuery{
 				BaseQuery: stats.BaseQuery{
 					Where: map[string]any{
-						stats.LOCATOR: "11",
+						stats.LOCATOR_KEY: "11",
 					},
 				},
 			},
@@ -193,7 +193,7 @@ func TestQuery(test *testing.T) {
 			stats.MetricQuery{
 				BaseQuery: stats.BaseQuery{
 					Where: map[string]any{
-						stats.LOCATOR: "zzz",
+						stats.LOCATOR_KEY: "zzz",
 					},
 				},
 			},
@@ -265,37 +265,37 @@ var testRecords []*stats.BaseMetric = []*stats.BaseMetric{
 	&stats.BaseMetric{
 		Timestamp: timestamp.FromMSecs(100),
 		Attributes: map[string]any{
-			stats.SENDER:        "1",
-			stats.ENDPOINT:      "E1",
-			stats.USER_EMAIL:    "U1",
-			stats.ASSIGNMENT_ID: "A1",
-			stats.COURSE_ID:     "C1",
-			stats.LOCATOR:       "11",
-			stats.DURATION:      100,
+			stats.SENDER_KEY:        "1",
+			stats.ENDPOINT_KEY:      "E1",
+			stats.USER_EMAIL_KEY:    "U1",
+			stats.ASSIGNMENT_ID_KEY: "A1",
+			stats.COURSE_ID_KEY:     "C1",
+			stats.LOCATOR_KEY:       "11",
+			stats.DURATION_KEY:      100,
 		},
 	},
 	&stats.BaseMetric{
 		Timestamp: timestamp.FromMSecs(200),
 		Attributes: map[string]any{
-			stats.SENDER:        "2",
-			stats.ENDPOINT:      "E2",
-			stats.USER_EMAIL:    "U1",
-			stats.COURSE_ID:     "C2",
-			stats.ASSIGNMENT_ID: "A2",
-			stats.LOCATOR:       "22",
-			stats.DURATION:      200,
+			stats.SENDER_KEY:        "2",
+			stats.ENDPOINT_KEY:      "E2",
+			stats.USER_EMAIL_KEY:    "U1",
+			stats.COURSE_ID_KEY:     "C2",
+			stats.ASSIGNMENT_ID_KEY: "A2",
+			stats.LOCATOR_KEY:       "22",
+			stats.DURATION_KEY:      200,
 		},
 	},
 	&stats.BaseMetric{
 		Timestamp: timestamp.FromMSecs(300),
 		Attributes: map[string]any{
-			stats.SENDER:        "3",
-			stats.ENDPOINT:      "E3",
-			stats.USER_EMAIL:    "U3",
-			stats.COURSE_ID:     "C3",
-			stats.ASSIGNMENT_ID: "A3",
-			stats.LOCATOR:       "33",
-			stats.DURATION:      300,
+			stats.SENDER_KEY:        "3",
+			stats.ENDPOINT_KEY:      "E3",
+			stats.USER_EMAIL_KEY:    "U3",
+			stats.COURSE_ID_KEY:     "C3",
+			stats.ASSIGNMENT_ID_KEY: "A3",
+			stats.LOCATOR_KEY:       "33",
+			stats.DURATION_KEY:      300,
 		},
 	},
 }

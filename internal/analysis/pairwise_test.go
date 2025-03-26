@@ -105,7 +105,7 @@ func TestPairwiseAnalysisFake(test *testing.T) {
 	courseMetricQuery := stats.MetricQuery{
 		BaseQuery: stats.BaseQuery{
 			Where: map[string]any{
-				stats.COURSE_ID: "course101",
+				stats.COURSE_ID_KEY: "course101",
 			},
 		},
 	}
@@ -121,11 +121,11 @@ func TestPairwiseAnalysisFake(test *testing.T) {
 			Timestamp: timestamp.Zero(),
 			Attributes: map[string]any{
 				stats.ATTRIBUTE_KEY_ANALYSIS: "pairwise",
-				stats.TYPE:                   stats.CourseMetricTypeCodeAnalysisTime,
-				stats.COURSE_ID:              "course101",
-				stats.ASSIGNMENT_ID:          "hw0",
-				stats.USER_EMAIL:             "server-admin@test.edulinq.org",
-				stats.VALUE:                  float64(3), // 1 for each run of the fake engine.
+				stats.TYPE_KEY:               stats.CourseMetricTypeCodeAnalysisTime,
+				stats.COURSE_ID_KEY:          "course101",
+				stats.ASSIGNMENT_ID_KEY:      "hw0",
+				stats.USER_EMAIL_KEY:         "server-admin@test.edulinq.org",
+				stats.VALUE_KEY:              float64(3), // 1 for each run of the fake engine.
 			},
 		},
 	}

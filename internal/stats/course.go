@@ -19,12 +19,12 @@ const (
 const (
 	ATTRIBUTE_KEY_TASK     = "task-type"
 	ATTRIBUTE_KEY_ANALYSIS = "analysis-type"
-	COURSE_ID              = "course"
-	TYPE                   = "type"
-	ASSIGNMENT_ID          = "assignment"
-	USER_EMAIL             = "user"
-	VALUE                  = "value"
-	TASK_TYPE              = "task-type"
+	ASSIGNMENT_ID_KEY      = "assignment"
+	COURSE_ID_KEY          = "course"
+	TASK_TYPE_KEY          = "task-type"
+	TYPE_KEY               = "type"
+	VALUE_KEY              = "value"
+	USER_EMAIL_KEY         = "user"
 )
 
 var courseMetricTypeToString = map[CourseMetricType]string{
@@ -59,7 +59,7 @@ func AsyncStoreCourseMetric(metric *BaseMetric) {
 		return
 	}
 
-	if metric.Attributes == nil || metric.Attributes[COURSE_ID] == nil || metric.Attributes[COURSE_ID] == "" {
+	if metric.Attributes == nil || metric.Attributes[COURSE_ID_KEY] == nil || metric.Attributes[COURSE_ID_KEY] == "" {
 		log.Error("Cannot log course statistic without course ID.", metric)
 		return
 	}
@@ -80,20 +80,20 @@ func AsyncStoreCourseMetric(metric *BaseMetric) {
 
 func AsyncStoreCourseGradingTime(startTime timestamp.Timestamp, endTime timestamp.Timestamp, courseID string, assignmentID string, userEmail string) {
 	attributes := map[string]any{
-		TYPE:  CourseMetricTypeGradingTime,
-		VALUE: uint64((endTime - startTime).ToMSecs()),
+		TYPE_KEY:  CourseMetricTypeGradingTime,
+		VALUE_KEY: uint64((endTime - startTime).ToMSecs()),
 	}
 
 	if userEmail != "" {
-		attributes[USER_EMAIL] = userEmail
+		attributes[USER_EMAIL_KEY] = userEmail
 	}
 
 	if courseID != "" {
-		attributes[COURSE_ID] = courseID
+		attributes[COURSE_ID_KEY] = courseID
 	}
 
 	if assignmentID != "" {
-		attributes[ASSIGNMENT_ID] = assignmentID
+		attributes[ASSIGNMENT_ID_KEY] = assignmentID
 	}
 
 	metric := &BaseMetric{
@@ -106,21 +106,21 @@ func AsyncStoreCourseGradingTime(startTime timestamp.Timestamp, endTime timestam
 
 func AsyncStoreCourseTaskTime(startTime timestamp.Timestamp, endTime timestamp.Timestamp, courseID string, assignmentID string, userEmail string, taskType string) {
 	attributes := map[string]any{
-		TYPE:      CourseMetricTypeTaskTime,
-		TASK_TYPE: taskType,
-		VALUE:     uint64((endTime - startTime).ToMSecs()),
+		TYPE_KEY:      CourseMetricTypeTaskTime,
+		TASK_TYPE_KEY: taskType,
+		VALUE_KEY:     uint64((endTime - startTime).ToMSecs()),
 	}
 
 	if userEmail != "" {
-		attributes[USER_EMAIL] = userEmail
+		attributes[USER_EMAIL_KEY] = userEmail
 	}
 
 	if courseID != "" {
-		attributes[COURSE_ID] = courseID
+		attributes[COURSE_ID_KEY] = courseID
 	}
 
 	if assignmentID != "" {
-		attributes[ASSIGNMENT_ID] = assignmentID
+		attributes[ASSIGNMENT_ID_KEY] = assignmentID
 	}
 
 	metric := &BaseMetric{

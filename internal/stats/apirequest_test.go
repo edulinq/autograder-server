@@ -14,13 +14,13 @@ func TestStoreAPIRequestMetric(test *testing.T) {
 	expectedMetric := &BaseMetric{
 		Timestamp: timestamp.Zero(),
 		Attributes: map[string]any{
-			SENDER:        "1",
-			ENDPOINT:      "E",
-			USER_EMAIL:    "U",
-			COURSE_ID:     "C",
-			ASSIGNMENT_ID: "A",
-			LOCATOR:       "2",
-			DURATION:      uint64(100),
+			SENDER_KEY:        "1",
+			ENDPOINT_KEY:      "E",
+			USER_EMAIL_KEY:    "U",
+			COURSE_ID_KEY:     "C",
+			ASSIGNMENT_ID_KEY: "A",
+			LOCATOR_KEY:       "2",
+			DURATION_KEY:      uint64(100),
 		},
 	}
 

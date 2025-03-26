@@ -42,11 +42,11 @@ func TestStoreCourseGradingTimeBase(test *testing.T) {
 	expected := &BaseMetric{
 		Timestamp: timestamp.Zero(),
 		Attributes: map[string]any{
-			TYPE:          CourseMetricTypeGradingTime,
-			COURSE_ID:     "C",
-			ASSIGNMENT_ID: "A",
-			USER_EMAIL:    "U",
-			VALUE:         uint64(100),
+			TYPE_KEY:          CourseMetricTypeGradingTime,
+			COURSE_ID_KEY:     "C",
+			ASSIGNMENT_ID_KEY: "A",
+			USER_EMAIL_KEY:    "U",
+			VALUE_KEY:         uint64(100),
 		},
 	}
 
@@ -62,11 +62,11 @@ func TestStoreCourseTaskTimeBase(test *testing.T) {
 		Timestamp: timestamp.Zero(),
 		Attributes: map[string]any{
 			ATTRIBUTE_KEY_TASK: "T",
-			TYPE:               CourseMetricTypeTaskTime,
-			COURSE_ID:          "C",
-			ASSIGNMENT_ID:      "A",
-			USER_EMAIL:         "U",
-			VALUE:              uint64(100),
+			TYPE_KEY:           CourseMetricTypeTaskTime,
+			COURSE_ID_KEY:      "C",
+			ASSIGNMENT_ID_KEY:  "A",
+			USER_EMAIL_KEY:     "U",
+			VALUE_KEY:          uint64(100),
 		},
 	}
 

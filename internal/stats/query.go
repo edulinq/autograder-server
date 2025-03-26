@@ -34,7 +34,7 @@ type BaseQuery struct {
 	// -1 for ascending, 0 for no sorting, 1 for descending.
 	Sort int `json:"sort"`
 
-	// Filter results by only including metrics that match specific attribute field values.
+	// Filter results to only include metrics that match BaseMetric attribute field values.
 	// Keys are field names (e.g., "course") and values are what to include (e.g., course101).
 	// This filter is applied after all other BaseQuery conditions are applied.
 	Where map[string]any `json:"where,omitempty"`
@@ -51,7 +51,7 @@ func (this MetricQuery) Match(metric *BaseMetric) bool {
 		return false
 	}
 
-	attributes, ok := metricJSONMap[ATTRIBUTES].(map[string]any)
+	attributes, ok := metricJSONMap[ATTRIBUTES_KEY].(map[string]any)
 	if !ok {
 		return false
 	}

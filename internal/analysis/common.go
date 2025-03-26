@@ -158,11 +158,11 @@ func collectAnalysisStats(fullSubmissionIDs []string, totalRunTime int64, initia
 			Timestamp: now,
 			Attributes: map[string]any{
 				stats.ATTRIBUTE_KEY_ANALYSIS: analysisType,
-				stats.TYPE:                   stats.CourseMetricTypeCodeAnalysisTime,
-				stats.COURSE_ID:              courseID,
-				stats.ASSIGNMENT_ID:          assignmentID,
-				stats.USER_EMAIL:             initiatorEmail,
-				stats.VALUE:                  uint64(totalRunTime),
+				stats.TYPE_KEY:               stats.CourseMetricTypeCodeAnalysisTime,
+				stats.COURSE_ID_KEY:          courseID,
+				stats.ASSIGNMENT_ID_KEY:      assignmentID,
+				stats.USER_EMAIL_KEY:         initiatorEmail,
+				stats.VALUE_KEY:              uint64(totalRunTime),
 			},
 		}
 

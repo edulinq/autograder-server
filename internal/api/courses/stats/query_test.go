@@ -54,7 +54,7 @@ func TestQuery(test *testing.T) {
 			stats.MetricQuery{
 				BaseQuery: stats.BaseQuery{
 					Where: map[string]any{
-						stats.ASSIGNMENT_ID: "A2",
+						stats.ASSIGNMENT_ID_KEY: "A2",
 					},
 				},
 			},
@@ -66,7 +66,7 @@ func TestQuery(test *testing.T) {
 			stats.MetricQuery{
 				BaseQuery: stats.BaseQuery{
 					Where: map[string]any{
-						stats.ASSIGNMENT_ID: "ZZZ",
+						stats.ASSIGNMENT_ID_KEY: "ZZZ",
 					},
 				},
 			},
@@ -78,7 +78,7 @@ func TestQuery(test *testing.T) {
 			stats.MetricQuery{
 				BaseQuery: stats.BaseQuery{
 					Where: map[string]any{
-						stats.USER_EMAIL: "U1",
+						stats.USER_EMAIL_KEY: "U1",
 					},
 				},
 			},
@@ -90,7 +90,7 @@ func TestQuery(test *testing.T) {
 			stats.MetricQuery{
 				BaseQuery: stats.BaseQuery{
 					Where: map[string]any{
-						stats.TYPE: stats.CourseMetricTypeGradingTime,
+						stats.TYPE_KEY: stats.CourseMetricTypeGradingTime,
 					},
 				},
 			},
@@ -161,31 +161,31 @@ var testRecords []*stats.BaseMetric = []*stats.BaseMetric{
 	&stats.BaseMetric{
 		Timestamp: timestamp.FromMSecs(100),
 		Attributes: map[string]any{
-			stats.TYPE:          stats.CourseMetricTypeGradingTime,
-			stats.COURSE_ID:     db.TEST_COURSE_ID,
-			stats.ASSIGNMENT_ID: "A1",
-			stats.USER_EMAIL:    "U1",
-			stats.VALUE:         100,
+			stats.TYPE_KEY:          stats.CourseMetricTypeGradingTime,
+			stats.COURSE_ID_KEY:     db.TEST_COURSE_ID,
+			stats.ASSIGNMENT_ID_KEY: "A1",
+			stats.USER_EMAIL_KEY:    "U1",
+			stats.VALUE_KEY:         100,
 		},
 	},
 	&stats.BaseMetric{
 		Timestamp: timestamp.FromMSecs(200),
 		Attributes: map[string]any{
-			stats.TYPE:          stats.CourseMetricTypeUnknown,
-			stats.COURSE_ID:     db.TEST_COURSE_ID,
-			stats.ASSIGNMENT_ID: "A2",
-			stats.USER_EMAIL:    "U1",
-			stats.VALUE:         200,
+			stats.TYPE_KEY:          stats.CourseMetricTypeUnknown,
+			stats.COURSE_ID_KEY:     db.TEST_COURSE_ID,
+			stats.ASSIGNMENT_ID_KEY: "A2",
+			stats.USER_EMAIL_KEY:    "U1",
+			stats.VALUE_KEY:         200,
 		},
 	},
 	&stats.BaseMetric{
 		Timestamp: timestamp.FromMSecs(300),
 		Attributes: map[string]any{
-			stats.TYPE:          stats.CourseMetricTypeGradingTime,
-			stats.COURSE_ID:     db.TEST_COURSE_ID,
-			stats.ASSIGNMENT_ID: "A3",
-			stats.USER_EMAIL:    "U2",
-			stats.VALUE:         300,
+			stats.TYPE_KEY:          stats.CourseMetricTypeGradingTime,
+			stats.COURSE_ID_KEY:     db.TEST_COURSE_ID,
+			stats.ASSIGNMENT_ID_KEY: "A3",
+			stats.USER_EMAIL_KEY:    "U2",
+			stats.VALUE_KEY:         300,
 		},
 	},
 }

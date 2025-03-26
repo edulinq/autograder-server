@@ -29,8 +29,8 @@ func TestMetric(test *testing.T) {
 			endpoint: "users/list",
 			expectedMetric: &stats.BaseMetric{
 				Attributes: map[string]any{
-					stats.ENDPOINT:   "/api/v03/users/list",
-					stats.USER_EMAIL: "server-admin@test.edulinq.org",
+					stats.ENDPOINT_KEY:   "/api/v03/users/list",
+					stats.USER_EMAIL_KEY: "server-admin@test.edulinq.org",
 				},
 			},
 		},
@@ -41,9 +41,9 @@ func TestMetric(test *testing.T) {
 			endpoint: "courses/users/list",
 			expectedMetric: &stats.BaseMetric{
 				Attributes: map[string]any{
-					stats.ENDPOINT:   "/api/v03/courses/users/list",
-					stats.USER_EMAIL: "server-admin@test.edulinq.org",
-					stats.COURSE_ID:  "course101",
+					stats.ENDPOINT_KEY:   "/api/v03/courses/users/list",
+					stats.USER_EMAIL_KEY: "server-admin@test.edulinq.org",
+					stats.COURSE_ID_KEY:  "course101",
 				},
 			},
 		},
@@ -54,10 +54,10 @@ func TestMetric(test *testing.T) {
 			endpoint: "courses/assignments/get",
 			expectedMetric: &stats.BaseMetric{
 				Attributes: map[string]any{
-					stats.ENDPOINT:      "/api/v03/courses/assignments/get",
-					stats.USER_EMAIL:    "server-admin@test.edulinq.org",
-					stats.COURSE_ID:     "course101",
-					stats.ASSIGNMENT_ID: "hw0",
+					stats.ENDPOINT_KEY:      "/api/v03/courses/assignments/get",
+					stats.USER_EMAIL_KEY:    "server-admin@test.edulinq.org",
+					stats.COURSE_ID_KEY:     "course101",
+					stats.ASSIGNMENT_ID_KEY: "hw0",
 				},
 			},
 		},
@@ -69,9 +69,9 @@ func TestMetric(test *testing.T) {
 			expectedLocator: "-041",
 			expectedMetric: &stats.BaseMetric{
 				Attributes: map[string]any{
-					stats.ENDPOINT:   "/api/v03/users/list",
-					stats.USER_EMAIL: "course-student@test.edulinq.org",
-					stats.LOCATOR:    "-041",
+					stats.ENDPOINT_KEY:   "/api/v03/users/list",
+					stats.USER_EMAIL_KEY: "course-student@test.edulinq.org",
+					stats.LOCATOR_KEY:    "-041",
 				},
 			},
 		},
@@ -83,10 +83,10 @@ func TestMetric(test *testing.T) {
 			expectedLocator: "-020",
 			expectedMetric: &stats.BaseMetric{
 				Attributes: map[string]any{
-					stats.ENDPOINT:   "/api/v03/courses/users/list",
-					stats.USER_EMAIL: "course-student@test.edulinq.org",
-					stats.COURSE_ID:  "course101",
-					stats.LOCATOR:    "-020",
+					stats.ENDPOINT_KEY:   "/api/v03/courses/users/list",
+					stats.USER_EMAIL_KEY: "course-student@test.edulinq.org",
+					stats.COURSE_ID_KEY:  "course101",
+					stats.LOCATOR_KEY:    "-020",
 				},
 			},
 		},
@@ -98,8 +98,8 @@ func TestMetric(test *testing.T) {
 			expectedLocator: "-040",
 			expectedMetric: &stats.BaseMetric{
 				Attributes: map[string]any{
-					stats.ENDPOINT: "/api/v03/courses/assignments/get",
-					stats.LOCATOR:  "-040",
+					stats.ENDPOINT_KEY: "/api/v03/courses/assignments/get",
+					stats.LOCATOR_KEY:  "-040",
 				},
 			},
 		},
@@ -112,10 +112,10 @@ func TestMetric(test *testing.T) {
 			expectedLocator: "-022",
 			expectedMetric: &stats.BaseMetric{
 				Attributes: map[string]any{
-					stats.ENDPOINT:      "/api/v03/courses/assignments/get",
-					stats.COURSE_ID:     "course101",
-					stats.ASSIGNMENT_ID: "zzz",
-					stats.LOCATOR:       "-022",
+					stats.ENDPOINT_KEY:      "/api/v03/courses/assignments/get",
+					stats.COURSE_ID_KEY:     "course101",
+					stats.ASSIGNMENT_ID_KEY: "zzz",
+					stats.LOCATOR_KEY:       "-022",
 				},
 			},
 		},
@@ -161,20 +161,20 @@ func TestMetric(test *testing.T) {
 			continue
 		}
 
-		if metric.Attributes != nil && metric.Attributes[stats.SENDER] == "" {
+		if metric.Attributes != nil && metric.Attributes[stats.SENDER_KEY] == "" {
 			test.Errorf("Case %d: Sender field was not properly populated: '%v'.", i, util.MustToJSONIndent(metric))
 			continue
 		}
 
-		if metric.Attributes != nil && metric.Attributes[stats.DURATION] == 0 {
+		if metric.Attributes != nil && metric.Attributes[stats.DURATION_KEY] == 0 {
 			test.Errorf("Case %d: Duration field was not properly populated: '%v'.", i, util.MustToJSONIndent(metric))
 			continue
 		}
 
 		// Zero out non-deterministic fields.
 		metric.Timestamp = 0
-		delete(metric.Attributes, stats.SENDER)
-		delete(metric.Attributes, stats.DURATION)
+		delete(metric.Attributes, stats.SENDER_KEY)
+		delete(metric.Attributes, stats.DURATION_KEY)
 
 		if !reflect.DeepEqual(metric, testCase.expectedMetric) {
 			test.Errorf("Case %d: Stored metric is not as expected. Expected: '%v', Actual: '%v'.", i, util.MustToJSONIndent(testCase.expectedMetric), util.MustToJSONIndent(metric))

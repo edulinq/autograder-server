@@ -7,33 +7,33 @@ import (
 )
 
 const (
-	SENDER   = "sender"
-	ENDPOINT = "endpoint"
-	LOCATOR  = "locator"
-	DURATION = "duration"
+	DURATION_KEY = "duration"
+	ENDPOINT_KEY = "endpoint"
+	LOCATOR_KEY  = "locator"
+	SENDER_KEY   = "sender"
 )
 
 func AsyncStoreAPIRequestMetric(startTime timestamp.Timestamp, endTime timestamp.Timestamp, sender string, endpoint string, userEmail string, courseID string, assignmentID string, locator string) {
 	attributes := map[string]any{
-		SENDER:   sender,
-		ENDPOINT: endpoint,
-		DURATION: uint64((endTime - startTime).ToMSecs()),
+		SENDER_KEY:   sender,
+		ENDPOINT_KEY: endpoint,
+		DURATION_KEY: uint64((endTime - startTime).ToMSecs()),
 	}
 
 	if userEmail != "" {
-		attributes[USER_EMAIL] = userEmail
+		attributes[USER_EMAIL_KEY] = userEmail
 	}
 
 	if courseID != "" {
-		attributes[COURSE_ID] = courseID
+		attributes[COURSE_ID_KEY] = courseID
 	}
 
 	if assignmentID != "" {
-		attributes[ASSIGNMENT_ID] = assignmentID
+		attributes[ASSIGNMENT_ID_KEY] = assignmentID
 	}
 
 	if locator != "" {
-		attributes[LOCATOR] = locator
+		attributes[LOCATOR_KEY] = locator
 	}
 
 	metric := &BaseMetric{

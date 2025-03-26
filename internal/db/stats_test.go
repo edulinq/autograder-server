@@ -52,11 +52,11 @@ func (this *DBTests) DBTestStoreCourseMetrics(test *testing.T) {
 	testRecord := stats.BaseMetric{
 		Timestamp: timestamp.Now(),
 		Attributes: map[string]any{
-			stats.TYPE:          stats.CourseMetricTypeGradingTime,
-			stats.COURSE_ID:     "C",
-			stats.ASSIGNMENT_ID: "A",
-			stats.USER_EMAIL:    "U",
-			stats.VALUE:         float64(100),
+			stats.TYPE_KEY:          stats.CourseMetricTypeGradingTime,
+			stats.COURSE_ID_KEY:     "C",
+			stats.ASSIGNMENT_ID_KEY: "A",
+			stats.USER_EMAIL_KEY:    "U",
+			stats.VALUE_KEY:         float64(100),
 		},
 	}
 
@@ -95,13 +95,13 @@ func (this *DBTests) DBTestStoreAPIRequestMetrics(test *testing.T) {
 	testRecord := stats.BaseMetric{
 		Timestamp: timestamp.Now(),
 		Attributes: map[string]any{
-			stats.SENDER:        "2",
-			stats.ENDPOINT:      "E",
-			stats.USER_EMAIL:    "U",
-			stats.COURSE_ID:     "C",
-			stats.ASSIGNMENT_ID: "A",
-			stats.LOCATOR:       "1",
-			stats.DURATION:      float64(100),
+			stats.SENDER_KEY:        "2",
+			stats.ENDPOINT_KEY:      "E",
+			stats.USER_EMAIL_KEY:    "U",
+			stats.COURSE_ID_KEY:     "C",
+			stats.ASSIGNMENT_ID_KEY: "A",
+			stats.LOCATOR_KEY:       "1",
+			stats.DURATION_KEY:      float64(100),
 		},
 	}
 

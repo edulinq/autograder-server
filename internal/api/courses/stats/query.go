@@ -25,7 +25,7 @@ func HandleQuery(request *QueryRequest) (*QueryResponse, *core.APIError) {
 	}
 
 	// The request must be for the given course.
-	request.Where[stats.COURSE_ID] = request.Course.ID
+	request.Where[stats.COURSE_ID_KEY] = request.Course.ID
 
 	records, err := db.GetCourseMetrics(request.MetricQuery)
 	if err != nil {

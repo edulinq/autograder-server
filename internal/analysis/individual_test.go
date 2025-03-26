@@ -62,7 +62,7 @@ func TestIndividualAnalysisBase(test *testing.T) {
 	courseMetricQuery := stats.MetricQuery{
 		BaseQuery: stats.BaseQuery{
 			Where: map[string]any{
-				stats.COURSE_ID: "course101",
+				stats.COURSE_ID_KEY: "course101",
 			},
 		},
 	}
@@ -78,11 +78,11 @@ func TestIndividualAnalysisBase(test *testing.T) {
 			Timestamp: timestamp.Zero(),
 			Attributes: map[string]any{
 				stats.ATTRIBUTE_KEY_ANALYSIS: "individual",
-				stats.TYPE:                   stats.CourseMetricTypeCodeAnalysisTime,
-				stats.COURSE_ID:              "course101",
-				stats.ASSIGNMENT_ID:          "hw0",
-				stats.USER_EMAIL:             "server-admin@test.edulinq.org",
-				stats.VALUE:                  0,
+				stats.TYPE_KEY:               stats.CourseMetricTypeCodeAnalysisTime,
+				stats.COURSE_ID_KEY:          "course101",
+				stats.ASSIGNMENT_ID_KEY:      "hw0",
+				stats.USER_EMAIL_KEY:         "server-admin@test.edulinq.org",
+				stats.VALUE_KEY:              0,
 			},
 		},
 	}
@@ -95,7 +95,7 @@ func TestIndividualAnalysisBase(test *testing.T) {
 			result.Attributes = make(map[string]any)
 		}
 
-		result.Attributes[stats.VALUE] = 0
+		result.Attributes[stats.VALUE_KEY] = 0
 	}
 
 	if !reflect.DeepEqual(expectedStats, results) {
