@@ -3,7 +3,9 @@ package stats
 import (
 	"slices"
 
+	"github.com/edulinq/autograder/internal/log"
 	"github.com/edulinq/autograder/internal/timestamp"
+	"github.com/edulinq/autograder/internal/util"
 )
 
 type Query interface {
@@ -31,6 +33,41 @@ type BaseQuery struct {
 	// Define how the results should be sorted by time.
 	// -1 for ascending, 0 for no sorting, 1 for descending.
 	Sort int `json:"sort"`
+
+	// Filter results by only including metrics that match specific attribute field values.
+	// Keys are field names (e.g., "course") and values are what to include (e.g., course101).
+	// This filter is applied after all other BaseQuery conditions are applied.
+	Where map[string]any `json:"where,omitempty"`
+}
+
+type MetricQuery struct {
+	BaseQuery
+}
+
+func (this MetricQuery) Match(metric *BaseMetric) bool {
+	metricJSONMap, err := util.ToJSONMap(metric)
+	if err != nil {
+		log.Error("Failed to convert metric to a JSON map.", err)
+		return false
+	}
+
+	attributes, ok := metricJSONMap[ATTRIBUTES].(map[string]any)
+	if !ok {
+		return false
+	}
+
+	for field, value := range this.Where {
+		fieldValue, exists := attributes[field]
+		if !exists {
+			return false
+		}
+
+		if value != "" && fieldValue != value {
+			return false
+		}
+	}
+
+	return true
 }
 
 func (this BaseQuery) Match(record Metric) bool {

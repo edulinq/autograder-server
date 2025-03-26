@@ -8,7 +8,7 @@ import (
 	"github.com/edulinq/autograder/internal/util"
 )
 
-func runStoreCourseMetricTest(test *testing.T, storeFunc func(), expectedMetric *CourseMetric) {
+func runStoreCourseMetricTest(test *testing.T, storeFunc func(), expectedMetric *BaseMetric) {
 	defer clearBackend()
 
 	// Ensure that there is no backend set during testing.
@@ -39,15 +39,15 @@ func runStoreCourseMetricTest(test *testing.T, storeFunc func(), expectedMetric 
 }
 
 func TestStoreCourseGradingTimeBase(test *testing.T) {
-	expected := &CourseMetric{
-		BaseMetric: BaseMetric{
-			Timestamp: timestamp.Zero(),
+	expected := &BaseMetric{
+		Timestamp: timestamp.Zero(),
+		Attributes: map[string]any{
+			TYPE:          CourseMetricTypeGradingTime,
+			COURSE_ID:     "C",
+			ASSIGNMENT_ID: "A",
+			USER_EMAIL:    "U",
+			VALUE:         uint64(100),
 		},
-		Type:         CourseMetricTypeGradingTime,
-		CourseID:     "C",
-		AssignmentID: "A",
-		UserEmail:    "U",
-		Value:        100,
 	}
 
 	runStoreCourseMetricTest(
@@ -58,16 +58,16 @@ func TestStoreCourseGradingTimeBase(test *testing.T) {
 }
 
 func TestStoreCourseTaskTimeBase(test *testing.T) {
-	expected := &CourseMetric{
-		BaseMetric: BaseMetric{
-			Timestamp:  timestamp.Zero(),
-			Attributes: map[string]any{ATTRIBUTE_KEY_TASK: "T"},
+	expected := &BaseMetric{
+		Timestamp: timestamp.Zero(),
+		Attributes: map[string]any{
+			ATTRIBUTE_KEY_TASK: "T",
+			TYPE:               CourseMetricTypeTaskTime,
+			COURSE_ID:          "C",
+			ASSIGNMENT_ID:      "A",
+			USER_EMAIL:         "U",
+			VALUE:              uint64(100),
 		},
-		Type:         CourseMetricTypeTaskTime,
-		CourseID:     "C",
-		AssignmentID: "A",
-		UserEmail:    "U",
-		Value:        100,
 	}
 
 	runStoreCourseMetricTest(

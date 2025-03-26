@@ -59,32 +59,43 @@ func TestIndividualAnalysisBase(test *testing.T) {
 	// Test again, which should pull from the cache.
 	testIndividual(test, ids, expected, len(expected))
 
+	courseMetricQuery := stats.MetricQuery{
+		BaseQuery: stats.BaseQuery{
+			Where: map[string]any{
+				stats.COURSE_ID: "course101",
+			},
+		},
+	}
+
 	// After both runs, there should be exactly one stat record (since the second one was cached).
-	results, err := db.GetCourseMetrics(stats.CourseMetricQuery{CourseID: "course101"})
+	results, err := db.GetCourseMetrics(courseMetricQuery)
 	if err != nil {
 		test.Fatalf("Failed to do stats query: '%v'.", err)
 	}
 
-	expectedStats := []*stats.CourseMetric{
-		&stats.CourseMetric{
-			BaseMetric: stats.BaseMetric{
-				Timestamp: timestamp.Zero(),
-				Attributes: map[string]any{
-					stats.ATTRIBUTE_KEY_ANALYSIS: "individual",
-				},
+	expectedStats := []*stats.BaseMetric{
+		&stats.BaseMetric{
+			Timestamp: timestamp.Zero(),
+			Attributes: map[string]any{
+				stats.ATTRIBUTE_KEY_ANALYSIS: "individual",
+				stats.TYPE:                   stats.CourseMetricTypeCodeAnalysisTime,
+				stats.COURSE_ID:              "course101",
+				stats.ASSIGNMENT_ID:          "hw0",
+				stats.USER_EMAIL:             "server-admin@test.edulinq.org",
+				stats.VALUE:                  0,
 			},
-			Type:         stats.CourseMetricTypeCodeAnalysisTime,
-			CourseID:     "course101",
-			AssignmentID: "hw0",
-			UserEmail:    "server-admin@test.edulinq.org",
-			Value:        0,
 		},
 	}
 
 	// Zero out the query results.
 	for _, result := range results {
 		result.Timestamp = timestamp.Zero()
-		result.Value = 0
+
+		if result.Attributes == nil {
+			result.Attributes = make(map[string]any)
+		}
+
+		result.Attributes[stats.VALUE] = 0
 	}
 
 	if !reflect.DeepEqual(expectedStats, results) {

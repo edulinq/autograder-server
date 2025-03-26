@@ -21,15 +21,17 @@ func TestMetric(test *testing.T) {
 		endpoint        string
 		expectedLocator string
 		fields          map[string]any
-		expectedMetric  *stats.APIRequestMetric
+		expectedMetric  *stats.BaseMetric
 	}{
-		// Valid permissions, APIRequestUserContext request.
+		// Valid permissions, APIRequestCourseUserContext request.
 		{
 			email:    "server-admin",
 			endpoint: "users/list",
-			expectedMetric: &stats.APIRequestMetric{
-				Endpoint:  "/api/v03/users/list",
-				UserEmail: "server-admin@test.edulinq.org",
+			expectedMetric: &stats.BaseMetric{
+				Attributes: map[string]any{
+					stats.ENDPOINT:   "/api/v03/users/list",
+					stats.USER_EMAIL: "server-admin@test.edulinq.org",
+				},
 			},
 		},
 
@@ -37,10 +39,12 @@ func TestMetric(test *testing.T) {
 		{
 			email:    "server-admin",
 			endpoint: "courses/users/list",
-			expectedMetric: &stats.APIRequestMetric{
-				Endpoint:  "/api/v03/courses/users/list",
-				UserEmail: "server-admin@test.edulinq.org",
-				CourseID:  "course101",
+			expectedMetric: &stats.BaseMetric{
+				Attributes: map[string]any{
+					stats.ENDPOINT:   "/api/v03/courses/users/list",
+					stats.USER_EMAIL: "server-admin@test.edulinq.org",
+					stats.COURSE_ID:  "course101",
+				},
 			},
 		},
 
@@ -48,11 +52,13 @@ func TestMetric(test *testing.T) {
 		{
 			email:    "server-admin",
 			endpoint: "courses/assignments/get",
-			expectedMetric: &stats.APIRequestMetric{
-				Endpoint:     "/api/v03/courses/assignments/get",
-				UserEmail:    "server-admin@test.edulinq.org",
-				CourseID:     "course101",
-				AssignmentID: "hw0",
+			expectedMetric: &stats.BaseMetric{
+				Attributes: map[string]any{
+					stats.ENDPOINT:      "/api/v03/courses/assignments/get",
+					stats.USER_EMAIL:    "server-admin@test.edulinq.org",
+					stats.COURSE_ID:     "course101",
+					stats.ASSIGNMENT_ID: "hw0",
+				},
 			},
 		},
 
@@ -61,10 +67,12 @@ func TestMetric(test *testing.T) {
 			email:           "course-student",
 			endpoint:        "users/list",
 			expectedLocator: "-041",
-			expectedMetric: &stats.APIRequestMetric{
-				Endpoint:  "/api/v03/users/list",
-				UserEmail: "course-student@test.edulinq.org",
-				Locator:   "-041",
+			expectedMetric: &stats.BaseMetric{
+				Attributes: map[string]any{
+					stats.ENDPOINT:   "/api/v03/users/list",
+					stats.USER_EMAIL: "course-student@test.edulinq.org",
+					stats.LOCATOR:    "-041",
+				},
 			},
 		},
 
@@ -73,11 +81,13 @@ func TestMetric(test *testing.T) {
 			email:           "course-student",
 			endpoint:        "courses/users/list",
 			expectedLocator: "-020",
-			expectedMetric: &stats.APIRequestMetric{
-				Endpoint:  "/api/v03/courses/users/list",
-				UserEmail: "course-student@test.edulinq.org",
-				CourseID:  "course101",
-				Locator:   "-020",
+			expectedMetric: &stats.BaseMetric{
+				Attributes: map[string]any{
+					stats.ENDPOINT:   "/api/v03/courses/users/list",
+					stats.USER_EMAIL: "course-student@test.edulinq.org",
+					stats.COURSE_ID:  "course101",
+					stats.LOCATOR:    "-020",
+				},
 			},
 		},
 
@@ -86,9 +96,11 @@ func TestMetric(test *testing.T) {
 			email:           "server-user",
 			endpoint:        "courses/assignments/get",
 			expectedLocator: "-040",
-			expectedMetric: &stats.APIRequestMetric{
-				Endpoint: "/api/v03/courses/assignments/get",
-				Locator:  "-040",
+			expectedMetric: &stats.BaseMetric{
+				Attributes: map[string]any{
+					stats.ENDPOINT: "/api/v03/courses/assignments/get",
+					stats.LOCATOR:  "-040",
+				},
 			},
 		},
 
@@ -98,11 +110,13 @@ func TestMetric(test *testing.T) {
 			endpoint:        "courses/assignments/get",
 			fields:          map[string]any{"assignment-id": "zzz"},
 			expectedLocator: "-022",
-			expectedMetric: &stats.APIRequestMetric{
-				Endpoint:     "/api/v03/courses/assignments/get",
-				CourseID:     "course101",
-				AssignmentID: "zzz",
-				Locator:      "-022",
+			expectedMetric: &stats.BaseMetric{
+				Attributes: map[string]any{
+					stats.ENDPOINT:      "/api/v03/courses/assignments/get",
+					stats.COURSE_ID:     "course101",
+					stats.ASSIGNMENT_ID: "zzz",
+					stats.LOCATOR:       "-022",
+				},
 			},
 		},
 	}
@@ -128,7 +142,7 @@ func TestMetric(test *testing.T) {
 			continue
 		}
 
-		metrics, err := db.GetAPIRequestMetrics(stats.APIRequestMetricQuery{})
+		metrics, err := db.GetAPIRequestMetrics(stats.MetricQuery{})
 		if err != nil {
 			test.Errorf("Case %d: Unable to get API request metrics: '%v'.", i, err)
 			continue
@@ -147,20 +161,20 @@ func TestMetric(test *testing.T) {
 			continue
 		}
 
-		if metric.Sender == "" {
+		if metric.Attributes != nil && metric.Attributes[stats.SENDER] == "" {
 			test.Errorf("Case %d: Sender field was not properly populated: '%v'.", i, util.MustToJSONIndent(metric))
 			continue
 		}
 
-		if metric.Duration == 0 {
+		if metric.Attributes != nil && metric.Attributes[stats.DURATION] == 0 {
 			test.Errorf("Case %d: Duration field was not properly populated: '%v'.", i, util.MustToJSONIndent(metric))
 			continue
 		}
 
 		// Zero out non-deterministic fields.
 		metric.Timestamp = 0
-		metric.Sender = ""
-		metric.Duration = 0
+		delete(metric.Attributes, stats.SENDER)
+		delete(metric.Attributes, stats.DURATION)
 
 		if !reflect.DeepEqual(metric, testCase.expectedMetric) {
 			test.Errorf("Case %d: Stored metric is not as expected. Expected: '%v', Actual: '%v'.", i, util.MustToJSONIndent(testCase.expectedMetric), util.MustToJSONIndent(metric))

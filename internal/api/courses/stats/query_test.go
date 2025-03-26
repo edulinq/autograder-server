@@ -17,23 +17,23 @@ func TestQuery(test *testing.T) {
 	testCases := []struct {
 		email            string
 		permErrorLocator string
-		query            stats.CourseMetricQuery
+		query            stats.MetricQuery
 		expectedValues   []int
 	}{
 		// Base
-		{"server-admin", "", stats.CourseMetricQuery{}, []int{100, 200, 300}},
-		{"server-admin", "", stats.CourseMetricQuery{BaseQuery: stats.BaseQuery{Sort: 1}}, []int{300, 200, 100}},
-		{"server-admin", "", stats.CourseMetricQuery{BaseQuery: stats.BaseQuery{After: timestamp.FromMSecs(150)}}, []int{200, 300}},
+		{"server-admin", "", stats.MetricQuery{}, []int{100, 200, 300}},
+		{"server-admin", "", stats.MetricQuery{BaseQuery: stats.BaseQuery{Sort: 1}}, []int{300, 200, 100}},
+		{"server-admin", "", stats.MetricQuery{BaseQuery: stats.BaseQuery{After: timestamp.FromMSecs(150)}}, []int{200, 300}},
 
 		// Course Specific
-		{"server-admin", "", stats.CourseMetricQuery{AssignmentID: "A2"}, []int{200}},
-		{"server-admin", "", stats.CourseMetricQuery{AssignmentID: "ZZZ"}, nil},
-		{"server-admin", "", stats.CourseMetricQuery{UserEmail: "U1"}, []int{100, 200}},
-		{"server-admin", "", stats.CourseMetricQuery{Type: stats.CourseMetricTypeGradingTime}, []int{100, 300}},
+		{"server-admin", "", stats.MetricQuery{BaseQuery: stats.BaseQuery{Where: map[string]any{stats.ASSIGNMENT_ID: "A2"}}}, []int{200}},
+		{"server-admin", "", stats.MetricQuery{BaseQuery: stats.BaseQuery{Where: map[string]any{stats.ASSIGNMENT_ID: "ZZZ"}}}, nil},
+		{"server-admin", "", stats.MetricQuery{BaseQuery: stats.BaseQuery{Where: map[string]any{stats.USER_EMAIL: "U1"}}}, []int{100, 200}},
+		{"server-admin", "", stats.MetricQuery{BaseQuery: stats.BaseQuery{Where: map[string]any{stats.TYPE: stats.CourseMetricTypeGradingTime}}}, []int{100, 300}},
 
 		// Error
-		{"server-user", "-040", stats.CourseMetricQuery{}, nil},
-		{"course-student", "-020", stats.CourseMetricQuery{}, nil},
+		{"server-user", "-040", stats.MetricQuery{}, nil},
+		{"course-student", "-020", stats.MetricQuery{}, nil},
 	}
 
 	for _, record := range testRecords {
@@ -81,35 +81,35 @@ func TestQuery(test *testing.T) {
 	}
 }
 
-var testRecords []*stats.CourseMetric = []*stats.CourseMetric{
-	&stats.CourseMetric{
-		BaseMetric: stats.BaseMetric{
-			Timestamp: timestamp.FromMSecs(100),
+var testRecords []*stats.BaseMetric = []*stats.BaseMetric{
+	&stats.BaseMetric{
+		Timestamp: timestamp.FromMSecs(100),
+		Attributes: map[string]any{
+			stats.TYPE:          stats.CourseMetricTypeGradingTime,
+			stats.COURSE_ID:     db.TEST_COURSE_ID,
+			stats.ASSIGNMENT_ID: "A1",
+			stats.USER_EMAIL:    "U1",
+			stats.VALUE:         100,
 		},
-		Type:         stats.CourseMetricTypeGradingTime,
-		CourseID:     db.TEST_COURSE_ID,
-		AssignmentID: "A1",
-		UserEmail:    "U1",
-		Value:        100,
 	},
-	&stats.CourseMetric{
-		BaseMetric: stats.BaseMetric{
-			Timestamp: timestamp.FromMSecs(200),
+	&stats.BaseMetric{
+		Timestamp: timestamp.FromMSecs(200),
+		Attributes: map[string]any{
+			stats.TYPE:          stats.CourseMetricTypeUnknown,
+			stats.COURSE_ID:     db.TEST_COURSE_ID,
+			stats.ASSIGNMENT_ID: "A2",
+			stats.USER_EMAIL:    "U1",
+			stats.VALUE:         200,
 		},
-		Type:         stats.CourseMetricTypeUnknown,
-		CourseID:     db.TEST_COURSE_ID,
-		AssignmentID: "A2",
-		UserEmail:    "U1",
-		Value:        200,
 	},
-	&stats.CourseMetric{
-		BaseMetric: stats.BaseMetric{
-			Timestamp: timestamp.FromMSecs(300),
+	&stats.BaseMetric{
+		Timestamp: timestamp.FromMSecs(300),
+		Attributes: map[string]any{
+			stats.TYPE:          stats.CourseMetricTypeGradingTime,
+			stats.COURSE_ID:     db.TEST_COURSE_ID,
+			stats.ASSIGNMENT_ID: "A3",
+			stats.USER_EMAIL:    "U2",
+			stats.VALUE:         300,
 		},
-		Type:         stats.CourseMetricTypeGradingTime,
-		CourseID:     db.TEST_COURSE_ID,
-		AssignmentID: "A3",
-		UserEmail:    "U2",
-		Value:        300,
 	},
 }

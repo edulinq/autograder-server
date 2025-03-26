@@ -49,19 +49,23 @@ func (this *DBTests) DBTestStoreCourseMetrics(test *testing.T) {
 	Clear()
 	defer Clear()
 
-	testRecord := stats.CourseMetric{
-		BaseMetric: stats.BaseMetric{
-			Timestamp: timestamp.Now(),
+	testRecord := stats.BaseMetric{
+		Timestamp: timestamp.Now(),
+		Attributes: map[string]any{
+			stats.TYPE:          stats.CourseMetricTypeGradingTime,
+			stats.COURSE_ID:     "C",
+			stats.ASSIGNMENT_ID: "A",
+			stats.USER_EMAIL:    "U",
+			stats.VALUE:         float64(100),
 		},
-		Type:         stats.CourseMetricTypeGradingTime,
-		CourseID:     "C",
-		AssignmentID: "A",
-		UserEmail:    "U",
-		Value:        100,
 	}
 
-	query := stats.CourseMetricQuery{
-		CourseID: "C",
+	query := stats.MetricQuery{
+		BaseQuery: stats.BaseQuery{
+			Where: map[string]any{
+				"course": "C",
+			},
+		},
 	}
 
 	err := StoreCourseMetric(&testRecord)
@@ -88,17 +92,17 @@ func (this *DBTests) DBTestStoreAPIRequestMetrics(test *testing.T) {
 	Clear()
 	defer Clear()
 
-	testRecord := stats.APIRequestMetric{
-		BaseMetric: stats.BaseMetric{
-			Timestamp: timestamp.Now(),
+	testRecord := stats.BaseMetric{
+		Timestamp: timestamp.Now(),
+		Attributes: map[string]any{
+			stats.SENDER:        "2",
+			stats.ENDPOINT:      "E",
+			stats.USER_EMAIL:    "U",
+			stats.COURSE_ID:     "C",
+			stats.ASSIGNMENT_ID: "A",
+			stats.LOCATOR:       "1",
+			stats.DURATION:      float64(100),
 		},
-		Sender:       "2",
-		Endpoint:     "E",
-		UserEmail:    "U",
-		CourseID:     "C",
-		AssignmentID: "A",
-		Locator:      "1",
-		Duration:     100,
 	}
 
 	err := StoreAPIRequestMetric(&testRecord)
@@ -106,7 +110,7 @@ func (this *DBTests) DBTestStoreAPIRequestMetrics(test *testing.T) {
 		test.Fatalf("Failed to store stats: '%v'.", err)
 	}
 
-	query := stats.APIRequestMetricQuery{}
+	query := stats.MetricQuery{}
 
 	records, err := GetAPIRequestMetrics(query)
 	if err != nil {

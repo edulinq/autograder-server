@@ -17,36 +17,35 @@ func TestQuery(test *testing.T) {
 	testCases := []struct {
 		email           string
 		expectedLocator string
-		query           stats.APIRequestMetricQuery
+		query           stats.MetricQuery
 		expectedValues  []int
 	}{
 		// Base
-		{"server-admin", "", stats.APIRequestMetricQuery{}, []int{100, 200, 300}},
-		{"server-admin", "", stats.APIRequestMetricQuery{BaseQuery: stats.BaseQuery{Sort: 1}}, []int{300, 200, 100}},
-		{"server-admin", "", stats.APIRequestMetricQuery{BaseQuery: stats.BaseQuery{After: timestamp.FromMSecs(150)}}, []int{200, 300}},
+		{"server-admin", "", stats.MetricQuery{}, []int{100, 200, 300}},
+		{"server-admin", "", stats.MetricQuery{BaseQuery: stats.BaseQuery{Sort: 1}}, []int{300, 200, 100}},
+		{"server-admin", "", stats.MetricQuery{BaseQuery: stats.BaseQuery{After: timestamp.FromMSecs(150)}}, []int{200, 300}},
 
 		// Course Specifc
-		{"server-admin", "", stats.APIRequestMetricQuery{AssignmentID: "A2"}, []int{200}},
-		{"server-admin", "", stats.APIRequestMetricQuery{AssignmentID: "zzz"}, nil},
-		{"server-admin", "", stats.APIRequestMetricQuery{UserEmail: "U1"}, []int{100, 200}},
-		{"server-admin", "", stats.APIRequestMetricQuery{UserEmail: "zzz"}, nil},
-		{"server-admin", "", stats.APIRequestMetricQuery{CourseID: "C1"}, []int{100}},
-		{"server-admin", "", stats.APIRequestMetricQuery{CourseID: "zzz"}, nil},
+		{"server-admin", "", stats.MetricQuery{BaseQuery: stats.BaseQuery{Where: map[string]any{stats.ASSIGNMENT_ID: "A2"}}}, []int{200}},
+		{"server-admin", "", stats.MetricQuery{BaseQuery: stats.BaseQuery{Where: map[string]any{stats.ASSIGNMENT_ID: "zzz"}}}, nil},
+		{"server-admin", "", stats.MetricQuery{BaseQuery: stats.BaseQuery{Where: map[string]any{stats.USER_EMAIL: "U1"}}}, []int{100, 200}},
+		{"server-admin", "", stats.MetricQuery{BaseQuery: stats.BaseQuery{Where: map[string]any{stats.USER_EMAIL: "zzz"}}}, nil},
+		{"server-admin", "", stats.MetricQuery{BaseQuery: stats.BaseQuery{Where: map[string]any{stats.COURSE_ID: "C1"}}}, []int{100}},
+		{"server-admin", "", stats.MetricQuery{BaseQuery: stats.BaseQuery{Where: map[string]any{stats.COURSE_ID: "zzz"}}}, nil},
 
 		// Endpoint Specific
-		{"server-admin", "", stats.APIRequestMetricQuery{Endpoint: "E1"}, []int{100}},
-		{"server-admin", "", stats.APIRequestMetricQuery{Endpoint: "zzz"}, nil},
+		{"server-admin", "", stats.MetricQuery{BaseQuery: stats.BaseQuery{Where: map[string]any{stats.ENDPOINT: "E1"}}}, []int{100}},
+		{"server-admin", "", stats.MetricQuery{BaseQuery: stats.BaseQuery{Where: map[string]any{stats.ENDPOINT: "zzz"}}}, nil},
 
 		// Sender Specific
-		{"server-admin", "", stats.APIRequestMetricQuery{Sender: "1"}, []int{100}},
-		{"server-admin", "", stats.APIRequestMetricQuery{Sender: "zzz"}, nil},
+		{"server-admin", "", stats.MetricQuery{BaseQuery: stats.BaseQuery{Where: map[string]any{stats.SENDER: "1"}}}, []int{100}},
+		{"server-admin", "", stats.MetricQuery{BaseQuery: stats.BaseQuery{Where: map[string]any{stats.SENDER: "zzz"}}}, nil},
 
 		// Locator Specific
-		{"server-admin", "", stats.APIRequestMetricQuery{Locator: "11"}, []int{100}},
-		{"server-admin", "", stats.APIRequestMetricQuery{Locator: "zzz"}, nil},
-
+		{"server-admin", "", stats.MetricQuery{BaseQuery: stats.BaseQuery{Where: map[string]any{stats.LOCATOR: "11"}}}, []int{100}},
+		{"server-admin", "", stats.MetricQuery{BaseQuery: stats.BaseQuery{Where: map[string]any{stats.LOCATOR: "zzz"}}}, nil},
 		// Error
-		{"server-user", "-041", stats.APIRequestMetricQuery{}, nil},
+		{"server-user", "-041", stats.MetricQuery{}, nil},
 	}
 
 	for i, testCase := range testCases {
@@ -101,41 +100,41 @@ func TestQuery(test *testing.T) {
 	}
 }
 
-var testRecords []*stats.APIRequestMetric = []*stats.APIRequestMetric{
-	&stats.APIRequestMetric{
-		BaseMetric: stats.BaseMetric{
-			Timestamp: timestamp.FromMSecs(100),
+var testRecords []*stats.BaseMetric = []*stats.BaseMetric{
+	&stats.BaseMetric{
+		Timestamp: timestamp.FromMSecs(100),
+		Attributes: map[string]any{
+			stats.SENDER:        "1",
+			stats.ENDPOINT:      "E1",
+			stats.USER_EMAIL:    "U1",
+			stats.ASSIGNMENT_ID: "A1",
+			stats.COURSE_ID:     "C1",
+			stats.LOCATOR:       "11",
+			stats.DURATION:      100,
 		},
-		Sender:       "1",
-		Endpoint:     "E1",
-		UserEmail:    "U1",
-		AssignmentID: "A1",
-		CourseID:     "C1",
-		Locator:      "11",
-		Duration:     100,
 	},
-	&stats.APIRequestMetric{
-		BaseMetric: stats.BaseMetric{
-			Timestamp: timestamp.FromMSecs(200),
+	&stats.BaseMetric{
+		Timestamp: timestamp.FromMSecs(200),
+		Attributes: map[string]any{
+			stats.SENDER:        "2",
+			stats.ENDPOINT:      "E2",
+			stats.USER_EMAIL:    "U1",
+			stats.COURSE_ID:     "C2",
+			stats.ASSIGNMENT_ID: "A2",
+			stats.LOCATOR:       "22",
+			stats.DURATION:      200,
 		},
-		Sender:       "2",
-		Endpoint:     "E2",
-		UserEmail:    "U1",
-		CourseID:     "C2",
-		AssignmentID: "A2",
-		Locator:      "22",
-		Duration:     200,
 	},
-	&stats.APIRequestMetric{
-		BaseMetric: stats.BaseMetric{
-			Timestamp: timestamp.FromMSecs(300),
+	&stats.BaseMetric{
+		Timestamp: timestamp.FromMSecs(300),
+		Attributes: map[string]any{
+			stats.SENDER:        "3",
+			stats.ENDPOINT:      "E3",
+			stats.USER_EMAIL:    "U3",
+			stats.COURSE_ID:     "C3",
+			stats.ASSIGNMENT_ID: "A3",
+			stats.LOCATOR:       "33",
+			stats.DURATION:      300,
 		},
-		Sender:       "3",
-		Endpoint:     "E3",
-		UserEmail:    "U3",
-		CourseID:     "C3",
-		AssignmentID: "A3",
-		Locator:      "33",
-		Duration:     300,
 	},
 }

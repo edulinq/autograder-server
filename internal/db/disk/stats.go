@@ -32,25 +32,31 @@ func (this *backend) StoreSystemStats(record *stats.SystemMetrics) error {
 	return util.AppendJSONLFile(this.getSystemStatsPath(), record)
 }
 
-func (this *backend) GetCourseMetrics(query stats.CourseMetricQuery) ([]*stats.CourseMetric, error) {
-	if query.CourseID == "" {
+func (this *backend) GetCourseMetrics(query stats.MetricQuery) ([]*stats.BaseMetric, error) {
+	courseID, ok := query.Where[stats.COURSE_ID].(string)
+	if !ok {
 		return nil, fmt.Errorf("When querying for course metrics, course ID must not be empty.")
 	}
 
-	path := this.getCourseStatsPath(query.CourseID)
+	path := this.getCourseStatsPath(courseID)
 
 	this.contextReadLock(path)
 	defer this.contextReadUnlock(path)
 
-	records, err := util.FilterJSONLFile(path, stats.CourseMetric{}, func(record *stats.CourseMetric) bool {
+	records, err := util.FilterJSONLFile(path, stats.BaseMetric{}, func(record *stats.BaseMetric) bool {
 		return query.Match(record)
 	})
 
 	return records, err
 }
 
-func (this *backend) StoreCourseMetric(record *stats.CourseMetric) error {
-	path := this.getCourseStatsPath(record.CourseID)
+func (this *backend) StoreCourseMetric(record *stats.BaseMetric) error {
+	courseID, ok := record.Attributes[stats.COURSE_ID].(string)
+	if !ok {
+		return fmt.Errorf("No course ID was given.")
+	}
+
+	path := this.getCourseStatsPath(courseID)
 
 	this.contextLock(path)
 	defer this.contextUnlock(path)
@@ -58,20 +64,20 @@ func (this *backend) StoreCourseMetric(record *stats.CourseMetric) error {
 	return util.AppendJSONLFile(path, record)
 }
 
-func (this *backend) GetAPIRequestMetrics(query stats.APIRequestMetricQuery) ([]*stats.APIRequestMetric, error) {
+func (this *backend) GetAPIRequestMetrics(query stats.MetricQuery) ([]*stats.BaseMetric, error) {
 	path := this.getAPIRequestStatsPath()
 
 	this.apiRequestLock.RLock()
 	defer this.apiRequestLock.RUnlock()
 
-	records, err := util.FilterJSONLFile(path, stats.APIRequestMetric{}, func(record *stats.APIRequestMetric) bool {
+	records, err := util.FilterJSONLFile(path, stats.BaseMetric{}, func(record *stats.BaseMetric) bool {
 		return query.Match(record)
 	})
 
 	return records, err
 }
 
-func (this *backend) StoreAPIRequestMetric(record *stats.APIRequestMetric) error {
+func (this *backend) StoreAPIRequestMetric(record *stats.BaseMetric) error {
 	path := this.getAPIRequestStatsPath()
 
 	this.apiRequestLock.Lock()

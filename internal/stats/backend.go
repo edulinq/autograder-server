@@ -11,11 +11,11 @@ type StorageBackend interface {
 	GetSystemStats(query Query) ([]*SystemMetrics, error)
 	StoreSystemStats(record *SystemMetrics) error
 
-	GetCourseMetrics(query CourseMetricQuery) ([]*CourseMetric, error)
-	StoreCourseMetric(record *CourseMetric) error
+	GetCourseMetrics(query MetricQuery) ([]*BaseMetric, error)
+	StoreCourseMetric(record *BaseMetric) error
 
-	GetAPIRequestMetrics(query APIRequestMetricQuery) ([]*APIRequestMetric, error)
-	StoreAPIRequestMetric(record *APIRequestMetric) error
+	GetAPIRequestMetrics(query MetricQuery) ([]*BaseMetric, error)
+	StoreAPIRequestMetric(record *BaseMetric) error
 }
 
 func SetStorageBackend(newBackend StorageBackend) {
@@ -55,7 +55,7 @@ func storeSystemStats(record *SystemMetrics) error {
 	return backend.StoreSystemStats(record)
 }
 
-func GetCourseMetrics(query CourseMetricQuery) ([]*CourseMetric, error) {
+func GetCourseMetrics(query MetricQuery) ([]*BaseMetric, error) {
 	backendLock.RLock()
 	defer backendLock.RUnlock()
 
@@ -66,7 +66,7 @@ func GetCourseMetrics(query CourseMetricQuery) ([]*CourseMetric, error) {
 	return backend.GetCourseMetrics(query)
 }
 
-func StoreCourseMetric(record *CourseMetric) error {
+func StoreCourseMetric(record *BaseMetric) error {
 	backendLock.RLock()
 	defer backendLock.RUnlock()
 
@@ -77,7 +77,7 @@ func StoreCourseMetric(record *CourseMetric) error {
 	return backend.StoreCourseMetric(record)
 }
 
-func GetAPIRequestMetrics(query APIRequestMetricQuery) ([]*APIRequestMetric, error) {
+func GetAPIRequestMetrics(query MetricQuery) ([]*BaseMetric, error) {
 	backendLock.RLock()
 	defer backendLock.RUnlock()
 
@@ -88,7 +88,7 @@ func GetAPIRequestMetrics(query APIRequestMetricQuery) ([]*APIRequestMetric, err
 	return backend.GetAPIRequestMetrics(query)
 }
 
-func StoreAPIRequestMetric(record *APIRequestMetric) error {
+func StoreAPIRequestMetric(record *BaseMetric) error {
 	backendLock.RLock()
 	defer backendLock.RUnlock()
 

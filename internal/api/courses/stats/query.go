@@ -10,26 +10,30 @@ type QueryRequest struct {
 	core.APIRequestCourseUserContext
 	core.MinCourseRoleAdmin
 
-	stats.CourseMetricQuery
+	stats.MetricQuery
 }
 
 type QueryResponse struct {
-	Records []*stats.CourseMetric `json:"results"`
+	Records []*stats.BaseMetric `json:"results"`
 }
 
 // Query metrics for a specific course.
 // Only the context course can be queried for, the target-course field will be ignored for this endpoint.
 func HandleQuery(request *QueryRequest) (*QueryResponse, *core.APIError) {
-	// The request must be for the given course.
-	request.CourseMetricQuery.CourseID = request.Course.ID
+	if request.Where == nil {
+		request.Where = make(map[string]any)
+	}
 
-	records, err := db.GetCourseMetrics(request.CourseMetricQuery)
+	// The request must be for the given course.
+	request.Where[stats.COURSE_ID] = request.Course.ID
+
+	records, err := db.GetCourseMetrics(request.MetricQuery)
 	if err != nil {
 		return nil, core.NewInternalError("-618", &request.APIRequestCourseUserContext, "Failed to query course stats.").Err(err)
 	}
 
 	response := QueryResponse{
-		Records: stats.ApplyBaseQuery(records, request.CourseMetricQuery.BaseQuery),
+		Records: stats.ApplyBaseQuery(records, request.MetricQuery.BaseQuery),
 	}
 
 	return &response, nil

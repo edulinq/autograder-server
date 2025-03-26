@@ -10,22 +10,22 @@ type QueryRequest struct {
 	core.APIRequestUserContext
 	core.MinServerRoleAdmin
 
-	stats.APIRequestMetricQuery
+	stats.MetricQuery
 }
 
 type QueryResponse struct {
-	Records []*stats.APIRequestMetric `json:"results"`
+	Records []*stats.BaseMetric `json:"results"`
 }
 
 // Query the API request stats for the server.
 func HandleQuery(request *QueryRequest) (*QueryResponse, *core.APIError) {
-	records, err := db.GetAPIRequestMetrics(request.APIRequestMetricQuery)
+	records, err := db.GetAPIRequestMetrics(request.MetricQuery)
 	if err != nil {
 		return nil, core.NewUserContextInternalError("-301", &request.APIRequestUserContext, "Failed to query API request stats.").Err(err)
 	}
 
 	response := QueryResponse{
-		Records: stats.ApplyBaseQuery(records, request.APIRequestMetricQuery.BaseQuery),
+		Records: stats.ApplyBaseQuery(records, request.BaseQuery),
 	}
 
 	return &response, nil

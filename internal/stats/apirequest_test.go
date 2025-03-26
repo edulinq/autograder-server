@@ -11,17 +11,17 @@ import (
 func TestStoreAPIRequestMetric(test *testing.T) {
 	defer clearBackend()
 
-	expectedMetric := &APIRequestMetric{
-		BaseMetric: BaseMetric{
-			Timestamp: timestamp.Zero(),
+	expectedMetric := &BaseMetric{
+		Timestamp: timestamp.Zero(),
+		Attributes: map[string]any{
+			SENDER:        "1",
+			ENDPOINT:      "E",
+			USER_EMAIL:    "U",
+			COURSE_ID:     "C",
+			ASSIGNMENT_ID: "A",
+			LOCATOR:       "2",
+			DURATION:      uint64(100),
 		},
-		Sender:       "1",
-		Endpoint:     "E",
-		UserEmail:    "U",
-		CourseID:     "C",
-		AssignmentID: "A",
-		Locator:      "2",
-		Duration:     100,
 	}
 
 	// Ensure that there is no backend set during testing.
