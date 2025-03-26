@@ -6,6 +6,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/edulinq/autograder/internal/common"
 	"github.com/edulinq/autograder/internal/timestamp"
 	"github.com/edulinq/autograder/internal/util"
 )
@@ -195,6 +196,21 @@ func (this *AssignmentAnalysisOptions) MatchRelpath(relpath string) bool {
 
 func (this *PairwiseKey) String() string {
 	return this[0] + PAIRWISE_KEY_DELIM + this[1]
+}
+
+// Get the representative course ID for this key.
+// Will return an empty string if there is no such course or the ID is malformed.
+func (this *PairwiseKey) Course() string {
+	if this == nil {
+		return ""
+	}
+
+	courseID, _, _, _, err := common.SplitFullSubmissionID(this[0])
+	if err != nil {
+		return ""
+	}
+
+	return courseID
 }
 
 func NewPairwiseAnalysis(pairwiseKey PairwiseKey, assignment *Assignment, similarities map[string][]*FileSimilarity, unmatches [][2]string, skipped []string) *PairwiseAnalysis {

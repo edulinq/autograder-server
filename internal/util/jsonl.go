@@ -131,6 +131,10 @@ func readline(reader *bufio.Reader) ([]byte, error) {
 // On most errors, the old file will remain the same.
 // The exception is if there is an error on the file move operation.
 func RemoveEntriesJSONLFile[T any](path string, emptyRecord T, shouldRemoveFunc func(record *T) bool) error {
+	if !PathExists(path) {
+		return nil
+	}
+
 	tempDir, err := MkDirTemp("jsonl-remove-entries-")
 	if err != nil {
 		return fmt.Errorf("Failed to create temp dir: '%w'.", err)
