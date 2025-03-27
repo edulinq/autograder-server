@@ -60,23 +60,25 @@ func WriteToNetworkConnection(connection net.Conn, data []byte) error {
 
 	responseBuffer := new(bytes.Buffer)
 
+	// TEST
+	fmt.Fprintln(os.Stderr, "\n\nTEST - Write")
+	fmt.Fprintln(os.Stderr, "Expected size    ", size)
+	fmt.Fprintln(os.Stderr, "    ", len(data))
+	// fmt.Fprintln(os.Stderr, "    ", data)
+	fmt.Fprintln(os.Stderr, "----\n")
+
 	err := binary.Write(responseBuffer, binary.BigEndian, size)
 	if err != nil {
+        fmt.Fprintln(os.Stderr, "binary write err:", err)
 		return err
 	}
 
 	responseBuffer.Write(data)
 
 	numBytesWritten, err := connection.Write(responseBuffer.Bytes())
-
-	// TEST
-	fmt.Fprintln(os.Stderr, "\n\nTEST - Write")
-	fmt.Fprintln(os.Stderr, "Expected size    ", size)
+    // TEST
 	fmt.Fprintln(os.Stderr, "Actual size    ", numBytesWritten)
-	fmt.Fprintln(os.Stderr, "    ", len(data))
-	fmt.Fprintln(os.Stderr, "    ", err)
-	// fmt.Fprintln(os.Stderr, "    ", data)
-	fmt.Fprintln(os.Stderr, "----\n")
+    fmt.Fprintln(os.Stderr, "    err:", err)
 
 	if err != nil {
 		return err
