@@ -132,11 +132,19 @@ func ToJSONFileIndentCustom(data any, path string, prefix string, indent string)
 
 // Take a best shot at getting what the key would be for this the field in a JSON object.
 func JSONFieldName(field reflect.StructField) string {
+	return JSONFieldNameFull(field, true)
+}
+
+func JSONFieldNameFull(field reflect.StructField, fallback bool) string {
 	name := field.Name
 
 	tag := field.Tag.Get("json")
 	if tag == "" {
-		return name
+		if fallback {
+			return name
+		} else {
+			return ""
+		}
 	}
 
 	parts := strings.Split(tag, ",")
@@ -148,8 +156,8 @@ func JSONFieldName(field reflect.StructField) string {
 			return ""
 		}
 
-		// This special option is allowed.
-		if part == "omitempty" {
+		// These special options are allowed.
+		if part == "omitempty" || part == "omitzero" {
 			continue
 		}
 
