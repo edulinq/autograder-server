@@ -239,3 +239,26 @@ func MustFormatJSONObjectIndent(text string) string {
 	MustJSONFromString(text, &object)
 	return MustToJSONIndent(object)
 }
+
+func MustToJSONMap(data any) map[string]any {
+	dataJSONMap, err := ToJSONMap(data)
+	if err != nil {
+		log.Fatal("Failed to convert data to a JSON map.", err)
+	}
+
+	return dataJSONMap
+}
+
+func ToJSONMap(data any) (map[string]any, error) {
+	dataJSON, err := ToJSON(data)
+	if err != nil {
+		return nil, fmt.Errorf("Failed to convert data to JSON: '%v'.", err)
+	}
+
+	dataJSONMap, err := JSONMapFromString(dataJSON)
+	if err != nil {
+		return nil, fmt.Errorf("Failed to convert JSON string to JSON map: '%v'.", err)
+	}
+
+	return dataJSONMap, nil
+}
