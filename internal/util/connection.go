@@ -6,8 +6,7 @@ import (
 	"fmt"
 	"net"
 
-	// TEST
-	"os"
+	"github.com/edulinq/autograder/internal/log"
 )
 
 const (
@@ -31,21 +30,29 @@ func ReadFromNetworkConnection(connection net.Conn) ([]byte, error) {
 		return nil, fmt.Errorf("Message content is too large to read.")
 	}
 
-	jsonBuffer := make([]byte, size)
-	numBytesRead, err := connection.Read(jsonBuffer)
-	if err != nil {
-		return nil, err
+	buffer := make([]byte, size)
+	var numBytesRead uint64
+	for numBytesRead = 0; numBytesRead < size; {
+		currBuffer := buffer[numBytesRead:]
+		currBytesRead, err := connection.Read(currBuffer)
+		if err != nil {
+			return nil, err
+		}
+
+		numBytesRead += uint64(currBytesRead)
 	}
 
+	log.Trace("Expected to read the following bytes from connection.", log.NewAttr("expected bytes", size))
+	log.Trace("Actually read the following bytes from connection.", log.NewAttr("actual bytes", numBytesRead))
 	// TEST
-	fmt.Fprintln(os.Stderr, "\n\nTEST - READ")
-	fmt.Fprintln(os.Stderr, "Expected size    ", size)
-	fmt.Fprintln(os.Stderr, "Actual size    ", numBytesRead)
-	fmt.Fprintln(os.Stderr, "    ", len(jsonBuffer))
-	// fmt.Fprintln(os.Stderr, "    ", jsonBuffer)
-	fmt.Fprintln(os.Stderr, "----\n")
+	// fmt.Fprintln(os.Stderr, "\n\nTEST - READ")
+	// fmt.Fprintln(os.Stderr, "Expected size    ", size)
+	// fmt.Fprintln(os.Stderr, "Actual size    ", numBytesRead)
+	// fmt.Fprintln(os.Stderr, "    ", len(buffer))
+	// fmt.Fprintln(os.Stderr, "    ", buffer)
+	// fmt.Fprintln(os.Stderr, "----\n")
 
-	return jsonBuffer, nil
+	return buffer, nil
 }
 
 // Write a message to a network connection.
@@ -61,25 +68,28 @@ func WriteToNetworkConnection(connection net.Conn, data []byte) error {
 	responseBuffer := new(bytes.Buffer)
 
 	// TEST
-	fmt.Fprintln(os.Stderr, "\n\nTEST - Write")
-	fmt.Fprintln(os.Stderr, "Expected size    ", size)
-	fmt.Fprintln(os.Stderr, "    ", len(data))
+	// fmt.Fprintln(os.Stderr, "\n\nTEST - Write")
+	// fmt.Fprintln(os.Stderr, "Expected size    ", size)
+	// fmt.Fprintln(os.Stderr, "    ", len(data))
 	// fmt.Fprintln(os.Stderr, "    ", data)
-	fmt.Fprintln(os.Stderr, "----\n")
+	// fmt.Fprintln(os.Stderr, "----\n")
 
 	err := binary.Write(responseBuffer, binary.BigEndian, size)
 	if err != nil {
-		fmt.Fprintln(os.Stderr, "binary write err:", err)
 		return err
 	}
 
 	responseBuffer.Write(data)
 
-	fmt.Fprintln(os.Stderr, "starting to write...")
+	// fmt.Fprintln(os.Stderr, "starting to write...")
+	log.Trace("Expected to write the following bytes from connection.", log.NewAttr("expected bytes", size))
+
 	numBytesWritten, err := connection.Write(responseBuffer.Bytes())
+
+	log.Trace("Actually wrote the following bytes from connection.", log.NewAttr("actual bytes", numBytesWritten))
 	// TEST
-	fmt.Fprintln(os.Stderr, "Actual size    ", numBytesWritten)
-	fmt.Fprintln(os.Stderr, "    err:", err)
+	// fmt.Fprintln(os.Stderr, "Actual size    ", numBytesWritten)
+	// fmt.Fprintln(os.Stderr, "    err:", err)
 
 	if err != nil {
 		return err
