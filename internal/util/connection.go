@@ -30,7 +30,7 @@ func ReadFromNetworkConnection(connection net.Conn) ([]byte, error) {
 		return nil, fmt.Errorf("Message content is too large to read.")
 	}
 
-	log.Trace("Attempting to read from a network connection.", log.NewAttr("expected-bytes", expectedSize))
+	log.Trace("Attempting a read from a network connection.", log.NewAttr("expected-bytes", expectedSize))
 
 	buffer := make([]byte, expectedSize)
 	numBytesRead := uint64(0)
@@ -81,7 +81,7 @@ func WriteToNetworkConnection(connection net.Conn, data []byte) error {
 
 	responseBuffer.Write(data)
 
-	log.Trace("Attempting to write to a network connection.", log.NewAttr("expected-bytes", expectedSize))
+	log.Trace("Attempting a write to a network connection.", log.NewAttr("expected-bytes", expectedSize))
 
 	// connection.Write() blocks until the entire buffer is written.
 	numBytesWritten, err := connection.Write(responseBuffer.Bytes())
