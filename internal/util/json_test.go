@@ -10,9 +10,12 @@ type Unmarshalable struct {
 }
 
 type TestStruct struct {
-	Field1 string `json:"field1"`
-	Field2 string `json:"field2"`
-	Field3 string `json:"field3"`
+	StringField string         `json:"string-field"`
+	IntField    int            `json:"int-field"`
+	FloatField  float64        `json:"float-field"`
+	NullField   *string        `json:"null-field"`
+	MapField    map[string]any `json:"map-field"`
+	ListField   []string       `json:"list-field"`
 }
 
 func (this *Unmarshalable) String() string {
@@ -30,17 +33,23 @@ func TestUnmarshalableStruct(test *testing.T) {
 	}
 }
 
-func TestToJsonMap(test *testing.T) {
+func TestToJSONMap(test *testing.T) {
 	data := &TestStruct{
-		Field1: "value1",
-		Field2: "value2",
-		Field3: "value3",
+		StringField: "string",
+		IntField:    1,
+		FloatField:  1.0,
+		NullField:   nil,
+		MapField:    map[string]any{"key": "value"},
+		ListField:   []string{"string1", "string2", "string3"},
 	}
 
 	expectedJSONMap := map[string]any{
-		"field1": "value1",
-		"field2": "value2",
-		"field3": "value3",
+		"string-field": "string",
+		"int-field":    1.0,
+		"float-field":  1.0,
+		"null-field":   nil,
+		"map-field":    map[string]any{"key": "value"},
+		"list-field":   []any{"string1", "string2", "string3"},
 	}
 
 	actualJSONMap, err := ToJSONMap(data)
