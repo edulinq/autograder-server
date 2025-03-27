@@ -10,7 +10,7 @@ import (
 type SubmitRequest struct {
 	core.APIRequestAssignmentContext
 	core.MinCourseRoleStudent
-	Files core.POSTFiles
+	Files core.POSTFiles `json:"-"`
 
 	Message   string `json:"message"`
 	AllowLate bool   `json:"allow-late"`
