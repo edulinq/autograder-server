@@ -2,6 +2,7 @@ package api
 
 import (
 	"errors"
+	"path/filepath"
 	"reflect"
 
 	"github.com/edulinq/autograder/internal/api/core"
@@ -30,8 +31,8 @@ func Describe(routes []core.Route) (*core.APIDescription, error) {
 		}
 
 		// RequestType and ResponseType must be structs, so Fields will hold the type's information.
-		input, _ := describeType(apiRoute.RequestType, typeMap)
-		output, _ := describeType(apiRoute.ResponseType, typeMap)
+		input, _, typeMap := describeType(apiRoute.RequestType, typeMap)
+		output, _, typeMap := describeType(apiRoute.ResponseType, typeMap)
 
 		endpointMap[apiRoute.GetBasePath()] = core.EndpointDescription{
 			Description:  apiRoute.Description,
@@ -50,19 +51,28 @@ func Describe(routes []core.Route) (*core.APIDescription, error) {
 	return &apiDescription, errs
 }
 
-func GetTypeID(customType reflect.Type) string {
-	typeID := customType.String()
+func getTypeID(customType reflect.Type) string {
+	prefix := ""
 
 	// Include the PkgPath() of pointers to custom types.
 	if customType.Kind() == reflect.Pointer {
+		prefix = "*"
 		customType = customType.Elem()
 	}
 
 	if customType.PkgPath() != "" {
-		typeID = customType.PkgPath() + "/" + typeID
+		prefix = prefix + filepath.Dir(customType.PkgPath()) + "/"
+	} else {
+		if customType.Kind() == reflect.Array || customType.Kind() == reflect.Slice {
+			return prefix + "[]" + getTypeID(customType.Elem())
+		}
+
+		if customType.Kind() == reflect.Map {
+			return prefix + "map[" + getTypeID(customType.Key()) + "]" + getTypeID(customType.Elem())
+		}
 	}
 
-	return typeID
+	return prefix + customType.String()
 }
 
 // Given a type and a map of known type descriptions, describeType() returns the type description and typeID.
@@ -71,35 +81,34 @@ func GetTypeID(customType reflect.Type) string {
 //   - Maps store the key type as a string and the value as a typeID in KeyType and ValueType respectively.
 //   - Structs have a Fields map describing each field, including embedded ones.
 //     Non-embedded struct fields that do not have a JSON tag are skipped.
-func describeType(customType reflect.Type, typeMap map[string]core.TypeDescription) (core.TypeDescription, string) {
+func describeType(customType reflect.Type, typeMap map[string]core.TypeDescription) (core.TypeDescription, string, map[string]core.TypeDescription) {
 	if customType == nil {
-		return core.TypeDescription{}, ""
+		return core.TypeDescription{}, "", map[string]core.TypeDescription{}
 	}
 
-	// If typeMap is nil, the results will not be accessible outside of the function.
 	if typeMap == nil {
 		typeMap = make(map[string]core.TypeDescription)
 	}
 
-	originalTypeID := GetTypeID(customType)
+	originalTypeID := getTypeID(customType)
 	if customType.Kind() == reflect.Pointer {
 		customType = customType.Elem()
 	}
 
-	typeID := GetTypeID(customType)
+	typeID := getTypeID(customType)
 	typeDescription, ok := typeMap[typeID]
 	if ok {
-		return typeDescription, originalTypeID
+		return typeDescription, originalTypeID, typeMap
 	}
 
 	switch customType.Kind() {
 	case reflect.Slice, reflect.Array:
-		_, elemTypeID := describeType(customType.Elem(), typeMap)
+		_, elemTypeID, _ := describeType(customType.Elem(), typeMap)
 
 		typeDescription.Category = core.ArrayType
 		typeDescription.ElementType = elemTypeID
 	case reflect.Map:
-		_, elemTypeID := describeType(customType.Elem(), typeMap)
+		_, elemTypeID, _ := describeType(customType.Elem(), typeMap)
 
 		typeDescription.Category = core.MapType
 		typeDescription.KeyType = customType.Key().String()
@@ -109,12 +118,12 @@ func describeType(customType reflect.Type, typeMap map[string]core.TypeDescripti
 		typeDescription.Fields = describeStructFields(customType, typeMap)
 	default:
 		// Handle built-in types.
-		typeDescription.Category = core.BasicType
+		typeDescription.Category = core.AliasType
 
 		if customType.PkgPath() == "" {
-			typeDescription.Alias = customType.String()
+			typeDescription.AliasType = customType.String()
 		} else {
-			typeDescription.Alias = customType.Kind().String()
+			typeDescription.AliasType = customType.Kind().String()
 		}
 	}
 
@@ -122,7 +131,7 @@ func describeType(customType reflect.Type, typeMap map[string]core.TypeDescripti
 		typeMap[typeID] = typeDescription
 	}
 
-	return typeDescription, originalTypeID
+	return typeDescription, originalTypeID, typeMap
 }
 
 func describeStructFields(customType reflect.Type, typeMap map[string]core.TypeDescription) map[string]string {
@@ -138,15 +147,15 @@ func describeStructFields(customType reflect.Type, typeMap map[string]core.TypeD
 
 		// Handle embedded fields.
 		if field.Anonymous {
-			fieldDescription, fieldTypeID := describeType(field.Type, typeMap)
+			fieldDescription, fieldTypeID, _ := describeType(field.Type, typeMap)
 			// If the embedded type is a struct, merge its fields into the current struct.
 			if len(fieldDescription.Fields) > 0 {
 				for fieldTag, fieldValue := range fieldDescription.Fields {
 					fieldTypes[fieldTag] = fieldValue
 				}
-			} else if fieldDescription.Category == core.BasicType {
+			} else if fieldDescription.Category == core.AliasType {
 				// Store basic embedded types under the current JSON tag.
-				fieldTypes[jsonTag] = fieldDescription.Alias
+				fieldTypes[jsonTag] = fieldDescription.AliasType
 			} else {
 				// Store non-basic embedded types under the current JSON tag using the typeID.
 				fieldTypes[jsonTag] = fieldTypeID
@@ -161,17 +170,13 @@ func describeStructFields(customType reflect.Type, typeMap map[string]core.TypeD
 			continue
 		}
 
-		fieldDescription, fieldTypeID := describeType(field.Type, typeMap)
-		if fieldDescription.Category == core.BasicType {
-			fieldTypes[jsonTag] = fieldDescription.Alias
+		fieldDescription, fieldTypeID, _ := describeType(field.Type, typeMap)
+		if fieldDescription.Category == core.AliasType {
+			fieldTypes[jsonTag] = fieldDescription.AliasType
 		} else {
 			fieldTypes[jsonTag] = fieldTypeID
 		}
 	}
 
-	if len(fieldTypes) > 0 {
-		return fieldTypes
-	} else {
-		return nil
-	}
+	return fieldTypes
 }

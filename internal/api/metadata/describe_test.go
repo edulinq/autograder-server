@@ -12,10 +12,7 @@ func TestMetadataDescribe(test *testing.T) {
 	// Cache a dummy APIDescription for testing.
 	description := core.APIDescription{
 		Endpoints: map[string]core.EndpointDescription{
-			"metadata/describe": core.EndpointDescription{
-				RequestType:  "*DescribeRequest",
-				ResponseType: "*DescribeResponse",
-			},
+			"metadata/describe": core.EndpointDescription{},
 		},
 	}
 

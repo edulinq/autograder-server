@@ -25,23 +25,36 @@ func ReadFromNetworkConnection(connection net.Conn) ([]byte, error) {
 		return nil, err
 	}
 
-	size := binary.BigEndian.Uint64(sizeBuffer)
-	if size > MAX_SOCKET_MESSAGE_SIZE_BYTES {
+	expectedSize := binary.BigEndian.Uint64(sizeBuffer)
+	if expectedSize > MAX_SOCKET_MESSAGE_SIZE_BYTES {
 		return nil, fmt.Errorf("Message content is too large to read.")
 	}
 
-	log.Trace("Reading the following bytes from a connection...", log.NewAttr("expected bytes", size))
+	log.Trace("About to read the following bytes from a connection.", log.NewAttr("expected bytes", expectedSize))
 
-	buffer := make([]byte, size)
-	var numBytesRead uint64
-	for numBytesRead = 0; numBytesRead < size; {
-		currBuffer := buffer[numBytesRead:]
-		currBytesRead, err := connection.Read(currBuffer)
+	buffer := make([]byte, expectedSize)
+	numBytesRead := uint64(0)
+
+	// A connection may not be able to send all of the data in a single write.
+	// Keep reading until all bytes are in the buffer.
+	for numBytesRead < expectedSize {
+		currentBuffer := buffer[numBytesRead:]
+		currentBytesRead, err := connection.Read(currentBuffer)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("Failed to read from the connection. Expected to read '%d' bytes, actually read '%d' bytes: '%v'.",
+				expectedSize, currentBytesRead, err)
 		}
 
-		numBytesRead += uint64(currBytesRead)
+		if currentBytesRead == 0 {
+			return nil, fmt.Errorf("Failed to read any bytes from the connection. Expected to read '%d' bytes, actuall read '%d' bytes.",
+				expectedSize, currentBytesRead)
+		}
+
+		numBytesRead += uint64(currentBytesRead)
+	}
+
+	if numBytesRead > expectedSize {
+		return nil, fmt.Errorf("Read too many bytes from a connection. Expected: '%d', actual: '%d'.", expectedSize, numBytesRead)
 	}
 
 	log.Trace("Read the following bytes from a connection.", log.NewAttr("actual bytes", numBytesRead))
@@ -53,28 +66,30 @@ func ReadFromNetworkConnection(connection net.Conn) ([]byte, error) {
 // The first 8 bytes is the size of the message content in bytes.
 // The remaining bytes should be x bytes of the actual message content.
 func WriteToNetworkConnection(connection net.Conn, data []byte) error {
-	size := uint64(len(data))
+	expectedSize := uint64(len(data))
 
-	if size > MAX_SOCKET_MESSAGE_SIZE_BYTES {
+	if expectedSize > MAX_SOCKET_MESSAGE_SIZE_BYTES {
 		return fmt.Errorf("Message content is too large to write.")
 	}
 
 	responseBuffer := new(bytes.Buffer)
 
-	err := binary.Write(responseBuffer, binary.BigEndian, size)
+	err := binary.Write(responseBuffer, binary.BigEndian, expectedSize)
 	if err != nil {
 		return err
 	}
 
 	responseBuffer.Write(data)
 
-	log.Trace("Writing the following bytes to a connection...", log.NewAttr("expected bytes", size))
+	log.Trace("About to write the following bytes to a connection.", log.NewAttr("expected bytes", expectedSize))
 
+	// connection.Write() blocks until the entire buffer is written.
 	numBytesWritten, err := connection.Write(responseBuffer.Bytes())
-	log.Trace("Wrote the following bytes to a connection.", log.NewAttr("actual bytes", numBytesWritten))
 	if err != nil {
 		return err
 	}
+
+	log.Trace("Wrote the following bytes to a connection.", log.NewAttr("actual bytes", numBytesWritten))
 
 	return nil
 }

@@ -10,10 +10,10 @@ import (
 )
 
 const (
-	BasicType  = "basic"
-	StructType = "struct"
-	MapType    = "map"
+	AliasType  = "alias"
 	ArrayType  = "array"
+	MapType    = "map"
+	StructType = "struct"
 )
 
 // API Description will be empty until RunServer() is called.
@@ -26,19 +26,19 @@ type APIDescription struct {
 
 type EndpointDescription struct {
 	Description  string            `json:"description"`
-	RequestType  string            `json:"request-type"`
-	ResponseType string            `json:"response-type"`
+	RequestType  string            `json:"-"`
+	ResponseType string            `json:"-"`
 	Input        map[string]string `json:"input"`
 	Output       map[string]string `json:"output"`
 }
 
 type TypeDescription struct {
 	Category    string            `json:"category"`
-	Alias       string            `json:"alias,omitempty"`
+	AliasType   string            `json:"alias-type,omitempty"`
 	Fields      map[string]string `json:"fields,omitempty"`
 	ElementType string            `json:"element-type,omitempty"`
-	KeyType     string            `json:"key-type,omitempty"`
-	ValueType   string            `json:"value-type,omitempty"`
+	KeyType     string            `json:"-"`
+	ValueType   string            `json:"-"`
 }
 
 func SetAPIDescription(description APIDescription) {
