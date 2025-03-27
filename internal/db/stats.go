@@ -22,34 +22,18 @@ func StoreSystemStats(record *stats.SystemMetrics) error {
 	return backend.StoreSystemStats(record)
 }
 
-func GetCourseMetrics(query stats.MetricQuery) ([]*stats.BaseMetric, error) {
+func GetMetrics(query stats.MetricQuery) ([]*stats.BaseMetric, error) {
 	if backend == nil {
 		return nil, fmt.Errorf("Database has not been opened.")
 	}
 
-	return backend.GetCourseMetrics(query)
+	return backend.GetMetrics(query)
 }
 
-func StoreCourseMetric(record *stats.BaseMetric) error {
+func StoreMetric(record *stats.BaseMetric) error {
 	if backend == nil {
 		return fmt.Errorf("Database has not been opened.")
 	}
 
-	return backend.StoreCourseMetric(record)
-}
-
-func GetAPIRequestMetrics(query stats.MetricQuery) ([]*stats.BaseMetric, error) {
-	if backend == nil {
-		return nil, fmt.Errorf("Database has not been opened.")
-	}
-
-	return backend.GetAPIRequestMetrics(query)
-}
-
-func StoreAPIRequestMetric(record *stats.BaseMetric) error {
-	if backend == nil {
-		return fmt.Errorf("Database has not been opened.")
-	}
-
-	return backend.StoreAPIRequestMetric(record)
+	return backend.StoreMetric(record)
 }

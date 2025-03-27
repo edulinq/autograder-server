@@ -51,8 +51,8 @@ func (this *DBTests) DBTestStoreCourseMetrics(test *testing.T) {
 
 	testRecord := stats.BaseMetric{
 		Timestamp: timestamp.Now(),
+		Type:      stats.GRADING_TIME_STATS_KEY,
 		Attributes: map[string]any{
-			stats.TYPE_KEY:          stats.CourseMetricTypeGradingTime,
 			stats.COURSE_ID_KEY:     "C",
 			stats.ASSIGNMENT_ID_KEY: "A",
 			stats.USER_EMAIL_KEY:    "U",
@@ -68,12 +68,12 @@ func (this *DBTests) DBTestStoreCourseMetrics(test *testing.T) {
 		},
 	}
 
-	err := StoreCourseMetric(&testRecord)
+	err := StoreMetric(&testRecord)
 	if err != nil {
 		test.Fatalf("Failed to store stats: '%v'.", err)
 	}
 
-	records, err := GetCourseMetrics(query)
+	records, err := GetMetrics(query)
 	if err != nil {
 		test.Fatalf("Failed to fetch stats: '%v'.", err)
 	}
@@ -94,6 +94,7 @@ func (this *DBTests) DBTestStoreAPIRequestMetrics(test *testing.T) {
 
 	testRecord := stats.BaseMetric{
 		Timestamp: timestamp.Now(),
+		Type:      stats.API_REQUEST_STATS_KEY,
 		Attributes: map[string]any{
 			stats.SENDER_KEY:        "2",
 			stats.ENDPOINT_KEY:      "E",
@@ -105,14 +106,18 @@ func (this *DBTests) DBTestStoreAPIRequestMetrics(test *testing.T) {
 		},
 	}
 
-	err := StoreAPIRequestMetric(&testRecord)
+	err := StoreMetric(&testRecord)
 	if err != nil {
 		test.Fatalf("Failed to store stats: '%v'.", err)
 	}
 
-	query := stats.MetricQuery{}
+	query := stats.MetricQuery{
+		BaseQuery: stats.BaseQuery{
+			Type: stats.API_REQUEST_STATS_KEY,
+		},
+	}
 
-	records, err := GetAPIRequestMetrics(query)
+	records, err := GetMetrics(query)
 	if err != nil {
 		test.Fatalf("Failed to fetch stats: '%v'.", err)
 	}

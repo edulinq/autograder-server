@@ -104,6 +104,7 @@ func TestPairwiseAnalysisFake(test *testing.T) {
 
 	courseMetricQuery := stats.MetricQuery{
 		BaseQuery: stats.BaseQuery{
+			Type: stats.CODE_ANALYSIS_TIME_STATS_KEY,
 			Where: map[string]any{
 				stats.COURSE_ID_KEY: "course101",
 			},
@@ -111,7 +112,7 @@ func TestPairwiseAnalysisFake(test *testing.T) {
 	}
 
 	// After both runs, there should be exactly one stat record (since the second one was cached).
-	results, err := db.GetCourseMetrics(courseMetricQuery)
+	results, err := db.GetMetrics(courseMetricQuery)
 	if err != nil {
 		test.Fatalf("Failed to do stats query: '%v'.", err)
 	}
@@ -119,9 +120,9 @@ func TestPairwiseAnalysisFake(test *testing.T) {
 	expectedStats := []*stats.BaseMetric{
 		&stats.BaseMetric{
 			Timestamp: timestamp.Zero(),
+			Type:      stats.CODE_ANALYSIS_TIME_STATS_KEY,
 			Attributes: map[string]any{
 				stats.ATTRIBUTE_KEY_ANALYSIS: "pairwise",
-				stats.TYPE_KEY:               stats.CourseMetricTypeCodeAnalysisTime,
 				stats.COURSE_ID_KEY:          "course101",
 				stats.ASSIGNMENT_ID_KEY:      "hw0",
 				stats.USER_EMAIL_KEY:         "server-admin@test.edulinq.org",

@@ -155,7 +155,22 @@ func sendAPIResponse(apiRequest ValidAPIRequest, response http.ResponseWriter,
 	}
 
 	endpoint, sender, userEmail, courseID, assignmentID, locator := getRequestInfo(apiRequest, apiErr)
-	stats.AsyncStoreAPIRequestMetric(startTime, apiResponse.EndTimestamp, sender, endpoint, userEmail, courseID, assignmentID, locator)
+	metric := stats.BaseMetric{
+		Timestamp: startTime,
+		Attributes: map[string]any{
+			stats.SENDER_KEY:   sender,
+			stats.ENDPOINT_KEY: endpoint,
+			stats.DURATION_KEY: float64((apiResponse.EndTimestamp - startTime).ToMSecs()),
+		},
+		Type: stats.API_REQUEST_STATS_KEY,
+	}
+
+	stats.AddIfNotEmpty(metric.Attributes, stats.USER_EMAIL_KEY, userEmail)
+	stats.AddIfNotEmpty(metric.Attributes, stats.COURSE_ID_KEY, courseID)
+	stats.AddIfNotEmpty(metric.Attributes, stats.ASSIGNMENT_ID_KEY, assignmentID)
+	stats.AddIfNotEmpty(metric.Attributes, stats.LOCATOR_KEY, locator)
+
+	stats.AsyncStoreMetric(&metric)
 
 	// When in testing mode, allow cross-origin requests.
 	if config.UNIT_TESTING_MODE.Get() {

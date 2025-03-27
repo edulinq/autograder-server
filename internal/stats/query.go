@@ -1,6 +1,7 @@
 package stats
 
 import (
+	"fmt"
 	"slices"
 
 	"github.com/edulinq/autograder/internal/log"
@@ -38,6 +39,8 @@ type BaseQuery struct {
 	// Keys are field names (e.g., "course") and values are what to include (e.g., course101).
 	// This filter is applied after all other BaseQuery conditions are applied.
 	Where map[string]any `json:"where,omitempty"`
+
+	Type string `json:"type"`
 }
 
 type MetricQuery struct {
@@ -55,6 +58,8 @@ func (this MetricQuery) Match(metric *BaseMetric) bool {
 	if !ok {
 		return false
 	}
+
+	fmt.Println("attributes: ", attributes)
 
 	for field, value := range this.Where {
 		fieldValue, exists := attributes[field]

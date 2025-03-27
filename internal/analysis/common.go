@@ -156,16 +156,19 @@ func collectAnalysisStats(fullSubmissionIDs []string, totalRunTime int64, initia
 	for courseID, assignmentID := range seenIdentifiers {
 		metric := stats.BaseMetric{
 			Timestamp: now,
+			Type:      stats.CODE_ANALYSIS_TIME_STATS_KEY,
 			Attributes: map[string]any{
 				stats.ATTRIBUTE_KEY_ANALYSIS: analysisType,
-				stats.TYPE_KEY:               stats.CourseMetricTypeCodeAnalysisTime,
 				stats.COURSE_ID_KEY:          courseID,
 				stats.ASSIGNMENT_ID_KEY:      assignmentID,
 				stats.USER_EMAIL_KEY:         initiatorEmail,
 				stats.VALUE_KEY:              uint64(totalRunTime),
 			},
 		}
+		stats.AddIfNotEmpty(metric.Attributes, stats.USER_EMAIL_KEY, initiatorEmail)
+		stats.AddIfNotEmpty(metric.Attributes, stats.COURSE_ID_KEY, courseID)
+		stats.AddIfNotEmpty(metric.Attributes, stats.ASSIGNMENT_ID_KEY, assignmentID)
 
-		stats.AsyncStoreCourseMetric(&metric)
+		stats.AsyncStoreMetric(&metric)
 	}
 }

@@ -27,13 +27,13 @@ func HandleQuery(request *QueryRequest) (*QueryResponse, *core.APIError) {
 	// The request must be for the given course.
 	request.Where[stats.COURSE_ID_KEY] = request.Course.ID
 
-	records, err := db.GetCourseMetrics(request.MetricQuery)
+	records, err := db.GetMetrics(request.MetricQuery)
 	if err != nil {
 		return nil, core.NewInternalError("-618", &request.APIRequestCourseUserContext, "Failed to query course stats.").Err(err)
 	}
 
 	response := QueryResponse{
-		Records: stats.ApplyBaseQuery(records, request.MetricQuery.BaseQuery),
+		Records: stats.ApplyBaseQuery(records, request.BaseQuery),
 	}
 
 	return &response, nil

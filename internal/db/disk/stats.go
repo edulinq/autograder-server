@@ -9,14 +9,12 @@ import (
 )
 
 const SYSTEM_STATS_FILENAME = "stats.jsonl"
-const COURSE_STATS_FILENAME = "course-stats.jsonl"
-const API_REQUEST_STATS_FILENAME = "api-request-stats.jsonl"
 
 func (this *backend) GetSystemStats(query stats.Query) ([]*stats.SystemMetrics, error) {
 	path := this.getSystemStatsPath()
 
-	this.statsLock.RLock()
-	defer this.statsLock.RUnlock()
+	this.systemStatsLock.RLock()
+	defer this.systemStatsLock.RUnlock()
 
 	records, err := util.FilterJSONLFile(path, stats.SystemMetrics{}, func(record *stats.SystemMetrics) bool {
 		return query.Match(record)
@@ -26,22 +24,21 @@ func (this *backend) GetSystemStats(query stats.Query) ([]*stats.SystemMetrics, 
 }
 
 func (this *backend) StoreSystemStats(record *stats.SystemMetrics) error {
-	this.statsLock.Lock()
-	defer this.statsLock.Unlock()
+	this.systemStatsLock.Lock()
+	defer this.systemStatsLock.Unlock()
 
 	return util.AppendJSONLFile(this.getSystemStatsPath(), record)
 }
 
-func (this *backend) GetCourseMetrics(query stats.MetricQuery) ([]*stats.BaseMetric, error) {
-	courseID, ok := query.Where[stats.COURSE_ID_KEY].(string)
-	if !ok {
-		return nil, fmt.Errorf("When querying for course metrics, course ID must not be empty.")
+func (this *backend) GetMetrics(query stats.MetricQuery) ([]*stats.BaseMetric, error) {
+	path, err := this.getStatsPath(query.Type)
+	if err != nil {
+		return nil, err
 	}
 
-	path := this.getCourseStatsPath(courseID)
-
-	this.contextReadLock(path)
-	defer this.contextReadUnlock(path)
+	fmt.Println("query: ", util.MustToJSONIndent(query))
+	this.statsLock.Lock()
+	defer this.statsLock.Unlock()
 
 	records, err := util.FilterJSONLFile(path, stats.BaseMetric{}, func(record *stats.BaseMetric) bool {
 		return query.Match(record)
@@ -50,50 +47,33 @@ func (this *backend) GetCourseMetrics(query stats.MetricQuery) ([]*stats.BaseMet
 	return records, err
 }
 
-func (this *backend) StoreCourseMetric(record *stats.BaseMetric) error {
-	courseID, ok := record.Attributes[stats.COURSE_ID_KEY].(string)
-	if !ok {
-		return fmt.Errorf("No course ID was given.")
+func (this *backend) StoreMetric(record *stats.BaseMetric) error {
+	path, err := this.getStatsPath(record.Type)
+	if err != nil {
+		return err
 	}
 
-	path := this.getCourseStatsPath(courseID)
+	// if (record.Type == stats.GRADING_TIME_STATS_KEY || record.Type == stats.TASK_TIME_STATS_KEY){
+	// 	course, ok := record.Attributes[stats.COURSE_ID_KEY]
+	// 	if !ok {
+	// 		return fmt.Errorf("")
+	// 	}
+	// }
 
-	this.contextLock(path)
-	defer this.contextUnlock(path)
+	this.statsLock.Lock()
+	defer this.statsLock.Unlock()
 
 	return util.AppendJSONLFile(path, record)
 }
 
-func (this *backend) GetAPIRequestMetrics(query stats.MetricQuery) ([]*stats.BaseMetric, error) {
-	path := this.getAPIRequestStatsPath()
+func (this *backend) getStatsPath(metricType string) (string, error) {
+	if metricType == "" {
+		return "", fmt.Errorf("No metric type was given.")
+	}
 
-	this.apiRequestLock.RLock()
-	defer this.apiRequestLock.RUnlock()
-
-	records, err := util.FilterJSONLFile(path, stats.BaseMetric{}, func(record *stats.BaseMetric) bool {
-		return query.Match(record)
-	})
-
-	return records, err
-}
-
-func (this *backend) StoreAPIRequestMetric(record *stats.BaseMetric) error {
-	path := this.getAPIRequestStatsPath()
-
-	this.apiRequestLock.Lock()
-	defer this.apiRequestLock.Unlock()
-
-	return util.AppendJSONLFile(path, record)
+	return filepath.Join(this.baseDir, metricType+".jsonl"), nil
 }
 
 func (this *backend) getSystemStatsPath() string {
 	return filepath.Join(this.baseDir, SYSTEM_STATS_FILENAME)
-}
-
-func (this *backend) getCourseStatsPath(courseID string) string {
-	return filepath.Join(this.getCourseDirFromID(courseID), COURSE_STATS_FILENAME)
-}
-
-func (this *backend) getAPIRequestStatsPath() string {
-	return filepath.Join(this.baseDir, API_REQUEST_STATS_FILENAME)
 }
