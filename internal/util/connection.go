@@ -30,7 +30,7 @@ func ReadFromNetworkConnection(connection net.Conn) ([]byte, error) {
 		return nil, fmt.Errorf("Message content is too large to read.")
 	}
 
-	log.Trace("About to read the following bytes from a connection.", log.NewAttr("expected bytes", expectedSize))
+	log.Trace("Attempting to read from a network connection.", log.NewAttr("expected-bytes", expectedSize))
 
 	buffer := make([]byte, expectedSize)
 	numBytesRead := uint64(0)
@@ -41,23 +41,23 @@ func ReadFromNetworkConnection(connection net.Conn) ([]byte, error) {
 		currentBuffer := buffer[numBytesRead:]
 		currentBytesRead, err := connection.Read(currentBuffer)
 		if err != nil {
-			return nil, fmt.Errorf("Failed to read from the connection. Expected to read '%d' bytes, actually read '%d' bytes: '%v'.",
+			return nil, fmt.Errorf("Failed to read from the network connection. Expected to read '%d' bytes, actually read '%d' bytes: '%v'.",
 				expectedSize, currentBytesRead, err)
 		}
 
 		if currentBytesRead == 0 {
-			return nil, fmt.Errorf("Failed to read any bytes from the connection. Expected to read '%d' bytes, actuall read '%d' bytes.",
-				expectedSize, currentBytesRead)
+			return nil, fmt.Errorf("Failed to read any bytes from the network connection. Expected to read '%d' bytes, actually read '%d' bytes for a total of '%d' bytes.",
+				expectedSize, currentBytesRead, numBytesRead)
 		}
 
 		numBytesRead += uint64(currentBytesRead)
 	}
 
 	if numBytesRead > expectedSize {
-		return nil, fmt.Errorf("Read too many bytes from a connection. Expected: '%d', actual: '%d'.", expectedSize, numBytesRead)
+		return nil, fmt.Errorf("Read too many bytes from a network connection. Expected: '%d', actual: '%d'.", expectedSize, numBytesRead)
 	}
 
-	log.Trace("Read the following bytes from a connection.", log.NewAttr("actual bytes", numBytesRead))
+	log.Trace("Read the following bytes from a network connection.", log.NewAttr("actual-bytes", numBytesRead))
 
 	return buffer, nil
 }
@@ -81,7 +81,7 @@ func WriteToNetworkConnection(connection net.Conn, data []byte) error {
 
 	responseBuffer.Write(data)
 
-	log.Trace("About to write the following bytes to a connection.", log.NewAttr("expected bytes", expectedSize))
+	log.Trace("Attempting to write to a network connection.", log.NewAttr("expected-bytes", expectedSize))
 
 	// connection.Write() blocks until the entire buffer is written.
 	numBytesWritten, err := connection.Write(responseBuffer.Bytes())
@@ -89,7 +89,7 @@ func WriteToNetworkConnection(connection net.Conn, data []byte) error {
 		return err
 	}
 
-	log.Trace("Wrote the following bytes to a connection.", log.NewAttr("actual bytes", numBytesWritten))
+	log.Trace("Wrote the following bytes to a network connection.", log.NewAttr("actual-bytes", numBytesWritten))
 
 	return nil
 }
