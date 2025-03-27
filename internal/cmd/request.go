@@ -94,10 +94,6 @@ func SendCMDRequest(endpoint string, request any) (core.APIResponse, error) {
 		return core.APIResponse{}, fmt.Errorf("Failed to read the response from the unix socket: '%w'.", err)
 	}
 
-	// TEST
-	message := fmt.Sprintf("Received the following raw data from the cmd socket: '%q'\n.", responseBuffer)
-	log.Trace(message)
-
 	var response core.APIResponse
 	util.MustJSONFromBytes(responseBuffer, &response)
 

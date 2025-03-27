@@ -30,6 +30,8 @@ func ReadFromNetworkConnection(connection net.Conn) ([]byte, error) {
 		return nil, fmt.Errorf("Message content is too large to read.")
 	}
 
+	log.Trace("Reading the following bytes from a connection...", log.NewAttr("expected bytes", size))
+
 	buffer := make([]byte, size)
 	var numBytesRead uint64
 	for numBytesRead = 0; numBytesRead < size; {
@@ -42,15 +44,7 @@ func ReadFromNetworkConnection(connection net.Conn) ([]byte, error) {
 		numBytesRead += uint64(currBytesRead)
 	}
 
-	log.Trace("Expected to read the following bytes from connection.", log.NewAttr("expected bytes", size))
-	log.Trace("Actually read the following bytes from connection.", log.NewAttr("actual bytes", numBytesRead))
-	// TEST
-	// fmt.Fprintln(os.Stderr, "\n\nTEST - READ")
-	// fmt.Fprintln(os.Stderr, "Expected size    ", size)
-	// fmt.Fprintln(os.Stderr, "Actual size    ", numBytesRead)
-	// fmt.Fprintln(os.Stderr, "    ", len(buffer))
-	// fmt.Fprintln(os.Stderr, "    ", buffer)
-	// fmt.Fprintln(os.Stderr, "----\n")
+	log.Trace("Read the following bytes from a connection.", log.NewAttr("actual bytes", numBytesRead))
 
 	return buffer, nil
 }
@@ -67,13 +61,6 @@ func WriteToNetworkConnection(connection net.Conn, data []byte) error {
 
 	responseBuffer := new(bytes.Buffer)
 
-	// TEST
-	// fmt.Fprintln(os.Stderr, "\n\nTEST - Write")
-	// fmt.Fprintln(os.Stderr, "Expected size    ", size)
-	// fmt.Fprintln(os.Stderr, "    ", len(data))
-	// fmt.Fprintln(os.Stderr, "    ", data)
-	// fmt.Fprintln(os.Stderr, "----\n")
-
 	err := binary.Write(responseBuffer, binary.BigEndian, size)
 	if err != nil {
 		return err
@@ -81,16 +68,10 @@ func WriteToNetworkConnection(connection net.Conn, data []byte) error {
 
 	responseBuffer.Write(data)
 
-	// fmt.Fprintln(os.Stderr, "starting to write...")
-	log.Trace("Expected to write the following bytes from connection.", log.NewAttr("expected bytes", size))
+	log.Trace("Writing the following bytes to a connection...", log.NewAttr("expected bytes", size))
 
 	numBytesWritten, err := connection.Write(responseBuffer.Bytes())
-
-	log.Trace("Actually wrote the following bytes from connection.", log.NewAttr("actual bytes", numBytesWritten))
-	// TEST
-	// fmt.Fprintln(os.Stderr, "Actual size    ", numBytesWritten)
-	// fmt.Fprintln(os.Stderr, "    err:", err)
-
+	log.Trace("Wrote the following bytes to a connection.", log.NewAttr("actual bytes", numBytesWritten))
 	if err != nil {
 		return err
 	}
