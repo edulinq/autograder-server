@@ -17,39 +17,33 @@ func TestQuery(test *testing.T) {
 	testCases := []struct {
 		email            string
 		permErrorLocator string
-		query            stats.MetricQuery
+		query            stats.Query
 		expectedValues   []int
 	}{
 		// Grading Time Stats Base.
 		{
 			"server-admin",
 			"",
-			stats.MetricQuery{
-				BaseQuery: stats.BaseQuery{
-					Type: stats.GRADING_TIME_STATS_KEY,
-				},
+			stats.Query{
+				Type: stats.GRADING_TIME_STATS_TYPE,
 			},
 			[]int{100, 200, 300},
 		},
 		{
 			"server-admin",
 			"",
-			stats.MetricQuery{
-				BaseQuery: stats.BaseQuery{
-					Type: stats.GRADING_TIME_STATS_KEY,
-					Sort: 1,
-				},
+			stats.Query{
+				Type: stats.GRADING_TIME_STATS_TYPE,
+				Sort: 1,
 			},
 			[]int{300, 200, 100},
 		},
 		{
 			"server-admin",
 			"",
-			stats.MetricQuery{
-				BaseQuery: stats.BaseQuery{
-					Type:  stats.GRADING_TIME_STATS_KEY,
-					After: timestamp.FromMSecs(150),
-				},
+			stats.Query{
+				Type:  stats.GRADING_TIME_STATS_TYPE,
+				After: timestamp.FromMSecs(150),
 			},
 			[]int{200, 300},
 		},
@@ -58,32 +52,26 @@ func TestQuery(test *testing.T) {
 		{
 			"server-admin",
 			"",
-			stats.MetricQuery{
-				BaseQuery: stats.BaseQuery{
-					Type: stats.TASK_TIME_STATS_KEY,
-				},
+			stats.Query{
+				Type: stats.TASK_TIME_STATS_TYPE,
 			},
 			[]int{100, 200, 300},
 		},
 		{
 			"server-admin",
 			"",
-			stats.MetricQuery{
-				BaseQuery: stats.BaseQuery{
-					Type: stats.TASK_TIME_STATS_KEY,
-					Sort: 1,
-				},
+			stats.Query{
+				Type: stats.TASK_TIME_STATS_TYPE,
+				Sort: 1,
 			},
 			[]int{300, 200, 100},
 		},
 		{
 			"server-admin",
 			"",
-			stats.MetricQuery{
-				BaseQuery: stats.BaseQuery{
-					Type:  stats.TASK_TIME_STATS_KEY,
-					After: timestamp.FromMSecs(150),
-				},
+			stats.Query{
+				Type:  stats.TASK_TIME_STATS_TYPE,
+				After: timestamp.FromMSecs(150),
 			},
 			[]int{200, 300},
 		},
@@ -92,12 +80,10 @@ func TestQuery(test *testing.T) {
 		{
 			"server-admin",
 			"",
-			stats.MetricQuery{
-				BaseQuery: stats.BaseQuery{
-					Type: stats.GRADING_TIME_STATS_KEY,
-					Where: map[string]any{
-						stats.ASSIGNMENT_ID_KEY: "A2",
-					},
+			stats.Query{
+				Type: stats.GRADING_TIME_STATS_TYPE,
+				Where: map[stats.MetricAttribute]any{
+					stats.ASSIGNMENT_ID_KEY: "A2",
 				},
 			},
 			[]int{200},
@@ -105,12 +91,10 @@ func TestQuery(test *testing.T) {
 		{
 			"server-admin",
 			"",
-			stats.MetricQuery{
-				BaseQuery: stats.BaseQuery{
-					Type: stats.GRADING_TIME_STATS_KEY,
-					Where: map[string]any{
-						stats.ASSIGNMENT_ID_KEY: "zzz",
-					},
+			stats.Query{
+				Type: stats.GRADING_TIME_STATS_TYPE,
+				Where: map[stats.MetricAttribute]any{
+					stats.ASSIGNMENT_ID_KEY: "zzz",
 				},
 			},
 			nil,
@@ -118,12 +102,10 @@ func TestQuery(test *testing.T) {
 		{
 			"server-admin",
 			"",
-			stats.MetricQuery{
-				BaseQuery: stats.BaseQuery{
-					Type: stats.GRADING_TIME_STATS_KEY,
-					Where: map[string]any{
-						stats.USER_EMAIL_KEY: "U1",
-					},
+			stats.Query{
+				Type: stats.GRADING_TIME_STATS_TYPE,
+				Where: map[stats.MetricAttribute]any{
+					stats.USER_EMAIL_KEY: "U1",
 				},
 			},
 			[]int{100, 200},
@@ -131,12 +113,10 @@ func TestQuery(test *testing.T) {
 		{
 			"server-admin",
 			"",
-			stats.MetricQuery{
-				BaseQuery: stats.BaseQuery{
-					Type: stats.GRADING_TIME_STATS_KEY,
-					Where: map[string]any{
-						stats.USER_EMAIL_KEY: "zzz",
-					},
+			stats.Query{
+				Type: stats.GRADING_TIME_STATS_TYPE,
+				Where: map[stats.MetricAttribute]any{
+					stats.USER_EMAIL_KEY: "zzz",
 				},
 			},
 			nil,
@@ -144,12 +124,10 @@ func TestQuery(test *testing.T) {
 		{
 			"server-admin",
 			"",
-			stats.MetricQuery{
-				BaseQuery: stats.BaseQuery{
-					Type: stats.GRADING_TIME_STATS_KEY,
-					Where: map[string]any{
-						stats.COURSE_ID_KEY: db.TEST_COURSE_ID,
-					},
+			stats.Query{
+				Type: stats.GRADING_TIME_STATS_TYPE,
+				Where: map[stats.MetricAttribute]any{
+					stats.COURSE_ID_KEY: db.TEST_COURSE_ID,
 				},
 			},
 			[]int{100, 200, 300},
@@ -157,12 +135,10 @@ func TestQuery(test *testing.T) {
 		{
 			"server-admin",
 			"",
-			stats.MetricQuery{
-				BaseQuery: stats.BaseQuery{
-					Type: stats.GRADING_TIME_STATS_KEY,
-					Where: map[string]any{
-						stats.COURSE_ID_KEY: "zzz",
-					},
+			stats.Query{
+				Type: stats.GRADING_TIME_STATS_TYPE,
+				Where: map[stats.MetricAttribute]any{
+					stats.COURSE_ID_KEY: "zzz",
 				},
 			},
 			[]int{100, 200, 300},
@@ -172,12 +148,10 @@ func TestQuery(test *testing.T) {
 		{
 			"server-admin",
 			"",
-			stats.MetricQuery{
-				BaseQuery: stats.BaseQuery{
-					Type: stats.TASK_TIME_STATS_KEY,
-					Where: map[string]any{
-						stats.ASSIGNMENT_ID_KEY: "A2",
-					},
+			stats.Query{
+				Type: stats.TASK_TIME_STATS_TYPE,
+				Where: map[stats.MetricAttribute]any{
+					stats.ASSIGNMENT_ID_KEY: "A2",
 				},
 			},
 			[]int{200},
@@ -185,12 +159,10 @@ func TestQuery(test *testing.T) {
 		{
 			"server-admin",
 			"",
-			stats.MetricQuery{
-				BaseQuery: stats.BaseQuery{
-					Type: stats.TASK_TIME_STATS_KEY,
-					Where: map[string]any{
-						stats.ASSIGNMENT_ID_KEY: "zzz",
-					},
+			stats.Query{
+				Type: stats.TASK_TIME_STATS_TYPE,
+				Where: map[stats.MetricAttribute]any{
+					stats.ASSIGNMENT_ID_KEY: "zzz",
 				},
 			},
 			nil,
@@ -198,12 +170,10 @@ func TestQuery(test *testing.T) {
 		{
 			"server-admin",
 			"",
-			stats.MetricQuery{
-				BaseQuery: stats.BaseQuery{
-					Type: stats.TASK_TIME_STATS_KEY,
-					Where: map[string]any{
-						stats.USER_EMAIL_KEY: "U1",
-					},
+			stats.Query{
+				Type: stats.TASK_TIME_STATS_TYPE,
+				Where: map[stats.MetricAttribute]any{
+					stats.USER_EMAIL_KEY: "U1",
 				},
 			},
 			[]int{100, 200},
@@ -211,12 +181,10 @@ func TestQuery(test *testing.T) {
 		{
 			"server-admin",
 			"",
-			stats.MetricQuery{
-				BaseQuery: stats.BaseQuery{
-					Type: stats.TASK_TIME_STATS_KEY,
-					Where: map[string]any{
-						stats.USER_EMAIL_KEY: "zzz",
-					},
+			stats.Query{
+				Type: stats.TASK_TIME_STATS_TYPE,
+				Where: map[stats.MetricAttribute]any{
+					stats.USER_EMAIL_KEY: "zzz",
 				},
 			},
 			nil,
@@ -224,12 +192,10 @@ func TestQuery(test *testing.T) {
 		{
 			"server-admin",
 			"",
-			stats.MetricQuery{
-				BaseQuery: stats.BaseQuery{
-					Type: stats.TASK_TIME_STATS_KEY,
-					Where: map[string]any{
-						stats.COURSE_ID_KEY: db.TEST_COURSE_ID,
-					},
+			stats.Query{
+				Type: stats.TASK_TIME_STATS_TYPE,
+				Where: map[stats.MetricAttribute]any{
+					stats.COURSE_ID_KEY: db.TEST_COURSE_ID,
 				},
 			},
 			[]int{100, 200, 300},
@@ -237,12 +203,10 @@ func TestQuery(test *testing.T) {
 		{
 			"server-admin",
 			"",
-			stats.MetricQuery{
-				BaseQuery: stats.BaseQuery{
-					Type: stats.TASK_TIME_STATS_KEY,
-					Where: map[string]any{
-						stats.COURSE_ID_KEY: "zzz",
-					},
+			stats.Query{
+				Type: stats.TASK_TIME_STATS_TYPE,
+				Where: map[stats.MetricAttribute]any{
+					stats.COURSE_ID_KEY: "zzz",
 				},
 			},
 			[]int{100, 200, 300},
@@ -252,10 +216,8 @@ func TestQuery(test *testing.T) {
 		{
 			"server-user",
 			"-040",
-			stats.MetricQuery{
-				BaseQuery: stats.BaseQuery{
-					Type: stats.GRADING_TIME_STATS_KEY,
-				},
+			stats.Query{
+				Type: stats.GRADING_TIME_STATS_TYPE,
 			},
 			nil,
 		},
@@ -264,10 +226,8 @@ func TestQuery(test *testing.T) {
 		{
 			"server-user",
 			"-040",
-			stats.MetricQuery{
-				BaseQuery: stats.BaseQuery{
-					Type: stats.TASK_TIME_STATS_KEY,
-				},
+			stats.Query{
+				Type: stats.TASK_TIME_STATS_TYPE,
 			},
 			nil,
 		},
@@ -318,65 +278,65 @@ func TestQuery(test *testing.T) {
 	}
 }
 
-var testRecords []*stats.BaseMetric = []*stats.BaseMetric{
-	&stats.BaseMetric{
+var testRecords []*stats.Metric = []*stats.Metric{
+	&stats.Metric{
 		Timestamp: timestamp.FromMSecs(100),
-		Type:      stats.GRADING_TIME_STATS_KEY,
-		Attributes: map[string]any{
+		Type:      stats.GRADING_TIME_STATS_TYPE,
+		Attributes: map[stats.MetricAttribute]any{
 			stats.COURSE_ID_KEY:     db.TEST_COURSE_ID,
 			stats.ASSIGNMENT_ID_KEY: "A1",
 			stats.USER_EMAIL_KEY:    "U1",
-			stats.VALUE_KEY:         float64(100),
+			stats.DURATION_KEY:      float64(100),
 		},
 	},
-	&stats.BaseMetric{
+	&stats.Metric{
 		Timestamp: timestamp.FromMSecs(100),
-		Type:      stats.TASK_TIME_STATS_KEY,
-		Attributes: map[string]any{
+		Type:      stats.TASK_TIME_STATS_TYPE,
+		Attributes: map[stats.MetricAttribute]any{
 			stats.COURSE_ID_KEY:     db.TEST_COURSE_ID,
 			stats.ASSIGNMENT_ID_KEY: "A1",
 			stats.USER_EMAIL_KEY:    "U1",
-			stats.VALUE_KEY:         float64(100),
+			stats.DURATION_KEY:      float64(100),
 		},
 	},
-	&stats.BaseMetric{
+	&stats.Metric{
 		Timestamp: timestamp.FromMSecs(200),
-		Type:      stats.GRADING_TIME_STATS_KEY,
-		Attributes: map[string]any{
+		Type:      stats.GRADING_TIME_STATS_TYPE,
+		Attributes: map[stats.MetricAttribute]any{
 			stats.COURSE_ID_KEY:     db.TEST_COURSE_ID,
 			stats.ASSIGNMENT_ID_KEY: "A2",
 			stats.USER_EMAIL_KEY:    "U1",
-			stats.VALUE_KEY:         float64(200),
+			stats.DURATION_KEY:      float64(200),
 		},
 	},
-	&stats.BaseMetric{
+	&stats.Metric{
 		Timestamp: timestamp.FromMSecs(200),
-		Type:      stats.TASK_TIME_STATS_KEY,
-		Attributes: map[string]any{
+		Type:      stats.TASK_TIME_STATS_TYPE,
+		Attributes: map[stats.MetricAttribute]any{
 			stats.COURSE_ID_KEY:     db.TEST_COURSE_ID,
 			stats.ASSIGNMENT_ID_KEY: "A2",
 			stats.USER_EMAIL_KEY:    "U1",
-			stats.VALUE_KEY:         float64(200),
+			stats.DURATION_KEY:      float64(200),
 		},
 	},
-	&stats.BaseMetric{
+	&stats.Metric{
 		Timestamp: timestamp.FromMSecs(300),
-		Type:      stats.GRADING_TIME_STATS_KEY,
-		Attributes: map[string]any{
+		Type:      stats.GRADING_TIME_STATS_TYPE,
+		Attributes: map[stats.MetricAttribute]any{
 			stats.COURSE_ID_KEY:     db.TEST_COURSE_ID,
 			stats.ASSIGNMENT_ID_KEY: "A3",
 			stats.USER_EMAIL_KEY:    "U2",
-			stats.VALUE_KEY:         float64(300),
+			stats.DURATION_KEY:      float64(300),
 		},
 	},
-	&stats.BaseMetric{
+	&stats.Metric{
 		Timestamp: timestamp.FromMSecs(300),
-		Type:      stats.TASK_TIME_STATS_KEY,
-		Attributes: map[string]any{
+		Type:      stats.TASK_TIME_STATS_TYPE,
+		Attributes: map[stats.MetricAttribute]any{
 			stats.COURSE_ID_KEY:     db.TEST_COURSE_ID,
 			stats.ASSIGNMENT_ID_KEY: "A3",
 			stats.USER_EMAIL_KEY:    "U2",
-			stats.VALUE_KEY:         float64(300),
+			stats.DURATION_KEY:      float64(300),
 		},
 	},
 }

@@ -21,15 +21,15 @@ func TestMetric(test *testing.T) {
 		endpoint        string
 		expectedLocator string
 		fields          map[string]any
-		expectedMetric  *stats.BaseMetric
+		expectedMetric  *stats.Metric
 	}{
 		// Valid permissions, APIRequestUserContext request.
 		{
 			email:    "server-admin",
 			endpoint: "users/list",
-			expectedMetric: &stats.BaseMetric{
-				Type: stats.API_REQUEST_STATS_KEY,
-				Attributes: map[string]any{
+			expectedMetric: &stats.Metric{
+				Type: stats.API_REQUEST_STATS_TYPE,
+				Attributes: map[stats.MetricAttribute]any{
 					stats.ENDPOINT_KEY:   "/api/v03/users/list",
 					stats.USER_EMAIL_KEY: "server-admin@test.edulinq.org",
 				},
@@ -40,9 +40,9 @@ func TestMetric(test *testing.T) {
 		{
 			email:    "server-admin",
 			endpoint: "courses/users/list",
-			expectedMetric: &stats.BaseMetric{
-				Type: stats.API_REQUEST_STATS_KEY,
-				Attributes: map[string]any{
+			expectedMetric: &stats.Metric{
+				Type: stats.API_REQUEST_STATS_TYPE,
+				Attributes: map[stats.MetricAttribute]any{
 					stats.ENDPOINT_KEY:   "/api/v03/courses/users/list",
 					stats.USER_EMAIL_KEY: "server-admin@test.edulinq.org",
 					stats.COURSE_ID_KEY:  "course101",
@@ -54,9 +54,9 @@ func TestMetric(test *testing.T) {
 		{
 			email:    "server-admin",
 			endpoint: "courses/assignments/get",
-			expectedMetric: &stats.BaseMetric{
-				Type: stats.API_REQUEST_STATS_KEY,
-				Attributes: map[string]any{
+			expectedMetric: &stats.Metric{
+				Type: stats.API_REQUEST_STATS_TYPE,
+				Attributes: map[stats.MetricAttribute]any{
 					stats.ENDPOINT_KEY:      "/api/v03/courses/assignments/get",
 					stats.USER_EMAIL_KEY:    "server-admin@test.edulinq.org",
 					stats.COURSE_ID_KEY:     "course101",
@@ -70,9 +70,9 @@ func TestMetric(test *testing.T) {
 			email:           "course-student",
 			endpoint:        "users/list",
 			expectedLocator: "-041",
-			expectedMetric: &stats.BaseMetric{
-				Type: stats.API_REQUEST_STATS_KEY,
-				Attributes: map[string]any{
+			expectedMetric: &stats.Metric{
+				Type: stats.API_REQUEST_STATS_TYPE,
+				Attributes: map[stats.MetricAttribute]any{
 					stats.ENDPOINT_KEY:   "/api/v03/users/list",
 					stats.USER_EMAIL_KEY: "course-student@test.edulinq.org",
 					stats.LOCATOR_KEY:    "-041",
@@ -85,9 +85,9 @@ func TestMetric(test *testing.T) {
 			email:           "course-student",
 			endpoint:        "courses/users/list",
 			expectedLocator: "-020",
-			expectedMetric: &stats.BaseMetric{
-				Type: stats.API_REQUEST_STATS_KEY,
-				Attributes: map[string]any{
+			expectedMetric: &stats.Metric{
+				Type: stats.API_REQUEST_STATS_TYPE,
+				Attributes: map[stats.MetricAttribute]any{
 					stats.ENDPOINT_KEY:   "/api/v03/courses/users/list",
 					stats.USER_EMAIL_KEY: "course-student@test.edulinq.org",
 					stats.COURSE_ID_KEY:  "course101",
@@ -101,9 +101,9 @@ func TestMetric(test *testing.T) {
 			email:           "server-user",
 			endpoint:        "courses/assignments/get",
 			expectedLocator: "-040",
-			expectedMetric: &stats.BaseMetric{
-				Type: stats.API_REQUEST_STATS_KEY,
-				Attributes: map[string]any{
+			expectedMetric: &stats.Metric{
+				Type: stats.API_REQUEST_STATS_TYPE,
+				Attributes: map[stats.MetricAttribute]any{
 					stats.ENDPOINT_KEY: "/api/v03/courses/assignments/get",
 					stats.LOCATOR_KEY:  "-040",
 				},
@@ -116,9 +116,9 @@ func TestMetric(test *testing.T) {
 			endpoint:        "courses/assignments/get",
 			fields:          map[string]any{"assignment-id": "zzz"},
 			expectedLocator: "-022",
-			expectedMetric: &stats.BaseMetric{
-				Type: stats.API_REQUEST_STATS_KEY,
-				Attributes: map[string]any{
+			expectedMetric: &stats.Metric{
+				Type: stats.API_REQUEST_STATS_TYPE,
+				Attributes: map[stats.MetricAttribute]any{
 					stats.ENDPOINT_KEY:      "/api/v03/courses/assignments/get",
 					stats.COURSE_ID_KEY:     "course101",
 					stats.ASSIGNMENT_ID_KEY: "zzz",
@@ -149,10 +149,8 @@ func TestMetric(test *testing.T) {
 			continue
 		}
 
-		query := stats.MetricQuery{
-			BaseQuery: stats.BaseQuery{
-				Type: stats.API_REQUEST_STATS_KEY,
-			},
+		query := stats.Query{
+			Type: stats.API_REQUEST_STATS_TYPE,
 		}
 
 		metrics, err := db.GetMetrics(query)

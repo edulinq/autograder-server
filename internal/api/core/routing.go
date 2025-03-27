@@ -155,20 +155,20 @@ func sendAPIResponse(apiRequest ValidAPIRequest, response http.ResponseWriter,
 	}
 
 	endpoint, sender, userEmail, courseID, assignmentID, locator := getRequestInfo(apiRequest, apiErr)
-	metric := stats.BaseMetric{
+	metric := stats.Metric{
 		Timestamp: startTime,
-		Attributes: map[string]any{
+		Type:      stats.API_REQUEST_STATS_TYPE,
+		Attributes: map[stats.MetricAttribute]any{
 			stats.SENDER_KEY:   sender,
 			stats.ENDPOINT_KEY: endpoint,
 			stats.DURATION_KEY: float64((apiResponse.EndTimestamp - startTime).ToMSecs()),
 		},
-		Type: stats.API_REQUEST_STATS_KEY,
 	}
 
-	stats.AddIfNotEmpty(metric.Attributes, stats.USER_EMAIL_KEY, userEmail)
-	stats.AddIfNotEmpty(metric.Attributes, stats.COURSE_ID_KEY, courseID)
-	stats.AddIfNotEmpty(metric.Attributes, stats.ASSIGNMENT_ID_KEY, assignmentID)
-	stats.AddIfNotEmpty(metric.Attributes, stats.LOCATOR_KEY, locator)
+	stats.InsertIntoMapIfPresent(metric.Attributes, stats.USER_EMAIL_KEY, userEmail)
+	stats.InsertIntoMapIfPresent(metric.Attributes, stats.COURSE_ID_KEY, courseID)
+	stats.InsertIntoMapIfPresent(metric.Attributes, stats.ASSIGNMENT_ID_KEY, assignmentID)
+	stats.InsertIntoMapIfPresent(metric.Attributes, stats.LOCATOR_KEY, locator)
 
 	stats.AsyncStoreMetric(&metric)
 

@@ -8,15 +8,15 @@ import (
 	"github.com/edulinq/autograder/internal/util"
 )
 
-type Query interface {
+type BaseQuery interface {
 	// Does this metric match the filtering conditions of this query.
-	Match(record Metric) bool
+	Match(record BaseMetric) bool
 }
 
 // The base for a stats query.
 // Note that the semantics of this struct mean that times before UNIX epoch (negative times)
 // must be offset by at least one MS (as a zero value is treated as the end of time).
-type BaseQuery struct {
+type Query struct {
 	// Limit the number of results.
 	// Take this number of results from the top.
 	// A non-positive number means no count limit will be applied.
@@ -34,28 +34,31 @@ type BaseQuery struct {
 	// -1 for ascending, 0 for no sorting, 1 for descending.
 	Sort int `json:"sort"`
 
-	// Filter results to only include metrics that match BaseMetric attribute field values.
+	// Filter results to only include metrics that match Metric attribute field values.
 	// Keys are field names (e.g., "course") and values are what to include (e.g., course101).
-	// This filter is applied after all other BaseQuery conditions are applied.
-	Where map[string]any `json:"where,omitempty"`
+	// This filter is applied after all other Query conditions are applied.
+	Where map[MetricAttribute]any `json:"where,omitempty"`
 
-	Type string `json:"type"`
+	// Only return data of this type.
+	// This field is required in the query to specify which kind of metric to return.
+	Type MetricType `json:"type"`
 }
 
-type MetricQuery struct {
-	BaseQuery
-}
-
-func (this MetricQuery) Match(metric *BaseMetric) bool {
+func (this Query) Match(metric *Metric) bool {
 	metricJSONMap, err := util.ToJSONMap(metric)
 	if err != nil {
 		log.Error("Failed to convert metric to a JSON map.", err)
 		return false
 	}
 
-	attributes, ok := metricJSONMap[ATTRIBUTES_KEY].(map[string]any)
+	generalizedAttributes, ok := metricJSONMap[ATTRIBUTES_KEY].(map[string]any)
 	if !ok {
 		return false
+	}
+
+	attributes := make(map[MetricAttribute]any)
+	for key, value := range generalizedAttributes {
+		attributes[MetricAttribute(key)] = value
 	}
 
 	for field, value := range this.Where {
@@ -69,16 +72,15 @@ func (this MetricQuery) Match(metric *BaseMetric) bool {
 		}
 	}
 
-
 	return true
 }
 
-func (this BaseQuery) Match(record Metric) bool {
+func (this Query) BaseMatch(record BaseMetric) bool {
 	time := record.GetTimestamp()
 	return (this.Before.IsZero() || (time < this.Before)) && (time > this.After)
 }
 
-func compareMetric[T Metric](order int, a T, b T) int {
+func compareMetric[T BaseMetric](order int, a T, b T) int {
 	aTime := a.GetTimestamp()
 	bTime := b.GetTimestamp()
 
@@ -96,7 +98,7 @@ func compareMetric[T Metric](order int, a T, b T) int {
 // Apply the base query to filter the given metrics.
 // Return a new list with only the query results.
 // The given metrics must already be sorted.
-func ApplyBaseQuery[T Metric](metrics []T, baseQuery BaseQuery) []T {
+func ApplyBaseQuery[T BaseMetric](metrics []T, baseQuery Query) []T {
 	// Ensure the semantics of sort ordering are followed.
 	sortOrder := baseQuery.Sort
 	if sortOrder < 0 {
@@ -109,7 +111,7 @@ func ApplyBaseQuery[T Metric](metrics []T, baseQuery BaseQuery) []T {
 
 	// First, filter.
 	for _, metric := range metrics {
-		if baseQuery.Match(metric) {
+		if baseQuery.BaseMatch(metric) {
 			results = append(results, metric)
 		}
 	}

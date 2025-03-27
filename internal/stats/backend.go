@@ -11,8 +11,8 @@ type StorageBackend interface {
 	GetSystemStats(query Query) ([]*SystemMetrics, error)
 	StoreSystemStats(record *SystemMetrics) error
 
-	GetMetrics(query MetricQuery) ([]*BaseMetric, error)
-	StoreMetric(record *BaseMetric) error
+	GetMetrics(query Query) ([]*Metric, error)
+	StoreMetric(record *Metric) error
 }
 
 func SetStorageBackend(newBackend StorageBackend) {
@@ -52,7 +52,7 @@ func storeSystemStats(record *SystemMetrics) error {
 	return backend.StoreSystemStats(record)
 }
 
-func GetMetric(query MetricQuery) ([]*BaseMetric, error) {
+func GetMetric(query Query) ([]*Metric, error) {
 	backendLock.RLock()
 	defer backendLock.RUnlock()
 
@@ -63,7 +63,7 @@ func GetMetric(query MetricQuery) ([]*BaseMetric, error) {
 	return backend.GetMetrics(query)
 }
 
-func StoreMetric(record *BaseMetric) error {
+func StoreMetric(record *Metric) error {
 	backendLock.RLock()
 	defer backendLock.RUnlock()
 

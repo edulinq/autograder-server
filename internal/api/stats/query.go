@@ -7,25 +7,25 @@ import (
 )
 
 type QueryRequest struct {
-	core.APIRequestCourseUserContext
+	core.APIRequestUserContext
 	core.MinServerRoleAdmin
 
-	stats.MetricQuery
+	stats.Query
 }
 
 type QueryResponse struct {
-	Records []*stats.BaseMetric `json:"results"`
+	Records []*stats.Metric `json:"results"`
 }
 
 // Query stats for the server.
 func HandleQuery(request *QueryRequest) (*QueryResponse, *core.APIError) {
-	records, err := db.GetMetrics(request.MetricQuery)
+	records, err := db.GetMetrics(request.Query)
 	if err != nil {
 		return nil, core.NewUserContextInternalError("-301", &request.APIRequestUserContext, "Failed to query stats.").Err(err)
 	}
 
 	response := QueryResponse{
-		Records: stats.ApplyBaseQuery(records, request.BaseQuery),
+		Records: stats.ApplyBaseQuery(records, request.Query),
 	}
 
 	return &response, nil

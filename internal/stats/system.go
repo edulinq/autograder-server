@@ -144,7 +144,7 @@ func getSystemMetrics(intervalMS int) (*SystemMetrics, error) {
 	lastBytesReceived = netMetrics[0].BytesRecv
 
 	results := SystemMetrics{
-		BaseMetric: BaseMetric{
+		Metric: Metric{
 			Timestamp: timestamp.Now(),
 		},
 		CPUPercent:       util.RoundWithPrecision(cpuMetrics[0], 2),

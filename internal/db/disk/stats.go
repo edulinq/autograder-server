@@ -17,7 +17,7 @@ func (this *backend) GetSystemStats(query stats.Query) ([]*stats.SystemMetrics, 
 	defer this.systemStatsLock.RUnlock()
 
 	records, err := util.FilterJSONLFile(path, stats.SystemMetrics{}, func(record *stats.SystemMetrics) bool {
-		return query.Match(record)
+		return query.BaseMatch(record)
 	})
 
 	return records, err
@@ -30,7 +30,7 @@ func (this *backend) StoreSystemStats(record *stats.SystemMetrics) error {
 	return util.AppendJSONLFile(this.getSystemStatsPath(), record)
 }
 
-func (this *backend) GetMetrics(query stats.MetricQuery) ([]*stats.BaseMetric, error) {
+func (this *backend) GetMetrics(query stats.Query) ([]*stats.Metric, error) {
 	path, err := this.getStatsPath(query.Type)
 	if err != nil {
 		return nil, err
@@ -39,25 +39,18 @@ func (this *backend) GetMetrics(query stats.MetricQuery) ([]*stats.BaseMetric, e
 	this.statsLock.Lock()
 	defer this.statsLock.Unlock()
 
-	records, err := util.FilterJSONLFile(path, stats.BaseMetric{}, func(record *stats.BaseMetric) bool {
+	records, err := util.FilterJSONLFile(path, stats.Metric{}, func(record *stats.Metric) bool {
 		return query.Match(record)
 	})
 
 	return records, err
 }
 
-func (this *backend) StoreMetric(record *stats.BaseMetric) error {
+func (this *backend) StoreMetric(record *stats.Metric) error {
 	path, err := this.getStatsPath(record.Type)
 	if err != nil {
 		return err
 	}
-
-	// if (record.Type == stats.GRADING_TIME_STATS_KEY || record.Type == stats.TASK_TIME_STATS_KEY){
-	// 	course, ok := record.Attributes[stats.COURSE_ID_KEY]
-	// 	if !ok {
-	// 		return fmt.Errorf("")
-	// 	}
-	// }
 
 	this.statsLock.Lock()
 	defer this.statsLock.Unlock()
@@ -65,12 +58,12 @@ func (this *backend) StoreMetric(record *stats.BaseMetric) error {
 	return util.AppendJSONLFile(path, record)
 }
 
-func (this *backend) getStatsPath(metricType string) (string, error) {
+func (this *backend) getStatsPath(metricType stats.MetricType) (string, error) {
 	if metricType == "" {
 		return "", fmt.Errorf("No metric type was given.")
 	}
 
-	return filepath.Join(this.baseDir, metricType+".jsonl"), nil
+	return filepath.Join(this.baseDir, string(metricType)+".jsonl"), nil
 }
 
 func (this *backend) getSystemStatsPath() string {

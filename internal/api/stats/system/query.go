@@ -10,7 +10,7 @@ type QueryRequest struct {
 	core.APIRequestUserContext
 	core.MinServerRoleAdmin
 
-	stats.BaseQuery
+	stats.Query
 }
 
 type QueryResponse struct {
@@ -19,13 +19,13 @@ type QueryResponse struct {
 
 // Query the system stats for the server.
 func HandleQuery(request *QueryRequest) (*QueryResponse, *core.APIError) {
-	records, err := db.GetSystemStats(request.BaseQuery)
+	records, err := db.GetSystemStats(request.Query)
 	if err != nil {
 		return nil, core.NewUserContextInternalError("-300", &request.APIRequestUserContext, "Failed to query system stats.").Err(err)
 	}
 
 	response := QueryResponse{
-		Records: stats.ApplyBaseQuery(records, request.BaseQuery),
+		Records: stats.ApplyBaseQuery(records, request.Query),
 	}
 
 	return &response, nil

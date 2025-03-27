@@ -112,20 +112,20 @@ func Grade(ctx context.Context, assignment *model.Assignment, submissionPath str
 		return &gradingResult, nil, "", fmt.Errorf("Failed to save grading result: '%w'.", err)
 	}
 
-	metric := stats.BaseMetric{
+	metric := stats.Metric{
 		Timestamp: startTimestamp,
-		Type:      stats.GRADING_TIME_STATS_KEY,
-		Attributes: map[string]any{
-			stats.VALUE_KEY: float64((endTimestamp - startTimestamp).ToMSecs()),
+		Type:      stats.GRADING_TIME_STATS_TYPE,
+		Attributes: map[stats.MetricAttribute]any{
+			stats.DURATION_KEY:  float64((endTimestamp - startTimestamp).ToMSecs()),
+			stats.COURSE_ID_KEY: gradingInfo.CourseID,
 		},
 	}
 
-	stats.AddIfNotEmpty(metric.Attributes, stats.USER_EMAIL_KEY, gradingInfo.User)
-	stats.AddIfNotEmpty(metric.Attributes, stats.COURSE_ID_KEY, gradingInfo.CourseID)
-	stats.AddIfNotEmpty(metric.Attributes, stats.ASSIGNMENT_ID_KEY, gradingInfo.AssignmentID)
+	stats.InsertIntoMapIfPresent(metric.Attributes, stats.USER_EMAIL_KEY, gradingInfo.User)
+	stats.InsertIntoMapIfPresent(metric.Attributes, stats.ASSIGNMENT_ID_KEY, gradingInfo.AssignmentID)
 
 	// Store stats for this grading (when everything is successful).
-	stats.AsyncStoreMetric(&metric)
+	stats.AsyncStoreCourseMetric(&metric)
 
 	return &gradingResult, nil, "", nil
 }

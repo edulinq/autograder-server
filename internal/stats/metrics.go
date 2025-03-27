@@ -6,46 +6,57 @@ import (
 	"github.com/edulinq/autograder/internal/timestamp"
 )
 
+type MetricAttribute string
+type MetricType string
+
+// Keys for the attributes field inside of Metric and Query.
 const (
-	ATTRIBUTES_KEY               = "attributes"
-	TYPE_KEY                     = "type"
-	DURATION_KEY                 = "duration"
-	ENDPOINT_KEY                 = "endpoint"
-	LOCATOR_KEY                  = "locator"
-	SENDER_KEY                   = "sender"
-	API_REQUEST_STATS_KEY        = "api-request-stats"
-	GRADING_TIME_STATS_KEY       = "grading-time-stats"
-	TASK_TIME_STATS_KEY          = "task-time-stats"
-	CODE_ANALYSIS_TIME_STATS_KEY = "code-analysis-time-stats"
-	ATTRIBUTE_KEY_TASK           = "task-type"
-	ATTRIBUTE_KEY_ANALYSIS       = "analysis-type"
-	ASSIGNMENT_ID_KEY            = "assignment"
-	COURSE_ID_KEY                = "course"
-	TASK_TYPE_KEY                = "task-type"
-	COURSE_TYPE_KEY              = "type"
-	VALUE_KEY                    = "value"
-	USER_EMAIL_KEY               = "user"
+	// Common metric attribute keys
+	DURATION_KEY MetricAttribute = "duration"
+	ENDPOINT_KEY MetricAttribute = "endpoint"
+	LOCATOR_KEY  MetricAttribute = "locator"
+	SENDER_KEY   MetricAttribute = "sender"
+	VALUE_KEY    MetricAttribute = "value"
+
+	// Course-specific attribute keys
+	ASSIGNMENT_ID_KEY MetricAttribute = "assignment"
+	COURSE_ID_KEY     MetricAttribute = "course"
+	USER_EMAIL_KEY    MetricAttribute = "user"
+
+	// Specialized attribute keys
+	ANALYSIS_KEY  MetricAttribute = "analysis-type"
+	TASK_TYPE_KEY MetricAttribute = "task-type"
 )
 
-type Metric interface {
+// Values for the type field inside of Metric and Query.
+const (
+	API_REQUEST_STATS_TYPE        MetricType = "api-request-stats"
+	CODE_ANALYSIS_TIME_STATS_TYPE MetricType = "code-analysis-time-stats"
+	GRADING_TIME_STATS_TYPE       MetricType = "grading-time-stats"
+	TASK_TIME_STATS_TYPE          MetricType = "task-time-stats"
+)
+
+const ATTRIBUTES_KEY = "attributes"
+
+type BaseMetric interface {
 	GetTimestamp() timestamp.Timestamp
 }
 
-type BaseMetric struct {
+type Metric struct {
 	Timestamp timestamp.Timestamp `json:"timestamp"`
 
-	Type string `json:"type"`
+	Type MetricType `json:"type"`
 
 	// Additional attributes that are not standard enough to be formalized in fields.
-	Attributes map[string]any `json:"attributes,omitempty"`
+	Attributes map[MetricAttribute]any `json:"attributes,omitempty"`
 }
 
-func (this BaseMetric) GetTimestamp() timestamp.Timestamp {
+func (this Metric) GetTimestamp() timestamp.Timestamp {
 	return this.Timestamp
 }
 
 type SystemMetrics struct {
-	BaseMetric
+	Metric
 
 	CPUPercent       float64 `json:"cpu-percent"`
 	MemPercent       float64 `json:"mem-percent"`
@@ -53,7 +64,7 @@ type SystemMetrics struct {
 	NetBytesReceived uint64  `json:"net-bytes-received"`
 }
 
-func AddIfNotEmpty(attributes map[string]any, key string, value any) {
+func InsertIntoMapIfPresent(attributes map[MetricAttribute]any, key MetricAttribute, value any) {
 	switch v := value.(type) {
 	case string:
 		if v != "" {
@@ -66,7 +77,7 @@ func AddIfNotEmpty(attributes map[string]any, key string, value any) {
 	}
 }
 
-func (this *BaseMetric) LogValue() []*log.Attr {
+func (this *Metric) LogValue() []*log.Attr {
 	attrs := []*log.Attr{
 		log.NewAttr("metric-type", this.Type),
 	}
@@ -89,7 +100,7 @@ func (this *BaseMetric) LogValue() []*log.Attr {
 	return attrs
 }
 
-func AsyncStoreMetric(metric *BaseMetric) {
+func AsyncStoreMetric(metric *Metric) {
 	if metric == nil {
 		return
 	}
@@ -107,4 +118,14 @@ func AsyncStoreMetric(metric *BaseMetric) {
 	} else {
 		go storeFunc()
 	}
+}
+
+func AsyncStoreCourseMetric(metric *Metric) {
+	courseID, ok := metric.Attributes[COURSE_ID_KEY]
+	if !ok || courseID == "" {
+		log.Error("Cannot log course statistic without course ID.", metric)
+		return
+	}
+
+	AsyncStoreMetric(metric)
 }

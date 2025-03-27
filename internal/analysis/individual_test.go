@@ -59,12 +59,10 @@ func TestIndividualAnalysisBase(test *testing.T) {
 	// Test again, which should pull from the cache.
 	testIndividual(test, ids, expected, len(expected))
 
-	courseMetricQuery := stats.MetricQuery{
-		BaseQuery: stats.BaseQuery{
-			Type: stats.CODE_ANALYSIS_TIME_STATS_KEY,
-			Where: map[string]any{
-				stats.COURSE_ID_KEY: "course101",
-			},
+	courseMetricQuery := stats.Query{
+		Type: stats.CODE_ANALYSIS_TIME_STATS_TYPE,
+		Where: map[stats.MetricAttribute]any{
+			stats.COURSE_ID_KEY: "course101",
 		},
 	}
 
@@ -74,16 +72,16 @@ func TestIndividualAnalysisBase(test *testing.T) {
 		test.Fatalf("Failed to do stats query: '%v'.", err)
 	}
 
-	expectedStats := []*stats.BaseMetric{
-		&stats.BaseMetric{
+	expectedStats := []*stats.Metric{
+		&stats.Metric{
 			Timestamp: timestamp.Zero(),
-			Type:      stats.CODE_ANALYSIS_TIME_STATS_KEY,
-			Attributes: map[string]any{
-				stats.ATTRIBUTE_KEY_ANALYSIS: "individual",
-				stats.COURSE_ID_KEY:          "course101",
-				stats.ASSIGNMENT_ID_KEY:      "hw0",
-				stats.USER_EMAIL_KEY:         "server-admin@test.edulinq.org",
-				stats.VALUE_KEY:              0,
+			Type:      stats.CODE_ANALYSIS_TIME_STATS_TYPE,
+			Attributes: map[stats.MetricAttribute]any{
+				stats.ANALYSIS_KEY:      "individual",
+				stats.COURSE_ID_KEY:     "course101",
+				stats.ASSIGNMENT_ID_KEY: "hw0",
+				stats.USER_EMAIL_KEY:    "server-admin@test.edulinq.org",
+				stats.VALUE_KEY:         0,
 			},
 		},
 	}
@@ -93,7 +91,7 @@ func TestIndividualAnalysisBase(test *testing.T) {
 		result.Timestamp = timestamp.Zero()
 
 		if result.Attributes == nil {
-			result.Attributes = make(map[string]any)
+			result.Attributes = make(map[stats.MetricAttribute]any)
 		}
 
 		result.Attributes[stats.VALUE_KEY] = 0
