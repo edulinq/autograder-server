@@ -36,7 +36,6 @@ func (this *backend) GetMetrics(query stats.MetricQuery) ([]*stats.BaseMetric, e
 		return nil, err
 	}
 
-	fmt.Println("query: ", util.MustToJSONIndent(query))
 	this.statsLock.Lock()
 	defer this.statsLock.Unlock()
 

@@ -1,7 +1,6 @@
 package stats
 
 import (
-	"fmt"
 	"slices"
 
 	"github.com/edulinq/autograder/internal/log"
@@ -59,8 +58,6 @@ func (this MetricQuery) Match(metric *BaseMetric) bool {
 		return false
 	}
 
-	fmt.Println("attributes: ", attributes)
-
 	for field, value := range this.Where {
 		fieldValue, exists := attributes[field]
 		if !exists {
@@ -71,6 +68,7 @@ func (this MetricQuery) Match(metric *BaseMetric) bool {
 			return false
 		}
 	}
+
 
 	return true
 }

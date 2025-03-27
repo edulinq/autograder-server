@@ -31,246 +31,246 @@ func TestQuery(test *testing.T) {
 			},
 			[]int{100, 200, 300},
 		},
-		// {
-		// 	"server-admin",
-		// 	"",
-		// 	stats.MetricQuery{
-		// 		BaseQuery: stats.BaseQuery{
-		// 			Type: stats.GRADING_TIME_STATS_KEY,
-		// 			Sort: 1,
-		// 		},
-		// 	},
-		// 	[]int{300, 200, 100},
-		// },
-		// {
-		// 	"server-admin",
-		// 	"",
-		// 	stats.MetricQuery{
-		// 		BaseQuery: stats.BaseQuery{
-		// 			Type:  stats.GRADING_TIME_STATS_KEY,
-		// 			After: timestamp.FromMSecs(150),
-		// 		},
-		// 	},
-		// 	[]int{200, 300},
-		// },
+		{
+			"server-admin",
+			"",
+			stats.MetricQuery{
+				BaseQuery: stats.BaseQuery{
+					Type: stats.GRADING_TIME_STATS_KEY,
+					Sort: 1,
+				},
+			},
+			[]int{300, 200, 100},
+		},
+		{
+			"server-admin",
+			"",
+			stats.MetricQuery{
+				BaseQuery: stats.BaseQuery{
+					Type:  stats.GRADING_TIME_STATS_KEY,
+					After: timestamp.FromMSecs(150),
+				},
+			},
+			[]int{200, 300},
+		},
 
-		// // Task Time Stats Base.
-		// {
-		// 	"server-admin",
-		// 	"",
-		// 	stats.MetricQuery{
-		// 		BaseQuery: stats.BaseQuery{
-		// 			Type: stats.TASK_TIME_STATS_KEY,
-		// 		},
-		// 	},
-		// 	[]int{100, 200, 300},
-		// },
-		// {
-		// 	"server-admin",
-		// 	"",
-		// 	stats.MetricQuery{
-		// 		BaseQuery: stats.BaseQuery{
-		// 			Type: stats.TASK_TIME_STATS_KEY,
-		// 			Sort: 1,
-		// 		},
-		// 	},
-		// 	[]int{300, 200, 100},
-		// },
-		// {
-		// 	"server-admin",
-		// 	"",
-		// 	stats.MetricQuery{
-		// 		BaseQuery: stats.BaseQuery{
-		// 			Type:  stats.TASK_TIME_STATS_KEY,
-		// 			After: timestamp.FromMSecs(150),
-		// 		},
-		// 	},
-		// 	[]int{200, 300},
-		// },
+		// Task Time Stats Base.
+		{
+			"server-admin",
+			"",
+			stats.MetricQuery{
+				BaseQuery: stats.BaseQuery{
+					Type: stats.TASK_TIME_STATS_KEY,
+				},
+			},
+			[]int{100, 200, 300},
+		},
+		{
+			"server-admin",
+			"",
+			stats.MetricQuery{
+				BaseQuery: stats.BaseQuery{
+					Type: stats.TASK_TIME_STATS_KEY,
+					Sort: 1,
+				},
+			},
+			[]int{300, 200, 100},
+		},
+		{
+			"server-admin",
+			"",
+			stats.MetricQuery{
+				BaseQuery: stats.BaseQuery{
+					Type:  stats.TASK_TIME_STATS_KEY,
+					After: timestamp.FromMSecs(150),
+				},
+			},
+			[]int{200, 300},
+		},
 
-		// // Grading Time Stats, Course Specific.
-		// {
-		// 	"server-admin",
-		// 	"",
-		// 	stats.MetricQuery{
-		// 		BaseQuery: stats.BaseQuery{
-		// 			Type: stats.GRADING_TIME_STATS_KEY,
-		// 			Where: map[string]any{
-		// 				stats.ASSIGNMENT_ID_KEY: "A2",
-		// 			},
-		// 		},
-		// 	},
-		// 	[]int{200},
-		// },
-		// {
-		// 	"server-admin",
-		// 	"",
-		// 	stats.MetricQuery{
-		// 		BaseQuery: stats.BaseQuery{
-		// 			Type: stats.GRADING_TIME_STATS_KEY,
-		// 			Where: map[string]any{
-		// 				stats.ASSIGNMENT_ID_KEY: "zzz",
-		// 			},
-		// 		},
-		// 	},
-		// 	nil,
-		// },
-		// {
-		// 	"server-admin",
-		// 	"",
-		// 	stats.MetricQuery{
-		// 		BaseQuery: stats.BaseQuery{
-		// 			Type: stats.GRADING_TIME_STATS_KEY,
-		// 			Where: map[string]any{
-		// 				stats.USER_EMAIL_KEY: "U1",
-		// 			},
-		// 		},
-		// 	},
-		// 	[]int{100, 200},
-		// },
-		// {
-		// 	"server-admin",
-		// 	"",
-		// 	stats.MetricQuery{
-		// 		BaseQuery: stats.BaseQuery{
-		// 			Type: stats.GRADING_TIME_STATS_KEY,
-		// 			Where: map[string]any{
-		// 				stats.USER_EMAIL_KEY: "zzz",
-		// 			},
-		// 		},
-		// 	},
-		// 	nil,
-		// },
-		// {
-		// 	"server-admin",
-		// 	"",
-		// 	stats.MetricQuery{
-		// 		BaseQuery: stats.BaseQuery{
-		// 			Type: stats.GRADING_TIME_STATS_KEY,
-		// 			Where: map[string]any{
-		// 				stats.COURSE_ID_KEY: "C1",
-		// 			},
-		// 		},
-		// 	},
-		// 	[]int{100},
-		// },
-		// {
-		// 	"server-admin",
-		// 	"",
-		// 	stats.MetricQuery{
-		// 		BaseQuery: stats.BaseQuery{
-		// 			Type: stats.GRADING_TIME_STATS_KEY,
-		// 			Where: map[string]any{
-		// 				stats.COURSE_ID_KEY: "zzz",
-		// 			},
-		// 		},
-		// 	},
-		// 	nil,
-		// },
+		// Grading Time Stats, Course Specific.
+		{
+			"server-admin",
+			"",
+			stats.MetricQuery{
+				BaseQuery: stats.BaseQuery{
+					Type: stats.GRADING_TIME_STATS_KEY,
+					Where: map[string]any{
+						stats.ASSIGNMENT_ID_KEY: "A2",
+					},
+				},
+			},
+			[]int{200},
+		},
+		{
+			"server-admin",
+			"",
+			stats.MetricQuery{
+				BaseQuery: stats.BaseQuery{
+					Type: stats.GRADING_TIME_STATS_KEY,
+					Where: map[string]any{
+						stats.ASSIGNMENT_ID_KEY: "zzz",
+					},
+				},
+			},
+			nil,
+		},
+		{
+			"server-admin",
+			"",
+			stats.MetricQuery{
+				BaseQuery: stats.BaseQuery{
+					Type: stats.GRADING_TIME_STATS_KEY,
+					Where: map[string]any{
+						stats.USER_EMAIL_KEY: "U1",
+					},
+				},
+			},
+			[]int{100, 200},
+		},
+		{
+			"server-admin",
+			"",
+			stats.MetricQuery{
+				BaseQuery: stats.BaseQuery{
+					Type: stats.GRADING_TIME_STATS_KEY,
+					Where: map[string]any{
+						stats.USER_EMAIL_KEY: "zzz",
+					},
+				},
+			},
+			nil,
+		},
+		{
+			"server-admin",
+			"",
+			stats.MetricQuery{
+				BaseQuery: stats.BaseQuery{
+					Type: stats.GRADING_TIME_STATS_KEY,
+					Where: map[string]any{
+						stats.COURSE_ID_KEY: db.TEST_COURSE_ID,
+					},
+				},
+			},
+			[]int{100, 200, 300},
+		},
+		{
+			"server-admin",
+			"",
+			stats.MetricQuery{
+				BaseQuery: stats.BaseQuery{
+					Type: stats.GRADING_TIME_STATS_KEY,
+					Where: map[string]any{
+						stats.COURSE_ID_KEY: "zzz",
+					},
+				},
+			},
+			[]int{100, 200, 300},
+		},
 
-		// // Task Time Stats, Course Specific.
-		// {
-		// 	"server-admin",
-		// 	"",
-		// 	stats.MetricQuery{
-		// 		BaseQuery: stats.BaseQuery{
-		// 			Type: stats.TASK_TIME_STATS_KEY,
-		// 			Where: map[string]any{
-		// 				stats.ASSIGNMENT_ID_KEY: "A2",
-		// 			},
-		// 		},
-		// 	},
-		// 	[]int{200},
-		// },
-		// {
-		// 	"server-admin",
-		// 	"",
-		// 	stats.MetricQuery{
-		// 		BaseQuery: stats.BaseQuery{
-		// 			Type: stats.TASK_TIME_STATS_KEY,
-		// 			Where: map[string]any{
-		// 				stats.ASSIGNMENT_ID_KEY: "zzz",
-		// 			},
-		// 		},
-		// 	},
-		// 	nil,
-		// },
-		// {
-		// 	"server-admin",
-		// 	"",
-		// 	stats.MetricQuery{
-		// 		BaseQuery: stats.BaseQuery{
-		// 			Type: stats.TASK_TIME_STATS_KEY,
-		// 			Where: map[string]any{
-		// 				stats.USER_EMAIL_KEY: "U1",
-		// 			},
-		// 		},
-		// 	},
-		// 	[]int{100, 200},
-		// },
-		// {
-		// 	"server-admin",
-		// 	"",
-		// 	stats.MetricQuery{
-		// 		BaseQuery: stats.BaseQuery{
-		// 			Type: stats.TASK_TIME_STATS_KEY,
-		// 			Where: map[string]any{
-		// 				stats.USER_EMAIL_KEY: "zzz",
-		// 			},
-		// 		},
-		// 	},
-		// 	nil,
-		// },
-		// {
-		// 	"server-admin",
-		// 	"",
-		// 	stats.MetricQuery{
-		// 		BaseQuery: stats.BaseQuery{
-		// 			Type: stats.TASK_TIME_STATS_KEY,
-		// 			Where: map[string]any{
-		// 				stats.COURSE_ID_KEY: "C1",
-		// 			},
-		// 		},
-		// 	},
-		// 	[]int{100},
-		// },
-		// {
-		// 	"server-admin",
-		// 	"",
-		// 	stats.MetricQuery{
-		// 		BaseQuery: stats.BaseQuery{
-		// 			Type: stats.TASK_TIME_STATS_KEY,
-		// 			Where: map[string]any{
-		// 				stats.COURSE_ID_KEY: "zzz",
-		// 			},
-		// 		},
-		// 	},
-		// 	nil,
-		// },
+		// Task Time Stats, Course Specific.
+		{
+			"server-admin",
+			"",
+			stats.MetricQuery{
+				BaseQuery: stats.BaseQuery{
+					Type: stats.TASK_TIME_STATS_KEY,
+					Where: map[string]any{
+						stats.ASSIGNMENT_ID_KEY: "A2",
+					},
+				},
+			},
+			[]int{200},
+		},
+		{
+			"server-admin",
+			"",
+			stats.MetricQuery{
+				BaseQuery: stats.BaseQuery{
+					Type: stats.TASK_TIME_STATS_KEY,
+					Where: map[string]any{
+						stats.ASSIGNMENT_ID_KEY: "zzz",
+					},
+				},
+			},
+			nil,
+		},
+		{
+			"server-admin",
+			"",
+			stats.MetricQuery{
+				BaseQuery: stats.BaseQuery{
+					Type: stats.TASK_TIME_STATS_KEY,
+					Where: map[string]any{
+						stats.USER_EMAIL_KEY: "U1",
+					},
+				},
+			},
+			[]int{100, 200},
+		},
+		{
+			"server-admin",
+			"",
+			stats.MetricQuery{
+				BaseQuery: stats.BaseQuery{
+					Type: stats.TASK_TIME_STATS_KEY,
+					Where: map[string]any{
+						stats.USER_EMAIL_KEY: "zzz",
+					},
+				},
+			},
+			nil,
+		},
+		{
+			"server-admin",
+			"",
+			stats.MetricQuery{
+				BaseQuery: stats.BaseQuery{
+					Type: stats.TASK_TIME_STATS_KEY,
+					Where: map[string]any{
+						stats.COURSE_ID_KEY: db.TEST_COURSE_ID,
+					},
+				},
+			},
+			[]int{100, 200, 300},
+		},
+		{
+			"server-admin",
+			"",
+			stats.MetricQuery{
+				BaseQuery: stats.BaseQuery{
+					Type: stats.TASK_TIME_STATS_KEY,
+					Where: map[string]any{
+						stats.COURSE_ID_KEY: "zzz",
+					},
+				},
+			},
+			[]int{100, 200, 300},
+		},
 
-		// // Grading Time Stats, Error
-		// {
-		// 	"server-user",
-		// 	"-040",
-		// 	stats.MetricQuery{
-		// 		BaseQuery: stats.BaseQuery{
-		// 			Type: stats.GRADING_TIME_STATS_KEY,
-		// 		},
-		// 	},
-		// 	nil,
-		// },
+		// Grading Time Stats, Error
+		{
+			"server-user",
+			"-040",
+			stats.MetricQuery{
+				BaseQuery: stats.BaseQuery{
+					Type: stats.GRADING_TIME_STATS_KEY,
+				},
+			},
+			nil,
+		},
 
-		// // Task Time Stats, Error
-		// {
-		// 	"server-user",
-		// 	"-040",
-		// 	stats.MetricQuery{
-		// 		BaseQuery: stats.BaseQuery{
-		// 			Type: stats.TASK_TIME_STATS_KEY,
-		// 		},
-		// 	},
-		// 	nil,
-		// },
+		// Task Time Stats, Error
+		{
+			"server-user",
+			"-040",
+			stats.MetricQuery{
+				BaseQuery: stats.BaseQuery{
+					Type: stats.TASK_TIME_STATS_KEY,
+				},
+			},
+			nil,
+		},
 	}
 
 	for _, record := range testRecords {
@@ -323,7 +323,7 @@ var testRecords []*stats.BaseMetric = []*stats.BaseMetric{
 		Timestamp: timestamp.FromMSecs(100),
 		Type:      stats.GRADING_TIME_STATS_KEY,
 		Attributes: map[string]any{
-			stats.COURSE_ID_KEY:     "C1",
+			stats.COURSE_ID_KEY:     db.TEST_COURSE_ID,
 			stats.ASSIGNMENT_ID_KEY: "A1",
 			stats.USER_EMAIL_KEY:    "U1",
 			stats.VALUE_KEY:         float64(100),
@@ -333,7 +333,7 @@ var testRecords []*stats.BaseMetric = []*stats.BaseMetric{
 		Timestamp: timestamp.FromMSecs(100),
 		Type:      stats.TASK_TIME_STATS_KEY,
 		Attributes: map[string]any{
-			stats.COURSE_ID_KEY:     "C1",
+			stats.COURSE_ID_KEY:     db.TEST_COURSE_ID,
 			stats.ASSIGNMENT_ID_KEY: "A1",
 			stats.USER_EMAIL_KEY:    "U1",
 			stats.VALUE_KEY:         float64(100),
@@ -343,7 +343,7 @@ var testRecords []*stats.BaseMetric = []*stats.BaseMetric{
 		Timestamp: timestamp.FromMSecs(200),
 		Type:      stats.GRADING_TIME_STATS_KEY,
 		Attributes: map[string]any{
-			stats.COURSE_ID_KEY:     "C2",
+			stats.COURSE_ID_KEY:     db.TEST_COURSE_ID,
 			stats.ASSIGNMENT_ID_KEY: "A2",
 			stats.USER_EMAIL_KEY:    "U1",
 			stats.VALUE_KEY:         float64(200),
@@ -353,7 +353,7 @@ var testRecords []*stats.BaseMetric = []*stats.BaseMetric{
 		Timestamp: timestamp.FromMSecs(200),
 		Type:      stats.TASK_TIME_STATS_KEY,
 		Attributes: map[string]any{
-			stats.COURSE_ID_KEY:     "C2",
+			stats.COURSE_ID_KEY:     db.TEST_COURSE_ID,
 			stats.ASSIGNMENT_ID_KEY: "A2",
 			stats.USER_EMAIL_KEY:    "U1",
 			stats.VALUE_KEY:         float64(200),
@@ -363,7 +363,7 @@ var testRecords []*stats.BaseMetric = []*stats.BaseMetric{
 		Timestamp: timestamp.FromMSecs(300),
 		Type:      stats.GRADING_TIME_STATS_KEY,
 		Attributes: map[string]any{
-			stats.COURSE_ID_KEY:     "C3",
+			stats.COURSE_ID_KEY:     db.TEST_COURSE_ID,
 			stats.ASSIGNMENT_ID_KEY: "A3",
 			stats.USER_EMAIL_KEY:    "U2",
 			stats.VALUE_KEY:         float64(300),
@@ -373,7 +373,7 @@ var testRecords []*stats.BaseMetric = []*stats.BaseMetric{
 		Timestamp: timestamp.FromMSecs(300),
 		Type:      stats.TASK_TIME_STATS_KEY,
 		Attributes: map[string]any{
-			stats.COURSE_ID_KEY:     "C3",
+			stats.COURSE_ID_KEY:     db.TEST_COURSE_ID,
 			stats.ASSIGNMENT_ID_KEY: "A3",
 			stats.USER_EMAIL_KEY:    "U2",
 			stats.VALUE_KEY:         float64(300),
