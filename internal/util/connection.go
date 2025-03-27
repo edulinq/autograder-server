@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"net"
 
-    // TEST
-    "os"
+	// TEST
+	"os"
 )
 
 const (
@@ -32,14 +32,15 @@ func ReadFromNetworkConnection(connection net.Conn) ([]byte, error) {
 	}
 
 	jsonBuffer := make([]byte, size)
-	_, err = connection.Read(jsonBuffer)
+	numBytesRead, err := connection.Read(jsonBuffer)
 	if err != nil {
 		return nil, err
 	}
 
 	// TEST
 	fmt.Fprintln(os.Stderr, "\n\nTEST - READ")
-	fmt.Fprintln(os.Stderr, "    ", size)
+	fmt.Fprintln(os.Stderr, "Expected size    ", size)
+	fmt.Fprintln(os.Stderr, "Actual size    ", numBytesRead)
 	fmt.Fprintln(os.Stderr, "    ", len(jsonBuffer))
 	fmt.Fprintln(os.Stderr, "    ", jsonBuffer)
 	fmt.Fprintln(os.Stderr, "----\n")
@@ -52,13 +53,6 @@ func ReadFromNetworkConnection(connection net.Conn) ([]byte, error) {
 // The remaining bytes should be x bytes of the actual message content.
 func WriteToNetworkConnection(connection net.Conn, data []byte) error {
 	size := uint64(len(data))
-
-	// TEST
-	fmt.Fprintln(os.Stderr, "\n\nTEST - Write")
-	fmt.Fprintln(os.Stderr, "    ", size)
-	fmt.Fprintln(os.Stderr, "    ", len(data))
-	fmt.Fprintln(os.Stderr, "    ", data)
-	fmt.Fprintln(os.Stderr, "----\n")
 
 	if size > MAX_SOCKET_MESSAGE_SIZE_BYTES {
 		return fmt.Errorf("Message content is too large to write.")
@@ -73,10 +67,18 @@ func WriteToNetworkConnection(connection net.Conn, data []byte) error {
 
 	responseBuffer.Write(data)
 
-	_, err = connection.Write(responseBuffer.Bytes())
+	numBytesWritten, err := connection.Write(responseBuffer.Bytes())
 	if err != nil {
 		return err
 	}
+
+	// TEST
+	fmt.Fprintln(os.Stderr, "\n\nTEST - Write")
+	fmt.Fprintln(os.Stderr, "Expected size    ", size)
+	fmt.Fprintln(os.Stderr, "Actual size    ", numBytesWritten)
+	fmt.Fprintln(os.Stderr, "    ", len(data))
+	fmt.Fprintln(os.Stderr, "    ", data)
+	fmt.Fprintln(os.Stderr, "----\n")
 
 	return nil
 }
