@@ -42,7 +42,7 @@ func ReadFromNetworkConnection(connection net.Conn) ([]byte, error) {
 	fmt.Fprintln(os.Stderr, "Expected size    ", size)
 	fmt.Fprintln(os.Stderr, "Actual size    ", numBytesRead)
 	fmt.Fprintln(os.Stderr, "    ", len(jsonBuffer))
-	fmt.Fprintln(os.Stderr, "    ", jsonBuffer)
+	// fmt.Fprintln(os.Stderr, "    ", jsonBuffer)
 	fmt.Fprintln(os.Stderr, "----\n")
 
 	return jsonBuffer, nil
@@ -68,17 +68,19 @@ func WriteToNetworkConnection(connection net.Conn, data []byte) error {
 	responseBuffer.Write(data)
 
 	numBytesWritten, err := connection.Write(responseBuffer.Bytes())
-	if err != nil {
-		return err
-	}
 
 	// TEST
 	fmt.Fprintln(os.Stderr, "\n\nTEST - Write")
 	fmt.Fprintln(os.Stderr, "Expected size    ", size)
 	fmt.Fprintln(os.Stderr, "Actual size    ", numBytesWritten)
 	fmt.Fprintln(os.Stderr, "    ", len(data))
-	fmt.Fprintln(os.Stderr, "    ", data)
+	fmt.Fprintln(os.Stderr, "    ", err)
+	// fmt.Fprintln(os.Stderr, "    ", data)
 	fmt.Fprintln(os.Stderr, "----\n")
+
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
