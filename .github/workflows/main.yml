@@ -42,10 +42,150 @@ jobs:
         with:
           go-version: '1.21.0'
 
-      - name: TEST1
-        run: |
-            go run cmd/call-endpoint/main.go users/list
+      - name: Build
+        run: ./scripts/build.sh
 
-      - name: TEST2
+      - name: Check Formatting
+        run: ./scripts/check_formatting.sh
+
+      - name: Check Duplicate Locators
+        run: ./scripts/check_duplicate_locators.sh
+
+      - name: Run Base Tests
+        env:
+          AUTOGRADER__DOCKER__DISABLE: ${{ startsWith(matrix.os, 'macos') }}
+        run: ./scripts/run_tests.sh
+
+  deploy-prebuilt-image:
+    name: Deploy Prebuilt Image
+    needs: test
+    if: ${{ (github.ref == 'refs/heads/main') || (startsWith(github.ref, 'refs/tags/v')) }}
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      - name: Get Vesion From Tag
+        shell: bash {0}
         run: |
-            go run cmd/call-endpoint/main.go metadata/describe
+          # Stip 'v' prefix.
+          version=${GITHUB_REF_NAME#v}
+
+          # Store the result in the github actions env.
+          echo "VERSION=${version}" >> $GITHUB_ENV
+
+          # Check if this looks like a version tag.
+          [[ ${GITHUB_REF_NAME} =~ ^v[0-9]+\.[0-9]+\.[0-9]+ ]]
+          isVersionTag=$?
+
+          # Output some information.
+          echo "Tag: ${GITHUB_REF_NAME}"
+          echo "Version: ${version}"
+          echo "Push Images: ${PUSH_IMAGES}"
+          echo "Is Version Tag: ${isVersionTag}"
+
+          # Test that the tag looks like a version if we are pushing.
+          [[ ${PUSH_IMAGES} != 'true' ]] || [[ ${isVersionTag} -eq 0 ]]
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+        with:
+          # See https://github.com/docker/setup-qemu-action/issues/198
+          image: tonistiigi/binfmt:qemu-v7.0.0-28
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to the Container registry
+        uses: docker/login-action@65b78e6e13532edd9afa3aa52ac7964289d1a9c1
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and Push Docker Image
+        id: push
+        uses: docker/build-push-action@f2a1d5e99d037542a71f64918e516c093c6f3fc4
+        with:
+          context: .
+          file: docker/prebuilt/Dockerfile
+          platforms: ${{ env.PLATFORMS }}
+          push: ${{ env.PUSH_IMAGES }}
+          tags: "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.VERSION }}-prebuilt"
+
+      - name: Generate Artifact Attestation
+        if: ${{ env.PUSH_IMAGES == 'true' }}
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-name: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME}}
+          subject-digest: ${{ steps.push.outputs.digest }}
+          push-to-registry: true
+
+  deploy-slim-image:
+    name: Deploy Slim Image
+    needs: test
+    if: ${{ (github.ref == 'refs/heads/main') || (startsWith(github.ref, 'refs/tags/v')) }}
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      - name: Get Vesion From Tag
+        shell: bash {0}
+        run: |
+          # Stip 'v' prefix.
+          version=${GITHUB_REF_NAME#v}
+
+          # Store the result in the github actions env.
+          echo "VERSION=${version}" >> $GITHUB_ENV
+
+          # Check if this looks like a version tag.
+          [[ ${GITHUB_REF_NAME} =~ ^v[0-9]+\.[0-9]+\.[0-9]+ ]]
+          isVersionTag=$?
+
+          # Output some information.
+          echo "Tag: ${GITHUB_REF_NAME}"
+          echo "Version: ${version}"
+          echo "Push Images: ${PUSH_IMAGES}"
+          echo "Is Version Tag: ${isVersionTag}"
+
+          # Test that the tag looks like a version if we are pushing.
+          [[ ${PUSH_IMAGES} != 'true' ]] || [[ ${isVersionTag} -eq 0 ]]
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+        with:
+          # See https://github.com/docker/setup-qemu-action/issues/198
+          image: tonistiigi/binfmt:qemu-v7.0.0-28
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to the Container registry
+        uses: docker/login-action@65b78e6e13532edd9afa3aa52ac7964289d1a9c1
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and Push Docker Image
+        id: push
+        uses: docker/build-push-action@f2a1d5e99d037542a71f64918e516c093c6f3fc4
+        with:
+          context: .
+          file: docker/slim/Dockerfile
+          platforms: ${{ env.PLATFORMS }}
+          push: ${{ env.PUSH_IMAGES }}
+          tags: "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.VERSION }}-slim"
+
+      - name: Generate Artifact Attestation
+        if: ${{ env.PUSH_IMAGES == 'true' }}
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-name: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME}}
+          subject-digest: ${{ steps.push.outputs.digest }}
+          push-to-registry: true
