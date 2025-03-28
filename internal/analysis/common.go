@@ -157,12 +157,13 @@ func collectAnalysisStats(fullSubmissionIDs []string, totalRunTime int64, initia
 		metric := stats.Metric{
 			Timestamp: now,
 			Type:      stats.CODE_ANALYSIS_TIME_STATS_TYPE,
+			Value:     float64(totalRunTime),
 			Attributes: map[stats.MetricAttribute]any{
 				stats.ANALYSIS_KEY:  analysisType,
 				stats.COURSE_ID_KEY: courseID,
-				stats.VALUE_KEY:     float64(totalRunTime),
 			},
 		}
+
 		stats.InsertIntoMapIfPresent(metric.Attributes, stats.USER_EMAIL_KEY, initiatorEmail)
 		stats.InsertIntoMapIfPresent(metric.Attributes, stats.ASSIGNMENT_ID_KEY, assignmentID)
 

@@ -1831,7 +1831,8 @@
             "fields": {
                 "attributes": "map[github.com/edulinq/autograder/internal/stats.MetricAttribute]interface {}",
                 "timestamp": "int64",
-                "type": "string"
+                "type": "string",
+                "value": "float64"
             }
         },
         "github.com/edulinq/autograder/internal/stats.MetricType": {
@@ -1858,7 +1859,8 @@
                 "net-bytes-received": "uint64",
                 "net-bytes-sent": "uint64",
                 "timestamp": "int64",
-                "type": "string"
+                "type": "string",
+                "value": "float64"
             }
         },
         "github.com/edulinq/autograder/internal/timestamp.Timestamp": {

@@ -76,12 +76,12 @@ func TestIndividualAnalysisBase(test *testing.T) {
 		&stats.Metric{
 			Timestamp: timestamp.Zero(),
 			Type:      stats.CODE_ANALYSIS_TIME_STATS_TYPE,
+			Value:     0,
 			Attributes: map[stats.MetricAttribute]any{
 				stats.ANALYSIS_KEY:      "individual",
 				stats.COURSE_ID_KEY:     "course101",
 				stats.ASSIGNMENT_ID_KEY: "hw0",
 				stats.USER_EMAIL_KEY:    "server-admin@test.edulinq.org",
-				stats.VALUE_KEY:         0,
 			},
 		},
 	}
@@ -94,7 +94,7 @@ func TestIndividualAnalysisBase(test *testing.T) {
 			result.Attributes = make(map[stats.MetricAttribute]any)
 		}
 
-		result.Attributes[stats.VALUE_KEY] = 0
+		result.Value = 0
 	}
 
 	if !reflect.DeepEqual(expectedStats, results) {

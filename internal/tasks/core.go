@@ -93,9 +93,9 @@ func runNextTask() {
 	metric := stats.Metric{
 		Timestamp: startTimestamp,
 		Type:      stats.TASK_TIME_STATS_TYPE,
+		Value:     float64((timestamp.Now() - startTimestamp).ToMSecs()),
 		Attributes: map[stats.MetricAttribute]any{
 			stats.TASK_TYPE_KEY: task.Type,
-			stats.DURATION_KEY:  float64((timestamp.Now() - startTimestamp).ToMSecs()),
 			stats.COURSE_ID_KEY: task.CourseID,
 		},
 	}

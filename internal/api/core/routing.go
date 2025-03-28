@@ -155,10 +155,10 @@ func sendAPIResponse(apiRequest ValidAPIRequest, response http.ResponseWriter,
 	metric := stats.Metric{
 		Timestamp: startTime,
 		Type:      stats.API_REQUEST_STATS_TYPE,
+		Value:     float64((apiResponse.EndTimestamp - startTime).ToMSecs()),
 		Attributes: map[stats.MetricAttribute]any{
 			stats.SENDER_KEY:   sender,
 			stats.ENDPOINT_KEY: endpoint,
-			stats.DURATION_KEY: float64((apiResponse.EndTimestamp - startTime).ToMSecs()),
 		},
 	}
 

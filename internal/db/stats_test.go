@@ -60,6 +60,7 @@ func (this *DBTests) DBTestStoreMetrics(test *testing.T) {
 			Metric: stats.Metric{
 				Timestamp: timestamp.Now(),
 				Type:      stats.API_REQUEST_STATS_TYPE,
+				Value:     float64(100),
 				Attributes: map[stats.MetricAttribute]any{
 					stats.SENDER_KEY:        "1",
 					stats.ENDPOINT_KEY:      "E1",
@@ -67,7 +68,6 @@ func (this *DBTests) DBTestStoreMetrics(test *testing.T) {
 					stats.ASSIGNMENT_ID_KEY: "A",
 					stats.COURSE_ID_KEY:     "C",
 					stats.LOCATOR_KEY:       "11",
-					stats.DURATION_KEY:      float64(100),
 				},
 			},
 			Query: stats.Query{
@@ -84,11 +84,11 @@ func (this *DBTests) DBTestStoreMetrics(test *testing.T) {
 			Metric: stats.Metric{
 				Timestamp: timestamp.Now(),
 				Type:      stats.TASK_TIME_STATS_TYPE,
+				Value:     float64(100),
 				Attributes: map[stats.MetricAttribute]any{
 					stats.COURSE_ID_KEY:     "C",
 					stats.ASSIGNMENT_ID_KEY: "A",
 					stats.USER_EMAIL_KEY:    "U",
-					stats.DURATION_KEY:      float64(100),
 				},
 			},
 			Query: stats.Query{
@@ -105,11 +105,11 @@ func (this *DBTests) DBTestStoreMetrics(test *testing.T) {
 			Metric: stats.Metric{
 				Timestamp: timestamp.Now(),
 				Type:      stats.GRADING_TIME_STATS_TYPE,
+				Value:     float64(100),
 				Attributes: map[stats.MetricAttribute]any{
 					stats.COURSE_ID_KEY:     "C",
 					stats.ASSIGNMENT_ID_KEY: "A",
 					stats.USER_EMAIL_KEY:    "U",
-					stats.DURATION_KEY:      float64(100),
 				},
 			},
 			Query: stats.Query{
@@ -126,11 +126,11 @@ func (this *DBTests) DBTestStoreMetrics(test *testing.T) {
 			Metric: stats.Metric{
 				Timestamp: timestamp.Now(),
 				Type:      stats.CODE_ANALYSIS_TIME_STATS_TYPE,
+				Value:     float64(100),
 				Attributes: map[stats.MetricAttribute]any{
 					stats.COURSE_ID_KEY:     "C",
 					stats.ASSIGNMENT_ID_KEY: "A",
 					stats.USER_EMAIL_KEY:    "U",
-					stats.DURATION_KEY:      float64(100),
 				},
 			},
 			Query: stats.Query{
@@ -147,11 +147,11 @@ func (this *DBTests) DBTestStoreMetrics(test *testing.T) {
 			Metric: stats.Metric{
 				Timestamp: timestamp.Now(),
 				Type:      stats.CODE_ANALYSIS_TIME_STATS_TYPE,
+				Value:     float64(100),
 				Attributes: map[stats.MetricAttribute]any{
 					stats.COURSE_ID_KEY:     "C",
 					stats.ASSIGNMENT_ID_KEY: "A",
 					stats.USER_EMAIL_KEY:    "U",
-					stats.DURATION_KEY:      float64(100),
 				},
 			},
 			Query: stats.Query{
@@ -166,11 +166,11 @@ func (this *DBTests) DBTestStoreMetrics(test *testing.T) {
 		{
 			Metric: stats.Metric{
 				Timestamp: timestamp.Now(),
+				Value:     float64(100),
 				Attributes: map[stats.MetricAttribute]any{
 					stats.COURSE_ID_KEY:     "C",
 					stats.ASSIGNMENT_ID_KEY: "A",
 					stats.USER_EMAIL_KEY:    "U",
-					stats.DURATION_KEY:      float64(100),
 				},
 			},
 			Query: stats.Query{
@@ -186,11 +186,11 @@ func (this *DBTests) DBTestStoreMetrics(test *testing.T) {
 		{
 			Metric: stats.Metric{
 				Timestamp: timestamp.Now(),
+				Value:     float64(100),
 				Attributes: map[stats.MetricAttribute]any{
 					stats.COURSE_ID_KEY:     "C",
 					stats.ASSIGNMENT_ID_KEY: "A",
 					stats.USER_EMAIL_KEY:    "U",
-					stats.DURATION_KEY:      float64(100),
 				},
 			},
 			Query: stats.Query{

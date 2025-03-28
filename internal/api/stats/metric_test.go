@@ -10,10 +10,11 @@ import (
 	"github.com/edulinq/autograder/internal/util"
 )
 
+// Test API Request stats properly stored.
 // Normal API tests typically only use the routes defined in their packages,
 // but here, multiple routes (defined in ./main_test.go) from different packages are tested.
 // This ensures that different types of API requests get their metrics stored properly.
-func TestMetric(test *testing.T) {
+func TestAPIRequestMetrics(test *testing.T) {
 	defer db.ResetForTesting()
 
 	testCases := []struct {
@@ -177,15 +178,15 @@ func TestMetric(test *testing.T) {
 			continue
 		}
 
-		if metric.Attributes != nil && metric.Attributes[stats.DURATION_KEY] == 0 {
-			test.Errorf("Case %d: Duration field was not properly populated: '%v'.", i, util.MustToJSONIndent(metric))
+		if metric.Value == 0 {
+			test.Errorf("Case %d: Value field was not properly populated: '%v'.", i, util.MustToJSONIndent(metric))
 			continue
 		}
 
 		// Zero out non-deterministic fields.
 		metric.Timestamp = 0
+		metric.Value = 0
 		delete(metric.Attributes, stats.SENDER_KEY)
-		delete(metric.Attributes, stats.DURATION_KEY)
 
 		if !reflect.DeepEqual(metric, testCase.expectedMetric) {
 			test.Errorf("Case %d: Stored metric is not as expected. Expected: '%v', Actual: '%v'.", i, util.MustToJSONIndent(testCase.expectedMetric), util.MustToJSONIndent(metric))

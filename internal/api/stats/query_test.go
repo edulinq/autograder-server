@@ -573,6 +573,7 @@ var testRecords []*stats.Metric = []*stats.Metric{
 	&stats.Metric{
 		Timestamp: timestamp.FromMSecs(100),
 		Type:      stats.API_REQUEST_STATS_TYPE,
+		Value:     float64(100),
 		Attributes: map[stats.MetricAttribute]any{
 			stats.SENDER_KEY:        "1",
 			stats.ENDPOINT_KEY:      "E1",
@@ -580,42 +581,42 @@ var testRecords []*stats.Metric = []*stats.Metric{
 			stats.ASSIGNMENT_ID_KEY: "A1",
 			stats.COURSE_ID_KEY:     "C1",
 			stats.LOCATOR_KEY:       "11",
-			stats.DURATION_KEY:      float64(100),
 		},
 	},
 	&stats.Metric{
 		Timestamp: timestamp.FromMSecs(100),
 		Type:      stats.GRADING_TIME_STATS_TYPE,
+		Value:     float64(100),
 		Attributes: map[stats.MetricAttribute]any{
 			stats.COURSE_ID_KEY:     "C1",
 			stats.ASSIGNMENT_ID_KEY: "A1",
 			stats.USER_EMAIL_KEY:    "U1",
-			stats.DURATION_KEY:      float64(100),
 		},
 	},
 	&stats.Metric{
 		Timestamp: timestamp.FromMSecs(100),
 		Type:      stats.TASK_TIME_STATS_TYPE,
+		Value:     float64(100),
 		Attributes: map[stats.MetricAttribute]any{
 			stats.COURSE_ID_KEY:     "C1",
 			stats.ASSIGNMENT_ID_KEY: "A1",
 			stats.USER_EMAIL_KEY:    "U1",
-			stats.DURATION_KEY:      float64(100),
 		},
 	},
 	&stats.Metric{
 		Timestamp: timestamp.FromMSecs(100),
 		Type:      stats.CODE_ANALYSIS_TIME_STATS_TYPE,
+		Value:     float64(100),
 		Attributes: map[stats.MetricAttribute]any{
 			stats.COURSE_ID_KEY:     "C1",
 			stats.ASSIGNMENT_ID_KEY: "A1",
 			stats.USER_EMAIL_KEY:    "U1",
-			stats.VALUE_KEY:         float64(100),
 		},
 	},
 	&stats.Metric{
 		Timestamp: timestamp.FromMSecs(200),
 		Type:      stats.API_REQUEST_STATS_TYPE,
+		Value:     float64(200),
 		Attributes: map[stats.MetricAttribute]any{
 			stats.SENDER_KEY:        "2",
 			stats.ENDPOINT_KEY:      "E2",
@@ -623,42 +624,42 @@ var testRecords []*stats.Metric = []*stats.Metric{
 			stats.COURSE_ID_KEY:     "C2",
 			stats.ASSIGNMENT_ID_KEY: "A2",
 			stats.LOCATOR_KEY:       "22",
-			stats.DURATION_KEY:      float64(200),
 		},
 	},
 	&stats.Metric{
 		Timestamp: timestamp.FromMSecs(200),
 		Type:      stats.GRADING_TIME_STATS_TYPE,
+		Value:     float64(200),
 		Attributes: map[stats.MetricAttribute]any{
 			stats.COURSE_ID_KEY:     "C2",
 			stats.ASSIGNMENT_ID_KEY: "A2",
 			stats.USER_EMAIL_KEY:    "U1",
-			stats.DURATION_KEY:      float64(200),
 		},
 	},
 	&stats.Metric{
 		Timestamp: timestamp.FromMSecs(200),
 		Type:      stats.TASK_TIME_STATS_TYPE,
+		Value:     float64(200),
 		Attributes: map[stats.MetricAttribute]any{
 			stats.COURSE_ID_KEY:     "C2",
 			stats.ASSIGNMENT_ID_KEY: "A2",
 			stats.USER_EMAIL_KEY:    "U1",
-			stats.DURATION_KEY:      float64(200),
 		},
 	},
 	&stats.Metric{
 		Timestamp: timestamp.FromMSecs(200),
 		Type:      stats.CODE_ANALYSIS_TIME_STATS_TYPE,
+		Value:     float64(200),
 		Attributes: map[stats.MetricAttribute]any{
 			stats.COURSE_ID_KEY:     "C2",
 			stats.ASSIGNMENT_ID_KEY: "A2",
 			stats.USER_EMAIL_KEY:    "U1",
-			stats.VALUE_KEY:         float64(200),
 		},
 	},
 	&stats.Metric{
 		Timestamp: timestamp.FromMSecs(300),
 		Type:      stats.API_REQUEST_STATS_TYPE,
+		Value:     float64(300),
 		Attributes: map[stats.MetricAttribute]any{
 			stats.SENDER_KEY:        "3",
 			stats.ENDPOINT_KEY:      "E3",
@@ -666,37 +667,36 @@ var testRecords []*stats.Metric = []*stats.Metric{
 			stats.COURSE_ID_KEY:     "C3",
 			stats.ASSIGNMENT_ID_KEY: "A3",
 			stats.LOCATOR_KEY:       "33",
-			stats.DURATION_KEY:      float64(300),
 		},
 	},
 	&stats.Metric{
 		Timestamp: timestamp.FromMSecs(300),
 		Type:      stats.GRADING_TIME_STATS_TYPE,
+		Value:     float64(300),
 		Attributes: map[stats.MetricAttribute]any{
 			stats.COURSE_ID_KEY:     "C3",
 			stats.ASSIGNMENT_ID_KEY: "A3",
 			stats.USER_EMAIL_KEY:    "U2",
-			stats.DURATION_KEY:      float64(300),
 		},
 	},
 	&stats.Metric{
 		Timestamp: timestamp.FromMSecs(300),
 		Type:      stats.TASK_TIME_STATS_TYPE,
+		Value:     float64(300),
 		Attributes: map[stats.MetricAttribute]any{
 			stats.COURSE_ID_KEY:     "C3",
 			stats.ASSIGNMENT_ID_KEY: "A3",
 			stats.USER_EMAIL_KEY:    "U2",
-			stats.DURATION_KEY:      float64(300),
 		},
 	},
 	&stats.Metric{
 		Timestamp: timestamp.FromMSecs(300),
 		Type:      stats.CODE_ANALYSIS_TIME_STATS_TYPE,
+		Value:     float64(300),
 		Attributes: map[stats.MetricAttribute]any{
 			stats.COURSE_ID_KEY:     "C3",
 			stats.ASSIGNMENT_ID_KEY: "A3",
 			stats.USER_EMAIL_KEY:    "U2",
-			stats.VALUE_KEY:         float64(300),
 		},
 	},
 }

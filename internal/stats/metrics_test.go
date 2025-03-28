@@ -14,6 +14,7 @@ func TestStoreMetrics(test *testing.T) {
 	metric := Metric{
 		Timestamp: timestamp.Zero(),
 		Type:      API_REQUEST_STATS_TYPE,
+		Value:     float64(100),
 		Attributes: map[MetricAttribute]any{
 			SENDER_KEY:        "1",
 			ENDPOINT_KEY:      "E",
@@ -21,7 +22,6 @@ func TestStoreMetrics(test *testing.T) {
 			COURSE_ID_KEY:     "C",
 			ASSIGNMENT_ID_KEY: "A",
 			LOCATOR_KEY:       "2",
-			DURATION_KEY:      float64(100),
 		},
 	}
 
@@ -66,11 +66,11 @@ func TestStoreCourseMetrics(test *testing.T) {
 			metric: &Metric{
 				Timestamp: timestamp.Zero(),
 				Type:      GRADING_TIME_STATS_TYPE,
+				Value:     float64(100),
 				Attributes: map[MetricAttribute]any{
 					COURSE_ID_KEY:     "C",
 					ASSIGNMENT_ID_KEY: "A",
 					USER_EMAIL_KEY:    "U",
-					DURATION_KEY:      float64(100),
 				},
 			},
 			expectedCount: 1,
@@ -81,11 +81,11 @@ func TestStoreCourseMetrics(test *testing.T) {
 			metric: &Metric{
 				Timestamp: timestamp.Zero(),
 				Type:      TASK_TIME_STATS_TYPE,
+				Value:     float64(100),
 				Attributes: map[MetricAttribute]any{
 					COURSE_ID_KEY:     "C",
 					ASSIGNMENT_ID_KEY: "A",
 					USER_EMAIL_KEY:    "U",
-					DURATION_KEY:      float64(100),
 				},
 			},
 			expectedCount: 1,
@@ -96,11 +96,11 @@ func TestStoreCourseMetrics(test *testing.T) {
 			metric: &Metric{
 				Timestamp: timestamp.Zero(),
 				Type:      CODE_ANALYSIS_TIME_STATS_TYPE,
+				Value:     float64(100),
 				Attributes: map[MetricAttribute]any{
 					COURSE_ID_KEY:     "C",
 					ASSIGNMENT_ID_KEY: "A",
 					USER_EMAIL_KEY:    "U",
-					DURATION_KEY:      float64(100),
 				},
 			},
 			expectedCount: 1,
@@ -111,10 +111,10 @@ func TestStoreCourseMetrics(test *testing.T) {
 			metric: &Metric{
 				Timestamp: timestamp.Zero(),
 				Type:      GRADING_TIME_STATS_TYPE,
+				Value:     float64(100),
 				Attributes: map[MetricAttribute]any{
 					ASSIGNMENT_ID_KEY: "A",
 					USER_EMAIL_KEY:    "U",
-					DURATION_KEY:      float64(100),
 				},
 			},
 		},
@@ -124,10 +124,10 @@ func TestStoreCourseMetrics(test *testing.T) {
 			metric: &Metric{
 				Timestamp: timestamp.Zero(),
 				Type:      TASK_TIME_STATS_TYPE,
+				Value:     float64(100),
 				Attributes: map[MetricAttribute]any{
 					ASSIGNMENT_ID_KEY: "A",
 					USER_EMAIL_KEY:    "U",
-					DURATION_KEY:      float64(100),
 				},
 			},
 		},
@@ -137,10 +137,10 @@ func TestStoreCourseMetrics(test *testing.T) {
 			metric: &Metric{
 				Timestamp: timestamp.Zero(),
 				Type:      CODE_ANALYSIS_TIME_STATS_TYPE,
+				Value:     float64(100),
 				Attributes: map[MetricAttribute]any{
 					ASSIGNMENT_ID_KEY: "A",
 					USER_EMAIL_KEY:    "U",
-					DURATION_KEY:      float64(100),
 				},
 			},
 		},

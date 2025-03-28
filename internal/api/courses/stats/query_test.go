@@ -76,6 +76,34 @@ func TestQuery(test *testing.T) {
 			[]int{200, 300},
 		},
 
+		// Code Analysis Time Stats Base.
+		{
+			"server-admin",
+			"",
+			stats.Query{
+				Type: stats.CODE_ANALYSIS_TIME_STATS_TYPE,
+			},
+			[]int{100, 200, 300},
+		},
+		{
+			"server-admin",
+			"",
+			stats.Query{
+				Type: stats.CODE_ANALYSIS_TIME_STATS_TYPE,
+				Sort: 1,
+			},
+			[]int{300, 200, 100},
+		},
+		{
+			"server-admin",
+			"",
+			stats.Query{
+				Type:  stats.CODE_ANALYSIS_TIME_STATS_TYPE,
+				After: timestamp.FromMSecs(150),
+			},
+			[]int{200, 300},
+		},
+
 		// Grading Time Stats, Course Specific.
 		{
 			"server-admin",
@@ -212,6 +240,74 @@ func TestQuery(test *testing.T) {
 			[]int{100, 200, 300},
 		},
 
+		// Code Analysis Time Stats, Course Specific.
+		{
+			"server-admin",
+			"",
+			stats.Query{
+				Type: stats.CODE_ANALYSIS_TIME_STATS_TYPE,
+				Where: map[stats.MetricAttribute]any{
+					stats.ASSIGNMENT_ID_KEY: "A2",
+				},
+			},
+			[]int{200},
+		},
+		{
+			"server-admin",
+			"",
+			stats.Query{
+				Type: stats.CODE_ANALYSIS_TIME_STATS_TYPE,
+				Where: map[stats.MetricAttribute]any{
+					stats.ASSIGNMENT_ID_KEY: "zzz",
+				},
+			},
+			nil,
+		},
+		{
+			"server-admin",
+			"",
+			stats.Query{
+				Type: stats.CODE_ANALYSIS_TIME_STATS_TYPE,
+				Where: map[stats.MetricAttribute]any{
+					stats.USER_EMAIL_KEY: "U1",
+				},
+			},
+			[]int{100, 200},
+		},
+		{
+			"server-admin",
+			"",
+			stats.Query{
+				Type: stats.CODE_ANALYSIS_TIME_STATS_TYPE,
+				Where: map[stats.MetricAttribute]any{
+					stats.USER_EMAIL_KEY: "zzz",
+				},
+			},
+			nil,
+		},
+		{
+			"server-admin",
+			"",
+			stats.Query{
+				Type: stats.CODE_ANALYSIS_TIME_STATS_TYPE,
+				Where: map[stats.MetricAttribute]any{
+					stats.COURSE_ID_KEY: db.TEST_COURSE_ID,
+				},
+			},
+			[]int{100, 200, 300},
+		},
+		{
+			"server-admin",
+			"",
+			stats.Query{
+				Type: stats.CODE_ANALYSIS_TIME_STATS_TYPE,
+				Where: map[stats.MetricAttribute]any{
+					stats.COURSE_ID_KEY: "zzz",
+				},
+			},
+			[]int{100, 200, 300},
+		},
+
 		// Grading Time Stats, Error
 		{
 			"server-user",
@@ -223,6 +319,16 @@ func TestQuery(test *testing.T) {
 		},
 
 		// Task Time Stats, Error
+		{
+			"server-user",
+			"-040",
+			stats.Query{
+				Type: stats.TASK_TIME_STATS_TYPE,
+			},
+			nil,
+		},
+
+		// Code Analysis Time Stats, Error
 		{
 			"server-user",
 			"-040",
@@ -282,61 +388,91 @@ var testRecords []*stats.Metric = []*stats.Metric{
 	&stats.Metric{
 		Timestamp: timestamp.FromMSecs(100),
 		Type:      stats.GRADING_TIME_STATS_TYPE,
+		Value:     float64(100),
 		Attributes: map[stats.MetricAttribute]any{
 			stats.COURSE_ID_KEY:     db.TEST_COURSE_ID,
 			stats.ASSIGNMENT_ID_KEY: "A1",
 			stats.USER_EMAIL_KEY:    "U1",
-			stats.DURATION_KEY:      float64(100),
 		},
 	},
 	&stats.Metric{
 		Timestamp: timestamp.FromMSecs(100),
 		Type:      stats.TASK_TIME_STATS_TYPE,
+		Value:     float64(100),
 		Attributes: map[stats.MetricAttribute]any{
 			stats.COURSE_ID_KEY:     db.TEST_COURSE_ID,
 			stats.ASSIGNMENT_ID_KEY: "A1",
 			stats.USER_EMAIL_KEY:    "U1",
-			stats.DURATION_KEY:      float64(100),
+		},
+	},
+	&stats.Metric{
+		Timestamp: timestamp.FromMSecs(100),
+		Type:      stats.CODE_ANALYSIS_TIME_STATS_TYPE,
+		Value:     float64(100),
+		Attributes: map[stats.MetricAttribute]any{
+			stats.COURSE_ID_KEY:     db.TEST_COURSE_ID,
+			stats.ASSIGNMENT_ID_KEY: "A1",
+			stats.USER_EMAIL_KEY:    "U1",
 		},
 	},
 	&stats.Metric{
 		Timestamp: timestamp.FromMSecs(200),
 		Type:      stats.GRADING_TIME_STATS_TYPE,
+		Value:     float64(200),
 		Attributes: map[stats.MetricAttribute]any{
 			stats.COURSE_ID_KEY:     db.TEST_COURSE_ID,
 			stats.ASSIGNMENT_ID_KEY: "A2",
 			stats.USER_EMAIL_KEY:    "U1",
-			stats.DURATION_KEY:      float64(200),
 		},
 	},
 	&stats.Metric{
 		Timestamp: timestamp.FromMSecs(200),
 		Type:      stats.TASK_TIME_STATS_TYPE,
+		Value:     float64(200),
 		Attributes: map[stats.MetricAttribute]any{
 			stats.COURSE_ID_KEY:     db.TEST_COURSE_ID,
 			stats.ASSIGNMENT_ID_KEY: "A2",
 			stats.USER_EMAIL_KEY:    "U1",
-			stats.DURATION_KEY:      float64(200),
+		},
+	},
+	&stats.Metric{
+		Timestamp: timestamp.FromMSecs(200),
+		Type:      stats.CODE_ANALYSIS_TIME_STATS_TYPE,
+		Value:     float64(200),
+		Attributes: map[stats.MetricAttribute]any{
+			stats.COURSE_ID_KEY:     db.TEST_COURSE_ID,
+			stats.ASSIGNMENT_ID_KEY: "A2",
+			stats.USER_EMAIL_KEY:    "U1",
 		},
 	},
 	&stats.Metric{
 		Timestamp: timestamp.FromMSecs(300),
 		Type:      stats.GRADING_TIME_STATS_TYPE,
+		Value:     float64(300),
 		Attributes: map[stats.MetricAttribute]any{
 			stats.COURSE_ID_KEY:     db.TEST_COURSE_ID,
 			stats.ASSIGNMENT_ID_KEY: "A3",
 			stats.USER_EMAIL_KEY:    "U2",
-			stats.DURATION_KEY:      float64(300),
 		},
 	},
 	&stats.Metric{
 		Timestamp: timestamp.FromMSecs(300),
 		Type:      stats.TASK_TIME_STATS_TYPE,
+		Value:     float64(300),
 		Attributes: map[stats.MetricAttribute]any{
 			stats.COURSE_ID_KEY:     db.TEST_COURSE_ID,
 			stats.ASSIGNMENT_ID_KEY: "A3",
 			stats.USER_EMAIL_KEY:    "U2",
-			stats.DURATION_KEY:      float64(300),
+		},
+	},
+	&stats.Metric{
+		Timestamp: timestamp.FromMSecs(300),
+		Type:      stats.CODE_ANALYSIS_TIME_STATS_TYPE,
+		Value:     float64(300),
+		Attributes: map[stats.MetricAttribute]any{
+			stats.COURSE_ID_KEY:     db.TEST_COURSE_ID,
+			stats.ASSIGNMENT_ID_KEY: "A3",
+			stats.USER_EMAIL_KEY:    "U2",
 		},
 	},
 }

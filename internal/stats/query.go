@@ -3,9 +3,7 @@ package stats
 import (
 	"slices"
 
-	"github.com/edulinq/autograder/internal/log"
 	"github.com/edulinq/autograder/internal/timestamp"
-	"github.com/edulinq/autograder/internal/util"
 )
 
 type BaseQuery interface {
@@ -44,23 +42,7 @@ type Query struct {
 	Type MetricType `json:"type"`
 }
 
-func (this Query) Match(metric *Metric) bool {
-	metricJSONMap, err := util.ToJSONMap(metric)
-	if err != nil {
-		log.Error("Failed to convert metric to a JSON map.", err)
-		return false
-	}
-
-	generalizedAttributes, ok := metricJSONMap[ATTRIBUTES_KEY].(map[string]any)
-	if !ok {
-		return false
-	}
-
-	attributes := make(map[MetricAttribute]any)
-	for key, value := range generalizedAttributes {
-		attributes[MetricAttribute(key)] = value
-	}
-
+func (this Query) Match(attributes map[MetricAttribute]any) bool {
 	for field, value := range this.Where {
 		fieldValue, exists := attributes[field]
 		if !exists {

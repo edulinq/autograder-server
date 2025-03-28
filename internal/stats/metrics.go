@@ -11,12 +11,10 @@ type MetricType string
 
 // Keys for the attributes field inside of Metric and Query.
 const (
-	// Common metric attribute keys
-	DURATION_KEY MetricAttribute = "duration"
+	// API request metric attribute keys
 	ENDPOINT_KEY MetricAttribute = "endpoint"
 	LOCATOR_KEY  MetricAttribute = "locator"
 	SENDER_KEY   MetricAttribute = "sender"
-	VALUE_KEY    MetricAttribute = "value"
 
 	// Course-specific attribute keys
 	ASSIGNMENT_ID_KEY MetricAttribute = "assignment"
@@ -46,6 +44,8 @@ type Metric struct {
 	Timestamp timestamp.Timestamp `json:"timestamp"`
 
 	Type MetricType `json:"type"`
+
+	Value float64 `json:"value"`
 
 	// Additional attributes that are not standard enough to be formalized in fields.
 	Attributes map[MetricAttribute]any `json:"attributes,omitempty"`

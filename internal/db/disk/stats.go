@@ -40,7 +40,7 @@ func (this *backend) GetMetrics(query stats.Query) ([]*stats.Metric, error) {
 	defer this.statsLock.Unlock()
 
 	records, err := util.FilterJSONLFile(path, stats.Metric{}, func(record *stats.Metric) bool {
-		return query.Match(record)
+		return query.Match(record.Attributes)
 	})
 
 	return records, err
