@@ -99,6 +99,7 @@ func runNextTask() {
 			stats.COURSE_ID_KEY: task.CourseID,
 		},
 	}
+
 	stats.InsertIntoMapIfPresent(metric.Attributes, stats.USER_EMAIL_KEY, task.UserEmail)
 	stats.InsertIntoMapIfPresent(metric.Attributes, stats.ASSIGNMENT_ID_KEY, task.AssignmentID)
 
