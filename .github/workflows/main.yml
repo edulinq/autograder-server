@@ -47,12 +47,17 @@ jobs:
       - name: Check for Flaky Mac Tests 1
         env:
           AUTOGRADER__DOCKER__DISABLE: ${{ startsWith(matrix.os, 'macos') }}
-        run: go test -count=100 -v ./internal/api/courses/assignments/submissions/analysis
+        run: go test -timeout 1h -count=1000 -v ./internal/api/courses/assignments/submissions/analysis
 
       - name: Check for Flaky Mac Tests 2
         env:
           AUTOGRADER__DOCKER__DISABLE: ${{ startsWith(matrix.os, 'macos') }}
-        run: go test -count=100 -v ./internal/analysis
+        run: go test -timeout 1h -count=200 -v ./internal/analysis
+
+      - name: Run Base Tests
+        env:
+          AUTOGRADER__DOCKER__DISABLE: ${{ startsWith(matrix.os, 'macos') }}
+        run: ./scripts/run_tests.sh
 
 # TEST
 #       - name: Build
