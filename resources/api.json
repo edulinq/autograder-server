@@ -2,8 +2,26 @@
     "endpoints": {
         "courses/admin/email": {
             "description": "Send an email to course users.",
-            "request-type": "*admin.EmailRequest",
-            "response-type": "*admin.EmailResponse"
+            "input": {
+                "APIRequest": "github.com/edulinq/autograder/internal/api/core.APIRequest",
+                "MinCourseRoleGrader": "bool",
+                "bcc": "[]string",
+                "body": "string",
+                "cc": "[]string",
+                "course-id": "string",
+                "dry-run": "bool",
+                "html": "bool",
+                "root-user-nonce": "string",
+                "subject": "string",
+                "to": "[]string",
+                "user-email": "string",
+                "user-pass": "string"
+            },
+            "output": {
+                "bcc": "[]string",
+                "cc": "[]string",
+                "to": "[]string"
+            }
         },
         "courses/admin/update": {
             "description": "Update an existing course.",
@@ -788,6 +806,32 @@
             "alias-type": "string",
             "category": "alias"
         },
+        "github.com/edulinq/autograder/internal/api/courses/admin.EmailRequest": {
+            "category": "struct",
+            "fields": {
+                "APIRequest": "github.com/edulinq/autograder/internal/api/core.APIRequest",
+                "MinCourseRoleGrader": "bool",
+                "bcc": "[]string",
+                "body": "string",
+                "cc": "[]string",
+                "course-id": "string",
+                "dry-run": "bool",
+                "html": "bool",
+                "root-user-nonce": "string",
+                "subject": "string",
+                "to": "[]string",
+                "user-email": "string",
+                "user-pass": "string"
+            }
+        },
+        "github.com/edulinq/autograder/internal/api/courses/admin.EmailResponse": {
+            "category": "struct",
+            "fields": {
+                "bcc": "[]string",
+                "cc": "[]string",
+                "to": "[]string"
+            }
+        },
         "github.com/edulinq/autograder/internal/api/courses/admin.UpdateRequest": {
             "category": "struct",
             "fields": {
@@ -1513,6 +1557,17 @@
             "category": "struct",
             "fields": {
                 "found": "bool"
+            }
+        },
+        "github.com/edulinq/autograder/internal/email.Message": {
+            "category": "struct",
+            "fields": {
+                "bcc": "[]string",
+                "body": "string",
+                "cc": "[]string",
+                "html": "bool",
+                "subject": "string",
+                "to": "[]string"
             }
         },
         "github.com/edulinq/autograder/internal/log.LogLevel": {
