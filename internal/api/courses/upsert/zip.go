@@ -13,7 +13,7 @@ type ZipFileRequest struct {
 	core.MinServerRoleCourseCreator
 
 	courses.CourseUpsertOptions
-	Files core.POSTFiles
+	Files core.POSTFiles `json:"-"`
 }
 
 // Upsert a course using a zip file.

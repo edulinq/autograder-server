@@ -110,10 +110,7 @@ func handleAPIEndpoint(response http.ResponseWriter, request *http.Request, apiH
 	}
 	defer CleanupAPIrequest(apiRequest)
 
-	_, ok := apiRequest.(log.Loggable)
-	if ok {
-		log.Debug("Incoming API Request", apiRequest)
-	}
+	log.Debug("Incoming API Request", getLogAttributesFromAPIRequest(apiRequest)...)
 
 	// Execute the handler.
 	apiResponse, apiErr := callHandler(apiHandler, apiRequest)
@@ -293,7 +290,7 @@ func validateAPIHandler(endpoint string, apiHandler any) (ValidAPIHandler, refle
 	}
 
 	if reflectType.Out(1) != reflect.TypeOf((*APIError)(nil)) {
-		return nil, nil, nil, NewBareInternalError("-011", endpoint, "API handler's second return value is a *APIError.").
+		return nil, nil, nil, NewBareInternalError("-011", endpoint, "API handler's second return value is not an *APIError.").
 			Add("type", reflectType.Out(1).String()).
 			Add("function-info", funcInfo)
 	}

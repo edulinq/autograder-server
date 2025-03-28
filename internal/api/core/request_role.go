@@ -2,9 +2,12 @@ package core
 
 import (
 	"reflect"
+	"regexp"
 
 	"github.com/edulinq/autograder/internal/model"
 )
+
+var minRoleRegex = regexp.MustCompile(`^Min(Server|Course)Role\w+$`)
 
 // The minimum server roles required encoded as a type so it can be embedded into a request struct.
 // Using any of these implies your request is at least an APIRequestUserContext.
