@@ -100,10 +100,11 @@ func runNextTask() {
 		},
 	}
 
-	stats.InsertIntoMapIfPresent(metric.Attributes, stats.USER_EMAIL_KEY, task.UserEmail)
-	stats.InsertIntoMapIfPresent(metric.Attributes, stats.ASSIGNMENT_ID_KEY, task.AssignmentID)
+	// Add optional fields if non-empty.
+	metric.SetUserEmail(task.UserEmail)
+	metric.SetAssignmentID(task.AssignmentID)
 
-	stats.AsyncStoreCourseMetric(&metric)
+	stats.AsyncStoreMetric(&metric)
 
 	task.AdvanceRunTimes()
 

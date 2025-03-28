@@ -20,16 +20,17 @@ type QueryResponse struct {
 // Query metrics for a specific course.
 // Only the context course can be queried for, the target-course field will be ignored for this endpoint.
 func HandleQuery(request *QueryRequest) (*QueryResponse, *core.APIError) {
-	if request.Where == nil {
-		request.Where = make(map[stats.MetricAttribute]any)
+	err := request.Query.Validate()
+	if err != nil {
+		return nil, core.NewBadRequestError("-618", &request.APIRequest, "Failed to validate query.").Err(err)
 	}
 
 	// The request must be for the given course.
-	request.Where[stats.COURSE_ID_KEY] = request.Course.ID
+	request.Query.Where[stats.COURSE_ID_KEY] = request.Course.ID
 
 	records, err := db.GetMetrics(request.Query)
 	if err != nil {
-		return nil, core.NewInternalError("-618", &request.APIRequestCourseUserContext, "Failed to query course stats.").Err(err)
+		return nil, core.NewInternalError("-619", &request.APIRequestCourseUserContext, "Failed to query course stats.").Err(err)
 	}
 
 	response := QueryResponse{

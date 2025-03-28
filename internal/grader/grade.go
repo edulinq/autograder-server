@@ -121,11 +121,12 @@ func Grade(ctx context.Context, assignment *model.Assignment, submissionPath str
 		},
 	}
 
-	stats.InsertIntoMapIfPresent(metric.Attributes, stats.USER_EMAIL_KEY, gradingInfo.User)
-	stats.InsertIntoMapIfPresent(metric.Attributes, stats.ASSIGNMENT_ID_KEY, gradingInfo.AssignmentID)
+	// Add optional fields if non-empty.
+	metric.SetUserEmail(gradingInfo.User)
+	metric.SetAssignmentID(gradingInfo.AssignmentID)
 
 	// Store stats for this grading (when everything is successful).
-	stats.AsyncStoreCourseMetric(&metric)
+	stats.AsyncStoreMetric(&metric)
 
 	return &gradingResult, nil, "", nil
 }

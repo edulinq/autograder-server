@@ -162,10 +162,11 @@ func sendAPIResponse(apiRequest ValidAPIRequest, response http.ResponseWriter,
 		},
 	}
 
-	stats.InsertIntoMapIfPresent(metric.Attributes, stats.USER_EMAIL_KEY, userEmail)
-	stats.InsertIntoMapIfPresent(metric.Attributes, stats.COURSE_ID_KEY, courseID)
-	stats.InsertIntoMapIfPresent(metric.Attributes, stats.ASSIGNMENT_ID_KEY, assignmentID)
-	stats.InsertIntoMapIfPresent(metric.Attributes, stats.LOCATOR_KEY, locator)
+	// Add optional fields if non-empty.
+	metric.SetAssignmentID(assignmentID)
+	metric.SetCourseID(courseID)
+	metric.SetLocator(locator)
+	metric.SetUserEmail(userEmail)
 
 	stats.AsyncStoreMetric(&metric)
 

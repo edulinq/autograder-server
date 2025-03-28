@@ -17,503 +17,483 @@ func TestQuery(test *testing.T) {
 	testCases := []struct {
 		email           string
 		expectedLocator string
-		query           stats.Query
+		query           *stats.Query
 		expectedValues  []int
 	}{
 		// API Request Stats Base.
 		{
-			"server-admin",
-			"",
-			stats.Query{
+			email: "server-admin",
+			query: &stats.Query{
 				Type: stats.API_REQUEST_STATS_TYPE,
 			},
-			[]int{100, 200, 300},
+			expectedValues: []int{100, 200, 300},
 		},
 		{
-			"server-admin",
-			"",
-			stats.Query{
+			email: "server-admin",
+			query: &stats.Query{
 				Type: stats.API_REQUEST_STATS_TYPE,
 				Sort: 1,
 			},
-			[]int{300, 200, 100},
+			expectedValues: []int{300, 200, 100},
 		},
 		{
-			"server-admin",
-			"",
-			stats.Query{
+			email: "server-admin",
+			query: &stats.Query{
 				Type:  stats.API_REQUEST_STATS_TYPE,
 				After: timestamp.FromMSecs(150),
 			},
-			[]int{200, 300},
+			expectedValues: []int{200, 300},
 		},
 
 		// Grading Time Stats Base.
 		{
-			"server-admin",
-			"",
-			stats.Query{
+			email: "server-admin",
+			query: &stats.Query{
 				Type: stats.GRADING_TIME_STATS_TYPE,
 			},
-			[]int{100, 200, 300},
+			expectedValues: []int{100, 200, 300},
 		},
 		{
-			"server-admin",
-			"",
-			stats.Query{
+			email: "server-admin",
+			query: &stats.Query{
 				Type: stats.GRADING_TIME_STATS_TYPE,
 				Sort: 1,
 			},
-			[]int{300, 200, 100},
+			expectedValues: []int{300, 200, 100},
 		},
 		{
-			"server-admin",
-			"",
-			stats.Query{
+			email: "server-admin",
+			query: &stats.Query{
 				Type:  stats.GRADING_TIME_STATS_TYPE,
 				After: timestamp.FromMSecs(150),
 			},
-			[]int{200, 300},
+			expectedValues: []int{200, 300},
 		},
 
 		// Task Time Stats Base.
 		{
-			"server-admin",
-			"",
-			stats.Query{
+			email: "server-admin",
+			query: &stats.Query{
 				Type: stats.TASK_TIME_STATS_TYPE,
 			},
-			[]int{100, 200, 300},
+			expectedValues: []int{100, 200, 300},
 		},
 		{
-			"server-admin",
-			"",
-			stats.Query{
+			email: "server-admin",
+			query: &stats.Query{
 				Type: stats.TASK_TIME_STATS_TYPE,
 				Sort: 1,
 			},
-			[]int{300, 200, 100},
+			expectedValues: []int{300, 200, 100},
 		},
 		{
-			"server-admin",
-			"",
-			stats.Query{
+			email: "server-admin",
+			query: &stats.Query{
 				Type:  stats.TASK_TIME_STATS_TYPE,
 				After: timestamp.FromMSecs(150),
 			},
-			[]int{200, 300},
+			expectedValues: []int{200, 300},
 		},
 
 		// Code Analysis Time Stats Base.
 		{
-			"server-admin",
-			"",
-			stats.Query{
+			email: "server-admin",
+			query: &stats.Query{
 				Type: stats.CODE_ANALYSIS_TIME_STATS_TYPE,
 			},
-			[]int{100, 200, 300},
+			expectedValues: []int{100, 200, 300},
 		},
 		{
-			"server-admin",
-			"",
-			stats.Query{
+			email: "server-admin",
+			query: &stats.Query{
 				Type: stats.CODE_ANALYSIS_TIME_STATS_TYPE,
 				Sort: 1,
 			},
-			[]int{300, 200, 100},
+			expectedValues: []int{300, 200, 100},
 		},
 		{
-			"server-admin",
-			"",
-			stats.Query{
+			email: "server-admin",
+			query: &stats.Query{
 				Type:  stats.CODE_ANALYSIS_TIME_STATS_TYPE,
 				After: timestamp.FromMSecs(150),
 			},
-			[]int{200, 300},
+			expectedValues: []int{200, 300},
 		},
 
 		// API Request Stats, Course Specific.
 		{
-			"server-admin",
-			"",
-			stats.Query{
+			email: "server-admin",
+			query: &stats.Query{
 				Type: stats.API_REQUEST_STATS_TYPE,
 				Where: map[stats.MetricAttribute]any{
 					stats.ASSIGNMENT_ID_KEY: "A2",
 				},
 			},
-			[]int{200},
+			expectedValues: []int{200},
 		},
 		{
-			"server-admin",
-			"",
-			stats.Query{
+			email: "server-admin",
+			query: &stats.Query{
 				Type: stats.API_REQUEST_STATS_TYPE,
 				Where: map[stats.MetricAttribute]any{
 					stats.ASSIGNMENT_ID_KEY: "zzz",
 				},
 			},
-			nil,
 		},
 		{
-			"server-admin",
-			"",
-			stats.Query{
+			email: "server-admin",
+			query: &stats.Query{
 				Type: stats.API_REQUEST_STATS_TYPE,
 				Where: map[stats.MetricAttribute]any{
 					stats.USER_EMAIL_KEY: "U1",
 				},
 			},
-			[]int{100, 200},
+			expectedValues: []int{100, 200},
 		},
 		{
-			"server-admin",
-			"",
-			stats.Query{
+			email: "server-admin",
+			query: &stats.Query{
 				Type: stats.API_REQUEST_STATS_TYPE,
 				Where: map[stats.MetricAttribute]any{
 					stats.USER_EMAIL_KEY: "zzz",
 				},
 			},
-			nil,
 		},
 		{
-			"server-admin",
-			"",
-			stats.Query{
+			email: "server-admin",
+			query: &stats.Query{
 				Type: stats.API_REQUEST_STATS_TYPE,
 				Where: map[stats.MetricAttribute]any{
 					stats.COURSE_ID_KEY: "C1",
 				},
 			},
-			[]int{100},
+			expectedValues: []int{100},
 		},
 		{
-			"server-admin",
-			"",
-			stats.Query{
+			email: "server-admin",
+			query: &stats.Query{
 				Type: stats.API_REQUEST_STATS_TYPE,
 				Where: map[stats.MetricAttribute]any{
 					stats.COURSE_ID_KEY: "zzz",
 				},
 			},
-			nil,
 		},
 
 		// Grading Time Stats, Course Specific.
 		{
-			"server-admin",
-			"",
-			stats.Query{
+			email: "server-admin",
+			query: &stats.Query{
 				Type: stats.GRADING_TIME_STATS_TYPE,
 				Where: map[stats.MetricAttribute]any{
 					stats.ASSIGNMENT_ID_KEY: "A2",
 				},
 			},
-			[]int{200},
+			expectedValues: []int{200},
 		},
 		{
-			"server-admin",
-			"",
-			stats.Query{
+			email: "server-admin",
+			query: &stats.Query{
 				Type: stats.GRADING_TIME_STATS_TYPE,
 				Where: map[stats.MetricAttribute]any{
 					stats.ASSIGNMENT_ID_KEY: "zzz",
 				},
 			},
-			nil,
 		},
 		{
-			"server-admin",
-			"",
-			stats.Query{
+			email: "server-admin",
+			query: &stats.Query{
 				Type: stats.GRADING_TIME_STATS_TYPE,
 				Where: map[stats.MetricAttribute]any{
 					stats.USER_EMAIL_KEY: "U1",
 				},
 			},
-			[]int{100, 200},
+			expectedValues: []int{100, 200},
 		},
 		{
-			"server-admin",
-			"",
-			stats.Query{
+			email: "server-admin",
+			query: &stats.Query{
 				Type: stats.GRADING_TIME_STATS_TYPE,
 				Where: map[stats.MetricAttribute]any{
 					stats.USER_EMAIL_KEY: "zzz",
 				},
 			},
-			nil,
 		},
 		{
-			"server-admin",
-			"",
-			stats.Query{
+			email: "server-admin",
+			query: &stats.Query{
 				Type: stats.GRADING_TIME_STATS_TYPE,
 				Where: map[stats.MetricAttribute]any{
 					stats.COURSE_ID_KEY: "C1",
 				},
 			},
-			[]int{100},
+			expectedValues: []int{100},
 		},
 		{
-			"server-admin",
-			"",
-			stats.Query{
+			email: "server-admin",
+			query: &stats.Query{
 				Type: stats.GRADING_TIME_STATS_TYPE,
 				Where: map[stats.MetricAttribute]any{
 					stats.COURSE_ID_KEY: "zzz",
 				},
 			},
-			nil,
 		},
 
 		// Task Time Stats, Course Specific.
 		{
-			"server-admin",
-			"",
-			stats.Query{
+			email: "server-admin",
+			query: &stats.Query{
 				Type: stats.TASK_TIME_STATS_TYPE,
 				Where: map[stats.MetricAttribute]any{
 					stats.ASSIGNMENT_ID_KEY: "A2",
 				},
 			},
-			[]int{200},
+			expectedValues: []int{200},
 		},
 		{
-			"server-admin",
-			"",
-			stats.Query{
+			email: "server-admin",
+			query: &stats.Query{
 				Type: stats.TASK_TIME_STATS_TYPE,
 				Where: map[stats.MetricAttribute]any{
 					stats.ASSIGNMENT_ID_KEY: "zzz",
 				},
 			},
-			nil,
 		},
 		{
-			"server-admin",
-			"",
-			stats.Query{
+			email: "server-admin",
+			query: &stats.Query{
 				Type: stats.TASK_TIME_STATS_TYPE,
 				Where: map[stats.MetricAttribute]any{
 					stats.USER_EMAIL_KEY: "U1",
 				},
 			},
-			[]int{100, 200},
+			expectedValues: []int{100, 200},
 		},
 		{
-			"server-admin",
-			"",
-			stats.Query{
+			email: "server-admin",
+			query: &stats.Query{
 				Type: stats.TASK_TIME_STATS_TYPE,
 				Where: map[stats.MetricAttribute]any{
 					stats.USER_EMAIL_KEY: "zzz",
 				},
 			},
-			nil,
 		},
 		{
-			"server-admin",
-			"",
-			stats.Query{
+			email: "server-admin",
+			query: &stats.Query{
 				Type: stats.TASK_TIME_STATS_TYPE,
 				Where: map[stats.MetricAttribute]any{
 					stats.COURSE_ID_KEY: "C1",
 				},
 			},
-			[]int{100},
+			expectedValues: []int{100},
 		},
 		{
-			"server-admin",
-			"",
-			stats.Query{
+			email: "server-admin",
+			query: &stats.Query{
 				Type: stats.TASK_TIME_STATS_TYPE,
 				Where: map[stats.MetricAttribute]any{
 					stats.COURSE_ID_KEY: "zzz",
 				},
 			},
-			nil,
 		},
 
 		// Code Analysis Time Stats, Course Specific.
 		{
-			"server-admin",
-			"",
-			stats.Query{
+			email: "server-admin",
+			query: &stats.Query{
 				Type: stats.CODE_ANALYSIS_TIME_STATS_TYPE,
 				Where: map[stats.MetricAttribute]any{
 					stats.ASSIGNMENT_ID_KEY: "A2",
 				},
 			},
-			[]int{200},
+			expectedValues: []int{200},
 		},
 		{
-			"server-admin",
-			"",
-			stats.Query{
+			email: "server-admin",
+			query: &stats.Query{
 				Type: stats.CODE_ANALYSIS_TIME_STATS_TYPE,
 				Where: map[stats.MetricAttribute]any{
 					stats.ASSIGNMENT_ID_KEY: "zzz",
 				},
 			},
-			nil,
 		},
 		{
-			"server-admin",
-			"",
-			stats.Query{
+			email: "server-admin",
+			query: &stats.Query{
 				Type: stats.CODE_ANALYSIS_TIME_STATS_TYPE,
 				Where: map[stats.MetricAttribute]any{
 					stats.USER_EMAIL_KEY: "U1",
 				},
 			},
-			[]int{100, 200},
+			expectedValues: []int{100, 200},
 		},
 		{
-			"server-admin",
-			"",
-			stats.Query{
+			email: "server-admin",
+			query: &stats.Query{
 				Type: stats.CODE_ANALYSIS_TIME_STATS_TYPE,
 				Where: map[stats.MetricAttribute]any{
 					stats.USER_EMAIL_KEY: "zzz",
 				},
 			},
-			nil,
 		},
 		{
-			"server-admin",
-			"",
-			stats.Query{
+			email: "server-admin",
+			query: &stats.Query{
 				Type: stats.CODE_ANALYSIS_TIME_STATS_TYPE,
 				Where: map[stats.MetricAttribute]any{
 					stats.COURSE_ID_KEY: "C1",
 				},
 			},
-			[]int{100},
+			expectedValues: []int{100},
 		},
 		{
-			"server-admin",
-			"",
-			stats.Query{
+			email: "server-admin",
+			query: &stats.Query{
 				Type: stats.CODE_ANALYSIS_TIME_STATS_TYPE,
 				Where: map[stats.MetricAttribute]any{
 					stats.COURSE_ID_KEY: "zzz",
 				},
 			},
-			nil,
 		},
 
 		// API Request Stats, Endpoint Specific
 		{
-			"server-admin",
-			"",
-			stats.Query{
+			email: "server-admin",
+			query: &stats.Query{
 				Type: stats.API_REQUEST_STATS_TYPE,
 				Where: map[stats.MetricAttribute]any{
 					stats.ENDPOINT_KEY: "E1",
 				},
 			},
-			[]int{100},
+			expectedValues: []int{100},
 		},
 		{
-			"server-admin",
-			"",
-			stats.Query{
+			email: "server-admin",
+			query: &stats.Query{
 				Type: stats.API_REQUEST_STATS_TYPE,
 				Where: map[stats.MetricAttribute]any{
 					stats.ENDPOINT_KEY: "zzz",
 				},
 			},
-			nil,
 		},
 
 		// API Request Stats, Sender Specific
 		{
-			"server-admin",
-			"",
-			stats.Query{
+			email: "server-admin",
+			query: &stats.Query{
 				Type: stats.API_REQUEST_STATS_TYPE,
 				Where: map[stats.MetricAttribute]any{
 					stats.SENDER_KEY: "1",
 				},
 			},
-			[]int{100},
+			expectedValues: []int{100},
 		},
 		{
-			"server-admin",
-			"",
-			stats.Query{
+			email: "server-admin",
+			query: &stats.Query{
 				Type: stats.API_REQUEST_STATS_TYPE,
 				Where: map[stats.MetricAttribute]any{
 					stats.SENDER_KEY: "zzz",
 				},
 			},
-			nil,
 		},
 
 		// API Request Stats, Locator Specific
 		{
-			"server-admin",
-			"",
-			stats.Query{
+			email: "server-admin",
+			query: &stats.Query{
 				Type: stats.API_REQUEST_STATS_TYPE,
 				Where: map[stats.MetricAttribute]any{
 					stats.LOCATOR_KEY: "11",
 				},
 			},
-			[]int{100},
+			expectedValues: []int{100},
 		},
 		{
-			"server-admin",
-			"",
-			stats.Query{
+			email: "server-admin",
+			query: &stats.Query{
 				Type: stats.API_REQUEST_STATS_TYPE,
 				Where: map[stats.MetricAttribute]any{
 					stats.LOCATOR_KEY: "zzz",
 				},
 			},
-			nil,
 		},
 
 		// API Request Stats, Error
 		{
-			"server-user",
-			"-041",
-			stats.Query{
+			email:           "server-user",
+			expectedLocator: "-041",
+			query: &stats.Query{
 				Type: stats.API_REQUEST_STATS_TYPE,
 			},
-			nil,
 		},
 
 		// Grading Time Stats, Error
 		{
-			"server-user",
-			"-041",
-			stats.Query{
+			email:           "server-user",
+			expectedLocator: "-041",
+			query: &stats.Query{
 				Type: stats.GRADING_TIME_STATS_TYPE,
 			},
-			nil,
 		},
 
 		// Task Time Stats, Error
 		{
-			"server-user",
-			"-041",
-			stats.Query{
+			email:           "server-user",
+			expectedLocator: "-041",
+			query: &stats.Query{
 				Type: stats.TASK_TIME_STATS_TYPE,
 			},
-			nil,
 		},
 
 		// Code Analysis Time Stats, Error
 		{
-			"server-user",
-			"-041",
-			stats.Query{
+			email:           "server-user",
+			expectedLocator: "-041",
+			query: &stats.Query{
 				Type: stats.CODE_ANALYSIS_TIME_STATS_TYPE,
 			},
-			nil,
+		},
+
+		// Validation Error
+		{
+			email:           "server-admin",
+			expectedLocator: "-301",
+			query: &stats.Query{
+				Type: stats.GRADING_TIME_STATS_TYPE,
+				Where: map[stats.MetricAttribute]any{
+					stats.UNKNOWN_METRIC_ATTRIBUTE_KEY: nil,
+				},
+			},
+		},
+		{
+			email:           "server-admin",
+			expectedLocator: "-301",
+			query: &stats.Query{
+				Type: stats.GRADING_TIME_STATS_TYPE,
+				Where: map[stats.MetricAttribute]any{
+					stats.COURSE_ID_KEY: nil,
+				},
+			},
+		},
+		{
+			email:           "server-admin",
+			expectedLocator: "-301",
+			query: &stats.Query{
+				Type: stats.GRADING_TIME_STATS_TYPE,
+				Where: map[stats.MetricAttribute]any{
+					stats.COURSE_ID_KEY: "",
+				},
+			},
+		},
+		{
+			email:           "server-admin",
+			expectedLocator: "-301",
+			query:           &stats.Query{},
+		},
+		{
+			email:           "server-admin",
+			expectedLocator: "-301",
 		},
 	}
 

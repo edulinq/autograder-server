@@ -164,9 +164,10 @@ func collectAnalysisStats(fullSubmissionIDs []string, totalRunTime int64, initia
 			},
 		}
 
-		stats.InsertIntoMapIfPresent(metric.Attributes, stats.USER_EMAIL_KEY, initiatorEmail)
-		stats.InsertIntoMapIfPresent(metric.Attributes, stats.ASSIGNMENT_ID_KEY, assignmentID)
+		// Add optional fields if non-empty.
+		metric.SetUserEmail(initiatorEmail)
+		metric.SetAssignmentID(assignmentID)
 
-		stats.AsyncStoreCourseMetric(&metric)
+		stats.AsyncStoreMetric(&metric)
 	}
 }

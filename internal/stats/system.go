@@ -26,6 +26,15 @@ var (
 	lastBytesReceived uint64 = 0
 )
 
+type SystemMetrics struct {
+	Metric
+
+	CPUPercent       float64 `json:"cpu-percent"`
+	MemPercent       float64 `json:"mem-percent"`
+	NetBytesSent     uint64  `json:"net-bytes-sent"`
+	NetBytesReceived uint64  `json:"net-bytes-received"`
+}
+
 func collectSystemStats(systemIntervalMS int) {
 	if backend == nil {
 		log.Error("Stats backend is nil, cannot collect system stats.")

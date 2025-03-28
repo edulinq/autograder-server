@@ -1,6 +1,7 @@
 package stats
 
 import (
+	"fmt"
 	"slices"
 
 	"github.com/edulinq/autograder/internal/timestamp"
@@ -37,14 +38,44 @@ type Query struct {
 	Type MetricType `json:"type"`
 }
 
-func (this Query) Match(attributes map[MetricAttribute]any) bool {
+func (this *Query) Validate() error {
+	if this == nil {
+		return fmt.Errorf("No query was given.")
+	}
+
+	if this.Type == UNKNOWN_METRIC_ATTRIBUTE_TYPE {
+		return fmt.Errorf("Query type was not set.")
+	}
+
+	if this.Where == nil {
+		this.Where = make(map[MetricAttribute]any)
+	}
+
 	for field, value := range this.Where {
-		fieldValue, exists := attributes[field]
-		if !exists {
+		if field == UNKNOWN_METRIC_ATTRIBUTE_KEY {
+			return fmt.Errorf("Query attribute field was empty.")
+		}
+
+		if value == nil || value == "" {
+			return fmt.Errorf("Query attribute value was empty.")
+		}
+	}
+
+	return nil
+}
+
+func (this Query) Match(metric *Metric) bool {
+	if (this.Type != UNKNOWN_METRIC_ATTRIBUTE_TYPE) && (this.Type != metric.Type) {
+		return false
+	}
+
+	for field, value := range this.Where {
+		if value == "" {
 			return false
 		}
 
-		if value != "" && fieldValue != value {
+		fieldValue, exists := metric.Attributes[field]
+		if !exists || fieldValue != value {
 			return false
 		}
 	}

@@ -36,11 +36,11 @@ func (this *backend) GetMetrics(query stats.Query) ([]*stats.Metric, error) {
 		return nil, err
 	}
 
-	this.statsLock.Lock()
-	defer this.statsLock.Unlock()
+	this.contextReadLock(path)
+	defer this.contextReadUnlock(path)
 
 	records, err := util.FilterJSONLFile(path, stats.Metric{}, func(record *stats.Metric) bool {
-		return query.Match(record.Attributes)
+		return query.Match(record)
 	})
 
 	return records, err
@@ -52,8 +52,8 @@ func (this *backend) StoreMetric(record *stats.Metric) error {
 		return err
 	}
 
-	this.statsLock.Lock()
-	defer this.statsLock.Unlock()
+	this.contextLock(path)
+	defer this.contextUnlock(path)
 
 	return util.AppendJSONLFile(path, record)
 }
@@ -63,7 +63,10 @@ func (this *backend) getStatsPath(metricType stats.MetricType) (string, error) {
 		return "", fmt.Errorf("No metric type was given.")
 	}
 
-	return filepath.Join(this.baseDir, string(metricType)+".jsonl"), nil
+	path := filepath.Join(this.baseDir, string(metricType)+".jsonl")
+	path = util.ShouldNormalizePath(path)
+
+	return path, nil
 }
 
 func (this *backend) getSystemStatsPath() string {

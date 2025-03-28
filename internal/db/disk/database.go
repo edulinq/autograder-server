@@ -26,7 +26,6 @@ type backend struct {
 	// Specific locks.
 	logLock                sync.RWMutex
 	userLock               sync.RWMutex
-	statsLock              sync.RWMutex
 	systemStatsLock        sync.RWMutex
 	tasksLock              sync.RWMutex
 	analysisIndividualLock sync.RWMutex
@@ -92,9 +91,6 @@ func (this *backend) Clear() error {
 
 	this.systemStatsLock.Lock()
 	defer this.systemStatsLock.Unlock()
-
-	this.statsLock.Lock()
-	defer this.statsLock.Unlock()
 
 	this.tasksLock.Lock()
 	defer this.tasksLock.Unlock()
