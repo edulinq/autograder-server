@@ -1,9 +1,8 @@
 package stats
 
 type testBackend struct {
-	system     []*SystemMetrics
-	course     []*CourseMetric
-	apiRequest []*APIRequestMetric
+	system []*SystemMetrics
+	metric []*Metric
 }
 
 func (this *testBackend) StoreSystemStats(record *SystemMetrics) error {
@@ -15,29 +14,19 @@ func (this *testBackend) GetSystemStats(query Query) ([]*SystemMetrics, error) {
 	return this.system, nil
 }
 
-func (this *testBackend) StoreCourseMetric(record *CourseMetric) error {
-	this.course = append(this.course, record)
+func (this *testBackend) StoreMetric(record *Metric) error {
+	this.metric = append(this.metric, record)
 	return nil
 }
 
-func (this *testBackend) GetCourseMetrics(query CourseMetricQuery) ([]*CourseMetric, error) {
-	return this.course, nil
-}
-
-func (this *testBackend) StoreAPIRequestMetric(record *APIRequestMetric) error {
-	this.apiRequest = append(this.apiRequest, record)
-	return nil
-}
-
-func (this *testBackend) GetAPIRequestMetrics(query APIRequestMetricQuery) ([]*APIRequestMetric, error) {
-	return this.apiRequest, nil
+func (this *testBackend) GetMetrics(query Query) ([]*Metric, error) {
+	return this.metric, nil
 }
 
 func makeTestBackend() *testBackend {
 	return &testBackend{
-		system:     make([]*SystemMetrics, 0, 100),
-		course:     make([]*CourseMetric, 0, 100),
-		apiRequest: make([]*APIRequestMetric, 0, 100),
+		system: make([]*SystemMetrics, 0, 100),
+		metric: make([]*Metric, 0, 100),
 	}
 }
 

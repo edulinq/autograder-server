@@ -17,14 +17,14 @@ func TestQuery(test *testing.T) {
 	testCases := []struct {
 		email          string
 		permError      bool
-		query          stats.BaseQuery
+		query          stats.Query
 		expectedValues []int
 	}{
-		{"server-admin", false, stats.BaseQuery{}, []int{100, 200, 300}},
-		{"server-admin", false, stats.BaseQuery{Sort: 1}, []int{300, 200, 100}},
-		{"server-admin", false, stats.BaseQuery{After: timestamp.FromMSecs(150)}, []int{200, 300}},
+		{"server-admin", false, stats.Query{}, []int{100, 200, 300}},
+		{"server-admin", false, stats.Query{Sort: 1}, []int{300, 200, 100}},
+		{"server-admin", false, stats.Query{After: timestamp.FromMSecs(150)}, []int{200, 300}},
 
-		{"server-user", true, stats.BaseQuery{}, nil},
+		{"server-user", true, stats.Query{}, nil},
 	}
 
 	for _, record := range testRecords {
@@ -75,7 +75,7 @@ func TestQuery(test *testing.T) {
 
 var testRecords []*stats.SystemMetrics = []*stats.SystemMetrics{
 	&stats.SystemMetrics{
-		BaseMetric: stats.BaseMetric{
+		Metric: stats.Metric{
 			Timestamp: timestamp.FromMSecs(100),
 		},
 		CPUPercent:       1,
@@ -84,7 +84,7 @@ var testRecords []*stats.SystemMetrics = []*stats.SystemMetrics{
 		NetBytesReceived: 1,
 	},
 	&stats.SystemMetrics{
-		BaseMetric: stats.BaseMetric{
+		Metric: stats.Metric{
 			Timestamp: timestamp.FromMSecs(200),
 		},
 		CPUPercent:       2,
@@ -93,7 +93,7 @@ var testRecords []*stats.SystemMetrics = []*stats.SystemMetrics{
 		NetBytesReceived: 2,
 	},
 	&stats.SystemMetrics{
-		BaseMetric: stats.BaseMetric{
+		Metric: stats.Metric{
 			Timestamp: timestamp.FromMSecs(300),
 		},
 		CPUPercent:       3,
