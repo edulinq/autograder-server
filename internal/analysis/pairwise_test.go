@@ -677,6 +677,11 @@ func TestPairwiseAnalysisCountBase(test *testing.T) {
 	}
 
 	for i, testCase := range testCases {
+		// Sleep to ensure the old analysis (from the previous iteration) completed.
+		if i != 0 {
+			time.Sleep(time.Duration(50) * time.Millisecond)
+		}
+
 		db.ResetForTesting()
 
 		if testCase.preload {
