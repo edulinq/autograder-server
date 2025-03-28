@@ -8,7 +8,7 @@ import (
 	"github.com/edulinq/autograder/internal/util"
 )
 
-const SYSTEM_STATS_FILENAME = "stats.jsonl"
+const SYSTEM_STATS_FILENAME = "system-stats.jsonl"
 
 func (this *backend) GetSystemStats(query stats.Query) ([]*stats.SystemMetrics, error) {
 	path := this.getSystemStatsPath()
@@ -17,7 +17,7 @@ func (this *backend) GetSystemStats(query stats.Query) ([]*stats.SystemMetrics, 
 	defer this.systemStatsLock.RUnlock()
 
 	records, err := util.FilterJSONLFile(path, stats.SystemMetrics{}, func(record *stats.SystemMetrics) bool {
-		return query.BaseMatch(record)
+		return query.MatchTimeWindow(record)
 	})
 
 	return records, err

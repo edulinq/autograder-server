@@ -6,12 +6,7 @@ import (
 	"github.com/edulinq/autograder/internal/timestamp"
 )
 
-type BaseQuery interface {
-	// Does this metric match the filtering conditions of this query.
-	Match(record BaseMetric) bool
-}
-
-// The base for a stats query.
+// The query for stats.
 // Note that the semantics of this struct mean that times before UNIX epoch (negative times)
 // must be offset by at least one MS (as a zero value is treated as the end of time).
 type Query struct {
@@ -57,12 +52,12 @@ func (this Query) Match(attributes map[MetricAttribute]any) bool {
 	return true
 }
 
-func (this Query) BaseMatch(record BaseMetric) bool {
+func (this Query) MatchTimeWindow(record TimestampedMetric) bool {
 	time := record.GetTimestamp()
 	return (this.Before.IsZero() || (time < this.Before)) && (time > this.After)
 }
 
-func compareMetric[T BaseMetric](order int, a T, b T) int {
+func compareMetric[T TimestampedMetric](order int, a T, b T) int {
 	aTime := a.GetTimestamp()
 	bTime := b.GetTimestamp()
 
@@ -77,12 +72,11 @@ func compareMetric[T BaseMetric](order int, a T, b T) int {
 	return -order
 }
 
-// Apply the base query to filter the given metrics.
-// Return a new list with only the query results.
-// The given metrics must already be sorted.
-func ApplyBaseQuery[T BaseMetric](metrics []T, baseQuery Query) []T {
+// Apply time-based filtering, sorting, and limiting to a slice of metrics.
+// Only metrics matching the time window are returned, with optional sorting and limiting.
+func LimitAndSort[T TimestampedMetric](metrics []T, query Query) []T {
 	// Ensure the semantics of sort ordering are followed.
-	sortOrder := baseQuery.Sort
+	sortOrder := query.Sort
 	if sortOrder < 0 {
 		sortOrder = -1
 	} else if sortOrder > 0 {
@@ -93,21 +87,21 @@ func ApplyBaseQuery[T BaseMetric](metrics []T, baseQuery Query) []T {
 
 	// First, filter.
 	for _, metric := range metrics {
-		if baseQuery.BaseMatch(metric) {
+		if query.MatchTimeWindow(metric) {
 			results = append(results, metric)
 		}
 	}
 
 	// Second, sort.
-	if baseQuery.Sort != 0 {
+	if query.Sort != 0 {
 		slices.SortFunc(results, func(a T, b T) int {
 			return compareMetric(sortOrder, a, b)
 		})
 	}
 
 	// Finally, limit.
-	if baseQuery.Limit > 0 {
-		limit := baseQuery.Limit
+	if query.Limit > 0 {
+		limit := query.Limit
 		if limit > len(results) {
 			limit = len(results)
 		}

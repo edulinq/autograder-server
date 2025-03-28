@@ -59,7 +59,7 @@ func TestIndividualAnalysisBase(test *testing.T) {
 	// Test again, which should pull from the cache.
 	testIndividual(test, ids, expected, len(expected))
 
-	courseMetricQuery := stats.Query{
+	query := stats.Query{
 		Type: stats.CODE_ANALYSIS_TIME_STATS_TYPE,
 		Where: map[stats.MetricAttribute]any{
 			stats.COURSE_ID_KEY: "course101",
@@ -67,7 +67,7 @@ func TestIndividualAnalysisBase(test *testing.T) {
 	}
 
 	// After both runs, there should be exactly one stat record (since the second one was cached).
-	results, err := db.GetMetrics(courseMetricQuery)
+	results, err := db.GetMetrics(query)
 	if err != nil {
 		test.Fatalf("Failed to do stats query: '%v'.", err)
 	}

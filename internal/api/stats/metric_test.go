@@ -10,7 +10,7 @@ import (
 	"github.com/edulinq/autograder/internal/util"
 )
 
-// Test API Request stats properly stored.
+// Test API Request stats get properly stored.
 // Normal API tests typically only use the routes defined in their packages,
 // but here, multiple routes (defined in ./main_test.go) from different packages are tested.
 // This ensures that different types of API requests get their metrics stored properly.

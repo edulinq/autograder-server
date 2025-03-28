@@ -11,19 +11,14 @@ type MetricType string
 
 // Keys for the attributes field inside of Metric and Query.
 const (
-	// API request metric attribute keys
-	ENDPOINT_KEY MetricAttribute = "endpoint"
-	LOCATOR_KEY  MetricAttribute = "locator"
-	SENDER_KEY   MetricAttribute = "sender"
-
-	// Course-specific attribute keys
 	ASSIGNMENT_ID_KEY MetricAttribute = "assignment"
+	ANALYSIS_KEY      MetricAttribute = "analysis-type"
 	COURSE_ID_KEY     MetricAttribute = "course"
+	ENDPOINT_KEY      MetricAttribute = "endpoint"
+	LOCATOR_KEY       MetricAttribute = "locator"
+	SENDER_KEY        MetricAttribute = "sender"
+	TASK_TYPE_KEY     MetricAttribute = "task-type"
 	USER_EMAIL_KEY    MetricAttribute = "user"
-
-	// Specialized attribute keys
-	ANALYSIS_KEY  MetricAttribute = "analysis-type"
-	TASK_TYPE_KEY MetricAttribute = "task-type"
 )
 
 // Values for the type field inside of Metric and Query.
@@ -36,7 +31,7 @@ const (
 
 const ATTRIBUTES_KEY = "attributes"
 
-type BaseMetric interface {
+type TimestampedMetric interface {
 	GetTimestamp() timestamp.Timestamp
 }
 
@@ -51,10 +46,6 @@ type Metric struct {
 	Attributes map[MetricAttribute]any `json:"attributes,omitempty"`
 }
 
-func (this Metric) GetTimestamp() timestamp.Timestamp {
-	return this.Timestamp
-}
-
 type SystemMetrics struct {
 	Metric
 
@@ -64,10 +55,14 @@ type SystemMetrics struct {
 	NetBytesReceived uint64  `json:"net-bytes-received"`
 }
 
+func (this Metric) GetTimestamp() timestamp.Timestamp {
+	return this.Timestamp
+}
+
 func InsertIntoMapIfPresent(attributes map[MetricAttribute]any, key MetricAttribute, value any) {
-	switch v := value.(type) {
+	switch typedValue := value.(type) {
 	case string:
-		if v != "" {
+		if typedValue != "" {
 			attributes[key] = value
 		}
 	case nil:
@@ -108,7 +103,7 @@ func AsyncStoreMetric(metric *Metric) {
 	storeFunc := func() {
 		err := StoreMetric(metric)
 		if err != nil {
-			log.Error("Failed to log metric.", metric)
+			log.Error("Failed to store metric.", metric)
 			return
 		}
 	}
@@ -123,7 +118,7 @@ func AsyncStoreMetric(metric *Metric) {
 func AsyncStoreCourseMetric(metric *Metric) {
 	courseID, ok := metric.Attributes[COURSE_ID_KEY]
 	if !ok || courseID == "" {
-		log.Error("Cannot log course statistic without course ID.", metric)
+		log.Error("Cannot store course stat without course ID.", metric)
 		return
 	}
 

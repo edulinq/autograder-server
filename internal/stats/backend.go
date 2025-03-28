@@ -52,7 +52,7 @@ func storeSystemStats(record *SystemMetrics) error {
 	return backend.StoreSystemStats(record)
 }
 
-func GetMetric(query Query) ([]*Metric, error) {
+func GetMetrics(query Query) ([]*Metric, error) {
 	backendLock.RLock()
 	defer backendLock.RUnlock()
 

@@ -33,7 +33,7 @@ func HandleQuery(request *QueryRequest) (*QueryResponse, *core.APIError) {
 	}
 
 	response := QueryResponse{
-		Records: stats.ApplyBaseQuery(records, request.Query),
+		Records: stats.LimitAndSort(records, request.Query),
 	}
 
 	return &response, nil

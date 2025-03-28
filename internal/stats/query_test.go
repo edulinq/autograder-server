@@ -9,25 +9,25 @@ import (
 )
 
 func init() {
-	simpleBaseMetricsReverse = append([]Metric(nil), simpleBaseMetrics...)
-	slices.Reverse(simpleBaseMetricsReverse)
+	simpleMetricsReverse = append([]Metric(nil), simpleMetrics...)
+	slices.Reverse(simpleMetricsReverse)
 }
 
-func TestApplyBaseQueryBase(test *testing.T) {
+func TestLimitAndSort(test *testing.T) {
 	testCases := []struct {
 		metrics  []Metric
 		Query    Query
 		expected []Metric
 	}{
 		{
-			simpleBaseMetrics,
+			simpleMetrics,
 			Query{},
-			simpleBaseMetrics,
+			simpleMetrics,
 		},
 
 		// Filter
 		{
-			simpleBaseMetrics,
+			simpleMetrics,
 			Query{After: timestamp.FromMSecs(200)},
 			[]Metric{
 				Metric{Timestamp: timestamp.FromMSecs(300)},
@@ -36,7 +36,7 @@ func TestApplyBaseQueryBase(test *testing.T) {
 			},
 		},
 		{
-			simpleBaseMetrics,
+			simpleMetrics,
 			Query{Before: timestamp.FromMSecs(300)},
 			[]Metric{
 				Metric{Timestamp: timestamp.FromMSecs(100)},
@@ -44,7 +44,7 @@ func TestApplyBaseQueryBase(test *testing.T) {
 			},
 		},
 		{
-			simpleBaseMetrics,
+			simpleMetrics,
 			Query{
 				After:  timestamp.FromMSecs(199),
 				Before: timestamp.FromMSecs(301),
@@ -57,39 +57,39 @@ func TestApplyBaseQueryBase(test *testing.T) {
 
 		// Sort
 		{
-			simpleBaseMetrics,
+			simpleMetrics,
 			Query{Sort: -1},
-			simpleBaseMetrics,
+			simpleMetrics,
 		},
 		{
-			simpleBaseMetricsReverse,
+			simpleMetricsReverse,
 			Query{Sort: 1},
-			simpleBaseMetricsReverse,
+			simpleMetricsReverse,
 		},
 		{
-			simpleBaseMetricsReverse,
+			simpleMetricsReverse,
 			Query{Sort: 0},
-			simpleBaseMetricsReverse,
+			simpleMetricsReverse,
 		},
 		{
-			simpleBaseMetrics,
+			simpleMetrics,
 			Query{Sort: 1},
-			simpleBaseMetricsReverse,
+			simpleMetricsReverse,
 		},
 		{
-			simpleBaseMetricsReverse,
+			simpleMetricsReverse,
 			Query{Sort: -1},
-			simpleBaseMetrics,
+			simpleMetrics,
 		},
 		{
-			simpleBaseMetrics,
+			simpleMetrics,
 			Query{Sort: 100},
-			simpleBaseMetricsReverse,
+			simpleMetricsReverse,
 		},
 
 		// Filter and Sort
 		{
-			simpleBaseMetrics,
+			simpleMetrics,
 			Query{
 				After:  timestamp.FromMSecs(199),
 				Before: timestamp.FromMSecs(301),
@@ -103,14 +103,14 @@ func TestApplyBaseQueryBase(test *testing.T) {
 
 		// Limit
 		{
-			simpleBaseMetrics,
+			simpleMetrics,
 			Query{Limit: 1},
 			[]Metric{
 				Metric{Timestamp: timestamp.FromMSecs(100)},
 			},
 		},
 		{
-			simpleBaseMetrics,
+			simpleMetrics,
 			Query{
 				Limit: 1,
 				Sort:  1,
@@ -122,7 +122,7 @@ func TestApplyBaseQueryBase(test *testing.T) {
 	}
 
 	for i, testCase := range testCases {
-		actual := ApplyBaseQuery(testCase.metrics, testCase.Query)
+		actual := LimitAndSort(testCase.metrics, testCase.Query)
 		if !reflect.DeepEqual(testCase.expected, actual) {
 			test.Errorf("Case %d: Result is not as expected. Expected: '%v', Actual: '%v'.", i, testCase.expected, actual)
 			continue
@@ -130,7 +130,7 @@ func TestApplyBaseQueryBase(test *testing.T) {
 	}
 }
 
-var simpleBaseMetrics []Metric = []Metric{
+var simpleMetrics []Metric = []Metric{
 	Metric{Timestamp: timestamp.FromMSecs(100)},
 	Metric{Timestamp: timestamp.FromMSecs(200)},
 	Metric{Timestamp: timestamp.FromMSecs(300)},
@@ -138,4 +138,4 @@ var simpleBaseMetrics []Metric = []Metric{
 	Metric{Timestamp: timestamp.FromMSecs(500)},
 }
 
-var simpleBaseMetricsReverse []Metric = nil
+var simpleMetricsReverse []Metric = nil

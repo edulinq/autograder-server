@@ -28,7 +28,6 @@ type backend struct {
 	userLock               sync.RWMutex
 	statsLock              sync.RWMutex
 	systemStatsLock        sync.RWMutex
-	apiRequestLock         sync.RWMutex
 	tasksLock              sync.RWMutex
 	analysisIndividualLock sync.RWMutex
 	analysisPairwiseLock   sync.RWMutex
@@ -96,9 +95,6 @@ func (this *backend) Clear() error {
 
 	this.statsLock.Lock()
 	defer this.statsLock.Unlock()
-
-	this.apiRequestLock.Lock()
-	defer this.apiRequestLock.Unlock()
 
 	this.tasksLock.Lock()
 	defer this.tasksLock.Unlock()
