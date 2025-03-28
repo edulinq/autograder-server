@@ -6,9 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
 	"net/http"
-	"os"
 	"path/filepath"
 	"reflect"
 
@@ -472,15 +470,9 @@ func storeRequestFile(request *http.Request, outDir string, filename string) err
 
 	outPath := filepath.Join(outDir, filename)
 
-	outFile, err := os.Create(outPath)
+	err = util.WriteFileFromReader(outPath, inFile)
 	if err != nil {
-		return fmt.Errorf("Failed to create output file '%s': '%w'.", outPath, err)
-	}
-	defer outFile.Close()
-
-	_, err = io.Copy(outFile, inFile)
-	if err != nil {
-		return fmt.Errorf("Failed to copy contents of request file '%s': '%w'.", filename, err)
+		return fmt.Errorf("Failed to store copy of request file '%s': '%w'.", outPath, err)
 	}
 
 	return nil

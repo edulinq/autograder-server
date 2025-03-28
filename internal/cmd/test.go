@@ -112,7 +112,7 @@ func RunCMDTest(test *testing.T, mainFunc func(), args []string, logLevel log.Lo
 		os.Stdout = oldStdout
 	}()
 
-	os.Stdout = util.MustCreateFile(stdoutPath)
+	os.Stdout = mustCreateFile(stdoutPath)
 
 	// Setup stderr capture.
 	oldStderr := os.Stderr
@@ -122,7 +122,7 @@ func RunCMDTest(test *testing.T, mainFunc func(), args []string, logLevel log.Lo
 	}()
 
 	// Capture the logging and stderr output to the same file.
-	stderrFile := util.MustCreateFile(stderrPath)
+	stderrFile := mustCreateFile(stderrPath)
 	os.Stderr = stderrFile
 	log.SetTextWriter(stderrFile)
 
@@ -209,4 +209,13 @@ func logOutputs(test *testing.T, stdout string, stderr string) {
 	test.Log("--- stderr ---")
 	test.Log(stderr)
 	test.Log("--------------")
+}
+
+func mustCreateFile(path string) *os.File {
+	file, err := os.Create(path)
+	if err != nil {
+		log.Fatal("Unable to create file.", err, log.NewAttr("path", path))
+	}
+
+	return file
 }

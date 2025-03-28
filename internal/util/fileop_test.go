@@ -1075,8 +1075,8 @@ func TestFileOpSymlinkBreakContainment(test *testing.T) {
 	yPath := filepath.Join(aDir, "y.txt")
 	MustMkDir(outsideDir)
 	MustMkDir(aDir)
-	MustCreateFile(zPath)
-	MustCreateFile(yPath)
+	MustCreateEmptyFile(zPath)
+	MustCreateEmptyFile(yPath)
 
 	// ln -s outside/a base/a_symlink
 	// ln -s outside/z.txt base/z_symlink.txt
@@ -1091,7 +1091,7 @@ func TestFileOpSymlinkBreakContainment(test *testing.T) {
 	MustSymbolicLink(aDir, aSymlinkPath)
 	MustSymbolicLink(zPath, zSymlinkPath)
 	MustSymbolicLink(yPath, ySymlinkPath)
-	MustCreateFile(xPath)
+	MustCreateEmptyFile(xPath)
 
 	// No file ops should actually execute,
 	// so all dirents should remain the same.
@@ -1243,7 +1243,7 @@ func TestFileOpGlobSymlinkSourceEqualsDest(test *testing.T) {
 	// touch already_exists/already_exists.txt
 	destDir := filepath.Join(tempDir, alreadyExistsDirname)
 	MustMkDir(destDir)
-	MustCreateFile(filepath.Join(destDir, alreadyExistsFilename))
+	MustCreateEmptyFile(filepath.Join(destDir, alreadyExistsFilename))
 
 	// ln -s already_exists symlink_to_dest
 	symlinkPath := filepath.Join(tempDir, "symlink_to_dest")
@@ -1288,9 +1288,9 @@ func runFileOpExecTest(test *testing.T, prefix string, rawOperation []string, er
 
 	// Make some existing entries.
 	MustMkDir(filepath.Join(tempDir, alreadyExistsDirname))
-	MustCreateFile(filepath.Join(tempDir, alreadyExistsFilename))
-	MustCreateFile(filepath.Join(tempDir, alreadyExistsFileRelpath))
-	MustCreateFile(filepath.Join(tempDir, alreadyExistsFileAltRelpath))
+	MustCreateEmptyFile(filepath.Join(tempDir, alreadyExistsFilename))
+	MustCreateEmptyFile(filepath.Join(tempDir, alreadyExistsFileRelpath))
+	MustCreateEmptyFile(filepath.Join(tempDir, alreadyExistsFileAltRelpath))
 	MustMkDir(filepath.Join(tempDir, startingEmptyDirname))
 
 	err = operation.Exec(tempDir)

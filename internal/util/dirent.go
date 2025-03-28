@@ -3,7 +3,6 @@ package util
 import (
 	"errors"
 	"fmt"
-	"io"
 	"io/fs"
 	"os"
 	"path/filepath"
@@ -104,13 +103,7 @@ func CopyFile(source string, dest string) error {
 	}
 	defer sourceIO.Close()
 
-	destIO, err := os.Create(dest)
-	if err != nil {
-		return fmt.Errorf("Could not open dest file for copy (%s): %w.", dest, err)
-	}
-	defer destIO.Close()
-
-	_, err = io.Copy(destIO, sourceIO)
+	err = WriteFileFromReader(dest, sourceIO)
 	if err != nil {
 		return fmt.Errorf("Failed to copy file contents from '%s' to '%s': %w.", source, dest, err)
 	}

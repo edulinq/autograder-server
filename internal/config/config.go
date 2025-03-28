@@ -1,9 +1,7 @@
 package config
 
 import (
-	"encoding/json"
 	"fmt"
-	"io"
 	"math"
 	"os"
 	"path/filepath"
@@ -105,44 +103,15 @@ func LoadConfigFromDir(dir string) error {
 	return nil
 }
 
-// See LoadReader().
-func LoadFile(path string) error {
-	file, err := os.Open(path)
-	if err != nil {
-		return fmt.Errorf("Could not open config file (%s): %w.", path, err)
-	}
-	defer file.Close()
-
-	err = LoadReader(file)
-	if err != nil {
-		return fmt.Errorf("Unable to get config from file (%s): %w.", path, err)
-	}
-
-	return nil
-}
-
-// See LoadReader().
-func LoadString(text string) error {
-	err := LoadReader(strings.NewReader(text))
-	if err != nil {
-		return fmt.Errorf("Unable to get config from string: %w.", err)
-	}
-
-	return nil
-}
-
 // Load data into the configuration.
 // This will not clear out an existing configuration (so can load multiple files).
 // If there are any key conflicts, the data loaded last will win.
 // If you want to clear the config, use Reset().
-func LoadReader(reader io.Reader) error {
-	decoder := json.NewDecoder(reader)
-
+func LoadFile(path string) error {
 	var fileOptions map[string]any
-
-	err := decoder.Decode(&fileOptions)
+	err := util.JSONFromFile(path, &fileOptions)
 	if err != nil {
-		return err
+		return fmt.Errorf("Could not read config from file (%s): %w.", path, err)
 	}
 
 	for key, value := range fileOptions {
