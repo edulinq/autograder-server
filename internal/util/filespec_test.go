@@ -15,6 +15,13 @@ type testCaseParseValidation struct {
 	ExpectedJSON     string
 }
 
+type testCaseCopy struct {
+	Spec                    FileSpec
+	ExpectedCopiedDirents   []string
+	ErrorSubstring          string
+	MakeOutsideSymbolicLink bool
+}
+
 func TestFileSpecValidateBase(test *testing.T) {
 	// Note that the expected file spec will not be validated (it should be constructed valid).
 	testCases := []struct {
@@ -736,12 +743,6 @@ func TestFileSpecParseValidation(test *testing.T) {
 	}
 }
 
-type testCaseCopy struct {
-	Spec                  FileSpec
-	ExpectedCopiedDirents []string
-	ExpectErrorForSameDir bool
-}
-
 func TestFileSpecCopy(test *testing.T) {
 	for i, testCase := range getCopyTestCases() {
 		err := testCase.Spec.Validate()
@@ -758,38 +759,36 @@ func TestFileSpecCopy(test *testing.T) {
 		defer RemoveDirent(tempDir)
 
 		destDir := filepath.Join(tempDir, "dest")
-		if testCase.ExpectErrorForSameDir {
-			destDir = filepath.Dir(testCase.Spec.Path)
-		} else {
-			MustMkDir(destDir)
+		MustMkDir(destDir)
+
+		if testCase.MakeOutsideSymbolicLink {
+			outsideDirPath := filepath.Join(tempDir, "outside_symlink_target_dir")
+			MustMkDir(outsideDirPath)
+			MustSymbolicLink(outsideDirPath, filepath.Join(destDir, "outside_symlink_dir"))
 		}
 
-		err = testCase.Spec.CopyTarget(TestdataDirForTesting(), destDir)
-		if (!testCase.ExpectErrorForSameDir) && (err != nil) {
-			test.Errorf("Case %d: Failed to copy matching targets (%+v): '%v'.", i, testCase.Spec, err)
+		err = testCase.Spec.CopyTarget(TestdataDirForTesting(), TestdataDirForTesting(), destDir, destDir)
+		if err != nil {
+			if testCase.ErrorSubstring != "" {
+				if !strings.Contains(err.Error(), testCase.ErrorSubstring) {
+					test.Errorf("Case %d: Did not get expected error output. Expected Substring '%s', Actual Error: '%v'.", i, testCase.ErrorSubstring, err)
+				}
+			} else {
+				test.Errorf("Case %d: Failed to perform operation '%+v': '%v'.", i, testCase.Spec, err)
+			}
+
 			continue
-		} else if (testCase.ExpectErrorForSameDir) && (err == nil) {
-			test.Errorf("Case %d: Unexpectedly copied matching targets (%+v).", i, testCase.Spec)
 		}
 
-		if testCase.ExpectErrorForSameDir {
+		if testCase.ErrorSubstring != "" {
+			test.Errorf("Case %d: Did not get expected error '%s' on '%+v'.", i, testCase.ErrorSubstring, testCase.Spec)
 			continue
 		}
 
-		dirents, err := GetAllDirents(destDir)
+		copiedDirents, err := GetAllDirents(destDir, true, false)
 		if err != nil {
 			test.Errorf("Case %d: Failed to get all dirents: '%v'.", i, err)
 			continue
-		}
-
-		copiedDirents := []string{}
-		for _, dirent := range dirents {
-			relativeDirentPath, err := filepath.Rel(destDir, dirent)
-			if err != nil {
-				test.Errorf("Case %d: Failed to compute relative path for '%s': '%v'.", i, dirent, err)
-				continue
-			}
-			copiedDirents = append(copiedDirents, relativeDirentPath)
 		}
 
 		if !reflect.DeepEqual(testCase.ExpectedCopiedDirents, copiedDirents) {
@@ -1004,28 +1003,28 @@ func getCopyTestCases() []*testCaseCopy {
 	return []*testCaseCopy{
 		&testCaseCopy{
 			Spec: FileSpec{
-				Type: "path",
+				Type: FILESPEC_TYPE_PATH,
 				Path: filepath.Join(TestdataDirForTesting(), "files", "filespec_test", "spec.txt"),
 			},
 			ExpectedCopiedDirents: []string{"spec.txt"},
 		},
 		&testCaseCopy{
 			Spec: FileSpec{
-				Type: "path",
+				Type: FILESPEC_TYPE_PATH,
 				Path: filepath.Join(TestdataDirForTesting(), "files", "filespec_test"),
 			},
 			ExpectedCopiedDirents: []string{"filespec_test", "filespec_test/spec.txt", "filespec_test/spec2.txt"},
 		},
 		&testCaseCopy{
 			Spec: FileSpec{
-				Type: "path",
+				Type: FILESPEC_TYPE_PATH,
 				Path: filepath.Join(TestdataDirForTesting(), "files", "filespec_test", "*"),
 			},
 			ExpectedCopiedDirents: []string{"spec.txt", "spec2.txt"},
 		},
 		&testCaseCopy{
 			Spec: FileSpec{
-				Type: "path",
+				Type: FILESPEC_TYPE_PATH,
 				Path: filepath.Join(TestdataDirForTesting(), "files", "filespec_test", "spe?.txt"),
 				Dest: "test.txt",
 			},
@@ -1033,7 +1032,7 @@ func getCopyTestCases() []*testCaseCopy {
 		},
 		&testCaseCopy{
 			Spec: FileSpec{
-				Type: "path",
+				Type: FILESPEC_TYPE_PATH,
 				Path: filepath.Join(TestdataDirForTesting(), "files", "filespec_test"),
 				Dest: "test",
 			},
@@ -1041,7 +1040,7 @@ func getCopyTestCases() []*testCaseCopy {
 		},
 		&testCaseCopy{
 			Spec: FileSpec{
-				Type: "path",
+				Type: FILESPEC_TYPE_PATH,
 				Path: filepath.Join(TestdataDirForTesting(), "files", "filespec_test", "*"),
 				Dest: "test",
 			},
@@ -1049,7 +1048,7 @@ func getCopyTestCases() []*testCaseCopy {
 		},
 		&testCaseCopy{
 			Spec: FileSpec{
-				Type: "path",
+				Type: FILESPEC_TYPE_PATH,
 				Path: filepath.Join(TestdataDirForTesting(), "files", "*_test", "*"),
 				Dest: "test",
 			},
@@ -1057,14 +1056,14 @@ func getCopyTestCases() []*testCaseCopy {
 		},
 		&testCaseCopy{
 			Spec: FileSpec{
-				Type: "path",
+				Type: FILESPEC_TYPE_PATH,
 				Path: filepath.Join(TestdataDirForTesting(), "files", "*_test", "*"),
 			},
 			ExpectedCopiedDirents: []string{"*globSpec.txt", "spec.txt", "spec2.txt"},
 		},
 		&testCaseCopy{
 			Spec: FileSpec{
-				Type: "path",
+				Type: FILESPEC_TYPE_PATH,
 				Path: filepath.Join(TestdataDirForTesting(), "files", "f*_test", "*"),
 				Dest: "test",
 			},
@@ -1073,7 +1072,7 @@ func getCopyTestCases() []*testCaseCopy {
 		// Only one file is matched, so it will be renamed.
 		&testCaseCopy{
 			Spec: FileSpec{
-				Type: "path",
+				Type: FILESPEC_TYPE_PATH,
 				Path: filepath.Join(TestdataDirForTesting(), "files", `\**_test`, "*"),
 				Dest: "test.txt",
 			},
@@ -1081,7 +1080,7 @@ func getCopyTestCases() []*testCaseCopy {
 		},
 		&testCaseCopy{
 			Spec: FileSpec{
-				Type: "path",
+				Type: FILESPEC_TYPE_PATH,
 				Path: filepath.Join(TestdataDirForTesting(), "files", "filespec_test", "*"),
 				Dest: "test",
 			},
@@ -1089,15 +1088,7 @@ func getCopyTestCases() []*testCaseCopy {
 		},
 		&testCaseCopy{
 			Spec: FileSpec{
-				Type: "path",
-				Path: filepath.Join(TestdataDirForTesting(), "files", "filespec_test", "*"),
-				Dest: "spec.txt",
-			},
-			ExpectErrorForSameDir: true,
-		},
-		&testCaseCopy{
-			Spec: FileSpec{
-				Type: "path",
+				Type: FILESPEC_TYPE_PATH,
 				Path: filepath.Join(TestdataDirForTesting(), "files", "filespec_test", "*.txt"),
 				Dest: "test",
 			},
@@ -1105,7 +1096,7 @@ func getCopyTestCases() []*testCaseCopy {
 		},
 		&testCaseCopy{
 			Spec: FileSpec{
-				Type: "path",
+				Type: FILESPEC_TYPE_PATH,
 				Path: filepath.Join(TestdataDirForTesting(), "files", "f*_test", "*.txt"),
 				Dest: "test.test",
 			},
@@ -1113,7 +1104,7 @@ func getCopyTestCases() []*testCaseCopy {
 		},
 		&testCaseCopy{
 			Spec: FileSpec{
-				Type: "path",
+				Type: FILESPEC_TYPE_PATH,
 				Path: filepath.Join(TestdataDirForTesting(), "files", `\*globFileSpec_test`, `\*globSpec.txt`),
 				Dest: `\*test.txt`,
 			},
@@ -1121,14 +1112,14 @@ func getCopyTestCases() []*testCaseCopy {
 		},
 		&testCaseCopy{
 			Spec: FileSpec{
-				Type: "path",
+				Type: FILESPEC_TYPE_PATH,
 				Path: filepath.Join(TestdataDirForTesting(), "files", "file????_test", "*"),
 			},
 			ExpectedCopiedDirents: []string{"spec.txt", "spec2.txt"},
 		},
 		&testCaseCopy{
 			Spec: FileSpec{
-				Type: "path",
+				Type: FILESPEC_TYPE_PATH,
 				Path: filepath.Join(TestdataDirForTesting(), "files", "filespec_test", "????.txt"),
 				Dest: "test.test",
 			},
@@ -1136,7 +1127,7 @@ func getCopyTestCases() []*testCaseCopy {
 		},
 		&testCaseCopy{
 			Spec: FileSpec{
-				Type: "path",
+				Type: FILESPEC_TYPE_PATH,
 				Path: filepath.Join(TestdataDirForTesting(), "files", "file????_test", "????.txt"),
 				Dest: "test.txt",
 			},
@@ -1144,7 +1135,7 @@ func getCopyTestCases() []*testCaseCopy {
 		},
 		&testCaseCopy{
 			Spec: FileSpec{
-				Type: "path",
+				Type: FILESPEC_TYPE_PATH,
 				Path: filepath.Join(TestdataDirForTesting(), "files", "filespe[b-d]_test", "*"),
 				Dest: "test",
 			},
@@ -1152,7 +1143,7 @@ func getCopyTestCases() []*testCaseCopy {
 		},
 		&testCaseCopy{
 			Spec: FileSpec{
-				Type: "path",
+				Type: FILESPEC_TYPE_PATH,
 				Path: filepath.Join(TestdataDirForTesting(), "files", "filespe[^d-z]_test", "*"),
 				Dest: "test",
 			},
@@ -1160,7 +1151,7 @@ func getCopyTestCases() []*testCaseCopy {
 		},
 		&testCaseCopy{
 			Spec: FileSpec{
-				Type: "path",
+				Type: FILESPEC_TYPE_PATH,
 				Path: filepath.Join(TestdataDirForTesting(), "files", "filespec_test", "[r-t]pec.txt"),
 				Dest: "test.txt",
 			},
@@ -1168,7 +1159,7 @@ func getCopyTestCases() []*testCaseCopy {
 		},
 		&testCaseCopy{
 			Spec: FileSpec{
-				Type: "path",
+				Type: FILESPEC_TYPE_PATH,
 				Path: filepath.Join(TestdataDirForTesting(), "files", "filespec_test", "[^a-r^t-v]pec.txt"),
 				Dest: "test.txt",
 			},
@@ -1176,7 +1167,7 @@ func getCopyTestCases() []*testCaseCopy {
 		},
 		&testCaseCopy{
 			Spec: FileSpec{
-				Type: "path",
+				Type: FILESPEC_TYPE_PATH,
 				Path: filepath.Join(TestdataDirForTesting(), "files", "filespe[b-d]_test", "[r-t]pec.txt"),
 				Dest: "test.txt",
 			},
@@ -1184,11 +1175,176 @@ func getCopyTestCases() []*testCaseCopy {
 		},
 		&testCaseCopy{
 			Spec: FileSpec{
-				Type: "path",
+				Type: FILESPEC_TYPE_PATH,
 				Path: filepath.Join(TestdataDirForTesting(), "files", "filespe[^d-z]_test", "[^a-r]pec.txt"),
 				Dest: "test.txt",
 			},
 			ExpectedCopiedDirents: []string{"test.txt"},
+		},
+		&testCaseCopy{
+			Spec: FileSpec{
+				Type: FILESPEC_TYPE_PATH,
+				Path: filepath.Join(TestdataDirForTesting(), "files", "a.txt"),
+				Dest: filepath.Join("..", "dest"),
+			},
+			ExpectedCopiedDirents: []string{"a.txt"},
+		},
+
+		// Breaking Containment (dest)
+
+		&testCaseCopy{
+			Spec: FileSpec{
+				Type: FILESPEC_TYPE_PATH,
+				Path: filepath.Join(TestdataDirForTesting(), "files", "a.txt"),
+				Dest: filepath.Join("..", "test.txt"),
+			},
+			ErrorSubstring: "Destination breaks containment",
+		},
+		&testCaseCopy{
+			Spec: FileSpec{
+				Type: FILESPEC_TYPE_PATH,
+				Path: filepath.Join(TestdataDirForTesting(), "files", "a.txt"),
+				Dest: filepath.Join(".."),
+			},
+			ErrorSubstring: "Destination breaks containment",
+		},
+		&testCaseCopy{
+			Spec: FileSpec{
+				Type: FILESPEC_TYPE_PATH,
+				Path: filepath.Join(TestdataDirForTesting(), "files", "a.txt"),
+				Dest: filepath.Join("..", "dest", ".."),
+			},
+			ErrorSubstring: "Destination breaks containment",
+		},
+		&testCaseCopy{
+			Spec: FileSpec{
+				Type: FILESPEC_TYPE_PATH,
+				Path: filepath.Join(TestdataDirForTesting(), "files", "a.txt"),
+				Dest: filepath.Join("/", "tmp"),
+			},
+			ErrorSubstring: "Destination breaks containment",
+		},
+		&testCaseCopy{
+			Spec: FileSpec{
+				Type: FILESPEC_TYPE_PATH,
+				Path: filepath.Join(TestdataDirForTesting(), "files", "a.txt"),
+				Dest: "outside_symlink_dir",
+			},
+			ErrorSubstring:          "Destination breaks containment",
+			MakeOutsideSymbolicLink: true,
+		},
+		&testCaseCopy{
+			Spec: FileSpec{
+				Type: FILESPEC_TYPE_GIT,
+				Path: "http://github.com/edulinq/test.git",
+				Dest: filepath.Join("..", "test.txt"),
+			},
+			ErrorSubstring: "Destination breaks containment",
+		},
+		&testCaseCopy{
+			Spec: FileSpec{
+				Type: FILESPEC_TYPE_GIT,
+				Path: "http://github.com/edulinq/test.git",
+				Dest: filepath.Join(".."),
+			},
+			ErrorSubstring: "Destination breaks containment",
+		},
+		&testCaseCopy{
+			Spec: FileSpec{
+				Type: FILESPEC_TYPE_GIT,
+				Path: "http://github.com/edulinq/test.git",
+				Dest: filepath.Join("..", "dest", ".."),
+			},
+			ErrorSubstring: "Destination breaks containment",
+		},
+		&testCaseCopy{
+			Spec: FileSpec{
+				Type: FILESPEC_TYPE_GIT,
+				Path: "http://github.com/edulinq/test.git",
+				Dest: filepath.Join("/", "tmp"),
+			},
+			ErrorSubstring: "Destination breaks containment",
+		},
+		&testCaseCopy{
+			Spec: FileSpec{
+				Type: FILESPEC_TYPE_GIT,
+				Path: "http://test.edulinq.org/test.git",
+				Dest: "outside_symlink_dir",
+			},
+			ErrorSubstring:          "Destination breaks containment",
+			MakeOutsideSymbolicLink: true,
+		},
+		&testCaseCopy{
+			Spec: FileSpec{
+				Type: FILESPEC_TYPE_URL,
+				Path: "http://test.edulinq.org/test.zip",
+				Dest: filepath.Join("..", "test.txt"),
+			},
+			ErrorSubstring: "Destination breaks containment",
+		},
+		&testCaseCopy{
+			Spec: FileSpec{
+				Type: FILESPEC_TYPE_URL,
+				Path: "http://test.edulinq.org/test.zip",
+				Dest: filepath.Join(".."),
+			},
+			ErrorSubstring: "Destination breaks containment",
+		},
+		&testCaseCopy{
+			Spec: FileSpec{
+				Type: FILESPEC_TYPE_URL,
+				Path: "http://test.edulinq.org/test.zip",
+				Dest: filepath.Join("..", "dest", ".."),
+			},
+			ErrorSubstring: "Destination breaks containment",
+		},
+		&testCaseCopy{
+			Spec: FileSpec{
+				Type: FILESPEC_TYPE_URL,
+				Path: "http://test.edulinq.org/test.zip",
+				Dest: filepath.Join("/", "tmp"),
+			},
+			ErrorSubstring: "Destination breaks containment",
+		},
+		&testCaseCopy{
+			Spec: FileSpec{
+				Type: FILESPEC_TYPE_URL,
+				Path: "http://test.edulinq.org/test.zip",
+				Dest: "outside_symlink_dir",
+			},
+			ErrorSubstring:          "Destination breaks containment",
+			MakeOutsideSymbolicLink: true,
+		},
+
+		// Breaking Containment (source)
+
+		&testCaseCopy{
+			Spec: FileSpec{
+				Type: FILESPEC_TYPE_PATH,
+				Path: filepath.Join(TestdataDirForTesting(), ".."),
+			},
+			ErrorSubstring: "Source breaks containment",
+		},
+		&testCaseCopy{
+			Spec: FileSpec{
+				Type: FILESPEC_TYPE_PATH,
+				Path: filepath.Join(TestdataDirForTesting(), "files", "..", ".."),
+			},
+			ErrorSubstring: "Source breaks containment",
+		},
+		&testCaseCopy{
+			Spec: FileSpec{
+				Type: FILESPEC_TYPE_PATH,
+				Path: filepath.Join(TestdataDirForTesting(), "..", "files", ".."),
+			},
+			ErrorSubstring: "Source breaks containment",
+		},
+		&testCaseCopy{
+			Spec: FileSpec{
+				Type: FILESPEC_TYPE_PATH,
+				Path: filepath.Join("/", "tmp"),
+			},
+			ErrorSubstring: "Source breaks containment",
 		},
 	}
 }

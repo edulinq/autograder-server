@@ -6,6 +6,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/edulinq/autograder/internal/common"
 	"github.com/edulinq/autograder/internal/timestamp"
 	"github.com/edulinq/autograder/internal/util"
 )
@@ -20,11 +21,11 @@ const (
 )
 
 type AssignmentAnalysisOptions struct {
-	IncludePatterns []string `json:"include-patterns,omitempty"`
-	ExcludePatterns []string `json:"exclude-patterns,omitempty"`
+	IncludePatterns []string `json:"include-patterns,omitempty,omitzero"`
+	ExcludePatterns []string `json:"exclude-patterns,omitempty,omitzero"`
 
-	TemplateFiles   []*util.FileSpec      `json:"template-files,omitempty"`
-	TemplateFileOps []*util.FileOperation `json:"template-file-ops,omitempty"`
+	TemplateFiles   []*util.FileSpec      `json:"template-files,omitempty,omitzero"`
+	TemplateFileOps []*util.FileOperation `json:"template-file-ops,omitempty,omitzero"`
 }
 
 type AnalysisFileInfo struct {
@@ -39,7 +40,7 @@ type FileSimilarity struct {
 
 	Tool    string         `json:"tool"`
 	Version string         `json:"version"`
-	Options map[string]any `json:"options,omitempty"`
+	Options map[string]any `json:"options,omitempty,omitzero"`
 	Score   float64        `json:"score"`
 }
 
@@ -47,6 +48,7 @@ type AnalysisSummary struct {
 	Complete      bool `json:"complete"`
 	CompleteCount int  `json:"complete-count"`
 	PendingCount  int  `json:"pending-count"`
+	FailureCount  int  `json:"failure-count"`
 
 	FirstTimestamp timestamp.Timestamp `json:"first-timestamp"`
 	LastTimestamp  timestamp.Timestamp `json:"last-timestamp"`
@@ -57,25 +59,28 @@ type IndividualAnalysis struct {
 
 	AnalysisTimestamp timestamp.Timestamp `json:"analysis-timestamp"`
 
+	Failure        bool   `json:"failure,omitempty"`
+	FailureMessage string `json:"failure-message,omitempty"`
+
 	FullID       string `json:"submission-id"`
 	ShortID      string `json:"short-id"`
 	CourseID     string `json:"course-id"`
 	AssignmentID string `json:"assignment-id"`
 	UserEmail    string `json:"user-email"`
 
-	SubmissionStartTime timestamp.Timestamp `json:"submission-start-time"`
-	Score               float64             `json:"score"`
+	SubmissionStartTime timestamp.Timestamp `json:"submission-start-time,omitempty"`
+	Score               float64             `json:"score,omitempty"`
 
-	Files        []AnalysisFileInfo `json:"files"`
-	SkippedFiles []string           `json:"skipped-files"`
-	LinesOfCode  int                `json:"lines-of-code"`
+	Files        []AnalysisFileInfo `json:"files,omitempty,omitzero"`
+	SkippedFiles []string           `json:"skipped-files,omitempty,omitzero"`
+	LinesOfCode  int                `json:"lines-of-code,omitempty"`
 
-	SubmissionTimeDelta int64   `json:"submission-time-delta"`
-	LinesOfCodeDelta    int     `json:"lines-of-code-delta"`
-	ScoreDelta          float64 `json:"score-delta"`
+	SubmissionTimeDelta int64   `json:"submission-time-delta,omitempty"`
+	LinesOfCodeDelta    int     `json:"lines-of-code-delta,omitempty"`
+	ScoreDelta          float64 `json:"score-delta,omitempty"`
 
-	LinesOfCodeVelocity float64 `json:"lines-of-code-per-hour"`
-	ScoreVelocity       float64 `json:"score-per-hour"`
+	LinesOfCodeVelocity float64 `json:"lines-of-code-per-hour,omitempty"`
+	ScoreVelocity       float64 `json:"score-per-hour,omitempty"`
 }
 
 type IndividualAnalysisSummary struct {
@@ -100,12 +105,15 @@ type PairwiseAnalysis struct {
 	AnalysisTimestamp timestamp.Timestamp `json:"analysis-timestamp"`
 	SubmissionIDs     PairwiseKey         `json:"submission-ids"`
 
-	Similarities   map[string][]*FileSimilarity `json:"similarities"`
-	UnmatchedFiles [][2]string                  `json:"unmatched-files"`
-	SkippedFiles   []string                     `json:"skipped-files"`
+	Failure        bool   `json:"failure,omitempty"`
+	FailureMessage string `json:"failure-message,omitempty"`
 
-	MeanSimilarities    map[string]float64 `json:"mean-similarities"`
-	TotalMeanSimilarity float64            `json:"total-mean-similarity"`
+	Similarities   map[string][]*FileSimilarity `json:"similarities,omitempty,omitzero"`
+	UnmatchedFiles [][2]string                  `json:"unmatched-files,omitempty,omitzero"`
+	SkippedFiles   []string                     `json:"skipped-files,omitempty,omitzero"`
+
+	MeanSimilarities    map[string]float64 `json:"mean-similarities,omitempty,omitzero"`
+	TotalMeanSimilarity float64            `json:"total-mean-similarity,omitempty"`
 }
 
 type PairwiseAnalysisSummary struct {
@@ -190,6 +198,21 @@ func (this *PairwiseKey) String() string {
 	return this[0] + PAIRWISE_KEY_DELIM + this[1]
 }
 
+// Get the representative course ID for this key.
+// Will return an empty string if there is no such course or the ID is malformed.
+func (this *PairwiseKey) Course() string {
+	if this == nil {
+		return ""
+	}
+
+	courseID, _, _, _, err := common.SplitFullSubmissionID(this[0])
+	if err != nil {
+		return ""
+	}
+
+	return courseID
+}
+
 func NewPairwiseAnalysis(pairwiseKey PairwiseKey, assignment *Assignment, similarities map[string][]*FileSimilarity, unmatches [][2]string, skipped []string) *PairwiseAnalysis {
 	meanSimilarities := make(map[string]float64, len(similarities))
 	totalMeanSimilarity := 0.0
@@ -229,6 +252,21 @@ func NewPairwiseAnalysis(pairwiseKey PairwiseKey, assignment *Assignment, simila
 	}
 }
 
+func NewFailedPairwiseAnalysis(pairwiseKey PairwiseKey, assignment *Assignment, message string) *PairwiseAnalysis {
+	var options *AssignmentAnalysisOptions
+	if assignment != nil {
+		options = assignment.AssignmentAnalysisOptions
+	}
+
+	return &PairwiseAnalysis{
+		Options:           options,
+		AnalysisTimestamp: timestamp.Now(),
+		SubmissionIDs:     pairwiseKey,
+		Failure:           true,
+		FailureMessage:    message,
+	}
+}
+
 func NewIndividualAnalysisSummary(results []*IndividualAnalysis, pendingCount int) *IndividualAnalysisSummary {
 	if len(results) == 0 {
 		return &IndividualAnalysisSummary{
@@ -236,6 +274,7 @@ func NewIndividualAnalysisSummary(results []*IndividualAnalysis, pendingCount in
 				Complete:       (pendingCount == 0),
 				CompleteCount:  0,
 				PendingCount:   pendingCount,
+				FailureCount:   0,
 				FirstTimestamp: timestamp.Zero(),
 				LastTimestamp:  timestamp.Zero(),
 			},
@@ -255,7 +294,14 @@ func NewIndividualAnalysisSummary(results []*IndividualAnalysis, pendingCount in
 
 	locPerFiles := make(map[string][]float64)
 
+	failureCount := 0
+
 	for i, result := range results {
+		if result.Failure {
+			failureCount++
+			continue
+		}
+
 		if (i == 0) || (result.AnalysisTimestamp < firstTimestamp) {
 			firstTimestamp = result.AnalysisTimestamp
 		}
@@ -285,8 +331,9 @@ func NewIndividualAnalysisSummary(results []*IndividualAnalysis, pendingCount in
 	return &IndividualAnalysisSummary{
 		AnalysisSummary: AnalysisSummary{
 			Complete:       (pendingCount == 0),
-			CompleteCount:  len(results),
+			CompleteCount:  len(scores),
 			PendingCount:   pendingCount,
+			FailureCount:   failureCount,
 			FirstTimestamp: firstTimestamp,
 			LastTimestamp:  lastTimestamp,
 		},
@@ -308,6 +355,7 @@ func NewPairwiseAnalysisSummary(results []*PairwiseAnalysis, pendingCount int) *
 				Complete:       (pendingCount == 0),
 				CompleteCount:  0,
 				PendingCount:   pendingCount,
+				FailureCount:   0,
 				FirstTimestamp: timestamp.Zero(),
 				LastTimestamp:  timestamp.Zero(),
 			},
@@ -318,9 +366,16 @@ func NewPairwiseAnalysisSummary(results []*PairwiseAnalysis, pendingCount int) *
 	lastTimestamp := timestamp.Zero()
 
 	meanSims := make(map[string][]float64)
-	totalMeanSim := make([]float64, 0, len(results))
+	totalMeanSims := make([]float64, 0, len(results))
+
+	failureCount := 0
 
 	for i, result := range results {
+		if result.Failure {
+			failureCount++
+			continue
+		}
+
 		if (i == 0) || (result.AnalysisTimestamp < firstTimestamp) {
 			firstTimestamp = result.AnalysisTimestamp
 		}
@@ -333,7 +388,7 @@ func NewPairwiseAnalysisSummary(results []*PairwiseAnalysis, pendingCount int) *
 			meanSims[relpath] = append(meanSims[relpath], meanSim)
 		}
 
-		totalMeanSim = append(totalMeanSim, result.TotalMeanSimilarity)
+		totalMeanSims = append(totalMeanSims, result.TotalMeanSimilarity)
 	}
 
 	aggregateMeanSimilarities := make(map[string]util.AggregateValues, len(meanSims))
@@ -344,13 +399,14 @@ func NewPairwiseAnalysisSummary(results []*PairwiseAnalysis, pendingCount int) *
 	return &PairwiseAnalysisSummary{
 		AnalysisSummary: AnalysisSummary{
 			Complete:       (pendingCount == 0),
-			CompleteCount:  len(results),
+			CompleteCount:  len(totalMeanSims),
 			PendingCount:   pendingCount,
+			FailureCount:   failureCount,
 			FirstTimestamp: firstTimestamp,
 			LastTimestamp:  lastTimestamp,
 		},
 		AggregateMeanSimilarities:      aggregateMeanSimilarities,
-		AggregateTotalMeanSimilarities: util.ComputeAggregates(totalMeanSim),
+		AggregateTotalMeanSimilarities: util.ComputeAggregates(totalMeanSims),
 	}
 }
 

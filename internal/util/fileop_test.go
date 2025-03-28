@@ -311,29 +311,109 @@ func TestFileOpValidateBase(test *testing.T) {
 	}
 }
 
-func TestFileOpToUnix(test *testing.T) {
-	baseDir := "/tmp/test"
-
+func TestFileOpToUnixForDocker(test *testing.T) {
 	testCases := []struct {
 		Op       FileOperation
+		BaseDir  string
 		Expected string
 	}{
-		{FileOperation([]string{"cp", "a", "b"}), "cp -r /tmp/test/a /tmp/test/b"},
-		{FileOperation([]string{"mv", "a", "b"}), "mv /tmp/test/a /tmp/test/b"},
-		{FileOperation([]string{"mkdir", "a"}), "mkdir -p /tmp/test/a"},
-		{FileOperation([]string{"mkdir", "a/b"}), "mkdir -p /tmp/test/a/b"},
-		{FileOperation([]string{"rm", "a"}), "rm -rf /tmp/test/a"},
-		{FileOperation([]string{"rm", "a/b"}), "rm -rf /tmp/test/a/b"},
+		// Base
+		{
+			FileOperation([]string{"cp", "a", "b"}),
+			"/tmp/test",
+			"cp -r /tmp/test/a /tmp/test/b",
+		},
+		{
+			FileOperation([]string{"mv", "a", "b"}),
+			"/tmp/test",
+			"mv /tmp/test/a /tmp/test/b",
+		},
+		{
+			FileOperation([]string{"mkdir", "a"}),
+			"/tmp/test",
+			"mkdir -p /tmp/test/a",
+		},
+		{
+			FileOperation([]string{"mkdir", "a/b"}),
+			"/tmp/test",
+			"mkdir -p /tmp/test/a/b",
+		},
+		{
+			FileOperation([]string{"rm", "a"}),
+			"/tmp/test",
+			"rm -rf /tmp/test/a",
+		},
+		{
+			FileOperation([]string{"rm", "a/b"}),
+			"/tmp/test",
+			"rm -rf /tmp/test/a/b",
+		},
 
-		{FileOperation([]string{"cp", "a A", "b B"}), "cp -r '/tmp/test/a A' '/tmp/test/b B'"},
-		{FileOperation([]string{"mv", "a A", "b B"}), "mv '/tmp/test/a A' '/tmp/test/b B'"},
-		{FileOperation([]string{"mkdir", "a A"}), "mkdir -p '/tmp/test/a A'"},
-		{FileOperation([]string{"rm", "a A"}), "rm -rf '/tmp/test/a A'"},
+		// Spaces
+		{
+			FileOperation([]string{"cp", "a A", "b B"}),
+			"/tmp/test",
+			"cp -r '/tmp/test/a A' '/tmp/test/b B'",
+		},
+		{
+			FileOperation([]string{"mv", "a A", "b B"}),
+			"/tmp/test",
+			"mv '/tmp/test/a A' '/tmp/test/b B'",
+		},
+		{
+			FileOperation([]string{"mkdir", "a A"}),
+			"/tmp/test",
+			"mkdir -p '/tmp/test/a A'",
+		},
+		{
+			FileOperation([]string{"rm", "a A"}),
+			"/tmp/test",
+			"rm -rf '/tmp/test/a A'",
+		},
 
-		{FileOperation([]string{"cp", "\"a\"", "'b'"}), "cp -r '/tmp/test/\"a\"' '/tmp/test/'\"'\"'b'\"'\"''"},
-		{FileOperation([]string{"mv", "\"a\"", "'b'"}), "mv '/tmp/test/\"a\"' '/tmp/test/'\"'\"'b'\"'\"''"},
-		{FileOperation([]string{"mkdir", "\"a\"/'b'"}), "mkdir -p '/tmp/test/\"a\"/'\"'\"'b'\"'\"''"},
-		{FileOperation([]string{"rm", "\"a\"/'b'"}), "rm -rf '/tmp/test/\"a\"/'\"'\"'b'\"'\"''"},
+		// Quotes / Escapes
+		{
+			FileOperation([]string{"cp", "\"a\"", "'b'"}),
+			"/tmp/test",
+			"cp -r '/tmp/test/\"a\"' '/tmp/test/'\"'\"'b'\"'\"''",
+		},
+		{
+			FileOperation([]string{"mv", "\"a\"", "'b'"}),
+			"/tmp/test",
+			"mv '/tmp/test/\"a\"' '/tmp/test/'\"'\"'b'\"'\"''",
+		},
+		{
+			FileOperation([]string{"mkdir", "\"a\"/'b'"}),
+			"/tmp/test",
+			"mkdir -p '/tmp/test/\"a\"/'\"'\"'b'\"'\"''",
+		},
+		{
+			FileOperation([]string{"rm", "\"a\"/'b'"}),
+			"/tmp/test",
+			"rm -rf '/tmp/test/\"a\"/'\"'\"'b'\"'\"''",
+		},
+
+		// Relative Base Dir
+		{
+			FileOperation([]string{"cp", "a", "b"}),
+			".",
+			"cp -r a b",
+		},
+		{
+			FileOperation([]string{"mv", "a", "b"}),
+			".",
+			"mv a b",
+		},
+		{
+			FileOperation([]string{"mkdir", "a"}),
+			".",
+			"mkdir -p a",
+		},
+		{
+			FileOperation([]string{"rm", "a"}),
+			".",
+			"rm -rf a",
+		},
 	}
 
 	for i, testCase := range testCases {
@@ -343,7 +423,7 @@ func TestFileOpToUnix(test *testing.T) {
 			continue
 		}
 
-		actual := testCase.Op.ToUnix(baseDir)
+		actual := testCase.Op.ToUnixForDocker(testCase.BaseDir)
 		if testCase.Expected != actual {
 			test.Errorf("Case %d: Unexpected UNIX command. Expected `%s`, Actual: `%s`.", i, testCase.Expected, actual)
 			continue
@@ -982,6 +1062,219 @@ func TestFileOpRemoveBase(test *testing.T) {
 	}
 }
 
+func TestFileOpSymlinkBreakContainment(test *testing.T) {
+	tempDir := MustMkDirTemp("test-fileop-symlink-break-containment-")
+	defer RemoveDirent(tempDir)
+
+	// mkdir -p outside/a
+	// touch outside/z.txt
+	// touch outside/a/y.txt
+	outsideDir := filepath.Join(tempDir, "outside")
+	aDir := filepath.Join(outsideDir, "a")
+	zPath := filepath.Join(outsideDir, "z.txt")
+	yPath := filepath.Join(aDir, "y.txt")
+	MustMkDir(outsideDir)
+	MustMkDir(aDir)
+	MustCreateEmptyFile(zPath)
+	MustCreateEmptyFile(yPath)
+
+	// ln -s outside/a base/a_symlink
+	// ln -s outside/z.txt base/z_symlink.txt
+	// ln -s outside/a/y.txt base/y_symlink.txt
+	// touch base/x.txt
+	baseDir := filepath.Join(tempDir, "base")
+	aSymlinkPath := filepath.Join(baseDir, "a_symlink")
+	zSymlinkPath := filepath.Join(baseDir, "z_symlink.txt")
+	ySymlinkPath := filepath.Join(baseDir, "y_symlink.txt")
+	xPath := filepath.Join(baseDir, "x.txt")
+	MustMkDir(baseDir)
+	MustSymbolicLink(aDir, aSymlinkPath)
+	MustSymbolicLink(zPath, zSymlinkPath)
+	MustSymbolicLink(yPath, ySymlinkPath)
+	MustCreateEmptyFile(xPath)
+
+	// No file ops should actually execute,
+	// so all dirents should remain the same.
+	expectedDirents, err := GetAllDirents(tempDir, false, false)
+	if err != nil {
+		test.Fatalf("Failed to list initial dirents: '%v'.", err)
+	}
+
+	testCases := []struct {
+		operation      FileOperation
+		errorSubstring string
+	}{
+		// Copy
+		{
+			FileOperation([]string{"cp", "a_symlink", "test"}),
+			"path breaks containment",
+		},
+		{
+			FileOperation([]string{"cp", "a_symlink/y.txt", "test.yxy"}),
+			"path breaks containment",
+		},
+		{
+			FileOperation([]string{"cp", "z_symlink.txt", "test.txt"}),
+			"path breaks containment",
+		},
+		{
+			FileOperation([]string{"cp", "y_symlink.txt", "test.txt"}),
+			"path breaks containment",
+		},
+		{
+			FileOperation([]string{"cp", "x.txt", "a_symlink"}),
+			"path breaks containment",
+		},
+		{
+			FileOperation([]string{"cp", "x.txt", "a_symlink/test.txt"}),
+			"path breaks containment",
+		},
+		{
+			FileOperation([]string{"cp", "*", "test"}),
+			"path breaks containment",
+		},
+
+		// Move
+		{
+			FileOperation([]string{"mv", "a_symlink", "test"}),
+			"path breaks containment",
+		},
+		{
+			FileOperation([]string{"mv", "a_symlink/y.txt", "test.yxy"}),
+			"path breaks containment",
+		},
+		{
+			FileOperation([]string{"mv", "z_symlink.txt", "test.txt"}),
+			"path breaks containment",
+		},
+		{
+			FileOperation([]string{"mv", "y_symlink.txt", "test.txt"}),
+			"path breaks containment",
+		},
+		{
+			FileOperation([]string{"mv", "x.txt", "a_symlink"}),
+			"path breaks containment",
+		},
+		{
+			FileOperation([]string{"mv", "x.txt", "a_symlink/test.txt"}),
+			"path breaks containment",
+		},
+		{
+			FileOperation([]string{"mv", "*", "test"}),
+			"path breaks containment",
+		},
+
+		// Mkdir
+		{
+			FileOperation([]string{"mkdir", "a_symlink"}),
+			"path breaks containment",
+		},
+		{
+			FileOperation([]string{"mkdir", "a_symlink/test"}),
+			"path breaks containment",
+		},
+
+		// Remove
+		{
+			FileOperation([]string{"rm", "a_symlink"}),
+			"path breaks containment",
+		},
+		{
+			FileOperation([]string{"rm", "a_symlink/y.txt"}),
+			"path breaks containment",
+		},
+		{
+			FileOperation([]string{"rm", "z_symlink.txt"}),
+			"path breaks containment",
+		},
+		{
+			FileOperation([]string{"rm", "y_symlink.txt"}),
+			"path breaks containment",
+		},
+		{
+			FileOperation([]string{"rm", "*"}),
+			"path breaks containment",
+		},
+	}
+
+	for i, testCase := range testCases {
+		if testCase.errorSubstring == "" {
+			test.Errorf("Case %d: Error substring required.", i)
+			continue
+		}
+
+		err := testCase.operation.Validate()
+		if err != nil {
+			test.Errorf("Case %d: Failed to validate operation '%+v': '%v'.", i, testCase.operation, err)
+			continue
+		}
+
+		// All ops should validate, but not execute.
+		err = testCase.operation.Exec(baseDir)
+		if err == nil {
+			test.Errorf("Case %d: No error was returned on '%v'.", i, testCase.operation)
+			continue
+		}
+
+		if !strings.Contains(err.Error(), testCase.errorSubstring) {
+			test.Errorf("Case %d: Did not get expected error outpout. Expected Substring '%s', Actual Error: '%v'.", i, testCase.errorSubstring, err)
+			continue
+		}
+
+		actualDirents, err := GetAllDirents(tempDir, false, false)
+		if err != nil {
+			test.Errorf("Failed to list final dirents: '%v'.", err)
+			continue
+		}
+
+		if !reflect.DeepEqual(expectedDirents, actualDirents) {
+			test.Errorf("Case %d: Dirents have changes when no ops should have been executed. Exepcted: '%s', Actual: '%s'.",
+				i, MustToJSONIndent(expectedDirents), MustToJSONIndent(actualDirents))
+			continue
+		}
+	}
+}
+
+func TestFileOpGlobSymlinkSourceEqualsDest(test *testing.T) {
+	tempDir := MustMkDirTemp("test-fileop-glob-symlink-source-equals-dest-")
+	defer RemoveDirent(tempDir)
+
+	// mkdir -p already_exists
+	// touch already_exists/already_exists.txt
+	destDir := filepath.Join(tempDir, alreadyExistsDirname)
+	MustMkDir(destDir)
+	MustCreateEmptyFile(filepath.Join(destDir, alreadyExistsFilename))
+
+	// ln -s already_exists symlink_to_dest
+	symlinkPath := filepath.Join(tempDir, "symlink_to_dest")
+	MustSymbolicLink(destDir, symlinkPath)
+
+	testCases := []struct {
+		operation FileOperation
+	}{
+		{
+			FileOperation([]string{"cp", "*", alreadyExistsDirname}),
+		},
+		{
+			FileOperation([]string{"mv", "*", alreadyExistsDirname}),
+		},
+	}
+
+	for i, testCase := range testCases {
+		err := testCase.operation.Validate()
+		if err != nil {
+			test.Errorf("Case %d: Failed to validate operation '%+v': '%v'.", i, testCase.operation, err)
+			continue
+		}
+
+		err = testCase.operation.Exec(tempDir)
+		if err != nil {
+			test.Errorf("Case %d: Unexpected error when executing operation '%+v': '%v'.", i, testCase.operation, err)
+			continue
+		}
+	}
+}
+
 func runFileOpExecTest(test *testing.T, prefix string, rawOperation []string, errorSubstring string, postExec func(tempDir string)) {
 	operation := NewFileOperation(rawOperation)
 	err := operation.Validate()
@@ -995,9 +1288,9 @@ func runFileOpExecTest(test *testing.T, prefix string, rawOperation []string, er
 
 	// Make some existing entries.
 	MustMkDir(filepath.Join(tempDir, alreadyExistsDirname))
-	MustCreateFile(filepath.Join(tempDir, alreadyExistsFilename))
-	MustCreateFile(filepath.Join(tempDir, alreadyExistsFileRelpath))
-	MustCreateFile(filepath.Join(tempDir, alreadyExistsFileAltRelpath))
+	MustCreateEmptyFile(filepath.Join(tempDir, alreadyExistsFilename))
+	MustCreateEmptyFile(filepath.Join(tempDir, alreadyExistsFileRelpath))
+	MustCreateEmptyFile(filepath.Join(tempDir, alreadyExistsFileAltRelpath))
 	MustMkDir(filepath.Join(tempDir, startingEmptyDirname))
 
 	err = operation.Exec(tempDir)

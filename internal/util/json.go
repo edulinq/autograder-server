@@ -132,11 +132,19 @@ func ToJSONFileIndentCustom(data any, path string, prefix string, indent string)
 
 // Take a best shot at getting what the key would be for this the field in a JSON object.
 func JSONFieldName(field reflect.StructField) string {
+	return JSONFieldNameFull(field, true)
+}
+
+func JSONFieldNameFull(field reflect.StructField, fallback bool) string {
 	name := field.Name
 
 	tag := field.Tag.Get("json")
 	if tag == "" {
-		return name
+		if fallback {
+			return name
+		} else {
+			return ""
+		}
 	}
 
 	parts := strings.Split(tag, ",")
@@ -148,8 +156,8 @@ func JSONFieldName(field reflect.StructField) string {
 			return ""
 		}
 
-		// This special option is allowed.
-		if part == "omitempty" {
+		// These special options are allowed.
+		if part == "omitempty" || part == "omitzero" {
 			continue
 		}
 
@@ -238,4 +246,27 @@ func MustFormatJSONObjectIndent(text string) string {
 	var object map[string]any
 	MustJSONFromString(text, &object)
 	return MustToJSONIndent(object)
+}
+
+func MustToJSONMap(data any) map[string]any {
+	dataJSONMap, err := ToJSONMap(data)
+	if err != nil {
+		log.Fatal("Failed to convert data to a JSON map.", err)
+	}
+
+	return dataJSONMap
+}
+
+func ToJSONMap(data any) (map[string]any, error) {
+	dataJSON, err := ToJSON(data)
+	if err != nil {
+		return nil, fmt.Errorf("Failed to convert data to JSON: '%v'.", err)
+	}
+
+	dataJSONMap, err := JSONMapFromString(dataJSON)
+	if err != nil {
+		return nil, fmt.Errorf("Failed to convert JSON string to JSON map: '%v'.", err)
+	}
+
+	return dataJSONMap, nil
 }

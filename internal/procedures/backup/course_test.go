@@ -10,7 +10,7 @@ import (
 )
 
 // This hash is expected to change when the test data for course101 is changed.
-const EXPECTED_MD5 = "a5cc59e9df670aea1e784b57feff5100"
+const EXPECTED_MD5 = "77229b0b7abcd1a73782d354f40ad8a7"
 
 func TestBackupTempDir(test *testing.T) {
 	tempDir, err := util.MkDirTemp("autograder-test-course-backup-")

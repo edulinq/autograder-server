@@ -40,7 +40,7 @@ type APIRequestUserContext struct {
 
 	UserEmail     string `json:"user-email"`
 	UserPass      string `json:"user-pass"`
-	RootUserNonce string `json:"root-user-nonce"`
+	RootUserNonce string `json:"root-user-nonce,omitempty"`
 
 	ServerUser *model.ServerUser `json:"-"`
 }
@@ -61,7 +61,7 @@ type APIRequestAssignmentContext struct {
 
 	AssignmentID string `json:"assignment-id"`
 
-	Assignment *model.Assignment
+	Assignment *model.Assignment `json:"-"`
 }
 
 func (this *APIRequest) Validate(httpRequest *http.Request, request any, endpoint string) *APIError {
@@ -216,37 +216,67 @@ func (this *APIRequestAssignmentContext) Validate(httpRequest *http.Request, req
 	return nil
 }
 
-func (this *APIRequest) LogValue() []*log.Attr {
-	return []*log.Attr{
-		log.NewAttr("id", this.RequestID),
-		log.NewAttr("endpoint", this.Endpoint),
-		log.NewAttr("sender", this.Sender),
-		log.NewAttr("timestamp", this.Timestamp),
+// Convert an API request into loggable attributes.
+// Note that this cannot be done (easily) with LogValue()
+// since we would need to attach that method to each instead of an APIRequest.
+func getLogAttributesFromAPIRequest(apiRequest ValidAPIRequest) []any {
+	typedAPIRequest := reflect.ValueOf(apiRequest).Elem().FieldByName("APIRequest").Interface().(APIRequest)
+
+	generalData, err := util.ToJSONMap(apiRequest)
+	if err != nil {
+		log.Error(fmt.Sprintf("Failed to convert APIRequest to JSON: '%#v'.", apiRequest), err)
+
+		return []any{
+			log.NewAttr("id", typedAPIRequest.RequestID),
+			log.NewAttr("endpoint", typedAPIRequest.Endpoint),
+			log.NewAttr("sender", typedAPIRequest.Sender),
+			log.NewAttr("timestamp", typedAPIRequest.Timestamp),
+			log.NewAttr("conversion-error", err.Error()),
+		}
 	}
-}
 
-func (this *APIRequestUserContext) LogValue() []*log.Attr {
-	attrs := this.APIRequest.LogValue()
+	// Clean up the data.
 
-	attrs = append(attrs, log.NewUserAttr(this.UserEmail))
+	// Add fields that do not have JSON equivalents.
+	generalData["id"] = typedAPIRequest.RequestID
+	generalData["endpoint"] = typedAPIRequest.Endpoint
+	generalData["sender"] = typedAPIRequest.Sender
 
-	return attrs
-}
+	// Remove passwords.
+	delete(generalData, "user-pass")
+	delete(generalData, "new-pass")
+	cleanRawUsers(generalData)
 
-func (this *APIRequestCourseUserContext) LogValue() []*log.Attr {
-	attrs := this.APIRequestUserContext.LogValue()
+	// Swap over standard loggable keys.
+	// Note that these will be nil if they don't exist (and will be removed later).
+	generalData[log.KEY_USER] = generalData["user-email"]
+	delete(generalData, "user-email")
+	generalData[log.KEY_COURSE] = generalData["course-id"]
+	delete(generalData, "course-id")
+	generalData[log.KEY_ASSIGNMENT] = generalData["assignment-id"]
+	delete(generalData, "assignment-id")
 
-	attrs = append(attrs, log.NewCourseAttr(this.CourseID))
+	for key, value := range generalData {
+		// Remove roles.
+		if minRoleRegex.MatchString(key) {
+			delete(generalData, key)
+			continue
+		}
 
-	return attrs
-}
+		// Remove nils.
+		if value == nil {
+			delete(generalData, key)
+			continue
+		}
+	}
 
-func (this *APIRequestAssignmentContext) LogValue() []*log.Attr {
-	attrs := this.APIRequestCourseUserContext.LogValue()
+	// Convert to loggable attributes.
+	result := make([]any, 0, len(generalData))
+	for key, value := range generalData {
+		result = append(result, log.NewAttr(key, value))
+	}
 
-	attrs = append(attrs, log.NewAssignmentAttr(this.AssignmentID))
-
-	return attrs
+	return result
 }
 
 // Take in a pointer to an API request.
@@ -442,4 +472,26 @@ func getBasicAPIRequestInfo(request ValidAPIRequest) (string, string, string, st
 	}
 
 	return endpoint, sender, userEmail, courseID, assignmentID
+}
+
+// Remove sensitive data from a generalized (from JSON) API request.
+func cleanRawUsers(generalData map[string]any) {
+	rawRawUsers, ok := generalData["raw-users"]
+	if !ok {
+		return
+	}
+
+	rawUsers, ok := rawRawUsers.([]any)
+	if !ok {
+		return
+	}
+
+	for _, rawRawUser := range rawUsers {
+		rawUser, ok := rawRawUser.(map[string]any)
+		if !ok {
+			continue
+		}
+
+		delete(rawUser, "pass")
+	}
 }

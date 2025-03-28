@@ -55,6 +55,14 @@ func (this *DBTests) DBTestGetIndividualAnalysisBase(test *testing.T) {
 				testIndividualRecords[2].FullID: testIndividualRecords[2],
 			},
 		},
+
+		// Error Record
+		{
+			[]string{testIndividualRecords[2].FullID},
+			map[string]*model.IndividualAnalysis{
+				testIndividualRecords[2].FullID: testIndividualRecords[2],
+			},
+		},
 	}
 
 	for i, testCase := range testCases {
@@ -65,8 +73,8 @@ func (this *DBTests) DBTestGetIndividualAnalysisBase(test *testing.T) {
 		}
 
 		if !reflect.DeepEqual(testCase.expected, results) {
-			test.Errorf("Case %d: Results not as expected. Expected: '%v', Actual: '%v'.",
-				i, testCase.expected, results)
+			test.Errorf("Case %d: Results not as expected. Expected: '%s', Actual: '%s'.",
+				i, util.MustToJSONIndent(testCase.expected), util.MustToJSONIndent(results))
 			continue
 		}
 	}
@@ -128,8 +136,8 @@ func (this *DBTests) DBTestGetPairwiseAnalysisBase(test *testing.T) {
 		}
 
 		if !reflect.DeepEqual(testCase.expected, results) {
-			test.Errorf("Case %d: Results not as expected. Expected: '%v', Actual: '%v'.",
-				i, testCase.expected, results)
+			test.Errorf("Case %d: Results not as expected. Expected: '%s', Actual: '%s'.",
+				i, mustToJSONPairwiseMap(testCase.expected), mustToJSONPairwiseMap(results))
 			continue
 		}
 	}
@@ -364,8 +372,8 @@ func (this *DBTests) DBTestRemovePairwiseAnalysisBase(test *testing.T) {
 		}
 
 		if !reflect.DeepEqual(testCase.expected, results) {
-			test.Errorf("Case %d: Results not as expected. Expected: '%+v', Actual: '%+v'.",
-				i, testCase.expected, results)
+			test.Errorf("Case %d: Results not as expected. Expected: '%s', Actual: '%s'.",
+				i, mustToJSONPairwiseMap(testCase.expected), mustToJSONPairwiseMap(results))
 			continue
 		}
 	}
@@ -381,14 +389,19 @@ var testIndividualRecords []*model.IndividualAnalysis = []*model.IndividualAnaly
 	&model.IndividualAnalysis{
 		AnalysisTimestamp: timestamp.Zero(),
 		FullID:            "course101::hw0::course-student@test.edulinq.org::1697406256",
+		CourseID:          "course101",
 	},
 	&model.IndividualAnalysis{
 		AnalysisTimestamp: timestamp.Zero(),
 		FullID:            "course101::hw0::course-student@test.edulinq.org::1697406265",
+		CourseID:          "course101",
 	},
 	&model.IndividualAnalysis{
 		AnalysisTimestamp: timestamp.Zero(),
 		FullID:            "course101::hw0::course-student@test.edulinq.org::1697406272",
+		CourseID:          "course101",
+		Failure:           true,
+		FailureMessage:    "Analysis failed.",
 	},
 }
 
@@ -424,7 +437,6 @@ var testPairwiseRecords []*model.PairwiseAnalysis = []*model.PairwiseAnalysis{
 				},
 			},
 		},
-		UnmatchedFiles: [][2]string{},
 	},
 	&model.PairwiseAnalysis{
 		AnalysisTimestamp: timestamp.Zero(),
@@ -442,7 +454,6 @@ var testPairwiseRecords []*model.PairwiseAnalysis = []*model.PairwiseAnalysis{
 				},
 			},
 		},
-		UnmatchedFiles: [][2]string{},
 	},
 	&model.PairwiseAnalysis{
 		AnalysisTimestamp: timestamp.Zero(),
@@ -450,16 +461,17 @@ var testPairwiseRecords []*model.PairwiseAnalysis = []*model.PairwiseAnalysis{
 			"course101::hw0::course-student@test.edulinq.org::1697406265",
 			"course101::hw0::course-student@test.edulinq.org::1697406272",
 		),
-		Similarities: map[string][]*model.FileSimilarity{
-			"submission.py": []*model.FileSimilarity{
-				&model.FileSimilarity{
-					Filename: "submission.py",
-					Tool:     "fake",
-					Version:  "0.0.1",
-					Score:    0.13,
-				},
-			},
-		},
-		UnmatchedFiles: [][2]string{},
+		Failure:        true,
+		FailureMessage: "Analysis failed.",
 	},
+}
+
+func mustToJSONPairwiseMap(input map[model.PairwiseKey]*model.PairwiseAnalysis) string {
+	output := make(map[string]*model.PairwiseAnalysis, len(input))
+
+	for key, value := range input {
+		output[key.String()] = value
+	}
+
+	return util.MustToJSONIndent(output)
 }

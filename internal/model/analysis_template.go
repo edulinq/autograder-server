@@ -31,9 +31,9 @@ func (this *AssignmentAnalysisOptions) validateTemplateFiles() error {
 // Fetch template files using the file specs from the baseDir,
 // and then execute any file operations on the target dir.
 // Return the relative paths to all the final template files.
-func (this *AssignmentAnalysisOptions) FetchTemplateFiles(baseDir string, destDir string) ([]string, error) {
+func (this *AssignmentAnalysisOptions) FetchTemplateFiles(baseDir string, courseDir string, destDir string) ([]string, error) {
 	for i, spec := range this.TemplateFiles {
-		err := spec.CopyTarget(baseDir, destDir)
+		err := spec.CopyTarget(baseDir, courseDir, destDir, destDir)
 		if err != nil {
 			return nil, fmt.Errorf("Failed to fetch template file spec at index %d ('%s`): '%w'.", i, spec.String(), err)
 		}
@@ -46,7 +46,7 @@ func (this *AssignmentAnalysisOptions) FetchTemplateFiles(baseDir string, destDi
 		}
 	}
 
-	relpaths, err := util.GetAllRelativeFiles(destDir)
+	relpaths, err := util.GetAllDirents(destDir, true, true)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to get paths of final template files: '%w'.", err)
 	}

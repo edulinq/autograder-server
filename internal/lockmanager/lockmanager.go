@@ -28,8 +28,12 @@ func init() {
 	go removeStaleLocks()
 }
 
-func Lock(key string) {
-	lock(key, false)
+// Acquire a write lock on the given key.
+// The returned boolean indicates if the lock was likely acquired without waiting
+// (e.g. true if the thread did not have to wait and false if there was another thread holding the lock).
+// This boolean return will not always be correct and should only be used as an advisement, not a hard fact.
+func Lock(key string) bool {
+	return lock(key, false)
 }
 
 func Unlock(key string) error {
@@ -44,11 +48,14 @@ func ReadUnlock(key string) error {
 	return unlock(key, true)
 }
 
-func lock(key string, read bool) {
+func lock(key string, read bool) bool {
 	lockManagerMutex.Lock()
 
 	val, _ := lockMap.LoadOrStore(key, &lockData{})
 	lock := val.(*lockData)
+
+	// Note if any other threads currently have this lock.
+	lockNotInUse := (lock.lockCount == 0)
 
 	// Unlock the lockManagerMutex before acquiring the lock to avoid a deadlock.
 	lockManagerMutex.Unlock()
@@ -63,6 +70,8 @@ func lock(key string, read bool) {
 
 	lock.lockCount++
 	lock.timestamp = time.Now()
+
+	return lockNotInUse
 }
 
 func unlock(key string, read bool) error {

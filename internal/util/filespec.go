@@ -285,36 +285,40 @@ func (this *FileSpec) GetDest(baseDir string) string {
 }
 
 // Copy the target of this FileSpec in the specified location.
-// If the FileSpec has a dest, then that will be the name of the resultant dirent within destDir.
+// If the FileSpec has a dest, then that will be the name of the resultant dirent within destBaseDir.
 // If the filespec is a path, then copy all matching dirents.
 // If the filespec is a git repo, then ensure it is cloned/updated.
 // Empty and Nil FileSpecs are no-ops.
-// |baseDir| provides the relative base.
-func (this *FileSpec) CopyTarget(baseDir string, destDir string) error {
+// |sourceBaseDir| provides the relative base.
+// If set, neither the source nor destination is allowed to point outside of their respective containment directories.
+func (this *FileSpec) CopyTarget(sourceBaseDir string, sourceContainmentDir string, destBaseDir string, destContainmentDir string) error {
 	switch this.Type {
 	case FILESPEC_TYPE_EMPTY, FILESPEC_TYPE_NIL:
 		// no-op.
 		return nil
 	case FILESPEC_TYPE_PATH:
-		return this.copyPaths(baseDir, destDir)
+		return this.copyPaths(sourceBaseDir, sourceContainmentDir, destBaseDir, destContainmentDir)
 	case FILESPEC_TYPE_GIT:
-		return this.copyGit(destDir)
+		return this.copyGit(destBaseDir, destContainmentDir)
 	case FILESPEC_TYPE_URL:
-		return this.downloadURL(destDir)
+		return this.downloadURL(destBaseDir, destContainmentDir)
 	default:
 		return fmt.Errorf("Unknown filespec type: '%s'.", this.Type)
 	}
 }
 
-func (this *FileSpec) copyPaths(baseDir string, baseDestDir string) error {
-	if !this.IsPath() {
-		return fmt.Errorf("Cannot match targets: FileSpec must be a path.")
-	}
-
+// Copy a path-based file spec from sourceBaseDir into destBaseDir.
+func (this *FileSpec) copyPaths(sourceBaseDir string, sourceContainmentDir string, destBaseDir string, destContainmentDir string) error {
 	// Resolve relative paths.
 	fileSpecPath := this.Path
-	if !filepath.IsAbs(fileSpecPath) && (baseDir != "") {
-		fileSpecPath = filepath.Join(baseDir, fileSpecPath)
+	if !filepath.IsAbs(fileSpecPath) && (sourceBaseDir != "") {
+		fileSpecPath = filepath.Join(sourceBaseDir, fileSpecPath)
+	}
+
+	// Get dest and check containment.
+	destPath := this.GetDest(destBaseDir)
+	if (destContainmentDir != "") && !PathHasParentOrSelf(destPath, destContainmentDir) {
+		return fmt.Errorf("Destination breaks containment: '%s'.", this.Dest)
 	}
 
 	// Resolve globs.
@@ -324,11 +328,10 @@ func (this *FileSpec) copyPaths(baseDir string, baseDestDir string) error {
 	}
 
 	if len(paths) == 0 {
-		return fmt.Errorf("No targets found for the path '%s'.", this.Path)
+		return fmt.Errorf("No source targets found for the path '%s'.", this.Path)
 	}
 
 	// If there are multiple paths, the dest cannot point to a file.
-	destPath := this.GetDest(baseDestDir)
 	if (len(paths) > 1) && (this.Dest != "") && IsFile(destPath) {
 		return fmt.Errorf("Found multiple paths (via glob), but dest is a file. Dest must be a dir.")
 	}
@@ -342,6 +345,11 @@ func (this *FileSpec) copyPaths(baseDir string, baseDestDir string) error {
 	}
 
 	for _, path := range paths {
+		// Check source containment.
+		if (sourceContainmentDir != "") && !PathHasParentOrSelf(path, sourceContainmentDir) {
+			return fmt.Errorf("Source breaks containment: '%s'.", this.Path)
+		}
+
 		// Note that CopyDirent() will handle when dest is a file or dir.
 		err := CopyDirent(path, destPath)
 		if err != nil {
@@ -352,8 +360,12 @@ func (this *FileSpec) copyPaths(baseDir string, baseDestDir string) error {
 	return nil
 }
 
-func (this *FileSpec) copyGit(destDir string) error {
-	destPath := this.GetDest(destDir)
+func (this *FileSpec) copyGit(destBaseDir string, destContainmentDir string) error {
+	// Get dest and check containment.
+	destPath := this.GetDest(destBaseDir)
+	if (destContainmentDir != "") && !PathHasParentOrSelf(destPath, destContainmentDir) {
+		return fmt.Errorf("Destination breaks containment: '%s'.", this.Dest)
+	}
 
 	if PathExists(destPath) {
 		err := RemoveDirent(destPath)
@@ -371,8 +383,12 @@ func (this *FileSpec) copyGit(destDir string) error {
 	return err
 }
 
-func (this *FileSpec) downloadURL(destDir string) error {
-	destPath := this.GetDest(destDir)
+func (this *FileSpec) downloadURL(destBaseDir string, destContainmentDir string) error {
+	// Get dest and check containment.
+	destPath := this.GetDest(destBaseDir)
+	if (destContainmentDir != "") && !PathHasParentOrSelf(destPath, destContainmentDir) {
+		return fmt.Errorf("Destination breaks containment: '%s'.", this.Dest)
+	}
 
 	if PathExists(destPath) {
 		err := RemoveDirent(destPath)
@@ -381,7 +397,7 @@ func (this *FileSpec) downloadURL(destDir string) error {
 		}
 	}
 
-	err := MkDir(filepath.Dir(destDir))
+	err := MkDir(filepath.Dir(destBaseDir))
 	if err != nil {
 		return fmt.Errorf("Failed to make dir for URL FileSpec ('%s'): '%w'.", destPath, err)
 	}
@@ -400,11 +416,13 @@ func (this *FileSpec) downloadURL(destDir string) error {
 }
 
 // Copy over filespecs with ops.
-// 1) Do pre-copy operations.
-// 2) Copy.
-// 3) Do post-copy operations.
+// 1) Do pre-copy operations in |baseDir|.
+// 2) Copy from |sourceBaseDir| to |destBaseDir|.
+// 3) Do post-copy operations in |baseDir|.
 func CopyFileSpecsWithOps(
-	sourceDir string, destDir string, baseDir string, filespecs []*FileSpec,
+	sourceBaseDir string, sourceContainmentDir string,
+	destBaseDir string, destContainmentDir string,
+	baseDir string, filespecs []*FileSpec,
 	preOperations []*FileOperation, postOperations []*FileOperation) error {
 	// Do pre ops.
 	err := ExecFileOperations(preOperations, baseDir)
@@ -414,7 +432,7 @@ func CopyFileSpecsWithOps(
 
 	// Copy files.
 	for _, filespec := range filespecs {
-		err = filespec.CopyTarget(sourceDir, destDir)
+		err = filespec.CopyTarget(sourceBaseDir, sourceContainmentDir, destBaseDir, destContainmentDir)
 		if err != nil {
 			return fmt.Errorf("Failed to handle FileSpec '%s': '%w'", filespec, err)
 		}

@@ -239,7 +239,7 @@ func TestUpsertFromFileSpec(test *testing.T) {
 				},
 				false,
 				0, 0,
-				"No targets found",
+				"No source targets found",
 			},
 		},
 		{

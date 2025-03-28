@@ -48,7 +48,7 @@ func GetTestSubmissions(baseDir string, useDocker bool) ([]*TestSubmissionInfo, 
 
 		dir := util.ShouldAbs(filepath.Dir(testSubmissionPath))
 
-		paths, err := util.GetAllDirents(dir)
+		paths, err := util.GetAllDirents(dir, false, false)
 		if err != nil {
 			return nil, fmt.Errorf("Failed to get test submission files: '%w'.", err)
 		}

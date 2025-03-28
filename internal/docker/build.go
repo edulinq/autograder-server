@@ -163,32 +163,33 @@ func collectBuildOutput(imageSource ImageSource, response types.ImageBuildRespon
 }
 
 // Write a full docker build context (Dockerfile and static files) to the given directory.
-func writeDockerContext(imageInfo *ImageInfo, dir string) error {
-	_, _, workDir, err := common.CreateStandardGradingDirs(dir)
+func writeDockerContext(imageInfo *ImageInfo, outDir string) error {
+	_, _, workDir, err := common.CreateStandardGradingDirs(outDir)
 	if err != nil {
 		return fmt.Errorf("Could not create standard grading directories: '%w'.", err)
 	}
 
 	// Copy over the static files (and do any file ops).
-	err = util.CopyFileSpecsWithOps(imageInfo.BaseDirFunc(), workDir, dir,
+	sourceBaseDir, sourceContainmentDir := imageInfo.BaseDirFunc()
+	err = util.CopyFileSpecsWithOps(sourceBaseDir, sourceContainmentDir, workDir, workDir, outDir,
 		imageInfo.StaticFiles, imageInfo.PreStaticFileOperations, imageInfo.PostStaticFileOperations)
 	if err != nil {
 		return fmt.Errorf("Failed to copy static imageInfo files: '%w'.", err)
 	}
 
-	dockerConfigPath := filepath.Join(dir, DOCKER_CONFIG_FILENAME)
+	dockerConfigPath := filepath.Join(outDir, DOCKER_CONFIG_FILENAME)
 	err = util.ToJSONFile(imageInfo.GetGradingConfig(), dockerConfigPath)
 	if err != nil {
 		return fmt.Errorf("Failed to create docker config file: '%w'.", err)
 	}
 
-	dockerPostSubmittionOpsPath := filepath.Join(dir, DOCKER_POST_SUBMISSION_OPS_FILENAME)
+	dockerPostSubmittionOpsPath := filepath.Join(outDir, DOCKER_POST_SUBMISSION_OPS_FILENAME)
 	err = writePostSubmissionOpsScript(imageInfo, dockerPostSubmittionOpsPath)
 	if err != nil {
 		return fmt.Errorf("Failed to write post-submission operations script: '%w'.", err)
 	}
 
-	dockerfilePath := filepath.Join(dir, "Dockerfile")
+	dockerfilePath := filepath.Join(outDir, "Dockerfile")
 	err = writeDockerfile(imageInfo, workDir, dockerfilePath)
 	if err != nil {
 		return err
@@ -206,7 +207,7 @@ func writePostSubmissionOpsScript(imageInfo *ImageInfo, path string) error {
 	lines = append(lines, fmt.Sprintf("# Post-Submission operations for '%s'.\n", imageInfo.Name))
 
 	for _, op := range imageInfo.PostSubmissionFileOperations {
-		lines = append(lines, op.ToUnix("."))
+		lines = append(lines, op.ToUnixForDocker("."))
 	}
 
 	err := util.WriteFile(strings.Join(lines, "\n"), path)

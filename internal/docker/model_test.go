@@ -25,8 +25,8 @@ func TestImageInfoStruct(test *testing.T) {
 				util.NewFileOperation([]string{"b", "c"}),
 			},
 			Name: "foo",
-			BaseDirFunc: func() string {
-				return "bar"
+			BaseDirFunc: func() (string, string) {
+				return "bar", "baz"
 			},
 		},
 	}

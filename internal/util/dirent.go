@@ -3,7 +3,6 @@ package util
 import (
 	"errors"
 	"fmt"
-	"io"
 	"io/fs"
 	"os"
 	"path/filepath"
@@ -104,13 +103,7 @@ func CopyFile(source string, dest string) error {
 	}
 	defer sourceIO.Close()
 
-	destIO, err := os.Create(dest)
-	if err != nil {
-		return fmt.Errorf("Could not open dest file for copy (%s): %w.", dest, err)
-	}
-	defer destIO.Close()
-
-	_, err = io.Copy(destIO, sourceIO)
+	err = WriteFileFromReader(dest, sourceIO)
 	if err != nil {
 		return fmt.Errorf("Failed to copy file contents from '%s' to '%s': %w.", source, dest, err)
 	}
@@ -254,4 +247,27 @@ func RecursiveChmod(basePath string, fileMode os.FileMode, dirMode os.FileMode) 
 	})
 
 	return errors.Join(errs, err)
+}
+
+func SameDirent(aPath string, bPath string) (bool, error) {
+	aInfo, err := os.Stat(aPath)
+	if err != nil {
+		return false, err
+	}
+
+	bInfo, err := os.Stat(bPath)
+	if err != nil {
+		return false, err
+	}
+
+	return os.SameFile(aInfo, bInfo), nil
+}
+
+func ShouldSameDirent(aPath string, bPath string) bool {
+	result, err := SameDirent(aPath, bPath)
+	if err != nil {
+		log.Debug("Failed to check for the same dirent.", err)
+	}
+
+	return result
 }

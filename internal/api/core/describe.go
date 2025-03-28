@@ -9,17 +9,36 @@ import (
 	"github.com/edulinq/autograder/internal/util"
 )
 
+const (
+	AliasType  = "alias"
+	ArrayType  = "array"
+	MapType    = "map"
+	StructType = "struct"
+)
+
 // API Description will be empty until RunServer() is called.
 var apiDescription APIDescription
 
 type APIDescription struct {
 	Endpoints map[string]EndpointDescription `json:"endpoints"`
+	Types     map[string]TypeDescription     `json:"types"`
 }
 
 type EndpointDescription struct {
-	RequestType  string `json:"request-type"`
-	ResponseType string `json:"response-type"`
-	Description  string `json:"description"`
+	Description  string            `json:"description"`
+	RequestType  string            `json:"-"`
+	ResponseType string            `json:"-"`
+	Input        map[string]string `json:"input"`
+	Output       map[string]string `json:"output"`
+}
+
+type TypeDescription struct {
+	Category    string            `json:"category"`
+	AliasType   string            `json:"alias-type,omitempty"`
+	Fields      map[string]string `json:"fields,omitempty"`
+	ElementType string            `json:"element-type,omitempty"`
+	KeyType     string            `json:"-"`
+	ValueType   string            `json:"-"`
 }
 
 func SetAPIDescription(description APIDescription) {

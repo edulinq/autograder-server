@@ -3,6 +3,7 @@ package analysis
 import (
 	"path/filepath"
 	"reflect"
+	"strings"
 	"testing"
 	"time"
 
@@ -45,8 +46,6 @@ func TestPairwiseAnalysisFake(test *testing.T) {
 					},
 				},
 			},
-			UnmatchedFiles: [][2]string{},
-			SkippedFiles:   []string{},
 			MeanSimilarities: map[string]float64{
 				"submission.py": 0.13,
 			},
@@ -69,8 +68,6 @@ func TestPairwiseAnalysisFake(test *testing.T) {
 					},
 				},
 			},
-			UnmatchedFiles: [][2]string{},
-			SkippedFiles:   []string{},
 			MeanSimilarities: map[string]float64{
 				"submission.py": 0.13,
 			},
@@ -93,8 +90,6 @@ func TestPairwiseAnalysisFake(test *testing.T) {
 					},
 				},
 			},
-			UnmatchedFiles: [][2]string{},
-			SkippedFiles:   []string{},
 			MeanSimilarities: map[string]float64{
 				"submission.py": 0.13,
 			},
@@ -170,9 +165,21 @@ func testPairwise(test *testing.T, ids []string, expected []*model.PairwiseAnaly
 		test.Fatalf("Found %d pending results, when 0 were expected.", pendingCount)
 	}
 
-	// Zero out the timestamps.
+	// Normalize the results.
 	for _, result := range results {
+		// Zero out the timestamps.
 		result.AnalysisTimestamp = timestamp.Zero()
+
+		// Nil empty skipped and unmatched files.
+		for _, result := range results {
+			if len(result.SkippedFiles) == 0 {
+				result.SkippedFiles = nil
+			}
+
+			if len(result.UnmatchedFiles) == 0 {
+				result.UnmatchedFiles = nil
+			}
+		}
 	}
 
 	if !reflect.DeepEqual(expected, results) {
@@ -670,6 +677,11 @@ func TestPairwiseAnalysisCountBase(test *testing.T) {
 	}
 
 	for i, testCase := range testCases {
+		// Sleep to ensure the old analysis (from the previous iteration) completed.
+		if i != 0 {
+			time.Sleep(time.Duration(50) * time.Millisecond)
+		}
+
 		db.ResetForTesting()
 
 		if testCase.preload {
@@ -755,5 +767,48 @@ func TestPairwiseAnalysisCountBase(test *testing.T) {
 				continue
 			}
 		}
+	}
+}
+
+func TestPairwiseAnalysisFailureBase(test *testing.T) {
+	db.ResetForTesting()
+	defer db.ResetForTesting()
+
+	testFailPairwiseAnalysis = true
+	defer func() {
+		testFailPairwiseAnalysis = false
+	}()
+
+	expectedMessageSubstring := "Test failure."
+
+	ids := []string{
+		"course101::hw0::course-student@test.edulinq.org::1697406256",
+		"course101::hw0::course-student@test.edulinq.org::1697406272",
+	}
+
+	options := AnalysisOptions{
+		ResolvedSubmissionIDs: ids,
+		WaitForCompletion:     true,
+	}
+
+	results, pendingCount, err := PairwiseAnalysis(options, "server-admin@test.edulinq.org")
+	if err != nil {
+		test.Fatalf("Failed to do pairwise analysis: '%v'.", err)
+	}
+
+	if pendingCount != 0 {
+		test.Fatalf("Found %d pending results, when 0 were expected.", pendingCount)
+	}
+
+	if len(results) != 1 {
+		test.Fatalf("Number of results not as expected. Expected: %d, Actual: %d.", 1, len(results))
+	}
+
+	if !results[0].Failure {
+		test.Fatalf("Result is not a failure, when it should be.")
+	}
+
+	if !strings.Contains(results[0].FailureMessage, expectedMessageSubstring) {
+		test.Fatalf("Failure message does not contain expected substring. Expected Substring: '%s', Actual: '%s'.", expectedMessageSubstring, results[0].FailureMessage)
 	}
 }
