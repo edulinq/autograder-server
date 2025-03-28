@@ -29,6 +29,7 @@ func Zip(source string, dest string, deterministic bool) error {
 		return fmt.Errorf("Could not create file for zip target '%s': '%w'.", dest, err)
 	}
 	defer zipfile.Close()
+	defer zipfile.Sync()
 
 	writer := zip.NewWriter(zipfile)
 	defer writer.Close()

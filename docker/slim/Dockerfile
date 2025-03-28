@@ -26,7 +26,7 @@ RUN chmod 0775 entrypoint.sh
 
 # Build and test to verify the binaries will always run.
 RUN ./scripts/build.sh
-RUN AUTOGRADER__DOCKER__DISABLE='true' AUTOGRADER__CI__DOCKER__BUILD='true' ./scripts/run_tests.sh
+RUN AUTOGRADER__DOCKER__DISABLE='true' AUTOGRADER__CI__DOCKER__BUILD='true' AUTOGRADER_TEST_RERUN_FLAKY='true' ./scripts/run_tests.sh
 RUN rm -rf ./bin
 
 # Clean up unnecessary files and directories to reduce the image size.

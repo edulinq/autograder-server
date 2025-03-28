@@ -3,6 +3,7 @@ package util
 import (
 	"bufio"
 	"fmt"
+	"io"
 	"os"
 	"strings"
 
@@ -40,6 +41,26 @@ func WriteFile(text string, path string) error {
 	return WriteBinaryFile([]byte(text), path)
 }
 
+func WriteFileFromReader(path string, reader io.Reader) error {
+	file, err := os.Create(path)
+	if err != nil {
+		return fmt.Errorf("Failed to create file '%s': '%w'.", path, err)
+	}
+	defer file.Close()
+
+	_, err = io.Copy(file, reader)
+	if err != nil {
+		return fmt.Errorf("Failed to copy contents of reader: '%w'.", err)
+	}
+
+	err = file.Sync()
+	if err != nil {
+		return fmt.Errorf("Failed to sync file: '%w'.", err)
+	}
+
+	return nil
+}
+
 // Read a separated file into a slice of slices.
 func ReadSeparatedFile(path string, delim string, skipRows int) ([][]string, error) {
 	file, err := os.Open(path)
@@ -65,13 +86,17 @@ func ReadSeparatedFile(path string, delim string, skipRows int) ([][]string, err
 	return rows, nil
 }
 
-func MustCreateFile(path string) *os.File {
+func MustCreateEmptyFile(path string) {
 	file, err := os.Create(path)
 	if err != nil {
-		log.Fatal("Unable to create file.", err, log.NewAttr("path", path))
+		log.Fatal("Unable to create empty file.", err, log.NewAttr("path", path))
 	}
+	defer file.Close()
 
-	return file
+	err = file.Sync()
+	if err != nil {
+		log.Fatal("Unable to sync empty file.", err, log.NewAttr("path", path))
+	}
 }
 
 func MustReadFile(path string) string {
