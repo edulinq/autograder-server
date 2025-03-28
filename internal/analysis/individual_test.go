@@ -62,7 +62,7 @@ func TestIndividualAnalysisBase(test *testing.T) {
 	query := stats.Query{
 		Type: stats.CODE_ANALYSIS_TIME_STATS_TYPE,
 		Where: map[stats.MetricAttribute]any{
-			stats.COURSE_ID_KEY: "course101",
+			stats.COURSE_ID_KEY: db.TEST_COURSE_ID,
 		},
 	}
 
