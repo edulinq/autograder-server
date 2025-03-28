@@ -40,6 +40,11 @@ func AppendJSONLFileMany[T any](path string, records []T) error {
 		return fmt.Errorf("Failed to write %d records to JSONL file '%s': '%w'.", len(lines), path, err)
 	}
 
+	err = file.Sync()
+	if err != nil {
+		return fmt.Errorf("Failed to sync %d records to JSONL file '%s': '%w'.", len(lines), path, err)
+	}
+
 	return nil
 }
 
@@ -172,6 +177,11 @@ func RemoveEntriesJSONLFile[T any](path string, emptyRecord T, shouldRemoveFunc 
 
 	if writeError != nil {
 		return writeError
+	}
+
+	err = file.Sync()
+	if err != nil {
+		return fmt.Errorf("Failed to sync temp file: '%w'.", err)
 	}
 
 	err = file.Close()
