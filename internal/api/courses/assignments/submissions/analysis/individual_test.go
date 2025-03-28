@@ -3,6 +3,7 @@ package analysis
 import (
 	"reflect"
 	"testing"
+	"time"
 
 	"github.com/edulinq/autograder/internal/analysis"
 	"github.com/edulinq/autograder/internal/api/core"
@@ -61,7 +62,7 @@ func TestIndividualBase(test *testing.T) {
 	}
 
 	// Make another request, but wait for the analysis.
-
+	time.Sleep(100 * time.Millisecond)
 	fields["wait-for-completion"] = true
 
 	response = core.SendTestAPIRequestFull(test, `courses/assignments/submissions/analysis/individual`, fields, nil, email)
