@@ -127,6 +127,7 @@ func TestRejectSubmissionMaxAttempts(test *testing.T) {
 }
 
 func TestRejectLateSubmission(test *testing.T) {
+	db.ResetForTesting()
 	defer db.ResetForTesting()
 
 	assignment := db.MustGetTestSubmissionAssignment()

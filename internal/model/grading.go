@@ -18,14 +18,17 @@ type GradingResult struct {
 
 type GradingInfo struct {
 	// Information set by the autograder.
-	ID           string  `json:"id"`
-	ShortID      string  `json:"short-id"`
-	CourseID     string  `json:"course-id"`
-	AssignmentID string  `json:"assignment-id"`
-	User         string  `json:"user"`
-	Message      string  `json:"message"`
-	MaxPoints    float64 `json:"max_points"`
-	Score        float64 `json:"score"`
+	ID             string               `json:"id"`
+	ShortID        string               `json:"short-id"`
+	CourseID       string               `json:"course-id"`
+	AssignmentID   string               `json:"assignment-id"`
+	User           string               `json:"user"`
+	ProxyUser      string               `json:"proxy-user,omitempty"`
+	Message        string               `json:"message"`
+	MaxPoints      float64              `json:"max_points"`
+	Score          float64              `json:"score"`
+	ProxyStartTime *timestamp.Timestamp `json:"proxy_start_time,omitempty"`
+	ProxyEndTime   *timestamp.Timestamp `json:"proxy_end_time,omitempty"`
 
 	// Information generally filled out by the grader.
 	Name             string              `json:"name"`
