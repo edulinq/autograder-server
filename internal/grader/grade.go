@@ -23,6 +23,8 @@ type GradeOptions struct {
 	NoDocker     bool
 	LeaveTempDir bool
 	AllowLate    bool
+	ProxyUser    string
+	ProxyTime    *timestamp.Timestamp
 }
 
 func GetDefaultGradeOptions() GradeOptions {
@@ -30,6 +32,8 @@ func GetDefaultGradeOptions() GradeOptions {
 		NoDocker:     config.DOCKER_DISABLE.Get(),
 		LeaveTempDir: config.KEEP_BUILD_DIRS.Get(),
 		AllowLate:    false,
+		ProxyUser:    "",
+		ProxyTime:    nil,
 	}
 }
 
@@ -99,8 +103,17 @@ func Grade(ctx context.Context, assignment *model.Assignment, submissionPath str
 	gradingInfo.AssignmentID = assignment.GetID()
 	gradingInfo.User = user
 	gradingInfo.Message = message
-	gradingInfo.GradingStartTime = startTimestamp
-	gradingInfo.GradingEndTime = endTimestamp
+	gradingInfo.ProxyUser = options.ProxyUser
+
+	if options.ProxyTime == nil {
+		gradingInfo.GradingStartTime = startTimestamp
+		gradingInfo.GradingEndTime = endTimestamp
+	} else {
+		gradingInfo.GradingStartTime = *options.ProxyTime
+		gradingInfo.GradingEndTime = *options.ProxyTime
+		gradingInfo.ProxyStartTime = &startTimestamp
+		gradingInfo.ProxyEndTime = &endTimestamp
+	}
 
 	gradingInfo.ComputePoints()
 

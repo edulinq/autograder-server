@@ -210,6 +210,28 @@
                 "submission-result": "*github.com/edulinq/autograder/internal/model.GradingInfo"
             }
         },
+        "courses/assignments/submissions/proxy/submit": {
+            "description": "Proxy submit an assignment submission to the autograder.",
+            "input": {
+                "APIRequest": "github.com/edulinq/autograder/internal/api/core.APIRequest",
+                "MinCourseRoleAdmin": "bool",
+                "assignment-id": "string",
+                "course-id": "string",
+                "message": "string",
+                "proxy-email": "github.com/edulinq/autograder/internal/api/core.TargetCourseUser",
+                "proxy-time": "int64",
+                "root-user-nonce": "string",
+                "user-email": "string",
+                "user-pass": "string"
+            },
+            "output": {
+                "found-user": "bool",
+                "grading-success": "bool",
+                "message": "string",
+                "rejected": "bool",
+                "result": "*github.com/edulinq/autograder/internal/model.GradingInfo"
+            }
+        },
         "courses/assignments/submissions/remove": {
             "description": "Remove a specified submission. Defaults to the most recent submission.",
             "input": {
@@ -1096,6 +1118,31 @@
                 "submission-result": "*github.com/edulinq/autograder/internal/model.GradingInfo"
             }
         },
+        "github.com/edulinq/autograder/internal/api/courses/assignments/submissions/proxy.SubmitRequest": {
+            "category": "struct",
+            "fields": {
+                "APIRequest": "github.com/edulinq/autograder/internal/api/core.APIRequest",
+                "MinCourseRoleAdmin": "bool",
+                "assignment-id": "string",
+                "course-id": "string",
+                "message": "string",
+                "proxy-email": "github.com/edulinq/autograder/internal/api/core.TargetCourseUser",
+                "proxy-time": "int64",
+                "root-user-nonce": "string",
+                "user-email": "string",
+                "user-pass": "string"
+            }
+        },
+        "github.com/edulinq/autograder/internal/api/courses/assignments/submissions/proxy.SubmitResponse": {
+            "category": "struct",
+            "fields": {
+                "found-user": "bool",
+                "grading-success": "bool",
+                "message": "string",
+                "rejected": "bool",
+                "result": "*github.com/edulinq/autograder/internal/model.GradingInfo"
+            }
+        },
         "github.com/edulinq/autograder/internal/api/courses/lms/scores.UploadRequest": {
             "category": "struct",
             "fields": {
@@ -1734,6 +1781,9 @@
                 "message": "string",
                 "name": "string",
                 "prologue": "string",
+                "proxy-user": "string",
+                "proxy_end_time": "int64",
+                "proxy_start_time": "int64",
                 "questions": "[]*github.com/edulinq/autograder/internal/model.GradedQuestion",
                 "score": "float64",
                 "short-id": "string",

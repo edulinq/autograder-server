@@ -6,6 +6,7 @@ import (
 	"github.com/edulinq/autograder/internal/api/core"
 	"github.com/edulinq/autograder/internal/api/courses/assignments/submissions/analysis"
 	"github.com/edulinq/autograder/internal/api/courses/assignments/submissions/fetch"
+	"github.com/edulinq/autograder/internal/api/courses/assignments/submissions/proxy"
 )
 
 var baseRoutes []core.Route = []core.Route{
@@ -19,6 +20,7 @@ func GetRoutes() *[]core.Route {
 	routes = append(routes, baseRoutes...)
 	routes = append(routes, *(analysis.GetRoutes())...)
 	routes = append(routes, *(fetch.GetRoutes())...)
+	routes = append(routes, *(proxy.GetRoutes())...)
 
 	return &routes
 }
