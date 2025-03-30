@@ -3,5 +3,8 @@
     "email.user": "Sammy Slug",
     "email.pass": "I Love Decomposing",
     "email.host": "smtp.gmail.com",
-    "email.port": "587"
+    "email.port": "587",
+
+    "web.http.port": 80,
+    "web.https.enable": true
 }
