@@ -68,7 +68,8 @@ jobs:
       - name: Run Base Tests
         env:
           AUTOGRADER__DOCKER__DISABLE: ${{ startsWith(matrix.os, 'macos') }}
-          AUTOGRADER_TEST_RERUN_FLAKY: ${{ startsWith(matrix.os, 'macos') }}
+          # TEST
+          # AUTOGRADER_TEST_RERUN_FLAKY: ${{ startsWith(matrix.os, 'macos') }}
         run: ./scripts/run_tests.sh
 
   deploy-prebuilt-image:
