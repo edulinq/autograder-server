@@ -47,7 +47,7 @@ jobs:
       - name: Run Flaky 1
         env:
           AUTOGRADER__DOCKER__DISABLE: ${{ startsWith(matrix.os, 'macos') }}
-        run: go test -timeout 1h -count=100 -v ./internal/api/courses/assignments/submissions/analysis
+        run: go test -timeout 1h -count=1000 -v ./internal/api/courses/assignments/submissions/analysis
 
       - name: Run Flaky 2
         env:
