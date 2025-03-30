@@ -139,7 +139,7 @@ func collectBuildOutput(imageSource ImageSource, response types.ImageBuildRespon
 
 			text = strings.TrimSpace(text)
 			if text != "" {
-				errs = errors.Join(errs, fmt.Errorf(text))
+				errs = errors.Join(errs, fmt.Errorf("%s", text))
 			}
 		}
 
