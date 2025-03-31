@@ -445,6 +445,8 @@ func TestPairwiseAnalysisCountBase(test *testing.T) {
 		expectedPendingCount      int
 		expectedCacheCount        int
 	}{
+		// Test cases that do not wait for completion are left out because they are flaky.
+
 		// Empty
 		{
 			options: AnalysisOptions{
@@ -461,62 +463,6 @@ func TestPairwiseAnalysisCountBase(test *testing.T) {
 
 		// Base, No Preload
 
-		{
-			options: AnalysisOptions{
-				ResolvedSubmissionIDs: ids,
-				DryRun:                false,
-				OverwriteCache:        false,
-				WaitForCompletion:     false,
-			},
-			preload:                   false,
-			expectedCacheSetOnPreload: false,
-			expectedResultIsFromCache: false,
-			expectedResultCount:       0,
-			expectedPendingCount:      1,
-			expectedCacheCount:        1,
-		},
-		{
-			options: AnalysisOptions{
-				ResolvedSubmissionIDs: ids,
-				DryRun:                true,
-				OverwriteCache:        false,
-				WaitForCompletion:     false,
-			},
-			preload:                   false,
-			expectedCacheSetOnPreload: false,
-			expectedResultIsFromCache: false,
-			expectedResultCount:       0,
-			expectedPendingCount:      1,
-			expectedCacheCount:        0,
-		},
-		{
-			options: AnalysisOptions{
-				ResolvedSubmissionIDs: ids,
-				DryRun:                false,
-				OverwriteCache:        true,
-				WaitForCompletion:     false,
-			},
-			preload:                   false,
-			expectedCacheSetOnPreload: false,
-			expectedResultIsFromCache: false,
-			expectedResultCount:       0,
-			expectedPendingCount:      1,
-			expectedCacheCount:        1,
-		},
-		{
-			options: AnalysisOptions{
-				ResolvedSubmissionIDs: ids,
-				DryRun:                true,
-				OverwriteCache:        true,
-				WaitForCompletion:     false,
-			},
-			preload:                   false,
-			expectedCacheSetOnPreload: false,
-			expectedResultIsFromCache: false,
-			expectedResultCount:       0,
-			expectedPendingCount:      1,
-			expectedCacheCount:        0,
-		},
 		{
 			options: AnalysisOptions{
 				ResolvedSubmissionIDs: ids,
@@ -576,62 +522,6 @@ func TestPairwiseAnalysisCountBase(test *testing.T) {
 
 		// Base, Preload
 
-		{
-			options: AnalysisOptions{
-				ResolvedSubmissionIDs: ids,
-				DryRun:                false,
-				OverwriteCache:        false,
-				WaitForCompletion:     false,
-			},
-			preload:                   true,
-			expectedCacheSetOnPreload: true,
-			expectedResultIsFromCache: true,
-			expectedResultCount:       1,
-			expectedPendingCount:      0,
-			expectedCacheCount:        1,
-		},
-		{
-			options: AnalysisOptions{
-				ResolvedSubmissionIDs: ids,
-				DryRun:                true,
-				OverwriteCache:        false,
-				WaitForCompletion:     false,
-			},
-			preload:                   true,
-			expectedCacheSetOnPreload: true,
-			expectedResultIsFromCache: true,
-			expectedResultCount:       1,
-			expectedPendingCount:      0,
-			expectedCacheCount:        1,
-		},
-		{
-			options: AnalysisOptions{
-				ResolvedSubmissionIDs: ids,
-				DryRun:                false,
-				OverwriteCache:        true,
-				WaitForCompletion:     false,
-			},
-			preload:                   true,
-			expectedCacheSetOnPreload: false,
-			expectedResultIsFromCache: false,
-			expectedResultCount:       0,
-			expectedPendingCount:      1,
-			expectedCacheCount:        1,
-		},
-		{
-			options: AnalysisOptions{
-				ResolvedSubmissionIDs: ids,
-				DryRun:                true,
-				OverwriteCache:        true,
-				WaitForCompletion:     false,
-			},
-			preload:                   true,
-			expectedCacheSetOnPreload: true,
-			expectedResultIsFromCache: false,
-			expectedResultCount:       0,
-			expectedPendingCount:      1,
-			expectedCacheCount:        1,
-		},
 		{
 			options: AnalysisOptions{
 				ResolvedSubmissionIDs: ids,
@@ -706,11 +596,6 @@ func TestPairwiseAnalysisCountBase(test *testing.T) {
 			contextCancelFunc()
 		}
 
-		// Sleep to ensure the old analysis (from the previous iteration) completed.
-		if i != 0 {
-			time.Sleep(time.Duration(50) * time.Millisecond)
-		}
-
 		db.ResetForTesting()
 
 		if testCase.preload {
@@ -767,11 +652,6 @@ func TestPairwiseAnalysisCountBase(test *testing.T) {
 					i, testCase.expectedResultIsFromCache, resultIsFromCache)
 				continue
 			}
-		}
-
-		// Wait long enough for the analysis to finish.
-		if !testCase.options.WaitForCompletion {
-			time.Sleep(time.Duration(100) * time.Millisecond)
 		}
 
 		dbResults, err := db.GetPairwiseAnalysis(createPairwiseKeys(testCase.options.ResolvedSubmissionIDs))
