@@ -1,6 +1,7 @@
 package analysis
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"path/filepath"
@@ -18,14 +19,18 @@ import (
 
 var testFailIndividualAnalysis bool = false
 
-func IndividualAnalysis(options AnalysisOptions, initiatorEmail string) ([]*model.IndividualAnalysis, int, error) {
+func IndividualAnalysis(options AnalysisOptions) ([]*model.IndividualAnalysis, int, error) {
+	if options.Context == nil {
+		options.Context = context.Background()
+	}
+
 	completeAnalysis, remainingIDs, err := getCachedIndividualResults(options)
 	if err != nil {
 		return nil, 0, err
 	}
 
 	if options.WaitForCompletion {
-		results, err := runIndividualAnalysis(options, remainingIDs, initiatorEmail)
+		results, err := runIndividualAnalysis(options, remainingIDs)
 		if err != nil {
 			return nil, 0, err
 		}
@@ -33,8 +38,12 @@ func IndividualAnalysis(options AnalysisOptions, initiatorEmail string) ([]*mode
 		completeAnalysis = append(completeAnalysis, results...)
 		remainingIDs = nil
 	} else {
+		if !options.RetainOriginalContext {
+			options.Context = context.Background()
+		}
+
 		go func() {
-			_, err := runIndividualAnalysis(options, remainingIDs, initiatorEmail)
+			_, err := runIndividualAnalysis(options, remainingIDs)
 			if err != nil {
 				log.Error("Failure during asynchronous individual analysis.", err)
 			}
@@ -77,7 +86,7 @@ func getCachedIndividualResults(options AnalysisOptions) ([]*model.IndividualAna
 }
 
 // Lock based on course and then run the analysis in a parallel pool.
-func runIndividualAnalysis(options AnalysisOptions, fullSubmissionIDs []string, initiatorEmail string) ([]*model.IndividualAnalysis, error) {
+func runIndividualAnalysis(options AnalysisOptions, fullSubmissionIDs []string) ([]*model.IndividualAnalysis, error) {
 	if len(fullSubmissionIDs) == 0 {
 		return nil, nil
 	}
@@ -92,6 +101,11 @@ func runIndividualAnalysis(options AnalysisOptions, fullSubmissionIDs []string, 
 	lockKey := fmt.Sprintf("analysis-individual-course-%s", lockCourseID)
 	noLockWait := lockmanager.Lock(lockKey)
 	defer lockmanager.Unlock(lockKey)
+
+	// The context has been canceled while waiting for a lock, abandon this analysis.
+	if options.Context.Err() != nil {
+		return nil, nil
+	}
 
 	// If we had to wait for the lock, then check again for cached results.
 	// If there are multiple requests queued up,
@@ -118,7 +132,7 @@ func runIndividualAnalysis(options AnalysisOptions, fullSubmissionIDs []string, 
 		Error   error
 	}
 
-	poolResults, _, err := util.RunParallelPoolMap(poolSize, fullSubmissionIDs, func(fullSubmissionID string) (PoolResult, error) {
+	poolResults, _, err := util.RunParallelPoolMap(poolSize, fullSubmissionIDs, options.Context, func(fullSubmissionID string) (PoolResult, error) {
 		result, runTime, err := runSingleIndividualAnalysis(options, fullSubmissionID)
 		if err != nil {
 			err = fmt.Errorf("Failed to perform individual analysis on submission %s: '%w'.", fullSubmissionID, err)
@@ -126,6 +140,11 @@ func runIndividualAnalysis(options AnalysisOptions, fullSubmissionIDs []string, 
 
 		return PoolResult{result, runTime, err}, nil
 	})
+
+	// If the analysis was canceled, exit right away.
+	if options.Context.Err() != nil {
+		return nil, nil
+	}
 
 	results := make([]*model.IndividualAnalysis, 0, len(fullSubmissionIDs))
 	var errs error = nil
@@ -140,7 +159,7 @@ func runIndividualAnalysis(options AnalysisOptions, fullSubmissionIDs []string, 
 		}
 	}
 
-	collectIndividualStats(fullSubmissionIDs, totalRunTime, initiatorEmail)
+	collectIndividualStats(fullSubmissionIDs, totalRunTime, options.InitiatorEmail)
 
 	return results, errs
 }
@@ -150,6 +169,11 @@ func runSingleIndividualAnalysis(options AnalysisOptions, fullSubmissionID strin
 	lockKey := fmt.Sprintf("analysis-individual-%s", fullSubmissionID)
 	lockmanager.Lock(lockKey)
 	defer lockmanager.Unlock(lockKey)
+
+	// The context has been canceled while waiting for a lock, abandon this analysis.
+	if options.Context.Err() != nil {
+		return nil, 0, nil
+	}
 
 	startTime := timestamp.Now()
 
@@ -172,7 +196,7 @@ func runSingleIndividualAnalysis(options AnalysisOptions, fullSubmissionID strin
 	}
 
 	// Store the result.
-	if !options.DryRun {
+	if !options.DryRun && (options.Context.Err() == nil) {
 		err = db.StoreIndividualAnalysis([]*model.IndividualAnalysis{result})
 		if err != nil {
 			return nil, 0, fmt.Errorf("Failed to store individual analysis for '%s' in DB: '%w'.", fullSubmissionID, err)

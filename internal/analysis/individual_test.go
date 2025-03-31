@@ -1,6 +1,7 @@
 package analysis
 
 import (
+	"context"
 	"reflect"
 	"strings"
 	"testing"
@@ -105,10 +106,11 @@ func testIndividual(test *testing.T, ids []string, expected []*model.IndividualA
 
 	options := AnalysisOptions{
 		ResolvedSubmissionIDs: ids,
+		InitiatorEmail:        "server-admin@test.edulinq.org",
 		WaitForCompletion:     true,
 	}
 
-	results, pendingCount, err := IndividualAnalysis(options, "server-admin@test.edulinq.org")
+	results, pendingCount, err := IndividualAnalysis(options)
 	if err != nil {
 		test.Fatalf("Failed to do individual analysis: '%v'.", err)
 	}
@@ -204,10 +206,11 @@ func TestIndividualAnalysisIncludeExclude(test *testing.T) {
 
 		options := AnalysisOptions{
 			ResolvedSubmissionIDs: submissionIDs,
+			InitiatorEmail:        "server-admin@test.edulinq.org",
 			WaitForCompletion:     true,
 		}
 
-		results, pendingCount, err := IndividualAnalysis(options, "server-admin@test.edulinq.org")
+		results, pendingCount, err := IndividualAnalysis(options)
 		if err != nil {
 			test.Errorf("Case %d: Failed to perform analysis: '%v'.", i, err)
 			continue
@@ -239,6 +242,7 @@ func TestIndividualAnalysisIncludeExclude(test *testing.T) {
 			if relpath != results[0].SkippedFiles[0] {
 				test.Errorf("Case %d: Unexpected skipped file. Expected: '%s', Actual: '%s'.",
 					i, relpath, results[0].SkippedFiles[0])
+				continue
 			}
 		}
 	}
@@ -535,16 +539,32 @@ func TestIndividualAnalysisCountBase(test *testing.T) {
 		},
 	}
 
+	// This test will need strong context control since we are not waiting for all the results.
+	var ctx context.Context = nil
+	var contextCancelFunc context.CancelFunc = nil
+
+	defer func() {
+		if contextCancelFunc != nil {
+			contextCancelFunc()
+		}
+	}()
+
 	for i, testCase := range testCases {
 		db.ResetForTesting()
+
+		// Cancel any old runs.
+		if contextCancelFunc != nil {
+			contextCancelFunc()
+		}
 
 		if testCase.preload {
 			preloadOptions := AnalysisOptions{
 				ResolvedSubmissionIDs: testCase.options.ResolvedSubmissionIDs,
+				InitiatorEmail:        "server-admin@test.edulinq.org",
 				WaitForCompletion:     true,
 			}
 
-			_, _, err := IndividualAnalysis(preloadOptions, "server-admin@test.edulinq.org")
+			_, _, err := IndividualAnalysis(preloadOptions)
 			if err != nil {
 				test.Errorf("Case %d: Failed to preload analysis: '%v'.", i, err)
 				continue
@@ -556,7 +576,14 @@ func TestIndividualAnalysisCountBase(test *testing.T) {
 		startTime := timestamp.Now()
 		time.Sleep(time.Duration(5) * time.Millisecond)
 
-		results, pendingCount, err := IndividualAnalysis(testCase.options, "server-admin@test.edulinq.org")
+		// Create a new cancellable context for this run.
+		ctx, contextCancelFunc = context.WithCancel(context.Background())
+
+		testCase.options.InitiatorEmail = "server-admin@test.edulinq.org"
+		testCase.options.Context = ctx
+		testCase.options.RetainOriginalContext = false
+
+		results, pendingCount, err := IndividualAnalysis(testCase.options)
 		if err != nil {
 			test.Errorf("Case %d: Failed to do analysis: '%v'.", i, err)
 			continue
@@ -636,10 +663,11 @@ func TestIndividualAnalysisFailureBase(test *testing.T) {
 
 	options := AnalysisOptions{
 		ResolvedSubmissionIDs: []string{"course101::hw0::course-student@test.edulinq.org::1697406265"},
+		InitiatorEmail:        "server-admin@test.edulinq.org",
 		WaitForCompletion:     true,
 	}
 
-	results, pendingCount, err := IndividualAnalysis(options, "server-admin@test.edulinq.org")
+	results, pendingCount, err := IndividualAnalysis(options)
 	if err != nil {
 		test.Fatalf("Failed to perform analysis: '%v'.", err)
 	}

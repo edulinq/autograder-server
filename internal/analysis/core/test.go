@@ -1,6 +1,7 @@
 package core
 
 import (
+	"context"
 	"path/filepath"
 	"reflect"
 	"testing"
@@ -30,7 +31,7 @@ func RunEngineTestComputeFileSimilarityBase(test *testing.T, engine SimilarityEn
 		templatePath = filepath.Join(util.RootDirForTesting(), notImplementedRelPath)
 	}
 
-	result, runTime, err := engine.ComputeFileSimilarity(paths, templatePath)
+	result, runTime, err := engine.ComputeFileSimilarity(paths, templatePath, context.Background())
 	if err != nil {
 		test.Fatalf("Failed to compute similarity: '%v'.", err)
 	}

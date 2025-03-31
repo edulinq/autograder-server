@@ -212,13 +212,13 @@ func ValidateFileOperations(operations []*FileOperation) error {
 
 	for i, operation := range operations {
 		if operation == nil {
-			errors.Join(errs, fmt.Errorf("File operation at index %d is nil.", i))
+			errs = errors.Join(errs, fmt.Errorf("File operation at index %d is nil.", i))
 			continue
 		}
 
 		err := operation.Validate()
 		if err != nil {
-			errors.Join(errs, fmt.Errorf("Failed to validate file operation at index %d: '%w'.", i, err))
+			errs = errors.Join(errs, fmt.Errorf("Failed to validate file operation at index %d: '%w'.", i, err))
 			continue
 		}
 	}
