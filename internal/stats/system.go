@@ -64,6 +64,11 @@ func collectSystemStats(systemIntervalMS int) {
 				continue
 			}
 
+			// Don't store if the collection was already canceled.
+			if ctx.Err() != nil {
+				return
+			}
+
 			err = storeSystemStats(stats)
 			if err != nil {
 				log.Error("Failed to store system stats.", err)
@@ -90,21 +95,30 @@ func startSystemStatsCollection(systemIntervalMS int) {
 }
 
 func stopSystemStatsCollection() {
+	// Note that we are not deferring an unlock.
 	systemContextLock.Lock()
-	defer systemContextLock.Unlock()
 
 	if ctx == nil {
 		// Already done collecting stats.
+		systemContextLock.Unlock()
 		return
 	}
 
-	// Cancel and wait for any in-progress collection to stop.
+	// Cancel the collection.
 	cancelFunc()
-	cancelWait.Wait()
 
-	ctx = nil
-	cancelFunc = nil
-	cancelWait = nil
+	// In the background, hold the lock until collection is complete.
+	go func() {
+		defer systemContextLock.Unlock()
+
+		// Wait for completion.
+		cancelWait.Wait()
+
+		// Cleanup
+		ctx = nil
+		cancelFunc = nil
+		cancelWait = nil
+	}()
 }
 
 // Get the system metrics.
