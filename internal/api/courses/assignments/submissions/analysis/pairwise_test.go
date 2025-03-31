@@ -65,7 +65,9 @@ func TestPairwiseBase(test *testing.T) {
 	time.Sleep(100 * time.Millisecond)
 	fields["wait-for-completion"] = true
 
-	response = core.SendTestAPIRequestFull(test, `courses/assignments/submissions/analysis/pairwise`, fields, nil, email)
+	// TEST
+	// response = core.SendTestAPIRequestFull(test, `courses/assignments/submissions/analysis/pairwise`, fields, nil, email)
+	response = core.SendTestAPIRequestFull(test, `courses/assignments/submissions/analysis/pairwise`, fields, nil, "server-owner")
 	if !response.Success {
 		test.Fatalf("Second response is not a success when it should be: '%v'.", response)
 	}

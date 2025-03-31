@@ -60,6 +60,9 @@ func PairwiseAnalysis(options AnalysisOptions) ([]*model.PairwiseAnalysis, int, 
 		return nil, 0, err
 	}
 
+	// TEST
+	fmt.Printf("TEST - %s - Start pairwise: '%s'.\n", options.InitiatorEmail, util.MustToJSON(options))
+
 	if options.WaitForCompletion {
 		results, err := runPairwiseAnalysis(options, remainingKeys)
 		if err != nil {
@@ -136,6 +139,9 @@ func getCachedPairwiseResults(options AnalysisOptions) ([]*model.PairwiseAnalysi
 // Lock based on course and then run the analysis in a parallel pool.
 func runPairwiseAnalysis(options AnalysisOptions, keys []model.PairwiseKey) ([]*model.PairwiseAnalysis, error) {
 	if len(keys) == 0 {
+		// TEST
+		fmt.Printf("TEST - %s - runPairwiseAnalysis got everything from the cache.\n", options.InitiatorEmail)
+
 		return nil, nil
 	}
 
@@ -146,9 +152,15 @@ func runPairwiseAnalysis(options AnalysisOptions, keys []model.PairwiseKey) ([]*
 		return nil, fmt.Errorf("Unable to get locking course: '%w'.", err)
 	}
 
+	// TEST
+	fmt.Printf("TEST - %s - runPairwiseAnalysis lock: '%s'.\n", options.InitiatorEmail, lockCourseID)
+
 	lockKey := fmt.Sprintf("analysis-pairwise-course-%s", lockCourseID)
 	noLockWait := lockmanager.Lock(lockKey)
 	defer lockmanager.Unlock(lockKey)
+
+	// TEST
+	fmt.Printf("TEST - %s - runPairwiseAnalysis unlock: '%s'.\n", options.InitiatorEmail, lockCourseID)
 
 	// The context has been canceled while waiting for a lock, abandon this analysis.
 	if options.Context.Err() != nil {
@@ -159,11 +171,17 @@ func runPairwiseAnalysis(options AnalysisOptions, keys []model.PairwiseKey) ([]*
 	// If there are multiple requests queued up,
 	// it will be faster to do a bulk check for cached results instead of checking each one individually.
 	if !noLockWait {
+		// TEST
+		fmt.Printf("TEST - %s - runPairwiseAnalysis fetching keys.\n", options.InitiatorEmail)
+
 		_, keys, err = getCachedPairwiseResults(options)
 		if err != nil {
 			return nil, fmt.Errorf("Failed to re-check result cache before run: '%w'.", err)
 		}
 	}
+
+	// TEST
+	fmt.Printf("TEST - %s - runPairwiseAnalysis keys: '%v'.\n", options.InitiatorEmail, keys)
 
 	// If we are overwriting the cache, then remove all the old entries.
 	if options.OverwriteCache && !options.DryRun {
@@ -197,6 +215,9 @@ func runPairwiseAnalysis(options AnalysisOptions, keys []model.PairwiseKey) ([]*
 		return nil, nil
 	}
 
+	// TEST
+	fmt.Printf("TEST - %s - runPairwiseAnalysis pool results: '%v'.\n", options.InitiatorEmail, util.MustToJSON(poolResults))
+
 	results := make([]*model.PairwiseAnalysis, 0, len(keys))
 	var errs error = nil
 	totalRunTime := int64(0)
@@ -216,10 +237,16 @@ func runPairwiseAnalysis(options AnalysisOptions, keys []model.PairwiseKey) ([]*
 }
 
 func runSinglePairwiseAnalysis(options AnalysisOptions, pairwiseKey model.PairwiseKey, templateFileStore *TemplateFileStore) (*model.PairwiseAnalysis, int64, error) {
+	// TEST
+	fmt.Printf("TEST - %s - runSinglePairwiseAnalysis lock: '%s'.\n", options.InitiatorEmail, pairwiseKey.String())
+
 	// Lock this key so we don't try to do the analysis multiple times.
 	lockKey := fmt.Sprintf("analysis-pairwise-single-%s", pairwiseKey.String())
 	lockmanager.Lock(lockKey)
 	defer lockmanager.Unlock(lockKey)
+
+	// TEST
+	fmt.Printf("TEST - %s - runSinglePairwiseAnalysis unlock: '%s'.\n", options.InitiatorEmail, pairwiseKey.String())
 
 	// The context has been canceled while waiting for a lock, abandon this analysis.
 	if options.Context.Err() != nil {
@@ -234,6 +261,9 @@ func runSinglePairwiseAnalysis(options AnalysisOptions, pairwiseKey model.Pairwi
 		}
 
 		if result != nil {
+			// TEST
+			fmt.Printf("TEST - %s - runSinglePairwiseAnalysis cache hit!: '%v'.\n", options.InitiatorEmail, util.MustToJSON(result))
+
 			return result, 0, nil
 		}
 	}
@@ -243,6 +273,9 @@ func runSinglePairwiseAnalysis(options AnalysisOptions, pairwiseKey model.Pairwi
 	if err != nil {
 		return nil, 0, fmt.Errorf("Failed to compute pairwise analysis for '%s': '%w'.", pairwiseKey.String(), err)
 	}
+
+	// TEST
+	fmt.Printf("TEST - %s - runSinglePairwiseAnalysis result: '%v'.\n", options.InitiatorEmail, util.MustToJSON(result))
 
 	// Store the result.
 	if !options.DryRun && (options.Context.Err() == nil) {
@@ -281,12 +314,18 @@ func computeSinglePairwiseAnalysis(options AnalysisOptions, pairwiseKey model.Pa
 		submissionDirs[i] = submissionDir
 	}
 
+	// TEST
+	fmt.Printf("TEST - %s - computeSinglePairwiseAnalysis start: '%v'.\n", options.InitiatorEmail, submissionDirs)
+
 	fileSimilarities, unmatches, skipped, totalRunTime, err := computeFileSims(options, submissionDirs, optionsAssignment, templateFileStore)
 	if err != nil {
 		message := fmt.Sprintf("Failed to compute similarities for %v: '%s'.", pairwiseKey, err.Error())
 		analysis := model.NewFailedPairwiseAnalysis(pairwiseKey, optionsAssignment, message)
 		return analysis, 0, nil
 	}
+
+	// TEST
+	fmt.Printf("TEST - %s - computeSinglePairwiseAnalysis result: '%v'.\n", options.InitiatorEmail, util.MustToJSON(fileSimilarities))
 
 	if options.Context.Err() != nil {
 		return nil, 0, nil
