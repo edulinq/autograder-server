@@ -24,7 +24,7 @@ var (
 	LOG_BACKEND_LEVEL = MustNewStringOption("log.backend.level", "INFO", "The default logging level for the backend (database) logger.")
 
 	// Stats
-	STATS_SYSTEM_INTERVAL_MS = MustNewIntOption("stats.system.interval", 5*1000, "The number of milliseconds between system stats collection events.")
+	STATS_SYSTEM_INTERVAL_MS = MustNewIntOption("stats.system.interval", 60*1000, "The number of milliseconds between system stats collection events.")
 
 	// Email
 	EMAIL_FROM                 = MustNewStringOption("email.from", "", "From address for emails sent from the autograder.")
