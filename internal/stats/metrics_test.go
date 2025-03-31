@@ -2,214 +2,157 @@ package stats
 
 import (
 	"reflect"
+	"strings"
 	"testing"
 
 	"github.com/edulinq/autograder/internal/timestamp"
 	"github.com/edulinq/autograder/internal/util"
 )
 
-func TestStoreMetrics(test *testing.T) {
+func TestMetricValidationBase(test *testing.T) {
 	defer clearBackend()
 
 	testCases := []struct {
-		metric        *Metric
-		expectedCount int
+		metric         *Metric
+		errorSubstring string
 	}{
-		// API Request, Course ID.
+		{
+			errorSubstring: "No metric was given.",
+		},
 		{
 			metric: &Metric{
 				Timestamp: timestamp.FromMSecs(100),
-				Type:      API_REQUEST_STATS_TYPE,
-				Value:     float64(100),
+				Type:      Unknown_Metric_Attribute_Type,
+			},
+			errorSubstring: "Metric attribute was not set.",
+		},
+		{
+			metric: &Metric{
+				Type: API_Request_Stats_Type,
+			},
+			errorSubstring: "Metric timestamp was not set.",
+		},
+		{
+			metric: &Metric{
+				Timestamp: timestamp.FromMSecs(100),
+				Type:      API_Request_Stats_Type,
 				Attributes: map[MetricAttribute]any{
-					SENDER_KEY:        "1",
-					ENDPOINT_KEY:      "E",
-					USER_EMAIL_KEY:    "U",
-					COURSE_ID_KEY:     "C",
-					ASSIGNMENT_ID_KEY: "A",
-					LOCATOR_KEY:       "2",
+					Unknown_Metric_Attribute_Key: "",
 				},
 			},
-			expectedCount: 1,
+			errorSubstring: "Metric attribute key was empty.",
 		},
-
-		// Grading Time, Course ID.
 		{
 			metric: &Metric{
 				Timestamp: timestamp.FromMSecs(100),
-				Type:      GRADING_TIME_STATS_TYPE,
-				Value:     float64(100),
+				Type:      API_Request_Stats_Type,
 				Attributes: map[MetricAttribute]any{
-					COURSE_ID_KEY:     "C",
-					ASSIGNMENT_ID_KEY: "A",
-					USER_EMAIL_KEY:    "U",
+					Course_ID_Key: nil,
 				},
 			},
-			expectedCount: 1,
+			errorSubstring: "Metric attribute value was empty.",
 		},
-
-		// Task Time, Course ID.
 		{
 			metric: &Metric{
 				Timestamp: timestamp.FromMSecs(100),
-				Type:      TASK_TIME_STATS_TYPE,
-				Value:     float64(100),
+				Type:      API_Request_Stats_Type,
 				Attributes: map[MetricAttribute]any{
-					COURSE_ID_KEY:     "C",
-					ASSIGNMENT_ID_KEY: "A",
-					USER_EMAIL_KEY:    "U",
+					Course_ID_Key: "",
 				},
 			},
-			expectedCount: 1,
-		},
-
-		// Code Analysis Time, Course ID.
-		{
-			metric: &Metric{
-				Timestamp: timestamp.FromMSecs(100),
-				Type:      CODE_ANALYSIS_TIME_STATS_TYPE,
-				Value:     float64(100),
-				Attributes: map[MetricAttribute]any{
-					COURSE_ID_KEY:     "C",
-					ASSIGNMENT_ID_KEY: "A",
-					USER_EMAIL_KEY:    "U",
-				},
-			},
-			expectedCount: 1,
-		},
-
-		// API Request, No Course ID.
-		{
-			metric: &Metric{
-				Timestamp: timestamp.FromMSecs(100),
-				Type:      API_REQUEST_STATS_TYPE,
-				Value:     float64(100),
-				Attributes: map[MetricAttribute]any{
-					SENDER_KEY:     "1",
-					ENDPOINT_KEY:   "E",
-					USER_EMAIL_KEY: "U",
-					LOCATOR_KEY:    "2",
-				},
-			},
-			expectedCount: 1,
-		},
-
-		// Grading Time, No Course ID.
-		{
-			metric: &Metric{
-				Timestamp: timestamp.FromMSecs(100),
-				Type:      GRADING_TIME_STATS_TYPE,
-				Value:     float64(100),
-				Attributes: map[MetricAttribute]any{
-					ASSIGNMENT_ID_KEY: "A",
-					USER_EMAIL_KEY:    "U",
-				},
-			},
-		},
-
-		// Task Time, No Course ID.
-		{
-			metric: &Metric{
-				Timestamp: timestamp.FromMSecs(100),
-				Type:      TASK_TIME_STATS_TYPE,
-				Value:     float64(100),
-				Attributes: map[MetricAttribute]any{
-					ASSIGNMENT_ID_KEY: "A",
-					USER_EMAIL_KEY:    "U",
-				},
-			},
-		},
-
-		// Code Analysis Time, No Course ID.
-		{
-			metric: &Metric{
-				Timestamp: timestamp.FromMSecs(100),
-				Type:      CODE_ANALYSIS_TIME_STATS_TYPE,
-				Value:     float64(100),
-				Attributes: map[MetricAttribute]any{
-					ASSIGNMENT_ID_KEY: "A",
-					USER_EMAIL_KEY:    "U",
-				},
-			},
-		},
-
-		// Validation Error.
-		{
-			metric: nil,
+			errorSubstring: "Metric attribute value was empty.",
 		},
 		{
 			metric: &Metric{
 				Timestamp: timestamp.FromMSecs(100),
-				Type:      UNKNOWN_METRIC_ATTRIBUTE_TYPE,
-			},
-		},
-		{
-			metric: &Metric{
-				Type: API_REQUEST_STATS_TYPE,
-			},
-		},
-		{
-			metric: &Metric{
-				Timestamp: timestamp.FromMSecs(100),
-				Type:      API_REQUEST_STATS_TYPE,
-				Attributes: map[MetricAttribute]any{
-					UNKNOWN_METRIC_ATTRIBUTE_KEY: "",
-				},
-			},
-		},
-		{
-			metric: &Metric{
-				Timestamp: timestamp.FromMSecs(100),
-				Type:      API_REQUEST_STATS_TYPE,
-				Attributes: map[MetricAttribute]any{
-					COURSE_ID_KEY: nil,
-				},
-			},
-		},
-		{
-			metric: &Metric{
-				Timestamp: timestamp.FromMSecs(100),
-				Type:      API_REQUEST_STATS_TYPE,
-				Attributes: map[MetricAttribute]any{
-					COURSE_ID_KEY: "",
-				},
+				Type:      API_Request_Stats_Type,
 			},
 		},
 	}
+
+	for i, testCase := range testCases {
+		err := testCase.metric.Validate()
+		if err != nil {
+			if testCase.errorSubstring != "" {
+				if !strings.Contains(err.Error(), testCase.errorSubstring) {
+					test.Errorf("Case %d: Did not get expected error output. Expected Substring '%s', Actual Error: '%v'.", i, testCase.errorSubstring, err)
+				}
+			} else {
+				test.Errorf("Case %d: Failed to validate metric '%+v': '%v'.", i, util.MustToJSONIndent(testCase.metric), err)
+			}
+
+			continue
+		}
+
+		if testCase.errorSubstring != "" {
+			test.Errorf("Case %d: Did not get expected error on metric '%+v'.", i, util.MustToJSONIndent(testCase.metric))
+			continue
+		}
+	}
+}
+
+func TestStoreAPIRequestMetric(test *testing.T) {
+	metric := Metric{
+		Timestamp: timestamp.FromMSecs(100),
+		Type:      API_Request_Stats_Type,
+	}
+
+	runStoreStatsTests(test, metric)
+}
+
+func TestStoreTaskTimeMetric(test *testing.T) {
+	metric := Metric{
+		Timestamp: timestamp.FromMSecs(100),
+		Type:      Task_Time_Stats_Type,
+	}
+
+	runStoreStatsTests(test, metric)
+}
+
+func TestStoreGradingTimeMetric(test *testing.T) {
+	metric := Metric{
+		Timestamp: timestamp.FromMSecs(100),
+		Type:      Grading_Time_Stats_Type,
+	}
+
+	runStoreStatsTests(test, metric)
+}
+
+func TestStoreCodeAnalysisTimeMetric(test *testing.T) {
+	metric := Metric{
+		Timestamp: timestamp.FromMSecs(100),
+		Type:      Code_Analysis_Time_Stats_Type,
+	}
+
+	runStoreStatsTests(test, metric)
+}
+
+func runStoreStatsTests(test *testing.T, metric Metric) {
+	clearBackend()
+	defer clearBackend()
 
 	if backend != nil {
 		test.Fatalf("Stats backend should not be set during testing.")
 	}
 
-	for i, testCase := range testCases {
-		clearBackend()
-		typedBackend := makeTestBackend()
-		backend = typedBackend
+	typedBackend := makeTestBackend()
+	backend = typedBackend
 
-		if len(typedBackend.metric) != 0 {
-			test.Errorf("Case %d: Found stored stats (%d) before collection.", i, len(typedBackend.metric))
-			continue
-		}
+	if len(typedBackend.metric) != 0 {
+		test.Fatalf("Found stored stats (%d) before collection.", len(typedBackend.metric))
+	}
 
-		AsyncStoreMetric(testCase.metric)
+	AsyncStoreMetric(&metric)
 
-		// Ensure that stats have been collected.
-		count := len(typedBackend.metric)
-		if count != testCase.expectedCount {
-			test.Errorf("Case %d: Got an unexpected number of metrics. Expected: %d, Actual: %d.", i, testCase.expectedCount, len(typedBackend.metric))
-			continue
-		}
+	// Ensure that stats have been collected.
+	count := len(typedBackend.metric)
+	if count != 1 {
+		test.Fatalf("Got an unexpected number of metrics. Expected: 1, Actual: %d.", len(typedBackend.metric))
+	}
 
-		// Skip comparing metrics if we're not expecting any metrics.
-		if testCase.expectedCount == 0 {
-			continue
-		}
-
-		// Compare the stored metric with the expected one.
-		if !reflect.DeepEqual(util.MustToJSON(testCase.metric), util.MustToJSON(typedBackend.metric[0])) {
-			test.Errorf("Case %d: Stored metric is not as expected. Expected: '%s', Actual: '%s'.",
-				i, util.MustToJSONIndent(testCase.metric), util.MustToJSONIndent(typedBackend.metric[0]))
-			continue
-		}
+	// Compare the stored metric with the expected one.
+	if !reflect.DeepEqual(util.MustToJSON(metric), util.MustToJSON(typedBackend.metric[0])) {
+		test.Fatalf("Stored metric is not as expected. Expected: '%s', Actual: '%s'.",
+			util.MustToJSONIndent(metric), util.MustToJSONIndent(typedBackend.metric[0]))
 	}
 }

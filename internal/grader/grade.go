@@ -114,10 +114,10 @@ func Grade(ctx context.Context, assignment *model.Assignment, submissionPath str
 
 	metric := stats.Metric{
 		Timestamp: startTimestamp,
-		Type:      stats.GRADING_TIME_STATS_TYPE,
+		Type:      stats.Grading_Time_Stats_Type,
 		Value:     float64((endTimestamp - startTimestamp).ToMSecs()),
 		Attributes: map[stats.MetricAttribute]any{
-			stats.COURSE_ID_KEY: gradingInfo.CourseID,
+			stats.Course_ID_Key: gradingInfo.CourseID,
 		},
 	}
 

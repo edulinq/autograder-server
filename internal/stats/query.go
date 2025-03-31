@@ -43,7 +43,7 @@ func (this *Query) Validate() error {
 		return fmt.Errorf("No query was given.")
 	}
 
-	if this.Type == UNKNOWN_METRIC_ATTRIBUTE_TYPE {
+	if this.Type == Unknown_Metric_Attribute_Type {
 		return fmt.Errorf("Query type was not set.")
 	}
 
@@ -52,7 +52,7 @@ func (this *Query) Validate() error {
 	}
 
 	for field, value := range this.Where {
-		if field == UNKNOWN_METRIC_ATTRIBUTE_KEY {
+		if field == Unknown_Metric_Attribute_Key {
 			return fmt.Errorf("Query attribute field was empty.")
 		}
 
@@ -64,18 +64,22 @@ func (this *Query) Validate() error {
 	return nil
 }
 
-func (this Query) Match(metric *Metric) bool {
-	if (this.Type != UNKNOWN_METRIC_ATTRIBUTE_TYPE) && (this.Type != metric.Type) {
+func (this *Query) Match(metric *Metric) bool {
+	if this == nil {
 		return false
 	}
 
-	for field, value := range this.Where {
+	if this.Type != metric.Type {
+		return false
+	}
+
+	for key, value := range this.Where {
 		if value == "" {
 			return false
 		}
 
-		fieldValue, exists := metric.Attributes[field]
-		if !exists || fieldValue != value {
+		fieldValue, exists := metric.Attributes[key]
+		if !exists || (fieldValue != value) {
 			return false
 		}
 	}

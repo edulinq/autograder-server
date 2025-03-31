@@ -10,40 +10,30 @@ import (
 
 type MetricAttribute string
 type MetricType string
-type MetricTypeInfo struct {
-	RequiresCourseID bool
-}
 
 // Keys for the attributes field inside of Metric and Query.
 const (
-	UNKNOWN_METRIC_ATTRIBUTE_KEY MetricAttribute = ""
-	ASSIGNMENT_ID_KEY                            = "assignment"
-	ANALYSIS_KEY                                 = "analysis-type"
-	COURSE_ID_KEY                                = "course"
-	ENDPOINT_KEY                                 = "endpoint"
-	LOCATOR_KEY                                  = "locator"
-	SENDER_KEY                                   = "sender"
-	TASK_TYPE_KEY                                = "task-type"
-	USER_EMAIL_KEY                               = "user"
+	Unknown_Metric_Attribute_Key MetricAttribute = ""
+	Assignment_ID_Key                            = "assignment"
+	Analysis_Type_Key                            = "analysis-type"
+	Course_ID_Key                                = "course"
+	Endpoint_Key                                 = "endpoint"
+	Locator_Key                                  = "locator"
+	Sender_Key                                   = "sender"
+	Task_Type_Key                                = "task-type"
+	User_Email_Key                               = "user"
 )
 
 // Values for the type field inside of Metric and Query.
 const (
-	UNKNOWN_METRIC_ATTRIBUTE_TYPE MetricType = ""
-	API_REQUEST_STATS_TYPE                   = "api-request-stats"
-	CODE_ANALYSIS_TIME_STATS_TYPE            = "code-analysis-time-stats"
-	GRADING_TIME_STATS_TYPE                  = "grading-time-stats"
-	TASK_TIME_STATS_TYPE                     = "task-time-stats"
+	Unknown_Metric_Attribute_Type MetricType = ""
+	API_Request_Stats_Type                   = "api-request"
+	Code_Analysis_Time_Stats_Type            = "code-analysis-time"
+	Grading_Time_Stats_Type                  = "grading-time"
+	Task_Time_Stats_Type                     = "task-time"
 )
 
 const ATTRIBUTES_KEY = "attributes"
-
-var metricTypeRequiresCourse = map[MetricType]MetricTypeInfo{
-	API_REQUEST_STATS_TYPE:        {RequiresCourseID: false},
-	CODE_ANALYSIS_TIME_STATS_TYPE: {RequiresCourseID: true},
-	GRADING_TIME_STATS_TYPE:       {RequiresCourseID: true},
-	TASK_TIME_STATS_TYPE:          {RequiresCourseID: true},
-}
 
 type TimestampedMetric interface {
 	GetTimestamp() timestamp.Timestamp
@@ -64,26 +54,28 @@ func (this Metric) GetTimestamp() timestamp.Timestamp {
 	return this.Timestamp
 }
 
+func (this *Metric) addAttr(attrs *[]*log.Attr, key MetricAttribute) {
+	val, ok := this.Attributes[key]
+	if ok {
+		*attrs = append(*attrs, log.NewAttr(string(key), val))
+	}
+}
+
 func (this *Metric) LogValue() []*log.Attr {
 	attrs := []*log.Attr{
 		log.NewAttr("metric-type", this.Type),
 	}
 
-	attrs = append(attrs, log.NewAttr("metric-attributes", this.Attributes))
+	this.addAttr(&attrs, Assignment_ID_Key)
+	this.addAttr(&attrs, Analysis_Type_Key)
+	this.addAttr(&attrs, Course_ID_Key)
+	this.addAttr(&attrs, Endpoint_Key)
+	this.addAttr(&attrs, Locator_Key)
+	this.addAttr(&attrs, Sender_Key)
+	this.addAttr(&attrs, Task_Type_Key)
+	this.addAttr(&attrs, User_Email_Key)
 
 	return attrs
-}
-
-// Ensure a course ID is provided when required by the metric type.
-func (this Metric) hasRequiredCourseID() bool {
-	requiresCourseID := metricTypeRequiresCourse[this.Type].RequiresCourseID
-
-	courseID, ok := this.Attributes[COURSE_ID_KEY]
-	if requiresCourseID && (!ok || courseID == nil || courseID == "") {
-		return false
-	}
-
-	return true
 }
 
 func (this *Metric) Validate() error {
@@ -91,7 +83,7 @@ func (this *Metric) Validate() error {
 		return fmt.Errorf("No metric was given.")
 	}
 
-	if this.Type == UNKNOWN_METRIC_ATTRIBUTE_TYPE {
+	if this.Type == Unknown_Metric_Attribute_Type {
 		return fmt.Errorf("Metric attribute was not set.")
 	}
 
@@ -99,13 +91,13 @@ func (this *Metric) Validate() error {
 		return fmt.Errorf("Metric timestamp was not set.")
 	}
 
-	if !this.hasRequiredCourseID() {
-		return fmt.Errorf("Metric type '%s' requires a course ID", this.Type)
+	if this.Attributes == nil {
+		this.Attributes = make(map[MetricAttribute]any)
 	}
 
-	for field, value := range this.Attributes {
-		if field == UNKNOWN_METRIC_ATTRIBUTE_KEY {
-			return fmt.Errorf("Metric attribute field was empty.")
+	for key, value := range this.Attributes {
+		if key == Unknown_Metric_Attribute_Key {
+			return fmt.Errorf("Metric attribute key was empty.")
 		}
 
 		if value == nil || value == "" {
@@ -138,50 +130,40 @@ func AsyncStoreMetric(metric *Metric) {
 	}
 }
 
-func (this *Metric) SetAssignmentID(id string) {
-	if id != "" {
-		this.Attributes[ASSIGNMENT_ID_KEY] = id
+func (this *Metric) setAttrIfNotEmpty(key MetricAttribute, value string) {
+	if value != "" {
+		this.Attributes[key] = value
 	}
+}
+
+func (this *Metric) SetAssignmentID(id string) {
+	this.setAttrIfNotEmpty(Assignment_ID_Key, id)
 }
 
 func (this *Metric) SetAnalysisType(analysis string) {
-	if analysis != "" {
-		this.Attributes[ANALYSIS_KEY] = analysis
-	}
+	this.setAttrIfNotEmpty(Analysis_Type_Key, analysis)
 }
 
 func (this *Metric) SetCourseID(courseID string) {
-	if courseID != "" {
-		this.Attributes[COURSE_ID_KEY] = courseID
-	}
+	this.setAttrIfNotEmpty(Course_ID_Key, courseID)
 }
 
 func (this *Metric) SetEndpoint(endpoint string) {
-	if endpoint != "" {
-		this.Attributes[ENDPOINT_KEY] = endpoint
-	}
+	this.setAttrIfNotEmpty(Endpoint_Key, endpoint)
 }
 
 func (this *Metric) SetLocator(locator string) {
-	if locator != "" {
-		this.Attributes[LOCATOR_KEY] = locator
-	}
+	this.setAttrIfNotEmpty(Locator_Key, locator)
 }
 
 func (this *Metric) SetSender(sender string) {
-	if sender != "" {
-		this.Attributes[SENDER_KEY] = sender
-	}
+	this.setAttrIfNotEmpty(Sender_Key, sender)
 }
 
 func (this *Metric) SetTaskType(taskType string) {
-	if taskType != "" {
-		this.Attributes[TASK_TYPE_KEY] = taskType
-	}
+	this.setAttrIfNotEmpty(Task_Type_Key, taskType)
 }
 
 func (this *Metric) SetUserEmail(email string) {
-	if email != "" {
-		this.Attributes[USER_EMAIL_KEY] = email
-	}
+	this.setAttrIfNotEmpty(User_Email_Key, email)
 }

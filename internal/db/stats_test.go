@@ -2,6 +2,7 @@ package db
 
 import (
 	"reflect"
+	"strings"
 	"testing"
 
 	"github.com/edulinq/autograder/internal/stats"
@@ -45,199 +46,220 @@ func (this *DBTests) DBTestStoreSystemStats(test *testing.T) {
 	}
 }
 
-func (this *DBTests) DBTestStoreMetrics(test *testing.T) {
+func (this *DBTests) DBTestStoreAPIRequestStats(test *testing.T) {
+	Clear()
+	defer Clear()
+
+	metric := stats.Metric{
+		Timestamp: timestamp.Now(),
+		Type:      stats.API_Request_Stats_Type,
+		Value:     float64(100),
+		Attributes: map[stats.MetricAttribute]any{
+			stats.Sender_Key:        "1",
+			stats.Endpoint_Key:      "E1",
+			stats.User_Email_Key:    "U",
+			stats.Assignment_ID_Key: "A",
+			stats.Course_ID_Key:     "C",
+			stats.Locator_Key:       "11",
+		},
+	}
+
+	query := stats.Query{
+		Type: stats.API_Request_Stats_Type,
+	}
+
+	runStoreStatsTests(test, &metric, query)
+}
+
+func (this *DBTests) DBTestStoreTaskTimeStats(test *testing.T) {
+	Clear()
+	defer Clear()
+
+	metric := stats.Metric{
+		Timestamp: timestamp.Now(),
+		Type:      stats.Task_Time_Stats_Type,
+		Value:     float64(100),
+		Attributes: map[stats.MetricAttribute]any{
+			stats.User_Email_Key:    "U",
+			stats.Assignment_ID_Key: "A",
+			stats.Course_ID_Key:     "C",
+		},
+	}
+
+	query := stats.Query{
+		Type: stats.Task_Time_Stats_Type,
+	}
+
+	runStoreStatsTests(test, &metric, query)
+}
+
+func (this *DBTests) DBTestStoreGradingTimeStats(test *testing.T) {
+	Clear()
+	defer Clear()
+
+	metric := stats.Metric{
+		Timestamp: timestamp.Now(),
+		Type:      stats.Grading_Time_Stats_Type,
+		Value:     float64(100),
+		Attributes: map[stats.MetricAttribute]any{
+			stats.User_Email_Key:    "U",
+			stats.Assignment_ID_Key: "A",
+			stats.Course_ID_Key:     "C",
+		},
+	}
+
+	query := stats.Query{
+		Type: stats.Grading_Time_Stats_Type,
+	}
+
+	runStoreStatsTests(test, &metric, query)
+}
+
+func (this *DBTests) DBTestStoreCodeAnalysisTimeStats(test *testing.T) {
+	Clear()
+	defer Clear()
+
+	metric := stats.Metric{
+		Timestamp: timestamp.Now(),
+		Type:      stats.Code_Analysis_Time_Stats_Type,
+		Value:     float64(100),
+		Attributes: map[stats.MetricAttribute]any{
+			stats.User_Email_Key:    "U",
+			stats.Assignment_ID_Key: "A",
+			stats.Course_ID_Key:     "C",
+		},
+	}
+
+	query := stats.Query{
+		Type: stats.Code_Analysis_Time_Stats_Type,
+	}
+
+	runStoreStatsTests(test, &metric, query)
+}
+
+func (this *DBTests) DBTestStoreMetricFailures(test *testing.T) {
 	Clear()
 	defer Clear()
 
 	testCases := []struct {
-		Metric                stats.Metric
-		Query                 stats.Query
-		ExpectedRecordsNumber int
-		ExpectedError         bool
+		metric          stats.Metric
+		query           stats.Query
+		errorSubstring  string
+		expectedMetrics []*stats.Metric
 	}{
-		// API Request Stats.
-		{
-			Metric: stats.Metric{
-				Timestamp: timestamp.Now(),
-				Type:      stats.API_REQUEST_STATS_TYPE,
-				Value:     float64(100),
-				Attributes: map[stats.MetricAttribute]any{
-					stats.SENDER_KEY:        "1",
-					stats.ENDPOINT_KEY:      "E1",
-					stats.USER_EMAIL_KEY:    "U",
-					stats.ASSIGNMENT_ID_KEY: "A",
-					stats.COURSE_ID_KEY:     "C",
-					stats.LOCATOR_KEY:       "11",
-				},
-			},
-			Query: stats.Query{
-				Type: stats.API_REQUEST_STATS_TYPE,
-				Where: map[stats.MetricAttribute]any{
-					"course": "C",
-				},
-			},
-			ExpectedRecordsNumber: 1,
-		},
-
-		// Task Time Stats.
-		{
-			Metric: stats.Metric{
-				Timestamp: timestamp.Now(),
-				Type:      stats.TASK_TIME_STATS_TYPE,
-				Value:     float64(100),
-				Attributes: map[stats.MetricAttribute]any{
-					stats.COURSE_ID_KEY:     "C",
-					stats.ASSIGNMENT_ID_KEY: "A",
-					stats.USER_EMAIL_KEY:    "U",
-				},
-			},
-			Query: stats.Query{
-				Type: stats.TASK_TIME_STATS_TYPE,
-				Where: map[stats.MetricAttribute]any{
-					"course": "C",
-				},
-			},
-			ExpectedRecordsNumber: 1,
-		},
-
-		// Grading Time Stats.
-		{
-			Metric: stats.Metric{
-				Timestamp: timestamp.Now(),
-				Type:      stats.GRADING_TIME_STATS_TYPE,
-				Value:     float64(100),
-				Attributes: map[stats.MetricAttribute]any{
-					stats.COURSE_ID_KEY:     "C",
-					stats.ASSIGNMENT_ID_KEY: "A",
-					stats.USER_EMAIL_KEY:    "U",
-				},
-			},
-			Query: stats.Query{
-				Type: stats.GRADING_TIME_STATS_TYPE,
-				Where: map[stats.MetricAttribute]any{
-					"course": "C",
-				},
-			},
-			ExpectedRecordsNumber: 1,
-		},
-
-		// Code Analysis Time Stats.
-		{
-			Metric: stats.Metric{
-				Timestamp: timestamp.Now(),
-				Type:      stats.CODE_ANALYSIS_TIME_STATS_TYPE,
-				Value:     float64(100),
-				Attributes: map[stats.MetricAttribute]any{
-					stats.COURSE_ID_KEY:     "C",
-					stats.ASSIGNMENT_ID_KEY: "A",
-					stats.USER_EMAIL_KEY:    "U",
-				},
-			},
-			Query: stats.Query{
-				Type: stats.CODE_ANALYSIS_TIME_STATS_TYPE,
-				Where: map[stats.MetricAttribute]any{
-					"course": "C",
-				},
-			},
-			ExpectedRecordsNumber: 1,
-		},
-
 		// Mixed Metric and Query Type.
 		{
-			Metric: stats.Metric{
+			metric: stats.Metric{
 				Timestamp: timestamp.Now(),
-				Type:      stats.CODE_ANALYSIS_TIME_STATS_TYPE,
+				Type:      stats.Code_Analysis_Time_Stats_Type,
 				Value:     float64(100),
 				Attributes: map[stats.MetricAttribute]any{
-					stats.COURSE_ID_KEY:     "C",
-					stats.ASSIGNMENT_ID_KEY: "A",
-					stats.USER_EMAIL_KEY:    "U",
+					stats.Course_ID_Key:     "C",
+					stats.Assignment_ID_Key: "A",
+					stats.User_Email_Key:    "U",
 				},
 			},
-			Query: stats.Query{
-				Type: stats.API_REQUEST_STATS_TYPE,
+			query: stats.Query{
+				Type: stats.API_Request_Stats_Type,
 				Where: map[stats.MetricAttribute]any{
 					"course": "C",
 				},
 			},
+			expectedMetrics: []*stats.Metric{},
 		},
 
 		// No Metric Type.
 		{
-			Metric: stats.Metric{
+			metric: stats.Metric{
 				Timestamp: timestamp.Now(),
 				Value:     float64(100),
 				Attributes: map[stats.MetricAttribute]any{
-					stats.COURSE_ID_KEY:     "C",
-					stats.ASSIGNMENT_ID_KEY: "A",
-					stats.USER_EMAIL_KEY:    "U",
+					stats.Course_ID_Key:     "C",
+					stats.Assignment_ID_Key: "A",
+					stats.User_Email_Key:    "U",
 				},
 			},
-			Query: stats.Query{
-				Type: stats.API_REQUEST_STATS_TYPE,
+			query: stats.Query{
+				Type: stats.API_Request_Stats_Type,
 				Where: map[stats.MetricAttribute]any{
 					"course": "C",
 				},
 			},
-			ExpectedError: true,
+			errorSubstring: "No metric type was given",
 		},
 
 		// No Query Type.
 		{
-			Metric: stats.Metric{
+			metric: stats.Metric{
 				Timestamp: timestamp.Now(),
 				Value:     float64(100),
 				Attributes: map[stats.MetricAttribute]any{
-					stats.COURSE_ID_KEY:     "C",
-					stats.ASSIGNMENT_ID_KEY: "A",
-					stats.USER_EMAIL_KEY:    "U",
+					stats.Course_ID_Key:     "C",
+					stats.Assignment_ID_Key: "A",
+					stats.User_Email_Key:    "U",
 				},
 			},
-			Query: stats.Query{
+			query: stats.Query{
 				Where: map[stats.MetricAttribute]any{
 					"course": "C",
 				},
 			},
-			ExpectedError: true,
+			errorSubstring: "No metric type was given",
 		},
 	}
 
 	for i, testCase := range testCases {
 		Clear()
 
-		err := StoreMetric(&testCase.Metric)
-		if err != nil && !testCase.ExpectedError {
-			test.Errorf("Case %d: Failed to store stats: '%v'.", i, err)
+		err := StoreMetric(&testCase.metric)
+		if err != nil {
+			if testCase.errorSubstring != "" {
+				if !strings.Contains(err.Error(), testCase.errorSubstring) {
+					test.Errorf("Case %d: Did not get expected error outpout. Expected Substring '%s', Actual Error: '%v'.", i, testCase.errorSubstring, err)
+				}
+			} else {
+				test.Errorf("Case %d: Failed to store metric '%+v': '%v'.", i, testCase.metric, err)
+			}
+
 			continue
 		}
 
-		if err == nil && testCase.ExpectedError {
-			test.Errorf("Case %d: Unexpected success when storing metric '%v'.", i, util.MustToJSONIndent(testCase.Metric))
-		}
-
-		if testCase.ExpectedError {
+		if testCase.errorSubstring != "" {
+			test.Errorf("Case %d: Did not get expected error on metric '%v'.", i, util.MustToJSONIndent(testCase.metric))
 			continue
 		}
 
-		records, err := GetMetrics(testCase.Query)
+		records, err := GetMetrics(testCase.query)
 		if err != nil {
 			test.Errorf("Case %d: Failed to fetch stats: '%v'.", i, err)
 			continue
 		}
 
-		if len(records) != testCase.ExpectedRecordsNumber {
-			test.Errorf("Case %d: Did not get the correct number of records. Expected: %d, Actual: %d.", i, testCase.ExpectedRecordsNumber, len(records))
-			continue
-		}
-
-		if testCase.ExpectedRecordsNumber == 0 {
-			continue
-		}
-
-		if !reflect.DeepEqual(*records[0], testCase.Metric) {
+		if !reflect.DeepEqual(records, testCase.expectedMetrics) {
 			test.Errorf("Case %d: Did not get the expected record back. Expected: '%s', Actual: '%s'.",
-				i, util.MustToJSONIndent(testCase.Metric), util.MustToJSONIndent(*records[0]))
+				i, util.MustToJSONIndent(testCase.expectedMetrics), util.MustToJSONIndent(records))
 			continue
 		}
+	}
+}
+
+func runStoreStatsTests(test *testing.T, metric *stats.Metric, query stats.Query) {
+	err := StoreMetric(metric)
+	if err != nil {
+		test.Fatalf("Failed to store stats: '%v'.", err)
+	}
+
+	records, err := GetMetrics(query)
+	if err != nil {
+		test.Fatalf("Failed to fetch stats: '%v'.", err)
+	}
+
+	if len(records) != 1 {
+		test.Fatalf("Did not get the correct number of records. Expected: 1, Actual: %d.", len(records))
+	}
+
+	if !reflect.DeepEqual(records[0], metric) {
+		test.Fatalf("Did not get the expected record back. Expected: '%s', Actual: '%s'.",
+			util.MustToJSONIndent(metric), util.MustToJSONIndent(*records[0]))
 	}
 }

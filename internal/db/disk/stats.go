@@ -9,6 +9,7 @@ import (
 )
 
 const SYSTEM_STATS_FILENAME = "system-stats.jsonl"
+const STATS_DIRNAME = "stats"
 
 func (this *backend) GetSystemStats(query stats.Query) ([]*stats.SystemMetrics, error) {
 	path := this.getSystemStatsPath()
@@ -63,7 +64,7 @@ func (this *backend) getStatsPath(metricType stats.MetricType) (string, error) {
 		return "", fmt.Errorf("No metric type was given.")
 	}
 
-	path := filepath.Join(this.baseDir, string(metricType)+".jsonl")
+	path := filepath.Join(this.baseDir, STATS_DIRNAME, string(metricType)+".jsonl")
 	path = util.ShouldNormalizePath(path)
 
 	return path, nil

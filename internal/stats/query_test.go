@@ -3,14 +3,88 @@ package stats
 import (
 	"reflect"
 	"slices"
+	"strings"
 	"testing"
 
 	"github.com/edulinq/autograder/internal/timestamp"
+	"github.com/edulinq/autograder/internal/util"
 )
 
 func init() {
 	simpleMetricsReverse = append([]Metric(nil), simpleMetrics...)
 	slices.Reverse(simpleMetricsReverse)
+}
+
+func TestQueryValidationBase(test *testing.T) {
+	defer clearBackend()
+
+	testCases := []struct {
+		query          *Query
+		errorSubstring string
+	}{
+		{
+			errorSubstring: "No query was given.",
+		},
+		{
+			query:          &Query{},
+			errorSubstring: "Query type was not set.",
+		},
+		{
+			query: &Query{
+				Type: API_Request_Stats_Type,
+				Where: map[MetricAttribute]any{
+					Unknown_Metric_Attribute_Key: "C1",
+				},
+			},
+			errorSubstring: "Query attribute field was empty.",
+		},
+		{
+			query: &Query{
+				Type: API_Request_Stats_Type,
+				Where: map[MetricAttribute]any{
+					Course_ID_Key: nil,
+				},
+			},
+			errorSubstring: "Query attribute value was empty.",
+		},
+		{
+			query: &Query{
+				Type: API_Request_Stats_Type,
+				Where: map[MetricAttribute]any{
+					Course_ID_Key: "",
+				},
+			},
+			errorSubstring: "Query attribute value was empty.",
+		},
+		{
+			query: &Query{
+				Type: API_Request_Stats_Type,
+				Where: map[MetricAttribute]any{
+					Course_ID_Key: "C1",
+				},
+			},
+		},
+	}
+
+	for i, testCase := range testCases {
+		err := testCase.query.Validate()
+		if err != nil {
+			if testCase.errorSubstring != "" {
+				if !strings.Contains(err.Error(), testCase.errorSubstring) {
+					test.Errorf("Case %d: Did not get expected error output. Expected Substring '%s', Actual Error: '%v'.", i, testCase.errorSubstring, err)
+				}
+			} else {
+				test.Errorf("Case %d: Failed to validate query '%+v': '%v'.", i, util.MustToJSONIndent(testCase.query), err)
+			}
+
+			continue
+		}
+
+		if testCase.errorSubstring != "" {
+			test.Errorf("Case %d: Did not get expected error on query '%v'.", i, util.MustToJSONIndent(testCase.query))
+			continue
+		}
+	}
 }
 
 func TestLimitAndSort(test *testing.T) {
