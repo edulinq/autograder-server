@@ -2,6 +2,7 @@ package proxy
 
 import (
 	"github.com/edulinq/autograder/internal/api/core"
+	"github.com/edulinq/autograder/internal/config"
 	"github.com/edulinq/autograder/internal/grader"
 	"github.com/edulinq/autograder/internal/log"
 	"github.com/edulinq/autograder/internal/model"
@@ -10,7 +11,7 @@ import (
 
 type SubmitRequest struct {
 	core.APIRequestAssignmentContext
-	core.MinCourseRoleAdmin
+	core.MinCourseRoleGrader
 	Files core.POSTFiles `json:"-"`
 
 	ProxyUser core.TargetCourseUser `json:"proxy-email"`
@@ -36,24 +37,17 @@ func HandleSubmit(request *SubmitRequest) (*SubmitResponse, *core.APIError) {
 		return &response, nil
 	}
 
-	gradeOptions := grader.GetDefaultGradeOptions()
-	gradeOptions.ProxyUser = request.User.Email
-
-	// If the proxy time is not specified, fall back to the assignment's due date.
-	if request.ProxyTime == nil {
-		// If the assignment does not have a due date, default to the Unix Epoch.
-		if request.Assignment.DueDate == nil {
-			proxyTime := timestamp.Zero()
-			gradeOptions.ProxyTime = &proxyTime
-		} else {
-			gradeOptions.ProxyTime = request.Assignment.DueDate
-		}
-	} else {
-		gradeOptions.ProxyTime = request.ProxyTime
+	// Proxy submissions are not subject to submission restrictions.
+	gradeOptions := grader.GradeOptions{
+		NoDocker:       config.DOCKER_DISABLE.Get(),
+		LeaveTempDir:   config.KEEP_BUILD_DIRS.Get(),
+		AllowLate:      false,
+		CheckRejection: false,
+		ProxyUser:      request.User.Email,
+		ProxyTime:      grader.ResolveProxyTime(request.ProxyTime, request.Assignment),
 	}
 
-	// Proxy submissions are not subject to submission restrictions.
-	result, reject, failureMessage, err := grader.Grade(request.Context, request.Assignment, request.Files.TempDir, request.ProxyUser.Email, request.Message, false, gradeOptions)
+	result, reject, failureMessage, err := grader.Grade(request.Context, request.Assignment, request.Files.TempDir, request.ProxyUser.Email, request.Message, gradeOptions)
 	if err != nil {
 		stdout := ""
 		stderr := ""
@@ -63,14 +57,14 @@ func HandleSubmit(request *SubmitRequest) (*SubmitResponse, *core.APIError) {
 			stderr = result.Stderr
 		}
 
-		log.LogToSplitLevels(log.LevelDebug, log.LevelInfo, "Submission failed internally.", err, request.Assignment, log.NewAttr("stdout", stdout), log.NewAttr("stderr", stderr), request.User)
+		log.Info("Submission failed internally.", err, request.Assignment, log.NewAttr("stdout", stdout), log.NewAttr("stderr", stderr), request.User)
 
 		return &response, nil
 	}
 
 	// A proxy submission should never be rejected.
 	if reject != nil {
-		log.LogToSplitLevels(log.LevelInfo, log.LevelError, "Proxy submission rejected.", request.Assignment, log.NewAttr("reason", reject.String()), log.NewAttr("request", request), request.User)
+		log.Error("Proxy submission rejected.", request.Assignment, log.NewAttr("reason", reject.String()), log.NewAttr("request", request), request.User)
 
 		response.Rejected = true
 		response.Message = reject.String()

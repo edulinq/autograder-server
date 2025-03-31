@@ -220,6 +220,42 @@ func (this *DBTests) DBTestGetSubmissionHistoryBase(test *testing.T) {
 	}
 }
 
+func (this *DBTests) DBTestGetNextSubmissionIDBase(test *testing.T) {
+	previousSubmissionID := ""
+
+	assignment := MustGetTestAssignment()
+	email := "course-student@test.edulinq.org"
+
+	for _ = range 10 {
+		currentSubmissionID, err := GetNextSubmissionID(assignment, email)
+		if err != nil {
+			test.Fatalf("Unable to get next submission ID: '%v'.", err)
+		}
+
+		if previousSubmissionID >= currentSubmissionID {
+			test.Fatalf("Next submission ID is not the largest for the user. Previous: '%s', next: '%s'.",
+				previousSubmissionID, currentSubmissionID)
+		}
+
+		submission := model.GradingResult{
+			Info: &model.GradingInfo{
+				ID:           currentSubmissionID,
+				ShortID:      currentSubmissionID,
+				CourseID:     assignment.GetCourse().GetID(),
+				AssignmentID: assignment.GetID(),
+				User:         email,
+			},
+		}
+
+		err = SaveSubmission(assignment, &submission)
+		if err != nil {
+			test.Fatalf("Failed to save submission: '%v'.", err)
+		}
+
+		previousSubmissionID = currentSubmissionID
+	}
+}
+
 func (this *DBTests) DBTestGetPreviousSubmissionIDBase(test *testing.T) {
 	testCases := []struct {
 		targetSubmission string

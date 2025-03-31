@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"slices"
+	"strconv"
 	"time"
 
 	"github.com/edulinq/autograder/internal/common"
@@ -69,8 +70,27 @@ func (this *backend) SaveSubmissions(course *model.Course, submissions []*model.
 	return this.saveSubmissionsLock(course, submissions, true)
 }
 
+// Compute the next submission ID based on the current time.
+// The next submission ID will be the largest ID for the user.
 func (this *backend) GetNextSubmissionID(assignment *model.Assignment, email string) (string, error) {
 	submissionID := time.Now().Unix()
+	previousStringID, err := this.getMostRecentSubmissionID(assignment, email)
+	if err != nil {
+		return "", err
+	}
+
+	if previousStringID != "" {
+		previousSubmissionID, err := strconv.Atoi(previousStringID)
+		if err != nil {
+			return "", err
+		}
+
+		// Ensure the next submission ID is the largest.
+		if int64(previousSubmissionID) >= submissionID {
+			submissionID = int64(previousSubmissionID) + 1
+		}
+	}
+
 	baseDir := this.getUserSubmissionDir(assignment.Course.GetID(), assignment.GetID(), email)
 
 	for {
@@ -316,7 +336,8 @@ func (this *backend) getUserSubmissionDir(courseID string, assignmentID string, 
 	return filepath.Join(this.getCourseDirFromID(courseID), model.SUBMISSIONS_DIRNAME, assignmentID, user)
 }
 
-// Get the short id of the most recent submission (or empty string if there are no submissions).
+// Get the short ID of the most recent submission (or empty string if there are no submissions).
+// The most recent submission has the largest ID for the user.
 func (this *backend) getMostRecentSubmissionID(assignment *model.Assignment, email string) (string, error) {
 	submissionsDir := this.getUserSubmissionDir(assignment.GetCourse().GetID(), assignment.GetID(), email)
 	if !util.PathExists(submissionsDir) {

@@ -20,35 +20,37 @@ import (
 const extraRunTimeSecs int = 10
 
 type GradeOptions struct {
-	NoDocker     bool
-	LeaveTempDir bool
-	AllowLate    bool
-	ProxyUser    string
-	ProxyTime    *timestamp.Timestamp
+	NoDocker       bool
+	LeaveTempDir   bool
+	CheckRejection bool
+	AllowLate      bool
+	ProxyUser      string
+	ProxyTime      *timestamp.Timestamp
 }
 
 func GetDefaultGradeOptions() GradeOptions {
 	return GradeOptions{
-		NoDocker:     config.DOCKER_DISABLE.Get(),
-		LeaveTempDir: config.KEEP_BUILD_DIRS.Get(),
-		AllowLate:    false,
-		ProxyUser:    "",
-		ProxyTime:    nil,
+		NoDocker:       config.DOCKER_DISABLE.Get(),
+		LeaveTempDir:   config.KEEP_BUILD_DIRS.Get(),
+		CheckRejection: true,
+		AllowLate:      false,
+		ProxyUser:      "",
+		ProxyTime:      nil,
 	}
 }
 
 // Grade with default options pulled from config.
 func GradeDefault(assignment *model.Assignment, submissionPath string, user string, message string) (
 	*model.GradingResult, RejectReason, string, error) {
-	return Grade(context.Background(), assignment, submissionPath, user, message, true, GetDefaultGradeOptions())
+	return Grade(context.Background(), assignment, submissionPath, user, message, GetDefaultGradeOptions())
 }
 
 // Grade with custom options.
 // Return (result, reject, softGradingError, error).
 // Full success is only when ((reject == nil) && (softGradingError == "") && (error == nil)).
-func Grade(ctx context.Context, assignment *model.Assignment, submissionPath string, user string, message string, checkRejection bool, options GradeOptions) (
+func Grade(ctx context.Context, assignment *model.Assignment, submissionPath string, user string, message string, options GradeOptions) (
 	*model.GradingResult, RejectReason, string, error) {
-	if checkRejection {
+	if options.CheckRejection {
 		reject, err := checkForRejection(assignment, submissionPath, user, message, options.AllowLate)
 		if err != nil {
 			return nil, nil, "", fmt.Errorf("Failed to check for rejection: '%w'.", err)
@@ -110,7 +112,7 @@ func Grade(ctx context.Context, assignment *model.Assignment, submissionPath str
 		gradingInfo.GradingEndTime = endTimestamp
 	} else {
 		gradingInfo.GradingStartTime = *options.ProxyTime
-		gradingInfo.GradingEndTime = *options.ProxyTime
+		gradingInfo.GradingEndTime = *options.ProxyTime + (endTimestamp - startTimestamp)
 		gradingInfo.ProxyStartTime = &startTimestamp
 		gradingInfo.ProxyEndTime = &endTimestamp
 	}
@@ -129,6 +131,25 @@ func Grade(ctx context.Context, assignment *model.Assignment, submissionPath str
 	stats.AsyncStoreCourseGradingTime(startTimestamp, endTimestamp, gradingInfo.CourseID, gradingInfo.AssignmentID, gradingInfo.User)
 
 	return &gradingResult, nil, "", nil
+}
+
+// Resolve a proxy time for a given assignment.
+// If the proxy time is not specified, fall back to a day before the assignment due date.
+// If the assignment does not have a due date, the current time will be used for the proxy time.
+func ResolveProxyTime(proxyTime *timestamp.Timestamp, assignment *model.Assignment) *timestamp.Timestamp {
+	if proxyTime == nil {
+		if assignment.DueDate == nil {
+			now := timestamp.Now()
+			proxyTime = &now
+		} else {
+			// Convert time (one day) to hours -> minutes -> seconds -> msecs.
+			oneDay := int64(1 * 24 * 60 * 60 * 1000)
+			dayBeforeDueDate := *assignment.DueDate - timestamp.FromMSecs(oneDay)
+			proxyTime = &dayBeforeDueDate
+		}
+	}
+
+	return proxyTime
 }
 
 func prepForGrading(assignment *model.Assignment, submissionPath string, user string) (string, map[string][]byte, error) {

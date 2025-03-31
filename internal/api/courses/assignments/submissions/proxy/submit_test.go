@@ -133,9 +133,9 @@ func TestProxySubmitErrors(test *testing.T) {
 	}{
 		// Unknown proxy emails.
 		{"zzz@test.edulinq.org", "course-admin", false, false},
+		{"zzz@test.edulinq.org", "course-grader", false, false},
 
 		// Permissions errors.
-		{"course-student@test.edulinq.org", "course-grader", false, true},
 		{"course-student@test.edulinq.org", "course-student", false, true},
 		{"zzz@test.edulinq.org", "course-other", false, true},
 	}
@@ -187,6 +187,8 @@ func verifySuccessfulTestSubmissions(test *testing.T, testSubmissions []*grader.
 			"proxy-time":    proxyTime,
 		}
 
+		proxyTimeLowerBound := grader.ResolveProxyTime(proxyTime, testSubmission.Assignment)
+
 		response := core.SendTestAPIRequestFull(test, `courses/assignments/submissions/proxy/submit`, fields, testSubmission.Files, "course-admin")
 		if !response.Success {
 			test.Errorf("Case %d: Response is not a success when it should be: '%v'.", i, util.MustToJSONIndent(response))
@@ -230,27 +232,18 @@ func verifySuccessfulTestSubmissions(test *testing.T, testSubmissions []*grader.
 			continue
 		}
 
-		var expectedProxyTime timestamp.Timestamp
-		if proxyTime == nil {
-			dueDate := testSubmission.Assignment.DueDate
-			if dueDate != nil {
-				expectedProxyTime = *dueDate
-			} else {
-				expectedProxyTime = timestamp.Zero()
-			}
-		} else {
-			expectedProxyTime = *proxyTime
-		}
+		startTime := responseContent.GradingInfo.GradingStartTime
+		proxyTimeUpperBound := grader.ResolveProxyTime(proxyTime, testSubmission.Assignment)
 
-		if expectedProxyTime != responseContent.GradingInfo.GradingStartTime {
-			test.Errorf("Case %d: Unexpected grading start time. Expected: '%d', actual: '%d'.",
-				i, expectedProxyTime, responseContent.GradingInfo.GradingStartTime)
+		if startTime < *proxyTimeLowerBound || startTime > *proxyTimeUpperBound {
+			test.Errorf("Case %d: Unexpected grading start time. Expected a start time in the range: ['%d', '%d'], actual: '%d'.",
+				i, proxyTimeLowerBound, proxyTimeUpperBound, startTime)
 			continue
 		}
 
-		if expectedProxyTime != responseContent.GradingInfo.GradingEndTime {
-			test.Errorf("Case %d: Unexpected grading end time. Expected: '%d', actual: '%d'.",
-				i, expectedProxyTime, responseContent.GradingInfo.GradingEndTime)
+		if startTime > responseContent.GradingInfo.GradingEndTime {
+			test.Errorf("Case %d: Unexpected grading end time. Expected a time after: '%d', actual: '%d'.",
+				i, startTime, responseContent.GradingInfo.GradingEndTime)
 			continue
 		}
 	}

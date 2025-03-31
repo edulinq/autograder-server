@@ -214,7 +214,7 @@
             "description": "Proxy submit an assignment submission to the autograder.",
             "input": {
                 "APIRequest": "github.com/edulinq/autograder/internal/api/core.APIRequest",
-                "MinCourseRoleAdmin": "bool",
+                "MinCourseRoleGrader": "bool",
                 "assignment-id": "string",
                 "course-id": "string",
                 "message": "string",
@@ -1122,7 +1122,7 @@
             "category": "struct",
             "fields": {
                 "APIRequest": "github.com/edulinq/autograder/internal/api/core.APIRequest",
-                "MinCourseRoleAdmin": "bool",
+                "MinCourseRoleGrader": "bool",
                 "assignment-id": "string",
                 "course-id": "string",
                 "message": "string",
