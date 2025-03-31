@@ -56,12 +56,12 @@ jobs:
       - name: Run Flaky 1
         env:
           AUTOGRADER__DOCKER__DISABLE: ${{ startsWith(matrix.os, 'macos') }}
-        run: go test -timeout 1h -count=3000 -v ./internal/api/courses/assignments/submissions/analysis
+        run: go test -timeout 2h -count=3000 -v ./internal/api/courses/assignments/submissions/analysis
 
       - name: Run Flaky 2
         env:
           AUTOGRADER__DOCKER__DISABLE: ${{ startsWith(matrix.os, 'macos') }}
-        run: go test -timeout 1h -count=100 -v ./internal/analysis
+        run: go test -timeout 2h -count=100 -v ./internal/analysis
 
       - name: Run Base Tests
         env:
