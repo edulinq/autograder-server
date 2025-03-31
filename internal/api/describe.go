@@ -4,6 +4,7 @@ import (
 	"errors"
 	"path/filepath"
 	"reflect"
+    "regexp"
 
 	"github.com/edulinq/autograder/internal/api/core"
 	"github.com/edulinq/autograder/internal/util"
@@ -43,6 +44,8 @@ func Describe(routes []core.Route) (*core.APIDescription, error) {
 		}
 	}
 
+    endpointMap, typeMap = reduceCustomTypeNames(endpointMap, typeMap)
+
 	apiDescription := core.APIDescription{
 		Endpoints: endpointMap,
 		Types:     typeMap,
@@ -53,6 +56,7 @@ func Describe(routes []core.Route) (*core.APIDescription, error) {
 
 func getTypeID(customType reflect.Type) string {
 	prefix := ""
+	suffix := ""
 
 	// Include the PkgPath() of pointers to custom types.
 	if customType.Kind() == reflect.Pointer {
@@ -61,7 +65,8 @@ func getTypeID(customType reflect.Type) string {
 	}
 
 	if customType.PkgPath() != "" {
-		prefix = prefix + filepath.Dir(customType.PkgPath()) + "/"
+		prefix = prefix + "(" + filepath.Dir(customType.PkgPath()) + "/"
+		suffix = ")"
 	} else {
 		if customType.Kind() == reflect.Array || customType.Kind() == reflect.Slice {
 			return prefix + "[]" + getTypeID(customType.Elem())
@@ -72,7 +77,7 @@ func getTypeID(customType reflect.Type) string {
 		}
 	}
 
-	return prefix + customType.String()
+	return prefix + customType.String() + suffix
 }
 
 // Given a type and a map of known type descriptions, describeType() returns the type description and typeID.
@@ -179,4 +184,28 @@ func describeStructFields(customType reflect.Type, typeMap map[string]core.TypeD
 	}
 
 	return fieldTypes
+}
+
+func reduceCustomTypeNames(endpointMap map[string]core.EndpointDescription, typeMap map[string]core.TypeDescription) (map[string]core.EndpointDescription, map[string]core.TypeDescription) {
+    customTypePattern := regexp.MustCompile("\(.*\)")
+    knownTypes := make(map[string]bool)
+    // TODO: Keep working on discovering all types in endpoint / type maps.
+    // Then, we reduce!
+    unvisitedTypes := make()
+
+    for endpointName, endpointDescription := range endpointMap {
+        _, ok := knownTypes[endpointName]
+        if !ok {
+            knownTypes[endpointName] = false
+        }
+
+        for _, fieldType := range endpointDescription {
+            customTypes := customTypePattern.FindAll(fieldType)
+            for _, customType := range customTypes {
+                knownTypes[customType] = true
+            }
+        }
+    }
+
+    visitedTypes := make(map[string]bool)
 }
