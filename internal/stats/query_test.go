@@ -28,40 +28,40 @@ func TestQueryValidationBase(test *testing.T) {
 		},
 		{
 			query:          &Query{},
-			errorSubstring: "Type was not set.",
+			errorSubstring: "Metric type was not set.",
 		},
 		{
 			query: &Query{
-				Type: APIRequestStatsType,
+				Type: MetricTypeAPIRequest,
 				Where: map[MetricAttribute]any{
-					UnknownMetricAttributeKey: "C1",
+					MetricAttributeUnknown: "C1",
 				},
 			},
 			errorSubstring: "Attribute key was empty.",
 		},
 		{
 			query: &Query{
-				Type: APIRequestStatsType,
+				Type: MetricTypeAPIRequest,
 				Where: map[MetricAttribute]any{
-					CourseIDKey: nil,
+					MetricAttributeCourseID: nil,
 				},
 			},
 			errorSubstring: "Attribute value was empty for key 'course'.",
 		},
 		{
 			query: &Query{
-				Type: APIRequestStatsType,
+				Type: MetricTypeAPIRequest,
 				Where: map[MetricAttribute]any{
-					CourseIDKey: "",
+					MetricAttributeCourseID: "",
 				},
 			},
 			errorSubstring: "Attribute value was empty for key 'course'.",
 		},
 		{
 			query: &Query{
-				Type: APIRequestStatsType,
+				Type: MetricTypeAPIRequest,
 				Where: map[MetricAttribute]any{
-					CourseIDKey: "C1",
+					MetricAttributeCourseID: "C1",
 				},
 			},
 		},

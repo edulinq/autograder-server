@@ -154,11 +154,11 @@ func sendAPIResponse(apiRequest ValidAPIRequest, response http.ResponseWriter,
 	endpoint, sender, userEmail, courseID, assignmentID, locator := getRequestInfo(apiRequest, apiErr)
 	metric := stats.Metric{
 		Timestamp: startTime,
-		Type:      stats.APIRequestStatsType,
+		Type:      stats.MetricTypeAPIRequest,
 		Value:     float64((apiResponse.EndTimestamp - startTime).ToMSecs()),
 		Attributes: map[stats.MetricAttribute]any{
-			stats.SenderKey:   sender,
-			stats.EndpointKey: endpoint,
+			stats.MetricAttributeSender:   sender,
+			stats.MetricAttributeEndpoint: endpoint,
 		},
 	}
 

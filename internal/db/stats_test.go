@@ -52,20 +52,20 @@ func (this *DBTests) DBTestStoreAPIRequestStats(test *testing.T) {
 
 	metric := stats.Metric{
 		Timestamp: timestamp.Now(),
-		Type:      stats.APIRequestStatsType,
+		Type:      stats.MetricTypeAPIRequest,
 		Value:     float64(100),
 		Attributes: map[stats.MetricAttribute]any{
-			stats.SenderKey:       "1",
-			stats.EndpointKey:     "E1",
-			stats.UserEmailKey:    "U",
-			stats.AssignmentIDKey: "A",
-			stats.CourseIDKey:     "C",
-			stats.LocatorKey:      "11",
+			stats.MetricAttributeSender:       "1",
+			stats.MetricAttributeEndpoint:     "E1",
+			stats.MetricAttributeUserEmail:    "U",
+			stats.MetricAttributeAssignmentID: "A",
+			stats.MetricAttributeCourseID:     "C",
+			stats.MetricAttributeLocator:      "11",
 		},
 	}
 
 	query := stats.Query{
-		Type: stats.APIRequestStatsType,
+		Type: stats.MetricTypeAPIRequest,
 	}
 
 	runStoreStatsTests(test, &metric, query)
@@ -77,17 +77,17 @@ func (this *DBTests) DBTestStoreTaskTimeStats(test *testing.T) {
 
 	metric := stats.Metric{
 		Timestamp: timestamp.Now(),
-		Type:      stats.TaskTimeStatsType,
+		Type:      stats.MetricTypeTaskTime,
 		Value:     float64(100),
 		Attributes: map[stats.MetricAttribute]any{
-			stats.UserEmailKey:    "U",
-			stats.AssignmentIDKey: "A",
-			stats.CourseIDKey:     "C",
+			stats.MetricAttributeUserEmail:    "U",
+			stats.MetricAttributeAssignmentID: "A",
+			stats.MetricAttributeCourseID:     "C",
 		},
 	}
 
 	query := stats.Query{
-		Type: stats.TaskTimeStatsType,
+		Type: stats.MetricTypeTaskTime,
 	}
 
 	runStoreStatsTests(test, &metric, query)
@@ -99,17 +99,17 @@ func (this *DBTests) DBTestStoreGradingTimeStats(test *testing.T) {
 
 	metric := stats.Metric{
 		Timestamp: timestamp.Now(),
-		Type:      stats.GradingTimeStatsType,
+		Type:      stats.MetricTypeGradingTime,
 		Value:     float64(100),
 		Attributes: map[stats.MetricAttribute]any{
-			stats.UserEmailKey:    "U",
-			stats.AssignmentIDKey: "A",
-			stats.CourseIDKey:     "C",
+			stats.MetricAttributeUserEmail:    "U",
+			stats.MetricAttributeAssignmentID: "A",
+			stats.MetricAttributeCourseID:     "C",
 		},
 	}
 
 	query := stats.Query{
-		Type: stats.GradingTimeStatsType,
+		Type: stats.MetricTypeGradingTime,
 	}
 
 	runStoreStatsTests(test, &metric, query)
@@ -121,17 +121,17 @@ func (this *DBTests) DBTestStoreCodeAnalysisTimeStats(test *testing.T) {
 
 	metric := stats.Metric{
 		Timestamp: timestamp.Now(),
-		Type:      stats.CodeAnalysisTimeStatsType,
+		Type:      stats.MetricTypeCodeAnalysisTime,
 		Value:     float64(100),
 		Attributes: map[stats.MetricAttribute]any{
-			stats.UserEmailKey:    "U",
-			stats.AssignmentIDKey: "A",
-			stats.CourseIDKey:     "C",
+			stats.MetricAttributeUserEmail:    "U",
+			stats.MetricAttributeAssignmentID: "A",
+			stats.MetricAttributeCourseID:     "C",
 		},
 	}
 
 	query := stats.Query{
-		Type: stats.CodeAnalysisTimeStatsType,
+		Type: stats.MetricTypeCodeAnalysisTime,
 	}
 
 	runStoreStatsTests(test, &metric, query)
@@ -180,20 +180,20 @@ func DBTestAsyncStoreMetric(test *testing.T) {
 
 	metric := stats.Metric{
 		Timestamp: timestamp.Now(),
-		Type:      stats.APIRequestStatsType,
+		Type:      stats.MetricTypeAPIRequest,
 		Value:     float64(100),
 		Attributes: map[stats.MetricAttribute]any{
-			stats.SenderKey:       "1",
-			stats.EndpointKey:     "E1",
-			stats.UserEmailKey:    "U",
-			stats.AssignmentIDKey: "A",
-			stats.CourseIDKey:     "C",
-			stats.LocatorKey:      "11",
+			stats.MetricAttributeSender:       "1",
+			stats.MetricAttributeEndpoint:     "E1",
+			stats.MetricAttributeUserEmail:    "U",
+			stats.MetricAttributeAssignmentID: "A",
+			stats.MetricAttributeCourseID:     "C",
+			stats.MetricAttributeLocator:      "11",
 		},
 	}
 
 	query := stats.Query{
-		Type: stats.APIRequestStatsType,
+		Type: stats.MetricTypeAPIRequest,
 	}
 
 	stats.AsyncStoreMetric(&metric)

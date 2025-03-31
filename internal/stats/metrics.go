@@ -13,24 +13,24 @@ type MetricType string
 
 // Keys for the attributes field inside of Metric and Query.
 const (
-	UnknownMetricAttributeKey MetricAttribute = ""
-	AssignmentIDKey                           = "assignment"
-	AnalysisTypeKey                           = "analysis-type"
-	CourseIDKey                               = "course"
-	EndpointKey                               = "endpoint"
-	LocatorKey                                = "locator"
-	SenderKey                                 = "sender"
-	TaskTypeKey                               = "task-type"
-	UserEmailKey                              = "user"
+	MetricAttributeUnknown      MetricAttribute = ""
+	MetricAttributeAssignmentID                 = "assignment"
+	MetricAttributeAnalysisType                 = "analysis-type"
+	MetricAttributeCourseID                     = "course"
+	MetricAttributeEndpoint                     = "endpoint"
+	MetricAttributeLocator                      = "locator"
+	MetricAttributeSender                       = "sender"
+	MetricAttributeTaskType                     = "task-type"
+	MetricAttributeUserEmail                    = "user"
 )
 
 // Values for the type field inside of Metric and Query.
 const (
-	UnknownMetricAttributeType MetricType = ""
-	APIRequestStatsType                   = "api-request"
-	CodeAnalysisTimeStatsType             = "code-analysis-time"
-	GradingTimeStatsType                  = "grading-time"
-	TaskTimeStatsType                     = "task-time"
+	MetricTypeUnknown          MetricType = ""
+	MetricTypeAPIRequest                  = "api-request"
+	MetricTypeCodeAnalysisTime            = "code-analysis-time"
+	MetricTypeGradingTime                 = "grading-time"
+	MetricTypeTaskTime                    = "task-time"
 )
 
 type TimestampedMetric interface {
@@ -48,24 +48,26 @@ type Metric struct {
 	Attributes map[MetricAttribute]any `json:"attributes,omitempty"`
 }
 
+// Map for quick existence check (empty value does not count).
 var knownMetricTypes = map[MetricType]bool{
-	UnknownMetricAttributeType: true,
-	APIRequestStatsType:        true,
-	CodeAnalysisTimeStatsType:  true,
-	GradingTimeStatsType:       true,
-	TaskTimeStatsType:          true,
+	MetricTypeUnknown:          false,
+	MetricTypeAPIRequest:       true,
+	MetricTypeCodeAnalysisTime: true,
+	MetricTypeGradingTime:      true,
+	MetricTypeTaskTime:         true,
 }
 
+// Map for quick existence check (empty value does not count).
 var knownMetricAttributes = map[MetricAttribute]bool{
-	UnknownMetricAttributeKey: true,
-	AssignmentIDKey:           true,
-	AnalysisTypeKey:           true,
-	CourseIDKey:               true,
-	EndpointKey:               true,
-	LocatorKey:                true,
-	SenderKey:                 true,
-	TaskTypeKey:               true,
-	UserEmailKey:              true,
+	MetricAttributeUnknown:      false,
+	MetricAttributeAssignmentID: true,
+	MetricAttributeAnalysisType: true,
+	MetricAttributeCourseID:     true,
+	MetricAttributeEndpoint:     true,
+	MetricAttributeLocator:      true,
+	MetricAttributeSender:       true,
+	MetricAttributeTaskType:     true,
+	MetricAttributeUserEmail:    true,
 }
 
 func (this Metric) GetTimestamp() timestamp.Timestamp {
@@ -111,7 +113,7 @@ func validateAttributeMap(attributes map[MetricAttribute]any) error {
 	}
 
 	for key, value := range attributes {
-		if key == UnknownMetricAttributeKey {
+		if key == MetricAttributeUnknown {
 			return fmt.Errorf("Attribute key was empty.")
 		}
 
@@ -128,12 +130,12 @@ func validateAttributeMap(attributes map[MetricAttribute]any) error {
 }
 
 func validateType(metricType MetricType) error {
-	if metricType == UnknownMetricAttributeType {
-		return fmt.Errorf("Type was not set.")
+	if metricType == MetricTypeUnknown {
+		return fmt.Errorf("Metric type was not set.")
 	}
 
 	if !knownMetricTypes[metricType] {
-		return fmt.Errorf("Invalid metric type: '%v'.", metricType)
+		return fmt.Errorf("Unknown metric type: '%v'.", metricType)
 	}
 
 	return nil
@@ -161,40 +163,40 @@ func AsyncStoreMetric(metric *Metric) {
 	}
 }
 
-func (this *Metric) setAttrIfNotEmpty(key MetricAttribute, value string) {
+func (this *Metric) setAttributeIfNotEmpty(key MetricAttribute, value string) {
 	if value != "" {
 		this.Attributes[key] = value
 	}
 }
 
 func (this *Metric) SetAssignmentID(id string) {
-	this.setAttrIfNotEmpty(AssignmentIDKey, id)
+	this.setAttributeIfNotEmpty(MetricAttributeAssignmentID, id)
 }
 
 func (this *Metric) SetAnalysisType(analysis string) {
-	this.setAttrIfNotEmpty(AnalysisTypeKey, analysis)
+	this.setAttributeIfNotEmpty(MetricAttributeAnalysisType, analysis)
 }
 
 func (this *Metric) SetCourseID(courseID string) {
-	this.setAttrIfNotEmpty(CourseIDKey, courseID)
+	this.setAttributeIfNotEmpty(MetricAttributeCourseID, courseID)
 }
 
 func (this *Metric) SetEndpoint(endpoint string) {
-	this.setAttrIfNotEmpty(EndpointKey, endpoint)
+	this.setAttributeIfNotEmpty(MetricAttributeEndpoint, endpoint)
 }
 
 func (this *Metric) SetLocator(locator string) {
-	this.setAttrIfNotEmpty(LocatorKey, locator)
+	this.setAttributeIfNotEmpty(MetricAttributeLocator, locator)
 }
 
 func (this *Metric) SetSender(sender string) {
-	this.setAttrIfNotEmpty(SenderKey, sender)
+	this.setAttributeIfNotEmpty(MetricAttributeSender, sender)
 }
 
 func (this *Metric) SetTaskType(taskType string) {
-	this.setAttrIfNotEmpty(TaskTypeKey, taskType)
+	this.setAttributeIfNotEmpty(MetricAttributeTaskType, taskType)
 }
 
 func (this *Metric) SetUserEmail(email string) {
-	this.setAttrIfNotEmpty(UserEmailKey, email)
+	this.setAttributeIfNotEmpty(MetricAttributeUserEmail, email)
 }

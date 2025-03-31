@@ -25,9 +25,9 @@ func TestQueryContextCourse(test *testing.T) {
 		{
 			email: "course-admin",
 			query: &stats.Query{
-				Type: stats.GradingTimeStatsType,
+				Type: stats.MetricTypeGradingTime,
 				Where: map[stats.MetricAttribute]any{
-					stats.CourseIDKey: db.TEST_COURSE_ID,
+					stats.MetricAttributeCourseID: db.TEST_COURSE_ID,
 				},
 			},
 			expectedValues: []int{100},
@@ -35,9 +35,9 @@ func TestQueryContextCourse(test *testing.T) {
 		{
 			email: "course-admin",
 			query: &stats.Query{
-				Type: stats.GradingTimeStatsType,
+				Type: stats.MetricTypeGradingTime,
 				Where: map[stats.MetricAttribute]any{
-					stats.CourseIDKey: "zzz",
+					stats.MetricAttributeCourseID: "zzz",
 				},
 			},
 			expectedValues: []int{100},
@@ -47,9 +47,9 @@ func TestQueryContextCourse(test *testing.T) {
 		{
 			email: "course-admin",
 			query: &stats.Query{
-				Type: stats.TaskTimeStatsType,
+				Type: stats.MetricTypeTaskTime,
 				Where: map[stats.MetricAttribute]any{
-					stats.CourseIDKey: db.TEST_COURSE_ID,
+					stats.MetricAttributeCourseID: db.TEST_COURSE_ID,
 				},
 			},
 			expectedValues: []int{100},
@@ -57,9 +57,9 @@ func TestQueryContextCourse(test *testing.T) {
 		{
 			email: "course-admin",
 			query: &stats.Query{
-				Type: stats.TaskTimeStatsType,
+				Type: stats.MetricTypeTaskTime,
 				Where: map[stats.MetricAttribute]any{
-					stats.CourseIDKey: "zzz",
+					stats.MetricAttributeCourseID: "zzz",
 				},
 			},
 			expectedValues: []int{100},
@@ -69,9 +69,9 @@ func TestQueryContextCourse(test *testing.T) {
 		{
 			email: "course-admin",
 			query: &stats.Query{
-				Type: stats.CodeAnalysisTimeStatsType,
+				Type: stats.MetricTypeCodeAnalysisTime,
 				Where: map[stats.MetricAttribute]any{
-					stats.CourseIDKey: db.TEST_COURSE_ID,
+					stats.MetricAttributeCourseID: db.TEST_COURSE_ID,
 				},
 			},
 			expectedValues: []int{100},
@@ -79,9 +79,9 @@ func TestQueryContextCourse(test *testing.T) {
 		{
 			email: "course-admin",
 			query: &stats.Query{
-				Type: stats.CodeAnalysisTimeStatsType,
+				Type: stats.MetricTypeCodeAnalysisTime,
 				Where: map[stats.MetricAttribute]any{
-					stats.CourseIDKey: "zzz",
+					stats.MetricAttributeCourseID: "zzz",
 				},
 			},
 			expectedValues: []int{100},
@@ -91,7 +91,7 @@ func TestQueryContextCourse(test *testing.T) {
 		{
 			email: "course-student",
 			query: &stats.Query{
-				Type: stats.GradingTimeStatsType,
+				Type: stats.MetricTypeGradingTime,
 			},
 			permError: true,
 		},
@@ -153,64 +153,64 @@ var testRecords []*stats.Metric = []*stats.Metric{
 	// Context course metrics.
 	&stats.Metric{
 		Timestamp: timestamp.FromMSecs(100),
-		Type:      stats.GradingTimeStatsType,
+		Type:      stats.MetricTypeGradingTime,
 		Value:     float64(100),
 		Attributes: map[stats.MetricAttribute]any{
-			stats.CourseIDKey:     db.TEST_COURSE_ID,
-			stats.AssignmentIDKey: "A1",
-			stats.UserEmailKey:    "U1",
+			stats.MetricAttributeCourseID:     db.TEST_COURSE_ID,
+			stats.MetricAttributeAssignmentID: "A1",
+			stats.MetricAttributeUserEmail:    "U1",
 		},
 	},
 	&stats.Metric{
 		Timestamp: timestamp.FromMSecs(100),
-		Type:      stats.TaskTimeStatsType,
+		Type:      stats.MetricTypeTaskTime,
 		Value:     float64(100),
 		Attributes: map[stats.MetricAttribute]any{
-			stats.CourseIDKey:     db.TEST_COURSE_ID,
-			stats.AssignmentIDKey: "A1",
-			stats.UserEmailKey:    "U1",
+			stats.MetricAttributeCourseID:     db.TEST_COURSE_ID,
+			stats.MetricAttributeAssignmentID: "A1",
+			stats.MetricAttributeUserEmail:    "U1",
 		},
 	},
 	&stats.Metric{
 		Timestamp: timestamp.FromMSecs(100),
-		Type:      stats.CodeAnalysisTimeStatsType,
+		Type:      stats.MetricTypeCodeAnalysisTime,
 		Value:     float64(100),
 		Attributes: map[stats.MetricAttribute]any{
-			stats.CourseIDKey:     db.TEST_COURSE_ID,
-			stats.AssignmentIDKey: "A1",
-			stats.UserEmailKey:    "U1",
+			stats.MetricAttributeCourseID:     db.TEST_COURSE_ID,
+			stats.MetricAttributeAssignmentID: "A1",
+			stats.MetricAttributeUserEmail:    "U1",
 		},
 	},
 
 	// Non-context course metrics.
 	&stats.Metric{
 		Timestamp: timestamp.FromMSecs(300),
-		Type:      stats.GradingTimeStatsType,
+		Type:      stats.MetricTypeGradingTime,
 		Value:     float64(300),
 		Attributes: map[stats.MetricAttribute]any{
-			stats.CourseIDKey:     "C1",
-			stats.AssignmentIDKey: "A1",
-			stats.UserEmailKey:    "U1",
+			stats.MetricAttributeCourseID:     "C1",
+			stats.MetricAttributeAssignmentID: "A1",
+			stats.MetricAttributeUserEmail:    "U1",
 		},
 	},
 	&stats.Metric{
 		Timestamp: timestamp.FromMSecs(300),
-		Type:      stats.TaskTimeStatsType,
+		Type:      stats.MetricTypeTaskTime,
 		Value:     float64(300),
 		Attributes: map[stats.MetricAttribute]any{
-			stats.CourseIDKey:     "C1",
-			stats.AssignmentIDKey: "A1",
-			stats.UserEmailKey:    "U1",
+			stats.MetricAttributeCourseID:     "C1",
+			stats.MetricAttributeAssignmentID: "A1",
+			stats.MetricAttributeUserEmail:    "U1",
 		},
 	},
 	&stats.Metric{
 		Timestamp: timestamp.FromMSecs(300),
-		Type:      stats.CodeAnalysisTimeStatsType,
+		Type:      stats.MetricTypeCodeAnalysisTime,
 		Value:     float64(300),
 		Attributes: map[stats.MetricAttribute]any{
-			stats.CourseIDKey:     "C1",
-			stats.AssignmentIDKey: "A1",
-			stats.UserEmailKey:    "U1",
+			stats.MetricAttributeCourseID:     "C1",
+			stats.MetricAttributeAssignmentID: "A1",
+			stats.MetricAttributeUserEmail:    "U1",
 		},
 	},
 }

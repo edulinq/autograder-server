@@ -114,16 +114,14 @@ func Grade(ctx context.Context, assignment *model.Assignment, submissionPath str
 
 	metric := stats.Metric{
 		Timestamp: startTimestamp,
-		Type:      stats.GradingTimeStatsType,
+		Type:      stats.MetricTypeGradingTime,
 		Value:     float64((endTimestamp - startTimestamp).ToMSecs()),
 		Attributes: map[stats.MetricAttribute]any{
-			stats.CourseIDKey: gradingInfo.CourseID,
+			stats.MetricAttributeUserEmail:    gradingInfo.User,
+			stats.MetricAttributeCourseID:     gradingInfo.CourseID,
+			stats.MetricAttributeAssignmentID: gradingInfo.AssignmentID,
 		},
 	}
-
-	// Add optional fields if non-empty.
-	metric.SetUserEmail(gradingInfo.User)
-	metric.SetAssignmentID(gradingInfo.AssignmentID)
 
 	// Store stats for this grading (when everything is successful).
 	stats.AsyncStoreMetric(&metric)

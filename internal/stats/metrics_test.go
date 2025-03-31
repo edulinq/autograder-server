@@ -22,22 +22,35 @@ func TestMetricValidationBase(test *testing.T) {
 		{
 			metric: &Metric{
 				Timestamp: timestamp.FromMSecs(100),
-				Type:      UnknownMetricAttributeType,
+				Type:      MetricTypeUnknown,
 			},
-			errorSubstring: "Type was not set.",
+			errorSubstring: "Metric type was not set.",
 		},
 		{
 			metric: &Metric{
-				Type: APIRequestStatsType,
+				Timestamp: timestamp.FromMSecs(100),
+				Type:      MetricType(""),
+			},
+			errorSubstring: "Metric type was not set.",
+		},
+		{
+			metric: &Metric{
+				Timestamp: timestamp.FromMSecs(100),
+			},
+			errorSubstring: "Metric type was not set.",
+		},
+		{
+			metric: &Metric{
+				Type: MetricTypeAPIRequest,
 			},
 			errorSubstring: "Metric timestamp was not set.",
 		},
 		{
 			metric: &Metric{
 				Timestamp: timestamp.FromMSecs(100),
-				Type:      APIRequestStatsType,
+				Type:      MetricTypeAPIRequest,
 				Attributes: map[MetricAttribute]any{
-					UnknownMetricAttributeKey: "",
+					MetricAttributeUnknown: "",
 				},
 			},
 			errorSubstring: "Attribute key was empty.",
@@ -45,9 +58,19 @@ func TestMetricValidationBase(test *testing.T) {
 		{
 			metric: &Metric{
 				Timestamp: timestamp.FromMSecs(100),
-				Type:      APIRequestStatsType,
+				Type:      MetricTypeAPIRequest,
 				Attributes: map[MetricAttribute]any{
-					CourseIDKey: nil,
+					MetricAttribute(""): "",
+				},
+			},
+			errorSubstring: "Attribute key was empty.",
+		},
+		{
+			metric: &Metric{
+				Timestamp: timestamp.FromMSecs(100),
+				Type:      MetricTypeAPIRequest,
+				Attributes: map[MetricAttribute]any{
+					MetricAttributeCourseID: nil,
 				},
 			},
 			errorSubstring: "Attribute value was empty for key 'course'.",
@@ -55,9 +78,9 @@ func TestMetricValidationBase(test *testing.T) {
 		{
 			metric: &Metric{
 				Timestamp: timestamp.FromMSecs(100),
-				Type:      APIRequestStatsType,
+				Type:      MetricTypeAPIRequest,
 				Attributes: map[MetricAttribute]any{
-					CourseIDKey: "",
+					MetricAttributeCourseID: "",
 				},
 			},
 			errorSubstring: "Attribute value was empty for key 'course'.",
@@ -65,7 +88,7 @@ func TestMetricValidationBase(test *testing.T) {
 		{
 			metric: &Metric{
 				Timestamp: timestamp.FromMSecs(100),
-				Type:      APIRequestStatsType,
+				Type:      MetricTypeAPIRequest,
 			},
 		},
 	}

@@ -103,9 +103,9 @@ func TestPairwiseAnalysisFake(test *testing.T) {
 	testPairwise(test, ids, expected, len(expected))
 
 	query := stats.Query{
-		Type: stats.CodeAnalysisTimeStatsType,
+		Type: stats.MetricTypeCodeAnalysisTime,
 		Where: map[stats.MetricAttribute]any{
-			stats.CourseIDKey: "course101",
+			stats.MetricAttributeCourseID: "course101",
 		},
 	}
 
@@ -118,13 +118,13 @@ func TestPairwiseAnalysisFake(test *testing.T) {
 	expectedStats := []*stats.Metric{
 		&stats.Metric{
 			Timestamp: timestamp.Zero(),
-			Type:      stats.CodeAnalysisTimeStatsType,
+			Type:      stats.MetricTypeCodeAnalysisTime,
 			Value:     float64(3), // 1 for each run of the fake engine.
 			Attributes: map[stats.MetricAttribute]any{
-				stats.AnalysisTypeKey: "pairwise",
-				stats.CourseIDKey:     "course101",
-				stats.AssignmentIDKey: "hw0",
-				stats.UserEmailKey:    "server-admin@test.edulinq.org",
+				stats.MetricAttributeAnalysisType: "pairwise",
+				stats.MetricAttributeCourseID:     "course101",
+				stats.MetricAttributeAssignmentID: "hw0",
+				stats.MetricAttributeUserEmail:    "server-admin@test.edulinq.org",
 			},
 		},
 	}
