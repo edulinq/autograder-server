@@ -60,9 +60,9 @@ func TestIndividualAnalysisBase(test *testing.T) {
 	testIndividual(test, ids, expected, len(expected))
 
 	query := stats.Query{
-		Type: stats.Code_Analysis_Time_Stats_Type,
+		Type: stats.CodeAnalysisTimeStatsType,
 		Where: map[stats.MetricAttribute]any{
-			stats.Course_ID_Key: db.TEST_COURSE_ID,
+			stats.CourseIDKey: db.TEST_COURSE_ID,
 		},
 	}
 
@@ -75,13 +75,13 @@ func TestIndividualAnalysisBase(test *testing.T) {
 	expectedStats := []*stats.Metric{
 		&stats.Metric{
 			Timestamp: timestamp.Zero(),
-			Type:      stats.Code_Analysis_Time_Stats_Type,
+			Type:      stats.CodeAnalysisTimeStatsType,
 			Value:     0,
 			Attributes: map[stats.MetricAttribute]any{
-				stats.Analysis_Type_Key: "individual",
-				stats.Course_ID_Key:     "course101",
-				stats.Assignment_ID_Key: "hw0",
-				stats.User_Email_Key:    "server-admin@test.edulinq.org",
+				stats.AnalysisTypeKey: "individual",
+				stats.CourseIDKey:     "course101",
+				stats.AssignmentIDKey: "hw0",
+				stats.UserEmailKey:    "server-admin@test.edulinq.org",
 			},
 		},
 	}

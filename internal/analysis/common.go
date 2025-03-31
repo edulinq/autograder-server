@@ -156,11 +156,11 @@ func collectAnalysisStats(fullSubmissionIDs []string, totalRunTime int64, initia
 	for courseID, assignmentID := range seenIdentifiers {
 		metric := stats.Metric{
 			Timestamp: now,
-			Type:      stats.Code_Analysis_Time_Stats_Type,
+			Type:      stats.CodeAnalysisTimeStatsType,
 			Value:     float64(totalRunTime),
 			Attributes: map[stats.MetricAttribute]any{
-				stats.Analysis_Type_Key: analysisType,
-				stats.Course_ID_Key:     courseID,
+				stats.AnalysisTypeKey: analysisType,
+				stats.CourseIDKey:     courseID,
 			},
 		}
 

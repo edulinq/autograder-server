@@ -16,18 +16,18 @@ func TestQueryContextCourse(test *testing.T) {
 	defer db.ResetForTesting()
 
 	testCases := []struct {
-		email           string
-		expectedLocator string
-		query           *stats.Query
-		expectedValues  []int
+		email          string
+		query          *stats.Query
+		expectedValues []int
+		permError      bool
 	}{
 		// Grading Time Stats.
 		{
 			email: "course-admin",
 			query: &stats.Query{
-				Type: stats.Grading_Time_Stats_Type,
+				Type: stats.GradingTimeStatsType,
 				Where: map[stats.MetricAttribute]any{
-					stats.Course_ID_Key: db.TEST_COURSE_ID,
+					stats.CourseIDKey: db.TEST_COURSE_ID,
 				},
 			},
 			expectedValues: []int{100},
@@ -35,9 +35,9 @@ func TestQueryContextCourse(test *testing.T) {
 		{
 			email: "course-admin",
 			query: &stats.Query{
-				Type: stats.Grading_Time_Stats_Type,
+				Type: stats.GradingTimeStatsType,
 				Where: map[stats.MetricAttribute]any{
-					stats.Course_ID_Key: "zzz",
+					stats.CourseIDKey: "zzz",
 				},
 			},
 			expectedValues: []int{100},
@@ -47,9 +47,9 @@ func TestQueryContextCourse(test *testing.T) {
 		{
 			email: "course-admin",
 			query: &stats.Query{
-				Type: stats.Task_Time_Stats_Type,
+				Type: stats.TaskTimeStatsType,
 				Where: map[stats.MetricAttribute]any{
-					stats.Course_ID_Key: db.TEST_COURSE_ID,
+					stats.CourseIDKey: db.TEST_COURSE_ID,
 				},
 			},
 			expectedValues: []int{100},
@@ -57,9 +57,9 @@ func TestQueryContextCourse(test *testing.T) {
 		{
 			email: "course-admin",
 			query: &stats.Query{
-				Type: stats.Task_Time_Stats_Type,
+				Type: stats.TaskTimeStatsType,
 				Where: map[stats.MetricAttribute]any{
-					stats.Course_ID_Key: "zzz",
+					stats.CourseIDKey: "zzz",
 				},
 			},
 			expectedValues: []int{100},
@@ -69,9 +69,9 @@ func TestQueryContextCourse(test *testing.T) {
 		{
 			email: "course-admin",
 			query: &stats.Query{
-				Type: stats.Code_Analysis_Time_Stats_Type,
+				Type: stats.CodeAnalysisTimeStatsType,
 				Where: map[stats.MetricAttribute]any{
-					stats.Course_ID_Key: db.TEST_COURSE_ID,
+					stats.CourseIDKey: db.TEST_COURSE_ID,
 				},
 			},
 			expectedValues: []int{100},
@@ -79,39 +79,21 @@ func TestQueryContextCourse(test *testing.T) {
 		{
 			email: "course-admin",
 			query: &stats.Query{
-				Type: stats.Code_Analysis_Time_Stats_Type,
+				Type: stats.CodeAnalysisTimeStatsType,
 				Where: map[stats.MetricAttribute]any{
-					stats.Course_ID_Key: "zzz",
+					stats.CourseIDKey: "zzz",
 				},
 			},
 			expectedValues: []int{100},
 		},
 
-		// Grading Time Stats, Error
+		// Perm Error
 		{
-			email:           "course-user",
-			expectedLocator: "-017",
+			email: "course-student",
 			query: &stats.Query{
-				Type: stats.Grading_Time_Stats_Type,
+				Type: stats.GradingTimeStatsType,
 			},
-		},
-
-		// Task Time Stats, Error
-		{
-			email:           "course-user",
-			expectedLocator: "-017",
-			query: &stats.Query{
-				Type: stats.Task_Time_Stats_Type,
-			},
-		},
-
-		// Code Analysis Time Stats, Error
-		{
-			email:           "course-user",
-			expectedLocator: "-017",
-			query: &stats.Query{
-				Type: stats.Task_Time_Stats_Type,
-			},
+			permError: true,
 		},
 	}
 
@@ -128,9 +110,11 @@ func TestQueryContextCourse(test *testing.T) {
 
 		response := core.SendTestAPIRequestFull(test, `courses/stats/query`, fields, nil, testCase.email)
 		if !response.Success {
-			if testCase.expectedLocator != "" {
-				if testCase.expectedLocator != response.Locator {
-					test.Errorf("Case %d: Incorrect locator. Expected: '%s', Actual: '%s'.", i, testCase.expectedLocator, response.Locator)
+			if testCase.permError {
+				expectedLocator := "-020"
+				if response.Locator != expectedLocator {
+					test.Errorf("Case %d: Incorrect error returned. Expected '%s', found '%s'.",
+						i, expectedLocator, response.Locator)
 				}
 			} else {
 				test.Errorf("Case %d: Response is not a success when it should be: '%v'.", i, response)
@@ -139,8 +123,8 @@ func TestQueryContextCourse(test *testing.T) {
 			continue
 		}
 
-		if testCase.expectedLocator != "" {
-			test.Errorf("Case %d: Unexpected success when locator '%s' was expected.", i, testCase.expectedLocator)
+		if testCase.permError {
+			test.Errorf("Case %d: Did not get an expected permissions error.", i)
 			continue
 		}
 
@@ -169,64 +153,64 @@ var testRecords []*stats.Metric = []*stats.Metric{
 	// Context course metrics.
 	&stats.Metric{
 		Timestamp: timestamp.FromMSecs(100),
-		Type:      stats.Grading_Time_Stats_Type,
+		Type:      stats.GradingTimeStatsType,
 		Value:     float64(100),
 		Attributes: map[stats.MetricAttribute]any{
-			stats.Course_ID_Key:     db.TEST_COURSE_ID,
-			stats.Assignment_ID_Key: "A1",
-			stats.User_Email_Key:    "U1",
+			stats.CourseIDKey:     db.TEST_COURSE_ID,
+			stats.AssignmentIDKey: "A1",
+			stats.UserEmailKey:    "U1",
 		},
 	},
 	&stats.Metric{
 		Timestamp: timestamp.FromMSecs(100),
-		Type:      stats.Task_Time_Stats_Type,
+		Type:      stats.TaskTimeStatsType,
 		Value:     float64(100),
 		Attributes: map[stats.MetricAttribute]any{
-			stats.Course_ID_Key:     db.TEST_COURSE_ID,
-			stats.Assignment_ID_Key: "A1",
-			stats.User_Email_Key:    "U1",
+			stats.CourseIDKey:     db.TEST_COURSE_ID,
+			stats.AssignmentIDKey: "A1",
+			stats.UserEmailKey:    "U1",
 		},
 	},
 	&stats.Metric{
 		Timestamp: timestamp.FromMSecs(100),
-		Type:      stats.Code_Analysis_Time_Stats_Type,
+		Type:      stats.CodeAnalysisTimeStatsType,
 		Value:     float64(100),
 		Attributes: map[stats.MetricAttribute]any{
-			stats.Course_ID_Key:     db.TEST_COURSE_ID,
-			stats.Assignment_ID_Key: "A1",
-			stats.User_Email_Key:    "U1",
+			stats.CourseIDKey:     db.TEST_COURSE_ID,
+			stats.AssignmentIDKey: "A1",
+			stats.UserEmailKey:    "U1",
 		},
 	},
 
 	// Non-context course metrics.
 	&stats.Metric{
 		Timestamp: timestamp.FromMSecs(300),
-		Type:      stats.Grading_Time_Stats_Type,
+		Type:      stats.GradingTimeStatsType,
 		Value:     float64(300),
 		Attributes: map[stats.MetricAttribute]any{
-			stats.Course_ID_Key:     "C1",
-			stats.Assignment_ID_Key: "A1",
-			stats.User_Email_Key:    "U1",
+			stats.CourseIDKey:     "C1",
+			stats.AssignmentIDKey: "A1",
+			stats.UserEmailKey:    "U1",
 		},
 	},
 	&stats.Metric{
 		Timestamp: timestamp.FromMSecs(300),
-		Type:      stats.Task_Time_Stats_Type,
+		Type:      stats.TaskTimeStatsType,
 		Value:     float64(300),
 		Attributes: map[stats.MetricAttribute]any{
-			stats.Course_ID_Key:     "C1",
-			stats.Assignment_ID_Key: "A1",
-			stats.User_Email_Key:    "U1",
+			stats.CourseIDKey:     "C1",
+			stats.AssignmentIDKey: "A1",
+			stats.UserEmailKey:    "U1",
 		},
 	},
 	&stats.Metric{
 		Timestamp: timestamp.FromMSecs(300),
-		Type:      stats.Code_Analysis_Time_Stats_Type,
+		Type:      stats.CodeAnalysisTimeStatsType,
 		Value:     float64(300),
 		Attributes: map[stats.MetricAttribute]any{
-			stats.Course_ID_Key:     "C1",
-			stats.Assignment_ID_Key: "A1",
-			stats.User_Email_Key:    "U1",
+			stats.CourseIDKey:     "C1",
+			stats.AssignmentIDKey: "A1",
+			stats.UserEmailKey:    "U1",
 		},
 	},
 }

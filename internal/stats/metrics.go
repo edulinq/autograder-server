@@ -13,27 +13,25 @@ type MetricType string
 
 // Keys for the attributes field inside of Metric and Query.
 const (
-	Unknown_Metric_Attribute_Key MetricAttribute = ""
-	Assignment_ID_Key                            = "assignment"
-	Analysis_Type_Key                            = "analysis-type"
-	Course_ID_Key                                = "course"
-	Endpoint_Key                                 = "endpoint"
-	Locator_Key                                  = "locator"
-	Sender_Key                                   = "sender"
-	Task_Type_Key                                = "task-type"
-	User_Email_Key                               = "user"
+	UnknownMetricAttributeKey MetricAttribute = ""
+	AssignmentIDKey                           = "assignment"
+	AnalysisTypeKey                           = "analysis-type"
+	CourseIDKey                               = "course"
+	EndpointKey                               = "endpoint"
+	LocatorKey                                = "locator"
+	SenderKey                                 = "sender"
+	TaskTypeKey                               = "task-type"
+	UserEmailKey                              = "user"
 )
 
 // Values for the type field inside of Metric and Query.
 const (
-	Unknown_Metric_Attribute_Type MetricType = ""
-	API_Request_Stats_Type                   = "api-request"
-	Code_Analysis_Time_Stats_Type            = "code-analysis-time"
-	Grading_Time_Stats_Type                  = "grading-time"
-	Task_Time_Stats_Type                     = "task-time"
+	UnknownMetricAttributeType MetricType = ""
+	APIRequestStatsType                   = "api-request"
+	CodeAnalysisTimeStatsType             = "code-analysis-time"
+	GradingTimeStatsType                  = "grading-time"
+	TaskTimeStatsType                     = "task-time"
 )
-
-const ATTRIBUTES_KEY = "attributes"
 
 type TimestampedMetric interface {
 	GetTimestamp() timestamp.Timestamp
@@ -50,15 +48,28 @@ type Metric struct {
 	Attributes map[MetricAttribute]any `json:"attributes,omitempty"`
 }
 
-func (this Metric) GetTimestamp() timestamp.Timestamp {
-	return this.Timestamp
+var knownMetricTypes = map[MetricType]bool{
+	UnknownMetricAttributeType: true,
+	APIRequestStatsType:        true,
+	CodeAnalysisTimeStatsType:  true,
+	GradingTimeStatsType:       true,
+	TaskTimeStatsType:          true,
 }
 
-func (this *Metric) addAttr(attrs *[]*log.Attr, key MetricAttribute) {
-	val, ok := this.Attributes[key]
-	if ok {
-		*attrs = append(*attrs, log.NewAttr(string(key), val))
-	}
+var knownMetricAttributes = map[MetricAttribute]bool{
+	UnknownMetricAttributeKey: true,
+	AssignmentIDKey:           true,
+	AnalysisTypeKey:           true,
+	CourseIDKey:               true,
+	EndpointKey:               true,
+	LocatorKey:                true,
+	SenderKey:                 true,
+	TaskTypeKey:               true,
+	UserEmailKey:              true,
+}
+
+func (this Metric) GetTimestamp() timestamp.Timestamp {
+	return this.Timestamp
 }
 
 func (this *Metric) LogValue() []*log.Attr {
@@ -66,14 +77,9 @@ func (this *Metric) LogValue() []*log.Attr {
 		log.NewAttr("metric-type", this.Type),
 	}
 
-	this.addAttr(&attrs, Assignment_ID_Key)
-	this.addAttr(&attrs, Analysis_Type_Key)
-	this.addAttr(&attrs, Course_ID_Key)
-	this.addAttr(&attrs, Endpoint_Key)
-	this.addAttr(&attrs, Locator_Key)
-	this.addAttr(&attrs, Sender_Key)
-	this.addAttr(&attrs, Task_Type_Key)
-	this.addAttr(&attrs, User_Email_Key)
+	for key, value := range this.Attributes {
+		attrs = append(attrs, log.NewAttr(string(key), value))
+	}
 
 	return attrs
 }
@@ -83,8 +89,9 @@ func (this *Metric) Validate() error {
 		return fmt.Errorf("No metric was given.")
 	}
 
-	if this.Type == Unknown_Metric_Attribute_Type {
-		return fmt.Errorf("Metric attribute was not set.")
+	err := validateType(this.Type)
+	if err != nil {
+		return err
 	}
 
 	if this.Timestamp.IsZero() {
@@ -95,14 +102,38 @@ func (this *Metric) Validate() error {
 		this.Attributes = make(map[MetricAttribute]any)
 	}
 
-	for key, value := range this.Attributes {
-		if key == Unknown_Metric_Attribute_Key {
-			return fmt.Errorf("Metric attribute key was empty.")
+	return validateAttributeMap(this.Attributes)
+}
+
+func validateAttributeMap(attributes map[MetricAttribute]any) error {
+	if attributes == nil {
+		return nil
+	}
+
+	for key, value := range attributes {
+		if key == UnknownMetricAttributeKey {
+			return fmt.Errorf("Attribute key was empty.")
+		}
+
+		if !knownMetricAttributes[key] {
+			return fmt.Errorf("Invalid attribute: '%v'.", key)
 		}
 
 		if value == nil || value == "" {
-			return fmt.Errorf("Metric attribute value was empty.")
+			return fmt.Errorf("Attribute value was empty for key '%v'.", key)
 		}
+	}
+
+	return nil
+}
+
+func validateType(metricType MetricType) error {
+	if metricType == UnknownMetricAttributeType {
+		return fmt.Errorf("Type was not set.")
+	}
+
+	if !knownMetricTypes[metricType] {
+		return fmt.Errorf("Invalid metric type: '%v'.", metricType)
 	}
 
 	return nil
@@ -137,33 +168,33 @@ func (this *Metric) setAttrIfNotEmpty(key MetricAttribute, value string) {
 }
 
 func (this *Metric) SetAssignmentID(id string) {
-	this.setAttrIfNotEmpty(Assignment_ID_Key, id)
+	this.setAttrIfNotEmpty(AssignmentIDKey, id)
 }
 
 func (this *Metric) SetAnalysisType(analysis string) {
-	this.setAttrIfNotEmpty(Analysis_Type_Key, analysis)
+	this.setAttrIfNotEmpty(AnalysisTypeKey, analysis)
 }
 
 func (this *Metric) SetCourseID(courseID string) {
-	this.setAttrIfNotEmpty(Course_ID_Key, courseID)
+	this.setAttrIfNotEmpty(CourseIDKey, courseID)
 }
 
 func (this *Metric) SetEndpoint(endpoint string) {
-	this.setAttrIfNotEmpty(Endpoint_Key, endpoint)
+	this.setAttrIfNotEmpty(EndpointKey, endpoint)
 }
 
 func (this *Metric) SetLocator(locator string) {
-	this.setAttrIfNotEmpty(Locator_Key, locator)
+	this.setAttrIfNotEmpty(LocatorKey, locator)
 }
 
 func (this *Metric) SetSender(sender string) {
-	this.setAttrIfNotEmpty(Sender_Key, sender)
+	this.setAttrIfNotEmpty(SenderKey, sender)
 }
 
 func (this *Metric) SetTaskType(taskType string) {
-	this.setAttrIfNotEmpty(Task_Type_Key, taskType)
+	this.setAttrIfNotEmpty(TaskTypeKey, taskType)
 }
 
 func (this *Metric) SetUserEmail(email string) {
-	this.setAttrIfNotEmpty(User_Email_Key, email)
+	this.setAttrIfNotEmpty(UserEmailKey, email)
 }

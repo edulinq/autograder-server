@@ -43,41 +43,24 @@ func (this *Query) Validate() error {
 		return fmt.Errorf("No query was given.")
 	}
 
-	if this.Type == Unknown_Metric_Attribute_Type {
-		return fmt.Errorf("Query type was not set.")
+	err := validateType(this.Type)
+	if err != nil {
+		return err
 	}
 
 	if this.Where == nil {
 		this.Where = make(map[MetricAttribute]any)
 	}
 
-	for field, value := range this.Where {
-		if field == Unknown_Metric_Attribute_Key {
-			return fmt.Errorf("Query attribute field was empty.")
-		}
-
-		if value == nil || value == "" {
-			return fmt.Errorf("Query attribute value was empty.")
-		}
-	}
-
-	return nil
+	return validateAttributeMap(this.Where)
 }
 
 func (this *Query) Match(metric *Metric) bool {
-	if this == nil {
-		return false
-	}
-
 	if this.Type != metric.Type {
 		return false
 	}
 
 	for key, value := range this.Where {
-		if value == "" {
-			return false
-		}
-
 		fieldValue, exists := metric.Attributes[key]
 		if !exists || (fieldValue != value) {
 			return false
