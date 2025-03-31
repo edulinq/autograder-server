@@ -30,12 +30,12 @@ const (
 	MetricTypeAPIRequest                  = "api-request"
 	MetricTypeCodeAnalysisTime            = "code-analysis-time"
 	MetricTypeGradingTime                 = "grading-time"
+	MetricTypeSystemCPU                   = "cpu-usage"
+	MetricTypeSystemMemory                = "mem-usage"
+	MetricTypeSystemNetworkIn             = "net-in"
+	MetricTypeSystemNetworkOut            = "net-out"
 	MetricTypeTaskTime                    = "task-time"
 )
-
-type TimestampedMetric interface {
-	GetTimestamp() timestamp.Timestamp
-}
 
 type Metric struct {
 	Timestamp timestamp.Timestamp `json:"timestamp"`
@@ -54,6 +54,10 @@ var knownMetricTypes = map[MetricType]bool{
 	MetricTypeAPIRequest:       true,
 	MetricTypeCodeAnalysisTime: true,
 	MetricTypeGradingTime:      true,
+	MetricTypeSystemCPU:        true,
+	MetricTypeSystemMemory:     true,
+	MetricTypeSystemNetworkIn:  true,
+	MetricTypeSystemNetworkOut: true,
 	MetricTypeTaskTime:         true,
 }
 

@@ -2,6 +2,7 @@ package stats
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"sync"
 	"time"
@@ -26,13 +27,13 @@ var (
 	lastBytesReceived uint64 = 0
 )
 
-type SystemMetrics struct {
-	Metric
-
-	CPUPercent       float64 `json:"cpu-percent"`
-	MemPercent       float64 `json:"mem-percent"`
-	NetBytesSent     uint64  `json:"net-bytes-sent"`
-	NetBytesReceived uint64  `json:"net-bytes-received"`
+// Just a simple container for holding system stats (not a Metric).
+type SystemStatsContainer struct {
+	Timestamp        timestamp.Timestamp
+	CPUPercent       float64
+	MemPercent       float64
+	NetBytesSent     uint64
+	NetBytesReceived uint64
 }
 
 func collectSystemStats(systemIntervalMS int) {
@@ -58,7 +59,7 @@ func collectSystemStats(systemIntervalMS int) {
 				return
 			}
 
-			stats, err := getSystemMetrics(systemIntervalMS)
+			statsContainer, err := getSystemMetrics(systemIntervalMS)
 			if err != nil {
 				log.Warn("Failed to collect system stats.", err)
 				continue
@@ -69,7 +70,7 @@ func collectSystemStats(systemIntervalMS int) {
 				return
 			}
 
-			err = storeSystemStats(stats)
+			err = storeSystemStats(statsContainer)
 			if err != nil {
 				log.Error("Failed to store system stats.", err)
 				continue
@@ -94,7 +95,7 @@ func startSystemStatsCollection(systemIntervalMS int) {
 	go collectSystemStats(systemIntervalMS)
 }
 
-func stopSystemStatsCollection() {
+func stopSystemStatsCollection(wait bool) {
 	// Note that we are not deferring an unlock.
 	systemContextLock.Lock()
 
@@ -107,8 +108,8 @@ func stopSystemStatsCollection() {
 	// Cancel the collection.
 	cancelFunc()
 
-	// In the background, hold the lock until collection is complete.
-	go func() {
+	// Setup a func to hold the lock until collection is complete.
+	cleanupFunc := func() {
 		defer systemContextLock.Unlock()
 
 		// Wait for completion.
@@ -118,7 +119,14 @@ func stopSystemStatsCollection() {
 		ctx = nil
 		cancelFunc = nil
 		cancelWait = nil
-	}()
+	}
+
+	// Either wait on the func or run it in the background.
+	if wait {
+		cleanupFunc()
+	} else {
+		go cleanupFunc()
+	}
 }
 
 // Get the system metrics.
@@ -134,7 +142,7 @@ func stopSystemStatsCollection() {
 // All known network interfaces will be summed.
 // Additionally, the numbers provided will be the total number of bytes since the last call to this function,
 // or zero if this is the first call.
-func getSystemMetrics(intervalMS int) (*SystemMetrics, error) {
+func getSystemMetrics(intervalMS int) (*SystemStatsContainer, error) {
 	getStatsLock.Lock()
 	defer getStatsLock.Unlock()
 
@@ -166,10 +174,8 @@ func getSystemMetrics(intervalMS int) (*SystemMetrics, error) {
 	lastBytesSent = netMetrics[0].BytesSent
 	lastBytesReceived = netMetrics[0].BytesRecv
 
-	results := SystemMetrics{
-		Metric: Metric{
-			Timestamp: timestamp.Now(),
-		},
+	results := SystemStatsContainer{
+		Timestamp:        timestamp.Now(),
 		CPUPercent:       util.RoundWithPrecision(cpuMetrics[0], 2),
 		MemPercent:       util.RoundWithPrecision(memMetrics.UsedPercent, 2),
 		NetBytesSent:     bytesSentDelta,
@@ -177,4 +183,53 @@ func getSystemMetrics(intervalMS int) (*SystemMetrics, error) {
 	}
 
 	return &results, nil
+}
+
+func storeSystemStats(container *SystemStatsContainer) error {
+	if container == nil {
+		return nil
+	}
+
+	metrics := []*Metric{
+		&Metric{
+			Timestamp: container.Timestamp,
+			Type:      MetricTypeSystemCPU,
+			Value:     container.CPUPercent,
+		},
+		&Metric{
+			Timestamp: container.Timestamp,
+			Type:      MetricTypeSystemMemory,
+			Value:     container.MemPercent,
+		},
+		&Metric{
+			Timestamp: container.Timestamp,
+			Type:      MetricTypeSystemNetworkIn,
+			Value:     float64(container.NetBytesReceived),
+		},
+		&Metric{
+			Timestamp: container.Timestamp,
+			Type:      MetricTypeSystemNetworkOut,
+			Value:     float64(container.NetBytesSent),
+		},
+	}
+
+	var err error = nil
+
+	for _, metric := range metrics {
+		err = errors.Join(err, metric.Validate())
+	}
+
+	if err != nil {
+		return fmt.Errorf("Failed to validate system metrics: '%w'.", err)
+	}
+
+	for _, metric := range metrics {
+		err = errors.Join(err, StoreMetric(metric))
+	}
+
+	if err != nil {
+		return fmt.Errorf("Failed to store system metrics: '%w'.", err)
+	}
+
+	return nil
 }

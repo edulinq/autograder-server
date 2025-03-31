@@ -70,14 +70,14 @@ func (this *Query) Match(metric *Metric) bool {
 	return true
 }
 
-func (this Query) MatchTimeWindow(record TimestampedMetric) bool {
-	time := record.GetTimestamp()
+func (this Query) MatchTimeWindow(record *Metric) bool {
+	time := record.Timestamp
 	return (this.Before.IsZero() || (time < this.Before)) && (time > this.After)
 }
 
-func compareMetric[T TimestampedMetric](order int, a T, b T) int {
-	aTime := a.GetTimestamp()
-	bTime := b.GetTimestamp()
+func compareMetric(order int, a *Metric, b *Metric) int {
+	aTime := a.Timestamp
+	bTime := b.Timestamp
 
 	if aTime == bTime {
 		return 0
@@ -92,7 +92,7 @@ func compareMetric[T TimestampedMetric](order int, a T, b T) int {
 
 // Apply time-based filtering, sorting, and limiting to a slice of metrics.
 // Only metrics matching the time window are returned, with optional sorting and limiting.
-func LimitAndSort[T TimestampedMetric](metrics []T, query Query) []T {
+func LimitAndSort(metrics []*Metric, query Query) []*Metric {
 	// Ensure the semantics of sort ordering are followed.
 	sortOrder := query.Sort
 	if sortOrder < 0 {
@@ -101,7 +101,7 @@ func LimitAndSort[T TimestampedMetric](metrics []T, query Query) []T {
 		sortOrder = 1
 	}
 
-	results := make([]T, 0, len(metrics))
+	results := make([]*Metric, 0, len(metrics))
 
 	// First, filter.
 	for _, metric := range metrics {
@@ -112,7 +112,7 @@ func LimitAndSort[T TimestampedMetric](metrics []T, query Query) []T {
 
 	// Second, sort.
 	if query.Sort != 0 {
-		slices.SortFunc(results, func(a T, b T) int {
+		slices.SortFunc(results, func(a *Metric, b *Metric) int {
 			return compareMetric(sortOrder, a, b)
 		})
 	}

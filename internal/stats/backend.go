@@ -8,9 +8,6 @@ var backend StorageBackend = nil
 var backendLock sync.RWMutex
 
 type StorageBackend interface {
-	GetSystemStats(query Query) ([]*SystemMetrics, error)
-	StoreSystemStats(record *SystemMetrics) error
-
 	GetMetrics(query Query) ([]*Metric, error)
 	StoreMetric(record *Metric) error
 }
@@ -27,29 +24,7 @@ func StartCollection(systemIntervalMS int) {
 }
 
 func StopCollection() {
-	stopSystemStatsCollection()
-}
-
-func GetSystemStats(query Query) ([]*SystemMetrics, error) {
-	backendLock.RLock()
-	defer backendLock.RUnlock()
-
-	if backend == nil {
-		return nil, nil
-	}
-
-	return backend.GetSystemStats(query)
-}
-
-func storeSystemStats(record *SystemMetrics) error {
-	backendLock.RLock()
-	defer backendLock.RUnlock()
-
-	if backend == nil {
-		return nil
-	}
-
-	return backend.StoreSystemStats(record)
+	stopSystemStatsCollection(false)
 }
 
 func GetMetrics(query Query) ([]*Metric, error) {

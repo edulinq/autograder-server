@@ -10,46 +10,43 @@ import (
 	"github.com/edulinq/autograder/internal/util"
 )
 
-func (this *DBTests) DBTestStoreSystemStats(test *testing.T) {
-	Clear()
-	defer Clear()
-
-	testRecord := stats.SystemMetrics{
-		Metric: stats.Metric{
-			Timestamp: timestamp.Now(),
-		},
-		CPUPercent:       1,
-		MemPercent:       2,
-		NetBytesSent:     3,
-		NetBytesReceived: 4,
+func (this *DBTests) DBTestStoreMetricTypeSystemCPU(test *testing.T) {
+	metric := stats.Metric{
+		Timestamp: timestamp.Now(),
+		Type:      stats.MetricTypeSystemCPU,
 	}
 
-	query := stats.Query{}
-
-	err := StoreSystemStats(&testRecord)
-	if err != nil {
-		test.Fatalf("Failed to store stats: '%v'.", err)
-	}
-
-	records, err := GetSystemStats(query)
-	if err != nil {
-		test.Fatalf("Failed to fetch stats: '%v'.", err)
-	}
-
-	if len(records) != 1 {
-		test.Fatalf("Did not get the correct number of records. Expected: 1, Actual: %d.", len(records))
-	}
-
-	if !reflect.DeepEqual(*records[0], testRecord) {
-		test.Fatalf("Did not get the expected record back. Expected: '%s', Actual: '%s'.",
-			util.MustToJSONIndent(testRecord), util.MustToJSONIndent(*records[0]))
-	}
+	runStoreStatsTests(test, &metric)
 }
 
-func (this *DBTests) DBTestStoreAPIRequestStats(test *testing.T) {
-	Clear()
-	defer Clear()
+func (this *DBTests) DBTestStoreMetricTypeSystemMemory(test *testing.T) {
+	metric := stats.Metric{
+		Timestamp: timestamp.Now(),
+		Type:      stats.MetricTypeSystemMemory,
+	}
 
+	runStoreStatsTests(test, &metric)
+}
+
+func (this *DBTests) DBTestStoreMetricTypeSystemNetworkIn(test *testing.T) {
+	metric := stats.Metric{
+		Timestamp: timestamp.Now(),
+		Type:      stats.MetricTypeSystemNetworkIn,
+	}
+
+	runStoreStatsTests(test, &metric)
+}
+
+func (this *DBTests) DBTestStoreMetricTypeSystemNetworkOut(test *testing.T) {
+	metric := stats.Metric{
+		Timestamp: timestamp.Now(),
+		Type:      stats.MetricTypeSystemNetworkOut,
+	}
+
+	runStoreStatsTests(test, &metric)
+}
+
+func (this *DBTests) DBTestStoreMetricTypeAPIRequest(test *testing.T) {
 	metric := stats.Metric{
 		Timestamp: timestamp.Now(),
 		Type:      stats.MetricTypeAPIRequest,
@@ -64,17 +61,10 @@ func (this *DBTests) DBTestStoreAPIRequestStats(test *testing.T) {
 		},
 	}
 
-	query := stats.Query{
-		Type: stats.MetricTypeAPIRequest,
-	}
-
-	runStoreStatsTests(test, &metric, query)
+	runStoreStatsTests(test, &metric)
 }
 
-func (this *DBTests) DBTestStoreTaskTimeStats(test *testing.T) {
-	Clear()
-	defer Clear()
-
+func (this *DBTests) DBTestStoreMetricTypeTaskTime(test *testing.T) {
 	metric := stats.Metric{
 		Timestamp: timestamp.Now(),
 		Type:      stats.MetricTypeTaskTime,
@@ -86,17 +76,10 @@ func (this *DBTests) DBTestStoreTaskTimeStats(test *testing.T) {
 		},
 	}
 
-	query := stats.Query{
-		Type: stats.MetricTypeTaskTime,
-	}
-
-	runStoreStatsTests(test, &metric, query)
+	runStoreStatsTests(test, &metric)
 }
 
-func (this *DBTests) DBTestStoreGradingTimeStats(test *testing.T) {
-	Clear()
-	defer Clear()
-
+func (this *DBTests) DBTestStoreMetricTypeGradingTime(test *testing.T) {
 	metric := stats.Metric{
 		Timestamp: timestamp.Now(),
 		Type:      stats.MetricTypeGradingTime,
@@ -108,17 +91,10 @@ func (this *DBTests) DBTestStoreGradingTimeStats(test *testing.T) {
 		},
 	}
 
-	query := stats.Query{
-		Type: stats.MetricTypeGradingTime,
-	}
-
-	runStoreStatsTests(test, &metric, query)
+	runStoreStatsTests(test, &metric)
 }
 
-func (this *DBTests) DBTestStoreCodeAnalysisTimeStats(test *testing.T) {
-	Clear()
-	defer Clear()
-
+func (this *DBTests) DBTestStoreMetricTypeCodeAnalysisTime(test *testing.T) {
 	metric := stats.Metric{
 		Timestamp: timestamp.Now(),
 		Type:      stats.MetricTypeCodeAnalysisTime,
@@ -130,11 +106,7 @@ func (this *DBTests) DBTestStoreCodeAnalysisTimeStats(test *testing.T) {
 		},
 	}
 
-	query := stats.Query{
-		Type: stats.MetricTypeCodeAnalysisTime,
-	}
-
-	runStoreStatsTests(test, &metric, query)
+	runStoreStatsTests(test, &metric)
 }
 
 func (this *DBTests) DBTestGetMetricFailure(test *testing.T) {
@@ -213,10 +185,17 @@ func DBTestAsyncStoreMetric(test *testing.T) {
 	}
 }
 
-func runStoreStatsTests(test *testing.T, metric *stats.Metric, query stats.Query) {
+func runStoreStatsTests(test *testing.T, metric *stats.Metric) {
+	Clear()
+	defer Clear()
+
 	err := StoreMetric(metric)
 	if err != nil {
 		test.Fatalf("Failed to store stats: '%v'.", err)
+	}
+
+	query := stats.Query{
+		Type: metric.Type,
 	}
 
 	records, err := GetMetrics(query)

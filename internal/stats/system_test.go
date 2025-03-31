@@ -45,8 +45,8 @@ func TestCollectSystemStats(test *testing.T) {
 	typedBackend := makeTestBackend()
 	backend = typedBackend
 
-	if len(typedBackend.system) != 0 {
-		test.Fatalf("Found stored stats (%d) before collection.", len(typedBackend.system))
+	if len(typedBackend.metrics) != 0 {
+		test.Fatalf("Found stored stats (%d) before collection.", len(typedBackend.metrics))
 	}
 
 	// Start a quick collection.
@@ -55,11 +55,11 @@ func TestCollectSystemStats(test *testing.T) {
 	// Wait for some collection.
 	time.Sleep(waitMS * time.Millisecond)
 
-	// Stop collection.
-	stopSystemStatsCollection()
+	// Stop collection and wait for completion.
+	stopSystemStatsCollection(true)
 
 	// Ensure that stats have been collected.
-	count := len(typedBackend.system)
+	count := len(typedBackend.metrics)
 	if count == 0 {
 		test.Fatalf("No system stats collected.")
 	}
@@ -68,7 +68,7 @@ func TestCollectSystemStats(test *testing.T) {
 	time.Sleep(waitMS * time.Millisecond)
 
 	// Ensure that no more stats have been collected.
-	newCount := len(typedBackend.system)
+	newCount := len(typedBackend.metrics)
 	if count != newCount {
 		test.Fatalf("Got more stats after collection.")
 	}

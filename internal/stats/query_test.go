@@ -11,7 +11,7 @@ import (
 )
 
 func init() {
-	simpleMetricsReverse = append([]Metric(nil), simpleMetrics...)
+	simpleMetricsReverse = append([]*Metric(nil), simpleMetrics...)
 	slices.Reverse(simpleMetricsReverse)
 }
 
@@ -90,9 +90,9 @@ func TestQueryValidationBase(test *testing.T) {
 
 func TestLimitAndSort(test *testing.T) {
 	testCases := []struct {
-		metrics  []Metric
+		metrics  []*Metric
 		Query    Query
-		expected []Metric
+		expected []*Metric
 	}{
 		{
 			simpleMetrics,
@@ -104,18 +104,18 @@ func TestLimitAndSort(test *testing.T) {
 		{
 			simpleMetrics,
 			Query{After: timestamp.FromMSecs(200)},
-			[]Metric{
-				Metric{Timestamp: timestamp.FromMSecs(300)},
-				Metric{Timestamp: timestamp.FromMSecs(400)},
-				Metric{Timestamp: timestamp.FromMSecs(500)},
+			[]*Metric{
+				&Metric{Timestamp: timestamp.FromMSecs(300)},
+				&Metric{Timestamp: timestamp.FromMSecs(400)},
+				&Metric{Timestamp: timestamp.FromMSecs(500)},
 			},
 		},
 		{
 			simpleMetrics,
 			Query{Before: timestamp.FromMSecs(300)},
-			[]Metric{
-				Metric{Timestamp: timestamp.FromMSecs(100)},
-				Metric{Timestamp: timestamp.FromMSecs(200)},
+			[]*Metric{
+				&Metric{Timestamp: timestamp.FromMSecs(100)},
+				&Metric{Timestamp: timestamp.FromMSecs(200)},
 			},
 		},
 		{
@@ -124,9 +124,9 @@ func TestLimitAndSort(test *testing.T) {
 				After:  timestamp.FromMSecs(199),
 				Before: timestamp.FromMSecs(301),
 			},
-			[]Metric{
-				Metric{Timestamp: timestamp.FromMSecs(200)},
-				Metric{Timestamp: timestamp.FromMSecs(300)},
+			[]*Metric{
+				&Metric{Timestamp: timestamp.FromMSecs(200)},
+				&Metric{Timestamp: timestamp.FromMSecs(300)},
 			},
 		},
 
@@ -170,9 +170,9 @@ func TestLimitAndSort(test *testing.T) {
 				Before: timestamp.FromMSecs(301),
 				Sort:   1,
 			},
-			[]Metric{
-				Metric{Timestamp: timestamp.FromMSecs(300)},
-				Metric{Timestamp: timestamp.FromMSecs(200)},
+			[]*Metric{
+				&Metric{Timestamp: timestamp.FromMSecs(300)},
+				&Metric{Timestamp: timestamp.FromMSecs(200)},
 			},
 		},
 
@@ -180,8 +180,8 @@ func TestLimitAndSort(test *testing.T) {
 		{
 			simpleMetrics,
 			Query{Limit: 1},
-			[]Metric{
-				Metric{Timestamp: timestamp.FromMSecs(100)},
+			[]*Metric{
+				&Metric{Timestamp: timestamp.FromMSecs(100)},
 			},
 		},
 		{
@@ -190,8 +190,8 @@ func TestLimitAndSort(test *testing.T) {
 				Limit: 1,
 				Sort:  1,
 			},
-			[]Metric{
-				Metric{Timestamp: timestamp.FromMSecs(500)},
+			[]*Metric{
+				&Metric{Timestamp: timestamp.FromMSecs(500)},
 			},
 		},
 	}
@@ -205,12 +205,12 @@ func TestLimitAndSort(test *testing.T) {
 	}
 }
 
-var simpleMetrics []Metric = []Metric{
-	Metric{Timestamp: timestamp.FromMSecs(100)},
-	Metric{Timestamp: timestamp.FromMSecs(200)},
-	Metric{Timestamp: timestamp.FromMSecs(300)},
-	Metric{Timestamp: timestamp.FromMSecs(400)},
-	Metric{Timestamp: timestamp.FromMSecs(500)},
+var simpleMetrics []*Metric = []*Metric{
+	&Metric{Timestamp: timestamp.FromMSecs(100)},
+	&Metric{Timestamp: timestamp.FromMSecs(200)},
+	&Metric{Timestamp: timestamp.FromMSecs(300)},
+	&Metric{Timestamp: timestamp.FromMSecs(400)},
+	&Metric{Timestamp: timestamp.FromMSecs(500)},
 }
 
-var simpleMetricsReverse []Metric = nil
+var simpleMetricsReverse []*Metric = nil

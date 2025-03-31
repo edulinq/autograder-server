@@ -20,7 +20,37 @@ func TestQuery(test *testing.T) {
 		query           *stats.Query
 		expectedValues  []int
 	}{
-		// API Request Stats Base.
+		// System Stats Base
+		{
+			email: "server-admin",
+			query: &stats.Query{
+				Type: stats.MetricTypeSystemCPU,
+			},
+			expectedValues: []int{401},
+		},
+		{
+			email: "server-admin",
+			query: &stats.Query{
+				Type: stats.MetricTypeSystemMemory,
+			},
+			expectedValues: []int{402},
+		},
+		{
+			email: "server-admin",
+			query: &stats.Query{
+				Type: stats.MetricTypeSystemNetworkIn,
+			},
+			expectedValues: []int{403},
+		},
+		{
+			email: "server-admin",
+			query: &stats.Query{
+				Type: stats.MetricTypeSystemNetworkOut,
+			},
+			expectedValues: []int{404},
+		},
+
+		// API Request Stats Base
 		{
 			email: "server-admin",
 			query: &stats.Query{
@@ -45,7 +75,7 @@ func TestQuery(test *testing.T) {
 			expectedValues: []int{200, 300},
 		},
 
-		// Grading Time Stats Base.
+		// Grading Time Stats Base
 		{
 			email: "server-admin",
 			query: &stats.Query{
@@ -70,7 +100,7 @@ func TestQuery(test *testing.T) {
 			expectedValues: []int{200, 300},
 		},
 
-		// Task Time Stats Base.
+		// Task Time Stats Base
 		{
 			email: "server-admin",
 			query: &stats.Query{
@@ -95,7 +125,7 @@ func TestQuery(test *testing.T) {
 			expectedValues: []int{200, 300},
 		},
 
-		// Code Analysis Time Stats Base.
+		// Code Analysis Time Stats Base
 		{
 			email: "server-admin",
 			query: &stats.Query{
@@ -120,7 +150,7 @@ func TestQuery(test *testing.T) {
 			expectedValues: []int{200, 300},
 		},
 
-		// API Request Stats, Course Specific.
+		// API Request Stats, Course Specific
 		{
 			email: "server-admin",
 			query: &stats.Query{
@@ -179,7 +209,7 @@ func TestQuery(test *testing.T) {
 			},
 		},
 
-		// Grading Time Stats, Course Specific.
+		// Grading Time Stats, Course Specific
 		{
 			email: "server-admin",
 			query: &stats.Query{
@@ -238,7 +268,7 @@ func TestQuery(test *testing.T) {
 			},
 		},
 
-		// Task Time Stats, Course Specific.
+		// Task Time Stats, Course Specific
 		{
 			email: "server-admin",
 			query: &stats.Query{
@@ -297,7 +327,7 @@ func TestQuery(test *testing.T) {
 			},
 		},
 
-		// Code Analysis Time Stats, Course Specific.
+		// Code Analysis Time Stats, Course Specific
 		{
 			email: "server-admin",
 			query: &stats.Query{
@@ -637,5 +667,25 @@ var testRecords []*stats.Metric = []*stats.Metric{
 			stats.MetricAttributeAssignmentID: "A3",
 			stats.MetricAttributeUserEmail:    "U2",
 		},
+	},
+	&stats.Metric{
+		Timestamp: timestamp.FromMSecs(401),
+		Type:      stats.MetricTypeSystemCPU,
+		Value:     float64(401),
+	},
+	&stats.Metric{
+		Timestamp: timestamp.FromMSecs(402),
+		Type:      stats.MetricTypeSystemMemory,
+		Value:     float64(402),
+	},
+	&stats.Metric{
+		Timestamp: timestamp.FromMSecs(403),
+		Type:      stats.MetricTypeSystemNetworkIn,
+		Value:     float64(403),
+	},
+	&stats.Metric{
+		Timestamp: timestamp.FromMSecs(404),
+		Type:      stats.MetricTypeSystemNetworkOut,
+		Value:     float64(404),
 	},
 }
