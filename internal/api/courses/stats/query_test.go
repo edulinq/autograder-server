@@ -10,34 +10,95 @@ import (
 	"github.com/edulinq/autograder/internal/util"
 )
 
-func TestQuery(test *testing.T) {
+// Test that the context course is correctly set when quering stats.
+func TestQueryContextCourse(test *testing.T) {
 	db.ResetForTesting()
 	defer db.ResetForTesting()
 
 	testCases := []struct {
-		email            string
-		permErrorLocator string
-		query            stats.CourseMetricQuery
-		expectedValues   []int
+		email          string
+		query          *stats.Query
+		expectedValues []int
+		permError      bool
 	}{
-		// Base
-		{"server-admin", "", stats.CourseMetricQuery{}, []int{100, 200, 300}},
-		{"server-admin", "", stats.CourseMetricQuery{BaseQuery: stats.BaseQuery{Sort: 1}}, []int{300, 200, 100}},
-		{"server-admin", "", stats.CourseMetricQuery{BaseQuery: stats.BaseQuery{After: timestamp.FromMSecs(150)}}, []int{200, 300}},
+		// Grading Time Stats.
+		{
+			email: "course-admin",
+			query: &stats.Query{
+				Type: stats.GradingTimeStatsType,
+				Where: map[stats.MetricAttribute]any{
+					stats.CourseIDKey: db.TEST_COURSE_ID,
+				},
+			},
+			expectedValues: []int{100},
+		},
+		{
+			email: "course-admin",
+			query: &stats.Query{
+				Type: stats.GradingTimeStatsType,
+				Where: map[stats.MetricAttribute]any{
+					stats.CourseIDKey: "zzz",
+				},
+			},
+			expectedValues: []int{100},
+		},
 
-		// Course Specific
-		{"server-admin", "", stats.CourseMetricQuery{AssignmentID: "A2"}, []int{200}},
-		{"server-admin", "", stats.CourseMetricQuery{AssignmentID: "ZZZ"}, nil},
-		{"server-admin", "", stats.CourseMetricQuery{UserEmail: "U1"}, []int{100, 200}},
-		{"server-admin", "", stats.CourseMetricQuery{Type: stats.CourseMetricTypeGradingTime}, []int{100, 300}},
+		// Task Time Stats.
+		{
+			email: "course-admin",
+			query: &stats.Query{
+				Type: stats.TaskTimeStatsType,
+				Where: map[stats.MetricAttribute]any{
+					stats.CourseIDKey: db.TEST_COURSE_ID,
+				},
+			},
+			expectedValues: []int{100},
+		},
+		{
+			email: "course-admin",
+			query: &stats.Query{
+				Type: stats.TaskTimeStatsType,
+				Where: map[stats.MetricAttribute]any{
+					stats.CourseIDKey: "zzz",
+				},
+			},
+			expectedValues: []int{100},
+		},
 
-		// Error
-		{"server-user", "-040", stats.CourseMetricQuery{}, nil},
-		{"course-student", "-020", stats.CourseMetricQuery{}, nil},
+		// Code Analysis Time Stats
+		{
+			email: "course-admin",
+			query: &stats.Query{
+				Type: stats.CodeAnalysisTimeStatsType,
+				Where: map[stats.MetricAttribute]any{
+					stats.CourseIDKey: db.TEST_COURSE_ID,
+				},
+			},
+			expectedValues: []int{100},
+		},
+		{
+			email: "course-admin",
+			query: &stats.Query{
+				Type: stats.CodeAnalysisTimeStatsType,
+				Where: map[stats.MetricAttribute]any{
+					stats.CourseIDKey: "zzz",
+				},
+			},
+			expectedValues: []int{100},
+		},
+
+		// Perm Error
+		{
+			email: "course-student",
+			query: &stats.Query{
+				Type: stats.GradingTimeStatsType,
+			},
+			permError: true,
+		},
 	}
 
 	for _, record := range testRecords {
-		err := db.StoreCourseMetric(record)
+		err := db.StoreMetric(record)
 		if err != nil {
 			test.Fatalf("Failed to store test record: '%v'.", err)
 		}
@@ -49,14 +110,21 @@ func TestQuery(test *testing.T) {
 
 		response := core.SendTestAPIRequestFull(test, `courses/stats/query`, fields, nil, testCase.email)
 		if !response.Success {
-			if testCase.permErrorLocator != "" {
-				if testCase.permErrorLocator != response.Locator {
-					test.Errorf("Case %d: Incorrect locator on perm error. Expected: '%s', Actual: '%s'.", i, testCase.permErrorLocator, response.Locator)
+			if testCase.permError {
+				expectedLocator := "-020"
+				if response.Locator != expectedLocator {
+					test.Errorf("Case %d: Incorrect error returned. Expected '%s', found '%s'.",
+						i, expectedLocator, response.Locator)
 				}
 			} else {
 				test.Errorf("Case %d: Response is not a success when it should be: '%v'.", i, response)
 			}
 
+			continue
+		}
+
+		if testCase.permError {
+			test.Errorf("Case %d: Did not get an expected permissions error.", i)
 			continue
 		}
 
@@ -81,35 +149,68 @@ func TestQuery(test *testing.T) {
 	}
 }
 
-var testRecords []*stats.CourseMetric = []*stats.CourseMetric{
-	&stats.CourseMetric{
-		BaseMetric: stats.BaseMetric{
-			Timestamp: timestamp.FromMSecs(100),
+var testRecords []*stats.Metric = []*stats.Metric{
+	// Context course metrics.
+	&stats.Metric{
+		Timestamp: timestamp.FromMSecs(100),
+		Type:      stats.GradingTimeStatsType,
+		Value:     float64(100),
+		Attributes: map[stats.MetricAttribute]any{
+			stats.CourseIDKey:     db.TEST_COURSE_ID,
+			stats.AssignmentIDKey: "A1",
+			stats.UserEmailKey:    "U1",
 		},
-		Type:         stats.CourseMetricTypeGradingTime,
-		CourseID:     db.TEST_COURSE_ID,
-		AssignmentID: "A1",
-		UserEmail:    "U1",
-		Value:        100,
 	},
-	&stats.CourseMetric{
-		BaseMetric: stats.BaseMetric{
-			Timestamp: timestamp.FromMSecs(200),
+	&stats.Metric{
+		Timestamp: timestamp.FromMSecs(100),
+		Type:      stats.TaskTimeStatsType,
+		Value:     float64(100),
+		Attributes: map[stats.MetricAttribute]any{
+			stats.CourseIDKey:     db.TEST_COURSE_ID,
+			stats.AssignmentIDKey: "A1",
+			stats.UserEmailKey:    "U1",
 		},
-		Type:         stats.CourseMetricTypeUnknown,
-		CourseID:     db.TEST_COURSE_ID,
-		AssignmentID: "A2",
-		UserEmail:    "U1",
-		Value:        200,
 	},
-	&stats.CourseMetric{
-		BaseMetric: stats.BaseMetric{
-			Timestamp: timestamp.FromMSecs(300),
+	&stats.Metric{
+		Timestamp: timestamp.FromMSecs(100),
+		Type:      stats.CodeAnalysisTimeStatsType,
+		Value:     float64(100),
+		Attributes: map[stats.MetricAttribute]any{
+			stats.CourseIDKey:     db.TEST_COURSE_ID,
+			stats.AssignmentIDKey: "A1",
+			stats.UserEmailKey:    "U1",
 		},
-		Type:         stats.CourseMetricTypeGradingTime,
-		CourseID:     db.TEST_COURSE_ID,
-		AssignmentID: "A3",
-		UserEmail:    "U2",
-		Value:        300,
+	},
+
+	// Non-context course metrics.
+	&stats.Metric{
+		Timestamp: timestamp.FromMSecs(300),
+		Type:      stats.GradingTimeStatsType,
+		Value:     float64(300),
+		Attributes: map[stats.MetricAttribute]any{
+			stats.CourseIDKey:     "C1",
+			stats.AssignmentIDKey: "A1",
+			stats.UserEmailKey:    "U1",
+		},
+	},
+	&stats.Metric{
+		Timestamp: timestamp.FromMSecs(300),
+		Type:      stats.TaskTimeStatsType,
+		Value:     float64(300),
+		Attributes: map[stats.MetricAttribute]any{
+			stats.CourseIDKey:     "C1",
+			stats.AssignmentIDKey: "A1",
+			stats.UserEmailKey:    "U1",
+		},
+	},
+	&stats.Metric{
+		Timestamp: timestamp.FromMSecs(300),
+		Type:      stats.CodeAnalysisTimeStatsType,
+		Value:     float64(300),
+		Attributes: map[stats.MetricAttribute]any{
+			stats.CourseIDKey:     "C1",
+			stats.AssignmentIDKey: "A1",
+			stats.UserEmailKey:    "U1",
+		},
 	},
 }

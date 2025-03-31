@@ -102,25 +102,30 @@ func TestPairwiseAnalysisFake(test *testing.T) {
 	// Test again, which should pull from the cache.
 	testPairwise(test, ids, expected, len(expected))
 
+	query := stats.Query{
+		Type: stats.CodeAnalysisTimeStatsType,
+		Where: map[stats.MetricAttribute]any{
+			stats.CourseIDKey: "course101",
+		},
+	}
+
 	// After both runs, there should be exactly one stat record (since the second one was cached).
-	results, err := db.GetCourseMetrics(stats.CourseMetricQuery{CourseID: "course101"})
+	results, err := db.GetMetrics(query)
 	if err != nil {
 		test.Fatalf("Failed to do stats query: '%v'.", err)
 	}
 
-	expectedStats := []*stats.CourseMetric{
-		&stats.CourseMetric{
-			BaseMetric: stats.BaseMetric{
-				Timestamp: timestamp.Zero(),
-				Attributes: map[string]any{
-					stats.ATTRIBUTE_KEY_ANALYSIS: "pairwise",
-				},
+	expectedStats := []*stats.Metric{
+		&stats.Metric{
+			Timestamp: timestamp.Zero(),
+			Type:      stats.CodeAnalysisTimeStatsType,
+			Value:     float64(3), // 1 for each run of the fake engine.
+			Attributes: map[stats.MetricAttribute]any{
+				stats.AnalysisTypeKey: "pairwise",
+				stats.CourseIDKey:     "course101",
+				stats.AssignmentIDKey: "hw0",
+				stats.UserEmailKey:    "server-admin@test.edulinq.org",
 			},
-			Type:         stats.CourseMetricTypeCodeAnalysisTime,
-			CourseID:     "course101",
-			AssignmentID: "hw0",
-			UserEmail:    "server-admin@test.edulinq.org",
-			Value:        3, // 1 for each run of the fake engine.
 		},
 	}
 

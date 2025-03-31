@@ -1,4 +1,4 @@
-package apirequest
+package stats
 
 import (
 	"testing"
