@@ -1,6 +1,7 @@
 package analysis
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"path/filepath"
@@ -169,7 +170,7 @@ func runPairwiseAnalysis(options AnalysisOptions, keys []model.PairwiseKey, init
 		Error   error
 	}
 
-	poolResults, _, err := util.RunParallelPoolMap(poolSize, keys, func(key model.PairwiseKey) (PoolResult, error) {
+	poolResults, _, err := util.RunParallelPoolMap(poolSize, keys, context.Background(), func(key model.PairwiseKey) (PoolResult, error) {
 		result, runTime, err := runSinglePairwiseAnalysis(options, key, templateFileStore)
 		if err != nil {
 			err = fmt.Errorf("Failed to perform pairwise analysis on submissions %s: '%w'.", key.String(), err)

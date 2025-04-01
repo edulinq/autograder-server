@@ -1,6 +1,7 @@
 package analysis
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"path/filepath"
@@ -118,7 +119,7 @@ func runIndividualAnalysis(options AnalysisOptions, fullSubmissionIDs []string, 
 		Error   error
 	}
 
-	poolResults, _, err := util.RunParallelPoolMap(poolSize, fullSubmissionIDs, func(fullSubmissionID string) (PoolResult, error) {
+	poolResults, _, err := util.RunParallelPoolMap(poolSize, fullSubmissionIDs, context.Background(), func(fullSubmissionID string) (PoolResult, error) {
 		result, runTime, err := runSingleIndividualAnalysis(options, fullSubmissionID)
 		if err != nil {
 			err = fmt.Errorf("Failed to perform individual analysis on submission %s: '%w'.", fullSubmissionID, err)
