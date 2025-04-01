@@ -2,7 +2,6 @@ package proxy
 
 import (
 	"github.com/edulinq/autograder/internal/api/core"
-	"github.com/edulinq/autograder/internal/config"
 	"github.com/edulinq/autograder/internal/grader"
 	"github.com/edulinq/autograder/internal/log"
 	"github.com/edulinq/autograder/internal/model"
@@ -37,15 +36,11 @@ func HandleSubmit(request *SubmitRequest) (*SubmitResponse, *core.APIError) {
 		return &response, nil
 	}
 
+	gradeOptions := grader.GetDefaultGradeOptions()
 	// Proxy submissions are not subject to submission restrictions.
-	gradeOptions := grader.GradeOptions{
-		NoDocker:       config.DOCKER_DISABLE.Get(),
-		LeaveTempDir:   config.KEEP_BUILD_DIRS.Get(),
-		AllowLate:      false,
-		CheckRejection: false,
-		ProxyUser:      request.User.Email,
-		ProxyTime:      grader.ResolveProxyTime(request.ProxyTime, request.Assignment),
-	}
+	gradeOptions.CheckRejection = false
+	gradeOptions.ProxyUser = request.User.Email
+	gradeOptions.ProxyTime = grader.ResolveProxyTime(request.ProxyTime, request.Assignment)
 
 	result, reject, failureMessage, err := grader.Grade(request.Context, request.Assignment, request.Files.TempDir, request.ProxyUser.Email, request.Message, gradeOptions)
 	if err != nil {
@@ -57,7 +52,7 @@ func HandleSubmit(request *SubmitRequest) (*SubmitResponse, *core.APIError) {
 			stderr = result.Stderr
 		}
 
-		log.Info("Submission failed internally.", err, request.Assignment, log.NewAttr("stdout", stdout), log.NewAttr("stderr", stderr), request.User)
+		log.Warn("Submission failed internally.", err, request.Assignment, log.NewAttr("stdout", stdout), log.NewAttr("stderr", stderr), request.User)
 
 		return &response, nil
 	}
@@ -72,7 +67,7 @@ func HandleSubmit(request *SubmitRequest) (*SubmitResponse, *core.APIError) {
 	}
 
 	if failureMessage != "" {
-		log.LogToSplitLevels(log.LevelTrace, log.LevelDebug, "Submission got a soft error.", request.Assignment, log.NewAttr("message", failureMessage), log.NewAttr("request", request), request.User)
+		log.Debug("Submission got a soft error.", request.Assignment, log.NewAttr("message", failureMessage), log.NewAttr("request", request), request.User)
 
 		response.Message = failureMessage
 		return &response, nil

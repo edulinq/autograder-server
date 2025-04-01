@@ -50,8 +50,7 @@ func runSubmissionTests(test *testing.T, parallel bool, useDocker bool) {
 	}
 
 	gradeOptions := GradeOptions{
-		NoDocker:       !useDocker,
-		CheckRejection: false,
+		NoDocker: !useDocker,
 	}
 
 	testSubmissions, err := GetTestSubmissions(baseDir, useDocker)

@@ -6,7 +6,6 @@ import (
 	"os"
 	"path/filepath"
 	"slices"
-	"strconv"
 	"time"
 
 	"github.com/edulinq/autograder/internal/common"
@@ -71,26 +70,10 @@ func (this *backend) SaveSubmissions(course *model.Course, submissions []*model.
 }
 
 // Compute the next submission ID based on the current time.
-// The next submission ID will be the largest ID for the user.
+// If a submission ID exists for the current time, increment the ID until it is unique.
+// The next submission ID will be the largest ID for the user on this assignment.
 func (this *backend) GetNextSubmissionID(assignment *model.Assignment, email string) (string, error) {
 	submissionID := time.Now().Unix()
-	previousStringID, err := this.getMostRecentSubmissionID(assignment, email)
-	if err != nil {
-		return "", err
-	}
-
-	if previousStringID != "" {
-		previousSubmissionID, err := strconv.Atoi(previousStringID)
-		if err != nil {
-			return "", err
-		}
-
-		// Ensure the next submission ID is the largest.
-		if int64(previousSubmissionID) >= submissionID {
-			submissionID = int64(previousSubmissionID) + 1
-		}
-	}
-
 	baseDir := this.getUserSubmissionDir(assignment.Course.GetID(), assignment.GetID(), email)
 
 	for {

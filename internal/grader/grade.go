@@ -3,6 +3,7 @@ package grader
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/edulinq/autograder/internal/common"
 	"github.com/edulinq/autograder/internal/config"
@@ -133,23 +134,27 @@ func Grade(ctx context.Context, assignment *model.Assignment, submissionPath str
 	return &gradingResult, nil, "", nil
 }
 
-// Resolve a proxy time for a given assignment.
-// If the proxy time is not specified, fall back to a day before the assignment due date.
-// If the assignment does not have a due date, the current time will be used for the proxy time.
+// Resolve a missing proxy time for a given assignment.
+// If the submission is not late (including no due date), return the current time.
+// Otherwise, the proxy time will be set to one minute before the due date.
 func ResolveProxyTime(proxyTime *timestamp.Timestamp, assignment *model.Assignment) *timestamp.Timestamp {
-	if proxyTime == nil {
-		if assignment.DueDate == nil {
-			now := timestamp.Now()
-			proxyTime = &now
-		} else {
-			// Convert time (one day) to hours -> minutes -> seconds -> msecs.
-			oneDay := int64(1 * 24 * 60 * 60 * 1000)
-			dayBeforeDueDate := *assignment.DueDate - timestamp.FromMSecs(oneDay)
-			proxyTime = &dayBeforeDueDate
-		}
+	if proxyTime != nil {
+		return proxyTime
 	}
 
-	return proxyTime
+	now := timestamp.Now()
+	if assignment.DueDate == nil {
+		return &now
+	}
+
+	if now < *assignment.DueDate {
+		return &now
+	}
+
+	oneMinute := time.Duration(1 * time.Minute).Milliseconds()
+	minuteBeforeDueDate := *assignment.DueDate - timestamp.FromMSecs(oneMinute)
+
+	return &minuteBeforeDueDate
 }
 
 func prepForGrading(assignment *model.Assignment, submissionPath string, user string) (string, map[string][]byte, error) {

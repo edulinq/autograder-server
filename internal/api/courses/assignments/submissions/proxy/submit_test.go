@@ -12,6 +12,8 @@ import (
 	"github.com/edulinq/autograder/internal/util"
 )
 
+// Test that proxy submissions work for a variety of assignments and submissions.
+// These submissions should never be rejected or have a start time after the due date.
 func TestProxySubmitBase(test *testing.T) {
 	db.ResetForTesting()
 	defer db.ResetForTesting()
@@ -24,7 +26,8 @@ func TestProxySubmitBase(test *testing.T) {
 	verifySuccessfulTestSubmissions(test, testSubmissions, nil)
 }
 
-func TestProxySubmitAtDueDate(test *testing.T) {
+// Ensure nil proxy times are automatically assigned a time before the due date.
+func TestProxySubmitAfterDueDate(test *testing.T) {
 	db.ResetForTesting()
 	defer db.ResetForTesting()
 
@@ -35,13 +38,14 @@ func TestProxySubmitAtDueDate(test *testing.T) {
 
 	testSubmission := testSubmissions[0]
 
-	dueDate := timestamp.Timestamp(123456)
+	dueDate := timestamp.Timestamp(-1)
 	testSubmission.Assignment.DueDate = &dueDate
 	db.MustSaveAssignment(testSubmission.Assignment)
 
 	verifySuccessfulTestSubmissions(test, []*grader.TestSubmissionInfo{testSubmission}, nil)
 }
 
+// Test to make sure non-nil proxy times are unchanged, even if this results in the submission being late.
 func TestProxySubmitProxyTime(test *testing.T) {
 	db.ResetForTesting()
 	defer db.ResetForTesting()
@@ -110,6 +114,7 @@ func TestRejectLateSubmission(test *testing.T) {
 	verifySuccessfulTestSubmissions(test, []*grader.TestSubmissionInfo{testSubmission}, nil)
 }
 
+// Test that proxy submissions fail on unknown proxy emails and invalid permissions.
 func TestProxySubmitErrors(test *testing.T) {
 	db.ResetForTesting()
 	defer db.ResetForTesting()
@@ -178,6 +183,9 @@ func TestProxySubmitErrors(test *testing.T) {
 	}
 }
 
+// Verify test submissions contain the expected start time and end time for the given proxy time.
+// A proxy time can resolve to the current time, so we test that the start and end time fall within an upper and lower bound.
+// If the proxy time is given, we check for exact matches and allow submissions to be past the due date.
 func verifySuccessfulTestSubmissions(test *testing.T, testSubmissions []*grader.TestSubmissionInfo, proxyTime *timestamp.Timestamp) {
 	for i, testSubmission := range testSubmissions {
 		fields := map[string]any{
@@ -188,6 +196,12 @@ func verifySuccessfulTestSubmissions(test *testing.T, testSubmissions []*grader.
 		}
 
 		proxyTimeLowerBound := grader.ResolveProxyTime(proxyTime, testSubmission.Assignment)
+		// If we are given a proxy time, make sure it is unchanged.
+		if proxyTime != nil && *proxyTime != *proxyTimeLowerBound {
+			test.Errorf("Case %d: Unexpected proxy time lower bound. Expected: '%d', actual: '%d'.",
+				i, *proxyTime, *proxyTimeLowerBound)
+			continue
+		}
 
 		response := core.SendTestAPIRequestFull(test, `courses/assignments/submissions/proxy/submit`, fields, testSubmission.Files, "course-admin")
 		if !response.Success {
@@ -233,7 +247,14 @@ func verifySuccessfulTestSubmissions(test *testing.T, testSubmissions []*grader.
 		}
 
 		startTime := responseContent.GradingInfo.GradingStartTime
+
 		proxyTimeUpperBound := grader.ResolveProxyTime(proxyTime, testSubmission.Assignment)
+		// If we are given a proxy time, make sure it is unchanged.
+		if proxyTime != nil && *proxyTime != *proxyTimeUpperBound {
+			test.Errorf("Case %d: Unexpected proxy time upper bound. Expected: '%d', actual: '%d'.",
+				i, *proxyTime, *proxyTimeUpperBound)
+			continue
+		}
 
 		if startTime < *proxyTimeLowerBound || startTime > *proxyTimeUpperBound {
 			test.Errorf("Case %d: Unexpected grading start time. Expected a start time in the range: ['%d', '%d'], actual: '%d'.",
@@ -244,6 +265,13 @@ func verifySuccessfulTestSubmissions(test *testing.T, testSubmissions []*grader.
 		if startTime > responseContent.GradingInfo.GradingEndTime {
 			test.Errorf("Case %d: Unexpected grading end time. Expected a time after: '%d', actual: '%d'.",
 				i, startTime, responseContent.GradingInfo.GradingEndTime)
+			continue
+		}
+
+		// If we resolved the proxy time, ensure it is not late.
+		if proxyTime == nil && testSubmission.Assignment.DueDate != nil && startTime > *testSubmission.Assignment.DueDate {
+			test.Errorf("Case %d: A submission with a resolved proxy time marked late. Due date: '%d', proxy time: '%d'.",
+				i, *testSubmission.Assignment.DueDate, startTime)
 			continue
 		}
 	}

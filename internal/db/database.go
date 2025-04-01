@@ -107,6 +107,7 @@ type Backend interface {
 	SaveSubmissions(course *model.Course, results []*model.GradingResult) error
 
 	// Get the next short submission ID.
+	// This will be the most recent ID for the user on this assignment.
 	GetNextSubmissionID(assignment *model.Assignment, email string) (string, error)
 
 	// Get the submission ID of the submission before this one (or empty string if this is the first one).
