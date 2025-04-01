@@ -29,6 +29,9 @@ func IndividualAnalysis(options AnalysisOptions) ([]*model.IndividualAnalysis, i
 		return nil, 0, err
 	}
 
+	// TEST
+	fmt.Printf("TEST - %s - Start individual: '%s'.\n", options.InitiatorEmail, util.MustToJSON(options))
+
 	if options.WaitForCompletion {
 		results, err := runIndividualAnalysis(options, remainingIDs)
 		if err != nil {
@@ -88,6 +91,9 @@ func getCachedIndividualResults(options AnalysisOptions) ([]*model.IndividualAna
 // Lock based on course and then run the analysis in a parallel pool.
 func runIndividualAnalysis(options AnalysisOptions, fullSubmissionIDs []string) ([]*model.IndividualAnalysis, error) {
 	if len(fullSubmissionIDs) == 0 {
+		// TEST
+		fmt.Printf("TEST - %s - runIndividualAnalysis got everything from the cache.\n", options.InitiatorEmail)
+
 		return nil, nil
 	}
 
@@ -98,9 +104,15 @@ func runIndividualAnalysis(options AnalysisOptions, fullSubmissionIDs []string) 
 		return nil, fmt.Errorf("Unable to get locking course: '%w'.", err)
 	}
 
+	// TEST
+	fmt.Printf("TEST - %s - runIndividualAnalysis lock: '%s'.\n", options.InitiatorEmail, lockCourseID)
+
 	lockKey := fmt.Sprintf("analysis-individual-course-%s", lockCourseID)
 	noLockWait := lockmanager.Lock(lockKey)
 	defer lockmanager.Unlock(lockKey)
+
+	// TEST
+	fmt.Printf("TEST - %s - runIndividualAnalysis unlock: '%s'.\n", options.InitiatorEmail, lockCourseID)
 
 	// The context has been canceled while waiting for a lock, abandon this analysis.
 	if options.Context.Err() != nil {
@@ -111,11 +123,17 @@ func runIndividualAnalysis(options AnalysisOptions, fullSubmissionIDs []string) 
 	// If there are multiple requests queued up,
 	// it will be faster to do a bulk check for cached results instead of checking each one individually.
 	if !noLockWait {
+		// TEST
+		fmt.Printf("TEST - %s - runIndividualAnalysis fetching keys.\n", options.InitiatorEmail)
+
 		_, fullSubmissionIDs, err = getCachedIndividualResults(options)
 		if err != nil {
 			return nil, fmt.Errorf("Failed to re-check result cache before run: '%w'.", err)
 		}
 	}
+
+	// TEST
+	fmt.Printf("TEST - %s - runIndividualAnalysis ids: '%v'.\n", options.InitiatorEmail, fullSubmissionIDs)
 
 	// If we are overwriting the cache, then remove all the old entries.
 	if options.OverwriteCache && !options.DryRun {
@@ -146,6 +164,9 @@ func runIndividualAnalysis(options AnalysisOptions, fullSubmissionIDs []string) 
 		return nil, nil
 	}
 
+	// TEST
+	fmt.Printf("TEST - %s - runIndividualAnalysis pool results: '%v'.\n", options.InitiatorEmail, util.MustToJSON(poolResults))
+
 	results := make([]*model.IndividualAnalysis, 0, len(fullSubmissionIDs))
 	var errs error = nil
 	totalRunTime := int64(0)
@@ -165,10 +186,16 @@ func runIndividualAnalysis(options AnalysisOptions, fullSubmissionIDs []string) 
 }
 
 func runSingleIndividualAnalysis(options AnalysisOptions, fullSubmissionID string) (*model.IndividualAnalysis, int64, error) {
+	// TEST
+	fmt.Printf("TEST - %s - runSingleIndividualAnalysis lock: '%s'.\n", options.InitiatorEmail, fullSubmissionID)
+
 	// Lock this id so we don't try to do the analysis multiple times.
 	lockKey := fmt.Sprintf("analysis-individual-%s", fullSubmissionID)
 	lockmanager.Lock(lockKey)
 	defer lockmanager.Unlock(lockKey)
+
+	// TEST
+	fmt.Printf("TEST - %s - runSingleIndividualAnalysis unlock: '%s'.\n", options.InitiatorEmail, fullSubmissionID)
 
 	// The context has been canceled while waiting for a lock, abandon this analysis.
 	if options.Context.Err() != nil {
@@ -185,15 +212,21 @@ func runSingleIndividualAnalysis(options AnalysisOptions, fullSubmissionID strin
 		}
 
 		if result != nil {
+			// TEST
+			fmt.Printf("TEST - %s - runSingleIndividualAnalysis cache hit!: '%v'.\n", options.InitiatorEmail, util.MustToJSON(result))
+
 			return result, 0, nil
 		}
 	}
 
 	// Nothing cached, compute the analysis.
-	result, err := computeSingleIndividualAnalysis(fullSubmissionID, true)
+	result, err := computeSingleIndividualAnalysis(options, fullSubmissionID, true)
 	if err != nil {
 		return nil, 0, fmt.Errorf("Failed to compute individual analysis for '%s': '%w'.", fullSubmissionID, err)
 	}
+
+	// TEST
+	fmt.Printf("TEST - %s - runSingleIndividualAnalysis result: '%v'.\n", options.InitiatorEmail, util.MustToJSON(result))
 
 	// Store the result.
 	if !options.DryRun && (options.Context.Err() == nil) {
@@ -208,7 +241,7 @@ func runSingleIndividualAnalysis(options AnalysisOptions, fullSubmissionID strin
 	return result, runTime, nil
 }
 
-func computeSingleIndividualAnalysis(fullSubmissionID string, computeDeltas bool) (*model.IndividualAnalysis, error) {
+func computeSingleIndividualAnalysis(options AnalysisOptions, fullSubmissionID string, computeDeltas bool) (*model.IndividualAnalysis, error) {
 	tempDir, err := util.MkDirTemp("individual-analysis-")
 	if err != nil {
 		return nil, fmt.Errorf("Failed to make temp dir: '%w'.", err)
@@ -235,6 +268,9 @@ func computeSingleIndividualAnalysis(fullSubmissionID string, computeDeltas bool
 		Score:               gradingResult.Info.Score,
 	}
 
+	// TEST
+	fmt.Printf("TEST - %s - computeSingleIndividualAnalysis start: '%v'.\n", options.InitiatorEmail, submissionDir)
+
 	fileInfos, skipped, loc, err := individualFileAnalysis(submissionDir, assignment)
 	if err != nil {
 		analysis.Failure = true
@@ -243,12 +279,15 @@ func computeSingleIndividualAnalysis(fullSubmissionID string, computeDeltas bool
 		return analysis, nil
 	}
 
+	// TEST
+	fmt.Printf("TEST - %s - computeSingleIndividualAnalysis result: '%v'.\n", options.InitiatorEmail, util.MustToJSON(fileInfos))
+
 	analysis.Files = fileInfos
 	analysis.SkippedFiles = skipped
 	analysis.LinesOfCode = loc
 
 	if computeDeltas {
-		err = computeDelta(analysis, assignment, gradingResult)
+		err = computeDelta(options, analysis, assignment, gradingResult)
 		if err != nil {
 			return nil, err
 		}
@@ -257,7 +296,7 @@ func computeSingleIndividualAnalysis(fullSubmissionID string, computeDeltas bool
 	return analysis, nil
 }
 
-func computeDelta(analysis *model.IndividualAnalysis, assignment *model.Assignment, gradingResult *model.GradingResult) error {
+func computeDelta(options AnalysisOptions, analysis *model.IndividualAnalysis, assignment *model.Assignment, gradingResult *model.GradingResult) error {
 	previousSubmissionID, err := db.GetPreviousSubmissionID(assignment, gradingResult.Info.User, gradingResult.Info.ShortID)
 	if err != nil {
 		return fmt.Errorf("Failed to get previous submission for delta computation: '%w'.", err)
@@ -267,7 +306,7 @@ func computeDelta(analysis *model.IndividualAnalysis, assignment *model.Assignme
 		return nil
 	}
 
-	previousAnalysis, err := computeSingleIndividualAnalysis(previousSubmissionID, false)
+	previousAnalysis, err := computeSingleIndividualAnalysis(options, previousSubmissionID, false)
 	if err != nil {
 		return fmt.Errorf("Failed to analyze previous submission for delta computation: '%w'.", err)
 	}
