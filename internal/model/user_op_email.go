@@ -70,13 +70,13 @@ func (this *UserOpResult) getNewPasswordEmail() *email.Message {
 var baseAddBody string = `Hello,
 
 An autograder account with the username/email '%s' has been created.
-Usage instructions will provided in class.
+Usage instructions will be provided in class.
 `
 
 var baseEnrollBody string = `Hello,
 
 Your autograder account '%s' has been enrolled in the course(s) '%s'.
-Usage instructions will provided in class.
+Usage instructions will be provided in class.
 `
 
 var baseNewPassBody string = `Hello,
