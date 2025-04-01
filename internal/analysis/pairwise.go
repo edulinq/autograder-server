@@ -153,6 +153,7 @@ func runPairwiseAnalysis(options AnalysisOptions, keys []model.PairwiseKey) ([]*
 	}
 
 	// TEST
+	fmt.Printf("TEST - %s - runPairwiseAnalysis initial keys: '%v'.\n", options.InitiatorEmail, keys)
 	fmt.Printf("TEST - %s - runPairwiseAnalysis lock: '%s'.\n", options.InitiatorEmail, lockCourseID)
 
 	lockKey := fmt.Sprintf("analysis-pairwise-course-%s", lockCourseID)
@@ -167,6 +168,8 @@ func runPairwiseAnalysis(options AnalysisOptions, keys []model.PairwiseKey) ([]*
 		return nil, nil
 	}
 
+	results := make([]*model.PairwiseAnalysis, 0, len(keys))
+
 	// If we had to wait for the lock, then check again for cached results.
 	// If there are multiple requests queued up,
 	// it will be faster to do a bulk check for cached results instead of checking each one individually.
@@ -174,10 +177,14 @@ func runPairwiseAnalysis(options AnalysisOptions, keys []model.PairwiseKey) ([]*
 		// TEST
 		fmt.Printf("TEST - %s - runPairwiseAnalysis fetching keys.\n", options.InitiatorEmail)
 
-		_, keys, err = getCachedPairwiseResults(options)
+		var partialResults []*model.PairwiseAnalysis = nil
+		partialResults, keys, err = getCachedPairwiseResults(options)
 		if err != nil {
 			return nil, fmt.Errorf("Failed to re-check result cache before run: '%w'.", err)
 		}
+
+		// Collect the partial results from the cache.
+		results = append(results, partialResults...)
 	}
 
 	// TEST
@@ -218,7 +225,6 @@ func runPairwiseAnalysis(options AnalysisOptions, keys []model.PairwiseKey) ([]*
 	// TEST
 	fmt.Printf("TEST - %s - runPairwiseAnalysis pool results: '%v'.\n", options.InitiatorEmail, util.MustToJSON(poolResults))
 
-	results := make([]*model.PairwiseAnalysis, 0, len(keys))
 	var errs error = nil
 	totalRunTime := int64(0)
 

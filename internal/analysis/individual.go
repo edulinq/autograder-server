@@ -105,6 +105,7 @@ func runIndividualAnalysis(options AnalysisOptions, fullSubmissionIDs []string) 
 	}
 
 	// TEST
+	fmt.Printf("TEST - %s - runIndividualAnalysis initial keys: '%v'.\n", options.InitiatorEmail, fullSubmissionIDs)
 	fmt.Printf("TEST - %s - runIndividualAnalysis lock: '%s'.\n", options.InitiatorEmail, lockCourseID)
 
 	lockKey := fmt.Sprintf("analysis-individual-course-%s", lockCourseID)
@@ -119,6 +120,8 @@ func runIndividualAnalysis(options AnalysisOptions, fullSubmissionIDs []string) 
 		return nil, nil
 	}
 
+	results := make([]*model.IndividualAnalysis, 0, len(fullSubmissionIDs))
+
 	// If we had to wait for the lock, then check again for cached results.
 	// If there are multiple requests queued up,
 	// it will be faster to do a bulk check for cached results instead of checking each one individually.
@@ -126,10 +129,14 @@ func runIndividualAnalysis(options AnalysisOptions, fullSubmissionIDs []string) 
 		// TEST
 		fmt.Printf("TEST - %s - runIndividualAnalysis fetching keys.\n", options.InitiatorEmail)
 
-		_, fullSubmissionIDs, err = getCachedIndividualResults(options)
+		var partialResults []*model.IndividualAnalysis = nil
+		partialResults, fullSubmissionIDs, err = getCachedIndividualResults(options)
 		if err != nil {
 			return nil, fmt.Errorf("Failed to re-check result cache before run: '%w'.", err)
 		}
+
+		// Collect the partial results from the cache.
+		results = append(results, partialResults...)
 	}
 
 	// TEST
@@ -167,7 +174,6 @@ func runIndividualAnalysis(options AnalysisOptions, fullSubmissionIDs []string) 
 	// TEST
 	fmt.Printf("TEST - %s - runIndividualAnalysis pool results: '%v'.\n", options.InitiatorEmail, util.MustToJSON(poolResults))
 
-	results := make([]*model.IndividualAnalysis, 0, len(fullSubmissionIDs))
 	var errs error = nil
 	totalRunTime := int64(0)
 
