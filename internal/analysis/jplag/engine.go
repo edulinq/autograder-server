@@ -51,7 +51,7 @@ func (this *JPlagEngine) IsAvailable() bool {
 	return docker.CanAccessDocker()
 }
 
-func (this *JPlagEngine) ComputeFileSimilarity(paths [2]string, templatePath string) (*model.FileSimilarity, int64, error) {
+func (this *JPlagEngine) ComputeFileSimilarity(paths [2]string, templatePath string, ctx context.Context) (*model.FileSimilarity, int64, error) {
 	err := ensureImage()
 	if err != nil {
 		return nil, 0, fmt.Errorf("Failed to ensure JPlag docker image exists: '%w'.", err)
@@ -135,7 +135,7 @@ func (this *JPlagEngine) ComputeFileSimilarity(paths [2]string, templatePath str
 		arguments = append(arguments, "--base-code", "template")
 	}
 
-	stdout, stderr, _, _, err := docker.RunContainer(context.Background(), this, getImageName(), mounts, arguments, NAME, MAX_RUNTIME_SECS)
+	stdout, stderr, _, _, err := docker.RunContainer(ctx, this, getImageName(), mounts, arguments, NAME, MAX_RUNTIME_SECS)
 	if err != nil {
 		log.Debug("Failed to run JPlag container.", err, log.NewAttr("stdout", stdout), log.NewAttr("stderr", stderr))
 		return nil, 0, fmt.Errorf("Failed to run JPlag container: '%w'.", err)

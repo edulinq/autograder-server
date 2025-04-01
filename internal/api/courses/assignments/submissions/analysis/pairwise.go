@@ -43,8 +43,10 @@ func HandlePairwise(request *PairwiseRequest) (*PairwiseResponse, *core.APIError
 	}
 
 	request.ResolvedSubmissionIDs = fullSubmissionIDs
+	request.InitiatorEmail = request.ServerUser.Email
+	request.Context = request.Context
 
-	results, pendingCount, err := analysis.PairwiseAnalysis(request.AnalysisOptions, request.ServerUser.Email)
+	results, pendingCount, err := analysis.PairwiseAnalysis(request.AnalysisOptions)
 	if err != nil {
 		return nil, core.NewUserContextInternalError("-622", &request.APIRequestUserContext, "Failed to perform pairwise analysis.").
 			Err(err)
