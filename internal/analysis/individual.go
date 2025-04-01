@@ -66,6 +66,10 @@ func getCachedIndividualResults(options AnalysisOptions) ([]*model.IndividualAna
 		return make([]*model.IndividualAnalysis, 0), fullSubmissionIDs, nil
 	}
 
+	return getCachedIndividualResultsInternal(fullSubmissionIDs)
+}
+
+func getCachedIndividualResultsInternal(fullSubmissionIDs []string) ([]*model.IndividualAnalysis, []string, error) {
 	// Get any already done analysis results from the DB.
 	dbResults, err := db.GetIndividualAnalysis(fullSubmissionIDs)
 	if err != nil {
@@ -130,13 +134,24 @@ func runIndividualAnalysis(options AnalysisOptions, fullSubmissionIDs []string) 
 		fmt.Printf("TEST - %s - runIndividualAnalysis fetching keys.\n", options.InitiatorEmail)
 
 		var partialResults []*model.IndividualAnalysis = nil
-		partialResults, fullSubmissionIDs, err = getCachedIndividualResults(options)
+		partialResults, fullSubmissionIDs, err = getCachedIndividualResultsInternal(fullSubmissionIDs)
 		if err != nil {
 			return nil, fmt.Errorf("Failed to re-check result cache before run: '%w'.", err)
 		}
 
+		// TEST
+		fmt.Printf("TEST - %s - runIndividualAnalysis (second) cache results: '%s', '%s'.\n", options.InitiatorEmail, util.MustToJSON(partialResults), util.MustToJSON(fullSubmissionIDs))
+
 		// Collect the partial results from the cache.
 		results = append(results, partialResults...)
+	}
+
+	// All results were fetched from the cache.
+	if len(fullSubmissionIDs) == 0 {
+		// TEST
+		fmt.Printf("TEST - %s - runIndividualAnalysis all results fetched from cache (second-level): '%v'.\n", options.InitiatorEmail, util.MustToJSON(results))
+
+		return results, nil
 	}
 
 	// TEST

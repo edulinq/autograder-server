@@ -114,6 +114,10 @@ func getCachedPairwiseResults(options AnalysisOptions) ([]*model.PairwiseAnalysi
 		return make([]*model.PairwiseAnalysis, 0), allKeys, nil
 	}
 
+	return getCachedPairwiseResultsInternal(allKeys)
+}
+
+func getCachedPairwiseResultsInternal(allKeys []model.PairwiseKey) ([]*model.PairwiseAnalysis, []model.PairwiseKey, error) {
 	// Get any already done analysis results from the DB.
 	dbResults, err := db.GetPairwiseAnalysis(allKeys)
 	if err != nil {
@@ -178,13 +182,24 @@ func runPairwiseAnalysis(options AnalysisOptions, keys []model.PairwiseKey) ([]*
 		fmt.Printf("TEST - %s - runPairwiseAnalysis fetching keys.\n", options.InitiatorEmail)
 
 		var partialResults []*model.PairwiseAnalysis = nil
-		partialResults, keys, err = getCachedPairwiseResults(options)
+		partialResults, keys, err = getCachedPairwiseResultsInternal(keys)
 		if err != nil {
 			return nil, fmt.Errorf("Failed to re-check result cache before run: '%w'.", err)
 		}
 
+		// TEST
+		fmt.Printf("TEST - %s - runPairwiseAnalysis (second) cache results: '%s', '%s'.\n", options.InitiatorEmail, util.MustToJSON(partialResults), util.MustToJSON(keys))
+
 		// Collect the partial results from the cache.
 		results = append(results, partialResults...)
+	}
+
+	// All results were fetched from the cache.
+	if len(keys) == 0 {
+		// TEST
+		fmt.Printf("TEST - %s - runPairwiseAnalysis all results fetched from cache (second-level): '%v'.\n", options.InitiatorEmail, util.MustToJSON(results))
+
+		return results, nil
 	}
 
 	// TEST
