@@ -90,7 +90,7 @@ func loadGrades(path string, users map[string]*model.CourseUser, force bool) ([]
 				fmt.Println(message)
 				continue
 			} else {
-				return nil, fmt.Errorf(message)
+				return nil, fmt.Errorf("%s", message)
 			}
 		}
 
@@ -102,7 +102,7 @@ func loadGrades(path string, users map[string]*model.CourseUser, force bool) ([]
 				fmt.Println(message)
 				continue
 			} else {
-				return nil, fmt.Errorf(message)
+				return nil, fmt.Errorf("%s", message)
 			}
 		}
 
