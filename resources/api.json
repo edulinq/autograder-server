@@ -297,15 +297,13 @@
                 "limit": "int",
                 "root-user-nonce": "string",
                 "sort": "int",
-                "target-assignment": "string",
-                "target-course": "string",
-                "target-type": "string",
-                "target-user": "string",
+                "type": "string",
                 "user-email": "string",
-                "user-pass": "string"
+                "user-pass": "string",
+                "where": "map[github.com/edulinq/autograder/internal/stats.MetricAttribute]interface {}"
             },
             "output": {
-                "results": "[]*github.com/edulinq/autograder/internal/stats.CourseMetric"
+                "results": "[]*github.com/edulinq/autograder/internal/stats.Metric"
             }
         },
         "courses/upsert/filespec": {
@@ -478,8 +476,8 @@
                 "types": "map[string]github.com/edulinq/autograder/internal/api/core.TypeDescription"
             }
         },
-        "stats/apirequest/query": {
-            "description": "Query the API request stats for the server.",
+        "stats/query": {
+            "description": "Query stats for the server.",
             "input": {
                 "APIRequest": "github.com/edulinq/autograder/internal/api/core.APIRequest",
                 "MinServerRoleAdmin": "bool",
@@ -488,34 +486,13 @@
                 "limit": "int",
                 "root-user-nonce": "string",
                 "sort": "int",
-                "target-assignment": "string",
-                "target-course": "string",
-                "target-endpoint": "string",
-                "target-locator": "string",
-                "target-sender": "string",
-                "target-user": "string",
+                "type": "string",
                 "user-email": "string",
-                "user-pass": "string"
+                "user-pass": "string",
+                "where": "map[github.com/edulinq/autograder/internal/stats.MetricAttribute]interface {}"
             },
             "output": {
-                "results": "[]*github.com/edulinq/autograder/internal/stats.APIRequestMetric"
-            }
-        },
-        "stats/system/query": {
-            "description": "Query the system stats for the server.",
-            "input": {
-                "APIRequest": "github.com/edulinq/autograder/internal/api/core.APIRequest",
-                "MinServerRoleAdmin": "bool",
-                "after": "int64",
-                "before": "int64",
-                "limit": "int",
-                "root-user-nonce": "string",
-                "sort": "int",
-                "user-email": "string",
-                "user-pass": "string"
-            },
-            "output": {
-                "results": "[]*github.com/edulinq/autograder/internal/stats.SystemMetrics"
+                "results": "[]*github.com/edulinq/autograder/internal/stats.Metric"
             }
         },
         "system/stacks": {
@@ -1173,18 +1150,16 @@
                 "limit": "int",
                 "root-user-nonce": "string",
                 "sort": "int",
-                "target-assignment": "string",
-                "target-course": "string",
-                "target-type": "string",
-                "target-user": "string",
+                "type": "string",
                 "user-email": "string",
-                "user-pass": "string"
+                "user-pass": "string",
+                "where": "map[github.com/edulinq/autograder/internal/stats.MetricAttribute]interface {}"
             }
         },
         "github.com/edulinq/autograder/internal/api/courses/stats.QueryResponse": {
             "category": "struct",
             "fields": {
-                "results": "[]*github.com/edulinq/autograder/internal/stats.CourseMetric"
+                "results": "[]*github.com/edulinq/autograder/internal/stats.Metric"
             }
         },
         "github.com/edulinq/autograder/internal/api/courses/upsert.FileSpecRequest": {
@@ -1395,7 +1370,7 @@
                 "types": "map[string]github.com/edulinq/autograder/internal/api/core.TypeDescription"
             }
         },
-        "github.com/edulinq/autograder/internal/api/stats/apirequest.QueryRequest": {
+        "github.com/edulinq/autograder/internal/api/stats.QueryRequest": {
             "category": "struct",
             "fields": {
                 "APIRequest": "github.com/edulinq/autograder/internal/api/core.APIRequest",
@@ -1405,40 +1380,16 @@
                 "limit": "int",
                 "root-user-nonce": "string",
                 "sort": "int",
-                "target-assignment": "string",
-                "target-course": "string",
-                "target-endpoint": "string",
-                "target-locator": "string",
-                "target-sender": "string",
-                "target-user": "string",
+                "type": "string",
                 "user-email": "string",
-                "user-pass": "string"
+                "user-pass": "string",
+                "where": "map[github.com/edulinq/autograder/internal/stats.MetricAttribute]interface {}"
             }
         },
-        "github.com/edulinq/autograder/internal/api/stats/apirequest.QueryResponse": {
+        "github.com/edulinq/autograder/internal/api/stats.QueryResponse": {
             "category": "struct",
             "fields": {
-                "results": "[]*github.com/edulinq/autograder/internal/stats.APIRequestMetric"
-            }
-        },
-        "github.com/edulinq/autograder/internal/api/stats/system.QueryRequest": {
-            "category": "struct",
-            "fields": {
-                "APIRequest": "github.com/edulinq/autograder/internal/api/core.APIRequest",
-                "MinServerRoleAdmin": "bool",
-                "after": "int64",
-                "before": "int64",
-                "limit": "int",
-                "root-user-nonce": "string",
-                "sort": "int",
-                "user-email": "string",
-                "user-pass": "string"
-            }
-        },
-        "github.com/edulinq/autograder/internal/api/stats/system.QueryResponse": {
-            "category": "struct",
-            "fields": {
-                "results": "[]*github.com/edulinq/autograder/internal/stats.SystemMetrics"
+                "results": "[]*github.com/edulinq/autograder/internal/stats.Metric"
             }
         },
         "github.com/edulinq/autograder/internal/api/system.StacksRequest": {
@@ -1987,89 +1938,28 @@
                 "skip-updates": "bool"
             }
         },
-        "github.com/edulinq/autograder/internal/stats.APIRequestMetric": {
+        "github.com/edulinq/autograder/internal/stats.Metric": {
             "category": "struct",
             "fields": {
-                "assignment": "string",
-                "attributes": "map[string]interface {}",
-                "course": "string",
-                "duration": "uint64",
-                "endpoint": "string",
-                "locator": "string",
-                "sender": "string",
-                "timestamp": "int64",
-                "user": "string"
-            }
-        },
-        "github.com/edulinq/autograder/internal/stats.APIRequestMetricQuery": {
-            "category": "struct",
-            "fields": {
-                "after": "int64",
-                "before": "int64",
-                "limit": "int",
-                "sort": "int",
-                "target-assignment": "string",
-                "target-course": "string",
-                "target-endpoint": "string",
-                "target-locator": "string",
-                "target-sender": "string",
-                "target-user": "string"
-            }
-        },
-        "github.com/edulinq/autograder/internal/stats.BaseMetric": {
-            "category": "struct",
-            "fields": {
-                "attributes": "map[string]interface {}",
-                "timestamp": "int64"
-            }
-        },
-        "github.com/edulinq/autograder/internal/stats.BaseQuery": {
-            "category": "struct",
-            "fields": {
-                "after": "int64",
-                "before": "int64",
-                "limit": "int",
-                "sort": "int"
-            }
-        },
-        "github.com/edulinq/autograder/internal/stats.CourseMetric": {
-            "category": "struct",
-            "fields": {
-                "assignment": "string",
-                "attributes": "map[string]interface {}",
-                "course": "string",
-                "duration": "uint64",
+                "attributes": "map[github.com/edulinq/autograder/internal/stats.MetricAttribute]interface {}",
                 "timestamp": "int64",
                 "type": "string",
-                "user": "string"
+                "value": "float64"
             }
         },
-        "github.com/edulinq/autograder/internal/stats.CourseMetricQuery": {
-            "category": "struct",
-            "fields": {
-                "after": "int64",
-                "before": "int64",
-                "limit": "int",
-                "sort": "int",
-                "target-assignment": "string",
-                "target-course": "string",
-                "target-type": "string",
-                "target-user": "string"
-            }
-        },
-        "github.com/edulinq/autograder/internal/stats.CourseMetricType": {
+        "github.com/edulinq/autograder/internal/stats.MetricType": {
             "alias-type": "string",
             "category": "alias"
         },
-        "github.com/edulinq/autograder/internal/stats.SystemMetrics": {
+        "github.com/edulinq/autograder/internal/stats.Query": {
             "category": "struct",
             "fields": {
-                "attributes": "map[string]interface {}",
-                "cpu-percent": "float64",
-                "mem-percent": "float64",
-                "net-bytes-received": "uint64",
-                "net-bytes-sent": "uint64",
-                "timestamp": "int64"
+                "after": "int64",
+                "before": "int64",
+                "limit": "int",
+                "sort": "int",
+                "type": "string",
+                "where": "map[github.com/edulinq/autograder/internal/stats.MetricAttribute]interface {}"
             }
         },
         "github.com/edulinq/autograder/internal/timestamp.Timestamp": {

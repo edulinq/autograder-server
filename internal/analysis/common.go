@@ -1,6 +1,7 @@
 package analysis
 
 import (
+	"context"
 	"fmt"
 	"path/filepath"
 	"strings"
@@ -27,6 +28,18 @@ type AnalysisOptions struct {
 
 	// Wait for the entire analysis to complete and return all results.
 	WaitForCompletion bool `json:"wait-for-completion"`
+
+	// Email of the person making the request for logging/stats purposes.
+	InitiatorEmail string `json:"-"`
+
+	// A context that can be used to cancel the analysis.
+	Context context.Context `json:"-"`
+
+	// If true, do not swap the context to the background context when running.
+	// By default (when this is false), the context will be swapped to the background context when !WaitForCompletion.
+	// The swap is so that analysis does not get canceled when an HTTP request is complete.
+	// Setting this true is useful for testing (as one round of analysis tests can be wrapped up).
+	RetainOriginalContext bool `json:"-"`
 
 	ResolvedSubmissionIDs []string `json:"-"`
 }
@@ -154,20 +167,20 @@ func collectAnalysisStats(fullSubmissionIDs []string, totalRunTime int64, initia
 	now := timestamp.Now()
 
 	for courseID, assignmentID := range seenIdentifiers {
-		metric := stats.CourseMetric{
-			BaseMetric: stats.BaseMetric{
-				Timestamp: now,
-				Attributes: map[string]any{
-					stats.ATTRIBUTE_KEY_ANALYSIS: analysisType,
-				},
+		metric := stats.Metric{
+			Timestamp: now,
+			Type:      stats.MetricTypeCodeAnalysisTime,
+			Value:     float64(totalRunTime),
+			Attributes: map[stats.MetricAttribute]any{
+				stats.MetricAttributeAnalysisType: analysisType,
+				stats.MetricAttributeCourseID:     courseID,
 			},
-			Type:         stats.CourseMetricTypeCodeAnalysisTime,
-			CourseID:     courseID,
-			AssignmentID: assignmentID,
-			UserEmail:    initiatorEmail,
-			Value:        uint64(totalRunTime),
 		}
 
-		stats.AsyncStoreCourseMetric(&metric)
+		// Add optional fields if non-empty.
+		metric.SetUserEmail(initiatorEmail)
+		metric.SetAssignmentID(assignmentID)
+
+		stats.AsyncStoreMetric(&metric)
 	}
 }

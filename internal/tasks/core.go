@@ -90,7 +90,21 @@ func runNextTask() {
 	runTask(task)
 	log.Debug("Task finished.", task)
 
-	stats.AsyncStoreCourseTaskTime(startTimestamp, timestamp.Now(), task.CourseID, task.AssignmentID, task.UserEmail, string(task.Type))
+	metric := stats.Metric{
+		Timestamp: startTimestamp,
+		Type:      stats.MetricTypeTaskTime,
+		Value:     float64((timestamp.Now() - startTimestamp).ToMSecs()),
+		Attributes: map[stats.MetricAttribute]any{
+			stats.MetricAttributeTaskType: task.Type,
+			stats.MetricAttributeCourseID: task.CourseID,
+		},
+	}
+
+	// Add optional fields if non-empty.
+	metric.SetUserEmail(task.UserEmail)
+	metric.SetAssignmentID(task.AssignmentID)
+
+	stats.AsyncStoreMetric(&metric)
 
 	task.AdvanceRunTimes()
 

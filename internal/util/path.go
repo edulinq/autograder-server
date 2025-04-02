@@ -285,6 +285,10 @@ func ShouldNormalizePath(path string) string {
 	path = filepath.Clean(path)
 	path = ShouldAbs(path)
 
+	if !PathExists(path) {
+		return path
+	}
+
 	realPath, err := filepath.EvalSymlinks(path)
 	if err != nil {
 		log.Debug("Failed to eval symlinks for realpath.", err, log.NewAttr("path", path))
