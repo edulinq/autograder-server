@@ -18,7 +18,7 @@ import (
 
 const PYTHON_AUTOGRADER_INVOCATION = "python3 -m autograder.cli.grading.grade-dir --grader <grader> --dir <basedir> --outpath <outpath>"
 const PYTHON_GRADER_FILENAME = "grader.py"
-const PYTHON_DOCKER_IMAGE_BASENAME = "edulinq/grader.python"
+const PYTHON_DOCKER_IMAGE_BASENAME = "ghcr.io/edulinq/grader.python"
 
 // A small delay to wait for a process to finish after already timing out.
 var noDockerTimeoutWaitDelayMS int = 10 * 1000

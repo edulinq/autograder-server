@@ -59,18 +59,18 @@ we can automatically verify the graders produce the correct results.
 To do so, each sample submission requires a `test-submission.json`, such as this [example for not-implemented](resources/my-first-course/final-with-ci/assignment-01/sample-submissions/not-implemented/test-submission.json).
 This allows CI to capture the output of the grader and compare the results with the expected results.
 
-With these parts in place, we can write the [CI script to check submissions](resources/my-first-course/final-with-ci/.ci/check_submissions.sh).
+With these parts in place, we can write the [CI script to check submissions](resources/my-first-course/final-with-ci/check_submissions.sh).
 Run the script as follows (from the `final-with-ci` directory):
 ```
-./.ci/check_submissions.sh
+./check_submissions.sh
 ```
 
 If everything works correctly, the script will output something similar to the following:
 ```
-Checking assignment: '/home/<user>/autograder-server/docs/tutorials/resources/my-first-course/final-with-ci/.ci/../assignment-01'.
-Testing assignment '/home/<user>/autograder-server/docs/tutorials/resources/my-first-course/final-with-ci/.ci/../assignment-01/assignment.json' and submission '/home/<user>/autograder-server/docs/tutorials/resources/my-first-course/final-with-ci/assignment-01/sample-submissions/solution/test-submission.json'.
-Testing assignment '/home/<user>/autograder-server/docs/tutorials/resources/my-first-course/final-with-ci/.ci/../assignment-01/assignment.json' and submission '/home/<user>/autograder-server/docs/tutorials/resources/my-first-course/final-with-ci/assignment-01/sample-submissions/syntax-error/test-submission.json'.
-Testing assignment '/home/<user>/autograder-server/docs/tutorials/resources/my-first-course/final-with-ci/.ci/../assignment-01/assignment.json' and submission '/home/<user>/autograder-server/docs/tutorials/resources/my-first-course/final-with-ci/assignment-01/sample-submissions/not-implemented/test-submission.json'.
+Checking assignment: '/home/<user>/autograder-server/docs/tutorials/resources/my-first-course/final-with-ci/../assignment-01'.
+Testing assignment '/home/<user>/autograder-server/docs/tutorials/resources/my-first-course/final-with-ci/../assignment-01/assignment.json' and submission '/home/<user>/autograder-server/docs/tutorials/resources/my-first-course/final-with-ci/assignment-01/sample-submissions/solution/test-submission.json'.
+Testing assignment '/home/<user>/autograder-server/docs/tutorials/resources/my-first-course/final-with-ci/../assignment-01/assignment.json' and submission '/home/<user>/autograder-server/docs/tutorials/resources/my-first-course/final-with-ci/assignment-01/sample-submissions/syntax-error/test-submission.json'.
+Testing assignment '/home/<user>/autograder-server/docs/tutorials/resources/my-first-course/final-with-ci/../assignment-01/assignment.json' and submission '/home/<user>/autograder-server/docs/tutorials/resources/my-first-course/final-with-ci/assignment-01/sample-submissions/not-implemented/test-submission.json'.
 Encountered 0 error(s) while testing 3 submissions.
 Success
 No issues found!

@@ -203,7 +203,7 @@ To get started, let's create an assignment config at
     "static-files": [
         "grader.py"
     ],
-    "image": "edulinq/grader.python-alpine"
+    "image": "ghcr.io/edulinq/grader.python:0.1.0.2-alpine"
 }
 ```
 
@@ -253,7 +253,7 @@ and successfully built Docker images for our new assignment!
 
 *Sidenote:*  
 Note that our assignment config is missing the `invocation` field that tells the autograder how to run the grader program/script.
-For canonical Python grader images (`edulinq/grader.python-*`),
+For canonical Python grader images (`ghcr.io/edulinq/grader.python*`),
 the autograder already understands what the invocation should be if none is specified.
 If you put in your invocation manually, it would be:
 ```json
