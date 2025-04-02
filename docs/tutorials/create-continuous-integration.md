@@ -67,10 +67,10 @@ Run the script as follows (from the `final-with-ci` directory):
 
 If everything works correctly, the script will output something similar to the following:
 ```
-Checking assignment: '/home/<user>/autograder-server/docs/tutorials/resources/my-first-course/final-with-ci/../assignment-01'.
-Testing assignment '/home/<user>/autograder-server/docs/tutorials/resources/my-first-course/final-with-ci/../assignment-01/assignment.json' and submission '/home/<user>/autograder-server/docs/tutorials/resources/my-first-course/final-with-ci/assignment-01/sample-submissions/solution/test-submission.json'.
-Testing assignment '/home/<user>/autograder-server/docs/tutorials/resources/my-first-course/final-with-ci/../assignment-01/assignment.json' and submission '/home/<user>/autograder-server/docs/tutorials/resources/my-first-course/final-with-ci/assignment-01/sample-submissions/syntax-error/test-submission.json'.
-Testing assignment '/home/<user>/autograder-server/docs/tutorials/resources/my-first-course/final-with-ci/../assignment-01/assignment.json' and submission '/home/<user>/autograder-server/docs/tutorials/resources/my-first-course/final-with-ci/assignment-01/sample-submissions/not-implemented/test-submission.json'.
+Checking assignment: '/home/<user>/autograder-server/docs/tutorials/resources/my-first-course/final-with-ci/assignment-01'.
+Testing assignment '/home/<user>/autograder-server/docs/tutorials/resources/my-first-course/final-with-ci/assignment-01/assignment.json' and submission '/home/<user>/autograder-server/docs/tutorials/resources/my-first-course/final-with-ci/assignment-01/sample-submissions/solution/test-submission.json'.
+Testing assignment '/home/<user>/autograder-server/docs/tutorials/resources/my-first-course/final-with-ci/assignment-01/assignment.json' and submission '/home/<user>/autograder-server/docs/tutorials/resources/my-first-course/final-with-ci/assignment-01/sample-submissions/syntax-error/test-submission.json'.
+Testing assignment '/home/<user>/autograder-server/docs/tutorials/resources/my-first-course/final-with-ci/assignment-01/assignment.json' and submission '/home/<user>/autograder-server/docs/tutorials/resources/my-first-course/final-with-ci/assignment-01/sample-submissions/not-implemented/test-submission.json'.
 Encountered 0 error(s) while testing 3 submissions.
 Success
 No issues found!

@@ -62,7 +62,7 @@ Leverage the `static-docker-commands` and `static-file-ops` to reduce post submi
 When graders work locally but unexpectedly give the wrong output during docker grading,
 the easiest way to pinpoint issues is to manually step through the grading process inside the grading container.
 
-The assignment grader image will likely follow the naming scheme of `autograder.<course-name>.<assignment-name>`.
+The assignment grader image will generally follow the naming scheme of `autograder.<course-name>.<assignment-name>`.
 To confirm the exact name of the grading image, list all Docker images by running the `docker images` command.
 
 Using `assignment-01` from `my-first-course` from the [create-a-course tutorial](create-a-course.md) as an example,

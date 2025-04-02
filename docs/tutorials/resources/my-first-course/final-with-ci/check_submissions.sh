@@ -3,7 +3,6 @@
 # Ensure that all test submissions run correctly.
 
 readonly THIS_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-readonly BASE_DIR="${THIS_DIR}/.."
 
 function check_grader() {
     local assignment_dir="${1}"
@@ -25,7 +24,7 @@ function check_assignments() {
     local error_count=0
 
     # Assignment dirs are identified by an assignment.json file.
-    for assignment_path in "${BASE_DIR}/"*"/assignment.json" ; do
+    for assignment_path in "${THIS_DIR}/"*"/assignment.json" ; do
         assignment_dir=$(dirname "${assignment_path}")
         echo "Checking assignment: '${assignment_dir}'."
 
