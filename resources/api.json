@@ -1581,6 +1581,7 @@
             "category": "struct",
             "fields": {
                 "id": "string",
+                "late-days-lms-id": "string",
                 "name": "string"
             }
         },

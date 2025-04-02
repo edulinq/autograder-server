@@ -70,7 +70,7 @@ func (this *Assignment) GetCourse() *Course {
 }
 
 // Get the assignment's name, falling back to id if there is no name.
-func (this *Assignment) GetName() string {
+func (this *Assignment) GetDisplayName() string {
 	if this.Name == "" {
 		return this.ID
 	}

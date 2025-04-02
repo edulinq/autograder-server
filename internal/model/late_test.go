@@ -233,7 +233,7 @@ func TestLateGradingPolicyValidate(test *testing.T) {
 				MaxLateDays: 1,
 			},
 			nil,
-			"LMS ID for late days assignment cannot be empty",
+			"Both LMS ID and name for late days assignment cannot be empty",
 		},
 	}
 

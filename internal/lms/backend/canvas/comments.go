@@ -9,6 +9,10 @@ import (
 )
 
 func (this *CanvasBackend) UpdateComments(assignmentID string, comments []*lmstypes.SubmissionComment) error {
+	if assignmentID == "" {
+		return fmt.Errorf("Cannot update comments, target assignment ID is empty.")
+	}
+
 	for i, comment := range comments {
 		if i != 0 {
 			time.Sleep(time.Duration(UPLOAD_SLEEP_TIME_SEC))
@@ -24,6 +28,10 @@ func (this *CanvasBackend) UpdateComments(assignmentID string, comments []*lmsty
 }
 
 func (this *CanvasBackend) UpdateComment(assignmentID string, comment *lmstypes.SubmissionComment) error {
+	if assignmentID == "" {
+		return fmt.Errorf("Cannot update comment, target assignment ID is empty.")
+	}
+
 	this.getAPILock()
 	defer this.releaseAPILock()
 

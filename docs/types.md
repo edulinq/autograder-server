@@ -778,11 +778,14 @@ the number of actual days late, the number of remaining grace days the student h
 If the number of effective grace days is not sufficient to cover the number of actual days the assignment is late,
 then each remaining late day is penalized in the same way as the `percentage-penalty` late policy.
 
-| Name               | Type    | Required | Description |
-|--------------------|---------|----------|-------------|
-| `penalty`          | Float   | true     | The proportion of the assignment's max points to apply as a penalty for each day of being late (after applying grace days). Must be in larger than 0.0 and less than or equal to 1.0. |
-| `max-late-days`    | Integer | true     | The maximum number of late days students may expend on this assignment. Must be less than or equal to `reject-after-days`. |
-| `late-days-lms-id` | String  | true     | The LMS ID for the assignment that will be used to track late days for each student. This assignment is usually not included in the final grade, but serves as a great place for students to view how many late days they have left. The autograder should have permissions to read and write this assignment. Instructors should populate it with the initial number of available late days for each student. |
+| Name                 | Type    | Required | Description |
+|----------------------|---------|----------|-------------|
+| `penalty`            | Float   | true     | The proportion of the assignment's max points to apply as a penalty for each day of being late (after applying grace days). Must be in larger than 0.0 and less than or equal to 1.0. |
+| `max-late-days`      | Integer | true     | The maximum number of late days students may expend on this assignment. Must be less than or equal to `reject-after-days`. |
+| `late-days-lms-id`   | String  | false*   | The LMS ID for the assignment that will be used to track late days for each student. This assignment is usually not included in the final grade, but serves as a great place for students to view how many late days they have left. The autograder should have permissions to read and write this assignment. Instructors should populate it with the initial number of available late days for each student. |
+| `late-days-lms-name` | String  | false*   | The name of the late days assignment in the LMS. This can be used to sync with the late days assignment if `late-days-lms-id` is not provided.
+
+At least one of the `late-days-lms-id` and `late-days-lms-name` fields must be set.
 
 For example:
 ```json
