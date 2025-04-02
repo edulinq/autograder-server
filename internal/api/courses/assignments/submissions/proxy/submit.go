@@ -36,6 +36,8 @@ func HandleSubmit(request *SubmitRequest) (*SubmitResponse, *core.APIError) {
 		return &response, nil
 	}
 
+	response.FoundUser = true
+
 	gradeOptions := grader.GetDefaultGradeOptions()
 	// Proxy submissions are not subject to submission restrictions.
 	gradeOptions.CheckRejection = false
