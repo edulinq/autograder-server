@@ -24,8 +24,9 @@ type LateGradingPolicy struct {
 	Penalty         float64               `json:"penalty,omitempty"`
 	RejectAfterDays int                   `json:"reject-after-days,omitempty"`
 
-	MaxLateDays   int    `json:"max-late-days,omitempty"`
-	LateDaysLMSID string `json:"late-days-lms-id,omitempty"`
+	MaxLateDays     int    `json:"max-late-days,omitempty"`
+	LateDaysLMSID   string `json:"late-days-lms-id,omitempty"`
+	LateDaysLMSName string `json:"late-days-lms-name,omitempty"`
 }
 
 func (this *LateGradingPolicy) Validate() error {
@@ -63,8 +64,8 @@ func (this *LateGradingPolicy) Validate() error {
 			return fmt.Errorf("Policy '%s': max late days must be in [1, <reject days>(%d)], found '%d'.", this.Type, this.RejectAfterDays, this.MaxLateDays)
 		}
 
-		if this.LateDaysLMSID == "" {
-			return fmt.Errorf("Policy '%s': LMS ID for late days assignment cannot be empty.", this.Type)
+		if (this.LateDaysLMSID == "") && (this.LateDaysLMSName == "") {
+			return fmt.Errorf("Policy '%s': Both LMS ID and name for late days assignment cannot be empty.", this.Type)
 		}
 	default:
 		return fmt.Errorf("Unknown late policy type: '%s'.", this.Type)

@@ -2,6 +2,7 @@ package stats
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/edulinq/autograder/internal/config"
 	"github.com/edulinq/autograder/internal/log"
@@ -168,6 +169,7 @@ func AsyncStoreMetric(metric *Metric) {
 }
 
 func (this *Metric) setAttributeIfNotEmpty(key MetricAttribute, value string) {
+	value = strings.TrimSpace(value)
 	if value != "" {
 		this.Attributes[key] = value
 	}

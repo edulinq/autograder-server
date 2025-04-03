@@ -1,6 +1,8 @@
 package stats
 
 import (
+	"fmt"
+
 	"github.com/edulinq/autograder/internal/api/core"
 	"github.com/edulinq/autograder/internal/db"
 	"github.com/edulinq/autograder/internal/stats"
@@ -21,7 +23,8 @@ type QueryResponse struct {
 func HandleQuery(request *QueryRequest) (*QueryResponse, *core.APIError) {
 	err := request.Query.Validate()
 	if err != nil {
-		return nil, core.NewBadRequestError("-301", &request.APIRequest, "Failed to validate query.").Err(err)
+		message := fmt.Sprintf("Failed to validate query: '%s'.", err.Error())
+		return nil, core.NewBadRequestError("-301", &request.APIRequest, message).Err(err)
 	}
 
 	records, err := db.GetMetrics(request.Query)

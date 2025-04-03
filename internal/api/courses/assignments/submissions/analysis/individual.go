@@ -43,8 +43,10 @@ func HandleIndividual(request *IndividualRequest) (*IndividualResponse, *core.AP
 	}
 
 	request.ResolvedSubmissionIDs = fullSubmissionIDs
+	request.InitiatorEmail = request.ServerUser.Email
+	request.Context = request.Context
 
-	results, pendingCount, err := analysis.IndividualAnalysis(request.AnalysisOptions, request.ServerUser.Email)
+	results, pendingCount, err := analysis.IndividualAnalysis(request.AnalysisOptions)
 	if err != nil {
 		return nil, core.NewUserContextInternalError("-626", &request.APIRequestUserContext, "Failed to perform individual analysis.").
 			Err(err)

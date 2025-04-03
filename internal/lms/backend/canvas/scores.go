@@ -9,6 +9,10 @@ import (
 )
 
 func (this *CanvasBackend) FetchAssignmentScore(assignmentID string, userID string) (*lmstypes.SubmissionScore, error) {
+	if assignmentID == "" {
+		return nil, fmt.Errorf("Cannot fetch assignment score, target assignment ID is empty.")
+	}
+
 	this.getAPILock()
 	defer this.releaseAPILock()
 
@@ -37,6 +41,10 @@ func (this *CanvasBackend) FetchAssignmentScores(assignmentID string) ([]*lmstyp
 }
 
 func (this *CanvasBackend) fetchAssignmentScores(assignmentID string, rewriteLinks bool) ([]*lmstypes.SubmissionScore, error) {
+	if assignmentID == "" {
+		return nil, fmt.Errorf("Cannot fetch assignment scores, target assignment ID is empty.")
+	}
+
 	this.getAPILock()
 	defer this.releaseAPILock()
 
@@ -86,6 +94,10 @@ func (this *CanvasBackend) fetchAssignmentScores(assignmentID string, rewriteLin
 }
 
 func (this *CanvasBackend) UpdateAssignmentScores(assignmentID string, scores []*lmstypes.SubmissionScore) error {
+	if assignmentID == "" {
+		return fmt.Errorf("Cannot update assignment scores, target assignment ID is empty.")
+	}
+
 	for page := 0; (page * POST_PAGE_SIZE) < len(scores); page++ {
 		startIndex := page * POST_PAGE_SIZE
 		endIndex := min(len(scores), ((page + 1) * POST_PAGE_SIZE))

@@ -1,6 +1,8 @@
 package core
 
 import (
+	"context"
+
 	"github.com/edulinq/autograder/internal/model"
 )
 
@@ -16,5 +18,6 @@ type SimilarityEngine interface {
 	// In additional to similarity, the engine should also return the time it took (in milliseconds) to run
 	// (not counting any time locked/waiting).
 	// On an error, 0 should be returned for run time.
-	ComputeFileSimilarity(paths [2]string, templatePath string) (*model.FileSimilarity, int64, error)
+	// On a timeout, (nil, 0, nil) should be returned.
+	ComputeFileSimilarity(paths [2]string, templatePath string, ctx context.Context) (*model.FileSimilarity, int64, error)
 }

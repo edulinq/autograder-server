@@ -157,12 +157,12 @@ func sendAPIResponse(apiRequest ValidAPIRequest, response http.ResponseWriter,
 		Type:      stats.MetricTypeAPIRequest,
 		Value:     float64((apiResponse.EndTimestamp - startTime).ToMSecs()),
 		Attributes: map[stats.MetricAttribute]any{
-			stats.MetricAttributeSender:   sender,
 			stats.MetricAttributeEndpoint: endpoint,
 		},
 	}
 
 	// Add optional fields if non-empty.
+	metric.SetSender(sender)
 	metric.SetAssignmentID(assignmentID)
 	metric.SetCourseID(courseID)
 	metric.SetLocator(locator)

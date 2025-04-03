@@ -128,26 +128,26 @@ func (this *Course) Validate() error {
 
 func (this *Course) AddAssignment(assignment *Assignment) error {
 	for _, otherAssignment := range this.Assignments {
-		if assignment.GetID() == otherAssignment.GetID() {
+		if assignment.ID == otherAssignment.ID {
 			return fmt.Errorf(
 				"Found multiple assignments with the same ID ('%s'): ['%s', '%s'].",
-				assignment.GetID(), otherAssignment.GetSourceDir(), assignment.GetSourceDir())
+				assignment.ID, otherAssignment.GetSourceDir(), assignment.GetSourceDir())
 		}
 
-		if assignment.GetName() == otherAssignment.GetName() {
+		if (assignment.Name != "") && (assignment.Name == otherAssignment.Name) {
 			return fmt.Errorf(
 				"Found multiple assignments with the same name ('%s'): ['%s', '%s'].",
-				assignment.GetName(), otherAssignment.GetID(), assignment.GetID())
+				assignment.Name, otherAssignment.ID, assignment.ID)
 		}
 
 		if (assignment.GetLMSID() != "") && (assignment.GetLMSID() == otherAssignment.GetLMSID()) {
 			return fmt.Errorf(
 				"Found multiple assignments with the same LMS ID ('%s'): ['%s', '%s'].",
-				assignment.GetLMSID(), otherAssignment.GetID(), assignment.GetID())
+				assignment.GetLMSID(), otherAssignment.ID, assignment.ID)
 		}
 	}
 
-	this.Assignments[assignment.GetID()] = assignment
+	this.Assignments[assignment.ID] = assignment
 	return nil
 }
 

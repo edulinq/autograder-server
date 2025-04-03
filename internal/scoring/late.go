@@ -116,11 +116,11 @@ func applyConstantPolicy(policy model.LateGradingPolicy, scores map[string]*mode
 	}
 }
 
-func applyLateDaysPolicy(
-	policy model.LateGradingPolicy,
-	assignment *model.Assignment, users map[string]*model.CourseUser,
-	scores map[string]*model.ScoringInfo, penalty float64,
-	dryRun bool) error {
+func applyLateDaysPolicy(policy model.LateGradingPolicy, assignment *model.Assignment, users map[string]*model.CourseUser, scores map[string]*model.ScoringInfo, penalty float64, dryRun bool) error {
+	if policy.LateDaysLMSID == "" {
+		return fmt.Errorf("Cannot apply late days policy, late days assignment LMS ID is empty.")
+	}
+
 	allLateDays, err := fetchLateDays(policy, assignment)
 	if err != nil {
 		return err

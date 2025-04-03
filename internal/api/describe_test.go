@@ -82,7 +82,7 @@ func TestDescribeFull(test *testing.T) {
 		util.MustJSONFromString(descriptionString, &descriptions)
 
 		if !reflect.DeepEqual(expectedDescriptions, descriptions) {
-			message := "Unexpected API Descriptions. "
+			message := "Unexpected API Descriptions.\n"
 
 			for endpoint, expectedDesc := range expectedDescriptions.Endpoints {
 				actualDesc, ok := descriptions.Endpoints[endpoint]
@@ -113,7 +113,7 @@ func TestDescribeFull(test *testing.T) {
 			message = message + fmt.Sprintf("Unexpected API Descriptions. Expected: '%s', actual: '%s'.\n",
 				util.MustToJSONIndent(expectedDescriptions), util.MustToJSONIndent(descriptions))
 
-			test.Fatalf(message)
+			test.Fatal(message)
 		}
 	}
 }

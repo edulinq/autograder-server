@@ -72,7 +72,7 @@ func runSubmissionTests(test *testing.T, parallel bool, useDocker bool) {
 				test.Parallel()
 			}
 
-			result, reject, softError, err := Grade(context.Background(), testSubmission.Assignment, testSubmission.Dir, user, TEST_MESSAGE, false, gradeOptions)
+			result, reject, softError, err := Grade(context.Background(), testSubmission.Assignment, testSubmission.Dir, user, TEST_MESSAGE, gradeOptions)
 			if err != nil {
 				if result != nil {
 					fmt.Println("--- stdout ---")
@@ -187,8 +187,9 @@ func testGradeCancelOrTimeout(test *testing.T, ctx context.Context, noDocker boo
 
 	options := GetDefaultGradeOptions()
 	options.NoDocker = noDocker
+	options.CheckRejection = false
 
-	result, reject, softError, err := Grade(ctx, assignment, submissionDir, "course-student@test.edulinq.org", "", false, options)
+	result, reject, softError, err := Grade(ctx, assignment, submissionDir, "course-student@test.edulinq.org", "", options)
 	if err != nil {
 		if result != nil {
 			fmt.Println("--- stdout ---")
@@ -237,7 +238,10 @@ func testTruncatedOutput(test *testing.T, sizeKB int, expectedTruncated bool) {
 
 	assignment := db.MustGetAssignment("course-languages", "bash")
 
-	result, reject, softError, err := Grade(context.Background(), assignment, submissionDir, "course-student@test.edulinq.org", "", false, GetDefaultGradeOptions())
+	options := GetDefaultGradeOptions()
+	options.CheckRejection = false
+
+	result, reject, softError, err := Grade(context.Background(), assignment, submissionDir, "course-student@test.edulinq.org", "", options)
 	if err != nil {
 		test.Fatalf("Failed to grade assignment: '%v'.", err)
 	}

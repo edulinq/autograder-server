@@ -8,6 +8,10 @@ import (
 )
 
 func (this *CanvasBackend) FetchAssignment(assignmentID string) (*lmstypes.Assignment, error) {
+	if assignmentID == "" {
+		return nil, fmt.Errorf("Cannot fetch assignment, target assignment ID is empty.")
+	}
+
 	this.getAPILock()
 	defer this.releaseAPILock()
 

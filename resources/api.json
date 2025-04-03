@@ -174,6 +174,25 @@
                 "submission-result": "*model.GradingInfo"
             }
         },
+        "courses/assignments/submissions/proxy/submit": {
+            "description": "Proxy submit an assignment submission to the autograder.",
+            "input": {
+                "assignment-id": "string",
+                "course-id": "string",
+                "message": "string",
+                "proxy-email": "core.TargetCourseUser",
+                "proxy-time": "int64",
+                "user-email": "string",
+                "user-pass": "string"
+            },
+            "output": {
+                "found-user": "bool",
+                "grading-success": "bool",
+                "message": "string",
+                "rejected": "bool",
+                "result": "*model.GradingInfo"
+            }
+        },
         "courses/assignments/submissions/remove": {
             "description": "Remove a specified submission. Defaults to the most recent submission.",
             "input": {
@@ -748,6 +767,7 @@
             "category": "struct",
             "fields": {
                 "id": "string",
+                "late-days-lms-id": "string",
                 "name": "string"
             }
         },
@@ -852,6 +872,9 @@
                 "message": "string",
                 "name": "string",
                 "prologue": "string",
+                "proxy-user": "string",
+                "proxy_end_time": "int64",
+                "proxy_start_time": "int64",
                 "questions": "[]*model.GradedQuestion",
                 "score": "float64",
                 "short-id": "string",

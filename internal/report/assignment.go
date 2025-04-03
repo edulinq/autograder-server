@@ -74,7 +74,7 @@ func GetAssignmentScoringReport(assignment *model.Assignment) (*AssignmentScorin
 	}
 
 	report := AssignmentScoringReport{
-		AssignmentName:      assignment.GetName(),
+		AssignmentName:      assignment.GetDisplayName(),
 		NumberOfSubmissions: numSubmissions,
 		LatestSubmission:    lastSubmissionTime,
 		Questions:           questions,
