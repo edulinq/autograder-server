@@ -3,9 +3,12 @@ package api
 import (
 	"fmt"
 	"reflect"
+	"strings"
 	"testing"
 
 	"github.com/edulinq/autograder/internal/api/core"
+	courseUsers "github.com/edulinq/autograder/internal/api/courses/users"
+	"github.com/edulinq/autograder/internal/api/users"
 	"github.com/edulinq/autograder/internal/util"
 )
 
@@ -141,7 +144,7 @@ func TestDescribeEmptyRoutes(test *testing.T) {
 	}
 }
 
-func TestSimplifyType(test *testing.T) {
+func TestDescribeType(test *testing.T) {
 	testCases := []struct {
 		customType      reflect.Type
 		expectedDesc    core.TypeDescription
@@ -512,8 +515,7 @@ func TestSimplifyType(test *testing.T) {
 
 		actual, _, _, _, err := describeType(testCase.customType, true, typeMap, nil)
 		if err != nil {
-			test.Errorf("Case %d: Unexpected error while describing types: '%v'.",
-				i, err)
+			test.Errorf("Case %d: Unexpected error while describing types: '%v'.", i, err)
 		}
 
 		if !reflect.DeepEqual(testCase.expectedDesc, actual) {
@@ -527,5 +529,28 @@ func TestSimplifyType(test *testing.T) {
 				i, util.MustToJSONIndent(testCase.expectedTypeMap), util.MustToJSONIndent(typeMap))
 			continue
 		}
+	}
+}
+
+func TestDescribeConflictingTypes(test *testing.T) {
+	typeMap := make(map[string]core.TypeDescription)
+	typeDescriptions := make(map[string]string)
+
+	// Add in the first users.ListRequest which will work.
+	_, _, _, _, err := describeType(reflect.TypeOf((*users.ListRequest)(nil)).Elem(), true, typeMap, typeDescriptions)
+	if err != nil {
+		test.Fatalf("Failed to describe type: '%v'.", err)
+	}
+
+	// Adding a second users.ListRequest will cause a conflict.
+	_, _, _, _, err = describeType(reflect.TypeOf((*courseUsers.ListRequest)(nil)).Elem(), true, typeMap, typeDescriptions)
+	if err == nil {
+		test.Fatalf("Did not get expected error while describing types.")
+	}
+
+	expectedMessage := "Unable to get type ID due to conflicting names."
+	if !strings.Contains(err.Error(), expectedMessage) {
+		test.Fatalf("Did not get the expected error output. Expected substring: '%s', actual: '%s'.",
+			expectedMessage, err.Error())
 	}
 }

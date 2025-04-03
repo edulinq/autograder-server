@@ -227,6 +227,10 @@ func describeStructFields(customType reflect.Type, typeMap map[string]core.TypeD
 			continue
 		}
 
+		if skipField(jsonTag) {
+			continue
+		}
+
 		// Handle embedded fields.
 		if field.Anonymous {
 			fieldDescription, fieldTypeID, _, _, err := describeType(field.Type, true, typeMap, typeConversions)

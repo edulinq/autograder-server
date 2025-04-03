@@ -3,15 +3,12 @@
         "courses/admin/email": {
             "description": "Send an email to course users.",
             "input": {
-                "APIRequest": "core.APIRequest",
-                "MinCourseRoleGrader": "bool",
                 "bcc": "[]string",
                 "body": "string",
                 "cc": "[]string",
                 "course-id": "string",
                 "dry-run": "bool",
                 "html": "bool",
-                "root-user-nonce": "string",
                 "subject": "string",
                 "to": "[]string",
                 "user-email": "string",
@@ -26,10 +23,7 @@
         "courses/admin/update": {
             "description": "Update an existing course.",
             "input": {
-                "APIRequest": "core.APIRequest",
-                "MinCourseRoleAdmin": "bool",
                 "course-id": "string",
-                "root-user-nonce": "string",
                 "user-email": "string",
                 "user-pass": "string"
             },
@@ -40,11 +34,8 @@
         "courses/assignments/get": {
             "description": "Get the information for a course assignment.",
             "input": {
-                "APIRequest": "core.APIRequest",
-                "MinCourseRoleOther": "bool",
                 "assignment-id": "string",
                 "course-id": "string",
-                "root-user-nonce": "string",
                 "user-email": "string",
                 "user-pass": "string"
             },
@@ -55,10 +46,7 @@
         "courses/assignments/list": {
             "description": "List the assignments in the course.",
             "input": {
-                "APIRequest": "core.APIRequest",
-                "MinCourseRoleOther": "bool",
                 "course-id": "string",
-                "root-user-nonce": "string",
                 "user-email": "string",
                 "user-pass": "string"
             },
@@ -69,11 +57,8 @@
         "courses/assignments/submissions/analysis/individual": {
             "description": "Get the result of a individual analysis for the specified submissions.",
             "input": {
-                "APIRequest": "core.APIRequest",
-                "MinServerRoleUser": "bool",
                 "dry-run": "bool",
                 "overwrite-cache": "bool",
-                "root-user-nonce": "string",
                 "submissions": "[]string",
                 "user-email": "string",
                 "user-pass": "string",
@@ -89,11 +74,8 @@
         "courses/assignments/submissions/analysis/pairwise": {
             "description": "Get the result of a pairwise analysis for the specified submissions.",
             "input": {
-                "APIRequest": "core.APIRequest",
-                "MinServerRoleUser": "bool",
                 "dry-run": "bool",
                 "overwrite-cache": "bool",
-                "root-user-nonce": "string",
                 "submissions": "[]string",
                 "user-email": "string",
                 "user-pass": "string",
@@ -109,12 +91,9 @@
         "courses/assignments/submissions/fetch/course/attempts": {
             "description": "Get all recent submissions and grading information for this assignment.",
             "input": {
-                "APIRequest": "core.APIRequest",
-                "MinCourseRoleGrader": "bool",
                 "assignment-id": "string",
                 "course-id": "string",
                 "filter-role": "int",
-                "root-user-nonce": "string",
                 "user-email": "string",
                 "user-pass": "string"
             },
@@ -125,12 +104,9 @@
         "courses/assignments/submissions/fetch/course/scores": {
             "description": "Get a summary of the most recent scores for this assignment.",
             "input": {
-                "APIRequest": "core.APIRequest",
-                "MinCourseRoleGrader": "bool",
                 "assignment-id": "string",
                 "course-id": "string",
                 "filter-role": "int",
-                "root-user-nonce": "string",
                 "user-email": "string",
                 "user-pass": "string"
             },
@@ -141,11 +117,8 @@
         "courses/assignments/submissions/fetch/user/attempt": {
             "description": "Get a submission along with all grading information.",
             "input": {
-                "APIRequest": "core.APIRequest",
-                "MinCourseRoleStudent": "bool",
                 "assignment-id": "string",
                 "course-id": "string",
-                "root-user-nonce": "string",
                 "target-email": "core.TargetCourseUserSelfOrGrader",
                 "target-submission": "string",
                 "user-email": "string",
@@ -160,11 +133,8 @@
         "courses/assignments/submissions/fetch/user/attempts": {
             "description": "Get all submission attempts made by a user along with all grading information.",
             "input": {
-                "APIRequest": "core.APIRequest",
-                "MinCourseRoleGrader": "bool",
                 "assignment-id": "string",
                 "course-id": "string",
-                "root-user-nonce": "string",
                 "target-email": "core.TargetCourseUserSelfOrGrader",
                 "user-email": "string",
                 "user-pass": "string"
@@ -177,11 +147,8 @@
         "courses/assignments/submissions/fetch/user/history": {
             "description": "Get a summary of the submissions for this assignment.",
             "input": {
-                "APIRequest": "core.APIRequest",
-                "MinCourseRoleStudent": "bool",
                 "assignment-id": "string",
                 "course-id": "string",
-                "root-user-nonce": "string",
                 "target-email": "core.TargetCourseUserSelfOrGrader",
                 "user-email": "string",
                 "user-pass": "string"
@@ -194,11 +161,8 @@
         "courses/assignments/submissions/fetch/user/peek": {
             "description": "Get a copy of the grading report for the specified submission. Does not submit a new submission.",
             "input": {
-                "APIRequest": "core.APIRequest",
-                "MinCourseRoleStudent": "bool",
                 "assignment-id": "string",
                 "course-id": "string",
-                "root-user-nonce": "string",
                 "target-email": "core.TargetCourseUserSelfOrGrader",
                 "target-submission": "string",
                 "user-email": "string",
@@ -213,11 +177,8 @@
         "courses/assignments/submissions/remove": {
             "description": "Remove a specified submission. Defaults to the most recent submission.",
             "input": {
-                "APIRequest": "core.APIRequest",
-                "MinCourseRoleGrader": "bool",
                 "assignment-id": "string",
                 "course-id": "string",
-                "root-user-nonce": "string",
                 "target-email": "core.TargetCourseUserSelfOrGrader",
                 "target-submission": "string",
                 "user-email": "string",
@@ -231,13 +192,10 @@
         "courses/assignments/submissions/submit": {
             "description": "Submit an assignment submission to the autograder.",
             "input": {
-                "APIRequest": "core.APIRequest",
-                "MinCourseRoleStudent": "bool",
                 "allow-late": "bool",
                 "assignment-id": "string",
                 "course-id": "string",
                 "message": "string",
-                "root-user-nonce": "string",
                 "user-email": "string",
                 "user-pass": "string"
             },
@@ -251,11 +209,8 @@
         "courses/lms/scores/upload": {
             "description": "Perform a full scoring and upload scores to the course's LMS.",
             "input": {
-                "APIRequest": "core.APIRequest",
-                "MinCourseRoleAdmin": "bool",
                 "course-id": "string",
                 "dry-run": "bool",
-                "root-user-nonce": "string",
                 "user-email": "string",
                 "user-pass": "string"
             },
@@ -267,13 +222,10 @@
         "courses/stats/query": {
             "description": "Query metrics for a specific course.\nOnly the context course can be queried for, the target-course field will be ignored for this endpoint.",
             "input": {
-                "APIRequest": "core.APIRequest",
-                "MinCourseRoleAdmin": "bool",
                 "after": "int64",
                 "before": "int64",
                 "course-id": "string",
                 "limit": "int",
-                "root-user-nonce": "string",
                 "sort": "int",
                 "type": "string",
                 "user-email": "string",
@@ -287,11 +239,8 @@
         "courses/upsert/filespec": {
             "description": "Upsert a course using a filespec.",
             "input": {
-                "APIRequest": "core.APIRequest",
-                "MinServerRoleCourseCreator": "bool",
                 "dry-run": "bool",
                 "filespec": "util.FileSpec",
-                "root-user-nonce": "string",
                 "skip-build-images": "bool",
                 "skip-emails": "bool",
                 "skip-lms-sync": "bool",
@@ -307,10 +256,7 @@
         "courses/upsert/zip": {
             "description": "Upsert a course using a zip file.",
             "input": {
-                "APIRequest": "core.APIRequest",
-                "MinServerRoleCourseCreator": "bool",
                 "dry-run": "bool",
-                "root-user-nonce": "string",
                 "skip-build-images": "bool",
                 "skip-emails": "bool",
                 "skip-lms-sync": "bool",
@@ -326,10 +272,7 @@
         "courses/users/drop": {
             "description": "Drop a user from the course.",
             "input": {
-                "APIRequest": "core.APIRequest",
-                "MinCourseRoleAdmin": "bool",
                 "course-id": "string",
-                "root-user-nonce": "string",
                 "target-email": "core.TargetCourseUser",
                 "user-email": "string",
                 "user-pass": "string"
@@ -341,12 +284,9 @@
         "courses/users/enroll": {
             "description": "Enroll one or more users to the course.",
             "input": {
-                "APIRequest": "core.APIRequest",
-                "MinCourseRoleAdmin": "bool",
                 "course-id": "string",
                 "dry-run": "bool",
                 "raw-course-users": "[]*model.RawCourseUserData",
-                "root-user-nonce": "string",
                 "send-emails": "bool",
                 "skip-inserts": "bool",
                 "skip-updates": "bool",
@@ -360,10 +300,7 @@
         "courses/users/get": {
             "description": "Get the information for a course user.",
             "input": {
-                "APIRequest": "core.APIRequest",
-                "MinCourseRoleOther": "bool",
                 "course-id": "string",
-                "root-user-nonce": "string",
                 "target-email": "core.TargetCourseUserSelfOrGrader",
                 "user-email": "string",
                 "user-pass": "string"
@@ -376,10 +313,7 @@
         "courses/users/list": {
             "description": "List the users in the course.",
             "input": {
-                "APIRequest": "core.APIRequest",
-                "MinCourseRoleGrader": "bool",
                 "course-id": "string",
-                "root-user-nonce": "string",
                 "user-email": "string",
                 "user-pass": "string"
             },
@@ -390,11 +324,8 @@
         "lms/upload/scores": {
             "description": "Upload scores from a tab-separated file to the course's LMS.\nThe file should not have headers, and should have two columns: email and score.",
             "input": {
-                "APIRequest": "core.APIRequest",
-                "MinCourseRoleGrader": "bool",
                 "assignment-lms-id": "string",
                 "course-id": "string",
-                "root-user-nonce": "string",
                 "scores": "[]upload.ScoreEntry",
                 "user-email": "string",
                 "user-pass": "string"
@@ -409,10 +340,7 @@
         "lms/user/get": {
             "description": "Get information for an LMS user.",
             "input": {
-                "APIRequest": "core.APIRequest",
-                "MinCourseRoleGrader": "bool",
                 "course-id": "string",
-                "root-user-nonce": "string",
                 "target-email": "core.TargetCourseUser",
                 "user-email": "string",
                 "user-pass": "string"
@@ -426,12 +354,9 @@
         "logs/query": {
             "description": "Query log entries from the autograder server.",
             "input": {
-                "APIRequest": "core.APIRequest",
-                "MinServerRoleUser": "bool",
                 "after": "string",
                 "level": "string",
                 "past": "string",
-                "root-user-nonce": "string",
                 "target-assignment": "string",
                 "target-course": "string",
                 "target-email": "string",
@@ -446,9 +371,7 @@
         },
         "metadata/describe": {
             "description": "Describe all endpoints on the server.",
-            "input": {
-                "APIRequest": "core.APIRequest"
-            },
+            "input": {},
             "output": {
                 "endpoints": "map[string]core.EndpointDescription",
                 "types": "map[string]core.TypeDescription"
@@ -457,12 +380,9 @@
         "stats/query": {
             "description": "Query stats for the server.",
             "input": {
-                "APIRequest": "core.APIRequest",
-                "MinServerRoleAdmin": "bool",
                 "after": "int64",
                 "before": "int64",
                 "limit": "int",
-                "root-user-nonce": "string",
                 "sort": "int",
                 "type": "string",
                 "user-email": "string",
@@ -476,9 +396,6 @@
         "system/stacks": {
             "description": "Get stack traces for all the currently running routines (threads) on the server.",
             "input": {
-                "APIRequest": "core.APIRequest",
-                "MinServerRoleAdmin": "bool",
-                "root-user-nonce": "string",
                 "user-email": "string",
                 "user-pass": "string"
             },
@@ -490,8 +407,6 @@
         "users/auth": {
             "description": "Authenticate as a user.",
             "input": {
-                "APIRequest": "core.APIRequest",
-                "root-user-nonce": "string",
                 "user-email": "string",
                 "user-pass": "string"
             },
@@ -502,9 +417,6 @@
         "users/get": {
             "description": "Get the information for a server user.",
             "input": {
-                "APIRequest": "core.APIRequest",
-                "MinServerRoleUser": "bool",
-                "root-user-nonce": "string",
                 "target-email": "core.TargetServerUserSelfOrAdmin",
                 "user-email": "string",
                 "user-pass": "string"
@@ -518,9 +430,6 @@
         "users/list": {
             "description": "List the users on the server.",
             "input": {
-                "APIRequest": "core.APIRequest",
-                "MinServerRoleAdmin": "bool",
-                "root-user-nonce": "string",
                 "user-email": "string",
                 "user-pass": "string"
             },
@@ -531,9 +440,7 @@
         "users/password/change": {
             "description": "Change your password to the one provided.",
             "input": {
-                "APIRequest": "core.APIRequest",
                 "new-pass": "string",
-                "root-user-nonce": "string",
                 "user-email": "string",
                 "user-pass": "string"
             },
@@ -545,7 +452,6 @@
         "users/password/reset": {
             "description": "Reset to a random password that will be emailed to you.",
             "input": {
-                "APIRequest": "core.APIRequest",
                 "user-email": "string"
             },
             "output": {}
@@ -553,9 +459,6 @@
         "users/remove": {
             "description": "Remove a user from the server.",
             "input": {
-                "APIRequest": "core.APIRequest",
-                "MinServerRoleAdmin": "bool",
-                "root-user-nonce": "string",
                 "target-email": "core.TargetServerUser",
                 "user-email": "string",
                 "user-pass": "string"
@@ -567,9 +470,7 @@
         "users/tokens/create": {
             "description": "Create a new authentication token.",
             "input": {
-                "APIRequest": "core.APIRequest",
                 "name": "string",
-                "root-user-nonce": "string",
                 "user-email": "string",
                 "user-pass": "string"
             },
@@ -581,8 +482,6 @@
         "users/tokens/delete": {
             "description": "Delete an authentication token.",
             "input": {
-                "APIRequest": "core.APIRequest",
-                "root-user-nonce": "string",
                 "token-id": "string",
                 "user-email": "string",
                 "user-pass": "string"
@@ -594,11 +493,8 @@
         "users/upsert": {
             "description": "Upsert one or more users to the server (update if exists, insert otherwise).",
             "input": {
-                "APIRequest": "core.APIRequest",
-                "MinServerRoleAdmin": "bool",
                 "dry-run": "bool",
                 "raw-users": "[]*model.RawServerUserData",
-                "root-user-nonce": "string",
                 "send-emails": "bool",
                 "skip-inserts": "bool",
                 "skip-updates": "bool",
@@ -627,16 +523,11 @@
                 "types": "map[string]core.TypeDescription"
             }
         },
-        "core.APIRequest": {
-            "category": "struct"
-        },
         "core.APIRequestAssignmentContext": {
             "category": "struct",
             "fields": {
-                "APIRequest": "core.APIRequest",
                 "assignment-id": "string",
                 "course-id": "string",
-                "root-user-nonce": "string",
                 "user-email": "string",
                 "user-pass": "string"
             }
@@ -644,9 +535,7 @@
         "core.APIRequestCourseUserContext": {
             "category": "struct",
             "fields": {
-                "APIRequest": "core.APIRequest",
                 "course-id": "string",
-                "root-user-nonce": "string",
                 "user-email": "string",
                 "user-pass": "string"
             }
@@ -654,8 +543,6 @@
         "core.APIRequestUserContext": {
             "category": "struct",
             "fields": {
-                "APIRequest": "core.APIRequest",
-                "root-user-nonce": "string",
                 "user-email": "string",
                 "user-pass": "string"
             }
@@ -709,34 +596,6 @@
                 "id": "string",
                 "role": "int"
             }
-        },
-        "core.MinCourseRoleAdmin": {
-            "alias-type": "bool",
-            "category": "alias"
-        },
-        "core.MinCourseRoleGrader": {
-            "alias-type": "bool",
-            "category": "alias"
-        },
-        "core.MinCourseRoleOther": {
-            "alias-type": "bool",
-            "category": "alias"
-        },
-        "core.MinCourseRoleStudent": {
-            "alias-type": "bool",
-            "category": "alias"
-        },
-        "core.MinServerRoleAdmin": {
-            "alias-type": "bool",
-            "category": "alias"
-        },
-        "core.MinServerRoleCourseCreator": {
-            "alias-type": "bool",
-            "category": "alias"
-        },
-        "core.MinServerRoleUser": {
-            "alias-type": "bool",
-            "category": "alias"
         },
         "core.NonEmptyString": {
             "alias-type": "string",
