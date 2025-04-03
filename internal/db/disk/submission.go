@@ -69,6 +69,9 @@ func (this *backend) SaveSubmissions(course *model.Course, submissions []*model.
 	return this.saveSubmissionsLock(course, submissions, true)
 }
 
+// Compute the next submission ID based on the current time.
+// If a submission ID exists for the current time, increment the ID until it is unique.
+// The next submission ID will be the largest ID for the user on this assignment.
 func (this *backend) GetNextSubmissionID(assignment *model.Assignment, email string) (string, error) {
 	submissionID := time.Now().Unix()
 	baseDir := this.getUserSubmissionDir(assignment.Course.GetID(), assignment.GetID(), email)
@@ -316,7 +319,8 @@ func (this *backend) getUserSubmissionDir(courseID string, assignmentID string, 
 	return filepath.Join(this.getCourseDirFromID(courseID), model.SUBMISSIONS_DIRNAME, assignmentID, user)
 }
 
-// Get the short id of the most recent submission (or empty string if there are no submissions).
+// Get the short ID of the most recent submission (or empty string if there are no submissions).
+// The most recent submission has the largest ID for the user.
 func (this *backend) getMostRecentSubmissionID(assignment *model.Assignment, email string) (string, error) {
 	submissionsDir := this.getUserSubmissionDir(assignment.GetCourse().GetID(), assignment.GetID(), email)
 	if !util.PathExists(submissionsDir) {
