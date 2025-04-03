@@ -458,10 +458,9 @@
             "description": "Query stats for the server.",
             "input": {
                 "APIRequest": "core.APIRequest",
-                "MinCourseRoleAdmin": "bool",
+                "MinServerRoleAdmin": "bool",
                 "after": "int64",
                 "before": "int64",
-                "course-id": "string",
                 "limit": "int",
                 "root-user-nonce": "string",
                 "sort": "int",
@@ -504,30 +503,29 @@
             "description": "Get the information for a server user.",
             "input": {
                 "APIRequest": "core.APIRequest",
-                "MinCourseRoleOther": "bool",
-                "course-id": "string",
+                "MinServerRoleUser": "bool",
                 "root-user-nonce": "string",
-                "target-email": "core.TargetCourseUserSelfOrGrader",
+                "target-email": "core.TargetServerUserSelfOrAdmin",
                 "user-email": "string",
                 "user-pass": "string"
             },
             "output": {
+                "courses": "map[string]*core.CourseInfo",
                 "found": "bool",
-                "user": "*core.CourseUserInfo"
+                "user": "*core.ServerUserInfo"
             }
         },
         "users/list": {
             "description": "List the users on the server.",
             "input": {
                 "APIRequest": "core.APIRequest",
-                "MinCourseRoleGrader": "bool",
-                "course-id": "string",
+                "MinServerRoleAdmin": "bool",
                 "root-user-nonce": "string",
                 "user-email": "string",
                 "user-pass": "string"
             },
             "output": {
-                "users": "[]*core.CourseUserInfo"
+                "users": "[]*core.ServerUserInfo"
             }
         },
         "users/password/change": {
@@ -613,49 +611,6 @@
         }
     },
     "types": {
-        "admin.EmailRequest": {
-            "category": "struct",
-            "fields": {
-                "APIRequest": "core.APIRequest",
-                "MinCourseRoleGrader": "bool",
-                "bcc": "[]string",
-                "body": "string",
-                "cc": "[]string",
-                "course-id": "string",
-                "dry-run": "bool",
-                "html": "bool",
-                "root-user-nonce": "string",
-                "subject": "string",
-                "to": "[]string",
-                "user-email": "string",
-                "user-pass": "string"
-            }
-        },
-        "admin.EmailResponse": {
-            "category": "struct",
-            "fields": {
-                "bcc": "[]string",
-                "cc": "[]string",
-                "to": "[]string"
-            }
-        },
-        "admin.UpdateRequest": {
-            "category": "struct",
-            "fields": {
-                "APIRequest": "core.APIRequest",
-                "MinCourseRoleAdmin": "bool",
-                "course-id": "string",
-                "root-user-nonce": "string",
-                "user-email": "string",
-                "user-pass": "string"
-            }
-        },
-        "admin.UpdateResponse": {
-            "category": "struct",
-            "fields": {
-                "result": "*courses.CourseUpsertResult"
-            }
-        },
         "analysis.AnalysisOptions": {
             "category": "struct",
             "fields": {
@@ -663,87 +618,6 @@
                 "overwrite-cache": "bool",
                 "submissions": "[]string",
                 "wait-for-completion": "bool"
-            }
-        },
-        "analysis.IndividualRequest": {
-            "category": "struct",
-            "fields": {
-                "APIRequest": "core.APIRequest",
-                "MinServerRoleUser": "bool",
-                "dry-run": "bool",
-                "overwrite-cache": "bool",
-                "root-user-nonce": "string",
-                "submissions": "[]string",
-                "user-email": "string",
-                "user-pass": "string",
-                "wait-for-completion": "bool"
-            }
-        },
-        "analysis.IndividualResponse": {
-            "category": "struct",
-            "fields": {
-                "complete": "bool",
-                "options": "analysis.AnalysisOptions",
-                "results": "[]*model.IndividualAnalysis",
-                "summary": "*model.IndividualAnalysisSummary"
-            }
-        },
-        "analysis.PairwiseRequest": {
-            "category": "struct",
-            "fields": {
-                "APIRequest": "core.APIRequest",
-                "MinServerRoleUser": "bool",
-                "dry-run": "bool",
-                "overwrite-cache": "bool",
-                "root-user-nonce": "string",
-                "submissions": "[]string",
-                "user-email": "string",
-                "user-pass": "string",
-                "wait-for-completion": "bool"
-            }
-        },
-        "analysis.PairwiseResponse": {
-            "category": "struct",
-            "fields": {
-                "complete": "bool",
-                "options": "analysis.AnalysisOptions",
-                "results": "[]*model.PairwiseAnalysis",
-                "summary": "*model.PairwiseAnalysisSummary"
-            }
-        },
-        "assignments.GetRequest": {
-            "category": "struct",
-            "fields": {
-                "APIRequest": "core.APIRequest",
-                "MinCourseRoleOther": "bool",
-                "assignment-id": "string",
-                "course-id": "string",
-                "root-user-nonce": "string",
-                "user-email": "string",
-                "user-pass": "string"
-            }
-        },
-        "assignments.GetResponse": {
-            "category": "struct",
-            "fields": {
-                "assignment": "*core.AssignmentInfo"
-            }
-        },
-        "assignments.ListRequest": {
-            "category": "struct",
-            "fields": {
-                "APIRequest": "core.APIRequest",
-                "MinCourseRoleOther": "bool",
-                "course-id": "string",
-                "root-user-nonce": "string",
-                "user-email": "string",
-                "user-pass": "string"
-            }
-        },
-        "assignments.ListResponse": {
-            "category": "struct",
-            "fields": {
-                "assignments": "[]*core.AssignmentInfo"
             }
         },
         "core.APIDescription": {
@@ -803,6 +677,14 @@
                 "type": "string"
             }
         },
+        "core.CourseInfo": {
+            "category": "struct",
+            "fields": {
+                "assignments": "map[string]*core.AssignmentInfo",
+                "id": "string",
+                "name": "string"
+            }
+        },
         "core.CourseUserInfo": {
             "category": "struct",
             "fields": {
@@ -819,6 +701,13 @@
                 "description": "string",
                 "input": "map[string]string",
                 "output": "map[string]string"
+            }
+        },
+        "core.EnrollmentInfo": {
+            "category": "struct",
+            "fields": {
+                "id": "string",
+                "role": "int"
             }
         },
         "core.MinCourseRoleAdmin": {
@@ -853,6 +742,16 @@
             "alias-type": "string",
             "category": "alias"
         },
+        "core.ServerUserInfo": {
+            "category": "struct",
+            "fields": {
+                "courses": "map[string]core.EnrollmentInfo",
+                "email": "string",
+                "name": "string",
+                "role": "int",
+                "type": "string"
+            }
+        },
         "core.TargetCourseUser": {
             "category": "struct"
         },
@@ -864,6 +763,12 @@
         },
         "core.TargetServerUser": {
             "category": "struct"
+        },
+        "core.TargetServerUserSelfOrAdmin": {
+            "category": "struct",
+            "fields": {
+                "TargetServerUser": "core.TargetServerUser"
+            }
         },
         "core.TypeDescription": {
             "category": "struct",
@@ -877,44 +782,6 @@
         "core.UserInfoType": {
             "alias-type": "string",
             "category": "alias"
-        },
-        "course.FetchCourseAttemptsRequest": {
-            "category": "struct",
-            "fields": {
-                "APIRequest": "core.APIRequest",
-                "MinCourseRoleGrader": "bool",
-                "assignment-id": "string",
-                "course-id": "string",
-                "filter-role": "int",
-                "root-user-nonce": "string",
-                "user-email": "string",
-                "user-pass": "string"
-            }
-        },
-        "course.FetchCourseAttemptsResponse": {
-            "category": "struct",
-            "fields": {
-                "grading-results": "map[string]*model.GradingResult"
-            }
-        },
-        "course.FetchCourseScoresRequest": {
-            "category": "struct",
-            "fields": {
-                "APIRequest": "core.APIRequest",
-                "MinCourseRoleGrader": "bool",
-                "assignment-id": "string",
-                "course-id": "string",
-                "filter-role": "int",
-                "root-user-nonce": "string",
-                "user-email": "string",
-                "user-pass": "string"
-            }
-        },
-        "course.FetchCourseScoresResponse": {
-            "category": "struct",
-            "fields": {
-                "submission-infos": "map[string]*model.SubmissionHistoryItem"
-            }
         },
         "courses.CourseUpsertOptions": {
             "category": "struct",
@@ -988,43 +855,6 @@
                 "message": "string",
                 "timestamp": "int64",
                 "user": "string"
-            }
-        },
-        "logs.QueryRequest": {
-            "category": "struct",
-            "fields": {
-                "APIRequest": "core.APIRequest",
-                "MinServerRoleUser": "bool",
-                "after": "string",
-                "level": "string",
-                "past": "string",
-                "root-user-nonce": "string",
-                "target-assignment": "string",
-                "target-course": "string",
-                "target-email": "string",
-                "user-email": "string",
-                "user-pass": "string"
-            }
-        },
-        "logs.QueryResponse": {
-            "category": "struct",
-            "fields": {
-                "error": "*model.ExternalLocatableError",
-                "results": "[]*log.Record",
-                "success": "bool"
-            }
-        },
-        "metadata.DescribeRequest": {
-            "category": "struct",
-            "fields": {
-                "APIRequest": "core.APIRequest"
-            }
-        },
-        "metadata.DescribeResponse": {
-            "category": "struct",
-            "fields": {
-                "endpoints": "map[string]core.EndpointDescription",
-                "types": "map[string]core.TypeDescription"
             }
         },
         "model.AnalysisFileInfo": {
@@ -1285,6 +1115,10 @@
                 "role": "string"
             }
         },
+        "model.ServerUserRole": {
+            "alias-type": "int",
+            "category": "alias"
+        },
         "model.SubmissionHistoryItem": {
             "category": "struct",
             "fields": {
@@ -1317,52 +1151,6 @@
                 "validation-error": "*model.LocatableError"
             }
         },
-        "password.PasswordChangeRequest": {
-            "category": "struct",
-            "fields": {
-                "APIRequest": "core.APIRequest",
-                "new-pass": "string",
-                "root-user-nonce": "string",
-                "user-email": "string",
-                "user-pass": "string"
-            }
-        },
-        "password.PasswordChangeResponse": {
-            "category": "struct",
-            "fields": {
-                "duplicate": "bool",
-                "success": "bool"
-            }
-        },
-        "password.PasswordResetRequest": {
-            "category": "struct",
-            "fields": {
-                "APIRequest": "core.APIRequest",
-                "user-email": "string"
-            }
-        },
-        "password.PasswordResetResponse": {
-            "category": "struct"
-        },
-        "scores.UploadRequest": {
-            "category": "struct",
-            "fields": {
-                "APIRequest": "core.APIRequest",
-                "MinCourseRoleAdmin": "bool",
-                "course-id": "string",
-                "dry-run": "bool",
-                "root-user-nonce": "string",
-                "user-email": "string",
-                "user-pass": "string"
-            }
-        },
-        "scores.UploadResponse": {
-            "category": "struct",
-            "fields": {
-                "dry-run": "bool",
-                "results": "[]*model.ExternalScoringInfo"
-            }
-        },
         "stats.Metric": {
             "category": "struct",
             "fields": {
@@ -1387,126 +1175,9 @@
                 "where": "map[stats.MetricAttribute]interface {}"
             }
         },
-        "stats.QueryRequest": {
-            "category": "struct",
-            "fields": {
-                "APIRequest": "core.APIRequest",
-                "MinCourseRoleAdmin": "bool",
-                "after": "int64",
-                "before": "int64",
-                "course-id": "string",
-                "limit": "int",
-                "root-user-nonce": "string",
-                "sort": "int",
-                "type": "string",
-                "user-email": "string",
-                "user-pass": "string",
-                "where": "map[stats.MetricAttribute]interface {}"
-            }
-        },
-        "stats.QueryResponse": {
-            "category": "struct",
-            "fields": {
-                "results": "[]*stats.Metric"
-            }
-        },
-        "submissions.RemoveRequest": {
-            "category": "struct",
-            "fields": {
-                "APIRequest": "core.APIRequest",
-                "MinCourseRoleGrader": "bool",
-                "assignment-id": "string",
-                "course-id": "string",
-                "root-user-nonce": "string",
-                "target-email": "core.TargetCourseUserSelfOrGrader",
-                "target-submission": "string",
-                "user-email": "string",
-                "user-pass": "string"
-            }
-        },
-        "submissions.RemoveResponse": {
-            "category": "struct",
-            "fields": {
-                "found-submission": "bool",
-                "found-user": "bool"
-            }
-        },
-        "submissions.SubmitRequest": {
-            "category": "struct",
-            "fields": {
-                "APIRequest": "core.APIRequest",
-                "MinCourseRoleStudent": "bool",
-                "allow-late": "bool",
-                "assignment-id": "string",
-                "course-id": "string",
-                "message": "string",
-                "root-user-nonce": "string",
-                "user-email": "string",
-                "user-pass": "string"
-            }
-        },
-        "submissions.SubmitResponse": {
-            "category": "struct",
-            "fields": {
-                "grading-success": "bool",
-                "message": "string",
-                "rejected": "bool",
-                "result": "*model.GradingInfo"
-            }
-        },
-        "system.StacksRequest": {
-            "category": "struct",
-            "fields": {
-                "APIRequest": "core.APIRequest",
-                "MinServerRoleAdmin": "bool",
-                "root-user-nonce": "string",
-                "user-email": "string",
-                "user-pass": "string"
-            }
-        },
-        "system.StacksResponse": {
-            "category": "struct",
-            "fields": {
-                "count": "int",
-                "stacks": "[]*util.CallStack"
-            }
-        },
         "timestamp.Timestamp": {
             "alias-type": "int64",
             "category": "alias"
-        },
-        "tokens.TokensCreateRequest": {
-            "category": "struct",
-            "fields": {
-                "APIRequest": "core.APIRequest",
-                "name": "string",
-                "root-user-nonce": "string",
-                "user-email": "string",
-                "user-pass": "string"
-            }
-        },
-        "tokens.TokensCreateResponse": {
-            "category": "struct",
-            "fields": {
-                "token-cleartext": "string",
-                "token-id": "string"
-            }
-        },
-        "tokens.TokensDeleteRequest": {
-            "category": "struct",
-            "fields": {
-                "APIRequest": "core.APIRequest",
-                "root-user-nonce": "string",
-                "token-id": "string",
-                "user-email": "string",
-                "user-pass": "string"
-            }
-        },
-        "tokens.TokensDeleteResponse": {
-            "category": "struct",
-            "fields": {
-                "found": "bool"
-            }
         },
         "upload.RowEntry": {
             "category": "struct",
@@ -1520,300 +1191,6 @@
             "fields": {
                 "email": "string",
                 "score": "float64"
-            }
-        },
-        "upload.UploadScoresRequest": {
-            "category": "struct",
-            "fields": {
-                "APIRequest": "core.APIRequest",
-                "MinCourseRoleGrader": "bool",
-                "assignment-lms-id": "string",
-                "course-id": "string",
-                "root-user-nonce": "string",
-                "scores": "[]upload.ScoreEntry",
-                "user-email": "string",
-                "user-pass": "string"
-            }
-        },
-        "upload.UploadScoresResponse": {
-            "category": "struct",
-            "fields": {
-                "count": "int",
-                "error-count": "int",
-                "no-lms-id-users": "[]upload.RowEntry",
-                "unrecognized-users": "[]upload.RowEntry"
-            }
-        },
-        "upsert.FileSpecRequest": {
-            "category": "struct",
-            "fields": {
-                "APIRequest": "core.APIRequest",
-                "MinServerRoleCourseCreator": "bool",
-                "dry-run": "bool",
-                "filespec": "util.FileSpec",
-                "root-user-nonce": "string",
-                "skip-build-images": "bool",
-                "skip-emails": "bool",
-                "skip-lms-sync": "bool",
-                "skip-source-sync": "bool",
-                "skip-template-files": "bool",
-                "user-email": "string",
-                "user-pass": "string"
-            }
-        },
-        "upsert.UpsertResponse": {
-            "category": "struct",
-            "fields": {
-                "results": "[]courses.CourseUpsertResult"
-            }
-        },
-        "upsert.ZipFileRequest": {
-            "category": "struct",
-            "fields": {
-                "APIRequest": "core.APIRequest",
-                "MinServerRoleCourseCreator": "bool",
-                "dry-run": "bool",
-                "root-user-nonce": "string",
-                "skip-build-images": "bool",
-                "skip-emails": "bool",
-                "skip-lms-sync": "bool",
-                "skip-source-sync": "bool",
-                "skip-template-files": "bool",
-                "user-email": "string",
-                "user-pass": "string"
-            }
-        },
-        "user.FetchUserAttemptRequest": {
-            "category": "struct",
-            "fields": {
-                "APIRequest": "core.APIRequest",
-                "MinCourseRoleStudent": "bool",
-                "assignment-id": "string",
-                "course-id": "string",
-                "root-user-nonce": "string",
-                "target-email": "core.TargetCourseUserSelfOrGrader",
-                "target-submission": "string",
-                "user-email": "string",
-                "user-pass": "string"
-            }
-        },
-        "user.FetchUserAttemptResponse": {
-            "category": "struct",
-            "fields": {
-                "found-submission": "bool",
-                "found-user": "bool",
-                "grading-result": "*model.GradingResult"
-            }
-        },
-        "user.FetchUserAttemptsRequest": {
-            "category": "struct",
-            "fields": {
-                "APIRequest": "core.APIRequest",
-                "MinCourseRoleGrader": "bool",
-                "assignment-id": "string",
-                "course-id": "string",
-                "root-user-nonce": "string",
-                "target-email": "core.TargetCourseUserSelfOrGrader",
-                "user-email": "string",
-                "user-pass": "string"
-            }
-        },
-        "user.FetchUserAttemptsResponse": {
-            "category": "struct",
-            "fields": {
-                "found-user": "bool",
-                "grading-results": "[]*model.GradingResult"
-            }
-        },
-        "user.FetchUserHistoryRequest": {
-            "category": "struct",
-            "fields": {
-                "APIRequest": "core.APIRequest",
-                "MinCourseRoleStudent": "bool",
-                "assignment-id": "string",
-                "course-id": "string",
-                "root-user-nonce": "string",
-                "target-email": "core.TargetCourseUserSelfOrGrader",
-                "user-email": "string",
-                "user-pass": "string"
-            }
-        },
-        "user.FetchUserHistoryResponse": {
-            "category": "struct",
-            "fields": {
-                "found-user": "bool",
-                "history": "[]*model.SubmissionHistoryItem"
-            }
-        },
-        "user.FetchUserPeekRequest": {
-            "category": "struct",
-            "fields": {
-                "APIRequest": "core.APIRequest",
-                "MinCourseRoleStudent": "bool",
-                "assignment-id": "string",
-                "course-id": "string",
-                "root-user-nonce": "string",
-                "target-email": "core.TargetCourseUserSelfOrGrader",
-                "target-submission": "string",
-                "user-email": "string",
-                "user-pass": "string"
-            }
-        },
-        "user.FetchUserPeekResponse": {
-            "category": "struct",
-            "fields": {
-                "found-submission": "bool",
-                "found-user": "bool",
-                "submission-result": "*model.GradingInfo"
-            }
-        },
-        "user.UserGetRequest": {
-            "category": "struct",
-            "fields": {
-                "APIRequest": "core.APIRequest",
-                "MinCourseRoleGrader": "bool",
-                "course-id": "string",
-                "root-user-nonce": "string",
-                "target-email": "core.TargetCourseUser",
-                "user-email": "string",
-                "user-pass": "string"
-            }
-        },
-        "user.UserGetResponse": {
-            "category": "struct",
-            "fields": {
-                "found-autograder-user": "bool",
-                "found-lms-user": "bool",
-                "user": "*core.CourseUserInfo"
-            }
-        },
-        "users.AuthRequest": {
-            "category": "struct",
-            "fields": {
-                "APIRequest": "core.APIRequest",
-                "root-user-nonce": "string",
-                "user-email": "string",
-                "user-pass": "string"
-            }
-        },
-        "users.AuthResponse": {
-            "category": "struct",
-            "fields": {
-                "success": "bool"
-            }
-        },
-        "users.DropRequest": {
-            "category": "struct",
-            "fields": {
-                "APIRequest": "core.APIRequest",
-                "MinCourseRoleAdmin": "bool",
-                "course-id": "string",
-                "root-user-nonce": "string",
-                "target-email": "core.TargetCourseUser",
-                "user-email": "string",
-                "user-pass": "string"
-            }
-        },
-        "users.DropResponse": {
-            "category": "struct",
-            "fields": {
-                "found-user": "bool"
-            }
-        },
-        "users.EnrollRequest": {
-            "category": "struct",
-            "fields": {
-                "APIRequest": "core.APIRequest",
-                "MinCourseRoleAdmin": "bool",
-                "course-id": "string",
-                "dry-run": "bool",
-                "raw-course-users": "[]*model.RawCourseUserData",
-                "root-user-nonce": "string",
-                "send-emails": "bool",
-                "skip-inserts": "bool",
-                "skip-updates": "bool",
-                "user-email": "string",
-                "user-pass": "string"
-            }
-        },
-        "users.EnrollResponse": {
-            "category": "struct",
-            "fields": {
-                "results": "[]*model.ExternalUserOpResult"
-            }
-        },
-        "users.GetRequest": {
-            "category": "struct",
-            "fields": {
-                "APIRequest": "core.APIRequest",
-                "MinCourseRoleOther": "bool",
-                "course-id": "string",
-                "root-user-nonce": "string",
-                "target-email": "core.TargetCourseUserSelfOrGrader",
-                "user-email": "string",
-                "user-pass": "string"
-            }
-        },
-        "users.GetResponse": {
-            "category": "struct",
-            "fields": {
-                "found": "bool",
-                "user": "*core.CourseUserInfo"
-            }
-        },
-        "users.ListRequest": {
-            "category": "struct",
-            "fields": {
-                "APIRequest": "core.APIRequest",
-                "MinCourseRoleGrader": "bool",
-                "course-id": "string",
-                "root-user-nonce": "string",
-                "user-email": "string",
-                "user-pass": "string"
-            }
-        },
-        "users.ListResponse": {
-            "category": "struct",
-            "fields": {
-                "users": "[]*core.CourseUserInfo"
-            }
-        },
-        "users.RemoveRequest": {
-            "category": "struct",
-            "fields": {
-                "APIRequest": "core.APIRequest",
-                "MinServerRoleAdmin": "bool",
-                "root-user-nonce": "string",
-                "target-email": "core.TargetServerUser",
-                "user-email": "string",
-                "user-pass": "string"
-            }
-        },
-        "users.RemoveResponse": {
-            "category": "struct",
-            "fields": {
-                "found-user": "bool"
-            }
-        },
-        "users.UpsertRequest": {
-            "category": "struct",
-            "fields": {
-                "APIRequest": "core.APIRequest",
-                "MinServerRoleAdmin": "bool",
-                "dry-run": "bool",
-                "raw-users": "[]*model.RawServerUserData",
-                "root-user-nonce": "string",
-                "send-emails": "bool",
-                "skip-inserts": "bool",
-                "skip-updates": "bool",
-                "user-email": "string",
-                "user-pass": "string"
-            }
-        },
-        "users.UpsertResponse": {
-            "category": "struct",
-            "fields": {
-                "results": "[]*model.ExternalUserOpResult"
             }
         },
         "users.UpsertUsersOptions": {
