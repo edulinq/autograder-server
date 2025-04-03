@@ -189,8 +189,13 @@ func describeType(customType reflect.Type, addType bool, typeMap map[string]core
 			return core.TypeDescription{}, "", map[string]core.TypeDescription{}, map[string]string{}, err
 		}
 
+		_, keyTypeID, _, _, err := describeType(customType.Key(), true, typeMap, typeConversions)
+		if err != nil {
+			return core.TypeDescription{}, "", map[string]core.TypeDescription{}, map[string]string{}, err
+		}
+
 		typeDescription.Category = core.MapType
-		typeDescription.KeyType = customType.Key().String()
+		typeDescription.KeyType = keyTypeID
 		typeDescription.ValueType = elemTypeID
 	case reflect.Struct:
 		typeDescription.Category = core.StructType

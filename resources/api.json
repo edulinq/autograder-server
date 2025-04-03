@@ -1019,6 +1019,10 @@
                 "value": "float64"
             }
         },
+        "stats.MetricAttribute": {
+            "alias-type": "string",
+            "category": "alias"
+        },
         "stats.MetricType": {
             "alias-type": "string",
             "category": "alias"
