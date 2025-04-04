@@ -9,6 +9,7 @@ import (
 	"github.com/edulinq/autograder/internal/api/core"
 	courseUsers "github.com/edulinq/autograder/internal/api/courses/users"
 	"github.com/edulinq/autograder/internal/api/users"
+	"github.com/edulinq/autograder/internal/log"
 	"github.com/edulinq/autograder/internal/util"
 )
 
@@ -56,6 +57,15 @@ type complexPointerStruct struct {
 	CoinValue *simpleMapWrapper   `json:"coin-value"`
 	GoodIndex *simpleArrayWrapper `json:"good-index"`
 	Personnel *embeddedJSONStruct `json:"personnel"`
+}
+
+func mustGetTypeID(customType reflect.Type, typeConversions map[string]string) string {
+	typeID, err := getTypeID(customType, typeConversions)
+	if err != nil {
+		log.Fatal("Failed to get type ID.", err)
+	}
+
+	return typeID
 }
 
 func TestDescribeFull(test *testing.T) {
@@ -542,7 +552,7 @@ func TestDescribeConflictingTypes(test *testing.T) {
 		test.Fatalf("Failed to describe type: '%v'.", err)
 	}
 
-	// Adding a second users.ListRequest will cause a conflict.
+	// Add in the second users.ListRequest which will cause a conflict.
 	_, _, _, _, err = describeType(reflect.TypeOf((*courseUsers.ListRequest)(nil)).Elem(), true, typeMap, typeDescriptions)
 	if err == nil {
 		test.Fatalf("Did not get expected error while describing types.")

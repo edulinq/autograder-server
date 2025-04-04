@@ -8,13 +8,12 @@ import (
 	"regexp"
 
 	"github.com/edulinq/autograder/internal/api/core"
-	"github.com/edulinq/autograder/internal/log"
 	"github.com/edulinq/autograder/internal/util"
 )
 
 var skipDescriptionPatterns = []*regexp.Regexp{
-	regexp.MustCompile("root-user-nonce"),
-	regexp.MustCompile("Min.*Role.*"),
+	regexp.MustCompile("^root-user-nonce$"),
+	regexp.MustCompile("^Min.*Role.*$"),
 	regexp.MustCompile("^APIRequest$"),
 }
 
@@ -125,15 +124,6 @@ func getTypeID(customType reflect.Type, typeConversions map[string]string) (stri
 	}
 
 	return prefix + customType.String(), nil
-}
-
-func mustGetTypeID(customType reflect.Type, typeConversions map[string]string) string {
-	typeID, err := getTypeID(customType, typeConversions)
-	if err != nil {
-		log.Fatal("Failed to get type ID.", err)
-	}
-
-	return typeID
 }
 
 // Given a type and a map of known type descriptions, describeType() returns the type description and typeID.
