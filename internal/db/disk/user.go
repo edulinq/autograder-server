@@ -54,8 +54,37 @@ func (this *backend) GetServerUser(email string) (*model.ServerUser, error) {
 	return user, nil
 }
 
-func (this *backend) UpsertUsers(users map[string]*model.ServerUser) error {
-	return this.upsertUsersLock(users, true)
+func (this *backend) UpsertUsers(upsertUsers map[string]*model.ServerUser) error {
+	this.userLock.Lock()
+	defer this.userLock.Unlock()
+
+	users, err := this.getServerUsersLock(false)
+	if err != nil {
+		return fmt.Errorf("Failed to get users to merge before saving: '%w'.", err)
+	}
+
+	for email, upsertUser := range upsertUsers {
+		if upsertUser == nil {
+			continue
+		}
+
+		oldUser, exists := users[email]
+		if exists {
+			_, err = oldUser.Merge(upsertUser)
+			if err != nil {
+				return fmt.Errorf("User '%s' could not be merged with existing user: '%w'.", email, err)
+			}
+		} else {
+			users[email] = upsertUser
+		}
+	}
+
+	err = util.ToJSONFileIndent(users, this.getServerUsersPath())
+	if err != nil {
+		return fmt.Errorf("Unable to save user's file: '%w'.", err)
+	}
+
+	return nil
 }
 
 func (this *backend) DeleteUser(email string) error {
@@ -171,41 +200,6 @@ func (this *backend) getServerUsersLock(acquireLock bool) (map[string]*model.Ser
 	}
 
 	return users, errs
-}
-
-func (this *backend) upsertUsersLock(upsertUsers map[string]*model.ServerUser, acquireLock bool) error {
-	if acquireLock {
-		this.userLock.Lock()
-		defer this.userLock.Unlock()
-	}
-
-	users, err := this.getServerUsersLock(false)
-	if err != nil {
-		return fmt.Errorf("Failed to get users to merge before saving: '%w'.", err)
-	}
-
-	for email, upsertUser := range upsertUsers {
-		if upsertUser == nil {
-			continue
-		}
-
-		oldUser, exists := users[email]
-		if exists {
-			_, err = oldUser.Merge(upsertUser)
-			if err != nil {
-				return fmt.Errorf("User '%s' could not be merged with existing user: '%w'.", email, err)
-			}
-		} else {
-			users[email] = upsertUser
-		}
-	}
-
-	err = util.ToJSONFileIndent(users, this.getServerUsersPath())
-	if err != nil {
-		return fmt.Errorf("Unable to save user's file: '%w'.", err)
-	}
-
-	return nil
 }
 
 func (this *backend) clearCourseUsers(course *model.Course) error {
