@@ -6,6 +6,7 @@ import (
 	"github.com/edulinq/autograder/internal/api/core"
 	"github.com/edulinq/autograder/internal/config"
 	"github.com/edulinq/autograder/internal/db"
+	"github.com/edulinq/autograder/internal/docker"
 	"github.com/edulinq/autograder/internal/grader"
 	"github.com/edulinq/autograder/internal/model"
 	"github.com/edulinq/autograder/internal/timestamp"
@@ -14,8 +15,10 @@ import (
 
 // Proxy resubmissions should never be rejected.
 func TestProxyResubmit(test *testing.T) {
-	db.ResetForTesting()
+	docker.EnsureOrSkipForTest(test)
+
 	defer db.ResetForTesting()
+	db.ResetForTesting()
 
 	// Disable testing mode to check for rejection.
 	config.UNIT_TESTING_MODE.Set(false)
@@ -62,6 +65,16 @@ func TestProxyResubmit(test *testing.T) {
 		{"course-student@test.edulinq.org", "course-admin", "course101::hw0::student@test.edulinq.org::1697406256", getTestProxyTime(), true, true, false},
 		{"course-student@test.edulinq.org", "course-admin", "course101::hw0::student@test.edulinq.org::1697406265", getTestProxyTime(), true, true, false},
 		{"course-student@test.edulinq.org", "course-admin", "course101::hw0::student@test.edulinq.org::1697406272", getTestProxyTime(), true, true, false},
+
+		// No ID (most recent), nil proxy time.
+		{"course-student@test.edulinq.org", "course-admin", "", nil, true, true, false},
+		{"course-student@test.edulinq.org", "course-admin", "", nil, true, true, false},
+		{"course-student@test.edulinq.org", "course-admin", "", nil, true, true, false},
+
+		// No ID (most recent), explicit proxy time.
+		{"course-student@test.edulinq.org", "course-admin", "", getTestProxyTime(), true, true, false},
+		{"course-student@test.edulinq.org", "course-admin", "", getTestProxyTime(), true, true, false},
+		{"course-student@test.edulinq.org", "course-admin", "", getTestProxyTime(), true, true, false},
 
 		// Invalid proxy resubmissions.
 		// Unknown proxy emails.
@@ -148,6 +161,11 @@ func TestProxyResubmit(test *testing.T) {
 		if responseContent.Message != "" {
 			test.Errorf("Case %d: Response has a reject reason when it should not: '%v'.", i, responseContent)
 			continue
+		}
+
+		// A nil target submission targets the most recent submission.
+		if testCase.targetSubmission == "" {
+			testCase.targetSubmission = "1697406272"
 		}
 
 		expectedGradingResult := studentGradingResults[testCase.targetSubmission]
