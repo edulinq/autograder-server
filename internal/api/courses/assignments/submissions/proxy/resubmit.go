@@ -1,10 +1,11 @@
 package proxy
 
 import (
+	"context"
+
 	"github.com/edulinq/autograder/internal/api/core"
 	"github.com/edulinq/autograder/internal/db"
 	"github.com/edulinq/autograder/internal/grader"
-	"github.com/edulinq/autograder/internal/log"
 	"github.com/edulinq/autograder/internal/model"
 	"github.com/edulinq/autograder/internal/timestamp"
 	"github.com/edulinq/autograder/internal/util"
@@ -21,14 +22,31 @@ type ResubmitRequest struct {
 	Message string `json:"message"`
 }
 
-type ResubmitResponse struct {
-	FoundUser       bool   `json:"found-user"`
-	FoundSubmission bool   `json:"found-submission"`
-	Rejected        bool   `json:"rejected"`
-	Message         string `json:"message"`
+func (request ResubmitRequest) GetContext() context.Context {
+	return request.Context
+}
 
-	GradingSuccess bool               `json:"grading-success"`
-	GradingInfo    *model.GradingInfo `json:"result"`
+func (request ResubmitRequest) GetAssignment() *model.Assignment {
+	return request.Assignment
+}
+
+func (request ResubmitRequest) GetUserEmail() string {
+	return request.ProxyUser.Email
+}
+
+func (request ResubmitRequest) GetMessage() string {
+	return request.Message
+}
+
+func (request ResubmitRequest) ToLogAttrs() []any {
+	return core.GetLogAttributesFromAPIRequest(&request)
+}
+
+type ResubmitResponse struct {
+	FoundUser       bool `json:"found-user"`
+	FoundSubmission bool `json:"found-submission"`
+
+	core.BaseSubmitResponse
 }
 
 // Proxy resubmit an assignment submission to the autograder.
@@ -60,10 +78,10 @@ func HandleResubmit(request *ResubmitRequest) (*ResubmitResponse, *core.APIError
 			Err(err).Assignment(request.Assignment.GetID()).
 			Add("target-user", request.ProxyUser.Email).Add("submission", request.TargetSubmission)
 	}
+	defer util.RemoveDirent(tempDir)
 
 	err = util.GzipBytesToDirectory(tempDir, gradingResult.InputFilesGZip)
 	if err != nil {
-		util.RemoveDirent(tempDir)
 		return nil, core.NewInternalError("-634", &request.APIRequestCourseUserContext, "Failed to write submission input to a temp dir.").
 			Err(err).Assignment(request.Assignment.GetID()).
 			Add("target-user", request.ProxyUser.Email).Add("submission", request.TargetSubmission)
@@ -75,39 +93,7 @@ func HandleResubmit(request *ResubmitRequest) (*ResubmitResponse, *core.APIError
 	gradeOptions.ProxyUser = request.User.Email
 	gradeOptions.ProxyTime = grader.ResolveProxyTime(request.ProxyTime, request.Assignment)
 
-	result, reject, failureMessage, err := grader.Grade(request.Context, request.Assignment, tempDir, request.ProxyUser.Email, request.Message, gradeOptions)
-	if err != nil {
-		stdout := ""
-		stderr := ""
-
-		if (result != nil) && (result.HasTextOutput()) {
-			stdout = result.Stdout
-			stderr = result.Stderr
-		}
-
-		log.Warn("Resubmission failed internally.", err, request.Assignment, log.NewAttr("stdout", stdout), log.NewAttr("stderr", stderr), request.User)
-
-		return &response, nil
-	}
-
-	// A proxy resubmission should never be rejected.
-	if reject != nil {
-		log.Error("Proxy resubmission rejected.", request.Assignment, log.NewAttr("reason", reject.String()), log.NewAttr("request", request), request.User)
-
-		response.Rejected = true
-		response.Message = reject.String()
-		return &response, nil
-	}
-
-	if failureMessage != "" {
-		log.Debug("Resubmission got a soft error.", request.Assignment, log.NewAttr("message", failureMessage), log.NewAttr("request", request), request.User)
-
-		response.Message = failureMessage
-		return &response, nil
-	}
-
-	response.GradingSuccess = true
-	response.GradingInfo = result.Info
+	response.BaseSubmitResponse = core.GradeToSubmissionResponse(request, tempDir, gradeOptions)
 
 	return &response, nil
 }

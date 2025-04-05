@@ -219,7 +219,7 @@ func (this *APIRequestAssignmentContext) Validate(httpRequest *http.Request, req
 // Convert an API request into loggable attributes.
 // Note that this cannot be done (easily) with LogValue()
 // since we would need to attach that method to each instead of an APIRequest.
-func getLogAttributesFromAPIRequest(apiRequest ValidAPIRequest) []any {
+func GetLogAttributesFromAPIRequest(apiRequest ValidAPIRequest) []any {
 	typedAPIRequest := reflect.ValueOf(apiRequest).Elem().FieldByName("APIRequest").Interface().(APIRequest)
 
 	generalData, err := util.ToJSONMap(apiRequest)

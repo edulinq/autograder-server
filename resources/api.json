@@ -596,6 +596,15 @@
                 "name": "string"
             }
         },
+        "core.BaseSubmitResponse": {
+            "category": "struct",
+            "fields": {
+                "grading-success": "bool",
+                "message": "string",
+                "rejected": "bool",
+                "result": "*model.GradingInfo"
+            }
+        },
         "core.BaseUserInfo": {
             "category": "struct",
             "fields": {
