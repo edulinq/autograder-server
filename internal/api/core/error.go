@@ -4,9 +4,9 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"reflect"
 
 	"github.com/edulinq/autograder/internal/log"
-	"github.com/edulinq/autograder/internal/model"
 	"github.com/edulinq/autograder/internal/timestamp"
 	"github.com/edulinq/autograder/internal/util"
 )
@@ -157,192 +157,124 @@ func (this *APIError) ToResponse() *APIResponse {
 
 // Constructors for common cases.
 
-func NewBadRequestError(locator string, request *APIRequest, message string) *APIError {
-	return &APIError{
-		RequestID:    request.RequestID,
+func NewAuthError(locator string, requestContext any, internalMessage string) *APIError {
+	apiError := &APIError{
 		Locator:      locator,
-		Endpoint:     request.Endpoint,
-		Sender:       request.Sender,
-		Timestamp:    request.Timestamp,
-		LogLevel:     log.LevelInfo,
-		HTTPStatus:   HTTP_STATUS_BAD_REQUEST,
-		InternalText: message,
-		ResponseText: message,
-	}
-}
-
-func NewBadUserRequestError(locator string, request *APIRequestUserContext, message string) *APIError {
-	err := &APIError{
-		RequestID:    request.RequestID,
-		Locator:      locator,
-		Endpoint:     request.Endpoint,
-		Sender:       request.Sender,
-		Timestamp:    request.Timestamp,
-		LogLevel:     log.LevelInfo,
-		HTTPStatus:   HTTP_STATUS_BAD_REQUEST,
-		InternalText: message,
-		ResponseText: message,
-		UserEmail:    request.UserEmail,
-	}
-
-	return err
-}
-
-func NewBadCourseRequestError(locator string, request *APIRequestCourseUserContext, message string) *APIError {
-	err := &APIError{
-		RequestID:    request.RequestID,
-		Locator:      locator,
-		Endpoint:     request.Endpoint,
-		Sender:       request.Sender,
-		Timestamp:    request.Timestamp,
-		LogLevel:     log.LevelInfo,
-		HTTPStatus:   HTTP_STATUS_BAD_REQUEST,
-		InternalText: message,
-		ResponseText: message,
-		CourseID:     request.CourseID,
-		UserEmail:    request.UserEmail,
-	}
-
-	return err
-}
-
-// A bad request before the request was even parsed (usually a JSON error).
-func NewBareBadRequestError(locator string, endpoint string, message string) *APIError {
-	return &APIError{
-		RequestID:    locator,
-		Locator:      locator,
-		Endpoint:     endpoint,
-		Sender:       "",
-		Timestamp:    timestamp.Now(),
-		LogLevel:     log.LevelInfo,
-		HTTPStatus:   HTTP_STATUS_BAD_REQUEST,
-		InternalText: message,
-		ResponseText: message,
-	}
-}
-
-func NewAuthBadRequestError(locator string, request *APIRequestUserContext, internalMessage string) *APIError {
-	err := &APIError{
-		RequestID:    request.RequestID,
-		Locator:      locator,
-		Endpoint:     request.Endpoint,
-		Sender:       request.Sender,
-		Timestamp:    request.Timestamp,
 		LogLevel:     log.LevelInfo,
 		HTTPStatus:   HTTP_STATUS_AUTH_ERROR,
 		InternalText: fmt.Sprintf("Authentication failure: '%s'.", internalMessage),
 		ResponseText: "Authentication failure, check email and password.",
-		UserEmail:    request.UserEmail,
 	}
 
-	return err
+	applyContext(apiError, requestContext)
+
+	return apiError
 }
 
-func NewBadServerPermissionsError(locator string, request *APIRequestUserContext, minRole model.ServerUserRole, internalMessage string) *APIError {
-	err := &APIError{
-		RequestID:    request.RequestID,
+func NewBadRequestError(locator string, requestContext any, message string) *APIError {
+	apiError := &APIError{
 		Locator:      locator,
-		Endpoint:     request.Endpoint,
-		Sender:       request.Sender,
-		Timestamp:    request.Timestamp,
+		LogLevel:     log.LevelInfo,
+		HTTPStatus:   HTTP_STATUS_BAD_REQUEST,
+		InternalText: message,
+		ResponseText: message,
+	}
+
+	applyContext(apiError, requestContext)
+
+	return apiError
+}
+
+func NewPermissionsError(locator string, requestContext any, minRole any, actualRole any, internalMessage string) *APIError {
+	apiError := &APIError{
+		Locator:      locator,
 		LogLevel:     log.LevelInfo,
 		HTTPStatus:   HTTP_PERMISSIONS_ERROR,
 		InternalText: fmt.Sprintf("Insufficient Permissions: '%s'.", internalMessage),
 		ResponseText: "You have insufficient permissions for the requested operation.",
-		UserEmail:    request.UserEmail,
 	}
 
-	err.Add("actual-server-role", request.ServerUser.Role)
-	err.Add("min-required-server-role", minRole)
+	applyContext(apiError, requestContext)
 
-	return err
+	apiError.Add("min-role", minRole)
+	apiError.Add("actual-role", actualRole)
+
+	return apiError
 }
 
-func NewBadCoursePermissionsError(locator string, request *APIRequestCourseUserContext, minRole model.CourseUserRole, internalMessage string) *APIError {
-	err := &APIError{
-		RequestID:    request.RequestID,
+func NewInternalError(locator string, requestContext any, internalMessage string) *APIError {
+	apiError := &APIError{
 		Locator:      locator,
-		Endpoint:     request.Endpoint,
-		Sender:       request.Sender,
-		Timestamp:    request.Timestamp,
-		LogLevel:     log.LevelInfo,
-		HTTPStatus:   HTTP_PERMISSIONS_ERROR,
-		InternalText: fmt.Sprintf("Insufficient Permissions: '%s'.", internalMessage),
-		ResponseText: "You have insufficient permissions for the requested operation.",
-		CourseID:     request.CourseID,
-		UserEmail:    request.UserEmail,
-	}
-
-	err.Add("actual-course-role", request.User.Role)
-	err.Add("min-required-course-role", minRole)
-
-	return err
-}
-
-func NewInternalError(locator string, request *APIRequestCourseUserContext, internalMessage string) *APIError {
-	err := &APIError{
-		RequestID:    request.RequestID,
-		Locator:      locator,
-		Endpoint:     request.Endpoint,
-		Sender:       request.Sender,
-		Timestamp:    request.Timestamp,
 		LogLevel:     log.LevelError,
 		HTTPStatus:   HTTP_STATUS_SERVER_ERROR,
 		InternalText: internalMessage,
-		ResponseText: fmt.Sprintf("The server failed to process your request. Please contact an administrator with this ID '%s'.", request.RequestID),
-		CourseID:     request.CourseID,
-		UserEmail:    request.UserEmail,
+		ResponseText: "The server failed to process your request.",
 	}
 
-	return err
+	applyContext(apiError, requestContext)
+
+	if apiError.RequestID != "" {
+		apiError.ResponseText = fmt.Sprintf("The server failed to process your request. Please contact an administrator with this ID '%s'.", apiError.RequestID)
+	}
+
+	return apiError
 }
 
-func NewUserContextInternalError(locator string, request *APIRequestUserContext, internalMessage string) *APIError {
-	err := &APIError{
-		RequestID:    request.RequestID,
-		Locator:      locator,
-		Endpoint:     request.Endpoint,
-		Sender:       request.Sender,
-		Timestamp:    request.Timestamp,
-		LogLevel:     log.LevelError,
-		HTTPStatus:   HTTP_STATUS_SERVER_ERROR,
-		InternalText: internalMessage,
-		ResponseText: fmt.Sprintf("The server failed to process your request. Please contact an administrator with this ID '%s'.", request.RequestID),
-		UserEmail:    request.UserEmail,
+// Figure out the type of the passed in request context and appy it to the given error.
+func applyContext(apiError *APIError, requestContext any) {
+	if requestContext == nil {
+		log.Error("APIError has a nil request context.", log.NewAttr("locator", apiError.Locator))
+		return
 	}
 
-	return err
-}
-
-func NewBaseInternalError(locator string, request *APIRequest, internalMessage string) *APIError {
-	err := &APIError{
-		RequestID:    request.RequestID,
-		Locator:      locator,
-		Endpoint:     request.Endpoint,
-		Sender:       request.Sender,
-		Timestamp:    request.Timestamp,
-		LogLevel:     log.LevelError,
-		HTTPStatus:   HTTP_STATUS_SERVER_ERROR,
-		InternalText: internalMessage,
-		ResponseText: fmt.Sprintf("The server failed to process your request. Please contact an administrator with this ID '%s'.", request.RequestID),
+	// When the request context is a string, it must be an endpoint.
+	stringContext, ok := requestContext.(string)
+	if ok {
+		apiError.Endpoint = stringContext
+		apiError.Timestamp = timestamp.Now()
+		return
 	}
 
-	return err
-}
+	// Now check for APIRequest embedded types.
 
-// Very rare errors can occur so early that there is not even a request id.
-func NewBareInternalError(locator string, endpoint string, internalMessage string) *APIError {
-	err := &APIError{
-		RequestID:    locator,
-		Locator:      locator,
-		Endpoint:     endpoint,
-		Sender:       "",
-		Timestamp:    timestamp.Now(),
-		LogLevel:     log.LevelError,
-		HTTPStatus:   HTTP_STATUS_SERVER_ERROR,
-		InternalText: internalMessage,
-		ResponseText: fmt.Sprintf("The server failed to process your request. Please contact an administrator with this ID '%s'.", locator),
+	reflectValue := reflect.ValueOf(requestContext)
+	if reflectValue.Kind() == reflect.Pointer {
+		reflectValue = reflectValue.Elem()
 	}
 
-	return err
+	if reflectValue.Kind() != reflect.Struct {
+		log.Error("APIError request context is not a struct.", log.NewAttr("context", requestContext), log.NewAttr("locator", apiError.Locator))
+		return
+	}
+
+	baseContextValue := reflectValue.FieldByName("APIRequest")
+	if baseContextValue.IsValid() {
+		baseContext := baseContextValue.Interface().(APIRequest)
+
+		apiError.RequestID = baseContext.RequestID
+		apiError.Endpoint = baseContext.Endpoint
+		apiError.Sender = baseContext.Sender
+		apiError.Timestamp = baseContext.Timestamp
+	}
+
+	userContextValue := reflectValue.FieldByName("APIRequestUserContext")
+	if userContextValue.IsValid() {
+		userContext := userContextValue.Interface().(APIRequestUserContext)
+
+		apiError.UserEmail = userContext.UserEmail
+	}
+
+	courseContextValue := reflectValue.FieldByName("APIRequestCourseUserContext")
+	if courseContextValue.IsValid() {
+		courseContext := courseContextValue.Interface().(APIRequestCourseUserContext)
+
+		apiError.CourseID = courseContext.CourseID
+	}
+
+	assignmentContextValue := reflectValue.FieldByName("APIRequestAssignmentContext")
+	if assignmentContextValue.IsValid() {
+		assignmentContext := assignmentContextValue.Interface().(APIRequestAssignmentContext)
+
+		apiError.AssignmentID = assignmentContext.AssignmentID
+	}
 }

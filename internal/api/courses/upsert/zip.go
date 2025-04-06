@@ -19,7 +19,7 @@ type ZipFileRequest struct {
 // Upsert a course using a zip file.
 func HandleZipFile(request *ZipFileRequest) (*UpsertResponse, *core.APIError) {
 	if len(request.Files.Filenames) != 1 {
-		return nil, core.NewBadUserRequestError("-615", &request.APIRequestUserContext,
+		return nil, core.NewBadRequestError("-615", request,
 			fmt.Sprintf("Expected exactly one file, found %d.", len(request.Files.Filenames)))
 	}
 
@@ -30,7 +30,7 @@ func HandleZipFile(request *ZipFileRequest) (*UpsertResponse, *core.APIError) {
 
 	results, err := courses.UpsertFromZipFile(path, options)
 	if err != nil {
-		return nil, core.NewBadUserRequestError("-616", &request.APIRequestUserContext,
+		return nil, core.NewBadRequestError("-616", request,
 			"Failed to upsert course from zip file.").Err(err)
 	}
 

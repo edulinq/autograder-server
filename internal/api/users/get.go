@@ -33,7 +33,7 @@ func HandleGet(request *GetRequest) (*GetResponse, *core.APIError) {
 	for courseID, _ := range request.TargetUser.User.CourseInfo {
 		course, err := db.GetCourse(courseID)
 		if err != nil {
-			return nil, core.NewUserContextInternalError("-804", &request.APIRequestUserContext,
+			return nil, core.NewInternalError("-804", request,
 				"Failed to get user's course.").Err(err).Course(courseID)
 		}
 

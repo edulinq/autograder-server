@@ -21,7 +21,7 @@ func HandleFileSpec(request *FileSpecRequest) (*UpsertResponse, *core.APIError) 
 
 	results, err := courses.UpsertFromFileSpec(&request.FileSpec, options)
 	if err != nil {
-		return nil, core.NewBadUserRequestError("-614", &request.APIRequestUserContext,
+		return nil, core.NewBadRequestError("-614", request,
 			"Failed to upsert course from FileSpec.").Err(err)
 	}
 

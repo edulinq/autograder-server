@@ -21,7 +21,7 @@ func HandlePasswordReset(request *PasswordResetRequest) (*PasswordResetResponse,
 
 	user, err := db.GetServerUser(string(request.UserEmail))
 	if err != nil {
-		return nil, core.NewBaseInternalError("-807", &request.APIRequest, "Failed to get server user.").Err(err)
+		return nil, core.NewInternalError("-807", request, "Failed to get server user.").Err(err)
 	}
 
 	if user == nil {
@@ -30,12 +30,12 @@ func HandlePasswordReset(request *PasswordResetRequest) (*PasswordResetResponse,
 
 	cleartext, err := user.SetRandomPassword()
 	if err != nil {
-		return nil, core.NewBaseInternalError("-808", &request.APIRequest, "Failed to set random password.").Err(err)
+		return nil, core.NewInternalError("-808", request, "Failed to set random password.").Err(err)
 	}
 
 	err = db.UpsertUser(user)
 	if err != nil {
-		return nil, core.NewBaseInternalError("-809", &request.APIRequest, "Failed to save user.").Err(err)
+		return nil, core.NewInternalError("-809", request, "Failed to save user.").Err(err)
 	}
 
 	userOp := &model.UserOpResult{
@@ -53,7 +53,7 @@ func HandlePasswordReset(request *PasswordResetRequest) (*PasswordResetResponse,
 
 	err = email.SendMessage(message)
 	if err != nil {
-		return nil, core.NewBaseInternalError("-810", &request.APIRequest, "Failed to email user.").Err(err)
+		return nil, core.NewInternalError("-810", request, "Failed to email user.").Err(err)
 	}
 
 	return response, nil

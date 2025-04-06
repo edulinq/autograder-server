@@ -21,13 +21,13 @@ type TokensCreateResponse struct {
 func HandleTokensCreate(request *TokensCreateRequest) (*TokensCreateResponse, *core.APIError) {
 	token, cleartext, err := request.ServerUser.CreateRandomToken(request.Name, model.TokenSourceUser)
 	if err != nil {
-		return nil, core.NewUserContextInternalError("-801", &request.APIRequestUserContext,
+		return nil, core.NewInternalError("-801", request,
 			"Failed to create random user token.").Err(err)
 	}
 
 	err = db.UpsertUser(request.ServerUser)
 	if err != nil {
-		return nil, core.NewUserContextInternalError("-802", &request.APIRequestUserContext,
+		return nil, core.NewInternalError("-802", request,
 			"Failed to save user.").Err(err)
 	}
 

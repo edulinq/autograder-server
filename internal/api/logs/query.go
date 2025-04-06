@@ -26,7 +26,7 @@ func HandleQuery(request *QueryRequest) (*QueryResponse, *core.APIError) {
 
 	records, locatableErr, err := plogs.Query(request.RawLogQuery, request.ServerUser)
 	if err != nil {
-		return nil, core.NewUserContextInternalError("-200", &request.APIRequestUserContext, "Failed to query logs.").Err(err)
+		return nil, core.NewInternalError("-200", request, "Failed to query logs.").Err(err)
 	}
 
 	if locatableErr != nil {

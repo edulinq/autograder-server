@@ -32,9 +32,8 @@ func HandleFetchUserPeek(request *FetchUserPeekRequest) (*FetchUserPeekResponse,
 
 	submissionResult, err := db.GetSubmissionResult(request.Assignment, request.TargetUser.Email, request.TargetSubmission)
 	if err != nil {
-		return nil, core.NewInternalError("-601", &request.APIRequestCourseUserContext, "Failed to get submission result.").
-			Err(err).Assignment(request.Assignment.GetID()).
-			Add("target-user", request.TargetUser.Email).Add("submission", request.TargetSubmission)
+		return nil, core.NewInternalError("-601", request, "Failed to get submission result.").
+			Err(err).Add("target-user", request.TargetUser.Email).Add("submission", request.TargetSubmission)
 	}
 
 	if submissionResult == nil {

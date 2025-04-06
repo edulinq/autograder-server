@@ -26,7 +26,7 @@ type EmailResponse struct {
 // Send an email to course users.
 func HandleEmail(request *EmailRequest) (*EmailResponse, *core.APIError) {
 	if request.Subject == "" {
-		return nil, core.NewBadRequestError("-627", &request.APIRequest, "No email subject provided.")
+		return nil, core.NewBadRequestError("-627", request, "No email subject provided.")
 	}
 
 	var err error
@@ -42,17 +42,17 @@ func HandleEmail(request *EmailRequest) (*EmailResponse, *core.APIError) {
 	errs = errors.Join(errs, err)
 
 	if errs != nil {
-		return nil, core.NewInternalError("-628", &request.APIRequestCourseUserContext, "Failed to resolve email recipients.").Err(errs)
+		return nil, core.NewInternalError("-628", request, "Failed to resolve email recipients.").Err(errs)
 	}
 
 	if (len(request.To) + len(request.CC) + len(request.BCC)) == 0 {
-		return nil, core.NewBadRequestError("-629", &request.APIRequest, "No email recipients provided.")
+		return nil, core.NewBadRequestError("-629", request, "No email recipients provided.")
 	}
 
 	if !request.DryRun {
 		err = email.SendFull(request.To, request.CC, request.BCC, request.Subject, request.Body, request.HTML)
 		if err != nil {
-			return nil, core.NewInternalError("-630", &request.APIRequestCourseUserContext, "Failed to send email.")
+			return nil, core.NewInternalError("-630", request, "Failed to send email.")
 		}
 	}
 

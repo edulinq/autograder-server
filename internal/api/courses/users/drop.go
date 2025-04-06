@@ -34,7 +34,7 @@ func HandleDrop(request *DropRequest) (*DropResponse, *core.APIError) {
 
 	_, _, err := db.RemoveUserFromCourse(request.Course, request.TargetCourseUser.User.Email)
 	if err != nil {
-		return nil, core.NewInternalError("-612", &request.APIRequestCourseUserContext,
+		return nil, core.NewInternalError("-612", request,
 			"Failed to drop user.").Err(err).Add("target-course-user", request.TargetCourseUser.User.Email)
 	}
 
@@ -52,6 +52,6 @@ func checkDropPermissions(request *DropRequest) *core.APIError {
 		return nil
 	}
 
-	return core.NewBadCoursePermissionsError("-613", &request.APIRequestCourseUserContext, request.TargetCourseUser.User.Role,
+	return core.NewPermissionsError("-613", request, request.TargetCourseUser.User.Role, request.User.Role,
 		"Cannot drop a user with an equal or higher role.").Add("target-course-user", request.TargetCourseUser.User.Email)
 }

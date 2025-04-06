@@ -27,13 +27,13 @@ func HandleRemove(request *RemoveRequest) (*RemoveResponse, *core.APIError) {
 	response.FoundUser = true
 
 	if request.TargetUser.User.Role >= request.ServerUser.Role {
-		return nil, core.NewBadServerPermissionsError("-811", &request.APIRequestUserContext, request.TargetUser.User.Role,
+		return nil, core.NewPermissionsError("-811", request, request.TargetUser.User.Role, request.ServerUser.Role,
 			"Cannot remove a user with an equal or higher role.").Add("target-user", request.TargetUser.User.Email)
 	}
 
 	_, err := db.DeleteUser(request.TargetUser.Email)
 	if err != nil {
-		return nil, core.NewUserContextInternalError("-812", &request.APIRequestUserContext,
+		return nil, core.NewInternalError("-812", request,
 			"Failed to remove user.").Err(err).Add("target-user", request.TargetUser.User.Email)
 	}
 
