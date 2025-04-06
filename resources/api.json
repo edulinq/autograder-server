@@ -768,6 +768,7 @@
             "fields": {
                 "id": "string",
                 "late-days-lms-id": "string",
+                "late-days-lms-name": "string",
                 "name": "string"
             }
         },
