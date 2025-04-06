@@ -250,6 +250,27 @@ func RecursiveChmod(basePath string, fileMode os.FileMode, dirMode os.FileMode) 
 }
 
 func SameDirent(aPath string, bPath string) (bool, error) {
+	aPath = ShouldNormalizePath(aPath)
+	bPath = ShouldNormalizePath(bPath)
+
+	// Even if they are empty, they point to the same dirent (if used as part of computations).
+	if aPath == bPath {
+		return true, nil
+	}
+
+	aExists := PathExists(aPath)
+	bExists := PathExists(bPath)
+
+	// If neither path exists (and they have already been checked for string equality), then they cannot be the same.
+	if !aExists && !bExists {
+		return false, nil
+	}
+
+	// If only one path exists, they cannot be the same.
+	if aExists != bExists {
+		return false, nil
+	}
+
 	aInfo, err := os.Stat(aPath)
 	if err != nil {
 		return false, err
