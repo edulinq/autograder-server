@@ -110,7 +110,7 @@ func handleAPIEndpoint(response http.ResponseWriter, request *http.Request, apiH
 	}
 	defer CleanupAPIrequest(apiRequest)
 
-	log.Debug("Incoming API Request", GetLogAttributesFromAPIRequest(apiRequest)...)
+	log.Debug("Incoming API Request", getLogAttributesFromAPIRequest(apiRequest)...)
 
 	// Execute the handler.
 	apiResponse, apiErr := callHandler(apiHandler, apiRequest)

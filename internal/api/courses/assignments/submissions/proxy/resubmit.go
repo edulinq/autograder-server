@@ -1,12 +1,9 @@
 package proxy
 
 import (
-	"context"
-
 	"github.com/edulinq/autograder/internal/api/core"
 	"github.com/edulinq/autograder/internal/db"
 	"github.com/edulinq/autograder/internal/grader"
-	"github.com/edulinq/autograder/internal/model"
 	"github.com/edulinq/autograder/internal/timestamp"
 	"github.com/edulinq/autograder/internal/util"
 )
@@ -22,31 +19,11 @@ type ResubmitRequest struct {
 	Message string `json:"message"`
 }
 
-func (request ResubmitRequest) GetContext() context.Context {
-	return request.Context
-}
-
-func (request ResubmitRequest) GetAssignment() *model.Assignment {
-	return request.Assignment
-}
-
-func (request ResubmitRequest) GetUserEmail() string {
-	return request.ProxyUser.Email
-}
-
-func (request ResubmitRequest) GetMessage() string {
-	return request.Message
-}
-
-func (request ResubmitRequest) ToLogAttrs() []any {
-	return core.GetLogAttributesFromAPIRequest(&request)
-}
-
 type ResubmitResponse struct {
+	core.BaseSubmitResponse
+
 	FoundUser       bool `json:"found-user"`
 	FoundSubmission bool `json:"found-submission"`
-
-	core.BaseSubmitResponse
 }
 
 // Proxy resubmit an assignment submission to the autograder.
@@ -93,7 +70,7 @@ func HandleResubmit(request *ResubmitRequest) (*ResubmitResponse, *core.APIError
 	gradeOptions.ProxyUser = request.User.Email
 	gradeOptions.ProxyTime = grader.ResolveProxyTime(request.ProxyTime, request.Assignment)
 
-	response.BaseSubmitResponse = core.GradeToSubmissionResponse(request, tempDir, gradeOptions)
+	response.BaseSubmitResponse = core.GradeToSubmissionResponse(request.APIRequestAssignmentContext, tempDir, request.ProxyUser.Email, request.Message, gradeOptions)
 
 	return &response, nil
 }
