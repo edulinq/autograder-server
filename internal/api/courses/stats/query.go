@@ -22,7 +22,7 @@ type QueryResponse struct {
 func HandleQuery(request *QueryRequest) (*QueryResponse, *core.APIError) {
 	err := request.Query.Validate()
 	if err != nil {
-		return nil, core.NewBadRequestError("-618", &request.APIRequest, "Failed to validate query.").Err(err)
+		return nil, core.NewBadRequestError("-618", request, "Failed to validate query.").Err(err)
 	}
 
 	// The request must be for the given course.
@@ -30,7 +30,7 @@ func HandleQuery(request *QueryRequest) (*QueryResponse, *core.APIError) {
 
 	records, err := db.GetMetrics(request.Query)
 	if err != nil {
-		return nil, core.NewInternalError("-631", &request.APIRequestCourseUserContext, "Failed to query course stats.").Err(err)
+		return nil, core.NewInternalError("-631", request, "Failed to query course stats.").Err(err)
 	}
 
 	response := QueryResponse{

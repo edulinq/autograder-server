@@ -27,18 +27,18 @@ func HandleIndividual(request *IndividualRequest) (*IndividualResponse, *core.AP
 	fullSubmissionIDs, courses, userErrors, systemErrors := analysis.ResolveSubmissionSpecs(request.RawSubmissionSpecs)
 
 	if systemErrors != nil {
-		return nil, core.NewUserContextInternalError("-623", &request.APIRequestUserContext, "Failed to resolve submission specs.").
+		return nil, core.NewInternalError("-623", request, "Failed to resolve submission specs.").
 			Err(systemErrors)
 	}
 
 	if userErrors != nil {
-		return nil, core.NewBadUserRequestError("-624", &request.APIRequestUserContext,
+		return nil, core.NewBadRequestError("-624", request,
 			fmt.Sprintf("Failed to resolve submission specs: '%s'.", userErrors.Error())).
 			Err(userErrors)
 	}
 
 	if !checkPermissions(request.ServerUser, courses) {
-		return nil, core.NewBadUserRequestError("-625", &request.APIRequestUserContext,
+		return nil, core.NewBadRequestError("-625", request,
 			"User does not have permissions (server admin or course admin in all present courses.")
 	}
 
@@ -48,7 +48,7 @@ func HandleIndividual(request *IndividualRequest) (*IndividualResponse, *core.AP
 
 	results, pendingCount, err := analysis.IndividualAnalysis(request.AnalysisOptions)
 	if err != nil {
-		return nil, core.NewUserContextInternalError("-626", &request.APIRequestUserContext, "Failed to perform individual analysis.").
+		return nil, core.NewInternalError("-626", request, "Failed to perform individual analysis.").
 			Err(err)
 	}
 

@@ -25,7 +25,7 @@ type UploadResponse struct {
 func HandleUpload(request *UploadRequest) (*UploadResponse, *core.APIError) {
 	scores, err := scoring.FullCourseScoringAndUpload(request.Course, request.DryRun)
 	if err != nil {
-		return nil, core.NewInternalError("-617", &request.APIRequestCourseUserContext,
+		return nil, core.NewInternalError("-617", request,
 			"Failed to perform a full course scoring.").Err(err)
 	}
 

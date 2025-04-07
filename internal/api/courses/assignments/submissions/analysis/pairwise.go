@@ -27,18 +27,18 @@ func HandlePairwise(request *PairwiseRequest) (*PairwiseResponse, *core.APIError
 	fullSubmissionIDs, courses, userErrors, systemErrors := analysis.ResolveSubmissionSpecs(request.RawSubmissionSpecs)
 
 	if systemErrors != nil {
-		return nil, core.NewUserContextInternalError("-619", &request.APIRequestUserContext, "Failed to resolve submission specs.").
+		return nil, core.NewInternalError("-619", request, "Failed to resolve submission specs.").
 			Err(systemErrors)
 	}
 
 	if userErrors != nil {
-		return nil, core.NewBadUserRequestError("-620", &request.APIRequestUserContext,
+		return nil, core.NewBadRequestError("-620", request,
 			fmt.Sprintf("Failed to resolve submission specs: '%s'.", userErrors.Error())).
 			Err(userErrors)
 	}
 
 	if !checkPermissions(request.ServerUser, courses) {
-		return nil, core.NewBadUserRequestError("-621", &request.APIRequestUserContext,
+		return nil, core.NewBadRequestError("-621", request,
 			"User does not have permissions (server admin or course admin in all present courses.")
 	}
 
@@ -48,7 +48,7 @@ func HandlePairwise(request *PairwiseRequest) (*PairwiseResponse, *core.APIError
 
 	results, pendingCount, err := analysis.PairwiseAnalysis(request.AnalysisOptions)
 	if err != nil {
-		return nil, core.NewUserContextInternalError("-622", &request.APIRequestUserContext, "Failed to perform pairwise analysis.").
+		return nil, core.NewInternalError("-622", request, "Failed to perform pairwise analysis.").
 			Err(err)
 	}
 

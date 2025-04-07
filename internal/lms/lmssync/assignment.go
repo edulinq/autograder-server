@@ -86,6 +86,7 @@ func syncAssignments(course *model.Course, dryRun bool) (*model.AssignmentSyncRe
 
 		if lateDaysAssignment != nil {
 			assignmentInfo.LateDaysLMSID = lateDaysAssignment.ID
+			assignmentInfo.LateDaysLMSName = lateDaysAssignment.Name
 		}
 
 		changed := mergeAssignment(localAssignment, lmsAssignments[lmsIndex], lateDaysAssignment)

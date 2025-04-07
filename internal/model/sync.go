@@ -8,9 +8,10 @@ type AssignmentSyncResult struct {
 }
 
 type AssignmentInfo struct {
-	ID            string `json:"id"`
-	Name          string `json:"name"`
-	LateDaysLMSID string `json:"late-days-lms-id,omitempty"`
+	ID              string `json:"id"`
+	Name            string `json:"name"`
+	LateDaysLMSID   string `json:"late-days-lms-id,omitempty"`
+	LateDaysLMSName string `json:"late-days-lms-name,omitempty"`
 }
 
 func NewAssignmentSyncResult() *AssignmentSyncResult {

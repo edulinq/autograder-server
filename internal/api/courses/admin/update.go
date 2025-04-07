@@ -22,7 +22,7 @@ func HandleUpdate(request *UpdateRequest) (*UpdateResponse, *core.APIError) {
 
 	result, err := courses.UpdateFromLocalSource(request.Course, options)
 	if err != nil {
-		return nil, core.NewInternalError("-611", &request.APIRequestCourseUserContext,
+		return nil, core.NewInternalError("-611", request,
 			"Failed to update course.").Err(err)
 	}
 

@@ -32,9 +32,8 @@ func HandleFetchUserAttempt(request *FetchUserAttemptRequest) (*FetchUserAttempt
 
 	gradingResult, err := db.GetSubmissionContents(request.Assignment, request.TargetUser.Email, request.TargetSubmission)
 	if err != nil {
-		return nil, core.NewInternalError("-604", &request.APIRequestCourseUserContext, "Failed to get submission contents.").
-			Err(err).Assignment(request.Assignment.GetID()).
-			Add("target-user", request.TargetUser.Email).Add("submission", request.TargetSubmission)
+		return nil, core.NewInternalError("-604", request, "Failed to get submission contents.").
+			Err(err).Add("target-user", request.TargetUser.Email).Add("submission", request.TargetSubmission)
 	}
 
 	if gradingResult == nil {

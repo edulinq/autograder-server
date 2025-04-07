@@ -20,13 +20,13 @@ type PasswordChangeResponse struct {
 func HandlePasswordChange(request *PasswordChangeRequest) (*PasswordChangeResponse, *core.APIError) {
 	success, err := request.ServerUser.SetPassword(request.NewPass)
 	if err != nil {
-		return nil, core.NewUserContextInternalError("-805", &request.APIRequestUserContext,
+		return nil, core.NewInternalError("-805", request,
 			"Failed to set new password.").Err(err)
 	}
 
 	err = db.UpsertUser(request.ServerUser)
 	if err != nil {
-		return nil, core.NewUserContextInternalError("-806", &request.APIRequestUserContext,
+		return nil, core.NewInternalError("-806", request,
 			"Failed to save user.").Err(err)
 	}
 

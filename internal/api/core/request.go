@@ -94,27 +94,27 @@ func (this *APIRequestUserContext) Validate(httpRequest *http.Request, request a
 		// Check for a valid nonce and skip auth if it exists.
 		_, rootUserExists := RootUserNonces.LoadAndDelete(this.RootUserNonce)
 		if !rootUserExists {
-			return NewAuthBadRequestError("-048", this, "Incorrect root user nonce.")
+			return NewAuthError("-048", this, "Incorrect root user nonce.")
 		}
 
 		rootUser, err := db.GetServerUser(model.RootUserEmail)
 		if err != nil {
-			return NewUserContextInternalError("-049", this, "Failed to get the root user.")
+			return NewInternalError("-049", this, "Failed to get the root user.")
 		}
 
 		if rootUser == nil {
-			return NewUserContextInternalError("-050", this, "Root user not found.")
+			return NewInternalError("-050", this, "Root user not found.")
 		}
 
 		this.UserEmail = rootUser.Email
 		this.ServerUser = rootUser
 	} else {
 		if this.UserEmail == "" {
-			return NewBadRequestError("-016", &this.APIRequest, "No user email specified.")
+			return NewBadRequestError("-016", this, "No user email specified.")
 		}
 
 		if this.UserPass == "" {
-			return NewBadRequestError("-017", &this.APIRequest, "No user password specified.")
+			return NewBadRequestError("-017", this, "No user password specified.")
 		}
 
 		this.ServerUser, apiErr = this.Auth()
@@ -129,7 +129,7 @@ func (this *APIRequestUserContext) Validate(httpRequest *http.Request, request a
 	}
 
 	if this.ServerUser.Role < minRole {
-		return NewBadServerPermissionsError("-041", this, minRole, "Base API Request")
+		return NewPermissionsError("-041", this, minRole, this.ServerUser.Role, "Base API Request")
 	}
 
 	return nil
@@ -144,12 +144,12 @@ func (this *APIRequestCourseUserContext) Validate(httpRequest *http.Request, req
 	}
 
 	if this.CourseID == "" {
-		return NewBadRequestError("-015", &this.APIRequest, "No course ID specified.")
+		return NewBadRequestError("-015", this, "No course ID specified.")
 	}
 
 	id, err := common.ValidateID(this.CourseID)
 	if err != nil {
-		return NewBadRequestError("-052", &this.APIRequest,
+		return NewBadRequestError("-052", this,
 			fmt.Sprintf("Could not find course (course ID ('%s') is invalid).", this.CourseID)).
 			Course(this.CourseID).Err(err)
 	}
@@ -162,7 +162,7 @@ func (this *APIRequestCourseUserContext) Validate(httpRequest *http.Request, req
 	}
 
 	if this.Course == nil {
-		return NewBadRequestError("-018", &this.APIRequest, fmt.Sprintf("Could not find course: '%s'.", this.CourseID)).
+		return NewBadRequestError("-018", this, fmt.Sprintf("Could not find course: '%s'.", this.CourseID)).
 			Course(this.CourseID)
 	}
 
@@ -172,7 +172,7 @@ func (this *APIRequestCourseUserContext) Validate(httpRequest *http.Request, req
 	}
 
 	if this.User == nil {
-		return NewBadRequestError("-040", &this.APIRequest, fmt.Sprintf("User '%s' is not enolled in course '%s'.", this.UserEmail, this.CourseID))
+		return NewBadRequestError("-040", this, fmt.Sprintf("User '%s' is not enolled in course '%s'.", this.UserEmail, this.CourseID))
 	}
 
 	minRole, foundRole := getMaxCourseRole(request)
@@ -181,7 +181,7 @@ func (this *APIRequestCourseUserContext) Validate(httpRequest *http.Request, req
 	}
 
 	if this.User.Role < minRole {
-		return NewBadCoursePermissionsError("-020", this, minRole, "Base API Request")
+		return NewPermissionsError("-020", this, minRole, this.User.Role, "Base API Request")
 	}
 
 	return nil
@@ -195,22 +195,21 @@ func (this *APIRequestAssignmentContext) Validate(httpRequest *http.Request, req
 	}
 
 	if this.AssignmentID == "" {
-		return NewBadRequestError("-021", &this.APIRequest, "No assignment ID specified.")
+		return NewBadRequestError("-021", this, "No assignment ID specified.")
 	}
 
 	id, err := common.ValidateID(this.AssignmentID)
 	if err != nil {
-		return NewBadRequestError("-035", &this.APIRequest,
+		return NewBadRequestError("-035", this,
 			fmt.Sprintf("Could not find assignment (assignment ID ('%s') is invalid).", this.AssignmentID)).
-			Course(this.CourseID).Assignment(this.AssignmentID).Err(err)
+			Err(err)
 	}
 
 	this.AssignmentID = id
 
 	this.Assignment = this.Course.GetAssignment(this.AssignmentID)
 	if this.Assignment == nil {
-		return NewBadRequestError("-022", &this.APIRequest, fmt.Sprintf("Could not find assignment: '%s'.", this.AssignmentID)).
-			Course(this.CourseID).Assignment(this.AssignmentID)
+		return NewBadRequestError("-022", this, fmt.Sprintf("Could not find assignment: '%s'.", this.AssignmentID))
 	}
 
 	return nil
@@ -284,7 +283,7 @@ func getLogAttributesFromAPIRequest(apiRequest ValidAPIRequest) []any {
 func ValidateAPIRequest(request *http.Request, apiRequest any, endpoint string) *APIError {
 	reflectPointer := reflect.ValueOf(apiRequest)
 	if reflectPointer.Kind() != reflect.Pointer {
-		return NewBareInternalError("-023", endpoint, "ValidateAPIRequest() must be called with a pointer.").
+		return NewInternalError("-023", endpoint, "ValidateAPIRequest() must be called with a pointer.").
 			Add("kind", reflectPointer.Kind().String())
 	}
 
@@ -295,7 +294,7 @@ func ValidateAPIRequest(request *http.Request, apiRequest any, endpoint string) 
 	}
 
 	if !foundRequestStruct {
-		return NewBareInternalError("-024", endpoint, "Request is not any kind of known API request.")
+		return NewInternalError("-024", endpoint, "Request is not any kind of known API request.")
 	}
 
 	// Check for any special field types that we know how to populate.
@@ -334,7 +333,7 @@ func validateRequestStruct(httpRequest *http.Request, rawRequest any, endpoint s
 
 	reflectValue := reflect.ValueOf(rawRequest).Elem()
 	if reflectValue.Kind() != reflect.Struct {
-		return false, NewBareInternalError("-031", endpoint, "Request's type must be a struct.").
+		return false, NewInternalError("-031", endpoint, "Request's type must be a struct.").
 			Add("kind", reflectValue.Kind().String())
 	}
 

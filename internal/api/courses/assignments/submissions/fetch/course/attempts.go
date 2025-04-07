@@ -21,8 +21,7 @@ type FetchCourseAttemptsResponse struct {
 func HandleFetchCourseAttempts(request *FetchCourseAttemptsRequest) (*FetchCourseAttemptsResponse, *core.APIError) {
 	results, err := db.GetRecentSubmissionContents(request.Assignment, request.FilterRole)
 	if err != nil {
-		return nil, core.NewInternalError("-605", &request.APIRequestCourseUserContext, "Failed to get submissions.").
-			Err(err).Assignment(request.Assignment.GetID())
+		return nil, core.NewInternalError("-605", request, "Failed to get submissions.").Err(err)
 	}
 
 	return &FetchCourseAttemptsResponse{results}, nil

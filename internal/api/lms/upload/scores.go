@@ -37,8 +37,7 @@ type RowEntry struct {
 // The file should not have headers, and should have two columns: email and score.
 func HandleUploadScores(request *UploadScoresRequest) (*UploadScoresResponse, *core.APIError) {
 	if request.Course.GetLMSAdapter() == nil {
-		return nil, core.NewBadRequestError("-405", &request.APIRequest, "Course is not linked to an LMS.").
-			Course(request.Course.GetID())
+		return nil, core.NewBadRequestError("-405", request, "Course is not linked to an LMS.")
 	}
 
 	response := UploadScoresResponse{
@@ -54,7 +53,7 @@ func HandleUploadScores(request *UploadScoresRequest) (*UploadScoresResponse, *c
 
 	err := lms.UpdateAssignmentScores(request.Course, string(request.AssignmentLMSID), scores)
 	if err != nil {
-		return nil, core.NewInternalError("-406", &request.APIRequestCourseUserContext,
+		return nil, core.NewInternalError("-406", request,
 			"Failed to upload LMS scores.").Err(err)
 	}
 
