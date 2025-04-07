@@ -3,8 +3,6 @@ package proxy
 import (
 	"github.com/edulinq/autograder/internal/api/core"
 	"github.com/edulinq/autograder/internal/grader"
-	"github.com/edulinq/autograder/internal/log"
-	"github.com/edulinq/autograder/internal/model"
 	"github.com/edulinq/autograder/internal/timestamp"
 )
 
@@ -20,12 +18,9 @@ type SubmitRequest struct {
 }
 
 type SubmitResponse struct {
-	FoundUser bool   `json:"found-user"`
-	Rejected  bool   `json:"rejected"`
-	Message   string `json:"message"`
+	core.BaseSubmitResponse
 
-	GradingSuccess bool               `json:"grading-success"`
-	GradingInfo    *model.GradingInfo `json:"result"`
+	FoundUser bool `json:"found-user"`
 }
 
 // Proxy submit an assignment submission to the autograder.
@@ -44,39 +39,7 @@ func HandleSubmit(request *SubmitRequest) (*SubmitResponse, *core.APIError) {
 	gradeOptions.ProxyUser = request.User.Email
 	gradeOptions.ProxyTime = grader.ResolveProxyTime(request.ProxyTime, request.Assignment)
 
-	result, reject, failureMessage, err := grader.Grade(request.Context, request.Assignment, request.Files.TempDir, request.ProxyUser.Email, request.Message, gradeOptions)
-	if err != nil {
-		stdout := ""
-		stderr := ""
-
-		if (result != nil) && (result.HasTextOutput()) {
-			stdout = result.Stdout
-			stderr = result.Stderr
-		}
-
-		log.Warn("Submission failed internally.", err, request.Assignment, log.NewAttr("stdout", stdout), log.NewAttr("stderr", stderr), request.User)
-
-		return &response, nil
-	}
-
-	// A proxy submission should never be rejected.
-	if reject != nil {
-		log.Error("Proxy submission rejected.", request.Assignment, log.NewAttr("reason", reject.String()), log.NewAttr("request", request), request.User)
-
-		response.Rejected = true
-		response.Message = reject.String()
-		return &response, nil
-	}
-
-	if failureMessage != "" {
-		log.Debug("Submission got a soft error.", request.Assignment, log.NewAttr("message", failureMessage), log.NewAttr("request", request), request.User)
-
-		response.Message = failureMessage
-		return &response, nil
-	}
-
-	response.GradingSuccess = true
-	response.GradingInfo = result.Info
+	response.BaseSubmitResponse = core.GradeRequestSubmission(request.APIRequestAssignmentContext, request.Files.TempDir, request.ProxyUser.Email, request.Message, gradeOptions)
 
 	return &response, nil
 }
