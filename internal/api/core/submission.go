@@ -14,7 +14,7 @@ type BaseSubmitResponse struct {
 	GradingInfo    *model.GradingInfo `json:"result"`
 }
 
-func GradeToSubmissionResponse(request APIRequestAssignmentContext, submissionPath string, email string, message string, options grader.GradeOptions) BaseSubmitResponse {
+func GradeRequestSubmission(request APIRequestAssignmentContext, submissionPath string, email string, message string, options grader.GradeOptions) BaseSubmitResponse {
 	response := BaseSubmitResponse{}
 
 	result, reject, failureMessage, err := grader.Grade(

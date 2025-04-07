@@ -25,7 +25,7 @@ func HandleSubmit(request *SubmitRequest) (*SubmitResponse, *core.APIError) {
 	gradeOptions := grader.GetDefaultGradeOptions()
 	gradeOptions.AllowLate = request.AllowLate
 
-	response.BaseSubmitResponse = core.GradeToSubmissionResponse(request.APIRequestAssignmentContext, request.Files.TempDir, request.User.Email, request.Message, gradeOptions)
+	response.BaseSubmitResponse = core.GradeRequestSubmission(request.APIRequestAssignmentContext, request.Files.TempDir, request.User.Email, request.Message, gradeOptions)
 
 	return &response, nil
 }

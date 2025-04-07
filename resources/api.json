@@ -179,7 +179,6 @@
             "input": {
                 "assignment-id": "string",
                 "course-id": "string",
-                "message": "string",
                 "proxy-email": "core.TargetCourseUser",
                 "proxy-time": "int64",
                 "target-submission": "string",

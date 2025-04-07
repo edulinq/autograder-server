@@ -11,12 +11,11 @@ import (
 type ResubmitRequest struct {
 	core.APIRequestAssignmentContext
 	core.MinCourseRoleGrader
+
 	TargetSubmission string `json:"target-submission"`
 
 	ProxyUser core.TargetCourseUser `json:"proxy-email"`
 	ProxyTime *timestamp.Timestamp  `json:"proxy-time"`
-
-	Message string `json:"message"`
 }
 
 type ResubmitResponse struct {
@@ -38,9 +37,8 @@ func HandleResubmit(request *ResubmitRequest) (*ResubmitResponse, *core.APIError
 
 	gradingResult, err := db.GetSubmissionContents(request.Assignment, request.ProxyUser.Email, request.TargetSubmission)
 	if err != nil {
-		return nil, core.NewInternalError("-632", &request.APIRequestCourseUserContext, "Failed to get submission contents.").
-			Err(err).Assignment(request.Assignment.GetID()).
-			Add("target-user", request.ProxyUser.Email).Add("submission", request.TargetSubmission)
+		return nil, core.NewInternalError("-632", request, "Failed to get submission contents.").
+			Err(err).Add("target-user", request.ProxyUser.Email).Add("submission", request.TargetSubmission)
 	}
 
 	if gradingResult == nil {
@@ -51,17 +49,20 @@ func HandleResubmit(request *ResubmitRequest) (*ResubmitResponse, *core.APIError
 
 	tempDir, err := util.MkDirTemp("resumbit-request-files-")
 	if err != nil {
-		return nil, core.NewInternalError("-633", &request.APIRequestCourseUserContext, "Failed to create temp resubmit files directory.").
-			Err(err).Assignment(request.Assignment.GetID()).
-			Add("target-user", request.ProxyUser.Email).Add("submission", request.TargetSubmission)
+		return nil, core.NewInternalError("-633", request, "Failed to create temp resubmit files directory.").
+			Err(err).Add("target-user", request.ProxyUser.Email).Add("submission", request.TargetSubmission)
 	}
 	defer util.RemoveDirent(tempDir)
 
 	err = util.GzipBytesToDirectory(tempDir, gradingResult.InputFilesGZip)
 	if err != nil {
-		return nil, core.NewInternalError("-634", &request.APIRequestCourseUserContext, "Failed to write submission input to a temp dir.").
-			Err(err).Assignment(request.Assignment.GetID()).
-			Add("target-user", request.ProxyUser.Email).Add("submission", request.TargetSubmission)
+		return nil, core.NewInternalError("-634", request, "Failed to write submission input to a temp dir.").
+			Err(err).Add("target-user", request.ProxyUser.Email).Add("submission", request.TargetSubmission)
+	}
+
+	message := ""
+	if gradingResult.Info != nil {
+		message = gradingResult.Info.Message
 	}
 
 	gradeOptions := grader.GetDefaultGradeOptions()
@@ -70,7 +71,7 @@ func HandleResubmit(request *ResubmitRequest) (*ResubmitResponse, *core.APIError
 	gradeOptions.ProxyUser = request.User.Email
 	gradeOptions.ProxyTime = grader.ResolveProxyTime(request.ProxyTime, request.Assignment)
 
-	response.BaseSubmitResponse = core.GradeToSubmissionResponse(request.APIRequestAssignmentContext, tempDir, request.ProxyUser.Email, request.Message, gradeOptions)
+	response.BaseSubmitResponse = core.GradeRequestSubmission(request.APIRequestAssignmentContext, tempDir, request.ProxyUser.Email, message, gradeOptions)
 
 	return &response, nil
 }
