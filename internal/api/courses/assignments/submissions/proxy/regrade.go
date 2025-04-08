@@ -16,13 +16,13 @@ type RegradeRequest struct {
 }
 
 type RegradeResponse struct {
-	SubmissionInfo map[string]*model.SubmissionHistoryItem `json:"submission-infos"`
+	Complete bool                                    `json:"complete"`
+	Options  grader.RegradeOptions                   `json:"options"`
+	Results  map[string]*model.SubmissionHistoryItem `json:"results"`
 }
 
-// Regrade the most recent submissions for the course.
+// Regrade the most recent submissions for users with the filtered role in the course.
 func HandleRegrade(request *RegradeRequest) (*RegradeResponse, *core.APIError) {
-	response := RegradeResponse{}
-
 	role := model.GetCourseUserRoleString(request.FilterRole)
 	users, err := db.ResolveCourseUsers(request.Course, []string{role})
 	if err != nil {
@@ -40,9 +40,15 @@ func HandleRegrade(request *RegradeRequest) (*RegradeResponse, *core.APIError) {
 		Users:      users,
 	}
 
-	response.SubmissionInfo, err = grader.RegradeSubmissions(regradeOptions)
+	results, pendingCount, err := grader.RegradeSubmissions(regradeOptions)
 	if err != nil {
 		return nil, core.NewInternalError("-636", request, "Unable to regrade subission contents.")
+	}
+
+	response := RegradeResponse{
+		Complete: (pendingCount == 0),
+		Options:  regradeOptions,
+		Results:  results,
 	}
 
 	return &response, nil

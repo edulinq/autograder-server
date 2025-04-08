@@ -175,7 +175,7 @@
             }
         },
         "courses/assignments/submissions/proxy/regrade": {
-            "description": "Regrade the most recent submissions for the course.",
+            "description": "Regrade the most recent submissions for users with the filtered role in the course.",
             "input": {
                 "assignment-id": "string",
                 "course-id": "string",
@@ -184,7 +184,9 @@
                 "user-pass": "string"
             },
             "output": {
-                "submission-infos": "map[string]*model.SubmissionHistoryItem"
+                "complete": "bool",
+                "options": "grader.RegradeOptions",
+                "results": "map[string]*model.SubmissionHistoryItem"
             }
         },
         "courses/assignments/submissions/proxy/resubmit": {
@@ -747,6 +749,13 @@
                 "html": "bool",
                 "subject": "string",
                 "to": "[]string"
+            }
+        },
+        "grader.RegradeOptions": {
+            "category": "struct",
+            "fields": {
+                "users": "[]string",
+                "wait-for-completion": "bool"
             }
         },
         "log.LogLevel": {
