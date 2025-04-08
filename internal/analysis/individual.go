@@ -156,6 +156,10 @@ func runIndividualAnalysis(options AnalysisOptions, fullSubmissionIDs []string) 
 		return PoolResult{result, runTime, err}, nil
 	})
 
+	if err != nil {
+		return nil, fmt.Errorf("Failed to run analysis in a parallel pool: '%w'.", err)
+	}
+
 	// If the analysis was canceled, exit right away.
 	if options.Context.Err() != nil {
 		return nil, nil
