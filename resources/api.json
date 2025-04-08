@@ -174,6 +174,19 @@
                 "submission-result": "*model.GradingInfo"
             }
         },
+        "courses/assignments/submissions/proxy/regrade": {
+            "description": "Regrade the most recent submissions for the course.",
+            "input": {
+                "assignment-id": "string",
+                "course-id": "string",
+                "filter-role": "int",
+                "user-email": "string",
+                "user-pass": "string"
+            },
+            "output": {
+                "submission-infos": "map[string]*model.SubmissionHistoryItem"
+            }
+        },
         "courses/assignments/submissions/proxy/resubmit": {
             "description": "Proxy resubmit an assignment submission to the autograder.",
             "input": {
