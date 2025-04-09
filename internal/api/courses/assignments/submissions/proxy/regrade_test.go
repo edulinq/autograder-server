@@ -6,12 +6,15 @@ import (
 
 	"github.com/edulinq/autograder/internal/api/core"
 	"github.com/edulinq/autograder/internal/db"
+	"github.com/edulinq/autograder/internal/docker"
 	"github.com/edulinq/autograder/internal/grader"
 	"github.com/edulinq/autograder/internal/model"
 	"github.com/edulinq/autograder/internal/util"
 )
 
 func TestRegradeBase(test *testing.T) {
+	docker.EnsureOrSkipForTest(test)
+
 	db.ResetForTesting()
 	defer db.ResetForTesting()
 
