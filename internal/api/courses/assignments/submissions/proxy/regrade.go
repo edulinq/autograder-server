@@ -13,11 +13,14 @@ type RegradeRequest struct {
 
 	// Filter results to only users with this role.
 	FilterRole model.CourseUserRole `json:"filter-role"`
+
+	// Wait for the entire regrade to complete and return all results.
+	WaitForCompletion bool `json:"wait-for-completion"`
 }
 
 type RegradeResponse struct {
 	Complete bool                                    `json:"complete"`
-	Options  grader.RegradeOptions                   `json:"options"`
+	Users    []string                                `json:"users"`
 	Results  map[string]*model.SubmissionHistoryItem `json:"results"`
 }
 
@@ -34,10 +37,12 @@ func HandleRegrade(request *RegradeRequest) (*RegradeResponse, *core.APIError) {
 	gradeOptions.CheckRejection = false
 
 	regradeOptions := grader.RegradeOptions{
-		Options:    gradeOptions,
-		Context:    request.Context,
-		Assignment: request.Assignment,
-		Users:      users,
+		Users:                 users,
+		WaitForCompletion:     request.WaitForCompletion,
+		Options:               gradeOptions,
+		Context:               request.Context,
+		Assignment:            request.Assignment,
+		RetainOriginalContext: false,
 	}
 
 	results, pendingCount, err := grader.RegradeSubmissions(regradeOptions)
@@ -47,7 +52,7 @@ func HandleRegrade(request *RegradeRequest) (*RegradeResponse, *core.APIError) {
 
 	response := RegradeResponse{
 		Complete: (pendingCount == 0),
-		Options:  regradeOptions,
+		Users:    users,
 		Results:  results,
 	}
 

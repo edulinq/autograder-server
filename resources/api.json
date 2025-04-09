@@ -181,12 +181,13 @@
                 "course-id": "string",
                 "filter-role": "int",
                 "user-email": "string",
-                "user-pass": "string"
+                "user-pass": "string",
+                "wait-for-completion": "bool"
             },
             "output": {
                 "complete": "bool",
-                "options": "grader.RegradeOptions",
-                "results": "map[string]*model.SubmissionHistoryItem"
+                "results": "map[string]*model.SubmissionHistoryItem",
+                "users": "[]string"
             }
         },
         "courses/assignments/submissions/proxy/resubmit": {
@@ -749,13 +750,6 @@
                 "html": "bool",
                 "subject": "string",
                 "to": "[]string"
-            }
-        },
-        "grader.RegradeOptions": {
-            "category": "struct",
-            "fields": {
-                "users": "[]string",
-                "wait-for-completion": "bool"
             }
         },
         "log.LogLevel": {

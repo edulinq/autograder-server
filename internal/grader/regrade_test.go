@@ -85,6 +85,7 @@ func TestRegradeBase(test *testing.T) {
 		db.ResetForTesting()
 
 		options := RegradeOptions{
+			Options:           GetDefaultGradeOptions(),
 			Users:             testCase.users,
 			Assignment:        assignment,
 			WaitForCompletion: testCase.waitForCompletion,
@@ -101,7 +102,7 @@ func TestRegradeBase(test *testing.T) {
 			continue
 		}
 
-		failed := checkAndClearIDs(test, i, testCase.results, results)
+		failed := CheckAndClearIDs(test, i, testCase.results, results)
 		if failed {
 			continue
 		}
@@ -112,48 +113,4 @@ func TestRegradeBase(test *testing.T) {
 			continue
 		}
 	}
-}
-
-func checkAndClearIDs(test *testing.T, i int, expectedResults map[string]*model.SubmissionHistoryItem, actualResults map[string]*model.SubmissionHistoryItem) bool {
-	for user, expected := range expectedResults {
-		actual, ok := actualResults[user]
-		if !ok {
-			test.Errorf("Case %d: Unable to find result for user '%s'. Expected: '%v'.",
-				i, user, util.MustToJSONIndent(expected))
-			return true
-		}
-
-		if (expected == nil) && (actual == nil) {
-			return false
-		}
-
-		if expected == nil {
-			test.Errorf("Case %d: Unexpected result for user '%s'. Expected: '<nil>', actual: '%s'.",
-				i, user, util.MustToJSONIndent(actual))
-			return true
-		}
-
-		if actual == nil {
-			test.Errorf("Case %d: Unexpected result for user '%s'. Expected: '%s', actual: '<nil>'.",
-				i, user, util.MustToJSONIndent(expected))
-			return true
-		}
-
-		if expected.ShortID == actual.ShortID {
-			test.Errorf("Case %d: Regrade submission has the same short ID as the previous submission: '%s'.", i, expected.ShortID)
-			return true
-		}
-
-		if expected.ID == actual.ID {
-			test.Errorf("Case %d: Regrade submission has the same ID as the previous submission: '%s'.", i, expected.ID)
-			return true
-		}
-
-		actual.ShortID = ""
-		expected.ShortID = ""
-		actual.ID = ""
-		expected.ID = ""
-	}
-
-	return false
 }
