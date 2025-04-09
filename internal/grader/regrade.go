@@ -62,7 +62,7 @@ func RegradeSubmissions(options RegradeOptions) (map[string]*model.SubmissionHis
 
 func runRegradeSubmissions(options RegradeOptions) (map[string]*model.SubmissionHistoryItem, error) {
 	if len(options.Users) == 0 {
-		return nil, nil
+		return map[string]*model.SubmissionHistoryItem{}, nil
 	}
 
 	// Lock based on the course to prevent multiple requests using up all the cores.
