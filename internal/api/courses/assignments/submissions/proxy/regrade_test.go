@@ -93,6 +93,13 @@ func TestRegradeBase(test *testing.T) {
 			"-005",
 			RegradeResponse{},
 		},
+		{
+			"",
+			"course-admin",
+			true,
+			"-005",
+			RegradeResponse{},
+		},
 
 		// Unknown role, no wait
 		{
