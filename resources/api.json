@@ -4,58 +4,58 @@
             "description": "Send an email to course users.",
             "input": [
                 {
-                    "field-name": "bcc",
-                    "field-type": "[]string"
+                    "name": "bcc",
+                    "type": "[]string"
                 },
                 {
-                    "field-name": "body",
-                    "field-type": "string"
+                    "name": "body",
+                    "type": "string"
                 },
                 {
-                    "field-name": "cc",
-                    "field-type": "[]string"
+                    "name": "cc",
+                    "type": "[]string"
                 },
                 {
-                    "field-name": "course-id",
-                    "field-type": "string"
+                    "name": "course-id",
+                    "type": "string"
                 },
                 {
-                    "field-name": "dry-run",
-                    "field-type": "bool"
+                    "name": "dry-run",
+                    "type": "bool"
                 },
                 {
-                    "field-name": "html",
-                    "field-type": "bool"
+                    "name": "html",
+                    "type": "bool"
                 },
                 {
-                    "field-name": "subject",
-                    "field-type": "string"
+                    "name": "subject",
+                    "type": "string"
                 },
                 {
-                    "field-name": "to",
-                    "field-type": "[]string"
+                    "name": "to",
+                    "type": "[]string"
                 },
                 {
-                    "field-name": "user-email",
-                    "field-type": "string"
+                    "name": "user-email",
+                    "type": "string"
                 },
                 {
-                    "field-name": "user-pass",
-                    "field-type": "string"
+                    "name": "user-pass",
+                    "type": "string"
                 }
             ],
             "output": [
                 {
-                    "field-name": "bcc",
-                    "field-type": "[]string"
+                    "name": "bcc",
+                    "type": "[]string"
                 },
                 {
-                    "field-name": "cc",
-                    "field-type": "[]string"
+                    "name": "cc",
+                    "type": "[]string"
                 },
                 {
-                    "field-name": "to",
-                    "field-type": "[]string"
+                    "name": "to",
+                    "type": "[]string"
                 }
             ]
         },
@@ -63,22 +63,22 @@
             "description": "Update an existing course.",
             "input": [
                 {
-                    "field-name": "course-id",
-                    "field-type": "string"
+                    "name": "course-id",
+                    "type": "string"
                 },
                 {
-                    "field-name": "user-email",
-                    "field-type": "string"
+                    "name": "user-email",
+                    "type": "string"
                 },
                 {
-                    "field-name": "user-pass",
-                    "field-type": "string"
+                    "name": "user-pass",
+                    "type": "string"
                 }
             ],
             "output": [
                 {
-                    "field-name": "result",
-                    "field-type": "*courses.CourseUpsertResult"
+                    "name": "result",
+                    "type": "*courses.CourseUpsertResult"
                 }
             ]
         },
@@ -86,26 +86,26 @@
             "description": "Get the information for a course assignment.",
             "input": [
                 {
-                    "field-name": "assignment-id",
-                    "field-type": "string"
+                    "name": "assignment-id",
+                    "type": "string"
                 },
                 {
-                    "field-name": "course-id",
-                    "field-type": "string"
+                    "name": "course-id",
+                    "type": "string"
                 },
                 {
-                    "field-name": "user-email",
-                    "field-type": "string"
+                    "name": "user-email",
+                    "type": "string"
                 },
                 {
-                    "field-name": "user-pass",
-                    "field-type": "string"
+                    "name": "user-pass",
+                    "type": "string"
                 }
             ],
             "output": [
                 {
-                    "field-name": "assignment",
-                    "field-type": "*core.AssignmentInfo"
+                    "name": "assignment",
+                    "type": "*core.AssignmentInfo"
                 }
             ]
         },
@@ -113,22 +113,22 @@
             "description": "List the assignments in the course.",
             "input": [
                 {
-                    "field-name": "course-id",
-                    "field-type": "string"
+                    "name": "course-id",
+                    "type": "string"
                 },
                 {
-                    "field-name": "user-email",
-                    "field-type": "string"
+                    "name": "user-email",
+                    "type": "string"
                 },
                 {
-                    "field-name": "user-pass",
-                    "field-type": "string"
+                    "name": "user-pass",
+                    "type": "string"
                 }
             ],
             "output": [
                 {
-                    "field-name": "assignments",
-                    "field-type": "[]*core.AssignmentInfo"
+                    "name": "assignments",
+                    "type": "[]*core.AssignmentInfo"
                 }
             ]
         },
@@ -136,46 +136,46 @@
             "description": "Get the result of a individual analysis for the specified submissions.",
             "input": [
                 {
-                    "field-name": "dry-run",
-                    "field-type": "bool"
+                    "name": "dry-run",
+                    "type": "bool"
                 },
                 {
-                    "field-name": "overwrite-cache",
-                    "field-type": "bool"
+                    "name": "overwrite-cache",
+                    "type": "bool"
                 },
                 {
-                    "field-name": "submissions",
-                    "field-type": "[]string"
+                    "name": "submissions",
+                    "type": "[]string"
                 },
                 {
-                    "field-name": "user-email",
-                    "field-type": "string"
+                    "name": "user-email",
+                    "type": "string"
                 },
                 {
-                    "field-name": "user-pass",
-                    "field-type": "string"
+                    "name": "user-pass",
+                    "type": "string"
                 },
                 {
-                    "field-name": "wait-for-completion",
-                    "field-type": "bool"
+                    "name": "wait-for-completion",
+                    "type": "bool"
                 }
             ],
             "output": [
                 {
-                    "field-name": "complete",
-                    "field-type": "bool"
+                    "name": "complete",
+                    "type": "bool"
                 },
                 {
-                    "field-name": "options",
-                    "field-type": "analysis.AnalysisOptions"
+                    "name": "options",
+                    "type": "analysis.AnalysisOptions"
                 },
                 {
-                    "field-name": "results",
-                    "field-type": "[]*model.IndividualAnalysis"
+                    "name": "results",
+                    "type": "[]*model.IndividualAnalysis"
                 },
                 {
-                    "field-name": "summary",
-                    "field-type": "*model.IndividualAnalysisSummary"
+                    "name": "summary",
+                    "type": "*model.IndividualAnalysisSummary"
                 }
             ]
         },
@@ -183,46 +183,46 @@
             "description": "Get the result of a pairwise analysis for the specified submissions.",
             "input": [
                 {
-                    "field-name": "dry-run",
-                    "field-type": "bool"
+                    "name": "dry-run",
+                    "type": "bool"
                 },
                 {
-                    "field-name": "overwrite-cache",
-                    "field-type": "bool"
+                    "name": "overwrite-cache",
+                    "type": "bool"
                 },
                 {
-                    "field-name": "submissions",
-                    "field-type": "[]string"
+                    "name": "submissions",
+                    "type": "[]string"
                 },
                 {
-                    "field-name": "user-email",
-                    "field-type": "string"
+                    "name": "user-email",
+                    "type": "string"
                 },
                 {
-                    "field-name": "user-pass",
-                    "field-type": "string"
+                    "name": "user-pass",
+                    "type": "string"
                 },
                 {
-                    "field-name": "wait-for-completion",
-                    "field-type": "bool"
+                    "name": "wait-for-completion",
+                    "type": "bool"
                 }
             ],
             "output": [
                 {
-                    "field-name": "complete",
-                    "field-type": "bool"
+                    "name": "complete",
+                    "type": "bool"
                 },
                 {
-                    "field-name": "options",
-                    "field-type": "analysis.AnalysisOptions"
+                    "name": "options",
+                    "type": "analysis.AnalysisOptions"
                 },
                 {
-                    "field-name": "results",
-                    "field-type": "[]*model.PairwiseAnalysis"
+                    "name": "results",
+                    "type": "[]*model.PairwiseAnalysis"
                 },
                 {
-                    "field-name": "summary",
-                    "field-type": "*model.PairwiseAnalysisSummary"
+                    "name": "summary",
+                    "type": "*model.PairwiseAnalysisSummary"
                 }
             ]
         },
@@ -230,30 +230,30 @@
             "description": "Get all recent submissions and grading information for this assignment.",
             "input": [
                 {
-                    "field-name": "assignment-id",
-                    "field-type": "string"
+                    "name": "assignment-id",
+                    "type": "string"
                 },
                 {
-                    "field-name": "course-id",
-                    "field-type": "string"
+                    "name": "course-id",
+                    "type": "string"
                 },
                 {
-                    "field-name": "filter-role",
-                    "field-type": "int"
+                    "name": "filter-role",
+                    "type": "int"
                 },
                 {
-                    "field-name": "user-email",
-                    "field-type": "string"
+                    "name": "user-email",
+                    "type": "string"
                 },
                 {
-                    "field-name": "user-pass",
-                    "field-type": "string"
+                    "name": "user-pass",
+                    "type": "string"
                 }
             ],
             "output": [
                 {
-                    "field-name": "grading-results",
-                    "field-type": "map[string]*model.GradingResult"
+                    "name": "grading-results",
+                    "type": "map[string]*model.GradingResult"
                 }
             ]
         },
@@ -261,30 +261,30 @@
             "description": "Get a summary of the most recent scores for this assignment.",
             "input": [
                 {
-                    "field-name": "assignment-id",
-                    "field-type": "string"
+                    "name": "assignment-id",
+                    "type": "string"
                 },
                 {
-                    "field-name": "course-id",
-                    "field-type": "string"
+                    "name": "course-id",
+                    "type": "string"
                 },
                 {
-                    "field-name": "filter-role",
-                    "field-type": "int"
+                    "name": "filter-role",
+                    "type": "int"
                 },
                 {
-                    "field-name": "user-email",
-                    "field-type": "string"
+                    "name": "user-email",
+                    "type": "string"
                 },
                 {
-                    "field-name": "user-pass",
-                    "field-type": "string"
+                    "name": "user-pass",
+                    "type": "string"
                 }
             ],
             "output": [
                 {
-                    "field-name": "submission-infos",
-                    "field-type": "map[string]*model.SubmissionHistoryItem"
+                    "name": "submission-infos",
+                    "type": "map[string]*model.SubmissionHistoryItem"
                 }
             ]
         },
@@ -292,42 +292,42 @@
             "description": "Get a submission along with all grading information.",
             "input": [
                 {
-                    "field-name": "assignment-id",
-                    "field-type": "string"
+                    "name": "assignment-id",
+                    "type": "string"
                 },
                 {
-                    "field-name": "course-id",
-                    "field-type": "string"
+                    "name": "course-id",
+                    "type": "string"
                 },
                 {
-                    "field-name": "target-email",
-                    "field-type": "core.TargetCourseUserSelfOrGrader"
+                    "name": "target-email",
+                    "type": "core.TargetCourseUserSelfOrGrader"
                 },
                 {
-                    "field-name": "target-submission",
-                    "field-type": "string"
+                    "name": "target-submission",
+                    "type": "string"
                 },
                 {
-                    "field-name": "user-email",
-                    "field-type": "string"
+                    "name": "user-email",
+                    "type": "string"
                 },
                 {
-                    "field-name": "user-pass",
-                    "field-type": "string"
+                    "name": "user-pass",
+                    "type": "string"
                 }
             ],
             "output": [
                 {
-                    "field-name": "found-submission",
-                    "field-type": "bool"
+                    "name": "found-submission",
+                    "type": "bool"
                 },
                 {
-                    "field-name": "found-user",
-                    "field-type": "bool"
+                    "name": "found-user",
+                    "type": "bool"
                 },
                 {
-                    "field-name": "grading-result",
-                    "field-type": "*model.GradingResult"
+                    "name": "grading-result",
+                    "type": "*model.GradingResult"
                 }
             ]
         },
@@ -335,34 +335,34 @@
             "description": "Get all submission attempts made by a user along with all grading information.",
             "input": [
                 {
-                    "field-name": "assignment-id",
-                    "field-type": "string"
+                    "name": "assignment-id",
+                    "type": "string"
                 },
                 {
-                    "field-name": "course-id",
-                    "field-type": "string"
+                    "name": "course-id",
+                    "type": "string"
                 },
                 {
-                    "field-name": "target-email",
-                    "field-type": "core.TargetCourseUserSelfOrGrader"
+                    "name": "target-email",
+                    "type": "core.TargetCourseUserSelfOrGrader"
                 },
                 {
-                    "field-name": "user-email",
-                    "field-type": "string"
+                    "name": "user-email",
+                    "type": "string"
                 },
                 {
-                    "field-name": "user-pass",
-                    "field-type": "string"
+                    "name": "user-pass",
+                    "type": "string"
                 }
             ],
             "output": [
                 {
-                    "field-name": "found-user",
-                    "field-type": "bool"
+                    "name": "found-user",
+                    "type": "bool"
                 },
                 {
-                    "field-name": "grading-results",
-                    "field-type": "[]*model.GradingResult"
+                    "name": "grading-results",
+                    "type": "[]*model.GradingResult"
                 }
             ]
         },
@@ -370,34 +370,34 @@
             "description": "Get a summary of the submissions for this assignment.",
             "input": [
                 {
-                    "field-name": "assignment-id",
-                    "field-type": "string"
+                    "name": "assignment-id",
+                    "type": "string"
                 },
                 {
-                    "field-name": "course-id",
-                    "field-type": "string"
+                    "name": "course-id",
+                    "type": "string"
                 },
                 {
-                    "field-name": "target-email",
-                    "field-type": "core.TargetCourseUserSelfOrGrader"
+                    "name": "target-email",
+                    "type": "core.TargetCourseUserSelfOrGrader"
                 },
                 {
-                    "field-name": "user-email",
-                    "field-type": "string"
+                    "name": "user-email",
+                    "type": "string"
                 },
                 {
-                    "field-name": "user-pass",
-                    "field-type": "string"
+                    "name": "user-pass",
+                    "type": "string"
                 }
             ],
             "output": [
                 {
-                    "field-name": "found-user",
-                    "field-type": "bool"
+                    "name": "found-user",
+                    "type": "bool"
                 },
                 {
-                    "field-name": "history",
-                    "field-type": "[]*model.SubmissionHistoryItem"
+                    "name": "history",
+                    "type": "[]*model.SubmissionHistoryItem"
                 }
             ]
         },
@@ -405,42 +405,42 @@
             "description": "Get a copy of the grading report for the specified submission. Does not submit a new submission.",
             "input": [
                 {
-                    "field-name": "assignment-id",
-                    "field-type": "string"
+                    "name": "assignment-id",
+                    "type": "string"
                 },
                 {
-                    "field-name": "course-id",
-                    "field-type": "string"
+                    "name": "course-id",
+                    "type": "string"
                 },
                 {
-                    "field-name": "target-email",
-                    "field-type": "core.TargetCourseUserSelfOrGrader"
+                    "name": "target-email",
+                    "type": "core.TargetCourseUserSelfOrGrader"
                 },
                 {
-                    "field-name": "target-submission",
-                    "field-type": "string"
+                    "name": "target-submission",
+                    "type": "string"
                 },
                 {
-                    "field-name": "user-email",
-                    "field-type": "string"
+                    "name": "user-email",
+                    "type": "string"
                 },
                 {
-                    "field-name": "user-pass",
-                    "field-type": "string"
+                    "name": "user-pass",
+                    "type": "string"
                 }
             ],
             "output": [
                 {
-                    "field-name": "found-submission",
-                    "field-type": "bool"
+                    "name": "found-submission",
+                    "type": "bool"
                 },
                 {
-                    "field-name": "found-user",
-                    "field-type": "bool"
+                    "name": "found-user",
+                    "type": "bool"
                 },
                 {
-                    "field-name": "submission-result",
-                    "field-type": "*model.GradingInfo"
+                    "name": "submission-result",
+                    "type": "*model.GradingInfo"
                 }
             ]
         },
@@ -448,58 +448,58 @@
             "description": "Proxy resubmit an assignment submission to the autograder.",
             "input": [
                 {
-                    "field-name": "assignment-id",
-                    "field-type": "string"
+                    "name": "assignment-id",
+                    "type": "string"
                 },
                 {
-                    "field-name": "course-id",
-                    "field-type": "string"
+                    "name": "course-id",
+                    "type": "string"
                 },
                 {
-                    "field-name": "proxy-email",
-                    "field-type": "core.TargetCourseUser"
+                    "name": "proxy-email",
+                    "type": "core.TargetCourseUser"
                 },
                 {
-                    "field-name": "proxy-time",
-                    "field-type": "int64"
+                    "name": "proxy-time",
+                    "type": "int64"
                 },
                 {
-                    "field-name": "target-submission",
-                    "field-type": "string"
+                    "name": "target-submission",
+                    "type": "string"
                 },
                 {
-                    "field-name": "user-email",
-                    "field-type": "string"
+                    "name": "user-email",
+                    "type": "string"
                 },
                 {
-                    "field-name": "user-pass",
-                    "field-type": "string"
+                    "name": "user-pass",
+                    "type": "string"
                 }
             ],
             "output": [
                 {
-                    "field-name": "found-submission",
-                    "field-type": "bool"
+                    "name": "found-submission",
+                    "type": "bool"
                 },
                 {
-                    "field-name": "found-user",
-                    "field-type": "bool"
+                    "name": "found-user",
+                    "type": "bool"
                 },
                 {
-                    "field-name": "grading-success",
-                    "field-type": "bool"
+                    "name": "grading-success",
+                    "type": "bool"
                 },
                 {
-                    "field-name": "message",
-                    "field-type": "string"
+                    "name": "message",
+                    "type": "string"
                 },
                 {
-                    "field-name": "rejected",
-                    "field-type": "bool"
+                    "name": "rejected",
+                    "type": "bool"
                 },
                 {
-                    "field-name": "result",
-                    "field-type": "*model.GradingInfo"
+                    "name": "result",
+                    "type": "*model.GradingInfo"
                 }
             ]
         },
@@ -507,54 +507,54 @@
             "description": "Proxy submit an assignment submission to the autograder.",
             "input": [
                 {
-                    "field-name": "assignment-id",
-                    "field-type": "string"
+                    "name": "assignment-id",
+                    "type": "string"
                 },
                 {
-                    "field-name": "course-id",
-                    "field-type": "string"
+                    "name": "course-id",
+                    "type": "string"
                 },
                 {
-                    "field-name": "message",
-                    "field-type": "string"
+                    "name": "message",
+                    "type": "string"
                 },
                 {
-                    "field-name": "proxy-email",
-                    "field-type": "core.TargetCourseUser"
+                    "name": "proxy-email",
+                    "type": "core.TargetCourseUser"
                 },
                 {
-                    "field-name": "proxy-time",
-                    "field-type": "int64"
+                    "name": "proxy-time",
+                    "type": "int64"
                 },
                 {
-                    "field-name": "user-email",
-                    "field-type": "string"
+                    "name": "user-email",
+                    "type": "string"
                 },
                 {
-                    "field-name": "user-pass",
-                    "field-type": "string"
+                    "name": "user-pass",
+                    "type": "string"
                 }
             ],
             "output": [
                 {
-                    "field-name": "found-user",
-                    "field-type": "bool"
+                    "name": "found-user",
+                    "type": "bool"
                 },
                 {
-                    "field-name": "grading-success",
-                    "field-type": "bool"
+                    "name": "grading-success",
+                    "type": "bool"
                 },
                 {
-                    "field-name": "message",
-                    "field-type": "string"
+                    "name": "message",
+                    "type": "string"
                 },
                 {
-                    "field-name": "rejected",
-                    "field-type": "bool"
+                    "name": "rejected",
+                    "type": "bool"
                 },
                 {
-                    "field-name": "result",
-                    "field-type": "*model.GradingInfo"
+                    "name": "result",
+                    "type": "*model.GradingInfo"
                 }
             ]
         },
@@ -562,38 +562,38 @@
             "description": "Remove a specified submission. Defaults to the most recent submission.",
             "input": [
                 {
-                    "field-name": "assignment-id",
-                    "field-type": "string"
+                    "name": "assignment-id",
+                    "type": "string"
                 },
                 {
-                    "field-name": "course-id",
-                    "field-type": "string"
+                    "name": "course-id",
+                    "type": "string"
                 },
                 {
-                    "field-name": "target-email",
-                    "field-type": "core.TargetCourseUserSelfOrGrader"
+                    "name": "target-email",
+                    "type": "core.TargetCourseUserSelfOrGrader"
                 },
                 {
-                    "field-name": "target-submission",
-                    "field-type": "string"
+                    "name": "target-submission",
+                    "type": "string"
                 },
                 {
-                    "field-name": "user-email",
-                    "field-type": "string"
+                    "name": "user-email",
+                    "type": "string"
                 },
                 {
-                    "field-name": "user-pass",
-                    "field-type": "string"
+                    "name": "user-pass",
+                    "type": "string"
                 }
             ],
             "output": [
                 {
-                    "field-name": "found-submission",
-                    "field-type": "bool"
+                    "name": "found-submission",
+                    "type": "bool"
                 },
                 {
-                    "field-name": "found-user",
-                    "field-type": "bool"
+                    "name": "found-user",
+                    "type": "bool"
                 }
             ]
         },
@@ -601,46 +601,46 @@
             "description": "Submit an assignment submission to the autograder.",
             "input": [
                 {
-                    "field-name": "allow-late",
-                    "field-type": "bool"
+                    "name": "allow-late",
+                    "type": "bool"
                 },
                 {
-                    "field-name": "assignment-id",
-                    "field-type": "string"
+                    "name": "assignment-id",
+                    "type": "string"
                 },
                 {
-                    "field-name": "course-id",
-                    "field-type": "string"
+                    "name": "course-id",
+                    "type": "string"
                 },
                 {
-                    "field-name": "message",
-                    "field-type": "string"
+                    "name": "message",
+                    "type": "string"
                 },
                 {
-                    "field-name": "user-email",
-                    "field-type": "string"
+                    "name": "user-email",
+                    "type": "string"
                 },
                 {
-                    "field-name": "user-pass",
-                    "field-type": "string"
+                    "name": "user-pass",
+                    "type": "string"
                 }
             ],
             "output": [
                 {
-                    "field-name": "grading-success",
-                    "field-type": "bool"
+                    "name": "grading-success",
+                    "type": "bool"
                 },
                 {
-                    "field-name": "message",
-                    "field-type": "string"
+                    "name": "message",
+                    "type": "string"
                 },
                 {
-                    "field-name": "rejected",
-                    "field-type": "bool"
+                    "name": "rejected",
+                    "type": "bool"
                 },
                 {
-                    "field-name": "result",
-                    "field-type": "*model.GradingInfo"
+                    "name": "result",
+                    "type": "*model.GradingInfo"
                 }
             ]
         },
@@ -648,30 +648,30 @@
             "description": "Perform a full scoring and upload scores to the course's LMS.",
             "input": [
                 {
-                    "field-name": "course-id",
-                    "field-type": "string"
+                    "name": "course-id",
+                    "type": "string"
                 },
                 {
-                    "field-name": "dry-run",
-                    "field-type": "bool"
+                    "name": "dry-run",
+                    "type": "bool"
                 },
                 {
-                    "field-name": "user-email",
-                    "field-type": "string"
+                    "name": "user-email",
+                    "type": "string"
                 },
                 {
-                    "field-name": "user-pass",
-                    "field-type": "string"
+                    "name": "user-pass",
+                    "type": "string"
                 }
             ],
             "output": [
                 {
-                    "field-name": "dry-run",
-                    "field-type": "bool"
+                    "name": "dry-run",
+                    "type": "bool"
                 },
                 {
-                    "field-name": "results",
-                    "field-type": "[]*model.ExternalScoringInfo"
+                    "name": "results",
+                    "type": "[]*model.ExternalScoringInfo"
                 }
             ]
         },
@@ -679,46 +679,46 @@
             "description": "Query metrics for a specific course.\nOnly the context course can be queried for, the target-course field will be ignored for this endpoint.",
             "input": [
                 {
-                    "field-name": "after",
-                    "field-type": "int64"
+                    "name": "after",
+                    "type": "int64"
                 },
                 {
-                    "field-name": "before",
-                    "field-type": "int64"
+                    "name": "before",
+                    "type": "int64"
                 },
                 {
-                    "field-name": "course-id",
-                    "field-type": "string"
+                    "name": "course-id",
+                    "type": "string"
                 },
                 {
-                    "field-name": "limit",
-                    "field-type": "int"
+                    "name": "limit",
+                    "type": "int"
                 },
                 {
-                    "field-name": "sort",
-                    "field-type": "int"
+                    "name": "sort",
+                    "type": "int"
                 },
                 {
-                    "field-name": "type",
-                    "field-type": "string"
+                    "name": "type",
+                    "type": "string"
                 },
                 {
-                    "field-name": "user-email",
-                    "field-type": "string"
+                    "name": "user-email",
+                    "type": "string"
                 },
                 {
-                    "field-name": "user-pass",
-                    "field-type": "string"
+                    "name": "user-pass",
+                    "type": "string"
                 },
                 {
-                    "field-name": "where",
-                    "field-type": "map[stats.MetricAttribute]interface {}"
+                    "name": "where",
+                    "type": "map[stats.MetricAttribute]interface {}"
                 }
             ],
             "output": [
                 {
-                    "field-name": "results",
-                    "field-type": "[]*stats.Metric"
+                    "name": "results",
+                    "type": "[]*stats.Metric"
                 }
             ]
         },
@@ -726,46 +726,46 @@
             "description": "Upsert a course using a filespec.",
             "input": [
                 {
-                    "field-name": "dry-run",
-                    "field-type": "bool"
+                    "name": "dry-run",
+                    "type": "bool"
                 },
                 {
-                    "field-name": "filespec",
-                    "field-type": "util.FileSpec"
+                    "name": "filespec",
+                    "type": "util.FileSpec"
                 },
                 {
-                    "field-name": "skip-build-images",
-                    "field-type": "bool"
+                    "name": "skip-build-images",
+                    "type": "bool"
                 },
                 {
-                    "field-name": "skip-emails",
-                    "field-type": "bool"
+                    "name": "skip-emails",
+                    "type": "bool"
                 },
                 {
-                    "field-name": "skip-lms-sync",
-                    "field-type": "bool"
+                    "name": "skip-lms-sync",
+                    "type": "bool"
                 },
                 {
-                    "field-name": "skip-source-sync",
-                    "field-type": "bool"
+                    "name": "skip-source-sync",
+                    "type": "bool"
                 },
                 {
-                    "field-name": "skip-template-files",
-                    "field-type": "bool"
+                    "name": "skip-template-files",
+                    "type": "bool"
                 },
                 {
-                    "field-name": "user-email",
-                    "field-type": "string"
+                    "name": "user-email",
+                    "type": "string"
                 },
                 {
-                    "field-name": "user-pass",
-                    "field-type": "string"
+                    "name": "user-pass",
+                    "type": "string"
                 }
             ],
             "output": [
                 {
-                    "field-name": "results",
-                    "field-type": "[]courses.CourseUpsertResult"
+                    "name": "results",
+                    "type": "[]courses.CourseUpsertResult"
                 }
             ]
         },
@@ -773,42 +773,42 @@
             "description": "Upsert a course using a zip file.",
             "input": [
                 {
-                    "field-name": "dry-run",
-                    "field-type": "bool"
+                    "name": "dry-run",
+                    "type": "bool"
                 },
                 {
-                    "field-name": "skip-build-images",
-                    "field-type": "bool"
+                    "name": "skip-build-images",
+                    "type": "bool"
                 },
                 {
-                    "field-name": "skip-emails",
-                    "field-type": "bool"
+                    "name": "skip-emails",
+                    "type": "bool"
                 },
                 {
-                    "field-name": "skip-lms-sync",
-                    "field-type": "bool"
+                    "name": "skip-lms-sync",
+                    "type": "bool"
                 },
                 {
-                    "field-name": "skip-source-sync",
-                    "field-type": "bool"
+                    "name": "skip-source-sync",
+                    "type": "bool"
                 },
                 {
-                    "field-name": "skip-template-files",
-                    "field-type": "bool"
+                    "name": "skip-template-files",
+                    "type": "bool"
                 },
                 {
-                    "field-name": "user-email",
-                    "field-type": "string"
+                    "name": "user-email",
+                    "type": "string"
                 },
                 {
-                    "field-name": "user-pass",
-                    "field-type": "string"
+                    "name": "user-pass",
+                    "type": "string"
                 }
             ],
             "output": [
                 {
-                    "field-name": "results",
-                    "field-type": "[]courses.CourseUpsertResult"
+                    "name": "results",
+                    "type": "[]courses.CourseUpsertResult"
                 }
             ]
         },
@@ -816,26 +816,26 @@
             "description": "Drop a user from the course.",
             "input": [
                 {
-                    "field-name": "course-id",
-                    "field-type": "string"
+                    "name": "course-id",
+                    "type": "string"
                 },
                 {
-                    "field-name": "target-email",
-                    "field-type": "core.TargetCourseUser"
+                    "name": "target-email",
+                    "type": "core.TargetCourseUser"
                 },
                 {
-                    "field-name": "user-email",
-                    "field-type": "string"
+                    "name": "user-email",
+                    "type": "string"
                 },
                 {
-                    "field-name": "user-pass",
-                    "field-type": "string"
+                    "name": "user-pass",
+                    "type": "string"
                 }
             ],
             "output": [
                 {
-                    "field-name": "found-user",
-                    "field-type": "bool"
+                    "name": "found-user",
+                    "type": "bool"
                 }
             ]
         },
@@ -843,42 +843,42 @@
             "description": "Enroll one or more users to the course.",
             "input": [
                 {
-                    "field-name": "course-id",
-                    "field-type": "string"
+                    "name": "course-id",
+                    "type": "string"
                 },
                 {
-                    "field-name": "dry-run",
-                    "field-type": "bool"
+                    "name": "dry-run",
+                    "type": "bool"
                 },
                 {
-                    "field-name": "raw-course-users",
-                    "field-type": "[]*model.RawCourseUserData"
+                    "name": "raw-course-users",
+                    "type": "[]*model.RawCourseUserData"
                 },
                 {
-                    "field-name": "send-emails",
-                    "field-type": "bool"
+                    "name": "send-emails",
+                    "type": "bool"
                 },
                 {
-                    "field-name": "skip-inserts",
-                    "field-type": "bool"
+                    "name": "skip-inserts",
+                    "type": "bool"
                 },
                 {
-                    "field-name": "skip-updates",
-                    "field-type": "bool"
+                    "name": "skip-updates",
+                    "type": "bool"
                 },
                 {
-                    "field-name": "user-email",
-                    "field-type": "string"
+                    "name": "user-email",
+                    "type": "string"
                 },
                 {
-                    "field-name": "user-pass",
-                    "field-type": "string"
+                    "name": "user-pass",
+                    "type": "string"
                 }
             ],
             "output": [
                 {
-                    "field-name": "results",
-                    "field-type": "[]*model.ExternalUserOpResult"
+                    "name": "results",
+                    "type": "[]*model.ExternalUserOpResult"
                 }
             ]
         },
@@ -886,30 +886,30 @@
             "description": "Get the information for a course user.",
             "input": [
                 {
-                    "field-name": "course-id",
-                    "field-type": "string"
+                    "name": "course-id",
+                    "type": "string"
                 },
                 {
-                    "field-name": "target-email",
-                    "field-type": "core.TargetCourseUserSelfOrGrader"
+                    "name": "target-email",
+                    "type": "core.TargetCourseUserSelfOrGrader"
                 },
                 {
-                    "field-name": "user-email",
-                    "field-type": "string"
+                    "name": "user-email",
+                    "type": "string"
                 },
                 {
-                    "field-name": "user-pass",
-                    "field-type": "string"
+                    "name": "user-pass",
+                    "type": "string"
                 }
             ],
             "output": [
                 {
-                    "field-name": "found",
-                    "field-type": "bool"
+                    "name": "found",
+                    "type": "bool"
                 },
                 {
-                    "field-name": "user",
-                    "field-type": "*core.CourseUserInfo"
+                    "name": "user",
+                    "type": "*core.CourseUserInfo"
                 }
             ]
         },
@@ -917,22 +917,22 @@
             "description": "List the users in the course.",
             "input": [
                 {
-                    "field-name": "course-id",
-                    "field-type": "string"
+                    "name": "course-id",
+                    "type": "string"
                 },
                 {
-                    "field-name": "user-email",
-                    "field-type": "string"
+                    "name": "user-email",
+                    "type": "string"
                 },
                 {
-                    "field-name": "user-pass",
-                    "field-type": "string"
+                    "name": "user-pass",
+                    "type": "string"
                 }
             ],
             "output": [
                 {
-                    "field-name": "users",
-                    "field-type": "[]*core.CourseUserInfo"
+                    "name": "users",
+                    "type": "[]*core.CourseUserInfo"
                 }
             ]
         },
@@ -940,42 +940,42 @@
             "description": "Upload scores from a tab-separated file to the course's LMS.\nThe file should not have headers, and should have two columns: email and score.",
             "input": [
                 {
-                    "field-name": "assignment-lms-id",
-                    "field-type": "string"
+                    "name": "assignment-lms-id",
+                    "type": "string"
                 },
                 {
-                    "field-name": "course-id",
-                    "field-type": "string"
+                    "name": "course-id",
+                    "type": "string"
                 },
                 {
-                    "field-name": "scores",
-                    "field-type": "[]upload.ScoreEntry"
+                    "name": "scores",
+                    "type": "[]upload.ScoreEntry"
                 },
                 {
-                    "field-name": "user-email",
-                    "field-type": "string"
+                    "name": "user-email",
+                    "type": "string"
                 },
                 {
-                    "field-name": "user-pass",
-                    "field-type": "string"
+                    "name": "user-pass",
+                    "type": "string"
                 }
             ],
             "output": [
                 {
-                    "field-name": "count",
-                    "field-type": "int"
+                    "name": "count",
+                    "type": "int"
                 },
                 {
-                    "field-name": "error-count",
-                    "field-type": "int"
+                    "name": "error-count",
+                    "type": "int"
                 },
                 {
-                    "field-name": "no-lms-id-users",
-                    "field-type": "[]upload.RowEntry"
+                    "name": "no-lms-id-users",
+                    "type": "[]upload.RowEntry"
                 },
                 {
-                    "field-name": "unrecognized-users",
-                    "field-type": "[]upload.RowEntry"
+                    "name": "unrecognized-users",
+                    "type": "[]upload.RowEntry"
                 }
             ]
         },
@@ -983,34 +983,34 @@
             "description": "Get information for an LMS user.",
             "input": [
                 {
-                    "field-name": "course-id",
-                    "field-type": "string"
+                    "name": "course-id",
+                    "type": "string"
                 },
                 {
-                    "field-name": "target-email",
-                    "field-type": "core.TargetCourseUser"
+                    "name": "target-email",
+                    "type": "core.TargetCourseUser"
                 },
                 {
-                    "field-name": "user-email",
-                    "field-type": "string"
+                    "name": "user-email",
+                    "type": "string"
                 },
                 {
-                    "field-name": "user-pass",
-                    "field-type": "string"
+                    "name": "user-pass",
+                    "type": "string"
                 }
             ],
             "output": [
                 {
-                    "field-name": "found-autograder-user",
-                    "field-type": "bool"
+                    "name": "found-autograder-user",
+                    "type": "bool"
                 },
                 {
-                    "field-name": "found-lms-user",
-                    "field-type": "bool"
+                    "name": "found-lms-user",
+                    "type": "bool"
                 },
                 {
-                    "field-name": "user",
-                    "field-type": "*core.CourseUserInfo"
+                    "name": "user",
+                    "type": "*core.CourseUserInfo"
                 }
             ]
         },
@@ -1018,50 +1018,50 @@
             "description": "Query log entries from the autograder server.",
             "input": [
                 {
-                    "field-name": "after",
-                    "field-type": "string"
+                    "name": "after",
+                    "type": "string"
                 },
                 {
-                    "field-name": "level",
-                    "field-type": "string"
+                    "name": "level",
+                    "type": "string"
                 },
                 {
-                    "field-name": "past",
-                    "field-type": "string"
+                    "name": "past",
+                    "type": "string"
                 },
                 {
-                    "field-name": "target-assignment",
-                    "field-type": "string"
+                    "name": "target-assignment",
+                    "type": "string"
                 },
                 {
-                    "field-name": "target-course",
-                    "field-type": "string"
+                    "name": "target-course",
+                    "type": "string"
                 },
                 {
-                    "field-name": "target-email",
-                    "field-type": "string"
+                    "name": "target-email",
+                    "type": "string"
                 },
                 {
-                    "field-name": "user-email",
-                    "field-type": "string"
+                    "name": "user-email",
+                    "type": "string"
                 },
                 {
-                    "field-name": "user-pass",
-                    "field-type": "string"
+                    "name": "user-pass",
+                    "type": "string"
                 }
             ],
             "output": [
                 {
-                    "field-name": "error",
-                    "field-type": "*model.ExternalLocatableError"
+                    "name": "error",
+                    "type": "*model.ExternalLocatableError"
                 },
                 {
-                    "field-name": "results",
-                    "field-type": "[]*log.Record"
+                    "name": "results",
+                    "type": "[]*log.Record"
                 },
                 {
-                    "field-name": "success",
-                    "field-type": "bool"
+                    "name": "success",
+                    "type": "bool"
                 }
             ]
         },
@@ -1070,12 +1070,12 @@
             "input": [],
             "output": [
                 {
-                    "field-name": "endpoints",
-                    "field-type": "map[string]core.EndpointDescription"
+                    "name": "endpoints",
+                    "type": "map[string]core.EndpointDescription"
                 },
                 {
-                    "field-name": "types",
-                    "field-type": "map[string]core.TypeDescription"
+                    "name": "types",
+                    "type": "map[string]core.TypeDescription"
                 }
             ]
         },
@@ -1083,42 +1083,42 @@
             "description": "Query stats for the server.",
             "input": [
                 {
-                    "field-name": "after",
-                    "field-type": "int64"
+                    "name": "after",
+                    "type": "int64"
                 },
                 {
-                    "field-name": "before",
-                    "field-type": "int64"
+                    "name": "before",
+                    "type": "int64"
                 },
                 {
-                    "field-name": "limit",
-                    "field-type": "int"
+                    "name": "limit",
+                    "type": "int"
                 },
                 {
-                    "field-name": "sort",
-                    "field-type": "int"
+                    "name": "sort",
+                    "type": "int"
                 },
                 {
-                    "field-name": "type",
-                    "field-type": "string"
+                    "name": "type",
+                    "type": "string"
                 },
                 {
-                    "field-name": "user-email",
-                    "field-type": "string"
+                    "name": "user-email",
+                    "type": "string"
                 },
                 {
-                    "field-name": "user-pass",
-                    "field-type": "string"
+                    "name": "user-pass",
+                    "type": "string"
                 },
                 {
-                    "field-name": "where",
-                    "field-type": "map[stats.MetricAttribute]interface {}"
+                    "name": "where",
+                    "type": "map[stats.MetricAttribute]interface {}"
                 }
             ],
             "output": [
                 {
-                    "field-name": "results",
-                    "field-type": "[]*stats.Metric"
+                    "name": "results",
+                    "type": "[]*stats.Metric"
                 }
             ]
         },
@@ -1126,22 +1126,22 @@
             "description": "Get stack traces for all the currently running routines (threads) on the server.",
             "input": [
                 {
-                    "field-name": "user-email",
-                    "field-type": "string"
+                    "name": "user-email",
+                    "type": "string"
                 },
                 {
-                    "field-name": "user-pass",
-                    "field-type": "string"
+                    "name": "user-pass",
+                    "type": "string"
                 }
             ],
             "output": [
                 {
-                    "field-name": "count",
-                    "field-type": "int"
+                    "name": "count",
+                    "type": "int"
                 },
                 {
-                    "field-name": "stacks",
-                    "field-type": "[]*util.CallStack"
+                    "name": "stacks",
+                    "type": "[]*util.CallStack"
                 }
             ]
         },
@@ -1149,18 +1149,18 @@
             "description": "Authenticate as a user.",
             "input": [
                 {
-                    "field-name": "user-email",
-                    "field-type": "string"
+                    "name": "user-email",
+                    "type": "string"
                 },
                 {
-                    "field-name": "user-pass",
-                    "field-type": "string"
+                    "name": "user-pass",
+                    "type": "string"
                 }
             ],
             "output": [
                 {
-                    "field-name": "success",
-                    "field-type": "bool"
+                    "name": "success",
+                    "type": "bool"
                 }
             ]
         },
@@ -1168,30 +1168,30 @@
             "description": "Get the information for a server user.",
             "input": [
                 {
-                    "field-name": "target-email",
-                    "field-type": "core.TargetServerUserSelfOrAdmin"
+                    "name": "target-email",
+                    "type": "core.TargetServerUserSelfOrAdmin"
                 },
                 {
-                    "field-name": "user-email",
-                    "field-type": "string"
+                    "name": "user-email",
+                    "type": "string"
                 },
                 {
-                    "field-name": "user-pass",
-                    "field-type": "string"
+                    "name": "user-pass",
+                    "type": "string"
                 }
             ],
             "output": [
                 {
-                    "field-name": "courses",
-                    "field-type": "map[string]*core.CourseInfo"
+                    "name": "courses",
+                    "type": "map[string]*core.CourseInfo"
                 },
                 {
-                    "field-name": "found",
-                    "field-type": "bool"
+                    "name": "found",
+                    "type": "bool"
                 },
                 {
-                    "field-name": "user",
-                    "field-type": "*core.ServerUserInfo"
+                    "name": "user",
+                    "type": "*core.ServerUserInfo"
                 }
             ]
         },
@@ -1199,18 +1199,18 @@
             "description": "List the users on the server.",
             "input": [
                 {
-                    "field-name": "user-email",
-                    "field-type": "string"
+                    "name": "user-email",
+                    "type": "string"
                 },
                 {
-                    "field-name": "user-pass",
-                    "field-type": "string"
+                    "name": "user-pass",
+                    "type": "string"
                 }
             ],
             "output": [
                 {
-                    "field-name": "users",
-                    "field-type": "[]*core.ServerUserInfo"
+                    "name": "users",
+                    "type": "[]*core.ServerUserInfo"
                 }
             ]
         },
@@ -1218,26 +1218,26 @@
             "description": "Change your password to the one provided.",
             "input": [
                 {
-                    "field-name": "new-pass",
-                    "field-type": "string"
+                    "name": "new-pass",
+                    "type": "string"
                 },
                 {
-                    "field-name": "user-email",
-                    "field-type": "string"
+                    "name": "user-email",
+                    "type": "string"
                 },
                 {
-                    "field-name": "user-pass",
-                    "field-type": "string"
+                    "name": "user-pass",
+                    "type": "string"
                 }
             ],
             "output": [
                 {
-                    "field-name": "duplicate",
-                    "field-type": "bool"
+                    "name": "duplicate",
+                    "type": "bool"
                 },
                 {
-                    "field-name": "success",
-                    "field-type": "bool"
+                    "name": "success",
+                    "type": "bool"
                 }
             ]
         },
@@ -1245,8 +1245,8 @@
             "description": "Reset to a random password that will be emailed to you.",
             "input": [
                 {
-                    "field-name": "user-email",
-                    "field-type": "string"
+                    "name": "user-email",
+                    "type": "string"
                 }
             ],
             "output": []
@@ -1255,22 +1255,22 @@
             "description": "Remove a user from the server.",
             "input": [
                 {
-                    "field-name": "target-email",
-                    "field-type": "core.TargetServerUser"
+                    "name": "target-email",
+                    "type": "core.TargetServerUser"
                 },
                 {
-                    "field-name": "user-email",
-                    "field-type": "string"
+                    "name": "user-email",
+                    "type": "string"
                 },
                 {
-                    "field-name": "user-pass",
-                    "field-type": "string"
+                    "name": "user-pass",
+                    "type": "string"
                 }
             ],
             "output": [
                 {
-                    "field-name": "found-user",
-                    "field-type": "bool"
+                    "name": "found-user",
+                    "type": "bool"
                 }
             ]
         },
@@ -1278,26 +1278,26 @@
             "description": "Create a new authentication token.",
             "input": [
                 {
-                    "field-name": "name",
-                    "field-type": "string"
+                    "name": "name",
+                    "type": "string"
                 },
                 {
-                    "field-name": "user-email",
-                    "field-type": "string"
+                    "name": "user-email",
+                    "type": "string"
                 },
                 {
-                    "field-name": "user-pass",
-                    "field-type": "string"
+                    "name": "user-pass",
+                    "type": "string"
                 }
             ],
             "output": [
                 {
-                    "field-name": "token-cleartext",
-                    "field-type": "string"
+                    "name": "token-cleartext",
+                    "type": "string"
                 },
                 {
-                    "field-name": "token-id",
-                    "field-type": "string"
+                    "name": "token-id",
+                    "type": "string"
                 }
             ]
         },
@@ -1305,22 +1305,22 @@
             "description": "Delete an authentication token.",
             "input": [
                 {
-                    "field-name": "token-id",
-                    "field-type": "string"
+                    "name": "token-id",
+                    "type": "string"
                 },
                 {
-                    "field-name": "user-email",
-                    "field-type": "string"
+                    "name": "user-email",
+                    "type": "string"
                 },
                 {
-                    "field-name": "user-pass",
-                    "field-type": "string"
+                    "name": "user-pass",
+                    "type": "string"
                 }
             ],
             "output": [
                 {
-                    "field-name": "found",
-                    "field-type": "bool"
+                    "name": "found",
+                    "type": "bool"
                 }
             ]
         },
@@ -1328,38 +1328,38 @@
             "description": "Upsert one or more users to the server (update if exists, insert otherwise).",
             "input": [
                 {
-                    "field-name": "dry-run",
-                    "field-type": "bool"
+                    "name": "dry-run",
+                    "type": "bool"
                 },
                 {
-                    "field-name": "raw-users",
-                    "field-type": "[]*model.RawServerUserData"
+                    "name": "raw-users",
+                    "type": "[]*model.RawServerUserData"
                 },
                 {
-                    "field-name": "send-emails",
-                    "field-type": "bool"
+                    "name": "send-emails",
+                    "type": "bool"
                 },
                 {
-                    "field-name": "skip-inserts",
-                    "field-type": "bool"
+                    "name": "skip-inserts",
+                    "type": "bool"
                 },
                 {
-                    "field-name": "skip-updates",
-                    "field-type": "bool"
+                    "name": "skip-updates",
+                    "type": "bool"
                 },
                 {
-                    "field-name": "user-email",
-                    "field-type": "string"
+                    "name": "user-email",
+                    "type": "string"
                 },
                 {
-                    "field-name": "user-pass",
-                    "field-type": "string"
+                    "name": "user-pass",
+                    "type": "string"
                 }
             ],
             "output": [
                 {
-                    "field-name": "results",
-                    "field-type": "[]*model.ExternalUserOpResult"
+                    "name": "results",
+                    "type": "[]*model.ExternalUserOpResult"
                 }
             ]
         }
@@ -1369,20 +1369,20 @@
             "category": "struct",
             "fields": [
                 {
-                    "field-name": "dry-run",
-                    "field-type": "bool"
+                    "name": "dry-run",
+                    "type": "bool"
                 },
                 {
-                    "field-name": "overwrite-cache",
-                    "field-type": "bool"
+                    "name": "overwrite-cache",
+                    "type": "bool"
                 },
                 {
-                    "field-name": "submissions",
-                    "field-type": "[]string"
+                    "name": "submissions",
+                    "type": "[]string"
                 },
                 {
-                    "field-name": "wait-for-completion",
-                    "field-type": "bool"
+                    "name": "wait-for-completion",
+                    "type": "bool"
                 }
             ]
         },
@@ -1390,12 +1390,12 @@
             "category": "struct",
             "fields": [
                 {
-                    "field-name": "endpoints",
-                    "field-type": "map[string]core.EndpointDescription"
+                    "name": "endpoints",
+                    "type": "map[string]core.EndpointDescription"
                 },
                 {
-                    "field-name": "types",
-                    "field-type": "map[string]core.TypeDescription"
+                    "name": "types",
+                    "type": "map[string]core.TypeDescription"
                 }
             ]
         },
@@ -1404,20 +1404,20 @@
             "description": "Context for requests that need an assignment on top of a user/course.",
             "fields": [
                 {
-                    "field-name": "assignment-id",
-                    "field-type": "string"
+                    "name": "assignment-id",
+                    "type": "string"
                 },
                 {
-                    "field-name": "course-id",
-                    "field-type": "string"
+                    "name": "course-id",
+                    "type": "string"
                 },
                 {
-                    "field-name": "user-email",
-                    "field-type": "string"
+                    "name": "user-email",
+                    "type": "string"
                 },
                 {
-                    "field-name": "user-pass",
-                    "field-type": "string"
+                    "name": "user-pass",
+                    "type": "string"
                 }
             ]
         },
@@ -1426,16 +1426,16 @@
             "description": "Context for a request that has a course and user from that course.",
             "fields": [
                 {
-                    "field-name": "course-id",
-                    "field-type": "string"
+                    "name": "course-id",
+                    "type": "string"
                 },
                 {
-                    "field-name": "user-email",
-                    "field-type": "string"
+                    "name": "user-email",
+                    "type": "string"
                 },
                 {
-                    "field-name": "user-pass",
-                    "field-type": "string"
+                    "name": "user-pass",
+                    "type": "string"
                 }
             ]
         },
@@ -1444,12 +1444,12 @@
             "description": "Context for a request that has a user (pretty much the lowest level of request).",
             "fields": [
                 {
-                    "field-name": "user-email",
-                    "field-type": "string"
+                    "name": "user-email",
+                    "type": "string"
                 },
                 {
-                    "field-name": "user-pass",
-                    "field-type": "string"
+                    "name": "user-pass",
+                    "type": "string"
                 }
             ]
         },
@@ -1457,20 +1457,20 @@
             "category": "struct",
             "fields": [
                 {
-                    "field-name": "due-date",
-                    "field-type": "int64"
+                    "name": "due-date",
+                    "type": "int64"
                 },
                 {
-                    "field-name": "id",
-                    "field-type": "string"
+                    "name": "id",
+                    "type": "string"
                 },
                 {
-                    "field-name": "max-points",
-                    "field-type": "float64"
+                    "name": "max-points",
+                    "type": "float64"
                 },
                 {
-                    "field-name": "name",
-                    "field-type": "string"
+                    "name": "name",
+                    "type": "string"
                 }
             ]
         },
@@ -1478,20 +1478,20 @@
             "category": "struct",
             "fields": [
                 {
-                    "field-name": "grading-success",
-                    "field-type": "bool"
+                    "name": "grading-success",
+                    "type": "bool"
                 },
                 {
-                    "field-name": "message",
-                    "field-type": "string"
+                    "name": "message",
+                    "type": "string"
                 },
                 {
-                    "field-name": "rejected",
-                    "field-type": "bool"
+                    "name": "rejected",
+                    "type": "bool"
                 },
                 {
-                    "field-name": "result",
-                    "field-type": "*model.GradingInfo"
+                    "name": "result",
+                    "type": "*model.GradingInfo"
                 }
             ]
         },
@@ -1500,16 +1500,16 @@
             "description": "This type must be embedded into any API-safe representation of a user.",
             "fields": [
                 {
-                    "field-name": "email",
-                    "field-type": "string"
+                    "name": "email",
+                    "type": "string"
                 },
                 {
-                    "field-name": "name",
-                    "field-type": "string"
+                    "name": "name",
+                    "type": "string"
                 },
                 {
-                    "field-name": "type",
-                    "field-type": "string"
+                    "name": "type",
+                    "type": "string"
                 }
             ]
         },
@@ -1517,16 +1517,16 @@
             "category": "struct",
             "fields": [
                 {
-                    "field-name": "assignments",
-                    "field-type": "map[string]*core.AssignmentInfo"
+                    "name": "assignments",
+                    "type": "map[string]*core.AssignmentInfo"
                 },
                 {
-                    "field-name": "id",
-                    "field-type": "string"
+                    "name": "id",
+                    "type": "string"
                 },
                 {
-                    "field-name": "name",
-                    "field-type": "string"
+                    "name": "name",
+                    "type": "string"
                 }
             ]
         },
@@ -1535,24 +1535,24 @@
             "description": "An API-safe representation of a course user.\nEmbed the BaseUserInfo and use CourseUserInfoType as the type.",
             "fields": [
                 {
-                    "field-name": "email",
-                    "field-type": "string"
+                    "name": "email",
+                    "type": "string"
                 },
                 {
-                    "field-name": "lms-id",
-                    "field-type": "string"
+                    "name": "lms-id",
+                    "type": "string"
                 },
                 {
-                    "field-name": "name",
-                    "field-type": "string"
+                    "name": "name",
+                    "type": "string"
                 },
                 {
-                    "field-name": "role",
-                    "field-type": "int"
+                    "name": "role",
+                    "type": "int"
                 },
                 {
-                    "field-name": "type",
-                    "field-type": "string"
+                    "name": "type",
+                    "type": "string"
                 }
             ]
         },
@@ -1560,16 +1560,16 @@
             "category": "struct",
             "fields": [
                 {
-                    "field-name": "description",
-                    "field-type": "string"
+                    "name": "description",
+                    "type": "string"
                 },
                 {
-                    "field-name": "input",
-                    "field-type": "[]core.FieldDescription"
+                    "name": "input",
+                    "type": "[]core.FieldDescription"
                 },
                 {
-                    "field-name": "output",
-                    "field-type": "[]core.FieldDescription"
+                    "name": "output",
+                    "type": "[]core.FieldDescription"
                 }
             ]
         },
@@ -1578,12 +1578,12 @@
             "description": "An API-safe representation of enrollment information.",
             "fields": [
                 {
-                    "field-name": "id",
-                    "field-type": "string"
+                    "name": "id",
+                    "type": "string"
                 },
                 {
-                    "field-name": "role",
-                    "field-type": "int"
+                    "name": "role",
+                    "type": "int"
                 }
             ]
         },
@@ -1591,12 +1591,12 @@
             "category": "struct",
             "fields": [
                 {
-                    "field-name": "field-name",
-                    "field-type": "string"
+                    "name": "name",
+                    "type": "string"
                 },
                 {
-                    "field-name": "field-type",
-                    "field-type": "string"
+                    "name": "type",
+                    "type": "string"
                 }
             ]
         },
@@ -1609,24 +1609,24 @@
             "description": "An API-safe representation of a server user.\nEmbed the BaseUserInfo and use ServerUserInfoType as the type.",
             "fields": [
                 {
-                    "field-name": "courses",
-                    "field-type": "map[string]core.EnrollmentInfo"
+                    "name": "courses",
+                    "type": "map[string]core.EnrollmentInfo"
                 },
                 {
-                    "field-name": "email",
-                    "field-type": "string"
+                    "name": "email",
+                    "type": "string"
                 },
                 {
-                    "field-name": "name",
-                    "field-type": "string"
+                    "name": "name",
+                    "type": "string"
                 },
                 {
-                    "field-name": "role",
-                    "field-type": "int"
+                    "name": "role",
+                    "type": "int"
                 },
                 {
-                    "field-name": "type",
-                    "field-type": "string"
+                    "name": "type",
+                    "type": "string"
                 }
             ]
         },
@@ -1639,8 +1639,8 @@
             "description": "Same as TargetServerUserSelfOrAdmin, but in the context of a course user and a grader context user.\nTherefore, the context user only has to be a grader in the context course (or the target user themself).\nWhen targeting yourself, the user can be a server admin (and will be escalated to course owner for the request).\nThe existence of this type in a struct also indicates that the request is at least a APIRequestCourseUserContext.",
             "fields": [
                 {
-                    "field-name": "TargetCourseUser",
-                    "field-type": "core.TargetCourseUser"
+                    "name": "TargetCourseUser",
+                    "type": "core.TargetCourseUser"
                 }
             ]
         },
@@ -1653,8 +1653,8 @@
             "description": "A request having a field of this type indicates that the request is targeting a specific user.\nThis type serializes to/from a string.\nIf no user is specified, then the context user is the target.\nIf a user is specified, then the context user must be a server admin\n(any user can access their own resources, but higher permissions are required to access another user's resources).\nNo error is generated if the user is not found.\nThe existence of this type in a struct also indicates that the request is at least a APIRequestUserContext.",
             "fields": [
                 {
-                    "field-name": "TargetServerUser",
-                    "field-type": "core.TargetServerUser"
+                    "name": "TargetServerUser",
+                    "type": "core.TargetServerUser"
                 }
             ]
         },
@@ -1662,24 +1662,24 @@
             "category": "struct",
             "fields": [
                 {
-                    "field-name": "alias-type",
-                    "field-type": "string"
+                    "name": "alias-type",
+                    "type": "string"
                 },
                 {
-                    "field-name": "category",
-                    "field-type": "string"
+                    "name": "category",
+                    "type": "string"
                 },
                 {
-                    "field-name": "description",
-                    "field-type": "string"
+                    "name": "description",
+                    "type": "string"
                 },
                 {
-                    "field-name": "element-type",
-                    "field-type": "string"
+                    "name": "element-type",
+                    "type": "string"
                 },
                 {
-                    "field-name": "fields",
-                    "field-type": "[]core.FieldDescription"
+                    "name": "fields",
+                    "type": "[]core.FieldDescription"
                 }
             ]
         },
@@ -1691,28 +1691,28 @@
             "category": "struct",
             "fields": [
                 {
-                    "field-name": "dry-run",
-                    "field-type": "bool"
+                    "name": "dry-run",
+                    "type": "bool"
                 },
                 {
-                    "field-name": "skip-build-images",
-                    "field-type": "bool"
+                    "name": "skip-build-images",
+                    "type": "bool"
                 },
                 {
-                    "field-name": "skip-emails",
-                    "field-type": "bool"
+                    "name": "skip-emails",
+                    "type": "bool"
                 },
                 {
-                    "field-name": "skip-lms-sync",
-                    "field-type": "bool"
+                    "name": "skip-lms-sync",
+                    "type": "bool"
                 },
                 {
-                    "field-name": "skip-source-sync",
-                    "field-type": "bool"
+                    "name": "skip-source-sync",
+                    "type": "bool"
                 },
                 {
-                    "field-name": "skip-template-files",
-                    "field-type": "bool"
+                    "name": "skip-template-files",
+                    "type": "bool"
                 }
             ]
         },
@@ -1720,28 +1720,28 @@
             "category": "struct",
             "fields": [
                 {
-                    "field-name": "dry-run",
-                    "field-type": "bool"
+                    "name": "dry-run",
+                    "type": "bool"
                 },
                 {
-                    "field-name": "skip-build-images",
-                    "field-type": "bool"
+                    "name": "skip-build-images",
+                    "type": "bool"
                 },
                 {
-                    "field-name": "skip-emails",
-                    "field-type": "bool"
+                    "name": "skip-emails",
+                    "type": "bool"
                 },
                 {
-                    "field-name": "skip-lms-sync",
-                    "field-type": "bool"
+                    "name": "skip-lms-sync",
+                    "type": "bool"
                 },
                 {
-                    "field-name": "skip-source-sync",
-                    "field-type": "bool"
+                    "name": "skip-source-sync",
+                    "type": "bool"
                 },
                 {
-                    "field-name": "skip-template-files",
-                    "field-type": "bool"
+                    "name": "skip-template-files",
+                    "type": "bool"
                 }
             ]
         },
@@ -1749,36 +1749,36 @@
             "category": "struct",
             "fields": [
                 {
-                    "field-name": "assignment-template-files",
-                    "field-type": "map[string][]string"
+                    "name": "assignment-template-files",
+                    "type": "map[string][]string"
                 },
                 {
-                    "field-name": "built-assignment-images",
-                    "field-type": "[]string"
+                    "name": "built-assignment-images",
+                    "type": "[]string"
                 },
                 {
-                    "field-name": "course-id",
-                    "field-type": "string"
+                    "name": "course-id",
+                    "type": "string"
                 },
                 {
-                    "field-name": "created",
-                    "field-type": "bool"
+                    "name": "created",
+                    "type": "bool"
                 },
                 {
-                    "field-name": "lms-sync-result",
-                    "field-type": "*model.LMSSyncResult"
+                    "name": "lms-sync-result",
+                    "type": "*model.LMSSyncResult"
                 },
                 {
-                    "field-name": "message",
-                    "field-type": "string"
+                    "name": "message",
+                    "type": "string"
                 },
                 {
-                    "field-name": "success",
-                    "field-type": "bool"
+                    "name": "success",
+                    "type": "bool"
                 },
                 {
-                    "field-name": "updated",
-                    "field-type": "bool"
+                    "name": "updated",
+                    "type": "bool"
                 }
             ]
         },
@@ -1786,28 +1786,28 @@
             "category": "struct",
             "fields": [
                 {
-                    "field-name": "bcc",
-                    "field-type": "[]string"
+                    "name": "bcc",
+                    "type": "[]string"
                 },
                 {
-                    "field-name": "body",
-                    "field-type": "string"
+                    "name": "body",
+                    "type": "string"
                 },
                 {
-                    "field-name": "cc",
-                    "field-type": "[]string"
+                    "name": "cc",
+                    "type": "[]string"
                 },
                 {
-                    "field-name": "html",
-                    "field-type": "bool"
+                    "name": "html",
+                    "type": "bool"
                 },
                 {
-                    "field-name": "subject",
-                    "field-type": "string"
+                    "name": "subject",
+                    "type": "string"
                 },
                 {
-                    "field-name": "to",
-                    "field-type": "[]string"
+                    "name": "to",
+                    "type": "[]string"
                 }
             ]
         },
@@ -1820,28 +1820,28 @@
             "description": "A representation of a query for server log records.\nA raw query can be processed (validated for structure and permissions)\nby the internal/procedures/log package.\nBecause of some assumptions we make, log times before UNIX epoch are not supported.\nHowever, since this code was created well past that only time travelers should be concerned.",
             "fields": [
                 {
-                    "field-name": "after",
-                    "field-type": "string"
+                    "name": "after",
+                    "type": "string"
                 },
                 {
-                    "field-name": "level",
-                    "field-type": "string"
+                    "name": "level",
+                    "type": "string"
                 },
                 {
-                    "field-name": "past",
-                    "field-type": "string"
+                    "name": "past",
+                    "type": "string"
                 },
                 {
-                    "field-name": "target-assignment",
-                    "field-type": "string"
+                    "name": "target-assignment",
+                    "type": "string"
                 },
                 {
-                    "field-name": "target-course",
-                    "field-type": "string"
+                    "name": "target-course",
+                    "type": "string"
                 },
                 {
-                    "field-name": "target-email",
-                    "field-type": "string"
+                    "name": "target-email",
+                    "type": "string"
                 }
             ]
         },
@@ -1849,36 +1849,36 @@
             "category": "struct",
             "fields": [
                 {
-                    "field-name": "assignment",
-                    "field-type": "string"
+                    "name": "assignment",
+                    "type": "string"
                 },
                 {
-                    "field-name": "attributes",
-                    "field-type": "map[string]interface {}"
+                    "name": "attributes",
+                    "type": "map[string]interface {}"
                 },
                 {
-                    "field-name": "course",
-                    "field-type": "string"
+                    "name": "course",
+                    "type": "string"
                 },
                 {
-                    "field-name": "error",
-                    "field-type": "string"
+                    "name": "error",
+                    "type": "string"
                 },
                 {
-                    "field-name": "level",
-                    "field-type": "int32"
+                    "name": "level",
+                    "type": "int32"
                 },
                 {
-                    "field-name": "message",
-                    "field-type": "string"
+                    "name": "message",
+                    "type": "string"
                 },
                 {
-                    "field-name": "timestamp",
-                    "field-type": "int64"
+                    "name": "timestamp",
+                    "type": "int64"
                 },
                 {
-                    "field-name": "user",
-                    "field-type": "string"
+                    "name": "user",
+                    "type": "string"
                 }
             ]
         },
@@ -1886,16 +1886,16 @@
             "category": "struct",
             "fields": [
                 {
-                    "field-name": "filename",
-                    "field-type": "string"
+                    "name": "filename",
+                    "type": "string"
                 },
                 {
-                    "field-name": "lines-of-code",
-                    "field-type": "int"
+                    "name": "lines-of-code",
+                    "type": "int"
                 },
                 {
-                    "field-name": "original-filename",
-                    "field-type": "string"
+                    "name": "original-filename",
+                    "type": "string"
                 }
             ]
         },
@@ -1903,28 +1903,28 @@
             "category": "struct",
             "fields": [
                 {
-                    "field-name": "complete",
-                    "field-type": "bool"
+                    "name": "complete",
+                    "type": "bool"
                 },
                 {
-                    "field-name": "complete-count",
-                    "field-type": "int"
+                    "name": "complete-count",
+                    "type": "int"
                 },
                 {
-                    "field-name": "failure-count",
-                    "field-type": "int"
+                    "name": "failure-count",
+                    "type": "int"
                 },
                 {
-                    "field-name": "first-timestamp",
-                    "field-type": "int64"
+                    "name": "first-timestamp",
+                    "type": "int64"
                 },
                 {
-                    "field-name": "last-timestamp",
-                    "field-type": "int64"
+                    "name": "last-timestamp",
+                    "type": "int64"
                 },
                 {
-                    "field-name": "pending-count",
-                    "field-type": "int"
+                    "name": "pending-count",
+                    "type": "int"
                 }
             ]
         },
@@ -1932,20 +1932,20 @@
             "category": "struct",
             "fields": [
                 {
-                    "field-name": "exclude-patterns",
-                    "field-type": "[]string"
+                    "name": "exclude-patterns",
+                    "type": "[]string"
                 },
                 {
-                    "field-name": "include-patterns",
-                    "field-type": "[]string"
+                    "name": "include-patterns",
+                    "type": "[]string"
                 },
                 {
-                    "field-name": "template-file-ops",
-                    "field-type": "[]*util.FileOperation"
+                    "name": "template-file-ops",
+                    "type": "[]*util.FileOperation"
                 },
                 {
-                    "field-name": "template-files",
-                    "field-type": "[]*util.FileSpec"
+                    "name": "template-files",
+                    "type": "[]*util.FileSpec"
                 }
             ]
         },
@@ -1953,20 +1953,20 @@
             "category": "struct",
             "fields": [
                 {
-                    "field-name": "id",
-                    "field-type": "string"
+                    "name": "id",
+                    "type": "string"
                 },
                 {
-                    "field-name": "late-days-lms-id",
-                    "field-type": "string"
+                    "name": "late-days-lms-id",
+                    "type": "string"
                 },
                 {
-                    "field-name": "late-days-lms-name",
-                    "field-type": "string"
+                    "name": "late-days-lms-name",
+                    "type": "string"
                 },
                 {
-                    "field-name": "name",
-                    "field-type": "string"
+                    "name": "name",
+                    "type": "string"
                 }
             ]
         },
@@ -1974,20 +1974,20 @@
             "category": "struct",
             "fields": [
                 {
-                    "field-name": "ambiguous-matches",
-                    "field-type": "[]model.AssignmentInfo"
+                    "name": "ambiguous-matches",
+                    "type": "[]model.AssignmentInfo"
                 },
                 {
-                    "field-name": "non-matched-assignments",
-                    "field-type": "[]model.AssignmentInfo"
+                    "name": "non-matched-assignments",
+                    "type": "[]model.AssignmentInfo"
                 },
                 {
-                    "field-name": "synced-assignments",
-                    "field-type": "[]model.AssignmentInfo"
+                    "name": "synced-assignments",
+                    "type": "[]model.AssignmentInfo"
                 },
                 {
-                    "field-name": "unchanged-assignments",
-                    "field-type": "[]model.AssignmentInfo"
+                    "name": "unchanged-assignments",
+                    "type": "[]model.AssignmentInfo"
                 }
             ]
         },
@@ -1996,40 +1996,40 @@
             "description": "A general representation of the result of operations that modify a user in any way (add, remove, enroll, drop, etc).",
             "fields": [
                 {
-                    "field-name": "added",
-                    "field-type": "bool"
+                    "name": "added",
+                    "type": "bool"
                 },
                 {
-                    "field-name": "dropped",
-                    "field-type": "[]string"
+                    "name": "dropped",
+                    "type": "[]string"
                 },
                 {
-                    "field-name": "email",
-                    "field-type": "string"
+                    "name": "email",
+                    "type": "string"
                 },
                 {
-                    "field-name": "emailed",
-                    "field-type": "bool"
+                    "name": "emailed",
+                    "type": "bool"
                 },
                 {
-                    "field-name": "enrolled",
-                    "field-type": "[]string"
+                    "name": "enrolled",
+                    "type": "[]string"
                 },
                 {
-                    "field-name": "modified",
-                    "field-type": "bool"
+                    "name": "modified",
+                    "type": "bool"
                 },
                 {
-                    "field-name": "not-exists",
-                    "field-type": "bool"
+                    "name": "not-exists",
+                    "type": "bool"
                 },
                 {
-                    "field-name": "removed",
-                    "field-type": "bool"
+                    "name": "removed",
+                    "type": "bool"
                 },
                 {
-                    "field-name": "skipped",
-                    "field-type": "bool"
+                    "name": "skipped",
+                    "type": "bool"
                 }
             ]
         },
@@ -2042,12 +2042,12 @@
             "description": "A user safe version of locatable errors.\nAll LocatableErrors must be converted to ExternalLocatableErrors\nif it is to be given to a user.",
             "fields": [
                 {
-                    "field-name": "locator",
-                    "field-type": "string"
+                    "name": "locator",
+                    "type": "string"
                 },
                 {
-                    "field-name": "message",
-                    "field-type": "string"
+                    "name": "message",
+                    "type": "string"
                 }
             ]
         },
@@ -2056,32 +2056,32 @@
             "description": "A trimmed-down version of ScoringInfo meant for external usage.",
             "fields": [
                 {
-                    "field-name": "assignment",
-                    "field-type": "string"
+                    "name": "assignment",
+                    "type": "string"
                 },
                 {
-                    "field-name": "raw-score",
-                    "field-type": "float64"
+                    "name": "raw-score",
+                    "type": "float64"
                 },
                 {
-                    "field-name": "score",
-                    "field-type": "float64"
+                    "name": "score",
+                    "type": "float64"
                 },
                 {
-                    "field-name": "submission-id",
-                    "field-type": "string"
+                    "name": "submission-id",
+                    "type": "string"
                 },
                 {
-                    "field-name": "submission-time",
-                    "field-type": "int64"
+                    "name": "submission-time",
+                    "type": "int64"
                 },
                 {
-                    "field-name": "upload-time",
-                    "field-type": "int64"
+                    "name": "upload-time",
+                    "type": "int64"
                 },
                 {
-                    "field-name": "user",
-                    "field-type": "string"
+                    "name": "user",
+                    "type": "string"
                 }
             ]
         },
@@ -2090,52 +2090,52 @@
             "description": "A user safe representation of the UserOpResult struct.\nNotably all errors will be converted to responses and the cleartext password field is removed.\nFor descriptions of shared fields, see UserOpResult above.",
             "fields": [
                 {
-                    "field-name": "added",
-                    "field-type": "bool"
+                    "name": "added",
+                    "type": "bool"
                 },
                 {
-                    "field-name": "communication-error",
-                    "field-type": "*model.ExternalLocatableError"
+                    "name": "communication-error",
+                    "type": "*model.ExternalLocatableError"
                 },
                 {
-                    "field-name": "dropped",
-                    "field-type": "[]string"
+                    "name": "dropped",
+                    "type": "[]string"
                 },
                 {
-                    "field-name": "email",
-                    "field-type": "string"
+                    "name": "email",
+                    "type": "string"
                 },
                 {
-                    "field-name": "emailed",
-                    "field-type": "bool"
+                    "name": "emailed",
+                    "type": "bool"
                 },
                 {
-                    "field-name": "enrolled",
-                    "field-type": "[]string"
+                    "name": "enrolled",
+                    "type": "[]string"
                 },
                 {
-                    "field-name": "modified",
-                    "field-type": "bool"
+                    "name": "modified",
+                    "type": "bool"
                 },
                 {
-                    "field-name": "not-exists",
-                    "field-type": "bool"
+                    "name": "not-exists",
+                    "type": "bool"
                 },
                 {
-                    "field-name": "removed",
-                    "field-type": "bool"
+                    "name": "removed",
+                    "type": "bool"
                 },
                 {
-                    "field-name": "skipped",
-                    "field-type": "bool"
+                    "name": "skipped",
+                    "type": "bool"
                 },
                 {
-                    "field-name": "system-error",
-                    "field-type": "*model.ExternalLocatableError"
+                    "name": "system-error",
+                    "type": "*model.ExternalLocatableError"
                 },
                 {
-                    "field-name": "validation-error",
-                    "field-type": "*model.ExternalLocatableError"
+                    "name": "validation-error",
+                    "type": "*model.ExternalLocatableError"
                 }
             ]
         },
@@ -2143,28 +2143,28 @@
             "category": "struct",
             "fields": [
                 {
-                    "field-name": "filename",
-                    "field-type": "string"
+                    "name": "filename",
+                    "type": "string"
                 },
                 {
-                    "field-name": "options",
-                    "field-type": "map[string]interface {}"
+                    "name": "options",
+                    "type": "map[string]interface {}"
                 },
                 {
-                    "field-name": "original-filename",
-                    "field-type": "string"
+                    "name": "original-filename",
+                    "type": "string"
                 },
                 {
-                    "field-name": "score",
-                    "field-type": "float64"
+                    "name": "score",
+                    "type": "float64"
                 },
                 {
-                    "field-name": "tool",
-                    "field-type": "string"
+                    "name": "tool",
+                    "type": "string"
                 },
                 {
-                    "field-name": "version",
-                    "field-type": "string"
+                    "name": "version",
+                    "type": "string"
                 }
             ]
         },
@@ -2172,36 +2172,36 @@
             "category": "struct",
             "fields": [
                 {
-                    "field-name": "grading_end_time",
-                    "field-type": "int64"
+                    "name": "grading_end_time",
+                    "type": "int64"
                 },
                 {
-                    "field-name": "grading_start_time",
-                    "field-type": "int64"
+                    "name": "grading_start_time",
+                    "type": "int64"
                 },
                 {
-                    "field-name": "hard_fail",
-                    "field-type": "bool"
+                    "name": "hard_fail",
+                    "type": "bool"
                 },
                 {
-                    "field-name": "max_points",
-                    "field-type": "float64"
+                    "name": "max_points",
+                    "type": "float64"
                 },
                 {
-                    "field-name": "message",
-                    "field-type": "string"
+                    "name": "message",
+                    "type": "string"
                 },
                 {
-                    "field-name": "name",
-                    "field-type": "string"
+                    "name": "name",
+                    "type": "string"
                 },
                 {
-                    "field-name": "score",
-                    "field-type": "float64"
+                    "name": "score",
+                    "type": "float64"
                 },
                 {
-                    "field-name": "skipped",
-                    "field-type": "bool"
+                    "name": "skipped",
+                    "type": "bool"
                 }
             ]
         },
@@ -2209,76 +2209,76 @@
             "category": "struct",
             "fields": [
                 {
-                    "field-name": "additional-info",
-                    "field-type": "map[string]interface {}"
+                    "name": "additional-info",
+                    "type": "map[string]interface {}"
                 },
                 {
-                    "field-name": "assignment-id",
-                    "field-type": "string"
+                    "name": "assignment-id",
+                    "type": "string"
                 },
                 {
-                    "field-name": "course-id",
-                    "field-type": "string"
+                    "name": "course-id",
+                    "type": "string"
                 },
                 {
-                    "field-name": "epilogue",
-                    "field-type": "string"
+                    "name": "epilogue",
+                    "type": "string"
                 },
                 {
-                    "field-name": "grading_end_time",
-                    "field-type": "int64"
+                    "name": "grading_end_time",
+                    "type": "int64"
                 },
                 {
-                    "field-name": "grading_start_time",
-                    "field-type": "int64"
+                    "name": "grading_start_time",
+                    "type": "int64"
                 },
                 {
-                    "field-name": "id",
-                    "field-type": "string"
+                    "name": "id",
+                    "type": "string"
                 },
                 {
-                    "field-name": "max_points",
-                    "field-type": "float64"
+                    "name": "max_points",
+                    "type": "float64"
                 },
                 {
-                    "field-name": "message",
-                    "field-type": "string"
+                    "name": "message",
+                    "type": "string"
                 },
                 {
-                    "field-name": "name",
-                    "field-type": "string"
+                    "name": "name",
+                    "type": "string"
                 },
                 {
-                    "field-name": "prologue",
-                    "field-type": "string"
+                    "name": "prologue",
+                    "type": "string"
                 },
                 {
-                    "field-name": "proxy-user",
-                    "field-type": "string"
+                    "name": "proxy-user",
+                    "type": "string"
                 },
                 {
-                    "field-name": "proxy_end_time",
-                    "field-type": "int64"
+                    "name": "proxy_end_time",
+                    "type": "int64"
                 },
                 {
-                    "field-name": "proxy_start_time",
-                    "field-type": "int64"
+                    "name": "proxy_start_time",
+                    "type": "int64"
                 },
                 {
-                    "field-name": "questions",
-                    "field-type": "[]*model.GradedQuestion"
+                    "name": "questions",
+                    "type": "[]*model.GradedQuestion"
                 },
                 {
-                    "field-name": "score",
-                    "field-type": "float64"
+                    "name": "score",
+                    "type": "float64"
                 },
                 {
-                    "field-name": "short-id",
-                    "field-type": "string"
+                    "name": "short-id",
+                    "type": "string"
                 },
                 {
-                    "field-name": "user",
-                    "field-type": "string"
+                    "name": "user",
+                    "type": "string"
                 }
             ]
         },
@@ -2286,24 +2286,24 @@
             "category": "struct",
             "fields": [
                 {
-                    "field-name": "info",
-                    "field-type": "*model.GradingInfo"
+                    "name": "info",
+                    "type": "*model.GradingInfo"
                 },
                 {
-                    "field-name": "input-files-gzip",
-                    "field-type": "map[string][]uint8"
+                    "name": "input-files-gzip",
+                    "type": "map[string][]uint8"
                 },
                 {
-                    "field-name": "output-files-gzip",
-                    "field-type": "map[string][]uint8"
+                    "name": "output-files-gzip",
+                    "type": "map[string][]uint8"
                 },
                 {
-                    "field-name": "stderr",
-                    "field-type": "string"
+                    "name": "stderr",
+                    "type": "string"
                 },
                 {
-                    "field-name": "stdout",
-                    "field-type": "string"
+                    "name": "stdout",
+                    "type": "string"
                 }
             ]
         },
@@ -2311,80 +2311,80 @@
             "category": "struct",
             "fields": [
                 {
-                    "field-name": "analysis-timestamp",
-                    "field-type": "int64"
+                    "name": "analysis-timestamp",
+                    "type": "int64"
                 },
                 {
-                    "field-name": "assignment-id",
-                    "field-type": "string"
+                    "name": "assignment-id",
+                    "type": "string"
                 },
                 {
-                    "field-name": "course-id",
-                    "field-type": "string"
+                    "name": "course-id",
+                    "type": "string"
                 },
                 {
-                    "field-name": "failure",
-                    "field-type": "bool"
+                    "name": "failure",
+                    "type": "bool"
                 },
                 {
-                    "field-name": "failure-message",
-                    "field-type": "string"
+                    "name": "failure-message",
+                    "type": "string"
                 },
                 {
-                    "field-name": "files",
-                    "field-type": "[]model.AnalysisFileInfo"
+                    "name": "files",
+                    "type": "[]model.AnalysisFileInfo"
                 },
                 {
-                    "field-name": "lines-of-code",
-                    "field-type": "int"
+                    "name": "lines-of-code",
+                    "type": "int"
                 },
                 {
-                    "field-name": "lines-of-code-delta",
-                    "field-type": "int"
+                    "name": "lines-of-code-delta",
+                    "type": "int"
                 },
                 {
-                    "field-name": "lines-of-code-per-hour",
-                    "field-type": "float64"
+                    "name": "lines-of-code-per-hour",
+                    "type": "float64"
                 },
                 {
-                    "field-name": "options",
-                    "field-type": "*model.AssignmentAnalysisOptions"
+                    "name": "options",
+                    "type": "*model.AssignmentAnalysisOptions"
                 },
                 {
-                    "field-name": "score",
-                    "field-type": "float64"
+                    "name": "score",
+                    "type": "float64"
                 },
                 {
-                    "field-name": "score-delta",
-                    "field-type": "float64"
+                    "name": "score-delta",
+                    "type": "float64"
                 },
                 {
-                    "field-name": "score-per-hour",
-                    "field-type": "float64"
+                    "name": "score-per-hour",
+                    "type": "float64"
                 },
                 {
-                    "field-name": "short-id",
-                    "field-type": "string"
+                    "name": "short-id",
+                    "type": "string"
                 },
                 {
-                    "field-name": "skipped-files",
-                    "field-type": "[]string"
+                    "name": "skipped-files",
+                    "type": "[]string"
                 },
                 {
-                    "field-name": "submission-id",
-                    "field-type": "string"
+                    "name": "submission-id",
+                    "type": "string"
                 },
                 {
-                    "field-name": "submission-start-time",
-                    "field-type": "int64"
+                    "name": "submission-start-time",
+                    "type": "int64"
                 },
                 {
-                    "field-name": "submission-time-delta",
-                    "field-type": "int64"
+                    "name": "submission-time-delta",
+                    "type": "int64"
                 },
                 {
-                    "field-name": "user-email",
-                    "field-type": "string"
+                    "name": "user-email",
+                    "type": "string"
                 }
             ]
         },
@@ -2392,60 +2392,60 @@
             "category": "struct",
             "fields": [
                 {
-                    "field-name": "aggregate-lines-of-code",
-                    "field-type": "util.AggregateValues"
+                    "name": "aggregate-lines-of-code",
+                    "type": "util.AggregateValues"
                 },
                 {
-                    "field-name": "aggregate-lines-of-code-delta",
-                    "field-type": "util.AggregateValues"
+                    "name": "aggregate-lines-of-code-delta",
+                    "type": "util.AggregateValues"
                 },
                 {
-                    "field-name": "aggregate-lines-of-code-per-file",
-                    "field-type": "map[string]util.AggregateValues"
+                    "name": "aggregate-lines-of-code-per-file",
+                    "type": "map[string]util.AggregateValues"
                 },
                 {
-                    "field-name": "aggregate-lines-of-code-per-hour",
-                    "field-type": "util.AggregateValues"
+                    "name": "aggregate-lines-of-code-per-hour",
+                    "type": "util.AggregateValues"
                 },
                 {
-                    "field-name": "aggregate-score",
-                    "field-type": "util.AggregateValues"
+                    "name": "aggregate-score",
+                    "type": "util.AggregateValues"
                 },
                 {
-                    "field-name": "aggregate-score-delta",
-                    "field-type": "util.AggregateValues"
+                    "name": "aggregate-score-delta",
+                    "type": "util.AggregateValues"
                 },
                 {
-                    "field-name": "aggregate-score-per-hour",
-                    "field-type": "util.AggregateValues"
+                    "name": "aggregate-score-per-hour",
+                    "type": "util.AggregateValues"
                 },
                 {
-                    "field-name": "aggregate-submission-time-delta",
-                    "field-type": "util.AggregateValues"
+                    "name": "aggregate-submission-time-delta",
+                    "type": "util.AggregateValues"
                 },
                 {
-                    "field-name": "complete",
-                    "field-type": "bool"
+                    "name": "complete",
+                    "type": "bool"
                 },
                 {
-                    "field-name": "complete-count",
-                    "field-type": "int"
+                    "name": "complete-count",
+                    "type": "int"
                 },
                 {
-                    "field-name": "failure-count",
-                    "field-type": "int"
+                    "name": "failure-count",
+                    "type": "int"
                 },
                 {
-                    "field-name": "first-timestamp",
-                    "field-type": "int64"
+                    "name": "first-timestamp",
+                    "type": "int64"
                 },
                 {
-                    "field-name": "last-timestamp",
-                    "field-type": "int64"
+                    "name": "last-timestamp",
+                    "type": "int64"
                 },
                 {
-                    "field-name": "pending-count",
-                    "field-type": "int"
+                    "name": "pending-count",
+                    "type": "int"
                 }
             ]
         },
@@ -2453,12 +2453,12 @@
             "category": "struct",
             "fields": [
                 {
-                    "field-name": "assignment-sync",
-                    "field-type": "*model.AssignmentSyncResult"
+                    "name": "assignment-sync",
+                    "type": "*model.AssignmentSyncResult"
                 },
                 {
-                    "field-name": "user-sync",
-                    "field-type": "[]*model.UserOpResult"
+                    "name": "user-sync",
+                    "type": "[]*model.UserOpResult"
                 }
             ]
         },
@@ -2470,44 +2470,44 @@
             "category": "struct",
             "fields": [
                 {
-                    "field-name": "analysis-timestamp",
-                    "field-type": "int64"
+                    "name": "analysis-timestamp",
+                    "type": "int64"
                 },
                 {
-                    "field-name": "failure",
-                    "field-type": "bool"
+                    "name": "failure",
+                    "type": "bool"
                 },
                 {
-                    "field-name": "failure-message",
-                    "field-type": "string"
+                    "name": "failure-message",
+                    "type": "string"
                 },
                 {
-                    "field-name": "mean-similarities",
-                    "field-type": "map[string]float64"
+                    "name": "mean-similarities",
+                    "type": "map[string]float64"
                 },
                 {
-                    "field-name": "options",
-                    "field-type": "*model.AssignmentAnalysisOptions"
+                    "name": "options",
+                    "type": "*model.AssignmentAnalysisOptions"
                 },
                 {
-                    "field-name": "similarities",
-                    "field-type": "map[string][]*model.FileSimilarity"
+                    "name": "similarities",
+                    "type": "map[string][]*model.FileSimilarity"
                 },
                 {
-                    "field-name": "skipped-files",
-                    "field-type": "[]string"
+                    "name": "skipped-files",
+                    "type": "[]string"
                 },
                 {
-                    "field-name": "submission-ids",
-                    "field-type": "model.PairwiseKey"
+                    "name": "submission-ids",
+                    "type": "model.PairwiseKey"
                 },
                 {
-                    "field-name": "total-mean-similarity",
-                    "field-type": "float64"
+                    "name": "total-mean-similarity",
+                    "type": "float64"
                 },
                 {
-                    "field-name": "unmatched-files",
-                    "field-type": "[][]string"
+                    "name": "unmatched-files",
+                    "type": "[][]string"
                 }
             ]
         },
@@ -2515,36 +2515,36 @@
             "category": "struct",
             "fields": [
                 {
-                    "field-name": "aggregate-mean-similarities",
-                    "field-type": "map[string]util.AggregateValues"
+                    "name": "aggregate-mean-similarities",
+                    "type": "map[string]util.AggregateValues"
                 },
                 {
-                    "field-name": "aggregate-total-mean-similarity",
-                    "field-type": "util.AggregateValues"
+                    "name": "aggregate-total-mean-similarity",
+                    "type": "util.AggregateValues"
                 },
                 {
-                    "field-name": "complete",
-                    "field-type": "bool"
+                    "name": "complete",
+                    "type": "bool"
                 },
                 {
-                    "field-name": "complete-count",
-                    "field-type": "int"
+                    "name": "complete-count",
+                    "type": "int"
                 },
                 {
-                    "field-name": "failure-count",
-                    "field-type": "int"
+                    "name": "failure-count",
+                    "type": "int"
                 },
                 {
-                    "field-name": "first-timestamp",
-                    "field-type": "int64"
+                    "name": "first-timestamp",
+                    "type": "int64"
                 },
                 {
-                    "field-name": "last-timestamp",
-                    "field-type": "int64"
+                    "name": "last-timestamp",
+                    "type": "int64"
                 },
                 {
-                    "field-name": "pending-count",
-                    "field-type": "int"
+                    "name": "pending-count",
+                    "type": "int"
                 }
             ]
         },
@@ -2557,20 +2557,20 @@
             "description": "Raw/dirty data for a course user.\nThis struct is used for raw data coming from a single course.",
             "fields": [
                 {
-                    "field-name": "course-lms-id",
-                    "field-type": "string"
+                    "name": "course-lms-id",
+                    "type": "string"
                 },
                 {
-                    "field-name": "course-role",
-                    "field-type": "string"
+                    "name": "course-role",
+                    "type": "string"
                 },
                 {
-                    "field-name": "email",
-                    "field-type": "string"
+                    "name": "email",
+                    "type": "string"
                 },
                 {
-                    "field-name": "name",
-                    "field-type": "string"
+                    "name": "name",
+                    "type": "string"
                 }
             ]
         },
@@ -2579,32 +2579,32 @@
             "description": "Raw/dirty data for a user.\nThis struct can be directly embedded for Kong arguments.",
             "fields": [
                 {
-                    "field-name": "course",
-                    "field-type": "string"
+                    "name": "course",
+                    "type": "string"
                 },
                 {
-                    "field-name": "course-lms-id",
-                    "field-type": "string"
+                    "name": "course-lms-id",
+                    "type": "string"
                 },
                 {
-                    "field-name": "course-role",
-                    "field-type": "string"
+                    "name": "course-role",
+                    "type": "string"
                 },
                 {
-                    "field-name": "email",
-                    "field-type": "string"
+                    "name": "email",
+                    "type": "string"
                 },
                 {
-                    "field-name": "name",
-                    "field-type": "string"
+                    "name": "name",
+                    "type": "string"
                 },
                 {
-                    "field-name": "pass",
-                    "field-type": "string"
+                    "name": "pass",
+                    "type": "string"
                 },
                 {
-                    "field-name": "role",
-                    "field-type": "string"
+                    "name": "role",
+                    "type": "string"
                 }
             ]
         },
@@ -2616,40 +2616,40 @@
             "category": "struct",
             "fields": [
                 {
-                    "field-name": "assignment-id",
-                    "field-type": "string"
+                    "name": "assignment-id",
+                    "type": "string"
                 },
                 {
-                    "field-name": "course-id",
-                    "field-type": "string"
+                    "name": "course-id",
+                    "type": "string"
                 },
                 {
-                    "field-name": "grading_start_time",
-                    "field-type": "int64"
+                    "name": "grading_start_time",
+                    "type": "int64"
                 },
                 {
-                    "field-name": "id",
-                    "field-type": "string"
+                    "name": "id",
+                    "type": "string"
                 },
                 {
-                    "field-name": "max_points",
-                    "field-type": "float64"
+                    "name": "max_points",
+                    "type": "float64"
                 },
                 {
-                    "field-name": "message",
-                    "field-type": "string"
+                    "name": "message",
+                    "type": "string"
                 },
                 {
-                    "field-name": "score",
-                    "field-type": "float64"
+                    "name": "score",
+                    "type": "float64"
                 },
                 {
-                    "field-name": "short-id",
-                    "field-type": "string"
+                    "name": "short-id",
+                    "type": "string"
                 },
                 {
-                    "field-name": "user",
-                    "field-type": "string"
+                    "name": "user",
+                    "type": "string"
                 }
             ]
         },
@@ -2658,56 +2658,56 @@
             "description": "A general representation of the result of operations that modify a user in any way (add, remove, enroll, drop, etc).\nAll user-facing functions (essentially non-db functions) should return an instance or collection of these objects.",
             "fields": [
                 {
-                    "field-name": "added",
-                    "field-type": "bool"
+                    "name": "added",
+                    "type": "bool"
                 },
                 {
-                    "field-name": "cleartext-password",
-                    "field-type": "string"
+                    "name": "cleartext-password",
+                    "type": "string"
                 },
                 {
-                    "field-name": "communication-error",
-                    "field-type": "*model.LocatableError"
+                    "name": "communication-error",
+                    "type": "*model.LocatableError"
                 },
                 {
-                    "field-name": "dropped",
-                    "field-type": "[]string"
+                    "name": "dropped",
+                    "type": "[]string"
                 },
                 {
-                    "field-name": "email",
-                    "field-type": "string"
+                    "name": "email",
+                    "type": "string"
                 },
                 {
-                    "field-name": "emailed",
-                    "field-type": "bool"
+                    "name": "emailed",
+                    "type": "bool"
                 },
                 {
-                    "field-name": "enrolled",
-                    "field-type": "[]string"
+                    "name": "enrolled",
+                    "type": "[]string"
                 },
                 {
-                    "field-name": "modified",
-                    "field-type": "bool"
+                    "name": "modified",
+                    "type": "bool"
                 },
                 {
-                    "field-name": "not-exists",
-                    "field-type": "bool"
+                    "name": "not-exists",
+                    "type": "bool"
                 },
                 {
-                    "field-name": "removed",
-                    "field-type": "bool"
+                    "name": "removed",
+                    "type": "bool"
                 },
                 {
-                    "field-name": "skipped",
-                    "field-type": "bool"
+                    "name": "skipped",
+                    "type": "bool"
                 },
                 {
-                    "field-name": "system-error",
-                    "field-type": "*model.LocatableError"
+                    "name": "system-error",
+                    "type": "*model.LocatableError"
                 },
                 {
-                    "field-name": "validation-error",
-                    "field-type": "*model.LocatableError"
+                    "name": "validation-error",
+                    "type": "*model.LocatableError"
                 }
             ]
         },
@@ -2715,20 +2715,20 @@
             "category": "struct",
             "fields": [
                 {
-                    "field-name": "attributes",
-                    "field-type": "map[stats.MetricAttribute]interface {}"
+                    "name": "attributes",
+                    "type": "map[stats.MetricAttribute]interface {}"
                 },
                 {
-                    "field-name": "timestamp",
-                    "field-type": "int64"
+                    "name": "timestamp",
+                    "type": "int64"
                 },
                 {
-                    "field-name": "type",
-                    "field-type": "string"
+                    "name": "type",
+                    "type": "string"
                 },
                 {
-                    "field-name": "value",
-                    "field-type": "float64"
+                    "name": "value",
+                    "type": "float64"
                 }
             ]
         },
@@ -2745,28 +2745,28 @@
             "description": "The query for stats.\nNote that the semantics of this struct mean that times before UNIX epoch (negative times)\nmust be offset by at least one MS (as a zero value is treated as the end of time).",
             "fields": [
                 {
-                    "field-name": "after",
-                    "field-type": "int64"
+                    "name": "after",
+                    "type": "int64"
                 },
                 {
-                    "field-name": "before",
-                    "field-type": "int64"
+                    "name": "before",
+                    "type": "int64"
                 },
                 {
-                    "field-name": "limit",
-                    "field-type": "int"
+                    "name": "limit",
+                    "type": "int"
                 },
                 {
-                    "field-name": "sort",
-                    "field-type": "int"
+                    "name": "sort",
+                    "type": "int"
                 },
                 {
-                    "field-name": "type",
-                    "field-type": "string"
+                    "name": "type",
+                    "type": "string"
                 },
                 {
-                    "field-name": "where",
-                    "field-type": "map[stats.MetricAttribute]interface {}"
+                    "name": "where",
+                    "type": "map[stats.MetricAttribute]interface {}"
                 }
             ]
         },
@@ -2778,12 +2778,12 @@
             "category": "struct",
             "fields": [
                 {
-                    "field-name": "entry",
-                    "field-type": "interface {}"
+                    "name": "entry",
+                    "type": "interface {}"
                 },
                 {
-                    "field-name": "row",
-                    "field-type": "int"
+                    "name": "row",
+                    "type": "int"
                 }
             ]
         },
@@ -2791,12 +2791,12 @@
             "category": "struct",
             "fields": [
                 {
-                    "field-name": "email",
-                    "field-type": "string"
+                    "name": "email",
+                    "type": "string"
                 },
                 {
-                    "field-name": "score",
-                    "field-type": "float64"
+                    "name": "score",
+                    "type": "float64"
                 }
             ]
         },
@@ -2805,24 +2805,24 @@
             "description": "Data for upserting users.\nUpserting should only be done by server or course admins,\nit should not be used for self creation.",
             "fields": [
                 {
-                    "field-name": "dry-run",
-                    "field-type": "bool"
+                    "name": "dry-run",
+                    "type": "bool"
                 },
                 {
-                    "field-name": "raw-users",
-                    "field-type": "[]*model.RawServerUserData"
+                    "name": "raw-users",
+                    "type": "[]*model.RawServerUserData"
                 },
                 {
-                    "field-name": "send-emails",
-                    "field-type": "bool"
+                    "name": "send-emails",
+                    "type": "bool"
                 },
                 {
-                    "field-name": "skip-inserts",
-                    "field-type": "bool"
+                    "name": "skip-inserts",
+                    "type": "bool"
                 },
                 {
-                    "field-name": "skip-updates",
-                    "field-type": "bool"
+                    "name": "skip-updates",
+                    "type": "bool"
                 }
             ]
         },
@@ -2830,24 +2830,24 @@
             "category": "struct",
             "fields": [
                 {
-                    "field-name": "count",
-                    "field-type": "int"
+                    "name": "count",
+                    "type": "int"
                 },
                 {
-                    "field-name": "max",
-                    "field-type": "float64"
+                    "name": "max",
+                    "type": "float64"
                 },
                 {
-                    "field-name": "mean",
-                    "field-type": "float64"
+                    "name": "mean",
+                    "type": "float64"
                 },
                 {
-                    "field-name": "median",
-                    "field-type": "float64"
+                    "name": "median",
+                    "type": "float64"
                 },
                 {
-                    "field-name": "min",
-                    "field-type": "float64"
+                    "name": "min",
+                    "type": "float64"
                 }
             ]
         },
@@ -2855,16 +2855,16 @@
             "category": "struct",
             "fields": [
                 {
-                    "field-name": "name",
-                    "field-type": "string"
+                    "name": "name",
+                    "type": "string"
                 },
                 {
-                    "field-name": "records",
-                    "field-type": "[]util.CallStackRecord"
+                    "name": "records",
+                    "type": "[]util.CallStackRecord"
                 },
                 {
-                    "field-name": "status",
-                    "field-type": "string"
+                    "name": "status",
+                    "type": "string"
                 }
             ]
         },
@@ -2872,20 +2872,20 @@
             "category": "struct",
             "fields": [
                 {
-                    "field-name": "call",
-                    "field-type": "string"
+                    "name": "call",
+                    "type": "string"
                 },
                 {
-                    "field-name": "file",
-                    "field-type": "string"
+                    "name": "file",
+                    "type": "string"
                 },
                 {
-                    "field-name": "line",
-                    "field-type": "int"
+                    "name": "line",
+                    "type": "int"
                 },
                 {
-                    "field-name": "pointer",
-                    "field-type": "string"
+                    "name": "pointer",
+                    "type": "string"
                 }
             ]
         },
@@ -2897,28 +2897,28 @@
             "category": "struct",
             "fields": [
                 {
-                    "field-name": "dest",
-                    "field-type": "string"
+                    "name": "dest",
+                    "type": "string"
                 },
                 {
-                    "field-name": "path",
-                    "field-type": "string"
+                    "name": "path",
+                    "type": "string"
                 },
                 {
-                    "field-name": "reference",
-                    "field-type": "string"
+                    "name": "reference",
+                    "type": "string"
                 },
                 {
-                    "field-name": "token",
-                    "field-type": "string"
+                    "name": "token",
+                    "type": "string"
                 },
                 {
-                    "field-name": "type",
-                    "field-type": "string"
+                    "name": "type",
+                    "type": "string"
                 },
                 {
-                    "field-name": "username",
-                    "field-type": "string"
+                    "name": "username",
+                    "type": "string"
                 }
             ]
         },

@@ -33,9 +33,8 @@ type EndpointDescription struct {
 }
 
 type FieldDescription struct {
-	FieldName string `json:"field-name"`
-	FieldType string `json:"field-type"`
-	// FieldDescription string `json:"field-description"`
+	Name string `json:"name"`
+	Type string `json:"type"`
 }
 
 type TypeDescription struct {
@@ -56,24 +55,8 @@ func GetAPIDescription() APIDescription {
 	return apiDescription
 }
 
-func CompareFieldDescriptionPointer(a *FieldDescription, b *FieldDescription) int {
-	if a == b {
-		return 0
-	}
-
-	if a == nil {
-		return 1
-	}
-
-	if b == nil {
-		return -1
-	}
-
-	return CompareFieldDescription(*a, *b)
-}
-
 func CompareFieldDescription(a FieldDescription, b FieldDescription) int {
-	return strings.Compare(a.FieldName, b.FieldName)
+	return strings.Compare(a.Name, b.Name)
 }
 
 func GetDescriptionFromHandler(basePath string) (string, error) {

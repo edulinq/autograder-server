@@ -199,7 +199,6 @@ func describeType(customType reflect.Type, addType bool, typeMap map[string]core
 			break
 		}
 
-		// TODO: Should we log an error or just assume people look at resources/api.json bc of test?
 		if customType.Name() == "" {
 			break
 		}
@@ -260,7 +259,7 @@ func describeStructFields(customType reflect.Type, typeMap map[string]core.TypeD
 			// If the embedded type is a struct, merge its fields into the current struct.
 			if len(fieldDescription.Fields) > 0 {
 				for _, description := range fieldDescription.Fields {
-					if skipField(description.FieldName) {
+					if skipField(description.Name) {
 						continue
 					}
 
@@ -269,16 +268,16 @@ func describeStructFields(customType reflect.Type, typeMap map[string]core.TypeD
 			} else if fieldDescription.Category == core.AliasType {
 				// Store basic embedded types under the current JSON tag.
 				description := core.FieldDescription{
-					FieldName: jsonTag,
-					FieldType: fieldDescription.AliasType,
+					Name: jsonTag,
+					Type: fieldDescription.AliasType,
 				}
 
 				fieldDescriptions = append(fieldDescriptions, description)
 			} else {
 				// Store non-basic embedded types under the current JSON tag using the typeID.
 				description := core.FieldDescription{
-					FieldName: jsonTag,
-					FieldType: fieldTypeID,
+					Name: jsonTag,
+					Type: fieldTypeID,
 				}
 
 				fieldDescriptions = append(fieldDescriptions, description)
@@ -300,15 +299,15 @@ func describeStructFields(customType reflect.Type, typeMap map[string]core.TypeD
 
 		if typeDescription.Category == core.AliasType {
 			fieldDescription := core.FieldDescription{
-				FieldName: jsonTag,
-				FieldType: typeDescription.AliasType,
+				Name: jsonTag,
+				Type: typeDescription.AliasType,
 			}
 
 			fieldDescriptions = append(fieldDescriptions, fieldDescription)
 		} else {
 			fieldDescription := core.FieldDescription{
-				FieldName: jsonTag,
-				FieldType: typeID,
+				Name: jsonTag,
+				Type: typeID,
 			}
 
 			fieldDescriptions = append(fieldDescriptions, fieldDescription)
