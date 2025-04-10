@@ -208,12 +208,15 @@ func describeType(customType reflect.Type, addType bool, typeMap map[string]core
 			break
 		}
 
-		description, err := util.GetDescriptionFromType(customType.PkgPath(), customType.Name())
+		descriptions, err := util.GetAllTypeDescriptionsFromPackage(customType.PkgPath())
 		if err != nil {
 			return core.TypeDescription{}, "", map[string]core.TypeDescription{}, map[string]string{}, err
 		}
 
-		typeDescription.Description = description
+		description, ok := descriptions[customType.Name()]
+		if ok {
+			typeDescription.Description = description
+		}
 	default:
 		// Handle built-in types.
 		typeDescription.Category = core.AliasType

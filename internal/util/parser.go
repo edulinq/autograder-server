@@ -9,6 +9,8 @@ import (
 	"strings"
 )
 
+var knownPackagePaths = map[string]map[string]string{}
+
 // This function takes a file path and a pattern that matches the name of the target function.
 // Returns the comment attached to the first occurrence of the target function.
 // Errors occur when the target function cannot be found.
@@ -45,23 +47,34 @@ func GetDescriptionFromFunction(path string, functionNamePattern *regexp.Regexp)
 	return "", fmt.Errorf("Unable to find a description using the pattern '%s' for a function located in '%s'.", functionNamePattern.String(), path)
 }
 
-func GetDescriptionFromType(packagePath string, typeName string) (string, error) {
-	dirPath := getDirPathFromPackagePath(packagePath)
+// This function takes a non-empty package path and returns a map of custom type names to their description.
+// The types of package paths accepted can be seen in getDirPathFromCustomPackagePath().
+func GetAllTypeDescriptionsFromPackage(packagePath string) (map[string]string, error) {
+	descriptions, ok := knownPackagePaths[packagePath]
+	if ok {
+		return descriptions, nil
+	}
+
+	dirPath := getDirPathFromCustomPackagePath(packagePath)
 
 	filePaths, err := FindFiles("", dirPath)
 	if err != nil {
-		return "", fmt.Errorf("Unable to find file paths for the package path '%s': '%v'.", packagePath, err)
+		return map[string]string{}, fmt.Errorf("Unable to find file paths for the package path '%s': '%v'.", packagePath, err)
 	}
 
-	description, err := getDescriptionFromType(filePaths, typeName)
+	descriptions, err = getDescriptionFromType(filePaths)
 	if err != nil {
-		return "", fmt.Errorf("Unable to get description for the type '%s' in '%s': '%v'.", typeName, packagePath, err)
+		return map[string]string{}, fmt.Errorf("Unable to get descriptions for the package path '%s': '%v'.", packagePath, err)
 	}
 
-	return description, nil
+	knownPackagePaths[packagePath] = descriptions
+
+	return descriptions, nil
 }
 
-func getDescriptionFromType(filePaths []string, typeName string) (string, error) {
+func getDescriptionFromType(filePaths []string) (map[string]string, error) {
+	descriptions := make(map[string]string, 0)
+
 	for _, path := range filePaths {
 		if !IsFile(path) {
 			continue
@@ -74,7 +87,7 @@ func getDescriptionFromType(filePaths []string, typeName string) (string, error)
 		fileSet := token.NewFileSet()
 		node, err := parser.ParseFile(fileSet, path, nil, parser.ParseComments)
 		if err != nil {
-			return "", fmt.Errorf("Error while parsing file to get function description: '%v'.", err)
+			return map[string]string{}, fmt.Errorf("Error while parsing file to get function description: '%v'.", err)
 		}
 
 		for _, decl := range node.Decls {
@@ -97,16 +110,15 @@ func getDescriptionFromType(filePaths []string, typeName string) (string, error)
 					continue
 				}
 
-				if typeSpec.Name.Name == typeName {
-					if genDecl.Doc == nil {
-						return "", nil
-					}
-
-					return strings.TrimSpace(genDecl.Doc.Text()), nil
+				if genDecl.Doc == nil {
+					descriptions[typeSpec.Name.Name] = ""
+					continue
 				}
+
+				descriptions[typeSpec.Name.Name] = strings.TrimSpace(genDecl.Doc.Text())
 			}
 		}
 	}
 
-	return "", fmt.Errorf("Unable to find a description using the name '%s' for a type located in '%v'.", typeName, filePaths)
+	return descriptions, nil
 }
