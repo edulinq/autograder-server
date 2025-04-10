@@ -1075,7 +1075,7 @@
                 },
                 {
                     "field-name": "types",
-                    "field-type": "map[string]core.FullTypeDescription"
+                    "field-type": "map[string]core.TypeDescription"
                 }
             ]
         },
@@ -1395,7 +1395,7 @@
                 },
                 {
                     "field-name": "types",
-                    "field-type": "map[string]core.FullTypeDescription"
+                    "field-type": "map[string]core.TypeDescription"
                 }
             ]
         },
@@ -1565,11 +1565,11 @@
                 },
                 {
                     "field-name": "input",
-                    "field-type": "[]core.TypeDescription"
+                    "field-type": "[]core.FieldDescription"
                 },
                 {
                     "field-name": "output",
-                    "field-type": "[]core.TypeDescription"
+                    "field-type": "[]core.FieldDescription"
                 }
             ]
         },
@@ -1587,28 +1587,16 @@
                 }
             ]
         },
-        "core.FullTypeDescription": {
+        "core.FieldDescription": {
             "category": "struct",
             "fields": [
                 {
-                    "field-name": "alias-type",
+                    "field-name": "field-name",
                     "field-type": "string"
                 },
                 {
-                    "field-name": "category",
+                    "field-name": "field-type",
                     "field-type": "string"
-                },
-                {
-                    "field-name": "description",
-                    "field-type": "string"
-                },
-                {
-                    "field-name": "element-type",
-                    "field-type": "string"
-                },
-                {
-                    "field-name": "fields",
-                    "field-type": "[]core.TypeDescription"
                 }
             ]
         },
@@ -1674,12 +1662,24 @@
             "category": "struct",
             "fields": [
                 {
-                    "field-name": "field-name",
+                    "field-name": "alias-type",
                     "field-type": "string"
                 },
                 {
-                    "field-name": "field-type",
+                    "field-name": "category",
                     "field-type": "string"
+                },
+                {
+                    "field-name": "description",
+                    "field-type": "string"
+                },
+                {
+                    "field-name": "element-type",
+                    "field-type": "string"
+                },
+                {
+                    "field-name": "fields",
+                    "field-type": "[]core.FieldDescription"
                 }
             ]
         },

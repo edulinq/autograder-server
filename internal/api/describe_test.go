@@ -157,52 +157,52 @@ func TestDescribeEmptyRoutes(test *testing.T) {
 func TestDescribeType(test *testing.T) {
 	testCases := []struct {
 		customType      reflect.Type
-		expectedDesc    core.FullTypeDescription
-		expectedTypeMap map[string]core.FullTypeDescription
+		expectedDesc    core.TypeDescription
+		expectedTypeMap map[string]core.TypeDescription
 	}{
 		// Base types to alias (no JSON tags).
 		{
 			reflect.TypeOf((*string)(nil)).Elem(),
-			core.FullTypeDescription{
+			core.TypeDescription{
 				Category:  core.AliasType,
 				AliasType: "string",
 			},
-			map[string]core.FullTypeDescription{},
+			map[string]core.TypeDescription{},
 		},
 		{
 			reflect.TypeOf((*int)(nil)).Elem(),
-			core.FullTypeDescription{
+			core.TypeDescription{
 				Category:  core.AliasType,
 				AliasType: "int",
 			},
-			map[string]core.FullTypeDescription{},
+			map[string]core.TypeDescription{},
 		},
 		{
 			reflect.TypeOf((*int64)(nil)).Elem(),
-			core.FullTypeDescription{
+			core.TypeDescription{
 				Category:  core.AliasType,
 				AliasType: "int64",
 			},
-			map[string]core.FullTypeDescription{},
+			map[string]core.TypeDescription{},
 		},
 		{
 			reflect.TypeOf((*bool)(nil)).Elem(),
-			core.FullTypeDescription{
+			core.TypeDescription{
 				Category:  core.AliasType,
 				AliasType: "bool",
 			},
-			map[string]core.FullTypeDescription{},
+			map[string]core.TypeDescription{},
 		},
 
 		// Simple wrapper types.
 		{
 			reflect.TypeOf((*stringWrapper)(nil)).Elem(),
-			core.FullTypeDescription{
+			core.TypeDescription{
 				Category:  core.AliasType,
 				AliasType: "string",
 			},
-			map[string]core.FullTypeDescription{
-				mustGetTypeID(reflect.TypeOf((*stringWrapper)(nil)).Elem(), nil): core.FullTypeDescription{
+			map[string]core.TypeDescription{
+				mustGetTypeID(reflect.TypeOf((*stringWrapper)(nil)).Elem(), nil): core.TypeDescription{
 					Category:  core.AliasType,
 					AliasType: "string",
 				},
@@ -210,12 +210,12 @@ func TestDescribeType(test *testing.T) {
 		},
 		{
 			reflect.TypeOf((*core.MinServerRoleAdmin)(nil)).Elem(),
-			core.FullTypeDescription{
+			core.TypeDescription{
 				Category:  core.AliasType,
 				AliasType: "bool",
 			},
-			map[string]core.FullTypeDescription{
-				mustGetTypeID(reflect.TypeOf((*core.MinServerRoleAdmin)(nil)).Elem(), nil): core.FullTypeDescription{
+			map[string]core.TypeDescription{
+				mustGetTypeID(reflect.TypeOf((*core.MinServerRoleAdmin)(nil)).Elem(), nil): core.TypeDescription{
 					Category:  core.AliasType,
 					AliasType: "bool",
 				},
@@ -225,32 +225,32 @@ func TestDescribeType(test *testing.T) {
 		// Simple maps and arrays.
 		{
 			reflect.TypeOf((*map[string]string)(nil)).Elem(),
-			core.FullTypeDescription{
+			core.TypeDescription{
 				Category:  core.MapType,
 				KeyType:   "string",
 				ValueType: "string",
 			},
-			map[string]core.FullTypeDescription{},
+			map[string]core.TypeDescription{},
 		},
 		{
 			reflect.TypeOf((*[]string)(nil)).Elem(),
-			core.FullTypeDescription{
+			core.TypeDescription{
 				Category:    core.ArrayType,
 				ElementType: "string",
 			},
-			map[string]core.FullTypeDescription{},
+			map[string]core.TypeDescription{},
 		},
 
 		// Wrapped maps and arrays.
 		{
 			reflect.TypeOf((*simpleMapWrapper)(nil)).Elem(),
-			core.FullTypeDescription{
+			core.TypeDescription{
 				Category:  core.MapType,
 				KeyType:   "string",
 				ValueType: "int",
 			},
-			map[string]core.FullTypeDescription{
-				mustGetTypeID(reflect.TypeOf((*simpleMapWrapper)(nil)).Elem(), nil): core.FullTypeDescription{
+			map[string]core.TypeDescription{
+				mustGetTypeID(reflect.TypeOf((*simpleMapWrapper)(nil)).Elem(), nil): core.TypeDescription{
 					Category:  core.MapType,
 					KeyType:   "string",
 					ValueType: "int",
@@ -259,12 +259,12 @@ func TestDescribeType(test *testing.T) {
 		},
 		{
 			reflect.TypeOf((*simpleArrayWrapper)(nil)).Elem(),
-			core.FullTypeDescription{
+			core.TypeDescription{
 				Category:    core.ArrayType,
 				ElementType: "bool",
 			},
-			map[string]core.FullTypeDescription{
-				mustGetTypeID(reflect.TypeOf((*simpleArrayWrapper)(nil)).Elem(), nil): core.FullTypeDescription{
+			map[string]core.TypeDescription{
+				mustGetTypeID(reflect.TypeOf((*simpleArrayWrapper)(nil)).Elem(), nil): core.TypeDescription{
 					Category:    core.ArrayType,
 					ElementType: "bool",
 				},
@@ -274,27 +274,27 @@ func TestDescribeType(test *testing.T) {
 		// Fields without JSON tags are ignored.
 		{
 			reflect.TypeOf((*simpleStruct)(nil)).Elem(),
-			core.FullTypeDescription{
+			core.TypeDescription{
 				Category: core.StructType,
-				Fields:   []core.TypeDescription{},
+				Fields:   []core.FieldDescription{},
 			},
-			map[string]core.FullTypeDescription{
-				mustGetTypeID(reflect.TypeOf((*simpleStruct)(nil)).Elem(), nil): core.FullTypeDescription{
+			map[string]core.TypeDescription{
+				mustGetTypeID(reflect.TypeOf((*simpleStruct)(nil)).Elem(), nil): core.TypeDescription{
 					Category: core.StructType,
-					Fields:   []core.TypeDescription{},
+					Fields:   []core.FieldDescription{},
 				},
 			},
 		},
 		{
 			reflect.TypeOf((*wrappedStruct)(nil)).Elem(),
-			core.FullTypeDescription{
+			core.TypeDescription{
 				Category: core.StructType,
-				Fields:   []core.TypeDescription{},
+				Fields:   []core.FieldDescription{},
 			},
-			map[string]core.FullTypeDescription{
-				mustGetTypeID(reflect.TypeOf((*wrappedStruct)(nil)).Elem(), nil): core.FullTypeDescription{
+			map[string]core.TypeDescription{
+				mustGetTypeID(reflect.TypeOf((*wrappedStruct)(nil)).Elem(), nil): core.TypeDescription{
 					Category: core.StructType,
-					Fields:   []core.TypeDescription{},
+					Fields:   []core.FieldDescription{},
 				},
 			},
 		},
@@ -302,19 +302,19 @@ func TestDescribeType(test *testing.T) {
 		// Simple JSON tags.
 		{
 			reflect.TypeOf((*simpleJSONStruct)(nil)).Elem(),
-			core.FullTypeDescription{
+			core.TypeDescription{
 				Category: core.StructType,
-				Fields: []core.TypeDescription{
-					core.TypeDescription{"email", "string"},
-					core.TypeDescription{"job-code", "int"},
+				Fields: []core.FieldDescription{
+					core.FieldDescription{"email", "string"},
+					core.FieldDescription{"job-code", "int"},
 				},
 			},
-			map[string]core.FullTypeDescription{
-				mustGetTypeID(reflect.TypeOf((*simpleJSONStruct)(nil)).Elem(), nil): core.FullTypeDescription{
+			map[string]core.TypeDescription{
+				mustGetTypeID(reflect.TypeOf((*simpleJSONStruct)(nil)).Elem(), nil): core.TypeDescription{
 					Category: core.StructType,
-					Fields: []core.TypeDescription{
-						core.TypeDescription{"email", "string"},
-						core.TypeDescription{"job-code", "int"},
+					Fields: []core.FieldDescription{
+						core.FieldDescription{"email", "string"},
+						core.FieldDescription{"job-code", "int"},
 					},
 				},
 			},
@@ -323,19 +323,19 @@ func TestDescribeType(test *testing.T) {
 		// Hidden JSON tags (-).
 		{
 			reflect.TypeOf((*secureJSONStruct)(nil)).Elem(),
-			core.FullTypeDescription{
+			core.TypeDescription{
 				Category: core.StructType,
-				Fields: []core.TypeDescription{
-					core.TypeDescription{"first-name", "string"},
-					core.TypeDescription{"last-name", "string"},
+				Fields: []core.FieldDescription{
+					core.FieldDescription{"first-name", "string"},
+					core.FieldDescription{"last-name", "string"},
 				},
 			},
-			map[string]core.FullTypeDescription{
-				mustGetTypeID(reflect.TypeOf((*secureJSONStruct)(nil)).Elem(), nil): core.FullTypeDescription{
+			map[string]core.TypeDescription{
+				mustGetTypeID(reflect.TypeOf((*secureJSONStruct)(nil)).Elem(), nil): core.TypeDescription{
 					Category: core.StructType,
-					Fields: []core.TypeDescription{
-						core.TypeDescription{"first-name", "string"},
-						core.TypeDescription{"last-name", "string"},
+					Fields: []core.FieldDescription{
+						core.FieldDescription{"first-name", "string"},
+						core.FieldDescription{"last-name", "string"},
 					},
 				},
 			},
@@ -344,37 +344,37 @@ func TestDescribeType(test *testing.T) {
 		// Embedded fields.
 		{
 			reflect.TypeOf((*embeddedJSONStruct)(nil)).Elem(),
-			core.FullTypeDescription{
+			core.TypeDescription{
 				Category: core.StructType,
-				Fields: []core.TypeDescription{
-					core.TypeDescription{"email", "string"},
-					core.TypeDescription{"first-name", "string"},
-					core.TypeDescription{"job-code", "int"},
-					core.TypeDescription{"last-name", "string"},
+				Fields: []core.FieldDescription{
+					core.FieldDescription{"email", "string"},
+					core.FieldDescription{"first-name", "string"},
+					core.FieldDescription{"job-code", "int"},
+					core.FieldDescription{"last-name", "string"},
 				},
 			},
-			map[string]core.FullTypeDescription{
-				mustGetTypeID(reflect.TypeOf((*embeddedJSONStruct)(nil)).Elem(), nil): core.FullTypeDescription{
+			map[string]core.TypeDescription{
+				mustGetTypeID(reflect.TypeOf((*embeddedJSONStruct)(nil)).Elem(), nil): core.TypeDescription{
 					Category: core.StructType,
-					Fields: []core.TypeDescription{
-						core.TypeDescription{"email", "string"},
-						core.TypeDescription{"first-name", "string"},
-						core.TypeDescription{"job-code", "int"},
-						core.TypeDescription{"last-name", "string"},
+					Fields: []core.FieldDescription{
+						core.FieldDescription{"email", "string"},
+						core.FieldDescription{"first-name", "string"},
+						core.FieldDescription{"job-code", "int"},
+						core.FieldDescription{"last-name", "string"},
 					},
 				},
-				mustGetTypeID(reflect.TypeOf((*simpleJSONStruct)(nil)).Elem(), nil): core.FullTypeDescription{
+				mustGetTypeID(reflect.TypeOf((*simpleJSONStruct)(nil)).Elem(), nil): core.TypeDescription{
 					Category: core.StructType,
-					Fields: []core.TypeDescription{
-						core.TypeDescription{"email", "string"},
-						core.TypeDescription{"job-code", "int"},
+					Fields: []core.FieldDescription{
+						core.FieldDescription{"email", "string"},
+						core.FieldDescription{"job-code", "int"},
 					},
 				},
-				mustGetTypeID(reflect.TypeOf((*secureJSONStruct)(nil)).Elem(), nil): core.FullTypeDescription{
+				mustGetTypeID(reflect.TypeOf((*secureJSONStruct)(nil)).Elem(), nil): core.TypeDescription{
 					Category: core.StructType,
-					Fields: []core.TypeDescription{
-						core.TypeDescription{"first-name", "string"},
-						core.TypeDescription{"last-name", "string"},
+					Fields: []core.FieldDescription{
+						core.FieldDescription{"first-name", "string"},
+						core.FieldDescription{"last-name", "string"},
 					},
 				},
 			},
@@ -383,51 +383,51 @@ func TestDescribeType(test *testing.T) {
 		// Complex fields.
 		{
 			reflect.TypeOf((*complexJSONStruct)(nil)).Elem(),
-			core.FullTypeDescription{
+			core.TypeDescription{
 				Category: core.StructType,
-				Fields: []core.TypeDescription{
-					core.TypeDescription{"coin-value", "api.simpleMapWrapper"},
-					core.TypeDescription{"good-index", "api.simpleArrayWrapper"},
-					core.TypeDescription{"personnel", "api.embeddedJSONStruct"},
+				Fields: []core.FieldDescription{
+					core.FieldDescription{"coin-value", "api.simpleMapWrapper"},
+					core.FieldDescription{"good-index", "api.simpleArrayWrapper"},
+					core.FieldDescription{"personnel", "api.embeddedJSONStruct"},
 				},
 			},
-			map[string]core.FullTypeDescription{
-				mustGetTypeID(reflect.TypeOf((*complexJSONStruct)(nil)).Elem(), nil): core.FullTypeDescription{
+			map[string]core.TypeDescription{
+				mustGetTypeID(reflect.TypeOf((*complexJSONStruct)(nil)).Elem(), nil): core.TypeDescription{
 					Category: core.StructType,
-					Fields: []core.TypeDescription{
-						core.TypeDescription{"coin-value", "api.simpleMapWrapper"},
-						core.TypeDescription{"good-index", "api.simpleArrayWrapper"},
-						core.TypeDescription{"personnel", "api.embeddedJSONStruct"},
+					Fields: []core.FieldDescription{
+						core.FieldDescription{"coin-value", "api.simpleMapWrapper"},
+						core.FieldDescription{"good-index", "api.simpleArrayWrapper"},
+						core.FieldDescription{"personnel", "api.embeddedJSONStruct"},
 					},
 				},
-				mustGetTypeID(reflect.TypeOf((*embeddedJSONStruct)(nil)).Elem(), nil): core.FullTypeDescription{
+				mustGetTypeID(reflect.TypeOf((*embeddedJSONStruct)(nil)).Elem(), nil): core.TypeDescription{
 					Category: core.StructType,
-					Fields: []core.TypeDescription{
-						core.TypeDescription{"email", "string"},
-						core.TypeDescription{"first-name", "string"},
-						core.TypeDescription{"job-code", "int"},
-						core.TypeDescription{"last-name", "string"},
+					Fields: []core.FieldDescription{
+						core.FieldDescription{"email", "string"},
+						core.FieldDescription{"first-name", "string"},
+						core.FieldDescription{"job-code", "int"},
+						core.FieldDescription{"last-name", "string"},
 					},
 				},
-				mustGetTypeID(reflect.TypeOf((*secureJSONStruct)(nil)).Elem(), nil): core.FullTypeDescription{
+				mustGetTypeID(reflect.TypeOf((*secureJSONStruct)(nil)).Elem(), nil): core.TypeDescription{
 					Category: core.StructType,
-					Fields: []core.TypeDescription{
-						core.TypeDescription{"first-name", "string"},
-						core.TypeDescription{"last-name", "string"},
+					Fields: []core.FieldDescription{
+						core.FieldDescription{"first-name", "string"},
+						core.FieldDescription{"last-name", "string"},
 					},
 				},
-				mustGetTypeID(reflect.TypeOf((*simpleArrayWrapper)(nil)).Elem(), nil): core.FullTypeDescription{
+				mustGetTypeID(reflect.TypeOf((*simpleArrayWrapper)(nil)).Elem(), nil): core.TypeDescription{
 					Category:    core.ArrayType,
 					ElementType: "bool",
 				},
-				mustGetTypeID(reflect.TypeOf((*simpleJSONStruct)(nil)).Elem(), nil): core.FullTypeDescription{
+				mustGetTypeID(reflect.TypeOf((*simpleJSONStruct)(nil)).Elem(), nil): core.TypeDescription{
 					Category: core.StructType,
-					Fields: []core.TypeDescription{
-						core.TypeDescription{"email", "string"},
-						core.TypeDescription{"job-code", "int"},
+					Fields: []core.FieldDescription{
+						core.FieldDescription{"email", "string"},
+						core.FieldDescription{"job-code", "int"},
 					},
 				},
-				mustGetTypeID(reflect.TypeOf((*simpleMapWrapper)(nil)).Elem(), nil): core.FullTypeDescription{
+				mustGetTypeID(reflect.TypeOf((*simpleMapWrapper)(nil)).Elem(), nil): core.TypeDescription{
 					Category:  core.MapType,
 					KeyType:   "string",
 					ValueType: "int",
@@ -438,80 +438,80 @@ func TestDescribeType(test *testing.T) {
 		// Pointers to various types.
 		{
 			reflect.TypeOf((**string)(nil)).Elem(),
-			core.FullTypeDescription{
+			core.TypeDescription{
 				Category:  core.AliasType,
 				AliasType: "string",
 			},
-			map[string]core.FullTypeDescription{},
+			map[string]core.TypeDescription{},
 		},
 		{
 			reflect.TypeOf((**map[string]string)(nil)).Elem(),
-			core.FullTypeDescription{
+			core.TypeDescription{
 				Category:  core.MapType,
 				KeyType:   "string",
 				ValueType: "string",
 			},
-			map[string]core.FullTypeDescription{},
+			map[string]core.TypeDescription{},
 		},
 
 		// Pointers inside of fields.
 		{
 			reflect.TypeOf((*simplePointerWrapper)(nil)).Elem(),
-			core.FullTypeDescription{
+			core.TypeDescription{
 				Category:  core.AliasType,
 				AliasType: "string",
 			},
-			map[string]core.FullTypeDescription{},
+			map[string]core.TypeDescription{},
 		},
 		{
 			reflect.TypeOf((*complexPointerStruct)(nil)).Elem(),
-			core.FullTypeDescription{
+			core.TypeDescription{
 				Category: core.StructType,
-				Fields: []core.TypeDescription{
-					core.TypeDescription{"coin-value", "*api.simpleMapWrapper"},
-					core.TypeDescription{"good-index", "*api.simpleArrayWrapper"},
-					core.TypeDescription{"personnel", "*api.embeddedJSONStruct"},
+				Fields: []core.FieldDescription{
+					core.FieldDescription{"coin-value", "*api.simpleMapWrapper"},
+					core.FieldDescription{"good-index", "*api.simpleArrayWrapper"},
+					core.FieldDescription{"personnel", "*api.embeddedJSONStruct"},
 				},
 			},
-			map[string]core.FullTypeDescription{
-				mustGetTypeID(reflect.TypeOf((*complexPointerStruct)(nil)).Elem(), nil): core.FullTypeDescription{
+			map[string]core.TypeDescription{
+				mustGetTypeID(reflect.TypeOf((*complexPointerStruct)(nil)).Elem(), nil): core.TypeDescription{
 					Category: core.StructType,
-					Fields: []core.TypeDescription{
-						core.TypeDescription{"coin-value", "*api.simpleMapWrapper"},
-						core.TypeDescription{"good-index", "*api.simpleArrayWrapper"},
-						core.TypeDescription{"personnel", "*api.embeddedJSONStruct"},
+					Fields: []core.FieldDescription{
+						core.FieldDescription{"coin-value", "*api.simpleMapWrapper"},
+						core.FieldDescription{"good-index", "*api.simpleArrayWrapper"},
+						core.FieldDescription{"personnel", "*api.embeddedJSONStruct"},
 					},
 				},
 				// Note that the keys in typeMap do not include the pointer.
 				// TypeMap stores 'api/api.embeddedJSONStruct' instead of 'api/*api.embeddedJSONStruct'.
-				mustGetTypeID(reflect.TypeOf((*embeddedJSONStruct)(nil)).Elem(), nil): core.FullTypeDescription{
+				mustGetTypeID(reflect.TypeOf((*embeddedJSONStruct)(nil)).Elem(), nil): core.TypeDescription{
 					Category: core.StructType,
-					Fields: []core.TypeDescription{
-						core.TypeDescription{"email", "string"},
-						core.TypeDescription{"first-name", "string"},
-						core.TypeDescription{"job-code", "int"},
-						core.TypeDescription{"last-name", "string"},
+					Fields: []core.FieldDescription{
+						core.FieldDescription{"email", "string"},
+						core.FieldDescription{"first-name", "string"},
+						core.FieldDescription{"job-code", "int"},
+						core.FieldDescription{"last-name", "string"},
 					},
 				},
-				mustGetTypeID(reflect.TypeOf((*secureJSONStruct)(nil)).Elem(), nil): core.FullTypeDescription{
+				mustGetTypeID(reflect.TypeOf((*secureJSONStruct)(nil)).Elem(), nil): core.TypeDescription{
 					Category: core.StructType,
-					Fields: []core.TypeDescription{
-						core.TypeDescription{"first-name", "string"},
-						core.TypeDescription{"last-name", "string"},
+					Fields: []core.FieldDescription{
+						core.FieldDescription{"first-name", "string"},
+						core.FieldDescription{"last-name", "string"},
 					},
 				},
-				mustGetTypeID(reflect.TypeOf((*simpleArrayWrapper)(nil)).Elem(), nil): core.FullTypeDescription{
+				mustGetTypeID(reflect.TypeOf((*simpleArrayWrapper)(nil)).Elem(), nil): core.TypeDescription{
 					Category:    core.ArrayType,
 					ElementType: "bool",
 				},
-				mustGetTypeID(reflect.TypeOf((*simpleJSONStruct)(nil)).Elem(), nil): core.FullTypeDescription{
+				mustGetTypeID(reflect.TypeOf((*simpleJSONStruct)(nil)).Elem(), nil): core.TypeDescription{
 					Category: core.StructType,
-					Fields: []core.TypeDescription{
-						core.TypeDescription{"email", "string"},
-						core.TypeDescription{"job-code", "int"},
+					Fields: []core.FieldDescription{
+						core.FieldDescription{"email", "string"},
+						core.FieldDescription{"job-code", "int"},
 					},
 				},
-				mustGetTypeID(reflect.TypeOf((*simpleMapWrapper)(nil)).Elem(), nil): core.FullTypeDescription{
+				mustGetTypeID(reflect.TypeOf((*simpleMapWrapper)(nil)).Elem(), nil): core.TypeDescription{
 					Category:  core.MapType,
 					KeyType:   "string",
 					ValueType: "int",
@@ -521,7 +521,7 @@ func TestDescribeType(test *testing.T) {
 	}
 
 	for i, testCase := range testCases {
-		typeMap := make(map[string]core.FullTypeDescription)
+		typeMap := make(map[string]core.TypeDescription)
 
 		actual, _, _, _, err := describeType(testCase.customType, true, typeMap, nil)
 		if err != nil {
@@ -543,7 +543,7 @@ func TestDescribeType(test *testing.T) {
 }
 
 func TestDescribeConflictingTypes(test *testing.T) {
-	typeMap := make(map[string]core.FullTypeDescription)
+	typeMap := make(map[string]core.TypeDescription)
 	typeDescriptions := make(map[string]string)
 
 	// Add in the first users.ListRequest which will work.
