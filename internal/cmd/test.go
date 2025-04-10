@@ -34,6 +34,10 @@ type CommonCMDTestCase struct {
 
 // Common setup for all CMD tests that require a server.
 func CMDServerTestingMain(suite *testing.M) {
+	oldValue := config.UPDATE_API_DESCRIPTIONS.Get()
+	config.UPDATE_API_DESCRIPTIONS.Set(false)
+	defer config.UPDATE_API_DESCRIPTIONS.Set(oldValue)
+
 	err := server.CleanupAndStop()
 	if err != nil {
 		log.Fatal("Failed to cleanup and stop server before running the CMD test server.", err)

@@ -305,5 +305,12 @@ func getDirPathFromCustomPackagePath(packagePath string) string {
 		packagePath = strings.TrimPrefix(packagePath, "github.com/edulinq/autograder/")
 	}
 
-	return ShouldAbs(filepath.Join(ShouldGetThisDir(), "..", "..", packagePath))
+	parts := strings.Split(packagePath, "/")
+
+	path := ShouldAbs(filepath.Join(ShouldGetThisDir(), "..", ".."))
+	for _, part := range parts {
+		path = filepath.Join(path, part)
+	}
+
+	return path
 }

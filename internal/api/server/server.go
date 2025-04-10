@@ -9,6 +9,7 @@ import (
 
 	"github.com/edulinq/autograder/internal/api"
 	"github.com/edulinq/autograder/internal/api/core"
+	"github.com/edulinq/autograder/internal/config"
 	"github.com/edulinq/autograder/internal/systemserver"
 	"github.com/edulinq/autograder/internal/util"
 )
@@ -32,9 +33,22 @@ func (this *APIServer) RunAndBlock(initiator systemserver.ServerInitiator) (err 
 		return err
 	}
 
-	apiDescription, err := api.Describe(*api.GetRoutes())
-	if err != nil {
-		return err
+	apiDescription := &core.APIDescription{}
+	if !config.UPDATE_API_DESCRIPTIONS.Get() && config.UNIT_TESTING_MODE.Get() {
+		apiFilepath, err := util.GetAPIDescriptionFilepath()
+		if err != nil {
+			return err
+		}
+
+		err = util.JSONFromFile(apiFilepath, apiDescription)
+		if err != nil {
+			return err
+		}
+	} else {
+		apiDescription, err = api.Describe(*api.GetRoutes())
+		if err != nil {
+			return err
+		}
 	}
 
 	core.SetAPIDescription(*apiDescription)
