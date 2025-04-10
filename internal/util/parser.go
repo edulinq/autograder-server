@@ -44,3 +44,69 @@ func GetDescriptionFromFunction(path string, functionNamePattern *regexp.Regexp)
 
 	return "", fmt.Errorf("Unable to find a description using the pattern '%s' for a function located in '%s'.", functionNamePattern.String(), path)
 }
+
+func GetDescriptionFromType(packagePath string, typeName string) (string, error) {
+	dirPath := getDirPathFromPackagePath(packagePath)
+
+	filePaths, err := FindFiles("", dirPath)
+	if err != nil {
+		return "", fmt.Errorf("Unable to find file paths for the package path '%s': '%v'.", packagePath, err)
+	}
+
+	description, err := getDescriptionFromType(filePaths, typeName)
+	if err != nil {
+		return "", fmt.Errorf("Unable to get description for the type '%s' in '%s': '%v'.", typeName, packagePath, err)
+	}
+
+	return description, nil
+}
+
+func getDescriptionFromType(filePaths []string, typeName string) (string, error) {
+	for _, path := range filePaths {
+		if !IsFile(path) {
+			continue
+		}
+
+		if !strings.HasSuffix(path, ".go") {
+			continue
+		}
+
+		fileSet := token.NewFileSet()
+		node, err := parser.ParseFile(fileSet, path, nil, parser.ParseComments)
+		if err != nil {
+			return "", fmt.Errorf("Error while parsing file to get function description: '%v'.", err)
+		}
+
+		for _, decl := range node.Decls {
+			genDecl, ok := decl.(*ast.GenDecl)
+			if !ok {
+				continue
+			}
+
+			if genDecl.Tok != token.TYPE {
+				continue
+			}
+
+			for _, spec := range genDecl.Specs {
+				typeSpec, ok := spec.(*ast.TypeSpec)
+				if !ok {
+					continue
+				}
+
+				if typeSpec.Name == nil {
+					continue
+				}
+
+				if typeSpec.Name.Name == typeName {
+					if genDecl.Doc == nil {
+						return "", nil
+					}
+
+					return strings.TrimSpace(genDecl.Doc.Text()), nil
+				}
+			}
+		}
+	}
+
+	return "", fmt.Errorf("Unable to find a description using the name '%s' for a type located in '%v'.", typeName, filePaths)
+}

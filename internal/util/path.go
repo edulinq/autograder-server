@@ -297,3 +297,11 @@ func ShouldNormalizePath(path string) string {
 
 	return realPath
 }
+
+func getDirPathFromPackagePath(packagePath string) string {
+	if strings.HasPrefix(packagePath, "github.com/edulinq/autograder/") {
+		packagePath = strings.TrimPrefix(packagePath, "github.com/edulinq/autograder/")
+	}
+
+	return ShouldAbs(filepath.Join(ShouldGetThisDir(), "..", "..", packagePath))
+}

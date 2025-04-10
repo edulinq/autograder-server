@@ -194,6 +194,26 @@ func describeType(customType reflect.Type, addType bool, typeMap map[string]core
 		if err != nil {
 			return core.FullTypeDescription{}, "", map[string]core.FullTypeDescription{}, map[string]string{}, err
 		}
+
+		if !addType {
+			break
+		}
+
+		// TODO: Should we log an error or just assume people look at resources/api.json bc of test?
+		if customType.Name() == "" {
+			break
+		}
+
+		if customType.PkgPath() == "" {
+			break
+		}
+
+		description, err := util.GetDescriptionFromType(customType.PkgPath(), customType.Name())
+		if err != nil {
+			return core.FullTypeDescription{}, "", map[string]core.FullTypeDescription{}, map[string]string{}, err
+		}
+
+		typeDescription.Description = description
 	default:
 		// Handle built-in types.
 		typeDescription.Category = core.AliasType

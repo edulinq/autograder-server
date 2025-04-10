@@ -1401,6 +1401,7 @@
         },
         "core.APIRequestAssignmentContext": {
             "category": "struct",
+            "description": "Context for requests that need an assignment on top of a user/course.",
             "fields": [
                 {
                     "field-name": "assignment-id",
@@ -1422,6 +1423,7 @@
         },
         "core.APIRequestCourseUserContext": {
             "category": "struct",
+            "description": "Context for a request that has a course and user from that course.",
             "fields": [
                 {
                     "field-name": "course-id",
@@ -1439,6 +1441,7 @@
         },
         "core.APIRequestUserContext": {
             "category": "struct",
+            "description": "Context for a request that has a user (pretty much the lowest level of request).",
             "fields": [
                 {
                     "field-name": "user-email",
@@ -1494,6 +1497,7 @@
         },
         "core.BaseUserInfo": {
             "category": "struct",
+            "description": "This type must be embedded into any API-safe representation of a user.",
             "fields": [
                 {
                     "field-name": "email",
@@ -1528,6 +1532,7 @@
         },
         "core.CourseUserInfo": {
             "category": "struct",
+            "description": "An API-safe representation of a course user.\nEmbed the BaseUserInfo and use CourseUserInfoType as the type.",
             "fields": [
                 {
                     "field-name": "email",
@@ -1570,6 +1575,7 @@
         },
         "core.EnrollmentInfo": {
             "category": "struct",
+            "description": "An API-safe representation of enrollment information.",
             "fields": [
                 {
                     "field-name": "id",
@@ -1593,6 +1599,10 @@
                     "field-type": "string"
                 },
                 {
+                    "field-name": "description",
+                    "field-type": "string"
+                },
+                {
                     "field-name": "element-type",
                     "field-type": "string"
                 },
@@ -1608,6 +1618,7 @@
         },
         "core.ServerUserInfo": {
             "category": "struct",
+            "description": "An API-safe representation of a server user.\nEmbed the BaseUserInfo and use ServerUserInfoType as the type.",
             "fields": [
                 {
                     "field-name": "courses",
@@ -1632,10 +1643,12 @@
             ]
         },
         "core.TargetCourseUser": {
-            "category": "struct"
+            "category": "struct",
+            "description": "A request having a field of this type indicates that the request is targeting a specific course user.\nThis type serializes to/from a string.\nA user's email must be specified, but no error is generated if the user is not found.\nThe existence of this type in a struct also indicates that the request is at least a APIRequestCourseUserContext."
         },
         "core.TargetCourseUserSelfOrGrader": {
             "category": "struct",
+            "description": "Same as TargetServerUserSelfOrAdmin, but in the context of a course user and a grader context user.\nTherefore, the context user only has to be a grader in the context course (or the target user themself).\nWhen targeting yourself, the user can be a server admin (and will be escalated to course owner for the request).\nThe existence of this type in a struct also indicates that the request is at least a APIRequestCourseUserContext.",
             "fields": [
                 {
                     "field-name": "TargetCourseUser",
@@ -1644,10 +1657,12 @@
             ]
         },
         "core.TargetServerUser": {
-            "category": "struct"
+            "category": "struct",
+            "description": "A request having a field of this type indicates that the request is targeting a specific server user.\nThis type serializes to/from a string.\nA user's email must be specified, but no error is generated if the user is not found.\nThe existence of this type in a struct also indicates that the request is at least a APIRequestUserContext."
         },
         "core.TargetServerUserSelfOrAdmin": {
             "category": "struct",
+            "description": "A request having a field of this type indicates that the request is targeting a specific user.\nThis type serializes to/from a string.\nIf no user is specified, then the context user is the target.\nIf a user is specified, then the context user must be a server admin\n(any user can access their own resources, but higher permissions are required to access another user's resources).\nNo error is generated if the user is not found.\nThe existence of this type in a struct also indicates that the request is at least a APIRequestUserContext.",
             "fields": [
                 {
                     "field-name": "TargetServerUser",
@@ -1802,6 +1817,7 @@
         },
         "log.RawLogQuery": {
             "category": "struct",
+            "description": "A representation of a query for server log records.\nA raw query can be processed (validated for structure and permissions)\nby the internal/procedures/log package.\nBecause of some assumptions we make, log times before UNIX epoch are not supported.\nHowever, since this code was created well past that only time travelers should be concerned.",
             "fields": [
                 {
                     "field-name": "after",
@@ -1977,6 +1993,7 @@
         },
         "model.BaseUserOpResult": {
             "category": "struct",
+            "description": "A general representation of the result of operations that modify a user in any way (add, remove, enroll, drop, etc).",
             "fields": [
                 {
                     "field-name": "added",
@@ -2022,6 +2039,7 @@
         },
         "model.ExternalLocatableError": {
             "category": "struct",
+            "description": "A user safe version of locatable errors.\nAll LocatableErrors must be converted to ExternalLocatableErrors\nif it is to be given to a user.",
             "fields": [
                 {
                     "field-name": "locator",
@@ -2035,6 +2053,7 @@
         },
         "model.ExternalScoringInfo": {
             "category": "struct",
+            "description": "A trimmed-down version of ScoringInfo meant for external usage.",
             "fields": [
                 {
                     "field-name": "assignment",
@@ -2068,6 +2087,7 @@
         },
         "model.ExternalUserOpResult": {
             "category": "struct",
+            "description": "A user safe representation of the UserOpResult struct.\nNotably all errors will be converted to responses and the cleartext password field is removed.\nFor descriptions of shared fields, see UserOpResult above.",
             "fields": [
                 {
                     "field-name": "added",
@@ -2443,7 +2463,8 @@
             ]
         },
         "model.LocatableError": {
-            "category": "struct"
+            "category": "struct",
+            "description": "A general representation of errors that have a definite source location."
         },
         "model.PairwiseAnalysis": {
             "category": "struct",
@@ -2533,6 +2554,7 @@
         },
         "model.RawCourseUserData": {
             "category": "struct",
+            "description": "Raw/dirty data for a course user.\nThis struct is used for raw data coming from a single course.",
             "fields": [
                 {
                     "field-name": "course-lms-id",
@@ -2554,6 +2576,7 @@
         },
         "model.RawServerUserData": {
             "category": "struct",
+            "description": "Raw/dirty data for a user.\nThis struct can be directly embedded for Kong arguments.",
             "fields": [
                 {
                     "field-name": "course",
@@ -2632,6 +2655,7 @@
         },
         "model.UserOpResult": {
             "category": "struct",
+            "description": "A general representation of the result of operations that modify a user in any way (add, remove, enroll, drop, etc).\nAll user-facing functions (essentially non-db functions) should return an instance or collection of these objects.",
             "fields": [
                 {
                     "field-name": "added",
@@ -2718,6 +2742,7 @@
         },
         "stats.Query": {
             "category": "struct",
+            "description": "The query for stats.\nNote that the semantics of this struct mean that times before UNIX epoch (negative times)\nmust be offset by at least one MS (as a zero value is treated as the end of time).",
             "fields": [
                 {
                     "field-name": "after",
@@ -2777,6 +2802,7 @@
         },
         "users.UpsertUsersOptions": {
             "category": "struct",
+            "description": "Data for upserting users.\nUpserting should only be done by server or course admins,\nit should not be used for self creation.",
             "fields": [
                 {
                     "field-name": "dry-run",

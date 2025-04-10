@@ -35,10 +35,12 @@ type EndpointDescription struct {
 type TypeDescription struct {
 	FieldName string `json:"field-name"`
 	FieldType string `json:"field-type"`
+	// FieldDescription string `json:"field-description"`
 }
 
 type FullTypeDescription struct {
 	Category    string            `json:"category"`
+	Description string            `json:"description,omitempty"`
 	AliasType   string            `json:"alias-type,omitempty"`
 	Fields      []TypeDescription `json:"fields,omitempty"`
 	ElementType string            `json:"element-type,omitempty"`

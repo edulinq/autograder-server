@@ -172,7 +172,7 @@ func runServerTestBase(test *testing.T) {
 	}()
 
 	// Wait for the server to start.
-	time.Sleep(time.Duration(TEST_SHORT_WAIT_MS) * time.Millisecond)
+	time.Sleep(time.Duration(TEST_SHORT_WAIT_MS) * time.Millisecond * 10)
 
 	// Send a request.
 	response := core.SendTestAPIRequest(test, "courses/users/list", nil)
