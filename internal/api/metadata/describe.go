@@ -6,6 +6,8 @@ import (
 
 type DescribeRequest struct {
 	core.APIRequest
+
+	ForceUpdate bool `json:"force-update"`
 }
 
 type DescribeResponse struct {
@@ -14,7 +16,24 @@ type DescribeResponse struct {
 
 // Describe all endpoints on the server.
 func HandleDescribe(request *DescribeRequest) (*DescribeResponse, *core.APIError) {
-	response := DescribeResponse{core.GetAPIDescription()}
+	apiDescription := core.GetAPIDescription()
+
+	var err error
+	if apiDescription == nil || request.ForceUpdate {
+		routes := core.GetAPIRoutes()
+		if len(routes) == 0 {
+			return nil, core.NewInternalError("-501", request, "Unable to describe API endpoints because the cached routes are empty.")
+		}
+
+		apiDescription, err = core.Describe(routes)
+		if err != nil {
+			return nil, core.NewInternalError("-502", request, "Failed to describe API endpoints.").Err(err)
+		}
+	}
+
+	core.SetAPIDescription(apiDescription)
+
+	response := DescribeResponse{*apiDescription}
 
 	return &response, nil
 }

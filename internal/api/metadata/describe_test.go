@@ -10,7 +10,7 @@ import (
 
 func TestMetadataDescribe(test *testing.T) {
 	// Cache a dummy APIDescription for testing.
-	description := core.APIDescription{
+	description := &core.APIDescription{
 		Endpoints: map[string]core.EndpointDescription{
 			"metadata/describe": core.EndpointDescription{},
 		},
@@ -28,7 +28,7 @@ func TestMetadataDescribe(test *testing.T) {
 	var responseContent DescribeResponse
 	util.MustJSONFromString(util.MustToJSON(response.Content), &responseContent)
 
-	expected := DescribeResponse{description}
+	expected := DescribeResponse{*description}
 	if !reflect.DeepEqual(expected, responseContent) {
 		test.Fatalf("Unexpected API description. Expected: '%s', actual: '%s'.",
 			util.MustToJSONIndent(expected), util.MustToJSONIndent(responseContent))
