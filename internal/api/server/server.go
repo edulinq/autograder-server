@@ -33,25 +33,17 @@ func (this *APIServer) RunAndBlock(initiator systemserver.ServerInitiator) (err 
 		return err
 	}
 
-	apiDescription := &core.APIDescription{}
-	if !config.UPDATE_API_DESCRIPTIONS.Get() && config.UNIT_TESTING_MODE.Get() {
-		apiFilepath, err := util.GetAPIDescriptionFilepath()
-		if err != nil {
-			return err
-		}
+	core.SetAPIRoutes(*api.GetRoutes())
 
-		err = util.JSONFromFile(apiFilepath, apiDescription)
-		if err != nil {
-			return err
-		}
-	} else {
-		apiDescription, err = api.Describe(*api.GetRoutes())
+	apiDescription := &core.APIDescription{}
+	if config.UPDATE_API_DESCRIPTIONS.Get() {
+		apiDescription, err = core.Describe(*api.GetRoutes())
 		if err != nil {
 			return err
 		}
 	}
 
-	core.SetAPIDescription(*apiDescription)
+	core.SetAPIDescription(apiDescription)
 
 	defer func() {
 		err = errors.Join(err, util.RemoveDirent(systemserver.GetStatusPath()))
