@@ -1067,7 +1067,12 @@
         },
         "metadata/describe": {
             "description": "Describe all endpoints on the server.",
-            "input": [],
+            "input": [
+                {
+                    "name": "force-update",
+                    "type": "bool"
+                }
+            ],
             "output": [
                 {
                     "name": "endpoints",
