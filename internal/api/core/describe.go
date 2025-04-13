@@ -25,7 +25,9 @@ var skipDescriptionPatterns = []*regexp.Regexp{
 	regexp.MustCompile("^APIRequest$"),
 }
 
-// API Description will be empty until RunServer() is called.
+// API Description will be nil until either of the following occur:
+//   - RunServer() is called with config.UPDATE_API_DESCRIPTIONS set to true
+//   - the metadata/describe API endpoint is called
 var apiDescription *APIDescription = nil
 
 type APIDescription struct {

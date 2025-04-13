@@ -22,16 +22,16 @@ func HandleDescribe(request *DescribeRequest) (*DescribeResponse, *core.APIError
 	if apiDescription == nil || request.ForceUpdate {
 		routes := core.GetAPIRoutes()
 		if len(routes) == 0 {
-			return nil, core.NewInternalError("-501", request, "Unable to describe API endpoints because the cached routes are empty.")
+			return nil, core.NewInternalError("-501", request, "Unable to describe API endpoints when the cached routes are empty.")
 		}
 
 		apiDescription, err = core.Describe(routes)
 		if err != nil {
 			return nil, core.NewInternalError("-502", request, "Failed to describe API endpoints.").Err(err)
 		}
-	}
 
-	core.SetAPIDescription(apiDescription)
+		core.SetAPIDescription(apiDescription)
+	}
 
 	response := DescribeResponse{*apiDescription}
 

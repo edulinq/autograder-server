@@ -12,6 +12,8 @@ import (
 	"github.com/edulinq/autograder/internal/util"
 )
 
+// A test server started in `internal/api/core` will not be able to get all routes from api.GetRoutes() due to an import cycle.
+// So, we test describing all API endpoints in `internal/api`.
 func TestDescribeFull(test *testing.T) {
 	path, err := util.GetAPIDescriptionFilepath()
 	if err != nil {
@@ -86,6 +88,7 @@ func TestDescribeEmpty(test *testing.T) {
 	}
 }
 
+// Test types with conflicting names in `internal/api` to avoid cycles when importing `users.ListRequest` and `courses/users.ListRequest`.
 func TestDescribeConflictingTypes(test *testing.T) {
 	typeMap := make(map[string]core.TypeDescription)
 	typeDescriptions := make(map[string]string)
