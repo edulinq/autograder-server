@@ -6,6 +6,7 @@ import (
 
 	"github.com/edulinq/autograder/internal/api/core"
 	"github.com/edulinq/autograder/internal/db"
+	"github.com/edulinq/autograder/internal/log"
 	"github.com/edulinq/autograder/internal/util"
 )
 
@@ -21,14 +22,14 @@ func TestMetadataDescribe(test *testing.T) {
 
 	testCases := []struct {
 		ForceUpdate bool
-		Routes      []core.Route
+		Routes      *[]core.Route
 		Description *core.APIDescription
 		Locator     string
 	}{
 		// Use cached description.
 		{
 			false,
-			[]core.Route{},
+			nil,
 			description,
 			"",
 		},
@@ -36,7 +37,7 @@ func TestMetadataDescribe(test *testing.T) {
 		// Force update to describe one route.
 		{
 			true,
-			[]core.Route{core.MustNewAPIRoute(`metadata/describe`, HandleDescribe)},
+			&[]core.Route{core.MustNewAPIRoute(`metadata/describe`, HandleDescribe)},
 			&core.APIDescription{
 				Endpoints: map[string]core.EndpointDescription{
 					"metadata/describe": core.EndpointDescription{
@@ -136,7 +137,13 @@ func TestMetadataDescribe(test *testing.T) {
 		// Force update without any routes cached in `internal/api/core`.
 		{
 			true,
-			[]core.Route{},
+			nil,
+			&core.APIDescription{},
+			"-501",
+		},
+		{
+			true,
+			&[]core.Route{},
 			&core.APIDescription{},
 			"-501",
 		},
@@ -145,9 +152,9 @@ func TestMetadataDescribe(test *testing.T) {
 	for i, testCase := range testCases {
 		db.ResetForTesting()
 
-		oldDescription := core.GetAPIDescription()
-		core.SetAPIDescription(description)
-		defer core.SetAPIDescription(oldDescription)
+		oldDescription := mustGetAPIDescription()
+		mustSetAPIDescription(description)
+		defer mustSetAPIDescription(oldDescription)
 
 		oldRoutes := core.GetAPIRoutes()
 		core.SetAPIRoutes(testCase.Routes)
@@ -179,4 +186,20 @@ func TestMetadataDescribe(test *testing.T) {
 				util.MustToJSONIndent(expected), util.MustToJSONIndent(responseContent))
 		}
 	}
+}
+
+func mustSetAPIDescription(apiDescription *core.APIDescription) {
+	err := core.SetAPIDescription(apiDescription)
+	if err != nil {
+		log.Fatal("Unable to cache API descriptions.", err)
+	}
+}
+
+func mustGetAPIDescription() *core.APIDescription {
+	apiDescription, err := core.GetAPIDescription()
+	if err != nil {
+		log.Fatal("Unable to get cached API description.", err)
+	}
+
+	return apiDescription
 }

@@ -9,8 +9,6 @@ import (
 	"strings"
 )
 
-var knownPackagePaths = map[string]map[string]string{}
-
 // This function takes a file path and a pattern that matches the name of the target function.
 // Returns the comment attached to the first occurrence of the target function.
 // Errors occur when the target function cannot be found.
@@ -50,11 +48,6 @@ func GetDescriptionFromFunction(path string, functionNamePattern *regexp.Regexp)
 // This function takes a non-empty package path and returns a map of custom type names to their description.
 // The types of package paths accepted can be seen in getDirPathFromCustomPackagePath().
 func GetAllTypeDescriptionsFromPackage(packagePath string) (map[string]string, error) {
-	descriptions, ok := knownPackagePaths[packagePath]
-	if ok {
-		return descriptions, nil
-	}
-
 	dirPath := getDirPathFromCustomPackagePath(packagePath)
 
 	filePaths, err := FindFiles("", dirPath)
@@ -62,12 +55,10 @@ func GetAllTypeDescriptionsFromPackage(packagePath string) (map[string]string, e
 		return map[string]string{}, fmt.Errorf("Unable to find file paths for the package path '%s': '%v'.", packagePath, err)
 	}
 
-	descriptions, err = getDescriptionFromType(filePaths)
+	descriptions, err := getDescriptionFromType(filePaths)
 	if err != nil {
 		return map[string]string{}, fmt.Errorf("Unable to get descriptions for the package path '%s': '%v'.", packagePath, err)
 	}
-
-	knownPackagePaths[packagePath] = descriptions
 
 	return descriptions, nil
 }

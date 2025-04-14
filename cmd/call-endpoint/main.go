@@ -45,7 +45,7 @@ func main() {
 		return
 	}
 
-	apiDescription, err := core.Describe(*api.GetRoutes())
+	apiDescription, err := core.DescribeRoutes(*api.GetRoutes())
 	if err != nil {
 		log.Fatal("Failed to describe API endpoints.", err)
 	}
@@ -84,7 +84,7 @@ func main() {
 }
 
 func listAPIEndpoints() {
-	apiDescription, err := core.Describe(*api.GetRoutes())
+	apiDescription, err := core.DescribeRoutes(*api.GetRoutes())
 	if err != nil {
 		log.Fatal("Failed to describe API endpoints: '%w'.", err)
 	}

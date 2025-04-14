@@ -135,9 +135,9 @@ func GetResourcesDir() string {
 	return ShouldAbs(filepath.Join(ShouldGetThisDir(), "..", "..", RESOURCES_DIRNAME))
 }
 
-func GetAPIDescriptionFilepath() (string, error) {
+func GetAPIDescriptionFilepath(mustExist bool) (string, error) {
 	apiPath := ShouldAbs(filepath.Join(GetResourcesDir(), API_DESCRIPTION_FILENAME))
-	if !IsFile(apiPath) {
+	if mustExist && !IsFile(apiPath) {
 		return apiPath, fmt.Errorf("API description path '%s' does not exist.", apiPath)
 	}
 

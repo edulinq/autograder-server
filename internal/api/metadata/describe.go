@@ -2,6 +2,7 @@ package metadata
 
 import (
 	"github.com/edulinq/autograder/internal/api/core"
+	"github.com/edulinq/autograder/internal/log"
 )
 
 type DescribeRequest struct {
@@ -16,21 +17,26 @@ type DescribeResponse struct {
 
 // Describe all endpoints on the server.
 func HandleDescribe(request *DescribeRequest) (*DescribeResponse, *core.APIError) {
-	apiDescription := core.GetAPIDescription()
+	apiDescription, err := core.GetAPIDescription()
+	if err != nil {
+		log.Warn("Unable to get cached API description.", err)
+	}
 
-	var err error
-	if apiDescription == nil || request.ForceUpdate {
+	if err != nil || apiDescription == nil || request.ForceUpdate {
 		routes := core.GetAPIRoutes()
-		if len(routes) == 0 {
+		if routes == nil || len(*routes) == 0 {
 			return nil, core.NewInternalError("-501", request, "Unable to describe API endpoints when the cached routes are empty.")
 		}
 
-		apiDescription, err = core.Describe(routes)
+		apiDescription, err = core.DescribeRoutes(*routes)
 		if err != nil {
 			return nil, core.NewInternalError("-502", request, "Failed to describe API endpoints.").Err(err)
 		}
 
-		core.SetAPIDescription(apiDescription)
+		err = core.SetAPIDescription(apiDescription)
+		if err != nil {
+			log.Warn("Unable to cache API description.", err)
+		}
 	}
 
 	response := DescribeResponse{*apiDescription}

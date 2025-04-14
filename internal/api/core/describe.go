@@ -25,11 +25,6 @@ var skipDescriptionPatterns = []*regexp.Regexp{
 	regexp.MustCompile("^APIRequest$"),
 }
 
-// API Description will be nil until either of the following occur:
-//   - RunServer() is called with config.UPDATE_API_DESCRIPTIONS set to true
-//   - the metadata/describe API endpoint is called
-var apiDescription *APIDescription = nil
-
 type APIDescription struct {
 	Endpoints map[string]EndpointDescription `json:"endpoints"`
 	Types     map[string]TypeDescription     `json:"types"`
@@ -58,12 +53,41 @@ type TypeDescription struct {
 	ValueType   string             `json:"-"`
 }
 
-func SetAPIDescription(description *APIDescription) {
-	apiDescription = description
+type StructDescription map[string]string
+
+type TypeInfoCache struct {
+	TypeMap         map[string]TypeDescription
+	TypeConversions map[string]string
+	KnownPackages   map[string]StructDescription
 }
 
-func GetAPIDescription() *APIDescription {
-	return apiDescription
+func SetAPIDescription(apiDescription *APIDescription) error {
+	apiDescriptionPath, err := util.GetAPIDescriptionFilepath(false)
+	if err != nil {
+		return err
+	}
+
+	err = util.ToJSONFileIndent(apiDescription, apiDescriptionPath)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func GetAPIDescription() (*APIDescription, error) {
+	apiDescriptionPath, err := util.GetAPIDescriptionFilepath(true)
+	if err != nil {
+		return nil, err
+	}
+
+	var apiDescription APIDescription
+	err = util.JSONFromFile(apiDescriptionPath, &apiDescription)
+	if err != nil {
+		return nil, err
+	}
+
+	return &apiDescription, nil
 }
 
 func CompareFieldDescription(a FieldDescription, b FieldDescription) int {
@@ -85,10 +109,12 @@ func GetDescriptionFromHandler(basePath string) (string, error) {
 	return description, nil
 }
 
-// Routes must be validated before calling Describe().
-func Describe(routes []Route) (*APIDescription, error) {
+// Routes must be validated before calling DescribeRoutes().
+func DescribeRoutes(routes []Route) (*APIDescription, error) {
 	endpointMap := make(map[string]EndpointDescription)
-	typeMap := make(map[string]TypeDescription)
+	info := TypeInfoCache{
+		TypeMap: make(map[string]TypeDescription),
+	}
 
 	var errs error = nil
 	var err error
@@ -107,12 +133,12 @@ func Describe(routes []Route) (*APIDescription, error) {
 		}
 
 		// RequestType and ResponseType must be structs, so Fields will hold the type's information.
-		input, _, typeMap, _, err := DescribeType(apiRoute.RequestType, false, typeMap, nil)
+		input, _, info, err := DescribeType(apiRoute.RequestType, false, info)
 		if err != nil {
 			errs = errors.Join(errs, err)
 		}
 
-		output, _, typeMap, _, err := DescribeType(apiRoute.ResponseType, false, typeMap, nil)
+		output, _, info, err := DescribeType(apiRoute.ResponseType, false, info)
 		if err != nil {
 			errs = errors.Join(errs, err)
 		}
@@ -128,7 +154,7 @@ func Describe(routes []Route) (*APIDescription, error) {
 
 	apiDescription := APIDescription{
 		Endpoints: endpointMap,
-		Types:     typeMap,
+		Types:     info.TypeMap,
 	}
 
 	return &apiDescription, errs
@@ -200,56 +226,60 @@ func getTypeID(customType reflect.Type, typeConversions map[string]string) (stri
 //   - Maps store the key type as a string and the value as a typeID in KeyType and ValueType respectively.
 //   - Structs have a Fields map describing each field, including embedded ones.
 //     Non-embedded struct fields that do not have a JSON tag are skipped.
-func DescribeType(customType reflect.Type, addType bool, typeMap map[string]TypeDescription, typeConversions map[string]string) (TypeDescription, string, map[string]TypeDescription, map[string]string, error) {
+func DescribeType(customType reflect.Type, addType bool, info TypeInfoCache) (TypeDescription, string, TypeInfoCache, error) {
 	if customType == nil {
-		return TypeDescription{}, "", map[string]TypeDescription{}, map[string]string{}, fmt.Errorf("Unable to describe nil type.")
+		return TypeDescription{}, "", TypeInfoCache{}, fmt.Errorf("Unable to describe nil type.")
 	}
 
-	if typeMap == nil {
-		typeMap = make(map[string]TypeDescription)
+	if info.TypeMap == nil {
+		info.TypeMap = make(map[string]TypeDescription)
 	}
 
-	if typeConversions == nil {
-		typeConversions = make(map[string]string)
+	if info.TypeConversions == nil {
+		info.TypeConversions = make(map[string]string)
 	}
 
-	originalTypeID, err := getTypeID(customType, typeConversions)
+	if info.KnownPackages == nil {
+		info.KnownPackages = make(map[string]StructDescription)
+	}
+
+	originalTypeID, err := getTypeID(customType, info.TypeConversions)
 	if err != nil {
-		return TypeDescription{}, "", map[string]TypeDescription{}, map[string]string{}, err
+		return TypeDescription{}, "", TypeInfoCache{}, err
 	}
 
 	if customType.Kind() == reflect.Pointer {
 		customType = customType.Elem()
 	}
 
-	typeID, err := getTypeID(customType, typeConversions)
+	typeID, err := getTypeID(customType, info.TypeConversions)
 	if err != nil {
-		return TypeDescription{}, "", map[string]TypeDescription{}, map[string]string{}, err
+		return TypeDescription{}, "", TypeInfoCache{}, err
 	}
 
-	typeDescription, ok := typeMap[typeID]
+	typeDescription, ok := info.TypeMap[typeID]
 	if ok {
-		return typeDescription, originalTypeID, typeMap, typeConversions, nil
+		return typeDescription, originalTypeID, info, nil
 	}
 
 	switch customType.Kind() {
 	case reflect.Slice, reflect.Array:
-		_, elemTypeID, _, _, err := DescribeType(customType.Elem(), true, typeMap, typeConversions)
+		_, elemTypeID, _, err := DescribeType(customType.Elem(), true, info)
 		if err != nil {
-			return TypeDescription{}, "", map[string]TypeDescription{}, map[string]string{}, err
+			return TypeDescription{}, "", TypeInfoCache{}, err
 		}
 
 		typeDescription.Category = ArrayType
 		typeDescription.ElementType = elemTypeID
 	case reflect.Map:
-		_, elemTypeID, _, _, err := DescribeType(customType.Elem(), true, typeMap, typeConversions)
+		_, elemTypeID, _, err := DescribeType(customType.Elem(), true, info)
 		if err != nil {
-			return TypeDescription{}, "", map[string]TypeDescription{}, map[string]string{}, err
+			return TypeDescription{}, "", TypeInfoCache{}, err
 		}
 
-		_, keyTypeID, _, _, err := DescribeType(customType.Key(), true, typeMap, typeConversions)
+		_, keyTypeID, _, err := DescribeType(customType.Key(), true, info)
 		if err != nil {
-			return TypeDescription{}, "", map[string]TypeDescription{}, map[string]string{}, err
+			return TypeDescription{}, "", TypeInfoCache{}, err
 		}
 
 		typeDescription.Category = MapType
@@ -257,32 +287,21 @@ func DescribeType(customType reflect.Type, addType bool, typeMap map[string]Type
 		typeDescription.ValueType = elemTypeID
 	case reflect.Struct:
 		typeDescription.Category = StructType
-		typeDescription.Fields, err = describeStructFields(customType, typeMap, typeConversions)
+		typeDescription.Fields, err = describeStructFields(customType, info)
 		if err != nil {
-			return TypeDescription{}, "", map[string]TypeDescription{}, map[string]string{}, err
+			return TypeDescription{}, "", TypeInfoCache{}, err
 		}
 
 		if !addType {
 			break
 		}
 
-		if customType.Name() == "" {
-			break
-		}
-
-		if customType.PkgPath() == "" {
-			break
-		}
-
-		descriptions, err := util.GetAllTypeDescriptionsFromPackage(customType.PkgPath())
+		description, err := describeStruct(customType, info.KnownPackages)
 		if err != nil {
-			return TypeDescription{}, "", map[string]TypeDescription{}, map[string]string{}, err
+			return TypeDescription{}, "", TypeInfoCache{}, err
 		}
 
-		description, ok := descriptions[customType.Name()]
-		if ok {
-			typeDescription.Description = description
-		}
+		typeDescription.Description = description
 	default:
 		// Handle built-in types.
 		typeDescription.Category = AliasType
@@ -295,13 +314,13 @@ func DescribeType(customType reflect.Type, addType bool, typeMap map[string]Type
 	}
 
 	if addType && customType.PkgPath() != "" {
-		typeMap[typeID] = typeDescription
+		info.TypeMap[typeID] = typeDescription
 	}
 
-	return typeDescription, originalTypeID, typeMap, typeConversions, nil
+	return typeDescription, originalTypeID, info, nil
 }
 
-func describeStructFields(customType reflect.Type, typeMap map[string]TypeDescription, typeConversions map[string]string) ([]FieldDescription, error) {
+func describeStructFields(customType reflect.Type, info TypeInfoCache) ([]FieldDescription, error) {
 	fieldDescriptions := make([]FieldDescription, 0)
 
 	for i := 0; i < customType.NumField(); i++ {
@@ -318,7 +337,7 @@ func describeStructFields(customType reflect.Type, typeMap map[string]TypeDescri
 
 		// Handle embedded fields.
 		if field.Anonymous {
-			fieldDescription, fieldTypeID, _, _, err := DescribeType(field.Type, true, typeMap, typeConversions)
+			fieldDescription, fieldTypeID, _, err := DescribeType(field.Type, true, info)
 			if err != nil {
 				return []FieldDescription{}, err
 			}
@@ -359,7 +378,7 @@ func describeStructFields(customType reflect.Type, typeMap map[string]TypeDescri
 			continue
 		}
 
-		typeDescription, typeID, _, _, err := DescribeType(field.Type, true, typeMap, typeConversions)
+		typeDescription, typeID, _, err := DescribeType(field.Type, true, info)
 		if err != nil {
 			return []FieldDescription{}, err
 		}
@@ -384,6 +403,35 @@ func describeStructFields(customType reflect.Type, typeMap map[string]TypeDescri
 	slices.SortFunc(fieldDescriptions, CompareFieldDescription)
 
 	return fieldDescriptions, nil
+}
+
+func describeStruct(customType reflect.Type, knownPackages map[string]StructDescription) (string, error) {
+	if customType.Name() == "" {
+		return "", nil
+	}
+
+	if customType.PkgPath() == "" {
+		return "", nil
+	}
+
+	var err error
+
+	descriptions, ok := knownPackages[customType.PkgPath()]
+	if !ok {
+		descriptions, err = util.GetAllTypeDescriptionsFromPackage(customType.PkgPath())
+		if err != nil {
+			return "", err
+		}
+
+		knownPackages[customType.PkgPath()] = descriptions
+	}
+
+	description, ok := descriptions[customType.Name()]
+	if !ok {
+		return "", nil
+	}
+
+	return description, nil
 }
 
 func skipField(name string) bool {

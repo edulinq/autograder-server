@@ -14,8 +14,8 @@ import (
 
 // A test server started in `internal/api/core` will not be able to get all routes from api.GetRoutes() due to an import cycle.
 // So, we test describing all API endpoints in `internal/api`.
-func TestDescribeFull(test *testing.T) {
-	path, err := util.GetAPIDescriptionFilepath()
+func TestDescribeRoutesFull(test *testing.T) {
+	path, err := util.GetAPIDescriptionFilepath(true)
 	if err != nil {
 		test.Fatalf("Unable to get the API description filepath: '%v'.", err)
 	}
@@ -26,7 +26,7 @@ func TestDescribeFull(test *testing.T) {
 		test.Fatalf("Failed to load api.json: '%v'.", err)
 	}
 
-	actualDescriptions, err := core.Describe(*GetRoutes())
+	actualDescriptions, err := core.DescribeRoutes(*GetRoutes())
 	if err != nil {
 		test.Fatalf("Failed to describe endpoints: '%v'.", err)
 	}
@@ -74,8 +74,8 @@ func TestDescribeFull(test *testing.T) {
 	}
 }
 
-func TestDescribeEmpty(test *testing.T) {
-	descriptions, err := core.Describe(*GetRoutes())
+func TestDescribeRoutesEmptyDescription(test *testing.T) {
+	descriptions, err := core.DescribeRoutes(*GetRoutes())
 	if err != nil {
 		test.Fatalf("Failed to describe endpoints: '%v'.", err)
 	}
@@ -89,18 +89,19 @@ func TestDescribeEmpty(test *testing.T) {
 }
 
 // Test types with conflicting names in `internal/api` to avoid cycles when importing `users.ListRequest` and `courses/users.ListRequest`.
-func TestDescribeConflictingTypes(test *testing.T) {
-	typeMap := make(map[string]core.TypeDescription)
-	typeDescriptions := make(map[string]string)
+func TestDescribeTypeConflictingNames(test *testing.T) {
+	info := core.TypeInfoCache{
+		TypeConversions: make(map[string]string),
+	}
 
 	// Add in the first users.ListRequest which will work.
-	_, _, _, _, err := core.DescribeType(reflect.TypeOf((*users.ListRequest)(nil)).Elem(), true, typeMap, typeDescriptions)
+	_, _, _, err := core.DescribeType(reflect.TypeOf((*users.ListRequest)(nil)).Elem(), true, info)
 	if err != nil {
 		test.Fatalf("Failed to describe type: '%v'.", err)
 	}
 
 	// Add in the second users.ListRequest which will cause a conflict.
-	_, _, _, _, err = core.DescribeType(reflect.TypeOf((*courseUsers.ListRequest)(nil)).Elem(), true, typeMap, typeDescriptions)
+	_, _, _, err = core.DescribeType(reflect.TypeOf((*courseUsers.ListRequest)(nil)).Elem(), true, info)
 	if err == nil {
 		test.Fatalf("Did not get expected error while describing types.")
 	}

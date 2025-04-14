@@ -307,6 +307,7 @@ func getDirPathFromCustomPackagePath(packagePath string) string {
 
 	parts := strings.Split(packagePath, "/")
 
+	// Package paths are relative from the base directory `autograder-server`.
 	path := ShouldAbs(filepath.Join(ShouldGetThisDir(), "..", ".."))
 	for _, part := range parts {
 		path = filepath.Join(path, part)

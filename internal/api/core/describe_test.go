@@ -63,9 +63,9 @@ func mustGetTypeID(customType reflect.Type, typeConversions map[string]string) s
 	return typeID
 }
 
-func TestDescribeEmptyRoutes(test *testing.T) {
+func TestDescribeRoutesEmptyRoutes(test *testing.T) {
 	routes := []Route{}
-	description, err := Describe(routes)
+	description, err := DescribeRoutes(routes)
 	if err != nil {
 		test.Fatalf("Failed to describe endpoints: '%v'.", err)
 	}
@@ -75,7 +75,7 @@ func TestDescribeEmptyRoutes(test *testing.T) {
 	}
 }
 
-func TestDescribeType(test *testing.T) {
+func TestDescribeTypeBase(test *testing.T) {
 	testCases := []struct {
 		customType      reflect.Type
 		expectedDesc    TypeDescription
@@ -440,9 +440,11 @@ func TestDescribeType(test *testing.T) {
 	}
 
 	for i, testCase := range testCases {
-		typeMap := make(map[string]TypeDescription)
+		info := TypeInfoCache{
+			TypeMap: make(map[string]TypeDescription),
+		}
 
-		actual, _, _, _, err := DescribeType(testCase.customType, true, typeMap, nil)
+		actual, _, _, err := DescribeType(testCase.customType, true, info)
 		if err != nil {
 			test.Errorf("Case %d: Unexpected error while describing types: '%v'.", i, err)
 		}
@@ -453,9 +455,9 @@ func TestDescribeType(test *testing.T) {
 			continue
 		}
 
-		if !reflect.DeepEqual(testCase.expectedTypeMap, typeMap) {
+		if !reflect.DeepEqual(testCase.expectedTypeMap, info.TypeMap) {
 			test.Errorf("Case %d: Unexpected type map. Expected: '%v', actual: '%v'.",
-				i, util.MustToJSONIndent(testCase.expectedTypeMap), util.MustToJSONIndent(typeMap))
+				i, util.MustToJSONIndent(testCase.expectedTypeMap), util.MustToJSONIndent(info.TypeMap))
 			continue
 		}
 	}

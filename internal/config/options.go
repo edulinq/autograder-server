@@ -66,8 +66,5 @@ var (
 	ANALYSIS_INDIVIDUAL_COURSE_POOL_SIZE = MustNewIntOption("analysis.individual.poolsize", 1, "The number of parallel workers per course when computing individual analysis.")
 	ANALYSIS_PAIRWISE_COURSE_POOL_SIZE   = MustNewIntOption("analysis.pairwise.poolsize", 1, "The number of parallel workers per course when computing pairwise analysis.")
 
-	// Metadata
-	UPDATE_API_DESCRIPTIONS = MustNewBoolOption("update.api.descriptions", false, "Update API descriptions when starting the server.")
-
 	STALELOCK_DURATION_SECS = MustNewIntOption("lockmanager.staleduration", 2*60*60, "Number of seconds a lock can be unused before getting removed.")
 )

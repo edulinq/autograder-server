@@ -9,7 +9,6 @@ import (
 
 	"github.com/edulinq/autograder/internal/api"
 	"github.com/edulinq/autograder/internal/api/core"
-	"github.com/edulinq/autograder/internal/config"
 	"github.com/edulinq/autograder/internal/systemserver"
 	"github.com/edulinq/autograder/internal/util"
 )
@@ -33,16 +32,7 @@ func (this *APIServer) RunAndBlock(initiator systemserver.ServerInitiator) (err 
 		return err
 	}
 
-	core.SetAPIRoutes(*api.GetRoutes())
-
-	if config.UPDATE_API_DESCRIPTIONS.Get() {
-		apiDescription, err := core.Describe(*api.GetRoutes())
-		if err != nil {
-			return err
-		}
-
-		core.SetAPIDescription(apiDescription)
-	}
+	core.SetAPIRoutes(api.GetRoutes())
 
 	defer func() {
 		err = errors.Join(err, util.RemoveDirent(systemserver.GetStatusPath()))
