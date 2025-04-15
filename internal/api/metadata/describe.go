@@ -8,7 +8,7 @@ import (
 type DescribeRequest struct {
 	core.APIRequest
 
-	ForceUpdate bool `json:"force-update"`
+	ForceCompute bool `json:"force-compute"`
 }
 
 type DescribeResponse struct {
@@ -17,29 +17,35 @@ type DescribeResponse struct {
 
 // Describe all endpoints on the server.
 func HandleDescribe(request *DescribeRequest) (*DescribeResponse, *core.APIError) {
-	apiDescription, err := core.GetAPIDescription()
+	response := DescribeResponse{}
+
+	if !request.ForceCompute {
+		apiDescription, err := core.GetAPIDescription()
+		if err != nil {
+			log.Warn("Unable to get cached API description.", err)
+		}
+
+		if apiDescription != nil {
+			response.APIDescription = *apiDescription
+			return &response, nil
+		}
+	}
+
+	routes := core.GetAPIRoutes()
+	if routes == nil || len(*routes) == 0 {
+		return nil, core.NewInternalError("-501", request, "Unable to describe API endpoints when the cached routes are empty.")
+	}
+
+	apiDescription, err := core.DescribeRoutes(*routes)
 	if err != nil {
-		log.Warn("Unable to get cached API description.", err)
+		return nil, core.NewInternalError("-502", request, "Failed to describe API endpoints.").Err(err)
 	}
 
-	if err != nil || apiDescription == nil || request.ForceUpdate {
-		routes := core.GetAPIRoutes()
-		if routes == nil || len(*routes) == 0 {
-			return nil, core.NewInternalError("-501", request, "Unable to describe API endpoints when the cached routes are empty.")
-		}
+	core.SetAPIDescription(apiDescription)
 
-		apiDescription, err = core.DescribeRoutes(*routes)
-		if err != nil {
-			return nil, core.NewInternalError("-502", request, "Failed to describe API endpoints.").Err(err)
-		}
-
-		err = core.SetAPIDescription(apiDescription)
-		if err != nil {
-			log.Warn("Unable to cache API description.", err)
-		}
+	if apiDescription != nil {
+		response.APIDescription = *apiDescription
 	}
-
-	response := DescribeResponse{*apiDescription}
 
 	return &response, nil
 }

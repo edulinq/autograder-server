@@ -15,7 +15,7 @@ import (
 // A test server started in `internal/api/core` will not be able to get all routes from api.GetRoutes() due to an import cycle.
 // So, we test describing all API endpoints in `internal/api`.
 func TestDescribeRoutesFull(test *testing.T) {
-	path, err := util.GetAPIDescriptionFilepath(true)
+	path, err := util.GetAPIDescriptionFilepath()
 	if err != nil {
 		test.Fatalf("Unable to get the API description filepath: '%v'.", err)
 	}

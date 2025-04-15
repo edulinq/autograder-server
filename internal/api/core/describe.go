@@ -19,6 +19,9 @@ const (
 	StructType = "struct"
 )
 
+// API Description will be nil until SetAPIDescription() is called.
+var apiDescription *APIDescription = nil
+
 var skipDescriptionPatterns = []*regexp.Regexp{
 	regexp.MustCompile("^root-user-nonce$"),
 	regexp.MustCompile("^Min.*Role.*$"),
@@ -61,22 +64,16 @@ type TypeInfoCache struct {
 	KnownPackages   map[string]StructDescription
 }
 
-func SetAPIDescription(apiDescription *APIDescription) error {
-	apiDescriptionPath, err := util.GetAPIDescriptionFilepath(false)
-	if err != nil {
-		return err
-	}
-
-	err = util.ToJSONFileIndent(apiDescription, apiDescriptionPath)
-	if err != nil {
-		return err
-	}
-
-	return nil
+func SetAPIDescription(description *APIDescription) {
+	apiDescription = description
 }
 
 func GetAPIDescription() (*APIDescription, error) {
-	apiDescriptionPath, err := util.GetAPIDescriptionFilepath(true)
+	if apiDescription != nil {
+		return apiDescription, nil
+	}
+
+	apiDescriptionPath, err := util.GetAPIDescriptionFilepath()
 	if err != nil {
 		return nil, err
 	}
@@ -86,6 +83,8 @@ func GetAPIDescription() (*APIDescription, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	SetAPIDescription(&apiDescription)
 
 	return &apiDescription, nil
 }

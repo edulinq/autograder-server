@@ -300,7 +300,7 @@ func ShouldNormalizePath(path string) string {
 
 // Best effort attempt to determine the absolute path to the directory that holds a custom package path.
 // The package path is expected to be an internal path of the form `github.com/edulinq/autograder/`.
-func getDirPathFromCustomPackagePath(packagePath string) string {
+func GetDirPathFromCustomPackagePath(packagePath string) string {
 	if strings.HasPrefix(packagePath, "github.com/edulinq/autograder/") {
 		packagePath = strings.TrimPrefix(packagePath, "github.com/edulinq/autograder/")
 	}

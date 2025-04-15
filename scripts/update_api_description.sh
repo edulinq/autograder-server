@@ -17,7 +17,7 @@ function main() {
 
     mkdir -p "${OUT_DIR}"
 
-    go run cmd/call-endpoint/main.go metadata/describe '"force-update":true' > "${OUT_FILE}"
+    go run cmd/call-endpoint/main.go metadata/describe 'force-compute:true' > "${OUT_FILE}"
     if [ $? -ne 0 ]; then
         echo "Failed to update ${OUT_FILE}."
         return 1

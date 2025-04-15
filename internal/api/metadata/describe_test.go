@@ -6,7 +6,6 @@ import (
 
 	"github.com/edulinq/autograder/internal/api/core"
 	"github.com/edulinq/autograder/internal/db"
-	"github.com/edulinq/autograder/internal/log"
 	"github.com/edulinq/autograder/internal/util"
 )
 
@@ -21,10 +20,10 @@ func TestMetadataDescribe(test *testing.T) {
 	}
 
 	testCases := []struct {
-		ForceUpdate bool
-		Routes      *[]core.Route
-		Description *core.APIDescription
-		Locator     string
+		ForceCompute bool
+		Routes       *[]core.Route
+		Description  *core.APIDescription
+		Locator      string
 	}{
 		// Use cached description.
 		{
@@ -34,7 +33,7 @@ func TestMetadataDescribe(test *testing.T) {
 			"",
 		},
 
-		// Force update to describe one route.
+		// Force compute to describe one route.
 		{
 			true,
 			&[]core.Route{core.MustNewAPIRoute(`metadata/describe`, HandleDescribe)},
@@ -44,7 +43,7 @@ func TestMetadataDescribe(test *testing.T) {
 						Description: "Describe all endpoints on the server.",
 						Input: []core.FieldDescription{
 							core.FieldDescription{
-								Name: "force-update",
+								Name: "force-compute",
 								Type: "bool",
 							},
 						},
@@ -134,7 +133,7 @@ func TestMetadataDescribe(test *testing.T) {
 			"",
 		},
 
-		// Force update without any routes cached in `internal/api/core`.
+		// Force compute without any routes cached in `internal/api/core`.
 		{
 			true,
 			nil,
@@ -152,15 +151,19 @@ func TestMetadataDescribe(test *testing.T) {
 	for i, testCase := range testCases {
 		db.ResetForTesting()
 
-		oldDescription := mustGetAPIDescription()
-		mustSetAPIDescription(description)
-		defer mustSetAPIDescription(oldDescription)
+		oldDescription, err := core.GetAPIDescription()
+		if err != nil {
+			test.Errorf("Case %d: Unable to get cached API description: '%v'.", i, err)
+			continue
+		}
+		core.SetAPIDescription(description)
+		defer core.SetAPIDescription(oldDescription)
 
 		oldRoutes := core.GetAPIRoutes()
 		core.SetAPIRoutes(testCase.Routes)
 		defer core.SetAPIRoutes(oldRoutes)
 
-		fields := map[string]any{"force-update": testCase.ForceUpdate}
+		fields := map[string]any{"force-compute": testCase.ForceCompute}
 
 		response := core.SendTestAPIRequestFull(test, `metadata/describe`, fields, nil, "course-student")
 		if !response.Success {
@@ -182,24 +185,9 @@ func TestMetadataDescribe(test *testing.T) {
 
 		expected := DescribeResponse{*testCase.Description}
 		if !reflect.DeepEqual(expected, responseContent) {
-			test.Fatalf("Unexpected API description. Expected: '%s', actual: '%s'.",
-				util.MustToJSONIndent(expected), util.MustToJSONIndent(responseContent))
+			test.Errorf("Case %d: Unexpected API description. Expected: '%s', actual: '%s'.",
+				i, util.MustToJSONIndent(expected), util.MustToJSONIndent(responseContent))
+			continue
 		}
 	}
-}
-
-func mustSetAPIDescription(apiDescription *core.APIDescription) {
-	err := core.SetAPIDescription(apiDescription)
-	if err != nil {
-		log.Fatal("Unable to cache API descriptions.", err)
-	}
-}
-
-func mustGetAPIDescription() *core.APIDescription {
-	apiDescription, err := core.GetAPIDescription()
-	if err != nil {
-		log.Fatal("Unable to get cached API description.", err)
-	}
-
-	return apiDescription
 }

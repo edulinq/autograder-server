@@ -46,9 +46,9 @@ func GetDescriptionFromFunction(path string, functionNamePattern *regexp.Regexp)
 }
 
 // This function takes a non-empty package path and returns a map of custom type names to their description.
-// The types of package paths accepted can be seen in getDirPathFromCustomPackagePath().
+// The types of package paths accepted can be seen in GetDirPathFromCustomPackagePath().
 func GetAllTypeDescriptionsFromPackage(packagePath string) (map[string]string, error) {
-	dirPath := getDirPathFromCustomPackagePath(packagePath)
+	dirPath := GetDirPathFromCustomPackagePath(packagePath)
 
 	filePaths, err := FindFiles("", dirPath)
 	if err != nil {

@@ -1069,7 +1069,7 @@
             "description": "Describe all endpoints on the server.",
             "input": [
                 {
-                    "name": "force-update",
+                    "name": "force-compute",
                     "type": "bool"
                 }
             ],
@@ -1606,8 +1606,8 @@
             ]
         },
         "core.NonEmptyString": {
-            "category": "alias",
-            "alias-type": "string"
+            "alias-type": "string",
+            "category": "alias"
         },
         "core.ServerUserInfo": {
             "category": "struct",
@@ -1689,8 +1689,8 @@
             ]
         },
         "core.UserInfoType": {
-            "category": "alias",
-            "alias-type": "string"
+            "alias-type": "string",
+            "category": "alias"
         },
         "courses.CourseUpsertOptions": {
             "category": "struct",
@@ -1817,8 +1817,8 @@
             ]
         },
         "log.LogLevel": {
-            "category": "alias",
-            "alias-type": "int32"
+            "alias-type": "int32",
+            "category": "alias"
         },
         "log.RawLogQuery": {
             "category": "struct",
@@ -2039,8 +2039,8 @@
             ]
         },
         "model.CourseUserRole": {
-            "category": "alias",
-            "alias-type": "int"
+            "alias-type": "int",
+            "category": "alias"
         },
         "model.ExternalLocatableError": {
             "category": "struct",
@@ -2614,8 +2614,8 @@
             ]
         },
         "model.ServerUserRole": {
-            "category": "alias",
-            "alias-type": "int"
+            "alias-type": "int",
+            "category": "alias"
         },
         "model.SubmissionHistoryItem": {
             "category": "struct",
@@ -2738,12 +2738,12 @@
             ]
         },
         "stats.MetricAttribute": {
-            "category": "alias",
-            "alias-type": "string"
+            "alias-type": "string",
+            "category": "alias"
         },
         "stats.MetricType": {
-            "category": "alias",
-            "alias-type": "string"
+            "alias-type": "string",
+            "category": "alias"
         },
         "stats.Query": {
             "category": "struct",
@@ -2776,8 +2776,8 @@
             ]
         },
         "timestamp.Timestamp": {
-            "category": "alias",
-            "alias-type": "int64"
+            "alias-type": "int64",
+            "category": "alias"
         },
         "upload.RowEntry": {
             "category": "struct",
@@ -2928,8 +2928,8 @@
             ]
         },
         "util.FileSpecType": {
-            "category": "alias",
-            "alias-type": "string"
+            "alias-type": "string",
+            "category": "alias"
         }
     }
 }
