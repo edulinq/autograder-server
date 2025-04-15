@@ -72,13 +72,7 @@ func main() {
 			return
 		}
 
-		if parts[1] == "true" {
-			request[parts[0]] = true
-		} else if parts[1] == "false" {
-			request[parts[0]] = false
-		} else {
-			request[parts[0]] = parts[1]
-		}
+		request[parts[0]] = parts[1]
 	}
 
 	var printFunc cmd.CustomResponseFormatter = nil

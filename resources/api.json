@@ -1606,8 +1606,8 @@
             ]
         },
         "core.NonEmptyString": {
-            "alias-type": "string",
-            "category": "alias"
+            "category": "alias",
+            "alias-type": "string"
         },
         "core.ServerUserInfo": {
             "category": "struct",
@@ -1689,8 +1689,8 @@
             ]
         },
         "core.UserInfoType": {
-            "alias-type": "string",
-            "category": "alias"
+            "category": "alias",
+            "alias-type": "string"
         },
         "courses.CourseUpsertOptions": {
             "category": "struct",
@@ -1817,8 +1817,8 @@
             ]
         },
         "log.LogLevel": {
-            "alias-type": "int32",
-            "category": "alias"
+            "category": "alias",
+            "alias-type": "int32"
         },
         "log.RawLogQuery": {
             "category": "struct",
@@ -2039,8 +2039,8 @@
             ]
         },
         "model.CourseUserRole": {
-            "alias-type": "int",
-            "category": "alias"
+            "category": "alias",
+            "alias-type": "int"
         },
         "model.ExternalLocatableError": {
             "category": "struct",
@@ -2614,8 +2614,8 @@
             ]
         },
         "model.ServerUserRole": {
-            "alias-type": "int",
-            "category": "alias"
+            "category": "alias",
+            "alias-type": "int"
         },
         "model.SubmissionHistoryItem": {
             "category": "struct",
@@ -2738,12 +2738,12 @@
             ]
         },
         "stats.MetricAttribute": {
-            "alias-type": "string",
-            "category": "alias"
+            "category": "alias",
+            "alias-type": "string"
         },
         "stats.MetricType": {
-            "alias-type": "string",
-            "category": "alias"
+            "category": "alias",
+            "alias-type": "string"
         },
         "stats.Query": {
             "category": "struct",
@@ -2776,8 +2776,8 @@
             ]
         },
         "timestamp.Timestamp": {
-            "alias-type": "int64",
-            "category": "alias"
+            "category": "alias",
+            "alias-type": "int64"
         },
         "upload.RowEntry": {
             "category": "struct",
@@ -2928,8 +2928,8 @@
             ]
         },
         "util.FileSpecType": {
-            "alias-type": "string",
-            "category": "alias"
+            "category": "alias",
+            "alias-type": "string"
         }
     }
 }
