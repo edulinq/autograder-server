@@ -166,15 +166,24 @@ func TestMetadataDescribe(test *testing.T) {
 		util.MustJSONFromString(util.MustToJSON(response.Content), &responseContent)
 
 		expected := DescribeResponse{testCase.Description}
-		if !reflect.DeepEqual(expected, responseContent) {
-			if !softEqual(test, i, testCase.Description, responseContent.APIDescription) {
+		if testCase.ForceCompute {
+			if !reflect.DeepEqual(expected, responseContent) {
+				test.Errorf("Case %d: Unexpected API description. Expected: '%s', actual: '%s'.",
+					i, util.MustToJSONIndent(expected), util.MustToJSONIndent(responseContent))
+				continue
+			}
+		} else {
+			if !subsetEqualityCheck(test, i, testCase.Description, responseContent.APIDescription) {
 				continue
 			}
 		}
 	}
 }
 
-func softEqual(test *testing.T, testNum int, expected *core.APIDescription, actual *core.APIDescription) bool {
+// If the API description is not computed, the description comes from `resources/api.json`.
+// As that resource constantly evolves and is tested for correctness in `internal/api/describe_test.go`,
+// only check that a subset of the API description is correctly returned by `metadata/describe`.
+func subsetEqualityCheck(test *testing.T, testNum int, expected *core.APIDescription, actual *core.APIDescription) bool {
 	for endpoint, expectedDescription := range expected.Endpoints {
 		actualDescription, ok := actual.Endpoints[endpoint]
 		if !ok {
