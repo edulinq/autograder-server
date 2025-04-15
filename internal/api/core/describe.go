@@ -9,6 +9,7 @@ import (
 	"slices"
 	"strings"
 
+	"github.com/edulinq/autograder/internal/log"
 	"github.com/edulinq/autograder/internal/util"
 )
 
@@ -18,9 +19,6 @@ const (
 	MapType    = "map"
 	StructType = "struct"
 )
-
-// API Description will be nil until SetAPIDescription() is called.
-var apiDescription *APIDescription = nil
 
 var skipDescriptionPatterns = []*regexp.Regexp{
 	regexp.MustCompile("^root-user-nonce$"),
@@ -64,27 +62,43 @@ type TypeInfoCache struct {
 	KnownPackages   map[string]StructDescription
 }
 
-func SetAPIDescription(description *APIDescription) {
-	apiDescription = description
-}
+func GetAPIDescription(forceCompute bool) (*APIDescription, error) {
+	if !forceCompute {
+		apiDescription, err := getCachedAPIDescription()
+		if err != nil {
+			return nil, fmt.Errorf("Failed to get cached API description: '%v'.", err)
+		}
 
-func GetAPIDescription() (*APIDescription, error) {
-	if apiDescription != nil {
-		return apiDescription, nil
+		if apiDescription != nil {
+			return apiDescription, nil
+		}
 	}
 
+	routes := GetAPIRoutes()
+	if routes == nil || len(*routes) == 0 {
+		return nil, fmt.Errorf("Unable to describe API endpoints when the cached routes are empty.")
+	}
+
+	apiDescription, err := DescribeRoutes(*routes)
+	if err != nil {
+		return nil, fmt.Errorf("Failed to describe API endpoints: '%v'.", err)
+	}
+
+	return apiDescription, nil
+}
+
+func getCachedAPIDescription() (*APIDescription, error) {
 	apiDescriptionPath, err := util.GetAPIDescriptionFilepath()
 	if err != nil {
-		return nil, err
+		log.Warn("Unable to get cached API description.", err)
+		return nil, nil
 	}
 
 	var apiDescription APIDescription
 	err = util.JSONFromFile(apiDescriptionPath, &apiDescription)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("Failed to get API description from file: '%v'.", err)
 	}
-
-	SetAPIDescription(&apiDescription)
 
 	return &apiDescription, nil
 }
@@ -116,7 +130,8 @@ func DescribeRoutes(routes []Route) (*APIDescription, error) {
 	}
 
 	var errs error = nil
-	var err error
+	var err error = nil
+
 	for _, route := range routes {
 		apiRoute, ok := route.(*APIRoute)
 		if !ok {
@@ -159,6 +174,7 @@ func DescribeRoutes(routes []Route) (*APIDescription, error) {
 	return &apiDescription, errs
 }
 
+// Type conversions is an optional parameter that ensures that type IDs are not ambiguous.
 func getTypeID(customType reflect.Type, typeConversions map[string]string) (string, error) {
 	if typeConversions == nil {
 		typeConversions = make(map[string]string)
@@ -262,7 +278,7 @@ func DescribeType(customType reflect.Type, addType bool, info TypeInfoCache) (Ty
 	}
 
 	switch customType.Kind() {
-	case reflect.Slice, reflect.Array:
+	case reflect.Array, reflect.Slice:
 		_, elemTypeID, _, err := DescribeType(customType.Elem(), true, info)
 		if err != nil {
 			return TypeDescription{}, "", TypeInfoCache{}, err
