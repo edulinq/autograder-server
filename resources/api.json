@@ -2,1005 +2,2556 @@
     "endpoints": {
         "courses/admin/email": {
             "description": "Send an email to course users.",
-            "input": {
-                "bcc": "[]string",
-                "body": "string",
-                "cc": "[]string",
-                "course-id": "string",
-                "dry-run": "bool",
-                "html": "bool",
-                "subject": "string",
-                "to": "[]string",
-                "user-email": "string",
-                "user-pass": "string"
-            },
-            "output": {
-                "bcc": "[]string",
-                "cc": "[]string",
-                "to": "[]string"
-            }
+            "input": [
+                {
+                    "name": "bcc",
+                    "type": "[]string"
+                },
+                {
+                    "name": "body",
+                    "type": "string"
+                },
+                {
+                    "name": "cc",
+                    "type": "[]string"
+                },
+                {
+                    "name": "course-id",
+                    "type": "string"
+                },
+                {
+                    "name": "dry-run",
+                    "type": "bool"
+                },
+                {
+                    "name": "html",
+                    "type": "bool"
+                },
+                {
+                    "name": "subject",
+                    "type": "string"
+                },
+                {
+                    "name": "to",
+                    "type": "[]string"
+                },
+                {
+                    "name": "user-email",
+                    "type": "string"
+                },
+                {
+                    "name": "user-pass",
+                    "type": "string"
+                }
+            ],
+            "output": [
+                {
+                    "name": "bcc",
+                    "type": "[]string"
+                },
+                {
+                    "name": "cc",
+                    "type": "[]string"
+                },
+                {
+                    "name": "to",
+                    "type": "[]string"
+                }
+            ]
         },
         "courses/admin/update": {
             "description": "Update an existing course.",
-            "input": {
-                "course-id": "string",
-                "user-email": "string",
-                "user-pass": "string"
-            },
-            "output": {
-                "result": "*courses.CourseUpsertResult"
-            }
+            "input": [
+                {
+                    "name": "course-id",
+                    "type": "string"
+                },
+                {
+                    "name": "user-email",
+                    "type": "string"
+                },
+                {
+                    "name": "user-pass",
+                    "type": "string"
+                }
+            ],
+            "output": [
+                {
+                    "name": "result",
+                    "type": "*courses.CourseUpsertResult"
+                }
+            ]
         },
         "courses/assignments/get": {
             "description": "Get the information for a course assignment.",
-            "input": {
-                "assignment-id": "string",
-                "course-id": "string",
-                "user-email": "string",
-                "user-pass": "string"
-            },
-            "output": {
-                "assignment": "*core.AssignmentInfo"
-            }
+            "input": [
+                {
+                    "name": "assignment-id",
+                    "type": "string"
+                },
+                {
+                    "name": "course-id",
+                    "type": "string"
+                },
+                {
+                    "name": "user-email",
+                    "type": "string"
+                },
+                {
+                    "name": "user-pass",
+                    "type": "string"
+                }
+            ],
+            "output": [
+                {
+                    "name": "assignment",
+                    "type": "*core.AssignmentInfo"
+                }
+            ]
         },
         "courses/assignments/list": {
             "description": "List the assignments in the course.",
-            "input": {
-                "course-id": "string",
-                "user-email": "string",
-                "user-pass": "string"
-            },
-            "output": {
-                "assignments": "[]*core.AssignmentInfo"
-            }
+            "input": [
+                {
+                    "name": "course-id",
+                    "type": "string"
+                },
+                {
+                    "name": "user-email",
+                    "type": "string"
+                },
+                {
+                    "name": "user-pass",
+                    "type": "string"
+                }
+            ],
+            "output": [
+                {
+                    "name": "assignments",
+                    "type": "[]*core.AssignmentInfo"
+                }
+            ]
         },
         "courses/assignments/submissions/analysis/individual": {
             "description": "Get the result of a individual analysis for the specified submissions.",
-            "input": {
-                "dry-run": "bool",
-                "overwrite-cache": "bool",
-                "submissions": "[]string",
-                "user-email": "string",
-                "user-pass": "string",
-                "wait-for-completion": "bool"
-            },
-            "output": {
-                "complete": "bool",
-                "options": "analysis.AnalysisOptions",
-                "results": "[]*model.IndividualAnalysis",
-                "summary": "*model.IndividualAnalysisSummary"
-            }
+            "input": [
+                {
+                    "name": "dry-run",
+                    "type": "bool"
+                },
+                {
+                    "name": "overwrite-cache",
+                    "type": "bool"
+                },
+                {
+                    "name": "submissions",
+                    "type": "[]string"
+                },
+                {
+                    "name": "user-email",
+                    "type": "string"
+                },
+                {
+                    "name": "user-pass",
+                    "type": "string"
+                },
+                {
+                    "name": "wait-for-completion",
+                    "type": "bool"
+                }
+            ],
+            "output": [
+                {
+                    "name": "complete",
+                    "type": "bool"
+                },
+                {
+                    "name": "options",
+                    "type": "analysis.AnalysisOptions"
+                },
+                {
+                    "name": "results",
+                    "type": "[]*model.IndividualAnalysis"
+                },
+                {
+                    "name": "summary",
+                    "type": "*model.IndividualAnalysisSummary"
+                }
+            ]
         },
         "courses/assignments/submissions/analysis/pairwise": {
             "description": "Get the result of a pairwise analysis for the specified submissions.",
-            "input": {
-                "dry-run": "bool",
-                "overwrite-cache": "bool",
-                "submissions": "[]string",
-                "user-email": "string",
-                "user-pass": "string",
-                "wait-for-completion": "bool"
-            },
-            "output": {
-                "complete": "bool",
-                "options": "analysis.AnalysisOptions",
-                "results": "[]*model.PairwiseAnalysis",
-                "summary": "*model.PairwiseAnalysisSummary"
-            }
+            "input": [
+                {
+                    "name": "dry-run",
+                    "type": "bool"
+                },
+                {
+                    "name": "overwrite-cache",
+                    "type": "bool"
+                },
+                {
+                    "name": "submissions",
+                    "type": "[]string"
+                },
+                {
+                    "name": "user-email",
+                    "type": "string"
+                },
+                {
+                    "name": "user-pass",
+                    "type": "string"
+                },
+                {
+                    "name": "wait-for-completion",
+                    "type": "bool"
+                }
+            ],
+            "output": [
+                {
+                    "name": "complete",
+                    "type": "bool"
+                },
+                {
+                    "name": "options",
+                    "type": "analysis.AnalysisOptions"
+                },
+                {
+                    "name": "results",
+                    "type": "[]*model.PairwiseAnalysis"
+                },
+                {
+                    "name": "summary",
+                    "type": "*model.PairwiseAnalysisSummary"
+                }
+            ]
         },
         "courses/assignments/submissions/fetch/course/attempts": {
             "description": "Get all recent submissions and grading information for this assignment.",
-            "input": {
-                "assignment-id": "string",
-                "course-id": "string",
-                "filter-role": "int",
-                "user-email": "string",
-                "user-pass": "string"
-            },
-            "output": {
-                "grading-results": "map[string]*model.GradingResult"
-            }
+            "input": [
+                {
+                    "name": "assignment-id",
+                    "type": "string"
+                },
+                {
+                    "name": "course-id",
+                    "type": "string"
+                },
+                {
+                    "name": "filter-role",
+                    "type": "int"
+                },
+                {
+                    "name": "user-email",
+                    "type": "string"
+                },
+                {
+                    "name": "user-pass",
+                    "type": "string"
+                }
+            ],
+            "output": [
+                {
+                    "name": "grading-results",
+                    "type": "map[string]*model.GradingResult"
+                }
+            ]
         },
         "courses/assignments/submissions/fetch/course/scores": {
             "description": "Get a summary of the most recent scores for this assignment.",
-            "input": {
-                "assignment-id": "string",
-                "course-id": "string",
-                "filter-role": "int",
-                "user-email": "string",
-                "user-pass": "string"
-            },
-            "output": {
-                "submission-infos": "map[string]*model.SubmissionHistoryItem"
-            }
+            "input": [
+                {
+                    "name": "assignment-id",
+                    "type": "string"
+                },
+                {
+                    "name": "course-id",
+                    "type": "string"
+                },
+                {
+                    "name": "filter-role",
+                    "type": "int"
+                },
+                {
+                    "name": "user-email",
+                    "type": "string"
+                },
+                {
+                    "name": "user-pass",
+                    "type": "string"
+                }
+            ],
+            "output": [
+                {
+                    "name": "submission-infos",
+                    "type": "map[string]*model.SubmissionHistoryItem"
+                }
+            ]
         },
         "courses/assignments/submissions/fetch/user/attempt": {
             "description": "Get a submission along with all grading information.",
-            "input": {
-                "assignment-id": "string",
-                "course-id": "string",
-                "target-email": "core.TargetCourseUserSelfOrGrader",
-                "target-submission": "string",
-                "user-email": "string",
-                "user-pass": "string"
-            },
-            "output": {
-                "found-submission": "bool",
-                "found-user": "bool",
-                "grading-result": "*model.GradingResult"
-            }
+            "input": [
+                {
+                    "name": "assignment-id",
+                    "type": "string"
+                },
+                {
+                    "name": "course-id",
+                    "type": "string"
+                },
+                {
+                    "name": "target-email",
+                    "type": "core.TargetCourseUserSelfOrGrader"
+                },
+                {
+                    "name": "target-submission",
+                    "type": "string"
+                },
+                {
+                    "name": "user-email",
+                    "type": "string"
+                },
+                {
+                    "name": "user-pass",
+                    "type": "string"
+                }
+            ],
+            "output": [
+                {
+                    "name": "found-submission",
+                    "type": "bool"
+                },
+                {
+                    "name": "found-user",
+                    "type": "bool"
+                },
+                {
+                    "name": "grading-result",
+                    "type": "*model.GradingResult"
+                }
+            ]
         },
         "courses/assignments/submissions/fetch/user/attempts": {
             "description": "Get all submission attempts made by a user along with all grading information.",
-            "input": {
-                "assignment-id": "string",
-                "course-id": "string",
-                "target-email": "core.TargetCourseUserSelfOrGrader",
-                "user-email": "string",
-                "user-pass": "string"
-            },
-            "output": {
-                "found-user": "bool",
-                "grading-results": "[]*model.GradingResult"
-            }
+            "input": [
+                {
+                    "name": "assignment-id",
+                    "type": "string"
+                },
+                {
+                    "name": "course-id",
+                    "type": "string"
+                },
+                {
+                    "name": "target-email",
+                    "type": "core.TargetCourseUserSelfOrGrader"
+                },
+                {
+                    "name": "user-email",
+                    "type": "string"
+                },
+                {
+                    "name": "user-pass",
+                    "type": "string"
+                }
+            ],
+            "output": [
+                {
+                    "name": "found-user",
+                    "type": "bool"
+                },
+                {
+                    "name": "grading-results",
+                    "type": "[]*model.GradingResult"
+                }
+            ]
         },
         "courses/assignments/submissions/fetch/user/history": {
             "description": "Get a summary of the submissions for this assignment.",
-            "input": {
-                "assignment-id": "string",
-                "course-id": "string",
-                "target-email": "core.TargetCourseUserSelfOrGrader",
-                "user-email": "string",
-                "user-pass": "string"
-            },
-            "output": {
-                "found-user": "bool",
-                "history": "[]*model.SubmissionHistoryItem"
-            }
+            "input": [
+                {
+                    "name": "assignment-id",
+                    "type": "string"
+                },
+                {
+                    "name": "course-id",
+                    "type": "string"
+                },
+                {
+                    "name": "target-email",
+                    "type": "core.TargetCourseUserSelfOrGrader"
+                },
+                {
+                    "name": "user-email",
+                    "type": "string"
+                },
+                {
+                    "name": "user-pass",
+                    "type": "string"
+                }
+            ],
+            "output": [
+                {
+                    "name": "found-user",
+                    "type": "bool"
+                },
+                {
+                    "name": "history",
+                    "type": "[]*model.SubmissionHistoryItem"
+                }
+            ]
         },
         "courses/assignments/submissions/fetch/user/peek": {
             "description": "Get a copy of the grading report for the specified submission. Does not submit a new submission.",
-            "input": {
-                "assignment-id": "string",
-                "course-id": "string",
-                "target-email": "core.TargetCourseUserSelfOrGrader",
-                "target-submission": "string",
-                "user-email": "string",
-                "user-pass": "string"
-            },
-            "output": {
-                "found-submission": "bool",
-                "found-user": "bool",
-                "submission-result": "*model.GradingInfo"
-            }
+            "input": [
+                {
+                    "name": "assignment-id",
+                    "type": "string"
+                },
+                {
+                    "name": "course-id",
+                    "type": "string"
+                },
+                {
+                    "name": "target-email",
+                    "type": "core.TargetCourseUserSelfOrGrader"
+                },
+                {
+                    "name": "target-submission",
+                    "type": "string"
+                },
+                {
+                    "name": "user-email",
+                    "type": "string"
+                },
+                {
+                    "name": "user-pass",
+                    "type": "string"
+                }
+            ],
+            "output": [
+                {
+                    "name": "found-submission",
+                    "type": "bool"
+                },
+                {
+                    "name": "found-user",
+                    "type": "bool"
+                },
+                {
+                    "name": "submission-result",
+                    "type": "*model.GradingInfo"
+                }
+            ]
         },
         "courses/assignments/submissions/proxy/resubmit": {
             "description": "Proxy resubmit an assignment submission to the autograder.",
-            "input": {
-                "assignment-id": "string",
-                "course-id": "string",
-                "proxy-email": "core.TargetCourseUser",
-                "proxy-time": "int64",
-                "target-submission": "string",
-                "user-email": "string",
-                "user-pass": "string"
-            },
-            "output": {
-                "found-submission": "bool",
-                "found-user": "bool",
-                "grading-success": "bool",
-                "message": "string",
-                "rejected": "bool",
-                "result": "*model.GradingInfo"
-            }
+            "input": [
+                {
+                    "name": "assignment-id",
+                    "type": "string"
+                },
+                {
+                    "name": "course-id",
+                    "type": "string"
+                },
+                {
+                    "name": "proxy-email",
+                    "type": "core.TargetCourseUser"
+                },
+                {
+                    "name": "proxy-time",
+                    "type": "int64"
+                },
+                {
+                    "name": "target-submission",
+                    "type": "string"
+                },
+                {
+                    "name": "user-email",
+                    "type": "string"
+                },
+                {
+                    "name": "user-pass",
+                    "type": "string"
+                }
+            ],
+            "output": [
+                {
+                    "name": "found-submission",
+                    "type": "bool"
+                },
+                {
+                    "name": "found-user",
+                    "type": "bool"
+                },
+                {
+                    "name": "grading-success",
+                    "type": "bool"
+                },
+                {
+                    "name": "message",
+                    "type": "string"
+                },
+                {
+                    "name": "rejected",
+                    "type": "bool"
+                },
+                {
+                    "name": "result",
+                    "type": "*model.GradingInfo"
+                }
+            ]
         },
         "courses/assignments/submissions/proxy/submit": {
             "description": "Proxy submit an assignment submission to the autograder.",
-            "input": {
-                "assignment-id": "string",
-                "course-id": "string",
-                "message": "string",
-                "proxy-email": "core.TargetCourseUser",
-                "proxy-time": "int64",
-                "user-email": "string",
-                "user-pass": "string"
-            },
-            "output": {
-                "found-user": "bool",
-                "grading-success": "bool",
-                "message": "string",
-                "rejected": "bool",
-                "result": "*model.GradingInfo"
-            }
+            "input": [
+                {
+                    "name": "assignment-id",
+                    "type": "string"
+                },
+                {
+                    "name": "course-id",
+                    "type": "string"
+                },
+                {
+                    "name": "message",
+                    "type": "string"
+                },
+                {
+                    "name": "proxy-email",
+                    "type": "core.TargetCourseUser"
+                },
+                {
+                    "name": "proxy-time",
+                    "type": "int64"
+                },
+                {
+                    "name": "user-email",
+                    "type": "string"
+                },
+                {
+                    "name": "user-pass",
+                    "type": "string"
+                }
+            ],
+            "output": [
+                {
+                    "name": "found-user",
+                    "type": "bool"
+                },
+                {
+                    "name": "grading-success",
+                    "type": "bool"
+                },
+                {
+                    "name": "message",
+                    "type": "string"
+                },
+                {
+                    "name": "rejected",
+                    "type": "bool"
+                },
+                {
+                    "name": "result",
+                    "type": "*model.GradingInfo"
+                }
+            ]
         },
         "courses/assignments/submissions/remove": {
             "description": "Remove a specified submission. Defaults to the most recent submission.",
-            "input": {
-                "assignment-id": "string",
-                "course-id": "string",
-                "target-email": "core.TargetCourseUserSelfOrGrader",
-                "target-submission": "string",
-                "user-email": "string",
-                "user-pass": "string"
-            },
-            "output": {
-                "found-submission": "bool",
-                "found-user": "bool"
-            }
+            "input": [
+                {
+                    "name": "assignment-id",
+                    "type": "string"
+                },
+                {
+                    "name": "course-id",
+                    "type": "string"
+                },
+                {
+                    "name": "target-email",
+                    "type": "core.TargetCourseUserSelfOrGrader"
+                },
+                {
+                    "name": "target-submission",
+                    "type": "string"
+                },
+                {
+                    "name": "user-email",
+                    "type": "string"
+                },
+                {
+                    "name": "user-pass",
+                    "type": "string"
+                }
+            ],
+            "output": [
+                {
+                    "name": "found-submission",
+                    "type": "bool"
+                },
+                {
+                    "name": "found-user",
+                    "type": "bool"
+                }
+            ]
         },
         "courses/assignments/submissions/submit": {
             "description": "Submit an assignment submission to the autograder.",
-            "input": {
-                "allow-late": "bool",
-                "assignment-id": "string",
-                "course-id": "string",
-                "message": "string",
-                "user-email": "string",
-                "user-pass": "string"
-            },
-            "output": {
-                "grading-success": "bool",
-                "message": "string",
-                "rejected": "bool",
-                "result": "*model.GradingInfo"
-            }
+            "input": [
+                {
+                    "name": "allow-late",
+                    "type": "bool"
+                },
+                {
+                    "name": "assignment-id",
+                    "type": "string"
+                },
+                {
+                    "name": "course-id",
+                    "type": "string"
+                },
+                {
+                    "name": "message",
+                    "type": "string"
+                },
+                {
+                    "name": "user-email",
+                    "type": "string"
+                },
+                {
+                    "name": "user-pass",
+                    "type": "string"
+                }
+            ],
+            "output": [
+                {
+                    "name": "grading-success",
+                    "type": "bool"
+                },
+                {
+                    "name": "message",
+                    "type": "string"
+                },
+                {
+                    "name": "rejected",
+                    "type": "bool"
+                },
+                {
+                    "name": "result",
+                    "type": "*model.GradingInfo"
+                }
+            ]
         },
         "courses/lms/scores/upload": {
             "description": "Perform a full scoring and upload scores to the course's LMS.",
-            "input": {
-                "course-id": "string",
-                "dry-run": "bool",
-                "user-email": "string",
-                "user-pass": "string"
-            },
-            "output": {
-                "dry-run": "bool",
-                "results": "[]*model.ExternalScoringInfo"
-            }
+            "input": [
+                {
+                    "name": "course-id",
+                    "type": "string"
+                },
+                {
+                    "name": "dry-run",
+                    "type": "bool"
+                },
+                {
+                    "name": "user-email",
+                    "type": "string"
+                },
+                {
+                    "name": "user-pass",
+                    "type": "string"
+                }
+            ],
+            "output": [
+                {
+                    "name": "dry-run",
+                    "type": "bool"
+                },
+                {
+                    "name": "results",
+                    "type": "[]*model.ExternalScoringInfo"
+                }
+            ]
         },
         "courses/stats/query": {
             "description": "Query metrics for a specific course.\nOnly the context course can be queried for, the target-course field will be ignored for this endpoint.",
-            "input": {
-                "after": "int64",
-                "before": "int64",
-                "course-id": "string",
-                "limit": "int",
-                "sort": "int",
-                "type": "string",
-                "user-email": "string",
-                "user-pass": "string",
-                "where": "map[stats.MetricAttribute]interface {}"
-            },
-            "output": {
-                "results": "[]*stats.Metric"
-            }
+            "input": [
+                {
+                    "name": "after",
+                    "type": "int64"
+                },
+                {
+                    "name": "before",
+                    "type": "int64"
+                },
+                {
+                    "name": "course-id",
+                    "type": "string"
+                },
+                {
+                    "name": "limit",
+                    "type": "int"
+                },
+                {
+                    "name": "sort",
+                    "type": "int"
+                },
+                {
+                    "name": "type",
+                    "type": "string"
+                },
+                {
+                    "name": "user-email",
+                    "type": "string"
+                },
+                {
+                    "name": "user-pass",
+                    "type": "string"
+                },
+                {
+                    "name": "where",
+                    "type": "map[stats.MetricAttribute]interface {}"
+                }
+            ],
+            "output": [
+                {
+                    "name": "results",
+                    "type": "[]*stats.Metric"
+                }
+            ]
         },
         "courses/upsert/filespec": {
             "description": "Upsert a course using a filespec.",
-            "input": {
-                "dry-run": "bool",
-                "filespec": "util.FileSpec",
-                "skip-build-images": "bool",
-                "skip-emails": "bool",
-                "skip-lms-sync": "bool",
-                "skip-source-sync": "bool",
-                "skip-template-files": "bool",
-                "user-email": "string",
-                "user-pass": "string"
-            },
-            "output": {
-                "results": "[]courses.CourseUpsertResult"
-            }
+            "input": [
+                {
+                    "name": "dry-run",
+                    "type": "bool"
+                },
+                {
+                    "name": "filespec",
+                    "type": "util.FileSpec"
+                },
+                {
+                    "name": "skip-build-images",
+                    "type": "bool"
+                },
+                {
+                    "name": "skip-emails",
+                    "type": "bool"
+                },
+                {
+                    "name": "skip-lms-sync",
+                    "type": "bool"
+                },
+                {
+                    "name": "skip-source-sync",
+                    "type": "bool"
+                },
+                {
+                    "name": "skip-template-files",
+                    "type": "bool"
+                },
+                {
+                    "name": "user-email",
+                    "type": "string"
+                },
+                {
+                    "name": "user-pass",
+                    "type": "string"
+                }
+            ],
+            "output": [
+                {
+                    "name": "results",
+                    "type": "[]courses.CourseUpsertResult"
+                }
+            ]
         },
         "courses/upsert/zip": {
             "description": "Upsert a course using a zip file.",
-            "input": {
-                "dry-run": "bool",
-                "skip-build-images": "bool",
-                "skip-emails": "bool",
-                "skip-lms-sync": "bool",
-                "skip-source-sync": "bool",
-                "skip-template-files": "bool",
-                "user-email": "string",
-                "user-pass": "string"
-            },
-            "output": {
-                "results": "[]courses.CourseUpsertResult"
-            }
+            "input": [
+                {
+                    "name": "dry-run",
+                    "type": "bool"
+                },
+                {
+                    "name": "skip-build-images",
+                    "type": "bool"
+                },
+                {
+                    "name": "skip-emails",
+                    "type": "bool"
+                },
+                {
+                    "name": "skip-lms-sync",
+                    "type": "bool"
+                },
+                {
+                    "name": "skip-source-sync",
+                    "type": "bool"
+                },
+                {
+                    "name": "skip-template-files",
+                    "type": "bool"
+                },
+                {
+                    "name": "user-email",
+                    "type": "string"
+                },
+                {
+                    "name": "user-pass",
+                    "type": "string"
+                }
+            ],
+            "output": [
+                {
+                    "name": "results",
+                    "type": "[]courses.CourseUpsertResult"
+                }
+            ]
         },
         "courses/users/drop": {
             "description": "Drop a user from the course.",
-            "input": {
-                "course-id": "string",
-                "target-email": "core.TargetCourseUser",
-                "user-email": "string",
-                "user-pass": "string"
-            },
-            "output": {
-                "found-user": "bool"
-            }
+            "input": [
+                {
+                    "name": "course-id",
+                    "type": "string"
+                },
+                {
+                    "name": "target-email",
+                    "type": "core.TargetCourseUser"
+                },
+                {
+                    "name": "user-email",
+                    "type": "string"
+                },
+                {
+                    "name": "user-pass",
+                    "type": "string"
+                }
+            ],
+            "output": [
+                {
+                    "name": "found-user",
+                    "type": "bool"
+                }
+            ]
         },
         "courses/users/enroll": {
             "description": "Enroll one or more users to the course.",
-            "input": {
-                "course-id": "string",
-                "dry-run": "bool",
-                "raw-course-users": "[]*model.RawCourseUserData",
-                "send-emails": "bool",
-                "skip-inserts": "bool",
-                "skip-updates": "bool",
-                "user-email": "string",
-                "user-pass": "string"
-            },
-            "output": {
-                "results": "[]*model.ExternalUserOpResult"
-            }
+            "input": [
+                {
+                    "name": "course-id",
+                    "type": "string"
+                },
+                {
+                    "name": "dry-run",
+                    "type": "bool"
+                },
+                {
+                    "name": "raw-course-users",
+                    "type": "[]*model.RawCourseUserData"
+                },
+                {
+                    "name": "send-emails",
+                    "type": "bool"
+                },
+                {
+                    "name": "skip-inserts",
+                    "type": "bool"
+                },
+                {
+                    "name": "skip-updates",
+                    "type": "bool"
+                },
+                {
+                    "name": "user-email",
+                    "type": "string"
+                },
+                {
+                    "name": "user-pass",
+                    "type": "string"
+                }
+            ],
+            "output": [
+                {
+                    "name": "results",
+                    "type": "[]*model.ExternalUserOpResult"
+                }
+            ]
         },
         "courses/users/get": {
             "description": "Get the information for a course user.",
-            "input": {
-                "course-id": "string",
-                "target-email": "core.TargetCourseUserSelfOrGrader",
-                "user-email": "string",
-                "user-pass": "string"
-            },
-            "output": {
-                "found": "bool",
-                "user": "*core.CourseUserInfo"
-            }
+            "input": [
+                {
+                    "name": "course-id",
+                    "type": "string"
+                },
+                {
+                    "name": "target-email",
+                    "type": "core.TargetCourseUserSelfOrGrader"
+                },
+                {
+                    "name": "user-email",
+                    "type": "string"
+                },
+                {
+                    "name": "user-pass",
+                    "type": "string"
+                }
+            ],
+            "output": [
+                {
+                    "name": "found",
+                    "type": "bool"
+                },
+                {
+                    "name": "user",
+                    "type": "*core.CourseUserInfo"
+                }
+            ]
         },
         "courses/users/list": {
             "description": "List the users in the course.",
-            "input": {
-                "course-id": "string",
-                "user-email": "string",
-                "user-pass": "string"
-            },
-            "output": {
-                "users": "[]*core.CourseUserInfo"
-            }
+            "input": [
+                {
+                    "name": "course-id",
+                    "type": "string"
+                },
+                {
+                    "name": "user-email",
+                    "type": "string"
+                },
+                {
+                    "name": "user-pass",
+                    "type": "string"
+                }
+            ],
+            "output": [
+                {
+                    "name": "users",
+                    "type": "[]*core.CourseUserInfo"
+                }
+            ]
         },
         "lms/upload/scores": {
             "description": "Upload scores from a tab-separated file to the course's LMS.\nThe file should not have headers, and should have two columns: email and score.",
-            "input": {
-                "assignment-lms-id": "string",
-                "course-id": "string",
-                "scores": "[]upload.ScoreEntry",
-                "user-email": "string",
-                "user-pass": "string"
-            },
-            "output": {
-                "count": "int",
-                "error-count": "int",
-                "no-lms-id-users": "[]upload.RowEntry",
-                "unrecognized-users": "[]upload.RowEntry"
-            }
+            "input": [
+                {
+                    "name": "assignment-lms-id",
+                    "type": "string"
+                },
+                {
+                    "name": "course-id",
+                    "type": "string"
+                },
+                {
+                    "name": "scores",
+                    "type": "[]upload.ScoreEntry"
+                },
+                {
+                    "name": "user-email",
+                    "type": "string"
+                },
+                {
+                    "name": "user-pass",
+                    "type": "string"
+                }
+            ],
+            "output": [
+                {
+                    "name": "count",
+                    "type": "int"
+                },
+                {
+                    "name": "error-count",
+                    "type": "int"
+                },
+                {
+                    "name": "no-lms-id-users",
+                    "type": "[]upload.RowEntry"
+                },
+                {
+                    "name": "unrecognized-users",
+                    "type": "[]upload.RowEntry"
+                }
+            ]
         },
         "lms/user/get": {
             "description": "Get information for an LMS user.",
-            "input": {
-                "course-id": "string",
-                "target-email": "core.TargetCourseUser",
-                "user-email": "string",
-                "user-pass": "string"
-            },
-            "output": {
-                "found-autograder-user": "bool",
-                "found-lms-user": "bool",
-                "user": "*core.CourseUserInfo"
-            }
+            "input": [
+                {
+                    "name": "course-id",
+                    "type": "string"
+                },
+                {
+                    "name": "target-email",
+                    "type": "core.TargetCourseUser"
+                },
+                {
+                    "name": "user-email",
+                    "type": "string"
+                },
+                {
+                    "name": "user-pass",
+                    "type": "string"
+                }
+            ],
+            "output": [
+                {
+                    "name": "found-autograder-user",
+                    "type": "bool"
+                },
+                {
+                    "name": "found-lms-user",
+                    "type": "bool"
+                },
+                {
+                    "name": "user",
+                    "type": "*core.CourseUserInfo"
+                }
+            ]
         },
         "logs/query": {
             "description": "Query log entries from the autograder server.",
-            "input": {
-                "after": "string",
-                "level": "string",
-                "past": "string",
-                "target-assignment": "string",
-                "target-course": "string",
-                "target-email": "string",
-                "user-email": "string",
-                "user-pass": "string"
-            },
-            "output": {
-                "error": "*model.ExternalLocatableError",
-                "results": "[]*log.Record",
-                "success": "bool"
-            }
+            "input": [
+                {
+                    "name": "after",
+                    "type": "string"
+                },
+                {
+                    "name": "level",
+                    "type": "string"
+                },
+                {
+                    "name": "past",
+                    "type": "string"
+                },
+                {
+                    "name": "target-assignment",
+                    "type": "string"
+                },
+                {
+                    "name": "target-course",
+                    "type": "string"
+                },
+                {
+                    "name": "target-email",
+                    "type": "string"
+                },
+                {
+                    "name": "user-email",
+                    "type": "string"
+                },
+                {
+                    "name": "user-pass",
+                    "type": "string"
+                }
+            ],
+            "output": [
+                {
+                    "name": "error",
+                    "type": "*model.ExternalLocatableError"
+                },
+                {
+                    "name": "results",
+                    "type": "[]*log.Record"
+                },
+                {
+                    "name": "success",
+                    "type": "bool"
+                }
+            ]
         },
         "metadata/describe": {
             "description": "Describe all endpoints on the server.",
-            "input": {},
-            "output": {
-                "endpoints": "map[string]core.EndpointDescription",
-                "types": "map[string]core.TypeDescription"
-            }
+            "input": [
+                {
+                    "name": "force-compute",
+                    "type": "bool"
+                }
+            ],
+            "output": [
+                {
+                    "name": "endpoints",
+                    "type": "map[string]core.EndpointDescription"
+                },
+                {
+                    "name": "types",
+                    "type": "map[string]core.TypeDescription"
+                }
+            ]
         },
         "stats/query": {
             "description": "Query stats for the server.",
-            "input": {
-                "after": "int64",
-                "before": "int64",
-                "limit": "int",
-                "sort": "int",
-                "type": "string",
-                "user-email": "string",
-                "user-pass": "string",
-                "where": "map[stats.MetricAttribute]interface {}"
-            },
-            "output": {
-                "results": "[]*stats.Metric"
-            }
+            "input": [
+                {
+                    "name": "after",
+                    "type": "int64"
+                },
+                {
+                    "name": "before",
+                    "type": "int64"
+                },
+                {
+                    "name": "limit",
+                    "type": "int"
+                },
+                {
+                    "name": "sort",
+                    "type": "int"
+                },
+                {
+                    "name": "type",
+                    "type": "string"
+                },
+                {
+                    "name": "user-email",
+                    "type": "string"
+                },
+                {
+                    "name": "user-pass",
+                    "type": "string"
+                },
+                {
+                    "name": "where",
+                    "type": "map[stats.MetricAttribute]interface {}"
+                }
+            ],
+            "output": [
+                {
+                    "name": "results",
+                    "type": "[]*stats.Metric"
+                }
+            ]
         },
         "system/stacks": {
             "description": "Get stack traces for all the currently running routines (threads) on the server.",
-            "input": {
-                "user-email": "string",
-                "user-pass": "string"
-            },
-            "output": {
-                "count": "int",
-                "stacks": "[]*util.CallStack"
-            }
+            "input": [
+                {
+                    "name": "user-email",
+                    "type": "string"
+                },
+                {
+                    "name": "user-pass",
+                    "type": "string"
+                }
+            ],
+            "output": [
+                {
+                    "name": "count",
+                    "type": "int"
+                },
+                {
+                    "name": "stacks",
+                    "type": "[]*util.CallStack"
+                }
+            ]
         },
         "users/auth": {
             "description": "Authenticate as a user.",
-            "input": {
-                "user-email": "string",
-                "user-pass": "string"
-            },
-            "output": {
-                "success": "bool"
-            }
+            "input": [
+                {
+                    "name": "user-email",
+                    "type": "string"
+                },
+                {
+                    "name": "user-pass",
+                    "type": "string"
+                }
+            ],
+            "output": [
+                {
+                    "name": "success",
+                    "type": "bool"
+                }
+            ]
         },
         "users/get": {
             "description": "Get the information for a server user.",
-            "input": {
-                "target-email": "core.TargetServerUserSelfOrAdmin",
-                "user-email": "string",
-                "user-pass": "string"
-            },
-            "output": {
-                "courses": "map[string]*core.CourseInfo",
-                "found": "bool",
-                "user": "*core.ServerUserInfo"
-            }
+            "input": [
+                {
+                    "name": "target-email",
+                    "type": "core.TargetServerUserSelfOrAdmin"
+                },
+                {
+                    "name": "user-email",
+                    "type": "string"
+                },
+                {
+                    "name": "user-pass",
+                    "type": "string"
+                }
+            ],
+            "output": [
+                {
+                    "name": "courses",
+                    "type": "map[string]*core.CourseInfo"
+                },
+                {
+                    "name": "found",
+                    "type": "bool"
+                },
+                {
+                    "name": "user",
+                    "type": "*core.ServerUserInfo"
+                }
+            ]
         },
         "users/list": {
             "description": "List the users on the server.",
-            "input": {
-                "user-email": "string",
-                "user-pass": "string"
-            },
-            "output": {
-                "users": "[]*core.ServerUserInfo"
-            }
+            "input": [
+                {
+                    "name": "user-email",
+                    "type": "string"
+                },
+                {
+                    "name": "user-pass",
+                    "type": "string"
+                }
+            ],
+            "output": [
+                {
+                    "name": "users",
+                    "type": "[]*core.ServerUserInfo"
+                }
+            ]
         },
         "users/password/change": {
             "description": "Change your password to the one provided.",
-            "input": {
-                "new-pass": "string",
-                "user-email": "string",
-                "user-pass": "string"
-            },
-            "output": {
-                "duplicate": "bool",
-                "success": "bool"
-            }
+            "input": [
+                {
+                    "name": "new-pass",
+                    "type": "string"
+                },
+                {
+                    "name": "user-email",
+                    "type": "string"
+                },
+                {
+                    "name": "user-pass",
+                    "type": "string"
+                }
+            ],
+            "output": [
+                {
+                    "name": "duplicate",
+                    "type": "bool"
+                },
+                {
+                    "name": "success",
+                    "type": "bool"
+                }
+            ]
         },
         "users/password/reset": {
             "description": "Reset to a random password that will be emailed to you.",
-            "input": {
-                "user-email": "string"
-            },
-            "output": {}
+            "input": [
+                {
+                    "name": "user-email",
+                    "type": "string"
+                }
+            ],
+            "output": []
         },
         "users/remove": {
             "description": "Remove a user from the server.",
-            "input": {
-                "target-email": "core.TargetServerUser",
-                "user-email": "string",
-                "user-pass": "string"
-            },
-            "output": {
-                "found-user": "bool"
-            }
+            "input": [
+                {
+                    "name": "target-email",
+                    "type": "core.TargetServerUser"
+                },
+                {
+                    "name": "user-email",
+                    "type": "string"
+                },
+                {
+                    "name": "user-pass",
+                    "type": "string"
+                }
+            ],
+            "output": [
+                {
+                    "name": "found-user",
+                    "type": "bool"
+                }
+            ]
         },
         "users/tokens/create": {
             "description": "Create a new authentication token.",
-            "input": {
-                "name": "string",
-                "user-email": "string",
-                "user-pass": "string"
-            },
-            "output": {
-                "token-cleartext": "string",
-                "token-id": "string"
-            }
+            "input": [
+                {
+                    "name": "name",
+                    "type": "string"
+                },
+                {
+                    "name": "user-email",
+                    "type": "string"
+                },
+                {
+                    "name": "user-pass",
+                    "type": "string"
+                }
+            ],
+            "output": [
+                {
+                    "name": "token-cleartext",
+                    "type": "string"
+                },
+                {
+                    "name": "token-id",
+                    "type": "string"
+                }
+            ]
         },
         "users/tokens/delete": {
             "description": "Delete an authentication token.",
-            "input": {
-                "token-id": "string",
-                "user-email": "string",
-                "user-pass": "string"
-            },
-            "output": {
-                "found": "bool"
-            }
+            "input": [
+                {
+                    "name": "token-id",
+                    "type": "string"
+                },
+                {
+                    "name": "user-email",
+                    "type": "string"
+                },
+                {
+                    "name": "user-pass",
+                    "type": "string"
+                }
+            ],
+            "output": [
+                {
+                    "name": "found",
+                    "type": "bool"
+                }
+            ]
         },
         "users/upsert": {
             "description": "Upsert one or more users to the server (update if exists, insert otherwise).",
-            "input": {
-                "dry-run": "bool",
-                "raw-users": "[]*model.RawServerUserData",
-                "send-emails": "bool",
-                "skip-inserts": "bool",
-                "skip-updates": "bool",
-                "user-email": "string",
-                "user-pass": "string"
-            },
-            "output": {
-                "results": "[]*model.ExternalUserOpResult"
-            }
+            "input": [
+                {
+                    "name": "dry-run",
+                    "type": "bool"
+                },
+                {
+                    "name": "raw-users",
+                    "type": "[]*model.RawServerUserData"
+                },
+                {
+                    "name": "send-emails",
+                    "type": "bool"
+                },
+                {
+                    "name": "skip-inserts",
+                    "type": "bool"
+                },
+                {
+                    "name": "skip-updates",
+                    "type": "bool"
+                },
+                {
+                    "name": "user-email",
+                    "type": "string"
+                },
+                {
+                    "name": "user-pass",
+                    "type": "string"
+                }
+            ],
+            "output": [
+                {
+                    "name": "results",
+                    "type": "[]*model.ExternalUserOpResult"
+                }
+            ]
         }
     },
     "types": {
         "analysis.AnalysisOptions": {
             "category": "struct",
-            "fields": {
-                "dry-run": "bool",
-                "overwrite-cache": "bool",
-                "submissions": "[]string",
-                "wait-for-completion": "bool"
-            }
+            "fields": [
+                {
+                    "name": "dry-run",
+                    "type": "bool"
+                },
+                {
+                    "name": "overwrite-cache",
+                    "type": "bool"
+                },
+                {
+                    "name": "submissions",
+                    "type": "[]string"
+                },
+                {
+                    "name": "wait-for-completion",
+                    "type": "bool"
+                }
+            ]
         },
         "core.APIDescription": {
             "category": "struct",
-            "fields": {
-                "endpoints": "map[string]core.EndpointDescription",
-                "types": "map[string]core.TypeDescription"
-            }
+            "fields": [
+                {
+                    "name": "endpoints",
+                    "type": "map[string]core.EndpointDescription"
+                },
+                {
+                    "name": "types",
+                    "type": "map[string]core.TypeDescription"
+                }
+            ]
         },
         "core.APIRequestAssignmentContext": {
             "category": "struct",
-            "fields": {
-                "assignment-id": "string",
-                "course-id": "string",
-                "user-email": "string",
-                "user-pass": "string"
-            }
+            "description": "Context for requests that need an assignment on top of a user/course.",
+            "fields": [
+                {
+                    "name": "assignment-id",
+                    "type": "string"
+                },
+                {
+                    "name": "course-id",
+                    "type": "string"
+                },
+                {
+                    "name": "user-email",
+                    "type": "string"
+                },
+                {
+                    "name": "user-pass",
+                    "type": "string"
+                }
+            ]
         },
         "core.APIRequestCourseUserContext": {
             "category": "struct",
-            "fields": {
-                "course-id": "string",
-                "user-email": "string",
-                "user-pass": "string"
-            }
+            "description": "Context for a request that has a course and user from that course.",
+            "fields": [
+                {
+                    "name": "course-id",
+                    "type": "string"
+                },
+                {
+                    "name": "user-email",
+                    "type": "string"
+                },
+                {
+                    "name": "user-pass",
+                    "type": "string"
+                }
+            ]
         },
         "core.APIRequestUserContext": {
             "category": "struct",
-            "fields": {
-                "user-email": "string",
-                "user-pass": "string"
-            }
+            "description": "Context for a request that has a user (pretty much the lowest level of request).",
+            "fields": [
+                {
+                    "name": "user-email",
+                    "type": "string"
+                },
+                {
+                    "name": "user-pass",
+                    "type": "string"
+                }
+            ]
         },
         "core.AssignmentInfo": {
             "category": "struct",
-            "fields": {
-                "due-date": "int64",
-                "id": "string",
-                "max-points": "float64",
-                "name": "string"
-            }
+            "fields": [
+                {
+                    "name": "due-date",
+                    "type": "int64"
+                },
+                {
+                    "name": "id",
+                    "type": "string"
+                },
+                {
+                    "name": "max-points",
+                    "type": "float64"
+                },
+                {
+                    "name": "name",
+                    "type": "string"
+                }
+            ]
         },
         "core.BaseSubmitResponse": {
             "category": "struct",
-            "fields": {
-                "grading-success": "bool",
-                "message": "string",
-                "rejected": "bool",
-                "result": "*model.GradingInfo"
-            }
+            "fields": [
+                {
+                    "name": "grading-success",
+                    "type": "bool"
+                },
+                {
+                    "name": "message",
+                    "type": "string"
+                },
+                {
+                    "name": "rejected",
+                    "type": "bool"
+                },
+                {
+                    "name": "result",
+                    "type": "*model.GradingInfo"
+                }
+            ]
         },
         "core.BaseUserInfo": {
             "category": "struct",
-            "fields": {
-                "email": "string",
-                "name": "string",
-                "type": "string"
-            }
+            "description": "This type must be embedded into any API-safe representation of a user.",
+            "fields": [
+                {
+                    "name": "email",
+                    "type": "string"
+                },
+                {
+                    "name": "name",
+                    "type": "string"
+                },
+                {
+                    "name": "type",
+                    "type": "string"
+                }
+            ]
         },
         "core.CourseInfo": {
             "category": "struct",
-            "fields": {
-                "assignments": "map[string]*core.AssignmentInfo",
-                "id": "string",
-                "name": "string"
-            }
+            "fields": [
+                {
+                    "name": "assignments",
+                    "type": "map[string]*core.AssignmentInfo"
+                },
+                {
+                    "name": "id",
+                    "type": "string"
+                },
+                {
+                    "name": "name",
+                    "type": "string"
+                }
+            ]
         },
         "core.CourseUserInfo": {
             "category": "struct",
-            "fields": {
-                "email": "string",
-                "lms-id": "string",
-                "name": "string",
-                "role": "int",
-                "type": "string"
-            }
+            "description": "An API-safe representation of a course user.\nEmbed the BaseUserInfo and use CourseUserInfoType as the type.",
+            "fields": [
+                {
+                    "name": "email",
+                    "type": "string"
+                },
+                {
+                    "name": "lms-id",
+                    "type": "string"
+                },
+                {
+                    "name": "name",
+                    "type": "string"
+                },
+                {
+                    "name": "role",
+                    "type": "int"
+                },
+                {
+                    "name": "type",
+                    "type": "string"
+                }
+            ]
         },
         "core.EndpointDescription": {
             "category": "struct",
-            "fields": {
-                "description": "string",
-                "input": "map[string]string",
-                "output": "map[string]string"
-            }
+            "fields": [
+                {
+                    "name": "description",
+                    "type": "string"
+                },
+                {
+                    "name": "input",
+                    "type": "[]core.FieldDescription"
+                },
+                {
+                    "name": "output",
+                    "type": "[]core.FieldDescription"
+                }
+            ]
         },
         "core.EnrollmentInfo": {
             "category": "struct",
-            "fields": {
-                "id": "string",
-                "role": "int"
-            }
+            "description": "An API-safe representation of enrollment information.",
+            "fields": [
+                {
+                    "name": "id",
+                    "type": "string"
+                },
+                {
+                    "name": "role",
+                    "type": "int"
+                }
+            ]
+        },
+        "core.FieldDescription": {
+            "category": "struct",
+            "fields": [
+                {
+                    "name": "name",
+                    "type": "string"
+                },
+                {
+                    "name": "type",
+                    "type": "string"
+                }
+            ]
         },
         "core.NonEmptyString": {
-            "alias-type": "string",
-            "category": "alias"
+            "category": "alias",
+            "alias-type": "string"
         },
         "core.ServerUserInfo": {
             "category": "struct",
-            "fields": {
-                "courses": "map[string]core.EnrollmentInfo",
-                "email": "string",
-                "name": "string",
-                "role": "int",
-                "type": "string"
-            }
+            "description": "An API-safe representation of a server user.\nEmbed the BaseUserInfo and use ServerUserInfoType as the type.",
+            "fields": [
+                {
+                    "name": "courses",
+                    "type": "map[string]core.EnrollmentInfo"
+                },
+                {
+                    "name": "email",
+                    "type": "string"
+                },
+                {
+                    "name": "name",
+                    "type": "string"
+                },
+                {
+                    "name": "role",
+                    "type": "int"
+                },
+                {
+                    "name": "type",
+                    "type": "string"
+                }
+            ]
         },
         "core.TargetCourseUser": {
-            "category": "struct"
+            "category": "struct",
+            "description": "A request having a field of this type indicates that the request is targeting a specific course user.\nThis type serializes to/from a string.\nA user's email must be specified, but no error is generated if the user is not found.\nThe existence of this type in a struct also indicates that the request is at least a APIRequestCourseUserContext."
         },
         "core.TargetCourseUserSelfOrGrader": {
             "category": "struct",
-            "fields": {
-                "TargetCourseUser": "core.TargetCourseUser"
-            }
+            "description": "Same as TargetServerUserSelfOrAdmin, but in the context of a course user and a grader context user.\nTherefore, the context user only has to be a grader in the context course (or the target user themself).\nWhen targeting yourself, the user can be a server admin (and will be escalated to course owner for the request).\nThe existence of this type in a struct also indicates that the request is at least a APIRequestCourseUserContext.",
+            "fields": [
+                {
+                    "name": "TargetCourseUser",
+                    "type": "core.TargetCourseUser"
+                }
+            ]
         },
         "core.TargetServerUser": {
-            "category": "struct"
+            "category": "struct",
+            "description": "A request having a field of this type indicates that the request is targeting a specific server user.\nThis type serializes to/from a string.\nA user's email must be specified, but no error is generated if the user is not found.\nThe existence of this type in a struct also indicates that the request is at least a APIRequestUserContext."
         },
         "core.TargetServerUserSelfOrAdmin": {
             "category": "struct",
-            "fields": {
-                "TargetServerUser": "core.TargetServerUser"
-            }
+            "description": "A request having a field of this type indicates that the request is targeting a specific user.\nThis type serializes to/from a string.\nIf no user is specified, then the context user is the target.\nIf a user is specified, then the context user must be a server admin\n(any user can access their own resources, but higher permissions are required to access another user's resources).\nNo error is generated if the user is not found.\nThe existence of this type in a struct also indicates that the request is at least a APIRequestUserContext.",
+            "fields": [
+                {
+                    "name": "TargetServerUser",
+                    "type": "core.TargetServerUser"
+                }
+            ]
         },
         "core.TypeDescription": {
             "category": "struct",
-            "fields": {
-                "alias-type": "string",
-                "category": "string",
-                "element-type": "string",
-                "fields": "map[string]string"
-            }
+            "fields": [
+                {
+                    "name": "alias-type",
+                    "type": "string"
+                },
+                {
+                    "name": "category",
+                    "type": "string"
+                },
+                {
+                    "name": "description",
+                    "type": "string"
+                },
+                {
+                    "name": "element-type",
+                    "type": "string"
+                },
+                {
+                    "name": "fields",
+                    "type": "[]core.FieldDescription"
+                }
+            ]
         },
         "core.UserInfoType": {
-            "alias-type": "string",
-            "category": "alias"
+            "category": "alias",
+            "alias-type": "string"
         },
         "courses.CourseUpsertOptions": {
             "category": "struct",
-            "fields": {
-                "dry-run": "bool",
-                "skip-build-images": "bool",
-                "skip-emails": "bool",
-                "skip-lms-sync": "bool",
-                "skip-source-sync": "bool",
-                "skip-template-files": "bool"
-            }
+            "fields": [
+                {
+                    "name": "dry-run",
+                    "type": "bool"
+                },
+                {
+                    "name": "skip-build-images",
+                    "type": "bool"
+                },
+                {
+                    "name": "skip-emails",
+                    "type": "bool"
+                },
+                {
+                    "name": "skip-lms-sync",
+                    "type": "bool"
+                },
+                {
+                    "name": "skip-source-sync",
+                    "type": "bool"
+                },
+                {
+                    "name": "skip-template-files",
+                    "type": "bool"
+                }
+            ]
         },
         "courses.CourseUpsertPublicOptions": {
             "category": "struct",
-            "fields": {
-                "dry-run": "bool",
-                "skip-build-images": "bool",
-                "skip-emails": "bool",
-                "skip-lms-sync": "bool",
-                "skip-source-sync": "bool",
-                "skip-template-files": "bool"
-            }
+            "fields": [
+                {
+                    "name": "dry-run",
+                    "type": "bool"
+                },
+                {
+                    "name": "skip-build-images",
+                    "type": "bool"
+                },
+                {
+                    "name": "skip-emails",
+                    "type": "bool"
+                },
+                {
+                    "name": "skip-lms-sync",
+                    "type": "bool"
+                },
+                {
+                    "name": "skip-source-sync",
+                    "type": "bool"
+                },
+                {
+                    "name": "skip-template-files",
+                    "type": "bool"
+                }
+            ]
         },
         "courses.CourseUpsertResult": {
             "category": "struct",
-            "fields": {
-                "assignment-template-files": "map[string][]string",
-                "built-assignment-images": "[]string",
-                "course-id": "string",
-                "created": "bool",
-                "lms-sync-result": "*model.LMSSyncResult",
-                "message": "string",
-                "success": "bool",
-                "updated": "bool"
-            }
+            "fields": [
+                {
+                    "name": "assignment-template-files",
+                    "type": "map[string][]string"
+                },
+                {
+                    "name": "built-assignment-images",
+                    "type": "[]string"
+                },
+                {
+                    "name": "course-id",
+                    "type": "string"
+                },
+                {
+                    "name": "created",
+                    "type": "bool"
+                },
+                {
+                    "name": "lms-sync-result",
+                    "type": "*model.LMSSyncResult"
+                },
+                {
+                    "name": "message",
+                    "type": "string"
+                },
+                {
+                    "name": "success",
+                    "type": "bool"
+                },
+                {
+                    "name": "updated",
+                    "type": "bool"
+                }
+            ]
         },
         "email.Message": {
             "category": "struct",
-            "fields": {
-                "bcc": "[]string",
-                "body": "string",
-                "cc": "[]string",
-                "html": "bool",
-                "subject": "string",
-                "to": "[]string"
-            }
+            "fields": [
+                {
+                    "name": "bcc",
+                    "type": "[]string"
+                },
+                {
+                    "name": "body",
+                    "type": "string"
+                },
+                {
+                    "name": "cc",
+                    "type": "[]string"
+                },
+                {
+                    "name": "html",
+                    "type": "bool"
+                },
+                {
+                    "name": "subject",
+                    "type": "string"
+                },
+                {
+                    "name": "to",
+                    "type": "[]string"
+                }
+            ]
         },
         "log.LogLevel": {
-            "alias-type": "int32",
-            "category": "alias"
+            "category": "alias",
+            "alias-type": "int32"
         },
         "log.RawLogQuery": {
             "category": "struct",
-            "fields": {
-                "after": "string",
-                "level": "string",
-                "past": "string",
-                "target-assignment": "string",
-                "target-course": "string",
-                "target-email": "string"
-            }
+            "description": "A representation of a query for server log records.\nA raw query can be processed (validated for structure and permissions)\nby the internal/procedures/log package.\nBecause of some assumptions we make, log times before UNIX epoch are not supported.\nHowever, since this code was created well past that only time travelers should be concerned.",
+            "fields": [
+                {
+                    "name": "after",
+                    "type": "string"
+                },
+                {
+                    "name": "level",
+                    "type": "string"
+                },
+                {
+                    "name": "past",
+                    "type": "string"
+                },
+                {
+                    "name": "target-assignment",
+                    "type": "string"
+                },
+                {
+                    "name": "target-course",
+                    "type": "string"
+                },
+                {
+                    "name": "target-email",
+                    "type": "string"
+                }
+            ]
         },
         "log.Record": {
             "category": "struct",
-            "fields": {
-                "assignment": "string",
-                "attributes": "map[string]interface {}",
-                "course": "string",
-                "error": "string",
-                "level": "int32",
-                "message": "string",
-                "timestamp": "int64",
-                "user": "string"
-            }
+            "fields": [
+                {
+                    "name": "assignment",
+                    "type": "string"
+                },
+                {
+                    "name": "attributes",
+                    "type": "map[string]interface {}"
+                },
+                {
+                    "name": "course",
+                    "type": "string"
+                },
+                {
+                    "name": "error",
+                    "type": "string"
+                },
+                {
+                    "name": "level",
+                    "type": "int32"
+                },
+                {
+                    "name": "message",
+                    "type": "string"
+                },
+                {
+                    "name": "timestamp",
+                    "type": "int64"
+                },
+                {
+                    "name": "user",
+                    "type": "string"
+                }
+            ]
         },
         "model.AnalysisFileInfo": {
             "category": "struct",
-            "fields": {
-                "filename": "string",
-                "lines-of-code": "int",
-                "original-filename": "string"
-            }
+            "fields": [
+                {
+                    "name": "filename",
+                    "type": "string"
+                },
+                {
+                    "name": "lines-of-code",
+                    "type": "int"
+                },
+                {
+                    "name": "original-filename",
+                    "type": "string"
+                }
+            ]
         },
         "model.AnalysisSummary": {
             "category": "struct",
-            "fields": {
-                "complete": "bool",
-                "complete-count": "int",
-                "failure-count": "int",
-                "first-timestamp": "int64",
-                "last-timestamp": "int64",
-                "pending-count": "int"
-            }
+            "fields": [
+                {
+                    "name": "complete",
+                    "type": "bool"
+                },
+                {
+                    "name": "complete-count",
+                    "type": "int"
+                },
+                {
+                    "name": "failure-count",
+                    "type": "int"
+                },
+                {
+                    "name": "first-timestamp",
+                    "type": "int64"
+                },
+                {
+                    "name": "last-timestamp",
+                    "type": "int64"
+                },
+                {
+                    "name": "pending-count",
+                    "type": "int"
+                }
+            ]
         },
         "model.AssignmentAnalysisOptions": {
             "category": "struct",
-            "fields": {
-                "exclude-patterns": "[]string",
-                "include-patterns": "[]string",
-                "template-file-ops": "[]*util.FileOperation",
-                "template-files": "[]*util.FileSpec"
-            }
+            "fields": [
+                {
+                    "name": "exclude-patterns",
+                    "type": "[]string"
+                },
+                {
+                    "name": "include-patterns",
+                    "type": "[]string"
+                },
+                {
+                    "name": "template-file-ops",
+                    "type": "[]*util.FileOperation"
+                },
+                {
+                    "name": "template-files",
+                    "type": "[]*util.FileSpec"
+                }
+            ]
         },
         "model.AssignmentInfo": {
             "category": "struct",
-            "fields": {
-                "id": "string",
-                "late-days-lms-id": "string",
-                "late-days-lms-name": "string",
-                "name": "string"
-            }
+            "fields": [
+                {
+                    "name": "id",
+                    "type": "string"
+                },
+                {
+                    "name": "late-days-lms-id",
+                    "type": "string"
+                },
+                {
+                    "name": "late-days-lms-name",
+                    "type": "string"
+                },
+                {
+                    "name": "name",
+                    "type": "string"
+                }
+            ]
         },
         "model.AssignmentSyncResult": {
             "category": "struct",
-            "fields": {
-                "ambiguous-matches": "[]model.AssignmentInfo",
-                "non-matched-assignments": "[]model.AssignmentInfo",
-                "synced-assignments": "[]model.AssignmentInfo",
-                "unchanged-assignments": "[]model.AssignmentInfo"
-            }
+            "fields": [
+                {
+                    "name": "ambiguous-matches",
+                    "type": "[]model.AssignmentInfo"
+                },
+                {
+                    "name": "non-matched-assignments",
+                    "type": "[]model.AssignmentInfo"
+                },
+                {
+                    "name": "synced-assignments",
+                    "type": "[]model.AssignmentInfo"
+                },
+                {
+                    "name": "unchanged-assignments",
+                    "type": "[]model.AssignmentInfo"
+                }
+            ]
         },
         "model.BaseUserOpResult": {
             "category": "struct",
-            "fields": {
-                "added": "bool",
-                "dropped": "[]string",
-                "email": "string",
-                "emailed": "bool",
-                "enrolled": "[]string",
-                "modified": "bool",
-                "not-exists": "bool",
-                "removed": "bool",
-                "skipped": "bool"
-            }
+            "description": "A general representation of the result of operations that modify a user in any way (add, remove, enroll, drop, etc).",
+            "fields": [
+                {
+                    "name": "added",
+                    "type": "bool"
+                },
+                {
+                    "name": "dropped",
+                    "type": "[]string"
+                },
+                {
+                    "name": "email",
+                    "type": "string"
+                },
+                {
+                    "name": "emailed",
+                    "type": "bool"
+                },
+                {
+                    "name": "enrolled",
+                    "type": "[]string"
+                },
+                {
+                    "name": "modified",
+                    "type": "bool"
+                },
+                {
+                    "name": "not-exists",
+                    "type": "bool"
+                },
+                {
+                    "name": "removed",
+                    "type": "bool"
+                },
+                {
+                    "name": "skipped",
+                    "type": "bool"
+                }
+            ]
         },
         "model.CourseUserRole": {
-            "alias-type": "int",
-            "category": "alias"
+            "category": "alias",
+            "alias-type": "int"
         },
         "model.ExternalLocatableError": {
             "category": "struct",
-            "fields": {
-                "locator": "string",
-                "message": "string"
-            }
+            "description": "A user safe version of locatable errors.\nAll LocatableErrors must be converted to ExternalLocatableErrors\nif it is to be given to a user.",
+            "fields": [
+                {
+                    "name": "locator",
+                    "type": "string"
+                },
+                {
+                    "name": "message",
+                    "type": "string"
+                }
+            ]
         },
         "model.ExternalScoringInfo": {
             "category": "struct",
-            "fields": {
-                "assignment": "string",
-                "raw-score": "float64",
-                "score": "float64",
-                "submission-id": "string",
-                "submission-time": "int64",
-                "upload-time": "int64",
-                "user": "string"
-            }
+            "description": "A trimmed-down version of ScoringInfo meant for external usage.",
+            "fields": [
+                {
+                    "name": "assignment",
+                    "type": "string"
+                },
+                {
+                    "name": "raw-score",
+                    "type": "float64"
+                },
+                {
+                    "name": "score",
+                    "type": "float64"
+                },
+                {
+                    "name": "submission-id",
+                    "type": "string"
+                },
+                {
+                    "name": "submission-time",
+                    "type": "int64"
+                },
+                {
+                    "name": "upload-time",
+                    "type": "int64"
+                },
+                {
+                    "name": "user",
+                    "type": "string"
+                }
+            ]
         },
         "model.ExternalUserOpResult": {
             "category": "struct",
-            "fields": {
-                "added": "bool",
-                "communication-error": "*model.ExternalLocatableError",
-                "dropped": "[]string",
-                "email": "string",
-                "emailed": "bool",
-                "enrolled": "[]string",
-                "modified": "bool",
-                "not-exists": "bool",
-                "removed": "bool",
-                "skipped": "bool",
-                "system-error": "*model.ExternalLocatableError",
-                "validation-error": "*model.ExternalLocatableError"
-            }
+            "description": "A user safe representation of the UserOpResult struct.\nNotably all errors will be converted to responses and the cleartext password field is removed.\nFor descriptions of shared fields, see UserOpResult above.",
+            "fields": [
+                {
+                    "name": "added",
+                    "type": "bool"
+                },
+                {
+                    "name": "communication-error",
+                    "type": "*model.ExternalLocatableError"
+                },
+                {
+                    "name": "dropped",
+                    "type": "[]string"
+                },
+                {
+                    "name": "email",
+                    "type": "string"
+                },
+                {
+                    "name": "emailed",
+                    "type": "bool"
+                },
+                {
+                    "name": "enrolled",
+                    "type": "[]string"
+                },
+                {
+                    "name": "modified",
+                    "type": "bool"
+                },
+                {
+                    "name": "not-exists",
+                    "type": "bool"
+                },
+                {
+                    "name": "removed",
+                    "type": "bool"
+                },
+                {
+                    "name": "skipped",
+                    "type": "bool"
+                },
+                {
+                    "name": "system-error",
+                    "type": "*model.ExternalLocatableError"
+                },
+                {
+                    "name": "validation-error",
+                    "type": "*model.ExternalLocatableError"
+                }
+            ]
         },
         "model.FileSimilarity": {
             "category": "struct",
-            "fields": {
-                "filename": "string",
-                "options": "map[string]interface {}",
-                "original-filename": "string",
-                "score": "float64",
-                "tool": "string",
-                "version": "string"
-            }
+            "fields": [
+                {
+                    "name": "filename",
+                    "type": "string"
+                },
+                {
+                    "name": "options",
+                    "type": "map[string]interface {}"
+                },
+                {
+                    "name": "original-filename",
+                    "type": "string"
+                },
+                {
+                    "name": "score",
+                    "type": "float64"
+                },
+                {
+                    "name": "tool",
+                    "type": "string"
+                },
+                {
+                    "name": "version",
+                    "type": "string"
+                }
+            ]
         },
         "model.GradedQuestion": {
             "category": "struct",
-            "fields": {
-                "grading_end_time": "int64",
-                "grading_start_time": "int64",
-                "hard_fail": "bool",
-                "max_points": "float64",
-                "message": "string",
-                "name": "string",
-                "score": "float64",
-                "skipped": "bool"
-            }
+            "fields": [
+                {
+                    "name": "grading_end_time",
+                    "type": "int64"
+                },
+                {
+                    "name": "grading_start_time",
+                    "type": "int64"
+                },
+                {
+                    "name": "hard_fail",
+                    "type": "bool"
+                },
+                {
+                    "name": "max_points",
+                    "type": "float64"
+                },
+                {
+                    "name": "message",
+                    "type": "string"
+                },
+                {
+                    "name": "name",
+                    "type": "string"
+                },
+                {
+                    "name": "score",
+                    "type": "float64"
+                },
+                {
+                    "name": "skipped",
+                    "type": "bool"
+                }
+            ]
         },
         "model.GradingInfo": {
             "category": "struct",
-            "fields": {
-                "additional-info": "map[string]interface {}",
-                "assignment-id": "string",
-                "course-id": "string",
-                "epilogue": "string",
-                "grading_end_time": "int64",
-                "grading_start_time": "int64",
-                "id": "string",
-                "max_points": "float64",
-                "message": "string",
-                "name": "string",
-                "prologue": "string",
-                "proxy-user": "string",
-                "proxy_end_time": "int64",
-                "proxy_start_time": "int64",
-                "questions": "[]*model.GradedQuestion",
-                "score": "float64",
-                "short-id": "string",
-                "user": "string"
-            }
+            "fields": [
+                {
+                    "name": "additional-info",
+                    "type": "map[string]interface {}"
+                },
+                {
+                    "name": "assignment-id",
+                    "type": "string"
+                },
+                {
+                    "name": "course-id",
+                    "type": "string"
+                },
+                {
+                    "name": "epilogue",
+                    "type": "string"
+                },
+                {
+                    "name": "grading_end_time",
+                    "type": "int64"
+                },
+                {
+                    "name": "grading_start_time",
+                    "type": "int64"
+                },
+                {
+                    "name": "id",
+                    "type": "string"
+                },
+                {
+                    "name": "max_points",
+                    "type": "float64"
+                },
+                {
+                    "name": "message",
+                    "type": "string"
+                },
+                {
+                    "name": "name",
+                    "type": "string"
+                },
+                {
+                    "name": "prologue",
+                    "type": "string"
+                },
+                {
+                    "name": "proxy-user",
+                    "type": "string"
+                },
+                {
+                    "name": "proxy_end_time",
+                    "type": "int64"
+                },
+                {
+                    "name": "proxy_start_time",
+                    "type": "int64"
+                },
+                {
+                    "name": "questions",
+                    "type": "[]*model.GradedQuestion"
+                },
+                {
+                    "name": "score",
+                    "type": "float64"
+                },
+                {
+                    "name": "short-id",
+                    "type": "string"
+                },
+                {
+                    "name": "user",
+                    "type": "string"
+                }
+            ]
         },
         "model.GradingResult": {
             "category": "struct",
-            "fields": {
-                "info": "*model.GradingInfo",
-                "input-files-gzip": "map[string][]uint8",
-                "output-files-gzip": "map[string][]uint8",
-                "stderr": "string",
-                "stdout": "string"
-            }
+            "fields": [
+                {
+                    "name": "info",
+                    "type": "*model.GradingInfo"
+                },
+                {
+                    "name": "input-files-gzip",
+                    "type": "map[string][]uint8"
+                },
+                {
+                    "name": "output-files-gzip",
+                    "type": "map[string][]uint8"
+                },
+                {
+                    "name": "stderr",
+                    "type": "string"
+                },
+                {
+                    "name": "stdout",
+                    "type": "string"
+                }
+            ]
         },
         "model.IndividualAnalysis": {
             "category": "struct",
-            "fields": {
-                "analysis-timestamp": "int64",
-                "assignment-id": "string",
-                "course-id": "string",
-                "failure": "bool",
-                "failure-message": "string",
-                "files": "[]model.AnalysisFileInfo",
-                "lines-of-code": "int",
-                "lines-of-code-delta": "int",
-                "lines-of-code-per-hour": "float64",
-                "options": "*model.AssignmentAnalysisOptions",
-                "score": "float64",
-                "score-delta": "float64",
-                "score-per-hour": "float64",
-                "short-id": "string",
-                "skipped-files": "[]string",
-                "submission-id": "string",
-                "submission-start-time": "int64",
-                "submission-time-delta": "int64",
-                "user-email": "string"
-            }
+            "fields": [
+                {
+                    "name": "analysis-timestamp",
+                    "type": "int64"
+                },
+                {
+                    "name": "assignment-id",
+                    "type": "string"
+                },
+                {
+                    "name": "course-id",
+                    "type": "string"
+                },
+                {
+                    "name": "failure",
+                    "type": "bool"
+                },
+                {
+                    "name": "failure-message",
+                    "type": "string"
+                },
+                {
+                    "name": "files",
+                    "type": "[]model.AnalysisFileInfo"
+                },
+                {
+                    "name": "lines-of-code",
+                    "type": "int"
+                },
+                {
+                    "name": "lines-of-code-delta",
+                    "type": "int"
+                },
+                {
+                    "name": "lines-of-code-per-hour",
+                    "type": "float64"
+                },
+                {
+                    "name": "options",
+                    "type": "*model.AssignmentAnalysisOptions"
+                },
+                {
+                    "name": "score",
+                    "type": "float64"
+                },
+                {
+                    "name": "score-delta",
+                    "type": "float64"
+                },
+                {
+                    "name": "score-per-hour",
+                    "type": "float64"
+                },
+                {
+                    "name": "short-id",
+                    "type": "string"
+                },
+                {
+                    "name": "skipped-files",
+                    "type": "[]string"
+                },
+                {
+                    "name": "submission-id",
+                    "type": "string"
+                },
+                {
+                    "name": "submission-start-time",
+                    "type": "int64"
+                },
+                {
+                    "name": "submission-time-delta",
+                    "type": "int64"
+                },
+                {
+                    "name": "user-email",
+                    "type": "string"
+                }
+            ]
         },
         "model.IndividualAnalysisSummary": {
             "category": "struct",
-            "fields": {
-                "aggregate-lines-of-code": "util.AggregateValues",
-                "aggregate-lines-of-code-delta": "util.AggregateValues",
-                "aggregate-lines-of-code-per-file": "map[string]util.AggregateValues",
-                "aggregate-lines-of-code-per-hour": "util.AggregateValues",
-                "aggregate-score": "util.AggregateValues",
-                "aggregate-score-delta": "util.AggregateValues",
-                "aggregate-score-per-hour": "util.AggregateValues",
-                "aggregate-submission-time-delta": "util.AggregateValues",
-                "complete": "bool",
-                "complete-count": "int",
-                "failure-count": "int",
-                "first-timestamp": "int64",
-                "last-timestamp": "int64",
-                "pending-count": "int"
-            }
+            "fields": [
+                {
+                    "name": "aggregate-lines-of-code",
+                    "type": "util.AggregateValues"
+                },
+                {
+                    "name": "aggregate-lines-of-code-delta",
+                    "type": "util.AggregateValues"
+                },
+                {
+                    "name": "aggregate-lines-of-code-per-file",
+                    "type": "map[string]util.AggregateValues"
+                },
+                {
+                    "name": "aggregate-lines-of-code-per-hour",
+                    "type": "util.AggregateValues"
+                },
+                {
+                    "name": "aggregate-score",
+                    "type": "util.AggregateValues"
+                },
+                {
+                    "name": "aggregate-score-delta",
+                    "type": "util.AggregateValues"
+                },
+                {
+                    "name": "aggregate-score-per-hour",
+                    "type": "util.AggregateValues"
+                },
+                {
+                    "name": "aggregate-submission-time-delta",
+                    "type": "util.AggregateValues"
+                },
+                {
+                    "name": "complete",
+                    "type": "bool"
+                },
+                {
+                    "name": "complete-count",
+                    "type": "int"
+                },
+                {
+                    "name": "failure-count",
+                    "type": "int"
+                },
+                {
+                    "name": "first-timestamp",
+                    "type": "int64"
+                },
+                {
+                    "name": "last-timestamp",
+                    "type": "int64"
+                },
+                {
+                    "name": "pending-count",
+                    "type": "int"
+                }
+            ]
         },
         "model.LMSSyncResult": {
             "category": "struct",
-            "fields": {
-                "assignment-sync": "*model.AssignmentSyncResult",
-                "user-sync": "[]*model.UserOpResult"
-            }
+            "fields": [
+                {
+                    "name": "assignment-sync",
+                    "type": "*model.AssignmentSyncResult"
+                },
+                {
+                    "name": "user-sync",
+                    "type": "[]*model.UserOpResult"
+                }
+            ]
         },
         "model.LocatableError": {
-            "category": "struct"
+            "category": "struct",
+            "description": "A general representation of errors that have a definite source location."
         },
         "model.PairwiseAnalysis": {
             "category": "struct",
-            "fields": {
-                "analysis-timestamp": "int64",
-                "failure": "bool",
-                "failure-message": "string",
-                "mean-similarities": "map[string]float64",
-                "options": "*model.AssignmentAnalysisOptions",
-                "similarities": "map[string][]*model.FileSimilarity",
-                "skipped-files": "[]string",
-                "submission-ids": "model.PairwiseKey",
-                "total-mean-similarity": "float64",
-                "unmatched-files": "[][]string"
-            }
+            "fields": [
+                {
+                    "name": "analysis-timestamp",
+                    "type": "int64"
+                },
+                {
+                    "name": "failure",
+                    "type": "bool"
+                },
+                {
+                    "name": "failure-message",
+                    "type": "string"
+                },
+                {
+                    "name": "mean-similarities",
+                    "type": "map[string]float64"
+                },
+                {
+                    "name": "options",
+                    "type": "*model.AssignmentAnalysisOptions"
+                },
+                {
+                    "name": "similarities",
+                    "type": "map[string][]*model.FileSimilarity"
+                },
+                {
+                    "name": "skipped-files",
+                    "type": "[]string"
+                },
+                {
+                    "name": "submission-ids",
+                    "type": "model.PairwiseKey"
+                },
+                {
+                    "name": "total-mean-similarity",
+                    "type": "float64"
+                },
+                {
+                    "name": "unmatched-files",
+                    "type": "[][]string"
+                }
+            ]
         },
         "model.PairwiseAnalysisSummary": {
             "category": "struct",
-            "fields": {
-                "aggregate-mean-similarities": "map[string]util.AggregateValues",
-                "aggregate-total-mean-similarity": "util.AggregateValues",
-                "complete": "bool",
-                "complete-count": "int",
-                "failure-count": "int",
-                "first-timestamp": "int64",
-                "last-timestamp": "int64",
-                "pending-count": "int"
-            }
+            "fields": [
+                {
+                    "name": "aggregate-mean-similarities",
+                    "type": "map[string]util.AggregateValues"
+                },
+                {
+                    "name": "aggregate-total-mean-similarity",
+                    "type": "util.AggregateValues"
+                },
+                {
+                    "name": "complete",
+                    "type": "bool"
+                },
+                {
+                    "name": "complete-count",
+                    "type": "int"
+                },
+                {
+                    "name": "failure-count",
+                    "type": "int"
+                },
+                {
+                    "name": "first-timestamp",
+                    "type": "int64"
+                },
+                {
+                    "name": "last-timestamp",
+                    "type": "int64"
+                },
+                {
+                    "name": "pending-count",
+                    "type": "int"
+                }
+            ]
         },
         "model.PairwiseKey": {
             "category": "array",
@@ -1008,143 +2559,340 @@
         },
         "model.RawCourseUserData": {
             "category": "struct",
-            "fields": {
-                "course-lms-id": "string",
-                "course-role": "string",
-                "email": "string",
-                "name": "string"
-            }
+            "description": "Raw/dirty data for a course user.\nThis struct is used for raw data coming from a single course.",
+            "fields": [
+                {
+                    "name": "course-lms-id",
+                    "type": "string"
+                },
+                {
+                    "name": "course-role",
+                    "type": "string"
+                },
+                {
+                    "name": "email",
+                    "type": "string"
+                },
+                {
+                    "name": "name",
+                    "type": "string"
+                }
+            ]
         },
         "model.RawServerUserData": {
             "category": "struct",
-            "fields": {
-                "course": "string",
-                "course-lms-id": "string",
-                "course-role": "string",
-                "email": "string",
-                "name": "string",
-                "pass": "string",
-                "role": "string"
-            }
+            "description": "Raw/dirty data for a user.\nThis struct can be directly embedded for Kong arguments.",
+            "fields": [
+                {
+                    "name": "course",
+                    "type": "string"
+                },
+                {
+                    "name": "course-lms-id",
+                    "type": "string"
+                },
+                {
+                    "name": "course-role",
+                    "type": "string"
+                },
+                {
+                    "name": "email",
+                    "type": "string"
+                },
+                {
+                    "name": "name",
+                    "type": "string"
+                },
+                {
+                    "name": "pass",
+                    "type": "string"
+                },
+                {
+                    "name": "role",
+                    "type": "string"
+                }
+            ]
         },
         "model.ServerUserRole": {
-            "alias-type": "int",
-            "category": "alias"
+            "category": "alias",
+            "alias-type": "int"
         },
         "model.SubmissionHistoryItem": {
             "category": "struct",
-            "fields": {
-                "assignment-id": "string",
-                "course-id": "string",
-                "grading_start_time": "int64",
-                "id": "string",
-                "max_points": "float64",
-                "message": "string",
-                "score": "float64",
-                "short-id": "string",
-                "user": "string"
-            }
+            "fields": [
+                {
+                    "name": "assignment-id",
+                    "type": "string"
+                },
+                {
+                    "name": "course-id",
+                    "type": "string"
+                },
+                {
+                    "name": "grading_start_time",
+                    "type": "int64"
+                },
+                {
+                    "name": "id",
+                    "type": "string"
+                },
+                {
+                    "name": "max_points",
+                    "type": "float64"
+                },
+                {
+                    "name": "message",
+                    "type": "string"
+                },
+                {
+                    "name": "score",
+                    "type": "float64"
+                },
+                {
+                    "name": "short-id",
+                    "type": "string"
+                },
+                {
+                    "name": "user",
+                    "type": "string"
+                }
+            ]
         },
         "model.UserOpResult": {
             "category": "struct",
-            "fields": {
-                "added": "bool",
-                "cleartext-password": "string",
-                "communication-error": "*model.LocatableError",
-                "dropped": "[]string",
-                "email": "string",
-                "emailed": "bool",
-                "enrolled": "[]string",
-                "modified": "bool",
-                "not-exists": "bool",
-                "removed": "bool",
-                "skipped": "bool",
-                "system-error": "*model.LocatableError",
-                "validation-error": "*model.LocatableError"
-            }
+            "description": "A general representation of the result of operations that modify a user in any way (add, remove, enroll, drop, etc).\nAll user-facing functions (essentially non-db functions) should return an instance or collection of these objects.",
+            "fields": [
+                {
+                    "name": "added",
+                    "type": "bool"
+                },
+                {
+                    "name": "cleartext-password",
+                    "type": "string"
+                },
+                {
+                    "name": "communication-error",
+                    "type": "*model.LocatableError"
+                },
+                {
+                    "name": "dropped",
+                    "type": "[]string"
+                },
+                {
+                    "name": "email",
+                    "type": "string"
+                },
+                {
+                    "name": "emailed",
+                    "type": "bool"
+                },
+                {
+                    "name": "enrolled",
+                    "type": "[]string"
+                },
+                {
+                    "name": "modified",
+                    "type": "bool"
+                },
+                {
+                    "name": "not-exists",
+                    "type": "bool"
+                },
+                {
+                    "name": "removed",
+                    "type": "bool"
+                },
+                {
+                    "name": "skipped",
+                    "type": "bool"
+                },
+                {
+                    "name": "system-error",
+                    "type": "*model.LocatableError"
+                },
+                {
+                    "name": "validation-error",
+                    "type": "*model.LocatableError"
+                }
+            ]
         },
         "stats.Metric": {
             "category": "struct",
-            "fields": {
-                "attributes": "map[stats.MetricAttribute]interface {}",
-                "timestamp": "int64",
-                "type": "string",
-                "value": "float64"
-            }
+            "fields": [
+                {
+                    "name": "attributes",
+                    "type": "map[stats.MetricAttribute]interface {}"
+                },
+                {
+                    "name": "timestamp",
+                    "type": "int64"
+                },
+                {
+                    "name": "type",
+                    "type": "string"
+                },
+                {
+                    "name": "value",
+                    "type": "float64"
+                }
+            ]
         },
         "stats.MetricAttribute": {
-            "alias-type": "string",
-            "category": "alias"
+            "category": "alias",
+            "alias-type": "string"
         },
         "stats.MetricType": {
-            "alias-type": "string",
-            "category": "alias"
+            "category": "alias",
+            "alias-type": "string"
         },
         "stats.Query": {
             "category": "struct",
-            "fields": {
-                "after": "int64",
-                "before": "int64",
-                "limit": "int",
-                "sort": "int",
-                "type": "string",
-                "where": "map[stats.MetricAttribute]interface {}"
-            }
+            "description": "The query for stats.\nNote that the semantics of this struct mean that times before UNIX epoch (negative times)\nmust be offset by at least one MS (as a zero value is treated as the end of time).",
+            "fields": [
+                {
+                    "name": "after",
+                    "type": "int64"
+                },
+                {
+                    "name": "before",
+                    "type": "int64"
+                },
+                {
+                    "name": "limit",
+                    "type": "int"
+                },
+                {
+                    "name": "sort",
+                    "type": "int"
+                },
+                {
+                    "name": "type",
+                    "type": "string"
+                },
+                {
+                    "name": "where",
+                    "type": "map[stats.MetricAttribute]interface {}"
+                }
+            ]
         },
         "timestamp.Timestamp": {
-            "alias-type": "int64",
-            "category": "alias"
+            "category": "alias",
+            "alias-type": "int64"
         },
         "upload.RowEntry": {
             "category": "struct",
-            "fields": {
-                "entry": "interface {}",
-                "row": "int"
-            }
+            "fields": [
+                {
+                    "name": "entry",
+                    "type": "interface {}"
+                },
+                {
+                    "name": "row",
+                    "type": "int"
+                }
+            ]
         },
         "upload.ScoreEntry": {
             "category": "struct",
-            "fields": {
-                "email": "string",
-                "score": "float64"
-            }
+            "fields": [
+                {
+                    "name": "email",
+                    "type": "string"
+                },
+                {
+                    "name": "score",
+                    "type": "float64"
+                }
+            ]
         },
         "users.UpsertUsersOptions": {
             "category": "struct",
-            "fields": {
-                "dry-run": "bool",
-                "raw-users": "[]*model.RawServerUserData",
-                "send-emails": "bool",
-                "skip-inserts": "bool",
-                "skip-updates": "bool"
-            }
+            "description": "Data for upserting users.\nUpserting should only be done by server or course admins,\nit should not be used for self creation.",
+            "fields": [
+                {
+                    "name": "dry-run",
+                    "type": "bool"
+                },
+                {
+                    "name": "raw-users",
+                    "type": "[]*model.RawServerUserData"
+                },
+                {
+                    "name": "send-emails",
+                    "type": "bool"
+                },
+                {
+                    "name": "skip-inserts",
+                    "type": "bool"
+                },
+                {
+                    "name": "skip-updates",
+                    "type": "bool"
+                }
+            ]
         },
         "util.AggregateValues": {
             "category": "struct",
-            "fields": {
-                "count": "int",
-                "max": "float64",
-                "mean": "float64",
-                "median": "float64",
-                "min": "float64"
-            }
+            "fields": [
+                {
+                    "name": "count",
+                    "type": "int"
+                },
+                {
+                    "name": "max",
+                    "type": "float64"
+                },
+                {
+                    "name": "mean",
+                    "type": "float64"
+                },
+                {
+                    "name": "median",
+                    "type": "float64"
+                },
+                {
+                    "name": "min",
+                    "type": "float64"
+                }
+            ]
         },
         "util.CallStack": {
             "category": "struct",
-            "fields": {
-                "name": "string",
-                "records": "[]util.CallStackRecord",
-                "status": "string"
-            }
+            "fields": [
+                {
+                    "name": "name",
+                    "type": "string"
+                },
+                {
+                    "name": "records",
+                    "type": "[]util.CallStackRecord"
+                },
+                {
+                    "name": "status",
+                    "type": "string"
+                }
+            ]
         },
         "util.CallStackRecord": {
             "category": "struct",
-            "fields": {
-                "call": "string",
-                "file": "string",
-                "line": "int",
-                "pointer": "string"
-            }
+            "fields": [
+                {
+                    "name": "call",
+                    "type": "string"
+                },
+                {
+                    "name": "file",
+                    "type": "string"
+                },
+                {
+                    "name": "line",
+                    "type": "int"
+                },
+                {
+                    "name": "pointer",
+                    "type": "string"
+                }
+            ]
         },
         "util.FileOperation": {
             "category": "array",
@@ -1152,18 +2900,36 @@
         },
         "util.FileSpec": {
             "category": "struct",
-            "fields": {
-                "dest": "string",
-                "path": "string",
-                "reference": "string",
-                "token": "string",
-                "type": "string",
-                "username": "string"
-            }
+            "fields": [
+                {
+                    "name": "dest",
+                    "type": "string"
+                },
+                {
+                    "name": "path",
+                    "type": "string"
+                },
+                {
+                    "name": "reference",
+                    "type": "string"
+                },
+                {
+                    "name": "token",
+                    "type": "string"
+                },
+                {
+                    "name": "type",
+                    "type": "string"
+                },
+                {
+                    "name": "username",
+                    "type": "string"
+                }
+            ]
         },
         "util.FileSpecType": {
-            "alias-type": "string",
-            "category": "alias"
+            "category": "alias",
+            "alias-type": "string"
         }
     }
 }

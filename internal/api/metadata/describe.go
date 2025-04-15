@@ -6,15 +6,22 @@ import (
 
 type DescribeRequest struct {
 	core.APIRequest
+
+	ForceCompute bool `json:"force-compute"`
 }
 
 type DescribeResponse struct {
-	core.APIDescription
+	*core.APIDescription
 }
 
 // Describe all endpoints on the server.
 func HandleDescribe(request *DescribeRequest) (*DescribeResponse, *core.APIError) {
-	response := DescribeResponse{core.GetAPIDescription()}
+	apiDescription, err := core.GetAPIDescription(request.ForceCompute)
+	if err != nil {
+		return nil, core.NewInternalError("-501", request, "Unable to get API description.").Err(err)
+	}
+
+	response := DescribeResponse{apiDescription}
 
 	return &response, nil
 }

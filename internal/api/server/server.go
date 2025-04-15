@@ -32,12 +32,7 @@ func (this *APIServer) RunAndBlock(initiator systemserver.ServerInitiator) (err 
 		return err
 	}
 
-	apiDescription, err := api.Describe(*api.GetRoutes())
-	if err != nil {
-		return err
-	}
-
-	core.SetAPIDescription(*apiDescription)
+	core.SetAPIRoutes(api.GetRoutes())
 
 	defer func() {
 		err = errors.Join(err, util.RemoveDirent(systemserver.GetStatusPath()))
