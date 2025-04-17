@@ -136,7 +136,7 @@ func runIndividualAnalysis(options AnalysisOptions, fullSubmissionIDs []string) 
 	if options.OverwriteCache && !options.DryRun {
 		err := db.RemoveIndividualAnalysis(fullSubmissionIDs)
 		if err != nil {
-			fmt.Errorf("Failed to remove old individual analysis cache entries: '%w'.", err)
+			return nil, fmt.Errorf("Failed to remove old individual analysis cache entries: '%w'.", err)
 		}
 	}
 

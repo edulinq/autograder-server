@@ -184,7 +184,7 @@ func runPairwiseAnalysis(options AnalysisOptions, keys []model.PairwiseKey) ([]*
 	if options.OverwriteCache && !options.DryRun {
 		err := db.RemovePairwiseAnalysis(keys)
 		if err != nil {
-			fmt.Errorf("Failed to remove old individual analysis cache entries: '%w'.", err)
+			return nil, fmt.Errorf("Failed to remove old individual analysis cache entries: '%w'.", err)
 		}
 	}
 
