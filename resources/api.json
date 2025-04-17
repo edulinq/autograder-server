@@ -136,12 +136,8 @@
             "description": "Get the result of a individual analysis for the specified submissions.",
             "input": [
                 {
-                    "name": "dry-run",
-                    "type": "bool"
-                },
-                {
-                    "name": "overwrite-cache",
-                    "type": "bool"
+                    "name": "job-options",
+                    "type": "*jobmanager.JobOptions"
                 },
                 {
                     "name": "submissions",
@@ -154,10 +150,6 @@
                 {
                     "name": "user-pass",
                     "type": "string"
-                },
-                {
-                    "name": "wait-for-completion",
-                    "type": "bool"
                 }
             ],
             "output": [
@@ -183,12 +175,8 @@
             "description": "Get the result of a pairwise analysis for the specified submissions.",
             "input": [
                 {
-                    "name": "dry-run",
-                    "type": "bool"
-                },
-                {
-                    "name": "overwrite-cache",
-                    "type": "bool"
+                    "name": "job-options",
+                    "type": "*jobmanager.JobOptions"
                 },
                 {
                     "name": "submissions",
@@ -201,10 +189,6 @@
                 {
                     "name": "user-pass",
                     "type": "string"
-                },
-                {
-                    "name": "wait-for-completion",
-                    "type": "bool"
                 }
             ],
             "output": [
@@ -1374,20 +1358,12 @@
             "category": "struct",
             "fields": [
                 {
-                    "name": "dry-run",
-                    "type": "bool"
-                },
-                {
-                    "name": "overwrite-cache",
-                    "type": "bool"
+                    "name": "job-options",
+                    "type": "*jobmanager.JobOptions"
                 },
                 {
                     "name": "submissions",
                     "type": "[]string"
-                },
-                {
-                    "name": "wait-for-completion",
-                    "type": "bool"
                 }
             ]
         },
@@ -1813,6 +1789,23 @@
                 {
                     "name": "to",
                     "type": "[]string"
+                }
+            ]
+        },
+        "jobmanager.JobOptions": {
+            "category": "struct",
+            "fields": [
+                {
+                    "name": "dry-run",
+                    "type": "bool"
+                },
+                {
+                    "name": "overwrite-cache",
+                    "type": "bool"
+                },
+                {
+                    "name": "wait-for-completion",
+                    "type": "bool"
                 }
             ]
         },

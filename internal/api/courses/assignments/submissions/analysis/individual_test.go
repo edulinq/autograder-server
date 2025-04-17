@@ -8,6 +8,7 @@ import (
 	"github.com/edulinq/autograder/internal/analysis"
 	"github.com/edulinq/autograder/internal/api/core"
 	"github.com/edulinq/autograder/internal/db"
+	"github.com/edulinq/autograder/internal/jobmanager"
 	"github.com/edulinq/autograder/internal/model"
 	"github.com/edulinq/autograder/internal/timestamp"
 	"github.com/edulinq/autograder/internal/util"
@@ -28,8 +29,10 @@ func TestIndividualBase(test *testing.T) {
 
 	email := "server-admin"
 	fields := map[string]any{
-		"submissions":         submissions,
-		"wait-for-completion": false,
+		"submissions": submissions,
+		"job-options": &jobmanager.JobOptions{
+			WaitForCompletion: false,
+		},
 	}
 
 	response := core.SendTestAPIRequestFull(test, `courses/assignments/submissions/analysis/individual`, fields, nil, email)
@@ -44,6 +47,7 @@ func TestIndividualBase(test *testing.T) {
 	expected := IndividualResponse{
 		Complete: false,
 		Options: analysis.AnalysisOptions{
+			JobOptions:         &jobmanager.JobOptions{},
 			RawSubmissionSpecs: submissions,
 		},
 		Summary: &model.IndividualAnalysisSummary{
@@ -63,7 +67,9 @@ func TestIndividualBase(test *testing.T) {
 
 	// Make another request, but wait for the analysis.
 	time.Sleep(100 * time.Millisecond)
-	fields["wait-for-completion"] = true
+	fields["job-options"] = &jobmanager.JobOptions{
+		WaitForCompletion: true,
+	}
 
 	response = core.SendTestAPIRequestFull(test, `courses/assignments/submissions/analysis/individual`, fields, nil, email)
 	if !response.Success {
@@ -77,7 +83,9 @@ func TestIndividualBase(test *testing.T) {
 		Complete: true,
 		Options: analysis.AnalysisOptions{
 			RawSubmissionSpecs: submissions,
-			WaitForCompletion:  true,
+			JobOptions: &jobmanager.JobOptions{
+				WaitForCompletion: true,
+			},
 		},
 		Summary: &model.IndividualAnalysisSummary{
 			AnalysisSummary: model.AnalysisSummary{
