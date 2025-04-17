@@ -59,12 +59,20 @@ func (this *JobOptions) Validate() error {
 	return nil
 }
 
-// TODO: expand usage
-// Returns runtime, output, numRemaining, err
+// RunJob() executes a potentially long-running job over a list of input items.
+// It supports optional caching, cache removal, synchronization, and context cancellation.
+// Given job options, input items, an optional cache lookup/removal function, and a work function,
+// RunJob() processes each item in a parallel pool.
+// Returns the result list, number of remaining items, total run time, and an error.
+// If the context is canceled, returns nil, 0, 0, nil.
 func RunJob[InputType any, OutputType any](options *JobOptions, workItems []InputType, cacheFunc func([]InputType) ([]OutputType, []InputType, error), removeCacheFunc func([]InputType) error, workFunc func(InputType) (OutputType, int64, error)) ([]OutputType, int, int64, error) {
+	if workFunc == nil {
+		return nil, len(workItems), 0, fmt.Errorf("Cannot run job with a nil work function.")
+	}
+
 	err := options.Validate()
 	if err != nil {
-		return []OutputType{}, len(workItems), 0, fmt.Errorf("Failed to validate job options: '%v'.", err)
+		return nil, len(workItems), 0, fmt.Errorf("Failed to validate job options: '%v'.", err)
 	}
 
 	completeItems := make([]OutputType, 0)
@@ -74,7 +82,7 @@ func RunJob[InputType any, OutputType any](options *JobOptions, workItems []Inpu
 	if !options.OverwriteCache && cacheFunc != nil {
 		completeItems, remainingItems, err = cacheFunc(workItems)
 		if err != nil {
-			return []OutputType{}, len(workItems), 0, err
+			return nil, len(workItems), 0, err
 		}
 	}
 
@@ -84,7 +92,12 @@ func RunJob[InputType any, OutputType any](options *JobOptions, workItems []Inpu
 	if options.WaitForCompletion {
 		results, runTime, err = runJob(options, remainingItems, cacheFunc, removeCacheFunc, workFunc)
 		if err != nil {
-			return []OutputType{}, len(workItems), 0, err
+			return nil, len(workItems), 0, err
+		}
+
+		// If the context was canceled during execution, return immediately.
+		if options.Context.Err() != nil {
+			return nil, 0, 0, nil
 		}
 
 		completeItems = append(completeItems, results...)
