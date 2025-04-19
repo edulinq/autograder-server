@@ -8,6 +8,7 @@ import (
 	"github.com/edulinq/autograder/internal/analysis"
 	"github.com/edulinq/autograder/internal/api/core"
 	"github.com/edulinq/autograder/internal/db"
+	"github.com/edulinq/autograder/internal/jobmanager"
 	"github.com/edulinq/autograder/internal/model"
 	"github.com/edulinq/autograder/internal/timestamp"
 	"github.com/edulinq/autograder/internal/util"
@@ -44,6 +45,7 @@ func TestIndividualBase(test *testing.T) {
 	expected := IndividualResponse{
 		Complete: false,
 		Options: analysis.AnalysisOptions{
+			JobOptions:         jobmanager.JobOptions{},
 			RawSubmissionSpecs: submissions,
 		},
 		Summary: &model.IndividualAnalysisSummary{
@@ -77,7 +79,9 @@ func TestIndividualBase(test *testing.T) {
 		Complete: true,
 		Options: analysis.AnalysisOptions{
 			RawSubmissionSpecs: submissions,
-			WaitForCompletion:  true,
+			JobOptions: jobmanager.JobOptions{
+				WaitForCompletion: true,
+			},
 		},
 		Summary: &model.IndividualAnalysisSummary{
 			AnalysisSummary: model.AnalysisSummary{

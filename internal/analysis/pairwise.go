@@ -1,7 +1,6 @@
 package analysis
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"path/filepath"
@@ -14,6 +13,7 @@ import (
 	"github.com/edulinq/autograder/internal/common"
 	"github.com/edulinq/autograder/internal/config"
 	"github.com/edulinq/autograder/internal/db"
+	"github.com/edulinq/autograder/internal/jobmanager"
 	"github.com/edulinq/autograder/internal/lockmanager"
 	"github.com/edulinq/autograder/internal/log"
 	"github.com/edulinq/autograder/internal/model"
@@ -46,42 +46,53 @@ var forceDefaultEnginesForTesting bool = false
 // and the remaining analysis will be done asynchronously.
 // Returns: (complete results, number of pending analysis runs, error)
 func PairwiseAnalysis(options AnalysisOptions) ([]*model.PairwiseAnalysis, int, error) {
-	if options.Context == nil {
-		options.Context = context.Background()
-	}
-
 	_, err := getEngines()
 	if err != nil {
 		return nil, 0, err
 	}
 
-	completeAnalysis, remainingKeys, err := getCachedPairwiseResults(options)
+	allKeys := createPairwiseKeys(options.ResolvedSubmissionIDs)
+	if len(allKeys) == 0 {
+		return []*model.PairwiseAnalysis{}, 0, nil
+	}
+
+	// Lock based on the first seen course.
+	// This is to prevent multiple requests using up all the cores.
+	lockCourseID, _, _, _, err := common.SplitFullSubmissionID(allKeys[0][0])
 	if err != nil {
-		return nil, 0, err
+		return nil, 0, fmt.Errorf("Unable to get locking course: '%w'.", err)
 	}
 
-	if options.WaitForCompletion {
-		results, err := runPairwiseAnalysis(options, remainingKeys)
-		if err != nil {
-			return nil, 0, err
-		}
+	options.LockKey = fmt.Sprintf("analysis-pairwise-course-%s", lockCourseID)
 
-		completeAnalysis = append(completeAnalysis, results...)
-		remainingKeys = nil
-	} else {
-		if !options.RetainOriginalContext {
-			options.Context = context.Background()
-		}
+	options.PoolSize = config.ANALYSIS_PAIRWISE_COURSE_POOL_SIZE.Get()
 
-		go func() {
-			_, err := runPairwiseAnalysis(options, remainingKeys)
-			if err != nil {
-				log.Error("Failure during asynchronous pairwise analysis.", err)
-			}
-		}()
+	err = options.JobOptions.Validate()
+	if err != nil {
+		return nil, 0, fmt.Errorf("Failed to validate job options: '%v'.", err)
 	}
 
-	return completeAnalysis, len(remainingKeys), nil
+	templateFileStore := NewTemplateFileStore()
+	defer templateFileStore.Close()
+
+	job := jobmanager.Job[model.PairwiseKey, *model.PairwiseAnalysis]{
+		JobOptions:        options.JobOptions,
+		WorkItems:         allKeys,
+		RetrieveFunc:      getCachedPairwiseResults,
+		RemoveStorageFunc: db.RemovePairwiseAnalysis,
+		WorkFunc: func(key model.PairwiseKey) (*model.PairwiseAnalysis, int64, error) {
+			return runSinglePairwiseAnalysis(options, key, templateFileStore)
+		},
+	}
+
+	output, err := job.Run()
+	if err != nil {
+		return nil, 0, fmt.Errorf("Failed to run pairwise analysis job: '%v'.", err)
+	}
+
+	collectPairwiseStats(allKeys, output.RunTime, options.InitiatorEmail)
+
+	return output.ResultItems, len(output.RemainingItems), nil
 }
 
 func createPairwiseKeys(fullSubmissionIDs []string) []model.PairwiseKey {
@@ -103,18 +114,7 @@ func createPairwiseKeys(fullSubmissionIDs []string) []model.PairwiseKey {
 	return allKeys
 }
 
-func getCachedPairwiseResults(options AnalysisOptions) ([]*model.PairwiseAnalysis, []model.PairwiseKey, error) {
-	allKeys := createPairwiseKeys(options.ResolvedSubmissionIDs)
-
-	// If we are overwriting the cache, don't query the DB for any of the cached results.
-	if options.OverwriteCache {
-		return make([]*model.PairwiseAnalysis, 0), allKeys, nil
-	}
-
-	return getCachedPairwiseResultsInternal(allKeys)
-}
-
-func getCachedPairwiseResultsInternal(allKeys []model.PairwiseKey) ([]*model.PairwiseAnalysis, []model.PairwiseKey, error) {
+func getCachedPairwiseResults(allKeys []model.PairwiseKey) ([]*model.PairwiseAnalysis, []model.PairwiseKey, error) {
 	// Get any already done analysis results from the DB.
 	dbResults, err := db.GetPairwiseAnalysis(allKeys)
 	if err != nil {
@@ -137,102 +137,6 @@ func getCachedPairwiseResultsInternal(allKeys []model.PairwiseKey) ([]*model.Pai
 	return completeAnalysis, remainingKeys, nil
 }
 
-// Lock based on course and then run the analysis in a parallel pool.
-func runPairwiseAnalysis(options AnalysisOptions, keys []model.PairwiseKey) ([]*model.PairwiseAnalysis, error) {
-	if len(keys) == 0 {
-		return nil, nil
-	}
-
-	// Lock based on the first seen course.
-	// This is to prevent multiple requests using up all the cores.
-	lockCourseID, _, _, _, err := common.SplitFullSubmissionID(keys[0][0])
-	if err != nil {
-		return nil, fmt.Errorf("Unable to get locking course: '%w'.", err)
-	}
-
-	lockKey := fmt.Sprintf("analysis-pairwise-course-%s", lockCourseID)
-	noLockWait := lockmanager.Lock(lockKey)
-	defer lockmanager.Unlock(lockKey)
-
-	// The context has been canceled while waiting for a lock, abandon this analysis.
-	if options.Context.Err() != nil {
-		return nil, nil
-	}
-
-	results := make([]*model.PairwiseAnalysis, 0, len(keys))
-
-	// If we had to wait for the lock, then check again for cached results.
-	// If there are multiple requests queued up,
-	// it will be faster to do a bulk check for cached results instead of checking each one individually.
-	if !noLockWait {
-		var partialResults []*model.PairwiseAnalysis = nil
-		partialResults, keys, err = getCachedPairwiseResultsInternal(keys)
-		if err != nil {
-			return nil, fmt.Errorf("Failed to re-check result cache before run: '%w'.", err)
-		}
-
-		// Collect the partial results from the cache.
-		results = append(results, partialResults...)
-	}
-
-	// All results were fetched from the cache.
-	if len(keys) == 0 {
-		return results, nil
-	}
-
-	// If we are overwriting the cache, then remove all the old entries.
-	if options.OverwriteCache && !options.DryRun {
-		err := db.RemovePairwiseAnalysis(keys)
-		if err != nil {
-			return nil, fmt.Errorf("Failed to remove old individual analysis cache entries: '%w'.", err)
-		}
-	}
-
-	templateFileStore := NewTemplateFileStore()
-	defer templateFileStore.Close()
-
-	poolSize := config.ANALYSIS_PAIRWISE_COURSE_POOL_SIZE.Get()
-	type PoolResult struct {
-		Result  *model.PairwiseAnalysis
-		RunTime int64
-		Error   error
-	}
-
-	poolResults, _, err := util.RunParallelPoolMap(poolSize, keys, options.Context, func(key model.PairwiseKey) (PoolResult, error) {
-		result, runTime, err := runSinglePairwiseAnalysis(options, key, templateFileStore)
-		if err != nil {
-			err = fmt.Errorf("Failed to perform pairwise analysis on submissions %s: '%w'.", key.String(), err)
-		}
-
-		return PoolResult{result, runTime, err}, nil
-	})
-
-	if err != nil {
-		return nil, fmt.Errorf("Failed to run analysis in a parallel pool: '%w'.", err)
-	}
-
-	// If the analysis was canceled, exit right away.
-	if options.Context.Err() != nil {
-		return nil, nil
-	}
-
-	var errs error = nil
-	totalRunTime := int64(0)
-
-	for _, poolResult := range poolResults {
-		if poolResult.Error != nil {
-			errs = errors.Join(errs, poolResult.Error)
-		} else {
-			results = append(results, poolResult.Result)
-			totalRunTime += poolResult.RunTime
-		}
-	}
-
-	collectPairwiseStats(keys, totalRunTime, options.InitiatorEmail)
-
-	return results, errs
-}
-
 func runSinglePairwiseAnalysis(options AnalysisOptions, pairwiseKey model.PairwiseKey, templateFileStore *TemplateFileStore) (*model.PairwiseAnalysis, int64, error) {
 	// Lock this key so we don't try to do the analysis multiple times.
 	lockKey := fmt.Sprintf("analysis-pairwise-single-%s", pairwiseKey.String())
@@ -245,7 +149,7 @@ func runSinglePairwiseAnalysis(options AnalysisOptions, pairwiseKey model.Pairwi
 	}
 
 	// Check the DB for a complete analysis.
-	if !options.OverwriteCache {
+	if !options.OverwriteRecords {
 		result, err := db.GetSinglePairwiseAnalysis(pairwiseKey)
 		if err != nil {
 			return nil, 0, fmt.Errorf("Failed to check DB for cached pairwise analysis for '%s': '%w'.", pairwiseKey.String(), err)
