@@ -136,8 +136,12 @@
             "description": "Get the result of a individual analysis for the specified submissions.",
             "input": [
                 {
-                    "name": "job-options",
-                    "type": "*jobmanager.JobOptions"
+                    "name": "dry-run",
+                    "type": "bool"
+                },
+                {
+                    "name": "overwrite-records",
+                    "type": "bool"
                 },
                 {
                     "name": "submissions",
@@ -150,6 +154,10 @@
                 {
                     "name": "user-pass",
                     "type": "string"
+                },
+                {
+                    "name": "wait-for-completion",
+                    "type": "bool"
                 }
             ],
             "output": [
@@ -175,8 +183,12 @@
             "description": "Get the result of a pairwise analysis for the specified submissions.",
             "input": [
                 {
-                    "name": "job-options",
-                    "type": "*jobmanager.JobOptions"
+                    "name": "dry-run",
+                    "type": "bool"
+                },
+                {
+                    "name": "overwrite-records",
+                    "type": "bool"
                 },
                 {
                     "name": "submissions",
@@ -189,6 +201,10 @@
                 {
                     "name": "user-pass",
                     "type": "string"
+                },
+                {
+                    "name": "wait-for-completion",
+                    "type": "bool"
                 }
             ],
             "output": [
@@ -1358,12 +1374,20 @@
             "category": "struct",
             "fields": [
                 {
-                    "name": "job-options",
-                    "type": "*jobmanager.JobOptions"
+                    "name": "dry-run",
+                    "type": "bool"
+                },
+                {
+                    "name": "overwrite-records",
+                    "type": "bool"
                 },
                 {
                     "name": "submissions",
                     "type": "[]string"
+                },
+                {
+                    "name": "wait-for-completion",
+                    "type": "bool"
                 }
             ]
         },
@@ -1796,11 +1820,7 @@
             "category": "struct",
             "fields": [
                 {
-                    "name": "dry-run",
-                    "type": "bool"
-                },
-                {
-                    "name": "overwrite-cache",
+                    "name": "overwrite-records",
                     "type": "bool"
                 },
                 {

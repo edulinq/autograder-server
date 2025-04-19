@@ -33,20 +33,36 @@ func IndividualAnalysis(options AnalysisOptions) ([]*model.IndividualAnalysis, i
 		return nil, 0, fmt.Errorf("Unable to get locking course: '%w'.", err)
 	}
 
-	options.JobOptions.LockKey = fmt.Sprintf("analysis-individual-course-%s", lockCourseID)
+	options.LockKey = fmt.Sprintf("analysis-individual-course-%s", lockCourseID)
 
-	options.JobOptions.PoolSize = config.ANALYSIS_INDIVIDUAL_COURSE_POOL_SIZE.Get()
+	options.PoolSize = config.ANALYSIS_INDIVIDUAL_COURSE_POOL_SIZE.Get()
 
-	completeAnalysis, numRemainingIDs, runTime, err := jobmanager.RunJob(options.JobOptions, fullSubmissionIDs, getCachedIndividualResultsInternal, db.RemoveIndividualAnalysis, func(fullSubmissionID string) (*model.IndividualAnalysis, int64, error) {
-		return runSingleIndividualAnalysis(options, fullSubmissionID)
-	})
+	err = options.JobOptions.Validate()
+	if err != nil {
+		return nil, 0, fmt.Errorf("Failed to validate job options: '%v'.", err)
+	}
 
-	collectIndividualStats(fullSubmissionIDs, runTime, options.InitiatorEmail)
+	job := jobmanager.Job[string, *model.IndividualAnalysis]{
+		JobOptions:        options.JobOptions,
+		WorkItems:         fullSubmissionIDs,
+		RetrieveFunc:      getCachedIndividualResults,
+		RemoveStorageFunc: db.RemoveIndividualAnalysis,
+		WorkFunc: func(fullSubmissionID string) (*model.IndividualAnalysis, int64, error) {
+			return runSingleIndividualAnalysis(options, fullSubmissionID)
+		},
+	}
 
-	return completeAnalysis, numRemainingIDs, nil
+	output, err := job.Run()
+	if err != nil {
+		return nil, 0, fmt.Errorf("Failed to run individual analysis job: '%v'.", err)
+	}
+
+	collectIndividualStats(fullSubmissionIDs, output.RunTime, options.InitiatorEmail)
+
+	return output.ResultItems, len(output.RemainingItems), nil
 }
 
-func getCachedIndividualResultsInternal(fullSubmissionIDs []string) ([]*model.IndividualAnalysis, []string, error) {
+func getCachedIndividualResults(fullSubmissionIDs []string) ([]*model.IndividualAnalysis, []string, error) {
 	// Get any already done analysis results from the DB.
 	dbResults, err := db.GetIndividualAnalysis(fullSubmissionIDs)
 	if err != nil {
@@ -76,14 +92,14 @@ func runSingleIndividualAnalysis(options AnalysisOptions, fullSubmissionID strin
 	defer lockmanager.Unlock(lockKey)
 
 	// The context has been canceled while waiting for a lock, abandon this analysis.
-	if options.JobOptions.Context.Err() != nil {
+	if options.Context.Err() != nil {
 		return nil, 0, nil
 	}
 
 	startTime := timestamp.Now()
 
 	// Check the DB for a complete analysis.
-	if !options.JobOptions.OverwriteCache {
+	if !options.OverwriteRecords {
 		result, err := db.GetSingleIndividualAnalysis(fullSubmissionID)
 		if err != nil {
 			return nil, 0, fmt.Errorf("Failed to check DB for cached individual analysis for '%s': '%w'.", fullSubmissionID, err)
@@ -101,7 +117,7 @@ func runSingleIndividualAnalysis(options AnalysisOptions, fullSubmissionID strin
 	}
 
 	// Store the result.
-	if !options.JobOptions.DryRun && (options.JobOptions.Context.Err() == nil) {
+	if !options.DryRun && (options.Context.Err() == nil) {
 		err = db.StoreIndividualAnalysis([]*model.IndividualAnalysis{result})
 		if err != nil {
 			return nil, 0, fmt.Errorf("Failed to store individual analysis for '%s' in DB: '%w'.", fullSubmissionID, err)

@@ -10,13 +10,52 @@ import (
 	"github.com/edulinq/autograder/internal/util"
 )
 
-type JobOptions struct {
-	// Don't save anything.
-	DryRun bool `json:"dry-run"`
+type Job[InputType comparable, OutputType any] struct {
+	JobOptions
 
-	// Replace any entries currently in the cache,
-	// and do not return any cached entries (when not waiting for completion).
-	OverwriteCache bool `json:"overwrite-cache"`
+	JobOutput[InputType, OutputType]
+
+	// A sorted list of items that need work.
+	WorkItems []InputType
+
+	// A function to retrieve existing records.
+	// Returns a list of processed records, items that need work, and an error.
+	RetrieveFunc func([]InputType) ([]OutputType, []InputType, error) `json:"-"`
+
+	// A function to remove existing records from storage.
+	RemoveStorageFunc func([]InputType) error `json:"-"`
+
+	// A function to transform work items into results.
+	// Returns a result, the time of computation, and an error.
+	WorkFunc func(InputType) (OutputType, int64, error) `json:"-"`
+
+	// An internal channel to signal the job is complete.
+	done chan struct{} `json:"-"`
+}
+
+type JobOutput[InputType comparable, OutputType any] struct {
+	// A list of errors encountered while running the job.
+	// The index of the error will match the index of the item
+	// that failed in RemainingItems.
+	Errors []error
+
+	// The list of results.
+	ResultItems []OutputType
+
+	// The list of tems that still need work.
+	RemainingItems []InputType
+
+	// The total computation time.
+	RunTime int64
+
+	// Signals the job is complete.
+	Done <-chan struct{} `json:"-"`
+}
+
+type JobOptions struct {
+	// Replace any records currently in storage,
+	// and do not retrieve any records (when not waiting for completion).
+	OverwriteRecords bool `json:"overwrite-records"`
 
 	// Wait for the entire job to complete and return all results.
 	WaitForCompletion bool `json:"wait-for-completion"`
@@ -30,18 +69,28 @@ type JobOptions struct {
 	// Setting this true is useful for testing (as one round of job tests can be wrapped up).
 	RetainOriginalContext bool `json:"-"`
 
+	// The number of workers in the parallel pool.
 	PoolSize int `json:"-"`
 
+	// An optional key to lock on.
 	LockKey string `json:"-"`
+}
+
+func (this *Job[InputType, OutputType]) Validate() error {
+	if this == nil {
+		return fmt.Errorf("Job is nil.")
+	}
+
+	if this.WorkFunc == nil {
+		return fmt.Errorf("Job cannot have a nil work function.")
+	}
+
+	return this.JobOptions.Validate()
 }
 
 func (this *JobOptions) Validate() error {
 	if this == nil {
 		return fmt.Errorf("Job options are nil.")
-	}
-
-	if this.LockKey == "" {
-		return fmt.Errorf("Cannot have an empty lock key.")
 	}
 
 	if this.PoolSize <= 0 {
@@ -59,142 +108,173 @@ func (this *JobOptions) Validate() error {
 	return nil
 }
 
-// RunJob() executes a potentially long-running job over a list of input items.
-// It supports optional caching, cache removal, synchronization, and context cancellation.
-// Given job options, input items, an optional cache lookup/removal function, and a work function,
-// RunJob() processes each item in a parallel pool.
+// Job.Run() executes a potentially long-running job over a list of input items.
+// It supports optional record retrieval, record removal from storage, synchronization, and context cancellation.
+// Given job options, input items, an optional record lookup/removal function, and a work function,
+// Job.Run() processes each item in a parallel pool.
+// If a lock key is provided, Job.Run() will block on that key for the duration of the method.
+// This prevents multiple Job.Run() invocations of the same type from overusing resources or conflicting with each other.
 // Returns the result list, number of remaining items, total run time, and an error.
 // If the context is canceled, returns nil, 0, 0, nil.
-func RunJob[InputType any, OutputType any](options *JobOptions, workItems []InputType, cacheFunc func([]InputType) ([]OutputType, []InputType, error), removeCacheFunc func([]InputType) error, workFunc func(InputType) (OutputType, int64, error)) ([]OutputType, int, int64, error) {
-	if workFunc == nil {
-		return nil, len(workItems), 0, fmt.Errorf("Cannot run job with a nil work function.")
-	}
-
-	err := options.Validate()
+func (this *Job[InputType, OutputType]) Run() (JobOutput[InputType, OutputType], error) {
+	err := this.Validate()
 	if err != nil {
-		return nil, len(workItems), 0, fmt.Errorf("Failed to validate job options: '%v'.", err)
+		return JobOutput[InputType, OutputType]{}, fmt.Errorf("Failed to validate job: '%v'.", err)
 	}
 
-	completeItems := make([]OutputType, 0)
-	remainingItems := workItems
+	this.ResultItems = make([]OutputType, 0, len(this.WorkItems))
+	this.RemainingItems = this.WorkItems
+	this.RunTime = 0
 
-	// If we are not overwriting the cache, query for cached results.
-	if !options.OverwriteCache && cacheFunc != nil {
-		completeItems, remainingItems, err = cacheFunc(workItems)
+	// If we are not overwriting records, query for stored records.
+	if !this.OverwriteRecords && this.RetrieveFunc != nil {
+		this.ResultItems, this.RemainingItems, err = this.RetrieveFunc(this.WorkItems)
 		if err != nil {
-			return nil, len(workItems), 0, err
+			return JobOutput[InputType, OutputType]{}, err
 		}
 	}
 
-	runTime := int64(0)
-	results := make([]OutputType, 0)
+	if this.done == nil {
+		this.done = make(chan struct{})
+		this.Done = this.done
+	}
 
-	if options.WaitForCompletion {
-		results, runTime, err = runJob(options, remainingItems, cacheFunc, removeCacheFunc, workFunc)
+	if this.WaitForCompletion {
+		err = this.run()
 		if err != nil {
-			return nil, len(workItems), 0, err
+			return JobOutput[InputType, OutputType]{}, err
 		}
 
 		// If the context was canceled during execution, return immediately.
-		if options.Context.Err() != nil {
-			return nil, 0, 0, nil
+		if this.Context.Err() != nil {
+			return JobOutput[InputType, OutputType]{}, nil
 		}
 
-		completeItems = append(completeItems, results...)
-		remainingItems = nil
+		select {
+		case <-this.done:
+		default:
+			close(this.done)
+		}
 	} else {
 		go func() {
-			_, _, err := runJob(options, remainingItems, cacheFunc, removeCacheFunc, workFunc)
+			err = this.run()
 			if err != nil {
 				log.Error("Failure while running asynchronous job.")
+			}
+
+			select {
+			case <-this.done:
+			default:
+				close(this.done)
 			}
 		}()
 	}
 
-	return completeItems, len(remainingItems), runTime, nil
+	return this.JobOutput, nil
 }
 
-func runJob[InputType any, OutputType any](options *JobOptions, workItems []InputType, cacheFunc func([]InputType) ([]OutputType, []InputType, error), removeCacheFunc func([]InputType) error, workFunc func(InputType) (OutputType, int64, error)) ([]OutputType, int64, error) {
-	if len(workItems) == 0 {
-		return nil, 0, nil
-	}
-
-	err := options.Validate()
+func (this *Job[InputType, OutputType]) run() error {
+	err := this.Validate()
 	if err != nil {
-		return []OutputType{}, 0, fmt.Errorf("Failed to validate job options: '%v'.", err)
+		return fmt.Errorf("Failed to validate job: '%v'.", err)
 	}
 
-	noLockWait := lockmanager.Lock(options.LockKey)
-	defer lockmanager.Unlock(options.LockKey)
+	if len(this.RemainingItems) == 0 {
+		return nil
+	}
+
+	noLockWait := true
+	if this.LockKey != "" {
+		noLockWait = lockmanager.Lock(this.LockKey)
+		defer lockmanager.Unlock(this.LockKey)
+	}
 
 	// The context has been canceled while waiting for a lock, abandon this job.
-	if options.Context.Err() != nil {
-		return nil, 0, nil
+	if this.Context.Err() != nil {
+		return nil
 	}
 
-	results := make([]OutputType, 0, len(workItems))
-
-	// If we had to wait for the lock, then check again for cached results.
-	// If there are multiple requests queued up,
-	// it will be faster to do a bulk check for cached results instead of checking each one individually.
-	if !noLockWait && cacheFunc != nil {
+	// If we had to wait for the lock, then check again for stored records.
+	if !noLockWait && this.RetrieveFunc != nil {
 		var partialResults []OutputType = nil
-		partialResults, workItems, err = cacheFunc(workItems)
+		partialResults, this.RemainingItems, err = this.RetrieveFunc(this.RemainingItems)
 		if err != nil {
-			return nil, 0, fmt.Errorf("Failed to re-check result cache before run: '%w'.", err)
+			return fmt.Errorf("Failed to re-check record storage before run: '%w'.", err)
 		}
 
-		// Collect the partial results from the cache.
-		results = append(results, partialResults...)
+		// Collect the partial records from storage.
+		this.ResultItems = append(this.ResultItems, partialResults...)
 	}
 
-	if len(workItems) == 0 {
-		return results, 0, nil
+	if len(this.RemainingItems) == 0 {
+		return nil
 	}
 
-	// If we are overwriting the cache, then remove all the old entries.
-	if options.OverwriteCache && removeCacheFunc != nil && !options.DryRun {
-		err = removeCacheFunc(workItems)
+	// If we are overwriting records, then remove all the old records.
+	if this.OverwriteRecords && this.RemoveStorageFunc != nil {
+		processedItems := getProcessedItems(this.WorkItems, this.RemainingItems)
+		err = this.RemoveStorageFunc(processedItems)
 		if err != nil {
-			return nil, 0, fmt.Errorf("Failed to remove old job cache entries: '%w'.", err)
+			return fmt.Errorf("Failed to remove old job cache entries: '%w'.", err)
 		}
 	}
 
 	type PoolResult struct {
+		Input   InputType
 		Result  OutputType
 		RunTime int64
 		Error   error
 	}
 
-	poolResults, _, err := util.RunParallelPoolMap(options.PoolSize, workItems, options.Context, func(workItem InputType) (PoolResult, error) {
-		result, runTime, err := workFunc(workItem)
+	poolResults, _, err := util.RunParallelPoolMap(this.PoolSize, this.RemainingItems, this.Context, func(workItem InputType) (PoolResult, error) {
+		result, runTime, err := this.WorkFunc(workItem)
 		if err != nil {
 			err = fmt.Errorf("Failed to perform individual work on item %v: '%w'.", workItem, err)
 		}
 
-		return PoolResult{result, runTime, err}, nil
+		return PoolResult{workItem, result, runTime, err}, nil
 	})
 
 	if err != nil {
-		return nil, 0, fmt.Errorf("Failed to run job in a parallel pool: '%w'.", err)
+		return fmt.Errorf("Failed to run job in a parallel pool: '%w'.", err)
 	}
 
 	// If the job was canceled, exit right away.
-	if options.Context.Err() != nil {
-		return nil, 0, nil
+	if this.Context.Err() != nil {
+		return nil
 	}
 
-	var errs error = nil
-	totalRunTime := int64(0)
+	this.RunTime = 0
+	this.Errors = nil
+	this.RemainingItems = []InputType{}
 
 	for _, poolResult := range poolResults {
 		if poolResult.Error != nil {
-			errs = errors.Join(errs, poolResult.Error)
+			this.Errors = append(this.Errors, poolResult.Error)
+			this.RemainingItems = append(this.RemainingItems, poolResult.Input)
 		} else {
-			results = append(results, poolResult.Result)
-			totalRunTime += poolResult.RunTime
+			this.ResultItems = append(this.ResultItems, poolResult.Result)
+			this.RunTime += poolResult.RunTime
 		}
 	}
 
-	return results, totalRunTime, errs
+	return errors.Join(this.Errors...)
+}
+
+func getProcessedItems[InputType comparable](allItems []InputType, remainingItems []InputType) []InputType {
+	seenItems := make(map[InputType]bool, len(remainingItems))
+	for _, item := range remainingItems {
+		seenItems[item] = true
+	}
+
+	results := make([]InputType, 0, len(allItems)-len(remainingItems))
+
+	for _, item := range allItems {
+		_, ok := seenItems[item]
+		if !ok {
+			results = append(results, item)
+		}
+	}
+
+	return results
 }

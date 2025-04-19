@@ -44,7 +44,7 @@ func HandleIndividual(request *IndividualRequest) (*IndividualResponse, *core.AP
 
 	request.ResolvedSubmissionIDs = fullSubmissionIDs
 	request.InitiatorEmail = request.ServerUser.Email
-	request.AnalysisOptions.JobOptions.Context = request.Context
+	request.AnalysisOptions.Context = request.APIRequestUserContext.Context
 
 	results, pendingCount, err := analysis.IndividualAnalysis(request.AnalysisOptions)
 	if err != nil {

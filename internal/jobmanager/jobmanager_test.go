@@ -15,140 +15,199 @@ import (
 var testLockKey string = "test_key"
 var testPoolSize int = 1
 
-func TestJobOptionsValidateBase(test *testing.T) {
+var workFunc = func(input string) (int, int64, error) {
+	return len(input), int64(1), nil
+}
+
+func TestJobValidateBase(test *testing.T) {
 	testCases := []struct {
-		input       *JobOptions
-		expected    *JobOptions
+		input       *Job[string, int]
+		expected    *Job[string, int]
 		errorString string
 	}{
 		// Success
 
-		// No context provided
+		// No Context Provided
 		{
-			&JobOptions{
-				LockKey:  testLockKey,
-				PoolSize: testPoolSize,
+			&Job[string, int]{
+				WorkFunc: workFunc,
+				JobOptions: JobOptions{
+					PoolSize: testPoolSize,
+					LockKey:  testLockKey,
+				},
 			},
-			&JobOptions{
-				Context:  context.Background(),
-				LockKey:  testLockKey,
-				PoolSize: testPoolSize,
+			&Job[string, int]{
+				WorkFunc: workFunc,
+				JobOptions: JobOptions{
+					Context:  context.Background(),
+					PoolSize: testPoolSize,
+					LockKey:  testLockKey,
+				},
 			},
 			"",
 		},
 		{
-			&JobOptions{
-				WaitForCompletion: true,
-				LockKey:           testLockKey,
-				PoolSize:          testPoolSize,
+			&Job[string, int]{
+				WorkFunc: workFunc,
+				JobOptions: JobOptions{
+					WaitForCompletion: true,
+					PoolSize:          testPoolSize,
+					LockKey:           testLockKey,
+				},
 			},
-			&JobOptions{
-				WaitForCompletion: true,
-				Context:           context.Background(),
-				LockKey:           testLockKey,
-				PoolSize:          testPoolSize,
+			&Job[string, int]{
+				WorkFunc: workFunc,
+				JobOptions: JobOptions{
+					Context:           context.Background(),
+					WaitForCompletion: true,
+					PoolSize:          testPoolSize,
+					LockKey:           testLockKey,
+				},
 			},
 			"",
 		},
 		{
-			&JobOptions{
-				RetainOriginalContext: true,
-				LockKey:               testLockKey,
-				PoolSize:              testPoolSize,
+			&Job[string, int]{
+				WorkFunc: workFunc,
+				JobOptions: JobOptions{
+					RetainOriginalContext: true,
+					PoolSize:              testPoolSize,
+					LockKey:               testLockKey,
+				},
 			},
-			&JobOptions{
-				RetainOriginalContext: true,
-				Context:               context.Background(),
-				LockKey:               testLockKey,
-				PoolSize:              testPoolSize,
+			&Job[string, int]{
+				WorkFunc: workFunc,
+				JobOptions: JobOptions{
+					Context:               context.Background(),
+					RetainOriginalContext: true,
+					PoolSize:              testPoolSize,
+					LockKey:               testLockKey,
+				},
 			},
 			"",
 		},
 		// Nil context provided
 		{
-			&JobOptions{
-				Context:  nil,
-				LockKey:  testLockKey,
-				PoolSize: testPoolSize,
+			&Job[string, int]{
+				WorkFunc: workFunc,
+				JobOptions: JobOptions{
+					Context:  nil,
+					PoolSize: testPoolSize,
+					LockKey:  testLockKey,
+				},
 			},
-			&JobOptions{
-				Context:  context.Background(),
-				LockKey:  testLockKey,
-				PoolSize: testPoolSize,
-			},
-			"",
-		},
-		{
-			&JobOptions{
-				Context:           nil,
-				WaitForCompletion: true,
-				LockKey:           testLockKey,
-				PoolSize:          testPoolSize,
-			},
-			&JobOptions{
-				Context:           context.Background(),
-				WaitForCompletion: true,
-				LockKey:           testLockKey,
-				PoolSize:          testPoolSize,
+			&Job[string, int]{
+				WorkFunc: workFunc,
+				JobOptions: JobOptions{
+					Context:  context.Background(),
+					PoolSize: testPoolSize,
+					LockKey:  testLockKey,
+				},
 			},
 			"",
 		},
 		{
-			&JobOptions{
-				Context:               nil,
-				RetainOriginalContext: true,
-				LockKey:               testLockKey,
-				PoolSize:              testPoolSize,
+			&Job[string, int]{
+				WorkFunc: workFunc,
+				JobOptions: JobOptions{
+					Context:           nil,
+					WaitForCompletion: true,
+					PoolSize:          testPoolSize,
+					LockKey:           testLockKey,
+				},
 			},
-			&JobOptions{
-				Context:               context.Background(),
-				RetainOriginalContext: true,
-				LockKey:               testLockKey,
-				PoolSize:              testPoolSize,
+			&Job[string, int]{
+				WorkFunc: workFunc,
+				JobOptions: JobOptions{
+					Context:           context.Background(),
+					WaitForCompletion: true,
+					PoolSize:          testPoolSize,
+					LockKey:           testLockKey,
+				},
+			},
+			"",
+		},
+		{
+			&Job[string, int]{
+				WorkFunc: workFunc,
+				JobOptions: JobOptions{
+					Context:               nil,
+					RetainOriginalContext: true,
+					PoolSize:              testPoolSize,
+					LockKey:               testLockKey,
+				},
+			},
+			&Job[string, int]{
+				WorkFunc: workFunc,
+				JobOptions: JobOptions{
+					Context:               context.Background(),
+					RetainOriginalContext: true,
+					PoolSize:              testPoolSize,
+					LockKey:               testLockKey,
+				},
 			},
 			"",
 		},
 		// Context provided
 		{
-			&JobOptions{
-				Context:  context.TODO(),
-				LockKey:  testLockKey,
-				PoolSize: testPoolSize,
+			&Job[string, int]{
+				WorkFunc: workFunc,
+				JobOptions: JobOptions{
+					Context:  context.TODO(),
+					PoolSize: testPoolSize,
+					LockKey:  testLockKey,
+				},
 			},
-			&JobOptions{
-				Context:  context.Background(),
-				LockKey:  testLockKey,
-				PoolSize: testPoolSize,
-			},
-			"",
-		},
-		{
-			&JobOptions{
-				Context:           context.TODO(),
-				WaitForCompletion: true,
-				LockKey:           testLockKey,
-				PoolSize:          testPoolSize,
-			},
-			&JobOptions{
-				Context:           context.TODO(),
-				WaitForCompletion: true,
-				LockKey:           testLockKey,
-				PoolSize:          testPoolSize,
+			&Job[string, int]{
+				WorkFunc: workFunc,
+				JobOptions: JobOptions{
+					// Swap the context to background when not waiting for completion.
+					Context:  context.Background(),
+					PoolSize: testPoolSize,
+					LockKey:  testLockKey,
+				},
 			},
 			"",
 		},
 		{
-			&JobOptions{
-				Context:               context.TODO(),
-				RetainOriginalContext: true,
-				LockKey:               testLockKey,
-				PoolSize:              testPoolSize,
+			&Job[string, int]{
+				WorkFunc: workFunc,
+				JobOptions: JobOptions{
+					Context:           context.TODO(),
+					WaitForCompletion: true,
+					PoolSize:          testPoolSize,
+					LockKey:           testLockKey,
+				},
 			},
-			&JobOptions{
-				Context:               context.TODO(),
-				RetainOriginalContext: true,
-				LockKey:               testLockKey,
-				PoolSize:              testPoolSize,
+			&Job[string, int]{
+				WorkFunc: workFunc,
+				JobOptions: JobOptions{
+					Context:           context.TODO(),
+					WaitForCompletion: true,
+					PoolSize:          testPoolSize,
+					LockKey:           testLockKey,
+				},
+			},
+			"",
+		},
+		{
+			&Job[string, int]{
+				WorkFunc: workFunc,
+				JobOptions: JobOptions{
+					Context:               context.TODO(),
+					RetainOriginalContext: true,
+					PoolSize:              testPoolSize,
+					LockKey:               testLockKey,
+				},
+			},
+			&Job[string, int]{
+				WorkFunc: workFunc,
+				JobOptions: JobOptions{
+					Context:               context.TODO(),
+					RetainOriginalContext: true,
+					PoolSize:              testPoolSize,
+					LockKey:               testLockKey,
+				},
 			},
 			"",
 		},
@@ -159,41 +218,45 @@ func TestJobOptionsValidateBase(test *testing.T) {
 		{
 			nil,
 			nil,
-			"Job options are nil.",
+			"Job is nil.",
 		},
-		// Bad lock key
+		// Bad Work Function
 		{
-			&JobOptions{},
+			&Job[string, int]{},
 			nil,
-			"Cannot have an empty lock key.",
+			"Job cannot have a nil work function.",
 		},
 		{
-			&JobOptions{
-				LockKey: "",
+			&Job[string, int]{
+				WorkFunc: nil,
 			},
 			nil,
-			"Cannot have an empty lock key.",
+			"Job cannot have a nil work function.",
 		},
-		// Bad pool size
+		// Bad Pool Size
 		{
-			&JobOptions{
-				LockKey: testLockKey,
-			},
-			nil,
-			"Pool size must be positive, got 0.",
-		},
-		{
-			&JobOptions{
-				LockKey:  testLockKey,
-				PoolSize: 0,
+			&Job[string, int]{
+				WorkFunc: workFunc,
 			},
 			nil,
 			"Pool size must be positive, got 0.",
 		},
 		{
-			&JobOptions{
-				LockKey:  testLockKey,
-				PoolSize: -1,
+			&Job[string, int]{
+				WorkFunc: workFunc,
+				JobOptions: JobOptions{
+					PoolSize: 0,
+				},
+			},
+			nil,
+			"Pool size must be positive, got 0.",
+		},
+		{
+			&Job[string, int]{
+				WorkFunc: workFunc,
+				JobOptions: JobOptions{
+					PoolSize: -1,
+				},
 			},
 			nil,
 			"Pool size must be positive, got -1.",
@@ -219,9 +282,18 @@ func TestJobOptionsValidateBase(test *testing.T) {
 			continue
 		}
 
+		if testCase.input.WorkFunc == nil {
+			test.Errorf("Case %d: Found non nil work func.", i)
+			continue
+		}
+
+		// Clear work functions for comparison.
+		testCase.input.WorkFunc = nil
+		testCase.expected.WorkFunc = nil
+
 		if !reflect.DeepEqual(testCase.expected, testCase.input) {
-			test.Errorf("Case %d: Unexpected result. Expected: '%+v', actual: '%+v'.",
-				i, testCase.expected, testCase.input)
+			test.Errorf("Case %d: Unexpected result. Expected: '%s', actual: '%s'.",
+				i, util.MustToJSONIndent(testCase.expected), util.MustToJSONIndent(testCase.input))
 			continue
 		}
 	}
@@ -240,14 +312,14 @@ func TestRunJobBase(test *testing.T) {
 		3,
 	}
 
-	cache := resetCache()
+	storage := resetStorage()
 
-	cacheFunc := func(inputs []string) ([]int, []string, error) {
-		outputs := make([]int, 0, len(cache))
+	retrieveFunc := func(inputs []string) ([]int, []string, error) {
+		outputs := make([]int, 0, len(storage))
 		remaining := make([]string, 0, len(inputs))
 
 		for _, input := range inputs {
-			output, ok := cache[input]
+			output, ok := storage[input]
 			if !ok {
 				remaining = append(remaining, input)
 				continue
@@ -259,247 +331,369 @@ func TestRunJobBase(test *testing.T) {
 		return outputs, remaining, nil
 	}
 
-	errorCacheFunc := func(inputs []string) ([]int, []string, error) {
-		return nil, nil, fmt.Errorf("Crazy cache error!")
+	errorRetrieveFunc := func(_ []string) ([]int, []string, error) {
+		return nil, nil, fmt.Errorf("Crazy retrieval error!")
 	}
 
-	removeCacheFunc := func(inputs []string) error {
+	removeStorageFunc := func(inputs []string) error {
 		for _, input := range inputs {
-			delete(cache, input)
+			delete(storage, input)
 		}
 
 		return nil
 	}
 
-	errorRemoveCacheFunc := func(inputs []string) error {
-		return fmt.Errorf("Insane cache removal error!")
+	errorRemoveStorageFunc := func(_ []string) error {
+		return fmt.Errorf("Insane storage removal error!")
 	}
 
-	workFunc := func(input string) (int, int64, error) {
-		return len(input), int64(1), nil
-	}
-
-	workFuncWithCache := func(input string) (int, int64, error) {
-		cache[input] = len(input)
+	workFuncWithStorage := func(input string) (int, int64, error) {
+		storage[input] = len(input)
 
 		return len(input), int64(1), nil
 	}
 
 	testCases := []struct {
-		input   []string
-		options *JobOptions
+		job Job[string, int]
 
-		initialRemaining int
-
-		initialOutput []int
-		finalOutput   []int
-
-		finalRunTime int64
-
-		workFunc         func(input string) (int, int64, error)
-		cacheFunc        func(inputs []string) ([]int, []string, error)
-		cacheRemovalFunc func(inputs []string) error
+		initialOutput JobOutput[string, int]
+		finalOutput   JobOutput[string, int]
 
 		initialErrorSubstring string
 		finalErrorSubstring   string
 
-		resetCache      bool
-		checkEmptyCache bool
+		resetStorage      bool
+		checkEmptyStorage bool
 	}{
 		// Success
 
-		// Base options
+		// Base Options
 		{
-			input:            input,
-			initialOutput:    []int{},
-			initialRemaining: len(input),
-			finalOutput:      finalExpected,
-			finalRunTime:     int64(len(input)),
-			workFunc:         workFunc,
+			job: Job[string, int]{
+				WorkItems: input,
+				WorkFunc:  workFunc,
+				JobOptions: JobOptions{
+					PoolSize: testPoolSize,
+					LockKey:  testLockKey,
+				},
+			},
+			initialOutput: JobOutput[string, int]{
+				ResultItems:    []int{},
+				RemainingItems: input,
+				RunTime:        int64(0),
+			},
+			finalOutput: JobOutput[string, int]{
+				ResultItems:    finalExpected,
+				RemainingItems: []string{},
+				RunTime:        int64(len(input)),
+			},
 		},
 		{
-			input:         nil,
-			initialOutput: []int{},
-			finalOutput:   []int{},
-			workFunc:      workFunc,
+			job: Job[string, int]{
+				WorkItems: nil,
+				WorkFunc:  workFunc,
+				JobOptions: JobOptions{
+					PoolSize: testPoolSize,
+					LockKey:  testLockKey,
+				},
+			},
+			initialOutput: JobOutput[string, int]{
+				ResultItems:    []int{},
+				RemainingItems: nil,
+				RunTime:        int64(0),
+			},
+			finalOutput: JobOutput[string, int]{
+				ResultItems:    []int{},
+				RemainingItems: nil,
+				RunTime:        int64(0),
+			},
 		},
 		{
-			input:         []string{},
-			initialOutput: []int{},
-			finalOutput:   []int{},
-			workFunc:      workFunc,
+			job: Job[string, int]{
+				WorkItems: []string{},
+				WorkFunc:  workFunc,
+				JobOptions: JobOptions{
+					PoolSize: testPoolSize,
+					LockKey:  testLockKey,
+				},
+			},
+			initialOutput: JobOutput[string, int]{
+				ResultItems:    []int{},
+				RemainingItems: []string{},
+				RunTime:        int64(0),
+			},
+			finalOutput: JobOutput[string, int]{
+				ResultItems:    []int{},
+				RemainingItems: []string{},
+				RunTime:        int64(0),
+			},
 		},
 
-		// Passing a cache function
+		// Passing A Retrieval Function
 		{
-			input:            input,
-			initialOutput:    []int{1, 2},
-			initialRemaining: 1,
-			finalOutput:      finalExpected,
-			finalRunTime:     int64(1),
-			workFunc:         workFunc,
-			cacheFunc:        cacheFunc,
+			job: Job[string, int]{
+				WorkItems:    input,
+				WorkFunc:     workFunc,
+				RetrieveFunc: retrieveFunc,
+				JobOptions: JobOptions{
+					PoolSize: testPoolSize,
+					LockKey:  testLockKey,
+				},
+			},
+			initialOutput: JobOutput[string, int]{
+				ResultItems:    []int{1, 2},
+				RemainingItems: []string{"CCC"},
+				RunTime:        int64(0),
+			},
+			finalOutput: JobOutput[string, int]{
+				ResultItems:    finalExpected,
+				RemainingItems: []string{},
+				RunTime:        int64(1),
+			},
 		},
 		{
-			input: input,
-			options: &JobOptions{
-				OverwriteCache: true,
-				LockKey:        testLockKey,
-				PoolSize:       testPoolSize,
+			job: Job[string, int]{
+				WorkItems:    input,
+				WorkFunc:     workFunc,
+				RetrieveFunc: retrieveFunc,
+				JobOptions: JobOptions{
+					OverwriteRecords: true,
+					PoolSize:         testPoolSize,
+					LockKey:          testLockKey,
+				},
 			},
-			initialOutput:    []int{},
-			initialRemaining: len(input),
-			finalOutput:      finalExpected,
-			finalRunTime:     int64(len(input)),
-			workFunc:         workFunc,
-			cacheFunc:        cacheFunc,
+			initialOutput: JobOutput[string, int]{
+				ResultItems:    []int{},
+				RemainingItems: input,
+				RunTime:        int64(0),
+			},
+			finalOutput: JobOutput[string, int]{
+				ResultItems:    finalExpected,
+				RemainingItems: []string{},
+				RunTime:        int64(len(input)),
+			},
 		},
 		{
-			input: input,
-			options: &JobOptions{
-				OverwriteCache: true,
-				LockKey:        testLockKey,
-				PoolSize:       testPoolSize,
+			job: Job[string, int]{
+				WorkItems: input,
+				WorkFunc:  workFunc,
+				// Won't cause an error because it won't be called.
+				RetrieveFunc: errorRetrieveFunc,
+				JobOptions: JobOptions{
+					OverwriteRecords: true,
+					PoolSize:         testPoolSize,
+					LockKey:          testLockKey,
+				},
 			},
-			initialOutput:    []int{},
-			initialRemaining: len(input),
-			finalOutput:      finalExpected,
-			finalRunTime:     int64(len(input)),
-			workFunc:         workFunc,
-			// Won't cause an error because it won't be called.
-			cacheFunc: errorCacheFunc,
+			initialOutput: JobOutput[string, int]{
+				ResultItems:    []int{},
+				RemainingItems: input,
+				RunTime:        int64(0),
+			},
+			finalOutput: JobOutput[string, int]{
+				ResultItems:    finalExpected,
+				RemainingItems: []string{},
+				RunTime:        int64(len(input)),
+			},
 		},
 
-		// Passing a cache removal function
+		// Passing A Storage Removal Function
 		{
-			input:            input,
-			initialOutput:    []int{},
-			initialRemaining: len(input),
-			finalOutput:      finalExpected,
-			finalRunTime:     int64(len(input)),
-			workFunc:         workFunc,
-			cacheRemovalFunc: removeCacheFunc,
+			job: Job[string, int]{
+				WorkItems:         input,
+				WorkFunc:          workFunc,
+				RemoveStorageFunc: removeStorageFunc,
+				JobOptions: JobOptions{
+					PoolSize: testPoolSize,
+					LockKey:  testLockKey,
+				},
+			},
+			initialOutput: JobOutput[string, int]{
+				ResultItems:    []int{},
+				RemainingItems: input,
+				RunTime:        int64(0),
+			},
+			finalOutput: JobOutput[string, int]{
+				ResultItems:    finalExpected,
+				RemainingItems: []string{},
+				RunTime:        int64(len(input)),
+			},
 		},
 		{
-			input:            input,
-			initialOutput:    []int{},
-			initialRemaining: len(input),
-			finalOutput:      finalExpected,
-			finalRunTime:     int64(len(input)),
-			workFunc:         workFunc,
-			// Won't cause an error because it won't be called.
-			cacheRemovalFunc: errorRemoveCacheFunc,
+			job: Job[string, int]{
+				WorkItems: input,
+				WorkFunc:  workFunc,
+				// Won't cause an error because it won't be called.
+				RemoveStorageFunc: errorRemoveStorageFunc,
+				JobOptions: JobOptions{
+					PoolSize: testPoolSize,
+					LockKey:  testLockKey,
+				},
+			},
+			initialOutput: JobOutput[string, int]{
+				ResultItems:    []int{},
+				RemainingItems: input,
+				RunTime:        int64(0),
+			},
+			finalOutput: JobOutput[string, int]{
+				ResultItems:    finalExpected,
+				RemainingItems: []string{},
+				RunTime:        int64(len(input)),
+			},
 		},
 
-		// Passing cache and cache removal functions
+		// Passing Retrieval And Storage Removal Functions
 		{
-			input:            input,
-			initialOutput:    []int{1, 2},
-			initialRemaining: 1,
-			finalOutput:      finalExpected,
-			finalRunTime:     int64(1),
-			workFunc:         workFunc,
-			cacheFunc:        cacheFunc,
-			cacheRemovalFunc: removeCacheFunc,
-		},
-		{
-			input: input,
-			options: &JobOptions{
-				OverwriteCache: true,
-				LockKey:        testLockKey,
-				PoolSize:       testPoolSize,
+			job: Job[string, int]{
+				WorkItems:         input,
+				WorkFunc:          workFunc,
+				RetrieveFunc:      retrieveFunc,
+				RemoveStorageFunc: removeStorageFunc,
+				JobOptions: JobOptions{
+					PoolSize: testPoolSize,
+					LockKey:  testLockKey,
+				},
 			},
-			initialOutput:    []int{},
-			initialRemaining: len(input),
-			finalOutput:      finalExpected,
-			finalRunTime:     int64(len(input)),
-			workFunc:         workFunc,
-			cacheFunc:        cacheFunc,
-			cacheRemovalFunc: removeCacheFunc,
-			resetCache:       true,
-			checkEmptyCache:  true,
-		},
-		{
-			input:            input,
-			initialOutput:    []int{1, 2},
-			initialRemaining: 1,
-			finalOutput:      finalExpected,
-			finalRunTime:     int64(1),
-			workFunc:         workFuncWithCache,
-			cacheFunc:        cacheFunc,
-			cacheRemovalFunc: removeCacheFunc,
-			resetCache:       true,
-		},
-		{
-			input: input,
-			options: &JobOptions{
-				OverwriteCache: true,
-				LockKey:        testLockKey,
-				PoolSize:       testPoolSize,
+			initialOutput: JobOutput[string, int]{
+				ResultItems:    []int{1, 2},
+				RemainingItems: []string{"CCC"},
+				RunTime:        int64(0),
 			},
-			initialOutput:    []int{},
-			initialRemaining: len(input),
-			finalOutput:      finalExpected,
-			finalRunTime:     int64(len(input)),
-			workFunc:         workFuncWithCache,
-			cacheFunc:        cacheFunc,
-			cacheRemovalFunc: removeCacheFunc,
-			resetCache:       true,
-			checkEmptyCache:  true,
+			finalOutput: JobOutput[string, int]{
+				ResultItems:    finalExpected,
+				RemainingItems: []string{},
+				RunTime:        int64(1),
+			},
+		},
+		{
+			job: Job[string, int]{
+				WorkItems:         input,
+				WorkFunc:          workFunc,
+				RetrieveFunc:      retrieveFunc,
+				RemoveStorageFunc: removeStorageFunc,
+				JobOptions: JobOptions{
+					OverwriteRecords: true,
+					PoolSize:         testPoolSize,
+					LockKey:          testLockKey,
+				},
+			},
+			initialOutput: JobOutput[string, int]{
+				ResultItems:    []int{},
+				RemainingItems: input,
+				RunTime:        int64(0),
+			},
+			finalOutput: JobOutput[string, int]{
+				ResultItems:    finalExpected,
+				RemainingItems: []string{},
+				RunTime:        int64(len(input)),
+			},
+			resetStorage:      true,
+			checkEmptyStorage: true,
+		},
+		{
+			job: Job[string, int]{
+				WorkItems:         input,
+				WorkFunc:          workFuncWithStorage,
+				RetrieveFunc:      retrieveFunc,
+				RemoveStorageFunc: removeStorageFunc,
+				JobOptions: JobOptions{
+					PoolSize: testPoolSize,
+					LockKey:  testLockKey,
+				},
+			},
+			initialOutput: JobOutput[string, int]{
+				ResultItems:    []int{1, 2},
+				RemainingItems: []string{"CCC"},
+				RunTime:        int64(0),
+			},
+			finalOutput: JobOutput[string, int]{
+				ResultItems:    finalExpected,
+				RemainingItems: []string{},
+				RunTime:        int64(1),
+			},
+			resetStorage: true,
+		},
+		{
+			job: Job[string, int]{
+				WorkItems:         input,
+				WorkFunc:          workFuncWithStorage,
+				RetrieveFunc:      retrieveFunc,
+				RemoveStorageFunc: removeStorageFunc,
+				JobOptions: JobOptions{
+					OverwriteRecords: true,
+					PoolSize:         testPoolSize,
+					LockKey:          testLockKey,
+				},
+			},
+			initialOutput: JobOutput[string, int]{
+				ResultItems:    []int{},
+				RemainingItems: input,
+				RunTime:        int64(0),
+			},
+			finalOutput: JobOutput[string, int]{
+				ResultItems:    finalExpected,
+				RemainingItems: []string{},
+				RunTime:        int64(len(input)),
+			},
+			resetStorage:      true,
+			checkEmptyStorage: true,
 		},
 
 		// Errors
 
-		// Nil work function
+		// Nil Work Function
 		{
-			input:                 input,
-			initialOutput:         []int{},
-			workFunc:              nil,
-			initialErrorSubstring: "Cannot run job with a nil work function.",
-		},
-		{
-			input:                 nil,
-			initialOutput:         []int{},
-			workFunc:              nil,
-			initialErrorSubstring: "Cannot run job with a nil work function.",
-		},
-
-		// Bad cache function
-		{
-			input:                 input,
-			initialOutput:         []int{},
-			workFunc:              workFunc,
-			cacheFunc:             errorCacheFunc,
-			initialErrorSubstring: "Crazy cache error!",
-		},
-
-		// Bad cache removal function
-		{
-			input: input,
-			options: &JobOptions{
-				OverwriteCache: true,
-				LockKey:        testLockKey,
-				PoolSize:       testPoolSize,
+			job: Job[string, int]{
+				WorkItems: input,
+				WorkFunc:  nil,
 			},
-			initialOutput:       []int{},
-			initialRemaining:    len(input),
-			workFunc:            workFunc,
-			cacheRemovalFunc:    errorRemoveCacheFunc,
-			finalErrorSubstring: "Insane cache removal error!",
+			initialErrorSubstring: "Job cannot have a nil work function.",
+		},
+		{
+			job: Job[string, int]{
+				WorkItems: nil,
+				WorkFunc:  nil,
+			},
+			initialErrorSubstring: "Job cannot have a nil work function.",
+		},
+
+		// Bad Storage Function
+		{
+			job: Job[string, int]{
+				WorkItems:    input,
+				WorkFunc:     workFunc,
+				RetrieveFunc: errorRetrieveFunc,
+				JobOptions: JobOptions{
+					PoolSize: testPoolSize,
+				},
+			},
+			initialErrorSubstring: "Crazy retrieval error!",
+		},
+
+		// Bad Storage Removal Function
+		{
+			job: Job[string, int]{
+				WorkItems:         input,
+				WorkFunc:          workFunc,
+				RemoveStorageFunc: errorRemoveStorageFunc,
+				JobOptions: JobOptions{
+					OverwriteRecords: true,
+					PoolSize:         testPoolSize,
+				},
+			},
+			initialOutput: JobOutput[string, int]{
+				ResultItems:    []int{},
+				RemainingItems: input,
+				RunTime:        int64(0),
+			},
+			finalErrorSubstring: "Insane storage removal error!",
 		},
 	}
 
 	for i, testCase := range testCases {
-		if testCase.options == nil {
-			testCase.options = &JobOptions{
-				LockKey:  testLockKey,
-				PoolSize: testPoolSize,
-			}
-		}
+		testCase.job.WaitForCompletion = false
 
-		testCase.options.WaitForCompletion = false
-
-		output, numRemaining, runTime, err := RunJob(testCase.options, testCase.input, testCase.cacheFunc, testCase.cacheRemovalFunc, testCase.workFunc)
+		output, err := testCase.job.Run()
 		if err != nil {
 			if testCase.initialErrorSubstring != "" {
 				if !strings.Contains(err.Error(), testCase.initialErrorSubstring) {
@@ -517,24 +711,18 @@ func TestRunJobBase(test *testing.T) {
 			continue
 		}
 
-		if numRemaining != testCase.initialRemaining {
-			test.Errorf("Case %d: Unexpected number of initial items remaining. Expected: '%d', actual: '%d'.", i, testCase.initialRemaining, numRemaining)
-			continue
-		}
-
-		if runTime != 0 {
-			test.Errorf("Case %d: Unexpected initial run time. Expected: '0', actual: '%d'.", i, runTime)
-			continue
-		}
+		// Set the done channel to pass the equality check.
+		testCase.initialOutput.Done = output.Done
 
 		if !reflect.DeepEqual(output, testCase.initialOutput) {
-			test.Errorf("Case %d: Unexpected initial results. Expected: '%v', actual: '%v'.", i, testCase.initialOutput, output)
+			test.Errorf("Case %d: Unexpected initial results. Expected: '%s', actual: '%s'.",
+				i, util.MustToJSONIndent(testCase.initialOutput), util.MustToJSONIndent(output))
 			continue
 		}
 
-		testCase.options.WaitForCompletion = true
+		testCase.job.WaitForCompletion = true
 
-		output, numRemaining, runTime, err = RunJob(testCase.options, testCase.input, testCase.cacheFunc, testCase.cacheRemovalFunc, testCase.workFunc)
+		output, err = testCase.job.Run()
 		if err != nil {
 			if testCase.finalErrorSubstring != "" {
 				if !strings.Contains(err.Error(), testCase.finalErrorSubstring) {
@@ -552,60 +740,48 @@ func TestRunJobBase(test *testing.T) {
 			continue
 		}
 
-		if numRemaining != 0 {
-			test.Errorf("Case %d: Unexpected number of final items remaining. Expected: '0', actual: '%d'.", i, numRemaining)
-			continue
-		}
+		// Set the done channel to pass the equality check.
+		testCase.finalOutput.Done = output.Done
 
-		if runTime != testCase.finalRunTime {
-			test.Errorf("Case %d: Unexpected final run time. Expected: '%d', actual: '%d'.", i, testCase.finalRunTime, runTime)
-			continue
-		}
-
-		if !reflect.DeepEqual(testCase.finalOutput, output) {
+		if !reflect.DeepEqual(output, testCase.finalOutput) {
 			test.Errorf("Case %d: Unexpected final results. Expected: '%s', actual: '%s'.",
 				i, util.MustToJSONIndent(testCase.finalOutput), util.MustToJSONIndent(output))
 			continue
 		}
 
-		if testCase.checkEmptyCache && !testCase.resetCache {
-			test.Errorf("Case %d: A test that checks for an empty cache must reset the cache.", i)
-			cache = resetCache()
+		if testCase.checkEmptyStorage && !testCase.resetStorage {
+			test.Errorf("Case %d: A test that checks for an empty storage must reset the storage.", i)
+			storage = resetStorage()
 			continue
 		}
 
-		if testCase.resetCache {
-			if testCase.checkEmptyCache {
-				testCase.options.WaitForCompletion = false
+		if testCase.resetStorage {
+			if testCase.checkEmptyStorage {
+				testCase.job.WaitForCompletion = false
 
-				output, numRemaining, runTime, err = RunJob(testCase.options, testCase.input, testCase.cacheFunc, testCase.cacheRemovalFunc, testCase.workFunc)
+				output, err = testCase.job.Run()
 				if err != nil {
-					test.Errorf("Case %d: Failed to check for an empty cache: '%v'.", i, err)
-					cache = resetCache()
+					test.Errorf("Case %d: Failed to check for an empty storage: '%v'.", i, err)
+					storage = resetStorage()
 					continue
 				}
 
-				if runTime != 0 {
-					test.Errorf("Case %d: Unexpected run time during cache check. Expected: '0', actual: '%d'.", i, runTime)
-					cache = resetCache()
-					continue
+				expected := JobOutput[string, int]{
+					ResultItems:    []int{},
+					RemainingItems: input,
+					RunTime:        int64(0),
+					// Set the done channel to pass the equality check.
+					Done: output.Done,
 				}
 
-				if numRemaining != len(testCase.input) {
-					test.Errorf("Case %d: Unexpected number of items remaining during cache check. Expected: '%d', actual: '%d'.",
-						i, len(testCase.input), numRemaining)
-					cache = resetCache()
-					continue
-				}
-
-				if !reflect.DeepEqual(output, []int{}) {
-					test.Errorf("Case %d: Unexpected output during cache check. Expected: '%v', actual: '%v'.", i, []int{}, output)
-					cache = resetCache()
+				if !reflect.DeepEqual(output, expected) {
+					test.Errorf("Case %d: Unexpected output during storage check. Expected: '%v', actual: '%v'.", i, expected, output)
+					storage = resetStorage()
 					continue
 				}
 			}
 
-			cache = resetCache()
+			storage = resetStorage()
 		}
 	}
 }
@@ -621,7 +797,7 @@ func TestRunJobCancel(test *testing.T) {
 	workWaitGroup := sync.WaitGroup{}
 	workWaitGroup.Add(1)
 
-	workFunc := func(input string) (int, int64, error) {
+	sleepWorkFunc := func(input string) (int, int64, error) {
 		// Signal on the initial piece of work that we can make sure the workers have started up before we cancel.
 		if input == "A" {
 			workWaitGroup.Done()
@@ -635,11 +811,15 @@ func TestRunJobCancel(test *testing.T) {
 
 	ctx, cancelFunc := context.WithCancel(context.Background())
 
-	options := &JobOptions{
-		Context:           ctx,
-		WaitForCompletion: true,
-		LockKey:           testLockKey,
-		PoolSize:          testPoolSize,
+	job := &Job[string, int]{
+		WorkItems: input,
+		WorkFunc:  sleepWorkFunc,
+		JobOptions: JobOptions{
+			Context:           ctx,
+			WaitForCompletion: true,
+			PoolSize:          testPoolSize,
+			LockKey:           testLockKey,
+		},
 	}
 
 	// Cancel the context as soon as the initial worker signals it.
@@ -648,25 +828,58 @@ func TestRunJobCancel(test *testing.T) {
 		cancelFunc()
 	}()
 
-	output, numRemaining, runTime, err := RunJob(options, input, nil, nil, workFunc)
+	output, err := job.Run()
 	if err != nil {
 		test.Fatalf("Got an unexpected error: '%v'.", err)
 	}
 
-	if output != nil {
-		test.Fatalf("Got a result when it should have been nil.")
-	}
-
-	if numRemaining != 0 {
-		test.Fatalf("Got jobs remaining when it should be 0.")
-	}
-
-	if runTime != 0 {
-		test.Fatalf("Got run time when it should be 0.")
+	if !reflect.DeepEqual(output, JobOutput[string, int]{}) {
+		test.Fatalf("Unexpected result. Expected: '%s', actual: '%s'.",
+			util.MustToJSONIndent(JobOutput[string, int]{}), util.MustToJSONIndent(output))
 	}
 }
 
-func resetCache() map[string]int {
+func TestRunJobChannel(test *testing.T) {
+	input := []string{
+		"A",
+		"BB",
+		"CCC",
+	}
+
+	job := &Job[string, int]{
+		WorkItems: input,
+		WorkFunc:  workFunc,
+		JobOptions: JobOptions{
+			WaitForCompletion: false,
+			PoolSize:          testPoolSize,
+			LockKey:           testLockKey,
+		},
+	}
+
+	output, err := job.Run()
+	if err != nil {
+		test.Fatalf("Failed to run job: '%v'.", err)
+	}
+
+	// Wait for the worker to signal the job is done.
+	<-output.Done
+
+	expected := JobOutput[string, int]{
+		ResultItems:    []int{1, 2, 3},
+		RemainingItems: []string{},
+		RunTime:        int64(len(input)),
+		Done:           job.Done,
+	}
+
+	// Must check the job object itself for updates.
+	// The output variable is returned before the work is done.
+	if !reflect.DeepEqual(job.JobOutput, expected) {
+		test.Fatalf("Unexpected output. Expected: '%s', actual: '%s'.",
+			util.MustToJSONIndent(expected), util.MustToJSONIndent(job.JobOutput))
+	}
+}
+
+func resetStorage() map[string]int {
 	return map[string]int{
 		"A":  1,
 		"BB": 2,

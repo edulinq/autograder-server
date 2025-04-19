@@ -29,10 +29,8 @@ func TestIndividualBase(test *testing.T) {
 
 	email := "server-admin"
 	fields := map[string]any{
-		"submissions": submissions,
-		"job-options": &jobmanager.JobOptions{
-			WaitForCompletion: false,
-		},
+		"submissions":         submissions,
+		"wait-for-completion": false,
 	}
 
 	response := core.SendTestAPIRequestFull(test, `courses/assignments/submissions/analysis/individual`, fields, nil, email)
@@ -47,7 +45,7 @@ func TestIndividualBase(test *testing.T) {
 	expected := IndividualResponse{
 		Complete: false,
 		Options: analysis.AnalysisOptions{
-			JobOptions:         &jobmanager.JobOptions{},
+			JobOptions:         jobmanager.JobOptions{},
 			RawSubmissionSpecs: submissions,
 		},
 		Summary: &model.IndividualAnalysisSummary{
@@ -67,9 +65,7 @@ func TestIndividualBase(test *testing.T) {
 
 	// Make another request, but wait for the analysis.
 	time.Sleep(100 * time.Millisecond)
-	fields["job-options"] = &jobmanager.JobOptions{
-		WaitForCompletion: true,
-	}
+	fields["wait-for-completion"] = true
 
 	response = core.SendTestAPIRequestFull(test, `courses/assignments/submissions/analysis/individual`, fields, nil, email)
 	if !response.Success {
@@ -83,7 +79,7 @@ func TestIndividualBase(test *testing.T) {
 		Complete: true,
 		Options: analysis.AnalysisOptions{
 			RawSubmissionSpecs: submissions,
-			JobOptions: &jobmanager.JobOptions{
+			JobOptions: jobmanager.JobOptions{
 				WaitForCompletion: true,
 			},
 		},

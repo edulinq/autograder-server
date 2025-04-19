@@ -44,7 +44,7 @@ func HandlePairwise(request *PairwiseRequest) (*PairwiseResponse, *core.APIError
 
 	request.ResolvedSubmissionIDs = fullSubmissionIDs
 	request.InitiatorEmail = request.ServerUser.Email
-	request.AnalysisOptions.JobOptions.Context = request.Context
+	request.AnalysisOptions.Context = request.APIRequestUserContext.Context
 
 	results, pendingCount, err := analysis.PairwiseAnalysis(request.AnalysisOptions)
 	if err != nil {

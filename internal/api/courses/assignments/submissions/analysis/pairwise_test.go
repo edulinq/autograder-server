@@ -29,10 +29,8 @@ func TestPairwiseBase(test *testing.T) {
 
 	email := "server-admin"
 	fields := map[string]any{
-		"submissions": submissions,
-		"job-options": &jobmanager.JobOptions{
-			WaitForCompletion: false,
-		},
+		"submissions":         submissions,
+		"wait-for-completion": false,
 	}
 
 	response := core.SendTestAPIRequestFull(test, `courses/assignments/submissions/analysis/pairwise`, fields, nil, email)
@@ -47,7 +45,7 @@ func TestPairwiseBase(test *testing.T) {
 	expected := PairwiseResponse{
 		Complete: false,
 		Options: analysis.AnalysisOptions{
-			JobOptions:         &jobmanager.JobOptions{},
+			JobOptions:         jobmanager.JobOptions{},
 			RawSubmissionSpecs: submissions,
 		},
 		Summary: &model.PairwiseAnalysisSummary{
@@ -67,9 +65,7 @@ func TestPairwiseBase(test *testing.T) {
 
 	// Make another request, but wait for the analysis.
 	time.Sleep(100 * time.Millisecond)
-	fields["job-options"] = &jobmanager.JobOptions{
-		WaitForCompletion: true,
-	}
+	fields["wait-for-completion"] = true
 
 	response = core.SendTestAPIRequestFull(test, `courses/assignments/submissions/analysis/pairwise`, fields, nil, email)
 	if !response.Success {
@@ -83,7 +79,7 @@ func TestPairwiseBase(test *testing.T) {
 		Complete: true,
 		Options: analysis.AnalysisOptions{
 			RawSubmissionSpecs: submissions,
-			JobOptions: &jobmanager.JobOptions{
+			JobOptions: jobmanager.JobOptions{
 				WaitForCompletion: true,
 			},
 		},

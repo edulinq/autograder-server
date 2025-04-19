@@ -118,7 +118,7 @@ func testIndividual(test *testing.T, ids []string, expected []*model.IndividualA
 	options := AnalysisOptions{
 		ResolvedSubmissionIDs: ids,
 		InitiatorEmail:        "server-admin@test.edulinq.org",
-		JobOptions: &jobmanager.JobOptions{
+		JobOptions: jobmanager.JobOptions{
 			WaitForCompletion: true,
 		},
 	}
@@ -220,7 +220,7 @@ func TestIndividualAnalysisIncludeExclude(test *testing.T) {
 		options := AnalysisOptions{
 			ResolvedSubmissionIDs: submissionIDs,
 			InitiatorEmail:        "server-admin@test.edulinq.org",
-			JobOptions: &jobmanager.JobOptions{
+			JobOptions: jobmanager.JobOptions{
 				WaitForCompletion: true,
 			},
 		}
@@ -283,7 +283,7 @@ func TestIndividualAnalysisCountBase(test *testing.T) {
 		{
 			options: AnalysisOptions{
 				ResolvedSubmissionIDs: []string{},
-				JobOptions: &jobmanager.JobOptions{
+				JobOptions: jobmanager.JobOptions{
 					WaitForCompletion: true,
 				},
 			},
@@ -302,11 +302,11 @@ func TestIndividualAnalysisCountBase(test *testing.T) {
 				ResolvedSubmissionIDs: []string{
 					submissionID,
 				},
-				JobOptions: &jobmanager.JobOptions{
-					DryRun:            false,
-					OverwriteCache:    false,
+				JobOptions: jobmanager.JobOptions{
+					OverwriteRecords:  false,
 					WaitForCompletion: true,
 				},
+				DryRun: false,
 			},
 			preload:                   false,
 			expectedCacheSetOnPreload: false,
@@ -320,11 +320,11 @@ func TestIndividualAnalysisCountBase(test *testing.T) {
 				ResolvedSubmissionIDs: []string{
 					submissionID,
 				},
-				JobOptions: &jobmanager.JobOptions{
-					DryRun:            true,
-					OverwriteCache:    false,
+				JobOptions: jobmanager.JobOptions{
+					OverwriteRecords:  false,
 					WaitForCompletion: true,
 				},
+				DryRun: true,
 			},
 			preload:                   false,
 			expectedCacheSetOnPreload: false,
@@ -338,11 +338,11 @@ func TestIndividualAnalysisCountBase(test *testing.T) {
 				ResolvedSubmissionIDs: []string{
 					submissionID,
 				},
-				JobOptions: &jobmanager.JobOptions{
-					DryRun:            false,
-					OverwriteCache:    true,
+				JobOptions: jobmanager.JobOptions{
+					OverwriteRecords:  true,
 					WaitForCompletion: true,
 				},
+				DryRun: false,
 			},
 			preload:                   false,
 			expectedCacheSetOnPreload: false,
@@ -356,11 +356,11 @@ func TestIndividualAnalysisCountBase(test *testing.T) {
 				ResolvedSubmissionIDs: []string{
 					submissionID,
 				},
-				JobOptions: &jobmanager.JobOptions{
-					DryRun:            true,
-					OverwriteCache:    true,
+				JobOptions: jobmanager.JobOptions{
+					OverwriteRecords:  true,
 					WaitForCompletion: true,
 				},
+				DryRun: true,
 			},
 			preload:                   false,
 			expectedCacheSetOnPreload: false,
@@ -377,11 +377,11 @@ func TestIndividualAnalysisCountBase(test *testing.T) {
 				ResolvedSubmissionIDs: []string{
 					submissionID,
 				},
-				JobOptions: &jobmanager.JobOptions{
-					DryRun:            false,
-					OverwriteCache:    false,
+				JobOptions: jobmanager.JobOptions{
+					OverwriteRecords:  false,
 					WaitForCompletion: true,
 				},
+				DryRun: false,
 			},
 			preload:                   true,
 			expectedCacheSetOnPreload: true,
@@ -395,11 +395,11 @@ func TestIndividualAnalysisCountBase(test *testing.T) {
 				ResolvedSubmissionIDs: []string{
 					submissionID,
 				},
-				JobOptions: &jobmanager.JobOptions{
-					DryRun:            true,
-					OverwriteCache:    false,
+				JobOptions: jobmanager.JobOptions{
+					OverwriteRecords:  false,
 					WaitForCompletion: true,
 				},
+				DryRun: true,
 			},
 			preload:                   true,
 			expectedCacheSetOnPreload: true,
@@ -413,11 +413,11 @@ func TestIndividualAnalysisCountBase(test *testing.T) {
 				ResolvedSubmissionIDs: []string{
 					submissionID,
 				},
-				JobOptions: &jobmanager.JobOptions{
-					DryRun:            false,
-					OverwriteCache:    true,
+				JobOptions: jobmanager.JobOptions{
+					OverwriteRecords:  true,
 					WaitForCompletion: true,
 				},
+				DryRun: false,
 			},
 			preload:                   true,
 			expectedCacheSetOnPreload: false,
@@ -431,11 +431,11 @@ func TestIndividualAnalysisCountBase(test *testing.T) {
 				ResolvedSubmissionIDs: []string{
 					submissionID,
 				},
-				JobOptions: &jobmanager.JobOptions{
-					DryRun:            true,
-					OverwriteCache:    true,
+				JobOptions: jobmanager.JobOptions{
+					OverwriteRecords:  true,
 					WaitForCompletion: true,
 				},
+				DryRun: true,
 			},
 			preload:                   true,
 			expectedCacheSetOnPreload: true,
@@ -468,7 +468,7 @@ func TestIndividualAnalysisCountBase(test *testing.T) {
 			preloadOptions := AnalysisOptions{
 				ResolvedSubmissionIDs: testCase.options.ResolvedSubmissionIDs,
 				InitiatorEmail:        "server-admin@test.edulinq.org",
-				JobOptions: &jobmanager.JobOptions{
+				JobOptions: jobmanager.JobOptions{
 					WaitForCompletion: true,
 				},
 			}
@@ -568,7 +568,7 @@ func TestIndividualAnalysisFailureBase(test *testing.T) {
 	options := AnalysisOptions{
 		ResolvedSubmissionIDs: []string{"course101::hw0::course-student@test.edulinq.org::1697406265"},
 		InitiatorEmail:        "server-admin@test.edulinq.org",
-		JobOptions: &jobmanager.JobOptions{
+		JobOptions: jobmanager.JobOptions{
 			WaitForCompletion: true,
 		},
 	}
