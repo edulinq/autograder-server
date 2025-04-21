@@ -233,7 +233,7 @@ func TestPairwiseWithPythonNotebook(test *testing.T) {
 		},
 	}
 
-	sims, unmatches, _, _, err := computeFileSims(options, paths, nil, nil)
+	sims, unmatches, _, err := computeFileSims(options, paths, nil, nil)
 	if err != nil {
 		test.Fatalf("Failed to compute file similarity: '%v'.", err)
 	}
@@ -320,7 +320,7 @@ func TestPairwiseAnalysisDefaultEnginesSpecificFiles(test *testing.T) {
 
 	for _, path := range testPaths {
 		for _, engine := range defaultSimilarityEngines {
-			sim, _, err := engine.ComputeFileSimilarity([2]string{path, path}, "", ctx)
+			sim, err := engine.ComputeFileSimilarity([2]string{path, path}, "", ctx)
 			if err != nil {
 				test.Errorf("Engine '%s' failed to compute similarity on '%s': '%v'.",
 					engine.GetName(), path, err)
