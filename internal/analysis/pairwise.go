@@ -66,7 +66,7 @@ func PairwiseAnalysis(options AnalysisOptions) ([]*model.PairwiseAnalysis, int, 
 	defer templateFileStore.Close()
 
 	job := jobmanager.Job[model.PairwiseKey, *model.PairwiseAnalysis]{
-		JobOptions:        options.JobOptions,
+		JobOptions:        &options.JobOptions,
 		LockKey:           fmt.Sprintf("analysis-pairwise-course-%s", lockCourseID),
 		PoolSize:          config.ANALYSIS_PAIRWISE_COURSE_POOL_SIZE.Get(),
 		WorkItems:         allKeys,
@@ -84,9 +84,6 @@ func PairwiseAnalysis(options AnalysisOptions) ([]*model.PairwiseAnalysis, int, 
 	if err != nil {
 		return nil, 0, fmt.Errorf("Failed to validate job: '%v'.", err)
 	}
-
-	// Capture any updates from validating the job.
-	options.JobOptions = job.JobOptions
 
 	output := job.Run()
 	if output.Error != nil {

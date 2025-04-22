@@ -39,7 +39,7 @@ type JobOptions struct {
 // Provide an input key generation function to synchronize at the input item level.
 type Job[InputType any, OutputType any] struct {
 	// The user level options for a Job.
-	JobOptions
+	*JobOptions
 
 	// The current state of the output.
 	// Only access the state of the output when JobOutput.Done signals.
@@ -116,6 +116,11 @@ func (this *Job[InputType, OutputType]) validateFull(setChannel bool) error {
 		return fmt.Errorf("Job cannot have a nil work function.")
 	}
 
+	err := this.JobOptions.Validate()
+	if err != nil {
+		return err
+	}
+
 	if setChannel {
 		if this.done != nil {
 			return fmt.Errorf("Job is actively running and cannot be run again.")
@@ -131,7 +136,7 @@ func (this *Job[InputType, OutputType]) validateFull(setChannel bool) error {
 		return fmt.Errorf("Pool size must be positive, got %d.", this.PoolSize)
 	}
 
-	return this.JobOptions.Validate()
+	return nil
 }
 
 func (this *JobOptions) Validate() error {

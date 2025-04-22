@@ -20,7 +20,7 @@ var workFunc = func(input string) (int, error) {
 }
 
 type printableJob[InputType any, OutputType any] struct {
-	JobOptions
+	*JobOptions
 
 	Context context.Context `json:"context"`
 
@@ -88,13 +88,13 @@ func TestJobValidateBase(test *testing.T) {
 				WorkFunc:   workFunc,
 				PoolSize:   testPoolSize,
 				LockKey:    testLockKey,
-				JobOptions: JobOptions{},
+				JobOptions: &JobOptions{},
 			},
 			&Job[string, int]{
 				WorkFunc: workFunc,
 				PoolSize: testPoolSize,
 				LockKey:  testLockKey,
-				JobOptions: JobOptions{
+				JobOptions: &JobOptions{
 					Context: context.Background(),
 				},
 			},
@@ -105,7 +105,7 @@ func TestJobValidateBase(test *testing.T) {
 				WorkFunc: workFunc,
 				PoolSize: testPoolSize,
 				LockKey:  testLockKey,
-				JobOptions: JobOptions{
+				JobOptions: &JobOptions{
 					WaitForCompletion: true,
 				},
 			},
@@ -113,7 +113,7 @@ func TestJobValidateBase(test *testing.T) {
 				WorkFunc: workFunc,
 				PoolSize: testPoolSize,
 				LockKey:  testLockKey,
-				JobOptions: JobOptions{
+				JobOptions: &JobOptions{
 					Context:           context.Background(),
 					WaitForCompletion: true,
 				},
@@ -125,7 +125,7 @@ func TestJobValidateBase(test *testing.T) {
 				WorkFunc: workFunc,
 				PoolSize: testPoolSize,
 				LockKey:  testLockKey,
-				JobOptions: JobOptions{
+				JobOptions: &JobOptions{
 					RetainOriginalContext: true,
 				},
 			},
@@ -133,20 +133,21 @@ func TestJobValidateBase(test *testing.T) {
 				WorkFunc: workFunc,
 				PoolSize: testPoolSize,
 				LockKey:  testLockKey,
-				JobOptions: JobOptions{
+				JobOptions: &JobOptions{
 					Context:               context.Background(),
 					RetainOriginalContext: true,
 				},
 			},
 			"",
 		},
+
 		// Nil context provided
 		{
 			&Job[string, int]{
 				WorkFunc: workFunc,
 				PoolSize: testPoolSize,
 				LockKey:  testLockKey,
-				JobOptions: JobOptions{
+				JobOptions: &JobOptions{
 					Context: nil,
 				},
 			},
@@ -154,7 +155,7 @@ func TestJobValidateBase(test *testing.T) {
 				WorkFunc: workFunc,
 				PoolSize: testPoolSize,
 				LockKey:  testLockKey,
-				JobOptions: JobOptions{
+				JobOptions: &JobOptions{
 					Context: context.Background(),
 				},
 			},
@@ -165,7 +166,7 @@ func TestJobValidateBase(test *testing.T) {
 				WorkFunc: workFunc,
 				PoolSize: testPoolSize,
 				LockKey:  testLockKey,
-				JobOptions: JobOptions{
+				JobOptions: &JobOptions{
 					Context:           nil,
 					WaitForCompletion: true,
 				},
@@ -174,7 +175,7 @@ func TestJobValidateBase(test *testing.T) {
 				WorkFunc: workFunc,
 				PoolSize: testPoolSize,
 				LockKey:  testLockKey,
-				JobOptions: JobOptions{
+				JobOptions: &JobOptions{
 					Context:           context.Background(),
 					WaitForCompletion: true,
 				},
@@ -186,7 +187,7 @@ func TestJobValidateBase(test *testing.T) {
 				WorkFunc: workFunc,
 				PoolSize: testPoolSize,
 				LockKey:  testLockKey,
-				JobOptions: JobOptions{
+				JobOptions: &JobOptions{
 					Context:               nil,
 					RetainOriginalContext: true,
 				},
@@ -195,20 +196,21 @@ func TestJobValidateBase(test *testing.T) {
 				WorkFunc: workFunc,
 				PoolSize: testPoolSize,
 				LockKey:  testLockKey,
-				JobOptions: JobOptions{
+				JobOptions: &JobOptions{
 					Context:               context.Background(),
 					RetainOriginalContext: true,
 				},
 			},
 			"",
 		},
+
 		// Context provided
 		{
 			&Job[string, int]{
 				WorkFunc: workFunc,
 				PoolSize: testPoolSize,
 				LockKey:  testLockKey,
-				JobOptions: JobOptions{
+				JobOptions: &JobOptions{
 					Context: context.TODO(),
 				},
 			},
@@ -216,7 +218,7 @@ func TestJobValidateBase(test *testing.T) {
 				WorkFunc: workFunc,
 				PoolSize: testPoolSize,
 				LockKey:  testLockKey,
-				JobOptions: JobOptions{
+				JobOptions: &JobOptions{
 					// Swap the context to background when not waiting for completion.
 					Context: context.Background(),
 				},
@@ -228,7 +230,7 @@ func TestJobValidateBase(test *testing.T) {
 				WorkFunc: workFunc,
 				PoolSize: testPoolSize,
 				LockKey:  testLockKey,
-				JobOptions: JobOptions{
+				JobOptions: &JobOptions{
 					Context:           context.TODO(),
 					WaitForCompletion: true,
 				},
@@ -237,7 +239,7 @@ func TestJobValidateBase(test *testing.T) {
 				WorkFunc: workFunc,
 				PoolSize: testPoolSize,
 				LockKey:  testLockKey,
-				JobOptions: JobOptions{
+				JobOptions: &JobOptions{
 					Context:           context.TODO(),
 					WaitForCompletion: true,
 				},
@@ -249,7 +251,7 @@ func TestJobValidateBase(test *testing.T) {
 				WorkFunc: workFunc,
 				PoolSize: testPoolSize,
 				LockKey:  testLockKey,
-				JobOptions: JobOptions{
+				JobOptions: &JobOptions{
 					Context:               context.TODO(),
 					RetainOriginalContext: true,
 				},
@@ -258,7 +260,7 @@ func TestJobValidateBase(test *testing.T) {
 				WorkFunc: workFunc,
 				PoolSize: testPoolSize,
 				LockKey:  testLockKey,
-				JobOptions: JobOptions{
+				JobOptions: &JobOptions{
 					Context:               context.TODO(),
 					RetainOriginalContext: true,
 				},
@@ -287,26 +289,45 @@ func TestJobValidateBase(test *testing.T) {
 			nil,
 			"Job cannot have a nil work function.",
 		},
+		// Nil Job Options
+		{
+			&Job[string, int]{
+				WorkFunc: workFunc,
+			},
+			nil,
+			"Job options are nil.",
+		},
+		{
+			&Job[string, int]{
+				WorkFunc:   workFunc,
+				JobOptions: nil,
+			},
+			nil,
+			"Job options are nil.",
+		},
 		// Bad Pool Size
 		{
 			&Job[string, int]{
-				WorkFunc: workFunc,
+				WorkFunc:   workFunc,
+				JobOptions: &JobOptions{},
 			},
 			nil,
 			"Pool size must be positive, got 0.",
 		},
 		{
 			&Job[string, int]{
-				WorkFunc: workFunc,
-				PoolSize: 0,
+				WorkFunc:   workFunc,
+				JobOptions: &JobOptions{},
+				PoolSize:   0,
 			},
 			nil,
 			"Pool size must be positive, got 0.",
 		},
 		{
 			&Job[string, int]{
-				WorkFunc: workFunc,
-				PoolSize: -1,
+				WorkFunc:   workFunc,
+				JobOptions: &JobOptions{},
+				PoolSize:   -1,
 			},
 			nil,
 			"Pool size must be positive, got -1.",
@@ -429,7 +450,7 @@ func TestRunJobBase(test *testing.T) {
 				WorkFunc:   workFunc,
 				PoolSize:   testPoolSize,
 				LockKey:    testLockKey,
-				JobOptions: JobOptions{},
+				JobOptions: &JobOptions{},
 			},
 			initialOutput: &JobOutput[string, int]{
 				ResultItems:    []int{},
@@ -450,7 +471,7 @@ func TestRunJobBase(test *testing.T) {
 				WorkFunc:   workFunc,
 				PoolSize:   testPoolSize,
 				LockKey:    testLockKey,
-				JobOptions: JobOptions{},
+				JobOptions: &JobOptions{},
 			},
 			initialOutput: &JobOutput[string, int]{
 				ResultItems:    []int{},
@@ -471,7 +492,7 @@ func TestRunJobBase(test *testing.T) {
 				WorkFunc:   workFunc,
 				PoolSize:   testPoolSize,
 				LockKey:    testLockKey,
-				JobOptions: JobOptions{},
+				JobOptions: &JobOptions{},
 			},
 			initialOutput: &JobOutput[string, int]{
 				ResultItems:    []int{},
@@ -495,7 +516,7 @@ func TestRunJobBase(test *testing.T) {
 				PoolSize:     testPoolSize,
 				LockKey:      testLockKey,
 				RetrieveFunc: retrieveFunc,
-				JobOptions:   JobOptions{},
+				JobOptions:   &JobOptions{},
 			},
 			initialOutput: &JobOutput[string, int]{
 				ResultItems:    []int{1, 2},
@@ -517,7 +538,7 @@ func TestRunJobBase(test *testing.T) {
 				PoolSize:     testPoolSize,
 				LockKey:      testLockKey,
 				RetrieveFunc: retrieveFunc,
-				JobOptions: JobOptions{
+				JobOptions: &JobOptions{
 					OverwriteRecords: true,
 				},
 			},
@@ -543,7 +564,7 @@ func TestRunJobBase(test *testing.T) {
 				PoolSize:          testPoolSize,
 				LockKey:           testLockKey,
 				RemoveStorageFunc: removeStorageFunc,
-				JobOptions:        JobOptions{},
+				JobOptions:        &JobOptions{},
 			},
 			initialOutput: &JobOutput[string, int]{
 				ResultItems:    []int{},
@@ -566,7 +587,7 @@ func TestRunJobBase(test *testing.T) {
 				LockKey:   testLockKey,
 				// Won't cause an error because it won't be called.
 				RemoveStorageFunc: errorRemoveStorageFunc,
-				JobOptions:        JobOptions{},
+				JobOptions:        &JobOptions{},
 			},
 			initialOutput: &JobOutput[string, int]{
 				ResultItems:    []int{},
@@ -592,7 +613,7 @@ func TestRunJobBase(test *testing.T) {
 				RetrieveFunc: retrieveFunc,
 				// Storage removal is not called.
 				RemoveStorageFunc: removeStorageFunc,
-				JobOptions:        JobOptions{},
+				JobOptions:        &JobOptions{},
 			},
 			initialOutput: &JobOutput[string, int]{
 				ResultItems:    []int{1, 2},
@@ -615,7 +636,7 @@ func TestRunJobBase(test *testing.T) {
 				LockKey:           testLockKey,
 				RetrieveFunc:      retrieveFunc,
 				RemoveStorageFunc: removeStorageFunc,
-				JobOptions: JobOptions{
+				JobOptions: &JobOptions{
 					OverwriteRecords: true,
 				},
 			},
@@ -643,7 +664,7 @@ func TestRunJobBase(test *testing.T) {
 				RetrieveFunc: retrieveFunc,
 				// Storage removal is not called.
 				RemoveStorageFunc: removeStorageFunc,
-				JobOptions:        JobOptions{},
+				JobOptions:        &JobOptions{},
 			},
 			initialOutput: &JobOutput[string, int]{
 				ResultItems:    []int{1, 2},
@@ -668,7 +689,7 @@ func TestRunJobBase(test *testing.T) {
 				LockKey:           testLockKey,
 				RetrieveFunc:      retrieveFunc,
 				RemoveStorageFunc: removeStorageFunc,
-				JobOptions: JobOptions{
+				JobOptions: &JobOptions{
 					OverwriteRecords: true,
 				},
 			},
@@ -693,15 +714,17 @@ func TestRunJobBase(test *testing.T) {
 		// Nil Work Function
 		{
 			job: Job[string, int]{
-				WorkItems: input,
-				WorkFunc:  nil,
+				WorkItems:  input,
+				WorkFunc:   nil,
+				JobOptions: &JobOptions{},
 			},
 			errorSubstring: "Job cannot have a nil work function.",
 		},
 		{
 			job: Job[string, int]{
-				WorkItems: nil,
-				WorkFunc:  nil,
+				WorkItems:  nil,
+				WorkFunc:   nil,
+				JobOptions: &JobOptions{},
 			},
 			errorSubstring: "Job cannot have a nil work function.",
 		},
@@ -714,7 +737,7 @@ func TestRunJobBase(test *testing.T) {
 				PoolSize:     testPoolSize,
 				LockKey:      testLockKey,
 				RetrieveFunc: errorRetrieveFunc,
-				JobOptions:   JobOptions{},
+				JobOptions:   &JobOptions{},
 			},
 			errorSubstring: "Crazy retrieval error!",
 		},
@@ -725,7 +748,7 @@ func TestRunJobBase(test *testing.T) {
 				PoolSize:     testPoolSize,
 				LockKey:      testLockKey,
 				RetrieveFunc: errorRetrieveFunc,
-				JobOptions: JobOptions{
+				JobOptions: &JobOptions{
 					OverwriteRecords: true,
 				},
 			},
@@ -741,7 +764,7 @@ func TestRunJobBase(test *testing.T) {
 				PoolSize:          testPoolSize,
 				LockKey:           testLockKey,
 				RemoveStorageFunc: errorRemoveStorageFunc,
-				JobOptions: JobOptions{
+				JobOptions: &JobOptions{
 					OverwriteRecords: true,
 				},
 			},
@@ -866,7 +889,7 @@ func TestRunJobCancel(test *testing.T) {
 		WorkFunc:  sleepWorkFunc,
 		PoolSize:  testPoolSize,
 		LockKey:   testLockKey,
-		JobOptions: JobOptions{
+		JobOptions: &JobOptions{
 			Context:           ctx,
 			WaitForCompletion: true,
 		},
@@ -897,7 +920,7 @@ func TestRunJobChannel(test *testing.T) {
 		WorkFunc:  workFunc,
 		PoolSize:  testPoolSize,
 		LockKey:   testLockKey,
-		JobOptions: JobOptions{
+		JobOptions: &JobOptions{
 			WaitForCompletion: false,
 		},
 	}

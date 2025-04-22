@@ -33,14 +33,13 @@ func IndividualAnalysis(options AnalysisOptions) ([]*model.IndividualAnalysis, i
 	}
 
 	job := jobmanager.Job[string, *model.IndividualAnalysis]{
-		JobOptions:        options.JobOptions,
+		JobOptions:        &options.JobOptions,
 		LockKey:           fmt.Sprintf("analysis-individual-course-%s", lockCourseID),
 		PoolSize:          config.ANALYSIS_INDIVIDUAL_COURSE_POOL_SIZE.Get(),
 		WorkItems:         fullSubmissionIDs,
 		RetrieveFunc:      getCachedIndividualResults,
 		RemoveStorageFunc: db.RemoveIndividualAnalysis,
 		WorkFunc: func(fullSubmissionID string) (*model.IndividualAnalysis, error) {
-			// TODO: Investigate if these options get the updates from validation on line 57.
 			return runSingleIndividualAnalysis(options, fullSubmissionID)
 		},
 		WorkItemKeyFunc: func(fullSubmissionID string) string {
@@ -52,9 +51,6 @@ func IndividualAnalysis(options AnalysisOptions) ([]*model.IndividualAnalysis, i
 	if err != nil {
 		return nil, 0, fmt.Errorf("Failed to validate job.: '%v'.", err)
 	}
-
-	// Capture any updates from validating the job.
-	options.JobOptions = job.JobOptions
 
 	output := job.Run()
 	if output.Error != nil {
