@@ -40,7 +40,7 @@ func IndividualAnalysis(options AnalysisOptions) ([]*model.IndividualAnalysis, i
 		RetrieveFunc:      getCachedIndividualResults,
 		RemoveStorageFunc: db.RemoveIndividualAnalysis,
 		WorkFunc: func(fullSubmissionID string) (*model.IndividualAnalysis, error) {
-            // TODO: Investigate if these options get the updates from validation on line 57.
+			// TODO: Investigate if these options get the updates from validation on line 57.
 			return runSingleIndividualAnalysis(options, fullSubmissionID)
 		},
 		WorkItemKeyFunc: func(fullSubmissionID string) string {
@@ -56,9 +56,9 @@ func IndividualAnalysis(options AnalysisOptions) ([]*model.IndividualAnalysis, i
 	// Capture any updates from validating the job.
 	options.JobOptions = job.JobOptions
 
-	output, err := job.Run()
-	if err != nil {
-		return nil, 0, fmt.Errorf("Failed to run individual analysis job: '%v'.", err)
+	output := job.Run()
+	if output.Error != nil {
+		return nil, 0, fmt.Errorf("Failed to run individual analysis job: '%v'.", output.Error)
 	}
 
 	collectIndividualStats(fullSubmissionIDs, output.RunTime, options.InitiatorEmail)

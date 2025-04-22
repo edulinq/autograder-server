@@ -88,9 +88,9 @@ func PairwiseAnalysis(options AnalysisOptions) ([]*model.PairwiseAnalysis, int, 
 	// Capture any updates from validating the job.
 	options.JobOptions = job.JobOptions
 
-	output, err := job.Run()
-	if err != nil {
-		return nil, 0, fmt.Errorf("Failed to run pairwise analysis job: '%v'.", err)
+	output := job.Run()
+	if output.Error != nil {
+		return nil, 0, fmt.Errorf("Failed to run pairwise analysis job: '%v'.", output.Error)
 	}
 
 	collectPairwiseStats(allKeys, output.RunTime, options.InitiatorEmail)

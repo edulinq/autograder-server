@@ -1,13 +1,11 @@
 package jobmanager
 
 import (
-	// TEST
-	// "os"
-
 	"context"
 	"errors"
 	"fmt"
 
+	"github.com/edulinq/autograder/internal/config"
 	"github.com/edulinq/autograder/internal/lockmanager"
 	"github.com/edulinq/autograder/internal/log"
 	"github.com/edulinq/autograder/internal/timestamp"
@@ -63,6 +61,7 @@ type Job[InputType any, OutputType any] struct {
 	RetrieveFunc func([]InputType) ([]OutputType, []InputType, []InputType, error)
 
 	// An optional function to remove existing records from storage.
+	// TODO: Find a way to not remove when on DryRun (may need to modify retrieve func).
 	RemoveStorageFunc func([]InputType) error
 
 	// A function to transform work items into results.
@@ -83,8 +82,7 @@ type Job[InputType any, OutputType any] struct {
 // If the context is cacelled while running a job,
 // the returned JobOutput will be empty.
 type JobOutput[InputType any, OutputType any] struct {
-	// TODO: Use Error field.
-	// An error for the Job.Run().
+	// An error for Job.Run().
 	Error error
 
 	// A map of errors encountered while running the job.
@@ -138,22 +136,42 @@ func (this *JobOptions) Validate() error {
 }
 
 // Given a customized Job, Job.Run() processes input items in a parallel pool of workers.
-// Returns the collected results in a JobOutput and an error.
-// If the context is canceled during execution, returns an empty JobOutput, nil.
+// Returns the collected results in a JobOutput.
+// If the context is canceled during execution, returns nil.
 // When not waiting for completion, Job.JobOutput will be populated with the results when the JobOutput.Done channel is closed.
-func (this *Job[InputType, OutputType]) Run() (JobOutput[InputType, OutputType], error) {
+func (this *Job[InputType, OutputType]) Run() *JobOutput[InputType, OutputType] {
+	err := this.Validate()
+	if err != nil {
+		this.Error = fmt.Errorf("Failed to validate job: '%v'.", err)
+		return &this.JobOutput
+	}
+
 	this.ResultItems = make([]OutputType, 0, len(this.WorkItems))
 	this.RemainingItems = this.WorkItems
 	this.RunTime = 0
 	this.WorkErrors = make(map[int]error, 0)
 
-	var err error
+	processedItems := []InputType{}
 
-	// If we are not overwriting records, query for stored records.
-	if !this.OverwriteRecords && this.RetrieveFunc != nil {
-		this.ResultItems, _, this.RemainingItems, err = this.RetrieveFunc(this.WorkItems)
-		if err != nil {
-			return JobOutput[InputType, OutputType]{}, err
+	// Query for stored records.
+	if this.RetrieveFunc != nil {
+		this.ResultItems, processedItems, this.RemainingItems, this.Error = this.RetrieveFunc(this.WorkItems)
+		if this.Error != nil {
+			return &this.JobOutput
+		}
+	}
+
+	// If we are overwriting records, remove all the old records.
+	if this.OverwriteRecords {
+		// Clear output when overwriting records.
+		this.ResultItems = []OutputType{}
+		this.RemainingItems = append(processedItems, this.RemainingItems...)
+
+		if this.RemoveStorageFunc != nil {
+			this.Error = this.RemoveStorageFunc(processedItems)
+			if this.Error != nil {
+				return &this.JobOutput
+			}
 		}
 	}
 
@@ -163,14 +181,11 @@ func (this *Job[InputType, OutputType]) Run() (JobOutput[InputType, OutputType],
 	}
 
 	if this.WaitForCompletion {
-		err = this.run()
-		if err != nil {
-			return JobOutput[InputType, OutputType]{}, err
-		}
+		this.run()
 
 		// If the context was canceled during execution, return immediately.
 		if this.Context.Err() != nil {
-			return JobOutput[InputType, OutputType]{}, nil
+			return nil
 		}
 
 		select {
@@ -180,9 +195,13 @@ func (this *Job[InputType, OutputType]) Run() (JobOutput[InputType, OutputType],
 		}
 	} else {
 		go func() {
-			err = this.run()
-			if err != nil {
-				log.Error("Failure while running asynchronous job: '%v'.", err)
+			this.run()
+			if this.Error != nil {
+				log.Error("Failure while running asynchronous job: '%v'.", this.Error)
+			}
+
+			if this.Context.Err() != nil {
+				return
 			}
 
 			select {
@@ -193,17 +212,12 @@ func (this *Job[InputType, OutputType]) Run() (JobOutput[InputType, OutputType],
 		}()
 	}
 
-	return this.JobOutput, nil
+	return &this.JobOutput
 }
 
-func (this *Job[InputType, OutputType]) run() error {
-	err := this.Validate()
-	if err != nil {
-		return fmt.Errorf("Failed to validate job: '%v'.", err)
-	}
-
+func (this *Job[InputType, OutputType]) run() {
 	if len(this.RemainingItems) == 0 {
-		return nil
+		return
 	}
 
 	noLockWait := true
@@ -214,17 +228,19 @@ func (this *Job[InputType, OutputType]) run() error {
 
 	// The context has been canceled while waiting for a lock, abandon this job.
 	if this.Context.Err() != nil {
-		return nil
+		return
 	}
 
 	processedItems := []InputType{}
+	var err error = nil
 
 	// If we had to wait for the lock, then check again for stored records.
 	if !noLockWait && this.RetrieveFunc != nil {
 		var partialResults []OutputType = nil
 		partialResults, processedItems, this.RemainingItems, err = this.RetrieveFunc(this.RemainingItems)
 		if err != nil {
-			return fmt.Errorf("Failed to re-check record storage before run: '%w'.", err)
+			this.Error = fmt.Errorf("Failed to re-check record storage before run: '%w'.", err)
+			return
 		}
 
 		// Collect the partial records from storage.
@@ -232,18 +248,20 @@ func (this *Job[InputType, OutputType]) run() error {
 	}
 
 	if len(this.RemainingItems) == 0 {
-		return nil
+		return
 	}
 
-	// If we are overwriting records, then remove all the old records.
+	// If we are overwriting records, remove all the old records.
 	if this.OverwriteRecords {
 		// Clear output when overwriting records.
 		this.ResultItems = []OutputType{}
+		this.RemainingItems = append(processedItems, this.RemainingItems...)
 
 		if this.RemoveStorageFunc != nil {
 			err = this.RemoveStorageFunc(processedItems)
 			if err != nil {
-				return fmt.Errorf("Failed to remove old job cache entries: '%w'.", err)
+				this.Error = fmt.Errorf("Failed to remove old job cache entries: '%w'.", err)
+				return
 			}
 		}
 	}
@@ -279,37 +297,35 @@ func (this *Job[InputType, OutputType]) run() error {
 		}
 
 		runTime := (timestamp.Now() - startTime).ToMSecs()
-		// TEST
-		// fmt.Fprintf(os.Stderr, "\nFound the following run time: '%d'.\n", runTime)
-		// fmt.Fprintf(os.Stderr, "\nFound the following start time: '%d'.\n", startTime)
-		// fmt.Fprintf(os.Stderr, "\nFound the following end time: '%d'.\n", timestamp.Now())
+		// Standardize the run time so tests can check for exact matches.
+		if config.UNIT_TESTING_MODE.Get() {
+			runTime = 1
+		}
 
 		return PoolResult{workItem, result, runTime, err}, nil
 	})
 
 	if err != nil {
-		return fmt.Errorf("Failed to run job in a parallel pool: '%w'.", err)
+		this.Error = fmt.Errorf("Failed to run job in a parallel pool: '%w'.", err)
+		return
 	}
 
 	// If the job was canceled, exit right away.
 	if this.Context.Err() != nil {
-		return nil
+		return
 	}
 
 	this.RunTime = 0
 	this.RemainingItems = []InputType{}
-	var errs error = nil
 
 	for _, poolResult := range poolResults {
 		if poolResult.Error != nil {
 			this.WorkErrors[len(this.RemainingItems)] = poolResult.Error
 			this.RemainingItems = append(this.RemainingItems, poolResult.Input)
-			errs = errors.Join(errs, poolResult.Error)
+			this.Error = errors.Join(this.Error, poolResult.Error)
 		} else {
 			this.ResultItems = append(this.ResultItems, poolResult.Result)
 			this.RunTime += poolResult.RunTime
 		}
 	}
-
-	return errs
 }
