@@ -585,11 +585,12 @@ func TestRunJobBase(test *testing.T) {
 		// Passing Retrieval And Storage Removal Functions
 		{
 			job: Job[string, int]{
-				WorkItems:         input,
-				WorkFunc:          workFunc,
-				PoolSize:          testPoolSize,
-				LockKey:           testLockKey,
-				RetrieveFunc:      retrieveFunc,
+				WorkItems:    input,
+				WorkFunc:     workFunc,
+				PoolSize:     testPoolSize,
+				LockKey:      testLockKey,
+				RetrieveFunc: retrieveFunc,
+				// Storage removal is not called.
 				RemoveStorageFunc: removeStorageFunc,
 				JobOptions:        JobOptions{},
 			},
@@ -635,11 +636,12 @@ func TestRunJobBase(test *testing.T) {
 		},
 		{
 			job: Job[string, int]{
-				WorkItems:         input,
-				WorkFunc:          workFuncWithStorage,
-				PoolSize:          testPoolSize,
-				LockKey:           testLockKey,
-				RetrieveFunc:      retrieveFunc,
+				WorkItems:    input,
+				WorkFunc:     workFuncWithStorage,
+				PoolSize:     testPoolSize,
+				LockKey:      testLockKey,
+				RetrieveFunc: retrieveFunc,
+				// Storage removal is not called.
 				RemoveStorageFunc: removeStorageFunc,
 				JobOptions:        JobOptions{},
 			},
@@ -652,8 +654,9 @@ func TestRunJobBase(test *testing.T) {
 			finalOutput: &JobOutput[string, int]{
 				ResultItems:    finalExpected,
 				RemainingItems: []string{},
-				RunTime:        int64(1),
-				WorkErrors:     map[int]error{},
+				// First run will store results, so second run will not have a run time.
+				RunTime:    int64(0),
+				WorkErrors: map[int]error{},
 			},
 			resetStorage: true,
 		},
@@ -777,6 +780,7 @@ func TestRunJobBase(test *testing.T) {
 		}
 
 		testCase.job.WaitForCompletion = true
+		<-output.Done
 
 		output = testCase.job.Run()
 		if output.Error != nil {

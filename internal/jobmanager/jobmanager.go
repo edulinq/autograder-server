@@ -104,12 +104,27 @@ type JobOutput[InputType any, OutputType any] struct {
 }
 
 func (this *Job[InputType, OutputType]) Validate() error {
+	return this.validateFull(false)
+}
+
+func (this *Job[InputType, OutputType]) validateFull(setChannel bool) error {
 	if this == nil {
 		return fmt.Errorf("Job is nil.")
 	}
 
 	if this.WorkFunc == nil {
 		return fmt.Errorf("Job cannot have a nil work function.")
+	}
+
+	if setChannel {
+		if this.done != nil {
+			return fmt.Errorf("Job is actively running and cannot be run again.")
+		}
+
+		this.JobOutput = JobOutput[InputType, OutputType]{}
+
+		this.done = make(chan any)
+		this.Done = this.done
 	}
 
 	if this.PoolSize <= 0 {
@@ -140,7 +155,7 @@ func (this *JobOptions) Validate() error {
 // If the context is canceled during execution, returns nil.
 // When not waiting for completion, Job.JobOutput will be populated with the results when the JobOutput.Done channel is closed.
 func (this *Job[InputType, OutputType]) Run() *JobOutput[InputType, OutputType] {
-	err := this.Validate()
+	err := this.validateFull(true)
 	if err != nil {
 		this.Error = fmt.Errorf("Failed to validate job: '%v'.", err)
 		return &this.JobOutput
@@ -183,15 +198,12 @@ func (this *Job[InputType, OutputType]) Run() *JobOutput[InputType, OutputType] 
 	if this.WaitForCompletion {
 		this.run()
 
+		close(this.done)
+		this.done = nil
+
 		// If the context was canceled during execution, return immediately.
 		if this.Context.Err() != nil {
 			return nil
-		}
-
-		select {
-		case <-this.done:
-		default:
-			close(this.done)
 		}
 	} else {
 		go func() {
@@ -200,15 +212,8 @@ func (this *Job[InputType, OutputType]) Run() *JobOutput[InputType, OutputType] 
 				log.Error("Failure while running asynchronous job: '%v'.", this.Error)
 			}
 
-			if this.Context.Err() != nil {
-				return
-			}
-
-			select {
-			case <-this.done:
-			default:
-				close(this.done)
-			}
+			close(this.done)
+			this.done = nil
 		}()
 	}
 
