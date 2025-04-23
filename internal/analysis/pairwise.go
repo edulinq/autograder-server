@@ -1,6 +1,7 @@
 package analysis
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"path/filepath"
@@ -62,6 +63,10 @@ func PairwiseAnalysis(options AnalysisOptions) ([]*model.PairwiseAnalysis, int, 
 		return nil, 0, fmt.Errorf("Unable to get locking course: '%w'.", err)
 	}
 
+	if !options.RetainOriginalContext && !options.WaitForCompletion {
+		options.Context = context.Background()
+	}
+
 	templateFileStore := NewTemplateFileStore()
 	defer templateFileStore.Close()
 
@@ -71,6 +76,7 @@ func PairwiseAnalysis(options AnalysisOptions) ([]*model.PairwiseAnalysis, int, 
 		PoolSize:          config.ANALYSIS_PAIRWISE_COURSE_POOL_SIZE.Get(),
 		WorkItems:         allKeys,
 		RetrieveFunc:      getCachedPairwiseResults,
+		StoreFunc:         db.StorePairwiseAnalysis,
 		RemoveStorageFunc: db.RemovePairwiseAnalysis,
 		WorkFunc: func(key model.PairwiseKey) (*model.PairwiseAnalysis, error) {
 			return runSinglePairwiseAnalysis(options, key, templateFileStore)
@@ -114,29 +120,27 @@ func createPairwiseKeys(fullSubmissionIDs []string) []model.PairwiseKey {
 	return allKeys
 }
 
-func getCachedPairwiseResults(allKeys []model.PairwiseKey) ([]*model.PairwiseAnalysis, []model.PairwiseKey, []model.PairwiseKey, error) {
+func getCachedPairwiseResults(allKeys []model.PairwiseKey) ([]*model.PairwiseAnalysis, []model.PairwiseKey, error) {
 	// Get any already done analysis results from the DB.
 	dbResults, err := db.GetPairwiseAnalysis(allKeys)
 	if err != nil {
-		return nil, nil, nil, fmt.Errorf("Failed to get cached pairwise analysis from DB: '%w'.", err)
+		return nil, nil, fmt.Errorf("Failed to get cached pairwise analysis from DB: '%w'.", err)
 	}
 
 	// Split up the keys into complete and remaining.
 	completeAnalysis := make([]*model.PairwiseAnalysis, 0, len(dbResults))
-	completeKeys := make([]model.PairwiseKey, 0, len(dbResults))
 	remainingKeys := make([]model.PairwiseKey, 0, len(allKeys)-len(dbResults))
 
 	for _, key := range allKeys {
 		result, ok := dbResults[key]
 		if ok {
 			completeAnalysis = append(completeAnalysis, result)
-			completeKeys = append(completeKeys, key)
 		} else {
 			remainingKeys = append(remainingKeys, key)
 		}
 	}
 
-	return completeAnalysis, completeKeys, remainingKeys, nil
+	return completeAnalysis, remainingKeys, nil
 }
 
 func runSinglePairwiseAnalysis(options AnalysisOptions, pairwiseKey model.PairwiseKey, templateFileStore *TemplateFileStore) (*model.PairwiseAnalysis, error) {
@@ -156,14 +160,6 @@ func runSinglePairwiseAnalysis(options AnalysisOptions, pairwiseKey model.Pairwi
 	result, err := computeSinglePairwiseAnalysis(options, pairwiseKey, templateFileStore)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to compute pairwise analysis for '%s': '%w'.", pairwiseKey.String(), err)
-	}
-
-	// Store the result.
-	if !options.DryRun && (options.Context.Err() == nil) {
-		err = db.StorePairwiseAnalysis([]*model.PairwiseAnalysis{result})
-		if err != nil {
-			return nil, fmt.Errorf("Failed to store pairwise analysis for '%s' in DB: '%w'.", pairwiseKey.String(), err)
-		}
 	}
 
 	return result, nil

@@ -120,26 +120,6 @@ func TestJobValidateBase(test *testing.T) {
 			},
 			"",
 		},
-		{
-			&Job[string, int]{
-				WorkFunc: workFunc,
-				PoolSize: testPoolSize,
-				LockKey:  testLockKey,
-				JobOptions: &JobOptions{
-					RetainOriginalContext: true,
-				},
-			},
-			&Job[string, int]{
-				WorkFunc: workFunc,
-				PoolSize: testPoolSize,
-				LockKey:  testLockKey,
-				JobOptions: &JobOptions{
-					Context:               context.Background(),
-					RetainOriginalContext: true,
-				},
-			},
-			"",
-		},
 
 		// Nil context provided
 		{
@@ -182,27 +162,6 @@ func TestJobValidateBase(test *testing.T) {
 			},
 			"",
 		},
-		{
-			&Job[string, int]{
-				WorkFunc: workFunc,
-				PoolSize: testPoolSize,
-				LockKey:  testLockKey,
-				JobOptions: &JobOptions{
-					Context:               nil,
-					RetainOriginalContext: true,
-				},
-			},
-			&Job[string, int]{
-				WorkFunc: workFunc,
-				PoolSize: testPoolSize,
-				LockKey:  testLockKey,
-				JobOptions: &JobOptions{
-					Context:               context.Background(),
-					RetainOriginalContext: true,
-				},
-			},
-			"",
-		},
 
 		// Context provided
 		{
@@ -219,8 +178,7 @@ func TestJobValidateBase(test *testing.T) {
 				PoolSize: testPoolSize,
 				LockKey:  testLockKey,
 				JobOptions: &JobOptions{
-					// Swap the context to background when not waiting for completion.
-					Context: context.Background(),
+					Context: context.TODO(),
 				},
 			},
 			"",
@@ -242,27 +200,6 @@ func TestJobValidateBase(test *testing.T) {
 				JobOptions: &JobOptions{
 					Context:           context.TODO(),
 					WaitForCompletion: true,
-				},
-			},
-			"",
-		},
-		{
-			&Job[string, int]{
-				WorkFunc: workFunc,
-				PoolSize: testPoolSize,
-				LockKey:  testLockKey,
-				JobOptions: &JobOptions{
-					Context:               context.TODO(),
-					RetainOriginalContext: true,
-				},
-			},
-			&Job[string, int]{
-				WorkFunc: workFunc,
-				PoolSize: testPoolSize,
-				LockKey:  testLockKey,
-				JobOptions: &JobOptions{
-					Context:               context.TODO(),
-					RetainOriginalContext: true,
 				},
 			},
 			"",
@@ -363,10 +300,6 @@ func TestJobValidateBase(test *testing.T) {
 		testCase.expected.WorkFunc = nil
 
 		if !reflect.DeepEqual(testCase.expected, testCase.input) {
-			if &testCase.expected.WorkFunc != &testCase.input.WorkFunc {
-				test.Errorf("Case %d: Wrong work func. Expected address: '%v', actual address: '%v'.", i, &testCase.expected.WorkFunc, &testCase.input.WorkFunc)
-			}
-
 			test.Errorf("Case %d: Unexpected result. Expected: '%s', actual: '%s'.",
 				i, util.MustToJSONIndent(testCase.expected.toPrintableJob()), util.MustToJSONIndent(testCase.input.toPrintableJob()))
 			continue
@@ -389,9 +322,8 @@ func TestRunJobBase(test *testing.T) {
 
 	storage := resetStorage()
 
-	retrieveFunc := func(inputs []string) ([]int, []string, []string, error) {
+	retrieveFunc := func(inputs []string) ([]int, []string, error) {
 		outputs := make([]int, 0, len(storage))
-		complete := make([]string, 0, len(storage))
 		remaining := make([]string, 0, len(inputs))
 
 		for _, input := range inputs {
@@ -402,14 +334,13 @@ func TestRunJobBase(test *testing.T) {
 			}
 
 			outputs = append(outputs, output)
-			complete = append(complete, input)
 		}
 
-		return outputs, complete, remaining, nil
+		return outputs, remaining, nil
 	}
 
-	errorRetrieveFunc := func(_ []string) ([]int, []string, []string, error) {
-		return nil, nil, nil, fmt.Errorf("Crazy retrieval error!")
+	errorRetrieveFunc := func(_ []string) ([]int, []string, error) {
+		return nil, nil, fmt.Errorf("Crazy retrieval error!")
 	}
 
 	removeStorageFunc := func(inputs []string) error {
@@ -424,10 +355,21 @@ func TestRunJobBase(test *testing.T) {
 		return fmt.Errorf("Insane storage removal error!")
 	}
 
-	workFuncWithStorage := func(input string) (int, error) {
-		storage[input] = len(input)
+	storageFunc := func(results []int) error {
+		for _, result := range results {
+			switch result {
+			case 1:
+				storage["A"] = 1
+			case 2:
+				storage["BB"] = 2
+			case 3:
+				storage["CCC"] = 3
+			default:
+				storage["unknown"] = result
+			}
+		}
 
-		return len(input), nil
+		return nil
 	}
 
 	testCases := []struct {
@@ -438,8 +380,7 @@ func TestRunJobBase(test *testing.T) {
 
 		errorSubstring string
 
-		resetStorage      bool
-		checkEmptyStorage bool
+		expectedStorage map[string]int
 	}{
 		// Success
 
@@ -447,9 +388,6 @@ func TestRunJobBase(test *testing.T) {
 		{
 			job: Job[string, int]{
 				WorkItems:  input,
-				WorkFunc:   workFunc,
-				PoolSize:   testPoolSize,
-				LockKey:    testLockKey,
 				JobOptions: &JobOptions{},
 			},
 			initialOutput: &JobOutput[string, int]{
@@ -468,9 +406,6 @@ func TestRunJobBase(test *testing.T) {
 		{
 			job: Job[string, int]{
 				WorkItems:  nil,
-				WorkFunc:   workFunc,
-				PoolSize:   testPoolSize,
-				LockKey:    testLockKey,
 				JobOptions: &JobOptions{},
 			},
 			initialOutput: &JobOutput[string, int]{
@@ -489,9 +424,6 @@ func TestRunJobBase(test *testing.T) {
 		{
 			job: Job[string, int]{
 				WorkItems:  []string{},
-				WorkFunc:   workFunc,
-				PoolSize:   testPoolSize,
-				LockKey:    testLockKey,
 				JobOptions: &JobOptions{},
 			},
 			initialOutput: &JobOutput[string, int]{
@@ -512,9 +444,6 @@ func TestRunJobBase(test *testing.T) {
 		{
 			job: Job[string, int]{
 				WorkItems:    input,
-				WorkFunc:     workFunc,
-				PoolSize:     testPoolSize,
-				LockKey:      testLockKey,
 				RetrieveFunc: retrieveFunc,
 				JobOptions:   &JobOptions{},
 			},
@@ -534,10 +463,29 @@ func TestRunJobBase(test *testing.T) {
 		{
 			job: Job[string, int]{
 				WorkItems:    input,
-				WorkFunc:     workFunc,
-				PoolSize:     testPoolSize,
-				LockKey:      testLockKey,
 				RetrieveFunc: retrieveFunc,
+				JobOptions: &JobOptions{
+					OverwriteRecords: true,
+				},
+			},
+			initialOutput: &JobOutput[string, int]{
+				ResultItems:    []int{},
+				RemainingItems: input,
+				RunTime:        int64(0),
+				WorkErrors:     map[int]error{},
+			},
+			finalOutput: &JobOutput[string, int]{
+				ResultItems:    finalExpected,
+				RemainingItems: []string{},
+				RunTime:        int64(len(input)),
+				WorkErrors:     map[int]error{},
+			},
+		},
+		{
+			job: Job[string, int]{
+				WorkItems: input,
+				// Won't be called due to OverwriteRecords.
+				RetrieveFunc: errorRetrieveFunc,
 				JobOptions: &JobOptions{
 					OverwriteRecords: true,
 				},
@@ -560,9 +508,6 @@ func TestRunJobBase(test *testing.T) {
 		{
 			job: Job[string, int]{
 				WorkItems:         input,
-				WorkFunc:          workFunc,
-				PoolSize:          testPoolSize,
-				LockKey:           testLockKey,
 				RemoveStorageFunc: removeStorageFunc,
 				JobOptions:        &JobOptions{},
 			},
@@ -582,10 +527,7 @@ func TestRunJobBase(test *testing.T) {
 		{
 			job: Job[string, int]{
 				WorkItems: input,
-				WorkFunc:  workFunc,
-				PoolSize:  testPoolSize,
-				LockKey:   testLockKey,
-				// Won't cause an error because it won't be called.
+				// Won't be called due to OverwriteRecords.
 				RemoveStorageFunc: errorRemoveStorageFunc,
 				JobOptions:        &JobOptions{},
 			},
@@ -607,9 +549,6 @@ func TestRunJobBase(test *testing.T) {
 		{
 			job: Job[string, int]{
 				WorkItems:    input,
-				WorkFunc:     workFunc,
-				PoolSize:     testPoolSize,
-				LockKey:      testLockKey,
 				RetrieveFunc: retrieveFunc,
 				// Storage removal is not called.
 				RemoveStorageFunc: removeStorageFunc,
@@ -631,9 +570,6 @@ func TestRunJobBase(test *testing.T) {
 		{
 			job: Job[string, int]{
 				WorkItems:         input,
-				WorkFunc:          workFunc,
-				PoolSize:          testPoolSize,
-				LockKey:           testLockKey,
 				RetrieveFunc:      retrieveFunc,
 				RemoveStorageFunc: removeStorageFunc,
 				JobOptions: &JobOptions{
@@ -652,17 +588,90 @@ func TestRunJobBase(test *testing.T) {
 				RunTime:        int64(len(input)),
 				WorkErrors:     map[int]error{},
 			},
-			resetStorage:      true,
-			checkEmptyStorage: true,
+			expectedStorage: map[string]int{},
+		},
+
+		// Storage Functions
+		{
+			job: Job[string, int]{
+				WorkItems:  input,
+				StoreFunc:  storageFunc,
+				JobOptions: &JobOptions{},
+			},
+			initialOutput: &JobOutput[string, int]{
+				ResultItems:    []int{},
+				RemainingItems: input,
+				RunTime:        int64(0),
+				WorkErrors:     map[int]error{},
+			},
+			finalOutput: &JobOutput[string, int]{
+				ResultItems:    finalExpected,
+				RemainingItems: []string{},
+				RunTime:        int64(len(input)),
+				WorkErrors:     map[int]error{},
+			},
+			expectedStorage: map[string]int{
+				"A":   1,
+				"BB":  2,
+				"CCC": 3,
+			},
 		},
 		{
 			job: Job[string, int]{
+				WorkItems: input,
+				StoreFunc: storageFunc,
+				JobOptions: &JobOptions{
+					DryRun: true,
+				},
+			},
+			initialOutput: &JobOutput[string, int]{
+				ResultItems:    []int{},
+				RemainingItems: input,
+				RunTime:        int64(0),
+				WorkErrors:     map[int]error{},
+			},
+			finalOutput: &JobOutput[string, int]{
+				ResultItems:    finalExpected,
+				RemainingItems: []string{},
+				RunTime:        int64(len(input)),
+				WorkErrors:     map[int]error{},
+			},
+			expectedStorage: map[string]int{
+				"A":  1,
+				"BB": 2,
+			},
+		},
+		// TODO: One item was processed but 0 run time overall.
+		{
+			job: Job[string, int]{
 				WorkItems:    input,
-				WorkFunc:     workFuncWithStorage,
-				PoolSize:     testPoolSize,
-				LockKey:      testLockKey,
+				StoreFunc:    storageFunc,
 				RetrieveFunc: retrieveFunc,
-				// Storage removal is not called.
+				JobOptions:   &JobOptions{},
+			},
+			initialOutput: &JobOutput[string, int]{
+				ResultItems:    []int{1, 2},
+				RemainingItems: []string{"CCC"},
+				RunTime:        int64(0),
+				WorkErrors:     map[int]error{},
+			},
+			finalOutput: &JobOutput[string, int]{
+				ResultItems:    finalExpected,
+				RemainingItems: []string{},
+				RunTime:        int64(0),
+				WorkErrors:     map[int]error{},
+			},
+			expectedStorage: map[string]int{
+				"A":   1,
+				"BB":  2,
+				"CCC": 3,
+			},
+		},
+		{
+			job: Job[string, int]{
+				WorkItems:         input,
+				StoreFunc:         storageFunc,
+				RetrieveFunc:      retrieveFunc,
 				RemoveStorageFunc: removeStorageFunc,
 				JobOptions:        &JobOptions{},
 			},
@@ -675,18 +684,19 @@ func TestRunJobBase(test *testing.T) {
 			finalOutput: &JobOutput[string, int]{
 				ResultItems:    finalExpected,
 				RemainingItems: []string{},
-				// First run will store results, so second run will not have a run time.
-				RunTime:    int64(0),
-				WorkErrors: map[int]error{},
+				RunTime:        int64(0),
+				WorkErrors:     map[int]error{},
 			},
-			resetStorage: true,
+			expectedStorage: map[string]int{
+				"A":   1,
+				"BB":  2,
+				"CCC": 3,
+			},
 		},
 		{
 			job: Job[string, int]{
 				WorkItems:         input,
-				WorkFunc:          workFuncWithStorage,
-				PoolSize:          testPoolSize,
-				LockKey:           testLockKey,
+				StoreFunc:         storageFunc,
 				RetrieveFunc:      retrieveFunc,
 				RemoveStorageFunc: removeStorageFunc,
 				JobOptions: &JobOptions{
@@ -702,32 +712,46 @@ func TestRunJobBase(test *testing.T) {
 			finalOutput: &JobOutput[string, int]{
 				ResultItems:    finalExpected,
 				RemainingItems: []string{},
+				RunTime:        int64(3),
+				WorkErrors:     map[int]error{},
+			},
+			// Storage happens after record removal.
+			expectedStorage: map[string]int{
+				"A":   1,
+				"BB":  2,
+				"CCC": 3,
+			},
+		},
+		{
+			job: Job[string, int]{
+				WorkItems:         input,
+				StoreFunc:         storageFunc,
+				RetrieveFunc:      retrieveFunc,
+				RemoveStorageFunc: removeStorageFunc,
+				JobOptions: &JobOptions{
+					OverwriteRecords: true,
+					DryRun:           true,
+				},
+			},
+			initialOutput: &JobOutput[string, int]{
+				ResultItems:    []int{},
+				RemainingItems: input,
+				RunTime:        int64(0),
+				WorkErrors:     map[int]error{},
+			},
+			finalOutput: &JobOutput[string, int]{
+				ResultItems:    finalExpected,
+				RemainingItems: []string{},
 				RunTime:        int64(len(input)),
 				WorkErrors:     map[int]error{},
 			},
-			resetStorage:      true,
-			checkEmptyStorage: true,
+			expectedStorage: map[string]int{
+				"A":  1,
+				"BB": 2,
+			},
 		},
 
 		// Errors
-
-		// Nil Work Function
-		{
-			job: Job[string, int]{
-				WorkItems:  input,
-				WorkFunc:   nil,
-				JobOptions: &JobOptions{},
-			},
-			errorSubstring: "Job cannot have a nil work function.",
-		},
-		{
-			job: Job[string, int]{
-				WorkItems:  nil,
-				WorkFunc:   nil,
-				JobOptions: &JobOptions{},
-			},
-			errorSubstring: "Job cannot have a nil work function.",
-		},
 
 		// Bad Storage Function
 		{
@@ -741,28 +765,11 @@ func TestRunJobBase(test *testing.T) {
 			},
 			errorSubstring: "Crazy retrieval error!",
 		},
-		{
-			job: Job[string, int]{
-				WorkItems:    input,
-				WorkFunc:     workFunc,
-				PoolSize:     testPoolSize,
-				LockKey:      testLockKey,
-				RetrieveFunc: errorRetrieveFunc,
-				JobOptions: &JobOptions{
-					OverwriteRecords: true,
-				},
-			},
-			// Won't cause an initial error because it won't be called.
-			errorSubstring: "Crazy retrieval error!",
-		},
 
 		// Bad Storage Removal Function
 		{
 			job: Job[string, int]{
 				WorkItems:         input,
-				WorkFunc:          workFunc,
-				PoolSize:          testPoolSize,
-				LockKey:           testLockKey,
 				RemoveStorageFunc: errorRemoveStorageFunc,
 				JobOptions: &JobOptions{
 					OverwriteRecords: true,
@@ -773,6 +780,10 @@ func TestRunJobBase(test *testing.T) {
 	}
 
 	for i, testCase := range testCases {
+		testCase.job.WorkFunc = workFunc
+		testCase.job.PoolSize = testPoolSize
+		testCase.job.LockKey = testLockKey
+
 		testCase.job.WaitForCompletion = false
 
 		output := testCase.job.Run()
@@ -820,42 +831,20 @@ func TestRunJobBase(test *testing.T) {
 			continue
 		}
 
-		if testCase.checkEmptyStorage && !testCase.resetStorage {
-			test.Errorf("Case %d: A test that checks for an empty storage must reset the storage.", i)
+		if testCase.expectedStorage == nil {
+			testCase.expectedStorage = map[string]int{
+				"A":  1,
+				"BB": 2,
+			}
+		}
+
+		if !reflect.DeepEqual(storage, testCase.expectedStorage) {
+			test.Errorf("Case %d: Unexpected storage results after final run. Expected: '%v', actual: '%v'.", i, testCase.expectedStorage, storage)
 			storage = resetStorage()
 			continue
 		}
 
-		if testCase.resetStorage {
-			if testCase.checkEmptyStorage {
-				testCase.job.WaitForCompletion = false
-
-				output = testCase.job.Run()
-				if output.Error != nil {
-					test.Errorf("Case %d: Failed to check for an empty storage: '%v'.", i, output.Error)
-					storage = resetStorage()
-					continue
-				}
-
-				expected := &JobOutput[string, int]{
-					ResultItems:    []int{},
-					RemainingItems: input,
-					RunTime:        int64(0),
-					WorkErrors:     map[int]error{},
-					// Set the done channel to pass the equality check.
-					Done: output.Done,
-				}
-
-				if !reflect.DeepEqual(output, expected) {
-					test.Errorf("Case %d: Unexpected output during storage check. Expected: '%v', actual: '%v'.",
-						i, expected.toPrintableJobOutput(), output.toPrintableJobOutput())
-					storage = resetStorage()
-					continue
-				}
-			}
-
-			storage = resetStorage()
-		}
+		storage = resetStorage()
 	}
 }
 

@@ -1821,6 +1821,10 @@
             "description": "JobOptions contains user level options for a Job.\nThese options allow for optional context cancellation of the Job.",
             "fields": [
                 {
+                    "name": "dry-run",
+                    "type": "bool"
+                },
+                {
                     "name": "overwrite-records",
                     "type": "bool"
                 },

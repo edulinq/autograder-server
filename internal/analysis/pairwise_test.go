@@ -483,10 +483,10 @@ func TestPairwiseAnalysisCountBase(test *testing.T) {
 			options: AnalysisOptions{
 				ResolvedSubmissionIDs: ids,
 				JobOptions: jobmanager.JobOptions{
+					DryRun:            false,
 					OverwriteRecords:  false,
 					WaitForCompletion: true,
 				},
-				DryRun: false,
 			},
 			preload:                   false,
 			expectedCacheSetOnPreload: false,
@@ -499,10 +499,10 @@ func TestPairwiseAnalysisCountBase(test *testing.T) {
 			options: AnalysisOptions{
 				ResolvedSubmissionIDs: ids,
 				JobOptions: jobmanager.JobOptions{
+					DryRun:            true,
 					OverwriteRecords:  false,
 					WaitForCompletion: true,
 				},
-				DryRun: true,
 			},
 			preload:                   false,
 			expectedCacheSetOnPreload: false,
@@ -515,10 +515,10 @@ func TestPairwiseAnalysisCountBase(test *testing.T) {
 			options: AnalysisOptions{
 				ResolvedSubmissionIDs: ids,
 				JobOptions: jobmanager.JobOptions{
+					DryRun:            false,
 					OverwriteRecords:  true,
 					WaitForCompletion: true,
 				},
-				DryRun: false,
 			},
 			preload:                   false,
 			expectedCacheSetOnPreload: false,
@@ -531,10 +531,10 @@ func TestPairwiseAnalysisCountBase(test *testing.T) {
 			options: AnalysisOptions{
 				ResolvedSubmissionIDs: ids,
 				JobOptions: jobmanager.JobOptions{
+					DryRun:            true,
 					OverwriteRecords:  true,
 					WaitForCompletion: true,
 				},
-				DryRun: true,
 			},
 			preload:                   false,
 			expectedCacheSetOnPreload: false,
@@ -550,10 +550,10 @@ func TestPairwiseAnalysisCountBase(test *testing.T) {
 			options: AnalysisOptions{
 				ResolvedSubmissionIDs: ids,
 				JobOptions: jobmanager.JobOptions{
+					DryRun:            false,
 					OverwriteRecords:  false,
 					WaitForCompletion: true,
 				},
-				DryRun: false,
 			},
 			preload:                   true,
 			expectedCacheSetOnPreload: true,
@@ -566,10 +566,10 @@ func TestPairwiseAnalysisCountBase(test *testing.T) {
 			options: AnalysisOptions{
 				ResolvedSubmissionIDs: ids,
 				JobOptions: jobmanager.JobOptions{
+					DryRun:            true,
 					OverwriteRecords:  false,
 					WaitForCompletion: true,
 				},
-				DryRun: true,
 			},
 			preload:                   true,
 			expectedCacheSetOnPreload: true,
@@ -582,10 +582,10 @@ func TestPairwiseAnalysisCountBase(test *testing.T) {
 			options: AnalysisOptions{
 				ResolvedSubmissionIDs: ids,
 				JobOptions: jobmanager.JobOptions{
+					DryRun:            false,
 					OverwriteRecords:  true,
 					WaitForCompletion: true,
 				},
-				DryRun: false,
 			},
 			preload:                   true,
 			expectedCacheSetOnPreload: false,
@@ -598,10 +598,10 @@ func TestPairwiseAnalysisCountBase(test *testing.T) {
 			options: AnalysisOptions{
 				ResolvedSubmissionIDs: ids,
 				JobOptions: jobmanager.JobOptions{
+					DryRun:            true,
 					OverwriteRecords:  true,
 					WaitForCompletion: true,
 				},
-				DryRun: true,
 			},
 			preload:                   true,
 			expectedCacheSetOnPreload: true,
@@ -656,7 +656,7 @@ func TestPairwiseAnalysisCountBase(test *testing.T) {
 
 		testCase.options.InitiatorEmail = "server-admin@test.edulinq.org"
 		testCase.options.JobOptions.Context = ctx
-		testCase.options.JobOptions.RetainOriginalContext = false
+		testCase.options.RetainOriginalContext = false
 
 		results, pendingCount, err := PairwiseAnalysis(testCase.options)
 		if err != nil {

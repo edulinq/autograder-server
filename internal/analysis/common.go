@@ -18,14 +18,17 @@ import (
 type AnalysisOptions struct {
 	jobmanager.JobOptions
 
-	// Don't save anything.
-	DryRun bool `json:"dry-run"`
-
 	// The raw submission specifications to analyze.
 	RawSubmissionSpecs []string `json:"submissions"`
 
 	// Email of the person making the request for logging/stats purposes.
 	InitiatorEmail string `json:"-"`
+
+	// If true, do not swap the context to the background context when running.
+	// By default (when this is false), the context will be swapped to the background context when !WaitForCompletion.
+	// The swap is so that analysis does not get canceled when an HTTP request is complete.
+	// Setting this true is useful for testing (as one round of analysis tests can be wrapped up).
+	RetainOriginalContext bool `json:"-"`
 
 	ResolvedSubmissionIDs []string `json:"-"`
 }

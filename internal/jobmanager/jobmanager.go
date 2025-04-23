@@ -15,24 +15,21 @@ import (
 // JobOptions contains user level options for a Job.
 // These options allow for optional context cancellation of the Job.
 type JobOptions struct {
+	// Don't save anything.
+	DryRun bool `json:"dry-run"`
+
 	// Remove any existing records before running the job.
 	OverwriteRecords bool `json:"overwrite-records"`
 
 	// Wait for the entire job to complete and return all results.
 	WaitForCompletion bool `json:"wait-for-completion"`
 
-	// If true, do not swap the context to the background context when running.
-	// By default (when this is false), the context will be swapped to the background context when !WaitForCompletion.
-	// The swap is so that jobs do not get canceled when an HTTP request is complete.
-	// Setting this true is useful for testing (as one round of job tests can be wrapped up).
-	RetainOriginalContext bool `json:"-"`
-
 	// A context that can be used to cancel the job.
 	Context context.Context `json:"-"`
 }
 
 // Job provides system level customization of the job's execution.
-// It supports optional record retrieval, record removal from storage, synchronization, and context cancellation.
+// It supports optional record retrieval, record storage, record removal from storage, synchronization, and context cancellation.
 // Given job options, input items, an optional record lookup/removal function, and a work function,
 // Job will process a list of input items through the work func in a parallel pool to produce a JobOutput.
 // If a lock key is provided, Job will block on that key before running preventing overuse of resources or conflicts between the same Job.
@@ -45,6 +42,7 @@ type Job[InputType any, OutputType any] struct {
 	// Only access the state of the output when JobOutput.Done signals.
 	// If the context is cancelled during execution,
 	// JobOutput's state is unknown.
+	// TODO: Remove and modify the shared address.
 	JobOutput[InputType, OutputType]
 
 	// The number of workers in the parallel pool.
@@ -57,8 +55,11 @@ type Job[InputType any, OutputType any] struct {
 	WorkItems []InputType
 
 	// An optional function to retrieve existing records that should not be processed.
-	// Returns a list of processed records, processed items, remaining items, and an error.
-	RetrieveFunc func([]InputType) ([]OutputType, []InputType, []InputType, error)
+	// Returns a list of processed records, remaining items, and an error.
+	RetrieveFunc func([]InputType) ([]OutputType, []InputType, error)
+
+	// An optional function to store the result.
+	StoreFunc func([]OutputType) error
 
 	// An optional function to remove existing records from storage.
 	// TODO: Find a way to not remove when on DryRun (may need to modify retrieve func).
@@ -82,6 +83,7 @@ type Job[InputType any, OutputType any] struct {
 // If the context is cacelled while running a job,
 // the returned JobOutput will be empty.
 type JobOutput[InputType any, OutputType any] struct {
+	// TODO: Can lock shared JobOutput and provide interface methods to get data (that handles the locking).
 	// An error for Job.Run().
 	Error error
 
@@ -148,10 +150,6 @@ func (this *JobOptions) Validate() error {
 		this.Context = context.Background()
 	}
 
-	if !this.WaitForCompletion && !this.RetainOriginalContext {
-		this.Context = context.Background()
-	}
-
 	return nil
 }
 
@@ -171,33 +169,20 @@ func (this *Job[InputType, OutputType]) Run() *JobOutput[InputType, OutputType] 
 	this.RunTime = 0
 	this.WorkErrors = make(map[int]error, 0)
 
-	processedItems := []InputType{}
-
-	// Query for stored records.
-	if this.RetrieveFunc != nil {
-		this.ResultItems, processedItems, this.RemainingItems, this.Error = this.RetrieveFunc(this.WorkItems)
+	// If we are overwriting records, remove all the old records.
+	if this.OverwriteRecords && !this.DryRun && this.RemoveStorageFunc != nil {
+		this.Error = this.RemoveStorageFunc(this.WorkItems)
 		if this.Error != nil {
 			return &this.JobOutput
 		}
 	}
 
-	// If we are overwriting records, remove all the old records.
-	if this.OverwriteRecords {
-		// Clear output when overwriting records.
-		this.ResultItems = []OutputType{}
-		this.RemainingItems = append(processedItems, this.RemainingItems...)
-
-		if this.RemoveStorageFunc != nil {
-			this.Error = this.RemoveStorageFunc(processedItems)
-			if this.Error != nil {
-				return &this.JobOutput
-			}
+	// Query for stored records.
+	if !this.OverwriteRecords && this.RetrieveFunc != nil {
+		this.ResultItems, this.RemainingItems, this.Error = this.RetrieveFunc(this.WorkItems)
+		if this.Error != nil {
+			return &this.JobOutput
 		}
-	}
-
-	if this.done == nil {
-		this.done = make(chan any)
-		this.Done = this.done
 	}
 
 	if this.WaitForCompletion {
@@ -211,7 +196,12 @@ func (this *Job[InputType, OutputType]) Run() *JobOutput[InputType, OutputType] 
 			return nil
 		}
 	} else {
+		// TODO: this.(non embedded)JobOutput.Copy()
+		// return copy
 		go func() {
+			// TEST
+			// Make a new job output here.
+			// Only takes remaining items.
 			this.run()
 			if this.Error != nil {
 				log.Error("Failure while running asynchronous job: '%v'.", this.Error)
@@ -225,6 +215,8 @@ func (this *Job[InputType, OutputType]) Run() *JobOutput[InputType, OutputType] 
 	return &this.JobOutput
 }
 
+// TODO: Can pass in a JobOutput pointer to modify.
+// If it's nil, don't save to results. (only errors)
 func (this *Job[InputType, OutputType]) run() {
 	if len(this.RemainingItems) == 0 {
 		return
@@ -241,13 +233,12 @@ func (this *Job[InputType, OutputType]) run() {
 		return
 	}
 
-	processedItems := []InputType{}
 	var err error = nil
 
 	// If we had to wait for the lock, then check again for stored records.
-	if !noLockWait && this.RetrieveFunc != nil {
-		var partialResults []OutputType = nil
-		partialResults, processedItems, this.RemainingItems, err = this.RetrieveFunc(this.RemainingItems)
+	if !noLockWait && !this.OverwriteRecords && this.RetrieveFunc != nil {
+		partialResults := []OutputType{}
+		partialResults, this.RemainingItems, err = this.RetrieveFunc(this.RemainingItems)
 		if err != nil {
 			this.Error = fmt.Errorf("Failed to re-check record storage before run: '%w'.", err)
 			return
@@ -259,21 +250,6 @@ func (this *Job[InputType, OutputType]) run() {
 
 	if len(this.RemainingItems) == 0 {
 		return
-	}
-
-	// If we are overwriting records, remove all the old records.
-	if this.OverwriteRecords {
-		// Clear output when overwriting records.
-		this.ResultItems = []OutputType{}
-		this.RemainingItems = append(processedItems, this.RemainingItems...)
-
-		if this.RemoveStorageFunc != nil {
-			err = this.RemoveStorageFunc(processedItems)
-			if err != nil {
-				this.Error = fmt.Errorf("Failed to remove old job cache entries: '%w'.", err)
-				return
-			}
-		}
 	}
 
 	type PoolResult struct {
@@ -301,9 +277,11 @@ func (this *Job[InputType, OutputType]) run() {
 
 		startTime := timestamp.Now()
 
+		var errs error = err
+
 		result, err := this.WorkFunc(workItem)
 		if err != nil {
-			err = fmt.Errorf("Failed to perform individual work on item %v: '%w'.", workItem, err)
+			errs = errors.Join(errs, fmt.Errorf("Failed to perform individual work on item %v: '%w'.", workItem, err))
 		}
 
 		runTime := (timestamp.Now() - startTime).ToMSecs()
@@ -312,7 +290,16 @@ func (this *Job[InputType, OutputType]) run() {
 			runTime = 1
 		}
 
-		return PoolResult{workItem, result, runTime, err}, nil
+		// We can separate the semantic options from the save func and retrieve func.
+		// Store the result.
+		if !this.DryRun && this.Context.Err() == nil && this.StoreFunc != nil {
+			err = this.StoreFunc([]OutputType{result})
+			if err != nil {
+				errs = errors.Join(errs, fmt.Errorf("Failed to store result for item '%v': '%w'.", workItem, err))
+			}
+		}
+
+		return PoolResult{workItem, result, runTime, errs}, nil
 	})
 
 	if err != nil {
