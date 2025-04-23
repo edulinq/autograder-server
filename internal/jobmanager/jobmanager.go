@@ -38,13 +38,6 @@ type Job[InputType any, OutputType any] struct {
 	// The user level options for a Job.
 	*JobOptions
 
-	// The current state of the output.
-	// Only access the state of the output when JobOutput.Done signals.
-	// If the context is cancelled during execution,
-	// JobOutput's state is unknown.
-	// TODO: Remove and modify the shared address.
-	JobOutput[InputType, OutputType]
-
 	// The number of workers in the parallel pool.
 	PoolSize int
 
@@ -71,10 +64,6 @@ type Job[InputType any, OutputType any] struct {
 
 	// An optional function to get the locking key for an individual work item.
 	WorkItemKeyFunc func(InputType) string
-
-	// An internal channel to signal the job is complete.
-	// Callers are notified the job is complete via JobOptions.Done.
-	done chan any
 }
 
 // JobOutput is the result of a call to Job.Run().
@@ -106,10 +95,6 @@ type JobOutput[InputType any, OutputType any] struct {
 }
 
 func (this *Job[InputType, OutputType]) Validate() error {
-	return this.validateFull(false)
-}
-
-func (this *Job[InputType, OutputType]) validateFull(setChannel bool) error {
 	if this == nil {
 		return fmt.Errorf("Job is nil.")
 	}
@@ -118,27 +103,11 @@ func (this *Job[InputType, OutputType]) validateFull(setChannel bool) error {
 		return fmt.Errorf("Job cannot have a nil work function.")
 	}
 
-	err := this.JobOptions.Validate()
-	if err != nil {
-		return err
-	}
-
-	if setChannel {
-		if this.done != nil {
-			return fmt.Errorf("Job is actively running and cannot be run again.")
-		}
-
-		this.JobOutput = JobOutput[InputType, OutputType]{}
-
-		this.done = make(chan any)
-		this.Done = this.done
-	}
-
 	if this.PoolSize <= 0 {
 		return fmt.Errorf("Pool size must be positive, got %d.", this.PoolSize)
 	}
 
-	return nil
+	return this.JobOptions.Validate()
 }
 
 func (this *JobOptions) Validate() error {
@@ -158,38 +127,43 @@ func (this *JobOptions) Validate() error {
 // If the context is canceled during execution, returns nil.
 // When not waiting for completion, Job.JobOutput will be populated with the results when the JobOutput.Done channel is closed.
 func (this *Job[InputType, OutputType]) Run() *JobOutput[InputType, OutputType] {
-	err := this.validateFull(true)
+	err := this.Validate()
 	if err != nil {
-		this.Error = fmt.Errorf("Failed to validate job: '%v'.", err)
-		return &this.JobOutput
+		return &JobOutput[InputType, OutputType]{
+			Error: fmt.Errorf("Failed to validate job: '%v'.", err),
+		}
 	}
 
-	this.ResultItems = make([]OutputType, 0, len(this.WorkItems))
-	this.RemainingItems = this.WorkItems
-	this.RunTime = 0
-	this.WorkErrors = make(map[int]error, 0)
+	done := make(chan any)
+
+	output := JobOutput[InputType, OutputType]{
+		Done:           done,
+		ResultItems:    make([]OutputType, 0, len(this.WorkItems)),
+		RemainingItems: this.WorkItems,
+		RunTime:        0,
+		WorkErrors:     make(map[int]error, 0),
+	}
 
 	// If we are overwriting records, remove all the old records.
 	if this.OverwriteRecords && !this.DryRun && this.RemoveStorageFunc != nil {
-		this.Error = this.RemoveStorageFunc(this.WorkItems)
-		if this.Error != nil {
-			return &this.JobOutput
+		output.Error = this.RemoveStorageFunc(this.WorkItems)
+		if output.Error != nil {
+			return &output
 		}
 	}
 
 	// Query for stored records.
 	if !this.OverwriteRecords && this.RetrieveFunc != nil {
-		this.ResultItems, this.RemainingItems, this.Error = this.RetrieveFunc(this.WorkItems)
-		if this.Error != nil {
-			return &this.JobOutput
+		output.ResultItems, output.RemainingItems, output.Error = this.RetrieveFunc(this.WorkItems)
+		if output.Error != nil {
+			return &output
 		}
 	}
 
 	if this.WaitForCompletion {
-		this.run()
+		this.run(&output)
 
-		close(this.done)
-		this.done = nil
+		close(done)
 
 		// If the context was canceled during execution, return immediately.
 		if this.Context.Err() != nil {
@@ -202,23 +176,22 @@ func (this *Job[InputType, OutputType]) Run() *JobOutput[InputType, OutputType] 
 			// TEST
 			// Make a new job output here.
 			// Only takes remaining items.
-			this.run()
-			if this.Error != nil {
-				log.Error("Failure while running asynchronous job: '%v'.", this.Error)
+			this.run(&output)
+			if output.Error != nil {
+				log.Error("Failure while running asynchronous job: '%v'.", output.Error)
 			}
 
-			close(this.done)
-			this.done = nil
+			close(done)
 		}()
 	}
 
-	return &this.JobOutput
+	return &output
 }
 
 // TODO: Can pass in a JobOutput pointer to modify.
 // If it's nil, don't save to results. (only errors)
-func (this *Job[InputType, OutputType]) run() {
-	if len(this.RemainingItems) == 0 {
+func (this *Job[InputType, OutputType]) run(output *JobOutput[InputType, OutputType]) {
+	if len(output.RemainingItems) == 0 {
 		return
 	}
 
@@ -238,17 +211,17 @@ func (this *Job[InputType, OutputType]) run() {
 	// If we had to wait for the lock, then check again for stored records.
 	if !noLockWait && !this.OverwriteRecords && this.RetrieveFunc != nil {
 		partialResults := []OutputType{}
-		partialResults, this.RemainingItems, err = this.RetrieveFunc(this.RemainingItems)
+		partialResults, output.RemainingItems, err = this.RetrieveFunc(output.RemainingItems)
 		if err != nil {
-			this.Error = fmt.Errorf("Failed to re-check record storage before run: '%w'.", err)
+			output.Error = fmt.Errorf("Failed to re-check record storage before run: '%w'.", err)
 			return
 		}
 
 		// Collect the partial records from storage.
-		this.ResultItems = append(this.ResultItems, partialResults...)
+		output.ResultItems = append(output.ResultItems, partialResults...)
 	}
 
-	if len(this.RemainingItems) == 0 {
+	if len(output.RemainingItems) == 0 {
 		return
 	}
 
@@ -259,7 +232,7 @@ func (this *Job[InputType, OutputType]) run() {
 		Error   error
 	}
 
-	poolResults, _, err := util.RunParallelPoolMap(this.PoolSize, this.RemainingItems, this.Context, func(workItem InputType) (PoolResult, error) {
+	poolResults, _, err := util.RunParallelPoolMap(this.PoolSize, output.RemainingItems, this.Context, func(workItem InputType) (PoolResult, error) {
 		workItemKey := ""
 		if this.WorkItemKeyFunc != nil {
 			workItemKey = this.WorkItemKeyFunc(workItem)
@@ -303,7 +276,7 @@ func (this *Job[InputType, OutputType]) run() {
 	})
 
 	if err != nil {
-		this.Error = fmt.Errorf("Failed to run job in a parallel pool: '%w'.", err)
+		output.Error = fmt.Errorf("Failed to run job in a parallel pool: '%w'.", err)
 		return
 	}
 
@@ -312,17 +285,16 @@ func (this *Job[InputType, OutputType]) run() {
 		return
 	}
 
-	this.RunTime = 0
-	this.RemainingItems = []InputType{}
+	output.RemainingItems = []InputType{}
 
 	for _, poolResult := range poolResults {
 		if poolResult.Error != nil {
-			this.WorkErrors[len(this.RemainingItems)] = poolResult.Error
-			this.RemainingItems = append(this.RemainingItems, poolResult.Input)
-			this.Error = errors.Join(this.Error, poolResult.Error)
+			output.WorkErrors[len(output.RemainingItems)] = poolResult.Error
+			output.RemainingItems = append(output.RemainingItems, poolResult.Input)
+			output.Error = errors.Join(output.Error, poolResult.Error)
 		} else {
-			this.ResultItems = append(this.ResultItems, poolResult.Result)
-			this.RunTime += poolResult.RunTime
+			output.ResultItems = append(output.ResultItems, poolResult.Result)
+			output.RunTime += poolResult.RunTime
 		}
 	}
 }

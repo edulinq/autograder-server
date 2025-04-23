@@ -24,8 +24,6 @@ type printableJob[InputType any, OutputType any] struct {
 
 	Context context.Context `json:"context"`
 
-	printableJobOutput[InputType, OutputType]
-
 	PoolSize int `json:"pool-size"`
 
 	LockKey string `json:"lock-key"`
@@ -39,12 +37,11 @@ func (this *Job[InputType, OutputType]) toPrintableJob() *printableJob[InputType
 	}
 
 	return &printableJob[InputType, OutputType]{
-		JobOptions:         this.JobOptions,
-		Context:            this.Context,
-		printableJobOutput: *this.JobOutput.toPrintableJobOutput(),
-		PoolSize:           this.PoolSize,
-		LockKey:            this.LockKey,
-		WorkItems:          this.WorkItems,
+		JobOptions: this.JobOptions,
+		Context:    this.Context,
+		PoolSize:   this.PoolSize,
+		LockKey:    this.LockKey,
+		WorkItems:  this.WorkItems,
 	}
 }
 
@@ -226,48 +223,47 @@ func TestJobValidateBase(test *testing.T) {
 			nil,
 			"Job cannot have a nil work function.",
 		},
-		// Nil Job Options
+		// Bad Pool Size
 		{
 			&Job[string, int]{
 				WorkFunc: workFunc,
 			},
 			nil,
+			"Pool size must be positive, got 0.",
+		},
+		{
+			&Job[string, int]{
+				WorkFunc: workFunc,
+				PoolSize: 0,
+			},
+			nil,
+			"Pool size must be positive, got 0.",
+		},
+		{
+			&Job[string, int]{
+				WorkFunc: workFunc,
+				PoolSize: -1,
+			},
+			nil,
+			"Pool size must be positive, got -1.",
+		},
+		// Nil Job Options
+		{
+			&Job[string, int]{
+				WorkFunc: workFunc,
+				PoolSize: testPoolSize,
+			},
+			nil,
 			"Job options are nil.",
 		},
 		{
 			&Job[string, int]{
 				WorkFunc:   workFunc,
+				PoolSize:   testPoolSize,
 				JobOptions: nil,
 			},
 			nil,
 			"Job options are nil.",
-		},
-		// Bad Pool Size
-		{
-			&Job[string, int]{
-				WorkFunc:   workFunc,
-				JobOptions: &JobOptions{},
-			},
-			nil,
-			"Pool size must be positive, got 0.",
-		},
-		{
-			&Job[string, int]{
-				WorkFunc:   workFunc,
-				JobOptions: &JobOptions{},
-				PoolSize:   0,
-			},
-			nil,
-			"Pool size must be positive, got 0.",
-		},
-		{
-			&Job[string, int]{
-				WorkFunc:   workFunc,
-				JobOptions: &JobOptions{},
-				PoolSize:   -1,
-			},
-			nil,
-			"Pool size must be positive, got -1.",
 		},
 	}
 
@@ -922,19 +918,17 @@ func TestRunJobChannel(test *testing.T) {
 	// Wait for the worker to signal the job is done.
 	<-output.Done
 
-	expected := JobOutput[string, int]{
+	expected := &JobOutput[string, int]{
 		ResultItems:    []int{1, 2, 3},
 		RemainingItems: []string{},
 		RunTime:        int64(len(input)),
 		WorkErrors:     map[int]error{},
-		Done:           job.Done,
+		Done:           output.Done,
 	}
 
-	// Must check the job object itself for updates.
-	// The output variable is returned before the work is done.
-	if !reflect.DeepEqual(job.JobOutput, expected) {
+	if !reflect.DeepEqual(output, expected) {
 		test.Fatalf("Unexpected output. Expected: '%s', actual: '%s'.",
-			util.MustToJSONIndent(expected.toPrintableJobOutput()), util.MustToJSONIndent(job.JobOutput.toPrintableJobOutput()))
+			util.MustToJSONIndent(expected.toPrintableJobOutput()), util.MustToJSONIndent(output.toPrintableJobOutput()))
 	}
 }
 
