@@ -800,8 +800,9 @@ func TestRunJobBase(test *testing.T) {
 			continue
 		}
 
-		// Set the done channel to pass the equality check.
+		// Set the done channel and job ID to pass the equality check.
 		testCase.initialOutput.Done = output.Done
+		testCase.initialOutput.JobID = output.JobID
 
 		if !reflect.DeepEqual(output, testCase.initialOutput) {
 			test.Errorf("Case %d: Unexpected initial results. Expected: '%s', actual: '%s'.",
@@ -818,8 +819,9 @@ func TestRunJobBase(test *testing.T) {
 			continue
 		}
 
-		// Set the done channel to pass the equality check.
+		// Set the done channel and job ID to pass the equality check.
 		testCase.finalOutput.Done = output.Done
+		testCase.finalOutput.JobID = output.JobID
 
 		if !reflect.DeepEqual(output, testCase.finalOutput) {
 			test.Errorf("Case %d: Unexpected final results. Expected: '%s', actual: '%s'.",
@@ -924,6 +926,7 @@ func TestRunJobChannel(test *testing.T) {
 		RunTime:        int64(len(input)),
 		WorkErrors:     map[int]error{},
 		Done:           output.Done,
+		JobID:          output.JobID,
 	}
 
 	if !reflect.DeepEqual(output, expected) {

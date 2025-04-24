@@ -92,13 +92,15 @@ func PairwiseAnalysis(options AnalysisOptions) ([]*model.PairwiseAnalysis, int, 
 	}
 
 	output := job.Run()
-	if output.Error != nil {
-		return nil, 0, fmt.Errorf("Failed to run pairwise analysis job: '%v'.", output.Error)
+
+	err = output.GetError()
+	if err != nil {
+		return nil, 0, fmt.Errorf("Failed to run pairwise analysis job: '%v'.", err)
 	}
 
-	collectPairwiseStats(allKeys, output.RunTime, options.InitiatorEmail)
+	collectPairwiseStats(allKeys, output.GetRunTime(), options.InitiatorEmail)
 
-	return output.ResultItems, len(output.RemainingItems), nil
+	return output.GetResultItems(), len(output.GetRemainingItems()), nil
 }
 
 func createPairwiseKeys(fullSubmissionIDs []string) []model.PairwiseKey {

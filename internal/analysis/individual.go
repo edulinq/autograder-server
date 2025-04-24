@@ -59,13 +59,16 @@ func IndividualAnalysis(options AnalysisOptions) ([]*model.IndividualAnalysis, i
 	}
 
 	output := job.Run()
-	if output.Error != nil {
-		return nil, 0, fmt.Errorf("Failed to run individual analysis job: '%v'.", output.Error)
+
+	err = output.GetError()
+	if err != nil {
+		return nil, 0, fmt.Errorf("Failed to run individual analysis job: '%v'.", err)
 	}
 
-	collectIndividualStats(fullSubmissionIDs, output.RunTime, options.InitiatorEmail)
+	// TODO: Pass a function to collect stats that takes an int64 (run time) and attributes run time.
+	collectIndividualStats(fullSubmissionIDs, output.GetRunTime(), options.InitiatorEmail)
 
-	return output.ResultItems, len(output.RemainingItems), nil
+	return output.GetResultItems(), len(output.GetRemainingItems()), nil
 }
 
 func getCachedIndividualResults(fullSubmissionIDs []string) ([]*model.IndividualAnalysis, []string, error) {

@@ -12,6 +12,15 @@ import (
 	"github.com/edulinq/autograder/internal/util"
 )
 
+const (
+	JOB_OUTPUT_LOCK_FORMAT     = "%s::%s"
+	JOB_OUTPUT_ERROR           = "error"
+	JOB_OUTPUT_WORK_ERRORS     = "work-errors"
+	JOB_OUTPUT_RESULT_ITEMS    = "result-items"
+	JOB_OUTPUT_REMAINING_ITEMS = "remaining-items"
+	JOB_OUTPUT_RUN_TIME        = "run-time"
+)
+
 // JobOptions contains user level options for a Job.
 // These options allow for optional context cancellation of the Job.
 type JobOptions struct {
@@ -55,7 +64,6 @@ type Job[InputType any, OutputType any] struct {
 	StoreFunc func([]OutputType) error
 
 	// An optional function to remove existing records from storage.
-	// TODO: Find a way to not remove when on DryRun (may need to modify retrieve func).
 	RemoveStorageFunc func([]InputType) error
 
 	// A function to transform work items into results.
@@ -72,7 +80,6 @@ type Job[InputType any, OutputType any] struct {
 // If the context is cacelled while running a job,
 // the returned JobOutput will be empty.
 type JobOutput[InputType any, OutputType any] struct {
-	// TODO: Can lock shared JobOutput and provide interface methods to get data (that handles the locking).
 	// An error for Job.Run().
 	Error error
 
@@ -92,6 +99,9 @@ type JobOutput[InputType any, OutputType any] struct {
 
 	// Signals the job is complete.
 	Done <-chan any
+
+	// A UUID for the job output that is used to synchronize reads and writes to the job output.
+	JobID string
 }
 
 func (this *Job[InputType, OutputType]) Validate() error {
@@ -122,15 +132,128 @@ func (this *JobOptions) Validate() error {
 	return nil
 }
 
+func (this JobOutput[InputType, OutputType]) GetError() error {
+	lockmanager.ReadLock(this.JobID)
+	defer lockmanager.ReadUnlock(this.JobID)
+
+	lockKey := fmt.Sprintf(JOB_OUTPUT_LOCK_FORMAT, this.JobID, JOB_OUTPUT_ERROR)
+	lockmanager.ReadLock(lockKey)
+	defer lockmanager.ReadUnlock(lockKey)
+
+	return this.Error
+}
+
+func (this JobOutput[InputType, OutputType]) GetWorkErrors() map[int]error {
+	lockmanager.ReadLock(this.JobID)
+	defer lockmanager.ReadUnlock(this.JobID)
+
+	lockKey := fmt.Sprintf(JOB_OUTPUT_LOCK_FORMAT, this.JobID, JOB_OUTPUT_WORK_ERRORS)
+	lockmanager.ReadLock(lockKey)
+	defer lockmanager.ReadUnlock(lockKey)
+
+	return this.WorkErrors
+}
+
+func (this JobOutput[InputType, OutputType]) GetResultItems() []OutputType {
+	lockmanager.ReadLock(this.JobID)
+	defer lockmanager.ReadUnlock(this.JobID)
+
+	lockKey := fmt.Sprintf(JOB_OUTPUT_LOCK_FORMAT, this.JobID, JOB_OUTPUT_RESULT_ITEMS)
+	lockmanager.ReadLock(lockKey)
+	defer lockmanager.ReadUnlock(lockKey)
+
+	return this.ResultItems
+}
+
+func (this JobOutput[InputType, OutputType]) GetRemainingItems() []InputType {
+	lockmanager.ReadLock(this.JobID)
+	defer lockmanager.ReadUnlock(this.JobID)
+
+	lockKey := fmt.Sprintf(JOB_OUTPUT_LOCK_FORMAT, this.JobID, JOB_OUTPUT_REMAINING_ITEMS)
+	lockmanager.ReadLock(lockKey)
+	defer lockmanager.ReadUnlock(lockKey)
+
+	return this.RemainingItems
+}
+
+func (this JobOutput[InputType, OutputType]) GetRunTime() int64 {
+	lockmanager.ReadLock(this.JobID)
+	defer lockmanager.ReadUnlock(this.JobID)
+
+	lockKey := fmt.Sprintf(JOB_OUTPUT_LOCK_FORMAT, this.JobID, JOB_OUTPUT_RUN_TIME)
+	lockmanager.ReadLock(lockKey)
+	defer lockmanager.ReadUnlock(lockKey)
+
+	return this.RunTime
+}
+
+func (this JobOutput[InputType, OutputType]) SetError(err error) {
+	lockmanager.Lock(this.JobID)
+	defer lockmanager.Unlock(this.JobID)
+
+	lockKey := fmt.Sprintf(JOB_OUTPUT_LOCK_FORMAT, this.JobID, JOB_OUTPUT_ERROR)
+	lockmanager.Lock(lockKey)
+	defer lockmanager.Unlock(lockKey)
+
+	this.Error = err
+}
+
+func (this JobOutput[InputType, OutputType]) SetWorkErrors(workErrors map[int]error) {
+	lockmanager.Lock(this.JobID)
+	defer lockmanager.Unlock(this.JobID)
+
+	lockKey := fmt.Sprintf(JOB_OUTPUT_LOCK_FORMAT, this.JobID, JOB_OUTPUT_WORK_ERRORS)
+	lockmanager.Lock(lockKey)
+	defer lockmanager.Unlock(lockKey)
+
+	this.WorkErrors = workErrors
+}
+
+func (this JobOutput[InputType, OutputType]) SetResultItems(resultItems []OutputType) {
+	lockmanager.Lock(this.JobID)
+	defer lockmanager.Unlock(this.JobID)
+
+	lockKey := fmt.Sprintf(JOB_OUTPUT_LOCK_FORMAT, this.JobID, JOB_OUTPUT_RESULT_ITEMS)
+	lockmanager.Lock(lockKey)
+	defer lockmanager.Unlock(lockKey)
+
+	this.ResultItems = resultItems
+}
+
+func (this JobOutput[InputType, OutputType]) SetRemainingItems(remainingItems []InputType) {
+	lockmanager.Lock(this.JobID)
+	defer lockmanager.Unlock(this.JobID)
+
+	lockKey := fmt.Sprintf(JOB_OUTPUT_LOCK_FORMAT, this.JobID, JOB_OUTPUT_REMAINING_ITEMS)
+	lockmanager.Lock(lockKey)
+	defer lockmanager.Unlock(lockKey)
+
+	this.RemainingItems = remainingItems
+}
+
+func (this JobOutput[InputType, OutputType]) SetRunTime(runTime int64) {
+	lockmanager.Lock(this.JobID)
+	defer lockmanager.Unlock(this.JobID)
+
+	lockKey := fmt.Sprintf(JOB_OUTPUT_LOCK_FORMAT, this.JobID, JOB_OUTPUT_RUN_TIME)
+	lockmanager.Lock(lockKey)
+	defer lockmanager.Unlock(lockKey)
+
+	this.RunTime = runTime
+}
+
 // Given a customized Job, Job.Run() processes input items in a parallel pool of workers.
 // Returns the collected results in a JobOutput.
 // If the context is canceled during execution, returns nil.
 // When not waiting for completion, Job.JobOutput will be populated with the results when the JobOutput.Done channel is closed.
 func (this *Job[InputType, OutputType]) Run() *JobOutput[InputType, OutputType] {
+	jobID := util.UUID()
+
 	err := this.Validate()
 	if err != nil {
 		return &JobOutput[InputType, OutputType]{
 			Error: fmt.Errorf("Failed to validate job: '%v'.", err),
+			JobID: jobID,
 		}
 	}
 
@@ -142,6 +265,7 @@ func (this *Job[InputType, OutputType]) Run() *JobOutput[InputType, OutputType] 
 		RemainingItems: this.WorkItems,
 		RunTime:        0,
 		WorkErrors:     make(map[int]error, 0),
+		JobID:          jobID,
 	}
 
 	// If we are overwriting records, remove all the old records.
@@ -188,8 +312,7 @@ func (this *Job[InputType, OutputType]) Run() *JobOutput[InputType, OutputType] 
 	return &output
 }
 
-// TODO: Can pass in a JobOutput pointer to modify.
-// If it's nil, don't save to results. (only errors)
+// TODO: If output is nil, don't save to results. (only errors)
 func (this *Job[InputType, OutputType]) run(output *JobOutput[InputType, OutputType]) {
 	if len(output.RemainingItems) == 0 {
 		return
@@ -211,17 +334,19 @@ func (this *Job[InputType, OutputType]) run(output *JobOutput[InputType, OutputT
 	// If we had to wait for the lock, then check again for stored records.
 	if !noLockWait && !this.OverwriteRecords && this.RetrieveFunc != nil {
 		partialResults := []OutputType{}
-		partialResults, output.RemainingItems, err = this.RetrieveFunc(output.RemainingItems)
+		remainingItems := []InputType{}
+		partialResults, remainingItems, err = this.RetrieveFunc(output.GetRemainingItems())
 		if err != nil {
-			output.Error = fmt.Errorf("Failed to re-check record storage before run: '%w'.", err)
+			output.SetError(fmt.Errorf("Failed to re-check record storage before run: '%w'.", err))
 			return
 		}
 
 		// Collect the partial records from storage.
-		output.ResultItems = append(output.ResultItems, partialResults...)
+		output.SetResultItems(append(output.GetResultItems(), partialResults...))
+		output.SetRemainingItems(remainingItems)
 	}
 
-	if len(output.RemainingItems) == 0 {
+	if len(output.GetRemainingItems()) == 0 {
 		return
 	}
 
@@ -232,7 +357,7 @@ func (this *Job[InputType, OutputType]) run(output *JobOutput[InputType, OutputT
 		Error   error
 	}
 
-	poolResults, _, err := util.RunParallelPoolMap(this.PoolSize, output.RemainingItems, this.Context, func(workItem InputType) (PoolResult, error) {
+	poolResults, _, err := util.RunParallelPoolMap(this.PoolSize, output.GetRemainingItems(), this.Context, func(workItem InputType) (PoolResult, error) {
 		workItemKey := ""
 		if this.WorkItemKeyFunc != nil {
 			workItemKey = this.WorkItemKeyFunc(workItem)
@@ -285,6 +410,8 @@ func (this *Job[InputType, OutputType]) run(output *JobOutput[InputType, OutputT
 		return
 	}
 
+	lockmanager.Lock(output.JobID)
+	defer lockmanager.Unlock(output.JobID)
 	output.RemainingItems = []InputType{}
 
 	for _, poolResult := range poolResults {
