@@ -20,6 +20,7 @@ The autograding effort is broken into three main parts:
    - [Running the Server in a Docker Container](docs/docker.md#running-the-server)
  - [Configuration](#configuration)
  - [Description of all Autograder Types](docs/types.md)
+ - [Development Notes](docs/development.md)
  - [Tutorial -- Creating a Course](docs/tutorials/create-a-course.md)
  - Resources
    - [Server (this repo)](https://github.com/edulinq/autograder-server)
