@@ -144,6 +144,10 @@
                     "type": "bool"
                 },
                 {
+                    "name": "return-copy",
+                    "type": "bool"
+                },
+                {
                     "name": "submissions",
                     "type": "[]string"
                 },
@@ -188,6 +192,10 @@
                 },
                 {
                     "name": "overwrite-records",
+                    "type": "bool"
+                },
+                {
+                    "name": "return-copy",
                     "type": "bool"
                 },
                 {
@@ -1382,6 +1390,10 @@
                     "type": "bool"
                 },
                 {
+                    "name": "return-copy",
+                    "type": "bool"
+                },
+                {
                     "name": "submissions",
                     "type": "[]string"
                 },
@@ -1826,6 +1838,10 @@
                 },
                 {
                     "name": "overwrite-records",
+                    "type": "bool"
+                },
+                {
+                    "name": "return-copy",
                     "type": "bool"
                 },
                 {

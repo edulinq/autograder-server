@@ -9,6 +9,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/edulinq/autograder/internal/lockmanager"
 	"github.com/edulinq/autograder/internal/util"
 )
 
@@ -637,7 +638,8 @@ func TestRunJobBase(test *testing.T) {
 				"BB": 2,
 			},
 		},
-		// TODO: One item was processed but 0 run time overall.
+		// Even though both outputs expect 0 run time when processing one item,
+		// the run time is charged in the background.
 		{
 			job: Job[string, int]{
 				WorkItems:    input,
@@ -754,8 +756,6 @@ func TestRunJobBase(test *testing.T) {
 			job: Job[string, int]{
 				WorkItems:    input,
 				WorkFunc:     workFunc,
-				PoolSize:     testPoolSize,
-				LockKey:      testLockKey,
 				RetrieveFunc: errorRetrieveFunc,
 				JobOptions:   &JobOptions{},
 			},
@@ -783,39 +783,54 @@ func TestRunJobBase(test *testing.T) {
 		testCase.job.WaitForCompletion = false
 
 		output := testCase.job.Run()
-		if output.Error != nil {
+
+		// Tests may be flaky if the new thread is started and gets the lock to modify output first.
+		// Loses the race to get the lock on output roughly 7/10,000 times.
+		lockmanager.Lock(output.JobID)
+		actual := &JobOutput[string, int]{
+			Error:          output.Error,
+			WorkErrors:     output.WorkErrors,
+			ResultItems:    output.ResultItems,
+			RemainingItems: output.RemainingItems,
+			RunTime:        output.RunTime,
+		}
+		lockmanager.Unlock(output.JobID)
+
+		if actual.Error != nil {
 			if testCase.errorSubstring != "" {
-				if !strings.Contains(output.Error.Error(), testCase.errorSubstring) {
-					test.Errorf("Case %d: Did not get expected error output on initial run. Expected substring: '%s', actual error: '%v'.", i, testCase.errorSubstring, output.Error)
+				if !strings.Contains(actual.Error.Error(), testCase.errorSubstring) {
+					test.Errorf("Case %d: Did not get expected error output on initial run. Expected substring: '%s', actual error: '%v'.", i, testCase.errorSubstring, actual.Error)
 				}
 			} else {
-				test.Errorf("Case %d: Failed to run initial job: '%v'.", i, output.Error)
+				test.Errorf("Case %d: Failed to run initial job: '%v'.", i, actual.Error)
 			}
 
+			storage = resetStorage()
 			continue
 		}
 
 		if testCase.errorSubstring != "" {
 			test.Errorf("Case %d: Did not get expected initial error: '%s'.", i, testCase.errorSubstring)
+			storage = resetStorage()
 			continue
 		}
 
-		// Set the done channel and job ID to pass the equality check.
-		testCase.initialOutput.Done = output.Done
-		testCase.initialOutput.JobID = output.JobID
-
-		if !reflect.DeepEqual(output, testCase.initialOutput) {
+		if !reflect.DeepEqual(actual, testCase.initialOutput) {
 			test.Errorf("Case %d: Unexpected initial results. Expected: '%s', actual: '%s'.",
-				i, util.MustToJSONIndent(testCase.initialOutput.toPrintableJobOutput()), util.MustToJSONIndent(output.toPrintableJobOutput()))
+				i, util.MustToJSONIndent(testCase.initialOutput.toPrintableJobOutput()), util.MustToJSONIndent(actual.toPrintableJobOutput()))
+			storage = resetStorage()
 			continue
 		}
 
 		testCase.job.WaitForCompletion = true
+
+		// Wait for the first run to complete before running again.
 		<-output.Done
 
 		output = testCase.job.Run()
 		if output.Error != nil {
 			test.Errorf("Case %d: Failed to run final job: '%v'.", i, output.Error)
+			storage = resetStorage()
 			continue
 		}
 
@@ -826,6 +841,7 @@ func TestRunJobBase(test *testing.T) {
 		if !reflect.DeepEqual(output, testCase.finalOutput) {
 			test.Errorf("Case %d: Unexpected final results. Expected: '%s', actual: '%s'.",
 				i, util.MustToJSONIndent(testCase.finalOutput.toPrintableJobOutput()), util.MustToJSONIndent(output.toPrintableJobOutput()))
+			storage = resetStorage()
 			continue
 		}
 
@@ -843,6 +859,108 @@ func TestRunJobBase(test *testing.T) {
 		}
 
 		storage = resetStorage()
+	}
+}
+
+func TestRunJobReturnCopy(test *testing.T) {
+	input := []string{"A", "BB", "CCC"}
+
+	job := Job[string, int]{
+		WorkItems: input,
+		WorkFunc:  workFunc,
+		PoolSize:  testPoolSize,
+		LockKey:   testLockKey,
+		JobOptions: &JobOptions{
+			ReturnCopy: true,
+		},
+	}
+
+	output := job.Run()
+
+	// Return copy will close the channel before returning.
+	<-output.Done
+
+	if output.Error != nil {
+		test.Fatalf("Failed to run first job: '%v'.", output.Error)
+	}
+
+	expectedOutput := &JobOutput[string, int]{
+		ResultItems:    []int{},
+		RemainingItems: input,
+		RunTime:        int64(0),
+		WorkErrors:     map[int]error{},
+		JobID:          output.JobID,
+		Done:           output.Done,
+	}
+
+	if !reflect.DeepEqual(output, expectedOutput) {
+		test.Fatalf("Unexpected first result. Expected: '%s', actual: '%s'.",
+			util.MustToJSONIndent(expectedOutput.toPrintableJobOutput()), util.MustToJSONIndent(output.toPrintableJobOutput()))
+	}
+
+	storage := map[string]int{
+		"A":  1,
+		"BB": 2,
+	}
+
+	job.RetrieveFunc = func(inputs []string) ([]int, []string, error) {
+		outputs := make([]int, 0, len(storage))
+		remaining := make([]string, 0, len(inputs))
+
+		for _, input := range inputs {
+			output, ok := storage[input]
+			if !ok {
+				remaining = append(remaining, input)
+				continue
+			}
+
+			outputs = append(outputs, output)
+		}
+
+		return outputs, remaining, nil
+	}
+
+	output = job.Run()
+
+	if output.Error != nil {
+		test.Fatalf("Failed to run second job: '%v'.", output.Error)
+	}
+
+	expectedOutput = &JobOutput[string, int]{
+		ResultItems:    []int{1, 2},
+		RemainingItems: []string{"CCC"},
+		RunTime:        int64(0),
+		WorkErrors:     map[int]error{},
+		JobID:          output.JobID,
+		Done:           output.Done,
+	}
+
+	if !reflect.DeepEqual(output, expectedOutput) {
+		test.Fatalf("Unexpected second result. Expected: '%s', actual: '%s'.",
+			util.MustToJSONIndent(expectedOutput.toPrintableJobOutput()), util.MustToJSONIndent(output.toPrintableJobOutput()))
+	}
+
+	// Test overriding ReturnCopy.
+	job.WaitForCompletion = true
+
+	output = job.Run()
+
+	if output.Error != nil {
+		test.Fatalf("Failed to run third job: '%v'.", output.Error)
+	}
+
+	expectedOutput = &JobOutput[string, int]{
+		ResultItems:    []int{1, 2, 3},
+		RemainingItems: []string{},
+		RunTime:        int64(1),
+		WorkErrors:     map[int]error{},
+		JobID:          output.JobID,
+		Done:           output.Done,
+	}
+
+	if !reflect.DeepEqual(output, expectedOutput) {
+		test.Fatalf("Unexpected third result. Expected: '%s', actual: '%s'.",
+			util.MustToJSONIndent(expectedOutput.toPrintableJobOutput()), util.MustToJSONIndent(output.toPrintableJobOutput()))
 	}
 }
 

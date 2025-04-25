@@ -60,7 +60,7 @@ func IndividualAnalysis(options AnalysisOptions) ([]*model.IndividualAnalysis, i
 
 	err = job.Validate()
 	if err != nil {
-		return nil, 0, fmt.Errorf("Failed to validate job.: '%v'.", err)
+		return nil, 0, fmt.Errorf("Failed to validate job: '%v'.", err)
 	}
 
 	output := job.Run()
