@@ -71,18 +71,22 @@ func PairwiseAnalysis(options AnalysisOptions) ([]*model.PairwiseAnalysis, int, 
 	defer templateFileStore.Close()
 
 	job := jobmanager.Job[model.PairwiseKey, *model.PairwiseAnalysis]{
-		JobOptions:        &options.JobOptions,
-		LockKey:           fmt.Sprintf("analysis-pairwise-course-%s", lockCourseID),
-		PoolSize:          config.ANALYSIS_PAIRWISE_COURSE_POOL_SIZE.Get(),
-		WorkItems:         allKeys,
-		RetrieveFunc:      getCachedPairwiseResults,
-		StoreFunc:         db.StorePairwiseAnalysis,
-		RemoveStorageFunc: db.RemovePairwiseAnalysis,
+		JobOptions:         &options.JobOptions,
+		LockKey:            fmt.Sprintf("analysis-pairwise-course-%s", lockCourseID),
+		PoolSize:           config.ANALYSIS_PAIRWISE_COURSE_POOL_SIZE.Get(),
+		WorkItems:          allKeys,
+		RetrieveFunc:       getCachedPairwiseResults,
+		SingleRetreiveFunc: db.GetSinglePairwiseAnalysis,
+		StoreFunc:          db.StorePairwiseAnalysis,
+		RemoveStorageFunc:  db.RemovePairwiseAnalysis,
 		WorkFunc: func(key model.PairwiseKey) (*model.PairwiseAnalysis, error) {
-			return runSinglePairwiseAnalysis(options, key, templateFileStore)
+			return computeSinglePairwiseAnalysis(options, key, templateFileStore)
 		},
 		WorkItemKeyFunc: func(key model.PairwiseKey) string {
 			return fmt.Sprintf("analysis-pairwise-single-%s", key.String())
+		},
+		StatFunc: func(runTime int64) {
+			collectPairwiseStats(allKeys, runTime, options.InitiatorEmail)
 		},
 	}
 
@@ -97,8 +101,6 @@ func PairwiseAnalysis(options AnalysisOptions) ([]*model.PairwiseAnalysis, int, 
 	if err != nil {
 		return nil, 0, fmt.Errorf("Failed to run pairwise analysis job: '%v'.", err)
 	}
-
-	collectPairwiseStats(allKeys, output.GetRunTime(), options.InitiatorEmail)
 
 	return output.GetResultItems(), len(output.GetRemainingItems()), nil
 }
@@ -143,28 +145,6 @@ func getCachedPairwiseResults(allKeys []model.PairwiseKey) ([]*model.PairwiseAna
 	}
 
 	return completeAnalysis, remainingKeys, nil
-}
-
-func runSinglePairwiseAnalysis(options AnalysisOptions, pairwiseKey model.PairwiseKey, templateFileStore *TemplateFileStore) (*model.PairwiseAnalysis, error) {
-	// Check the DB for a complete analysis.
-	if !options.OverwriteRecords {
-		result, err := db.GetSinglePairwiseAnalysis(pairwiseKey)
-		if err != nil {
-			return nil, fmt.Errorf("Failed to check DB for cached pairwise analysis for '%s': '%w'.", pairwiseKey.String(), err)
-		}
-
-		if result != nil {
-			return result, nil
-		}
-	}
-
-	// Nothing cached, compute the analsis.
-	result, err := computeSinglePairwiseAnalysis(options, pairwiseKey, templateFileStore)
-	if err != nil {
-		return nil, fmt.Errorf("Failed to compute pairwise analysis for '%s': '%w'.", pairwiseKey.String(), err)
-	}
-
-	return result, nil
 }
 
 func computeSinglePairwiseAnalysis(options AnalysisOptions, pairwiseKey model.PairwiseKey, templateFileStore *TemplateFileStore) (*model.PairwiseAnalysis, error) {

@@ -60,6 +60,9 @@ type Job[InputType any, OutputType any] struct {
 	// Returns a list of processed records, remaining items, and an error.
 	RetrieveFunc func([]InputType) ([]OutputType, []InputType, error)
 
+	// An optional function to retrieve a record based on a single work item.
+	SingleRetreiveFunc func(InputType) (OutputType, bool, error)
+
 	// An optional function to store the result.
 	StoreFunc func([]OutputType) error
 
@@ -72,6 +75,9 @@ type Job[InputType any, OutputType any] struct {
 
 	// An optional function to get the locking key for an individual work item.
 	WorkItemKeyFunc func(InputType) string
+
+	// An optional function to store stats on how long the job took.
+	StatFunc func(int64)
 }
 
 // JobOutput is the result of a call to Job.Run().
@@ -373,6 +379,22 @@ func (this *Job[InputType, OutputType]) run(output *JobOutput[InputType, OutputT
 			return PoolResult{}, nil
 		}
 
+		// Check storage for a record.
+		if !this.OverwriteRecords && this.SingleRetreiveFunc != nil {
+			result, found, err := this.SingleRetreiveFunc(workItem)
+			if err != nil {
+				return PoolResult{
+					Input: workItem,
+					Error: fmt.Errorf("Failed to retrieve an individual record from storage: '%w'.", err),
+				}, nil
+			}
+
+			if found {
+				return PoolResult{workItem, result, 0, nil}, nil
+			}
+		}
+
+		// Nothing cached, compute the job.
 		startTime := timestamp.Now()
 
 		var errs error = err
@@ -411,7 +433,7 @@ func (this *Job[InputType, OutputType]) run(output *JobOutput[InputType, OutputT
 	}
 
 	lockmanager.Lock(output.JobID)
-	defer lockmanager.Unlock(output.JobID)
+
 	output.RemainingItems = []InputType{}
 
 	for _, poolResult := range poolResults {
@@ -423,5 +445,10 @@ func (this *Job[InputType, OutputType]) run(output *JobOutput[InputType, OutputT
 			output.ResultItems = append(output.ResultItems, poolResult.Result)
 			output.RunTime += poolResult.RunTime
 		}
+	}
+	lockmanager.Unlock(output.JobID)
+
+	if this.StatFunc != nil {
+		this.StatFunc(output.GetRunTime())
 	}
 }

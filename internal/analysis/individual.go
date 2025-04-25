@@ -33,23 +33,28 @@ func IndividualAnalysis(options AnalysisOptions) ([]*model.IndividualAnalysis, i
 		return nil, 0, fmt.Errorf("Unable to get locking course: '%w'.", err)
 	}
 
+	// TODO: Will be overwritten by options.Validate() (it will set to background on only !WaitForCompletion).
 	if !options.RetainOriginalContext && !options.WaitForCompletion {
 		options.Context = context.Background()
 	}
 
 	job := jobmanager.Job[string, *model.IndividualAnalysis]{
-		JobOptions:        &options.JobOptions,
-		LockKey:           fmt.Sprintf("analysis-individual-course-%s", lockCourseID),
-		PoolSize:          config.ANALYSIS_INDIVIDUAL_COURSE_POOL_SIZE.Get(),
-		WorkItems:         fullSubmissionIDs,
-		RetrieveFunc:      getCachedIndividualResults,
-		StoreFunc:         db.StoreIndividualAnalysis,
-		RemoveStorageFunc: db.RemoveIndividualAnalysis,
+		JobOptions:         &options.JobOptions,
+		LockKey:            fmt.Sprintf("analysis-individual-course-%s", lockCourseID),
+		PoolSize:           config.ANALYSIS_INDIVIDUAL_COURSE_POOL_SIZE.Get(),
+		WorkItems:          fullSubmissionIDs,
+		RetrieveFunc:       getCachedIndividualResults,
+		SingleRetreiveFunc: db.GetSingleIndividualAnalysis,
+		StoreFunc:          db.StoreIndividualAnalysis,
+		RemoveStorageFunc:  db.RemoveIndividualAnalysis,
 		WorkFunc: func(fullSubmissionID string) (*model.IndividualAnalysis, error) {
-			return runSingleIndividualAnalysis(options, fullSubmissionID)
+			return computeSingleIndividualAnalysis(options, fullSubmissionID, true)
 		},
 		WorkItemKeyFunc: func(fullSubmissionID string) string {
 			return fmt.Sprintf("analysis-individual-%s", fullSubmissionID)
+		},
+		StatFunc: func(runTime int64) {
+			collectIndividualStats(fullSubmissionIDs, runTime, options.InitiatorEmail)
 		},
 	}
 
@@ -64,9 +69,6 @@ func IndividualAnalysis(options AnalysisOptions) ([]*model.IndividualAnalysis, i
 	if err != nil {
 		return nil, 0, fmt.Errorf("Failed to run individual analysis job: '%v'.", err)
 	}
-
-	// TODO: Pass a function to collect stats that takes an int64 (run time) and attributes run time.
-	collectIndividualStats(fullSubmissionIDs, output.GetRunTime(), options.InitiatorEmail)
 
 	return output.GetResultItems(), len(output.GetRemainingItems()), nil
 }
@@ -92,28 +94,6 @@ func getCachedIndividualResults(fullSubmissionIDs []string) ([]*model.Individual
 	}
 
 	return completeAnalysis, remainingIDs, nil
-}
-
-func runSingleIndividualAnalysis(options AnalysisOptions, fullSubmissionID string) (*model.IndividualAnalysis, error) {
-	// Check the DB for a complete analysis.
-	if !options.OverwriteRecords {
-		result, err := db.GetSingleIndividualAnalysis(fullSubmissionID)
-		if err != nil {
-			return nil, fmt.Errorf("Failed to check DB for cached individual analysis for '%s': '%w'.", fullSubmissionID, err)
-		}
-
-		if result != nil {
-			return result, nil
-		}
-	}
-
-	// Nothing cached, compute the analysis.
-	result, err := computeSingleIndividualAnalysis(options, fullSubmissionID, true)
-	if err != nil {
-		return nil, fmt.Errorf("Failed to compute individual analysis for '%s': '%w'.", fullSubmissionID, err)
-	}
-
-	return result, nil
 }
 
 func computeSingleIndividualAnalysis(options AnalysisOptions, fullSubmissionID string, computeDeltas bool) (*model.IndividualAnalysis, error) {
