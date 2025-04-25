@@ -33,7 +33,6 @@ func IndividualAnalysis(options AnalysisOptions) ([]*model.IndividualAnalysis, i
 		return nil, 0, fmt.Errorf("Unable to get locking course: '%w'.", err)
 	}
 
-	// TODO: Will be overwritten by options.Validate() (it will set to background on only !WaitForCompletion).
 	if !options.RetainOriginalContext && !options.WaitForCompletion {
 		options.Context = context.Background()
 	}

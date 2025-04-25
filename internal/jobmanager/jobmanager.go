@@ -270,8 +270,8 @@ func (this JobOutput[InputType, OutputType]) SetRunTime(runTime int64) {
 // Given a customized Job, Job.Run() processes input items in a parallel pool of workers.
 // Returns the collected results in a JobOutput.
 // If the context is canceled during execution, returns nil.
-// When not waiting for completion, Job.JobOutput will be populated with the results when the JobOutput.Done channel is closed.
-// When returning a copy of results, the Job.JobOutput can be accessed immediately but will not be populated with the final results.
+// When not waiting for completion, the JobOutput may still be modified until the Done channel is closed.
+// Returning a copy of results gives immediate access to stable results but the final results will not be accessible later.
 func (this *Job[InputType, OutputType]) Run() *JobOutput[InputType, OutputType] {
 	done := make(chan any)
 
