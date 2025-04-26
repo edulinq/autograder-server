@@ -22,32 +22,6 @@ func GetPairwiseAnalysis(keys []model.PairwiseKey) (map[model.PairwiseKey]*model
 	return backend.GetPairwiseAnalysis(keys)
 }
 
-// Get a single individual analysis result.
-// If the id is not matched, return nil.
-func GetSingleIndividualAnalysis(fullSubmissionID string) (*model.IndividualAnalysis, bool, error) {
-	results, err := GetIndividualAnalysis([]string{fullSubmissionID})
-	if err != nil {
-		return nil, false, err
-	}
-
-	result, ok := results[fullSubmissionID]
-
-	return result, ok, nil
-}
-
-// Get a single pairwise analysis result.
-// If the key is not matched, return nil.
-func GetSinglePairwiseAnalysis(key model.PairwiseKey) (*model.PairwiseAnalysis, bool, error) {
-	results, err := GetPairwiseAnalysis([]model.PairwiseKey{key})
-	if err != nil {
-		return nil, false, err
-	}
-
-	result, ok := results[key]
-
-	return result, ok, nil
-}
-
 func RemoveIndividualAnalysis(fullSubmissionIDs []string) error {
 	if backend == nil {
 		return fmt.Errorf("Database has not been opened.")

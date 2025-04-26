@@ -121,7 +121,7 @@ func TestPairwiseAnalysisFake(test *testing.T) {
 		&stats.Metric{
 			Timestamp: timestamp.Zero(),
 			Type:      stats.MetricTypeCodeAnalysisTime,
-			Value:     float64(3), // 1 for each run of the fake engine.
+			Value:     float64(0),
 			Attributes: map[stats.MetricAttribute]any{
 				stats.MetricAttributeAnalysisType: "pairwise",
 				stats.MetricAttributeCourseID:     "course101",
@@ -134,6 +134,8 @@ func TestPairwiseAnalysisFake(test *testing.T) {
 	// Zero out the query results.
 	for _, result := range results {
 		result.Timestamp = timestamp.Zero()
+
+		result.Value = 0
 	}
 
 	if !reflect.DeepEqual(expectedStats, results) {

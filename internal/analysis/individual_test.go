@@ -426,6 +426,7 @@ func TestIndividualAnalysisCountBase(test *testing.T) {
 			expectedPendingCount:      0,
 			expectedCacheCount:        1,
 		},
+		// TODO: Fix dry run test case.
 		{
 			options: AnalysisOptions{
 				ResolvedSubmissionIDs: []string{

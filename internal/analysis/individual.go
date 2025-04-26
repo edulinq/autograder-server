@@ -38,22 +38,22 @@ func IndividualAnalysis(options AnalysisOptions) ([]*model.IndividualAnalysis, i
 	}
 
 	job := jobmanager.Job[string, *model.IndividualAnalysis]{
-		JobOptions:         &options.JobOptions,
-		LockKey:            fmt.Sprintf("analysis-individual-course-%s", lockCourseID),
-		PoolSize:           config.ANALYSIS_INDIVIDUAL_COURSE_POOL_SIZE.Get(),
-		WorkItems:          fullSubmissionIDs,
-		RetrieveFunc:       getCachedIndividualResults,
-		SingleRetreiveFunc: db.GetSingleIndividualAnalysis,
-		StoreFunc:          db.StoreIndividualAnalysis,
-		RemoveStorageFunc:  db.RemoveIndividualAnalysis,
+		JobOptions:              &options.JobOptions,
+		LockKey:                 fmt.Sprintf("analysis-individual-course-%s", lockCourseID),
+		PoolSize:                config.ANALYSIS_INDIVIDUAL_COURSE_POOL_SIZE.Get(),
+		ReturnIncompleteResults: !options.WaitForCompletion,
+		WorkItems:               fullSubmissionIDs,
+		RetrieveFunc:            getCachedIndividualResults,
+		StoreFunc:               db.StoreIndividualAnalysis,
+		RemoveFunc:              db.RemoveIndividualAnalysis,
 		WorkFunc: func(fullSubmissionID string) (*model.IndividualAnalysis, error) {
 			return computeSingleIndividualAnalysis(options, fullSubmissionID, true)
 		},
 		WorkItemKeyFunc: func(fullSubmissionID string) string {
 			return fmt.Sprintf("analysis-individual-%s", fullSubmissionID)
 		},
-		StatFunc: func(runTime int64) {
-			collectIndividualStats(fullSubmissionIDs, runTime, options.InitiatorEmail)
+		OnComplete: func(result jobmanager.JobOutput[string, *model.IndividualAnalysis]) {
+			collectIndividualStats(fullSubmissionIDs, result.RunTime, options.InitiatorEmail)
 		},
 	}
 
@@ -64,12 +64,12 @@ func IndividualAnalysis(options AnalysisOptions) ([]*model.IndividualAnalysis, i
 
 	output := job.Run()
 
-	err = output.GetError()
+	err = output.Error
 	if err != nil {
 		return nil, 0, fmt.Errorf("Failed to run individual analysis job: '%v'.", err)
 	}
 
-	return output.GetResultItems(), len(output.GetRemainingItems()), nil
+	return output.ResultItems, len(output.RemainingItems), nil
 }
 
 func getCachedIndividualResults(fullSubmissionIDs []string) ([]*model.IndividualAnalysis, []string, error) {

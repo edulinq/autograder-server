@@ -71,22 +71,22 @@ func PairwiseAnalysis(options AnalysisOptions) ([]*model.PairwiseAnalysis, int, 
 	defer templateFileStore.Close()
 
 	job := jobmanager.Job[model.PairwiseKey, *model.PairwiseAnalysis]{
-		JobOptions:         &options.JobOptions,
-		LockKey:            fmt.Sprintf("analysis-pairwise-course-%s", lockCourseID),
-		PoolSize:           config.ANALYSIS_PAIRWISE_COURSE_POOL_SIZE.Get(),
-		WorkItems:          allKeys,
-		RetrieveFunc:       getCachedPairwiseResults,
-		SingleRetreiveFunc: db.GetSinglePairwiseAnalysis,
-		StoreFunc:          db.StorePairwiseAnalysis,
-		RemoveStorageFunc:  db.RemovePairwiseAnalysis,
+		JobOptions:              &options.JobOptions,
+		LockKey:                 fmt.Sprintf("analysis-pairwise-course-%s", lockCourseID),
+		PoolSize:                config.ANALYSIS_PAIRWISE_COURSE_POOL_SIZE.Get(),
+		ReturnIncompleteResults: !options.WaitForCompletion,
+		WorkItems:               allKeys,
+		RetrieveFunc:            getCachedPairwiseResults,
+		StoreFunc:               db.StorePairwiseAnalysis,
+		RemoveFunc:              db.RemovePairwiseAnalysis,
 		WorkFunc: func(key model.PairwiseKey) (*model.PairwiseAnalysis, error) {
 			return computeSinglePairwiseAnalysis(options, key, templateFileStore)
 		},
 		WorkItemKeyFunc: func(key model.PairwiseKey) string {
 			return fmt.Sprintf("analysis-pairwise-single-%s", key.String())
 		},
-		StatFunc: func(runTime int64) {
-			collectPairwiseStats(allKeys, runTime, options.InitiatorEmail)
+		OnComplete: func(result jobmanager.JobOutput[model.PairwiseKey, *model.PairwiseAnalysis]) {
+			collectPairwiseStats(allKeys, result.RunTime, options.InitiatorEmail)
 		},
 	}
 
@@ -97,12 +97,12 @@ func PairwiseAnalysis(options AnalysisOptions) ([]*model.PairwiseAnalysis, int, 
 
 	output := job.Run()
 
-	err = output.GetError()
+	err = output.Error
 	if err != nil {
 		return nil, 0, fmt.Errorf("Failed to run pairwise analysis job: '%v'.", err)
 	}
 
-	return output.GetResultItems(), len(output.GetRemainingItems()), nil
+	return output.ResultItems, len(output.RemainingItems), nil
 }
 
 func createPairwiseKeys(fullSubmissionIDs []string) []model.PairwiseKey {

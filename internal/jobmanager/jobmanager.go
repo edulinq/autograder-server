@@ -5,26 +5,10 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/edulinq/autograder/internal/config"
 	"github.com/edulinq/autograder/internal/lockmanager"
 	"github.com/edulinq/autograder/internal/log"
 	"github.com/edulinq/autograder/internal/timestamp"
 	"github.com/edulinq/autograder/internal/util"
-)
-
-// Job output is locked on two levels:
-//   - The object level
-//   - The field level
-//
-// Locking on the JobID gives access to all fields.
-// When locking on a specific field, the JobID lock must be acquired first.
-const (
-	JOB_OUTPUT_LOCK_FORMAT     = "%s::%s"
-	JOB_OUTPUT_ERROR           = "error"
-	JOB_OUTPUT_WORK_ERRORS     = "work-errors"
-	JOB_OUTPUT_RESULT_ITEMS    = "result-items"
-	JOB_OUTPUT_REMAINING_ITEMS = "remaining-items"
-	JOB_OUTPUT_RUN_TIME        = "run-time"
 )
 
 // JobOptions contains user level options for a Job.
@@ -39,11 +23,6 @@ type JobOptions struct {
 	// Wait for the entire job to complete and return all results.
 	WaitForCompletion bool `json:"wait-for-completion"`
 
-	// Return a copy of an intermediate result.
-	// Will not be able to access final output.
-	// If WaitForCompletion is true, this option is overwritten.
-	ReturnCopy bool `json:"return-copy"`
-
 	// A context that can be used to cancel the job.
 	Context context.Context `json:"-"`
 }
@@ -53,10 +32,9 @@ type JobOptions struct {
 //   - synchronization
 //   - context cancellation
 //   - record retrieval
-//   - single record retrieval
 //   - record storage
 //   - record removal from storage
-//   - stat tracking
+//   - asynchronous output processing
 //
 // Given job options, input items, and a work function,
 // Job will process a list of input items through the work func in a parallel pool to produce a JobOutput.
@@ -65,6 +43,11 @@ type JobOptions struct {
 type Job[InputType any, OutputType any] struct {
 	// The user level options for a Job.
 	*JobOptions
+
+	// Return a copy of the incomplete result.
+	// The final output will not be accessible.
+	// If WaitForCompletion is true, this option is ignored.
+	ReturnIncompleteResults bool
 
 	// The number of workers in the parallel pool.
 	PoolSize int
@@ -79,14 +62,11 @@ type Job[InputType any, OutputType any] struct {
 	// Returns a list of processed records, remaining items, and an error.
 	RetrieveFunc func([]InputType) ([]OutputType, []InputType, error)
 
-	// An optional function to retrieve a record based on a single work item.
-	SingleRetreiveFunc func(InputType) (OutputType, bool, error)
-
 	// An optional function to store the result.
 	StoreFunc func([]OutputType) error
 
 	// An optional function to remove existing records from storage.
-	RemoveStorageFunc func([]InputType) error
+	RemoveFunc func([]InputType) error
 
 	// A function to transform work items into results.
 	// Returns a result, the time of computation, and an error.
@@ -95,8 +75,8 @@ type Job[InputType any, OutputType any] struct {
 	// An optional function to get the locking key for an individual work item.
 	WorkItemKeyFunc func(InputType) string
 
-	// An optional function to store stats on how long the job took.
-	StatFunc func(int64)
+	// An optional function to process final JobOutput.
+	OnComplete func(JobOutput[InputType, OutputType])
 }
 
 // JobOutput is the result of a call to Job.Run().
@@ -119,14 +99,12 @@ type JobOutput[InputType any, OutputType any] struct {
 	// The list of tems that still need work.
 	RemainingItems []InputType
 
-	// The total computation time.
+	// The total computation time spent in WorkFunc().
+	// This time does not include time spent waiting for locks or retrieving stored items.
 	RunTime int64
 
 	// Signals the job is complete.
 	Done <-chan any
-
-	// A UUID to synchronize operations.
-	JobID string
 }
 
 func (this *Job[InputType, OutputType]) Validate() error {
@@ -157,116 +135,6 @@ func (this *JobOptions) Validate() error {
 	return nil
 }
 
-func (this JobOutput[InputType, OutputType]) GetError() error {
-	lockmanager.ReadLock(this.JobID)
-	defer lockmanager.ReadUnlock(this.JobID)
-
-	lockKey := fmt.Sprintf(JOB_OUTPUT_LOCK_FORMAT, this.JobID, JOB_OUTPUT_ERROR)
-	lockmanager.ReadLock(lockKey)
-	defer lockmanager.ReadUnlock(lockKey)
-
-	return this.Error
-}
-
-func (this JobOutput[InputType, OutputType]) GetWorkErrors() map[int]error {
-	lockmanager.ReadLock(this.JobID)
-	defer lockmanager.ReadUnlock(this.JobID)
-
-	lockKey := fmt.Sprintf(JOB_OUTPUT_LOCK_FORMAT, this.JobID, JOB_OUTPUT_WORK_ERRORS)
-	lockmanager.ReadLock(lockKey)
-	defer lockmanager.ReadUnlock(lockKey)
-
-	return this.WorkErrors
-}
-
-func (this JobOutput[InputType, OutputType]) GetResultItems() []OutputType {
-	lockmanager.ReadLock(this.JobID)
-	defer lockmanager.ReadUnlock(this.JobID)
-
-	lockKey := fmt.Sprintf(JOB_OUTPUT_LOCK_FORMAT, this.JobID, JOB_OUTPUT_RESULT_ITEMS)
-	lockmanager.ReadLock(lockKey)
-	defer lockmanager.ReadUnlock(lockKey)
-
-	return this.ResultItems
-}
-
-func (this JobOutput[InputType, OutputType]) GetRemainingItems() []InputType {
-	lockmanager.ReadLock(this.JobID)
-	defer lockmanager.ReadUnlock(this.JobID)
-
-	lockKey := fmt.Sprintf(JOB_OUTPUT_LOCK_FORMAT, this.JobID, JOB_OUTPUT_REMAINING_ITEMS)
-	lockmanager.ReadLock(lockKey)
-	defer lockmanager.ReadUnlock(lockKey)
-
-	return this.RemainingItems
-}
-
-func (this JobOutput[InputType, OutputType]) GetRunTime() int64 {
-	lockmanager.ReadLock(this.JobID)
-	defer lockmanager.ReadUnlock(this.JobID)
-
-	lockKey := fmt.Sprintf(JOB_OUTPUT_LOCK_FORMAT, this.JobID, JOB_OUTPUT_RUN_TIME)
-	lockmanager.ReadLock(lockKey)
-	defer lockmanager.ReadUnlock(lockKey)
-
-	return this.RunTime
-}
-
-func (this JobOutput[InputType, OutputType]) SetError(err error) {
-	lockmanager.Lock(this.JobID)
-	defer lockmanager.Unlock(this.JobID)
-
-	lockKey := fmt.Sprintf(JOB_OUTPUT_LOCK_FORMAT, this.JobID, JOB_OUTPUT_ERROR)
-	lockmanager.Lock(lockKey)
-	defer lockmanager.Unlock(lockKey)
-
-	this.Error = err
-}
-
-func (this JobOutput[InputType, OutputType]) SetWorkErrors(workErrors map[int]error) {
-	lockmanager.Lock(this.JobID)
-	defer lockmanager.Unlock(this.JobID)
-
-	lockKey := fmt.Sprintf(JOB_OUTPUT_LOCK_FORMAT, this.JobID, JOB_OUTPUT_WORK_ERRORS)
-	lockmanager.Lock(lockKey)
-	defer lockmanager.Unlock(lockKey)
-
-	this.WorkErrors = workErrors
-}
-
-func (this JobOutput[InputType, OutputType]) SetResultItems(resultItems []OutputType) {
-	lockmanager.Lock(this.JobID)
-	defer lockmanager.Unlock(this.JobID)
-
-	lockKey := fmt.Sprintf(JOB_OUTPUT_LOCK_FORMAT, this.JobID, JOB_OUTPUT_RESULT_ITEMS)
-	lockmanager.Lock(lockKey)
-	defer lockmanager.Unlock(lockKey)
-
-	this.ResultItems = resultItems
-}
-
-func (this JobOutput[InputType, OutputType]) SetRemainingItems(remainingItems []InputType) {
-	lockmanager.Lock(this.JobID)
-	defer lockmanager.Unlock(this.JobID)
-
-	lockKey := fmt.Sprintf(JOB_OUTPUT_LOCK_FORMAT, this.JobID, JOB_OUTPUT_REMAINING_ITEMS)
-	lockmanager.Lock(lockKey)
-	defer lockmanager.Unlock(lockKey)
-
-	this.RemainingItems = remainingItems
-}
-
-func (this JobOutput[InputType, OutputType]) SetRunTime(runTime int64) {
-	lockmanager.Lock(this.JobID)
-	defer lockmanager.Unlock(this.JobID)
-
-	lockKey := fmt.Sprintf(JOB_OUTPUT_LOCK_FORMAT, this.JobID, JOB_OUTPUT_RUN_TIME)
-	lockmanager.Lock(lockKey)
-	defer lockmanager.Unlock(lockKey)
-
-	this.RunTime = runTime
-}
-
 // Given a customized Job, Job.Run() processes input items in a parallel pool of workers.
 // Returns the collected results in a JobOutput.
 // If the context is canceled during execution, returns nil.
@@ -281,33 +149,34 @@ func (this *Job[InputType, OutputType]) Run() *JobOutput[InputType, OutputType] 
 		RemainingItems: this.WorkItems,
 		RunTime:        0,
 		WorkErrors:     make(map[int]error, 0),
-		JobID:          util.UUID(),
 	}
 
 	err := this.Validate()
 	if err != nil {
-		close(done)
+		output.Error = fmt.Errorf("Failed to validate job: '%w'.", err)
 
-		output.Error = fmt.Errorf("Failed to validate job: '%v'.", err)
+		close(done)
 		return &output
 	}
 
 	// If we are overwriting records, remove all the old records.
-	if this.OverwriteRecords && !this.DryRun && this.RemoveStorageFunc != nil {
-		output.Error = this.RemoveStorageFunc(this.WorkItems)
-		if output.Error != nil {
-			close(done)
+	if this.OverwriteRecords && !this.DryRun && this.RemoveFunc != nil {
+		err = this.RemoveFunc(this.WorkItems)
+		if err != nil {
+			output.Error = fmt.Errorf("Failed to remove items: '%w'.", err)
 
+			close(done)
 			return &output
 		}
 	}
 
 	// Query for stored records.
 	if !this.OverwriteRecords && this.RetrieveFunc != nil {
-		output.ResultItems, output.RemainingItems, output.Error = this.RetrieveFunc(this.WorkItems)
-		if output.Error != nil {
-			close(done)
+		output.ResultItems, output.RemainingItems, err = this.RetrieveFunc(this.WorkItems)
+		if err != nil {
+			output.Error = fmt.Errorf("Failed to retrieve items: '%w'.", err)
 
+			close(done)
 			return &output
 		}
 	}
@@ -316,44 +185,50 @@ func (this *Job[InputType, OutputType]) Run() *JobOutput[InputType, OutputType] 
 		this.run(&output, true)
 
 		close(done)
-
-		// If the context was canceled during execution, return immediately.
-		if this.Context.Err() != nil {
-			return nil
-		}
-	} else if this.ReturnCopy {
+	} else if this.ReturnIncompleteResults {
 		go func() {
+			backgroundDone := make(chan any)
+			defer close(backgroundDone)
+
 			backgroundOutput := &JobOutput[InputType, OutputType]{
-				RemainingItems: output.GetRemainingItems(),
+				Done:           backgroundDone,
+				ResultItems:    make([]OutputType, 0),
+				RemainingItems: output.RemainingItems,
+				RunTime:        0,
+				WorkErrors:     make(map[int]error, 0),
 			}
 
 			this.run(backgroundOutput, false)
-
 			if backgroundOutput.Error != nil {
-				log.Error("Failure while running asynchronous job: '%v'.", output.Error)
+				log.Error("Failure while running asynchronous job.", backgroundOutput.Error)
 			}
 		}()
 
 		close(done)
-		return &output
 	} else {
 		go func() {
 			this.run(&output, true)
 			if output.Error != nil {
-				log.Error("Failure while running asynchronous job: '%v'.", output.Error)
+				log.Error("Failure while running asynchronous job.", output.Error)
 			}
 
 			close(done)
 		}()
 	}
 
+	// If the context was canceled during execution, return immediately.
+	if this.Context.Err() != nil {
+		return nil
+	}
+
 	return &output
 }
 
-// Given a partial job output, run job processes the remaining items in a thread safe manner.
-// When not updating the output, only the run time and errors will be available.
+// Job.run() processes the remaining items and updates the partial job output.
+// When update output is false, Job.run() will not update the results to reduce memory usage.
+// However, the run time and error will be updated for stats and logging purposes.
 func (this *Job[InputType, OutputType]) run(output *JobOutput[InputType, OutputType], updateOutput bool) {
-	if len(output.GetRemainingItems()) == 0 {
+	if len(output.RemainingItems) == 0 {
 		return
 	}
 
@@ -371,24 +246,24 @@ func (this *Job[InputType, OutputType]) run(output *JobOutput[InputType, OutputT
 	var err error = nil
 
 	// If we had to wait for the lock, then check again for stored records.
-	if !noLockWait && !this.OverwriteRecords && this.RetrieveFunc != nil {
+	if !noLockWait && this.RetrieveFunc != nil {
 		partialResults := []OutputType{}
 		remainingItems := []InputType{}
-		partialResults, remainingItems, err = this.RetrieveFunc(output.GetRemainingItems())
+		partialResults, remainingItems, err = this.RetrieveFunc(output.RemainingItems)
 		if err != nil {
-			output.SetError(fmt.Errorf("Failed to re-check record storage before run: '%w'.", err))
+			output.Error = fmt.Errorf("Failed to re-check record storage before run: '%w'.", err)
 			return
 		}
 
-		output.SetRemainingItems(remainingItems)
+		output.RemainingItems = remainingItems
 
 		if updateOutput {
 			// Collect the partial records from storage.
-			output.SetResultItems(append(output.GetResultItems(), partialResults...))
+			output.ResultItems = append(output.ResultItems, partialResults...)
 		}
 	}
 
-	if len(output.GetRemainingItems()) == 0 {
+	if len(output.RemainingItems) == 0 {
 		return
 	}
 
@@ -399,7 +274,7 @@ func (this *Job[InputType, OutputType]) run(output *JobOutput[InputType, OutputT
 		Error   error
 	}
 
-	poolResults, _, err := util.RunParallelPoolMap(this.PoolSize, output.GetRemainingItems(), this.Context, func(workItem InputType) (PoolResult, error) {
+	poolResults, _, err := util.RunParallelPoolMap(this.PoolSize, output.RemainingItems, this.Context, func(workItem InputType) (PoolResult, error) {
 		workItemKey := ""
 		if this.WorkItemKeyFunc != nil {
 			workItemKey = this.WorkItemKeyFunc(workItem)
@@ -416,45 +291,45 @@ func (this *Job[InputType, OutputType]) run(output *JobOutput[InputType, OutputT
 		}
 
 		// Check storage for a record.
-		if !this.OverwriteRecords && this.SingleRetreiveFunc != nil {
-			result, found, err := this.SingleRetreiveFunc(workItem)
+		if this.RetrieveFunc != nil {
+			results, _, err := this.RetrieveFunc([]InputType{workItem})
 			if err != nil {
 				return PoolResult{
 					Input: workItem,
-					Error: fmt.Errorf("Failed to retrieve an individual record from storage: '%w'.", err),
+					Error: fmt.Errorf("Failed to retrieve item '%v': '%w'.", workItem, err),
 				}, nil
 			}
 
-			if found {
-				return PoolResult{workItem, result, 0, nil}, nil
+			if len(results) == 1 {
+				return PoolResult{workItem, results[0], 0, nil}, nil
 			}
 		}
 
 		// Nothing cached, compute the job.
 		startTime := timestamp.Now()
 
-		var errs error = err
-
 		result, err := this.WorkFunc(workItem)
 		if err != nil {
-			errs = errors.Join(errs, fmt.Errorf("Failed to perform individual work on item %v: '%w'.", workItem, err))
+			return PoolResult{
+				Input: workItem,
+				Error: fmt.Errorf("Failed to perform individual work on item '%v': '%w'.", workItem, err),
+			}, nil
 		}
 
 		runTime := (timestamp.Now() - startTime).ToMSecs()
-		// Standardize the run time so tests can check for exact matches.
-		if config.UNIT_TESTING_MODE.Get() {
-			runTime = 1
-		}
 
 		// Store the result.
 		if !this.DryRun && this.Context.Err() == nil && this.StoreFunc != nil {
 			err = this.StoreFunc([]OutputType{result})
 			if err != nil {
-				errs = errors.Join(errs, fmt.Errorf("Failed to store result for item '%v': '%w'.", workItem, err))
+				return PoolResult{
+					Input: workItem,
+					Error: fmt.Errorf("Failed to store result for item '%v': '%w'.", workItem, err),
+				}, nil
 			}
 		}
 
-		return PoolResult{workItem, result, runTime, errs}, nil
+		return PoolResult{workItem, result, runTime, nil}, nil
 	})
 
 	if err != nil {
@@ -466,8 +341,6 @@ func (this *Job[InputType, OutputType]) run(output *JobOutput[InputType, OutputT
 	if this.Context.Err() != nil {
 		return
 	}
-
-	lockmanager.Lock(output.JobID)
 
 	output.RemainingItems = []InputType{}
 
@@ -489,9 +362,8 @@ func (this *Job[InputType, OutputType]) run(output *JobOutput[InputType, OutputT
 			}
 		}
 	}
-	lockmanager.Unlock(output.JobID)
 
-	if this.StatFunc != nil {
-		this.StatFunc(output.GetRunTime())
+	if this.OnComplete != nil {
+		this.OnComplete(*output)
 	}
 }
