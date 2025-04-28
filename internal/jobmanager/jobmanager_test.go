@@ -745,8 +745,9 @@ func TestRunJobBase(test *testing.T) {
 			continue
 		}
 
-		// Set the done channel and job ID to pass the equality check.
-		testCase.finalOutput.Done = output.Done
+		// Clear channel and run time for comparison.
+		output.Done = nil
+		output.RunTime = 0
 
 		if !reflect.DeepEqual(output, testCase.finalOutput) {
 			test.Errorf("Case %d: Unexpected final results. Expected: '%s', actual: '%s'.",
@@ -761,6 +762,9 @@ func TestRunJobBase(test *testing.T) {
 				"BB": 2,
 			}
 		}
+
+		// Sleep to let the writes to the storage complete.
+		time.Sleep(time.Duration(2) * time.Millisecond)
 
 		if !reflect.DeepEqual(storage, testCase.expectedStorage) {
 			test.Errorf("Case %d: Unexpected storage results after final run. Expected: '%v', actual: '%v'.", i, testCase.expectedStorage, storage)

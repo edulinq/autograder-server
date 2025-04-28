@@ -37,8 +37,9 @@ type JobOptions struct {
 //   - asynchronous output processing
 //
 // Given job options, input items, and a work function,
-// Job will process a list of input items through the work func in a parallel pool to produce a JobOutput.
-// If a lock key is provided, Job will block on that key before running preventing overuse of resources or conflicts between the same Job.
+// Job will invoke the work func on each input item in a parallel pool to produce a JobOutput.
+// If a lock key is provided, Job will block on that key before running.
+// The locking behavior prevents overuse of resources and conflicts between the same Job.
 // Provide an input key generation function to synchronize at the input item level.
 type Job[InputType any, OutputType any] struct {
 	// The user level options for a Job.
@@ -69,7 +70,7 @@ type Job[InputType any, OutputType any] struct {
 	RemoveFunc func([]InputType) error
 
 	// A function to transform work items into results.
-	// Returns a result, the time of computation, and an error.
+	// Returns a result and an error.
 	WorkFunc func(InputType) (OutputType, error)
 
 	// An optional function to get the locking key for an individual work item.
@@ -82,8 +83,6 @@ type Job[InputType any, OutputType any] struct {
 // JobOutput is the result of a call to Job.Run().
 // It contains a system error, a map of work errors, the result items,
 // the remaining items, the total run time, and a channel that signals execution is complete.
-// If the context is cacelled while running a job,
-// the returned JobOutput will be empty.
 type JobOutput[InputType any, OutputType any] struct {
 	// An error for Job.Run().
 	Error error
@@ -137,9 +136,9 @@ func (this *JobOptions) Validate() error {
 
 // Given a customized Job, Job.Run() processes input items in a parallel pool of workers.
 // Returns the collected results in a JobOutput.
-// If the context is canceled during execution, returns nil.
 // When not waiting for completion, the JobOutput may still be modified until the Done channel is closed.
 // Returning a copy of results gives immediate access to stable results but the final results will not be accessible later.
+// Returns nil if the context is canceled during execution.
 func (this *Job[InputType, OutputType]) Run() *JobOutput[InputType, OutputType] {
 	done := make(chan any)
 

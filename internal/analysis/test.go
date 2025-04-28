@@ -1,14 +1,9 @@
 package analysis
 
 import (
-	// TEST
-	"fmt"
-	"os"
-
 	"context"
 	"path/filepath"
 	"testing"
-	"time"
 
 	"github.com/edulinq/autograder/internal/db"
 	"github.com/edulinq/autograder/internal/model"
@@ -33,10 +28,6 @@ func (this *fakeSimiliartyEngine) ComputeFileSimilarity(paths [2]string, templat
 		Version:  "0.0.1",
 		Score:    float64(len(filepath.Base(paths[0]))) / 100.0,
 	}
-
-	// Sleep for a small amount of time to differentiate from cached results.
-	fmt.Fprintf(os.Stderr, "sleeping...\n")
-	time.Sleep(time.Duration(500) * time.Millisecond)
 
 	return &similarity, nil
 }
