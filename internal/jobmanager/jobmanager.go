@@ -54,6 +54,7 @@ type Job[InputType any, OutputType any] struct {
 	PoolSize int
 
 	// An optional key to lock on.
+	// This locks at the job level whereas the function generates locks at the item level.
 	LockKey string
 
 	// A sorted list of items that need work.
@@ -61,9 +62,11 @@ type Job[InputType any, OutputType any] struct {
 
 	// An optional function to retrieve existing records that should not be processed.
 	// Returns a list of processed records, remaining items, and an error.
+	// Utilize this function to reduce the amount of computation when previous results are stored in a cache.
 	RetrieveFunc func([]InputType) ([]OutputType, []InputType, error)
 
 	// An optional function to store the result.
+	// Use this function to cache the result of the work function to reduce future computation.
 	StoreFunc func([]OutputType) error
 
 	// An optional function to remove existing records from storage.
@@ -140,6 +143,8 @@ func (this *JobOptions) Validate() error {
 // Returning a copy of results gives immediate access to stable results but the final results will not be accessible later.
 // Returns nil if the context is canceled during execution.
 func (this *Job[InputType, OutputType]) Run() *JobOutput[InputType, OutputType] {
+	// Run closes the channel to signal the returned JobOutput is safe to handle.
+	// The channel is always closed by this thread except when running asynchronously without ReturnIncompleteResults.
 	done := make(chan any)
 
 	output := JobOutput[InputType, OutputType]{
@@ -224,7 +229,8 @@ func (this *Job[InputType, OutputType]) Run() *JobOutput[InputType, OutputType] 
 }
 
 // Job.run() processes the remaining items and updates the partial job output.
-// When update output is false, Job.run() will not update the results to reduce memory usage.
+// The updateOutput parameter signals if the output will be accessible outside of the scope of Run().
+// When the result is not needed, Job.run() will not update the result to reduce memory usage.
 // However, the run time and error will be updated for stats and logging purposes.
 func (this *Job[InputType, OutputType]) run(output *JobOutput[InputType, OutputType], updateOutput bool) {
 	if len(output.RemainingItems) == 0 {
@@ -299,7 +305,7 @@ func (this *Job[InputType, OutputType]) run(output *JobOutput[InputType, OutputT
 				}, nil
 			}
 
-			if len(results) == 1 {
+			if len(results) >= 1 {
 				return PoolResult{workItem, results[0], 0, nil}, nil
 			}
 		}
@@ -315,10 +321,14 @@ func (this *Job[InputType, OutputType]) run(output *JobOutput[InputType, OutputT
 			}, nil
 		}
 
+		if this.Context.Err() != nil {
+			return PoolResult{}, nil
+		}
+
 		runTime := (timestamp.Now() - startTime).ToMSecs()
 
 		// Store the result.
-		if !this.DryRun && this.Context.Err() == nil && this.StoreFunc != nil {
+		if !this.DryRun && this.StoreFunc != nil {
 			err = this.StoreFunc([]OutputType{result})
 			if err != nil {
 				return PoolResult{
