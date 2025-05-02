@@ -54,6 +54,7 @@ type Job[InputType any, OutputType any] struct {
 	PoolSize int
 
 	// An optional key to lock on.
+	// TODO: Try again
 	// This locks at the job level whereas the function generates locks at the item level.
 	LockKey string
 
@@ -62,7 +63,7 @@ type Job[InputType any, OutputType any] struct {
 
 	// An optional function to retrieve existing records that should not be processed.
 	// Returns a list of processed records, remaining items, and an error.
-	// Utilize this function to reduce the amount of computation when previous results are stored in a cache.
+	// E.g. This function could be used to retrieve completed items from a cache.
 	RetrieveFunc func([]InputType) ([]OutputType, []InputType, error)
 
 	// An optional function to store the result.
@@ -229,6 +230,7 @@ func (this *Job[InputType, OutputType]) Run() *JobOutput[InputType, OutputType] 
 }
 
 // Job.run() processes the remaining items and updates the partial job output.
+// TODO: Reduce awkwardness
 // The updateOutput parameter signals if the output will be accessible outside of the scope of Run().
 // When the result is not needed, Job.run() will not update the result to reduce memory usage.
 // However, the run time and error will be updated for stats and logging purposes.
@@ -371,6 +373,8 @@ func (this *Job[InputType, OutputType]) run(output *JobOutput[InputType, OutputT
 			}
 		}
 	}
+
+	// TODO: Check if there are work errors, set job error to signal there are work errors.
 
 	if this.OnComplete != nil {
 		this.OnComplete(*output)
