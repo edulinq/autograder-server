@@ -2,7 +2,6 @@ package jobmanager
 
 import (
 	"context"
-	"errors"
 	"fmt"
 
 	"github.com/edulinq/autograder/internal/lockmanager"
@@ -54,8 +53,8 @@ type Job[InputType any, OutputType any] struct {
 	PoolSize int
 
 	// An optional key to lock on.
-	// TODO: Try again
-	// This locks at the job level whereas the function generates locks at the item level.
+	// The job will block until it acquires the lock.
+	// Provide a WorkItemKeyFunc to synchronize individual work items.
 	LockKey string
 
 	// A sorted list of items that need work.
@@ -99,8 +98,11 @@ type JobOutput[InputType any, OutputType any] struct {
 	// The list of results.
 	ResultItems []OutputType
 
-	// The list of tems that still need work.
+	// The list of items that still need work.
 	RemainingItems []InputType
+
+	// The list of items that encountered errors.
+	ErrorItems []InputType
 
 	// The total computation time spent in WorkFunc().
 	// This time does not include time spent waiting for locks or retrieving stored items.
@@ -145,7 +147,7 @@ func (this *JobOptions) Validate() error {
 // Returns nil if the context is canceled during execution.
 func (this *Job[InputType, OutputType]) Run() *JobOutput[InputType, OutputType] {
 	// Run closes the channel to signal the returned JobOutput is safe to handle.
-	// The channel is always closed by this thread except when running asynchronously without ReturnIncompleteResults.
+	// The channel is closed by this thread except when !WaitForCompletion and !ReturnIncompleteResults.
 	done := make(chan any)
 
 	output := JobOutput[InputType, OutputType]{
@@ -154,6 +156,7 @@ func (this *Job[InputType, OutputType]) Run() *JobOutput[InputType, OutputType] 
 		RemainingItems: this.WorkItems,
 		RunTime:        0,
 		WorkErrors:     make(map[int]error, 0),
+		ErrorItems:     make([]InputType, 0, len(this.WorkItems)),
 	}
 
 	err := this.Validate()
@@ -230,10 +233,10 @@ func (this *Job[InputType, OutputType]) Run() *JobOutput[InputType, OutputType] 
 }
 
 // Job.run() processes the remaining items and updates the partial job output.
-// TODO: Reduce awkwardness
-// The updateOutput parameter signals if the output will be accessible outside of the scope of Run().
-// When the result is not needed, Job.run() will not update the result to reduce memory usage.
+// If Job.Run() returned incomplete results, the JobOutput will not be accessible.
+// In this case, Job.run() will not not update the results to reduce memory usage.
 // However, the run time and error will be updated for stats and logging purposes.
+// The parameter updateOutput signals whether Job.run() will add results to JobOutput.
 func (this *Job[InputType, OutputType]) run(output *JobOutput[InputType, OutputType], updateOutput bool) {
 	if len(output.RemainingItems) == 0 {
 		return
@@ -354,16 +357,13 @@ func (this *Job[InputType, OutputType]) run(output *JobOutput[InputType, OutputT
 	}
 
 	output.RemainingItems = []InputType{}
+	output.ErrorItems = []InputType{}
 
 	for _, poolResult := range poolResults {
 		if poolResult.Error != nil {
-			// Always update the error for error logging purposes.
-			output.Error = errors.Join(output.Error, poolResult.Error)
-
-			if updateOutput {
-				output.WorkErrors[len(output.RemainingItems)] = poolResult.Error
-				output.RemainingItems = append(output.RemainingItems, poolResult.Input)
-			}
+			// Always update errors.
+			output.WorkErrors[len(output.ErrorItems)] = poolResult.Error
+			output.ErrorItems = append(output.ErrorItems, poolResult.Input)
 		} else {
 			// Always update the run time for stats purposes.
 			output.RunTime += poolResult.RunTime
@@ -374,7 +374,10 @@ func (this *Job[InputType, OutputType]) run(output *JobOutput[InputType, OutputT
 		}
 	}
 
-	// TODO: Check if there are work errors, set job error to signal there are work errors.
+	if len(output.ErrorItems) > 0 {
+		output.Error = fmt.Errorf("Failed to complete work for items: '%v'.", output.ErrorItems)
+		return
+	}
 
 	if this.OnComplete != nil {
 		this.OnComplete(*output)

@@ -15,6 +15,12 @@ import (
 var testLockKey string = "test_key"
 var testPoolSize int = 1
 
+var input []string = []string{
+	"A",
+	"BB",
+	"CCC",
+}
+
 var workFunc = func(input string) (int, error) {
 	return len(input), nil
 }
@@ -22,7 +28,10 @@ var workFunc = func(input string) (int, error) {
 type printableJob[InputType any, OutputType any] struct {
 	*JobOptions
 
+	// Overwrite the JSON tag to display the context.
 	Context context.Context `json:"context"`
+
+	ReturnIncompleteResults bool `json:"return-incomplete-results"`
 
 	PoolSize int `json:"pool-size"`
 
@@ -37,11 +46,12 @@ func (this *Job[InputType, OutputType]) toPrintableJob() *printableJob[InputType
 	}
 
 	return &printableJob[InputType, OutputType]{
-		JobOptions: this.JobOptions,
-		Context:    this.Context,
-		PoolSize:   this.PoolSize,
-		LockKey:    this.LockKey,
-		WorkItems:  this.WorkItems,
+		JobOptions:              this.JobOptions,
+		Context:                 this.Context,
+		ReturnIncompleteResults: this.ReturnIncompleteResults,
+		PoolSize:                this.PoolSize,
+		LockKey:                 this.LockKey,
+		WorkItems:               this.WorkItems,
 	}
 }
 
@@ -53,6 +63,8 @@ type printableJobOutput[InputType any, OutputType any] struct {
 	ResultItems []OutputType `json:"result-items"`
 
 	RemainingItems []InputType `json:"remaining-items"`
+
+	ErrorItems []InputType `json:"error-items"`
 
 	RunTime int64 `json:"run-time"`
 }
@@ -67,6 +79,7 @@ func (this *JobOutput[InputType, OutputType]) toPrintableJobOutput() *printableJ
 		WorkErrors:     this.WorkErrors,
 		ResultItems:    this.ResultItems,
 		RemainingItems: this.RemainingItems,
+		ErrorItems:     this.ErrorItems,
 		RunTime:        this.RunTime,
 	}
 }
@@ -118,7 +131,7 @@ func TestJobValidateBase(test *testing.T) {
 			"",
 		},
 
-		// Nil context provided
+		// Nil Context Provided
 		{
 			&Job[string, int]{
 				WorkFunc: workFunc,
@@ -272,7 +285,7 @@ func TestJobValidateBase(test *testing.T) {
 		if err != nil {
 			if testCase.errorString != "" {
 				if err.Error() != testCase.errorString {
-					test.Errorf("Case %d: Did not get expected error output. Expected substring '%s', actual error: '%v'.", i, testCase.errorString, err)
+					test.Errorf("Case %d: Did not get expected error output. Expected substring: '%s', actual error: '%s'.", i, testCase.errorString, err.Error())
 				}
 			} else {
 				test.Errorf("Case %d: Failed to validate '%+v': '%v'.", i, testCase.input, err)
@@ -304,19 +317,14 @@ func TestJobValidateBase(test *testing.T) {
 }
 
 func TestRunJobBase(test *testing.T) {
-	input := []string{
-		"A",
-		"BB",
-		"CCC",
-	}
-
 	finalExpected := []int{
 		1,
 		2,
 		3,
 	}
 
-	storage := resetStorage()
+	// A basic cache to test caching functionality.
+	storage := map[string]int{}
 
 	retrieveFunc := func(inputs []string) ([]int, []string, error) {
 		outputs := make([]int, 0, len(storage))
@@ -333,10 +341,6 @@ func TestRunJobBase(test *testing.T) {
 		}
 
 		return outputs, remaining, nil
-	}
-
-	errorRetrieveFunc := func(_ []string) ([]int, []string, error) {
-		return nil, nil, fmt.Errorf("Crazy retrieval error!")
 	}
 
 	removeStorageFunc := func(inputs []string) error {
@@ -383,34 +387,16 @@ func TestRunJobBase(test *testing.T) {
 		// Base Options
 		{
 			job: Job[string, int]{
-				WorkItems:  input,
-				JobOptions: &JobOptions{},
-			},
-			initialOutput: &JobOutput[string, int]{
-				ResultItems:    []int{},
-				RemainingItems: input,
-				WorkErrors:     map[int]error{},
-			},
-			finalOutput: &JobOutput[string, int]{
-				ResultItems:    finalExpected,
-				RemainingItems: []string{},
-				WorkErrors:     map[int]error{},
-			},
-		},
-		{
-			job: Job[string, int]{
 				WorkItems:  nil,
 				JobOptions: &JobOptions{},
 			},
 			initialOutput: &JobOutput[string, int]{
 				ResultItems:    []int{},
 				RemainingItems: nil,
-				WorkErrors:     map[int]error{},
 			},
 			finalOutput: &JobOutput[string, int]{
 				ResultItems:    []int{},
 				RemainingItems: nil,
-				WorkErrors:     map[int]error{},
 			},
 		},
 		{
@@ -421,12 +407,24 @@ func TestRunJobBase(test *testing.T) {
 			initialOutput: &JobOutput[string, int]{
 				ResultItems:    []int{},
 				RemainingItems: []string{},
-				WorkErrors:     map[int]error{},
 			},
 			finalOutput: &JobOutput[string, int]{
 				ResultItems:    []int{},
 				RemainingItems: []string{},
-				WorkErrors:     map[int]error{},
+			},
+		},
+		{
+			job: Job[string, int]{
+				WorkItems:  input,
+				JobOptions: &JobOptions{},
+			},
+			initialOutput: &JobOutput[string, int]{
+				ResultItems:    []int{},
+				RemainingItems: input,
+			},
+			finalOutput: &JobOutput[string, int]{
+				ResultItems:    finalExpected,
+				RemainingItems: []string{},
 			},
 		},
 
@@ -440,12 +438,10 @@ func TestRunJobBase(test *testing.T) {
 			initialOutput: &JobOutput[string, int]{
 				ResultItems:    []int{1, 2},
 				RemainingItems: []string{"CCC"},
-				WorkErrors:     map[int]error{},
 			},
 			finalOutput: &JobOutput[string, int]{
 				ResultItems:    finalExpected,
 				RemainingItems: []string{},
-				WorkErrors:     map[int]error{},
 			},
 		},
 		{
@@ -459,49 +455,66 @@ func TestRunJobBase(test *testing.T) {
 			initialOutput: &JobOutput[string, int]{
 				ResultItems:    []int{},
 				RemainingItems: input,
-				WorkErrors:     map[int]error{},
 			},
 			finalOutput: &JobOutput[string, int]{
 				ResultItems:    finalExpected,
 				RemainingItems: []string{},
-				WorkErrors:     map[int]error{},
 			},
 		},
 
 		// Passing A Storage Removal Function
 		{
 			job: Job[string, int]{
-				WorkItems:  input,
+				WorkItems: input,
+				// Storage removal is not called when not overwriting records.
 				RemoveFunc: removeStorageFunc,
-				JobOptions: &JobOptions{},
+				JobOptions: &JobOptions{
+					OverwriteRecords: false,
+				},
 			},
 			initialOutput: &JobOutput[string, int]{
 				ResultItems:    []int{},
 				RemainingItems: input,
-				WorkErrors:     map[int]error{},
 			},
 			finalOutput: &JobOutput[string, int]{
 				ResultItems:    finalExpected,
 				RemainingItems: []string{},
-				WorkErrors:     map[int]error{},
 			},
 		},
 		{
 			job: Job[string, int]{
-				WorkItems: input,
-				// Won't be called due to OverwriteRecords.
-				RemoveFunc: errorRemoveFunc,
-				JobOptions: &JobOptions{},
+				WorkItems:  input,
+				RemoveFunc: removeStorageFunc,
+				JobOptions: &JobOptions{
+					OverwriteRecords: true,
+				},
 			},
 			initialOutput: &JobOutput[string, int]{
 				ResultItems:    []int{},
 				RemainingItems: input,
-				WorkErrors:     map[int]error{},
 			},
 			finalOutput: &JobOutput[string, int]{
 				ResultItems:    finalExpected,
 				RemainingItems: []string{},
-				WorkErrors:     map[int]error{},
+			},
+			expectedStorage: map[string]int{},
+		},
+		{
+			job: Job[string, int]{
+				WorkItems: input,
+				// Storage removal is not called when not overwriting records.
+				RemoveFunc: errorRemoveFunc,
+				JobOptions: &JobOptions{
+					OverwriteRecords: false,
+				},
+			},
+			initialOutput: &JobOutput[string, int]{
+				ResultItems:    []int{},
+				RemainingItems: input,
+			},
+			finalOutput: &JobOutput[string, int]{
+				ResultItems:    finalExpected,
+				RemainingItems: []string{},
 			},
 		},
 
@@ -510,19 +523,19 @@ func TestRunJobBase(test *testing.T) {
 			job: Job[string, int]{
 				WorkItems:    input,
 				RetrieveFunc: retrieveFunc,
-				// Storage removal is not called.
+				// Storage removal is not called when not overwriting records.
 				RemoveFunc: removeStorageFunc,
-				JobOptions: &JobOptions{},
+				JobOptions: &JobOptions{
+					OverwriteRecords: false,
+				},
 			},
 			initialOutput: &JobOutput[string, int]{
 				ResultItems:    []int{1, 2},
 				RemainingItems: []string{"CCC"},
-				WorkErrors:     map[int]error{},
 			},
 			finalOutput: &JobOutput[string, int]{
 				ResultItems:    finalExpected,
 				RemainingItems: []string{},
-				WorkErrors:     map[int]error{},
 			},
 		},
 		{
@@ -537,12 +550,10 @@ func TestRunJobBase(test *testing.T) {
 			initialOutput: &JobOutput[string, int]{
 				ResultItems:    []int{},
 				RemainingItems: input,
-				WorkErrors:     map[int]error{},
 			},
 			finalOutput: &JobOutput[string, int]{
 				ResultItems:    finalExpected,
 				RemainingItems: []string{},
-				WorkErrors:     map[int]error{},
 			},
 			expectedStorage: map[string]int{},
 		},
@@ -557,12 +568,10 @@ func TestRunJobBase(test *testing.T) {
 			initialOutput: &JobOutput[string, int]{
 				ResultItems:    []int{},
 				RemainingItems: input,
-				WorkErrors:     map[int]error{},
 			},
 			finalOutput: &JobOutput[string, int]{
 				ResultItems:    finalExpected,
 				RemainingItems: []string{},
-				WorkErrors:     map[int]error{},
 			},
 			expectedStorage: map[string]int{
 				"A":   1,
@@ -581,35 +590,32 @@ func TestRunJobBase(test *testing.T) {
 			initialOutput: &JobOutput[string, int]{
 				ResultItems:    []int{},
 				RemainingItems: input,
-				WorkErrors:     map[int]error{},
 			},
 			finalOutput: &JobOutput[string, int]{
 				ResultItems:    finalExpected,
 				RemainingItems: []string{},
-				WorkErrors:     map[int]error{},
 			},
 			expectedStorage: map[string]int{
 				"A":  1,
 				"BB": 2,
 			},
 		},
+
+		// Retrieval, Removal, And Storage Functions
 		{
 			job: Job[string, int]{
 				WorkItems:    input,
 				StoreFunc:    storageFunc,
 				RetrieveFunc: retrieveFunc,
-				RemoveFunc:   removeStorageFunc,
 				JobOptions:   &JobOptions{},
 			},
 			initialOutput: &JobOutput[string, int]{
 				ResultItems:    []int{1, 2},
 				RemainingItems: []string{"CCC"},
-				WorkErrors:     map[int]error{},
 			},
 			finalOutput: &JobOutput[string, int]{
 				ResultItems:    finalExpected,
 				RemainingItems: []string{},
-				WorkErrors:     map[int]error{},
 			},
 			expectedStorage: map[string]int{
 				"A":   1,
@@ -630,12 +636,10 @@ func TestRunJobBase(test *testing.T) {
 			initialOutput: &JobOutput[string, int]{
 				ResultItems:    []int{},
 				RemainingItems: input,
-				WorkErrors:     map[int]error{},
 			},
 			finalOutput: &JobOutput[string, int]{
 				ResultItems:    finalExpected,
 				RemainingItems: []string{},
-				WorkErrors:     map[int]error{},
 			},
 			// Storage happens after record removal.
 			expectedStorage: map[string]int{
@@ -658,16 +662,71 @@ func TestRunJobBase(test *testing.T) {
 			initialOutput: &JobOutput[string, int]{
 				ResultItems:    []int{},
 				RemainingItems: input,
-				WorkErrors:     map[int]error{},
 			},
 			finalOutput: &JobOutput[string, int]{
 				ResultItems:    finalExpected,
 				RemainingItems: []string{},
-				WorkErrors:     map[int]error{},
 			},
 			expectedStorage: map[string]int{
 				"A":  1,
 				"BB": 2,
+			},
+		},
+
+		// Work Item Key Function
+		{
+			job: Job[string, int]{
+				WorkItems: input,
+				WorkItemKeyFunc: func(input string) string {
+					return input
+				},
+				JobOptions: &JobOptions{},
+			},
+			initialOutput: &JobOutput[string, int]{
+				ResultItems:    []int{},
+				RemainingItems: input,
+			},
+			finalOutput: &JobOutput[string, int]{
+				ResultItems:    finalExpected,
+				RemainingItems: []string{},
+			},
+		},
+		{
+			job: Job[string, int]{
+				WorkItems: input,
+				WorkItemKeyFunc: func(_ string) string {
+					return "serial_test_key"
+				},
+				JobOptions: &JobOptions{},
+			},
+			initialOutput: &JobOutput[string, int]{
+				ResultItems:    []int{},
+				RemainingItems: input,
+			},
+			finalOutput: &JobOutput[string, int]{
+				ResultItems:    finalExpected,
+				RemainingItems: []string{},
+			},
+		},
+
+		// On Complete Function
+		{
+			job: Job[string, int]{
+				WorkItems: input,
+				OnComplete: func(output JobOutput[string, int]) {
+					for i, result := range output.ResultItems {
+						output.ResultItems[i] = result * 2
+					}
+				},
+				JobOptions: &JobOptions{},
+			},
+			initialOutput: &JobOutput[string, int]{
+				ResultItems:    []int{},
+				RemainingItems: input,
+			},
+			finalOutput: &JobOutput[string, int]{
+				ResultItems:    []int{2, 4, 6},
+				RemainingItems: []string{},
 			},
 		},
 
@@ -676,9 +735,11 @@ func TestRunJobBase(test *testing.T) {
 		// Bad Storage Function
 		{
 			job: Job[string, int]{
-				WorkItems:    input,
-				RetrieveFunc: errorRetrieveFunc,
-				JobOptions:   &JobOptions{},
+				WorkItems: input,
+				RetrieveFunc: func(_ []string) ([]int, []string, error) {
+					return nil, nil, fmt.Errorf("Crazy retrieval error!")
+				},
+				JobOptions: &JobOptions{},
 			},
 			errorSubstring: "Crazy retrieval error!",
 		},
@@ -697,12 +758,15 @@ func TestRunJobBase(test *testing.T) {
 	}
 
 	for i, testCase := range testCases {
+		// Set defualt job config.
 		testCase.job.WorkFunc = workFunc
 		testCase.job.PoolSize = testPoolSize
 		testCase.job.LockKey = testLockKey
 
 		testCase.job.WaitForCompletion = false
 		testCase.job.ReturnIncompleteResults = true
+
+		storage = resetStorage()
 
 		output := testCase.job.Run()
 
@@ -716,23 +780,24 @@ func TestRunJobBase(test *testing.T) {
 					test.Errorf("Case %d: Did not get expected error output on initial run. Expected substring: '%s', actual error: '%v'.", i, testCase.errorSubstring, output.Error)
 				}
 			} else {
-				test.Errorf("Case %d: Failed to run initial job: '%v'.", i, output.Error)
+				test.Errorf("Case %d: Failed to run initial job: '%s'.", i, output.Error.Error())
 			}
 
-			storage = resetStorage()
 			continue
 		}
 
 		if testCase.errorSubstring != "" {
 			test.Errorf("Case %d: Did not get expected initial error: '%s'.", i, testCase.errorSubstring)
-			storage = resetStorage()
 			continue
 		}
+
+		// Set default error output for successful test cases.
+		testCase.initialOutput.WorkErrors = map[int]error{}
+		testCase.initialOutput.ErrorItems = []string{}
 
 		if !reflect.DeepEqual(output, testCase.initialOutput) {
 			test.Errorf("Case %d: Unexpected initial results. Expected: '%s', actual: '%s'.",
 				i, util.MustToJSONIndent(testCase.initialOutput.toPrintableJobOutput()), util.MustToJSONIndent(output.toPrintableJobOutput()))
-			storage = resetStorage()
 			continue
 		}
 
@@ -740,8 +805,7 @@ func TestRunJobBase(test *testing.T) {
 
 		output = testCase.job.Run()
 		if output.Error != nil {
-			test.Errorf("Case %d: Failed to run final job: '%v'.", i, output.Error)
-			storage = resetStorage()
+			test.Errorf("Case %d: Failed to run final job: '%s'.", i, output.Error.Error())
 			continue
 		}
 
@@ -749,10 +813,13 @@ func TestRunJobBase(test *testing.T) {
 		output.Done = nil
 		output.RunTime = 0
 
+		// Set default error output for successful test cases.
+		testCase.finalOutput.WorkErrors = map[int]error{}
+		testCase.finalOutput.ErrorItems = []string{}
+
 		if !reflect.DeepEqual(output, testCase.finalOutput) {
 			test.Errorf("Case %d: Unexpected final results. Expected: '%s', actual: '%s'.",
 				i, util.MustToJSONIndent(testCase.finalOutput.toPrintableJobOutput()), util.MustToJSONIndent(output.toPrintableJobOutput()))
-			storage = resetStorage()
 			continue
 		}
 
@@ -767,22 +834,13 @@ func TestRunJobBase(test *testing.T) {
 		time.Sleep(time.Duration(2) * time.Millisecond)
 
 		if !reflect.DeepEqual(storage, testCase.expectedStorage) {
-			test.Errorf("Case %d: Unexpected storage results after final run. Expected: '%v', actual: '%v'.", i, testCase.expectedStorage, storage)
-			storage = resetStorage()
+			test.Errorf("Case %d: Unexpected storage results. Expected: '%v', actual: '%v'.", i, testCase.expectedStorage, storage)
 			continue
 		}
-
-		storage = resetStorage()
 	}
 }
 
 func TestRunJobCancel(test *testing.T) {
-	input := []string{
-		"A",
-		"BB",
-		"CCC",
-	}
-
 	// Block until the initial worker has started.
 	workWaitGroup := sync.WaitGroup{}
 	workWaitGroup.Add(1)
@@ -826,12 +884,6 @@ func TestRunJobCancel(test *testing.T) {
 }
 
 func TestRunJobChannel(test *testing.T) {
-	input := []string{
-		"A",
-		"BB",
-		"CCC",
-	}
-
 	job := &Job[string, int]{
 		WorkItems:               input,
 		WorkFunc:                workFunc,
@@ -856,12 +908,86 @@ func TestRunJobChannel(test *testing.T) {
 		RemainingItems: []string{},
 		RunTime:        output.RunTime,
 		WorkErrors:     map[int]error{},
+		ErrorItems:     []string{},
 		Done:           output.Done,
 	}
 
 	if !reflect.DeepEqual(output, expected) {
 		test.Fatalf("Unexpected output. Expected: '%s', actual: '%s'.",
 			util.MustToJSONIndent(expected.toPrintableJobOutput()), util.MustToJSONIndent(output.toPrintableJobOutput()))
+	}
+}
+
+func TestBadWorkFunc(test *testing.T) {
+	job := &Job[string, int]{
+		WorkItems: input,
+		WorkFunc: func(input string) (int, error) {
+			return 0, fmt.Errorf("Sneaky work error.")
+		},
+		PoolSize:                testPoolSize,
+		LockKey:                 testLockKey,
+		ReturnIncompleteResults: true,
+		JobOptions: &JobOptions{
+			WaitForCompletion: false,
+		},
+	}
+
+	// The incomplete results should not have any errors.
+	output := job.Run()
+	if output.Error != nil {
+		test.Fatalf("Failed to run job: '%s'.", output.Error.Error())
+	}
+
+	job.WaitForCompletion = true
+
+	expectedOutput := &JobOutput[string, int]{
+		Error:          fmt.Errorf("Failed to complete work for items: '%v'.", input),
+		RemainingItems: []string{},
+		ResultItems:    []int{},
+		WorkErrors: map[int]error{
+			0: fmt.Errorf("Failed to perform individual work on item 'A': 'Sneaky work error.'."),
+			1: fmt.Errorf("Failed to perform individual work on item 'BB': 'Sneaky work error.'."),
+			2: fmt.Errorf("Failed to perform individual work on item 'CCC': 'Sneaky work error.'."),
+		},
+		ErrorItems: []string{"A", "BB", "CCC"},
+	}
+
+	output = job.Run()
+	if output.Error.Error() != expectedOutput.Error.Error() {
+		test.Fatalf("Unexpected error. Expected: '%s', actual: '%s'.",
+			expectedOutput.Error.Error(), output.Error.Error())
+	}
+
+	if len(output.WorkErrors) != len(expectedOutput.WorkErrors) {
+		test.Fatalf("Unexpected number of work errors. Expected: '%v', actual: '%v'.",
+			expectedOutput.WorkErrors, output.WorkErrors)
+	}
+
+	for i, expectedError := range expectedOutput.WorkErrors {
+		actualError, ok := output.WorkErrors[i]
+		if !ok {
+			test.Fatalf("Unable to find expected error at index '%d': '%s'.", i, expectedError.Error())
+		}
+
+		if expectedError.Error() != actualError.Error() {
+			test.Fatalf("Unexpected work error at index %d. Expected: '%s', actual: '%s'.",
+				i, expectedError.Error(), actualError.Error())
+		}
+	}
+
+	// Clear done channel and errors for comparison check.
+	output.Done = nil
+	expectedOutput.Done = nil
+
+	output.Error = nil
+	expectedOutput.Error = nil
+
+	output.WorkErrors = nil
+	expectedOutput.WorkErrors = nil
+
+	if !reflect.DeepEqual(output, expectedOutput) {
+		test.Fatalf("Unexpected result. Expected: '%s', actual: '%s'.",
+			util.MustToJSONIndent(expectedOutput.toPrintableJobOutput()), util.MustToJSONIndent(output.toPrintableJobOutput()))
 	}
 }
 
