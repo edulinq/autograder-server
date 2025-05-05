@@ -19,7 +19,7 @@ type PairwiseResponse struct {
 	Complete bool                           `json:"complete"`
 	Options  analysis.AnalysisOptions       `json:"options"`
 	Summary  *model.PairwiseAnalysisSummary `json:"summary"`
-	Results  []*model.PairwiseAnalysis      `json:"results"`
+	Results  model.PairwiseAnalysisMap      `json:"results"`
 }
 
 // Get the result of a pairwise analysis for the specified submissions.

@@ -17,7 +17,7 @@ import (
 
 var testFailIndividualAnalysis bool = false
 
-func IndividualAnalysis(options AnalysisOptions) ([]*model.IndividualAnalysis, int, error) {
+func IndividualAnalysis(options AnalysisOptions) (map[string]*model.IndividualAnalysis, int, error) {
 	// Sort the ids so the result will be consistently ordered.
 	fullSubmissionIDs := slices.Clone(options.ResolvedSubmissionIDs)
 	slices.Sort(fullSubmissionIDs)
@@ -43,7 +43,7 @@ func IndividualAnalysis(options AnalysisOptions) ([]*model.IndividualAnalysis, i
 		PoolSize:                config.ANALYSIS_INDIVIDUAL_COURSE_POOL_SIZE.Get(),
 		ReturnIncompleteResults: !options.WaitForCompletion,
 		WorkItems:               fullSubmissionIDs,
-		RetrieveFunc:            getCachedIndividualResults,
+		RetrieveFunc:            db.GetIndividualAnalysis,
 		StoreFunc:               db.StoreIndividualAnalysis,
 		RemoveFunc:              db.RemoveIndividualAnalysis,
 		WorkFunc: func(fullSubmissionID string) (*model.IndividualAnalysis, error) {
@@ -70,29 +70,6 @@ func IndividualAnalysis(options AnalysisOptions) ([]*model.IndividualAnalysis, i
 	}
 
 	return output.ResultItems, len(output.RemainingItems), nil
-}
-
-func getCachedIndividualResults(fullSubmissionIDs []string) ([]*model.IndividualAnalysis, []string, error) {
-	// Get any already done analysis results from the DB.
-	dbResults, err := db.GetIndividualAnalysis(fullSubmissionIDs)
-	if err != nil {
-		return nil, nil, fmt.Errorf("Failed to get cached individual analysis from DB: '%w'.", err)
-	}
-
-	// Split up the IDs into complete and remaining.
-	completeAnalysis := make([]*model.IndividualAnalysis, 0, len(dbResults))
-	remainingIDs := make([]string, 0, len(fullSubmissionIDs)-len(dbResults))
-
-	for _, id := range fullSubmissionIDs {
-		result, ok := dbResults[id]
-		if ok {
-			completeAnalysis = append(completeAnalysis, result)
-		} else {
-			remainingIDs = append(remainingIDs, id)
-		}
-	}
-
-	return completeAnalysis, remainingIDs, nil
 }
 
 func computeSingleIndividualAnalysis(options AnalysisOptions, fullSubmissionID string, computeDeltas bool) (*model.IndividualAnalysis, error) {

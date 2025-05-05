@@ -101,7 +101,7 @@ func RunParallelPoolMap[InputType any, OutputType any](poolSize int, workItems [
 	select {
 	case <-ctx.Done():
 		// The context was canceled, return nothing.
-		return nil, nil, nil
+		return results, workErrors, nil
 	case <-exitWaitGroupChan:
 		// Normal Completion
 	}

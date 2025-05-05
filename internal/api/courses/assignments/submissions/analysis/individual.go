@@ -16,10 +16,10 @@ type IndividualRequest struct {
 }
 
 type IndividualResponse struct {
-	Complete bool                             `json:"complete"`
-	Options  analysis.AnalysisOptions         `json:"options"`
-	Summary  *model.IndividualAnalysisSummary `json:"summary"`
-	Results  []*model.IndividualAnalysis      `json:"results"`
+	Complete bool                                 `json:"complete"`
+	Options  analysis.AnalysisOptions             `json:"options"`
+	Summary  *model.IndividualAnalysisSummary     `json:"summary"`
+	Results  map[string]*model.IndividualAnalysis `json:"results"`
 }
 
 // Get the result of a individual analysis for the specified submissions.

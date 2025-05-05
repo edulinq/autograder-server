@@ -25,8 +25,8 @@ func TestIndividualAnalysisBase(test *testing.T) {
 		"course101::hw0::course-student@test.edulinq.org::1697406265",
 	}
 
-	expected := []*model.IndividualAnalysis{
-		&model.IndividualAnalysis{
+	expected := map[string]*model.IndividualAnalysis{
+		ids[0]: &model.IndividualAnalysis{
 			AnalysisTimestamp: timestamp.Zero(),
 			Options:           assignment.AssignmentAnalysisOptions,
 
@@ -105,7 +105,7 @@ func TestIndividualAnalysisBase(test *testing.T) {
 	}
 }
 
-func testIndividual(test *testing.T, ids []string, expected []*model.IndividualAnalysis, expectedInitialCacheCount int) {
+func testIndividual(test *testing.T, ids []string, expected map[string]*model.IndividualAnalysis, expectedInitialCacheCount int) {
 	queryResult, err := db.GetIndividualAnalysis(ids)
 	if err != nil {
 		test.Fatalf("Failed to do initial query for cached anslysis: '%v'.", err)
@@ -241,22 +241,22 @@ func TestIndividualAnalysisIncludeExclude(test *testing.T) {
 			continue
 		}
 
-		if testCase.expectedCount != len(results[0].Files) {
+		if testCase.expectedCount != len(results[submissionIDs[0]].Files) {
 			test.Errorf("Case %d: Unexpected number of result files. Expected: %d, Actual: %d.",
-				i, testCase.expectedCount, len(results[0].Files))
+				i, testCase.expectedCount, len(results[submissionIDs[0]].Files))
 			continue
 		}
 
-		if (baseCount - testCase.expectedCount) != len(results[0].SkippedFiles) {
+		if (baseCount - testCase.expectedCount) != len(results[submissionIDs[0]].SkippedFiles) {
 			test.Errorf("Case %d: Unexpected number of skipped files. Expected: %d, Actual: %d.",
-				i, (baseCount - testCase.expectedCount), len(results[0].SkippedFiles))
+				i, (baseCount - testCase.expectedCount), len(results[submissionIDs[0]].SkippedFiles))
 			continue
 		}
 
 		if testCase.expectedCount == 0 {
-			if relpath != results[0].SkippedFiles[0] {
+			if relpath != results[submissionIDs[0]].SkippedFiles[0] {
 				test.Errorf("Case %d: Unexpected skipped file. Expected: '%s', Actual: '%s'.",
-					i, relpath, results[0].SkippedFiles[0])
+					i, relpath, results[submissionIDs[0]].SkippedFiles[0])
 				continue
 			}
 		}
@@ -512,7 +512,7 @@ func TestIndividualAnalysisCountBase(test *testing.T) {
 
 		// Check if the result was from the cache using the start time.
 		if len(results) > 0 {
-			resultTime := results[0].AnalysisTimestamp
+			resultTime := results[testCase.options.ResolvedSubmissionIDs[0]].AnalysisTimestamp
 			resultIsFromCache := (resultTime <= startTime)
 
 			if testCase.expectedResultIsFromCache != resultIsFromCache {
@@ -586,11 +586,12 @@ func TestIndividualAnalysisFailureBase(test *testing.T) {
 		test.Fatalf("Found %d results, when 1 was expected.", len(results))
 	}
 
-	if !results[0].Failure {
+	if !results[options.ResolvedSubmissionIDs[0]].Failure {
 		test.Fatalf("Result is not a failure, when it should be.")
 	}
 
-	if !strings.Contains(results[0].FailureMessage, expectedMessageSubstring) {
-		test.Fatalf("Failure message does not contain expected substring. Expected Substring: '%s', Actual: '%s'.", expectedMessageSubstring, results[0].FailureMessage)
+	if !strings.Contains(results[options.ResolvedSubmissionIDs[0]].FailureMessage, expectedMessageSubstring) {
+		test.Fatalf("Failure message does not contain expected substring. Expected Substring: '%s', Actual: '%s'.",
+			expectedMessageSubstring, results[options.ResolvedSubmissionIDs[0]].FailureMessage)
 	}
 }

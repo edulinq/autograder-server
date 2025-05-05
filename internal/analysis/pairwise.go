@@ -45,7 +45,7 @@ var forceDefaultEnginesForTesting bool = false
 // Otherwise, this function will return any cached results from the database
 // and the remaining analysis will be done asynchronously.
 // Returns: (complete results, number of pending analysis runs, error)
-func PairwiseAnalysis(options AnalysisOptions) ([]*model.PairwiseAnalysis, int, error) {
+func PairwiseAnalysis(options AnalysisOptions) (model.PairwiseAnalysisMap, int, error) {
 	_, err := getEngines()
 	if err != nil {
 		return nil, 0, err
@@ -53,7 +53,7 @@ func PairwiseAnalysis(options AnalysisOptions) ([]*model.PairwiseAnalysis, int, 
 
 	allKeys := createPairwiseKeys(options.ResolvedSubmissionIDs)
 	if len(allKeys) == 0 {
-		return []*model.PairwiseAnalysis{}, 0, nil
+		return model.PairwiseAnalysisMap{}, 0, nil
 	}
 
 	// Lock based on the first seen course.
@@ -76,7 +76,7 @@ func PairwiseAnalysis(options AnalysisOptions) ([]*model.PairwiseAnalysis, int, 
 		PoolSize:                config.ANALYSIS_PAIRWISE_COURSE_POOL_SIZE.Get(),
 		ReturnIncompleteResults: !options.WaitForCompletion,
 		WorkItems:               allKeys,
-		RetrieveFunc:            getCachedPairwiseResults,
+		RetrieveFunc:            db.GetPairwiseAnalysis,
 		StoreFunc:               db.StorePairwiseAnalysis,
 		RemoveFunc:              db.RemovePairwiseAnalysis,
 		WorkFunc: func(key model.PairwiseKey) (*model.PairwiseAnalysis, error) {
@@ -122,29 +122,6 @@ func createPairwiseKeys(fullSubmissionIDs []string) []model.PairwiseKey {
 	}
 
 	return allKeys
-}
-
-func getCachedPairwiseResults(allKeys []model.PairwiseKey) ([]*model.PairwiseAnalysis, []model.PairwiseKey, error) {
-	// Get any already done analysis results from the DB.
-	dbResults, err := db.GetPairwiseAnalysis(allKeys)
-	if err != nil {
-		return nil, nil, fmt.Errorf("Failed to get cached pairwise analysis from DB: '%w'.", err)
-	}
-
-	// Split up the keys into complete and remaining.
-	completeAnalysis := make([]*model.PairwiseAnalysis, 0, len(dbResults))
-	remainingKeys := make([]model.PairwiseKey, 0, len(allKeys)-len(dbResults))
-
-	for _, key := range allKeys {
-		result, ok := dbResults[key]
-		if ok {
-			completeAnalysis = append(completeAnalysis, result)
-		} else {
-			remainingKeys = append(remainingKeys, key)
-		}
-	}
-
-	return completeAnalysis, remainingKeys, nil
 }
 
 func computeSinglePairwiseAnalysis(options AnalysisOptions, pairwiseKey model.PairwiseKey, templateFileStore *TemplateFileStore) (*model.PairwiseAnalysis, error) {

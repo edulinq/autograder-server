@@ -55,16 +55,16 @@ func (this *Job[InputType, OutputType]) toPrintableJob() *printableJob[InputType
 	}
 }
 
-type printableJobOutput[InputType any, OutputType any] struct {
+type printableJobOutput[InputType comparable, OutputType any] struct {
+	Canceled bool `json:"canceled"`
+
 	Error error `json:"error"`
 
-	WorkErrors map[int]error `json:"work-errors"`
+	WorkErrors map[InputType]error `json:"work-errors"`
 
-	ResultItems []OutputType `json:"result-items"`
+	ResultItems map[InputType]OutputType `json:"result-items"`
 
 	RemainingItems []InputType `json:"remaining-items"`
-
-	ErrorItems []InputType `json:"error-items"`
 
 	RunTime int64 `json:"run-time"`
 }
@@ -75,11 +75,11 @@ func (this *JobOutput[InputType, OutputType]) toPrintableJobOutput() *printableJ
 	}
 
 	return &printableJobOutput[InputType, OutputType]{
+		Canceled:       this.Canceled,
 		Error:          this.Error,
 		WorkErrors:     this.WorkErrors,
 		ResultItems:    this.ResultItems,
 		RemainingItems: this.RemainingItems,
-		ErrorItems:     this.ErrorItems,
 		RunTime:        this.RunTime,
 	}
 }
@@ -317,30 +317,17 @@ func TestJobValidateBase(test *testing.T) {
 }
 
 func TestRunJobBase(test *testing.T) {
-	finalExpected := []int{
-		1,
-		2,
-		3,
+	finalExpected := map[string]int{
+		"A":   1,
+		"BB":  2,
+		"CCC": 3,
 	}
 
 	// A basic cache to test caching functionality.
 	storage := map[string]int{}
 
-	retrieveFunc := func(inputs []string) ([]int, []string, error) {
-		outputs := make([]int, 0, len(storage))
-		remaining := make([]string, 0, len(inputs))
-
-		for _, input := range inputs {
-			output, ok := storage[input]
-			if !ok {
-				remaining = append(remaining, input)
-				continue
-			}
-
-			outputs = append(outputs, output)
-		}
-
-		return outputs, remaining, nil
+	retrieveFunc := func(_ []string) (map[string]int, error) {
+		return storage, nil
 	}
 
 	removeStorageFunc := func(inputs []string) error {
@@ -391,11 +378,11 @@ func TestRunJobBase(test *testing.T) {
 				JobOptions: &JobOptions{},
 			},
 			initialOutput: &JobOutput[string, int]{
-				ResultItems:    []int{},
+				ResultItems:    map[string]int{},
 				RemainingItems: nil,
 			},
 			finalOutput: &JobOutput[string, int]{
-				ResultItems:    []int{},
+				ResultItems:    map[string]int{},
 				RemainingItems: nil,
 			},
 		},
@@ -405,11 +392,11 @@ func TestRunJobBase(test *testing.T) {
 				JobOptions: &JobOptions{},
 			},
 			initialOutput: &JobOutput[string, int]{
-				ResultItems:    []int{},
+				ResultItems:    map[string]int{},
 				RemainingItems: []string{},
 			},
 			finalOutput: &JobOutput[string, int]{
-				ResultItems:    []int{},
+				ResultItems:    map[string]int{},
 				RemainingItems: []string{},
 			},
 		},
@@ -419,7 +406,7 @@ func TestRunJobBase(test *testing.T) {
 				JobOptions: &JobOptions{},
 			},
 			initialOutput: &JobOutput[string, int]{
-				ResultItems:    []int{},
+				ResultItems:    map[string]int{},
 				RemainingItems: input,
 			},
 			finalOutput: &JobOutput[string, int]{
@@ -436,7 +423,10 @@ func TestRunJobBase(test *testing.T) {
 				JobOptions:   &JobOptions{},
 			},
 			initialOutput: &JobOutput[string, int]{
-				ResultItems:    []int{1, 2},
+				ResultItems: map[string]int{
+					"A":  1,
+					"BB": 2,
+				},
 				RemainingItems: []string{"CCC"},
 			},
 			finalOutput: &JobOutput[string, int]{
@@ -453,7 +443,7 @@ func TestRunJobBase(test *testing.T) {
 				},
 			},
 			initialOutput: &JobOutput[string, int]{
-				ResultItems:    []int{},
+				ResultItems:    map[string]int{},
 				RemainingItems: input,
 			},
 			finalOutput: &JobOutput[string, int]{
@@ -473,7 +463,7 @@ func TestRunJobBase(test *testing.T) {
 				},
 			},
 			initialOutput: &JobOutput[string, int]{
-				ResultItems:    []int{},
+				ResultItems:    map[string]int{},
 				RemainingItems: input,
 			},
 			finalOutput: &JobOutput[string, int]{
@@ -490,7 +480,7 @@ func TestRunJobBase(test *testing.T) {
 				},
 			},
 			initialOutput: &JobOutput[string, int]{
-				ResultItems:    []int{},
+				ResultItems:    map[string]int{},
 				RemainingItems: input,
 			},
 			finalOutput: &JobOutput[string, int]{
@@ -509,7 +499,7 @@ func TestRunJobBase(test *testing.T) {
 				},
 			},
 			initialOutput: &JobOutput[string, int]{
-				ResultItems:    []int{},
+				ResultItems:    map[string]int{},
 				RemainingItems: input,
 			},
 			finalOutput: &JobOutput[string, int]{
@@ -530,7 +520,10 @@ func TestRunJobBase(test *testing.T) {
 				},
 			},
 			initialOutput: &JobOutput[string, int]{
-				ResultItems:    []int{1, 2},
+				ResultItems: map[string]int{
+					"A":  1,
+					"BB": 2,
+				},
 				RemainingItems: []string{"CCC"},
 			},
 			finalOutput: &JobOutput[string, int]{
@@ -548,7 +541,7 @@ func TestRunJobBase(test *testing.T) {
 				},
 			},
 			initialOutput: &JobOutput[string, int]{
-				ResultItems:    []int{},
+				ResultItems:    map[string]int{},
 				RemainingItems: input,
 			},
 			finalOutput: &JobOutput[string, int]{
@@ -566,7 +559,7 @@ func TestRunJobBase(test *testing.T) {
 				JobOptions: &JobOptions{},
 			},
 			initialOutput: &JobOutput[string, int]{
-				ResultItems:    []int{},
+				ResultItems:    map[string]int{},
 				RemainingItems: input,
 			},
 			finalOutput: &JobOutput[string, int]{
@@ -588,7 +581,7 @@ func TestRunJobBase(test *testing.T) {
 				},
 			},
 			initialOutput: &JobOutput[string, int]{
-				ResultItems:    []int{},
+				ResultItems:    map[string]int{},
 				RemainingItems: input,
 			},
 			finalOutput: &JobOutput[string, int]{
@@ -610,7 +603,10 @@ func TestRunJobBase(test *testing.T) {
 				JobOptions:   &JobOptions{},
 			},
 			initialOutput: &JobOutput[string, int]{
-				ResultItems:    []int{1, 2},
+				ResultItems: map[string]int{
+					"A":  1,
+					"BB": 2,
+				},
 				RemainingItems: []string{"CCC"},
 			},
 			finalOutput: &JobOutput[string, int]{
@@ -634,7 +630,7 @@ func TestRunJobBase(test *testing.T) {
 				},
 			},
 			initialOutput: &JobOutput[string, int]{
-				ResultItems:    []int{},
+				ResultItems:    map[string]int{},
 				RemainingItems: input,
 			},
 			finalOutput: &JobOutput[string, int]{
@@ -660,7 +656,7 @@ func TestRunJobBase(test *testing.T) {
 				},
 			},
 			initialOutput: &JobOutput[string, int]{
-				ResultItems:    []int{},
+				ResultItems:    map[string]int{},
 				RemainingItems: input,
 			},
 			finalOutput: &JobOutput[string, int]{
@@ -683,7 +679,7 @@ func TestRunJobBase(test *testing.T) {
 				JobOptions: &JobOptions{},
 			},
 			initialOutput: &JobOutput[string, int]{
-				ResultItems:    []int{},
+				ResultItems:    map[string]int{},
 				RemainingItems: input,
 			},
 			finalOutput: &JobOutput[string, int]{
@@ -700,7 +696,7 @@ func TestRunJobBase(test *testing.T) {
 				JobOptions: &JobOptions{},
 			},
 			initialOutput: &JobOutput[string, int]{
-				ResultItems:    []int{},
+				ResultItems:    map[string]int{},
 				RemainingItems: input,
 			},
 			finalOutput: &JobOutput[string, int]{
@@ -721,11 +717,15 @@ func TestRunJobBase(test *testing.T) {
 				JobOptions: &JobOptions{},
 			},
 			initialOutput: &JobOutput[string, int]{
-				ResultItems:    []int{},
+				ResultItems:    map[string]int{},
 				RemainingItems: input,
 			},
 			finalOutput: &JobOutput[string, int]{
-				ResultItems:    []int{2, 4, 6},
+				ResultItems: map[string]int{
+					"A":   2,
+					"BB":  4,
+					"CCC": 6,
+				},
 				RemainingItems: []string{},
 			},
 		},
@@ -736,8 +736,8 @@ func TestRunJobBase(test *testing.T) {
 		{
 			job: Job[string, int]{
 				WorkItems: input,
-				RetrieveFunc: func(_ []string) ([]int, []string, error) {
-					return nil, nil, fmt.Errorf("Crazy retrieval error!")
+				RetrieveFunc: func(_ []string) (map[string]int, error) {
+					return nil, fmt.Errorf("Crazy retrieval error!")
 				},
 				JobOptions: &JobOptions{},
 			},
@@ -792,8 +792,7 @@ func TestRunJobBase(test *testing.T) {
 		}
 
 		// Set default error output for successful test cases.
-		testCase.initialOutput.WorkErrors = map[int]error{}
-		testCase.initialOutput.ErrorItems = []string{}
+		testCase.initialOutput.WorkErrors = map[string]error{}
 
 		if !reflect.DeepEqual(output, testCase.initialOutput) {
 			test.Errorf("Case %d: Unexpected initial results. Expected: '%s', actual: '%s'.",
@@ -814,8 +813,7 @@ func TestRunJobBase(test *testing.T) {
 		output.RunTime = 0
 
 		// Set default error output for successful test cases.
-		testCase.finalOutput.WorkErrors = map[int]error{}
-		testCase.finalOutput.ErrorItems = []string{}
+		testCase.finalOutput.WorkErrors = map[string]error{}
 
 		if !reflect.DeepEqual(output, testCase.finalOutput) {
 			test.Errorf("Case %d: Unexpected final results. Expected: '%s', actual: '%s'.",
@@ -846,8 +844,13 @@ func TestRunJobCancel(test *testing.T) {
 	workWaitGroup.Add(1)
 
 	sleepWorkFunc := func(input string) (int, error) {
-		// Signal on the initial piece of work that we can make sure the workers have started up before we cancel.
+		// Allow the first input to return a result to test cleanup.
 		if input == "A" {
+			return len(input), nil
+		}
+
+		// Signal on the second piece of work so that we can make sure the workers have started up before we cancel.
+		if input == "BB" {
 			workWaitGroup.Done()
 		}
 
@@ -870,16 +873,34 @@ func TestRunJobCancel(test *testing.T) {
 		},
 	}
 
-	// Cancel the context as soon as the initial worker signals it.
+	// Cancel the context as soon as the worker signals it.
 	go func() {
 		workWaitGroup.Wait()
 		cancelFunc()
 	}()
 
+	expectedOutput := &JobOutput[string, int]{
+		Canceled:       true,
+		Error:          fmt.Errorf("Job was canceled: 'context canceled'."),
+		WorkErrors:     map[string]error{},
+		ResultItems:    map[string]int{"A": 1},
+		RemainingItems: []string{"BB", "CCC"},
+	}
+
 	output := job.Run()
-	if output != nil {
+	if output.Error.Error() != expectedOutput.Error.Error() {
+		test.Fatalf("Unexpected error. Expected: '%s', actual: '%s'.",
+			expectedOutput.Error.Error(), output.Error.Error())
+	}
+
+	// Clear done channel and errors for comparison check.
+	output.Done = nil
+	output.Error = nil
+	expectedOutput.Error = nil
+
+	if !reflect.DeepEqual(output, expectedOutput) {
 		test.Fatalf("Unexpected result. Expected: '%s', actual: '%s'.",
-			util.MustToJSONIndent(nil), util.MustToJSONIndent(output.toPrintableJobOutput()))
+			util.MustToJSONIndent(expectedOutput.toPrintableJobOutput()), util.MustToJSONIndent(output.toPrintableJobOutput()))
 	}
 }
 
@@ -904,11 +925,14 @@ func TestRunJobChannel(test *testing.T) {
 	<-output.Done
 
 	expected := &JobOutput[string, int]{
-		ResultItems:    []int{1, 2, 3},
+		ResultItems: map[string]int{
+			"A":   1,
+			"BB":  2,
+			"CCC": 3,
+		},
 		RemainingItems: []string{},
 		RunTime:        output.RunTime,
-		WorkErrors:     map[int]error{},
-		ErrorItems:     []string{},
+		WorkErrors:     map[string]error{},
 		Done:           output.Done,
 	}
 
@@ -941,15 +965,14 @@ func TestBadWorkFunc(test *testing.T) {
 	job.WaitForCompletion = true
 
 	expectedOutput := &JobOutput[string, int]{
-		Error:          fmt.Errorf("Failed to complete work for items: '%v'.", input),
+		Error:          fmt.Errorf("Failed to complete work for '%d' items.", len(input)),
 		RemainingItems: []string{},
-		ResultItems:    []int{},
-		WorkErrors: map[int]error{
-			0: fmt.Errorf("Failed to perform individual work on item 'A': 'Sneaky work error.'."),
-			1: fmt.Errorf("Failed to perform individual work on item 'BB': 'Sneaky work error.'."),
-			2: fmt.Errorf("Failed to perform individual work on item 'CCC': 'Sneaky work error.'."),
+		ResultItems:    map[string]int{},
+		WorkErrors: map[string]error{
+			"A":   fmt.Errorf("Failed to perform individual work on item 'A': 'Sneaky work error.'."),
+			"BB":  fmt.Errorf("Failed to perform individual work on item 'BB': 'Sneaky work error.'."),
+			"CCC": fmt.Errorf("Failed to perform individual work on item 'CCC': 'Sneaky work error.'."),
 		},
-		ErrorItems: []string{"A", "BB", "CCC"},
 	}
 
 	output = job.Run()
@@ -963,15 +986,15 @@ func TestBadWorkFunc(test *testing.T) {
 			expectedOutput.WorkErrors, output.WorkErrors)
 	}
 
-	for i, expectedError := range expectedOutput.WorkErrors {
-		actualError, ok := output.WorkErrors[i]
+	for item, expectedError := range expectedOutput.WorkErrors {
+		actualError, ok := output.WorkErrors[item]
 		if !ok {
-			test.Fatalf("Unable to find expected error at index '%d': '%s'.", i, expectedError.Error())
+			test.Fatalf("Unable to find expected error for item '%v': '%s'.", item, expectedError.Error())
 		}
 
 		if expectedError.Error() != actualError.Error() {
-			test.Fatalf("Unexpected work error at index %d. Expected: '%s', actual: '%s'.",
-				i, expectedError.Error(), actualError.Error())
+			test.Fatalf("Unexpected work error for item '%v'. Expected: '%s', actual: '%s'.",
+				item, expectedError.Error(), actualError.Error())
 		}
 	}
 

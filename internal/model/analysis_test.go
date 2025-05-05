@@ -290,8 +290,8 @@ func TestAssignmentAnalysisOptionsMatchRelpathBase(test *testing.T) {
 }
 
 func TestNewIndividualAnalysisSummaryBase(test *testing.T) {
-	input := []*IndividualAnalysis{
-		&IndividualAnalysis{
+	input := map[string]*IndividualAnalysis{
+		"A": &IndividualAnalysis{
 			Score:               10,
 			LinesOfCode:         10,
 			SubmissionTimeDelta: 0,
@@ -306,7 +306,7 @@ func TestNewIndividualAnalysisSummaryBase(test *testing.T) {
 				},
 			},
 		},
-		&IndividualAnalysis{
+		"B": &IndividualAnalysis{
 			Score:               20,
 			LinesOfCode:         40,
 			SubmissionTimeDelta: 12,
@@ -325,7 +325,7 @@ func TestNewIndividualAnalysisSummaryBase(test *testing.T) {
 				},
 			},
 		},
-		&IndividualAnalysis{
+		"C": &IndividualAnalysis{
 			Score:               30,
 			LinesOfCode:         20,
 			SubmissionTimeDelta: 32,
@@ -340,7 +340,7 @@ func TestNewIndividualAnalysisSummaryBase(test *testing.T) {
 				},
 			},
 		},
-		&IndividualAnalysis{
+		"FAILURE": &IndividualAnalysis{
 			Failure: true,
 		},
 	}
@@ -499,11 +499,11 @@ func TestNewPairwiseAnalysisSummaryBase(test *testing.T) {
 		},
 	}
 
-	input := []*PairwiseAnalysis{
-		NewPairwiseAnalysis(NewPairwiseKey("A", "B"), nil, sims1, nil, nil),
-		NewPairwiseAnalysis(NewPairwiseKey("C", "D"), nil, sims2, nil, nil),
-		NewPairwiseAnalysis(NewPairwiseKey("E", "F"), nil, sims3, nil, nil),
-		&PairwiseAnalysis{
+	input := PairwiseAnalysisMap{
+		NewPairwiseKey("A", "B"): NewPairwiseAnalysis(NewPairwiseKey("A", "B"), nil, sims1, nil, nil),
+		NewPairwiseKey("C", "D"): NewPairwiseAnalysis(NewPairwiseKey("C", "D"), nil, sims2, nil, nil),
+		NewPairwiseKey("E", "F"): NewPairwiseAnalysis(NewPairwiseKey("E", "F"), nil, sims3, nil, nil),
+		NewPairwiseKey("FOO", "BAR"): &PairwiseAnalysis{
 			Failure: true,
 		},
 	}
