@@ -2,7 +2,6 @@ package analysis
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"path/filepath"
 	"slices"
@@ -65,12 +64,7 @@ func IndividualAnalysis(options AnalysisOptions) (map[string]*model.IndividualAn
 
 	output := job.Run()
 	if output.Error != nil {
-		errs := output.Error
-		for _, err := range output.WorkErrors {
-			errs = errors.Join(errs, err)
-		}
-
-		return nil, 0, fmt.Errorf("Failed to run individual analysis job: '%v'.", errs)
+		return nil, 0, fmt.Errorf("Failed to run individual analysis job with '%d' work errors: '%v'.", len(output.WorkErrors), output.Error)
 	}
 
 	return output.ResultItems, len(output.RemainingItems), nil

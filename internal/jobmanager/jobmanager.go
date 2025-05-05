@@ -290,7 +290,7 @@ func (this *Job[InputType, OutputType]) run(output *JobOutput[InputType, OutputT
 		return
 	}
 
-	poolResults, err := this.runParallelPoolMap(output)
+	poolResults, _, err := this.runParallelPoolMap(output)
 	if err != nil {
 		output.Error = fmt.Errorf("Failed to run job in a parallel pool: '%w'.", err)
 		return
@@ -329,8 +329,8 @@ func (this *Job[InputType, OutputType]) run(output *JobOutput[InputType, OutputT
 	}
 }
 
-func (this *Job[InputType, OutputType]) runParallelPoolMap(output *JobOutput[InputType, OutputType]) ([]poolResult[InputType, OutputType], error) {
-	poolResults, _, err := util.RunParallelPoolMap(this.PoolSize, output.RemainingItems, this.Context, func(workItem InputType) (poolResult[InputType, OutputType], error) {
+func (this *Job[InputType, OutputType]) runParallelPoolMap(output *JobOutput[InputType, OutputType]) ([]poolResult[InputType, OutputType], map[int]error, error) {
+	return util.RunParallelPoolMap(this.PoolSize, output.RemainingItems, this.Context, func(workItem InputType) (poolResult[InputType, OutputType], error) {
 		workItemKey := ""
 		if this.WorkItemKeyFunc != nil {
 			workItemKey = this.WorkItemKeyFunc(workItem)
@@ -396,8 +396,6 @@ func (this *Job[InputType, OutputType]) runParallelPoolMap(output *JobOutput[Inp
 
 		return poolResult[InputType, OutputType]{workItem, result, runTime, nil}, nil
 	})
-
-	return poolResults, err
 }
 
 func getRemainingItems[InputType comparable, OutputType any](workItems []InputType, results map[InputType]OutputType) []InputType {
