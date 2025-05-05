@@ -1685,6 +1685,14 @@
                 {
                     "name": "fields",
                     "type": "[]core.FieldDescription"
+                },
+                {
+                    "name": "key-type",
+                    "type": "string"
+                },
+                {
+                    "name": "value-type",
+                    "type": "string"
                 }
             ]
         },
@@ -2535,7 +2543,9 @@
             ]
         },
         "model.PairwiseAnalysisMap": {
-            "category": "map"
+            "category": "map",
+            "key-type": "model.PairwiseKey",
+            "value-type": "*model.PairwiseAnalysis"
         },
         "model.PairwiseAnalysisSummary": {
             "category": "struct",

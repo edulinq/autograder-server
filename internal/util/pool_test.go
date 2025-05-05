@@ -100,8 +100,16 @@ func TestRunParallelPoolMapCancel(test *testing.T) {
 		workWaitGroup.Add(1)
 
 		workFunc := func(input string) (int, error) {
-			// Signal on the first piece of work that we can make sure the workers have started up before we cancel.
+			// Allow the first input to return a result to test partial results.
 			if input == "A" {
+				return len(input), nil
+			}
+
+			// Sleep to allow the first result to be captured.
+			time.Sleep(time.Duration(2) * time.Millisecond)
+
+			// Signal on the second piece of work so that we can make sure the workers have started up before we cancel.
+			if input == "BB" {
 				workWaitGroup.Done()
 			}
 
@@ -125,13 +133,19 @@ func TestRunParallelPoolMapCancel(test *testing.T) {
 			continue
 		}
 
-		if actual != nil {
-			test.Errorf("Case %d: Got a result when it should have been nil.", i)
+		expected := []int{1}
+
+		if !reflect.DeepEqual(actual, expected) {
+			test.Errorf("Case %d: Unexpected result. Expected: '%v', actual: '%v'.",
+				i, MustToJSONIndent(expected), MustToJSONIndent(actual))
 			continue
 		}
 
-		if workErrors != nil {
-			test.Errorf("Case %d: Got errors when they should have been nil.", i)
+		expectedWorkErrors := map[int]error{}
+
+		if !reflect.DeepEqual(workErrors, expectedWorkErrors) {
+			test.Errorf("Case %d: Unexpected work errors. Expected: '%v', actual: '%v'.",
+				i, MustToJSONIndent(expectedWorkErrors), MustToJSONIndent(workErrors))
 			continue
 		}
 	}

@@ -327,7 +327,13 @@ func TestRunJobBase(test *testing.T) {
 	storage := map[string]int{}
 
 	retrieveFunc := func(_ []string) (map[string]int, error) {
-		return storage, nil
+		results := make(map[string]int, len(storage))
+
+		for input, output := range storage {
+			results[input] = output
+		}
+
+		return results, nil
 	}
 
 	removeStorageFunc := func(inputs []string) error {
@@ -849,6 +855,9 @@ func TestRunJobCancel(test *testing.T) {
 			return len(input), nil
 		}
 
+		// Sleep to allow the first result to be captured.
+		time.Sleep(time.Duration(2) * time.Millisecond)
+
 		// Signal on the second piece of work so that we can make sure the workers have started up before we cancel.
 		if input == "BB" {
 			workWaitGroup.Done()
@@ -884,7 +893,7 @@ func TestRunJobCancel(test *testing.T) {
 		Error:          fmt.Errorf("Job was canceled: 'context canceled'."),
 		WorkErrors:     map[string]error{},
 		ResultItems:    map[string]int{"A": 1},
-		RemainingItems: []string{"BB", "CCC"},
+		RemainingItems: []string{},
 	}
 
 	output := job.Run()

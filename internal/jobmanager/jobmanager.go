@@ -1,9 +1,6 @@
 package jobmanager
 
 import (
-	// TEST
-	"os"
-
 	"context"
 	"fmt"
 
@@ -346,8 +343,6 @@ func (this *Job[InputType, OutputType]) runParallelPoolMap(output *JobOutput[Inp
 		}
 
 		if this.Context.Err() != nil {
-			// TODO: select on done channel happens before returning canceled pool item?
-			fmt.Fprintf(os.Stderr, "returning a pool item from ctx cancellation: '%v'.\n", workItem)
 			return poolResult[InputType, OutputType]{
 				Input: workItem,
 			}, nil
@@ -381,7 +376,6 @@ func (this *Job[InputType, OutputType]) runParallelPoolMap(output *JobOutput[Inp
 		}
 
 		if this.Context.Err() != nil {
-			fmt.Fprintf(os.Stderr, "returning a pool item from ctx cancellation: '%v'.", workItem)
 			return poolResult[InputType, OutputType]{
 				Input: workItem,
 			}, nil
