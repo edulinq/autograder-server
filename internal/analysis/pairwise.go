@@ -96,10 +96,13 @@ func PairwiseAnalysis(options AnalysisOptions) (model.PairwiseAnalysisMap, int, 
 	}
 
 	output := job.Run()
+	if output.Error != nil {
+		errs := output.Error
+		for _, err := range output.WorkErrors {
+			errs = errors.Join(errs, err)
+		}
 
-	err = output.Error
-	if err != nil {
-		return nil, 0, fmt.Errorf("Failed to run pairwise analysis job: '%v'.", err)
+		return nil, 0, fmt.Errorf("Failed to run pairwise analysis job: '%v'.", errs)
 	}
 
 	return output.ResultItems, len(output.RemainingItems), nil

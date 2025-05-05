@@ -775,11 +775,6 @@ func TestRunJobBase(test *testing.T) {
 		storage = resetStorage()
 
 		output := testCase.job.Run()
-
-		// Clear channel and run time for comparison.
-		output.Done = nil
-		output.RunTime = 0
-
 		if output.Error != nil {
 			if testCase.errorSubstring != "" {
 				if !strings.Contains(output.Error.Error(), testCase.errorSubstring) {
@@ -796,6 +791,10 @@ func TestRunJobBase(test *testing.T) {
 			test.Errorf("Case %d: Did not get expected initial error: '%s'.", i, testCase.errorSubstring)
 			continue
 		}
+
+		// Clear channel and run time for comparison.
+		output.Done = nil
+		output.RunTime = 0
 
 		// Set default error output for successful test cases.
 		testCase.initialOutput.WorkErrors = map[string]error{}
