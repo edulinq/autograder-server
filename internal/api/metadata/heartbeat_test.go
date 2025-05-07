@@ -18,10 +18,13 @@ func TestHeartbeat(test *testing.T) {
 
 	expected, err := util.GetFullCachedVersion()
 	if err != nil {
-		test.Fatalf("Failed to get expected server version: %v", err)
-		return
+		test.Fatalf("Failed to get expected server version: '%v'.", err)
 	}
+
 	if heartbeatResponse.ServerVersion != expected {
-		test.Fatalf("Server version mismatch. Expected %s, got %s", expected, heartbeatResponse.ServerVersion)
+		test.Fatalf("Server version mismatch. Expected '%s', Actual '%s'.",
+			util.MustToJSONIndent(expected),
+			util.MustToJSONIndent(heartbeatResponse.ServerVersion),
+		)
 	}
 }

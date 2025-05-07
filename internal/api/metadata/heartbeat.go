@@ -13,10 +13,11 @@ type HeartbeatResponse struct {
 	ServerVersion util.Version `json:"server-version"`
 }
 
+// Get server heartbeat.
 func HandleHeartbeat(request *HeartbeatRequest) (*HeartbeatResponse, *core.APIError) {
 	version, err := util.GetFullCachedVersion()
 	if err != nil {
-		return nil, core.NewInternalError("-502", request, "Unable to get API heartbeat.").Err(err)
+		return nil, core.NewInternalError("-502", request, "Unable to get server version.").Err(err)
 	}
 
 	response := HeartbeatResponse{
