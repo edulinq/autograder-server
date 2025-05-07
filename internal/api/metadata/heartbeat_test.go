@@ -22,7 +22,7 @@ func TestHeartbeat(test *testing.T) {
 	}
 
 	if heartbeatResponse.ServerVersion != expected {
-		test.Fatalf("Server version mismatch. Expected '%s', Actual '%s'.",
+		test.Fatalf("Server version mismatch. Expected: '%s', Actual: '%s'.",
 			util.MustToJSONIndent(expected),
 			util.MustToJSONIndent(heartbeatResponse.ServerVersion),
 		)
