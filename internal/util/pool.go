@@ -10,6 +10,7 @@ import (
 // Always call Done() before accessing any results to avoid concurrency issues.
 type PoolResult[OutputType any] struct {
 	// The results of the parallel pool.
+	// TODO: turn into a map
 	Results []OutputType
 
 	// A map of work errors using the item's index for item-level errors.
@@ -19,10 +20,12 @@ type PoolResult[OutputType any] struct {
 	// Use CompletedItems to determine which results were processed.
 	Canceled bool
 
+	// TODO: remove
 	// A list of indices that indicate which results are completed.
 	CompletedItems []bool
 
 	// An internal done function to signal the result can be accessed.
+	// TODO: keep the channel instead
 	doneFunc func()
 }
 
@@ -32,12 +35,14 @@ type resultItem[OutputType any] struct {
 	Error error
 }
 
+// TODO: IsDone? Also,
 func (this PoolResult[OutputType]) Done() {
 	if this.doneFunc != nil {
 		this.doneFunc()
 	}
 }
 
+// TODO: remove
 func (this PoolResult[OutputType]) GetCompletedResults() []OutputType {
 	this.Done()
 
@@ -56,6 +61,7 @@ func (this PoolResult[OutputType]) GetCompletedResults() []OutputType {
 	return completedResults
 }
 
+// TODO: not necessary, siblings inside
 func (this PoolResult[OutputType]) addResultItem(result resultItem[OutputType]) {
 	this.Results[result.Index] = result.Item
 	if result.Error != nil {
@@ -76,6 +82,7 @@ func RunParallelPoolMap[InputType any, OutputType any](poolSize int, workItems [
 		return PoolResult[OutputType]{}, fmt.Errorf("Pool size must be positive, got %d.", poolSize)
 	}
 
+	// TODO: move with sibling struct.
 	type WorkItem struct {
 		Index int
 		Item  InputType
@@ -121,8 +128,10 @@ func RunParallelPoolMap[InputType any, OutputType any](poolSize int, workItems [
 		}()
 
 		for i := 0; i < len(workItems); i++ {
+			// TODO: result collection.
 			select {
 			case <-ctx.Done():
+				// TODO: remove
 				if !completeInProgressWork {
 					return
 				}
@@ -181,6 +190,7 @@ func RunParallelPoolMap[InputType any, OutputType any](poolSize int, workItems [
 	select {
 	case <-ctx.Done():
 		// The context was canceled, return partial results.
+		// TODO: don't return a copy, if they don't want the results, they won't wait on Done().
 		if !completeInProgressWork {
 			// Return a stable copy with the current progress.
 			return PoolResult[OutputType]{

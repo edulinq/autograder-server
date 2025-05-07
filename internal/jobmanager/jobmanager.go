@@ -52,6 +52,7 @@ type Job[InputType comparable, OutputType any] struct {
 	// Allow in progress workers to finish upon cancellation.
 	// After a cancellation, new work will not be started.
 	// A soft cancel should be used when cleaning up partial work is essential.
+	// TODO: Create an issue to add these features (soft and OnCancellation).
 	SoftCancel bool
 
 	// The number of workers in the parallel pool.
@@ -90,6 +91,7 @@ type Job[InputType comparable, OutputType any] struct {
 	// An optional function to clean up partial results after a cancellation.
 	// TODO: Could we just remove partial artifacts using remove func if soft cancel == true?
 	// TODO: flexibility vs ease of use
+	// Only used if SoftCancel is true.
 	OnCancellation func(JobOutput[InputType, OutputType])
 }
 
