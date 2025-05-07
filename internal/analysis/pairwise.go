@@ -104,7 +104,7 @@ func PairwiseAnalysis(options AnalysisOptions) (model.PairwiseAnalysisMap, int, 
 }
 
 func createPairwiseKeys(fullSubmissionIDs []string) []model.PairwiseKey {
-	// Sort the ids so the result will be consistently ordered.
+	// Sort the ids so the locking key will be consistent.
 	fullSubmissionIDs = slices.Clone(fullSubmissionIDs)
 	slices.Sort(fullSubmissionIDs)
 

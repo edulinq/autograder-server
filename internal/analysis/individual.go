@@ -18,7 +18,7 @@ import (
 var testFailIndividualAnalysis bool = false
 
 func IndividualAnalysis(options AnalysisOptions) (map[string]*model.IndividualAnalysis, int, error) {
-	// Sort the ids so the result will be consistently ordered.
+	// Sort the ids so the locking key will be consistent.
 	fullSubmissionIDs := slices.Clone(options.ResolvedSubmissionIDs)
 	slices.Sort(fullSubmissionIDs)
 
