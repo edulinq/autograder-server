@@ -1,6 +1,9 @@
 package util
 
 import (
+	// TEST
+	"os"
+
 	"context"
 	"fmt"
 	"sync"
@@ -26,10 +29,43 @@ type PoolResult[OutputType any] struct {
 	doneFunc func()
 }
 
+type resultItem[OutputType any] struct {
+	Index int
+	Item  OutputType
+	Error error
+}
+
 func (this PoolResult[OutputType]) Done() {
 	if this.doneFunc != nil {
 		this.doneFunc()
 	}
+}
+
+func (this PoolResult[OutputType]) GetCompletedResults() []OutputType {
+	this.Done()
+
+	if !this.Canceled {
+		return this.Results
+	}
+
+	completedResults := make([]OutputType, 0, len(this.Results))
+
+	for i := 0; i < len(this.Results) && i < len(this.CompletedItems); i++ {
+		if this.CompletedItems[i] {
+			completedResults = append(completedResults, this.Results[i])
+		}
+	}
+
+	return completedResults
+}
+
+func (this PoolResult[OutputType]) addResultItem(result resultItem[OutputType]) {
+	this.Results[result.Index] = result.Item
+	if result.Error != nil {
+		this.WorkErrors[result.Index] = result.Error
+	}
+
+	this.CompletedItems[result.Index] = true
 }
 
 // Do a map function (one result for one input) with a parallel pool of workers.
@@ -48,12 +84,6 @@ func RunParallelPoolMap[InputType any, OutputType any](poolSize int, workItems [
 		Item  InputType
 	}
 
-	type ResultItem struct {
-		Index int
-		Item  OutputType
-		Error error
-	}
-
 	output := PoolResult[OutputType]{
 		Results:        make([]OutputType, len(workItems)),
 		WorkErrors:     make(map[int]error),
@@ -61,13 +91,16 @@ func RunParallelPoolMap[InputType any, OutputType any](poolSize int, workItems [
 		doneFunc:       func() {},
 	}
 
-	resultQueue := make(chan ResultItem, poolSize)
+	resultQueue := make(chan resultItem[OutputType], poolSize)
 	workQueue := make(chan WorkItem, poolSize)
-	doneChan := make(chan bool, poolSize)
+	doneCollectingChan := make(chan bool, poolSize)
 	exitWaitGroup := sync.WaitGroup{}
 
 	// Load work.
 	go func() {
+		fmt.Fprintf(os.Stderr, "work loader: starting.\n")
+		defer fmt.Fprintf(os.Stderr, "work loader: ending.\n")
+
 		for i, item := range workItems {
 			// Either send a work item, or cancel.
 			select {
@@ -82,7 +115,19 @@ func RunParallelPoolMap[InputType any, OutputType any](poolSize int, workItems [
 	exitWaitGroupChan := make(chan any)
 
 	// Collect results.
+	doneChan := make(chan any)
 	go func() {
+		fmt.Fprintf(os.Stderr, "result collecter: starting.\n")
+		defer fmt.Fprintf(os.Stderr, "result collecter: ending.\n")
+		defer func() {
+			// Got all the results (or canceled), signal completion to all the workers.
+			for i := 0; i < (poolSize); i++ {
+				doneCollectingChan <- true
+			}
+
+			close(doneChan)
+		}()
+
 		for i := 0; i < len(workItems); i++ {
 			select {
 			case <-ctx.Done():
@@ -94,30 +139,22 @@ func RunParallelPoolMap[InputType any, OutputType any](poolSize int, workItems [
 				for {
 					select {
 					case resultItem := <-resultQueue:
-						output.Results[resultItem.Index] = resultItem.Item
-						if resultItem.Error != nil {
-							output.WorkErrors[resultItem.Index] = resultItem.Error
-						}
-
-						output.CompletedItems[resultItem.Index] = true
+						output.addResultItem(resultItem)
 					case <-exitWaitGroupChan:
-						// All workers completed in progress work.
-						return
+						// All workers completed in progress work, drain remaining results.
+						for {
+							select {
+							case resultItem := <-resultQueue:
+								output.addResultItem(resultItem)
+							default:
+								return
+							}
+						}
 					}
 				}
 			case resultItem := <-resultQueue:
-				output.Results[resultItem.Index] = resultItem.Item
-				if resultItem.Error != nil {
-					output.WorkErrors[resultItem.Index] = resultItem.Error
-				}
-
-				output.CompletedItems[resultItem.Index] = true
+				output.addResultItem(resultItem)
 			}
-		}
-
-		// Got all the results (or canceled), signal completion to all the workers.
-		for i := 0; i < (poolSize); i++ {
-			doneChan <- true
 		}
 	}()
 
@@ -125,17 +162,25 @@ func RunParallelPoolMap[InputType any, OutputType any](poolSize int, workItems [
 	exitWaitGroup.Add(poolSize)
 	for i := 0; i < poolSize; i++ {
 		go func() {
+			fmt.Fprintf(os.Stderr, "worker dispatch %d: starting.\n", i)
+			defer fmt.Fprintf(os.Stderr, "worker dispatch %d: ending.\n", i)
 			defer exitWaitGroup.Done()
 
 			for {
 				select {
 				case <-ctx.Done():
 					return
-				case workItem := <-workQueue:
-					result, err := workFunc(workItem.Item)
-					resultQueue <- ResultItem{workItem.Index, result, err}
-				case <-doneChan:
+				case <-doneCollectingChan:
 					return
+				case workItem, ok := <-workQueue:
+					if !ok {
+						return
+					}
+
+					result, err := workFunc(workItem.Item)
+					// TODO: I believe the resultQueue is full so the worker blocks waiting to put the result in queue.
+					// TODO: Need a clean way to signal results are no longer accepted.
+					resultQueue <- resultItem[OutputType]{workItem.Index, result, err}
 				}
 			}
 		}()
@@ -144,6 +189,8 @@ func RunParallelPoolMap[InputType any, OutputType any](poolSize int, workItems [
 	// Wait on the wait group in the background so we can select between it and the context.
 	// Technically we could wait on the done channel, but this will ensure that all workers have exited.
 	go func() {
+		fmt.Fprintf(os.Stderr, "work waiter: starting.\n")
+		defer fmt.Fprintf(os.Stderr, "work waiter: ending.\n")
 		exitWaitGroup.Wait()
 		close(exitWaitGroupChan)
 	}()
@@ -166,7 +213,7 @@ func RunParallelPoolMap[InputType any, OutputType any](poolSize int, workItems [
 
 			// The done function will block until the workers complete in progress jobs.
 			output.doneFunc = func() {
-				<-exitWaitGroupChan
+				<-doneChan
 			}
 
 			return output, nil
