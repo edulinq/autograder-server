@@ -889,7 +889,7 @@ func TestRunJobCancel(test *testing.T) {
 		Error:          fmt.Errorf("Job was canceled: 'context canceled'."),
 		WorkErrors:     map[string]error{},
 		ResultItems:    map[string]int{},
-		RemainingItems: input,
+		RemainingItems: []string{},
 	}
 
 	output := job.Run()

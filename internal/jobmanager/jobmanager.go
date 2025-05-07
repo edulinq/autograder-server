@@ -365,7 +365,9 @@ func (this *Job[InputType, OutputType]) runParallelPoolMap(output *JobOutput[Inp
 		return resultItem{result, runTime}, nil
 	})
 
-	// Return quickly upon cancellation.
+	output.RemainingItems = []InputType{}
+
+	// The job was canceled so return without collecting results.
 	if results.Canceled {
 		output.Canceled = true
 		return nil
@@ -373,7 +375,6 @@ func (this *Job[InputType, OutputType]) runParallelPoolMap(output *JobOutput[Inp
 
 	results.IsDone()
 
-	output.RemainingItems = []InputType{}
 	output.WorkErrors = results.WorkErrors
 
 	for input, result := range results.Results {
