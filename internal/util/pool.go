@@ -1,9 +1,6 @@
 package util
 
 import (
-	// TEST
-	"os"
-
 	"context"
 	"fmt"
 	"sync"
@@ -98,9 +95,6 @@ func RunParallelPoolMap[InputType any, OutputType any](poolSize int, workItems [
 
 	// Load work.
 	go func() {
-		fmt.Fprintf(os.Stderr, "work loader: starting.\n")
-		defer fmt.Fprintf(os.Stderr, "work loader: ending.\n")
-
 		for i, item := range workItems {
 			// Either send a work item, or cancel.
 			select {
@@ -117,8 +111,6 @@ func RunParallelPoolMap[InputType any, OutputType any](poolSize int, workItems [
 	// Collect results.
 	doneChan := make(chan any)
 	go func() {
-		fmt.Fprintf(os.Stderr, "result collecter: starting.\n")
-		defer fmt.Fprintf(os.Stderr, "result collecter: ending.\n")
 		defer func() {
 			// Got all the results (or canceled), signal completion to all the workers.
 			for i := 0; i < (poolSize); i++ {
@@ -162,8 +154,6 @@ func RunParallelPoolMap[InputType any, OutputType any](poolSize int, workItems [
 	exitWaitGroup.Add(poolSize)
 	for i := 0; i < poolSize; i++ {
 		go func() {
-			fmt.Fprintf(os.Stderr, "worker dispatch %d: starting.\n", i)
-			defer fmt.Fprintf(os.Stderr, "worker dispatch %d: ending.\n", i)
 			defer exitWaitGroup.Done()
 
 			for {
@@ -172,14 +162,8 @@ func RunParallelPoolMap[InputType any, OutputType any](poolSize int, workItems [
 					return
 				case <-doneCollectingChan:
 					return
-				case workItem, ok := <-workQueue:
-					if !ok {
-						return
-					}
-
+				case workItem := <-workQueue:
 					result, err := workFunc(workItem.Item)
-					// TODO: I believe the resultQueue is full so the worker blocks waiting to put the result in queue.
-					// TODO: Need a clean way to signal results are no longer accepted.
 					resultQueue <- resultItem[OutputType]{workItem.Index, result, err}
 				}
 			}
@@ -189,8 +173,6 @@ func RunParallelPoolMap[InputType any, OutputType any](poolSize int, workItems [
 	// Wait on the wait group in the background so we can select between it and the context.
 	// Technically we could wait on the done channel, but this will ensure that all workers have exited.
 	go func() {
-		fmt.Fprintf(os.Stderr, "work waiter: starting.\n")
-		defer fmt.Fprintf(os.Stderr, "work waiter: ending.\n")
 		exitWaitGroup.Wait()
 		close(exitWaitGroupChan)
 	}()

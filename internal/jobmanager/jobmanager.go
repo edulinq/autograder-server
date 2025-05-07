@@ -49,6 +49,11 @@ type Job[InputType comparable, OutputType any] struct {
 	// If WaitForCompletion is true, this option is ignored.
 	ReturnIncompleteResults bool
 
+	// Allow in progress workers to finish upon cancellation.
+	// After a cancellation, new work will not be started.
+	// A soft cancel should be used when cleaning up partial work is essential.
+	SoftCancel bool
+
 	// The number of workers in the parallel pool.
 	PoolSize int
 
@@ -81,6 +86,11 @@ type Job[InputType comparable, OutputType any] struct {
 
 	// An optional function to process final JobOutput.
 	OnComplete func(JobOutput[InputType, OutputType])
+
+	// An optional function to clean up partial results after a cancellation.
+	// TODO: Could we just remove partial artifacts using remove func if soft cancel == true?
+	// TODO: flexibility vs ease of use
+	OnCancellation func(JobOutput[InputType, OutputType])
 }
 
 // JobOutput is the result of a call to Job.Run().
@@ -116,7 +126,7 @@ type JobOutput[InputType comparable, OutputType any] struct {
 }
 
 // The result of processing a work item in a parallel pool.
-type poolResult[InputType any, OutputType any] struct {
+type jobPoolResult[InputType any, OutputType any] struct {
 	Input   InputType
 	Output  OutputType
 	RunTime int64
@@ -290,7 +300,7 @@ func (this *Job[InputType, OutputType]) run(output *JobOutput[InputType, OutputT
 		return
 	}
 
-	poolResults, _, err := this.runParallelPoolMap(output)
+	jobPoolResults, _, err := this.runParallelPoolMap(output)
 	if err != nil {
 		output.Error = fmt.Errorf("Failed to run job in a parallel pool: '%w'.", err)
 		return
@@ -298,7 +308,7 @@ func (this *Job[InputType, OutputType]) run(output *JobOutput[InputType, OutputT
 
 	output.RemainingItems = []InputType{}
 
-	for _, result := range poolResults {
+	for _, result := range jobPoolResults {
 		if result.Error != nil {
 			// Always update errors.
 			output.WorkErrors[result.Input] = result.Error
@@ -329,8 +339,8 @@ func (this *Job[InputType, OutputType]) run(output *JobOutput[InputType, OutputT
 	}
 }
 
-func (this *Job[InputType, OutputType]) runParallelPoolMap(output *JobOutput[InputType, OutputType]) ([]poolResult[InputType, OutputType], map[int]error, error) {
-	return util.RunParallelPoolMap(this.PoolSize, output.RemainingItems, this.Context, func(workItem InputType) (poolResult[InputType, OutputType], error) {
+func (this *Job[InputType, OutputType]) runParallelPoolMap(output *JobOutput[InputType, OutputType]) ([]jobPoolResult[InputType, OutputType], map[int]error, error) {
+	results, err := util.RunParallelPoolMap(this.PoolSize, output.RemainingItems, this.Context, this.SoftCancel, func(workItem InputType) (jobPoolResult[InputType, OutputType], error) {
 		workItemKey := ""
 		if this.WorkItemKeyFunc != nil {
 			workItemKey = this.WorkItemKeyFunc(workItem)
@@ -342,8 +352,8 @@ func (this *Job[InputType, OutputType]) runParallelPoolMap(output *JobOutput[Inp
 			defer lockmanager.Unlock(workItemKey)
 		}
 
-		if this.Context.Err() != nil {
-			return poolResult[InputType, OutputType]{
+		if this.Context.Err() != nil && !this.SoftCancel {
+			return jobPoolResult[InputType, OutputType]{
 				Input: workItem,
 			}, nil
 		}
@@ -352,7 +362,7 @@ func (this *Job[InputType, OutputType]) runParallelPoolMap(output *JobOutput[Inp
 		if this.RetrieveFunc != nil {
 			results, err := this.RetrieveFunc([]InputType{workItem})
 			if err != nil {
-				return poolResult[InputType, OutputType]{
+				return jobPoolResult[InputType, OutputType]{
 					Input: workItem,
 					Error: fmt.Errorf("Failed to retrieve item '%v': '%w'.", workItem, err),
 				}, nil
@@ -360,7 +370,7 @@ func (this *Job[InputType, OutputType]) runParallelPoolMap(output *JobOutput[Inp
 
 			result, ok := results[workItem]
 			if ok {
-				return poolResult[InputType, OutputType]{workItem, result, 0, nil}, nil
+				return jobPoolResult[InputType, OutputType]{workItem, result, 0, nil}, nil
 			}
 		}
 
@@ -369,14 +379,14 @@ func (this *Job[InputType, OutputType]) runParallelPoolMap(output *JobOutput[Inp
 
 		result, err := this.WorkFunc(workItem)
 		if err != nil {
-			return poolResult[InputType, OutputType]{
+			return jobPoolResult[InputType, OutputType]{
 				Input: workItem,
 				Error: fmt.Errorf("Failed to perform individual work on item '%v': '%w'.", workItem, err),
 			}, nil
 		}
 
-		if this.Context.Err() != nil {
-			return poolResult[InputType, OutputType]{
+		if this.Context.Err() != nil && !this.SoftCancel {
+			return jobPoolResult[InputType, OutputType]{
 				Input: workItem,
 			}, nil
 		}
@@ -387,15 +397,19 @@ func (this *Job[InputType, OutputType]) runParallelPoolMap(output *JobOutput[Inp
 		if !this.DryRun && this.StoreFunc != nil {
 			err = this.StoreFunc([]OutputType{result})
 			if err != nil {
-				return poolResult[InputType, OutputType]{
+				return jobPoolResult[InputType, OutputType]{
 					Input: workItem,
 					Error: fmt.Errorf("Failed to store result for item '%v': '%w'.", workItem, err),
 				}, nil
 			}
 		}
 
-		return poolResult[InputType, OutputType]{workItem, result, runTime, nil}, nil
+		return jobPoolResult[InputType, OutputType]{workItem, result, runTime, nil}, nil
 	})
+
+	results.Done()
+
+	return results.GetCompletedResults(), results.WorkErrors, err
 }
 
 func getRemainingItems[InputType comparable, OutputType any](workItems []InputType, results map[InputType]OutputType) []InputType {

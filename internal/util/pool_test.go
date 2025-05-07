@@ -85,16 +85,15 @@ func TestRunParallelPoolMapBase(test *testing.T) {
 	}
 }
 
-func TestRunParallelPoolMapCancelNoComplete(test *testing.T) {
+func TestRunParallelPoolMapCancel(test *testing.T) {
 	testCases := []struct {
 		numThreads int
 	}{
 		{1},
-		// TEST
-		// {2},
-		// {3},
-		// {4},
-		// {10},
+		{2},
+		{3},
+		{4},
+		{10},
 	}
 
 	input := []string{
@@ -118,15 +117,16 @@ func TestRunParallelPoolMapCancelNoComplete(test *testing.T) {
 			}
 
 			// Sleep to allow the first result to be captured.
-			time.Sleep(time.Duration(2) * time.Millisecond)
+			time.Sleep(2 * time.Millisecond)
 
 			// Signal on the second piece of work so that we can make sure the workers have started up before we cancel.
 			if input == "BB" {
 				workWaitGroup.Done()
 			}
 
-			// Sleep for a really long time (for a test).
-			time.Sleep(1 * time.Hour)
+			// Sleep to allow the the stop signal to go through.
+			// We do not want to capture any more results.
+			time.Sleep(2 * time.Millisecond)
 
 			return len(input), nil
 		}
@@ -165,7 +165,7 @@ func TestRunParallelPoolMapCancelNoComplete(test *testing.T) {
 
 		// Check for the thread count last (this gives the workers a small bit of extra time to exit).
 		// Note that there may be other tests with stray threads, so we are allowed to have less than when we started.
-		time.Sleep(10 * time.Second)
+		time.Sleep(1 * time.Second)
 		endThreadCount := runtime.NumGoroutine()
 		if startThreadCount < endThreadCount {
 			test.Errorf("Case %d: Ended with more threads than we started with. Start: %d, End: %d.",
@@ -175,7 +175,7 @@ func TestRunParallelPoolMapCancelNoComplete(test *testing.T) {
 	}
 }
 
-func TestRunParallelPoolMapCancelCompleteInProgress(test *testing.T) {
+func TestRunParallelPoolMapCancelSoft(test *testing.T) {
 	testCases := []struct {
 		numThreads int
 	}{
@@ -241,9 +241,8 @@ func TestRunParallelPoolMapCancelCompleteInProgress(test *testing.T) {
 			actualStarted[startedInput] = len(startedInput)
 		}
 
-		// Worker threads race to start jobs before the cancellation signal.
-		// Rely on the started channel to know which jobs started before the cancellation signal.
-		// Test that all started work functions finish and their results are collected.
+		// Workers race to start before the cancellation.
+		// Ensure all started work is completed.
 		variableExpected := make([]int, len(input))
 		variableCompleted := make([]bool, len(input))
 		for input, output := range actualStarted {
