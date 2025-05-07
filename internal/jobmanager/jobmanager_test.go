@@ -711,11 +711,11 @@ func TestRunJobBase(test *testing.T) {
 			},
 		},
 
-		// On Complete Function
+		// On Success Function
 		{
 			job: Job[string, int]{
 				WorkItems: input,
-				OnComplete: func(output JobOutput[string, int]) {
+				OnSuccess: func(output JobOutput[string, int]) {
 					for i, result := range output.ResultItems {
 						output.ResultItems[i] = result * 2
 					}
@@ -854,9 +854,6 @@ func TestRunJobCancel(test *testing.T) {
 			return len(input), nil
 		}
 
-		// Sleep to allow the first result to be captured.
-		time.Sleep(time.Duration(2) * time.Millisecond)
-
 		// Signal on the second piece of work so that we can make sure the workers have started up before we cancel.
 		if input == "BB" {
 			workWaitGroup.Done()
@@ -871,11 +868,10 @@ func TestRunJobCancel(test *testing.T) {
 	ctx, cancelFunc := context.WithCancel(context.Background())
 
 	job := &Job[string, int]{
-		WorkItems:  input,
-		WorkFunc:   sleepWorkFunc,
-		SoftCancel: false,
-		PoolSize:   testPoolSize,
-		LockKey:    testLockKey,
+		WorkItems: input,
+		WorkFunc:  sleepWorkFunc,
+		PoolSize:  testPoolSize,
+		LockKey:   testLockKey,
 		JobOptions: &JobOptions{
 			Context:           ctx,
 			WaitForCompletion: true,
@@ -892,90 +888,11 @@ func TestRunJobCancel(test *testing.T) {
 		Canceled:       true,
 		Error:          fmt.Errorf("Job was canceled: 'context canceled'."),
 		WorkErrors:     map[string]error{},
-		ResultItems:    map[string]int{"A": 1},
-		RemainingItems: []string{},
+		ResultItems:    map[string]int{},
+		RemainingItems: input,
 	}
 
 	output := job.Run()
-	if output.Error.Error() != expectedOutput.Error.Error() {
-		test.Fatalf("Unexpected error. Expected: '%s', actual: '%s'.",
-			expectedOutput.Error.Error(), output.Error.Error())
-	}
-
-	// Clear done channel and errors for comparison check.
-	output.Done = nil
-	output.Error = nil
-	expectedOutput.Error = nil
-
-	if !reflect.DeepEqual(output, expectedOutput) {
-		test.Fatalf("Unexpected result. Expected: '%s', actual: '%s'.",
-			util.MustToJSONIndent(expectedOutput.toPrintableJobOutput()), util.MustToJSONIndent(output.toPrintableJobOutput()))
-	}
-}
-
-func TestRunJobSoftCancel(test *testing.T) {
-	// A channel to know which jobs started.
-	startedChan := make(chan string, len(input))
-
-	// Block until the first worker has started.
-	workWaitGroup := sync.WaitGroup{}
-	workWaitGroup.Add(1)
-
-	sleepWorkFunc := func(input string) (int, error) {
-		startedChan <- input
-
-		// Signal on the first piece of work so that we can make sure the workers have started up before we cancel.
-		if input == "A" {
-			workWaitGroup.Done()
-			time.Sleep(time.Duration(5) * time.Millisecond)
-			return len(input), nil
-		}
-
-		time.Sleep(time.Duration(5) * time.Millisecond)
-
-		return len(input), nil
-	}
-
-	ctx, cancelFunc := context.WithCancel(context.Background())
-
-	job := &Job[string, int]{
-		WorkItems:  input,
-		WorkFunc:   sleepWorkFunc,
-		SoftCancel: true,
-		PoolSize:   testPoolSize,
-		LockKey:    testLockKey,
-		JobOptions: &JobOptions{
-			Context:           ctx,
-			WaitForCompletion: true,
-		},
-	}
-
-	// Cancel the context as soon as the worker signals it.
-	go func() {
-		workWaitGroup.Wait()
-		cancelFunc()
-	}()
-
-	// TODO: run isn't waiting for the results to populate?
-	output := job.Run()
-
-	close(startedChan)
-
-	// Workers race to start before the cancellation.
-	// Ensure all started work is completed.
-	expectedResults := map[string]int{}
-	for input := range startedChan {
-		expectedResults[input] = len(input)
-	}
-
-	expectedOutput := &JobOutput[string, int]{
-		Canceled:       true,
-		Error:          fmt.Errorf("Job was canceled: 'context canceled'."),
-		WorkErrors:     map[string]error{},
-		ResultItems:    expectedResults,
-		RemainingItems: []string{},
-	}
-
 	if output.Error.Error() != expectedOutput.Error.Error() {
 		test.Fatalf("Unexpected error. Expected: '%s', actual: '%s'.",
 			expectedOutput.Error.Error(), output.Error.Error())
@@ -1064,6 +981,10 @@ func TestBadWorkFunc(test *testing.T) {
 	}
 
 	output = job.Run()
+	if output.Error == nil {
+		test.Fatalf("Did not get expected error. Expected: '%s'.", expectedOutput.Error.Error())
+	}
+
 	if output.Error.Error() != expectedOutput.Error.Error() {
 		test.Fatalf("Unexpected error. Expected: '%s', actual: '%s'.",
 			expectedOutput.Error.Error(), output.Error.Error())

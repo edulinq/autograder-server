@@ -85,7 +85,7 @@ func PairwiseAnalysis(options AnalysisOptions) (model.PairwiseAnalysisMap, int, 
 		WorkItemKeyFunc: func(key model.PairwiseKey) string {
 			return fmt.Sprintf("analysis-pairwise-single-%s", key.String())
 		},
-		OnComplete: func(result jobmanager.JobOutput[model.PairwiseKey, *model.PairwiseAnalysis]) {
+		OnSuccess: func(result jobmanager.JobOutput[model.PairwiseKey, *model.PairwiseAnalysis]) {
 			collectPairwiseStats(allKeys, result.RunTime, options.InitiatorEmail)
 		},
 	}

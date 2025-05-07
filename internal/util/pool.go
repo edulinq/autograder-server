@@ -8,115 +8,70 @@ import (
 
 // The result of running a map function in parallel pool.
 // Always call Done() before accessing any results to avoid concurrency issues.
-type PoolResult[OutputType any] struct {
+type PoolResult[InputType comparable, OutputType any] struct {
 	// The results of the parallel pool.
-	// TODO: turn into a map
-	Results []OutputType
+	Results map[InputType]OutputType
 
 	// A map of work errors using the item's index for item-level errors.
-	WorkErrors map[int]error
+	WorkErrors map[InputType]error
 
 	// Signals that the parallel pool was canceled during execution.
-	// Use CompletedItems to determine which results were processed.
 	Canceled bool
 
-	// TODO: remove
-	// A list of indices that indicate which results are completed.
-	CompletedItems []bool
-
-	// An internal done function to signal the result can be accessed.
-	// TODO: keep the channel instead
-	doneFunc func()
+	// An internal done channel to signal the result can be accessed.
+	done chan any
 }
 
-type resultItem[OutputType any] struct {
-	Index int
-	Item  OutputType
-	Error error
+func (this PoolResult[InputType, OutputType]) IsDone() {
+	<-this.done
 }
 
-// TODO: IsDone? Also,
-func (this PoolResult[OutputType]) Done() {
-	if this.doneFunc != nil {
-		this.doneFunc()
-	}
-}
-
-// TODO: remove
-func (this PoolResult[OutputType]) GetCompletedResults() []OutputType {
-	this.Done()
-
-	if !this.Canceled {
-		return this.Results
-	}
-
-	completedResults := make([]OutputType, 0, len(this.Results))
-
-	for i := 0; i < len(this.Results) && i < len(this.CompletedItems); i++ {
-		if this.CompletedItems[i] {
-			completedResults = append(completedResults, this.Results[i])
-		}
-	}
-
-	return completedResults
-}
-
-// TODO: not necessary, siblings inside
-func (this PoolResult[OutputType]) addResultItem(result resultItem[OutputType]) {
-	this.Results[result.Index] = result.Item
-	if result.Error != nil {
-		this.WorkErrors[result.Index] = result.Error
-	}
-
-	this.CompletedItems[result.Index] = true
-}
-
+// TODO: update comment
 // Do a map function (one result for one input) with a parallel pool of workers.
 // Unless there is a critical error (the final return value) or cancellation,
 // the output will have the same length as and index-match the input, but will have an empty value if there is an error.
 // A cancellation will return (partial results, any errors encountered, nil).
 // Consult the returned map of errors using the item's index to check for item-level errors.
 // The underlying collection of input work items must not be modified as this function is running.
-func RunParallelPoolMap[InputType any, OutputType any](poolSize int, workItems []InputType, ctx context.Context, completeInProgressWork bool, workFunc func(InputType) (OutputType, error)) (PoolResult[OutputType], error) {
+func RunParallelPoolMap[InputType comparable, OutputType any](poolSize int, workItems []InputType, ctx context.Context, workFunc func(InputType) (OutputType, error)) (PoolResult[InputType, OutputType], error) {
 	if poolSize <= 0 {
-		return PoolResult[OutputType]{}, fmt.Errorf("Pool size must be positive, got %d.", poolSize)
+		return PoolResult[InputType, OutputType]{}, fmt.Errorf("Pool size must be positive, got %d.", poolSize)
 	}
 
-	// TODO: move with sibling struct.
-	type WorkItem struct {
-		Index int
-		Item  InputType
+	type ResultItem struct {
+		Input  InputType
+		Result OutputType
+		Error  error
 	}
 
-	output := PoolResult[OutputType]{
-		Results:        make([]OutputType, len(workItems)),
-		WorkErrors:     make(map[int]error),
-		CompletedItems: make([]bool, len(workItems)),
-		doneFunc:       func() {},
-	}
-
-	resultQueue := make(chan resultItem[OutputType], poolSize)
-	workQueue := make(chan WorkItem, poolSize)
+	resultQueue := make(chan ResultItem, poolSize)
+	workQueue := make(chan InputType, poolSize)
 	doneCollectingChan := make(chan bool, poolSize)
 	exitWaitGroup := sync.WaitGroup{}
 
 	// Load work.
 	go func() {
-		for i, item := range workItems {
+		for _, item := range workItems {
 			// Either send a work item, or cancel.
 			select {
 			case <-ctx.Done():
 				return
-			case workQueue <- WorkItem{i, item}:
+			case workQueue <- item:
 				// Item was already sent on the chan, do nothing here.
 			}
 		}
 	}()
 
 	exitWaitGroupChan := make(chan any)
+	doneChan := make(chan any)
+
+	output := PoolResult[InputType, OutputType]{
+		Results:    make(map[InputType]OutputType, len(workItems)),
+		WorkErrors: make(map[InputType]error, 0),
+		done:       doneChan,
+	}
 
 	// Collect results.
-	doneChan := make(chan any)
 	go func() {
 		defer func() {
 			// Got all the results (or canceled), signal completion to all the workers.
@@ -128,33 +83,25 @@ func RunParallelPoolMap[InputType any, OutputType any](poolSize int, workItems [
 		}()
 
 		for i := 0; i < len(workItems); i++ {
-			// TODO: result collection.
 			select {
-			case <-ctx.Done():
-				// TODO: remove
-				if !completeInProgressWork {
-					return
-				}
-
-				// Keep collecting in progress results.
+			case <-exitWaitGroupChan:
+				// All workers completed in progress work, drain remaining results.
 				for {
 					select {
 					case resultItem := <-resultQueue:
-						output.addResultItem(resultItem)
-					case <-exitWaitGroupChan:
-						// All workers completed in progress work, drain remaining results.
-						for {
-							select {
-							case resultItem := <-resultQueue:
-								output.addResultItem(resultItem)
-							default:
-								return
-							}
+						output.Results[resultItem.Input] = resultItem.Result
+						if resultItem.Error != nil {
+							output.WorkErrors[resultItem.Input] = resultItem.Error
 						}
+					default:
+						return
 					}
 				}
 			case resultItem := <-resultQueue:
-				output.addResultItem(resultItem)
+				output.Results[resultItem.Input] = resultItem.Result
+				if resultItem.Error != nil {
+					output.WorkErrors[resultItem.Input] = resultItem.Error
+				}
 			}
 		}
 	}()
@@ -172,8 +119,8 @@ func RunParallelPoolMap[InputType any, OutputType any](poolSize int, workItems [
 				case <-doneCollectingChan:
 					return
 				case workItem := <-workQueue:
-					result, err := workFunc(workItem.Item)
-					resultQueue <- resultItem[OutputType]{workItem.Index, result, err}
+					result, err := workFunc(workItem)
+					resultQueue <- ResultItem{workItem, result, err}
 				}
 			}
 		}()
@@ -190,26 +137,9 @@ func RunParallelPoolMap[InputType any, OutputType any](poolSize int, workItems [
 	select {
 	case <-ctx.Done():
 		// The context was canceled, return partial results.
-		// TODO: don't return a copy, if they don't want the results, they won't wait on Done().
-		if !completeInProgressWork {
-			// Return a stable copy with the current progress.
-			return PoolResult[OutputType]{
-				Results:        output.Results,
-				WorkErrors:     output.WorkErrors,
-				Canceled:       true,
-				CompletedItems: output.CompletedItems,
-				doneFunc:       func() {},
-			}, nil
-		} else {
-			output.Canceled = true
+		output.Canceled = true
 
-			// The done function will block until the workers complete in progress jobs.
-			output.doneFunc = func() {
-				<-doneChan
-			}
-
-			return output, nil
-		}
+		return output, nil
 	case <-exitWaitGroupChan:
 		// Normal Completion
 	}

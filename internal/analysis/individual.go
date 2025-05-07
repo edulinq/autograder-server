@@ -52,7 +52,7 @@ func IndividualAnalysis(options AnalysisOptions) (map[string]*model.IndividualAn
 		WorkItemKeyFunc: func(fullSubmissionID string) string {
 			return fmt.Sprintf("analysis-individual-%s", fullSubmissionID)
 		},
-		OnComplete: func(result jobmanager.JobOutput[string, *model.IndividualAnalysis]) {
+		OnSuccess: func(result jobmanager.JobOutput[string, *model.IndividualAnalysis]) {
 			collectIndividualStats(fullSubmissionIDs, result.RunTime, options.InitiatorEmail)
 		},
 	}
