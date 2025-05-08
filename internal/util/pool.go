@@ -102,7 +102,6 @@ func RunParallelPoolMap[InputType comparable, OutputType any](poolSize int, work
 
 		// Close the done channel to signal that the output is accessible.
 		defer close(doneChan)
-
 		defer threadExitWaitGroup.Done()
 
 		for i := 0; i < len(workItems); i++ {
@@ -149,7 +148,7 @@ func RunParallelPoolMap[InputType comparable, OutputType any](poolSize int, work
 	}
 
 	// Wait on the wait group in the background so we can select between it and the context.
-	// Technically we could wait on the done chan, but this will ensure that all results are collected.
+	// Technically we could wait on the done channel, but this will ensure that all workers have exited.
 	threadExitWaitGroup.Add(1)
 	go func() {
 		defer threadExitWaitGroup.Done()

@@ -288,7 +288,6 @@ func (this *Job[InputType, OutputType]) run(output *JobOutput[InputType, OutputT
 		return
 	}
 
-	// If the job was canceled, return after collecting partial results.
 	if this.Context.Err() != nil {
 		output.Error = fmt.Errorf("Job was canceled: '%v'.", this.Context.Err())
 		output.Canceled = true

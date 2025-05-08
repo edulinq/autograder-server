@@ -102,13 +102,13 @@ func TestRunParallelPoolMapCancel(test *testing.T) {
 	cancelWaitGroup := sync.WaitGroup{}
 	cancelWaitGroup.Add(1)
 
-	// Input 'A' will complete normally and 'BB' will be completed despite the cancellation signal during execution.
 	// Work will not start on input 'CCC'.
 	workFunc := func(input string) (int, error) {
-		// Signal on the second piece of work so that we can make sure the workers have started up before we cancel.
+		// Signal on the second piece of work so that work on input 'A' will complete normally.
 		if input == "BB" {
 			workWaitGroup.Done()
 			// Wait until the cancellation is triggered.
+			// Work on input 'BB' will complete despite the cancellation signal during execution.
 			cancelWaitGroup.Wait()
 		}
 
