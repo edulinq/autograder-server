@@ -135,6 +135,12 @@ func RunParallelPoolMap[InputType comparable, OutputType any](poolSize int, work
 						return
 					}
 
+					// Pulling work from the queue can be selected over a context cancellation.
+					// Check the context for cancellations before starting new work.
+					if ctx.Err() != nil {
+						return
+					}
+
 					result, err := workFunc(workItem)
 					resultQueue <- ResultItem{workItem, result, err}
 				}

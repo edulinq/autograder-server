@@ -6,6 +6,7 @@ import (
 	"runtime"
 	"sync"
 	"testing"
+	"time"
 )
 
 func TestRunParallelPoolMapBase(test *testing.T) {
@@ -73,6 +74,7 @@ func TestRunParallelPoolMapBase(test *testing.T) {
 
 		// Check for the thread count last (this gives the workers a small bit of extra time to exit).
 		// Note that there may be other tests with stray threads, so we are allowed to have less than when we started.
+		time.Sleep(25 * time.Nanosecond)
 		endThreadCount := runtime.NumGoroutine()
 		if startThreadCount < endThreadCount {
 			test.Errorf("Case %d: Ended with more threads than we started with. Start: %d, End: %d.",
@@ -100,12 +102,9 @@ func TestRunParallelPoolMapCancel(test *testing.T) {
 	cancelWaitGroup := sync.WaitGroup{}
 	cancelWaitGroup.Add(1)
 
+	// Input 'A' will complete normally and 'BB' will be completed despite the cancellation signal during execution.
+	// Work will not start on input 'CCC'.
 	workFunc := func(input string) (int, error) {
-		// Allow the first worker to complete normally.
-		if input == "A" {
-			return len(input), nil
-		}
-
 		// Signal on the second piece of work so that we can make sure the workers have started up before we cancel.
 		if input == "BB" {
 			workWaitGroup.Done()
@@ -122,7 +121,6 @@ func TestRunParallelPoolMapCancel(test *testing.T) {
 	go func() {
 		workWaitGroup.Wait()
 		cancelFunc()
-		// TODO: Still unpredictable.
 		// Signal to continue working after the cancellation signal goes through.
 		cancelWaitGroup.Done()
 	}()
@@ -153,6 +151,7 @@ func TestRunParallelPoolMapCancel(test *testing.T) {
 
 	// Check for the thread count last (this gives the workers a small bit of extra time to exit).
 	// Note that there may be other tests with stray threads, so we are allowed to have less than when we started.
+	time.Sleep(25 * time.Nanosecond)
 	endThreadCount := runtime.NumGoroutine()
 	if startThreadCount < endThreadCount {
 		test.Fatalf("Ended with more threads than we started with. Start: %d, End: %d.",
