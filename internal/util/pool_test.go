@@ -6,7 +6,6 @@ import (
 	"runtime"
 	"sync"
 	"testing"
-	"time"
 )
 
 func TestRunParallelPoolMapBase(test *testing.T) {
@@ -43,8 +42,11 @@ func TestRunParallelPoolMapBase(test *testing.T) {
 		return len(input), nil
 	}
 
+	// Count the number of active threads before running any tests.
+	overallStartThreadCount := runtime.NumGoroutine()
+
 	for i, testCase := range testCases {
-		// Count the number of active threads before running.
+		// Count the number of active threads before running the test case.
 		startThreadCount := runtime.NumGoroutine()
 
 		output, err := RunParallelPoolMap(testCase.numThreads, input, context.Background(), workFunc)
@@ -74,13 +76,25 @@ func TestRunParallelPoolMapBase(test *testing.T) {
 
 		// Check for the thread count last (this gives the workers a small bit of extra time to exit).
 		// Note that there may be other tests with stray threads, so we are allowed to have less than when we started.
-		time.Sleep(25 * time.Nanosecond)
+		// The final thread that signals the output.IsDone() may not have enough time to exit,
+		// so we are allowed to end with one more thread than when we started.
 		endThreadCount := runtime.NumGoroutine()
-		if startThreadCount < endThreadCount {
+		allowedEndThreadCount := endThreadCount - 1
+		if startThreadCount < allowedEndThreadCount {
 			test.Errorf("Case %d: Ended with more threads than we started with. Start: %d, End: %d.",
-				i, startThreadCount, endThreadCount)
+				i, startThreadCount, allowedEndThreadCount)
 			continue
 		}
+	}
+
+	// Note that there may be other tests with stray threads, so we are allowed to have less than when we started.
+	// The final thread that signals the output.IsDone() may not have enough time to exit,
+	// so we are allowed to end with one more thread than when we started.
+	overallEndThreadCount := runtime.NumGoroutine()
+	allowedOverallEndThreadCount := overallEndThreadCount - 1
+	if overallStartThreadCount < allowedOverallEndThreadCount {
+		test.Fatalf("Ended with more threads than we started with. Start: %d, End: %d.",
+			overallStartThreadCount, allowedOverallEndThreadCount)
 	}
 }
 
@@ -117,7 +131,7 @@ func TestRunParallelPoolMapCancel(test *testing.T) {
 
 	ctx, cancelFunc := context.WithCancel(context.Background())
 
-	// Cancel the context as soon as the first worker signals it.
+	// Cancel the context as soon as the worker signals it.
 	go func() {
 		workWaitGroup.Wait()
 		cancelFunc()
@@ -151,10 +165,12 @@ func TestRunParallelPoolMapCancel(test *testing.T) {
 
 	// Check for the thread count last (this gives the workers a small bit of extra time to exit).
 	// Note that there may be other tests with stray threads, so we are allowed to have less than when we started.
-	time.Sleep(25 * time.Nanosecond)
+	// The final thread that signals the output.IsDone() may not have enough time to exit,
+	// so we are allowed to end with one more thread than when we started.
 	endThreadCount := runtime.NumGoroutine()
-	if startThreadCount < endThreadCount {
+	allowedEndThreadCount := endThreadCount - 1
+	if startThreadCount < allowedEndThreadCount {
 		test.Fatalf("Ended with more threads than we started with. Start: %d, End: %d.",
-			startThreadCount, endThreadCount)
+			startThreadCount, allowedEndThreadCount)
 	}
 }

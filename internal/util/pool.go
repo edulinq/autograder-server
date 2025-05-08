@@ -35,7 +35,7 @@ func (this PoolResult[InputType, OutputType]) IsDone() {
 // A cancellation will stop new work from starting but complete in progress work asynchronously.
 // The partial results from a cancellation are available after PoolResult.IsDone() returns.
 // Consult the returned map of errors using the item to check for item-level errors.
-// Work level errors will not generate a non-nil return error, so both must be checked independently.
+// Work level errors will not generate a critical error, so both must be checked independently.
 // The underlying collection of input work items must not be modified as this function is running.
 func RunParallelPoolMap[InputType comparable, OutputType any](poolSize int, workItems []InputType, ctx context.Context, workFunc func(InputType) (OutputType, error)) (PoolResult[InputType, OutputType], error) {
 	if poolSize <= 0 {
@@ -56,6 +56,12 @@ func RunParallelPoolMap[InputType comparable, OutputType any](poolSize int, work
 	workerExitWaitGroup := sync.WaitGroup{}
 	threadExitWaitGroup := sync.WaitGroup{}
 
+	workerExitWaitGroup.Add(poolSize)
+	// There will always be poolSize + 2 threads started.
+	// A thread will be started for the work loader, the work collecter, and each worker in the pool.
+	// Every one of these work threads must call threadExitWaitGroup.Done() to avoid a deadlock.
+	threadExitWaitGroup.Add(poolSize + 2)
+
 	output := PoolResult[InputType, OutputType]{
 		Results:    make(map[InputType]OutputType, len(workItems)),
 		WorkErrors: make(map[InputType]error, 0),
@@ -63,7 +69,6 @@ func RunParallelPoolMap[InputType comparable, OutputType any](poolSize int, work
 	}
 
 	// Load work.
-	threadExitWaitGroup.Add(1)
 	go func() {
 		defer threadExitWaitGroup.Done()
 
@@ -82,9 +87,10 @@ func RunParallelPoolMap[InputType comparable, OutputType any](poolSize int, work
 	}()
 
 	// Collect results.
-	threadExitWaitGroup.Add(1)
 	go func() {
 		defer func() {
+			defer threadExitWaitGroup.Done()
+
 			// All workers completed, drain remaining results.
 			// If the context was canceled, the number of results may be less than the number of work items.
 			for {
@@ -100,10 +106,6 @@ func RunParallelPoolMap[InputType comparable, OutputType any](poolSize int, work
 			}
 		}()
 
-		// Close the done channel to signal that the output is accessible.
-		defer close(doneChan)
-		defer threadExitWaitGroup.Done()
-
 		for i := 0; i < len(workItems); i++ {
 			select {
 			case <-doneWorkingChan:
@@ -118,12 +120,10 @@ func RunParallelPoolMap[InputType comparable, OutputType any](poolSize int, work
 	}()
 
 	// Dispatch workers.
-	workerExitWaitGroup.Add(poolSize)
-	threadExitWaitGroup.Add(poolSize)
 	for i := 0; i < poolSize; i++ {
 		go func() {
-			defer workerExitWaitGroup.Done()
 			defer threadExitWaitGroup.Done()
+			defer workerExitWaitGroup.Done()
 
 			for {
 				select {
@@ -149,12 +149,16 @@ func RunParallelPoolMap[InputType comparable, OutputType any](poolSize int, work
 
 	// Wait on the wait group in the background so we can select between it and the context.
 	// Technically we could wait on the done channel, but this will ensure that all workers have exited.
-	threadExitWaitGroup.Add(1)
 	go func() {
-		defer threadExitWaitGroup.Done()
-
+		// Once all pool workers have completed there work, signal to collect the remaining results.
 		workerExitWaitGroup.Wait()
 		close(doneWorkingChan)
+
+		// Wait for all worker threads to signal they have exited.
+		threadExitWaitGroup.Wait()
+
+		// Close the done channel to signal that the output is accessible and worker threads are joined.
+		close(doneChan)
 	}()
 
 	// Wait for either completion or cancellation.
@@ -167,8 +171,6 @@ func RunParallelPoolMap[InputType comparable, OutputType any](poolSize int, work
 	case <-doneChan:
 		// Normal Completion
 	}
-
-	threadExitWaitGroup.Wait()
 
 	return output, nil
 }
