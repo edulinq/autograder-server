@@ -21,7 +21,7 @@ func (this *fakeSimiliartyEngine) IsAvailable() bool {
 	return true
 }
 
-func (this *fakeSimiliartyEngine) ComputeFileSimilarity(paths [2]string, templatePath string, ctx context.Context) (*model.FileSimilarity, int64, error) {
+func (this *fakeSimiliartyEngine) ComputeFileSimilarity(paths [2]string, templatePath string, ctx context.Context) (*model.FileSimilarity, error) {
 	similarity := model.FileSimilarity{
 		Filename: filepath.Base(paths[0]),
 		Tool:     this.GetName(),
@@ -29,7 +29,7 @@ func (this *fakeSimiliartyEngine) ComputeFileSimilarity(paths [2]string, templat
 		Score:    float64(len(filepath.Base(paths[0]))) / 100.0,
 	}
 
-	return &similarity, 1, nil
+	return &similarity, nil
 }
 
 func AddTestSubmissions(test *testing.T) {

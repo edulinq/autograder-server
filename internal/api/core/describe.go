@@ -50,8 +50,8 @@ type TypeDescription struct {
 	AliasType   string             `json:"alias-type,omitempty"`
 	Fields      []FieldDescription `json:"fields,omitempty"`
 	ElementType string             `json:"element-type,omitempty"`
-	KeyType     string             `json:"-"`
-	ValueType   string             `json:"-"`
+	KeyType     string             `json:"key-type,omitempty"`
+	ValueType   string             `json:"value-type,omitempty"`
 }
 
 type StructDescription map[string]string

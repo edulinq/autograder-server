@@ -98,6 +98,14 @@ func TestMetadataDescribe(test *testing.T) {
 						Name: "fields",
 						Type: "[]core.FieldDescription",
 					},
+					{
+						Name: "key-type",
+						Type: "string",
+					},
+					{
+						Name: "value-type",
+						Type: "string",
+					},
 				},
 			},
 		},

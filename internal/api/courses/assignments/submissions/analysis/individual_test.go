@@ -8,6 +8,7 @@ import (
 	"github.com/edulinq/autograder/internal/analysis"
 	"github.com/edulinq/autograder/internal/api/core"
 	"github.com/edulinq/autograder/internal/db"
+	"github.com/edulinq/autograder/internal/jobmanager"
 	"github.com/edulinq/autograder/internal/model"
 	"github.com/edulinq/autograder/internal/timestamp"
 	"github.com/edulinq/autograder/internal/util"
@@ -44,6 +45,7 @@ func TestIndividualBase(test *testing.T) {
 	expected := IndividualResponse{
 		Complete: false,
 		Options: analysis.AnalysisOptions{
+			JobOptions:         jobmanager.JobOptions{},
 			RawSubmissionSpecs: submissions,
 		},
 		Summary: &model.IndividualAnalysisSummary{
@@ -53,7 +55,7 @@ func TestIndividualBase(test *testing.T) {
 				PendingCount:  2,
 			},
 		},
-		Results: []*model.IndividualAnalysis{},
+		Results: map[string]*model.IndividualAnalysis{},
 	}
 
 	if !reflect.DeepEqual(expected, responseContent) {
@@ -77,7 +79,9 @@ func TestIndividualBase(test *testing.T) {
 		Complete: true,
 		Options: analysis.AnalysisOptions{
 			RawSubmissionSpecs: submissions,
-			WaitForCompletion:  true,
+			JobOptions: jobmanager.JobOptions{
+				WaitForCompletion: true,
+			},
 		},
 		Summary: &model.IndividualAnalysisSummary{
 			AnalysisSummary: model.AnalysisSummary{
@@ -146,8 +150,8 @@ func TestIndividualBase(test *testing.T) {
 				},
 			},
 		},
-		Results: []*model.IndividualAnalysis{
-			&model.IndividualAnalysis{
+		Results: map[string]*model.IndividualAnalysis{
+			"course101::hw0::course-student@test.edulinq.org::1697406256": &model.IndividualAnalysis{
 				Options:             assignment.AssignmentAnalysisOptions,
 				AnalysisTimestamp:   timestamp.Zero(),
 				FullID:              "course101::hw0::course-student@test.edulinq.org::1697406256",
@@ -170,7 +174,7 @@ func TestIndividualBase(test *testing.T) {
 					},
 				},
 			},
-			&model.IndividualAnalysis{
+			"course101::hw0::course-student@test.edulinq.org::1697406265": &model.IndividualAnalysis{
 				Options:             assignment.AssignmentAnalysisOptions,
 				AnalysisTimestamp:   timestamp.Zero(),
 				FullID:              "course101::hw0::course-student@test.edulinq.org::1697406265",

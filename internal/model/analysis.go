@@ -1,6 +1,7 @@
 package model
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"regexp"
@@ -123,6 +124,9 @@ type PairwiseAnalysisSummary struct {
 	AggregateTotalMeanSimilarities util.AggregateValues            `json:"aggregate-total-mean-similarity"`
 }
 
+// A named map type allows for custom marshalling and unmarshalling.
+type PairwiseAnalysisMap map[PairwiseKey]*PairwiseAnalysis
+
 func NewPairwiseKey(fullSubmissionID1 string, fullSubmissionID2 string) PairwiseKey {
 	return PairwiseKey([2]string{
 		min(fullSubmissionID1, fullSubmissionID2),
@@ -213,6 +217,41 @@ func (this *PairwiseKey) Course() string {
 	return courseID
 }
 
+func (this PairwiseAnalysisMap) MarshalJSON() ([]byte, error) {
+	temp := make(map[string]*PairwiseAnalysis, len(this))
+
+	for key, analysis := range this {
+		keyString := key.String()
+
+		temp[keyString] = analysis
+	}
+
+	return json.Marshal(temp)
+}
+
+func (this *PairwiseAnalysisMap) UnmarshalJSON(data []byte) error {
+	temp := make(map[string]*PairwiseAnalysis)
+	err := json.Unmarshal(data, &temp)
+	if err != nil {
+		return err
+	}
+
+	results := make(PairwiseAnalysisMap, len(temp))
+	for text, analysis := range temp {
+		keyParts := strings.Split(text, PAIRWISE_KEY_DELIM)
+		if len(keyParts) != 2 {
+			return fmt.Errorf("Invalid PairwiseKey: '%s'.", text)
+		}
+
+		pairwiseKey := NewPairwiseKey(keyParts[0], keyParts[1])
+		results[pairwiseKey] = analysis
+	}
+
+	*this = results
+
+	return nil
+}
+
 func NewPairwiseAnalysis(pairwiseKey PairwiseKey, assignment *Assignment, similarities map[string][]*FileSimilarity, unmatches [][2]string, skipped []string) *PairwiseAnalysis {
 	meanSimilarities := make(map[string]float64, len(similarities))
 	totalMeanSimilarity := 0.0
@@ -267,7 +306,7 @@ func NewFailedPairwiseAnalysis(pairwiseKey PairwiseKey, assignment *Assignment, 
 	}
 }
 
-func NewIndividualAnalysisSummary(results []*IndividualAnalysis, pendingCount int) *IndividualAnalysisSummary {
+func NewIndividualAnalysisSummary(results map[string]*IndividualAnalysis, pendingCount int) *IndividualAnalysisSummary {
 	if len(results) == 0 {
 		return &IndividualAnalysisSummary{
 			AnalysisSummary: AnalysisSummary{
@@ -294,19 +333,20 @@ func NewIndividualAnalysisSummary(results []*IndividualAnalysis, pendingCount in
 
 	locPerFiles := make(map[string][]float64)
 
+	firstItem := true
 	failureCount := 0
 
-	for i, result := range results {
+	for _, result := range results {
 		if result.Failure {
 			failureCount++
 			continue
 		}
 
-		if (i == 0) || (result.AnalysisTimestamp < firstTimestamp) {
+		if firstItem || (result.AnalysisTimestamp < firstTimestamp) {
 			firstTimestamp = result.AnalysisTimestamp
 		}
 
-		if (i == 0) || (result.AnalysisTimestamp > lastTimestamp) {
+		if firstItem || (result.AnalysisTimestamp > lastTimestamp) {
 			lastTimestamp = result.AnalysisTimestamp
 		}
 
@@ -321,6 +361,8 @@ func NewIndividualAnalysisSummary(results []*IndividualAnalysis, pendingCount in
 		scoreDeltas = append(scoreDeltas, result.ScoreDelta)
 		locVelocities = append(locVelocities, result.LinesOfCodeVelocity)
 		scoreVelocities = append(scoreVelocities, result.ScoreVelocity)
+
+		firstItem = false
 	}
 
 	aggregateLOCPerFile := make(map[string]util.AggregateValues, len(locPerFiles))
@@ -348,7 +390,7 @@ func NewIndividualAnalysisSummary(results []*IndividualAnalysis, pendingCount in
 	}
 }
 
-func NewPairwiseAnalysisSummary(results []*PairwiseAnalysis, pendingCount int) *PairwiseAnalysisSummary {
+func NewPairwiseAnalysisSummary(results PairwiseAnalysisMap, pendingCount int) *PairwiseAnalysisSummary {
 	if len(results) == 0 {
 		return &PairwiseAnalysisSummary{
 			AnalysisSummary: AnalysisSummary{
@@ -368,19 +410,20 @@ func NewPairwiseAnalysisSummary(results []*PairwiseAnalysis, pendingCount int) *
 	meanSims := make(map[string][]float64)
 	totalMeanSims := make([]float64, 0, len(results))
 
+	firstItem := true
 	failureCount := 0
 
-	for i, result := range results {
+	for _, result := range results {
 		if result.Failure {
 			failureCount++
 			continue
 		}
 
-		if (i == 0) || (result.AnalysisTimestamp < firstTimestamp) {
+		if firstItem || (result.AnalysisTimestamp < firstTimestamp) {
 			firstTimestamp = result.AnalysisTimestamp
 		}
 
-		if (i == 0) || (result.AnalysisTimestamp > lastTimestamp) {
+		if firstItem || (result.AnalysisTimestamp > lastTimestamp) {
 			lastTimestamp = result.AnalysisTimestamp
 		}
 
@@ -389,6 +432,8 @@ func NewPairwiseAnalysisSummary(results []*PairwiseAnalysis, pendingCount int) *
 		}
 
 		totalMeanSims = append(totalMeanSims, result.TotalMeanSimilarity)
+
+		firstItem = false
 	}
 
 	aggregateMeanSimilarities := make(map[string]util.AggregateValues, len(meanSims))

@@ -31,7 +31,7 @@ func RunEngineTestComputeFileSimilarityBase(test *testing.T, engine SimilarityEn
 		templatePath = filepath.Join(util.RootDirForTesting(), notImplementedRelPath)
 	}
 
-	result, runTime, err := engine.ComputeFileSimilarity(paths, templatePath, context.Background())
+	result, err := engine.ComputeFileSimilarity(paths, templatePath, context.Background())
 	if err != nil {
 		test.Fatalf("Failed to compute similarity: '%v'.", err)
 	}
@@ -49,9 +49,5 @@ func RunEngineTestComputeFileSimilarityBase(test *testing.T, engine SimilarityEn
 
 	if !util.IsClose(expectedScore, actualScore) {
 		test.Fatalf("Score not as expected. Expected: %f, Actual: %f.", expectedScore, actualScore)
-	}
-
-	if runTime <= 0 {
-		test.Fatalf("Run time is too small. It should be at least 1 ms, but is %d ms.", runTime)
 	}
 }
