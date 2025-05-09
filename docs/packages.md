@@ -14,7 +14,7 @@ All these packages (except cmd) live in `internal`.
  3. util
  4. config
  5. lockmanager
- 6. common, systemserver, stats
+ 6. common, systemserver, stats, jobmanager
  7. email
  8. docker
  9. model
