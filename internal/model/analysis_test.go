@@ -21,18 +21,89 @@ func TestPairwiseAnalysisMarshal(test *testing.T) {
 			NewPairwiseKey("bar", "baz"): &PairwiseAnalysis{},
 		},
 		map[PairwiseKey]*PairwiseAnalysis{
-			NewPairwiseKey("baz", "foo"): NewPairwiseAnalysis(NewPairwiseKey("baz", "foo"), nil, nil, nil, nil),
+			NewPairwiseKey("baz", "qux"): NewPairwiseAnalysis(
+				NewPairwiseKey("baz", "foo"),
+				nil,
+				nil,
+				nil,
+				nil,
+			),
+		},
+		map[PairwiseKey]*PairwiseAnalysis{
+			NewPairwiseKey("qux", "foo"): NewPairwiseAnalysis(
+				NewPairwiseKey("baz", "foo"),
+				&Assignment{},
+				map[string][]*FileSimilarity{},
+				[][2]string{},
+				[]string{},
+			),
 		},
 		map[PairwiseKey]*PairwiseAnalysis{
 			NewPairwiseKey("failed", "analysis"): NewFailedPairwiseAnalysis(NewPairwiseKey("failed", "analysis"), nil, ""),
 		},
 	}
 
-	for _, testCase := range testCases {
+	for i, testCase := range testCases {
 		pairwiseAnalysisJSON := util.MustToJSON(testCase)
 
 		var pairwiseAnalysisResult map[PairwiseKey]*PairwiseAnalysis
 		util.MustJSONFromString(pairwiseAnalysisJSON, &pairwiseAnalysisResult)
+
+		// Normalize the expected results.
+		for _, result := range testCase {
+			if result == nil {
+				continue
+			}
+
+			// Nil empty similarities.
+			if len(result.Similarities) == 0 {
+				result.Similarities = nil
+			}
+
+			if len(result.MeanSimilarities) == 0 {
+				result.MeanSimilarities = nil
+			}
+
+			// Nil empty skipped and unmatched files.
+			if len(result.SkippedFiles) == 0 {
+				result.SkippedFiles = nil
+			}
+
+			if len(result.UnmatchedFiles) == 0 {
+				result.UnmatchedFiles = nil
+			}
+		}
+
+		// Normalize the actual results.
+		for _, result := range pairwiseAnalysisResult {
+			if result == nil {
+				continue
+			}
+
+			// Nil empty similarities.
+			if len(result.Similarities) == 0 {
+				result.Similarities = nil
+			}
+
+			if len(result.MeanSimilarities) == 0 {
+				result.MeanSimilarities = nil
+			}
+
+			// Nil empty skipped and unmatched files.
+			if len(result.SkippedFiles) == 0 {
+				result.SkippedFiles = nil
+			}
+
+			if len(result.UnmatchedFiles) == 0 {
+				result.UnmatchedFiles = nil
+			}
+		}
+
+		if !reflect.DeepEqual(testCase, pairwiseAnalysisResult) {
+			test.Errorf("Case %d: Unexpected result. Expected: '%s', Actual: '%s'.",
+				i, util.MustToJSONIndent(testCase), util.MustToJSONIndent(pairwiseAnalysisResult))
+			continue
+		}
 	}
 }
 
