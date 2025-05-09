@@ -45,7 +45,7 @@ var forceDefaultEnginesForTesting bool = false
 // Otherwise, this function will return any cached results from the database
 // and the remaining analysis will be done asynchronously.
 // Returns: (complete results, number of pending analysis runs, error)
-func PairwiseAnalysis(options AnalysisOptions) (model.PairwiseAnalysisMap, int, error) {
+func PairwiseAnalysis(options AnalysisOptions) (map[model.PairwiseKey]*model.PairwiseAnalysis, int, error) {
 	if options.Context == nil {
 		options.Context = context.Background()
 	}
@@ -106,18 +106,18 @@ func createPairwiseKeys(fullSubmissionIDs []string) []model.PairwiseKey {
 	return allKeys
 }
 
-func getCachedPairwiseResults(options AnalysisOptions) (model.PairwiseAnalysisMap, []model.PairwiseKey, error) {
+func getCachedPairwiseResults(options AnalysisOptions) (map[model.PairwiseKey]*model.PairwiseAnalysis, []model.PairwiseKey, error) {
 	allKeys := createPairwiseKeys(options.ResolvedSubmissionIDs)
 
 	// If we are overwriting the cache, don't query the DB for any of the cached results.
 	if options.OverwriteCache {
-		return make(model.PairwiseAnalysisMap, 0), allKeys, nil
+		return make(map[model.PairwiseKey]*model.PairwiseAnalysis, 0), allKeys, nil
 	}
 
 	return getCachedPairwiseResultsInternal(allKeys)
 }
 
-func getCachedPairwiseResultsInternal(allKeys []model.PairwiseKey) (model.PairwiseAnalysisMap, []model.PairwiseKey, error) {
+func getCachedPairwiseResultsInternal(allKeys []model.PairwiseKey) (map[model.PairwiseKey]*model.PairwiseAnalysis, []model.PairwiseKey, error) {
 	// Get any already done analysis results from the DB.
 	dbResults, err := db.GetPairwiseAnalysis(allKeys)
 	if err != nil {
@@ -137,7 +137,7 @@ func getCachedPairwiseResultsInternal(allKeys []model.PairwiseKey) (model.Pairwi
 }
 
 // Lock based on course and then run the analysis in a parallel pool.
-func runPairwiseAnalysis(options AnalysisOptions, keys []model.PairwiseKey) (model.PairwiseAnalysisMap, error) {
+func runPairwiseAnalysis(options AnalysisOptions, keys []model.PairwiseKey) (map[model.PairwiseKey]*model.PairwiseAnalysis, error) {
 	if len(keys) == 0 {
 		return nil, nil
 	}
@@ -158,13 +158,13 @@ func runPairwiseAnalysis(options AnalysisOptions, keys []model.PairwiseKey) (mod
 		return nil, nil
 	}
 
-	results := make(model.PairwiseAnalysisMap, len(keys))
+	results := make(map[model.PairwiseKey]*model.PairwiseAnalysis, len(keys))
 
 	// If we had to wait for the lock, then check again for cached results.
 	// If there are multiple requests queued up,
 	// it will be faster to do a bulk check for cached results instead of checking each one individually.
 	if !noLockWait {
-		var partialResults model.PairwiseAnalysisMap = nil
+		var partialResults map[model.PairwiseKey]*model.PairwiseAnalysis = nil
 		partialResults, keys, err = getCachedPairwiseResultsInternal(keys)
 		if err != nil {
 			return nil, fmt.Errorf("Failed to re-check result cache before run: '%w'.", err)

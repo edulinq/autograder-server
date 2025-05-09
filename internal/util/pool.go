@@ -51,11 +51,12 @@ func RunParallelPoolMap[InputType comparable, OutputType any](poolSize int, work
 
 	// The done working channel is used by the pool workers to signal work is complete to the result collectors.
 	doneWorkingChan := make(chan any)
+
 	// The done channel is used to signal that the all results are collected and accessible.
 	// It also waits to signal until all worker threads join the main thread.
 	doneChan := make(chan any)
 
-	// A wait group used to determine when the workers have completed there work.
+	// A wait group used to determine when the workers have completed their work.
 	// Note that completion can be natural or due to a cancellation.
 	workerExitWaitGroup := sync.WaitGroup{}
 	workerExitWaitGroup.Add(poolSize)
@@ -99,9 +100,10 @@ func RunParallelPoolMap[InputType comparable, OutputType any](poolSize int, work
 			for {
 				select {
 				case resultItem := <-resultQueue:
-					output.Results[resultItem.Input] = resultItem.Result
 					if resultItem.Error != nil {
 						output.WorkErrors[resultItem.Input] = resultItem.Error
+					} else {
+						output.Results[resultItem.Input] = resultItem.Result
 					}
 				default:
 					return
@@ -114,9 +116,10 @@ func RunParallelPoolMap[InputType comparable, OutputType any](poolSize int, work
 			case <-doneWorkingChan:
 				return
 			case resultItem := <-resultQueue:
-				output.Results[resultItem.Input] = resultItem.Result
 				if resultItem.Error != nil {
 					output.WorkErrors[resultItem.Input] = resultItem.Error
+				} else {
+					output.Results[resultItem.Input] = resultItem.Result
 				}
 			}
 		}
@@ -154,7 +157,7 @@ func RunParallelPoolMap[InputType comparable, OutputType any](poolSize int, work
 	// Wait on the wait group in the background so we can select between it and the context.
 	// Technically we could wait on the done channel, but this will ensure that all workers have exited.
 	go func() {
-		// Once all pool workers have completed there work, signal to collect the remaining results.
+		// Once all pool workers have completed their work, signal to collect the remaining results.
 		workerExitWaitGroup.Wait()
 		close(doneWorkingChan)
 

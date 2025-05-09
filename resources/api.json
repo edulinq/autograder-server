@@ -218,7 +218,7 @@
                 },
                 {
                     "name": "results",
-                    "type": "model.PairwiseAnalysisMap"
+                    "type": "map[model.PairwiseKey]*model.PairwiseAnalysis"
                 },
                 {
                     "name": "summary",
@@ -2515,9 +2515,6 @@
                     "type": "[][]string"
                 }
             ]
-        },
-        "model.PairwiseAnalysisMap": {
-            "category": "map"
         },
         "model.PairwiseAnalysisSummary": {
             "category": "struct",

@@ -29,7 +29,7 @@ func TestPairwiseAnalysisFake(test *testing.T) {
 		"course101::hw0::course-student@test.edulinq.org::1697406272",
 	}
 
-	expected := model.PairwiseAnalysisMap{
+	expected := map[model.PairwiseKey]*model.PairwiseAnalysis{
 		model.NewPairwiseKey(ids[0], ids[1]): &model.PairwiseAnalysis{
 			Options:           assignment.AssignmentAnalysisOptions,
 			AnalysisTimestamp: timestamp.Zero(),
@@ -141,7 +141,7 @@ func TestPairwiseAnalysisFake(test *testing.T) {
 	}
 }
 
-func testPairwise(test *testing.T, ids []string, expected model.PairwiseAnalysisMap, expectedInitialCacheCount int) {
+func testPairwise(test *testing.T, ids []string, expected map[model.PairwiseKey]*model.PairwiseAnalysis, expectedInitialCacheCount int) {
 	// Check for records in the DB.
 	queryKeys := make([]model.PairwiseKey, 0, len(expected))
 	for _, analysis := range expected {

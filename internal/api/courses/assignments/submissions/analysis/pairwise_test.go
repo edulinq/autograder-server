@@ -53,7 +53,7 @@ func TestPairwiseBase(test *testing.T) {
 				PendingCount:  1,
 			},
 		},
-		Results: model.PairwiseAnalysisMap{},
+		Results: map[model.PairwiseKey]*model.PairwiseAnalysis{},
 	}
 
 	if !reflect.DeepEqual(expected, responseContent) {
@@ -107,7 +107,7 @@ func TestPairwiseBase(test *testing.T) {
 				Max:    0.13,
 			},
 		},
-		Results: model.PairwiseAnalysisMap{
+		Results: map[model.PairwiseKey]*model.PairwiseAnalysis{
 			model.NewPairwiseKey(submissionID1, submissionID2): &model.PairwiseAnalysis{
 				Options:           assignment.AssignmentAnalysisOptions,
 				AnalysisTimestamp: timestamp.Zero(),

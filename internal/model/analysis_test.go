@@ -10,6 +10,32 @@ import (
 	"github.com/edulinq/autograder/internal/util"
 )
 
+func TestPairwiseAnalysisMarshal(test *testing.T) {
+	testCases := []map[PairwiseKey]*PairwiseAnalysis{
+		nil,
+		map[PairwiseKey]*PairwiseAnalysis{},
+		map[PairwiseKey]*PairwiseAnalysis{
+			NewPairwiseKey("foo", "bar"): nil,
+		},
+		map[PairwiseKey]*PairwiseAnalysis{
+			NewPairwiseKey("bar", "baz"): &PairwiseAnalysis{},
+		},
+		map[PairwiseKey]*PairwiseAnalysis{
+			NewPairwiseKey("baz", "foo"): NewPairwiseAnalysis(NewPairwiseKey("baz", "foo"), nil, nil, nil, nil),
+		},
+		map[PairwiseKey]*PairwiseAnalysis{
+			NewPairwiseKey("failed", "analysis"): NewFailedPairwiseAnalysis(NewPairwiseKey("failed", "analysis"), nil, ""),
+		},
+	}
+
+	for _, testCase := range testCases {
+		pairwiseAnalysisJSON := util.MustToJSON(testCase)
+
+		var pairwiseAnalysisResult map[PairwiseKey]*PairwiseAnalysis
+		util.MustJSONFromString(pairwiseAnalysisJSON, &pairwiseAnalysisResult)
+	}
+}
+
 func TestAssignmentAnalysisOptionsValidateBase(test *testing.T) {
 	testCases := []struct {
 		input          *AssignmentAnalysisOptions
@@ -499,7 +525,7 @@ func TestNewPairwiseAnalysisSummaryBase(test *testing.T) {
 		},
 	}
 
-	input := PairwiseAnalysisMap{
+	input := map[PairwiseKey]*PairwiseAnalysis{
 		NewPairwiseKey("A", "B"): NewPairwiseAnalysis(NewPairwiseKey("A", "B"), nil, sims1, nil, nil),
 		NewPairwiseKey("C", "D"): NewPairwiseAnalysis(NewPairwiseKey("C", "D"), nil, sims2, nil, nil),
 		NewPairwiseKey("E", "F"): NewPairwiseAnalysis(NewPairwiseKey("E", "F"), nil, sims3, nil, nil),
