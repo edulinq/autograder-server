@@ -53,7 +53,7 @@ func TestIndividualBase(test *testing.T) {
 				PendingCount:  2,
 			},
 		},
-		Results: []*model.IndividualAnalysis{},
+		Results: map[string]*model.IndividualAnalysis{},
 	}
 
 	if !reflect.DeepEqual(expected, responseContent) {
@@ -146,8 +146,8 @@ func TestIndividualBase(test *testing.T) {
 				},
 			},
 		},
-		Results: []*model.IndividualAnalysis{
-			&model.IndividualAnalysis{
+		Results: map[string]*model.IndividualAnalysis{
+			"course101::hw0::course-student@test.edulinq.org::1697406256": &model.IndividualAnalysis{
 				Options:             assignment.AssignmentAnalysisOptions,
 				AnalysisTimestamp:   timestamp.Zero(),
 				FullID:              "course101::hw0::course-student@test.edulinq.org::1697406256",
@@ -170,7 +170,7 @@ func TestIndividualBase(test *testing.T) {
 					},
 				},
 			},
-			&model.IndividualAnalysis{
+			"course101::hw0::course-student@test.edulinq.org::1697406265": &model.IndividualAnalysis{
 				Options:             assignment.AssignmentAnalysisOptions,
 				AnalysisTimestamp:   timestamp.Zero(),
 				FullID:              "course101::hw0::course-student@test.edulinq.org::1697406265",

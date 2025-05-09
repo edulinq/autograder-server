@@ -53,7 +53,7 @@ func TestPairwiseBase(test *testing.T) {
 				PendingCount:  1,
 			},
 		},
-		Results: []*model.PairwiseAnalysis{},
+		Results: model.PairwiseAnalysisMap{},
 	}
 
 	if !reflect.DeepEqual(expected, responseContent) {
@@ -71,6 +71,9 @@ func TestPairwiseBase(test *testing.T) {
 	}
 
 	util.MustJSONFromString(util.MustToJSON(response.Content), &responseContent)
+
+	submissionID1 := "course101::hw0::course-student@test.edulinq.org::1697406256"
+	submissionID2 := "course101::hw0::course-student@test.edulinq.org::1697406265"
 
 	// Second round should be complete.
 	expected = PairwiseResponse{
@@ -104,13 +107,13 @@ func TestPairwiseBase(test *testing.T) {
 				Max:    0.13,
 			},
 		},
-		Results: []*model.PairwiseAnalysis{
-			&model.PairwiseAnalysis{
+		Results: model.PairwiseAnalysisMap{
+			model.NewPairwiseKey(submissionID1, submissionID2): &model.PairwiseAnalysis{
 				Options:           assignment.AssignmentAnalysisOptions,
 				AnalysisTimestamp: timestamp.Zero(),
 				SubmissionIDs: model.NewPairwiseKey(
-					"course101::hw0::course-student@test.edulinq.org::1697406256",
-					"course101::hw0::course-student@test.edulinq.org::1697406265",
+					submissionID1,
+					submissionID2,
 				),
 				Similarities: map[string][]*model.FileSimilarity{
 					"submission.py": []*model.FileSimilarity{

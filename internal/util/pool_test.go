@@ -4,9 +4,7 @@ import (
 	"context"
 	"reflect"
 	"runtime"
-	"sync"
 	"testing"
-	"time"
 )
 
 func TestRunParallelPoolMapBase(test *testing.T) {
@@ -29,21 +27,28 @@ func TestRunParallelPoolMapBase(test *testing.T) {
 		"CCC",
 	}
 
-	expected := []int{
-		1,
-		2,
-		3,
+	expected := &PoolResult[string, int]{
+		Results: map[string]int{
+			"A":   1,
+			"BB":  2,
+			"CCC": 3,
+		},
+		WorkErrors: map[string]error{},
+		Canceled:   false,
 	}
 
 	workFunc := func(input string) (int, error) {
 		return len(input), nil
 	}
 
+	// Count the number of active threads before running any tests.
+	overallStartThreadCount := runtime.NumGoroutine()
+
 	for i, testCase := range testCases {
-		// Count the number of active threads before running.
+		// Count the number of active threads before running the test case.
 		startThreadCount := runtime.NumGoroutine()
 
-		actual, workErrors, err := RunParallelPoolMap(testCase.numThreads, input, context.Background(), workFunc)
+		output, err := RunParallelPoolMap(testCase.numThreads, input, context.Background(), workFunc)
 		if err != nil {
 			if !testCase.hasError {
 				test.Errorf("Case %d: Got an unexpected error: '%v'.", i, err)
@@ -57,82 +62,95 @@ func TestRunParallelPoolMapBase(test *testing.T) {
 			continue
 		}
 
-		if len(workErrors) != 0 {
-			test.Errorf("Case %d: Unexpected work errors: '%s'.", i, MustToJSONIndent(workErrors))
-			continue
-		}
+		output.IsDone()
 
-		if !reflect.DeepEqual(expected, actual) {
-			test.Errorf("Case %d: Result not as expected. Expected: '%s', Actual: '%s'.", i, MustToJSONIndent(expected), MustToJSONIndent(actual))
+		// Clear output done channel for comparison check.
+		output.done = nil
+
+		if !reflect.DeepEqual(expected, output) {
+			test.Errorf("Case %d: Result not as expected. Expected: '%s', actual: '%s'.",
+				i, MustToJSONIndent(expected), MustToJSONIndent(output))
+			continue
 		}
 
 		// Check for the thread count last (this gives the workers a small bit of extra time to exit).
 		// Note that there may be other tests with stray threads, so we are allowed to have less than when we started.
-		time.Sleep(25 * time.Millisecond)
+		// The final thread that signals the output.IsDone() may not have enough time to exit,
+		// so we are allowed to end with one more thread than when we started.
 		endThreadCount := runtime.NumGoroutine()
-		if startThreadCount < endThreadCount {
-			test.Errorf("Case %d: Ended with more threads than we started with. Start: %d, End: %d.", i, startThreadCount, endThreadCount)
+		allowedEndThreadCount := endThreadCount - 1
+		if startThreadCount < allowedEndThreadCount {
+			test.Errorf("Case %d: Ended with more threads than we started with. Start: %d, End: %d.",
+				i, startThreadCount, allowedEndThreadCount)
 			continue
 		}
+	}
+
+	// Note that there may be other tests with stray threads, so we are allowed to have less than when we started.
+	// The final thread that signals the output.IsDone() may not have enough time to exit,
+	// so we are allowed to end with one more thread than when we started.
+	overallEndThreadCount := runtime.NumGoroutine()
+	allowedOverallEndThreadCount := overallEndThreadCount - 1
+	if overallStartThreadCount < allowedOverallEndThreadCount {
+		test.Fatalf("Ended with more threads than we started with. Start: %d, End: %d.",
+			overallStartThreadCount, allowedOverallEndThreadCount)
 	}
 }
 
 func TestRunParallelPoolMapCancel(test *testing.T) {
-	testCases := []struct {
-		numThreads int
-	}{
-		{1},
-		{2},
-		{3},
-		{4},
-		{10},
-	}
-
 	input := []string{
 		"A",
 		"BB",
 		"CCC",
 	}
 
-	for i, testCase := range testCases {
-		// Block until the first worker has started.
-		workWaitGroup := sync.WaitGroup{}
-		workWaitGroup.Add(1)
+	// Count the number of active threads before running.
+	startThreadCount := runtime.NumGoroutine()
 
-		workFunc := func(input string) (int, error) {
-			// Signal on the first piece of work that we can make sure the workers have started up before we cancel.
-			if input == "A" {
-				workWaitGroup.Done()
-			}
+	ctx, cancelFunc := context.WithCancel(context.Background())
 
-			// Sleep for a really long time (for a test).
-			time.Sleep(1 * time.Hour)
-
-			return len(input), nil
-		}
-
-		ctx, cancelFunc := context.WithCancel(context.Background())
-
-		// Cancel the context as soon as the first worker signals it.
-		go func() {
-			workWaitGroup.Wait()
+	// Work will not start on input 'CCC'.
+	workFunc := func(input string) (int, error) {
+		// Cancel on the second piece of work so that work on input 'A' will complete normally.
+		if input == "BB" {
 			cancelFunc()
-		}()
-
-		actual, workErrors, err := RunParallelPoolMap(testCase.numThreads, input, ctx, workFunc)
-		if err != nil {
-			test.Errorf("Case %d: Got an unexpected error: '%v'.", i, err)
-			continue
 		}
 
-		if actual != nil {
-			test.Errorf("Case %d: Got a result when it should have been nil.", i)
-			continue
-		}
+		return len(input), nil
+	}
 
-		if workErrors != nil {
-			test.Errorf("Case %d: Got errors when they should have been nil.", i)
-			continue
-		}
+	output, err := RunParallelPoolMap(1, input, ctx, workFunc)
+	if err != nil {
+		test.Fatalf("Got an unexpected error: '%v'.", err)
+	}
+
+	output.IsDone()
+
+	expected := &PoolResult[string, int]{
+		Results: map[string]int{
+			"A":  1,
+			"BB": 2,
+		},
+		WorkErrors: map[string]error{},
+		Canceled:   true,
+	}
+
+	// Clear output done channel for comparison check.
+	output.done = nil
+
+	if !reflect.DeepEqual(output, expected) {
+		test.Fatalf("Unexpected results. Expected: '%v', actual: '%v'.",
+			MustToJSONIndent(expected), MustToJSONIndent(output))
+	}
+
+	// Check for the thread count last (this gives the workers a small bit of extra time to exit).
+	// Note that there may be other tests with stray threads, so we are allowed to have less than when we started.
+	// The final thread that signals the output.IsDone() may not have enough time to exit,
+	// so we are allowed to end with one more thread than when we started.
+	endThreadCount := runtime.NumGoroutine()
+	allowedEndThreadCount := endThreadCount - 1
+	if startThreadCount < allowedEndThreadCount {
+		test.Fatalf("Ended with more threads than we started with. Start: %d, End: %d.",
+			startThreadCount, allowedEndThreadCount)
 	}
 }

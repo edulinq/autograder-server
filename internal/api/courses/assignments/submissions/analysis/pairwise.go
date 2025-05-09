@@ -19,7 +19,7 @@ type PairwiseResponse struct {
 	Complete bool                           `json:"complete"`
 	Options  analysis.AnalysisOptions       `json:"options"`
 	Summary  *model.PairwiseAnalysisSummary `json:"summary"`
-	Results  []*model.PairwiseAnalysis      `json:"results"`
+	Results  model.PairwiseAnalysisMap      `json:"results"`
 }
 
 // Get the result of a pairwise analysis for the specified submissions.
@@ -44,7 +44,7 @@ func HandlePairwise(request *PairwiseRequest) (*PairwiseResponse, *core.APIError
 
 	request.ResolvedSubmissionIDs = fullSubmissionIDs
 	request.InitiatorEmail = request.ServerUser.Email
-	request.AnalysisOptions.Context = request.Context
+	request.AnalysisOptions.Context = request.APIRequestUserContext.Context
 
 	results, pendingCount, err := analysis.PairwiseAnalysis(request.AnalysisOptions)
 	if err != nil {
