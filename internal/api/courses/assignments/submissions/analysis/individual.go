@@ -16,10 +16,10 @@ type IndividualRequest struct {
 }
 
 type IndividualResponse struct {
-	Complete bool                             `json:"complete"`
-	Options  analysis.AnalysisOptions         `json:"options"`
-	Summary  *model.IndividualAnalysisSummary `json:"summary"`
-	Results  []*model.IndividualAnalysis      `json:"results"`
+	Complete bool                                 `json:"complete"`
+	Options  analysis.AnalysisOptions             `json:"options"`
+	Summary  *model.IndividualAnalysisSummary     `json:"summary"`
+	Results  map[string]*model.IndividualAnalysis `json:"results"`
 }
 
 // Get the result of a individual analysis for the specified submissions.
@@ -44,7 +44,7 @@ func HandleIndividual(request *IndividualRequest) (*IndividualResponse, *core.AP
 
 	request.ResolvedSubmissionIDs = fullSubmissionIDs
 	request.InitiatorEmail = request.ServerUser.Email
-	request.AnalysisOptions.Context = request.Context
+	request.AnalysisOptions.Context = request.APIRequestUserContext.Context
 
 	results, pendingCount, err := analysis.IndividualAnalysis(request.AnalysisOptions)
 	if err != nil {

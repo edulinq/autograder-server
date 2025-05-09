@@ -29,13 +29,13 @@ func TestPairwiseAnalysisFake(test *testing.T) {
 		"course101::hw0::course-student@test.edulinq.org::1697406272",
 	}
 
-	expected := []*model.PairwiseAnalysis{
-		&model.PairwiseAnalysis{
+	expected := map[model.PairwiseKey]*model.PairwiseAnalysis{
+		model.NewPairwiseKey(ids[0], ids[1]): &model.PairwiseAnalysis{
 			Options:           assignment.AssignmentAnalysisOptions,
 			AnalysisTimestamp: timestamp.Zero(),
 			SubmissionIDs: model.NewPairwiseKey(
-				"course101::hw0::course-student@test.edulinq.org::1697406256",
-				"course101::hw0::course-student@test.edulinq.org::1697406265",
+				ids[0],
+				ids[1],
 			),
 			Similarities: map[string][]*model.FileSimilarity{
 				"submission.py": []*model.FileSimilarity{
@@ -52,12 +52,12 @@ func TestPairwiseAnalysisFake(test *testing.T) {
 			},
 			TotalMeanSimilarity: 0.13,
 		},
-		&model.PairwiseAnalysis{
+		model.NewPairwiseKey(ids[0], ids[2]): &model.PairwiseAnalysis{
 			Options:           assignment.AssignmentAnalysisOptions,
 			AnalysisTimestamp: timestamp.Zero(),
 			SubmissionIDs: model.NewPairwiseKey(
-				"course101::hw0::course-student@test.edulinq.org::1697406256",
-				"course101::hw0::course-student@test.edulinq.org::1697406272",
+				ids[0],
+				ids[2],
 			),
 			Similarities: map[string][]*model.FileSimilarity{
 				"submission.py": []*model.FileSimilarity{
@@ -74,12 +74,12 @@ func TestPairwiseAnalysisFake(test *testing.T) {
 			},
 			TotalMeanSimilarity: 0.13,
 		},
-		&model.PairwiseAnalysis{
+		model.NewPairwiseKey(ids[1], ids[2]): &model.PairwiseAnalysis{
 			Options:           assignment.AssignmentAnalysisOptions,
 			AnalysisTimestamp: timestamp.Zero(),
 			SubmissionIDs: model.NewPairwiseKey(
-				"course101::hw0::course-student@test.edulinq.org::1697406265",
-				"course101::hw0::course-student@test.edulinq.org::1697406272",
+				ids[1],
+				ids[2],
 			),
 			Similarities: map[string][]*model.FileSimilarity{
 				"submission.py": []*model.FileSimilarity{
@@ -141,7 +141,7 @@ func TestPairwiseAnalysisFake(test *testing.T) {
 	}
 }
 
-func testPairwise(test *testing.T, ids []string, expected []*model.PairwiseAnalysis, expectedInitialCacheCount int) {
+func testPairwise(test *testing.T, ids []string, expected map[model.PairwiseKey]*model.PairwiseAnalysis, expectedInitialCacheCount int) {
 	// Check for records in the DB.
 	queryKeys := make([]model.PairwiseKey, 0, len(expected))
 	for _, analysis := range expected {
@@ -412,22 +412,24 @@ func TestPairwiseAnalysisIncludeExclude(test *testing.T) {
 			continue
 		}
 
-		if testCase.expectedCount != len(results[0].Similarities) {
+		key := model.NewPairwiseKey(options.ResolvedSubmissionIDs[0], options.ResolvedSubmissionIDs[1])
+
+		if testCase.expectedCount != len(results[key].Similarities) {
 			test.Errorf("Case %d: Unexpected number of result similarities. Expected: %d, Actual: %d.",
-				i, testCase.expectedCount, len(results[0].Similarities))
+				i, testCase.expectedCount, len(results[key].Similarities))
 			continue
 		}
 
-		if (baseCount - testCase.expectedCount) != len(results[0].SkippedFiles) {
+		if (baseCount - testCase.expectedCount) != len(results[key].SkippedFiles) {
 			test.Errorf("Case %d: Unexpected number of skipped files. Expected: %d, Actual: %d.",
-				i, (baseCount - testCase.expectedCount), len(results[0].SkippedFiles))
+				i, (baseCount - testCase.expectedCount), len(results[key].SkippedFiles))
 			continue
 		}
 
 		if testCase.expectedCount == 0 {
-			if relpath != results[0].SkippedFiles[0] {
+			if relpath != results[key].SkippedFiles[0] {
 				test.Errorf("Case %d: Unexpected skipped file. Expected: '%s', Actual: '%s'.",
-					i, relpath, results[0].SkippedFiles[0])
+					i, relpath, results[key].SkippedFiles[0])
 			}
 		}
 	}
@@ -649,7 +651,9 @@ func TestPairwiseAnalysisCountBase(test *testing.T) {
 
 		// Check if the result was from the cache using the start time.
 		if len(results) > 0 {
-			resultTime := results[0].AnalysisTimestamp
+			key := model.NewPairwiseKey(testCase.options.ResolvedSubmissionIDs[0], testCase.options.ResolvedSubmissionIDs[1])
+
+			resultTime := results[key].AnalysisTimestamp
 			resultIsFromCache := (resultTime <= startTime)
 
 			if testCase.expectedResultIsFromCache != resultIsFromCache {
@@ -727,11 +731,14 @@ func TestPairwiseAnalysisFailureBase(test *testing.T) {
 		test.Fatalf("Number of results not as expected. Expected: %d, Actual: %d.", 1, len(results))
 	}
 
-	if !results[0].Failure {
+	key := model.NewPairwiseKey(options.ResolvedSubmissionIDs[0], options.ResolvedSubmissionIDs[1])
+
+	if !results[key].Failure {
 		test.Fatalf("Result is not a failure, when it should be.")
 	}
 
-	if !strings.Contains(results[0].FailureMessage, expectedMessageSubstring) {
-		test.Fatalf("Failure message does not contain expected substring. Expected Substring: '%s', Actual: '%s'.", expectedMessageSubstring, results[0].FailureMessage)
+	if !strings.Contains(results[key].FailureMessage, expectedMessageSubstring) {
+		test.Fatalf("Failure message does not contain expected substring. Expected Substring: '%s', Actual: '%s'.",
+			expectedMessageSubstring, results[key].FailureMessage)
 	}
 }

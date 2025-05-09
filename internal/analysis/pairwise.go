@@ -45,7 +45,7 @@ var forceDefaultEnginesForTesting bool = false
 // Otherwise, this function will return any cached results from the database
 // and the remaining analysis will be done asynchronously.
 // Returns: (complete results, number of pending analysis runs, error)
-func PairwiseAnalysis(options AnalysisOptions) ([]*model.PairwiseAnalysis, int, error) {
+func PairwiseAnalysis(options AnalysisOptions) (map[model.PairwiseKey]*model.PairwiseAnalysis, int, error) {
 	if options.Context == nil {
 		options.Context = context.Background()
 	}
@@ -66,7 +66,10 @@ func PairwiseAnalysis(options AnalysisOptions) ([]*model.PairwiseAnalysis, int, 
 			return nil, 0, err
 		}
 
-		completeAnalysis = append(completeAnalysis, results...)
+		for key, result := range results {
+			completeAnalysis[key] = result
+		}
+
 		remainingKeys = nil
 	} else {
 		if !options.RetainOriginalContext {
@@ -103,42 +106,38 @@ func createPairwiseKeys(fullSubmissionIDs []string) []model.PairwiseKey {
 	return allKeys
 }
 
-func getCachedPairwiseResults(options AnalysisOptions) ([]*model.PairwiseAnalysis, []model.PairwiseKey, error) {
+func getCachedPairwiseResults(options AnalysisOptions) (map[model.PairwiseKey]*model.PairwiseAnalysis, []model.PairwiseKey, error) {
 	allKeys := createPairwiseKeys(options.ResolvedSubmissionIDs)
 
 	// If we are overwriting the cache, don't query the DB for any of the cached results.
 	if options.OverwriteCache {
-		return make([]*model.PairwiseAnalysis, 0), allKeys, nil
+		return make(map[model.PairwiseKey]*model.PairwiseAnalysis, 0), allKeys, nil
 	}
 
 	return getCachedPairwiseResultsInternal(allKeys)
 }
 
-func getCachedPairwiseResultsInternal(allKeys []model.PairwiseKey) ([]*model.PairwiseAnalysis, []model.PairwiseKey, error) {
+func getCachedPairwiseResultsInternal(allKeys []model.PairwiseKey) (map[model.PairwiseKey]*model.PairwiseAnalysis, []model.PairwiseKey, error) {
 	// Get any already done analysis results from the DB.
 	dbResults, err := db.GetPairwiseAnalysis(allKeys)
 	if err != nil {
 		return nil, nil, fmt.Errorf("Failed to get cached pairwise analysis from DB: '%w'.", err)
 	}
 
-	// Split up the keys into complete and remaining.
-	completeAnalysis := make([]*model.PairwiseAnalysis, 0, len(dbResults))
 	remainingKeys := make([]model.PairwiseKey, 0, len(allKeys)-len(dbResults))
 
 	for _, key := range allKeys {
-		result, ok := dbResults[key]
-		if ok {
-			completeAnalysis = append(completeAnalysis, result)
-		} else {
+		_, ok := dbResults[key]
+		if !ok {
 			remainingKeys = append(remainingKeys, key)
 		}
 	}
 
-	return completeAnalysis, remainingKeys, nil
+	return dbResults, remainingKeys, nil
 }
 
 // Lock based on course and then run the analysis in a parallel pool.
-func runPairwiseAnalysis(options AnalysisOptions, keys []model.PairwiseKey) ([]*model.PairwiseAnalysis, error) {
+func runPairwiseAnalysis(options AnalysisOptions, keys []model.PairwiseKey) (map[model.PairwiseKey]*model.PairwiseAnalysis, error) {
 	if len(keys) == 0 {
 		return nil, nil
 	}
@@ -159,20 +158,22 @@ func runPairwiseAnalysis(options AnalysisOptions, keys []model.PairwiseKey) ([]*
 		return nil, nil
 	}
 
-	results := make([]*model.PairwiseAnalysis, 0, len(keys))
+	results := make(map[model.PairwiseKey]*model.PairwiseAnalysis, len(keys))
 
 	// If we had to wait for the lock, then check again for cached results.
 	// If there are multiple requests queued up,
 	// it will be faster to do a bulk check for cached results instead of checking each one individually.
 	if !noLockWait {
-		var partialResults []*model.PairwiseAnalysis = nil
+		var partialResults map[model.PairwiseKey]*model.PairwiseAnalysis = nil
 		partialResults, keys, err = getCachedPairwiseResultsInternal(keys)
 		if err != nil {
 			return nil, fmt.Errorf("Failed to re-check result cache before run: '%w'.", err)
 		}
 
 		// Collect the partial results from the cache.
-		results = append(results, partialResults...)
+		for id, result := range partialResults {
+			results[id] = result
+		}
 	}
 
 	// All results were fetched from the cache.
@@ -184,7 +185,7 @@ func runPairwiseAnalysis(options AnalysisOptions, keys []model.PairwiseKey) ([]*
 	if options.OverwriteCache && !options.DryRun {
 		err := db.RemovePairwiseAnalysis(keys)
 		if err != nil {
-			return nil, fmt.Errorf("Failed to remove old individual analysis cache entries: '%w'.", err)
+			return nil, fmt.Errorf("Failed to remove old pairwise analysis cache entries: '%w'.", err)
 		}
 	}
 
@@ -192,19 +193,18 @@ func runPairwiseAnalysis(options AnalysisOptions, keys []model.PairwiseKey) ([]*
 	defer templateFileStore.Close()
 
 	poolSize := config.ANALYSIS_PAIRWISE_COURSE_POOL_SIZE.Get()
-	type PoolResult struct {
+	type AnalysisPoolResult struct {
 		Result  *model.PairwiseAnalysis
 		RunTime int64
-		Error   error
 	}
 
-	poolResults, _, err := util.RunParallelPoolMap(poolSize, keys, options.Context, func(key model.PairwiseKey) (PoolResult, error) {
+	poolResults, err := util.RunParallelPoolMap(poolSize, keys, options.Context, func(key model.PairwiseKey) (AnalysisPoolResult, error) {
 		result, runTime, err := runSinglePairwiseAnalysis(options, key, templateFileStore)
 		if err != nil {
 			err = fmt.Errorf("Failed to perform pairwise analysis on submissions %s: '%w'.", key.String(), err)
 		}
 
-		return PoolResult{result, runTime, err}, nil
+		return AnalysisPoolResult{result, runTime}, err
 	})
 
 	if err != nil {
@@ -212,20 +212,30 @@ func runPairwiseAnalysis(options AnalysisOptions, keys []model.PairwiseKey) ([]*
 	}
 
 	// If the analysis was canceled, exit right away.
-	if options.Context.Err() != nil {
+	if poolResults.Canceled {
 		return nil, nil
 	}
+
+	poolResults.IsDone()
 
 	var errs error = nil
 	totalRunTime := int64(0)
 
-	for _, poolResult := range poolResults {
-		if poolResult.Error != nil {
-			errs = errors.Join(errs, poolResult.Error)
-		} else {
-			results = append(results, poolResult.Result)
-			totalRunTime += poolResult.RunTime
+	for _, key := range keys {
+		err, ok := poolResults.WorkErrors[key]
+		if ok {
+			errs = errors.Join(errs, err)
+			continue
 		}
+
+		analysisPoolResult, ok := poolResults.Results[key]
+		if !ok {
+			errs = errors.Join(errs, fmt.Errorf("Unable to find result for submissions: '%s'.", key.String()))
+			continue
+		}
+
+		results[key] = analysisPoolResult.Result
+		totalRunTime += analysisPoolResult.RunTime
 	}
 
 	collectPairwiseStats(keys, totalRunTime, options.InitiatorEmail)
