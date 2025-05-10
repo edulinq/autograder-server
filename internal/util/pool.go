@@ -18,13 +18,13 @@ type PoolResult[InputType comparable, OutputType any] struct {
 	// Signals that the parallel pool was canceled during execution.
 	Canceled bool
 
-	// An internal done channel to signal the results can be accessed.
-	done chan any
+	// Signals the results can be accessed.
+	Done <-chan any
 }
 
 // Use this method to block until the results can be accessed.
 func (this PoolResult[InputType, OutputType]) IsDone() {
-	<-this.done
+	<-this.Done
 }
 
 // Do a map function (one result for one input) with a parallel pool of workers.
@@ -70,7 +70,7 @@ func RunParallelPoolMap[InputType comparable, OutputType any](poolSize int, work
 	output := PoolResult[InputType, OutputType]{
 		Results:    make(map[InputType]OutputType, len(workItems)),
 		WorkErrors: make(map[InputType]error, 0),
-		done:       doneChan,
+		Done:       doneChan,
 	}
 
 	// Load work.
