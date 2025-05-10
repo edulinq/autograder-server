@@ -10,8 +10,7 @@ import (
 	"github.com/edulinq/autograder/internal/util"
 )
 
-// JobOptions contains user level options for a Job.
-// These options allow for optional context cancellation of the Job.
+// The user level options for a job, including an optional context.
 type JobOptions struct {
 	// Don't save anything.
 	DryRun bool `json:"dry-run"`
@@ -26,26 +25,15 @@ type JobOptions struct {
 	Context context.Context `json:"-"`
 }
 
-// Job provides system level customization of the job's execution.
-// It supports the following optional functionality:
-//   - synchronization
-//   - context cancellation
-//   - record retrieval
-//   - record storage
-//   - record removal from storage
-//   - asynchronous output processing
-//
+// Provides system level customization of the job's execution.
 // Given job options, input items, and a work function,
-// Job will invoke the work func on each input item in a parallel pool to produce a JobOutput.
-// If a lock key is provided, Job will block on that key before running.
-// The locking behavior prevents overuse of resources and conflicts between the same Job.
-// Provide an input key generation function to synchronize at the input item level in addition to the job level.
+// a job will invoke the work func on each input item in a parallel pool.
 type Job[InputType comparable, OutputType any] struct {
 	// The user level options for a Job.
 	*JobOptions
 
 	// Instead of adding to the results as they are processed,
-	// return a copy of the potentially incomplete results fetched before the job starts.
+	// return a copy of the potentially incomplete results fetched before the job starts, e.g. from a cache.
 	// If WaitForCompletion is true, this option is ignored.
 	ReturnIncompleteResults bool
 
@@ -54,51 +42,49 @@ type Job[InputType comparable, OutputType any] struct {
 
 	// An optional key to lock the job on.
 	// The job will block until it acquires the lock.
-	// Provide a WorkItemKeyFunc to synchronize individual work items.
+	// Provide a function to generate a lock key from the work item to synchronize individual items.
 	LockKey string
 
 	// A list of items that need work.
 	WorkItems []InputType
 
 	// An optional function to retrieve existing records that should not be processed.
-	// Returns a list of processed records, remaining items, and an error.
-	// E.g. This function could be used to retrieve completed items from a cache.
-	RetrieveFunc func([]InputType) (map[InputType]OutputType, error)
+	RetrieveFunc func([]InputType) (map[InputType]OutputType, error) `json:"-"`
 
 	// An optional function to store the result.
-	// Use this function to cache the result of the work function to reduce future computation.
-	StoreFunc func([]OutputType) error
+	StoreFunc func([]OutputType) error `json:"-"`
 
 	// An optional function to remove existing records from storage.
-	RemoveFunc func([]InputType) error
+	RemoveFunc func([]InputType) error `json:"-"`
 
 	// A function to transform work items into results.
-	// Returns a result and an error.
-	WorkFunc func(InputType) (OutputType, error)
+	// System errors should be returned by the work func,
+	// but non system errors should be handled internally.
+	// These error semantics allow for proper run time tracking.
+	WorkFunc func(InputType) (OutputType, error) `json:"-"`
 
 	// An optional function to get the locking key for an individual work item.
-	WorkItemKeyFunc func(InputType) string
+	// Provide an input key generation function to synchronize at the input item level in addition to the job level.
+	WorkItemKeyFunc func(InputType) string `json:"-"`
 
 	// An optional function to process the final JobOutput upon successful completion.
-	OnSuccess func(JobOutput[InputType, OutputType])
+	OnSuccess func(JobOutput[InputType, OutputType]) `json:"-"`
 }
 
-// JobOutput is the result of a call to Job.Run().
-// It contains a system error, a map of work errors, the result items,
-// the remaining items, the total run time, and a channel that signals execution is complete.
-// System errors are held in Error, whereas errors during work are included in WorkErrors.
-// If there are work errors there will always be a system error, but the converse is not always true.
-// Always wait for the Done channel to be closed before handling JobOutput.
+// The output from running a job.
+// A critical error (JobOutput.Error) may not generate work errors, so both must be checked independently.
+// Consult the map of errors using the item to check for item-level errors.
+// Always wait for the Done channel to be closed before handling the output,
+// which can be achieved by calling JobOutput.IsDone().
 type JobOutput[InputType comparable, OutputType any] struct {
 	// Signals the job was canceled during execution.
 	Canceled bool
 
-	// An error for Job.Run().
+	// A system error from running the job.
 	Error error
 
 	// A map of errors encountered while running the job.
-	// The key of the error will be the index of the item
-	// that failed in RemainingItems.
+	// The key of the error will be the item that failed.
 	WorkErrors map[InputType]error
 
 	// The map of results.
@@ -107,12 +93,18 @@ type JobOutput[InputType comparable, OutputType any] struct {
 	// The list of items that still need work.
 	RemainingItems []InputType
 
-	// The total computation time spent in WorkFunc().
+	// The total computation time spent working on items.
 	// This time does not include time spent waiting for locks or retrieving stored items.
+	// The run time does not include time spent working on items that returned an error.
 	RunTime int64
 
 	// Signals the job is complete.
-	Done <-chan any
+	Done <-chan any `json:"-"`
+}
+
+// Use this method to block until the results can be accessed.
+func (this JobOutput[InputType, OutputType]) IsDone() {
+	<-this.Done
 }
 
 func (this *Job[InputType, OutputType]) Validate() error {
@@ -143,13 +135,12 @@ func (this *JobOptions) Validate() error {
 	return nil
 }
 
-// Given a customized Job, Job.Run() processes input items in a parallel pool of workers.
-// Returns the collected results in a JobOutput.
-// When not waiting for completion, the JobOutput may still be modified until the Done channel is closed.
-// Returning a copy of results gives immediate access to stable results but the final results will not be accessible later.
-// Returns nil if the context is canceled during execution.
+// Process input items in a parallel pool of workers and return the collected results.
+// When not waiting for completion, the output may still be modified until the Done channel is closed.
+// Returning a copy of results gives immediate access to stable results but the final results will be inaccessible.
+// If the context is canceled during execution, the output will signal accordingly.
 func (this *Job[InputType, OutputType]) Run() *JobOutput[InputType, OutputType] {
-	// Run closes the channel to signal the returned JobOutput is safe to handle.
+	// Run closes the channel to signal the returned output is safe to handle.
 	// The channel is closed by this thread except when !WaitForCompletion and !ReturnIncompleteResults.
 	done := make(chan any)
 
@@ -229,19 +220,13 @@ func (this *Job[InputType, OutputType]) Run() *JobOutput[InputType, OutputType] 
 		}()
 	}
 
-	// If the context was canceled during execution, return immediately.
-	if this.Context.Err() != nil {
-		return &output
-	}
-
 	return &output
 }
 
-// Job.run() processes the remaining items and updates the partial job output.
-// If Job.Run() returned incomplete results, the JobOutput will not be accessible.
-// In this case, Job.run() will not not update the results to reduce memory usage.
+// Process the remaining items and update the partial job output.
+// If the results will be inaccessible, the output will not be updated to reduce memory usage.
 // However, the run time and error will be updated for stats and logging purposes.
-// The parameter updateOutput signals whether Job.run() will add results to JobOutput.
+// The parameter updateOutput signals whether to add results to the output or not.
 func (this *Job[InputType, OutputType]) run(output *JobOutput[InputType, OutputType], updateOutput bool) {
 	if len(output.RemainingItems) == 0 {
 		return
@@ -310,7 +295,7 @@ func (this *Job[InputType, OutputType]) runParallelPoolMap(output *JobOutput[Inp
 		RunTime int64
 	}
 
-	results, err := util.RunParallelPoolMap(this.PoolSize, output.RemainingItems, this.Context, func(workItem InputType) (resultItem, error) {
+	results, err := util.RunParallelPoolMap(this.PoolSize, output.RemainingItems, this.Context, func(workItem InputType) (*resultItem, error) {
 		workItemKey := ""
 		if this.WorkItemKeyFunc != nil {
 			workItemKey = this.WorkItemKeyFunc(workItem)
@@ -323,19 +308,19 @@ func (this *Job[InputType, OutputType]) runParallelPoolMap(output *JobOutput[Inp
 		}
 
 		if this.Context.Err() != nil {
-			return resultItem{}, nil
+			return nil, nil
 		}
 
 		// Check storage for a record.
 		if this.RetrieveFunc != nil {
 			results, err := this.RetrieveFunc([]InputType{workItem})
 			if err != nil {
-				return resultItem{}, fmt.Errorf("Failed to retrieve item '%v': '%w'.", workItem, err)
+				return nil, fmt.Errorf("Failed to retrieve item '%v': '%w'.", workItem, err)
 			}
 
 			result, ok := results[workItem]
 			if ok {
-				return resultItem{result, 0}, nil
+				return &resultItem{result, 0}, nil
 			}
 		}
 
@@ -344,11 +329,11 @@ func (this *Job[InputType, OutputType]) runParallelPoolMap(output *JobOutput[Inp
 
 		result, err := this.WorkFunc(workItem)
 		if err != nil {
-			return resultItem{}, fmt.Errorf("Failed to perform individual work on item '%v': '%w'.", workItem, err)
+			return nil, fmt.Errorf("Failed to perform individual work on item '%v': '%w'.", workItem, err)
 		}
 
 		if this.Context.Err() != nil {
-			return resultItem{}, nil
+			return nil, nil
 		}
 
 		runTime := (timestamp.Now() - startTime).ToMSecs()
@@ -357,14 +342,12 @@ func (this *Job[InputType, OutputType]) runParallelPoolMap(output *JobOutput[Inp
 		if !this.DryRun && this.StoreFunc != nil {
 			err = this.StoreFunc([]OutputType{result})
 			if err != nil {
-				return resultItem{}, fmt.Errorf("Failed to store result for item '%v': '%w'.", workItem, err)
+				return nil, fmt.Errorf("Failed to store result for item '%v': '%w'.", workItem, err)
 			}
 		}
 
-		return resultItem{result, runTime}, nil
+		return &resultItem{result, runTime}, nil
 	})
-
-	output.RemainingItems = []InputType{}
 
 	// The job was canceled so return without collecting results.
 	if results.Canceled {
@@ -372,13 +355,16 @@ func (this *Job[InputType, OutputType]) runParallelPoolMap(output *JobOutput[Inp
 		return nil
 	}
 
+	// Block until the parallel pool is finished so the results are safe to access.
 	results.IsDone()
 
+	output.RemainingItems = []InputType{}
 	output.WorkErrors = results.WorkErrors
 
 	for input, result := range results.Results {
 		_, ok := results.WorkErrors[input]
 		if ok {
+			// Avoid charging run time for work errors caused by the system.
 			continue
 		}
 

@@ -65,7 +65,7 @@ func TestRunParallelPoolMapBase(test *testing.T) {
 		output.IsDone()
 
 		// Clear output done channel for comparison check.
-		output.done = nil
+		output.Done = nil
 
 		if !reflect.DeepEqual(expected, output) {
 			test.Errorf("Case %d: Result not as expected. Expected: '%s', actual: '%s'.",
@@ -136,7 +136,7 @@ func TestRunParallelPoolMapCancel(test *testing.T) {
 	}
 
 	// Clear output done channel for comparison check.
-	output.done = nil
+	output.Done = nil
 
 	if !reflect.DeepEqual(output, expected) {
 		test.Fatalf("Unexpected results. Expected: '%v', actual: '%v'.",

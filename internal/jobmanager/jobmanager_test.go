@@ -25,65 +25,6 @@ var workFunc = func(input string) (int, error) {
 	return len(input), nil
 }
 
-type printableJob[InputType any, OutputType any] struct {
-	*JobOptions
-
-	// Overwrite the JSON tag to display the context.
-	Context context.Context `json:"context"`
-
-	ReturnIncompleteResults bool `json:"return-incomplete-results"`
-
-	PoolSize int `json:"pool-size"`
-
-	LockKey string `json:"lock-key"`
-
-	WorkItems []InputType `json:"work-items"`
-}
-
-func (this *Job[InputType, OutputType]) toPrintableJob() *printableJob[InputType, OutputType] {
-	if this == nil {
-		return nil
-	}
-
-	return &printableJob[InputType, OutputType]{
-		JobOptions:              this.JobOptions,
-		Context:                 this.Context,
-		ReturnIncompleteResults: this.ReturnIncompleteResults,
-		PoolSize:                this.PoolSize,
-		LockKey:                 this.LockKey,
-		WorkItems:               this.WorkItems,
-	}
-}
-
-type printableJobOutput[InputType comparable, OutputType any] struct {
-	Canceled bool `json:"canceled"`
-
-	Error error `json:"error"`
-
-	WorkErrors map[InputType]error `json:"work-errors"`
-
-	ResultItems map[InputType]OutputType `json:"result-items"`
-
-	RemainingItems []InputType `json:"remaining-items"`
-
-	RunTime int64 `json:"run-time"`
-}
-
-func (this *JobOutput[InputType, OutputType]) toPrintableJobOutput() *printableJobOutput[InputType, OutputType] {
-	if this == nil {
-		return nil
-	}
-
-	return &printableJobOutput[InputType, OutputType]{
-		Canceled:       this.Canceled,
-		Error:          this.Error,
-		WorkErrors:     this.WorkErrors,
-		ResultItems:    this.ResultItems,
-		RemainingItems: this.RemainingItems,
-		RunTime:        this.RunTime,
-	}
-}
-
 func TestJobValidateBase(test *testing.T) {
 	testCases := []struct {
 		input       *Job[string, int]
@@ -310,7 +251,7 @@ func TestJobValidateBase(test *testing.T) {
 
 		if !reflect.DeepEqual(testCase.expected, testCase.input) {
 			test.Errorf("Case %d: Unexpected result. Expected: '%s', actual: '%s'.",
-				i, util.MustToJSONIndent(testCase.expected.toPrintableJob()), util.MustToJSONIndent(testCase.input.toPrintableJob()))
+				i, util.MustToJSONIndent(testCase.expected), util.MustToJSONIndent(testCase.input))
 			continue
 		}
 	}
@@ -801,7 +742,7 @@ func TestRunJobBase(test *testing.T) {
 
 		if !reflect.DeepEqual(output, testCase.initialOutput) {
 			test.Errorf("Case %d: Unexpected initial results. Expected: '%s', actual: '%s'.",
-				i, util.MustToJSONIndent(testCase.initialOutput.toPrintableJobOutput()), util.MustToJSONIndent(output.toPrintableJobOutput()))
+				i, util.MustToJSONIndent(testCase.initialOutput), util.MustToJSONIndent(output))
 			continue
 		}
 
@@ -822,7 +763,7 @@ func TestRunJobBase(test *testing.T) {
 
 		if !reflect.DeepEqual(output, testCase.finalOutput) {
 			test.Errorf("Case %d: Unexpected final results. Expected: '%s', actual: '%s'.",
-				i, util.MustToJSONIndent(testCase.finalOutput.toPrintableJobOutput()), util.MustToJSONIndent(output.toPrintableJobOutput()))
+				i, util.MustToJSONIndent(testCase.finalOutput), util.MustToJSONIndent(output))
 			continue
 		}
 
@@ -889,7 +830,7 @@ func TestRunJobCancel(test *testing.T) {
 		Error:          fmt.Errorf("Job was canceled: 'context canceled'."),
 		WorkErrors:     map[string]error{},
 		ResultItems:    map[string]int{},
-		RemainingItems: []string{},
+		RemainingItems: input,
 	}
 
 	output := job.Run()
@@ -905,7 +846,7 @@ func TestRunJobCancel(test *testing.T) {
 
 	if !reflect.DeepEqual(output, expectedOutput) {
 		test.Fatalf("Unexpected result. Expected: '%s', actual: '%s'.",
-			util.MustToJSONIndent(expectedOutput.toPrintableJobOutput()), util.MustToJSONIndent(output.toPrintableJobOutput()))
+			util.MustToJSONIndent(expectedOutput), util.MustToJSONIndent(output))
 	}
 }
 
@@ -943,7 +884,7 @@ func TestRunJobChannel(test *testing.T) {
 
 	if !reflect.DeepEqual(output, expected) {
 		test.Fatalf("Unexpected output. Expected: '%s', actual: '%s'.",
-			util.MustToJSONIndent(expected.toPrintableJobOutput()), util.MustToJSONIndent(output.toPrintableJobOutput()))
+			util.MustToJSONIndent(expected), util.MustToJSONIndent(output))
 	}
 }
 
@@ -1019,7 +960,7 @@ func TestBadWorkFunc(test *testing.T) {
 
 	if !reflect.DeepEqual(output, expectedOutput) {
 		test.Fatalf("Unexpected result. Expected: '%s', actual: '%s'.",
-			util.MustToJSONIndent(expectedOutput.toPrintableJobOutput()), util.MustToJSONIndent(output.toPrintableJobOutput()))
+			util.MustToJSONIndent(expectedOutput), util.MustToJSONIndent(output))
 	}
 }
 
