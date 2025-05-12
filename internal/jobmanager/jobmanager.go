@@ -25,7 +25,7 @@ type JobOptions struct {
 	Context context.Context `json:"-"`
 }
 
-// Provides system level customization of the job's execution.
+// Provides system-level customization of the job's execution.
 // Given job options, input items, and a work function,
 // a job will invoke the work func on each input item in a parallel pool.
 type Job[InputType comparable, OutputType any] struct {
@@ -75,7 +75,7 @@ type Job[InputType comparable, OutputType any] struct {
 // A critical error (JobOutput.Error) may not generate work errors, so both must be checked independently.
 // Consult the map of errors using the item to check for item-level errors.
 // Always wait for the Done channel to be closed before handling the output,
-// which can be achieved by calling JobOutput.IsDone().
+// which can also be achieved by calling JobOutput.IsDone().
 type JobOutput[InputType comparable, OutputType any] struct {
 	// Signals the job was canceled during execution.
 	Canceled bool
@@ -140,7 +140,7 @@ func (this *JobOptions) Validate() error {
 // Returning a copy of results gives immediate access to stable results but the final results will be inaccessible.
 // If the context is canceled during execution, the output will signal accordingly.
 func (this *Job[InputType, OutputType]) Run() *JobOutput[InputType, OutputType] {
-	// Run closes the channel to signal the returned output is safe to handle.
+	// Run() closes the channel to signal the returned output is safe to handle.
 	// The channel is closed by this thread except when !WaitForCompletion and !ReturnIncompleteResults.
 	done := make(chan any)
 
@@ -228,6 +228,8 @@ func (this *Job[InputType, OutputType]) Run() *JobOutput[InputType, OutputType] 
 // However, the run time and error will be updated for stats and logging purposes.
 // The parameter updateOutput signals whether to add results to the output or not.
 func (this *Job[InputType, OutputType]) run(output *JobOutput[InputType, OutputType], updateOutput bool) {
+	defer this.runComplete(output)
+
 	if len(output.RemainingItems) == 0 {
 		return
 	}
@@ -283,7 +285,20 @@ func (this *Job[InputType, OutputType]) run(output *JobOutput[InputType, OutputT
 		output.Error = fmt.Errorf("Failed to complete work for '%d' items.", len(output.WorkErrors))
 		return
 	}
+}
 
+// Perform optional work on the final output.
+func (this *Job[InputType, OutputType]) runComplete(output *JobOutput[InputType, OutputType]) {
+	// Encountered a cancellation, return immediately.
+	if output.Canceled {
+		return
+	}
+
+	if output.Error != nil || len(output.WorkErrors) != 0 {
+		return
+	}
+
+	// Completed work successfully.
 	if this.OnSuccess != nil {
 		this.OnSuccess(*output)
 	}
