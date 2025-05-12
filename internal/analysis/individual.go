@@ -2,7 +2,6 @@ package analysis
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"path/filepath"
 	"slices"
@@ -10,8 +9,7 @@ import (
 	"github.com/edulinq/autograder/internal/common"
 	"github.com/edulinq/autograder/internal/config"
 	"github.com/edulinq/autograder/internal/db"
-	"github.com/edulinq/autograder/internal/lockmanager"
-	"github.com/edulinq/autograder/internal/log"
+	"github.com/edulinq/autograder/internal/jobmanager"
 	"github.com/edulinq/autograder/internal/model"
 	"github.com/edulinq/autograder/internal/timestamp"
 	"github.com/edulinq/autograder/internal/util"
@@ -20,220 +18,64 @@ import (
 var testFailIndividualAnalysis bool = false
 
 func IndividualAnalysis(options AnalysisOptions) (map[string]*model.IndividualAnalysis, int, error) {
-	if options.Context == nil {
-		options.Context = context.Background()
-	}
-
-	completeAnalysis, remainingIDs, err := getCachedIndividualResults(options)
-	if err != nil {
-		return nil, 0, err
-	}
-
-	if options.WaitForCompletion {
-		results, err := runIndividualAnalysis(options, remainingIDs)
-		if err != nil {
-			return nil, 0, err
-		}
-
-		for fullSubmissionID, result := range results {
-			completeAnalysis[fullSubmissionID] = result
-		}
-
-		remainingIDs = nil
-	} else {
-		if !options.RetainOriginalContext {
-			options.Context = context.Background()
-		}
-
-		go func() {
-			_, err := runIndividualAnalysis(options, remainingIDs)
-			if err != nil {
-				log.Error("Failure during asynchronous individual analysis.", err)
-			}
-		}()
-	}
-
-	return completeAnalysis, len(remainingIDs), nil
-}
-
-func getCachedIndividualResults(options AnalysisOptions) (map[string]*model.IndividualAnalysis, []string, error) {
-	// Sort the ids so the result will be consistently ordered.
+	// Sort the ids so the locking key will be consistent.
 	fullSubmissionIDs := slices.Clone(options.ResolvedSubmissionIDs)
 	slices.Sort(fullSubmissionIDs)
 
-	// If we are overwriting the cache, don't query the DB for any of the cached results.
-	if options.OverwriteCache {
-		return make(map[string]*model.IndividualAnalysis, 0), fullSubmissionIDs, nil
-	}
-
-	return getCachedIndividualResultsInternal(fullSubmissionIDs)
-}
-
-func getCachedIndividualResultsInternal(fullSubmissionIDs []string) (map[string]*model.IndividualAnalysis, []string, error) {
-	// Get any already done analysis results from the DB.
-	dbResults, err := db.GetIndividualAnalysis(fullSubmissionIDs)
-	if err != nil {
-		return nil, nil, fmt.Errorf("Failed to get cached individual analysis from DB: '%w'.", err)
-	}
-
-	remainingIDs := make([]string, 0, len(fullSubmissionIDs)-len(dbResults))
-
-	for _, id := range fullSubmissionIDs {
-		_, ok := dbResults[id]
-		if !ok {
-			remainingIDs = append(remainingIDs, id)
-		}
-	}
-
-	return dbResults, remainingIDs, nil
-}
-
-// Lock based on course and then run the analysis in a parallel pool.
-func runIndividualAnalysis(options AnalysisOptions, fullSubmissionIDs []string) (map[string]*model.IndividualAnalysis, error) {
 	if len(fullSubmissionIDs) == 0 {
-		return nil, nil
+		return nil, 0, nil
 	}
 
 	// Lock based on the first seen course.
 	// This is to prevent multiple requests using up all the cores.
 	lockCourseID, _, _, _, err := common.SplitFullSubmissionID(fullSubmissionIDs[0])
 	if err != nil {
-		return nil, fmt.Errorf("Unable to get locking course: '%w'.", err)
+		return nil, 0, fmt.Errorf("Unable to get locking course: '%w'.", err)
 	}
 
-	lockKey := fmt.Sprintf("analysis-individual-course-%s", lockCourseID)
-	noLockWait := lockmanager.Lock(lockKey)
-	defer lockmanager.Unlock(lockKey)
-
-	// The context has been canceled while waiting for a lock, abandon this analysis.
-	if options.Context.Err() != nil {
-		return nil, nil
+	if !options.RetainOriginalContext && !options.WaitForCompletion {
+		options.Context = context.Background()
 	}
 
-	results := make(map[string]*model.IndividualAnalysis, len(fullSubmissionIDs))
+	job := jobmanager.Job[string, *model.IndividualAnalysis]{
+		JobOptions:              &options.JobOptions,
+		LockKey:                 fmt.Sprintf("analysis-individual-course-%s", lockCourseID),
+		PoolSize:                config.ANALYSIS_INDIVIDUAL_COURSE_POOL_SIZE.Get(),
+		ReturnIncompleteResults: !options.WaitForCompletion,
+		WorkItems:               fullSubmissionIDs,
+		RetrieveFunc:            db.GetIndividualAnalysis,
+		StoreFunc:               db.StoreIndividualAnalysis,
+		RemoveFunc:              db.RemoveIndividualAnalysis,
+		WorkFunc: func(fullSubmissionID string) (*model.IndividualAnalysis, error) {
+			return computeSingleIndividualAnalysis(options, fullSubmissionID, true)
+		},
+		WorkItemKeyFunc: func(fullSubmissionID string) string {
+			return fmt.Sprintf("analysis-individual-%s", fullSubmissionID)
+		},
+		OnComplete: func(result *jobmanager.JobOutput[string, *model.IndividualAnalysis]) {
+			if result == nil {
+				return
+			}
 
-	// If we had to wait for the lock, then check again for cached results.
-	// If there are multiple requests queued up,
-	// it will be faster to do a bulk check for cached results instead of checking each one individually.
-	if !noLockWait {
-		var partialResults map[string]*model.IndividualAnalysis = nil
-		partialResults, fullSubmissionIDs, err = getCachedIndividualResultsInternal(fullSubmissionIDs)
-		if err != nil {
-			return nil, fmt.Errorf("Failed to re-check result cache before run: '%w'.", err)
-		}
-
-		// Collect the partial results from the cache.
-		for id, result := range partialResults {
-			results[id] = result
-		}
+			collectIndividualStats(fullSubmissionIDs, result.RunTime, options.InitiatorEmail)
+		},
 	}
 
-	// All results were fetched from the cache.
-	if len(fullSubmissionIDs) == 0 {
-		return results, nil
-	}
-
-	// If we are overwriting the cache, then remove all the old entries.
-	if options.OverwriteCache && !options.DryRun {
-		err := db.RemoveIndividualAnalysis(fullSubmissionIDs)
-		if err != nil {
-			return nil, fmt.Errorf("Failed to remove old individual analysis cache entries: '%w'.", err)
-		}
-	}
-
-	poolSize := config.ANALYSIS_INDIVIDUAL_COURSE_POOL_SIZE.Get()
-	type AnalysisPoolResult struct {
-		Result  *model.IndividualAnalysis
-		RunTime int64
-	}
-
-	poolResults, err := util.RunParallelPoolMap(poolSize, fullSubmissionIDs, options.Context, func(fullSubmissionID string) (AnalysisPoolResult, error) {
-		result, runTime, err := runSingleIndividualAnalysis(options, fullSubmissionID)
-		if err != nil {
-			err = fmt.Errorf("Failed to perform individual analysis on submission %s: '%w'.", fullSubmissionID, err)
-		}
-
-		return AnalysisPoolResult{result, runTime}, err
-	})
-
+	err = job.Validate()
 	if err != nil {
-		return nil, fmt.Errorf("Failed to run analysis in a parallel pool: '%w'.", err)
+		return nil, 0, fmt.Errorf("Failed to validate job: '%w'.", err)
 	}
 
-	// If the analysis was canceled, exit right away.
-	if poolResults.Canceled {
-		return nil, nil
+	output := job.Run()
+	if output.Error != nil {
+		return nil, 0, fmt.Errorf("Failed to run individual analysis job: '%w'.", output.Error)
 	}
 
-	poolResults.IsDone()
-
-	var errs error = nil
-	totalRunTime := int64(0)
-
-	for _, id := range fullSubmissionIDs {
-		err, ok := poolResults.WorkErrors[id]
-		if ok {
-			errs = errors.Join(errs, err)
-			continue
-		}
-
-		analysisPoolResult, ok := poolResults.Results[id]
-		if !ok {
-			errs = errors.Join(errs, fmt.Errorf("Unable to find result for submission: '%s'.", id))
-			continue
-		}
-
-		results[id] = analysisPoolResult.Result
-		totalRunTime += analysisPoolResult.RunTime
+	if len(output.WorkErrors) != 0 {
+		return nil, 0, fmt.Errorf("Failed to run individual analysis for '%d' submissions.", len(output.WorkErrors))
 	}
 
-	collectIndividualStats(fullSubmissionIDs, totalRunTime, options.InitiatorEmail)
-
-	return results, errs
-}
-
-func runSingleIndividualAnalysis(options AnalysisOptions, fullSubmissionID string) (*model.IndividualAnalysis, int64, error) {
-	// Lock this id so we don't try to do the analysis multiple times.
-	lockKey := fmt.Sprintf("analysis-individual-%s", fullSubmissionID)
-	lockmanager.Lock(lockKey)
-	defer lockmanager.Unlock(lockKey)
-
-	// The context has been canceled while waiting for a lock, abandon this analysis.
-	if options.Context.Err() != nil {
-		return nil, 0, nil
-	}
-
-	startTime := timestamp.Now()
-
-	// Check the DB for a complete analysis.
-	if !options.OverwriteCache {
-		result, err := db.GetSingleIndividualAnalysis(fullSubmissionID)
-		if err != nil {
-			return nil, 0, fmt.Errorf("Failed to check DB for cached individual analysis for '%s': '%w'.", fullSubmissionID, err)
-		}
-
-		if result != nil {
-			return result, 0, nil
-		}
-	}
-
-	// Nothing cached, compute the analysis.
-	result, err := computeSingleIndividualAnalysis(options, fullSubmissionID, true)
-	if err != nil {
-		return nil, 0, fmt.Errorf("Failed to compute individual analysis for '%s': '%w'.", fullSubmissionID, err)
-	}
-
-	// Store the result.
-	if !options.DryRun && (options.Context.Err() == nil) {
-		err = db.StoreIndividualAnalysis([]*model.IndividualAnalysis{result})
-		if err != nil {
-			return nil, 0, fmt.Errorf("Failed to store individual analysis for '%s' in DB: '%w'.", fullSubmissionID, err)
-		}
-	}
-
-	runTime := int64(timestamp.Now() - startTime)
-
-	return result, runTime, nil
+	return output.ResultItems, len(output.RemainingItems), nil
 }
 
 func computeSingleIndividualAnalysis(options AnalysisOptions, fullSubmissionID string, computeDeltas bool) (*model.IndividualAnalysis, error) {
@@ -243,7 +85,7 @@ func computeSingleIndividualAnalysis(options AnalysisOptions, fullSubmissionID s
 	}
 	defer util.RemoveDirent(tempDir)
 
-	submissionDir := filepath.Join(tempDir, "current")
+	submissionDir := filepath.Join(tempDir, fullSubmissionID)
 	gradingResult, assignment, err := fetchSubmission(fullSubmissionID, submissionDir)
 	if err != nil {
 		return nil, err
