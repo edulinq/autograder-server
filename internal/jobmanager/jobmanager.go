@@ -285,7 +285,7 @@ func (this *Job[InputType, OutputType]) run(output *JobOutput[InputType, OutputT
 // Perform optional work on the final output.
 func (this *Job[InputType, OutputType]) completeRun(output *JobOutput[InputType, OutputType]) {
 	if this.OnComplete != nil {
-		defer this.OnComplete(output)
+		this.OnComplete(output)
 	}
 }
 
