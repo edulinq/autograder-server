@@ -67,8 +67,8 @@ type Job[InputType comparable, OutputType any] struct {
 	// Provide an input key generation function to synchronize at the input item level in addition to the job level.
 	WorkItemKeyFunc func(InputType) string `json:"-"`
 
-	// An optional function to process the final JobOutput upon successful completion.
-	OnSuccess func(JobOutput[InputType, OutputType]) `json:"-"`
+	// An optional function to process the final JobOutput upon completion.
+	OnComplete func(*JobOutput[InputType, OutputType]) `json:"-"`
 }
 
 // The output from running a job.
@@ -228,7 +228,7 @@ func (this *Job[InputType, OutputType]) Run() *JobOutput[InputType, OutputType] 
 // However, the run time and error will be updated for stats and logging purposes.
 // The parameter updateOutput signals whether to add results to the output or not.
 func (this *Job[InputType, OutputType]) run(output *JobOutput[InputType, OutputType], updateOutput bool) {
-	defer this.runComplete(output)
+	defer this.completeRun(output)
 
 	if len(output.RemainingItems) == 0 {
 		return
@@ -280,27 +280,12 @@ func (this *Job[InputType, OutputType]) run(output *JobOutput[InputType, OutputT
 		output.Canceled = true
 		return
 	}
-
-	if len(output.WorkErrors) > 0 {
-		output.Error = fmt.Errorf("Failed to complete work for '%d' items.", len(output.WorkErrors))
-		return
-	}
 }
 
 // Perform optional work on the final output.
-func (this *Job[InputType, OutputType]) runComplete(output *JobOutput[InputType, OutputType]) {
-	// Encountered a cancellation, return immediately.
-	if output.Canceled {
-		return
-	}
-
-	if output.Error != nil || len(output.WorkErrors) != 0 {
-		return
-	}
-
-	// Completed work successfully.
-	if this.OnSuccess != nil {
-		this.OnSuccess(*output)
+func (this *Job[InputType, OutputType]) completeRun(output *JobOutput[InputType, OutputType]) {
+	if this.OnComplete != nil {
+		defer this.OnComplete(output)
 	}
 }
 

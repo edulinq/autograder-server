@@ -652,11 +652,11 @@ func TestRunJobBase(test *testing.T) {
 			},
 		},
 
-		// On Success Function
+		// On Complete Function
 		{
 			job: Job[string, int]{
 				WorkItems: input,
-				OnSuccess: func(output JobOutput[string, int]) {
+				OnComplete: func(output *JobOutput[string, int]) {
 					for i, result := range output.ResultItems {
 						output.ResultItems[i] = result * 2
 					}
@@ -911,7 +911,7 @@ func TestBadWorkFunc(test *testing.T) {
 	job.WaitForCompletion = true
 
 	expectedOutput := &JobOutput[string, int]{
-		Error:          fmt.Errorf("Failed to complete work for '%d' items.", len(input)),
+		Error:          nil,
 		RemainingItems: []string{},
 		ResultItems:    map[string]int{},
 		WorkErrors: map[string]error{
@@ -922,13 +922,8 @@ func TestBadWorkFunc(test *testing.T) {
 	}
 
 	output = job.Run()
-	if output.Error == nil {
-		test.Fatalf("Did not get expected error. Expected: '%s'.", expectedOutput.Error.Error())
-	}
-
-	if output.Error.Error() != expectedOutput.Error.Error() {
-		test.Fatalf("Unexpected error. Expected: '%s', actual: '%s'.",
-			expectedOutput.Error.Error(), output.Error.Error())
+	if output.Error != nil {
+		test.Fatalf("Failed to run job: '%s'.", output.Error.Error())
 	}
 
 	if len(output.WorkErrors) != len(expectedOutput.WorkErrors) {
@@ -951,9 +946,6 @@ func TestBadWorkFunc(test *testing.T) {
 	// Clear done channel and errors for comparison check.
 	output.Done = nil
 	expectedOutput.Done = nil
-
-	output.Error = nil
-	expectedOutput.Error = nil
 
 	output.WorkErrors = nil
 	expectedOutput.WorkErrors = nil
