@@ -140,7 +140,7 @@ func ParseUserReference(rawReference string) (*UserReference, error) {
 		}
 
 		// First part must be a course.
-		course, err := GetCourse(reference)
+		course, err := GetCourse(referenceParts[0])
 		if err != nil {
 			return nil, fmt.Errorf("Unable to get course while parsing user reference: '%w'.", err)
 		}
