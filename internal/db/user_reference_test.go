@@ -10,7 +10,7 @@ import (
 	"github.com/edulinq/autograder/internal/util"
 )
 
-func (this *DBTests) TestParseServerUserReferenceBase(test *testing.T) {
+func (this *DBTests) DBTestParseServerUserReference(test *testing.T) {
 	testCases := []struct {
 		reference      string
 		output         *UserReference
@@ -147,7 +147,19 @@ func (this *DBTests) TestParseServerUserReferenceBase(test *testing.T) {
 			"",
 		},
 
-		// TODO: Add error case for accessing root.
+		// Errors
+
+		// Accessing Root
+		{
+			"root",
+			nil,
+			"User reference cannot target the root user",
+		},
+		{
+			"-root",
+			nil,
+			"User reference cannot target the root user",
+		},
 	}
 
 	for i, testCase := range testCases {

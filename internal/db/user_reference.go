@@ -9,6 +9,7 @@ import (
 
 const USER_REFERENCE_DELIM = "::"
 
+// TODO: Make a string? Int is smaller but looks dumb in output
 const (
 	EmailReference      UserReferenceType = 0
 	CourseRoleReference                   = 10
@@ -39,6 +40,8 @@ type ServerUserReference string
 // - A course user reference
 type CourseUserReference string
 
+// TODO: Should there be a common user reference and separate ones for server vs coyrse?
+// TODO: Can we make this the combinable version (take a list of roles (map?) or a map of courses (with the role or unknown for all))?
 type UserReference struct {
 	// The type of the user reference.
 	Type UserReferenceType
@@ -60,6 +63,31 @@ type UserReference struct {
 	Course *model.Course
 
 	CourseUserRole model.CourseUserRole
+}
+
+// TODO: Name needs work (if it stays)
+// Could this be combined with the above?
+// Should this exist or should this be dealt with through resolve?
+type MultiUserReference struct {
+	// Signals to include all available users.
+	AllUsers bool
+
+	// The set of emails to include.
+	Emails map[string]any
+
+	// The set of emails to exclude.
+	ExcludeEmails map[string]any
+
+	// The set of server roles to include.
+	ServerUserRoles map[model.ServerUserRole]any
+
+	// The courses and list of roles to include.
+	CourseReferences map[string]map[model.CourseUserRole]any
+}
+
+// TODO: Implement if needed
+func (this *UserReference) ToMultiUserReference() *MultiUserReference {
+	return nil
 }
 
 func ParseUserReference(rawReference string) (*UserReference, error) {
@@ -214,4 +242,61 @@ func ParseCourseUserReference(course *model.Course, rawReference string) (*UserR
 	}
 
 	return nil, fmt.Errorf("Invalid course user reference: '%s'.", rawReference)
+}
+
+func (this *MultiUserReference) CombineUserRefernce(reference *UserReference) {
+	if reference == nil {
+		return
+	}
+
+	if this == nil {
+		this = reference.ToMultiUserReference()
+	}
+
+	switch reference.Type {
+	case EmailReference:
+		if !reference.Exclude {
+			this.Emails[reference.Email] = nil
+		} else {
+			this.ExcludeEmails[reference.Email] = nil
+			delete(this.Emails, reference.Email)
+		}
+	case CourseRoleReference:
+		if !reference.Exclude {
+			if reference.Course == nil {
+				// TODO: Handle the all courses case.
+				return
+			} else {
+				_, ok := this.CourseReferences[reference.Course.GetID()]
+				if !ok {
+					this.CourseReferences[reference.Course.GetID()] = map[model.CourseUserRole]any{
+						reference.CourseUserRole: nil,
+					}
+
+					break
+				}
+
+				this.CourseReferences[reference.Course.GetID()][reference.CourseUserRole] = nil
+			}
+		}
+	case CourseReference:
+		if !reference.Exclude {
+			_, ok := this.CourseReferences[reference.Course.GetID()]
+			if !ok {
+				this.CourseReferences[reference.Course.GetID()] = map[model.CourseUserRole]any{
+					model.CourseRoleUnknown: nil,
+				}
+
+				break
+			}
+
+			this.CourseReferences[reference.Course.GetID()][model.CourseRoleUnknown] = nil
+		}
+	case ServerRoleReference:
+		if !reference.Exclude {
+			this.ServerUserRoles[reference.ServerUserRole] = nil
+		}
+	case AllUserReference:
+		this.AllUsers = true
+	}
 }
