@@ -71,6 +71,11 @@ You can also use the `scripts/run_tests.sh` script for running all tests:
 ./scripts/run_tests.sh
 ```
 
+To run tests without using docker, you can disable it using the `docker.disable` config option (see the [Configuration](#configuration) section):
+```sh
+AUTOGRADER__DOCKER__DISABLE=true ./scripts/run_tests.sh
+```
+
 ## Running Executables
 
 Once built, all executables are available in the `bin` directory and can be run directly.
