@@ -292,6 +292,11 @@ func TestPairwiseAnalysisDefaultEnginesBase(test *testing.T) {
 	if len(results) != 1 {
 		test.Fatalf("Number of results not as expected. Expected: %d, Actual: %d.", 1, len(results))
 	}
+
+	similaritiesCount := len(results[model.NewPairwiseKey(ids[0], ids[1])].Similarities["submission.py"])
+	if similaritiesCount != 2 {
+		test.Fatalf("Number of similarity results not as expected. Expected: %d, Actual: %d.", 2, similaritiesCount)
+	}
 }
 
 // A test for special files that seem to cause trouble with the engines.
