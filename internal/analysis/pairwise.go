@@ -105,7 +105,11 @@ func PairwiseAnalysis(options AnalysisOptions) (map[model.PairwiseKey]*model.Pai
 	}
 
 	if len(output.WorkErrors) != 0 {
-		return nil, 0, fmt.Errorf("Failed to run pairwise analysis for '%d' submissions.", len(output.WorkErrors))
+		for pairwiseKey, err := range output.WorkErrors {
+			log.Error("Failed to run pairwise analysis.", err, log.NewAttr("pairwise-key", pairwiseKey.String()), log.NewAttr("job-id", output.ID))
+		}
+
+		return nil, 0, fmt.Errorf("Failed to run pairwise analysis for '%d' submissions during job '%s'.", len(output.WorkErrors), output.ID)
 	}
 
 	return output.ResultItems, len(output.RemainingItems), nil

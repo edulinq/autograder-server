@@ -98,6 +98,9 @@ type JobOutput[InputType comparable, OutputType any] struct {
 	// The run time does not include time spent working on items that returned an error.
 	RunTime int64
 
+	// A unique identifier for the job output.
+	ID string
+
 	// Signals the job is complete.
 	Done <-chan any `json:"-"`
 }
@@ -150,6 +153,7 @@ func (this *Job[InputType, OutputType]) Run() *JobOutput[InputType, OutputType] 
 		RemainingItems: this.WorkItems,
 		RunTime:        0,
 		WorkErrors:     make(map[InputType]error, 0),
+		ID:             util.UUID(),
 	}
 
 	err := this.Validate()

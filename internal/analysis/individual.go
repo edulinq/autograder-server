@@ -10,6 +10,7 @@ import (
 	"github.com/edulinq/autograder/internal/config"
 	"github.com/edulinq/autograder/internal/db"
 	"github.com/edulinq/autograder/internal/jobmanager"
+	"github.com/edulinq/autograder/internal/log"
 	"github.com/edulinq/autograder/internal/model"
 	"github.com/edulinq/autograder/internal/timestamp"
 	"github.com/edulinq/autograder/internal/util"
@@ -72,7 +73,11 @@ func IndividualAnalysis(options AnalysisOptions) (map[string]*model.IndividualAn
 	}
 
 	if len(output.WorkErrors) != 0 {
-		return nil, 0, fmt.Errorf("Failed to run individual analysis for '%d' submissions.", len(output.WorkErrors))
+		for submissionID, err := range output.WorkErrors {
+			log.Error("Failed to run individual analysis.", err, log.NewAttr("submission-id", submissionID), log.NewAttr("job-id", output.ID))
+		}
+
+		return nil, 0, fmt.Errorf("Failed to run individual analysis for '%d' submissions during job '%s'.", len(output.WorkErrors), output.ID)
 	}
 
 	return output.ResultItems, len(output.RemainingItems), nil
