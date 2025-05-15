@@ -77,6 +77,9 @@ type Job[InputType comparable, OutputType any] struct {
 // Always wait for the Done channel to be closed before handling the output,
 // which can also be achieved by calling JobOutput.IsDone().
 type JobOutput[InputType comparable, OutputType any] struct {
+	// A unique identifier for the job output.
+	ID string
+
 	// Signals the job was canceled during execution.
 	Canceled bool
 
@@ -97,9 +100,6 @@ type JobOutput[InputType comparable, OutputType any] struct {
 	// This time does not include time spent waiting for locks or retrieving stored items.
 	// The run time does not include time spent working on items that returned an error.
 	RunTime int64
-
-	// A unique identifier for the job output.
-	ID string
 
 	// Signals the job is complete.
 	Done <-chan any `json:"-"`
@@ -148,12 +148,12 @@ func (this *Job[InputType, OutputType]) Run() *JobOutput[InputType, OutputType] 
 	done := make(chan any)
 
 	output := JobOutput[InputType, OutputType]{
+		ID:             util.UUID(),
 		Done:           done,
 		ResultItems:    make(map[InputType]OutputType, len(this.WorkItems)),
 		RemainingItems: this.WorkItems,
 		RunTime:        0,
 		WorkErrors:     make(map[InputType]error, 0),
-		ID:             util.UUID(),
 	}
 
 	err := this.Validate()
@@ -196,6 +196,7 @@ func (this *Job[InputType, OutputType]) Run() *JobOutput[InputType, OutputType] 
 		backgroundDone := make(chan any)
 
 		backgroundOutput := &JobOutput[InputType, OutputType]{
+			ID:             util.UUID(),
 			Done:           backgroundDone,
 			ResultItems:    make(map[InputType]OutputType, len(output.RemainingItems)),
 			RemainingItems: output.RemainingItems,

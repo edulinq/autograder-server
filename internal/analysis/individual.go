@@ -69,15 +69,23 @@ func IndividualAnalysis(options AnalysisOptions) (map[string]*model.IndividualAn
 
 	output := job.Run()
 	if output.Error != nil {
-		return nil, 0, fmt.Errorf("Failed to run individual analysis job: '%w'.", output.Error)
+		return nil, 0, fmt.Errorf("Failed to run individual analysis job '%s': '%w'.", output.ID, output.Error)
 	}
 
 	if len(output.WorkErrors) != 0 {
-		for submissionID, err := range output.WorkErrors {
-			log.Error("Failed to run individual analysis.", err, log.NewAttr("submission-id", submissionID), log.NewAttr("job-id", output.ID))
+		for fullSubmissionID, err := range output.WorkErrors {
+			courseID, assignmentID, email, shortSubmissionID, splitErr := common.SplitFullSubmissionID(fullSubmissionID)
+			if splitErr != nil {
+				log.Error("Failed to split full submission ID.", splitErr, log.NewAttr("submission-id", fullSubmissionID))
+				log.Error("Failed to run individual analysis.", err, log.NewAttr("submission-id", fullSubmissionID), log.NewAttr("job-id", output.ID))
+
+				continue
+			}
+
+			log.Error("Failed to run individual analysis.", err, log.NewCourseAttr(courseID), log.NewAssignmentAttr(assignmentID), log.NewUserAttr(email), log.NewAttr("short-submission-id", shortSubmissionID), log.NewAttr("job-id", output.ID))
 		}
 
-		return nil, 0, fmt.Errorf("Failed to run individual analysis for '%d' submissions during job '%s'.", len(output.WorkErrors), output.ID)
+		return nil, 0, fmt.Errorf("Failed to run individual analysis for %d submissions during job '%s'.", len(output.WorkErrors), output.ID)
 	}
 
 	return output.ResultItems, len(output.RemainingItems), nil

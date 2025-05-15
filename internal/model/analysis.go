@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/edulinq/autograder/internal/common"
+	"github.com/edulinq/autograder/internal/log"
 	"github.com/edulinq/autograder/internal/timestamp"
 	"github.com/edulinq/autograder/internal/util"
 )
@@ -196,6 +197,37 @@ func (this *AssignmentAnalysisOptions) MatchRelpath(relpath string) bool {
 
 func (this *PairwiseKey) String() string {
 	return this[0] + PAIRWISE_KEY_DELIM + this[1]
+}
+
+func (this PairwiseKey) LogValue() []*log.Attr {
+	courseID, assignmentID, email, shortSubmissionID, err := common.SplitFullSubmissionID(this[0])
+	if err != nil {
+		return []*log.Attr{
+			log.NewAttr("error", err),
+			log.NewAttr("submission", this[0]),
+			log.NewAttr("alt-submission", this[1]),
+		}
+	}
+
+	altCourseID, altAssignmentID, altEmail, altShortSubmissionID, err := common.SplitFullSubmissionID(this[1])
+	if err != nil {
+		return []*log.Attr{
+			log.NewAttr("error", err),
+			log.NewAttr("submission", this[0]),
+			log.NewAttr("alt-submission", this[1]),
+		}
+	}
+
+	return []*log.Attr{
+		log.NewCourseAttr(courseID),
+		log.NewAssignmentAttr(assignmentID),
+		log.NewUserAttr(email),
+		log.NewAttr("submission", shortSubmissionID),
+		log.NewAttr("alt-course", altCourseID),
+		log.NewAttr("alt-assignment", altAssignmentID),
+		log.NewAttr("alt-user", altEmail),
+		log.NewAttr("alt-submission", altShortSubmissionID),
+	}
 }
 
 // Get the representative course ID for this key.
