@@ -7,19 +7,6 @@ import (
 	"github.com/edulinq/autograder/internal/model"
 )
 
-const USER_REFERENCE_DELIM = "::"
-
-// TODO: Make a string? Int is smaller but looks dumb in output
-const (
-	EmailReference      UserReferenceType = 0
-	CourseRoleReference                   = 10
-	CourseReference                       = 20
-	ServerRoleReference                   = 30
-	AllUserReference                      = 40
-)
-
-type UserReferenceType int
-
 // A flexible way to reference server users.
 // Server user references can be represented as follows (in the order the are evaluated):
 //
@@ -29,7 +16,7 @@ type UserReferenceType int
 // - A literal "*" (which includes all users on the server)
 // TODO: Update final part of this comment (show examples of various forms)
 // - A course user reference
-type ServerUserReference string
+type ServerUserReferenceInput string
 
 // Course user references can be represented as follows (in the order they are evaluated):
 //
@@ -38,170 +25,120 @@ type ServerUserReference string
 // - A course role (which will include all course users with that role)
 // - A literal "*" (which includes all users in the course)
 // - A course user reference
-type CourseUserReference string
+type CourseUserReferenceInput string
 
-// TODO: Should there be a common user reference and separate ones for server vs coyrse?
-// TODO: Can we make this the combinable version (take a list of roles (map?) or a map of courses (with the role or unknown for all))?
-type UserReference struct {
-	// The type of the user reference.
-	Type UserReferenceType
-
-	// A signal to exclude the users captured in the reference.
-	Exclude bool
-
-	// The email address of the user.
-	Email string
-
-	// Refers to all users with this server role.
-	ServerUserRole model.ServerUserRole
-
-	// The course that orients the user reference.
-	// If there is a course but not a course role,
-	// refers to all users in the course.
-	// If the course is nil but there is a course role,
-	// refers to all users with the target course role in ANY course.
-	Course *model.Course
-
-	CourseUserRole model.CourseUserRole
-}
-
-// TODO: Name needs work (if it stays)
-// Could this be combined with the above?
-// Should this exist or should this be dealt with through resolve?
-type MultiUserReference struct {
-	// Signals to include all available users.
-	AllUsers bool
-
-	// The set of emails to include.
-	Emails map[string]any
-
-	// The set of emails to exclude.
-	ExcludeEmails map[string]any
-
-	// The set of server roles to include.
-	ServerUserRoles map[model.ServerUserRole]any
-
-	// The courses and list of roles to include.
-	CourseReferences map[string]map[model.CourseUserRole]any
-}
-
-// TODO: Implement if needed
-func (this *UserReference) ToMultiUserReference() *MultiUserReference {
-	return nil
-}
-
-func ParseUserReference(rawReference string) (*UserReference, error) {
-	reference := strings.ToLower(strings.TrimSpace(rawReference))
-
-	exclude := false
-	if strings.HasPrefix(reference, "-") {
-		exclude = true
-
-		reference = strings.TrimPrefix(reference, "-")
+func ParseUserReference(rawReferences []ServerUserReferenceInput) (*model.ServerUserReference, error) {
+	serverUserReference := &model.ServerUserReference{
+		Emails:                  make(map[string]any, 0),
+		ExcludeEmails:           make(map[string]any, 0),
+		ServerUserRoles:         make(map[model.ServerUserRole]any, 0),
+		ExcludeServerUserRoles:  make(map[model.ServerUserRole]any, 0),
+		CourseReferences:        make(map[string]CourseUserReference, 0),
+		ExcludeCourseReferences: make(map[string]any, 0),
 	}
 
-	if strings.Contains(reference, "@") {
-		return &UserReference{
-			Type:    EmailReference,
-			Exclude: exclude,
-			Email:   reference,
-		}, nil
-	}
+	var errs error = nil
 
-	if reference == "root" {
-		return nil, fmt.Errorf("User reference cannot target the root user: '%s'.", rawReference)
-	}
+	for i, rawReference := range rawReferences {
+		reference := strings.ToLower(strings.TrimSpace(string(rawReference)))
 
-	if reference == "*" {
-		return &UserReference{
-			Type:    AllUserReference,
-			Exclude: exclude,
-		}, nil
-	}
+		exclude := false
+		if strings.HasPrefix(reference, "-") {
+			exclude = true
 
-	referenceParts := strings.Split(reference, USER_REFERENCE_DELIM)
-	if len(referenceParts) == 1 {
-		serverRole := model.GetServerUserRole(reference)
-		if serverRole != model.ServerRoleUnknown {
-			return &UserReference{
-				Type:           ServerRoleReference,
-				Exclude:        exclude,
-				ServerUserRole: serverRole,
-			}, nil
+			reference = strings.TrimPrefix(reference, "-")
 		}
 
-		course, err := GetCourse(reference)
-		if err != nil {
-			return nil, fmt.Errorf("Unable to get course while parsing user reference: '%w'.", err)
+		if reference == "root" {
+			errs = errors.Join(errs, fmt.Errorf("User reference %d cannot target the root user: '%s'.", i, rawReference))
+			continue
 		}
 
-		if course != nil {
-			return &UserReference{
-				Type:    CourseReference,
-				Exclude: exclude,
-				Course:  course,
-			}, nil
+		if strings.Contains(reference, "@") {
+			if exclude {
+				serverUserReference.ExcludeEmails[reference] = nil
+			} else {
+				serverUserReference.Emails[reference] = nil
+			}
+
+			continue
 		}
 
-		return nil, fmt.Errorf("Unknown user reference: '%s'.", rawReference)
-	} else if len(referenceParts) == 2 {
-		if referenceParts[0] == "*" && referenceParts[1] == "*" {
-			return &UserReference{
-				Type:    AllUserReference,
-				Exclude: exclude,
-			}, nil
+		if reference == "*" {
+			serverUserReference.AllUsers = true
+			continue
 		}
 
-		// Reference to all users with a certain course role.
-		if referenceParts[0] == "*" {
-			courseRole := model.GetCourseUserRole(referenceParts[1])
-			if courseRole != model.CourseRoleUnknown {
-				return &UserReference{
-					Type:           CourseRoleReference,
-					Course:         nil,
-					CourseUserRole: courseRole,
-					Exclude:        exclude,
+		referenceParts := strings.Split(reference, USER_REFERENCE_DELIM)
+		if len(referenceParts) == 1 {
+			serverRole := model.GetServerUserRole(reference)
+			if serverRole != model.ServerRoleUnknown {
+				if exclude {
+					serverUserReference.ExclueServerUserRoles[serverRole] = nil
+				} else {
+					serverUserReference.ServerUserRoles[serverRole] = nil
+				}
+
+				continue
+			}
+
+			errs = errors.Join(errs, fmt.Errorf("Unknown user reference %d: '%s'.", i, rawReference))
+		} else if len(referenceParts) == 2 {
+			if referenceParts[0] == "*" && referenceParts[1] == "*" {
+				userReference.AllUsers = true
+				continue
+			}
+
+			// TODO: Continue from here!
+			// Reference to all users with a certain course role.
+			if referenceParts[0] == "*" {
+				courseRole := model.GetCourseUserRole(referenceParts[1])
+				if courseRole != model.CourseRoleUnknown {
+					return &model.ServerUserReference{
+						Course:         nil,
+						CourseUserRole: courseRole,
+						Exclude:        exclude,
+					}, nil
+				}
+
+				return nil, fmt.Errorf("Unknown user reference: '%s'.", rawReference)
+			}
+
+			// First part must be a course.
+			course, err := GetCourse(referenceParts[0])
+			if err != nil {
+				return nil, fmt.Errorf("Unable to get course while parsing user reference: '%w'.", err)
+			}
+
+			if course == nil {
+				return nil, fmt.Errorf("Unknown user reference: '%s'.", rawReference)
+			}
+
+			if referenceParts[1] == "*" {
+				return &model.ServerUserReference{
+					Course:  course,
+					Exclude: exclude,
 				}, nil
 			}
 
-			return nil, fmt.Errorf("Unknown user reference: '%s'.", rawReference)
-		}
+			courseRole := model.GetCourseUserRole(referenceParts[1])
+			if courseRole == model.CourseRoleUnknown {
+				return nil, fmt.Errorf("Unknown user reference: '%s'.", rawReference)
+			}
 
-		// First part must be a course.
-		course, err := GetCourse(referenceParts[0])
-		if err != nil {
-			return nil, fmt.Errorf("Unable to get course while parsing user reference: '%w'.", err)
-		}
-
-		if course == nil {
-			return nil, fmt.Errorf("Unknown user reference: '%s'.", rawReference)
-		}
-
-		if referenceParts[1] == "*" {
-			return &UserReference{
-				Type:    CourseReference,
-				Course:  course,
-				Exclude: exclude,
+			return &model.ServerUserReference{
+				Course:         course,
+				CourseUserRole: courseRole,
+				Exclude:        exclude,
 			}, nil
+		} else {
+			return nil, fmt.Errorf("Invalid user reference format: '%s'.", rawReference)
 		}
 
-		courseRole := model.GetCourseUserRole(referenceParts[1])
-		if courseRole == model.CourseRoleUnknown {
-			return nil, fmt.Errorf("Unknown user reference: '%s'.", rawReference)
-		}
-
-		return &UserReference{
-			Type:           CourseRoleReference,
-			Course:         course,
-			CourseUserRole: courseRole,
-			Exclude:        exclude,
-		}, nil
-	} else {
-		return nil, fmt.Errorf("Invalid user reference format: '%s'.", rawReference)
 	}
 }
 
-func ParseCourseUserReference(course *model.Course, rawReference string) (*UserReference, error) {
+func ParseCourseUserReference(course *model.Course, rawReference CourseUserReferenceInput) (*CourseUserReference, error) {
 	reference := strings.ToLower(strings.TrimSpace(rawReference))
 
 	exclude := false
@@ -217,7 +154,6 @@ func ParseCourseUserReference(course *model.Course, rawReference string) (*UserR
 	}
 
 	if strings.Contains(reference, "@") {
-		userReference.Type = EmailReference
 		userReference.Email = reference
 
 		return userReference, nil
@@ -228,75 +164,16 @@ func ParseCourseUserReference(course *model.Course, rawReference string) (*UserR
 	}
 
 	if reference == "*" {
-		userReference.Type = CourseReference
 
 		return userReference, nil
 	}
 
 	courseRole := model.GetCourseUserRole(reference)
 	if courseRole != model.CourseRoleUnknown {
-		userReference.Type = CourseRoleReference
 		userReference.CourseUserRole = courseRole
 
 		return userReference, nil
 	}
 
 	return nil, fmt.Errorf("Invalid course user reference: '%s'.", rawReference)
-}
-
-func (this *MultiUserReference) CombineUserRefernce(reference *UserReference) {
-	if reference == nil {
-		return
-	}
-
-	if this == nil {
-		this = reference.ToMultiUserReference()
-	}
-
-	switch reference.Type {
-	case EmailReference:
-		if !reference.Exclude {
-			this.Emails[reference.Email] = nil
-		} else {
-			this.ExcludeEmails[reference.Email] = nil
-			delete(this.Emails, reference.Email)
-		}
-	case CourseRoleReference:
-		if !reference.Exclude {
-			if reference.Course == nil {
-				// TODO: Handle the all courses case.
-				return
-			} else {
-				_, ok := this.CourseReferences[reference.Course.GetID()]
-				if !ok {
-					this.CourseReferences[reference.Course.GetID()] = map[model.CourseUserRole]any{
-						reference.CourseUserRole: nil,
-					}
-
-					break
-				}
-
-				this.CourseReferences[reference.Course.GetID()][reference.CourseUserRole] = nil
-			}
-		}
-	case CourseReference:
-		if !reference.Exclude {
-			_, ok := this.CourseReferences[reference.Course.GetID()]
-			if !ok {
-				this.CourseReferences[reference.Course.GetID()] = map[model.CourseUserRole]any{
-					model.CourseRoleUnknown: nil,
-				}
-
-				break
-			}
-
-			this.CourseReferences[reference.Course.GetID()][model.CourseRoleUnknown] = nil
-		}
-	case ServerRoleReference:
-		if !reference.Exclude {
-			this.ServerUserRoles[reference.ServerUserRole] = nil
-		}
-	case AllUserReference:
-		this.AllUsers = true
-	}
 }
