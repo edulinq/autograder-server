@@ -196,7 +196,7 @@ func (this *Job[InputType, OutputType]) Run() *JobOutput[InputType, OutputType] 
 		backgroundDone := make(chan any)
 
 		backgroundOutput := &JobOutput[InputType, OutputType]{
-			ID:             util.UUID(),
+			ID:             fmt.Sprintf("%s-background", output.ID),
 			Done:           backgroundDone,
 			ResultItems:    make(map[InputType]OutputType, len(output.RemainingItems)),
 			RemainingItems: output.RemainingItems,

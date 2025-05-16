@@ -200,22 +200,25 @@ func (this *PairwiseKey) String() string {
 }
 
 func (this PairwiseKey) LogValue() []*log.Attr {
+    logAttributes := make([]*log.Attr, 0)
+
 	courseID, assignmentID, email, shortSubmissionID, err := common.SplitFullSubmissionID(this[0])
 	if err != nil {
-		return []*log.Attr{
-			log.NewAttr("error", err),
-			log.NewAttr("submission", this[0]),
-			log.NewAttr("alt-submission", this[1]),
-		}
-	}
+        log.Error("Failed to split submission ID.", err, log.NewAttr("submission", this[0]))
+
+		logAttributes = append(logAttributes, log.NewAttr("submission", this[0]))
+	} else {
+		logAttributes = append(logAttributes, log.NewCourseAttr(courseID)),
+		logAttributes = append(logAttributes, log.NewAssignmentAttr(assignmentID)),
+		logAttributes = append(logAttributes, log.NewUserAttr(email)),
+		logAttributes = append(logAttributes, log.NewAttr("submission", shortSubmissionID))
+    }
 
 	altCourseID, altAssignmentID, altEmail, altShortSubmissionID, err := common.SplitFullSubmissionID(this[1])
 	if err != nil {
-		return []*log.Attr{
-			log.NewAttr("error", err),
-			log.NewAttr("submission", this[0]),
-			log.NewAttr("alt-submission", this[1]),
-		}
+        log.Error("Failed to split submission ID.", err, log.NewAttr("submission", this[1]))
+
+		logAttributes = append(logAttributes, log.NewAttr("submission", this[0]))
 	}
 
 	return []*log.Attr{
