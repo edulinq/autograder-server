@@ -1,6 +1,7 @@
 package db
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
@@ -33,11 +34,12 @@ func ParseUserReference(rawReferences []ServerUserReferenceInput) (*model.Server
 		ExcludeEmails:           make(map[string]any, 0),
 		ServerUserRoles:         make(map[model.ServerUserRole]any, 0),
 		ExcludeServerUserRoles:  make(map[model.ServerUserRole]any, 0),
-		CourseReferences:        make(map[string]CourseUserReference, 0),
+		CourseReferences:        make(map[string]model.CourseUserReference, 0),
 		ExcludeCourseReferences: make(map[string]any, 0),
 	}
 
 	var errs error = nil
+	var err error = nil
 
 	for i, rawReference := range rawReferences {
 		reference := strings.ToLower(strings.TrimSpace(string(rawReference)))
@@ -49,8 +51,14 @@ func ParseUserReference(rawReferences []ServerUserReferenceInput) (*model.Server
 			reference = strings.TrimPrefix(reference, "-")
 		}
 
+		// Only process exclusions after targeting all users.
+		if serverUserReference.AllUsers && !exclude {
+			continue
+		}
+
 		if reference == "root" {
 			errs = errors.Join(errs, fmt.Errorf("User reference %d cannot target the root user: '%s'.", i, rawReference))
+
 			continue
 		}
 
@@ -69,76 +77,83 @@ func ParseUserReference(rawReferences []ServerUserReferenceInput) (*model.Server
 			continue
 		}
 
-		referenceParts := strings.Split(reference, USER_REFERENCE_DELIM)
-		if len(referenceParts) == 1 {
+		parts := strings.Split(reference, model.USER_REFERENCE_DELIM)
+		if len(parts) == 1 {
 			serverRole := model.GetServerUserRole(reference)
-			if serverRole != model.ServerRoleUnknown {
-				if exclude {
-					serverUserReference.ExclueServerUserRoles[serverRole] = nil
-				} else {
-					serverUserReference.ServerUserRoles[serverRole] = nil
-				}
+			if serverRole == model.ServerRoleUnknown {
+				errs = errors.Join(errs, fmt.Errorf("Unknown user reference %d: '%s'. Unknown server user role '%s'.", i, rawReference, reference))
 
 				continue
 			}
 
-			errs = errors.Join(errs, fmt.Errorf("Unknown user reference %d: '%s'.", i, rawReference))
-		} else if len(referenceParts) == 2 {
-			if referenceParts[0] == "*" && referenceParts[1] == "*" {
-				userReference.AllUsers = true
+			if exclude {
+				serverUserReference.ExcludeServerUserRoles[serverRole] = nil
+			} else {
+				serverUserReference.ServerUserRoles[serverRole] = nil
+			}
+		} else if len(parts) == 2 {
+			if parts[0] == "*" && parts[1] == "*" {
+				serverUserReference.AllUsers = true
 				continue
 			}
 
-			// TODO: Continue from here!
-			// Reference to all users with a certain course role.
-			if referenceParts[0] == "*" {
-				courseRole := model.GetCourseUserRole(referenceParts[1])
-				if courseRole != model.CourseRoleUnknown {
-					return &model.ServerUserReference{
-						Course:         nil,
-						CourseUserRole: courseRole,
-						Exclude:        exclude,
-					}, nil
+			// TODO: Can we leverage the parsing function of the course user reference?
+			// We could get back a CourseUserReference and then merge it in?
+			courses := make(map[string]*model.Course, 0)
+
+			// Target all courses.
+			if parts[0] == "*" {
+				// TODO: Think about caching all courses. (or implementing db caching).
+				courses, err = GetCourses()
+				if err != nil {
+					return nil, fmt.Errorf("Failed to get courses: '%w'.", err)
+				}
+			} else {
+				// Target a specific course.
+				course, err := GetCourse(parts[0])
+				if err != nil {
+					errs = errors.Join(errs, fmt.Errorf("Unable to get course while parsing user reference: '%w'.", err))
+
+					continue
 				}
 
-				return nil, fmt.Errorf("Unknown user reference: '%s'.", rawReference)
+				if course == nil {
+					errs = errors.Join(errs, fmt.Errorf("Unknown user reference %d: '%s'. Unknown course '%s'.", i, rawReference, parts[0]))
+
+					continue
+				}
+
+				courses[course.GetID()] = course
 			}
 
-			// First part must be a course.
-			course, err := GetCourse(referenceParts[0])
-			if err != nil {
-				return nil, fmt.Errorf("Unable to get course while parsing user reference: '%w'.", err)
+			courseRoles := make([]model.CourseUserRole, 0)
+
+			// Target all course roles.
+			if parts[1] == "*" {
+				courseRoles := model.GetCommonCourseRoleStrings()
+			} else {
+				// Target a specific course role.
+				courseRole := model.GetCourseUserRole(parts[1])
+				if courseRole == model.CourseRoleUnknown {
+					errs = errors.Join(errs, fmt.Errorf("Unknown user reference %d: '%s'. Unknown course user role '%s'.", i, rawReference, parts[1]))
+
+					continue
+				}
+
+				courseRoles = append(courseRoles, courseRole)
 			}
 
-			if course == nil {
-				return nil, fmt.Errorf("Unknown user reference: '%s'.", rawReference)
-			}
-
-			if referenceParts[1] == "*" {
-				return &model.ServerUserReference{
-					Course:  course,
-					Exclude: exclude,
-				}, nil
-			}
-
-			courseRole := model.GetCourseUserRole(referenceParts[1])
-			if courseRole == model.CourseRoleUnknown {
-				return nil, fmt.Errorf("Unknown user reference: '%s'.", rawReference)
-			}
-
-			return &model.ServerUserReference{
-				Course:         course,
-				CourseUserRole: courseRole,
-				Exclude:        exclude,
-			}, nil
+			serverUserReference.AddCourseUserReference(courses, courseRoles, exclude)
 		} else {
 			return nil, fmt.Errorf("Invalid user reference format: '%s'.", rawReference)
 		}
-
 	}
+
+	return serverUserReference, errs
 }
 
-func ParseCourseUserReference(course *model.Course, rawReference CourseUserReferenceInput) (*CourseUserReference, error) {
+// TODO: Convert course function.
+func ParseCourseUserReference(course *model.Course, rawReference CourseUserReferenceInput) (*model.CourseUserReference, error) {
 	reference := strings.ToLower(strings.TrimSpace(rawReference))
 
 	exclude := false
@@ -148,7 +163,7 @@ func ParseCourseUserReference(course *model.Course, rawReference CourseUserRefer
 		reference = strings.TrimPrefix(reference, "-")
 	}
 
-	userReference := &UserReference{
+	userReference := &model.CourseUserReference{
 		Course:  course,
 		Exclude: exclude,
 	}
