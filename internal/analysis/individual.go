@@ -74,15 +74,11 @@ func IndividualAnalysis(options AnalysisOptions) (map[string]*model.IndividualAn
 
 	if len(output.WorkErrors) != 0 {
 		for fullSubmissionID, err := range output.WorkErrors {
-			courseID, assignmentID, email, shortSubmissionID, splitErr := common.SplitFullSubmissionID(fullSubmissionID)
-			if splitErr != nil {
-				log.Error("Failed to split full submission ID.", splitErr, log.NewAttr("submission-id", fullSubmissionID))
-				log.Error("Failed to run individual analysis.", err, log.NewAttr("submission-id", fullSubmissionID), log.NewAttr("job-id", output.ID))
+			logAttributes := submissionIDToLogValues(fullSubmissionID)
 
-				continue
-			}
+			logAttributes = append([]any{err}, logAttributes...)
 
-			log.Error("Failed to run individual analysis.", err, log.NewCourseAttr(courseID), log.NewAssignmentAttr(assignmentID), log.NewUserAttr(email), log.NewAttr("short-submission-id", shortSubmissionID), log.NewAttr("job-id", output.ID))
+			log.Error("Failed to run individual analysis.", logAttributes...)
 		}
 
 		return nil, 0, fmt.Errorf("Failed to run individual analysis for %d submissions during job '%s'.", len(output.WorkErrors), output.ID)
@@ -218,4 +214,22 @@ func individualFileAnalysis(submissionDir string, assignment *model.Assignment) 
 
 func collectIndividualStats(fullSubmissionIDs []string, totalRunTime int64, initiatorEmail string) {
 	collectAnalysisStats(fullSubmissionIDs, totalRunTime, initiatorEmail, "individual")
+}
+
+func submissionIDToLogValues(fullSubmissionID string) []any {
+	logAttributes := make([]any, 0)
+
+	courseID, assignmentID, email, shortSubmissionID, err := common.SplitFullSubmissionID(fullSubmissionID)
+	if err != nil {
+		log.Error("Failed to split full submission ID.", err, log.NewAttr("submission", fullSubmissionID))
+
+		logAttributes = append(logAttributes, log.NewAttr("submission", fullSubmissionID))
+	} else {
+		logAttributes = append(logAttributes, log.NewCourseAttr(courseID))
+		logAttributes = append(logAttributes, log.NewAssignmentAttr(assignmentID))
+		logAttributes = append(logAttributes, log.NewUserAttr(email))
+		logAttributes = append(logAttributes, log.NewAttr("submission", shortSubmissionID))
+	}
+
+	return logAttributes
 }
