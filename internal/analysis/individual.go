@@ -216,6 +216,8 @@ func collectIndividualStats(fullSubmissionIDs []string, totalRunTime int64, init
 	collectAnalysisStats(fullSubmissionIDs, totalRunTime, initiatorEmail, "individual")
 }
 
+// Best effort attempt to convert a submission ID into fine grain log attributes.
+// Returns a slice of any instead of a slice of *log.Attr due to type constraints of the logging functions.
 func submissionIDToLogValues(fullSubmissionID string) []any {
 	logAttributes := make([]any, 0)
 
