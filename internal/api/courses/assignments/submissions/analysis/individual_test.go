@@ -43,6 +43,7 @@ func TestIndividualBase(test *testing.T) {
 
 	// First round should have nothing, because we are not waiting for completion.
 	expected := IndividualResponse{
+		Success:  true,
 		Complete: false,
 		Options: analysis.AnalysisOptions{
 			RawSubmissionSpecs: submissions,
@@ -54,7 +55,8 @@ func TestIndividualBase(test *testing.T) {
 				PendingCount:  2,
 			},
 		},
-		Results: map[string]*model.IndividualAnalysis{},
+		Results:    map[string]*model.IndividualAnalysis{},
+		WorkErrors: map[string]string{},
 	}
 
 	if !reflect.DeepEqual(expected, responseContent) {
@@ -75,6 +77,7 @@ func TestIndividualBase(test *testing.T) {
 
 	// Second round should be complete.
 	expected = IndividualResponse{
+		Success:  true,
 		Complete: true,
 		Options: analysis.AnalysisOptions{
 			RawSubmissionSpecs: submissions,
@@ -197,6 +200,7 @@ func TestIndividualBase(test *testing.T) {
 				},
 			},
 		},
+		WorkErrors: map[string]string{},
 	}
 
 	// Zero out the timestamps.

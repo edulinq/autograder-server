@@ -16,10 +16,12 @@ type PairwiseRequest struct {
 }
 
 type PairwiseResponse struct {
-	Complete bool                                          `json:"complete"`
-	Options  analysis.AnalysisOptions                      `json:"options"`
-	Summary  *model.PairwiseAnalysisSummary                `json:"summary"`
-	Results  map[model.PairwiseKey]*model.PairwiseAnalysis `json:"results"`
+	Success    bool                                          `json:"success"`
+	Complete   bool                                          `json:"complete"`
+	Options    analysis.AnalysisOptions                      `json:"options"`
+	Summary    *model.PairwiseAnalysisSummary                `json:"summary"`
+	Results    map[model.PairwiseKey]*model.PairwiseAnalysis `json:"results"`
+	WorkErrors map[string]string                             `json:"work-errors"`
 }
 
 // Get the result of a pairwise analysis for the specified submissions.
@@ -46,17 +48,19 @@ func HandlePairwise(request *PairwiseRequest) (*PairwiseResponse, *core.APIError
 	request.InitiatorEmail = request.ServerUser.Email
 	request.AnalysisOptions.Context = request.APIRequestUserContext.Context
 
-	results, pendingCount, err := analysis.PairwiseAnalysis(request.AnalysisOptions)
+	results, pendingCount, workErrors, err := analysis.PairwiseAnalysis(request.AnalysisOptions)
 	if err != nil {
 		return nil, core.NewInternalError("-622", request, "Failed to perform pairwise analysis.").
 			Err(err)
 	}
 
 	response := PairwiseResponse{
-		Complete: (pendingCount == 0),
-		Options:  request.AnalysisOptions,
-		Summary:  model.NewPairwiseAnalysisSummary(results, pendingCount),
-		Results:  results,
+		Success:    (len(workErrors) == 0),
+		Complete:   (pendingCount == 0),
+		Options:    request.AnalysisOptions,
+		Summary:    model.NewPairwiseAnalysisSummary(results, pendingCount),
+		Results:    results,
+		WorkErrors: workErrors,
 	}
 
 	return &response, nil

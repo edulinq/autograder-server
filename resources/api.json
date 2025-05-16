@@ -174,8 +174,16 @@
                     "type": "map[string]*model.IndividualAnalysis"
                 },
                 {
+                    "name": "success",
+                    "type": "bool"
+                },
+                {
                     "name": "summary",
                     "type": "*model.IndividualAnalysisSummary"
+                },
+                {
+                    "name": "work-errors",
+                    "type": "map[string]string"
                 }
             ]
         },
@@ -221,8 +229,16 @@
                     "type": "map[model.PairwiseKey]*model.PairwiseAnalysis"
                 },
                 {
+                    "name": "success",
+                    "type": "bool"
+                },
+                {
                     "name": "summary",
                     "type": "*model.PairwiseAnalysisSummary"
+                },
+                {
+                    "name": "work-errors",
+                    "type": "map[string]string"
                 }
             ]
         },

@@ -123,9 +123,13 @@ func testIndividual(test *testing.T, ids []string, expected map[string]*model.In
 		},
 	}
 
-	results, pendingCount, err := IndividualAnalysis(options)
+	results, pendingCount, workErrors, err := IndividualAnalysis(options)
 	if err != nil {
 		test.Fatalf("Failed to do individual analysis: '%v'.", err)
+	}
+
+	if len(workErrors) != 0 {
+		test.Fatalf("Unexpected work errors: '%s'.", util.MustToJSONIndent(workErrors))
 	}
 
 	if pendingCount != 0 {
@@ -225,9 +229,14 @@ func TestIndividualAnalysisIncludeExclude(test *testing.T) {
 			},
 		}
 
-		results, pendingCount, err := IndividualAnalysis(options)
+		results, pendingCount, workErrors, err := IndividualAnalysis(options)
 		if err != nil {
 			test.Errorf("Case %d: Failed to perform analysis: '%v'.", i, err)
+			continue
+		}
+
+		if len(workErrors) != 0 {
+			test.Errorf("Case %d: Unexpected work errors: '%s'.", i, util.MustToJSONIndent(workErrors))
 			continue
 		}
 
@@ -473,7 +482,7 @@ func TestIndividualAnalysisCountBase(test *testing.T) {
 				},
 			}
 
-			_, _, err := IndividualAnalysis(preloadOptions)
+			_, _, _, err := IndividualAnalysis(preloadOptions)
 			if err != nil {
 				test.Errorf("Case %d: Failed to preload analysis: '%v'.", i, err)
 				continue
@@ -492,9 +501,14 @@ func TestIndividualAnalysisCountBase(test *testing.T) {
 		testCase.options.JobOptions.Context = ctx
 		testCase.options.RetainOriginalContext = false
 
-		results, pendingCount, err := IndividualAnalysis(testCase.options)
+		results, pendingCount, workErrors, err := IndividualAnalysis(testCase.options)
 		if err != nil {
 			test.Errorf("Case %d: Failed to do analysis: '%v'.", i, err)
+			continue
+		}
+
+		if len(workErrors) != 0 {
+			test.Errorf("Case %d: Unexpected work errors: '%s'.", i, util.MustToJSONIndent(workErrors))
 			continue
 		}
 
@@ -573,9 +587,13 @@ func TestIndividualAnalysisFailureBase(test *testing.T) {
 		},
 	}
 
-	results, pendingCount, err := IndividualAnalysis(options)
+	results, pendingCount, workErrors, err := IndividualAnalysis(options)
 	if err != nil {
 		test.Fatalf("Failed to perform analysis: '%v'.", err)
+	}
+
+	if len(workErrors) != 0 {
+		test.Fatalf("Unexpected work errors: '%s'.", util.MustToJSONIndent(workErrors))
 	}
 
 	if pendingCount != 0 {

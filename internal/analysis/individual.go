@@ -18,20 +18,20 @@ import (
 
 var testFailIndividualAnalysis bool = false
 
-func IndividualAnalysis(options AnalysisOptions) (map[string]*model.IndividualAnalysis, int, error) {
+func IndividualAnalysis(options AnalysisOptions) (map[string]*model.IndividualAnalysis, int, map[string]string, error) {
 	// Sort the ids so the locking key will be consistent.
 	fullSubmissionIDs := slices.Clone(options.ResolvedSubmissionIDs)
 	slices.Sort(fullSubmissionIDs)
 
 	if len(fullSubmissionIDs) == 0 {
-		return nil, 0, nil
+		return nil, 0, nil, nil
 	}
 
 	// Lock based on the first seen course.
 	// This is to prevent multiple requests using up all the cores.
 	lockCourseID, _, _, _, err := common.SplitFullSubmissionID(fullSubmissionIDs[0])
 	if err != nil {
-		return nil, 0, fmt.Errorf("Unable to get locking course: '%w'.", err)
+		return nil, 0, nil, fmt.Errorf("Unable to get locking course: '%w'.", err)
 	}
 
 	if !options.RetainOriginalContext && !options.WaitForCompletion {
@@ -64,27 +64,29 @@ func IndividualAnalysis(options AnalysisOptions) (map[string]*model.IndividualAn
 
 	err = job.Validate()
 	if err != nil {
-		return nil, 0, fmt.Errorf("Failed to validate job: '%w'.", err)
+		return nil, 0, nil, fmt.Errorf("Failed to validate job: '%w'.", err)
 	}
 
 	output := job.Run()
 	if output.Error != nil {
-		return nil, 0, fmt.Errorf("Failed to run individual analysis job '%s': '%w'.", output.ID, output.Error)
+		return nil, 0, nil, fmt.Errorf("Failed to run individual analysis job '%s': '%w'.", output.ID, output.Error)
 	}
+
+	workErrors := make(map[string]string, len(output.WorkErrors))
 
 	if len(output.WorkErrors) != 0 {
 		for fullSubmissionID, err := range output.WorkErrors {
+			workErrors[fullSubmissionID] = err.Error()
+
 			logAttributes := submissionIDToLogValues(fullSubmissionID)
 
 			logAttributes = append([]any{err}, logAttributes...)
 
 			log.Error("Failed to run individual analysis.", logAttributes...)
 		}
-
-		return nil, 0, fmt.Errorf("Failed to run individual analysis for %d submissions during job '%s'.", len(output.WorkErrors), output.ID)
 	}
 
-	return output.ResultItems, len(output.RemainingItems), nil
+	return output.ResultItems, len(output.RemainingItems), workErrors, nil
 }
 
 func computeSingleIndividualAnalysis(options AnalysisOptions, fullSubmissionID string, computeDeltas bool) (*model.IndividualAnalysis, error) {

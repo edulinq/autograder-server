@@ -44,23 +44,23 @@ var forceDefaultEnginesForTesting bool = false
 // If options.WaitForCompletion is true, then this function will block until all requested results are computed.
 // Otherwise, this function will return any cached results from the database
 // and the remaining analysis will be done asynchronously.
-// Returns: (complete results, number of pending analysis runs, error)
-func PairwiseAnalysis(options AnalysisOptions) (map[model.PairwiseKey]*model.PairwiseAnalysis, int, error) {
+// Returns: (complete results, number of pending analysis runs, work errors, error)
+func PairwiseAnalysis(options AnalysisOptions) (map[model.PairwiseKey]*model.PairwiseAnalysis, int, map[string]string, error) {
 	_, err := getEngines()
 	if err != nil {
-		return nil, 0, err
+		return nil, 0, nil, err
 	}
 
 	allKeys := createPairwiseKeys(options.ResolvedSubmissionIDs)
 	if len(allKeys) == 0 {
-		return nil, 0, nil
+		return nil, 0, nil, nil
 	}
 
 	// Lock based on the first seen course.
 	// This is to prevent multiple requests using up all the cores.
 	lockCourseID, _, _, _, err := common.SplitFullSubmissionID(allKeys[0][0])
 	if err != nil {
-		return nil, 0, fmt.Errorf("Unable to get locking course: '%w'.", err)
+		return nil, 0, nil, fmt.Errorf("Unable to get locking course: '%w'.", err)
 	}
 
 	if !options.RetainOriginalContext && !options.WaitForCompletion {
@@ -96,23 +96,25 @@ func PairwiseAnalysis(options AnalysisOptions) (map[model.PairwiseKey]*model.Pai
 
 	err = job.Validate()
 	if err != nil {
-		return nil, 0, fmt.Errorf("Failed to validate job: '%v'.", err)
+		return nil, 0, nil, fmt.Errorf("Failed to validate job: '%v'.", err)
 	}
 
 	output := job.Run()
 	if output.Error != nil {
-		return nil, 0, fmt.Errorf("Failed to run pairwise analysis job '%s': '%w'.", output.ID, output.Error)
+		return nil, 0, nil, fmt.Errorf("Failed to run pairwise analysis job '%s': '%w'.", output.ID, output.Error)
 	}
+
+	workErrors := make(map[string]string, len(output.WorkErrors))
 
 	if len(output.WorkErrors) != 0 {
 		for pairwiseKey, err := range output.WorkErrors {
+			workErrors[pairwiseKey.String()] = err.Error()
+
 			log.Error("Failed to run pairwise analysis.", err, pairwiseKey, log.NewAttr("job-id", output.ID))
 		}
-
-		return nil, 0, fmt.Errorf("Failed to run pairwise analysis for %d submissions during job '%s'.", len(output.WorkErrors), output.ID)
 	}
 
-	return output.ResultItems, len(output.RemainingItems), nil
+	return output.ResultItems, len(output.RemainingItems), workErrors, nil
 }
 
 func createPairwiseKeys(fullSubmissionIDs []string) []model.PairwiseKey {
