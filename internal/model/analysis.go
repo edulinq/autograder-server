@@ -50,6 +50,7 @@ type AnalysisSummary struct {
 	CompleteCount int  `json:"complete-count"`
 	PendingCount  int  `json:"pending-count"`
 	FailureCount  int  `json:"failure-count"`
+	ErrorCount    int  `json:"error-count"`
 
 	FirstTimestamp timestamp.Timestamp `json:"first-timestamp"`
 	LastTimestamp  timestamp.Timestamp `json:"last-timestamp"`
@@ -326,7 +327,7 @@ func NewFailedPairwiseAnalysis(pairwiseKey PairwiseKey, assignment *Assignment, 
 	}
 }
 
-func NewIndividualAnalysisSummary(results map[string]*IndividualAnalysis, pendingCount int) *IndividualAnalysisSummary {
+func NewIndividualAnalysisSummary(results map[string]*IndividualAnalysis, pendingCount int, errorCount int) *IndividualAnalysisSummary {
 	if len(results) == 0 {
 		return &IndividualAnalysisSummary{
 			AnalysisSummary: AnalysisSummary{
@@ -334,6 +335,7 @@ func NewIndividualAnalysisSummary(results map[string]*IndividualAnalysis, pendin
 				CompleteCount:  0,
 				PendingCount:   pendingCount,
 				FailureCount:   0,
+				ErrorCount:     errorCount,
 				FirstTimestamp: timestamp.Zero(),
 				LastTimestamp:  timestamp.Zero(),
 			},
@@ -393,6 +395,7 @@ func NewIndividualAnalysisSummary(results map[string]*IndividualAnalysis, pendin
 			CompleteCount:  len(scores),
 			PendingCount:   pendingCount,
 			FailureCount:   failureCount,
+			ErrorCount:     errorCount,
 			FirstTimestamp: firstTimestamp,
 			LastTimestamp:  lastTimestamp,
 		},
@@ -407,7 +410,7 @@ func NewIndividualAnalysisSummary(results map[string]*IndividualAnalysis, pendin
 	}
 }
 
-func NewPairwiseAnalysisSummary(results map[PairwiseKey]*PairwiseAnalysis, pendingCount int) *PairwiseAnalysisSummary {
+func NewPairwiseAnalysisSummary(results map[PairwiseKey]*PairwiseAnalysis, pendingCount int, errorCount int) *PairwiseAnalysisSummary {
 	if len(results) == 0 {
 		return &PairwiseAnalysisSummary{
 			AnalysisSummary: AnalysisSummary{
@@ -415,6 +418,7 @@ func NewPairwiseAnalysisSummary(results map[PairwiseKey]*PairwiseAnalysis, pendi
 				CompleteCount:  0,
 				PendingCount:   pendingCount,
 				FailureCount:   0,
+				ErrorCount:     errorCount,
 				FirstTimestamp: timestamp.Zero(),
 				LastTimestamp:  timestamp.Zero(),
 			},
@@ -461,6 +465,7 @@ func NewPairwiseAnalysisSummary(results map[PairwiseKey]*PairwiseAnalysis, pendi
 			CompleteCount:  len(totalMeanSims),
 			PendingCount:   pendingCount,
 			FailureCount:   failureCount,
+			ErrorCount:     errorCount,
 			FirstTimestamp: firstTimestamp,
 			LastTimestamp:  lastTimestamp,
 		},

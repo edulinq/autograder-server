@@ -52,10 +52,10 @@ func TestPairwiseBase(test *testing.T) {
 				Complete:      false,
 				CompleteCount: 0,
 				PendingCount:  1,
+				ErrorCount:    0,
 			},
 		},
 		Results:    map[model.PairwiseKey]*model.PairwiseAnalysis{},
-		ErrorCount: 0,
 		WorkErrors: map[string]string{},
 	}
 
@@ -92,6 +92,7 @@ func TestPairwiseBase(test *testing.T) {
 				Complete:       true,
 				CompleteCount:  1,
 				PendingCount:   0,
+				ErrorCount:     0,
 				FirstTimestamp: timestamp.Zero(),
 				LastTimestamp:  timestamp.Zero(),
 			},
@@ -136,7 +137,6 @@ func TestPairwiseBase(test *testing.T) {
 				TotalMeanSimilarity: 0.13,
 			},
 		},
-		ErrorCount: 0,
 		WorkErrors: map[string]string{},
 	}
 

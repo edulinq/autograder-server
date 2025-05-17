@@ -166,10 +166,6 @@
                     "type": "bool"
                 },
                 {
-                    "name": "error-count",
-                    "type": "int"
-                },
-                {
                     "name": "options",
                     "type": "analysis.AnalysisOptions"
                 },
@@ -219,10 +215,6 @@
                 {
                     "name": "complete",
                     "type": "bool"
-                },
-                {
-                    "name": "error-count",
-                    "type": "int"
                 },
                 {
                     "name": "options",
@@ -1950,6 +1942,10 @@
                     "type": "int"
                 },
                 {
+                    "name": "error-count",
+                    "type": "int"
+                },
+                {
                     "name": "failure-count",
                     "type": "int"
                 },
@@ -2471,6 +2467,10 @@
                     "type": "int"
                 },
                 {
+                    "name": "error-count",
+                    "type": "int"
+                },
+                {
                     "name": "failure-count",
                     "type": "int"
                 },
@@ -2567,6 +2567,10 @@
                 },
                 {
                     "name": "complete-count",
+                    "type": "int"
+                },
+                {
+                    "name": "error-count",
                     "type": "int"
                 },
                 {

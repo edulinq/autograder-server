@@ -448,6 +448,7 @@ func TestNewIndividualAnalysisSummaryBase(test *testing.T) {
 			CompleteCount:  3,
 			PendingCount:   0,
 			FailureCount:   1,
+			ErrorCount:     0,
 			FirstTimestamp: timestamp.Zero(),
 			LastTimestamp:  timestamp.Zero(),
 		},
@@ -518,7 +519,7 @@ func TestNewIndividualAnalysisSummaryBase(test *testing.T) {
 		},
 	}
 
-	actual := NewIndividualAnalysisSummary(input, 0)
+	actual := NewIndividualAnalysisSummary(input, 0, 0)
 
 	// Zero out timesstamps.
 	actual.FirstTimestamp = timestamp.Zero()
@@ -611,6 +612,7 @@ func TestNewPairwiseAnalysisSummaryBase(test *testing.T) {
 			CompleteCount:  3,
 			PendingCount:   0,
 			FailureCount:   1,
+			ErrorCount:     0,
 			FirstTimestamp: timestamp.Zero(),
 			LastTimestamp:  timestamp.Zero(),
 		},
@@ -646,7 +648,7 @@ func TestNewPairwiseAnalysisSummaryBase(test *testing.T) {
 		},
 	}
 
-	actual := NewPairwiseAnalysisSummary(input, 0)
+	actual := NewPairwiseAnalysisSummary(input, 0, 0)
 
 	// Zero out timesstamps.
 	actual.FirstTimestamp = timestamp.Zero()

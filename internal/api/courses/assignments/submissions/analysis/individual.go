@@ -20,7 +20,6 @@ type IndividualResponse struct {
 	Options    analysis.AnalysisOptions             `json:"options"`
 	Summary    *model.IndividualAnalysisSummary     `json:"summary"`
 	Results    map[string]*model.IndividualAnalysis `json:"results"`
-	ErrorCount int                                  `json:"error-count"`
 	WorkErrors map[string]string                    `json:"work-errors"`
 }
 
@@ -57,9 +56,8 @@ func HandleIndividual(request *IndividualRequest) (*IndividualResponse, *core.AP
 	response := IndividualResponse{
 		Complete:   (pendingCount == 0),
 		Options:    request.AnalysisOptions,
-		Summary:    model.NewIndividualAnalysisSummary(results, pendingCount),
+		Summary:    model.NewIndividualAnalysisSummary(results, pendingCount, len(workErrors)),
 		Results:    results,
-		ErrorCount: len(workErrors),
 		WorkErrors: workErrors,
 	}
 

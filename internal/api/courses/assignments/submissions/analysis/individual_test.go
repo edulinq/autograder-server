@@ -52,10 +52,10 @@ func TestIndividualBase(test *testing.T) {
 				Complete:      false,
 				CompleteCount: 0,
 				PendingCount:  2,
+				ErrorCount:    0,
 			},
 		},
 		Results:    map[string]*model.IndividualAnalysis{},
-		ErrorCount: 0,
 		WorkErrors: map[string]string{},
 	}
 
@@ -89,6 +89,7 @@ func TestIndividualBase(test *testing.T) {
 				Complete:       true,
 				CompleteCount:  2,
 				PendingCount:   0,
+				ErrorCount:     0,
 				FirstTimestamp: timestamp.Zero(),
 				LastTimestamp:  timestamp.Zero(),
 			},
@@ -199,7 +200,6 @@ func TestIndividualBase(test *testing.T) {
 				},
 			},
 		},
-		ErrorCount: 0,
 		WorkErrors: map[string]string{},
 	}
 
