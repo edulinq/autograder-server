@@ -8,6 +8,7 @@ import (
 	"github.com/edulinq/autograder/internal/analysis"
 	"github.com/edulinq/autograder/internal/api/core"
 	"github.com/edulinq/autograder/internal/db"
+	"github.com/edulinq/autograder/internal/jobmanager"
 	"github.com/edulinq/autograder/internal/model"
 	"github.com/edulinq/autograder/internal/timestamp"
 	"github.com/edulinq/autograder/internal/util"
@@ -51,9 +52,11 @@ func TestIndividualBase(test *testing.T) {
 				Complete:      false,
 				CompleteCount: 0,
 				PendingCount:  2,
+				ErrorCount:    0,
 			},
 		},
-		Results: map[string]*model.IndividualAnalysis{},
+		Results:    map[string]*model.IndividualAnalysis{},
+		WorkErrors: map[string]string{},
 	}
 
 	if !reflect.DeepEqual(expected, responseContent) {
@@ -77,13 +80,16 @@ func TestIndividualBase(test *testing.T) {
 		Complete: true,
 		Options: analysis.AnalysisOptions{
 			RawSubmissionSpecs: submissions,
-			WaitForCompletion:  true,
+			JobOptions: jobmanager.JobOptions{
+				WaitForCompletion: true,
+			},
 		},
 		Summary: &model.IndividualAnalysisSummary{
 			AnalysisSummary: model.AnalysisSummary{
 				Complete:       true,
 				CompleteCount:  2,
 				PendingCount:   0,
+				ErrorCount:     0,
 				FirstTimestamp: timestamp.Zero(),
 				LastTimestamp:  timestamp.Zero(),
 			},
@@ -194,6 +200,7 @@ func TestIndividualBase(test *testing.T) {
 				},
 			},
 		},
+		WorkErrors: map[string]string{},
 	}
 
 	// Zero out the timestamps.

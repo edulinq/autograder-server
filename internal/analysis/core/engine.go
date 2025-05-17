@@ -15,9 +15,6 @@ type SimilarityEngine interface {
 	// The engine must not modify the existing template file.
 	// Working on two files (submissions) at a time will typically be less efficient than working on all files at the same time,
 	// but a lot of shorter jobs is more flexible than one large job.
-	// In additional to similarity, the engine should also return the time it took (in milliseconds) to run
-	// (not counting any time locked/waiting).
-	// On an error, 0 should be returned for run time.
-	// On a timeout, (nil, 0, nil) should be returned.
-	ComputeFileSimilarity(paths [2]string, templatePath string, ctx context.Context) (*model.FileSimilarity, int64, error)
+	// On a timeout, (nil, nil) should be returned.
+	ComputeFileSimilarity(paths [2]string, templatePath string, ctx context.Context) (*model.FileSimilarity, error)
 }

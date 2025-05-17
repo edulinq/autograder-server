@@ -733,9 +733,10 @@ func TestRunJobBase(test *testing.T) {
 			continue
 		}
 
-		// Clear channel and run time for comparison.
+		// Clear channel, run time, and ID for comparison.
 		output.Done = nil
 		output.RunTime = 0
+		output.ID = ""
 
 		// Set default error output for successful test cases.
 		testCase.initialOutput.WorkErrors = map[string]error{}
@@ -754,9 +755,10 @@ func TestRunJobBase(test *testing.T) {
 			continue
 		}
 
-		// Clear channel and run time for comparison.
+		// Clear channel, run time, and ID for comparison.
 		output.Done = nil
 		output.RunTime = 0
+		output.ID = ""
 
 		// Set default error output for successful test cases.
 		testCase.finalOutput.WorkErrors = map[string]error{}
@@ -839,9 +841,10 @@ func TestRunJobCancel(test *testing.T) {
 			expectedOutput.Error.Error(), output.Error.Error())
 	}
 
-	// Clear done channel and errors for comparison check.
+	// Clear done channel, errors, and ID for comparison check.
 	output.Done = nil
 	output.Error = nil
+	output.ID = ""
 	expectedOutput.Error = nil
 
 	if !reflect.DeepEqual(output, expectedOutput) {
@@ -880,6 +883,7 @@ func TestRunJobChannel(test *testing.T) {
 		RunTime:        output.RunTime,
 		WorkErrors:     map[string]error{},
 		Done:           output.Done,
+		ID:             output.ID,
 	}
 
 	if !reflect.DeepEqual(output, expected) {
@@ -943,12 +947,14 @@ func TestBadWorkFunc(test *testing.T) {
 		}
 	}
 
-	// Clear done channel and errors for comparison check.
+	// Clear done channel, errors, and ID for comparison check.
 	output.Done = nil
 	expectedOutput.Done = nil
 
 	output.WorkErrors = nil
 	expectedOutput.WorkErrors = nil
+
+	output.ID = ""
 
 	if !reflect.DeepEqual(output, expectedOutput) {
 		test.Fatalf("Unexpected result. Expected: '%s', actual: '%s'.",

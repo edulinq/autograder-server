@@ -77,6 +77,9 @@ type Job[InputType comparable, OutputType any] struct {
 // Always wait for the Done channel to be closed before handling the output,
 // which can also be achieved by calling JobOutput.IsDone().
 type JobOutput[InputType comparable, OutputType any] struct {
+	// A unique identifier for the job output.
+	ID string
+
 	// Signals the job was canceled during execution.
 	Canceled bool
 
@@ -145,6 +148,7 @@ func (this *Job[InputType, OutputType]) Run() *JobOutput[InputType, OutputType] 
 	done := make(chan any)
 
 	output := JobOutput[InputType, OutputType]{
+		ID:             util.UUID(),
 		Done:           done,
 		ResultItems:    make(map[InputType]OutputType, len(this.WorkItems)),
 		RemainingItems: this.WorkItems,
@@ -192,6 +196,7 @@ func (this *Job[InputType, OutputType]) Run() *JobOutput[InputType, OutputType] 
 		backgroundDone := make(chan any)
 
 		backgroundOutput := &JobOutput[InputType, OutputType]{
+			ID:             fmt.Sprintf("%s-background", output.ID),
 			Done:           backgroundDone,
 			ResultItems:    make(map[InputType]OutputType, len(output.RemainingItems)),
 			RemainingItems: output.RemainingItems,
