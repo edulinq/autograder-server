@@ -1092,6 +1092,16 @@
                 }
             ]
         },
+        "metadata/heartbeat": {
+            "description": "Get server heartbeat.",
+            "input": [],
+            "output": [
+                {
+                    "name": "server-version",
+                    "type": "util.Version"
+                }
+            ]
+        },
         "stats/query": {
             "description": "Query stats for the server.",
             "input": [
@@ -2968,6 +2978,23 @@
         "util.FileSpecType": {
             "category": "alias",
             "alias-type": "string"
+        },
+        "util.Version": {
+            "category": "struct",
+            "fields": [
+                {
+                    "name": "base-version",
+                    "type": "string"
+                },
+                {
+                    "name": "git-hash",
+                    "type": "string"
+                },
+                {
+                    "name": "is-dirty",
+                    "type": "bool"
+                }
+            ]
         }
     }
 }
