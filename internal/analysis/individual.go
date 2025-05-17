@@ -79,9 +79,8 @@ func IndividualAnalysis(options AnalysisOptions) (map[string]*model.IndividualAn
 			workErrors[fullSubmissionID] = err.Error()
 
 			logAttributes := submissionIDToLogValues(fullSubmissionID)
-
 			logAttributes = append([]any{err}, logAttributes...)
-
+			logAttributes = append(logAttributes, log.NewAttr("job-id", output.ID))
 			log.Error("Failed to run individual analysis.", logAttributes...)
 		}
 	}

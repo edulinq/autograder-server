@@ -166,16 +166,16 @@
                     "type": "bool"
                 },
                 {
+                    "name": "error-count",
+                    "type": "int"
+                },
+                {
                     "name": "options",
                     "type": "analysis.AnalysisOptions"
                 },
                 {
                     "name": "results",
                     "type": "map[string]*model.IndividualAnalysis"
-                },
-                {
-                    "name": "success",
-                    "type": "bool"
                 },
                 {
                     "name": "summary",
@@ -221,16 +221,16 @@
                     "type": "bool"
                 },
                 {
+                    "name": "error-count",
+                    "type": "int"
+                },
+                {
                     "name": "options",
                     "type": "analysis.AnalysisOptions"
                 },
                 {
                     "name": "results",
                     "type": "map[model.PairwiseKey]*model.PairwiseAnalysis"
-                },
-                {
-                    "name": "success",
-                    "type": "bool"
                 },
                 {
                     "name": "summary",

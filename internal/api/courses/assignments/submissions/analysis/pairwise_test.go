@@ -43,7 +43,6 @@ func TestPairwiseBase(test *testing.T) {
 
 	// First round should have nothing, because we are not waiting for completion.
 	expected := PairwiseResponse{
-		Success:  true,
 		Complete: false,
 		Options: analysis.AnalysisOptions{
 			RawSubmissionSpecs: submissions,
@@ -56,6 +55,7 @@ func TestPairwiseBase(test *testing.T) {
 			},
 		},
 		Results:    map[model.PairwiseKey]*model.PairwiseAnalysis{},
+		ErrorCount: 0,
 		WorkErrors: map[string]string{},
 	}
 
@@ -80,7 +80,6 @@ func TestPairwiseBase(test *testing.T) {
 
 	// Second round should be complete.
 	expected = PairwiseResponse{
-		Success:  true,
 		Complete: true,
 		Options: analysis.AnalysisOptions{
 			RawSubmissionSpecs: submissions,
@@ -137,6 +136,7 @@ func TestPairwiseBase(test *testing.T) {
 				TotalMeanSimilarity: 0.13,
 			},
 		},
+		ErrorCount: 0,
 		WorkErrors: map[string]string{},
 	}
 

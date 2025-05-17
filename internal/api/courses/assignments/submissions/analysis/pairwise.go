@@ -16,11 +16,11 @@ type PairwiseRequest struct {
 }
 
 type PairwiseResponse struct {
-	Success    bool                                          `json:"success"`
 	Complete   bool                                          `json:"complete"`
 	Options    analysis.AnalysisOptions                      `json:"options"`
 	Summary    *model.PairwiseAnalysisSummary                `json:"summary"`
 	Results    map[model.PairwiseKey]*model.PairwiseAnalysis `json:"results"`
+	ErrorCount int                                           `json:"error-count"`
 	WorkErrors map[string]string                             `json:"work-errors"`
 }
 
@@ -55,11 +55,11 @@ func HandlePairwise(request *PairwiseRequest) (*PairwiseResponse, *core.APIError
 	}
 
 	response := PairwiseResponse{
-		Success:    (len(workErrors) == 0),
 		Complete:   (pendingCount == 0),
 		Options:    request.AnalysisOptions,
 		Summary:    model.NewPairwiseAnalysisSummary(results, pendingCount),
 		Results:    results,
+		ErrorCount: len(workErrors),
 		WorkErrors: workErrors,
 	}
 

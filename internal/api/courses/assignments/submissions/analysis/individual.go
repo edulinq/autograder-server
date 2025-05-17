@@ -16,11 +16,11 @@ type IndividualRequest struct {
 }
 
 type IndividualResponse struct {
-	Success    bool                                 `json:"success"`
 	Complete   bool                                 `json:"complete"`
 	Options    analysis.AnalysisOptions             `json:"options"`
 	Summary    *model.IndividualAnalysisSummary     `json:"summary"`
 	Results    map[string]*model.IndividualAnalysis `json:"results"`
+	ErrorCount int                                  `json:"error-count"`
 	WorkErrors map[string]string                    `json:"work-errors"`
 }
 
@@ -55,11 +55,11 @@ func HandleIndividual(request *IndividualRequest) (*IndividualResponse, *core.AP
 	}
 
 	response := IndividualResponse{
-		Success:    (len(workErrors) == 0),
 		Complete:   (pendingCount == 0),
 		Options:    request.AnalysisOptions,
 		Summary:    model.NewIndividualAnalysisSummary(results, pendingCount),
 		Results:    results,
+		ErrorCount: len(workErrors),
 		WorkErrors: workErrors,
 	}
 

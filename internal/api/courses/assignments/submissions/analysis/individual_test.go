@@ -43,7 +43,6 @@ func TestIndividualBase(test *testing.T) {
 
 	// First round should have nothing, because we are not waiting for completion.
 	expected := IndividualResponse{
-		Success:  true,
 		Complete: false,
 		Options: analysis.AnalysisOptions{
 			RawSubmissionSpecs: submissions,
@@ -56,6 +55,7 @@ func TestIndividualBase(test *testing.T) {
 			},
 		},
 		Results:    map[string]*model.IndividualAnalysis{},
+		ErrorCount: 0,
 		WorkErrors: map[string]string{},
 	}
 
@@ -77,7 +77,6 @@ func TestIndividualBase(test *testing.T) {
 
 	// Second round should be complete.
 	expected = IndividualResponse{
-		Success:  true,
 		Complete: true,
 		Options: analysis.AnalysisOptions{
 			RawSubmissionSpecs: submissions,
@@ -200,6 +199,7 @@ func TestIndividualBase(test *testing.T) {
 				},
 			},
 		},
+		ErrorCount: 0,
 		WorkErrors: map[string]string{},
 	}
 
