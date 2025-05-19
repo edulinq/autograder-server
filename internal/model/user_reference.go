@@ -13,10 +13,10 @@ type ServerUserReference struct {
 	ExcludeEmails map[string]any
 
 	// The set of server roles to include.
-	ServerUserRoles map[model.ServerUserRole]any
+	ServerUserRoles map[ServerUserRole]any
 
 	// The set of server roles to exclude.
-	ExclueServerUserRoles map[model.ServerUserRole]any
+	ExcludeServerUserRoles map[ServerUserRole]any
 
 	// The courses and list of roles to include.
 	// Keyed on the course ID.
@@ -40,10 +40,20 @@ type CourseUserReference struct {
 	ExcludeEmails map[string]any
 
 	// The set of course roles to include.
-	CourseUserRoles map[model.CourseUserRole]any
+	CourseUserRoles map[CourseUserRole]any
 
 	// The set of course roles to exclude.
-	ExcludeCourseUserRoles map[model.CourseUserRole]any
+	ExcludeCourseUserRoles map[CourseUserRole]any
+}
+
+// TODO: Name is a bit off since we are not adding the reference directly.
+func (this *ServerUserReference) AddCourseUserReference(courses map[string]*Course, courseRoles []CourseUserRole, exclude bool) {
+	// TODO
+	if this == nil {
+		return
+	}
+
+	return
 }
 
 func (this *CourseUserReference) ToServerUserReference() *ServerUserReference {
@@ -55,8 +65,8 @@ func (this *CourseUserReference) ToServerUserReference() *ServerUserReference {
 		AllUsers:               this.AllUsers,
 		Emails:                 this.Emails,
 		ExcludeEmails:          this.ExcludeEmails,
-		ServerUserRoles:        make(map[model.ServerUserRole]any, 0),
-		ExcludeServerUserRoles: make(map[model.ServerUserRole]any, 0),
+		ServerUserRoles:        make(map[ServerUserRole]any, 0),
+		ExcludeServerUserRoles: make(map[ServerUserRole]any, 0),
 		// Clear the emails and exclude emails to reduce memory usage.
 		// These fields are transferred to the new ServerUserReference.
 		CourseReferences: map[string]CourseUserReference{
@@ -69,6 +79,6 @@ func (this *CourseUserReference) ToServerUserReference() *ServerUserReference {
 				ExcludeCourseUserRoles: this.ExcludeCourseUserRoles,
 			},
 		},
-		ExcludeCourseUserRoles: map[string]any{},
+		ExcludeCourseReferences: map[string]any{},
 	}
 }
