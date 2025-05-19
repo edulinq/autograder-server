@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/edulinq/autograder/internal/common"
+	"github.com/edulinq/autograder/internal/log"
 	"github.com/edulinq/autograder/internal/timestamp"
 	"github.com/edulinq/autograder/internal/util"
 )
@@ -49,6 +50,7 @@ type AnalysisSummary struct {
 	CompleteCount int  `json:"complete-count"`
 	PendingCount  int  `json:"pending-count"`
 	FailureCount  int  `json:"failure-count"`
+	ErrorCount    int  `json:"error-count"`
 
 	FirstTimestamp timestamp.Timestamp `json:"first-timestamp"`
 	LastTimestamp  timestamp.Timestamp `json:"last-timestamp"`
@@ -198,6 +200,45 @@ func (this *PairwiseKey) String() string {
 	return this[0] + PAIRWISE_KEY_DELIM + this[1]
 }
 
+func (this PairwiseKey) LogValue() []*log.Attr {
+	logAttributes := make([]*log.Attr, 0)
+
+	courseID, assignmentID, email, shortSubmissionID, err := common.SplitFullSubmissionID(this[0])
+	if err != nil {
+		log.Error("Failed to split submission ID.", err, log.NewAttr("submission", this[0]))
+
+		logAttributes = append(logAttributes, log.NewAttr("submission", this[0]))
+	} else {
+		logAttributes = append(logAttributes, log.NewCourseAttr(courseID))
+		logAttributes = append(logAttributes, log.NewAssignmentAttr(assignmentID))
+		logAttributes = append(logAttributes, log.NewUserAttr(email))
+		logAttributes = append(logAttributes, log.NewAttr("submission", shortSubmissionID))
+	}
+
+	altCourseID, altAssignmentID, altEmail, altShortSubmissionID, err := common.SplitFullSubmissionID(this[1])
+	if err != nil {
+		log.Error("Failed to split submission ID.", err, log.NewAttr("submission", this[1]))
+
+		logAttributes = append(logAttributes, log.NewAttr("alt-submission", this[1]))
+	} else {
+		if altCourseID != courseID {
+			logAttributes = append(logAttributes, log.NewAttr("alt-course", altCourseID))
+		}
+
+		if altAssignmentID != assignmentID {
+			logAttributes = append(logAttributes, log.NewAttr("alt-assignment", altAssignmentID))
+		}
+
+		if altEmail != email {
+			logAttributes = append(logAttributes, log.NewAttr("alt-user", altEmail))
+		}
+
+		logAttributes = append(logAttributes, log.NewAttr("alt-submission", altShortSubmissionID))
+	}
+
+	return logAttributes
+}
+
 // Get the representative course ID for this key.
 // Will return an empty string if there is no such course or the ID is malformed.
 func (this *PairwiseKey) Course() string {
@@ -211,6 +252,25 @@ func (this *PairwiseKey) Course() string {
 	}
 
 	return courseID
+}
+
+func (this PairwiseKey) MarshalText() ([]byte, error) {
+	keyString := this.String()
+
+	return []byte(keyString), nil
+}
+
+func (this *PairwiseKey) UnmarshalText(text []byte) error {
+	keyString := string(text)
+
+	keyParts := strings.Split(keyString, PAIRWISE_KEY_DELIM)
+	if len(keyParts) != 2 {
+		return fmt.Errorf("Invalid PairwiseKey: '%s'.", keyString)
+	}
+
+	*this = NewPairwiseKey(keyParts[0], keyParts[1])
+
+	return nil
 }
 
 func NewPairwiseAnalysis(pairwiseKey PairwiseKey, assignment *Assignment, similarities map[string][]*FileSimilarity, unmatches [][2]string, skipped []string) *PairwiseAnalysis {
@@ -267,7 +327,7 @@ func NewFailedPairwiseAnalysis(pairwiseKey PairwiseKey, assignment *Assignment, 
 	}
 }
 
-func NewIndividualAnalysisSummary(results []*IndividualAnalysis, pendingCount int) *IndividualAnalysisSummary {
+func NewIndividualAnalysisSummary(results map[string]*IndividualAnalysis, pendingCount int, errorCount int) *IndividualAnalysisSummary {
 	if len(results) == 0 {
 		return &IndividualAnalysisSummary{
 			AnalysisSummary: AnalysisSummary{
@@ -275,6 +335,7 @@ func NewIndividualAnalysisSummary(results []*IndividualAnalysis, pendingCount in
 				CompleteCount:  0,
 				PendingCount:   pendingCount,
 				FailureCount:   0,
+				ErrorCount:     errorCount,
 				FirstTimestamp: timestamp.Zero(),
 				LastTimestamp:  timestamp.Zero(),
 			},
@@ -296,17 +357,17 @@ func NewIndividualAnalysisSummary(results []*IndividualAnalysis, pendingCount in
 
 	failureCount := 0
 
-	for i, result := range results {
+	for _, result := range results {
 		if result.Failure {
 			failureCount++
 			continue
 		}
 
-		if (i == 0) || (result.AnalysisTimestamp < firstTimestamp) {
+		if firstTimestamp.IsZero() || (result.AnalysisTimestamp < firstTimestamp) {
 			firstTimestamp = result.AnalysisTimestamp
 		}
 
-		if (i == 0) || (result.AnalysisTimestamp > lastTimestamp) {
+		if lastTimestamp.IsZero() || (result.AnalysisTimestamp > lastTimestamp) {
 			lastTimestamp = result.AnalysisTimestamp
 		}
 
@@ -334,6 +395,7 @@ func NewIndividualAnalysisSummary(results []*IndividualAnalysis, pendingCount in
 			CompleteCount:  len(scores),
 			PendingCount:   pendingCount,
 			FailureCount:   failureCount,
+			ErrorCount:     errorCount,
 			FirstTimestamp: firstTimestamp,
 			LastTimestamp:  lastTimestamp,
 		},
@@ -348,7 +410,7 @@ func NewIndividualAnalysisSummary(results []*IndividualAnalysis, pendingCount in
 	}
 }
 
-func NewPairwiseAnalysisSummary(results []*PairwiseAnalysis, pendingCount int) *PairwiseAnalysisSummary {
+func NewPairwiseAnalysisSummary(results map[PairwiseKey]*PairwiseAnalysis, pendingCount int, errorCount int) *PairwiseAnalysisSummary {
 	if len(results) == 0 {
 		return &PairwiseAnalysisSummary{
 			AnalysisSummary: AnalysisSummary{
@@ -356,6 +418,7 @@ func NewPairwiseAnalysisSummary(results []*PairwiseAnalysis, pendingCount int) *
 				CompleteCount:  0,
 				PendingCount:   pendingCount,
 				FailureCount:   0,
+				ErrorCount:     errorCount,
 				FirstTimestamp: timestamp.Zero(),
 				LastTimestamp:  timestamp.Zero(),
 			},
@@ -370,17 +433,17 @@ func NewPairwiseAnalysisSummary(results []*PairwiseAnalysis, pendingCount int) *
 
 	failureCount := 0
 
-	for i, result := range results {
+	for _, result := range results {
 		if result.Failure {
 			failureCount++
 			continue
 		}
 
-		if (i == 0) || (result.AnalysisTimestamp < firstTimestamp) {
+		if firstTimestamp.IsZero() || (result.AnalysisTimestamp < firstTimestamp) {
 			firstTimestamp = result.AnalysisTimestamp
 		}
 
-		if (i == 0) || (result.AnalysisTimestamp > lastTimestamp) {
+		if lastTimestamp.IsZero() || (result.AnalysisTimestamp > lastTimestamp) {
 			lastTimestamp = result.AnalysisTimestamp
 		}
 
@@ -402,6 +465,7 @@ func NewPairwiseAnalysisSummary(results []*PairwiseAnalysis, pendingCount int) *
 			CompleteCount:  len(totalMeanSims),
 			PendingCount:   pendingCount,
 			FailureCount:   failureCount,
+			ErrorCount:     errorCount,
 			FirstTimestamp: firstTimestamp,
 			LastTimestamp:  lastTimestamp,
 		},

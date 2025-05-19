@@ -16,10 +16,11 @@ type IndividualRequest struct {
 }
 
 type IndividualResponse struct {
-	Complete bool                             `json:"complete"`
-	Options  analysis.AnalysisOptions         `json:"options"`
-	Summary  *model.IndividualAnalysisSummary `json:"summary"`
-	Results  []*model.IndividualAnalysis      `json:"results"`
+	Complete   bool                                 `json:"complete"`
+	Options    analysis.AnalysisOptions             `json:"options"`
+	Summary    *model.IndividualAnalysisSummary     `json:"summary"`
+	Results    map[string]*model.IndividualAnalysis `json:"results"`
+	WorkErrors map[string]string                    `json:"work-errors"`
 }
 
 // Get the result of a individual analysis for the specified submissions.
@@ -44,19 +45,20 @@ func HandleIndividual(request *IndividualRequest) (*IndividualResponse, *core.AP
 
 	request.ResolvedSubmissionIDs = fullSubmissionIDs
 	request.InitiatorEmail = request.ServerUser.Email
-	request.AnalysisOptions.Context = request.Context
+	request.AnalysisOptions.Context = request.APIRequestUserContext.Context
 
-	results, pendingCount, err := analysis.IndividualAnalysis(request.AnalysisOptions)
+	results, pendingCount, workErrors, err := analysis.IndividualAnalysis(request.AnalysisOptions)
 	if err != nil {
 		return nil, core.NewInternalError("-626", request, "Failed to perform individual analysis.").
 			Err(err)
 	}
 
 	response := IndividualResponse{
-		Complete: (pendingCount == 0),
-		Options:  request.AnalysisOptions,
-		Summary:  model.NewIndividualAnalysisSummary(results, pendingCount),
-		Results:  results,
+		Complete:   (pendingCount == 0),
+		Options:    request.AnalysisOptions,
+		Summary:    model.NewIndividualAnalysisSummary(results, pendingCount, len(workErrors)),
+		Results:    results,
+		WorkErrors: workErrors,
 	}
 
 	return &response, nil

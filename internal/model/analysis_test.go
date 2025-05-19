@@ -10,6 +10,103 @@ import (
 	"github.com/edulinq/autograder/internal/util"
 )
 
+func TestPairwiseAnalysisMarshal(test *testing.T) {
+	testCases := []map[PairwiseKey]*PairwiseAnalysis{
+		nil,
+		map[PairwiseKey]*PairwiseAnalysis{},
+		map[PairwiseKey]*PairwiseAnalysis{
+			NewPairwiseKey("foo", "bar"): nil,
+		},
+		map[PairwiseKey]*PairwiseAnalysis{
+			NewPairwiseKey("bar", "baz"): &PairwiseAnalysis{},
+		},
+		map[PairwiseKey]*PairwiseAnalysis{
+			NewPairwiseKey("baz", "qux"): NewPairwiseAnalysis(
+				NewPairwiseKey("baz", "foo"),
+				nil,
+				nil,
+				nil,
+				nil,
+			),
+		},
+		map[PairwiseKey]*PairwiseAnalysis{
+			NewPairwiseKey("qux", "foo"): NewPairwiseAnalysis(
+				NewPairwiseKey("baz", "foo"),
+				&Assignment{},
+				map[string][]*FileSimilarity{},
+				[][2]string{},
+				[]string{},
+			),
+		},
+		map[PairwiseKey]*PairwiseAnalysis{
+			NewPairwiseKey("failed", "analysis"): NewFailedPairwiseAnalysis(NewPairwiseKey("failed", "analysis"), nil, ""),
+		},
+	}
+
+	for i, testCase := range testCases {
+		pairwiseAnalysisJSON := util.MustToJSON(testCase)
+
+		var pairwiseAnalysisResult map[PairwiseKey]*PairwiseAnalysis
+		util.MustJSONFromString(pairwiseAnalysisJSON, &pairwiseAnalysisResult)
+
+		// Normalize the expected results.
+		for _, result := range testCase {
+			if result == nil {
+				continue
+			}
+
+			// Nil empty similarities.
+			if len(result.Similarities) == 0 {
+				result.Similarities = nil
+			}
+
+			if len(result.MeanSimilarities) == 0 {
+				result.MeanSimilarities = nil
+			}
+
+			// Nil empty skipped and unmatched files.
+			if len(result.SkippedFiles) == 0 {
+				result.SkippedFiles = nil
+			}
+
+			if len(result.UnmatchedFiles) == 0 {
+				result.UnmatchedFiles = nil
+			}
+		}
+
+		// Normalize the actual results.
+		for _, result := range pairwiseAnalysisResult {
+			if result == nil {
+				continue
+			}
+
+			// Nil empty similarities.
+			if len(result.Similarities) == 0 {
+				result.Similarities = nil
+			}
+
+			if len(result.MeanSimilarities) == 0 {
+				result.MeanSimilarities = nil
+			}
+
+			// Nil empty skipped and unmatched files.
+			if len(result.SkippedFiles) == 0 {
+				result.SkippedFiles = nil
+			}
+
+			if len(result.UnmatchedFiles) == 0 {
+				result.UnmatchedFiles = nil
+			}
+		}
+
+		if !reflect.DeepEqual(testCase, pairwiseAnalysisResult) {
+			test.Errorf("Case %d: Unexpected result. Expected: '%s', Actual: '%s'.",
+				i, util.MustToJSONIndent(testCase), util.MustToJSONIndent(pairwiseAnalysisResult))
+			continue
+		}
+	}
+}
+
 func TestAssignmentAnalysisOptionsValidateBase(test *testing.T) {
 	testCases := []struct {
 		input          *AssignmentAnalysisOptions
@@ -290,8 +387,8 @@ func TestAssignmentAnalysisOptionsMatchRelpathBase(test *testing.T) {
 }
 
 func TestNewIndividualAnalysisSummaryBase(test *testing.T) {
-	input := []*IndividualAnalysis{
-		&IndividualAnalysis{
+	input := map[string]*IndividualAnalysis{
+		"A": &IndividualAnalysis{
 			Score:               10,
 			LinesOfCode:         10,
 			SubmissionTimeDelta: 0,
@@ -306,7 +403,7 @@ func TestNewIndividualAnalysisSummaryBase(test *testing.T) {
 				},
 			},
 		},
-		&IndividualAnalysis{
+		"B": &IndividualAnalysis{
 			Score:               20,
 			LinesOfCode:         40,
 			SubmissionTimeDelta: 12,
@@ -325,7 +422,7 @@ func TestNewIndividualAnalysisSummaryBase(test *testing.T) {
 				},
 			},
 		},
-		&IndividualAnalysis{
+		"C": &IndividualAnalysis{
 			Score:               30,
 			LinesOfCode:         20,
 			SubmissionTimeDelta: 32,
@@ -340,7 +437,7 @@ func TestNewIndividualAnalysisSummaryBase(test *testing.T) {
 				},
 			},
 		},
-		&IndividualAnalysis{
+		"FAILURE": &IndividualAnalysis{
 			Failure: true,
 		},
 	}
@@ -351,6 +448,7 @@ func TestNewIndividualAnalysisSummaryBase(test *testing.T) {
 			CompleteCount:  3,
 			PendingCount:   0,
 			FailureCount:   1,
+			ErrorCount:     0,
 			FirstTimestamp: timestamp.Zero(),
 			LastTimestamp:  timestamp.Zero(),
 		},
@@ -421,7 +519,7 @@ func TestNewIndividualAnalysisSummaryBase(test *testing.T) {
 		},
 	}
 
-	actual := NewIndividualAnalysisSummary(input, 0)
+	actual := NewIndividualAnalysisSummary(input, 0, 0)
 
 	// Zero out timesstamps.
 	actual.FirstTimestamp = timestamp.Zero()
@@ -499,11 +597,11 @@ func TestNewPairwiseAnalysisSummaryBase(test *testing.T) {
 		},
 	}
 
-	input := []*PairwiseAnalysis{
-		NewPairwiseAnalysis(NewPairwiseKey("A", "B"), nil, sims1, nil, nil),
-		NewPairwiseAnalysis(NewPairwiseKey("C", "D"), nil, sims2, nil, nil),
-		NewPairwiseAnalysis(NewPairwiseKey("E", "F"), nil, sims3, nil, nil),
-		&PairwiseAnalysis{
+	input := map[PairwiseKey]*PairwiseAnalysis{
+		NewPairwiseKey("A", "B"): NewPairwiseAnalysis(NewPairwiseKey("A", "B"), nil, sims1, nil, nil),
+		NewPairwiseKey("C", "D"): NewPairwiseAnalysis(NewPairwiseKey("C", "D"), nil, sims2, nil, nil),
+		NewPairwiseKey("E", "F"): NewPairwiseAnalysis(NewPairwiseKey("E", "F"), nil, sims3, nil, nil),
+		NewPairwiseKey("FOO", "BAR"): &PairwiseAnalysis{
 			Failure: true,
 		},
 	}
@@ -514,6 +612,7 @@ func TestNewPairwiseAnalysisSummaryBase(test *testing.T) {
 			CompleteCount:  3,
 			PendingCount:   0,
 			FailureCount:   1,
+			ErrorCount:     0,
 			FirstTimestamp: timestamp.Zero(),
 			LastTimestamp:  timestamp.Zero(),
 		},
@@ -549,7 +648,7 @@ func TestNewPairwiseAnalysisSummaryBase(test *testing.T) {
 		},
 	}
 
-	actual := NewPairwiseAnalysisSummary(input, 0)
+	actual := NewPairwiseAnalysisSummary(input, 0, 0)
 
 	// Zero out timesstamps.
 	actual.FirstTimestamp = timestamp.Zero()

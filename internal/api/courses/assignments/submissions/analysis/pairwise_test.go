@@ -8,6 +8,7 @@ import (
 	"github.com/edulinq/autograder/internal/analysis"
 	"github.com/edulinq/autograder/internal/api/core"
 	"github.com/edulinq/autograder/internal/db"
+	"github.com/edulinq/autograder/internal/jobmanager"
 	"github.com/edulinq/autograder/internal/model"
 	"github.com/edulinq/autograder/internal/timestamp"
 	"github.com/edulinq/autograder/internal/util"
@@ -51,9 +52,11 @@ func TestPairwiseBase(test *testing.T) {
 				Complete:      false,
 				CompleteCount: 0,
 				PendingCount:  1,
+				ErrorCount:    0,
 			},
 		},
-		Results: []*model.PairwiseAnalysis{},
+		Results:    map[model.PairwiseKey]*model.PairwiseAnalysis{},
+		WorkErrors: map[string]string{},
 	}
 
 	if !reflect.DeepEqual(expected, responseContent) {
@@ -72,18 +75,24 @@ func TestPairwiseBase(test *testing.T) {
 
 	util.MustJSONFromString(util.MustToJSON(response.Content), &responseContent)
 
+	submissionID1 := "course101::hw0::course-student@test.edulinq.org::1697406256"
+	submissionID2 := "course101::hw0::course-student@test.edulinq.org::1697406265"
+
 	// Second round should be complete.
 	expected = PairwiseResponse{
 		Complete: true,
 		Options: analysis.AnalysisOptions{
 			RawSubmissionSpecs: submissions,
-			WaitForCompletion:  true,
+			JobOptions: jobmanager.JobOptions{
+				WaitForCompletion: true,
+			},
 		},
 		Summary: &model.PairwiseAnalysisSummary{
 			AnalysisSummary: model.AnalysisSummary{
 				Complete:       true,
 				CompleteCount:  1,
 				PendingCount:   0,
+				ErrorCount:     0,
 				FirstTimestamp: timestamp.Zero(),
 				LastTimestamp:  timestamp.Zero(),
 			},
@@ -104,13 +113,13 @@ func TestPairwiseBase(test *testing.T) {
 				Max:    0.13,
 			},
 		},
-		Results: []*model.PairwiseAnalysis{
-			&model.PairwiseAnalysis{
+		Results: map[model.PairwiseKey]*model.PairwiseAnalysis{
+			model.NewPairwiseKey(submissionID1, submissionID2): &model.PairwiseAnalysis{
 				Options:           assignment.AssignmentAnalysisOptions,
 				AnalysisTimestamp: timestamp.Zero(),
 				SubmissionIDs: model.NewPairwiseKey(
-					"course101::hw0::course-student@test.edulinq.org::1697406256",
-					"course101::hw0::course-student@test.edulinq.org::1697406265",
+					submissionID1,
+					submissionID2,
 				),
 				Similarities: map[string][]*model.FileSimilarity{
 					"submission.py": []*model.FileSimilarity{
@@ -128,6 +137,7 @@ func TestPairwiseBase(test *testing.T) {
 				TotalMeanSimilarity: 0.13,
 			},
 		},
+		WorkErrors: map[string]string{},
 	}
 
 	// Zero out the timestamps.
