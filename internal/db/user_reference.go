@@ -13,6 +13,10 @@ import (
 // System-level errors immediately return (nil, error).
 // User-level errors return (partial reference, aggregated user errors).
 func ParseServerUserReference(rawReferences []model.ServerUserReferenceInput) (*model.ServerUserReference, error) {
+	if backend == nil {
+		return nil, fmt.Errorf("Database has not been opened.")
+	}
+
 	serverUserReference := model.ServerUserReference{
 		Emails:                 make(map[string]any, 0),
 		ExcludeEmails:          make(map[string]any, 0),
@@ -32,6 +36,11 @@ func ParseServerUserReference(rawReferences []model.ServerUserReferenceInput) (*
 			exclude = true
 
 			reference = strings.TrimPrefix(reference, "-")
+			reference = strings.TrimSpace(reference)
+		}
+
+		if reference == "" {
+			continue
 		}
 
 		if strings.Contains(reference, "@") {
@@ -134,6 +143,10 @@ func ParseServerUserReference(rawReferences []model.ServerUserReferenceInput) (*
 // System-level errors immediately return (nil, error).
 // User-level errors return (partial reference, aggregated user errors).
 func ParseCourseUserReference(course *model.Course, rawReferences []model.CourseUserReferenceInput) (*model.CourseUserReference, error) {
+	if backend == nil {
+		return nil, fmt.Errorf("Database has not been opened.")
+	}
+
 	courseUserReference := model.CourseUserReference{
 		Course:                 course,
 		Emails:                 make(map[string]any, 0),
@@ -158,6 +171,11 @@ func ParseCourseUserReference(course *model.Course, rawReferences []model.Course
 			exclude = true
 
 			reference = strings.TrimPrefix(reference, "-")
+			reference = strings.TrimSpace(reference)
+		}
+
+		if reference == "" {
+			continue
 		}
 
 		if strings.Contains(reference, "@") {

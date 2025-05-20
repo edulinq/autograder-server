@@ -84,3 +84,53 @@ func ResolveCourseUsers(course *model.Course, emails []string) ([]string, error)
 
 	return emailSlice, nil
 }
+
+func ResolveCourseUsersTODO(course *model.Course, emails []model.CourseUserReferenceInput) ([]string, error) {
+	if backend == nil {
+		return nil, fmt.Errorf("Database has not been opened.")
+	}
+
+	reference, err := ParseCourseUserReference(course, emails)
+	if err != nil {
+		return nil, fmt.Errorf("Failed to parse input references: '%w'.", err)
+	}
+
+	emailSet := reference.Emails
+
+	// Add or remove users based off their course role.
+	if len(reference.CourseUserRoles) > 0 || len(reference.ExcludeCourseUserRoles) > 0 {
+		users, err := GetCourseUsers(course)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, user := range users {
+			// Remove a user if their role is set to exclude.
+			_, ok := reference.ExcludeCourseUserRoles[user.Role.String()]
+			if ok {
+				delete(emailSet, strings.ToLower(user.Email))
+				continue
+			}
+
+			// Add a user if their role is set.
+			_, ok = reference.CourseUserRoles[user.Role.String()]
+			if ok {
+				emailSet[strings.ToLower(user.Email)] = nil
+			}
+		}
+	}
+
+	// Remove negative users.
+	for email, _ := range reference.ExcludeEmails {
+		delete(emailSet, email)
+	}
+
+	emailSlice := make([]string, 0, len(emailSet))
+	for email := range emailSet {
+		emailSlice = append(emailSlice, email)
+	}
+
+	slices.Sort(emailSlice)
+
+	return emailSlice, nil
+}

@@ -6,20 +6,26 @@ const USER_REFERENCE_DELIM = "::"
 // Server user references can be represented as follows (in the order the are evaluated):
 //
 // - An email address
-// - An email address preceded by a dash ("-") (which indicates that this email address should NOT be included in the final results).
 // - A server role (which will include all server users with that role)
 // - A literal "*" (which includes all users on the server)
-// TODO: Update final part of this comment (show examples of various forms)
+// - Any of the above options preceded by a dash ("-") (which indicates that the user or group will NOT be included in the final results)
 // - A course user reference
+//
+// A course user reference can be represented as follows:
+//
+// - <course-id>::<course-role> (which will include all users in the target course with the target course role)
+// - *::<course-role> (which will include all users with the target course role in any course)
+// - <course-id>::* (which includes all users in the target course)
+// - *::* (which includes all users enrolled in at least one course)
+// - Any of the above can be preceded by a dash ("-") (which indicates that that group will NOT be included in the final results)
 type ServerUserReferenceInput string
 
-// Course user references can be represented as follows (in the order they are evaluated):
+// Course user references can be represented as follows (in the order the are evaluated):
 //
 // - An email address
-// - An email address preceded by a dash ("-") (which indicates that this email address should NOT be included in the final results).
 // - A course role (which will include all course users with that role)
 // - A literal "*" (which includes all users in the course)
-// - A course user reference
+// - Any of the above options preceded by a dash ("-") (which indicates that the user or group will NOT be included in the final results)
 type CourseUserReferenceInput string
 
 type ServerUserReference struct {
@@ -62,6 +68,19 @@ func (this *ServerUserReference) AddCourseUserReference(courseUserReference *Cou
 		return
 	}
 
+	// Transfer the emails to the ServerUserReference to reduce memory usage.
+	for email, _ := range courseUserReference.Emails {
+		this.Emails[email] = nil
+	}
+
+	courseUserReference.Emails = make(map[string]any, 0)
+
+	for email, _ := range courseUserReference.ExcludeEmails {
+		this.ExcludeEmails[email] = nil
+	}
+
+	courseUserReference.ExcludeEmails = make(map[string]any, 0)
+
 	if courseUserReference.Course == nil {
 		return
 	}
@@ -75,14 +94,6 @@ func (this *ServerUserReference) AddCourseUserReference(courseUserReference *Cou
 	if currentCourseUserReference == nil {
 		this.CourseUserReferences[courseUserReference.Course.GetID()] = courseUserReference
 		return
-	}
-
-	for email, _ := range courseUserReference.Emails {
-		currentCourseUserReference.Emails[email] = nil
-	}
-
-	for email, _ := range courseUserReference.ExcludeEmails {
-		currentCourseUserReference.ExcludeEmails[email] = nil
 	}
 
 	for roleString, role := range courseUserReference.CourseUserRoles {
