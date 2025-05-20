@@ -22,7 +22,7 @@ func (this *DBTests) DBTestParseServerUserReference(test *testing.T) {
 				"*",
 			},
 			&model.ServerUserReference{
-				AllUsers: true,
+				ServerUserRoles: model.GetCommonServerUserRoleStrings(),
 			},
 			"",
 		},
@@ -31,7 +31,7 @@ func (this *DBTests) DBTestParseServerUserReference(test *testing.T) {
 				"-*",
 			},
 			&model.ServerUserReference{
-				ExcludeAllUsers: true,
+				ExcludeServerUserRoles: model.GetCommonServerUserRoleStrings(),
 			},
 			"",
 		},
@@ -88,7 +88,16 @@ func (this *DBTests) DBTestParseServerUserReference(test *testing.T) {
 				"*::*",
 			},
 			&model.ServerUserReference{
-				AllUsers: true,
+				CourseUserReferences: map[string]*model.CourseUserReference{
+					TEST_COURSE_ID: &model.CourseUserReference{
+						Course:          MustGetTestCourse(),
+						CourseUserRoles: model.GetCommonCourseUserRoleStrings(),
+					},
+					"course-languages": &model.CourseUserReference{
+						Course:          MustGetCourse("course-languages"),
+						CourseUserRoles: model.GetCommonCourseUserRoleStrings(),
+					},
+				},
 			},
 			"",
 		},
@@ -97,7 +106,16 @@ func (this *DBTests) DBTestParseServerUserReference(test *testing.T) {
 				"-*::*",
 			},
 			&model.ServerUserReference{
-				ExcludeAllUsers: true,
+				CourseUserReferences: map[string]*model.CourseUserReference{
+					TEST_COURSE_ID: &model.CourseUserReference{
+						Course:                 MustGetTestCourse(),
+						ExcludeCourseUserRoles: model.GetCommonCourseUserRoleStrings(),
+					},
+					"course-languages": &model.CourseUserReference{
+						Course:                 MustGetCourse("course-languages"),
+						ExcludeCourseUserRoles: model.GetCommonCourseUserRoleStrings(),
+					},
+				},
 			},
 			"",
 		},
@@ -208,6 +226,207 @@ func (this *DBTests) DBTestParseServerUserReference(test *testing.T) {
 						},
 					},
 				},
+			},
+			"",
+		},
+
+		// Complex, Non-Overlapping
+		{
+			[]model.ServerUserReferenceInput{
+				"course-student@test.edulinq.org",
+				"-course-admin@test.edulinq.org",
+				"admin",
+				"-owner",
+				"course101::grader",
+				"-course101::student",
+			},
+			&model.ServerUserReference{
+				Emails: map[string]any{
+					"course-student@test.edulinq.org": nil,
+				},
+				ExcludeEmails: map[string]any{
+					"course-admin@test.edulinq.org": nil,
+				},
+				ServerUserRoles: map[string]model.ServerUserRole{
+					"admin": model.GetServerUserRole("admin"),
+				},
+				ExcludeServerUserRoles: map[string]model.ServerUserRole{
+					"owner": model.GetServerUserRole("owner"),
+				},
+				CourseUserReferences: map[string]*model.CourseUserReference{
+					TEST_COURSE_ID: &model.CourseUserReference{
+						Course: MustGetTestCourse(),
+						CourseUserRoles: map[string]model.CourseUserRole{
+							"grader": model.GetCourseUserRole("grader"),
+						},
+						ExcludeCourseUserRoles: map[string]model.CourseUserRole{
+							"student": model.GetCourseUserRole("student"),
+						},
+					},
+				},
+			},
+			"",
+		},
+
+		// Complex, Normalization
+		{
+			[]model.ServerUserReferenceInput{
+				"course-student@test.edulinq.org",
+				"COURSE-student@test.EDULINQ.org",
+				"admin",
+				"aDmIn",
+				"COURSE101::grader",
+				"course101::GRADER",
+			},
+			&model.ServerUserReference{
+				Emails: map[string]any{
+					"course-student@test.edulinq.org": nil,
+				},
+				ServerUserRoles: map[string]model.ServerUserRole{
+					"admin": model.GetServerUserRole("admin"),
+				},
+				CourseUserReferences: map[string]*model.CourseUserReference{
+					TEST_COURSE_ID: &model.CourseUserReference{
+						Course: MustGetTestCourse(),
+						CourseUserRoles: map[string]model.CourseUserRole{
+							"grader": model.GetCourseUserRole("grader"),
+						},
+					},
+				},
+			},
+			"",
+		},
+		{
+			[]model.ServerUserReferenceInput{
+				"course-student@test.edulinq.org    	",
+				"    	course-student@test.edulinq.org",
+				"   admin",
+				"admin	",
+				"	course101     ::   grader	",
+				" course101	::	grader     ",
+			},
+			&model.ServerUserReference{
+				Emails: map[string]any{
+					"course-student@test.edulinq.org": nil,
+				},
+				ServerUserRoles: map[string]model.ServerUserRole{
+					"admin": model.GetServerUserRole("admin"),
+				},
+				CourseUserReferences: map[string]*model.CourseUserReference{
+					TEST_COURSE_ID: &model.CourseUserReference{
+						Course: MustGetTestCourse(),
+						CourseUserRoles: map[string]model.CourseUserRole{
+							"grader": model.GetCourseUserRole("grader"),
+						},
+					},
+				},
+			},
+			"",
+		},
+
+		// Complex, Overlapping
+		{
+			[]model.ServerUserReferenceInput{
+				"course-student@test.edulinq.org",
+				"-course-student@test.edulinq.org",
+				"admin",
+				"-admin",
+				"course101::grader",
+				"-course101::grader",
+			},
+			&model.ServerUserReference{
+				Emails: map[string]any{
+					"course-student@test.edulinq.org": nil,
+				},
+				ExcludeEmails: map[string]any{
+					"course-student@test.edulinq.org": nil,
+				},
+				ServerUserRoles: map[string]model.ServerUserRole{
+					"admin": model.GetServerUserRole("admin"),
+				},
+				ExcludeServerUserRoles: map[string]model.ServerUserRole{
+					"admin": model.GetServerUserRole("admin"),
+				},
+				CourseUserReferences: map[string]*model.CourseUserReference{
+					TEST_COURSE_ID: &model.CourseUserReference{
+						Course: MustGetTestCourse(),
+						CourseUserRoles: map[string]model.CourseUserRole{
+							"grader": model.GetCourseUserRole("grader"),
+						},
+						ExcludeCourseUserRoles: map[string]model.CourseUserRole{
+							"grader": model.GetCourseUserRole("grader"),
+						},
+					},
+				},
+			},
+			"",
+		},
+		{
+			[]model.ServerUserReferenceInput{
+				"course101::grader",
+				"*::grader",
+			},
+			&model.ServerUserReference{
+				CourseUserReferences: map[string]*model.CourseUserReference{
+					TEST_COURSE_ID: &model.CourseUserReference{
+						Course: MustGetTestCourse(),
+						CourseUserRoles: map[string]model.CourseUserRole{
+							"grader": model.GetCourseUserRole("grader"),
+						},
+					},
+					"course-languages": &model.CourseUserReference{
+						Course: MustGetCourse("course-languages"),
+						CourseUserRoles: map[string]model.CourseUserRole{
+							"grader": model.GetCourseUserRole("grader"),
+						},
+					},
+				},
+			},
+			"",
+		},
+		{
+			[]model.ServerUserReferenceInput{
+				"course101::grader",
+				"course101::*",
+			},
+			&model.ServerUserReference{
+				CourseUserReferences: map[string]*model.CourseUserReference{
+					TEST_COURSE_ID: &model.CourseUserReference{
+						Course:          MustGetTestCourse(),
+						CourseUserRoles: model.GetCommonCourseUserRoleStrings(),
+					},
+				},
+			},
+			"",
+		},
+		{
+			[]model.ServerUserReferenceInput{
+				"course101::grader",
+				"course101::*",
+				"*::grader",
+				"*::*",
+			},
+			&model.ServerUserReference{
+				CourseUserReferences: map[string]*model.CourseUserReference{
+					TEST_COURSE_ID: &model.CourseUserReference{
+						Course:          MustGetTestCourse(),
+						CourseUserRoles: model.GetCommonCourseUserRoleStrings(),
+					},
+					"course-languages": &model.CourseUserReference{
+						Course:          MustGetCourse("course-languages"),
+						CourseUserRoles: model.GetCommonCourseUserRoleStrings(),
+					},
+				},
+			},
+			"",
+		},
+		{
+			[]model.ServerUserReferenceInput{
+				"admin",
+				"*",
+			},
+			&model.ServerUserReference{
+				ServerUserRoles: model.GetCommonServerUserRoleStrings(),
 			},
 			"",
 		},
@@ -335,10 +554,6 @@ func setServerUserReferenceDefaults(reference *model.ServerUserReference) {
 		for _, courseUserReference := range reference.CourseUserReferences {
 			setCourseUserReferenceDefaults(courseUserReference)
 		}
-	}
-
-	if reference.ExcludeCourseUserReferences == nil {
-		reference.ExcludeCourseUserReferences = make(map[string]any, 0)
 	}
 }
 

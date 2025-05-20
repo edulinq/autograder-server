@@ -10,12 +10,11 @@ import (
 
 func ParseUserReference(rawReferences []model.ServerUserReferenceInput) (*model.ServerUserReference, error) {
 	serverUserReference := &model.ServerUserReference{
-		Emails:                      make(map[string]any, 0),
-		ExcludeEmails:               make(map[string]any, 0),
-		ServerUserRoles:             make(map[string]model.ServerUserRole, 0),
-		ExcludeServerUserRoles:      make(map[string]model.ServerUserRole, 0),
-		CourseUserReferences:        make(map[string]*model.CourseUserReference, 0),
-		ExcludeCourseUserReferences: make(map[string]any, 0),
+		Emails:                 make(map[string]any, 0),
+		ExcludeEmails:          make(map[string]any, 0),
+		ServerUserRoles:        make(map[string]model.ServerUserRole, 0),
+		ExcludeServerUserRoles: make(map[string]model.ServerUserRole, 0),
+		CourseUserReferences:   make(map[string]*model.CourseUserReference, 0),
 	}
 
 	var errs error = nil
@@ -31,11 +30,6 @@ func ParseUserReference(rawReferences []model.ServerUserReferenceInput) (*model.
 			reference = strings.TrimPrefix(reference, "-")
 		}
 
-		// Only process exclusions after targeting all users.
-		if serverUserReference.AllUsers && !exclude {
-			continue
-		}
-
 		if strings.Contains(reference, "@") {
 			if exclude {
 				serverUserReference.ExcludeEmails[reference] = nil
@@ -48,11 +42,11 @@ func ParseUserReference(rawReferences []model.ServerUserReferenceInput) (*model.
 
 		if reference == "*" {
 			if exclude {
-				serverUserReference.ExcludeAllUsers = true
-				break
+				serverUserReference.ExcludeServerUserRoles = model.GetCommonServerUserRoleStrings()
+			} else {
+				serverUserReference.ServerUserRoles = model.GetCommonServerUserRoleStrings()
 			}
 
-			serverUserReference.AllUsers = true
 			continue
 		}
 
@@ -76,18 +70,7 @@ func ParseUserReference(rawReferences []model.ServerUserReferenceInput) (*model.
 			// If a '*' is present, target all courses or course roles respectively.
 			courseID := strings.ToLower(strings.TrimSpace(parts[0]))
 			courseRoleString := strings.TrimSpace(parts[1])
-			if courseID == "*" && courseRoleString == "*" {
-				if exclude {
-					serverUserReference.ExcludeAllUsers = true
-					break
-				}
 
-				serverUserReference.AllUsers = true
-				continue
-			}
-
-			// TODO: Can we leverage the parsing function of the course user reference?
-			// We could get back a CourseUserReference and then merge it in?
 			courses := make(map[string]*model.Course, 0)
 
 			if courseID == "*" {
@@ -107,7 +90,6 @@ func ParseUserReference(rawReferences []model.ServerUserReferenceInput) (*model.
 
 				if course == nil {
 					errs = errors.Join(errs, fmt.Errorf("Unknown user reference %d: '%s'. Unknown course '%s'.", i, rawReference, courseID))
-
 					continue
 				}
 
@@ -125,7 +107,6 @@ func ParseUserReference(rawReferences []model.ServerUserReferenceInput) (*model.
 				courseRole, ok := commonCourseRoles[courseRoleString]
 				if !ok {
 					errs = errors.Join(errs, fmt.Errorf("Unknown user reference %d: '%s'. Unknown course user role '%s'.", i, rawReference, courseRoleString))
-
 					continue
 				}
 

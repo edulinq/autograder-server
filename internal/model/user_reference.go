@@ -23,12 +23,6 @@ type ServerUserReferenceInput string
 type CourseUserReferenceInput string
 
 type ServerUserReference struct {
-	// Signals to include all server users.
-	AllUsers bool
-
-	// Signals to exclude all server users.
-	ExcludeAllUsers bool
-
 	// The set of emails to include.
 	Emails map[string]any
 
@@ -44,20 +38,11 @@ type ServerUserReference struct {
 	// The courses and list of roles to include.
 	// Keyed on the course ID.
 	CourseUserReferences map[string]*CourseUserReference
-
-	// The set of courses to exclude.
-	ExcludeCourseUserReferences map[string]any
 }
 
 type CourseUserReference struct {
 	// The course that orients the reference.
 	Course *Course
-
-	// Signals to include all course users.
-	AllUsers bool
-
-	// Signals to exclude all course users.
-	ExcludeAllUsers bool
 
 	// The set of emails to include.
 	Emails map[string]any
@@ -92,10 +77,6 @@ func (this *ServerUserReference) AddCourseUserReference(courseUserReference *Cou
 		return
 	}
 
-	if courseUserReference.AllUsers {
-		currentCourseUserReference.AllUsers = true
-	}
-
 	for email, _ := range courseUserReference.Emails {
 		currentCourseUserReference.Emails[email] = nil
 	}
@@ -121,8 +102,6 @@ func (this *CourseUserReference) ToServerUserReference() *ServerUserReference {
 	}
 
 	return &ServerUserReference{
-		AllUsers:               this.AllUsers,
-		ExcludeAllUsers:        this.ExcludeAllUsers,
 		Emails:                 this.Emails,
 		ExcludeEmails:          this.ExcludeEmails,
 		ServerUserRoles:        make(map[string]ServerUserRole, 0),
@@ -132,13 +111,11 @@ func (this *CourseUserReference) ToServerUserReference() *ServerUserReference {
 		CourseUserReferences: map[string]*CourseUserReference{
 			this.Course.GetID(): &CourseUserReference{
 				Course:                 this.Course,
-				AllUsers:               this.AllUsers,
 				Emails:                 make(map[string]any, 0),
 				ExcludeEmails:          make(map[string]any, 0),
 				CourseUserRoles:        this.CourseUserRoles,
 				ExcludeCourseUserRoles: this.ExcludeCourseUserRoles,
 			},
 		},
-		ExcludeCourseUserReferences: make(map[string]any, 0),
 	}
 }
