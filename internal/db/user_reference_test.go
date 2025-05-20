@@ -220,14 +220,50 @@ func (this *DBTests) DBTestParseServerUserReference(test *testing.T) {
 				"root",
 			},
 			nil,
-			"cannot target the root user",
+			"Unknown server user role 'root'.",
 		},
 		{
 			[]model.ServerUserReferenceInput{
 				"-root",
 			},
 			nil,
-			"cannot target the root user",
+			"Unknown server user role 'root'.",
+		},
+
+		// Unknown Server Role
+		{
+			[]model.ServerUserReferenceInput{
+				"ZZZ",
+			},
+			nil,
+			"Unknown server user role 'zzz'.",
+		},
+
+		// Unknown
+		{
+			[]model.ServerUserReferenceInput{
+				"ZZZ::*",
+			},
+			nil,
+			"Unknown course 'zzz'.",
+		},
+
+		// Unknown Course Role
+		{
+			[]model.ServerUserReferenceInput{
+				"*::ZZZ",
+			},
+			nil,
+			"Unknown course user role 'zzz'.",
+		},
+
+		// Invalid Format
+		{
+			[]model.ServerUserReferenceInput{
+				"foo::bar::baz",
+			},
+			nil,
+			"Invalid user reference format",
 		},
 	}
 
@@ -248,8 +284,8 @@ func (this *DBTests) DBTestParseServerUserReference(test *testing.T) {
 		}
 
 		if testCase.errorSubstring != "" {
-			test.Errorf("Case %d: Did not get expected error for reference '%s'.",
-				i, util.MustToJSONIndent(testCase.output))
+			test.Errorf("Case %d: Did not get expected error for input '%s'.",
+				i, util.MustToJSONIndent(testCase.input))
 			continue
 		}
 

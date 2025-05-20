@@ -57,9 +57,18 @@ func GetAllServerUserRoleSStrings() map[string]ServerUserRole {
 }
 
 func GetCommonServerUserRoleStrings() map[string]ServerUserRole {
-	commonServerRoles := stringToServerUserRole
-	delete(commonServerRoles, "unknown")
-	delete(commonServerRoles, "root")
+	commonServerRoles := make(map[string]ServerUserRole, 0)
+	for roleString, role := range stringToServerUserRole {
+		if roleString == "unknown" {
+			continue
+		}
+
+		if roleString == "root" {
+			continue
+		}
+
+		commonServerRoles[roleString] = role
+	}
 
 	return commonServerRoles
 }
