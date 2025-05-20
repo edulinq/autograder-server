@@ -8,8 +8,12 @@ import (
 	"github.com/edulinq/autograder/internal/model"
 )
 
-func ParseUserReference(rawReferences []model.ServerUserReferenceInput) (*model.ServerUserReference, error) {
-	serverUserReference := &model.ServerUserReference{
+// Process a list of user inputs and return a normalized reference and error.
+// See model.ServerUserReferenceInput for the list of acceptable inputs.
+// System-level errors immediately return (nil, error).
+// User-level errors return (partial reference, aggregated user errors).
+func ParseServerUserReference(rawReferences []model.ServerUserReferenceInput) (*model.ServerUserReference, error) {
+	serverUserReference := model.ServerUserReference{
 		Emails:                 make(map[string]any, 0),
 		ExcludeEmails:          make(map[string]any, 0),
 		ServerUserRoles:        make(map[string]model.ServerUserRole, 0),
@@ -77,15 +81,13 @@ func ParseUserReference(rawReferences []model.ServerUserReferenceInput) (*model.
 				// Target all courses.
 				courses, err = GetCourses()
 				if err != nil {
-					errs = errors.Join(errs, fmt.Errorf("Failed to get courses: '%w'.", err))
-					return nil, errs
+					return nil, fmt.Errorf("Failed to get courses: '%w'.", err)
 				}
 			} else {
 				// Target a specific course.
 				course, err := GetCourse(courseID)
 				if err != nil {
-					errs = errors.Join(errs, fmt.Errorf("Failed to get course '%s': '%w'.", courseID, err))
-					return nil, errs
+					return nil, fmt.Errorf("Failed to get course '%s': '%w'.", courseID, err)
 				}
 
 				if course == nil {
@@ -123,51 +125,83 @@ func ParseUserReference(rawReferences []model.ServerUserReferenceInput) (*model.
 		}
 	}
 
-	return serverUserReference, errs
+	return &serverUserReference, errs
 }
 
-// TODO: Convert course function.
-/*
-func ParseCourseUserReference(course *model.Course, rawReference model.CourseUserReferenceInput) (*model.CourseUserReference, error) {
-	reference := strings.ToLower(strings.TrimSpace(string(rawReference)))
-
-	exclude := false
-	if strings.HasPrefix(reference, "-") {
-		exclude = true
-
-		reference = strings.TrimPrefix(reference, "-")
+// Process a list of user inputs in the context of a course.
+// See model.ServerUserReferenceInput for the list of acceptable inputs.
+// Returns a reference with normalized information and error.
+// System-level errors immediately return (nil, error).
+// User-level errors return (partial reference, aggregated user errors).
+func ParseCourseUserReference(course *model.Course, rawReferences []model.CourseUserReferenceInput) (*model.CourseUserReference, error) {
+	courseUserReference := model.CourseUserReference{
+		Course:                 course,
+		Emails:                 make(map[string]any, 0),
+		ExcludeEmails:          make(map[string]any, 0),
+		CourseUserRoles:        make(map[string]model.CourseUserRole, 0),
+		ExcludeCourseUserRoles: make(map[string]model.CourseUserRole, 0),
 	}
 
-	userReference := &model.CourseUserReference{
-		Course:  course,
-		Exclude: exclude,
+	var errs error = nil
+
+	commonCourseRoles := model.GetCommonCourseUserRoleStrings()
+	courseUsers, err := GetCourseUsers(course)
+	if err != nil {
+		return nil, fmt.Errorf("Failed to get courses: '%w'.", err)
 	}
 
-	if strings.Contains(reference, "@") {
-		userReference.Email = reference
+	for i, rawReference := range rawReferences {
+		reference := strings.ToLower(strings.TrimSpace(string(rawReference)))
 
-		return userReference, nil
+		exclude := false
+		if strings.HasPrefix(reference, "-") {
+			exclude = true
+
+			reference = strings.TrimPrefix(reference, "-")
+		}
+
+		if strings.Contains(reference, "@") {
+			_, ok := courseUsers[reference]
+			if !ok {
+				errs = errors.Join(errs, fmt.Errorf("Unknown user reference %d: '%s'. Unknown course user '%s'.", i, rawReference, reference))
+				continue
+			}
+
+			if exclude {
+				courseUserReference.ExcludeEmails[reference] = nil
+			} else {
+				courseUserReference.Emails[reference] = nil
+			}
+
+			continue
+		}
+
+		if reference == "*" {
+			if exclude {
+				courseUserReference.ExcludeCourseUserRoles = commonCourseRoles
+			} else {
+				courseUserReference.CourseUserRoles = commonCourseRoles
+			}
+
+			continue
+		}
+
+		// Target a specific course role.
+		courseRole, ok := commonCourseRoles[reference]
+		if !ok {
+			errs = errors.Join(errs, fmt.Errorf("Unknown user reference %d: '%s'. Unknown course user role '%s'.", i, rawReference, reference))
+			continue
+		}
+
+		if exclude {
+			courseUserReference.ExcludeCourseUserRoles[reference] = courseRole
+		} else {
+			courseUserReference.CourseUserRoles[reference] = courseRole
+		}
 	}
 
-	if reference == "root" {
-		return nil, fmt.Errorf("User reference cannot target the root user: '%s'.", rawReference)
-	}
-
-	if reference == "*" {
-
-		return userReference, nil
-	}
-
-	courseRole := model.GetCourseUserRole(reference)
-	if courseRole != model.CourseRoleUnknown {
-		userReference.CourseUserRole = courseRole
-
-		return userReference, nil
-	}
-
-	return nil, fmt.Errorf("Invalid course user reference: '%s'.", rawReference)
+	return &courseUserReference, errs
 }
-*/
 
 func createCourseUserReference(course *model.Course, courseRoles map[string]model.CourseUserRole, exclude bool) *model.CourseUserReference {
 	courseUserRoles := make(map[string]model.CourseUserRole, 0)
