@@ -8,34 +8,14 @@ import (
 	"github.com/edulinq/autograder/internal/model"
 )
 
-// A flexible way to reference server users.
-// Server user references can be represented as follows (in the order the are evaluated):
-//
-// - An email address
-// - An email address preceded by a dash ("-") (which indicates that this email address should NOT be included in the final results).
-// - A server role (which will include all server users with that role)
-// - A literal "*" (which includes all users on the server)
-// TODO: Update final part of this comment (show examples of various forms)
-// - A course user reference
-type ServerUserReferenceInput string
-
-// Course user references can be represented as follows (in the order they are evaluated):
-//
-// - An email address
-// - An email address preceded by a dash ("-") (which indicates that this email address should NOT be included in the final results).
-// - A course role (which will include all course users with that role)
-// - A literal "*" (which includes all users in the course)
-// - A course user reference
-type CourseUserReferenceInput string
-
-func ParseUserReference(rawReferences []ServerUserReferenceInput) (*model.ServerUserReference, error) {
+func ParseUserReference(rawReferences []model.ServerUserReferenceInput) (*model.ServerUserReference, error) {
 	serverUserReference := &model.ServerUserReference{
-		Emails:                  make(map[string]any, 0),
-		ExcludeEmails:           make(map[string]any, 0),
-		ServerUserRoles:         make(map[model.ServerUserRole]any, 0),
-		ExcludeServerUserRoles:  make(map[model.ServerUserRole]any, 0),
-		CourseReferences:        make(map[string]model.CourseUserReference, 0),
-		ExcludeCourseReferences: make(map[string]any, 0),
+		Emails:                      make(map[string]any, 0),
+		ExcludeEmails:               make(map[string]any, 0),
+		ServerUserRoles:             make(map[string]model.ServerUserRole, 0),
+		ExcludeServerUserRoles:      make(map[string]model.ServerUserRole, 0),
+		CourseUserReferences:        make(map[string]*model.CourseUserReference, 0),
+		ExcludeCourseUserReferences: make(map[string]any, 0),
 	}
 
 	var errs error = nil
@@ -73,12 +53,18 @@ func ParseUserReference(rawReferences []ServerUserReferenceInput) (*model.Server
 		}
 
 		if reference == "*" {
+			if exclude {
+				serverUserReference.ExcludeAllUsers = true
+				break
+			}
+
 			serverUserReference.AllUsers = true
 			continue
 		}
 
 		parts := strings.Split(reference, model.USER_REFERENCE_DELIM)
 		if len(parts) == 1 {
+			// User reference must be a server role.
 			serverRole := model.GetServerUserRole(reference)
 			if serverRole == model.ServerRoleUnknown {
 				errs = errors.Join(errs, fmt.Errorf("Unknown user reference %d: '%s'. Unknown server user role '%s'.", i, rawReference, reference))
@@ -87,12 +73,19 @@ func ParseUserReference(rawReferences []ServerUserReferenceInput) (*model.Server
 			}
 
 			if exclude {
-				serverUserReference.ExcludeServerUserRoles[serverRole] = nil
+				serverUserReference.ExcludeServerUserRoles[reference] = serverRole
 			} else {
-				serverUserReference.ServerUserRoles[serverRole] = nil
+				serverUserReference.ServerUserRoles[reference] = serverRole
 			}
 		} else if len(parts) == 2 {
+			// User reference must be <course-id>::<course-role>.
+			// If a '*' is present, target all courses or course roles respectively.
 			if parts[0] == "*" && parts[1] == "*" {
+				if exclude {
+					serverUserReference.ExcludeAllUsers = true
+					break
+				}
+
 				serverUserReference.AllUsers = true
 				continue
 			}
@@ -101,8 +94,8 @@ func ParseUserReference(rawReferences []ServerUserReferenceInput) (*model.Server
 			// We could get back a CourseUserReference and then merge it in?
 			courses := make(map[string]*model.Course, 0)
 
-			// Target all courses.
 			if parts[0] == "*" {
+				// Target all courses.
 				// TODO: Think about caching all courses. (or implementing db caching).
 				courses, err = GetCourses()
 				if err != nil {
@@ -126,11 +119,11 @@ func ParseUserReference(rawReferences []ServerUserReferenceInput) (*model.Server
 				courses[course.GetID()] = course
 			}
 
-			courseRoles := make([]model.CourseUserRole, 0)
+			courseRoles := make(map[string]model.CourseUserRole, 0)
 
-			// Target all course roles.
 			if parts[1] == "*" {
-				courseRoles := model.GetCommonCourseRoleStrings()
+				// Target all course roles.
+				courseRoles = model.GetCommonCourseUserRoleStrings()
 			} else {
 				// Target a specific course role.
 				courseRole := model.GetCourseUserRole(parts[1])
@@ -140,10 +133,13 @@ func ParseUserReference(rawReferences []ServerUserReferenceInput) (*model.Server
 					continue
 				}
 
-				courseRoles = append(courseRoles, courseRole)
+				courseRoles[parts[1]] = courseRole
 			}
 
-			serverUserReference.AddCourseUserReference(courses, courseRoles, exclude)
+			for _, course := range courses {
+				courseUserReference := createCourseUserReference(course, courseRoles, exclude)
+				serverUserReference.AddCourseUserReference(courseUserReference)
+			}
 		} else {
 			return nil, fmt.Errorf("Invalid user reference format: '%s'.", rawReference)
 		}
@@ -153,8 +149,9 @@ func ParseUserReference(rawReferences []ServerUserReferenceInput) (*model.Server
 }
 
 // TODO: Convert course function.
-func ParseCourseUserReference(course *model.Course, rawReference CourseUserReferenceInput) (*model.CourseUserReference, error) {
-	reference := strings.ToLower(strings.TrimSpace(rawReference))
+/*
+func ParseCourseUserReference(course *model.Course, rawReference model.CourseUserReferenceInput) (*model.CourseUserReference, error) {
+	reference := strings.ToLower(strings.TrimSpace(string(rawReference)))
 
 	exclude := false
 	if strings.HasPrefix(reference, "-") {
@@ -191,4 +188,24 @@ func ParseCourseUserReference(course *model.Course, rawReference CourseUserRefer
 	}
 
 	return nil, fmt.Errorf("Invalid course user reference: '%s'.", rawReference)
+}
+*/
+
+func createCourseUserReference(course *model.Course, courseRoles map[string]model.CourseUserRole, exclude bool) *model.CourseUserReference {
+	courseUserRoles := make(map[string]model.CourseUserRole, 0)
+	excludeCourseUserRoles := make(map[string]model.CourseUserRole, 0)
+
+	if exclude {
+		excludeCourseUserRoles = courseRoles
+	} else {
+		courseUserRoles = courseRoles
+	}
+
+	return &model.CourseUserReference{
+		Course:                 course,
+		Emails:                 make(map[string]any, 0),
+		ExcludeEmails:          make(map[string]any, 0),
+		CourseUserRoles:        courseUserRoles,
+		ExcludeCourseUserRoles: excludeCourseUserRoles,
+	}
 }

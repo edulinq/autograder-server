@@ -56,6 +56,13 @@ func GetAllCourseUserRolesStrings() map[string]CourseUserRole {
 	return stringToCourseUserRole
 }
 
+func GetCommonCourseUserRoleStrings() map[string]CourseUserRole {
+	commonCourseRoles := stringToCourseUserRole
+	delete(commonCourseRoles, "unknown")
+
+	return commonCourseRoles
+}
+
 func (this CourseUserRole) String() string {
 	return courseRoleToString[this]
 }

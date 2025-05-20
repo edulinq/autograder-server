@@ -12,137 +12,202 @@ import (
 
 func (this *DBTests) DBTestParseServerUserReference(test *testing.T) {
 	testCases := []struct {
-		reference      string
-		output         *UserReference
+		input          []model.ServerUserReferenceInput
+		output         *model.ServerUserReference
 		errorSubstring string
 	}{
-		// Email Reference
+		// All Users
 		{
-			"course-student@test.edulinq.org",
-			&UserReference{
-				Type:  EmailReference,
-				Email: "course-student@test.edulinq.org",
+			[]model.ServerUserReferenceInput{
+				"*",
+			},
+			&model.ServerUserReference{
+				AllUsers: true,
 			},
 			"",
 		},
 		{
-			"-course-student@test.edulinq.org",
-			&UserReference{
-				Type:    EmailReference,
-				Exclude: true,
-				Email:   "course-student@test.edulinq.org",
+			[]model.ServerUserReferenceInput{
+				"-*",
 			},
-			"",
-		},
-
-		// Course Role Reference
-		{
-			strings.Join([]string{"*", "student"}, USER_REFERENCE_DELIM),
-			&UserReference{
-				Type:           CourseRoleReference,
-				Course:         nil,
-				CourseUserRole: model.GetCourseUserRole("student"),
-			},
-			"",
-		},
-		{
-			strings.Join([]string{"-*", "student"}, USER_REFERENCE_DELIM),
-			&UserReference{
-				Type:           CourseRoleReference,
-				Exclude:        true,
-				Course:         nil,
-				CourseUserRole: model.GetCourseUserRole("student"),
-			},
-			"",
-		},
-		{
-			strings.Join([]string{TEST_COURSE_ID, "student"}, USER_REFERENCE_DELIM),
-			&UserReference{
-				Type:           CourseRoleReference,
-				Course:         MustGetTestCourse(),
-				CourseUserRole: model.GetCourseUserRole("student"),
-			},
-			"",
-		},
-		{
-			strings.Join([]string{fmt.Sprintf("-%s", TEST_COURSE_ID), "student"}, USER_REFERENCE_DELIM),
-			&UserReference{
-				Type:           CourseRoleReference,
-				Exclude:        true,
-				Course:         MustGetTestCourse(),
-				CourseUserRole: model.GetCourseUserRole("student"),
+			&model.ServerUserReference{
+				ExcludeAllUsers: true,
 			},
 			"",
 		},
 
-		// Course Reference
+		// Target Email
 		{
-			TEST_COURSE_ID,
-			&UserReference{
-				Type:   CourseReference,
-				Course: MustGetTestCourse(),
+			[]model.ServerUserReferenceInput{
+				"course-student@test.edulinq.org",
+			},
+			&model.ServerUserReference{
+				Emails: map[string]any{
+					"course-student@test.edulinq.org": nil,
+				},
 			},
 			"",
 		},
 		{
-			fmt.Sprintf("-%s", TEST_COURSE_ID),
-			&UserReference{
-				Type:    CourseReference,
-				Exclude: true,
-				Course:  MustGetTestCourse(),
-			},
-			"",
-		},
-		{
-			strings.Join([]string{TEST_COURSE_ID, "*"}, USER_REFERENCE_DELIM),
-			&UserReference{
-				Type:   CourseReference,
-				Course: MustGetTestCourse(),
-			},
-			"",
-		},
-		{
-			strings.Join([]string{fmt.Sprintf("-%s", TEST_COURSE_ID), "*"}, USER_REFERENCE_DELIM),
-			&UserReference{
-				Type:    CourseReference,
-				Exclude: true,
-				Course:  MustGetTestCourse(),
+			[]model.ServerUserReferenceInput{"-course-student@test.edulinq.org"},
+			&model.ServerUserReference{
+				ExcludeEmails: map[string]any{
+					"course-student@test.edulinq.org": nil,
+				},
 			},
 			"",
 		},
 
-		// Server Role Reference
+		// Target Server Role
 		{
-			"user",
-			&UserReference{
-				Type:           ServerRoleReference,
-				ServerUserRole: model.GetServerUserRole("user"),
+			[]model.ServerUserReferenceInput{
+				"user",
+			},
+			&model.ServerUserReference{
+				ServerUserRoles: map[string]model.ServerUserRole{
+					"user": model.GetServerUserRole("user"),
+				},
 			},
 			"",
 		},
 		{
-			"-user",
-			&UserReference{
-				Type:           ServerRoleReference,
-				Exclude:        true,
-				ServerUserRole: model.GetServerUserRole("user"),
+			[]model.ServerUserReferenceInput{
+				"-user",
+			},
+			&model.ServerUserReference{
+				ExcludeServerUserRoles: map[string]model.ServerUserRole{
+					"user": model.GetServerUserRole("user"),
+				},
 			},
 			"",
 		},
 
-		// All User Reference
+		// All Courses, All Course Roles
 		{
-			"*",
-			&UserReference{
-				Type: AllUserReference,
+			[]model.ServerUserReferenceInput{
+				"*::*",
+			},
+			&model.ServerUserReference{
+				AllUsers: true,
 			},
 			"",
 		},
 		{
-			"-*",
-			&UserReference{
-				Type:    AllUserReference,
-				Exclude: true,
+			[]model.ServerUserReferenceInput{
+				"-*::*",
+			},
+			&model.ServerUserReference{
+				ExcludeAllUsers: true,
+			},
+			"",
+		},
+
+		// All Courses, Target Course Role
+		{
+			[]model.ServerUserReferenceInput{
+				"*::student",
+			},
+			&model.ServerUserReference{
+				CourseUserReferences: map[string]*model.CourseUserReference{
+					TEST_COURSE_ID: &model.CourseUserReference{
+						Course: MustGetTestCourse(),
+						CourseUserRoles: map[string]model.CourseUserRole{
+							"student": model.GetCourseUserRole("student"),
+						},
+					},
+					"course-languages": &model.CourseUserReference{
+						Course: MustGetCourse("course-languages"),
+						CourseUserRoles: map[string]model.CourseUserRole{
+							"student": model.GetCourseUserRole("student"),
+						},
+					},
+				},
+			},
+			"",
+		},
+		{
+			[]model.ServerUserReferenceInput{
+				"-*::student",
+			},
+			&model.ServerUserReference{
+				CourseUserReferences: map[string]*model.CourseUserReference{
+					TEST_COURSE_ID: &model.CourseUserReference{
+						Course: MustGetTestCourse(),
+						ExcludeCourseUserRoles: map[string]model.CourseUserRole{
+							"student": model.GetCourseUserRole("student"),
+						},
+					},
+					"course-languages": &model.CourseUserReference{
+						Course: MustGetCourse("course-languages"),
+						ExcludeCourseUserRoles: map[string]model.CourseUserRole{
+							"student": model.GetCourseUserRole("student"),
+						},
+					},
+				},
+			},
+			"",
+		},
+
+		// Target Course, All Course Roles
+		{
+			[]model.ServerUserReferenceInput{
+				model.ServerUserReferenceInput(fmt.Sprintf("%s::*", TEST_COURSE_ID)),
+			},
+			&model.ServerUserReference{
+				CourseUserReferences: map[string]*model.CourseUserReference{
+					TEST_COURSE_ID: &model.CourseUserReference{
+						Course:          MustGetTestCourse(),
+						CourseUserRoles: model.GetCommonCourseUserRoleStrings(),
+					},
+				},
+			},
+			"",
+		},
+		{
+			[]model.ServerUserReferenceInput{
+				model.ServerUserReferenceInput(fmt.Sprintf("-%s::*", TEST_COURSE_ID)),
+			},
+			&model.ServerUserReference{
+				CourseUserReferences: map[string]*model.CourseUserReference{
+					TEST_COURSE_ID: &model.CourseUserReference{
+						Course:                 MustGetTestCourse(),
+						ExcludeCourseUserRoles: model.GetCommonCourseUserRoleStrings(),
+					},
+				},
+			},
+			"",
+		},
+
+		// Target Course, Target Course Role
+		{
+			[]model.ServerUserReferenceInput{
+				model.ServerUserReferenceInput(fmt.Sprintf("%s::student", TEST_COURSE_ID)),
+			},
+			&model.ServerUserReference{
+				CourseUserReferences: map[string]*model.CourseUserReference{
+					TEST_COURSE_ID: &model.CourseUserReference{
+						Course: MustGetTestCourse(),
+						CourseUserRoles: map[string]model.CourseUserRole{
+							"student": model.GetCourseUserRole("student"),
+						},
+					},
+				},
+			},
+			"",
+		},
+		{
+			[]model.ServerUserReferenceInput{
+				model.ServerUserReferenceInput(fmt.Sprintf("-%s::student", TEST_COURSE_ID)),
+			},
+			&model.ServerUserReference{
+				CourseUserReferences: map[string]*model.CourseUserReference{
+					TEST_COURSE_ID: &model.CourseUserReference{
+						Course: MustGetTestCourse(),
+						ExcludeCourseUserRoles: map[string]model.CourseUserRole{
+							"student": model.GetCourseUserRole("student"),
+						},
+					},
+				},
 			},
 			"",
 		},
@@ -151,19 +216,23 @@ func (this *DBTests) DBTestParseServerUserReference(test *testing.T) {
 
 		// Accessing Root
 		{
-			"root",
+			[]model.ServerUserReferenceInput{
+				"root",
+			},
 			nil,
-			"User reference cannot target the root user",
+			"cannot target the root user",
 		},
 		{
-			"-root",
+			[]model.ServerUserReferenceInput{
+				"-root",
+			},
 			nil,
-			"User reference cannot target the root user",
+			"cannot target the root user",
 		},
 	}
 
 	for i, testCase := range testCases {
-		result, err := ParseUserReference(testCase.reference)
+		result, err := ParseUserReference(testCase.input)
 		if err != nil {
 			if testCase.errorSubstring != "" {
 				if !strings.Contains(err.Error(), testCase.errorSubstring) {
@@ -171,27 +240,28 @@ func (this *DBTests) DBTestParseServerUserReference(test *testing.T) {
 						i, testCase.errorSubstring, err.Error())
 				}
 			} else {
-				test.Errorf("Case %d: Failed to parse user reference '%s': '%v'.", i, testCase.reference, err.Error())
+				test.Errorf("Case %d: Failed to parse user reference '%s': '%v'.",
+					i, util.MustToJSONIndent(testCase.output), err.Error())
 			}
 
 			continue
 		}
 
 		if testCase.errorSubstring != "" {
-			test.Errorf("Case %d: Did not get expected error for reference '%s'.", i, testCase.reference)
+			test.Errorf("Case %d: Did not get expected error for reference '%s'.",
+				i, util.MustToJSONIndent(testCase.output))
 			continue
 		}
 
-		// Check and clear course information.
-		if testCase.output.Course != nil && result.Course != nil {
-			if testCase.output.Course.GetID() != result.Course.GetID() {
-				test.Errorf("Case %d: Unexpected course ID. Expected: '%s', actual: '%s'.",
-					i, testCase.output.Course.GetID(), result.Course.GetID())
+		setServerUserReferenceDefaults(testCase.output)
+
+		// Check and clear course information from CourseUserReference map to pass equality check.
+		for courseID, courseUserReference := range testCase.output.CourseUserReferences {
+			actual, _ := result.CourseUserReferences[courseID]
+			failed := checkAndClearCourse(test, i, courseUserReference, actual)
+			if failed {
 				continue
 			}
-
-			testCase.output.Course = nil
-			result.Course = nil
 		}
 
 		if !reflect.DeepEqual(testCase.output, result) {
@@ -200,4 +270,91 @@ func (this *DBTests) DBTestParseServerUserReference(test *testing.T) {
 			continue
 		}
 	}
+}
+
+func setServerUserReferenceDefaults(reference *model.ServerUserReference) {
+	if reference == nil {
+		return
+	}
+
+	if reference.Emails == nil {
+		reference.Emails = make(map[string]any, 0)
+	}
+
+	if reference.ExcludeEmails == nil {
+		reference.ExcludeEmails = make(map[string]any, 0)
+	}
+
+	if reference.ServerUserRoles == nil {
+		reference.ServerUserRoles = make(map[string]model.ServerUserRole, 0)
+	}
+
+	if reference.ExcludeServerUserRoles == nil {
+		reference.ExcludeServerUserRoles = make(map[string]model.ServerUserRole, 0)
+	}
+
+	if reference.CourseUserReferences == nil {
+		reference.CourseUserReferences = make(map[string]*model.CourseUserReference, 0)
+	} else {
+		for _, courseUserReference := range reference.CourseUserReferences {
+			setCourseUserReferenceDefaults(courseUserReference)
+		}
+	}
+
+	if reference.ExcludeCourseUserReferences == nil {
+		reference.ExcludeCourseUserReferences = make(map[string]any, 0)
+	}
+}
+
+func setCourseUserReferenceDefaults(reference *model.CourseUserReference) {
+	if reference == nil {
+		return
+	}
+
+	if reference.Emails == nil {
+		reference.Emails = make(map[string]any, 0)
+	}
+
+	if reference.ExcludeEmails == nil {
+		reference.ExcludeEmails = make(map[string]any, 0)
+	}
+
+	if reference.CourseUserRoles == nil {
+		reference.CourseUserRoles = make(map[string]model.CourseUserRole, 0)
+	}
+
+	if reference.ExcludeCourseUserRoles == nil {
+		reference.ExcludeCourseUserRoles = make(map[string]model.CourseUserRole, 0)
+	}
+}
+
+func checkAndClearCourse(test *testing.T, i int, expected *model.CourseUserReference, actual *model.CourseUserReference) bool {
+	if expected == nil && actual == nil {
+		return false
+	}
+
+	if expected == nil {
+		test.Errorf("Case %d: Unexpected course information. Expected: '%s', Actual: '%s'.",
+			i, util.MustToJSONIndent(expected), util.MustToJSONIndent(actual))
+		return true
+	}
+
+	if actual == nil {
+		test.Errorf("Case %d: Unexpected course information. Expected: '%s', Actual: '%s'.",
+			i, util.MustToJSONIndent(expected), util.MustToJSONIndent(actual))
+		return true
+	}
+
+	if expected.Course != nil && actual.Course != nil {
+		if expected.Course.GetID() != actual.Course.GetID() {
+			test.Errorf("Case %d: Unexpected course ID. Expected: '%s', actual: '%s'.",
+				i, expected.Course.GetID(), actual.Course.GetID())
+			return true
+		}
+
+		expected.Course = nil
+		actual.Course = nil
+	}
+
+	return false
 }
