@@ -18,18 +18,14 @@ func (this *DBTests) DBTestParseServerUserReference(test *testing.T) {
 	}{
 		// All Users
 		{
-			[]model.ServerUserReferenceInput{
-				"*",
-			},
+			[]model.ServerUserReferenceInput{"*"},
 			&model.ServerUserReference{
 				ServerUserRoles: model.GetCommonServerUserRoleStrings(),
 			},
 			"",
 		},
 		{
-			[]model.ServerUserReferenceInput{
-				"-*",
-			},
+			[]model.ServerUserReferenceInput{"-*"},
 			&model.ServerUserReference{
 				ExcludeServerUserRoles: model.GetCommonServerUserRoleStrings(),
 			},
@@ -38,9 +34,7 @@ func (this *DBTests) DBTestParseServerUserReference(test *testing.T) {
 
 		// Target Email
 		{
-			[]model.ServerUserReferenceInput{
-				"course-student@test.edulinq.org",
-			},
+			[]model.ServerUserReferenceInput{"course-student@test.edulinq.org"},
 			&model.ServerUserReference{
 				Emails: map[string]any{
 					"course-student@test.edulinq.org": nil,
@@ -60,9 +54,7 @@ func (this *DBTests) DBTestParseServerUserReference(test *testing.T) {
 
 		// Target Server Role
 		{
-			[]model.ServerUserReferenceInput{
-				"user",
-			},
+			[]model.ServerUserReferenceInput{"user"},
 			&model.ServerUserReference{
 				ServerUserRoles: map[string]model.ServerUserRole{
 					"user": model.GetServerUserRole("user"),
@@ -71,9 +63,7 @@ func (this *DBTests) DBTestParseServerUserReference(test *testing.T) {
 			"",
 		},
 		{
-			[]model.ServerUserReferenceInput{
-				"-user",
-			},
+			[]model.ServerUserReferenceInput{"-user"},
 			&model.ServerUserReference{
 				ExcludeServerUserRoles: map[string]model.ServerUserRole{
 					"user": model.GetServerUserRole("user"),
@@ -84,9 +74,7 @@ func (this *DBTests) DBTestParseServerUserReference(test *testing.T) {
 
 		// All Courses, All Course Roles
 		{
-			[]model.ServerUserReferenceInput{
-				"*::*",
-			},
+			[]model.ServerUserReferenceInput{"*::*"},
 			&model.ServerUserReference{
 				CourseUserReferences: map[string]*model.CourseUserReference{
 					TEST_COURSE_ID: &model.CourseUserReference{
@@ -102,9 +90,7 @@ func (this *DBTests) DBTestParseServerUserReference(test *testing.T) {
 			"",
 		},
 		{
-			[]model.ServerUserReferenceInput{
-				"-*::*",
-			},
+			[]model.ServerUserReferenceInput{"-*::*"},
 			&model.ServerUserReference{
 				CourseUserReferences: map[string]*model.CourseUserReference{
 					TEST_COURSE_ID: &model.CourseUserReference{
@@ -122,9 +108,7 @@ func (this *DBTests) DBTestParseServerUserReference(test *testing.T) {
 
 		// All Courses, Target Course Role
 		{
-			[]model.ServerUserReferenceInput{
-				"*::student",
-			},
+			[]model.ServerUserReferenceInput{"*::student"},
 			&model.ServerUserReference{
 				CourseUserReferences: map[string]*model.CourseUserReference{
 					TEST_COURSE_ID: &model.CourseUserReference{
@@ -144,9 +128,7 @@ func (this *DBTests) DBTestParseServerUserReference(test *testing.T) {
 			"",
 		},
 		{
-			[]model.ServerUserReferenceInput{
-				"-*::student",
-			},
+			[]model.ServerUserReferenceInput{"-*::student"},
 			&model.ServerUserReference{
 				CourseUserReferences: map[string]*model.CourseUserReference{
 					TEST_COURSE_ID: &model.CourseUserReference{
@@ -435,52 +417,40 @@ func (this *DBTests) DBTestParseServerUserReference(test *testing.T) {
 
 		// Accessing Root
 		{
-			[]model.ServerUserReferenceInput{
-				"root",
-			},
+			[]model.ServerUserReferenceInput{"root"},
 			nil,
 			"Unknown server user role 'root'.",
 		},
 		{
-			[]model.ServerUserReferenceInput{
-				"-root",
-			},
+			[]model.ServerUserReferenceInput{"-root"},
 			nil,
 			"Unknown server user role 'root'.",
 		},
 
 		// Unknown Server Role
 		{
-			[]model.ServerUserReferenceInput{
-				"ZZZ",
-			},
+			[]model.ServerUserReferenceInput{"ZZZ"},
 			nil,
 			"Unknown server user role 'zzz'.",
 		},
 
 		// Unknown Course
 		{
-			[]model.ServerUserReferenceInput{
-				"ZZZ::*",
-			},
+			[]model.ServerUserReferenceInput{"ZZZ::*"},
 			nil,
 			"Unknown course 'zzz'.",
 		},
 
 		// Unknown Course Role
 		{
-			[]model.ServerUserReferenceInput{
-				"*::ZZZ",
-			},
+			[]model.ServerUserReferenceInput{"*::ZZZ"},
 			nil,
 			"Unknown course user role 'zzz'.",
 		},
 
 		// Invalid Format
 		{
-			[]model.ServerUserReferenceInput{
-				"foo::bar::baz",
-			},
+			[]model.ServerUserReferenceInput{"foo::bar::baz"},
 			nil,
 			"Invalid user reference format",
 		},
@@ -535,9 +505,7 @@ func (this *DBTests) DBTestParseCourseUserReference(test *testing.T) {
 	}{
 		// Target Emails
 		{
-			[]model.CourseUserReferenceInput{
-				"course-student@test.edulinq.org",
-			},
+			[]model.CourseUserReferenceInput{"course-student@test.edulinq.org"},
 			&model.CourseUserReference{
 				Emails: map[string]any{
 					"course-student@test.edulinq.org": nil,
@@ -546,9 +514,7 @@ func (this *DBTests) DBTestParseCourseUserReference(test *testing.T) {
 			"",
 		},
 		{
-			[]model.CourseUserReferenceInput{
-				"-course-student@test.edulinq.org",
-			},
+			[]model.CourseUserReferenceInput{"-course-student@test.edulinq.org"},
 			&model.CourseUserReference{
 				ExcludeEmails: map[string]any{
 					"course-student@test.edulinq.org": nil,
@@ -559,9 +525,7 @@ func (this *DBTests) DBTestParseCourseUserReference(test *testing.T) {
 
 		// Target Roles
 		{
-			[]model.CourseUserReferenceInput{
-				"admin",
-			},
+			[]model.CourseUserReferenceInput{"admin"},
 			&model.CourseUserReference{
 				CourseUserRoles: map[string]model.CourseUserRole{
 					"admin": model.GetCourseUserRole("admin"),
@@ -570,9 +534,7 @@ func (this *DBTests) DBTestParseCourseUserReference(test *testing.T) {
 			"",
 		},
 		{
-			[]model.CourseUserReferenceInput{
-				"-admin",
-			},
+			[]model.CourseUserReferenceInput{"-admin"},
 			&model.CourseUserReference{
 				ExcludeCourseUserRoles: map[string]model.CourseUserRole{
 					"admin": model.GetCourseUserRole("admin"),
@@ -583,18 +545,14 @@ func (this *DBTests) DBTestParseCourseUserReference(test *testing.T) {
 
 		// All Users
 		{
-			[]model.CourseUserReferenceInput{
-				"*",
-			},
+			[]model.CourseUserReferenceInput{"*"},
 			&model.CourseUserReference{
 				CourseUserRoles: model.GetCommonCourseUserRoleStrings(),
 			},
 			"",
 		},
 		{
-			[]model.CourseUserReferenceInput{
-				"-*",
-			},
+			[]model.CourseUserReferenceInput{"-*"},
 			&model.CourseUserReference{
 				ExcludeCourseUserRoles: model.GetCommonCourseUserRoleStrings(),
 			},
@@ -711,25 +669,19 @@ func (this *DBTests) DBTestParseCourseUserReference(test *testing.T) {
 
 		// Unknown Course User
 		{
-			[]model.CourseUserReferenceInput{
-				"zzz@test.edulinq.org",
-			},
+			[]model.CourseUserReferenceInput{"zzz@test.edulinq.org"},
 			nil,
 			"Unknown course user 'zzz@test.edulinq.org'.",
 		},
 		{
-			[]model.CourseUserReferenceInput{
-				"server-user@test.edulinq.org",
-			},
+			[]model.CourseUserReferenceInput{"server-user@test.edulinq.org"},
 			nil,
 			"Unknown course user 'server-user@test.edulinq.org'.",
 		},
 
 		// Unknown Course Role
 		{
-			[]model.CourseUserReferenceInput{
-				"ZZZ",
-			},
+			[]model.CourseUserReferenceInput{"ZZZ"},
 			nil,
 			"Unknown course user role 'zzz'.",
 		},
