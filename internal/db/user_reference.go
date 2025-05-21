@@ -28,7 +28,10 @@ func ParseServerUserReference(rawReferences []model.ServerUserReferenceInput) (*
 	var errs error = nil
 	var err error = nil
 
-	for i, rawReference := range rawReferences {
+	commonServerRoles := model.GetCommonServerUserRoleStrings()
+	commonCourseRoles := model.GetCommonCourseUserRoleStrings()
+
+	for _, rawReference := range rawReferences {
 		reference := strings.ToLower(strings.TrimSpace(string(rawReference)))
 
 		exclude := false
@@ -55,9 +58,9 @@ func ParseServerUserReference(rawReferences []model.ServerUserReferenceInput) (*
 
 		if reference == "*" {
 			if exclude {
-				serverUserReference.ExcludeServerUserRoles = model.GetCommonServerUserRoleStrings()
+				serverUserReference.ExcludeServerUserRoles = commonServerRoles
 			} else {
-				serverUserReference.ServerUserRoles = model.GetCommonServerUserRoleStrings()
+				serverUserReference.ServerUserRoles = commonServerRoles
 			}
 
 			continue
@@ -66,26 +69,24 @@ func ParseServerUserReference(rawReferences []model.ServerUserReferenceInput) (*
 		parts := strings.Split(reference, model.USER_REFERENCE_DELIM)
 		if len(parts) == 1 {
 			// User reference must be a server role.
-			commonServerRoles := model.GetCommonServerUserRoleStrings()
-			serverUserRole, ok := commonServerRoles[reference]
+			_, ok := commonServerRoles[reference]
 			if !ok {
-				errs = errors.Join(errs, fmt.Errorf("Unknown user reference %d: '%s'. Unknown server user role '%s'.", i, rawReference, reference))
+				errs = errors.Join(errs, fmt.Errorf("Unknown server user role '%s' in user reference: '%s'.", reference, rawReference))
 				continue
 			}
 
 			if exclude {
-				serverUserReference.ExcludeServerUserRoles[reference] = serverUserRole
+				serverUserReference.ExcludeServerUserRoles[reference] = nil
 			} else {
-				serverUserReference.ServerUserRoles[reference] = serverUserRole
+				serverUserReference.ServerUserRoles[reference] = nil
 			}
 		} else if len(parts) == 2 {
 			// User reference must be <course-id>::<course-role>.
 			// If a '*' is present, target all courses or course roles respectively.
-			courseID := strings.ToLower(strings.TrimSpace(parts[0]))
+			courseID := strings.TrimSpace(parts[0])
 			courseRoleString := strings.TrimSpace(parts[1])
 
 			courses := make(map[string]*model.Course, 0)
-
 			if courseID == "*" {
 				// Target all courses.
 				courses, err = GetCourses()
@@ -100,7 +101,7 @@ func ParseServerUserReference(rawReferences []model.ServerUserReferenceInput) (*
 				}
 
 				if course == nil {
-					errs = errors.Join(errs, fmt.Errorf("Unknown user reference %d: '%s'. Unknown course '%s'.", i, rawReference, courseID))
+					errs = errors.Join(errs, fmt.Errorf("Unknown course '%s' in user reference: '%s'.", courseID, rawReference))
 					continue
 				}
 
@@ -108,20 +109,18 @@ func ParseServerUserReference(rawReferences []model.ServerUserReferenceInput) (*
 			}
 
 			courseRoles := make(map[string]any, 0)
-
 			if courseRoleString == "*" {
 				// Target all course roles.
-				courseRoles = model.GetCommonCourseUserRoleStrings()
+				courseRoles = commonCourseRoles
 			} else {
 				// Target a specific course role.
-				commonCourseRoles := model.GetCommonCourseUserRoleStrings()
-				courseRole, ok := commonCourseRoles[courseRoleString]
+				_, ok := commonCourseRoles[courseRoleString]
 				if !ok {
-					errs = errors.Join(errs, fmt.Errorf("Unknown user reference %d: '%s'. Unknown course user role '%s'.", i, rawReference, courseRoleString))
+					errs = errors.Join(errs, fmt.Errorf("Unknown course user role '%s' in user reference: '%s'.", courseRoleString, rawReference))
 					continue
 				}
 
-				courseRoles[courseRoleString] = courseRole
+				courseRoles[courseRoleString] = nil
 			}
 
 			for _, course := range courses {
@@ -129,7 +128,7 @@ func ParseServerUserReference(rawReferences []model.ServerUserReferenceInput) (*
 				serverUserReference.AddCourseUserReference(courseUserReference)
 			}
 		} else {
-			errs = errors.Join(errs, fmt.Errorf("Invalid user reference format: '%s'.", rawReference))
+			errs = errors.Join(errs, fmt.Errorf("Invalid format in user reference: '%s'.", rawReference))
 			continue
 		}
 	}
@@ -138,7 +137,7 @@ func ParseServerUserReference(rawReferences []model.ServerUserReferenceInput) (*
 }
 
 // Process a list of user inputs in the context of a course.
-// See model.ServerUserReferenceInput for the list of acceptable inputs.
+// See model.CourseUserReferenceInput for the list of acceptable inputs.
 // Returns a reference with normalized information and error.
 // System-level errors immediately return (nil, error).
 // User-level errors return (partial reference, aggregated user errors).
@@ -158,12 +157,13 @@ func ParseCourseUserReference(course *model.Course, rawReferences []model.Course
 	var errs error = nil
 
 	commonCourseRoles := model.GetCommonCourseUserRoleStrings()
+
 	courseUsers, err := GetCourseUsers(course)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to get courses: '%w'.", err)
 	}
 
-	for i, rawReference := range rawReferences {
+	for _, rawReference := range rawReferences {
 		reference := strings.ToLower(strings.TrimSpace(string(rawReference)))
 
 		exclude := false
@@ -181,7 +181,7 @@ func ParseCourseUserReference(course *model.Course, rawReferences []model.Course
 		if strings.Contains(reference, "@") {
 			_, ok := courseUsers[reference]
 			if !ok {
-				errs = errors.Join(errs, fmt.Errorf("Unknown user reference %d: '%s'. Unknown course user '%s'.", i, rawReference, reference))
+				errs = errors.Join(errs, fmt.Errorf("Unknown course user '%s' in user reference: '%s'.", reference, rawReference))
 				continue
 			}
 
@@ -205,16 +205,16 @@ func ParseCourseUserReference(course *model.Course, rawReferences []model.Course
 		}
 
 		// Target a specific course role.
-		courseRole, ok := commonCourseRoles[reference]
+		_, ok := commonCourseRoles[reference]
 		if !ok {
-			errs = errors.Join(errs, fmt.Errorf("Unknown user reference %d: '%s'. Unknown course user role '%s'.", i, rawReference, reference))
+			errs = errors.Join(errs, fmt.Errorf("Unknown course user role '%s' in user reference: '%s'.", reference, rawReference))
 			continue
 		}
 
 		if exclude {
-			courseUserReference.ExcludeCourseUserRoles[reference] = courseRole
+			courseUserReference.ExcludeCourseUserRoles[reference] = nil
 		} else {
-			courseUserReference.CourseUserRoles[reference] = courseRole
+			courseUserReference.CourseUserRoles[reference] = nil
 		}
 	}
 

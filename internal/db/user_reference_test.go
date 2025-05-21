@@ -419,40 +419,40 @@ func (this *DBTests) DBTestParseServerUserReference(test *testing.T) {
 		{
 			[]model.ServerUserReferenceInput{"root"},
 			nil,
-			"Unknown server user role 'root'.",
+			"Unknown server user role 'root' in user reference: 'root'.",
 		},
 		{
 			[]model.ServerUserReferenceInput{"-root"},
 			nil,
-			"Unknown server user role 'root'.",
+			"Unknown server user role 'root' in user reference: '-root'.",
 		},
 
 		// Unknown Server Role
 		{
 			[]model.ServerUserReferenceInput{"ZZZ"},
 			nil,
-			"Unknown server user role 'zzz'.",
+			"Unknown server user role 'zzz' in user reference: 'ZZZ'.",
 		},
 
 		// Unknown Course
 		{
 			[]model.ServerUserReferenceInput{"ZZZ::*"},
 			nil,
-			"Unknown course 'zzz'.",
+			"Unknown course 'zzz' in user reference: 'ZZZ::*'.",
 		},
 
 		// Unknown Course Role
 		{
 			[]model.ServerUserReferenceInput{"*::ZZZ"},
 			nil,
-			"Unknown course user role 'zzz'.",
+			"Unknown course user role 'zzz' in user reference: '*::ZZZ'.",
 		},
 
 		// Invalid Format
 		{
 			[]model.ServerUserReferenceInput{"foo::bar::baz"},
 			nil,
-			"Invalid user reference format",
+			"Invalid format in user reference: 'foo::bar::baz'.",
 		},
 	}
 
@@ -671,19 +671,19 @@ func (this *DBTests) DBTestParseCourseUserReference(test *testing.T) {
 		{
 			[]model.CourseUserReferenceInput{"zzz@test.edulinq.org"},
 			nil,
-			"Unknown course user 'zzz@test.edulinq.org'.",
+			"Unknown course user 'zzz@test.edulinq.org' in user reference: 'zzz@test.edulinq.org'.",
 		},
 		{
 			[]model.CourseUserReferenceInput{"server-user@test.edulinq.org"},
 			nil,
-			"Unknown course user 'server-user@test.edulinq.org'.",
+			"Unknown course user 'server-user@test.edulinq.org' in user reference: 'server-user@test.edulinq.org'.",
 		},
 
 		// Unknown Course Role
 		{
 			[]model.CourseUserReferenceInput{"ZZZ"},
 			nil,
-			"Unknown course user role 'zzz'.",
+			"Unknown course user role 'zzz' in user reference: 'ZZZ'.",
 		},
 	}
 
