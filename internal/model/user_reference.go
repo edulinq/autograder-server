@@ -3,11 +3,11 @@ package model
 const USER_REFERENCE_DELIM = "::"
 
 // A flexible way to reference server users.
-// Server user references can be represented as follows (in the order the are evaluated):
+// Server user references can be represented as follows:
 //
 // - An email address
-// - A server role (which will include all server users with that role)
 // - A literal "*" (which includes all users on the server)
+// - A server role (which will include all server users with that role)
 // - Any of the above options preceded by a dash ("-") (which indicates that the user or group will NOT be included in the final results)
 // - A course user reference
 //
@@ -20,11 +20,11 @@ const USER_REFERENCE_DELIM = "::"
 // - Any of the above can be preceded by a dash ("-") (which indicates that that group will NOT be included in the final results)
 type ServerUserReferenceInput string
 
-// Course user references can be represented as follows (in the order the are evaluated):
+// Course user references can be represented as follows:
 //
 // - An email address
-// - A course role (which will include all course users with that role)
 // - A literal "*" (which includes all users in the course)
+// - A course role (which will include all course users with that role)
 // - Any of the above options preceded by a dash ("-") (which indicates that the user or group will NOT be included in the final results)
 type CourseUserReferenceInput string
 
