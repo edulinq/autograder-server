@@ -202,16 +202,21 @@ func (this *DBTests) DBTestParseCourseUserReference(test *testing.T) {
 	testCourse := MustGetTestCourse()
 
 	for i, testCase := range testCases {
-		result, err := ParseCourseUserReference(testCourse, testCase.input)
+		result, userErr, err := ParseCourseUserReference(testCourse, testCase.input)
 		if err != nil {
+			test.Errorf("Case %d: Failed to parse user reference '%s': '%v'.",
+				i, util.MustToJSONIndent(testCase.output), err.Error())
+		}
+
+		if userErr != nil {
 			if testCase.errorSubstring != "" {
-				if !strings.Contains(err.Error(), testCase.errorSubstring) {
+				if !strings.Contains(userErr.Error(), testCase.errorSubstring) {
 					test.Errorf("Case %d: Did not get expected error output. Expected Substring '%s', Actual Error: '%s'.",
-						i, testCase.errorSubstring, err.Error())
+						i, testCase.errorSubstring, userErr.Error())
 				}
 			} else {
 				test.Errorf("Case %d: Failed to parse user reference '%s': '%v'.",
-					i, util.MustToJSONIndent(testCase.output), err.Error())
+					i, util.MustToJSONIndent(testCase.output), userErr.Error())
 			}
 
 			continue

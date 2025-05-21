@@ -10,12 +10,12 @@ import (
 
 // Process a list of user inputs in the context of a course.
 // See model.CourseUserReferenceInput for the list of acceptable inputs.
-// Returns a reference with normalized information and error.
-// System-level errors immediately return (nil, error).
-// User-level errors return (partial reference, aggregated user errors).
-func ParseCourseUserReference(course *model.Course, rawReferences []model.CourseUserReferenceInput) (*model.CourseUserReference, error) {
+// Returns a reference with normalized information, user errors, system error.
+// System-level errors immediately return (nil, nil, error).
+// User-level errors return (partial reference, aggregated user errors, nil).
+func ParseCourseUserReference(course *model.Course, rawReferences []model.CourseUserReferenceInput) (*model.CourseUserReference, error, error) {
 	if backend == nil {
-		return nil, fmt.Errorf("Database has not been opened.")
+		return nil, nil, fmt.Errorf("Database has not been opened.")
 	}
 
 	courseUserReference := model.CourseUserReference{
@@ -32,7 +32,7 @@ func ParseCourseUserReference(course *model.Course, rawReferences []model.Course
 
 	courseUsers, err := GetCourseUsers(course)
 	if err != nil {
-		return nil, fmt.Errorf("Failed to get courses: '%w'.", err)
+		return nil, nil, fmt.Errorf("Failed to get courses: '%w'.", err)
 	}
 
 	for _, rawReference := range rawReferences {
@@ -90,5 +90,5 @@ func ParseCourseUserReference(course *model.Course, rawReferences []model.Course
 		}
 	}
 
-	return &courseUserReference, errs
+	return &courseUserReference, errs, nil
 }

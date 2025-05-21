@@ -37,7 +37,7 @@ func RunCourseReportTask(task *model.FullScheduledTask) error {
 
 	subject := fmt.Sprintf("Autograder Scoring Report for %s", course.GetName())
 
-	to, err = db.ResolveCourseUsers(course, to)
+	to, err = db.ResolveCourseUserEmails(course, to)
 	if err != nil {
 		return fmt.Errorf("Failed to resolve users for course '%s': '%w'.", course.GetID(), err)
 	}

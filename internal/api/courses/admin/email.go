@@ -32,13 +32,13 @@ func HandleEmail(request *EmailRequest) (*EmailResponse, *core.APIError) {
 	var err error
 	var errs error
 
-	request.To, err = db.ResolveCourseUsers(request.Course, request.To)
+	request.To, err = db.ResolveCourseUserEmails(request.Course, request.To)
 	errs = errors.Join(errs, err)
 
-	request.CC, err = db.ResolveCourseUsers(request.Course, request.CC)
+	request.CC, err = db.ResolveCourseUserEmails(request.Course, request.CC)
 	errs = errors.Join(errs, err)
 
-	request.BCC, err = db.ResolveCourseUsers(request.Course, request.BCC)
+	request.BCC, err = db.ResolveCourseUserEmails(request.Course, request.BCC)
 	errs = errors.Join(errs, err)
 
 	if errs != nil {

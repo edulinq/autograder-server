@@ -35,7 +35,7 @@ func main() {
 	if args.Course != "" {
 		course := db.MustGetCourse(args.Course)
 
-		args.To, err = db.ResolveCourseUsers(course, args.To)
+		args.To, err = db.ResolveCourseUserEmails(course, args.To)
 		if err != nil {
 			log.Fatal("Failed to resolve users.", err, course)
 		}

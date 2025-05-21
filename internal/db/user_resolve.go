@@ -9,6 +9,54 @@ import (
 	"github.com/edulinq/autograder/internal/model"
 )
 
+// Resolve email addresses to users within the course.
+// See model.CourseUserReferenceInput for acceptable inputs.
+// Returns a sorted list of users and an error.
+func ResolveCourseUsers(course *model.Course, reference *model.CourseUserReference) ([]*model.CourseUser, error) {
+	if backend == nil {
+		return nil, fmt.Errorf("Database has not been opened.")
+	}
+
+	if reference == nil {
+		return nil, nil
+	}
+
+	users, err := GetCourseUsers(course)
+	if err != nil {
+		return nil, fmt.Errorf("Failed to get course users: '%w'.", err)
+	}
+
+	results := make([]*model.CourseUser, 0, len(users))
+
+	for email, user := range users {
+		_, ok := reference.ExcludeEmails[email]
+		if ok {
+			continue
+		}
+
+		_, ok = reference.ExcludeCourseUserRoles[user.Role.String()]
+		if ok {
+			continue
+		}
+
+		_, ok = reference.Emails[email]
+		if ok {
+			results = append(results, user)
+			continue
+		}
+
+		_, ok = reference.CourseUserRoles[user.Role.String()]
+		if ok {
+			results = append(results, user)
+			continue
+		}
+	}
+
+	slices.SortFunc(results, model.CompareCourseUserPointer)
+
+	return results, nil
+}
+
 // Resolve course email addresses.
 // Take a course and a list of strings (containing emails specs) and returns a sorted slice of lowercase emails without duplicates.
 // An email spec can be:
@@ -16,7 +64,7 @@ import (
 // a course role (which will include all course users with that role),
 // a literal "*" (which includes all users enrolled in the course),
 // or an email address preceded by a dash ("-") (which indicates that this email address should NOT be included in the final results).
-func ResolveCourseUsers(course *model.Course, emails []string) ([]string, error) {
+func ResolveCourseUserEmails(course *model.Course, emails []string) ([]string, error) {
 	if backend == nil {
 		return nil, fmt.Errorf("Database has not been opened.")
 	}

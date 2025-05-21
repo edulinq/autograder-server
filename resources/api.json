@@ -935,6 +935,10 @@
                 {
                     "name": "user-pass",
                     "type": "string"
+                },
+                {
+                    "name": "users",
+                    "type": "[]model.CourseUserReferenceInput"
                 }
             ],
             "output": [
@@ -2077,6 +2081,10 @@
                     "type": "bool"
                 }
             ]
+        },
+        "model.CourseUserReferenceInput": {
+            "category": "alias",
+            "alias-type": "string"
         },
         "model.CourseUserRole": {
             "category": "alias",
