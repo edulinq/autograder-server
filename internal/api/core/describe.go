@@ -352,7 +352,7 @@ func describeStructFields(customType reflect.Type, info TypeInfoCache) ([]FieldD
 
 		// Handle embedded fields.
 		if field.Anonymous {
-			fieldDescription, fieldTypeID, _, err := DescribeType(field.Type, true, info)
+			fieldDescription, fieldTypeID, _, err := DescribeType(field.Type, false, info)
 			if err != nil {
 				return []FieldDescription{}, err
 			}

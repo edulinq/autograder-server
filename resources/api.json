@@ -1409,73 +1409,6 @@
                 }
             ]
         },
-        "core.APIDescription": {
-            "category": "struct",
-            "fields": [
-                {
-                    "name": "endpoints",
-                    "type": "map[string]core.EndpointDescription"
-                },
-                {
-                    "name": "types",
-                    "type": "map[string]core.TypeDescription"
-                }
-            ]
-        },
-        "core.APIRequestAssignmentContext": {
-            "category": "struct",
-            "description": "Context for requests that need an assignment on top of a user/course.",
-            "fields": [
-                {
-                    "name": "assignment-id",
-                    "type": "string"
-                },
-                {
-                    "name": "course-id",
-                    "type": "string"
-                },
-                {
-                    "name": "user-email",
-                    "type": "string"
-                },
-                {
-                    "name": "user-pass",
-                    "type": "string"
-                }
-            ]
-        },
-        "core.APIRequestCourseUserContext": {
-            "category": "struct",
-            "description": "Context for a request that has a course and user from that course.",
-            "fields": [
-                {
-                    "name": "course-id",
-                    "type": "string"
-                },
-                {
-                    "name": "user-email",
-                    "type": "string"
-                },
-                {
-                    "name": "user-pass",
-                    "type": "string"
-                }
-            ]
-        },
-        "core.APIRequestUserContext": {
-            "category": "struct",
-            "description": "Context for a request that has a user (pretty much the lowest level of request).",
-            "fields": [
-                {
-                    "name": "user-email",
-                    "type": "string"
-                },
-                {
-                    "name": "user-pass",
-                    "type": "string"
-                }
-            ]
-        },
         "core.AssignmentInfo": {
             "category": "struct",
             "fields": [
@@ -1493,45 +1426,6 @@
                 },
                 {
                     "name": "name",
-                    "type": "string"
-                }
-            ]
-        },
-        "core.BaseSubmitResponse": {
-            "category": "struct",
-            "fields": [
-                {
-                    "name": "grading-success",
-                    "type": "bool"
-                },
-                {
-                    "name": "message",
-                    "type": "string"
-                },
-                {
-                    "name": "rejected",
-                    "type": "bool"
-                },
-                {
-                    "name": "result",
-                    "type": "*model.GradingInfo"
-                }
-            ]
-        },
-        "core.BaseUserInfo": {
-            "category": "struct",
-            "description": "This type must be embedded into any API-safe representation of a user.",
-            "fields": [
-                {
-                    "name": "email",
-                    "type": "string"
-                },
-                {
-                    "name": "name",
-                    "type": "string"
-                },
-                {
-                    "name": "type",
                     "type": "string"
                 }
             ]
@@ -1710,64 +1604,6 @@
             "category": "alias",
             "alias-type": "string"
         },
-        "courses.CourseUpsertOptions": {
-            "category": "struct",
-            "fields": [
-                {
-                    "name": "dry-run",
-                    "type": "bool"
-                },
-                {
-                    "name": "skip-build-images",
-                    "type": "bool"
-                },
-                {
-                    "name": "skip-emails",
-                    "type": "bool"
-                },
-                {
-                    "name": "skip-lms-sync",
-                    "type": "bool"
-                },
-                {
-                    "name": "skip-source-sync",
-                    "type": "bool"
-                },
-                {
-                    "name": "skip-template-files",
-                    "type": "bool"
-                }
-            ]
-        },
-        "courses.CourseUpsertPublicOptions": {
-            "category": "struct",
-            "fields": [
-                {
-                    "name": "dry-run",
-                    "type": "bool"
-                },
-                {
-                    "name": "skip-build-images",
-                    "type": "bool"
-                },
-                {
-                    "name": "skip-emails",
-                    "type": "bool"
-                },
-                {
-                    "name": "skip-lms-sync",
-                    "type": "bool"
-                },
-                {
-                    "name": "skip-source-sync",
-                    "type": "bool"
-                },
-                {
-                    "name": "skip-template-files",
-                    "type": "bool"
-                }
-            ]
-        },
         "courses.CourseUpsertResult": {
             "category": "struct",
             "fields": [
@@ -1805,86 +1641,9 @@
                 }
             ]
         },
-        "email.Message": {
-            "category": "struct",
-            "fields": [
-                {
-                    "name": "bcc",
-                    "type": "[]string"
-                },
-                {
-                    "name": "body",
-                    "type": "string"
-                },
-                {
-                    "name": "cc",
-                    "type": "[]string"
-                },
-                {
-                    "name": "html",
-                    "type": "bool"
-                },
-                {
-                    "name": "subject",
-                    "type": "string"
-                },
-                {
-                    "name": "to",
-                    "type": "[]string"
-                }
-            ]
-        },
-        "jobmanager.JobOptions": {
-            "category": "struct",
-            "description": "The user level options for a job, including an optional context.",
-            "fields": [
-                {
-                    "name": "dry-run",
-                    "type": "bool"
-                },
-                {
-                    "name": "overwrite-records",
-                    "type": "bool"
-                },
-                {
-                    "name": "wait-for-completion",
-                    "type": "bool"
-                }
-            ]
-        },
         "log.LogLevel": {
             "category": "alias",
             "alias-type": "int32"
-        },
-        "log.RawLogQuery": {
-            "category": "struct",
-            "description": "A representation of a query for server log records.\nA raw query can be processed (validated for structure and permissions)\nby the internal/procedures/log package.\nBecause of some assumptions we make, log times before UNIX epoch are not supported.\nHowever, since this code was created well past that only time travelers should be concerned.",
-            "fields": [
-                {
-                    "name": "after",
-                    "type": "string"
-                },
-                {
-                    "name": "level",
-                    "type": "string"
-                },
-                {
-                    "name": "past",
-                    "type": "string"
-                },
-                {
-                    "name": "target-assignment",
-                    "type": "string"
-                },
-                {
-                    "name": "target-course",
-                    "type": "string"
-                },
-                {
-                    "name": "target-email",
-                    "type": "string"
-                }
-            ]
         },
         "log.Record": {
             "category": "struct",
@@ -1937,39 +1696,6 @@
                 {
                     "name": "original-filename",
                     "type": "string"
-                }
-            ]
-        },
-        "model.AnalysisSummary": {
-            "category": "struct",
-            "fields": [
-                {
-                    "name": "complete",
-                    "type": "bool"
-                },
-                {
-                    "name": "complete-count",
-                    "type": "int"
-                },
-                {
-                    "name": "error-count",
-                    "type": "int"
-                },
-                {
-                    "name": "failure-count",
-                    "type": "int"
-                },
-                {
-                    "name": "first-timestamp",
-                    "type": "int64"
-                },
-                {
-                    "name": "last-timestamp",
-                    "type": "int64"
-                },
-                {
-                    "name": "pending-count",
-                    "type": "int"
                 }
             ]
         },
@@ -2033,48 +1759,6 @@
                 {
                     "name": "unchanged-assignments",
                     "type": "[]model.AssignmentInfo"
-                }
-            ]
-        },
-        "model.BaseUserOpResult": {
-            "category": "struct",
-            "description": "A general representation of the result of operations that modify a user in any way (add, remove, enroll, drop, etc).",
-            "fields": [
-                {
-                    "name": "added",
-                    "type": "bool"
-                },
-                {
-                    "name": "dropped",
-                    "type": "[]string"
-                },
-                {
-                    "name": "email",
-                    "type": "string"
-                },
-                {
-                    "name": "emailed",
-                    "type": "bool"
-                },
-                {
-                    "name": "enrolled",
-                    "type": "[]string"
-                },
-                {
-                    "name": "modified",
-                    "type": "bool"
-                },
-                {
-                    "name": "not-exists",
-                    "type": "bool"
-                },
-                {
-                    "name": "removed",
-                    "type": "bool"
-                },
-                {
-                    "name": "skipped",
-                    "type": "bool"
                 }
             ]
         },
@@ -2793,36 +2477,6 @@
             "category": "alias",
             "alias-type": "string"
         },
-        "stats.Query": {
-            "category": "struct",
-            "description": "The query for stats.\nNote that the semantics of this struct mean that times before UNIX epoch (negative times)\nmust be offset by at least one MS (as a zero value is treated as the end of time).",
-            "fields": [
-                {
-                    "name": "after",
-                    "type": "int64"
-                },
-                {
-                    "name": "before",
-                    "type": "int64"
-                },
-                {
-                    "name": "limit",
-                    "type": "int"
-                },
-                {
-                    "name": "sort",
-                    "type": "int"
-                },
-                {
-                    "name": "type",
-                    "type": "string"
-                },
-                {
-                    "name": "where",
-                    "type": "map[stats.MetricAttribute]interface {}"
-                }
-            ]
-        },
         "timestamp.Timestamp": {
             "category": "alias",
             "alias-type": "int64"
@@ -2850,32 +2504,6 @@
                 {
                     "name": "score",
                     "type": "float64"
-                }
-            ]
-        },
-        "users.UpsertUsersOptions": {
-            "category": "struct",
-            "description": "Data for upserting users.\nUpserting should only be done by server or course admins,\nit should not be used for self creation.",
-            "fields": [
-                {
-                    "name": "dry-run",
-                    "type": "bool"
-                },
-                {
-                    "name": "raw-users",
-                    "type": "[]*model.RawServerUserData"
-                },
-                {
-                    "name": "send-emails",
-                    "type": "bool"
-                },
-                {
-                    "name": "skip-inserts",
-                    "type": "bool"
-                },
-                {
-                    "name": "skip-updates",
-                    "type": "bool"
                 }
             ]
         },
