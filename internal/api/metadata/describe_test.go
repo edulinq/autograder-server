@@ -32,19 +32,6 @@ func TestMetadataDescribe(test *testing.T) {
 			},
 		},
 		Types: map[string]core.TypeDescription{
-			"core.APIDescription": core.TypeDescription{
-				Category: "struct",
-				Fields: []core.FieldDescription{
-					{
-						Name: "endpoints",
-						Type: "map[string]core.EndpointDescription",
-					},
-					{
-						Name: "types",
-						Type: "map[string]core.TypeDescription",
-					},
-				},
-			},
 			"core.EndpointDescription": core.TypeDescription{
 				Category: "struct",
 				Fields: []core.FieldDescription{

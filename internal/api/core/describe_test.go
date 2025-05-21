@@ -284,20 +284,6 @@ func TestDescribeTypeBase(test *testing.T) {
 						FieldDescription{"last-name", "string"},
 					},
 				},
-				mustGetTypeID(reflect.TypeOf((*simpleJSONStruct)(nil)).Elem(), nil): TypeDescription{
-					Category: StructType,
-					Fields: []FieldDescription{
-						FieldDescription{"email", "string"},
-						FieldDescription{"job-code", "int"},
-					},
-				},
-				mustGetTypeID(reflect.TypeOf((*secureJSONStruct)(nil)).Elem(), nil): TypeDescription{
-					Category: StructType,
-					Fields: []FieldDescription{
-						FieldDescription{"first-name", "string"},
-						FieldDescription{"last-name", "string"},
-					},
-				},
 			},
 		},
 
@@ -330,23 +316,9 @@ func TestDescribeTypeBase(test *testing.T) {
 						FieldDescription{"last-name", "string"},
 					},
 				},
-				mustGetTypeID(reflect.TypeOf((*secureJSONStruct)(nil)).Elem(), nil): TypeDescription{
-					Category: StructType,
-					Fields: []FieldDescription{
-						FieldDescription{"first-name", "string"},
-						FieldDescription{"last-name", "string"},
-					},
-				},
 				mustGetTypeID(reflect.TypeOf((*simpleArrayWrapper)(nil)).Elem(), nil): TypeDescription{
 					Category:    ArrayType,
 					ElementType: "bool",
-				},
-				mustGetTypeID(reflect.TypeOf((*simpleJSONStruct)(nil)).Elem(), nil): TypeDescription{
-					Category: StructType,
-					Fields: []FieldDescription{
-						FieldDescription{"email", "string"},
-						FieldDescription{"job-code", "int"},
-					},
 				},
 				mustGetTypeID(reflect.TypeOf((*simpleMapWrapper)(nil)).Elem(), nil): TypeDescription{
 					Category:  MapType,
@@ -412,23 +384,9 @@ func TestDescribeTypeBase(test *testing.T) {
 						FieldDescription{"last-name", "string"},
 					},
 				},
-				mustGetTypeID(reflect.TypeOf((*secureJSONStruct)(nil)).Elem(), nil): TypeDescription{
-					Category: StructType,
-					Fields: []FieldDescription{
-						FieldDescription{"first-name", "string"},
-						FieldDescription{"last-name", "string"},
-					},
-				},
 				mustGetTypeID(reflect.TypeOf((*simpleArrayWrapper)(nil)).Elem(), nil): TypeDescription{
 					Category:    ArrayType,
 					ElementType: "bool",
-				},
-				mustGetTypeID(reflect.TypeOf((*simpleJSONStruct)(nil)).Elem(), nil): TypeDescription{
-					Category: StructType,
-					Fields: []FieldDescription{
-						FieldDescription{"email", "string"},
-						FieldDescription{"job-code", "int"},
-					},
 				},
 				mustGetTypeID(reflect.TypeOf((*simpleMapWrapper)(nil)).Elem(), nil): TypeDescription{
 					Category:  MapType,
