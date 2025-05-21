@@ -56,8 +56,8 @@ func (this *DBTests) DBTestParseServerUserReference(test *testing.T) {
 		{
 			[]model.ServerUserReferenceInput{"user"},
 			&model.ServerUserReference{
-				ServerUserRoles: map[string]model.ServerUserRole{
-					"user": model.GetServerUserRole("user"),
+				ServerUserRoles: map[string]any{
+					"user": nil,
 				},
 			},
 			"",
@@ -65,8 +65,8 @@ func (this *DBTests) DBTestParseServerUserReference(test *testing.T) {
 		{
 			[]model.ServerUserReferenceInput{"-user"},
 			&model.ServerUserReference{
-				ExcludeServerUserRoles: map[string]model.ServerUserRole{
-					"user": model.GetServerUserRole("user"),
+				ExcludeServerUserRoles: map[string]any{
+					"user": nil,
 				},
 			},
 			"",
@@ -113,14 +113,14 @@ func (this *DBTests) DBTestParseServerUserReference(test *testing.T) {
 				CourseUserReferences: map[string]*model.CourseUserReference{
 					TEST_COURSE_ID: &model.CourseUserReference{
 						Course: MustGetTestCourse(),
-						CourseUserRoles: map[string]model.CourseUserRole{
-							"student": model.GetCourseUserRole("student"),
+						CourseUserRoles: map[string]any{
+							"student": nil,
 						},
 					},
 					"course-languages": &model.CourseUserReference{
 						Course: MustGetCourse("course-languages"),
-						CourseUserRoles: map[string]model.CourseUserRole{
-							"student": model.GetCourseUserRole("student"),
+						CourseUserRoles: map[string]any{
+							"student": nil,
 						},
 					},
 				},
@@ -133,14 +133,14 @@ func (this *DBTests) DBTestParseServerUserReference(test *testing.T) {
 				CourseUserReferences: map[string]*model.CourseUserReference{
 					TEST_COURSE_ID: &model.CourseUserReference{
 						Course: MustGetTestCourse(),
-						ExcludeCourseUserRoles: map[string]model.CourseUserRole{
-							"student": model.GetCourseUserRole("student"),
+						ExcludeCourseUserRoles: map[string]any{
+							"student": nil,
 						},
 					},
 					"course-languages": &model.CourseUserReference{
 						Course: MustGetCourse("course-languages"),
-						ExcludeCourseUserRoles: map[string]model.CourseUserRole{
-							"student": model.GetCourseUserRole("student"),
+						ExcludeCourseUserRoles: map[string]any{
+							"student": nil,
 						},
 					},
 				},
@@ -187,8 +187,8 @@ func (this *DBTests) DBTestParseServerUserReference(test *testing.T) {
 				CourseUserReferences: map[string]*model.CourseUserReference{
 					TEST_COURSE_ID: &model.CourseUserReference{
 						Course: MustGetTestCourse(),
-						CourseUserRoles: map[string]model.CourseUserRole{
-							"student": model.GetCourseUserRole("student"),
+						CourseUserRoles: map[string]any{
+							"student": nil,
 						},
 					},
 				},
@@ -203,8 +203,8 @@ func (this *DBTests) DBTestParseServerUserReference(test *testing.T) {
 				CourseUserReferences: map[string]*model.CourseUserReference{
 					TEST_COURSE_ID: &model.CourseUserReference{
 						Course: MustGetTestCourse(),
-						ExcludeCourseUserRoles: map[string]model.CourseUserRole{
-							"student": model.GetCourseUserRole("student"),
+						ExcludeCourseUserRoles: map[string]any{
+							"student": nil,
 						},
 					},
 				},
@@ -226,14 +226,14 @@ func (this *DBTests) DBTestParseServerUserReference(test *testing.T) {
 				Emails: map[string]any{
 					"course-student@test.edulinq.org": nil,
 				},
-				ServerUserRoles: map[string]model.ServerUserRole{
-					"admin": model.GetServerUserRole("admin"),
+				ServerUserRoles: map[string]any{
+					"admin": nil,
 				},
 				CourseUserReferences: map[string]*model.CourseUserReference{
 					TEST_COURSE_ID: &model.CourseUserReference{
 						Course: MustGetTestCourse(),
-						CourseUserRoles: map[string]model.CourseUserRole{
-							"grader": model.GetCourseUserRole("grader"),
+						CourseUserRoles: map[string]any{
+							"grader": nil,
 						},
 					},
 				},
@@ -253,14 +253,14 @@ func (this *DBTests) DBTestParseServerUserReference(test *testing.T) {
 				Emails: map[string]any{
 					"course-student@test.edulinq.org": nil,
 				},
-				ServerUserRoles: map[string]model.ServerUserRole{
-					"admin": model.GetServerUserRole("admin"),
+				ServerUserRoles: map[string]any{
+					"admin": nil,
 				},
 				CourseUserReferences: map[string]*model.CourseUserReference{
 					TEST_COURSE_ID: &model.CourseUserReference{
 						Course: MustGetTestCourse(),
-						CourseUserRoles: map[string]model.CourseUserRole{
-							"grader": model.GetCourseUserRole("grader"),
+						CourseUserRoles: map[string]any{
+							"grader": nil,
 						},
 					},
 				},
@@ -285,20 +285,20 @@ func (this *DBTests) DBTestParseServerUserReference(test *testing.T) {
 				ExcludeEmails: map[string]any{
 					"course-admin@test.edulinq.org": nil,
 				},
-				ServerUserRoles: map[string]model.ServerUserRole{
-					"admin": model.GetServerUserRole("admin"),
+				ServerUserRoles: map[string]any{
+					"admin": nil,
 				},
-				ExcludeServerUserRoles: map[string]model.ServerUserRole{
-					"owner": model.GetServerUserRole("owner"),
+				ExcludeServerUserRoles: map[string]any{
+					"owner": nil,
 				},
 				CourseUserReferences: map[string]*model.CourseUserReference{
 					TEST_COURSE_ID: &model.CourseUserReference{
 						Course: MustGetTestCourse(),
-						CourseUserRoles: map[string]model.CourseUserRole{
-							"grader": model.GetCourseUserRole("grader"),
+						CourseUserRoles: map[string]any{
+							"grader": nil,
 						},
-						ExcludeCourseUserRoles: map[string]model.CourseUserRole{
-							"student": model.GetCourseUserRole("student"),
+						ExcludeCourseUserRoles: map[string]any{
+							"student": nil,
 						},
 					},
 				},
@@ -323,20 +323,20 @@ func (this *DBTests) DBTestParseServerUserReference(test *testing.T) {
 				ExcludeEmails: map[string]any{
 					"course-student@test.edulinq.org": nil,
 				},
-				ServerUserRoles: map[string]model.ServerUserRole{
-					"admin": model.GetServerUserRole("admin"),
+				ServerUserRoles: map[string]any{
+					"admin": nil,
 				},
-				ExcludeServerUserRoles: map[string]model.ServerUserRole{
-					"admin": model.GetServerUserRole("admin"),
+				ExcludeServerUserRoles: map[string]any{
+					"admin": nil,
 				},
 				CourseUserReferences: map[string]*model.CourseUserReference{
 					TEST_COURSE_ID: &model.CourseUserReference{
 						Course: MustGetTestCourse(),
-						CourseUserRoles: map[string]model.CourseUserRole{
-							"grader": model.GetCourseUserRole("grader"),
+						CourseUserRoles: map[string]any{
+							"grader": nil,
 						},
-						ExcludeCourseUserRoles: map[string]model.CourseUserRole{
-							"grader": model.GetCourseUserRole("grader"),
+						ExcludeCourseUserRoles: map[string]any{
+							"grader": nil,
 						},
 					},
 				},
@@ -352,14 +352,14 @@ func (this *DBTests) DBTestParseServerUserReference(test *testing.T) {
 				CourseUserReferences: map[string]*model.CourseUserReference{
 					TEST_COURSE_ID: &model.CourseUserReference{
 						Course: MustGetTestCourse(),
-						CourseUserRoles: map[string]model.CourseUserRole{
-							"grader": model.GetCourseUserRole("grader"),
+						CourseUserRoles: map[string]any{
+							"grader": nil,
 						},
 					},
 					"course-languages": &model.CourseUserReference{
 						Course: MustGetCourse("course-languages"),
-						CourseUserRoles: map[string]model.CourseUserRole{
-							"grader": model.GetCourseUserRole("grader"),
+						CourseUserRoles: map[string]any{
+							"grader": nil,
 						},
 					},
 				},
@@ -527,8 +527,8 @@ func (this *DBTests) DBTestParseCourseUserReference(test *testing.T) {
 		{
 			[]model.CourseUserReferenceInput{"admin"},
 			&model.CourseUserReference{
-				CourseUserRoles: map[string]model.CourseUserRole{
-					"admin": model.GetCourseUserRole("admin"),
+				CourseUserRoles: map[string]any{
+					"admin": nil,
 				},
 			},
 			"",
@@ -536,8 +536,8 @@ func (this *DBTests) DBTestParseCourseUserReference(test *testing.T) {
 		{
 			[]model.CourseUserReferenceInput{"-admin"},
 			&model.CourseUserReference{
-				ExcludeCourseUserRoles: map[string]model.CourseUserRole{
-					"admin": model.GetCourseUserRole("admin"),
+				ExcludeCourseUserRoles: map[string]any{
+					"admin": nil,
 				},
 			},
 			"",
@@ -571,8 +571,8 @@ func (this *DBTests) DBTestParseCourseUserReference(test *testing.T) {
 				Emails: map[string]any{
 					"course-student@test.edulinq.org": nil,
 				},
-				CourseUserRoles: map[string]model.CourseUserRole{
-					"admin": model.GetCourseUserRole("admin"),
+				CourseUserRoles: map[string]any{
+					"admin": nil,
 				},
 			},
 			"",
@@ -588,8 +588,8 @@ func (this *DBTests) DBTestParseCourseUserReference(test *testing.T) {
 				Emails: map[string]any{
 					"course-student@test.edulinq.org": nil,
 				},
-				ExcludeCourseUserRoles: map[string]model.CourseUserRole{
-					"admin": model.GetCourseUserRole("admin"),
+				ExcludeCourseUserRoles: map[string]any{
+					"admin": nil,
 				},
 			},
 			"",
@@ -610,11 +610,11 @@ func (this *DBTests) DBTestParseCourseUserReference(test *testing.T) {
 				ExcludeEmails: map[string]any{
 					"course-admin@test.edulinq.org": nil,
 				},
-				CourseUserRoles: map[string]model.CourseUserRole{
-					"admin": model.GetCourseUserRole("admin"),
+				CourseUserRoles: map[string]any{
+					"admin": nil,
 				},
-				ExcludeCourseUserRoles: map[string]model.CourseUserRole{
-					"owner": model.GetCourseUserRole("owner"),
+				ExcludeCourseUserRoles: map[string]any{
+					"owner": nil,
 				},
 			},
 			"",
@@ -635,11 +635,11 @@ func (this *DBTests) DBTestParseCourseUserReference(test *testing.T) {
 				ExcludeEmails: map[string]any{
 					"course-student@test.edulinq.org": nil,
 				},
-				CourseUserRoles: map[string]model.CourseUserRole{
-					"admin": model.GetCourseUserRole("admin"),
+				CourseUserRoles: map[string]any{
+					"admin": nil,
 				},
-				ExcludeCourseUserRoles: map[string]model.CourseUserRole{
-					"admin": model.GetCourseUserRole("admin"),
+				ExcludeCourseUserRoles: map[string]any{
+					"admin": nil,
 				},
 			},
 			"",
@@ -742,11 +742,11 @@ func setServerUserReferenceDefaults(reference *model.ServerUserReference) {
 	}
 
 	if reference.ServerUserRoles == nil {
-		reference.ServerUserRoles = make(map[string]model.ServerUserRole, 0)
+		reference.ServerUserRoles = make(map[string]any, 0)
 	}
 
 	if reference.ExcludeServerUserRoles == nil {
-		reference.ExcludeServerUserRoles = make(map[string]model.ServerUserRole, 0)
+		reference.ExcludeServerUserRoles = make(map[string]any, 0)
 	}
 
 	if reference.CourseUserReferences == nil {
@@ -772,11 +772,11 @@ func setCourseUserReferenceDefaults(reference *model.CourseUserReference) {
 	}
 
 	if reference.CourseUserRoles == nil {
-		reference.CourseUserRoles = make(map[string]model.CourseUserRole, 0)
+		reference.CourseUserRoles = make(map[string]any, 0)
 	}
 
 	if reference.ExcludeCourseUserRoles == nil {
-		reference.ExcludeCourseUserRoles = make(map[string]model.CourseUserRole, 0)
+		reference.ExcludeCourseUserRoles = make(map[string]any, 0)
 	}
 }
 

@@ -56,14 +56,14 @@ func GetAllCourseUserRolesStrings() map[string]CourseUserRole {
 	return stringToCourseUserRole
 }
 
-func GetCommonCourseUserRoleStrings() map[string]CourseUserRole {
-	commonCourseRoles := make(map[string]CourseUserRole, 0)
-	for roleString, role := range stringToCourseUserRole {
+func GetCommonCourseUserRoleStrings() map[string]any {
+	commonCourseRoles := make(map[string]any, 0)
+	for roleString, _ := range stringToCourseUserRole {
 		if roleString == "unknown" {
 			continue
 		}
 
-		commonCourseRoles[roleString] = role
+		commonCourseRoles[roleString] = nil
 	}
 
 	return commonCourseRoles

@@ -36,10 +36,10 @@ type ServerUserReference struct {
 	ExcludeEmails map[string]any
 
 	// The set of server roles to include.
-	ServerUserRoles map[string]ServerUserRole
+	ServerUserRoles map[string]any
 
 	// The set of server roles to exclude.
-	ExcludeServerUserRoles map[string]ServerUserRole
+	ExcludeServerUserRoles map[string]any
 
 	// The courses and list of roles to include.
 	// Keyed on the course ID.
@@ -57,10 +57,10 @@ type CourseUserReference struct {
 	ExcludeEmails map[string]any
 
 	// The set of course roles to include.
-	CourseUserRoles map[string]CourseUserRole
+	CourseUserRoles map[string]any
 
 	// The set of course roles to exclude.
-	ExcludeCourseUserRoles map[string]CourseUserRole
+	ExcludeCourseUserRoles map[string]any
 }
 
 func (this *ServerUserReference) AddCourseUserReference(courseUserReference *CourseUserReference) {
@@ -96,12 +96,12 @@ func (this *ServerUserReference) AddCourseUserReference(courseUserReference *Cou
 		return
 	}
 
-	for roleString, role := range courseUserReference.CourseUserRoles {
-		currentCourseUserReference.CourseUserRoles[roleString] = role
+	for roleString, _ := range courseUserReference.CourseUserRoles {
+		currentCourseUserReference.CourseUserRoles[roleString] = nil
 	}
 
-	for roleString, role := range courseUserReference.ExcludeCourseUserRoles {
-		currentCourseUserReference.ExcludeCourseUserRoles[roleString] = role
+	for roleString, _ := range courseUserReference.ExcludeCourseUserRoles {
+		currentCourseUserReference.ExcludeCourseUserRoles[roleString] = nil
 	}
 
 	return
@@ -113,12 +113,11 @@ func (this *CourseUserReference) ToServerUserReference() *ServerUserReference {
 	}
 
 	return &ServerUserReference{
+		// Transfer Emails and ExcludeEmails to the ServerUserReference to reduce memory usage.
 		Emails:                 this.Emails,
 		ExcludeEmails:          this.ExcludeEmails,
-		ServerUserRoles:        make(map[string]ServerUserRole, 0),
-		ExcludeServerUserRoles: make(map[string]ServerUserRole, 0),
-		// Clear the emails and exclude emails to reduce memory usage.
-		// These fields are transferred to the new ServerUserReference.
+		ServerUserRoles:        make(map[string]any, 0),
+		ExcludeServerUserRoles: make(map[string]any, 0),
 		CourseUserReferences: map[string]*CourseUserReference{
 			this.Course.GetID(): &CourseUserReference{
 				Course:                 this.Course,

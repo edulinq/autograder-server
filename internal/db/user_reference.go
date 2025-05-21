@@ -20,8 +20,8 @@ func ParseServerUserReference(rawReferences []model.ServerUserReferenceInput) (*
 	serverUserReference := model.ServerUserReference{
 		Emails:                 make(map[string]any, 0),
 		ExcludeEmails:          make(map[string]any, 0),
-		ServerUserRoles:        make(map[string]model.ServerUserRole, 0),
-		ExcludeServerUserRoles: make(map[string]model.ServerUserRole, 0),
+		ServerUserRoles:        make(map[string]any, 0),
+		ExcludeServerUserRoles: make(map[string]any, 0),
 		CourseUserReferences:   make(map[string]*model.CourseUserReference, 0),
 	}
 
@@ -107,7 +107,7 @@ func ParseServerUserReference(rawReferences []model.ServerUserReferenceInput) (*
 				courses[course.GetID()] = course
 			}
 
-			courseRoles := make(map[string]model.CourseUserRole, 0)
+			courseRoles := make(map[string]any, 0)
 
 			if courseRoleString == "*" {
 				// Target all course roles.
@@ -151,8 +151,8 @@ func ParseCourseUserReference(course *model.Course, rawReferences []model.Course
 		Course:                 course,
 		Emails:                 make(map[string]any, 0),
 		ExcludeEmails:          make(map[string]any, 0),
-		CourseUserRoles:        make(map[string]model.CourseUserRole, 0),
-		ExcludeCourseUserRoles: make(map[string]model.CourseUserRole, 0),
+		CourseUserRoles:        make(map[string]any, 0),
+		ExcludeCourseUserRoles: make(map[string]any, 0),
 	}
 
 	var errs error = nil
@@ -221,9 +221,9 @@ func ParseCourseUserReference(course *model.Course, rawReferences []model.Course
 	return &courseUserReference, errs
 }
 
-func createCourseUserReference(course *model.Course, courseRoles map[string]model.CourseUserRole, exclude bool) *model.CourseUserReference {
-	courseUserRoles := make(map[string]model.CourseUserRole, 0)
-	excludeCourseUserRoles := make(map[string]model.CourseUserRole, 0)
+func createCourseUserReference(course *model.Course, courseRoles map[string]any, exclude bool) *model.CourseUserReference {
+	courseUserRoles := make(map[string]any, 0)
+	excludeCourseUserRoles := make(map[string]any, 0)
 
 	if exclude {
 		excludeCourseUserRoles = courseRoles
