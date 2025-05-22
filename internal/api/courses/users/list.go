@@ -26,15 +26,15 @@ func HandleList(request *ListRequest) (*ListResponse, *core.APIError) {
 		request.Users = []model.CourseUserReferenceInput{"*"}
 	}
 
-	reference, workErrors, err := db.ParseCourseUserReference(request.Course, request.Users)
+	reference, userErrors, err := db.ParseCourseUserReference(request.Course, request.Users)
 	if err != nil {
 		return nil, core.NewInternalError("-635", request, "Failed to parse course user references.").Err(err)
 	}
 
-	userErrors := make(map[string]string, len(workErrors))
+	errors := make(map[string]string, len(userErrors))
 
-	for user, err := range workErrors {
-		userErrors[user] = err.Error()
+	for user, err := range userErrors {
+		errors[user] = err.Error()
 
 		log.Warn("Failed to parse user reference.", err, log.NewAttr("reference", user))
 	}
@@ -46,7 +46,7 @@ func HandleList(request *ListRequest) (*ListResponse, *core.APIError) {
 
 	response := ListResponse{
 		Users:  core.NewCourseUserInfos(users),
-		Errors: userErrors,
+		Errors: errors,
 	}
 
 	return &response, nil

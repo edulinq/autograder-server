@@ -224,7 +224,7 @@ func (this *DBTests) DBTestParseCourseUserReference(test *testing.T) {
 		}
 
 		testCase.output.Course = testCourse
-		setCourseUserReferenceDefaults(testCase.output)
+		testCase.output.SetEmptyFields()
 
 		// Check and clear course information to pass equality check.
 		failed := checkAndClearCourse(test, i, testCase.output, result)
@@ -237,28 +237,6 @@ func (this *DBTests) DBTestParseCourseUserReference(test *testing.T) {
 				i, util.MustToJSONIndent(testCase.output), util.MustToJSONIndent(result))
 			continue
 		}
-	}
-}
-
-func setCourseUserReferenceDefaults(reference *model.CourseUserReference) {
-	if reference == nil {
-		return
-	}
-
-	if reference.Emails == nil {
-		reference.Emails = make(map[string]any, 0)
-	}
-
-	if reference.ExcludeEmails == nil {
-		reference.ExcludeEmails = make(map[string]any, 0)
-	}
-
-	if reference.CourseUserRoles == nil {
-		reference.CourseUserRoles = make(map[string]any, 0)
-	}
-
-	if reference.ExcludeCourseUserRoles == nil {
-		reference.ExcludeCourseUserRoles = make(map[string]any, 0)
 	}
 }
 

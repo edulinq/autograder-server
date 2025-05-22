@@ -24,3 +24,25 @@ type CourseUserReference struct {
 	// The set of course roles to exclude.
 	ExcludeCourseUserRoles map[string]any
 }
+
+func (this *CourseUserReference) SetEmptyFields() {
+	if this == nil {
+		return
+	}
+
+	if this.Emails == nil {
+		this.Emails = make(map[string]any, 0)
+	}
+
+	if this.ExcludeEmails == nil {
+		this.ExcludeEmails = make(map[string]any, 0)
+	}
+
+	if this.CourseUserRoles == nil {
+		this.CourseUserRoles = make(map[string]any, 0)
+	}
+
+	if this.ExcludeCourseUserRoles == nil {
+		this.ExcludeCourseUserRoles = make(map[string]any, 0)
+	}
+}

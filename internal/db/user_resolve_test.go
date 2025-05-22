@@ -279,6 +279,7 @@ func (this *DBTests) DBTestResolveCourseUsers(test *testing.T) {
 		courseUsers, err := GetCourseUsers(course)
 		if err != nil {
 			test.Errorf("Case %d: Failed to get course users: '%v'.", i, err)
+			continue
 		}
 
 		expectedOutput := []*model.CourseUser{}

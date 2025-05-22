@@ -9,9 +9,7 @@ import (
 	"github.com/edulinq/autograder/internal/model"
 )
 
-// Resolve email addresses to users within the course.
-// See model.CourseUserReferenceInput for acceptable inputs.
-// Returns a sorted list of users and an error.
+// Returns a sorted list of users based on the course reference and an error.
 func ResolveCourseUsers(course *model.Course, reference *model.CourseUserReference) ([]*model.CourseUser, error) {
 	if backend == nil {
 		return nil, fmt.Errorf("Database has not been opened.")
@@ -21,21 +19,7 @@ func ResolveCourseUsers(course *model.Course, reference *model.CourseUserReferen
 		return nil, nil
 	}
 
-	if reference.Emails == nil {
-		reference.Emails = make(map[string]any, 0)
-	}
-
-	if reference.ExcludeEmails == nil {
-		reference.ExcludeEmails = make(map[string]any, 0)
-	}
-
-	if reference.CourseUserRoles == nil {
-		reference.CourseUserRoles = make(map[string]any, 0)
-	}
-
-	if reference.ExcludeCourseUserRoles == nil {
-		reference.ExcludeCourseUserRoles = make(map[string]any, 0)
-	}
+	reference.SetEmptyFields()
 
 	users, err := GetCourseUsers(course)
 	if err != nil {
