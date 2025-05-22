@@ -21,6 +21,22 @@ func ResolveCourseUsers(course *model.Course, reference *model.CourseUserReferen
 		return nil, nil
 	}
 
+	if reference.Emails == nil {
+		reference.Emails = make(map[string]any, 0)
+	}
+
+	if reference.ExcludeEmails == nil {
+		reference.ExcludeEmails = make(map[string]any, 0)
+	}
+
+	if reference.CourseUserRoles == nil {
+		reference.CourseUserRoles = make(map[string]any, 0)
+	}
+
+	if reference.ExcludeCourseUserRoles == nil {
+		reference.ExcludeCourseUserRoles = make(map[string]any, 0)
+	}
+
 	users, err := GetCourseUsers(course)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to get course users: '%w'.", err)
