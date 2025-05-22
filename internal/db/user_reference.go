@@ -9,6 +9,8 @@ import (
 
 // Process a list of user inputs in the context of a course.
 // See model.CourseUserReferenceInput for the list of acceptable inputs.
+// Inputs are parsed without checking permissions.
+// APIs using this function should require a core.MinCourseRoleGrader or custom permissions checking.
 // Returns a reference, user errors, and a system error.
 // User-level errors return (partial reference, user errors, nil).
 // A system-level error returns (nil, nil, error).
