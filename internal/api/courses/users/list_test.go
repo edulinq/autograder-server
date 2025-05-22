@@ -119,9 +119,9 @@ func TestList(test *testing.T) {
 		var responseContent ListResponse
 		util.MustJSONFromString(util.MustToJSON(response.Content), &responseContent)
 
-		if !reflect.DeepEqual(testCase.expectedErrors, responseContent.UserErrors) {
+		if !reflect.DeepEqual(testCase.expectedErrors, responseContent.Errors) {
 			test.Errorf("Case %d: Unexpected user errors. Expected: '%s', Actual: '%s'.",
-				i, util.MustToJSONIndent(testCase.expectedErrors), util.MustToJSONIndent(responseContent.UserErrors))
+				i, util.MustToJSONIndent(testCase.expectedErrors), util.MustToJSONIndent(responseContent.Errors))
 			continue
 		}
 

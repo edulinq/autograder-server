@@ -15,8 +15,8 @@ type ListRequest struct {
 }
 
 type ListResponse struct {
-	Users      []*core.CourseUserInfo `json:"users"`
-	UserErrors map[string]string      `json:"errors"`
+	Users  []*core.CourseUserInfo `json:"users"`
+	Errors map[string]string      `json:"errors"`
 }
 
 // List the users in the course.
@@ -45,8 +45,8 @@ func HandleList(request *ListRequest) (*ListResponse, *core.APIError) {
 	}
 
 	response := ListResponse{
-		Users:      core.NewCourseUserInfos(users),
-		UserErrors: userErrors,
+		Users:  core.NewCourseUserInfos(users),
+		Errors: userErrors,
 	}
 
 	return &response, nil
