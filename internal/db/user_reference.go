@@ -1,7 +1,6 @@
 package db
 
 import (
-	"errors"
 	"fmt"
 	"strings"
 
@@ -10,10 +9,10 @@ import (
 
 // Process a list of user inputs in the context of a course.
 // See model.CourseUserReferenceInput for the list of acceptable inputs.
-// Returns a reference with normalized information, user errors, system error.
-// System-level errors immediately return (nil, nil, error).
-// User-level errors return (partial reference, aggregated user errors, nil).
-func ParseCourseUserReference(course *model.Course, rawReferences []model.CourseUserReferenceInput) (*model.CourseUserReference, error, error) {
+// Returns a reference, user errors, and a system error.
+// User-level errors return (partial reference, user errors, nil).
+// A system-level error returns (nil, nil, error).
+func ParseCourseUserReference(course *model.Course, rawReferences []model.CourseUserReferenceInput) (*model.CourseUserReference, map[string]error, error) {
 	if backend == nil {
 		return nil, nil, fmt.Errorf("Database has not been opened.")
 	}
@@ -26,7 +25,7 @@ func ParseCourseUserReference(course *model.Course, rawReferences []model.Course
 		ExcludeCourseUserRoles: make(map[string]any, 0),
 	}
 
-	var errs error = nil
+	workErrors := make(map[string]error, 0)
 
 	commonCourseRoles := model.GetCommonCourseUserRoleStrings()
 
@@ -53,7 +52,7 @@ func ParseCourseUserReference(course *model.Course, rawReferences []model.Course
 		if strings.Contains(reference, "@") {
 			_, ok := courseUsers[reference]
 			if !ok {
-				errs = errors.Join(errs, fmt.Errorf("Unknown course user '%s' in user reference: '%s'.", reference, rawReference))
+				workErrors[string(rawReference)] = fmt.Errorf("Unknown course user: '%s'.", reference)
 				continue
 			}
 
@@ -79,7 +78,7 @@ func ParseCourseUserReference(course *model.Course, rawReferences []model.Course
 		// Target a specific course role.
 		_, ok := commonCourseRoles[reference]
 		if !ok {
-			errs = errors.Join(errs, fmt.Errorf("Unknown course user role '%s' in user reference: '%s'.", reference, rawReference))
+			workErrors[string(rawReference)] = fmt.Errorf("Unknown course role: '%s'.", reference)
 			continue
 		}
 
@@ -90,5 +89,5 @@ func ParseCourseUserReference(course *model.Course, rawReferences []model.Course
 		}
 	}
 
-	return &courseUserReference, errs, nil
+	return &courseUserReference, workErrors, nil
 }

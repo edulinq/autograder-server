@@ -943,6 +943,10 @@
             ],
             "output": [
                 {
+                    "name": "errors",
+                    "type": "map[string]string"
+                },
+                {
                     "name": "users",
                     "type": "[]*core.CourseUserInfo"
                 }

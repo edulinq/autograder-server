@@ -10,7 +10,7 @@ import (
 	"github.com/edulinq/autograder/internal/util"
 )
 
-func (this *DBTests) DBTestResolveCourseUser(test *testing.T) {
+func (this *DBTests) DBTestResolveCourseUsers(test *testing.T) {
 	defer ResetForTesting()
 
 	testCases := []struct {

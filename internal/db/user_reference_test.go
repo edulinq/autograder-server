@@ -1,8 +1,8 @@
 package db
 
 import (
+	"fmt"
 	"reflect"
-	"strings"
 	"testing"
 
 	"github.com/edulinq/autograder/internal/model"
@@ -11,9 +11,9 @@ import (
 
 func (this *DBTests) DBTestParseCourseUserReference(test *testing.T) {
 	testCases := []struct {
-		input          []model.CourseUserReferenceInput
-		output         *model.CourseUserReference
-		errorSubstring string
+		input      []model.CourseUserReferenceInput
+		output     *model.CourseUserReference
+		workErrors map[string]error
 	}{
 		// Target Emails
 		{
@@ -23,7 +23,7 @@ func (this *DBTests) DBTestParseCourseUserReference(test *testing.T) {
 					"course-student@test.edulinq.org": nil,
 				},
 			},
-			"",
+			nil,
 		},
 		{
 			[]model.CourseUserReferenceInput{"-course-student@test.edulinq.org"},
@@ -32,7 +32,7 @@ func (this *DBTests) DBTestParseCourseUserReference(test *testing.T) {
 					"course-student@test.edulinq.org": nil,
 				},
 			},
-			"",
+			nil,
 		},
 
 		// Target Roles
@@ -43,7 +43,7 @@ func (this *DBTests) DBTestParseCourseUserReference(test *testing.T) {
 					"admin": nil,
 				},
 			},
-			"",
+			nil,
 		},
 		{
 			[]model.CourseUserReferenceInput{"-admin"},
@@ -52,7 +52,7 @@ func (this *DBTests) DBTestParseCourseUserReference(test *testing.T) {
 					"admin": nil,
 				},
 			},
-			"",
+			nil,
 		},
 
 		// All Users
@@ -61,14 +61,14 @@ func (this *DBTests) DBTestParseCourseUserReference(test *testing.T) {
 			&model.CourseUserReference{
 				CourseUserRoles: model.GetCommonCourseUserRoleStrings(),
 			},
-			"",
+			nil,
 		},
 		{
 			[]model.CourseUserReferenceInput{"-*"},
 			&model.CourseUserReference{
 				ExcludeCourseUserRoles: model.GetCommonCourseUserRoleStrings(),
 			},
-			"",
+			nil,
 		},
 
 		// Complex, Normalization
@@ -87,7 +87,7 @@ func (this *DBTests) DBTestParseCourseUserReference(test *testing.T) {
 					"admin": nil,
 				},
 			},
-			"",
+			nil,
 		},
 		{
 			[]model.CourseUserReferenceInput{
@@ -104,7 +104,7 @@ func (this *DBTests) DBTestParseCourseUserReference(test *testing.T) {
 					"admin": nil,
 				},
 			},
-			"",
+			nil,
 		},
 
 		// Complex, Non-Overlapping
@@ -129,7 +129,7 @@ func (this *DBTests) DBTestParseCourseUserReference(test *testing.T) {
 					"owner": nil,
 				},
 			},
-			"",
+			nil,
 		},
 
 		// Complex, Overlapping
@@ -154,7 +154,7 @@ func (this *DBTests) DBTestParseCourseUserReference(test *testing.T) {
 					"admin": nil,
 				},
 			},
-			"",
+			nil,
 		},
 		{
 			[]model.CourseUserReferenceInput{
@@ -164,7 +164,7 @@ func (this *DBTests) DBTestParseCourseUserReference(test *testing.T) {
 			&model.CourseUserReference{
 				CourseUserRoles: model.GetCommonCourseUserRoleStrings(),
 			},
-			"",
+			nil,
 		},
 		{
 			[]model.CourseUserReferenceInput{
@@ -174,7 +174,7 @@ func (this *DBTests) DBTestParseCourseUserReference(test *testing.T) {
 			&model.CourseUserReference{
 				ExcludeCourseUserRoles: model.GetCommonCourseUserRoleStrings(),
 			},
-			"",
+			nil,
 		},
 
 		// Errors
@@ -183,48 +183,43 @@ func (this *DBTests) DBTestParseCourseUserReference(test *testing.T) {
 		{
 			[]model.CourseUserReferenceInput{"zzz@test.edulinq.org"},
 			nil,
-			"Unknown course user 'zzz@test.edulinq.org' in user reference: 'zzz@test.edulinq.org'.",
+			map[string]error{
+				"zzz@test.edulinq.org": fmt.Errorf("Unknown course user: 'zzz@test.edulinq.org'."),
+			},
 		},
 		{
 			[]model.CourseUserReferenceInput{"server-user@test.edulinq.org"},
 			nil,
-			"Unknown course user 'server-user@test.edulinq.org' in user reference: 'server-user@test.edulinq.org'.",
+			map[string]error{
+				"server-user@test.edulinq.org": fmt.Errorf("Unknown course user: 'server-user@test.edulinq.org'."),
+			},
 		},
 
 		// Unknown Course Role
 		{
 			[]model.CourseUserReferenceInput{"ZZZ"},
 			nil,
-			"Unknown course user role 'zzz' in user reference: 'ZZZ'.",
+			map[string]error{
+				"ZZZ": fmt.Errorf("Unknown course role: 'zzz'."),
+			},
 		},
 	}
 
 	testCourse := MustGetTestCourse()
 
 	for i, testCase := range testCases {
-		result, userErr, err := ParseCourseUserReference(testCourse, testCase.input)
+		result, workErrors, err := ParseCourseUserReference(testCourse, testCase.input)
 		if err != nil {
 			test.Errorf("Case %d: Failed to parse user reference '%s': '%v'.",
 				i, util.MustToJSONIndent(testCase.output), err.Error())
 		}
 
-		if userErr != nil {
-			if testCase.errorSubstring != "" {
-				if !strings.Contains(userErr.Error(), testCase.errorSubstring) {
-					test.Errorf("Case %d: Did not get expected error output. Expected Substring '%s', Actual Error: '%s'.",
-						i, testCase.errorSubstring, userErr.Error())
-				}
-			} else {
-				test.Errorf("Case %d: Failed to parse user reference '%s': '%v'.",
-					i, util.MustToJSONIndent(testCase.output), userErr.Error())
+		if len(testCase.workErrors) != 0 {
+			if !reflect.DeepEqual(testCase.workErrors, workErrors) {
+				test.Errorf("Case %d: Unexpected work errors. Expected: '%s', Actual: '%s'.",
+					i, util.MustToJSONIndent(testCase.workErrors), util.MustToJSONIndent(workErrors))
 			}
 
-			continue
-		}
-
-		if testCase.errorSubstring != "" {
-			test.Errorf("Case %d: Did not get expected error for input '%s'.",
-				i, util.MustToJSONIndent(testCase.input))
 			continue
 		}
 
