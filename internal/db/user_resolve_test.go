@@ -327,7 +327,7 @@ func (this *DBTests) DBTestResolveCourseUserEmails(test *testing.T) {
 		removeUsers    []string
 		numWarnings    int
 	}{
-		// This test case tests the empty slice input.
+		// Empty Input
 		{
 			[]string{},
 			[]string{},
@@ -335,8 +335,6 @@ func (this *DBTests) DBTestResolveCourseUserEmails(test *testing.T) {
 			[]string{},
 			0,
 		},
-
-		// This is a simple test case for the empty string input.
 		{
 			[]string{""},
 			[]string{},
@@ -345,7 +343,7 @@ func (this *DBTests) DBTestResolveCourseUserEmails(test *testing.T) {
 			0,
 		},
 
-		// This is a test to ensure the output is sorted.
+		// Output Normalization
 		{
 			[]string{"b@test.edulinq.org", "a@test.edulinq.org", "c@test.edulinq.org"},
 			[]string{"a@test.edulinq.org", "b@test.edulinq.org", "c@test.edulinq.org"},
@@ -354,16 +352,7 @@ func (this *DBTests) DBTestResolveCourseUserEmails(test *testing.T) {
 			0,
 		},
 
-		// This is a test to ensure miscapitalized emails only get returned once.
-		{
-			[]string{"a@test.edulinq.org", "A@tesT.EduLiNq.OrG", "A@TESt.EDuLINQ.ORG"},
-			[]string{"a@test.edulinq.org"},
-			nil,
-			[]string{},
-			0,
-		},
-
-		// This is a basic test to ensure that a role gets mapped to the correct email.
+		// Target Role
 		{
 			[]string{"admin"},
 			[]string{"course-admin@test.edulinq.org"},
@@ -372,7 +361,7 @@ func (this *DBTests) DBTestResolveCourseUserEmails(test *testing.T) {
 			0,
 		},
 
-		// This is a test for our all roles character, the *.
+		// All Roles (*)
 		{
 			[]string{"*"},
 			[]string{"course-admin@test.edulinq.org", "course-grader@test.edulinq.org", "course-other@test.edulinq.org", "course-owner@test.edulinq.org", "course-student@test.edulinq.org"},
@@ -381,20 +370,33 @@ func (this *DBTests) DBTestResolveCourseUserEmails(test *testing.T) {
 			0,
 		},
 
-		// This test case is given redundant roles and emails.
-		// It tests to ensures we do not produce duplicates on this input.
+		// Input Normalization
 		{
-			[]string{"other", "*", "course-grader@test.edulinq.org"},
-			[]string{"course-admin@test.edulinq.org", "course-grader@test.edulinq.org", "course-other@test.edulinq.org", "course-owner@test.edulinq.org", "course-student@test.edulinq.org"},
+			[]string{"a@test.edulinq.org", "A@tesT.EduLiNq.OrG", "A@TESt.EDuLINQ.ORG"},
+			[]string{"a@test.edulinq.org"},
+			nil,
+			[]string{},
+			0,
+		},
+		{
+			[]string{"OTHER"},
+			[]string{"course-other@test.edulinq.org"},
+			nil,
+			[]string{},
+			0,
+		},
+		{
+			[]string{"\t\n student    ", "\n \t testing@test.edulinq.org", "\t\n     \t    \n"},
+			[]string{"course-student@test.edulinq.org", "testing@test.edulinq.org"},
 			nil,
 			[]string{},
 			0,
 		},
 
-		// This test case tests if miscapitalized roles still function.
+		// Redundant Information
 		{
-			[]string{"OTHER"},
-			[]string{"course-other@test.edulinq.org"},
+			[]string{"other", "*", "course-grader@test.edulinq.org"},
+			[]string{"course-admin@test.edulinq.org", "course-grader@test.edulinq.org", "course-other@test.edulinq.org", "course-owner@test.edulinq.org", "course-student@test.edulinq.org"},
 			nil,
 			[]string{},
 			0,
@@ -409,7 +411,7 @@ func (this *DBTests) DBTestResolveCourseUserEmails(test *testing.T) {
 			4,
 		},
 
-		// This test adds new Users to the course and ensures we retrieve all emails for the given role.
+		// Target Role, Multiple Users
 		{
 			[]string{"student"},
 			[]string{"a_student@test.edulinq.org", "b_student@test.edulinq.org", "course-student@test.edulinq.org"},
@@ -441,16 +443,14 @@ func (this *DBTests) DBTestResolveCourseUserEmails(test *testing.T) {
 			0,
 		},
 
-		// This is a test case to see if we properly trim whitespace.
+		// Target Role Without Any Users
 		{
-			[]string{"\t\n student    ", "\n \t testing@test.edulinq.org", "\t\n     \t    \n"},
-			[]string{"course-student@test.edulinq.org", "testing@test.edulinq.org"},
-			nil,
+			[]string{"owner"},
 			[]string{},
+			nil,
+			[]string{"course-owner@test.edulinq.org"},
 			0,
 		},
-
-		// This test case removes the only user from the "owner" role, so we check that a role without any users still functions properly.
 		{
 			[]string{"owner", "student"},
 			[]string{"course-student@test.edulinq.org"},
@@ -459,16 +459,7 @@ func (this *DBTests) DBTestResolveCourseUserEmails(test *testing.T) {
 			0,
 		},
 
-		// This test supplies a single role that resolves to nothing.
-		{
-			[]string{"owner"},
-			[]string{},
-			nil,
-			[]string{"course-owner@test.edulinq.org"},
-			0,
-		},
-
-		// Remove a user.
+		// Remove Users
 		{
 			[]string{"*", "-course-admin@test.edulinq.org"},
 			[]string{"course-grader@test.edulinq.org", "course-other@test.edulinq.org", "course-owner@test.edulinq.org", "course-student@test.edulinq.org"},
@@ -476,8 +467,6 @@ func (this *DBTests) DBTestResolveCourseUserEmails(test *testing.T) {
 			[]string{},
 			0,
 		},
-
-		// Remove multiple users.
 		{
 			[]string{"*", "-course-admin@test.edulinq.org", "- course-other@test.edulinq.org", " - course-student@test.edulinq.org"},
 			[]string{"course-grader@test.edulinq.org", "course-owner@test.edulinq.org"},
@@ -486,7 +475,7 @@ func (this *DBTests) DBTestResolveCourseUserEmails(test *testing.T) {
 			0,
 		},
 
-		// Remove a use that is not in the list.
+		// Unnecessary Removal
 		{
 			[]string{"course-admin@test.edulinq.org", "-course-other@test.edulinq.org"},
 			[]string{"course-admin@test.edulinq.org"},
@@ -495,7 +484,7 @@ func (this *DBTests) DBTestResolveCourseUserEmails(test *testing.T) {
 			0,
 		},
 
-		// Remove all users.
+		// Remove All Users
 		{
 			[]string{"course-admin@test.edulinq.org", "-course-admin@test.edulinq.org"},
 			[]string{},
@@ -519,25 +508,25 @@ func (this *DBTests) DBTestResolveCourseUserEmails(test *testing.T) {
 
 		actualOutput, err := ResolveCourseUserEmails(course, testCase.input)
 		if err != nil {
-			test.Errorf("Case %d (%+v): Failed to resolve course user emails: '%v'.", i, testCase, err)
+			test.Errorf("Case %d: Failed to resolve course user emails: '%v'.", i, err)
 			continue
 		}
 
 		if !reflect.DeepEqual(testCase.expectedOutput, actualOutput) {
-			test.Errorf("Case %d (%+v): Incorrect Output. Expected: '%v', Actual: '%v'.", i,
-				testCase, testCase.expectedOutput, actualOutput)
+			test.Errorf("Case %d: Incorrect Output. Expected: '%v', Actual: '%v'.",
+				i, util.MustToJSONIndent(testCase.expectedOutput), util.MustToJSONIndent(actualOutput))
 			continue
 		}
 
 		logs, err := GetLogRecords(log.ParsedLogQuery{Level: log.LevelWarn})
 		if err != nil {
-			test.Errorf("Case %d (%+v): Error getting log records.", i, testCase)
+			test.Errorf("Case %d: Error getting log records.", i)
 			continue
 		}
 
 		if testCase.numWarnings != len(logs) {
-			test.Errorf("Case %d (%+v): Incorrect number of warnings issued. Expected: %d, Actual: %d.", i,
-				testCase, testCase.numWarnings, len(logs))
+			test.Errorf("Case %d: Incorrect number of warnings issued. Expected: %d, Actual: %d.",
+				i, testCase.numWarnings, len(logs))
 			continue
 		}
 	}
