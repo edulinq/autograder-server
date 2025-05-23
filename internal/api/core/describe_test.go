@@ -32,8 +32,8 @@ type simpleJSONStruct struct {
 }
 
 type secureJSONStruct struct {
-	FirstName string `json:"first-name"`
-	LastName  string `json:"last-name"`
+	FirstName string `json:"first-name" required:""`
+	LastName  string `json:"last-name" required:""`
 	Pay       int    `json:"-"`
 }
 
@@ -226,16 +226,28 @@ func TestDescribeTypeBase(test *testing.T) {
 			TypeDescription{
 				Category: StructType,
 				Fields: []FieldDescription{
-					FieldDescription{"email", "string"},
-					FieldDescription{"job-code", "int"},
+					FieldDescription{
+						BaseFieldDescription: BaseFieldDescription{"email", "string"},
+						Required:             false,
+					},
+					FieldDescription{
+						BaseFieldDescription: BaseFieldDescription{"job-code", "int"},
+						Required:             false,
+					},
 				},
 			},
 			map[string]TypeDescription{
 				mustGetTypeID(reflect.TypeOf((*simpleJSONStruct)(nil)).Elem(), nil): TypeDescription{
 					Category: StructType,
 					Fields: []FieldDescription{
-						FieldDescription{"email", "string"},
-						FieldDescription{"job-code", "int"},
+						FieldDescription{
+							BaseFieldDescription: BaseFieldDescription{"email", "string"},
+							Required:             false,
+						},
+						FieldDescription{
+							BaseFieldDescription: BaseFieldDescription{"job-code", "int"},
+							Required:             false,
+						},
 					},
 				},
 			},
@@ -247,16 +259,28 @@ func TestDescribeTypeBase(test *testing.T) {
 			TypeDescription{
 				Category: StructType,
 				Fields: []FieldDescription{
-					FieldDescription{"first-name", "string"},
-					FieldDescription{"last-name", "string"},
+					FieldDescription{
+						BaseFieldDescription: BaseFieldDescription{"first-name", "string"},
+						Required:             true,
+					},
+					FieldDescription{
+						BaseFieldDescription: BaseFieldDescription{"last-name", "string"},
+						Required:             true,
+					},
 				},
 			},
 			map[string]TypeDescription{
 				mustGetTypeID(reflect.TypeOf((*secureJSONStruct)(nil)).Elem(), nil): TypeDescription{
 					Category: StructType,
 					Fields: []FieldDescription{
-						FieldDescription{"first-name", "string"},
-						FieldDescription{"last-name", "string"},
+						FieldDescription{
+							BaseFieldDescription: BaseFieldDescription{"first-name", "string"},
+							Required:             true,
+						},
+						FieldDescription{
+							BaseFieldDescription: BaseFieldDescription{"last-name", "string"},
+							Required:             true,
+						},
 					},
 				},
 			},
@@ -268,20 +292,44 @@ func TestDescribeTypeBase(test *testing.T) {
 			TypeDescription{
 				Category: StructType,
 				Fields: []FieldDescription{
-					FieldDescription{"email", "string"},
-					FieldDescription{"first-name", "string"},
-					FieldDescription{"job-code", "int"},
-					FieldDescription{"last-name", "string"},
+					FieldDescription{
+						BaseFieldDescription: BaseFieldDescription{"email", "string"},
+						Required:             false,
+					},
+					FieldDescription{
+						BaseFieldDescription: BaseFieldDescription{"first-name", "string"},
+						Required:             true,
+					},
+					FieldDescription{
+						BaseFieldDescription: BaseFieldDescription{"job-code", "int"},
+						Required:             false,
+					},
+					FieldDescription{
+						BaseFieldDescription: BaseFieldDescription{"last-name", "string"},
+						Required:             true,
+					},
 				},
 			},
 			map[string]TypeDescription{
 				mustGetTypeID(reflect.TypeOf((*embeddedJSONStruct)(nil)).Elem(), nil): TypeDescription{
 					Category: StructType,
 					Fields: []FieldDescription{
-						FieldDescription{"email", "string"},
-						FieldDescription{"first-name", "string"},
-						FieldDescription{"job-code", "int"},
-						FieldDescription{"last-name", "string"},
+						FieldDescription{
+							BaseFieldDescription: BaseFieldDescription{"email", "string"},
+							Required:             false,
+						},
+						FieldDescription{
+							BaseFieldDescription: BaseFieldDescription{"first-name", "string"},
+							Required:             true,
+						},
+						FieldDescription{
+							BaseFieldDescription: BaseFieldDescription{"job-code", "int"},
+							Required:             false,
+						},
+						FieldDescription{
+							BaseFieldDescription: BaseFieldDescription{"last-name", "string"},
+							Required:             true,
+						},
 					},
 				},
 			},
@@ -293,27 +341,57 @@ func TestDescribeTypeBase(test *testing.T) {
 			TypeDescription{
 				Category: StructType,
 				Fields: []FieldDescription{
-					FieldDescription{"coin-value", "core.simpleMapWrapper"},
-					FieldDescription{"good-index", "core.simpleArrayWrapper"},
-					FieldDescription{"personnel", "core.embeddedJSONStruct"},
+					FieldDescription{
+						BaseFieldDescription: BaseFieldDescription{"coin-value", "core.simpleMapWrapper"},
+						Required:             false,
+					},
+					FieldDescription{
+						BaseFieldDescription: BaseFieldDescription{"good-index", "core.simpleArrayWrapper"},
+						Required:             false,
+					},
+					FieldDescription{
+						BaseFieldDescription: BaseFieldDescription{"personnel", "core.embeddedJSONStruct"},
+						Required:             false,
+					},
 				},
 			},
 			map[string]TypeDescription{
 				mustGetTypeID(reflect.TypeOf((*complexJSONStruct)(nil)).Elem(), nil): TypeDescription{
 					Category: StructType,
 					Fields: []FieldDescription{
-						FieldDescription{"coin-value", "core.simpleMapWrapper"},
-						FieldDescription{"good-index", "core.simpleArrayWrapper"},
-						FieldDescription{"personnel", "core.embeddedJSONStruct"},
+						FieldDescription{
+							BaseFieldDescription: BaseFieldDescription{"coin-value", "core.simpleMapWrapper"},
+							Required:             false,
+						},
+						FieldDescription{
+							BaseFieldDescription: BaseFieldDescription{"good-index", "core.simpleArrayWrapper"},
+							Required:             false,
+						},
+						FieldDescription{
+							BaseFieldDescription: BaseFieldDescription{"personnel", "core.embeddedJSONStruct"},
+							Required:             false,
+						},
 					},
 				},
 				mustGetTypeID(reflect.TypeOf((*embeddedJSONStruct)(nil)).Elem(), nil): TypeDescription{
 					Category: StructType,
 					Fields: []FieldDescription{
-						FieldDescription{"email", "string"},
-						FieldDescription{"first-name", "string"},
-						FieldDescription{"job-code", "int"},
-						FieldDescription{"last-name", "string"},
+						FieldDescription{
+							BaseFieldDescription: BaseFieldDescription{"email", "string"},
+							Required:             false,
+						},
+						FieldDescription{
+							BaseFieldDescription: BaseFieldDescription{"first-name", "string"},
+							Required:             true,
+						},
+						FieldDescription{
+							BaseFieldDescription: BaseFieldDescription{"job-code", "int"},
+							Required:             false,
+						},
+						FieldDescription{
+							BaseFieldDescription: BaseFieldDescription{"last-name", "string"},
+							Required:             true,
+						},
 					},
 				},
 				mustGetTypeID(reflect.TypeOf((*simpleArrayWrapper)(nil)).Elem(), nil): TypeDescription{
@@ -361,27 +439,57 @@ func TestDescribeTypeBase(test *testing.T) {
 			TypeDescription{
 				Category: StructType,
 				Fields: []FieldDescription{
-					FieldDescription{"coin-value", "*core.simpleMapWrapper"},
-					FieldDescription{"good-index", "*core.simpleArrayWrapper"},
-					FieldDescription{"personnel", "*core.embeddedJSONStruct"},
+					FieldDescription{
+						BaseFieldDescription: BaseFieldDescription{"coin-value", "*core.simpleMapWrapper"},
+						Required:             false,
+					},
+					FieldDescription{
+						BaseFieldDescription: BaseFieldDescription{"good-index", "*core.simpleArrayWrapper"},
+						Required:             false,
+					},
+					FieldDescription{
+						BaseFieldDescription: BaseFieldDescription{"personnel", "*core.embeddedJSONStruct"},
+						Required:             false,
+					},
 				},
 			},
 			map[string]TypeDescription{
 				mustGetTypeID(reflect.TypeOf((*complexPointerStruct)(nil)).Elem(), nil): TypeDescription{
 					Category: StructType,
 					Fields: []FieldDescription{
-						FieldDescription{"coin-value", "*core.simpleMapWrapper"},
-						FieldDescription{"good-index", "*core.simpleArrayWrapper"},
-						FieldDescription{"personnel", "*core.embeddedJSONStruct"},
+						FieldDescription{
+							BaseFieldDescription: BaseFieldDescription{"coin-value", "*core.simpleMapWrapper"},
+							Required:             false,
+						},
+						FieldDescription{
+							BaseFieldDescription: BaseFieldDescription{"good-index", "*core.simpleArrayWrapper"},
+							Required:             false,
+						},
+						FieldDescription{
+							BaseFieldDescription: BaseFieldDescription{"personnel", "*core.embeddedJSONStruct"},
+							Required:             false,
+						},
 					},
 				},
 				mustGetTypeID(reflect.TypeOf((*embeddedJSONStruct)(nil)).Elem(), nil): TypeDescription{
 					Category: StructType,
 					Fields: []FieldDescription{
-						FieldDescription{"email", "string"},
-						FieldDescription{"first-name", "string"},
-						FieldDescription{"job-code", "int"},
-						FieldDescription{"last-name", "string"},
+						FieldDescription{
+							BaseFieldDescription: BaseFieldDescription{"email", "string"},
+							Required:             false,
+						},
+						FieldDescription{
+							BaseFieldDescription: BaseFieldDescription{"first-name", "string"},
+							Required:             true,
+						},
+						FieldDescription{
+							BaseFieldDescription: BaseFieldDescription{"job-code", "int"},
+							Required:             false,
+						},
+						FieldDescription{
+							BaseFieldDescription: BaseFieldDescription{"last-name", "string"},
+							Required:             true,
+						},
 					},
 				},
 				mustGetTypeID(reflect.TypeOf((*simpleArrayWrapper)(nil)).Elem(), nil): TypeDescription{
