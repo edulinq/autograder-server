@@ -5,7 +5,7 @@
             "input": [
                 {
                     "name": "bcc",
-                    "type": "[]string"
+                    "type": "[]model.CourseUserReference"
                 },
                 {
                     "name": "body",
@@ -13,7 +13,7 @@
                 },
                 {
                     "name": "cc",
-                    "type": "[]string"
+                    "type": "[]model.CourseUserReference"
                 },
                 {
                     "name": "course-id",
@@ -33,7 +33,7 @@
                 },
                 {
                     "name": "to",
-                    "type": "[]string"
+                    "type": "[]model.CourseUserReference"
                 },
                 {
                     "name": "user-email",
@@ -938,7 +938,7 @@
                 },
                 {
                     "name": "users",
-                    "type": "[]model.CourseUserReferenceInput"
+                    "type": "[]model.CourseUserReference"
                 }
             ],
             "output": [
@@ -1770,7 +1770,7 @@
                 }
             ]
         },
-        "model.CourseUserReferenceInput": {
+        "model.CourseUserReference": {
             "category": "alias",
             "alias-type": "string"
         },

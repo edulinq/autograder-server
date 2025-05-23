@@ -11,22 +11,22 @@ type ListRequest struct {
 	core.APIRequestCourseUserContext
 	core.MinCourseRoleGrader
 
-	Users []model.CourseUserReferenceInput `json:"users"`
+	Users []model.CourseUserReference `json:"users"`
 }
 
 type ListResponse struct {
 	Users  []*core.CourseUserInfo `json:"users"`
-	Errors map[string]string      `json:"errors"`
+	Errors map[string]string      `json:"errors,omitempty"`
 }
 
 // List the users in the course.
 func HandleList(request *ListRequest) (*ListResponse, *core.APIError) {
 	// Default to listing all users in the course.
 	if len(request.Users) == 0 {
-		request.Users = []model.CourseUserReferenceInput{"*"}
+		request.Users = []model.CourseUserReference{"*"}
 	}
 
-	reference, userErrors, err := db.ParseCourseUserReference(request.Course, request.Users)
+	reference, err := model.ResolveCourseUserReferences(request.Course, request.Users)
 	if err != nil {
 		return nil, core.NewInternalError("-635", request, "Failed to parse course user references.").Err(err)
 	}

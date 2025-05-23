@@ -9,13 +9,21 @@ import (
 	"github.com/edulinq/autograder/internal/util"
 )
 
+type MessageRecipients struct {
+	To  []string `json:"to"`
+	CC  []string `json:"cc"`
+	BCC []string `json:"bcc"`
+}
+
+type MessageContent struct {
+	Subject string `json:"subject"`
+	Body    string `json:"body"`
+	HTML    bool   `json:"html"`
+}
+
 type Message struct {
-	To      []string `json:"to"`
-	CC      []string `json:"cc"`
-	BCC     []string `json:"bcc"`
-	Subject string   `json:"subject"`
-	Body    string   `json:"body"`
-	HTML    bool     `json:"html"`
+	MessageRecipients
+	MessageContent
 }
 
 // Get the raw email formatted string (bytes).
@@ -126,4 +134,8 @@ func ShallowSliceEqual(a []*Message, b []*Message) bool {
 	slices.SortFunc(bSorted, Compare)
 
 	return slices.EqualFunc(aSorted, bSorted, ShallowEqual)
+}
+
+func (this *MessageRecipients) IsEmpty() bool {
+	return (len(this.To) + len(this.CC) + len(this.BCC)) == 0
 }

@@ -1,18 +1,17 @@
 package admin
 
 import (
-	"errors"
-
 	"github.com/edulinq/autograder/internal/api/core"
-	"github.com/edulinq/autograder/internal/db"
 	"github.com/edulinq/autograder/internal/email"
+	"github.com/edulinq/autograder/internal/model"
 )
 
 type EmailRequest struct {
 	core.APIRequestCourseUserContext
 	core.MinCourseRoleGrader
 
-	email.Message
+	model.CourseMessageRecipients
+	email.MessageContent
 
 	DryRun bool `json:"dry-run"`
 }
@@ -29,37 +28,26 @@ func HandleEmail(request *EmailRequest) (*EmailResponse, *core.APIError) {
 		return nil, core.NewBadRequestError("-627", request, "No email subject provided.")
 	}
 
-	var err error
-	var errs error
-
-	request.To, err = db.ResolveCourseUserEmails(request.Course, request.To)
-	errs = errors.Join(errs, err)
-
-	request.CC, err = db.ResolveCourseUserEmails(request.Course, request.CC)
-	errs = errors.Join(errs, err)
-
-	request.BCC, err = db.ResolveCourseUserEmails(request.Course, request.BCC)
-	errs = errors.Join(errs, err)
-
-	if errs != nil {
-		return nil, core.NewInternalError("-628", request, "Failed to resolve email recipients.").Err(errs)
+	recipients, err := request.CourseMessageRecipients.ToMessageRecipients()
+	if err != nil {
+		return nil, core.NewInternalError("-628", request, "Failed to resolve email recipients.").Err(err)
 	}
 
-	if (len(request.To) + len(request.CC) + len(request.BCC)) == 0 {
+	if recipients.IsEmpty() {
 		return nil, core.NewBadRequestError("-629", request, "No email recipients provided.")
 	}
 
 	if !request.DryRun {
-		err = email.SendFull(request.To, request.CC, request.BCC, request.Subject, request.Body, request.HTML)
+		err = email.SendFull(recipients.To, recipients.CC, recipients.BCC, request.Subject, request.Body, request.HTML)
 		if err != nil {
 			return nil, core.NewInternalError("-630", request, "Failed to send email.")
 		}
 	}
 
 	response := EmailResponse{
-		To:  request.To,
-		CC:  request.CC,
-		BCC: request.BCC,
+		To:  recipients.To,
+		CC:  recipients.CC,
+		BCC: recipients.BCC,
 	}
 
 	return &response, nil
