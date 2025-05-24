@@ -33,29 +33,50 @@ func main() {
 	db.MustOpen()
 	defer db.MustClose()
 
-	users := make(map[string]*model.CourseUser, 0)
+	var to []string = nil
+	var cc []string = nil
+	var bcc []string = nil
 
 	if args.Course != "" {
 		course := db.MustGetCourse(args.Course)
 
-		users, err = db.GetCourseUsers(course)
+		users, err := db.GetCourseUsers(course)
 		if err != nil {
 			log.Fatal("Failed to get course users.", err)
 		}
+
+		courseRecipients := model.CourseMessageRecipients{
+			To:  args.To,
+			CC:  args.CC,
+			BCC: args.BCC,
+		}
+
+		recipients, userErrors := courseRecipients.ToMessageRecipients(users)
+		if err != nil {
+			log.Fatal("Failed to resolve users.", log.NewAttr("errors", userErrors))
+		}
+
+		to = recipients.To
+		cc = recipients.CC
+		bcc = recipients.BCC
+	} else {
+		to = make([]string, 0, len(args.To))
+		for _, email := range args.To {
+			to = append(to, string(email))
+		}
+
+		cc = make([]string, 0, len(args.CC))
+		for _, email := range args.CC {
+			cc = append(cc, string(email))
+		}
+
+		bcc = make([]string, 0, len(args.BCC))
+		for _, email := range args.BCC {
+			bcc = append(bcc, string(email))
+		}
 	}
 
-	courseRecipients := model.CourseMessageRecipients{
-		To:  args.To,
-		CC:  args.CC,
-		BCC: args.BCC,
-	}
-
-	recipients, userErrors := courseRecipients.ToMessageRecipients(users)
-	if err != nil {
-		log.Fatal("Failed to resolve users.", log.NewAttr("errors", userErrors))
-	}
-
-	err = email.SendFull(recipients.To, recipients.CC, recipients.BCC, args.Subject, args.Body, false)
+	err = email.SendFull(to, cc, bcc, args.Subject, args.Body, false)
 	if err != nil {
 		log.Fatal("Could not send email.", err)
 	}

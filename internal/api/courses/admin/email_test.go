@@ -156,7 +156,7 @@ func TestEmail(test *testing.T) {
 		{
 			UserEmail: "course-grader",
 			MessageContent: email.MessageContent{
-				Subject: "Subject",
+				Subject: "Message in a Bottle",
 			},
 			Locator: "-628",
 		},

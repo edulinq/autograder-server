@@ -21,9 +21,9 @@ func TestList(test *testing.T) {
 		test.Fatalf("Unable to get course users: '%v'.", err)
 	}
 
-	allUsers := make([]*model.CourseUser, 0, len(usersMap))
+	users := make([]*model.CourseUser, 0, len(usersMap))
 	for _, user := range usersMap {
-		allUsers = append(allUsers, user)
+		users = append(users, user)
 	}
 
 	testCases := []struct {
@@ -42,15 +42,15 @@ func TestList(test *testing.T) {
 		{"server-creator", nil, nil, nil, "-040"},
 
 		// Valid Permissions, All Users
-		{"course-grader", nil, allUsers, nil, ""},
-		{"course-admin", []string{}, allUsers, nil, ""},
-		{"course-owner", []string{"*"}, allUsers, nil, ""},
+		{"course-grader", nil, users, nil, ""},
+		{"course-admin", []string{}, users, nil, ""},
+		{"course-owner", []string{"*"}, users, nil, ""},
 
 		// Valid Permissions, Role Escalation, All Users
 		{
 			"server-admin",
 			[]string{"admin", "grader", "other", "owner", "student"},
-			allUsers,
+			users,
 			nil,
 			"",
 		},
@@ -63,7 +63,7 @@ func TestList(test *testing.T) {
 				"course-owner@test.edulinq.org",
 				"course-student@test.edulinq.org",
 			},
-			allUsers,
+			users,
 			nil,
 			"",
 		},

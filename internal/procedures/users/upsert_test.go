@@ -10,9 +10,9 @@ import (
 	"github.com/edulinq/autograder/internal/util"
 )
 
-var CourseUserReference_PASSWORD_CLEARTEXT string = "<placeholder_pass>"
-var CourseUserReference_SALT *string = util.StringPointer("abcd")
-var CourseUserReference_PASSWORD_TOKEN *model.Token = model.MustNewToken(CourseUserReference_PASSWORD_CLEARTEXT, *CourseUserReference_SALT, model.TokenSourcePassword, "password")
+var PLACEHOLDER_PASSWORD_CLEARTEXT string = "<placeholder_pass>"
+var PLACEHOLDER_SALT *string = util.StringPointer("abcd")
+var PLACEHOLDER_PASSWORD_TOKEN *model.Token = model.MustNewToken(PLACEHOLDER_PASSWORD_CLEARTEXT, *PLACEHOLDER_SALT, model.TokenSourcePassword, "password")
 var VALIDATION_ERROR_EXTERNAL_MESSAGE = "You have insufficient permissions for the requested operation."
 
 func TestUpsertUser(test *testing.T) {
@@ -51,8 +51,8 @@ func TestUpsertUser(test *testing.T) {
 			expectedUser: &model.ServerUser{
 				Email:    "new@test.edulinq.org",
 				Name:     util.StringPointer("new"),
-				Salt:     CourseUserReference_SALT,
-				Password: CourseUserReference_PASSWORD_TOKEN,
+				Salt:     PLACEHOLDER_SALT,
+				Password: PLACEHOLDER_PASSWORD_TOKEN,
 				Role:     model.ServerRoleUser,
 				Tokens:   []*model.Token{},
 			},
@@ -85,8 +85,8 @@ func TestUpsertUser(test *testing.T) {
 			expectedUser: &model.ServerUser{
 				Email:    "new@test.edulinq.org",
 				Name:     util.StringPointer("new"),
-				Salt:     CourseUserReference_SALT,
-				Password: CourseUserReference_PASSWORD_TOKEN,
+				Salt:     PLACEHOLDER_SALT,
+				Password: PLACEHOLDER_PASSWORD_TOKEN,
 				Role:     model.ServerRoleUser,
 				Tokens:   []*model.Token{},
 				CourseInfo: map[string]*model.UserCourseInfo{
@@ -118,8 +118,8 @@ func TestUpsertUser(test *testing.T) {
 			expectedUser: &model.ServerUser{
 				Email:    "course-student@test.edulinq.org",
 				Name:     util.StringPointer("new"),
-				Salt:     CourseUserReference_SALT,
-				Password: CourseUserReference_PASSWORD_TOKEN,
+				Salt:     PLACEHOLDER_SALT,
+				Password: PLACEHOLDER_PASSWORD_TOKEN,
 				Role:     model.ServerRoleUser,
 				Tokens:   []*model.Token{},
 				CourseInfo: map[string]*model.UserCourseInfo{
@@ -159,8 +159,8 @@ func TestUpsertUser(test *testing.T) {
 			expectedUser: &model.ServerUser{
 				Email:    "course-student@test.edulinq.org",
 				Name:     util.StringPointer("course-student"),
-				Salt:     CourseUserReference_SALT,
-				Password: CourseUserReference_PASSWORD_TOKEN,
+				Salt:     PLACEHOLDER_SALT,
+				Password: PLACEHOLDER_PASSWORD_TOKEN,
 				Role:     model.ServerRoleUser,
 				Tokens:   []*model.Token{},
 				CourseInfo: map[string]*model.UserCourseInfo{
@@ -201,8 +201,8 @@ func TestUpsertUser(test *testing.T) {
 			expectedUser: &model.ServerUser{
 				Email:    "course-student@test.edulinq.org",
 				Name:     util.StringPointer("course-student"),
-				Salt:     CourseUserReference_SALT,
-				Password: CourseUserReference_PASSWORD_TOKEN,
+				Salt:     PLACEHOLDER_SALT,
+				Password: PLACEHOLDER_PASSWORD_TOKEN,
 				Role:     model.ServerRoleUser,
 				Tokens:   []*model.Token{},
 				CourseInfo: map[string]*model.UserCourseInfo{
@@ -240,8 +240,8 @@ func TestUpsertUser(test *testing.T) {
 			expectedUser: &model.ServerUser{
 				Email:    "course-student@test.edulinq.org",
 				Name:     util.StringPointer("course-student"),
-				Salt:     CourseUserReference_SALT,
-				Password: CourseUserReference_PASSWORD_TOKEN,
+				Salt:     PLACEHOLDER_SALT,
+				Password: PLACEHOLDER_PASSWORD_TOKEN,
 				Role:     model.ServerRoleUser,
 				Tokens:   []*model.Token{},
 				CourseInfo: map[string]*model.UserCourseInfo{
@@ -279,8 +279,8 @@ func TestUpsertUser(test *testing.T) {
 			expectedUser: &model.ServerUser{
 				Email:    "course-student@test.edulinq.org",
 				Name:     util.StringPointer("new"),
-				Salt:     CourseUserReference_SALT,
-				Password: CourseUserReference_PASSWORD_TOKEN,
+				Salt:     PLACEHOLDER_SALT,
+				Password: PLACEHOLDER_PASSWORD_TOKEN,
 				Role:     model.ServerRoleUser,
 				Tokens:   []*model.Token{},
 				CourseInfo: map[string]*model.UserCourseInfo{
@@ -317,8 +317,8 @@ func TestUpsertUser(test *testing.T) {
 			expectedUser: &model.ServerUser{
 				Email:    "course-student@test.edulinq.org",
 				Name:     util.StringPointer("new"),
-				Salt:     CourseUserReference_SALT,
-				Password: CourseUserReference_PASSWORD_TOKEN,
+				Salt:     PLACEHOLDER_SALT,
+				Password: PLACEHOLDER_PASSWORD_TOKEN,
 				Role:     model.ServerRoleUser,
 				Tokens:   []*model.Token{},
 				CourseInfo: map[string]*model.UserCourseInfo{
@@ -355,8 +355,8 @@ func TestUpsertUser(test *testing.T) {
 			expectedUser: &model.ServerUser{
 				Email:    "server-admin@test.edulinq.org",
 				Name:     util.StringPointer("server-admin"),
-				Salt:     CourseUserReference_SALT,
-				Password: CourseUserReference_PASSWORD_TOKEN,
+				Salt:     PLACEHOLDER_SALT,
+				Password: PLACEHOLDER_PASSWORD_TOKEN,
 				Role:     model.ServerRoleUser,
 				Tokens:   []*model.Token{},
 			},
@@ -385,8 +385,8 @@ func TestUpsertUser(test *testing.T) {
 			expectedUser: &model.ServerUser{
 				Email:    "course-admin@test.edulinq.org",
 				Name:     util.StringPointer("course-admin"),
-				Salt:     CourseUserReference_SALT,
-				Password: CourseUserReference_PASSWORD_TOKEN,
+				Salt:     PLACEHOLDER_SALT,
+				Password: PLACEHOLDER_PASSWORD_TOKEN,
 				Role:     model.ServerRoleUser,
 				Tokens: []*model.Token{
 					&model.Token{
@@ -431,8 +431,8 @@ func TestUpsertUser(test *testing.T) {
 			expectedUser: &model.ServerUser{
 				Email:    "course-student@test.edulinq.org",
 				Name:     util.StringPointer("course-student"),
-				Salt:     CourseUserReference_SALT,
-				Password: CourseUserReference_PASSWORD_TOKEN,
+				Salt:     PLACEHOLDER_SALT,
+				Password: PLACEHOLDER_PASSWORD_TOKEN,
 				Role:     model.ServerRoleUser,
 				Tokens:   []*model.Token{},
 				CourseInfo: map[string]*model.UserCourseInfo{
@@ -467,8 +467,8 @@ func TestUpsertUser(test *testing.T) {
 			expectedUser: &model.ServerUser{
 				Email:    "course-student@test.edulinq.org",
 				Name:     util.StringPointer("course-student"),
-				Salt:     CourseUserReference_SALT,
-				Password: CourseUserReference_PASSWORD_TOKEN,
+				Salt:     PLACEHOLDER_SALT,
+				Password: PLACEHOLDER_PASSWORD_TOKEN,
 				Role:     model.ServerRoleUser,
 				Tokens:   []*model.Token{},
 				CourseInfo: map[string]*model.UserCourseInfo{
@@ -501,12 +501,12 @@ func TestUpsertUser(test *testing.T) {
 					Added:   true,
 					Emailed: true,
 				},
-				CleartextPassword: CourseUserReference_PASSWORD_CLEARTEXT,
+				CleartextPassword: PLACEHOLDER_PASSWORD_CLEARTEXT,
 			},
 			expectedUser: &model.ServerUser{
 				Email:    "new@test.edulinq.org",
-				Salt:     CourseUserReference_SALT,
-				Password: CourseUserReference_PASSWORD_TOKEN,
+				Salt:     PLACEHOLDER_SALT,
+				Password: PLACEHOLDER_PASSWORD_TOKEN,
 				Role:     model.ServerRoleUser,
 				Tokens:   []*model.Token{},
 			},
@@ -530,12 +530,12 @@ func TestUpsertUser(test *testing.T) {
 					Added:   true,
 					Emailed: true,
 				},
-				CleartextPassword: CourseUserReference_PASSWORD_CLEARTEXT,
+				CleartextPassword: PLACEHOLDER_PASSWORD_CLEARTEXT,
 			},
 			expectedUser: &model.ServerUser{
 				Email:    "new@test.edulinq.org",
-				Salt:     CourseUserReference_SALT,
-				Password: CourseUserReference_PASSWORD_TOKEN,
+				Salt:     PLACEHOLDER_SALT,
+				Password: PLACEHOLDER_PASSWORD_TOKEN,
 				Role:     model.ServerRoleUser,
 				Tokens:   []*model.Token{},
 			},
@@ -562,8 +562,8 @@ func TestUpsertUser(test *testing.T) {
 			expectedUser: &model.ServerUser{
 				Email:    "course-owner@test.edulinq.org",
 				Name:     util.StringPointer("course-owner"),
-				Salt:     CourseUserReference_SALT,
-				Password: CourseUserReference_PASSWORD_TOKEN,
+				Salt:     PLACEHOLDER_SALT,
+				Password: PLACEHOLDER_PASSWORD_TOKEN,
 				Role:     model.ServerRoleUser,
 				Tokens:   []*model.Token{},
 				CourseInfo: map[string]*model.UserCourseInfo{
