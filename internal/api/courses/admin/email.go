@@ -1,18 +1,19 @@
 package admin
 
 import (
-	"errors"
-
 	"github.com/edulinq/autograder/internal/api/core"
-	"github.com/edulinq/autograder/internal/db"
 	"github.com/edulinq/autograder/internal/email"
+	"github.com/edulinq/autograder/internal/log"
+	"github.com/edulinq/autograder/internal/model"
 )
 
 type EmailRequest struct {
 	core.APIRequestCourseUserContext
 	core.MinCourseRoleGrader
+	Users core.CourseUsers `json:"-"`
 
-	email.Message
+	model.CourseMessageRecipients
+	email.MessageContent
 
 	DryRun bool `json:"dry-run"`
 }
@@ -21,6 +22,8 @@ type EmailResponse struct {
 	To  []string `json:"to"`
 	CC  []string `json:"cc"`
 	BCC []string `json:"bcc"`
+
+	Errors map[string]string `json:"errors,omitempty"`
 }
 
 // Send an email to course users.
@@ -29,37 +32,32 @@ func HandleEmail(request *EmailRequest) (*EmailResponse, *core.APIError) {
 		return nil, core.NewBadRequestError("-627", request, "No email subject provided.")
 	}
 
-	var err error
-	var errs error
+	recipients, userErrors := request.CourseMessageRecipients.ToMessageRecipients(request.Users)
 
-	request.To, err = db.ResolveCourseUsers(request.Course, request.To)
-	errs = errors.Join(errs, err)
+	errors := make(map[string]string, len(userErrors))
 
-	request.CC, err = db.ResolveCourseUsers(request.Course, request.CC)
-	errs = errors.Join(errs, err)
+	for reference, err := range userErrors {
+		errors[reference] = err.Error()
 
-	request.BCC, err = db.ResolveCourseUsers(request.Course, request.BCC)
-	errs = errors.Join(errs, err)
-
-	if errs != nil {
-		return nil, core.NewInternalError("-628", request, "Failed to resolve email recipients.").Err(errs)
+		log.Warn("Failed to parse user reference.", err, log.NewAttr("reference", reference))
 	}
 
-	if (len(request.To) + len(request.CC) + len(request.BCC)) == 0 {
-		return nil, core.NewBadRequestError("-629", request, "No email recipients provided.")
+	if recipients.IsEmpty() {
+		return nil, core.NewBadRequestError("-628", request, "No email recipients provided.")
 	}
 
 	if !request.DryRun {
-		err = email.SendFull(request.To, request.CC, request.BCC, request.Subject, request.Body, request.HTML)
+		err := email.SendFull(recipients.To, recipients.CC, recipients.BCC, request.Subject, request.Body, request.HTML)
 		if err != nil {
-			return nil, core.NewInternalError("-630", request, "Failed to send email.")
+			return nil, core.NewInternalError("-629", request, "Failed to send email.")
 		}
 	}
 
 	response := EmailResponse{
-		To:  request.To,
-		CC:  request.CC,
-		BCC: request.BCC,
+		To:     recipients.To,
+		CC:     recipients.CC,
+		BCC:    recipients.BCC,
+		Errors: errors,
 	}
 
 	return &response, nil

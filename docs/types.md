@@ -84,6 +84,9 @@ The following values are allowed:
  - Negative Email - An email address preceded by a minus sign (e.g., "-alice@test.edulinq.org")
    will remove this address from the email recipients (even if they are not currently there).
    This can be useful when using course roles but you want to exclude someone.
+ - Negative Course Role - A course role preceded by a minus sign (e.g., "-student")
+   will remove all course users with that role. This can be usefil when using the "\*"
+   but you want to exclude a role.
 
 ### Timestamp
 

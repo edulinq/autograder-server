@@ -12,12 +12,16 @@ func TestSendEmailFullBase(test *testing.T) {
 	defer ClearTestMessages()
 
 	message := &Message{
-		To:      []string{"a@test.edulinq.org"},
-		CC:      []string{"b@test.edulinq.org"},
-		BCC:     []string{"c@test.edulinq.org"},
-		Subject: "sub",
-		Body:    "body",
-		HTML:    false,
+		MessageRecipients: MessageRecipients{
+			To:  []string{"a@test.edulinq.org"},
+			CC:  []string{"b@test.edulinq.org"},
+			BCC: []string{"c@test.edulinq.org"},
+		},
+		MessageContent: MessageContent{
+			Subject: "sub",
+			Body:    "body",
+			HTML:    false,
+		},
 	}
 
 	err := SendFull(message.To, message.CC, message.BCC, message.Subject, message.Body, message.HTML)

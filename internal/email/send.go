@@ -50,12 +50,16 @@ func Send(to []string, subject string, body string, html bool) error {
 
 func SendFull(to []string, cc []string, bcc []string, subject string, body string, html bool) error {
 	return SendMessage(&Message{
-		To:      to,
-		CC:      cc,
-		BCC:     bcc,
-		Subject: subject,
-		Body:    body,
-		HTML:    html,
+		MessageRecipients: MessageRecipients{
+			To:  to,
+			CC:  cc,
+			BCC: bcc,
+		},
+		MessageContent: MessageContent{
+			Subject: subject,
+			Body:    body,
+			HTML:    html,
+		},
 	})
 }
 

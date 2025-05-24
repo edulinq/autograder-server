@@ -5,7 +5,7 @@
             "input": [
                 {
                     "name": "bcc",
-                    "type": "[]string"
+                    "type": "[]model.CourseUserReference"
                 },
                 {
                     "name": "body",
@@ -13,7 +13,7 @@
                 },
                 {
                     "name": "cc",
-                    "type": "[]string"
+                    "type": "[]model.CourseUserReference"
                 },
                 {
                     "name": "course-id",
@@ -33,7 +33,7 @@
                 },
                 {
                     "name": "to",
-                    "type": "[]string"
+                    "type": "[]model.CourseUserReference"
                 },
                 {
                     "name": "user-email",
@@ -52,6 +52,10 @@
                 {
                     "name": "cc",
                     "type": "[]string"
+                },
+                {
+                    "name": "errors",
+                    "type": "map[string]string"
                 },
                 {
                     "name": "to",
@@ -929,6 +933,10 @@
                     "type": "string"
                 },
                 {
+                    "name": "references",
+                    "type": "[]model.CourseUserReference"
+                },
+                {
                     "name": "user-email",
                     "type": "string"
                 },
@@ -938,6 +946,10 @@
                 }
             ],
             "output": [
+                {
+                    "name": "errors",
+                    "type": "map[string]string"
+                },
                 {
                     "name": "users",
                     "type": "[]*core.CourseUserInfo"
@@ -1761,6 +1773,10 @@
                     "type": "[]model.AssignmentInfo"
                 }
             ]
+        },
+        "model.CourseUserReference": {
+            "category": "alias",
+            "alias-type": "string"
         },
         "model.CourseUserRole": {
             "category": "alias",

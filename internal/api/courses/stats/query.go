@@ -30,7 +30,7 @@ func HandleQuery(request *QueryRequest) (*QueryResponse, *core.APIError) {
 
 	records, err := db.GetMetrics(request.Query)
 	if err != nil {
-		return nil, core.NewInternalError("-631", request, "Failed to query course stats.").Err(err)
+		return nil, core.NewInternalError("-630", request, "Failed to query course stats.").Err(err)
 	}
 
 	response := QueryResponse{
