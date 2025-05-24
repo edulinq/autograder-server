@@ -1,8 +1,8 @@
 package model
 
 import (
+	"fmt"
 	"reflect"
-	"strings"
 	"testing"
 
 	"github.com/edulinq/autograder/internal/util"
@@ -10,9 +10,9 @@ import (
 
 func TestResolveCourseUserReferences(test *testing.T) {
 	testCases := []struct {
-		input          []CourseUserReference
-		output         *ResolvedCourseUserReference
-		errorSubstring string
+		input      []CourseUserReference
+		output     *ResolvedCourseUserReference
+		userErrors map[string]error
 	}{
 		// Target Emails
 		{
@@ -22,7 +22,7 @@ func TestResolveCourseUserReferences(test *testing.T) {
 					"course-student@test.edulinq.org": nil,
 				},
 			},
-			"",
+			nil,
 		},
 		{
 			[]CourseUserReference{"-course-student@test.edulinq.org"},
@@ -31,7 +31,7 @@ func TestResolveCourseUserReferences(test *testing.T) {
 					"course-student@test.edulinq.org": nil,
 				},
 			},
-			"",
+			nil,
 		},
 
 		// Target Roles
@@ -42,7 +42,7 @@ func TestResolveCourseUserReferences(test *testing.T) {
 					"admin": nil,
 				},
 			},
-			"",
+			nil,
 		},
 		{
 			[]CourseUserReference{"-admin"},
@@ -51,7 +51,7 @@ func TestResolveCourseUserReferences(test *testing.T) {
 					"admin": nil,
 				},
 			},
-			"",
+			nil,
 		},
 
 		// All Users
@@ -60,14 +60,14 @@ func TestResolveCourseUserReferences(test *testing.T) {
 			&ResolvedCourseUserReference{
 				CourseUserRoles: GetCommonCourseUserRoleStrings(),
 			},
-			"",
+			nil,
 		},
 		{
 			[]CourseUserReference{"-*"},
 			&ResolvedCourseUserReference{
 				ExcludeCourseUserRoles: GetCommonCourseUserRoleStrings(),
 			},
-			"",
+			nil,
 		},
 
 		// Complex, Normalization
@@ -86,7 +86,7 @@ func TestResolveCourseUserReferences(test *testing.T) {
 					"admin": nil,
 				},
 			},
-			"",
+			nil,
 		},
 		{
 			[]CourseUserReference{
@@ -103,7 +103,7 @@ func TestResolveCourseUserReferences(test *testing.T) {
 					"admin": nil,
 				},
 			},
-			"",
+			nil,
 		},
 
 		// Complex, Non-Overlapping
@@ -128,7 +128,7 @@ func TestResolveCourseUserReferences(test *testing.T) {
 					"owner": nil,
 				},
 			},
-			"",
+			nil,
 		},
 
 		// Complex, Overlapping
@@ -153,7 +153,7 @@ func TestResolveCourseUserReferences(test *testing.T) {
 					"admin": nil,
 				},
 			},
-			"",
+			nil,
 		},
 		{
 			[]CourseUserReference{
@@ -163,7 +163,7 @@ func TestResolveCourseUserReferences(test *testing.T) {
 			&ResolvedCourseUserReference{
 				CourseUserRoles: GetCommonCourseUserRoleStrings(),
 			},
-			"",
+			nil,
 		},
 		{
 			[]CourseUserReference{
@@ -173,7 +173,7 @@ func TestResolveCourseUserReferences(test *testing.T) {
 			&ResolvedCourseUserReference{
 				ExcludeCourseUserRoles: GetCommonCourseUserRoleStrings(),
 			},
-			"",
+			nil,
 		},
 
 		// Not Enrolled Users
@@ -184,7 +184,7 @@ func TestResolveCourseUserReferences(test *testing.T) {
 					"zzz@test.edulinq.org": nil,
 				},
 			},
-			"",
+			nil,
 		},
 		{
 			[]CourseUserReference{"server-user@test.edulinq.org"},
@@ -193,7 +193,7 @@ func TestResolveCourseUserReferences(test *testing.T) {
 					"server-user@test.edulinq.org": nil,
 				},
 			},
-			"",
+			nil,
 		},
 
 		// Errors
@@ -202,29 +202,21 @@ func TestResolveCourseUserReferences(test *testing.T) {
 		{
 			[]CourseUserReference{"ZZZ"},
 			nil,
-			"Unknown course role 'zzz' in reference: 'ZZZ'.",
+			map[string]error{
+				"ZZZ": fmt.Errorf("Unknown course role 'zzz'."),
+			},
 		},
 	}
 
 	for i, testCase := range testCases {
-		result, err := ResolveCourseUserReferences(testCase.input)
-		if err != nil {
-			if testCase.errorSubstring != "" {
-				if !strings.Contains(err.Error(), testCase.errorSubstring) {
-					test.Errorf("Case %d: Did not get expected error output. Expected Substring: '%s', Actual Error: '%s'.",
-						i, testCase.errorSubstring, err.Error())
-				}
-			} else {
-				test.Errorf("Case %d: Failed to parse user reference '%s': '%s'.",
-					i, util.MustToJSONIndent(testCase.output), err.Error())
-			}
-
+		result, userErrors := ResolveCourseUserReferences(testCase.input)
+		if !reflect.DeepEqual(userErrors, testCase.userErrors) {
+			test.Errorf("Case %d: Unexpected user errors. Expected: '%v', Actual: '%v'.",
+				i, testCase.userErrors, userErrors)
 			continue
 		}
 
-		if testCase.errorSubstring != "" {
-			test.Errorf("Case %d: Did not get expected error '%s' on '%s'.",
-				i, testCase.errorSubstring, util.MustToJSONIndent(testCase.input))
+		if len(testCase.userErrors) != 0 {
 			continue
 		}
 

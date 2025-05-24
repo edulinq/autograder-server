@@ -158,7 +158,7 @@ func TestEmail(test *testing.T) {
 			MessageContent: email.MessageContent{
 				Subject: "Subject",
 			},
-			Locator: "-629",
+			Locator: "-628",
 		},
 
 		// No recipients after resolving email addresses.
@@ -170,7 +170,7 @@ func TestEmail(test *testing.T) {
 			MessageContent: email.MessageContent{
 				Subject: "Subject",
 			},
-			Locator: "-629",
+			Locator: "-628",
 		},
 	}
 

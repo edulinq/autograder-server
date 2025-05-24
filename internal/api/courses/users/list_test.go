@@ -42,16 +42,16 @@ func TestList(test *testing.T) {
 		{"server-creator", nil, nil, nil, "-040"},
 
 		// Valid Permissions, All Users
-		{"course-grader", nil, allUsers, map[string]string{}, ""},
-		{"course-admin", []string{}, allUsers, map[string]string{}, ""},
-		{"course-owner", []string{"*"}, allUsers, map[string]string{}, ""},
+		{"course-grader", nil, allUsers, nil, ""},
+		{"course-admin", []string{}, allUsers, nil, ""},
+		{"course-owner", []string{"*"}, allUsers, nil, ""},
 
 		// Valid Permissions, Role Escalation, All Users
 		{
 			"server-admin",
 			[]string{"admin", "grader", "other", "owner", "student"},
 			allUsers,
-			map[string]string{},
+			nil,
 			"",
 		},
 		{
@@ -64,21 +64,19 @@ func TestList(test *testing.T) {
 				"course-student@test.edulinq.org",
 			},
 			allUsers,
-			map[string]string{},
+			nil,
 			"",
 		},
 
 		// No Users
-		{"course-admin", []string{"-*"}, []*model.CourseUser{}, map[string]string{}, ""},
+		{"course-admin", []string{"-*"}, []*model.CourseUser{}, nil, ""},
 
-		// Invalid Users
+		// Non Enrolled Users
 		{
 			"course-admin",
 			[]string{"server-admin@test.edulinq.org"},
 			nil,
-			map[string]string{
-				"server-admin@test.edulinq.org": "Unknown course user: 'server-admin@test.edulinq.org'.",
-			},
+			nil,
 			"",
 		},
 		{
@@ -86,7 +84,7 @@ func TestList(test *testing.T) {
 			[]string{"creator"},
 			nil,
 			map[string]string{
-				"creator": "Unknown course role: 'creator'.",
+				"creator": "Unknown course role 'creator'.",
 			},
 			"",
 		},
@@ -94,7 +92,7 @@ func TestList(test *testing.T) {
 
 	for i, testCase := range testCases {
 		fields := map[string]any{
-			"users": testCase.input,
+			"references": testCase.input,
 		}
 
 		response := core.SendTestAPIRequestFull(test, `courses/users/list`, fields, nil, testCase.email)

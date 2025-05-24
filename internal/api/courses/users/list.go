@@ -2,7 +2,6 @@ package users
 
 import (
 	"github.com/edulinq/autograder/internal/api/core"
-	"github.com/edulinq/autograder/internal/db"
 	"github.com/edulinq/autograder/internal/log"
 	"github.com/edulinq/autograder/internal/model"
 )
@@ -10,8 +9,9 @@ import (
 type ListRequest struct {
 	core.APIRequestCourseUserContext
 	core.MinCourseRoleGrader
+	Users core.CourseUsers `json:"-"`
 
-	Users []model.CourseUserReference `json:"users"`
+	References []model.CourseUserReference `json:"references"`
 }
 
 type ListResponse struct {
@@ -22,27 +22,21 @@ type ListResponse struct {
 // List the users in the course.
 func HandleList(request *ListRequest) (*ListResponse, *core.APIError) {
 	// Default to listing all users in the course.
-	if len(request.Users) == 0 {
-		request.Users = []model.CourseUserReference{"*"}
+	if len(request.References) == 0 {
+		request.References = []model.CourseUserReference{"*"}
 	}
 
-	reference, err := model.ResolveCourseUserReferences(request.Course, request.Users)
-	if err != nil {
-		return nil, core.NewInternalError("-635", request, "Failed to parse course user references.").Err(err)
-	}
+	reference, userErrors := model.ResolveCourseUserReferences(request.References)
 
 	errors := make(map[string]string, len(userErrors))
 
-	for user, err := range userErrors {
-		errors[user] = err.Error()
+	for reference, err := range userErrors {
+		errors[reference] = err.Error()
 
-		log.Warn("Failed to parse user reference.", err, log.NewAttr("reference", user))
+		log.Warn("Failed to parse user reference.", err, log.NewAttr("reference", reference))
 	}
 
-	users, err := db.ResolveCourseUsers(request.Course, reference)
-	if err != nil {
-		return nil, core.NewInternalError("-636", request, "Failed to resolve course users.").Err(err)
-	}
+	users := model.ResolveCourseUsers(request.Users, reference)
 
 	response := ListResponse{
 		Users:  core.NewCourseUserInfos(users),

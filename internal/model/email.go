@@ -1,8 +1,6 @@
 package model
 
 import (
-	"errors"
-
 	"github.com/edulinq/autograder/internal/email"
 )
 
@@ -12,26 +10,26 @@ type CourseMessageRecipients struct {
 	BCC []CourseUserReference `json:"bcc"`
 }
 
-func (this *CourseMessageRecipients) ToMessageRecipients(users map[string]*CourseUser) (*email.MessageRecipients, error) {
-	var errs error = nil
+func (this *CourseMessageRecipients) ToMessageRecipients(users map[string]*CourseUser) (*email.MessageRecipients, map[string]error) {
+	userErrors := make(map[string]error, 0)
 
-	reference, err := ResolveCourseUserReferences(this.To)
-	if err != nil {
-		errs = errors.Join(errs, err)
+	reference, errs := ResolveCourseUserReferences(this.To)
+	for input, err := range errs {
+		userErrors[input] = err
 	}
 
 	to := ResolveCourseUserEmails(users, reference)
 
-	reference, err = ResolveCourseUserReferences(this.CC)
-	if err != nil {
-		errs = errors.Join(errs, err)
+	reference, errs = ResolveCourseUserReferences(this.CC)
+	for input, err := range errs {
+		userErrors[input] = err
 	}
 
 	cc := ResolveCourseUserEmails(users, reference)
 
-	reference, err = ResolveCourseUserReferences(this.BCC)
-	if err != nil {
-		errs = errors.Join(errs, err)
+	reference, errs = ResolveCourseUserReferences(this.BCC)
+	for input, err := range errs {
+		userErrors[input] = err
 	}
 
 	bcc := ResolveCourseUserEmails(users, reference)
@@ -40,6 +38,10 @@ func (this *CourseMessageRecipients) ToMessageRecipients(users map[string]*Cours
 		To:  to,
 		CC:  cc,
 		BCC: bcc,
+	}
+
+	if len(errs) == 0 {
+		errs = nil
 	}
 
 	return &recipients, errs

@@ -1,7 +1,6 @@
 package model
 
 import (
-	"errors"
 	"fmt"
 	"slices"
 	"strings"
@@ -58,7 +57,7 @@ func (this ResolvedCourseUserReference) RefersTo(email string, role string) bool
 // APIs using this function should require a sufficient role or custom permissions checking.
 // Returns a reference and user errors.
 // User-level errors return (partial reference, user errors).
-func ResolveCourseUserReferences(rawReferences []CourseUserReference) (*ResolvedCourseUserReference, error) {
+func ResolveCourseUserReferences(rawReferences []CourseUserReference) (*ResolvedCourseUserReference, map[string]error) {
 	courseUserReference := ResolvedCourseUserReference{
 		Emails:                 make(map[string]any, 0),
 		ExcludeEmails:          make(map[string]any, 0),
@@ -66,7 +65,7 @@ func ResolveCourseUserReferences(rawReferences []CourseUserReference) (*Resolved
 		ExcludeCourseUserRoles: make(map[string]any, 0),
 	}
 
-	var errs error = nil
+	userErrors := make(map[string]error, 0)
 
 	commonCourseRoles := GetCommonCourseUserRoleStrings()
 
@@ -101,7 +100,7 @@ func ResolveCourseUserReferences(rawReferences []CourseUserReference) (*Resolved
 			// Target a specific course role.
 			_, ok := commonCourseRoles[reference]
 			if !ok {
-				errs = errors.Join(errs, fmt.Errorf("Unknown course role '%s' in reference: '%s'.", reference, rawReference))
+				userErrors[string(rawReference)] = fmt.Errorf("Unknown course role '%s'.", reference)
 				continue
 			}
 
@@ -113,7 +112,11 @@ func ResolveCourseUserReferences(rawReferences []CourseUserReference) (*Resolved
 		}
 	}
 
-	return &courseUserReference, errs
+	if len(userErrors) == 0 {
+		userErrors = nil
+	}
+
+	return &courseUserReference, userErrors
 }
 
 // Returns a sorted list of users based on the course reference.

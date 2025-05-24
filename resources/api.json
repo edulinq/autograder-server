@@ -54,6 +54,10 @@
                     "type": "[]string"
                 },
                 {
+                    "name": "errors",
+                    "type": "map[string]string"
+                },
+                {
                     "name": "to",
                     "type": "[]string"
                 }
@@ -929,16 +933,16 @@
                     "type": "string"
                 },
                 {
+                    "name": "references",
+                    "type": "[]model.CourseUserReference"
+                },
+                {
                     "name": "user-email",
                     "type": "string"
                 },
                 {
                     "name": "user-pass",
                     "type": "string"
-                },
-                {
-                    "name": "users",
-                    "type": "[]model.CourseUserReference"
                 }
             ],
             "output": [
