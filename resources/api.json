@@ -11,7 +11,7 @@
                 {
                     "name": "body",
                     "type": "string",
-                    "required": false
+                    "required": true
                 },
                 {
                     "name": "cc",
@@ -36,12 +36,12 @@
                 {
                     "name": "subject",
                     "type": "string",
-                    "required": false
+                    "required": true
                 },
                 {
                     "name": "to",
                     "type": "[]string",
-                    "required": false
+                    "required": true
                 },
                 {
                     "name": "user-email",
@@ -168,7 +168,7 @@
                 {
                     "name": "submissions",
                     "type": "[]string",
-                    "required": false
+                    "required": true
                 },
                 {
                     "name": "user-email",
@@ -225,7 +225,7 @@
                 {
                     "name": "submissions",
                     "type": "[]string",
-                    "required": false
+                    "required": true
                 },
                 {
                     "name": "user-email",
@@ -532,7 +532,7 @@
                 {
                     "name": "proxy-email",
                     "type": "core.TargetCourseUser",
-                    "required": false
+                    "required": true
                 },
                 {
                     "name": "proxy-time",
@@ -603,7 +603,7 @@
                 {
                     "name": "proxy-email",
                     "type": "core.TargetCourseUser",
-                    "required": false
+                    "required": true
                 },
                 {
                     "name": "proxy-time",
@@ -808,7 +808,7 @@
                 {
                     "name": "type",
                     "type": "string",
-                    "required": false
+                    "required": true
                 },
                 {
                     "name": "user-email",
@@ -844,7 +844,7 @@
                 {
                     "name": "filespec",
                     "type": "util.FileSpec",
-                    "required": false
+                    "required": true
                 },
                 {
                     "name": "skip-build-images",
@@ -951,7 +951,7 @@
                 {
                     "name": "target-email",
                     "type": "core.TargetCourseUser",
-                    "required": false
+                    "required": true
                 },
                 {
                     "name": "user-email",
@@ -987,7 +987,7 @@
                 {
                     "name": "raw-course-users",
                     "type": "[]*model.RawCourseUserData",
-                    "required": false
+                    "required": true
                 },
                 {
                     "name": "send-emails",
@@ -1089,7 +1089,7 @@
                 {
                     "name": "assignment-lms-id",
                     "type": "string",
-                    "required": false
+                    "required": true
                 },
                 {
                     "name": "course-id",
@@ -1099,7 +1099,7 @@
                 {
                     "name": "scores",
                     "type": "[]upload.ScoreEntry",
-                    "required": false
+                    "required": true
                 },
                 {
                     "name": "user-email",
@@ -1142,7 +1142,7 @@
                 {
                     "name": "target-email",
                     "type": "core.TargetCourseUser",
-                    "required": false
+                    "required": true
                 },
                 {
                     "name": "user-email",
@@ -1285,7 +1285,7 @@
                 {
                     "name": "type",
                     "type": "string",
-                    "required": false
+                    "required": true
                 },
                 {
                     "name": "user-email",
@@ -1417,7 +1417,7 @@
                 {
                     "name": "new-pass",
                     "type": "string",
-                    "required": false
+                    "required": true
                 },
                 {
                     "name": "user-email",
@@ -1447,7 +1447,7 @@
                 {
                     "name": "user-email",
                     "type": "string",
-                    "required": false
+                    "required": true
                 }
             ],
             "output": []
@@ -1458,7 +1458,7 @@
                 {
                     "name": "target-email",
                     "type": "core.TargetServerUser",
-                    "required": false
+                    "required": true
                 },
                 {
                     "name": "user-email",
@@ -1514,7 +1514,7 @@
                 {
                     "name": "token-id",
                     "type": "string",
-                    "required": false
+                    "required": true
                 },
                 {
                     "name": "user-email",
@@ -1545,7 +1545,7 @@
                 {
                     "name": "raw-users",
                     "type": "[]*model.RawServerUserData",
-                    "required": false
+                    "required": true
                 },
                 {
                     "name": "send-emails",
@@ -1598,7 +1598,7 @@
                 {
                     "name": "submissions",
                     "type": "[]string",
-                    "required": false
+                    "required": true
                 },
                 {
                     "name": "wait-for-completion",

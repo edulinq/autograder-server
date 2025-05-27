@@ -10,7 +10,7 @@ type DropRequest struct {
 	core.APIRequestCourseUserContext
 	core.MinCourseRoleAdmin
 
-	TargetCourseUser core.TargetCourseUser `json:"target-email"`
+	TargetCourseUser core.TargetCourseUser `json:"target-email" required:""`
 }
 
 type DropResponse struct {

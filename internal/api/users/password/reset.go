@@ -10,7 +10,7 @@ import (
 type PasswordResetRequest struct {
 	core.APIRequest
 
-	UserEmail core.NonEmptyString `json:"user-email"`
+	UserEmail core.NonEmptyString `json:"user-email" required:""`
 }
 
 type PasswordResetResponse struct{}

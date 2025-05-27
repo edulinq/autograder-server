@@ -10,11 +10,11 @@ import (
 )
 
 type Message struct {
-	To      []string `json:"to"`
+	To      []string `json:"to" required:""`
 	CC      []string `json:"cc"`
 	BCC     []string `json:"bcc"`
-	Subject string   `json:"subject"`
-	Body    string   `json:"body"`
+	Subject string   `json:"subject" required:""`
+	Body    string   `json:"body" required:""`
 	HTML    bool     `json:"html"`
 }
 

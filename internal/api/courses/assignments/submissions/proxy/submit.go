@@ -11,7 +11,7 @@ type SubmitRequest struct {
 	core.MinCourseRoleGrader
 	Files core.POSTFiles `json:"-"`
 
-	ProxyUser core.TargetCourseUser `json:"proxy-email"`
+	ProxyUser core.TargetCourseUser `json:"proxy-email" required:""`
 	ProxyTime *timestamp.Timestamp  `json:"proxy-time"`
 
 	Message string `json:"message"`

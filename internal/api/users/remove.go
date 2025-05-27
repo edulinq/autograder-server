@@ -9,7 +9,7 @@ type RemoveRequest struct {
 	core.APIRequestUserContext
 	core.MinServerRoleAdmin
 
-	TargetUser core.TargetServerUser `json:"target-email"`
+	TargetUser core.TargetServerUser `json:"target-email" required:""`
 }
 
 type RemoveResponse struct {
