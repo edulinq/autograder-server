@@ -507,7 +507,7 @@ func TestResolveCourseUsers(test *testing.T) {
 			Role:  CourseRoleGrader,
 		},
 		"course-other@test.edulinq.org": &CourseUser{
-			Email: "course-owner@test.edulinq.org",
+			Email: "course-other@test.edulinq.org",
 			Role:  CourseRoleOther,
 		},
 		"course-owner@test.edulinq.org": &CourseUser{

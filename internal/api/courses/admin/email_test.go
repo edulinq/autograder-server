@@ -13,20 +13,19 @@ func TestEmail(test *testing.T) {
 	defer email.ClearTestMessages()
 
 	testCases := []struct {
-		model.CourseMessageRecipients
-		email.MessageContent
-
-		UserEmail string
-		Locator   string
-		DryRun    bool
+		Recipients model.CourseMessageRecipients
+		Content    email.MessageContent
+		UserEmail  string
+		Locator    string
+		DryRun     bool
 	}{
 		// Valid permissions.
 		{
 			UserEmail: "course-grader",
-			CourseMessageRecipients: model.CourseMessageRecipients{
+			Recipients: model.CourseMessageRecipients{
 				To: []model.CourseUserReference{"course-student@test.edulinq.org"},
 			},
-			MessageContent: email.MessageContent{
+			Content: email.MessageContent{
 				Subject: "Subject",
 			},
 		},
@@ -34,19 +33,19 @@ func TestEmail(test *testing.T) {
 		// Valid permissions, role escalation.
 		{
 			UserEmail: "server-admin",
-			CourseMessageRecipients: model.CourseMessageRecipients{
+			Recipients: model.CourseMessageRecipients{
 				To: []model.CourseUserReference{"course-student@test.edulinq.org"},
 			},
-			MessageContent: email.MessageContent{
+			Content: email.MessageContent{
 				Subject: "Subject",
 			},
 		},
 		{
 			UserEmail: "server-owner",
-			CourseMessageRecipients: model.CourseMessageRecipients{
+			Recipients: model.CourseMessageRecipients{
 				To: []model.CourseUserReference{"course-student@test.edulinq.org"},
 			},
-			MessageContent: email.MessageContent{
+			Content: email.MessageContent{
 				Subject: "Subject",
 			},
 		},
@@ -54,10 +53,10 @@ func TestEmail(test *testing.T) {
 		// CC
 		{
 			UserEmail: "course-grader",
-			CourseMessageRecipients: model.CourseMessageRecipients{
+			Recipients: model.CourseMessageRecipients{
 				CC: []model.CourseUserReference{"course-student@test.edulinq.org"},
 			},
-			MessageContent: email.MessageContent{
+			Content: email.MessageContent{
 				Subject: "Subject",
 			},
 		},
@@ -65,10 +64,10 @@ func TestEmail(test *testing.T) {
 		// BCC
 		{
 			UserEmail: "course-grader",
-			CourseMessageRecipients: model.CourseMessageRecipients{
+			Recipients: model.CourseMessageRecipients{
 				BCC: []model.CourseUserReference{"course-student@test.edulinq.org"},
 			},
-			MessageContent: email.MessageContent{
+			Content: email.MessageContent{
 				Subject: "Subject",
 			},
 		},
@@ -76,10 +75,10 @@ func TestEmail(test *testing.T) {
 		// Body
 		{
 			UserEmail: "course-grader",
-			CourseMessageRecipients: model.CourseMessageRecipients{
+			Recipients: model.CourseMessageRecipients{
 				To: []model.CourseUserReference{"course-student@test.edulinq.org"},
 			},
-			MessageContent: email.MessageContent{
+			Content: email.MessageContent{
 				Subject: "Subject",
 				Body:    "Body",
 			},
@@ -88,10 +87,10 @@ func TestEmail(test *testing.T) {
 		//HTML
 		{
 			UserEmail: "course-grader",
-			CourseMessageRecipients: model.CourseMessageRecipients{
+			Recipients: model.CourseMessageRecipients{
 				To: []model.CourseUserReference{"course-student@test.edulinq.org"},
 			},
-			MessageContent: email.MessageContent{
+			Content: email.MessageContent{
 				Subject: "Subject",
 				HTML:    true,
 			},
@@ -100,10 +99,10 @@ func TestEmail(test *testing.T) {
 		// Dry run.
 		{
 			UserEmail: "course-grader",
-			CourseMessageRecipients: model.CourseMessageRecipients{
+			Recipients: model.CourseMessageRecipients{
 				To: []model.CourseUserReference{"course-student@test.edulinq.org"},
 			},
-			MessageContent: email.MessageContent{
+			Content: email.MessageContent{
 				Subject: "Subject",
 			},
 			DryRun: true,
@@ -112,10 +111,10 @@ func TestEmail(test *testing.T) {
 		// Invalid permissions.
 		{
 			UserEmail: "course-student",
-			CourseMessageRecipients: model.CourseMessageRecipients{
+			Recipients: model.CourseMessageRecipients{
 				To: []model.CourseUserReference{"course-student@test.edulinq.org"},
 			},
-			MessageContent: email.MessageContent{
+			Content: email.MessageContent{
 				Subject: "Subject",
 			},
 			Locator: "-020",
@@ -124,20 +123,20 @@ func TestEmail(test *testing.T) {
 		// Invalid permissions, role escalation.
 		{
 			UserEmail: "server-user",
-			CourseMessageRecipients: model.CourseMessageRecipients{
+			Recipients: model.CourseMessageRecipients{
 				To: []model.CourseUserReference{"course-student@test.edulinq.org"},
 			},
-			MessageContent: email.MessageContent{
+			Content: email.MessageContent{
 				Subject: "Subject",
 			},
 			Locator: "-040",
 		},
 		{
 			UserEmail: "server-creator",
-			CourseMessageRecipients: model.CourseMessageRecipients{
+			Recipients: model.CourseMessageRecipients{
 				To: []model.CourseUserReference{"course-student@test.edulinq.org"},
 			},
-			MessageContent: email.MessageContent{
+			Content: email.MessageContent{
 				Subject: "Subject",
 			},
 			Locator: "-040",
@@ -146,7 +145,7 @@ func TestEmail(test *testing.T) {
 		// No subject.
 		{
 			UserEmail: "course-grader",
-			CourseMessageRecipients: model.CourseMessageRecipients{
+			Recipients: model.CourseMessageRecipients{
 				To: []model.CourseUserReference{"course-student@test.edulinq.org"},
 			},
 			Locator: "-627",
@@ -155,7 +154,7 @@ func TestEmail(test *testing.T) {
 		// No recipients.
 		{
 			UserEmail: "course-grader",
-			MessageContent: email.MessageContent{
+			Content: email.MessageContent{
 				Subject: "Message in a Bottle",
 			},
 			Locator: "-628",
@@ -164,10 +163,10 @@ func TestEmail(test *testing.T) {
 		// No recipients after resolving email addresses.
 		{
 			UserEmail: "course-grader",
-			CourseMessageRecipients: model.CourseMessageRecipients{
+			Recipients: model.CourseMessageRecipients{
 				To: []model.CourseUserReference{"course-student", "-course-student@test.edulinq.org"},
 			},
-			MessageContent: email.MessageContent{
+			Content: email.MessageContent{
 				Subject: "Subject",
 			},
 			Locator: "-628",
@@ -178,10 +177,10 @@ func TestEmail(test *testing.T) {
 		email.ClearTestMessages()
 
 		var fields map[string]any
-		util.MustJSONFromString(util.MustToJSON(testCase.CourseMessageRecipients), &fields)
-		fields["subject"] = testCase.Subject
-		fields["body"] = testCase.Body
-		fields["html"] = testCase.HTML
+		util.MustJSONFromString(util.MustToJSON(testCase.Recipients), &fields)
+		fields["subject"] = testCase.Content.Subject
+		fields["body"] = testCase.Content.Body
+		fields["html"] = testCase.Content.HTML
 		fields["dry-run"] = testCase.DryRun
 
 		response := core.SendTestAPIRequestFull(test, "courses/admin/email", fields, nil, testCase.UserEmail)
@@ -224,13 +223,13 @@ func TestEmail(test *testing.T) {
 
 		testMessage := testMessages[0]
 
-		if testCase.Body != testMessage.Body {
-			test.Errorf("Case %d: Unexpected body content. Expected: '%s', actual: '%s'.", i, testCase.Body, testMessage.Body)
+		if testCase.Content.Body != testMessage.Body {
+			test.Errorf("Case %d: Unexpected body content. Expected: '%s', actual: '%s'.", i, testCase.Content.Body, testMessage.Body)
 			continue
 		}
 
-		if testCase.HTML != testMessage.HTML {
-			test.Errorf("Case %d: Unexpected HTML value. Expected: '%t', actual: '%t'.", i, testCase.HTML, testMessage.HTML)
+		if testCase.Content.HTML != testMessage.HTML {
+			test.Errorf("Case %d: Unexpected HTML value. Expected: '%t', actual: '%t'.", i, testCase.Content.HTML, testMessage.HTML)
 			continue
 		}
 	}
