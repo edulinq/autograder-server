@@ -5,18 +5,15 @@
             "input": [
                 {
                     "name": "bcc",
-                    "type": "[]string",
-                    "required": false
+                    "type": "[]string"
                 },
                 {
                     "name": "body",
-                    "type": "string",
-                    "required": true
+                    "type": "string"
                 },
                 {
                     "name": "cc",
-                    "type": "[]string",
-                    "required": false
+                    "type": "[]string"
                 },
                 {
                     "name": "course-id",
@@ -25,13 +22,11 @@
                 },
                 {
                     "name": "dry-run",
-                    "type": "bool",
-                    "required": false
+                    "type": "bool"
                 },
                 {
                     "name": "html",
-                    "type": "bool",
-                    "required": false
+                    "type": "bool"
                 },
                 {
                     "name": "subject",
@@ -40,8 +35,7 @@
                 },
                 {
                     "name": "to",
-                    "type": "[]string",
-                    "required": true
+                    "type": "[]string"
                 },
                 {
                     "name": "user-email",
@@ -157,13 +151,11 @@
             "input": [
                 {
                     "name": "dry-run",
-                    "type": "bool",
-                    "required": false
+                    "type": "bool"
                 },
                 {
                     "name": "overwrite-records",
-                    "type": "bool",
-                    "required": false
+                    "type": "bool"
                 },
                 {
                     "name": "submissions",
@@ -182,8 +174,7 @@
                 },
                 {
                     "name": "wait-for-completion",
-                    "type": "bool",
-                    "required": false
+                    "type": "bool"
                 }
             ],
             "output": [
@@ -214,13 +205,11 @@
             "input": [
                 {
                     "name": "dry-run",
-                    "type": "bool",
-                    "required": false
+                    "type": "bool"
                 },
                 {
                     "name": "overwrite-records",
-                    "type": "bool",
-                    "required": false
+                    "type": "bool"
                 },
                 {
                     "name": "submissions",
@@ -239,8 +228,7 @@
                 },
                 {
                     "name": "wait-for-completion",
-                    "type": "bool",
-                    "required": false
+                    "type": "bool"
                 }
             ],
             "output": [
@@ -281,8 +269,7 @@
                 },
                 {
                     "name": "filter-role",
-                    "type": "int",
-                    "required": false
+                    "type": "int"
                 },
                 {
                     "name": "user-email",
@@ -317,8 +304,7 @@
                 },
                 {
                     "name": "filter-role",
-                    "type": "int",
-                    "required": false
+                    "type": "int"
                 },
                 {
                     "name": "user-email",
@@ -353,13 +339,11 @@
                 },
                 {
                     "name": "target-email",
-                    "type": "core.TargetCourseUserSelfOrGrader",
-                    "required": false
+                    "type": "core.TargetCourseUserSelfOrGrader"
                 },
                 {
                     "name": "target-submission",
-                    "type": "string",
-                    "required": false
+                    "type": "string"
                 },
                 {
                     "name": "user-email",
@@ -402,8 +386,7 @@
                 },
                 {
                     "name": "target-email",
-                    "type": "core.TargetCourseUserSelfOrGrader",
-                    "required": false
+                    "type": "core.TargetCourseUserSelfOrGrader"
                 },
                 {
                     "name": "user-email",
@@ -442,8 +425,7 @@
                 },
                 {
                     "name": "target-email",
-                    "type": "core.TargetCourseUserSelfOrGrader",
-                    "required": false
+                    "type": "core.TargetCourseUserSelfOrGrader"
                 },
                 {
                     "name": "user-email",
@@ -482,13 +464,11 @@
                 },
                 {
                     "name": "target-email",
-                    "type": "core.TargetCourseUserSelfOrGrader",
-                    "required": false
+                    "type": "core.TargetCourseUserSelfOrGrader"
                 },
                 {
                     "name": "target-submission",
-                    "type": "string",
-                    "required": false
+                    "type": "string"
                 },
                 {
                     "name": "user-email",
@@ -536,13 +516,11 @@
                 },
                 {
                     "name": "proxy-time",
-                    "type": "int64",
-                    "required": false
+                    "type": "int64"
                 },
                 {
                     "name": "target-submission",
-                    "type": "string",
-                    "required": false
+                    "type": "string"
                 },
                 {
                     "name": "user-email",
@@ -597,8 +575,7 @@
                 },
                 {
                     "name": "message",
-                    "type": "string",
-                    "required": false
+                    "type": "string"
                 },
                 {
                     "name": "proxy-email",
@@ -607,8 +584,7 @@
                 },
                 {
                     "name": "proxy-time",
-                    "type": "int64",
-                    "required": false
+                    "type": "int64"
                 },
                 {
                     "name": "user-email",
@@ -659,13 +635,11 @@
                 },
                 {
                     "name": "target-email",
-                    "type": "core.TargetCourseUserSelfOrGrader",
-                    "required": false
+                    "type": "core.TargetCourseUserSelfOrGrader"
                 },
                 {
                     "name": "target-submission",
-                    "type": "string",
-                    "required": false
+                    "type": "string"
                 },
                 {
                     "name": "user-email",
@@ -694,8 +668,7 @@
             "input": [
                 {
                     "name": "allow-late",
-                    "type": "bool",
-                    "required": false
+                    "type": "bool"
                 },
                 {
                     "name": "assignment-id",
@@ -709,8 +682,7 @@
                 },
                 {
                     "name": "message",
-                    "type": "string",
-                    "required": false
+                    "type": "string"
                 },
                 {
                     "name": "user-email",
@@ -752,8 +724,7 @@
                 },
                 {
                     "name": "dry-run",
-                    "type": "bool",
-                    "required": false
+                    "type": "bool"
                 },
                 {
                     "name": "user-email",
@@ -782,13 +753,11 @@
             "input": [
                 {
                     "name": "after",
-                    "type": "int64",
-                    "required": false
+                    "type": "int64"
                 },
                 {
                     "name": "before",
-                    "type": "int64",
-                    "required": false
+                    "type": "int64"
                 },
                 {
                     "name": "course-id",
@@ -797,13 +766,11 @@
                 },
                 {
                     "name": "limit",
-                    "type": "int",
-                    "required": false
+                    "type": "int"
                 },
                 {
                     "name": "sort",
-                    "type": "int",
-                    "required": false
+                    "type": "int"
                 },
                 {
                     "name": "type",
@@ -822,8 +789,7 @@
                 },
                 {
                     "name": "where",
-                    "type": "map[stats.MetricAttribute]interface {}",
-                    "required": false
+                    "type": "map[stats.MetricAttribute]interface {}"
                 }
             ],
             "output": [
@@ -838,8 +804,7 @@
             "input": [
                 {
                     "name": "dry-run",
-                    "type": "bool",
-                    "required": false
+                    "type": "bool"
                 },
                 {
                     "name": "filespec",
@@ -848,28 +813,23 @@
                 },
                 {
                     "name": "skip-build-images",
-                    "type": "bool",
-                    "required": false
+                    "type": "bool"
                 },
                 {
                     "name": "skip-emails",
-                    "type": "bool",
-                    "required": false
+                    "type": "bool"
                 },
                 {
                     "name": "skip-lms-sync",
-                    "type": "bool",
-                    "required": false
+                    "type": "bool"
                 },
                 {
                     "name": "skip-source-sync",
-                    "type": "bool",
-                    "required": false
+                    "type": "bool"
                 },
                 {
                     "name": "skip-template-files",
-                    "type": "bool",
-                    "required": false
+                    "type": "bool"
                 },
                 {
                     "name": "user-email",
@@ -894,33 +854,27 @@
             "input": [
                 {
                     "name": "dry-run",
-                    "type": "bool",
-                    "required": false
+                    "type": "bool"
                 },
                 {
                     "name": "skip-build-images",
-                    "type": "bool",
-                    "required": false
+                    "type": "bool"
                 },
                 {
                     "name": "skip-emails",
-                    "type": "bool",
-                    "required": false
+                    "type": "bool"
                 },
                 {
                     "name": "skip-lms-sync",
-                    "type": "bool",
-                    "required": false
+                    "type": "bool"
                 },
                 {
                     "name": "skip-source-sync",
-                    "type": "bool",
-                    "required": false
+                    "type": "bool"
                 },
                 {
                     "name": "skip-template-files",
-                    "type": "bool",
-                    "required": false
+                    "type": "bool"
                 },
                 {
                     "name": "user-email",
@@ -981,8 +935,7 @@
                 },
                 {
                     "name": "dry-run",
-                    "type": "bool",
-                    "required": false
+                    "type": "bool"
                 },
                 {
                     "name": "raw-course-users",
@@ -991,18 +944,15 @@
                 },
                 {
                     "name": "send-emails",
-                    "type": "bool",
-                    "required": false
+                    "type": "bool"
                 },
                 {
                     "name": "skip-inserts",
-                    "type": "bool",
-                    "required": false
+                    "type": "bool"
                 },
                 {
                     "name": "skip-updates",
-                    "type": "bool",
-                    "required": false
+                    "type": "bool"
                 },
                 {
                     "name": "user-email",
@@ -1032,8 +982,7 @@
                 },
                 {
                     "name": "target-email",
-                    "type": "core.TargetCourseUserSelfOrGrader",
-                    "required": false
+                    "type": "core.TargetCourseUserSelfOrGrader"
                 },
                 {
                     "name": "user-email",
@@ -1175,33 +1124,27 @@
             "input": [
                 {
                     "name": "after",
-                    "type": "string",
-                    "required": false
+                    "type": "string"
                 },
                 {
                     "name": "level",
-                    "type": "string",
-                    "required": false
+                    "type": "string"
                 },
                 {
                     "name": "past",
-                    "type": "string",
-                    "required": false
+                    "type": "string"
                 },
                 {
                     "name": "target-assignment",
-                    "type": "string",
-                    "required": false
+                    "type": "string"
                 },
                 {
                     "name": "target-course",
-                    "type": "string",
-                    "required": false
+                    "type": "string"
                 },
                 {
                     "name": "target-email",
-                    "type": "string",
-                    "required": false
+                    "type": "string"
                 },
                 {
                     "name": "user-email",
@@ -1234,8 +1177,7 @@
             "input": [
                 {
                     "name": "force-compute",
-                    "type": "bool",
-                    "required": false
+                    "type": "bool"
                 }
             ],
             "output": [
@@ -1264,23 +1206,19 @@
             "input": [
                 {
                     "name": "after",
-                    "type": "int64",
-                    "required": false
+                    "type": "int64"
                 },
                 {
                     "name": "before",
-                    "type": "int64",
-                    "required": false
+                    "type": "int64"
                 },
                 {
                     "name": "limit",
-                    "type": "int",
-                    "required": false
+                    "type": "int"
                 },
                 {
                     "name": "sort",
-                    "type": "int",
-                    "required": false
+                    "type": "int"
                 },
                 {
                     "name": "type",
@@ -1299,8 +1237,7 @@
                 },
                 {
                     "name": "where",
-                    "type": "map[stats.MetricAttribute]interface {}",
-                    "required": false
+                    "type": "map[stats.MetricAttribute]interface {}"
                 }
             ],
             "output": [
@@ -1361,8 +1298,7 @@
             "input": [
                 {
                     "name": "target-email",
-                    "type": "core.TargetServerUserSelfOrAdmin",
-                    "required": false
+                    "type": "core.TargetServerUserSelfOrAdmin"
                 },
                 {
                     "name": "user-email",
@@ -1483,8 +1419,7 @@
             "input": [
                 {
                     "name": "name",
-                    "type": "string",
-                    "required": false
+                    "type": "string"
                 },
                 {
                     "name": "user-email",
@@ -1539,8 +1474,7 @@
             "input": [
                 {
                     "name": "dry-run",
-                    "type": "bool",
-                    "required": false
+                    "type": "bool"
                 },
                 {
                     "name": "raw-users",
@@ -1549,18 +1483,15 @@
                 },
                 {
                     "name": "send-emails",
-                    "type": "bool",
-                    "required": false
+                    "type": "bool"
                 },
                 {
                     "name": "skip-inserts",
-                    "type": "bool",
-                    "required": false
+                    "type": "bool"
                 },
                 {
                     "name": "skip-updates",
-                    "type": "bool",
-                    "required": false
+                    "type": "bool"
                 },
                 {
                     "name": "user-email",
@@ -1587,23 +1518,19 @@
             "fields": [
                 {
                     "name": "dry-run",
-                    "type": "bool",
-                    "required": false
+                    "type": "bool"
                 },
                 {
                     "name": "overwrite-records",
-                    "type": "bool",
-                    "required": false
+                    "type": "bool"
                 },
                 {
                     "name": "submissions",
-                    "type": "[]string",
-                    "required": true
+                    "type": "[]string"
                 },
                 {
                     "name": "wait-for-completion",
-                    "type": "bool",
-                    "required": false
+                    "type": "bool"
                 }
             ]
         },
@@ -1612,23 +1539,19 @@
             "fields": [
                 {
                     "name": "due-date",
-                    "type": "int64",
-                    "required": false
+                    "type": "int64"
                 },
                 {
                     "name": "id",
-                    "type": "string",
-                    "required": false
+                    "type": "string"
                 },
                 {
                     "name": "max-points",
-                    "type": "float64",
-                    "required": false
+                    "type": "float64"
                 },
                 {
                     "name": "name",
-                    "type": "string",
-                    "required": false
+                    "type": "string"
                 }
             ]
         },
@@ -1637,13 +1560,11 @@
             "fields": [
                 {
                     "name": "name",
-                    "type": "string",
-                    "required": false
+                    "type": "string"
                 },
                 {
                     "name": "type",
-                    "type": "string",
-                    "required": false
+                    "type": "string"
                 }
             ]
         },
@@ -1652,18 +1573,15 @@
             "fields": [
                 {
                     "name": "assignments",
-                    "type": "map[string]*core.AssignmentInfo",
-                    "required": false
+                    "type": "map[string]*core.AssignmentInfo"
                 },
                 {
                     "name": "id",
-                    "type": "string",
-                    "required": false
+                    "type": "string"
                 },
                 {
                     "name": "name",
-                    "type": "string",
-                    "required": false
+                    "type": "string"
                 }
             ]
         },
@@ -1673,28 +1591,23 @@
             "fields": [
                 {
                     "name": "email",
-                    "type": "string",
-                    "required": false
+                    "type": "string"
                 },
                 {
                     "name": "lms-id",
-                    "type": "string",
-                    "required": false
+                    "type": "string"
                 },
                 {
                     "name": "name",
-                    "type": "string",
-                    "required": false
+                    "type": "string"
                 },
                 {
                     "name": "role",
-                    "type": "int",
-                    "required": false
+                    "type": "int"
                 },
                 {
                     "name": "type",
-                    "type": "string",
-                    "required": false
+                    "type": "string"
                 }
             ]
         },
@@ -1703,18 +1616,15 @@
             "fields": [
                 {
                     "name": "description",
-                    "type": "string",
-                    "required": false
+                    "type": "string"
                 },
                 {
                     "name": "input",
-                    "type": "[]core.FieldDescription",
-                    "required": false
+                    "type": "[]core.FieldDescription"
                 },
                 {
                     "name": "output",
-                    "type": "[]core.BaseFieldDescription",
-                    "required": false
+                    "type": "[]core.BaseFieldDescription"
                 }
             ]
         },
@@ -1724,13 +1634,11 @@
             "fields": [
                 {
                     "name": "id",
-                    "type": "string",
-                    "required": false
+                    "type": "string"
                 },
                 {
                     "name": "role",
-                    "type": "int",
-                    "required": false
+                    "type": "int"
                 }
             ]
         },
@@ -1739,18 +1647,15 @@
             "fields": [
                 {
                     "name": "name",
-                    "type": "string",
-                    "required": false
+                    "type": "string"
                 },
                 {
                     "name": "required",
-                    "type": "bool",
-                    "required": false
+                    "type": "bool"
                 },
                 {
                     "name": "type",
-                    "type": "string",
-                    "required": false
+                    "type": "string"
                 }
             ]
         },
@@ -1764,28 +1669,23 @@
             "fields": [
                 {
                     "name": "courses",
-                    "type": "map[string]core.EnrollmentInfo",
-                    "required": false
+                    "type": "map[string]core.EnrollmentInfo"
                 },
                 {
                     "name": "email",
-                    "type": "string",
-                    "required": false
+                    "type": "string"
                 },
                 {
                     "name": "name",
-                    "type": "string",
-                    "required": false
+                    "type": "string"
                 },
                 {
                     "name": "role",
-                    "type": "int",
-                    "required": false
+                    "type": "int"
                 },
                 {
                     "name": "type",
-                    "type": "string",
-                    "required": false
+                    "type": "string"
                 }
             ]
         },
@@ -1799,8 +1699,7 @@
             "fields": [
                 {
                     "name": "TargetCourseUser",
-                    "type": "core.TargetCourseUser",
-                    "required": false
+                    "type": "core.TargetCourseUser"
                 }
             ]
         },
@@ -1814,8 +1713,7 @@
             "fields": [
                 {
                     "name": "TargetServerUser",
-                    "type": "core.TargetServerUser",
-                    "required": false
+                    "type": "core.TargetServerUser"
                 }
             ]
         },
@@ -1824,28 +1722,23 @@
             "fields": [
                 {
                     "name": "alias-type",
-                    "type": "string",
-                    "required": false
+                    "type": "string"
                 },
                 {
                     "name": "category",
-                    "type": "string",
-                    "required": false
+                    "type": "string"
                 },
                 {
                     "name": "description",
-                    "type": "string",
-                    "required": false
+                    "type": "string"
                 },
                 {
                     "name": "element-type",
-                    "type": "string",
-                    "required": false
+                    "type": "string"
                 },
                 {
                     "name": "fields",
-                    "type": "[]core.FieldDescription",
-                    "required": false
+                    "type": "[]core.BaseFieldDescription"
                 }
             ]
         },
@@ -1858,43 +1751,35 @@
             "fields": [
                 {
                     "name": "assignment-template-files",
-                    "type": "map[string][]string",
-                    "required": false
+                    "type": "map[string][]string"
                 },
                 {
                     "name": "built-assignment-images",
-                    "type": "[]string",
-                    "required": false
+                    "type": "[]string"
                 },
                 {
                     "name": "course-id",
-                    "type": "string",
-                    "required": false
+                    "type": "string"
                 },
                 {
                     "name": "created",
-                    "type": "bool",
-                    "required": false
+                    "type": "bool"
                 },
                 {
                     "name": "lms-sync-result",
-                    "type": "*model.LMSSyncResult",
-                    "required": false
+                    "type": "*model.LMSSyncResult"
                 },
                 {
                     "name": "message",
-                    "type": "string",
-                    "required": false
+                    "type": "string"
                 },
                 {
                     "name": "success",
-                    "type": "bool",
-                    "required": false
+                    "type": "bool"
                 },
                 {
                     "name": "updated",
-                    "type": "bool",
-                    "required": false
+                    "type": "bool"
                 }
             ]
         },
@@ -1907,43 +1792,35 @@
             "fields": [
                 {
                     "name": "assignment",
-                    "type": "string",
-                    "required": false
+                    "type": "string"
                 },
                 {
                     "name": "attributes",
-                    "type": "map[string]interface {}",
-                    "required": false
+                    "type": "map[string]interface {}"
                 },
                 {
                     "name": "course",
-                    "type": "string",
-                    "required": false
+                    "type": "string"
                 },
                 {
                     "name": "error",
-                    "type": "string",
-                    "required": false
+                    "type": "string"
                 },
                 {
                     "name": "level",
-                    "type": "int32",
-                    "required": false
+                    "type": "int32"
                 },
                 {
                     "name": "message",
-                    "type": "string",
-                    "required": false
+                    "type": "string"
                 },
                 {
                     "name": "timestamp",
-                    "type": "int64",
-                    "required": false
+                    "type": "int64"
                 },
                 {
                     "name": "user",
-                    "type": "string",
-                    "required": false
+                    "type": "string"
                 }
             ]
         },
@@ -1952,18 +1829,15 @@
             "fields": [
                 {
                     "name": "filename",
-                    "type": "string",
-                    "required": false
+                    "type": "string"
                 },
                 {
                     "name": "lines-of-code",
-                    "type": "int",
-                    "required": false
+                    "type": "int"
                 },
                 {
                     "name": "original-filename",
-                    "type": "string",
-                    "required": false
+                    "type": "string"
                 }
             ]
         },
@@ -1972,23 +1846,19 @@
             "fields": [
                 {
                     "name": "exclude-patterns",
-                    "type": "[]string",
-                    "required": false
+                    "type": "[]string"
                 },
                 {
                     "name": "include-patterns",
-                    "type": "[]string",
-                    "required": false
+                    "type": "[]string"
                 },
                 {
                     "name": "template-file-ops",
-                    "type": "[]*util.FileOperation",
-                    "required": false
+                    "type": "[]*util.FileOperation"
                 },
                 {
                     "name": "template-files",
-                    "type": "[]*util.FileSpec",
-                    "required": false
+                    "type": "[]*util.FileSpec"
                 }
             ]
         },
@@ -1997,23 +1867,19 @@
             "fields": [
                 {
                     "name": "id",
-                    "type": "string",
-                    "required": false
+                    "type": "string"
                 },
                 {
                     "name": "late-days-lms-id",
-                    "type": "string",
-                    "required": false
+                    "type": "string"
                 },
                 {
                     "name": "late-days-lms-name",
-                    "type": "string",
-                    "required": false
+                    "type": "string"
                 },
                 {
                     "name": "name",
-                    "type": "string",
-                    "required": false
+                    "type": "string"
                 }
             ]
         },
@@ -2022,23 +1888,19 @@
             "fields": [
                 {
                     "name": "ambiguous-matches",
-                    "type": "[]model.AssignmentInfo",
-                    "required": false
+                    "type": "[]model.AssignmentInfo"
                 },
                 {
                     "name": "non-matched-assignments",
-                    "type": "[]model.AssignmentInfo",
-                    "required": false
+                    "type": "[]model.AssignmentInfo"
                 },
                 {
                     "name": "synced-assignments",
-                    "type": "[]model.AssignmentInfo",
-                    "required": false
+                    "type": "[]model.AssignmentInfo"
                 },
                 {
                     "name": "unchanged-assignments",
-                    "type": "[]model.AssignmentInfo",
-                    "required": false
+                    "type": "[]model.AssignmentInfo"
                 }
             ]
         },
@@ -2052,13 +1914,11 @@
             "fields": [
                 {
                     "name": "locator",
-                    "type": "string",
-                    "required": false
+                    "type": "string"
                 },
                 {
                     "name": "message",
-                    "type": "string",
-                    "required": false
+                    "type": "string"
                 }
             ]
         },
@@ -2068,38 +1928,31 @@
             "fields": [
                 {
                     "name": "assignment",
-                    "type": "string",
-                    "required": false
+                    "type": "string"
                 },
                 {
                     "name": "raw-score",
-                    "type": "float64",
-                    "required": false
+                    "type": "float64"
                 },
                 {
                     "name": "score",
-                    "type": "float64",
-                    "required": false
+                    "type": "float64"
                 },
                 {
                     "name": "submission-id",
-                    "type": "string",
-                    "required": false
+                    "type": "string"
                 },
                 {
                     "name": "submission-time",
-                    "type": "int64",
-                    "required": false
+                    "type": "int64"
                 },
                 {
                     "name": "upload-time",
-                    "type": "int64",
-                    "required": false
+                    "type": "int64"
                 },
                 {
                     "name": "user",
-                    "type": "string",
-                    "required": false
+                    "type": "string"
                 }
             ]
         },
@@ -2109,63 +1962,51 @@
             "fields": [
                 {
                     "name": "added",
-                    "type": "bool",
-                    "required": false
+                    "type": "bool"
                 },
                 {
                     "name": "communication-error",
-                    "type": "*model.ExternalLocatableError",
-                    "required": false
+                    "type": "*model.ExternalLocatableError"
                 },
                 {
                     "name": "dropped",
-                    "type": "[]string",
-                    "required": false
+                    "type": "[]string"
                 },
                 {
                     "name": "email",
-                    "type": "string",
-                    "required": false
+                    "type": "string"
                 },
                 {
                     "name": "emailed",
-                    "type": "bool",
-                    "required": false
+                    "type": "bool"
                 },
                 {
                     "name": "enrolled",
-                    "type": "[]string",
-                    "required": false
+                    "type": "[]string"
                 },
                 {
                     "name": "modified",
-                    "type": "bool",
-                    "required": false
+                    "type": "bool"
                 },
                 {
                     "name": "not-exists",
-                    "type": "bool",
-                    "required": false
+                    "type": "bool"
                 },
                 {
                     "name": "removed",
-                    "type": "bool",
-                    "required": false
+                    "type": "bool"
                 },
                 {
                     "name": "skipped",
-                    "type": "bool",
-                    "required": false
+                    "type": "bool"
                 },
                 {
                     "name": "system-error",
-                    "type": "*model.ExternalLocatableError",
-                    "required": false
+                    "type": "*model.ExternalLocatableError"
                 },
                 {
                     "name": "validation-error",
-                    "type": "*model.ExternalLocatableError",
-                    "required": false
+                    "type": "*model.ExternalLocatableError"
                 }
             ]
         },
@@ -2174,33 +2015,27 @@
             "fields": [
                 {
                     "name": "filename",
-                    "type": "string",
-                    "required": false
+                    "type": "string"
                 },
                 {
                     "name": "options",
-                    "type": "map[string]interface {}",
-                    "required": false
+                    "type": "map[string]interface {}"
                 },
                 {
                     "name": "original-filename",
-                    "type": "string",
-                    "required": false
+                    "type": "string"
                 },
                 {
                     "name": "score",
-                    "type": "float64",
-                    "required": false
+                    "type": "float64"
                 },
                 {
                     "name": "tool",
-                    "type": "string",
-                    "required": false
+                    "type": "string"
                 },
                 {
                     "name": "version",
-                    "type": "string",
-                    "required": false
+                    "type": "string"
                 }
             ]
         },
@@ -2209,43 +2044,35 @@
             "fields": [
                 {
                     "name": "grading_end_time",
-                    "type": "int64",
-                    "required": false
+                    "type": "int64"
                 },
                 {
                     "name": "grading_start_time",
-                    "type": "int64",
-                    "required": false
+                    "type": "int64"
                 },
                 {
                     "name": "hard_fail",
-                    "type": "bool",
-                    "required": false
+                    "type": "bool"
                 },
                 {
                     "name": "max_points",
-                    "type": "float64",
-                    "required": false
+                    "type": "float64"
                 },
                 {
                     "name": "message",
-                    "type": "string",
-                    "required": false
+                    "type": "string"
                 },
                 {
                     "name": "name",
-                    "type": "string",
-                    "required": false
+                    "type": "string"
                 },
                 {
                     "name": "score",
-                    "type": "float64",
-                    "required": false
+                    "type": "float64"
                 },
                 {
                     "name": "skipped",
-                    "type": "bool",
-                    "required": false
+                    "type": "bool"
                 }
             ]
         },
@@ -2254,93 +2081,75 @@
             "fields": [
                 {
                     "name": "additional-info",
-                    "type": "map[string]interface {}",
-                    "required": false
+                    "type": "map[string]interface {}"
                 },
                 {
                     "name": "assignment-id",
-                    "type": "string",
-                    "required": false
+                    "type": "string"
                 },
                 {
                     "name": "course-id",
-                    "type": "string",
-                    "required": false
+                    "type": "string"
                 },
                 {
                     "name": "epilogue",
-                    "type": "string",
-                    "required": false
+                    "type": "string"
                 },
                 {
                     "name": "grading_end_time",
-                    "type": "int64",
-                    "required": false
+                    "type": "int64"
                 },
                 {
                     "name": "grading_start_time",
-                    "type": "int64",
-                    "required": false
+                    "type": "int64"
                 },
                 {
                     "name": "id",
-                    "type": "string",
-                    "required": false
+                    "type": "string"
                 },
                 {
                     "name": "max_points",
-                    "type": "float64",
-                    "required": false
+                    "type": "float64"
                 },
                 {
                     "name": "message",
-                    "type": "string",
-                    "required": false
+                    "type": "string"
                 },
                 {
                     "name": "name",
-                    "type": "string",
-                    "required": false
+                    "type": "string"
                 },
                 {
                     "name": "prologue",
-                    "type": "string",
-                    "required": false
+                    "type": "string"
                 },
                 {
                     "name": "proxy-user",
-                    "type": "string",
-                    "required": false
+                    "type": "string"
                 },
                 {
                     "name": "proxy_end_time",
-                    "type": "int64",
-                    "required": false
+                    "type": "int64"
                 },
                 {
                     "name": "proxy_start_time",
-                    "type": "int64",
-                    "required": false
+                    "type": "int64"
                 },
                 {
                     "name": "questions",
-                    "type": "[]*model.GradedQuestion",
-                    "required": false
+                    "type": "[]*model.GradedQuestion"
                 },
                 {
                     "name": "score",
-                    "type": "float64",
-                    "required": false
+                    "type": "float64"
                 },
                 {
                     "name": "short-id",
-                    "type": "string",
-                    "required": false
+                    "type": "string"
                 },
                 {
                     "name": "user",
-                    "type": "string",
-                    "required": false
+                    "type": "string"
                 }
             ]
         },
@@ -2349,28 +2158,23 @@
             "fields": [
                 {
                     "name": "info",
-                    "type": "*model.GradingInfo",
-                    "required": false
+                    "type": "*model.GradingInfo"
                 },
                 {
                     "name": "input-files-gzip",
-                    "type": "map[string][]uint8",
-                    "required": false
+                    "type": "map[string][]uint8"
                 },
                 {
                     "name": "output-files-gzip",
-                    "type": "map[string][]uint8",
-                    "required": false
+                    "type": "map[string][]uint8"
                 },
                 {
                     "name": "stderr",
-                    "type": "string",
-                    "required": false
+                    "type": "string"
                 },
                 {
                     "name": "stdout",
-                    "type": "string",
-                    "required": false
+                    "type": "string"
                 }
             ]
         },
@@ -2379,98 +2183,79 @@
             "fields": [
                 {
                     "name": "analysis-timestamp",
-                    "type": "int64",
-                    "required": false
+                    "type": "int64"
                 },
                 {
                     "name": "assignment-id",
-                    "type": "string",
-                    "required": false
+                    "type": "string"
                 },
                 {
                     "name": "course-id",
-                    "type": "string",
-                    "required": false
+                    "type": "string"
                 },
                 {
                     "name": "failure",
-                    "type": "bool",
-                    "required": false
+                    "type": "bool"
                 },
                 {
                     "name": "failure-message",
-                    "type": "string",
-                    "required": false
+                    "type": "string"
                 },
                 {
                     "name": "files",
-                    "type": "[]model.AnalysisFileInfo",
-                    "required": false
+                    "type": "[]model.AnalysisFileInfo"
                 },
                 {
                     "name": "lines-of-code",
-                    "type": "int",
-                    "required": false
+                    "type": "int"
                 },
                 {
                     "name": "lines-of-code-delta",
-                    "type": "int",
-                    "required": false
+                    "type": "int"
                 },
                 {
                     "name": "lines-of-code-per-hour",
-                    "type": "float64",
-                    "required": false
+                    "type": "float64"
                 },
                 {
                     "name": "options",
-                    "type": "*model.AssignmentAnalysisOptions",
-                    "required": false
+                    "type": "*model.AssignmentAnalysisOptions"
                 },
                 {
                     "name": "score",
-                    "type": "float64",
-                    "required": false
+                    "type": "float64"
                 },
                 {
                     "name": "score-delta",
-                    "type": "float64",
-                    "required": false
+                    "type": "float64"
                 },
                 {
                     "name": "score-per-hour",
-                    "type": "float64",
-                    "required": false
+                    "type": "float64"
                 },
                 {
                     "name": "short-id",
-                    "type": "string",
-                    "required": false
+                    "type": "string"
                 },
                 {
                     "name": "skipped-files",
-                    "type": "[]string",
-                    "required": false
+                    "type": "[]string"
                 },
                 {
                     "name": "submission-id",
-                    "type": "string",
-                    "required": false
+                    "type": "string"
                 },
                 {
                     "name": "submission-start-time",
-                    "type": "int64",
-                    "required": false
+                    "type": "int64"
                 },
                 {
                     "name": "submission-time-delta",
-                    "type": "int64",
-                    "required": false
+                    "type": "int64"
                 },
                 {
                     "name": "user-email",
-                    "type": "string",
-                    "required": false
+                    "type": "string"
                 }
             ]
         },
@@ -2479,78 +2264,63 @@
             "fields": [
                 {
                     "name": "aggregate-lines-of-code",
-                    "type": "util.AggregateValues",
-                    "required": false
+                    "type": "util.AggregateValues"
                 },
                 {
                     "name": "aggregate-lines-of-code-delta",
-                    "type": "util.AggregateValues",
-                    "required": false
+                    "type": "util.AggregateValues"
                 },
                 {
                     "name": "aggregate-lines-of-code-per-file",
-                    "type": "map[string]util.AggregateValues",
-                    "required": false
+                    "type": "map[string]util.AggregateValues"
                 },
                 {
                     "name": "aggregate-lines-of-code-per-hour",
-                    "type": "util.AggregateValues",
-                    "required": false
+                    "type": "util.AggregateValues"
                 },
                 {
                     "name": "aggregate-score",
-                    "type": "util.AggregateValues",
-                    "required": false
+                    "type": "util.AggregateValues"
                 },
                 {
                     "name": "aggregate-score-delta",
-                    "type": "util.AggregateValues",
-                    "required": false
+                    "type": "util.AggregateValues"
                 },
                 {
                     "name": "aggregate-score-per-hour",
-                    "type": "util.AggregateValues",
-                    "required": false
+                    "type": "util.AggregateValues"
                 },
                 {
                     "name": "aggregate-submission-time-delta",
-                    "type": "util.AggregateValues",
-                    "required": false
+                    "type": "util.AggregateValues"
                 },
                 {
                     "name": "complete",
-                    "type": "bool",
-                    "required": false
+                    "type": "bool"
                 },
                 {
                     "name": "complete-count",
-                    "type": "int",
-                    "required": false
+                    "type": "int"
                 },
                 {
                     "name": "error-count",
-                    "type": "int",
-                    "required": false
+                    "type": "int"
                 },
                 {
                     "name": "failure-count",
-                    "type": "int",
-                    "required": false
+                    "type": "int"
                 },
                 {
                     "name": "first-timestamp",
-                    "type": "int64",
-                    "required": false
+                    "type": "int64"
                 },
                 {
                     "name": "last-timestamp",
-                    "type": "int64",
-                    "required": false
+                    "type": "int64"
                 },
                 {
                     "name": "pending-count",
-                    "type": "int",
-                    "required": false
+                    "type": "int"
                 }
             ]
         },
@@ -2559,13 +2329,11 @@
             "fields": [
                 {
                     "name": "assignment-sync",
-                    "type": "*model.AssignmentSyncResult",
-                    "required": false
+                    "type": "*model.AssignmentSyncResult"
                 },
                 {
                     "name": "user-sync",
-                    "type": "[]*model.UserOpResult",
-                    "required": false
+                    "type": "[]*model.UserOpResult"
                 }
             ]
         },
@@ -2578,53 +2346,43 @@
             "fields": [
                 {
                     "name": "analysis-timestamp",
-                    "type": "int64",
-                    "required": false
+                    "type": "int64"
                 },
                 {
                     "name": "failure",
-                    "type": "bool",
-                    "required": false
+                    "type": "bool"
                 },
                 {
                     "name": "failure-message",
-                    "type": "string",
-                    "required": false
+                    "type": "string"
                 },
                 {
                     "name": "mean-similarities",
-                    "type": "map[string]float64",
-                    "required": false
+                    "type": "map[string]float64"
                 },
                 {
                     "name": "options",
-                    "type": "*model.AssignmentAnalysisOptions",
-                    "required": false
+                    "type": "*model.AssignmentAnalysisOptions"
                 },
                 {
                     "name": "similarities",
-                    "type": "map[string][]*model.FileSimilarity",
-                    "required": false
+                    "type": "map[string][]*model.FileSimilarity"
                 },
                 {
                     "name": "skipped-files",
-                    "type": "[]string",
-                    "required": false
+                    "type": "[]string"
                 },
                 {
                     "name": "submission-ids",
-                    "type": "model.PairwiseKey",
-                    "required": false
+                    "type": "model.PairwiseKey"
                 },
                 {
                     "name": "total-mean-similarity",
-                    "type": "float64",
-                    "required": false
+                    "type": "float64"
                 },
                 {
                     "name": "unmatched-files",
-                    "type": "[][]string",
-                    "required": false
+                    "type": "[][]string"
                 }
             ]
         },
@@ -2633,48 +2391,39 @@
             "fields": [
                 {
                     "name": "aggregate-mean-similarities",
-                    "type": "map[string]util.AggregateValues",
-                    "required": false
+                    "type": "map[string]util.AggregateValues"
                 },
                 {
                     "name": "aggregate-total-mean-similarity",
-                    "type": "util.AggregateValues",
-                    "required": false
+                    "type": "util.AggregateValues"
                 },
                 {
                     "name": "complete",
-                    "type": "bool",
-                    "required": false
+                    "type": "bool"
                 },
                 {
                     "name": "complete-count",
-                    "type": "int",
-                    "required": false
+                    "type": "int"
                 },
                 {
                     "name": "error-count",
-                    "type": "int",
-                    "required": false
+                    "type": "int"
                 },
                 {
                     "name": "failure-count",
-                    "type": "int",
-                    "required": false
+                    "type": "int"
                 },
                 {
                     "name": "first-timestamp",
-                    "type": "int64",
-                    "required": false
+                    "type": "int64"
                 },
                 {
                     "name": "last-timestamp",
-                    "type": "int64",
-                    "required": false
+                    "type": "int64"
                 },
                 {
                     "name": "pending-count",
-                    "type": "int",
-                    "required": false
+                    "type": "int"
                 }
             ]
         },
@@ -2688,23 +2437,19 @@
             "fields": [
                 {
                     "name": "course-lms-id",
-                    "type": "string",
-                    "required": false
+                    "type": "string"
                 },
                 {
                     "name": "course-role",
-                    "type": "string",
-                    "required": false
+                    "type": "string"
                 },
                 {
                     "name": "email",
-                    "type": "string",
-                    "required": false
+                    "type": "string"
                 },
                 {
                     "name": "name",
-                    "type": "string",
-                    "required": false
+                    "type": "string"
                 }
             ]
         },
@@ -2714,38 +2459,31 @@
             "fields": [
                 {
                     "name": "course",
-                    "type": "string",
-                    "required": false
+                    "type": "string"
                 },
                 {
                     "name": "course-lms-id",
-                    "type": "string",
-                    "required": false
+                    "type": "string"
                 },
                 {
                     "name": "course-role",
-                    "type": "string",
-                    "required": false
+                    "type": "string"
                 },
                 {
                     "name": "email",
-                    "type": "string",
-                    "required": true
+                    "type": "string"
                 },
                 {
                     "name": "name",
-                    "type": "string",
-                    "required": false
+                    "type": "string"
                 },
                 {
                     "name": "pass",
-                    "type": "string",
-                    "required": false
+                    "type": "string"
                 },
                 {
                     "name": "role",
-                    "type": "string",
-                    "required": false
+                    "type": "string"
                 }
             ]
         },
@@ -2758,48 +2496,39 @@
             "fields": [
                 {
                     "name": "assignment-id",
-                    "type": "string",
-                    "required": false
+                    "type": "string"
                 },
                 {
                     "name": "course-id",
-                    "type": "string",
-                    "required": false
+                    "type": "string"
                 },
                 {
                     "name": "grading_start_time",
-                    "type": "int64",
-                    "required": false
+                    "type": "int64"
                 },
                 {
                     "name": "id",
-                    "type": "string",
-                    "required": false
+                    "type": "string"
                 },
                 {
                     "name": "max_points",
-                    "type": "float64",
-                    "required": false
+                    "type": "float64"
                 },
                 {
                     "name": "message",
-                    "type": "string",
-                    "required": false
+                    "type": "string"
                 },
                 {
                     "name": "score",
-                    "type": "float64",
-                    "required": false
+                    "type": "float64"
                 },
                 {
                     "name": "short-id",
-                    "type": "string",
-                    "required": false
+                    "type": "string"
                 },
                 {
                     "name": "user",
-                    "type": "string",
-                    "required": false
+                    "type": "string"
                 }
             ]
         },
@@ -2809,68 +2538,55 @@
             "fields": [
                 {
                     "name": "added",
-                    "type": "bool",
-                    "required": false
+                    "type": "bool"
                 },
                 {
                     "name": "cleartext-password",
-                    "type": "string",
-                    "required": false
+                    "type": "string"
                 },
                 {
                     "name": "communication-error",
-                    "type": "*model.LocatableError",
-                    "required": false
+                    "type": "*model.LocatableError"
                 },
                 {
                     "name": "dropped",
-                    "type": "[]string",
-                    "required": false
+                    "type": "[]string"
                 },
                 {
                     "name": "email",
-                    "type": "string",
-                    "required": false
+                    "type": "string"
                 },
                 {
                     "name": "emailed",
-                    "type": "bool",
-                    "required": false
+                    "type": "bool"
                 },
                 {
                     "name": "enrolled",
-                    "type": "[]string",
-                    "required": false
+                    "type": "[]string"
                 },
                 {
                     "name": "modified",
-                    "type": "bool",
-                    "required": false
+                    "type": "bool"
                 },
                 {
                     "name": "not-exists",
-                    "type": "bool",
-                    "required": false
+                    "type": "bool"
                 },
                 {
                     "name": "removed",
-                    "type": "bool",
-                    "required": false
+                    "type": "bool"
                 },
                 {
                     "name": "skipped",
-                    "type": "bool",
-                    "required": false
+                    "type": "bool"
                 },
                 {
                     "name": "system-error",
-                    "type": "*model.LocatableError",
-                    "required": false
+                    "type": "*model.LocatableError"
                 },
                 {
                     "name": "validation-error",
-                    "type": "*model.LocatableError",
-                    "required": false
+                    "type": "*model.LocatableError"
                 }
             ]
         },
@@ -2879,23 +2595,19 @@
             "fields": [
                 {
                     "name": "attributes",
-                    "type": "map[stats.MetricAttribute]interface {}",
-                    "required": false
+                    "type": "map[stats.MetricAttribute]interface {}"
                 },
                 {
                     "name": "timestamp",
-                    "type": "int64",
-                    "required": false
+                    "type": "int64"
                 },
                 {
                     "name": "type",
-                    "type": "string",
-                    "required": false
+                    "type": "string"
                 },
                 {
                     "name": "value",
-                    "type": "float64",
-                    "required": false
+                    "type": "float64"
                 }
             ]
         },
@@ -2916,13 +2628,11 @@
             "fields": [
                 {
                     "name": "entry",
-                    "type": "interface {}",
-                    "required": false
+                    "type": "interface {}"
                 },
                 {
                     "name": "row",
-                    "type": "int",
-                    "required": false
+                    "type": "int"
                 }
             ]
         },
@@ -2931,13 +2641,11 @@
             "fields": [
                 {
                     "name": "email",
-                    "type": "string",
-                    "required": false
+                    "type": "string"
                 },
                 {
                     "name": "score",
-                    "type": "float64",
-                    "required": false
+                    "type": "float64"
                 }
             ]
         },
@@ -2946,28 +2654,23 @@
             "fields": [
                 {
                     "name": "count",
-                    "type": "int",
-                    "required": false
+                    "type": "int"
                 },
                 {
                     "name": "max",
-                    "type": "float64",
-                    "required": false
+                    "type": "float64"
                 },
                 {
                     "name": "mean",
-                    "type": "float64",
-                    "required": false
+                    "type": "float64"
                 },
                 {
                     "name": "median",
-                    "type": "float64",
-                    "required": false
+                    "type": "float64"
                 },
                 {
                     "name": "min",
-                    "type": "float64",
-                    "required": false
+                    "type": "float64"
                 }
             ]
         },
@@ -2976,18 +2679,15 @@
             "fields": [
                 {
                     "name": "name",
-                    "type": "string",
-                    "required": false
+                    "type": "string"
                 },
                 {
                     "name": "records",
-                    "type": "[]util.CallStackRecord",
-                    "required": false
+                    "type": "[]util.CallStackRecord"
                 },
                 {
                     "name": "status",
-                    "type": "string",
-                    "required": false
+                    "type": "string"
                 }
             ]
         },
@@ -2996,23 +2696,19 @@
             "fields": [
                 {
                     "name": "call",
-                    "type": "string",
-                    "required": false
+                    "type": "string"
                 },
                 {
                     "name": "file",
-                    "type": "string",
-                    "required": false
+                    "type": "string"
                 },
                 {
                     "name": "line",
-                    "type": "int",
-                    "required": false
+                    "type": "int"
                 },
                 {
                     "name": "pointer",
-                    "type": "string",
-                    "required": false
+                    "type": "string"
                 }
             ]
         },
@@ -3025,33 +2721,27 @@
             "fields": [
                 {
                     "name": "dest",
-                    "type": "string",
-                    "required": false
+                    "type": "string"
                 },
                 {
                     "name": "path",
-                    "type": "string",
-                    "required": false
+                    "type": "string"
                 },
                 {
                     "name": "reference",
-                    "type": "string",
-                    "required": false
+                    "type": "string"
                 },
                 {
                     "name": "token",
-                    "type": "string",
-                    "required": false
+                    "type": "string"
                 },
                 {
                     "name": "type",
-                    "type": "string",
-                    "required": false
+                    "type": "string"
                 },
                 {
                     "name": "username",
-                    "type": "string",
-                    "required": false
+                    "type": "string"
                 }
             ]
         },
@@ -3064,18 +2754,15 @@
             "fields": [
                 {
                     "name": "base-version",
-                    "type": "string",
-                    "required": false
+                    "type": "string"
                 },
                 {
                     "name": "git-hash",
-                    "type": "string",
-                    "required": false
+                    "type": "string"
                 },
                 {
                     "name": "is-dirty",
-                    "type": "bool",
-                    "required": false
+                    "type": "bool"
                 }
             ]
         }

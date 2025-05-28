@@ -14,7 +14,7 @@ func TestMetadataDescribe(test *testing.T) {
 			"metadata/describe": core.EndpointDescription{
 				Description: "Describe all endpoints on the server.",
 				Input: []core.FieldDescription{
-					core.FieldDescription{
+					{
 						BaseFieldDescription: core.BaseFieldDescription{
 							Name: "force-compute",
 							Type: "bool",
@@ -22,11 +22,11 @@ func TestMetadataDescribe(test *testing.T) {
 					},
 				},
 				Output: []core.BaseFieldDescription{
-					core.BaseFieldDescription{
+					{
 						Name: "endpoints",
 						Type: "map[string]core.EndpointDescription",
 					},
-					core.BaseFieldDescription{
+					{
 						Name: "types",
 						Type: "map[string]core.TypeDescription",
 					},
@@ -35,100 +35,82 @@ func TestMetadataDescribe(test *testing.T) {
 		},
 		Types: map[string]core.TypeDescription{
 			"core.BaseFieldDescription": core.TypeDescription{
-				Category: "struct",
-				Fields: []core.FieldDescription{
+				BaseTypeDescription: core.BaseTypeDescription{
+					Category: "struct",
+				},
+				Fields: []core.BaseFieldDescription{
 					{
-						BaseFieldDescription: core.BaseFieldDescription{
-							Name: "name",
-							Type: "string",
-						},
+						Name: "name",
+						Type: "string",
 					},
 					{
-						BaseFieldDescription: core.BaseFieldDescription{
-							Name: "type",
-							Type: "string",
-						},
+						Name: "type",
+						Type: "string",
 					},
 				},
 			},
 			"core.EndpointDescription": core.TypeDescription{
-				Category: "struct",
-				Fields: []core.FieldDescription{
+				BaseTypeDescription: core.BaseTypeDescription{
+					Category: "struct",
+				},
+				Fields: []core.BaseFieldDescription{
 					{
-						BaseFieldDescription: core.BaseFieldDescription{
-							Name: "description",
-							Type: "string",
-						},
+						Name: "description",
+						Type: "string",
 					},
 					{
-						BaseFieldDescription: core.BaseFieldDescription{
-							Name: "input",
-							Type: "[]core.FieldDescription",
-						},
+						Name: "input",
+						Type: "[]core.FieldDescription",
 					},
 					{
-						BaseFieldDescription: core.BaseFieldDescription{
-							Name: "output",
-							Type: "[]core.BaseFieldDescription",
-						},
+						Name: "output",
+						Type: "[]core.BaseFieldDescription",
 					},
 				},
 			},
 			"core.FieldDescription": core.TypeDescription{
-				Category: "struct",
-				Fields: []core.FieldDescription{
+				BaseTypeDescription: core.BaseTypeDescription{
+					Category: "struct",
+				},
+				Fields: []core.BaseFieldDescription{
 					{
-						BaseFieldDescription: core.BaseFieldDescription{
-							Name: "name",
-							Type: "string",
-						},
+						Name: "name",
+						Type: "string",
 					},
 					{
-						BaseFieldDescription: core.BaseFieldDescription{
-							Name: "required",
-							Type: "bool",
-						},
+						Name: "required",
+						Type: "bool",
 					},
 					{
-						BaseFieldDescription: core.BaseFieldDescription{
-							Name: "type",
-							Type: "string",
-						},
+						Name: "type",
+						Type: "string",
 					},
 				},
 			},
 			"core.TypeDescription": core.TypeDescription{
-				Category: "struct",
-				Fields: []core.FieldDescription{
+				BaseTypeDescription: core.BaseTypeDescription{
+					Category: "struct",
+				},
+				Fields: []core.BaseFieldDescription{
 					{
-						BaseFieldDescription: core.BaseFieldDescription{
-							Name: "alias-type",
-							Type: "string",
-						},
+						Name: "alias-type",
+						Type: "string",
 					},
 					{
-						BaseFieldDescription: core.BaseFieldDescription{
-							Name: "category",
-							Type: "string",
-						},
+						Name: "category",
+						Type: "string",
 					},
 					{
-						BaseFieldDescription: core.BaseFieldDescription{
-							Name: "description",
-							Type: "string",
-						},
+						Name: "description",
+						Type: "string",
 					},
 					{
-						BaseFieldDescription: core.BaseFieldDescription{
-							Name: "element-type",
-							Type: "string",
-						},
+						Name: "element-type",
+						Type: "string",
 					},
 					{
-						BaseFieldDescription: core.BaseFieldDescription{
-							Name: "fields",
-							Type: "[]core.FieldDescription",
-						},
+						Name: "fields",
+						Type: "[]core.BaseFieldDescription",
 					},
 				},
 			},
