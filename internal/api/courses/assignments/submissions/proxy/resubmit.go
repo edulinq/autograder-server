@@ -37,7 +37,7 @@ func HandleResubmit(request *ResubmitRequest) (*ResubmitResponse, *core.APIError
 
 	gradingResult, err := db.GetSubmissionContents(request.Assignment, request.ProxyUser.Email, request.TargetSubmission)
 	if err != nil {
-		return nil, core.NewInternalError("-631", request, "Failed to get submission contents.").
+		return nil, core.NewInternalError("-632", request, "Failed to get submission contents.").
 			Err(err).Add("target-user", request.ProxyUser.Email).Add("submission", request.TargetSubmission)
 	}
 
@@ -49,14 +49,14 @@ func HandleResubmit(request *ResubmitRequest) (*ResubmitResponse, *core.APIError
 
 	tempDir, err := util.MkDirTemp("resumbit-request-files-")
 	if err != nil {
-		return nil, core.NewInternalError("-632", request, "Failed to create temp resubmit files directory.").
+		return nil, core.NewInternalError("-633", request, "Failed to create temp resubmit files directory.").
 			Err(err).Add("target-user", request.ProxyUser.Email).Add("submission", request.TargetSubmission)
 	}
 	defer util.RemoveDirent(tempDir)
 
 	err = util.GzipBytesToDirectory(tempDir, gradingResult.InputFilesGZip)
 	if err != nil {
-		return nil, core.NewInternalError("-633", request, "Failed to write submission input to a temp dir.").
+		return nil, core.NewInternalError("-634", request, "Failed to write submission input to a temp dir.").
 			Err(err).Add("target-user", request.ProxyUser.Email).Add("submission", request.TargetSubmission)
 	}
 

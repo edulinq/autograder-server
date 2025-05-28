@@ -933,7 +933,7 @@
                     "type": "string"
                 },
                 {
-                    "name": "references",
+                    "name": "target-users",
                     "type": "[]model.CourseUserReference"
                 },
                 {

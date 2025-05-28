@@ -10,7 +10,7 @@ Extra keys will generally be ignored.
  - [Semantic Types](#semantic-types)
    - [Identifier](#identifier)
    - [Email](#email)
-     - [Course Email Specification (CourseEmailSpec)](#course-email-specification-courseemailspec)
+     - [Course User Reference (CourseUserReference)](#course-user-reference-courseuserreference)
    - [Timestamp](#timestamp)
    - [Pointer](#pointer)
    - [Regex](#regex)
@@ -72,10 +72,11 @@ Underlying Type: String
 
 An email address.
 
-#### Course Email Specification (CourseEmailSpec)
+#### Course User Reference (CourseUserReference)
 
 When used in the context of a course,
-a `CourseEmailSpec` can be used to generalize email recipients.
+a `CourseUserReference` can be used to generalize targeting users for group actions
+(e.g, email recipients, listing users, etc).
 The following values are allowed:
 
  - Email - Normal email addresses may be used.
@@ -85,7 +86,7 @@ The following values are allowed:
    will remove this address from the email recipients (even if they are not currently there).
    This can be useful when using course roles but you want to exclude someone.
  - Negative Course Role - A course role preceded by a minus sign (e.g., "-student")
-   will remove all course users with that role. This can be usefil when using the "\*"
+   will remove all course users with that role. This can be useful when using the "\*"
    but you want to exclude a role.
 
 ### Timestamp

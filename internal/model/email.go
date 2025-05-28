@@ -13,21 +13,21 @@ type CourseMessageRecipients struct {
 func (this *CourseMessageRecipients) ToMessageRecipients(users map[string]*CourseUser) (*email.MessageRecipients, map[string]error) {
 	userErrors := make(map[string]error, 0)
 
-	reference, errs := ResolveCourseUserReferences(this.To)
+	reference, errs := ParseCourseUserReferences(this.To)
 	for input, err := range errs {
 		userErrors[input] = err
 	}
 
 	to := ResolveCourseUserEmails(users, reference)
 
-	reference, errs = ResolveCourseUserReferences(this.CC)
+	reference, errs = ParseCourseUserReferences(this.CC)
 	for input, err := range errs {
 		userErrors[input] = err
 	}
 
 	cc := ResolveCourseUserEmails(users, reference)
 
-	reference, errs = ResolveCourseUserReferences(this.BCC)
+	reference, errs = ParseCourseUserReferences(this.BCC)
 	for input, err := range errs {
 		userErrors[input] = err
 	}
@@ -40,9 +40,9 @@ func (this *CourseMessageRecipients) ToMessageRecipients(users map[string]*Cours
 		BCC: bcc,
 	}
 
-	if len(errs) == 0 {
-		errs = nil
+	if len(userErrors) == 0 {
+		userErrors = nil
 	}
 
-	return &recipients, errs
+	return &recipients, userErrors
 }

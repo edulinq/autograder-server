@@ -1,6 +1,7 @@
 package admin
 
 import (
+	"reflect"
 	"testing"
 
 	"github.com/edulinq/autograder/internal/api/core"
@@ -13,13 +14,14 @@ func TestEmail(test *testing.T) {
 	defer email.ClearTestMessages()
 
 	testCases := []struct {
+		UserEmail  string
 		Recipients model.CourseMessageRecipients
 		Content    email.MessageContent
-		UserEmail  string
+		UserErrors map[string]string
 		Locator    string
 		DryRun     bool
 	}{
-		// Valid permissions.
+		// Valid Permissions
 		{
 			UserEmail: "course-grader",
 			Recipients: model.CourseMessageRecipients{
@@ -29,8 +31,26 @@ func TestEmail(test *testing.T) {
 				Subject: "Subject",
 			},
 		},
+		{
+			UserEmail: "course-grader",
+			Recipients: model.CourseMessageRecipients{
+				To: []model.CourseUserReference{"student"},
+			},
+			Content: email.MessageContent{
+				Subject: "Subject",
+			},
+		},
+		{
+			UserEmail: "course-grader",
+			Recipients: model.CourseMessageRecipients{
+				To: []model.CourseUserReference{"outside-email@test.edulinq.org"},
+			},
+			Content: email.MessageContent{
+				Subject: "Subject",
+			},
+		},
 
-		// Valid permissions, role escalation.
+		// Valid Permissions, Role Escalation
 		{
 			UserEmail: "server-admin",
 			Recipients: model.CourseMessageRecipients{
@@ -84,7 +104,7 @@ func TestEmail(test *testing.T) {
 			},
 		},
 
-		//HTML
+		// HTML
 		{
 			UserEmail: "course-grader",
 			Recipients: model.CourseMessageRecipients{
@@ -96,7 +116,7 @@ func TestEmail(test *testing.T) {
 			},
 		},
 
-		// Dry run.
+		// Dry Run
 		{
 			UserEmail: "course-grader",
 			Recipients: model.CourseMessageRecipients{
@@ -108,7 +128,21 @@ func TestEmail(test *testing.T) {
 			DryRun: true,
 		},
 
-		// Invalid permissions.
+		// User Errors
+		{
+			UserEmail: "course-grader",
+			Recipients: model.CourseMessageRecipients{
+				To: []model.CourseUserReference{"creator"},
+			},
+			Content: email.MessageContent{
+				Subject: "Subject",
+			},
+			UserErrors: map[string]string{
+				"creator": "Unknown course role 'creator'.",
+			},
+		},
+
+		// Invalid Permissions
 		{
 			UserEmail: "course-student",
 			Recipients: model.CourseMessageRecipients{
@@ -120,7 +154,7 @@ func TestEmail(test *testing.T) {
 			Locator: "-020",
 		},
 
-		// Invalid permissions, role escalation.
+		// Invalid Permissions, Role Escalation
 		{
 			UserEmail: "server-user",
 			Recipients: model.CourseMessageRecipients{
@@ -142,7 +176,7 @@ func TestEmail(test *testing.T) {
 			Locator: "-040",
 		},
 
-		// No subject.
+		// No Subject
 		{
 			UserEmail: "course-grader",
 			Recipients: model.CourseMessageRecipients{
@@ -151,7 +185,7 @@ func TestEmail(test *testing.T) {
 			Locator: "-627",
 		},
 
-		// No recipients.
+		// No Recipients
 		{
 			UserEmail: "course-grader",
 			Content: email.MessageContent{
@@ -164,7 +198,17 @@ func TestEmail(test *testing.T) {
 		{
 			UserEmail: "course-grader",
 			Recipients: model.CourseMessageRecipients{
-				To: []model.CourseUserReference{"course-student", "-course-student@test.edulinq.org"},
+				To: []model.CourseUserReference{"course-student@test.edulinq.org", "-course-student@test.edulinq.org"},
+			},
+			Content: email.MessageContent{
+				Subject: "Subject",
+			},
+			Locator: "-628",
+		},
+		{
+			UserEmail: "course-grader",
+			Recipients: model.CourseMessageRecipients{
+				To: []model.CourseUserReference{"student", "-student"},
 			},
 			Content: email.MessageContent{
 				Subject: "Subject",
@@ -186,7 +230,7 @@ func TestEmail(test *testing.T) {
 		response := core.SendTestAPIRequestFull(test, "courses/admin/email", fields, nil, testCase.UserEmail)
 		if !response.Success {
 			if testCase.Locator != response.Locator {
-				test.Errorf("Case %d: Incorrect error returned. Expected '%s', found '%s'.",
+				test.Errorf("Case %d: Incorrect error returned. Expected: '%s', Actual: '%s'.",
 					i, testCase.Locator, response.Locator)
 			}
 
@@ -198,23 +242,28 @@ func TestEmail(test *testing.T) {
 			continue
 		}
 
+		var responseContent EmailResponse
+		util.MustJSONFromString(util.MustToJSON(response.Content), &responseContent)
+
+		if !reflect.DeepEqual(responseContent.Errors, testCase.UserErrors) {
+			test.Errorf("Case %d: Unexpected user errors. Expected: '%v', Actual: '%v'.", i, util.MustToJSONIndent(testCase.UserErrors), util.MustToJSONIndent(responseContent.Errors))
+			continue
+		}
+
 		testMessages := email.GetTestMessages()
 
-		if testCase.DryRun {
+		if testCase.DryRun || len(testCase.UserErrors) != 0 {
 			if len(testMessages) != 0 {
-				test.Errorf("Case %d: Unexpected emails sent. Expected '0 emails', found '%d emails'.", i, len(testMessages))
+				test.Errorf("Case %d: Unexpected emails sent. Expected: '0 emails', Actual: '%d emails'.", i, len(testMessages))
 			}
 
 			continue
 		}
 
 		if len(testMessages) != 1 {
-			test.Errorf("Case %d: Unexpected number of emails sent. Expected '1 email', found '%d emails'.", i, len(testMessages))
+			test.Errorf("Case %d: Unexpected number of emails sent. Expected: '1 email', Actual: '%d emails'.", i, len(testMessages))
 			continue
 		}
-
-		var responseContent EmailResponse
-		util.MustJSONFromString(util.MustToJSON(response.Content), &responseContent)
 
 		if (len(responseContent.To) + len(responseContent.CC) + len(responseContent.BCC)) == 0 {
 			test.Errorf("Case %d: Email was sent without any recipients.", i)
@@ -224,12 +273,12 @@ func TestEmail(test *testing.T) {
 		testMessage := testMessages[0]
 
 		if testCase.Content.Body != testMessage.Body {
-			test.Errorf("Case %d: Unexpected body content. Expected: '%s', actual: '%s'.", i, testCase.Content.Body, testMessage.Body)
+			test.Errorf("Case %d: Unexpected body content. Expected: '%s', Actual: '%s'.", i, testCase.Content.Body, testMessage.Body)
 			continue
 		}
 
 		if testCase.Content.HTML != testMessage.HTML {
-			test.Errorf("Case %d: Unexpected HTML value. Expected: '%t', actual: '%t'.", i, testCase.Content.HTML, testMessage.HTML)
+			test.Errorf("Case %d: Unexpected HTML value. Expected: '%t', Actual: '%t'.", i, testCase.Content.HTML, testMessage.HTML)
 			continue
 		}
 	}

@@ -92,7 +92,7 @@ func TestList(test *testing.T) {
 
 	for i, testCase := range testCases {
 		fields := map[string]any{
-			"references": testCase.input,
+			"target-users": testCase.input,
 		}
 
 		response := core.SendTestAPIRequestFull(test, `courses/users/list`, fields, nil, testCase.email)
@@ -123,7 +123,10 @@ func TestList(test *testing.T) {
 			continue
 		}
 
-		expectedInfos := core.NewCourseUserInfos(testCase.expectedUsers)
+		var expectedInfos []*core.CourseUserInfo = nil
+		if len(testCase.expectedErrors) == 0 {
+			expectedInfos = core.NewCourseUserInfos(testCase.expectedUsers)
+		}
 
 		if !reflect.DeepEqual(expectedInfos, responseContent.Users) {
 			test.Errorf("Case %d: Unexpected users information. Expected: '%s', Actual: '%s'.",

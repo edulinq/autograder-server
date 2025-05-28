@@ -39,12 +39,12 @@ func RunCourseReportTask(task *model.FullScheduledTask) error {
 
 	users, err := db.GetCourseUsers(course)
 	if err != nil {
-		return fmt.Errorf("Failed to get course users: '%w'.", err)
+		return fmt.Errorf("Failed to get course users for course '%s': '%w'.", course.GetID(), err)
 	}
 
-	reference, userErrors := model.ResolveCourseUserReferences(to)
+	reference, userErrors := model.ParseCourseUserReferences(to)
 	if userErrors != nil {
-		return fmt.Errorf("Failed to resolve users for course '%s': '%v'.", course.GetID(), userErrors)
+		return fmt.Errorf("Failed to parse course user references: '%v'.", userErrors)
 	}
 
 	emailTo := model.ResolveCourseUserEmails(users, reference)

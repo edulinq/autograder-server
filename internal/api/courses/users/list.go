@@ -11,22 +11,22 @@ type ListRequest struct {
 	core.MinCourseRoleGrader
 	Users core.CourseUsers `json:"-"`
 
-	References []model.CourseUserReference `json:"references"`
+	TargetUsers []model.CourseUserReference `json:"target-users"`
 }
 
 type ListResponse struct {
 	Users  []*core.CourseUserInfo `json:"users"`
-	Errors map[string]string      `json:"errors,omitempty"`
+	Errors map[string]string      `json:"errors,omitempty,omitzero"`
 }
 
 // List the users in the course.
 func HandleList(request *ListRequest) (*ListResponse, *core.APIError) {
 	// Default to listing all users in the course.
-	if len(request.References) == 0 {
-		request.References = []model.CourseUserReference{"*"}
+	if len(request.TargetUsers) == 0 {
+		request.TargetUsers = []model.CourseUserReference{"*"}
 	}
 
-	reference, userErrors := model.ResolveCourseUserReferences(request.References)
+	reference, userErrors := model.ParseCourseUserReferences(request.TargetUsers)
 
 	errors := make(map[string]string, len(userErrors))
 
@@ -36,11 +36,18 @@ func HandleList(request *ListRequest) (*ListResponse, *core.APIError) {
 		log.Warn("Failed to parse user reference.", err, log.NewAttr("reference", reference))
 	}
 
+	if len(userErrors) != 0 {
+		return &ListResponse{
+			Users:  nil,
+			Errors: errors,
+		}, nil
+	}
+
 	users := model.ResolveCourseUsers(request.Users, reference)
 
 	response := ListResponse{
 		Users:  core.NewCourseUserInfos(users),
-		Errors: errors,
+		Errors: nil,
 	}
 
 	return &response, nil

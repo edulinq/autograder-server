@@ -23,7 +23,7 @@ type EmailResponse struct {
 	CC  []string `json:"cc"`
 	BCC []string `json:"bcc"`
 
-	Errors map[string]string `json:"errors,omitempty"`
+	Errors map[string]string `json:"errors,omitempty,omitzero"`
 }
 
 // Send an email to course users.
@@ -42,6 +42,15 @@ func HandleEmail(request *EmailRequest) (*EmailResponse, *core.APIError) {
 		log.Warn("Failed to parse user reference.", err, log.NewAttr("reference", reference))
 	}
 
+	if len(errors) != 0 {
+		return &EmailResponse{
+			To:     nil,
+			CC:     nil,
+			BCC:    nil,
+			Errors: errors,
+		}, nil
+	}
+
 	if recipients.IsEmpty() {
 		return nil, core.NewBadRequestError("-628", request, "No email recipients provided.")
 	}
@@ -57,7 +66,7 @@ func HandleEmail(request *EmailRequest) (*EmailResponse, *core.APIError) {
 		To:     recipients.To,
 		CC:     recipients.CC,
 		BCC:    recipients.BCC,
-		Errors: errors,
+		Errors: nil,
 	}
 
 	return &response, nil

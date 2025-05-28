@@ -8,16 +8,21 @@ import (
 	"github.com/edulinq/autograder/internal/util"
 )
 
-func TestResolveCourseUserReferences(test *testing.T) {
+func TestParseCourseUserReferences(test *testing.T) {
+	allCourseRoles := make(map[CourseUserRole]any, len(CommonCourseUserRole))
+	for _, role := range CommonCourseUserRole {
+		allCourseRoles[role] = nil
+	}
+
 	testCases := []struct {
 		input      []CourseUserReference
-		output     *ResolvedCourseUserReference
+		output     *ParsedCourseUserReference
 		userErrors map[string]error
 	}{
 		// Target Emails
 		{
 			[]CourseUserReference{"course-student@test.edulinq.org"},
-			&ResolvedCourseUserReference{
+			&ParsedCourseUserReference{
 				Emails: map[string]any{
 					"course-student@test.edulinq.org": nil,
 				},
@@ -26,7 +31,7 @@ func TestResolveCourseUserReferences(test *testing.T) {
 		},
 		{
 			[]CourseUserReference{"-course-student@test.edulinq.org"},
-			&ResolvedCourseUserReference{
+			&ParsedCourseUserReference{
 				ExcludeEmails: map[string]any{
 					"course-student@test.edulinq.org": nil,
 				},
@@ -37,18 +42,18 @@ func TestResolveCourseUserReferences(test *testing.T) {
 		// Target Roles
 		{
 			[]CourseUserReference{"admin"},
-			&ResolvedCourseUserReference{
-				CourseUserRoles: map[string]any{
-					"admin": nil,
+			&ParsedCourseUserReference{
+				CourseUserRoles: map[CourseUserRole]any{
+					GetCourseUserRole("admin"): nil,
 				},
 			},
 			nil,
 		},
 		{
 			[]CourseUserReference{"-admin"},
-			&ResolvedCourseUserReference{
-				ExcludeCourseUserRoles: map[string]any{
-					"admin": nil,
+			&ParsedCourseUserReference{
+				ExcludeCourseUserRoles: map[CourseUserRole]any{
+					GetCourseUserRole("admin"): nil,
 				},
 			},
 			nil,
@@ -57,15 +62,15 @@ func TestResolveCourseUserReferences(test *testing.T) {
 		// All Users
 		{
 			[]CourseUserReference{"*"},
-			&ResolvedCourseUserReference{
-				CourseUserRoles: GetCommonCourseUserRoleStrings(),
+			&ParsedCourseUserReference{
+				CourseUserRoles: allCourseRoles,
 			},
 			nil,
 		},
 		{
 			[]CourseUserReference{"-*"},
-			&ResolvedCourseUserReference{
-				ExcludeCourseUserRoles: GetCommonCourseUserRoleStrings(),
+			&ParsedCourseUserReference{
+				ExcludeCourseUserRoles: allCourseRoles,
 			},
 			nil,
 		},
@@ -78,12 +83,12 @@ func TestResolveCourseUserReferences(test *testing.T) {
 				"admin",
 				"aDmIn",
 			},
-			&ResolvedCourseUserReference{
+			&ParsedCourseUserReference{
 				Emails: map[string]any{
 					"course-student@test.edulinq.org": nil,
 				},
-				CourseUserRoles: map[string]any{
-					"admin": nil,
+				CourseUserRoles: map[CourseUserRole]any{
+					GetCourseUserRole("admin"): nil,
 				},
 			},
 			nil,
@@ -95,12 +100,12 @@ func TestResolveCourseUserReferences(test *testing.T) {
 				"   -admin",
 				"-admin	",
 			},
-			&ResolvedCourseUserReference{
+			&ParsedCourseUserReference{
 				Emails: map[string]any{
 					"course-student@test.edulinq.org": nil,
 				},
-				ExcludeCourseUserRoles: map[string]any{
-					"admin": nil,
+				ExcludeCourseUserRoles: map[CourseUserRole]any{
+					GetCourseUserRole("admin"): nil,
 				},
 			},
 			nil,
@@ -114,18 +119,18 @@ func TestResolveCourseUserReferences(test *testing.T) {
 				"admin",
 				"-owner",
 			},
-			&ResolvedCourseUserReference{
+			&ParsedCourseUserReference{
 				Emails: map[string]any{
 					"course-student@test.edulinq.org": nil,
 				},
 				ExcludeEmails: map[string]any{
 					"course-admin@test.edulinq.org": nil,
 				},
-				CourseUserRoles: map[string]any{
-					"admin": nil,
+				CourseUserRoles: map[CourseUserRole]any{
+					GetCourseUserRole("admin"): nil,
 				},
-				ExcludeCourseUserRoles: map[string]any{
-					"owner": nil,
+				ExcludeCourseUserRoles: map[CourseUserRole]any{
+					GetCourseUserRole("owner"): nil,
 				},
 			},
 			nil,
@@ -139,18 +144,18 @@ func TestResolveCourseUserReferences(test *testing.T) {
 				"admin",
 				"-admin",
 			},
-			&ResolvedCourseUserReference{
+			&ParsedCourseUserReference{
 				Emails: map[string]any{
 					"course-student@test.edulinq.org": nil,
 				},
 				ExcludeEmails: map[string]any{
 					"course-student@test.edulinq.org": nil,
 				},
-				CourseUserRoles: map[string]any{
-					"admin": nil,
+				CourseUserRoles: map[CourseUserRole]any{
+					GetCourseUserRole("admin"): nil,
 				},
-				ExcludeCourseUserRoles: map[string]any{
-					"admin": nil,
+				ExcludeCourseUserRoles: map[CourseUserRole]any{
+					GetCourseUserRole("admin"): nil,
 				},
 			},
 			nil,
@@ -160,8 +165,8 @@ func TestResolveCourseUserReferences(test *testing.T) {
 				"grader",
 				"*",
 			},
-			&ResolvedCourseUserReference{
-				CourseUserRoles: GetCommonCourseUserRoleStrings(),
+			&ParsedCourseUserReference{
+				CourseUserRoles: allCourseRoles,
 			},
 			nil,
 		},
@@ -170,8 +175,8 @@ func TestResolveCourseUserReferences(test *testing.T) {
 				"-*",
 				"-student",
 			},
-			&ResolvedCourseUserReference{
-				ExcludeCourseUserRoles: GetCommonCourseUserRoleStrings(),
+			&ParsedCourseUserReference{
+				ExcludeCourseUserRoles: allCourseRoles,
 			},
 			nil,
 		},
@@ -179,7 +184,7 @@ func TestResolveCourseUserReferences(test *testing.T) {
 		// Not Enrolled Users
 		{
 			[]CourseUserReference{"zzz@test.edulinq.org"},
-			&ResolvedCourseUserReference{
+			&ParsedCourseUserReference{
 				Emails: map[string]any{
 					"zzz@test.edulinq.org": nil,
 				},
@@ -188,7 +193,7 @@ func TestResolveCourseUserReferences(test *testing.T) {
 		},
 		{
 			[]CourseUserReference{"server-user@test.edulinq.org"},
-			&ResolvedCourseUserReference{
+			&ParsedCourseUserReference{
 				Emails: map[string]any{
 					"server-user@test.edulinq.org": nil,
 				},
@@ -209,7 +214,7 @@ func TestResolveCourseUserReferences(test *testing.T) {
 	}
 
 	for i, testCase := range testCases {
-		result, userErrors := ResolveCourseUserReferences(testCase.input)
+		result, userErrors := ParseCourseUserReferences(testCase.input)
 		if !reflect.DeepEqual(userErrors, testCase.userErrors) {
 			test.Errorf("Case %d: Unexpected user errors. Expected: '%v', Actual: '%v'.",
 				i, testCase.userErrors, userErrors)
@@ -230,11 +235,11 @@ func TestResolveCourseUserReferences(test *testing.T) {
 		}
 
 		if testCase.output.CourseUserRoles == nil {
-			testCase.output.CourseUserRoles = make(map[string]any, 0)
+			testCase.output.CourseUserRoles = make(map[CourseUserRole]any, 0)
 		}
 
 		if testCase.output.ExcludeCourseUserRoles == nil {
-			testCase.output.ExcludeCourseUserRoles = make(map[string]any, 0)
+			testCase.output.ExcludeCourseUserRoles = make(map[CourseUserRole]any, 0)
 		}
 
 		if !reflect.DeepEqual(testCase.output, result) {
@@ -246,6 +251,11 @@ func TestResolveCourseUserReferences(test *testing.T) {
 }
 
 func TestResolveCourseUserEmails(test *testing.T) {
+	allCourseRoles := make(map[CourseUserRole]any, len(CommonCourseUserRole))
+	for _, role := range CommonCourseUserRole {
+		allCourseRoles[role] = nil
+	}
+
 	defaultUsers := map[string]*CourseUser{
 		"course-admin@test.edulinq.org": &CourseUser{
 			Email: "course-admin@test.edulinq.org",
@@ -270,7 +280,7 @@ func TestResolveCourseUserEmails(test *testing.T) {
 	}
 
 	testCases := []struct {
-		reference      *ResolvedCourseUserReference
+		reference      *ParsedCourseUserReference
 		users          map[string]*CourseUser
 		expectedOutput []string
 	}{
@@ -281,20 +291,20 @@ func TestResolveCourseUserEmails(test *testing.T) {
 			nil,
 		},
 		{
-			&ResolvedCourseUserReference{},
+			&ParsedCourseUserReference{},
 			nil,
 			[]string{},
 		},
 		{
-			&ResolvedCourseUserReference{
-				CourseUserRoles: GetCommonCourseUserRoleStrings(),
+			&ParsedCourseUserReference{
+				CourseUserRoles: allCourseRoles,
 			},
 			nil,
 			[]string{},
 		},
 		{
-			&ResolvedCourseUserReference{
-				CourseUserRoles: GetCommonCourseUserRoleStrings(),
+			&ParsedCourseUserReference{
+				CourseUserRoles: allCourseRoles,
 			},
 			map[string]*CourseUser{},
 			[]string{},
@@ -302,9 +312,9 @@ func TestResolveCourseUserEmails(test *testing.T) {
 
 		// Course Role
 		{
-			&ResolvedCourseUserReference{
-				CourseUserRoles: map[string]any{
-					"admin": nil,
+			&ParsedCourseUserReference{
+				CourseUserRoles: map[CourseUserRole]any{
+					GetCourseUserRole("admin"): nil,
 				},
 			},
 			defaultUsers,
@@ -313,8 +323,8 @@ func TestResolveCourseUserEmails(test *testing.T) {
 
 		// All Users
 		{
-			&ResolvedCourseUserReference{
-				CourseUserRoles: GetCommonCourseUserRoleStrings(),
+			&ParsedCourseUserReference{
+				CourseUserRoles: allCourseRoles,
 			},
 			defaultUsers,
 			[]string{"course-admin@test.edulinq.org", "course-grader@test.edulinq.org", "course-other@test.edulinq.org", "course-owner@test.edulinq.org", "course-student@test.edulinq.org"},
@@ -322,9 +332,9 @@ func TestResolveCourseUserEmails(test *testing.T) {
 
 		// Role With Multiple Users
 		{
-			&ResolvedCourseUserReference{
-				CourseUserRoles: map[string]any{
-					"student": nil,
+			&ParsedCourseUserReference{
+				CourseUserRoles: map[CourseUserRole]any{
+					GetCourseUserRole("student"): nil,
 				},
 			},
 			map[string]*CourseUser{
@@ -343,9 +353,9 @@ func TestResolveCourseUserEmails(test *testing.T) {
 
 		// Role With No Users
 		{
-			&ResolvedCourseUserReference{
-				CourseUserRoles: map[string]any{
-					"owner": nil,
+			&ParsedCourseUserReference{
+				CourseUserRoles: map[CourseUserRole]any{
+					GetCourseUserRole("owner"): nil,
 				},
 			},
 			map[string]*CourseUser{
@@ -354,10 +364,10 @@ func TestResolveCourseUserEmails(test *testing.T) {
 			[]string{},
 		},
 		{
-			&ResolvedCourseUserReference{
-				CourseUserRoles: map[string]any{
-					"owner":   nil,
-					"student": nil,
+			&ParsedCourseUserReference{
+				CourseUserRoles: map[CourseUserRole]any{
+					GetCourseUserRole("owner"):   nil,
+					GetCourseUserRole("student"): nil,
 				},
 			},
 			map[string]*CourseUser{
@@ -368,8 +378,8 @@ func TestResolveCourseUserEmails(test *testing.T) {
 
 		// Exclude Email
 		{
-			&ResolvedCourseUserReference{
-				CourseUserRoles: GetCommonCourseUserRoleStrings(),
+			&ParsedCourseUserReference{
+				CourseUserRoles: allCourseRoles,
 				ExcludeEmails: map[string]any{
 					"course-admin@test.edulinq.org": nil,
 				},
@@ -383,8 +393,8 @@ func TestResolveCourseUserEmails(test *testing.T) {
 			},
 		},
 		{
-			&ResolvedCourseUserReference{
-				CourseUserRoles: GetCommonCourseUserRoleStrings(),
+			&ParsedCourseUserReference{
+				CourseUserRoles: allCourseRoles,
 				ExcludeEmails: map[string]any{
 					"course-admin@test.edulinq.org":   nil,
 					"course-other@test.edulinq.org":   nil,
@@ -395,7 +405,7 @@ func TestResolveCourseUserEmails(test *testing.T) {
 			[]string{"course-grader@test.edulinq.org", "course-owner@test.edulinq.org"},
 		},
 		{
-			&ResolvedCourseUserReference{
+			&ParsedCourseUserReference{
 				Emails: map[string]any{
 					"course-admin@test.edulinq.org": nil,
 				},
@@ -407,7 +417,7 @@ func TestResolveCourseUserEmails(test *testing.T) {
 			[]string{"course-admin@test.edulinq.org"},
 		},
 		{
-			&ResolvedCourseUserReference{
+			&ParsedCourseUserReference{
 				Emails: map[string]any{
 					"course-admin@test.edulinq.org": nil,
 				},
@@ -421,58 +431,58 @@ func TestResolveCourseUserEmails(test *testing.T) {
 
 		// Exclude Role
 		{
-			&ResolvedCourseUserReference{
-				CourseUserRoles: map[string]any{
-					"admin": nil,
+			&ParsedCourseUserReference{
+				CourseUserRoles: map[CourseUserRole]any{
+					GetCourseUserRole("admin"): nil,
 				},
-				ExcludeCourseUserRoles: map[string]any{
-					"admin": nil,
+				ExcludeCourseUserRoles: map[CourseUserRole]any{
+					GetCourseUserRole("admin"): nil,
 				},
 			},
 			defaultUsers,
 			[]string{},
 		},
 		{
-			&ResolvedCourseUserReference{
+			&ParsedCourseUserReference{
 				Emails: map[string]any{
 					"course-admin@test.edulinq.org": nil,
 				},
-				ExcludeCourseUserRoles: map[string]any{
-					"admin": nil,
+				ExcludeCourseUserRoles: map[CourseUserRole]any{
+					GetCourseUserRole("admin"): nil,
 				},
 			},
 			defaultUsers,
 			[]string{},
 		},
 		{
-			&ResolvedCourseUserReference{
-				CourseUserRoles: map[string]any{
-					"student": nil,
+			&ParsedCourseUserReference{
+				CourseUserRoles: map[CourseUserRole]any{
+					GetCourseUserRole("student"): nil,
 				},
-				ExcludeCourseUserRoles: map[string]any{
-					"admin": nil,
+				ExcludeCourseUserRoles: map[CourseUserRole]any{
+					GetCourseUserRole("admin"): nil,
 				},
 			},
 			defaultUsers,
 			[]string{"course-student@test.edulinq.org"},
 		},
 		{
-			&ResolvedCourseUserReference{
+			&ParsedCourseUserReference{
 				Emails: map[string]any{
 					"course-student@test.edulinq.org": nil,
 				},
-				ExcludeCourseUserRoles: map[string]any{
-					"admin": nil,
+				ExcludeCourseUserRoles: map[CourseUserRole]any{
+					GetCourseUserRole("admin"): nil,
 				},
 			},
 			defaultUsers,
 			[]string{"course-student@test.edulinq.org"},
 		},
 		{
-			&ResolvedCourseUserReference{
-				CourseUserRoles: GetCommonCourseUserRoleStrings(),
-				ExcludeCourseUserRoles: map[string]any{
-					"admin": nil,
+			&ParsedCourseUserReference{
+				CourseUserRoles: allCourseRoles,
+				ExcludeCourseUserRoles: map[CourseUserRole]any{
+					GetCourseUserRole("admin"): nil,
 				},
 			},
 			defaultUsers,
@@ -482,6 +492,29 @@ func TestResolveCourseUserEmails(test *testing.T) {
 				"course-owner@test.edulinq.org",
 				"course-student@test.edulinq.org",
 			},
+		},
+
+		// Outside Emails
+		{
+			&ParsedCourseUserReference{
+				Emails: map[string]any{
+					"outside-email@test.edulinq.org": nil,
+				},
+			},
+			defaultUsers,
+			[]string{"outside-email@test.edulinq.org"},
+		},
+		{
+			&ParsedCourseUserReference{
+				Emails: map[string]any{
+					"outside-email@test.edulinq.org": nil,
+				},
+				ExcludeEmails: map[string]any{
+					"outside-email@test.edulinq.org": nil,
+				},
+			},
+			defaultUsers,
+			[]string{},
 		},
 	}
 
@@ -497,6 +530,11 @@ func TestResolveCourseUserEmails(test *testing.T) {
 }
 
 func TestResolveCourseUsers(test *testing.T) {
+	allCourseRoles := make(map[CourseUserRole]any, len(CommonCourseUserRole))
+	for _, role := range CommonCourseUserRole {
+		allCourseRoles[role] = nil
+	}
+
 	defaultUsers := map[string]*CourseUser{
 		"course-admin@test.edulinq.org": &CourseUser{
 			Email: "course-admin@test.edulinq.org",
@@ -521,7 +559,7 @@ func TestResolveCourseUsers(test *testing.T) {
 	}
 
 	testCases := []struct {
-		reference      *ResolvedCourseUserReference
+		reference      *ParsedCourseUserReference
 		users          map[string]*CourseUser
 		expectedOutput []string
 	}{
@@ -532,20 +570,20 @@ func TestResolveCourseUsers(test *testing.T) {
 			nil,
 		},
 		{
-			&ResolvedCourseUserReference{},
+			&ParsedCourseUserReference{},
 			nil,
 			[]string{},
 		},
 		{
-			&ResolvedCourseUserReference{
-				CourseUserRoles: GetCommonCourseUserRoleStrings(),
+			&ParsedCourseUserReference{
+				CourseUserRoles: allCourseRoles,
 			},
 			nil,
 			[]string{},
 		},
 		{
-			&ResolvedCourseUserReference{
-				CourseUserRoles: GetCommonCourseUserRoleStrings(),
+			&ParsedCourseUserReference{
+				CourseUserRoles: allCourseRoles,
 			},
 			map[string]*CourseUser{},
 			[]string{},
@@ -553,9 +591,9 @@ func TestResolveCourseUsers(test *testing.T) {
 
 		// Course Role
 		{
-			&ResolvedCourseUserReference{
-				CourseUserRoles: map[string]any{
-					"admin": nil,
+			&ParsedCourseUserReference{
+				CourseUserRoles: map[CourseUserRole]any{
+					GetCourseUserRole("admin"): nil,
 				},
 			},
 			defaultUsers,
@@ -564,8 +602,8 @@ func TestResolveCourseUsers(test *testing.T) {
 
 		// All Users
 		{
-			&ResolvedCourseUserReference{
-				CourseUserRoles: GetCommonCourseUserRoleStrings(),
+			&ParsedCourseUserReference{
+				CourseUserRoles: allCourseRoles,
 			},
 			defaultUsers,
 			[]string{"course-admin@test.edulinq.org", "course-grader@test.edulinq.org", "course-other@test.edulinq.org", "course-owner@test.edulinq.org", "course-student@test.edulinq.org"},
@@ -573,9 +611,9 @@ func TestResolveCourseUsers(test *testing.T) {
 
 		// Role With Multiple Users
 		{
-			&ResolvedCourseUserReference{
-				CourseUserRoles: map[string]any{
-					"student": nil,
+			&ParsedCourseUserReference{
+				CourseUserRoles: map[CourseUserRole]any{
+					GetCourseUserRole("student"): nil,
 				},
 			},
 			map[string]*CourseUser{
@@ -594,9 +632,9 @@ func TestResolveCourseUsers(test *testing.T) {
 
 		// Role With No Users
 		{
-			&ResolvedCourseUserReference{
-				CourseUserRoles: map[string]any{
-					"owner": nil,
+			&ParsedCourseUserReference{
+				CourseUserRoles: map[CourseUserRole]any{
+					GetCourseUserRole("owner"): nil,
 				},
 			},
 			map[string]*CourseUser{
@@ -605,10 +643,10 @@ func TestResolveCourseUsers(test *testing.T) {
 			[]string{},
 		},
 		{
-			&ResolvedCourseUserReference{
-				CourseUserRoles: map[string]any{
-					"owner":   nil,
-					"student": nil,
+			&ParsedCourseUserReference{
+				CourseUserRoles: map[CourseUserRole]any{
+					GetCourseUserRole("owner"):   nil,
+					GetCourseUserRole("student"): nil,
 				},
 			},
 			map[string]*CourseUser{
@@ -619,8 +657,8 @@ func TestResolveCourseUsers(test *testing.T) {
 
 		// Exclude Email
 		{
-			&ResolvedCourseUserReference{
-				CourseUserRoles: GetCommonCourseUserRoleStrings(),
+			&ParsedCourseUserReference{
+				CourseUserRoles: allCourseRoles,
 				ExcludeEmails: map[string]any{
 					"course-admin@test.edulinq.org": nil,
 				},
@@ -634,8 +672,8 @@ func TestResolveCourseUsers(test *testing.T) {
 			},
 		},
 		{
-			&ResolvedCourseUserReference{
-				CourseUserRoles: GetCommonCourseUserRoleStrings(),
+			&ParsedCourseUserReference{
+				CourseUserRoles: allCourseRoles,
 				ExcludeEmails: map[string]any{
 					"course-admin@test.edulinq.org":   nil,
 					"course-other@test.edulinq.org":   nil,
@@ -646,7 +684,7 @@ func TestResolveCourseUsers(test *testing.T) {
 			[]string{"course-grader@test.edulinq.org", "course-owner@test.edulinq.org"},
 		},
 		{
-			&ResolvedCourseUserReference{
+			&ParsedCourseUserReference{
 				Emails: map[string]any{
 					"course-admin@test.edulinq.org": nil,
 				},
@@ -658,7 +696,7 @@ func TestResolveCourseUsers(test *testing.T) {
 			[]string{"course-admin@test.edulinq.org"},
 		},
 		{
-			&ResolvedCourseUserReference{
+			&ParsedCourseUserReference{
 				Emails: map[string]any{
 					"course-admin@test.edulinq.org": nil,
 				},
@@ -672,58 +710,58 @@ func TestResolveCourseUsers(test *testing.T) {
 
 		// Exclude Role
 		{
-			&ResolvedCourseUserReference{
-				CourseUserRoles: map[string]any{
-					"admin": nil,
+			&ParsedCourseUserReference{
+				CourseUserRoles: map[CourseUserRole]any{
+					GetCourseUserRole("admin"): nil,
 				},
-				ExcludeCourseUserRoles: map[string]any{
-					"admin": nil,
+				ExcludeCourseUserRoles: map[CourseUserRole]any{
+					GetCourseUserRole("admin"): nil,
 				},
 			},
 			defaultUsers,
 			[]string{},
 		},
 		{
-			&ResolvedCourseUserReference{
+			&ParsedCourseUserReference{
 				Emails: map[string]any{
 					"course-admin@test.edulinq.org": nil,
 				},
-				ExcludeCourseUserRoles: map[string]any{
-					"admin": nil,
+				ExcludeCourseUserRoles: map[CourseUserRole]any{
+					GetCourseUserRole("admin"): nil,
 				},
 			},
 			defaultUsers,
 			[]string{},
 		},
 		{
-			&ResolvedCourseUserReference{
-				CourseUserRoles: map[string]any{
-					"student": nil,
+			&ParsedCourseUserReference{
+				CourseUserRoles: map[CourseUserRole]any{
+					GetCourseUserRole("student"): nil,
 				},
-				ExcludeCourseUserRoles: map[string]any{
-					"admin": nil,
+				ExcludeCourseUserRoles: map[CourseUserRole]any{
+					GetCourseUserRole("admin"): nil,
 				},
 			},
 			defaultUsers,
 			[]string{"course-student@test.edulinq.org"},
 		},
 		{
-			&ResolvedCourseUserReference{
+			&ParsedCourseUserReference{
 				Emails: map[string]any{
 					"course-student@test.edulinq.org": nil,
 				},
-				ExcludeCourseUserRoles: map[string]any{
-					"admin": nil,
+				ExcludeCourseUserRoles: map[CourseUserRole]any{
+					GetCourseUserRole("admin"): nil,
 				},
 			},
 			defaultUsers,
 			[]string{"course-student@test.edulinq.org"},
 		},
 		{
-			&ResolvedCourseUserReference{
-				CourseUserRoles: GetCommonCourseUserRoleStrings(),
-				ExcludeCourseUserRoles: map[string]any{
-					"admin": nil,
+			&ParsedCourseUserReference{
+				CourseUserRoles: allCourseRoles,
+				ExcludeCourseUserRoles: map[CourseUserRole]any{
+					GetCourseUserRole("admin"): nil,
 				},
 			},
 			defaultUsers,
