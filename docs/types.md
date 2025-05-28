@@ -75,8 +75,8 @@ An email address.
 #### Course User Reference (CourseUserReference)
 
 When used in the context of a course,
-a `CourseUserReference` can be used to generalize targeting users for group actions
-(e.g, email recipients, listing users, etc).
+a `CourseUserReference` can be used to generalize targeting users
+(e.g, email recipients).
 The following values are allowed:
 
  - Email - Normal email addresses may be used.
