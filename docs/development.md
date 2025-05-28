@@ -102,6 +102,16 @@ The structure of API endpoint files must follow these rules:
 
 For example, the handler for `users/list` is called `HandleList` and located in the file `internal/api/users/list.go`.
 
+### Automatic API Descriptions
+
+The server generates API descriptions automatically from source code.
+
+ - Each API endpoint must have a comment describing the endpoint attached to the handler's function declaration.
+ - User-facing input fields must include a `json` tag to appear in the description.
+ - Required fields must also include a `required` tag with an empty value.
+
+For example, the field tag for the required `UserEmail` input field is `json:"user-email" required:""`.
+
 ### Passwords/Tokens
 
 No password or token should be sent to the server as cleartext.
