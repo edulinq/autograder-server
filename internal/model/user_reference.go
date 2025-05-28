@@ -67,10 +67,7 @@ func ParseCourseUserReferences(rawReferences []CourseUserReference) (*ParsedCour
 
 	userErrors := make(map[string]error, 0)
 
-	commonCourseRoles := make(map[string]CourseUserRole, len(CommonCourseUserRole))
-	for roleString, role := range CommonCourseUserRole {
-		commonCourseRoles[roleString] = role
-	}
+	commonCourseRoles := GetCommonCourseUserRolesCopy()
 
 	for _, rawReference := range rawReferences {
 		reference := strings.ToLower(strings.TrimSpace(string(rawReference)))

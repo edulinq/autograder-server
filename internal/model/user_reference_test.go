@@ -9,8 +9,10 @@ import (
 )
 
 func TestParseCourseUserReferences(test *testing.T) {
-	allCourseRoles := make(map[CourseUserRole]any, len(CommonCourseUserRole))
-	for _, role := range CommonCourseUserRole {
+	commonCourseRoles := GetCommonCourseUserRolesCopy()
+
+	allCourseRoles := make(map[CourseUserRole]any, len(commonCourseRoles))
+	for _, role := range commonCourseRoles {
 		allCourseRoles[role] = nil
 	}
 
@@ -251,8 +253,10 @@ func TestParseCourseUserReferences(test *testing.T) {
 }
 
 func TestResolveCourseUserEmails(test *testing.T) {
-	allCourseRoles := make(map[CourseUserRole]any, len(CommonCourseUserRole))
-	for _, role := range CommonCourseUserRole {
+	commonCourseRoles := GetCommonCourseUserRolesCopy()
+
+	allCourseRoles := make(map[CourseUserRole]any, len(commonCourseRoles))
+	for _, role := range commonCourseRoles {
 		allCourseRoles[role] = nil
 	}
 
@@ -530,8 +534,10 @@ func TestResolveCourseUserEmails(test *testing.T) {
 }
 
 func TestResolveCourseUsers(test *testing.T) {
-	allCourseRoles := make(map[CourseUserRole]any, len(CommonCourseUserRole))
-	for _, role := range CommonCourseUserRole {
+	commonCourseRoles := GetCommonCourseUserRolesCopy()
+
+	allCourseRoles := make(map[CourseUserRole]any, len(commonCourseRoles))
+	for _, role := range commonCourseRoles {
 		allCourseRoles[role] = nil
 	}
 
