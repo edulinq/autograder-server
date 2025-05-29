@@ -3,6 +3,7 @@ package config
 import (
 	"path/filepath"
 	"reflect"
+	"strings"
 	"testing"
 
 	"github.com/edulinq/autograder/internal/util"
@@ -15,46 +16,77 @@ func TestConfigArgs(test *testing.T) {
 	defer util.RemoveDirent(tempDir)
 
 	testCases := []struct {
-		baseDir  string
-		cwd      string
-		args     ConfigArgs
-		hasError bool
-		expected map[string]any
+		baseDir        string
+		cwd            string
+		args           ConfigArgs
+		errorSubstring string
+		expected       map[string]any
 	}{
 		// Empty config.
-		{filepath.Join(tempDir, "empty"), tempDir, ConfigArgs{}, false, map[string]any{
-			"dirs.base": filepath.Join(tempDir, "empty"),
-		}},
+		{
+			filepath.Join(tempDir, "empty"),
+			tempDir,
+			ConfigArgs{},
+			"",
+			map[string]any{
+				"dirs.base": filepath.Join(tempDir, "empty"),
+			},
+		},
 
 		// Base dirs cannot be set in config files.
-		{filepath.Join(tempDir, "bad-base-dir"), tempDir, ConfigArgs{}, true, nil},
+		{
+			filepath.Join(tempDir, "bad-base-dir"),
+			tempDir,
+			ConfigArgs{},
+			"Cannot set key 'dirs.base' in config files, use the command-line.",
+			nil,
+		},
 
 		// config and secrets file without overriding.
-		{filepath.Join(tempDir, "dual-different"), tempDir, ConfigArgs{}, false, map[string]any{
-			"dirs.base": filepath.Join(tempDir, "dual-different"),
-			"a":         "A",
-			"b":         "B",
-		}},
+		{
+			filepath.Join(tempDir, "dual-different"),
+			tempDir,
+			ConfigArgs{},
+			"",
+			map[string]any{
+				"dirs.base": filepath.Join(tempDir, "dual-different"),
+				"a":         "A",
+				"b":         "B",
+			},
+		},
 
 		// config and secrets file without overriding.
-		{filepath.Join(tempDir, "dual-override"), tempDir, ConfigArgs{}, false, map[string]any{
-			"dirs.base": filepath.Join(tempDir, "dual-override"),
-			"a":         "secret",
-		}},
+		{
+			filepath.Join(tempDir, "dual-override"),
+			tempDir,
+			ConfigArgs{},
+			"",
+			map[string]any{
+				"dirs.base": filepath.Join(tempDir, "dual-override"),
+				"a":         "secret",
+			},
+		},
 
 		// Config on cmd.
-		{filepath.Join(tempDir, "empty"), tempDir,
+		{
+			filepath.Join(tempDir, "empty"),
+			tempDir,
 			ConfigArgs{
 				Config: map[string]string{
 					"a": "A",
 				},
-			}, false, map[string]any{
+			},
+			"",
+			map[string]any{
 				"dirs.base": filepath.Join(tempDir, "empty"),
 				"a":         "A",
-			}},
+			},
+		},
 
 		// Load config and path on cmd.
-		{filepath.Join(tempDir, "empty"), tempDir,
+		{
+			filepath.Join(tempDir, "empty"),
+			tempDir,
 			ConfigArgs{
 				Config: map[string]string{
 					"c": "C",
@@ -62,14 +94,19 @@ func TestConfigArgs(test *testing.T) {
 				ConfigPath: []string{
 					getConfigPath(tempDir, "dual-different", "config.json"),
 				},
-			}, false, map[string]any{
+			},
+			"",
+			map[string]any{
 				"dirs.base": filepath.Join(tempDir, "empty"),
 				"a":         "A",
 				"c":         "C",
-			}},
+			},
+		},
 
 		// Load config and path on cmd, with overriding.
-		{filepath.Join(tempDir, "empty"), tempDir,
+		{
+			filepath.Join(tempDir, "empty"),
+			tempDir,
 			ConfigArgs{
 				Config: map[string]string{
 					"a": "ZZZ",
@@ -77,13 +114,18 @@ func TestConfigArgs(test *testing.T) {
 				ConfigPath: []string{
 					getConfigPath(tempDir, "dual-different", "config.json"),
 				},
-			}, false, map[string]any{
+			},
+			"",
+			map[string]any{
 				"dirs.base": filepath.Join(tempDir, "empty"),
 				"a":         "ZZZ",
-			}},
+			},
+		},
 
 		// config file, secrets file, cmd, config path; with override.
-		{filepath.Join(tempDir, "dual-override"), tempDir,
+		{
+			filepath.Join(tempDir, "dual-override"),
+			tempDir,
 			ConfigArgs{
 				Config: map[string]string{
 					"a": "ZZZ",
@@ -91,26 +133,43 @@ func TestConfigArgs(test *testing.T) {
 				ConfigPath: []string{
 					getConfigPath(tempDir, "dual-different", "config.json"),
 				},
-			}, false, map[string]any{
+			},
+			"",
+			map[string]any{
 				"dirs.base": filepath.Join(tempDir, "dual-override"),
 				"a":         "ZZZ",
-			}},
+			},
+		},
 
 		// cwd config and cwd secrets file without overriding.
-		{filepath.Join(tempDir, "empty"), getConfigDir(tempDir, "dual-different"), ConfigArgs{}, false, map[string]any{
-			"dirs.base": filepath.Join(tempDir, "empty"),
-			"a":         "A",
-			"b":         "B",
-		}},
+		{
+			filepath.Join(tempDir, "empty"),
+			getConfigDir(tempDir, "dual-different"),
+			ConfigArgs{},
+			"",
+			map[string]any{
+				"dirs.base": filepath.Join(tempDir, "empty"),
+				"a":         "A",
+				"b":         "B",
+			},
+		},
 
 		// cwd config and cwd secrets file with overriding.
-		{filepath.Join(tempDir, "empty"), getConfigDir(tempDir, "dual-override"), ConfigArgs{}, false, map[string]any{
-			"dirs.base": filepath.Join(tempDir, "empty"),
-			"a":         "secret",
-		}},
+		{
+			filepath.Join(tempDir, "empty"),
+			getConfigDir(tempDir, "dual-override"),
+			ConfigArgs{},
+			"",
+			map[string]any{
+				"dirs.base": filepath.Join(tempDir, "empty"),
+				"a":         "secret",
+			},
+		},
 
 		// sys config and secrets, cwd config and secrets, cmd, config path; with override.
-		{filepath.Join(tempDir, "dual-override"), getConfigDir(tempDir, "dual-override"),
+		{
+			filepath.Join(tempDir, "dual-override"),
+			getConfigDir(tempDir, "dual-override"),
 			ConfigArgs{
 				Config: map[string]string{
 					"a": "ZZZ",
@@ -118,10 +177,13 @@ func TestConfigArgs(test *testing.T) {
 				ConfigPath: []string{
 					getConfigPath(tempDir, "dual-different", "config.json"),
 				},
-			}, false, map[string]any{
+			},
+			"",
+			map[string]any{
 				"dirs.base": filepath.Join(tempDir, "dual-override"),
 				"a":         "ZZZ",
-			}},
+			},
+		},
 	}
 
 	for i, testCase := range testCases {
@@ -129,18 +191,18 @@ func TestConfigArgs(test *testing.T) {
 		BASE_DIR.Set(testCase.baseDir)
 
 		err := HandleConfigArgsFull(testCase.args, testCase.cwd, true)
+		if err != nil {
+			if testCase.errorSubstring != "" {
+				if !strings.Contains(err.Error(), testCase.errorSubstring) {
+					test.Errorf("Case %d: Did not get expected error output. Expected Substring '%s', Actual Error: '%v'.", i, testCase.errorSubstring, err)
+				}
+			} else {
+				test.Errorf("Case %d: Failed to handle args: '%v'.", i, err)
+			}
 
-		if (err == nil) && (testCase.hasError) {
-			test.Errorf("Case %d: Found no error when there should be one.", i)
 			continue
-		}
-
-		if (err != nil) && (!testCase.hasError) {
-			test.Errorf("Case %d: Found error when there should not be one: '%v'.", i, err)
-			continue
-		}
-
-		if testCase.hasError {
+		} else if testCase.errorSubstring != "" {
+			test.Errorf("Case %d: Did not get expected error on '%s'.", i, testCase.errorSubstring)
 			continue
 		}
 
@@ -206,6 +268,7 @@ func setupConfigTempDir(test *testing.T) string {
 }
 
 func getConfigDir(tempDir string, basename string) string {
+	// Hard-coded specifically for testing.
 	return filepath.Join(tempDir, basename, NAME.Get(), CONFIG_DIRNAME)
 }
 
