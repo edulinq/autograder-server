@@ -2,6 +2,7 @@ package core
 
 import (
 	"reflect"
+	"strings"
 	"testing"
 
 	"github.com/edulinq/autograder/internal/log"
@@ -54,6 +55,14 @@ type complexPointerStruct struct {
 	Personnel *embeddedJSONStruct `json:"personnel"`
 }
 
+type errorTypeFalse struct {
+	badTag string `json:"bad-tag" required:"false"`
+}
+
+type errorTypeTrue struct {
+	badTag string `json:"bad-tag" required:"true"`
+}
+
 func mustGetTypeID(customType reflect.Type, typeConversions map[string]string) string {
 	typeID, err := getTypeID(customType, typeConversions)
 	if err != nil {
@@ -80,6 +89,7 @@ func TestDescribeTypeBase(test *testing.T) {
 		customType      reflect.Type
 		expectedDesc    FullTypeDescription
 		expectedTypeMap map[string]FullTypeDescription
+		errorSubstring  string
 	}{
 		// Base types to alias (no JSON tags).
 		{
@@ -91,6 +101,7 @@ func TestDescribeTypeBase(test *testing.T) {
 				},
 			},
 			map[string]FullTypeDescription{},
+			"",
 		},
 		{
 			reflect.TypeOf((*int)(nil)).Elem(),
@@ -101,6 +112,7 @@ func TestDescribeTypeBase(test *testing.T) {
 				},
 			},
 			map[string]FullTypeDescription{},
+			"",
 		},
 		{
 			reflect.TypeOf((*int64)(nil)).Elem(),
@@ -111,6 +123,7 @@ func TestDescribeTypeBase(test *testing.T) {
 				},
 			},
 			map[string]FullTypeDescription{},
+			"",
 		},
 		{
 			reflect.TypeOf((*bool)(nil)).Elem(),
@@ -121,6 +134,7 @@ func TestDescribeTypeBase(test *testing.T) {
 				},
 			},
 			map[string]FullTypeDescription{},
+			"",
 		},
 
 		// Simple wrapper types.
@@ -140,6 +154,7 @@ func TestDescribeTypeBase(test *testing.T) {
 					},
 				},
 			},
+			"",
 		},
 		{
 			reflect.TypeOf((*MinServerRoleAdmin)(nil)).Elem(),
@@ -157,6 +172,7 @@ func TestDescribeTypeBase(test *testing.T) {
 					},
 				},
 			},
+			"",
 		},
 
 		// Simple maps and arrays.
@@ -170,6 +186,7 @@ func TestDescribeTypeBase(test *testing.T) {
 				},
 			},
 			map[string]FullTypeDescription{},
+			"",
 		},
 		{
 			reflect.TypeOf((*[]string)(nil)).Elem(),
@@ -180,6 +197,7 @@ func TestDescribeTypeBase(test *testing.T) {
 				},
 			},
 			map[string]FullTypeDescription{},
+			"",
 		},
 
 		// Wrapped maps and arrays.
@@ -201,6 +219,7 @@ func TestDescribeTypeBase(test *testing.T) {
 					},
 				},
 			},
+			"",
 		},
 		{
 			reflect.TypeOf((*simpleArrayWrapper)(nil)).Elem(),
@@ -218,6 +237,7 @@ func TestDescribeTypeBase(test *testing.T) {
 					},
 				},
 			},
+			"",
 		},
 
 		// Fields without JSON tags are ignored.
@@ -237,6 +257,7 @@ func TestDescribeTypeBase(test *testing.T) {
 					Fields: []FieldDescription{},
 				},
 			},
+			"",
 		},
 		{
 			reflect.TypeOf((*wrappedStruct)(nil)).Elem(),
@@ -254,6 +275,7 @@ func TestDescribeTypeBase(test *testing.T) {
 					Fields: []FieldDescription{},
 				},
 			},
+			"",
 		},
 
 		// Simple JSON tags.
@@ -291,6 +313,7 @@ func TestDescribeTypeBase(test *testing.T) {
 					},
 				},
 			},
+			"",
 		},
 
 		// Hidden JSON tags (-).
@@ -328,6 +351,7 @@ func TestDescribeTypeBase(test *testing.T) {
 					},
 				},
 			},
+			"",
 		},
 
 		// Embedded fields.
@@ -381,6 +405,7 @@ func TestDescribeTypeBase(test *testing.T) {
 					},
 				},
 			},
+			"",
 		},
 
 		// Complex fields.
@@ -462,6 +487,7 @@ func TestDescribeTypeBase(test *testing.T) {
 					},
 				},
 			},
+			"",
 		},
 
 		// Pointers to various types.
@@ -474,6 +500,7 @@ func TestDescribeTypeBase(test *testing.T) {
 				},
 			},
 			map[string]FullTypeDescription{},
+			"",
 		},
 		{
 			reflect.TypeOf((**map[string]string)(nil)).Elem(),
@@ -485,6 +512,7 @@ func TestDescribeTypeBase(test *testing.T) {
 				},
 			},
 			map[string]FullTypeDescription{},
+			"",
 		},
 
 		// Pointers inside of fields.
@@ -497,6 +525,7 @@ func TestDescribeTypeBase(test *testing.T) {
 				},
 			},
 			map[string]FullTypeDescription{},
+			"",
 		},
 		{
 			reflect.TypeOf((*complexPointerStruct)(nil)).Elem(),
@@ -576,6 +605,21 @@ func TestDescribeTypeBase(test *testing.T) {
 					},
 				},
 			},
+			"",
+		},
+
+		// Errors.
+		{
+			reflect.TypeOf((*errorTypeFalse)(nil)).Elem(),
+			FullTypeDescription{},
+			nil,
+			"Unexpected required tag value. Expected: '', Actual: 'false'.",
+		},
+		{
+			reflect.TypeOf((*errorTypeTrue)(nil)).Elem(),
+			FullTypeDescription{},
+			nil,
+			"Unexpected required tag value. Expected: '', Actual: 'true'.",
 		},
 	}
 
@@ -586,7 +630,23 @@ func TestDescribeTypeBase(test *testing.T) {
 
 		actual, _, _, err := DescribeType(testCase.customType, true, info)
 		if err != nil {
-			test.Errorf("Case %d: Unexpected error while describing types: '%v'.", i, err)
+			if testCase.errorSubstring == "" {
+				test.Errorf("Case %d: Unexpected error while describing types: '%v'.", i, err)
+				continue
+			}
+
+			if !strings.Contains(err.Error(), testCase.errorSubstring) {
+				test.Errorf("Case %d: Error is not as expected. Expected Substring: '%s', Actual: '%s'.",
+					i, testCase.errorSubstring, err.Error())
+				continue
+			}
+
+			continue
+		}
+
+		if testCase.errorSubstring != "" {
+			test.Errorf("Case %d: Did not get expected error '%s' on '%+v'.", i, testCase.errorSubstring, testCase.customType)
+			continue
 		}
 
 		if !reflect.DeepEqual(testCase.expectedDesc, actual) {

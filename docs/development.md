@@ -110,7 +110,30 @@ The server generates API descriptions automatically from source code.
  - User-facing input fields must include a `json` tag to appear in the description.
  - Required fields must also include a `required` tag with an empty value.
 
-For example, the field tag for the required `UserEmail` input field is `json:"user-email" required:""`.
+Putting it all together in an example:
+
+```
+type GetRequest struct {
+    UserEmail string `json:"user-email" required:""`
+    UserPass  string `json:"user-pass" required:""`
+
+    // Note: TargetUser is not required as the API will fallback to UserEmail.
+    TargetUser string `json:"target-user"`
+
+    // Note: The user cannot input the secret number, so it will not appear in the API description.
+    SecretNumber int `json:"-"`
+}
+
+type GetResponse struct {
+    Found bool   `json:"found"`
+    Name  string `json:"name"`
+}
+
+// Get the name for a server user.
+func HandleGet(request *GetRequest) (*GetResponse, error) {
+    // Awesome API handler logic.
+}
+```
 
 ### Passwords/Tokens
 

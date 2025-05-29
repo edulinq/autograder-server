@@ -194,7 +194,6 @@ func DescribeRoutes(routes []Route) (*APIDescription, error) {
 		}
 
 		outputBaseFields := make([]BaseFieldDescription, 0, len(output.Fields))
-
 		for _, field := range output.Fields {
 			outputBaseFields = append(outputBaseFields, field.BaseFieldDescription)
 		}
@@ -394,7 +393,10 @@ func describeStructFields(customType reflect.Type, info TypeInfoCache) ([]FieldD
 			continue
 		}
 
-		requiredField := isFieldRequired(field)
+		requiredField, err := isFieldRequired(field)
+		if err != nil {
+			return nil, err
+		}
 
 		// Handle embedded fields.
 		if field.Anonymous {
@@ -507,17 +509,17 @@ func describeStruct(customType reflect.Type, knownPackages map[string]StructDesc
 	return description, nil
 }
 
-func isFieldRequired(field reflect.StructField) bool {
+func isFieldRequired(field reflect.StructField) (bool, error) {
 	tag, ok := field.Tag.Lookup("required")
 	if !ok {
-		return false
+		return false, nil
 	}
 
 	if tag == "" {
-		return true
+		return true, nil
 	}
 
-	return false
+	return false, fmt.Errorf("Unexpected required tag value. Expected: '', Actual: '%s'.", tag)
 }
 
 func skipField(name string) bool {
