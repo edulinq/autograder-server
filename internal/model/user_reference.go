@@ -156,6 +156,9 @@ func ResolveCourseUserEmails(users map[string]*CourseUser, reference *ParsedCour
 	}
 
 	emailSet := make(map[string]any, 0)
+	// Exclusion always takes priority over inclusion.
+	// The final list of emails will be the users in emailSet that are not in excludeSet.
+	// (e.g., a user excluded based on role but included by explicit email will NOT be included in the results).
 	excludeSet := make(map[string]any, 0)
 
 	// Add all emails from the course users.

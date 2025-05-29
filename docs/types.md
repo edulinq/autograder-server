@@ -70,27 +70,29 @@ Identifiers are case insensitive (they are always stored in lower case).
 
 Underlying Type: String
 
-When used in the context of a course,
-a `CourseUserReference` can be used to generalize targeting users
-(e.g, email recipients).
+A `CourseUserReference` can be used to generalize targeting any number of course users
+(e.g., email recipients).
 The following values are allowed:
 
- - Email - Normal email addresses may be used.
- - "\*" - Represents all users in a course.
- - [Course Role](#course-roles-courserole) (e.g., "student", "grader", etc) - Represents all course users with that role.
+ - Email - The email of the requested user.
+   - Emails that are not enrolled in the course are treated differently depending on the operation
+     (e.g., ignored, used normally, result in an error, etc).
+ - "\*" - Represents requesting all users in the course.
+ - [Course Role](#course-roles-courserole) (e.g., "student", "grader", etc) - Represents requesting all course users with that role.
  - Negative Email - An email address preceded by a minus sign (e.g., "-alice@test.edulinq.org")
-   will remove this address from the email recipients (even if they are not currently there).
+   will remove this user from the request (even if they are not currently there).
    This can be useful when using course roles but you want to exclude someone.
  - Negative Course Role - A course role preceded by a minus sign (e.g., "-student")
-   will remove all course users with that role. This can be useful when using the "\*"
-   but you want to exclude a role.
+   will remove all course users with that role from the request.
+   This can be useful when using the "\*" but you want to exclude a role.
 
 ### Email
 
 Underlying Type: String
 
 An email address.
-Some places that accept an email address use an underlying type of [CourseUserReference](#course-user-reference-courseuserreference).
+Email addresses are usually used to identify a user on the server.
+Some places that accept an email address use [CourseUserReference](#course-user-reference-courseuserreference).
 
 ### Timestamp
 
