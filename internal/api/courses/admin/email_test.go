@@ -1,7 +1,6 @@
 package admin
 
 import (
-	"reflect"
 	"testing"
 
 	"github.com/edulinq/autograder/internal/api/core"
@@ -17,7 +16,6 @@ func TestEmail(test *testing.T) {
 		UserEmail  string
 		Recipients model.CourseMessageRecipients
 		Content    email.MessageContent
-		UserErrors map[string]string
 		Locator    string
 		DryRun     bool
 	}{
@@ -128,20 +126,6 @@ func TestEmail(test *testing.T) {
 			DryRun: true,
 		},
 
-		// User Errors
-		{
-			UserEmail: "course-grader",
-			Recipients: model.CourseMessageRecipients{
-				To: []model.CourseUserReference{"creator"},
-			},
-			Content: email.MessageContent{
-				Subject: "Subject",
-			},
-			UserErrors: map[string]string{
-				"creator": "Unknown course role 'creator'.",
-			},
-		},
-
 		// Invalid Permissions
 		{
 			UserEmail: "course-student",
@@ -185,13 +169,25 @@ func TestEmail(test *testing.T) {
 			Locator: "-627",
 		},
 
+		// User Errors
+		{
+			UserEmail: "course-grader",
+			Recipients: model.CourseMessageRecipients{
+				To: []model.CourseUserReference{"creator"},
+			},
+			Content: email.MessageContent{
+				Subject: "Subject",
+			},
+			Locator: "-628",
+		},
+
 		// No Recipients
 		{
 			UserEmail: "course-grader",
 			Content: email.MessageContent{
 				Subject: "Message in a Bottle",
 			},
-			Locator: "-628",
+			Locator: "-629",
 		},
 
 		// No recipients after resolving email addresses.
@@ -203,7 +199,7 @@ func TestEmail(test *testing.T) {
 			Content: email.MessageContent{
 				Subject: "Subject",
 			},
-			Locator: "-628",
+			Locator: "-629",
 		},
 		{
 			UserEmail: "course-grader",
@@ -213,7 +209,7 @@ func TestEmail(test *testing.T) {
 			Content: email.MessageContent{
 				Subject: "Subject",
 			},
-			Locator: "-628",
+			Locator: "-629",
 		},
 	}
 
@@ -242,17 +238,9 @@ func TestEmail(test *testing.T) {
 			continue
 		}
 
-		var responseContent EmailResponse
-		util.MustJSONFromString(util.MustToJSON(response.Content), &responseContent)
-
-		if !reflect.DeepEqual(responseContent.Errors, testCase.UserErrors) {
-			test.Errorf("Case %d: Unexpected user errors. Expected: '%v', Actual: '%v'.", i, util.MustToJSONIndent(testCase.UserErrors), util.MustToJSONIndent(responseContent.Errors))
-			continue
-		}
-
 		testMessages := email.GetTestMessages()
 
-		if testCase.DryRun || len(testCase.UserErrors) != 0 {
+		if testCase.DryRun {
 			if len(testMessages) != 0 {
 				test.Errorf("Case %d: Unexpected emails sent. Expected: '0 emails', Actual: '%d emails'.", i, len(testMessages))
 			}
@@ -264,6 +252,9 @@ func TestEmail(test *testing.T) {
 			test.Errorf("Case %d: Unexpected number of emails sent. Expected: '1 email', Actual: '%d emails'.", i, len(testMessages))
 			continue
 		}
+
+		var responseContent EmailResponse
+		util.MustJSONFromString(util.MustToJSON(response.Content), &responseContent)
 
 		if (len(responseContent.To) + len(responseContent.CC) + len(responseContent.BCC)) == 0 {
 			test.Errorf("Case %d: Email was sent without any recipients.", i)

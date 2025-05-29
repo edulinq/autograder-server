@@ -9,8 +9,8 @@ Extra keys will generally be ignored.
 
  - [Semantic Types](#semantic-types)
    - [Identifier](#identifier)
+   - [Course User Reference (CourseUserReference)](#course-user-reference-courseuserreference)
    - [Email](#email)
-     - [Course User Reference (CourseUserReference)](#course-user-reference-courseuserreference)
    - [Timestamp](#timestamp)
    - [Pointer](#pointer)
    - [Regex](#regex)
@@ -66,13 +66,9 @@ The non-alphanumeric characters cannot be repeated in a sequence (e.g. you can h
 Identifiers must start and end with alphanumeric characters.
 Identifiers are case insensitive (they are always stored in lower case).
 
-### Email
+### Course User Reference (CourseUserReference)
 
 Underlying Type: String
-
-An email address.
-
-#### Course User Reference (CourseUserReference)
 
 When used in the context of a course,
 a `CourseUserReference` can be used to generalize targeting users
@@ -88,6 +84,13 @@ The following values are allowed:
  - Negative Course Role - A course role preceded by a minus sign (e.g., "-student")
    will remove all course users with that role. This can be useful when using the "\*"
    but you want to exclude a role.
+
+### Email
+
+Underlying Type: String
+
+An email address.
+Some places that accept an email address use an underlying type of [CourseUserReference](#course-user-reference-courseuserreference).
 
 ### Timestamp
 

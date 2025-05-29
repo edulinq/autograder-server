@@ -59,7 +59,6 @@ func GetCourseUserRoleString(role CourseUserRole) string {
 
 func GetCommonCourseUserRolesCopy() map[string]CourseUserRole {
 	commonCourseUserRoleCopy := make(map[string]CourseUserRole, len(commonStringToCourseUserRole))
-
 	for roleString, role := range commonStringToCourseUserRole {
 		commonCourseUserRoleCopy[roleString] = role
 	}

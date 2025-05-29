@@ -54,10 +54,6 @@
                     "type": "[]string"
                 },
                 {
-                    "name": "errors",
-                    "type": "map[string]string"
-                },
-                {
                     "name": "to",
                     "type": "[]string"
                 }
@@ -946,10 +942,6 @@
                 }
             ],
             "output": [
-                {
-                    "name": "errors",
-                    "type": "map[string]string"
-                },
                 {
                     "name": "users",
                     "type": "[]*core.CourseUserInfo"

@@ -1,6 +1,7 @@
 package model
 
 import (
+	"errors"
 	"fmt"
 	"slices"
 	"strings"
@@ -27,18 +28,26 @@ type ParsedCourseUserReference struct {
 	ExcludeCourseUserRoles map[CourseUserRole]any
 }
 
-func (this ParsedCourseUserReference) RefersTo(email string, role CourseUserRole) bool {
+func (this ParsedCourseUserReference) Excludes(email string, role CourseUserRole) bool {
 	_, ok := this.ExcludeEmails[email]
 	if ok {
-		return false
+		return true
 	}
 
 	_, ok = this.ExcludeCourseUserRoles[role]
 	if ok {
+		return true
+	}
+
+	return false
+}
+
+func (this ParsedCourseUserReference) RefersTo(email string, role CourseUserRole) bool {
+	if this.Excludes(email, role) {
 		return false
 	}
 
-	_, ok = this.Emails[email]
+	_, ok := this.Emails[email]
 	if ok {
 		return true
 	}
@@ -57,7 +66,7 @@ func (this ParsedCourseUserReference) RefersTo(email string, role CourseUserRole
 // APIs using this function should require a sufficient role or custom permissions checking.
 // Returns a reference and user errors.
 // User-level errors return (partial reference, user errors).
-func ParseCourseUserReferences(rawReferences []CourseUserReference) (*ParsedCourseUserReference, map[string]error) {
+func ParseCourseUserReferences(rawReferences []CourseUserReference) (*ParsedCourseUserReference, error) {
 	courseUserReference := ParsedCourseUserReference{
 		Emails:                 make(map[string]any, 0),
 		ExcludeEmails:          make(map[string]any, 0),
@@ -65,7 +74,7 @@ func ParseCourseUserReferences(rawReferences []CourseUserReference) (*ParsedCour
 		ExcludeCourseUserRoles: make(map[CourseUserRole]any, 0),
 	}
 
-	userErrors := make(map[string]error, 0)
+	var errs error = nil
 
 	commonCourseRoles := GetCommonCourseUserRolesCopy()
 
@@ -105,7 +114,7 @@ func ParseCourseUserReferences(rawReferences []CourseUserReference) (*ParsedCour
 			// Target a specific course role.
 			role, ok := commonCourseRoles[reference]
 			if !ok {
-				userErrors[string(rawReference)] = fmt.Errorf("Unknown course role '%s'.", reference)
+				errs = errors.Join(errs, fmt.Errorf("Course user reference '%s' contains an unknown course role: '%s'.", rawReference, reference))
 				continue
 			}
 
@@ -117,11 +126,7 @@ func ParseCourseUserReferences(rawReferences []CourseUserReference) (*ParsedCour
 		}
 	}
 
-	if len(userErrors) == 0 {
-		userErrors = nil
-	}
-
-	return &courseUserReference, userErrors
+	return &courseUserReference, errs
 }
 
 // Returns a sorted list of users based on the course reference.
@@ -155,10 +160,10 @@ func ResolveCourseUserEmails(users map[string]*CourseUser, reference *ParsedCour
 
 	// Add all emails from the course users.
 	for email, user := range users {
-		if reference.RefersTo(email, user.Role) {
-			emailSet[email] = nil
-		} else {
+		if reference.Excludes(email, user.Role) {
 			excludeSet[email] = nil
+		} else if reference.RefersTo(email, user.Role) {
+			emailSet[email] = nil
 		}
 	}
 
