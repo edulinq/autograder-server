@@ -113,25 +113,31 @@ The server generates API descriptions automatically from source code.
 Putting it all together in an example:
 
 ```
-type GetRequest struct {
-    UserEmail string `json:"user-email" required:""`
-    UserPass  string `json:"user-pass" required:""`
+type SomeTestRequest struct {
+    core.APIRequestUserContext
 
-    // Note: TargetUser is not required as the API will fallback to UserEmail.
-    TargetUser string `json:"target-user"`
+    // Note: A required field.
+    Guess int `json:"guess" required:""`
 
-    // Note: The user cannot input the secret number, so it will not appear in the API description.
+    // Note: A non-required field.
+    BonusGuess int `json:"bonus-guess"`
+
+    // Note: The user cannot input the secret number because that would be cheating!
+    // This field will not appear in the API description.
     SecretNumber int `json:"-"`
 }
 
-type GetResponse struct {
-    Found bool   `json:"found"`
-    Name  string `json:"name"`
+type SomeTestResponse struct {
+    Correct bool `json:"correct"`
+    Score   int  `json:"score"`
 }
 
-// Get the name for a server user.
-func HandleGet(request *GetRequest) (*GetResponse, error) {
+// Note: This is the comment attached to the handler's function declaration.
+// It will appear as the endpoint's description.
+// Guess the secret number.
+func HandleSomeTest(request *SomeTestRequest) (*SomeTestResponse, error) {
     // Awesome API handler logic.
+    ...
 }
 ```
 
