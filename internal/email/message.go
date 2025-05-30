@@ -13,7 +13,7 @@ type Message struct {
 	To      []string `json:"to"`
 	CC      []string `json:"cc"`
 	BCC     []string `json:"bcc"`
-	Subject string   `json:"subject"`
+	Subject string   `json:"subject" required:""`
 	Body    string   `json:"body"`
 	HTML    bool     `json:"html"`
 }

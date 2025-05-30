@@ -8,7 +8,7 @@ import (
 type PasswordChangeRequest struct {
 	core.APIRequestUserContext
 
-	NewPass string `json:"new-pass"`
+	NewPass string `json:"new-pass" required:""`
 }
 
 type PasswordChangeResponse struct {

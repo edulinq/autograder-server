@@ -11,7 +11,7 @@ type FileSpecRequest struct {
 	core.MinServerRoleCourseCreator
 
 	courses.CourseUpsertOptions
-	FileSpec util.FileSpec `json:"filespec"`
+	FileSpec util.FileSpec `json:"filespec" required:""`
 }
 
 // Upsert a course using a filespec.

@@ -14,7 +14,7 @@ type ResubmitRequest struct {
 
 	TargetSubmission string `json:"target-submission"`
 
-	ProxyUser core.TargetCourseUser `json:"proxy-email"`
+	ProxyUser core.TargetCourseUser `json:"proxy-email" required:""`
 	ProxyTime *timestamp.Timestamp  `json:"proxy-time"`
 }
 

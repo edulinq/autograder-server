@@ -19,7 +19,7 @@ type AnalysisOptions struct {
 	jobmanager.JobOptions
 
 	// The raw submission specifications to analyze.
-	RawSubmissionSpecs []string `json:"submissions"`
+	RawSubmissionSpecs []string `json:"submissions" required:""`
 
 	// Email of the person making the request for logging/stats purposes.
 	InitiatorEmail string `json:"-"`
