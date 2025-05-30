@@ -5,7 +5,7 @@
             "input": [
                 {
                     "name": "bcc",
-                    "type": "[]string"
+                    "type": "[]model.CourseUserReference"
                 },
                 {
                     "name": "body",
@@ -13,7 +13,7 @@
                 },
                 {
                     "name": "cc",
-                    "type": "[]string"
+                    "type": "[]model.CourseUserReference"
                 },
                 {
                     "name": "course-id",
@@ -35,7 +35,7 @@
                 },
                 {
                     "name": "to",
-                    "type": "[]string"
+                    "type": "[]model.CourseUserReference"
                 },
                 {
                     "name": "user-email",
@@ -1015,6 +1015,10 @@
                     "required": true
                 },
                 {
+                    "name": "target-users",
+                    "type": "[]model.CourseUserReference"
+                },
+                {
                     "name": "user-email",
                     "type": "string",
                     "required": true
@@ -1903,6 +1907,10 @@
                     "type": "[]model.AssignmentInfo"
                 }
             ]
+        },
+        "model.CourseUserReference": {
+            "category": "alias",
+            "alias-type": "string"
         },
         "model.CourseUserRole": {
             "category": "alias",

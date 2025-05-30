@@ -38,10 +38,14 @@ func (this *UserOpResult) getAddEmail() *email.Message {
 	}
 
 	return &email.Message{
-		To:      []string{this.Email},
-		Subject: fmt.Sprintf("Autograder %s -- User Account Created", config.NAME.Get()),
-		Body:    body,
-		HTML:    false,
+		MessageRecipients: email.MessageRecipients{
+			To: []string{this.Email},
+		},
+		MessageContent: email.MessageContent{
+			Subject: fmt.Sprintf("Autograder %s -- User Account Created", config.NAME.Get()),
+			Body:    body,
+			HTML:    false,
+		},
 	}
 }
 
@@ -49,10 +53,14 @@ func (this *UserOpResult) getEnrolledEmail() *email.Message {
 	body := fmt.Sprintf(baseEnrollBody, this.Email, util.JoinStrings(", ", this.Enrolled...))
 
 	return &email.Message{
-		To:      []string{this.Email},
-		Subject: fmt.Sprintf("Autograder %s -- Enrolled in Course", config.NAME.Get()),
-		Body:    body,
-		HTML:    false,
+		MessageRecipients: email.MessageRecipients{
+			To: []string{this.Email},
+		},
+		MessageContent: email.MessageContent{
+			Subject: fmt.Sprintf("Autograder %s -- Enrolled in Course", config.NAME.Get()),
+			Body:    body,
+			HTML:    false,
+		},
 	}
 }
 
@@ -60,10 +68,14 @@ func (this *UserOpResult) getNewPasswordEmail() *email.Message {
 	body := fmt.Sprintf(baseNewPassBody, this.Email, this.CleartextPassword)
 
 	return &email.Message{
-		To:      []string{this.Email},
-		Subject: fmt.Sprintf("Autograder %s -- New Password Token", config.NAME.Get()),
-		Body:    body,
-		HTML:    false,
+		MessageRecipients: email.MessageRecipients{
+			To: []string{this.Email},
+		},
+		MessageContent: email.MessageContent{
+			Subject: fmt.Sprintf("Autograder %s -- New Password Token", config.NAME.Get()),
+			Body:    body,
+			HTML:    false,
+		},
 	}
 }
 

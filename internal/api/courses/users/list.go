@@ -9,6 +9,8 @@ type ListRequest struct {
 	core.APIRequestCourseUserContext
 	core.MinCourseRoleGrader
 	Users core.CourseUsers `json:"-"`
+
+	TargetUsers []model.CourseUserReference `json:"target-users"`
 }
 
 type ListResponse struct {
@@ -17,10 +19,17 @@ type ListResponse struct {
 
 // List the users in the course.
 func HandleList(request *ListRequest) (*ListResponse, *core.APIError) {
-	users := make([]*model.CourseUser, 0, len(request.Users))
-	for _, user := range request.Users {
-		users = append(users, user)
+	// Default to listing all users in the course.
+	if len(request.TargetUsers) == 0 {
+		request.TargetUsers = []model.CourseUserReference{"*"}
 	}
+
+	reference, err := model.ParseCourseUserReferences(request.TargetUsers)
+	if err != nil {
+		return nil, core.NewBadRequestError("-635", request, "Failed to parse target users.").Err(err)
+	}
+
+	users := model.ResolveCourseUsers(request.Users, reference)
 
 	response := ListResponse{core.NewCourseUserInfos(users)}
 

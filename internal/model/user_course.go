@@ -106,3 +106,23 @@ func (this *CourseUser) MustToRow() []string {
 		util.PointerToString(this.LMSID),
 	}
 }
+
+func CompareCourseUserPointer(a *CourseUser, b *CourseUser) int {
+	if a == b {
+		return 0
+	}
+
+	if a == nil {
+		return 1
+	}
+
+	if b == nil {
+		return -1
+	}
+
+	return CompareCourseUser(*a, *b)
+}
+
+func CompareCourseUser(a CourseUser, b CourseUser) int {
+	return strings.Compare(a.Email, b.Email)
+}
