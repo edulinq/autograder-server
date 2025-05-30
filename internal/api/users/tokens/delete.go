@@ -8,7 +8,7 @@ import (
 type TokensDeleteRequest struct {
 	core.APIRequestUserContext
 
-	TokenID core.NonEmptyString `json:"token-id"`
+	TokenID core.NonEmptyString `json:"token-id" required:""`
 }
 
 type TokensDeleteResponse struct {

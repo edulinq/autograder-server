@@ -16,7 +16,7 @@ type MessageRecipients struct {
 }
 
 type MessageContent struct {
-	Subject string `json:"subject"`
+	Subject string `json:"subject" required:""`
 	Body    string `json:"body"`
 	HTML    bool   `json:"html"`
 }

@@ -29,11 +29,11 @@ func GetWorkDir() string {
 	dirname := WORK_DIR_BASENAME
 
 	serverName := NAME.Get()
-	if serverName != "" {
+	if (serverName != "") && (dirname != serverName) {
 		dirname = fmt.Sprintf("%s-%s", dirname, serverName)
 	}
 
-	return filepath.Join(BASE_DIR.Get(), serverName)
+	return filepath.Join(BASE_DIR.Get(), dirname)
 }
 
 func GetBaseBackupDir() string {
