@@ -1563,6 +1563,10 @@
             "category": "struct",
             "fields": [
                 {
+                    "name": "description",
+                    "type": "string"
+                },
+                {
                     "name": "name",
                     "type": "string"
                 },
@@ -1649,6 +1653,10 @@
         "core.FieldDescription": {
             "category": "struct",
             "fields": [
+                {
+                    "name": "description",
+                    "type": "string"
+                },
                 {
                     "name": "name",
                     "type": "string"

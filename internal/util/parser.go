@@ -5,6 +5,7 @@ import (
 	"go/ast"
 	"go/parser"
 	"go/token"
+	"reflect"
 	"regexp"
 	"strings"
 )
@@ -61,6 +62,15 @@ func GetAllTypeDescriptionsFromPackage(packagePath string) (map[string]string, e
 	}
 
 	return descriptions, nil
+}
+
+func GetFieldDescriptionsFromType(_ reflect.Type, fields map[string]any) (map[string]string, error) {
+	fieldDescriptions := make(map[string]string, len(fields))
+	for fieldTag, _ := range fields {
+		fieldDescriptions[fieldTag] = ""
+	}
+
+	return fieldDescriptions, nil
 }
 
 func getDescriptionFromType(filePaths []string) (map[string]string, error) {

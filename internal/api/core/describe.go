@@ -40,8 +40,9 @@ type EndpointDescription struct {
 }
 
 type BaseFieldDescription struct {
-	Name string `json:"name"`
-	Type string `json:"type"`
+	Name        string `json:"name"`
+	Type        string `json:"type"`
+	Description string `json:"description,omitempty"`
 }
 
 type FieldDescription struct {
@@ -402,7 +403,7 @@ func describeStructFields(customType reflect.Type, info TypeInfoCache) ([]FieldD
 		if field.Anonymous {
 			fieldDescription, fieldTypeID, _, err := DescribeType(field.Type, false, info)
 			if err != nil {
-				return []FieldDescription{}, err
+				return nil, err
 			}
 
 			// If the embedded type is a struct, merge its fields into the current struct.
@@ -449,7 +450,7 @@ func describeStructFields(customType reflect.Type, info TypeInfoCache) ([]FieldD
 
 		typeDescription, typeID, _, err := DescribeType(field.Type, true, info)
 		if err != nil {
-			return []FieldDescription{}, err
+			return nil, err
 		}
 
 		if typeDescription.Category == AliasType {
@@ -475,9 +476,12 @@ func describeStructFields(customType reflect.Type, info TypeInfoCache) ([]FieldD
 		}
 	}
 
-	slices.SortFunc(fieldDescriptions, CompareFieldDescription)
+	descriptions, err := getFieldDescription(customType, fieldDescriptions)
+	if err != nil {
+		return nil, err
+	}
 
-	return fieldDescriptions, nil
+	return descriptions, nil
 }
 
 func describeStruct(customType reflect.Type, knownPackages map[string]StructDescription) (string, error) {
@@ -520,6 +524,42 @@ func isFieldRequired(field reflect.StructField) (bool, error) {
 	}
 
 	return false, fmt.Errorf("Unexpected required tag value. Expected: '', Actual: '%s'.", tag)
+}
+
+func getFieldDescription(customType reflect.Type, fieldDescriptions []FieldDescription) ([]FieldDescription, error) {
+	fieldNames := make(map[string]any, len(fieldDescriptions))
+	fieldDescriptionSet := make(map[string]FieldDescription, len(fieldDescriptions))
+	for _, fieldDescription := range fieldDescriptions {
+		fieldNames[fieldDescription.Name] = nil
+		fieldDescriptionSet[fieldDescription.Name] = fieldDescription
+	}
+
+	fieldNameDescriptions, err := util.GetFieldDescriptionsFromType(customType, fieldNames)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(fieldNameDescriptions) != len(fieldDescriptions) {
+		return nil, fmt.Errorf("Unexpected number of field tag descriptions. Expected: '%d', Actual: '%d'.",
+			len(fieldDescriptions), len(fieldNameDescriptions))
+	}
+
+	descriptions := make([]FieldDescription, 0, len(fieldNameDescriptions))
+
+	for fieldName, description := range fieldNameDescriptions {
+		fieldDescription, ok := fieldDescriptionSet[fieldName]
+		if !ok {
+			return nil, fmt.Errorf("Unexpected field name found while getting field descriptions: '%s'.", fieldName)
+		}
+
+		fieldDescription.Description = description
+
+		descriptions = append(descriptions, fieldDescription)
+	}
+
+	slices.SortFunc(descriptions, CompareFieldDescription)
+
+	return descriptions, nil
 }
 
 func skipField(name string) bool {
