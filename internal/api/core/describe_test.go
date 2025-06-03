@@ -28,8 +28,10 @@ type wrappedStruct struct {
 }
 
 type simpleJSONStruct struct {
-	Email   string `json:"email"`
-	JobCode int    `json:"job-code"`
+	Email string `json:"email"`
+
+	// The job code for the employee.
+	JobCode int `json:"job-code"`
 }
 
 type secureJSONStruct struct {
@@ -44,12 +46,15 @@ type embeddedJSONStruct struct {
 }
 
 type complexJSONStruct struct {
+	// The value of the coin.
 	CoinValue simpleMapWrapper   `json:"coin-value"`
 	GoodIndex simpleArrayWrapper `json:"good-index"`
 	Personnel embeddedJSONStruct `json:"personnel"`
 }
 
 type complexPointerStruct struct {
+	// The value of the coin.
+	// A nil value indicates an unknown value.
 	CoinValue *simpleMapWrapper   `json:"coin-value"`
 	GoodIndex *simpleArrayWrapper `json:"good-index"`
 	Personnel *embeddedJSONStruct `json:"personnel"`
@@ -295,8 +300,9 @@ func TestDescribeTypeBase(test *testing.T) {
 					},
 					FieldDescription{
 						BaseFieldDescription: BaseFieldDescription{
-							Name: "job-code",
-							Type: "int",
+							Name:        "job-code",
+							Type:        "int",
+							Description: "The job code for the employee.",
 						},
 						Required: false,
 					},
@@ -317,8 +323,9 @@ func TestDescribeTypeBase(test *testing.T) {
 						},
 						FieldDescription{
 							BaseFieldDescription: BaseFieldDescription{
-								Name: "job-code",
-								Type: "int",
+								Name:        "job-code",
+								Type:        "int",
+								Description: "The job code for the employee.",
 							},
 							Required: false,
 						},
@@ -402,8 +409,9 @@ func TestDescribeTypeBase(test *testing.T) {
 					},
 					FieldDescription{
 						BaseFieldDescription: BaseFieldDescription{
-							Name: "job-code",
-							Type: "int",
+							Name:        "job-code",
+							Type:        "int",
+							Description: "The job code for the employee.",
 						},
 						Required: false,
 					},
@@ -438,8 +446,9 @@ func TestDescribeTypeBase(test *testing.T) {
 						},
 						FieldDescription{
 							BaseFieldDescription: BaseFieldDescription{
-								Name: "job-code",
-								Type: "int",
+								Name:        "job-code",
+								Type:        "int",
+								Description: "The job code for the employee.",
 							},
 							Required: false,
 						},
@@ -466,8 +475,9 @@ func TestDescribeTypeBase(test *testing.T) {
 				Fields: []FieldDescription{
 					FieldDescription{
 						BaseFieldDescription: BaseFieldDescription{
-							Name: "coin-value",
-							Type: "core.simpleMapWrapper",
+							Name:        "coin-value",
+							Type:        "core.simpleMapWrapper",
+							Description: "The value of the coin.",
 						},
 						Required: false,
 					},
@@ -495,8 +505,9 @@ func TestDescribeTypeBase(test *testing.T) {
 					Fields: []FieldDescription{
 						FieldDescription{
 							BaseFieldDescription: BaseFieldDescription{
-								Name: "coin-value",
-								Type: "core.simpleMapWrapper",
+								Name:        "coin-value",
+								Type:        "core.simpleMapWrapper",
+								Description: "The value of the coin.",
 							},
 							Required: false,
 						},
@@ -537,8 +548,9 @@ func TestDescribeTypeBase(test *testing.T) {
 						},
 						FieldDescription{
 							BaseFieldDescription: BaseFieldDescription{
-								Name: "job-code",
-								Type: "int",
+								Name:        "job-code",
+								Type:        "int",
+								Description: "The job code for the employee.",
 							},
 							Required: false,
 						},
@@ -614,8 +626,9 @@ func TestDescribeTypeBase(test *testing.T) {
 				Fields: []FieldDescription{
 					FieldDescription{
 						BaseFieldDescription: BaseFieldDescription{
-							Name: "coin-value",
-							Type: "*core.simpleMapWrapper",
+							Name:        "coin-value",
+							Type:        "*core.simpleMapWrapper",
+							Description: "The value of the coin.\nA nil value indicates an unknown value.",
 						},
 						Required: false,
 					},
@@ -643,8 +656,9 @@ func TestDescribeTypeBase(test *testing.T) {
 					Fields: []FieldDescription{
 						FieldDescription{
 							BaseFieldDescription: BaseFieldDescription{
-								Name: "coin-value",
-								Type: "*core.simpleMapWrapper",
+								Name:        "coin-value",
+								Type:        "*core.simpleMapWrapper",
+								Description: "The value of the coin.\nA nil value indicates an unknown value.",
 							},
 							Required: false,
 						},
@@ -685,8 +699,9 @@ func TestDescribeTypeBase(test *testing.T) {
 						},
 						FieldDescription{
 							BaseFieldDescription: BaseFieldDescription{
-								Name: "job-code",
-								Type: "int",
+								Name:        "job-code",
+								Type:        "int",
+								Description: "The job code for the employee.",
 							},
 							Required: false,
 						},
