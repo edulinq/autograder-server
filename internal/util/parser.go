@@ -103,20 +103,22 @@ func GetFieldDescriptionsFromType(customType reflect.Type) (map[string]string, e
 					continue
 				}
 
-				structType, ok := typeSpec.Type.(*ast.StructType)
-				if !ok {
-					continue
-				}
-
 				if typeSpec.Name == nil {
 					continue
 				}
 
-				if typeSpec.Name.Name == customType.Name() {
-					descriptions := getFieldDescriptionsFromStructType(structType)
-
-					return descriptions, nil
+				if typeSpec.Name.Name != customType.Name() {
+					continue
 				}
+
+				structType, ok := typeSpec.Type.(*ast.StructType)
+				if !ok {
+					return nil, fmt.Errorf("Type '%s' must be a struct type.", customType.Name())
+				}
+
+				descriptions := getFieldDescriptionsFromStructType(structType)
+
+				return descriptions, nil
 			}
 		}
 	}

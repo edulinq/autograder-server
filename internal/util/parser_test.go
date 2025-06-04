@@ -2,7 +2,9 @@ package util
 
 import (
 	"path/filepath"
+	"reflect"
 	"regexp"
+	"strings"
 	"testing"
 )
 
@@ -10,6 +12,23 @@ type dummyTypeWithoutComment bool
 
 // Really cool type comment!
 type dummyTypeWithComment bool
+
+type dummyStruct struct {
+	NoComment string
+
+	// Commenting code helps all!
+	Comment string
+}
+
+type dummyStructEmbeddedWithoutFields struct {
+	dummyTypeWithComment
+	dummyTypeWithoutComment
+}
+
+type dummyStructEmbeddedWithFields struct {
+	// This comment is ignored.
+	dummyStruct
+}
 
 func TestGetDescriptionFromFunction(test *testing.T) {
 	tempDir := MustMkDirTemp("test-description-parser-")
@@ -90,6 +109,72 @@ func TestGetAllTypeDescriptionsFromPackage(test *testing.T) {
 
 		if testCase.expectedDescription != description {
 			test.Errorf("Case %d: Unexpected type description. Expected: '%s', actual: '%s'.", i, testCase.expectedDescription, description)
+			continue
+		}
+	}
+}
+
+func TestGetFieldDescriptionsFromType(test *testing.T) {
+	testCases := []struct {
+		customType     reflect.Type
+		expectedDesc   map[string]string
+		errorSubstring string
+	}{
+		// Simple Types
+		{
+			reflect.TypeOf((*dummyStruct)(nil)).Elem(),
+			map[string]string{
+				"Comment":   "Commenting code helps all!",
+				"NoComment": "",
+			},
+			"",
+		},
+
+		// Types With Embeddings
+		{
+			reflect.TypeOf((*dummyStructEmbeddedWithoutFields)(nil)).Elem(),
+			map[string]string{},
+			"",
+		},
+		{
+			reflect.TypeOf((*dummyStructEmbeddedWithFields)(nil)).Elem(),
+			map[string]string{
+				"Comment":   "Commenting code helps all!",
+				"NoComment": "",
+			},
+			"",
+		},
+
+		// Errors
+		{
+			reflect.TypeOf((*dummyTypeWithComment)(nil)).Elem(),
+			nil,
+			"Type 'dummyTypeWithComment' must be a struct type.",
+		},
+	}
+
+	for i, testCase := range testCases {
+		actualDesc, err := GetFieldDescriptionsFromType(testCase.customType)
+		if err != nil {
+			if testCase.errorSubstring != "" {
+				if !strings.Contains(err.Error(), testCase.errorSubstring) {
+					test.Errorf("Case %d: Did not get expected error outpout. Expected Substring: '%s', Actual Error: '%s'.", i, testCase.errorSubstring, err.Error())
+				}
+			} else {
+				test.Errorf("Case %d: Failed to get field descriptions from type '%s': '%s'.", i, testCase.customType.Name(), err.Error())
+			}
+
+			continue
+		}
+
+		if testCase.errorSubstring != "" {
+			test.Errorf("Case %d: Did not get expected error '%s'.", i, testCase.errorSubstring)
+			continue
+		}
+
+		if !reflect.DeepEqual(actualDesc, testCase.expectedDesc) {
+			test.Errorf("Case %d: Unexpected field descriptions. Expected: '%s', Actual: '%s'.",
+				i, MustToJSONIndent(testCase.expectedDesc), MustToJSONIndent(actualDesc))
 			continue
 		}
 	}
