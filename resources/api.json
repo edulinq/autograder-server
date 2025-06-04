@@ -496,6 +496,22 @@
                 }
             ]
         },
+        "courses/assignments/submissions/proxy/regrade": {
+            "description": "Regrade the most recent submissions for users with the filtered role in the course.",
+            "input": {
+                "assignment-id": "string",
+                "course-id": "string",
+                "filter-role": "int",
+                "user-email": "string",
+                "user-pass": "string",
+                "wait-for-completion": "bool"
+            },
+            "output": {
+                "complete": "bool",
+                "results": "map[string]*model.SubmissionHistoryItem",
+                "users": "[]string"
+            }
+        },
         "courses/assignments/submissions/proxy/resubmit": {
             "description": "Proxy resubmit an assignment submission to the autograder.",
             "input": [
