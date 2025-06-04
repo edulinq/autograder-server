@@ -18,6 +18,7 @@
                 {
                     "name": "course-id",
                     "type": "string",
+                    "description": "The ID of the course to make this request to.",
                     "required": true
                 },
                 {
@@ -40,11 +41,13 @@
                 {
                     "name": "user-email",
                     "type": "string",
+                    "description": "The email of the user making this request.",
                     "required": true
                 },
                 {
                     "name": "user-pass",
                     "type": "string",
+                    "description": "The password of the user making this request.",
                     "required": true
                 }
             ],
@@ -69,16 +72,19 @@
                 {
                     "name": "course-id",
                     "type": "string",
+                    "description": "The ID of the course to make this request to.",
                     "required": true
                 },
                 {
                     "name": "user-email",
                     "type": "string",
+                    "description": "The email of the user making this request.",
                     "required": true
                 },
                 {
                     "name": "user-pass",
                     "type": "string",
+                    "description": "The password of the user making this request.",
                     "required": true
                 }
             ],
@@ -95,21 +101,25 @@
                 {
                     "name": "assignment-id",
                     "type": "string",
+                    "description": "The ID of the assignment to make this request to.",
                     "required": true
                 },
                 {
                     "name": "course-id",
                     "type": "string",
+                    "description": "The ID of the course to make this request to.",
                     "required": true
                 },
                 {
                     "name": "user-email",
                     "type": "string",
+                    "description": "The email of the user making this request.",
                     "required": true
                 },
                 {
                     "name": "user-pass",
                     "type": "string",
+                    "description": "The password of the user making this request.",
                     "required": true
                 }
             ],
@@ -126,16 +136,19 @@
                 {
                     "name": "course-id",
                     "type": "string",
+                    "description": "The ID of the course to make this request to.",
                     "required": true
                 },
                 {
                     "name": "user-email",
                     "type": "string",
+                    "description": "The email of the user making this request.",
                     "required": true
                 },
                 {
                     "name": "user-pass",
                     "type": "string",
+                    "description": "The password of the user making this request.",
                     "required": true
                 }
             ],
@@ -168,11 +181,13 @@
                 {
                     "name": "user-email",
                     "type": "string",
+                    "description": "The email of the user making this request.",
                     "required": true
                 },
                 {
                     "name": "user-pass",
                     "type": "string",
+                    "description": "The password of the user making this request.",
                     "required": true
                 },
                 {
@@ -226,11 +241,13 @@
                 {
                     "name": "user-email",
                     "type": "string",
+                    "description": "The email of the user making this request.",
                     "required": true
                 },
                 {
                     "name": "user-pass",
                     "type": "string",
+                    "description": "The password of the user making this request.",
                     "required": true
                 },
                 {
@@ -268,11 +285,13 @@
                 {
                     "name": "assignment-id",
                     "type": "string",
+                    "description": "The ID of the assignment to make this request to.",
                     "required": true
                 },
                 {
                     "name": "course-id",
                     "type": "string",
+                    "description": "The ID of the course to make this request to.",
                     "required": true
                 },
                 {
@@ -282,11 +301,13 @@
                 {
                     "name": "user-email",
                     "type": "string",
+                    "description": "The email of the user making this request.",
                     "required": true
                 },
                 {
                     "name": "user-pass",
                     "type": "string",
+                    "description": "The password of the user making this request.",
                     "required": true
                 }
             ],
@@ -303,11 +324,13 @@
                 {
                     "name": "assignment-id",
                     "type": "string",
+                    "description": "The ID of the assignment to make this request to.",
                     "required": true
                 },
                 {
                     "name": "course-id",
                     "type": "string",
+                    "description": "The ID of the course to make this request to.",
                     "required": true
                 },
                 {
@@ -318,11 +341,13 @@
                 {
                     "name": "user-email",
                     "type": "string",
+                    "description": "The email of the user making this request.",
                     "required": true
                 },
                 {
                     "name": "user-pass",
                     "type": "string",
+                    "description": "The password of the user making this request.",
                     "required": true
                 }
             ],
@@ -339,11 +364,13 @@
                 {
                     "name": "assignment-id",
                     "type": "string",
+                    "description": "The ID of the assignment to make this request to.",
                     "required": true
                 },
                 {
                     "name": "course-id",
                     "type": "string",
+                    "description": "The ID of the course to make this request to.",
                     "required": true
                 },
                 {
@@ -357,11 +384,13 @@
                 {
                     "name": "user-email",
                     "type": "string",
+                    "description": "The email of the user making this request.",
                     "required": true
                 },
                 {
                     "name": "user-pass",
                     "type": "string",
+                    "description": "The password of the user making this request.",
                     "required": true
                 }
             ],
@@ -386,11 +415,13 @@
                 {
                     "name": "assignment-id",
                     "type": "string",
+                    "description": "The ID of the assignment to make this request to.",
                     "required": true
                 },
                 {
                     "name": "course-id",
                     "type": "string",
+                    "description": "The ID of the course to make this request to.",
                     "required": true
                 },
                 {
@@ -400,11 +431,13 @@
                 {
                     "name": "user-email",
                     "type": "string",
+                    "description": "The email of the user making this request.",
                     "required": true
                 },
                 {
                     "name": "user-pass",
                     "type": "string",
+                    "description": "The password of the user making this request.",
                     "required": true
                 }
             ],
@@ -425,11 +458,13 @@
                 {
                     "name": "assignment-id",
                     "type": "string",
+                    "description": "The ID of the assignment to make this request to.",
                     "required": true
                 },
                 {
                     "name": "course-id",
                     "type": "string",
+                    "description": "The ID of the course to make this request to.",
                     "required": true
                 },
                 {
@@ -439,11 +474,13 @@
                 {
                     "name": "user-email",
                     "type": "string",
+                    "description": "The email of the user making this request.",
                     "required": true
                 },
                 {
                     "name": "user-pass",
                     "type": "string",
+                    "description": "The password of the user making this request.",
                     "required": true
                 }
             ],
@@ -464,11 +501,13 @@
                 {
                     "name": "assignment-id",
                     "type": "string",
+                    "description": "The ID of the assignment to make this request to.",
                     "required": true
                 },
                 {
                     "name": "course-id",
                     "type": "string",
+                    "description": "The ID of the course to make this request to.",
                     "required": true
                 },
                 {
@@ -482,11 +521,13 @@
                 {
                     "name": "user-email",
                     "type": "string",
+                    "description": "The email of the user making this request.",
                     "required": true
                 },
                 {
                     "name": "user-pass",
                     "type": "string",
+                    "description": "The password of the user making this request.",
                     "required": true
                 }
             ],
@@ -511,11 +552,13 @@
                 {
                     "name": "assignment-id",
                     "type": "string",
+                    "description": "The ID of the assignment to make this request to.",
                     "required": true
                 },
                 {
                     "name": "course-id",
                     "type": "string",
+                    "description": "The ID of the course to make this request to.",
                     "required": true
                 },
                 {
@@ -534,11 +577,13 @@
                 {
                     "name": "user-email",
                     "type": "string",
+                    "description": "The email of the user making this request.",
                     "required": true
                 },
                 {
                     "name": "user-pass",
                     "type": "string",
+                    "description": "The password of the user making this request.",
                     "required": true
                 }
             ],
@@ -575,11 +620,13 @@
                 {
                     "name": "assignment-id",
                     "type": "string",
+                    "description": "The ID of the assignment to make this request to.",
                     "required": true
                 },
                 {
                     "name": "course-id",
                     "type": "string",
+                    "description": "The ID of the course to make this request to.",
                     "required": true
                 },
                 {
@@ -598,11 +645,13 @@
                 {
                     "name": "user-email",
                     "type": "string",
+                    "description": "The email of the user making this request.",
                     "required": true
                 },
                 {
                     "name": "user-pass",
                     "type": "string",
+                    "description": "The password of the user making this request.",
                     "required": true
                 }
             ],
@@ -635,11 +684,13 @@
                 {
                     "name": "assignment-id",
                     "type": "string",
+                    "description": "The ID of the assignment to make this request to.",
                     "required": true
                 },
                 {
                     "name": "course-id",
                     "type": "string",
+                    "description": "The ID of the course to make this request to.",
                     "required": true
                 },
                 {
@@ -653,11 +704,13 @@
                 {
                     "name": "user-email",
                     "type": "string",
+                    "description": "The email of the user making this request.",
                     "required": true
                 },
                 {
                     "name": "user-pass",
                     "type": "string",
+                    "description": "The password of the user making this request.",
                     "required": true
                 }
             ],
@@ -682,11 +735,13 @@
                 {
                     "name": "assignment-id",
                     "type": "string",
+                    "description": "The ID of the assignment to make this request to.",
                     "required": true
                 },
                 {
                     "name": "course-id",
                     "type": "string",
+                    "description": "The ID of the course to make this request to.",
                     "required": true
                 },
                 {
@@ -696,11 +751,13 @@
                 {
                     "name": "user-email",
                     "type": "string",
+                    "description": "The email of the user making this request.",
                     "required": true
                 },
                 {
                     "name": "user-pass",
                     "type": "string",
+                    "description": "The password of the user making this request.",
                     "required": true
                 }
             ],
@@ -729,6 +786,7 @@
                 {
                     "name": "course-id",
                     "type": "string",
+                    "description": "The ID of the course to make this request to.",
                     "required": true
                 },
                 {
@@ -738,11 +796,13 @@
                 {
                     "name": "user-email",
                     "type": "string",
+                    "description": "The email of the user making this request.",
                     "required": true
                 },
                 {
                     "name": "user-pass",
                     "type": "string",
+                    "description": "The password of the user making this request.",
                     "required": true
                 }
             ],
@@ -773,6 +833,7 @@
                 {
                     "name": "course-id",
                     "type": "string",
+                    "description": "The ID of the course to make this request to.",
                     "required": true
                 },
                 {
@@ -794,16 +855,18 @@
                 {
                     "name": "user-email",
                     "type": "string",
+                    "description": "The email of the user making this request.",
                     "required": true
                 },
                 {
                     "name": "user-pass",
                     "type": "string",
+                    "description": "The password of the user making this request.",
                     "required": true
                 },
                 {
                     "name": "where",
-                    "type": "map[stats.MetricAttribute]interface {}",
+                    "type": "map[stats.MetricAttribute]any",
                     "description": "Filter results to only include metrics that match Metric attribute field values.\nKeys are field names (e.g., \"course\") and values are what to include (e.g., course101).\nThis filter is applied after all other Query conditions are applied."
                 }
             ],
@@ -849,11 +912,13 @@
                 {
                     "name": "user-email",
                     "type": "string",
+                    "description": "The email of the user making this request.",
                     "required": true
                 },
                 {
                     "name": "user-pass",
                     "type": "string",
+                    "description": "The password of the user making this request.",
                     "required": true
                 }
             ],
@@ -894,11 +959,13 @@
                 {
                     "name": "user-email",
                     "type": "string",
+                    "description": "The email of the user making this request.",
                     "required": true
                 },
                 {
                     "name": "user-pass",
                     "type": "string",
+                    "description": "The password of the user making this request.",
                     "required": true
                 }
             ],
@@ -915,6 +982,7 @@
                 {
                     "name": "course-id",
                     "type": "string",
+                    "description": "The ID of the course to make this request to.",
                     "required": true
                 },
                 {
@@ -925,11 +993,13 @@
                 {
                     "name": "user-email",
                     "type": "string",
+                    "description": "The email of the user making this request.",
                     "required": true
                 },
                 {
                     "name": "user-pass",
                     "type": "string",
+                    "description": "The password of the user making this request.",
                     "required": true
                 }
             ],
@@ -946,6 +1016,7 @@
                 {
                     "name": "course-id",
                     "type": "string",
+                    "description": "The ID of the course to make this request to.",
                     "required": true
                 },
                 {
@@ -974,11 +1045,13 @@
                 {
                     "name": "user-email",
                     "type": "string",
+                    "description": "The email of the user making this request.",
                     "required": true
                 },
                 {
                     "name": "user-pass",
                     "type": "string",
+                    "description": "The password of the user making this request.",
                     "required": true
                 }
             ],
@@ -995,6 +1068,7 @@
                 {
                     "name": "course-id",
                     "type": "string",
+                    "description": "The ID of the course to make this request to.",
                     "required": true
                 },
                 {
@@ -1004,11 +1078,13 @@
                 {
                     "name": "user-email",
                     "type": "string",
+                    "description": "The email of the user making this request.",
                     "required": true
                 },
                 {
                     "name": "user-pass",
                     "type": "string",
+                    "description": "The password of the user making this request.",
                     "required": true
                 }
             ],
@@ -1029,6 +1105,7 @@
                 {
                     "name": "course-id",
                     "type": "string",
+                    "description": "The ID of the course to make this request to.",
                     "required": true
                 },
                 {
@@ -1038,11 +1115,13 @@
                 {
                     "name": "user-email",
                     "type": "string",
+                    "description": "The email of the user making this request.",
                     "required": true
                 },
                 {
                     "name": "user-pass",
                     "type": "string",
+                    "description": "The password of the user making this request.",
                     "required": true
                 }
             ],
@@ -1064,6 +1143,7 @@
                 {
                     "name": "course-id",
                     "type": "string",
+                    "description": "The ID of the course to make this request to.",
                     "required": true
                 },
                 {
@@ -1074,11 +1154,13 @@
                 {
                     "name": "user-email",
                     "type": "string",
+                    "description": "The email of the user making this request.",
                     "required": true
                 },
                 {
                     "name": "user-pass",
                     "type": "string",
+                    "description": "The password of the user making this request.",
                     "required": true
                 }
             ],
@@ -1107,6 +1189,7 @@
                 {
                     "name": "course-id",
                     "type": "string",
+                    "description": "The ID of the course to make this request to.",
                     "required": true
                 },
                 {
@@ -1117,11 +1200,13 @@
                 {
                     "name": "user-email",
                     "type": "string",
+                    "description": "The email of the user making this request.",
                     "required": true
                 },
                 {
                     "name": "user-pass",
                     "type": "string",
+                    "description": "The password of the user making this request.",
                     "required": true
                 }
             ],
@@ -1170,11 +1255,13 @@
                 {
                     "name": "user-email",
                     "type": "string",
+                    "description": "The email of the user making this request.",
                     "required": true
                 },
                 {
                     "name": "user-pass",
                     "type": "string",
+                    "description": "The password of the user making this request.",
                     "required": true
                 }
             ],
@@ -1254,16 +1341,18 @@
                 {
                     "name": "user-email",
                     "type": "string",
+                    "description": "The email of the user making this request.",
                     "required": true
                 },
                 {
                     "name": "user-pass",
                     "type": "string",
+                    "description": "The password of the user making this request.",
                     "required": true
                 },
                 {
                     "name": "where",
-                    "type": "map[stats.MetricAttribute]interface {}",
+                    "type": "map[stats.MetricAttribute]any",
                     "description": "Filter results to only include metrics that match Metric attribute field values.\nKeys are field names (e.g., \"course\") and values are what to include (e.g., course101).\nThis filter is applied after all other Query conditions are applied."
                 }
             ],
@@ -1280,11 +1369,13 @@
                 {
                     "name": "user-email",
                     "type": "string",
+                    "description": "The email of the user making this request.",
                     "required": true
                 },
                 {
                     "name": "user-pass",
                     "type": "string",
+                    "description": "The password of the user making this request.",
                     "required": true
                 }
             ],
@@ -1305,11 +1396,13 @@
                 {
                     "name": "user-email",
                     "type": "string",
+                    "description": "The email of the user making this request.",
                     "required": true
                 },
                 {
                     "name": "user-pass",
                     "type": "string",
+                    "description": "The password of the user making this request.",
                     "required": true
                 }
             ],
@@ -1330,11 +1423,13 @@
                 {
                     "name": "user-email",
                     "type": "string",
+                    "description": "The email of the user making this request.",
                     "required": true
                 },
                 {
                     "name": "user-pass",
                     "type": "string",
+                    "description": "The password of the user making this request.",
                     "required": true
                 }
             ],
@@ -1359,11 +1454,13 @@
                 {
                     "name": "user-email",
                     "type": "string",
+                    "description": "The email of the user making this request.",
                     "required": true
                 },
                 {
                     "name": "user-pass",
                     "type": "string",
+                    "description": "The password of the user making this request.",
                     "required": true
                 }
             ],
@@ -1385,11 +1482,13 @@
                 {
                     "name": "user-email",
                     "type": "string",
+                    "description": "The email of the user making this request.",
                     "required": true
                 },
                 {
                     "name": "user-pass",
                     "type": "string",
+                    "description": "The password of the user making this request.",
                     "required": true
                 }
             ],
@@ -1426,11 +1525,13 @@
                 {
                     "name": "user-email",
                     "type": "string",
+                    "description": "The email of the user making this request.",
                     "required": true
                 },
                 {
                     "name": "user-pass",
                     "type": "string",
+                    "description": "The password of the user making this request.",
                     "required": true
                 }
             ],
@@ -1451,11 +1552,13 @@
                 {
                     "name": "user-email",
                     "type": "string",
+                    "description": "The email of the user making this request.",
                     "required": true
                 },
                 {
                     "name": "user-pass",
                     "type": "string",
+                    "description": "The password of the user making this request.",
                     "required": true
                 }
             ],
@@ -1481,11 +1584,13 @@
                 {
                     "name": "user-email",
                     "type": "string",
+                    "description": "The email of the user making this request.",
                     "required": true
                 },
                 {
                     "name": "user-pass",
                     "type": "string",
+                    "description": "The password of the user making this request.",
                     "required": true
                 }
             ],
@@ -1525,11 +1630,13 @@
                 {
                     "name": "user-email",
                     "type": "string",
+                    "description": "The email of the user making this request.",
                     "required": true
                 },
                 {
                     "name": "user-pass",
                     "type": "string",
+                    "description": "The password of the user making this request.",
                     "required": true
                 }
             ],
@@ -1837,7 +1944,7 @@
                 },
                 {
                     "name": "attributes",
-                    "type": "map[string]interface {}",
+                    "type": "map[string]any",
                     "description": "Additional Attributes"
                 },
                 {
@@ -2079,7 +2186,7 @@
                 },
                 {
                     "name": "options",
-                    "type": "map[string]interface {}"
+                    "type": "map[string]any"
                 },
                 {
                     "name": "original-filename",
@@ -2141,8 +2248,7 @@
             "fields": [
                 {
                     "name": "additional-info",
-                    "type": "map[string]interface {}",
-                    "description": "Additional pass-through information that the grader can use."
+                    "type": "map[string]any"
                 },
                 {
                     "name": "assignment-id",
@@ -2166,8 +2272,7 @@
                 },
                 {
                     "name": "id",
-                    "type": "string",
-                    "description": "Information set by the autograder."
+                    "type": "string"
                 },
                 {
                     "name": "max_points",
@@ -2179,8 +2284,7 @@
                 },
                 {
                     "name": "name",
-                    "type": "string",
-                    "description": "Information generally filled out by the grader."
+                    "type": "string"
                 },
                 {
                     "name": "prologue",
@@ -2671,7 +2775,7 @@
             "fields": [
                 {
                     "name": "attributes",
-                    "type": "map[stats.MetricAttribute]interface {}",
+                    "type": "map[stats.MetricAttribute]any",
                     "description": "Additional attributes that are not standard enough to be formalized in fields."
                 },
                 {

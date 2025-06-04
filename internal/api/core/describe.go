@@ -276,7 +276,12 @@ func getTypeID(customType reflect.Type, typeConversions map[string]string) (stri
 		}
 	}
 
-	return prefix + customType.String(), nil
+	name := customType.String()
+	if name == "interface {}" {
+		name = "any"
+	}
+
+	return prefix + name, nil
 }
 
 // Given a type and a map of known type descriptions, DescribeType() returns the type description and typeID.

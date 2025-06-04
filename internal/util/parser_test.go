@@ -26,7 +26,7 @@ type dummyStructEmbeddedWithoutFields struct {
 }
 
 type dummyStructEmbeddedWithFields struct {
-	// This comment is ignored.
+	// This is the only comment in the description.
 	dummyStruct
 }
 
@@ -133,14 +133,16 @@ func TestGetFieldDescriptionsFromType(test *testing.T) {
 		// Types With Embeddings
 		{
 			reflect.TypeOf((*dummyStructEmbeddedWithoutFields)(nil)).Elem(),
-			map[string]string{},
+			map[string]string{
+				"dummyTypeWithComment":    "",
+				"dummyTypeWithoutComment": "",
+			},
 			"",
 		},
 		{
 			reflect.TypeOf((*dummyStructEmbeddedWithFields)(nil)).Elem(),
 			map[string]string{
-				"Comment":   "Commenting code helps all!",
-				"NoComment": "",
+				"dummyStruct": "This is the only comment in the description.",
 			},
 			"",
 		},

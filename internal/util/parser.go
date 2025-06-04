@@ -65,6 +65,10 @@ func GetAllTypeDescriptionsFromPackage(packagePath string) (map[string]string, e
 }
 
 func GetFieldDescriptionsFromType(customType reflect.Type) (map[string]string, error) {
+	if customType == nil {
+		return nil, nil
+	}
+
 	dirPath := GetDirPathFromCustomPackagePath(customType.PkgPath())
 
 	filePaths, err := FindFiles("", dirPath)
@@ -84,7 +88,7 @@ func GetFieldDescriptionsFromType(customType reflect.Type) (map[string]string, e
 		fileSet := token.NewFileSet()
 		node, err := parser.ParseFile(fileSet, path, nil, parser.ParseComments)
 		if err != nil {
-			return nil, fmt.Errorf("Error while parsing file to get function description: '%v'.", err)
+			return nil, fmt.Errorf("Error while parsing file to get field descriptions from type: '%v'.", err)
 		}
 
 		for _, decl := range node.Decls {
@@ -141,7 +145,7 @@ func getDescriptionFromType(filePaths []string) (map[string]string, error) {
 		fileSet := token.NewFileSet()
 		node, err := parser.ParseFile(fileSet, path, nil, parser.ParseComments)
 		if err != nil {
-			return nil, fmt.Errorf("Error while parsing file to get function description: '%v'.", err)
+			return nil, fmt.Errorf("Error while parsing file to get type description: '%v'.", err)
 		}
 
 		for _, decl := range node.Decls {
@@ -197,22 +201,33 @@ func getFieldDescriptionsFromStructType(structType *ast.StructType) map[string]s
 			continue
 		}
 
-		if field.Names == nil {
-			continue
-		}
-
 		fieldName := ""
-		for _, name := range field.Names {
-			if name == nil {
-				continue
-			}
+		if field.Names != nil {
+			for _, name := range field.Names {
+				if name == nil {
+					continue
+				}
 
-			fieldName = name.Name
-			break
+				fieldName = name.Name
+				break
+			}
 		}
 
 		if fieldName == "" {
-			continue
+			if field.Type == nil {
+				continue
+			}
+
+			ident, ok := field.Type.(*ast.Ident)
+			if !ok {
+				continue
+			}
+
+			if ident == nil {
+				continue
+			}
+
+			fieldName = ident.Name
 		}
 
 		if field.Doc == nil {
