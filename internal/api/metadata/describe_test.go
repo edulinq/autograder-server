@@ -40,6 +40,10 @@ func TestMetadataDescribe(test *testing.T) {
 				},
 				Fields: []core.BaseFieldDescription{
 					core.BaseFieldDescription{
+						Name: "description",
+						Type: "string",
+					},
+					core.BaseFieldDescription{
 						Name: "name",
 						Type: "string",
 					},
@@ -73,6 +77,10 @@ func TestMetadataDescribe(test *testing.T) {
 					Category: "struct",
 				},
 				Fields: []core.BaseFieldDescription{
+					core.BaseFieldDescription{
+						Name: "description",
+						Type: "string",
+					},
 					core.BaseFieldDescription{
 						Name: "name",
 						Type: "string",

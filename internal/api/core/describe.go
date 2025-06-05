@@ -40,14 +40,15 @@ type EndpointDescription struct {
 }
 
 type BaseFieldDescription struct {
-	Name string `json:"name"`
-	Type string `json:"type"`
+	Name        string `json:"name"`
+	Type        string `json:"type"`
+	Description string `json:"description,omitempty"`
 }
 
 type FieldDescription struct {
 	BaseFieldDescription
 
-	Required bool `json:"required,omitzero"`
+	Required bool `json:"required,omitempty,omitzero"`
 }
 
 type BaseTypeDescription struct {
@@ -275,7 +276,12 @@ func getTypeID(customType reflect.Type, typeConversions map[string]string) (stri
 		}
 	}
 
-	return prefix + customType.String(), nil
+	name := customType.String()
+	if name == "interface {}" {
+		name = "any"
+	}
+
+	return prefix + name, nil
 }
 
 // Given a type and a map of known type descriptions, DescribeType() returns the type description and typeID.
@@ -381,6 +387,11 @@ func DescribeType(customType reflect.Type, addType bool, info TypeInfoCache) (Fu
 func describeStructFields(customType reflect.Type, info TypeInfoCache) ([]FieldDescription, error) {
 	fieldDescriptions := make([]FieldDescription, 0)
 
+	fieldNameDescriptions, err := util.GetFieldDescriptionsFromType(customType)
+	if err != nil {
+		return nil, err
+	}
+
 	for i := 0; i < customType.NumField(); i++ {
 		field := customType.Field(i)
 
@@ -398,11 +409,16 @@ func describeStructFields(customType reflect.Type, info TypeInfoCache) ([]FieldD
 			return nil, err
 		}
 
+		nameDescription, ok := fieldNameDescriptions[field.Name]
+		if !ok {
+			nameDescription = ""
+		}
+
 		// Handle embedded fields.
 		if field.Anonymous {
 			fieldDescription, fieldTypeID, _, err := DescribeType(field.Type, false, info)
 			if err != nil {
-				return []FieldDescription{}, err
+				return nil, err
 			}
 
 			// If the embedded type is a struct, merge its fields into the current struct.
@@ -418,8 +434,9 @@ func describeStructFields(customType reflect.Type, info TypeInfoCache) ([]FieldD
 				// Store basic embedded types under the current JSON tag.
 				description := FieldDescription{
 					BaseFieldDescription: BaseFieldDescription{
-						Name: jsonTag,
-						Type: fieldDescription.AliasType,
+						Name:        jsonTag,
+						Type:        fieldDescription.AliasType,
+						Description: nameDescription,
 					},
 					Required: requiredField,
 				}
@@ -429,8 +446,9 @@ func describeStructFields(customType reflect.Type, info TypeInfoCache) ([]FieldD
 				// Store non-basic embedded types under the current JSON tag using the typeID.
 				description := FieldDescription{
 					BaseFieldDescription: BaseFieldDescription{
-						Name: jsonTag,
-						Type: fieldTypeID,
+						Name:        jsonTag,
+						Type:        fieldTypeID,
+						Description: nameDescription,
 					},
 					Required: requiredField,
 				}
@@ -449,14 +467,15 @@ func describeStructFields(customType reflect.Type, info TypeInfoCache) ([]FieldD
 
 		typeDescription, typeID, _, err := DescribeType(field.Type, true, info)
 		if err != nil {
-			return []FieldDescription{}, err
+			return nil, err
 		}
 
 		if typeDescription.Category == AliasType {
 			fieldDescription := FieldDescription{
 				BaseFieldDescription: BaseFieldDescription{
-					Name: jsonTag,
-					Type: typeDescription.AliasType,
+					Name:        jsonTag,
+					Type:        typeDescription.AliasType,
+					Description: nameDescription,
 				},
 				Required: requiredField,
 			}
@@ -465,8 +484,9 @@ func describeStructFields(customType reflect.Type, info TypeInfoCache) ([]FieldD
 		} else {
 			fieldDescription := FieldDescription{
 				BaseFieldDescription: BaseFieldDescription{
-					Name: jsonTag,
-					Type: typeID,
+					Name:        jsonTag,
+					Type:        typeID,
+					Description: nameDescription,
 				},
 				Required: requiredField,
 			}

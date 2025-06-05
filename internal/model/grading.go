@@ -18,6 +18,7 @@ type GradingResult struct {
 
 type GradingInfo struct {
 	// Information set by the autograder.
+
 	ID             string               `json:"id"`
 	ShortID        string               `json:"short-id"`
 	CourseID       string               `json:"course-id"`
@@ -31,6 +32,7 @@ type GradingInfo struct {
 	ProxyEndTime   *timestamp.Timestamp `json:"proxy_end_time,omitempty"`
 
 	// Information generally filled out by the grader.
+
 	Name             string              `json:"name"`
 	Questions        []*GradedQuestion   `json:"questions"`
 	GradingStartTime timestamp.Timestamp `json:"grading_start_time"`
@@ -39,6 +41,7 @@ type GradingInfo struct {
 	Epilogue         string              `json:"epilogue,omitempty"`
 
 	// Additional pass-through information that the grader can use.
+
 	AdditionalInfo map[string]any `json:"additional-info"`
 }
 

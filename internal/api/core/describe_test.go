@@ -28,8 +28,10 @@ type wrappedStruct struct {
 }
 
 type simpleJSONStruct struct {
-	Email   string `json:"email"`
-	JobCode int    `json:"job-code"`
+	Email string `json:"email"`
+
+	// The job code for the employee.
+	JobCode int `json:"job-code"`
 }
 
 type secureJSONStruct struct {
@@ -44,12 +46,15 @@ type embeddedJSONStruct struct {
 }
 
 type complexJSONStruct struct {
+	// The value of the coin.
 	CoinValue simpleMapWrapper   `json:"coin-value"`
 	GoodIndex simpleArrayWrapper `json:"good-index"`
 	Personnel embeddedJSONStruct `json:"personnel"`
 }
 
 type complexPointerStruct struct {
+	// The value of the coin.
+	// A nil value indicates an unknown value.
 	CoinValue *simpleMapWrapper   `json:"coin-value"`
 	GoodIndex *simpleArrayWrapper `json:"good-index"`
 	Personnel *embeddedJSONStruct `json:"personnel"`
@@ -287,12 +292,19 @@ func TestDescribeTypeBase(test *testing.T) {
 				},
 				Fields: []FieldDescription{
 					FieldDescription{
-						BaseFieldDescription: BaseFieldDescription{"email", "string"},
-						Required:             false,
+						BaseFieldDescription: BaseFieldDescription{
+							Name: "email",
+							Type: "string",
+						},
+						Required: false,
 					},
 					FieldDescription{
-						BaseFieldDescription: BaseFieldDescription{"job-code", "int"},
-						Required:             false,
+						BaseFieldDescription: BaseFieldDescription{
+							Name:        "job-code",
+							Type:        "int",
+							Description: "The job code for the employee.",
+						},
+						Required: false,
 					},
 				},
 			},
@@ -303,12 +315,19 @@ func TestDescribeTypeBase(test *testing.T) {
 					},
 					Fields: []FieldDescription{
 						FieldDescription{
-							BaseFieldDescription: BaseFieldDescription{"email", "string"},
-							Required:             false,
+							BaseFieldDescription: BaseFieldDescription{
+								Name: "email",
+								Type: "string",
+							},
+							Required: false,
 						},
 						FieldDescription{
-							BaseFieldDescription: BaseFieldDescription{"job-code", "int"},
-							Required:             false,
+							BaseFieldDescription: BaseFieldDescription{
+								Name:        "job-code",
+								Type:        "int",
+								Description: "The job code for the employee.",
+							},
+							Required: false,
 						},
 					},
 				},
@@ -325,12 +344,18 @@ func TestDescribeTypeBase(test *testing.T) {
 				},
 				Fields: []FieldDescription{
 					FieldDescription{
-						BaseFieldDescription: BaseFieldDescription{"first-name", "string"},
-						Required:             true,
+						BaseFieldDescription: BaseFieldDescription{
+							Name: "first-name",
+							Type: "string",
+						},
+						Required: true,
 					},
 					FieldDescription{
-						BaseFieldDescription: BaseFieldDescription{"last-name", "string"},
-						Required:             true,
+						BaseFieldDescription: BaseFieldDescription{
+							Name: "last-name",
+							Type: "string",
+						},
+						Required: true,
 					},
 				},
 			},
@@ -341,12 +366,18 @@ func TestDescribeTypeBase(test *testing.T) {
 					},
 					Fields: []FieldDescription{
 						FieldDescription{
-							BaseFieldDescription: BaseFieldDescription{"first-name", "string"},
-							Required:             true,
+							BaseFieldDescription: BaseFieldDescription{
+								Name: "first-name",
+								Type: "string",
+							},
+							Required: true,
 						},
 						FieldDescription{
-							BaseFieldDescription: BaseFieldDescription{"last-name", "string"},
-							Required:             true,
+							BaseFieldDescription: BaseFieldDescription{
+								Name: "last-name",
+								Type: "string",
+							},
+							Required: true,
 						},
 					},
 				},
@@ -363,20 +394,33 @@ func TestDescribeTypeBase(test *testing.T) {
 				},
 				Fields: []FieldDescription{
 					FieldDescription{
-						BaseFieldDescription: BaseFieldDescription{"email", "string"},
-						Required:             false,
+						BaseFieldDescription: BaseFieldDescription{
+							Name: "email",
+							Type: "string",
+						},
+						Required: false,
 					},
 					FieldDescription{
-						BaseFieldDescription: BaseFieldDescription{"first-name", "string"},
-						Required:             true,
+						BaseFieldDescription: BaseFieldDescription{
+							Name: "first-name",
+							Type: "string",
+						},
+						Required: true,
 					},
 					FieldDescription{
-						BaseFieldDescription: BaseFieldDescription{"job-code", "int"},
-						Required:             false,
+						BaseFieldDescription: BaseFieldDescription{
+							Name:        "job-code",
+							Type:        "int",
+							Description: "The job code for the employee.",
+						},
+						Required: false,
 					},
 					FieldDescription{
-						BaseFieldDescription: BaseFieldDescription{"last-name", "string"},
-						Required:             true,
+						BaseFieldDescription: BaseFieldDescription{
+							Name: "last-name",
+							Type: "string",
+						},
+						Required: true,
 					},
 				},
 			},
@@ -387,20 +431,33 @@ func TestDescribeTypeBase(test *testing.T) {
 					},
 					Fields: []FieldDescription{
 						FieldDescription{
-							BaseFieldDescription: BaseFieldDescription{"email", "string"},
-							Required:             false,
+							BaseFieldDescription: BaseFieldDescription{
+								Name: "email",
+								Type: "string",
+							},
+							Required: false,
 						},
 						FieldDescription{
-							BaseFieldDescription: BaseFieldDescription{"first-name", "string"},
-							Required:             true,
+							BaseFieldDescription: BaseFieldDescription{
+								Name: "first-name",
+								Type: "string",
+							},
+							Required: true,
 						},
 						FieldDescription{
-							BaseFieldDescription: BaseFieldDescription{"job-code", "int"},
-							Required:             false,
+							BaseFieldDescription: BaseFieldDescription{
+								Name:        "job-code",
+								Type:        "int",
+								Description: "The job code for the employee.",
+							},
+							Required: false,
 						},
 						FieldDescription{
-							BaseFieldDescription: BaseFieldDescription{"last-name", "string"},
-							Required:             true,
+							BaseFieldDescription: BaseFieldDescription{
+								Name: "last-name",
+								Type: "string",
+							},
+							Required: true,
 						},
 					},
 				},
@@ -417,16 +474,26 @@ func TestDescribeTypeBase(test *testing.T) {
 				},
 				Fields: []FieldDescription{
 					FieldDescription{
-						BaseFieldDescription: BaseFieldDescription{"coin-value", "core.simpleMapWrapper"},
-						Required:             false,
+						BaseFieldDescription: BaseFieldDescription{
+							Name:        "coin-value",
+							Type:        "core.simpleMapWrapper",
+							Description: "The value of the coin.",
+						},
+						Required: false,
 					},
 					FieldDescription{
-						BaseFieldDescription: BaseFieldDescription{"good-index", "core.simpleArrayWrapper"},
-						Required:             false,
+						BaseFieldDescription: BaseFieldDescription{
+							Name: "good-index",
+							Type: "core.simpleArrayWrapper",
+						},
+						Required: false,
 					},
 					FieldDescription{
-						BaseFieldDescription: BaseFieldDescription{"personnel", "core.embeddedJSONStruct"},
-						Required:             false,
+						BaseFieldDescription: BaseFieldDescription{
+							Name: "personnel",
+							Type: "core.embeddedJSONStruct",
+						},
+						Required: false,
 					},
 				},
 			},
@@ -437,16 +504,26 @@ func TestDescribeTypeBase(test *testing.T) {
 					},
 					Fields: []FieldDescription{
 						FieldDescription{
-							BaseFieldDescription: BaseFieldDescription{"coin-value", "core.simpleMapWrapper"},
-							Required:             false,
+							BaseFieldDescription: BaseFieldDescription{
+								Name:        "coin-value",
+								Type:        "core.simpleMapWrapper",
+								Description: "The value of the coin.",
+							},
+							Required: false,
 						},
 						FieldDescription{
-							BaseFieldDescription: BaseFieldDescription{"good-index", "core.simpleArrayWrapper"},
-							Required:             false,
+							BaseFieldDescription: BaseFieldDescription{
+								Name: "good-index",
+								Type: "core.simpleArrayWrapper",
+							},
+							Required: false,
 						},
 						FieldDescription{
-							BaseFieldDescription: BaseFieldDescription{"personnel", "core.embeddedJSONStruct"},
-							Required:             false,
+							BaseFieldDescription: BaseFieldDescription{
+								Name: "personnel",
+								Type: "core.embeddedJSONStruct",
+							},
+							Required: false,
 						},
 					},
 				},
@@ -456,20 +533,33 @@ func TestDescribeTypeBase(test *testing.T) {
 					},
 					Fields: []FieldDescription{
 						FieldDescription{
-							BaseFieldDescription: BaseFieldDescription{"email", "string"},
-							Required:             false,
+							BaseFieldDescription: BaseFieldDescription{
+								Name: "email",
+								Type: "string",
+							},
+							Required: false,
 						},
 						FieldDescription{
-							BaseFieldDescription: BaseFieldDescription{"first-name", "string"},
-							Required:             true,
+							BaseFieldDescription: BaseFieldDescription{
+								Name: "first-name",
+								Type: "string",
+							},
+							Required: true,
 						},
 						FieldDescription{
-							BaseFieldDescription: BaseFieldDescription{"job-code", "int"},
-							Required:             false,
+							BaseFieldDescription: BaseFieldDescription{
+								Name:        "job-code",
+								Type:        "int",
+								Description: "The job code for the employee.",
+							},
+							Required: false,
 						},
 						FieldDescription{
-							BaseFieldDescription: BaseFieldDescription{"last-name", "string"},
-							Required:             true,
+							BaseFieldDescription: BaseFieldDescription{
+								Name: "last-name",
+								Type: "string",
+							},
+							Required: true,
 						},
 					},
 				},
@@ -535,16 +625,26 @@ func TestDescribeTypeBase(test *testing.T) {
 				},
 				Fields: []FieldDescription{
 					FieldDescription{
-						BaseFieldDescription: BaseFieldDescription{"coin-value", "*core.simpleMapWrapper"},
-						Required:             false,
+						BaseFieldDescription: BaseFieldDescription{
+							Name:        "coin-value",
+							Type:        "*core.simpleMapWrapper",
+							Description: "The value of the coin.\nA nil value indicates an unknown value.",
+						},
+						Required: false,
 					},
 					FieldDescription{
-						BaseFieldDescription: BaseFieldDescription{"good-index", "*core.simpleArrayWrapper"},
-						Required:             false,
+						BaseFieldDescription: BaseFieldDescription{
+							Name: "good-index",
+							Type: "*core.simpleArrayWrapper",
+						},
+						Required: false,
 					},
 					FieldDescription{
-						BaseFieldDescription: BaseFieldDescription{"personnel", "*core.embeddedJSONStruct"},
-						Required:             false,
+						BaseFieldDescription: BaseFieldDescription{
+							Name: "personnel",
+							Type: "*core.embeddedJSONStruct",
+						},
+						Required: false,
 					},
 				},
 			},
@@ -555,16 +655,26 @@ func TestDescribeTypeBase(test *testing.T) {
 					},
 					Fields: []FieldDescription{
 						FieldDescription{
-							BaseFieldDescription: BaseFieldDescription{"coin-value", "*core.simpleMapWrapper"},
-							Required:             false,
+							BaseFieldDescription: BaseFieldDescription{
+								Name:        "coin-value",
+								Type:        "*core.simpleMapWrapper",
+								Description: "The value of the coin.\nA nil value indicates an unknown value.",
+							},
+							Required: false,
 						},
 						FieldDescription{
-							BaseFieldDescription: BaseFieldDescription{"good-index", "*core.simpleArrayWrapper"},
-							Required:             false,
+							BaseFieldDescription: BaseFieldDescription{
+								Name: "good-index",
+								Type: "*core.simpleArrayWrapper",
+							},
+							Required: false,
 						},
 						FieldDescription{
-							BaseFieldDescription: BaseFieldDescription{"personnel", "*core.embeddedJSONStruct"},
-							Required:             false,
+							BaseFieldDescription: BaseFieldDescription{
+								Name: "personnel",
+								Type: "*core.embeddedJSONStruct",
+							},
+							Required: false,
 						},
 					},
 				},
@@ -574,20 +684,33 @@ func TestDescribeTypeBase(test *testing.T) {
 					},
 					Fields: []FieldDescription{
 						FieldDescription{
-							BaseFieldDescription: BaseFieldDescription{"email", "string"},
-							Required:             false,
+							BaseFieldDescription: BaseFieldDescription{
+								Name: "email",
+								Type: "string",
+							},
+							Required: false,
 						},
 						FieldDescription{
-							BaseFieldDescription: BaseFieldDescription{"first-name", "string"},
-							Required:             true,
+							BaseFieldDescription: BaseFieldDescription{
+								Name: "first-name",
+								Type: "string",
+							},
+							Required: true,
 						},
 						FieldDescription{
-							BaseFieldDescription: BaseFieldDescription{"job-code", "int"},
-							Required:             false,
+							BaseFieldDescription: BaseFieldDescription{
+								Name:        "job-code",
+								Type:        "int",
+								Description: "The job code for the employee.",
+							},
+							Required: false,
 						},
 						FieldDescription{
-							BaseFieldDescription: BaseFieldDescription{"last-name", "string"},
-							Required:             true,
+							BaseFieldDescription: BaseFieldDescription{
+								Name: "last-name",
+								Type: "string",
+							},
+							Required: true,
 						},
 					},
 				},
