@@ -1,12 +1,529 @@
 package model
 
 import (
+	"fmt"
 	"reflect"
 	"strings"
 	"testing"
 
 	"github.com/edulinq/autograder/internal/util"
 )
+
+func TestParseServerUserReferences(test *testing.T) {
+	commonServerRoles := GetCommonServerUserRolesCopy()
+
+	allServerRoles := make(map[ServerUserRole]any, len(commonServerRoles))
+	for _, role := range commonServerRoles {
+		allServerRoles[role] = nil
+	}
+
+	commonCourseRoles := GetCommonCourseUserRolesCopy()
+
+	allCourseRoles := make(map[CourseUserRole]any, len(commonCourseRoles))
+	for _, role := range commonCourseRoles {
+		allCourseRoles[role] = nil
+	}
+
+	courses := map[string]*Course{
+		TEST_COURSE_ID: &Course{
+			ID: TEST_COURSE_ID,
+		},
+		"course-languages": &Course{
+			ID: "course-languages",
+		},
+	}
+
+	testCases := []struct {
+		input          []ServerUserReference
+		output         *ParsedServerUserReference
+		errorSubstring string
+	}{
+		// All Users
+		{
+			[]ServerUserReference{"*"},
+			&ParsedServerUserReference{
+				ServerUserRoles: allServerRoles,
+			},
+			"",
+		},
+		{
+			[]ServerUserReference{"-*"},
+			&ParsedServerUserReference{
+				ExcludeServerUserRoles: allServerRoles,
+			},
+			"",
+		},
+
+		// Target Email
+		{
+			[]ServerUserReference{"course-student@test.edulinq.org"},
+			&ParsedServerUserReference{
+				Emails: map[string]any{
+					"course-student@test.edulinq.org": nil,
+				},
+			},
+			"",
+		},
+		{
+			[]ServerUserReference{"-course-student@test.edulinq.org"},
+			&ParsedServerUserReference{
+				ExcludeEmails: map[string]any{
+					"course-student@test.edulinq.org": nil,
+				},
+			},
+			"",
+		},
+
+		// Target Server Role
+		{
+			[]ServerUserReference{"user"},
+			&ParsedServerUserReference{
+				ServerUserRoles: map[ServerUserRole]any{
+					GetServerUserRole("user"): nil,
+				},
+			},
+			"",
+		},
+		{
+			[]ServerUserReference{"-user"},
+			&ParsedServerUserReference{
+				ExcludeServerUserRoles: map[ServerUserRole]any{
+					GetServerUserRole("user"): nil,
+				},
+			},
+			"",
+		},
+
+		// All Courses, All Course Roles
+		{
+			[]ServerUserReference{"*::*"},
+			&ParsedServerUserReference{
+				CourseUserReferences: map[string]*ParsedCourseUserReference{
+					TEST_COURSE_ID: &ParsedCourseUserReference{
+						CourseUserRoles: allCourseRoles,
+					},
+					"course-languages": &ParsedCourseUserReference{
+						CourseUserRoles: allCourseRoles,
+					},
+				},
+			},
+			"",
+		},
+		{
+			[]ServerUserReference{"-*::*"},
+			&ParsedServerUserReference{
+				CourseUserReferences: map[string]*ParsedCourseUserReference{
+					TEST_COURSE_ID: &ParsedCourseUserReference{
+						ExcludeCourseUserRoles: allCourseRoles,
+					},
+					"course-languages": &ParsedCourseUserReference{
+						ExcludeCourseUserRoles: allCourseRoles,
+					},
+				},
+			},
+			"",
+		},
+
+		// All Courses, Target Course Role
+		{
+			[]ServerUserReference{"*::student"},
+			&ParsedServerUserReference{
+				CourseUserReferences: map[string]*ParsedCourseUserReference{
+					TEST_COURSE_ID: &ParsedCourseUserReference{
+						CourseUserRoles: map[CourseUserRole]any{
+							GetCourseUserRole("student"): nil,
+						},
+					},
+					"course-languages": &ParsedCourseUserReference{
+						CourseUserRoles: map[CourseUserRole]any{
+							GetCourseUserRole("student"): nil,
+						},
+					},
+				},
+			},
+			"",
+		},
+		{
+			[]ServerUserReference{"-*::student"},
+			&ParsedServerUserReference{
+				CourseUserReferences: map[string]*ParsedCourseUserReference{
+					TEST_COURSE_ID: &ParsedCourseUserReference{
+						ExcludeCourseUserRoles: map[CourseUserRole]any{
+							GetCourseUserRole("student"): nil,
+						},
+					},
+					"course-languages": &ParsedCourseUserReference{
+						ExcludeCourseUserRoles: map[CourseUserRole]any{
+							GetCourseUserRole("student"): nil,
+						},
+					},
+				},
+			},
+			"",
+		},
+
+		// Target Course, All Course Roles
+		{
+			[]ServerUserReference{
+				ServerUserReference(fmt.Sprintf("%s::*", TEST_COURSE_ID)),
+			},
+			&ParsedServerUserReference{
+				CourseUserReferences: map[string]*ParsedCourseUserReference{
+					TEST_COURSE_ID: &ParsedCourseUserReference{
+						CourseUserRoles: allCourseRoles,
+					},
+				},
+			},
+			"",
+		},
+		{
+			[]ServerUserReference{
+				ServerUserReference(fmt.Sprintf("-%s::*", TEST_COURSE_ID)),
+			},
+			&ParsedServerUserReference{
+				CourseUserReferences: map[string]*ParsedCourseUserReference{
+					TEST_COURSE_ID: &ParsedCourseUserReference{
+						ExcludeCourseUserRoles: allCourseRoles,
+					},
+				},
+			},
+			"",
+		},
+
+		// Target Course, Target Course Role
+		{
+			[]ServerUserReference{
+				ServerUserReference(fmt.Sprintf("%s::student", TEST_COURSE_ID)),
+			},
+			&ParsedServerUserReference{
+				CourseUserReferences: map[string]*ParsedCourseUserReference{
+					TEST_COURSE_ID: &ParsedCourseUserReference{
+						CourseUserRoles: map[CourseUserRole]any{
+							GetCourseUserRole("student"): nil,
+						},
+					},
+				},
+			},
+			"",
+		},
+		{
+			[]ServerUserReference{
+				ServerUserReference(fmt.Sprintf("-%s::student", TEST_COURSE_ID)),
+			},
+			&ParsedServerUserReference{
+				CourseUserReferences: map[string]*ParsedCourseUserReference{
+					TEST_COURSE_ID: &ParsedCourseUserReference{
+						ExcludeCourseUserRoles: map[CourseUserRole]any{
+							GetCourseUserRole("student"): nil,
+						},
+					},
+				},
+			},
+			"",
+		},
+
+		// Complex, Normalization
+		{
+			[]ServerUserReference{
+				"course-student@test.edulinq.org",
+				"COURSE-student@test.EDULINQ.org",
+				"admin",
+				"aDmIn",
+				"COURSE101::grader",
+				"course101::GRADER",
+			},
+			&ParsedServerUserReference{
+				Emails: map[string]any{
+					"course-student@test.edulinq.org": nil,
+				},
+				ServerUserRoles: map[ServerUserRole]any{
+					GetServerUserRole("admin"): nil,
+				},
+				CourseUserReferences: map[string]*ParsedCourseUserReference{
+					TEST_COURSE_ID: &ParsedCourseUserReference{
+						CourseUserRoles: map[CourseUserRole]any{
+							GetCourseUserRole("grader"): nil,
+						},
+					},
+				},
+			},
+			"",
+		},
+		{
+			[]ServerUserReference{
+				"course-student@test.edulinq.org    	",
+				"    	course-student@test.edulinq.org",
+				"   admin",
+				"admin	",
+				"	course101     ::   grader	",
+				" course101	::	grader     ",
+			},
+			&ParsedServerUserReference{
+				Emails: map[string]any{
+					"course-student@test.edulinq.org": nil,
+				},
+				ServerUserRoles: map[ServerUserRole]any{
+					GetServerUserRole("admin"): nil,
+				},
+				CourseUserReferences: map[string]*ParsedCourseUserReference{
+					TEST_COURSE_ID: &ParsedCourseUserReference{
+						CourseUserRoles: map[CourseUserRole]any{
+							GetCourseUserRole("grader"): nil,
+						},
+					},
+				},
+			},
+			"",
+		},
+
+		// Complex, Non-Overlapping
+		{
+			[]ServerUserReference{
+				"course-student@test.edulinq.org",
+				"-course-admin@test.edulinq.org",
+				"admin",
+				"-owner",
+				"course101::grader",
+				"-course101::student",
+			},
+			&ParsedServerUserReference{
+				Emails: map[string]any{
+					"course-student@test.edulinq.org": nil,
+				},
+				ExcludeEmails: map[string]any{
+					"course-admin@test.edulinq.org": nil,
+				},
+				ServerUserRoles: map[ServerUserRole]any{
+					GetServerUserRole("admin"): nil,
+				},
+				ExcludeServerUserRoles: map[ServerUserRole]any{
+					GetServerUserRole("owner"): nil,
+				},
+				CourseUserReferences: map[string]*ParsedCourseUserReference{
+					TEST_COURSE_ID: &ParsedCourseUserReference{
+						CourseUserRoles: map[CourseUserRole]any{
+							GetCourseUserRole("grader"): nil,
+						},
+						ExcludeCourseUserRoles: map[CourseUserRole]any{
+							GetCourseUserRole("student"): nil,
+						},
+					},
+				},
+			},
+			"",
+		},
+
+		// Complex, Overlapping
+		{
+			[]ServerUserReference{
+				"course-student@test.edulinq.org",
+				"-course-student@test.edulinq.org",
+				"admin",
+				"-admin",
+				"course101::grader",
+				"-course101::grader",
+			},
+			&ParsedServerUserReference{
+				Emails: map[string]any{
+					"course-student@test.edulinq.org": nil,
+				},
+				ExcludeEmails: map[string]any{
+					"course-student@test.edulinq.org": nil,
+				},
+				ServerUserRoles: map[ServerUserRole]any{
+					GetServerUserRole("admin"): nil,
+				},
+				ExcludeServerUserRoles: map[ServerUserRole]any{
+					GetServerUserRole("admin"): nil,
+				},
+				CourseUserReferences: map[string]*ParsedCourseUserReference{
+					TEST_COURSE_ID: &ParsedCourseUserReference{
+						CourseUserRoles: map[CourseUserRole]any{
+							GetCourseUserRole("grader"): nil,
+						},
+						ExcludeCourseUserRoles: map[CourseUserRole]any{
+							GetCourseUserRole("grader"): nil,
+						},
+					},
+				},
+			},
+			"",
+		},
+		{
+			[]ServerUserReference{
+				"course101::grader",
+				"*::grader",
+			},
+			&ParsedServerUserReference{
+				CourseUserReferences: map[string]*ParsedCourseUserReference{
+					TEST_COURSE_ID: &ParsedCourseUserReference{
+						CourseUserRoles: map[CourseUserRole]any{
+							GetCourseUserRole("grader"): nil,
+						},
+					},
+					"course-languages": &ParsedCourseUserReference{
+						CourseUserRoles: map[CourseUserRole]any{
+							GetCourseUserRole("grader"): nil,
+						},
+					},
+				},
+			},
+			"",
+		},
+		{
+			[]ServerUserReference{
+				"course101::grader",
+				"course101::*",
+			},
+			&ParsedServerUserReference{
+				CourseUserReferences: map[string]*ParsedCourseUserReference{
+					TEST_COURSE_ID: &ParsedCourseUserReference{
+						CourseUserRoles: allCourseRoles,
+					},
+				},
+			},
+			"",
+		},
+		{
+			[]ServerUserReference{
+				"course101::grader",
+				"course101::*",
+				"*::grader",
+				"*::*",
+			},
+			&ParsedServerUserReference{
+				CourseUserReferences: map[string]*ParsedCourseUserReference{
+					TEST_COURSE_ID: &ParsedCourseUserReference{
+						CourseUserRoles: allCourseRoles,
+					},
+					"course-languages": &ParsedCourseUserReference{
+						CourseUserRoles: allCourseRoles,
+					},
+				},
+			},
+			"",
+		},
+		{
+			[]ServerUserReference{
+				"admin",
+				"*",
+			},
+			&ParsedServerUserReference{
+				ServerUserRoles: allServerRoles,
+			},
+			"",
+		},
+
+		// Errors
+
+		// Accessing Root
+		{
+			[]ServerUserReference{"root"},
+			nil,
+			"Server user reference 'root' contains an unknown server role: 'root'.",
+		},
+		{
+			[]ServerUserReference{"-root"},
+			nil,
+			"Server user reference '-root' contains an unknown server role: 'root'.",
+		},
+
+		// Unknown Server Role
+		{
+			[]ServerUserReference{"ZZZ"},
+			nil,
+			"Server user reference 'ZZZ' contains an unknown server role: 'zzz'.",
+		},
+
+		// Unknown Course
+		{
+			[]ServerUserReference{"ZZZ::*"},
+			nil,
+			"Server user reference 'ZZZ::*' contains an unknown course: 'zzz'.",
+		},
+
+		// Unknown Course Role
+		{
+			[]ServerUserReference{"*::ZZZ"},
+			nil,
+			"Server user reference '*::ZZZ' contains an unknown course role: 'zzz'.",
+		},
+
+		// Invalid Format
+		{
+			[]ServerUserReference{"foo::bar::baz"},
+			nil,
+			"Invalid format in server user reference: 'foo::bar::baz'.",
+		},
+	}
+
+	for i, testCase := range testCases {
+		result, err := ParseServerUserReferences(testCase.input, courses)
+		if err != nil {
+			if testCase.errorSubstring != "" {
+				if !strings.Contains(err.Error(), testCase.errorSubstring) {
+					test.Errorf("Case %d: Did not get expected error output. Expected Substring '%s', Actual Error: '%s'.",
+						i, testCase.errorSubstring, err.Error())
+				}
+			} else {
+				test.Errorf("Case %d: Failed to parse user reference '%s': '%v'.",
+					i, util.MustToJSONIndent(testCase.output), err.Error())
+			}
+
+			continue
+		}
+
+		if testCase.errorSubstring != "" {
+			test.Errorf("Case %d: Did not get expected error for input '%s'.",
+				i, util.MustToJSONIndent(testCase.input))
+			continue
+		}
+
+		// Set empty fields to pass equality check.
+		if testCase.output.Emails == nil {
+			testCase.output.Emails = make(map[string]any, 0)
+		}
+
+		if testCase.output.ExcludeEmails == nil {
+			testCase.output.ExcludeEmails = make(map[string]any, 0)
+		}
+
+		if testCase.output.ServerUserRoles == nil {
+			testCase.output.ServerUserRoles = make(map[ServerUserRole]any, 0)
+		}
+
+		if testCase.output.ExcludeServerUserRoles == nil {
+			testCase.output.ExcludeServerUserRoles = make(map[ServerUserRole]any, 0)
+		}
+
+		if testCase.output.CourseUserReferences == nil {
+			testCase.output.CourseUserReferences = make(map[string]*ParsedCourseUserReference, 0)
+		}
+
+		for _, courseReference := range testCase.output.CourseUserReferences {
+			if courseReference.Emails == nil {
+				courseReference.Emails = make(map[string]any, 0)
+			}
+
+			if courseReference.ExcludeEmails == nil {
+				courseReference.ExcludeEmails = make(map[string]any, 0)
+			}
+
+			if courseReference.CourseUserRoles == nil {
+				courseReference.CourseUserRoles = make(map[CourseUserRole]any, 0)
+			}
+
+			if courseReference.ExcludeCourseUserRoles == nil {
+				courseReference.ExcludeCourseUserRoles = make(map[CourseUserRole]any, 0)
+			}
+		}
+		if !reflect.DeepEqual(testCase.output, result) {
+			test.Errorf("Case %d: Unexpected result. Expected: '%s', Actual: '%s'.",
+				i, util.MustToJSONIndent(testCase.output), util.MustToJSONIndent(result))
+			continue
+		}
+	}
+}
 
 func TestParseCourseUserReferences(test *testing.T) {
 	commonCourseRoles := GetCommonCourseUserRolesCopy()

@@ -12,6 +12,10 @@ import (
 	"github.com/edulinq/autograder/internal/util"
 )
 
+const (
+	TEST_COURSE_ID = "course101"
+)
+
 // Use the common main for all tests in this package.
 func TestMain(suite *testing.M) {
 	// Run inside a func so defers will run before os.Exit().
