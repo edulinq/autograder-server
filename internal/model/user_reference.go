@@ -387,6 +387,7 @@ func ParseCourseUserReferences(rawReferences []CourseUserReference) (*ParsedCour
 	return &courseUserReference, errs
 }
 
+// Returns a sorted list of users based on the server reference.
 func ResolveServerUsers(users map[string]*ServerUser, reference *ParsedServerUserReference) []*ServerUser {
 	if reference == nil {
 		return nil
@@ -401,6 +402,70 @@ func ResolveServerUsers(users map[string]*ServerUser, reference *ParsedServerUse
 	}
 
 	slices.SortFunc(results, CompareServerUserPointer)
+
+	return results
+}
+
+// Returns a sorted list of emails based on the server reference.
+// Emails can target users outside of the server.
+func ResolveServerUserEmails(users map[string]*ServerUser, reference *ParsedServerUserReference) []string {
+	if reference == nil {
+		return nil
+	}
+
+	emailSet := make(map[string]any, 0)
+	// Exclusion always takes priority over inclusion.
+	// The final list of emails will be the users in emailSet that are not in excludeSet.
+	// (e.g., a user excluded based on role but included by explicit email will NOT be included in the results).
+	excludeSet := make(map[string]any, 0)
+
+	// Add all emails from the server users.
+	for email, user := range users {
+		if reference.Excludes(user) {
+			excludeSet[email] = nil
+		} else if reference.RefersTo(user) {
+			emailSet[email] = nil
+		}
+	}
+
+	// Add all emails based on email alone.
+	for email, _ := range reference.Emails {
+		_, ok := reference.ExcludeEmails[email]
+		if ok {
+			continue
+		}
+
+		_, ok = excludeSet[email]
+		if ok {
+			continue
+		}
+
+		emailSet[email] = nil
+	}
+
+	for _, courseReference := range reference.CourseUserReferences {
+		for email, _ := range courseReference.Emails {
+			_, ok := courseReference.ExcludeEmails[email]
+			if ok {
+				continue
+			}
+
+			_, ok = excludeSet[email]
+			if ok {
+				continue
+			}
+
+			emailSet[email] = nil
+		}
+	}
+
+	results := make([]string, 0, len(emailSet))
+
+	for email, _ := range emailSet {
+		results = append(results, email)
+	}
+
+	slices.Sort(results)
 
 	return results
 }
