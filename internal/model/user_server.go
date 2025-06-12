@@ -485,3 +485,23 @@ func (this *UserCourseInfo) Clone() *UserCourseInfo {
 		LMSID: this.LMSID,
 	}
 }
+
+func CompareServerUserPointer(a *ServerUser, b *ServerUser) int {
+	if a == b {
+		return 0
+	}
+
+	if a == nil {
+		return 1
+	}
+
+	if b == nil {
+		return -1
+	}
+
+	return CompareServerUser(*a, *b)
+}
+
+func CompareServerUser(a ServerUser, b ServerUser) int {
+	return strings.Compare(a.Email, b.Email)
+}

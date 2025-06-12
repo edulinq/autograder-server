@@ -40,7 +40,7 @@ type ParsedServerUserReference struct {
 	// The set of server roles to exclude.
 	ExcludeServerUserRoles map[ServerUserRole]any
 
-	// The courses and course roles to include.
+	// Information to include or exclude a user based on course information.
 	// Keyed on the course ID.
 	CourseUserReferences map[string]*ParsedCourseUserReference
 }
@@ -114,6 +114,60 @@ func (this *ParsedCourseUserReference) ToParsedServerUserReference(courseID stri
 			},
 		},
 	}
+}
+
+func (this ParsedServerUserReference) Excludes(user *ServerUser) bool {
+	_, ok := this.ExcludeEmails[user.Email]
+	if ok {
+		return true
+	}
+
+	_, ok = this.ExcludeServerUserRoles[user.Role]
+	if ok {
+		return true
+	}
+
+	for courseID, courseReference := range this.CourseUserReferences {
+		courseInfo, ok := user.CourseInfo[courseID]
+		if !ok {
+			continue
+		}
+
+		if courseReference.Excludes(user.Email, courseInfo.Role) {
+			return true
+		}
+	}
+
+	return false
+}
+
+func (this ParsedServerUserReference) RefersTo(user *ServerUser) bool {
+	if this.Excludes(user) {
+		return false
+	}
+
+	_, ok := this.Emails[user.Email]
+	if ok {
+		return true
+	}
+
+	_, ok = this.ServerUserRoles[user.Role]
+	if ok {
+		return true
+	}
+
+	for courseID, courseReference := range this.CourseUserReferences {
+		courseInfo, ok := user.CourseInfo[courseID]
+		if !ok {
+			continue
+		}
+
+		if courseReference.RefersTo(user.Email, courseInfo.Role) {
+			return true
+		}
+	}
+
+	return false
 }
 
 func (this ParsedCourseUserReference) Excludes(email string, role CourseUserRole) bool {
@@ -250,7 +304,7 @@ func ParseServerUserReferences(rawReferences []ServerUserReference, courses map[
 					courseRoles[role] = nil
 				}
 
-				for courseID, _ := range courses {
+				for courseID, _ := range targetCourses {
 					courseUserReference := createCourseUserReference(courseRoles, exclude)
 					serverUserReference.AddParsedCourseUserReference(courseID, courseUserReference)
 				}
@@ -331,6 +385,24 @@ func ParseCourseUserReferences(rawReferences []CourseUserReference) (*ParsedCour
 	}
 
 	return &courseUserReference, errs
+}
+
+func ResolveServerUsers(users map[string]*ServerUser, reference *ParsedServerUserReference) []*ServerUser {
+	if reference == nil {
+		return nil
+	}
+
+	results := make([]*ServerUser, 0, len(users))
+
+	for _, user := range users {
+		if reference.RefersTo(user) {
+			results = append(results, user)
+		}
+	}
+
+	slices.SortFunc(results, CompareServerUserPointer)
+
+	return results
 }
 
 // Returns a sorted list of users based on the course reference.
