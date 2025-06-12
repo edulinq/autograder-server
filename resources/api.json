@@ -1452,6 +1452,10 @@
             "description": "List the users on the server.",
             "input": [
                 {
+                    "name": "target-users",
+                    "type": "[]model.ServerUserReference"
+                },
+                {
                     "name": "user-email",
                     "type": "string",
                     "description": "The email of the user making this request.",
@@ -2653,6 +2657,10 @@
                     "type": "string"
                 }
             ]
+        },
+        "model.ServerUserReference": {
+            "category": "alias",
+            "alias-type": "string"
         },
         "model.ServerUserRole": {
             "category": "alias",
