@@ -9,22 +9,11 @@ import (
 	"github.com/edulinq/autograder/internal/util"
 )
 
-func TestParseServerUserReferences(test *testing.T) {
-	commonServerRoles := GetCommonServerUserRolesCopy()
+var (
+	allServerRoles = getAllServerRoles()
+	allCourseRoles = getAllCourseRoles()
 
-	allServerRoles := make(map[ServerUserRole]any, len(commonServerRoles))
-	for _, role := range commonServerRoles {
-		allServerRoles[role] = nil
-	}
-
-	commonCourseRoles := GetCommonCourseUserRolesCopy()
-
-	allCourseRoles := make(map[CourseUserRole]any, len(commonCourseRoles))
-	for _, role := range commonCourseRoles {
-		allCourseRoles[role] = nil
-	}
-
-	courses := map[string]*Course{
+	testCourses = map[string]*Course{
 		TEST_COURSE_ID: &Course{
 			ID: TEST_COURSE_ID,
 		},
@@ -33,6 +22,640 @@ func TestParseServerUserReferences(test *testing.T) {
 		},
 	}
 
+	defaultServerUsers = map[string]*ServerUser{
+		"course-admin@test.edulinq.org": &ServerUser{
+			Email: "course-admin@test.edulinq.org",
+			Role:  ServerRoleUser,
+			CourseInfo: map[string]*UserCourseInfo{
+				TEST_COURSE_ID: &UserCourseInfo{
+					Role: CourseRoleAdmin,
+				},
+				"course-languages": &UserCourseInfo{
+					Role: CourseRoleAdmin,
+				},
+			},
+		},
+		"course-grader@test.edulinq.org": &ServerUser{
+			Email: "course-grader@test.edulinq.org",
+			Role:  ServerRoleUser,
+			CourseInfo: map[string]*UserCourseInfo{
+				TEST_COURSE_ID: &UserCourseInfo{
+					Role: CourseRoleGrader,
+				},
+				"course-languages": &UserCourseInfo{
+					Role: CourseRoleGrader,
+				},
+			},
+		},
+		"course-other@test.edulinq.org": &ServerUser{
+			Email: "course-other@test.edulinq.org",
+			Role:  ServerRoleUser,
+			CourseInfo: map[string]*UserCourseInfo{
+				TEST_COURSE_ID: &UserCourseInfo{
+					Role: CourseRoleOther,
+				},
+				"course-languages": &UserCourseInfo{
+					Role: CourseRoleOther,
+				},
+			},
+		},
+		"course-owner@test.edulinq.org": &ServerUser{
+			Email: "course-owner@test.edulinq.org",
+			Role:  ServerRoleUser,
+			CourseInfo: map[string]*UserCourseInfo{
+				TEST_COURSE_ID: &UserCourseInfo{
+					Role: CourseRoleOwner,
+				},
+				"course-languages": &UserCourseInfo{
+					Role: CourseRoleOwner,
+				},
+			},
+		},
+		"course-student@test.edulinq.org": &ServerUser{
+			Email: "course-student@test.edulinq.org",
+			Role:  ServerRoleUser,
+			CourseInfo: map[string]*UserCourseInfo{
+				TEST_COURSE_ID: &UserCourseInfo{
+					Role: CourseRoleStudent,
+				},
+				"course-languages": &UserCourseInfo{
+					Role: CourseRoleStudent,
+				},
+			},
+		},
+		"server-admin@test.edulinq.org": &ServerUser{
+			Email:      "server-admin@test.edulinq.org",
+			Role:       ServerRoleAdmin,
+			CourseInfo: nil,
+		},
+		"server-creator@test.edulinq.org": &ServerUser{
+			Email:      "server-creator@test.edulinq.org",
+			Role:       ServerRoleCourseCreator,
+			CourseInfo: nil,
+		},
+		"server-owner@test.edulinq.org": &ServerUser{
+			Email:      "server-owner@test.edulinq.org",
+			Role:       ServerRoleOwner,
+			CourseInfo: nil,
+		},
+		"server-user@test.edulinq.org": &ServerUser{
+			Email:      "server-user@test.edulinq.org",
+			Role:       ServerRoleUser,
+			CourseInfo: nil,
+		},
+	}
+
+	defaultCourseUsers = map[string]*CourseUser{
+		"course-admin@test.edulinq.org": &CourseUser{
+			Email: "course-admin@test.edulinq.org",
+			Role:  CourseRoleAdmin,
+		},
+		"course-grader@test.edulinq.org": &CourseUser{
+			Email: "course-grader@test.edulinq.org",
+			Role:  CourseRoleGrader,
+		},
+		"course-other@test.edulinq.org": &CourseUser{
+			Email: "course-other@test.edulinq.org",
+			Role:  CourseRoleOther,
+		},
+		"course-owner@test.edulinq.org": &CourseUser{
+			Email: "course-owner@test.edulinq.org",
+			Role:  CourseRoleOwner,
+		},
+		"course-student@test.edulinq.org": &CourseUser{
+			Email: "course-student@test.edulinq.org",
+			Role:  CourseRoleStudent,
+		},
+	}
+
+	resolveServerUserTestCases = []resolveServerUserTestCase{
+		// Empty Inputs
+		{
+			nil,
+			nil,
+			nil,
+		},
+		{
+			&ParsedServerUserReference{},
+			nil,
+			[]string{},
+		},
+		{
+			&ParsedServerUserReference{
+				ServerUserRoles: allServerRoles,
+			},
+			nil,
+			[]string{},
+		},
+		{
+			&ParsedServerUserReference{
+				ServerUserRoles: allServerRoles,
+			},
+			map[string]*ServerUser{},
+			[]string{},
+		},
+
+		// Server Role
+		{
+			&ParsedServerUserReference{
+				ServerUserRoles: map[ServerUserRole]any{
+					GetServerUserRole("admin"): nil,
+				},
+			},
+			defaultServerUsers,
+			[]string{"server-admin@test.edulinq.org"},
+		},
+
+		// All Users
+		{
+			&ParsedServerUserReference{
+				ServerUserRoles: allServerRoles,
+			},
+			defaultServerUsers,
+			[]string{
+				"course-admin@test.edulinq.org",
+				"course-grader@test.edulinq.org",
+				"course-other@test.edulinq.org",
+				"course-owner@test.edulinq.org",
+				"course-student@test.edulinq.org",
+				"server-admin@test.edulinq.org",
+				"server-creator@test.edulinq.org",
+				"server-owner@test.edulinq.org",
+				"server-user@test.edulinq.org",
+			},
+		},
+
+		// Server Role With Multiple Users
+		{
+			&ParsedServerUserReference{
+				ServerUserRoles: map[ServerUserRole]any{
+					GetServerUserRole("user"): nil,
+				},
+			},
+			defaultServerUsers,
+			[]string{
+				"course-admin@test.edulinq.org",
+				"course-grader@test.edulinq.org",
+				"course-other@test.edulinq.org",
+				"course-owner@test.edulinq.org",
+				"course-student@test.edulinq.org",
+				"server-user@test.edulinq.org",
+			},
+		},
+
+		// Server Role With No Users
+		{
+			&ParsedServerUserReference{
+				ServerUserRoles: map[ServerUserRole]any{
+					GetServerUserRole("owner"): nil,
+				},
+			},
+			map[string]*ServerUser{
+				"server-creator@test.edulinq.org": defaultServerUsers["server-creator@test.edulinq.org"],
+			},
+			[]string{},
+		},
+		{
+			&ParsedServerUserReference{
+				ServerUserRoles: map[ServerUserRole]any{
+					GetServerUserRole("creator"): nil,
+					GetServerUserRole("owner"):   nil,
+				},
+			},
+			map[string]*ServerUser{
+				"server-creator@test.edulinq.org": defaultServerUsers["server-creator@test.edulinq.org"],
+			},
+			[]string{"server-creator@test.edulinq.org"},
+		},
+
+		// Exclude Email
+		{
+			&ParsedServerUserReference{
+				ServerUserRoles: allServerRoles,
+				ExcludeEmails: map[string]any{
+					"course-other@test.edulinq.org":   nil,
+					"course-student@test.edulinq.org": nil,
+					"server-admin@test.edulinq.org":   nil,
+				},
+			},
+			defaultServerUsers,
+			[]string{
+				"course-admin@test.edulinq.org",
+				"course-grader@test.edulinq.org",
+				"course-owner@test.edulinq.org",
+				"server-creator@test.edulinq.org",
+				"server-owner@test.edulinq.org",
+				"server-user@test.edulinq.org",
+			},
+		},
+		{
+			&ParsedServerUserReference{
+				Emails: map[string]any{
+					"server-admin@test.edulinq.org": nil,
+				},
+				ExcludeEmails: map[string]any{
+					"server-other@test.edulinq.org": nil,
+				},
+			},
+			defaultServerUsers,
+			[]string{"server-admin@test.edulinq.org"},
+		},
+		{
+			&ParsedServerUserReference{
+				Emails: map[string]any{
+					"server-admin@test.edulinq.org": nil,
+				},
+				ExcludeEmails: map[string]any{
+					"server-admin@test.edulinq.org": nil,
+				},
+			},
+			defaultServerUsers,
+			[]string{},
+		},
+
+		// Exclude Role
+		{
+			&ParsedServerUserReference{
+				ServerUserRoles: map[ServerUserRole]any{
+					GetServerUserRole("admin"): nil,
+				},
+				ExcludeServerUserRoles: map[ServerUserRole]any{
+					GetServerUserRole("admin"): nil,
+				},
+			},
+			defaultServerUsers,
+			[]string{},
+		},
+		{
+			&ParsedServerUserReference{
+				Emails: map[string]any{
+					"server-admin@test.edulinq.org": nil,
+				},
+				ExcludeServerUserRoles: map[ServerUserRole]any{
+					GetServerUserRole("admin"): nil,
+				},
+			},
+			defaultServerUsers,
+			[]string{},
+		},
+		{
+			&ParsedServerUserReference{
+				ServerUserRoles: map[ServerUserRole]any{
+					GetServerUserRole("owner"): nil,
+				},
+				ExcludeServerUserRoles: map[ServerUserRole]any{
+					GetServerUserRole("admin"): nil,
+				},
+			},
+			defaultServerUsers,
+			[]string{"server-owner@test.edulinq.org"},
+		},
+		{
+			&ParsedServerUserReference{
+				Emails: map[string]any{
+					"server-user@test.edulinq.org": nil,
+				},
+				ExcludeServerUserRoles: map[ServerUserRole]any{
+					GetServerUserRole("admin"): nil,
+				},
+			},
+			defaultServerUsers,
+			[]string{"server-user@test.edulinq.org"},
+		},
+		{
+			&ParsedServerUserReference{
+				ServerUserRoles: allServerRoles,
+				ExcludeServerUserRoles: map[ServerUserRole]any{
+					GetServerUserRole("user"): nil,
+				},
+			},
+			defaultServerUsers,
+			[]string{
+				"server-admin@test.edulinq.org",
+				"server-creator@test.edulinq.org",
+				"server-owner@test.edulinq.org",
+			},
+		},
+
+		// Course Role
+		{
+			&ParsedServerUserReference{
+				CourseUserReferences: map[string]*ParsedCourseUserReference{
+					TEST_COURSE_ID: &ParsedCourseUserReference{
+						CourseUserRoles: map[CourseUserRole]any{
+							GetCourseUserRole("admin"): nil,
+						},
+					},
+				},
+			},
+			defaultServerUsers,
+			[]string{
+				"course-admin@test.edulinq.org",
+			},
+		},
+
+		// All Course Roles
+		{
+			&ParsedServerUserReference{
+				CourseUserReferences: map[string]*ParsedCourseUserReference{
+					TEST_COURSE_ID: &ParsedCourseUserReference{
+						CourseUserRoles: allCourseRoles,
+					},
+				},
+			},
+			defaultServerUsers,
+			[]string{
+				"course-admin@test.edulinq.org",
+				"course-grader@test.edulinq.org",
+				"course-other@test.edulinq.org",
+				"course-owner@test.edulinq.org",
+				"course-student@test.edulinq.org",
+			},
+		},
+
+		// Exclude Course Roles
+		{
+			&ParsedServerUserReference{
+				ServerUserRoles: allServerRoles,
+				CourseUserReferences: map[string]*ParsedCourseUserReference{
+					TEST_COURSE_ID: &ParsedCourseUserReference{
+						ExcludeCourseUserRoles: allCourseRoles,
+					},
+				},
+			},
+			defaultServerUsers,
+			[]string{
+				"server-admin@test.edulinq.org",
+				"server-creator@test.edulinq.org",
+				"server-owner@test.edulinq.org",
+				"server-user@test.edulinq.org",
+			},
+		},
+
+		// Conflicts Between Courses
+		{
+			&ParsedServerUserReference{
+				CourseUserReferences: map[string]*ParsedCourseUserReference{
+					TEST_COURSE_ID: &ParsedCourseUserReference{
+						CourseUserRoles: allCourseRoles,
+					},
+					"course-languages": &ParsedCourseUserReference{
+						ExcludeEmails: map[string]any{
+							"course-admin@test.edulinq.org": nil,
+						},
+					},
+				},
+			},
+			defaultServerUsers,
+			[]string{
+				"course-grader@test.edulinq.org",
+				"course-other@test.edulinq.org",
+				"course-owner@test.edulinq.org",
+				"course-student@test.edulinq.org",
+			},
+		},
+		{
+			&ParsedServerUserReference{
+				CourseUserReferences: map[string]*ParsedCourseUserReference{
+					TEST_COURSE_ID: &ParsedCourseUserReference{
+						CourseUserRoles: allCourseRoles,
+					},
+					"course-languages": &ParsedCourseUserReference{
+						ExcludeCourseUserRoles: allCourseRoles,
+					},
+				},
+			},
+			defaultServerUsers,
+			[]string{},
+		},
+	}
+
+	resolveCourseUserTestCases = []resolveCourseUserTestCase{
+		// Empty Inputs
+		{
+			nil,
+			nil,
+			nil,
+		},
+		{
+			&ParsedCourseUserReference{},
+			nil,
+			[]string{},
+		},
+		{
+			&ParsedCourseUserReference{
+				CourseUserRoles: allCourseRoles,
+			},
+			nil,
+			[]string{},
+		},
+		{
+			&ParsedCourseUserReference{
+				CourseUserRoles: allCourseRoles,
+			},
+			map[string]*CourseUser{},
+			[]string{},
+		},
+
+		// Course Role
+		{
+			&ParsedCourseUserReference{
+				CourseUserRoles: map[CourseUserRole]any{
+					GetCourseUserRole("admin"): nil,
+				},
+			},
+			defaultCourseUsers,
+			[]string{"course-admin@test.edulinq.org"},
+		},
+
+		// All Users
+		{
+			&ParsedCourseUserReference{
+				CourseUserRoles: allCourseRoles,
+			},
+			defaultCourseUsers,
+			[]string{"course-admin@test.edulinq.org", "course-grader@test.edulinq.org", "course-other@test.edulinq.org", "course-owner@test.edulinq.org", "course-student@test.edulinq.org"},
+		},
+
+		// Role With Multiple Users
+		{
+			&ParsedCourseUserReference{
+				CourseUserRoles: map[CourseUserRole]any{
+					GetCourseUserRole("student"): nil,
+				},
+			},
+			map[string]*CourseUser{
+				"a_student@test.edulinq.org": &CourseUser{
+					Email: "a_student@test.edulinq.org",
+					Role:  CourseRoleStudent,
+				},
+				"course-student@test.edulinq.org": defaultCourseUsers["course-student@test.edulinq.org"],
+				"b_student@test.edulinq.org": &CourseUser{
+					Email: "b_student@test.edulinq.org",
+					Role:  CourseRoleStudent,
+				},
+			},
+			[]string{"a_student@test.edulinq.org", "b_student@test.edulinq.org", "course-student@test.edulinq.org"},
+		},
+
+		// Role With No Users
+		{
+			&ParsedCourseUserReference{
+				CourseUserRoles: map[CourseUserRole]any{
+					GetCourseUserRole("owner"): nil,
+				},
+			},
+			map[string]*CourseUser{
+				"course-student@test.edulinq.org": defaultCourseUsers["course-student@test.edulinq.org"],
+			},
+			[]string{},
+		},
+		{
+			&ParsedCourseUserReference{
+				CourseUserRoles: map[CourseUserRole]any{
+					GetCourseUserRole("owner"):   nil,
+					GetCourseUserRole("student"): nil,
+				},
+			},
+			map[string]*CourseUser{
+				"course-student@test.edulinq.org": defaultCourseUsers["course-student@test.edulinq.org"],
+			},
+			[]string{"course-student@test.edulinq.org"},
+		},
+
+		// Exclude Email
+		{
+			&ParsedCourseUserReference{
+				CourseUserRoles: allCourseRoles,
+				ExcludeEmails: map[string]any{
+					"course-admin@test.edulinq.org": nil,
+				},
+			},
+			defaultCourseUsers,
+			[]string{
+				"course-grader@test.edulinq.org",
+				"course-other@test.edulinq.org",
+				"course-owner@test.edulinq.org",
+				"course-student@test.edulinq.org",
+			},
+		},
+		{
+			&ParsedCourseUserReference{
+				CourseUserRoles: allCourseRoles,
+				ExcludeEmails: map[string]any{
+					"course-admin@test.edulinq.org":   nil,
+					"course-other@test.edulinq.org":   nil,
+					"course-student@test.edulinq.org": nil,
+				},
+			},
+			defaultCourseUsers,
+			[]string{"course-grader@test.edulinq.org", "course-owner@test.edulinq.org"},
+		},
+		{
+			&ParsedCourseUserReference{
+				Emails: map[string]any{
+					"course-admin@test.edulinq.org": nil,
+				},
+				ExcludeEmails: map[string]any{
+					"course-other@test.edulinq.org": nil,
+				},
+			},
+			defaultCourseUsers,
+			[]string{"course-admin@test.edulinq.org"},
+		},
+		{
+			&ParsedCourseUserReference{
+				Emails: map[string]any{
+					"course-admin@test.edulinq.org": nil,
+				},
+				ExcludeEmails: map[string]any{
+					"course-admin@test.edulinq.org": nil,
+				},
+			},
+			defaultCourseUsers,
+			[]string{},
+		},
+
+		// Exclude Role
+		{
+			&ParsedCourseUserReference{
+				CourseUserRoles: map[CourseUserRole]any{
+					GetCourseUserRole("admin"): nil,
+				},
+				ExcludeCourseUserRoles: map[CourseUserRole]any{
+					GetCourseUserRole("admin"): nil,
+				},
+			},
+			defaultCourseUsers,
+			[]string{},
+		},
+		{
+			&ParsedCourseUserReference{
+				Emails: map[string]any{
+					"course-admin@test.edulinq.org": nil,
+				},
+				ExcludeCourseUserRoles: map[CourseUserRole]any{
+					GetCourseUserRole("admin"): nil,
+				},
+			},
+			defaultCourseUsers,
+			[]string{},
+		},
+		{
+			&ParsedCourseUserReference{
+				CourseUserRoles: map[CourseUserRole]any{
+					GetCourseUserRole("student"): nil,
+				},
+				ExcludeCourseUserRoles: map[CourseUserRole]any{
+					GetCourseUserRole("admin"): nil,
+				},
+			},
+			defaultCourseUsers,
+			[]string{"course-student@test.edulinq.org"},
+		},
+		{
+			&ParsedCourseUserReference{
+				Emails: map[string]any{
+					"course-student@test.edulinq.org": nil,
+				},
+				ExcludeCourseUserRoles: map[CourseUserRole]any{
+					GetCourseUserRole("admin"): nil,
+				},
+			},
+			defaultCourseUsers,
+			[]string{"course-student@test.edulinq.org"},
+		},
+		{
+			&ParsedCourseUserReference{
+				CourseUserRoles: allCourseRoles,
+				ExcludeCourseUserRoles: map[CourseUserRole]any{
+					GetCourseUserRole("admin"): nil,
+				},
+			},
+			defaultCourseUsers,
+			[]string{
+				"course-grader@test.edulinq.org",
+				"course-other@test.edulinq.org",
+				"course-owner@test.edulinq.org",
+				"course-student@test.edulinq.org",
+			},
+		},
+	}
+)
+
+type resolveServerUserTestCase struct {
+	reference      *ParsedServerUserReference
+	users          map[string]*ServerUser
+	expectedOutput []string
+}
+
+type resolveCourseUserTestCase struct {
+	reference      *ParsedCourseUserReference
+	users          map[string]*CourseUser
+	expectedOutput []string
+}
+
+func TestParseServerUserReferences(test *testing.T) {
 	testCases := []struct {
 		input          []ServerUserReference
 		output         *ParsedServerUserReference
@@ -458,7 +1081,7 @@ func TestParseServerUserReferences(test *testing.T) {
 	}
 
 	for i, testCase := range testCases {
-		result, err := ParseServerUserReferences(testCase.input, courses)
+		result, err := ParseServerUserReferences(testCase.input, testCourses)
 		if err != nil {
 			if testCase.errorSubstring != "" {
 				if !strings.Contains(err.Error(), testCase.errorSubstring) {
@@ -527,13 +1150,6 @@ func TestParseServerUserReferences(test *testing.T) {
 }
 
 func TestParseCourseUserReferences(test *testing.T) {
-	commonCourseRoles := GetCommonCourseUserRolesCopy()
-
-	allCourseRoles := make(map[CourseUserRole]any, len(commonCourseRoles))
-	for _, role := range commonCourseRoles {
-		allCourseRoles[role] = nil
-	}
-
 	testCases := []struct {
 		input          []CourseUserReference
 		output         *ParsedCourseUserReference
@@ -776,408 +1392,7 @@ func TestParseCourseUserReferences(test *testing.T) {
 }
 
 func TestResolveServerUserEmails(test *testing.T) {
-	commonServerRoles := GetCommonServerUserRolesCopy()
-
-	allServerRoles := make(map[ServerUserRole]any, len(commonServerRoles))
-	for _, role := range commonServerRoles {
-		allServerRoles[role] = nil
-	}
-
-	commonCourseRoles := GetCommonCourseUserRolesCopy()
-
-	allCourseRoles := make(map[CourseUserRole]any, len(commonCourseRoles))
-	for _, role := range commonCourseRoles {
-		allCourseRoles[role] = nil
-	}
-
-	defaultUsers := map[string]*ServerUser{
-		"course-admin@test.edulinq.org": &ServerUser{
-			Email: "course-admin@test.edulinq.org",
-			Role:  ServerRoleUser,
-			CourseInfo: map[string]*UserCourseInfo{
-				TEST_COURSE_ID: &UserCourseInfo{
-					Role: CourseRoleAdmin,
-				},
-				"course-languages": &UserCourseInfo{
-					Role: CourseRoleAdmin,
-				},
-			},
-		},
-		"course-grader@test.edulinq.org": &ServerUser{
-			Email: "course-grader@test.edulinq.org",
-			Role:  ServerRoleUser,
-			CourseInfo: map[string]*UserCourseInfo{
-				TEST_COURSE_ID: &UserCourseInfo{
-					Role: CourseRoleGrader,
-				},
-				"course-languages": &UserCourseInfo{
-					Role: CourseRoleGrader,
-				},
-			},
-		},
-		"course-other@test.edulinq.org": &ServerUser{
-			Email: "course-other@test.edulinq.org",
-			Role:  ServerRoleUser,
-			CourseInfo: map[string]*UserCourseInfo{
-				TEST_COURSE_ID: &UserCourseInfo{
-					Role: CourseRoleOther,
-				},
-				"course-languages": &UserCourseInfo{
-					Role: CourseRoleOther,
-				},
-			},
-		},
-		"course-owner@test.edulinq.org": &ServerUser{
-			Email: "course-owner@test.edulinq.org",
-			Role:  ServerRoleUser,
-			CourseInfo: map[string]*UserCourseInfo{
-				TEST_COURSE_ID: &UserCourseInfo{
-					Role: CourseRoleOwner,
-				},
-				"course-languages": &UserCourseInfo{
-					Role: CourseRoleOwner,
-				},
-			},
-		},
-		"course-student@test.edulinq.org": &ServerUser{
-			Email: "course-student@test.edulinq.org",
-			Role:  ServerRoleUser,
-			CourseInfo: map[string]*UserCourseInfo{
-				TEST_COURSE_ID: &UserCourseInfo{
-					Role: CourseRoleStudent,
-				},
-				"course-languages": &UserCourseInfo{
-					Role: CourseRoleStudent,
-				},
-			},
-		},
-		"server-admin@test.edulinq.org": &ServerUser{
-			Email:      "server-admin@test.edulinq.org",
-			Role:       ServerRoleAdmin,
-			CourseInfo: nil,
-		},
-		"server-creator@test.edulinq.org": &ServerUser{
-			Email:      "server-creator@test.edulinq.org",
-			Role:       ServerRoleCourseCreator,
-			CourseInfo: nil,
-		},
-		"server-owner@test.edulinq.org": &ServerUser{
-			Email:      "server-owner@test.edulinq.org",
-			Role:       ServerRoleOwner,
-			CourseInfo: nil,
-		},
-		"server-user@test.edulinq.org": &ServerUser{
-			Email:      "server-user@test.edulinq.org",
-			Role:       ServerRoleUser,
-			CourseInfo: nil,
-		},
-	}
-
-	testCases := []struct {
-		reference      *ParsedServerUserReference
-		users          map[string]*ServerUser
-		expectedOutput []string
-	}{
-		// Empty Inputs
-		{
-			nil,
-			nil,
-			nil,
-		},
-		{
-			&ParsedServerUserReference{},
-			nil,
-			[]string{},
-		},
-		{
-			&ParsedServerUserReference{
-				ServerUserRoles: allServerRoles,
-			},
-			nil,
-			[]string{},
-		},
-		{
-			&ParsedServerUserReference{
-				ServerUserRoles: allServerRoles,
-			},
-			map[string]*ServerUser{},
-			[]string{},
-		},
-
-		// Server Role
-		{
-			&ParsedServerUserReference{
-				ServerUserRoles: map[ServerUserRole]any{
-					GetServerUserRole("admin"): nil,
-				},
-			},
-			defaultUsers,
-			[]string{"server-admin@test.edulinq.org"},
-		},
-
-		// All Users
-		{
-			&ParsedServerUserReference{
-				ServerUserRoles: allServerRoles,
-			},
-			defaultUsers,
-			[]string{
-				"course-admin@test.edulinq.org",
-				"course-grader@test.edulinq.org",
-				"course-other@test.edulinq.org",
-				"course-owner@test.edulinq.org",
-				"course-student@test.edulinq.org",
-				"server-admin@test.edulinq.org",
-				"server-creator@test.edulinq.org",
-				"server-owner@test.edulinq.org",
-				"server-user@test.edulinq.org",
-			},
-		},
-
-		// Server Role With Multiple Users
-		{
-			&ParsedServerUserReference{
-				ServerUserRoles: map[ServerUserRole]any{
-					GetServerUserRole("user"): nil,
-				},
-			},
-			defaultUsers,
-			[]string{
-				"course-admin@test.edulinq.org",
-				"course-grader@test.edulinq.org",
-				"course-other@test.edulinq.org",
-				"course-owner@test.edulinq.org",
-				"course-student@test.edulinq.org",
-				"server-user@test.edulinq.org",
-			},
-		},
-
-		// Server Role With No Users
-		{
-			&ParsedServerUserReference{
-				ServerUserRoles: map[ServerUserRole]any{
-					GetServerUserRole("owner"): nil,
-				},
-			},
-			map[string]*ServerUser{
-				"server-creator@test.edulinq.org": defaultUsers["server-creator@test.edulinq.org"],
-			},
-			[]string{},
-		},
-		{
-			&ParsedServerUserReference{
-				ServerUserRoles: map[ServerUserRole]any{
-					GetServerUserRole("creator"): nil,
-					GetServerUserRole("owner"):   nil,
-				},
-			},
-			map[string]*ServerUser{
-				"server-creator@test.edulinq.org": defaultUsers["server-creator@test.edulinq.org"],
-			},
-			[]string{"server-creator@test.edulinq.org"},
-		},
-
-		// Exclude Email
-		{
-			&ParsedServerUserReference{
-				ServerUserRoles: allServerRoles,
-				ExcludeEmails: map[string]any{
-					"course-other@test.edulinq.org":   nil,
-					"course-student@test.edulinq.org": nil,
-					"server-admin@test.edulinq.org":   nil,
-				},
-			},
-			defaultUsers,
-			[]string{
-				"course-admin@test.edulinq.org",
-				"course-grader@test.edulinq.org",
-				"course-owner@test.edulinq.org",
-				"server-creator@test.edulinq.org",
-				"server-owner@test.edulinq.org",
-				"server-user@test.edulinq.org",
-			},
-		},
-		{
-			&ParsedServerUserReference{
-				Emails: map[string]any{
-					"server-admin@test.edulinq.org": nil,
-				},
-				ExcludeEmails: map[string]any{
-					"server-other@test.edulinq.org": nil,
-				},
-			},
-			defaultUsers,
-			[]string{"server-admin@test.edulinq.org"},
-		},
-		{
-			&ParsedServerUserReference{
-				Emails: map[string]any{
-					"server-admin@test.edulinq.org": nil,
-				},
-				ExcludeEmails: map[string]any{
-					"server-admin@test.edulinq.org": nil,
-				},
-			},
-			defaultUsers,
-			[]string{},
-		},
-
-		// Exclude Role
-		{
-			&ParsedServerUserReference{
-				ServerUserRoles: map[ServerUserRole]any{
-					GetServerUserRole("admin"): nil,
-				},
-				ExcludeServerUserRoles: map[ServerUserRole]any{
-					GetServerUserRole("admin"): nil,
-				},
-			},
-			defaultUsers,
-			[]string{},
-		},
-		{
-			&ParsedServerUserReference{
-				Emails: map[string]any{
-					"server-admin@test.edulinq.org": nil,
-				},
-				ExcludeServerUserRoles: map[ServerUserRole]any{
-					GetServerUserRole("admin"): nil,
-				},
-			},
-			defaultUsers,
-			[]string{},
-		},
-		{
-			&ParsedServerUserReference{
-				ServerUserRoles: map[ServerUserRole]any{
-					GetServerUserRole("owner"): nil,
-				},
-				ExcludeServerUserRoles: map[ServerUserRole]any{
-					GetServerUserRole("admin"): nil,
-				},
-			},
-			defaultUsers,
-			[]string{"server-owner@test.edulinq.org"},
-		},
-		{
-			&ParsedServerUserReference{
-				Emails: map[string]any{
-					"server-user@test.edulinq.org": nil,
-				},
-				ExcludeServerUserRoles: map[ServerUserRole]any{
-					GetServerUserRole("admin"): nil,
-				},
-			},
-			defaultUsers,
-			[]string{"server-user@test.edulinq.org"},
-		},
-		{
-			&ParsedServerUserReference{
-				ServerUserRoles: allServerRoles,
-				ExcludeServerUserRoles: map[ServerUserRole]any{
-					GetServerUserRole("user"): nil,
-				},
-			},
-			defaultUsers,
-			[]string{
-				"server-admin@test.edulinq.org",
-				"server-creator@test.edulinq.org",
-				"server-owner@test.edulinq.org",
-			},
-		},
-
-		// Course Role
-		{
-			&ParsedServerUserReference{
-				CourseUserReferences: map[string]*ParsedCourseUserReference{
-					TEST_COURSE_ID: &ParsedCourseUserReference{
-						CourseUserRoles: map[CourseUserRole]any{
-							GetCourseUserRole("admin"): nil,
-						},
-					},
-				},
-			},
-			defaultUsers,
-			[]string{
-				"course-admin@test.edulinq.org",
-			},
-		},
-
-		// All Course Roles
-		{
-			&ParsedServerUserReference{
-				CourseUserReferences: map[string]*ParsedCourseUserReference{
-					TEST_COURSE_ID: &ParsedCourseUserReference{
-						CourseUserRoles: allCourseRoles,
-					},
-				},
-			},
-			defaultUsers,
-			[]string{
-				"course-admin@test.edulinq.org",
-				"course-grader@test.edulinq.org",
-				"course-other@test.edulinq.org",
-				"course-owner@test.edulinq.org",
-				"course-student@test.edulinq.org",
-			},
-		},
-
-		// Exclude Course Roles
-		{
-			&ParsedServerUserReference{
-				ServerUserRoles: allServerRoles,
-				CourseUserReferences: map[string]*ParsedCourseUserReference{
-					TEST_COURSE_ID: &ParsedCourseUserReference{
-						ExcludeCourseUserRoles: allCourseRoles,
-					},
-				},
-			},
-			defaultUsers,
-			[]string{
-				"server-admin@test.edulinq.org",
-				"server-creator@test.edulinq.org",
-				"server-owner@test.edulinq.org",
-				"server-user@test.edulinq.org",
-			},
-		},
-
-		// Conflicts Between Courses
-		{
-			&ParsedServerUserReference{
-				CourseUserReferences: map[string]*ParsedCourseUserReference{
-					TEST_COURSE_ID: &ParsedCourseUserReference{
-						CourseUserRoles: allCourseRoles,
-					},
-					"course-languages": &ParsedCourseUserReference{
-						ExcludeEmails: map[string]any{
-							"course-admin@test.edulinq.org": nil,
-						},
-					},
-				},
-			},
-			defaultUsers,
-			[]string{
-				"course-grader@test.edulinq.org",
-				"course-other@test.edulinq.org",
-				"course-owner@test.edulinq.org",
-				"course-student@test.edulinq.org",
-			},
-		},
-		{
-			&ParsedServerUserReference{
-				CourseUserReferences: map[string]*ParsedCourseUserReference{
-					TEST_COURSE_ID: &ParsedCourseUserReference{
-						CourseUserRoles: allCourseRoles,
-					},
-					"course-languages": &ParsedCourseUserReference{
-						ExcludeCourseUserRoles: allCourseRoles,
-					},
-				},
-			},
-			defaultUsers,
-			[]string{},
-		},
-
+	extraTestCases := []resolveServerUserTestCase{
 		// Outside Emails
 		{
 			&ParsedServerUserReference{
@@ -1185,7 +1400,7 @@ func TestResolveServerUserEmails(test *testing.T) {
 					"outside-email@test.edulinq.org": nil,
 				},
 			},
-			defaultUsers,
+			defaultServerUsers,
 			[]string{"outside-email@test.edulinq.org"},
 		},
 		{
@@ -1197,10 +1412,15 @@ func TestResolveServerUserEmails(test *testing.T) {
 					"outside-email@test.edulinq.org": nil,
 				},
 			},
-			defaultUsers,
+			defaultServerUsers,
 			[]string{},
 		},
 	}
+
+	testCases := make([]resolveServerUserTestCase, len(resolveServerUserTestCases))
+	copy(resolveServerUserTestCases, testCases)
+
+	testCases = append(testCases, extraTestCases...)
 
 	for i, testCase := range testCases {
 		actualOutput := ResolveServerUserEmails(testCase.users, testCase.reference)
@@ -1214,410 +1434,7 @@ func TestResolveServerUserEmails(test *testing.T) {
 }
 
 func TestResolveServerUsers(test *testing.T) {
-	commonServerRoles := GetCommonServerUserRolesCopy()
-
-	allServerRoles := make(map[ServerUserRole]any, len(commonServerRoles))
-	for _, role := range commonServerRoles {
-		allServerRoles[role] = nil
-	}
-
-	commonCourseRoles := GetCommonCourseUserRolesCopy()
-
-	allCourseRoles := make(map[CourseUserRole]any, len(commonCourseRoles))
-	for _, role := range commonCourseRoles {
-		allCourseRoles[role] = nil
-	}
-
-	defaultUsers := map[string]*ServerUser{
-		"course-admin@test.edulinq.org": &ServerUser{
-			Email: "course-admin@test.edulinq.org",
-			Role:  ServerRoleUser,
-			CourseInfo: map[string]*UserCourseInfo{
-				TEST_COURSE_ID: &UserCourseInfo{
-					Role: CourseRoleAdmin,
-				},
-				"course-languages": &UserCourseInfo{
-					Role: CourseRoleAdmin,
-				},
-			},
-		},
-		"course-grader@test.edulinq.org": &ServerUser{
-			Email: "course-grader@test.edulinq.org",
-			Role:  ServerRoleUser,
-			CourseInfo: map[string]*UserCourseInfo{
-				TEST_COURSE_ID: &UserCourseInfo{
-					Role: CourseRoleGrader,
-				},
-				"course-languages": &UserCourseInfo{
-					Role: CourseRoleGrader,
-				},
-			},
-		},
-		"course-other@test.edulinq.org": &ServerUser{
-			Email: "course-other@test.edulinq.org",
-			Role:  ServerRoleUser,
-			CourseInfo: map[string]*UserCourseInfo{
-				TEST_COURSE_ID: &UserCourseInfo{
-					Role: CourseRoleOther,
-				},
-				"course-languages": &UserCourseInfo{
-					Role: CourseRoleOther,
-				},
-			},
-		},
-		"course-owner@test.edulinq.org": &ServerUser{
-			Email: "course-owner@test.edulinq.org",
-			Role:  ServerRoleUser,
-			CourseInfo: map[string]*UserCourseInfo{
-				TEST_COURSE_ID: &UserCourseInfo{
-					Role: CourseRoleOwner,
-				},
-				"course-languages": &UserCourseInfo{
-					Role: CourseRoleOwner,
-				},
-			},
-		},
-		"course-student@test.edulinq.org": &ServerUser{
-			Email: "course-student@test.edulinq.org",
-			Role:  ServerRoleUser,
-			CourseInfo: map[string]*UserCourseInfo{
-				TEST_COURSE_ID: &UserCourseInfo{
-					Role: CourseRoleStudent,
-				},
-				"course-languages": &UserCourseInfo{
-					Role: CourseRoleStudent,
-				},
-			},
-		},
-		"server-admin@test.edulinq.org": &ServerUser{
-			Email:      "server-admin@test.edulinq.org",
-			Role:       ServerRoleAdmin,
-			CourseInfo: nil,
-		},
-		"server-creator@test.edulinq.org": &ServerUser{
-			Email:      "server-creator@test.edulinq.org",
-			Role:       ServerRoleCourseCreator,
-			CourseInfo: nil,
-		},
-		"server-owner@test.edulinq.org": &ServerUser{
-			Email:      "server-owner@test.edulinq.org",
-			Role:       ServerRoleOwner,
-			CourseInfo: nil,
-		},
-		"server-user@test.edulinq.org": &ServerUser{
-			Email:      "server-user@test.edulinq.org",
-			Role:       ServerRoleUser,
-			CourseInfo: nil,
-		},
-	}
-
-	testCases := []struct {
-		reference      *ParsedServerUserReference
-		users          map[string]*ServerUser
-		expectedOutput []string
-	}{
-		// Empty Inputs
-		{
-			nil,
-			nil,
-			nil,
-		},
-		{
-			&ParsedServerUserReference{},
-			nil,
-			[]string{},
-		},
-		{
-			&ParsedServerUserReference{
-				ServerUserRoles: allServerRoles,
-			},
-			nil,
-			[]string{},
-		},
-		{
-			&ParsedServerUserReference{
-				ServerUserRoles: allServerRoles,
-			},
-			map[string]*ServerUser{},
-			[]string{},
-		},
-
-		// Server Role
-		{
-			&ParsedServerUserReference{
-				ServerUserRoles: map[ServerUserRole]any{
-					GetServerUserRole("admin"): nil,
-				},
-			},
-			defaultUsers,
-			[]string{"server-admin@test.edulinq.org"},
-		},
-
-		// All Users
-		{
-			&ParsedServerUserReference{
-				ServerUserRoles: allServerRoles,
-			},
-			defaultUsers,
-			[]string{
-				"course-admin@test.edulinq.org",
-				"course-grader@test.edulinq.org",
-				"course-other@test.edulinq.org",
-				"course-owner@test.edulinq.org",
-				"course-student@test.edulinq.org",
-				"server-admin@test.edulinq.org",
-				"server-creator@test.edulinq.org",
-				"server-owner@test.edulinq.org",
-				"server-user@test.edulinq.org",
-			},
-		},
-
-		// Server Role With Multiple Users
-		{
-			&ParsedServerUserReference{
-				ServerUserRoles: map[ServerUserRole]any{
-					GetServerUserRole("user"): nil,
-				},
-			},
-			defaultUsers,
-			[]string{
-				"course-admin@test.edulinq.org",
-				"course-grader@test.edulinq.org",
-				"course-other@test.edulinq.org",
-				"course-owner@test.edulinq.org",
-				"course-student@test.edulinq.org",
-				"server-user@test.edulinq.org",
-			},
-		},
-
-		// Server Role With No Users
-		{
-			&ParsedServerUserReference{
-				ServerUserRoles: map[ServerUserRole]any{
-					GetServerUserRole("owner"): nil,
-				},
-			},
-			map[string]*ServerUser{
-				"server-creator@test.edulinq.org": defaultUsers["server-creator@test.edulinq.org"],
-			},
-			[]string{},
-		},
-		{
-			&ParsedServerUserReference{
-				ServerUserRoles: map[ServerUserRole]any{
-					GetServerUserRole("creator"): nil,
-					GetServerUserRole("owner"):   nil,
-				},
-			},
-			map[string]*ServerUser{
-				"server-creator@test.edulinq.org": defaultUsers["server-creator@test.edulinq.org"],
-			},
-			[]string{"server-creator@test.edulinq.org"},
-		},
-
-		// Exclude Email
-		{
-			&ParsedServerUserReference{
-				ServerUserRoles: allServerRoles,
-				ExcludeEmails: map[string]any{
-					"course-other@test.edulinq.org":   nil,
-					"course-student@test.edulinq.org": nil,
-					"server-admin@test.edulinq.org":   nil,
-				},
-			},
-			defaultUsers,
-			[]string{
-				"course-admin@test.edulinq.org",
-				"course-grader@test.edulinq.org",
-				"course-owner@test.edulinq.org",
-				"server-creator@test.edulinq.org",
-				"server-owner@test.edulinq.org",
-				"server-user@test.edulinq.org",
-			},
-		},
-		{
-			&ParsedServerUserReference{
-				Emails: map[string]any{
-					"server-admin@test.edulinq.org": nil,
-				},
-				ExcludeEmails: map[string]any{
-					"server-other@test.edulinq.org": nil,
-				},
-			},
-			defaultUsers,
-			[]string{"server-admin@test.edulinq.org"},
-		},
-		{
-			&ParsedServerUserReference{
-				Emails: map[string]any{
-					"server-admin@test.edulinq.org": nil,
-				},
-				ExcludeEmails: map[string]any{
-					"server-admin@test.edulinq.org": nil,
-				},
-			},
-			defaultUsers,
-			[]string{},
-		},
-
-		// Exclude Role
-		{
-			&ParsedServerUserReference{
-				ServerUserRoles: map[ServerUserRole]any{
-					GetServerUserRole("admin"): nil,
-				},
-				ExcludeServerUserRoles: map[ServerUserRole]any{
-					GetServerUserRole("admin"): nil,
-				},
-			},
-			defaultUsers,
-			[]string{},
-		},
-		{
-			&ParsedServerUserReference{
-				Emails: map[string]any{
-					"server-admin@test.edulinq.org": nil,
-				},
-				ExcludeServerUserRoles: map[ServerUserRole]any{
-					GetServerUserRole("admin"): nil,
-				},
-			},
-			defaultUsers,
-			[]string{},
-		},
-		{
-			&ParsedServerUserReference{
-				ServerUserRoles: map[ServerUserRole]any{
-					GetServerUserRole("owner"): nil,
-				},
-				ExcludeServerUserRoles: map[ServerUserRole]any{
-					GetServerUserRole("admin"): nil,
-				},
-			},
-			defaultUsers,
-			[]string{"server-owner@test.edulinq.org"},
-		},
-		{
-			&ParsedServerUserReference{
-				Emails: map[string]any{
-					"server-user@test.edulinq.org": nil,
-				},
-				ExcludeServerUserRoles: map[ServerUserRole]any{
-					GetServerUserRole("admin"): nil,
-				},
-			},
-			defaultUsers,
-			[]string{"server-user@test.edulinq.org"},
-		},
-		{
-			&ParsedServerUserReference{
-				ServerUserRoles: allServerRoles,
-				ExcludeServerUserRoles: map[ServerUserRole]any{
-					GetServerUserRole("user"): nil,
-				},
-			},
-			defaultUsers,
-			[]string{
-				"server-admin@test.edulinq.org",
-				"server-creator@test.edulinq.org",
-				"server-owner@test.edulinq.org",
-			},
-		},
-
-		// Course Role
-		{
-			&ParsedServerUserReference{
-				CourseUserReferences: map[string]*ParsedCourseUserReference{
-					TEST_COURSE_ID: &ParsedCourseUserReference{
-						CourseUserRoles: map[CourseUserRole]any{
-							GetCourseUserRole("admin"): nil,
-						},
-					},
-				},
-			},
-			defaultUsers,
-			[]string{
-				"course-admin@test.edulinq.org",
-			},
-		},
-
-		// All Course Roles
-		{
-			&ParsedServerUserReference{
-				CourseUserReferences: map[string]*ParsedCourseUserReference{
-					TEST_COURSE_ID: &ParsedCourseUserReference{
-						CourseUserRoles: allCourseRoles,
-					},
-				},
-			},
-			defaultUsers,
-			[]string{
-				"course-admin@test.edulinq.org",
-				"course-grader@test.edulinq.org",
-				"course-other@test.edulinq.org",
-				"course-owner@test.edulinq.org",
-				"course-student@test.edulinq.org",
-			},
-		},
-
-		// Exclude Course Roles
-		{
-			&ParsedServerUserReference{
-				ServerUserRoles: allServerRoles,
-				CourseUserReferences: map[string]*ParsedCourseUserReference{
-					TEST_COURSE_ID: &ParsedCourseUserReference{
-						ExcludeCourseUserRoles: allCourseRoles,
-					},
-				},
-			},
-			defaultUsers,
-			[]string{
-				"server-admin@test.edulinq.org",
-				"server-creator@test.edulinq.org",
-				"server-owner@test.edulinq.org",
-				"server-user@test.edulinq.org",
-			},
-		},
-
-		// Conflicts Between Courses
-		{
-			&ParsedServerUserReference{
-				CourseUserReferences: map[string]*ParsedCourseUserReference{
-					TEST_COURSE_ID: &ParsedCourseUserReference{
-						CourseUserRoles: allCourseRoles,
-					},
-					"course-languages": &ParsedCourseUserReference{
-						ExcludeEmails: map[string]any{
-							"course-admin@test.edulinq.org": nil,
-						},
-					},
-				},
-			},
-			defaultUsers,
-			[]string{
-				"course-grader@test.edulinq.org",
-				"course-other@test.edulinq.org",
-				"course-owner@test.edulinq.org",
-				"course-student@test.edulinq.org",
-			},
-		},
-		{
-			&ParsedServerUserReference{
-				CourseUserReferences: map[string]*ParsedCourseUserReference{
-					TEST_COURSE_ID: &ParsedCourseUserReference{
-						CourseUserRoles: allCourseRoles,
-					},
-					"course-languages": &ParsedCourseUserReference{
-						ExcludeCourseUserRoles: allCourseRoles,
-					},
-				},
-			},
-			defaultUsers,
-			[]string{},
-		},
-	}
-
-	for i, testCase := range testCases {
+	for i, testCase := range resolveServerUserTestCases {
 		actualOutput := ResolveServerUsers(testCase.users, testCase.reference)
 
 		expectedOutput := []*ServerUser{}
@@ -1645,251 +1462,7 @@ func TestResolveServerUsers(test *testing.T) {
 }
 
 func TestResolveCourseUserEmails(test *testing.T) {
-	commonCourseRoles := GetCommonCourseUserRolesCopy()
-
-	allCourseRoles := make(map[CourseUserRole]any, len(commonCourseRoles))
-	for _, role := range commonCourseRoles {
-		allCourseRoles[role] = nil
-	}
-
-	defaultUsers := map[string]*CourseUser{
-		"course-admin@test.edulinq.org": &CourseUser{
-			Email: "course-admin@test.edulinq.org",
-			Role:  CourseRoleAdmin,
-		},
-		"course-grader@test.edulinq.org": &CourseUser{
-			Email: "course-grader@test.edulinq.org",
-			Role:  CourseRoleGrader,
-		},
-		"course-other@test.edulinq.org": &CourseUser{
-			Email: "course-other@test.edulinq.org",
-			Role:  CourseRoleOther,
-		},
-		"course-owner@test.edulinq.org": &CourseUser{
-			Email: "course-owner@test.edulinq.org",
-			Role:  CourseRoleOwner,
-		},
-		"course-student@test.edulinq.org": &CourseUser{
-			Email: "course-student@test.edulinq.org",
-			Role:  CourseRoleStudent,
-		},
-	}
-
-	testCases := []struct {
-		reference      *ParsedCourseUserReference
-		users          map[string]*CourseUser
-		expectedOutput []string
-	}{
-		// Empty Inputs
-		{
-			nil,
-			nil,
-			nil,
-		},
-		{
-			&ParsedCourseUserReference{},
-			nil,
-			[]string{},
-		},
-		{
-			&ParsedCourseUserReference{
-				CourseUserRoles: allCourseRoles,
-			},
-			nil,
-			[]string{},
-		},
-		{
-			&ParsedCourseUserReference{
-				CourseUserRoles: allCourseRoles,
-			},
-			map[string]*CourseUser{},
-			[]string{},
-		},
-
-		// Course Role
-		{
-			&ParsedCourseUserReference{
-				CourseUserRoles: map[CourseUserRole]any{
-					GetCourseUserRole("admin"): nil,
-				},
-			},
-			defaultUsers,
-			[]string{"course-admin@test.edulinq.org"},
-		},
-
-		// All Users
-		{
-			&ParsedCourseUserReference{
-				CourseUserRoles: allCourseRoles,
-			},
-			defaultUsers,
-			[]string{"course-admin@test.edulinq.org", "course-grader@test.edulinq.org", "course-other@test.edulinq.org", "course-owner@test.edulinq.org", "course-student@test.edulinq.org"},
-		},
-
-		// Role With Multiple Users
-		{
-			&ParsedCourseUserReference{
-				CourseUserRoles: map[CourseUserRole]any{
-					GetCourseUserRole("student"): nil,
-				},
-			},
-			map[string]*CourseUser{
-				"a_student@test.edulinq.org": &CourseUser{
-					Email: "a_student@test.edulinq.org",
-					Role:  CourseRoleStudent,
-				},
-				"course-student@test.edulinq.org": defaultUsers["course-student@test.edulinq.org"],
-				"b_student@test.edulinq.org": &CourseUser{
-					Email: "b_student@test.edulinq.org",
-					Role:  CourseRoleStudent,
-				},
-			},
-			[]string{"a_student@test.edulinq.org", "b_student@test.edulinq.org", "course-student@test.edulinq.org"},
-		},
-
-		// Role With No Users
-		{
-			&ParsedCourseUserReference{
-				CourseUserRoles: map[CourseUserRole]any{
-					GetCourseUserRole("owner"): nil,
-				},
-			},
-			map[string]*CourseUser{
-				"course-student@test.edulinq.org": defaultUsers["course-student@test.edulinq.org"],
-			},
-			[]string{},
-		},
-		{
-			&ParsedCourseUserReference{
-				CourseUserRoles: map[CourseUserRole]any{
-					GetCourseUserRole("owner"):   nil,
-					GetCourseUserRole("student"): nil,
-				},
-			},
-			map[string]*CourseUser{
-				"course-student@test.edulinq.org": defaultUsers["course-student@test.edulinq.org"],
-			},
-			[]string{"course-student@test.edulinq.org"},
-		},
-
-		// Exclude Email
-		{
-			&ParsedCourseUserReference{
-				CourseUserRoles: allCourseRoles,
-				ExcludeEmails: map[string]any{
-					"course-admin@test.edulinq.org": nil,
-				},
-			},
-			defaultUsers,
-			[]string{
-				"course-grader@test.edulinq.org",
-				"course-other@test.edulinq.org",
-				"course-owner@test.edulinq.org",
-				"course-student@test.edulinq.org",
-			},
-		},
-		{
-			&ParsedCourseUserReference{
-				CourseUserRoles: allCourseRoles,
-				ExcludeEmails: map[string]any{
-					"course-admin@test.edulinq.org":   nil,
-					"course-other@test.edulinq.org":   nil,
-					"course-student@test.edulinq.org": nil,
-				},
-			},
-			defaultUsers,
-			[]string{"course-grader@test.edulinq.org", "course-owner@test.edulinq.org"},
-		},
-		{
-			&ParsedCourseUserReference{
-				Emails: map[string]any{
-					"course-admin@test.edulinq.org": nil,
-				},
-				ExcludeEmails: map[string]any{
-					"course-other@test.edulinq.org": nil,
-				},
-			},
-			defaultUsers,
-			[]string{"course-admin@test.edulinq.org"},
-		},
-		{
-			&ParsedCourseUserReference{
-				Emails: map[string]any{
-					"course-admin@test.edulinq.org": nil,
-				},
-				ExcludeEmails: map[string]any{
-					"course-admin@test.edulinq.org": nil,
-				},
-			},
-			defaultUsers,
-			[]string{},
-		},
-
-		// Exclude Role
-		{
-			&ParsedCourseUserReference{
-				CourseUserRoles: map[CourseUserRole]any{
-					GetCourseUserRole("admin"): nil,
-				},
-				ExcludeCourseUserRoles: map[CourseUserRole]any{
-					GetCourseUserRole("admin"): nil,
-				},
-			},
-			defaultUsers,
-			[]string{},
-		},
-		{
-			&ParsedCourseUserReference{
-				Emails: map[string]any{
-					"course-admin@test.edulinq.org": nil,
-				},
-				ExcludeCourseUserRoles: map[CourseUserRole]any{
-					GetCourseUserRole("admin"): nil,
-				},
-			},
-			defaultUsers,
-			[]string{},
-		},
-		{
-			&ParsedCourseUserReference{
-				CourseUserRoles: map[CourseUserRole]any{
-					GetCourseUserRole("student"): nil,
-				},
-				ExcludeCourseUserRoles: map[CourseUserRole]any{
-					GetCourseUserRole("admin"): nil,
-				},
-			},
-			defaultUsers,
-			[]string{"course-student@test.edulinq.org"},
-		},
-		{
-			&ParsedCourseUserReference{
-				Emails: map[string]any{
-					"course-student@test.edulinq.org": nil,
-				},
-				ExcludeCourseUserRoles: map[CourseUserRole]any{
-					GetCourseUserRole("admin"): nil,
-				},
-			},
-			defaultUsers,
-			[]string{"course-student@test.edulinq.org"},
-		},
-		{
-			&ParsedCourseUserReference{
-				CourseUserRoles: allCourseRoles,
-				ExcludeCourseUserRoles: map[CourseUserRole]any{
-					GetCourseUserRole("admin"): nil,
-				},
-			},
-			defaultUsers,
-			[]string{
-				"course-grader@test.edulinq.org",
-				"course-other@test.edulinq.org",
-				"course-owner@test.edulinq.org",
-				"course-student@test.edulinq.org",
-			},
-		},
-
+	extraTestCases := []resolveCourseUserTestCase{
 		// Outside Emails
 		{
 			&ParsedCourseUserReference{
@@ -1897,7 +1470,7 @@ func TestResolveCourseUserEmails(test *testing.T) {
 					"outside-email@test.edulinq.org": nil,
 				},
 			},
-			defaultUsers,
+			defaultCourseUsers,
 			[]string{"outside-email@test.edulinq.org"},
 		},
 		{
@@ -1909,10 +1482,15 @@ func TestResolveCourseUserEmails(test *testing.T) {
 					"outside-email@test.edulinq.org": nil,
 				},
 			},
-			defaultUsers,
+			defaultCourseUsers,
 			[]string{},
 		},
 	}
+
+	testCases := make([]resolveCourseUserTestCase, len(resolveCourseUserTestCases))
+	copy(resolveCourseUserTestCases, testCases)
+
+	testCases = append(testCases, extraTestCases...)
 
 	for i, testCase := range testCases {
 		actualOutput := ResolveCourseUserEmails(testCase.users, testCase.reference)
@@ -1926,253 +1504,7 @@ func TestResolveCourseUserEmails(test *testing.T) {
 }
 
 func TestResolveCourseUsers(test *testing.T) {
-	commonCourseRoles := GetCommonCourseUserRolesCopy()
-
-	allCourseRoles := make(map[CourseUserRole]any, len(commonCourseRoles))
-	for _, role := range commonCourseRoles {
-		allCourseRoles[role] = nil
-	}
-
-	defaultUsers := map[string]*CourseUser{
-		"course-admin@test.edulinq.org": &CourseUser{
-			Email: "course-admin@test.edulinq.org",
-			Role:  CourseRoleAdmin,
-		},
-		"course-grader@test.edulinq.org": &CourseUser{
-			Email: "course-grader@test.edulinq.org",
-			Role:  CourseRoleGrader,
-		},
-		"course-other@test.edulinq.org": &CourseUser{
-			Email: "course-other@test.edulinq.org",
-			Role:  CourseRoleOther,
-		},
-		"course-owner@test.edulinq.org": &CourseUser{
-			Email: "course-owner@test.edulinq.org",
-			Role:  CourseRoleOwner,
-		},
-		"course-student@test.edulinq.org": &CourseUser{
-			Email: "course-student@test.edulinq.org",
-			Role:  CourseRoleStudent,
-		},
-	}
-
-	testCases := []struct {
-		reference      *ParsedCourseUserReference
-		users          map[string]*CourseUser
-		expectedOutput []string
-	}{
-		// Empty Inputs
-		{
-			nil,
-			nil,
-			nil,
-		},
-		{
-			&ParsedCourseUserReference{},
-			nil,
-			[]string{},
-		},
-		{
-			&ParsedCourseUserReference{
-				CourseUserRoles: allCourseRoles,
-			},
-			nil,
-			[]string{},
-		},
-		{
-			&ParsedCourseUserReference{
-				CourseUserRoles: allCourseRoles,
-			},
-			map[string]*CourseUser{},
-			[]string{},
-		},
-
-		// Course Role
-		{
-			&ParsedCourseUserReference{
-				CourseUserRoles: map[CourseUserRole]any{
-					GetCourseUserRole("admin"): nil,
-				},
-			},
-			defaultUsers,
-			[]string{"course-admin@test.edulinq.org"},
-		},
-
-		// All Users
-		{
-			&ParsedCourseUserReference{
-				CourseUserRoles: allCourseRoles,
-			},
-			defaultUsers,
-			[]string{"course-admin@test.edulinq.org", "course-grader@test.edulinq.org", "course-other@test.edulinq.org", "course-owner@test.edulinq.org", "course-student@test.edulinq.org"},
-		},
-
-		// Role With Multiple Users
-		{
-			&ParsedCourseUserReference{
-				CourseUserRoles: map[CourseUserRole]any{
-					GetCourseUserRole("student"): nil,
-				},
-			},
-			map[string]*CourseUser{
-				"a_student@test.edulinq.org": &CourseUser{
-					Email: "a_student@test.edulinq.org",
-					Role:  CourseRoleStudent,
-				},
-				"course-student@test.edulinq.org": defaultUsers["course-student@test.edulinq.org"],
-				"b_student@test.edulinq.org": &CourseUser{
-					Email: "b_student@test.edulinq.org",
-					Role:  CourseRoleStudent,
-				},
-			},
-			[]string{"a_student@test.edulinq.org", "b_student@test.edulinq.org", "course-student@test.edulinq.org"},
-		},
-
-		// Role With No Users
-		{
-			&ParsedCourseUserReference{
-				CourseUserRoles: map[CourseUserRole]any{
-					GetCourseUserRole("owner"): nil,
-				},
-			},
-			map[string]*CourseUser{
-				"course-student@test.edulinq.org": defaultUsers["course-student@test.edulinq.org"],
-			},
-			[]string{},
-		},
-		{
-			&ParsedCourseUserReference{
-				CourseUserRoles: map[CourseUserRole]any{
-					GetCourseUserRole("owner"):   nil,
-					GetCourseUserRole("student"): nil,
-				},
-			},
-			map[string]*CourseUser{
-				"course-student@test.edulinq.org": defaultUsers["course-student@test.edulinq.org"],
-			},
-			[]string{"course-student@test.edulinq.org"},
-		},
-
-		// Exclude Email
-		{
-			&ParsedCourseUserReference{
-				CourseUserRoles: allCourseRoles,
-				ExcludeEmails: map[string]any{
-					"course-admin@test.edulinq.org": nil,
-				},
-			},
-			defaultUsers,
-			[]string{
-				"course-grader@test.edulinq.org",
-				"course-other@test.edulinq.org",
-				"course-owner@test.edulinq.org",
-				"course-student@test.edulinq.org",
-			},
-		},
-		{
-			&ParsedCourseUserReference{
-				CourseUserRoles: allCourseRoles,
-				ExcludeEmails: map[string]any{
-					"course-admin@test.edulinq.org":   nil,
-					"course-other@test.edulinq.org":   nil,
-					"course-student@test.edulinq.org": nil,
-				},
-			},
-			defaultUsers,
-			[]string{"course-grader@test.edulinq.org", "course-owner@test.edulinq.org"},
-		},
-		{
-			&ParsedCourseUserReference{
-				Emails: map[string]any{
-					"course-admin@test.edulinq.org": nil,
-				},
-				ExcludeEmails: map[string]any{
-					"course-other@test.edulinq.org": nil,
-				},
-			},
-			defaultUsers,
-			[]string{"course-admin@test.edulinq.org"},
-		},
-		{
-			&ParsedCourseUserReference{
-				Emails: map[string]any{
-					"course-admin@test.edulinq.org": nil,
-				},
-				ExcludeEmails: map[string]any{
-					"course-admin@test.edulinq.org": nil,
-				},
-			},
-			defaultUsers,
-			[]string{},
-		},
-
-		// Exclude Role
-		{
-			&ParsedCourseUserReference{
-				CourseUserRoles: map[CourseUserRole]any{
-					GetCourseUserRole("admin"): nil,
-				},
-				ExcludeCourseUserRoles: map[CourseUserRole]any{
-					GetCourseUserRole("admin"): nil,
-				},
-			},
-			defaultUsers,
-			[]string{},
-		},
-		{
-			&ParsedCourseUserReference{
-				Emails: map[string]any{
-					"course-admin@test.edulinq.org": nil,
-				},
-				ExcludeCourseUserRoles: map[CourseUserRole]any{
-					GetCourseUserRole("admin"): nil,
-				},
-			},
-			defaultUsers,
-			[]string{},
-		},
-		{
-			&ParsedCourseUserReference{
-				CourseUserRoles: map[CourseUserRole]any{
-					GetCourseUserRole("student"): nil,
-				},
-				ExcludeCourseUserRoles: map[CourseUserRole]any{
-					GetCourseUserRole("admin"): nil,
-				},
-			},
-			defaultUsers,
-			[]string{"course-student@test.edulinq.org"},
-		},
-		{
-			&ParsedCourseUserReference{
-				Emails: map[string]any{
-					"course-student@test.edulinq.org": nil,
-				},
-				ExcludeCourseUserRoles: map[CourseUserRole]any{
-					GetCourseUserRole("admin"): nil,
-				},
-			},
-			defaultUsers,
-			[]string{"course-student@test.edulinq.org"},
-		},
-		{
-			&ParsedCourseUserReference{
-				CourseUserRoles: allCourseRoles,
-				ExcludeCourseUserRoles: map[CourseUserRole]any{
-					GetCourseUserRole("admin"): nil,
-				},
-			},
-			defaultUsers,
-			[]string{
-				"course-grader@test.edulinq.org",
-				"course-other@test.edulinq.org",
-				"course-owner@test.edulinq.org",
-				"course-student@test.edulinq.org",
-			},
-		},
-	}
-
-	for i, testCase := range testCases {
+	for i, testCase := range resolveCourseUserTestCases {
 		actualOutput := ResolveCourseUsers(testCase.users, testCase.reference)
 
 		expectedOutput := []*CourseUser{}
@@ -2197,4 +1529,26 @@ func TestResolveCourseUsers(test *testing.T) {
 			continue
 		}
 	}
+}
+
+func getAllServerRoles() map[ServerUserRole]any {
+	commonServerRoles := GetCommonServerUserRolesCopy()
+
+	allServerRoles := make(map[ServerUserRole]any, len(commonServerRoles))
+	for _, role := range commonServerRoles {
+		allServerRoles[role] = nil
+	}
+
+	return allServerRoles
+}
+
+func getAllCourseRoles() map[CourseUserRole]any {
+	commonCourseRoles := GetCommonCourseUserRolesCopy()
+
+	allCourseRoles := make(map[CourseUserRole]any, len(commonCourseRoles))
+	for _, role := range commonCourseRoles {
+		allCourseRoles[role] = nil
+	}
+
+	return allCourseRoles
 }
