@@ -45,35 +45,46 @@ func (this *ParsedCourseUserReference) ToParsedServerUserReference(courseID stri
 }
 
 func (this *ParsedCourseUserReference) Merge(other *ParsedCourseUserReference) *ParsedCourseUserReference {
-	if this == other {
-		return this
+	mergedReference := &ParsedCourseUserReference{
+		Emails:                 make(map[string]any, 0),
+		ExcludeEmails:          make(map[string]any, 0),
+		CourseUserRoles:        make(map[CourseUserRole]any, 0),
+		ExcludeCourseUserRoles: make(map[CourseUserRole]any, 0),
 	}
 
-	if this == nil {
-		return other
-	}
-
-	if other == nil {
-		return this
+	for email, _ := range this.Emails {
+		mergedReference.Emails[email] = nil
 	}
 
 	for email, _ := range other.Emails {
-		this.Emails[email] = nil
+		mergedReference.Emails[email] = nil
+	}
+
+	for email, _ := range this.ExcludeEmails {
+		mergedReference.ExcludeEmails[email] = nil
 	}
 
 	for email, _ := range other.ExcludeEmails {
-		this.ExcludeEmails[email] = nil
+		mergedReference.ExcludeEmails[email] = nil
+	}
+
+	for role, _ := range this.CourseUserRoles {
+		mergedReference.CourseUserRoles[role] = nil
 	}
 
 	for role, _ := range other.CourseUserRoles {
-		this.CourseUserRoles[role] = nil
+		mergedReference.CourseUserRoles[role] = nil
+	}
+
+	for role, _ := range this.ExcludeCourseUserRoles {
+		mergedReference.ExcludeCourseUserRoles[role] = nil
 	}
 
 	for role, _ := range other.ExcludeCourseUserRoles {
-		this.ExcludeCourseUserRoles[role] = nil
+		mergedReference.ExcludeCourseUserRoles[role] = nil
 	}
 
-	return this
+	return mergedReference
 }
 
 func (this ParsedCourseUserReference) Excludes(email string, role CourseUserRole) bool {
@@ -244,7 +255,8 @@ func ResolveCourseUserEmails(users map[string]*CourseUser, reference *ParsedCour
 	return results
 }
 
-func createCourseUserReference(courseRoles map[CourseUserRole]any, exclude bool) *ParsedCourseUserReference {
+// A helper function to abstract the creation of a ParsedCourseUserReference from a set of course roles that should be included or excluded.
+func courseUserRolesToParsedCourseUserReference(courseRoles map[CourseUserRole]any, exclude bool) *ParsedCourseUserReference {
 	courseUserRoles := make(map[CourseUserRole]any, 0)
 	excludeCourseUserRoles := make(map[CourseUserRole]any, 0)
 

@@ -168,7 +168,7 @@ func ParseServerUserReferences(rawReferences []ServerUserReference, courses map[
 					serverUserReference.ServerUserRoles[role] = nil
 				}
 			} else if len(parts) == 2 {
-				// User refernce must be <course-id>::<course-role>.
+				// User reference must be <course-id>::<course-role>.
 				// If a '*' is present, target all courses or course roles respectively.
 				courseID := strings.TrimSpace(parts[0])
 				courseRoleString := strings.TrimSpace(parts[1])
@@ -225,7 +225,7 @@ func (this ParsedServerUserReference) parseCourseInformation(rawReference Server
 	}
 
 	for courseID, _ := range targetCourses {
-		courseUserReference := createCourseUserReference(courseRoles, exclude)
+		courseUserReference := courseUserRolesToParsedCourseUserReference(courseRoles, exclude)
 		this.AddParsedCourseUserReference(courseID, courseUserReference)
 	}
 
@@ -290,6 +290,7 @@ func ResolveServerUserEmails(users map[string]*ServerUser, reference *ParsedServ
 
 	// Add all emails based on emails found in course user references.
 	// Role based inclusions and exclusions from the course user reference are handled by RefersTo() and Excludes().
+	// These calls occurred above (while iterating over the set of users).
 	for _, courseReference := range reference.CourseUserReferences {
 		for email, _ := range courseReference.Emails {
 			_, ok := courseReference.ExcludeEmails[email]
