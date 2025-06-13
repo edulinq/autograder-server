@@ -15,7 +15,7 @@ func TestList(test *testing.T) {
 
 	users := make([]*model.ServerUser, 0, len(usersMap))
 	for _, user := range usersMap {
-		if user.GetName(true) == "root" {
+		if user.Email == model.RootUserEmail {
 			continue
 		}
 

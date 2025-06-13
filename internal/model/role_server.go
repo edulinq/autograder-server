@@ -40,6 +40,7 @@ var stringToServerUserRole = map[string]ServerUserRole{
 	"root":    ServerRoleRoot,
 }
 
+// Common server user roles are the valid roles a user could have in a server.
 var commonStringToServerUserRole = map[string]ServerUserRole{
 	"user":    ServerRoleUser,
 	"creator": ServerRoleCourseCreator,
