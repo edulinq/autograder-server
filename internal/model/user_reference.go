@@ -40,7 +40,7 @@ type ParsedServerUserReference struct {
 	// The set of server roles to exclude.
 	ExcludeServerUserRoles map[ServerUserRole]any
 
-	// Information to include or exclude a user based on course information.
+	// Information to include or exclude users based on course information.
 	// Keyed on the course ID.
 	CourseUserReferences map[string]*ParsedCourseUserReference
 }
@@ -214,7 +214,6 @@ func ParseServerUserReferences(rawReferences []ServerUserReference, courses map[
 	var errs error = nil
 
 	commonServerRoles := GetCommonServerUserRolesCopy()
-	commonCourseRoles := GetCommonCourseUserRolesCopy()
 
 	for _, rawReference := range rawReferences {
 		reference := strings.ToLower(strings.TrimSpace(string(rawReference)))
@@ -264,49 +263,15 @@ func ParseServerUserReferences(rawReferences []ServerUserReference, courses map[
 					serverUserReference.ServerUserRoles[role] = nil
 				}
 			} else if len(parts) == 2 {
-				// User refernce must be <course-id>::<course-role>
+				// User refernce must be <course-id>::<course-role>.
 				// If a '*' is present, target all courses or course roles respectively.
 				courseID := strings.TrimSpace(parts[0])
 				courseRoleString := strings.TrimSpace(parts[1])
 
-				targetCourses := make(map[string]*Course, 0)
-				if courseID == "*" {
-					// Target all courses.
-					targetCourses = courses
-				} else {
-					// Target a specific course.
-					course, ok := courses[courseID]
-					if !ok {
-						errs = errors.Join(errs, fmt.Errorf("Server user reference '%s' contains an unknown course: '%s'.", rawReference, courseID))
-						continue
-					}
-
-					targetCourses[course.GetID()] = course
-				}
-
-				courseRoles := make(map[CourseUserRole]any, 0)
-				if courseRoleString == "*" {
-					// Target all course roles.
-					allCourseRoles := make(map[CourseUserRole]any, len(commonCourseRoles))
-					for _, role := range commonCourseRoles {
-						allCourseRoles[role] = nil
-					}
-
-					courseRoles = allCourseRoles
-				} else {
-					// Target a specific course role.
-					role, ok := commonCourseRoles[courseRoleString]
-					if !ok {
-						errs = errors.Join(errs, fmt.Errorf("Server user reference '%s' contains an unknown course role: '%s'.", rawReference, courseRoleString))
-						continue
-					}
-
-					courseRoles[role] = nil
-				}
-
-				for courseID, _ := range targetCourses {
-					courseUserReference := createCourseUserReference(courseRoles, exclude)
-					serverUserReference.AddParsedCourseUserReference(courseID, courseUserReference)
+				err := serverUserReference.parseCourseInformation(rawReference, exclude, courseID, courseRoleString, courses)
+				if err != nil {
+					errs = errors.Join(errs, err)
+					continue
 				}
 			} else {
 				errs = errors.Join(errs, fmt.Errorf("Invalid format in server user reference: '%s'.", rawReference))
@@ -316,6 +281,50 @@ func ParseServerUserReferences(rawReferences []ServerUserReference, courses map[
 	}
 
 	return &serverUserReference, errs
+}
+
+func (this ParsedServerUserReference) parseCourseInformation(rawReference ServerUserReference, exclude bool, courseID string, courseRoleString string, courses map[string]*Course) error {
+	targetCourses := make(map[string]*Course, 0)
+	if courseID == "*" {
+		// Target all courses.
+		targetCourses = courses
+	} else {
+		// Target a specific course.
+		course, ok := courses[courseID]
+		if !ok {
+			return fmt.Errorf("Server user reference '%s' contains an unknown course: '%s'.", rawReference, courseID)
+		}
+
+		targetCourses[course.GetID()] = course
+	}
+
+	commonCourseRoles := GetCommonCourseUserRolesCopy()
+
+	courseRoles := make(map[CourseUserRole]any, 0)
+	if courseRoleString == "*" {
+		// Target all course roles.
+		allCourseRoles := make(map[CourseUserRole]any, len(commonCourseRoles))
+		for _, role := range commonCourseRoles {
+			allCourseRoles[role] = nil
+		}
+
+		courseRoles = allCourseRoles
+	} else {
+		// Target a specific course role.
+		role, ok := commonCourseRoles[courseRoleString]
+		if !ok {
+			return fmt.Errorf("Server user reference '%s' contains an unknown course role: '%s'.", rawReference, courseRoleString)
+		}
+
+		courseRoles[role] = nil
+	}
+
+	for courseID, _ := range targetCourses {
+		courseUserReference := createCourseUserReference(courseRoles, exclude)
+		this.AddParsedCourseUserReference(courseID, courseUserReference)
+	}
+
+	return nil
 }
 
 // Parse a list of user inputs into a structured reference.
