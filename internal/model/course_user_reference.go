@@ -28,6 +28,55 @@ type ParsedCourseUserReference struct {
 	ExcludeCourseUserRoles map[CourseUserRole]any
 }
 
+func (this *ParsedCourseUserReference) ToParsedServerUserReference(courseID string) *ParsedServerUserReference {
+	if this == nil {
+		return nil
+	}
+
+	return &ParsedServerUserReference{
+		Emails:                 make(map[string]any, 0),
+		ExcludeEmails:          make(map[string]any, 0),
+		ServerUserRoles:        make(map[ServerUserRole]any, 0),
+		ExcludeServerUserRoles: make(map[ServerUserRole]any, 0),
+		CourseUserReferences: map[string]*ParsedCourseUserReference{
+			courseID: this,
+		},
+	}
+}
+
+func (this *ParsedCourseUserReference) Merge(other *ParsedCourseUserReference) *ParsedCourseUserReference {
+	mergedReference := &ParsedCourseUserReference{
+		Emails:                 make(map[string]any, 0),
+		ExcludeEmails:          make(map[string]any, 0),
+		CourseUserRoles:        make(map[CourseUserRole]any, 0),
+		ExcludeCourseUserRoles: make(map[CourseUserRole]any, 0),
+	}
+
+	for _, reference := range []*ParsedCourseUserReference{this, other} {
+		if reference == nil {
+			continue
+		}
+
+		for email, _ := range reference.Emails {
+			mergedReference.Emails[email] = nil
+		}
+
+		for email, _ := range reference.ExcludeEmails {
+			mergedReference.ExcludeEmails[email] = nil
+		}
+
+		for role, _ := range reference.CourseUserRoles {
+			mergedReference.CourseUserRoles[role] = nil
+		}
+
+		for role, _ := range reference.ExcludeCourseUserRoles {
+			mergedReference.ExcludeCourseUserRoles[role] = nil
+		}
+	}
+
+	return mergedReference
+}
+
 func (this ParsedCourseUserReference) Excludes(email string, role CourseUserRole) bool {
 	_, ok := this.ExcludeEmails[email]
 	if ok {
@@ -194,4 +243,23 @@ func ResolveCourseUserEmails(users map[string]*CourseUser, reference *ParsedCour
 	slices.Sort(results)
 
 	return results
+}
+
+// A helper function to abstract the creation of a ParsedCourseUserReference from a set of course roles that should be included or excluded.
+func courseUserRolesToParsedCourseUserReference(courseRoles map[CourseUserRole]any, exclude bool) *ParsedCourseUserReference {
+	courseUserRoles := make(map[CourseUserRole]any, 0)
+	excludeCourseUserRoles := make(map[CourseUserRole]any, 0)
+
+	if exclude {
+		excludeCourseUserRoles = courseRoles
+	} else {
+		courseUserRoles = courseRoles
+	}
+
+	return &ParsedCourseUserReference{
+		Emails:                 make(map[string]any, 0),
+		ExcludeEmails:          make(map[string]any, 0),
+		CourseUserRoles:        courseUserRoles,
+		ExcludeCourseUserRoles: excludeCourseUserRoles,
+	}
 }

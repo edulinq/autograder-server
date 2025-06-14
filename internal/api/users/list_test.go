@@ -15,32 +15,51 @@ func TestList(test *testing.T) {
 
 	users := make([]*model.ServerUser, 0, len(usersMap))
 	for _, user := range usersMap {
+		if user.Email == model.RootUserEmail {
+			continue
+		}
+
 		users = append(users, user)
 	}
 
-	expectedInfos := core.NewServerUserInfos(users)
-
 	testCases := []struct {
-		email     string
-		permError bool
+		email         string
+		input         []string
+		expectedUsers []*model.ServerUser
+		locator       string
 	}{
-		// Invalid permissions.
-		{"server-user", true},
-		{"server-creator", true},
+		// Invalid Permissions
+		{"server-user", nil, nil, "-041"},
+		{"server-creator", nil, nil, "-041"},
 
-		// Valid permissions.
-		{"server-admin", false},
-		{"server-owner", false},
+		// Valid Permissions, All Users
+		{"server-admin", nil, users, ""},
+		{"server-owner", []string{}, users, ""},
+		{"server-owner", []string{"*"}, users, ""},
+
+		// No Users
+		{"server-admin", []string{"-*"}, []*model.ServerUser{}, ""},
+
+		// One User
+		{"server-admin", []string{"owner"}, []*model.ServerUser{usersMap["server-owner@test.edulinq.org"]}, ""},
+
+		// Input Errors
+		{"server-admin", []string{"ZZZ"}, nil, "-815"},
+		{"server-admin", []string{"ZZZ::*"}, nil, "-815"},
+		{"server-admin", []string{"*::ZZZ"}, nil, "-815"},
 	}
 
 	for i, testCase := range testCases {
-		response := core.SendTestAPIRequestFull(test, `users/list`, nil, nil, testCase.email)
+		fields := map[string]any{
+			"target-users": testCase.input,
+		}
+
+		response := core.SendTestAPIRequestFull(test, `users/list`, fields, nil, testCase.email)
 		if !response.Success {
-			if testCase.permError {
-				expectedLocator := "-041"
-				if response.Locator != expectedLocator {
+			if testCase.locator != "" {
+				if response.Locator != testCase.locator {
 					test.Errorf("Case %d: Incorrect error returned. Expected '%s', found '%s'.",
-						i, expectedLocator, response.Locator)
+						i, testCase.locator, response.Locator)
 				}
 			} else {
 				test.Errorf("Case %d: Response is not a success when it should be: '%v'.", i, response)
@@ -49,16 +68,18 @@ func TestList(test *testing.T) {
 			continue
 		}
 
-		if testCase.permError {
-			test.Errorf("Case %d: Did not get an expected permissions error.", i)
+		if testCase.locator != "" {
+			test.Errorf("Case %d: Did not get an expected error: '%s'.", i, testCase.locator)
 			continue
 		}
 
 		var responseContent ListResponse
 		util.MustJSONFromString(util.MustToJSON(response.Content), &responseContent)
 
+		expectedInfos := core.NewServerUserInfos(testCase.expectedUsers)
+
 		if !reflect.DeepEqual(expectedInfos, responseContent.Users) {
-			test.Errorf("Case %d: Unexpected users information. Expected: '%s', actual: '%s'.",
+			test.Errorf("Case %d: Unexpected users information. Expected: '%s', Actual: '%s'.",
 				i, util.MustToJSONIndent(expectedInfos), util.MustToJSONIndent(responseContent.Users))
 			continue
 		}
