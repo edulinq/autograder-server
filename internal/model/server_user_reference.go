@@ -44,13 +44,7 @@ func (this *ParsedServerUserReference) AddParsedCourseUserReference(courseID str
 		return
 	}
 
-	currentCourseUserReference, ok := this.CourseUserReferences[courseID]
-	if !ok {
-		this.CourseUserReferences[courseID] = courseUserReference
-		return
-	}
-
-	this.CourseUserReferences[courseID] = currentCourseUserReference.Merge(courseUserReference)
+	this.CourseUserReferences[courseID] = this.CourseUserReferences[courseID].Merge(courseUserReference)
 }
 
 func (this ParsedServerUserReference) Excludes(user *ServerUser) bool {

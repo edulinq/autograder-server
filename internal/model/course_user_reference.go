@@ -52,36 +52,26 @@ func (this *ParsedCourseUserReference) Merge(other *ParsedCourseUserReference) *
 		ExcludeCourseUserRoles: make(map[CourseUserRole]any, 0),
 	}
 
-	for email, _ := range this.Emails {
-		mergedReference.Emails[email] = nil
-	}
+	for _, reference := range []*ParsedCourseUserReference{this, other} {
+		if reference == nil {
+			continue
+		}
 
-	for email, _ := range other.Emails {
-		mergedReference.Emails[email] = nil
-	}
+		for email, _ := range reference.Emails {
+			mergedReference.Emails[email] = nil
+		}
 
-	for email, _ := range this.ExcludeEmails {
-		mergedReference.ExcludeEmails[email] = nil
-	}
+		for email, _ := range reference.ExcludeEmails {
+			mergedReference.ExcludeEmails[email] = nil
+		}
 
-	for email, _ := range other.ExcludeEmails {
-		mergedReference.ExcludeEmails[email] = nil
-	}
+		for role, _ := range reference.CourseUserRoles {
+			mergedReference.CourseUserRoles[role] = nil
+		}
 
-	for role, _ := range this.CourseUserRoles {
-		mergedReference.CourseUserRoles[role] = nil
-	}
-
-	for role, _ := range other.CourseUserRoles {
-		mergedReference.CourseUserRoles[role] = nil
-	}
-
-	for role, _ := range this.ExcludeCourseUserRoles {
-		mergedReference.ExcludeCourseUserRoles[role] = nil
-	}
-
-	for role, _ := range other.ExcludeCourseUserRoles {
-		mergedReference.ExcludeCourseUserRoles[role] = nil
+		for role, _ := range reference.ExcludeCourseUserRoles {
+			mergedReference.ExcludeCourseUserRoles[role] = nil
+		}
 	}
 
 	return mergedReference
