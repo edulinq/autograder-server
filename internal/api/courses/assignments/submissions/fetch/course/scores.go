@@ -10,6 +10,8 @@ type FetchCourseScoresRequest struct {
 	core.APIRequestAssignmentContext
 	core.MinCourseRoleGrader
 
+	// Filter results to users that match the course user references.
+	// If TargetUsers is empty, results for all users in the course will be fetched.
 	TargetUsers []model.CourseUserReference `json:"target-users"`
 }
 
