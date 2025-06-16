@@ -11,70 +11,86 @@ import (
 
 func TestFetchCourseScores(test *testing.T) {
 	testCases := []struct {
-		email      string
-		filterRole model.CourseUserRole
-		permError  bool
-		locator    string
-		ids        map[string]string
+		email       string
+		targetUsers []model.CourseUserReference
+		locator     string
+		ids         map[string]string
 	}{
-		// Valid permissions
-		{"course-grader", model.CourseRoleUnknown, false, "", map[string]string{
+		// Valid Permissions
+		{"course-grader", nil, "", map[string]string{
 			"course-other@test.edulinq.org":   "",
 			"course-student@test.edulinq.org": "course101::hw0::course-student@test.edulinq.org::1697406272",
 			"course-grader@test.edulinq.org":  "",
 			"course-admin@test.edulinq.org":   "",
 			"course-owner@test.edulinq.org":   "",
 		}},
-		{"course-admin", model.CourseRoleUnknown, false, "", map[string]string{
+		{"course-admin", []model.CourseUserReference{}, "", map[string]string{
 			"course-other@test.edulinq.org":   "",
 			"course-student@test.edulinq.org": "course101::hw0::course-student@test.edulinq.org::1697406272",
 			"course-grader@test.edulinq.org":  "",
 			"course-admin@test.edulinq.org":   "",
 			"course-owner@test.edulinq.org":   "",
 		}},
-		{"course-grader", model.CourseRoleStudent, false, "", map[string]string{
+		{"course-admin", []model.CourseUserReference{"*"}, "", map[string]string{
+			"course-other@test.edulinq.org":   "",
+			"course-student@test.edulinq.org": "course101::hw0::course-student@test.edulinq.org::1697406272",
+			"course-grader@test.edulinq.org":  "",
+			"course-admin@test.edulinq.org":   "",
+			"course-owner@test.edulinq.org":   "",
+		}},
+		{"course-grader", []model.CourseUserReference{"student"}, "", map[string]string{
 			"course-student@test.edulinq.org": "course101::hw0::course-student@test.edulinq.org::1697406272",
 		}},
-		{"course-grader", model.CourseRoleGrader, false, "", map[string]string{
+		{"course-grader", []model.CourseUserReference{"grader"}, "", map[string]string{
+			"course-grader@test.edulinq.org": "",
+		}},
+		{"course-admin", []model.CourseUserReference{"*", "-grader"}, "", map[string]string{
+			"course-other@test.edulinq.org":   "",
+			"course-student@test.edulinq.org": "course101::hw0::course-student@test.edulinq.org::1697406272",
+			"course-admin@test.edulinq.org":   "",
+			"course-owner@test.edulinq.org":   "",
+		}},
+		{"course-admin", []model.CourseUserReference{"-*"}, "", map[string]string{}},
+
+		// Valid Permissions, Role Escalation
+		{"server-admin", []model.CourseUserReference{"*"}, "", map[string]string{
+			"course-other@test.edulinq.org":   "",
+			"course-student@test.edulinq.org": "course101::hw0::course-student@test.edulinq.org::1697406272",
+			"course-grader@test.edulinq.org":  "",
+			"course-admin@test.edulinq.org":   "",
+			"course-owner@test.edulinq.org":   "",
+		}},
+		{"server-admin", []model.CourseUserReference{"student"}, "", map[string]string{
+			"course-student@test.edulinq.org": "course101::hw0::course-student@test.edulinq.org::1697406272",
+		}},
+		{"server-admin", []model.CourseUserReference{"grader"}, "", map[string]string{
 			"course-grader@test.edulinq.org": "",
 		}},
 
-		// Valid permissions, role escalation
-		{"server-admin", model.CourseRoleUnknown, false, "", map[string]string{
-			"course-other@test.edulinq.org":   "",
-			"course-student@test.edulinq.org": "course101::hw0::course-student@test.edulinq.org::1697406272",
-			"course-grader@test.edulinq.org":  "",
-			"course-admin@test.edulinq.org":   "",
-			"course-owner@test.edulinq.org":   "",
-		}},
-		{"server-admin", model.CourseRoleStudent, false, "", map[string]string{
-			"course-student@test.edulinq.org": "course101::hw0::course-student@test.edulinq.org::1697406272",
-		}},
-		{"server-admin", model.CourseRoleGrader, false, "", map[string]string{
-			"course-grader@test.edulinq.org": "",
-		}},
+		// Invalid Permissions
+		{"course-student", []model.CourseUserReference{"*"}, "-020", nil},
+		{"course-student", []model.CourseUserReference{"student"}, "-020", nil},
+		{"course-other", []model.CourseUserReference{"*"}, "-020", nil},
+		{"course-other", []model.CourseUserReference{"grader"}, "-020", nil},
 
-		// Invalid permissions
-		{"course-student", model.CourseRoleUnknown, true, "-020", nil},
-		{"course-student", model.CourseRoleStudent, true, "-020", nil},
-		{"course-other", model.CourseRoleUnknown, true, "-020", nil},
-		{"course-other", model.CourseRoleGrader, true, "-020", nil},
+		// Invalid Permissions, Role Escalation
+		{"server-user", []model.CourseUserReference{"*"}, "-040", nil},
+		{"server-user", []model.CourseUserReference{"student"}, "-040", nil},
+		{"server-creator", []model.CourseUserReference{"*"}, "-040", nil},
+		{"server-creator", []model.CourseUserReference{"grader"}, "-040", nil},
 
-		// Invalid permissions, role escalation
-		{"server-user", model.CourseRoleUnknown, true, "-040", nil},
-		{"server-user", model.CourseRoleStudent, true, "-040", nil},
-		{"server-creator", model.CourseRoleUnknown, true, "-040", nil},
-		{"server-creator", model.CourseRoleGrader, true, "-040", nil},
+		// Invalid Inputs
+		{"course-grader", []model.CourseUserReference{"ZZZ"}, "-636", nil},
 	}
 
 	for i, testCase := range testCases {
 		fields := map[string]any{
-			"filter-role": testCase.filterRole,
+			"target-users": testCase.targetUsers,
 		}
 
 		response := core.SendTestAPIRequestFull(test, `courses/assignments/submissions/fetch/course/scores`, fields, nil, testCase.email)
 		if !response.Success {
-			if testCase.permError {
+			if testCase.locator != "" {
 				if response.Locator != testCase.locator {
 					test.Errorf("Case %d: Incorrect error returned on permissions error. Expected '%s', found '%s'.",
 						i, testCase.locator, response.Locator)
@@ -83,6 +99,11 @@ func TestFetchCourseScores(test *testing.T) {
 				test.Errorf("Case %d: Response is not a success when it should be: '%v'.", i, response)
 			}
 
+			continue
+		}
+
+		if testCase.locator != "" {
+			test.Errorf("Case %d: Did not get an expected error: '%s'.", i, testCase.locator)
 			continue
 		}
 

@@ -180,7 +180,7 @@ func (this *backend) GetSubmissionHistory(assignment *model.Assignment, email st
 	return history, nil
 }
 
-func (this *backend) GetRecentSubmissions(assignment *model.Assignment, filterRole model.CourseUserRole) (map[string]*model.GradingInfo, error) {
+func (this *backend) GetRecentSubmissions(assignment *model.Assignment, reference model.ParsedCourseUserReference) (map[string]*model.GradingInfo, error) {
 	gradingInfos := make(map[string]*model.GradingInfo)
 
 	users, err := this.GetCourseUsers(assignment.Course)
@@ -189,7 +189,7 @@ func (this *backend) GetRecentSubmissions(assignment *model.Assignment, filterRo
 	}
 
 	for email, user := range users {
-		if (filterRole != model.CourseRoleUnknown) && (filterRole != user.Role) {
+		if !reference.RefersTo(email, user.Role) {
 			continue
 		}
 
@@ -217,10 +217,10 @@ func (this *backend) GetRecentSubmissions(assignment *model.Assignment, filterRo
 	return gradingInfos, nil
 }
 
-func (this *backend) GetScoringInfos(assignment *model.Assignment, filterRole model.CourseUserRole) (map[string]*model.ScoringInfo, error) {
+func (this *backend) GetScoringInfos(assignment *model.Assignment, reference model.ParsedCourseUserReference) (map[string]*model.ScoringInfo, error) {
 	scoringInfos := make(map[string]*model.ScoringInfo)
 
-	submissionResults, err := this.GetRecentSubmissions(assignment, filterRole)
+	submissionResults, err := this.GetRecentSubmissions(assignment, reference)
 	if err != nil {
 		return nil, err
 	}
@@ -236,10 +236,10 @@ func (this *backend) GetScoringInfos(assignment *model.Assignment, filterRole mo
 	return scoringInfos, nil
 }
 
-func (this *backend) GetRecentSubmissionSurvey(assignment *model.Assignment, filterRole model.CourseUserRole) (map[string]*model.SubmissionHistoryItem, error) {
+func (this *backend) GetRecentSubmissionSurvey(assignment *model.Assignment, reference model.ParsedCourseUserReference) (map[string]*model.SubmissionHistoryItem, error) {
 	results := make(map[string]*model.SubmissionHistoryItem)
 
-	submissionResults, err := this.GetRecentSubmissions(assignment, filterRole)
+	submissionResults, err := this.GetRecentSubmissions(assignment, reference)
 	if err != nil {
 		return nil, err
 	}
@@ -279,7 +279,7 @@ func (this *backend) GetSubmissionContents(assignment *model.Assignment, email s
 	return model.LoadGradingResult(resultPath)
 }
 
-func (this *backend) GetRecentSubmissionContents(assignment *model.Assignment, filterRole model.CourseUserRole) (map[string]*model.GradingResult, error) {
+func (this *backend) GetRecentSubmissionContents(assignment *model.Assignment, reference model.ParsedCourseUserReference) (map[string]*model.GradingResult, error) {
 	results := make(map[string]*model.GradingResult)
 
 	users, err := this.GetCourseUsers(assignment.Course)
@@ -288,7 +288,7 @@ func (this *backend) GetRecentSubmissionContents(assignment *model.Assignment, f
 	}
 
 	for email, user := range users {
-		if (filterRole != model.CourseRoleUnknown) && (filterRole != user.Role) {
+		if !reference.RefersTo(email, user.Role) {
 			continue
 		}
 
