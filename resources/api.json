@@ -297,7 +297,7 @@
                 {
                     "name": "target-users",
                     "type": "[]model.CourseUserReference",
-                    "description": "Filter results to users that match the course user references.\nIf TargetUsers is empty, results for all users in the course will be fetched."
+                    "description": "If not empty, filter results to matching users."
                 },
                 {
                     "name": "user-email",
@@ -337,7 +337,7 @@
                 {
                     "name": "target-users",
                     "type": "[]model.CourseUserReference",
-                    "description": "Filter results to users that match the course user references.\nIf TargetUsers is empty, results for all users in the course will be fetched."
+                    "description": "If not empty, filter results to matching users."
                 },
                 {
                     "name": "user-email",

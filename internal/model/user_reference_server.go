@@ -101,6 +101,10 @@ func (this ParsedServerUserReference) RefersTo(user *ServerUser) bool {
 	return false
 }
 
+func NewAllServerUserReference() []ServerUserReference {
+	return []ServerUserReference{"*"}
+}
+
 func ParseServerUserReferences(rawReferences []ServerUserReference, courses map[string]*Course) (*ParsedServerUserReference, error) {
 	serverUserReference := ParsedServerUserReference{
 		Emails:                 make(map[string]any, 0),

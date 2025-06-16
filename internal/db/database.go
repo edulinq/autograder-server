@@ -127,17 +127,17 @@ type Backend interface {
 	// Get the scoring infos for an assignment for all users that match the given course user reference.
 	// Users without a submission (but matching the reference) will be represented with a nil map value.
 	// A nil map should only be returned on error.
-	GetScoringInfos(assignment *model.Assignment, reference model.ParsedCourseUserReference) (map[string]*model.ScoringInfo, error)
+	GetScoringInfos(assignment *model.Assignment, reference *model.ParsedCourseUserReference) (map[string]*model.ScoringInfo, error)
 
 	// Get recent submission results for each user matching the given course user reference.
 	// Users without a submission (but matching the reference) will be represented with a nil map value.
 	// A nil map should only be returned on error.
-	GetRecentSubmissions(assignment *model.Assignment, reference model.ParsedCourseUserReference) (map[string]*model.GradingInfo, error)
+	GetRecentSubmissions(assignment *model.Assignment, reference *model.ParsedCourseUserReference) (map[string]*model.GradingInfo, error)
 
 	// Get an overview of the recent submission result for each user that matches the given course user reference.
 	// Users without a submission (but matching the reference) will be represented with a nil map value.
 	// A nil map should only be returned on error.
-	GetRecentSubmissionSurvey(assignment *model.Assignment, reference model.ParsedCourseUserReference) (map[string]*model.SubmissionHistoryItem, error)
+	GetRecentSubmissionSurvey(assignment *model.Assignment, reference *model.ParsedCourseUserReference) (map[string]*model.SubmissionHistoryItem, error)
 
 	// Get the results of a submission including files and grading output.
 	GetSubmissionContents(assignment *model.Assignment, email string, shortSubmissionID string) (*model.GradingResult, error)
@@ -145,7 +145,7 @@ type Backend interface {
 	// Get the contents of recent submission result for each user that matches the given course user reference.
 	// Users without a submission (but matching the reference) will be represented with a nil map value.
 	// A nil map should only be returned on error.
-	GetRecentSubmissionContents(assignment *model.Assignment, reference model.ParsedCourseUserReference) (map[string]*model.GradingResult, error)
+	GetRecentSubmissionContents(assignment *model.Assignment, reference *model.ParsedCourseUserReference) (map[string]*model.GradingResult, error)
 
 	// Task Operations
 

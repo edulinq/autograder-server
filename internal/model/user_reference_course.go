@@ -109,6 +109,10 @@ func (this ParsedCourseUserReference) RefersTo(email string, role CourseUserRole
 	return false
 }
 
+func NewAllCourseUserReference() []CourseUserReference {
+	return []CourseUserReference{"*"}
+}
+
 // Parse a list of user inputs into a structured reference.
 // See CourseUserReference for the list of acceptable inputs.
 // Inputs are parsed without checking permissions.
@@ -243,6 +247,15 @@ func ResolveCourseUserEmails(users map[string]*CourseUser, reference *ParsedCour
 	slices.Sort(results)
 
 	return results
+}
+
+// Create a ParsedCourseUserReference from a CourseUserRole.
+func CourseUserRoleToParsedCourseUserReference(courseRole CourseUserRole) *ParsedCourseUserReference {
+	return &ParsedCourseUserReference{
+		CourseUserRoles: map[CourseUserRole]any{
+			courseRole: nil,
+		},
+	}
 }
 
 // A helper function to abstract the creation of a ParsedCourseUserReference from a set of course roles that should be included or excluded.

@@ -10,8 +10,7 @@ type FetchCourseScoresRequest struct {
 	core.APIRequestAssignmentContext
 	core.MinCourseRoleGrader
 
-	// Filter results to users that match the course user references.
-	// If TargetUsers is empty, results for all users in the course will be fetched.
+	// If not empty, filter results to matching users.
 	TargetUsers []model.CourseUserReference `json:"target-users"`
 }
 
@@ -23,7 +22,7 @@ type FetchCourseScoresResponse struct {
 func HandleFetchCourseScores(request *FetchCourseScoresRequest) (*FetchCourseScoresResponse, *core.APIError) {
 	// Default to getting the most recent scores for all users in the course.
 	if len(request.TargetUsers) == 0 {
-		request.TargetUsers = []model.CourseUserReference{"*"}
+		request.TargetUsers = model.NewAllCourseUserReference()
 	}
 
 	reference, err := model.ParseCourseUserReferences(request.TargetUsers)
@@ -31,7 +30,7 @@ func HandleFetchCourseScores(request *FetchCourseScoresRequest) (*FetchCourseSco
 		return nil, core.NewBadRequestError("-636", request, "Failed to parse target users.").Err(err)
 	}
 
-	submissionInfos, err := db.GetRecentSubmissionSurvey(request.Assignment, *reference)
+	submissionInfos, err := db.GetRecentSubmissionSurvey(request.Assignment, reference)
 	if err != nil {
 		return nil, core.NewInternalError("-602", request, "Failed to get submission summaries.").Err(err)
 	}

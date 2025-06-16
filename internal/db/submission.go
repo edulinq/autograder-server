@@ -58,7 +58,7 @@ func GetSubmissionResult(assignment *model.Assignment, email string, submissionI
 }
 
 // Get only non-nil scoring infos.
-func GetExistingScoringInfos(assignment *model.Assignment, reference model.ParsedCourseUserReference) (map[string]*model.ScoringInfo, error) {
+func GetExistingScoringInfos(assignment *model.Assignment, reference *model.ParsedCourseUserReference) (map[string]*model.ScoringInfo, error) {
 	rawInfo, err := GetScoringInfos(assignment, reference)
 	if err != nil {
 		return nil, err
@@ -74,7 +74,7 @@ func GetExistingScoringInfos(assignment *model.Assignment, reference model.Parse
 	return info, nil
 }
 
-func GetScoringInfos(assignment *model.Assignment, reference model.ParsedCourseUserReference) (map[string]*model.ScoringInfo, error) {
+func GetScoringInfos(assignment *model.Assignment, reference *model.ParsedCourseUserReference) (map[string]*model.ScoringInfo, error) {
 	if backend == nil {
 		return nil, fmt.Errorf("Database has not been opened.")
 	}
@@ -82,7 +82,7 @@ func GetScoringInfos(assignment *model.Assignment, reference model.ParsedCourseU
 	return backend.GetScoringInfos(assignment, reference)
 }
 
-func GetRecentSubmissions(assignment *model.Assignment, reference model.ParsedCourseUserReference) (map[string]*model.GradingInfo, error) {
+func GetRecentSubmissions(assignment *model.Assignment, reference *model.ParsedCourseUserReference) (map[string]*model.GradingInfo, error) {
 	if backend == nil {
 		return nil, fmt.Errorf("Database has not been opened.")
 	}
@@ -90,7 +90,7 @@ func GetRecentSubmissions(assignment *model.Assignment, reference model.ParsedCo
 	return backend.GetRecentSubmissions(assignment, reference)
 }
 
-func GetRecentSubmissionSurvey(assignment *model.Assignment, reference model.ParsedCourseUserReference) (map[string]*model.SubmissionHistoryItem, error) {
+func GetRecentSubmissionSurvey(assignment *model.Assignment, reference *model.ParsedCourseUserReference) (map[string]*model.SubmissionHistoryItem, error) {
 	if backend == nil {
 		return nil, fmt.Errorf("Database has not been opened.")
 	}
@@ -107,7 +107,7 @@ func GetSubmissionContents(assignment *model.Assignment, email string, submissio
 	return backend.GetSubmissionContents(assignment, email, shortSubmissionID)
 }
 
-func GetRecentSubmissionContents(assignment *model.Assignment, reference model.ParsedCourseUserReference) (map[string]*model.GradingResult, error) {
+func GetRecentSubmissionContents(assignment *model.Assignment, reference *model.ParsedCourseUserReference) (map[string]*model.GradingResult, error) {
 	if backend == nil {
 		return nil, fmt.Errorf("Database has not been opened.")
 	}

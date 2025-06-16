@@ -51,11 +51,7 @@ func ResolveSubmissionSpecs(submissionSpecs []string) ([]string, []string, error
 
 		if userEmail == "" {
 			// Most recent submissions for entire course.
-			reference := model.ParsedCourseUserReference{
-				CourseUserRoles: map[model.CourseUserRole]any{
-					model.GetCourseUserRole("student"): nil,
-				},
-			}
+			reference := model.CourseUserRoleToParsedCourseUserReference(model.CourseRoleStudent)
 
 			submissions, err := db.GetRecentSubmissions(assignment, reference)
 			if err != nil {

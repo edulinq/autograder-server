@@ -31,11 +31,7 @@ func FullAssignmentScoringAndUpload(assignment *model.Assignment, dryRun bool) (
 		return nil, fmt.Errorf("Could not fetch LMS grades: '%w'.", err)
 	}
 
-	reference := model.ParsedCourseUserReference{
-		CourseUserRoles: map[model.CourseUserRole]any{
-			model.GetCourseUserRole("student"): nil,
-		},
-	}
+	reference := model.CourseUserRoleToParsedCourseUserReference(model.CourseRoleStudent)
 
 	scoringInfos, err := db.GetExistingScoringInfos(assignment, reference)
 	if err != nil {

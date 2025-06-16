@@ -84,11 +84,7 @@ func GetAssignmentScoringReport(assignment *model.Assignment) (*AssignmentScorin
 }
 
 func fetchScores(assignment *model.Assignment) ([]string, map[string][]float64, timestamp.Timestamp, error) {
-	reference := model.ParsedCourseUserReference{
-		CourseUserRoles: map[model.CourseUserRole]any{
-			model.GetCourseUserRole("student"): nil,
-		},
-	}
+	reference := model.CourseUserRoleToParsedCourseUserReference(model.CourseRoleStudent)
 
 	results, err := db.GetRecentSubmissions(assignment, reference)
 	if err != nil {
