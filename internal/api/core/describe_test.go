@@ -9,8 +9,13 @@ import (
 	"github.com/edulinq/autograder/internal/util"
 )
 
+// This is a simple alias for the string type.
 type stringWrapper string
+
+// A named map type.
 type simpleMapWrapper map[string]int
+
+// Wrapping a list in a named type!
 type simpleArrayWrapper []bool
 
 type simplePointerWrapper *string
@@ -147,15 +152,17 @@ func TestDescribeTypeBase(test *testing.T) {
 			reflect.TypeOf((*stringWrapper)(nil)).Elem(),
 			FullTypeDescription{
 				BaseTypeDescription: BaseTypeDescription{
-					Category:  AliasType,
-					AliasType: "string",
+					Description: "This is a simple alias for the string type.",
+					Category:    AliasType,
+					AliasType:   "string",
 				},
 			},
 			map[string]FullTypeDescription{
 				mustGetTypeID(reflect.TypeOf((*stringWrapper)(nil)).Elem(), nil): FullTypeDescription{
 					BaseTypeDescription: BaseTypeDescription{
-						Category:  AliasType,
-						AliasType: "string",
+						Description: "This is a simple alias for the string type.",
+						Category:    AliasType,
+						AliasType:   "string",
 					},
 				},
 			},
@@ -210,17 +217,19 @@ func TestDescribeTypeBase(test *testing.T) {
 			reflect.TypeOf((*simpleMapWrapper)(nil)).Elem(),
 			FullTypeDescription{
 				BaseTypeDescription: BaseTypeDescription{
-					Category:  MapType,
-					KeyType:   "string",
-					ValueType: "int",
+					Description: "A named map type.",
+					Category:    MapType,
+					KeyType:     "string",
+					ValueType:   "int",
 				},
 			},
 			map[string]FullTypeDescription{
 				mustGetTypeID(reflect.TypeOf((*simpleMapWrapper)(nil)).Elem(), nil): FullTypeDescription{
 					BaseTypeDescription: BaseTypeDescription{
-						Category:  MapType,
-						KeyType:   "string",
-						ValueType: "int",
+						Description: "A named map type.",
+						Category:    MapType,
+						KeyType:     "string",
+						ValueType:   "int",
 					},
 				},
 			},
@@ -230,6 +239,7 @@ func TestDescribeTypeBase(test *testing.T) {
 			reflect.TypeOf((*simpleArrayWrapper)(nil)).Elem(),
 			FullTypeDescription{
 				BaseTypeDescription: BaseTypeDescription{
+					Description: "Wrapping a list in a named type!",
 					Category:    ArrayType,
 					ElementType: "bool",
 				},
@@ -237,6 +247,7 @@ func TestDescribeTypeBase(test *testing.T) {
 			map[string]FullTypeDescription{
 				mustGetTypeID(reflect.TypeOf((*simpleArrayWrapper)(nil)).Elem(), nil): FullTypeDescription{
 					BaseTypeDescription: BaseTypeDescription{
+						Description: "Wrapping a list in a named type!",
 						Category:    ArrayType,
 						ElementType: "bool",
 					},
@@ -565,15 +576,17 @@ func TestDescribeTypeBase(test *testing.T) {
 				},
 				mustGetTypeID(reflect.TypeOf((*simpleArrayWrapper)(nil)).Elem(), nil): FullTypeDescription{
 					BaseTypeDescription: BaseTypeDescription{
+						Description: "Wrapping a list in a named type!",
 						Category:    ArrayType,
 						ElementType: "bool",
 					},
 				},
 				mustGetTypeID(reflect.TypeOf((*simpleMapWrapper)(nil)).Elem(), nil): FullTypeDescription{
 					BaseTypeDescription: BaseTypeDescription{
-						Category:  MapType,
-						KeyType:   "string",
-						ValueType: "int",
+						Description: "A named map type.",
+						Category:    MapType,
+						KeyType:     "string",
+						ValueType:   "int",
 					},
 				},
 			},
@@ -716,15 +729,17 @@ func TestDescribeTypeBase(test *testing.T) {
 				},
 				mustGetTypeID(reflect.TypeOf((*simpleArrayWrapper)(nil)).Elem(), nil): FullTypeDescription{
 					BaseTypeDescription: BaseTypeDescription{
+						Description: "Wrapping a list in a named type!",
 						Category:    ArrayType,
 						ElementType: "bool",
 					},
 				},
 				mustGetTypeID(reflect.TypeOf((*simpleMapWrapper)(nil)).Elem(), nil): FullTypeDescription{
 					BaseTypeDescription: BaseTypeDescription{
-						Category:  MapType,
-						KeyType:   "string",
-						ValueType: "int",
+						Description: "A named map type.",
+						Category:    MapType,
+						KeyType:     "string",
+						ValueType:   "int",
 					},
 				},
 			},
