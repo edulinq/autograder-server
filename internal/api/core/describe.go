@@ -360,7 +360,7 @@ func DescribeType(customType reflect.Type, addType bool, info TypeInfoCache) (Fu
 		typeDescription.ValueType = elemTypeID
 	case reflect.Struct:
 		typeDescription.Category = StructType
-		typeDescription.Fields, err = getFieldDescriptions(customType, info)
+		typeDescription.Fields, err = describeStructFields(customType, info)
 		if err != nil {
 			return FullTypeDescription{}, "", TypeInfoCache{}, err
 		}
@@ -382,7 +382,7 @@ func DescribeType(customType reflect.Type, addType bool, info TypeInfoCache) (Fu
 	return typeDescription, originalTypeID, info, nil
 }
 
-func getFieldDescriptions(customType reflect.Type, info TypeInfoCache) ([]FieldDescription, error) {
+func describeStructFields(customType reflect.Type, info TypeInfoCache) ([]FieldDescription, error) {
 	fieldDescriptions := make([]FieldDescription, 0)
 
 	fieldNameDescriptions, err := util.GetFieldDescriptionsFromType(customType)
