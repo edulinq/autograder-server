@@ -295,8 +295,9 @@
                     "required": true
                 },
                 {
-                    "name": "filter-role",
-                    "type": "int"
+                    "name": "target-users",
+                    "type": "[]model.CourseUserReference",
+                    "description": "If not empty, filter results to matching users."
                 },
                 {
                     "name": "user-email",
@@ -334,9 +335,9 @@
                     "required": true
                 },
                 {
-                    "name": "filter-role",
-                    "type": "int",
-                    "description": "Filter results to only users with this role."
+                    "name": "target-users",
+                    "type": "[]model.CourseUserReference",
+                    "description": "If not empty, filter results to matching users."
                 },
                 {
                     "name": "user-email",

@@ -10,29 +10,6 @@ import (
 )
 
 func TestFetchCourseAttempts(test *testing.T) {
-	testCases := []struct {
-		email     string
-		permError bool
-		locator   string
-	}{
-		// Invalid permissions
-		{"course-other", true, "-020"},
-		{"course-student", true, "-020"},
-
-		// Invalid permissions, role escalation
-		{"server-user", true, "-040"},
-		{"server-creator", true, "-040"},
-
-		// Valid permissions
-		{"course-grader", false, ""},
-		{"course-admin", false, ""},
-		{"course-owner", false, ""},
-
-		// Valid permissions, role escalation
-		{"server-admin", false, ""},
-		{"server-owner", false, ""},
-	}
-
 	submissions := map[string]*model.GradingResult{
 		"course-other@test.edulinq.org":   nil,
 		"course-student@test.edulinq.org": model.MustLoadGradingResult(getTestSubmissionResultPath("1697406272")),
@@ -41,10 +18,45 @@ func TestFetchCourseAttempts(test *testing.T) {
 		"course-owner@test.edulinq.org":   nil,
 	}
 
+	testCases := []struct {
+		email       string
+		targetUsers []model.CourseUserReference
+		locator     string
+		output      map[string]*model.GradingResult
+	}{
+		// Invalid Permissions
+		{"course-other", nil, "-020", nil},
+		{"course-student", nil, "-020", nil},
+
+		// Invalid Permissions, Role Escalation
+		{"server-user", nil, "-040", nil},
+		{"server-creator", nil, "-040", nil},
+
+		// Valid Permissions
+		{"course-grader", nil, "", submissions},
+		{"course-admin", []model.CourseUserReference{}, "", submissions},
+		{"course-owner", []model.CourseUserReference{"*"}, "", submissions},
+
+		{"course-owner", []model.CourseUserReference{"student"}, "", map[string]*model.GradingResult{
+			"course-student@test.edulinq.org": submissions["course-student@test.edulinq.org"],
+		}},
+
+		// Valid Permissions, Role Escalation
+		{"server-admin", []model.CourseUserReference{"*"}, "", submissions},
+		{"server-owner", []model.CourseUserReference{"*"}, "", submissions},
+
+		// Invalid Inputs
+		{"course-grader", []model.CourseUserReference{"ZZZ"}, "-637", nil},
+	}
+
 	for i, testCase := range testCases {
-		response := core.SendTestAPIRequestFull(test, `courses/assignments/submissions/fetch/course/attempts`, nil, nil, testCase.email)
+		fields := map[string]any{
+			"target-users": testCase.targetUsers,
+		}
+
+		response := core.SendTestAPIRequestFull(test, `courses/assignments/submissions/fetch/course/attempts`, fields, nil, testCase.email)
 		if !response.Success {
-			if testCase.permError {
+			if testCase.locator != "" {
 				if response.Locator != testCase.locator {
 					test.Errorf("Case %d: Incorrect error returned on permissions error. Expected '%s', found '%s'.",
 						i, testCase.locator, response.Locator)
@@ -56,12 +68,17 @@ func TestFetchCourseAttempts(test *testing.T) {
 			continue
 		}
 
+		if testCase.locator != "" {
+			test.Errorf("Case %d: Did not get an expected error: '%s'.", i, testCase.locator)
+			continue
+		}
+
 		var responseContent FetchCourseAttemptsResponse
 		util.MustJSONFromString(util.MustToJSON(response.Content), &responseContent)
 
-		if !reflect.DeepEqual(submissions, responseContent.GradingResults) {
+		if !reflect.DeepEqual(testCase.output, responseContent.GradingResults) {
 			test.Errorf("Case %d: Unexpected submission IDs. Expected: '%s', actual: '%s'.", i,
-				util.MustToJSONIndent(submissions), util.MustToJSONIndent(responseContent.GradingResults))
+				util.MustToJSONIndent(testCase.output), util.MustToJSONIndent(responseContent.GradingResults))
 			continue
 		}
 	}
