@@ -45,7 +45,7 @@ func (this *ParsedCourseUserReference) ToParsedServerUserReference(courseID stri
 }
 
 func (this *ParsedCourseUserReference) Merge(other *ParsedCourseUserReference) *ParsedCourseUserReference {
-	mergedReference := &ParsedCourseUserReference{
+	mergedReference := ParsedCourseUserReference{
 		Emails:                 make(map[string]any, 0),
 		ExcludeEmails:          make(map[string]any, 0),
 		CourseUserRoles:        make(map[CourseUserRole]any, 0),
@@ -74,10 +74,14 @@ func (this *ParsedCourseUserReference) Merge(other *ParsedCourseUserReference) *
 		}
 	}
 
-	return mergedReference
+	return &mergedReference
 }
 
-func (this ParsedCourseUserReference) Excludes(email string, role CourseUserRole) bool {
+func (this *ParsedCourseUserReference) Excludes(email string, role CourseUserRole) bool {
+	if this == nil {
+		return false
+	}
+
 	_, ok := this.ExcludeEmails[email]
 	if ok {
 		return true
@@ -91,7 +95,11 @@ func (this ParsedCourseUserReference) Excludes(email string, role CourseUserRole
 	return false
 }
 
-func (this ParsedCourseUserReference) RefersTo(email string, role CourseUserRole) bool {
+func (this *ParsedCourseUserReference) RefersTo(email string, role CourseUserRole) bool {
+	if this == nil {
+		return false
+	}
+
 	if this.Excludes(email, role) {
 		return false
 	}
