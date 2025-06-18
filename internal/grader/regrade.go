@@ -10,6 +10,7 @@ import (
 	"github.com/edulinq/autograder/internal/log"
 	"github.com/edulinq/autograder/internal/model"
 	"github.com/edulinq/autograder/internal/timestamp"
+	"github.com/edulinq/autograder/internal/util"
 )
 
 type RegradeOptions struct {
@@ -18,6 +19,10 @@ type RegradeOptions struct {
 
 	// The raw references of users to regrade.
 	RawReferences []model.CourseUserReference `json:"target-users" required:""`
+
+	// Ensure every user has made a new submission after this time.
+	// If nil, the current time will be used.
+	RegradeAfter *timestamp.Timestamp `json:"regrade-after"`
 
 	// If true, do not swap the context to the background context when running.
 	// By default (when this is false), the context will be swapped to the background context when !WaitForCompletion.
@@ -47,12 +52,15 @@ func Regrade(options RegradeOptions) (map[string]*model.SubmissionHistoryItem, i
 		options.Context = context.Background()
 	}
 
-	// TODO: We may want to return the proxy time!
-	var proxyTime timestamp.Timestamp = 0
-	if options.ProxyTime == nil {
-		proxyTime = timestamp.Now()
+	// TODO: We may want to return the regrade time!
+	// TODO: Think about what happens if they put a proxy time < regrade after.
+	// We will duplicate work on subsequent calls because the proxy time will be the submission time
+	// (so we will think work needs to be done again).
+	var regradeAfter timestamp.Timestamp = 0
+	if options.RegradeAfter == nil {
+		regradeAfter = timestamp.Now()
 	} else {
-		proxyTime = *options.ProxyTime
+		regradeAfter = *options.RegradeAfter
 	}
 
 	lockKey := fmt.Sprintf("regrade-course-%s", options.Assignment.GetCourse().GetID())
@@ -64,7 +72,7 @@ func Regrade(options RegradeOptions) (map[string]*model.SubmissionHistoryItem, i
 		ReturnIncompleteResults: !options.WaitForCompletion,
 		WorkItems:               fullUsers,
 		RetrieveFunc: func(resolvedEmails []string) (map[string]*model.SubmissionHistoryItem, error) {
-			return retrieveRegradedSubmissions(options.Assignment, proxyTime, resolvedEmails)
+			return retrieveRegradedSubmissions(options.Assignment, regradeAfter, resolvedEmails)
 		},
 		WorkFunc: func(email string) (*model.SubmissionHistoryItem, error) {
 			return computeSingleRegrade(options, email)
@@ -99,10 +107,69 @@ func Regrade(options RegradeOptions) (map[string]*model.SubmissionHistoryItem, i
 }
 
 func computeSingleRegrade(options RegradeOptions, email string) (*model.SubmissionHistoryItem, error) {
-	return nil, nil
+	previousResult, err := db.GetSubmissionContents(options.Assignment, email, "")
+	if err != nil {
+		return nil, fmt.Errorf("Failed to get most recent grading result for '%s': '%w'.", email, err)
+	}
+
+	if previousResult == nil {
+		return nil, nil
+	}
+
+	dirName := fmt.Sprintf("regrade-%s-%s-%s-", options.Assignment.GetCourse().GetID(), options.Assignment.GetID(), email)
+	tempDir, err := util.MkDirTemp(dirName)
+	if err != nil {
+		return nil, fmt.Errorf("Failed to create temp regrade dir: '%w'.", err)
+	}
+	defer util.RemoveDirent(tempDir)
+
+	err = util.GzipBytesToDirectory(tempDir, previousResult.InputFilesGZip)
+	if err != nil {
+		return nil, fmt.Errorf("Failed to write submission input to a temp dir: '%v'.", err)
+	}
+
+	message := ""
+	if previousResult.Info != nil {
+		message = previousResult.Info.Message
+		options.GradeOptions.ProxyTime = &previousResult.Info.GradingStartTime
+	}
+
+	gradingResult, reject, failureMessage, err := Grade(options.Context, options.Assignment, tempDir, email, message, options.GradeOptions)
+	if err != nil {
+		stdout := ""
+		stderr := ""
+
+		if (gradingResult != nil) && (gradingResult.HasTextOutput()) {
+			stdout = gradingResult.Stdout
+			stderr = gradingResult.Stderr
+		}
+
+		log.Warn("Regrade submission failed internally.", err, log.NewAttr("stdout", stdout), log.NewAttr("stderr", stderr))
+
+		return nil, fmt.Errorf("Regrade submission failed internally.")
+	}
+
+	if reject != nil {
+		log.Debug("Regrade submission rejected.", log.NewAttr("reason", reject.String()))
+
+		return nil, fmt.Errorf("Regrade submission rejected: '%s'.", reject.String())
+	}
+
+	if failureMessage != "" {
+		log.Debug("Regrade submission got a soft error.", log.NewAttr("message", failureMessage))
+
+		return nil, fmt.Errorf("Regrade submission got a soft error: '%s'.", failureMessage)
+	}
+
+	var result *model.SubmissionHistoryItem = nil
+	if gradingResult.Info != nil {
+		result = (*gradingResult.Info).ToHistoryItem()
+	}
+
+	return result, nil
 }
 
-func retrieveRegradedSubmissions(assignment *model.Assignment, proxyTime timestamp.Timestamp, emails []string) (map[string]*model.SubmissionHistoryItem, error) {
+func retrieveRegradedSubmissions(assignment *model.Assignment, regradeAfter timestamp.Timestamp, emails []string) (map[string]*model.SubmissionHistoryItem, error) {
 	emailSet := make(map[string]any, len(emails))
 	for _, email := range emails {
 		emailSet[email] = nil
@@ -125,7 +192,7 @@ func retrieveRegradedSubmissions(assignment *model.Assignment, proxyTime timesta
 		}
 
 		// The submission was made before the regrade threshold.
-		if result.GradingStartTime < proxyTime {
+		if result.GradingStartTime < regradeAfter {
 			continue
 		}
 
