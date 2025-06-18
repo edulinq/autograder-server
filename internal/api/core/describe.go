@@ -326,6 +326,15 @@ func DescribeType(customType reflect.Type, addType bool, info TypeInfoCache) (Fu
 		return typeDescription, originalTypeID, info, nil
 	}
 
+	if addType {
+		description, err := getTypeDescription(customType, info.KnownPackages)
+		if err != nil {
+			return FullTypeDescription{}, "", TypeInfoCache{}, err
+		}
+
+		typeDescription.Description = description
+	}
+
 	switch customType.Kind() {
 	case reflect.Array, reflect.Slice:
 		_, elemTypeID, _, err := DescribeType(customType.Elem(), true, info)
@@ -355,17 +364,6 @@ func DescribeType(customType reflect.Type, addType bool, info TypeInfoCache) (Fu
 		if err != nil {
 			return FullTypeDescription{}, "", TypeInfoCache{}, err
 		}
-
-		if !addType {
-			break
-		}
-
-		description, err := describeStruct(customType, info.KnownPackages)
-		if err != nil {
-			return FullTypeDescription{}, "", TypeInfoCache{}, err
-		}
-
-		typeDescription.Description = description
 	default:
 		// Handle built-in types.
 		typeDescription.Category = AliasType
@@ -500,7 +498,7 @@ func describeStructFields(customType reflect.Type, info TypeInfoCache) ([]FieldD
 	return fieldDescriptions, nil
 }
 
-func describeStruct(customType reflect.Type, knownPackages map[string]StructDescription) (string, error) {
+func getTypeDescription(customType reflect.Type, knownPackages map[string]StructDescription) (string, error) {
 	if customType.Name() == "" {
 		return "", nil
 	}
