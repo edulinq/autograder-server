@@ -5,7 +5,9 @@ import (
 	"path/filepath"
 	"slices"
 	"strings"
+	"testing"
 
+	"github.com/edulinq/autograder/internal/config"
 	"github.com/edulinq/autograder/internal/db"
 	"github.com/edulinq/autograder/internal/model"
 	"github.com/edulinq/autograder/internal/util"
@@ -72,6 +74,50 @@ func GetTestSubmissions(baseDir string, useDocker bool) ([]*TestSubmissionInfo, 
 	return testSubmissions, nil
 }
 
+func CheckAndClearIDs(test *testing.T, i int, expectedResults map[string]*model.SubmissionHistoryItem, actualResults map[string]*model.SubmissionHistoryItem) bool {
+	for user, expected := range expectedResults {
+		actual, ok := actualResults[user]
+		if !ok {
+			test.Errorf("Case %d: Unable to find result for user '%s'. Expected: '%v'.",
+				i, user, util.MustToJSONIndent(expected))
+			return true
+		}
+
+		if (expected == nil) && (actual == nil) {
+			continue
+		}
+
+		if expected == nil {
+			test.Errorf("Case %d: Unexpected result for user '%s'. Expected: '<nil>', actual: '%s'.",
+				i, user, util.MustToJSONIndent(actual))
+			return true
+		}
+
+		if actual == nil {
+			test.Errorf("Case %d: Unexpected result for user '%s'. Expected: '%s', actual: '<nil>'.",
+				i, user, util.MustToJSONIndent(expected))
+			return true
+		}
+
+		if expected.ShortID == actual.ShortID {
+			test.Errorf("Case %d: Regrade submission has the same short ID as the previous submission: '%s'.", i, expected.ShortID)
+			return true
+		}
+
+		if expected.ID == actual.ID {
+			test.Errorf("Case %d: Regrade submission has the same ID as the previous submission: '%s'.", i, expected.ID)
+			return true
+		}
+
+		actual.ShortID = ""
+		expected.ShortID = ""
+		actual.ID = ""
+		expected.ID = ""
+	}
+
+	return false
+}
+
 // Test submission are within their assignment's directory,
 // just check the source dirs for existing courses and assignments.
 func fetchTestSubmissionAssignment(testSubmissionPath string) (*model.Assignment, error) {
@@ -99,4 +145,8 @@ func fetchTestSubmissionAssignment(testSubmissionPath string) (*model.Assignment
 	}
 
 	return db.GetAssignment(course.GetID(), assignment.GetID())
+}
+
+func getTestSubmissionResultPath(shortID string) string {
+	return filepath.Join(config.GetTestdataDir(), "course101", "submissions", "HW0", "course-student@test.edulinq.org", shortID, "submission-result.json")
 }

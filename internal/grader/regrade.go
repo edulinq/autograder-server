@@ -24,13 +24,13 @@ type RegradeOptions struct {
 	// If nil, the current time will be used.
 	RegradeAfter *timestamp.Timestamp `json:"regrade-after"`
 
+	Assignment *model.Assignment `json:"-"`
+
 	// If true, do not swap the context to the background context when running.
 	// By default (when this is false), the context will be swapped to the background context when !WaitForCompletion.
 	// The swap is so that regrade does not get canceled when an HTTP request is complete.
 	// Setting this true is useful for testing (as one round of analysis tests can be wrapped up).
 	RetainOriginalContext bool `json:"-"`
-
-	Assignment *model.Assignment `json:"-"`
 
 	ResolvedUsers []string `json:"-"`
 }
@@ -144,20 +144,14 @@ func computeSingleRegrade(options RegradeOptions, email string) (*model.Submissi
 			stderr = gradingResult.Stderr
 		}
 
-		log.Warn("Regrade submission failed internally.", err, log.NewAttr("stdout", stdout), log.NewAttr("stderr", stderr))
-
-		return nil, fmt.Errorf("Regrade submission failed internally.")
+		return nil, fmt.Errorf("Regrade submission failed internally: '%w'. Stdout: '%s', Stderr: '%s'.", err, stdout, stderr)
 	}
 
 	if reject != nil {
-		log.Debug("Regrade submission rejected.", log.NewAttr("reason", reject.String()))
-
 		return nil, fmt.Errorf("Regrade submission rejected: '%s'.", reject.String())
 	}
 
 	if failureMessage != "" {
-		log.Debug("Regrade submission got a soft error.", log.NewAttr("message", failureMessage))
-
 		return nil, fmt.Errorf("Regrade submission got a soft error: '%s'.", failureMessage)
 	}
 
