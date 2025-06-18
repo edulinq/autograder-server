@@ -75,6 +75,8 @@ func TestList(test *testing.T) {
 			nil,
 			"",
 		},
+
+		// Invalid Inputs
 		{
 			"course-admin",
 			[]string{"creator"},

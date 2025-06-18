@@ -51,7 +51,9 @@ func ResolveSubmissionSpecs(submissionSpecs []string) ([]string, []string, error
 
 		if userEmail == "" {
 			// Most recent submissions for entire course.
-			submissions, err := db.GetRecentSubmissions(assignment, model.CourseRoleStudent)
+			reference := model.CourseUserRoleToParsedCourseUserReference(model.CourseRoleStudent)
+
+			submissions, err := db.GetRecentSubmissions(assignment, reference)
 			if err != nil {
 				systemErrors = errors.Join(systemErrors, fmt.Errorf("Failed to fetch submissions (%s): '%w'.", submissionSpec, err))
 				continue

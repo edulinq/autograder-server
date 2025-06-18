@@ -47,7 +47,11 @@ func (this *ParsedServerUserReference) AddParsedCourseUserReference(courseID str
 	this.CourseUserReferences[courseID] = this.CourseUserReferences[courseID].Merge(courseUserReference)
 }
 
-func (this ParsedServerUserReference) Excludes(user *ServerUser) bool {
+func (this *ParsedServerUserReference) Excludes(user *ServerUser) bool {
+	if this == nil {
+		return false
+	}
+
 	_, ok := this.ExcludeEmails[user.Email]
 	if ok {
 		return true
@@ -72,7 +76,11 @@ func (this ParsedServerUserReference) Excludes(user *ServerUser) bool {
 	return false
 }
 
-func (this ParsedServerUserReference) RefersTo(user *ServerUser) bool {
+func (this *ParsedServerUserReference) RefersTo(user *ServerUser) bool {
+	if this == nil {
+		return false
+	}
+
 	if this.Excludes(user) {
 		return false
 	}
@@ -99,6 +107,10 @@ func (this ParsedServerUserReference) RefersTo(user *ServerUser) bool {
 	}
 
 	return false
+}
+
+func NewAllServerUserReference() []ServerUserReference {
+	return []ServerUserReference{"*"}
 }
 
 func ParseServerUserReferences(rawReferences []ServerUserReference, courses map[string]*Course) (*ParsedServerUserReference, error) {
@@ -182,7 +194,7 @@ func ParseServerUserReferences(rawReferences []ServerUserReference, courses map[
 	return &serverUserReference, errs
 }
 
-func (this ParsedServerUserReference) parseCourseInformation(rawReference ServerUserReference, exclude bool, courseID string, courseRoleString string, courses map[string]*Course) error {
+func (this *ParsedServerUserReference) parseCourseInformation(rawReference ServerUserReference, exclude bool, courseID string, courseRoleString string, courses map[string]*Course) error {
 	targetCourses := make(map[string]*Course, 0)
 	if courseID == "*" {
 		// Target all courses.

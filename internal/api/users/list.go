@@ -21,7 +21,7 @@ type ListResponse struct {
 func HandleList(request *ListRequest) (*ListResponse, *core.APIError) {
 	// Default to listing all users in the server.
 	if len(request.TargetUsers) == 0 {
-		request.TargetUsers = []model.ServerUserReference{"*"}
+		request.TargetUsers = model.NewAllServerUserReference()
 	}
 
 	courses, err := db.GetCourses()
