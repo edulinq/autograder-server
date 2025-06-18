@@ -7,6 +7,7 @@ import (
 )
 
 var baseRoutes []core.Route = []core.Route{
+	core.MustNewAPIRoute(`courses/assignments/submissions/proxy/regrade`, HandleRegrade),
 	core.MustNewAPIRoute(`courses/assignments/submissions/proxy/resubmit`, HandleResubmit),
 	core.MustNewAPIRoute(`courses/assignments/submissions/proxy/submit`, HandleSubmit),
 }
