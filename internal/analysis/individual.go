@@ -74,15 +74,13 @@ func IndividualAnalysis(options AnalysisOptions) (map[string]*model.IndividualAn
 
 	workErrors := make(map[string]string, len(output.WorkErrors))
 
-	if len(output.WorkErrors) != 0 {
-		for fullSubmissionID, err := range output.WorkErrors {
-			workErrors[fullSubmissionID] = err.Error()
+	for fullSubmissionID, err := range output.WorkErrors {
+		workErrors[fullSubmissionID] = err.Error()
 
-			logAttributes := submissionIDToLogValues(fullSubmissionID)
-			logAttributes = append([]any{err}, logAttributes...)
-			logAttributes = append(logAttributes, log.NewAttr("job-id", output.ID))
-			log.Error("Failed to run individual analysis.", logAttributes...)
-		}
+		logAttributes := submissionIDToLogValues(fullSubmissionID)
+		logAttributes = append([]any{err}, logAttributes...)
+		logAttributes = append(logAttributes, log.NewAttr("job-id", output.ID))
+		log.Error("Failed to run individual analysis.", logAttributes...)
 	}
 
 	return output.ResultItems, len(output.RemainingItems), workErrors, nil
