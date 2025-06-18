@@ -15,7 +15,7 @@ import (
 
 type RegradeOptions struct {
 	jobmanager.JobOptions
-	GradeOptions
+	GradeOptions `json:"-"`
 
 	// The raw references of users to regrade.
 	RawReferences []model.CourseUserReference `json:"target-users" required:""`
@@ -23,8 +23,6 @@ type RegradeOptions struct {
 	// Ensure every user has made a new submission after this time.
 	// If nil, the current time will be used.
 	RegradeAfter *timestamp.Timestamp `json:"regrade-after"`
-
-	Assignment *model.Assignment `json:"-"`
 
 	// If true, do not swap the context to the background context when running.
 	// By default (when this is false), the context will be swapped to the background context when !WaitForCompletion.
@@ -35,15 +33,15 @@ type RegradeOptions struct {
 	ResolvedUsers []string `json:"-"`
 }
 
-func Regrade(options RegradeOptions) (map[string]*model.SubmissionHistoryItem, int, map[string]string, error) {
+func Regrade(assignment *model.Assignment, options RegradeOptions) (map[string]*model.SubmissionHistoryItem, timestamp.Timestamp, int, map[string]string, error) {
 	reference, err := model.ParseCourseUserReferences(options.RawReferences)
 	if err != nil {
-		return nil, 0, nil, fmt.Errorf("Failed to parse course user references: '%w'.", err)
+		return nil, 0, 0, nil, fmt.Errorf("Failed to parse course user references: '%w'.", err)
 	}
 
-	courseUsers, err := db.GetCourseUsers(options.Assignment.GetCourse())
+	courseUsers, err := db.GetCourseUsers(assignment.GetCourse())
 	if err != nil {
-		return nil, 0, nil, fmt.Errorf("Failed to get course users: '%w'.", err)
+		return nil, 0, 0, nil, fmt.Errorf("Failed to get course users: '%w'.", err)
 	}
 
 	fullUsers := model.ResolveCourseUserEmails(courseUsers, reference)
@@ -63,7 +61,7 @@ func Regrade(options RegradeOptions) (map[string]*model.SubmissionHistoryItem, i
 		regradeAfter = *options.RegradeAfter
 	}
 
-	lockKey := fmt.Sprintf("regrade-course-%s", options.Assignment.GetCourse().GetID())
+	lockKey := fmt.Sprintf("regrade-course-%s", assignment.GetCourse().GetID())
 
 	job := jobmanager.Job[string, *model.SubmissionHistoryItem]{
 		JobOptions:              &options.JobOptions,
@@ -72,10 +70,10 @@ func Regrade(options RegradeOptions) (map[string]*model.SubmissionHistoryItem, i
 		ReturnIncompleteResults: !options.WaitForCompletion,
 		WorkItems:               fullUsers,
 		RetrieveFunc: func(resolvedEmails []string) (map[string]*model.SubmissionHistoryItem, error) {
-			return retrieveRegradedSubmissions(options.Assignment, regradeAfter, resolvedEmails)
+			return retrieveRegradedSubmissions(assignment, regradeAfter, resolvedEmails)
 		},
 		WorkFunc: func(email string) (*model.SubmissionHistoryItem, error) {
-			return computeSingleRegrade(options, email)
+			return computeSingleRegrade(assignment, options, email)
 		},
 		WorkItemKeyFunc: func(email string) string {
 			return fmt.Sprintf("%s-%s", lockKey, email)
@@ -84,12 +82,12 @@ func Regrade(options RegradeOptions) (map[string]*model.SubmissionHistoryItem, i
 
 	err = job.Validate()
 	if err != nil {
-		return nil, 0, nil, fmt.Errorf("Failed to validate job: '%w'.", err)
+		return nil, 0, 0, nil, fmt.Errorf("Failed to validate job: '%w'.", err)
 	}
 
 	output := job.Run()
 	if output.Error != nil {
-		return nil, 0, nil, fmt.Errorf("Failed to run regrade job '%s': '%w'.", output.ID, output.Error)
+		return nil, 0, 0, nil, fmt.Errorf("Failed to run regrade job '%s': '%w'.", output.ID, output.Error)
 	}
 
 	workErrors := make(map[string]string, len(output.WorkErrors))
@@ -103,11 +101,11 @@ func Regrade(options RegradeOptions) (map[string]*model.SubmissionHistoryItem, i
 		log.Error("Failed to run regrade.", logAttributes...)
 	}
 
-	return output.ResultItems, len(output.RemainingItems), workErrors, nil
+	return output.ResultItems, regradeAfter, len(output.RemainingItems), workErrors, nil
 }
 
-func computeSingleRegrade(options RegradeOptions, email string) (*model.SubmissionHistoryItem, error) {
-	previousResult, err := db.GetSubmissionContents(options.Assignment, email, "")
+func computeSingleRegrade(assignment *model.Assignment, options RegradeOptions, email string) (*model.SubmissionHistoryItem, error) {
+	previousResult, err := db.GetSubmissionContents(assignment, email, "")
 	if err != nil {
 		return nil, fmt.Errorf("Failed to get most recent grading result for '%s': '%w'.", email, err)
 	}
@@ -116,7 +114,7 @@ func computeSingleRegrade(options RegradeOptions, email string) (*model.Submissi
 		return nil, nil
 	}
 
-	dirName := fmt.Sprintf("regrade-%s-%s-%s-", options.Assignment.GetCourse().GetID(), options.Assignment.GetID(), email)
+	dirName := fmt.Sprintf("regrade-%s-%s-%s-", assignment.GetCourse().GetID(), assignment.GetID(), email)
 	tempDir, err := util.MkDirTemp(dirName)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to create temp regrade dir: '%w'.", err)
@@ -134,7 +132,7 @@ func computeSingleRegrade(options RegradeOptions, email string) (*model.Submissi
 		options.GradeOptions.ProxyTime = &previousResult.Info.GradingStartTime
 	}
 
-	gradingResult, reject, failureMessage, err := Grade(options.Context, options.Assignment, tempDir, email, message, options.GradeOptions)
+	gradingResult, reject, failureMessage, err := Grade(options.Context, assignment, tempDir, email, message, options.GradeOptions)
 	if err != nil {
 		stdout := ""
 		stderr := ""

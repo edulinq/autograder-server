@@ -105,11 +105,10 @@ func TestRegradeBase(test *testing.T) {
 			RawReferences: testCase.users,
 			// TODO: Make this a test case field.
 			RegradeAfter:          nil,
-			Assignment:            assignment,
 			RetainOriginalContext: false,
 		}
 
-		results, numLeft, workErrors, err := Regrade(options)
+		results, regradeAfter, numLeft, workErrors, err := Regrade(assignment, options)
 		if err != nil {
 			test.Errorf("Case %d: Failed to regrade submissions: '%v'.", i, err)
 			continue
@@ -117,6 +116,11 @@ func TestRegradeBase(test *testing.T) {
 
 		if len(workErrors) != 0 {
 			test.Errorf("Case %d: Unexpected work errors during regrade: '%s'.", i, util.MustToJSONIndent(workErrors))
+			continue
+		}
+
+		// TODO: Add a check for regradeAfter.
+		if regradeAfter == 0 {
 			continue
 		}
 
