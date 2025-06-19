@@ -33,18 +33,25 @@ type RegradeOptions struct {
 	ResolvedUsers []string `json:"-"`
 }
 
-func Regrade(assignment *model.Assignment, options RegradeOptions) (map[string]*model.SubmissionHistoryItem, timestamp.Timestamp, int, map[string]string, error) {
+type RegradeResult struct {
+	Options      RegradeOptions                          `json:"options"`
+	RegradeAfter timestamp.Timestamp                     `json:"regrade-after"`
+	Results      map[string]*model.SubmissionHistoryItem `json:"results"`
+	WorkErrors   map[string]string                       `json:"work-errors"`
+}
+
+func Regrade(assignment *model.Assignment, options RegradeOptions) (*RegradeResult, int, error) {
 	reference, err := model.ParseCourseUserReferences(options.RawReferences)
 	if err != nil {
-		return nil, 0, 0, nil, fmt.Errorf("Failed to parse course user references: '%w'.", err)
+		return nil, 0, fmt.Errorf("Failed to parse course user references: '%w'.", err)
 	}
 
 	courseUsers, err := db.GetCourseUsers(assignment.GetCourse())
 	if err != nil {
-		return nil, 0, 0, nil, fmt.Errorf("Failed to get course users: '%w'.", err)
+		return nil, 0, fmt.Errorf("Failed to get course users: '%w'.", err)
 	}
 
-	fullUsers := model.ResolveCourseUserEmails(courseUsers, reference)
+	options.ResolvedUsers = model.ResolveCourseUserEmails(courseUsers, reference)
 
 	if !options.RetainOriginalContext && !options.WaitForCompletion {
 		options.Context = context.Background()
@@ -68,12 +75,12 @@ func Regrade(assignment *model.Assignment, options RegradeOptions) (map[string]*
 		LockKey:                 lockKey,
 		PoolSize:                config.REGRADE_COURSE_POOL_SIZE.Get(),
 		ReturnIncompleteResults: !options.WaitForCompletion,
-		WorkItems:               fullUsers,
+		WorkItems:               options.ResolvedUsers,
 		RetrieveFunc: func(resolvedEmails []string) (map[string]*model.SubmissionHistoryItem, error) {
 			return retrieveRegradedSubmissions(assignment, regradeAfter, resolvedEmails)
 		},
 		WorkFunc: func(email string) (*model.SubmissionHistoryItem, error) {
-			return computeSingleRegrade(assignment, options, email)
+			return computeSingleRegrade(courseUsers, assignment, options, email)
 		},
 		WorkItemKeyFunc: func(email string) string {
 			return fmt.Sprintf("%s-%s", lockKey, email)
@@ -82,12 +89,12 @@ func Regrade(assignment *model.Assignment, options RegradeOptions) (map[string]*
 
 	err = job.Validate()
 	if err != nil {
-		return nil, 0, 0, nil, fmt.Errorf("Failed to validate job: '%w'.", err)
+		return nil, 0, fmt.Errorf("Failed to validate job: '%w'.", err)
 	}
 
 	output := job.Run()
 	if output.Error != nil {
-		return nil, 0, 0, nil, fmt.Errorf("Failed to run regrade job '%s': '%w'.", output.ID, output.Error)
+		return nil, 0, fmt.Errorf("Failed to run regrade job '%s': '%w'.", output.ID, output.Error)
 	}
 
 	workErrors := make(map[string]string, len(output.WorkErrors))
@@ -101,10 +108,22 @@ func Regrade(assignment *model.Assignment, options RegradeOptions) (map[string]*
 		log.Error("Failed to run regrade.", logAttributes...)
 	}
 
-	return output.ResultItems, regradeAfter, len(output.RemainingItems), workErrors, nil
+	regradeResult := RegradeResult{
+		Options:      options,
+		RegradeAfter: regradeAfter,
+		Results:      output.ResultItems,
+		WorkErrors:   workErrors,
+	}
+
+	return &regradeResult, len(output.RemainingItems), nil
 }
 
-func computeSingleRegrade(assignment *model.Assignment, options RegradeOptions, email string) (*model.SubmissionHistoryItem, error) {
+func computeSingleRegrade(courseUsers map[string]*model.CourseUser, assignment *model.Assignment, options RegradeOptions, email string) (*model.SubmissionHistoryItem, error) {
+	_, ok := courseUsers[email]
+	if !ok {
+		return nil, fmt.Errorf("Cannot regrade an unknown user: '%s'.", email)
+	}
+
 	previousResult, err := db.GetSubmissionContents(assignment, email, "")
 	if err != nil {
 		return nil, fmt.Errorf("Failed to get most recent grading result for '%s': '%w'.", email, err)

@@ -108,35 +108,32 @@ func TestRegradeBase(test *testing.T) {
 			RetainOriginalContext: false,
 		}
 
-		results, regradeAfter, numLeft, workErrors, err := Regrade(assignment, options)
+		result, numLeft, err := Regrade(assignment, options)
 		if err != nil {
 			test.Errorf("Case %d: Failed to regrade submissions: '%v'.", i, err)
 			continue
 		}
 
-		if len(workErrors) != 0 {
-			test.Errorf("Case %d: Unexpected work errors during regrade: '%s'.", i, util.MustToJSONIndent(workErrors))
+		if len(result.WorkErrors) != 0 {
+			test.Errorf("Case %d: Unexpected work errors during regrade: '%s'.", i, util.MustToJSONIndent(result.WorkErrors))
 			continue
 		}
 
-		// TODO: Add a check for regradeAfter.
-		if regradeAfter == 0 {
-			continue
-		}
+		// TODO: Add a check for result.RegradeAfter.
 
 		if testCase.numLeft != numLeft {
 			test.Errorf("Case %d: Unexpected number of regrades remaining. Expected: '%d', actual: '%d'.", i, testCase.numLeft, numLeft)
 			continue
 		}
 
-		failed := CheckAndClearIDs(test, i, testCase.results, results)
+		failed := CheckAndClearIDs(test, i, testCase.results, result.Results)
 		if failed {
 			continue
 		}
 
-		if !reflect.DeepEqual(testCase.results, results) {
+		if !reflect.DeepEqual(testCase.results, result.Results) {
 			test.Errorf("Case %d: Unexpected regrade result. Expected: '%s', actual: '%s'.",
-				i, util.MustToJSONIndent(testCase.results), util.MustToJSONIndent(results))
+				i, util.MustToJSONIndent(testCase.results), util.MustToJSONIndent(result.Results))
 			continue
 		}
 	}

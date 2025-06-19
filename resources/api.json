@@ -547,6 +547,87 @@
                 }
             ]
         },
+        "courses/assignments/submissions/proxy/regrade": {
+            "description": "Proxy regrade an assignment for all target users using their most recent submission.",
+            "input": [
+                {
+                    "name": "assignment-id",
+                    "type": "string",
+                    "description": "The ID of the assignment to make this request to.",
+                    "required": true
+                },
+                {
+                    "name": "course-id",
+                    "type": "string",
+                    "description": "The ID of the course to make this request to.",
+                    "required": true
+                },
+                {
+                    "name": "dry-run",
+                    "type": "bool",
+                    "description": "Don't save anything."
+                },
+                {
+                    "name": "overwrite-records",
+                    "type": "bool",
+                    "description": "Remove any existing records before running the job."
+                },
+                {
+                    "name": "regrade-after",
+                    "type": "int64",
+                    "description": "Ensure every user has made a new submission after this time.\nIf nil, the current time will be used."
+                },
+                {
+                    "name": "target-users",
+                    "type": "[]model.CourseUserReference",
+                    "description": "The raw references of users to regrade.",
+                    "required": true
+                },
+                {
+                    "name": "user-email",
+                    "type": "string",
+                    "description": "The email of the user making this request.",
+                    "required": true
+                },
+                {
+                    "name": "user-pass",
+                    "type": "string",
+                    "description": "The password of the user making this request.",
+                    "required": true
+                },
+                {
+                    "name": "wait-for-completion",
+                    "type": "bool",
+                    "description": "Wait for the entire job to complete and return all results."
+                }
+            ],
+            "output": [
+                {
+                    "name": "complete",
+                    "type": "bool"
+                },
+                {
+                    "name": "options",
+                    "type": "grader.RegradeOptions"
+                },
+                {
+                    "name": "regrade-after",
+                    "type": "int64"
+                },
+                {
+                    "name": "resolved-users",
+                    "type": "[]string"
+                },
+                {
+                    "name": "results",
+                    "type": "map[string]*model.SubmissionHistoryItem"
+                },
+                {
+                    "name": "work-errors",
+                    "type": "map[string]string"
+                }
+            ]
+        },
         "courses/assignments/submissions/proxy/resubmit": {
             "description": "Proxy resubmit an assignment submission to the autograder.",
             "input": [
@@ -1933,6 +2014,36 @@
                 {
                     "name": "updated",
                     "type": "bool"
+                }
+            ]
+        },
+        "grader.RegradeOptions": {
+            "category": "struct",
+            "fields": [
+                {
+                    "name": "dry-run",
+                    "type": "bool",
+                    "description": "Don't save anything."
+                },
+                {
+                    "name": "overwrite-records",
+                    "type": "bool",
+                    "description": "Remove any existing records before running the job."
+                },
+                {
+                    "name": "regrade-after",
+                    "type": "int64",
+                    "description": "Ensure every user has made a new submission after this time.\nIf nil, the current time will be used."
+                },
+                {
+                    "name": "target-users",
+                    "type": "[]model.CourseUserReference",
+                    "description": "The raw references of users to regrade."
+                },
+                {
+                    "name": "wait-for-completion",
+                    "type": "bool",
+                    "description": "Wait for the entire job to complete and return all results."
                 }
             ]
         },
