@@ -197,7 +197,6 @@ func testPairwise(test *testing.T, ids []string, expected map[model.PairwiseKey]
 			}
 		}
 	}
-
 	if !reflect.DeepEqual(expected, results) {
 		test.Fatalf("Results not as expected. Expected: '%s', Actual: '%s'.",
 			util.MustToJSONIndent(expected), util.MustToJSONIndent(results))
@@ -335,7 +334,7 @@ func TestPairwiseAnalysisDefaultEnginesSpecificFiles(test *testing.T) {
 
 	for _, path := range testPaths {
 		for _, engine := range defaultSimilarityEngines {
-			sim, err := engine.ComputeFileSimilarity([2]string{path, path}, "", ctx)
+			sim, err := engine.ComputeFileSimilarity([2]string{path, path}, "", ctx, nil)
 			if err != nil {
 				test.Errorf("Engine '%s' failed to compute similarity on '%s': '%v'.",
 					engine.GetName(), path, err)
@@ -800,5 +799,118 @@ func TestPairwiseAnalysisFailureBase(test *testing.T) {
 	if !strings.Contains(results[key].FailureMessage, expectedMessageSubstring) {
 		test.Fatalf("Failure message does not contain expected substring. Expected Substring: '%s', Actual: '%s'.",
 			expectedMessageSubstring, results[key].FailureMessage)
+	}
+}
+
+func TestPairwiseAnalysisJPlagNoOptions(test *testing.T) {
+	docker.EnsureOrSkipForTest(test)
+	db.ResetForTesting()
+	defer db.ResetForTesting()
+
+	forceDefaultEnginesForTesting = true
+	defer func() { forceDefaultEnginesForTesting = false }()
+
+	// Get engine instances
+	jplagEngine, ok := defaultSimilarityEngines[1].(*jplag.JPlagEngine)
+	if !ok {
+		test.Fatalf("Failed to cast defaultSimilarityEngines[1] to *jplag.JPlagEngine")
+	}
+
+	// Store original values to restore later
+	originalJplagMinTokens := jplagEngine.MinTokens
+	defer func() { jplagEngine.MinTokens = originalJplagMinTokens }()
+	if jplagEngine.MinTokens != jplag.DEFAULT_MIN_TOKENS {
+		test.Fatalf("Pre-analysis: JPlag engine MinTokens expected to be default (%f), got %f",
+			jplag.DEFAULT_MIN_TOKENS, jplagEngine.MinTokens)
+	}
+
+	assignment := db.MustGetTestAssignment()
+	assignment.AssignmentAnalysisOptions = &model.AssignmentAnalysisOptions{
+		EngineOptions: nil, // No options passed
+	}
+	db.MustSaveAssignment(assignment)
+
+	ids := []string{
+		"course101::hw0::course-student@test.edulinq.org::1697406256",
+		"course101::hw0::course-student@test.edulinq.org::1697406272",
+	}
+
+	options := AnalysisOptions{
+		ResolvedSubmissionIDs: ids,
+		InitiatorEmail:        "server-admin@test.edulinq.org",
+		JobOptions:            jobmanager.JobOptions{WaitForCompletion: true},
+	}
+
+	results, pendingCount, workErrors, err := PairwiseAnalysis(options)
+	if err != nil {
+		test.Fatalf("Analysis failed: %v", err)
+	}
+	if pendingCount != 0 || len(workErrors) != 0 {
+		test.Fatalf("Unexpected pending or work errors: pending=%d, workErrors=%+v", pendingCount, workErrors)
+	}
+	if len(results) != 1 {
+		test.Fatalf("Expected 1 result, got %d. Full results: %+v", len(results), results)
+	}
+
+	// This confirms that PairwiseAnalysis did *not* override the defaults
+	// when EngineOptions was nil.
+	if jplagEngine.MinTokens != jplag.DEFAULT_MIN_TOKENS {
+		test.Fatalf("Post-analysis: JPlag engine MinTokens expected to remain default (%f), got %f. "+
+			"This suggests default options were not correctly applied or preserved.",
+			jplag.DEFAULT_MIN_TOKENS, jplagEngine.MinTokens)
+	}
+
+}
+
+func TestPairwiseAnalysisJPlagWithOptions(test *testing.T) {
+	docker.EnsureOrSkipForTest(test)
+	db.ResetForTesting()
+	defer db.ResetForTesting()
+
+	forceDefaultEnginesForTesting = true
+	defer func() { forceDefaultEnginesForTesting = false }()
+
+	jplagEngine := defaultSimilarityEngines[1].(*jplag.JPlagEngine)
+	originalMinTokens := jplagEngine.MinTokens
+	defer func() { jplagEngine.MinTokens = originalMinTokens }()
+
+	expectedMinTokens := 7.0
+
+	assignment := db.MustGetTestAssignment()
+	assignment.AssignmentAnalysisOptions = &model.AssignmentAnalysisOptions{
+		EngineOptions: map[string]any{
+			"jplag": map[string]any{
+				"min-tokens": float64(expectedMinTokens),
+			},
+		},
+	}
+	db.MustSaveAssignment(assignment)
+
+	ids := []string{
+		"course101::hw0::course-student@test.edulinq.org::1697406256",
+		"course101::hw0::course-student@test.edulinq.org::1697406272",
+	}
+
+	options := AnalysisOptions{
+		ResolvedSubmissionIDs: ids,
+		InitiatorEmail:        "server-admin@test.edulinq.org",
+		JobOptions:            jobmanager.JobOptions{WaitForCompletion: true},
+	}
+
+	results, pendingCount, workErrors, err := PairwiseAnalysis(options)
+	if err != nil {
+		test.Fatalf("Analysis failed: %v", err)
+	}
+	if pendingCount != 0 || len(workErrors) != 0 {
+		test.Fatalf("Unexpected pending or work errors.")
+	}
+	if len(results) != 1 {
+		test.Fatalf("Expected 1 result, got %d", len(results))
+	}
+
+	if jplagEngine.MinTokens != expectedMinTokens {
+		test.Fatalf("Post-analysis: JPlag engine MinTokens expected to be %f (from options), got %f. "+
+			"This suggests provided options were not correctly applied.",
+			expectedMinTokens, jplagEngine.MinTokens)
 	}
 }
