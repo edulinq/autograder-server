@@ -24,7 +24,7 @@ const (
 	OUT_FILENAME      = "results.csv"
 	TEMPLATE_FILENAME = "template"
 
-	DEFAULT_MIN_TOKENS = 12
+	DEFAULT_MIN_TOKENS = 12.0
 )
 
 var (
@@ -33,8 +33,12 @@ var (
 )
 
 type JPlagEngine struct {
-	MinTokens int
+	MinTokens float64 `json:"minTokens"`
 }
+
+// func GetEngine() *JPlagEngine {
+// 	return &JPlagEngine{}
+// }
 
 func GetEngine() *JPlagEngine {
 	return &JPlagEngine{
@@ -50,7 +54,34 @@ func (this *JPlagEngine) IsAvailable() bool {
 	return docker.CanAccessDocker()
 }
 
-func (this *JPlagEngine) ComputeFileSimilarity(paths [2]string, templatePath string, ctx context.Context) (*model.FileSimilarity, error) {
+func (this *JPlagEngine) ComputeFileSimilarity(paths [2]string, templatePath string, ctx context.Context, options any) (*model.FileSimilarity, error) {
+
+	effectiveMinTokens := this.MinTokens // Start with the engine's default/configured minTokens
+
+	// Try to get minTokens from the 'options' parameter, if provided.
+	// The 'options any' will typically be a map[string]any if coming from JSON config.
+	if options != nil {
+		if mapOptions, ok := options.(map[string]any); ok {
+			if val, exists := mapOptions["minTokens"]; exists {
+				if floatVal, isFloat := val.(float64); isFloat {
+					effectiveMinTokens = floatVal
+				} else {
+					log.Warn("JPlag engine options: 'minTokens' found but not a float64, using default.", log.NewAttr("value", val))
+				}
+			}
+		} else {
+			// This case handles scenarios where `options` might be a *jplagEngine struct itself
+			if specificOpts, ok := options.(*JPlagEngine); ok {
+				if specificOpts.MinTokens != 0 { // Check if it's explicitly set
+					effectiveMinTokens = specificOpts.MinTokens
+				}
+			} else {
+				log.Warn("JPlag engine received unexpected options type, ignoring. Type: %T", options)
+			}
+		}
+	}
+
+	fmt.Println("Effective MinTokens of jplag: ", effectiveMinTokens)
 	err := ensureImage()
 	if err != nil {
 		return nil, fmt.Errorf("Failed to ensure JPlag docker image exists: '%w'.", err)

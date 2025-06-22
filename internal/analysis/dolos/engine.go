@@ -23,6 +23,7 @@ const (
 	OUT_DIRNAME       = "out"
 	OUT_FILENAME      = "pairs.csv"
 	TEMPLATE_FILENAME = "template"
+	DEFAULT_THRESHOLD = 0.5
 )
 
 var (
@@ -30,10 +31,18 @@ var (
 	imageLock sync.Mutex
 )
 
-type dolosEngine struct{}
+type dolosEngine struct {
+	Threshold float64 `json:"threshold"`
+}
+
+// func GetEngine() *dolosEngine {
+// 	return &dolosEngine{}
+// }
 
 func GetEngine() *dolosEngine {
-	return &dolosEngine{}
+	return &dolosEngine{
+		Threshold: DEFAULT_THRESHOLD,
+	}
 }
 
 func (this *dolosEngine) GetName() string {
@@ -44,7 +53,37 @@ func (this *dolosEngine) IsAvailable() bool {
 	return docker.CanAccessDocker()
 }
 
-func (this *dolosEngine) ComputeFileSimilarity(paths [2]string, templatePath string, ctx context.Context) (*model.FileSimilarity, error) {
+func (this *dolosEngine) ComputeFileSimilarity(paths [2]string, templatePath string, ctx context.Context, options any) (*model.FileSimilarity, error) {
+	fmt.Println("Options Received for Engine: ", options)
+
+	effectiveThreshold := this.Threshold // Start with the engine's default/configured threshold
+
+	// Try to get threshold from the 'options' parameter, if provided.
+	// The 'options any' will typically be a map[string]any if coming from JSON config.
+	if options != nil {
+		if mapOptions, ok := options.(map[string]any); ok {
+			if val, exists := mapOptions["threshold"]; exists {
+				if floatVal, isFloat := val.(float64); isFloat {
+					effectiveThreshold = floatVal
+				} else {
+					log.Warn("Dolos engine options: 'threshold' found but not a float64, using default.", log.NewAttr("value", val))
+				}
+			}
+		} else {
+			// This case handles scenarios where `options` might be a *dolosEngine struct itself
+			// (e.g., if you constructed it directly in test code or a different part of your app).
+			if specificOpts, ok := options.(*dolosEngine); ok {
+				if specificOpts.Threshold != 0 { // Check if it's explicitly set (0 might be a default)
+					effectiveThreshold = specificOpts.Threshold
+				}
+			} else {
+				log.Warn("Dolos engine received unexpected options type, ignoring. Type: %T", options)
+			}
+		}
+	}
+
+	fmt.Println("Effective Threshold of dolos: ", effectiveThreshold)
+
 	err := ensureImage()
 	if err != nil {
 		return nil, fmt.Errorf("Failed to ensure Dolos docker image exists: '%w'.", err)

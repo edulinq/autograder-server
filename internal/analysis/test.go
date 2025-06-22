@@ -21,7 +21,7 @@ func (this *fakeSimiliartyEngine) IsAvailable() bool {
 	return true
 }
 
-func (this *fakeSimiliartyEngine) ComputeFileSimilarity(paths [2]string, templatePath string, ctx context.Context) (*model.FileSimilarity, error) {
+func (this *fakeSimiliartyEngine) ComputeFileSimilarity(paths [2]string, templatePath string, ctx context.Context, options any) (*model.FileSimilarity, error) {
 	similarity := model.FileSimilarity{
 		Filename: filepath.Base(paths[0]),
 		Tool:     this.GetName(),
