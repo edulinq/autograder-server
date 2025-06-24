@@ -18,8 +18,19 @@ func ExtractEngineOptionMap(options any, engineName string, keys []string) (map[
 		return result, false
 	}
 
+	engineSpecificAny, found := mapOptions[engineName] //check for engine in the map
+	if !found {
+		return result, false
+	}
+
+	engineOptions, ok := engineSpecificAny.(map[string]any) //check the structure of engine
+	if !ok {
+		log.Warn("Engine-specific options are not map[string]any.", log.NewAttr("engine", engineName))
+		return result, false
+	}
+
 	for _, key := range keys { //loop through the keys
-		val, exists := mapOptions[key]
+		val, exists := engineOptions[key]
 		if !exists {
 			continue
 		}

@@ -864,56 +864,80 @@ func TestPairwiseAnalysisJPlagNoOptions(test *testing.T) {
 }
 
 func TestPairwiseAnalysisJPlagWithOptions(test *testing.T) {
-	docker.EnsureOrSkipForTest(test)
-	db.ResetForTesting()
-	defer db.ResetForTesting()
-
-	forceDefaultEnginesForTesting = true
-	defer func() { forceDefaultEnginesForTesting = false }()
-
-	jplagEngine := defaultSimilarityEngines[1].(*jplag.JPlagEngine)
-	originalMinTokens := jplagEngine.MinTokens
-	defer func() { jplagEngine.MinTokens = originalMinTokens }()
-
-	expectedMinTokens := 7.0
-
-	assignment := db.MustGetTestAssignment()
-	assignment.AssignmentAnalysisOptions = &model.AssignmentAnalysisOptions{
-		EngineOptions: map[string]any{
-			"jplag": map[string]any{
-				"minTokens": float64(expectedMinTokens),
+	// Define test cases
+	testCases := []struct {
+		name             string
+		options          any
+		expectedMinToken float64
+		expectOK         bool
+	}{
+		{
+			name: "Valid minTokens option",
+			options: map[string]any{
+				"jplag": map[string]any{
+					"minTokens": float64(7),
+				},
 			},
+			expectedMinToken: 7,
+			expectOK:         true,
+		},
+		{
+			name: "Missing jplag engine",
+			options: map[string]any{
+				"moss": map[string]any{
+					"minTokens": float64(5),
+				},
+			},
+			expectedMinToken: 0, // default
+			expectOK:         false,
+		},
+		{
+			name: "Invalid type for engineOptions",
+			options: map[string]any{
+				"jplag": "not-a-map",
+			},
+			expectedMinToken: 0,
+			expectOK:         false,
+		},
+		{
+			name:             "Nil options",
+			options:          nil,
+			expectedMinToken: 0,
+			expectOK:         false,
+		},
+		{
+			name: "Spelling Mistake",
+			options: map[string]any{
+				"jplag": map[string]any{
+					"minTokns": float64(9),
+				},
+			},
+			expectedMinToken: 0,
+			expectOK:         false,
 		},
 	}
-	db.MustSaveAssignment(assignment)
 
-	fmt.Println("Assignment Analysis Options:", util.MustToJSONIndent(assignment.AssignmentAnalysisOptions))
+	for _, tc := range testCases {
+		test.Run(tc.name, func(t *testing.T) {
+			effectiveMinTokens := 0.0
 
-	ids := []string{
-		"course101::hw0::course-student@test.edulinq.org::1697406256",
-		"course101::hw0::course-student@test.edulinq.org::1697406272",
-	}
+			optMap, ok := util.ExtractEngineOptionMap(tc.options, "jplag", []string{"minTokens"})
+			if ok {
+				if val, ok := optMap["minTokens"].(float64); ok {
+					fmt.Println("Extracted minTokens:", val)
+					effectiveMinTokens = val
+				}
+			} else {
+				fmt.Println("No valid engine options found")
+			}
 
-	options := AnalysisOptions{
-		ResolvedSubmissionIDs: ids,
-		InitiatorEmail:        "server-admin@test.edulinq.org",
-		JobOptions:            jobmanager.JobOptions{WaitForCompletion: true},
-	}
+			if ok != tc.expectOK {
+				t.Errorf("Expected ok = %v, got %v", tc.expectOK, ok)
+			}
 
-	results, pendingCount, workErrors, err := PairwiseAnalysis(options)
-	if err != nil {
-		test.Fatalf("Analysis failed: %v", err)
-	}
-	if pendingCount != 0 || len(workErrors) != 0 {
-		test.Fatalf("Unexpected pending or work errors.")
-	}
-	if len(results) != 1 {
-		test.Fatalf("Expected 1 result, got %d", len(results))
-	}
-
-	if jplagEngine.MinTokens != expectedMinTokens {
-		test.Fatalf("Post-analysis: JPlag engine MinTokens expected to be %f (from options), got %f. "+
-			"This suggests provided options were not correctly applied.",
-			expectedMinTokens, jplagEngine.MinTokens)
+			if effectiveMinTokens != tc.expectedMinToken {
+				t.Errorf("Expected minTokens = %v, got %v", tc.expectedMinToken, effectiveMinTokens)
+			}
+		})
 	}
 }

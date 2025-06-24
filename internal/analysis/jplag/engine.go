@@ -36,10 +36,6 @@ type JPlagEngine struct {
 	MinTokens float64 `json:"minTokens"`
 }
 
-// func GetEngine() *JPlagEngine {
-// 	return &JPlagEngine{}
-// }
-
 func GetEngine() *JPlagEngine {
 	return &JPlagEngine{
 		MinTokens: DEFAULT_MIN_TOKENS,
@@ -58,45 +54,16 @@ func (this *JPlagEngine) ComputeFileSimilarity(paths [2]string, templatePath str
 
 	effectiveMinTokens := this.MinTokens // Start with the engine's default/configured minTokens
 
-	// // Try to get minTokens from the 'options' parameter, if provided.
-	// // The 'options any' will typically be a map[string]any if coming from JSON config.
-	// if options != nil {
-	// 	if mapOptions, ok := options.(map[string]any); ok {
-	// 		if val, exists := mapOptions["minTokens"]; exists {
-	// 			if floatVal, isFloat := val.(float64); isFloat {
-	// 				effectiveMinTokens = floatVal
-	// 			} else {
-	// 				log.Warn("JPlag engine options: 'minTokens' found but not a float64, using default.", log.NewAttr("value", val))
-	// 			}
-	// 		}
-	// 	} else {
-	// 		// This case handles scenarios where `options` might be a *jplagEngine struct itself
-	// 		if specificOpts, ok := options.(*JPlagEngine); ok {
-	// 			if specificOpts.MinTokens != 0 { // Check if it's explicitly set
-	// 				effectiveMinTokens = specificOpts.MinTokens
-	// 			}
-	// 		} else {
-	// 			log.Warn("JPlag engine received unexpected options type, ignoring. Type: %T", options)
-	// 		}
-	// 	}
-	// }
-
 	optMap, ok := util.ExtractEngineOptionMap(options, "jplag", []string{"minTokens"})
-	fmt.Println("ok", ok)
 	if ok {
 		if val, ok := optMap["minTokens"].(float64); ok {
-			fmt.Println("This line is not getting printed 1: ", effectiveMinTokens)
+			fmt.Println("Effective Min Tokens: ", effectiveMinTokens)
 			effectiveMinTokens = val
-		}
-		if dbg, ok := optMap["enableDebug"].(bool); ok && dbg {
-			fmt.Println("This line is not getting printed 2: ", effectiveMinTokens)
-			log.Info("JPlag debug mode enabled")
 		}
 	} else {
 		log.Info("No valid engine options provided for JPlag")
 	}
-	//fmt.Println("Effective this.MinTokens of jplag: ", this.MinTokens)
-	fmt.Println("This line is not getting printed 3: ", effectiveMinTokens)
+
 	err := ensureImage()
 	if err != nil {
 		return nil, fmt.Errorf("Failed to ensure JPlag docker image exists: '%w'.", err)
