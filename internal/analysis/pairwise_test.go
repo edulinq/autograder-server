@@ -2,6 +2,7 @@ package analysis
 
 import (
 	"context"
+	"fmt"
 	"path/filepath"
 	"reflect"
 	"strings"
@@ -880,11 +881,13 @@ func TestPairwiseAnalysisJPlagWithOptions(test *testing.T) {
 	assignment.AssignmentAnalysisOptions = &model.AssignmentAnalysisOptions{
 		EngineOptions: map[string]any{
 			"jplag": map[string]any{
-				"min-tokens": float64(expectedMinTokens),
+				"minTokens": float64(expectedMinTokens),
 			},
 		},
 	}
 	db.MustSaveAssignment(assignment)
+
+	fmt.Println("Assignment Analysis Options:", util.MustToJSONIndent(assignment.AssignmentAnalysisOptions))
 
 	ids := []string{
 		"course101::hw0::course-student@test.edulinq.org::1697406256",

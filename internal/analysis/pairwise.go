@@ -225,6 +225,7 @@ func computeFileSims(options AnalysisOptions, inputDirs [2]string, assignment *m
 	if assignment != nil && assignment.AssignmentAnalysisOptions != nil {
 		engineOptions = assignment.AssignmentAnalysisOptions.EngineOptions //take engine options and then check for nil
 	}
+
 	fmt.Println("Engine Options Received: ", util.MustToJSONIndent(engineOptions))
 
 	for _, relpath := range matches {
@@ -280,7 +281,7 @@ func computeFileSims(options AnalysisOptions, inputDirs [2]string, assignment *m
 			// Pass options to function
 			go func(index int, simEngine core.SimilarityEngine, opts map[string]interface{}) { // change any
 				defer engineWaitGroup.Done()
-				fmt.Println("Opts Received: ", util.MustToJSONIndent(engineOptions))
+				//fmt.Println("Opts Received: ", util.MustToJSONIndent(engineOptions))
 				similarity, err := simEngine.ComputeFileSimilarity(paths, templatePath, options.Context, opts)
 				if err != nil {
 					errs[index] = fmt.Errorf("Unable to compute similarity for '%s' using engine '%s': '%w'", relpath, simEngine.GetName(), err)
