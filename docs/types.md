@@ -97,7 +97,7 @@ They are the more powerful version of [CourseUserReference](#course-user-referen
 The following values are allowed:
 
  - Email - The email of the requested user.
-   - Emails that are not present on the server are treated differentlt depending on the operation
+   - Emails that are not present on the server are treated differently depending on the operation
      (e.g., ignored, used normally, result in an error, etc).
  - "\*" - Represents requesting all users on the server.
  - [Server Role](#server-roles-serverrole) (e.g., "user", "creator", etc) - Represents requesting all server users with that role.
@@ -107,9 +107,8 @@ The following values are allowed:
  - "\*::\*" - Represents requesting all users enrolled in at least one course.
  - Negative targeting - Exclude the user or group from the request.
    - Any of the previous options preceded by a minus sign
-     (e.g., "-alice@test.edulinq.org", "-user", "-*::student")
-     - Represents exluding that user or group from the request.
-   - Exclusions can be useful when using broad targeting (e.g., "\*"), but you want to exclude a role, course, course role, or email.
+     (e.g., "-alice@test.edulinq.org", "-user", "-*::student") - Represents exluding that user or group from the request.
+   - Exclusions can be useful when using broad targeting (e.g., "\*"), but you want to exclude a more specific targeting group (e.g., server role, course, course role, email, etc).
 
 ### Email
 
