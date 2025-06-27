@@ -1895,6 +1895,7 @@
         },
         "core.NonEmptyString": {
             "category": "alias",
+            "description": "The type for a named field that must have a non-empty string value.",
             "alias-type": "string"
         },
         "core.ServerUserInfo": {
@@ -2173,10 +2174,12 @@
         },
         "model.CourseUserReference": {
             "category": "alias",
+            "description": "Course user references can represent the following:\n- An email address.\n- A literal \"*\" (which includes all users in the course).\n- A course role (which will include all course users with that role).\n- Any of the above options preceded by a dash (\"-\") (which indicates that the user or group will NOT be included in the final results).",
             "alias-type": "string"
         },
         "model.CourseUserRole": {
             "category": "alias",
+            "description": "Course user roles represent a user's role within a single course.",
             "alias-type": "int"
         },
         "model.ExternalLocatableError": {
@@ -2712,6 +2715,7 @@
         },
         "model.PairwiseKey": {
             "category": "array",
+            "description": "A key for pairwise analysis.\nShould always be an ordered (lexicographically) pair of full submissions IDs.",
             "element-type": "string"
         },
         "model.RawCourseUserData": {
@@ -2772,10 +2776,12 @@
         },
         "model.ServerUserReference": {
             "category": "alias",
+            "description": "Server user references can represent the following:\n- An email address.\n- A literal \"*\" (which includes all users on the server).\n- A server role (which will include all server users with that role).\n- \u003ccourse-id\u003e::\u003ccourse-role\u003e (which will include all users in the target course with that role).\n- *::\u003ccourse-role\u003e (which will include all users with the course role in any course).\n- \u003ccourse-id\u003e::* (which will include all users in the target course).\n- *::* (which includes all users enrolled in at least one course).\n- Any of the above options preceded by a dash (\"-\") (which indicates that the user or group will NOT be included in the final results).",
             "alias-type": "string"
         },
         "model.ServerUserRole": {
             "category": "alias",
+            "description": "Server user roles represent a user's role within an autograder server instance.",
             "alias-type": "int"
         },
         "model.SubmissionHistoryItem": {
@@ -2922,6 +2928,7 @@
         },
         "timestamp.Timestamp": {
             "category": "alias",
+            "description": "A safe (always valid) time representation.\nA timestamp is the number of milliseconds (int64) since the UNIX epoch (which is in UTC).",
             "alias-type": "int64"
         },
         "upload.RowEntry": {
@@ -3015,6 +3022,7 @@
         },
         "util.FileOperation": {
             "category": "array",
+            "description": "File operations represent simple file operations.\nAny represented file paths must be POSIX, relative, and not point to any parent directories.\nNote that this code will only work properly on POSIX systems because of the lexical analysis on paths.",
             "element-type": "string"
         },
         "util.FileSpec": {

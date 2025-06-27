@@ -106,6 +106,47 @@ func (this *DBTests) DBTestGetActiveCourseTasksBase(test *testing.T) {
 	}
 }
 
+func (this *DBTests) DBTestDisableTask(test *testing.T) {
+	ResetForTesting()
+	defer ResetForTesting()
+
+	testTask := &model.UserTaskInfo{
+		Type:     model.TaskTypeTest,
+		Name:     "test",
+		Disabled: false,
+		When:     &util.ScheduledTime{Daily: "00:00"},
+		Options:  nil,
+	}
+
+	course := MustGetTestCourse()
+	course.Tasks = []*model.UserTaskInfo{testTask}
+	MustSaveCourse(course)
+
+	tasks, err := GetActiveCourseTasks(course)
+	if err != nil {
+		test.Fatalf("Failed to fetch initial tasks: '%v'.", err)
+	}
+
+	if len(tasks) != 1 {
+		test.Fatalf("Did not get expected number of initial tasks. Expected: %d, Actual: %d.", 1, len(tasks))
+	}
+
+	testTask.Disabled = true
+
+	course = MustGetTestCourse()
+	course.Tasks = []*model.UserTaskInfo{testTask}
+	MustSaveCourse(course)
+
+	tasks, err = GetActiveCourseTasks(course)
+	if err != nil {
+		test.Fatalf("Failed to fetch final tasks: '%v'.", err)
+	}
+
+	if len(tasks) != 0 {
+		test.Fatalf("Did not get expected number of final tasks. Expected: %d, Actual: %d.", 0, len(tasks))
+	}
+}
+
 func (this *DBTests) DBTestGetNextActiveTaskBase(test *testing.T) {
 	ResetForTesting()
 	defer ResetForTesting()
