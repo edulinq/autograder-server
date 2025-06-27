@@ -93,7 +93,6 @@ Underlying Type: String
 
 A `ServerUserReference` can be used to generalize targeting any number of server users
 (e.g., email recipients).
-They are the more powerful version of [CourseUserReference](#course-user-reference-courseuserreference).
 The following values are allowed:
 
  - Email - The email of the requested user.
