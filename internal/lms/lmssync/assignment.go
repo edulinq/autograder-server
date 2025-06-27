@@ -49,7 +49,7 @@ func syncAssignments(course *model.Course, dryRun bool) (*model.AssignmentSyncRe
 				}
 			} else {
 				// Name match.
-				if (localName != "") && strings.EqualFold(localName, lmsAssignment.Name) {
+				if (localName != "") && approximateNameMatch(localName, lmsAssignment.Name) {
 					matchIndex = i
 				}
 			}
@@ -127,7 +127,7 @@ func matchLateDaysAssignment(localAssignment *model.Assignment, lmsAssignments [
 
 	var match *lmstypes.Assignment = nil
 	for _, lmsAssignment := range lmsAssignments {
-		if (lateLMSName != "") && strings.EqualFold(lateLMSName, lmsAssignment.Name) {
+		if (lateLMSName != "") && approximateNameMatch(lateLMSName, lmsAssignment.Name) {
 			if match != nil {
 				log.Warn("Ambiguous late days match for assignment.",
 					localAssignment, log.NewAttr("match-1", match.Name), log.NewAttr("match-2", lmsAssignment.Name))
@@ -140,6 +140,13 @@ func matchLateDaysAssignment(localAssignment *model.Assignment, lmsAssignments [
 	}
 
 	return match
+}
+
+func approximateNameMatch(a string, b string) bool {
+	a = strings.TrimSpace(a)
+	b = strings.TrimSpace(b)
+
+	return strings.EqualFold(a, b)
 }
 
 func mergeAssignment(localAssignment *model.Assignment, lmsAssignment *lmstypes.Assignment, lateLMSAssignment *lmstypes.Assignment) bool {
