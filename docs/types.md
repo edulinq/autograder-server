@@ -10,6 +10,7 @@ Extra keys will generally be ignored.
  - [Semantic Types](#semantic-types)
    - [Identifier](#identifier)
    - [Course User Reference (CourseUserReference)](#course-user-reference-courseuserreference)
+   - [Server User Reference (ServerUserReference)](#server-user-reference-serveruserreference)
    - [Email](#email)
    - [Timestamp](#timestamp)
    - [Pointer](#pointer)
@@ -85,6 +86,30 @@ The following values are allowed:
  - Negative Course Role - A course role preceded by a minus sign (e.g., "-student")
    will remove all course users with that role from the request.
    This can be useful when using the "\*" but you want to exclude a role.
+
+### Server User Reference (ServerUserReference)
+
+Underlying Type: String
+
+A `ServerUserReference` can be used to generalize targeting any number of server users
+(e.g., email recipients).
+They are the more powerful version of [CourseUserReference](#course-user-reference-courseuserreference).
+The following values are allowed:
+
+ - Email - The email of the requested user.
+   - Emails that are not present on the server are treated differentlt depending on the operation
+     (e.g., ignored, used normally, result in an error, etc).
+ - "\*" - Represents requesting all users on the server.
+ - [Server Role](#server-roles-serverrole) (e.g., "user", "creator", etc) - Represents requesting all server users with that role.
+ - "\<course id\>::\<course role\>" (e.g., "course101::student") - Represents requesting all users in the target course with that course role.
+ - "\*::\<course role\>" (e.g., "\*::student") - Represents requesting all users with that course role in any course.
+ - "\<course id\>::\*" - Represents requesting all users in the target course.
+ - "\*::\*" - Represents requesting all users enrolled in at least one course.
+ - Negative targeting - Exclude the user or group from the request.
+   - Any of the previous options preceded by a minus sign
+     (e.g., "-alice@test.edulinq.org", "-user", "-*::student")
+     - Represents exluding that user or group from the request.
+   - Exclusions can be useful when using broad targeting (e.g., "\*"), but you want to exclude a role, course, course role, or email.
 
 ### Email
 
