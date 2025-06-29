@@ -17,6 +17,5 @@ type SimilarityEngine interface {
 	// but a lot of shorter jobs is more flexible than one large job.
 	// On a timeout, (nil, nil) should be returned.
 
-	//ComputeFileSimilarity(paths [2]string, templatePath string, ctx context.Context) (*model.FileSimilarity, error)
-	ComputeFileSimilarity(paths [2]string, templatePath string, ctx context.Context, options any) (*model.FileSimilarity, error)
+	ComputeFileSimilarity(paths [2]string, templatePath string, ctx context.Context, options map[string]any) (*model.FileSimilarity, error)
 }

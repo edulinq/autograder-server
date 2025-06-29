@@ -23,7 +23,6 @@ const (
 	OUT_DIRNAME       = "out"
 	OUT_FILENAME      = "pairs.csv"
 	TEMPLATE_FILENAME = "template"
-	DEFAULT_THRESHOLD = 0.5
 )
 
 var (
@@ -31,18 +30,10 @@ var (
 	imageLock sync.Mutex
 )
 
-type dolosEngine struct {
-	Threshold float64 `json:"threshold"`
-}
-
-// func GetEngine() *dolosEngine {
-// 	return &dolosEngine{}
-// }
+type dolosEngine struct{}
 
 func GetEngine() *dolosEngine {
-	return &dolosEngine{
-		Threshold: DEFAULT_THRESHOLD,
-	}
+	return &dolosEngine{}
 }
 
 func (this *dolosEngine) GetName() string {
@@ -53,21 +44,7 @@ func (this *dolosEngine) IsAvailable() bool {
 	return docker.CanAccessDocker()
 }
 
-func (this *dolosEngine) ComputeFileSimilarity(paths [2]string, templatePath string, ctx context.Context, options any) (*model.FileSimilarity, error) {
-	fmt.Println("Options Received for Engine: ", options)
-
-	effectiveThreshold := this.Threshold // Start with the engine's default/configured threshold
-	optMap, ok := util.ExtractEngineOptionMap(options, "dolos", []string{"threshold"})
-	if ok {
-		if val, ok := optMap["threshold"].(float64); ok {
-			fmt.Println("Effective Threshold: ", effectiveThreshold)
-			effectiveThreshold = val
-		}
-	} else {
-		log.Info("No valid engine options provided for Dolos")
-	}
-
-	fmt.Println("Effective Threshold of dolos: ", effectiveThreshold) //need to be used where
+func (this *dolosEngine) ComputeFileSimilarity(paths [2]string, templatePath string, ctx context.Context, options map[string]any) (*model.FileSimilarity, error) {
 	err := ensureImage()
 	if err != nil {
 		return nil, fmt.Errorf("Failed to ensure Dolos docker image exists: '%w'.", err)
