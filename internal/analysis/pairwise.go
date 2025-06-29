@@ -221,6 +221,11 @@ func computeFileSims(options AnalysisOptions, inputDirs [2]string, assignment *m
 	similarities := make(map[string][]*model.FileSimilarity, len(matches))
 	skipped := make([]string, 0)
 
+	engineOptions := make(map[string]any)
+	if assignment != nil && assignment.AssignmentAnalysisOptions != nil {
+		engineOptions = assignment.AssignmentAnalysisOptions.EngineOptions //take engine options and then check for nil
+	}
+
 	for _, relpath := range matches {
 		// Check if this file should be skipped because of inclusions/exclusions.
 		if (assignment != nil) && (assignment.AssignmentAnalysisOptions != nil) && !assignment.AssignmentAnalysisOptions.MatchRelpath(relpath) {
@@ -248,22 +253,38 @@ func computeFileSims(options AnalysisOptions, inputDirs [2]string, assignment *m
 		var engineWaitGroup sync.WaitGroup
 
 		for i, engine := range engines {
+
+			// Initialize specific options for the engine.
+			var specificEngineOptions map[string]any
+
+			// Get specific options for this engine.
+			specificEngineOptionsAny, found := engineOptions[engine.GetName()]
+
+			// Initialize with nil map[string]interface{}
+			if found && specificEngineOptionsAny != nil { // Check if found and not nil
+				var ok bool
+				specificEngineOptions, ok = specificEngineOptionsAny.(map[string]any)
+				if !ok {
+					// Handle the case where the assertion fails.
+					errs[i] = fmt.Errorf("Engine options for '%s' could not be converted into map[string]any, skipping engine.", engine.GetName())
+					continue // Skip to the next engine
+				}
+			}
+
 			// Compute the file similarity for each engine in parallel.
 			// Note that because we know the index for each engine up-front, we don't need a channel.
 			engineWaitGroup.Add(1)
-			go func(index int, simEngine core.SimilarityEngine) {
+			// Pass options to function.
+			go func(index int, simEngine core.SimilarityEngine, EngineOptions map[string]any) { // change any
 				defer engineWaitGroup.Done()
-
-				similarity, err := simEngine.ComputeFileSimilarity(paths, templatePath, options.Context)
+				similarity, err := simEngine.ComputeFileSimilarity(paths, templatePath, options.Context, EngineOptions)
 				if err != nil {
 					errs[index] = fmt.Errorf("Unable to compute similarity for '%s' using engine '%s': '%w'", relpath, simEngine.GetName(), err)
 				} else if similarity != nil {
 					similarity.Filename = relpath
-					similarity.OriginalFilename = renames[relpath]
-
 					tempSimilarities[index] = similarity
 				}
-			}(i, engine)
+			}(i, engine, specificEngineOptions) // Pass specificEngineOptions to the goroutine
 		}
 
 		// Wait for all engines to complete.

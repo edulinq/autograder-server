@@ -32,14 +32,14 @@ var (
 	imageLock sync.Mutex
 )
 
-type JPlagEngine struct {
+type JPlagEngineOptions struct {
 	MinTokens int
 }
 
+type JPlagEngine struct{}
+
 func GetEngine() *JPlagEngine {
-	return &JPlagEngine{
-		MinTokens: DEFAULT_MIN_TOKENS,
-	}
+	return &JPlagEngine{}
 }
 
 func (this *JPlagEngine) GetName() string {
@@ -50,7 +50,46 @@ func (this *JPlagEngine) IsAvailable() bool {
 	return docker.CanAccessDocker()
 }
 
-func (this *JPlagEngine) ComputeFileSimilarity(paths [2]string, templatePath string, ctx context.Context) (*model.FileSimilarity, error) {
+func getIntFromAny(val any, defaultValue int) int {
+	switch v := val.(type) {
+	case int:
+		return v
+	case float64:
+		// Truncate float64 to int.
+		return int(v)
+	default:
+		return defaultValue
+	}
+}
+
+func extractJplagOptions(options map[string]any) JPlagEngineOptions {
+	effectiveEngineOptions := JPlagEngineOptions{}
+
+	// Check for minTokens option.
+	minTokensVal, ok := options["minTokens"]
+	if !ok {
+		// If minTokens is not specified, use the default value.
+		effectiveEngineOptions.MinTokens = DEFAULT_MIN_TOKENS
+		return effectiveEngineOptions
+	}
+
+	// Check if minTokens is a valid type.
+	effectiveEngineOptions.MinTokens = getIntFromAny(minTokensVal, DEFAULT_MIN_TOKENS)
+	return effectiveEngineOptions
+
+}
+
+func (this *JPlagEngine) ComputeFileSimilarity(paths [2]string, templatePath string, ctx context.Context, options map[string]any) (*model.FileSimilarity, error) {
+
+	var effectiveMinTokens int
+
+	// Extract JPlag specific options.
+	if options != nil && len(options) > 0 {
+		EffectiveOptions := extractJplagOptions(options)
+		// Extract the minTokens option.
+		effectiveMinTokens = EffectiveOptions.MinTokens
+	}
+
 	err := ensureImage()
 	if err != nil {
 		return nil, fmt.Errorf("Failed to ensure JPlag docker image exists: '%w'.", err)
@@ -124,7 +163,7 @@ func (this *JPlagEngine) ComputeFileSimilarity(paths [2]string, templatePath str
 		"--mode", "RUN",
 		"--csv-export",
 		"--language", getLanguage(tempFilenames[0]),
-		"--min-tokens", fmt.Sprintf("%d", this.MinTokens),
+		"--min-tokens", fmt.Sprintf("%d", effectiveMinTokens),
 		"/jplag/src",
 	}
 
