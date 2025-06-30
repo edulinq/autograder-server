@@ -19,7 +19,7 @@ func GetServerUsers() (map[string]*model.ServerUser, error) {
 func MustGetServerUsers() map[string]*model.ServerUser {
 	users, err := GetServerUsers()
 	if err != nil {
-		log.Fatal("Faled to get server users.", err)
+		log.Fatal("Failed to get server users.", err)
 	}
 
 	return users
@@ -46,7 +46,7 @@ func GetServerUser(email string) (*model.ServerUser, error) {
 func MustGetServerUser(email string) *model.ServerUser {
 	user, err := GetServerUser(email)
 	if err != nil {
-		log.Fatal("Faled to get server user.", err, log.NewUserAttr(email))
+		log.Fatal("Failed to get server user.", err, log.NewUserAttr(email))
 	}
 
 	return user
@@ -98,7 +98,7 @@ func UpsertUser(user *model.ServerUser) error {
 func MustUpsertUser(user *model.ServerUser) {
 	err := UpsertUser(user)
 	if err != nil {
-		log.Fatal("Faled to upsert user.", err, user)
+		log.Fatal("Failed to upsert user.", err, user)
 	}
 }
 

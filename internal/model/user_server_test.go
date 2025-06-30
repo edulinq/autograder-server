@@ -1079,7 +1079,7 @@ func TestUserServerUserAuth(test *testing.T) {
 	for i, testCase := range testCases {
 		success, err := user.Auth(util.Sha256HexFromString(testCase.pass))
 		if err != nil {
-			test.Errorf("Case %d: Faled to auth: '%v'.", i, err)
+			test.Errorf("Case %d: Failed to auth: '%v'.", i, err)
 			continue
 		}
 
@@ -1106,7 +1106,7 @@ func TestUserServerSetPassword(test *testing.T) {
 
 	success, err := user.Auth(input)
 	if err != nil {
-		test.Fatalf("Faled to auth: '%v'.", err)
+		test.Fatalf("Failed to auth: '%v'.", err)
 	}
 
 	if !success {
@@ -1126,7 +1126,7 @@ func TestUserServerSetRandomPassword(test *testing.T) {
 
 	success, err := user.Auth(input)
 	if err != nil {
-		test.Fatalf("Faled to auth: '%v'.", err)
+		test.Fatalf("Failed to auth: '%v'.", err)
 	}
 
 	if !success {
