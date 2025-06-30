@@ -5,18 +5,14 @@ import (
 	"testing"
 
 	"github.com/edulinq/autograder/internal/db"
-	"github.com/edulinq/autograder/internal/docker"
 	"github.com/edulinq/autograder/internal/jobmanager"
 	"github.com/edulinq/autograder/internal/model"
 	"github.com/edulinq/autograder/internal/util"
 )
 
 func TestRegradeBase(test *testing.T) {
-	docker.EnsureOrSkipForTest(test)
-
 	defer db.ResetForTesting()
 
-	// Note that computation of these paths are deferred until test time.
 	studentGradingResults := map[string]*model.GradingResult{
 		"1697406272": model.MustLoadGradingResult(getTestSubmissionResultPath("1697406272")),
 	}
@@ -92,10 +88,9 @@ func TestRegradeBase(test *testing.T) {
 		},
 	}
 
-	assignment := db.MustGetTestAssignment()
-
 	for i, testCase := range testCases {
 		db.ResetForTesting()
+		dummyAssignment := loadDummyAssignment(test)
 
 		options := RegradeOptions{
 			GradeOptions: GetDefaultGradeOptions(),
@@ -108,7 +103,7 @@ func TestRegradeBase(test *testing.T) {
 			RetainOriginalContext: false,
 		}
 
-		result, numLeft, err := Regrade(assignment, options)
+		result, numLeft, err := Regrade(dummyAssignment, options)
 		if err != nil {
 			test.Errorf("Case %d: Failed to regrade submissions: '%v'.", i, err)
 			continue
@@ -137,4 +132,72 @@ func TestRegradeBase(test *testing.T) {
 			continue
 		}
 	}
+}
+
+func loadDummyAssignment(test *testing.T) *model.Assignment {
+	dummyCourse := &model.Course{
+		ID:          "dummy-course",
+		Name:        "Dummy Course",
+		Assignments: map[string]*model.Assignment{},
+	}
+
+	dummyAssignment := &model.Assignment{
+		Course:    dummyCourse,
+		ID:        "dummyAssignment",
+		Name:      "Dummy Assignment",
+		MaxPoints: 1,
+	}
+
+	dummyCourse.AddAssignment(dummyAssignment)
+	db.SaveCourse(dummyCourse)
+
+	users := map[string]*model.ServerUser{
+		"course-admin@test.edulinq.org": &model.ServerUser{
+			Email: "course-admin@test.edulinq.org",
+			CourseInfo: map[string]*model.UserCourseInfo{
+				dummyCourse.GetID(): &model.UserCourseInfo{
+					Role: model.CourseRoleAdmin,
+				},
+			},
+		},
+		"course-grader@test.edulinq.org": &model.ServerUser{
+			Email: "course-grader@test.edulinq.org",
+			CourseInfo: map[string]*model.UserCourseInfo{
+				dummyCourse.GetID(): &model.UserCourseInfo{
+					Role: model.CourseRoleGrader,
+				},
+			},
+		},
+		"course-other@test.edulinq.org": &model.ServerUser{
+			Email: "course-other@test.edulinq.org",
+			CourseInfo: map[string]*model.UserCourseInfo{
+				dummyCourse.GetID(): &model.UserCourseInfo{
+					Role: model.CourseRoleOther,
+				},
+			},
+		},
+		"course-owner@test.edulinq.org": &model.ServerUser{
+			Email: "course-owner@test.edulinq.org",
+			CourseInfo: map[string]*model.UserCourseInfo{
+				dummyCourse.GetID(): &model.UserCourseInfo{
+					Role: model.CourseRoleOwner,
+				},
+			},
+		},
+		"course-student@test.edulinq.org": &model.ServerUser{
+			Email: "course-student@test.edulinq.org",
+			CourseInfo: map[string]*model.UserCourseInfo{
+				dummyCourse.GetID(): &model.UserCourseInfo{
+					Role: model.CourseRoleStudent,
+				},
+			},
+		},
+	}
+
+	err := db.UpsertUsers(users)
+	if err != nil {
+		test.Fatalf("Failed to upsert users into the new course: '%v'.", err)
+	}
+
+	return dummyAssignment
 }
