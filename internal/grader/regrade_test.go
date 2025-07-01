@@ -7,31 +7,35 @@ import (
 
 	"context"
 	"path/filepath"
-	// "reflect"
 	"testing"
 
-	"github.com/edulinq/autograder/internal/common"
 	"github.com/edulinq/autograder/internal/db"
-	"github.com/edulinq/autograder/internal/docker"
 	// "github.com/edulinq/autograder/internal/jobmanager"
 	"github.com/edulinq/autograder/internal/model"
+	"github.com/edulinq/autograder/internal/procedures/courses"
 	"github.com/edulinq/autograder/internal/util"
 )
 
-// TODO: Do we need a dummy course config?
-// const DUMMY_COURSE_CONFIG = ``
+const DUMMY_COURSE_CONFIG = `{
+    "id": "dummy-course",
+    "name": "A dummy course to test regrades.",
+    "lms": {
+        "type": "test"
+    }
+}`
 
 const DUMMY_ASSIGNMENT_CONFIG = `{
     "id": "dummy-assignment",
     "name": "A dummy assignment to test regrades.",
     "due-date": 0,
     "static-files": [
+        "assignment.json",
         "grader.sh"
     ],
     "invocation": ["bash", "./grader.sh"],
     "post-submission-file-ops": [
         ["cp", "input/assignment.sh", "work/assignment.sh"]
-    ],
+    ]
 }`
 
 const BASE_GRADER = `#!/bin/bash
@@ -289,10 +293,11 @@ func TestRegradeBase(test *testing.T) {
 }
 */
 
+/*
 func loadDummyAssignment(sourceDir string, test *testing.T) *model.Assignment {
 	dummyCourse := &model.Course{
 		ID:          "dummy-course",
-		Name:        "Dummy Course",
+		Name:        "A dummy course to test regrades.",
 		Assignments: map[string]*model.Assignment{},
 		Source: &util.FileSpec{
 			Type: util.FILESPEC_TYPE_PATH,
@@ -386,39 +391,102 @@ func loadDummyAssignment(sourceDir string, test *testing.T) *model.Assignment {
 
 	return dummyAssignment
 }
+*/
 
 func TestDummyPrep(test *testing.T) {
 	db.ResetForTesting()
 
-	// tempDir, err := util.MkDirTemp("regrade-grading-dir-")
-	tempDir, inputDir, _, _, err := common.PrepTempGradingDir("regrade-grading-dir")
+	tempDir, err := util.MkDirTemp("regrade-grading-dir")
 	if err != nil {
 		test.Fatalf("Failed to create temp dir for grading: '%v'.", err)
 	}
 	defer util.RemoveDirent(tempDir)
 
+	err = util.WriteFile(DUMMY_COURSE_CONFIG, filepath.Join(tempDir, "course.json"))
+	if err != nil {
+		test.Fatalf("Failed to write course config: '%v'.", err)
+	}
+
+	assignmentDir := filepath.Join(tempDir, "dummy-assignment")
+	util.MustMkDir(assignmentDir)
+
+	err = util.WriteFile(DUMMY_ASSIGNMENT_CONFIG, filepath.Join(assignmentDir, "assignment.json"))
+	if err != nil {
+		test.Fatalf("Failed to write assignment config: '%v'.", err)
+	}
+
 	faultyGrader := BASE_GRADER + FAULTY_GRADER
-	err = util.WriteFile(faultyGrader, filepath.Join(tempDir, "grader.sh"))
+	err = util.WriteFile(faultyGrader, filepath.Join(assignmentDir, "grader.sh"))
 	if err != nil {
 		test.Fatalf("Failed to write faulty grader: '%v'.", err)
 	}
 
-	paths, err := util.GetAllDirents(tempDir, false, false)
+	users, err := db.GetServerUsers()
 	if err != nil {
-		test.Fatalf("Failed to get dirents: '%v'.", err)
+		test.Fatalf("Failed to get server users: '%v'.", err)
 	}
-	fmt.Fprintf(os.Stderr, "found the following paths: '%v'.", util.MustToJSONIndent(paths))
 
-	dummyAssignment := loadDummyAssignment(tempDir, test)
+	upsertResult, err := courses.UpsertFromDir(tempDir, courses.CourseUpsertOptions{ContextUser: users["server-admin@test.edulinq.org"]})
+	if err != nil {
+		test.Fatalf("Failed to upsert course from dir: '%v'.", err)
+	}
 
-	/*
-		err = util.WriteFile(DUMMY_ASSIGNMENT_CONFIG, filepath.Join(workDir, "assignment.json"))
-		if err != nil {
-			test.Fatalf("Failed to write dummy assignment.json: '%v'.", err)
-		}
-	*/
+	fmt.Fprintf(os.Stderr, "Upsert got the following result: '%s'.", util.MustToJSONIndent(upsertResult))
 
-	err = util.WriteFile(SUBMISSION, filepath.Join(inputDir, "assignment.sh"))
+	dummyCourse, err := db.GetCourse("dummy-course")
+	if err != nil {
+		test.Fatalf("Failed to get newly upserted course: '%v'.", err)
+	}
+
+	newUsers := map[string]*model.ServerUser{
+		"course-admin@test.edulinq.org": &model.ServerUser{
+			Email: "course-admin@test.edulinq.org",
+			CourseInfo: map[string]*model.UserCourseInfo{
+				dummyCourse.GetID(): &model.UserCourseInfo{
+					Role: model.CourseRoleAdmin,
+				},
+			},
+		},
+		"course-grader@test.edulinq.org": &model.ServerUser{
+			Email: "course-grader@test.edulinq.org",
+			CourseInfo: map[string]*model.UserCourseInfo{
+				dummyCourse.GetID(): &model.UserCourseInfo{
+					Role: model.CourseRoleGrader,
+				},
+			},
+		},
+		"course-other@test.edulinq.org": &model.ServerUser{
+			Email: "course-other@test.edulinq.org",
+			CourseInfo: map[string]*model.UserCourseInfo{
+				dummyCourse.GetID(): &model.UserCourseInfo{
+					Role: model.CourseRoleOther,
+				},
+			},
+		},
+		"course-owner@test.edulinq.org": &model.ServerUser{
+			Email: "course-owner@test.edulinq.org",
+			CourseInfo: map[string]*model.UserCourseInfo{
+				dummyCourse.GetID(): &model.UserCourseInfo{
+					Role: model.CourseRoleOwner,
+				},
+			},
+		},
+		"course-student@test.edulinq.org": &model.ServerUser{
+			Email: "course-student@test.edulinq.org",
+			CourseInfo: map[string]*model.UserCourseInfo{
+				dummyCourse.GetID(): &model.UserCourseInfo{
+					Role: model.CourseRoleStudent,
+				},
+			},
+		},
+	}
+
+	err = db.UpsertUsers(newUsers)
+	if err != nil {
+		test.Fatalf("Failed to upsert users into the new course: '%v'.", err)
+	}
+
+	err = util.WriteFile(SUBMISSION, filepath.Join(tempDir, "assignment.sh"))
 	if err != nil {
 		test.Fatalf("Failed to write submission file: '%v'.", err)
 	}
@@ -427,8 +495,19 @@ func TestDummyPrep(test *testing.T) {
 	gradeOptions.NoDocker = true
 	gradeOptions.CheckRejection = false
 
-	result, reject, softError, err := Grade(context.Background(), dummyAssignment, inputDir, "course-student@test.edulinq.org", "", gradeOptions)
+	dummyAssignment := dummyCourse.GetAssignment("dummy-assignment")
+	if dummyAssignment == nil {
+		test.Fatalf("Failed to get dummy assignment from dummy course: '%v'.", err)
+	}
+
+	result, reject, softError, err := Grade(context.Background(), dummyAssignment, tempDir, "course-student@test.edulinq.org", "", gradeOptions)
 	fmt.Fprintf(os.Stderr, "result: '%s'.\nreject: '%s'.\nsoftError: '%s'.\nerr: '%v'.\n",
 		util.MustToJSONIndent(result), util.MustToJSONIndent(reject),
 		util.MustToJSONIndent(softError), err)
+
+	paths, err := util.GetAllDirents(tempDir, false, false)
+	if err != nil {
+		test.Fatalf("Failed to get dirents: '%v'.", err)
+	}
+	fmt.Fprintf(os.Stderr, "found the following paths: '%v'.", util.MustToJSONIndent(paths))
 }
