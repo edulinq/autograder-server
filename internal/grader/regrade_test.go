@@ -391,24 +391,32 @@ func TestDummyPrep(test *testing.T) {
 	db.ResetForTesting()
 
 	// tempDir, err := util.MkDirTemp("regrade-grading-dir-")
-	tempDir, inputDir, _, workDir, err := common.PrepTempGradingDir("regrade-grading-dir-")
+	tempDir, inputDir, _, _, err := common.PrepTempGradingDir("regrade-grading-dir")
 	if err != nil {
 		test.Fatalf("Failed to create temp dir for grading: '%v'.", err)
 	}
 	defer util.RemoveDirent(tempDir)
 
-	dummyAssignment := loadDummyAssignment(tempDir, test)
-
-	err = util.WriteFile(DUMMY_ASSIGNMENT_CONFIG, filepath.Join(workDir, "assignment.json"))
-	if err != nil {
-		test.Fatalf("Failed to write dummy assignment.json: '%v'.", err)
-	}
-
 	faultyGrader := BASE_GRADER + FAULTY_GRADER
-	err = util.WriteFile(faultyGrader, filepath.Join(workDir, "grader.sh"))
+	err = util.WriteFile(faultyGrader, filepath.Join(tempDir, "grader.sh"))
 	if err != nil {
 		test.Fatalf("Failed to write faulty grader: '%v'.", err)
 	}
+
+	paths, err := util.GetAllDirents(tempDir, false, false)
+	if err != nil {
+		test.Fatalf("Failed to get dirents: '%v'.", err)
+	}
+	fmt.Fprintf(os.Stderr, "found the following paths: '%v'.", util.MustToJSONIndent(paths))
+
+	dummyAssignment := loadDummyAssignment(tempDir, test)
+
+	/*
+		err = util.WriteFile(DUMMY_ASSIGNMENT_CONFIG, filepath.Join(workDir, "assignment.json"))
+		if err != nil {
+			test.Fatalf("Failed to write dummy assignment.json: '%v'.", err)
+		}
+	*/
 
 	err = util.WriteFile(SUBMISSION, filepath.Join(inputDir, "assignment.sh"))
 	if err != nil {
