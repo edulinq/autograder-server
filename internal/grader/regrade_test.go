@@ -10,6 +10,115 @@ import (
 	"github.com/edulinq/autograder/internal/util"
 )
 
+// TODO: Do we need a dummy course config?
+// const DUMMY_COURSE_CONFIG = ``
+
+const DUMMY_ASSIGNMENT_CONFIG = `{
+    "id": "dummy-assignment",
+    "name": "A dummy assignment to test regrades.",
+    "due-date": 0,
+    "static-files": [
+        "grader.sh"
+    ],
+    "invocation": ["bash", "./grader.sh"],
+    "post-submission-file-ops": [
+        ["cp", "input/assignment.sh", "work/assignment.sh"]
+    ],
+}`
+
+const BASE_GRADER = `#!/bin/bash
+
+readonly THIS_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+readonly DEFAULT_OUTPUT_PATH="${THIS_DIR}/../output/result.json"
+
+function main() {
+    if [[ $# -ne 0 ]]; then
+        echo "USAGE: $0"
+        return 1
+    fi
+
+    trap exit SIGINT
+
+    cd "${THIS_DIR}"
+
+    # Allow the grader to run locally by changing the output location
+    # if not in the docker image.
+    local outputPath="${DEFAULT_OUTPUT_PATH}"
+    if [[ ! -d $(dirname "${outputPath}") ]] ; then
+        outputPath="$(basename "${outputPath}")"
+    fi
+
+    # Run grader.
+    grade "${outputPath}"
+    if [[ $? -ne 0 ]] ; then
+        echo "ERROR: Failed to run grader."
+        return 3
+    fi
+
+    return 0
+}
+
+function grade() {
+    # Source the student's assignment file.
+    source "${THIS_DIR}/assignment.sh"
+
+    local score=2
+    local message=""
+
+    eq_one 1 true 'Expected true.' || { score=$((score-1)); message+="Failed to retrun true for good value. "; }
+    eq_one 2 false 'Expected false.'|| { score=$((score-1)); message+="Failed to retrun true for good value. "; }
+
+    local json_output='{
+        "name": "bash",
+        "questions": [
+            {
+                "name": "Task 1: eq_one()",
+                "max_points": 2,
+                "score": '"$score"',
+                "message": "'"$message"'"
+            }
+        ]
+    }'
+
+    echo "$json_output" > "${outputPath}"
+}`
+
+const FAULTY_GRADER = `
+function test_eq_one() {
+    local a=$1
+    local expected=$2
+    local feedback=$3
+
+    local result=$(eq_one $a)
+    # BUG in grader!
+    [[ $result -ne $expected ]]
+}
+
+[[ "${BASH_SOURCE[0]}" == "${0}" ]] && main "$@"
+`
+
+const GOOD_GRADER = `
+function test_eq_one() {
+    local a=$1
+    local expected=$2
+    local feedback=$3
+
+    local result=$(eq_one $a)
+    # BUG in grader!
+    [[ $result -eq $expected ]]
+}
+
+[[ "${BASH_SOURCE[0]}" == "${0}" ]] && main "$@"
+`
+
+const SUBMISSION = `
+function eq_one() {
+    local a=$1
+
+    [[ $a -eq 1 ]]
+}
+`
+
 func TestRegradeBase(test *testing.T) {
 	defer db.ResetForTesting()
 
@@ -92,8 +201,19 @@ func TestRegradeBase(test *testing.T) {
 		db.ResetForTesting()
 		dummyAssignment := loadDummyAssignment(test)
 
+        tempDir, err := util.MkDirTemp("regrade-grading-dir-")
+        if err != nil {
+            test.Errorf("Failed to create temp dir for grading: '%v'.", err)
+            continue
+        }
+        defer util.RemoveDirent(tempDir)
+
+        gradeOptions := GetDefaultGradeOptions()
+        gradeOptions.NoDocker = true
+        gradeOptions.CheckRejection = false
+
 		options := RegradeOptions{
-			GradeOptions: GetDefaultGradeOptions(),
+			GradeOptions: gradeOptions,
 			JobOptions: jobmanager.JobOptions{
 				WaitForCompletion: testCase.waitForCompletion,
 			},
@@ -143,8 +263,8 @@ func loadDummyAssignment(test *testing.T) *model.Assignment {
 
 	dummyAssignment := &model.Assignment{
 		Course:    dummyCourse,
-		ID:        "dummyAssignment",
-		Name:      "Dummy Assignment",
+		ID:        "dummy-assignment",
+		Name:      "A dummy assignment to test regrades",
 		MaxPoints: 1,
 	}
 
@@ -198,6 +318,8 @@ func loadDummyAssignment(test *testing.T) *model.Assignment {
 	if err != nil {
 		test.Fatalf("Failed to upsert users into the new course: '%v'.", err)
 	}
+
+    
 
 	return dummyAssignment
 }
