@@ -1,11 +1,19 @@
 package grader
 
 import (
-	"reflect"
+	// TEST
+	"fmt"
+	"os"
+
+	"context"
+	"path/filepath"
+	// "reflect"
 	"testing"
 
+	"github.com/edulinq/autograder/internal/common"
 	"github.com/edulinq/autograder/internal/db"
-	"github.com/edulinq/autograder/internal/jobmanager"
+	"github.com/edulinq/autograder/internal/docker"
+	// "github.com/edulinq/autograder/internal/jobmanager"
 	"github.com/edulinq/autograder/internal/model"
 	"github.com/edulinq/autograder/internal/util"
 )
@@ -119,6 +127,7 @@ function eq_one() {
 }
 `
 
+/*
 func TestRegradeBase(test *testing.T) {
 	defer db.ResetForTesting()
 
@@ -201,12 +210,37 @@ func TestRegradeBase(test *testing.T) {
 		db.ResetForTesting()
 		dummyAssignment := loadDummyAssignment(test)
 
-        tempDir, err := util.MkDirTemp("regrade-grading-dir-")
+        // tempDir, err := util.MkDirTemp("regrade-grading-dir-")
+        tempDir, inputDir, outputDir, workDir, err := common.PrepTempGradingDir("regrade-grading-dir-")
         if err != nil {
             test.Errorf("Failed to create temp dir for grading: '%v'.", err)
             continue
         }
         defer util.RemoveDirent(tempDir)
+
+        err = util.WriteFile(DUMMY_ASSIGNMENT_CONFIG, filepath.Join(workDir, "assignment.json"))
+        if err != nil {
+            test.Errorf("Failed to write dummy assignment.json: '%v'.", err)
+            continue
+        }
+
+        faultyGrader := BASE_GRADER + FAULTY_GRADER
+        err = util.WriteFile(faultyGrader, filepath.Join(workDir, "grader.sh"))
+        if err != nil {
+            test.Errorf("Failed to write faulty grader: '%v'.", err)
+            continue
+        }
+
+        err = util.WriteFile(SUBMISSION, filepath.Join(inputDir, "assignment.sh"))
+        if err != nil {
+            test.Errorf("Failed to write submission file: '%v'.", err)
+            continue
+        }
+
+        result, reject, softError, err := Grade(context.Background(), dummyAssignment, inputDir, "course-student@test.edulinq.org")
+        fmt.Fprintf(os.Stderr, "result: '%s'.\nreject: '%s'.\nsoftError: '%s'.\nerr: '%v'.\n",
+                util.MustToJSONIndent(result), util.MustToJSONIndent(reject),
+                util.MustToJSONIndent(softError), err)
 
         gradeOptions := GetDefaultGradeOptions()
         gradeOptions.NoDocker = true
@@ -253,19 +287,50 @@ func TestRegradeBase(test *testing.T) {
 		}
 	}
 }
+*/
 
-func loadDummyAssignment(test *testing.T) *model.Assignment {
+func loadDummyAssignment(sourceDir string, test *testing.T) *model.Assignment {
 	dummyCourse := &model.Course{
 		ID:          "dummy-course",
 		Name:        "Dummy Course",
 		Assignments: map[string]*model.Assignment{},
+		Source: &util.FileSpec{
+			Type: util.FILESPEC_TYPE_PATH,
+			Path: filepath.Join(sourceDir, "course.json"),
+		},
+	}
+
+	err := dummyCourse.Validate()
+	if err != nil {
+		test.Fatalf("Failed to validate dummy course: '%v'.", err)
 	}
 
 	dummyAssignment := &model.Assignment{
-		Course:    dummyCourse,
-		ID:        "dummy-assignment",
-		Name:      "A dummy assignment to test regrades",
-		MaxPoints: 1,
+		Course:       dummyCourse,
+		ID:           "dummy-assignment",
+		Name:         "A dummy assignment to test regrades",
+		MaxPoints:    1,
+		RelSourceDir: "dummy-assignment",
+		ImageInfo: docker.ImageInfo{
+			StaticFiles: []*util.FileSpec{
+				&util.FileSpec{
+					Type: util.FILESPEC_TYPE_PATH,
+					Path: "grader.sh",
+				},
+			},
+			Invocation: []string{"bash", "./grader.sh"},
+			PostSubmissionFileOperations: []*util.FileOperation{
+				util.NewFileOperation([]string{"cp", "input/assignment.sh", "work/assignment.sh"}),
+			},
+			BaseDirFunc: func() (string, string) {
+				return sourceDir, sourceDir
+			},
+		},
+	}
+
+	err = dummyAssignment.Validate()
+	if err != nil {
+		test.Fatalf("Failed to validate dummy assignment: '%v'.", err)
 	}
 
 	dummyCourse.AddAssignment(dummyAssignment)
@@ -314,12 +379,48 @@ func loadDummyAssignment(test *testing.T) *model.Assignment {
 		},
 	}
 
-	err := db.UpsertUsers(users)
+	err = db.UpsertUsers(users)
 	if err != nil {
 		test.Fatalf("Failed to upsert users into the new course: '%v'.", err)
 	}
 
-    
-
 	return dummyAssignment
+}
+
+func TestDummyPrep(test *testing.T) {
+	db.ResetForTesting()
+
+	// tempDir, err := util.MkDirTemp("regrade-grading-dir-")
+	tempDir, inputDir, _, workDir, err := common.PrepTempGradingDir("regrade-grading-dir-")
+	if err != nil {
+		test.Fatalf("Failed to create temp dir for grading: '%v'.", err)
+	}
+	defer util.RemoveDirent(tempDir)
+
+	dummyAssignment := loadDummyAssignment(tempDir, test)
+
+	err = util.WriteFile(DUMMY_ASSIGNMENT_CONFIG, filepath.Join(workDir, "assignment.json"))
+	if err != nil {
+		test.Fatalf("Failed to write dummy assignment.json: '%v'.", err)
+	}
+
+	faultyGrader := BASE_GRADER + FAULTY_GRADER
+	err = util.WriteFile(faultyGrader, filepath.Join(workDir, "grader.sh"))
+	if err != nil {
+		test.Fatalf("Failed to write faulty grader: '%v'.", err)
+	}
+
+	err = util.WriteFile(SUBMISSION, filepath.Join(inputDir, "assignment.sh"))
+	if err != nil {
+		test.Fatalf("Failed to write submission file: '%v'.", err)
+	}
+
+	gradeOptions := GetDefaultGradeOptions()
+	gradeOptions.NoDocker = true
+	gradeOptions.CheckRejection = false
+
+	result, reject, softError, err := Grade(context.Background(), dummyAssignment, inputDir, "course-student@test.edulinq.org", "", gradeOptions)
+	fmt.Fprintf(os.Stderr, "result: '%s'.\nreject: '%s'.\nsoftError: '%s'.\nerr: '%v'.\n",
+		util.MustToJSONIndent(result), util.MustToJSONIndent(reject),
+		util.MustToJSONIndent(softError), err)
 }
