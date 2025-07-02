@@ -802,8 +802,8 @@ func TestPairwiseAnalysisFailureBase(test *testing.T) {
 	}
 }
 
-func TestExtractJplagOptions(t *testing.T) {
-	tests := []struct {
+func TestExtractJplagOptions(test *testing.T) {
+	testCases := []struct {
 		name     string
 		input    map[string]any
 		expected jplag.JPlagEngineOptions
@@ -821,7 +821,7 @@ func TestExtractJplagOptions(t *testing.T) {
 		{
 			name:     "minTokens as float64",
 			input:    map[string]any{"minTokens": 75.5},
-			expected: jplag.JPlagEngineOptions{MinTokens: 75}, // Expects truncation
+			expected: jplag.JPlagEngineOptions{MinTokens: 75},
 		},
 		{
 			name:     "minTokens as string (invalid type)",
@@ -835,7 +835,7 @@ func TestExtractJplagOptions(t *testing.T) {
 		},
 		{
 			name:     "empty minTokens value (from user's request)",
-			input:    map[string]any{"minTokens": nil}, // Interpreting "minTokens": {} as nil for testing purposes given map[string]any
+			input:    map[string]any{"minTokens": nil},
 			expected: jplag.JPlagEngineOptions{MinTokens: jplag.DEFAULT_MIN_TOKENS},
 		},
 		{
@@ -845,12 +845,12 @@ func TestExtractJplagOptions(t *testing.T) {
 		},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got := jplag.extractJplagOptions(tt.input)
-			if !reflect.DeepEqual(got, tt.expected) {
-				t.Errorf("extractJplagOptions() got = %v, want %v", got, tt.expected)
-			}
-		})
+	var extractedOptions jplag.JPlagEngineOptions
+	for i, testCase := range testCases {
+		extractedOptions = jplag.ExtractJplagOptions(testCase.input)
+
+		if !reflect.DeepEqual(extractedOptions.MinTokens, testCase.expected.MinTokens) {
+			test.Errorf("Case: %d extractJplagOptions() error, got = %v want %v", i, extractedOptions.MinTokens, testCase.expected.MinTokens)
+		}
 	}
 }

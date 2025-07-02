@@ -62,7 +62,7 @@ func getIntFromAny(val any, defaultValue int) int {
 	}
 }
 
-func extractJplagOptions(options map[string]any) JPlagEngineOptions {
+func ExtractJplagOptions(options map[string]any) JPlagEngineOptions {
 	effectiveEngineOptions := JPlagEngineOptions{}
 
 	// Check for minTokens option.
@@ -85,7 +85,7 @@ func (this *JPlagEngine) ComputeFileSimilarity(paths [2]string, templatePath str
 
 	// Extract JPlag specific options.
 	if options != nil && len(options) > 0 {
-		EffectiveOptions := extractJplagOptions(options)
+		EffectiveOptions := ExtractJplagOptions(options)
 		// Extract the minTokens option.
 		effectiveMinTokens = EffectiveOptions.MinTokens
 	}
