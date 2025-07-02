@@ -192,6 +192,7 @@ func TestMetadataDescribe(test *testing.T) {
 			if !reflect.DeepEqual(expected, responseContent) {
 				test.Errorf("Case %d: Unexpected API description. Expected: '%s', actual: '%s'.",
 					i, util.MustToJSONIndent(expected), util.MustToJSONIndent(responseContent))
+
 				continue
 			}
 		} else {
