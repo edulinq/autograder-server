@@ -1,16 +1,14 @@
 package grader
 
 import (
-	// TEST
-	"fmt"
-	"os"
-
 	"context"
+	"fmt"
 	"path/filepath"
+	"reflect"
 	"testing"
 
 	"github.com/edulinq/autograder/internal/db"
-	// "github.com/edulinq/autograder/internal/jobmanager"
+	"github.com/edulinq/autograder/internal/jobmanager"
 	"github.com/edulinq/autograder/internal/model"
 	"github.com/edulinq/autograder/internal/procedures/courses"
 	"github.com/edulinq/autograder/internal/util"
@@ -75,13 +73,12 @@ function grade() {
     source "${THIS_DIR}/assignment.sh"
 
     local score=2
-    local message=""
 
-    eq_one 1 true 'Expected true.' || { score=$((score-1)); message+="Failed to retrun true for good value. "; }
-    eq_one 2 false 'Expected false.'|| { score=$((score-1)); message+="Failed to retrun true for good value. "; }
+    test_eq_one 1 true || { score=$((score-1)); }
+    test_eq_one 2 false || { score=$((score-1)); }
 
     local json_output='{
-        "name": "bash",
+        "name": "dummy-assignment",
         "questions": [
             {
                 "name": "Task 1: eq_one()",
@@ -99,46 +96,35 @@ const FAULTY_GRADER = `
 function test_eq_one() {
     local a=$1
     local expected=$2
-    local feedback=$3
 
     local result=$(eq_one $a)
     # BUG in grader!
     [[ $result -ne $expected ]]
 }
 
-[[ "${BASH_SOURCE[0]}" == "${0}" ]] && main "$@"
-`
+[[ "${BASH_SOURCE[0]}" == "${0}" ]] && main "$@"`
 
 const GOOD_GRADER = `
 function test_eq_one() {
     local a=$1
     local expected=$2
-    local feedback=$3
 
     local result=$(eq_one $a)
-    # BUG in grader!
+    # Fixed the bug in the grader.
     [[ $result -eq $expected ]]
 }
 
-[[ "${BASH_SOURCE[0]}" == "${0}" ]] && main "$@"
-`
+[[ "${BASH_SOURCE[0]}" == "${0}" ]] && main "$@"`
 
 const SUBMISSION = `
 function eq_one() {
     local a=$1
 
-    [[ $a -eq 1 ]]
-}
-`
+    echo $(($a -eq 1))
+}`
 
 /*
 func TestRegradeBase(test *testing.T) {
-	defer db.ResetForTesting()
-
-	studentGradingResults := map[string]*model.GradingResult{
-		"1697406272": model.MustLoadGradingResult(getTestSubmissionResultPath("1697406272")),
-	}
-
 	testCases := []struct {
 		users             []model.CourseUserReference
 		waitForCompletion bool
@@ -209,46 +195,111 @@ func TestRegradeBase(test *testing.T) {
 			map[string]*model.SubmissionHistoryItem{},
 		},
 	}
+}
+*/
+
+func TestRegradeBase(test *testing.T) {
+	defer db.ResetForTesting()
+
+	testCases := []struct {
+		users              []model.CourseUserReference
+		initialSubmissions map[string]float64
+		waitForCompletion  bool
+		numLeft            int
+		finalResults       map[string]*model.SubmissionHistoryItem
+	}{
+		{
+			[]model.CourseUserReference{"course-student@test.edulinq.org"},
+			map[string]float64{
+				"course-student@test.edulinq.org": 0,
+			},
+			true,
+			0,
+			map[string]*model.SubmissionHistoryItem{
+				"course-student@test.edulinq.org": &model.SubmissionHistoryItem{
+					CourseID:     "dummy-course",
+					AssignmentID: "assignment-id",
+					User:         "course-student@test.edulinq.org",
+					MaxPoints:    2,
+					Score:        2,
+				},
+			},
+		},
+	}
 
 	for i, testCase := range testCases {
 		db.ResetForTesting()
-		dummyAssignment := loadDummyAssignment(test)
 
-        // tempDir, err := util.MkDirTemp("regrade-grading-dir-")
-        tempDir, inputDir, outputDir, workDir, err := common.PrepTempGradingDir("regrade-grading-dir-")
-        if err != nil {
-            test.Errorf("Failed to create temp dir for grading: '%v'.", err)
-            continue
-        }
-        defer util.RemoveDirent(tempDir)
+		tempDir, err := util.MkDirTemp("regrade-grading-dir-")
+		if err != nil {
+			test.Errorf("Case %d: Failed to create temp dir for grading: '%v'.", i, err)
+			continue
+		}
+		defer util.RemoveDirent(tempDir)
 
-        err = util.WriteFile(DUMMY_ASSIGNMENT_CONFIG, filepath.Join(workDir, "assignment.json"))
-        if err != nil {
-            test.Errorf("Failed to write dummy assignment.json: '%v'.", err)
-            continue
-        }
+		assignment, err := prepDummyAssignment(tempDir)
+		if err != nil {
+			test.Errorf("Case %d: Failed to prep dummy assignment: '%v'.", i, err)
+			continue
+		}
 
-        faultyGrader := BASE_GRADER + FAULTY_GRADER
-        err = util.WriteFile(faultyGrader, filepath.Join(workDir, "grader.sh"))
-        if err != nil {
-            test.Errorf("Failed to write faulty grader: '%v'.", err)
-            continue
-        }
+		// Set a relative source dir for the assignment to pass validation.
+		assignment.RelSourceDir = "dummy-assignment"
+		course := assignment.GetCourse()
+		course.Assignments["dummyAssignment"] = assignment
+		db.SaveCourse(course)
 
-        err = util.WriteFile(SUBMISSION, filepath.Join(inputDir, "assignment.sh"))
-        if err != nil {
-            test.Errorf("Failed to write submission file: '%v'.", err)
-            continue
-        }
+		gradeOptions := GetDefaultGradeOptions()
+		gradeOptions.NoDocker = true
+		gradeOptions.CheckRejection = false
 
-        result, reject, softError, err := Grade(context.Background(), dummyAssignment, inputDir, "course-student@test.edulinq.org")
-        fmt.Fprintf(os.Stderr, "result: '%s'.\nreject: '%s'.\nsoftError: '%s'.\nerr: '%v'.\n",
-                util.MustToJSONIndent(result), util.MustToJSONIndent(reject),
-                util.MustToJSONIndent(softError), err)
+		ok := true
+		for user, expectedScore := range testCase.initialSubmissions {
+			result, reject, softError, err := Grade(context.Background(), assignment, tempDir, user, "", gradeOptions)
+			if err != nil {
+				test.Errorf("Case %d: Failed to grade initial submission for user '%s': '%v'.", i, user, err)
+				ok = false
+				break
+			}
 
-        gradeOptions := GetDefaultGradeOptions()
-        gradeOptions.NoDocker = true
-        gradeOptions.CheckRejection = false
+			if softError != "" {
+				test.Errorf("Case %d: Unexpected soft error for initial submission for user '%s': '%s'.", i, user, softError)
+				ok = false
+				break
+			}
+
+			if reject != nil {
+				test.Errorf("Case %d: Unexpected rejection during initial submission for user '%s': '%s'.", i, user, reject.String())
+				ok = false
+				break
+			}
+
+			if result.Info.Score != expectedScore {
+				test.Errorf("Case %d: Unexpected score on initial submission. Expected: '%f', Actual: '%f'.", i, expectedScore, result.Info.Score)
+				ok = false
+				break
+			}
+		}
+
+		if !ok {
+			continue
+		}
+
+		goodGrader := BASE_GRADER + GOOD_GRADER
+		assignmentDir := filepath.Join(tempDir, "dummy-assignment")
+
+		err = util.WriteFile(goodGrader, filepath.Join(assignmentDir, "grader.sh"))
+		if err != nil {
+			test.Errorf("Case %d: Failed to write good grader: '%v'.", i, err)
+			continue
+		}
+
+		// TODO: Failing to upsert when the existing course exists.
+		err = upsertTestCourseInTmpDir(tempDir)
+		if err != nil {
+			test.Errorf("Case %d: Failed to upsert test course: '%v'.", i, err)
+			continue
+		}
 
 		options := RegradeOptions{
 			GradeOptions: gradeOptions,
@@ -261,7 +312,7 @@ func TestRegradeBase(test *testing.T) {
 			RetainOriginalContext: false,
 		}
 
-		result, numLeft, err := Regrade(dummyAssignment, options)
+		result, numLeft, err := Regrade(assignment, options)
 		if err != nil {
 			test.Errorf("Case %d: Failed to regrade submissions: '%v'.", i, err)
 			continue
@@ -279,132 +330,23 @@ func TestRegradeBase(test *testing.T) {
 			continue
 		}
 
-		failed := CheckAndClearIDs(test, i, testCase.results, result.Results)
+		failed := CheckAndClearIDs(test, i, testCase.finalResults, result.Results)
 		if failed {
 			continue
 		}
 
-		if !reflect.DeepEqual(testCase.results, result.Results) {
+		if !reflect.DeepEqual(testCase.finalResults, result.Results) {
 			test.Errorf("Case %d: Unexpected regrade result. Expected: '%s', actual: '%s'.",
-				i, util.MustToJSONIndent(testCase.results), util.MustToJSONIndent(result.Results))
+				i, util.MustToJSONIndent(testCase.finalResults), util.MustToJSONIndent(result.Results))
 			continue
 		}
 	}
 }
-*/
 
-/*
-func loadDummyAssignment(sourceDir string, test *testing.T) *model.Assignment {
-	dummyCourse := &model.Course{
-		ID:          "dummy-course",
-		Name:        "A dummy course to test regrades.",
-		Assignments: map[string]*model.Assignment{},
-		Source: &util.FileSpec{
-			Type: util.FILESPEC_TYPE_PATH,
-			Path: filepath.Join(sourceDir, "course.json"),
-		},
-	}
-
-	err := dummyCourse.Validate()
+func prepDummyAssignment(tempDir string) (*model.Assignment, error) {
+	err := util.WriteFile(DUMMY_COURSE_CONFIG, filepath.Join(tempDir, "course.json"))
 	if err != nil {
-		test.Fatalf("Failed to validate dummy course: '%v'.", err)
-	}
-
-	dummyAssignment := &model.Assignment{
-		Course:       dummyCourse,
-		ID:           "dummy-assignment",
-		Name:         "A dummy assignment to test regrades",
-		MaxPoints:    1,
-		RelSourceDir: "dummy-assignment",
-		ImageInfo: docker.ImageInfo{
-			StaticFiles: []*util.FileSpec{
-				&util.FileSpec{
-					Type: util.FILESPEC_TYPE_PATH,
-					Path: "grader.sh",
-				},
-			},
-			Invocation: []string{"bash", "./grader.sh"},
-			PostSubmissionFileOperations: []*util.FileOperation{
-				util.NewFileOperation([]string{"cp", "input/assignment.sh", "work/assignment.sh"}),
-			},
-			BaseDirFunc: func() (string, string) {
-				return sourceDir, sourceDir
-			},
-		},
-	}
-
-	err = dummyAssignment.Validate()
-	if err != nil {
-		test.Fatalf("Failed to validate dummy assignment: '%v'.", err)
-	}
-
-	dummyCourse.AddAssignment(dummyAssignment)
-	db.SaveCourse(dummyCourse)
-
-	users := map[string]*model.ServerUser{
-		"course-admin@test.edulinq.org": &model.ServerUser{
-			Email: "course-admin@test.edulinq.org",
-			CourseInfo: map[string]*model.UserCourseInfo{
-				dummyCourse.GetID(): &model.UserCourseInfo{
-					Role: model.CourseRoleAdmin,
-				},
-			},
-		},
-		"course-grader@test.edulinq.org": &model.ServerUser{
-			Email: "course-grader@test.edulinq.org",
-			CourseInfo: map[string]*model.UserCourseInfo{
-				dummyCourse.GetID(): &model.UserCourseInfo{
-					Role: model.CourseRoleGrader,
-				},
-			},
-		},
-		"course-other@test.edulinq.org": &model.ServerUser{
-			Email: "course-other@test.edulinq.org",
-			CourseInfo: map[string]*model.UserCourseInfo{
-				dummyCourse.GetID(): &model.UserCourseInfo{
-					Role: model.CourseRoleOther,
-				},
-			},
-		},
-		"course-owner@test.edulinq.org": &model.ServerUser{
-			Email: "course-owner@test.edulinq.org",
-			CourseInfo: map[string]*model.UserCourseInfo{
-				dummyCourse.GetID(): &model.UserCourseInfo{
-					Role: model.CourseRoleOwner,
-				},
-			},
-		},
-		"course-student@test.edulinq.org": &model.ServerUser{
-			Email: "course-student@test.edulinq.org",
-			CourseInfo: map[string]*model.UserCourseInfo{
-				dummyCourse.GetID(): &model.UserCourseInfo{
-					Role: model.CourseRoleStudent,
-				},
-			},
-		},
-	}
-
-	err = db.UpsertUsers(users)
-	if err != nil {
-		test.Fatalf("Failed to upsert users into the new course: '%v'.", err)
-	}
-
-	return dummyAssignment
-}
-*/
-
-func TestDummyPrep(test *testing.T) {
-	db.ResetForTesting()
-
-	tempDir, err := util.MkDirTemp("regrade-grading-dir")
-	if err != nil {
-		test.Fatalf("Failed to create temp dir for grading: '%v'.", err)
-	}
-	defer util.RemoveDirent(tempDir)
-
-	err = util.WriteFile(DUMMY_COURSE_CONFIG, filepath.Join(tempDir, "course.json"))
-	if err != nil {
-		test.Fatalf("Failed to write course config: '%v'.", err)
+		return nil, fmt.Errorf("Failed to write course config: '%v'.", err)
 	}
 
 	assignmentDir := filepath.Join(tempDir, "dummy-assignment")
@@ -412,30 +354,23 @@ func TestDummyPrep(test *testing.T) {
 
 	err = util.WriteFile(DUMMY_ASSIGNMENT_CONFIG, filepath.Join(assignmentDir, "assignment.json"))
 	if err != nil {
-		test.Fatalf("Failed to write assignment config: '%v'.", err)
+		return nil, fmt.Errorf("Failed to write assignment config: '%v'.", err)
 	}
 
 	faultyGrader := BASE_GRADER + FAULTY_GRADER
 	err = util.WriteFile(faultyGrader, filepath.Join(assignmentDir, "grader.sh"))
 	if err != nil {
-		test.Fatalf("Failed to write faulty grader: '%v'.", err)
+		return nil, fmt.Errorf("Failed to write faulty grader: '%v'.", err)
 	}
 
-	users, err := db.GetServerUsers()
+	err = upsertTestCourseInTmpDir(tempDir)
 	if err != nil {
-		test.Fatalf("Failed to get server users: '%v'.", err)
+		return nil, fmt.Errorf("Failed to upsert test course: '%v'.", err)
 	}
-
-	upsertResult, err := courses.UpsertFromDir(tempDir, courses.CourseUpsertOptions{ContextUser: users["server-admin@test.edulinq.org"]})
-	if err != nil {
-		test.Fatalf("Failed to upsert course from dir: '%v'.", err)
-	}
-
-	fmt.Fprintf(os.Stderr, "Upsert got the following result: '%s'.", util.MustToJSONIndent(upsertResult))
 
 	dummyCourse, err := db.GetCourse("dummy-course")
 	if err != nil {
-		test.Fatalf("Failed to get newly upserted course: '%v'.", err)
+		return nil, fmt.Errorf("Failed to get newly upserted course: '%v'.", err)
 	}
 
 	newUsers := map[string]*model.ServerUser{
@@ -483,31 +418,36 @@ func TestDummyPrep(test *testing.T) {
 
 	err = db.UpsertUsers(newUsers)
 	if err != nil {
-		test.Fatalf("Failed to upsert users into the new course: '%v'.", err)
+		return nil, fmt.Errorf("Failed to upsert users into the new course: '%v'.", err)
 	}
 
 	err = util.WriteFile(SUBMISSION, filepath.Join(tempDir, "assignment.sh"))
 	if err != nil {
-		test.Fatalf("Failed to write submission file: '%v'.", err)
+		return nil, fmt.Errorf("Failed to write submission file: '%v'.", err)
 	}
-
-	gradeOptions := GetDefaultGradeOptions()
-	gradeOptions.NoDocker = true
-	gradeOptions.CheckRejection = false
 
 	dummyAssignment := dummyCourse.GetAssignment("dummy-assignment")
 	if dummyAssignment == nil {
-		test.Fatalf("Failed to get dummy assignment from dummy course: '%v'.", err)
+		return nil, fmt.Errorf("Failed to get dummy assignment from dummy course: '%v'.", err)
 	}
 
-	result, reject, softError, err := Grade(context.Background(), dummyAssignment, tempDir, "course-student@test.edulinq.org", "", gradeOptions)
-	fmt.Fprintf(os.Stderr, "result: '%s'.\nreject: '%s'.\nsoftError: '%s'.\nerr: '%v'.\n",
-		util.MustToJSONIndent(result), util.MustToJSONIndent(reject),
-		util.MustToJSONIndent(softError), err)
+	return dummyAssignment, nil
+}
 
-	paths, err := util.GetAllDirents(tempDir, false, false)
+func upsertTestCourseInTmpDir(tempDir string) error {
+	users, err := db.GetServerUsers()
 	if err != nil {
-		test.Fatalf("Failed to get dirents: '%v'.", err)
+		return fmt.Errorf("Failed to get server users: '%v'.", err)
 	}
-	fmt.Fprintf(os.Stderr, "found the following paths: '%v'.", util.MustToJSONIndent(paths))
+
+	upsertOptions := courses.CourseUpsertOptions{
+		ContextUser: users["server-admin@test.edulinq.org"],
+	}
+
+	_, err = courses.UpsertFromDir(tempDir, upsertOptions)
+	if err != nil {
+		return fmt.Errorf("Failed to upsert course from dir: '%v'.", err)
+	}
+
+	return nil
 }
