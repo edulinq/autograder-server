@@ -57,10 +57,6 @@ func Regrade(assignment *model.Assignment, options RegradeOptions) (*RegradeResu
 		options.Context = context.Background()
 	}
 
-	// TODO: We may want to return the regrade time!
-	// TODO: Think about what happens if they put a proxy time < regrade after.
-	// We will duplicate work on subsequent calls because the proxy time will be the submission time
-	// (so we will think work needs to be done again).
 	var regradeAfter timestamp.Timestamp = 0
 	if options.RegradeAfter == nil {
 		regradeAfter = timestamp.Now()

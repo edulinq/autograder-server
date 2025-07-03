@@ -22,11 +22,15 @@ const FAULTY_GRADER = `[[ $result -ne $expected ]]`
 func TestRegradeBase(test *testing.T) {
 	defer db.ResetForTesting()
 
+	// A time in the year 3003 which can be used for regrade tests that want a future RegradeAfter time.
+	farFutureTime := timestamp.FromMSecs(32614181465000)
+
 	testCases := []struct {
 		users              []model.CourseUserReference
 		initialSubmissions []string
 		waitForCompletion  bool
 		numLeft            int
+		regradeAfter       *timestamp.Timestamp
 		results            map[string]*model.SubmissionHistoryItem
 	}{
 		// User With Submission, Wait
@@ -35,6 +39,7 @@ func TestRegradeBase(test *testing.T) {
 			[]string{"course-student@test.edulinq.org"},
 			true,
 			0,
+			nil,
 			map[string]*model.SubmissionHistoryItem{
 				"course-student@test.edulinq.org": &model.SubmissionHistoryItem{
 					CourseID:     "course-languages",
@@ -52,6 +57,7 @@ func TestRegradeBase(test *testing.T) {
 			[]string{"course-student@test.edulinq.org"},
 			false,
 			1,
+			nil,
 			map[string]*model.SubmissionHistoryItem{},
 		},
 
@@ -61,6 +67,7 @@ func TestRegradeBase(test *testing.T) {
 			nil,
 			true,
 			0,
+			nil,
 			map[string]*model.SubmissionHistoryItem{
 				"course-admin@test.edulinq.org": nil,
 			},
@@ -72,6 +79,7 @@ func TestRegradeBase(test *testing.T) {
 			nil,
 			false,
 			1,
+			nil,
 			map[string]*model.SubmissionHistoryItem{},
 		},
 
@@ -81,6 +89,7 @@ func TestRegradeBase(test *testing.T) {
 			nil,
 			true,
 			0,
+			nil,
 			map[string]*model.SubmissionHistoryItem{},
 		},
 		{
@@ -88,6 +97,7 @@ func TestRegradeBase(test *testing.T) {
 			nil,
 			true,
 			0,
+			nil,
 			map[string]*model.SubmissionHistoryItem{},
 		},
 
@@ -97,6 +107,7 @@ func TestRegradeBase(test *testing.T) {
 			nil,
 			false,
 			0,
+			nil,
 			map[string]*model.SubmissionHistoryItem{},
 		},
 		{
@@ -104,6 +115,7 @@ func TestRegradeBase(test *testing.T) {
 			nil,
 			false,
 			0,
+			nil,
 			map[string]*model.SubmissionHistoryItem{},
 		},
 
@@ -113,6 +125,7 @@ func TestRegradeBase(test *testing.T) {
 			[]string{"course-student@test.edulinq.org", "course-admin@test.edulinq.org"},
 			true,
 			0,
+			nil,
 			map[string]*model.SubmissionHistoryItem{
 				"course-admin@test.edulinq.org": &model.SubmissionHistoryItem{
 					CourseID:     "course-languages",
@@ -140,6 +153,7 @@ func TestRegradeBase(test *testing.T) {
 			[]string{"course-student@test.edulinq.org", "course-admin@test.edulinq.org"},
 			false,
 			5,
+			nil,
 			map[string]*model.SubmissionHistoryItem{},
 		},
 
@@ -149,6 +163,7 @@ func TestRegradeBase(test *testing.T) {
 			[]string{"course-student@test.edulinq.org", "course-grader@test.edulinq.org"},
 			true,
 			0,
+			nil,
 			map[string]*model.SubmissionHistoryItem{
 				"course-admin@test.edulinq.org": nil,
 				"course-grader@test.edulinq.org": &model.SubmissionHistoryItem{
@@ -174,6 +189,73 @@ func TestRegradeBase(test *testing.T) {
 			[]string{"course-student@test.edulinq.org", "course-grader@test.edulinq.org"},
 			false,
 			3,
+			nil,
+			map[string]*model.SubmissionHistoryItem{},
+		},
+
+		// Regrade Time Before Submission, Wait
+		{
+			[]model.CourseUserReference{"course-student@test.edulinq.org"},
+			[]string{"course-student@test.edulinq.org"},
+			true,
+			0,
+			timestamp.ZeroPointer(),
+			map[string]*model.SubmissionHistoryItem{
+				"course-student@test.edulinq.org": &model.SubmissionHistoryItem{
+					CourseID:     "course-languages",
+					AssignmentID: "bash",
+					User:         "course-student@test.edulinq.org",
+					MaxPoints:    10,
+					// Note the full credit came from the original submission with the good grader.
+					Score: 10,
+				},
+			},
+		},
+
+		// Regrade Time Before Submission, No Wait
+		{
+			[]model.CourseUserReference{"course-student@test.edulinq.org"},
+			[]string{"course-student@test.edulinq.org"},
+			false,
+			0,
+			timestamp.ZeroPointer(),
+			map[string]*model.SubmissionHistoryItem{
+				"course-student@test.edulinq.org": &model.SubmissionHistoryItem{
+					CourseID:     "course-languages",
+					AssignmentID: "bash",
+					User:         "course-student@test.edulinq.org",
+					MaxPoints:    10,
+					// Note the full credit came from the original submission with the good grader.
+					Score: 10,
+				},
+			},
+		},
+
+		// Regrade Time Before Submission, Wait
+		{
+			[]model.CourseUserReference{"course-student@test.edulinq.org"},
+			[]string{"course-student@test.edulinq.org"},
+			true,
+			0,
+			&farFutureTime,
+			map[string]*model.SubmissionHistoryItem{
+				"course-student@test.edulinq.org": &model.SubmissionHistoryItem{
+					CourseID:     "course-languages",
+					AssignmentID: "bash",
+					User:         "course-student@test.edulinq.org",
+					MaxPoints:    10,
+					Score:        0,
+				},
+			},
+		},
+
+		// Regrade Time Before Submission, No Wait
+		{
+			[]model.CourseUserReference{"course-student@test.edulinq.org"},
+			[]string{"course-student@test.edulinq.org"},
+			false,
+			1,
+			&farFutureTime,
 			map[string]*model.SubmissionHistoryItem{},
 		},
 	}
@@ -235,9 +317,8 @@ func TestRegradeBase(test *testing.T) {
 			JobOptions: jobmanager.JobOptions{
 				WaitForCompletion: testCase.waitForCompletion,
 			},
-			RawReferences: testCase.users,
-			// TODO: Make this a test case field.
-			RegradeAfter:          nil,
+			RawReferences:         testCase.users,
+			RegradeAfter:          testCase.regradeAfter,
 			RetainOriginalContext: false,
 		}
 
@@ -251,8 +332,6 @@ func TestRegradeBase(test *testing.T) {
 			test.Errorf("Case %d: Unexpected work errors during regrade: '%s'.", i, util.MustToJSONIndent(result.WorkErrors))
 			continue
 		}
-
-		// TODO: Add a check for result.RegradeAfter.
 
 		if testCase.numLeft != numLeft {
 			test.Errorf("Case %d: Unexpected number of regrades remaining. Expected: '%d', actual: '%d'.", i, testCase.numLeft, numLeft)
