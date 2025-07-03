@@ -33,7 +33,9 @@ func TestRegradeBase(test *testing.T) {
 		regradeAfter       *timestamp.Timestamp
 		results            map[string]*model.SubmissionHistoryItem
 	}{
-		// User With Submission, Wait
+		// Wait For Completion
+
+		// User With Submission
 		{
 			[]model.CourseUserReference{"course-student@test.edulinq.org"},
 			[]string{"course-student@test.edulinq.org"},
@@ -51,17 +53,7 @@ func TestRegradeBase(test *testing.T) {
 			},
 		},
 
-		// User With Submission, No Wait
-		{
-			[]model.CourseUserReference{"course-student@test.edulinq.org"},
-			[]string{"course-student@test.edulinq.org"},
-			false,
-			1,
-			nil,
-			map[string]*model.SubmissionHistoryItem{},
-		},
-
-		// User Without Submission, Wait
+		// User Without Submission
 		{
 			[]model.CourseUserReference{"course-admin@test.edulinq.org"},
 			nil,
@@ -73,17 +65,7 @@ func TestRegradeBase(test *testing.T) {
 			},
 		},
 
-		// User Without Submission, No Wait
-		{
-			[]model.CourseUserReference{"course-admin@test.edulinq.org"},
-			nil,
-			false,
-			1,
-			nil,
-			map[string]*model.SubmissionHistoryItem{},
-		},
-
-		// Empty Users, Wait
+		// Empty Users
 		{
 			nil,
 			nil,
@@ -101,25 +83,7 @@ func TestRegradeBase(test *testing.T) {
 			map[string]*model.SubmissionHistoryItem{},
 		},
 
-		// Empty Users, No Wait
-		{
-			nil,
-			nil,
-			false,
-			0,
-			nil,
-			map[string]*model.SubmissionHistoryItem{},
-		},
-		{
-			[]model.CourseUserReference{},
-			nil,
-			false,
-			0,
-			nil,
-			map[string]*model.SubmissionHistoryItem{},
-		},
-
-		// All Users, Multiple Submissions, Wait
+		// All Users, Multiple Submissions
 		{
 			model.NewAllCourseUserReference(),
 			[]string{"course-student@test.edulinq.org", "course-admin@test.edulinq.org"},
@@ -147,17 +111,7 @@ func TestRegradeBase(test *testing.T) {
 			},
 		},
 
-		// All Users, Multiple Submissions, No Wait
-		{
-			model.NewAllCourseUserReference(),
-			[]string{"course-student@test.edulinq.org", "course-admin@test.edulinq.org"},
-			false,
-			5,
-			nil,
-			map[string]*model.SubmissionHistoryItem{},
-		},
-
-		// Some Users, Multiple Submissions, Wait
+		// Some Users, Multiple Submissions
 		{
 			[]model.CourseUserReference{"*", "-other", "-owner"},
 			[]string{"course-student@test.edulinq.org", "course-grader@test.edulinq.org"},
@@ -183,17 +137,7 @@ func TestRegradeBase(test *testing.T) {
 			},
 		},
 
-		// Some Users, Multiple Submissions, No Wait
-		{
-			[]model.CourseUserReference{"*", "-other", "-owner"},
-			[]string{"course-student@test.edulinq.org", "course-grader@test.edulinq.org"},
-			false,
-			3,
-			nil,
-			map[string]*model.SubmissionHistoryItem{},
-		},
-
-		// Regrade Time Before Submission, Wait
+		// Regrade Time Before Submission
 		{
 			[]model.CourseUserReference{"course-student@test.edulinq.org"},
 			[]string{"course-student@test.edulinq.org"},
@@ -212,26 +156,7 @@ func TestRegradeBase(test *testing.T) {
 			},
 		},
 
-		// Regrade Time Before Submission, No Wait
-		{
-			[]model.CourseUserReference{"course-student@test.edulinq.org"},
-			[]string{"course-student@test.edulinq.org"},
-			false,
-			0,
-			timestamp.ZeroPointer(),
-			map[string]*model.SubmissionHistoryItem{
-				"course-student@test.edulinq.org": &model.SubmissionHistoryItem{
-					CourseID:     "course-languages",
-					AssignmentID: "bash",
-					User:         "course-student@test.edulinq.org",
-					MaxPoints:    10,
-					// Note the full credit came from the original submission with the good grader.
-					Score: 10,
-				},
-			},
-		},
-
-		// Regrade Time Before Submission, Wait
+		// Regrade Time After Submission
 		{
 			[]model.CourseUserReference{"course-student@test.edulinq.org"},
 			[]string{"course-student@test.edulinq.org"},
@@ -249,7 +174,86 @@ func TestRegradeBase(test *testing.T) {
 			},
 		},
 
-		// Regrade Time Before Submission, No Wait
+		// No Wait For Completion
+
+		// User With Submission
+		{
+			[]model.CourseUserReference{"course-student@test.edulinq.org"},
+			[]string{"course-student@test.edulinq.org"},
+			false,
+			1,
+			nil,
+			map[string]*model.SubmissionHistoryItem{},
+		},
+
+		// User Without Submission
+		{
+			[]model.CourseUserReference{"course-admin@test.edulinq.org"},
+			nil,
+			false,
+			1,
+			nil,
+			map[string]*model.SubmissionHistoryItem{},
+		},
+
+		// Empty Users
+		{
+			nil,
+			nil,
+			false,
+			0,
+			nil,
+			map[string]*model.SubmissionHistoryItem{},
+		},
+		{
+			[]model.CourseUserReference{},
+			nil,
+			false,
+			0,
+			nil,
+			map[string]*model.SubmissionHistoryItem{},
+		},
+
+		// All Users, Multiple Submissions
+		{
+			model.NewAllCourseUserReference(),
+			[]string{"course-student@test.edulinq.org", "course-admin@test.edulinq.org"},
+			false,
+			5,
+			nil,
+			map[string]*model.SubmissionHistoryItem{},
+		},
+
+		// Some Users, Multiple Submissions
+		{
+			[]model.CourseUserReference{"*", "-other", "-owner"},
+			[]string{"course-student@test.edulinq.org", "course-grader@test.edulinq.org"},
+			false,
+			3,
+			nil,
+			map[string]*model.SubmissionHistoryItem{},
+		},
+
+		// Regrade Time Before Submission
+		{
+			[]model.CourseUserReference{"course-student@test.edulinq.org"},
+			[]string{"course-student@test.edulinq.org"},
+			false,
+			0,
+			timestamp.ZeroPointer(),
+			map[string]*model.SubmissionHistoryItem{
+				"course-student@test.edulinq.org": &model.SubmissionHistoryItem{
+					CourseID:     "course-languages",
+					AssignmentID: "bash",
+					User:         "course-student@test.edulinq.org",
+					MaxPoints:    10,
+					// Note the full credit came from the original submission with the good grader.
+					Score: 10,
+				},
+			},
+		},
+
+		// Regrade Time After Submission
 		{
 			[]model.CourseUserReference{"course-student@test.edulinq.org"},
 			[]string{"course-student@test.edulinq.org"},

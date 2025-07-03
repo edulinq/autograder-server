@@ -3,6 +3,7 @@ package proxy
 import (
 	"github.com/edulinq/autograder/internal/api/core"
 	"github.com/edulinq/autograder/internal/grader"
+	"github.com/edulinq/autograder/internal/model"
 )
 
 type RegradeRequest struct {
@@ -21,6 +22,10 @@ type RegradeResponse struct {
 
 // Proxy regrade an assignment for all target users using their most recent submission.
 func HandleRegrade(request *RegradeRequest) (*RegradeResponse, *core.APIError) {
+	if len(request.RegradeOptions.RawReferences) == 0 {
+		request.RegradeOptions.RawReferences = model.NewAllCourseUserReference()
+	}
+
 	gradeOptions := grader.GetDefaultGradeOptions()
 	// Proxy submissions are not subject to submission restrictions.
 	gradeOptions.CheckRejection = false
