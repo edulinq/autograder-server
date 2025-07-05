@@ -2002,6 +2002,10 @@
             "category": "struct",
             "fields": [
                 {
+                    "name": "engine-options",
+                    "type": "map[string]any"
+                },
+                {
                     "name": "exclude-patterns",
                     "type": "[]string"
                 },

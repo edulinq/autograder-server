@@ -15,11 +15,13 @@ func TestJPlagComputeFileSimilarityBase(test *testing.T) {
 		Score:    0.896552,
 	}
 
-	// Lower the token minimum for testing.
 	engine := GetEngine()
-	engine.MinTokens = 5
 
-	core.RunEngineTestComputeFileSimilarityBase(test, engine, false, expected)
+	engineOptions := map[string]any{
+		"minTokens": 5,
+	}
+
+	core.RunEngineTestComputeFileSimilarityBase(test, engine, false, expected, engineOptions)
 }
 
 func TestJPlagComputeFileSimilarityWithIgnoreBase(test *testing.T) {
@@ -30,9 +32,11 @@ func TestJPlagComputeFileSimilarityWithIgnoreBase(test *testing.T) {
 		Score:    0.526316,
 	}
 
-	// Lower the token minimum for testing.
 	engine := GetEngine()
-	engine.MinTokens = 5
 
-	core.RunEngineTestComputeFileSimilarityBase(test, engine, true, expected)
+	engineOptions := map[string]any{
+		"minTokens": 5,
+	}
+
+	core.RunEngineTestComputeFileSimilarityBase(test, engine, true, expected, engineOptions)
 }

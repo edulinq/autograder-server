@@ -27,6 +27,8 @@ type AssignmentAnalysisOptions struct {
 
 	TemplateFiles   []*util.FileSpec      `json:"template-files,omitempty,omitzero"`
 	TemplateFileOps []*util.FileOperation `json:"template-file-ops,omitempty,omitzero"`
+
+	EngineOptions map[string]any `json:"engine-options,omitempty,omitzero"`
 }
 
 type AnalysisFileInfo struct {

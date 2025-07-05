@@ -275,11 +275,6 @@ func TestPairwiseAnalysisDefaultEnginesBase(test *testing.T) {
 		forceDefaultEnginesForTesting = false
 	}()
 
-	defaultSimilarityEngines[1].(*jplag.JPlagEngine).MinTokens = 5
-	defer func() {
-		defaultSimilarityEngines[1].(*jplag.JPlagEngine).MinTokens = jplag.DEFAULT_MIN_TOKENS
-	}()
-
 	ids := []string{
 		"course101::hw0::course-student@test.edulinq.org::1697406256",
 		"course101::hw0::course-student@test.edulinq.org::1697406272",
@@ -321,10 +316,9 @@ func TestPairwiseAnalysisDefaultEnginesSpecificFiles(test *testing.T) {
 	docker.EnsureOrSkipForTest(test)
 
 	// Override a setting for JPlag for testing.
-	defaultSimilarityEngines[1].(*jplag.JPlagEngine).MinTokens = 5
-	defer func() {
-		defaultSimilarityEngines[1].(*jplag.JPlagEngine).MinTokens = jplag.DEFAULT_MIN_TOKENS
-	}()
+	engineOptions := map[string]any{
+		"minTokens": 5,
+	}
 
 	testPaths := []string{
 		filepath.Join(util.RootDirForTesting(), "testdata", "files", "sim_engine", "config.json"),
@@ -335,7 +329,7 @@ func TestPairwiseAnalysisDefaultEnginesSpecificFiles(test *testing.T) {
 
 	for _, path := range testPaths {
 		for _, engine := range defaultSimilarityEngines {
-			sim, err := engine.ComputeFileSimilarity([2]string{path, path}, "", ctx)
+			sim, err := engine.ComputeFileSimilarity([2]string{path, path}, "", ctx, engineOptions)
 			if err != nil {
 				test.Errorf("Engine '%s' failed to compute similarity on '%s': '%v'.",
 					engine.GetName(), path, err)
@@ -800,5 +794,58 @@ func TestPairwiseAnalysisFailureBase(test *testing.T) {
 	if !strings.Contains(results[key].FailureMessage, expectedMessageSubstring) {
 		test.Fatalf("Failure message does not contain expected substring. Expected Substring: '%s', Actual: '%s'.",
 			expectedMessageSubstring, results[key].FailureMessage)
+	}
+}
+
+func TestExtractJplagOptions(test *testing.T) {
+	testCases := []struct {
+		name     string
+		input    map[string]any
+		expected jplag.JPlagEngineOptions
+	}{
+		{
+			name:     "minTokens not specified",
+			input:    map[string]any{},
+			expected: jplag.JPlagEngineOptions{MinTokens: jplag.DEFAULT_MIN_TOKENS},
+		},
+		{
+			name:     "minTokens as int",
+			input:    map[string]any{"minTokens": 100},
+			expected: jplag.JPlagEngineOptions{MinTokens: 100},
+		},
+		{
+			name:     "minTokens as float64",
+			input:    map[string]any{"minTokens": 75.5},
+			expected: jplag.JPlagEngineOptions{MinTokens: 75},
+		},
+		{
+			name:     "minTokens as string (invalid type)",
+			input:    map[string]any{"minTokens": "abc"},
+			expected: jplag.JPlagEngineOptions{MinTokens: jplag.DEFAULT_MIN_TOKENS},
+		},
+		{
+			name:     "minTokens as nil",
+			input:    map[string]any{"minTokens": nil},
+			expected: jplag.JPlagEngineOptions{MinTokens: jplag.DEFAULT_MIN_TOKENS},
+		},
+		{
+			name:     "empty minTokens value (from user's request)",
+			input:    map[string]any{"minTokens": nil},
+			expected: jplag.JPlagEngineOptions{MinTokens: jplag.DEFAULT_MIN_TOKENS},
+		},
+		{
+			name:     "other options present, minTokens valid",
+			input:    map[string]any{"minTokens": 200, "anotherOption": "value"},
+			expected: jplag.JPlagEngineOptions{MinTokens: 200},
+		},
+	}
+
+	var extractedOptions jplag.JPlagEngineOptions
+	for i, testCase := range testCases {
+		extractedOptions = jplag.ExtractJplagOptions(testCase.input)
+
+		if !reflect.DeepEqual(extractedOptions.MinTokens, testCase.expected.MinTokens) {
+			test.Errorf("Case: %d extractJplagOptions() error, got = %v want %v", i, extractedOptions.MinTokens, testCase.expected.MinTokens)
+		}
 	}
 }
