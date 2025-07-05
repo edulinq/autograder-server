@@ -20,7 +20,7 @@ func TestDolosComputeFileSimilarityBase(test *testing.T) {
 		Score:    0.717949,
 	}
 
-	core.RunEngineTestComputeFileSimilarityBase(test, GetEngine(), false, expected)
+	core.RunEngineTestComputeFileSimilarityBase(test, GetEngine(), false, expected, nil)
 }
 
 func TestDolosComputeFileSimilarityWithIgnoreBase(test *testing.T) {
@@ -35,5 +35,5 @@ func TestDolosComputeFileSimilarityWithIgnoreBase(test *testing.T) {
 		Score:    0.702703,
 	}
 
-	core.RunEngineTestComputeFileSimilarityBase(test, GetEngine(), true, expected)
+	core.RunEngineTestComputeFileSimilarityBase(test, GetEngine(), true, expected, nil)
 }

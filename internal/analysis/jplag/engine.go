@@ -88,6 +88,8 @@ func (this *JPlagEngine) ComputeFileSimilarity(paths [2]string, templatePath str
 		EffectiveOptions := ExtractJplagOptions(options)
 		// Extract the minTokens option.
 		effectiveMinTokens = EffectiveOptions.MinTokens
+	} else {
+		effectiveMinTokens = DEFAULT_MIN_TOKENS
 	}
 
 	err := ensureImage()
