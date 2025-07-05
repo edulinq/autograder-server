@@ -223,8 +223,9 @@ func computeFileSims(options AnalysisOptions, inputDirs [2]string, assignment *m
 
 	engineOptions := make(map[string]any)
 	if assignment != nil && assignment.AssignmentAnalysisOptions != nil {
-		engineOptions = assignment.AssignmentAnalysisOptions.EngineOptions //take engine options and then check for nil
+		engineOptions = assignment.AssignmentAnalysisOptions.EngineOptions
 	} else {
+		// Assign EngineOptions as nil if not found.
 		engineOptions = nil
 	}
 
@@ -262,14 +263,14 @@ func computeFileSims(options AnalysisOptions, inputDirs [2]string, assignment *m
 			// Get specific options for this engine.
 			specificEngineOptionsAny, found := engineOptions[engine.GetName()]
 
-			// Initialize with nil map[string]any{}
-			if found && specificEngineOptionsAny != nil { // Check if found and not nil
+			if found && specificEngineOptionsAny != nil { // Check if found and specificEngineOptions are not nil.
 				var ok bool
 				specificEngineOptions, ok = specificEngineOptionsAny.(map[string]any)
 				if !ok {
 					// Handle the case where the assertion fails.
-					errs[i] = fmt.Errorf("Engine options for '%s' could not be converted into map[string]any, skipping engine.", engine.GetName())
-					continue // Skip to the next engine
+					specificEngineOptions = nil
+					log.Warn("Engine options for '%s' could not be converted into map[string]any. Engines will use default values.", engine.GetName())
+					continue // Skip to the next engine.
 				}
 			}
 
@@ -289,7 +290,7 @@ func computeFileSims(options AnalysisOptions, inputDirs [2]string, assignment *m
 					tempSimilarities[index] = similarity
 
 				}
-			}(i, engine, specificEngineOptions) // Pass specificEngineOptions to the goroutine
+			}(i, engine, specificEngineOptions) // Pass specificEngineOptions to the goroutine.
 		}
 
 		// Wait for all engines to complete.

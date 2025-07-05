@@ -275,11 +275,6 @@ func TestPairwiseAnalysisDefaultEnginesBase(test *testing.T) {
 		forceDefaultEnginesForTesting = false
 	}()
 
-	// defaultSimilarityEngines[1].(*jplag.JPlagEngine).MinTokens = 5
-	// defer func() {
-	// 	defaultSimilarityEngines[1].(*jplag.JPlagEngine).MinTokens = jplag.DEFAULT_MIN_TOKENS
-	// }()
-
 	ids := []string{
 		"course101::hw0::course-student@test.edulinq.org::1697406256",
 		"course101::hw0::course-student@test.edulinq.org::1697406272",

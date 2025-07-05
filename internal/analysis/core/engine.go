@@ -16,6 +16,5 @@ type SimilarityEngine interface {
 	// Working on two files (submissions) at a time will typically be less efficient than working on all files at the same time,
 	// but a lot of shorter jobs is more flexible than one large job.
 	// On a timeout, (nil, nil) should be returned.
-
 	ComputeFileSimilarity(paths [2]string, templatePath string, ctx context.Context, options map[string]any) (*model.FileSimilarity, error)
 }
