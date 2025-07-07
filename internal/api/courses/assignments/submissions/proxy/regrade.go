@@ -36,7 +36,7 @@ func HandleRegrade(request *RegradeRequest) (*RegradeResponse, *core.APIError) {
 
 	result, numRemaining, err := grader.Regrade(request.Assignment, request.RegradeOptions)
 	if err != nil {
-		return nil, core.NewInternalError("-638", request, "Failed to get courses from database.").Err(err)
+		return nil, core.NewInternalError("-638", request, "Failed to regrade the assignment for the target users.").Err(err)
 	}
 
 	response := RegradeResponse{

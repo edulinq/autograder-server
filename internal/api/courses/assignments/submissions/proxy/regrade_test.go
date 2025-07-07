@@ -34,7 +34,9 @@ func TestRegradeBase(test *testing.T) {
 		expectedLocator string
 		expected        RegradeResponse
 	}{
-		// Student, Wait For Completion
+		// Wait For Completion
+
+		// Student
 		{
 			grader.RegradeOptions{
 				JobOptions: jobmanager.JobOptions{
@@ -56,7 +58,7 @@ func TestRegradeBase(test *testing.T) {
 			},
 		},
 
-		// Admin, Wait For Completion
+		// Admin
 		{
 			grader.RegradeOptions{
 				JobOptions: jobmanager.JobOptions{
@@ -78,7 +80,7 @@ func TestRegradeBase(test *testing.T) {
 			},
 		},
 
-		// Empty Users, Wait For Completion
+		// Empty Users
 		{
 			grader.RegradeOptions{
 				JobOptions: jobmanager.JobOptions{
@@ -109,7 +111,7 @@ func TestRegradeBase(test *testing.T) {
 			},
 		},
 
-		// All Users, Wait For Completion
+		// All Users
 		{
 			grader.RegradeOptions{
 				JobOptions: jobmanager.JobOptions{
@@ -141,7 +143,7 @@ func TestRegradeBase(test *testing.T) {
 			},
 		},
 
-		// Early Regrade After, Wait For Completion
+		// Early Regrade After
 		{
 			grader.RegradeOptions{
 				JobOptions: jobmanager.JobOptions{
@@ -164,7 +166,7 @@ func TestRegradeBase(test *testing.T) {
 			},
 		},
 
-		// Late Regrade After, Wait For Completion
+		// Late Regrade After
 		{
 			grader.RegradeOptions{
 				JobOptions: jobmanager.JobOptions{
@@ -187,7 +189,9 @@ func TestRegradeBase(test *testing.T) {
 			},
 		},
 
-		// Student, No Wait
+		// No Wait
+
+		// Student
 		{
 			grader.RegradeOptions{
 				JobOptions: jobmanager.JobOptions{
@@ -207,7 +211,7 @@ func TestRegradeBase(test *testing.T) {
 			},
 		},
 
-		// Grader, No Wait
+		// Grader
 		{
 			grader.RegradeOptions{
 				JobOptions: jobmanager.JobOptions{
@@ -227,7 +231,7 @@ func TestRegradeBase(test *testing.T) {
 			},
 		},
 
-		// Empty Users, No Wait
+		// Empty Users
 		{
 			grader.RegradeOptions{
 				JobOptions: jobmanager.JobOptions{
@@ -252,7 +256,7 @@ func TestRegradeBase(test *testing.T) {
 			},
 		},
 
-		// All Users, No Wait
+		// All Users
 		{
 			grader.RegradeOptions{
 				JobOptions: jobmanager.JobOptions{
@@ -278,11 +282,11 @@ func TestRegradeBase(test *testing.T) {
 			},
 		},
 
-		// Early Regrade After, No Wait
+		// Early Regrade After
 		{
 			grader.RegradeOptions{
 				JobOptions: jobmanager.JobOptions{
-					WaitForCompletion: true,
+					WaitForCompletion: false,
 				},
 				RawReferences: []model.CourseUserReference{"student"},
 				RegradeAfter:  timestamp.ZeroPointer(),
@@ -301,11 +305,11 @@ func TestRegradeBase(test *testing.T) {
 			},
 		},
 
-		// Late Regrade After, No Wait
+		// Late Regrade After
 		{
 			grader.RegradeOptions{
 				JobOptions: jobmanager.JobOptions{
-					WaitForCompletion: true,
+					WaitForCompletion: false,
 				},
 				RawReferences: []model.CourseUserReference{"student"},
 				RegradeAfter:  &farFutureTime,
@@ -314,17 +318,16 @@ func TestRegradeBase(test *testing.T) {
 			"",
 			RegradeResponse{
 				RegradeResult: grader.RegradeResult{
-					Results: map[string]*model.SubmissionHistoryItem{
-						"course-student@test.edulinq.org": studentGradingResults["1697406272"].Info.ToHistoryItem(),
-					},
+					Results:    map[string]*model.SubmissionHistoryItem{},
 					WorkErrors: map[string]string{},
 				},
-				Complete:      true,
+				Complete:      false,
 				ResolvedUsers: []string{"course-student@test.edulinq.org"},
 			},
 		},
 
 		// Errors
+
 		// Invalid Target Users
 		{
 			grader.RegradeOptions{
@@ -398,7 +401,7 @@ func TestRegradeBase(test *testing.T) {
 		if !response.Success {
 			if testCase.expectedLocator != "" {
 				if response.Locator != testCase.expectedLocator {
-					test.Errorf("Case %d: Incorrect error returned. Expected '%s', found '%s'.",
+					test.Errorf("Case %d: Incorrect error returned. Expected: '%s', Actual: '%s'.",
 						i, testCase.expectedLocator, response.Locator)
 				}
 			} else {
@@ -430,7 +433,7 @@ func TestRegradeBase(test *testing.T) {
 		}
 
 		if !((minRegradeAfter <= responseContent.RegradeAfter) && (responseContent.RegradeAfter <= maxRegradeAfter)) {
-			test.Errorf("Case %d: Unexpected regrade after time. Expected a time between '%d' and '%d', Actual: '%d'.",
+			test.Errorf("Case %d: Unexpected regrade after time. Expected a time within the range ['%d', '%d'], Actual: '%d'.",
 				i, minRegradeAfter, maxRegradeAfter, responseContent.RegradeAfter)
 			continue
 		}
@@ -438,7 +441,9 @@ func TestRegradeBase(test *testing.T) {
 		// Clear regrade after time for equality check.
 		responseContent.RegradeAfter = 0
 
+		// Copy the test case options to the expected output to pass the equality check.
 		testCase.expected.Options = testCase.options
+
 		if !reflect.DeepEqual(testCase.expected, responseContent) {
 			test.Errorf("Case %d: Unexpected regrade result. Expected: '%s', actual: '%s'.",
 				i, util.MustToJSONIndent(testCase.expected), util.MustToJSONIndent(responseContent))

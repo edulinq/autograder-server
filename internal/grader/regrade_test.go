@@ -352,6 +352,67 @@ func TestRegradeBase(test *testing.T) {
 				i, util.MustToJSONIndent(testCase.results), util.MustToJSONIndent(result.Results))
 			continue
 		}
+
+		// Ensure there are not any more regrades running in the background.
+		if !testCase.waitForCompletion {
+			// Use the same regrade after time to continue the previous job.
+			options.RegradeAfter = &result.RegradeAfter
+			options.JobOptions.WaitForCompletion = true
+
+			_, numLeft, err = Regrade(assignment, options)
+			if err != nil {
+				test.Errorf("Case %d: Failed to complete cleanup regrade: '%v'.", i, err)
+				continue
+			}
+
+			if numLeft != 0 {
+				test.Errorf("Case %d: Unexpected number of cleanup regrades remaining. Expected: '0', Actual: '%d'.", i, numLeft)
+				continue
+			}
+		}
+	}
+}
+
+func TestRegradeSubmissionTime(test *testing.T) {
+	earlyTime := timestamp.Zero()
+	futureTime := earlyTime + 10
+	middleTime := (futureTime + earlyTime) / 2
+
+	testCases := []struct {
+		gradingStartTime timestamp.Timestamp
+		proxyStartTime   *timestamp.Timestamp
+		regradeAfter     timestamp.Timestamp
+		expected         bool
+	}{
+		// Normal Submissions, Submitted After Regrade Threshold
+		{earlyTime, nil, earlyTime, false},
+		{middleTime, nil, earlyTime, false},
+
+		// Normal Submissions, Submitted Before Regrade Threshold
+		{earlyTime, nil, middleTime, true},
+		{middleTime, nil, futureTime, true},
+
+		// Proxy Submissions, Submitted After Regrade Threshold
+		{earlyTime, &earlyTime, earlyTime, false},
+		{earlyTime, &futureTime, earlyTime, false},
+		{middleTime, &earlyTime, earlyTime, false},
+		{middleTime, &middleTime, earlyTime, false},
+
+		{earlyTime, &middleTime, middleTime, false},
+		{earlyTime, &futureTime, middleTime, false},
+		{middleTime, &futureTime, futureTime, false},
+
+		// Proxy Submissions, Submitted Before Regrade Threshold
+		{earlyTime, &earlyTime, middleTime, true},
+		{middleTime, &earlyTime, futureTime, true},
+	}
+
+	for i, testCase := range testCases {
+		result := isSubmittedBeforeRegradeTime(testCase.gradingStartTime, testCase.proxyStartTime, testCase.regradeAfter)
+		if result != testCase.expected {
+			test.Errorf("Case %d: Unexpected result. Expected: '%t', Actual: '%t'.", i, testCase.expected, result)
+			continue
+		}
 	}
 }
 

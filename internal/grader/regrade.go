@@ -186,7 +186,7 @@ func retrieveRegradedSubmissions(assignment *model.Assignment, regradeAfter time
 		Emails: emailSet,
 	}
 
-	results, err := db.GetRecentSubmissionSurvey(assignment, reference)
+	results, err := db.GetRecentSubmissions(assignment, reference)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to get recent submissions from db: '%w'.", err)
 	}
@@ -199,12 +199,28 @@ func retrieveRegradedSubmissions(assignment *model.Assignment, regradeAfter time
 		}
 
 		// The submission was made before the regrade threshold.
-		if result.GradingStartTime < regradeAfter {
+		if isSubmittedBeforeRegradeTime(result.GradingStartTime, result.ProxyStartTime, regradeAfter) {
 			continue
 		}
 
-		finalResults[email] = result
+		finalResults[email] = result.ToHistoryItem()
 	}
 
 	return finalResults, nil
+}
+
+func isSubmittedBeforeRegradeTime(gradingStartTime timestamp.Timestamp, proxyStartTime *timestamp.Timestamp, regradeAfter timestamp.Timestamp) bool {
+	if gradingStartTime >= regradeAfter {
+		return false
+	}
+
+	// Grading start time is before the regrade after time.
+	// Check for proxy submissions made after the threshold.
+
+	if proxyStartTime == nil {
+		// The submission is not a proxy submission.
+		return true
+	}
+
+	return *proxyStartTime < regradeAfter
 }
