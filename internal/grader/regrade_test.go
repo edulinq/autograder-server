@@ -22,7 +22,7 @@ const FAULTY_GRADER = `[[ $result -ne $expected ]]`
 func TestRegradeBase(test *testing.T) {
 	defer db.ResetForTesting()
 
-	// A time in the year 3003 which can be used for regrade tests that want a future RegradeAfter time.
+	// A time in the year 3003.
 	farFutureTime := timestamp.FromMSecs(32614181465000)
 
 	testCases := []struct {
@@ -277,12 +277,12 @@ func TestRegradeBase(test *testing.T) {
 
 		testSubmissions, err := GetTestSubmissions(bashSolutionDir, false)
 		if err != nil {
-			test.Errorf("Case %d: Error getting test submissions in '%s': '%v'.", i, baseDir, err)
+			test.Errorf("Case %d: Error getting test submissions in '%s': '%v'.", i, bashSolutionDir, err)
 			continue
 		}
 
 		if len(testSubmissions) != 1 {
-			test.Errorf("Case %d: Unexpected number of test submissions. Expected: '1', Actual: '%d' in '%s'.", i, len(testSubmissions), baseDir)
+			test.Errorf("Case %d: Unexpected number of test submissions in '%s'. Expected: '1', Actual: '%d'.", i, bashSolutionDir, len(testSubmissions))
 			continue
 		}
 
@@ -309,6 +309,7 @@ func TestRegradeBase(test *testing.T) {
 
 		// Insert a buggy line in the grader that will cause incorrect scoring.
 		bashGrader = strings.Replace(bashGrader, GOOD_GRADER, FAULTY_GRADER, 1)
+
 		err = util.WriteFile(bashGrader, bashGraderPath)
 		if err != nil {
 			test.Errorf("Case %d: Failed to write faulty grader: '%v'.", i, err)
@@ -355,7 +356,7 @@ func TestRegradeBase(test *testing.T) {
 
 		// Ensure there are not any more regrades running in the background.
 		if !testCase.waitForCompletion {
-			// Use the same regrade after time to continue the previous job.
+			// Use the same RegradeAfter time to continue the previous job.
 			options.RegradeAfter = &result.RegradeAfter
 			options.JobOptions.WaitForCompletion = true
 

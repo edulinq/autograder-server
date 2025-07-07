@@ -25,7 +25,7 @@ func TestRegradeBase(test *testing.T) {
 		"1697406272": model.MustLoadGradingResult(getTestSubmissionResultPath("1697406272")),
 	}
 
-	// A time in the year 3003 which can be used for regrade tests that want a future RegradeAfter time.
+	// A time in the year 3003.
 	farFutureTime := timestamp.FromMSecs(32614181465000)
 
 	testCases := []struct {

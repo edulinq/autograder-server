@@ -580,7 +580,7 @@
                 {
                     "name": "target-users",
                     "type": "[]model.CourseUserReference",
-                    "description": "The raw references of users to regrade.",
+                    "description": "The raw course user references to regrade.",
                     "required": true
                 },
                 {
@@ -2039,7 +2039,7 @@
                 {
                     "name": "target-users",
                     "type": "[]model.CourseUserReference",
-                    "description": "The raw references of users to regrade."
+                    "description": "The raw course user references to regrade."
                 },
                 {
                     "name": "wait-for-completion",

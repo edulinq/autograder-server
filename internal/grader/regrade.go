@@ -17,7 +17,7 @@ type RegradeOptions struct {
 	jobmanager.JobOptions
 	GradeOptions `json:"-"`
 
-	// The raw references of users to regrade.
+	// The raw course user references to regrade.
 	RawReferences []model.CourseUserReference `json:"target-users" required:""`
 
 	// Ensure every user has made a new submission after this time.
