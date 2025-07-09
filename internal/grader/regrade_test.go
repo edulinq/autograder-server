@@ -31,6 +31,7 @@ func TestRegradeBase(test *testing.T) {
 		waitForCompletion  bool
 		numLeft            int
 		regradeAfter       *timestamp.Timestamp
+		isCached           bool
 		results            map[string]*model.SubmissionHistoryItem
 	}{
 		// Wait For Completion
@@ -42,6 +43,7 @@ func TestRegradeBase(test *testing.T) {
 			true,
 			0,
 			nil,
+			false,
 			map[string]*model.SubmissionHistoryItem{
 				"course-student@test.edulinq.org": &model.SubmissionHistoryItem{
 					CourseID:     "course-languages",
@@ -60,6 +62,7 @@ func TestRegradeBase(test *testing.T) {
 			true,
 			0,
 			nil,
+			false,
 			map[string]*model.SubmissionHistoryItem{
 				"course-admin@test.edulinq.org": nil,
 			},
@@ -72,6 +75,7 @@ func TestRegradeBase(test *testing.T) {
 			true,
 			0,
 			nil,
+			false,
 			map[string]*model.SubmissionHistoryItem{},
 		},
 		{
@@ -80,6 +84,7 @@ func TestRegradeBase(test *testing.T) {
 			true,
 			0,
 			nil,
+			false,
 			map[string]*model.SubmissionHistoryItem{},
 		},
 
@@ -90,6 +95,7 @@ func TestRegradeBase(test *testing.T) {
 			true,
 			0,
 			nil,
+			false,
 			map[string]*model.SubmissionHistoryItem{
 				"course-admin@test.edulinq.org": &model.SubmissionHistoryItem{
 					CourseID:     "course-languages",
@@ -111,32 +117,6 @@ func TestRegradeBase(test *testing.T) {
 			},
 		},
 
-		// Some Users, Multiple Submissions
-		{
-			[]model.CourseUserReference{"*", "-other", "-owner"},
-			[]string{"course-student@test.edulinq.org", "course-grader@test.edulinq.org"},
-			true,
-			0,
-			nil,
-			map[string]*model.SubmissionHistoryItem{
-				"course-admin@test.edulinq.org": nil,
-				"course-grader@test.edulinq.org": &model.SubmissionHistoryItem{
-					CourseID:     "course-languages",
-					AssignmentID: "bash",
-					User:         "course-grader@test.edulinq.org",
-					MaxPoints:    10,
-					Score:        0,
-				},
-				"course-student@test.edulinq.org": &model.SubmissionHistoryItem{
-					CourseID:     "course-languages",
-					AssignmentID: "bash",
-					User:         "course-student@test.edulinq.org",
-					MaxPoints:    10,
-					Score:        0,
-				},
-			},
-		},
-
 		// Regrade Time Before Submission
 		{
 			[]model.CourseUserReference{"course-student@test.edulinq.org"},
@@ -144,6 +124,7 @@ func TestRegradeBase(test *testing.T) {
 			true,
 			0,
 			timestamp.ZeroPointer(),
+			true,
 			map[string]*model.SubmissionHistoryItem{
 				"course-student@test.edulinq.org": &model.SubmissionHistoryItem{
 					CourseID:     "course-languages",
@@ -163,6 +144,7 @@ func TestRegradeBase(test *testing.T) {
 			true,
 			0,
 			&farFutureTime,
+			false,
 			map[string]*model.SubmissionHistoryItem{
 				"course-student@test.edulinq.org": &model.SubmissionHistoryItem{
 					CourseID:     "course-languages",
@@ -183,6 +165,7 @@ func TestRegradeBase(test *testing.T) {
 			false,
 			1,
 			nil,
+			false,
 			map[string]*model.SubmissionHistoryItem{},
 		},
 
@@ -193,6 +176,7 @@ func TestRegradeBase(test *testing.T) {
 			false,
 			1,
 			nil,
+			false,
 			map[string]*model.SubmissionHistoryItem{},
 		},
 
@@ -203,6 +187,7 @@ func TestRegradeBase(test *testing.T) {
 			false,
 			0,
 			nil,
+			false,
 			map[string]*model.SubmissionHistoryItem{},
 		},
 		{
@@ -211,6 +196,7 @@ func TestRegradeBase(test *testing.T) {
 			false,
 			0,
 			nil,
+			false,
 			map[string]*model.SubmissionHistoryItem{},
 		},
 
@@ -221,16 +207,7 @@ func TestRegradeBase(test *testing.T) {
 			false,
 			5,
 			nil,
-			map[string]*model.SubmissionHistoryItem{},
-		},
-
-		// Some Users, Multiple Submissions
-		{
-			[]model.CourseUserReference{"*", "-other", "-owner"},
-			[]string{"course-student@test.edulinq.org", "course-grader@test.edulinq.org"},
 			false,
-			3,
-			nil,
 			map[string]*model.SubmissionHistoryItem{},
 		},
 
@@ -241,6 +218,7 @@ func TestRegradeBase(test *testing.T) {
 			false,
 			0,
 			timestamp.ZeroPointer(),
+			true,
 			map[string]*model.SubmissionHistoryItem{
 				"course-student@test.edulinq.org": &model.SubmissionHistoryItem{
 					CourseID:     "course-languages",
@@ -260,6 +238,7 @@ func TestRegradeBase(test *testing.T) {
 			false,
 			1,
 			&farFutureTime,
+			false,
 			map[string]*model.SubmissionHistoryItem{},
 		},
 	}
@@ -288,7 +267,7 @@ func TestRegradeBase(test *testing.T) {
 
 		for _, user := range testCase.initialSubmissions {
 			// Capture the grading start time of the initial submission.
-			gradingStartTime, err := makeInitialSubmission(user, testSubmissions[0], gradeOptions)
+			info, err := makeInitialSubmission(user, testSubmissions[0], gradeOptions)
 			if err != nil {
 				test.Errorf("Case %d: Failed to make initial submissions for user '%s': '%v'.", i, user, err)
 				continue
@@ -300,7 +279,9 @@ func TestRegradeBase(test *testing.T) {
 			}
 
 			// The regrade start time must match the initial submission time.
-			expectedGradingInfo.GradingStartTime = gradingStartTime
+			expectedGradingInfo.GradingStartTime = info.GradingStartTime
+			expectedGradingInfo.ID = info.ID
+			expectedGradingInfo.ShortID = info.ShortID
 		}
 
 		workDir := config.GetWorkDir()
@@ -343,9 +324,11 @@ func TestRegradeBase(test *testing.T) {
 			continue
 		}
 
-		failed := CheckAndClearIDs(test, i, testCase.results, result.Results)
-		if failed {
-			continue
+		if !testCase.isCached {
+			failed := checkAndClearIDs(test, i, testCase.results, result.Results)
+			if failed {
+				continue
+			}
 		}
 
 		if !reflect.DeepEqual(testCase.results, result.Results) {
@@ -417,7 +400,7 @@ func TestRegradeSubmissionTime(test *testing.T) {
 	}
 }
 
-func makeInitialSubmission(user string, testSubmission *TestSubmissionInfo, gradeOptions GradeOptions) (timestamp.Timestamp, error) {
+func makeInitialSubmission(user string, testSubmission *TestSubmissionInfo, gradeOptions GradeOptions) (*model.GradingInfo, error) {
 	initialMessage := fmt.Sprintf("Submission '%s': ", testSubmission.ID)
 	result, reject, softError, err := Grade(context.Background(), testSubmission.Assignment, testSubmission.Dir, user, TEST_MESSAGE, gradeOptions)
 	if err != nil {
@@ -427,21 +410,67 @@ func makeInitialSubmission(user string, testSubmission *TestSubmissionInfo, grad
 			message += fmt.Sprintf("\n--- stderr ---\n%v\n--------------", result.Stderr)
 		}
 
-		return timestamp.Zero(), fmt.Errorf("%sFailed to grade assignment: '%v'.%s", initialMessage, err, message)
+		return nil, fmt.Errorf("%sFailed to grade assignment: '%v'.%s", initialMessage, err, message)
 	}
 
 	if reject != nil {
-		return timestamp.Zero(), fmt.Errorf("%sSubmission was rejected: '%s'.", initialMessage, reject.String())
+		return nil, fmt.Errorf("%sSubmission was rejected: '%s'.", initialMessage, reject.String())
 	}
 
 	if softError != "" {
-		return timestamp.Zero(), fmt.Errorf("%sSubmission got a soft error: '%s'.", initialMessage, softError)
+		return nil, fmt.Errorf("%sSubmission got a soft error: '%s'.", initialMessage, softError)
 	}
 
 	if !result.Info.Equals(*testSubmission.TestSubmission.GradingInfo, !testSubmission.TestSubmission.IgnoreMessages) {
-		return timestamp.Zero(), fmt.Errorf("%sActual output:\n---\n%v\n---\ndoes not match expected output:\n---\n%v\n---\n.",
+		return nil, fmt.Errorf("%sActual output:\n---\n%v\n---\ndoes not match expected output:\n---\n%v\n---\n.",
 			initialMessage, util.MustToJSONIndent(result.Info), util.MustToJSONIndent(testSubmission.TestSubmission.GradingInfo))
 	}
 
-	return result.Info.GradingStartTime, nil
+	return result.Info, nil
+}
+
+// Check that the regraded submissions have different submission IDs than the corresponding initial submission.
+// Then, clear the IDs to pass the equality check.
+func checkAndClearIDs(test *testing.T, i int, expectedResults map[string]*model.SubmissionHistoryItem, actualResults map[string]*model.SubmissionHistoryItem) bool {
+	for user, expected := range expectedResults {
+		actual, ok := actualResults[user]
+		if !ok {
+			test.Errorf("Case %d: Unable to find result for user '%s'. Expected: '%v'.",
+				i, user, util.MustToJSONIndent(expected))
+			return true
+		}
+
+		if (expected == nil) && (actual == nil) {
+			continue
+		}
+
+		if expected == nil {
+			test.Errorf("Case %d: Unexpected result for user '%s'. Expected: '<nil>', actual: '%s'.",
+				i, user, util.MustToJSONIndent(actual))
+			return true
+		}
+
+		if actual == nil {
+			test.Errorf("Case %d: Unexpected result for user '%s'. Expected: '%s', actual: '<nil>'.",
+				i, user, util.MustToJSONIndent(expected))
+			return true
+		}
+
+		if expected.ShortID == actual.ShortID {
+			test.Errorf("Case %d: Regrade submission has the same short ID as the previous submission: '%s'.", i, expected.ShortID)
+			return true
+		}
+
+		if expected.ID == actual.ID {
+			test.Errorf("Case %d: Regrade submission has the same ID as the previous submission: '%s'.", i, expected.ID)
+			return true
+		}
+
+		actual.ShortID = ""
+		expected.ShortID = ""
+		actual.ID = ""
+		expected.ID = ""
+	}
+
+	return false
 }

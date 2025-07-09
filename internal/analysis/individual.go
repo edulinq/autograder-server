@@ -73,7 +73,6 @@ func IndividualAnalysis(options AnalysisOptions) (map[string]*model.IndividualAn
 	}
 
 	workErrors := make(map[string]string, len(output.WorkErrors))
-
 	for fullSubmissionID, err := range output.WorkErrors {
 		workErrors[fullSubmissionID] = err.Error()
 

@@ -105,7 +105,6 @@ func PairwiseAnalysis(options AnalysisOptions) (map[model.PairwiseKey]*model.Pai
 	}
 
 	workErrors := make(map[string]string, len(output.WorkErrors))
-
 	for pairwiseKey, err := range output.WorkErrors {
 		workErrors[pairwiseKey.String()] = err.Error()
 

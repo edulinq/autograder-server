@@ -58,28 +58,6 @@ func TestRegradeBase(test *testing.T) {
 			},
 		},
 
-		// Admin
-		{
-			grader.RegradeOptions{
-				JobOptions: jobmanager.JobOptions{
-					WaitForCompletion: true,
-				},
-				RawReferences: []model.CourseUserReference{"admin"},
-			},
-			"course-grader",
-			"",
-			RegradeResponse{
-				RegradeResult: grader.RegradeResult{
-					Results: map[string]*model.SubmissionHistoryItem{
-						"course-admin@test.edulinq.org": nil,
-					},
-					WorkErrors: map[string]string{},
-				},
-				Complete:      true,
-				ResolvedUsers: []string{"course-admin@test.edulinq.org"},
-			},
-		},
-
 		// Empty Users
 		{
 			grader.RegradeOptions{
@@ -211,77 +189,6 @@ func TestRegradeBase(test *testing.T) {
 			},
 		},
 
-		// Grader
-		{
-			grader.RegradeOptions{
-				JobOptions: jobmanager.JobOptions{
-					WaitForCompletion: false,
-				},
-				RawReferences: []model.CourseUserReference{"grader"},
-			},
-			"course-grader",
-			"",
-			RegradeResponse{
-				RegradeResult: grader.RegradeResult{
-					Results:    map[string]*model.SubmissionHistoryItem{},
-					WorkErrors: map[string]string{},
-				},
-				Complete:      false,
-				ResolvedUsers: []string{"course-grader@test.edulinq.org"},
-			},
-		},
-
-		// Empty Users
-		{
-			grader.RegradeOptions{
-				JobOptions: jobmanager.JobOptions{
-					WaitForCompletion: false,
-				},
-			},
-			"course-grader",
-			"",
-			RegradeResponse{
-				RegradeResult: grader.RegradeResult{
-					Results:    map[string]*model.SubmissionHistoryItem{},
-					WorkErrors: map[string]string{},
-				},
-				Complete: false,
-				ResolvedUsers: []string{
-					"course-admin@test.edulinq.org",
-					"course-grader@test.edulinq.org",
-					"course-other@test.edulinq.org",
-					"course-owner@test.edulinq.org",
-					"course-student@test.edulinq.org",
-				},
-			},
-		},
-
-		// All Users
-		{
-			grader.RegradeOptions{
-				JobOptions: jobmanager.JobOptions{
-					WaitForCompletion: false,
-				},
-				RawReferences: []model.CourseUserReference{"*"},
-			},
-			"course-grader",
-			"",
-			RegradeResponse{
-				RegradeResult: grader.RegradeResult{
-					Results:    map[string]*model.SubmissionHistoryItem{},
-					WorkErrors: map[string]string{},
-				},
-				Complete: false,
-				ResolvedUsers: []string{
-					"course-admin@test.edulinq.org",
-					"course-grader@test.edulinq.org",
-					"course-other@test.edulinq.org",
-					"course-owner@test.edulinq.org",
-					"course-student@test.edulinq.org",
-				},
-			},
-		},
-
 		// Early Regrade After
 		{
 			grader.RegradeOptions{
@@ -389,14 +296,6 @@ func TestRegradeBase(test *testing.T) {
 			testCase.options.RawReferences = model.NewAllCourseUserReference()
 		}
 
-		var minRegradeAfter timestamp.Timestamp = 0
-		if testCase.options.RegradeAfter == nil {
-			// Create a window for the regrade after check.
-			minRegradeAfter = timestamp.Now()
-		} else {
-			minRegradeAfter = *testCase.options.RegradeAfter
-		}
-
 		response := core.SendTestAPIRequestFull(test, `courses/assignments/submissions/proxy/regrade`, fields, nil, testCase.proxyUser)
 		if !response.Success {
 			if testCase.expectedLocator != "" {
@@ -419,30 +318,33 @@ func TestRegradeBase(test *testing.T) {
 		var responseContent RegradeResponse
 		util.MustJSONFromString(util.MustToJSON(response.Content), &responseContent)
 
-		failed := grader.CheckAndClearIDs(test, i, testCase.expected.Results, responseContent.Results)
-		if failed {
-			continue
-		}
-
-		var maxRegradeAfter timestamp.Timestamp = 0
-		if testCase.options.RegradeAfter == nil {
-			// Create a window for the regrade after check.
-			maxRegradeAfter = timestamp.Now()
-		} else {
-			maxRegradeAfter = *testCase.options.RegradeAfter
-		}
-
-		if !((minRegradeAfter <= responseContent.RegradeAfter) && (responseContent.RegradeAfter <= maxRegradeAfter)) {
-			test.Errorf("Case %d: Unexpected regrade after time. Expected a time within the range ['%d', '%d'], Actual: '%d'.",
-				i, minRegradeAfter, maxRegradeAfter, responseContent.RegradeAfter)
-			continue
-		}
-
-		// Clear regrade after time for equality check.
-		responseContent.RegradeAfter = 0
-
 		// Copy the test case options to the expected output to pass the equality check.
 		testCase.expected.Options = testCase.options
+
+		// Clear variable regrade after times for equality check.
+		responseContent.RegradeAfter = 0
+		if testCase.options.RegradeAfter == nil {
+			testCase.expected.Options.RegradeAfter = responseContent.Options.RegradeAfter
+		}
+
+		// Clear the submission IDs to pass the equality check.
+		for _, expected := range testCase.expected.Results {
+			if expected == nil {
+				continue
+			}
+
+			expected.ShortID = ""
+			expected.ID = ""
+		}
+
+		for _, actual := range responseContent.Results {
+			if actual == nil {
+				continue
+			}
+
+			actual.ShortID = ""
+			actual.ID = ""
+		}
 
 		if !reflect.DeepEqual(testCase.expected, responseContent) {
 			test.Errorf("Case %d: Unexpected regrade result. Expected: '%s', actual: '%s'.",

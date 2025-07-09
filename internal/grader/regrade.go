@@ -57,13 +57,12 @@ func Regrade(assignment *model.Assignment, options RegradeOptions) (*RegradeResu
 		options.Context = context.Background()
 	}
 
-	var regradeAfter timestamp.Timestamp = 0
 	if options.RegradeAfter == nil {
-		regradeAfter = timestamp.Now()
-	} else {
-		regradeAfter = *options.RegradeAfter
+		now := timestamp.Now()
+		options.RegradeAfter = &now
 	}
 
+	// Lock based on the course to prevent multiple requests using up all the cores.
 	lockKey := fmt.Sprintf("regrade-course-%s", assignment.GetCourse().GetID())
 
 	job := jobmanager.Job[string, *model.SubmissionHistoryItem]{
@@ -73,10 +72,10 @@ func Regrade(assignment *model.Assignment, options RegradeOptions) (*RegradeResu
 		ReturnIncompleteResults: !options.WaitForCompletion,
 		WorkItems:               options.ResolvedUsers,
 		RetrieveFunc: func(resolvedEmails []string) (map[string]*model.SubmissionHistoryItem, error) {
-			return retrieveRegradedSubmissions(assignment, regradeAfter, resolvedEmails)
+			return retrieveRegradedSubmissions(assignment, *options.RegradeAfter, resolvedEmails)
 		},
 		WorkFunc: func(email string) (*model.SubmissionHistoryItem, error) {
-			return computeSingleRegrade(courseUsers, assignment, options, email)
+			return performSingleRegrade(courseUsers, assignment, options, email)
 		},
 		WorkItemKeyFunc: func(email string) string {
 			return fmt.Sprintf("%s-%s", lockKey, email)
@@ -94,7 +93,6 @@ func Regrade(assignment *model.Assignment, options RegradeOptions) (*RegradeResu
 	}
 
 	workErrors := make(map[string]string, len(output.WorkErrors))
-
 	for email, err := range output.WorkErrors {
 		workErrors[email] = err.Error()
 
@@ -106,7 +104,7 @@ func Regrade(assignment *model.Assignment, options RegradeOptions) (*RegradeResu
 
 	regradeResult := RegradeResult{
 		Options:      options,
-		RegradeAfter: regradeAfter,
+		RegradeAfter: *options.RegradeAfter,
 		Results:      output.ResultItems,
 		WorkErrors:   workErrors,
 	}
@@ -114,28 +112,32 @@ func Regrade(assignment *model.Assignment, options RegradeOptions) (*RegradeResu
 	return &regradeResult, len(output.RemainingItems), nil
 }
 
-func computeSingleRegrade(courseUsers map[string]*model.CourseUser, assignment *model.Assignment, options RegradeOptions, email string) (*model.SubmissionHistoryItem, error) {
+func performSingleRegrade(courseUsers map[string]*model.CourseUser, assignment *model.Assignment, options RegradeOptions, email string) (*model.SubmissionHistoryItem, error) {
 	_, ok := courseUsers[email]
 	if !ok {
 		return nil, fmt.Errorf("Cannot regrade an unknown user: '%s'.", email)
 	}
 
+	// Get the students most recent submission.
 	previousResult, err := db.GetSubmissionContents(assignment, email, "")
 	if err != nil {
 		return nil, fmt.Errorf("Failed to get most recent grading result for '%s': '%w'.", email, err)
 	}
 
+	// Skip students with no submissions.
 	if previousResult == nil {
 		return nil, nil
 	}
 
-	dirName := fmt.Sprintf("regrade-%s-%s-%s-", assignment.GetCourse().GetID(), assignment.GetID(), email)
-	tempDir, err := util.MkDirTemp(dirName)
+	// Create a temp dir for grading.
+	prefix := fmt.Sprintf("regrade-%s-%s-%s-", assignment.GetCourse().GetID(), assignment.GetID(), email)
+	tempDir, err := util.MkDirTemp(prefix)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to create temp regrade dir: '%w'.", err)
 	}
 	defer util.RemoveDirent(tempDir)
 
+	// Write the previous submission's input files to the temp grading directory.
 	err = util.GzipBytesToDirectory(tempDir, previousResult.InputFilesGZip)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to write submission input to a temp dir: '%v'.", err)
@@ -144,9 +146,11 @@ func computeSingleRegrade(courseUsers map[string]*model.CourseUser, assignment *
 	message := ""
 	if previousResult.Info != nil {
 		message = previousResult.Info.Message
+		// Use the previous submission's grading start time as the proxy time.
 		options.GradeOptions.ProxyTime = &previousResult.Info.GradingStartTime
 	}
 
+	// Regrade the submission using the standard Grade() infrastructure.
 	gradingResult, reject, failureMessage, err := Grade(options.Context, assignment, tempDir, email, message, options.GradeOptions)
 	if err != nil {
 		stdout := ""
@@ -192,7 +196,6 @@ func retrieveRegradedSubmissions(assignment *model.Assignment, regradeAfter time
 	}
 
 	finalResults := make(map[string]*model.SubmissionHistoryItem, len(results))
-
 	for email, result := range results {
 		if result == nil {
 			continue
@@ -209,13 +212,13 @@ func retrieveRegradedSubmissions(assignment *model.Assignment, regradeAfter time
 	return finalResults, nil
 }
 
+// Check if a submission was made before the regrade time.
+// If either the grading start time or proxy start time are after the threshold,
+// the submission does not need to be regraded.
 func isSubmittedBeforeRegradeTime(gradingStartTime timestamp.Timestamp, proxyStartTime *timestamp.Timestamp, regradeAfter timestamp.Timestamp) bool {
 	if gradingStartTime >= regradeAfter {
 		return false
 	}
-
-	// Grading start time is before the regrade after time.
-	// Check for proxy submissions made after the threshold.
 
 	if proxyStartTime == nil {
 		// The submission is not a proxy submission.
