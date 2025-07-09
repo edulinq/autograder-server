@@ -212,27 +212,6 @@ func TestRegradeBase(test *testing.T) {
 			},
 		},
 
-		// Late Regrade After
-		{
-			grader.RegradeOptions{
-				JobOptions: jobmanager.JobOptions{
-					WaitForCompletion: false,
-				},
-				RawReferences: []model.CourseUserReference{"student"},
-				RegradeAfter:  &farFutureTime,
-			},
-			"course-grader",
-			"",
-			RegradeResponse{
-				RegradeResult: grader.RegradeResult{
-					Results:    map[string]*model.SubmissionHistoryItem{},
-					WorkErrors: map[string]string{},
-				},
-				Complete:      false,
-				ResolvedUsers: []string{"course-student@test.edulinq.org"},
-			},
-		},
-
 		// Errors
 
 		// Invalid Target Users

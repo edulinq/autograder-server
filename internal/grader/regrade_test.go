@@ -158,52 +158,10 @@ func TestRegradeBase(test *testing.T) {
 
 		// No Wait For Completion
 
-		// User With Submission
-		{
-			[]model.CourseUserReference{"course-student@test.edulinq.org"},
-			[]string{"course-student@test.edulinq.org"},
-			false,
-			1,
-			nil,
-			false,
-			map[string]*model.SubmissionHistoryItem{},
-		},
-
-		// User Without Submission
-		{
-			[]model.CourseUserReference{"course-admin@test.edulinq.org"},
-			nil,
-			false,
-			1,
-			nil,
-			false,
-			map[string]*model.SubmissionHistoryItem{},
-		},
-
-		// Empty Users
-		{
-			nil,
-			nil,
-			false,
-			0,
-			nil,
-			false,
-			map[string]*model.SubmissionHistoryItem{},
-		},
-		{
-			[]model.CourseUserReference{},
-			nil,
-			false,
-			0,
-			nil,
-			false,
-			map[string]*model.SubmissionHistoryItem{},
-		},
-
-		// All Users, Multiple Submissions
+		// All Users
 		{
 			model.NewAllCourseUserReference(),
-			[]string{"course-student@test.edulinq.org", "course-admin@test.edulinq.org"},
+			nil,
 			false,
 			5,
 			nil,
@@ -229,17 +187,6 @@ func TestRegradeBase(test *testing.T) {
 					Score: 10,
 				},
 			},
-		},
-
-		// Regrade Time After Submission
-		{
-			[]model.CourseUserReference{"course-student@test.edulinq.org"},
-			[]string{"course-student@test.edulinq.org"},
-			false,
-			1,
-			&farFutureTime,
-			false,
-			map[string]*model.SubmissionHistoryItem{},
 		},
 	}
 

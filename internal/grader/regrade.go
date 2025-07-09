@@ -96,7 +96,7 @@ func Regrade(assignment *model.Assignment, options RegradeOptions) (*RegradeResu
 	for email, err := range output.WorkErrors {
 		workErrors[email] = err.Error()
 
-		logAttributes := make([]any, 3)
+		logAttributes := make([]any, 0, 3)
 		logAttributes = append([]any{err}, log.NewUserAttr(email))
 		logAttributes = append(logAttributes, log.NewAttr("job-id", output.ID))
 		log.Error("Failed to run regrade.", logAttributes...)
@@ -118,7 +118,7 @@ func performSingleRegrade(courseUsers map[string]*model.CourseUser, assignment *
 		return nil, fmt.Errorf("Cannot regrade an unknown user: '%s'.", email)
 	}
 
-	// Get the students most recent submission.
+	// Get the student's most recent submission.
 	previousResult, err := db.GetSubmissionContents(assignment, email, "")
 	if err != nil {
 		return nil, fmt.Errorf("Failed to get most recent grading result for '%s': '%w'.", email, err)
