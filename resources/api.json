@@ -573,7 +573,7 @@
                     "description": "Remove any existing records before running the job."
                 },
                 {
-                    "name": "regrade-after",
+                    "name": "regrade-cutoff",
                     "type": "int64",
                     "description": "Ensure every user has made a new submission after this time.\nIf nil, the current time will be used."
                 },
@@ -609,10 +609,6 @@
                 {
                     "name": "options",
                     "type": "grader.RegradeOptions"
-                },
-                {
-                    "name": "regrade-after",
-                    "type": "int64"
                 },
                 {
                     "name": "resolved-users",
@@ -2032,7 +2028,7 @@
                     "description": "Remove any existing records before running the job."
                 },
                 {
-                    "name": "regrade-after",
+                    "name": "regrade-cutoff",
                     "type": "int64",
                     "description": "Ensure every user has made a new submission after this time.\nIf nil, the current time will be used."
                 },

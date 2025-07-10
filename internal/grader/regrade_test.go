@@ -30,7 +30,7 @@ func TestRegradeBase(test *testing.T) {
 		initialSubmissions []string
 		waitForCompletion  bool
 		numLeft            int
-		regradeAfter       *timestamp.Timestamp
+		regradeCutoff      *timestamp.Timestamp
 		isCached           bool
 		results            map[string]*model.SubmissionHistoryItem
 	}{
@@ -251,7 +251,7 @@ func TestRegradeBase(test *testing.T) {
 				WaitForCompletion: testCase.waitForCompletion,
 			},
 			RawReferences:         testCase.users,
-			RegradeAfter:          testCase.regradeAfter,
+			RegradeCutoff:         testCase.regradeCutoff,
 			RetainOriginalContext: false,
 		}
 
@@ -286,8 +286,8 @@ func TestRegradeBase(test *testing.T) {
 
 		// Ensure there are not any more regrades running in the background.
 		if !testCase.waitForCompletion {
-			// Use the same RegradeAfter time to continue the previous job.
-			options.RegradeAfter = &result.RegradeAfter
+			// Use the same RegradeCutoff time to continue the previous job.
+			options.RegradeCutoff = result.Options.RegradeCutoff
 			options.JobOptions.WaitForCompletion = true
 
 			_, numLeft, err = Regrade(assignment, options)
@@ -304,7 +304,7 @@ func TestRegradeBase(test *testing.T) {
 	}
 }
 
-func TestRegradeSubmissionTime(test *testing.T) {
+func TestRegradeSubmissionCutoff(test *testing.T) {
 	earlyTime := timestamp.Zero()
 	futureTime := earlyTime + 10
 	middleTime := (futureTime + earlyTime) / 2
@@ -312,7 +312,7 @@ func TestRegradeSubmissionTime(test *testing.T) {
 	testCases := []struct {
 		gradingStartTime timestamp.Timestamp
 		proxyStartTime   *timestamp.Timestamp
-		regradeAfter     timestamp.Timestamp
+		regradeCutoff    timestamp.Timestamp
 		expected         bool
 	}{
 		// Normal Submissions, Submitted After Regrade Threshold
@@ -339,7 +339,7 @@ func TestRegradeSubmissionTime(test *testing.T) {
 	}
 
 	for i, testCase := range testCases {
-		result := isSubmittedBeforeRegradeTime(testCase.gradingStartTime, testCase.proxyStartTime, testCase.regradeAfter)
+		result := isSubmittedBeforeRegradeCutoff(testCase.gradingStartTime, testCase.proxyStartTime, testCase.regradeCutoff)
 		if result != testCase.expected {
 			test.Errorf("Case %d: Unexpected result. Expected: '%t', Actual: '%t'.", i, testCase.expected, result)
 			continue

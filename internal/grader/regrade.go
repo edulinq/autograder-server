@@ -22,7 +22,7 @@ type RegradeOptions struct {
 
 	// Ensure every user has made a new submission after this time.
 	// If nil, the current time will be used.
-	RegradeAfter *timestamp.Timestamp `json:"regrade-after"`
+	RegradeCutoff *timestamp.Timestamp `json:"regrade-cutoff"`
 
 	// If true, do not swap the context to the background context when running.
 	// By default (when this is false), the context will be swapped to the background context when !WaitForCompletion.
@@ -34,10 +34,9 @@ type RegradeOptions struct {
 }
 
 type RegradeResult struct {
-	Options      RegradeOptions                          `json:"options"`
-	RegradeAfter timestamp.Timestamp                     `json:"regrade-after"`
-	Results      map[string]*model.SubmissionHistoryItem `json:"results"`
-	WorkErrors   map[string]string                       `json:"work-errors"`
+	Options    RegradeOptions                          `json:"options"`
+	Results    map[string]*model.SubmissionHistoryItem `json:"results"`
+	WorkErrors map[string]string                       `json:"work-errors"`
 }
 
 func Regrade(assignment *model.Assignment, options RegradeOptions) (*RegradeResult, int, error) {
@@ -57,9 +56,9 @@ func Regrade(assignment *model.Assignment, options RegradeOptions) (*RegradeResu
 		options.Context = context.Background()
 	}
 
-	if options.RegradeAfter == nil {
+	if options.RegradeCutoff == nil {
 		now := timestamp.Now()
-		options.RegradeAfter = &now
+		options.RegradeCutoff = &now
 	}
 
 	// Lock based on the course to prevent multiple requests using up all the cores.
@@ -72,7 +71,7 @@ func Regrade(assignment *model.Assignment, options RegradeOptions) (*RegradeResu
 		ReturnIncompleteResults: !options.WaitForCompletion,
 		WorkItems:               options.ResolvedUsers,
 		RetrieveFunc: func(resolvedEmails []string) (map[string]*model.SubmissionHistoryItem, error) {
-			return retrieveRegradedSubmissions(assignment, *options.RegradeAfter, resolvedEmails)
+			return retrieveRegradedSubmissions(assignment, *options.RegradeCutoff, resolvedEmails)
 		},
 		WorkFunc: func(email string) (*model.SubmissionHistoryItem, error) {
 			return performSingleRegrade(courseUsers, assignment, options, email)
@@ -103,10 +102,9 @@ func Regrade(assignment *model.Assignment, options RegradeOptions) (*RegradeResu
 	}
 
 	regradeResult := RegradeResult{
-		Options:      options,
-		RegradeAfter: *options.RegradeAfter,
-		Results:      output.ResultItems,
-		WorkErrors:   workErrors,
+		Options:    options,
+		Results:    output.ResultItems,
+		WorkErrors: workErrors,
 	}
 
 	return &regradeResult, len(output.RemainingItems), nil
@@ -180,7 +178,7 @@ func performSingleRegrade(courseUsers map[string]*model.CourseUser, assignment *
 	return result, nil
 }
 
-func retrieveRegradedSubmissions(assignment *model.Assignment, regradeAfter timestamp.Timestamp, emails []string) (map[string]*model.SubmissionHistoryItem, error) {
+func retrieveRegradedSubmissions(assignment *model.Assignment, regradeCutoff timestamp.Timestamp, emails []string) (map[string]*model.SubmissionHistoryItem, error) {
 	emailSet := make(map[string]any, len(emails))
 	for _, email := range emails {
 		emailSet[email] = nil
@@ -202,7 +200,7 @@ func retrieveRegradedSubmissions(assignment *model.Assignment, regradeAfter time
 		}
 
 		// The submission was made before the regrade threshold.
-		if isSubmittedBeforeRegradeTime(result.GradingStartTime, result.ProxyStartTime, regradeAfter) {
+		if isSubmittedBeforeRegradeCutoff(result.GradingStartTime, result.ProxyStartTime, regradeCutoff) {
 			continue
 		}
 
@@ -215,8 +213,8 @@ func retrieveRegradedSubmissions(assignment *model.Assignment, regradeAfter time
 // Check if a submission was made before the regrade time.
 // If either the grading start time or proxy start time are after the threshold,
 // the submission does not need to be regraded.
-func isSubmittedBeforeRegradeTime(gradingStartTime timestamp.Timestamp, proxyStartTime *timestamp.Timestamp, regradeAfter timestamp.Timestamp) bool {
-	if gradingStartTime >= regradeAfter {
+func isSubmittedBeforeRegradeCutoff(gradingStartTime timestamp.Timestamp, proxyStartTime *timestamp.Timestamp, regradeCutoff timestamp.Timestamp) bool {
+	if gradingStartTime >= regradeCutoff {
 		return false
 	}
 
@@ -225,5 +223,5 @@ func isSubmittedBeforeRegradeTime(gradingStartTime timestamp.Timestamp, proxySta
 		return true
 	}
 
-	return *proxyStartTime < regradeAfter
+	return *proxyStartTime < regradeCutoff
 }

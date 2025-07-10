@@ -128,7 +128,7 @@ func TestRegradeBase(test *testing.T) {
 					WaitForCompletion: true,
 				},
 				RawReferences: []model.CourseUserReference{"student"},
-				RegradeAfter:  timestamp.ZeroPointer(),
+				RegradeCutoff: timestamp.ZeroPointer(),
 			},
 			"course-grader",
 			"",
@@ -151,7 +151,7 @@ func TestRegradeBase(test *testing.T) {
 					WaitForCompletion: true,
 				},
 				RawReferences: []model.CourseUserReference{"student"},
-				RegradeAfter:  &farFutureTime,
+				RegradeCutoff: &farFutureTime,
 			},
 			"course-grader",
 			"",
@@ -196,7 +196,7 @@ func TestRegradeBase(test *testing.T) {
 					WaitForCompletion: false,
 				},
 				RawReferences: []model.CourseUserReference{"student"},
-				RegradeAfter:  timestamp.ZeroPointer(),
+				RegradeCutoff: timestamp.ZeroPointer(),
 			},
 			"course-grader",
 			"",
@@ -267,7 +267,7 @@ func TestRegradeBase(test *testing.T) {
 		fields := map[string]any{
 			"target-users":        testCase.options.RawReferences,
 			"wait-for-completion": testCase.options.JobOptions.WaitForCompletion,
-			"regrade-after":       testCase.options.RegradeAfter,
+			"regrade-cutoff":      testCase.options.RegradeCutoff,
 		}
 
 		// Update empty raw references to be the "*" to pass equality check.
@@ -301,9 +301,8 @@ func TestRegradeBase(test *testing.T) {
 		testCase.expected.Options = testCase.options
 
 		// Clear variable regrade after times for equality check.
-		responseContent.RegradeAfter = 0
-		if testCase.options.RegradeAfter == nil {
-			testCase.expected.Options.RegradeAfter = responseContent.Options.RegradeAfter
+		if testCase.options.RegradeCutoff == nil {
+			testCase.expected.Options.RegradeCutoff = responseContent.Options.RegradeCutoff
 		}
 
 		// Clear the submission IDs to pass the equality check.
