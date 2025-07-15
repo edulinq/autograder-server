@@ -2003,7 +2003,8 @@
             "fields": [
                 {
                     "name": "engine-options",
-                    "type": "map[string]any"
+                    "type": "map[string]any",
+                    "description": "EngineOptions include the parameters for the engines that will be used for the analysis.\nCurrent implementation includes minTokens for JPlag.\nCurrent expected Structure: {\"jplag\": {\"minTokens\": YourValue}} minTokens accepts a int value"
                 },
                 {
                     "name": "exclude-patterns",
