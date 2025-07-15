@@ -2,6 +2,7 @@ package jplag
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"path/filepath"
 	"strconv"
@@ -33,7 +34,12 @@ var (
 )
 
 type JPlagEngineOptions struct {
-	MinTokens int
+	MinTokens int `json:"minTokens"`
+}
+
+// Initialization of default struct.
+var JplagDefaultOptions = JPlagEngineOptions{
+	MinTokens: DEFAULT_MIN_TOKENS,
 }
 
 type JPlagEngine struct{}
@@ -50,47 +56,33 @@ func (this *JPlagEngine) IsAvailable() bool {
 	return docker.CanAccessDocker()
 }
 
-func getIntFromAny(val any, defaultValue int) int {
-	switch v := val.(type) {
-	case int:
-		return v
-	case float64:
-		// Truncate float64 to int.
-		return int(v)
-	default:
-		return defaultValue
-	}
-}
-
-func ExtractJplagOptions(options map[string]any) JPlagEngineOptions {
-	effectiveEngineOptions := JPlagEngineOptions{}
-
-	// Check for minTokens option.
-	minTokensVal, ok := options["minTokens"]
-	if !ok {
-		// If minTokens is not specified, use the default value.
-		effectiveEngineOptions.MinTokens = DEFAULT_MIN_TOKENS
-		return effectiveEngineOptions
+// SetJplagEngineOptions sets engine options by marshalling the options map
+// to JSON and then unmarshalling it into the struct.
+func SetJplagEngineOptions(defaultOptions JPlagEngineOptions, rawOptions map[string]any) JPlagEngineOptions {
+	// If the input map is empty, return default struct.
+	if len(rawOptions) == 0 {
+		return defaultOptions
 	}
 
-	// Check if minTokens is a valid type.
-	effectiveEngineOptions.MinTokens = getIntFromAny(minTokensVal, DEFAULT_MIN_TOKENS)
-	return effectiveEngineOptions
+	jsonBytes, err := json.Marshal(rawOptions)
+	if err != nil {
+		log.Error("failed to marshal options map to JSON: ", err)
+		// If there is an error, return default struct.
+		return defaultOptions
+	}
 
+	err = json.Unmarshal(jsonBytes, &defaultOptions)
+	if err != nil {
+		log.Error("could not unmarshal options, some values may be defaults. Error: %w", err)
+		// If there is an error, return default struct.
+		return defaultOptions
+	}
+
+	return defaultOptions
 }
 
 func (this *JPlagEngine) ComputeFileSimilarity(paths [2]string, templatePath string, ctx context.Context, options map[string]any) (*model.FileSimilarity, error) {
-
-	var effectiveMinTokens int
-
-	// Extract JPlag specific options.
-	if options != nil && len(options) > 0 {
-		EffectiveOptions := ExtractJplagOptions(options)
-		// Extract the minTokens option.
-		effectiveMinTokens = EffectiveOptions.MinTokens
-	} else {
-		effectiveMinTokens = DEFAULT_MIN_TOKENS
-	}
+	effectiveOptions := SetJplagEngineOptions(JplagDefaultOptions, options)
 
 	err := ensureImage()
 	if err != nil {
@@ -165,7 +157,7 @@ func (this *JPlagEngine) ComputeFileSimilarity(paths [2]string, templatePath str
 		"--mode", "RUN",
 		"--csv-export",
 		"--language", getLanguage(tempFilenames[0]),
-		"--min-tokens", fmt.Sprintf("%d", effectiveMinTokens),
+		"--min-tokens", fmt.Sprintf("%d", effectiveOptions.MinTokens),
 		"/jplag/src",
 	}
 

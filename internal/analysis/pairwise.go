@@ -224,9 +224,6 @@ func computeFileSims(options AnalysisOptions, inputDirs [2]string, assignment *m
 	engineOptions := make(map[string]any)
 	if assignment != nil && assignment.AssignmentAnalysisOptions != nil {
 		engineOptions = assignment.AssignmentAnalysisOptions.EngineOptions
-	} else {
-		// Assign EngineOptions as nil if not found.
-		engineOptions = nil
 	}
 
 	for _, relpath := range matches {
@@ -256,21 +253,15 @@ func computeFileSims(options AnalysisOptions, inputDirs [2]string, assignment *m
 		var engineWaitGroup sync.WaitGroup
 
 		for i, engine := range engines {
-
 			// Initialize specific options for the engine.
 			var specificEngineOptions map[string]any
 
-			// Get specific options for this engine.
-			specificEngineOptionsAny, found := engineOptions[engine.GetName()]
-
-			if found && specificEngineOptionsAny != nil { // Check if found and specificEngineOptions are not nil.
-				var ok bool
+			specificEngineOptionsAny, ok := engineOptions[engine.GetName()]
+			if ok && specificEngineOptionsAny != nil {
 				specificEngineOptions, ok = specificEngineOptionsAny.(map[string]any)
 				if !ok {
-					// Handle the case where the assertion fails.
-					specificEngineOptions = nil
 					log.Warn("Engine options for '%s' could not be converted into map[string]any. Engines will use default values.", engine.GetName())
-					continue // Skip to the next engine.
+					continue
 				}
 			}
 
@@ -278,9 +269,9 @@ func computeFileSims(options AnalysisOptions, inputDirs [2]string, assignment *m
 			// Note that because we know the index for each engine up-front, we don't need a channel.
 			engineWaitGroup.Add(1)
 			// Pass options to function.
-			go func(index int, simEngine core.SimilarityEngine, EngineOptions map[string]any) {
+			go func(index int, simEngine core.SimilarityEngine, engineOptions map[string]any) {
 				defer engineWaitGroup.Done()
-				similarity, err := simEngine.ComputeFileSimilarity(paths, templatePath, options.Context, EngineOptions)
+				similarity, err := simEngine.ComputeFileSimilarity(paths, templatePath, options.Context, engineOptions)
 				if err != nil {
 					errs[index] = fmt.Errorf("Unable to compute similarity for '%s' using engine '%s': '%w'", relpath, simEngine.GetName(), err)
 				} else if similarity != nil {

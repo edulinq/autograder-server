@@ -45,6 +45,9 @@ func (this *dolosEngine) IsAvailable() bool {
 }
 
 func (this *dolosEngine) ComputeFileSimilarity(paths [2]string, templatePath string, ctx context.Context, options map[string]any) (*model.FileSimilarity, error) {
+	// Ignore unused 'options' parameter for dolos.
+	_ = options
+
 	err := ensureImage()
 	if err != nil {
 		return nil, fmt.Errorf("Failed to ensure Dolos docker image exists: '%w'.", err)
