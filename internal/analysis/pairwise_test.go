@@ -292,7 +292,6 @@ func TestPairwiseAnalysisDefaultEnginesBase(test *testing.T) {
 	if err != nil {
 		test.Fatalf("Failed to do pairwise analysis: '%v'.", err)
 	}
-
 	if len(workErrors) != 0 {
 		test.Fatalf("Unexpected work errors: '%s'.", util.MustToJSONIndent(workErrors))
 	}
@@ -799,53 +798,51 @@ func TestPairwiseAnalysisFailureBase(test *testing.T) {
 
 func TestExtractJplagOptions(test *testing.T) {
 	testCases := []struct {
-		name     string
 		input    map[string]any
 		expected jplag.JPlagEngineOptions
 	}{
+		// minTokens not specified
 		{
-			name:     "minTokens not specified",
 			input:    map[string]any{},
-			expected: jplag.JPlagEngineOptions{MinTokens: jplag.DEFAULT_MIN_TOKENS},
+			expected: jplag.JplagDefaultOptions,
 		},
+
+		//minTokens as int
 		{
-			name:     "minTokens as int",
 			input:    map[string]any{"minTokens": 100},
 			expected: jplag.JPlagEngineOptions{MinTokens: 100},
 		},
+
+		// minTokens as float64
 		{
-			name:     "minTokens as float64",
 			input:    map[string]any{"minTokens": 75.5},
-			expected: jplag.JPlagEngineOptions{MinTokens: 75},
+			expected: jplag.JplagDefaultOptions,
 		},
+
+		// minTokens as string (invalid type)
 		{
-			name:     "minTokens as string (invalid type)",
 			input:    map[string]any{"minTokens": "abc"},
-			expected: jplag.JPlagEngineOptions{MinTokens: jplag.DEFAULT_MIN_TOKENS},
+			expected: jplag.JplagDefaultOptions,
 		},
+
+		// minTokens as nil
 		{
-			name:     "minTokens as nil",
 			input:    map[string]any{"minTokens": nil},
-			expected: jplag.JPlagEngineOptions{MinTokens: jplag.DEFAULT_MIN_TOKENS},
+			expected: jplag.JplagDefaultOptions,
 		},
+
+		// additional options present
 		{
-			name:     "empty minTokens value (from user's request)",
-			input:    map[string]any{"minTokens": nil},
-			expected: jplag.JPlagEngineOptions{MinTokens: jplag.DEFAULT_MIN_TOKENS},
-		},
-		{
-			name:     "other options present, minTokens valid",
 			input:    map[string]any{"minTokens": 200, "anotherOption": "value"},
 			expected: jplag.JPlagEngineOptions{MinTokens: 200},
 		},
 	}
-
-	var extractedOptions jplag.JPlagEngineOptions
 	for i, testCase := range testCases {
-		extractedOptions = jplag.ExtractJplagOptions(testCase.input)
+		effectiveOptions := jplag.SetJplagEngineOptions(jplag.JplagDefaultOptions, testCase.input)
 
-		if !reflect.DeepEqual(extractedOptions.MinTokens, testCase.expected.MinTokens) {
-			test.Errorf("Case: %d extractJplagOptions() error, got = %v want %v", i, extractedOptions.MinTokens, testCase.expected.MinTokens)
+		if !reflect.DeepEqual(effectiveOptions, testCase.expected) {
+			test.Errorf("Case: %d extractJplagOptions() error, got = %v want %v", i, effectiveOptions, testCase.expected)
+			continue
 		}
 	}
 }
