@@ -16,7 +16,7 @@ func TestJPlagComputeFileSimilarityBase(test *testing.T) {
 	}
 
 	engine := GetEngine()
-
+	// Lower the token minimum for testing.
 	engineOptions := map[string]any{
 		"minTokens": 5,
 	}
@@ -33,7 +33,7 @@ func TestJPlagComputeFileSimilarityWithIgnoreBase(test *testing.T) {
 	}
 
 	engine := GetEngine()
-
+	// Lower the token minimum for testing.
 	engineOptions := map[string]any{
 		"minTokens": 5,
 	}
