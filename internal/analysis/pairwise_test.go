@@ -2,6 +2,8 @@ package analysis
 
 import (
 	"context"
+	"encoding/json"
+	"log"
 	"path/filepath"
 	"reflect"
 	"strings"
@@ -315,8 +317,17 @@ func TestPairwiseAnalysisDefaultEnginesSpecificFiles(test *testing.T) {
 	docker.EnsureOrSkipForTest(test)
 
 	// Override a setting for JPlag for testing.
-	engineOptions := map[string]any{
-		"minTokens": 5,
+	engineOptsStruct := jplag.JPlagEngineOptions{
+		MinTokens: 5,
+	}
+	jsonBytes, err := json.Marshal(engineOptsStruct)
+	if err != nil {
+		log.Fatalf("Error marshaling JPlagEngineOptions to JSON: %v", err)
+	}
+	var engineOptions map[string]any
+	err = json.Unmarshal(jsonBytes, &engineOptions)
+	if err != nil {
+		log.Fatalf("Error unmarshaling JSON to map[string]any: %v", err)
 	}
 
 	testPaths := []string{
