@@ -7,7 +7,7 @@ import (
 )
 
 const (
-	DEFAULT_IMAGE = "edulinq/autograder/internal.base"
+	DEFAULT_IMAGE = "ghcr.io/edulinq/grader.base:0.1.0-alpine"
 )
 
 type ImageInfo struct {

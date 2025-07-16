@@ -97,7 +97,7 @@ func runSubmissionTests(test *testing.T, parallel bool, useDocker bool) {
 
 			if !result.Info.Equals(*testSubmission.TestSubmission.GradingInfo, !testSubmission.TestSubmission.IgnoreMessages) {
 				test.Fatalf("Actual output:\n---\n%v\n---\ndoes not match expected output:\n---\n%v\n---\n.",
-					result.Info, testSubmission.TestSubmission.GradingInfo)
+					util.MustToJSONIndent(result.Info), util.MustToJSONIndent(testSubmission.TestSubmission.GradingInfo))
 			}
 
 		})

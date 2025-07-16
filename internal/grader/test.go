@@ -6,6 +6,7 @@ import (
 	"slices"
 	"strings"
 
+	"github.com/edulinq/autograder/internal/config"
 	"github.com/edulinq/autograder/internal/db"
 	"github.com/edulinq/autograder/internal/model"
 	"github.com/edulinq/autograder/internal/util"
@@ -99,4 +100,8 @@ func fetchTestSubmissionAssignment(testSubmissionPath string) (*model.Assignment
 	}
 
 	return db.GetAssignment(course.GetID(), assignment.GetID())
+}
+
+func getTestSubmissionResultPath(shortID string) string {
+	return filepath.Join(config.GetTestdataDir(), "course101", "submissions", "HW0", "course-student@test.edulinq.org", shortID, "submission-result.json")
 }
