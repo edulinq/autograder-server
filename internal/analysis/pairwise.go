@@ -281,7 +281,8 @@ func computeFileSims(options AnalysisOptions, inputDirs [2]string, assignment *m
 					tempSimilarities[index] = similarity
 
 				}
-			}(i, engine, specificEngineOptions) // Pass specificEngineOptions to the goroutine.
+				// Pass specificEngineOptions to the goroutine.
+			}(i, engine, specificEngineOptions)
 		}
 
 		// Wait for all engines to complete.

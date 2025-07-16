@@ -30,7 +30,7 @@ type AssignmentAnalysisOptions struct {
 
 	// EngineOptions include the parameters for the engines that will be used for the analysis.
 	// Current implementation includes minTokens for JPlag.
-	// Current expected Structure: {"jplag": {"minTokens": YourValue}} minTokens accepts a int value
+	// Current expected structure: {"jplag": {"minTokens": YourValue}} minTokens accepts a int value
 	EngineOptions map[string]any `json:"engine-options,omitempty,omitzero"`
 }
 
