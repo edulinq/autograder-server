@@ -250,17 +250,8 @@ func computeFileSims(options AnalysisOptions, inputDirs [2]string, assignment *m
 		var engineWaitGroup sync.WaitGroup
 
 		for i, engine := range engines {
-			// Initialize specific options for the engine.
-			var specificEngineOptions map[string]any
-
-			specificEngineOptionsAny, ok := engineOptions[engine.GetName()]
-			if ok && specificEngineOptionsAny != nil {
-				specificEngineOptions, ok = specificEngineOptionsAny.(map[string]any)
-				if !ok {
-					log.Warn("Engine options for '%s' could not be converted into map[string]any. Engines will use default values.", engine.GetName())
-					continue
-				}
-			}
+			// Extract specific options for the engine.
+			specificEngineOptions := util.GetSpecificEngineOptions(engineOptions, engine.GetName())
 
 			// Compute the file similarity for each engine in parallel.
 			// Note that because we know the index for each engine up-front, we don't need a channel.
