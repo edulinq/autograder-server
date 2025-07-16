@@ -2111,7 +2111,7 @@
                 {
                     "name": "engine-options",
                     "type": "map[string]any",
-                    "description": "EngineOptions include the parameters for the engines that will be used for the analysis.\nCurrent implementation includes minTokens for JPlag.\nCurrent expected structure: {\"jplag\": {\"minTokens\": YourValue}} minTokens accepts a int value"
+                    "description": "EngineOptions includes the parameters for the engines that will be used for the analysis.\nCurrent implementation includes minTokens for JPlag.\nCurrent expected structure: {\"jplag\": {\"minTokens\": YourValue}} minTokens accepts int type."
                 },
                 {
                     "name": "exclude-patterns",
