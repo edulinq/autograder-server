@@ -59,8 +59,8 @@ func (this *JPlagEngine) IsAvailable() bool {
 // SetJplagEngineOptions sets engine options by marshalling the options map
 // to JSON and then unmarshalling it into the struct.
 func SetJplagEngineOptions(defaultOptions JPlagEngineOptions, rawOptions map[string]any) JPlagEngineOptions {
-	// If the input map is empty, return default struct.
-	if len(rawOptions) == 0 {
+	// If the input map is empty or nil, return default struct.
+	if len(rawOptions) == 0 || rawOptions == nil {
 		return defaultOptions
 	}
 
