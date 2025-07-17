@@ -251,7 +251,7 @@ func computeFileSims(options AnalysisOptions, inputDirs [2]string, assignment *m
 
 		for i, engine := range engines {
 			// Extract specific options for the engine.
-			specificEngineOptions := util.GetSpecificEngineOptions(engineOptions, engine.GetName())
+			specificEngineOptions, _ := util.GetSpecificEngineOptions(engineOptions, engine.GetName())
 
 			// Compute the file similarity for each engine in parallel.
 			// Note that because we know the index for each engine up-front, we don't need a channel.
