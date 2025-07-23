@@ -158,7 +158,7 @@ func computeSinglePairwiseAnalysis(options AnalysisOptions, pairwiseKey model.Pa
 
 		submissionDirs[i] = submissionDir
 	}
-
+	fmt.Println("161")
 	fileSimilarities, unmatches, skipped, err := computeFileSims(options, submissionDirs, optionsAssignment, templateFileStore)
 	if err != nil {
 		message := fmt.Sprintf("Failed to compute similarities for %v: '%s'.", pairwiseKey, err.Error())
@@ -251,14 +251,20 @@ func computeFileSims(options AnalysisOptions, inputDirs [2]string, assignment *m
 
 		for i, engine := range engines {
 			// Extract specific options for the engine.
-			specificEngineOptions, _ := util.GetSpecificEngineOptions(engineOptions, engine.GetName())
+			specificEngineOptions, ok := core.GetSpecificEngineOptions(engineOptions, engine.GetName())
+			if !ok {
+				log.Info("No engine options found for '%s' or engine options are empty. Engine will use default values.", engine.GetName())
+			}
+
+			fmt.Println("seo", specificEngineOptions)
 
 			// Compute the file similarity for each engine in parallel.
 			// Note that because we know the index for each engine up-front, we don't need a channel.
 			engineWaitGroup.Add(1)
-			// Pass options to function.
+
 			go func(index int, simEngine core.SimilarityEngine, engineOptions map[string]any) {
 				defer engineWaitGroup.Done()
+				fmt.Println("en", simEngine)
 				similarity, err := simEngine.ComputeFileSimilarity(paths, templatePath, options.Context, engineOptions)
 				if err != nil {
 					errs[index] = fmt.Errorf("Unable to compute similarity for '%s' using engine '%s': '%w'", relpath, simEngine.GetName(), err)
@@ -267,9 +273,7 @@ func computeFileSims(options AnalysisOptions, inputDirs [2]string, assignment *m
 					similarity.OriginalFilename = renames[relpath]
 
 					tempSimilarities[index] = similarity
-
 				}
-				// Pass specificEngineOptions to the goroutine.
 			}(i, engine, specificEngineOptions)
 		}
 

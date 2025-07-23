@@ -294,6 +294,7 @@ func TestPairwiseAnalysisDefaultEnginesBase(test *testing.T) {
 	if err != nil {
 		test.Fatalf("Failed to do pairwise analysis: '%v'.", err)
 	}
+
 	if len(workErrors) != 0 {
 		test.Fatalf("Unexpected work errors: '%s'.", util.MustToJSONIndent(workErrors))
 	}
@@ -809,50 +810,63 @@ func TestPairwiseAnalysisFailureBase(test *testing.T) {
 
 func TestExtractJplagOptions(test *testing.T) {
 	testCases := []struct {
-		input    map[string]any
-		expected jplag.JPlagEngineOptions
+		input           map[string]any
+		expected        *jplag.JPlagEngineOptions
+		extractionError bool
 	}{
-		// minTokens not specified
+		// Base Case
 		{
-			input:    map[string]any{},
-			expected: jplag.JplagDefaultOptions,
+			input:           map[string]any{"min-tokens": 100},
+			expected:        &jplag.JPlagEngineOptions{MinTokens: 100},
+			extractionError: false,
 		},
 
-		//minTokens as int
+		// Fallback to Default
 		{
-			input:    map[string]any{"minTokens": 100},
-			expected: jplag.JPlagEngineOptions{MinTokens: 100},
+			input:           map[string]any{},
+			expected:        jplag.GetDefaultJplagOptions(),
+			extractionError: false,
+		},
+		{
+			input:           map[string]any{"min-tokens": 75.5},
+			expected:        jplag.GetDefaultJplagOptions(),
+			extractionError: true,
+		},
+		{
+			input:           map[string]any{"min-tokens": "abc"},
+			expected:        jplag.GetDefaultJplagOptions(),
+			extractionError: true,
+		},
+		{
+			input:           map[string]any{"min-tokens": nil},
+			expected:        jplag.GetDefaultJplagOptions(),
+			extractionError: false,
 		},
 
-		// minTokens as float64
+		// Extra Options
 		{
-			input:    map[string]any{"minTokens": 75.5},
-			expected: jplag.JplagDefaultOptions,
-		},
-
-		// minTokens as string (invalid type)
-		{
-			input:    map[string]any{"minTokens": "abc"},
-			expected: jplag.JplagDefaultOptions,
-		},
-
-		// minTokens as nil
-		{
-			input:    map[string]any{"minTokens": nil},
-			expected: jplag.JplagDefaultOptions,
-		},
-
-		// additional options present
-		{
-			input:    map[string]any{"minTokens": 200, "anotherOption": "value"},
-			expected: jplag.JPlagEngineOptions{MinTokens: 200},
+			input:           map[string]any{"min-tokens": 200, "another-option": "value"},
+			expected:        &jplag.JPlagEngineOptions{MinTokens: 200},
+			extractionError: false,
 		},
 	}
+
 	for i, testCase := range testCases {
-		effectiveOptions := jplag.SetJplagEngineOptions(jplag.JplagDefaultOptions, testCase.input)
+		effectiveOptions, err := jplag.GetJplagEngineOptions(testCase.input)
+		if err != nil {
+			if !testCase.extractionError {
+				test.Errorf("Case %d: Got an unexpected error: '%v'.", i, err)
+			}
+
+		} else {
+			if testCase.extractionError {
+				test.Errorf("Case %d: Did not get an expected error.", i)
+				continue
+			}
+		}
 
 		if !reflect.DeepEqual(effectiveOptions, testCase.expected) {
-			test.Errorf("Case: %d extractJplagOptions() error, got = %v want %v", i, effectiveOptions, testCase.expected)
+			test.Errorf("Case %d: Unexpected result. Expected = '%v', Actual = '%v'.", i, testCase.expected, effectiveOptions)
 			continue
 		}
 	}

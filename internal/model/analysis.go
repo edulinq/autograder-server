@@ -29,8 +29,8 @@ type AssignmentAnalysisOptions struct {
 	TemplateFileOps []*util.FileOperation `json:"template-file-ops,omitempty,omitzero"`
 
 	// EngineOptions includes the parameters for the engines that will be used for the analysis.
-	// Current implementation includes minTokens for JPlag.
-	// Current expected structure: {"jplag": {"minTokens": YourValue}} minTokens accepts int type.
+	// It is a map of engine name to options of type map[string]any.
+	// Current supported values can be found in the respective engine's options struct.
 	EngineOptions map[string]any `json:"engine-options,omitempty,omitzero"`
 }
 
