@@ -164,15 +164,21 @@
             "input": [
                 {
                     "name": "course-id",
-                    "type": "string"
+                    "type": "string",
+                    "description": "The ID of the course to make this request to.",
+                    "required": true
                 },
                 {
                     "name": "user-email",
-                    "type": "string"
+                    "type": "string",
+                    "description": "The email of the user making this request.",
+                    "required": true
                 },
                 {
                     "name": "user-pass",
-                    "type": "string"
+                    "type": "string",
+                    "description": "The password of the user making this request.",
+                    "required": true
                 }
             ],
             "output": [
