@@ -40,6 +40,15 @@ var stringToCourseUserRole = map[string]CourseUserRole{
 	"owner":   CourseRoleOwner,
 }
 
+// Common course user roles are the valid roles a user could have in a course.
+var commonStringToCourseUserRole = map[string]CourseUserRole{
+	"other":   CourseRoleOther,
+	"student": CourseRoleStudent,
+	"grader":  CourseRoleGrader,
+	"admin":   CourseRoleAdmin,
+	"owner":   CourseRoleOwner,
+}
+
 func GetCourseUserRole(text string) CourseUserRole {
 	return stringToCourseUserRole[text]
 }
@@ -48,12 +57,13 @@ func GetCourseUserRoleString(role CourseUserRole) string {
 	return courseRoleToString[role]
 }
 
-func GetAllCourseUserRoles() map[CourseUserRole]string {
-	return courseRoleToString
-}
+func GetCommonCourseUserRolesCopy() map[string]CourseUserRole {
+	commonCourseUserRoleCopy := make(map[string]CourseUserRole, len(commonStringToCourseUserRole))
+	for roleString, role := range commonStringToCourseUserRole {
+		commonCourseUserRoleCopy[roleString] = role
+	}
 
-func GetAllCourseUserRolesStrings() map[string]CourseUserRole {
-	return stringToCourseUserRole
+	return commonCourseUserRoleCopy
 }
 
 func (this CourseUserRole) String() string {

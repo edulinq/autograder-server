@@ -1,7 +1,6 @@
 package api
 
 import (
-	"fmt"
 	"reflect"
 	"strings"
 	"testing"
@@ -31,47 +30,17 @@ func TestDescribeRoutesFull(test *testing.T) {
 		test.Fatalf("Failed to describe endpoints: '%v'.", err)
 	}
 
-	if !reflect.DeepEqual(&expectedDescriptions, actualDescriptions) {
-		// If not deep equal, check for JSON equality.
-		descriptionString := util.MustToJSON(actualDescriptions)
-		var descriptions core.APIDescription
-		util.MustJSONFromString(descriptionString, &descriptions)
+	// Compare the JSON objects for equality to avoid any pointers or empty values.
+	descriptionString := util.MustToJSON(actualDescriptions)
+	var descriptions core.APIDescription
+	util.MustJSONFromString(descriptionString, &descriptions)
 
-		if !reflect.DeepEqual(expectedDescriptions, descriptions) {
-			message := "Unexpected API Descriptions.\n"
-
-			for endpoint, expectedDesc := range expectedDescriptions.Endpoints {
-				actualDesc, ok := descriptions.Endpoints[endpoint]
-				if !ok {
-					message = message + fmt.Sprintf("Actual description does not contain an expected endpoint. Expected: '%s'.\n", endpoint)
-					continue
-				}
-
-				if !reflect.DeepEqual(expectedDesc, actualDesc) {
-					message = message + fmt.Sprintf("Unexpected endpoint description. Expected: '%v', actual: '%v'.\n",
-						expectedDesc, actualDesc)
-				}
-			}
-
-			for currentType, expectedDesc := range expectedDescriptions.Types {
-				actualDesc, ok := descriptions.Types[currentType]
-				if !ok {
-					message = message + fmt.Sprintf("Actual description does not contain an expected type. Expected: '%s'.\n", currentType)
-					continue
-				}
-
-				if !reflect.DeepEqual(expectedDesc, actualDesc) {
-					message = message + fmt.Sprintf("Unexpected type description. Expected: '%v', actual: '%v'.\n",
-						expectedDesc, actualDesc)
-				}
-			}
-
-			message = message + fmt.Sprintf("Unexpected API Descriptions. Expected: '%s', actual: '%s'.\n",
-				util.MustToJSONIndent(expectedDescriptions), util.MustToJSONIndent(descriptions))
-
-			test.Fatal(message)
-		}
+	if reflect.DeepEqual(expectedDescriptions, descriptions) {
+		return
 	}
+
+	diff := util.MustComputeTestDiff(util.MustToJSONIndent(expectedDescriptions), util.MustToJSONIndent(descriptions))
+	test.Fatalf("Unexpected API Description. Diff:\n%s.", diff)
 }
 
 func TestDescribeRoutesEmptyDescription(test *testing.T) {

@@ -13,7 +13,7 @@ import (
 // Upserting should only be done by server or course admins,
 // it should not be used for self creation.
 type UpsertUsersOptions struct {
-	RawUsers []*model.RawServerUserData `json:"raw-users"`
+	RawUsers []*model.RawServerUserData `json:"raw-users" required:""`
 
 	SkipInserts bool `json:"skip-inserts"`
 	SkipUpdates bool `json:"skip-updates"`

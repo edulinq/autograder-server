@@ -11,8 +11,8 @@ type UploadScoresRequest struct {
 	core.MinCourseRoleGrader
 	Users core.CourseUsers `json:"-"`
 
-	AssignmentLMSID core.NonEmptyString `json:"assignment-lms-id"`
-	Scores          []ScoreEntry        `json:"scores"`
+	AssignmentLMSID core.NonEmptyString `json:"assignment-lms-id" required:""`
+	Scores          []ScoreEntry        `json:"scores" required:""`
 }
 
 type ScoreEntry struct {

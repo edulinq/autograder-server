@@ -2,14 +2,20 @@ package core
 
 import (
 	"reflect"
+	"strings"
 	"testing"
 
 	"github.com/edulinq/autograder/internal/log"
 	"github.com/edulinq/autograder/internal/util"
 )
 
+// This is a simple alias for the string type.
 type stringWrapper string
+
+// A named map type.
 type simpleMapWrapper map[string]int
+
+// Wrapping a list in a named type!
 type simpleArrayWrapper []bool
 
 type simplePointerWrapper *string
@@ -27,13 +33,15 @@ type wrappedStruct struct {
 }
 
 type simpleJSONStruct struct {
-	Email   string `json:"email"`
-	JobCode int    `json:"job-code"`
+	Email string `json:"email"`
+
+	// The job code for the employee.
+	JobCode int `json:"job-code"`
 }
 
 type secureJSONStruct struct {
-	FirstName string `json:"first-name"`
-	LastName  string `json:"last-name"`
+	FirstName string `json:"first-name" required:""`
+	LastName  string `json:"last-name" required:""`
 	Pay       int    `json:"-"`
 }
 
@@ -43,15 +51,26 @@ type embeddedJSONStruct struct {
 }
 
 type complexJSONStruct struct {
+	// The value of the coin.
 	CoinValue simpleMapWrapper   `json:"coin-value"`
 	GoodIndex simpleArrayWrapper `json:"good-index"`
 	Personnel embeddedJSONStruct `json:"personnel"`
 }
 
 type complexPointerStruct struct {
+	// The value of the coin.
+	// A nil value indicates an unknown value.
 	CoinValue *simpleMapWrapper   `json:"coin-value"`
 	GoodIndex *simpleArrayWrapper `json:"good-index"`
 	Personnel *embeddedJSONStruct `json:"personnel"`
+}
+
+type errorTypeFalse struct {
+	badTag string `json:"bad-tag" required:"false"`
+}
+
+type errorTypeTrue struct {
+	badTag string `json:"bad-tag" required:"true"`
 }
 
 func mustGetTypeID(customType reflect.Type, typeConversions map[string]string) string {
@@ -78,333 +97,694 @@ func TestDescribeRoutesEmptyRoutes(test *testing.T) {
 func TestDescribeTypeBase(test *testing.T) {
 	testCases := []struct {
 		customType      reflect.Type
-		expectedDesc    TypeDescription
-		expectedTypeMap map[string]TypeDescription
+		expectedDesc    FullTypeDescription
+		expectedTypeMap map[string]FullTypeDescription
+		errorSubstring  string
 	}{
 		// Base types to alias (no JSON tags).
 		{
 			reflect.TypeOf((*string)(nil)).Elem(),
-			TypeDescription{
-				Category:  AliasType,
-				AliasType: "string",
+			FullTypeDescription{
+				BaseTypeDescription: BaseTypeDescription{
+					Category:  AliasType,
+					AliasType: "string",
+				},
 			},
-			map[string]TypeDescription{},
+			map[string]FullTypeDescription{},
+			"",
 		},
 		{
 			reflect.TypeOf((*int)(nil)).Elem(),
-			TypeDescription{
-				Category:  AliasType,
-				AliasType: "int",
+			FullTypeDescription{
+				BaseTypeDescription: BaseTypeDescription{
+					Category:  AliasType,
+					AliasType: "int",
+				},
 			},
-			map[string]TypeDescription{},
+			map[string]FullTypeDescription{},
+			"",
 		},
 		{
 			reflect.TypeOf((*int64)(nil)).Elem(),
-			TypeDescription{
-				Category:  AliasType,
-				AliasType: "int64",
+			FullTypeDescription{
+				BaseTypeDescription: BaseTypeDescription{
+					Category:  AliasType,
+					AliasType: "int64",
+				},
 			},
-			map[string]TypeDescription{},
+			map[string]FullTypeDescription{},
+			"",
 		},
 		{
 			reflect.TypeOf((*bool)(nil)).Elem(),
-			TypeDescription{
-				Category:  AliasType,
-				AliasType: "bool",
+			FullTypeDescription{
+				BaseTypeDescription: BaseTypeDescription{
+					Category:  AliasType,
+					AliasType: "bool",
+				},
 			},
-			map[string]TypeDescription{},
+			map[string]FullTypeDescription{},
+			"",
 		},
 
 		// Simple wrapper types.
 		{
 			reflect.TypeOf((*stringWrapper)(nil)).Elem(),
-			TypeDescription{
-				Category:  AliasType,
-				AliasType: "string",
-			},
-			map[string]TypeDescription{
-				mustGetTypeID(reflect.TypeOf((*stringWrapper)(nil)).Elem(), nil): TypeDescription{
-					Category:  AliasType,
-					AliasType: "string",
+			FullTypeDescription{
+				BaseTypeDescription: BaseTypeDescription{
+					Description: "This is a simple alias for the string type.",
+					Category:    AliasType,
+					AliasType:   "string",
 				},
 			},
+			map[string]FullTypeDescription{
+				mustGetTypeID(reflect.TypeOf((*stringWrapper)(nil)).Elem(), nil): FullTypeDescription{
+					BaseTypeDescription: BaseTypeDescription{
+						Description: "This is a simple alias for the string type.",
+						Category:    AliasType,
+						AliasType:   "string",
+					},
+				},
+			},
+			"",
 		},
 		{
 			reflect.TypeOf((*MinServerRoleAdmin)(nil)).Elem(),
-			TypeDescription{
-				Category:  AliasType,
-				AliasType: "bool",
-			},
-			map[string]TypeDescription{
-				mustGetTypeID(reflect.TypeOf((*MinServerRoleAdmin)(nil)).Elem(), nil): TypeDescription{
+			FullTypeDescription{
+				BaseTypeDescription: BaseTypeDescription{
 					Category:  AliasType,
 					AliasType: "bool",
 				},
 			},
+			map[string]FullTypeDescription{
+				mustGetTypeID(reflect.TypeOf((*MinServerRoleAdmin)(nil)).Elem(), nil): FullTypeDescription{
+					BaseTypeDescription: BaseTypeDescription{
+						Category:  AliasType,
+						AliasType: "bool",
+					},
+				},
+			},
+			"",
 		},
 
 		// Simple maps and arrays.
 		{
 			reflect.TypeOf((*map[string]string)(nil)).Elem(),
-			TypeDescription{
-				Category:  MapType,
-				KeyType:   "string",
-				ValueType: "string",
+			FullTypeDescription{
+				BaseTypeDescription: BaseTypeDescription{
+					Category:  MapType,
+					KeyType:   "string",
+					ValueType: "string",
+				},
 			},
-			map[string]TypeDescription{},
+			map[string]FullTypeDescription{},
+			"",
 		},
 		{
 			reflect.TypeOf((*[]string)(nil)).Elem(),
-			TypeDescription{
-				Category:    ArrayType,
-				ElementType: "string",
+			FullTypeDescription{
+				BaseTypeDescription: BaseTypeDescription{
+					Category:    ArrayType,
+					ElementType: "string",
+				},
 			},
-			map[string]TypeDescription{},
+			map[string]FullTypeDescription{},
+			"",
 		},
 
 		// Wrapped maps and arrays.
 		{
 			reflect.TypeOf((*simpleMapWrapper)(nil)).Elem(),
-			TypeDescription{
-				Category:  MapType,
-				KeyType:   "string",
-				ValueType: "int",
-			},
-			map[string]TypeDescription{
-				mustGetTypeID(reflect.TypeOf((*simpleMapWrapper)(nil)).Elem(), nil): TypeDescription{
-					Category:  MapType,
-					KeyType:   "string",
-					ValueType: "int",
+			FullTypeDescription{
+				BaseTypeDescription: BaseTypeDescription{
+					Description: "A named map type.",
+					Category:    MapType,
+					KeyType:     "string",
+					ValueType:   "int",
 				},
 			},
+			map[string]FullTypeDescription{
+				mustGetTypeID(reflect.TypeOf((*simpleMapWrapper)(nil)).Elem(), nil): FullTypeDescription{
+					BaseTypeDescription: BaseTypeDescription{
+						Description: "A named map type.",
+						Category:    MapType,
+						KeyType:     "string",
+						ValueType:   "int",
+					},
+				},
+			},
+			"",
 		},
 		{
 			reflect.TypeOf((*simpleArrayWrapper)(nil)).Elem(),
-			TypeDescription{
-				Category:    ArrayType,
-				ElementType: "bool",
-			},
-			map[string]TypeDescription{
-				mustGetTypeID(reflect.TypeOf((*simpleArrayWrapper)(nil)).Elem(), nil): TypeDescription{
+			FullTypeDescription{
+				BaseTypeDescription: BaseTypeDescription{
+					Description: "Wrapping a list in a named type!",
 					Category:    ArrayType,
 					ElementType: "bool",
 				},
 			},
+			map[string]FullTypeDescription{
+				mustGetTypeID(reflect.TypeOf((*simpleArrayWrapper)(nil)).Elem(), nil): FullTypeDescription{
+					BaseTypeDescription: BaseTypeDescription{
+						Description: "Wrapping a list in a named type!",
+						Category:    ArrayType,
+						ElementType: "bool",
+					},
+				},
+			},
+			"",
 		},
 
 		// Fields without JSON tags are ignored.
 		{
 			reflect.TypeOf((*simpleStruct)(nil)).Elem(),
-			TypeDescription{
-				Category: StructType,
-				Fields:   []FieldDescription{},
-			},
-			map[string]TypeDescription{
-				mustGetTypeID(reflect.TypeOf((*simpleStruct)(nil)).Elem(), nil): TypeDescription{
+			FullTypeDescription{
+				BaseTypeDescription: BaseTypeDescription{
 					Category: StructType,
-					Fields:   []FieldDescription{},
+				},
+				Fields: []FieldDescription{},
+			},
+			map[string]FullTypeDescription{
+				mustGetTypeID(reflect.TypeOf((*simpleStruct)(nil)).Elem(), nil): FullTypeDescription{
+					BaseTypeDescription: BaseTypeDescription{
+						Category: StructType,
+					},
+					Fields: []FieldDescription{},
 				},
 			},
+			"",
 		},
 		{
 			reflect.TypeOf((*wrappedStruct)(nil)).Elem(),
-			TypeDescription{
-				Category: StructType,
-				Fields:   []FieldDescription{},
-			},
-			map[string]TypeDescription{
-				mustGetTypeID(reflect.TypeOf((*wrappedStruct)(nil)).Elem(), nil): TypeDescription{
+			FullTypeDescription{
+				BaseTypeDescription: BaseTypeDescription{
 					Category: StructType,
-					Fields:   []FieldDescription{},
+				},
+				Fields: []FieldDescription{},
+			},
+			map[string]FullTypeDescription{
+				mustGetTypeID(reflect.TypeOf((*wrappedStruct)(nil)).Elem(), nil): FullTypeDescription{
+					BaseTypeDescription: BaseTypeDescription{
+						Category: StructType,
+					},
+					Fields: []FieldDescription{},
 				},
 			},
+			"",
 		},
 
 		// Simple JSON tags.
 		{
 			reflect.TypeOf((*simpleJSONStruct)(nil)).Elem(),
-			TypeDescription{
-				Category: StructType,
-				Fields: []FieldDescription{
-					FieldDescription{"email", "string"},
-					FieldDescription{"job-code", "int"},
-				},
-			},
-			map[string]TypeDescription{
-				mustGetTypeID(reflect.TypeOf((*simpleJSONStruct)(nil)).Elem(), nil): TypeDescription{
+			FullTypeDescription{
+				BaseTypeDescription: BaseTypeDescription{
 					Category: StructType,
-					Fields: []FieldDescription{
-						FieldDescription{"email", "string"},
-						FieldDescription{"job-code", "int"},
+				},
+				Fields: []FieldDescription{
+					FieldDescription{
+						BaseFieldDescription: BaseFieldDescription{
+							Name: "email",
+							Type: "string",
+						},
+						Required: false,
+					},
+					FieldDescription{
+						BaseFieldDescription: BaseFieldDescription{
+							Name:        "job-code",
+							Type:        "int",
+							Description: "The job code for the employee.",
+						},
+						Required: false,
 					},
 				},
 			},
+			map[string]FullTypeDescription{
+				mustGetTypeID(reflect.TypeOf((*simpleJSONStruct)(nil)).Elem(), nil): FullTypeDescription{
+					BaseTypeDescription: BaseTypeDescription{
+						Category: StructType,
+					},
+					Fields: []FieldDescription{
+						FieldDescription{
+							BaseFieldDescription: BaseFieldDescription{
+								Name: "email",
+								Type: "string",
+							},
+							Required: false,
+						},
+						FieldDescription{
+							BaseFieldDescription: BaseFieldDescription{
+								Name:        "job-code",
+								Type:        "int",
+								Description: "The job code for the employee.",
+							},
+							Required: false,
+						},
+					},
+				},
+			},
+			"",
 		},
 
 		// Hidden JSON tags (-).
 		{
 			reflect.TypeOf((*secureJSONStruct)(nil)).Elem(),
-			TypeDescription{
-				Category: StructType,
-				Fields: []FieldDescription{
-					FieldDescription{"first-name", "string"},
-					FieldDescription{"last-name", "string"},
-				},
-			},
-			map[string]TypeDescription{
-				mustGetTypeID(reflect.TypeOf((*secureJSONStruct)(nil)).Elem(), nil): TypeDescription{
+			FullTypeDescription{
+				BaseTypeDescription: BaseTypeDescription{
 					Category: StructType,
-					Fields: []FieldDescription{
-						FieldDescription{"first-name", "string"},
-						FieldDescription{"last-name", "string"},
+				},
+				Fields: []FieldDescription{
+					FieldDescription{
+						BaseFieldDescription: BaseFieldDescription{
+							Name: "first-name",
+							Type: "string",
+						},
+						Required: true,
+					},
+					FieldDescription{
+						BaseFieldDescription: BaseFieldDescription{
+							Name: "last-name",
+							Type: "string",
+						},
+						Required: true,
 					},
 				},
 			},
+			map[string]FullTypeDescription{
+				mustGetTypeID(reflect.TypeOf((*secureJSONStruct)(nil)).Elem(), nil): FullTypeDescription{
+					BaseTypeDescription: BaseTypeDescription{
+						Category: StructType,
+					},
+					Fields: []FieldDescription{
+						FieldDescription{
+							BaseFieldDescription: BaseFieldDescription{
+								Name: "first-name",
+								Type: "string",
+							},
+							Required: true,
+						},
+						FieldDescription{
+							BaseFieldDescription: BaseFieldDescription{
+								Name: "last-name",
+								Type: "string",
+							},
+							Required: true,
+						},
+					},
+				},
+			},
+			"",
 		},
 
 		// Embedded fields.
 		{
 			reflect.TypeOf((*embeddedJSONStruct)(nil)).Elem(),
-			TypeDescription{
-				Category: StructType,
-				Fields: []FieldDescription{
-					FieldDescription{"email", "string"},
-					FieldDescription{"first-name", "string"},
-					FieldDescription{"job-code", "int"},
-					FieldDescription{"last-name", "string"},
-				},
-			},
-			map[string]TypeDescription{
-				mustGetTypeID(reflect.TypeOf((*embeddedJSONStruct)(nil)).Elem(), nil): TypeDescription{
+			FullTypeDescription{
+				BaseTypeDescription: BaseTypeDescription{
 					Category: StructType,
-					Fields: []FieldDescription{
-						FieldDescription{"email", "string"},
-						FieldDescription{"first-name", "string"},
-						FieldDescription{"job-code", "int"},
-						FieldDescription{"last-name", "string"},
+				},
+				Fields: []FieldDescription{
+					FieldDescription{
+						BaseFieldDescription: BaseFieldDescription{
+							Name: "email",
+							Type: "string",
+						},
+						Required: false,
+					},
+					FieldDescription{
+						BaseFieldDescription: BaseFieldDescription{
+							Name: "first-name",
+							Type: "string",
+						},
+						Required: true,
+					},
+					FieldDescription{
+						BaseFieldDescription: BaseFieldDescription{
+							Name:        "job-code",
+							Type:        "int",
+							Description: "The job code for the employee.",
+						},
+						Required: false,
+					},
+					FieldDescription{
+						BaseFieldDescription: BaseFieldDescription{
+							Name: "last-name",
+							Type: "string",
+						},
+						Required: true,
 					},
 				},
 			},
+			map[string]FullTypeDescription{
+				mustGetTypeID(reflect.TypeOf((*embeddedJSONStruct)(nil)).Elem(), nil): FullTypeDescription{
+					BaseTypeDescription: BaseTypeDescription{
+						Category: StructType,
+					},
+					Fields: []FieldDescription{
+						FieldDescription{
+							BaseFieldDescription: BaseFieldDescription{
+								Name: "email",
+								Type: "string",
+							},
+							Required: false,
+						},
+						FieldDescription{
+							BaseFieldDescription: BaseFieldDescription{
+								Name: "first-name",
+								Type: "string",
+							},
+							Required: true,
+						},
+						FieldDescription{
+							BaseFieldDescription: BaseFieldDescription{
+								Name:        "job-code",
+								Type:        "int",
+								Description: "The job code for the employee.",
+							},
+							Required: false,
+						},
+						FieldDescription{
+							BaseFieldDescription: BaseFieldDescription{
+								Name: "last-name",
+								Type: "string",
+							},
+							Required: true,
+						},
+					},
+				},
+			},
+			"",
 		},
 
 		// Complex fields.
 		{
 			reflect.TypeOf((*complexJSONStruct)(nil)).Elem(),
-			TypeDescription{
-				Category: StructType,
+			FullTypeDescription{
+				BaseTypeDescription: BaseTypeDescription{
+					Category: StructType,
+				},
 				Fields: []FieldDescription{
-					FieldDescription{"coin-value", "core.simpleMapWrapper"},
-					FieldDescription{"good-index", "core.simpleArrayWrapper"},
-					FieldDescription{"personnel", "core.embeddedJSONStruct"},
-				},
-			},
-			map[string]TypeDescription{
-				mustGetTypeID(reflect.TypeOf((*complexJSONStruct)(nil)).Elem(), nil): TypeDescription{
-					Category: StructType,
-					Fields: []FieldDescription{
-						FieldDescription{"coin-value", "core.simpleMapWrapper"},
-						FieldDescription{"good-index", "core.simpleArrayWrapper"},
-						FieldDescription{"personnel", "core.embeddedJSONStruct"},
+					FieldDescription{
+						BaseFieldDescription: BaseFieldDescription{
+							Name:        "coin-value",
+							Type:        "core.simpleMapWrapper",
+							Description: "The value of the coin.",
+						},
+						Required: false,
+					},
+					FieldDescription{
+						BaseFieldDescription: BaseFieldDescription{
+							Name: "good-index",
+							Type: "core.simpleArrayWrapper",
+						},
+						Required: false,
+					},
+					FieldDescription{
+						BaseFieldDescription: BaseFieldDescription{
+							Name: "personnel",
+							Type: "core.embeddedJSONStruct",
+						},
+						Required: false,
 					},
 				},
-				mustGetTypeID(reflect.TypeOf((*embeddedJSONStruct)(nil)).Elem(), nil): TypeDescription{
-					Category: StructType,
+			},
+			map[string]FullTypeDescription{
+				mustGetTypeID(reflect.TypeOf((*complexJSONStruct)(nil)).Elem(), nil): FullTypeDescription{
+					BaseTypeDescription: BaseTypeDescription{
+						Category: StructType,
+					},
 					Fields: []FieldDescription{
-						FieldDescription{"email", "string"},
-						FieldDescription{"first-name", "string"},
-						FieldDescription{"job-code", "int"},
-						FieldDescription{"last-name", "string"},
+						FieldDescription{
+							BaseFieldDescription: BaseFieldDescription{
+								Name:        "coin-value",
+								Type:        "core.simpleMapWrapper",
+								Description: "The value of the coin.",
+							},
+							Required: false,
+						},
+						FieldDescription{
+							BaseFieldDescription: BaseFieldDescription{
+								Name: "good-index",
+								Type: "core.simpleArrayWrapper",
+							},
+							Required: false,
+						},
+						FieldDescription{
+							BaseFieldDescription: BaseFieldDescription{
+								Name: "personnel",
+								Type: "core.embeddedJSONStruct",
+							},
+							Required: false,
+						},
 					},
 				},
-				mustGetTypeID(reflect.TypeOf((*simpleArrayWrapper)(nil)).Elem(), nil): TypeDescription{
-					Category:    ArrayType,
-					ElementType: "bool",
+				mustGetTypeID(reflect.TypeOf((*embeddedJSONStruct)(nil)).Elem(), nil): FullTypeDescription{
+					BaseTypeDescription: BaseTypeDescription{
+						Category: StructType,
+					},
+					Fields: []FieldDescription{
+						FieldDescription{
+							BaseFieldDescription: BaseFieldDescription{
+								Name: "email",
+								Type: "string",
+							},
+							Required: false,
+						},
+						FieldDescription{
+							BaseFieldDescription: BaseFieldDescription{
+								Name: "first-name",
+								Type: "string",
+							},
+							Required: true,
+						},
+						FieldDescription{
+							BaseFieldDescription: BaseFieldDescription{
+								Name:        "job-code",
+								Type:        "int",
+								Description: "The job code for the employee.",
+							},
+							Required: false,
+						},
+						FieldDescription{
+							BaseFieldDescription: BaseFieldDescription{
+								Name: "last-name",
+								Type: "string",
+							},
+							Required: true,
+						},
+					},
 				},
-				mustGetTypeID(reflect.TypeOf((*simpleMapWrapper)(nil)).Elem(), nil): TypeDescription{
-					Category:  MapType,
-					KeyType:   "string",
-					ValueType: "int",
+				mustGetTypeID(reflect.TypeOf((*simpleArrayWrapper)(nil)).Elem(), nil): FullTypeDescription{
+					BaseTypeDescription: BaseTypeDescription{
+						Description: "Wrapping a list in a named type!",
+						Category:    ArrayType,
+						ElementType: "bool",
+					},
+				},
+				mustGetTypeID(reflect.TypeOf((*simpleMapWrapper)(nil)).Elem(), nil): FullTypeDescription{
+					BaseTypeDescription: BaseTypeDescription{
+						Description: "A named map type.",
+						Category:    MapType,
+						KeyType:     "string",
+						ValueType:   "int",
+					},
 				},
 			},
+			"",
 		},
 
 		// Pointers to various types.
 		{
 			reflect.TypeOf((**string)(nil)).Elem(),
-			TypeDescription{
-				Category:  AliasType,
-				AliasType: "string",
+			FullTypeDescription{
+				BaseTypeDescription: BaseTypeDescription{
+					Category:  AliasType,
+					AliasType: "string",
+				},
 			},
-			map[string]TypeDescription{},
+			map[string]FullTypeDescription{},
+			"",
 		},
 		{
 			reflect.TypeOf((**map[string]string)(nil)).Elem(),
-			TypeDescription{
-				Category:  MapType,
-				KeyType:   "string",
-				ValueType: "string",
+			FullTypeDescription{
+				BaseTypeDescription: BaseTypeDescription{
+					Category:  MapType,
+					KeyType:   "string",
+					ValueType: "string",
+				},
 			},
-			map[string]TypeDescription{},
+			map[string]FullTypeDescription{},
+			"",
 		},
 
 		// Pointers inside of fields.
 		{
 			reflect.TypeOf((*simplePointerWrapper)(nil)).Elem(),
-			TypeDescription{
-				Category:  AliasType,
-				AliasType: "string",
+			FullTypeDescription{
+				BaseTypeDescription: BaseTypeDescription{
+					Category:  AliasType,
+					AliasType: "string",
+				},
 			},
-			map[string]TypeDescription{},
+			map[string]FullTypeDescription{},
+			"",
 		},
 		{
 			reflect.TypeOf((*complexPointerStruct)(nil)).Elem(),
-			TypeDescription{
-				Category: StructType,
+			FullTypeDescription{
+				BaseTypeDescription: BaseTypeDescription{
+					Category: StructType,
+				},
 				Fields: []FieldDescription{
-					FieldDescription{"coin-value", "*core.simpleMapWrapper"},
-					FieldDescription{"good-index", "*core.simpleArrayWrapper"},
-					FieldDescription{"personnel", "*core.embeddedJSONStruct"},
-				},
-			},
-			map[string]TypeDescription{
-				mustGetTypeID(reflect.TypeOf((*complexPointerStruct)(nil)).Elem(), nil): TypeDescription{
-					Category: StructType,
-					Fields: []FieldDescription{
-						FieldDescription{"coin-value", "*core.simpleMapWrapper"},
-						FieldDescription{"good-index", "*core.simpleArrayWrapper"},
-						FieldDescription{"personnel", "*core.embeddedJSONStruct"},
+					FieldDescription{
+						BaseFieldDescription: BaseFieldDescription{
+							Name:        "coin-value",
+							Type:        "*core.simpleMapWrapper",
+							Description: "The value of the coin.\nA nil value indicates an unknown value.",
+						},
+						Required: false,
+					},
+					FieldDescription{
+						BaseFieldDescription: BaseFieldDescription{
+							Name: "good-index",
+							Type: "*core.simpleArrayWrapper",
+						},
+						Required: false,
+					},
+					FieldDescription{
+						BaseFieldDescription: BaseFieldDescription{
+							Name: "personnel",
+							Type: "*core.embeddedJSONStruct",
+						},
+						Required: false,
 					},
 				},
-				mustGetTypeID(reflect.TypeOf((*embeddedJSONStruct)(nil)).Elem(), nil): TypeDescription{
-					Category: StructType,
+			},
+			map[string]FullTypeDescription{
+				mustGetTypeID(reflect.TypeOf((*complexPointerStruct)(nil)).Elem(), nil): FullTypeDescription{
+					BaseTypeDescription: BaseTypeDescription{
+						Category: StructType,
+					},
 					Fields: []FieldDescription{
-						FieldDescription{"email", "string"},
-						FieldDescription{"first-name", "string"},
-						FieldDescription{"job-code", "int"},
-						FieldDescription{"last-name", "string"},
+						FieldDescription{
+							BaseFieldDescription: BaseFieldDescription{
+								Name:        "coin-value",
+								Type:        "*core.simpleMapWrapper",
+								Description: "The value of the coin.\nA nil value indicates an unknown value.",
+							},
+							Required: false,
+						},
+						FieldDescription{
+							BaseFieldDescription: BaseFieldDescription{
+								Name: "good-index",
+								Type: "*core.simpleArrayWrapper",
+							},
+							Required: false,
+						},
+						FieldDescription{
+							BaseFieldDescription: BaseFieldDescription{
+								Name: "personnel",
+								Type: "*core.embeddedJSONStruct",
+							},
+							Required: false,
+						},
 					},
 				},
-				mustGetTypeID(reflect.TypeOf((*simpleArrayWrapper)(nil)).Elem(), nil): TypeDescription{
-					Category:    ArrayType,
-					ElementType: "bool",
+				mustGetTypeID(reflect.TypeOf((*embeddedJSONStruct)(nil)).Elem(), nil): FullTypeDescription{
+					BaseTypeDescription: BaseTypeDescription{
+						Category: StructType,
+					},
+					Fields: []FieldDescription{
+						FieldDescription{
+							BaseFieldDescription: BaseFieldDescription{
+								Name: "email",
+								Type: "string",
+							},
+							Required: false,
+						},
+						FieldDescription{
+							BaseFieldDescription: BaseFieldDescription{
+								Name: "first-name",
+								Type: "string",
+							},
+							Required: true,
+						},
+						FieldDescription{
+							BaseFieldDescription: BaseFieldDescription{
+								Name:        "job-code",
+								Type:        "int",
+								Description: "The job code for the employee.",
+							},
+							Required: false,
+						},
+						FieldDescription{
+							BaseFieldDescription: BaseFieldDescription{
+								Name: "last-name",
+								Type: "string",
+							},
+							Required: true,
+						},
+					},
 				},
-				mustGetTypeID(reflect.TypeOf((*simpleMapWrapper)(nil)).Elem(), nil): TypeDescription{
-					Category:  MapType,
-					KeyType:   "string",
-					ValueType: "int",
+				mustGetTypeID(reflect.TypeOf((*simpleArrayWrapper)(nil)).Elem(), nil): FullTypeDescription{
+					BaseTypeDescription: BaseTypeDescription{
+						Description: "Wrapping a list in a named type!",
+						Category:    ArrayType,
+						ElementType: "bool",
+					},
+				},
+				mustGetTypeID(reflect.TypeOf((*simpleMapWrapper)(nil)).Elem(), nil): FullTypeDescription{
+					BaseTypeDescription: BaseTypeDescription{
+						Description: "A named map type.",
+						Category:    MapType,
+						KeyType:     "string",
+						ValueType:   "int",
+					},
 				},
 			},
+			"",
+		},
+
+		// Errors.
+		{
+			reflect.TypeOf((*errorTypeFalse)(nil)).Elem(),
+			FullTypeDescription{},
+			nil,
+			"Unexpected required tag value. Expected: '', Actual: 'false'.",
+		},
+		{
+			reflect.TypeOf((*errorTypeTrue)(nil)).Elem(),
+			FullTypeDescription{},
+			nil,
+			"Unexpected required tag value. Expected: '', Actual: 'true'.",
 		},
 	}
 
 	for i, testCase := range testCases {
 		info := TypeInfoCache{
-			TypeMap: make(map[string]TypeDescription),
+			TypeMap: make(map[string]FullTypeDescription),
 		}
 
 		actual, _, _, err := DescribeType(testCase.customType, true, info)
 		if err != nil {
-			test.Errorf("Case %d: Unexpected error while describing types: '%v'.", i, err)
+			if testCase.errorSubstring == "" {
+				test.Errorf("Case %d: Unexpected error while describing types: '%v'.", i, err)
+				continue
+			}
+
+			if !strings.Contains(err.Error(), testCase.errorSubstring) {
+				test.Errorf("Case %d: Error is not as expected. Expected Substring: '%s', Actual: '%s'.",
+					i, testCase.errorSubstring, err.Error())
+				continue
+			}
+
+			continue
+		}
+
+		if testCase.errorSubstring != "" {
+			test.Errorf("Case %d: Did not get expected error '%s' on '%+v'.", i, testCase.errorSubstring, testCase.customType)
+			continue
 		}
 
 		if !reflect.DeepEqual(testCase.expectedDesc, actual) {

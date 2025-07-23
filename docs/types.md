@@ -9,8 +9,9 @@ Extra keys will generally be ignored.
 
  - [Semantic Types](#semantic-types)
    - [Identifier](#identifier)
+   - [Course User Reference (CourseUserReference)](#course-user-reference-courseuserreference)
+   - [Server User Reference (ServerUserReference)](#server-user-reference-serveruserreference)
    - [Email](#email)
-     - [Course Email Specification (CourseEmailSpec)](#course-email-specification-courseemailspec)
    - [Timestamp](#timestamp)
    - [Pointer](#pointer)
    - [Regex](#regex)
@@ -66,24 +67,55 @@ The non-alphanumeric characters cannot be repeated in a sequence (e.g. you can h
 Identifiers must start and end with alphanumeric characters.
 Identifiers are case insensitive (they are always stored in lower case).
 
+### Course User Reference (CourseUserReference)
+
+Underlying Type: String
+
+A `CourseUserReference` can be used to generalize targeting any number of course users
+(e.g., email recipients).
+The following values are allowed:
+
+ - Email - The email of the requested user.
+   - Emails that are not enrolled in the course are treated differently depending on the operation
+     (e.g., ignored, used normally, result in an error, etc).
+ - "\*" - Represents requesting all users in the course.
+ - [Course Role](#course-roles-courserole) (e.g., "student", "grader", etc) - Represents requesting all course users with that role.
+ - Negative Email - An email address preceded by a minus sign (e.g., "-alice@test.edulinq.org")
+   will remove this user from the request (even if they are not currently there).
+   This can be useful when using course roles but you want to exclude someone.
+ - Negative Course Role - A course role preceded by a minus sign (e.g., "-student")
+   will remove all course users with that role from the request.
+   This can be useful when using the "\*" but you want to exclude a role.
+
+### Server User Reference (ServerUserReference)
+
+Underlying Type: String
+
+A `ServerUserReference` can be used to generalize targeting any number of server users
+(e.g., email recipients).
+The following values are allowed:
+
+ - Email - The email of the requested user.
+   - Emails that are not present on the server are treated differently depending on the operation
+     (e.g., ignored, used normally, result in an error, etc).
+ - "\*" - Represents requesting all users on the server.
+ - [Server Role](#server-roles-serverrole) (e.g., "user", "creator", etc) - Represents requesting all server users with that role.
+ - "\<course id\>::\<course role\>" (e.g., "course101::student") - Represents requesting all users in the target course with that course role.
+ - "\*::\<course role\>" (e.g., "\*::student") - Represents requesting all users with that course role in any course.
+ - "\<course id\>::\*" - Represents requesting all users in the target course.
+ - "\*::\*" - Represents requesting all users enrolled in at least one course.
+ - Negative targeting - Exclude the user or group from the request.
+   - Any of the previous options preceded by a minus sign
+     (e.g., "-alice@test.edulinq.org", "-user", "-*::student") - Represents exluding that user or group from the request.
+   - Exclusions can be useful when using broad targeting (e.g., "\*"), but you want to exclude a more specific targeting group (e.g., server role, course, course role, email, etc).
+
 ### Email
 
 Underlying Type: String
 
 An email address.
-
-#### Course Email Specification (CourseEmailSpec)
-
-When used in the context of a course,
-a `CourseEmailSpec` can be used to generalize email recipients.
-The following values are allowed:
-
- - Email - Normal email addresses may be used.
- - "\*" - Represents all users in a course.
- - [Course Role](#course-roles-courserole) (e.g., "student", "grader", etc) - Represents all course users with that role.
- - Negative Email - An email address preceded by a minus sign (e.g., "-alice@test.edulinq.org")
-   will remove this address from the email recipients (even if they are not currently there).
-   This can be useful when using course roles but you want to exclude someone.
+Email addresses are usually used to identify a user on the server.
+Some places that accept an email address use [CourseUserReference](#course-user-reference-courseuserreference).
 
 ### Timestamp
 

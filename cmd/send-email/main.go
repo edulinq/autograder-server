@@ -7,16 +7,16 @@ import (
 	"github.com/edulinq/autograder/internal/db"
 	"github.com/edulinq/autograder/internal/email"
 	"github.com/edulinq/autograder/internal/log"
+	"github.com/edulinq/autograder/internal/model"
 )
 
 var args struct {
 	config.ConfigArgs
-	Course  string   `help:"Optional Course ID. Only required when roles or * (all course users) are in the recipients." arg:"" optional:""`
-	To      []string `help:"Email recipents (to)." required:""`
-	CC      []string `help:"Email recipents (cc)." optional:""`
-	BCC     []string `help:"Email recipents (bcc)." optional:""`
-	Subject string   `help:"Email subject." required:""`
-	Body    string   `help:"Email body." required:""`
+	To      []model.ServerUserReference `help:"Email (to). Accepts server user references." required:""`
+	CC      []model.ServerUserReference `help:"Email (cc). Accepts server user references." optional:""`
+	BCC     []model.ServerUserReference `help:"Email (bcc). Accepts server user references." optional:""`
+	Subject string                      `help:"Email subject." required:""`
+	Body    string                      `help:"Email body." required:""`
 }
 
 func main() {
@@ -29,19 +29,21 @@ func main() {
 		log.Fatal("Could not load config options.", err)
 	}
 
-	db.MustOpen()
-	defer db.MustClose()
+	courses := db.MustGetCourses()
+	users := db.MustGetServerUsers()
 
-	if args.Course != "" {
-		course := db.MustGetCourse(args.Course)
-
-		args.To, err = db.ResolveCourseUsers(course, args.To)
-		if err != nil {
-			log.Fatal("Failed to resolve users.", err, course)
-		}
+	serverRecipients := model.ServerMessageRecipients{
+		To:  args.To,
+		CC:  args.CC,
+		BCC: args.BCC,
 	}
 
-	err = email.SendFull(args.To, args.CC, args.BCC, args.Subject, args.Body, false)
+	recipients, err := serverRecipients.ToMessageRecipients(courses, users)
+	if err != nil {
+		log.Fatal("Failed to convert references to message recipients.", err)
+	}
+
+	err = email.SendFull(recipients.To, recipients.CC, recipients.BCC, args.Subject, args.Body, false)
 	if err != nil {
 		log.Fatal("Could not send email.", err)
 	}

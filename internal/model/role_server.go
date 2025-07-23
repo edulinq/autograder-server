@@ -40,6 +40,14 @@ var stringToServerUserRole = map[string]ServerUserRole{
 	"root":    ServerRoleRoot,
 }
 
+// Common server user roles are the valid roles a user could have in a server.
+var commonStringToServerUserRole = map[string]ServerUserRole{
+	"user":    ServerRoleUser,
+	"creator": ServerRoleCourseCreator,
+	"admin":   ServerRoleAdmin,
+	"owner":   ServerRoleOwner,
+}
+
 func GetServerUserRole(text string) ServerUserRole {
 	return stringToServerUserRole[text]
 }
@@ -48,12 +56,13 @@ func GetServerUserRoleString(role ServerUserRole) string {
 	return serverRoleToString[role]
 }
 
-func GetAllServerUserRoles() map[ServerUserRole]string {
-	return serverRoleToString
-}
+func GetCommonServerUserRolesCopy() map[string]ServerUserRole {
+	commonServerUserRoleCopy := make(map[string]ServerUserRole, len(commonStringToServerUserRole))
+	for roleString, role := range commonStringToServerUserRole {
+		commonServerUserRoleCopy[roleString] = role
+	}
 
-func GetAllServerUserRoleSStrings() map[string]ServerUserRole {
-	return stringToServerUserRole
+	return commonServerUserRoleCopy
 }
 
 func (this ServerUserRole) String() string {

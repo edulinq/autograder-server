@@ -5,7 +5,7 @@
             "input": [
                 {
                     "name": "bcc",
-                    "type": "[]string"
+                    "type": "[]model.CourseUserReference"
                 },
                 {
                     "name": "body",
@@ -13,11 +13,13 @@
                 },
                 {
                     "name": "cc",
-                    "type": "[]string"
+                    "type": "[]model.CourseUserReference"
                 },
                 {
                     "name": "course-id",
-                    "type": "string"
+                    "type": "string",
+                    "description": "The ID of the course to make this request to.",
+                    "required": true
                 },
                 {
                     "name": "dry-run",
@@ -29,19 +31,24 @@
                 },
                 {
                     "name": "subject",
-                    "type": "string"
+                    "type": "string",
+                    "required": true
                 },
                 {
                     "name": "to",
-                    "type": "[]string"
+                    "type": "[]model.CourseUserReference"
                 },
                 {
                     "name": "user-email",
-                    "type": "string"
+                    "type": "string",
+                    "description": "The email of the user making this request.",
+                    "required": true
                 },
                 {
                     "name": "user-pass",
-                    "type": "string"
+                    "type": "string",
+                    "description": "The password of the user making this request.",
+                    "required": true
                 }
             ],
             "output": [
@@ -64,15 +71,21 @@
             "input": [
                 {
                     "name": "course-id",
-                    "type": "string"
+                    "type": "string",
+                    "description": "The ID of the course to make this request to.",
+                    "required": true
                 },
                 {
                     "name": "user-email",
-                    "type": "string"
+                    "type": "string",
+                    "description": "The email of the user making this request.",
+                    "required": true
                 },
                 {
                     "name": "user-pass",
-                    "type": "string"
+                    "type": "string",
+                    "description": "The password of the user making this request.",
+                    "required": true
                 }
             ],
             "output": [
@@ -87,19 +100,27 @@
             "input": [
                 {
                     "name": "assignment-id",
-                    "type": "string"
+                    "type": "string",
+                    "description": "The ID of the assignment to make this request to.",
+                    "required": true
                 },
                 {
                     "name": "course-id",
-                    "type": "string"
+                    "type": "string",
+                    "description": "The ID of the course to make this request to.",
+                    "required": true
                 },
                 {
                     "name": "user-email",
-                    "type": "string"
+                    "type": "string",
+                    "description": "The email of the user making this request.",
+                    "required": true
                 },
                 {
                     "name": "user-pass",
-                    "type": "string"
+                    "type": "string",
+                    "description": "The password of the user making this request.",
+                    "required": true
                 }
             ],
             "output": [
@@ -114,15 +135,21 @@
             "input": [
                 {
                     "name": "course-id",
-                    "type": "string"
+                    "type": "string",
+                    "description": "The ID of the course to make this request to.",
+                    "required": true
                 },
                 {
                     "name": "user-email",
-                    "type": "string"
+                    "type": "string",
+                    "description": "The email of the user making this request.",
+                    "required": true
                 },
                 {
                     "name": "user-pass",
-                    "type": "string"
+                    "type": "string",
+                    "description": "The password of the user making this request.",
+                    "required": true
                 }
             ],
             "output": [
@@ -160,27 +187,36 @@
             "input": [
                 {
                     "name": "dry-run",
-                    "type": "bool"
+                    "type": "bool",
+                    "description": "Don't save anything."
                 },
                 {
                     "name": "overwrite-records",
-                    "type": "bool"
+                    "type": "bool",
+                    "description": "Remove any existing records before running the job."
                 },
                 {
                     "name": "submissions",
-                    "type": "[]string"
+                    "type": "[]string",
+                    "description": "The raw submission specifications to analyze.",
+                    "required": true
                 },
                 {
                     "name": "user-email",
-                    "type": "string"
+                    "type": "string",
+                    "description": "The email of the user making this request.",
+                    "required": true
                 },
                 {
                     "name": "user-pass",
-                    "type": "string"
+                    "type": "string",
+                    "description": "The password of the user making this request.",
+                    "required": true
                 },
                 {
                     "name": "wait-for-completion",
-                    "type": "bool"
+                    "type": "bool",
+                    "description": "Wait for the entire job to complete and return all results."
                 }
             ],
             "output": [
@@ -211,27 +247,36 @@
             "input": [
                 {
                     "name": "dry-run",
-                    "type": "bool"
+                    "type": "bool",
+                    "description": "Don't save anything."
                 },
                 {
                     "name": "overwrite-records",
-                    "type": "bool"
+                    "type": "bool",
+                    "description": "Remove any existing records before running the job."
                 },
                 {
                     "name": "submissions",
-                    "type": "[]string"
+                    "type": "[]string",
+                    "description": "The raw submission specifications to analyze.",
+                    "required": true
                 },
                 {
                     "name": "user-email",
-                    "type": "string"
+                    "type": "string",
+                    "description": "The email of the user making this request.",
+                    "required": true
                 },
                 {
                     "name": "user-pass",
-                    "type": "string"
+                    "type": "string",
+                    "description": "The password of the user making this request.",
+                    "required": true
                 },
                 {
                     "name": "wait-for-completion",
-                    "type": "bool"
+                    "type": "bool",
+                    "description": "Wait for the entire job to complete and return all results."
                 }
             ],
             "output": [
@@ -262,23 +307,32 @@
             "input": [
                 {
                     "name": "assignment-id",
-                    "type": "string"
+                    "type": "string",
+                    "description": "The ID of the assignment to make this request to.",
+                    "required": true
                 },
                 {
                     "name": "course-id",
-                    "type": "string"
+                    "type": "string",
+                    "description": "The ID of the course to make this request to.",
+                    "required": true
                 },
                 {
-                    "name": "filter-role",
-                    "type": "int"
+                    "name": "target-users",
+                    "type": "[]model.CourseUserReference",
+                    "description": "If not empty, filter results to matching users."
                 },
                 {
                     "name": "user-email",
-                    "type": "string"
+                    "type": "string",
+                    "description": "The email of the user making this request.",
+                    "required": true
                 },
                 {
                     "name": "user-pass",
-                    "type": "string"
+                    "type": "string",
+                    "description": "The password of the user making this request.",
+                    "required": true
                 }
             ],
             "output": [
@@ -293,23 +347,32 @@
             "input": [
                 {
                     "name": "assignment-id",
-                    "type": "string"
+                    "type": "string",
+                    "description": "The ID of the assignment to make this request to.",
+                    "required": true
                 },
                 {
                     "name": "course-id",
-                    "type": "string"
+                    "type": "string",
+                    "description": "The ID of the course to make this request to.",
+                    "required": true
                 },
                 {
-                    "name": "filter-role",
-                    "type": "int"
+                    "name": "target-users",
+                    "type": "[]model.CourseUserReference",
+                    "description": "If not empty, filter results to matching users."
                 },
                 {
                     "name": "user-email",
-                    "type": "string"
+                    "type": "string",
+                    "description": "The email of the user making this request.",
+                    "required": true
                 },
                 {
                     "name": "user-pass",
-                    "type": "string"
+                    "type": "string",
+                    "description": "The password of the user making this request.",
+                    "required": true
                 }
             ],
             "output": [
@@ -324,11 +387,15 @@
             "input": [
                 {
                     "name": "assignment-id",
-                    "type": "string"
+                    "type": "string",
+                    "description": "The ID of the assignment to make this request to.",
+                    "required": true
                 },
                 {
                     "name": "course-id",
-                    "type": "string"
+                    "type": "string",
+                    "description": "The ID of the course to make this request to.",
+                    "required": true
                 },
                 {
                     "name": "target-email",
@@ -340,11 +407,15 @@
                 },
                 {
                     "name": "user-email",
-                    "type": "string"
+                    "type": "string",
+                    "description": "The email of the user making this request.",
+                    "required": true
                 },
                 {
                     "name": "user-pass",
-                    "type": "string"
+                    "type": "string",
+                    "description": "The password of the user making this request.",
+                    "required": true
                 }
             ],
             "output": [
@@ -367,11 +438,15 @@
             "input": [
                 {
                     "name": "assignment-id",
-                    "type": "string"
+                    "type": "string",
+                    "description": "The ID of the assignment to make this request to.",
+                    "required": true
                 },
                 {
                     "name": "course-id",
-                    "type": "string"
+                    "type": "string",
+                    "description": "The ID of the course to make this request to.",
+                    "required": true
                 },
                 {
                     "name": "target-email",
@@ -379,11 +454,15 @@
                 },
                 {
                     "name": "user-email",
-                    "type": "string"
+                    "type": "string",
+                    "description": "The email of the user making this request.",
+                    "required": true
                 },
                 {
                     "name": "user-pass",
-                    "type": "string"
+                    "type": "string",
+                    "description": "The password of the user making this request.",
+                    "required": true
                 }
             ],
             "output": [
@@ -402,11 +481,15 @@
             "input": [
                 {
                     "name": "assignment-id",
-                    "type": "string"
+                    "type": "string",
+                    "description": "The ID of the assignment to make this request to.",
+                    "required": true
                 },
                 {
                     "name": "course-id",
-                    "type": "string"
+                    "type": "string",
+                    "description": "The ID of the course to make this request to.",
+                    "required": true
                 },
                 {
                     "name": "target-email",
@@ -414,11 +497,15 @@
                 },
                 {
                     "name": "user-email",
-                    "type": "string"
+                    "type": "string",
+                    "description": "The email of the user making this request.",
+                    "required": true
                 },
                 {
                     "name": "user-pass",
-                    "type": "string"
+                    "type": "string",
+                    "description": "The password of the user making this request.",
+                    "required": true
                 }
             ],
             "output": [
@@ -437,11 +524,15 @@
             "input": [
                 {
                     "name": "assignment-id",
-                    "type": "string"
+                    "type": "string",
+                    "description": "The ID of the assignment to make this request to.",
+                    "required": true
                 },
                 {
                     "name": "course-id",
-                    "type": "string"
+                    "type": "string",
+                    "description": "The ID of the course to make this request to.",
+                    "required": true
                 },
                 {
                     "name": "target-email",
@@ -453,11 +544,15 @@
                 },
                 {
                     "name": "user-email",
-                    "type": "string"
+                    "type": "string",
+                    "description": "The email of the user making this request.",
+                    "required": true
                 },
                 {
                     "name": "user-pass",
-                    "type": "string"
+                    "type": "string",
+                    "description": "The password of the user making this request.",
+                    "required": true
                 }
             ],
             "output": [
@@ -475,20 +570,102 @@
                 }
             ]
         },
+        "courses/assignments/submissions/proxy/regrade": {
+            "description": "Proxy regrade an assignment for all target users using their most recent submission.",
+            "input": [
+                {
+                    "name": "assignment-id",
+                    "type": "string",
+                    "description": "The ID of the assignment to make this request to.",
+                    "required": true
+                },
+                {
+                    "name": "course-id",
+                    "type": "string",
+                    "description": "The ID of the course to make this request to.",
+                    "required": true
+                },
+                {
+                    "name": "dry-run",
+                    "type": "bool",
+                    "description": "Don't save anything."
+                },
+                {
+                    "name": "overwrite-records",
+                    "type": "bool",
+                    "description": "Remove any existing records before running the job."
+                },
+                {
+                    "name": "regrade-cutoff",
+                    "type": "int64",
+                    "description": "Ensure every user has made a new submission after this time.\nIf nil, the current time will be used."
+                },
+                {
+                    "name": "target-users",
+                    "type": "[]model.CourseUserReference",
+                    "description": "The raw course user references to regrade.",
+                    "required": true
+                },
+                {
+                    "name": "user-email",
+                    "type": "string",
+                    "description": "The email of the user making this request.",
+                    "required": true
+                },
+                {
+                    "name": "user-pass",
+                    "type": "string",
+                    "description": "The password of the user making this request.",
+                    "required": true
+                },
+                {
+                    "name": "wait-for-completion",
+                    "type": "bool",
+                    "description": "Wait for the entire job to complete and return all results."
+                }
+            ],
+            "output": [
+                {
+                    "name": "complete",
+                    "type": "bool"
+                },
+                {
+                    "name": "options",
+                    "type": "grader.RegradeOptions"
+                },
+                {
+                    "name": "resolved-users",
+                    "type": "[]string"
+                },
+                {
+                    "name": "results",
+                    "type": "map[string]*model.SubmissionHistoryItem"
+                },
+                {
+                    "name": "work-errors",
+                    "type": "map[string]string"
+                }
+            ]
+        },
         "courses/assignments/submissions/proxy/resubmit": {
             "description": "Proxy resubmit an assignment submission to the autograder.",
             "input": [
                 {
                     "name": "assignment-id",
-                    "type": "string"
+                    "type": "string",
+                    "description": "The ID of the assignment to make this request to.",
+                    "required": true
                 },
                 {
                     "name": "course-id",
-                    "type": "string"
+                    "type": "string",
+                    "description": "The ID of the course to make this request to.",
+                    "required": true
                 },
                 {
                     "name": "proxy-email",
-                    "type": "core.TargetCourseUser"
+                    "type": "core.TargetCourseUser",
+                    "required": true
                 },
                 {
                     "name": "proxy-time",
@@ -500,11 +677,15 @@
                 },
                 {
                     "name": "user-email",
-                    "type": "string"
+                    "type": "string",
+                    "description": "The email of the user making this request.",
+                    "required": true
                 },
                 {
                     "name": "user-pass",
-                    "type": "string"
+                    "type": "string",
+                    "description": "The password of the user making this request.",
+                    "required": true
                 }
             ],
             "output": [
@@ -539,11 +720,15 @@
             "input": [
                 {
                     "name": "assignment-id",
-                    "type": "string"
+                    "type": "string",
+                    "description": "The ID of the assignment to make this request to.",
+                    "required": true
                 },
                 {
                     "name": "course-id",
-                    "type": "string"
+                    "type": "string",
+                    "description": "The ID of the course to make this request to.",
+                    "required": true
                 },
                 {
                     "name": "message",
@@ -551,7 +736,8 @@
                 },
                 {
                     "name": "proxy-email",
-                    "type": "core.TargetCourseUser"
+                    "type": "core.TargetCourseUser",
+                    "required": true
                 },
                 {
                     "name": "proxy-time",
@@ -559,11 +745,15 @@
                 },
                 {
                     "name": "user-email",
-                    "type": "string"
+                    "type": "string",
+                    "description": "The email of the user making this request.",
+                    "required": true
                 },
                 {
                     "name": "user-pass",
-                    "type": "string"
+                    "type": "string",
+                    "description": "The password of the user making this request.",
+                    "required": true
                 }
             ],
             "output": [
@@ -594,11 +784,15 @@
             "input": [
                 {
                     "name": "assignment-id",
-                    "type": "string"
+                    "type": "string",
+                    "description": "The ID of the assignment to make this request to.",
+                    "required": true
                 },
                 {
                     "name": "course-id",
-                    "type": "string"
+                    "type": "string",
+                    "description": "The ID of the course to make this request to.",
+                    "required": true
                 },
                 {
                     "name": "target-email",
@@ -610,11 +804,15 @@
                 },
                 {
                     "name": "user-email",
-                    "type": "string"
+                    "type": "string",
+                    "description": "The email of the user making this request.",
+                    "required": true
                 },
                 {
                     "name": "user-pass",
-                    "type": "string"
+                    "type": "string",
+                    "description": "The password of the user making this request.",
+                    "required": true
                 }
             ],
             "output": [
@@ -637,11 +835,15 @@
                 },
                 {
                     "name": "assignment-id",
-                    "type": "string"
+                    "type": "string",
+                    "description": "The ID of the assignment to make this request to.",
+                    "required": true
                 },
                 {
                     "name": "course-id",
-                    "type": "string"
+                    "type": "string",
+                    "description": "The ID of the course to make this request to.",
+                    "required": true
                 },
                 {
                     "name": "message",
@@ -649,11 +851,15 @@
                 },
                 {
                     "name": "user-email",
-                    "type": "string"
+                    "type": "string",
+                    "description": "The email of the user making this request.",
+                    "required": true
                 },
                 {
                     "name": "user-pass",
-                    "type": "string"
+                    "type": "string",
+                    "description": "The password of the user making this request.",
+                    "required": true
                 }
             ],
             "output": [
@@ -680,7 +886,9 @@
             "input": [
                 {
                     "name": "course-id",
-                    "type": "string"
+                    "type": "string",
+                    "description": "The ID of the course to make this request to.",
+                    "required": true
                 },
                 {
                     "name": "dry-run",
@@ -688,11 +896,15 @@
                 },
                 {
                     "name": "user-email",
-                    "type": "string"
+                    "type": "string",
+                    "description": "The email of the user making this request.",
+                    "required": true
                 },
                 {
                     "name": "user-pass",
-                    "type": "string"
+                    "type": "string",
+                    "description": "The password of the user making this request.",
+                    "required": true
                 }
             ],
             "output": [
@@ -711,39 +923,52 @@
             "input": [
                 {
                     "name": "after",
-                    "type": "int64"
+                    "type": "int64",
+                    "description": "Only return data from after this time.\nA value of zero is treated normally here (as UNIX epoch)."
                 },
                 {
                     "name": "before",
-                    "type": "int64"
+                    "type": "int64",
+                    "description": "Only return data from before this time.\nA value of zero is treated as the end of time."
                 },
                 {
                     "name": "course-id",
-                    "type": "string"
+                    "type": "string",
+                    "description": "The ID of the course to make this request to.",
+                    "required": true
                 },
                 {
                     "name": "limit",
-                    "type": "int"
+                    "type": "int",
+                    "description": "Limit the number of results.\nTake this number of results from the top.\nA non-positive number means no count limit will be applied."
                 },
                 {
                     "name": "sort",
-                    "type": "int"
+                    "type": "int",
+                    "description": "Define how the results should be sorted by time.\n-1 for ascending, 0 for no sorting, 1 for descending."
                 },
                 {
                     "name": "type",
-                    "type": "string"
+                    "type": "string",
+                    "description": "Only return data of this type.\nThis field is required in the query to specify which kind of metric to return.",
+                    "required": true
                 },
                 {
                     "name": "user-email",
-                    "type": "string"
+                    "type": "string",
+                    "description": "The email of the user making this request.",
+                    "required": true
                 },
                 {
                     "name": "user-pass",
-                    "type": "string"
+                    "type": "string",
+                    "description": "The password of the user making this request.",
+                    "required": true
                 },
                 {
                     "name": "where",
-                    "type": "map[stats.MetricAttribute]interface {}"
+                    "type": "map[stats.MetricAttribute]any",
+                    "description": "Filter results to only include metrics that match Metric attribute field values.\nKeys are field names (e.g., \"course\") and values are what to include (e.g., course101).\nThis filter is applied after all other Query conditions are applied."
                 }
             ],
             "output": [
@@ -762,7 +987,8 @@
                 },
                 {
                     "name": "filespec",
-                    "type": "util.FileSpec"
+                    "type": "util.FileSpec",
+                    "required": true
                 },
                 {
                     "name": "skip-build-images",
@@ -786,11 +1012,15 @@
                 },
                 {
                     "name": "user-email",
-                    "type": "string"
+                    "type": "string",
+                    "description": "The email of the user making this request.",
+                    "required": true
                 },
                 {
                     "name": "user-pass",
-                    "type": "string"
+                    "type": "string",
+                    "description": "The password of the user making this request.",
+                    "required": true
                 }
             ],
             "output": [
@@ -829,11 +1059,15 @@
                 },
                 {
                     "name": "user-email",
-                    "type": "string"
+                    "type": "string",
+                    "description": "The email of the user making this request.",
+                    "required": true
                 },
                 {
                     "name": "user-pass",
-                    "type": "string"
+                    "type": "string",
+                    "description": "The password of the user making this request.",
+                    "required": true
                 }
             ],
             "output": [
@@ -848,19 +1082,26 @@
             "input": [
                 {
                     "name": "course-id",
-                    "type": "string"
+                    "type": "string",
+                    "description": "The ID of the course to make this request to.",
+                    "required": true
                 },
                 {
                     "name": "target-email",
-                    "type": "core.TargetCourseUser"
+                    "type": "core.TargetCourseUser",
+                    "required": true
                 },
                 {
                     "name": "user-email",
-                    "type": "string"
+                    "type": "string",
+                    "description": "The email of the user making this request.",
+                    "required": true
                 },
                 {
                     "name": "user-pass",
-                    "type": "string"
+                    "type": "string",
+                    "description": "The password of the user making this request.",
+                    "required": true
                 }
             ],
             "output": [
@@ -875,19 +1116,24 @@
             "input": [
                 {
                     "name": "course-id",
-                    "type": "string"
+                    "type": "string",
+                    "description": "The ID of the course to make this request to.",
+                    "required": true
                 },
                 {
                     "name": "dry-run",
-                    "type": "bool"
+                    "type": "bool",
+                    "description": "Do not actually commit any changes or send any emails regardless of |SendEmails|."
                 },
                 {
                     "name": "raw-course-users",
-                    "type": "[]*model.RawCourseUserData"
+                    "type": "[]*model.RawCourseUserData",
+                    "required": true
                 },
                 {
                     "name": "send-emails",
-                    "type": "bool"
+                    "type": "bool",
+                    "description": "Send any relevant email (usually about creation or password changing)."
                 },
                 {
                     "name": "skip-inserts",
@@ -899,11 +1145,15 @@
                 },
                 {
                     "name": "user-email",
-                    "type": "string"
+                    "type": "string",
+                    "description": "The email of the user making this request.",
+                    "required": true
                 },
                 {
                     "name": "user-pass",
-                    "type": "string"
+                    "type": "string",
+                    "description": "The password of the user making this request.",
+                    "required": true
                 }
             ],
             "output": [
@@ -918,7 +1168,9 @@
             "input": [
                 {
                     "name": "course-id",
-                    "type": "string"
+                    "type": "string",
+                    "description": "The ID of the course to make this request to.",
+                    "required": true
                 },
                 {
                     "name": "target-email",
@@ -926,11 +1178,15 @@
                 },
                 {
                     "name": "user-email",
-                    "type": "string"
+                    "type": "string",
+                    "description": "The email of the user making this request.",
+                    "required": true
                 },
                 {
                     "name": "user-pass",
-                    "type": "string"
+                    "type": "string",
+                    "description": "The password of the user making this request.",
+                    "required": true
                 }
             ],
             "output": [
@@ -949,15 +1205,25 @@
             "input": [
                 {
                     "name": "course-id",
-                    "type": "string"
+                    "type": "string",
+                    "description": "The ID of the course to make this request to.",
+                    "required": true
+                },
+                {
+                    "name": "target-users",
+                    "type": "[]model.CourseUserReference"
                 },
                 {
                     "name": "user-email",
-                    "type": "string"
+                    "type": "string",
+                    "description": "The email of the user making this request.",
+                    "required": true
                 },
                 {
                     "name": "user-pass",
-                    "type": "string"
+                    "type": "string",
+                    "description": "The password of the user making this request.",
+                    "required": true
                 }
             ],
             "output": [
@@ -972,23 +1238,31 @@
             "input": [
                 {
                     "name": "assignment-lms-id",
-                    "type": "string"
+                    "type": "string",
+                    "required": true
                 },
                 {
                     "name": "course-id",
-                    "type": "string"
+                    "type": "string",
+                    "description": "The ID of the course to make this request to.",
+                    "required": true
                 },
                 {
                     "name": "scores",
-                    "type": "[]upload.ScoreEntry"
+                    "type": "[]upload.ScoreEntry",
+                    "required": true
                 },
                 {
                     "name": "user-email",
-                    "type": "string"
+                    "type": "string",
+                    "description": "The email of the user making this request.",
+                    "required": true
                 },
                 {
                     "name": "user-pass",
-                    "type": "string"
+                    "type": "string",
+                    "description": "The password of the user making this request.",
+                    "required": true
                 }
             ],
             "output": [
@@ -1015,19 +1289,26 @@
             "input": [
                 {
                     "name": "course-id",
-                    "type": "string"
+                    "type": "string",
+                    "description": "The ID of the course to make this request to.",
+                    "required": true
                 },
                 {
                     "name": "target-email",
-                    "type": "core.TargetCourseUser"
+                    "type": "core.TargetCourseUser",
+                    "required": true
                 },
                 {
                     "name": "user-email",
-                    "type": "string"
+                    "type": "string",
+                    "description": "The email of the user making this request.",
+                    "required": true
                 },
                 {
                     "name": "user-pass",
-                    "type": "string"
+                    "type": "string",
+                    "description": "The password of the user making this request.",
+                    "required": true
                 }
             ],
             "output": [
@@ -1074,11 +1355,15 @@
                 },
                 {
                     "name": "user-email",
-                    "type": "string"
+                    "type": "string",
+                    "description": "The email of the user making this request.",
+                    "required": true
                 },
                 {
                     "name": "user-pass",
-                    "type": "string"
+                    "type": "string",
+                    "description": "The password of the user making this request.",
+                    "required": true
                 }
             ],
             "output": [
@@ -1130,35 +1415,46 @@
             "input": [
                 {
                     "name": "after",
-                    "type": "int64"
+                    "type": "int64",
+                    "description": "Only return data from after this time.\nA value of zero is treated normally here (as UNIX epoch)."
                 },
                 {
                     "name": "before",
-                    "type": "int64"
+                    "type": "int64",
+                    "description": "Only return data from before this time.\nA value of zero is treated as the end of time."
                 },
                 {
                     "name": "limit",
-                    "type": "int"
+                    "type": "int",
+                    "description": "Limit the number of results.\nTake this number of results from the top.\nA non-positive number means no count limit will be applied."
                 },
                 {
                     "name": "sort",
-                    "type": "int"
+                    "type": "int",
+                    "description": "Define how the results should be sorted by time.\n-1 for ascending, 0 for no sorting, 1 for descending."
                 },
                 {
                     "name": "type",
-                    "type": "string"
+                    "type": "string",
+                    "description": "Only return data of this type.\nThis field is required in the query to specify which kind of metric to return.",
+                    "required": true
                 },
                 {
                     "name": "user-email",
-                    "type": "string"
+                    "type": "string",
+                    "description": "The email of the user making this request.",
+                    "required": true
                 },
                 {
                     "name": "user-pass",
-                    "type": "string"
+                    "type": "string",
+                    "description": "The password of the user making this request.",
+                    "required": true
                 },
                 {
                     "name": "where",
-                    "type": "map[stats.MetricAttribute]interface {}"
+                    "type": "map[stats.MetricAttribute]any",
+                    "description": "Filter results to only include metrics that match Metric attribute field values.\nKeys are field names (e.g., \"course\") and values are what to include (e.g., course101).\nThis filter is applied after all other Query conditions are applied."
                 }
             ],
             "output": [
@@ -1173,11 +1469,15 @@
             "input": [
                 {
                     "name": "user-email",
-                    "type": "string"
+                    "type": "string",
+                    "description": "The email of the user making this request.",
+                    "required": true
                 },
                 {
                     "name": "user-pass",
-                    "type": "string"
+                    "type": "string",
+                    "description": "The password of the user making this request.",
+                    "required": true
                 }
             ],
             "output": [
@@ -1196,11 +1496,15 @@
             "input": [
                 {
                     "name": "user-email",
-                    "type": "string"
+                    "type": "string",
+                    "description": "The email of the user making this request.",
+                    "required": true
                 },
                 {
                     "name": "user-pass",
-                    "type": "string"
+                    "type": "string",
+                    "description": "The password of the user making this request.",
+                    "required": true
                 }
             ],
             "output": [
@@ -1219,11 +1523,15 @@
                 },
                 {
                     "name": "user-email",
-                    "type": "string"
+                    "type": "string",
+                    "description": "The email of the user making this request.",
+                    "required": true
                 },
                 {
                     "name": "user-pass",
-                    "type": "string"
+                    "type": "string",
+                    "description": "The password of the user making this request.",
+                    "required": true
                 }
             ],
             "output": [
@@ -1245,12 +1553,20 @@
             "description": "List the users on the server.",
             "input": [
                 {
+                    "name": "target-users",
+                    "type": "[]model.ServerUserReference"
+                },
+                {
                     "name": "user-email",
-                    "type": "string"
+                    "type": "string",
+                    "description": "The email of the user making this request.",
+                    "required": true
                 },
                 {
                     "name": "user-pass",
-                    "type": "string"
+                    "type": "string",
+                    "description": "The password of the user making this request.",
+                    "required": true
                 }
             ],
             "output": [
@@ -1265,15 +1581,20 @@
             "input": [
                 {
                     "name": "new-pass",
-                    "type": "string"
+                    "type": "string",
+                    "required": true
                 },
                 {
                     "name": "user-email",
-                    "type": "string"
+                    "type": "string",
+                    "description": "The email of the user making this request.",
+                    "required": true
                 },
                 {
                     "name": "user-pass",
-                    "type": "string"
+                    "type": "string",
+                    "description": "The password of the user making this request.",
+                    "required": true
                 }
             ],
             "output": [
@@ -1292,7 +1613,8 @@
             "input": [
                 {
                     "name": "user-email",
-                    "type": "string"
+                    "type": "string",
+                    "required": true
                 }
             ],
             "output": []
@@ -1302,15 +1624,20 @@
             "input": [
                 {
                     "name": "target-email",
-                    "type": "core.TargetServerUser"
+                    "type": "core.TargetServerUser",
+                    "required": true
                 },
                 {
                     "name": "user-email",
-                    "type": "string"
+                    "type": "string",
+                    "description": "The email of the user making this request.",
+                    "required": true
                 },
                 {
                     "name": "user-pass",
-                    "type": "string"
+                    "type": "string",
+                    "description": "The password of the user making this request.",
+                    "required": true
                 }
             ],
             "output": [
@@ -1329,11 +1656,15 @@
                 },
                 {
                     "name": "user-email",
-                    "type": "string"
+                    "type": "string",
+                    "description": "The email of the user making this request.",
+                    "required": true
                 },
                 {
                     "name": "user-pass",
-                    "type": "string"
+                    "type": "string",
+                    "description": "The password of the user making this request.",
+                    "required": true
                 }
             ],
             "output": [
@@ -1352,15 +1683,20 @@
             "input": [
                 {
                     "name": "token-id",
-                    "type": "string"
+                    "type": "string",
+                    "required": true
                 },
                 {
                     "name": "user-email",
-                    "type": "string"
+                    "type": "string",
+                    "description": "The email of the user making this request.",
+                    "required": true
                 },
                 {
                     "name": "user-pass",
-                    "type": "string"
+                    "type": "string",
+                    "description": "The password of the user making this request.",
+                    "required": true
                 }
             ],
             "output": [
@@ -1375,15 +1711,18 @@
             "input": [
                 {
                     "name": "dry-run",
-                    "type": "bool"
+                    "type": "bool",
+                    "description": "Do not actually commit any changes or send any emails regardless of |SendEmails|."
                 },
                 {
                     "name": "raw-users",
-                    "type": "[]*model.RawServerUserData"
+                    "type": "[]*model.RawServerUserData",
+                    "required": true
                 },
                 {
                     "name": "send-emails",
-                    "type": "bool"
+                    "type": "bool",
+                    "description": "Send any relevant email (usually about creation or password changing)."
                 },
                 {
                     "name": "skip-inserts",
@@ -1395,11 +1734,15 @@
                 },
                 {
                     "name": "user-email",
-                    "type": "string"
+                    "type": "string",
+                    "description": "The email of the user making this request.",
+                    "required": true
                 },
                 {
                     "name": "user-pass",
-                    "type": "string"
+                    "type": "string",
+                    "description": "The password of the user making this request.",
+                    "required": true
                 }
             ],
             "output": [
@@ -1416,19 +1759,23 @@
             "fields": [
                 {
                     "name": "dry-run",
-                    "type": "bool"
+                    "type": "bool",
+                    "description": "Don't save anything."
                 },
                 {
                     "name": "overwrite-records",
-                    "type": "bool"
+                    "type": "bool",
+                    "description": "Remove any existing records before running the job."
                 },
                 {
                     "name": "submissions",
-                    "type": "[]string"
+                    "type": "[]string",
+                    "description": "The raw submission specifications to analyze."
                 },
                 {
                     "name": "wait-for-completion",
-                    "type": "bool"
+                    "type": "bool",
+                    "description": "Wait for the entire job to complete and return all results."
                 }
             ]
         },
@@ -1449,6 +1796,23 @@
                 },
                 {
                     "name": "name",
+                    "type": "string"
+                }
+            ]
+        },
+        "core.BaseFieldDescription": {
+            "category": "struct",
+            "fields": [
+                {
+                    "name": "description",
+                    "type": "string"
+                },
+                {
+                    "name": "name",
+                    "type": "string"
+                },
+                {
+                    "name": "type",
                     "type": "string"
                 }
             ]
@@ -1509,7 +1873,7 @@
                 },
                 {
                     "name": "output",
-                    "type": "[]core.FieldDescription"
+                    "type": "[]core.BaseFieldDescription"
                 }
             ]
         },
@@ -1531,8 +1895,16 @@
             "category": "struct",
             "fields": [
                 {
+                    "name": "description",
+                    "type": "string"
+                },
+                {
                     "name": "name",
                     "type": "string"
+                },
+                {
+                    "name": "required",
+                    "type": "bool"
                 },
                 {
                     "name": "type",
@@ -1542,6 +1914,7 @@
         },
         "core.NonEmptyString": {
             "category": "alias",
+            "description": "The type for a named field that must have a non-empty string value.",
             "alias-type": "string"
         },
         "core.ServerUserInfo": {
@@ -1619,7 +1992,7 @@
                 },
                 {
                     "name": "fields",
-                    "type": "[]core.FieldDescription"
+                    "type": "[]core.BaseFieldDescription"
                 }
             ]
         },
@@ -1664,6 +2037,36 @@
                 }
             ]
         },
+        "grader.RegradeOptions": {
+            "category": "struct",
+            "fields": [
+                {
+                    "name": "dry-run",
+                    "type": "bool",
+                    "description": "Don't save anything."
+                },
+                {
+                    "name": "overwrite-records",
+                    "type": "bool",
+                    "description": "Remove any existing records before running the job."
+                },
+                {
+                    "name": "regrade-cutoff",
+                    "type": "int64",
+                    "description": "Ensure every user has made a new submission after this time.\nIf nil, the current time will be used."
+                },
+                {
+                    "name": "target-users",
+                    "type": "[]model.CourseUserReference",
+                    "description": "The raw course user references to regrade."
+                },
+                {
+                    "name": "wait-for-completion",
+                    "type": "bool",
+                    "description": "Wait for the entire job to complete and return all results."
+                }
+            ]
+        },
         "log.LogLevel": {
             "category": "alias",
             "alias-type": "int32"
@@ -1677,11 +2080,13 @@
                 },
                 {
                     "name": "attributes",
-                    "type": "map[string]interface {}"
+                    "type": "map[string]any",
+                    "description": "Additional Attributes"
                 },
                 {
                     "name": "course",
-                    "type": "string"
+                    "type": "string",
+                    "description": "Context Attributes"
                 },
                 {
                     "name": "error",
@@ -1689,7 +2094,8 @@
                 },
                 {
                     "name": "level",
-                    "type": "int32"
+                    "type": "int32",
+                    "description": "Core Attributes"
                 },
                 {
                     "name": "message",
@@ -1785,8 +2191,14 @@
                 }
             ]
         },
+        "model.CourseUserReference": {
+            "category": "alias",
+            "description": "Course user references can represent the following:\n- An email address.\n- A literal \"*\" (which includes all users in the course).\n- A course role (which will include all course users with that role).\n- Any of the above options preceded by a dash (\"-\") (which indicates that the user or group will NOT be included in the final results).",
+            "alias-type": "string"
+        },
         "model.CourseUserRole": {
             "category": "alias",
+            "description": "Course user roles represent a user's role within a single course.",
             "alias-type": "int"
         },
         "model.ExternalLocatableError": {
@@ -1843,51 +2255,63 @@
             "fields": [
                 {
                     "name": "added",
-                    "type": "bool"
+                    "type": "bool",
+                    "description": "The user was added to the server."
                 },
                 {
                     "name": "communication-error",
-                    "type": "*model.ExternalLocatableError"
+                    "type": "*model.ExternalLocatableError",
+                    "description": "A user safe representation of a communication error."
                 },
                 {
                     "name": "dropped",
-                    "type": "[]string"
+                    "type": "[]string",
+                    "description": "The user was removed from the following courses (by id)."
                 },
                 {
                     "name": "email",
-                    "type": "string"
+                    "type": "string",
+                    "description": "The email/id of the target user."
                 },
                 {
                     "name": "emailed",
-                    "type": "bool"
+                    "type": "bool",
+                    "description": "The user was emailed during the course of this operation.\nThis is more than just GetEmail() was called, an actual email was sent\n(or would have been sent if this operation was during a dry-run)."
                 },
                 {
                     "name": "enrolled",
-                    "type": "[]string"
+                    "type": "[]string",
+                    "description": "The user was enrolled in the following courses (by id)."
                 },
                 {
                     "name": "modified",
-                    "type": "bool"
+                    "type": "bool",
+                    "description": "The user existed before this operation and was edited (including enrollment changes)."
                 },
                 {
                     "name": "not-exists",
-                    "type": "bool"
+                    "type": "bool",
+                    "description": "The user did not exist before this operation and does not exist after.\nThis may also be an error depending on the semantics of the operation."
                 },
                 {
                     "name": "removed",
-                    "type": "bool"
+                    "type": "bool",
+                    "description": "The user existed before this operation and was removed."
                 },
                 {
                     "name": "skipped",
-                    "type": "bool"
+                    "type": "bool",
+                    "description": "The user was skipped (often because they already exist)."
                 },
                 {
                     "name": "system-error",
-                    "type": "*model.ExternalLocatableError"
+                    "type": "*model.ExternalLocatableError",
+                    "description": "A user safe representation of a system error."
                 },
                 {
                     "name": "validation-error",
-                    "type": "*model.ExternalLocatableError"
+                    "type": "*model.ExternalLocatableError",
+                    "description": "A user safe representation of a validation error, which will not include a locator."
                 }
             ]
         },
@@ -1900,7 +2324,7 @@
                 },
                 {
                     "name": "options",
-                    "type": "map[string]interface {}"
+                    "type": "map[string]any"
                 },
                 {
                     "name": "original-filename",
@@ -1962,7 +2386,7 @@
             "fields": [
                 {
                     "name": "additional-info",
-                    "type": "map[string]interface {}"
+                    "type": "map[string]any"
                 },
                 {
                     "name": "assignment-id",
@@ -2310,6 +2734,7 @@
         },
         "model.PairwiseKey": {
             "category": "array",
+            "description": "A key for pairwise analysis.\nShould always be an ordered (lexicographically) pair of full submissions IDs.",
             "element-type": "string"
         },
         "model.RawCourseUserData": {
@@ -2368,8 +2793,14 @@
                 }
             ]
         },
+        "model.ServerUserReference": {
+            "category": "alias",
+            "description": "Server user references can represent the following:\n- An email address.\n- A literal \"*\" (which includes all users on the server).\n- A server role (which will include all server users with that role).\n- \u003ccourse-id\u003e::\u003ccourse-role\u003e (which will include all users in the target course with that role).\n- *::\u003ccourse-role\u003e (which will include all users with the course role in any course).\n- \u003ccourse-id\u003e::* (which will include all users in the target course).\n- *::* (which includes all users enrolled in at least one course).\n- Any of the above options preceded by a dash (\"-\") (which indicates that the user or group will NOT be included in the final results).",
+            "alias-type": "string"
+        },
         "model.ServerUserRole": {
             "category": "alias",
+            "description": "Server user roles represent a user's role within an autograder server instance.",
             "alias-type": "int"
         },
         "model.SubmissionHistoryItem": {
@@ -2419,55 +2850,68 @@
             "fields": [
                 {
                     "name": "added",
-                    "type": "bool"
+                    "type": "bool",
+                    "description": "The user was added to the server."
                 },
                 {
                     "name": "cleartext-password",
-                    "type": "string"
+                    "type": "string",
+                    "description": "The following cleartext password was generated during this operation.\nCare should be taken to not expose this field."
                 },
                 {
                     "name": "communication-error",
-                    "type": "*model.LocatableError"
+                    "type": "*model.LocatableError",
+                    "description": "The following error occurred during this operation, but not because of the provided data,\ni.e., the system was unable to communicate the results.\nThese errors are not guaranteed to be safe for users,\nand the calling code should decide how they should be managed."
                 },
                 {
                     "name": "dropped",
-                    "type": "[]string"
+                    "type": "[]string",
+                    "description": "The user was removed from the following courses (by id)."
                 },
                 {
                     "name": "email",
-                    "type": "string"
+                    "type": "string",
+                    "description": "The email/id of the target user."
                 },
                 {
                     "name": "emailed",
-                    "type": "bool"
+                    "type": "bool",
+                    "description": "The user was emailed during the course of this operation.\nThis is more than just GetEmail() was called, an actual email was sent\n(or would have been sent if this operation was during a dry-run)."
                 },
                 {
                     "name": "enrolled",
-                    "type": "[]string"
+                    "type": "[]string",
+                    "description": "The user was enrolled in the following courses (by id)."
                 },
                 {
                     "name": "modified",
-                    "type": "bool"
+                    "type": "bool",
+                    "description": "The user existed before this operation and was edited (including enrollment changes)."
                 },
                 {
                     "name": "not-exists",
-                    "type": "bool"
+                    "type": "bool",
+                    "description": "The user did not exist before this operation and does not exist after.\nThis may also be an error depending on the semantics of the operation."
                 },
                 {
                     "name": "removed",
-                    "type": "bool"
+                    "type": "bool",
+                    "description": "The user existed before this operation and was removed."
                 },
                 {
                     "name": "skipped",
-                    "type": "bool"
+                    "type": "bool",
+                    "description": "The user was skipped (often because they already exist)."
                 },
                 {
                     "name": "system-error",
-                    "type": "*model.LocatableError"
+                    "type": "*model.LocatableError",
+                    "description": "The following error occurred during this operation, but not because of the provided data,\ni.e., they are the system's fault.\nThese errors are not guaranteed to be safe for users,\nand the calling code should decide how they should be managed."
                 },
                 {
                     "name": "validation-error",
-                    "type": "*model.LocatableError"
+                    "type": "*model.LocatableError",
+                    "description": "The following error occurred during this operation because of the provided data,\ni.e., they are caused by the calling user.\nAll error messages should be safe for users."
                 }
             ]
         },
@@ -2539,7 +2983,8 @@
             "fields": [
                 {
                     "name": "attributes",
-                    "type": "map[stats.MetricAttribute]interface {}"
+                    "type": "map[stats.MetricAttribute]any",
+                    "description": "Additional attributes that are not standard enough to be formalized in fields."
                 },
                 {
                     "name": "timestamp",
@@ -2565,6 +3010,7 @@
         },
         "timestamp.Timestamp": {
             "category": "alias",
+            "description": "A safe (always valid) time representation.\nA timestamp is the number of milliseconds (int64) since the UNIX epoch (which is in UTC).",
             "alias-type": "int64"
         },
         "upload.RowEntry": {
@@ -2658,6 +3104,7 @@
         },
         "util.FileOperation": {
             "category": "array",
+            "description": "File operations represent simple file operations.\nAny represented file paths must be POSIX, relative, and not point to any parent directories.\nNote that this code will only work properly on POSIX systems because of the lexical analysis on paths.",
             "element-type": "string"
         },
         "util.FileSpec": {

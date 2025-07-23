@@ -35,7 +35,7 @@ type Query struct {
 
 	// Only return data of this type.
 	// This field is required in the query to specify which kind of metric to return.
-	Type MetricType `json:"type"`
+	Type MetricType `json:"type" required:""`
 }
 
 func (this *Query) Validate() error {

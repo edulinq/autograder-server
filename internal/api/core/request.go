@@ -38,8 +38,11 @@ type APIRequest struct {
 type APIRequestUserContext struct {
 	APIRequest
 
-	UserEmail     string `json:"user-email"`
-	UserPass      string `json:"user-pass"`
+	// The email of the user making this request.
+	UserEmail string `json:"user-email" required:""`
+
+	// The password of the user making this request.
+	UserPass      string `json:"user-pass" required:""`
 	RootUserNonce string `json:"root-user-nonce,omitempty"`
 
 	ServerUser *model.ServerUser `json:"-"`
@@ -49,7 +52,8 @@ type APIRequestUserContext struct {
 type APIRequestCourseUserContext struct {
 	APIRequestUserContext
 
-	CourseID string `json:"course-id"`
+	// The ID of the course to make this request to.
+	CourseID string `json:"course-id" required:""`
 
 	Course *model.Course     `json:"-"`
 	User   *model.CourseUser `json:"-"`
@@ -59,7 +63,8 @@ type APIRequestCourseUserContext struct {
 type APIRequestAssignmentContext struct {
 	APIRequestCourseUserContext
 
-	AssignmentID string `json:"assignment-id"`
+	// The ID of the assignment to make this request to.
+	AssignmentID string `json:"assignment-id" required:""`
 
 	Assignment *model.Assignment `json:"-"`
 }

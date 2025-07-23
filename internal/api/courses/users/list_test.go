@@ -26,35 +26,73 @@ func TestList(test *testing.T) {
 		users = append(users, user)
 	}
 
-	expectedInfos := core.NewCourseUserInfos(users)
-
 	testCases := []struct {
-		email     string
-		permError bool
-		locator   string
+		email         string
+		input         []string
+		expectedUsers []*model.CourseUser
+		locator       string
 	}{
-		// Invalid permissions.
-		{"course-other", true, "-020"},
-		{"course-student", true, "-020"},
+		// Invalid Permissions
+		{"course-other", nil, nil, "-020"},
+		{"course-student", nil, nil, "-020"},
 
-		// Invalid permissions, role escalation.
-		{"server-user", true, "-040"},
-		{"server-creator", true, "-040"},
+		// Invalid Permissions, Role Escalation
+		{"server-user", nil, nil, "-040"},
+		{"server-creator", nil, nil, "-040"},
 
-		// Valid permissions.
-		{"course-grader", false, ""},
-		{"course-admin", false, ""},
-		{"course-owner", false, ""},
+		// Valid Permissions, All Users
+		{"course-grader", nil, users, ""},
+		{"course-admin", []string{}, users, ""},
+		{"course-owner", []string{"*"}, users, ""},
 
-		// Valid permissions, role escalation.
-		{"server-admin", false, ""},
-		{"server-owner", false, ""},
+		// Valid Permissions, Role Escalation, All Users
+		{
+			"server-admin",
+			[]string{"admin", "grader", "other", "owner", "student"},
+			users,
+			"",
+		},
+		{
+			"server-owner",
+			[]string{
+				"course-admin@test.edulinq.org",
+				"course-grader@test.edulinq.org",
+				"course-other@test.edulinq.org",
+				"course-owner@test.edulinq.org",
+				"course-student@test.edulinq.org",
+			},
+			users,
+			"",
+		},
+
+		// No Users
+		{"course-admin", []string{"-*"}, []*model.CourseUser{}, ""},
+
+		// Non Enrolled Users
+		{
+			"course-admin",
+			[]string{"server-admin@test.edulinq.org"},
+			nil,
+			"",
+		},
+
+		// Invalid Inputs
+		{
+			"course-admin",
+			[]string{"creator"},
+			nil,
+			"-635",
+		},
 	}
 
 	for i, testCase := range testCases {
-		response := core.SendTestAPIRequestFull(test, `courses/users/list`, nil, nil, testCase.email)
+		fields := map[string]any{
+			"target-users": testCase.input,
+		}
+
+		response := core.SendTestAPIRequestFull(test, `courses/users/list`, fields, nil, testCase.email)
 		if !response.Success {
-			if testCase.permError {
+			if testCase.locator != "" {
 				if response.Locator != testCase.locator {
 					test.Errorf("Case %d: Incorrect error returned. Expected '%s', found '%s'.",
 						i, testCase.locator, response.Locator)
@@ -66,16 +104,18 @@ func TestList(test *testing.T) {
 			continue
 		}
 
-		if testCase.permError {
-			test.Errorf("Case %d: Did not get an expected permissions error.", i)
+		if testCase.locator != "" {
+			test.Errorf("Case %d: Did not get an expected error: '%s'.", i, testCase.locator)
 			continue
 		}
 
 		var responseContent ListResponse
 		util.MustJSONFromString(util.MustToJSON(response.Content), &responseContent)
 
+		expectedInfos := core.NewCourseUserInfos(testCase.expectedUsers)
+
 		if !reflect.DeepEqual(expectedInfos, responseContent.Users) {
-			test.Errorf("Case %d: Unexpected users information. Expected: '%s', actual: '%s'.",
+			test.Errorf("Case %d: Unexpected users information. Expected: '%s', Actual: '%s'.",
 				i, util.MustToJSONIndent(expectedInfos), util.MustToJSONIndent(responseContent.Users))
 			continue
 		}

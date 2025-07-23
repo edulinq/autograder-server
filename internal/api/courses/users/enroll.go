@@ -12,7 +12,7 @@ type EnrollRequest struct {
 	core.APIRequestCourseUserContext
 	core.MinCourseRoleAdmin
 
-	RawCourseUsers []*model.RawCourseUserData `json:"raw-course-users"`
+	RawCourseUsers []*model.RawCourseUserData `json:"raw-course-users" required:""`
 
 	SkipInserts bool `json:"skip-inserts"`
 	SkipUpdates bool `json:"skip-updates"`

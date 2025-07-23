@@ -102,6 +102,45 @@ The structure of API endpoint files must follow these rules:
 
 For example, the handler for `users/list` is called `HandleList` and located in the file `internal/api/users/list.go`.
 
+### Automatic API Descriptions
+
+The server generates API descriptions automatically from source code.
+
+ - Each API endpoint must have a comment describing the endpoint attached to the handler's function declaration.
+ - User-facing input fields must include a `json` tag to appear in the description.
+ - Required fields must also include a `required` tag with an empty value.
+
+Putting it all together in an example:
+
+```
+type SomeTestRequest struct {
+    core.APIRequestUserContext
+
+    // Note: A required field.
+    Guess int `json:"guess" required:""`
+
+    // Note: A non-required field.
+    BonusGuess int `json:"bonus-guess"`
+
+    // Note: The user cannot input the secret number because that would be cheating!
+    // This field will not appear in the API description.
+    SecretNumber int `json:"-"`
+}
+
+type SomeTestResponse struct {
+    Correct bool `json:"correct"`
+    Score   int  `json:"score"`
+}
+
+// Note: This is the comment attached to the handler's function declaration.
+// It will appear as the endpoint's description.
+// Guess the secret number.
+func HandleSomeTest(request *SomeTestRequest) (*SomeTestResponse, error) {
+    // Awesome API handler logic.
+    ...
+}
+```
+
 ### Passwords/Tokens
 
 No password or token should be sent to the server as cleartext.

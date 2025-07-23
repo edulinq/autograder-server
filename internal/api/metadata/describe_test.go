@@ -15,16 +15,18 @@ func TestMetadataDescribe(test *testing.T) {
 				Description: "Describe all endpoints on the server.",
 				Input: []core.FieldDescription{
 					core.FieldDescription{
-						Name: "force-compute",
-						Type: "bool",
+						BaseFieldDescription: core.BaseFieldDescription{
+							Name: "force-compute",
+							Type: "bool",
+						},
 					},
 				},
-				Output: []core.FieldDescription{
-					core.FieldDescription{
+				Output: []core.BaseFieldDescription{
+					core.BaseFieldDescription{
 						Name: "endpoints",
 						Type: "map[string]core.EndpointDescription",
 					},
-					core.FieldDescription{
+					core.BaseFieldDescription{
 						Name: "types",
 						Type: "map[string]core.TypeDescription",
 					},
@@ -32,58 +34,91 @@ func TestMetadataDescribe(test *testing.T) {
 			},
 		},
 		Types: map[string]core.TypeDescription{
-			"core.EndpointDescription": core.TypeDescription{
-				Category: "struct",
-				Fields: []core.FieldDescription{
-					{
+			"core.BaseFieldDescription": core.TypeDescription{
+				BaseTypeDescription: core.BaseTypeDescription{
+					Category: "struct",
+				},
+				Fields: []core.BaseFieldDescription{
+					core.BaseFieldDescription{
 						Name: "description",
 						Type: "string",
 					},
-					{
+					core.BaseFieldDescription{
+						Name: "name",
+						Type: "string",
+					},
+					core.BaseFieldDescription{
+						Name: "type",
+						Type: "string",
+					},
+				},
+			},
+			"core.EndpointDescription": core.TypeDescription{
+				BaseTypeDescription: core.BaseTypeDescription{
+					Category: "struct",
+				},
+				Fields: []core.BaseFieldDescription{
+					core.BaseFieldDescription{
+						Name: "description",
+						Type: "string",
+					},
+					core.BaseFieldDescription{
 						Name: "input",
 						Type: "[]core.FieldDescription",
 					},
-					{
+					core.BaseFieldDescription{
 						Name: "output",
-						Type: "[]core.FieldDescription",
+						Type: "[]core.BaseFieldDescription",
 					},
 				},
 			},
 			"core.FieldDescription": core.TypeDescription{
-				Category: "struct",
-				Fields: []core.FieldDescription{
-					{
+				BaseTypeDescription: core.BaseTypeDescription{
+					Category: "struct",
+				},
+				Fields: []core.BaseFieldDescription{
+					core.BaseFieldDescription{
+						Name: "description",
+						Type: "string",
+					},
+					core.BaseFieldDescription{
 						Name: "name",
 						Type: "string",
 					},
-					{
+					core.BaseFieldDescription{
+						Name: "required",
+						Type: "bool",
+					},
+					core.BaseFieldDescription{
 						Name: "type",
 						Type: "string",
 					},
 				},
 			},
 			"core.TypeDescription": core.TypeDescription{
-				Category: "struct",
-				Fields: []core.FieldDescription{
-					{
+				BaseTypeDescription: core.BaseTypeDescription{
+					Category: "struct",
+				},
+				Fields: []core.BaseFieldDescription{
+					core.BaseFieldDescription{
 						Name: "alias-type",
 						Type: "string",
 					},
-					{
+					core.BaseFieldDescription{
 						Name: "category",
 						Type: "string",
 					},
-					{
+					core.BaseFieldDescription{
 						Name: "description",
 						Type: "string",
 					},
-					{
+					core.BaseFieldDescription{
 						Name: "element-type",
 						Type: "string",
 					},
-					{
+					core.BaseFieldDescription{
 						Name: "fields",
-						Type: "[]core.FieldDescription",
+						Type: "[]core.BaseFieldDescription",
 					},
 				},
 			},
@@ -157,6 +192,7 @@ func TestMetadataDescribe(test *testing.T) {
 			if !reflect.DeepEqual(expected, responseContent) {
 				test.Errorf("Case %d: Unexpected API description. Expected: '%s', actual: '%s'.",
 					i, util.MustToJSONIndent(expected), util.MustToJSONIndent(responseContent))
+
 				continue
 			}
 		} else {
