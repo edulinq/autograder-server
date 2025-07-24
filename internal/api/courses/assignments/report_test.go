@@ -16,20 +16,20 @@ func TestCourseReport(test *testing.T) {
 		locator string
 	}{
 		// Permission Too Low
-		{"course-student@test.edulinq.org", "-020"},
 		{"course-other@test.edulinq.org", "-020"},
+		{"course-student@test.edulinq.org", "-020"},
 
 		// Valid Permission
 		{"course-grader@test.edulinq.org", ""},
 		{"course-admin@test.edulinq.org", ""},
+		{"course-owner@test.edulinq.org", ""},
 		{"server-admin@test.edulinq.org", ""},
 	}
 
 	for i, testCase := range testCases {
-
-		response := core.SendTestAPIRequestFull(test, `courses/assignments/report`, map[string]any{}, []string{}, testCase.email)
+		response := core.SendTestAPIRequestFull(test, `courses/assignments/report`, nil, nil, testCase.email)
 		if !response.Success {
-			if len(testCase.locator) != 0 {
+			if testCase.locator != "" {
 				if response.Locator != testCase.locator {
 					test.Errorf("Case %d: Incorrect error returned. Expected '%s', found '%s'.",
 						i, testCase.locator, response.Locator)
@@ -41,15 +41,16 @@ func TestCourseReport(test *testing.T) {
 			continue
 		}
 
-		if len(testCase.locator) != 0 {
-			test.Errorf("Case %d: Did not get an expected permissions error.", i)
+		if testCase.locator != "" {
+			test.Errorf("Case %d: Did not get an expected error. Expected '%s', found '%s'.",
+				i, testCase.locator, response.Locator)
 			continue
 		}
 
 		var responseContent CourseReportResponse
 		util.MustJSONFromString(util.MustToJSON(response.Content), &responseContent)
 
-		course := db.MustGetCourse("course101")
+		course := db.MustGetTestCourse()
 		expected, err := report.GetCourseScoringReport(course)
 		if err != nil {
 			test.Errorf("Error fetching course report: %s.", err)
