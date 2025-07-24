@@ -18,7 +18,7 @@ type CourseReportResponse struct {
 func HandleCourseReport(request *CourseReportRequest) (*CourseReportResponse, *core.APIError) {
 	courseReport, err := report.GetCourseScoringReport(request.Course)
 	if err != nil {
-		return nil, core.NewInternalError("-638", request, "Unable to fetch course report.").Err(err)
+		return nil, core.NewInternalError("-639", request, "Unable to fetch course report.").Err(err)
 	}
 
 	response := CourseReportResponse{
