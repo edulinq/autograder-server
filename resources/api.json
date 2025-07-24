@@ -160,7 +160,7 @@
             ]
         },
         "courses/assignments/report": {
-            "description": "Fetch course report.",
+            "description": "Fetch an assignment grading report for a course.",
             "input": [
                 {
                     "name": "course-id",
