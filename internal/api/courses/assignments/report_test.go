@@ -42,8 +42,8 @@ func TestCourseReport(test *testing.T) {
 		}
 
 		if testCase.locator != "" {
-			test.Errorf("Case %d: Did not get an expected error. Expected '%s', found '%s'.",
-				i, testCase.locator, response.Locator)
+			test.Errorf("Case %d: Did not get an expected error. Expected '%s'.",
+				i, testCase.locator)
 			continue
 		}
 
@@ -53,7 +53,7 @@ func TestCourseReport(test *testing.T) {
 		course := db.MustGetTestCourse()
 		expected, err := report.GetCourseScoringReport(course)
 		if err != nil {
-			test.Errorf("Error fetching course report: %s.", err)
+			test.Errorf("Error fetching course report: %v.", err)
 			continue
 		}
 
