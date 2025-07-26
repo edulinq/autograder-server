@@ -89,7 +89,6 @@ func (this *JPlagEngine) ComputeFileSimilarity(paths [2]string, templatePath str
 	if err != nil {
 		return nil, fmt.Errorf("Failed to set custom JPlag engine options: '%w'.", err)
 	}
-	fmt.Println("ef", effectiveOptions)
 	err = ensureImage()
 	if err != nil {
 		return nil, fmt.Errorf("Failed to ensure JPlag docker image exists: '%w'.", err)
