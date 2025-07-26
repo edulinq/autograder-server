@@ -852,7 +852,7 @@ func TestExtractJplagOptions(test *testing.T) {
 	}
 
 	for i, testCase := range testCases {
-		effectiveOptions, err := jplag.GetJplagEngineOptions(testCase.input)
+		effectiveOptions, err := jplag.GetJPlagEngineOptions(testCase.input)
 		if err != nil {
 			if !testCase.extractionError {
 				test.Errorf("Case %d: Got an unexpected error: '%v'.", i, err)

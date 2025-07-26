@@ -39,7 +39,7 @@ type JPlagEngineOptions struct {
 
 // GetDefaultJplagOptions returns a new copy of JPlagEngineOptions
 // initialized with default values.
-func GetDefaultJplagOptions() *JPlagEngineOptions {
+func GetDefaultJPlagOptions() *JPlagEngineOptions {
 	return &JPlagEngineOptions{
 		MinTokens: DEFAULT_MIN_TOKENS,
 	}
@@ -59,10 +59,10 @@ func (this *JPlagEngine) IsAvailable() bool {
 	return docker.CanAccessDocker()
 }
 
-// GetJplagEngineOptions sets engine options by marshalling the options map
+// GetJPlagEngineOptions sets engine options by marshalling the options map
 // to JSON and then unmarshalling it into the struct.
-func GetJplagEngineOptions(rawOptions map[string]any) (*JPlagEngineOptions, error) {
-	effectiveOptions := GetDefaultJplagOptions()
+func GetJPlagEngineOptions(rawOptions map[string]any) (*JPlagEngineOptions, error) {
+	effectiveOptions := GetDefaultJPlagOptions()
 
 	// If the input map is empty or nil, return defaul struct.
 	if (len(rawOptions) == 0) || (rawOptions == nil) {
@@ -85,7 +85,7 @@ func GetJplagEngineOptions(rawOptions map[string]any) (*JPlagEngineOptions, erro
 }
 
 func (this *JPlagEngine) ComputeFileSimilarity(paths [2]string, templatePath string, ctx context.Context, options map[string]any) (*model.FileSimilarity, error) {
-	effectiveOptions, err := GetJplagEngineOptions(options)
+	effectiveOptions, err := GetJPlagEngineOptions(options)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to set custom JPlag engine options: '%w'.", err)
 	}
