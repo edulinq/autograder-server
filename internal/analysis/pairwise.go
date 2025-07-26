@@ -249,9 +249,9 @@ func computeFileSims(options AnalysisOptions, inputDirs [2]string, assignment *m
 
 		for i, engine := range engines {
 			// Extract specific options for the engine.
-			specificEngineOptions, ok := core.GetSpecificEngineOptions(engineOptions, engine.GetName())
-			if !ok {
-				log.Info("No engine options found for '%s' or engine options are empty. Engine will use default values.", engine.GetName())
+			specificEngineOptions, err := core.GetSpecificEngineOptions(engineOptions, engine.GetName())
+			if err != nil {
+				log.Warn("No engine options found for '%s' or engine options are empty. Engine will use default values.", engine.GetName())
 			}
 
 			// Compute the file similarity for each engine in parallel.

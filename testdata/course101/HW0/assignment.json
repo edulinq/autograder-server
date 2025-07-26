@@ -8,7 +8,7 @@
     "analysis-options": {
         "engine-options": {
             "jplag": {
-                "minTokens": 5
+                "min-tokens": 5
             }
         },
         "include-patterns": [
