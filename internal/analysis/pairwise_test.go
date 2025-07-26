@@ -856,6 +856,7 @@ func TestExtractJplagOptions(test *testing.T) {
 		if err != nil {
 			if !testCase.extractionError {
 				test.Errorf("Case %d: Got an unexpected error: '%v'.", i, err)
+				continue
 			}
 
 		} else {

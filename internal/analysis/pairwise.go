@@ -260,6 +260,7 @@ func computeFileSims(options AnalysisOptions, inputDirs [2]string, assignment *m
 
 			go func(index int, simEngine core.SimilarityEngine, engineOptions map[string]any) {
 				defer engineWaitGroup.Done()
+
 				similarity, err := simEngine.ComputeFileSimilarity(paths, templatePath, options.Context, engineOptions)
 				if err != nil {
 					errs[index] = fmt.Errorf("Unable to compute similarity for '%s' using engine '%s': '%w'", relpath, simEngine.GetName(), err)
