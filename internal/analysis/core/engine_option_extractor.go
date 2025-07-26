@@ -13,7 +13,7 @@ func GetSpecificEngineOptions(engineOptions map[string]any, engineName string) (
 	}
 	specificEngineOptions, ok = specificEngineOptionsAny.(map[string]any)
 	if !ok {
-		log.Warn("Expected options for '%s' to be of type map[string]any, but got %T\n", engineName, specificEngineOptionsAny)
+		log.Warn("Expected options for '%s' to be of type map[string]any, but got '%T'.", engineName, specificEngineOptionsAny)
 		return nil, false
 	}
 

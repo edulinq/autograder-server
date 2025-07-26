@@ -48,6 +48,7 @@ func TestJPlagComputeFileSimilarityWithIgnoreBase(test *testing.T) {
 	engineOptsStruct := JPlagEngineOptions{
 		MinTokens: 5,
 	}
+
 	jsonBytes, err := json.Marshal(engineOptsStruct)
 	if err != nil {
 		test.Fatalf("Error marshaling JPlagEngineOptions to JSON: '%v'.", err)
