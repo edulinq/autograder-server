@@ -64,20 +64,20 @@ func (this *JPlagEngine) IsAvailable() bool {
 func GetJPlagEngineOptions(rawOptions map[string]any) (*JPlagEngineOptions, error) {
 	effectiveOptions := GetDefaultJPlagOptions()
 
-	// If the input map is empty or nil, return defaul struct.
+	// If the input map is empty or nil, return default struct.
 	if (len(rawOptions) == 0) || (rawOptions == nil) {
 		return effectiveOptions, nil
 	}
 
 	jsonBytes, err := json.Marshal(rawOptions)
 	if err != nil {
-		// If there is an error, return nil along with error.
+		// If there is an error, return default struct along with error.
 		return effectiveOptions, fmt.Errorf("Could not marshal options map to JSON: '%w'.", err)
 	}
 
 	err = json.Unmarshal(jsonBytes, effectiveOptions)
 	if err != nil {
-		// If there is an error, return default struct.
+		// If there is an error, return default struct along with error.
 		return effectiveOptions, fmt.Errorf("Could not unmarshal JSON to JPlagEngineOptions: '%w'.", err)
 	}
 
