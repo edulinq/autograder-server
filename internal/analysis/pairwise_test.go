@@ -824,22 +824,22 @@ func TestExtractJplagOptions(test *testing.T) {
 		// Fallback to Default
 		{
 			input:           map[string]any{},
-			expected:        jplag.GetDefaultJplagOptions(),
+			expected:        jplag.GetDefaultJPlagOptions(),
 			extractionError: false,
 		},
 		{
 			input:           map[string]any{"min-tokens": 75.5},
-			expected:        jplag.GetDefaultJplagOptions(),
+			expected:        jplag.GetDefaultJPlagOptions(),
 			extractionError: true,
 		},
 		{
 			input:           map[string]any{"min-tokens": "abc"},
-			expected:        jplag.GetDefaultJplagOptions(),
+			expected:        jplag.GetDefaultJPlagOptions(),
 			extractionError: true,
 		},
 		{
 			input:           map[string]any{"min-tokens": nil},
-			expected:        jplag.GetDefaultJplagOptions(),
+			expected:        jplag.GetDefaultJPlagOptions(),
 			extractionError: false,
 		},
 
