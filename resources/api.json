@@ -159,6 +159,35 @@
                 }
             ]
         },
+        "courses/assignments/report": {
+            "description": "Fetch an assignment grading report for a course.",
+            "input": [
+                {
+                    "name": "course-id",
+                    "type": "string",
+                    "description": "The ID of the course to make this request to.",
+                    "required": true
+                },
+                {
+                    "name": "user-email",
+                    "type": "string",
+                    "description": "The email of the user making this request.",
+                    "required": true
+                },
+                {
+                    "name": "user-pass",
+                    "type": "string",
+                    "description": "The password of the user making this request.",
+                    "required": true
+                }
+            ],
+            "output": [
+                {
+                    "name": "course-report",
+                    "type": "*report.CourseScoringReport"
+                }
+            ]
+        },
         "courses/assignments/submissions/analysis/individual": {
             "description": "Get the result of a individual analysis for the specified submissions.",
             "input": [
@@ -2889,6 +2918,69 @@
                     "name": "validation-error",
                     "type": "*model.LocatableError",
                     "description": "The following error occurred during this operation because of the provided data,\ni.e., they are caused by the calling user.\nAll error messages should be safe for users."
+                }
+            ]
+        },
+        "report.AssignmentScoringReport": {
+            "category": "struct",
+            "fields": [
+                {
+                    "name": "assignment-name",
+                    "type": "string"
+                },
+                {
+                    "name": "latest-submission",
+                    "type": "int64"
+                },
+                {
+                    "name": "number-of-submissions",
+                    "type": "int"
+                },
+                {
+                    "name": "questions",
+                    "type": "[]*report.ScoringReportQuestionStats"
+                }
+            ]
+        },
+        "report.CourseScoringReport": {
+            "category": "struct",
+            "fields": [
+                {
+                    "name": "assignments",
+                    "type": "[]*report.AssignmentScoringReport"
+                },
+                {
+                    "name": "course-name",
+                    "type": "string"
+                }
+            ]
+        },
+        "report.ScoringReportQuestionStats": {
+            "category": "struct",
+            "fields": [
+                {
+                    "name": "max",
+                    "type": "float64"
+                },
+                {
+                    "name": "mean",
+                    "type": "float64"
+                },
+                {
+                    "name": "median",
+                    "type": "float64"
+                },
+                {
+                    "name": "min",
+                    "type": "float64"
+                },
+                {
+                    "name": "question-name",
+                    "type": "string"
+                },
+                {
+                    "name": "standard-deviation",
+                    "type": "float64"
                 }
             ]
         },
