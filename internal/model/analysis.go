@@ -27,6 +27,11 @@ type AssignmentAnalysisOptions struct {
 
 	TemplateFiles   []*util.FileSpec      `json:"template-files,omitempty,omitzero"`
 	TemplateFileOps []*util.FileOperation `json:"template-file-ops,omitempty,omitzero"`
+
+	// EngineOptions includes the parameters for the engines that will be used for the analysis.
+	// It is a map of engine name to options of type map[string]any.
+	// Current supported values can be found in the respective engine's options struct.
+	EngineOptions map[string]any `json:"engine-options,omitempty,omitzero"`
 }
 
 type AnalysisFileInfo struct {

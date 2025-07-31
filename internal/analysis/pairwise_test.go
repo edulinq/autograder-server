@@ -2,6 +2,8 @@ package analysis
 
 import (
 	"context"
+	"encoding/json"
+	"log"
 	"path/filepath"
 	"reflect"
 	"strings"
@@ -275,11 +277,6 @@ func TestPairwiseAnalysisDefaultEnginesBase(test *testing.T) {
 		forceDefaultEnginesForTesting = false
 	}()
 
-	defaultSimilarityEngines[1].(*jplag.JPlagEngine).MinTokens = 5
-	defer func() {
-		defaultSimilarityEngines[1].(*jplag.JPlagEngine).MinTokens = jplag.DEFAULT_MIN_TOKENS
-	}()
-
 	ids := []string{
 		"course101::hw0::course-student@test.edulinq.org::1697406256",
 		"course101::hw0::course-student@test.edulinq.org::1697406272",
@@ -321,10 +318,18 @@ func TestPairwiseAnalysisDefaultEnginesSpecificFiles(test *testing.T) {
 	docker.EnsureOrSkipForTest(test)
 
 	// Override a setting for JPlag for testing.
-	defaultSimilarityEngines[1].(*jplag.JPlagEngine).MinTokens = 5
-	defer func() {
-		defaultSimilarityEngines[1].(*jplag.JPlagEngine).MinTokens = jplag.DEFAULT_MIN_TOKENS
-	}()
+	engineOptsStruct := jplag.JPlagEngineOptions{
+		MinTokens: 5,
+	}
+	jsonBytes, err := json.Marshal(engineOptsStruct)
+	if err != nil {
+		log.Fatalf("Error marshaling JPlagEngineOptions to JSON: %v", err)
+	}
+	var engineOptions map[string]any
+	err = json.Unmarshal(jsonBytes, &engineOptions)
+	if err != nil {
+		log.Fatalf("Error unmarshaling JSON to map[string]any: %v", err)
+	}
 
 	testPaths := []string{
 		filepath.Join(util.RootDirForTesting(), "testdata", "files", "sim_engine", "config.json"),
@@ -335,7 +340,7 @@ func TestPairwiseAnalysisDefaultEnginesSpecificFiles(test *testing.T) {
 
 	for _, path := range testPaths {
 		for _, engine := range defaultSimilarityEngines {
-			sim, err := engine.ComputeFileSimilarity([2]string{path, path}, "", ctx)
+			sim, err := engine.ComputeFileSimilarity([2]string{path, path}, "", ctx, engineOptions)
 			if err != nil {
 				test.Errorf("Engine '%s' failed to compute similarity on '%s': '%v'.",
 					engine.GetName(), path, err)
@@ -800,5 +805,70 @@ func TestPairwiseAnalysisFailureBase(test *testing.T) {
 	if !strings.Contains(results[key].FailureMessage, expectedMessageSubstring) {
 		test.Fatalf("Failure message does not contain expected substring. Expected Substring: '%s', Actual: '%s'.",
 			expectedMessageSubstring, results[key].FailureMessage)
+	}
+}
+
+func TestExtractJplagOptions(test *testing.T) {
+	testCases := []struct {
+		input           map[string]any
+		expected        *jplag.JPlagEngineOptions
+		extractionError bool
+	}{
+		// Base Case
+		{
+			input:           map[string]any{"min-tokens": 100},
+			expected:        &jplag.JPlagEngineOptions{MinTokens: 100},
+			extractionError: false,
+		},
+
+		// Fallback to Default
+		{
+			input:           map[string]any{},
+			expected:        jplag.GetDefaultJPlagOptions(),
+			extractionError: false,
+		},
+		{
+			input:           map[string]any{"min-tokens": 75.5},
+			expected:        jplag.GetDefaultJPlagOptions(),
+			extractionError: true,
+		},
+		{
+			input:           map[string]any{"min-tokens": "abc"},
+			expected:        jplag.GetDefaultJPlagOptions(),
+			extractionError: true,
+		},
+		{
+			input:           map[string]any{"min-tokens": nil},
+			expected:        jplag.GetDefaultJPlagOptions(),
+			extractionError: false,
+		},
+
+		// Extra Options
+		{
+			input:           map[string]any{"min-tokens": 200, "another-option": "value"},
+			expected:        &jplag.JPlagEngineOptions{MinTokens: 200},
+			extractionError: false,
+		},
+	}
+
+	for i, testCase := range testCases {
+		effectiveOptions, err := jplag.GetJPlagEngineOptions(testCase.input)
+		if err != nil {
+			if !testCase.extractionError {
+				test.Errorf("Case %d: Got an unexpected error: '%v'.", i, err)
+				continue
+			}
+
+		} else {
+			if testCase.extractionError {
+				test.Errorf("Case %d: Did not get an expected error.", i)
+				continue
+			}
+		}
+
+		if !reflect.DeepEqual(effectiveOptions, testCase.expected) {
+			test.Errorf("Case %d: Unexpected result. Expected = '%v', Actual = '%v'.", i, testCase.expected, effectiveOptions)
+			continue
+		}
 	}
 }

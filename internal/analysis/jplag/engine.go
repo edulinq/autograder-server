@@ -2,6 +2,7 @@ package jplag
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"path/filepath"
 	"strconv"
@@ -32,14 +33,22 @@ var (
 	imageLock sync.Mutex
 )
 
-type JPlagEngine struct {
-	MinTokens int
+type JPlagEngineOptions struct {
+	MinTokens int `json:"min-tokens"`
 }
 
-func GetEngine() *JPlagEngine {
-	return &JPlagEngine{
+// GetDefaultJplagOptions returns a new copy of JPlagEngineOptions
+// initialized with default values.
+func GetDefaultJPlagOptions() *JPlagEngineOptions {
+	return &JPlagEngineOptions{
 		MinTokens: DEFAULT_MIN_TOKENS,
 	}
+}
+
+type JPlagEngine struct{}
+
+func GetEngine() *JPlagEngine {
+	return &JPlagEngine{}
 }
 
 func (this *JPlagEngine) GetName() string {
@@ -50,8 +59,37 @@ func (this *JPlagEngine) IsAvailable() bool {
 	return docker.CanAccessDocker()
 }
 
-func (this *JPlagEngine) ComputeFileSimilarity(paths [2]string, templatePath string, ctx context.Context) (*model.FileSimilarity, error) {
-	err := ensureImage()
+// GetJPlagEngineOptions sets engine options by marshalling the options map
+// to JSON and then unmarshalling it into the struct.
+func GetJPlagEngineOptions(rawOptions map[string]any) (*JPlagEngineOptions, error) {
+	effectiveOptions := GetDefaultJPlagOptions()
+
+	// If the input map is empty or nil, return default struct.
+	if (len(rawOptions) == 0) || (rawOptions == nil) {
+		return effectiveOptions, nil
+	}
+
+	jsonBytes, err := json.Marshal(rawOptions)
+	if err != nil {
+		// If there is an error, return default struct along with error.
+		return effectiveOptions, fmt.Errorf("Could not marshal options map to JSON: '%w'.", err)
+	}
+
+	err = json.Unmarshal(jsonBytes, effectiveOptions)
+	if err != nil {
+		// If there is an error, return default struct along with error.
+		return effectiveOptions, fmt.Errorf("Could not unmarshal JSON to JPlagEngineOptions: '%w'.", err)
+	}
+
+	return effectiveOptions, nil
+}
+
+func (this *JPlagEngine) ComputeFileSimilarity(paths [2]string, templatePath string, ctx context.Context, options map[string]any) (*model.FileSimilarity, error) {
+	effectiveOptions, err := GetJPlagEngineOptions(options)
+	if err != nil {
+		return nil, fmt.Errorf("Failed to set custom JPlag engine options: '%w'.", err)
+	}
+	err = ensureImage()
 	if err != nil {
 		return nil, fmt.Errorf("Failed to ensure JPlag docker image exists: '%w'.", err)
 	}
@@ -124,7 +162,7 @@ func (this *JPlagEngine) ComputeFileSimilarity(paths [2]string, templatePath str
 		"--mode", "RUN",
 		"--csv-export",
 		"--language", getLanguage(tempFilenames[0]),
-		"--min-tokens", fmt.Sprintf("%d", this.MinTokens),
+		"--min-tokens", fmt.Sprintf("%d", effectiveOptions.MinTokens),
 		"/jplag/src",
 	}
 
