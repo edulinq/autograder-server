@@ -173,3 +173,17 @@ func collectAnalysisStats(fullSubmissionIDs []string, totalRunTime int64, initia
 		stats.AsyncStoreMetric(&metric)
 	}
 }
+
+func GetEngineOptions(allEngineOptions map[string]any, engineName string) (map[string]any, error) {
+	engineOptionsAny, ok := allEngineOptions[engineName]
+	if !ok || (engineOptionsAny == nil) {
+		return nil, nil
+	}
+
+	engineOptions, ok := engineOptionsAny.(map[string]any)
+	if !ok {
+		return nil, fmt.Errorf("Expected options for '%s' to be of type map[string]any, but got '%T'.", engineName, engineOptionsAny)
+	}
+
+	return engineOptions, nil
+}
