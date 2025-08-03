@@ -17,6 +17,7 @@ func TestJPlagComputeFileSimilarityBase(test *testing.T) {
 	}
 
 	engine := GetEngine()
+
 	// Lower the token minimum for testing.
 	engineOptsStruct := JPlagEngineOptions{
 		MinTokens: 5,
@@ -26,6 +27,7 @@ func TestJPlagComputeFileSimilarityBase(test *testing.T) {
 	if err != nil {
 		test.Fatalf("Error marshaling JPlagEngineOptions to JSON: '%v'.", err)
 	}
+
 	var engineOptions map[string]any
 	err = json.Unmarshal(jsonBytes, &engineOptions)
 	if err != nil {
@@ -44,6 +46,7 @@ func TestJPlagComputeFileSimilarityWithIgnoreBase(test *testing.T) {
 	}
 
 	engine := GetEngine()
+
 	// Lower the token minimum for testing.
 	engineOptsStruct := JPlagEngineOptions{
 		MinTokens: 5,
@@ -53,6 +56,7 @@ func TestJPlagComputeFileSimilarityWithIgnoreBase(test *testing.T) {
 	if err != nil {
 		test.Fatalf("Error marshaling JPlagEngineOptions to JSON: '%v'.", err)
 	}
+
 	var engineOptions map[string]any
 	err = json.Unmarshal(jsonBytes, &engineOptions)
 	if err != nil {
