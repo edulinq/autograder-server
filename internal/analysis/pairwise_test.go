@@ -3,7 +3,6 @@ package analysis
 import (
 	"context"
 	"encoding/json"
-	"log"
 	"path/filepath"
 	"reflect"
 	"strings"
@@ -321,14 +320,16 @@ func TestPairwiseAnalysisDefaultEnginesSpecificFiles(test *testing.T) {
 	engineOptsStruct := jplag.JPlagEngineOptions{
 		MinTokens: 5,
 	}
+
 	jsonBytes, err := json.Marshal(engineOptsStruct)
 	if err != nil {
-		log.Fatalf("Error marshaling JPlagEngineOptions to JSON: %v", err)
+		test.Errorf("Error marshaling JPlagEngineOptions to JSON: %v", err)
 	}
+
 	var engineOptions map[string]any
 	err = json.Unmarshal(jsonBytes, &engineOptions)
 	if err != nil {
-		log.Fatalf("Error unmarshaling JSON to map[string]any: %v", err)
+		test.Errorf("Error unmarshaling JSON to map[string]any: %v", err)
 	}
 
 	testPaths := []string{
@@ -808,7 +809,7 @@ func TestPairwiseAnalysisFailureBase(test *testing.T) {
 	}
 }
 
-func TestExtractJplagOptions(test *testing.T) {
+func TestGetJplagOptions(test *testing.T) {
 	testCases := []struct {
 		input           map[string]any
 		expected        *jplag.JPlagEngineOptions
@@ -821,25 +822,27 @@ func TestExtractJplagOptions(test *testing.T) {
 			extractionError: false,
 		},
 
-		// Fallback to Default
+		// Errors
 		{
 			input:           map[string]any{},
-			expected:        jplag.GetDefaultJPlagOptions(),
+			expected:        nil,
 			extractionError: false,
 		},
 		{
 			input:           map[string]any{"min-tokens": 75.5},
-			expected:        jplag.GetDefaultJPlagOptions(),
+			expected:        nil,
 			extractionError: true,
 		},
 		{
 			input:           map[string]any{"min-tokens": "abc"},
-			expected:        jplag.GetDefaultJPlagOptions(),
+			expected:        nil,
 			extractionError: true,
 		},
+
+		// Fallback to Default
 		{
 			input:           map[string]any{"min-tokens": nil},
-			expected:        jplag.GetDefaultJPlagOptions(),
+			expected:        &jplag.JPlagEngineOptions{MinTokens: 0},
 			extractionError: false,
 		},
 
@@ -858,7 +861,6 @@ func TestExtractJplagOptions(test *testing.T) {
 				test.Errorf("Case %d: Got an unexpected error: '%v'.", i, err)
 				continue
 			}
-
 		} else {
 			if testCase.extractionError {
 				test.Errorf("Case %d: Did not get an expected error.", i)
