@@ -54,13 +54,13 @@ func TestJPlagComputeFileSimilarityWithIgnoreBase(test *testing.T) {
 
 	jsonBytes, err := json.Marshal(engineOptsStruct)
 	if err != nil {
-		test.Fatalf("Error marshaling JPlagEngineOptions to JSON: '%v'.", err)
+		test.Fatalf("Failed to marshal JPlagEngineOptions to JSON: '%v'.", err)
 	}
 
 	var engineOptions map[string]any
 	err = json.Unmarshal(jsonBytes, &engineOptions)
 	if err != nil {
-		test.Fatalf("Error unmarshaling JSON to map[string]any: '%v'.", err)
+		test.Fatalf("Failed to unmarshal JSON to map[string]any: '%v'.", err)
 	}
 
 	core.RunEngineTestComputeFileSimilarityBase(test, engine, true, expected, engineOptions)
