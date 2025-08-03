@@ -83,6 +83,7 @@ func (this *JPlagEngine) ComputeFileSimilarity(paths [2]string, templatePath str
 	if err != nil {
 		return nil, fmt.Errorf("Failed to set custom JPlag engine options: '%w'.", err)
 	}
+
 	if effectiveOptions == nil {
 		effectiveOptions = GetDefaultJPlagOptionsCopy()
 	}
