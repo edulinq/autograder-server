@@ -37,9 +37,7 @@ type JPlagEngineOptions struct {
 	MinTokens int `json:"min-tokens"`
 }
 
-// GetDefaultJplagOptions returns a new copy of JPlagEngineOptions
-// initialized with default values.
-func GetDefaultJPlagOptions() *JPlagEngineOptions {
+func GetDefaultJPlagOptionsCopy() *JPlagEngineOptions {
 	return &JPlagEngineOptions{
 		MinTokens: DEFAULT_MIN_TOKENS,
 	}
@@ -59,29 +57,25 @@ func (this *JPlagEngine) IsAvailable() bool {
 	return docker.CanAccessDocker()
 }
 
-// GetJPlagEngineOptions sets engine options by marshalling the options map
+// Sets engine options by marshalling the options map
 // to JSON and then unmarshalling it into the struct.
 func GetJPlagEngineOptions(rawOptions map[string]any) (*JPlagEngineOptions, error) {
-	effectiveOptions := GetDefaultJPlagOptions()
-
-	// If the input map is empty or nil, return default struct.
+	var effectiveOptions JPlagEngineOptions
 	if (len(rawOptions) == 0) || (rawOptions == nil) {
-		return effectiveOptions, nil
+		return nil, nil
 	}
 
 	jsonBytes, err := json.Marshal(rawOptions)
 	if err != nil {
-		// If there is an error, return default struct along with error.
-		return effectiveOptions, fmt.Errorf("Could not marshal options map to JSON: '%w'.", err)
+		return nil, fmt.Errorf("Failed to marshal options into JPlagEngineOptions: '%w'.", err)
 	}
 
-	err = json.Unmarshal(jsonBytes, effectiveOptions)
+	err = json.Unmarshal(jsonBytes, &effectiveOptions)
 	if err != nil {
-		// If there is an error, return default struct along with error.
-		return effectiveOptions, fmt.Errorf("Could not unmarshal JSON to JPlagEngineOptions: '%w'.", err)
+		return nil, fmt.Errorf("Failed to unmarshal options into JPlagEngineOptions: '%w'.", err)
 	}
 
-	return effectiveOptions, nil
+	return &effectiveOptions, nil
 }
 
 func (this *JPlagEngine) ComputeFileSimilarity(paths [2]string, templatePath string, ctx context.Context, options map[string]any) (*model.FileSimilarity, error) {
@@ -89,6 +83,10 @@ func (this *JPlagEngine) ComputeFileSimilarity(paths [2]string, templatePath str
 	if err != nil {
 		return nil, fmt.Errorf("Failed to set custom JPlag engine options: '%w'.", err)
 	}
+	if effectiveOptions == nil {
+		effectiveOptions = GetDefaultJPlagOptionsCopy()
+	}
+
 	err = ensureImage()
 	if err != nil {
 		return nil, fmt.Errorf("Failed to ensure JPlag docker image exists: '%w'.", err)
