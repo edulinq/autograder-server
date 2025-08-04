@@ -174,15 +174,10 @@ func collectAnalysisStats(fullSubmissionIDs []string, totalRunTime int64, initia
 	}
 }
 
-func GetEngineOptions(allEngineOptions map[string]any, engineName string) (map[string]any, error) {
-	engineOptionsAny, ok := allEngineOptions[engineName]
-	if !ok || (engineOptionsAny == nil) {
+func GetEngineOptions(allEngineOptions map[string]map[string]any, engineName string) (map[string]any, error) {
+	engineOptions, ok := allEngineOptions[engineName]
+	if !ok || (engineOptions == nil) {
 		return nil, nil
-	}
-
-	engineOptions, ok := engineOptionsAny.(map[string]any)
-	if !ok {
-		return nil, fmt.Errorf("Unexpected engine options type for '%s'. Expected: 'map[string]any', Actual: '%v'.", engineName, engineOptionsAny)
 	}
 
 	return engineOptions, nil
