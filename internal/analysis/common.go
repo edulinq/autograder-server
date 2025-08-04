@@ -182,7 +182,7 @@ func GetEngineOptions(allEngineOptions map[string]any, engineName string) (map[s
 
 	engineOptions, ok := engineOptionsAny.(map[string]any)
 	if !ok {
-		return nil, fmt.Errorf("Expected options for '%s' to be of type map[string]any, but got '%T'.", engineName, engineOptionsAny)
+		return nil, fmt.Errorf("Unexpected engine options type for '%s'. Expected: 'map[string]any', Actual: '%v'.", engineName, engineOptionsAny)
 	}
 
 	return engineOptions, nil
