@@ -191,14 +191,14 @@ func computeFileSims(options AnalysisOptions, inputDirs [2]string, assignment *m
 		allEngineOptions = assignment.AssignmentAnalysisOptions.EngineOptions
 	}
 
-	allEngineOptionMap := make(map[string]any)
+	allEngineOptionsFinal := make(map[string]any)
 	for _, engine := range engines {
 		specificEngineOptions, err := GetEngineOptions(allEngineOptions, engine.GetName())
 		if err != nil {
 			return nil, nil, nil, err
 		}
 
-		allEngineOptionMap[engine.GetName()] = specificEngineOptions
+		allEngineOptionsFinal[engine.GetName()] = specificEngineOptions
 	}
 
 	templateDir := ""
@@ -274,7 +274,7 @@ func computeFileSims(options AnalysisOptions, inputDirs [2]string, assignment *m
 
 					tempSimilarities[index] = similarity
 				}
-			}(i, engine, allEngineOptionMap[engine.GetName()].(map[string]any))
+			}(i, engine, allEngineOptionsFinal[engine.GetName()].(map[string]any))
 		}
 
 		// Wait for all engines to complete.
