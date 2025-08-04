@@ -822,12 +822,14 @@ func TestGetJplagOptions(test *testing.T) {
 			extractionError: false,
 		},
 
-		// Errors
+		// Empty options
 		{
 			input:           map[string]any{},
 			expected:        nil,
 			extractionError: false,
 		},
+
+		// Errors
 		{
 			input:           map[string]any{"min-tokens": 75.5},
 			expected:        nil,
