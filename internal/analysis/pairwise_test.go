@@ -323,13 +323,13 @@ func TestPairwiseAnalysisDefaultEnginesSpecificFiles(test *testing.T) {
 
 	jsonBytes, err := json.Marshal(engineOptsStruct)
 	if err != nil {
-		test.Errorf("Error marshaling JPlagEngineOptions to JSON: %v", err)
+		test.Errorf("Failed to marshal JPlagEngineOptions to JSON: '%v'.", err)
 	}
 
 	var engineOptions map[string]any
 	err = json.Unmarshal(jsonBytes, &engineOptions)
 	if err != nil {
-		test.Errorf("Error unmarshaling JSON to map[string]any: %v", err)
+		test.Errorf("Failed to unmarshal JSON to map[string]any: '%v'.", err)
 	}
 
 	testPaths := []string{
