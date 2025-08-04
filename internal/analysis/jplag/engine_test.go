@@ -1,11 +1,11 @@
 package jplag
 
 import (
-	"encoding/json"
 	"testing"
 
 	"github.com/edulinq/autograder/internal/analysis/core"
 	"github.com/edulinq/autograder/internal/model"
+	"github.com/edulinq/autograder/internal/util"
 )
 
 func TestJPlagComputeFileSimilarityBase(test *testing.T) {
@@ -23,15 +23,9 @@ func TestJPlagComputeFileSimilarityBase(test *testing.T) {
 		MinTokens: 5,
 	}
 
-	jsonBytes, err := json.Marshal(engineOptsStruct)
+	engineOptions, err := util.ToJSONMap(engineOptsStruct)
 	if err != nil {
-		test.Fatalf("Failed to marshal JPlagEngineOptions to JSON: '%v'.", err)
-	}
-
-	var engineOptions map[string]any
-	err = json.Unmarshal(jsonBytes, &engineOptions)
-	if err != nil {
-		test.Fatalf("Failed to unmarshal JSON to map[string]any: '%v'.", err)
+		test.Errorf("Failed to convert JPlagEngineOption to map[string]any: '%v'.", err)
 	}
 
 	core.RunEngineTestComputeFileSimilarityBase(test, engine, false, expected, engineOptions)
@@ -52,15 +46,9 @@ func TestJPlagComputeFileSimilarityWithIgnoreBase(test *testing.T) {
 		MinTokens: 5,
 	}
 
-	jsonBytes, err := json.Marshal(engineOptsStruct)
+	engineOptions, err := util.ToJSONMap(engineOptsStruct)
 	if err != nil {
-		test.Fatalf("Failed to marshal JPlagEngineOptions to JSON: '%v'.", err)
-	}
-
-	var engineOptions map[string]any
-	err = json.Unmarshal(jsonBytes, &engineOptions)
-	if err != nil {
-		test.Fatalf("Failed to unmarshal JSON to map[string]any: '%v'.", err)
+		test.Errorf("Failed to convert JPlagEngineOption to map[string]any: '%v'.", err)
 	}
 
 	core.RunEngineTestComputeFileSimilarityBase(test, engine, true, expected, engineOptions)

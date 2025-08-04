@@ -2,7 +2,6 @@ package jplag
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"path/filepath"
 	"strconv"
@@ -65,14 +64,9 @@ func GetJPlagEngineOptions(rawOptions map[string]any) (*JPlagEngineOptions, erro
 		return nil, nil
 	}
 
-	jsonBytes, err := json.Marshal(rawOptions)
+	effectiveOptions, err := util.JSONTransformTypes(rawOptions, effectiveOptions)
 	if err != nil {
-		return nil, fmt.Errorf("Failed to marshal options into JPlagEngineOptions: '%w'.", err)
-	}
-
-	err = json.Unmarshal(jsonBytes, &effectiveOptions)
-	if err != nil {
-		return nil, fmt.Errorf("Failed to unmarshal options into JPlagEngineOptions: '%w'.", err)
+		return nil, fmt.Errorf("Failed to convert raw options to JPlagEngineOptions: '%v'.", err)
 	}
 
 	return &effectiveOptions, nil

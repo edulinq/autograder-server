@@ -2,7 +2,6 @@ package analysis
 
 import (
 	"context"
-	"encoding/json"
 	"path/filepath"
 	"reflect"
 	"strings"
@@ -321,15 +320,9 @@ func TestPairwiseAnalysisDefaultEnginesSpecificFiles(test *testing.T) {
 		MinTokens: 5,
 	}
 
-	jsonBytes, err := json.Marshal(engineOptsStruct)
+	engineOptions, err := util.ToJSONMap(engineOptsStruct)
 	if err != nil {
-		test.Errorf("Failed to marshal JPlagEngineOptions to JSON: '%v'.", err)
-	}
-
-	var engineOptions map[string]any
-	err = json.Unmarshal(jsonBytes, &engineOptions)
-	if err != nil {
-		test.Errorf("Failed to unmarshal JSON to map[string]any: '%v'.", err)
+		test.Errorf("Failed to convert JPlagEngineOption to map[string]any: '%v'.", err)
 	}
 
 	testPaths := []string{
