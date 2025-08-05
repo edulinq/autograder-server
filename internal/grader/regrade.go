@@ -39,15 +39,15 @@ type RegradeResult struct {
 	WorkErrors map[string]string                       `json:"work-errors"`
 }
 
-func Regrade(assignment *model.Assignment, options RegradeOptions) (*RegradeResult, int, error) {
+func Regrade(assignment *model.Assignment, options RegradeOptions) (*RegradeResult, int, error, error) {
 	reference, err := model.ParseCourseUserReferences(options.RawReferences)
 	if err != nil {
-		return nil, 0, fmt.Errorf("Failed to parse course user references: '%w'.", err)
+		return nil, 0, fmt.Errorf("Failed to parse course user references: '%w'.", err), nil
 	}
 
 	courseUsers, err := db.GetCourseUsers(assignment.GetCourse())
 	if err != nil {
-		return nil, 0, fmt.Errorf("Failed to get course users: '%w'.", err)
+		return nil, 0, nil, fmt.Errorf("Failed to get course users: '%w'.", err)
 	}
 
 	options.ResolvedUsers = model.ResolveCourseUserEmails(courseUsers, reference)
@@ -83,12 +83,12 @@ func Regrade(assignment *model.Assignment, options RegradeOptions) (*RegradeResu
 
 	err = job.Validate()
 	if err != nil {
-		return nil, 0, fmt.Errorf("Failed to validate job: '%w'.", err)
+		return nil, 0, nil, fmt.Errorf("Failed to validate job: '%w'.", err)
 	}
 
 	output := job.Run()
 	if output.Error != nil {
-		return nil, 0, fmt.Errorf("Failed to run regrade job '%s': '%w'.", output.ID, output.Error)
+		return nil, 0, nil, fmt.Errorf("Failed to run regrade job '%s': '%w'.", output.ID, output.Error)
 	}
 
 	workErrors := make(map[string]string, len(output.WorkErrors))
@@ -107,7 +107,7 @@ func Regrade(assignment *model.Assignment, options RegradeOptions) (*RegradeResu
 		WorkErrors: workErrors,
 	}
 
-	return &regradeResult, len(output.RemainingItems), nil
+	return &regradeResult, len(output.RemainingItems), nil, nil
 }
 
 func performSingleRegrade(courseUsers map[string]*model.CourseUser, assignment *model.Assignment, options RegradeOptions, email string) (*model.SubmissionHistoryItem, error) {

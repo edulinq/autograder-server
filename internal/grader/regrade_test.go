@@ -255,9 +255,14 @@ func TestRegradeBase(test *testing.T) {
 			RetainOriginalContext: false,
 		}
 
-		result, numLeft, err := Regrade(assignment, options)
-		if err != nil {
-			test.Errorf("Case %d: Failed to regrade submissions: '%v'.", i, err)
+		result, numLeft, userErr, internalErr := Regrade(assignment, options)
+		if internalErr != nil {
+			test.Errorf("Case %d: Failed internally to regrade submissions: '%v'.", i, internalErr)
+			continue
+		}
+
+		if userErr != nil {
+			test.Errorf("Case %d: Failed to regrade submissions: '%v'.", i, userErr)
 			continue
 		}
 
@@ -290,9 +295,14 @@ func TestRegradeBase(test *testing.T) {
 			options.RegradeCutoff = result.Options.RegradeCutoff
 			options.JobOptions.WaitForCompletion = true
 
-			_, numLeft, err = Regrade(assignment, options)
-			if err != nil {
-				test.Errorf("Case %d: Failed to complete cleanup regrade: '%v'.", i, err)
+			_, numLeft, userErr, internalErr = Regrade(assignment, options)
+			if internalErr != nil {
+				test.Errorf("Case %d: Failed to complete cleanup regrade: '%v'.", i, internalErr)
+				continue
+			}
+
+			if userErr != nil {
+				test.Errorf("Case %d: Failed to complete cleanup regrade: '%v'.", i, userErr)
 				continue
 			}
 
