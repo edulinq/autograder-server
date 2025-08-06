@@ -186,12 +186,12 @@ func computeFileSims(options AnalysisOptions, inputDirs [2]string, assignment *m
 		return nil, nil, nil, err
 	}
 
-	allEngineOptions := make(map[string]map[string]any)
+	allEngineOptions := make(map[string]model.OptionsMap)
 	if (assignment != nil) && (assignment.AssignmentAnalysisOptions != nil) {
 		allEngineOptions = assignment.AssignmentAnalysisOptions.EngineOptions
 	}
 
-	allEngineOptionsFinal := make(map[string]map[string]any)
+	allEngineOptionsFinal := make(map[string]model.OptionsMap)
 	for _, engine := range engines {
 		specificEngineOptions, err := GetEngineOptions(allEngineOptions, engine.GetName())
 		if err != nil {

@@ -2139,7 +2139,7 @@
             "fields": [
                 {
                     "name": "engine-options",
-                    "type": "map[string]map[string]any",
+                    "type": "map[string]model.OptionsMap",
                     "description": "EngineOptions includes the parameters for the engines that will be used for the analysis.\nIt is a map of engine name to options of type map[string]any.\nCurrent supported values can be found in the respective engine's options struct."
                 },
                 {
@@ -2656,6 +2656,9 @@
         "model.LocatableError": {
             "category": "struct",
             "description": "A general representation of errors that have a definite source location."
+        },
+        "model.OptionsMap": {
+            "category": "map"
         },
         "model.PairwiseAnalysis": {
             "category": "struct",

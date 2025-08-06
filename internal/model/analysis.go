@@ -21,6 +21,8 @@ const (
 	DEFAULT_INCLUDE_REGEX string = ".+"
 )
 
+type OptionsMap map[string]any
+
 type AssignmentAnalysisOptions struct {
 	IncludePatterns []string `json:"include-patterns,omitempty,omitzero"`
 	ExcludePatterns []string `json:"exclude-patterns,omitempty,omitzero"`
@@ -31,7 +33,7 @@ type AssignmentAnalysisOptions struct {
 	// EngineOptions includes the parameters for the engines that will be used for the analysis.
 	// It is a map of engine name to options of type map[string]any.
 	// Current supported values can be found in the respective engine's options struct.
-	EngineOptions map[string]map[string]any `json:"engine-options,omitempty,omitzero"`
+	EngineOptions map[string]OptionsMap `json:"engine-options,omitempty,omitzero"`
 }
 
 type AnalysisFileInfo struct {
