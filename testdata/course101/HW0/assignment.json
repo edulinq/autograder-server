@@ -9,6 +9,9 @@
         "engine-options": {
             "jplag": {
                 "min-tokens": 5
+            },
+            "dolos": {
+                "kgram-length": 22
             }
         },
         "include-patterns": [

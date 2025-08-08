@@ -33,10 +33,10 @@ var (
 )
 
 type JPlagEngineOptions struct {
-	MinTokens int `json:"min-tokens"`
+	MinTokens int `json:"min-tokens"` // --min-tokens
 }
 
-func GetDefaultJPlagOptionsCopy() *JPlagEngineOptions {
+func GetDefaultJPlagOptions() *JPlagEngineOptions {
 	return &JPlagEngineOptions{
 		MinTokens: DEFAULT_MIN_TOKENS,
 	}
@@ -56,30 +56,21 @@ func (this *JPlagEngine) IsAvailable() bool {
 	return docker.CanAccessDocker()
 }
 
-// Sets engine options by marshalling the options map
-// to JSON and then unmarshalling it into the struct.
-func GetJPlagEngineOptions(rawOptions map[string]any) (*JPlagEngineOptions, error) {
-	var effectiveOptions JPlagEngineOptions
-	if (len(rawOptions) == 0) || (rawOptions == nil) {
-		return nil, nil
-	}
+func parseEngineOptions(rawOptions model.OptionsMap) (*JPlagEngineOptions, error) {
+	effectiveOptions := GetDefaultJPlagOptions()
 
 	effectiveOptions, err := util.JSONTransformTypes(rawOptions, effectiveOptions)
 	if err != nil {
-		return nil, fmt.Errorf("Failed to convert raw options to JPlagEngineOptions: '%v'.", err)
+		return nil, fmt.Errorf("Failed to convert raw options to JPlagEngineOptions: '%w'.", err)
 	}
 
-	return &effectiveOptions, nil
+	return effectiveOptions, nil
 }
 
-func (this *JPlagEngine) ComputeFileSimilarity(paths [2]string, templatePath string, ctx context.Context, options map[string]any) (*model.FileSimilarity, error) {
-	effectiveOptions, err := GetJPlagEngineOptions(options)
+func (this *JPlagEngine) ComputeFileSimilarity(paths [2]string, templatePath string, ctx context.Context, options model.OptionsMap) (*model.FileSimilarity, error) {
+	effectiveOptions, err := parseEngineOptions(options)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to set custom JPlag engine options: '%w'.", err)
-	}
-
-	if effectiveOptions == nil {
-		effectiveOptions = GetDefaultJPlagOptionsCopy()
 	}
 
 	err = ensureImage()

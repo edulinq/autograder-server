@@ -174,11 +174,15 @@ func collectAnalysisStats(fullSubmissionIDs []string, totalRunTime int64, initia
 	}
 }
 
-func GetEngineOptions(allEngineOptions map[string]model.OptionsMap, engineName string) (map[string]any, error) {
-	engineOptions, ok := allEngineOptions[engineName]
-	if !ok || (engineOptions == nil) {
-		return nil, nil
+func GetEngineOptions(allEngineOptions map[string]model.OptionsMap, engineName string) model.OptionsMap {
+	if allEngineOptions == nil {
+		return make(model.OptionsMap)
 	}
 
-	return engineOptions, nil
+	engineOptions, ok := allEngineOptions[engineName]
+	if !ok {
+		return make(model.OptionsMap)
+	}
+
+	return engineOptions
 }

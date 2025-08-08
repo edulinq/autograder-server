@@ -23,12 +23,27 @@ const (
 	OUT_DIRNAME       = "out"
 	OUT_FILENAME      = "pairs.csv"
 	TEMPLATE_FILENAME = "template"
+
+	DEFAULT_KGRAM_IN_WINDOW = 17
+	DEFAULT_KGRAM_LENGTH    = 23
 )
 
 var (
 	hasImage  bool = false
 	imageLock sync.Mutex
 )
+
+type DolosEngineOptions struct {
+	KGramsInWindow int `json:"kgrams-in-window"` // --kgrams-in-window
+	KGramLength    int `json:"kgram-length"`     // --kgram-length
+}
+
+func GetDefaultDolosOptions() *DolosEngineOptions {
+	return &DolosEngineOptions{
+		KGramsInWindow: DEFAULT_KGRAM_IN_WINDOW,
+		KGramLength:    DEFAULT_KGRAM_LENGTH,
+	}
+}
 
 type dolosEngine struct{}
 
@@ -44,8 +59,24 @@ func (this *dolosEngine) IsAvailable() bool {
 	return docker.CanAccessDocker()
 }
 
-func (this *dolosEngine) ComputeFileSimilarity(paths [2]string, templatePath string, ctx context.Context, _ map[string]any) (*model.FileSimilarity, error) {
-	err := ensureImage()
+func parseEngineOptions(rawOptions model.OptionsMap) (*DolosEngineOptions, error) {
+	effectiveOptions := GetDefaultDolosOptions()
+
+	effectiveOptions, err := util.JSONTransformTypes(rawOptions, effectiveOptions)
+	if err != nil {
+		return nil, fmt.Errorf("Failed to convert raw options to DolosEngineOptions: '%w'.", err)
+	}
+
+	return effectiveOptions, nil
+}
+
+func (this *dolosEngine) ComputeFileSimilarity(paths [2]string, templatePath string, ctx context.Context, options model.OptionsMap) (*model.FileSimilarity, error) {
+	effectiveOptions, err := parseEngineOptions(options)
+	if err != nil {
+		return nil, fmt.Errorf("Failed to set custom JPlag engine options: '%w'.", err)
+	}
+
+	err = ensureImage()
 	if err != nil {
 		return nil, fmt.Errorf("Failed to ensure Dolos docker image exists: '%w'.", err)
 	}
@@ -95,6 +126,8 @@ func (this *dolosEngine) ComputeFileSimilarity(paths [2]string, templatePath str
 		"--output-format", "csv",
 		"--output-destination", OUT_DIRNAME,
 		"--language", getLanguage(tempFilenames[0]),
+		"--kgrams-in-window", fmt.Sprintf("%d", effectiveOptions.KGramsInWindow),
+		"--kgram-length", fmt.Sprintf("%d", effectiveOptions.KGramLength),
 		tempFilenames[0],
 		tempFilenames[1],
 	}

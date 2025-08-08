@@ -20,7 +20,10 @@ func TestDolosComputeFileSimilarityBase(test *testing.T) {
 		Score:    0.717949,
 	}
 
-	core.RunEngineTestComputeFileSimilarityBase(test, GetEngine(), false, expected, nil)
+	// Empty Engine Option map for testing
+	engineOpts := make(model.OptionsMap)
+
+	core.RunEngineTestComputeFileSimilarityBase(test, GetEngine(), false, expected, engineOpts)
 }
 
 func TestDolosComputeFileSimilarityWithIgnoreBase(test *testing.T) {
@@ -35,5 +38,8 @@ func TestDolosComputeFileSimilarityWithIgnoreBase(test *testing.T) {
 		Score:    0.702703,
 	}
 
-	core.RunEngineTestComputeFileSimilarityBase(test, GetEngine(), true, expected, nil)
+	// Empty Engine Option map for testing
+	engineOpts := make(model.OptionsMap)
+
+	core.RunEngineTestComputeFileSimilarityBase(test, GetEngine(), true, expected, engineOpts)
 }

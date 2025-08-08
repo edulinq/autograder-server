@@ -193,11 +193,7 @@ func computeFileSims(options AnalysisOptions, inputDirs [2]string, assignment *m
 
 	allEngineOptionsFinal := make(map[string]model.OptionsMap)
 	for _, engine := range engines {
-		specificEngineOptions, err := GetEngineOptions(allEngineOptions, engine.GetName())
-		if err != nil {
-			return nil, nil, nil, err
-		}
-
+		specificEngineOptions := GetEngineOptions(allEngineOptions, engine.GetName())
 		allEngineOptionsFinal[engine.GetName()] = specificEngineOptions
 	}
 
@@ -263,7 +259,7 @@ func computeFileSims(options AnalysisOptions, inputDirs [2]string, assignment *m
 			// Compute the file similarity for each engine in parallel.
 			// Note that because we know the index for each engine up-front, we don't need a channel.
 			engineWaitGroup.Add(1)
-			go func(index int, simEngine core.SimilarityEngine, engineOptions map[string]any) {
+			go func(index int, simEngine core.SimilarityEngine, engineOptions model.OptionsMap) {
 				defer engineWaitGroup.Done()
 				similarity, err := simEngine.ComputeFileSimilarity(paths, templatePath, options.Context, engineOptions)
 				if err != nil {

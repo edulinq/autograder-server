@@ -1,6 +1,7 @@
 package jplag
 
 import (
+	"reflect"
 	"testing"
 
 	"github.com/edulinq/autograder/internal/analysis/core"
@@ -52,4 +53,72 @@ func TestJPlagComputeFileSimilarityWithIgnoreBase(test *testing.T) {
 	}
 
 	core.RunEngineTestComputeFileSimilarityBase(test, engine, true, expected, engineOptions)
+}
+
+func TestGetJplagOptions(test *testing.T) {
+	testCases := []struct {
+		input           map[string]any
+		expected        *JPlagEngineOptions
+		extractionError bool
+	}{
+		// Base Case
+		{
+			input:           map[string]any{"min-tokens": 100},
+			expected:        &JPlagEngineOptions{MinTokens: 100},
+			extractionError: false,
+		},
+
+		// Empty options
+		{
+			input:           map[string]any{},
+			expected:        GetDefaultJPlagOptions(),
+			extractionError: false,
+		},
+
+		// Errors
+		{
+			input:           map[string]any{"min-tokens": 75.5},
+			expected:        nil,
+			extractionError: true,
+		},
+		{
+			input:           map[string]any{"min-tokens": "abc"},
+			expected:        nil,
+			extractionError: true,
+		},
+
+		// Fallback to Default
+		{
+			input:           map[string]any{"min-tokens": nil},
+			expected:        GetDefaultJPlagOptions(),
+			extractionError: false,
+		},
+
+		// Extra Options
+		{
+			input:           map[string]any{"min-tokens": 200, "another-option": "value"},
+			expected:        &JPlagEngineOptions{MinTokens: 200},
+			extractionError: false,
+		},
+	}
+
+	for i, testCase := range testCases {
+		effectiveOptions, err := parseEngineOptions(testCase.input)
+		if err != nil {
+			if !testCase.extractionError {
+				test.Errorf("Case %d: Got an unexpected error: '%v'.", i, err)
+				continue
+			}
+		} else {
+			if testCase.extractionError {
+				test.Errorf("Case %d: Did not get an expected error.", i)
+				continue
+			}
+		}
+
+		if !reflect.DeepEqual(effectiveOptions, testCase.expected) {
+			test.Errorf("Case %d: Unexpected result. Expected = '%v', Actual = '%v'.", i, testCase.expected, effectiveOptions)
+			continue
+		}
+	}
 }

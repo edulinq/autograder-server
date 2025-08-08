@@ -18,7 +18,7 @@ var (
 	notImplementedRelPath = filepath.Join(baseTestRelDir, "not_implemented", "submission.py")
 )
 
-func RunEngineTestComputeFileSimilarityBase(test *testing.T, engine SimilarityEngine, includeTemplate bool, expected *model.FileSimilarity, engineOptions map[string]any) {
+func RunEngineTestComputeFileSimilarityBase(test *testing.T, engine SimilarityEngine, includeTemplate bool, expected *model.FileSimilarity, engineOptions model.OptionsMap) {
 	docker.EnsureOrSkipForTest(test)
 
 	paths := [2]string{
