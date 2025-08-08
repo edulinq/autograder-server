@@ -223,7 +223,7 @@ func TestRegradeBase(test *testing.T) {
 				RawReferences: []model.CourseUserReference{"ZZZ"},
 			},
 			"course-admin",
-			"-639",
+			"-640",
 			RegradeResponse{},
 		},
 		{
@@ -234,7 +234,7 @@ func TestRegradeBase(test *testing.T) {
 				RawReferences: []model.CourseUserReference{"ZZZ"},
 			},
 			"course-admin",
-			"-639",
+			"-640",
 			RegradeResponse{},
 		},
 

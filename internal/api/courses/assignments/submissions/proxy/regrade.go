@@ -40,7 +40,7 @@ func HandleRegrade(request *RegradeRequest) (*RegradeResponse, *core.APIError) {
 	}
 
 	if userErr != nil {
-		return nil, core.NewBadRequestError("-639", request, "Failed to regrade the assignment for the target users.").Err(userErr)
+		return nil, core.NewBadRequestError("-640", request, "Failed to regrade the assignment for the target users.").Err(userErr)
 	}
 
 	response := RegradeResponse{
