@@ -73,7 +73,7 @@ func parseEngineOptions(rawOptions model.OptionsMap) (*DolosEngineOptions, error
 func (this *dolosEngine) ComputeFileSimilarity(paths [2]string, templatePath string, ctx context.Context, options model.OptionsMap) (*model.FileSimilarity, error) {
 	effectiveOptions, err := parseEngineOptions(options)
 	if err != nil {
-		return nil, fmt.Errorf("Failed to set custom JPlag engine options: '%w'.", err)
+		return nil, fmt.Errorf("Failed to set custom Dolos engine options: '%w'.", err)
 	}
 
 	err = ensureImage()
