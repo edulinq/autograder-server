@@ -2140,7 +2140,7 @@
                 {
                     "name": "engine-options",
                     "type": "map[string]model.OptionsMap",
-                    "description": "EngineOptions includes the options for the analysis engines.\nIt is a map of engine name to options of type map[string]any.\nCurrent supported values can be found in the respective engine's options struct."
+                    "description": "EngineOptions includes the options for the analysis engines.\nIt is a map keyed by an engine name to it's respective engine options.\nCurrent supported values can be found in the respective engine's options struct."
                 },
                 {
                     "name": "exclude-patterns",
