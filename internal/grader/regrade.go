@@ -39,6 +39,7 @@ type RegradeResult struct {
 	WorkErrors map[string]string                       `json:"work-errors"`
 }
 
+// Returns (result, number of remaining regrades, user errors, internal errors).
 func Regrade(assignment *model.Assignment, options RegradeOptions) (*RegradeResult, int, error, error) {
 	reference, err := model.ParseCourseUserReferences(options.RawReferences)
 	if err != nil {

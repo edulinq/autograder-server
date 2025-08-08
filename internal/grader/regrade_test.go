@@ -297,12 +297,12 @@ func TestRegradeBase(test *testing.T) {
 
 			_, numLeft, userErr, internalErr = Regrade(assignment, options)
 			if internalErr != nil {
-				test.Errorf("Case %d: Failed to complete cleanup regrade: '%v'.", i, internalErr)
+				test.Errorf("Case %d: Failed internally to regrade submissions: '%v'.", i, internalErr)
 				continue
 			}
 
 			if userErr != nil {
-				test.Errorf("Case %d: Failed to complete cleanup regrade: '%v'.", i, userErr)
+				test.Errorf("Case %d: Failed to regrade submissions: '%v'.", i, userErr)
 				continue
 			}
 
