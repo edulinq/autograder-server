@@ -55,7 +55,7 @@ func TestJPlagComputeFileSimilarityWithIgnoreBase(test *testing.T) {
 	core.RunEngineTestComputeFileSimilarityBase(test, engine, true, expected, engineOptions)
 }
 
-func TestGetJplagOptions(test *testing.T) {
+func TestParseJplagOptions(test *testing.T) {
 	testCases := []struct {
 		input           map[string]any
 		expected        *JPlagEngineOptions
@@ -63,7 +63,7 @@ func TestGetJplagOptions(test *testing.T) {
 	}{
 		// Base Case
 		{
-			input:           map[string]any{"min-tokens": 100},
+			input:           model.OptionsMap{"min-tokens": 100},
 			expected:        &JPlagEngineOptions{MinTokens: 100},
 			extractionError: false,
 		},
@@ -74,29 +74,34 @@ func TestGetJplagOptions(test *testing.T) {
 			expected:        GetDefaultJPlagOptions(),
 			extractionError: false,
 		},
+		{
+			input:           model.OptionsMap{},
+			expected:        GetDefaultJPlagOptions(),
+			extractionError: false,
+		},
 
 		// Errors
 		{
-			input:           map[string]any{"min-tokens": 75.5},
+			input:           model.OptionsMap{"min-tokens": 75.5},
 			expected:        nil,
 			extractionError: true,
 		},
 		{
-			input:           map[string]any{"min-tokens": "abc"},
+			input:           model.OptionsMap{"min-tokens": "abc"},
 			expected:        nil,
 			extractionError: true,
 		},
 
 		// Fallback to Default
 		{
-			input:           map[string]any{"min-tokens": nil},
+			input:           model.OptionsMap{"min-tokens": nil},
 			expected:        GetDefaultJPlagOptions(),
 			extractionError: false,
 		},
 
 		// Extra Options
 		{
-			input:           map[string]any{"min-tokens": 200, "another-option": "value"},
+			input:           model.OptionsMap{"min-tokens": 200, "another-option": "value"},
 			expected:        &JPlagEngineOptions{MinTokens: 200},
 			extractionError: false,
 		},
