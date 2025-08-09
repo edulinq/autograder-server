@@ -396,7 +396,7 @@ Current Supported Options:
 
 | Name               | Type           | Required | Description |
 |--------------------|----------------|----------|-------------|
-`min-tokens` | int | false | This controls the sensitivity of the program. The minimum number of consecutive tokens that must match between two code submissions to be considered a plagiarism match. Lower values increase sensitivity but may result in more false positives.
+`min-tokens` | int | false | This controls the sensitivity of the program. The minimum number of consecutive tokens that must match between two code submissions to be considered a plagiarism match.
 
 #### Dolos
 Dolos is a plagiarism detection tool optimized for performance and detailed similarity reporting. 
@@ -407,7 +407,7 @@ Current Supported Options:
 | Name               | Type           | Required | Description |
 |--------------------|----------------|----------|-------------|
 `kgram-length` | number | false | Sets the minimum number of tokens in a k-gram. Common fragments between two files that are shorter than `$$k$$` tokens will not be found during plagiarism detection.
-`window-length`	| number | false | The size of the window used during winnowing algorithm. It select one k-grams from each overlapping window of `w` subsequent k-grams. Smaller windows increase sensitivity but may capture more noise.
+`window-length`	| number | false | The size of the window used during winnowing algorithm. It select one k-grams from each overlapping window of `w` subsequent k-grams.
 
 
 
