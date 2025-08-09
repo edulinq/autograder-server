@@ -34,8 +34,11 @@ var (
 )
 
 type DolosEngineOptions struct {
-	KGramsInWindow int `json:"kgrams-in-window"` // --kgrams-in-window
-	KGramLength    int `json:"kgram-length"`     // --kgram-length
+	// --kgrams-in-window
+	KGramsInWindow int `json:"kgrams-in-window"`
+
+	// --kgram-length
+	KGramLength int `json:"kgram-length"`
 }
 
 func GetDefaultDolosOptions() *DolosEngineOptions {

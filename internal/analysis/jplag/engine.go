@@ -33,7 +33,8 @@ var (
 )
 
 type JPlagEngineOptions struct {
-	MinTokens int `json:"min-tokens"` // --min-tokens
+	// --min-tokens
+	MinTokens int `json:"min-tokens"`
 }
 
 func GetDefaultJPlagOptions() *JPlagEngineOptions {
