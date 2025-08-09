@@ -409,8 +409,6 @@ Current Supported Options:
 `kgram-length` | number | false | Sets the minimum number of tokens in a k-gram. Common fragments between two files that are shorter than `$$k$$` tokens will not be found during plagiarism detection.
 `window-length`	| number | false | The size of the window used during winnowing algorithm. It select one k-grams from each overlapping window of `w` subsequent k-grams.
 
-
-
 ## Roles
 
 Roles are used to define privileges for a user within the server and each course.
