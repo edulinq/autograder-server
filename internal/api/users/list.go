@@ -31,7 +31,7 @@ func HandleList(request *ListRequest) (*ListResponse, *core.APIError) {
 
 	reference, err := model.ParseServerUserReferences(request.TargetUsers, courses)
 	if err != nil {
-		return nil, core.NewInternalError("-815", request, "Failed to parse target users.").Err(err)
+		return nil, core.NewBadRequestError("-815", request, "Failed to parse target users.").Err(err)
 	}
 
 	usersMap, err := db.GetServerUsers()
