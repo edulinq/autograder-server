@@ -6,6 +6,14 @@
     ],
     "image": "ghcr.io/edulinq/grader.python:0.1.0.2-alpine",
     "analysis-options": {
+        "engine-options": {
+            "jplag": {
+                "min-tokens": 5
+            },
+            "dolos": {
+                "kgram-length": 22
+            }
+        },
         "include-patterns": [
             "submission.py"
         ],
