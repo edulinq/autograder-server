@@ -387,6 +387,7 @@ It is a map of engine name to a map of it's respective engine options.
 Currently, we have support for two plaiagrism tools for which engine options are used. They are [JPlag](https://github.com/jplag/JPlag/wiki) and [Dolos](https://dolos.ugent.be/docs/). 
 
 ##### JPlag 
+
 JPlag is a plagiarism detection tool that compares code files to identify for any suspicious similarities. 
 It works by generating an abstraction layer from their parse trees. 
 This approach makes it resilient to common obfuscation techniques, such as renaming identifiers or reordering code to change it's flow.
@@ -399,6 +400,7 @@ Current Supported Options:
 `min-tokens` | int | false | This controls the sensitivity of the program. The minimum number of consecutive tokens that must match between two code submissions to be considered a plagiarism match.
 
 #### Dolos
+
 Dolos is a plagiarism detection tool optimized for performance and detailed similarity reporting. 
 It works by parsing code into tokens, generating fingerprints, comparing these fingerprints, and then visualizing the results to help educators identify potential plagiarism
 
