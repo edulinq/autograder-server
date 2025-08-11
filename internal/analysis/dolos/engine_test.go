@@ -40,9 +40,9 @@ func TestDolosComputeFileSimilarityWithIgnoreBase(test *testing.T) {
 	}
 
 	// Empty engine option map for testing.
-	engineOpts := make(model.OptionsMap)
+	engineOptions := make(model.OptionsMap)
 
-	core.RunEngineTestComputeFileSimilarityBase(test, GetEngine(), true, expected, engineOpts)
+	core.RunEngineTestComputeFileSimilarityBase(test, GetEngine(), true, expected, engineOptions)
 }
 
 func TestParseDolosOptions(test *testing.T) {
@@ -51,6 +51,23 @@ func TestParseDolosOptions(test *testing.T) {
 		expected        *DolosEngineOptions
 		extractionError bool
 	}{
+		// Empty options
+		{
+			input:           nil,
+			expected:        GetDefaultDolosOptions(),
+			extractionError: false,
+		},
+		{
+			input:           map[string]any{},
+			expected:        GetDefaultDolosOptions(),
+			extractionError: false,
+		},
+		{
+			input:           model.OptionsMap{},
+			expected:        GetDefaultDolosOptions(),
+			extractionError: false,
+		},
+
 		// Base Case
 		{
 			input: model.OptionsMap{
@@ -71,23 +88,6 @@ func TestParseDolosOptions(test *testing.T) {
 				KGramsInWindow: 16,
 				KGramLength:    23,
 			},
-			extractionError: false,
-		},
-
-		// Empty options
-		{
-			input:           nil,
-			expected:        GetDefaultDolosOptions(),
-			extractionError: false,
-		},
-		{
-			input:           map[string]any{},
-			expected:        GetDefaultDolosOptions(),
-			extractionError: false,
-		},
-		{
-			input:           model.OptionsMap{},
-			expected:        GetDefaultDolosOptions(),
 			extractionError: false,
 		},
 
@@ -146,7 +146,7 @@ func TestParseDolosOptions(test *testing.T) {
 		}
 
 		if !reflect.DeepEqual(effectiveOptions, testCase.expected) {
-			test.Errorf("Case %d: Unexpected result. Expected: '%v', Actual: '%v'.", i, testCase.expected, effectiveOptions)
+			test.Errorf("Case %d: Unexpected result. Expected = '%v', Actual = '%v'.", i, testCase.expected, effectiveOptions)
 			continue
 		}
 	}

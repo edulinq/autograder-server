@@ -11,7 +11,8 @@
                 "min-tokens": 5
             },
             "dolos": {
-                "kgram-length": 22
+                "kgram-length": 22,
+                "kgrams-in-window": 18
             }
         },
         "include-patterns": [

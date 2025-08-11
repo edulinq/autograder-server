@@ -21,7 +21,7 @@ const (
 	DEFAULT_INCLUDE_REGEX string = ".+"
 )
 
-// Defines a generic map for engine option key-value pairs.
+// Holds engine options for an engine, keyed by option name.
 type OptionsMap map[string]any
 
 type AssignmentAnalysisOptions struct {

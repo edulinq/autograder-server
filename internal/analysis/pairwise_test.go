@@ -316,11 +316,11 @@ func TestPairwiseAnalysisDefaultEnginesSpecificFiles(test *testing.T) {
 	docker.EnsureOrSkipForTest(test)
 
 	// Override a setting for JPlag for testing.
-	engineOptsStruct := jplag.JPlagEngineOptions{
+	engineOptionsStruct := jplag.JPlagEngineOptions{
 		MinTokens: 5,
 	}
 
-	engineOptions, err := util.ToJSONMap(engineOptsStruct)
+	engineOptions, err := util.ToJSONMap(engineOptionsStruct)
 	if err != nil {
 		test.Errorf("Failed to convert JPlagEngineOption to map[string]any: '%v'.", err)
 	}

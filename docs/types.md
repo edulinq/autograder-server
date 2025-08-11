@@ -342,13 +342,15 @@ On a full name match, then autograder will sync over the `lms-id` from the cours
 
 The analysis options type allows options to be passed to code analysis for assignments.
 It has the following fields:
-| Name               | Type           | Required | Description |
-|--------------------|----------------|----------|-------------|
-| `include-patterns` | List[Regex]    | false    | Any source file eligible for code analysis must match at least one of these patterns. When not specified or empty, ".+" will be used (which will match any non-empty value). |
-| `exclude-patterns` | List[Regex]    | false    | Any source file that matches any of these patterns will not be used in code analysis. |
-| `template-files`   | List[FileSpec] | false    | A list of files to use as "templates" during pairwise analysis. Similarity engines can try to ignore template/boilerplate code when computing similarities. Any file paths must be local (relative). |
-| `template-file-ops`| List[FileOp]   | false    | A list of file operations to transform the template files with. |
-|`engine-options`| map[string]model.OptionsMap | false | A map keyed by engine name to it's respective engine options.
+| Name               | Type            | Required | Description |
+|--------------------|-----------------|----------|-------------|
+| `include-patterns` | List[Regex]     | false    | Any source file eligible for code analysis must match at least one of these patterns. When not specified or empty, ".+" will be used (which will match any non-empty value). |
+| `exclude-patterns` | List[Regex]     | false    | Any source file that matches any of these patterns will not be used in code analysis. |
+| `template-files`   | List[FileSpec]  | false    | A list of files to use as "templates" during pairwise analysis. Similarity engines can try to ignore template/boilerplate code when computing similarities. Any file paths must be local (relative). |
+| `template-file-ops`| List[FileOp]    | false    | A list of file operations to transform the template files with. |
+| `engine-options`   | Map             | false    | A map keyed by engine name to it's respective engine options. |
+
+Each engine contains its respective options in an `OptionsMap`, a key–value map (`map[string]any`) containing configuration options specific to that engine.
 
 During a pairwise code analysis,
 the options of the assignment for the submission with the [lexicographically](https://en.wikipedia.org/wiki/Lexicographic_order) smaller id will always be used.
@@ -383,33 +385,66 @@ When working with these patterns, keep the following in mind:
 #### Engine Options
 
 The engine option type allows engine specific options to be passed for code analysis for assignments.
-It is a map of engine name to a map of it's respective engine options.
-Currently, we have support for two plaiagrism tools for which engine options are used. They are [JPlag](https://github.com/jplag/JPlag/wiki) and [Dolos](https://dolos.ugent.be/docs/). 
+It is a map of engine name to its respective engine options.
+
+Example Structure: 
+```json
+{
+    "jplag": {
+        "min-tokens": 7
+    },
+    "dolos": {
+        "kgram-length": 12
+    }
+}
+```
+
+Currently, we have support for two code analysis tools for which engine options are used. 
+They are [JPlag](https://github.com/jplag/JPlag/wiki) and [Dolos](https://dolos.ugent.be/docs/). 
 
 ##### JPlag 
 
-JPlag is a plagiarism detection tool that compares code files to identify for any suspicious similarities. 
-It works by generating an abstraction layer from their parse trees. 
-This approach makes it resilient to common obfuscation techniques, such as renaming identifiers or reordering code to change it's flow.
-It supports multiple programming languages such as Java, C/C++, Python, and JavaScript. 
+JPlag is a code analysis tool that compares code files to identify for any suspicious similarities. 
+More info on it can be found here: [JPlag](https://github.com/jplag/JPlag/wiki)
 
+The values from its `OptionsMap` in `engine-options` are parsed into CLI arguments for the JPlag container.
 Current Supported Options:
 
 | Name               | Type           | Required | Description |
 |--------------------|----------------|----------|-------------|
-`min-tokens` | int | false | This controls the sensitivity of the program. The minimum number of consecutive tokens that must match between two code submissions to be considered a plagiarism match.
+| `min-tokens`       | Integer        | false    | The minimum number of consecutive tokens that must match between two code submissions to be 
+considered a plagiarism match. |
+
+Example Structure:
+``` json
+"jplag": {
+    "min-tokens": 7
+}
+```
+
 
 #### Dolos
 
-Dolos is a plagiarism detection tool optimized for performance and detailed similarity reporting. 
-It works by parsing code into tokens, generating fingerprints, comparing these fingerprints, and then visualizing the results to help educators identify potential plagiarism
+Dolos is a code analysis tool optimized for performance and detailed similarity reporting. 
+More on dolos can be found here: [Dolos](https://dolos.ugent.be/docs/).
 
+The values from its `OptionsMap` in `engine-options` are parsed into CLI arguments for the Dolos container.
 Current Supported Options:
 
 | Name               | Type           | Required | Description |
 |--------------------|----------------|----------|-------------|
-`kgram-length` | number | false | Sets the minimum number of tokens in a k-gram. Common fragments between two files that are shorter than `$$k$$` tokens will not be found during plagiarism detection.
-`window-length`	| number | false | The size of the window used during winnowing algorithm. It select one k-grams from each overlapping window of `w` subsequent k-grams.
+| `kgram-length`     | Integer        | false    | Sets the minimum number of tokens in a k-gram. Common fragments between two files that are shorter 
+than `$$k$$` tokens will not be found during plagiarism detection.
+| `kgrams-in-window` | Integer        | false    | The size of the window used during winnowing algorithm. It select one k-grams from each overlapping 
+window of `w` subsequent k-grams.
+
+Example Structure: 
+```json
+"dolos": {
+    "kgram-length": 12,
+    "kgrams-in-window": 23
+}
+```
 
 ## Roles
 

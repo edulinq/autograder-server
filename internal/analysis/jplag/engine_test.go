@@ -20,11 +20,11 @@ func TestJPlagComputeFileSimilarityBase(test *testing.T) {
 	engine := GetEngine()
 
 	// Lower the token minimum for testing.
-	engineOptsStruct := JPlagEngineOptions{
+	engineOptionsStruct := JPlagEngineOptions{
 		MinTokens: 5,
 	}
 
-	engineOptions, err := util.ToJSONMap(engineOptsStruct)
+	engineOptions, err := util.ToJSONMap(engineOptionsStruct)
 	if err != nil {
 		test.Errorf("Failed to convert JPlagEngineOption to map[string]any: '%v'.", err)
 	}
@@ -43,11 +43,11 @@ func TestJPlagComputeFileSimilarityWithIgnoreBase(test *testing.T) {
 	engine := GetEngine()
 
 	// Lower the token minimum for testing.
-	engineOptsStruct := JPlagEngineOptions{
+	engineOptionsStruct := JPlagEngineOptions{
 		MinTokens: 5,
 	}
 
-	engineOptions, err := util.ToJSONMap(engineOptsStruct)
+	engineOptions, err := util.ToJSONMap(engineOptionsStruct)
 	if err != nil {
 		test.Errorf("Failed to convert JPlagEngineOption to map[string]any: '%v'.", err)
 	}
@@ -61,21 +61,10 @@ func TestParseJplagOptions(test *testing.T) {
 		expected        *JPlagEngineOptions
 		extractionError bool
 	}{
-		// Base Case
-		{
-			input: model.OptionsMap{
-				"min-tokens": 100,
-			},
-			expected: &JPlagEngineOptions{
-				MinTokens: 100,
-			},
-			extractionError: false,
-		},
-
 		// Empty options
 		{
 			input:           nil,
-			expected:        GetDefaultJPlagOptions(),
+			expected:        nil,
 			extractionError: false,
 		},
 		{
@@ -86,6 +75,17 @@ func TestParseJplagOptions(test *testing.T) {
 		{
 			input:           model.OptionsMap{},
 			expected:        GetDefaultJPlagOptions(),
+			extractionError: false,
+		},
+
+		// Base Case
+		{
+			input: model.OptionsMap{
+				"min-tokens": 100,
+			},
+			expected: &JPlagEngineOptions{
+				MinTokens: 100,
+			},
 			extractionError: false,
 		},
 
@@ -134,15 +134,15 @@ func TestParseJplagOptions(test *testing.T) {
 				test.Errorf("Case %d: Got an unexpected error: '%v'.", i, err)
 				continue
 			}
-			continue
-		}
-		if testCase.extractionError {
-			test.Errorf("Case %d: Did not get an expected error.", i)
-			continue
+		} else {
+			if testCase.extractionError {
+				test.Errorf("Case %d: Did not get an expected error.", i)
+				continue
+			}
 		}
 
 		if !reflect.DeepEqual(effectiveOptions, testCase.expected) {
-			test.Errorf("Case %d: Unexpected result. Expected: '%v', Actual: '%v'.", i, testCase.expected, effectiveOptions)
+			test.Errorf("Case %d: Unexpected result. Expected = '%v', Actual = '%v'.", i, testCase.expected, effectiveOptions)
 			continue
 		}
 	}
