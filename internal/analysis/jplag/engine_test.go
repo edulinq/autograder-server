@@ -63,12 +63,21 @@ func TestParseJplagOptions(test *testing.T) {
 	}{
 		// Base Case
 		{
-			input:           model.OptionsMap{"min-tokens": 100},
-			expected:        &JPlagEngineOptions{MinTokens: 100},
+			input: model.OptionsMap{
+				"min-tokens": 100,
+			},
+			expected: &JPlagEngineOptions{
+				MinTokens: 100,
+			},
 			extractionError: false,
 		},
 
 		// Empty options
+		{
+			input:           nil,
+			expected:        GetDefaultJPlagOptions(),
+			extractionError: false,
+		},
 		{
 			input:           map[string]any{},
 			expected:        GetDefaultJPlagOptions(),
@@ -80,30 +89,41 @@ func TestParseJplagOptions(test *testing.T) {
 			extractionError: false,
 		},
 
-		// Errors
-		{
-			input:           model.OptionsMap{"min-tokens": 75.5},
-			expected:        nil,
-			extractionError: true,
-		},
-		{
-			input:           model.OptionsMap{"min-tokens": "abc"},
-			expected:        nil,
-			extractionError: true,
-		},
-
 		// Fallback to Default
 		{
-			input:           model.OptionsMap{"min-tokens": nil},
+			input: model.OptionsMap{
+				"min-tokens": nil,
+			},
 			expected:        GetDefaultJPlagOptions(),
 			extractionError: false,
 		},
 
 		// Extra Options
 		{
-			input:           model.OptionsMap{"min-tokens": 200, "another-option": "value"},
-			expected:        &JPlagEngineOptions{MinTokens: 200},
+			input: model.OptionsMap{
+				"min-tokens":     200,
+				"another-option": "value",
+			},
+			expected: &JPlagEngineOptions{
+				MinTokens: 200,
+			},
 			extractionError: false,
+		},
+
+		// Errors
+		{
+			input: model.OptionsMap{
+				"min-tokens": 75.5,
+			},
+			expected:        nil,
+			extractionError: true,
+		},
+		{
+			input: model.OptionsMap{
+				"min-tokens": "abc",
+			},
+			expected:        nil,
+			extractionError: true,
 		},
 	}
 
@@ -114,11 +134,11 @@ func TestParseJplagOptions(test *testing.T) {
 				test.Errorf("Case %d: Got an unexpected error: '%v'.", i, err)
 				continue
 			}
-		} else {
-			if testCase.extractionError {
-				test.Errorf("Case %d: Did not get an expected error.", i)
-				continue
-			}
+			continue
+		}
+		if testCase.extractionError {
+			test.Errorf("Case %d: Did not get an expected error.", i)
+			continue
 		}
 
 		if !reflect.DeepEqual(effectiveOptions, testCase.expected) {

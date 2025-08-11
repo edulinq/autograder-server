@@ -22,9 +22,9 @@ func TestDolosComputeFileSimilarityBase(test *testing.T) {
 	}
 
 	// Empty engine option map for testing.
-	engineOpts := make(model.OptionsMap)
+	engineOptions := make(model.OptionsMap)
 
-	core.RunEngineTestComputeFileSimilarityBase(test, GetEngine(), false, expected, engineOpts)
+	core.RunEngineTestComputeFileSimilarityBase(test, GetEngine(), false, expected, engineOptions)
 }
 
 func TestDolosComputeFileSimilarityWithIgnoreBase(test *testing.T) {
@@ -53,17 +53,33 @@ func TestParseDolosOptions(test *testing.T) {
 	}{
 		// Base Case
 		{
-			input:           model.OptionsMap{"kgrams-in-window": 15, "kgram-length": 23},
-			expected:        &DolosEngineOptions{KGramsInWindow: 15, KGramLength: 23},
+			input: model.OptionsMap{
+				"kgrams-in-window": 15,
+				"kgram-length":     23,
+			},
+			expected: &DolosEngineOptions{
+				KGramsInWindow: 15,
+				KGramLength:    23,
+			},
 			extractionError: false,
 		},
 		{
-			input:           model.OptionsMap{"kgrams-in-window": 16},
-			expected:        &DolosEngineOptions{KGramsInWindow: 16, KGramLength: 23},
+			input: model.OptionsMap{
+				"kgrams-in-window": 16,
+			},
+			expected: &DolosEngineOptions{
+				KGramsInWindow: 16,
+				KGramLength:    23,
+			},
 			extractionError: false,
 		},
 
 		// Empty options
+		{
+			input:           nil,
+			expected:        GetDefaultDolosOptions(),
+			extractionError: false,
+		},
 		{
 			input:           map[string]any{},
 			expected:        GetDefaultDolosOptions(),
@@ -75,30 +91,43 @@ func TestParseDolosOptions(test *testing.T) {
 			extractionError: false,
 		},
 
-		// Errors
-		{
-			input:           model.OptionsMap{"kgrams-in-window": 17.5, "kgram-length": 23},
-			expected:        nil,
-			extractionError: true,
-		},
-		{
-			input:           model.OptionsMap{"kgrams-in-window": "abc"},
-			expected:        nil,
-			extractionError: true,
-		},
-
 		// Fallback to Default
 		{
-			input:           model.OptionsMap{"kgrams-in-window": nil},
+			input: model.OptionsMap{
+				"kgrams-in-window": nil,
+			},
 			expected:        GetDefaultDolosOptions(),
 			extractionError: false,
 		},
 
 		// Extra Options
 		{
-			input:           model.OptionsMap{"kgrams-in-window": 12, "another-option": "value"},
-			expected:        &DolosEngineOptions{KGramsInWindow: 12, KGramLength: 23},
+			input: model.OptionsMap{
+				"kgrams-in-window": 12,
+				"another-option":   "value",
+			},
+			expected: &DolosEngineOptions{
+				KGramsInWindow: 12,
+				KGramLength:    23,
+			},
 			extractionError: false,
+		},
+
+		// Errors
+		{
+			input: model.OptionsMap{
+				"kgrams-in-window": 17.5,
+				"kgram-length":     23,
+			},
+			expected:        nil,
+			extractionError: true,
+		},
+		{
+			input: model.OptionsMap{
+				"kgrams-in-window": "abc",
+			},
+			expected:        nil,
+			extractionError: true,
 		},
 	}
 
