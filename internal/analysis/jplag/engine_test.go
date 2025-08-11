@@ -122,7 +122,7 @@ func TestParseJplagOptions(test *testing.T) {
 		}
 
 		if !reflect.DeepEqual(effectiveOptions, testCase.expected) {
-			test.Errorf("Case %d: Unexpected result. Expected = '%v', Actual = '%v'.", i, testCase.expected, effectiveOptions)
+			test.Errorf("Case %d: Unexpected result. Expected: '%v', Actual: '%v'.", i, testCase.expected, effectiveOptions)
 			continue
 		}
 	}

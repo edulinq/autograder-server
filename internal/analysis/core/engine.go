@@ -16,6 +16,6 @@ type SimilarityEngine interface {
 	// Working on two files (submissions) at a time will typically be less efficient than working on all files at the same time,
 	// but a lot of shorter jobs is more flexible than one large job.
 	// On a timeout, (nil, nil) should be returned.
-	// Options carries engine‑specific parameters, e.g., the minimum number of tokens required to perform similarity analysis by JPlag.
+	// Options carries engine‑specific parameters, e.g., the minimum number of words required to perform similarity analysis by JPlag.
 	ComputeFileSimilarity(paths [2]string, templatePath string, ctx context.Context, options model.OptionsMap) (*model.FileSimilarity, error)
 }

@@ -33,7 +33,8 @@ var (
 )
 
 type JPlagEngineOptions struct {
-	// --min-tokens
+	// --min-tokens: minimum number of consecutive tokens that must match between two code submissions to be
+	// considered a plagiarism match
 	MinTokens int `json:"min-tokens"`
 }
 
@@ -71,7 +72,7 @@ func parseEngineOptions(rawOptions model.OptionsMap) (*JPlagEngineOptions, error
 func (this *JPlagEngine) ComputeFileSimilarity(paths [2]string, templatePath string, ctx context.Context, options model.OptionsMap) (*model.FileSimilarity, error) {
 	effectiveOptions, err := parseEngineOptions(options)
 	if err != nil {
-		return nil, fmt.Errorf("Failed to set custom JPlag engine options: '%w'.", err)
+		return nil, fmt.Errorf("Failed to parse custom JPlag engine options: '%w'.", err)
 	}
 
 	err = ensureImage()
