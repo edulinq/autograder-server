@@ -407,9 +407,9 @@ JPlag is a code analysis tool that compares code files to identify for any suspi
 The values from its `OptionsMap` in `engine-options` are parsed into CLI arguments for the JPlag container.
 
 Current Supported Options:
-| Name               | Type           | Required | Description |
-|--------------------|----------------|----------|-------------|
-| `min-tokens`       | Integer        | false    | The minimum number of consecutive tokens that must match between two code submissions to be considered a plagiarism match. |
+| Name          | Type      | Required | Description |
+|---------------|-----------|----------|-------------|
+| `min-tokens`  | Integer   | false    | The minimum number of consecutive tokens that must match between two code submissions to be considered a plagiarism match. |
 
 Example Structure:
 ``` json
