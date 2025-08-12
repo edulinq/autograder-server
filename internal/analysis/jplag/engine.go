@@ -33,8 +33,7 @@ var (
 )
 
 type JPlagEngineOptions struct {
-	// --min-tokens: minimum number of consecutive tokens that must match between two code submissions to be
-	// considered a plagiarism match
+	// --min-tokens: minimum number of consecutive words that must match between two code submissions to be considered a plagiarism match.
 	MinTokens int `json:"min-tokens"`
 }
 
