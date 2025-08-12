@@ -136,13 +136,13 @@ func TestParseDolosOptions(test *testing.T) {
 		if err != nil {
 			if !testCase.extractionError {
 				test.Errorf("Case %d: Got an unexpected error: '%v'.", i, err)
-				continue
 			}
-		} else {
-			if testCase.extractionError {
-				test.Errorf("Case %d: Did not get an expected error.", i)
-				continue
-			}
+			continue
+		}
+
+		if testCase.extractionError {
+			test.Errorf("Case %d: Did not get an expected error.", i)
+			continue
 		}
 
 		if !reflect.DeepEqual(effectiveOptions, testCase.expected) {
