@@ -33,7 +33,7 @@ var (
 )
 
 type JPlagEngineOptions struct {
-	// --min-tokens: minimum number of consecutive tokens that must match between two code submissions to be considered a plagiarism match.
+	// Minimum number of consecutive tokens that must match between two code submissions to be considered similar. (--min-tokens).
 	MinTokens int `json:"min-tokens"`
 }
 
@@ -59,6 +59,10 @@ func (this *JPlagEngine) IsAvailable() bool {
 
 func parseEngineOptions(rawOptions model.OptionsMap) (*JPlagEngineOptions, error) {
 	effectiveOptions := GetDefaultJPlagOptions()
+
+	if rawOptions == nil {
+		return effectiveOptions, nil
+	}
 
 	effectiveOptions, err := util.JSONTransformTypes(rawOptions, effectiveOptions)
 	if err != nil {

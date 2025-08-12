@@ -34,10 +34,10 @@ var (
 )
 
 type DolosEngineOptions struct {
-	// --kgrams-in-window: size of the window used during winnowing algorithm.
+	// Size of the window to be used when selecting one k-grams from each overlapping window of w subsequent k-grams (--kgrams-in-window).
 	KGramsInWindow int `json:"kgrams-in-window"`
 
-	// --kgram-length: minimum number of tokens in a k-gram.
+	// The minimum number of tokens in a k-gram (--kgram-length).
 	KGramLength int `json:"kgram-length"`
 }
 
@@ -64,6 +64,10 @@ func (this *dolosEngine) IsAvailable() bool {
 
 func parseEngineOptions(rawOptions model.OptionsMap) (*DolosEngineOptions, error) {
 	effectiveOptions := GetDefaultDolosOptions()
+
+	if rawOptions == nil {
+		return effectiveOptions, nil
+	}
 
 	effectiveOptions, err := util.JSONTransformTypes(rawOptions, effectiveOptions)
 	if err != nil {
