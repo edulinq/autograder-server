@@ -51,7 +51,7 @@ func TestParseDolosOptions(test *testing.T) {
 		expected        *DolosEngineOptions
 		extractionError bool
 	}{
-		// Empty options
+		// Empty options.
 		{
 			input:           nil,
 			expected:        nil,
@@ -68,7 +68,7 @@ func TestParseDolosOptions(test *testing.T) {
 			extractionError: false,
 		},
 
-		// Base Case
+		// Custom Options.
 		{
 			input: model.OptionsMap{
 				"kgrams-in-window": 15,
@@ -91,7 +91,7 @@ func TestParseDolosOptions(test *testing.T) {
 			extractionError: false,
 		},
 
-		// Fallback to Default
+		// Fallback to Default.
 		{
 			input: model.OptionsMap{
 				"kgrams-in-window": nil,
@@ -100,7 +100,7 @@ func TestParseDolosOptions(test *testing.T) {
 			extractionError: false,
 		},
 
-		// Extra Options
+		// Extra Options.
 		{
 			input: model.OptionsMap{
 				"kgrams-in-window": 12,
@@ -113,7 +113,7 @@ func TestParseDolosOptions(test *testing.T) {
 			extractionError: false,
 		},
 
-		// Errors
+		// Errors.
 		{
 			input: model.OptionsMap{
 				"kgrams-in-window": 17.5,

@@ -350,7 +350,7 @@ It has the following fields:
 | `template-file-ops`| List[FileOp]    | false    | A list of file operations to transform the template files with. |
 | `engine-options`   | Map             | false    | A map keyed by engine name to it's respective engine options. |
 
-Each engine contains its respective options in an `OptionsMap`, a key–value map (`map[string]any`) containing configuration options specific to that engine.
+In `engine-options`, each engine contains its respective options in an `OptionsMap`, a key–value map (`map[string]any`) containing options specific to that engine.
 
 During a pairwise code analysis,
 the options of the assignment for the submission with the [lexicographically](https://en.wikipedia.org/wiki/Lexicographic_order) smaller id will always be used.
@@ -406,14 +406,13 @@ They are [JPlag](https://github.com/jplag/JPlag/wiki) and [Dolos](https://dolos.
 
 JPlag is a code analysis tool that compares code files to identify for any suspicious similarities. 
 More info on it can be found here: [JPlag](https://github.com/jplag/JPlag/wiki)
-
 The values from its `OptionsMap` in `engine-options` are parsed into CLI arguments for the JPlag container.
+
 Current Supported Options:
 
 | Name               | Type           | Required | Description |
 |--------------------|----------------|----------|-------------|
-| `min-tokens`       | Integer        | false    | The minimum number of consecutive tokens that must match between two code submissions to be 
-considered a plagiarism match. |
+| `min-tokens`       | Integer        | false    | The minimum number of consecutive tokens that must match between two code submissions to be considered a plagiarism match. |
 
 Example Structure:
 ``` json
@@ -422,21 +421,18 @@ Example Structure:
 }
 ```
 
-
 #### Dolos
 
 Dolos is a code analysis tool optimized for performance and detailed similarity reporting. 
 More on dolos can be found here: [Dolos](https://dolos.ugent.be/docs/).
-
 The values from its `OptionsMap` in `engine-options` are parsed into CLI arguments for the Dolos container.
+
 Current Supported Options:
 
 | Name               | Type           | Required | Description |
 |--------------------|----------------|----------|-------------|
-| `kgram-length`     | Integer        | false    | Sets the minimum number of tokens in a k-gram. Common fragments between two files that are shorter 
-than `$$k$$` tokens will not be found during plagiarism detection.
-| `kgrams-in-window` | Integer        | false    | The size of the window used during winnowing algorithm. It select one k-grams from each overlapping 
-window of `w` subsequent k-grams.
+| `kgram-length`     | Integer        | false    | Sets the minimum number of tokens in a k-gram. Common fragments between two files that are shorter than `$$k$$` tokens will not be found during plagiarism detection. |
+| `kgrams-in-window` | Integer        | false    | The size of the window used during winnowing algorithm. It select one k-grams from each overlapping window of `w` subsequent k-grams. |
 
 Example Structure: 
 ```json

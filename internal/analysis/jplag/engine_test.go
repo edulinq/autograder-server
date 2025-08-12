@@ -61,7 +61,7 @@ func TestParseJplagOptions(test *testing.T) {
 		expected        *JPlagEngineOptions
 		extractionError bool
 	}{
-		// Empty options
+		// Empty options.
 		{
 			input:           nil,
 			expected:        nil,
@@ -78,7 +78,7 @@ func TestParseJplagOptions(test *testing.T) {
 			extractionError: false,
 		},
 
-		// Base Case
+		// Custom Options.
 		{
 			input: model.OptionsMap{
 				"min-tokens": 100,
@@ -89,7 +89,7 @@ func TestParseJplagOptions(test *testing.T) {
 			extractionError: false,
 		},
 
-		// Fallback to Default
+		// Fallback to Default.
 		{
 			input: model.OptionsMap{
 				"min-tokens": nil,
@@ -98,7 +98,7 @@ func TestParseJplagOptions(test *testing.T) {
 			extractionError: false,
 		},
 
-		// Extra Options
+		// Extra Options.
 		{
 			input: model.OptionsMap{
 				"min-tokens":     200,
@@ -110,7 +110,7 @@ func TestParseJplagOptions(test *testing.T) {
 			extractionError: false,
 		},
 
-		// Errors
+		// Errors.
 		{
 			input: model.OptionsMap{
 				"min-tokens": 75.5,
