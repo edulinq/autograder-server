@@ -21,10 +21,7 @@ func TestDolosComputeFileSimilarityBase(test *testing.T) {
 		Score:    0.717949,
 	}
 
-	// Empty engine option map for testing.
-	engineOptions := make(model.OptionsMap)
-
-	core.RunEngineTestComputeFileSimilarityBase(test, GetEngine(), false, expected, engineOptions)
+	core.RunEngineTestComputeFileSimilarityBase(test, GetEngine(), false, expected, nil)
 }
 
 func TestDolosComputeFileSimilarityWithIgnoreBase(test *testing.T) {
@@ -39,10 +36,7 @@ func TestDolosComputeFileSimilarityWithIgnoreBase(test *testing.T) {
 		Score:    0.702703,
 	}
 
-	// Empty engine option map for testing.
-	engineOptions := make(model.OptionsMap)
-
-	core.RunEngineTestComputeFileSimilarityBase(test, GetEngine(), true, expected, engineOptions)
+	core.RunEngineTestComputeFileSimilarityBase(test, GetEngine(), true, expected, nil)
 }
 
 func TestParseDolosOptions(test *testing.T) {
@@ -54,7 +48,7 @@ func TestParseDolosOptions(test *testing.T) {
 		// Empty options.
 		{
 			input:           nil,
-			expected:        nil,
+			expected:        GetDefaultDolosOptions(),
 			extractionError: false,
 		},
 		{
@@ -137,6 +131,7 @@ func TestParseDolosOptions(test *testing.T) {
 			if !testCase.extractionError {
 				test.Errorf("Case %d: Got an unexpected error: '%v'.", i, err)
 			}
+
 			continue
 		}
 

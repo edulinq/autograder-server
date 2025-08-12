@@ -64,7 +64,7 @@ func TestParseJplagOptions(test *testing.T) {
 		// Empty options.
 		{
 			input:           nil,
-			expected:        nil,
+			expected:        GetDefaultJPlagOptions(),
 			extractionError: false,
 		},
 		{
@@ -133,6 +133,7 @@ func TestParseJplagOptions(test *testing.T) {
 			if !testCase.extractionError {
 				test.Errorf("Case %d: Got an unexpected error: '%v'.", i, err)
 			}
+
 			continue
 		}
 
