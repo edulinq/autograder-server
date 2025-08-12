@@ -429,6 +429,8 @@ Current Supported Options:
 | `kgram-length`     | Integer   | false    | Sets the minimum number of tokens in a k-gram. Common fragments between two files that are shorter than `$$k$$` tokens will not be found during plagiarism detection. |
 | `kgrams-in-window` | Integer   | false    | The size of the window used during winnowing algorithm. It select one k-grams from each overlapping window of `w` subsequent k-grams. |
 
+Read more on `winnowing algorithm` [here](https://dolos.ugent.be/docs/running.html#window-length).
+
 Example Structure: 
 ```json
 "dolos": {
