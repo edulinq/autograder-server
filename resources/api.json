@@ -2659,7 +2659,7 @@
         },
         "model.OptionsMap": {
             "category": "map",
-            "description": "Defines a generic map for engine option key-value pairs."
+            "description": "Holds engine options for an engine, keyed by option name."
         },
         "model.PairwiseAnalysis": {
             "category": "struct",

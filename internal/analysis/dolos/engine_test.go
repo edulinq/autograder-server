@@ -54,7 +54,7 @@ func TestParseDolosOptions(test *testing.T) {
 		// Empty options
 		{
 			input:           nil,
-			expected:        GetDefaultDolosOptions(),
+			expected:        nil,
 			extractionError: false,
 		},
 		{
