@@ -350,7 +350,7 @@ It has the following fields:
 | `template-file-ops`| List[FileOp]    | false    | A list of file operations to transform the template files with. |
 | `engine-options`   | Map             | false    | A map keyed by engine name to it's respective engine options. |
 
-In `engine-options`, each engine contains its respective options in an `OptionsMap`, a key–value map (`map[string]any`) containing options specific to that engine.
+`engine-options` contains `OptionsMap`, a key–value map of type `map[string]any` holding options specific to that engine.
 
 During a pairwise code analysis,
 the options of the assignment for the submission with the [lexicographically](https://en.wikipedia.org/wiki/Lexicographic_order) smaller id will always be used.
