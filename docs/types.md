@@ -409,7 +409,7 @@ The values from its `OptionsMap` in `engine-options` are parsed into CLI argumen
 Current Supported Options:
 | Name          | Type      | Required | Description |
 |---------------|-----------|----------|-------------|
-| `min-tokens`  | Integer   | false    | The minimum number of consecutive tokens that must match between two code submissions to be considered a plagiarism match. |
+| `min-tokens`  | Integer   | false    | The minimum number of consecutive tokens that must match between two code submissions to be considered a similarity match. |
 
 Example Structure:
 ``` json
@@ -426,7 +426,7 @@ The values from its `OptionsMap` in `engine-options` are parsed into CLI argumen
 Current Supported Options:
 | Name               | Type      | Required | Description |
 |--------------------|-----------|----------|-------------|
-| `kgram-length`     | Integer   | false    | Sets the minimum number of tokens in a k-gram. Common fragments between two files that are shorter than `$$k$$` tokens will not be found during plagiarism detection. |
+| `kgram-length`     | Integer   | false    | Sets the minimum number of tokens in a k-gram. Common fragments between two files that are shorter than `$$k$$` tokens will not be found during similarity detection. |
 | `kgrams-in-window` | Integer   | false    | The size of the window used during winnowing algorithm. It select one k-grams from each overlapping window of `w` subsequent k-grams. |
 
 Read more on `kgrams-in-windows` [here](https://dolos.ugent.be/docs/running.html#window-length).
