@@ -409,7 +409,6 @@ More info on it can be found here: [JPlag](https://github.com/jplag/JPlag/wiki)
 The values from its `OptionsMap` in `engine-options` are parsed into CLI arguments for the JPlag container.
 
 Current Supported Options:
-
 | Name               | Type           | Required | Description |
 |--------------------|----------------|----------|-------------|
 | `min-tokens`       | Integer        | false    | The minimum number of consecutive tokens that must match between two code submissions to be considered a plagiarism match. |
@@ -428,7 +427,6 @@ More on dolos can be found here: [Dolos](https://dolos.ugent.be/docs/).
 The values from its `OptionsMap` in `engine-options` are parsed into CLI arguments for the Dolos container.
 
 Current Supported Options:
-
 | Name               | Type           | Required | Description |
 |--------------------|----------------|----------|-------------|
 | `kgram-length`     | Integer        | false    | Sets the minimum number of tokens in a k-gram. Common fragments between two files that are shorter than `$$k$$` tokens will not be found during plagiarism detection. |
