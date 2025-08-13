@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"sync"
 
+	"github.com/edulinq/autograder/internal/analysis/core"
 	"github.com/edulinq/autograder/internal/docker"
 	"github.com/edulinq/autograder/internal/log"
 	"github.com/edulinq/autograder/internal/model"
@@ -63,23 +64,9 @@ func (this *dolosEngine) IsAvailable() bool {
 	return docker.CanAccessDocker()
 }
 
-func parseEngineOptions(rawOptions model.OptionsMap) (*DolosEngineOptions, error) {
-	effectiveOptions := GetDefaultDolosOptions()
-
-	if rawOptions == nil {
-		return effectiveOptions, nil
-	}
-
-	effectiveOptions, err := util.JSONTransformTypes(rawOptions, effectiveOptions)
-	if err != nil {
-		return nil, fmt.Errorf("Failed to convert raw options to DolosEngineOptions: '%w'.", err)
-	}
-
-	return effectiveOptions, nil
-}
-
-func (this *dolosEngine) ComputeFileSimilarity(paths [2]string, templatePath string, ctx context.Context, options model.OptionsMap) (*model.FileSimilarity, error) {
-	effectiveOptions, err := parseEngineOptions(options)
+func (this *dolosEngine) ComputeFileSimilarity(paths [2]string, templatePath string, ctx context.Context, rawOptions model.OptionsMap) (*model.FileSimilarity, error) {
+	defaultOptions := GetDefaultDolosOptions()
+	options, err := core.ParseEngineOptions(rawOptions, *defaultOptions)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to parse custom Dolos engine options: '%w'.", err)
 	}
@@ -134,8 +121,8 @@ func (this *dolosEngine) ComputeFileSimilarity(paths [2]string, templatePath str
 		"--output-format", "csv",
 		"--output-destination", OUT_DIRNAME,
 		"--language", getLanguage(tempFilenames[0]),
-		"--kgrams-in-window", fmt.Sprintf("%d", effectiveOptions.KGramsInWindow),
-		"--kgram-length", fmt.Sprintf("%d", effectiveOptions.KGramLength),
+		"--kgrams-in-window", fmt.Sprintf("%d", options.KGramsInWindow),
+		"--kgram-length", fmt.Sprintf("%d", options.KGramLength),
 		tempFilenames[0],
 		tempFilenames[1],
 	}

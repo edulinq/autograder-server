@@ -2,8 +2,10 @@ package core
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/edulinq/autograder/internal/model"
+	"github.com/edulinq/autograder/internal/util"
 )
 
 type SimilarityEngine interface {
@@ -18,4 +20,18 @@ type SimilarityEngine interface {
 	// On a timeout, (nil, nil) should be returned.
 	// The options map carries engine‑specific parameters, e.g., the minimum number of words required to perform similarity analysis by JPlag.
 	ComputeFileSimilarity(paths [2]string, templatePath string, ctx context.Context, options model.OptionsMap) (*model.FileSimilarity, error)
+}
+
+func ParseEngineOptions[T any](rawOptions model.OptionsMap, defaultOptions T) (*T, error) {
+	if rawOptions == nil {
+		return &defaultOptions, nil
+	}
+
+	effectiveOptions, err := util.JSONTransformTypes(rawOptions, defaultOptions)
+	if err != nil {
+		//var empty T
+		return nil, fmt.Errorf("Failed to convert raw options: '%w'.", err)
+	}
+
+	return &effectiveOptions, nil
 }
