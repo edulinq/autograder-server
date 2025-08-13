@@ -21,7 +21,7 @@ const (
 	DEFAULT_INCLUDE_REGEX string = ".+"
 )
 
-// Holds options specific to a particular engine.
+// Holds options specific to a particular analysis engine.
 type OptionsMap map[string]any
 
 type AssignmentAnalysisOptions struct {

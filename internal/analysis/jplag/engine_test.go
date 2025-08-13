@@ -26,7 +26,7 @@ func TestJPlagComputeFileSimilarityBase(test *testing.T) {
 
 	engineOptions, err := util.ToJSONMap(engineOptionsStruct)
 	if err != nil {
-		test.Errorf("Failed to convert JPlagEngineOption to map[string]any: '%v'.", err)
+		test.Fatalf("Failed to convert engine options: '%v'.", err)
 	}
 
 	core.RunEngineTestComputeFileSimilarityBase(test, engine, false, expected, engineOptions)
@@ -49,7 +49,7 @@ func TestJPlagComputeFileSimilarityWithIgnoreBase(test *testing.T) {
 
 	engineOptions, err := util.ToJSONMap(engineOptionsStruct)
 	if err != nil {
-		test.Errorf("Failed to convert JPlagEngineOption to map[string]any: '%v'.", err)
+		test.Fatalf("Failed to convert engine options: '%v'.", err)
 	}
 
 	core.RunEngineTestComputeFileSimilarityBase(test, engine, true, expected, engineOptions)
@@ -128,7 +128,8 @@ func TestParseJplagOptions(test *testing.T) {
 	}
 
 	for i, testCase := range testCases {
-		effectiveOptions, err := parseEngineOptions(testCase.input)
+		defaultOptions := GetDefaultJPlagOptions()
+		effectiveOptions, err := core.ParseEngineOptions(testCase.input, *defaultOptions)
 		if err != nil {
 			if !testCase.extractionError {
 				test.Errorf("Case %d: Got an unexpected error: '%v'.", i, err)

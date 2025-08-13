@@ -71,8 +71,11 @@ func (this *dolosEngine) ComputeFileSimilarity(paths [2]string, templatePath str
 		return nil, fmt.Errorf("Failed to parse custom Dolos engine options: '%w'.", err)
 	}
 
+	fmt.Println("74")
+
 	err = ensureImage()
 	if err != nil {
+		fmt.Println("lol")
 		return nil, fmt.Errorf("Failed to ensure Dolos docker image exists: '%w'.", err)
 	}
 
@@ -81,6 +84,7 @@ func (this *dolosEngine) ComputeFileSimilarity(paths [2]string, templatePath str
 		return nil, fmt.Errorf("Failed to create temp dir: '%w'.", err)
 	}
 	defer util.RemoveDirent(tempDir)
+	fmt.Println("86")
 
 	tempFilenames := make([]string, 0, 2)
 	for i, path := range paths {
@@ -102,6 +106,7 @@ func (this *dolosEngine) ComputeFileSimilarity(paths [2]string, templatePath str
 			return nil, fmt.Errorf("Failed to copy template file to temp dir: '%w'.", err)
 		}
 	}
+	fmt.Println("107")
 
 	// Ensure permissions are very open because UID/GID will not be properly aligned.
 	err = util.RecursiveChmod(tempDir, 0666, 0777)
@@ -132,6 +137,7 @@ func (this *dolosEngine) ComputeFileSimilarity(paths [2]string, templatePath str
 	}
 
 	stdout, stderr, _, _, err := docker.RunContainer(ctx, this, getImageName(), mounts, arguments, NAME, MAX_RUNTIME_SECS)
+	fmt.Println(stdout)
 	if err != nil {
 		log.Debug("Failed to run Dolos container.", err, log.NewAttr("stdout", stdout), log.NewAttr("stderr", stderr))
 		return nil, fmt.Errorf("Failed to run Dolos container: '%w'.", err)

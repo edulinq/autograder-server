@@ -186,7 +186,7 @@ func computeFileSims(options AnalysisOptions, inputDirs [2]string, assignment *m
 		return nil, nil, nil, err
 	}
 
-	rawEngineOptions := make(map[string]model.OptionsMap)
+	rawEngineOptions := make(map[string]model.OptionsMap, 0)
 	if (assignment != nil) && (assignment.AssignmentAnalysisOptions != nil) {
 		rawEngineOptions = assignment.AssignmentAnalysisOptions.EngineOptions
 	}

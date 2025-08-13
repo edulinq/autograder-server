@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"sync"
 
+	"github.com/edulinq/autograder/internal/analysis/core"
 	"github.com/edulinq/autograder/internal/docker"
 	"github.com/edulinq/autograder/internal/log"
 	"github.com/edulinq/autograder/internal/model"
@@ -57,23 +58,24 @@ func (this *JPlagEngine) IsAvailable() bool {
 	return docker.CanAccessDocker()
 }
 
-func parseEngineOptions(rawOptions model.OptionsMap) (*JPlagEngineOptions, error) {
-	effectiveOptions := GetDefaultJPlagOptions()
+// func parseEngineOptions(rawOptions model.OptionsMap) (*JPlagEngineOptions, error) {
+// 	effectiveOptions := GetDefaultJPlagOptions()
 
-	if rawOptions == nil {
-		return effectiveOptions, nil
-	}
+// 	if rawOptions == nil {
+// 		return effectiveOptions, nil
+// 	}
 
-	effectiveOptions, err := util.JSONTransformTypes(rawOptions, effectiveOptions)
-	if err != nil {
-		return nil, fmt.Errorf("Failed to convert raw options to JPlagEngineOptions: '%w'.", err)
-	}
+// 	effectiveOptions, err := util.JSONTransformTypes(rawOptions, effectiveOptions)
+// 	if err != nil {
+// 		return nil, fmt.Errorf("Failed to convert raw options to JPlagEngineOptions: '%w'.", err)
+// 	}
 
-	return effectiveOptions, nil
-}
+// 	return effectiveOptions, nil
+// }
 
-func (this *JPlagEngine) ComputeFileSimilarity(paths [2]string, templatePath string, ctx context.Context, options model.OptionsMap) (*model.FileSimilarity, error) {
-	effectiveOptions, err := parseEngineOptions(options)
+func (this *JPlagEngine) ComputeFileSimilarity(paths [2]string, templatePath string, ctx context.Context, rawOptions model.OptionsMap) (*model.FileSimilarity, error) {
+	defaultOptions := GetDefaultJPlagOptions()
+	effectiveOptions, err := core.ParseEngineOptions(rawOptions, *defaultOptions)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to parse custom JPlag engine options: '%w'.", err)
 	}
@@ -160,6 +162,7 @@ func (this *JPlagEngine) ComputeFileSimilarity(paths [2]string, templatePath str
 	}
 
 	stdout, stderr, _, _, err := docker.RunContainer(ctx, this, getImageName(), mounts, arguments, NAME, MAX_RUNTIME_SECS)
+	//fmt.Println(stdout)
 	if err != nil {
 		log.Debug("Failed to run JPlag container.", err, log.NewAttr("stdout", stdout), log.NewAttr("stderr", stderr))
 		return nil, fmt.Errorf("Failed to run JPlag container: '%w'.", err)

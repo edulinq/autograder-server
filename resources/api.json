@@ -2659,7 +2659,7 @@
         },
         "model.OptionsMap": {
             "category": "map",
-            "description": "Holds options specific to a particular engine."
+            "description": "Holds options specific to a particular analysis engine."
         },
         "model.PairwiseAnalysis": {
             "category": "struct",
