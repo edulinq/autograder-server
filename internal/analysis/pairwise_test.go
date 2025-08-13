@@ -2,7 +2,6 @@ package analysis
 
 import (
 	"context"
-	"fmt"
 	"path/filepath"
 	"reflect"
 	"strings"
@@ -290,7 +289,6 @@ func TestPairwiseAnalysisDefaultEnginesBase(test *testing.T) {
 	}
 
 	results, pendingCount, workErrors, err := PairwiseAnalysis(options)
-	//fmt.Println(results.)
 	if err != nil {
 		test.Fatalf("Failed to do pairwise analysis: '%v'.", err)
 	}
@@ -305,16 +303,6 @@ func TestPairwiseAnalysisDefaultEnginesBase(test *testing.T) {
 
 	if len(results) != 1 {
 		test.Fatalf("Number of results not as expected. Expected: %d, Actual: %d.", 1, len(results))
-	}
-
-	similaritiesSlice := results[model.NewPairwiseKey(ids[0], ids[1])].Similarities["submission.py"]
-
-	fmt.Printf("Found %d similarities for submission.py:\n", len(similaritiesSlice))
-
-	// Loop through the slice of pointers
-	for i, similarityPtr := range similaritiesSlice {
-		// Dereference each pointer inside the loop to print its value
-		fmt.Printf("  [%d]: %+v\n", i, *similarityPtr)
 	}
 
 	similaritiesCount := len(results[model.NewPairwiseKey(ids[0], ids[1])].Similarities["submission.py"])
