@@ -66,8 +66,7 @@ func (this *dolosEngine) IsAvailable() bool {
 }
 
 func (this *dolosEngine) ComputeFileSimilarity(paths [2]string, templatePath string, ctx context.Context, rawOptions model.OptionsMap) (*model.FileSimilarity, error) {
-	defaultOptions := GetDefaultDolosOptions()
-	options, err := core.ParseEngineOptions(rawOptions, *defaultOptions)
+	options, err := core.ParseEngineOptions(rawOptions, *GetDefaultDolosOptions())
 	if err != nil {
 		return nil, fmt.Errorf("Failed to parse custom Dolos engine options: '%w'.", err)
 	}

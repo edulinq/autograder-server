@@ -126,8 +126,7 @@ func TestParseDolosOptions(test *testing.T) {
 	}
 
 	for i, testCase := range testCases {
-		defaultOptions := GetDefaultDolosOptions()
-		effectiveOptions, err := core.ParseEngineOptions(testCase.input, *defaultOptions)
+		effectiveOptions, err := core.ParseEngineOptions(testCase.input, *GetDefaultDolosOptions())
 		if err != nil {
 			if !testCase.extractionError {
 				test.Errorf("Case %d: Got an unexpected error: '%v'.", i, err)

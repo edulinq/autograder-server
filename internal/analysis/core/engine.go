@@ -29,7 +29,6 @@ func ParseEngineOptions[T any](rawOptions model.OptionsMap, defaultOptions T) (*
 
 	effectiveOptions, err := util.JSONTransformTypes(rawOptions, defaultOptions)
 	if err != nil {
-		//var empty T
 		return nil, fmt.Errorf("Failed to convert raw options: '%w'.", err)
 	}
 

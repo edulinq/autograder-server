@@ -58,24 +58,8 @@ func (this *JPlagEngine) IsAvailable() bool {
 	return docker.CanAccessDocker()
 }
 
-// func parseEngineOptions(rawOptions model.OptionsMap) (*JPlagEngineOptions, error) {
-// 	effectiveOptions := GetDefaultJPlagOptions()
-
-// 	if rawOptions == nil {
-// 		return effectiveOptions, nil
-// 	}
-
-// 	effectiveOptions, err := util.JSONTransformTypes(rawOptions, effectiveOptions)
-// 	if err != nil {
-// 		return nil, fmt.Errorf("Failed to convert raw options to JPlagEngineOptions: '%w'.", err)
-// 	}
-
-// 	return effectiveOptions, nil
-// }
-
 func (this *JPlagEngine) ComputeFileSimilarity(paths [2]string, templatePath string, ctx context.Context, rawOptions model.OptionsMap) (*model.FileSimilarity, error) {
-	defaultOptions := GetDefaultJPlagOptions()
-	effectiveOptions, err := core.ParseEngineOptions(rawOptions, *defaultOptions)
+	options, err := core.ParseEngineOptions(rawOptions, *GetDefaultJPlagOptions())
 	if err != nil {
 		return nil, fmt.Errorf("Failed to parse custom JPlag engine options: '%w'.", err)
 	}
@@ -153,7 +137,7 @@ func (this *JPlagEngine) ComputeFileSimilarity(paths [2]string, templatePath str
 		"--mode", "RUN",
 		"--csv-export",
 		"--language", getLanguage(tempFilenames[0]),
-		"--min-tokens", fmt.Sprintf("%d", effectiveOptions.MinTokens),
+		"--min-tokens", fmt.Sprintf("%d", options.MinTokens),
 		"/jplag/src",
 	}
 
@@ -162,7 +146,6 @@ func (this *JPlagEngine) ComputeFileSimilarity(paths [2]string, templatePath str
 	}
 
 	stdout, stderr, _, _, err := docker.RunContainer(ctx, this, getImageName(), mounts, arguments, NAME, MAX_RUNTIME_SECS)
-	//fmt.Println(stdout)
 	if err != nil {
 		log.Debug("Failed to run JPlag container.", err, log.NewAttr("stdout", stdout), log.NewAttr("stderr", stderr))
 		return nil, fmt.Errorf("Failed to run JPlag container: '%w'.", err)
