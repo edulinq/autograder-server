@@ -382,9 +382,8 @@ When working with these patterns, keep the following in mind:
 
 #### Engine Options
 
-The engine options parameter contains specific options that are passed to the code analysis engines.
-`engine-options` contains a map of engine name to its respective engine options. 
-It holds the options in the form of `OptionsMap`, a key–value map of type `map[string]any`.
+Engine options contains options that are passed to specific code analysis engines.
+These options contain a map of engine name to its respective engine options. 
 
 Example Structure: 
 ```json
@@ -398,13 +397,12 @@ Example Structure:
 }
 ```
 
-Currently, we have support for two code analysis tools for which engine options are used. 
-They are [JPlag](https://github.com/jplag/JPlag/wiki) and [Dolos](https://dolos.ugent.be/docs/). 
+The code analysis tools currently supported are listed below.
 
 ##### JPlag 
 
-JPlag is a code analysis tool that compares code files to identify for any suspicious similarities. 
-The values from its `OptionsMap` in `engine-options` are parsed into CLI arguments for the JPlag container.
+This engine is built upon [JPlag](https://github.com/jplag/JPlag/),
+and provided as a [docker image](https://github.com/edulinq/jplag-docker).
 
 Current Supported Options:
 | Name          | Type      | Required | Description |
@@ -418,11 +416,10 @@ Example Structure:
 }
 ```
 
-#### Dolos
+##### Dolos
 
-Dolos is a code analysis tool optimized for performance and detailed similarity reporting. 
-Users can set the `OptionsMap` for Dolos via the 
-The values from its `OptionsMap` in `engine-options` are parsed into CLI arguments for the Dolos container.
+This engine is built upon [Dolos](https://dolos.ugent.be/),
+and provided as a [docker image](https://github.com/edulinq/dolos-docker).
 
 Current Supported Options:
 | Name                                                                         | Type      | Required | Description |
