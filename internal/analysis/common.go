@@ -176,12 +176,12 @@ func collectAnalysisStats(fullSubmissionIDs []string, totalRunTime int64, initia
 
 func GetEngineOptions(allEngineOptions map[string]model.OptionsMap, engineName string) model.OptionsMap {
 	if (allEngineOptions == nil) || (len(allEngineOptions) == 0) {
-		return make(model.OptionsMap)
+		return make(model.OptionsMap, 0)
 	}
 
 	engineOptions, ok := allEngineOptions[engineName]
 	if !ok {
-		return make(model.OptionsMap)
+		return make(model.OptionsMap, 0)
 	}
 
 	return engineOptions
