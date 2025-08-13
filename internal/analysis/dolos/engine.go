@@ -35,7 +35,7 @@ var (
 )
 
 type DolosEngineOptions struct {
-	// Sets the number of overlapping subsequent k-grams to be used when selecting one k-grams (--kgrams-in-window).
+	// The number of overlapping subsequent k-grams to be used when selecting one k-grams (--kgrams-in-window).
 	KGramsInWindow int `json:"kgrams-in-window"`
 
 	// The minimum number of tokens in a k-gram (--kgram-length).
