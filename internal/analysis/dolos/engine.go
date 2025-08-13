@@ -24,6 +24,7 @@ const (
 	OUT_FILENAME      = "pairs.csv"
 	TEMPLATE_FILENAME = "template"
 
+	// More info on this: https://dolos.ugent.be/docs/running.html#modifying-plagiarism-detection-parameters
 	DEFAULT_KGRAM_IN_WINDOW = 17
 	DEFAULT_KGRAM_LENGTH    = 23
 )
