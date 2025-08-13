@@ -33,7 +33,7 @@ var (
 )
 
 type JPlagEngineOptions struct {
-	// Minimum number of consecutive tokens that must match between two code submissions to be considered similar. (--min-tokens).
+	// Minimum number of consecutive tokens that must match between two code submissions to be considered similar (--min-tokens).
 	MinTokens int `json:"min-tokens"`
 }
 

@@ -382,7 +382,7 @@ When working with these patterns, keep the following in mind:
 
 #### Engine Options
 
-The engine option type allows engine specific options to be passed for code analysis for assignments.
+The engine options parameter contains specific options that are passed to the code analysis engines.
 `engine-options` contains a map of engine name to its respective engine options. 
 It holds the options in the form of `OptionsMap`, a key–value map of type `map[string]any`.
 
@@ -421,15 +421,14 @@ Example Structure:
 #### Dolos
 
 Dolos is a code analysis tool optimized for performance and detailed similarity reporting. 
+Users can set the `OptionsMap` for Dolos via the 
 The values from its `OptionsMap` in `engine-options` are parsed into CLI arguments for the Dolos container.
 
 Current Supported Options:
-| Name               | Type      | Required | Description |
-|--------------------|-----------|----------|-------------|
-| `kgram-length`     | Integer   | false    | Sets the minimum number of tokens in a k-gram. Common fragments between two files that are shorter than `$$k$$` tokens will not be found during similarity detection. |
-| `kgrams-in-window` | Integer   | false    | The size of the window used during winnowing algorithm. It select one k-grams from each overlapping window of `w` subsequent k-grams. |
-
-Read more on `kgrams-in-windows` [here](https://dolos.ugent.be/docs/running.html#window-length).
+| Name                                                                         | Type      | Required | Description |
+|------------------------------------------------------------------------------|-----------|----------|-------------|
+| `kgram-length`                                                               | Integer   | false    | Sets the minimum number of tokens in a k-gram. Common fragments between two files that are shorter than `$$k$$` tokens will not be found during similarity detection. |
+| [`kgrams-in-window`](https://dolos.ugent.be/docs/running.html#window-length) | Integer   | false    | The size of the window used during winnowing algorithm. It select one k-grams from each overlapping window of `w` subsequent k-grams. |
 
 Example Structure: 
 ```json
