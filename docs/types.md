@@ -385,7 +385,7 @@ When working with these patterns, keep the following in mind:
 Engine options contains options that are passed to specific code analysis engines.
 These options contain a map of engine name to its respective engine options. 
 
-Example Structure: 
+For Example: 
 ```json
 {
     "jplag": {
@@ -409,11 +409,11 @@ Current Supported Options:
 |---------------|-----------|----------|-------------|
 | `min-tokens`  | Integer   | false    | The minimum number of consecutive tokens that must match between two code submissions to be considered a similarity match. |
 
-Example Structure:
-``` json
-"jplag": {
-    "min-tokens": 7
-}
+For Example:
+```json
+    "jplag": {
+        "min-tokens": 7
+    }
 ```
 
 ##### Dolos
@@ -422,17 +422,17 @@ This engine is built upon [Dolos](https://dolos.ugent.be/),
 and provided as a [docker image](https://github.com/edulinq/dolos-docker).
 
 Current Supported Options:
-| Name                                                                         | Type      | Required | Description |
-|------------------------------------------------------------------------------|-----------|----------|-------------|
-| `kgram-length`                                                               | Integer   | false    | Sets the minimum number of tokens in a k-gram. Common fragments between two files that are shorter than `$$k$$` tokens will not be found during similarity detection. |
-| [`kgrams-in-window`](https://dolos.ugent.be/docs/running.html#window-length) | Integer   | false    | The size of the window used during winnowing algorithm. It select one k-grams from each overlapping window of `w` subsequent k-grams. |
+| Name               | Type      | Required | Description |
+|--------------------|-----------|----------|-------------|
+| `kgram-length`     | Integer   | false    | The minimum number of tokens in a k-gram. Common fragments between two files that are shorter than `$$k$$` tokens will not be found during similarity detection. |
+| `kgrams-in-window` | Integer   | false    | The size of the window used during winnowing algorithm. It select one k-grams from each overlapping window of `w` subsequent k-grams. See [this documentation](https://dolos.ugent.be/docs/running.html#window-length). |
 
-Example Structure: 
+For Example: 
 ```json
-"dolos": {
-    "kgram-length": 12,
-    "kgrams-in-window": 23
-}
+    "dolos": {
+        "kgram-length": 12,
+        "kgrams-in-window": 23
+    }
 ```
 
 ## Roles
