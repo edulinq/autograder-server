@@ -128,7 +128,7 @@ func TestParseJplagOptions(test *testing.T) {
 	}
 
 	for i, testCase := range testCases {
-		effectiveOptions, err := core.ParseEngineOptions(testCase.input, *GetDefaultJPlagOptions())
+		effectiveOptions, err := core.ParseEngineOptions(testCase.input, GetDefaultJPlagOptions())
 		if err != nil {
 			if !testCase.extractionError {
 				test.Errorf("Case %d: Got an unexpected error: '%v'.", i, err)

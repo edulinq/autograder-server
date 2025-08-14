@@ -322,7 +322,7 @@ func TestPairwiseAnalysisDefaultEnginesSpecificFiles(test *testing.T) {
 
 	engineOptions, err := util.ToJSONMap(engineOptionsStruct)
 	if err != nil {
-		test.Errorf("Failed to convert JPlagEngineOption to map[string]any: '%v'.", err)
+		test.Fatalf("Failed to convert engine option: '%v'.", err)
 	}
 
 	testPaths := []string{

@@ -59,7 +59,7 @@ func (this *JPlagEngine) IsAvailable() bool {
 }
 
 func (this *JPlagEngine) ComputeFileSimilarity(paths [2]string, templatePath string, ctx context.Context, rawOptions model.OptionsMap) (*model.FileSimilarity, error) {
-	options, err := core.ParseEngineOptions(rawOptions, *GetDefaultJPlagOptions())
+	options, err := core.ParseEngineOptions(rawOptions, GetDefaultJPlagOptions())
 	if err != nil {
 		return nil, fmt.Errorf("Failed to parse custom JPlag engine options: '%w'.", err)
 	}

@@ -19,12 +19,12 @@ type SimilarityEngine interface {
 	// but a lot of shorter jobs is more flexible than one large job.
 	// On a timeout, (nil, nil) should be returned.
 	// The options map carries engine‑specific parameters, e.g., the minimum number of words required to perform similarity analysis by JPlag.
-	ComputeFileSimilarity(paths [2]string, templatePath string, ctx context.Context, options model.OptionsMap) (*model.FileSimilarity, error)
+	ComputeFileSimilarity(paths [2]string, templatePath string, ctx context.Context, rawOptions model.OptionsMap) (*model.FileSimilarity, error)
 }
 
-func ParseEngineOptions[T any](rawOptions model.OptionsMap, defaultOptions T) (*T, error) {
+func ParseEngineOptions[T any](rawOptions model.OptionsMap, defaultOptions *T) (*T, error) {
 	if rawOptions == nil {
-		return &defaultOptions, nil
+		return defaultOptions, nil
 	}
 
 	effectiveOptions, err := util.JSONTransformTypes(rawOptions, defaultOptions)
@@ -32,5 +32,5 @@ func ParseEngineOptions[T any](rawOptions model.OptionsMap, defaultOptions T) (*
 		return nil, fmt.Errorf("Failed to convert raw options: '%w'.", err)
 	}
 
-	return &effectiveOptions, nil
+	return effectiveOptions, nil
 }
