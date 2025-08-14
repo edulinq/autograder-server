@@ -13,6 +13,11 @@ var minRoleRegex = regexp.MustCompile(`^Min(Server|Course)Role\w+$`)
 // Using any of these implies your request is at least an APIRequestUserContext.
 type MinServerRoleRoot bool
 type MinServerRoleOwner bool
+
+//	__TYPE_DESCRIPTION_OVERRIDE__: "min-role-server-admin" = {
+//	    "category": "role",
+//	    "description": "Test server admin!"
+//	}
 type MinServerRoleAdmin bool
 type MinServerRoleCourseCreator bool
 type MinServerRoleUser bool

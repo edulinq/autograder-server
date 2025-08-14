@@ -45,9 +45,12 @@ type secureJSONStruct struct {
 	Pay       int    `json:"-"`
 }
 
+// TODO: Fix test cases that use the embeddedJSONStruct.
+// TODO: It's not returning the overriden type info, look into removing addType restriction.
 type embeddedJSONStruct struct {
 	simpleJSONStruct
 	secureJSONStruct
+	MinServerRoleAdmin
 }
 
 type complexJSONStruct struct {
@@ -157,6 +160,7 @@ func TestDescribeTypeBase(test *testing.T) {
 					AliasType:   "string",
 				},
 			},
+			// TODO: Updated this test case.
 			map[string]FullTypeDescription{
 				mustGetTypeID(reflect.TypeOf((*stringWrapper)(nil)).Elem(), nil): FullTypeDescription{
 					BaseTypeDescription: BaseTypeDescription{

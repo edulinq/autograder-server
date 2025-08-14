@@ -13,6 +13,8 @@ import (
 	"github.com/edulinq/autograder/internal/util"
 )
 
+const TYPE_OVERRIDE_INDICATOR = "__TYPE_DESCRIPTION_OVERRIDE__"
+
 const (
 	AliasType  = "alias"
 	ArrayType  = "array"
@@ -22,7 +24,6 @@ const (
 
 var skipDescriptionPatterns = []*regexp.Regexp{
 	regexp.MustCompile("^root-user-nonce$"),
-	regexp.MustCompile("^Min.*Role.*$"),
 	regexp.MustCompile("^APIRequest$"),
 }
 
@@ -326,10 +327,21 @@ func DescribeType(customType reflect.Type, addType bool, info TypeInfoCache) (Fu
 		return typeDescription, originalTypeID, info, nil
 	}
 
+	// TODO: Will probably need to remove addType restriction to get a potention type override.
 	if addType {
 		description, err := getTypeDescription(customType, info.KnownPackages)
 		if err != nil {
 			return FullTypeDescription{}, "", TypeInfoCache{}, err
+		}
+
+		overrideTypeID, overrideTypeDescription, err := getTypeOverride(description)
+		if err != nil {
+			return FullTypeDescription{}, "", TypeInfoCache{}, err
+		}
+
+		if overrideTypeDescription != nil {
+			info.TypeMap[overrideTypeID] = *overrideTypeDescription
+			return *overrideTypeDescription, overrideTypeID, info, nil
 		}
 
 		typeDescription.Description = description
@@ -525,6 +537,38 @@ func getTypeDescription(customType reflect.Type, knownPackages map[string]Struct
 	}
 
 	return description, nil
+}
+
+func getTypeOverride(rawDescription string) (string, *FullTypeDescription, error) {
+	if !strings.Contains(rawDescription, TYPE_OVERRIDE_INDICATOR) {
+		return "", nil, nil
+	}
+
+	commentParts := strings.Split(rawDescription, fmt.Sprintf("%s:", TYPE_OVERRIDE_INDICATOR))
+	if len(commentParts) != 2 {
+		return "", nil, fmt.Errorf("Type override description requires a part after the indicator: '%s'.", rawDescription)
+	}
+
+	// Everything after the indicator is a part of the type override.
+	commentOverride := commentParts[1]
+
+	descriptionParts := strings.Split(commentOverride, "=")
+	if len(descriptionParts) != 2 {
+		return "", nil, fmt.Errorf("Unexpected description override. Expected: '<typeID>=<typeDescription>', Actual: '%s'.", descriptionParts)
+	}
+
+	rawTypeID := descriptionParts[0]
+	rawTypeDescription := descriptionParts[1]
+
+	typeID := strings.Trim(strings.TrimSpace(rawTypeID), "'\"")
+
+	typeDescription := FullTypeDescription{}
+	err := util.JSONFromString(rawTypeDescription, &typeDescription)
+	if err != nil {
+		return "", nil, fmt.Errorf("Failed to convert type override: '%w'.", err)
+	}
+
+	return typeID, &typeDescription, nil
 }
 
 func isFieldRequired(field reflect.StructField) (bool, error) {
