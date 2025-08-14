@@ -45,12 +45,9 @@ type secureJSONStruct struct {
 	Pay       int    `json:"-"`
 }
 
-// TODO: Fix test cases that use the embeddedJSONStruct.
-// TODO: It's not returning the overriden type info, look into removing addType restriction.
 type embeddedJSONStruct struct {
 	simpleJSONStruct
 	secureJSONStruct
-	MinServerRoleAdmin
 }
 
 type complexJSONStruct struct {
@@ -66,6 +63,15 @@ type complexPointerStruct struct {
 	CoinValue *simpleMapWrapper   `json:"coin-value"`
 	GoodIndex *simpleArrayWrapper `json:"good-index"`
 	Personnel *embeddedJSONStruct `json:"personnel"`
+}
+
+type overrideTypeStruct struct {
+	//	__TYPE_DESCRIPTION_OVERRIDE__: "overriden-type-id" = {
+	//	    "category": "clowns",
+	//	    "description": "This field is ignored in JSON, but it we provided a custom description."
+	//	}
+	SpecialCase string `json:"-"`
+	NormalCase  int    `json:"normal-case"`
 }
 
 type errorTypeFalse struct {
@@ -160,31 +166,12 @@ func TestDescribeTypeBase(test *testing.T) {
 					AliasType:   "string",
 				},
 			},
-			// TODO: Updated this test case.
 			map[string]FullTypeDescription{
 				mustGetTypeID(reflect.TypeOf((*stringWrapper)(nil)).Elem(), nil): FullTypeDescription{
 					BaseTypeDescription: BaseTypeDescription{
 						Description: "This is a simple alias for the string type.",
 						Category:    AliasType,
 						AliasType:   "string",
-					},
-				},
-			},
-			"",
-		},
-		{
-			reflect.TypeOf((*MinServerRoleAdmin)(nil)).Elem(),
-			FullTypeDescription{
-				BaseTypeDescription: BaseTypeDescription{
-					Category:  AliasType,
-					AliasType: "bool",
-				},
-			},
-			map[string]FullTypeDescription{
-				mustGetTypeID(reflect.TypeOf((*MinServerRoleAdmin)(nil)).Elem(), nil): FullTypeDescription{
-					BaseTypeDescription: BaseTypeDescription{
-						Category:  AliasType,
-						AliasType: "bool",
 					},
 				},
 			},
@@ -744,6 +731,59 @@ func TestDescribeTypeBase(test *testing.T) {
 						Category:    MapType,
 						KeyType:     "string",
 						ValueType:   "int",
+					},
+				},
+			},
+			"",
+		},
+
+		// Type overrides.
+		{
+			reflect.TypeOf((*MinServerRoleAdmin)(nil)).Elem(),
+			FullTypeDescription{
+				BaseTypeDescription: BaseTypeDescription{
+					Category:    "role",
+					Description: "The requesting user must have a minimum server role of admin to complete this operation.",
+				},
+			},
+			map[string]FullTypeDescription{
+				"min-server-role-admin": FullTypeDescription{
+					BaseTypeDescription: BaseTypeDescription{
+						Category:    "role",
+						Description: "The requesting user must have a minimum server role of admin to complete this operation.",
+					},
+				},
+			},
+			"",
+		},
+		{
+			reflect.TypeOf((*overrideTypeStruct)(nil)).Elem(),
+			FullTypeDescription{
+				BaseTypeDescription: BaseTypeDescription{
+					Category: "struct",
+				},
+				Fields: []FieldDescription{
+					FieldDescription{
+						BaseFieldDescription: BaseFieldDescription{
+							Name: "normal-case",
+							Type: "int",
+						},
+					},
+				},
+			},
+			map[string]FullTypeDescription{
+				"overriden-type-id": FullTypeDescription{
+					BaseTypeDescription: BaseTypeDescription{
+						Category:    "clowns",
+						Description: "This field is ignored in JSON, but it we provided a custom description.",
+					},
+					Fields: []FieldDescription{
+						FieldDescription{
+							BaseFieldDescription: BaseFieldDescription{
+								Name: "normal-case",
+								Type: "int",
+							},
+						},
 					},
 				},
 			},

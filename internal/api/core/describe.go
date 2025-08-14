@@ -327,25 +327,24 @@ func DescribeType(customType reflect.Type, addType bool, info TypeInfoCache) (Fu
 		return typeDescription, originalTypeID, info, nil
 	}
 
-	// TODO: Will probably need to remove addType restriction to get a potention type override.
-	if addType {
-		description, err := getTypeDescription(customType, info.KnownPackages)
-		if err != nil {
-			return FullTypeDescription{}, "", TypeInfoCache{}, err
-		}
-
-		overrideTypeID, overrideTypeDescription, err := getTypeOverride(description)
-		if err != nil {
-			return FullTypeDescription{}, "", TypeInfoCache{}, err
-		}
-
-		if overrideTypeDescription != nil {
-			info.TypeMap[overrideTypeID] = *overrideTypeDescription
-			return *overrideTypeDescription, overrideTypeID, info, nil
-		}
-
-		typeDescription.Description = description
+	description, err := getTypeDescription(customType, info.KnownPackages)
+	if err != nil {
+		return FullTypeDescription{}, "", TypeInfoCache{}, err
 	}
+
+	overrideTypeID, overrideTypeDescription, err := getTypeOverride(description)
+	if err != nil {
+		return FullTypeDescription{}, "", TypeInfoCache{}, err
+	}
+
+	if overrideTypeDescription != nil {
+		// Always add an overriden type to the type map.
+		// It may have a custom key and need to be recomputed.
+		info.TypeMap[overrideTypeID] = *overrideTypeDescription
+		return *overrideTypeDescription, overrideTypeID, info, nil
+	}
+
+	typeDescription.Description = description
 
 	switch customType.Kind() {
 	case reflect.Array, reflect.Slice:
