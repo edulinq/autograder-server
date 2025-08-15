@@ -65,15 +65,14 @@ type complexPointerStruct struct {
 	Personnel *embeddedJSONStruct `json:"personnel"`
 }
 
-type fullTypeOverrideStruct struct {
-	// TODO
-	// Note: The overriden field name persists.
-	MinServerRoleAdmin
-}
-
 type typeOverrideStruct struct {
 	// Note: Only the overriden type name appears.
 	MinServerRoleAdmin `json:"type-override-struct"`
+}
+
+type fullTypeOverrideStruct struct {
+	// Note: The embedded struct name still appears as the field name.
+	MinServerRoleAdmin
 }
 
 type ignoredTypeOverride struct {
@@ -87,6 +86,21 @@ type errorTypeFalse struct {
 type errorTypeTrue struct {
 	badTag string `json:"bad-tag" required:"true"`
 }
+
+//	__TYPE_DESCRIPTION_OVERRIDE__ {
+//	    "category": "override",
+//	    "description": "This type is missing an override type ID."
+//	}
+type errorTypeOverrideID bool
+
+// __TYPE_DESCRIPTION_OVERRIDE__ "error-type-override-type"
+type errorTypeOverrideType bool
+
+//	__TYPE_DESCRIPTION_OVERRIDE__ "error-type-override-JSON" = {
+//	    "category": "override",
+//	    "description": "This type has an invalid JSON structure.",
+//	}
+type errorTypeOverrideJSON bool
 
 func mustGetTypeID(customType reflect.Type, typeConversions map[string]string) string {
 	typeID, err := getTypeID(customType, typeConversions)
@@ -813,25 +827,25 @@ func TestDescribeTypeBase(test *testing.T) {
 				Fields: []FieldDescription{
 					FieldDescription{
 						BaseFieldDescription: BaseFieldDescription{
-							Name:        "type-override-struct",
+							Name:        "MinServerRoleAdmin",
 							Type:        "min-server-role-admin",
-							Description: "Note: Only the overriden type name appears.",
+							Description: "Note: The embedded struct name still appears as the field name.",
 						},
 						Required: false,
 					},
 				},
 			},
 			map[string]FullTypeDescription{
-				mustGetTypeID(reflect.TypeOf((*typeOverrideStruct)(nil)).Elem(), nil): FullTypeDescription{
+				mustGetTypeID(reflect.TypeOf((*fullTypeOverrideStruct)(nil)).Elem(), nil): FullTypeDescription{
 					BaseTypeDescription: BaseTypeDescription{
 						Category: "struct",
 					},
 					Fields: []FieldDescription{
 						FieldDescription{
 							BaseFieldDescription: BaseFieldDescription{
-								Name:        "type-override-struct",
+								Name:        "MinServerRoleAdmin",
 								Type:        "min-server-role-admin",
-								Description: "Note: Only the overriden type name appears.",
+								Description: "Note: The embedded struct name still appears as the field name.",
 							},
 							Required: false,
 						},
@@ -879,6 +893,24 @@ func TestDescribeTypeBase(test *testing.T) {
 			FullTypeDescription{},
 			nil,
 			"Unexpected required tag value. Expected: '', Actual: 'true'.",
+		},
+		{
+			reflect.TypeOf((*errorTypeOverrideID)(nil)).Elem(),
+			FullTypeDescription{},
+			nil,
+			"Unexpected description override. Expected: '<typeID>=<typeDescription>', Actual:",
+		},
+		{
+			reflect.TypeOf((*errorTypeOverrideType)(nil)).Elem(),
+			FullTypeDescription{},
+			nil,
+			"Unexpected description override. Expected: '<typeID>=<typeDescription>', Actual:",
+		},
+		{
+			reflect.TypeOf((*errorTypeOverrideJSON)(nil)).Elem(),
+			FullTypeDescription{},
+			nil,
+			"Failed to convert type override: 'Could not unmarshal JSON bytes/string",
 		},
 	}
 
