@@ -22,11 +22,6 @@ type CourseUsers map[string]*model.CourseUser
 
 // A request having a field of this type indicates that files from the POST request
 // will be qutomatically read and written to a temp directory on disk.
-
-//	__TYPE_DESCRIPTION_OVERRIDE__: "post-files" = {
-//	    "category": "files",
-//	    "description": "The request must contain files in the POST request."
-//	}
 type POSTFiles struct {
 	TempDir   string   `json:"-"`
 	Filenames []string `json:"-"`

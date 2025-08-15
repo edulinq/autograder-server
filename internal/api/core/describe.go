@@ -543,7 +543,7 @@ func getTypeOverride(rawDescription string) (*FullTypeDescription, string, error
 		return nil, "", nil
 	}
 
-	commentParts := strings.Split(rawDescription, fmt.Sprintf("%s:", TYPE_OVERRIDE_INDICATOR))
+	commentParts := strings.Split(rawDescription, TYPE_OVERRIDE_INDICATOR)
 	if len(commentParts) != 2 {
 		return nil, "", fmt.Errorf("Type override description requires a part after the indicator: '%s'.", rawDescription)
 	}

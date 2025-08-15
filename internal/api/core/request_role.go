@@ -12,31 +12,31 @@ var minRoleRegex = regexp.MustCompile(`^Min(Server|Course)Role\w+$`)
 // The minimum server roles required encoded as a type so it can be embedded into a request struct.
 // Using any of these implies your request is at least an APIRequestUserContext.
 
-//	__TYPE_DESCRIPTION_OVERRIDE__: "min-server-role-root" = {
+//	__TYPE_DESCRIPTION_OVERRIDE__ "min-server-role-root" = {
 //	    "category": "role",
 //	    "description": "The requesting user must have a minimum server role of root to complete this operation."
 //	}
 type MinServerRoleRoot bool
 
-//	__TYPE_DESCRIPTION_OVERRIDE__: "min-server-role-owner" = {
+//	__TYPE_DESCRIPTION_OVERRIDE__ "min-server-role-owner" = {
 //	    "category": "role",
 //	    "description": "The requesting user must have a minimum server role of owner to complete this operation."
 //	}
 type MinServerRoleOwner bool
 
-//	__TYPE_DESCRIPTION_OVERRIDE__: "min-server-role-admin" = {
+//	__TYPE_DESCRIPTION_OVERRIDE__ "min-server-role-admin" = {
 //	    "category": "role",
 //	    "description": "The requesting user must have a minimum server role of admin to complete this operation."
 //	}
 type MinServerRoleAdmin bool
 
-//	__TYPE_DESCRIPTION_OVERRIDE__: "min-server-role-course-creator" = {
+//	__TYPE_DESCRIPTION_OVERRIDE__ "min-server-role-course-creator" = {
 //	    "category": "role",
 //	    "description": "The requesting user must have a minimum server role of course creator to complete this operation."
 //	}
 type MinServerRoleCourseCreator bool
 
-//	__TYPE_DESCRIPTION_OVERRIDE__: "min-server-role-user" = {
+//	__TYPE_DESCRIPTION_OVERRIDE__ "min-server-role-user" = {
 //	    "category": "role",
 //	    "description": "The requesting user must have a minimum server role of user to complete this operation."
 //	}
@@ -45,31 +45,31 @@ type MinServerRoleUser bool
 // The minimum course roles required encoded as a type so it can be embedded into a request struct.
 // Using any of these implies your request is at least an APIRequestCourseUserContext.
 
-//	__TYPE_DESCRIPTION_OVERRIDE__: "min-course-role-owner" = {
+//	__TYPE_DESCRIPTION_OVERRIDE__ "min-course-role-owner" = {
 //	    "category": "role",
 //	    "description": "The requesting user must have a minimum course role of owner to complete this operation."
 //	}
 type MinCourseRoleOwner bool
 
-//	__TYPE_DESCRIPTION_OVERRIDE__: "min-course-role-admin" = {
+//	__TYPE_DESCRIPTION_OVERRIDE__ "min-course-role-admin" = {
 //	    "category": "role",
 //	    "description": "The requesting user must have a minimum course role of admin to complete this operation."
 //	}
 type MinCourseRoleAdmin bool
 
-//	__TYPE_DESCRIPTION_OVERRIDE__: "min-course-role-grader" = {
+//	__TYPE_DESCRIPTION_OVERRIDE__ "min-course-role-grader" = {
 //	    "category": "role",
 //	    "description": "The requesting user must have a minimum course role of grader to complete this operation."
 //	}
 type MinCourseRoleGrader bool
 
-//	__TYPE_DESCRIPTION_OVERRIDE__: "min-course-role-student" = {
+//	__TYPE_DESCRIPTION_OVERRIDE__ "min-course-role-student" = {
 //	    "category": "role",
 //	    "description": "The requesting user must have a minimum course role of student to complete this operation."
 //	}
 type MinCourseRoleStudent bool
 
-//	__TYPE_DESCRIPTION_OVERRIDE__: "min-course-role-other" = {
+//	__TYPE_DESCRIPTION_OVERRIDE__ "min-course-role-other" = {
 //	    "category": "role",
 //	    "description": "The requesting user must have a minimum course role of other to complete this operation."
 //	}

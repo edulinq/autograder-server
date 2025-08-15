@@ -65,6 +65,21 @@ type complexPointerStruct struct {
 	Personnel *embeddedJSONStruct `json:"personnel"`
 }
 
+type fullTypeOverrideStruct struct {
+	// TODO
+	// Note: The overriden field name persists.
+	MinServerRoleAdmin
+}
+
+type typeOverrideStruct struct {
+	// Note: Only the overriden type name appears.
+	MinServerRoleAdmin `json:"type-override-struct"`
+}
+
+type ignoredTypeOverride struct {
+	MinServerRoleAdmin `json:"-"`
+}
+
 type errorTypeFalse struct {
 	badTag string `json:"bad-tag" required:"false"`
 }
@@ -743,6 +758,110 @@ func TestDescribeTypeBase(test *testing.T) {
 						Category:    "role",
 						Description: "The requesting user must have a minimum server role of admin to complete this operation.",
 					},
+				},
+			},
+			"",
+		},
+		{
+			reflect.TypeOf((*typeOverrideStruct)(nil)).Elem(),
+			FullTypeDescription{
+				BaseTypeDescription: BaseTypeDescription{
+					Category: "struct",
+				},
+				Fields: []FieldDescription{
+					FieldDescription{
+						BaseFieldDescription: BaseFieldDescription{
+							Name:        "type-override-struct",
+							Type:        "min-server-role-admin",
+							Description: "Note: Only the overriden type name appears.",
+						},
+						Required: false,
+					},
+				},
+			},
+			map[string]FullTypeDescription{
+				mustGetTypeID(reflect.TypeOf((*typeOverrideStruct)(nil)).Elem(), nil): FullTypeDescription{
+					BaseTypeDescription: BaseTypeDescription{
+						Category: "struct",
+					},
+					Fields: []FieldDescription{
+						FieldDescription{
+							BaseFieldDescription: BaseFieldDescription{
+								Name:        "type-override-struct",
+								Type:        "min-server-role-admin",
+								Description: "Note: Only the overriden type name appears.",
+							},
+							Required: false,
+						},
+					},
+				},
+				"min-server-role-admin": FullTypeDescription{
+					BaseTypeDescription: BaseTypeDescription{
+						Category:    "role",
+						Description: "The requesting user must have a minimum server role of admin to complete this operation.",
+					},
+				},
+			},
+			"",
+		},
+		{
+			reflect.TypeOf((*fullTypeOverrideStruct)(nil)).Elem(),
+			FullTypeDescription{
+				BaseTypeDescription: BaseTypeDescription{
+					Category: "struct",
+				},
+				Fields: []FieldDescription{
+					FieldDescription{
+						BaseFieldDescription: BaseFieldDescription{
+							Name:        "type-override-struct",
+							Type:        "min-server-role-admin",
+							Description: "Note: Only the overriden type name appears.",
+						},
+						Required: false,
+					},
+				},
+			},
+			map[string]FullTypeDescription{
+				mustGetTypeID(reflect.TypeOf((*typeOverrideStruct)(nil)).Elem(), nil): FullTypeDescription{
+					BaseTypeDescription: BaseTypeDescription{
+						Category: "struct",
+					},
+					Fields: []FieldDescription{
+						FieldDescription{
+							BaseFieldDescription: BaseFieldDescription{
+								Name:        "type-override-struct",
+								Type:        "min-server-role-admin",
+								Description: "Note: Only the overriden type name appears.",
+							},
+							Required: false,
+						},
+					},
+				},
+				"min-server-role-admin": FullTypeDescription{
+					BaseTypeDescription: BaseTypeDescription{
+						Category:    "role",
+						Description: "The requesting user must have a minimum server role of admin to complete this operation.",
+					},
+				},
+			},
+			"",
+		},
+
+		// Ignored type overrides.
+		{
+			reflect.TypeOf((*ignoredTypeOverride)(nil)).Elem(),
+			FullTypeDescription{
+				BaseTypeDescription: BaseTypeDescription{
+					Category: "struct",
+				},
+				Fields: []FieldDescription{},
+			},
+			map[string]FullTypeDescription{
+				mustGetTypeID(reflect.TypeOf((*ignoredTypeOverride)(nil)).Elem(), nil): FullTypeDescription{
+					BaseTypeDescription: BaseTypeDescription{
+						Category: "struct",
+					},
+					Fields: []FieldDescription{},
 				},
 			},
 			"",
