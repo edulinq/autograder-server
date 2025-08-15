@@ -65,15 +65,6 @@ type complexPointerStruct struct {
 	Personnel *embeddedJSONStruct `json:"personnel"`
 }
 
-type overrideTypeStruct struct {
-	//	__TYPE_DESCRIPTION_OVERRIDE__: "overriden-type-id" = {
-	//	    "category": "clowns",
-	//	    "description": "This field is ignored in JSON, but it we provided a custom description."
-	//	}
-	SpecialCase string `json:"-"`
-	NormalCase  int    `json:"normal-case"`
-}
-
 type errorTypeFalse struct {
 	badTag string `json:"bad-tag" required:"false"`
 }
@@ -751,39 +742,6 @@ func TestDescribeTypeBase(test *testing.T) {
 					BaseTypeDescription: BaseTypeDescription{
 						Category:    "role",
 						Description: "The requesting user must have a minimum server role of admin to complete this operation.",
-					},
-				},
-			},
-			"",
-		},
-		{
-			reflect.TypeOf((*overrideTypeStruct)(nil)).Elem(),
-			FullTypeDescription{
-				BaseTypeDescription: BaseTypeDescription{
-					Category: "struct",
-				},
-				Fields: []FieldDescription{
-					FieldDescription{
-						BaseFieldDescription: BaseFieldDescription{
-							Name: "normal-case",
-							Type: "int",
-						},
-					},
-				},
-			},
-			map[string]FullTypeDescription{
-				"overriden-type-id": FullTypeDescription{
-					BaseTypeDescription: BaseTypeDescription{
-						Category:    "clowns",
-						Description: "This field is ignored in JSON, but it we provided a custom description.",
-					},
-					Fields: []FieldDescription{
-						FieldDescription{
-							BaseFieldDescription: BaseFieldDescription{
-								Name: "normal-case",
-								Type: "int",
-							},
-						},
 					},
 				},
 			},

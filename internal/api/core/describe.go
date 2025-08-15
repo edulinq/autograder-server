@@ -332,7 +332,7 @@ func DescribeType(customType reflect.Type, addType bool, info TypeInfoCache) (Fu
 		return FullTypeDescription{}, "", TypeInfoCache{}, err
 	}
 
-	overrideTypeID, overrideTypeDescription, err := getTypeOverride(description)
+	overrideTypeDescription, overrideTypeID, err := getTypeOverride(description)
 	if err != nil {
 		return FullTypeDescription{}, "", TypeInfoCache{}, err
 	}
@@ -538,14 +538,14 @@ func getTypeDescription(customType reflect.Type, knownPackages map[string]Struct
 	return description, nil
 }
 
-func getTypeOverride(rawDescription string) (string, *FullTypeDescription, error) {
+func getTypeOverride(rawDescription string) (*FullTypeDescription, string, error) {
 	if !strings.Contains(rawDescription, TYPE_OVERRIDE_INDICATOR) {
-		return "", nil, nil
+		return nil, "", nil
 	}
 
 	commentParts := strings.Split(rawDescription, fmt.Sprintf("%s:", TYPE_OVERRIDE_INDICATOR))
 	if len(commentParts) != 2 {
-		return "", nil, fmt.Errorf("Type override description requires a part after the indicator: '%s'.", rawDescription)
+		return nil, "", fmt.Errorf("Type override description requires a part after the indicator: '%s'.", rawDescription)
 	}
 
 	// Everything after the indicator is a part of the type override.
@@ -553,7 +553,7 @@ func getTypeOverride(rawDescription string) (string, *FullTypeDescription, error
 
 	descriptionParts := strings.Split(commentOverride, "=")
 	if len(descriptionParts) != 2 {
-		return "", nil, fmt.Errorf("Unexpected description override. Expected: '<typeID>=<typeDescription>', Actual: '%s'.", descriptionParts)
+		return nil, "", fmt.Errorf("Unexpected description override. Expected: '<typeID>=<typeDescription>', Actual: '%s'.", descriptionParts)
 	}
 
 	rawTypeID := descriptionParts[0]
@@ -564,10 +564,10 @@ func getTypeOverride(rawDescription string) (string, *FullTypeDescription, error
 	typeDescription := FullTypeDescription{}
 	err := util.JSONFromString(rawTypeDescription, &typeDescription)
 	if err != nil {
-		return "", nil, fmt.Errorf("Failed to convert type override: '%w'.", err)
+		return nil, "", fmt.Errorf("Failed to convert type override: '%w'.", err)
 	}
 
-	return typeID, &typeDescription, nil
+	return &typeDescription, typeID, nil
 }
 
 func isFieldRequired(field reflect.StructField) (bool, error) {
