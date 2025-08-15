@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"sync"
 
+	"github.com/edulinq/autograder/internal/analysis/core"
 	"github.com/edulinq/autograder/internal/docker"
 	"github.com/edulinq/autograder/internal/log"
 	"github.com/edulinq/autograder/internal/model"
@@ -23,12 +24,32 @@ const (
 	OUT_DIRNAME       = "out"
 	OUT_FILENAME      = "pairs.csv"
 	TEMPLATE_FILENAME = "template"
+
+	// Default values taken from documentation:
+	// https://dolos.ugent.be/docs/running.html#modifying-plagiarism-detection-parameters
+	DEFAULT_KGRAM_IN_WINDOW = 17
+	DEFAULT_KGRAM_LENGTH    = 23
 )
 
 var (
 	hasImage  bool = false
 	imageLock sync.Mutex
 )
+
+type DolosEngineOptions struct {
+	// The number of overlapping subsequent k-grams to be used when selecting one k-grams (--kgrams-in-window).
+	KGramsInWindow int `json:"kgrams-in-window"`
+
+	// The minimum number of tokens in a k-gram (--kgram-length).
+	KGramLength int `json:"kgram-length"`
+}
+
+func GetDefaultDolosOptions() *DolosEngineOptions {
+	return &DolosEngineOptions{
+		KGramsInWindow: DEFAULT_KGRAM_IN_WINDOW,
+		KGramLength:    DEFAULT_KGRAM_LENGTH,
+	}
+}
 
 type dolosEngine struct{}
 
@@ -44,8 +65,13 @@ func (this *dolosEngine) IsAvailable() bool {
 	return docker.CanAccessDocker()
 }
 
-func (this *dolosEngine) ComputeFileSimilarity(paths [2]string, templatePath string, ctx context.Context) (*model.FileSimilarity, error) {
-	err := ensureImage()
+func (this *dolosEngine) ComputeFileSimilarity(paths [2]string, templatePath string, ctx context.Context, rawOptions model.OptionsMap) (*model.FileSimilarity, error) {
+	options, err := core.ParseEngineOptions(rawOptions, GetDefaultDolosOptions())
+	if err != nil {
+		return nil, fmt.Errorf("Failed to parse custom Dolos engine options: '%w'.", err)
+	}
+
+	err = ensureImage()
 	if err != nil {
 		return nil, fmt.Errorf("Failed to ensure Dolos docker image exists: '%w'.", err)
 	}
@@ -95,6 +121,8 @@ func (this *dolosEngine) ComputeFileSimilarity(paths [2]string, templatePath str
 		"--output-format", "csv",
 		"--output-destination", OUT_DIRNAME,
 		"--language", getLanguage(tempFilenames[0]),
+		"--kgrams-in-window", fmt.Sprintf("%d", options.KGramsInWindow),
+		"--kgram-length", fmt.Sprintf("%d", options.KGramLength),
 		tempFilenames[0],
 		tempFilenames[1],
 	}

@@ -348,6 +348,7 @@ It has the following fields:
 | `exclude-patterns` | List[Regex]    | false    | Any source file that matches any of these patterns will not be used in code analysis. |
 | `template-files`   | List[FileSpec] | false    | A list of files to use as "templates" during pairwise analysis. Similarity engines can try to ignore template/boilerplate code when computing similarities. Any file paths must be local (relative). |
 | `template-file-ops`| List[FileOp]   | false    | A list of file operations to transform the template files with. |
+| `engine-options`   | Map            | false    | A map keyed by engine name to it's respective engine options. |
 
 During a pairwise code analysis,
 the options of the assignment for the submission with the [lexicographically](https://en.wikipedia.org/wiki/Lexicographic_order) smaller id will always be used.
@@ -378,6 +379,61 @@ When working with these patterns, keep the following in mind:
     The inclusion/exclusion patterns apply after renaming and transformation.
     For example, [iPython Notebooks](https://en.wikipedia.org/wiki/Project_Jupyter#Documents) with the `.ipynb` extensions
     will have their code Python extracted and renamed to `.py`.
+
+#### Engine Options
+
+Engine options contains options that are passed to specific code analysis engines.
+These options contain a map of engine name to its respective engine options. 
+
+For Example: 
+```json
+{
+    "jplag": {
+        "min-tokens": 7
+    },
+    "dolos": {
+        "kgram-length": 12
+    }
+}
+```
+
+The code analysis tools currently supported are listed below.
+
+##### JPlag 
+
+This engine is built upon [JPlag](https://github.com/jplag/JPlag/),
+and provided as a [docker image](https://github.com/edulinq/jplag-docker).
+
+Current Supported Options:
+| Name          | Type      | Required | Description |
+|---------------|-----------|----------|-------------|
+| `min-tokens`  | Integer   | false    | The minimum number of consecutive tokens that must match between two code submissions to be considered a similarity match. |
+
+For Example:
+```json
+    "jplag": {
+        "min-tokens": 7
+    }
+```
+
+##### Dolos
+
+This engine is built upon [Dolos](https://dolos.ugent.be/),
+and provided as a [docker image](https://github.com/edulinq/dolos-docker).
+
+Current Supported Options:
+| Name               | Type      | Required | Description |
+|--------------------|-----------|----------|-------------|
+| `kgram-length`     | Integer   | false    | The minimum number of tokens in a k-gram. Common fragments between two files that are shorter than `$$k$$` tokens will not be found during similarity detection. |
+| `kgrams-in-window` | Integer   | false    | The size of the window used during winnowing algorithm. It select one k-grams from each overlapping window of `w` subsequent k-grams. See [this documentation](https://dolos.ugent.be/docs/running.html#window-length). |
+
+For Example: 
+```json
+    "dolos": {
+        "kgram-length": 12,
+        "kgrams-in-window": 23
+    }
+```
 
 ## Roles
 

@@ -2138,6 +2138,11 @@
             "category": "struct",
             "fields": [
                 {
+                    "name": "engine-options",
+                    "type": "map[string]model.OptionsMap",
+                    "description": "EngineOptions includes the options for analysis engines.\nIt is a map keyed by an engine name to it's respective engine options.\nCurrent supported values can be found in the respective engine's options struct."
+                },
+                {
                     "name": "exclude-patterns",
                     "type": "[]string"
                 },
@@ -2651,6 +2656,10 @@
         "model.LocatableError": {
             "category": "struct",
             "description": "A general representation of errors that have a definite source location."
+        },
+        "model.OptionsMap": {
+            "category": "map",
+            "description": "Holds options specific to a particular analysis engine."
         },
         "model.PairwiseAnalysis": {
             "category": "struct",

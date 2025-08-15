@@ -18,7 +18,7 @@ var (
 	notImplementedRelPath = filepath.Join(baseTestRelDir, "not_implemented", "submission.py")
 )
 
-func RunEngineTestComputeFileSimilarityBase(test *testing.T, engine SimilarityEngine, includeTemplate bool, expected *model.FileSimilarity) {
+func RunEngineTestComputeFileSimilarityBase(test *testing.T, engine SimilarityEngine, includeTemplate bool, expected *model.FileSimilarity, engineOptions model.OptionsMap) {
 	docker.EnsureOrSkipForTest(test)
 
 	paths := [2]string{
@@ -31,7 +31,7 @@ func RunEngineTestComputeFileSimilarityBase(test *testing.T, engine SimilarityEn
 		templatePath = filepath.Join(util.RootDirForTesting(), notImplementedRelPath)
 	}
 
-	result, err := engine.ComputeFileSimilarity(paths, templatePath, context.Background())
+	result, err := engine.ComputeFileSimilarity(paths, templatePath, context.Background(), engineOptions)
 	if err != nil {
 		test.Fatalf("Failed to compute similarity: '%v'.", err)
 	}

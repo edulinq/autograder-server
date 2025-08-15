@@ -186,6 +186,16 @@ func computeFileSims(options AnalysisOptions, inputDirs [2]string, assignment *m
 		return nil, nil, nil, err
 	}
 
+	rawEngineOptions := make(map[string]model.OptionsMap, 0)
+	if (assignment != nil) && (assignment.AssignmentAnalysisOptions != nil) {
+		rawEngineOptions = assignment.AssignmentAnalysisOptions.EngineOptions
+	}
+
+	parsedEngineOptions := make(map[string]model.OptionsMap)
+	for _, engine := range engines {
+		parsedEngineOptions[engine.GetName()] = GetEngineOptions(rawEngineOptions, engine.GetName())
+	}
+
 	templateDir := ""
 	if templateFileStore != nil {
 		templateDir, err = templateFileStore.GetTemplatePath(assignment)
@@ -248,10 +258,9 @@ func computeFileSims(options AnalysisOptions, inputDirs [2]string, assignment *m
 			// Compute the file similarity for each engine in parallel.
 			// Note that because we know the index for each engine up-front, we don't need a channel.
 			engineWaitGroup.Add(1)
-			go func(index int, simEngine core.SimilarityEngine) {
+			go func(index int, simEngine core.SimilarityEngine, engineOptions model.OptionsMap) {
 				defer engineWaitGroup.Done()
-
-				similarity, err := simEngine.ComputeFileSimilarity(paths, templatePath, options.Context)
+				similarity, err := simEngine.ComputeFileSimilarity(paths, templatePath, options.Context, engineOptions)
 				if err != nil {
 					errs[index] = fmt.Errorf("Unable to compute similarity for '%s' using engine '%s': '%w'", relpath, simEngine.GetName(), err)
 				} else if similarity != nil {
@@ -260,7 +269,7 @@ func computeFileSims(options AnalysisOptions, inputDirs [2]string, assignment *m
 
 					tempSimilarities[index] = similarity
 				}
-			}(i, engine)
+			}(i, engine, parsedEngineOptions[engine.GetName()])
 		}
 
 		// Wait for all engines to complete.

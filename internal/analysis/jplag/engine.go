@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"sync"
 
+	"github.com/edulinq/autograder/internal/analysis/core"
 	"github.com/edulinq/autograder/internal/docker"
 	"github.com/edulinq/autograder/internal/log"
 	"github.com/edulinq/autograder/internal/model"
@@ -32,14 +33,21 @@ var (
 	imageLock sync.Mutex
 )
 
-type JPlagEngine struct {
-	MinTokens int
+type JPlagEngineOptions struct {
+	// Minimum number of consecutive tokens that must match between two code submissions to be considered similar (--min-tokens).
+	MinTokens int `json:"min-tokens"`
 }
 
-func GetEngine() *JPlagEngine {
-	return &JPlagEngine{
+func GetDefaultJPlagOptions() *JPlagEngineOptions {
+	return &JPlagEngineOptions{
 		MinTokens: DEFAULT_MIN_TOKENS,
 	}
+}
+
+type JPlagEngine struct{}
+
+func GetEngine() *JPlagEngine {
+	return &JPlagEngine{}
 }
 
 func (this *JPlagEngine) GetName() string {
@@ -50,8 +58,13 @@ func (this *JPlagEngine) IsAvailable() bool {
 	return docker.CanAccessDocker()
 }
 
-func (this *JPlagEngine) ComputeFileSimilarity(paths [2]string, templatePath string, ctx context.Context) (*model.FileSimilarity, error) {
-	err := ensureImage()
+func (this *JPlagEngine) ComputeFileSimilarity(paths [2]string, templatePath string, ctx context.Context, rawOptions model.OptionsMap) (*model.FileSimilarity, error) {
+	options, err := core.ParseEngineOptions(rawOptions, GetDefaultJPlagOptions())
+	if err != nil {
+		return nil, fmt.Errorf("Failed to parse custom JPlag engine options: '%w'.", err)
+	}
+
+	err = ensureImage()
 	if err != nil {
 		return nil, fmt.Errorf("Failed to ensure JPlag docker image exists: '%w'.", err)
 	}
@@ -124,7 +137,7 @@ func (this *JPlagEngine) ComputeFileSimilarity(paths [2]string, templatePath str
 		"--mode", "RUN",
 		"--csv-export",
 		"--language", getLanguage(tempFilenames[0]),
-		"--min-tokens", fmt.Sprintf("%d", this.MinTokens),
+		"--min-tokens", fmt.Sprintf("%d", options.MinTokens),
 		"/jplag/src",
 	}
 

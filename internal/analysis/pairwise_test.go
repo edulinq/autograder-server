@@ -275,11 +275,6 @@ func TestPairwiseAnalysisDefaultEnginesBase(test *testing.T) {
 		forceDefaultEnginesForTesting = false
 	}()
 
-	defaultSimilarityEngines[1].(*jplag.JPlagEngine).MinTokens = 5
-	defer func() {
-		defaultSimilarityEngines[1].(*jplag.JPlagEngine).MinTokens = jplag.DEFAULT_MIN_TOKENS
-	}()
-
 	ids := []string{
 		"course101::hw0::course-student@test.edulinq.org::1697406256",
 		"course101::hw0::course-student@test.edulinq.org::1697406272",
@@ -321,10 +316,14 @@ func TestPairwiseAnalysisDefaultEnginesSpecificFiles(test *testing.T) {
 	docker.EnsureOrSkipForTest(test)
 
 	// Override a setting for JPlag for testing.
-	defaultSimilarityEngines[1].(*jplag.JPlagEngine).MinTokens = 5
-	defer func() {
-		defaultSimilarityEngines[1].(*jplag.JPlagEngine).MinTokens = jplag.DEFAULT_MIN_TOKENS
-	}()
+	engineOptionsStruct := jplag.JPlagEngineOptions{
+		MinTokens: 5,
+	}
+
+	engineOptions, err := util.ToJSONMap(engineOptionsStruct)
+	if err != nil {
+		test.Fatalf("Failed to convert engine option: '%v'.", err)
+	}
 
 	testPaths := []string{
 		filepath.Join(util.RootDirForTesting(), "testdata", "files", "sim_engine", "config.json"),
@@ -335,7 +334,7 @@ func TestPairwiseAnalysisDefaultEnginesSpecificFiles(test *testing.T) {
 
 	for _, path := range testPaths {
 		for _, engine := range defaultSimilarityEngines {
-			sim, err := engine.ComputeFileSimilarity([2]string{path, path}, "", ctx)
+			sim, err := engine.ComputeFileSimilarity([2]string{path, path}, "", ctx, engineOptions)
 			if err != nil {
 				test.Errorf("Engine '%s' failed to compute similarity on '%s': '%v'.",
 					engine.GetName(), path, err)
