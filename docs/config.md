@@ -3,7 +3,7 @@
 This project uses configuration options to set the behavior of its executables.
 All executables that use autograder resources use the same configuration infrastructure
 and can therefore be configured the same way and with the same options.
-See the (Configuration Options section)[#configuration-options] for all available options.
+See the [Configuration Options section](#configuration-options) for all available options.
 
 Options can be set on the command-line using the `-c`/`--config` flag.
 For example:
