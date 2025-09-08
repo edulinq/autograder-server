@@ -5,7 +5,7 @@
 
 #include "assignment.h"
 
-const char* ASSIGNMENT_NAME = "cpp-simple";
+const char* ASSIGNMENT_NAME = "cpp";
 const int BUFFER_LENGTH = 1024;
 
 struct AddTestCase {

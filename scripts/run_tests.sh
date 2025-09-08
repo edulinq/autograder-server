@@ -20,6 +20,8 @@ function main() {
         extra_args='--rerun-fails=3'
     fi
 
+    go clean -testcache
+
     echo "Running tests."
     go run gotest.tools/gotestsum --format-hide-empty-pkg ${extra_args} --packages='./...'
     if [[ ${?} -ne 0 ]] ; then

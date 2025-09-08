@@ -1,6 +1,6 @@
 {
     "course": "CSE-i123",
-    "assignment": "cpp-simple",
+    "assignment": "cpp",
     "server": "http://sozopol.soe.ucsc.edu:12345",
     "user": "course-student@test.edulinq.org",
     "pass": "student"

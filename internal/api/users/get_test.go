@@ -124,8 +124,8 @@ func TestGetSingle(test *testing.T) {
 						Name:    "A Simple Bash Assignment",
 						DueDate: timestamp.ZeroPointer(),
 					},
-					"cpp-simple": &core.AssignmentInfo{
-						ID:   "cpp-simple",
+					"cpp": &core.AssignmentInfo{
+						ID:   "cpp",
 						Name: "A Simple C++ Assignment",
 					},
 					"java": &core.AssignmentInfo{

@@ -32,7 +32,7 @@ func TestNewAssignmentInfos(test *testing.T) {
 		// Multiple Assignments
 		{"course-languages", []*AssignmentInfo{
 			&AssignmentInfo{ID: "bash", Name: "A Simple Bash Assignment", DueDate: timestamp.ZeroPointer()},
-			&AssignmentInfo{ID: "cpp-simple", Name: "A Simple C++ Assignment"},
+			&AssignmentInfo{ID: "cpp", Name: "A Simple C++ Assignment"},
 			&AssignmentInfo{ID: "java", Name: "A Simple Java Assignment"},
 		}},
 	}

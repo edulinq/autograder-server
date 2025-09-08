@@ -1,5 +1,5 @@
 {
-    "id": "cpp-simple",
+    "id": "cpp",
     "name": "A Simple C++ Assignment",
     "static-files": [
         "grader.sh",
