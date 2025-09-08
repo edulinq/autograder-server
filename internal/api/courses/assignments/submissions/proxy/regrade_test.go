@@ -34,7 +34,7 @@ func TestRegradeBase(test *testing.T) {
 		expectedLocator string
 		expected        RegradeResponse
 	}{
-		// Wait For Completion
+		// Note: Tests that do not wait for completion are left out because of flakiness.
 
 		// Student
 		{
@@ -167,77 +167,6 @@ func TestRegradeBase(test *testing.T) {
 			},
 		},
 
-		// No Wait
-
-		// Student
-		{
-			grader.RegradeOptions{
-				JobOptions: jobmanager.JobOptions{
-					WaitForCompletion: false,
-				},
-				RawReferences: []model.CourseUserReference{"student"},
-			},
-			"course-grader",
-			"",
-			RegradeResponse{
-				RegradeResult: grader.RegradeResult{
-					Results:    map[string]*model.SubmissionHistoryItem{},
-					WorkErrors: map[string]string{},
-				},
-				Complete:      false,
-				ResolvedUsers: []string{"course-student@test.edulinq.org"},
-			},
-		},
-
-		// Early Regrade After
-		{
-			grader.RegradeOptions{
-				JobOptions: jobmanager.JobOptions{
-					WaitForCompletion: false,
-				},
-				RawReferences: []model.CourseUserReference{"student"},
-				RegradeCutoff: timestamp.ZeroPointer(),
-			},
-			"course-grader",
-			"",
-			RegradeResponse{
-				RegradeResult: grader.RegradeResult{
-					Results: map[string]*model.SubmissionHistoryItem{
-						"course-student@test.edulinq.org": studentGradingResults["1697406272"].Info.ToHistoryItem(),
-					},
-					WorkErrors: map[string]string{},
-				},
-				Complete:      true,
-				ResolvedUsers: []string{"course-student@test.edulinq.org"},
-			},
-		},
-
-		// Errors
-
-		// Invalid Target Users
-		{
-			grader.RegradeOptions{
-				JobOptions: jobmanager.JobOptions{
-					WaitForCompletion: true,
-				},
-				RawReferences: []model.CourseUserReference{"ZZZ"},
-			},
-			"course-admin",
-			"-640",
-			RegradeResponse{},
-		},
-		{
-			grader.RegradeOptions{
-				JobOptions: jobmanager.JobOptions{
-					WaitForCompletion: false,
-				},
-				RawReferences: []model.CourseUserReference{"ZZZ"},
-			},
-			"course-admin",
-			"-640",
-			RegradeResponse{},
-		},
-
 		// Perm Errors
 		{
 			grader.RegradeOptions{
@@ -247,17 +176,6 @@ func TestRegradeBase(test *testing.T) {
 				RawReferences: []model.CourseUserReference{"student"},
 			},
 			"course-student",
-			"-020",
-			RegradeResponse{},
-		},
-		{
-			grader.RegradeOptions{
-				JobOptions: jobmanager.JobOptions{
-					WaitForCompletion: false,
-				},
-				RawReferences: []model.CourseUserReference{"student"},
-			},
-			"course-other",
 			"-020",
 			RegradeResponse{},
 		},

@@ -183,8 +183,8 @@ func TestProxyResubmit(test *testing.T) {
 		}
 
 		if !responseContent.GradingInfo.Equals(*submission, false) {
-			test.Errorf("Case %d: Actual output:\n---\n%v\n---\ndoes not match database value:\n---\n%v\n---\n.",
-				i, responseContent.GradingInfo, submission)
+			test.Errorf("Case %d: Actual output does not match database value:\n%s.",
+				i, util.MustComputeTestDiff(util.MustToJSONIndent(responseContent.GradingInfo), util.MustToJSONIndent(submission)))
 			continue
 		}
 
