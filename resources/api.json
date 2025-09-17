@@ -887,6 +887,39 @@
                 }
             ]
         },
+        "courses/get": {
+            "description": "Get information about a course.",
+            "input": [
+                {
+                    "name": "course-id",
+                    "type": "string",
+                    "description": "The ID of the course to make this request to.",
+                    "required": true
+                },
+                {
+                    "name": "user-email",
+                    "type": "string",
+                    "description": "The email of the user making this request.",
+                    "required": true
+                },
+                {
+                    "name": "user-pass",
+                    "type": "string",
+                    "description": "The password of the user making this request.",
+                    "required": true
+                }
+            ],
+            "output": [
+                {
+                    "name": "course",
+                    "type": "*core.CourseInfo"
+                },
+                {
+                    "name": "found",
+                    "type": "bool"
+                }
+            ]
+        },
         "courses/lms/scores/upload": {
             "description": "Perform a full scoring and upload scores to the course's LMS.",
             "input": [

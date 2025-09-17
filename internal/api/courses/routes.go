@@ -12,9 +12,14 @@ import (
 	"github.com/edulinq/autograder/internal/api/courses/users"
 )
 
+var baseRoutes []core.Route = []core.Route{
+	core.MustNewAPIRoute(`courses/get`, HandleGet),
+}
+
 func GetRoutes() *[]core.Route {
 	routes := make([]core.Route, 0)
 
+	routes = append(routes, baseRoutes...)
 	routes = append(routes, *(admin.GetRoutes())...)
 	routes = append(routes, *(assignments.GetRoutes())...)
 	routes = append(routes, *(lms.GetRoutes())...)
