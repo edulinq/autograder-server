@@ -14,6 +14,7 @@ import (
 
 var baseRoutes []core.Route = []core.Route{
 	core.MustNewAPIRoute(`courses/get`, HandleGet),
+	core.MustNewAPIRoute(`courses/list`, HandleList),
 }
 
 func GetRoutes() *[]core.Route {

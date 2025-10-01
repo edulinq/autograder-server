@@ -1,6 +1,8 @@
 package core
 
 import (
+	"slices"
+
 	"github.com/edulinq/autograder/internal/model"
 	"github.com/edulinq/autograder/internal/timestamp"
 )
@@ -47,4 +49,29 @@ func NewCourseInfo(course *model.Course) *CourseInfo {
 		Name:        course.Name,
 		Assignments: assignments,
 	}
+}
+
+func NewCourseInfos(courses []*model.Course) []*CourseInfo {
+	result := make([]*CourseInfo, 0, len(courses))
+	for _, course := range courses {
+		result = append(result, NewCourseInfo(course))
+	}
+
+	return result
+}
+
+func NewCourseInfosFromMap(courses map[string]*model.Course) []*CourseInfo {
+	ids := make([]string, 0, len(courses))
+	for id, _ := range courses {
+		ids = append(ids, id)
+	}
+
+	slices.Sort(ids)
+
+	result := make([]*CourseInfo, 0, len(courses))
+	for _, id := range ids {
+		result = append(result, NewCourseInfo(courses[id]))
+	}
+
+	return result
 }
