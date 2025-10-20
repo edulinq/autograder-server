@@ -235,6 +235,29 @@ func applyContext(apiError *APIError, requestContext any) {
 		return
 	}
 
+	// Check the base type of the request.
+	switch typedContext := requestContext.(type) {
+	case *APIRequest:
+		applyAPIRequestContext(apiError, typedContext)
+	case APIRequest:
+		applyAPIRequestContext(apiError, &typedContext)
+
+	case *APIRequestUserContext:
+		applyAPIRequestUserContext(apiError, typedContext)
+	case APIRequestUserContext:
+		applyAPIRequestUserContext(apiError, &typedContext)
+
+	case *APIRequestCourseUserContext:
+		applyAPIRequestCourseUserContext(apiError, typedContext)
+	case APIRequestCourseUserContext:
+		applyAPIRequestCourseUserContext(apiError, &typedContext)
+
+	case *APIRequestAssignmentContext:
+		applyAPIRequestAssignmentContext(apiError, typedContext)
+	case APIRequestAssignmentContext:
+		applyAPIRequestAssignmentContext(apiError, &typedContext)
+	}
+
 	// Now check for APIRequest embedded types.
 
 	reflectValue := reflect.ValueOf(requestContext)
@@ -249,32 +272,44 @@ func applyContext(apiError *APIError, requestContext any) {
 
 	baseContextValue := reflectValue.FieldByName("APIRequest")
 	if baseContextValue.IsValid() {
-		baseContext := baseContextValue.Interface().(APIRequest)
-
-		apiError.RequestID = baseContext.RequestID
-		apiError.Endpoint = baseContext.Endpoint
-		apiError.Sender = baseContext.Sender
-		apiError.Timestamp = baseContext.Timestamp
+		context := baseContextValue.Interface().(APIRequest)
+		applyAPIRequestContext(apiError, &context)
 	}
 
 	userContextValue := reflectValue.FieldByName("APIRequestUserContext")
 	if userContextValue.IsValid() {
-		userContext := userContextValue.Interface().(APIRequestUserContext)
-
-		apiError.UserEmail = userContext.UserEmail
+		context := userContextValue.Interface().(APIRequestUserContext)
+		applyAPIRequestUserContext(apiError, &context)
 	}
 
 	courseContextValue := reflectValue.FieldByName("APIRequestCourseUserContext")
 	if courseContextValue.IsValid() {
-		courseContext := courseContextValue.Interface().(APIRequestCourseUserContext)
-
-		apiError.CourseID = courseContext.CourseID
+		context := courseContextValue.Interface().(APIRequestCourseUserContext)
+		applyAPIRequestCourseUserContext(apiError, &context)
 	}
 
 	assignmentContextValue := reflectValue.FieldByName("APIRequestAssignmentContext")
 	if assignmentContextValue.IsValid() {
-		assignmentContext := assignmentContextValue.Interface().(APIRequestAssignmentContext)
-
-		apiError.AssignmentID = assignmentContext.AssignmentID
+		context := assignmentContextValue.Interface().(APIRequestAssignmentContext)
+		applyAPIRequestAssignmentContext(apiError, &context)
 	}
+}
+
+func applyAPIRequestContext(apiError *APIError, context *APIRequest) {
+	apiError.RequestID = context.RequestID
+	apiError.Endpoint = context.Endpoint
+	apiError.Sender = context.Sender
+	apiError.Timestamp = context.Timestamp
+}
+
+func applyAPIRequestUserContext(apiError *APIError, context *APIRequestUserContext) {
+	apiError.UserEmail = context.UserEmail
+}
+
+func applyAPIRequestCourseUserContext(apiError *APIError, context *APIRequestCourseUserContext) {
+	apiError.CourseID = context.CourseID
+}
+
+func applyAPIRequestAssignmentContext(apiError *APIError, context *APIRequestAssignmentContext) {
+	apiError.AssignmentID = context.AssignmentID
 }
