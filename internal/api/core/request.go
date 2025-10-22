@@ -15,17 +15,25 @@ import (
 	"github.com/edulinq/autograder/internal/util"
 )
 
-// An api request that has been reflexively verifed.
+// An api request that has been reflexively verified.
 // Once validated, callers should feel safe calling reflection methods on this without extra checks.
 type ValidAPIRequest any
 
 // A random nonce is generated for each root user request (e.g. CMDs).
 // The nonce is stored in RootUserNonces and is attached to the request.
 // It's later validated when processing the request through the http socket and then immediately deleted
-// to confirm the request came from a valid root user through the unix socket.
+// to confirm the request came from a valid root user through the UNIX socket.
 var RootUserNonces sync.Map
 
 type APIRequest struct {
+	// The self-described source of this request.
+	// For example, requests sent from this project will use common.AG_REQUEST_SOURCE.
+	Source string `json:"source"`
+
+	// The self-described version of the source of this request.
+	// For example, requests sent from this project will use the version computed from util.
+	SourceVersion string `json:"source-version"`
+
 	// These are not provided in JSON, they are filled in during validation.
 	RequestID string              `json:"-"`
 	Endpoint  string              `json:"-"`

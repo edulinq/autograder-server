@@ -117,10 +117,19 @@ func GetFullCachedVersion() (Version, error) {
 	return version, nil
 }
 
-func MustGetAPIVersion() int {
+func MustGetFullCachedVersion() Version {
 	version, err := GetFullCachedVersion()
 	if err != nil {
 		log.Fatal("Failed to get the full cached version.", err)
+	}
+
+	return version
+}
+
+func MustGetAPIVersion() int {
+	version, err := GetFullCachedVersion()
+	if err != nil {
+		log.Fatal("Failed to get the full cached version to get the API version.", err)
 	}
 
 	major, err := version.Major()

@@ -10,8 +10,10 @@ import (
 	"github.com/edulinq/autograder/internal/api"
 	"github.com/edulinq/autograder/internal/api/core"
 	"github.com/edulinq/autograder/internal/cmd"
+	"github.com/edulinq/autograder/internal/common"
 	"github.com/edulinq/autograder/internal/config"
 	"github.com/edulinq/autograder/internal/log"
+	"github.com/edulinq/autograder/internal/util"
 )
 
 var args struct {
@@ -63,7 +65,11 @@ func main() {
 		return
 	}
 
-	request := map[string]any{}
+	request := map[string]any{
+		"source":         common.AG_REQUEST_SOURCE,
+		"source-version": util.MustGetFullCachedVersion().String(),
+	}
+
 	for _, arg := range args.Parameters {
 		// Split the parameter into it's key and value.
 		parts := strings.SplitN(arg, ":", 2)

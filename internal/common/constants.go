@@ -12,3 +12,5 @@ const SUBMISSION_STDERR_FILENAME = "stderr.txt"
 const AUTOGRADER_COMMENT_IDENTITY_KEY = "__autograder__"
 
 const SUBMISSION_ID_DELIM = "::"
+
+const AG_REQUEST_SOURCE = "edq-autograder-server"

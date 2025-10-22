@@ -36,16 +36,18 @@ const (
 // This is technically an error,
 // but should generally be treated as an APIError and not a general error.
 type APIError struct {
-	RequestID    string
-	Locator      string
-	Endpoint     string
-	Sender       string
-	Timestamp    timestamp.Timestamp
-	LogLevel     log.LogLevel
-	HTTPStatus   int
-	InternalText string
-	ResponseText string
-	SourceError  error
+	RequestID     string
+	Locator       string
+	Endpoint      string
+	Sender        string
+	Source        string
+	SourceVersion string
+	Timestamp     timestamp.Timestamp
+	LogLevel      log.LogLevel
+	HTTPStatus    int
+	InternalText  string
+	ResponseText  string
+	SourceError   error
 
 	CourseID     string
 	AssignmentID string
@@ -67,6 +69,8 @@ func (this *APIError) Log() {
 		log.NewAttr("locator", this.Locator),
 		log.NewAttr("api-endpoint", this.Endpoint),
 		log.NewAttr("sender", this.Sender),
+		log.NewAttr("source", this.Source),
+		log.NewAttr("source-version", this.SourceVersion),
 		log.NewAttr("timestamp", this.Timestamp),
 		log.NewAttr("http-status", this.HTTPStatus),
 		log.NewAttr("internal-text", this.InternalText),
@@ -299,6 +303,8 @@ func applyAPIRequestContext(apiError *APIError, context *APIRequest) {
 	apiError.RequestID = context.RequestID
 	apiError.Endpoint = context.Endpoint
 	apiError.Sender = context.Sender
+	apiError.Source = context.Source
+	apiError.SourceVersion = context.SourceVersion
 	apiError.Timestamp = context.Timestamp
 }
 
