@@ -133,6 +133,70 @@
             }
         }
     },
+    "extra-course-student-1@test.edulinq.org": {
+        "email": "extra-course-student-1@test.edulinq.org",
+        "name": "extra-course-student-1",
+        "server-role": "user",
+        "salt": "e60c471719d04f5b980d5af0831582ca2c15f5595e655c52d14294b5ea1a7b20",
+        "password": {
+            "id": "666d07f2-a13a-418d-8732-da11072db79f",
+            "hex-digest": "0baa24021610f2173f7af8284f6216021761526d639f7c219983d86b3b688a8f",
+            "source": "password",
+            "name": "password",
+            "creation-time": 0,
+            "access-time": 0
+        },
+        "tokens": [],
+        "course-info": {}
+    },
+    "extra-course-student-2@test.edulinq.org": {
+        "email": "extra-course-student-2@test.edulinq.org",
+        "name": "extra-course-student-2",
+        "server-role": "user",
+        "salt": "29b745d5382799830b04d1d425d488eb410f70fbd4b8b8666ce6afc6e50cfa69",
+        "password": {
+            "id": "ce677066-5d03-41c3-8aa8-12f97a63b63e",
+            "hex-digest": "153e14d56d67424eb4c5e3958caff40a1e75f00a1899ab70bd71b151e231a83b",
+            "source": "password",
+            "name": "password",
+            "creation-time": 0,
+            "access-time": 0
+        },
+        "tokens": [],
+        "course-info": {}
+    },
+    "extra-course-student-3@test.edulinq.org": {
+        "email": "extra-course-student-3@test.edulinq.org",
+        "name": "extra-course-student-3",
+        "server-role": "user",
+        "salt": "2f171d465e5291be9ea61e928cf25c77d9111a09cfbe1c6168be96abc7e5eec0",
+        "password": {
+            "id": "b13691fc-682e-4435-8098-017eb01bdd4c",
+            "hex-digest": "383755691755fd854f07508d1cb7f44a1353fd280103248b35a6e573e046fdd6",
+            "source": "password",
+            "name": "password",
+            "creation-time": 0,
+            "access-time": 0
+        },
+        "tokens": [],
+        "course-info": {}
+    },
+    "extra-course-student-4@test.edulinq.org": {
+        "email": "extra-course-student-4@test.edulinq.org",
+        "name": "extra-course-student-4",
+        "server-role": "user",
+        "salt": "00a7db95a02681381116955b8cd48e7d52eeb3dc85e229ef99352f631547f335",
+        "password": {
+            "id": "52b104c2-88b1-4343-afa3-03820b6b4c4c",
+            "hex-digest": "a7792a1067a456cddc4ad06c78bd75f53309c116ba60150a0083847a9ad515ef",
+            "source": "password",
+            "name": "password",
+            "creation-time": 0,
+            "access-time": 0
+        },
+        "tokens": [],
+        "course-info": {}
+    },
     "server-admin@test.edulinq.org": {
         "email": "server-admin@test.edulinq.org",
         "name": "server-admin",
