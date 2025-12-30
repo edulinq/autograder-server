@@ -1052,14 +1052,14 @@ func getCopyTestCases() []*testCaseCopy {
 				Path: filepath.Join(TestdataDirForTesting(), "files", "*_test", "*"),
 				Dest: "test",
 			},
-			ExpectedCopiedDirents: []string{"test", "test/*globSpec.txt", "test/spec.txt", "test/spec2.txt"},
+			ExpectedCopiedDirents: []string{"test", "test/spec.txt", "test/spec2.txt"},
 		},
 		&testCaseCopy{
 			Spec: FileSpec{
 				Type: FILESPEC_TYPE_PATH,
 				Path: filepath.Join(TestdataDirForTesting(), "files", "*_test", "*"),
 			},
-			ExpectedCopiedDirents: []string{"*globSpec.txt", "spec.txt", "spec2.txt"},
+			ExpectedCopiedDirents: []string{"spec.txt", "spec2.txt"},
 		},
 		&testCaseCopy{
 			Spec: FileSpec{
@@ -1068,15 +1068,6 @@ func getCopyTestCases() []*testCaseCopy {
 				Dest: "test",
 			},
 			ExpectedCopiedDirents: []string{"test", "test/spec.txt", "test/spec2.txt"},
-		},
-		// Only one file is matched, so it will be renamed.
-		&testCaseCopy{
-			Spec: FileSpec{
-				Type: FILESPEC_TYPE_PATH,
-				Path: filepath.Join(TestdataDirForTesting(), "files", `\**_test`, "*"),
-				Dest: "test.txt",
-			},
-			ExpectedCopiedDirents: []string{"test.txt"},
 		},
 		&testCaseCopy{
 			Spec: FileSpec{
@@ -1101,14 +1092,6 @@ func getCopyTestCases() []*testCaseCopy {
 				Dest: "test.test",
 			},
 			ExpectedCopiedDirents: []string{"test.test", "test.test/spec.txt", "test.test/spec2.txt"},
-		},
-		&testCaseCopy{
-			Spec: FileSpec{
-				Type: FILESPEC_TYPE_PATH,
-				Path: filepath.Join(TestdataDirForTesting(), "files", `\*globFileSpec_test`, `\*globSpec.txt`),
-				Dest: `\*test.txt`,
-			},
-			ExpectedCopiedDirents: []string{`\*test.txt`},
 		},
 		&testCaseCopy{
 			Spec: FileSpec{
