@@ -29,7 +29,7 @@ function main() {
         fi
 
         echo "Building ${bin_name}"
-        go build -o "${BIN_DIR}/${bin_name}" "${main_path}"
+        CGO_ENABLED=0 go build -ldflags="-s -w" -o "${BIN_DIR}/${bin_name}" "${main_path}"
     done
 
     return 0
