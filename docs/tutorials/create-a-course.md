@@ -21,7 +21,7 @@ we strongly recommend working from the autograder repository for the duration of
 
 ## Running Autograder Commands
 
-In this tutorial, we will be interacting with the autograder using a prebuilt Docker image to access admin commands for the autograder.
+In this tutorial, we will be interacting with the autograder using a Docker image to access admin commands for the autograder.
 Specifically, we will be using a Python script to run a Docker container to run autograder commands
 (Python Script -> Docker Container -> Autograder Commands).
 This may seem a bit confusing,

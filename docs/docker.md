@@ -12,16 +12,8 @@ or by building the image from source.
 
 ### Using the Built Images
 
-We provide two images already compiled and hosted on [Docker Hub](https://hub.docker.com/u/edulinq):
- - `edulinq/autograder-server-prebuilt` --
-   An image that contains all the autograder's functionality and executables that have already been built.
- - `edulinq/autograder-server-slim` --
-   All the same functionality of the `prebuilt` version, but with a substantially smaller size.
-   To allow for a smaller size, the target executable will be rebuilt from source when the container is run.
-
+We provide images already compiled and hosted on [Github](https://github.com/edulinq/autograder-server/pkgs/container/autograder-server).
 These images are built and deployed automatically in this repository's CI.
-The latest version will always reflect the most recent passing version of the `main` branch of this repo.
-For any example code we will be using the prebuilt image, but either image will work.
 
 To run the images, the autograder container must mount two directories:
  - `/var/run/docker.sock` -- The socket that the Docker daemon listens on.
@@ -46,7 +38,7 @@ To run the container run:
 docker run -it --rm \
     -v /var/run/docker.sock:/var/run/docker.sock \
     -v /tmp/autograder-temp/:/tmp/autograder-temp \
-    edulinq/autograder-server-prebuilt <command>
+    edulinq/autograder-server <command>
 ```
 
 Where `<command>` can be any command form the `cmd` folder.
@@ -55,7 +47,7 @@ For example, you can run `version` using:
 docker run -it --rm \
     -v /var/run/docker.sock:/var/run/docker.sock \
     -v /tmp/autograder-temp/:/tmp/autograder-temp \
-    edulinq/autograder-server-prebuilt version
+    edulinq/autograder-server version
 ```
 
 If you want to run the server, it could be useful to add the -p flag to the command, as shown below:
@@ -69,7 +61,7 @@ docker run -it --rm \
     -p 8080:8080 \
     -v /var/run/docker.sock:/var/run/docker.sock \
     -v /tmp/autograder-temp/:/tmp/autograder-temp \
-    edulinq/autograder-server-prebuilt server
+    edulinq/autograder-server server
 ```
 
 To ensure your changes persist between container runs,
@@ -81,7 +73,7 @@ docker run -it --rm \
     -v /var/run/docker.sock:/var/run/docker.sock \
     -v /tmp/autograder-temp/:/tmp/autograder-temp \
     -v $(realpath ~/.local/share):/data \
-    edulinq/autograder-server-prebuilt version
+    edulinq/autograder-server version
 ```
 
 Note the use of `realpath`, because `docker run` requires absolute paths.
@@ -107,11 +99,7 @@ Use `--help` to see all the functionality of the script:
 
 To build the images, you can use the following commands from the repository's root directory:
 ```
-# Prebuilt Image
-docker build -f docker/prebuilt/Dockerfile -t my-autograder-server-prebuilt .
-
-# Slim Image
-docker build -f docker/slim/Dockerfile -t my-autograder-server-slim .
+docker build -f docker/Dockerfile -t my-autograder-server .
 ```
 
 Note the `my-` prefix that was added to the image tags to indicate that you built them.

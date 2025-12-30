@@ -25,7 +25,7 @@ import time
 THIS_DIR = os.path.abspath(os.path.dirname(os.path.realpath(__file__)))
 CMD_DIR = os.path.join(THIS_DIR, '..', 'cmd')
 
-DEFAULT_DOCKER_IMAGE = 'edulinq/autograder-server-prebuilt:latest'
+DEFAULT_DOCKER_IMAGE = 'edulinq/autograder-server:latest'
 
 DOCKER_CONTAINER_DOCKER_SOCKET = '/var/run/docker.sock'
 DEFAULT_HOST_DOCKER_SOCKET = '/var/run/docker.sock'
