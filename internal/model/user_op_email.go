@@ -50,7 +50,7 @@ func (this *UserOpResult) getAddEmail() *email.Message {
 }
 
 func (this *UserOpResult) getEnrolledEmail() *email.Message {
-	body := fmt.Sprintf(baseEnrollBody, this.Email, util.JoinStrings(", ", this.Enrolled...))
+	body := fmt.Sprintf(baseEnrollBody, this.Email, util.JoinStrings(", ", this.Enrolled...), this.Email)
 
 	return &email.Message{
 		MessageRecipients: email.MessageRecipients{
@@ -87,8 +87,12 @@ Usage instructions will be provided in class.
 
 var baseEnrollBody string = `Hello,
 
-Your autograder account '%s' has been enrolled in the course(s) '%s'.
+Your existing autograder account '%s' has been enrolled in the course(s) '%s'.
 Usage instructions will be provided in class.
+
+The password/token you previously used is still valid.
+If you do not remember your password, you can generate a new random one using the Python interface with:
+python3 -m autograder.run.reset-pass --user '%s'
 `
 
 var baseNewPassBody string = `Hello,
