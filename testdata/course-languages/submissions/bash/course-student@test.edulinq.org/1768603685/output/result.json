@@ -1,0 +1,11 @@
+{
+        "name": "bash",
+        "questions": [
+            {
+                "name": "Task 1: add()",
+                "max_points": 10,
+                "score": 10,
+                "message": ""
+            }
+        ]
+    }

@@ -1,0 +1,26 @@
+{
+    "id": "course-languages::bash::course-student@test.edulinq.org::1768603646",
+    "short-id": "1768603646",
+    "course-id": "course-languages",
+    "assignment-id": "bash",
+    "user": "course-student@test.edulinq.org",
+    "message": "",
+    "max_points": 10,
+    "score": 0,
+    "name": "bash",
+    "questions": [
+        {
+            "name": "Task 1: add()",
+            "max_points": 10,
+            "score": 0,
+            "hard_fail": false,
+            "skipped": false,
+            "message": "Missed test case 'basic'. Missed test case 'one zero'. Missed test case 'all zero'. Missed test case 'one negative'. Missed test case 'all negative'. ",
+            "grading_start_time": 1768603646208,
+            "grading_end_time": 1768603646520
+        }
+    ],
+    "grading_start_time": 1768603646208,
+    "grading_end_time": 1768603646520,
+    "additional-info": null
+}

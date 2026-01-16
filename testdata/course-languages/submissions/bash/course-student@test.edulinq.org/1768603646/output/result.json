@@ -1,0 +1,11 @@
+{
+        "name": "bash",
+        "questions": [
+            {
+                "name": "Task 1: add()",
+                "max_points": 10,
+                "score": 0,
+                "message": "Missed test case 'basic'. Missed test case 'one zero'. Missed test case 'all zero'. Missed test case 'one negative'. Missed test case 'all negative'. "
+            }
+        ]
+    }
