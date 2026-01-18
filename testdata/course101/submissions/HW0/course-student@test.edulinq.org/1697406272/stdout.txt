@@ -2,7 +2,5 @@ Autograder transcript for assignment: HW0.
 Grading started at 2023-11-11 22:13 and ended at 2023-11-11 22:13.
 Q1: 1 / 1
 Q2: 1 / 1
-Style: 0 / 0
-   Style is clean!
 
 Total: 2 / 2

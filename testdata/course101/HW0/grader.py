@@ -1,16 +1,14 @@
-from autograder.assignment import Assignment
-from autograder.question import Question
-from autograder.style import Style
+import autograder.assignment
+import autograder.question
 
-class HW0(Assignment):
+class HW0(autograder.assignment.Assignment):
     def __init__(self, **kwargs):
         super().__init__(questions = [
             Q1(1),
             Q2(1),
-            Style(kwargs.get('input_dir'), max_points = 0),
         ], **kwargs)
 
-class Q1(Question):
+class Q1(autograder.question.Question):
     def score_question(self, submission):
         result = submission.__all__.function1()
         self.check_not_implemented(result)
@@ -20,7 +18,7 @@ class Q1(Question):
 
         self.full_credit()
 
-class Q2(Question):
+class Q2(autograder.question.Question):
     def score_question(self, submission):
         result = submission.__all__.function2(0)
         self.check_not_implemented(result)

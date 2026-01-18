@@ -296,8 +296,6 @@ Q1: 0 / 1
    NotImplemented returned.
 Q2: 0 / 1
    NotImplemented returned.
-Style: 0 / 0
-   Style is clean!
 
 Total: 0 / 2
 `

@@ -24,14 +24,6 @@
             "message": "NotImplemented returned.",
             "grading_start_time": 1697406256000,
             "grading_end_time": 1697406256000
-        },
-        {
-            "name": "Style",
-            "max_points": 0,
-            "score": 0,
-            "message": "Style is clean!",
-            "grading_start_time": 1697406256000,
-            "grading_end_time": 1697406256000
         }
     ],
     "grading_start_time": 1697406256000,
