@@ -8,6 +8,8 @@ import (
 type UpdateRequest struct {
 	core.APIRequestCourseUserContext
 	core.MinCourseRoleAdmin
+
+	courses.CourseUpsertOptions
 }
 
 type UpdateResponse struct {
@@ -16,9 +18,8 @@ type UpdateResponse struct {
 
 // Update an existing course.
 func HandleUpdate(request *UpdateRequest) (*UpdateResponse, *core.APIError) {
-	options := courses.CourseUpsertOptions{
-		ContextUser: request.ServerUser,
-	}
+	options := request.CourseUpsertOptions
+	options.ContextUser = request.ServerUser
 
 	result, err := courses.UpdateFromLocalSource(request.Course, options)
 	if err != nil {

@@ -76,6 +76,30 @@
                     "required": true
                 },
                 {
+                    "name": "dry-run",
+                    "type": "bool"
+                },
+                {
+                    "name": "skip-build-images",
+                    "type": "bool"
+                },
+                {
+                    "name": "skip-emails",
+                    "type": "bool"
+                },
+                {
+                    "name": "skip-lms-sync",
+                    "type": "bool"
+                },
+                {
+                    "name": "skip-source-sync",
+                    "type": "bool"
+                },
+                {
+                    "name": "skip-template-files",
+                    "type": "bool"
+                },
+                {
                     "name": "user-email",
                     "type": "string",
                     "description": "The email of the user making this request.",
