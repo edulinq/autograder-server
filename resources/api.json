@@ -4,6 +4,10 @@
             "description": "Send an email to course users.",
             "input": [
                 {
+                    "name": "MinCourseRoleGrader",
+                    "type": "min-course-role-grader"
+                },
+                {
                     "name": "bcc",
                     "type": "[]model.CourseUserReference"
                 },
@@ -70,6 +74,10 @@
             "description": "Update an existing course.",
             "input": [
                 {
+                    "name": "MinCourseRoleAdmin",
+                    "type": "min-course-role-admin"
+                },
+                {
                     "name": "course-id",
                     "type": "string",
                     "description": "The ID of the course to make this request to.",
@@ -123,6 +131,10 @@
             "description": "Get the information for a course assignment.",
             "input": [
                 {
+                    "name": "MinCourseRoleOther",
+                    "type": "min-course-role-other"
+                },
+                {
                     "name": "assignment-id",
                     "type": "string",
                     "description": "The ID of the assignment to make this request to.",
@@ -158,6 +170,10 @@
             "description": "List the assignments in the course.",
             "input": [
                 {
+                    "name": "MinCourseRoleOther",
+                    "type": "min-course-role-other"
+                },
+                {
                     "name": "course-id",
                     "type": "string",
                     "description": "The ID of the course to make this request to.",
@@ -187,6 +203,10 @@
             "description": "Fetch an assignment grading report for a course.",
             "input": [
                 {
+                    "name": "MinCourseRoleGrader",
+                    "type": "min-course-role-grader"
+                },
+                {
                     "name": "course-id",
                     "type": "string",
                     "description": "The ID of the course to make this request to.",
@@ -215,6 +235,10 @@
         "courses/assignments/submissions/analysis/individual": {
             "description": "Get the result of a individual analysis for the specified submissions.",
             "input": [
+                {
+                    "name": "MinServerRoleUser",
+                    "type": "min-server-role-user"
+                },
                 {
                     "name": "dry-run",
                     "type": "bool",
@@ -276,6 +300,10 @@
             "description": "Get the result of a pairwise analysis for the specified submissions.",
             "input": [
                 {
+                    "name": "MinServerRoleUser",
+                    "type": "min-server-role-user"
+                },
+                {
                     "name": "dry-run",
                     "type": "bool",
                     "description": "Don't save anything."
@@ -336,6 +364,10 @@
             "description": "Get all recent submissions and grading information for this assignment.",
             "input": [
                 {
+                    "name": "MinCourseRoleGrader",
+                    "type": "min-course-role-grader"
+                },
+                {
                     "name": "assignment-id",
                     "type": "string",
                     "description": "The ID of the assignment to make this request to.",
@@ -376,6 +408,10 @@
             "description": "Get a summary of the most recent scores for this assignment.",
             "input": [
                 {
+                    "name": "MinCourseRoleGrader",
+                    "type": "min-course-role-grader"
+                },
+                {
                     "name": "assignment-id",
                     "type": "string",
                     "description": "The ID of the assignment to make this request to.",
@@ -415,6 +451,10 @@
         "courses/assignments/submissions/fetch/user/attempt": {
             "description": "Get a submission along with all grading information.",
             "input": [
+                {
+                    "name": "MinCourseRoleStudent",
+                    "type": "min-course-role-student"
+                },
                 {
                     "name": "assignment-id",
                     "type": "string",
@@ -467,6 +507,10 @@
             "description": "Get all submission attempts made by a user along with all grading information.",
             "input": [
                 {
+                    "name": "MinCourseRoleGrader",
+                    "type": "min-course-role-grader"
+                },
+                {
                     "name": "assignment-id",
                     "type": "string",
                     "description": "The ID of the assignment to make this request to.",
@@ -510,6 +554,10 @@
             "description": "Get a summary of the submissions for this assignment.",
             "input": [
                 {
+                    "name": "MinCourseRoleStudent",
+                    "type": "min-course-role-student"
+                },
+                {
                     "name": "assignment-id",
                     "type": "string",
                     "description": "The ID of the assignment to make this request to.",
@@ -552,6 +600,10 @@
         "courses/assignments/submissions/fetch/user/peek": {
             "description": "Get a copy of the grading report for the specified submission. Does not submit a new submission.",
             "input": [
+                {
+                    "name": "MinCourseRoleStudent",
+                    "type": "min-course-role-student"
+                },
                 {
                     "name": "assignment-id",
                     "type": "string",
@@ -603,6 +655,10 @@
         "courses/assignments/submissions/proxy/regrade": {
             "description": "Proxy regrade an assignment for all target users using their most recent submission.",
             "input": [
+                {
+                    "name": "MinCourseRoleGrader",
+                    "type": "min-course-role-grader"
+                },
                 {
                     "name": "assignment-id",
                     "type": "string",
@@ -681,6 +737,10 @@
             "description": "Proxy resubmit an assignment submission to the autograder.",
             "input": [
                 {
+                    "name": "MinCourseRoleGrader",
+                    "type": "min-course-role-grader"
+                },
+                {
                     "name": "assignment-id",
                     "type": "string",
                     "description": "The ID of the assignment to make this request to.",
@@ -749,6 +809,10 @@
             "description": "Proxy submit an assignment submission to the autograder.",
             "input": [
                 {
+                    "name": "MinCourseRoleGrader",
+                    "type": "min-course-role-grader"
+                },
+                {
                     "name": "assignment-id",
                     "type": "string",
                     "description": "The ID of the assignment to make this request to.",
@@ -813,6 +877,10 @@
             "description": "Remove a specified submission. Defaults to the most recent submission.",
             "input": [
                 {
+                    "name": "MinCourseRoleGrader",
+                    "type": "min-course-role-grader"
+                },
+                {
                     "name": "assignment-id",
                     "type": "string",
                     "description": "The ID of the assignment to make this request to.",
@@ -859,6 +927,10 @@
         "courses/assignments/submissions/submit": {
             "description": "Submit an assignment submission to the autograder.",
             "input": [
+                {
+                    "name": "MinCourseRoleStudent",
+                    "type": "min-course-role-student"
+                },
                 {
                     "name": "allow-late",
                     "type": "bool"
@@ -971,6 +1043,10 @@
             "description": "Perform a full scoring and upload scores to the course's LMS.",
             "input": [
                 {
+                    "name": "MinCourseRoleAdmin",
+                    "type": "min-course-role-admin"
+                },
+                {
                     "name": "course-id",
                     "type": "string",
                     "description": "The ID of the course to make this request to.",
@@ -1007,6 +1083,10 @@
         "courses/stats/query": {
             "description": "Query metrics for a specific course.\nOnly the context course can be queried for, the target-course field will be ignored for this endpoint.",
             "input": [
+                {
+                    "name": "MinCourseRoleAdmin",
+                    "type": "min-course-role-admin"
+                },
                 {
                     "name": "after",
                     "type": "int64",
@@ -1068,6 +1148,10 @@
             "description": "Upsert a course using a filespec.",
             "input": [
                 {
+                    "name": "MinServerRoleCourseCreator",
+                    "type": "min-server-role-course-creator"
+                },
+                {
                     "name": "dry-run",
                     "type": "bool"
                 },
@@ -1120,6 +1204,10 @@
             "description": "Upsert a course using a zip file.",
             "input": [
                 {
+                    "name": "MinServerRoleCourseCreator",
+                    "type": "min-server-role-course-creator"
+                },
+                {
                     "name": "dry-run",
                     "type": "bool"
                 },
@@ -1167,6 +1255,10 @@
             "description": "Drop a user from the course.",
             "input": [
                 {
+                    "name": "MinCourseRoleAdmin",
+                    "type": "min-course-role-admin"
+                },
+                {
                     "name": "course-id",
                     "type": "string",
                     "description": "The ID of the course to make this request to.",
@@ -1200,6 +1292,10 @@
         "courses/users/enroll": {
             "description": "Enroll one or more users to the course.",
             "input": [
+                {
+                    "name": "MinCourseRoleAdmin",
+                    "type": "min-course-role-admin"
+                },
                 {
                     "name": "course-id",
                     "type": "string",
@@ -1253,6 +1349,10 @@
             "description": "Get the information for a course user.",
             "input": [
                 {
+                    "name": "MinCourseRoleOther",
+                    "type": "min-course-role-other"
+                },
+                {
                     "name": "course-id",
                     "type": "string",
                     "description": "The ID of the course to make this request to.",
@@ -1290,6 +1390,10 @@
             "description": "List the users in the course.",
             "input": [
                 {
+                    "name": "MinCourseRoleGrader",
+                    "type": "min-course-role-grader"
+                },
+                {
                     "name": "course-id",
                     "type": "string",
                     "description": "The ID of the course to make this request to.",
@@ -1322,6 +1426,10 @@
         "lms/upload/scores": {
             "description": "Upload scores from a tab-separated file to the course's LMS.\nThe file should not have headers, and should have two columns: email and score.",
             "input": [
+                {
+                    "name": "MinCourseRoleGrader",
+                    "type": "min-course-role-grader"
+                },
                 {
                     "name": "assignment-lms-id",
                     "type": "string",
@@ -1374,6 +1482,10 @@
             "description": "Get information for an LMS user.",
             "input": [
                 {
+                    "name": "MinCourseRoleGrader",
+                    "type": "min-course-role-grader"
+                },
+                {
                     "name": "course-id",
                     "type": "string",
                     "description": "The ID of the course to make this request to.",
@@ -1415,6 +1527,10 @@
         "logs/query": {
             "description": "Query log entries from the autograder server.",
             "input": [
+                {
+                    "name": "MinServerRoleUser",
+                    "type": "min-server-role-user"
+                },
                 {
                     "name": "after",
                     "type": "string"
@@ -1500,6 +1616,10 @@
             "description": "Query stats for the server.",
             "input": [
                 {
+                    "name": "MinServerRoleAdmin",
+                    "type": "min-server-role-admin"
+                },
+                {
                     "name": "after",
                     "type": "int64",
                     "description": "Only return data from after this time.\nA value of zero is treated normally here (as UNIX epoch)."
@@ -1554,6 +1674,10 @@
             "description": "Get stack traces for all the currently running routines (threads) on the server.",
             "input": [
                 {
+                    "name": "MinServerRoleAdmin",
+                    "type": "min-server-role-admin"
+                },
+                {
                     "name": "user-email",
                     "type": "string",
                     "description": "The email of the user making this request.",
@@ -1604,6 +1728,10 @@
             "description": "Get the information for a server user.",
             "input": [
                 {
+                    "name": "MinServerRoleUser",
+                    "type": "min-server-role-user"
+                },
+                {
                     "name": "target-email",
                     "type": "core.TargetServerUserSelfOrAdmin"
                 },
@@ -1638,6 +1766,10 @@
         "users/list": {
             "description": "List the users on the server.",
             "input": [
+                {
+                    "name": "MinServerRoleAdmin",
+                    "type": "min-server-role-admin"
+                },
                 {
                     "name": "target-users",
                     "type": "[]model.ServerUserReference"
@@ -1708,6 +1840,10 @@
         "users/remove": {
             "description": "Remove a user from the server.",
             "input": [
+                {
+                    "name": "MinServerRoleAdmin",
+                    "type": "min-server-role-admin"
+                },
                 {
                     "name": "target-email",
                     "type": "core.TargetServerUser",
@@ -1795,6 +1931,10 @@
         "users/upsert": {
             "description": "Upsert one or more users to the server (update if exists, insert otherwise).",
             "input": [
+                {
+                    "name": "MinServerRoleAdmin",
+                    "type": "min-server-role-admin"
+                },
                 {
                     "name": "dry-run",
                     "type": "bool",
@@ -2196,6 +2336,34 @@
                     "type": "string"
                 }
             ]
+        },
+        "min-course-role-admin": {
+            "category": "role",
+            "description": "The requesting user must have a minimum course role of admin to complete this operation."
+        },
+        "min-course-role-grader": {
+            "category": "role",
+            "description": "The requesting user must have a minimum course role of grader to complete this operation."
+        },
+        "min-course-role-other": {
+            "category": "role",
+            "description": "The requesting user must have a minimum course role of other to complete this operation."
+        },
+        "min-course-role-student": {
+            "category": "role",
+            "description": "The requesting user must have a minimum course role of student to complete this operation."
+        },
+        "min-server-role-admin": {
+            "category": "role",
+            "description": "The requesting user must have a minimum server role of admin to complete this operation."
+        },
+        "min-server-role-course-creator": {
+            "category": "role",
+            "description": "The requesting user must have a minimum server role of course creator to complete this operation."
+        },
+        "min-server-role-user": {
+            "category": "role",
+            "description": "The requesting user must have a minimum server role of user to complete this operation."
         },
         "model.AnalysisFileInfo": {
             "category": "struct",

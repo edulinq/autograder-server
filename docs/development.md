@@ -141,6 +141,38 @@ func HandleSomeTest(request *SomeTestRequest) (*SomeTestResponse, error) {
 }
 ```
 
+### Overriding Type Descriptions
+
+To override the automatic type description, an override comment can be attached to the type declaration.
+An override type comment must include the keyword `__TYPE_DESCRIPTION_OVERRIDE__`.
+
+The remainder of the comment, after the keyword, is used to override the type description.
+The override type description must include `<override-type-id> = <override-type-description in JSON>`.
+See `core.FullTypeDescription` for the full list of fields that can be set in the override.
+
+Currently, you cannot override the type description of a field in a struct by attaching the override comment to the field.
+Because of this limitation, fields that are ignored by JSON, using the `-`, cannot be overriden.
+
+For Example:
+
+```
+type SomeTestType struct {
+    // Note: Type overrides are not allowed on a field.
+    TestType
+
+    // Note: Even with a type override, this field will be ignored.
+    TestHiddenType bool `json:"-"`
+}
+
+// Note: Everything before the override keyword is ignored.
+//	__TYPE_DESCRIPTION_OVERRIDE__ "test-type-id" = {
+//	    "category": "Custom Category",
+//	    "description": "Custom Description",
+//      ...
+//	}
+type TestType string
+```
+
 ### Passwords/Tokens
 
 No password or token should be sent to the server as cleartext.
