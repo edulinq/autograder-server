@@ -89,7 +89,7 @@ func ApplyLatePolicy(
 // Apply a common policy.
 func applyBaselinePolicy(assignment *model.Assignment, policy model.LateGradingPolicy, users map[string]*model.CourseUser, scores map[string]*model.ScoringInfo, dueDate timestamp.Timestamp) {
 	for email, score := range scores {
-		score.NumDaysLate = computeLateDays(dueDate, score.SubmissionTime)
+		score.NumDaysLate = computeLateDays(dueDate, score.SubmissionTime, policy.GraceMinutes)
 
 		_, ok := users[email]
 		if !ok {
@@ -314,12 +314,17 @@ func fetchLateDays(policy model.LateGradingPolicy, assignment *model.Assignment)
 	return lateDays, nil
 }
 
-func computeLateDays(dueDate timestamp.Timestamp, submissionTime timestamp.Timestamp) int {
-	if dueDate >= submissionTime {
+func computeLateDays(dueDate timestamp.Timestamp, submissionTime timestamp.Timestamp, graceMinutes int) int {
+	// Apply grace time to the due date.
+	// Convert grace minutes to milliseconds (minutes * 60 seconds * 1000 msecs).
+	graceMSecs := int64(graceMinutes) * 60 * 1000
+	adjustedDueDate := dueDate + timestamp.Timestamp(graceMSecs)
+
+	if adjustedDueDate >= submissionTime {
 		return 0
 	}
 
-	delta := submissionTime.ToMSecs() - dueDate.ToMSecs()
+	delta := submissionTime.ToMSecs() - adjustedDueDate.ToMSecs()
 
 	// Convert delta (msecs) to seconds -> minutes -> hours -> days.
 	return int(math.Ceil(float64(delta) / 1000.0 / 60.0 / 60.0 / 24.0))

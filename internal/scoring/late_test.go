@@ -57,9 +57,48 @@ func TestComputeLateDays(test *testing.T) {
 	}
 
 	for i, testCase := range testCases {
-		actual := computeLateDays(testCase.dueDate, testCase.submissionTime)
+		actual := computeLateDays(testCase.dueDate, testCase.submissionTime, 0)
 		if testCase.expected != actual {
 			test.Errorf("Case %d: Bad late days. Expected: %d, Actual: %d.", i, testCase.expected, actual)
+		}
+	}
+}
+
+func TestComputeLateDaysWithGraceTime(test *testing.T) {
+	var dayMSecs int64 = 24 * 60 * 60 * 1000
+	var minuteMSecs int64 = 60 * 1000
+
+	testCases := []struct {
+		dueDate        timestamp.Timestamp
+		submissionTime timestamp.Timestamp
+		graceMinutes   int
+		expected       int
+	}{
+		// No late time, with grace time should still be 0.
+		{timestamp.Timestamp(0), timestamp.Timestamp(0), 10, 0},
+
+		// Submission within grace period should be 0.
+		{timestamp.Timestamp(0), timestamp.Timestamp(5 * minuteMSecs), 10, 0},
+		{timestamp.Timestamp(0), timestamp.Timestamp(10 * minuteMSecs), 10, 0},
+
+		// Submission just after grace period should be 1 day late.
+		{timestamp.Timestamp(0), timestamp.Timestamp((10 * minuteMSecs) + 1), 10, 1},
+
+		// Submission 1 day + grace time should be 1 day late.
+		{timestamp.Timestamp(0), timestamp.Timestamp(dayMSecs + (10 * minuteMSecs)), 10, 1},
+
+		// Submission 1 day + grace time + 1ms should be 2 days late.
+		{timestamp.Timestamp(0), timestamp.Timestamp(dayMSecs + (10 * minuteMSecs) + 1), 10, 2},
+
+		// Zero grace time should behave like original function.
+		{timestamp.Timestamp(0), timestamp.Timestamp(dayMSecs), 0, 1},
+		{timestamp.Timestamp(0), timestamp.Timestamp(1), 0, 1},
+	}
+
+	for i, testCase := range testCases {
+		actual := computeLateDays(testCase.dueDate, testCase.submissionTime, testCase.graceMinutes)
+		if testCase.expected != actual {
+			test.Errorf("Case %d: Bad late days with grace time. Expected: %d, Actual: %d.", i, testCase.expected, actual)
 		}
 	}
 }
