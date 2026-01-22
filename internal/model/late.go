@@ -23,6 +23,7 @@ type LateGradingPolicy struct {
 	Type            LateGradingPolicyType `json:"type"`
 	Penalty         float64               `json:"penalty,omitempty"`
 	RejectAfterDays int                   `json:"reject-after-days,omitempty"`
+	GraceMinutes    int                   `json:"grace-mins,omitempty"`
 
 	MaxLateDays     int    `json:"max-late-days,omitempty"`
 	LateDaysLMSID   string `json:"late-days-lms-id,omitempty"`
@@ -38,6 +39,10 @@ func (this *LateGradingPolicy) Validate() error {
 
 	if this.RejectAfterDays < 0 {
 		return fmt.Errorf("Number of days for rejection is negative (%d), should be zero to be ignored or positive to be applied.", this.RejectAfterDays)
+	}
+
+	if this.GraceMinutes < 0 {
+		return fmt.Errorf("Grace time in minutes is negative (%d), should be zero to be ignored or positive to be applied.", this.GraceMinutes)
 	}
 
 	switch this.Type {

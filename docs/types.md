@@ -832,6 +832,7 @@ All late policies share common fields:
 |------------------------|------------|----------|-------------|
 | `type`                 | String     | true     | The type of late policy being used. Valid values are: `baseline`, `constant-penalty`, `percentage-penalty`, and `late-days`. |
 | `reject-after-days`    | Integer    | false    | After this number of days past the assignment due date, do not accept any more submissions. Submissions past this time are fully ignored, they will not be neither stored nor stored. A zero (or no) value will result in submissions never being rejected for being late. |
+| `grace-mins`           | Integer    | false    | Grace time in minutes to add to the due date before calculating late penalties. Submissions within this grace period are not considered late. Defaults to 0 (no grace time). |
 
 ### Baseline Late Policy (baseline)
 
