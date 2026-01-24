@@ -25,10 +25,10 @@ type LateGradingPolicy struct {
 	RejectAfterDays int                   `json:"reject-after-days,omitempty"`
 	GraceMinutes    int                   `json:"grace-mins,omitempty"`
 
-	MaxLateDays     int    `json:"max-late-days,omitempty"`
-	LateDaysLMSID   string `json:"late-days-lms-id,omitempty"`
-	LateDaysLMSName string `json:"late-days-lms-name,omitempty"`
-	BenevolentAllocation bool `json:"benevolent-allocation,omitempty"`
+	MaxLateDays          int    `json:"max-late-days,omitempty"`
+	LateDaysLMSID        string `json:"late-days-lms-id,omitempty"`
+	LateDaysLMSName      string `json:"late-days-lms-name,omitempty"`
+	BenevolentAllocation bool   `json:"benevolent-allocation,omitempty"`
 }
 
 func (this *LateGradingPolicy) Validate() error {
