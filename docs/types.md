@@ -873,13 +873,13 @@ then each remaining late day is penalized in the same way as the `percentage-pen
 | `max-late-days`         | Integer | true     | The maximum number of late days students may expend on this assignment. Must be less than or equal to `reject-after-days`. |
 | `late-days-lms-id`      | String  | false*   | The LMS ID for the assignment that will be used to track late days for each student. This assignment is usually not included in the final grade, but serves as a great place for students to view how many late days they have left. The autograder should have permissions to read and write this assignment. Instructors should populate it with the initial number of available late days for each student. |
 | `late-days-lms-name`    | String  | false*   | The name of the late days assignment in the LMS. This can be used to sync with the late days assignment if `late-days-lms-id` is not provided. |
-| `benevolent-allocation` | Boolean | false    | When enabled, late days are optimally distributed across all assignments to maximize the student's total score. See [Benevolent Allocation](#benevolent-allocation) below. Defaults to false. |
+| `optimal-allocation` | Boolean | false    | When enabled, late days are optimally distributed across all assignments to maximize the student's total score. See [Optimal Allocation](#optimal-allocation) below. Defaults to false. |
 
 At least one of the `late-days-lms-id` and `late-days-lms-name` fields must be set.
 
-#### Benevolent Allocation
+#### Optimal Allocation
 
-When `benevolent-allocation` is set to `true`, the system uses a greedy algorithm to optimally allocate late days across all assignments.
+When `optimal-allocation` is set to `true`, the system uses a greedy algorithm to optimally allocate late days across all assignments.
 Instead of allocating late days chronologically as submissions arrive, it reallocates late days to assignments where they save the most points.
 
 **How it works:**
@@ -889,9 +889,9 @@ Instead of allocating late days chronologically as submissions arrive, it reallo
 4. Scores are recalculated based on the optimal allocation.
 
 **Important considerations:**
-- **Grades may change retroactively:** When a new assignment is submitted, existing scores may be adjusted as late days are reallocated.
-- **Based on raw scores only:** The optimization uses raw assignment scores. External weighting (like exam vs quiz categories in the LMS gradebook) is not considered.
-- **Best for equal-weight courses:** This feature works best when all assignments have similar importance to the final grade.
+ - **Grades may change retroactively:** When a new assignment is submitted, existing scores may be adjusted as late days are reallocated.
+ - **Based on raw scores only:** The optimization uses raw assignment scores. External weighting (like exam vs quiz categories in the LMS gradebook) is not considered.
+ - **Best for equal-weight courses:** This feature works best when all assignments have similar importance to the final grade.
 
 For example:
 ```json

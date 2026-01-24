@@ -22,13 +22,17 @@ type LateDaysInfo struct {
 	UploadTime    timestamp.Timestamp `json:"upload-time"`
 	AllocatedDays map[string]int      `json:"allocated-days"`
 
-	// For benevolent allocation: stores the points saved per late day for each assignment.
-	// This allows optimal reallocation when new assignments are graded.
+	// Stores the penalty (points per late day) for each assignment.
+	// Used for optimal reallocation when new assignments are graded.
 	AllocationValues map[string]float64 `json:"allocation-values,omitempty"`
 
-	// For benevolent allocation: stores the number of days late for each assignment.
+	// Stores the number of days late for each assignment.
 	// This is needed to know the maximum late days that could be used per assignment.
 	DaysLatePerAssignment map[string]int `json:"days-late,omitempty"`
+
+	// Stores the submission time for each assignment.
+	// Used for standard allocation ordering (earliest submission first).
+	SubmissionTimes map[string]timestamp.Timestamp `json:"submission-times,omitempty"`
 
 	// A distinct key so we can recognize this as an autograder object.
 	AutograderStructVersion string `json:"__autograder__version__"`
@@ -162,8 +166,13 @@ func applyLateDaysPolicy(policy model.LateGradingPolicy, assignment *model.Assig
 		if lateDays.AllocationValues == nil {
 			lateDays.AllocationValues = make(map[string]float64)
 		}
+
 		if lateDays.DaysLatePerAssignment == nil {
 			lateDays.DaysLatePerAssignment = make(map[string]int)
+		}
+
+		if lateDays.SubmissionTimes == nil {
+			lateDays.SubmissionTimes = make(map[string]timestamp.Timestamp)
 		}
 
 		// Compute how many late days can be used.
@@ -183,26 +192,19 @@ func applyLateDaysPolicy(policy model.LateGradingPolicy, assignment *model.Assig
 			continue
 		}
 
-		var lateDaysToUse int
-
-		if policy.BenevolentAllocation {
-			// Benevolent allocation: optimally distribute late days across all assignments
-			// to maximize the student's total score.
-			lateDaysToUse = computeBenevolentAllocation(
-				lateDays,
-				assignment.GetID(),
-				scoringInfo.NumDaysLate,
-				penalty,
-				policy.MaxLateDays,
-				lateDaysAvailable,
-			)
-		} else {
-			// Standard allocation: use late days limited by:
-			// - The number of late days the user has to use.
-			// - The maximum number of late days that can be used on this assignment.
-			// - The number of days late the submission actually is.
-			lateDaysToUse = min(lateDaysAvailable, policy.MaxLateDays, scoringInfo.NumDaysLate)
-		}
+		// Use unified allocation function for both standard and optimal modes.
+		// Standard mode: allocates by submission time (earliest first).
+		// Optimal mode: allocates by penalty value (highest points saved first).
+		lateDaysToUse := computeLateDayAllocation(
+			lateDays,
+			assignment.GetID(),
+			scoringInfo.NumDaysLate,
+			penalty,
+			scoringInfo.SubmissionTime,
+			policy.MaxLateDays,
+			lateDaysAvailable,
+			policy.OptimalAllocation,
+		)
 
 		scoringInfo.LateDayUsage = lateDaysToUse
 
@@ -213,17 +215,13 @@ func applyLateDaysPolicy(policy model.LateGradingPolicy, assignment *model.Assig
 		// Check if the number of allocated late days has changed.
 		// If so, we need to update the late days in the LMS.
 		if allocatedDays != lateDaysToUse {
-			// For benevolent allocation, AvailableDays is already updated by computeBenevolentAllocation.
-			// For standard allocation, we need to update it here.
-			if !policy.BenevolentAllocation {
-				lateDays.AvailableDays = lateDaysAvailable - lateDaysToUse
-			}
 			lateDays.AllocatedDays[assignment.GetID()] = lateDaysToUse
 			lateDays.UploadTime = timestamp.Now()
 
-			// Store allocation metadata for future benevolent reallocation.
+			// Store allocation metadata for future reallocation.
 			lateDays.AllocationValues[assignment.GetID()] = penalty
 			lateDays.DaysLatePerAssignment[assignment.GetID()] = scoringInfo.NumDaysLate
+			lateDays.SubmissionTimes[assignment.GetID()] = scoringInfo.SubmissionTime
 
 			lateDaysToUpdate[studentLMSID] = lateDays
 		}
@@ -359,23 +357,26 @@ func fetchLateDays(policy model.LateGradingPolicy, assignment *model.Assignment)
 type assignmentAllocation struct {
 	AssignmentID   string
 	DaysLate       int
-	PointsPerDay   float64 // Points saved per late day used
-	MaxDaysAllowed int     // Maximum late days that can be used for this assignment
+	PointsPerDay   float64             // Points saved per late day used
+	SubmissionTime timestamp.Timestamp // When the assignment was submitted
+	MaxDaysAllowed int                 // Maximum late days that can be used for this assignment
 }
 
-// computeBenevolentAllocation optimally allocates late days across all assignments
-// to maximize the student's total score. It uses a greedy algorithm that prioritizes
-// assignments where late days save the most points.
+// computeLateDayAllocation allocates late days across all assignments using a greedy algorithm.
+// In standard mode (optimalMode=false), assignments are processed by submission time (earliest first).
+// In optimal mode (optimalMode=true), assignments are processed by penalty value (highest first).
 //
 // Note: This optimization is based on raw assignment scores only.
 // External weighting (like exam vs quiz categories) is not considered.
-func computeBenevolentAllocation(
+func computeLateDayAllocation(
 	lateDays *LateDaysInfo,
 	currentAssignmentID string,
 	currentDaysLate int,
 	currentPenalty float64,
+	currentSubmissionTime timestamp.Timestamp,
 	maxLateDaysPerAssignment int,
 	totalLateDaysAvailable int,
+	optimalMode bool,
 ) int {
 	// Build a list of all assignments that need late days.
 	allocations := make([]assignmentAllocation, 0)
@@ -385,6 +386,7 @@ func computeBenevolentAllocation(
 		AssignmentID:   currentAssignmentID,
 		DaysLate:       currentDaysLate,
 		PointsPerDay:   currentPenalty,
+		SubmissionTime: currentSubmissionTime,
 		MaxDaysAllowed: min(maxLateDaysPerAssignment, currentDaysLate),
 	})
 
@@ -395,7 +397,8 @@ func computeBenevolentAllocation(
 		}
 
 		pointsPerDay, hasValue := lateDays.AllocationValues[assignmentID]
-		if !hasValue || daysLate <= 0 {
+		submissionTime, hasTime := lateDays.SubmissionTimes[assignmentID]
+		if !hasValue || !hasTime || daysLate <= 0 {
 			continue
 		}
 
@@ -408,16 +411,25 @@ func computeBenevolentAllocation(
 			AssignmentID:   assignmentID,
 			DaysLate:       daysLate,
 			PointsPerDay:   pointsPerDay,
+			SubmissionTime: submissionTime,
 			MaxDaysAllowed: min(maxLateDaysPerAssignment, daysLate),
 		})
 	}
 
-	// Sort by points per day (descending) - greedy approach.
-	sort.Slice(allocations, func(i, j int) bool {
-		return allocations[i].PointsPerDay > allocations[j].PointsPerDay
-	})
+	// Sort based on mode.
+	if optimalMode {
+		// Optimal mode: sort by points per day (descending) - highest value first.
+		sort.Slice(allocations, func(i, j int) bool {
+			return allocations[i].PointsPerDay > allocations[j].PointsPerDay
+		})
+	} else {
+		// Standard mode: sort by submission time (ascending) - earliest first.
+		sort.Slice(allocations, func(i, j int) bool {
+			return allocations[i].SubmissionTime < allocations[j].SubmissionTime
+		})
+	}
 
-	// Greedily allocate late days to assignments that save the most points.
+	// Greedily allocate late days to assignments based on sort order.
 	remainingLateDays := totalLateDaysAvailable
 	newAllocations := make(map[string]int)
 

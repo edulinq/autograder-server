@@ -21,6 +21,7 @@ func TestLateDaysInfoStruct(test *testing.T) {
 			AllocatedDays:           map[string]int{"A": 1, "B": 2},
 			AllocationValues:        map[string]float64{"A": 10.0, "B": 20.0},
 			DaysLatePerAssignment:   map[string]int{"A": 1, "B": 2},
+			SubmissionTimes:         map[string]timestamp.Timestamp{"A": timestamp.Timestamp(1000), "B": timestamp.Timestamp(2000)},
 			AutograderStructVersion: LATE_DAYS_STRUCT_VERSION,
 			LMSCommentID:            "foo",
 			LMSCommentAuthorID:      "bar",
@@ -112,16 +113,22 @@ func TestComputeLateDaysWithGraceTime(test *testing.T) {
 	}
 }
 
-func TestComputeBenevolentAllocation(test *testing.T) {
+func TestComputeLateDayAllocation(test *testing.T) {
+	// Submission times for testing (in milliseconds).
+	timeA := timestamp.Timestamp(1000) // Earlier
+	timeB := timestamp.Timestamp(2000) // Later
+
 	testCases := []struct {
-		description          string
-		lateDays             *LateDaysInfo
-		currentAssignmentID  string
-		currentDaysLate      int
-		currentPenalty       float64
-		maxLateDaysPerAssign int
-		totalAvailable       int
-		expectedAllocation   int
+		description           string
+		lateDays              *LateDaysInfo
+		currentAssignmentID   string
+		currentDaysLate       int
+		currentPenalty        float64
+		currentSubmissionTime timestamp.Timestamp
+		maxLateDaysPerAssign  int
+		totalAvailable        int
+		expectedStandard      int // Expected result in standard mode
+		expectedOptimal       int // Expected result in optimal mode
 	}{
 		{
 			description: "Single assignment, enough late days",
@@ -129,13 +136,16 @@ func TestComputeBenevolentAllocation(test *testing.T) {
 				AllocatedDays:         make(map[string]int),
 				AllocationValues:      make(map[string]float64),
 				DaysLatePerAssignment: make(map[string]int),
+				SubmissionTimes:       make(map[string]timestamp.Timestamp),
 			},
-			currentAssignmentID:  "A",
-			currentDaysLate:      2,
-			currentPenalty:       10.0,
-			maxLateDaysPerAssign: 3,
-			totalAvailable:       5,
-			expectedAllocation:   2, // Uses 2 days (limited by days late)
+			currentAssignmentID:   "A",
+			currentDaysLate:       2,
+			currentPenalty:        10.0,
+			currentSubmissionTime: timeA,
+			maxLateDaysPerAssign:  3,
+			totalAvailable:        5,
+			expectedStandard:      2, // Uses 2 days (limited by days late)
+			expectedOptimal:       2, // Same result for single assignment
 		},
 		{
 			description: "Single assignment, limited by max per assignment",
@@ -143,84 +153,155 @@ func TestComputeBenevolentAllocation(test *testing.T) {
 				AllocatedDays:         make(map[string]int),
 				AllocationValues:      make(map[string]float64),
 				DaysLatePerAssignment: make(map[string]int),
+				SubmissionTimes:       make(map[string]timestamp.Timestamp),
 			},
-			currentAssignmentID:  "A",
-			currentDaysLate:      5,
-			currentPenalty:       10.0,
-			maxLateDaysPerAssign: 2,
-			totalAvailable:       5,
-			expectedAllocation:   2, // Limited by max per assignment
+			currentAssignmentID:   "A",
+			currentDaysLate:       5,
+			currentPenalty:        10.0,
+			currentSubmissionTime: timeA,
+			maxLateDaysPerAssign:  2,
+			totalAvailable:        5,
+			expectedStandard:      2, // Limited by max per assignment
+			expectedOptimal:       2, // Same result for single assignment
 		},
 		{
-			description: "Two assignments, current has higher value",
+			description: "Two assignments, current submitted later with higher value",
 			lateDays: &LateDaysInfo{
 				AllocatedDays:         map[string]int{"B": 2},
 				AllocationValues:      map[string]float64{"B": 5.0}, // Lower value
 				DaysLatePerAssignment: map[string]int{"B": 2},
+				SubmissionTimes:       map[string]timestamp.Timestamp{"B": timeA}, // B submitted earlier
 			},
-			currentAssignmentID:  "A",
-			currentDaysLate:      2,
-			currentPenalty:       10.0, // Higher value - should get priority
-			maxLateDaysPerAssign: 2,
-			totalAvailable:       3, // 3 available (not counting B's allocation)
-			expectedAllocation:   2, // A gets 2, B gets reclaimed 2 + 3 - 2 = 3 remaining
+			currentAssignmentID:   "A",
+			currentDaysLate:       2,
+			currentPenalty:        10.0,  // Higher value
+			currentSubmissionTime: timeB, // A submitted later
+			maxLateDaysPerAssign:  2,
+			totalAvailable:        1, // 1 available (not counting B's allocation)
+			expectedStandard:      1, // Standard: B gets 2 (earlier), A gets remaining 1
+			expectedOptimal:       2, // Optimal: A gets 2 (higher value), B gets 1
 		},
 		{
-			description: "Two assignments, previous has higher value",
+			description: "Two assignments, current submitted earlier with lower value",
 			lateDays: &LateDaysInfo{
 				AllocatedDays:         map[string]int{"B": 2},
 				AllocationValues:      map[string]float64{"B": 20.0}, // Higher value
 				DaysLatePerAssignment: map[string]int{"B": 2},
+				SubmissionTimes:       map[string]timestamp.Timestamp{"B": timeB}, // B submitted later
 			},
-			currentAssignmentID:  "A",
-			currentDaysLate:      2,
-			currentPenalty:       5.0, // Lower value
-			maxLateDaysPerAssign: 2,
-			totalAvailable:       1, // Only 1 available (not counting B's allocation)
-			expectedAllocation:   1, // B keeps 2, A gets remaining 1
+			currentAssignmentID:   "A",
+			currentDaysLate:       2,
+			currentPenalty:        5.0,   // Lower value
+			currentSubmissionTime: timeA, // A submitted earlier
+			maxLateDaysPerAssign:  2,
+			totalAvailable:        1, // 1 available (not counting B's allocation)
+			expectedStandard:      2, // Standard: A gets 2 (earlier), B gets 1
+			expectedOptimal:       1, // Optimal: B gets 2 (higher value), A gets 1
 		},
 		{
-			description: "Not enough late days, current has lower value",
+			description: "Not enough late days, current has lower value and submitted later",
 			lateDays: &LateDaysInfo{
 				AllocatedDays:         map[string]int{"B": 2},
-				AllocationValues:      map[string]float64{"B": 15.0}, // Higher value - gets priority
+				AllocationValues:      map[string]float64{"B": 15.0}, // Higher value
 				DaysLatePerAssignment: map[string]int{"B": 2},
+				SubmissionTimes:       map[string]timestamp.Timestamp{"B": timeA}, // B submitted earlier
 			},
-			currentAssignmentID:  "A",
-			currentDaysLate:      2,
-			currentPenalty:       10.0, // Lower value
-			maxLateDaysPerAssign: 2,
-			totalAvailable:       0, // 0 available (not counting B's allocation)
-			expectedAllocation:   0, // Total pool: 2 (from B). B keeps 2 (higher value), A gets 0
+			currentAssignmentID:   "A",
+			currentDaysLate:       2,
+			currentPenalty:        10.0,  // Lower value
+			currentSubmissionTime: timeB, // A submitted later
+			maxLateDaysPerAssign:  2,
+			totalAvailable:        0, // 0 available (not counting B's allocation)
+			expectedStandard:      0, // Standard: B gets 2 (earlier), A gets 0
+			expectedOptimal:       0, // Optimal: B gets 2 (higher value), A gets 0
 		},
 		{
-			description: "Equal penalty values, current assignment gets priority",
+			description: "Equal penalty values, current submitted earlier",
 			lateDays: &LateDaysInfo{
 				AllocatedDays:         map[string]int{"B": 2},
-				AllocationValues:      map[string]float64{"B": 10.0}, // Same value as current
+				AllocationValues:      map[string]float64{"B": 10.0}, // Same value
 				DaysLatePerAssignment: map[string]int{"B": 2},
+				SubmissionTimes:       map[string]timestamp.Timestamp{"B": timeB}, // B submitted later
 			},
-			currentAssignmentID:  "A",
-			currentDaysLate:      2,
-			currentPenalty:       10.0, // Same value as B
-			maxLateDaysPerAssign: 2,
-			totalAvailable:       0, // 0 available (not counting B's allocation)
-			expectedAllocation:   2, // Total pool: 2. Equal values, A added first so gets priority
+			currentAssignmentID:   "A",
+			currentDaysLate:       2,
+			currentPenalty:        10.0,  // Same value
+			currentSubmissionTime: timeA, // A submitted earlier
+			maxLateDaysPerAssign:  2,
+			totalAvailable:        0, // 0 available (not counting B's allocation)
+			expectedStandard:      2, // Standard: A gets 2 (earlier), B gets 0
+			expectedOptimal:       2, // Optimal: A gets 2 (added first), B gets 0
 		},
 	}
 
 	for i, testCase := range testCases {
-		actual := computeBenevolentAllocation(
-			testCase.lateDays,
+		// Test standard mode.
+		// Create a fresh copy of lateDays for standard mode test.
+		lateDaysStandard := copyLateDaysInfo(testCase.lateDays)
+		actualStandard := computeLateDayAllocation(
+			lateDaysStandard,
 			testCase.currentAssignmentID,
 			testCase.currentDaysLate,
 			testCase.currentPenalty,
+			testCase.currentSubmissionTime,
 			testCase.maxLateDaysPerAssign,
 			testCase.totalAvailable,
+			false, // standard mode
 		)
-		if testCase.expectedAllocation != actual {
-			test.Errorf("Case %d (%s): Bad benevolent allocation. Expected: %d, Actual: %d.",
-				i, testCase.description, testCase.expectedAllocation, actual)
+		if testCase.expectedStandard != actualStandard {
+			test.Errorf("Case %d (%s) [standard]: Bad allocation. Expected: %d, Actual: %d.",
+				i, testCase.description, testCase.expectedStandard, actualStandard)
+		}
+
+		// Test optimal mode.
+		// Create a fresh copy of lateDays for optimal mode test.
+		lateDaysOptimal := copyLateDaysInfo(testCase.lateDays)
+		actualOptimal := computeLateDayAllocation(
+			lateDaysOptimal,
+			testCase.currentAssignmentID,
+			testCase.currentDaysLate,
+			testCase.currentPenalty,
+			testCase.currentSubmissionTime,
+			testCase.maxLateDaysPerAssign,
+			testCase.totalAvailable,
+			true, // optimal mode
+		)
+		if testCase.expectedOptimal != actualOptimal {
+			test.Errorf("Case %d (%s) [optimal]: Bad allocation. Expected: %d, Actual: %d.",
+				i, testCase.description, testCase.expectedOptimal, actualOptimal)
 		}
 	}
+}
+
+// copyLateDaysInfo creates a deep copy of LateDaysInfo for testing.
+func copyLateDaysInfo(original *LateDaysInfo) *LateDaysInfo {
+	copy := &LateDaysInfo{
+		AvailableDays:           original.AvailableDays,
+		UploadTime:              original.UploadTime,
+		AllocatedDays:           make(map[string]int),
+		AllocationValues:        make(map[string]float64),
+		DaysLatePerAssignment:   make(map[string]int),
+		SubmissionTimes:         make(map[string]timestamp.Timestamp),
+		AutograderStructVersion: original.AutograderStructVersion,
+		LMSCommentID:            original.LMSCommentID,
+		LMSCommentAuthorID:      original.LMSCommentAuthorID,
+	}
+
+	for k, v := range original.AllocatedDays {
+		copy.AllocatedDays[k] = v
+	}
+
+	for k, v := range original.AllocationValues {
+		copy.AllocationValues[k] = v
+	}
+
+	for k, v := range original.DaysLatePerAssignment {
+		copy.DaysLatePerAssignment[k] = v
+	}
+
+	for k, v := range original.SubmissionTimes {
+		copy.SubmissionTimes[k] = v
+	}
+
+	return copy
 }
