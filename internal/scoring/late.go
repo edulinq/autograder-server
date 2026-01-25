@@ -139,6 +139,13 @@ func applyLateDaysPolicy(policy model.LateGradingPolicy, assignment *model.Assig
 		return err
 	}
 
+	// Get optimal allocation from course-level late policy (not per-assignment).
+	// This ensures consistent behavior across all assignments in the course.
+	optimalAllocation := false
+	if assignment.GetCourse().LatePolicy != nil {
+		optimalAllocation = assignment.GetCourse().LatePolicy.OptimalAllocation
+	}
+
 	lateDaysToUpdate := make(map[string]*LateDaysInfo)
 
 	for email, scoringInfo := range scores {
@@ -175,6 +182,13 @@ func applyLateDaysPolicy(policy model.LateGradingPolicy, assignment *model.Assig
 			lateDays.SubmissionTimes = make(map[string]timestamp.Timestamp)
 		}
 
+		// Save original allocations to detect any changes (not just current assignment).
+		// This is needed because optimal allocation may reallocate late days between assignments.
+		originalAllocations := make(map[string]int)
+		for k, v := range lateDays.AllocatedDays {
+			originalAllocations[k] = v
+		}
+
 		// Compute how many late days can be used.
 		// To do this, we will reclaim any late days that have already been used in addition to free days.
 		lateDaysAvailable := lateDays.AvailableDays
@@ -203,7 +217,7 @@ func applyLateDaysPolicy(policy model.LateGradingPolicy, assignment *model.Assig
 			scoringInfo.SubmissionTime,
 			policy.MaxLateDays,
 			lateDaysAvailable,
-			policy.OptimalAllocation,
+			optimalAllocation,
 		)
 
 		scoringInfo.LateDayUsage = lateDaysToUse
@@ -212,10 +226,14 @@ func applyLateDaysPolicy(policy model.LateGradingPolicy, assignment *model.Assig
 		remainingDaysLate := scoringInfo.NumDaysLate - lateDaysToUse
 		scoringInfo.Score = math.Max(0.0, scoringInfo.RawScore-(penalty*float64(remainingDaysLate)))
 
-		// Check if the number of allocated late days has changed.
-		// If so, we need to update the late days in the LMS.
-		if allocatedDays != lateDaysToUse {
-			lateDays.AllocatedDays[assignment.GetID()] = lateDaysToUse
+		// Update current assignment's allocation.
+		lateDays.AllocatedDays[assignment.GetID()] = lateDaysToUse
+
+		// Check if any allocation changed (not just the current assignment).
+		// This handles the case where grading assignment A causes reallocation from B to C.
+		allocationsChanged := !mapsEqual(originalAllocations, lateDays.AllocatedDays)
+
+		if allocationsChanged {
 			lateDays.UploadTime = timestamp.Now()
 
 			// Store allocation metadata for future reallocation.
@@ -473,4 +491,19 @@ func computeLateDays(dueDate timestamp.Timestamp, submissionTime timestamp.Times
 
 	// Convert delta (msecs) to seconds -> minutes -> hours -> days.
 	return int(math.Ceil(float64(delta) / 1000.0 / 60.0 / 60.0 / 24.0))
+}
+
+// mapsEqual checks if two maps have the same keys and values.
+func mapsEqual(a, b map[string]int) bool {
+	if len(a) != len(b) {
+		return false
+	}
+
+	for k, v := range a {
+		if bv, ok := b[k]; !ok || v != bv {
+			return false
+		}
+	}
+
+	return true
 }
