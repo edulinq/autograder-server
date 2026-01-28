@@ -26,37 +26,10 @@ func (this *backend) GetLogRecords(query log.ParsedLogQuery) ([]*log.Record, err
 	}
 
 	records, err := util.FilterJSONLFile(path, log.Record{}, func(record *log.Record) bool {
-		return keepRecord(record, query)
+		return query.Match(record)
 	})
 
 	return records, err
-}
-
-func keepRecord(record *log.Record, query log.ParsedLogQuery) bool {
-	if record.Level < query.Level {
-		return false
-	}
-
-	if (query.CourseID != "") && (record.Course != query.CourseID) {
-		return false
-	}
-
-	// Assignment ID will only be matched on if the course ID also matches.
-	courseMatch := ((query.CourseID != "") && (record.Course == query.CourseID))
-
-	if (query.AssignmentID != "") && (!courseMatch || (record.Assignment != query.AssignmentID)) {
-		return false
-	}
-
-	if (query.UserEmail != "") && (record.User != query.UserEmail) {
-		return false
-	}
-
-	if record.Timestamp < query.After {
-		return false
-	}
-
-	return true
 }
 
 func (this *backend) getLogPath() string {

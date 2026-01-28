@@ -8,12 +8,16 @@ import (
 	"github.com/edulinq/autograder/internal/model"
 )
 
+func Query(rawQuery log.RawLogQuery, contextUser *model.ServerUser) ([]*log.Record, *model.LocatableError, error) {
+	return QueryFull(rawQuery, contextUser, false)
+}
+
 // Query for log records.
 // There are several steps before querying the database (parsing, validation, permissions check, etc),
 // and this function does them all.
 // The returned model.LocatableError should be shown to the caller (i.e. the user caused the error),
 // while the returned error is a system error.
-func Query(rawQuery log.RawLogQuery, contextUser *model.ServerUser) ([]*log.Record, *model.LocatableError, error) {
+func QueryFull(rawQuery log.RawLogQuery, contextUser *model.ServerUser, useTestingLogs bool) ([]*log.Record, *model.LocatableError, error) {
 	parsedQuery, err := rawQuery.ParseJoin()
 	if err != nil {
 		message := fmt.Sprintf("Failed to parse log query: '%s'.", err.Error())
@@ -53,7 +57,7 @@ func Query(rawQuery log.RawLogQuery, contextUser *model.ServerUser) ([]*log.Reco
 		return nil, locatableErr, nil
 	}
 
-	records, err := db.GetLogRecords(*parsedQuery)
+	records, err := db.GetLogRecordsFull(*parsedQuery, useTestingLogs)
 	if err != nil {
 		return nil, nil, fmt.Errorf("Failed to execute log query: '%w'.", err)
 	}

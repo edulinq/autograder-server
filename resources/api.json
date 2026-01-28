@@ -1440,6 +1440,11 @@
                     "type": "string"
                 },
                 {
+                    "name": "use-testing-logs",
+                    "type": "bool",
+                    "description": "If true, only hard-coded testing logs will be queried from."
+                },
+                {
                     "name": "user-email",
                     "type": "string",
                     "description": "The email of the user making this request.",

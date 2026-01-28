@@ -230,3 +230,34 @@ func (this ParsedLogQuery) String() string {
 
 	return builder.String()
 }
+
+func (this ParsedLogQuery) Match(record *Record) bool {
+	if record == nil {
+		return false
+	}
+
+	if record.Level < this.Level {
+		return false
+	}
+
+	if (this.CourseID != "") && (record.Course != this.CourseID) {
+		return false
+	}
+
+	// Assignment ID will only be matched on if the course ID also matches.
+	courseMatch := ((this.CourseID != "") && (record.Course == this.CourseID))
+
+	if (this.AssignmentID != "") && (!courseMatch || (record.Assignment != this.AssignmentID)) {
+		return false
+	}
+
+	if (this.UserEmail != "") && (record.User != this.UserEmail) {
+		return false
+	}
+
+	if record.Timestamp < this.After {
+		return false
+	}
+
+	return true
+}

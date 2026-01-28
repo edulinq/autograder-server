@@ -12,6 +12,9 @@ type QueryRequest struct {
 	core.MinServerRoleUser
 
 	log.RawLogQuery
+
+	// If true, only hard-coded testing logs will be queried from.
+	UseTestingLogs bool `json:"use-testing-logs"`
 }
 
 type QueryResponse struct {
@@ -24,7 +27,7 @@ type QueryResponse struct {
 func HandleQuery(request *QueryRequest) (*QueryResponse, *core.APIError) {
 	var response QueryResponse
 
-	records, locatableErr, err := plogs.Query(request.RawLogQuery, request.ServerUser)
+	records, locatableErr, err := plogs.QueryFull(request.RawLogQuery, request.ServerUser, request.UseTestingLogs)
 	if err != nil {
 		return nil, core.NewInternalError("-200", request, "Failed to query logs.").Err(err)
 	}

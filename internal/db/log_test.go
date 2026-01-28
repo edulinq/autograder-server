@@ -260,3 +260,40 @@ func (this *DBTests) DBTestGetLogsContext(test *testing.T) {
 		}
 	}
 }
+
+func (this *DBTests) DBTestGetTestingLogs(test *testing.T) {
+	testCases := []struct {
+		query           log.ParsedLogQuery
+		expectedRecords []*log.Record
+	}{
+		{
+			log.ParsedLogQuery{
+				Level: log.LevelTrace,
+			},
+			TESTING_LOG_RECORDS,
+		},
+		{
+			log.ParsedLogQuery{
+				Level:        log.LevelTrace,
+				CourseID:     "course101",
+				AssignmentID: "hw0",
+				UserEmail:    "course-other@test.edulinq.org",
+			},
+			[]*log.Record{TESTING_LOG_RECORDS[0]},
+		},
+	}
+
+	for i, testCase := range testCases {
+		records, err := GetLogRecordsFull(testCase.query, true)
+		if err != nil {
+			test.Errorf("Case %d: Failed to get log records: '%v'.", i, err)
+			continue
+		}
+
+		if !reflect.DeepEqual(testCase.expectedRecords, records) {
+			test.Errorf("Case %d: Unexpected records. Expected: %s, Actual: %s.", i,
+				util.MustToJSONIndent(testCase.expectedRecords), util.MustToJSONIndent(records))
+			continue
+		}
+	}
+}

@@ -1,6 +1,7 @@
 package logs
 
 import (
+	"reflect"
 	"testing"
 
 	"github.com/edulinq/autograder/internal/api/core"
@@ -131,5 +132,25 @@ func TestQuery(test *testing.T) {
 			test.Errorf("Case %d: Error is not as expected. Expected: '%s', Actual: '%s'.", i, testCase.expectedErrorLocator, responseContent.Error.Locator)
 			continue
 		}
+	}
+}
+
+func TestQueryTestingLogs(test *testing.T) {
+	fields := map[string]any{
+		"use-testing-logs": true,
+		"level":            "TRACE",
+	}
+
+	response := core.SendTestAPIRequestFull(test, `logs/query`, fields, nil, "server-admin")
+	if !response.Success {
+		test.Fatalf("Response is not a success when it should be: '%v'.", response)
+	}
+
+	var responseContent QueryResponse
+	util.MustJSONFromString(util.MustToJSON(response.Content), &responseContent)
+
+	if !reflect.DeepEqual(db.TESTING_LOG_RECORDS, responseContent.Records) {
+		test.Fatalf("Unexpected records. Expected: %s, Actual: %s.",
+			util.MustToJSONIndent(db.TESTING_LOG_RECORDS), util.MustToJSONIndent(responseContent.Records))
 	}
 }

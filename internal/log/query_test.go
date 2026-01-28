@@ -269,12 +269,264 @@ func TestLogQueryParseTiming(test *testing.T) {
 	for i, testCase := range testCases {
 		actual, err := parseLogQueryTiming(now, testCase.afterString, testCase.pastString)
 		if err != nil {
-			test.Fatalf("Case %d: Unexpected error: '%v'.", i, err)
+			test.Errorf("Case %d: Unexpected error: '%v'.", i, err)
+			continue
 		}
 
 		if testCase.expected != actual {
-			test.Fatalf("Case %d: Time mismatch. Expected: '%s', Actual: '%s'.", i,
+			test.Errorf("Case %d: Time mismatch. Expected: '%s', Actual: '%s'.", i,
 				testCase.expected.SafeString(), actual.SafeString())
+			continue
+		}
+	}
+}
+
+func TestParsedLogQueryMatch(test *testing.T) {
+	testCases := []struct {
+		query    ParsedLogQuery
+		record   *Record
+		expected bool
+	}{
+		// Empty
+		{
+			ParsedLogQuery{
+				Level:        LevelInfo,
+				After:        timestamp.Timestamp(0),
+				CourseID:     "",
+				AssignmentID: "",
+				UserEmail:    "",
+			},
+			&Record{
+				Level:      LevelInfo,
+				Timestamp:  timestamp.Now(),
+				Course:     "",
+				Assignment: "",
+				User:       "",
+			},
+			true,
+		},
+		{
+			ParsedLogQuery{
+				Level:        LevelInfo,
+				After:        timestamp.Timestamp(0),
+				CourseID:     "",
+				AssignmentID: "",
+				UserEmail:    "",
+			},
+			&Record{
+				Level:      LevelInfo,
+				Timestamp:  timestamp.Timestamp(100),
+				Course:     "course101",
+				Assignment: "hw0",
+				User:       "course-student@test.edulinq.org",
+			},
+			true,
+		},
+
+		// Level
+		{
+			ParsedLogQuery{
+				Level:        LevelDebug,
+				After:        timestamp.Timestamp(0),
+				CourseID:     "",
+				AssignmentID: "",
+				UserEmail:    "",
+			},
+			&Record{
+				Level:      LevelInfo,
+				Timestamp:  timestamp.Timestamp(100),
+				Course:     "course101",
+				Assignment: "hw0",
+				User:       "course-student@test.edulinq.org",
+			},
+			true,
+		},
+		{
+			ParsedLogQuery{
+				Level:        LevelWarn,
+				After:        timestamp.Timestamp(0),
+				CourseID:     "",
+				AssignmentID: "",
+				UserEmail:    "",
+			},
+			&Record{
+				Level:      LevelInfo,
+				Timestamp:  timestamp.Timestamp(100),
+				Course:     "course101",
+				Assignment: "hw0",
+				User:       "course-student@test.edulinq.org",
+			},
+			false,
+		},
+
+		// Course
+		{
+			ParsedLogQuery{
+				Level:        LevelInfo,
+				After:        timestamp.Timestamp(0),
+				CourseID:     "course101",
+				AssignmentID: "",
+				UserEmail:    "",
+			},
+			&Record{
+				Level:      LevelInfo,
+				Timestamp:  timestamp.Timestamp(100),
+				Course:     "course101",
+				Assignment: "hw0",
+				User:       "course-student@test.edulinq.org",
+			},
+			true,
+		},
+		{
+			ParsedLogQuery{
+				Level:        LevelInfo,
+				After:        timestamp.Timestamp(0),
+				CourseID:     "ZZZ",
+				AssignmentID: "",
+				UserEmail:    "",
+			},
+			&Record{
+				Level:      LevelInfo,
+				Timestamp:  timestamp.Timestamp(100),
+				Course:     "course101",
+				Assignment: "hw0",
+				User:       "course-student@test.edulinq.org",
+			},
+			false,
+		},
+
+		// Assignment
+		{
+			ParsedLogQuery{
+				Level:        LevelInfo,
+				After:        timestamp.Timestamp(0),
+				CourseID:     "course101",
+				AssignmentID: "hw0",
+				UserEmail:    "",
+			},
+			&Record{
+				Level:      LevelInfo,
+				Timestamp:  timestamp.Timestamp(100),
+				Course:     "course101",
+				Assignment: "hw0",
+				User:       "course-student@test.edulinq.org",
+			},
+			true,
+		},
+		{
+			ParsedLogQuery{
+				Level:        LevelInfo,
+				After:        timestamp.Timestamp(0),
+				CourseID:     "course101",
+				AssignmentID: "ZZZ",
+				UserEmail:    "",
+			},
+			&Record{
+				Level:      LevelInfo,
+				Timestamp:  timestamp.Timestamp(100),
+				Course:     "course101",
+				Assignment: "hw0",
+				User:       "course-student@test.edulinq.org",
+			},
+			false,
+		},
+		{
+			ParsedLogQuery{
+				Level:        LevelInfo,
+				After:        timestamp.Timestamp(0),
+				CourseID:     "",
+				AssignmentID: "hw0",
+				UserEmail:    "",
+			},
+			&Record{
+				Level:      LevelInfo,
+				Timestamp:  timestamp.Timestamp(100),
+				Course:     "course101",
+				Assignment: "hw0",
+				User:       "course-student@test.edulinq.org",
+			},
+			false,
+		},
+
+		// User
+		{
+			ParsedLogQuery{
+				Level:        LevelInfo,
+				After:        timestamp.Timestamp(0),
+				CourseID:     "",
+				AssignmentID: "",
+				UserEmail:    "course-student@test.edulinq.org",
+			},
+			&Record{
+				Level:      LevelInfo,
+				Timestamp:  timestamp.Timestamp(100),
+				Course:     "course101",
+				Assignment: "hw0",
+				User:       "course-student@test.edulinq.org",
+			},
+			true,
+		},
+		{
+			ParsedLogQuery{
+				Level:        LevelInfo,
+				After:        timestamp.Timestamp(0),
+				CourseID:     "",
+				AssignmentID: "",
+				UserEmail:    "ZZZ@test.edulinq.org",
+			},
+			&Record{
+				Level:      LevelInfo,
+				Timestamp:  timestamp.Timestamp(100),
+				Course:     "course101",
+				Assignment: "hw0",
+				User:       "course-student@test.edulinq.org",
+			},
+			false,
+		},
+
+		// After
+		{
+			ParsedLogQuery{
+				Level:        LevelInfo,
+				After:        timestamp.Timestamp(0),
+				CourseID:     "",
+				AssignmentID: "",
+				UserEmail:    "",
+			},
+			&Record{
+				Level:      LevelInfo,
+				Timestamp:  timestamp.Timestamp(100),
+				Course:     "course101",
+				Assignment: "hw0",
+				User:       "course-student@test.edulinq.org",
+			},
+			true,
+		},
+		{
+			ParsedLogQuery{
+				Level:        LevelInfo,
+				After:        timestamp.Timestamp(200),
+				CourseID:     "",
+				AssignmentID: "",
+				UserEmail:    "",
+			},
+			&Record{
+				Level:      LevelInfo,
+				Timestamp:  timestamp.Timestamp(100),
+				Course:     "course101",
+				Assignment: "hw0",
+				User:       "course-student@test.edulinq.org",
+			},
+			false,
+		},
+	}
+
+	for i, testCase := range testCases {
+		actual := testCase.query.Match(testCase.record)
+
+		if testCase.expected != actual {
+			test.Errorf("Case %d: Mismatch. Expected: '%v', Actual: '%v'.", i, testCase.expected, actual)
+			continue
 		}
 	}
 }
