@@ -60,18 +60,21 @@ func RunGradingContainer(ctx context.Context, logId log.Loggable, imageName stri
 func RunContainer(ctx context.Context, logId log.Loggable, imageName string, mounts []MountInfo, cmd []string, baseID string, maxRuntimeSecs int) (string, string, bool, bool, error) {
 	var stdout string
 	var stderr string
+	var tempTimeout bool
 	var timeout bool
 	var canceled bool
 	var err error
 
 	runFunc := func(softTimeoutCtx context.Context) {
-		stdout, stderr, err = runContainerInternal(softTimeoutCtx, logId, imageName, mounts, cmd, baseID)
+		stdout, stderr, tempTimeout, err = runContainerInternal(softTimeoutCtx, logId, imageName, mounts, cmd, baseID)
+		timeout = timeout || tempTimeout
 	}
 
 	if maxRuntimeSecs > 0 {
 		softTimeoutMS := int64(maxRuntimeSecs * 1000)
 		hardTimeoutMS := int64((maxRuntimeSecs + extraInitTimeSecs) * 1000)
-		timeout = !util.RunWithTimeoutFull(softTimeoutMS, hardTimeoutMS, ctx, runFunc)
+		tempTimeout = !util.RunWithTimeoutFull(softTimeoutMS, hardTimeoutMS, ctx, runFunc)
+		timeout = timeout || tempTimeout
 	} else {
 		runFunc(ctx)
 	}
@@ -91,13 +94,15 @@ func RunContainer(ctx context.Context, logId log.Loggable, imageName string, mou
 // We split these up to allow for better timeout guarantees
 // (we can't fully trust Docker to timeout properly).
 // This function does not try to enforce any timeouts (aside from passing along the context), that is left to callers.
-func runContainerInternal(ctx context.Context, logId log.Loggable, imageName string, mounts []MountInfo, cmd []string, baseID string) (string, string, error) {
+// If a timeout is detected, it will be returned (but it is only one of many ways a timeout could happen).
+// Returns: (stdout, stderr, timeout (only one of many types), error)
+func runContainerInternal(ctx context.Context, logId log.Loggable, imageName string, mounts []MountInfo, cmd []string, baseID string) (string, string, bool, error) {
 	// Get a docker client.
 	// Note that cleaning this up needs to wait until after we are sure the container is dead.
 	// This means we won't be defering the close right away (see cleanupRun()).
 	docker, err := getDockerClient()
 	if err != nil {
-		return "", "", err
+		return "", "", false, err
 	}
 
 	name := cleanContainerName(fmt.Sprintf("%s-%s", baseID, util.UUID()))
@@ -128,7 +133,7 @@ func runContainerInternal(ctx context.Context, logId log.Loggable, imageName str
 
 	if err != nil {
 		docker.Close()
-		return "", "", fmt.Errorf("Failed to create container '%s': '%w'.", name, err)
+		return "", "", false, fmt.Errorf("Failed to create container '%s': '%w'.", name, err)
 	}
 
 	// Now that we have the container, we can schedule cleanup in the background.
@@ -144,7 +149,7 @@ func runContainerInternal(ctx context.Context, logId log.Loggable, imageName str
 		Stderr: true,
 	})
 	if err != nil {
-		return "", "", fmt.Errorf("Failed to attach to container '%s' (%s): '%w'.", name, containerInstance.ID, err)
+		return "", "", false, fmt.Errorf("Failed to attach to container '%s' (%s): '%w'.", name, containerInstance.ID, err)
 	}
 	defer connection.Close()
 
@@ -157,7 +162,7 @@ func runContainerInternal(ctx context.Context, logId log.Loggable, imageName str
 	log.Trace("Starting container.", log.NewAttr("name", name))
 	err = docker.ContainerStart(ctx, containerInstance.ID, container.StartOptions{})
 	if err != nil {
-		return "", "", fmt.Errorf("Failed to start container '%s' (%s): '%w'.", name, containerInstance.ID, err)
+		return "", "", false, fmt.Errorf("Failed to start container '%s' (%s): '%w'.", name, containerInstance.ID, err)
 	}
 
 	// Wait for the container to finish.
@@ -173,7 +178,7 @@ func runContainerInternal(ctx context.Context, logId log.Loggable, imageName str
 				break
 			}
 
-			return "", "", fmt.Errorf("Got an error when running container '%s' (%s): '%w'.", name, containerInstance.ID, err)
+			return "", "", false, fmt.Errorf("Got an error when running container '%s' (%s): '%w'.", name, containerInstance.ID, err)
 		}
 	case <-statusChan:
 		// Waiting is complete.
@@ -199,7 +204,7 @@ func runContainerInternal(ctx context.Context, logId log.Loggable, imageName str
 		output.Err,
 	)
 
-	return output.Stdout, output.Stderr, nil
+	return output.Stdout, output.Stderr, errors.Is(ctx.Err(), context.DeadlineExceeded), nil
 }
 
 func cleanContainerName(text string) string {
