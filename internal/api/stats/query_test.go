@@ -1,6 +1,7 @@
 package stats
 
 import (
+	"reflect"
 	"testing"
 
 	"github.com/edulinq/autograder/internal/api/core"
@@ -535,6 +536,28 @@ func TestQuery(test *testing.T) {
 			test.Errorf("Case %d: Unexpected record timestamps. Expected: %s, Actual: %s.", i, util.MustToJSONIndent(testCase.expectedValues), util.MustToJSONIndent(responseContent.Records))
 			continue
 		}
+	}
+}
+
+func TestQueryTestingMetrics(test *testing.T) {
+	fields := map[string]any{
+		"use-testing-data": true,
+		"type":             "api-request",
+	}
+
+	response := core.SendTestAPIRequestFull(test, `stats/query`, fields, nil, "server-admin")
+	if !response.Success {
+		test.Fatalf("Response is not a success when it should be: '%v'.", response)
+	}
+
+	var responseContent QueryResponse
+	util.MustJSONFromString(util.MustToJSON(response.Content), &responseContent)
+
+	expected := []*stats.Metric{db.TESTING_STATS_METRICS[0]}
+
+	if !reflect.DeepEqual(expected, responseContent.Records) {
+		test.Fatalf("Unexpected records. Expected: %s, Actual: %s.",
+			util.MustToJSONIndent(expected), util.MustToJSONIndent(responseContent.Records))
 	}
 }
 

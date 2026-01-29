@@ -11,16 +11,16 @@ func GetLogRecords(query log.ParsedLogQuery) ([]*log.Record, error) {
 	return GetLogRecordsFull(query, false)
 }
 
-func GetLogRecordsFull(query log.ParsedLogQuery, useTestingRecords bool) ([]*log.Record, error) {
+func GetLogRecordsFull(query log.ParsedLogQuery, useTestingData bool) ([]*log.Record, error) {
 	if backend == nil {
 		return nil, fmt.Errorf("Database has not been opened.")
 	}
 
-	if !useTestingRecords {
+	if !useTestingData {
 		return backend.GetLogRecords(query)
 	}
 
-	records := make([]*log.Record, 0)
+	records := make([]*log.Record, 0, len(TESTING_LOG_RECORDS))
 	for _, record := range TESTING_LOG_RECORDS {
 		if query.Match(record) {
 			records = append(records, record)

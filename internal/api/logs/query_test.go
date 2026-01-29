@@ -137,7 +137,7 @@ func TestQuery(test *testing.T) {
 
 func TestQueryTestingLogs(test *testing.T) {
 	fields := map[string]any{
-		"use-testing-logs": true,
+		"use-testing-data": true,
 		"level":            "TRACE",
 	}
 

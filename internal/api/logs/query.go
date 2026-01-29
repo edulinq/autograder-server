@@ -13,8 +13,8 @@ type QueryRequest struct {
 
 	log.RawLogQuery
 
-	// If true, only hard-coded testing logs will be queried from.
-	UseTestingLogs bool `json:"use-testing-logs"`
+	// If true, only hard-coded testing data will be queried from.
+	UseTestingData bool `json:"use-testing-data"`
 }
 
 type QueryResponse struct {
@@ -27,7 +27,7 @@ type QueryResponse struct {
 func HandleQuery(request *QueryRequest) (*QueryResponse, *core.APIError) {
 	var response QueryResponse
 
-	records, locatableErr, err := plogs.QueryFull(request.RawLogQuery, request.ServerUser, request.UseTestingLogs)
+	records, locatableErr, err := plogs.QueryFull(request.RawLogQuery, request.ServerUser, request.UseTestingData)
 	if err != nil {
 		return nil, core.NewInternalError("-200", request, "Failed to query logs.").Err(err)
 	}

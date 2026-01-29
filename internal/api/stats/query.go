@@ -13,6 +13,9 @@ type QueryRequest struct {
 	core.MinServerRoleAdmin
 
 	stats.Query
+
+	// If true, only hard-coded testing data will be queried from.
+	UseTestingData bool `json:"use-testing-data"`
 }
 
 type QueryResponse struct {
@@ -27,7 +30,7 @@ func HandleQuery(request *QueryRequest) (*QueryResponse, *core.APIError) {
 		return nil, core.NewBadRequestError("-301", request, message).Err(err)
 	}
 
-	records, err := db.GetMetrics(request.Query)
+	records, err := db.GetMetricsFull(request.Query, request.UseTestingData)
 	if err != nil {
 		return nil, core.NewInternalError("-302", request, "Failed to query stats.").Err(err)
 	}

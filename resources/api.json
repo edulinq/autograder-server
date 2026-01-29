@@ -1440,9 +1440,9 @@
                     "type": "string"
                 },
                 {
-                    "name": "use-testing-logs",
+                    "name": "use-testing-data",
                     "type": "bool",
-                    "description": "If true, only hard-coded testing logs will be queried from."
+                    "description": "If true, only hard-coded testing data will be queried from."
                 },
                 {
                     "name": "user-email",
@@ -1529,6 +1529,11 @@
                     "type": "string",
                     "description": "Only return data of this type.\nThis field is required in the query to specify which kind of metric to return.",
                     "required": true
+                },
+                {
+                    "name": "use-testing-data",
+                    "type": "bool",
+                    "description": "If true, only hard-coded testing data will be queried from."
                 },
                 {
                     "name": "user-email",

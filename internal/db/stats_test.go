@@ -212,3 +212,40 @@ func runStoreStatsTests(test *testing.T, metric *stats.Metric) {
 			util.MustToJSONIndent(metric), util.MustToJSONIndent(*records[0]))
 	}
 }
+
+func (this *DBTests) DBTestGetTestingMetrics(test *testing.T) {
+	testCases := []struct {
+		query    stats.Query
+		expected []*stats.Metric
+	}{
+		{
+			stats.Query{
+				Type: stats.MetricTypeAPIRequest,
+			},
+			[]*stats.Metric{TESTING_STATS_METRICS[0]},
+		},
+		{
+			stats.Query{
+				Type: stats.MetricTypeSystemCPU,
+			},
+			[]*stats.Metric{
+				TESTING_STATS_METRICS[7],
+				TESTING_STATS_METRICS[11],
+			},
+		},
+	}
+
+	for i, testCase := range testCases {
+		actual, err := GetMetricsFull(testCase.query, true)
+		if err != nil {
+			test.Errorf("Case %d: Failed to get metrics: '%v'.", i, err)
+			continue
+		}
+
+		if !reflect.DeepEqual(testCase.expected, actual) {
+			test.Errorf("Case %d: Unexpected metrics. Expected: %s, Actual: %s.", i,
+				util.MustToJSONIndent(testCase.expected), util.MustToJSONIndent(actual))
+			continue
+		}
+	}
+}
