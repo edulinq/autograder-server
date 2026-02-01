@@ -204,3 +204,30 @@ For example:
 go run cmd/peek-submission/main.go course-student@test.edulinq.org course101 hw0 -c dirs.base="/path/to/working/directory"
 ```
 
+## Development Procedure for Adding/Editing an API Endpoint
+
+Adding (or editing) an API endpoint is a very common task (especially for new developers).
+The procedure for doing so within this project is fairly straightforward (add the endpoint and tests).
+However, it becomes a bit more complicated when we consider also adding the complimentary test data and code for the Python interface.
+The Python interface ([autograder-py](https://github.com/edulinq/autograder-py)) is treated as a complete interface and should have support for every API endpoint.
+This means that any new API here should also be accompanied by an interface on the Python side,
+and any Python interface would not be complete without tests, which require creating [test data](https://github.com/edulinq/autograder-testdata).
+
+The part that may confuse people about this process is the dependencies.
+Naturally, the Python interface and test data both depend on the server,
+but these repositories point to a version of the server that won't yet have your changes in them.
+This should only be an issue when you are generating test data in the [autograder-testdata repo](https://github.com/edulinq/autograder-testdata).
+To overcome this, use the `--source-dir` option to the data generation script to point to your autograder-server working directory
+(which contains your new changes).
+
+The general process should be something like:
+ 1. Implement your autograder-server code and tests.
+ 2. PR and iterate until the autograder-server PR is conditionally accepted.
+ 3. Implement Python code and tests (reference the [development documentation](https://github.com/edulinq/autograder-py/blob/main/docs/development.md) for the repo).
+ 4. Generate test data using the `--source-dir`. There is no need to make a PR for the test data (unless something more than data needs to be updated).
+ 5. PR and iterate until the autograder-py PR is conditionally accepted.
+ 6. Your reviewer will now accept and merge your autograder-server PR.
+ 7. Your reviewer will now update autograder-testdata repo to point to the latest autograder-server changes (the ones you just made).
+ 8. You should now pull these changes into your autograder-py PR and ensure everything is working.
+ 9. Your reviewer will now accept and merge your autograder-py PR.
+ 10. Done.
