@@ -31,8 +31,8 @@ func runDockerGrader(ctx context.Context, assignment *model.Assignment, submissi
 		log.Debug("Leaving behind temp grading dir.", assignment, log.NewAttr("path", tempDir))
 	}
 
-	// Copy over submission files to the temp input dir.
-	err = util.CopyDirentFull(submissionPath, inputDir, true)
+	// Copy over submission files to the temp input dir inside a container for isolation.
+	err = docker.CopyDirContentsInContainer(submissionPath, inputDir)
 	if err != nil {
 		return nil, nil, "", "", "", fmt.Errorf("Failed to copy over submission/input contents: '%w'.", err)
 	}
