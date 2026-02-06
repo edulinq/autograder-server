@@ -5,8 +5,12 @@ import (
 )
 
 type TestSubmission struct {
-	IgnoreMessages bool         `json:"ignore_messages"`
-	GradingInfo    *GradingInfo `json:"result"`
+	IgnoreMessages bool   `json:"ignore_messages"`
+	SoftError      bool   `json:"soft_error"`
+	Stdout         string `json:"stdout"`
+	Stderr         string `json:"stderr"`
+
+	GradingInfo *GradingInfo `json:"result"`
 }
 
 type SubmissionHistoryItem struct {

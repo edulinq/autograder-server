@@ -59,13 +59,19 @@ func runNoDockerGrader(ctx context.Context, assignment *model.Assignment, submis
 	err = util.CopyFileSpecsWithOps(submissionPath, "", inputDir, "", tempDir,
 		[]*util.FileSpec{util.GetPathFileSpec("*")}, []*util.FileOperation{}, imageInfo.PostSubmissionFileOperations)
 	if err != nil {
-		return nil, nil, "", "", "", fmt.Errorf("Failed to copy submission ssignment files: '%w'.", err)
+		return nil, nil, "", "", "", fmt.Errorf("Failed to copy submission assignment files: '%w'.", err)
 	}
 
 	stdout, stderr, timeout, canceled, err := runCMD(ctx, cmd)
 	if err != nil {
-		return nil, nil, stdout, stderr, "",
-			fmt.Errorf("Failed to run non-docker grader for assignment '%s': '%w'.", assignment.FullID(), err)
+		log.Warn("Failed to run non-docker grader for assignment.",
+			assignment, err, log.NewAttr("cmd", cmd.String()))
+
+		// Note that this message could be a little more precise,
+		// but we make it match the case where an output file is not found to mimic Docker-based grading.
+		// This message shouldn't be used in production anyways.
+		message := "Cannot find output/result of grading. It is likely that the grader crashed."
+		return nil, nil, stdout, stderr, message, nil
 	}
 
 	if timeout {
@@ -78,7 +84,11 @@ func runNoDockerGrader(ctx context.Context, assignment *model.Assignment, submis
 
 	resultPath := filepath.Join(outputDir, common.GRADER_OUTPUT_RESULT_FILENAME)
 	if !util.PathExists(resultPath) {
-		return nil, nil, stdout, stderr, "", fmt.Errorf("Cannot find output file ('%s') after non-docker grading.", resultPath)
+		log.Warn("Cannot find output file after non-docker grading.",
+			log.NewAttr("path", resultPath), log.NewAttr("cmd", cmd.String()))
+
+		message := "Cannot find output/result of grading. It is likely that the grader crashed."
+		return nil, nil, stdout, stderr, message, nil
 	}
 
 	var gradingInfo model.GradingInfo

@@ -4,7 +4,7 @@
     "static-files": [
         "grader.py"
     ],
-    "image": "ghcr.io/edulinq/grader.python:0.1.0.2-alpine",
+    "image": "ghcr.io/edulinq/grader.python:0.1.0.4-alpine",
     "analysis-options": {
         "engine-options": {
             "jplag": {

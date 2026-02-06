@@ -1,6 +1,8 @@
 package core
 
 import (
+	"fmt"
+
 	"github.com/edulinq/autograder/internal/grader"
 	"github.com/edulinq/autograder/internal/log"
 	"github.com/edulinq/autograder/internal/model"
@@ -50,10 +52,18 @@ func GradeRequestSubmission(request APIRequestAssignmentContext, submissionPath 
 	}
 
 	if failureMessage != "" {
-		logAttributes := append([]any{log.NewAttr("message", failureMessage)}, getLogAttributesFromAPIRequest(&request)...)
+		stdout := ""
+		stderr := ""
+
+		if (result != nil) && (result.HasTextOutput()) {
+			stdout = result.Stdout
+			stderr = result.Stderr
+		}
+
+		logAttributes := append([]any{log.NewAttr("message", failureMessage), log.NewAttr("stdout", stdout), log.NewAttr("stderr", stderr)}, getLogAttributesFromAPIRequest(&request)...)
 		log.Debug("Submission got a soft error.", logAttributes...)
 
-		response.Message = failureMessage
+		response.Message = ConcatStdOutErr(failureMessage, stdout, stderr)
 		return response
 	}
 
@@ -61,4 +71,11 @@ func GradeRequestSubmission(request APIRequestAssignmentContext, submissionPath 
 	response.GradingInfo = result.Info
 
 	return response
+}
+
+// Concat stdout/stderr to the given message.
+func ConcatStdOutErr(message string, stdout string, stderr string) string {
+	message += fmt.Sprintf("\n--- stdout ---\n%s\n--------------\n", stdout)
+	message += fmt.Sprintf("\n--- stderr ---\n%s\n--------------\n", stderr)
+	return message
 }

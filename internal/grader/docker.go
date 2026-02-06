@@ -52,8 +52,11 @@ func runDockerGrader(ctx context.Context, assignment *model.Assignment, submissi
 
 	resultPath := filepath.Join(outputDir, common.GRADER_OUTPUT_RESULT_FILENAME)
 	if !util.PathExists(resultPath) {
-		return nil, nil, stdout, stderr, "",
-			fmt.Errorf("Cannot find output file ('%s') after the grading container (%s) was run.", resultPath, assignment.ImageName())
+		log.Warn("Cannot find output file after the grading container was run.",
+			log.NewAttr("path", resultPath), log.NewAttr("image", assignment.ImageName()))
+
+		message := fmt.Sprintf("Cannot find output/result of grading. It is likely that the grader crashed.")
+		return nil, nil, stdout, stderr, message, nil
 	}
 
 	var gradingInfo model.GradingInfo

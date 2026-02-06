@@ -33,13 +33,25 @@ func TestSubmit(test *testing.T) {
 		}
 
 		response := core.SendTestAPIRequestFull(test, `courses/assignments/submissions/submit`, fields, testSubmission.Files, "course-student")
+
+		var responseContent SubmitResponse
+		util.MustJSONFromString(util.MustToJSON(response.Content), &responseContent)
+
+		if testSubmission.TestSubmission.SoftError {
+			expectedMessage := core.ConcatStdOutErr(testSubmission.TestSubmission.GradingInfo.Message, testSubmission.TestSubmission.Stdout, testSubmission.TestSubmission.Stderr)
+
+			if expectedMessage != responseContent.Message {
+				test.Errorf("Case %d: Soft error mismatch. Expected: '%s', Actual: '%s'.", i, expectedMessage, responseContent.Message)
+				continue
+			}
+
+			continue
+		}
+
 		if !response.Success {
 			test.Errorf("Case %d: Response is not a success when it should be: '%v'.", i, response)
 			continue
 		}
-
-		var responseContent SubmitResponse
-		util.MustJSONFromString(util.MustToJSON(response.Content), &responseContent)
 
 		if !responseContent.GradingSuccess {
 			test.Errorf("Case %d: Response is not a grading success when it should be: '%v'.", i, responseContent)

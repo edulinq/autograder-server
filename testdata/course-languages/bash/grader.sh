@@ -10,6 +10,7 @@ function main() {
     fi
 
     trap exit SIGINT
+    set -e
 
     cd "${THIS_DIR}"
 

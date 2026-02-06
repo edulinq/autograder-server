@@ -91,8 +91,16 @@ func runSubmissionTests(test *testing.T, parallel bool, useDocker bool) {
 				test.Fatalf("Submission was rejected: '%s'.", reject.String())
 			}
 
+			if testSubmission.TestSubmission.SoftError {
+				if testSubmission.TestSubmission.GradingInfo.Message != softError {
+					test.Fatalf("Soft error not as expected. Expected: '%s', Actual: '%s'.", testSubmission.TestSubmission.GradingInfo.Message, softError)
+				}
+
+				return
+			}
+
 			if softError != "" {
-				test.Fatalf("Submission got a soft error: '%s'.", softError)
+				test.Fatalf("Submission got an unexpected soft error: '%s'.", softError)
 			}
 
 			if !result.Info.Equals(*testSubmission.TestSubmission.GradingInfo, !testSubmission.TestSubmission.IgnoreMessages) {
