@@ -212,7 +212,7 @@ func verifySuccessfulTestSubmissions(test *testing.T, testSubmissions []*grader.
 			expectedMessage := core.ConcatStdOutErr(testSubmission.TestSubmission.GradingInfo.Message, testSubmission.TestSubmission.Stdout, testSubmission.TestSubmission.Stderr)
 
 			if expectedMessage != responseContent.Message {
-				test.Errorf("Case %d: Soft error mismatch. Expected: '%s', Actual: '%s'.", i, expectedMessage, responseContent.Message)
+				test.Errorf("Case %d: Soft error mismatch.\nExpected: '%s', Actual: '%s'.", i, expectedMessage, responseContent.Message)
 				continue
 			}
 

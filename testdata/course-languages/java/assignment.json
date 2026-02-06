@@ -5,7 +5,7 @@
         "grader.sh",
         "Grader.java"
     ],
-    "image": "ghcr.io/edulinq/grader.base:0.1.0-ubuntu",
+    "image": "ghcr.io/edulinq/grader.base:0.1.1-ubuntu",
     "invocation": ["bash", "./grader.sh"],
     "post-static-docker-commands": [
         "RUN apt-get update",

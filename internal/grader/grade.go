@@ -51,6 +51,17 @@ func GradeDefault(assignment *model.Assignment, submissionPath string, user stri
 // Full success is only when ((reject == nil) && (softGradingError == "") && (error == nil)).
 func Grade(ctx context.Context, assignment *model.Assignment, submissionPath string, user string, message string, options GradeOptions) (
 	*model.GradingResult, RejectReason, string, error) {
+	gradingKey := fmt.Sprintf("%s::%s::%s", assignment.GetCourse().GetID(), assignment.GetID(), user)
+
+	// Get the grading start time right before we acquire the user's lock.
+	startTimestamp := timestamp.Now()
+
+	// Ensure the user can only have one submission (of each assignment) running at a time.
+	lockmanager.Lock(gradingKey)
+	defer lockmanager.Unlock(gradingKey)
+
+	// Check for rejection inside the lock to prevent TOCTOU race conditions
+	// where concurrent submissions could both pass the limit check before either acquires the lock.
 	if options.CheckRejection {
 		reject, err := checkForRejection(assignment, submissionPath, user, message, options.AllowLate)
 		if err != nil {
@@ -61,15 +72,6 @@ func Grade(ctx context.Context, assignment *model.Assignment, submissionPath str
 			return nil, reject, "", nil
 		}
 	}
-
-	gradingKey := fmt.Sprintf("%s::%s::%s", assignment.GetCourse().GetID(), assignment.GetID(), user)
-
-	// Get the grading start time right before we acquire the user's lock.
-	startTimestamp := timestamp.Now()
-
-	// Ensure the user can only have one submission (of each assignment) running at a time.
-	lockmanager.Lock(gradingKey)
-	defer lockmanager.Unlock(gradingKey)
 
 	submissionID, inputFileContents, err := prepForGrading(assignment, submissionPath, user)
 	if err != nil {

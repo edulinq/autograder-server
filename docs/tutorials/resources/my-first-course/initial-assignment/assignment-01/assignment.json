@@ -3,5 +3,5 @@
     "static-files": [
         "grader.py"
     ],
-    "image": "edulinq/grader.python-alpine"
+    "image": "ghcr.io/edulinq/grader.python:0.1.1.0-alpine"
 }

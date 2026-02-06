@@ -1,6 +1,6 @@
 {
     "soft_error": true,
-    "stdout": "Running post submission operations.\nCRASH\n",
+    "stdout": "CRASH\n",
     "result": {
         "message": "Cannot find output/result of grading. It is likely that the grader crashed."
     }

@@ -35,6 +35,8 @@ function grade() {
     # Source the student's assignment file.
     source "${THIS_DIR}/assignment.sh"
 
+    echo "Running Bash Grader"
+
     local score=10
     local message=""
 
