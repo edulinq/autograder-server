@@ -209,7 +209,7 @@ creating an identical and isolated grading environment for each student.
 Images will be created with some default directories:
  - `/autograder` -- The base directory for autograder materials. When running commands, this is the default directory.
  - `/autograder/input` -- Where student code is places. This directory is read-only.
- - `/autograder/output` -- Where the [output of grading](#grader-output) (specifically `/autograder/output/results.json`) should be written.
+ - `/autograder/output` -- Where the [output of grading](#grader-output) (specifically `/autograder/output/result.json`) should be written.
  - `/autograder/work` -- The "working" directory for grading. All static files are copied here.
  - `/autograder/scripts` -- Where miscellaneous scripts are located.
 
@@ -218,8 +218,8 @@ The general grading workflow is as follows:
  - The autograder copies the student's code to a temporary location.
  - The assignment image is invoked with two mounts/volumes:
     - `/autograder/input` (read-only) which contains the student's submission.
-    - `/autograder/output` where the grader is expected to write the results of grading (`/autograder/output/results.json`).
- - After the grading container stops running, the autograder collects the grading artifacts (results.json, stdout, and stderr), and inserts them into the database.
+    - `/autograder/output` where the grader is expected to write the results of grading (`/autograder/output/result.json`).
+ - After the grading container stops running, the autograder collects the grading artifacts (result.json, stdout, and stderr), and inserts them into the database.
  - The autograder now responds to the student's submission request with a summary of the results.
 
 Building an assignment image can seem daunting, so here we will run through the different options in the order they are executed.
@@ -278,7 +278,7 @@ The invocation will take place (by default) in the `/autograder` directory.
 
 ### Grader Output (GraderOutput)
 
-When a grader finishes running, it is supposed to create a JSON file (`/autograder/output/results.json`)
+When a grader finishes running, it is supposed to create a JSON file (`/autograder/output/result.json`)
 that describes the result of grader.
 The fields for this file (the `GraderOutput` type) are as follows:
 | Name                 | Type                 | Required | Description |

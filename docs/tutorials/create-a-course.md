@@ -259,7 +259,7 @@ If you put in your invocation manually, it would be:
 ```json
 {
     ... the rest of an assignment object ...
-    "invocation": "python3 -m autograder.cli.grading.grade-dir --grader grader.py --dir /autograder/work --outpath /autograder/output/results.json"
+    "invocation": "python3 -m autograder.cli.grading.grade-dir --grader grader.py --dir /autograder/work --outpath /autograder/output/result.json"
 }
 ```
 
