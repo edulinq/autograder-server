@@ -21,11 +21,11 @@ type CommonOptions struct {
 
 type CustomResponseFormatter func(response core.APIResponse) (string, bool)
 
-func MustHandleCMDRequestAndExit(endpoint string, request any, responseType any) {
-	MustHandleCMDRequestAndExitFull(endpoint, request, responseType, CommonOptions{}, nil)
+func MustHandleCMDRequestAndExit(endpoint string, request any, responseType any) int {
+	return MustHandleCMDRequestAndExitFull(endpoint, request, responseType, CommonOptions{}, nil)
 }
 
-func MustHandleCMDRequestAndExitFull(endpoint string, request any, responseType any, options CommonOptions, customPrintFunc CustomResponseFormatter) {
+func MustHandleCMDRequestAndExitFull(endpoint string, request any, responseType any, options CommonOptions, customPrintFunc CustomResponseFormatter) int {
 	var response core.APIResponse
 	var err error
 
@@ -47,12 +47,12 @@ func MustHandleCMDRequestAndExitFull(endpoint string, request any, responseType 
 		log.Fatal("API Request was unsuccessful.", log.NewAttr("message", response.Message))
 
 		// Return to prevent further execution after log.Fatal().
-		return
+		return 1
 	}
 
 	PrintCMDResponseFull(request, response, responseType, options, customPrintFunc)
 
-	exit.Exit(0)
+	return exit.Exit(0)
 }
 
 // Send a CMD request to the unix socket and return the response.

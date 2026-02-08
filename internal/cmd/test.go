@@ -87,6 +87,9 @@ func RunCMDTest(test *testing.T, mainFunc func(), args []string, logLevel log.Lo
 	exit.SetShouldExitForTesting(false)
 	defer exit.SetShouldExitForTesting(true)
 
+	// Default the exit code to 0.
+	exit.Exit(0)
+
 	tempDir := util.MustMkDirTemp("autograder-testing-cmd-")
 	defer util.RemoveDirent(tempDir)
 

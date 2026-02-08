@@ -16,12 +16,14 @@ var (
 
 // Everyone should use Exit() instead of exiting via something like os.Exit().
 // This allows for easier testing.
-func Exit(code int) {
+func Exit(code int) int {
 	lastExitCode = code
 
 	if shouldExitForTesting {
 		os.Exit(code)
 	}
+
+	return code
 }
 
 func GetLastExitCode() int {

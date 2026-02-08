@@ -12,6 +12,7 @@ import (
 	"github.com/edulinq/autograder/internal/cmd"
 	"github.com/edulinq/autograder/internal/common"
 	"github.com/edulinq/autograder/internal/config"
+	"github.com/edulinq/autograder/internal/exit"
 	"github.com/edulinq/autograder/internal/log"
 	"github.com/edulinq/autograder/internal/util"
 )
@@ -23,13 +24,19 @@ var args struct {
 	Endpoint   string   `help:"Endpoint of the desired API." arg:"" optional:""`
 	Parameters []string `help:"Parameter for the endpoint in the format 'key:value', e.g., 'id:123'." arg:"" optional:""`
 	Table      bool     `help:"Attempt to output data as a TSV. Fallback to JSON if the table conversion fails." default:"false"`
-	List       bool     `help:"List all API endpoints." default:"false"`
+	List       bool     `help:"List all API endpoints." default:"false" short:"l"`
+	Describe   bool     `help:"Describe the given endpoint instead of calling it (e.g., output information about the parameters)." default:"false" short:"d"`
 }
 
 func main() {
 	kong.Parse(&args,
 		kong.Description("Call an endpoint."),
 	)
+
+	// Note the return/exit behavior in this function.
+	// During testing log.Fatal() and exit.Exit() will not actually terminate the program,
+	// but they will set an exit status that will be retrieved and compared in testing.
+	// So all exiting cases will need to make sure to return, even if after a log.Fatal() or exit.Exit().
 
 	err := config.HandleConfigArgs(args.ConfigArgs)
 	if err != nil {
@@ -44,12 +51,14 @@ func main() {
 
 	if args.Endpoint == "" {
 		log.Error("Please enter an endpoint. Use --list to view all endpoints.")
+		exit.Exit(1)
 		return
 	}
 
 	apiDescription, err := core.DescribeRoutes(*api.GetRoutes())
 	if err != nil {
 		log.Fatal("Failed to describe API endpoints.", err)
+		return
 	}
 
 	var endpointDescription *core.EndpointDescription
@@ -62,6 +71,11 @@ func main() {
 
 	if endpointDescription == nil {
 		log.Fatal("Failed to find the endpoint. Use --list to view all endpoints.", log.NewAttr("endpoint", args.Endpoint))
+		return
+	}
+
+	if args.Describe {
+		fmt.Println(util.MustToJSONIndent(endpointDescription))
 		return
 	}
 

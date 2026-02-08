@@ -2,10 +2,14 @@ package main
 
 import (
 	"fmt"
+	"slices"
+	"strings"
 	"testing"
 
+	"github.com/edulinq/autograder/internal/api"
 	"github.com/edulinq/autograder/internal/api/core"
 	"github.com/edulinq/autograder/internal/cmd"
+	"github.com/edulinq/autograder/internal/util"
 )
 
 // Use the common main for all tests in this package.
@@ -14,6 +18,17 @@ func TestMain(suite *testing.M) {
 }
 
 func TestCallEndpoint(test *testing.T) {
+	apiDescription, err := core.DescribeRoutes(*api.GetRoutes())
+	if err != nil {
+		test.Fatalf("Failed to get API description: '%v'.", err)
+	}
+
+	listRows := make([]string, 0, len(apiDescription.Endpoints))
+	for endpoint, _ := range apiDescription.Endpoints {
+		listRows = append(listRows, endpoint)
+	}
+	slices.Sort(listRows)
+
 	testCases := []struct {
 		cmd.CommonCMDTestCase
 		endpoint   string
@@ -38,6 +53,28 @@ func TestCallEndpoint(test *testing.T) {
 				"course-idcourse101",
 				"assignment-id:hw0",
 				"target-submission:1697406256",
+			},
+		},
+
+		// List
+		{
+			CommonCMDTestCase: cmd.CommonCMDTestCase{
+				ExpectedStdout: strings.Join(listRows, "\n") + "\n",
+			},
+			endpoint: "",
+			parameters: []string{
+				"--list",
+			},
+		},
+
+		// Describe
+		{
+			CommonCMDTestCase: cmd.CommonCMDTestCase{
+				ExpectedStdout: util.MustToJSONIndent(apiDescription.Endpoints["users/auth"]) + "\n",
+			},
+			endpoint: "users/auth",
+			parameters: []string{
+				"--describe",
 			},
 		},
 
