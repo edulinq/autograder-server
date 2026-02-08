@@ -16,10 +16,10 @@
                     "type": "[]model.CourseUserReference"
                 },
                 {
-                    "name": "course-id",
-                    "type": "string",
                     "description": "The ID of the course to make this request to.",
-                    "required": true
+                    "name": "course-id",
+                    "required": true,
+                    "type": "string"
                 },
                 {
                     "name": "dry-run",
@@ -31,24 +31,24 @@
                 },
                 {
                     "name": "subject",
-                    "type": "string",
-                    "required": true
+                    "required": true,
+                    "type": "string"
                 },
                 {
                     "name": "to",
                     "type": "[]model.CourseUserReference"
                 },
                 {
-                    "name": "user-email",
-                    "type": "string",
                     "description": "The email of the user making this request.",
-                    "required": true
+                    "name": "user-email",
+                    "required": true,
+                    "type": "string"
                 },
                 {
-                    "name": "user-pass",
-                    "type": "string",
                     "description": "The password of the user making this request.",
-                    "required": true
+                    "name": "user-pass",
+                    "required": true,
+                    "type": "string"
                 }
             ],
             "output": [
@@ -70,10 +70,10 @@
             "description": "Update an existing course.",
             "input": [
                 {
-                    "name": "course-id",
-                    "type": "string",
                     "description": "The ID of the course to make this request to.",
-                    "required": true
+                    "name": "course-id",
+                    "required": true,
+                    "type": "string"
                 },
                 {
                     "name": "dry-run",
@@ -100,16 +100,16 @@
                     "type": "bool"
                 },
                 {
-                    "name": "user-email",
-                    "type": "string",
                     "description": "The email of the user making this request.",
-                    "required": true
+                    "name": "user-email",
+                    "required": true,
+                    "type": "string"
                 },
                 {
-                    "name": "user-pass",
-                    "type": "string",
                     "description": "The password of the user making this request.",
-                    "required": true
+                    "name": "user-pass",
+                    "required": true,
+                    "type": "string"
                 }
             ],
             "output": [
@@ -123,28 +123,28 @@
             "description": "Get the information for a course assignment.",
             "input": [
                 {
-                    "name": "assignment-id",
-                    "type": "string",
                     "description": "The ID of the assignment to make this request to.",
-                    "required": true
+                    "name": "assignment-id",
+                    "required": true,
+                    "type": "string"
                 },
                 {
-                    "name": "course-id",
-                    "type": "string",
                     "description": "The ID of the course to make this request to.",
-                    "required": true
+                    "name": "course-id",
+                    "required": true,
+                    "type": "string"
                 },
                 {
-                    "name": "user-email",
-                    "type": "string",
                     "description": "The email of the user making this request.",
-                    "required": true
+                    "name": "user-email",
+                    "required": true,
+                    "type": "string"
                 },
                 {
-                    "name": "user-pass",
-                    "type": "string",
                     "description": "The password of the user making this request.",
-                    "required": true
+                    "name": "user-pass",
+                    "required": true,
+                    "type": "string"
                 }
             ],
             "output": [
@@ -158,22 +158,22 @@
             "description": "List the assignments in the course.",
             "input": [
                 {
-                    "name": "course-id",
-                    "type": "string",
                     "description": "The ID of the course to make this request to.",
-                    "required": true
+                    "name": "course-id",
+                    "required": true,
+                    "type": "string"
                 },
                 {
-                    "name": "user-email",
-                    "type": "string",
                     "description": "The email of the user making this request.",
-                    "required": true
+                    "name": "user-email",
+                    "required": true,
+                    "type": "string"
                 },
                 {
-                    "name": "user-pass",
-                    "type": "string",
                     "description": "The password of the user making this request.",
-                    "required": true
+                    "name": "user-pass",
+                    "required": true,
+                    "type": "string"
                 }
             ],
             "output": [
@@ -187,22 +187,22 @@
             "description": "Fetch an assignment grading report for a course.",
             "input": [
                 {
-                    "name": "course-id",
-                    "type": "string",
                     "description": "The ID of the course to make this request to.",
-                    "required": true
+                    "name": "course-id",
+                    "required": true,
+                    "type": "string"
                 },
                 {
-                    "name": "user-email",
-                    "type": "string",
                     "description": "The email of the user making this request.",
-                    "required": true
+                    "name": "user-email",
+                    "required": true,
+                    "type": "string"
                 },
                 {
-                    "name": "user-pass",
-                    "type": "string",
                     "description": "The password of the user making this request.",
-                    "required": true
+                    "name": "user-pass",
+                    "required": true,
+                    "type": "string"
                 }
             ],
             "output": [
@@ -216,37 +216,37 @@
             "description": "Get the result of a individual analysis for the specified submissions.",
             "input": [
                 {
+                    "description": "Don't save anything.",
                     "name": "dry-run",
-                    "type": "bool",
-                    "description": "Don't save anything."
+                    "type": "bool"
                 },
                 {
+                    "description": "Remove any existing records before running the job.",
                     "name": "overwrite-records",
-                    "type": "bool",
-                    "description": "Remove any existing records before running the job."
+                    "type": "bool"
                 },
                 {
-                    "name": "submissions",
-                    "type": "[]string",
                     "description": "The raw submission specifications to analyze.",
-                    "required": true
+                    "name": "submissions",
+                    "required": true,
+                    "type": "[]string"
                 },
                 {
-                    "name": "user-email",
-                    "type": "string",
                     "description": "The email of the user making this request.",
-                    "required": true
+                    "name": "user-email",
+                    "required": true,
+                    "type": "string"
                 },
                 {
-                    "name": "user-pass",
-                    "type": "string",
                     "description": "The password of the user making this request.",
-                    "required": true
+                    "name": "user-pass",
+                    "required": true,
+                    "type": "string"
                 },
                 {
+                    "description": "Wait for the entire job to complete and return all results.",
                     "name": "wait-for-completion",
-                    "type": "bool",
-                    "description": "Wait for the entire job to complete and return all results."
+                    "type": "bool"
                 }
             ],
             "output": [
@@ -276,37 +276,37 @@
             "description": "Get the result of a pairwise analysis for the specified submissions.",
             "input": [
                 {
+                    "description": "Don't save anything.",
                     "name": "dry-run",
-                    "type": "bool",
-                    "description": "Don't save anything."
+                    "type": "bool"
                 },
                 {
+                    "description": "Remove any existing records before running the job.",
                     "name": "overwrite-records",
-                    "type": "bool",
-                    "description": "Remove any existing records before running the job."
+                    "type": "bool"
                 },
                 {
-                    "name": "submissions",
-                    "type": "[]string",
                     "description": "The raw submission specifications to analyze.",
-                    "required": true
+                    "name": "submissions",
+                    "required": true,
+                    "type": "[]string"
                 },
                 {
-                    "name": "user-email",
-                    "type": "string",
                     "description": "The email of the user making this request.",
-                    "required": true
+                    "name": "user-email",
+                    "required": true,
+                    "type": "string"
                 },
                 {
-                    "name": "user-pass",
-                    "type": "string",
                     "description": "The password of the user making this request.",
-                    "required": true
+                    "name": "user-pass",
+                    "required": true,
+                    "type": "string"
                 },
                 {
+                    "description": "Wait for the entire job to complete and return all results.",
                     "name": "wait-for-completion",
-                    "type": "bool",
-                    "description": "Wait for the entire job to complete and return all results."
+                    "type": "bool"
                 }
             ],
             "output": [
@@ -336,33 +336,33 @@
             "description": "Get all recent submissions and grading information for this assignment.",
             "input": [
                 {
-                    "name": "assignment-id",
-                    "type": "string",
                     "description": "The ID of the assignment to make this request to.",
-                    "required": true
+                    "name": "assignment-id",
+                    "required": true,
+                    "type": "string"
                 },
                 {
-                    "name": "course-id",
-                    "type": "string",
                     "description": "The ID of the course to make this request to.",
-                    "required": true
+                    "name": "course-id",
+                    "required": true,
+                    "type": "string"
                 },
                 {
+                    "description": "If not empty, filter results to matching users.",
                     "name": "target-users",
-                    "type": "[]model.CourseUserReference",
-                    "description": "If not empty, filter results to matching users."
+                    "type": "[]model.CourseUserReference"
                 },
                 {
-                    "name": "user-email",
-                    "type": "string",
                     "description": "The email of the user making this request.",
-                    "required": true
+                    "name": "user-email",
+                    "required": true,
+                    "type": "string"
                 },
                 {
-                    "name": "user-pass",
-                    "type": "string",
                     "description": "The password of the user making this request.",
-                    "required": true
+                    "name": "user-pass",
+                    "required": true,
+                    "type": "string"
                 }
             ],
             "output": [
@@ -376,33 +376,33 @@
             "description": "Get a summary of the most recent scores for this assignment.",
             "input": [
                 {
-                    "name": "assignment-id",
-                    "type": "string",
                     "description": "The ID of the assignment to make this request to.",
-                    "required": true
+                    "name": "assignment-id",
+                    "required": true,
+                    "type": "string"
                 },
                 {
-                    "name": "course-id",
-                    "type": "string",
                     "description": "The ID of the course to make this request to.",
-                    "required": true
+                    "name": "course-id",
+                    "required": true,
+                    "type": "string"
                 },
                 {
+                    "description": "If not empty, filter results to matching users.",
                     "name": "target-users",
-                    "type": "[]model.CourseUserReference",
-                    "description": "If not empty, filter results to matching users."
+                    "type": "[]model.CourseUserReference"
                 },
                 {
-                    "name": "user-email",
-                    "type": "string",
                     "description": "The email of the user making this request.",
-                    "required": true
+                    "name": "user-email",
+                    "required": true,
+                    "type": "string"
                 },
                 {
-                    "name": "user-pass",
-                    "type": "string",
                     "description": "The password of the user making this request.",
-                    "required": true
+                    "name": "user-pass",
+                    "required": true,
+                    "type": "string"
                 }
             ],
             "output": [
@@ -416,16 +416,16 @@
             "description": "Get a submission along with all grading information.",
             "input": [
                 {
-                    "name": "assignment-id",
-                    "type": "string",
                     "description": "The ID of the assignment to make this request to.",
-                    "required": true
+                    "name": "assignment-id",
+                    "required": true,
+                    "type": "string"
                 },
                 {
-                    "name": "course-id",
-                    "type": "string",
                     "description": "The ID of the course to make this request to.",
-                    "required": true
+                    "name": "course-id",
+                    "required": true,
+                    "type": "string"
                 },
                 {
                     "name": "target-email",
@@ -436,16 +436,16 @@
                     "type": "string"
                 },
                 {
-                    "name": "user-email",
-                    "type": "string",
                     "description": "The email of the user making this request.",
-                    "required": true
+                    "name": "user-email",
+                    "required": true,
+                    "type": "string"
                 },
                 {
-                    "name": "user-pass",
-                    "type": "string",
                     "description": "The password of the user making this request.",
-                    "required": true
+                    "name": "user-pass",
+                    "required": true,
+                    "type": "string"
                 }
             ],
             "output": [
@@ -467,32 +467,32 @@
             "description": "Get all submission attempts made by a user along with all grading information.",
             "input": [
                 {
-                    "name": "assignment-id",
-                    "type": "string",
                     "description": "The ID of the assignment to make this request to.",
-                    "required": true
+                    "name": "assignment-id",
+                    "required": true,
+                    "type": "string"
                 },
                 {
-                    "name": "course-id",
-                    "type": "string",
                     "description": "The ID of the course to make this request to.",
-                    "required": true
+                    "name": "course-id",
+                    "required": true,
+                    "type": "string"
                 },
                 {
                     "name": "target-email",
                     "type": "core.TargetCourseUserSelfOrGrader"
                 },
                 {
-                    "name": "user-email",
-                    "type": "string",
                     "description": "The email of the user making this request.",
-                    "required": true
+                    "name": "user-email",
+                    "required": true,
+                    "type": "string"
                 },
                 {
-                    "name": "user-pass",
-                    "type": "string",
                     "description": "The password of the user making this request.",
-                    "required": true
+                    "name": "user-pass",
+                    "required": true,
+                    "type": "string"
                 }
             ],
             "output": [
@@ -510,32 +510,32 @@
             "description": "Get a summary of the submissions for this assignment.",
             "input": [
                 {
-                    "name": "assignment-id",
-                    "type": "string",
                     "description": "The ID of the assignment to make this request to.",
-                    "required": true
+                    "name": "assignment-id",
+                    "required": true,
+                    "type": "string"
                 },
                 {
-                    "name": "course-id",
-                    "type": "string",
                     "description": "The ID of the course to make this request to.",
-                    "required": true
+                    "name": "course-id",
+                    "required": true,
+                    "type": "string"
                 },
                 {
                     "name": "target-email",
                     "type": "core.TargetCourseUserSelfOrGrader"
                 },
                 {
-                    "name": "user-email",
-                    "type": "string",
                     "description": "The email of the user making this request.",
-                    "required": true
+                    "name": "user-email",
+                    "required": true,
+                    "type": "string"
                 },
                 {
-                    "name": "user-pass",
-                    "type": "string",
                     "description": "The password of the user making this request.",
-                    "required": true
+                    "name": "user-pass",
+                    "required": true,
+                    "type": "string"
                 }
             ],
             "output": [
@@ -553,16 +553,16 @@
             "description": "Get a copy of the grading report for the specified submission. Does not submit a new submission.",
             "input": [
                 {
-                    "name": "assignment-id",
-                    "type": "string",
                     "description": "The ID of the assignment to make this request to.",
-                    "required": true
+                    "name": "assignment-id",
+                    "required": true,
+                    "type": "string"
                 },
                 {
-                    "name": "course-id",
-                    "type": "string",
                     "description": "The ID of the course to make this request to.",
-                    "required": true
+                    "name": "course-id",
+                    "required": true,
+                    "type": "string"
                 },
                 {
                     "name": "target-email",
@@ -573,16 +573,16 @@
                     "type": "string"
                 },
                 {
-                    "name": "user-email",
-                    "type": "string",
                     "description": "The email of the user making this request.",
-                    "required": true
+                    "name": "user-email",
+                    "required": true,
+                    "type": "string"
                 },
                 {
-                    "name": "user-pass",
-                    "type": "string",
                     "description": "The password of the user making this request.",
-                    "required": true
+                    "name": "user-pass",
+                    "required": true,
+                    "type": "string"
                 }
             ],
             "output": [
@@ -604,54 +604,54 @@
             "description": "Proxy regrade an assignment for all target users using their most recent submission.",
             "input": [
                 {
-                    "name": "assignment-id",
-                    "type": "string",
                     "description": "The ID of the assignment to make this request to.",
-                    "required": true
+                    "name": "assignment-id",
+                    "required": true,
+                    "type": "string"
                 },
                 {
-                    "name": "course-id",
-                    "type": "string",
                     "description": "The ID of the course to make this request to.",
-                    "required": true
+                    "name": "course-id",
+                    "required": true,
+                    "type": "string"
                 },
                 {
+                    "description": "Don't save anything.",
                     "name": "dry-run",
-                    "type": "bool",
-                    "description": "Don't save anything."
+                    "type": "bool"
                 },
                 {
+                    "description": "Remove any existing records before running the job.",
                     "name": "overwrite-records",
-                    "type": "bool",
-                    "description": "Remove any existing records before running the job."
+                    "type": "bool"
                 },
                 {
+                    "description": "Ensure every user has made a new submission after this time.\nIf nil, the current time will be used.",
                     "name": "regrade-cutoff",
-                    "type": "int64",
-                    "description": "Ensure every user has made a new submission after this time.\nIf nil, the current time will be used."
+                    "type": "int64"
                 },
                 {
-                    "name": "target-users",
-                    "type": "[]model.CourseUserReference",
                     "description": "The raw course user references to regrade.",
-                    "required": true
+                    "name": "target-users",
+                    "required": true,
+                    "type": "[]model.CourseUserReference"
                 },
                 {
-                    "name": "user-email",
-                    "type": "string",
                     "description": "The email of the user making this request.",
-                    "required": true
+                    "name": "user-email",
+                    "required": true,
+                    "type": "string"
                 },
                 {
-                    "name": "user-pass",
-                    "type": "string",
                     "description": "The password of the user making this request.",
-                    "required": true
+                    "name": "user-pass",
+                    "required": true,
+                    "type": "string"
                 },
                 {
+                    "description": "Wait for the entire job to complete and return all results.",
                     "name": "wait-for-completion",
-                    "type": "bool",
-                    "description": "Wait for the entire job to complete and return all results."
+                    "type": "bool"
                 }
             ],
             "output": [
@@ -681,21 +681,21 @@
             "description": "Proxy resubmit an assignment submission to the autograder.",
             "input": [
                 {
-                    "name": "assignment-id",
-                    "type": "string",
                     "description": "The ID of the assignment to make this request to.",
-                    "required": true
+                    "name": "assignment-id",
+                    "required": true,
+                    "type": "string"
                 },
                 {
-                    "name": "course-id",
-                    "type": "string",
                     "description": "The ID of the course to make this request to.",
-                    "required": true
+                    "name": "course-id",
+                    "required": true,
+                    "type": "string"
                 },
                 {
                     "name": "proxy-email",
-                    "type": "core.TargetCourseUser",
-                    "required": true
+                    "required": true,
+                    "type": "core.TargetCourseUser"
                 },
                 {
                     "name": "proxy-time",
@@ -706,16 +706,16 @@
                     "type": "string"
                 },
                 {
-                    "name": "user-email",
-                    "type": "string",
                     "description": "The email of the user making this request.",
-                    "required": true
+                    "name": "user-email",
+                    "required": true,
+                    "type": "string"
                 },
                 {
-                    "name": "user-pass",
-                    "type": "string",
                     "description": "The password of the user making this request.",
-                    "required": true
+                    "name": "user-pass",
+                    "required": true,
+                    "type": "string"
                 }
             ],
             "output": [
@@ -749,16 +749,16 @@
             "description": "Proxy submit an assignment submission to the autograder.",
             "input": [
                 {
-                    "name": "assignment-id",
-                    "type": "string",
                     "description": "The ID of the assignment to make this request to.",
-                    "required": true
+                    "name": "assignment-id",
+                    "required": true,
+                    "type": "string"
                 },
                 {
-                    "name": "course-id",
-                    "type": "string",
                     "description": "The ID of the course to make this request to.",
-                    "required": true
+                    "name": "course-id",
+                    "required": true,
+                    "type": "string"
                 },
                 {
                     "name": "message",
@@ -766,24 +766,24 @@
                 },
                 {
                     "name": "proxy-email",
-                    "type": "core.TargetCourseUser",
-                    "required": true
+                    "required": true,
+                    "type": "core.TargetCourseUser"
                 },
                 {
                     "name": "proxy-time",
                     "type": "int64"
                 },
                 {
-                    "name": "user-email",
-                    "type": "string",
                     "description": "The email of the user making this request.",
-                    "required": true
+                    "name": "user-email",
+                    "required": true,
+                    "type": "string"
                 },
                 {
-                    "name": "user-pass",
-                    "type": "string",
                     "description": "The password of the user making this request.",
-                    "required": true
+                    "name": "user-pass",
+                    "required": true,
+                    "type": "string"
                 }
             ],
             "output": [
@@ -813,16 +813,16 @@
             "description": "Remove a specified submission. Defaults to the most recent submission.",
             "input": [
                 {
-                    "name": "assignment-id",
-                    "type": "string",
                     "description": "The ID of the assignment to make this request to.",
-                    "required": true
+                    "name": "assignment-id",
+                    "required": true,
+                    "type": "string"
                 },
                 {
-                    "name": "course-id",
-                    "type": "string",
                     "description": "The ID of the course to make this request to.",
-                    "required": true
+                    "name": "course-id",
+                    "required": true,
+                    "type": "string"
                 },
                 {
                     "name": "target-email",
@@ -833,16 +833,16 @@
                     "type": "string"
                 },
                 {
-                    "name": "user-email",
-                    "type": "string",
                     "description": "The email of the user making this request.",
-                    "required": true
+                    "name": "user-email",
+                    "required": true,
+                    "type": "string"
                 },
                 {
-                    "name": "user-pass",
-                    "type": "string",
                     "description": "The password of the user making this request.",
-                    "required": true
+                    "name": "user-pass",
+                    "required": true,
+                    "type": "string"
                 }
             ],
             "output": [
@@ -864,32 +864,32 @@
                     "type": "bool"
                 },
                 {
-                    "name": "assignment-id",
-                    "type": "string",
                     "description": "The ID of the assignment to make this request to.",
-                    "required": true
+                    "name": "assignment-id",
+                    "required": true,
+                    "type": "string"
                 },
                 {
-                    "name": "course-id",
-                    "type": "string",
                     "description": "The ID of the course to make this request to.",
-                    "required": true
+                    "name": "course-id",
+                    "required": true,
+                    "type": "string"
                 },
                 {
                     "name": "message",
                     "type": "string"
                 },
                 {
-                    "name": "user-email",
-                    "type": "string",
                     "description": "The email of the user making this request.",
-                    "required": true
+                    "name": "user-email",
+                    "required": true,
+                    "type": "string"
                 },
                 {
-                    "name": "user-pass",
-                    "type": "string",
                     "description": "The password of the user making this request.",
-                    "required": true
+                    "name": "user-pass",
+                    "required": true,
+                    "type": "string"
                 }
             ],
             "output": [
@@ -915,22 +915,22 @@
             "description": "Get information about a course.",
             "input": [
                 {
-                    "name": "course-id",
-                    "type": "string",
                     "description": "The ID of the course to make this request to.",
-                    "required": true
+                    "name": "course-id",
+                    "required": true,
+                    "type": "string"
                 },
                 {
-                    "name": "user-email",
-                    "type": "string",
                     "description": "The email of the user making this request.",
-                    "required": true
+                    "name": "user-email",
+                    "required": true,
+                    "type": "string"
                 },
                 {
-                    "name": "user-pass",
-                    "type": "string",
                     "description": "The password of the user making this request.",
-                    "required": true
+                    "name": "user-pass",
+                    "required": true,
+                    "type": "string"
                 }
             ],
             "output": [
@@ -948,16 +948,16 @@
             "description": "List the courses on the server.",
             "input": [
                 {
-                    "name": "user-email",
-                    "type": "string",
                     "description": "The email of the user making this request.",
-                    "required": true
+                    "name": "user-email",
+                    "required": true,
+                    "type": "string"
                 },
                 {
-                    "name": "user-pass",
-                    "type": "string",
                     "description": "The password of the user making this request.",
-                    "required": true
+                    "name": "user-pass",
+                    "required": true,
+                    "type": "string"
                 }
             ],
             "output": [
@@ -971,26 +971,26 @@
             "description": "Perform a full scoring and upload scores to the course's LMS.",
             "input": [
                 {
-                    "name": "course-id",
-                    "type": "string",
                     "description": "The ID of the course to make this request to.",
-                    "required": true
+                    "name": "course-id",
+                    "required": true,
+                    "type": "string"
                 },
                 {
                     "name": "dry-run",
                     "type": "bool"
                 },
                 {
-                    "name": "user-email",
-                    "type": "string",
                     "description": "The email of the user making this request.",
-                    "required": true
+                    "name": "user-email",
+                    "required": true,
+                    "type": "string"
                 },
                 {
-                    "name": "user-pass",
-                    "type": "string",
                     "description": "The password of the user making this request.",
-                    "required": true
+                    "name": "user-pass",
+                    "required": true,
+                    "type": "string"
                 }
             ],
             "output": [
@@ -1008,53 +1008,53 @@
             "description": "Query metrics for a specific course.\nOnly the context course can be queried for, the target-course field will be ignored for this endpoint.",
             "input": [
                 {
+                    "description": "Only return data from after this time.\nA value of zero is treated normally here (as UNIX epoch).",
                     "name": "after",
-                    "type": "int64",
-                    "description": "Only return data from after this time.\nA value of zero is treated normally here (as UNIX epoch)."
+                    "type": "int64"
                 },
                 {
+                    "description": "Only return data from before this time.\nA value of zero is treated as the end of time.",
                     "name": "before",
-                    "type": "int64",
-                    "description": "Only return data from before this time.\nA value of zero is treated as the end of time."
+                    "type": "int64"
                 },
                 {
-                    "name": "course-id",
-                    "type": "string",
                     "description": "The ID of the course to make this request to.",
-                    "required": true
+                    "name": "course-id",
+                    "required": true,
+                    "type": "string"
                 },
                 {
+                    "description": "Limit the number of results.\nTake this number of results from the top.\nA non-positive number means no count limit will be applied.",
                     "name": "limit",
-                    "type": "int",
-                    "description": "Limit the number of results.\nTake this number of results from the top.\nA non-positive number means no count limit will be applied."
+                    "type": "int"
                 },
                 {
+                    "description": "Define how the results should be sorted by time.\n-1 for ascending, 0 for no sorting, 1 for descending.",
                     "name": "sort",
-                    "type": "int",
-                    "description": "Define how the results should be sorted by time.\n-1 for ascending, 0 for no sorting, 1 for descending."
+                    "type": "int"
                 },
                 {
-                    "name": "type",
-                    "type": "string",
                     "description": "Only return data of this type.\nThis field is required in the query to specify which kind of metric to return.",
-                    "required": true
+                    "name": "type",
+                    "required": true,
+                    "type": "string"
                 },
                 {
-                    "name": "user-email",
-                    "type": "string",
                     "description": "The email of the user making this request.",
-                    "required": true
+                    "name": "user-email",
+                    "required": true,
+                    "type": "string"
                 },
                 {
-                    "name": "user-pass",
-                    "type": "string",
                     "description": "The password of the user making this request.",
-                    "required": true
+                    "name": "user-pass",
+                    "required": true,
+                    "type": "string"
                 },
                 {
+                    "description": "Filter results to only include metrics that match Metric attribute field values.\nKeys are field names (e.g., \"course\") and values are what to include (e.g., course101).\nThis filter is applied after all other Query conditions are applied.",
                     "name": "where",
-                    "type": "map[stats.MetricAttribute]any",
-                    "description": "Filter results to only include metrics that match Metric attribute field values.\nKeys are field names (e.g., \"course\") and values are what to include (e.g., course101).\nThis filter is applied after all other Query conditions are applied."
+                    "type": "map[stats.MetricAttribute]any"
                 }
             ],
             "output": [
@@ -1073,8 +1073,8 @@
                 },
                 {
                     "name": "filespec",
-                    "type": "util.FileSpec",
-                    "required": true
+                    "required": true,
+                    "type": "util.FileSpec"
                 },
                 {
                     "name": "skip-build-images",
@@ -1097,16 +1097,16 @@
                     "type": "bool"
                 },
                 {
-                    "name": "user-email",
-                    "type": "string",
                     "description": "The email of the user making this request.",
-                    "required": true
+                    "name": "user-email",
+                    "required": true,
+                    "type": "string"
                 },
                 {
-                    "name": "user-pass",
-                    "type": "string",
                     "description": "The password of the user making this request.",
-                    "required": true
+                    "name": "user-pass",
+                    "required": true,
+                    "type": "string"
                 }
             ],
             "output": [
@@ -1144,16 +1144,16 @@
                     "type": "bool"
                 },
                 {
-                    "name": "user-email",
-                    "type": "string",
                     "description": "The email of the user making this request.",
-                    "required": true
+                    "name": "user-email",
+                    "required": true,
+                    "type": "string"
                 },
                 {
-                    "name": "user-pass",
-                    "type": "string",
                     "description": "The password of the user making this request.",
-                    "required": true
+                    "name": "user-pass",
+                    "required": true,
+                    "type": "string"
                 }
             ],
             "output": [
@@ -1167,27 +1167,27 @@
             "description": "Drop a user from the course.",
             "input": [
                 {
-                    "name": "course-id",
-                    "type": "string",
                     "description": "The ID of the course to make this request to.",
-                    "required": true
+                    "name": "course-id",
+                    "required": true,
+                    "type": "string"
                 },
                 {
                     "name": "target-email",
-                    "type": "core.TargetCourseUser",
-                    "required": true
+                    "required": true,
+                    "type": "core.TargetCourseUser"
                 },
                 {
-                    "name": "user-email",
-                    "type": "string",
                     "description": "The email of the user making this request.",
-                    "required": true
+                    "name": "user-email",
+                    "required": true,
+                    "type": "string"
                 },
                 {
-                    "name": "user-pass",
-                    "type": "string",
                     "description": "The password of the user making this request.",
-                    "required": true
+                    "name": "user-pass",
+                    "required": true,
+                    "type": "string"
                 }
             ],
             "output": [
@@ -1201,25 +1201,25 @@
             "description": "Enroll one or more users to the course.",
             "input": [
                 {
-                    "name": "course-id",
-                    "type": "string",
                     "description": "The ID of the course to make this request to.",
-                    "required": true
+                    "name": "course-id",
+                    "required": true,
+                    "type": "string"
                 },
                 {
+                    "description": "Do not actually commit any changes or send any emails regardless of |SendEmails|.",
                     "name": "dry-run",
-                    "type": "bool",
-                    "description": "Do not actually commit any changes or send any emails regardless of |SendEmails|."
+                    "type": "bool"
                 },
                 {
                     "name": "raw-course-users",
-                    "type": "[]*model.RawCourseUserData",
-                    "required": true
+                    "required": true,
+                    "type": "[]*model.RawCourseUserData"
                 },
                 {
+                    "description": "Send any relevant email (usually about creation or password changing).",
                     "name": "send-emails",
-                    "type": "bool",
-                    "description": "Send any relevant email (usually about creation or password changing)."
+                    "type": "bool"
                 },
                 {
                     "name": "skip-inserts",
@@ -1230,16 +1230,16 @@
                     "type": "bool"
                 },
                 {
-                    "name": "user-email",
-                    "type": "string",
                     "description": "The email of the user making this request.",
-                    "required": true
+                    "name": "user-email",
+                    "required": true,
+                    "type": "string"
                 },
                 {
-                    "name": "user-pass",
-                    "type": "string",
                     "description": "The password of the user making this request.",
-                    "required": true
+                    "name": "user-pass",
+                    "required": true,
+                    "type": "string"
                 }
             ],
             "output": [
@@ -1253,26 +1253,26 @@
             "description": "Get the information for a course user.",
             "input": [
                 {
-                    "name": "course-id",
-                    "type": "string",
                     "description": "The ID of the course to make this request to.",
-                    "required": true
+                    "name": "course-id",
+                    "required": true,
+                    "type": "string"
                 },
                 {
                     "name": "target-email",
                     "type": "core.TargetCourseUserSelfOrGrader"
                 },
                 {
-                    "name": "user-email",
-                    "type": "string",
                     "description": "The email of the user making this request.",
-                    "required": true
+                    "name": "user-email",
+                    "required": true,
+                    "type": "string"
                 },
                 {
-                    "name": "user-pass",
-                    "type": "string",
                     "description": "The password of the user making this request.",
-                    "required": true
+                    "name": "user-pass",
+                    "required": true,
+                    "type": "string"
                 }
             ],
             "output": [
@@ -1290,26 +1290,26 @@
             "description": "List the users in the course.",
             "input": [
                 {
-                    "name": "course-id",
-                    "type": "string",
                     "description": "The ID of the course to make this request to.",
-                    "required": true
+                    "name": "course-id",
+                    "required": true,
+                    "type": "string"
                 },
                 {
                     "name": "target-users",
                     "type": "[]model.CourseUserReference"
                 },
                 {
-                    "name": "user-email",
-                    "type": "string",
                     "description": "The email of the user making this request.",
-                    "required": true
+                    "name": "user-email",
+                    "required": true,
+                    "type": "string"
                 },
                 {
-                    "name": "user-pass",
-                    "type": "string",
                     "description": "The password of the user making this request.",
-                    "required": true
+                    "name": "user-pass",
+                    "required": true,
+                    "type": "string"
                 }
             ],
             "output": [
@@ -1324,31 +1324,31 @@
             "input": [
                 {
                     "name": "assignment-lms-id",
-                    "type": "string",
-                    "required": true
+                    "required": true,
+                    "type": "string"
                 },
                 {
-                    "name": "course-id",
-                    "type": "string",
                     "description": "The ID of the course to make this request to.",
-                    "required": true
+                    "name": "course-id",
+                    "required": true,
+                    "type": "string"
                 },
                 {
                     "name": "scores",
-                    "type": "[]upload.ScoreEntry",
-                    "required": true
+                    "required": true,
+                    "type": "[]upload.ScoreEntry"
                 },
                 {
-                    "name": "user-email",
-                    "type": "string",
                     "description": "The email of the user making this request.",
-                    "required": true
+                    "name": "user-email",
+                    "required": true,
+                    "type": "string"
                 },
                 {
-                    "name": "user-pass",
-                    "type": "string",
                     "description": "The password of the user making this request.",
-                    "required": true
+                    "name": "user-pass",
+                    "required": true,
+                    "type": "string"
                 }
             ],
             "output": [
@@ -1374,27 +1374,27 @@
             "description": "Get information for an LMS user.",
             "input": [
                 {
-                    "name": "course-id",
-                    "type": "string",
                     "description": "The ID of the course to make this request to.",
-                    "required": true
+                    "name": "course-id",
+                    "required": true,
+                    "type": "string"
                 },
                 {
                     "name": "target-email",
-                    "type": "core.TargetCourseUser",
-                    "required": true
+                    "required": true,
+                    "type": "core.TargetCourseUser"
                 },
                 {
-                    "name": "user-email",
-                    "type": "string",
                     "description": "The email of the user making this request.",
-                    "required": true
+                    "name": "user-email",
+                    "required": true,
+                    "type": "string"
                 },
                 {
-                    "name": "user-pass",
-                    "type": "string",
                     "description": "The password of the user making this request.",
-                    "required": true
+                    "name": "user-pass",
+                    "required": true,
+                    "type": "string"
                 }
             ],
             "output": [
@@ -1440,21 +1440,21 @@
                     "type": "string"
                 },
                 {
+                    "description": "If true, only hard-coded testing data will be queried from.",
                     "name": "use-testing-data",
-                    "type": "bool",
-                    "description": "If true, only hard-coded testing data will be queried from."
+                    "type": "bool"
                 },
                 {
-                    "name": "user-email",
-                    "type": "string",
                     "description": "The email of the user making this request.",
-                    "required": true
+                    "name": "user-email",
+                    "required": true,
+                    "type": "string"
                 },
                 {
-                    "name": "user-pass",
-                    "type": "string",
                     "description": "The password of the user making this request.",
-                    "required": true
+                    "name": "user-pass",
+                    "required": true,
+                    "type": "string"
                 }
             ],
             "output": [
@@ -1505,52 +1505,52 @@
             "description": "Query stats for the server.",
             "input": [
                 {
+                    "description": "Only return data from after this time.\nA value of zero is treated normally here (as UNIX epoch).",
                     "name": "after",
-                    "type": "int64",
-                    "description": "Only return data from after this time.\nA value of zero is treated normally here (as UNIX epoch)."
+                    "type": "int64"
                 },
                 {
+                    "description": "Only return data from before this time.\nA value of zero is treated as the end of time.",
                     "name": "before",
-                    "type": "int64",
-                    "description": "Only return data from before this time.\nA value of zero is treated as the end of time."
+                    "type": "int64"
                 },
                 {
+                    "description": "Limit the number of results.\nTake this number of results from the top.\nA non-positive number means no count limit will be applied.",
                     "name": "limit",
-                    "type": "int",
-                    "description": "Limit the number of results.\nTake this number of results from the top.\nA non-positive number means no count limit will be applied."
+                    "type": "int"
                 },
                 {
+                    "description": "Define how the results should be sorted by time.\n-1 for ascending, 0 for no sorting, 1 for descending.",
                     "name": "sort",
-                    "type": "int",
-                    "description": "Define how the results should be sorted by time.\n-1 for ascending, 0 for no sorting, 1 for descending."
+                    "type": "int"
                 },
                 {
-                    "name": "type",
-                    "type": "string",
                     "description": "Only return data of this type.\nThis field is required in the query to specify which kind of metric to return.",
-                    "required": true
+                    "name": "type",
+                    "required": true,
+                    "type": "string"
                 },
                 {
+                    "description": "If true, only hard-coded testing data will be queried from.",
                     "name": "use-testing-data",
-                    "type": "bool",
-                    "description": "If true, only hard-coded testing data will be queried from."
+                    "type": "bool"
                 },
                 {
-                    "name": "user-email",
-                    "type": "string",
                     "description": "The email of the user making this request.",
-                    "required": true
+                    "name": "user-email",
+                    "required": true,
+                    "type": "string"
                 },
                 {
-                    "name": "user-pass",
-                    "type": "string",
                     "description": "The password of the user making this request.",
-                    "required": true
+                    "name": "user-pass",
+                    "required": true,
+                    "type": "string"
                 },
                 {
+                    "description": "Filter results to only include metrics that match Metric attribute field values.\nKeys are field names (e.g., \"course\") and values are what to include (e.g., course101).\nThis filter is applied after all other Query conditions are applied.",
                     "name": "where",
-                    "type": "map[stats.MetricAttribute]any",
-                    "description": "Filter results to only include metrics that match Metric attribute field values.\nKeys are field names (e.g., \"course\") and values are what to include (e.g., course101).\nThis filter is applied after all other Query conditions are applied."
+                    "type": "map[stats.MetricAttribute]any"
                 }
             ],
             "output": [
@@ -1564,16 +1564,16 @@
             "description": "Get stack traces for all the currently running routines (threads) on the server.",
             "input": [
                 {
-                    "name": "user-email",
-                    "type": "string",
                     "description": "The email of the user making this request.",
-                    "required": true
+                    "name": "user-email",
+                    "required": true,
+                    "type": "string"
                 },
                 {
-                    "name": "user-pass",
-                    "type": "string",
                     "description": "The password of the user making this request.",
-                    "required": true
+                    "name": "user-pass",
+                    "required": true,
+                    "type": "string"
                 }
             ],
             "output": [
@@ -1591,16 +1591,16 @@
             "description": "Authenticate as a user.",
             "input": [
                 {
-                    "name": "user-email",
-                    "type": "string",
                     "description": "The email of the user making this request.",
-                    "required": true
+                    "name": "user-email",
+                    "required": true,
+                    "type": "string"
                 },
                 {
-                    "name": "user-pass",
-                    "type": "string",
                     "description": "The password of the user making this request.",
-                    "required": true
+                    "name": "user-pass",
+                    "required": true,
+                    "type": "string"
                 }
             ],
             "output": [
@@ -1618,16 +1618,16 @@
                     "type": "core.TargetServerUserSelfOrAdmin"
                 },
                 {
-                    "name": "user-email",
-                    "type": "string",
                     "description": "The email of the user making this request.",
-                    "required": true
+                    "name": "user-email",
+                    "required": true,
+                    "type": "string"
                 },
                 {
-                    "name": "user-pass",
-                    "type": "string",
                     "description": "The password of the user making this request.",
-                    "required": true
+                    "name": "user-pass",
+                    "required": true,
+                    "type": "string"
                 }
             ],
             "output": [
@@ -1653,16 +1653,16 @@
                     "type": "[]model.ServerUserReference"
                 },
                 {
-                    "name": "user-email",
-                    "type": "string",
                     "description": "The email of the user making this request.",
-                    "required": true
+                    "name": "user-email",
+                    "required": true,
+                    "type": "string"
                 },
                 {
-                    "name": "user-pass",
-                    "type": "string",
                     "description": "The password of the user making this request.",
-                    "required": true
+                    "name": "user-pass",
+                    "required": true,
+                    "type": "string"
                 }
             ],
             "output": [
@@ -1677,20 +1677,20 @@
             "input": [
                 {
                     "name": "new-pass",
-                    "type": "string",
-                    "required": true
+                    "required": true,
+                    "type": "string"
                 },
                 {
-                    "name": "user-email",
-                    "type": "string",
                     "description": "The email of the user making this request.",
-                    "required": true
+                    "name": "user-email",
+                    "required": true,
+                    "type": "string"
                 },
                 {
-                    "name": "user-pass",
-                    "type": "string",
                     "description": "The password of the user making this request.",
-                    "required": true
+                    "name": "user-pass",
+                    "required": true,
+                    "type": "string"
                 }
             ],
             "output": [
@@ -1709,8 +1709,8 @@
             "input": [
                 {
                     "name": "user-email",
-                    "type": "string",
-                    "required": true
+                    "required": true,
+                    "type": "string"
                 }
             ],
             "output": []
@@ -1720,20 +1720,20 @@
             "input": [
                 {
                     "name": "target-email",
-                    "type": "core.TargetServerUser",
-                    "required": true
+                    "required": true,
+                    "type": "core.TargetServerUser"
                 },
                 {
-                    "name": "user-email",
-                    "type": "string",
                     "description": "The email of the user making this request.",
-                    "required": true
+                    "name": "user-email",
+                    "required": true,
+                    "type": "string"
                 },
                 {
-                    "name": "user-pass",
-                    "type": "string",
                     "description": "The password of the user making this request.",
-                    "required": true
+                    "name": "user-pass",
+                    "required": true,
+                    "type": "string"
                 }
             ],
             "output": [
@@ -1751,16 +1751,16 @@
                     "type": "string"
                 },
                 {
-                    "name": "user-email",
-                    "type": "string",
                     "description": "The email of the user making this request.",
-                    "required": true
+                    "name": "user-email",
+                    "required": true,
+                    "type": "string"
                 },
                 {
-                    "name": "user-pass",
-                    "type": "string",
                     "description": "The password of the user making this request.",
-                    "required": true
+                    "name": "user-pass",
+                    "required": true,
+                    "type": "string"
                 }
             ],
             "output": [
@@ -1779,20 +1779,20 @@
             "input": [
                 {
                     "name": "token-id",
-                    "type": "string",
-                    "required": true
+                    "required": true,
+                    "type": "string"
                 },
                 {
-                    "name": "user-email",
-                    "type": "string",
                     "description": "The email of the user making this request.",
-                    "required": true
+                    "name": "user-email",
+                    "required": true,
+                    "type": "string"
                 },
                 {
-                    "name": "user-pass",
-                    "type": "string",
                     "description": "The password of the user making this request.",
-                    "required": true
+                    "name": "user-pass",
+                    "required": true,
+                    "type": "string"
                 }
             ],
             "output": [
@@ -1806,19 +1806,19 @@
             "description": "Upsert one or more users to the server (update if exists, insert otherwise).",
             "input": [
                 {
+                    "description": "Do not actually commit any changes or send any emails regardless of |SendEmails|.",
                     "name": "dry-run",
-                    "type": "bool",
-                    "description": "Do not actually commit any changes or send any emails regardless of |SendEmails|."
+                    "type": "bool"
                 },
                 {
                     "name": "raw-users",
-                    "type": "[]*model.RawServerUserData",
-                    "required": true
+                    "required": true,
+                    "type": "[]*model.RawServerUserData"
                 },
                 {
+                    "description": "Send any relevant email (usually about creation or password changing).",
                     "name": "send-emails",
-                    "type": "bool",
-                    "description": "Send any relevant email (usually about creation or password changing)."
+                    "type": "bool"
                 },
                 {
                     "name": "skip-inserts",
@@ -1829,16 +1829,16 @@
                     "type": "bool"
                 },
                 {
-                    "name": "user-email",
-                    "type": "string",
                     "description": "The email of the user making this request.",
-                    "required": true
+                    "name": "user-email",
+                    "required": true,
+                    "type": "string"
                 },
                 {
-                    "name": "user-pass",
-                    "type": "string",
                     "description": "The password of the user making this request.",
-                    "required": true
+                    "name": "user-pass",
+                    "required": true,
+                    "type": "string"
                 }
             ],
             "output": [
@@ -1854,24 +1854,24 @@
             "category": "struct",
             "fields": [
                 {
+                    "description": "Don't save anything.",
                     "name": "dry-run",
-                    "type": "bool",
-                    "description": "Don't save anything."
+                    "type": "bool"
                 },
                 {
+                    "description": "Remove any existing records before running the job.",
                     "name": "overwrite-records",
-                    "type": "bool",
-                    "description": "Remove any existing records before running the job."
+                    "type": "bool"
                 },
                 {
+                    "description": "The raw submission specifications to analyze.",
                     "name": "submissions",
-                    "type": "[]string",
-                    "description": "The raw submission specifications to analyze."
+                    "type": "[]string"
                 },
                 {
+                    "description": "Wait for the entire job to complete and return all results.",
                     "name": "wait-for-completion",
-                    "type": "bool",
-                    "description": "Wait for the entire job to complete and return all results."
+                    "type": "bool"
                 }
             ]
         },
@@ -2009,9 +2009,9 @@
             ]
         },
         "core.NonEmptyString": {
+            "alias-type": "string",
             "category": "alias",
-            "description": "The type for a named field that must have a non-empty string value.",
-            "alias-type": "string"
+            "description": "The type for a named field that must have a non-empty string value."
         },
         "core.ServerUserInfo": {
             "category": "struct",
@@ -2093,8 +2093,8 @@
             ]
         },
         "core.UserInfoType": {
-            "category": "alias",
-            "alias-type": "string"
+            "alias-type": "string",
+            "category": "alias"
         },
         "courses.CourseUpsertResult": {
             "category": "struct",
@@ -2137,35 +2137,35 @@
             "category": "struct",
             "fields": [
                 {
+                    "description": "Don't save anything.",
                     "name": "dry-run",
-                    "type": "bool",
-                    "description": "Don't save anything."
+                    "type": "bool"
                 },
                 {
+                    "description": "Remove any existing records before running the job.",
                     "name": "overwrite-records",
-                    "type": "bool",
-                    "description": "Remove any existing records before running the job."
+                    "type": "bool"
                 },
                 {
+                    "description": "Ensure every user has made a new submission after this time.\nIf nil, the current time will be used.",
                     "name": "regrade-cutoff",
-                    "type": "int64",
-                    "description": "Ensure every user has made a new submission after this time.\nIf nil, the current time will be used."
+                    "type": "int64"
                 },
                 {
+                    "description": "The raw course user references to regrade.",
                     "name": "target-users",
-                    "type": "[]model.CourseUserReference",
-                    "description": "The raw course user references to regrade."
+                    "type": "[]model.CourseUserReference"
                 },
                 {
+                    "description": "Wait for the entire job to complete and return all results.",
                     "name": "wait-for-completion",
-                    "type": "bool",
-                    "description": "Wait for the entire job to complete and return all results."
+                    "type": "bool"
                 }
             ]
         },
         "log.LogLevel": {
-            "category": "alias",
-            "alias-type": "int32"
+            "alias-type": "int32",
+            "category": "alias"
         },
         "log.Record": {
             "category": "struct",
@@ -2175,23 +2175,23 @@
                     "type": "string"
                 },
                 {
+                    "description": "Additional Attributes",
                     "name": "attributes",
-                    "type": "map[string]any",
-                    "description": "Additional Attributes"
+                    "type": "map[string]any"
                 },
                 {
+                    "description": "Context Attributes",
                     "name": "course",
-                    "type": "string",
-                    "description": "Context Attributes"
+                    "type": "string"
                 },
                 {
                     "name": "error",
                     "type": "string"
                 },
                 {
+                    "description": "Core Attributes",
                     "name": "level",
-                    "type": "int32",
-                    "description": "Core Attributes"
+                    "type": "int32"
                 },
                 {
                     "name": "message",
@@ -2228,9 +2228,9 @@
             "category": "struct",
             "fields": [
                 {
+                    "description": "EngineOptions includes the options for analysis engines.\nIt is a map keyed by an engine name to it's respective engine options.\nCurrent supported values can be found in the respective engine's options struct.",
                     "name": "engine-options",
-                    "type": "map[string]model.OptionsMap",
-                    "description": "EngineOptions includes the options for analysis engines.\nIt is a map keyed by an engine name to it's respective engine options.\nCurrent supported values can be found in the respective engine's options struct."
+                    "type": "map[string]model.OptionsMap"
                 },
                 {
                     "name": "exclude-patterns",
@@ -2293,14 +2293,14 @@
             ]
         },
         "model.CourseUserReference": {
+            "alias-type": "string",
             "category": "alias",
-            "description": "Course user references can represent the following:\n- An email address.\n- A literal \"*\" (which includes all users in the course).\n- A course role (which will include all course users with that role).\n- Any of the above options preceded by a dash (\"-\") (which indicates that the user or group will NOT be included in the final results).",
-            "alias-type": "string"
+            "description": "Course user references can represent the following:\n- An email address.\n- A literal \"*\" (which includes all users in the course).\n- A course role (which will include all course users with that role).\n- Any of the above options preceded by a dash (\"-\") (which indicates that the user or group will NOT be included in the final results)."
         },
         "model.CourseUserRole": {
+            "alias-type": "int",
             "category": "alias",
-            "description": "Course user roles represent a user's role within a single course.",
-            "alias-type": "int"
+            "description": "Course user roles represent a user's role within a single course."
         },
         "model.ExternalLocatableError": {
             "category": "struct",
@@ -2355,64 +2355,64 @@
             "description": "A user safe representation of the UserOpResult struct.\nNotably all errors will be converted to responses and the cleartext password field is removed.\nFor descriptions of shared fields, see UserOpResult above.",
             "fields": [
                 {
+                    "description": "The user was added to the server.",
                     "name": "added",
-                    "type": "bool",
-                    "description": "The user was added to the server."
+                    "type": "bool"
                 },
                 {
+                    "description": "A user safe representation of a communication error.",
                     "name": "communication-error",
-                    "type": "*model.ExternalLocatableError",
-                    "description": "A user safe representation of a communication error."
+                    "type": "*model.ExternalLocatableError"
                 },
                 {
+                    "description": "The user was removed from the following courses (by id).",
                     "name": "dropped",
-                    "type": "[]string",
-                    "description": "The user was removed from the following courses (by id)."
+                    "type": "[]string"
                 },
                 {
+                    "description": "The email/id of the target user.",
                     "name": "email",
-                    "type": "string",
-                    "description": "The email/id of the target user."
+                    "type": "string"
                 },
                 {
+                    "description": "The user was emailed during the course of this operation.\nThis is more than just GetEmail() was called, an actual email was sent\n(or would have been sent if this operation was during a dry-run).",
                     "name": "emailed",
-                    "type": "bool",
-                    "description": "The user was emailed during the course of this operation.\nThis is more than just GetEmail() was called, an actual email was sent\n(or would have been sent if this operation was during a dry-run)."
+                    "type": "bool"
                 },
                 {
+                    "description": "The user was enrolled in the following courses (by id).",
                     "name": "enrolled",
-                    "type": "[]string",
-                    "description": "The user was enrolled in the following courses (by id)."
+                    "type": "[]string"
                 },
                 {
+                    "description": "The user existed before this operation and was edited (including enrollment changes).",
                     "name": "modified",
-                    "type": "bool",
-                    "description": "The user existed before this operation and was edited (including enrollment changes)."
+                    "type": "bool"
                 },
                 {
+                    "description": "The user did not exist before this operation and does not exist after.\nThis may also be an error depending on the semantics of the operation.",
                     "name": "not-exists",
-                    "type": "bool",
-                    "description": "The user did not exist before this operation and does not exist after.\nThis may also be an error depending on the semantics of the operation."
+                    "type": "bool"
                 },
                 {
+                    "description": "The user existed before this operation and was removed.",
                     "name": "removed",
-                    "type": "bool",
-                    "description": "The user existed before this operation and was removed."
+                    "type": "bool"
                 },
                 {
+                    "description": "The user was skipped (often because they already exist).",
                     "name": "skipped",
-                    "type": "bool",
-                    "description": "The user was skipped (often because they already exist)."
+                    "type": "bool"
                 },
                 {
+                    "description": "A user safe representation of a system error.",
                     "name": "system-error",
-                    "type": "*model.ExternalLocatableError",
-                    "description": "A user safe representation of a system error."
+                    "type": "*model.ExternalLocatableError"
                 },
                 {
+                    "description": "A user safe representation of a validation error, which will not include a locator.",
                     "name": "validation-error",
-                    "type": "*model.ExternalLocatableError",
-                    "description": "A user safe representation of a validation error, which will not include a locator."
+                    "type": "*model.ExternalLocatableError"
                 }
             ]
         },
@@ -2899,14 +2899,14 @@
             ]
         },
         "model.ServerUserReference": {
+            "alias-type": "string",
             "category": "alias",
-            "description": "Server user references can represent the following:\n- An email address.\n- A literal \"*\" (which includes all users on the server).\n- A server role (which will include all server users with that role).\n- \u003ccourse-id\u003e::\u003ccourse-role\u003e (which will include all users in the target course with that role).\n- *::\u003ccourse-role\u003e (which will include all users with the course role in any course).\n- \u003ccourse-id\u003e::* (which will include all users in the target course).\n- *::* (which includes all users enrolled in at least one course).\n- Any of the above options preceded by a dash (\"-\") (which indicates that the user or group will NOT be included in the final results).",
-            "alias-type": "string"
+            "description": "Server user references can represent the following:\n- An email address.\n- A literal \"*\" (which includes all users on the server).\n- A server role (which will include all server users with that role).\n- \u003ccourse-id\u003e::\u003ccourse-role\u003e (which will include all users in the target course with that role).\n- *::\u003ccourse-role\u003e (which will include all users with the course role in any course).\n- \u003ccourse-id\u003e::* (which will include all users in the target course).\n- *::* (which includes all users enrolled in at least one course).\n- Any of the above options preceded by a dash (\"-\") (which indicates that the user or group will NOT be included in the final results)."
         },
         "model.ServerUserRole": {
+            "alias-type": "int",
             "category": "alias",
-            "description": "Server user roles represent a user's role within an autograder server instance.",
-            "alias-type": "int"
+            "description": "Server user roles represent a user's role within an autograder server instance."
         },
         "model.SubmissionHistoryItem": {
             "category": "struct",
@@ -2954,69 +2954,69 @@
             "description": "A general representation of the result of operations that modify a user in any way (add, remove, enroll, drop, etc).\nAll user-facing functions (essentially non-db functions) should return an instance or collection of these objects.",
             "fields": [
                 {
+                    "description": "The user was added to the server.",
                     "name": "added",
-                    "type": "bool",
-                    "description": "The user was added to the server."
+                    "type": "bool"
                 },
                 {
+                    "description": "The following cleartext password was generated during this operation.\nCare should be taken to not expose this field.",
                     "name": "cleartext-password",
-                    "type": "string",
-                    "description": "The following cleartext password was generated during this operation.\nCare should be taken to not expose this field."
+                    "type": "string"
                 },
                 {
+                    "description": "The following error occurred during this operation, but not because of the provided data,\ni.e., the system was unable to communicate the results.\nThese errors are not guaranteed to be safe for users,\nand the calling code should decide how they should be managed.",
                     "name": "communication-error",
-                    "type": "*model.LocatableError",
-                    "description": "The following error occurred during this operation, but not because of the provided data,\ni.e., the system was unable to communicate the results.\nThese errors are not guaranteed to be safe for users,\nand the calling code should decide how they should be managed."
+                    "type": "*model.LocatableError"
                 },
                 {
+                    "description": "The user was removed from the following courses (by id).",
                     "name": "dropped",
-                    "type": "[]string",
-                    "description": "The user was removed from the following courses (by id)."
+                    "type": "[]string"
                 },
                 {
+                    "description": "The email/id of the target user.",
                     "name": "email",
-                    "type": "string",
-                    "description": "The email/id of the target user."
+                    "type": "string"
                 },
                 {
+                    "description": "The user was emailed during the course of this operation.\nThis is more than just GetEmail() was called, an actual email was sent\n(or would have been sent if this operation was during a dry-run).",
                     "name": "emailed",
-                    "type": "bool",
-                    "description": "The user was emailed during the course of this operation.\nThis is more than just GetEmail() was called, an actual email was sent\n(or would have been sent if this operation was during a dry-run)."
+                    "type": "bool"
                 },
                 {
+                    "description": "The user was enrolled in the following courses (by id).",
                     "name": "enrolled",
-                    "type": "[]string",
-                    "description": "The user was enrolled in the following courses (by id)."
+                    "type": "[]string"
                 },
                 {
+                    "description": "The user existed before this operation and was edited (including enrollment changes).",
                     "name": "modified",
-                    "type": "bool",
-                    "description": "The user existed before this operation and was edited (including enrollment changes)."
+                    "type": "bool"
                 },
                 {
+                    "description": "The user did not exist before this operation and does not exist after.\nThis may also be an error depending on the semantics of the operation.",
                     "name": "not-exists",
-                    "type": "bool",
-                    "description": "The user did not exist before this operation and does not exist after.\nThis may also be an error depending on the semantics of the operation."
+                    "type": "bool"
                 },
                 {
+                    "description": "The user existed before this operation and was removed.",
                     "name": "removed",
-                    "type": "bool",
-                    "description": "The user existed before this operation and was removed."
+                    "type": "bool"
                 },
                 {
+                    "description": "The user was skipped (often because they already exist).",
                     "name": "skipped",
-                    "type": "bool",
-                    "description": "The user was skipped (often because they already exist)."
+                    "type": "bool"
                 },
                 {
+                    "description": "The following error occurred during this operation, but not because of the provided data,\ni.e., they are the system's fault.\nThese errors are not guaranteed to be safe for users,\nand the calling code should decide how they should be managed.",
                     "name": "system-error",
-                    "type": "*model.LocatableError",
-                    "description": "The following error occurred during this operation, but not because of the provided data,\ni.e., they are the system's fault.\nThese errors are not guaranteed to be safe for users,\nand the calling code should decide how they should be managed."
+                    "type": "*model.LocatableError"
                 },
                 {
+                    "description": "The following error occurred during this operation because of the provided data,\ni.e., they are caused by the calling user.\nAll error messages should be safe for users.",
                     "name": "validation-error",
-                    "type": "*model.LocatableError",
-                    "description": "The following error occurred during this operation because of the provided data,\ni.e., they are caused by the calling user.\nAll error messages should be safe for users."
+                    "type": "*model.LocatableError"
                 }
             ]
         },
@@ -3087,9 +3087,9 @@
             "category": "struct",
             "fields": [
                 {
+                    "description": "Additional attributes that are not standard enough to be formalized in fields.",
                     "name": "attributes",
-                    "type": "map[stats.MetricAttribute]any",
-                    "description": "Additional attributes that are not standard enough to be formalized in fields."
+                    "type": "map[stats.MetricAttribute]any"
                 },
                 {
                     "name": "timestamp",
@@ -3106,17 +3106,17 @@
             ]
         },
         "stats.MetricAttribute": {
-            "category": "alias",
-            "alias-type": "string"
+            "alias-type": "string",
+            "category": "alias"
         },
         "stats.MetricType": {
-            "category": "alias",
-            "alias-type": "string"
+            "alias-type": "string",
+            "category": "alias"
         },
         "timestamp.Timestamp": {
+            "alias-type": "int64",
             "category": "alias",
-            "description": "A safe (always valid) time representation.\nA timestamp is the number of milliseconds (int64) since the UNIX epoch (which is in UTC).",
-            "alias-type": "int64"
+            "description": "A safe (always valid) time representation.\nA timestamp is the number of milliseconds (int64) since the UNIX epoch (which is in UTC)."
         },
         "upload.RowEntry": {
             "category": "struct",
@@ -3242,8 +3242,8 @@
             ]
         },
         "util.FileSpecType": {
-            "category": "alias",
-            "alias-type": "string"
+            "alias-type": "string",
+            "category": "alias"
         },
         "util.Version": {
             "category": "struct",
