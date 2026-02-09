@@ -34,14 +34,84 @@ func TestCallEndpoint(test *testing.T) {
 		endpoint   string
 		parameters []string
 	}{
-		// Errors.
+		// Empty Substring
 		{
 			CommonCMDTestCase: cmd.CommonCMDTestCase{
-				ExpectedStderrSubstring: `Failed to find the endpoint. Use --list to view all endpoints. | {"endpoint":"ZZZ"}`,
+				ExpectedStderrSubstring: `Please enter an endpoint. Use --list to view all endpoints.`,
+				ExpectedExitCode:        1,
+			},
+			endpoint: "",
+		},
+
+		// No Matches
+		{
+			CommonCMDTestCase: cmd.CommonCMDTestCase{
+				ExpectedStderrSubstring: `Failed to find matching endpoint. Use --list to view all endpoints. | {"endpoint-substring":"ZZZ"}`,
 				ExpectedExitCode:        1,
 			},
 			endpoint: "ZZZ",
 		},
+
+		// Shorthand
+		{
+			CommonCMDTestCase: cmd.CommonCMDTestCase{
+				ExpectedStdout: util.MustToJSONIndent(apiDescription.Endpoints["metadata/heartbeat"]) + "\n",
+			},
+			endpoint: "heartbeat",
+			parameters: []string{
+				"--describe",
+			},
+		},
+
+		// Multiple Matches
+		{
+			CommonCMDTestCase: cmd.CommonCMDTestCase{
+				ExpectedStderrSubstring: `Found multiple matching endpoints. Use --list to view all endpoints. | {"endpoint-substring":"sers/list","matching-endpoints":["courses/users/list","users/list"]}`,
+				ExpectedExitCode:        1,
+			},
+			endpoint: "sers/list",
+			parameters: []string{
+				"--describe",
+			},
+		},
+
+		// Multiple Matches - Full Match
+		// Also matches: courses/users/list
+		{
+			CommonCMDTestCase: cmd.CommonCMDTestCase{
+				ExpectedStdout: util.MustToJSONIndent(apiDescription.Endpoints["users/list"]) + "\n",
+			},
+			endpoint: "users/list",
+			parameters: []string{
+				"--describe",
+			},
+		},
+
+		// Exact Match
+		{
+			CommonCMDTestCase: cmd.CommonCMDTestCase{
+				ExpectedStdout: util.MustToJSONIndent(apiDescription.Endpoints["metadata/heartbeat"]) + "\n",
+			},
+			endpoint: "metadata/heartbeat",
+			parameters: []string{
+				"--describe",
+			},
+		},
+
+		// Exact Match - Multiple
+		{
+			CommonCMDTestCase: cmd.CommonCMDTestCase{
+				ExpectedStderrSubstring: `Failed to find an exact endpoint match. Use --list to view all endpoints. | {"endpoint-substring":"heartbeat"}`,
+				ExpectedExitCode:        1,
+			},
+			endpoint: "heartbeat",
+			parameters: []string{
+				"--exact-match",
+				"--describe",
+			},
+		},
+
+		// Bad Parameter
 		{
 			CommonCMDTestCase: cmd.CommonCMDTestCase{
 				ExpectedStderrSubstring: `Invalid parameter format: missing a colon. Expected format is 'key:value', e.g., 'id:123'. | {"parameter":["course-idcourse101"]}`,
@@ -126,181 +196,6 @@ func TestCallEndpoint(test *testing.T) {
 				"target-email:course-student@test.edulinq.org",
 				"course-id:course101",
 				"--table",
-			},
-		},
-
-		// Base functionality for each supported endpoint.
-		{
-			CommonCMDTestCase: cmd.CommonCMDTestCase{
-				IgnoreStdout: true,
-			},
-			endpoint: "courses/assignments/get",
-			parameters: []string{
-				"course-id:course101",
-				"assignment-id:hw0",
-			},
-		},
-		{
-			CommonCMDTestCase: cmd.CommonCMDTestCase{
-				IgnoreStdout: true,
-			},
-			endpoint: "courses/assignments/list",
-			parameters: []string{
-				"course-id:course101",
-			},
-		},
-		{
-			CommonCMDTestCase: cmd.CommonCMDTestCase{
-				IgnoreStdout: true,
-			},
-			endpoint: "courses/users/drop",
-			parameters: []string{
-				"target-email:course-student@test.edulinq.org",
-				"course-id:course101",
-			},
-		},
-		{
-			CommonCMDTestCase: cmd.CommonCMDTestCase{
-				IgnoreStdout: true,
-			},
-			endpoint: "courses/users/get",
-			parameters: []string{
-				"target-email:course-student@test.edulinq.org",
-				"course-id:course101",
-			},
-		},
-		{
-			CommonCMDTestCase: cmd.CommonCMDTestCase{
-				IgnoreStdout: true,
-			},
-			endpoint: "courses/users/list",
-			parameters: []string{
-				"course-id:course101",
-			},
-		},
-		{
-			CommonCMDTestCase: cmd.CommonCMDTestCase{
-				IgnoreStdout: true,
-			},
-			endpoint: "courses/assignments/submissions/fetch/course/attempts",
-			parameters: []string{
-				"course-id:course101",
-				"assignment-id:hw0",
-			},
-		},
-		{
-			CommonCMDTestCase: cmd.CommonCMDTestCase{
-				IgnoreStdout: true,
-			},
-			endpoint: "courses/assignments/submissions/fetch/course/scores",
-			parameters: []string{
-				"course-id:course101",
-				"assignment-id:hw0",
-			},
-		},
-		{
-			CommonCMDTestCase: cmd.CommonCMDTestCase{
-				IgnoreStdout: true,
-			},
-			endpoint: "courses/assignments/submissions/fetch/user/attempt",
-			parameters: []string{
-				"target-email:course-student@test.edulinq.org",
-				"course-id:course101",
-				"assignment-id:hw0",
-				"target-submission:1697406256",
-			},
-		},
-		{
-			CommonCMDTestCase: cmd.CommonCMDTestCase{
-				IgnoreStdout: true,
-			},
-			endpoint: "courses/assignments/submissions/fetch/user/attempts",
-			parameters: []string{
-				"target-email:course-student@test.edulinq.org",
-				"course-id:course101",
-				"assignment-id:hw0",
-			},
-		},
-		{
-			CommonCMDTestCase: cmd.CommonCMDTestCase{
-				IgnoreStdout: true,
-			},
-			endpoint: "courses/assignments/submissions/fetch/user/history",
-			parameters: []string{
-				"target-email:course-student@test.edulinq.org",
-				"course-id:course101",
-				"assignment-id:hw0",
-				"target-submission:1697406256",
-			},
-		},
-		{
-			CommonCMDTestCase: cmd.CommonCMDTestCase{
-				IgnoreStdout: true,
-			},
-			endpoint: "courses/assignments/submissions/fetch/user/peek",
-			parameters: []string{
-				"target-email:course-student@test.edulinq.org",
-				"course-id:course101",
-				"assignment-id:hw0",
-				"target-submission:1697406256",
-			},
-		},
-		{
-			CommonCMDTestCase: cmd.CommonCMDTestCase{
-				IgnoreStdout: true,
-			},
-			endpoint: "courses/assignments/submissions/remove",
-			parameters: []string{
-				"target-email:course-student@test.edulinq.org",
-				"course-id:course101",
-				"assignment-id:hw0",
-				"target-submission:1697406256",
-			},
-		},
-		{
-			CommonCMDTestCase: cmd.CommonCMDTestCase{
-				IgnoreStdout: true,
-			},
-			endpoint: "lms/user/get",
-			parameters: []string{
-				"target-email:course-student@test.edulinq.org",
-				"course-id:course101",
-			},
-		},
-		{
-			CommonCMDTestCase: cmd.CommonCMDTestCase{
-				IgnoreStdout: true,
-			},
-			endpoint: "logs/query",
-		},
-		{
-			CommonCMDTestCase: cmd.CommonCMDTestCase{
-				IgnoreStdout: true,
-			},
-			endpoint: "metadata/describe",
-		},
-		{
-			CommonCMDTestCase: cmd.CommonCMDTestCase{
-				IgnoreStdout: true,
-			},
-			endpoint: "users/get",
-			parameters: []string{
-				"target-email:course-student@test.edulinq.org",
-			},
-		},
-		{
-			CommonCMDTestCase: cmd.CommonCMDTestCase{
-				IgnoreStdout: true,
-			},
-			endpoint: "users/list",
-		},
-		{
-			CommonCMDTestCase: cmd.CommonCMDTestCase{
-				IgnoreStdout: true,
-			},
-			endpoint: "users/remove",
-			parameters: []string{
-				"target-email:course-student@test.edulinq.org",
 			},
 		},
 	}

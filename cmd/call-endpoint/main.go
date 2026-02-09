@@ -21,11 +21,12 @@ var args struct {
 	config.ConfigArgs
 	cmd.CommonOptions
 
-	Endpoint   string   `help:"Endpoint of the desired API." arg:"" optional:""`
-	Parameters []string `help:"Parameter for the endpoint in the format 'key:value', e.g., 'id:123'." arg:"" optional:""`
-	Table      bool     `help:"Attempt to output data as a TSV. Fallback to JSON if the table conversion fails." default:"false"`
-	List       bool     `help:"List all API endpoints." default:"false" short:"l"`
-	Describe   bool     `help:"Describe the given endpoint instead of calling it (e.g., output information about the parameters)." default:"false" short:"d"`
+	EndpointSubstring string   `help:"Substring of the desired API endpoint. Must match exactly one endpoint. If this matches the full text of an endpoint, then substring matches will be ignored." arg:"" optional:""`
+	Parameters        []string `help:"Parameter for the endpoint in the format 'key:value', e.g., 'id:123'." arg:"" optional:""`
+	ExactMatch        bool     `help:"Don't check for substring endpoint matches." default:"false"`
+	Table             bool     `help:"Attempt to output data as a TSV. Fallback to JSON if the table conversion fails." default:"false"`
+	List              bool     `help:"List all API endpoints." default:"false" short:"l"`
+	Describe          bool     `help:"Describe the given endpoint instead of calling it (e.g., output information about the parameters)." default:"false" short:"d"`
 }
 
 func main() {
@@ -49,7 +50,7 @@ func main() {
 		return
 	}
 
-	if args.Endpoint == "" {
+	if args.EndpointSubstring == "" {
 		log.Error("Please enter an endpoint. Use --list to view all endpoints.")
 		exit.Exit(1)
 		return
@@ -61,21 +62,13 @@ func main() {
 		return
 	}
 
-	var endpointDescription *core.EndpointDescription
-	for endpoint, requestResponse := range apiDescription.Endpoints {
-		if endpoint == args.Endpoint {
-			endpointDescription = &requestResponse
-			break
-		}
-	}
-
-	if endpointDescription == nil {
-		log.Fatal("Failed to find the endpoint. Use --list to view all endpoints.", log.NewAttr("endpoint", args.Endpoint))
+	endpoint := matchEndpoint(apiDescription)
+	if endpoint == "" {
 		return
 	}
 
 	if args.Describe {
-		fmt.Println(util.MustToJSONIndent(endpointDescription))
+		fmt.Println(util.MustToJSONIndent(apiDescription.Endpoints[endpoint]))
 		return
 	}
 
@@ -100,7 +93,7 @@ func main() {
 		printFunc = cmd.ConvertAPIResponseToTable
 	}
 
-	cmd.MustHandleCMDRequestAndExitFull(args.Endpoint, request, nil, args.CommonOptions, printFunc)
+	cmd.MustHandleCMDRequestAndExitFull(args.EndpointSubstring, request, nil, args.CommonOptions, printFunc)
 }
 
 func listAPIEndpoints() {
@@ -119,4 +112,45 @@ func listAPIEndpoints() {
 	for _, endpoint := range endpoints {
 		fmt.Println(endpoint)
 	}
+}
+
+func matchEndpoint(apiDescription *core.APIDescription) string {
+	substringMatches := make([]string, 0)
+	exactMatch := ""
+
+	for endpoint, _ := range apiDescription.Endpoints {
+		if endpoint == args.EndpointSubstring {
+			exactMatch = endpoint
+		}
+
+		if strings.Contains(endpoint, args.EndpointSubstring) {
+			substringMatches = append(substringMatches, endpoint)
+		}
+	}
+
+	if exactMatch != "" {
+		return exactMatch
+	}
+
+	if args.ExactMatch {
+		log.Fatal("Failed to find an exact endpoint match. Use --list to view all endpoints.",
+			log.NewAttr("endpoint-substring", args.EndpointSubstring))
+		return ""
+	}
+
+	if len(substringMatches) == 0 {
+		log.Fatal("Failed to find matching endpoint. Use --list to view all endpoints.",
+			log.NewAttr("endpoint-substring", args.EndpointSubstring))
+		return ""
+	}
+
+	if len(substringMatches) > 1 {
+		slices.Sort(substringMatches)
+		log.Fatal("Found multiple matching endpoints. Use --list to view all endpoints.",
+			log.NewAttr("endpoint-substring", args.EndpointSubstring),
+			log.NewAttr("matching-endpoints", substringMatches))
+		return ""
+	}
+
+	return substringMatches[0]
 }
