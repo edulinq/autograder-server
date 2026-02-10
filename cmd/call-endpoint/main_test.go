@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"reflect"
 	"slices"
 	"strings"
 	"testing"
@@ -148,8 +149,19 @@ func TestCallEndpoint(test *testing.T) {
 			},
 		},
 
-		// Custom Output Formatters.
-		// Single key with a list.
+		// Input: Bool
+		{
+			CommonCMDTestCase: cmd.CommonCMDTestCase{
+				ExpectedStdout: EXPECTED_TESTING_STATS,
+			},
+			endpoint: "stats/query",
+			parameters: []string{
+				"type:cpu-usage",
+				"use-testing-data:true",
+			},
+		},
+
+		// Output: Single key with a list.
 		{
 			CommonCMDTestCase: cmd.CommonCMDTestCase{
 				ExpectedStdout: EXPECTED_COURSES_ASSIGNMENTS_LIST_TABLE,
@@ -160,7 +172,8 @@ func TestCallEndpoint(test *testing.T) {
 				"--table",
 			},
 		},
-		// Single key with a map.
+
+		// Output: Single key with a map.
 		{
 			CommonCMDTestCase: cmd.CommonCMDTestCase{
 				ExpectedStdout: EXPECTED_COURSES_ASSIGNMENTS_GET_TABLE,
@@ -172,7 +185,8 @@ func TestCallEndpoint(test *testing.T) {
 				"--table",
 			},
 		},
-		// Multiple keys with a list.
+
+		// Output: Multiple keys with a list.
 		{
 			CommonCMDTestCase: cmd.CommonCMDTestCase{
 				ExpectedStdout: EXPECTED_FETCH_USER_HISTORY_TABLE,
@@ -186,7 +200,8 @@ func TestCallEndpoint(test *testing.T) {
 				"--table",
 			},
 		},
-		// Multiple keys with a map.
+
+		// Output: Multiple keys with a map.
 		{
 			CommonCMDTestCase: cmd.CommonCMDTestCase{
 				ExpectedStdout: EXPECTED_COURSES_USERS_GET_TABLE,
@@ -216,4 +231,75 @@ func TestTableConversion(test *testing.T) {
 	}
 
 	_, _ = cmd.ConvertAPIResponseToTable(response)
+}
+
+func TestUpdateEndpointParams(test *testing.T) {
+	apiDescription, err := core.DescribeRoutes(*api.GetRoutes())
+	if err != nil {
+		test.Fatalf("Failed to get API description: '%v'.", err)
+	}
+
+	testCases := []struct {
+		endpoint       string
+		params         map[string]any
+		expected       map[string]any
+		errorSubstring string
+	}{
+		// Boolean - True
+		{
+			endpoint: "stats/query",
+			params: map[string]any{
+				"use-testing-data": "true",
+			},
+			expected: map[string]any{
+				"use-testing-data": true,
+			},
+		},
+
+		// Boolean - False
+		{
+			endpoint: "stats/query",
+			params: map[string]any{
+				"use-testing-data": "false",
+			},
+			expected: map[string]any{
+				"use-testing-data": false,
+			},
+		},
+
+		// Boolean - Error
+		{
+			endpoint: "stats/query",
+			params: map[string]any{
+				"use-testing-data": "TRUE",
+			},
+			errorSubstring: "Param 'use-testing-data': Failed to convert boolean",
+		},
+	}
+
+	for i, testCase := range testCases {
+		err := updateParams(apiDescription.Endpoints[testCase.endpoint], testCase.params)
+		if err != nil {
+			if testCase.errorSubstring != "" {
+				if !strings.Contains(err.Error(), testCase.errorSubstring) {
+					test.Errorf("Case %d: Did not get expected error output. Expected Substring '%s', Actual Error: '%v'.", i, testCase.errorSubstring, err)
+				}
+			} else {
+				test.Errorf("Case %d: Failed to update params: '%v'.", i, err)
+			}
+
+			continue
+		}
+
+		if testCase.errorSubstring != "" {
+			test.Errorf("Case %d: Did not get expected error.", i)
+			continue
+		}
+
+		if !reflect.DeepEqual(testCase.expected, testCase.params) {
+			test.Errorf("Case %d: Params not as expected. Expected: '%s', Actual: '%s'.",
+				i, util.MustToJSONIndent(testCase.expected), util.MustToJSONIndent(testCase.params))
+			continue
+		}
+	}
 }

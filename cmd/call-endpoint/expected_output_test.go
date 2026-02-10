@@ -13,3 +13,19 @@ true	[{"assignment-id":"hw0","course-id":"course101","grading_start_time":169740
 const EXPECTED_COURSES_USERS_GET_TABLE = `found	user
 true	{"email":"course-student@test.edulinq.org","lms-id":"lms-course-student@test.edulinq.org","name":"course-student","role":"student","type":"course"}
 `
+
+const EXPECTED_TESTING_STATS = `{
+    "results": [
+        {
+            "timestamp": 1800,
+            "type": "cpu-usage",
+            "value": 5
+        },
+        {
+            "timestamp": 2200,
+            "type": "cpu-usage",
+            "value": 10
+        }
+    ]
+}
+`

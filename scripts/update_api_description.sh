@@ -18,7 +18,7 @@ function main() {
 
     mkdir -p "${OUT_DIR}"
 
-    go run cmd/call-endpoint/main.go metadata/describe > "${TEMP_FILE}"
+    go run cmd/call-endpoint/main.go metadata/describe force-compute:true > "${TEMP_FILE}"
     if [ $? -ne 0 ]; then
         echo "Failed to update ${OUT_FILE}."
         return 1

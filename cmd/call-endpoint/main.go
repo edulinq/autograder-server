@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"slices"
 	"strings"
@@ -72,10 +73,7 @@ func main() {
 		return
 	}
 
-	request := map[string]any{
-		"source":         common.AG_REQUEST_SOURCE,
-		"source-version": util.MustGetFullCachedVersion().String(),
-	}
+	request := make(map[string]any, 0)
 
 	for _, arg := range args.Parameters {
 		// Split the parameter into it's key and value.
@@ -88,12 +86,55 @@ func main() {
 		request[parts[0]] = parts[1]
 	}
 
+	err = updateParams(apiDescription.Endpoints[endpoint], request)
+	if err != nil {
+		log.Fatal("Failed to parse endpoint-specific params.", err)
+		return
+	}
+
+	// Add in core request fields.
+	request["source"] = common.AG_REQUEST_SOURCE
+	request["source-version"] = util.MustGetFullCachedVersion().String()
+
 	var printFunc cmd.CustomResponseFormatter = nil
 	if args.Table {
 		printFunc = cmd.ConvertAPIResponseToTable
 	}
 
 	cmd.MustHandleCMDRequestAndExitFull(args.EndpointSubstring, request, nil, args.CommonOptions, printFunc)
+}
+
+// Update the parameters that will be sent to the server according to the specific endpoint.
+// This is where parameters can be typed.
+func updateParams(endpoint core.EndpointDescription, params map[string]any) error {
+	var allErrors error
+
+	for _, field := range endpoint.Input {
+		raw_value, exists := params[field.Name]
+		if !exists {
+			continue
+		}
+
+		// If the value is not a string, then it must gave already been handled.
+		string_value, ok := raw_value.(string)
+		if !ok {
+			continue
+		}
+
+		if field.Type == "bool" {
+			string_value = strings.TrimSpace(string_value)
+			if string_value == "true" {
+				params[field.Name] = true
+			} else if string_value == "false" {
+				params[field.Name] = false
+			} else {
+				allErrors = errors.Join(allErrors, fmt.Errorf("Param '%s': Failed to convert boolean: '%v'.", field.Name, raw_value))
+				continue
+			}
+		}
+	}
+
+	return allErrors
 }
 
 func listAPIEndpoints() {
