@@ -13,6 +13,7 @@ import (
 
 	"github.com/edulinq/autograder/internal/config"
 	"github.com/edulinq/autograder/internal/log"
+	"github.com/edulinq/autograder/internal/timestamp"
 	"github.com/edulinq/autograder/internal/util"
 )
 
@@ -163,23 +164,13 @@ func CheckFileChanges(imageSource ImageSource, quick bool) (bool, error) {
 // If it does not exist, it will be pulled.
 // To check if the image is listed, the RepoTags field will be checked for the image's name.
 func EnsureImage(name string) error {
-	docker, err := getDockerClient()
+	image, err := GetImageInfo(name)
 	if err != nil {
 		return err
 	}
-	defer docker.Close()
 
-	images, err := docker.ImageList(context.Background(), image.ListOptions{})
-	if err != nil {
-		return fmt.Errorf("Failed to list docker images: '%w'.", err)
-	}
-
-	for _, image := range images {
-		for _, tag := range image.RepoTags {
-			if tag == name {
-				return nil
-			}
-		}
+	if image != nil {
+		return nil
 	}
 
 	log.Debug("Did not find image locally, attempting pull.", log.NewAttr("name", name))
@@ -187,6 +178,31 @@ func EnsureImage(name string) error {
 	return PullImage(name)
 }
 
+func GetImageInfo(name string) (*image.Summary, error) {
+	docker, err := getDockerClient()
+	if err != nil {
+		return nil, err
+	}
+	defer docker.Close()
+
+	images, err := docker.ImageList(context.Background(), image.ListOptions{})
+	if err != nil {
+		return nil, fmt.Errorf("Failed to list docker images: '%w'.", err)
+	}
+
+	for _, image := range images {
+		for _, tag := range image.RepoTags {
+			if tag == name {
+				return &image, nil
+			}
+		}
+	}
+
+	return nil, nil
+}
+
+// Pull the image into the local repo.
+// The image name should include the version.
 func PullImage(name string) error {
 	docker, err := getDockerClient()
 	if err != nil {
@@ -206,4 +222,51 @@ func PullImage(name string) error {
 	log.Debug("Image Pull", log.NewAttr("name", name), log.NewAttr("output", buffer.String()))
 
 	return nil
+}
+
+func GetImageGzipBytes(name string) ([]byte, error) {
+	docker, err := getDockerClient()
+	if err != nil {
+		return nil, err
+	}
+	defer docker.Close()
+
+	reader, err := docker.ImageSave(context.Background(), []string{name})
+	if err != nil {
+		return nil, fmt.Errorf("Failed to get reader for image '%s': '%w'.", name, err)
+	}
+	defer reader.Close()
+
+	return util.ReaderToGzipBytesFull(reader, name, "")
+}
+
+func GetImage(name string, appendLatest bool) (*BuiltImageInfo, error) {
+	searchName := name
+	if appendLatest {
+		searchName += ":latest"
+	}
+
+	image, err := GetImageInfo(searchName)
+	if err != nil {
+		return nil, err
+	}
+
+	if image == nil {
+		return nil, fmt.Errorf("Could not find image: '%s'.", name)
+	}
+
+	gzipBytes, err := GetImageGzipBytes(name)
+	if err != nil {
+		return nil, err
+	}
+
+	info := BuiltImageInfo{
+		Name:             name,
+		CreatedTimestamp: timestamp.Timestamp(image.Created * 1000),
+		Size:             image.Size,
+		GzipSize:         int64(len(gzipBytes)),
+		GzipBytes:        gzipBytes,
+	}
+
+	return &info, nil
 }

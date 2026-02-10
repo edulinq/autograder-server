@@ -10,25 +10,36 @@ import (
 )
 
 func GzipFileToBytes(path string) ([]byte, error) {
-	var buffer bytes.Buffer
-
-	writer := gzip.NewWriter(&buffer)
-	writer.Name = filepath.Base(path)
-
 	file, err := os.Open(path)
 	if err != nil {
 		return nil, fmt.Errorf("Could not open source file for gzip '%s': '%w'.", path, err)
 	}
 	defer file.Close()
 
-	_, err = io.Copy(writer, file)
+	return ReaderToGzipBytesFull(file, filepath.Base(path), "")
+}
+
+func ReaderToGzipBytes(reader io.Reader) ([]byte, error) {
+	return ReaderToGzipBytesFull(reader, "", "")
+}
+
+// Read bytes from a reader and convert them to buffer of Gzipped bytes.
+// Will not close the passed in reader.
+func ReaderToGzipBytesFull(reader io.Reader, name string, comment string) ([]byte, error) {
+	var buffer bytes.Buffer
+
+	writer := gzip.NewWriter(&buffer)
+	writer.Name = name
+	writer.Comment = comment
+
+	_, err := io.Copy(writer, reader)
 	if err != nil {
-		return nil, fmt.Errorf("Could not copy file into gzip '%s': '%w'.", path, err)
+		return nil, fmt.Errorf("Could not copy reader into gzip writer: '%w'.", err)
 	}
 
 	err = writer.Close()
 	if err != nil {
-		return nil, fmt.Errorf("Failed to close gzip writer for '%s': '%w'.", path, err)
+		return nil, fmt.Errorf("Failed to close gzip writer: '%w'.", err)
 	}
 
 	return buffer.Bytes(), nil
@@ -48,7 +59,7 @@ func GzipBytesToFile(data []byte, path string) error {
 	return WriteBinaryFile(clearData, path)
 }
 
-// Gzip each file in a direcotry to bytes and return the output as a map: {<relpath>: bytes, ...}.
+// Gzip each file in a directory to bytes and return the output as a map: {<relpath>: bytes, ...}.
 // Complements GzipBytesToDirectory().
 func GzipDirectoryToBytes(baseDir string) (map[string][]byte, error) {
 	fileContents := make(map[string][]byte)

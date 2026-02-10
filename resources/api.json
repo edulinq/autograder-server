@@ -154,6 +154,49 @@
                 }
             ]
         },
+        "courses/assignments/images/fetch": {
+            "description": "Fetch an assignment's current Docker image.",
+            "input": [
+                {
+                    "description": "The ID of the assignment to make this request to.",
+                    "name": "assignment-id",
+                    "required": true,
+                    "type": "string"
+                },
+                {
+                    "description": "The ID of the course to make this request to.",
+                    "name": "course-id",
+                    "required": true,
+                    "type": "string"
+                },
+                {
+                    "description": "The email of the user making this request.",
+                    "name": "user-email",
+                    "required": true,
+                    "type": "string"
+                },
+                {
+                    "description": "The password of the user making this request.",
+                    "name": "user-pass",
+                    "required": true,
+                    "type": "string"
+                }
+            ],
+            "output": [
+                {
+                    "name": "bytes",
+                    "type": "string"
+                },
+                {
+                    "name": "gzip",
+                    "type": "bool"
+                },
+                {
+                    "name": "image-info",
+                    "type": "*docker.BuiltImageInfo"
+                }
+            ]
+        },
         "courses/assignments/list": {
             "description": "List the assignments in the course.",
             "input": [
@@ -2130,6 +2173,28 @@
                 {
                     "name": "updated",
                     "type": "bool"
+                }
+            ]
+        },
+        "docker.BuiltImageInfo": {
+            "category": "struct",
+            "description": "Information about an image fetched from disk.",
+            "fields": [
+                {
+                    "name": "created-timestamp",
+                    "type": "int64"
+                },
+                {
+                    "name": "gzip-size-bytes",
+                    "type": "int64"
+                },
+                {
+                    "name": "name",
+                    "type": "string"
+                },
+                {
+                    "name": "size-bytes",
+                    "type": "int64"
                 }
             ]
         },

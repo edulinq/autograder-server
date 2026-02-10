@@ -3,6 +3,7 @@ package docker
 import (
 	"fmt"
 
+	"github.com/edulinq/autograder/internal/timestamp"
 	"github.com/edulinq/autograder/internal/util"
 )
 
@@ -34,6 +35,16 @@ type ImageInfo struct {
 	// Dir used for relative paths.
 	// Using a func allows for lazy resolution of the base dir.
 	BaseDirFunc func() (string, string) `json:"-"`
+}
+
+// Information about an image fetched from disk.
+type BuiltImageInfo struct {
+	Name             string              `json:"name"`
+	CreatedTimestamp timestamp.Timestamp `json:"created-timestamp"`
+	Size             int64               `json:"size-bytes"`
+	GzipSize         int64               `json:"gzip-size-bytes"`
+
+	GzipBytes []byte `json:"-"`
 }
 
 // A subset of the image information that is passed to docker images for config during grading.
