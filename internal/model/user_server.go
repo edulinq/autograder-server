@@ -131,7 +131,7 @@ func (this *ServerUser) validate(checkAll bool) error {
 
 		err = info.Validate()
 		if err != nil {
-			return fmt.Errorf("User '%s' has an invalid course info '%s': '%w'.", this.Email, courseID, err)
+			return fmt.Errorf("User '%s' has an invalid course info for course '%s': '%w'.", this.Email, courseID, err)
 		}
 
 		newCourseInfo[newCourseID] = info

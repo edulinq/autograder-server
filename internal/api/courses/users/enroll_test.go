@@ -186,7 +186,7 @@ func TestEnroll(test *testing.T) {
 					},
 					ValidationError: &model.ExternalLocatableError{
 						Locator: "",
-						Message: VALIDATION_ERROR_EXTERNAL_MESSAGE,
+						Message: "User 'new@test.edulinq.org' has an invalid course info for course 'course101': 'Unknown course role.'.",
 					},
 				},
 			},
@@ -270,7 +270,7 @@ func TestEnroll(test *testing.T) {
 					},
 					ValidationError: &model.ExternalLocatableError{
 						Locator: "",
-						Message: VALIDATION_ERROR_EXTERNAL_MESSAGE,
+						Message: "User 'course-student@test.edulinq.org' has an invalid course info for course 'course101': 'Unknown course role.'.",
 					},
 				},
 			},

@@ -105,7 +105,18 @@ type UserOpResultsCounts struct {
 	CleartextPassword  int
 }
 
+// A validation error where all information can be shown to the user.
 func NewUserOpResultValidationError(locator string, email string, err error) *UserOpResult {
+	return &UserOpResult{
+		BaseUserOpResult: BaseUserOpResult{
+			Email: email,
+		},
+		ValidationError: NewLocatableError(locator, true, err.Error(), err.Error()),
+	}
+}
+
+// A permissions error where some information cannot be shown to the user.
+func NewUserOpResultPermissionsError(locator string, email string, err error) *UserOpResult {
 	return &UserOpResult{
 		BaseUserOpResult: BaseUserOpResult{
 			Email: email,

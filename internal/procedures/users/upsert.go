@@ -180,7 +180,7 @@ func updateUser(newUser *model.ServerUser, user *model.ServerUser, options Upser
 
 	changed, err := user.Merge(newUser)
 	if err != nil {
-		return model.NewUserOpResultValidationError("-1007", newUser.Email, err)
+		return model.NewUserOpResultPermissionsError("-1007", newUser.Email, err)
 	}
 
 	if rawData.Pass != "" {
@@ -221,7 +221,7 @@ func checkBaseUpsertPermissions(user *model.ServerUser, options UpsertUsersOptio
 
 	// Regardless of course role, users with higher server permissions cannot be inserted.
 	if options.ContextServerRole < user.Role {
-		return model.NewUserOpResultValidationError("-1011", user.Email,
+		return model.NewUserOpResultPermissionsError("-1011", user.Email,
 			fmt.Errorf("User has a server role of '%s', which is not high enough to upsert a user with server role of '%s'.", options.ContextServerRole.String(), user.Role.String()))
 	}
 
@@ -238,7 +238,7 @@ func checkInsertPermissions(user *model.ServerUser, rawData *model.RawServerUser
 
 	// The user has no course role and insufficient server role.
 	if options.ContextCourseRole == model.CourseRoleUnknown {
-		return model.NewUserOpResultValidationError("-1012", user.Email,
+		return model.NewUserOpResultPermissionsError("-1012", user.Email,
 			fmt.Errorf("User has an insufficient server role of '%s' and no course role to insert users.", options.ContextServerRole.String()))
 	}
 
@@ -248,13 +248,13 @@ func checkInsertPermissions(user *model.ServerUser, rawData *model.RawServerUser
 
 	// Check the relative course credentials.
 	if options.ContextCourseRole < courseRole {
-		return model.NewUserOpResultValidationError("-1013", user.Email,
+		return model.NewUserOpResultPermissionsError("-1013", user.Email,
 			fmt.Errorf("User has a course role of '%s', which is not high enough to insert a user with course role of '%s'.", options.ContextCourseRole.String(), courseRole.String()))
 	}
 
 	// The user's course-level credentials need to be high enough to insert.
 	if options.ContextCourseRole < model.CourseRoleAdmin {
-		return model.NewUserOpResultValidationError("-1014", user.Email,
+		return model.NewUserOpResultPermissionsError("-1014", user.Email,
 			fmt.Errorf("User has a course role of '%s', which is not high enough to insert users.", options.ContextCourseRole.String()))
 	}
 
@@ -292,19 +292,19 @@ func checkServerUpdatePermissions(newUser *model.ServerUser, oldUser *model.Serv
 	// Server roles can only be modified by server admins.
 	hasServerRoleChange := ((newUser.Role != model.ServerRoleUnknown) && (newUser.Role != oldUser.Role))
 	if hasServerRoleChange && (options.ContextServerRole < model.ServerRoleAdmin) {
-		return model.NewUserOpResultValidationError("-1015", newUser.Email,
+		return model.NewUserOpResultPermissionsError("-1015", newUser.Email,
 			fmt.Errorf("User has a server role of '%s', which is not high enough to modify server roles.", options.ContextServerRole.String()))
 	}
 
 	// Cannot modify server data on a user that has higher server role.
 	if options.ContextServerRole < oldUser.Role {
-		return model.NewUserOpResultValidationError("-1016", newUser.Email,
+		return model.NewUserOpResultPermissionsError("-1016", newUser.Email,
 			fmt.Errorf("User has a server role of '%s', which is not high enough to update a user with server role of '%s'.", options.ContextServerRole.String(), oldUser.Role.String()))
 	}
 
 	// Cannot modify server data unless you are an admin or self.
 	if (oldUser.Email != options.ContextEmail) && (options.ContextServerRole < model.ServerRoleAdmin) {
-		return model.NewUserOpResultValidationError("-1017", newUser.Email,
+		return model.NewUserOpResultPermissionsError("-1017", newUser.Email,
 			fmt.Errorf("User has a server role of '%s', which is not high enough to update server-level information for another user.", options.ContextServerRole.String()))
 	}
 
@@ -324,25 +324,25 @@ func checkCourseUpdatePermissions(newUser *model.ServerUser, oldUser *model.Serv
 	// Course roles can only be modified by course admins.
 	hasCourseRoleChange := ((newCourseRole != model.CourseRoleUnknown) && (oldCourseRole != newCourseRole))
 	if hasCourseRoleChange && (options.ContextCourseRole < model.CourseRoleAdmin) {
-		return model.NewUserOpResultValidationError("-1018", newUser.Email,
+		return model.NewUserOpResultPermissionsError("-1018", newUser.Email,
 			fmt.Errorf("User has a course role of '%s', which is not high enough to modify course roles.", options.ContextCourseRole.String()))
 	}
 
 	// Cannot update course data on a user that has higher course role.
 	if options.ContextCourseRole < oldCourseRole {
-		return model.NewUserOpResultValidationError("-1019", newUser.Email,
+		return model.NewUserOpResultPermissionsError("-1019", newUser.Email,
 			fmt.Errorf("User has a course role of '%s', which is not high enough to update a user with course role of '%s'.", options.ContextCourseRole.String(), oldCourseRole.String()))
 	}
 
 	// Cannot update a user to have a higher course role than the context user.
 	if options.ContextCourseRole < newCourseRole {
-		return model.NewUserOpResultValidationError("-1022", newUser.Email,
+		return model.NewUserOpResultPermissionsError("-1022", newUser.Email,
 			fmt.Errorf("User has a course role of '%s', which is not high enough to update a user to a course role of '%s'.", options.ContextCourseRole.String(), newCourseRole.String()))
 	}
 
 	// Cannot modify course data unless you are an admin or self.
 	if (oldUser.Email != options.ContextEmail) && (options.ContextCourseRole < model.CourseRoleAdmin) {
-		return model.NewUserOpResultValidationError("-1020", newUser.Email,
+		return model.NewUserOpResultPermissionsError("-1020", newUser.Email,
 			fmt.Errorf("User has a course role of '%s', which is not high enough to update course-level information for another user.", options.ContextCourseRole.String()))
 	}
 
