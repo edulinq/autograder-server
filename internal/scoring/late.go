@@ -30,16 +30,10 @@ type LateDaysInfo struct {
 }
 
 // This assumes that all assignments are in the LMS.
-func ApplyLatePolicy(
-	assignment *model.Assignment,
-	users map[string]*model.CourseUser,
-	scores map[string]*model.ScoringInfo,
-	dryRun bool) error {
+func ApplyLatePolicy(assignment *model.Assignment, users map[string]*model.CourseUser, scores map[string]*model.ScoringInfo, dryRun bool) error {
 	policy := assignment.GetLatePolicy()
-
-	// Start with each submission getting the raw score.
-	for _, score := range scores {
-		score.Score = score.RawScore
+	if policy == nil {
+		return nil
 	}
 
 	// Empty policy does nothing.
@@ -87,7 +81,7 @@ func ApplyLatePolicy(
 }
 
 // Apply a common policy.
-func applyBaselinePolicy(assignment *model.Assignment, policy model.LateGradingPolicy, users map[string]*model.CourseUser, scores map[string]*model.ScoringInfo, dueDate timestamp.Timestamp) {
+func applyBaselinePolicy(assignment *model.Assignment, policy *model.LateGradingPolicy, users map[string]*model.CourseUser, scores map[string]*model.ScoringInfo, dueDate timestamp.Timestamp) {
 	for email, score := range scores {
 		score.NumDaysLate = computeLateDays(dueDate, score.SubmissionTime, policy.GraceMinutes)
 
@@ -106,7 +100,7 @@ func applyBaselinePolicy(assignment *model.Assignment, policy model.LateGradingP
 }
 
 // Apply a constant penalty per late day.
-func applyConstantPolicy(policy model.LateGradingPolicy, scores map[string]*model.ScoringInfo, penalty float64) {
+func applyConstantPolicy(policy *model.LateGradingPolicy, scores map[string]*model.ScoringInfo, penalty float64) {
 	for _, score := range scores {
 		if score.NumDaysLate <= 0 {
 			continue
@@ -116,7 +110,7 @@ func applyConstantPolicy(policy model.LateGradingPolicy, scores map[string]*mode
 	}
 }
 
-func applyLateDaysPolicy(policy model.LateGradingPolicy, assignment *model.Assignment, users map[string]*model.CourseUser, scores map[string]*model.ScoringInfo, penalty float64, dryRun bool) error {
+func applyLateDaysPolicy(policy *model.LateGradingPolicy, assignment *model.Assignment, users map[string]*model.CourseUser, scores map[string]*model.ScoringInfo, penalty float64, dryRun bool) error {
 	if policy.LateDaysLMSID == "" {
 		return fmt.Errorf("Cannot apply late days policy, late days assignment LMS ID is empty.")
 	}
@@ -196,7 +190,7 @@ func applyLateDaysPolicy(policy model.LateGradingPolicy, assignment *model.Assig
 	return nil
 }
 
-func updateLateDays(policy model.LateGradingPolicy, assignment *model.Assignment, lateDaysToUpdate map[string]*LateDaysInfo, dryRun bool) error {
+func updateLateDays(policy *model.LateGradingPolicy, assignment *model.Assignment, lateDaysToUpdate map[string]*LateDaysInfo, dryRun bool) error {
 	// Update late days.
 	// Info that does NOT have a LMSCommentID will get the autograder comment added in.
 	grades := make([]*lmstypes.SubmissionScore, 0, len(lateDaysToUpdate))
@@ -253,7 +247,7 @@ func updateLateDays(policy model.LateGradingPolicy, assignment *model.Assignment
 	return nil
 }
 
-func fetchLateDays(policy model.LateGradingPolicy, assignment *model.Assignment) (map[string]*LateDaysInfo, error) {
+func fetchLateDays(policy *model.LateGradingPolicy, assignment *model.Assignment) (map[string]*LateDaysInfo, error) {
 	// Fetch available late days from the LMS.
 	lmsLateDaysScores, err := lms.FetchAssignmentScores(assignment.GetCourse(), policy.LateDaysLMSID)
 	if err != nil {

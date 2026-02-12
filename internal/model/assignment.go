@@ -25,9 +25,10 @@ type Assignment struct {
 	DueDate   *timestamp.Timestamp `json:"due-date,omitempty"`
 	MaxPoints float64              `json:"max-points,omitempty"`
 
-	LMSID      string             `json:"lms-id,omitempty"`
-	LatePolicy *LateGradingPolicy `json:"late-policy,omitempty"`
+	LMSID string `json:"lms-id,omitempty"`
 
+	// Inheritable
+	LatePolicy      *LateGradingPolicy   `json:"late-policy,omitempty"`
 	SubmissionLimit *SubmissionLimitInfo `json:"submission-limit,omitempty"`
 
 	docker.ImageInfo
@@ -82,12 +83,24 @@ func (this *Assignment) GetLMSID() string {
 	return this.LMSID
 }
 
-func (this *Assignment) GetLatePolicy() LateGradingPolicy {
-	return *this.LatePolicy
+// Get the late policy to use for this assignment or nil if there is no late policy.
+// If this assignment has no late policy, the course will be checked.
+func (this *Assignment) GetLatePolicy() *LateGradingPolicy {
+	if this.LatePolicy != nil {
+		return this.LatePolicy
+	}
+
+	return this.Course.LatePolicy
 }
 
+// Get the submission limit to use for this assignment or nil if there is no submission limit.
+// If this assignment has no submission limit, the course will be checked.
 func (this *Assignment) GetSubmissionLimit() *SubmissionLimitInfo {
-	return this.SubmissionLimit
+	if this.SubmissionLimit != nil {
+		return this.SubmissionLimit
+	}
+
+	return this.Course.SubmissionLimit
 }
 
 func (this *Assignment) ImageName() string {
@@ -125,11 +138,6 @@ func (this *Assignment) Validate() error {
 
 	this.imageLock = &sync.Mutex{}
 
-	// Inherit submission limit from course or leave nil.
-	if (this.SubmissionLimit == nil) && (this.Course.SubmissionLimit != nil) {
-		this.SubmissionLimit = this.Course.SubmissionLimit
-	}
-
 	if this.SubmissionLimit != nil {
 		err = this.SubmissionLimit.Validate()
 		if err != nil {
@@ -137,18 +145,11 @@ func (this *Assignment) Validate() error {
 		}
 	}
 
-	// Inherit late policy from course or default to empty.
-	if this.LatePolicy == nil {
-		if this.Course.LatePolicy != nil {
-			this.LatePolicy = this.Course.LatePolicy
-		} else {
-			this.LatePolicy = &LateGradingPolicy{}
+	if this.LatePolicy != nil {
+		err = this.LatePolicy.Validate()
+		if err != nil {
+			return fmt.Errorf("Failed to validate late policy: '%w'.", err)
 		}
-	}
-
-	err = this.LatePolicy.Validate()
-	if err != nil {
-		return fmt.Errorf("Failed to validate late policy: '%w'.", err)
 	}
 
 	if this.RelSourceDir == "" {

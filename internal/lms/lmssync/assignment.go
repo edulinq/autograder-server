@@ -112,8 +112,13 @@ func syncAssignments(course *model.Course, dryRun bool) (*model.AssignmentSyncRe
 // Then (only after all assignments have been checked), look for an approximate name match.
 // If there is ambiguity on the name match, don't match.
 func matchLateDaysAssignment(localAssignment *model.Assignment, lmsAssignments []*lmstypes.Assignment) *lmstypes.Assignment {
-	lateLMSID := localAssignment.LatePolicy.LateDaysLMSID
-	lateLMSName := localAssignment.LatePolicy.LateDaysLMSName
+	latePolicy := localAssignment.GetLatePolicy()
+	if latePolicy == nil {
+		return nil
+	}
+
+	lateLMSID := latePolicy.LateDaysLMSID
+	lateLMSName := latePolicy.LateDaysLMSName
 
 	if (lateLMSID == "") && (lateLMSName == "") {
 		return nil
@@ -173,14 +178,17 @@ func mergeAssignment(localAssignment *model.Assignment, lmsAssignment *lmstypes.
 	}
 
 	if lateLMSAssignment != nil {
-		if localAssignment.LatePolicy.LateDaysLMSID == "" {
-			localAssignment.LatePolicy.LateDaysLMSID = lateLMSAssignment.ID
-			changed = true
-		}
+		latePolicy := localAssignment.GetLatePolicy()
+		if latePolicy != nil {
+			if latePolicy.LateDaysLMSID == "" {
+				latePolicy.LateDaysLMSID = lateLMSAssignment.ID
+				changed = true
+			}
 
-		if (localAssignment.LatePolicy.LateDaysLMSName == "") && (lateLMSAssignment.Name != "") {
-			localAssignment.LatePolicy.LateDaysLMSName = lateLMSAssignment.Name
-			changed = true
+			if (latePolicy.LateDaysLMSName == "") && (lateLMSAssignment.Name != "") {
+				latePolicy.LateDaysLMSName = lateLMSAssignment.Name
+				changed = true
+			}
 		}
 	}
 

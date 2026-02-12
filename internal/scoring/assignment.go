@@ -38,6 +38,11 @@ func FullAssignmentScoringAndUpload(assignment *model.Assignment, dryRun bool) (
 		return nil, fmt.Errorf("Failed to get scoring information: '%w'.", err)
 	}
 
+	// Start with each submission getting the raw score.
+	for _, scoringInfo := range scoringInfos {
+		scoringInfo.Score = scoringInfo.RawScore
+	}
+
 	err = ApplyLatePolicy(assignment, users, scoringInfos, dryRun)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to apply late policy: '%w'.", err)

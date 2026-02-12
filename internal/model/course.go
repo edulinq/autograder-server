@@ -22,10 +22,8 @@ type Course struct {
 
 	LMS *LMSAdapter `json:"lms,omitempty"`
 
-	// A common late policy that assignments can inherit.
-	LatePolicy *LateGradingPolicy `json:"late-policy,omitempty"`
-
-	// A common submission limit that assignments can inherit.
+	// Inheritable by assignments.
+	LatePolicy      *LateGradingPolicy   `json:"late-policy,omitempty"`
 	SubmissionLimit *SubmissionLimitInfo `json:"submission-limit,omitempty"`
 
 	Tasks []*UserTaskInfo `json:"tasks,omitempty"`
