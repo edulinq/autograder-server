@@ -169,10 +169,6 @@ func TestRejectSubmissionLimitNotAffectedByRegrade(test *testing.T) {
 	db.ResetForTesting()
 	defer db.ResetForTesting()
 
-	oldDockerVal := config.DOCKER_DISABLE.Get()
-	config.DOCKER_DISABLE.Set(true)
-	defer config.DOCKER_DISABLE.Set(oldDockerVal)
-
 	assignment := db.MustGetTestSubmissionAssignment()
 	assignment.DueDate = nil
 

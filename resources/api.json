@@ -3001,6 +3001,10 @@
                     "type": "string"
                 },
                 {
+                    "name": "proxy-time",
+                    "type": "int64"
+                },
+                {
                     "name": "proxy-user",
                     "type": "string"
                 },
