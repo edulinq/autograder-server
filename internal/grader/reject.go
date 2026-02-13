@@ -132,14 +132,17 @@ func checkSubmissionLimit(assignment *model.Assignment, email string) (RejectRea
 		return nil, err
 	}
 
+	// Filter out proxy/regrade submissions so they don't count against the student's limit.
+	studentHistory := filterStudentSubmissions(history)
+
 	if *limit.Max >= 0 {
-		if len(history) >= *limit.Max {
+		if len(studentHistory) >= *limit.Max {
 			return &RejectMaxAttempts{*limit.Max}, nil
 		}
 	}
 
 	if limit.Window != nil {
-		reason, err := checkSubmissionLimitWindow(limit.Window, history, now)
+		reason, err := checkSubmissionLimitWindow(limit.Window, studentHistory, now)
 		if err != nil {
 			return nil, err
 		}
@@ -150,6 +153,18 @@ func checkSubmissionLimit(assignment *model.Assignment, email string) (RejectRea
 	}
 
 	return nil, nil
+}
+
+// Filter out proxy/regrade submissions, returning only student-initiated submissions.
+func filterStudentSubmissions(history []*model.SubmissionHistoryItem) []*model.SubmissionHistoryItem {
+	result := make([]*model.SubmissionHistoryItem, 0, len(history))
+	for _, item := range history {
+		if item.ProxyUser == "" {
+			result = append(result, item)
+		}
+	}
+
+	return result
 }
 
 func checkSubmissionLimitWindow(window *model.SubmittionLimitWindow,

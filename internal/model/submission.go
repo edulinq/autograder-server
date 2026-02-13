@@ -19,6 +19,7 @@ type SubmissionHistoryItem struct {
 	CourseID         string              `json:"course-id"`
 	AssignmentID     string              `json:"assignment-id"`
 	User             string              `json:"user"`
+	ProxyUser        string              `json:"proxy-user,omitempty"`
 	Message          string              `json:"message"`
 	MaxPoints        float64             `json:"max_points"`
 	Score            float64             `json:"score"`
@@ -32,6 +33,7 @@ func (this GradingInfo) ToHistoryItem() *SubmissionHistoryItem {
 		CourseID:         this.CourseID,
 		AssignmentID:     this.AssignmentID,
 		User:             this.User,
+		ProxyUser:        this.ProxyUser,
 		Message:          this.Message,
 		MaxPoints:        this.MaxPoints,
 		Score:            this.Score,
