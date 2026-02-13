@@ -223,7 +223,7 @@ func TestRegradeBase(test *testing.T) {
 			testCase.expected.Options.RegradeCutoff = responseContent.Options.RegradeCutoff
 		}
 
-		// Clear the submission IDs to pass the equality check.
+		// Clear the submission IDs and proxy user to pass the equality check.
 		for _, expected := range testCase.expected.Results {
 			if expected == nil {
 				continue
@@ -231,6 +231,7 @@ func TestRegradeBase(test *testing.T) {
 
 			expected.ShortID = ""
 			expected.ID = ""
+			expected.ProxyUser = ""
 		}
 
 		for _, actual := range responseContent.Results {
@@ -240,6 +241,7 @@ func TestRegradeBase(test *testing.T) {
 
 			actual.ShortID = ""
 			actual.ID = ""
+			actual.ProxyUser = ""
 		}
 
 		if !reflect.DeepEqual(testCase.expected, responseContent) {
