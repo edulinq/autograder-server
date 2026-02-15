@@ -225,6 +225,7 @@ func TestRegradeBase(test *testing.T) {
 
 		// Clear variable fields and set the expected proxy user for the equality check.
 		proxyEmail := testCase.proxyUser + "@test.edulinq.org"
+
 		for _, expected := range testCase.expected.Results {
 			if expected == nil {
 				continue

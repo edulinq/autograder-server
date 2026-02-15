@@ -164,7 +164,7 @@ func testMaxWindowAttempts(test *testing.T, user string, expectReject bool) {
 	submitForRejection(test, assignment, user, false, reason)
 }
 
-// Ensure that proxy/regrade submissions do not count against a student's submission limit.
+// Ensure that proxy submissions do not count against a student's submission limit.
 func TestRejectSubmissionLimitNotAffectedByRegrade(test *testing.T) {
 	db.ResetForTesting()
 	defer db.ResetForTesting()
@@ -181,7 +181,7 @@ func TestRejectSubmissionLimitNotAffectedByRegrade(test *testing.T) {
 	// First student submission should succeed (1/2 used).
 	submitForRejection(test, assignment, user, false, nil)
 
-	// Simulate a regrade/proxy submission (CheckRejection=false, ProxyUser set).
+	// Simulate a proxy submission (CheckRejection = false, ProxyUser set).
 	// This creates a new submission entry in the DB with ProxyUser populated.
 	submitProxyForRejection(test, assignment, user)
 

@@ -152,13 +152,16 @@ func checkSubmissionLimit(assignment *model.Assignment, email string) (RejectRea
 	return nil, nil
 }
 
-// Count student-initiated submissions, excluding proxy/regrade submissions.
+// Count student-initiated submissions, excluding proxy submissions.
 func countStudentSubmissions(history []*model.SubmissionHistoryItem) int {
 	count := 0
 	for _, item := range history {
-		if item.ProxyUser == "" {
-			count++
+		// Skip proxy submissions (instructor regrades) - they don't count against student limits.
+		if item.ProxyUser != "" {
+			continue
 		}
+
+		count++
 	}
 
 	return count
@@ -175,6 +178,7 @@ func checkSubmissionLimitWindow(window *model.SubmittionLimitWindow,
 
 	windowCount := 0
 	for _, item := range history {
+		// Skip proxy submissions (instructor regrades) - they don't count against student limits.
 		if item.ProxyUser != "" {
 			continue
 		}
