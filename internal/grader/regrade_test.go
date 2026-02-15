@@ -427,6 +427,8 @@ func checkAndClearIDs(test *testing.T, i int, expectedResults map[string]*model.
 		expected.ShortID = ""
 		actual.ID = ""
 		expected.ID = ""
+		actual.ProxyTime = nil
+		expected.ProxyTime = nil
 	}
 
 	return false
