@@ -170,6 +170,14 @@ func sendAPIResponse(apiRequest ValidAPIRequest, response http.ResponseWriter,
 
 	stats.AsyncStoreMetric(&metric)
 
+	// Log API Response at TRACE level (payload truncated via LongLogString).
+	log.Trace("API Response",
+		log.NewAttr("endpoint", endpoint),
+		log.NewAttr("status", apiResponse.HTTPStatus),
+		log.NewAttr("success", apiResponse.Success),
+		log.NewAttr("duration_ms", (apiResponse.EndTimestamp-startTime).ToMSecs()),
+		log.NewAttr("payload", log.LongLogString(payload).String()))
+
 	// When in testing mode, allow cross-origin requests.
 	if config.UNIT_TESTING_MODE.Get() {
 		response.Header().Set("Access-Control-Allow-Origin", "*")
