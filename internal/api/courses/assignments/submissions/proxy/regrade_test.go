@@ -223,9 +223,7 @@ func TestRegradeBase(test *testing.T) {
 			testCase.expected.Options.RegradeCutoff = responseContent.Options.RegradeCutoff
 		}
 
-		// Clear variable fields and set the expected proxy user for the equality check.
-		proxyEmail := testCase.proxyUser + "@test.edulinq.org"
-
+		// Clear the submission IDs to pass the equality check.
 		for _, expected := range testCase.expected.Results {
 			if expected == nil {
 				continue
@@ -233,7 +231,7 @@ func TestRegradeBase(test *testing.T) {
 
 			expected.ShortID = ""
 			expected.ID = ""
-			expected.ProxyUser = proxyEmail
+			expected.ProxyUser = testCase.proxyUser + "@test.edulinq.org"
 			expected.ProxyTime = nil
 		}
 

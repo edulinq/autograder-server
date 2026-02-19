@@ -181,7 +181,7 @@ func TestRejectSubmissionLimitNotAffectedByRegrade(test *testing.T) {
 	// First student submission should succeed (1/2 used).
 	submitForRejection(test, assignment, user, false, nil)
 
-	// Simulate a proxy submission (CheckRejection = false, ProxyUser set).
+	// Simulate a proxy submission. CheckRejection is false and ProxyUser is set.
 	// This creates a new submission entry in the DB with ProxyUser populated.
 	submitProxyForRejection(test, assignment, user)
 
