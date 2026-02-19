@@ -231,6 +231,8 @@ func TestRegradeBase(test *testing.T) {
 
 			expected.ShortID = ""
 			expected.ID = ""
+			expected.ProxyUser = testCase.proxyUser + "@test.edulinq.org"
+			expected.ProxyTime = nil
 		}
 
 		for _, actual := range responseContent.Results {
@@ -240,6 +242,7 @@ func TestRegradeBase(test *testing.T) {
 
 			actual.ShortID = ""
 			actual.ID = ""
+			actual.ProxyTime = nil
 		}
 
 		if !reflect.DeepEqual(testCase.expected, responseContent) {

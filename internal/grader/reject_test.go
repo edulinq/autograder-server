@@ -164,6 +164,59 @@ func testMaxWindowAttempts(test *testing.T, user string, expectReject bool) {
 	submitForRejection(test, assignment, user, false, reason)
 }
 
+// Ensure that proxy submissions do not count against a student's submission limit.
+func TestRejectSubmissionLimitNotAffectedByRegrade(test *testing.T) {
+	db.ResetForTesting()
+	defer db.ResetForTesting()
+
+	assignment := db.MustGetTestSubmissionAssignment()
+	assignment.DueDate = nil
+
+	// Set the max submissions to 2.
+	maxValue := 2
+	assignment.SubmissionLimit = &model.SubmissionLimitInfo{Max: &maxValue}
+
+	user := "course-other@test.edulinq.org"
+
+	// First student submission should succeed (1/2 used).
+	submitForRejection(test, assignment, user, false, nil)
+
+	// Simulate a proxy submission. CheckRejection is false and ProxyUser is set.
+	// This creates a new submission entry in the DB with ProxyUser populated.
+	submitProxyForRejection(test, assignment, user)
+
+	// Second student submission should still succeed (only 1 student submission counted, not 2).
+	// Without the fix, this would be rejected because the regrade entry inflates the count.
+	submitForRejection(test, assignment, user, false, nil)
+
+	// Third student submission should be rejected (2/2 student submissions used).
+	submitForRejection(test, assignment, user, false, &RejectMaxAttempts{2})
+}
+
+func submitProxyForRejection(test *testing.T, assignment *model.Assignment, user string) {
+	config.UNIT_TESTING_MODE.Set(false)
+	defer config.UNIT_TESTING_MODE.Set(true)
+
+	submissionPath := filepath.Join(assignment.GetSourceDir(), SUBMISSION_RELPATH)
+
+	gradeOptions := GetDefaultGradeOptions()
+	gradeOptions.CheckRejection = false
+	gradeOptions.ProxyUser = "course-admin@test.edulinq.org"
+
+	result, _, softError, err := Grade(context.Background(), assignment, submissionPath, user, TEST_MESSAGE, gradeOptions)
+	if err != nil {
+		test.Fatalf("Failed to grade proxy submission: '%v'.", err)
+	}
+
+	if softError != "" {
+		test.Fatalf("Proxy submission got a soft error: '%s'.", softError)
+	}
+
+	if result == nil {
+		test.Fatalf("Did not get a grading result for proxy submission.")
+	}
+}
+
 func submitForRejection(test *testing.T, assignment *model.Assignment, user string, allowLate bool, expectedRejection RejectReason) (
 	*model.GradingResult, RejectReason, error) {
 	// Disable testing mode to check for rejection.
