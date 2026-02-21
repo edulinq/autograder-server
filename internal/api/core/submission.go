@@ -39,7 +39,7 @@ func GradeRequestSubmission(request APIRequestAssignmentContext, submissionPath 
 		logAttributes := append([]any{err, log.NewAttr("stdout", stdout), log.NewAttr("stderr", stderr)}, getLogAttributesFromAPIRequest(&request)...)
 		log.Warn("Submission failed internally.", logAttributes...)
 
-		return nil, NewInternalError("-635", &request, "Submission failed due to an internal error.").Err(err)
+		return nil, NewInternalError("-644", &request, "Submission failed due to an internal error.").Err(err)
 	}
 
 	if reject != nil {
