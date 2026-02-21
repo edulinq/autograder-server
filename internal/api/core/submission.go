@@ -16,8 +16,8 @@ type BaseSubmitResponse struct {
 	GradingInfo    *model.GradingInfo `json:"result"`
 }
 
-func GradeRequestSubmission(request APIRequestAssignmentContext, submissionPath string, email string, message string, options grader.GradeOptions) BaseSubmitResponse {
-	response := BaseSubmitResponse{}
+func GradeRequestSubmission(request APIRequestAssignmentContext, submissionPath string, email string, message string, options grader.GradeOptions) (*BaseSubmitResponse, *APIError) {
+	response := &BaseSubmitResponse{}
 
 	result, reject, failureMessage, err := grader.Grade(
 		request.Context,
@@ -39,7 +39,7 @@ func GradeRequestSubmission(request APIRequestAssignmentContext, submissionPath 
 		logAttributes := append([]any{err, log.NewAttr("stdout", stdout), log.NewAttr("stderr", stderr)}, getLogAttributesFromAPIRequest(&request)...)
 		log.Warn("Submission failed internally.", logAttributes...)
 
-		return response
+		return nil, NewInternalError("-635", &request, "Submission failed due to an internal error.").Err(err)
 	}
 
 	if reject != nil {
@@ -48,7 +48,7 @@ func GradeRequestSubmission(request APIRequestAssignmentContext, submissionPath 
 
 		response.Rejected = true
 		response.Message = reject.String()
-		return response
+		return response, nil
 	}
 
 	if failureMessage != "" {
@@ -64,13 +64,13 @@ func GradeRequestSubmission(request APIRequestAssignmentContext, submissionPath 
 		log.Debug("Submission got a soft error.", logAttributes...)
 
 		response.Message = ConcatStdOutErr(failureMessage, stdout, stderr)
-		return response
+		return response, nil
 	}
 
 	response.GradingSuccess = true
 	response.GradingInfo = result.Info
 
-	return response
+	return response, nil
 }
 
 // Concat stdout/stderr to the given message.

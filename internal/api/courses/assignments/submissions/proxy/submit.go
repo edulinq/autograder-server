@@ -39,7 +39,12 @@ func HandleSubmit(request *SubmitRequest) (*SubmitResponse, *core.APIError) {
 	gradeOptions.ProxyUser = request.User.Email
 	gradeOptions.ProxyTime = grader.ResolveProxyTime(request.ProxyTime, request.Assignment)
 
-	response.BaseSubmitResponse = core.GradeRequestSubmission(request.APIRequestAssignmentContext, request.Files.TempDir, request.ProxyUser.Email, request.Message, gradeOptions)
+	base, apiErr := core.GradeRequestSubmission(request.APIRequestAssignmentContext, request.Files.TempDir, request.ProxyUser.Email, request.Message, gradeOptions)
+	if apiErr != nil {
+		return nil, apiErr
+	}
+
+	response.BaseSubmitResponse = *base
 
 	return &response, nil
 }
