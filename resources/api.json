@@ -1861,6 +1861,37 @@
                 }
             ]
         },
+        "users/tokens/list": {
+            "description": "List all the token information for a server user.",
+            "input": [
+                {
+                    "name": "target-user",
+                    "type": "core.TargetServerUserSelfOrAdmin"
+                },
+                {
+                    "description": "The email of the user making this request.",
+                    "name": "user-email",
+                    "required": true,
+                    "type": "string"
+                },
+                {
+                    "description": "The password of the user making this request.",
+                    "name": "user-pass",
+                    "required": true,
+                    "type": "string"
+                }
+            ],
+            "output": [
+                {
+                    "name": "found-user",
+                    "type": "bool"
+                },
+                {
+                    "name": "tokens",
+                    "type": "[]model.TokenInfo"
+                }
+            ]
+        },
         "users/upsert": {
             "description": "Upsert one or more users to the server (update if exists, insert otherwise).",
             "input": [
