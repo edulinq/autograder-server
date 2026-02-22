@@ -63,6 +63,16 @@ func TestCallEndpoint(test *testing.T) {
 				"--describe",
 			},
 		},
+		{
+			CommonCMDTestCase: cmd.CommonCMDTestCase{
+				ExpectedStdout: EXPECTED_COURSES_ASSIGNMENTS_LIST_TABLE,
+			},
+			endpoint: "assignments/list",
+			parameters: []string{
+				"course-id:course101",
+				"--table",
+			},
+		},
 
 		// Multiple Matches
 		{

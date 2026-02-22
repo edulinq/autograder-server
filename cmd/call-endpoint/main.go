@@ -101,7 +101,7 @@ func main() {
 		printFunc = cmd.ConvertAPIResponseToTable
 	}
 
-	cmd.MustHandleCMDRequestAndExitFull(args.EndpointSubstring, request, nil, args.CommonOptions, printFunc)
+	cmd.MustHandleCMDRequestAndExitFull(endpoint, request, nil, args.CommonOptions, printFunc)
 }
 
 // Update the parameters that will be sent to the server according to the specific endpoint.
