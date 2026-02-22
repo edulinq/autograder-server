@@ -210,8 +210,10 @@ func TestUserServerUserValidate(test *testing.T) {
 			baseTestServerUser.Salt,
 			baseTestServerUser.Password,
 			[]*Token{&Token{
+				TokenInfo: TokenInfo{
+					Source: TokenSourceServer,
+				},
 				HexDigest: "ZZZ",
-				Source:    TokenSourceServer,
 			}},
 			baseTestServerUser.CourseInfo,
 			nil,

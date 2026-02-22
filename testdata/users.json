@@ -9,8 +9,8 @@
             "hex-digest": "841adfc8e2020a678c383fb56e9459da77c75fb813ab9e443a582902de0fecf6",
             "source": "password",
             "name": "password",
-            "CreationTime": 0,
-            "AccessTime": 0
+            "creation-time": 0,
+            "access-time": 0
         },
         "tokens": [
             {
@@ -18,8 +18,17 @@
                 "hex-digest": "74f72731825e660f5720ffe86e71103c5534171f1e4ef9fe2d8c73d0121ef192",
                 "source": "user",
                 "name": "test",
-                "creation-time": 1727118291215,
-                "access-time": 1727118291215
+                "creation-time": 0,
+                "access-time": 0
+            },
+            {
+                "_cleartext": "d2932b918fd30f1011836112683e20de",
+                "access-time": 0,
+                "creation-time": 0,
+                "id": "01b437a6-0de0-4278-b87d-bcfa128cbf36",
+                "name": "test",
+                "source": "user",
+                "hex-digest": "1aebbbea41732c9e4e513a51074f11a2eed1ba59221aafb17faa6fbf01a1f27c"
             }
         ],
         "course-info": {
@@ -43,10 +52,20 @@
             "hex-digest": "f511fa2bd83e5423b29356d798d20a214de9534e4d64fb3956a184b1a91cc66a",
             "source": "password",
             "name": "password",
-            "CreationTime": 0,
-            "AccessTime": 0
+            "creation-time": 0,
+            "access-time": 0
         },
-        "tokens": [],
+        "tokens": [
+            {
+                "_cleartext": "3ffd2f75491d257a668ce807271bccee",
+                "access-time": 0,
+                "creation-time": 0,
+                "id": "ee954969-094c-461f-b4fd-23eb48f78ebf",
+                "name": "test",
+                "source": "user",
+                "hex-digest": "b093533fdb2da72d7fb7bbae97d802e69bb2dbc574b60780614830d7c244c35d"
+            }
+        ],
         "course-info": {
             "course-languages": {
                 "role": "grader",
@@ -68,10 +87,20 @@
             "hex-digest": "0b3420a7c188254522f4aecebe427d0e3fda03067e6289b7524914de26cedb11",
             "source": "password",
             "name": "password",
-            "CreationTime": 0,
-            "AccessTime": 0
+            "creation-time": 0,
+            "access-time": 0
         },
-        "tokens": [],
+        "tokens": [
+            {
+                "_cleartext": "0ec8427e3d32c1b9c8632dda0f8f8b76",
+                "access-time": 0,
+                "creation-time": 0,
+                "id": "2e664056-e378-4bc5-9cb2-5f1539262ccb",
+                "name": "test",
+                "source": "user",
+                "hex-digest": "7a1f1f73e439a3892ca38b4e9a49a5aa3c0f0953ccbe3b43efbfea12a28bafc2"
+            }
+        ],
         "course-info": {
             "course-languages": {
                 "role": "other",
@@ -93,10 +122,20 @@
             "hex-digest": "200217c44f4c36e5d6380c1c6fb639a9f1749dc81a79b13261fa2cd5806f3d06",
             "source": "password",
             "name": "password",
-            "CreationTime": 0,
-            "AccessTime": 0
+            "creation-time": 0,
+            "access-time": 0
         },
-        "tokens": [],
+        "tokens": [
+            {
+                "_cleartext": "38ecd3a6f6e2152f0bb3dca0deacf640",
+                "access-time": 0,
+                "creation-time": 0,
+                "id": "2459a3d8-cd3b-43fa-9f39-cbf8dfd45175",
+                "name": "test",
+                "source": "user",
+                "hex-digest": "9ae4c11a7a91eabfcfb7d376ea13cc583f725e037563ff48ac83103942b939dc"
+            }
+        ],
         "course-info": {
             "course-languages": {
                 "role": "owner",
@@ -118,10 +157,20 @@
             "hex-digest": "9188d2d8ec097dffd93ce06e16ab01d0344d648923fbc45535e93ad16c5d8c58",
             "source": "password",
             "name": "password",
-            "CreationTime": 0,
-            "AccessTime": 0
+            "creation-time": 0,
+            "access-time": 0
         },
-        "tokens": [],
+        "tokens": [
+            {
+                "_cleartext": "97beae436f093dd3cb6ddc632bce1d16",
+                "access-time": 0,
+                "creation-time": 0,
+                "id": "dddbc97c-36e4-43fc-b5a0-478aade61c53",
+                "name": "test",
+                "source": "user",
+                "hex-digest": "0f08e9ed74e449ca800af8a5236eeeaa51eed428bd18fb968ff77d8b95bd1de6"
+            }
+        ],
         "course-info": {
             "course-languages": {
                 "role": "student",
@@ -146,7 +195,17 @@
             "creation-time": 0,
             "access-time": 0
         },
-        "tokens": [],
+        "tokens": [
+            {
+                "_cleartext": "562bd08851b21bbbf730e47991128d81",
+                "access-time": 0,
+                "creation-time": 0,
+                "id": "9217c24e-d56c-49bf-b32f-b0551732b47c",
+                "name": "test",
+                "source": "user",
+                "hex-digest": "e95458cc4a8e7b262e9af2ccfa887da5c931c735098c5daa06afb7ed3a36fb99"
+            }
+        ],
         "course-info": {}
     },
     "extra-course-student-2@test.edulinq.org": {
@@ -162,7 +221,17 @@
             "creation-time": 0,
             "access-time": 0
         },
-        "tokens": [],
+        "tokens": [
+            {
+                "_cleartext": "bcd72b521cebe8751d78f1bbed517a4b",
+                "access-time": 0,
+                "creation-time": 0,
+                "id": "93189ccd-0a23-4b16-8f47-f7c80e9b9f9c",
+                "name": "test",
+                "source": "user",
+                "hex-digest": "de7f71bacc3fa80e7f5e2df05cc73e9f35af4d0bbfb59d7ec234ea5e7ca6b426"
+            }
+        ],
         "course-info": {}
     },
     "extra-course-student-3@test.edulinq.org": {
@@ -178,7 +247,17 @@
             "creation-time": 0,
             "access-time": 0
         },
-        "tokens": [],
+        "tokens": [
+            {
+                "_cleartext": "1680eb19d6904fe2f572df8ba012c6c4",
+                "access-time": 0,
+                "creation-time": 0,
+                "id": "b4436119-0d80-4cdf-9fbd-24d77fb5ee65",
+                "name": "test",
+                "source": "user",
+                "hex-digest": "079ac0187a31f88dcd7eb97749ebb4831b8b4fe7fbf1cc15b8ceaef65da50780"
+            }
+        ],
         "course-info": {}
     },
     "extra-course-student-4@test.edulinq.org": {
@@ -194,7 +273,17 @@
             "creation-time": 0,
             "access-time": 0
         },
-        "tokens": [],
+        "tokens": [
+            {
+                "_cleartext": "bf9f4203892fbba9dfe78c371ca08c02",
+                "access-time": 0,
+                "creation-time": 0,
+                "id": "3e2f642e-64bb-4da8-a861-ae71725c00d3",
+                "name": "test",
+                "source": "user",
+                "hex-digest": "59b5ae2dc7686c1c2d090d0c5e9733d09c85c6cc1a61d2e5810ac032d8c8a7bc"
+            }
+        ],
         "course-info": {}
     },
     "server-admin@test.edulinq.org": {
@@ -210,7 +299,17 @@
             "creation-time": 0,
             "access-time": 0
         },
-        "tokens": [],
+        "tokens": [
+            {
+                "_cleartext": "61aa86de8ccb3097583bf4324262ba7e",
+                "access-time": 0,
+                "creation-time": 0,
+                "id": "db281f47-22a8-409b-be53-812534c80a8a",
+                "name": "test",
+                "source": "user",
+                "hex-digest": "72545679cad9aaf352077453613a71e66ca9b1ff31c8819933efe3212df1caf8"
+            }
+        ],
         "course-info": {}
     },
     "server-creator@test.edulinq.org": {
@@ -226,7 +325,17 @@
             "creation-time": 0,
             "access-time": 0
         },
-        "tokens": [],
+        "tokens": [
+            {
+                "_cleartext": "bf0b99a5991bc67ef03c0fb9b302b448",
+                "access-time": 0,
+                "creation-time": 0,
+                "id": "44b25809-7ce8-4f9b-a73e-2459bc809309",
+                "name": "test",
+                "source": "user",
+                "hex-digest": "2711c34c69c0b113b04708dabc02b23e86f0368b9f576aad60affe70271808c0"
+            }
+        ],
         "course-info": {}
     },
     "server-owner@test.edulinq.org": {
@@ -242,7 +351,17 @@
             "creation-time": 0,
             "access-time": 0
         },
-        "tokens": [],
+        "tokens": [
+            {
+                "_cleartext": "f1fe1332d4f84bd66a35897b41050a92",
+                "access-time": 0,
+                "creation-time": 0,
+                "id": "a9ed41a5-9e2a-4db6-aa55-7a0cfdb6de34",
+                "name": "test",
+                "source": "user",
+                "hex-digest": "9538d06c3aa5a396984e921e7a68f2e9ebced7b10cc0d13b4197ac2393a6f30d"
+            }
+        ],
         "course-info": {}
     },
     "server-user@test.edulinq.org": {
@@ -258,7 +377,17 @@
             "creation-time": 0,
             "access-time": 0
         },
-        "tokens": [],
+        "tokens": [
+            {
+                "_cleartext": "0b6e8b232098c05f407f4ef17f6ee74b",
+                "access-time": 0,
+                "creation-time": 0,
+                "id": "f8d1e487-0574-4f8d-a610-a62ad252db88",
+                "name": "test",
+                "source": "user",
+                "hex-digest": "ec8c4deeb07ee2d535f977117732b75fb83e4e09068ddc1797148add303c767f"
+            }
+        ],
         "course-info": {}
     }
 }

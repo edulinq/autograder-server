@@ -465,7 +465,7 @@ func (this *DBTests) DBTestUserDeleteTokenBase(test *testing.T) {
 	// Ensure the token exists.
 	user := MustGetServerUser(email)
 
-	if len(user.Tokens) != 1 {
+	if len(user.Tokens) != 2 {
 		test.Fatalf("Incorrect number of tokens. Expected: 1, Actual: %d.", len(user.Tokens))
 	}
 

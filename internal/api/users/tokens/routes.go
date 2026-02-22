@@ -7,8 +7,8 @@ import (
 )
 
 var routes []core.Route = []core.Route{
-	core.MustNewAPIRoute(`users/tokens/create`, HandleTokensCreate),
-	core.MustNewAPIRoute(`users/tokens/delete`, HandleTokensDelete),
+	core.MustNewAPIRoute(`users/tokens/create`, HandleCreate),
+	core.MustNewAPIRoute(`users/tokens/delete`, HandleDelete),
 }
 
 func GetRoutes() *[]core.Route {

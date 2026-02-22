@@ -28,15 +28,22 @@ const (
 	TokenSourcePassword             = "password"
 )
 
-// Tokens refer to any hex string that is used for authentication.
-// They can come from different sources but all act the same.
-type Token struct {
+// Information about a token that does not contain the actual token bytes.
+// This is safe to pass to authorized users.
+type TokenInfo struct {
 	ID           string              `json:"id"`
-	HexDigest    string              `json:"hex-digest"`
 	Source       TokenSource         `json:"source"`
 	Name         string              `json:"name"`
 	CreationTime timestamp.Timestamp `json:"creation-time"`
 	AccessTime   timestamp.Timestamp `json:"access-time"`
+}
+
+// Tokens refer to any hex string that is used for authentication.
+// They can come from different sources but all act the same.
+type Token struct {
+	TokenInfo
+
+	HexDigest string `json:"hex-digest"`
 }
 
 const (
@@ -67,12 +74,14 @@ func NewToken(input string, salt string, source TokenSource, name string) (*Toke
 	now := timestamp.Now()
 
 	token := &Token{
-		ID:           util.UUID(),
-		HexDigest:    digest,
-		Source:       source,
-		Name:         name,
-		CreationTime: now,
-		AccessTime:   now,
+		TokenInfo: TokenInfo{
+			ID:           util.UUID(),
+			Source:       source,
+			Name:         name,
+			CreationTime: now,
+			AccessTime:   now,
+		},
+		HexDigest: digest,
 	}
 
 	return token, token.Validate()
@@ -193,12 +202,14 @@ func (this *Token) Validate() error {
 
 func (this *Token) Clone() *Token {
 	return &Token{
-		ID:           this.ID,
-		HexDigest:    this.HexDigest,
-		Source:       this.Source,
-		Name:         this.Name,
-		CreationTime: this.CreationTime,
-		AccessTime:   this.AccessTime,
+		TokenInfo: TokenInfo{
+			ID:           this.ID,
+			Source:       this.Source,
+			Name:         this.Name,
+			CreationTime: this.CreationTime,
+			AccessTime:   this.AccessTime,
+		},
+		HexDigest: this.HexDigest,
 	}
 }
 

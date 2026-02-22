@@ -54,7 +54,6 @@ func TestUpsertUser(test *testing.T) {
 				Salt:     PLACEHOLDER_SALT,
 				Password: PLACEHOLDER_PASSWORD_TOKEN,
 				Role:     model.ServerRoleUser,
-				Tokens:   []*model.Token{},
 			},
 		},
 
@@ -88,7 +87,6 @@ func TestUpsertUser(test *testing.T) {
 				Salt:     PLACEHOLDER_SALT,
 				Password: PLACEHOLDER_PASSWORD_TOKEN,
 				Role:     model.ServerRoleUser,
-				Tokens:   []*model.Token{},
 				CourseInfo: map[string]*model.UserCourseInfo{
 					"new-course": &model.UserCourseInfo{
 						Role:  model.CourseRoleStudent,
@@ -121,7 +119,6 @@ func TestUpsertUser(test *testing.T) {
 				Salt:     PLACEHOLDER_SALT,
 				Password: PLACEHOLDER_PASSWORD_TOKEN,
 				Role:     model.ServerRoleUser,
-				Tokens:   []*model.Token{},
 				CourseInfo: map[string]*model.UserCourseInfo{
 					"course-languages": &model.UserCourseInfo{
 						Role:  model.CourseRoleStudent,
@@ -162,7 +159,6 @@ func TestUpsertUser(test *testing.T) {
 				Salt:     PLACEHOLDER_SALT,
 				Password: PLACEHOLDER_PASSWORD_TOKEN,
 				Role:     model.ServerRoleUser,
-				Tokens:   []*model.Token{},
 				CourseInfo: map[string]*model.UserCourseInfo{
 					"course-languages": &model.UserCourseInfo{
 						Role:  model.CourseRoleStudent,
@@ -204,7 +200,6 @@ func TestUpsertUser(test *testing.T) {
 				Salt:     PLACEHOLDER_SALT,
 				Password: PLACEHOLDER_PASSWORD_TOKEN,
 				Role:     model.ServerRoleUser,
-				Tokens:   []*model.Token{},
 				CourseInfo: map[string]*model.UserCourseInfo{
 					"course-languages": &model.UserCourseInfo{
 						Role:  model.CourseRoleStudent,
@@ -243,7 +238,6 @@ func TestUpsertUser(test *testing.T) {
 				Salt:     PLACEHOLDER_SALT,
 				Password: PLACEHOLDER_PASSWORD_TOKEN,
 				Role:     model.ServerRoleUser,
-				Tokens:   []*model.Token{},
 				CourseInfo: map[string]*model.UserCourseInfo{
 					"course-languages": &model.UserCourseInfo{
 						Role:  model.CourseRoleStudent,
@@ -282,7 +276,6 @@ func TestUpsertUser(test *testing.T) {
 				Salt:     PLACEHOLDER_SALT,
 				Password: PLACEHOLDER_PASSWORD_TOKEN,
 				Role:     model.ServerRoleUser,
-				Tokens:   []*model.Token{},
 				CourseInfo: map[string]*model.UserCourseInfo{
 					"course-languages": &model.UserCourseInfo{
 						Role:  model.CourseRoleStudent,
@@ -320,7 +313,6 @@ func TestUpsertUser(test *testing.T) {
 				Salt:     PLACEHOLDER_SALT,
 				Password: PLACEHOLDER_PASSWORD_TOKEN,
 				Role:     model.ServerRoleUser,
-				Tokens:   []*model.Token{},
 				CourseInfo: map[string]*model.UserCourseInfo{
 					"course-languages": &model.UserCourseInfo{
 						Role:  model.CourseRoleStudent,
@@ -358,7 +350,6 @@ func TestUpsertUser(test *testing.T) {
 				Salt:     PLACEHOLDER_SALT,
 				Password: PLACEHOLDER_PASSWORD_TOKEN,
 				Role:     model.ServerRoleUser,
-				Tokens:   []*model.Token{},
 			},
 		},
 
@@ -388,16 +379,6 @@ func TestUpsertUser(test *testing.T) {
 				Salt:     PLACEHOLDER_SALT,
 				Password: PLACEHOLDER_PASSWORD_TOKEN,
 				Role:     model.ServerRoleUser,
-				Tokens: []*model.Token{
-					&model.Token{
-						ID:           "df0a1f16-9cd8-4395-8509-10ae314fe6fc",
-						HexDigest:    "74f72731825e660f5720ffe86e71103c5534171f1e4ef9fe2d8c73d0121ef192",
-						Source:       "user",
-						Name:         "test",
-						CreationTime: 1727118291215,
-						AccessTime:   1727118291215,
-					},
-				},
 				CourseInfo: map[string]*model.UserCourseInfo{
 					"course-languages": &model.UserCourseInfo{
 						Role:  model.CourseRoleAdmin,
@@ -434,7 +415,6 @@ func TestUpsertUser(test *testing.T) {
 				Salt:     PLACEHOLDER_SALT,
 				Password: PLACEHOLDER_PASSWORD_TOKEN,
 				Role:     model.ServerRoleUser,
-				Tokens:   []*model.Token{},
 				CourseInfo: map[string]*model.UserCourseInfo{
 					"course-languages": &model.UserCourseInfo{
 						Role:  model.CourseRoleStudent,
@@ -470,7 +450,6 @@ func TestUpsertUser(test *testing.T) {
 				Salt:     PLACEHOLDER_SALT,
 				Password: PLACEHOLDER_PASSWORD_TOKEN,
 				Role:     model.ServerRoleUser,
-				Tokens:   []*model.Token{},
 				CourseInfo: map[string]*model.UserCourseInfo{
 					"course-languages": &model.UserCourseInfo{
 						Role:  model.CourseRoleStudent,
@@ -508,7 +487,6 @@ func TestUpsertUser(test *testing.T) {
 				Salt:     PLACEHOLDER_SALT,
 				Password: PLACEHOLDER_PASSWORD_TOKEN,
 				Role:     model.ServerRoleUser,
-				Tokens:   []*model.Token{},
 			},
 		},
 
@@ -537,7 +515,6 @@ func TestUpsertUser(test *testing.T) {
 				Salt:     PLACEHOLDER_SALT,
 				Password: PLACEHOLDER_PASSWORD_TOKEN,
 				Role:     model.ServerRoleUser,
-				Tokens:   []*model.Token{},
 			},
 		},
 
@@ -565,7 +542,6 @@ func TestUpsertUser(test *testing.T) {
 				Salt:     PLACEHOLDER_SALT,
 				Password: PLACEHOLDER_PASSWORD_TOKEN,
 				Role:     model.ServerRoleUser,
-				Tokens:   []*model.Token{},
 				CourseInfo: map[string]*model.UserCourseInfo{
 					"course-languages": &model.UserCourseInfo{
 						Role:  model.CourseRoleOwner,
@@ -1085,17 +1061,7 @@ func cloneTestServerUser(user *model.ServerUser) *model.ServerUser {
 		return nil
 	}
 
-	// Specially copy the tokens (since we will be passing nils instead of real tokens).
-	newTokens := append([]*model.Token(nil), user.Tokens...)
-	oldTokens := user.Tokens
-
-	user.Tokens = nil
-	clone := user.Clone()
-
-	user.Tokens = oldTokens
-	clone.Tokens = newTokens
-
-	return clone
+	return user.Clone()
 }
 
 func testUpsertDryRun(test *testing.T, caseIndex int, sendEmails bool, options UpsertUsersOptions, expected *model.UserOpResult) bool {
@@ -1181,7 +1147,8 @@ func testUpsert(test *testing.T, caseIndex int, sendEmails bool, options UpsertU
 		return false
 	}
 
-	// Do not check salt, password, and tokens exactly, just ensure that the counts match.
+	// Do not check salt, and password exactly.
+	// Ignore tokens.
 
 	expectedHasSalt := (expectedUser.Salt != nil)
 	actualHasSalt := (actualUser.Salt != nil)
@@ -1194,14 +1161,6 @@ func testUpsert(test *testing.T, caseIndex int, sendEmails bool, options UpsertU
 	actualHasPassword := (actualUser.Password != nil)
 	if expectedHasPassword != actualHasPassword {
 		test.Errorf("Case (wet run, email: %v) %d: Password not as expected. Expected: '%v', Actual: '%v'.", sendEmails, caseIndex, expectedHasPassword, actualHasPassword)
-		return false
-	}
-
-	expectedTokenCount := len(expectedUser.Tokens)
-	actualTokenCount := len(actualUser.Tokens)
-
-	if expectedTokenCount != actualTokenCount {
-		test.Errorf("Case (wet run, email: %v) %d: Token count not as expected. Expected: '%d', Actual: '%d'.", sendEmails, caseIndex, expectedTokenCount, actualTokenCount)
 		return false
 	}
 

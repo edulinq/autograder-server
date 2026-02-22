@@ -5,76 +5,172 @@ import (
 
 	"github.com/edulinq/autograder/internal/api/core"
 	"github.com/edulinq/autograder/internal/db"
+	"github.com/edulinq/autograder/internal/model"
 	"github.com/edulinq/autograder/internal/util"
 )
 
-func TestTokensDelete(test *testing.T) {
-	db.ResetForTesting()
+func TestDeleteBase(test *testing.T) {
 	defer db.ResetForTesting()
 
-	email := "course-admin@test.edulinq.org"
-	user := db.MustGetServerUser(email)
+	// See testdata/users.json for tokens.
+	testCases := []struct {
+		email        string
+		targetUser   string
+		id           string
+		missingUser  bool
+		missingToken bool
+		locator      string
+	}{
+		// Self
+		{
+			email: "course-student@test.edulinq.org",
+			id:    "dddbc97c-36e4-43fc-b5a0-478aade61c53",
+		},
 
-	initialTokenCount := len(user.Tokens)
-	if initialTokenCount == 0 {
-		test.Fatalf("Test user has no tokens.")
+		// Self - Missing
+		{
+			email: "course-student@test.edulinq.org",
+			id:    "ZZZ",
+		},
+
+		// Self - No ID
+		{
+			email:   "course-student@test.edulinq.org",
+			locator: "-038",
+		},
+
+		// Other
+		{
+			email:      "server-admin@test.edulinq.org",
+			targetUser: "course-student@test.edulinq.org",
+			id:         "dddbc97c-36e4-43fc-b5a0-478aade61c53",
+		},
+
+		// Other - Token Missing
+		{
+			email:      "server-admin@test.edulinq.org",
+			targetUser: "course-student@test.edulinq.org",
+			id:         "ZZZ",
+		},
+
+		// Other - Bad Permissions
+		{
+			email:      "course-admin@test.edulinq.org",
+			targetUser: "course-student@test.edulinq.org",
+			locator:    "-046",
+		},
+
+		// Other - User Missing
+		{
+			email:       "server-admin@test.edulinq.org",
+			id:          "ZZZ",
+			targetUser:  "ZZZ",
+			missingUser: true,
+		},
 	}
 
-	args := map[string]any{
-		"token-id": user.Tokens[0].ID,
-	}
+	for i, testCase := range testCases {
+		db.ResetForTesting()
 
-	response := core.SendTestAPIRequest(test, `users/tokens/delete`, args)
-	if !response.Success {
-		test.Fatalf("Response not successful: '%s'.", util.MustToJSONIndent(response))
-	}
+		targetEmail := testCase.targetUser
+		if targetEmail == "" {
+			targetEmail = testCase.email
+		}
 
-	var responseContent TokensDeleteResponse
-	util.MustJSONFromString(util.MustToJSON(response.Content), &responseContent)
+		targetUser, err := db.GetServerUser(targetEmail)
+		if err != nil {
+			test.Errorf("Case %d: Failed to get initial target user: '%v'.", i, err)
+			continue
+		}
 
-	if !responseContent.Found {
-		test.Fatalf("Could not find token to delete.")
-	}
+		var initialToken *model.Token
+		if targetUser != nil {
+			for _, token := range targetUser.Tokens {
+				if token.ID == testCase.id {
+					initialToken = token
+					break
+				}
+			}
+		}
 
-	user = db.MustGetServerUser(email)
+		fields := map[string]any{
+			"target-user": testCase.targetUser,
+			"token-id":    testCase.id,
+		}
 
-	newTokenCount := len(user.Tokens)
+		response := core.SendTestAPIRequestFull(test, "users/tokens/delete", fields, nil, testCase.email)
+		if !response.Success {
+			if testCase.locator != response.Locator {
+				test.Errorf("Case %d: Incorrect error returned. Expected: '%s', Actual: '%s'.",
+					i, testCase.locator, response.Locator)
+			}
 
-	if newTokenCount != (initialTokenCount - 1) {
-		test.Fatalf("Incorrect token count. Expected: %d, Found: %d.", (initialTokenCount - 1), newTokenCount)
-	}
-}
+			continue
+		}
 
-func TestTokensDeleteNoTokens(test *testing.T) {
-	db.ResetForTesting()
-	defer db.ResetForTesting()
+		if testCase.locator != "" {
+			test.Errorf("Case %d: Did not get an expected error. Expected: '%s'", i, testCase.locator)
+			continue
+		}
 
-	email := "server-admin@test.edulinq.org"
-	user := db.MustGetServerUser(email)
+		var responseContent DeleteResponse
+		util.MustJSONFromString(util.MustToJSON(response.Content), &responseContent)
 
-	if len(user.Tokens) != 0 {
-		test.Fatalf("Test user has tokens.")
-	}
+		targetUser, err = db.GetServerUser(targetEmail)
+		if err != nil {
+			test.Errorf("Case %d: Failed to get final target user: '%v'.", i, err)
+			continue
+		}
 
-	args := map[string]any{
-		"token-id": "abc123",
-	}
+		if targetUser == nil {
+			if !testCase.missingUser {
+				test.Errorf("Case %d: Found no user when one was expected.", i)
+				continue
+			}
 
-	response := core.SendTestAPIRequest(test, `users/tokens/delete`, args)
-	if !response.Success {
-		test.Fatalf("Response not successful: '%s'.", util.MustToJSONIndent(response))
-	}
+			if responseContent.FoundUser {
+				test.Errorf("Case %d: Found user not as expected. Expected: false, Actual: true.", i)
+				continue
+			}
 
-	var responseContent TokensDeleteResponse
-	util.MustJSONFromString(util.MustToJSON(response.Content), &responseContent)
+			continue
+		}
 
-	if responseContent.Found {
-		test.Fatalf("Found token to delete (when there should not be one).")
-	}
+		if testCase.missingUser {
+			test.Errorf("Case %d: Found a user when none was expected.", i)
+			continue
+		}
 
-	user = db.MustGetServerUser(email)
+		if !responseContent.FoundUser {
+			test.Errorf("Case %d: Found user not as expected. Expected: true, Actual: false.", i)
+			continue
+		}
 
-	if len(user.Tokens) != 0 {
-		test.Fatalf("User somehow gained tokens...")
+		if !responseContent.FoundToken {
+			if initialToken != nil {
+				test.Errorf("Case %d: Found token when none was expected.", i)
+				continue
+			}
+
+			continue
+		}
+
+		if initialToken == nil {
+			test.Errorf("Case %d: Found no token when one was expected.", i)
+			continue
+		}
+
+		var finalToken *model.Token
+		for _, token := range targetUser.Tokens {
+			if token.ID == testCase.id {
+				finalToken = token
+				break
+			}
+		}
+
+		if finalToken != nil {
+			test.Errorf("Case %d: Found token when it should have been deleted.", i)
+			continue
+		}
 	}
 }
