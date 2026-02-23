@@ -93,6 +93,15 @@ func (this *Assignment) GetLatePolicy() *LateGradingPolicy {
 	return this.Course.LatePolicy
 }
 
+// GetMaxPoints returns the effective max points for this assignment.
+// Falls back to the course-level max points if the assignment has none configured.
+func (this *Assignment) GetMaxPoints() float64 {
+	if this.MaxPoints > 0 {
+		return this.MaxPoints
+	}
+	return this.Course.MaxPoints
+}
+
 // Get the submission limit to use for this assignment or nil if there is no submission limit.
 // If this assignment has no submission limit, the course will be checked.
 func (this *Assignment) GetSubmissionLimit() *SubmissionLimitInfo {

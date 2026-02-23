@@ -225,6 +225,133 @@ func testGradeCancelOrTimeout(test *testing.T, ctx context.Context, noDocker boo
 	}
 }
 
+func TestGradeSaveFailedSubmission(test *testing.T) {
+	db.ResetForTesting()
+	defer db.ResetForTesting()
+
+	// DOCKER_DISABLE skips the image build in prepForGrading().
+	// options.NoDocker (set below) skips Docker only in runGrader(); it does not affect prepForGrading().
+	// Both are required for a fully Docker-free test — see TestNoDockerSubmissions for the same pattern.
+	oldDockerVal := config.DOCKER_DISABLE.Get()
+	config.DOCKER_DISABLE.Set(true)
+	defer config.DOCKER_DISABLE.Set(oldDockerVal)
+
+	resetFunc := SetNoDockerTimeoutWaitDelayMSForTesting(10)
+	defer resetFunc()
+
+	submissionDir := filepath.Join(util.ShouldGetThisDir(), "testdata", "bash-sleep")
+	assignment := db.MustGetAssignment("course-languages", "bash")
+	assignment.MaxRuntimeSecs = 1
+
+	// Use a user with no pre-existing fixture submissions so history is predictable.
+	user := "testonly-failsave@test.edulinq.org"
+
+	options := GetDefaultGradeOptions()
+	options.NoDocker = true
+	options.CheckRejection = false
+
+	_, reject, softError, err := Grade(context.Background(), assignment, submissionDir, user, "", options)
+	if err != nil {
+		test.Fatalf("Grade() returned an unexpected hard error: '%v'.", err)
+	}
+
+	if reject != nil {
+		test.Fatalf("Submission was rejected: '%s'.", reject.String())
+	}
+
+	if softError == "" {
+		test.Fatalf("Expected a soft error but got none.")
+	}
+
+	history, err := db.GetSubmissionHistory(assignment, user)
+	if err != nil {
+		test.Fatalf("Failed to get submission history: '%v'.", err)
+	}
+
+	if len(history) != 1 {
+		test.Fatalf("Expected exactly 1 history entry, got %d.", len(history))
+	}
+
+	item := history[0]
+
+	if item.Score != 0 {
+		test.Fatalf("Expected score 0, got %f.", item.Score)
+	}
+
+	if item.User != user {
+		test.Fatalf("Expected user '%s', got '%s'.", user, item.User)
+	}
+
+	if item.CourseID != assignment.GetCourse().GetID() {
+		test.Fatalf("Expected course ID '%s', got '%s'.", assignment.GetCourse().GetID(), item.CourseID)
+	}
+
+	if item.AssignmentID != assignment.GetID() {
+		test.Fatalf("Expected assignment ID '%s', got '%s'.", assignment.GetID(), item.AssignmentID)
+	}
+
+	if item.ID == "" {
+		test.Fatalf("Expected non-empty ID.")
+	}
+
+	if item.ShortID == "" {
+		test.Fatalf("Expected non-empty ShortID.")
+	}
+}
+
+func TestGradeFailedSubmissionMaxPoints(test *testing.T) {
+	db.ResetForTesting()
+	defer db.ResetForTesting()
+
+	// DOCKER_DISABLE skips the image build in prepForGrading().
+	// options.NoDocker (set below) skips Docker only in runGrader(); it does not affect prepForGrading().
+	// Both are required for a fully Docker-free test — see TestNoDockerSubmissions for the same pattern.
+	oldDockerVal := config.DOCKER_DISABLE.Get()
+	config.DOCKER_DISABLE.Set(true)
+	defer config.DOCKER_DISABLE.Set(oldDockerVal)
+
+	resetFunc := SetNoDockerTimeoutWaitDelayMSForTesting(10)
+	defer resetFunc()
+
+	submissionDir := filepath.Join(util.ShouldGetThisDir(), "testdata", "bash-sleep")
+	assignment := db.MustGetAssignment("course-languages", "bash")
+	assignment.MaxRuntimeSecs = 1
+	assignment.MaxPoints = 10
+
+	// Use a user with no pre-existing fixture submissions so history is predictable.
+	user := "testonly-failsave@test.edulinq.org"
+
+	options := GetDefaultGradeOptions()
+	options.NoDocker = true
+	options.CheckRejection = false
+
+	_, reject, softError, err := Grade(context.Background(), assignment, submissionDir, user, "", options)
+	if err != nil {
+		test.Fatalf("Grade() returned an unexpected hard error: '%v'.", err)
+	}
+
+	if reject != nil {
+		test.Fatalf("Submission was rejected: '%s'.", reject.String())
+	}
+
+	if softError == "" {
+		test.Fatalf("Expected a soft error but got none.")
+	}
+
+	history, err := db.GetSubmissionHistory(assignment, user)
+	if err != nil {
+		test.Fatalf("Failed to get submission history: '%v'.", err)
+	}
+
+	if len(history) != 1 {
+		test.Fatalf("Expected exactly 1 history entry, got %d.", len(history))
+	}
+
+	if history[0].MaxPoints != 10 {
+		test.Fatalf("Expected MaxPoints 10, got %f.", history[0].MaxPoints)
+	}
+}
+
 func TestGradeTruncatedOutputNoTruncation(test *testing.T) {
 	testTruncatedOutput(test, 20, false)
 }

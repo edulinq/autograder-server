@@ -10,6 +10,7 @@ import (
 	"github.com/edulinq/autograder/internal/db"
 	"github.com/edulinq/autograder/internal/docker"
 	"github.com/edulinq/autograder/internal/lockmanager"
+	"github.com/edulinq/autograder/internal/log"
 	"github.com/edulinq/autograder/internal/model"
 	"github.com/edulinq/autograder/internal/stats"
 	"github.com/edulinq/autograder/internal/timestamp"
@@ -91,13 +92,40 @@ func Grade(ctx context.Context, assignment *model.Assignment, submissionPath str
 	gradingResult.Stdout = stdout
 	gradingResult.Stderr = stderr
 
-	// Check for hard grading errors.
-	if err != nil {
-		return &gradingResult, nil, "", err
-	}
+	// Check for hard or soft grading errors.
+	// Save every attempt regardless of outcome.
+	if err != nil || softGradingError != "" {
+		var failureInfo model.GradingInfo
+		failureInfo.ID = fullSubmissionID
+		failureInfo.ShortID = submissionID
+		failureInfo.CourseID = assignment.GetCourse().GetID()
+		failureInfo.AssignmentID = assignment.GetID()
+		failureInfo.User = user
+		failureInfo.Message = message
+		failureInfo.ProxyUser = options.ProxyUser
+		failureInfo.MaxPoints = assignment.GetMaxPoints()
+		// Score and Questions are left at their zero values (0.0 and nil).
 
-	// Check for soft grading errors.
-	if softGradingError != "" {
+		if options.ProxyTime == nil {
+			failureInfo.GradingStartTime = startTimestamp
+			failureInfo.GradingEndTime = endTimestamp
+		} else {
+			failureInfo.GradingStartTime = *options.ProxyTime
+			failureInfo.GradingEndTime = *options.ProxyTime + (endTimestamp - startTimestamp)
+			failureInfo.ProxyStartTime = &startTimestamp
+			failureInfo.ProxyEndTime = &endTimestamp
+		}
+
+		gradingResult.Info = &failureInfo
+
+		saveErr := db.SaveSubmission(assignment, &gradingResult)
+		if saveErr != nil {
+			log.Warn("Failed to save failed submission.", assignment, saveErr, log.NewAttr("user", user))
+		}
+
+		if err != nil {
+			return &gradingResult, nil, "", err
+		}
 		return &gradingResult, nil, softGradingError, nil
 	}
 

@@ -24,6 +24,7 @@ type Course struct {
 
 	// Inheritable by assignments.
 	LatePolicy      *LateGradingPolicy   `json:"late-policy,omitempty"`
+	MaxPoints       float64              `json:"max-points,omitempty"`
 	SubmissionLimit *SubmissionLimitInfo `json:"submission-limit,omitempty"`
 
 	Tasks []*UserTaskInfo `json:"tasks,omitempty"`
@@ -100,6 +101,10 @@ func (this *Course) Validate() error {
 		if err != nil {
 			return fmt.Errorf("Failed to validate late policy: '%w'.", err)
 		}
+	}
+
+	if this.MaxPoints < 0 {
+		return fmt.Errorf("Max points cannot be negative: %f.", this.MaxPoints)
 	}
 
 	if this.SubmissionLimit != nil {
