@@ -24,6 +24,7 @@ type ImageSource interface {
 	GetSourceDir() string
 	GetCachePath() string
 	GetFileCachePath() string
+	GetImageName() string
 	GetImageInfo() *ImageInfo
 	GetImageLock() *sync.Mutex
 }
@@ -164,7 +165,7 @@ func CheckFileChanges(imageSource ImageSource, quick bool) (bool, error) {
 // If it does not exist, it will be pulled.
 // To check if the image is listed, the RepoTags field will be checked for the image's name.
 func EnsureImage(name string) error {
-	image, err := GetImageInfo(name)
+	image, err := GetImageSummary(name)
 	if err != nil {
 		return err
 	}
@@ -178,7 +179,7 @@ func EnsureImage(name string) error {
 	return PullImage(name)
 }
 
-func GetImageInfo(name string) (*image.Summary, error) {
+func GetImageSummary(name string) (*image.Summary, error) {
 	docker, err := getDockerClient()
 	if err != nil {
 		return nil, err
@@ -240,33 +241,56 @@ func GetImageGzipBytes(name string) ([]byte, error) {
 	return util.ReaderToGzipBytesFull(reader, name, "")
 }
 
-func GetImage(name string, appendLatest bool) (*BuiltImageInfo, error) {
+func GetBuiltImageInfo(imageSource ImageSource, appendLatest bool) (*BuiltImageInfo, error) {
+	name := imageSource.GetImageName()
+
 	searchName := name
 	if appendLatest {
 		searchName += ":latest"
 	}
 
-	image, err := GetImageInfo(searchName)
-	if err != nil {
-		return nil, err
-	}
-
-	if image == nil {
-		return nil, fmt.Errorf("Could not find image: '%s'.", name)
-	}
-
-	gzipBytes, err := GetImageGzipBytes(name)
+	image, err := GetImageSummary(searchName)
 	if err != nil {
 		return nil, err
 	}
 
 	info := BuiltImageInfo{
-		Name:             name,
-		CreatedTimestamp: timestamp.Timestamp(image.Created * 1000),
-		Size:             image.Size,
-		GzipSize:         int64(len(gzipBytes)),
-		GzipBytes:        gzipBytes,
+		Name:       name,
+		SourceInfo: imageSource.GetImageInfo(),
 	}
 
+	if image == nil {
+		return &info, nil
+	}
+
+	info.Built = true
+	info.CreatedTimestamp = timestamp.Timestamp(image.Created * 1000)
+	info.Size = image.Size
+
 	return &info, nil
+}
+
+func GetBuiltImageInfoAndData(imageSource ImageSource, appendLatest bool) (*BuiltImageInfoAndData, error) {
+	info, err := GetBuiltImageInfo(imageSource, appendLatest)
+	if err != nil {
+		return nil, fmt.Errorf("Failed to get built image info: '%w'.", err)
+	}
+
+	fullInfo := BuiltImageInfoAndData{
+		BuiltImageInfo: *info,
+	}
+
+	if !info.Built {
+		return &fullInfo, nil
+	}
+
+	gzipBytes, err := GetImageGzipBytes(imageSource.GetImageName())
+	if err != nil {
+		return nil, err
+	}
+
+	fullInfo.GzipSize = int64(len(gzipBytes))
+	fullInfo.GzipBytes = gzipBytes
+
+	return &fullInfo, nil
 }

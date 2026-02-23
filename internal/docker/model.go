@@ -40,9 +40,17 @@ type ImageInfo struct {
 // Information about an image fetched from disk.
 type BuiltImageInfo struct {
 	Name             string              `json:"name"`
+	Built            bool                `json:"built"`
 	CreatedTimestamp timestamp.Timestamp `json:"created-timestamp"`
 	Size             int64               `json:"size-bytes"`
-	GzipSize         int64               `json:"gzip-size-bytes"`
+	SourceInfo       *ImageInfo          `json:"source-info"`
+}
+
+// Information about an image fetched from disk along with the actual image data.
+type BuiltImageInfoAndData struct {
+	BuiltImageInfo
+
+	GzipSize int64 `json:"gzip-size-bytes"`
 
 	GzipBytes []byte `json:"-"`
 }

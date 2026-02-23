@@ -193,6 +193,41 @@
                 },
                 {
                     "name": "image-info",
+                    "type": "*docker.BuiltImageInfoAndData"
+                }
+            ]
+        },
+        "courses/assignments/images/info": {
+            "description": "Get information about an assignment's current Docker image (does not include the image itself).",
+            "input": [
+                {
+                    "description": "The ID of the assignment to make this request to.",
+                    "name": "assignment-id",
+                    "required": true,
+                    "type": "string"
+                },
+                {
+                    "description": "The ID of the course to make this request to.",
+                    "name": "course-id",
+                    "required": true,
+                    "type": "string"
+                },
+                {
+                    "description": "The email of the user making this request.",
+                    "name": "user-email",
+                    "required": true,
+                    "type": "string"
+                },
+                {
+                    "description": "The password of the user making this request.",
+                    "name": "user-pass",
+                    "required": true,
+                    "type": "string"
+                }
+            ],
+            "output": [
+                {
+                    "name": "image-info",
                     "type": "*docker.BuiltImageInfo"
                 }
             ]
@@ -2228,6 +2263,36 @@
             "description": "Information about an image fetched from disk.",
             "fields": [
                 {
+                    "name": "built",
+                    "type": "bool"
+                },
+                {
+                    "name": "created-timestamp",
+                    "type": "int64"
+                },
+                {
+                    "name": "name",
+                    "type": "string"
+                },
+                {
+                    "name": "size-bytes",
+                    "type": "int64"
+                },
+                {
+                    "name": "source-info",
+                    "type": "*docker.ImageInfo"
+                }
+            ]
+        },
+        "docker.BuiltImageInfoAndData": {
+            "category": "struct",
+            "description": "Information about an image fetched from disk along with the actual image data.",
+            "fields": [
+                {
+                    "name": "built",
+                    "type": "bool"
+                },
+                {
                     "name": "created-timestamp",
                     "type": "int64"
                 },
@@ -2242,6 +2307,51 @@
                 {
                     "name": "size-bytes",
                     "type": "int64"
+                },
+                {
+                    "name": "source-info",
+                    "type": "*docker.ImageInfo"
+                }
+            ]
+        },
+        "docker.ImageInfo": {
+            "category": "struct",
+            "fields": [
+                {
+                    "name": "image",
+                    "type": "string"
+                },
+                {
+                    "name": "invocation",
+                    "type": "[]string"
+                },
+                {
+                    "name": "max-runtime-secs",
+                    "type": "int"
+                },
+                {
+                    "name": "post-static-docker-commands",
+                    "type": "[]string"
+                },
+                {
+                    "name": "post-static-file-ops",
+                    "type": "[]*util.FileOperation"
+                },
+                {
+                    "name": "post-submission-file-ops",
+                    "type": "[]*util.FileOperation"
+                },
+                {
+                    "name": "pre-static-docker-commands",
+                    "type": "[]string"
+                },
+                {
+                    "name": "pre-static-file-ops",
+                    "type": "[]*util.FileOperation"
+                },
+                {
+                    "name": "static-files",
+                    "type": "[]*util.FileSpec"
                 }
             ]
         },

@@ -8,6 +8,7 @@ import (
 
 var baseRoutes []core.Route = []core.Route{
 	core.MustNewAPIRoute(`courses/assignments/images/fetch`, HandleFetch),
+	core.MustNewAPIRoute(`courses/assignments/images/info`, HandleInfo),
 }
 
 func GetRoutes() *[]core.Route {

@@ -103,7 +103,7 @@ func (this *Assignment) GetSubmissionLimit() *SubmissionLimitInfo {
 	return this.Course.SubmissionLimit
 }
 
-func (this *Assignment) ImageName() string {
+func (this *Assignment) GetImageName() string {
 	return strings.ToLower(fmt.Sprintf("autograder.%s.%s", this.Course.GetID(), this.ID))
 }
 
@@ -156,7 +156,7 @@ func (this *Assignment) Validate() error {
 		return fmt.Errorf("Relative source dir must not be empty.")
 	}
 
-	this.ImageInfo.Name = this.ImageName()
+	this.ImageInfo.Name = this.GetImageName()
 	this.ImageInfo.BaseDirFunc = func() (string, string) {
 		return this.GetSourceDir(), this.Course.GetBaseSourceDir()
 	}

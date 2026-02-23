@@ -12,22 +12,16 @@ type FetchRequest struct {
 }
 
 type FetchResponse struct {
-	ImageInfo *docker.BuiltImageInfo `json:"image-info"`
-	Gzip      bool                   `json:"gzip"`
-	Bytes     string                 `json:"bytes"`
+	ImageInfo *docker.BuiltImageInfoAndData `json:"image-info"`
+	Gzip      bool                          `json:"gzip"`
+	Bytes     string                        `json:"bytes"`
 }
 
 // Fetch an assignment's current Docker image.
 func HandleFetch(request *FetchRequest) (*FetchResponse, *core.APIError) {
-	// Ensure the assignment docker image is built.
-	err := docker.BuildImageFromSourceQuick(request.Assignment)
+	imageInfo, err := docker.GetBuiltImageInfoAndData(request.Assignment, true)
 	if err != nil {
-		return nil, core.NewInternalError("-642", request, "Failed to build assignment image.").Err(err)
-	}
-
-	imageInfo, err := docker.GetImage(request.Assignment.ImageName(), true)
-	if err != nil {
-		return nil, core.NewInternalError("-643", request, "Failed to fetch image info.").Err(err)
+		return nil, core.NewInternalError("-642", request, "Failed to fetch built image info and data.").Err(err)
 	}
 
 	response := FetchResponse{

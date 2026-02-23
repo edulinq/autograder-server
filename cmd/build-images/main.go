@@ -78,7 +78,7 @@ func buildImages(assignments []*model.Assignment) []string {
 			log.Fatal("Failed to build image.", assignment, err)
 		}
 
-		imageNames = append(imageNames, assignment.ImageName())
+		imageNames = append(imageNames, assignment.GetImageName())
 	}
 
 	return imageNames

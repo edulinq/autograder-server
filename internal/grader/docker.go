@@ -37,7 +37,7 @@ func runDockerGrader(ctx context.Context, assignment *model.Assignment, submissi
 		return nil, nil, "", "", "", fmt.Errorf("Failed to copy over submission/input contents: '%w'.", err)
 	}
 
-	stdout, stderr, timeout, canceled, err := docker.RunGradingContainer(ctx, assignment, assignment.ImageName(), inputDir, outputDir, fullSubmissionID, assignment.MaxRuntimeSecs)
+	stdout, stderr, timeout, canceled, err := docker.RunGradingContainer(ctx, assignment, assignment.GetImageName(), inputDir, outputDir, fullSubmissionID, assignment.MaxRuntimeSecs)
 	if err != nil {
 		return nil, nil, stdout, stderr, "", err
 	}
@@ -53,7 +53,7 @@ func runDockerGrader(ctx context.Context, assignment *model.Assignment, submissi
 	resultPath := filepath.Join(outputDir, common.GRADER_OUTPUT_RESULT_FILENAME)
 	if !util.PathExists(resultPath) {
 		log.Warn("Cannot find output file after the grading container was run.",
-			log.NewAttr("path", resultPath), log.NewAttr("image", assignment.ImageName()))
+			log.NewAttr("path", resultPath), log.NewAttr("image", assignment.GetImageName()))
 
 		message := fmt.Sprintf("Cannot find output/result of grading. It is likely that the grader crashed.")
 		return nil, nil, stdout, stderr, message, nil

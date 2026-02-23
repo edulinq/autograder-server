@@ -158,9 +158,9 @@ func (this *Course) BuildAssignmentImages(force bool, quick bool, options *docke
 		err := docker.BuildImageFromSource(assignment, force, quick, options)
 		if err != nil {
 			log.Error("Failed to build assignment docker image.", err, this, assignment)
-			errors[assignment.ImageName()] = err
+			errors[assignment.GetImageName()] = err
 		} else {
-			goodImageNames = append(goodImageNames, assignment.ImageName())
+			goodImageNames = append(goodImageNames, assignment.GetImageName())
 		}
 	}
 

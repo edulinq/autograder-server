@@ -9,10 +9,11 @@ import (
 	"github.com/edulinq/autograder/internal/util"
 )
 
-func TestFetchBase(test *testing.T) {
+func TestInfoBase(test *testing.T) {
 	docker.EnsureOrSkipForTest(test)
 
 	assignment := db.MustGetTestAssignment()
+	expectedImageInfo := assignment.GetImageInfo()
 
 	// Ensure that the image is built.
 	err := docker.BuildImageFromSourceQuick(assignment)
@@ -28,6 +29,9 @@ func TestFetchBase(test *testing.T) {
 		{
 			User: "course-grader",
 		},
+		{
+			User: "server-admin",
+		},
 
 		// Invalid Permissions
 		{
@@ -41,7 +45,7 @@ func TestFetchBase(test *testing.T) {
 	}
 
 	for i, testCase := range testCases {
-		response := core.SendTestAPIRequestFull(test, "courses/assignments/images/fetch", nil, nil, testCase.User)
+		response := core.SendTestAPIRequestFull(test, "courses/assignments/images/info", nil, nil, testCase.User)
 		if !response.Success {
 			if testCase.Locator != response.Locator {
 				test.Errorf("Case %d: Incorrect error returned. Expected: '%s', Actual: '%s'.",
@@ -56,11 +60,22 @@ func TestFetchBase(test *testing.T) {
 			continue
 		}
 
-		var responseContent FetchResponse
+		var responseContent InfoResponse
 		util.MustJSONFromString(util.MustToJSON(response.Content), &responseContent)
 
-		if !responseContent.Gzip {
-			test.Errorf("Case %d: Gzip is not true.", i)
+		if assignment.GetImageName() != responseContent.ImageInfo.Name {
+			test.Errorf("Case %d: Image name not as expected. Expected: '%s', Actual: '%s'.",
+				i, assignment.GetImageName(), responseContent.ImageInfo.Name)
+			continue
+		}
+
+		// Compare JSON instead of raw structs because of hidden fields.
+		expectedImageInfoJSON := util.MustToJSONIndent(expectedImageInfo)
+		actualImageInfoJSON := util.MustToJSONIndent(responseContent.ImageInfo.SourceInfo)
+
+		if expectedImageInfoJSON != actualImageInfoJSON {
+			test.Errorf("Case %d: Image source info not as expected. Expected: '%s', Actual: '%s'.",
+				i, expectedImageInfoJSON, actualImageInfoJSON)
 			continue
 		}
 
@@ -68,19 +83,6 @@ func TestFetchBase(test *testing.T) {
 		if responseContent.ImageInfo.Size < minSizeBytes {
 			test.Errorf("Case %d: Image size less than expected. Expected: '%v', Actual: '%v'.",
 				i, minSizeBytes, responseContent.ImageInfo.Size)
-			continue
-		}
-
-		minGzipSizeBytes := int64(20 * 1024 * 1024)
-		if responseContent.ImageInfo.GzipSize < minGzipSizeBytes {
-			test.Errorf("Case %d: Image gzip size less than expected. Expected: '%v', Actual: '%v'.",
-				i, minGzipSizeBytes, responseContent.ImageInfo.GzipSize)
-			continue
-		}
-
-		if int64(len(responseContent.Bytes)) < minGzipSizeBytes {
-			test.Errorf("Case %d: Image byte length less than expected. Expected: '%v', Actual: '%v'.",
-				i, minGzipSizeBytes, len(responseContent.Bytes))
 			continue
 		}
 	}
