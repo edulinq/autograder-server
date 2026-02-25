@@ -8,9 +8,12 @@ import (
 )
 
 type PasswordResetRequest struct {
-	core.APIRequest
+	core.APIRequestUserContext
+	core.MinServerRoleUser
 
-	UserEmail core.NonEmptyString `json:"user-email" required:""`
+	// If set, reset this user's password instead of the caller's own.
+	// Only server admins may specify a target other than themselves.
+	TargetUserEmail string `json:"target-user-email"`
 }
 
 type PasswordResetResponse struct{}
@@ -19,7 +22,17 @@ type PasswordResetResponse struct{}
 func HandlePasswordReset(request *PasswordResetRequest) (*PasswordResetResponse, *core.APIError) {
 	response := &PasswordResetResponse{}
 
-	user, err := db.GetServerUser(string(request.UserEmail))
+	targetEmail := request.ServerUser.Email
+
+	if request.TargetUserEmail != "" {
+		if request.ServerUser.Role < model.ServerRoleAdmin {
+			return nil, core.NewPermissionsError("-811", request, model.ServerRoleAdmin, request.ServerUser.Role, "Resetting another user's password requires a server admin role.")
+		}
+
+		targetEmail = request.TargetUserEmail
+	}
+
+	user, err := db.GetServerUser(targetEmail)
 	if err != nil {
 		return nil, core.NewInternalError("-807", request, "Failed to get server user.").Err(err)
 	}
@@ -40,7 +53,7 @@ func HandlePasswordReset(request *PasswordResetRequest) (*PasswordResetResponse,
 
 	userOp := &model.UserOpResult{
 		BaseUserOpResult: model.BaseUserOpResult{
-			Email:    string(request.UserEmail),
+			Email:    targetEmail,
 			Modified: true,
 		},
 		CleartextPassword: cleartext,
