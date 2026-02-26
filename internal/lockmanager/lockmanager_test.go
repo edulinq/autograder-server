@@ -630,16 +630,23 @@ func TestCleanupReleasesPerKeyMutexAfterDeletion(test *testing.T) {
 // Verifies there is no data race between lock() writing lockCount/timestamp and
 // RemoveStaleLocksOnce() reading those fields. Run with -race.
 //
-// Before the fix, lock() wrote lockCount and timestamp without lockManagerMutex,
-// while RemoveStaleLocksOnce() read those fields also without lockManagerMutex.
-// Both goroutines start from the same channel signal, running concurrently on
-// separate OS threads (GOMAXPROCS > 1), so the race detector observes the
-// unsynchronized accesses and reports a DATA RACE. With the fix, both accesses
-// are guarded by lockManagerMutex and the race detector reports nothing.
+// lockManagerMutex is held externally before both goroutines start, forcing them
+// to queue on it before doing any work. Goroutine 1 is started first so it enters
+// the wait queue before goroutine 2. After sleeping >1ms (past Go's mutex starvation
+// threshold), the queue is served FIFO, so goroutine 1 is guaranteed to acquire
+// lockManagerMutex first when we release it:
 //
-// Unlock() may return "key not found" if cleanup deletes the entry after lock()
-// acquires the per-key mutex but before Unlock() runs. That error is expected
-// and intentionally ignored — the test is checking for the absence of a data race.
+//   - Goroutine 1 (lock()): acquires lockManagerMutex, releases it, acquires the
+//     per-key mutex, then writes lockCount/timestamp — without lockManagerMutex in
+//     the old code. Its vector clock never sees goroutine 2's epoch.
+//   - Goroutine 2 (RemoveStaleLocksOnce()): reads lockCount/timestamp at the first
+//     check without lockManagerMutex (old code), then acquires lockManagerMutex and
+//     finds TryLock() fails because goroutine 1 holds the per-key mutex. Goroutine 2
+//     returns without deleting the entry.
+//
+// No happens-before exists between goroutine 2's reads and goroutine 1's write, so
+// the race detector reports a DATA RACE. With the fix, both accesses are guarded by
+// lockManagerMutex — no race is reported.
 func TestLockAndStaleLockCleanupConcurrentlyNoDataRace(test *testing.T) {
 	clear()
 	defer clear()
@@ -653,30 +660,46 @@ func TestLockAndStaleLockCleanupConcurrentlyNoDataRace(test *testing.T) {
 	val, _ := lockMap.Load(key1)
 	val.(*lockData).timestamp = time.Now().Add(-2 * staleDuration)
 
-	ready := make(chan struct{})
-	var wg sync.WaitGroup
-	wg.Add(2)
+	// Hold lockManagerMutex so both goroutines block at their first lockManagerMutex
+	// acquisition before doing any racy work.
+	lockManagerMutex.Lock()
 
-	// Goroutine 1: lock() writes lockCount and timestamp.
-	// Before the fix these writes occurred without lockManagerMutex.
+	var allDone sync.WaitGroup
+	allDone.Add(2)
+
+	// Goroutine 1: lock() blocks on lockManagerMutex at function entry. Started first
+	// so it enters the wait queue before goroutine 2.
 	go func() {
-		defer wg.Done()
-		<-ready
+		defer allDone.Done()
 		Lock(key1)
-		// Error intentionally ignored: see comment above.
 		Unlock(key1)
 	}()
 
-	// Goroutine 2: RemoveStaleLocksOnce() reads lockCount and timestamp.
-	// Before the fix these reads occurred without lockManagerMutex.
+	// Small delay so goroutine 1 is in the lockManagerMutex wait queue before goroutine 2 starts.
+	time.Sleep(1 * time.Millisecond)
+
+	// Goroutine 2: in the old code, RemoveStaleLocksOnce() reads lockCount/timestamp
+	// at the first check without lockManagerMutex, then blocks on lockManagerMutex.
+	// In the fixed code, it blocks on lockManagerMutex immediately.
 	go func() {
-		defer wg.Done()
-		<-ready
+		defer allDone.Done()
 		RemoveStaleLocksOnce()
 	}()
 
-	close(ready)
-	wg.Wait()
+	// Sleep well past Go's 1ms mutex starvation threshold so the wait queue switches
+	// to FIFO. Goroutine 1 (the earlier waiter) will acquire lockManagerMutex first.
+	time.Sleep(10 * time.Millisecond)
+
+	// Release lockManagerMutex. Goroutine 1 wakes first (FIFO starvation mode):
+	// it acquires lockManagerMutex, releases it, then acquires the per-key mutex
+	// and writes lockCount/timestamp without lockManagerMutex (old code). Goroutine 2
+	// wakes next, acquires lockManagerMutex, and finds TryLock() fails (goroutine 1
+	// holds the per-key mutex), so it returns without deleting the entry.
+	// Goroutine 1's write clock never includes goroutine 2's epoch — no happens-before
+	// exists between the read and the write — the race detector catches the race.
+	lockManagerMutex.Unlock()
+
+	allDone.Wait()
 }
 
 func clear() {
