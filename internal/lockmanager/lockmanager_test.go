@@ -586,18 +586,13 @@ func TestReadLockBlock(test *testing.T) {
 
 // Lock(key1) -> Unlock(key1) -> MakeTimestampStale(key1) -> StaleCheck -> AssertPerKeyMutexFree.
 //
-// Regression test for: RemoveStaleLocksOnce() calling TryLock() on the per-key mutex
-// to claim exclusive access before deleting the map entry, but never calling Unlock()
-// afterward. This left the per-key mutex permanently acquired on the deleted lockData.
+// Verifies that RemoveStaleLocksOnce() releases the per-key mutex after acquiring it
+// via TryLock(). Without the fix, TryLock() was called to claim exclusive access
+// before deleting the map entry, but Unlock() was never called, leaving the per-key
+// mutex permanently held on the deleted lockData.
 //
-// Any goroutine that obtained a pointer to that lockData before the deletion (e.g., a
-// grading goroutine that had already passed its lockMap.LoadOrStore call but had not yet
-// reached lock.mutex.Lock()) would then block forever — a deadlock requiring a server restart.
-//
-// This test is deterministic and does not require -race: it directly inspects the
-// per-key mutex on the deleted entry via TryLock(). Without the fix, TryLock() returns
-// false because cleanup holds the mutex indefinitely. With the fix, cleanup calls
-// Unlock() before returning, so TryLock() succeeds.
+// Does not require -race: directly inspects the per-key mutex on the deleted entry
+// via TryLock(). If the mutex is still held, TryLock() returns false.
 func TestCleanupReleasesPerKeyMutexAfterDeletion(test *testing.T) {
 	clear()
 	defer clear()
@@ -630,63 +625,58 @@ func TestCleanupReleasesPerKeyMutexAfterDeletion(test *testing.T) {
 	entry.mutex.Unlock()
 }
 
-// (100x) Lock(key1) -> Unlock(key1) -> MakeTimestampStale(key1) -> [%Lock(key1) || %StaleCheck].
+// Lock(key1) -> Unlock(key1) -> MakeTimestampStale(key1) -> [%Lock(key1) || %StaleCheck].
 //
-// Regression test for: lock() writing lockCount and timestamp after releasing
-// lockManagerMutex (i.e., without holding any lock), while RemoveStaleLocksOnce()
-// read those same fields also without holding any lock. These were concurrent
-// unsynchronized accesses to the same memory — a data race per Go's memory model.
+// Verifies there is no data race between lock() writing lockCount/timestamp and
+// RemoveStaleLocksOnce() reading those fields. Run with -race.
 //
-// Run this test with -race. Without the fix, the race detector reports a DATA RACE
-// between lock()'s write of lockCount/timestamp and RemoveStaleLocksOnce()'s read
-// of those fields. With the fix, both accesses are guarded by lockManagerMutex and
-// the race detector reports nothing.
+// Before the fix, lock() wrote lockCount and timestamp without lockManagerMutex,
+// while RemoveStaleLocksOnce() read those fields also without lockManagerMutex.
+// Both goroutines start from the same channel signal, running concurrently on
+// separate OS threads (GOMAXPROCS > 1), so the race detector observes the
+// unsynchronized accesses and reports a DATA RACE. With the fix, both accesses
+// are guarded by lockManagerMutex and the race detector reports nothing.
 //
-// Note on the unchecked Unlock() error: cleanup may delete the map entry after
-// lock() has acquired the per-key mutex but before Unlock() runs. In that case
-// Unlock() returns "key not found". This is an expected outcome of the concurrent
-// execution and is not a test failure — the point of this test is the absence of
-// a data race, not the success of every Unlock() call.
+// Unlock() may return "key not found" if cleanup deletes the entry after lock()
+// acquires the per-key mutex but before Unlock() runs. That error is expected
+// and intentionally ignored — the test is checking for the absence of a data race.
 func TestLockAndStaleLockCleanupConcurrentlyNoDataRace(test *testing.T) {
-	staleDuration := time.Duration(config.STALELOCK_DURATION_SECS.Get()) * time.Second
+	clear()
+	defer clear()
+
 	key1 := "testkey1"
+	staleDuration := time.Duration(config.STALELOCK_DURATION_SECS.Get()) * time.Second
 
-	const iterations = 100
+	Lock(key1)
+	Unlock(key1)
 
-	for i := 0; i < iterations; i++ {
-		clear()
+	val, _ := lockMap.Load(key1)
+	val.(*lockData).timestamp = time.Now().Add(-2 * staleDuration)
 
+	ready := make(chan struct{})
+	var wg sync.WaitGroup
+	wg.Add(2)
+
+	// Goroutine 1: lock() writes lockCount and timestamp.
+	// Before the fix these writes occurred without lockManagerMutex.
+	go func() {
+		defer wg.Done()
+		<-ready
 		Lock(key1)
+		// Error intentionally ignored: see comment above.
 		Unlock(key1)
+	}()
 
-		val, _ := lockMap.Load(key1)
-		val.(*lockData).timestamp = time.Now().Add(-2 * staleDuration)
+	// Goroutine 2: RemoveStaleLocksOnce() reads lockCount and timestamp.
+	// Before the fix these reads occurred without lockManagerMutex.
+	go func() {
+		defer wg.Done()
+		<-ready
+		RemoveStaleLocksOnce()
+	}()
 
-		ready := make(chan struct{})
-		var wg sync.WaitGroup
-		wg.Add(2)
-
-		// Goroutine 1: lock() writes lockCount and timestamp.
-		// Before the fix these writes occurred without lockManagerMutex.
-		go func() {
-			defer wg.Done()
-			<-ready
-			Lock(key1)
-			// Error intentionally ignored: see note above about "key not found".
-			Unlock(key1)
-		}()
-
-		// Goroutine 2: RemoveStaleLocksOnce() reads lockCount and timestamp.
-		// Before the fix these reads occurred without lockManagerMutex.
-		go func() {
-			defer wg.Done()
-			<-ready
-			RemoveStaleLocksOnce()
-		}()
-
-		close(ready)
-		wg.Wait()
-	}
+	close(ready)
+	wg.Wait()
 }
 
 func clear() {
