@@ -584,6 +584,111 @@ func TestReadLockBlock(test *testing.T) {
 	}
 }
 
+// Lock(key1) -> Unlock(key1) -> MakeTimestampStale(key1) -> StaleCheck -> AssertPerKeyMutexFree.
+//
+// Regression test for: RemoveStaleLocksOnce() calling TryLock() on the per-key mutex
+// to claim exclusive access before deleting the map entry, but never calling Unlock()
+// afterward. This left the per-key mutex permanently acquired on the deleted lockData.
+//
+// Any goroutine that obtained a pointer to that lockData before the deletion (e.g., a
+// grading goroutine that had already passed its lockMap.LoadOrStore call but had not yet
+// reached lock.mutex.Lock()) would then block forever — a deadlock requiring a server restart.
+//
+// This test is deterministic and does not require -race: it directly inspects the
+// per-key mutex on the deleted entry via TryLock(). Without the fix, TryLock() returns
+// false because cleanup holds the mutex indefinitely. With the fix, cleanup calls
+// Unlock() before returning, so TryLock() succeeds.
+func TestCleanupReleasesPerKeyMutexAfterDeletion(test *testing.T) {
+	clear()
+	defer clear()
+
+	key1 := "testkey1"
+	staleDuration := time.Duration(config.STALELOCK_DURATION_SECS.Get()) * time.Second
+
+	Lock(key1)
+	Unlock(key1)
+
+	// Make the entry stale.
+	val, _ := lockMap.Load(key1)
+	entry := val.(*lockData)
+	entry.timestamp = time.Now().Add(-2 * staleDuration)
+
+	RemoveStaleLocksOnce()
+
+	// Confirm the stale entry was deleted.
+	_, exists := lockMap.Load(key1)
+	if exists {
+		test.Fatalf("Stale lock was not removed.")
+	}
+
+	// The per-key mutex on the deleted entry must be free after cleanup.
+	// Without the fix, RemoveStaleLocksOnce() called TryLock() but never Unlock(),
+	// permanently holding the mutex. TryLock() here would then return false.
+	if !entry.mutex.TryLock() {
+		test.Fatalf("Per-key mutex was permanently locked by stale lock cleanup (missing Unlock after TryLock).")
+	}
+	entry.mutex.Unlock()
+}
+
+// (100x) Lock(key1) -> Unlock(key1) -> MakeTimestampStale(key1) -> [%Lock(key1) || %StaleCheck].
+//
+// Regression test for: lock() writing lockCount and timestamp after releasing
+// lockManagerMutex (i.e., without holding any lock), while RemoveStaleLocksOnce()
+// read those same fields also without holding any lock. These were concurrent
+// unsynchronized accesses to the same memory — a data race per Go's memory model.
+//
+// Run this test with -race. Without the fix, the race detector reports a DATA RACE
+// between lock()'s write of lockCount/timestamp and RemoveStaleLocksOnce()'s read
+// of those fields. With the fix, both accesses are guarded by lockManagerMutex and
+// the race detector reports nothing.
+//
+// Note on the unchecked Unlock() error: cleanup may delete the map entry after
+// lock() has acquired the per-key mutex but before Unlock() runs. In that case
+// Unlock() returns "key not found". This is an expected outcome of the concurrent
+// execution and is not a test failure — the point of this test is the absence of
+// a data race, not the success of every Unlock() call.
+func TestLockAndStaleLockCleanupConcurrentlyNoDataRace(test *testing.T) {
+	staleDuration := time.Duration(config.STALELOCK_DURATION_SECS.Get()) * time.Second
+	key1 := "testkey1"
+
+	const iterations = 100
+
+	for i := 0; i < iterations; i++ {
+		clear()
+
+		Lock(key1)
+		Unlock(key1)
+
+		val, _ := lockMap.Load(key1)
+		val.(*lockData).timestamp = time.Now().Add(-2 * staleDuration)
+
+		ready := make(chan struct{})
+		var wg sync.WaitGroup
+		wg.Add(2)
+
+		// Goroutine 1: lock() writes lockCount and timestamp.
+		// Before the fix these writes occurred without lockManagerMutex.
+		go func() {
+			defer wg.Done()
+			<-ready
+			Lock(key1)
+			// Error intentionally ignored: see note above about "key not found".
+			Unlock(key1)
+		}()
+
+		// Goroutine 2: RemoveStaleLocksOnce() reads lockCount and timestamp.
+		// Before the fix these reads occurred without lockManagerMutex.
+		go func() {
+			defer wg.Done()
+			<-ready
+			RemoveStaleLocksOnce()
+		}()
+
+		close(ready)
+		wg.Wait()
+	}
+}
+
 func clear() {
 	lockManagerMutex = sync.Mutex{}
 	lockMap = sync.Map{}

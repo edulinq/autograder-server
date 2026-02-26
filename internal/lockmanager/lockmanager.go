@@ -68,8 +68,10 @@ func lock(key string, read bool) bool {
 
 	log.Trace("Lock", log.NewAttr("read", read), log.NewAttr("key", key))
 
+	lockManagerMutex.Lock()
 	lock.lockCount++
 	lock.timestamp = time.Now()
+	lockManagerMutex.Unlock()
 
 	return lockNotInUse
 }
@@ -116,18 +118,13 @@ func RemoveStaleLocksOnce() {
 	lockMap.Range(func(key, val any) bool {
 		lock := val.(*lockData)
 
-		// First check: If the lock isn't stale or is locked, return early.
-		if time.Since(lock.timestamp) < staleDuration || lock.lockCount > 0 {
-			return true
-		}
-
-		// Lock the lock manager in case another thread is trying to lock/unlock.
 		lockManagerMutex.Lock()
 		defer lockManagerMutex.Unlock()
 
-		// Second check: If the lock is stale and and is able to be locked, delete it.
-		if time.Since(lock.timestamp) > staleDuration && lock.mutex.TryLock() {
+		// If the lock is stale, unused, and can be exclusively acquired, delete it.
+		if time.Since(lock.timestamp) > staleDuration && lock.lockCount == 0 && lock.mutex.TryLock() {
 			lockMap.Delete(key)
+			lock.mutex.Unlock()
 		}
 
 		return true
