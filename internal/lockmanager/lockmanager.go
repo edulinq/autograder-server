@@ -128,6 +128,7 @@ func RemoveStaleLocksOnce() {
 		// Second check: If the lock is stale and and is able to be locked, delete it.
 		if time.Since(lock.timestamp) > staleDuration && lock.mutex.TryLock() {
 			lockMap.Delete(key)
+			lock.mutex.Unlock()
 		}
 
 		return true
