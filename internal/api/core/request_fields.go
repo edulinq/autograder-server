@@ -41,6 +41,7 @@ type TargetServerUser struct {
 // This type serializes to/from a string.
 // A user's email must be specified, but no error is generated if the user is not found.
 // The existence of this type in a struct also indicates that the request is at least a APIRequestCourseUserContext.
+// Server users (with adequate permissions) can also be returned.
 type TargetCourseUser struct {
 	Found bool
 	Email string
@@ -283,11 +284,25 @@ func checkRequestTargetCourseUser(endpoint string, apiRequest any, fieldIndex in
 
 	user := users[field.Email]
 	if user == nil {
-		field.Found = false
-	} else {
-		field.Found = true
-		field.User = user
+		// If the user was not found as a member of this course, check if they are a promotable user (e.g., a server admin).
+
+		serverUser, err := db.GetServerUser(field.Email)
+		if err != nil {
+			return NewInternalError("-053", courseContext, "Failed to fetch target server user from DB.").
+				Add("email", field.Email).Err(err)
+		}
+
+		if serverUser != nil {
+			user, err = serverUser.ToCourseUser(courseContext.Course.GetID(), true)
+			if err != nil {
+				return NewInternalError("-054", courseContext, "Failed to convert server user.").
+					User(serverUser.Email).Err(err)
+			}
+		}
 	}
+
+	field.Found = (user != nil)
+	field.User = user
 
 	reflect.ValueOf(apiRequest).Elem().Field(fieldIndex).Set(reflect.ValueOf(field))
 
@@ -314,10 +329,6 @@ func checkRequestTargetCourseUserSelfOrRole(endpoint string, apiRequest any, fie
 	field := reflectField.Interface().(TargetCourseUser)
 	if field.Email == "" {
 		field.Email = courseContext.User.Email
-
-		// If the user (which is the target of this request) is a server admin,
-		// insert them into the course users (they have already been escalated).
-		users[courseContext.User.Email] = courseContext.User
 	}
 
 	// Operations not on self require higher permissions.
@@ -327,11 +338,25 @@ func checkRequestTargetCourseUserSelfOrRole(endpoint string, apiRequest any, fie
 
 	user := users[field.Email]
 	if user == nil {
-		field.Found = false
-	} else {
-		field.Found = true
-		field.User = user
+		// If the user was not found as a member of this course, check if they are a promotable user (e.g., a server admin).
+
+		serverUser, err := db.GetServerUser(field.Email)
+		if err != nil {
+			return NewInternalError("-053", courseContext, "Failed to fetch target server user from DB.").
+				Add("email", field.Email).Err(err)
+		}
+
+		if serverUser != nil {
+			user, err = serverUser.ToCourseUser(courseContext.Course.GetID(), true)
+			if err != nil {
+				return NewInternalError("-054", courseContext, "Failed to convert server user.").
+					User(serverUser.Email).Err(err)
+			}
+		}
 	}
+
+	field.Found = (user != nil)
+	field.User = user
 
 	reflectField.Set(reflect.ValueOf(field))
 

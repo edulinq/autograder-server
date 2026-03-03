@@ -2166,7 +2166,7 @@
         },
         "core.TargetCourseUser": {
             "category": "struct",
-            "description": "A request having a field of this type indicates that the request is targeting a specific course user.\nThis type serializes to/from a string.\nA user's email must be specified, but no error is generated if the user is not found.\nThe existence of this type in a struct also indicates that the request is at least a APIRequestCourseUserContext."
+            "description": "A request having a field of this type indicates that the request is targeting a specific course user.\nThis type serializes to/from a string.\nA user's email must be specified, but no error is generated if the user is not found.\nThe existence of this type in a struct also indicates that the request is at least a APIRequestCourseUserContext.\nServer users (with adequate permissions) can also be returned."
         },
         "core.TargetCourseUserSelfOrGrader": {
             "category": "struct",

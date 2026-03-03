@@ -526,12 +526,12 @@ func TestTargetCourseUserSelfOrGrader(test *testing.T) {
 		return TargetCourseUserSelfOrGrader{targetCourseUser}
 	}
 
-	createRequest := func(role model.CourseUserRole, target string) *testTargetCourseUserSelfOrGraderRequestType {
+	createRequest := func(userName string, target string) *testTargetCourseUserSelfOrGraderRequestType {
 		return &testTargetCourseUserSelfOrGraderRequestType{
 			APIRequestCourseUserContext: APIRequestCourseUserContext{
 				APIRequestUserContext: APIRequestUserContext{
-					UserEmail: "course-" + role.String() + "@test.edulinq.org",
-					UserPass:  util.Sha256HexFromString("course-" + role.String()),
+					UserEmail: userName + "@test.edulinq.org",
+					UserPass:  util.Sha256HexFromString(userName),
 				},
 				CourseID: "course101",
 			},
@@ -566,12 +566,12 @@ func TestTargetCourseUserSelfOrAdmin(test *testing.T) {
 		return TargetCourseUserSelfOrAdmin{targetCourseUser}
 	}
 
-	createRequest := func(role model.CourseUserRole, target string) *testTargetCourseUserSelfOrAdminRequestType {
+	createRequest := func(userName string, target string) *testTargetCourseUserSelfOrAdminRequestType {
 		return &testTargetCourseUserSelfOrAdminRequestType{
 			APIRequestCourseUserContext: APIRequestCourseUserContext{
 				APIRequestUserContext: APIRequestUserContext{
-					UserEmail: "course-" + role.String() + "@test.edulinq.org",
-					UserPass:  util.Sha256HexFromString("course-" + role.String()),
+					UserEmail: userName + "@test.edulinq.org",
+					UserPass:  util.Sha256HexFromString(userName),
 				},
 				CourseID: "course101",
 			},
@@ -607,7 +607,7 @@ type userGetter interface {
 
 func testTargetCourseUser[T comparable, V userGetter](test *testing.T,
 	createTargetType func(TargetCourseUser) T,
-	createRequest func(model.CourseUserRole, string) V,
+	createRequest func(string, string) V,
 	isNonSelfPermError func(model.CourseUserRole) bool) {
 	course := db.MustGetTestCourse()
 
@@ -616,33 +616,40 @@ func testTargetCourseUser[T comparable, V userGetter](test *testing.T,
 		test.Fatalf("Failed to get users: '%v'.", err)
 	}
 
+	serverAdminUser := db.MustGetServerUser("server-admin@test.edulinq.org")
+
+	serverAdminCourseUser, err := serverAdminUser.ToCourseUser(course.GetID(), true)
+	if err != nil {
+		test.Fatalf("Failed to get server admin as course user: '%v'.", err)
+	}
+
 	testCases := []struct {
-		role      model.CourseUserRole
+		name      string
 		target    string
 		permError bool
 		expected  T
 	}{
 		// Self
 		{
-			role:      model.CourseRoleStudent,
+			name:      "course-student",
 			target:    "",
 			permError: false,
 			expected:  createTargetType(TargetCourseUser{true, "course-student@test.edulinq.org", users["course-student@test.edulinq.org"]}),
 		},
 		{
-			role:      model.CourseRoleStudent,
+			name:      "course-student",
 			target:    "course-student@test.edulinq.org",
 			permError: false,
 			expected:  createTargetType(TargetCourseUser{true, "course-student@test.edulinq.org", users["course-student@test.edulinq.org"]}),
 		},
 		{
-			role:      model.CourseRoleGrader,
+			name:      "course-grader",
 			target:    "",
 			permError: false,
 			expected:  createTargetType(TargetCourseUser{true, "course-grader@test.edulinq.org", users["course-grader@test.edulinq.org"]}),
 		},
 		{
-			role:      model.CourseRoleGrader,
+			name:      "course-grader",
 			target:    "course-grader@test.edulinq.org",
 			permError: false,
 			expected:  createTargetType(TargetCourseUser{true, "course-grader@test.edulinq.org", users["course-grader@test.edulinq.org"]}),
@@ -650,31 +657,31 @@ func testTargetCourseUser[T comparable, V userGetter](test *testing.T,
 
 		// Other
 		{
-			role:      model.CourseRoleOther,
+			name:      "course-other",
 			target:    "course-student@test.edulinq.org",
 			permError: isNonSelfPermError(model.CourseRoleOther),
 			expected:  createTargetType(TargetCourseUser{true, "course-student@test.edulinq.org", users["course-student@test.edulinq.org"]}),
 		},
 		{
-			role:      model.CourseRoleStudent,
+			name:      "course-student",
 			target:    "course-grader@test.edulinq.org",
 			permError: isNonSelfPermError(model.CourseRoleStudent),
 			expected:  createTargetType(TargetCourseUser{true, "course-grader@test.edulinq.org", users["course-grader@test.edulinq.org"]}),
 		},
 		{
-			role:      model.CourseRoleGrader,
+			name:      "course-grader",
 			target:    "course-student@test.edulinq.org",
 			permError: isNonSelfPermError(model.CourseRoleGrader),
 			expected:  createTargetType(TargetCourseUser{true, "course-student@test.edulinq.org", users["course-student@test.edulinq.org"]}),
 		},
 		{
-			role:      model.CourseRoleAdmin,
+			name:      "course-admin",
 			target:    "course-student@test.edulinq.org",
 			permError: isNonSelfPermError(model.CourseRoleAdmin),
 			expected:  createTargetType(TargetCourseUser{true, "course-student@test.edulinq.org", users["course-student@test.edulinq.org"]}),
 		},
 		{
-			role:      model.CourseRoleOwner,
+			name:      "course-owner",
 			target:    "course-student@test.edulinq.org",
 			permError: isNonSelfPermError(model.CourseRoleOwner),
 			expected:  createTargetType(TargetCourseUser{true, "course-student@test.edulinq.org", users["course-student@test.edulinq.org"]}),
@@ -682,21 +689,41 @@ func testTargetCourseUser[T comparable, V userGetter](test *testing.T,
 
 		// Not Found
 		{
-			role:      model.CourseRoleGrader,
+			name:      "course-grader",
 			target:    "ZZZ",
 			permError: isNonSelfPermError(model.CourseRoleGrader),
 			expected:  createTargetType(TargetCourseUser{false, "ZZZ", nil}),
 		},
 		{
-			role:      model.CourseRoleAdmin,
+			name:      "course-admin",
 			target:    "ZZZ",
 			permError: isNonSelfPermError(model.CourseRoleAdmin),
 			expected:  createTargetType(TargetCourseUser{false, "ZZZ", nil}),
 		},
+
+		// Promotion (Server User)
+		{
+			name:      "server-admin",
+			target:    "course-student@test.edulinq.org",
+			permError: false,
+			expected:  createTargetType(TargetCourseUser{true, "course-student@test.edulinq.org", users["course-student@test.edulinq.org"]}),
+		},
+		{
+			name:      "server-admin",
+			target:    "",
+			permError: false,
+			expected:  createTargetType(TargetCourseUser{true, "server-admin@test.edulinq.org", serverAdminCourseUser}),
+		},
+		{
+			name:      "course-owner",
+			target:    "server-admin@test.edulinq.org",
+			permError: false,
+			expected:  createTargetType(TargetCourseUser{true, "server-admin@test.edulinq.org", serverAdminCourseUser}),
+		},
 	}
 
 	for i, testCase := range testCases {
-		request := createRequest(testCase.role, testCase.target)
+		request := createRequest(testCase.name, testCase.target)
 
 		apiErr := ValidateAPIRequest(nil, request, "")
 		if apiErr != nil {
@@ -740,33 +767,97 @@ func TestTargetCourseUser(test *testing.T) {
 		test.Fatalf("Failed to get users: '%v'.", err)
 	}
 
+	serverAdminUser := db.MustGetServerUser("server-admin@test.edulinq.org")
+
+	serverAdminCourseUser, err := serverAdminUser.ToCourseUser(course.GetID(), true)
+	if err != nil {
+		test.Fatalf("Failed to get server admin as course user: '%v'.", err)
+	}
+
 	testCases := []struct {
-		role     model.CourseUserRole
+		name     string
 		target   string
 		expected TargetCourseUser
 	}{
-		{model.CourseRoleStudent, "course-student@test.edulinq.org", TargetCourseUser{true, "course-student@test.edulinq.org", users["course-student@test.edulinq.org"]}},
-		{model.CourseRoleGrader, "course-grader@test.edulinq.org", TargetCourseUser{true, "course-grader@test.edulinq.org", users["course-grader@test.edulinq.org"]}},
+		{
+			name:     "course-student",
+			target:   "course-student@test.edulinq.org",
+			expected: TargetCourseUser{true, "course-student@test.edulinq.org", users["course-student@test.edulinq.org"]},
+		},
+		{
+			name:     "course-grader",
+			target:   "course-grader@test.edulinq.org",
+			expected: TargetCourseUser{true, "course-grader@test.edulinq.org", users["course-grader@test.edulinq.org"]},
+		},
 
-		{model.CourseRoleStudent, "", TargetCourseUser{}},
-		{model.CourseRoleGrader, "", TargetCourseUser{}},
+		{
+			name:     "course-student",
+			target:   "",
+			expected: TargetCourseUser{},
+		},
+		{
+			name:     "course-grader",
+			target:   "",
+			expected: TargetCourseUser{},
+		},
 
-		{model.CourseRoleOther, "course-student@test.edulinq.org", TargetCourseUser{true, "course-student@test.edulinq.org", users["course-student@test.edulinq.org"]}},
-		{model.CourseRoleStudent, "course-grader@test.edulinq.org", TargetCourseUser{true, "course-grader@test.edulinq.org", users["course-grader@test.edulinq.org"]}},
-		{model.CourseRoleGrader, "course-student@test.edulinq.org", TargetCourseUser{true, "course-student@test.edulinq.org", users["course-student@test.edulinq.org"]}},
-		{model.CourseRoleAdmin, "course-student@test.edulinq.org", TargetCourseUser{true, "course-student@test.edulinq.org", users["course-student@test.edulinq.org"]}},
-		{model.CourseRoleOwner, "course-student@test.edulinq.org", TargetCourseUser{true, "course-student@test.edulinq.org", users["course-student@test.edulinq.org"]}},
+		{
+			name:     "course-other",
+			target:   "course-student@test.edulinq.org",
+			expected: TargetCourseUser{true, "course-student@test.edulinq.org", users["course-student@test.edulinq.org"]},
+		},
+		{
+			name:     "course-student",
+			target:   "course-grader@test.edulinq.org",
+			expected: TargetCourseUser{true, "course-grader@test.edulinq.org", users["course-grader@test.edulinq.org"]},
+		},
+		{
+			name:     "course-grader",
+			target:   "course-student@test.edulinq.org",
+			expected: TargetCourseUser{true, "course-student@test.edulinq.org", users["course-student@test.edulinq.org"]},
+		},
+		{
+			name:     "course-admin",
+			target:   "course-student@test.edulinq.org",
+			expected: TargetCourseUser{true, "course-student@test.edulinq.org", users["course-student@test.edulinq.org"]},
+		},
+		{
+			name:     "course-owner",
+			target:   "course-student@test.edulinq.org",
+			expected: TargetCourseUser{true, "course-student@test.edulinq.org", users["course-student@test.edulinq.org"]},
+		},
 
 		// Not found.
-		{model.CourseRoleGrader, "ZZZ", TargetCourseUser{false, "ZZZ", nil}},
+		{
+			name:     "course-grader",
+			target:   "ZZZ",
+			expected: TargetCourseUser{false, "ZZZ", nil},
+		},
+
+		// Promotion (Server User)
+		{
+			name:     "server-admin",
+			target:   "course-student@test.edulinq.org",
+			expected: TargetCourseUser{true, "course-student@test.edulinq.org", users["course-student@test.edulinq.org"]},
+		},
+		{
+			name:     "server-admin",
+			target:   "",
+			expected: TargetCourseUser{true, "server-admin@test.edulinq.org", serverAdminCourseUser},
+		},
+		{
+			name:     "course-owner",
+			target:   "server-admin@test.edulinq.org",
+			expected: TargetCourseUser{true, "server-admin@test.edulinq.org", serverAdminCourseUser},
+		},
 	}
 
 	for i, testCase := range testCases {
 		request := requestType{
 			APIRequestCourseUserContext: APIRequestCourseUserContext{
 				APIRequestUserContext: APIRequestUserContext{
-					UserEmail: "course-" + testCase.role.String() + "@test.edulinq.org",
-					UserPass:  util.Sha256HexFromString("course-" + testCase.role.String()),
+					UserEmail: testCase.name + "@test.edulinq.org",
+					UserPass:  util.Sha256HexFromString(testCase.name),
 				},
 				CourseID: "course101",
 			},
