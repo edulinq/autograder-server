@@ -342,14 +342,14 @@ func checkRequestTargetCourseUserSelfOrRole(endpoint string, apiRequest any, fie
 
 		serverUser, err := db.GetServerUser(field.Email)
 		if err != nil {
-			return NewInternalError("-053", courseContext, "Failed to fetch target server user from DB.").
+			return NewInternalError("-055", courseContext, "Failed to fetch target server user from DB.").
 				Add("email", field.Email).Err(err)
 		}
 
 		if serverUser != nil {
 			user, err = serverUser.ToCourseUser(courseContext.Course.GetID(), true)
 			if err != nil {
-				return NewInternalError("-054", courseContext, "Failed to convert server user.").
+				return NewInternalError("-056", courseContext, "Failed to convert server user.").
 					User(serverUser.Email).Err(err)
 			}
 		}
