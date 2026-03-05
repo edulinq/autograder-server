@@ -67,5 +67,21 @@ var (
 	ANALYSIS_PAIRWISE_COURSE_POOL_SIZE   = MustNewIntOption("analysis.pairwise.poolsize", 1, "The number of parallel workers per course when computing pairwise analysis.")
 	REGRADE_COURSE_POOL_SIZE             = MustNewIntOption("regrade.poolsize", 4, "The number of parallel workers per course when regrading an assignment.")
 
+	// Background Analysis Pipeline
+	// The pipeline runs asynchronously after each successful grading and is intentionally
+	// decoupled from the request-driven analysis paths. Jobs are dropped (not queued) when
+	// the channel is full, so grading latency is never affected by pipeline load.
+	ANALYSIS_PIPELINE_QUEUE_DEPTH = MustNewIntOption("analysis.pipeline.queue", 1000, "Capacity of the background analysis pipeline's job queue. Jobs are dropped when full.")
+	ANALYSIS_PIPELINE_WORKERS     = MustNewIntOption("analysis.pipeline.workers", 2, "Number of worker goroutines draining the background analysis pipeline.")
+
+	// Differential Privacy - Laplace Mechanism
+	// Epsilon controls the privacy-utility tradeoff: smaller epsilon means more noise and
+	// stronger privacy guarantees but less useful aggregate results. The default of 1.0
+	// is a reasonable starting point for educational research data.
+	// No composition tracking is performed — each query is independently epsilon-DP.
+	// Delta is currently unused (pure DP only), reserved for future Gaussian mechanism.
+	ANALYSIS_DP_EPSILON = MustNewFloatOption("analysis.dp.epsilon", 1.0, "Laplace mechanism epsilon for differential privacy. Must be > 0.")
+	ANALYSIS_DP_DELTA   = MustNewFloatOption("analysis.dp.delta", 0.0, "DP delta parameter. Currently unused (pure DP only). Reserved for future approximate DP.")
+
 	STALELOCK_DURATION_SECS = MustNewIntOption("lockmanager.staleduration", 2*60*60, "Number of seconds a lock can be unused before getting removed.")
 )

@@ -53,3 +53,27 @@ func StorePairwiseAnalysis(records []*model.PairwiseAnalysis) error {
 
 	return backend.StorePairwiseAnalysis(records)
 }
+
+func GetPrivatizedAnalysis(fullSubmissionIDs []string) (map[string]*model.PrivatizedAnalysis, error) {
+	if backend == nil {
+		return nil, fmt.Errorf("Database has not been opened.")
+	}
+
+	return backend.GetPrivatizedAnalysis(fullSubmissionIDs)
+}
+
+func RemovePrivatizedAnalysis(fullSubmissionIDs []string) error {
+	if backend == nil {
+		return fmt.Errorf("Database has not been opened.")
+	}
+
+	return backend.RemovePrivatizedAnalysis(fullSubmissionIDs)
+}
+
+func StorePrivatizedAnalysis(records []*model.PrivatizedAnalysis) error {
+	if backend == nil {
+		return fmt.Errorf("Database has not been opened.")
+	}
+
+	return backend.StorePrivatizedAnalysis(records)
+}

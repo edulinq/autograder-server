@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/edulinq/autograder/internal/analysis"
 	"github.com/edulinq/autograder/internal/common"
 	"github.com/edulinq/autograder/internal/config"
 	"github.com/edulinq/autograder/internal/db"
@@ -129,6 +130,11 @@ func Grade(ctx context.Context, assignment *model.Assignment, submissionPath str
 	if err != nil {
 		return &gradingResult, nil, "", fmt.Errorf("Failed to save grading result: '%w'.", err)
 	}
+
+	// Enqueue for async privacy-preserving feature analysis.
+	// This must remain non-blocking — the analysis pipeline drops jobs when overwhelmed
+	// rather than stalling the grading response. The student's grade is already saved above.
+	analysis.EnqueueSubmission(gradingInfo)
 
 	metric := stats.Metric{
 		Timestamp: startTimestamp,

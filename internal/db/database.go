@@ -202,6 +202,18 @@ type Backend interface {
 
 	// Store the results of a pairwise analysis.
 	StorePairwiseAnalysis(records []*model.PairwiseAnalysis) error
+
+	// Privatized Analysis Operations
+
+	// Fetch any matching privatized analysis results.
+	// Any id not matched in the DB will not be represented in the output.
+	GetPrivatizedAnalysis(fullSubmissionIDs []string) (map[string]*model.PrivatizedAnalysis, error)
+
+	// Remove any matching privatized analysis results.
+	RemovePrivatizedAnalysis(fullSubmissionIDs []string) error
+
+	// Store the results of a privatized (DP-sanitized) analysis.
+	StorePrivatizedAnalysis(records []*model.PrivatizedAnalysis) error
 }
 
 func Open() error {
