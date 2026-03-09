@@ -3,6 +3,7 @@ package lockmanager
 import (
 	"fmt"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/edulinq/autograder/internal/config"
@@ -12,7 +13,7 @@ import (
 type lockData struct {
 	timestamp time.Time
 	mutex     sync.RWMutex
-	lockCount int
+	lockCount atomic.Int64
 }
 
 const TICKER_DURATION_HOUR = 1.0
@@ -55,7 +56,7 @@ func lock(key string, read bool) bool {
 	lock := val.(*lockData)
 
 	// Note if any other threads currently have this lock.
-	lockNotInUse := (lock.lockCount == 0)
+	lockNotInUse := (lock.lockCount.Load() == 0)
 
 	// Unlock the lockManagerMutex before acquiring the lock to avoid a deadlock.
 	lockManagerMutex.Unlock()
@@ -68,7 +69,7 @@ func lock(key string, read bool) bool {
 
 	log.Trace("Lock", log.NewAttr("read", read), log.NewAttr("key", key))
 
-	lock.lockCount++
+	lock.lockCount.Add(1)
 	lock.timestamp = time.Now()
 
 	return lockNotInUse
@@ -85,12 +86,12 @@ func unlock(key string, read bool) error {
 	}
 
 	lock := val.(*lockData)
-	if !read && lock.lockCount == 0 {
+	if !read && lock.lockCount.Load() <= 0 {
 		log.Error("Tried to unlock a lock that is already unlocked: %s\n", key)
 		return fmt.Errorf("Tried to unlock a lock that is already unlocked with key '%s'", key)
 	}
 
-	lock.lockCount--
+	lock.lockCount.Add(-1)
 	lock.timestamp = time.Now()
 
 	log.Trace("Unlock", log.NewAttr("read", read), log.NewAttr("key", key))
@@ -117,7 +118,7 @@ func RemoveStaleLocksOnce() {
 		lock := val.(*lockData)
 
 		// First check: If the lock isn't stale or is locked, return early.
-		if time.Since(lock.timestamp) < staleDuration || lock.lockCount > 0 {
+		if time.Since(lock.timestamp) < staleDuration || lock.lockCount.Load() > 0 {
 			return true
 		}
 
