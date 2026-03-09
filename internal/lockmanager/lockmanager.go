@@ -117,8 +117,8 @@ func RemoveStaleLocksOnce() {
 	lockMap.Range(func(key, val any) bool {
 		lock := val.(*lockData)
 
-		// First check: If the lock isn't stale or is locked, return early.
-		if time.Since(lock.timestamp) < staleDuration || lock.lockCount.Load() > 0 {
+		// First, check if the lock isn't stale or is locked.
+		if (time.Since(lock.timestamp) < staleDuration) || (lock.lockCount.Load() > 0) {
 			return true
 		}
 
@@ -126,10 +126,14 @@ func RemoveStaleLocksOnce() {
 		lockManagerMutex.Lock()
 		defer lockManagerMutex.Unlock()
 
-		// Second check: If the lock is stale and and is able to be locked, delete it.
-		if time.Since(lock.timestamp) > staleDuration && lock.mutex.TryLock() {
-			lockMap.Delete(key)
-			lock.mutex.Unlock()
+		// Second, try to acquire the lock.
+		if lock.mutex.TryLock() {
+			defer lock.mutex.Unlock()
+
+			// Finally, if the lock is stale, delete it.
+			if time.Since(lock.timestamp) > staleDuration {
+				lockMap.Delete(key)
+			}
 		}
 
 		return true
