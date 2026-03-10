@@ -11,7 +11,7 @@ import (
 )
 
 type lockData struct {
-	timestamp time.Time
+	timestamp atomic.Int64 // Unix nanoseconds, accessed atomically to avoid data races.
 	mutex     sync.RWMutex
 	lockCount atomic.Int64
 }
@@ -61,7 +61,7 @@ func lock(key string, read bool) bool {
 	// Increment lockCount while holding lockManagerMutex so RemoveStaleLocksOnce()
 	// cannot observe lockCount == 0 and delete this entry before we acquire the mutex.
 	lock.lockCount.Add(1)
-	lock.timestamp = time.Now()
+	lock.timestamp.Store(time.Now().UnixNano())
 
 	// Unlock the lockManagerMutex before acquiring the lock to avoid a deadlock.
 	lockManagerMutex.Unlock()
@@ -94,7 +94,7 @@ func unlock(key string, read bool) error {
 	}
 
 	lock.lockCount.Add(-1)
-	lock.timestamp = time.Now()
+	lock.timestamp.Store(time.Now().UnixNano())
 
 	log.Trace("Unlock", log.NewAttr("read", read), log.NewAttr("key", key))
 
@@ -120,7 +120,7 @@ func RemoveStaleLocksOnce() {
 		lock := val.(*lockData)
 
 		// First, check if the lock isn't stale or is locked.
-		if (time.Since(lock.timestamp) < staleDuration) || (lock.lockCount.Load() > 0) {
+		if (time.Since(time.Unix(0, lock.timestamp.Load())) < staleDuration) || (lock.lockCount.Load() > 0) {
 			return true
 		}
 
@@ -133,7 +133,7 @@ func RemoveStaleLocksOnce() {
 			defer lock.mutex.Unlock()
 
 			// Finally, if the lock is stale, delete it.
-			if time.Since(lock.timestamp) > staleDuration {
+			if time.Since(time.Unix(0, lock.timestamp.Load())) > staleDuration {
 				lockMap.Delete(key)
 			}
 		}
