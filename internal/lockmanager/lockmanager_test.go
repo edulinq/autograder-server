@@ -280,7 +280,7 @@ func TestStaleLockRetentionWithLockedKey(test *testing.T) {
 
 	// Load the lockmap and set the timestamp for the lock to be considered stale.
 	val, _ := lockMap.Load(key1)
-	val.(*lockData).timestamp.Store(time.Now().Add(-2 * (staleDuration)).UnixNano())
+	val.(*lockData).timestamp.Store(time.Now().Add(-2 * (staleDuration)).Unix())
 
 	staleCheckBlock.Add(1)
 
@@ -327,7 +327,7 @@ func TestLockRetentionWithMidCheckActivity(test *testing.T) {
 	// Load the lockmap and set the timestamp for the lock to be considered stale.
 	val, _ := lockMap.Load(key1)
 	lockData := val.(*lockData)
-	lockData.timestamp.Store(time.Now().Add(-2 * (staleDuration)).UnixNano())
+	lockData.timestamp.Store(time.Now().Add(-2 * (staleDuration)).Unix())
 
 	// Lock the lockManagerMutex to to give the main thread time to reset the lock's timestamp.
 	lockManagerMutex.Lock()
@@ -352,7 +352,7 @@ func TestLockRetentionWithMidCheckActivity(test *testing.T) {
 	time.Sleep(10 * time.Millisecond)
 
 	// Reset the lockdata's timestamp to simulate a lock aquiring a lock between checks in RemoveStaleLocksOnce().
-	lockData.timestamp.Store(time.Now().UnixNano())
+	lockData.timestamp.Store(time.Now().Unix())
 
 	// Let the thread continue to the second part in RemoveStaleLocksOnce().
 	lockManagerMutex.Unlock()
@@ -386,7 +386,7 @@ func TestStaleLockDeletion(test *testing.T) {
 
 	// Load the lockmap and set the timestamp for the lock to be considered stale.
 	val, _ := lockMap.Load(key1)
-	val.(*lockData).timestamp.Store(time.Now().Add(-2 * (staleDuration)).UnixNano())
+	val.(*lockData).timestamp.Store(time.Now().Add(-2 * (staleDuration)).Unix())
 
 	finishThreadBlock.Add(1)
 

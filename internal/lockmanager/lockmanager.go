@@ -10,8 +10,12 @@ import (
 	"github.com/edulinq/autograder/internal/log"
 )
 
+// All fields in lockData are only modified while holding lockManagerMutex,
+// except for mutex which is the lock itself.
+// timestamp and lockCount use atomic types to allow safe reads outside the mutex
+// (e.g., the initial staleness check in RemoveStaleLocksOnce).
 type lockData struct {
-	timestamp atomic.Int64 // Unix nanoseconds, accessed atomically to avoid data races.
+	timestamp atomic.Int64
 	mutex     sync.RWMutex
 	lockCount atomic.Int64
 }
@@ -58,10 +62,11 @@ func lock(key string, read bool) bool {
 	// Note if any other threads currently have this lock.
 	lockNotInUse := (lock.lockCount.Load() == 0)
 
-	// Increment lockCount while holding lockManagerMutex so RemoveStaleLocksOnce()
-	// cannot observe lockCount == 0 and delete this entry before we acquire the mutex.
+	// Update the lock state before releasing lockManagerMutex.
+	// This ensures RemoveStaleLocksOnce() always sees consistent, up-to-date state
+	// when it inspects entries without holding the mutex.
 	lock.lockCount.Add(1)
-	lock.timestamp.Store(time.Now().UnixNano())
+	lock.timestamp.Store(time.Now().Unix())
 
 	// Unlock the lockManagerMutex before acquiring the lock to avoid a deadlock.
 	lockManagerMutex.Unlock()
@@ -94,7 +99,7 @@ func unlock(key string, read bool) error {
 	}
 
 	lock.lockCount.Add(-1)
-	lock.timestamp.Store(time.Now().UnixNano())
+	lock.timestamp.Store(time.Now().Unix())
 
 	log.Trace("Unlock", log.NewAttr("read", read), log.NewAttr("key", key))
 
@@ -120,7 +125,7 @@ func RemoveStaleLocksOnce() {
 		lock := val.(*lockData)
 
 		// First, check if the lock isn't stale or is locked.
-		if (time.Since(time.Unix(0, lock.timestamp.Load())) < staleDuration) || (lock.lockCount.Load() > 0) {
+		if (time.Since(time.Unix(lock.timestamp.Load(), 0)) < staleDuration) || (lock.lockCount.Load() > 0) {
 			return true
 		}
 
@@ -133,7 +138,7 @@ func RemoveStaleLocksOnce() {
 			defer lock.mutex.Unlock()
 
 			// Finally, if the lock is stale, delete it.
-			if time.Since(time.Unix(0, lock.timestamp.Load())) > staleDuration {
+			if time.Since(time.Unix(lock.timestamp.Load(), 0)) > staleDuration {
 				lockMap.Delete(key)
 			}
 		}
