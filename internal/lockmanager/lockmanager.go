@@ -8,10 +8,11 @@ import (
 
 	"github.com/edulinq/autograder/internal/config"
 	"github.com/edulinq/autograder/internal/log"
+	"github.com/edulinq/autograder/internal/timestamp"
 )
 
 // All fields in lockData are only modified while holding lockManagerMutex,
-// except for mutex which is the lock itself.
+// except for mutex (which is the lock itself).
 // timestamp and lockCount use atomic types to allow safe reads outside the mutex
 // (e.g., the initial staleness check in RemoveStaleLocksOnce).
 type lockData struct {
@@ -66,7 +67,7 @@ func lock(key string, read bool) bool {
 	// This ensures RemoveStaleLocksOnce() always sees consistent, up-to-date state
 	// when it inspects entries without holding the mutex.
 	lock.lockCount.Add(1)
-	lock.timestamp.Store(time.Now().Unix())
+	lock.timestamp.Store(int64(timestamp.Now()))
 
 	// Unlock the lockManagerMutex before acquiring the lock to avoid a deadlock.
 	lockManagerMutex.Unlock()
@@ -99,7 +100,7 @@ func unlock(key string, read bool) error {
 	}
 
 	lock.lockCount.Add(-1)
-	lock.timestamp.Store(time.Now().Unix())
+	lock.timestamp.Store(int64(timestamp.Now()))
 
 	log.Trace("Unlock", log.NewAttr("read", read), log.NewAttr("key", key))
 
@@ -125,7 +126,7 @@ func RemoveStaleLocksOnce() {
 		lock := val.(*lockData)
 
 		// First, check if the lock isn't stale or is locked.
-		if (time.Since(time.Unix(lock.timestamp.Load(), 0)) < staleDuration) || (lock.lockCount.Load() > 0) {
+		if (time.Since(time.UnixMilli(lock.timestamp.Load())) < staleDuration) || (lock.lockCount.Load() > 0) {
 			return true
 		}
 
@@ -138,7 +139,7 @@ func RemoveStaleLocksOnce() {
 			defer lock.mutex.Unlock()
 
 			// Finally, if the lock is stale, delete it.
-			if time.Since(time.Unix(lock.timestamp.Load(), 0)) > staleDuration {
+			if time.Since(time.UnixMilli(lock.timestamp.Load())) > staleDuration {
 				lockMap.Delete(key)
 			}
 		}
