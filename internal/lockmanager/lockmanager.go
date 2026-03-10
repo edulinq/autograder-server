@@ -58,6 +58,11 @@ func lock(key string, read bool) bool {
 	// Note if any other threads currently have this lock.
 	lockNotInUse := (lock.lockCount.Load() == 0)
 
+	// Increment lockCount while holding lockManagerMutex so RemoveStaleLocksOnce()
+	// cannot observe lockCount == 0 and delete this entry before we acquire the mutex.
+	lock.lockCount.Add(1)
+	lock.timestamp = time.Now()
+
 	// Unlock the lockManagerMutex before acquiring the lock to avoid a deadlock.
 	lockManagerMutex.Unlock()
 
@@ -68,9 +73,6 @@ func lock(key string, read bool) bool {
 	}
 
 	log.Trace("Lock", log.NewAttr("read", read), log.NewAttr("key", key))
-
-	lock.lockCount.Add(1)
-	lock.timestamp = time.Now()
 
 	return lockNotInUse
 }
