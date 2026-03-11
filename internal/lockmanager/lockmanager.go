@@ -67,7 +67,7 @@ func lock(key string, read bool) bool {
 	// This ensures RemoveStaleLocksOnce() always sees consistent, up-to-date state
 	// when it inspects entries without holding the mutex.
 	lock.lockCount.Add(1)
-	lock.timestamp.Store(int64(timestamp.Now()))
+	lock.timestamp.Store(timestamp.Now().ToMSecs())
 
 	// Unlock the lockManagerMutex before acquiring the lock to avoid a deadlock.
 	lockManagerMutex.Unlock()
@@ -100,7 +100,7 @@ func unlock(key string, read bool) error {
 	}
 
 	lock.lockCount.Add(-1)
-	lock.timestamp.Store(int64(timestamp.Now()))
+	lock.timestamp.Store(timestamp.Now().ToMSecs())
 
 	log.Trace("Unlock", log.NewAttr("read", read), log.NewAttr("key", key))
 
@@ -120,13 +120,14 @@ func removeStaleLocks() {
 }
 
 func RemoveStaleLocksOnce() {
-	staleDuration := time.Duration(time.Duration(config.STALELOCK_DURATION_SECS.Get()) * time.Second)
+	staleDuration := time.Duration(config.STALELOCK_DURATION_SECS.Get()) * time.Second
+	staleDurationMSecs := staleDuration.Milliseconds()
 
 	lockMap.Range(func(key, val any) bool {
 		lock := val.(*lockData)
 
 		// First, check if the lock isn't stale or is locked.
-		if (time.Since(time.UnixMilli(lock.timestamp.Load())) < staleDuration) || (lock.lockCount.Load() > 0) {
+		if (timestamp.Now().ToMSecs()-lock.timestamp.Load() < staleDurationMSecs) || (lock.lockCount.Load() > 0) {
 			return true
 		}
 
@@ -139,7 +140,7 @@ func RemoveStaleLocksOnce() {
 			defer lock.mutex.Unlock()
 
 			// Finally, if the lock is stale, delete it.
-			if time.Since(time.UnixMilli(lock.timestamp.Load())) > staleDuration {
+			if timestamp.Now().ToMSecs()-lock.timestamp.Load() > staleDurationMSecs {
 				lockMap.Delete(key)
 			}
 		}
