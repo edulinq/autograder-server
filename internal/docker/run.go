@@ -220,10 +220,10 @@ func cleanContainerName(text string) string {
 }
 
 // Read a maximum amount from the container's stdout/stderr, parse the two from the common stream, and signal completion.
-// The inner goroutine must finish writing to the output struct before the WaitGroup is signaled,
-// otherwise the caller will race on reading the output.
 func handleContainerOutput(ctx context.Context, output *containerOutput, outputWaitGroup *sync.WaitGroup, connection types.HijackedResponse) {
 	defer outputWaitGroup.Done()
+
+	// Closing the connection should also close the reader and stop any waiting read operations.
 	defer connection.Close()
 
 	successChan := make(chan bool, 1)
@@ -239,8 +239,8 @@ func handleContainerOutput(ctx context.Context, output *containerOutput, outputW
 	case <-successChan:
 		return
 	case <-ctx.Done():
-		// Interrupt any blocking reads so the inner goroutine can exit,
-		// then wait for it to finish writing to the output struct.
+		// Close the connection to interrupt any blocking reads in handleContainerOutputInternal,
+		// then wait for it to finish writing to the output struct before signaling the WaitGroup.
 		connection.Close()
 		<-successChan
 		return
