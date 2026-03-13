@@ -15,6 +15,7 @@ import (
 	"github.com/edulinq/autograder/internal/log"
 	"github.com/edulinq/autograder/internal/stats"
 	"github.com/edulinq/autograder/internal/timestamp"
+	"github.com/edulinq/autograder/internal/types"
 	"github.com/edulinq/autograder/internal/util"
 )
 
@@ -155,7 +156,7 @@ func sendAPIResponse(apiRequest ValidAPIRequest, response http.ResponseWriter,
 	metric := stats.Metric{
 		Timestamp: startTime,
 		Type:      stats.MetricTypeAPIRequest,
-		Value:     float64((apiResponse.EndTimestamp - startTime).ToMSecs()),
+		Value:     float64(apiResponse.EndTimestamp - startTime),
 		Attributes: map[stats.MetricAttribute]any{
 			stats.MetricAttributeEndpoint: endpoint,
 		},
@@ -169,6 +170,12 @@ func sendAPIResponse(apiRequest ValidAPIRequest, response http.ResponseWriter,
 	metric.SetUserEmail(userEmail)
 
 	stats.AsyncStoreMetric(&metric)
+
+	// Log API Response at TRACE level (payload truncated via LongString).
+	apiResponse.Payload = types.LongString(payload)
+	log.Trace("API Response",
+		apiResponse,
+		log.NewAttr("endpoint", endpoint))
 
 	// When in testing mode, allow cross-origin requests.
 	if config.UNIT_TESTING_MODE.Get() {
