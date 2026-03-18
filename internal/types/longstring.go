@@ -7,6 +7,5 @@ type LongString string
 const MAX_LOG_STRING_LENGTH = 1000
 
 func (this LongString) String() string {
-
-	return util.ClipStringWithHash(string(this), MAX_LOG_STRING_LENGTH)
+	return util.ClipString(string(this), MAX_LOG_STRING_LENGTH, true)
 }

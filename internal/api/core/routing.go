@@ -171,11 +171,11 @@ func sendAPIResponse(apiRequest ValidAPIRequest, response http.ResponseWriter,
 
 	stats.AsyncStoreMetric(&metric)
 
-	// Log API Response at TRACE level (payload truncated via LongString).
-	apiResponse.Payload = types.LongString(payload)
+	// Log API Response at TRACE level with clipped payload.
 	log.Trace("API Response",
 		apiResponse,
-		log.NewAttr("endpoint", endpoint))
+		log.NewAttr("endpoint", endpoint),
+		log.NewAttr("payload", util.ClipString(payload, types.MAX_LOG_STRING_LENGTH, true)))
 
 	// When in testing mode, allow cross-origin requests.
 	if config.UNIT_TESTING_MODE.Get() {
@@ -187,7 +187,8 @@ func sendAPIResponse(apiRequest ValidAPIRequest, response http.ResponseWriter,
 	_, err = fmt.Fprint(response, payload)
 	if err != nil {
 		http.Error(response, "Server Failed to Send Response - Contact Admins", http.StatusInternalServerError)
-		log.Error("Failed to write final payload to http writer.", err, log.NewAttr("payload", payload))
+		log.Error("Failed to write final payload to http writer.", err,
+			log.NewAttr("payload", util.ClipString(payload, types.MAX_LOG_STRING_LENGTH, true)))
 		return fmt.Errorf("Could not write API response payload: '%w'.", err)
 	}
 
