@@ -1,6 +1,7 @@
 package canvas
 
 import (
+	"strings"
 	"time"
 
 	"github.com/edulinq/autograder/internal/lms/lmstypes"
@@ -95,7 +96,7 @@ func (this *User) GetRole() model.CourseUserRole {
 
 func (this *User) ToLMSType() *lmstypes.User {
 	email := this.LoginID
-	if email == "" {
+	if (email == "") || !strings.Contains(email, "@") {
 		email = this.Email
 	}
 
