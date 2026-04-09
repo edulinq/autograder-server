@@ -239,6 +239,10 @@ func handleContainerOutput(ctx context.Context, output *containerOutput, outputW
 	case <-successChan:
 		return
 	case <-ctx.Done():
+		// Close the connection to interrupt any blocking reads in handleContainerOutputInternal,
+		// then wait for it to finish writing to the output struct before signaling the WaitGroup.
+		connection.Close()
+		<-successChan
 		return
 	}
 }
