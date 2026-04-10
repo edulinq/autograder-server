@@ -3,6 +3,8 @@ package core
 import (
 	"fmt"
 	"math"
+	"os"
+	"strings"
 	"testing"
 
 	"github.com/edulinq/autograder/internal/exit"
@@ -139,5 +141,53 @@ func TestNonMarshalableResponse(test *testing.T) {
 	response := SendTestAPIRequest(test, endpoint, nil)
 	if response.Locator != "-002" {
 		test.Fatalf("Response does not locator of '-002', actual locator: '%s'.", response.Locator)
+	}
+}
+
+func TestResponsePayloadLoggingIsClipped(test *testing.T) {
+	buffer := strings.Builder{}
+
+	log.SetTextWriter(&buffer)
+	defer log.SetTextWriter(os.Stderr)
+
+	oldTextLevel := log.GetTextLevel()
+	log.SetLevelTrace()
+	defer log.SetTextLevel(oldTextLevel)
+
+	endpoint := `/test/api/response-payload-clipping`
+
+	type responseType struct {
+		Value string `json:"value"`
+	}
+
+	large := strings.Repeat("z", 3000)
+	handler := func(request *BaseTestRequest) (*responseType, *APIError) {
+		return &responseType{Value: large}, nil
+	}
+
+	routes = append(routes, MustNewAPIRoute(endpoint, handler))
+
+	response := SendTestAPIRequest(test, endpoint, nil)
+	if !response.Success {
+		test.Fatalf("Response should be successful: '%v'.", response)
+	}
+
+	var responseContent responseType
+	util.MustJSONFromString(util.MustToJSON(response.Content), &responseContent)
+	if responseContent.Value != large {
+		test.Fatalf("Response content did not match expected value.")
+	}
+
+	logOutput := buffer.String()
+	if !strings.Contains(logOutput, "API Response") {
+		test.Fatalf("Did not find API response log line. Logs: '%s'.", logOutput)
+	}
+
+	if !strings.Contains(logOutput, "[hash: ") {
+		test.Fatalf("Expected clipped payload hash marker in logs. Logs: '%s'.", logOutput)
+	}
+
+	if strings.Contains(logOutput, strings.Repeat("z", 1200)) {
+		test.Fatalf("Found unexpectedly long raw payload content in logs.")
 	}
 }

@@ -15,6 +15,7 @@ import (
 	"github.com/edulinq/autograder/internal/log"
 	"github.com/edulinq/autograder/internal/stats"
 	"github.com/edulinq/autograder/internal/timestamp"
+	"github.com/edulinq/autograder/internal/types"
 	"github.com/edulinq/autograder/internal/util"
 )
 
@@ -155,7 +156,7 @@ func sendAPIResponse(apiRequest ValidAPIRequest, response http.ResponseWriter,
 	metric := stats.Metric{
 		Timestamp: startTime,
 		Type:      stats.MetricTypeAPIRequest,
-		Value:     float64((apiResponse.EndTimestamp - startTime).ToMSecs()),
+		Value:     float64(apiResponse.EndTimestamp - startTime),
 		Attributes: map[stats.MetricAttribute]any{
 			stats.MetricAttributeEndpoint: endpoint,
 		},
@@ -170,6 +171,12 @@ func sendAPIResponse(apiRequest ValidAPIRequest, response http.ResponseWriter,
 
 	stats.AsyncStoreMetric(&metric)
 
+	// Log API Response at TRACE level with clipped payload.
+	log.Trace("API Response",
+		apiResponse,
+		log.NewAttr("endpoint", endpoint),
+		log.NewAttr("payload", util.ClipString(payload, types.MAX_LOG_STRING_LENGTH, true)))
+
 	// When in testing mode, allow cross-origin requests.
 	if config.UNIT_TESTING_MODE.Get() {
 		response.Header().Set("Access-Control-Allow-Origin", "*")
@@ -180,7 +187,8 @@ func sendAPIResponse(apiRequest ValidAPIRequest, response http.ResponseWriter,
 	_, err = fmt.Fprint(response, payload)
 	if err != nil {
 		http.Error(response, "Server Failed to Send Response - Contact Admins", http.StatusInternalServerError)
-		log.Error("Failed to write final payload to http writer.", err, log.NewAttr("payload", payload))
+		log.Error("Failed to write final payload to http writer.", err,
+			log.NewAttr("payload", util.ClipString(payload, types.MAX_LOG_STRING_LENGTH, true)))
 		return fmt.Errorf("Could not write API response payload: '%w'.", err)
 	}
 

@@ -25,6 +25,16 @@ func (this *APIResponse) String() string {
 	return util.BaseString(this)
 }
 
+func (this *APIResponse) LogValue() []*log.Attr {
+	return []*log.Attr{
+		log.NewAttr("id", this.ID),
+		log.NewAttr("locator", this.Locator),
+		log.NewAttr("status", this.HTTPStatus),
+		log.NewAttr("success", this.Success),
+		log.NewAttr("duration-ms", this.EndTimestamp-this.StartTimestamp),
+	}
+}
+
 func NewAPIResponse(request ValidAPIRequest, content any) *APIResponse {
 	id, startTime := getRequestIDAndTimestamp(request)
 
