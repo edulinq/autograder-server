@@ -82,7 +82,7 @@ func TestRemove(test *testing.T) {
 			},
 		},
 
-		// Clearing when the caller has highest StatusSource.
+		// Clearing when the caller has the highest status.
 		{
 			"server-admin",
 			"",

@@ -65,7 +65,7 @@ func HandleSet(request *SetRequest) (*SetResponse, *core.APIError) {
 	return &SetResponse{Status: status}, nil
 }
 
-// Finds the highest StatusSource using the user's server role.
+// Finds the highest source using the user's server role.
 // The request permissions require the caller to be at least a course admin.
 func determineSource(serverRole model.ServerUserRole) model.StatusSource {
 	if serverRole >= model.ServerRoleRoot {

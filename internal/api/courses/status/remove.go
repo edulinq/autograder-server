@@ -1,6 +1,8 @@
 package status
 
 import (
+	"fmt"
+
 	"github.com/edulinq/autograder/internal/api/core"
 	"github.com/edulinq/autograder/internal/db"
 	"github.com/edulinq/autograder/internal/log"
@@ -14,7 +16,7 @@ type RemoveRequest struct {
 	// Email of status owner to remove. Defaults to the caller.
 	TargetOwner string `json:"target-owner"`
 
-	// If true, ignores TargetOwner and removes all statuses the caller has permission to remove.
+	// If true, ignores the target owner and removes all statuses the caller has permission to remove.
 	Clear bool `json:"clear"`
 
 	// Optional log message to include with status removal.
@@ -49,7 +51,8 @@ func HandleRemove(request *RemoveRequest) (*RemoveResponse, *core.APIError) {
 		if ok {
 			if callerSource < targetStatus.Source {
 				return nil, core.NewBadRequestError("-648", request,
-					"Cannot remove this course's active/inactive status because it was set by a higher privileged source.")
+					fmt.Sprintf("Cannot remove this course's active/inactive status because it was set by a higher privileged source (%s) than yours (%s).",
+						targetStatus.Source, callerSource))
 			}
 
 			delete(courseStatuses, target)

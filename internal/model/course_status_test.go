@@ -11,7 +11,7 @@ func TestGetActiveStatus(test *testing.T) {
 		statuses      map[string]*CourseStatus
 		expectedOwner string
 	}{
-		// No statuses, so GetActiveStatus returns nil.
+		// No statuses, so the getter returns nil.
 		{
 			map[string]*CourseStatus{},
 			"",
@@ -29,7 +29,7 @@ func TestGetActiveStatus(test *testing.T) {
 			"course-admin@test.edulinq.org",
 		},
 
-		// Conflicting StatusSource
+		// Conflicting Sources
 		{
 			map[string]*CourseStatus{
 				"course-admin@test.edulinq.org": {
@@ -61,7 +61,7 @@ func TestGetActiveStatus(test *testing.T) {
 			"automated@test.edulinq.org",
 		},
 
-		// Tie on StatusSource (picks most recent SetTime).
+		// Tie on the source (picks most recent).
 		{
 			map[string]*CourseStatus{
 				"server-owner@test.edulinq.org": {
@@ -78,7 +78,7 @@ func TestGetActiveStatus(test *testing.T) {
 			"server-admin@test.edulinq.org",
 		},
 
-		// Tie on StatusSource and SetTime (picks owner string that comes last in lexicographical order).
+		// Tie on the source and time (picks owner string that comes last in lexicographical order).
 		{
 			map[string]*CourseStatus{
 				"server-owner@test.edulinq.org": {

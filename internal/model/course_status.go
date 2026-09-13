@@ -67,8 +67,10 @@ func (this *StatusSource) UnmarshalJSON(data []byte) error {
 	return err
 }
 
-// Checks if a status has priority over another status, determined by the one with a larger source value.
-// Statuses set later have priority over earlier ones, and if the time is equal, the unique owner strings are compared lexicographically.
+// Compare two statuses using status priority ordering.
+// Status priority ordering is determined by the larger source value,
+// then by whichever was more recently set, and finally by the lexicographically greater owner.
+// Statuses sorted later (having a positive return) have higher priority.
 func (this *CourseStatus) compareTo(other *CourseStatus) int {
 	if this.Source != other.Source {
 		if this.Source > other.Source {

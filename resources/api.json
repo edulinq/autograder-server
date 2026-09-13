@@ -1185,7 +1185,7 @@
             "description": "Remove one or more course statuses based on the caller's permissions.",
             "input": [
                 {
-                    "description": "If true, ignores TargetOwner and removes all statuses the caller has permission to remove.",
+                    "description": "If true, ignores the target owner and removes all statuses the caller has permission to remove.",
                     "name": "clear",
                     "type": "bool"
                 },
