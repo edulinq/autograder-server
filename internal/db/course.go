@@ -123,18 +123,21 @@ func upsertActiveCourseTasks(course *model.Course) error {
 	}
 
 	// Add in any new tasks and merge with any exiting tasks.
-	for i, task := range course.Tasks {
-		newTask, err := task.ToFullCourseTask(course.GetID())
-		if err != nil {
-			return fmt.Errorf("Unable to upsert task at inded %d: '%w'.", i, err)
-		}
+	// An inactive course has all its tasks removed, only repopulated once active again.
+	if course.IsActiveNow() {
+		for i, task := range course.Tasks {
+			newTask, err := task.ToFullCourseTask(course.GetID())
+			if err != nil {
+				return fmt.Errorf("Unable to upsert task at index %d: '%w'.", i, err)
+			}
 
-		if newTask == nil {
-			continue
-		}
+			if newTask == nil {
+				continue
+			}
 
-		newTask.MergeTimes(oldTasks[newTask.Hash])
-		newTasks[newTask.Hash] = newTask
+			newTask.MergeTimes(oldTasks[newTask.Hash])
+			newTasks[newTask.Hash] = newTask
+		}
 	}
 
 	// Save.

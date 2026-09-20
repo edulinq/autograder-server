@@ -183,6 +183,61 @@ func (this *DBTests) DBTestGetNextActiveTaskBase(test *testing.T) {
 	}
 }
 
+func (this *DBTests) DBTestToggleCourseActiveStatus(test *testing.T) {
+	ResetForTesting()
+	defer ResetForTesting()
+
+	testTask := &model.UserTaskInfo{
+		Type: model.TaskTypeTest,
+		Name: "test",
+		When: &util.ScheduledTime{Daily: "00:00"},
+	}
+
+	// Start with an active course that has a task.
+	course := MustGetTestCourse()
+	course.Tasks = []*model.UserTaskInfo{testTask}
+	MustSaveCourse(course)
+
+	tasks, err := GetActiveCourseTasks(course)
+	if err != nil {
+		test.Fatalf("Failed to fetch case 1 tasks: '%v'.", err)
+	}
+
+	if len(tasks) != 1 {
+		test.Fatalf("Did not get expected number of case 1 tasks. Expected: %d, Actual: %d.", 1, len(tasks))
+	}
+
+	// Set status to inactive, removing all active tasks for the course.
+	course.Statuses = map[string]*model.CourseStatus{
+		"fake-user@test.edulinq.org": {
+			Active: false,
+		},
+	}
+	MustSaveCourse(course)
+
+	tasks, err = GetActiveCourseTasks(course)
+	if err != nil {
+		test.Fatalf("Failed to fetch case 2 tasks: '%v'.", err)
+	}
+
+	if len(tasks) != 0 {
+		test.Fatalf("Did not get expected number of case 2 tasks. Expected: %d, Actual: %d.", 0, len(tasks))
+	}
+
+	// Set status back to active, reactivating all course tasks.
+	course.Statuses = map[string]*model.CourseStatus{}
+	MustSaveCourse(course)
+
+	tasks, err = GetActiveCourseTasks(course)
+	if err != nil {
+		test.Fatalf("Failed to fetch case 3 tasks: '%v'.", err)
+	}
+
+	if len(tasks) != 1 {
+		test.Fatalf("Did not get expected number of case 3 tasks. Expected: %d, Actual: %d.", 1, len(tasks))
+	}
+}
+
 // Note that the hashes and tasks are not real and only work if we don't validate them.
 var testTasks map[string]*model.FullScheduledTask = map[string]*model.FullScheduledTask{
 	"A": &model.FullScheduledTask{

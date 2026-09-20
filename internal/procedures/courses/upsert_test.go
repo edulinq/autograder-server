@@ -336,6 +336,41 @@ func TestUpsertBase(test *testing.T) {
 	}
 }
 
+func TestUpsertPreserveStatuses(test *testing.T) {
+	db.ResetForTesting()
+	defer db.ResetForTesting()
+
+	// Save the initial status.
+	course := db.MustGetCourse("course101")
+	course.Statuses = map[string]*model.CourseStatus{
+		"course-admin@test.edulinq.org": {
+			Source: model.StatusSourceCourse,
+		},
+	}
+	db.MustSaveCourse(course)
+
+	course101Path := filepath.Join(config.GetTestdataDir(), "course101", model.COURSE_CONFIG_FILENAME)
+
+	options := CourseUpsertOptions{
+		ContextUser: db.MustGetServerUser("server-creator@test.edulinq.org"),
+		CourseUpsertPublicOptions: CourseUpsertPublicOptions{
+			SkipBuildImages: true,
+		},
+	}
+
+	_, _, err := upsertFromConfigPath(course101Path, options)
+	if err != nil {
+		test.Fatalf("Failed to upsert course: '%v'.", err)
+	}
+
+	// Verify the upsert preserved the statuses.
+	updatedCourse := db.MustGetCourse("course101")
+	_, ok := updatedCourse.Statuses["course-admin@test.edulinq.org"]
+	if !ok {
+		test.Fatalf("Status did not survive the source reload.")
+	}
+}
+
 var standardLMSSyncResult *model.LMSSyncResult = &model.LMSSyncResult{
 	UserSync: []*model.UserOpResult{
 		&model.UserOpResult{BaseUserOpResult: model.BaseUserOpResult{Email: "course-admin@test.edulinq.org", Skipped: true}},

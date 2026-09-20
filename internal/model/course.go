@@ -10,6 +10,7 @@ import (
 	"github.com/edulinq/autograder/internal/config"
 	"github.com/edulinq/autograder/internal/docker"
 	"github.com/edulinq/autograder/internal/log"
+	"github.com/edulinq/autograder/internal/timestamp"
 	"github.com/edulinq/autograder/internal/util"
 )
 
@@ -25,6 +26,12 @@ type Course struct {
 	// Inheritable by assignments.
 	LatePolicy      *LateGradingPolicy   `json:"late-policy,omitempty"`
 	SubmissionLimit *SubmissionLimitInfo `json:"submission-limit,omitempty"`
+
+	// Course Active Window
+	StartDate *timestamp.Timestamp `json:"start-date,omitempty"`
+	EndDate   *timestamp.Timestamp `json:"end-date,omitempty"`
+
+	Statuses map[string]*CourseStatus `json:"statuses,omitempty"`
 
 	Tasks []*UserTaskInfo `json:"tasks,omitempty"`
 
@@ -107,6 +114,17 @@ func (this *Course) Validate() error {
 		if err != nil {
 			return fmt.Errorf("Failed to validate submission limit: '%w'.", err)
 		}
+	}
+
+	if (this.StartDate != nil) && (this.EndDate != nil) {
+		if *this.EndDate < *this.StartDate {
+			return fmt.Errorf("Course end date is before start date.")
+		}
+	}
+
+	// Create an empty map for safe write operations.
+	if this.Statuses == nil {
+		this.Statuses = make(map[string]*CourseStatus)
 	}
 
 	if this.Tasks == nil {
@@ -247,4 +265,39 @@ func (this *Course) GetTemplatesDir() string {
 
 func (this *Course) GetSourceConfigPath() string {
 	return filepath.Join(this.GetBaseSourceDir(), COURSE_CONFIG_FILENAME)
+}
+
+// Returns the highest-priority status, or nil if the course has none.
+func (this *Course) GetActiveStatus() *CourseStatus {
+	var best *CourseStatus
+	for _, status := range this.Statuses {
+		if (best == nil) || (status.compareTo(best) > 0) {
+			best = status
+		}
+	}
+
+	return best
+}
+
+// Returns whether a course is active at a specific time.
+// If there are no statuses, the date window is checked.
+func (this *Course) IsActive(time timestamp.Timestamp) bool {
+	activeStatus := this.GetActiveStatus()
+	if activeStatus != nil {
+		return activeStatus.Active
+	}
+
+	if (this.StartDate != nil) && (time < *this.StartDate) {
+		return false
+	}
+
+	if (this.EndDate != nil) && (time > *this.EndDate) {
+		return false
+	}
+
+	return true
+}
+
+func (this *Course) IsActiveNow() bool {
+	return this.IsActive(timestamp.Now())
 }

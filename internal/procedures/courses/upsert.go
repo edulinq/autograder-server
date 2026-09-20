@@ -67,6 +67,16 @@ func upsertFromConfigPath(path string, options CourseUpsertOptions) (*CourseUpse
 
 	// Upsert Course Into Database
 	if !options.DryRun {
+		// Preserve statuses because they are not brought in from the source.
+		existingCourse, err := db.GetCourse(course.ID)
+		if err != nil {
+			return nil, result.CourseID, fmt.Errorf("Failed to load existing course: '%w'.", err)
+		}
+
+		if existingCourse != nil {
+			course.Statuses = existingCourse.Statuses
+		}
+
 		err = db.SaveCourse(course)
 		if err != nil {
 			return nil, result.CourseID, fmt.Errorf("Failed to save course to database: '%w'.", err)

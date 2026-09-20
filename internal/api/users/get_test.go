@@ -116,8 +116,9 @@ func TestGetSingle(test *testing.T) {
 		},
 		Courses: map[string]*core.CourseInfo{
 			"course-languages": &core.CourseInfo{
-				ID:   "course-languages",
-				Name: "Course Using Different Languages",
+				ID:     "course-languages",
+				Name:   "Course Using Different Languages",
+				Active: true,
 				Assignments: map[string]*core.AssignmentInfo{
 					"bash": &core.AssignmentInfo{
 						ID:      "bash",
@@ -133,16 +134,19 @@ func TestGetSingle(test *testing.T) {
 						Name: "A Simple Java Assignment",
 					},
 				},
+				Statuses: map[string]*model.CourseStatus{},
 			},
 			"course101": &core.CourseInfo{
-				ID:   "course101",
-				Name: "Course 101",
+				ID:     "course101",
+				Name:   "Course 101",
+				Active: true,
 				Assignments: map[string]*core.AssignmentInfo{
 					"hw0": &core.AssignmentInfo{
 						ID:   "hw0",
 						Name: "Homework 0",
 					},
 				},
+				Statuses: map[string]*model.CourseStatus{},
 			},
 		},
 	}

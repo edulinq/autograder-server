@@ -6,6 +6,8 @@ import (
 
 	"github.com/edulinq/autograder/internal/api/core"
 	"github.com/edulinq/autograder/internal/db"
+	"github.com/edulinq/autograder/internal/model"
+	"github.com/edulinq/autograder/internal/timestamp"
 	"github.com/edulinq/autograder/internal/util"
 )
 
@@ -72,5 +74,52 @@ func TestGetBase(test *testing.T) {
 				i, util.MustToJSONIndent(expectedCourse), util.MustToJSONIndent(responseContent.Course))
 			continue
 		}
+	}
+}
+
+func TestGetInactiveCourse(test *testing.T) {
+	db.ResetForTesting()
+	defer db.ResetForTesting()
+
+	testStatuses := map[string]*model.CourseStatus{
+		"server-admin@test.edulinq.org": {
+			Active:  false,
+			Source:  model.StatusSourceServer,
+			Owner:   "server-admin@test.edulinq.org",
+			SetTime: timestamp.Now(),
+		},
+		"course-admin@test.edulinq.org": {
+			Active:  true,
+			Source:  model.StatusSourceCourse,
+			Owner:   "course-admin@test.edulinq.org",
+			SetTime: timestamp.Now(),
+		},
+	}
+
+	course := db.MustGetCourse("course101")
+	course.Statuses = testStatuses
+	db.MustSaveCourse(course)
+
+	fields := map[string]any{
+		"course-id": "course101",
+	}
+
+	response := core.SendTestAPIRequestFull(test, `courses/get`, fields, nil, "course-admin")
+	if !response.Success {
+		test.Fatalf("Response is not a success when it should be: '%v'.", response)
+	}
+
+	var responseContent GetResponse
+	util.MustJSONFromString(util.MustToJSON(response.Content), &responseContent)
+
+	if responseContent.Course.Active {
+		test.Fatalf("Expected course to be inactive, but was instead active")
+	}
+
+	actualStatuses := responseContent.Course.Statuses
+
+	if !reflect.DeepEqual(testStatuses, actualStatuses) {
+		test.Fatalf("Unexpected statuses. Expected: '%s', Actual: '%s'.",
+			util.MustToJSONIndent(testStatuses), util.MustToJSONIndent(actualStatuses))
 	}
 }

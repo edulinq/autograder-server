@@ -61,6 +61,14 @@ func (this *RejectLate) String() string {
 		this.AssignmentName, this.DueDate.SafeMessage(), deltaString)
 }
 
+type RejectInactiveCourse struct {
+	CourseName string
+}
+
+func (this *RejectInactiveCourse) String() string {
+	return fmt.Sprintf("Course (%s) is not currently active and is not accepting submissions.", this.CourseName)
+}
+
 func checkForRejection(assignment *model.Assignment, submissionPath string, email string, message string, allowLate bool) (RejectReason, error) {
 	user, err := db.GetServerUser(email)
 	if err != nil {
@@ -74,6 +82,11 @@ func checkForRejection(assignment *model.Assignment, submissionPath string, emai
 	// Server admins are never rejected.
 	if user.Role >= model.ServerRoleAdmin {
 		return nil, nil
+	}
+
+	// Reject if the course is inactive.
+	if !assignment.GetCourse().IsActiveNow() {
+		return &RejectInactiveCourse{assignment.GetCourse().GetDisplayName()}, nil
 	}
 
 	reason := checkLateSubmission(assignment, allowLate)

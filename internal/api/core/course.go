@@ -15,9 +15,11 @@ type AssignmentInfo struct {
 }
 
 type CourseInfo struct {
-	ID          string                     `json:"id"`
-	Name        string                     `json:"name"`
-	Assignments map[string]*AssignmentInfo `json:"assignments"`
+	ID          string                         `json:"id"`
+	Name        string                         `json:"name"`
+	Active      bool                           `json:"active"`
+	Assignments map[string]*AssignmentInfo     `json:"assignments"`
+	Statuses    map[string]*model.CourseStatus `json:"statuses"`
 }
 
 func NewAssignmentInfo(assignment *model.Assignment) *AssignmentInfo {
@@ -47,7 +49,9 @@ func NewCourseInfo(course *model.Course) *CourseInfo {
 	return &CourseInfo{
 		ID:          course.ID,
 		Name:        course.Name,
+		Active:      course.IsActiveNow(),
 		Assignments: assignments,
+		Statuses:    course.Statuses,
 	}
 }
 
