@@ -1181,6 +1181,35 @@
                 }
             ]
         },
+        "courses/status/list": {
+            "description": "List all the statuses of a course.",
+            "input": [
+                {
+                    "description": "The ID of the course to make this request to.",
+                    "name": "course-id",
+                    "required": true,
+                    "type": "string"
+                },
+                {
+                    "description": "The email of the user making this request.",
+                    "name": "user-email",
+                    "required": true,
+                    "type": "string"
+                },
+                {
+                    "description": "The password of the user making this request.",
+                    "name": "user-pass",
+                    "required": true,
+                    "type": "string"
+                }
+            ],
+            "output": [
+                {
+                    "name": "statuses",
+                    "type": "map[string]*model.CourseStatus"
+                }
+            ]
+        },
         "courses/status/remove": {
             "description": "Remove one or more course statuses based on the caller's permissions.",
             "input": [

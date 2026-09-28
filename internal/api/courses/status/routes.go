@@ -9,6 +9,7 @@ import (
 var routes []core.Route = []core.Route{
 	core.MustNewAPIRoute(`courses/status/remove`, HandleRemove),
 	core.MustNewAPIRoute(`courses/status/set`, HandleSet),
+	core.MustNewAPIRoute(`courses/status/list`, HandleList),
 }
 
 func GetRoutes() *[]core.Route {
