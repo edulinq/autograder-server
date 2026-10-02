@@ -146,7 +146,15 @@ func TestGetSingle(test *testing.T) {
 						Name: "Homework 0",
 					},
 				},
-				Statuses: map[string]*model.CourseStatus{},
+				Statuses: map[string]*model.CourseStatus{
+					"course-admin@test.edulinq.org": {
+						Active:  true,
+						Source:  model.StatusSourceCourse,
+						Owner:   "course-admin@test.edulinq.org",
+						Message: "",
+						SetTime: timestamp.Zero(),
+					},
+				},
 			},
 		},
 	}

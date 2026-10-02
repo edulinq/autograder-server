@@ -7,6 +7,7 @@ import (
 )
 
 var routes []core.Route = []core.Route{
+	core.MustNewAPIRoute(`courses/status/list`, HandleList),
 	core.MustNewAPIRoute(`courses/status/remove`, HandleRemove),
 	core.MustNewAPIRoute(`courses/status/set`, HandleSet),
 }

@@ -3,5 +3,14 @@
     "name": "Course 101",
     "lms": {
         "type": "test"
+    },
+    "statuses": {
+        "course-admin@test.edulinq.org": {
+            "active": true,
+            "source": "course",
+            "owner": "course-admin@test.edulinq.org",
+            "message": "",
+            "set-time": 0
+        }
     }
 }
