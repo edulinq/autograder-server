@@ -1,8 +1,11 @@
 package core
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
+	"mime/multipart"
+	"net/http"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -405,6 +408,136 @@ func TestBadPostFilesFileSizeExceeded(test *testing.T) {
 		test.Fatalf("Error does not have the correct locator. Expected '%s', found '%s'.",
 			expectedLocator, response.Locator)
 	}
+}
+
+func TestPostFilesFieldNameNotLocal(test *testing.T) {
+	endpoint := `/test/api/post-files/field-name-not-local`
+
+	type requestType struct {
+		APIRequestCourseUserContext
+		MinCourseRoleStudent
+
+		Files POSTFiles
+	}
+
+	handler := func(request *requestType) (*string, *APIError) {
+		path := filepath.Join(request.Files.TempDir, request.Files.Filenames[0])
+		text, err := util.ReadFile(path)
+		if err != nil {
+			response := fmt.Sprintf("Unable to get files contents from '%s': '%v'.", path, err)
+			return &response, nil
+		}
+
+		if text != "marker" {
+			response := fmt.Sprintf("File text not as expected. Expected: 'marker', actual: '%s'.", text)
+			return &response, nil
+		}
+
+		return nil, nil
+	}
+
+	routes = append(routes, MustNewAPIRoute(endpoint, handler))
+
+	testCases := []struct {
+		fieldName       string
+		expectedLocator string
+	}{
+		{"submission.py", ""},
+		{"../escaped.txt", "-057"},
+		{"../../escaped.txt", "-057"},
+		{"a/../../escaped.txt", "-057"},
+		{"/escaped.txt", "-057"},
+	}
+
+	for i, testCase := range testCases {
+		// Request files are stored in a dir under baseDir/requests,
+		// so anything that escapes (up to two levels) will land in one of these dirs.
+		baseDir := util.MustMkDirTemp("test-post-files-field-name-")
+		requestsDir := filepath.Join(baseDir, "requests")
+
+		util.SetTempDirForTesting(requestsDir)
+
+		response := sendTestAPIRequestFileField(test, endpoint, testCase.fieldName, "marker")
+
+		util.SetTempDirForTesting("")
+
+		for _, dir := range []string{baseDir, requestsDir} {
+			path := filepath.Join(dir, "escaped.txt")
+			if util.PathExists(path) {
+				test.Errorf("Case %d ('%s'): File was written outside of the request dir: '%s'.", i, testCase.fieldName, path)
+			}
+		}
+
+		util.RemoveDirent(baseDir)
+
+		if testCase.expectedLocator == "" {
+			if !response.Success || (response.Content != nil) {
+				test.Errorf("Case %d ('%s'): Request was not successful: '%v'.", i, testCase.fieldName, response)
+			}
+
+			continue
+		}
+
+		if response.Success {
+			test.Errorf("Case %d ('%s'): Request did not generate an error: '%v'.", i, testCase.fieldName, response)
+			continue
+		}
+
+		if response.Locator != testCase.expectedLocator {
+			test.Errorf("Case %d ('%s'): Error does not have the correct locator. Expected '%s', found '%s'.",
+				i, testCase.fieldName, testCase.expectedLocator, response.Locator)
+		}
+	}
+}
+
+// Send a request with a single file whose multipart form field name is set directly
+// (normal clients always use the base name of the file).
+func sendTestAPIRequestFileField(test *testing.T, endpoint string, fieldName string, contents string) *APIResponse {
+	email := "course-student@test.edulinq.org"
+	user := db.MustGetServerUser(email)
+
+	content := map[string]any{
+		"course-id":     "course101",
+		"assignment-id": "hw0",
+		"user-email":    email,
+		"user-pass":     util.Sha256HexFromString(user.GetName(false)),
+	}
+
+	var buffer bytes.Buffer
+	formWriter := multipart.NewWriter(&buffer)
+
+	err := formWriter.WriteField(API_REQUEST_CONTENT_KEY, util.MustToJSON(content))
+	if err != nil {
+		test.Fatalf("Failed to write content field: '%v'.", err)
+	}
+
+	fileWriter, err := formWriter.CreateFormFile(fieldName, "escaped.txt")
+	if err != nil {
+		test.Fatalf("Failed to create form file: '%v'.", err)
+	}
+
+	_, err = fileWriter.Write([]byte(contents))
+	if err != nil {
+		test.Fatalf("Failed to write form file: '%v'.", err)
+	}
+
+	formWriter.Close()
+
+	url := serverURL + MakeFullAPIPath(endpoint)
+
+	httpResponse, err := http.Post(url, formWriter.FormDataContentType(), &buffer)
+	if err != nil {
+		test.Fatalf("API POST returned an error: '%v'.", err)
+	}
+	defer httpResponse.Body.Close()
+
+	var response APIResponse
+	err = json.NewDecoder(httpResponse.Body).Decode(&response)
+	if err != nil {
+		test.Fatalf("Could not unmarshal JSON response: '%v'.", err)
+	}
+
+	return &response
 }
 
 func TestTargetCourseUserJSON(test *testing.T) {

@@ -384,11 +384,16 @@ func checkRequestPostFiles(request *http.Request, endpoint string, apiRequest an
 
 	if err != nil {
 		var fileSizeExceededError *fileSizeExceededError
+		var invalidFilenameError *invalidFilenameError
 		if errors.As(err, &fileSizeExceededError) {
 			return nil, NewBadRequestError("-036", endpoint, err.Error()).Err(err).
 				Add("struct-name", structName).Add("field-name", fieldType.Name).
 				Add("filename", fileSizeExceededError.Filename).Add("file-size", fileSizeExceededError.FileSizeKB).
 				Add("max-file-size-kb", fileSizeExceededError.MaxFileSizeKB)
+		} else if errors.As(err, &invalidFilenameError) {
+			return nil, NewBadRequestError("-057", endpoint, err.Error()).Err(err).
+				Add("struct-name", structName).Add("field-name", fieldType.Name).
+				Add("filename", invalidFilenameError.Filename).Add("reason", invalidFilenameError.Reason)
 		} else {
 			return nil, NewInternalError("-029", endpoint, "Failed to store files from POST.").Err(err).
 				Add("struct-name", structName).Add("field-name", fieldType.Name)
@@ -478,6 +483,15 @@ func storeRequestFiles(request *http.Request) (*POSTFiles, error) {
 }
 
 func storeRequestFile(request *http.Request, outDir string, filename string) error {
+	// The filename is the name of the multipart form field (not the sanitized filename of the part),
+	// so make sure it cannot point outside of the output directory.
+	if !filepath.IsLocal(filename) {
+		return &invalidFilenameError{
+			Filename: filename,
+			Reason:   "file names cannot be absolute or reference parent directories",
+		}
+	}
+
 	inFile, fileHeader, err := request.FormFile(filename)
 	if err != nil {
 		return fmt.Errorf("Failed to access request file '%s': '%w'.", filename, err)
@@ -611,4 +625,14 @@ type fileSizeExceededError struct {
 
 func (this *fileSizeExceededError) Error() string {
 	return fmt.Sprintf("File '%s' is %d KB. The maximum allowable size is %d KB.", this.Filename, this.FileSizeKB, this.MaxFileSizeKB)
+}
+
+// A special error for when a submitted file's name is not allowed.
+type invalidFilenameError struct {
+	Filename string
+	Reason   string
+}
+
+func (this *invalidFilenameError) Error() string {
+	return fmt.Sprintf("File '%s' is invalid: %s.", this.Filename, this.Reason)
 }
