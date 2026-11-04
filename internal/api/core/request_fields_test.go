@@ -523,7 +523,9 @@ func sendTestAPIRequestFileField(test *testing.T, endpoint string, fieldName str
 
 	formWriter.Close()
 
-	httpResponse, err := http.Post(serverURL+MakeFullAPIPath(endpoint), formWriter.FormDataContentType(), &buffer)
+	url := serverURL + MakeFullAPIPath(endpoint)
+
+	httpResponse, err := http.Post(url, formWriter.FormDataContentType(), &buffer)
 	if err != nil {
 		test.Fatalf("API POST returned an error: '%v'.", err)
 	}
